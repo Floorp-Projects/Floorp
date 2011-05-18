@@ -69,10 +69,8 @@ MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
     if (!block || !block->init())
         return NULL;
 
-    if (pred) {
-        if (!block->inherit(pred) || !block->initHeader())
-            return NULL;
-    }
+    if (pred && !block->inherit(pred))
+        return NULL;
 
     return block;
 }
@@ -111,7 +109,8 @@ MBasicBlock::initHeader()
 {
     JS_ASSERT(!header_);
 
-    // Copy the initial definitions so we can place phi nodes at the back edge.
+    // Save the basic block's initial slot mapping, both for debugging and for
+    // computing phis on the backedge of a loop.
     header_ = gen->allocate<MInstruction *>(headerSlots_);
     if (!header_)
         return false;
@@ -120,19 +119,23 @@ MBasicBlock::initHeader()
     return true;
 }
 
-bool
-MBasicBlock::inherit(MBasicBlock *pred)
+void
+MBasicBlock::copySlots(MBasicBlock *from)
 {
-    stackPosition_ = pred->stackPosition_;
+    stackPosition_ = from->stackPosition_;
     headerSlots_ = stackPosition_;
 
     for (uint32 i = 0; i < stackPosition_; i++)
-        slots_[i] = pred->slots_[i];
+        slots_[i] = from->slots_[i];
+}
 
+bool
+MBasicBlock::inherit(MBasicBlock *pred)
+{
+    copySlots(pred);
     if (!predecessors_.append(pred))
         return false;
-
-    return true;
+    return initHeader();
 }
 
 MInstruction *
@@ -360,25 +363,11 @@ MBasicBlock::addPhi(MPhi *phi)
     return true;
 }
 
-void
-MBasicBlock::inheritPhi(MPhi *phi)
-{
-    setSlot(phi->slot(), phi);
-    header_[phi->slot()] = phi;
-}
-
-void
-MBasicBlock::inheritPhis(MBasicBlock *loopHeader)
-{
-    for (size_t i = 0; i < loopHeader->numPhis(); i++)
-        inheritPhi(loopHeader->getPhi(i));
-}
-
 bool
 MBasicBlock::addPredecessor(MBasicBlock *pred)
 {
     if (!header_)
-        return inherit(pred) && initHeader();
+        return inherit(pred);
 
     // Predecessors must be finished, and at the correct stack depth.
     JS_ASSERT(pred->lastIns_);
@@ -432,7 +421,7 @@ MBasicBlock::assertUsesAreNotWithin(MOperand *use)
 }
 
 bool
-MBasicBlock::setBackedge(MBasicBlock *pred)
+MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
 {
     // Predecessors must be finished, and at the correct stack depth.
     JS_ASSERT(lastIns_);
@@ -499,6 +488,23 @@ MBasicBlock::setBackedge(MBasicBlock *pred)
             return false;
 
         setSlot(i, phi);
+
+        // Only replace the successor's mapping if the successor did not
+        // re-define the variable. For example:
+        //   for (;;) {
+        //      if (x) {
+        //         y = 2;
+        //         break;
+        //      }
+        //      y *= 2;
+        //   }
+        //
+        // In this case, |y| is always 2 leaving the loop, so we should not
+        // replace the phi.
+        if (successor && successor->getSlot(i) == entryDef) {
+            successor->setSlot(i, phi);
+            successor->header_[i] = phi;
+        }
     }
 
     return predecessors_.append(pred);

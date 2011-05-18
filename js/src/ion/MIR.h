@@ -278,6 +278,7 @@ class MInstruction : public TempObject
     void printName(FILE *fp);
 
     uint32 id() const {
+        JS_ASSERT(block_);
         return id_;
     }
     void setId(uint32 id) {

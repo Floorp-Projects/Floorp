@@ -235,41 +235,45 @@ BytecodeAnalyzer::traverseBytecode()
     for (;;) {
         JS_ASSERT(pc < script->code + script->length);
 
-        // Check if we've hit an expected join point or edge in the bytecode.
-        // Leaving one control structure could place us at the edge of another,
-        // thus |while| instead of |if| so we don't skip any opcodes.
-        while (!cfgStack_.empty() && cfgStack_.back().stopAt == pc) {
-            ControlStatus status = processCfgStack();
+        for (;;) {
+            // Check if we've hit an expected join point or edge in the bytecode.
+            // Leaving one control structure could place us at the edge of another,
+            // thus |while| instead of |if| so we don't skip any opcodes.
+            if (!cfgStack_.empty() && cfgStack_.back().stopAt == pc) {
+                ControlStatus status = processCfgStack();
+                if (status == ControlStatus_Error)
+                    return false;
+                if (!current)
+                    return true;
+                continue;
+            }
+
+            // Some opcodes need to be handled early because they affect control
+            // flow, terminating the current basic block and/or instructing the
+            // traversal algorithm to continue from a new pc.
+            //
+            //   (1) If the opcode does not affect control flow, then the opcode
+            //       is inspected and transformed to IR. This is the process_opcode
+            //       label.
+            //   (2) A loop could be detected via a forward GOTO. In this case,
+            //       we don't want to process the GOTO, but the following
+            //       instruction.
+            //   (3) A RETURN, STOP, BREAK, or CONTINUE may require processing the
+            //       CFG stack to terminate open branches.
+            //
+            // Similar to above, snooping control flow could land us at another
+            // control flow point, so we iterate until it's time to inspect a real
+            // opcode.
+            ControlStatus status;
+            if ((status = snoopControlFlow(JSOp(*pc))) == ControlStatus_None)
+                break;
             if (status == ControlStatus_Error)
                 return false;
             if (!current)
                 return true;
         }
 
-        // Some opcodes need to be handled early because they affect control
-        // flow, terminating the current basic block and/or instructing the
-        // traversal algorithm to continue from a new pc.
-        //
-        //   (1) If the opcode does not affect control flow, then the opcode
-        //       is inspected and transformed to IR. This is the process_opcode
-        //       label.
-        //   (2) A loop could be detected via a forward GOTO. In this case,
-        //       we don't want to process the GOTO, but the following
-        //       instruction.
-        //   (3) A RETURN, STOP, BREAK, or CONTINUE may require processing the
-        //       CFG stack to terminate open branches.
-        //
-        // Similar to above, snooping control flow could land us at another
-        // control flow point, so we iterate until it's time to inspect a real
-        // opcode.
-        ControlStatus status;
-        while ((status = snoopControlFlow(JSOp(*pc))) != ControlStatus_None) {
-            if (status == ControlStatus_Error)
-                return false;
-            if (!current)
-                return true;
-        }
-
+        // Nothing in inspectOpcode() is allowed to advance the pc.
         JSOp op = JSOp(*pc);
         if (!inspectOpcode(op))
             return false;
@@ -284,6 +288,12 @@ BytecodeAnalyzer::ControlStatus
 BytecodeAnalyzer::snoopControlFlow(JSOp op)
 {
     switch (op) {
+      case JSOP_NOP:
+        return maybeLoop(op, js_GetSrcNote(script, pc));
+
+      case JSOP_POP:
+        return maybeLoop(op, js_GetSrcNote(script, pc));
+
       case JSOP_RETURN:
       case JSOP_STOP:
         return processReturn(op);
@@ -304,12 +314,6 @@ BytecodeAnalyzer::snoopControlFlow(JSOp op)
           case SRC_WHILE:
             // while (cond) { }
             if (!whileLoop(op, sn))
-              return ControlStatus_Error;
-            return ControlStatus_Jumped;
-
-          case SRC_FOR:
-            // for (init?; cond; update?) { }
-            if (!forLoop(op, sn))
               return ControlStatus_Error;
             return ControlStatus_Jumped;
 
@@ -344,9 +348,6 @@ bool
 BytecodeAnalyzer::inspectOpcode(JSOp op)
 {
     switch (op) {
-      case JSOP_NOP:
-        return maybeLoop(op, js_GetSrcNote(script, pc));
-
       case JSOP_PUSH:
         return pushConstant(UndefinedValue());
 
@@ -377,10 +378,6 @@ BytecodeAnalyzer::inspectOpcode(JSOp op)
       case JSOP_TRUE:
         return pushConstant(BooleanValue(true));
 
-      case JSOP_POP:
-        current->pop();
-        return maybeLoop(op, js_GetSrcNote(script, pc));
-
       case JSOP_GETARG:
         current->pushArg(GET_SLOTNO(pc));
         return true;
@@ -391,6 +388,10 @@ BytecodeAnalyzer::inspectOpcode(JSOp op)
 
       case JSOP_SETLOCAL:
         return current->setLocal(GET_SLOTNO(pc));
+
+      case JSOP_POP:
+        current->pop();
+        return true;
 
       case JSOP_IFEQX:
         return jsop_ifeq(JSOP_IFEQX);
@@ -490,6 +491,15 @@ BytecodeAnalyzer::processCfgEntry(CFGState &state)
       case CFGState::WHILE_LOOP_BODY:
         return processWhileBodyEnd(state);
 
+      case CFGState::FOR_LOOP_COND:
+        return processForCondEnd(state);
+
+      case CFGState::FOR_LOOP_BODY:
+        return processForBodyEnd(state);
+
+      case CFGState::FOR_LOOP_UPDATE:
+        return processForUpdateEnd(state);
+
       default:
         JS_NOT_REACHED("unknown cfgstate");
     }
@@ -570,34 +580,36 @@ BytecodeAnalyzer::processIfElseFalseEnd(CFGState &state)
 bool
 BytecodeAnalyzer::finalizeLoop(CFGState &state, MInstruction *last)
 {
-    if (state.loop.continues) {
-        MBasicBlock *repeat = newBlock(pc);
+    JS_ASSERT(!state.loop.continues);
 
-        DeferredEdge *edge = state.loop.continues;
+    // Create a block to catch all breaks.
+    MBasicBlock *breaks = NULL;
+    if (state.loop.breaks) {
+        breaks = newBlock(state.loop.exitpc);
+
+        DeferredEdge *edge = state.loop.breaks;
         while (edge) {
-            MGoto *ins = MGoto::New(this, repeat);
+            MGoto *ins = MGoto::New(this, breaks);
             if (!edge->block->end(ins))
                 return false;
-            if (!repeat->addPredecessor(edge->block))
+            if (!breaks->addPredecessor(edge->block))
                 return false;
             edge = edge->next;
         }
-
-        if (current) {
-            MGoto *ins = MGoto::New(this, repeat);
-            if (!current->end(ins))
-                return false;
-            if (!repeat->addPredecessor(current))
-                return false;
-        }
-
-        current = repeat;
     }
+
+    // If there is no successor, but there are breaks, treat the catch-all
+    // break block as the actual successor.
+    MBasicBlock *successor = state.loop.successor
+                             ? state.loop.successor
+                             : breaks;
 
     // Place phis in the loop header, propagating their assignment to the
     // successor block. If there is no |current|, then the successor is still
     // reachable via the original test branch, and thus its state is coherent.
     if (current) {
+        JS_ASSERT_IF(last, state.loop.successor);
+
         MControlInstruction *ins;
         if (last)
             ins = MTest::New(this, last, state.loop.entry, state.loop.successor);
@@ -606,27 +618,21 @@ BytecodeAnalyzer::finalizeLoop(CFGState &state, MInstruction *last)
         if (!current->end(ins))
             return false;
 
-        if (!state.loop.entry->setBackedge(current))
+        if (!state.loop.entry->setBackedge(current, successor))
             return false;
-
-        if (state.loop.successor)
-            state.loop.successor->inheritPhis(state.loop.entry);
     }
 
-    if (state.loop.breaks) {
-        // Connect pending breaks to the successor (callers must ensure that a
-        // successor block is available).
-        DeferredEdge *edge = state.loop.breaks;
-        while (edge) {
-            MGoto *ins = MGoto::New(this, state.loop.successor);
-            if (!edge->block->end(ins))
-                return false;
-            if (!state.loop.successor->addPredecessor(edge->block))
-                return false;
-            edge = edge->next;
-        }
+    // Now that phis are computed in the successor block, see if we need to
+    // link the successor and break blocks together.
+    if (successor && breaks && (successor != breaks)) {
+        MGoto *ins = MGoto::New(this, successor);
+        if (!breaks->end(ins))
+            return false;
+        if (!successor->addPredecessor(breaks))
+            return false;
     }
 
+    state.loop.successor = successor;
     return true;
 }
 
@@ -639,6 +645,8 @@ BytecodeAnalyzer::processDoWhileEnd(CFGState &state)
             return ControlStatus_Error;
     }
 
+    if (!processDeferredContinues(state))
+        return ControlStatus_Error;
     if (!finalizeLoop(state, current->pop()))
         return ControlStatus_Error;
 
@@ -672,6 +680,92 @@ BytecodeAnalyzer::processWhileCondEnd(CFGState &state)
 
 BytecodeAnalyzer::ControlStatus
 BytecodeAnalyzer::processWhileBodyEnd(CFGState &state)
+{
+    if (!processDeferredContinues(state))
+        return ControlStatus_Error;
+    if (!finalizeLoop(state, NULL))
+        return ControlStatus_Error;
+
+    current = state.loop.successor;
+    if (!current)
+        return ControlStatus_Ended;
+
+    pc = current->pc();
+    return ControlStatus_Joined;
+}
+
+BytecodeAnalyzer::ControlStatus
+BytecodeAnalyzer::processForCondEnd(CFGState &state)
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
+
+    // Balance the stack past the IFNE.
+    MInstruction *ins = current->pop();
+
+    // Create the body and successor blocks.
+    MBasicBlock *body = newBlock(current, state.loop.bodyStart);
+    state.loop.successor = newBlock(current, state.loop.exitpc);
+    MTest *test = MTest::New(this, ins, body, state.loop.successor);
+    if (!current->end(test))
+        return ControlStatus_Error;
+
+    state.state = CFGState::FOR_LOOP_BODY;
+    state.stopAt = state.loop.bodyEnd;
+    pc = state.loop.bodyStart;
+    current = body;
+    return ControlStatus_Jumped;
+}
+
+bool
+BytecodeAnalyzer::processDeferredContinues(CFGState &state)
+{
+    // If there are any continues for this loop, and there is an update block,
+    // then we need to create a new basic block to house the update.
+    if (state.loop.continues) {
+        MBasicBlock *update = newBlock(pc);
+        if (current) {
+            MGoto *ins = MGoto::New(this, update);
+            if (!current->end(ins))
+                return ControlStatus_Error;
+            if (!update->addPredecessor(current))
+                return ControlStatus_Error;
+        }
+
+        DeferredEdge *edge = state.loop.continues;
+        while (edge) {
+            MGoto *ins = MGoto::New(this, update);
+            if (!edge->block->end(ins))
+                return ControlStatus_Error;
+            if (!update->addPredecessor(edge->block))
+                return ControlStatus_Error;
+            edge = edge->next;
+        }
+        state.loop.continues = NULL;
+
+        current = update;
+    }
+
+    return true;
+}
+
+BytecodeAnalyzer::ControlStatus
+BytecodeAnalyzer::processForBodyEnd(CFGState &state)
+{
+    if (!processDeferredContinues(state))
+        return ControlStatus_Error;
+
+    if (!state.loop.updatepc)
+        return processForUpdateEnd(state);
+
+    pc = state.loop.updatepc;
+
+    state.state = CFGState::FOR_LOOP_UPDATE;
+    state.stopAt = state.loop.updateEnd;
+    return ControlStatus_Jumped;
+}
+
+BytecodeAnalyzer::ControlStatus
+BytecodeAnalyzer::processForUpdateEnd(CFGState &state)
 {
     if (!finalizeLoop(state, NULL))
         return ControlStatus_Error;
@@ -746,7 +840,7 @@ BytecodeAnalyzer::processContinue(JSOp op, jssrcnote *sn)
     return processControlEnd();
 }
 
-bool
+BytecodeAnalyzer::ControlStatus
 BytecodeAnalyzer::maybeLoop(JSOp op, jssrcnote *sn)
 {
     // This function looks at the opcode and source note and tries to
@@ -757,8 +851,10 @@ BytecodeAnalyzer::maybeLoop(JSOp op, jssrcnote *sn)
     switch (op) {
       case JSOP_POP:
         // for (init; ; update?) ...
-        if (sn && SN_TYPE(sn) == SRC_FOR)
+        if (sn && SN_TYPE(sn) == SRC_FOR) {
+            current->pop();
             return forLoop(op, sn);
+        }
         break;
 
       case JSOP_NOP:
@@ -775,10 +871,10 @@ BytecodeAnalyzer::maybeLoop(JSOp op, jssrcnote *sn)
 
       default:
         JS_NOT_REACHED("unexpected opcode");
-        return false;
+        return ControlStatus_Error;
     }
 
-    return true;
+    return ControlStatus_None;
 }
 
 void
@@ -809,7 +905,7 @@ BytecodeAnalyzer::assertValidTraceOp(JSOp op)
 #endif
 }
 
-bool
+BytecodeAnalyzer::ControlStatus
 BytecodeAnalyzer::doWhileLoop(JSOp op, jssrcnote *sn)
 {
     int offset = js_GetSrcNoteOffset(sn, 0);
@@ -828,18 +924,18 @@ BytecodeAnalyzer::doWhileLoop(JSOp op, jssrcnote *sn)
     MBasicBlock *header = newLoopHeader(current, pc);
     MGoto *ins = MGoto::New(this, header);
     if (!current->end(ins))
-        return false;
+        return ControlStatus_Error;
 
     current = header;
     jsbytecode *bodyStart = GetNextPc(GetNextPc(pc));
     jsbytecode *exitpc = GetNextPc(ifne);
     if (!pushLoop(CFGState::DO_WHILE_LOOP, ifne, header, bodyStart, ifne, exitpc))
-        return false;
+        return ControlStatus_Error;
 
-    return true;
+    return ControlStatus_Jumped;
 }
 
-bool
+BytecodeAnalyzer::ControlStatus
 BytecodeAnalyzer::whileLoop(JSOp op, jssrcnote *sn)
 {
     // while (cond) { } loops have the following structure:
@@ -860,19 +956,88 @@ BytecodeAnalyzer::whileLoop(JSOp op, jssrcnote *sn)
     MBasicBlock *header = newLoopHeader(current, pc);
     MGoto *ins = MGoto::New(this, header);
     if (!current->end(ins))
-        return false;
+        return ControlStatus_Error;
 
     // Skip past the JSOP_TRACE for the body start.
     jsbytecode *bodyStart = GetNextPc(GetNextPc(pc));
     jsbytecode *bodyEnd = pc + GetJumpOffset(pc);
     jsbytecode *exitpc = GetNextPc(ifne);
     if (!pushLoop(CFGState::WHILE_LOOP_COND, ifne, header, bodyStart, bodyEnd, exitpc))
-        return false;
+        return ControlStatus_Error;
 
     // Parse the condition first.
     pc = bodyEnd;
     current = header;
-    return true;
+    return ControlStatus_Jumped;
+}
+
+BytecodeAnalyzer::ControlStatus
+BytecodeAnalyzer::forLoop(JSOp op, jssrcnote *sn)
+{
+    // Skip the NOP or POP.
+    JS_ASSERT(op == JSOP_POP || op == JSOP_NOP);
+    pc = GetNextPc(pc);
+
+    jsbytecode *condpc = pc + js_GetSrcNoteOffset(sn, 0);
+    jsbytecode *updatepc = pc + js_GetSrcNoteOffset(sn, 1);
+    jsbytecode *ifne = pc + js_GetSrcNoteOffset(sn, 2);
+    jsbytecode *exitpc = GetNextPc(ifne);
+
+    // for loops have the following structures:
+    //
+    //   NOP or POP
+    //   [GOTO cond]
+    //   TRACE
+    // body:
+    //    ; [body]
+    // [increment:]
+    //    ; [increment]
+    // [cond:]
+    //   GOTO body
+    //
+    // If there is a condition (condpc != ifne), this acts similar to a while
+    // loop otherwise, it acts like a do-while loop.
+    jsbytecode *bodyStart = pc;
+    jsbytecode *bodyEnd = updatepc;
+    if (condpc != ifne) {
+        JS_ASSERT(JSOp(*bodyStart) == JSOP_GOTO || JSOp(*bodyStart) == JSOP_GOTOX);
+        JS_ASSERT(bodyStart + GetJumpOffset(bodyStart) == condpc);
+        bodyStart = GetNextPc(bodyStart);
+    }
+    JS_ASSERT(JSOp(*bodyStart) == JSOP_TRACE);
+    JS_ASSERT(ifne + GetJumpOffset(ifne) == bodyStart);
+    bodyStart = GetNextPc(bodyStart);
+
+    MBasicBlock *header = newLoopHeader(current, pc);
+    MGoto *ins = MGoto::New(this, header);
+    if (!current->end(ins))
+        return ControlStatus_Error;
+
+    // If there is no condition, we immediately parse the body. Otherwise, we
+    // parse the condition.
+    jsbytecode *stopAt;
+    CFGState::State initial;
+    if (condpc != ifne) {
+        pc = condpc;
+        stopAt = ifne;
+        initial = CFGState::FOR_LOOP_COND;
+    } else {
+        pc = bodyStart;
+        stopAt = bodyEnd;
+        initial = CFGState::FOR_LOOP_BODY;
+    }
+
+    if (!pushLoop(initial, ifne, header, bodyStart, bodyEnd, exitpc))
+        return ControlStatus_Error;
+
+    CFGState &state = cfgStack_.back();
+    state.loop.condpc = (condpc != ifne) ? condpc : NULL;
+    state.loop.updatepc = (updatepc != condpc) ? updatepc : NULL;
+    if (state.loop.updatepc)
+        state.loop.updateEnd = condpc;
+
+    current = header;
+    return ControlStatus_Jumped;
 }
 
 bool
@@ -966,6 +1131,8 @@ BytecodeAnalyzer::processReturn(JSOp op)
 
       case JSOP_STOP:
         ins = MConstant::New(this, UndefinedValue());
+        if (!current->add(ins))
+            return ControlStatus_Error;
         break;
 
       default:
