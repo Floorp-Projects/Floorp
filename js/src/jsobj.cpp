@@ -4981,7 +4981,7 @@ CallAddPropertyHook(JSContext *cx, Class *clasp, JSObject *obj, const Shape *sha
             return false;
         if (*vp != nominal) {
             if (obj->containsSlot(shape->slot))
-                obj->nativeSetSlot(shape->slot, *vp);
+                obj->nativeSetSlotWithType(cx, shape, *vp);
         }
     }
     return true;

@@ -1010,6 +1010,13 @@ JSObject::nativeSetSlot(uintN slot, const js::Value &value)
     return setSlot(slot, value);
 }
 
+inline void
+JSObject::nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value)
+{
+    nativeSetSlot(shape->slot, value);
+    cx->addTypePropertyId(getType(), shape->propid, value);
+}
+
 inline bool
 JSObject::isNative() const
 {
