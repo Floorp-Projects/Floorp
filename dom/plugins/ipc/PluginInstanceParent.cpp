@@ -68,10 +68,6 @@ extern const PRUnichar* kOOPPPluginFocusEventId;
 UINT gOOPPPluginFocusEvent =
     RegisterWindowMessage(kOOPPPluginFocusEventId);
 extern const PRUnichar* kFlashFullscreenClass;
-UINT gOOPPSpinNativeLoopEvent =
-    RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
-UINT gOOPPStopNativeLoopEvent =
-    RegisterWindowMessage(L"SyncChannel Stop Inner Loop Message");
 #elif defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
 #elif defined(XP_MACOSX)
