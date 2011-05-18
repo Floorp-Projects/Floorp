@@ -716,6 +716,7 @@ struct JSObject : js::gc::Cell {
     }
 
     inline void nativeSetSlot(uintN slot, const js::Value &value);
+    inline void nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value);
 
     inline js::Value getReservedSlot(uintN index) const;
 
