@@ -2748,7 +2748,7 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
     JS_ASSERT(which == 0 || which == 1);
 
     /* The actual pushed value is at sp[0], fix up the stack. See finishBarrier. */
-    Value &result = f.regs.sp[-1 - which];
+    Value &result = f.regs.sp[-1 - (int)which];
     result = f.regs.sp[0];
 
     /*
