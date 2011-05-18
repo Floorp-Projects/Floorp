@@ -1,64 +1,91 @@
 %include organizer.css
 
-#placesView:-moz-system-metric(windows-default-theme) {
+%filter substitution
+%define toolbarHighlight rgba(255,255,255,.5)
+%define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
+%define customToolbarColor hsl(214,44%,87%)
+
+#placesView {
   border-top: none;
 }
 
-#placesToolbar {
-  -moz-appearance: -moz-win-media-toolbox;
-  color: -moz-win-mediatext;
+@media not all and (-moz-windows-classic) {
+  #placesToolbox {
+    -moz-appearance: none;
+    background-color: transparent;
+  }
+
+  #placesToolbar {
+    -moz-appearance: none;
+    background-color: -moz-Dialog;
+    color: -moz-dialogText;
+  }
 }
 
-#placesToolbar:-moz-system-metric(windows-default-theme) {
-  min-height: 36px;
-  padding-top: 0px;
-  padding-bottom: 0px;
-  -moz-padding-start: 6px;
-  -moz-padding-end: 8px;
+@media all and (-moz-windows-compositor) {
+  #placesToolbox {
+    border-top: none;
+  }
+
+  #placesToolbar {
+    background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
+  }
 }
 
-#placesMenu > menu {
-  color: -moz-win-mediatext;
-}
+@media all and (-moz-windows-default-theme) {
+  #placesView,
+  #searchModifiers,
+  #infoPane,
+  #placesList,
+  #placeContent {
+    background-color: #EEF3FA;
+  }
 
-#placesMenu > menu > .menubar-text:-moz-system-metric(windows-default-theme) {
-  -moz-padding-end: 15px;
-  background-image: url(chrome://browser/skin/places/dropDown.png);
-}
+  #placesToolbar {
+    background-color: @customToolbarColor@;
+    color: black;
+  }
 
-#placesView > splitter:-moz-system-metric(windows-default-theme) {
-  border: 0;
-  -moz-border-end: 1px solid #A9B7C9;
-  min-width: 0;
-  width: 3px;
-  background-color: transparent;
-  -moz-margin-start: -3px;
-  position: relative;
-}
+  #placesView > splitter {
+    border: 0;
+    -moz-border-end: 1px solid #A9B7C9;
+    min-width: 0;
+    width: 3px;
+    background-color: transparent;
+    -moz-margin-start: -3px;
+    position: relative;
+  }
 
-#searchModifiers:-moz-system-metric(windows-default-theme) {
-  border-bottom: 1px solid #A9B7C9;
-}
+  #searchModifiers {
+    border-bottom: 1px solid #A9B7C9;
+  }
 
-#organizerScopeBar:-moz-system-metric(windows-default-theme) {
-  -moz-appearance: none;
-  border: none;
-}
+  #organizerScopeBar {
+    -moz-appearance: none;
+    border: none;
+  }
 
-#infoPaneBox:-moz-system-metric(windows-default-theme) {
-  border-top-color: #A9B7C9;
-}
+  #infoPaneBox {
+    border-top-color: #A9B7C9;
+  }
 
-#placesView:-moz-system-metric(windows-default-theme),
-#searchModifiers:-moz-system-metric(windows-default-theme),
-#infoPane:-moz-system-metric(windows-default-theme),
-#placesList:-moz-system-metric(windows-default-theme),
-#placeContent:-moz-system-metric(windows-default-theme) {
-  background-color: #EEF3FA;
-}
+  #searchFilter {
+    -moz-appearance: none;
+    background-color: rgba(255,255,255,.725);
+    color: black;
+    padding: 2px;
+    -moz-padding-start: 4px;
+    background-clip: padding-box;
+    border: 1px solid ThreeDDarkShadow;
+    border-radius: 3.5px;
+    @navbarTextboxCustomBorder@
+  }
 
-/**** Vista default theme: Library's search box needs to be vertically centered ****/
-#searchFilter:-moz-system-metric(windows-default-theme) {
-  padding-top: 3px;
-  padding-bottom: 2px;
+  #searchFilter:hover {
+    background-color: rgba(255,255,255,.898);
+  }
+
+  #searchFilter[focused] {
+    background-color: white;
+  }
 }

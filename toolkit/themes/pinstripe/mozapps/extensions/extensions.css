@@ -102,6 +102,13 @@
   }
 }
 
+/*** global informations ***/
+#addons-page .global-info-container {
+  background-color: #e3e6eb;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+}
+
 /* Plugins aren't yet disabled by safemode (bug 342333),
    so don't show that warning when viewing plugins. */
 #addons-page[warning="safemode"] .view-pane[type="plugin"] .global-warning-container,
