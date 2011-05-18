@@ -169,6 +169,9 @@ pref("media.enforce_same_site_origin", false);
 // Media cache size in kilobytes
 pref("media.cache_size", 512000);
 
+// Master HTML5 media volume scale.
+pref("media.volume_scale", "1.0");
+
 #ifdef MOZ_RAW
 pref("media.raw.enabled", true);
 #endif

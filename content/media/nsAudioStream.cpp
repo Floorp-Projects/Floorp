@@ -47,10 +47,13 @@ using namespace mozilla::dom;
 #include <math.h>
 #include "prlog.h"
 #include "prmem.h"
+#include "prdtoa.h"
 #include "nsAutoPtr.h"
 #include "nsAudioStream.h"
 #include "nsAlgorithm.h"
 #include "VideoUtils.h"
+#include "nsContentUtils.h"
+#include "mozilla/Mutex.h"
 extern "C" {
 #include "sydneyaudio/sydney_audio.h"
 }
@@ -313,16 +316,47 @@ class AudioShutdownEvent : public nsRunnable
   nsRefPtr<AudioChild> mAudioChild;
 };
 
+static mozilla::Mutex* gVolumeScaleLock = nsnull;
+
+static double gVolumeScale = 1.0;
+
+static int VolumeScaleChanged(const char* aPref, void *aClosure) {
+  mozilla::MutexAutoLock lock(*gVolumeScaleLock);
+  nsAdoptingString value =
+    nsContentUtils::GetStringPref("media.volume_scale");
+  if (value.IsEmpty()) {
+    gVolumeScale = 1.0;
+  } else {
+    NS_ConvertUTF16toUTF8 utf8(value);
+    gVolumeScale = PR_MAX(0, PR_strtod(utf8.get(), nsnull));
+  }
+  return 0;
+}
+
+static double GetVolumeScale() {
+  mozilla::MutexAutoLock lock(*gVolumeScaleLock);
+  return gVolumeScale;
+}
 
 void nsAudioStream::InitLibrary()
 {
 #ifdef PR_LOGGING
   gAudioStreamLog = PR_NewLogModule("nsAudioStream");
 #endif
+  gVolumeScaleLock = new mozilla::Mutex("nsAudioStream::gVolumeScaleLock");
+  VolumeScaleChanged(nsnull, nsnull);
+  nsContentUtils::RegisterPrefCallback("media.volume_scale",
+                                       VolumeScaleChanged,
+                                       nsnull);
 }
 
 void nsAudioStream::ShutdownLibrary()
 {
+  nsContentUtils::UnregisterPrefCallback("media.volume_scale",
+                                         VolumeScaleChanged,
+                                         nsnull);
+  delete gVolumeScaleLock;
+  gVolumeScaleLock = nsnull;
 }
 
 nsIThread *
@@ -439,10 +473,11 @@ nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBl
     }
     mBufferOverflow.Clear();
 
+    double scaled_volume = GetVolumeScale() * mVolume;
     switch (mFormat) {
       case FORMAT_U8: {
         const PRUint8* buf = static_cast<const PRUint8*>(aBuf);
-        PRInt32 volume = PRInt32((1 << 16) * mVolume);
+        PRInt32 volume = PRInt32((1 << 16) * scaled_volume);
         for (PRUint32 i = 0; i < aCount; ++i) {
           s_data[i + offset] = short(((PRInt32(buf[i]) - 128) * volume) >> 8);
         }
@@ -450,7 +485,7 @@ nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBl
       }
       case FORMAT_S16_LE: {
         const short* buf = static_cast<const short*>(aBuf);
-        PRInt32 volume = PRInt32((1 << 16) * mVolume);
+        PRInt32 volume = PRInt32((1 << 16) * scaled_volume);
         for (PRUint32 i = 0; i < aCount; ++i) {
           short s = buf[i];
 #if defined(IS_BIG_ENDIAN)
@@ -463,7 +498,7 @@ nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBl
       case FORMAT_FLOAT32: {
         const float* buf = static_cast<const float*>(aBuf);
         for (PRUint32 i = 0; i <  aCount; ++i) {
-          float scaled_value = floorf(0.5 + 32768 * buf[i] * mVolume);
+          float scaled_value = floorf(0.5 + 32768 * buf[i] * scaled_volume);
           if (buf[i] < 0.0) {
             s_data[i + offset] = (scaled_value < -32768.0) ?
               -32768 :
