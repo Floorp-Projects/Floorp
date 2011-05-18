@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "BytecodeAnalyzer.h"
+#include "IonBuilder.h"
 #include "Ion.h"
 #include "IonSpew.h"
 #include "MIRGraph.h"

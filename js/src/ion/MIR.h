@@ -128,7 +128,6 @@ class MIRGenerator
     TempAllocator &temp() {
         return temp_;
     }
-
     JSFunction *fun() const {
         return fun_;
     }

@@ -47,7 +47,7 @@
 namespace js {
 namespace ion {
 
-class BytecodeAnalyzer : public MIRGenerator
+class IonBuilder : public MIRGenerator
 {
     enum ControlStatus {
         ControlStatus_Error,
@@ -144,7 +144,7 @@ class BytecodeAnalyzer : public MIRGenerator
     };
 
   public:
-    BytecodeAnalyzer(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
+    IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
                      MIRGraph &graph);
 
   public:
