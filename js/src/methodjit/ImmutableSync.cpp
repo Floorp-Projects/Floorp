@@ -54,7 +54,8 @@ ImmutableSync::ImmutableSync()
 
 ImmutableSync::~ImmutableSync()
 {
-    cx->free_(entries);
+    if (cx)
+        cx->free_(entries);
 }
 
 bool

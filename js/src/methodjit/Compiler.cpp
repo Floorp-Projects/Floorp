@@ -664,7 +664,9 @@ mjit::TryCompile(JSContext *cx, StackFrame *fp)
         return (status == JITScript_Valid) ? Compile_Okay : Compile_Retry;
     }
 
-    JS_ASSERT_IF(status == Compile_Error, cx->isExceptionPending());
+    /* Non-OOM errors should have an associated exception. */
+    JS_ASSERT_IF(status == Compile_Error,
+                 cx->isExceptionPending() || cx->runtime->hadOutOfMemory);
 
     return status;
 }

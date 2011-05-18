@@ -377,7 +377,7 @@ class TypeSet
     void addSubsetBarrier(JSContext *cx, JSScript *script, const jsbytecode *pc, TypeSet *target);
 
     void addBaseSubset(JSContext *cx, TypeObject *object, TypeSet *target);
-    void addCondensed(JSContext *cx, JSScript *script);
+    bool addCondensed(JSContext *cx, JSScript *script);
 
     /*
      * Make an intermediate type set with the specified debugging name,
@@ -435,11 +435,11 @@ class TypeSet
     /* Set of scripts which condensed constraints have been generated for. */
     typedef HashSet<JSScript *,
                     DefaultHasher<JSScript *>,
-                    ContextAllocPolicy> ScriptSet;
+                    SystemAllocPolicy> ScriptSet;
 
-    static void
-    CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
-                         ScriptSet *pcondensed, TypeSet *types);
+    static bool
+    CondenseSweepTypeSet(JSContext *cx, JSCompartment *compartment,
+                         ScriptSet &condensed, TypeSet *types);
 
   private:
     inline void markUnknown(JSContext *cx);
@@ -896,7 +896,6 @@ struct TypeCompartment
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, JSScript *script, uint32 offset);
 
-    void condense(JSContext *cx);
     void sweep(JSContext *cx);
 };
 

@@ -406,6 +406,8 @@ struct JS_FRIEND_API(JSCompartment) {
     /* Type information about the scripts and objects in this compartment. */
     js::types::TypeCompartment   types;
 
+    bool condenseTypes(JSContext *cx);
+
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
     js::TraceMonitor             traceMonitor;
