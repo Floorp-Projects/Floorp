@@ -497,6 +497,9 @@ struct JSRuntime {
      */
     JSBool              debugMode;
 
+    /* Had an out-of-memory error which did not populate an exception. */
+    JSBool              hadOutOfMemory;
+
 #ifdef JS_TRACER
     /* True if any debug hooks not supported by the JIT are enabled. */
     bool debuggerInhibitsJIT() const {

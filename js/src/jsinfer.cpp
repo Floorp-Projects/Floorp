@@ -482,18 +482,17 @@ public:
     bool condensed() { return true; }
 };
 
-void
+bool
 TypeSet::addCondensed(JSContext *cx, JSScript *script)
 {
     /* Condensed constraints are added during GC, so we need off-the-books allocation. */
     TypeConstraintCondensed *constraint = OffTheBooks::new_<TypeConstraintCondensed>(script);
 
-    if (!constraint) {
-        script->compartment->types.setPendingNukeTypes(cx);
-        return;
-    }
+    if (!constraint)
+        return false;
 
     add(cx, constraint, false);
+    return true;
 }
 
 /* Constraints for reads/writes on object properties. */
@@ -1012,6 +1011,9 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
 
     JSScript *callee = function->script;
     unsigned nargs = callee->fun->nargs;
+
+    if (!callee->ensureTypeArray(cx))
+        return;
 
     /* Analyze the function if we have not already done so. */
     if (!callee->analyzed) {
@@ -1996,6 +1998,7 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
 void
 TypeCompartment::setPendingNukeTypes(JSContext *cx)
 {
+    JS_ASSERT(cx->compartment->activeInference);
     if (!pendingNukeTypes) {
         js_ReportOutOfMemory(cx);
         pendingNukeTypes = true;
@@ -2005,10 +2008,13 @@ TypeCompartment::setPendingNukeTypes(JSContext *cx)
 void
 TypeCompartment::nukeTypes(JSContext *cx)
 {
+    JSCompartment *compartment = cx->compartment;
+    JS_ASSERT(this == &compartment->types);
+
     /*
      * This is the usual response if we encounter an OOM while adding a type
-     * or resolving type constraints. Release all memory used for type information,
-     * reset the compartment to not use type inference, and recompile all scripts.
+     * or resolving type constraints. Reset the compartment to not use type
+     * inference, and recompile all scripts.
      *
      * Because of the nature of constraint-based analysis (add constraints, and
      * iterate them until reaching a fixpoint), we can't undo an add of a type set,
@@ -2022,8 +2028,44 @@ TypeCompartment::nukeTypes(JSContext *cx)
         pendingRecompiles = NULL;
     }
 
-    /* :FIXME: Implement this function. */
-    *((int*)0) = 0;
+    /*
+     * We may or may not be under the GC. In either case don't allocate, and
+     * acquire the GC lock so we can update inferenceEnabled for all contexts.
+     */
+
+#ifdef JS_THREADSAFE
+    Maybe<AutoLockGC> maybeLock;
+    if (!cx->runtime->gcMarkAndSweep)
+        maybeLock.construct(info.runtime);
+#endif
+
+    inferenceEnabled = false;
+
+    /* Update the cached inferenceEnabled bit in all contexts. */
+    for (JSCList *cl = cx->runtime->contextList.next;
+         cl != &cx->runtime->contextList;
+         cl = cl->next) {
+        JSContext *cx = js_ContextFromLinkField(cl);
+        cx->setCompartment(cx->compartment);
+    }
+
+#ifdef JS_METHODJIT
+
+    mjit::ExpandInlineFrames(cx, true);
+
+    /* Throw away all JIT code in the compartment, but leave everything else alone. */
+    for (JSCList *cursor = compartment->scripts.next;
+         cursor != &compartment->scripts;
+         cursor = cursor->next) {
+        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+        if (script->hasJITCode()) {
+            mjit::Recompiler recompiler(cx, script);
+            recompiler.recompile();
+        }
+    }
+
+#endif /* JS_METHODJIT */
+
 }
 
 void
@@ -4579,9 +4621,9 @@ types::TypeObject::trace(JSTracer *trc)
  * of a script, and sweep all type objects and references to type objects
  * which no longer exist.
  */
-void
-TypeSet::CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
-                              ScriptSet *pcondensed, TypeSet *types)
+bool
+TypeSet::CondenseSweepTypeSet(JSContext *cx, JSCompartment *compartment,
+                              ScriptSet &condensed, TypeSet *types)
 {
     /*
      * This function is called from GC, and cannot malloc any data that could
@@ -4607,7 +4649,7 @@ TypeSet::CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
                  * type object with unknown properties.
                  */
                 if (object->unknownProperties())
-                    types->objectSet[i] = &compartment->typeEmpty;
+                    types->objectSet[i] = &compartment->types.typeEmpty;
                 else
                     types->objectSet[i] = NULL;
                 removed = true;
@@ -4633,7 +4675,7 @@ TypeSet::CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
         TypeObject *object = (TypeObject*) types->objectSet;
         if (!object->marked) {
             if (object->unknownProperties()) {
-                types->objectSet = (TypeObject**) &compartment->typeEmpty;
+                types->objectSet = (TypeObject**) &compartment->types.typeEmpty;
             } else {
                 types->objectSet = NULL;
                 types->objectCount = 0;
@@ -4685,13 +4727,13 @@ TypeSet::CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
             continue;
         }
 
-        if (pcondensed) {
-            ScriptSet::AddPtr p = pcondensed->lookupForAdd(script);
-            if (!p) {
-                if (pcondensed->add(p, script))
-                    types->addCondensed(cx, script);
-                else
-                    compartment->setPendingNukeTypes(cx);
+        ScriptSet::AddPtr p = condensed.lookupForAdd(script);
+        if (!p) {
+            if (!condensed.add(p, script) || !types->addCondensed(cx, script)) {
+                SwitchToCompartment enterCompartment(cx, compartment);
+                AutoEnterTypeInference enter(cx);
+                compartment->types.setPendingNukeTypes(cx);
+                return false;
             }
         }
 
@@ -4700,8 +4742,8 @@ TypeSet::CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
         constraint = next;
     }
 
-    if (pcondensed)
-        pcondensed->clear();
+    condensed.clear();
+    return true;
 }
 
 /* Remove to-be-destroyed objects from the list of instances of a type object. */
@@ -4717,13 +4759,15 @@ PruneInstanceObjects(TypeObject *object)
     }
 }
 
-static void
-CondenseTypeObjectList(JSContext *cx, TypeCompartment *compartment, TypeObject *objects)
+static bool
+CondenseTypeObjectList(JSContext *cx, JSCompartment *compartment, TypeObject *objects)
 {
-    TypeSet::ScriptSet condensed(cx), *pcondensed = &condensed;
+    TypeSet::ScriptSet condensed;
     if (!condensed.init()) {
-        compartment->setPendingNukeTypes(cx);
-        pcondensed = NULL;
+        SwitchToCompartment enterCompartment(cx, compartment);
+        AutoEnterTypeInference enter(cx);
+        compartment->types.setPendingNukeTypes(cx);
+        return false;
     }
 
     TypeObject *object = objects;
@@ -4743,20 +4787,22 @@ CondenseTypeObjectList(JSContext *cx, TypeCompartment *compartment, TypeObject *
         unsigned count = object->getPropertyCount();
         for (unsigned i = 0; i < count; i++) {
             Property *prop = object->getProperty(i);
-            if (prop)
-                TypeSet::CondenseSweepTypeSet(cx, compartment, pcondensed, &prop->types);
+            if (prop && !TypeSet::CondenseSweepTypeSet(cx, compartment, condensed, &prop->types))
+                return false;
         }
 
         object = object->next;
     }
+
+    return true;
 }
 
-void
-TypeCompartment::condense(JSContext *cx)
+bool
+JSCompartment::condenseTypes(JSContext *cx)
 {
-    PruneInstanceObjects(&typeEmpty);
+    PruneInstanceObjects(&types.typeEmpty);
 
-    CondenseTypeObjectList(cx, this, objects);
+    return CondenseTypeObjectList(cx, this, types.objects);
 }
 
 static void
@@ -4868,16 +4914,19 @@ TypeCompartment::~TypeCompartment()
         Foreground::delete_(objectTypeTable);
 }
 
-void
+bool
 JSScript::condenseTypes(JSContext *cx)
 {
-    CondenseTypeObjectList(cx, &compartment->types, typeObjects);
+    if (!CondenseTypeObjectList(cx, compartment, typeObjects))
+        return false;
 
     if (typeArray) {
-        TypeSet::ScriptSet condensed(cx), *pcondensed = &condensed;
+        TypeSet::ScriptSet condensed;
         if (!condensed.init()) {
+            SwitchToCompartment enterCompartment(cx, compartment);
+            AutoEnterTypeInference enter(cx);
             compartment->types.setPendingNukeTypes(cx);
-            pcondensed = NULL;
+            return false;
         }
 
         unsigned num = nTypeSets + TotalSlots(this) + bindings.countUpvars();
@@ -4890,8 +4939,10 @@ JSScript::condenseTypes(JSContext *cx)
             cx->free_(typeArray);
             typeArray = NULL;
         } else {
-            for (unsigned i = 0; i < num; i++)
-                TypeSet::CondenseSweepTypeSet(cx, &compartment->types, pcondensed, &typeArray[i]);
+            for (unsigned i = 0; i < num; i++) {
+                if (!TypeSet::CondenseSweepTypeSet(cx, compartment, condensed, &typeArray[i]))
+                    return false;
+            }
         }
     }
 
@@ -4905,6 +4956,8 @@ JSScript::condenseTypes(JSContext *cx)
             cx->delete_(result);
         }
     }
+
+    return true;
 }
 
 void
