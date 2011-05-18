@@ -104,7 +104,6 @@ FrameState::allocReg(uint32 mask)
     }
 
     AnyRegisterID reg = evictSomeReg(mask);
-    regstate(reg).forget();
     modifyReg(reg);
     return reg;
 }
@@ -145,12 +144,10 @@ FrameState::allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type)
         return reg;
     }
 
-    if (!freeRegs.empty(mask)) {
+    if (!freeRegs.empty(mask))
         reg = freeRegs.takeAnyReg(mask);
-    } else {
+    else
         reg = evictSomeReg(mask);
-        regstate(reg).forget();
-    }
     modifyReg(reg);
 
     if (fp)
@@ -284,16 +281,9 @@ FrameState::pushSynced(JSValueType type, RegisterID reg)
 }
 
 inline void
-FrameState::push(Address address, JSValueType knownType, bool reuseBase)
+FrameState::loadIntoRegisters(Address address, bool reuseBase,
+                              RegisterID *ptypeReg, RegisterID *pdataReg)
 {
-    if (knownType == JSVAL_TYPE_DOUBLE) {
-        FPRegisterID fpreg = allocFPReg();
-        masm.moveInt32OrDouble(address, fpreg);
-        pushDouble(fpreg);
-        if (reuseBase)
-            freeReg(address.base);
-        return;
-    }
 
 #ifdef JS_PUNBOX64
 
@@ -305,13 +295,6 @@ FrameState::push(Address address, JSValueType knownType, bool reuseBase)
     masm.loadValueAsComponents(address, typeReg, dataReg);
 
 #elif JS_NUNBOX32
-
-    if (knownType != JSVAL_TYPE_UNKNOWN) {
-        RegisterID dataReg = reuseBase ? address.base : allocReg();
-        masm.loadPayload(address, dataReg);
-        pushTypedPayload(knownType, dataReg);
-        return;
-    }
 
     // Prevent us from clobbering this reg.
     bool free = freeRegs.hasReg(address.base);
@@ -338,17 +321,49 @@ FrameState::push(Address address, JSValueType knownType, bool reuseBase)
 
 #endif
 
-    pushRegs(typeReg, dataReg, knownType);
+    *ptypeReg = typeReg;
+    *pdataReg = dataReg;
+}
+
+inline void
+FrameState::push(Address address, JSValueType knownType, bool reuseBase)
+{
+    if (knownType == JSVAL_TYPE_DOUBLE) {
+        FPRegisterID fpreg = allocFPReg();
+        masm.moveInt32OrDouble(address, fpreg);
+        pushDouble(fpreg);
+        if (reuseBase)
+            freeReg(address.base);
+        return;
+    }
+
+    if (knownType != JSVAL_TYPE_UNKNOWN) {
+        RegisterID dataReg = reuseBase ? address.base : allocReg();
+        masm.loadPayload(address, dataReg);
+        pushTypedPayload(knownType, dataReg);
+        return;
+    }
+
+    RegisterID typeReg, dataReg;
+    loadIntoRegisters(address, reuseBase, &typeReg, &dataReg);
+
+    pushRegs(typeReg, dataReg, JSVAL_TYPE_UNKNOWN);
 }
 
 inline JSC::MacroAssembler::FPRegisterID
-FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType)
+FrameState::storeRegs(int32 depth, RegisterID type, RegisterID data, JSValueType knownType)
 {
+    FrameEntry *fe = peek(depth);
+    forgetEntry(fe);
+    fe->resetUnsynced();
+
+    /*
+     * Even if the type or data gets freed due to knownType or a double result,
+     * neither register should be clobbered (see Compiler::testBarrier).
+     */
     JS_ASSERT(!freeRegs.hasReg(type) && !freeRegs.hasReg(data));
 
     if (knownType == JSVAL_TYPE_UNKNOWN) {
-        FrameEntry *fe = rawPush();
-        fe->resetUnsynced();
         fe->type.setRegister(type);
         fe->data.setRegister(data);
         regstate(type).associate(fe, RematInfo::TYPE);
@@ -358,18 +373,27 @@ FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType)
 
     if (knownType == JSVAL_TYPE_DOUBLE) {
         FPRegisterID fpreg = allocFPReg();
-        pushSynced(JSVAL_TYPE_UNKNOWN);
-        masm.moveInt32OrDouble(data, type, addressOf(a->sp - 1), fpreg);
-        pop();
-        pushDouble(fpreg);
+        masm.moveInt32OrDouble(data, type, addressOf(fe), fpreg);
+        fe->setType(JSVAL_TYPE_DOUBLE);
+        fe->data.setFPRegister(fpreg);
+        regstate(fpreg).associate(fe, RematInfo::DATA);
         freeReg(type);
         freeReg(data);
         return fpreg;
     }
 
     freeReg(type);
-    pushTypedPayload(knownType, data);
+    fe->setType(knownType);
+    fe->data.setRegister(data);
+    regstate(data).associate(fe, RematInfo::DATA);
     return Registers::FPConversionTemp;
+}
+
+inline JSC::MacroAssembler::FPRegisterID
+FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType)
+{
+    pushSynced(JSVAL_TYPE_UNKNOWN);
+    return storeRegs(-1, type, data, knownType);
 }
 
 inline void

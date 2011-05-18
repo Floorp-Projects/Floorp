@@ -905,6 +905,8 @@ CheckStackAndEnterMethodJIT(JSContext *cx, StackFrame *fp, void *code)
 {
     JS_CHECK_RECURSION(cx, return false);
 
+    JS_ASSERT(!cx->compartment->activeAnalysis);
+
     Value *stackLimit = cx->stack.space().getStackLimit(cx);
     if (!stackLimit)
         return false;
@@ -1256,7 +1258,7 @@ DumpProfile(JSContext *cx, JSScript *script, JITScript* jit, bool isCtor)
 #ifdef DEBUG
     if (IsJaegerSpewChannelActive(JSpew_PCProf) && jit->pcProfile) {
         // Display hit counts for every JS code line
-        AutoArenaAllocator(&cx->tempPool);
+        AutoArenaAllocator alloc(&cx->tempPool);
         Sprinter sprinter;
         INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
         js_Disassemble(cx, script, true, &sprinter, jit->pcProfile);

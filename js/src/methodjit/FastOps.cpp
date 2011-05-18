@@ -1440,7 +1440,7 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     RegisterID dataReg = frame.allocReg();
 
     MaybeRegisterID typeReg;
-    if (type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE)
+    if (type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE || hasTypeBarriers(PC))
         typeReg = frame.allocReg();
 
     // Guard on the array's initialized length.
@@ -1483,10 +1483,13 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
 
     frame.popn(2);
 
-    if (type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE)
+    BarrierState barrier;
+    if (typeReg.isSet()) {
         frame.pushRegs(typeReg.reg(), dataReg, type);
-    else
+        barrier = testBarrier(typeReg.reg(), dataReg, false);
+    } else {
         frame.pushTypedPayload(type, dataReg);
+    }
 
     stubcc.rejoin(Changes(2));
 
@@ -1502,6 +1505,8 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
             stubcc.masm.loadValueAsComponents(UndefinedValue(), typeReg.reg(), dataReg);
         stubcc.linkRejoin(stubcc.masm.jump());
     }
+
+    finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
 }
 
 bool
@@ -1649,6 +1654,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
     frame.popn(2);
     frame.pushRegs(ic.typeReg, ic.objReg, knownPushedType(0));
+    BarrierState barrier = testBarrier(ic.typeReg, ic.objReg, false);
     if (isCall)
         frame.pushSynced(knownPushedType(1));
 
@@ -1659,6 +1665,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
         return false;
 #endif
 
+    finishBarrier(barrier, REJOIN_FALLTHROUGH, isCall ? 1 : 0);
     return true;
 }
 
