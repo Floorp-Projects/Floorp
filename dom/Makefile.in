@@ -81,6 +81,7 @@ DIRS += \
   locales \
   plugins/base \
   plugins/ipc \
+  plugins/test \
   indexedDB \
   system \
   ipc \
@@ -88,6 +89,13 @@ DIRS += \
 
 ifdef ENABLE_TESTS
 DIRS += tests
+
+# These subdirs rely on GTK libraries and header files, it is not
+#  buildable on other non-GTK unix builds
+
+ifneq (,$(filter gtk2 cocoa windows android qt os2,$(MOZ_WIDGET_TOOLKIT)))
+DIRS += plugins/test
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

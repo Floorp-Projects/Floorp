@@ -40,7 +40,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = modules/plugin/test
+relativesrcdir = dom/plugins/test
 
 include $(DEPTH)/config/autoconf.mk
 

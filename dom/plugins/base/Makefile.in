@@ -165,3 +165,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 EXTRA_DSO_LDOPTS += $(XEXT_LIBS) $(XCOMPOSITE_LIBS)
 endif
 
+$(DIST)/bin/plugins:
+	$(NSINSTALL) -D $@
+
+export:: $(DIST)/bin/plugins
