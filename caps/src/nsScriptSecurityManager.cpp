@@ -72,7 +72,6 @@
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsIZipReader.h"
-#include "nsIPluginInstance.h"
 #include "nsIXPConnect.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
@@ -3285,27 +3284,6 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext* cx,
             PRBool canAccess = PR_FALSE;
             if (NS_SUCCEEDED(IsCapabilityEnabled(aObjectSecurityLevel, &canAccess)) &&
                 canAccess)
-                return NS_OK;
-        }
-    }
-
-    //-- If user allows scripting of plugins by untrusted scripts,
-    //   and the target object is a plugin, allow the access.
-    if(aObj)
-    {
-        nsresult rv;
-        nsCOMPtr<nsIPluginInstance> plugin(do_QueryInterface(aObj, &rv));
-        if (NS_SUCCEEDED(rv))
-        {
-            static PRBool prefSet = PR_FALSE;
-            static PRBool allowPluginAccess = PR_FALSE;
-            if (!prefSet)
-            {
-                rv = mPrefBranch->GetBoolPref("security.xpconnect.plugin.unrestricted",
-                                                       &allowPluginAccess);
-                prefSet = PR_TRUE;
-            }
-            if (allowPluginAccess)
                 return NS_OK;
         }
     }

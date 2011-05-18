@@ -69,7 +69,7 @@
 #include "nsGfxCIID.h"
 #include "nsIMenuRollup.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "nsIPluginInstance.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsThemeConstants.h"
 
 #include "nsDragService.h"
@@ -717,8 +717,8 @@ void nsChildView::HidePlugin()
       [(ChildView*)mView pluginDrawingModel] == NPDrawingModelQuickDraw) {
     NPWindow* window;
     mPluginInstanceOwner->GetWindow(window);
-    nsCOMPtr<nsIPluginInstance> instance;
-    mPluginInstanceOwner->GetInstance(*getter_AddRefs(instance));
+    nsRefPtr<nsNPAPIPluginInstance> instance;
+    mPluginInstanceOwner->GetInstance(getter_AddRefs(instance));
     if (window && instance) {
        window->clipRect.top = 0;
        window->clipRect.left = 0;
@@ -1182,8 +1182,8 @@ void nsChildView::PaintQD()
   updateEvent.what = updateEvt;
   updateEvent.message = UInt32(window);
 
-  nsCOMPtr<nsIPluginInstance> instance;
-  mPluginInstanceOwner->GetInstance(*getter_AddRefs(instance));
+  nsRefPtr<nsNPAPIPluginInstance> instance;
+  mPluginInstanceOwner->GetInstance(getter_AddRefs(instance));
 
   instance->HandleEvent(&updateEvent, nsnull);
   EndDrawPlugin();
