@@ -45,8 +45,11 @@ struct JSCompartment;
 namespace js {
 namespace gc {
 
+template <typename T> struct Arena;
 struct ArenaHeader;
+struct MarkingDelay;
 struct Chunk;
+struct FreeCell;
 
 /*
  * Live objects are marked black. How many other additional colors are available
@@ -55,8 +58,13 @@ struct Chunk;
 static const uint32 BLACK = 0;
 
 /*
- * A GC cell is the base class for all GC things.
+ * A GC cell is the base class for GC Things like JSObject, JSShortString,
+ * JSFunction, JSXML and for an empty cell called FreeCell. It helps avoiding 
+ * casts from an Object to a Cell whenever we call GC related mark functions.
+ * Cell is not the base Class for JSString because static initialization
+ * (used for unitStringTables) does not work with inheritance.
  */
+
 struct Cell {
     static const size_t CellShift = 3;
     static const size_t CellSize = size_t(1) << CellShift;
@@ -72,10 +80,27 @@ struct Cell {
 
     inline JSCompartment *compartment() const;
 
+    JS_ALWAYS_INLINE js::gc::FreeCell *asFreeCell() {
+        return reinterpret_cast<FreeCell *>(this);
+    }
+
+    JS_ALWAYS_INLINE const js::gc::FreeCell *asFreeCell() const {
+        return reinterpret_cast<const FreeCell *>(this);
+    }
+
 #ifdef DEBUG
     inline bool isAligned() const;
 #endif
 };
+
+struct FreeCell : Cell {
+    union {
+        FreeCell *link;
+        double data;
+    };
+};
+
+JS_STATIC_ASSERT(sizeof(FreeCell) == Cell::CellSize);
 
 } /* namespace gc */
 } /* namespace js */
