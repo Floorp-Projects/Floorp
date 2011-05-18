@@ -3880,6 +3880,14 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
      * have been cleared).
      */
 
+    if (initializerList->length() > 50) {
+        /*
+         * Bail out on really long initializer lists (far longer than maximum
+         * number of properties we can track), we may be recursing.
+         */
+        return false;
+    }
+
     ScriptAnalysis *analysis = script->analysis(cx);
     if (analysis && !analysis->ranInference())
         analysis->analyzeTypes(cx);
