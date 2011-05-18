@@ -3689,6 +3689,9 @@ extern JS_PUBLIC_API(JSBool)
 JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *reobj, jschar *chars, size_t length,
                           size_t *indexp, JSBool test, jsval *rval);
 
+extern JS_PUBLIC_API(JSBool)
+JS_ObjectIsRegExp(JSContext *cx, JSObject *obj);
+
 /************************************************************************/
 
 extern JS_PUBLIC_API(JSBool)

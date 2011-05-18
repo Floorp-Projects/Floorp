@@ -5885,6 +5885,13 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t le
     return re->executeNoStatics(cx, str, indexp, test, Valueify(rval));
 }
 
+JS_PUBLIC_API(JSBool)
+JS_ObjectIsRegExp(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj);
+    return obj->isRegExp();
+}
+
 /************************************************************************/
 
 JS_PUBLIC_API(void)
