@@ -443,9 +443,8 @@ function run_next_test() {
   if (tests.length) {
     let test = tests.shift();
     print("\n ***Test: " + test.desc);
+    remove_all_bookmarks();
     waitForClearHistory(function() {
-      DBConn().executeSimpleSQL("DELETE FROM moz_places");
-      remove_all_bookmarks();
       test.run.call(test);
     });
   }

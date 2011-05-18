@@ -40,5 +40,6 @@
 
 <overlay id="browserTestOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/browser-test.js"/>
 </overlay>
