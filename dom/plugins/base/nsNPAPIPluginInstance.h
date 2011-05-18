@@ -42,7 +42,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsIPluginInstance.h"
 #include "nsPIDOMWindow.h"
 #include "nsITimer.h"
 #include "nsIPluginTagInfo.h"
@@ -54,9 +53,13 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/PluginLibrary.h"
 
+struct JSObject;
+
 class nsPluginStreamListenerPeer; // browser-initiated stream class
 class nsNPAPIPluginStreamListener; // plugin-initiated stream class
 class nsIPluginInstanceOwner;
+class nsIPluginStreamListener;
+class nsIOutputStream;
 
 class nsNPAPITimer
 {
@@ -67,14 +70,51 @@ public:
   void (*callback)(NPP npp, uint32_t timerID);
 };
 
-class nsNPAPIPluginInstance : public nsIPluginInstance
+class nsNPAPIPluginInstance : public nsISupports
 {
 private:
   typedef mozilla::PluginLibrary PluginLibrary;
 
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPLUGININSTANCE
+
+  nsresult Initialize(nsIPluginInstanceOwner* aOwner, const char* aMIMEType);
+  nsresult Start();
+  nsresult Stop();
+  nsresult SetWindow(NPWindow* window);
+  nsresult NewStreamToPlugin(nsIPluginStreamListener** listener);
+  nsresult NewStreamFromPlugin(const char* type, const char* target, nsIOutputStream* *result);
+  nsresult Print(NPPrint* platformPrint);
+  nsresult HandleEvent(void* event, PRInt16* result);
+  nsresult GetValueFromPlugin(NPPVariable variable, void* value);
+  nsresult GetDrawingModel(PRInt32* aModel);
+  nsresult IsRemoteDrawingCoreAnimation(PRBool* aDrawing);
+  nsresult GetJSObject(JSContext *cx, JSObject** outObject);
+  nsresult DefineJavaProperties();
+  nsresult ShouldCache(PRBool* shouldCache);
+  nsresult IsWindowless(PRBool* isWindowless);
+  nsresult AsyncSetWindow(NPWindow* window);
+  nsresult GetImage(ImageContainer* aContainer, Image** aImage);
+  nsresult GetImageSize(nsIntSize* aSize);
+  nsresult NotifyPainted(void);
+  nsresult UseAsyncPainting(PRBool* aIsAsync);
+  nsresult SetBackgroundUnknown();
+  nsresult BeginUpdateBackground(nsIntRect* aRect, gfxContext** aContext);
+  nsresult EndUpdateBackground(gfxContext* aContext, nsIntRect* aRect);
+  nsresult IsTransparent(PRBool* isTransparent);
+  nsresult GetFormValue(nsAString& aValue);
+  nsresult PushPopupsEnabledState(PRBool aEnabled);
+  nsresult PopPopupsEnabledState();
+  nsresult GetPluginAPIVersion(PRUint16* version);
+  nsresult InvalidateRect(NPRect *invalidRect);
+  nsresult InvalidateRegion(NPRegion invalidRegion);
+  nsresult ForceRedraw();
+  nsresult GetMIMEType(const char* *result);
+  nsresult GetJSContext(JSContext* *outContext);
+  nsresult GetOwner(nsIPluginInstanceOwner **aOwner);
+  nsresult SetOwner(nsIPluginInstanceOwner *aOwner);
+  nsresult ShowStatus(const char* message);
+  nsresult InvalidateOwner();
 
   nsNPAPIPlugin* GetPlugin();
 

@@ -117,7 +117,9 @@
 #define PP_CHUNK           3
 #define PP_CHUNKVERT       4
 #define PP_FILL            5
+#define PP_FILLVERT        6
 #define PP_MOVEOVERLAY     8
+#define PP_MOVEOVERLAYVERT 9
 
 // Tab constants
 #define TABP_TAB             4
