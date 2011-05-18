@@ -307,15 +307,16 @@ TypeSet::addTypeSet(JSContext *cx, ClonedTypeSet *types)
 inline void
 TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 {
+    if (!constraint) {
+        /* OOM failure while constructing the constraint. */
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
     JS_ASSERT_IF(!constraint->condensed() && !constraint->persistentObject(),
                  constraint->script->compartment == cx->compartment);
     JS_ASSERT_IF(!constraint->condensed(), cx->compartment->activeInference);
     JS_ASSERT_IF(intermediate(), !constraint->persistentObject() && !constraint->condensed());
-
-    if (!constraint) {
-        /* OOM failure while constructing the constraint. */
-        cx->compartment->types.setPendingNukeTypes(cx);
-    }
 
     InferSpew(ISpewOps, "addConstraint: T%p C%p %s",
               this, constraint, constraint->kind());
@@ -2036,7 +2037,7 @@ TypeCompartment::nukeTypes(JSContext *cx)
 #ifdef JS_THREADSAFE
     Maybe<AutoLockGC> maybeLock;
     if (!cx->runtime->gcMarkAndSweep)
-        maybeLock.construct(info.runtime);
+        maybeLock.construct(cx->runtime);
 #endif
 
     inferenceEnabled = false;
@@ -3724,7 +3725,12 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 void
 ScriptAnalysis::analyzeTypes(JSContext *cx)
 {
-    JS_ASSERT(!ranInference() && !failed());
+    JS_ASSERT(!ranInference());
+
+    if (OOM()) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
 
     /*
      * Refuse to analyze the types in a script which is compileAndGo but is
@@ -4427,13 +4433,13 @@ JSScript::typeSetFunction(JSContext *cx, JSFunction *fun)
     name = (char *) alloca(10);
     JS_snprintf(name, 10, "#%u", id());
 #endif
-    TypeFunction *type = cx->newTypeFunction(name, fun->getProto())->asFunction();
+    TypeObject *type = cx->newTypeFunction(name, fun->getProto());
     if (!type)
         return false;
 
     if (!fun->setTypeAndUniqueShape(cx, type))
         return false;
-    type->script = this;
+    type->asFunction()->script = this;
     this->fun = fun;
 
     return true;
