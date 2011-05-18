@@ -223,7 +223,15 @@ AutocompletePopup.prototype = {
     while (this._list.hasChildNodes()) {
       this._list.removeChild(this._list.firstChild);
     }
+
+    // Reset the panel and list dimensions. New dimensions are calculated when a
+    // new set of items is added to the autocomplete popup.
     this._list.width = "";
+    this._list.height = "";
+    this._panel.width = "";
+    this._panel.height = "";
+    this._panel.top = "";
+    this._panel.left = "";
   },
 
   /**
