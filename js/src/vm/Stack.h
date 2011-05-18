@@ -540,7 +540,8 @@ class StackFrame
     inline js::Value *actualArgsEnd() const;
 
     inline js::Value &canonicalActualArg(uintN i) const;
-    template <class Op> inline bool forEachCanonicalActualArg(Op op);
+    template <class Op>
+    inline bool forEachCanonicalActualArg(Op op, uintN start = 0, uintN count = uintN(-1));
     template <class Op> inline bool forEachFormalArg(Op op);
 
     inline void clearMissingArgs();
