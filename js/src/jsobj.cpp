@@ -1180,8 +1180,16 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
      * Try the JSON parser first because it's much faster.  If the eval string
      * isn't JSON, JSON parsing will probably fail quickly, so little time
      * will be lost.
+     *
+     * Don't use the JSON parser if the caller is strict mode code, because in
+     * strict mode object literals must not have repeated properties, and the
+     * JSON parser cheerfully (and correctly) accepts them.  If you're parsing
+     * JSON with eval and using strict mode, you deserve to be slow.
      */
-    if (length > 2 && chars[0] == '(' && chars[length - 1] == ')') {
+    if (length > 2 &&
+        chars[0] == '(' && chars[length - 1] == ')' &&
+        (!caller || !caller->script()->strictModeCode))
+    {
         JSONParser parser(cx, chars + 1, length - 2, JSONParser::StrictJSON, JSONParser::NoError);
         Value tmp;
         if (!parser.parse(&tmp))
