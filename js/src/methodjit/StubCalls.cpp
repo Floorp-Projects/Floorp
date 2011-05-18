@@ -2196,8 +2196,7 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
          * property, not updating an existing slot's value that might
          * contain a method of a branded shape.
          */
-        cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), rval);
-        obj->nativeSetSlot(slot, rval);
+        obj->nativeSetSlotWithType(cx, shape, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
 
