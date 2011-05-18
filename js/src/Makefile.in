@@ -367,7 +367,7 @@ CPPSRCS += 	MethodJIT.cpp \
 VPATH +=	$(srcdir)/ion
 
 CPPSRCS +=	MIR.cpp \
-		BytecodeAnalyzer.cpp \
+		IonBuilder.cpp \
 		IonSpew.cpp \
 		MIRGraph.cpp \
 		$(NULL)

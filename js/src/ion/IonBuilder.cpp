@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "BytecodeAnalyzer.h"
+#include "IonBuilder.h"
 #include "MIRGraph.h"
 #include "Ion.h"
 #include "IonSpew.h"
@@ -58,7 +58,7 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 
     MIRGraph graph(cx);
     C1Spewer spew(graph, script);
-    BytecodeAnalyzer analyzer(cx, script, fun, temp, graph);
+    IonBuilder analyzer(cx, script, fun, temp, graph);
     spew.enable("/tmp/ion.cfg");
 
     if (!analyzer.analyze())
@@ -69,7 +69,7 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
     return false;
 }
 
-BytecodeAnalyzer::BytecodeAnalyzer(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
+IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
                                    MIRGraph &graph)
   : MIRGenerator(cx, temp, script, fun, graph),
     cfgStack_(TempAllocPolicy(cx)),
@@ -97,13 +97,13 @@ GetNextPc(jsbytecode *pc)
 }
 
 uint32
-BytecodeAnalyzer::readIndex(jsbytecode *pc)
+IonBuilder::readIndex(jsbytecode *pc)
 {
     return (atoms - script->atomMap.vector) + GET_INDEX(pc);
 }
 
-BytecodeAnalyzer::CFGState
-BytecodeAnalyzer::CFGState::If(jsbytecode *join, MBasicBlock *ifFalse)
+IonBuilder::CFGState
+IonBuilder::CFGState::If(jsbytecode *join, MBasicBlock *ifFalse)
 {
     CFGState state;
     state.state = IF_TRUE;
@@ -112,8 +112,8 @@ BytecodeAnalyzer::CFGState::If(jsbytecode *join, MBasicBlock *ifFalse)
     return state;
 }
 
-BytecodeAnalyzer::CFGState
-BytecodeAnalyzer::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse) 
+IonBuilder::CFGState
+IonBuilder::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse) 
 {
     CFGState state;
     // If the end of the false path is the same as the start of the
@@ -131,7 +131,7 @@ BytecodeAnalyzer::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MB
 }
 
 void
-BytecodeAnalyzer::popCfgStack()
+IonBuilder::popCfgStack()
 {
     if (cfgStack_.back().isLoop())
         loops_.popBack();
@@ -139,7 +139,7 @@ BytecodeAnalyzer::popCfgStack()
 }
 
 bool
-BytecodeAnalyzer::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBlock *entry,
+IonBuilder::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBlock *entry,
                            jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc)
 {
     LoopInfo loop(cfgStack_.length());
@@ -160,7 +160,7 @@ BytecodeAnalyzer::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBl
 }
 
 bool
-BytecodeAnalyzer::analyze()
+IonBuilder::analyze()
 {
     current = newBlock(pc);
     if (!current)
@@ -230,7 +230,7 @@ BytecodeAnalyzer::analyze()
 // predecessors. For loops, care must be taken to propagate Phi nodes back
 // through uses in the loop body.
 bool
-BytecodeAnalyzer::traverseBytecode()
+IonBuilder::traverseBytecode()
 {
     for (;;) {
         JS_ASSERT(pc < script->code + script->length);
@@ -284,8 +284,8 @@ BytecodeAnalyzer::traverseBytecode()
     return true;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::snoopControlFlow(JSOp op)
+IonBuilder::ControlStatus
+IonBuilder::snoopControlFlow(JSOp op)
 {
     switch (op) {
       case JSOP_NOP:
@@ -345,7 +345,7 @@ BytecodeAnalyzer::snoopControlFlow(JSOp op)
 }
 
 bool
-BytecodeAnalyzer::inspectOpcode(JSOp op)
+IonBuilder::inspectOpcode(JSOp op)
 {
     switch (op) {
       case JSOP_PUSH:
@@ -427,8 +427,8 @@ BytecodeAnalyzer::inspectOpcode(JSOp op)
 //
 // If |current| is NULL when this function returns, then there is no more
 // control flow to be processed.
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processControlEnd()
+IonBuilder::ControlStatus
+IonBuilder::processControlEnd()
 {
     JS_ASSERT(!current);
 
@@ -447,8 +447,8 @@ BytecodeAnalyzer::processControlEnd()
 //     point in the bytecode.
 // (2) traverseBytecode(), whereby we reach the last instruction in a CFG
 //     structure.
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processCfgStack()
+IonBuilder::ControlStatus
+IonBuilder::processCfgStack()
 {
     ControlStatus status = processCfgEntry(cfgStack_.back());
 
@@ -468,8 +468,8 @@ BytecodeAnalyzer::processCfgStack()
     return status;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processCfgEntry(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processCfgEntry(CFGState &state)
 {
     switch (state.state) {
       case CFGState::IF_TRUE:
@@ -506,8 +506,8 @@ BytecodeAnalyzer::processCfgEntry(CFGState &state)
     return ControlStatus_Error;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processIfEnd(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processIfEnd(CFGState &state)
 {
     if (!current)
         return ControlStatus_Ended;
@@ -526,8 +526,8 @@ BytecodeAnalyzer::processIfEnd(CFGState &state)
     return ControlStatus_Joined;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processIfElseTrueEnd(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processIfElseTrueEnd(CFGState &state)
 {
     // We've reached the end of the true branch of an if-else. Don't
     // create an edge yet, just transition to parsing the false branch.
@@ -539,8 +539,8 @@ BytecodeAnalyzer::processIfElseTrueEnd(CFGState &state)
     return ControlStatus_Jumped;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processIfElseFalseEnd(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processIfElseFalseEnd(CFGState &state)
 {
     // Update the state to have the latest block from the false path.
     state.branch.ifFalse = current;
@@ -578,7 +578,7 @@ BytecodeAnalyzer::processIfElseFalseEnd(CFGState &state)
 }
 
 bool
-BytecodeAnalyzer::finalizeLoop(CFGState &state, MInstruction *last)
+IonBuilder::finalizeLoop(CFGState &state, MInstruction *last)
 {
     JS_ASSERT(!state.loop.continues);
 
@@ -636,8 +636,8 @@ BytecodeAnalyzer::finalizeLoop(CFGState &state, MInstruction *last)
     return true;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processDoWhileEnd(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processDoWhileEnd(CFGState &state)
 {
     if (current || state.loop.breaks) {
         state.loop.successor = newBlock(current, state.loop.exitpc);
@@ -656,8 +656,8 @@ BytecodeAnalyzer::processDoWhileEnd(CFGState &state)
     return current ? ControlStatus_Joined : ControlStatus_Ended;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processWhileCondEnd(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processWhileCondEnd(CFGState &state)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
 
@@ -678,8 +678,8 @@ BytecodeAnalyzer::processWhileCondEnd(CFGState &state)
     return ControlStatus_Jumped;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processWhileBodyEnd(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processWhileBodyEnd(CFGState &state)
 {
     if (!processDeferredContinues(state))
         return ControlStatus_Error;
@@ -694,8 +694,8 @@ BytecodeAnalyzer::processWhileBodyEnd(CFGState &state)
     return ControlStatus_Joined;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processForCondEnd(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processForCondEnd(CFGState &state)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
 
@@ -717,7 +717,7 @@ BytecodeAnalyzer::processForCondEnd(CFGState &state)
 }
 
 bool
-BytecodeAnalyzer::processDeferredContinues(CFGState &state)
+IonBuilder::processDeferredContinues(CFGState &state)
 {
     // If there are any continues for this loop, and there is an update block,
     // then we need to create a new basic block to house the update.
@@ -748,8 +748,8 @@ BytecodeAnalyzer::processDeferredContinues(CFGState &state)
     return true;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processForBodyEnd(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processForBodyEnd(CFGState &state)
 {
     if (!processDeferredContinues(state))
         return ControlStatus_Error;
@@ -764,8 +764,8 @@ BytecodeAnalyzer::processForBodyEnd(CFGState &state)
     return ControlStatus_Jumped;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processForUpdateEnd(CFGState &state)
+IonBuilder::ControlStatus
+IonBuilder::processForUpdateEnd(CFGState &state)
 {
     if (!finalizeLoop(state, NULL))
         return ControlStatus_Error;
@@ -778,8 +778,8 @@ BytecodeAnalyzer::processForUpdateEnd(CFGState &state)
     return ControlStatus_Joined;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processBreak(JSOp op, jssrcnote *sn)
+IonBuilder::ControlStatus
+IonBuilder::processBreak(JSOp op, jssrcnote *sn)
 {
     JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
 
@@ -809,8 +809,8 @@ BytecodeAnalyzer::processBreak(JSOp op, jssrcnote *sn)
     return processControlEnd();
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processContinue(JSOp op, jssrcnote *sn)
+IonBuilder::ControlStatus
+IonBuilder::processContinue(JSOp op, jssrcnote *sn)
 {
     JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
 
@@ -840,8 +840,8 @@ BytecodeAnalyzer::processContinue(JSOp op, jssrcnote *sn)
     return processControlEnd();
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::maybeLoop(JSOp op, jssrcnote *sn)
+IonBuilder::ControlStatus
+IonBuilder::maybeLoop(JSOp op, jssrcnote *sn)
 {
     // This function looks at the opcode and source note and tries to
     // determine the structure of the loop. For some opcodes, like
@@ -878,7 +878,7 @@ BytecodeAnalyzer::maybeLoop(JSOp op, jssrcnote *sn)
 }
 
 void
-BytecodeAnalyzer::assertValidTraceOp(JSOp op)
+IonBuilder::assertValidTraceOp(JSOp op)
 {
 #ifdef DEBUG
     jssrcnote *sn = js_GetSrcNote(script, pc);
@@ -905,8 +905,8 @@ BytecodeAnalyzer::assertValidTraceOp(JSOp op)
 #endif
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::doWhileLoop(JSOp op, jssrcnote *sn)
+IonBuilder::ControlStatus
+IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
 {
     int offset = js_GetSrcNoteOffset(sn, 0);
     jsbytecode *ifne = pc + offset;
@@ -935,8 +935,8 @@ BytecodeAnalyzer::doWhileLoop(JSOp op, jssrcnote *sn)
     return ControlStatus_Jumped;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::whileLoop(JSOp op, jssrcnote *sn)
+IonBuilder::ControlStatus
+IonBuilder::whileLoop(JSOp op, jssrcnote *sn)
 {
     // while (cond) { } loops have the following structure:
     //    GOTO cond   ; SRC_WHILE (offset to IFNE)
@@ -971,8 +971,8 @@ BytecodeAnalyzer::whileLoop(JSOp op, jssrcnote *sn)
     return ControlStatus_Jumped;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::forLoop(JSOp op, jssrcnote *sn)
+IonBuilder::ControlStatus
+IonBuilder::forLoop(JSOp op, jssrcnote *sn)
 {
     // Skip the NOP or POP.
     JS_ASSERT(op == JSOP_POP || op == JSOP_NOP);
@@ -1041,7 +1041,7 @@ BytecodeAnalyzer::forLoop(JSOp op, jssrcnote *sn)
 }
 
 bool
-BytecodeAnalyzer::jsop_ifeq(JSOp op)
+IonBuilder::jsop_ifeq(JSOp op)
 {
     // IFEQ always has a forward offset.
     jsbytecode *trueStart = pc + js_CodeSpec[op].length;
@@ -1120,8 +1120,8 @@ BytecodeAnalyzer::jsop_ifeq(JSOp op)
     return true;
 }
 
-BytecodeAnalyzer::ControlStatus
-BytecodeAnalyzer::processReturn(JSOp op)
+IonBuilder::ControlStatus
+IonBuilder::processReturn(JSOp op)
 {
     MInstruction *ins;
     switch (op) {
@@ -1151,7 +1151,7 @@ BytecodeAnalyzer::processReturn(JSOp op)
 }
 
 bool
-BytecodeAnalyzer::pushConstant(const Value &v)
+IonBuilder::pushConstant(const Value &v)
 {
     MConstant *ins = MConstant::New(this, v);
     if (!current->add(ins))
@@ -1161,7 +1161,7 @@ BytecodeAnalyzer::pushConstant(const Value &v)
 }
 
 bool
-BytecodeAnalyzer::jsop_binary(JSOp op)
+IonBuilder::jsop_binary(JSOp op)
 {
     MInstruction *right = current->pop();
     MInstruction *left = current->pop();
@@ -1185,7 +1185,7 @@ BytecodeAnalyzer::jsop_binary(JSOp op)
 }
 
 MBasicBlock *
-BytecodeAnalyzer::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
+IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::New(this, predecessor, pc);
     if (!graph().addBlock(block))
@@ -1194,7 +1194,7 @@ BytecodeAnalyzer::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 }
 
 MBasicBlock *
-BytecodeAnalyzer::newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
+IonBuilder::newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::NewLoopHeader(this, predecessor, pc);
     if (!graph().addBlock(block))
