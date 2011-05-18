@@ -57,6 +57,16 @@ class BytecodeAnalyzer : public MIRGenerator
         ControlStatus_None          // No control flow.
     };
 
+    struct DeferredEdge : public TempObject
+    {
+        MBasicBlock *block;
+        DeferredEdge *next;
+
+        DeferredEdge(MBasicBlock *block, DeferredEdge *next)
+          : block(block), next(next)
+        { }
+    };
+
     struct LoopInfo {
         uint32 cfgEntry;
 
@@ -101,14 +111,12 @@ class BytecodeAnalyzer : public MIRGenerator
                 // pc immediately after the loop exits.
                 jsbytecode *exitpc;
 
-                // Common continue point. Created lazily, so it may be NULL.
-                MBasicBlock *repeat;
-
-                // Common break point. Created lazily, so it may be NULL.
-                MBasicBlock *exit;
-
                 // Common exit point. Created lazily, so it may be NULL.
                 MBasicBlock *successor;
+
+                // Deferred break and continue targets.
+                DeferredEdge *breaks;
+                DeferredEdge *continues;
             } loop;
         };
 
@@ -141,7 +149,6 @@ class BytecodeAnalyzer : public MIRGenerator
     uint32 readIndex(jsbytecode *pc);
 
     void popCfgStack();
-    CFGState &findInnermostLoop();
     ControlStatus processControlEnd();
     ControlStatus processCfgStack();
     ControlStatus processCfgEntry(CFGState &state);
@@ -152,8 +159,8 @@ class BytecodeAnalyzer : public MIRGenerator
     ControlStatus processWhileCondEnd(CFGState &state);
     ControlStatus processWhileBodyEnd(CFGState &state);
     ControlStatus processReturn(JSOp op);
-    ControlStatus simpleContinue(JSOp op, jssrcnote *sn);
-    ControlStatus simpleBreak(JSOp op, jssrcnote *sn);
+    ControlStatus processContinue(JSOp op, jssrcnote *sn);
+    ControlStatus processBreak(JSOp op, jssrcnote *sn);
     bool pushLoop(CFGState::State state, jsbytecode *stopAt, MBasicBlock *entry,
                   jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc);
 
@@ -162,6 +169,7 @@ class BytecodeAnalyzer : public MIRGenerator
     MBasicBlock *newBlock(jsbytecode *pc) {
         return newBlock(NULL, pc);
     }
+    bool finalizeLoop(CFGState &state, MInstruction *last);
 
     void assertValidTraceOp(JSOp op);
     bool maybeLoop(JSOp op, jssrcnote *sn);
