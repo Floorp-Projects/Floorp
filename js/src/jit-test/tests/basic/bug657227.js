@@ -34,4 +34,6 @@ function test()
     }
 }
 
-test();
+try {
+    test();
+} catch (e) {}
