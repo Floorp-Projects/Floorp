@@ -5533,7 +5533,8 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, replacer, space);
     StringBuffer sb(cx);
-    if (!js_Stringify(cx, Valueify(vp), replacer, Valueify(space), sb))
+    Value spacev = Valueify(space);
+    if (!js_Stringify(cx, Valueify(vp), replacer, spacev, sb))
         return false;
     return callback(sb.begin(), sb.length(), data);
 }
