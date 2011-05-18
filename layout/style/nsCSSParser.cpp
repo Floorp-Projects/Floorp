@@ -831,8 +831,7 @@ CSSParserImpl::InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
   // the stream until we're done parsing.
   NS_ASSERTION(! mScannerInited, "already have scanner");
 
-  mScanner.Init(nsnull, aString.BeginReading(), aString.Length(), aSheetURI,
-                aLineNumber, mSheet, mChildLoader);
+  mScanner.Init(aString, aSheetURI, aLineNumber, mSheet, mChildLoader);
 
 #ifdef DEBUG
   mScannerInited = true;
