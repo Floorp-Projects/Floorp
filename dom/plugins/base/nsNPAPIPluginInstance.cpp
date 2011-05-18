@@ -64,7 +64,7 @@ using namespace mozilla::plugins::parent;
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
-NS_IMPL_ISUPPORTS1(nsNPAPIPluginInstance, nsIPluginInstance)
+NS_IMPL_ISUPPORTS0(nsNPAPIPluginInstance)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
   :
@@ -134,7 +134,7 @@ nsNPAPIPluginInstance::LastStopTime()
   return mStopTime;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::Initialize(nsIPluginInstanceOwner* aOwner, const char* aMIMEType)
+nsresult nsNPAPIPluginInstance::Initialize(nsIPluginInstanceOwner* aOwner, const char* aMIMEType)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::Initialize this=%p\n",this));
 
@@ -150,7 +150,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Initialize(nsIPluginInstanceOwner* aOwner, 
   return InitializePlugin();
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::Start()
+nsresult nsNPAPIPluginInstance::Start()
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::Start this=%p\n",this));
 
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Start()
   return InitializePlugin();
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::Stop()
+nsresult nsNPAPIPluginInstance::Stop()
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::Stop this=%p\n",this));
 
@@ -431,7 +431,7 @@ nsNPAPIPluginInstance::InitializePlugin()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(NPWindow* window)
+nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
 {
   // NPAPI plugins don't want a SetWindow(NULL).
   if (!window || RUNNING != mRunning)
@@ -477,14 +477,14 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(NPWindow* window)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::NewStreamToPlugin(nsIPluginStreamListener** listener)
 {
   // This method can be removed at the next opportunity.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::NewStreamFromPlugin(const char* type, const char* target,
                                            nsIOutputStream* *result)
 {
@@ -507,7 +507,7 @@ nsNPAPIPluginInstance::NewStreamListener(const char* aURL, void* notifyData,
   return stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
+nsresult nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
 {
   NS_ENSURE_TRUE(platformPrint, NS_ERROR_NULL_POINTER);
 
@@ -557,7 +557,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(void* event, PRInt16* result)
+nsresult nsNPAPIPluginInstance::HandleEvent(void* event, PRInt16* result)
 {
   if (RUNNING != mRunning)
     return NS_OK;
@@ -593,7 +593,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(void* event, PRInt16* result)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, void* value)
+nsresult nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, void* value)
 {
 #if (MOZ_PLATFORM_MAEMO == 5)
   // The maemo flash plugin does not remember this.  It sets the
@@ -726,7 +726,7 @@ void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 
 #endif
 
-NS_IMETHODIMP nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
+nsresult nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 {
 #ifdef XP_MACOSX
   *aModel = (PRInt32)mDrawingModel;
@@ -736,7 +736,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 #endif
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawing)
+nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawing)
 {
 #ifdef XP_MACOSX
   if (!mPlugin)
@@ -752,7 +752,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawi
 #endif
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 {
   NPObject *npobj = nsnull;
@@ -767,7 +767,7 @@ nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::DefineJavaProperties()
 {
   NPObject *plugin_obj = nsnull;
@@ -831,14 +831,14 @@ nsNPAPIPluginInstance::SetCached(PRBool aCache)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::ShouldCache(PRBool* shouldCache)
 {
   *shouldCache = mCached;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::IsWindowless(PRBool* isWindowless)
 {
   *isWindowless = mWindowless;
@@ -864,7 +864,7 @@ private:
   PluginLibrary* mLibrary;
 };
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::AsyncSetWindow(NPWindow* window)
 {
   if (RUNNING != mRunning)
@@ -877,7 +877,7 @@ nsNPAPIPluginInstance::AsyncSetWindow(NPWindow* window)
   return library->AsyncSetWindow(&mNPP, window);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::GetImage(ImageContainer* aContainer, Image** aImage)
 {
   *aImage = nsnull;
@@ -889,7 +889,7 @@ nsNPAPIPluginInstance::GetImage(ImageContainer* aContainer, Image** aImage)
   return !library ? NS_ERROR_FAILURE : library->GetImage(&mNPP, aContainer, aImage);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::GetImageSize(nsIntSize* aSize)
 {
   *aSize = nsIntSize(0, 0);
@@ -901,14 +901,14 @@ nsNPAPIPluginInstance::GetImageSize(nsIntSize* aSize)
   return !library ? NS_ERROR_FAILURE : library->GetImageSize(&mNPP, aSize);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::NotifyPainted(void)
 {
   NS_NOTREACHED("Dead code, shouldn't be called.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
 {
   if (!mUsePluginLayersPref) {
@@ -924,7 +924,7 @@ nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::SetBackgroundUnknown()
 {
   if (RUNNING != mRunning)
@@ -937,7 +937,7 @@ nsNPAPIPluginInstance::SetBackgroundUnknown()
   return library->SetBackgroundUnknown(&mNPP);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::BeginUpdateBackground(nsIntRect* aRect,
                                              gfxContext** aContext)
 {
@@ -951,7 +951,7 @@ nsNPAPIPluginInstance::BeginUpdateBackground(nsIntRect* aRect,
   return library->BeginUpdateBackground(&mNPP, *aRect, aContext);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::EndUpdateBackground(gfxContext* aContext,
                                            nsIntRect* aRect)
 {
@@ -965,14 +965,14 @@ nsNPAPIPluginInstance::EndUpdateBackground(gfxContext* aContext,
   return library->EndUpdateBackground(&mNPP, aContext, *aRect);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::IsTransparent(PRBool* isTransparent)
 {
   *isTransparent = mTransparent;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::GetFormValue(nsAString& aValue)
 {
   aValue.Truncate();
@@ -991,7 +991,7 @@ nsNPAPIPluginInstance::GetFormValue(nsAString& aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
 {
   nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
@@ -1011,7 +1011,7 @@ nsNPAPIPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::PopPopupsEnabledState()
 {
   PRInt32 last = mPopupStates.Length() - 1;
@@ -1034,7 +1034,7 @@ nsNPAPIPluginInstance::PopPopupsEnabledState()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::GetPluginAPIVersion(PRUint16* version)
 {
   NS_ENSURE_ARG_POINTER(version);
@@ -1208,7 +1208,7 @@ nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::InvalidateRect(NPRect *invalidRect)
 {
   if (RUNNING != mRunning)
@@ -1222,7 +1222,7 @@ nsNPAPIPluginInstance::InvalidateRect(NPRect *invalidRect)
   return owner->InvalidateRect(invalidRect);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::InvalidateRegion(NPRegion invalidRegion)
 {
   if (RUNNING != mRunning)
@@ -1236,7 +1236,7 @@ nsNPAPIPluginInstance::InvalidateRegion(NPRegion invalidRegion)
   return owner->InvalidateRegion(invalidRegion);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::ForceRedraw()
 {
   if (RUNNING != mRunning)
@@ -1250,7 +1250,7 @@ nsNPAPIPluginInstance::ForceRedraw()
   return owner->ForceRedraw();
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::GetMIMEType(const char* *result)
 {
   if (!mMIMEType)
@@ -1261,7 +1261,7 @@ nsNPAPIPluginInstance::GetMIMEType(const char* *result)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::GetJSContext(JSContext* *outContext)
 {
   nsCOMPtr<nsIPluginInstanceOwner> owner;
@@ -1289,7 +1289,7 @@ nsNPAPIPluginInstance::GetJSContext(JSContext* *outContext)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::GetOwner(nsIPluginInstanceOwner **aOwner)
 {
   NS_ENSURE_ARG_POINTER(aOwner);
@@ -1298,14 +1298,14 @@ nsNPAPIPluginInstance::GetOwner(nsIPluginInstanceOwner **aOwner)
   return (mOwner ? NS_OK : NS_ERROR_FAILURE);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::SetOwner(nsIPluginInstanceOwner *aOwner)
 {
   mOwner = aOwner;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::ShowStatus(const char* message)
 {
   if (mOwner)
@@ -1314,7 +1314,7 @@ nsNPAPIPluginInstance::ShowStatus(const char* message)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPluginInstance::InvalidateOwner()
 {
   mOwner = nsnull;
