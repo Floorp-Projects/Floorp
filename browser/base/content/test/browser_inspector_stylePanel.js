@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Inspector Highlighter Tests.
+ * The Original Code is Inspector Style Panel Tests.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Rob Campbell <rcampbell@mozilla.com>
+ *   Rob Campbell <rcampbell@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,66 +38,69 @@
  * ***** END LICENSE BLOCK ***** */
 
 let doc;
-let h1;
+let spans;
+let testGen;
 
 function createDocument()
 {
-  let div = doc.createElement("div");
-  let h1 = doc.createElement("h1");
-  let p1 = doc.createElement("p");
-  let p2 = doc.createElement("p");
-  let div2 = doc.createElement("div");
-  let p3 = doc.createElement("p");
-  doc.title = "Inspector Tree Selection Test";
-  h1.textContent = "Inspector Tree Selection Test";
-  p1.textContent = "This is some example text";
-  p2.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
-    "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
-    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
-    "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
-    "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
-    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
-    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-  p3.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
-    "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
-    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
-    "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
-    "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
-    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
-    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-  div.appendChild(h1);
-  div.appendChild(p1);
-  div.appendChild(p2);
-  div2.appendChild(p3);
-  doc.body.appendChild(div);
-  doc.body.appendChild(div2);
-  setupHighlighterTests();
+  doc.body.innerHTML = '<div id="first" style="{ margin: 10em; ' +
+    'font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA}">\n' +
+    '<h1>Some header text</h1>\n' +
+    '<p id="salutation" style="{font-size: 12pt}">hi.</p>\n' +
+    '<p id="body" style="{font-size: 12pt}">I am a test-case. This text exists ' +
+    'solely to provide some things to <span style="{color: yellow}">' +
+    'highlight</span> and <span style="{font-weight: bold}">count</span> ' +
+    'style list-items in the box at right. If you are reading this, ' +
+    'you should go do something else instead. Maybe read a book. Or better ' +
+    'yet, write some test-cases for another bit of code. ' +
+    '<span style="{font-style: italic}">Maybe more inspector test-cases!</span></p>\n' +
+    '<p id="closing">end transmission</p>\n' +
+    '</div>';
+  doc.title = "Inspector Style Test";
+  setupStyleTests();
 }
 
-function setupHighlighterTests()
+function setupStyleTests()
 {
-  h1 = doc.querySelectorAll("h1")[0];
-  ok(h1, "we have the header node");
-  Services.obs.addObserver(runSelectionTests, "inspector-opened", false);
-  InspectorUI.toggleInspectorUI();
+  spans = doc.querySelectorAll("span");
+  ok(spans, "captain, we have the spans");
+  Services.obs.addObserver(runStyleTests, "inspector-opened", false);
+  InspectorUI.openInspectorUI();
 }
 
-function runSelectionTests()
+function spanGenerator()
 {
-  Services.obs.removeObserver(runSelectionTests, "inspector-opened", false);
+  for (var i = 0; i < spans.length; ++i) {
+    InspectorUI.inspectNode(spans[i]);
+    yield;
+  }
+}
+
+function runStyleTests()
+{
+  Services.obs.removeObserver(runStyleTests, "inspector-opened", false);
   document.addEventListener("popupshown", performTestComparisons, false);
-  EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
+  InspectorUI.stopInspecting();
+  testGen = spanGenerator();
+  testGen.next();
 }
 
 function performTestComparisons(evt)
 {
   if (evt.target.id != "highlighter-panel")
     return true;
-  document.removeEventListener("popupshown", performTestComparisons, false);
-  is(h1, InspectorUI.selection, "selection matches node");
+
+  ok(InspectorUI.selection, "selection");
+  ok(InspectorUI.isStylePanelOpen, "style panel is open?");
   ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
-  is(InspectorUI.highlighter.highlitNode, h1, "highlighter matches selection");
-  executeSoon(finishUp);
+  ok(InspectorUI.styleBox.itemCount > 0, "styleBox has items");
+
+  try {
+    testGen.next();
+  } catch(StopIteration) {
+    document.removeEventListener("popupshown", performTestComparisons, false);
+    finishUp();
+  }
 }
 
 function finishUp() {

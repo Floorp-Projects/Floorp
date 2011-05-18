@@ -54,12 +54,16 @@ function runInspectorTests()
   is(InspectorUI.treeIFrame, iframe, "Inspector IFrame matches");
   ok(InspectorUI.inspecting, "Inspector is highlighting");
   ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  ok(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
+  ok(InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is open");
   InspectorUI.closeInspectorUI();
 }
 
 function finishInspectorTests()
 {
   Services.obs.removeObserver(finishInspectorTests, "inspector-closed", false);
+  ok(!InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is closed");
+  ok(!InspectorUI.isStylePanelOpen, "Inspector Style Panel is closed");
   ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
   gBrowser.removeCurrentTab();

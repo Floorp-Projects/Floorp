@@ -249,11 +249,46 @@
                        accesskey="&inspectButton.accesskey;"
                        class="toolbarbutton-text"
                        command="Inspector:Inspect"/>
+        <toolbarbutton id="inspector-previous-toolbutton"
+                       label="&inspectPreviousButton.label;"
+                       accesskey="&inspectPreviousButton.accesskey;"
+                       class="toolbarbutton-text"
+                       command="Inspector:Previous"/>
+        <toolbarbutton id="inspector-next-toolbutton"
+                       label="&inspectNextButton.label;"
+                       accesskey="&inspectNextButton.accesskey;"
+                       class="toolbarbutton-text"
+                       command="Inspector:Next"/>
+        <toolbarbutton id="inspector-style-toolbutton"
+                       label="&inspectStyleButton.label;"
+                       accesskey="&inspectStyleButton.accesskey;"
+                       class="toolbarbutton-text"
+                       oncommand="InspectorUI.toggleStylePanel();"/>
+        <toolbarbutton id="inspector-dom-toolbutton"
+                       label="&inspectObjectButton.label;"
+                       accesskey="&inspectObjectButton.accesskey;"
+                       class="toolbarbutton-text"
+                       oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
       <hbox id="tree-panel-resizer-box" align="end">
         <spacer flex="1" />
         <resizer dir="bottomend" />
       </hbox>
+    </panel>
+
+    <panel id="inspector-style-panel"
+           hidden="true"
+           orient="vertical"
+           ignorekeys="true"
+           noautofocus="true"
+           noautohide="true"
+           titlebar="normal"
+           label="&inspectStylePanelTitle.label;">
+        <listbox id="inspector-style-listbox" flex="1"/>
+        <hbox align="end">
+          <spacer flex="1" />
+          <resizer dir="bottomend"/>
+        </hbox>
     </panel>
 
     <menupopup id="toolbar-context-menu"
