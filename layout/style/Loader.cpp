@@ -632,8 +632,7 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
 NS_IMETHODIMP
 SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
                                   nsISupports* aContext,
-                                  const char* aData,
-                                  PRUint32 aDataLength,
+                                  nsACString const& aSegment,
                                   nsACString& aCharset)
 {
   NS_PRECONDITION(!mOwningElement || mCharsetHint.IsEmpty(),
@@ -671,8 +670,8 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
   if (aCharset.IsEmpty()) {
     //  We have no charset
     //  Try @charset rule and BOM
-    result = GetCharsetFromData((const unsigned char*)aData,
-                                aDataLength, aCharset);
+    result = GetCharsetFromData((const unsigned char*)aSegment.BeginReading(),
+                                aSegment.Length(), aCharset);
 #ifdef PR_LOGGING
     if (NS_SUCCEEDED(result)) {
       LOG(("  Setting from @charset rule or BOM: %s",
@@ -750,7 +749,7 @@ NS_IMETHODIMP
 SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
                                 nsISupports* aContext,
                                 nsresult aStatus,
-                                nsIUnicharInputStream* aDataStream)
+                                const nsAString& aBuffer)
 {
   LOG(("SheetLoadData::OnStreamComplete"));
   NS_ASSERTION(!mLoader->mSyncCallback, "Synchronous callback from necko");
@@ -834,12 +833,6 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     }
   }
 
-  if (!aDataStream) {
-    LOG_WARN(("  No data stream; bailing"));
-    mLoader->SheetComplete(this, NS_ERROR_NOT_AVAILABLE);
-    return NS_OK;
-  }
-
   nsCAutoString contentType;
   if (channel) {
     channel->GetContentType(contentType);
@@ -902,7 +895,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   mSheet->SetURIs(channelURI, originalURI, channelURI);
 
   PRBool completed;
-  return mLoader->ParseSheet(*aDataStream, this, completed);
+  return mLoader->ParseSheet(aBuffer, this, completed);
 }
 
 #ifdef MOZ_XUL
