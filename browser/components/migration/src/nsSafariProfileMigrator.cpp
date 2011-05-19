@@ -1269,29 +1269,5 @@ nsSafariProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
       return NS_OK;
   }
 
-#ifdef __LP64__
   return NS_ERROR_FAILURE;
-#else
-  // Couldn't find the home page in com.apple.safai, time to check
-  // com.apple.internetconfig for this key!
-  ICInstance internetConfig;
-  OSStatus error = ::ICStart(&internetConfig, 'FRFX');
-  if (error != noErr)
-    return NS_ERROR_FAILURE;
-
-  ICAttr dummy;
-  Str255 homePagePValue;
-  long prefSize = sizeof(homePagePValue);
-  error = ::ICGetPref(internetConfig, kICWWWHomePage, &dummy,
-                      homePagePValue, &prefSize);
-  if (error != noErr)
-    return NS_ERROR_FAILURE;
-
-  char homePageValue[256] = "";
-  CopyPascalStringToC((ConstStr255Param)homePagePValue, homePageValue);
-  aResult.Assign(homePageValue);
-  ::ICStop(internetConfig);
-
-  return NS_OK;
-#endif
 }
