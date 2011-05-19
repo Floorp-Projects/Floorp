@@ -218,7 +218,7 @@ public:
   NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
 
 private:
-  nsCOMPtr<nsFrameSelection> mFrameSelection;
+  nsRefPtr<nsFrameSelection> mFrameSelection;
   nsCOMPtr<nsIContent>       mLimiter;
   nsIScrollableFrame        *mScrollFrame;
   nsWeakPtr mPresShellWeak;
@@ -1091,7 +1091,7 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
 
   // Create selection
   nsresult rv;
-  nsCOMPtr<nsFrameSelection> frameSel;
+  nsRefPtr<nsFrameSelection> frameSel;
   frameSel = do_CreateInstance(kFrameSelectionCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 

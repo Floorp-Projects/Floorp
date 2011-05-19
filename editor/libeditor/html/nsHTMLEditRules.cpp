@@ -412,7 +412,7 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
       NS_ENSURE_SUCCESS(res, res);
       nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(selection));
-      nsCOMPtr<nsFrameSelection> frameSelection;
+      nsRefPtr<nsFrameSelection> frameSelection;
       privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
       if (frameSelection) {
         frameSelection->UndefineCaretBidiLevel();
