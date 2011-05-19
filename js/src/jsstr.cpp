@@ -3585,7 +3585,10 @@ js_InitStringClass(JSContext *cx, JSObject *global)
     if (!proto)
         return NULL;
 
-    types::TypeObject *protoType = cx->newTypeObject("String", "prototype", proto->getProto(), false);
+    types::TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
+                                                                        "String", "prototype",
+                                                                        false, false,
+                                                                        proto->getProto());
     if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
         return NULL;
 

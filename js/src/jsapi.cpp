@@ -3089,7 +3089,8 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
     if (!obj)
         return NULL;
 
-    types::TypeObject *type = cx->newTypeObject("Unique", proto);
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "Unique", "",
+                                                            false, false, proto);
     if (!type)
         return NULL;
     if (obj->hasSpecialEquality())

@@ -3307,7 +3307,10 @@ js_InitReflectClass(JSContext *cx, JSObject *obj)
     if (!Reflect)
         return NULL;
 
-    types::TypeObject *type = cx->newTypeObject(js_ReflectClass.name, Reflect->getProto());
+    types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
+                                                                   js_ReflectClass.name, "",
+                                                                   false, false,
+                                                                   Reflect->getProto());
     if (!type || !Reflect->setTypeAndUniqueShape(cx, type))
         return NULL;
 
