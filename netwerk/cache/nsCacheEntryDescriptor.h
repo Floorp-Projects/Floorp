@@ -77,21 +77,18 @@ public:
 
     void           CloseOutput(void)
     {
-      InternalCleanup(mOutput);
-      mOutput = nsnull;
-    }
-
-private:
-    void           InternalCleanup(nsIOutputStream *stream)
-    {
-      if (stream) {
-        nsCOMPtr<nsIDiskCacheStreamInternal> tmp (do_QueryInterface(stream));
+      if (mOutput) {
+        nsCOMPtr<nsIDiskCacheStreamInternal> tmp (do_QueryInterface(mOutput));
         if (tmp)
           tmp->CloseInternal();
         else
-          stream->Close();
+          mOutput->Close();
+
+        mOutput = nsnull;
       }
     }
+
+private:
 
 
      /*************************************************************************
