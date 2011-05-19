@@ -260,9 +260,6 @@ ChangeFlag(PRUint32 aFlags, PRBool aOnOff, PRUint32 aFlag)
 // *  - initially created for bugs 31816, 20760, 22963
 static void ColorToString(nscolor aColor, nsAutoString &aString);
 
-// Class ID's
-static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
-
 // RangePaintInfo is used to paint ranges to offscreen buffers
 struct RangePaintInfo {
   nsCOMPtr<nsIRange> mRange;
@@ -1831,11 +1828,7 @@ PresShell::Init(nsIDocument* aDocument,
   // before creating any frames.
   SetPreferenceStyleRules(PR_FALSE);
 
-  result = CallCreateInstance(kFrameSelectionCID, &mSelection);
-  if (NS_FAILED(result)) {
-    mStyleSet = nsnull;
-    return result;
-  }
+  NS_ADDREF(mSelection = new nsFrameSelection());
 
   // Create and initialize the frame manager
   result = FrameManager()->Init(this, mStyleSet);
