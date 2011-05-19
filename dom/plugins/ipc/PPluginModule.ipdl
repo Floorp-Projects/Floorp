@@ -68,6 +68,10 @@ both:
   async PPluginIdentifier(nsCString aString,
                           int32_t aInt);
 
+  // Window-specific message which instructs the RPC mechanism to enter
+  // a nested event loop for the current RPC call.
+  async ProcessNativeEventsInRPCCall();
+
 child:
   // Forces the child process to update its plugin function table.
   rpc NP_GetEntryPoints()
@@ -122,10 +126,6 @@ parent:
   // entered a nested event loop.  If the browser doesn't process
   // native events, then "livelock" and some other glitches can occur.
   rpc ProcessSomeEvents();
-
-  // Window-specific message which instructs the RPC mechanism to enter
-  // a nested event loop for the current RPC call.
-  async ProcessNativeEventsInRPCCall();
 
   sync AppendNotesToCrashReport(nsCString aNotes);
 
