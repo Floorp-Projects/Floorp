@@ -386,6 +386,7 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
       }
 
       let result = {
+        id: aId,
         version: version,
         updateURL: getProperty(ds, targetApp, "updateLink"),
         updateHash: getProperty(ds, targetApp, "updateHash"),
@@ -684,9 +685,16 @@ var AddonUpdateChecker = {
     if (!aPlatformVersion)
       aPlatformVersion = Services.appinfo.platformVersion;
 
+    let blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                    getService(Ci.nsIBlocklistService);
+
     let newest = null;
     for (let i = 0; i < aUpdates.length; i++) {
       if (!aUpdates[i].updateURL)
+        continue;
+      let state = blocklist.getAddonBlocklistState(aUpdates[i].id, aUpdates[i].version,
+                                                   aAppVersion, aPlatformVersion);
+      if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
         continue;
       if ((newest == null || (Services.vc.compare(newest.version, aUpdates[i].version) < 0)) &&
           matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion))
