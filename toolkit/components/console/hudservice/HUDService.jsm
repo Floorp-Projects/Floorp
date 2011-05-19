@@ -128,9 +128,9 @@ const NEW_GROUP_DELAY = 5000;
 // search.
 const SEARCH_DELAY = 200;
 
-// The number of lines that are displayed in the console output by default.
-// The user can change this number by adjusting the hidden
-// "devtools.hud.loglimit" preference.
+// The number of lines that are displayed in the console output by default, for
+// each category. The user can change this number by adjusting the hidden
+// "devtools.hud.loglimit.{network,cssparser,exception,console}" preferences.
 const DEFAULT_LOG_LIMIT = 200;
 
 // The various categories of messages. We start numbering at zero so we can
@@ -1193,22 +1193,24 @@ NetworkPanel.prototype =
 //// Private utility functions for the HUD service
 
 /**
- * Destroys lines of output if more lines than the allowed log limit are
- * present.
+ * Ensures that the number of message nodes of type aCategory don't exceed that
+ * category's line limit by removing old messages as needed.
  *
  * @param nsIDOMNode aConsoleNode
  *        The DOM node (richlistbox aka outputNode) that holds the output of the
  *        console.
+ * @param integer aCategory
+ *        The category of message nodes to limit.
  * @return number
  *         The current user-selected log limit.
  */
-function pruneConsoleOutputIfNecessary(aConsoleNode)
+function pruneConsoleOutputIfNecessary(aConsoleNode, aCategory)
 {
   // Get the log limit, either from the pref or from the constant.
   let logLimit;
   try {
-    let prefBranch = Services.prefs.getBranch("devtools.hud.");
-    logLimit = prefBranch.getIntPref("loglimit");
+    let prefName = CATEGORY_CLASS_FRAGMENTS[aCategory];
+    logLimit = Services.prefs.getIntPref("devtools.hud.loglimit." + prefName);
   } catch (e) {
     logLimit = DEFAULT_LOG_LIMIT;
   }
@@ -1219,7 +1221,8 @@ function pruneConsoleOutputIfNecessary(aConsoleNode)
   let hudRef = HUDService.getHudReferenceForOutputNode(aConsoleNode);
 
   // Prune the nodes.
-  let messageNodes = aConsoleNode.querySelectorAll(".hud-msg-node");
+  let messageNodes = aConsoleNode.querySelectorAll(".webconsole-msg-" +
+      CATEGORY_CLASS_FRAGMENTS[aCategory]);
   let removeNodes = messageNodes.length - logLimit;
   for (let i = 0; i < removeNodes; i++) {
     if (messageNodes[i].classList.contains("webconsole-msg-cssparser")) {
@@ -4183,7 +4186,7 @@ function JSPropertyProvider(aScope, aInputValue)
     for (let i = 0; i < properties.length; i++) {
       let prop = properties[i].trim();
 
-      // If obj is undefined or null, then there is no change to run completion
+      // If obj is undefined or null, then there is no chance to run completion
       // on it. Exit here.
       if (typeof obj === "undefined" || obj === null) {
         return null;
@@ -4201,7 +4204,7 @@ function JSPropertyProvider(aScope, aInputValue)
     matchProp = properties[0].trimLeft();
   }
 
-  // If obj is undefined or null, then there is no change to run
+  // If obj is undefined or null, then there is no chance to run
   // completion on it. Exit here.
   if (typeof obj === "undefined" || obj === null) {
     return null;
@@ -4515,8 +4518,6 @@ JSTerm.prototype = {
 
   get codeInputString()
   {
-    // TODO: filter the input for windows line breaks, conver to unix
-    // see bug 572812
     return this.inputNode.value;
   },
 
@@ -5810,7 +5811,7 @@ ConsoleUtils = {
 
     HUDService.regroupOutput(outputNode);
 
-    if (pruneConsoleOutputIfNecessary(outputNode) == 0) {
+    if (pruneConsoleOutputIfNecessary(outputNode, aNode.category) == 0) {
       // We can't very well scroll to make the message node visible if the log
       // limit is zero and the node was destroyed in the first place.
       return;
