@@ -203,12 +203,13 @@ public:
   // Clears everything set by the above Set*() functions.
   void Reset();
 
-  nsresult Parse(nsIUnicharInputStream* aInput,
-                 nsIURI*                aSheetURI,
-                 nsIURI*                aBaseURI,
-                 nsIPrincipal*          aSheetPrincipal,
-                 PRUint32               aLineNumber,
-                 PRBool                 aAllowUnsafeRules);
+  template <typename T>
+  nsresult ParseSheet(T&               aInput,
+                      nsIURI*          aSheetURI,
+                      nsIURI*          aBaseURI,
+                      nsIPrincipal*    aSheetPrincipal,
+                      PRUint32         aLineNumber,
+                      PRBool           aAllowUnsafeRules);
 
   nsresult ParseStyleAttribute(const nsAString&  aAttributeValue,
                                nsIURI*           aDocURL,
@@ -295,10 +296,10 @@ protected:
       CSSParserImpl* mParser;
   };
 
-  void InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
+  void InitScanner(nsIUnicharInputStream& aInput, nsIURI* aSheetURI,
                    PRUint32 aLineNumber, nsIURI* aBaseURI,
                    nsIPrincipal* aSheetPrincipal);
-  // the caller must hold on to aBuffer until parsing is done
+  // the caller must hold on to aString until parsing is done
   void InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
                    PRUint32 aLineNumber, nsIURI* aBaseURI,
                    nsIPrincipal* aSheetPrincipal);
@@ -836,13 +837,13 @@ CSSParserImpl::Reset()
 }
 
 void
-CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
+CSSParserImpl::InitScanner(nsIUnicharInputStream& aInput, nsIURI* aSheetURI,
                            PRUint32 aLineNumber, nsIURI* aBaseURI,
                            nsIPrincipal* aSheetPrincipal)
 {
   NS_ASSERTION(! mScannerInited, "already have scanner");
 
-  mScanner.Init(aInput, nsnull, 0, aSheetURI, aLineNumber, mSheet,
+  mScanner.Init(&aInput, nsnull, 0, aSheetURI, aLineNumber, mSheet,
                 mChildLoader);
 #ifdef DEBUG
   mScannerInited = PR_TRUE;
@@ -888,14 +889,14 @@ CSSParserImpl::ReleaseScanner(void)
   mSheetPrincipal = nsnull;
 }
 
-
+template <typename T>
 nsresult
-CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
-                     nsIURI*                aSheetURI,
-                     nsIURI*                aBaseURI,
-                     nsIPrincipal*          aSheetPrincipal,
-                     PRUint32               aLineNumber,
-                     PRBool                 aAllowUnsafeRules)
+CSSParserImpl::ParseSheet(T&               aInput,
+                          nsIURI*          aSheetURI,
+                          nsIURI*          aBaseURI,
+                          nsIPrincipal*    aSheetPrincipal,
+                          PRUint32         aLineNumber,
+                          PRBool           aAllowUnsafeRules)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
 
@@ -8758,16 +8759,29 @@ nsCSSParser::SetChildLoader(mozilla::css::Loader* aChildLoader)
 }
 
 nsresult
-nsCSSParser::Parse(nsIUnicharInputStream* aInput,
-                   nsIURI*                aSheetURI,
-                   nsIURI*                aBaseURI,
-                   nsIPrincipal*          aSheetPrincipal,
-                   PRUint32               aLineNumber,
-                   PRBool                 aAllowUnsafeRules)
+nsCSSParser::ParseSheet(nsIUnicharInputStream& aInput,
+                        nsIURI*                aSheetURI,
+                        nsIURI*                aBaseURI,
+                        nsIPrincipal*          aSheetPrincipal,
+                        PRUint32               aLineNumber,
+                        PRBool                 aAllowUnsafeRules)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
-    Parse(aInput, aSheetURI, aBaseURI, aSheetPrincipal, aLineNumber,
-          aAllowUnsafeRules);
+    ParseSheet(aInput, aSheetURI, aBaseURI, aSheetPrincipal, aLineNumber,
+               aAllowUnsafeRules);
+}
+
+nsresult
+nsCSSParser::ParseSheet(const nsAString& aInput,
+                        nsIURI*          aSheetURI,
+                        nsIURI*          aBaseURI,
+                        nsIPrincipal*    aSheetPrincipal,
+                        PRUint32         aLineNumber,
+                        PRBool           aAllowUnsafeRules)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    ParseSheet(aInput, aSheetURI, aBaseURI, aSheetPrincipal, aLineNumber,
+               aAllowUnsafeRules);
 }
 
 nsresult
