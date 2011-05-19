@@ -208,6 +208,8 @@ UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
 static inline bool
 CanHaveReadBarrier(const jsbytecode *pc)
 {
+    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
+
     switch (JSOp(*pc)) {
       case JSOP_LENGTH:
       case JSOP_GETPROP:
@@ -290,6 +292,8 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
 
     JSScript *script;
     jsbytecode *pc = caller->inlinepc(this, &script);
+
+    js::analyze::UntrapOpcode untrap(this, script, pc);
 
     switch ((JSOp)*pc) {
       case JSOP_CALL:
@@ -515,6 +519,7 @@ JSScript::bytecodeTypes(const jsbytecode *pc)
     JS_ASSERT(typeArray);
 
     JSOp op = JSOp(*pc);
+    JS_ASSERT(op != JSOP_TRAP);
     JS_ASSERT(js_CodeSpec[op].format & JOF_TYPESET);
 
     /* All bytecodes with type sets are JOF_ATOM, except JSOP_{GET,CALL}ELEM */
@@ -622,8 +627,10 @@ JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 }
 
 inline void
-JSScript::typeMonitor(JSContext *cx, const jsbytecode *pc, const js::Value &rval)
+JSScript::typeMonitor(JSContext *cx, jsbytecode *pc, const js::Value &rval)
 {
+    js::analyze::UntrapOpcode untrap(cx, this, pc);
+
     if (cx->typeInferenceEnabled() && (js_CodeSpec[*pc].format & JOF_TYPESET)) {
         /* Allow the non-TYPESET scenario to simplify stubs invonked by INC* ops. Yuck. */
 
