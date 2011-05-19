@@ -188,16 +188,10 @@ public:
 
     /*
      * For constraints attached to the index type set of an object (JSID_VOID),
-     * mark a change in one of the object's dynamic property flags.
+     * mark a change in one of the object's dynamic property flags. If force is
+     * set, recompilation is always triggered.
      */
-    virtual void newObjectState(JSContext *cx, TypeObject *object) {}
-
-    /*
-     * For constraints attached to the index type set of a global object,
-     * mark a reallocation on the object's dynamic slots. This can happen
-     * multiple times over the life of the object.
-     */
-    virtual void slotsReallocation(JSContext *cx) {}
+    virtual void newObjectState(JSContext *cx, TypeObject *object, bool force) {}
 
     /*
      * Whether this is an input type constraint condensed from the original
