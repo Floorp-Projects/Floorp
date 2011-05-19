@@ -73,17 +73,39 @@
 <!ENTITY print.accesskey              "p">
 <!ENTITY print.key                    "r">
 
+<!-- LOCALIZATION NOTE (environmentMenu.label, accesskey): This menu item was
+  -  renamed from "Context" to avoid confusion with the right-click context
+  -  menu in the text area. It refers to the JavaScript Environment (or context)
+  -  the user is evaluating against. I.e., Content (current tab) or Chrome
+  -  (browser).
+  -->
+<!ENTITY environmentMenu.label        "Environment">
+<!ENTITY environmentMenu.accesskey    "N">
+
+<!-- LOCALIZATION NOTE (contextMenu.label, accesskey): No longer used.
 <!ENTITY contextMenu.label            "Context">
 <!ENTITY contextMenu.accesskey        "C">
+  -->
 
 <!ENTITY contentContext.label         "Content">
 <!ENTITY contentContext.accesskey     "C">
 
+<!-- LOCALIZATION NOTE (browserContext.label, accesskey): This menu item is used
+  -  to select an execution environment for the browser window itself as opposed
+  -  to content. This is a feature for browser and addon developers and only
+  -  enabled via the devtools.chrome.enabled preference. Formerly, this label
+  -  was called "Chrome".
+  -->
+<!ENTITY browserContext.label         "Browser">
+<!ENTITY browserContext.accesskey     "B">
+
+<!-- LOCALIZATION NOTE (chromeContext.label, accesskey): No longer used.
 <!ENTITY chromeContext.label          "Chrome">
 <!ENTITY chromeContext.accesskey      "H">
+  -->
 
 <!-- LOCALIZATION NOTE (resetContext.label): This command allows the developer
-  -  to reset/clear the global object of the context where the code executes.
+  -  to reset/clear the global object of the environment where the code executes.
   -->
 <!ENTITY resetContext.label           "Reset">
 <!ENTITY resetContext.accesskey       "R">

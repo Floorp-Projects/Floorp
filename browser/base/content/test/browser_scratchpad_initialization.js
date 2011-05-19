@@ -33,7 +33,7 @@ function runTests()
   is(typeof sp.print, "function", "Scratchpad.print() exists");
 
   let chromeContextMenu = gScratchpadWindow.document.
-                          getElementById("sp-menu-chrome");
+                          getElementById("sp-menu-browser");
   ok(chromeContextMenu, "Chrome context menuitem element exists");
   is(chromeContextMenu.getAttribute("hidden"), "true",
      "Chrome context menuitem is hidden");
@@ -51,7 +51,7 @@ function runTests()
      "Error console menu item is hidden");
 
   let chromeContextCommand = gScratchpadWindow.document.
-                            getElementById("sp-cmd-chromeContext");
+                            getElementById("sp-cmd-browserContext");
   ok(chromeContextCommand, "Chrome context command element exists");
   is(chromeContextCommand.getAttribute("disabled"), "true",
      "Chrome context command is disabled");
