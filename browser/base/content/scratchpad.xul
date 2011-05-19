@@ -74,7 +74,7 @@
   <command id="sp-cmd-inspect" oncommand="Scratchpad.inspect();"/>
   <command id="sp-cmd-print" oncommand="Scratchpad.print();"/>
   <command id="sp-cmd-contentContext" oncommand="Scratchpad.setContentContext();"/>
-  <command id="sp-cmd-chromeContext" oncommand="Scratchpad.setChromeContext();" disabled="true"/>
+  <command id="sp-cmd-browserContext" oncommand="Scratchpad.setBrowserContext();" disabled="true"/>
   <command id="sp-cmd-resetContext" oncommand="Scratchpad.resetContext();"/>
   <command id="sp-cmd-errorConsole" oncommand="Scratchpad.openErrorConsole();" disabled="true"/>
   <command id="sp-cmd-webConsole" oncommand="Scratchpad.openWebConsole();"/>
@@ -256,20 +256,20 @@
     </menupopup>
   </menu>
 
-  <menu id="sp-context-menu"
-        label="&contextMenu.label;"
-        accesskey="&contextMenu.accesskey;">
-    <menupopup id="sp-menu-context">
+  <menu id="sp-environment-menu"
+        label="&environmentMenu.label;"
+        accesskey="&environmentMenu.accesskey;">
+    <menupopup id="sp-menu-environment">
       <menuitem id="sp-menu-content"
                 label="&contentContext.label;"
                 accesskey="&contentContext.accesskey;"
                 command="sp-cmd-contentContext"
                 checked="true"
                 type="radio"/>
-      <menuitem id="sp-menu-chrome" hidden="true"
-                command="sp-cmd-chromeContext"
-                label="&chromeContext.label;"
-                accesskey="&chromeContext.accesskey;"
+      <menuitem id="sp-menu-browser" hidden="true"
+                command="sp-cmd-browserContext"
+                label="&browserContext.label;"
+                accesskey="&browserContext.accesskey;"
                 type="radio"/>
       <menuseparator/>
       <menuitem id="sp-menu-resetContext"

@@ -58,7 +58,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource:///modules/PropertyPanel.jsm");
 
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
-const SCRATCHPAD_CONTEXT_CHROME = 2;
+const SCRATCHPAD_CONTEXT_BROWSER = 2;
 const SCRATCHPAD_WINDOW_URL = "chrome://browser/content/scratchpad.xul";
 const SCRATCHPAD_L10N = "chrome://browser/locale/scratchpad.properties";
 const SCRATCHPAD_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
@@ -75,7 +75,7 @@ var Scratchpad = {
    * Possible values:
    *   - SCRATCHPAD_CONTEXT_CONTENT to execute code in the context of the current
    *   tab content window object.
-   *   - SCRATCHPAD_CONTEXT_CHROME to execute code in the context of the
+   *   - SCRATCHPAD_CONTEXT_BROWSER to execute code in the context of the
    *   currently active chrome window object.
    */
   executionContext: SCRATCHPAD_CONTEXT_CONTENT,
@@ -556,7 +556,7 @@ var Scratchpad = {
   setContentContext: function SP_setContentContext()
   {
     let content = document.getElementById("sp-menu-content");
-    document.getElementById("sp-menu-chrome").removeAttribute("checked");
+    document.getElementById("sp-menu-browser").removeAttribute("checked");
     content.setAttribute("checked", true);
     this.statusbarStatus.label = content.getAttribute("label");
     this.executionContext = SCRATCHPAD_CONTEXT_CONTENT;
@@ -566,13 +566,13 @@ var Scratchpad = {
   /**
    * Set the current execution context to be the most recent chrome window.
    */
-  setChromeContext: function SP_setChromeContext()
+  setBrowserContext: function SP_setBrowserContext()
   {
-    let chrome = document.getElementById("sp-menu-chrome");
+    let chrome = document.getElementById("sp-menu-browser");
     document.getElementById("sp-menu-content").removeAttribute("checked");
     chrome.setAttribute("checked", true);
     this.statusbarStatus.label = chrome.getAttribute("label");
-    this.executionContext = SCRATCHPAD_CONTEXT_CHROME;
+    this.executionContext = SCRATCHPAD_CONTEXT_BROWSER;
     this.resetContext();
   },
 
@@ -604,10 +604,10 @@ var Scratchpad = {
    */
   onLoad: function SP_onLoad()
   {
-    let chromeContextMenu = document.getElementById("sp-menu-chrome");
+    let chromeContextMenu = document.getElementById("sp-menu-browser");
     let errorConsoleMenu = document.getElementById("sp-menu-errorConsole");
     let errorConsoleCommand = document.getElementById("sp-cmd-errorConsole");
-    let chromeContextCommand = document.getElementById("sp-cmd-chromeContext");
+    let chromeContextCommand = document.getElementById("sp-cmd-browserContext");
 
     let chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
     if (chrome) {
