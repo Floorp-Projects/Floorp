@@ -151,6 +151,9 @@
         false
 #endif
       </field>
+      <field name="mAddProgressListenerWasCalled">
+        false
+      </field>
       <field name="_browsers">
         null
       </field>
@@ -1850,6 +1853,11 @@
                                            "608628.");
             }
 
+            if (!this.mAddProgressListenerWasCalled) {
+              this.mAddProgressListenerWasCalled = true;
+              this.tabContainer.updateVisibility();
+            }
+
             this.mProgressListeners.push(aListener);
           ]]>
         </body>
@@ -2688,7 +2696,6 @@
           Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
 
-          this.updateVisibility();
           if (window.TabsInTitlebar)
             TabsInTitlebar.allowedBy("tabs-visible", this.visible);
         ]]>
