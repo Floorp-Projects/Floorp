@@ -233,9 +233,10 @@ protected:
 
   void GetDomainURI(nsIURI **uri);
 
-  nsresult WriteCommon(const nsAString& aText,
+  nsresult WriteCommon(JSContext *cx, const nsAString& aText,
                        PRBool aNewlineTerminate);
-  nsresult OpenCommon(const nsACString& aContentType, PRBool aReplace);
+  nsresult OpenCommon(JSContext *cx, const nsACString& aContentType,
+                      PRBool aReplace);
 
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);

@@ -216,7 +216,8 @@ public:
    * When a document's scope changes (e.g., from document.open(), call this
    * function to move all content wrappers from the old scope to the new one.
    */
-  static nsresult ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
+  static nsresult ReparentContentWrappersInScope(JSContext *cx,
+                                                 nsIScriptGlobalObject *aOldScope,
                                                  nsIScriptGlobalObject *aNewScope);
 
   static PRBool   IsCallerChrome();
