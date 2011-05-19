@@ -292,16 +292,26 @@
             Cu.reportError(ex);
           }
 
+          function loadCurrent() {
+            // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
+            // inheriting the currently loaded document's principal.
+            let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+                        Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+            gBrowser.loadURIWithFlags(url, flags, null, null, postData);
+          }
+
           if (aTriggeringEvent instanceof MouseEvent) {
             // We have a mouse event (from the go button), so use the standard
             // UI link behaviors
             let where = whereToOpenLink(aTriggeringEvent, false, false);
-            if (where != "current") {
+            if (where == "current") {
+              loadCurrent();
+            } else {
               this.handleRevert();
               content.focus();
+              openUILinkIn(url, where,
+                           { allowThirdPartyFixup: true, postData: postData });
             }
-            openUILinkIn(url, where,
-                        { allowThirdPartyFixup: true, postData: postData });
             return;
           }
 
@@ -317,11 +327,7 @@
             aTriggeringEvent.preventDefault();
             aTriggeringEvent.stopPropagation();
           } else {
-            // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
-            // inheriting the currently loaded document's principal.
-            let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-                        Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
-            gBrowser.loadURIWithFlags(url, flags, null, null, postData);
+            loadCurrent();
           }
 
           gBrowser.selectedBrowser.focus();
