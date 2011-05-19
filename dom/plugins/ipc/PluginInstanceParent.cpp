@@ -68,10 +68,6 @@ extern const PRUnichar* kOOPPPluginFocusEventId;
 UINT gOOPPPluginFocusEvent =
     RegisterWindowMessage(kOOPPPluginFocusEventId);
 extern const PRUnichar* kFlashFullscreenClass;
-UINT gOOPPSpinNativeLoopEvent =
-    RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
-UINT gOOPPStopNativeLoopEvent =
-    RegisterWindowMessage(L"SyncChannel Stop Inner Loop Message");
 #elif defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
 #elif defined(XP_MACOSX)
@@ -100,6 +96,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mPluginHWND(NULL)
     , mPluginWndProc(NULL)
     , mNestedEventState(false)
+    , mInAnswerFocusChange(false)
 #endif // defined(XP_WIN)
     , mQuirks(0)
 #if defined(XP_MACOSX)
@@ -1563,7 +1560,8 @@ PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
     switch (message) {
         case WM_SETFOCUS:
         // Let the child plugin window know it should take focus.
-        self->CallSetPluginFocus();
+        if (!self->mInAnswerFocusChange)
+          self->CallSetPluginFocus();
         break;
 
         case WM_CLOSE:
@@ -1743,6 +1741,8 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
     // focus. We forward the event down to widget so the dom/focus manager can
     // be updated.
 #if defined(OS_WIN)
+    AutoRestore<bool> ar(mInAnswerFocusChange);
+    mInAnswerFocusChange = true;
     ::SendMessage(mPluginHWND, gOOPPPluginFocusEvent, gotFocus ? 1 : 0, 0);
     return true;
 #else

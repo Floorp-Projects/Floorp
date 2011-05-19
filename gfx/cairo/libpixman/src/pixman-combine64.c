@@ -963,15 +963,33 @@ set_lum (uint64_t dest[3], uint64_t src[3], uint64_t sa, uint64_t lum)
 
     if (min < 0)
     {
-	tmp[0] = l + (tmp[0] - l) * l / (l - min);
-	tmp[1] = l + (tmp[1] - l) * l / (l - min);
-	tmp[2] = l + (tmp[2] - l) * l / (l - min);
+	if (l - min == 0.0)
+	{
+	    tmp[0] = 0;
+	    tmp[1] = 0;
+	    tmp[2] = 0;
+	}
+	else
+	{
+	    tmp[0] = l + (tmp[0] - l) * l / (l - min);
+	    tmp[1] = l + (tmp[1] - l) * l / (l - min);
+	    tmp[2] = l + (tmp[2] - l) * l / (l - min);
+	}
     }
     if (max > a)
     {
-	tmp[0] = l + (tmp[0] - l) * (a - l) / (max - l);
-	tmp[1] = l + (tmp[1] - l) * (a - l) / (max - l);
-	tmp[2] = l + (tmp[2] - l) * (a - l) / (max - l);
+	if (max - l == 0.0)
+	{
+	    tmp[0] = a;
+	    tmp[1] = a;
+	    tmp[2] = a;
+	}
+	else
+	{
+	    tmp[0] = l + (tmp[0] - l) * (a - l) / (max - l);
+	    tmp[1] = l + (tmp[1] - l) * (a - l) / (max - l);
+	    tmp[2] = l + (tmp[2] - l) * (a - l) / (max - l);
+	}
     }
 
     dest[0] = tmp[0] * MASK + 0.5;

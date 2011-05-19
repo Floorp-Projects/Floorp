@@ -47,7 +47,7 @@ include ../../layout/xul/base/src/tree/src/crashtests/crashtests.list
 include ../../gfx/tests/crashtests/crashtests.list
 
 include ../../modules/libpr0n/test/crashtests/crashtests.list
-include ../../modules/plugin/test/crashtests/crashtests.list
+include ../../dom/plugins/test/crashtests/crashtests.list
 
 include ../../parser/htmlparser/tests/crashtests/crashtests.list
 

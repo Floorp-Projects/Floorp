@@ -6140,8 +6140,15 @@ if test -n "$MOZ_ANGLE"; then
   fi
 
   # Get the SDK path from the registry.
-  MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
-  MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's,  *, ,g' | cut -d' ' -f4-`
+  # First try to get the June 2010 SDK
+  MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK (June 2010)' | head -n 1`
+  if test -z "$MOZ_DIRECTX_SDK_REG_KEY" ; then
+    # Otherwise just take whatever comes first
+    MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
+  fi
+  echo "MOZ_DIRECTX_SDK_REG_KEY=$MOZ_DIRECTX_SDK_REG_KEY"
+  MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/'`
+  echo "MOZ_DIRECTX_SDK_PATH=$MOZ_DIRECTX_SDK_PATH"
 
   MOZ_ANGLE=
 

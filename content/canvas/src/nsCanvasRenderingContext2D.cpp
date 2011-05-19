@@ -472,6 +472,7 @@ protected:
     // Member vars
     PRInt32 mWidth, mHeight;
     PRPackedBool mValid;
+    PRPackedBool mZero;
     PRPackedBool mOpaque;
     PRPackedBool mResetLayer;
     PRPackedBool mIPC;
@@ -824,7 +825,7 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 }
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
-    : mValid(PR_FALSE), mOpaque(PR_FALSE), mResetLayer(PR_TRUE)
+    : mValid(PR_FALSE), mZero(PR_FALSE), mOpaque(PR_FALSE), mResetLayer(PR_TRUE)
     , mIPC(PR_FALSE)
     , mCanvasElement(nsnull)
     , mSaveCount(0), mIsEntireFrameInvalid(PR_FALSE)
@@ -1090,6 +1091,12 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
     // Check that the dimensions are sane
     gfxIntSize size(width, height);
     if (gfxASurface::CheckSurfaceSize(size, 0xffff)) {
+        // Zero sized surfaces have problems, so just use a 1 by 1.
+        if (height == 0 || width == 0) {
+            mZero = PR_TRUE;
+            height = 1;
+            width = 1;
+        }
 
         gfxASurface::gfxImageFormat format = GetImageFormat();
 
@@ -3372,6 +3379,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
 
     pattern = new gfxPattern(imgsurf);
     pattern->SetMatrix(matrix);
+    pattern->SetExtend(gfxPattern::EXTEND_PAD);
 
     if (CurrentState().imageSmoothingEnabled)
         pattern->SetFilter(gfxPattern::FILTER_GOOD);
@@ -3755,26 +3763,28 @@ nsCanvasRenderingContext2D::GetImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
     if (tmpctx->HasError())
         return NS_ERROR_FAILURE;
 
-    gfxRect srcRect(0, 0, mWidth, mHeight);
-    gfxRect destRect(x, y, w, h);
+    if (!mZero) {
+        gfxRect srcRect(0, 0, mWidth, mHeight);
+        gfxRect destRect(x, y, w, h);
 
-    bool finishedPainting = false;
-    // In the common case, we want to avoid the Rectangle call.
-    if (!srcRect.Contains(destRect)) {
-        // If the requested area is entirely outside the canvas, we're done.
-        gfxRect tmp = srcRect.Intersect(destRect);
-        finishedPainting = tmp.IsEmpty();
+        bool finishedPainting = false;
+        // In the common case, we want to avoid the Rectangle call.
+        if (!srcRect.Contains(destRect)) {
+            // If the requested area is entirely outside the canvas, we're done.
+            gfxRect tmp = srcRect.Intersect(destRect);
+            finishedPainting = tmp.IsEmpty();
 
-        // Set clipping region if necessary.
-        if (!finishedPainting) {
-            tmpctx->Rectangle(tmp);
+            // Set clipping region if necessary.
+            if (!finishedPainting) {
+                tmpctx->Rectangle(tmp);
+            }
         }
-    }
 
-    if (!finishedPainting) {
-        tmpctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        tmpctx->SetSource(mSurface, gfxPoint(-x, -y));
-        tmpctx->Paint();
+        if (!finishedPainting) {
+            tmpctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+            tmpctx->SetSource(mSurface, gfxPoint(-x, -y));
+            tmpctx->Paint();
+        }
     }
 
     // make sure sUnpremultiplyTable has been created
