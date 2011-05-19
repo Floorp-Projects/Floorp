@@ -176,8 +176,10 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
     code->jumpTarget = true;
 
     if (offset < *currentOffset) {
-        JSOp op = JSOp(script->code[offset]);
-        if (op == JSOP_TRACE || op == JSOP_NOTRACE)
+        jsbytecode *pc = script->code + offset;
+        UntrapOpcode untrap(cx, script, pc);
+
+        if (JSOp(*pc) == JSOP_TRACE || JSOp(*pc) == JSOP_NOTRACE)
             code->loopHead = true;
 
         /* Scripts containing loops are never inlined. */
@@ -790,7 +792,10 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
         if (loop && code->safePoint)
             loop->hasSafePoints = true;
 
-        UntrapOpcode untrap(cx, script, script->code + offset);
+        jsbytecode *pc = script->code + offset;
+        UntrapOpcode untrap(cx, script, pc);
+
+        JSOp op = (JSOp) *pc;
 
         if (code->loop) {
             /*
@@ -813,9 +818,6 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
         /* Find the last jump target in the loop, other than the initial entry point. */
         if (loop && code->jumpTarget && offset != loop->entry && offset > loop->lastBlock)
             loop->lastBlock = offset;
-
-        jsbytecode *pc = script->code + offset;
-        JSOp op = (JSOp) *pc;
 
         switch (op) {
           case JSOP_GETARG:
@@ -911,7 +913,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
 #ifdef DEBUG
                 JSOp nop = JSOp(script->code[targetOffset]);
-                JS_ASSERT(nop == JSOP_TRACE || nop == JSOP_NOTRACE);
+                JS_ASSERT(nop == JSOP_TRACE || nop == JSOP_NOTRACE || nop == JSOP_TRAP);
 #endif
 
                 /*
@@ -952,6 +954,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                     } while (!maybeCode(entry));
 
                     jsbytecode *entrypc = script->code + entry;
+                    UntrapOpcode untrap(cx, script, entrypc);
+
                     if (JSOp(*entrypc) == JSOP_GOTO || JSOp(*entrypc) == JSOP_GOTOX)
                         loop->entry = entry + GetJumpOffset(entrypc, entrypc);
                     else
@@ -1795,6 +1799,8 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
 
     if (v.kind() == SSAValue::PUSHED) {
         jsbytecode *pc = frame.script->code + v.pushedOffset();
+        UntrapOpcode untrap(cx, frame.script, pc);
+
         switch (JSOp(*pc)) {
           case JSOP_THIS:
             if (parentScript) {
@@ -1824,6 +1830,7 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
                 uint32 offset = 0;
                 while (offset < callee->length) {
                     jsbytecode *pc = callee->code + offset;
+                    UntrapOpcode untrap(cx, callee, pc);
                     if (analysis->maybeCode(pc) && JSOp(*pc) == JSOP_RETURN)
                         return foldValue(CrossSSAValue(calleeFrame, analysis->poppedValue(pc, 0)));
                     offset += GetBytecodeLength(pc);
@@ -1867,6 +1874,8 @@ ScriptAnalysis::printSSA(JSContext *cx)
             continue;
 
         jsbytecode *pc = script->code + offset;
+        UntrapOpcode untrap(cx, script, pc);
+
         PrintBytecode(cx, script, pc);
 
         SlotValue *newv = code->newValues;
