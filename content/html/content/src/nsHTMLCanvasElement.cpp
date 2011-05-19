@@ -328,6 +328,12 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
 {
   bool fallbackToPNG = false;
 
+  nsIntSize size = GetWidthHeight();
+  if (size.height == 0 || size.width == 0) {
+    aDataURL = NS_LITERAL_STRING("data:,");
+    return NS_OK;
+  }
+
   nsAutoString type;
   nsContentUtils::ASCIIToLower(aMimeType, type);
 
