@@ -733,6 +733,7 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_GUI_EVENT:
     case NS_COMPOSITION_EVENT:
     case NS_SCROLLPORT_EVENT:
+    case NS_UI_EVENT:
       return NS_NewDOMUIEvent(aDOMEvent, aPresContext,
                               static_cast<nsGUIEvent*>(aEvent));
     case NS_SCROLLAREA_EVENT:

@@ -255,7 +255,7 @@ static gboolean drag_drop_event_cb        (GtkWidget *aWidget,
                                            gint aX,
                                            gint aY,
                                            guint aTime,
-                                           gpointer *aData);
+                                           gpointer aData);
 static void    drag_data_received_event_cb(GtkWidget *aWidget,
                                            GdkDragContext *aDragContext,
                                            gint aX,
@@ -3619,7 +3619,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
                           gint aX,
                           gint aY,
                           guint aTime,
-                          gpointer *aData)
+                          gpointer aData)
 
 {
     LOGDRAG(("nsWindow::OnDragDropSignal\n"));
@@ -6116,7 +6116,7 @@ drag_drop_event_cb(GtkWidget *aWidget,
                    gint aX,
                    gint aY,
                    guint aTime,
-                   gpointer *aData)
+                   gpointer aData)
 {
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
     if (!window)
