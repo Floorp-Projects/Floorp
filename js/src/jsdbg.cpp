@@ -851,6 +851,14 @@ DebugFrame_getGenerator(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
+DebugFrame_getConstructing(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_FRAME(cx, vp, "get constructing", thisobj, fp);
+    vp->setBoolean(fp->isFunctionFrame() && fp->isConstructing());
+    return true;
+}
+
+static JSBool
 DebugFrame_getThis(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get this", thisobj, fp);
@@ -938,6 +946,7 @@ static JSPropertySpec DebugFrame_properties[] = {
     JS_PSG("live", DebugFrame_getLive, 0),
     JS_PSG("callee", DebugFrame_getCallee, 0),
     JS_PSG("generator", DebugFrame_getGenerator, 0),
+    JS_PSG("constructing", DebugFrame_getConstructing, 0),
     JS_PSG("arguments", DebugFrame_getArguments, 0),
     JS_PS_END
 };
