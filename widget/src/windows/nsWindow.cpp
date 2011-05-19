@@ -298,6 +298,7 @@ PRUint32        nsWindow::sOOPPPluginFocusEvent   =
 
 MSG             nsWindow::sRedirectedKeyDown;
 
+PRBool          nsWindow::sEnablePixelScrolling = PR_TRUE;
 PRBool          nsWindow::sNeedsToInitMouseWheelSettings = PR_TRUE;
 ULONG           nsWindow::sMouseWheelScrollLines  = 0;
 ULONG           nsWindow::sMouseWheelScrollChars  = 0;
@@ -667,6 +668,11 @@ nsWindow::Create(nsIWidget *aParent,
         if (NS_SUCCEEDED(prefBranch->GetBoolPref("mozilla.widget.disable-native-theme",
                                                  &temp)))
           gDisableNativeTheme = temp;
+
+        if (NS_SUCCEEDED(prefBranch->GetBoolPref("mousewheel.enable_pixel_scrolling",
+                                                 &temp))) {
+          sEnablePixelScrolling = temp;
+        }
       }
     }
   }
@@ -6411,27 +6417,33 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   sLastMouseWheelUnitIsPage = isPageScroll;
   sLastMouseWheelTime = now;
 
-  nsMouseScrollEvent testEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
-  InitEvent(testEvent);
-  testEvent.scrollFlags = isPageScroll ? nsMouseScrollEvent::kIsFullPage : 0;
-  testEvent.scrollFlags |= isVertical ? nsMouseScrollEvent::kIsVertical :
-                                        nsMouseScrollEvent::kIsHorizontal;
-  testEvent.delta = sLastMouseWheelDeltaIsPositive ? -1 : 1;
-  nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_SCROLL_TARGET_INFO, this);
-  InitEvent(queryEvent);
-  queryEvent.InitForQueryScrollTargetInfo(&testEvent);
-  DispatchWindowEvent(&queryEvent);
-  // If the necessary interger isn't larger than 0, we should assume that
-  // the event failed for us.
-  if (queryEvent.mSucceeded) {
-    if (isPageScroll) {
-      if (isVertical) {
-        queryEvent.mSucceeded = (queryEvent.mReply.mPageHeight > 0);
+  PRBool dispatchPixelScrollEvent = PR_FALSE;
+  PRInt32 pixelsPerUnit = 0;
+
+  if (sEnablePixelScrolling) {
+    nsMouseScrollEvent testEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
+    InitEvent(testEvent);
+    testEvent.scrollFlags = isPageScroll ? nsMouseScrollEvent::kIsFullPage : 0;
+    testEvent.scrollFlags |= isVertical ? nsMouseScrollEvent::kIsVertical :
+                                          nsMouseScrollEvent::kIsHorizontal;
+    testEvent.delta = sLastMouseWheelDeltaIsPositive ? -1 : 1;
+    nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_SCROLL_TARGET_INFO, this);
+    InitEvent(queryEvent);
+    queryEvent.InitForQueryScrollTargetInfo(&testEvent);
+    DispatchWindowEvent(&queryEvent);
+    // If the necessary interger isn't larger than 0, we should assume that
+    // the event failed for us.
+    if (queryEvent.mSucceeded) {
+      if (isPageScroll) {
+        if (isVertical) {
+          pixelsPerUnit = queryEvent.mReply.mPageHeight;
+        } else {
+          pixelsPerUnit = queryEvent.mReply.mPageWidth;
+        }
       } else {
-        queryEvent.mSucceeded = (queryEvent.mReply.mPageWidth > 0);
+        pixelsPerUnit = queryEvent.mReply.mLineHeight;
       }
-    } else {
-      queryEvent.mSucceeded = (queryEvent.mReply.mLineHeight > 0);
+      dispatchPixelScrollEvent = (pixelsPerUnit > 0);
     }
   }
 
@@ -6456,9 +6468,8 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
 
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
   InitEvent(scrollEvent);
-  // If the query event failed, we cannot send pixel events.
   scrollEvent.scrollFlags =
-    queryEvent.mSucceeded ? nsMouseScrollEvent::kHasPixels : 0;
+    dispatchPixelScrollEvent ? nsMouseScrollEvent::kHasPixels : 0;
   scrollEvent.isShift     = modKeyState.mIsShiftDown;
   scrollEvent.isControl   = isControl;
   scrollEvent.isMeta      = PR_FALSE;
@@ -6501,7 +6512,7 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   }
 
   // If the query event failed, we cannot send pixel events.
-  if (!queryEvent.mSucceeded) {
+  if (!dispatchPixelScrollEvent) {
     sRemainingDeltaForPixel = 0;
     return PR_FALSE;
   }
@@ -6519,18 +6530,14 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
 
   double deltaPerPixel;
   if (isPageScroll) {
-    if (isVertical) {
-      deltaPerPixel = (double)WHEEL_DELTA / queryEvent.mReply.mPageHeight;
-    } else {
-      deltaPerPixel = (double)WHEEL_DELTA / queryEvent.mReply.mPageWidth;
-    }
+    deltaPerPixel = (double)WHEEL_DELTA / pixelsPerUnit;
   } else {
     if (isVertical) {
       deltaPerPixel = (double)WHEEL_DELTA / sMouseWheelScrollLines;
     } else {
       deltaPerPixel = (double)WHEEL_DELTA / sMouseWheelScrollChars;
     }
-    deltaPerPixel /= queryEvent.mReply.mLineHeight;
+    deltaPerPixel /= pixelsPerUnit;
   }
   pixelEvent.delta =
     RoundDelta((double)nativeDeltaForPixel * orienter / deltaPerPixel);
