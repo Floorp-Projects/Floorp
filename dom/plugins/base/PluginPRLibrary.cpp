@@ -258,17 +258,6 @@ PluginPRLibrary::GetImageSize(NPP instance, nsIntSize* aSize)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#if defined(XP_MACOSX)
-nsresult
-PluginPRLibrary::IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing)
-{
-  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
-  NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
-  *aDrawing = PR_FALSE; 
-  return NS_OK;
-}
-#endif
-
 nsresult
 PluginPRLibrary::SetBackgroundUnknown(NPP instance)
 {
