@@ -3002,11 +3002,17 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
          */
         JS_ASSERT(cx->typeInferenceEnabled());
 
+#ifdef DEBUG
         static unsigned count = 0;
         char *name = (char *) alloca(30);
         JS_snprintf(name, 30, "SpecializedThis:%u", ++count);
+#else
+        char *name = NULL;
+#endif
 
-        types::TypeObject *type = cx->newTypeObject(name, obj->getProto());
+        types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, name, "",
+                                                                       false, false,
+                                                                       obj->getProto());
         types::AutoTypeRooter root(cx, type);
 
         obj = NewReshapedObject(cx, type, obj->getParent(), gc::FinalizeKind(obj->finalizeKind()),
@@ -4028,8 +4034,10 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     if (!proto)
         return NULL;
 
-    TypeObject *protoType = cx->newTypeObject(clasp->name, "prototype", proto->getProto(),
-                                              clasp == &js_FunctionClass);
+    TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
+                                                                 clasp->name, "prototype",
+                                                                 clasp == &js_FunctionClass, false,
+                                                                 proto->getProto());
     if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
         return NULL;
     protoType->singleton = proto;

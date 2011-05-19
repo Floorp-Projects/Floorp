@@ -920,7 +920,9 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
     if (!Math)
         return NULL;
 
-    types::TypeObject *type = cx->newTypeObject(js_Math_str, Math->getProto());
+    types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, js_Math_str, "",
+                                                                   false, false,
+                                                                   Math->getProto());
     if (!type || !Math->setTypeAndUniqueShape(cx, type))
         return NULL;
     type->singleton = Math;

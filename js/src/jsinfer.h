@@ -871,7 +871,8 @@ struct TypeCompartment
 
     /* Make a function or non-function object associated with an optional script. */
     TypeObject *newTypeObject(JSContext *cx, JSScript *script,
-                              const char *name, bool isFunction, bool isArray, JSObject *proto);
+                              const char *base, const char *postfix,
+                              bool isFunction, bool isArray, JSObject *proto);
 
     /* Make an initializer object. */
     TypeObject *newInitializerTypeObject(JSContext *cx, JSScript *script,

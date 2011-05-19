@@ -1780,7 +1780,11 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Make a new type for the prototype object. */
-    TypeObject *protoType = cx->newTypeObject(obj->getType()->name(), "prototype", objProto);
+
+    TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
+                                                                 obj->getType()->name(),
+                                                                 "prototype",
+                                                                 false, false, objProto);
     if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
         return NULL;
 
@@ -2781,11 +2785,13 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         if (!funobj)
             return NULL;
         if (handler) {
-            TypeFunction *type = cx->newTypeFunction(fullName, funobj->getProto());
+            TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, fullName, "",
+                                                                    true, false,
+                                                                    funobj->getProto());
             if (!type || !funobj->setTypeAndUniqueShape(cx, type))
                 return NULL;
-            type->handler = handler;
-            type->singleton = funobj;
+            type->asFunction()->handler = handler;
+            type->asFunction()->singleton = funobj;
         }
     }
     JS_ASSERT(!funobj->getPrivate());
@@ -2894,13 +2900,15 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
 #endif
             js_CallNewScriptHook(cx, cfun->script(), cfun);
         } else {
-            TypeFunction *type = cx->newTypeFunction("ClonedFunction", clone->getProto());
+            TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "ClonedFunction", "",
+                                                                    true, false,
+                                                                    clone->getProto());
             if (!type || !clone->setTypeAndUniqueShape(cx, type))
                 return NULL;
             if (fun->getType()->unknownProperties())
                 cx->markTypeObjectUnknownProperties(type);
             else
-                type->handler = fun->getType()->asFunction()->handler;
+                type->asFunction()->handler = fun->getType()->asFunction()->handler;
         }
     }
     return clone;
