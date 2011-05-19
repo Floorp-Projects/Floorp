@@ -179,7 +179,6 @@ public:
   enum { ePluginPaintEnable, ePluginPaintDisable };
   
   NPDrawingModel GetDrawingModel();
-  PRBool IsRemoteDrawingCoreAnimation();
   NPEventModel GetEventModel();
   static void CARefresh(nsITimer *aTimer, void *aClosure);
   static void AddToCARefreshTimer(nsPluginInstanceOwner *aPluginInstance);
@@ -207,9 +206,9 @@ public:
   void EndCGPaint();
 #else // XP_MACOSX
   void UpdateWindowPositionAndClipRect(PRBool aSetWindow);
-  void CallSetWindow();
   void UpdateWindowVisibility(PRBool aVisible);
 #endif // XP_MACOSX
+  void CallSetWindow();
   
   void SetOwner(nsObjectFrame *aOwner)
   {
@@ -295,15 +294,7 @@ public:
   already_AddRefed<gfxContext> BeginUpdateBackground(const nsIntRect& aRect);
   void EndUpdateBackground(gfxContext* aContext, const nsIntRect& aRect);
   
-  PRBool UseAsyncRendering()
-  {
-    PRBool useAsyncRendering;
-    return (mInstance &&
-            NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncRendering)) &&
-            useAsyncRendering &&
-            (!mPluginWindow ||
-             mPluginWindow->type == NPWindowTypeDrawable));
-  }
+  PRBool UseAsyncRendering();
   
 private:
   
@@ -339,6 +330,9 @@ private:
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;
   PRBool                                    mSentInitialTopLevelWindowEvent;
 #endif
+  // We need to know if async hide window is required since we
+  // can not check UseAsyncRendering when executing StopPlugin
+  PRBool                                    mAsyncHidePluginWindow;
   
   // Initially, the event loop nesting level we were created on, it's updated
   // if we detect the appshell is on a lower level as long as we're not stopped.
