@@ -39,6 +39,10 @@
 
 #include "nsIDOMDocument.idl"
 
+%{C++
+#include "jspubtd.h"
+%}
+
 /**
  * The nsIDOMHTMLDocument interface is the interface to a [X]HTML
  * document object.
@@ -46,7 +50,7 @@
  * @see <http://www.whatwg.org/html/>
  */
 
-[scriptable, uuid(6dd39b10-65ec-46f3-8c41-939300f6a7ce)]
+[scriptable, uuid(3c0ca40f-72c5-4d15-935e-ccaff7953f2c)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
   readonly attribute DOMString            URL;
@@ -74,11 +78,14 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
   // probably throw.
   // Pass aReplace = true to trigger a replacement of the previous
   // document in session history; pass false for normal history handling.
+  [implicit_jscontext]
   nsIDOMDocument            open(in ACString aContentType,
                                  in boolean aReplace);
   void                      close();
 
+  [implicit_jscontext]
   void                      write([optional, Null(Stringify)] in DOMString text);
+  [implicit_jscontext]
   void                      writeln([optional, Null(Stringify)] in DOMString text);
 
   /**
