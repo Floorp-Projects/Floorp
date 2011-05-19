@@ -36,7 +36,7 @@ function runTests()
     "sp-text-execute": "execute",
     "sp-text-inspect": "inspect",
     "sp-menu-content": "setContentContext",
-    "sp-menu-chrome": "setChromeContext",
+    "sp-menu-browser": "setBrowserContext",
     "sp-menu-resetContext": "resetContext",
     "sp-menu-errorConsole": "openErrorConsole",
     "sp-menu-webConsole": "openWebConsole",

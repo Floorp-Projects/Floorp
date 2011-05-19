@@ -27,11 +27,11 @@ function runTests()
   let sp = gScratchpadWindow.Scratchpad;
 
   let contentMenu = gScratchpadWindow.document.getElementById("sp-menu-content");
-  let chromeMenu = gScratchpadWindow.document.getElementById("sp-menu-chrome");
+  let chromeMenu = gScratchpadWindow.document.getElementById("sp-menu-browser");
   let statusbar = sp.statusbarStatus;
 
   ok(contentMenu, "found #sp-menu-content");
-  ok(chromeMenu, "found #sp-menu-chrome");
+  ok(chromeMenu, "found #sp-menu-browser");
   ok(statusbar, "found Scratchpad.statusbarStatus");
 
   sp.setContentContext();
@@ -59,9 +59,9 @@ function runTests()
   is(content.wrappedJSObject.foobarBug636725, "aloha",
      "content.foobarBug636725 has been set");
 
-  sp.setChromeContext();
+  sp.setBrowserContext();
 
-  is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CHROME,
+  is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER,
      "executionContext is chrome");
 
   is(chromeMenu.getAttribute("checked"), "true",
