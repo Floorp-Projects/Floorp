@@ -1363,6 +1363,15 @@ template <typename T>
 inline Cell *
 RefillTypedFreeList(JSContext *cx, unsigned thingKind)
 {
+    JS_ASSERT(!cx->runtime->gcRunning);
+
+    /*
+     * For compatibility with older code we tolerate calling the allocator
+     * during the GC in optimized builds.
+     */
+    if (cx->runtime->gcRunning)
+        return NULL;
+
     JSCompartment *compartment = cx->compartment;
     JS_ASSERT(!compartment->freeLists.finalizables[thingKind]);
 
