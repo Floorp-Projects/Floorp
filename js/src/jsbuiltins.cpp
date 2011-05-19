@@ -252,7 +252,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
 
     JSObject* obj2;
     JSProperty* prop;
-    if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) < 0)
+    if (!LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
         return JS_NEITHER;
     return prop != NULL;
 }
@@ -260,7 +260,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
 JSBool FASTCALL
 js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 {
-    JSAtom *atom = js_AtomizeString(cx, idstr, 0);
+    JSAtom *atom = js_AtomizeString(cx, idstr);
     if (!atom)
         return JS_NEITHER;
 

@@ -203,6 +203,12 @@ public:
         m_assembler.imull_i32r(src, imm.m_value, dest);
     }
 
+    void idiv(RegisterID reg)
+    {
+        m_assembler.cdq();
+        m_assembler.idivl_r(reg);
+    }
+
     void neg32(RegisterID srcDest)
     {
         m_assembler.negl_r(srcDest);

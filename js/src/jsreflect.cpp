@@ -203,7 +203,7 @@ class NodeBuilder
             Value funv;
 
             const char *name = callbackNames[i];
-            JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+            JSAtom *atom = js_Atomize(cx, name, strlen(name));
             if (!atom || !GetPropertyDefault(cx, userobj, ATOM_TO_JSID(atom), NullValue(), &funv))
                 return false;
 
@@ -313,7 +313,7 @@ class NodeBuilder
         /*
          * Bug 575416: instead of js_Atomize, lookup constant atoms in tbl file
          */
-        JSAtom *atom = js_Atomize(cx, s, strlen(s), 0);
+        JSAtom *atom = js_Atomize(cx, s, strlen(s));
         if (!atom)
             return false;
 
@@ -425,7 +425,7 @@ class NodeBuilder
         /*
          * Bug 575416: instead of js_Atomize, lookup constant atoms in tbl file
          */
-        JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+        JSAtom *atom = js_Atomize(cx, name, strlen(name));
         if (!atom)
             return false;
 

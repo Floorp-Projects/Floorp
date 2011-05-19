@@ -256,7 +256,7 @@ pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
 pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "beep");
-pref("accessibility.typeaheadfind.enablesound", true);
+pref("accessibility.typeaheadfind.enablesound", false);
 pref("accessibility.typeaheadfind.prefillwithselection", true);
 
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
@@ -271,6 +271,11 @@ pref("toolkit.autocomplete.richBoundaryCutoff", 200);
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
+
+// Telemetry
+pref("toolkit.telemetry.enabled", false);
+// Telemetry test server to be used until the official one is public
+pref("toolkit.telemetry.server", "http://telemetry.allizom.org");
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -1216,12 +1221,6 @@ pref("bidi.numeral", 0);
 // 2 = OsBidisupport
 // 3 = disableBidisupport
 pref("bidi.support", 1);
-// ------------------
-//  Charset Mode
-// ------------------
-// 1 = doccharactersetBidi *
-// 2 = defaultcharactersetBidi
-pref("bidi.characterset", 1);
 // Whether delete and backspace should immediately delete characters not
 // visually adjacent to the caret, or adjust the visual position of the caret
 // on the first keypress and delete the character on a second keypress
@@ -2293,6 +2292,8 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 
 // See bug 404131, topmost <panel> element wins to Dashboard on MacOSX.
 pref("ui.panel.default_level_parent", false);
+
+pref("ui.plugin.cancel_composition_at_input_source_changed", false);
 
 pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 

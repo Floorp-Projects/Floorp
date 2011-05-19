@@ -146,10 +146,8 @@ public:
   virtual nsresult CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance);
 
 private:
-#ifndef WINCE
   nsresult SubclassAndAssociateWindow();
   nsresult UndoSubclassAndAssociateWindow();
-#endif
 
 public:
   // locals
@@ -288,7 +286,6 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
 
       break;
 
-#ifndef WINCE
     case WM_MOUSEACTIVATE: {
       // If a child window of this plug-in is already focused,
       // don't focus the parent to avoid focus dance. We'll 
@@ -332,7 +329,6 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
       }
       break;
     }
-#endif
   }
 
   // Macromedia Flash plugin may flood the message queue with some special messages
@@ -653,8 +649,6 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
     }
   }
 
-  // WINCE does not subclass windows.  See bug 300011 for the details.
-#ifndef WINCE
   if (window) {
     // grab the widget procedure before the plug-in does a subclass in
     // setwindow. We'll use this in PluginWndProc for forwarding focus
@@ -675,23 +669,18 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
       }
     }
   }
-#endif
 
   nsPluginNativeWindow::CallSetWindow(aPluginInstance);
 
-#ifndef WINCE
   SubclassAndAssociateWindow();
 
   if (window && mPluginType == nsPluginType_Flash &&
       !GetPropW((HWND)window, L"PluginInstanceParentProperty")) {
     HookSetWindowLongPtr();
   }
-#endif
 
   return NS_OK;
 }
-
-#ifndef WINCE
 
 nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
 {
@@ -774,7 +763,6 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
 
   return NS_OK;
 }
-#endif // WINCE
 
 nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow)
 {

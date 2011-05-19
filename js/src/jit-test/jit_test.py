@@ -2,9 +2,10 @@
 
 # jit_test.py -- Python harness for JavaScript trace tests.
 
-import datetime, os, re, sys, tempfile, traceback
+import datetime, os, re, sys, tempfile, traceback, time, shlex
 import subprocess
 from subprocess import *
+from threading import Thread
 
 DEBUGGER_INFO = {
   "gdb": {
@@ -122,22 +123,24 @@ def find_tests(dir, substring = None):
                 ans.append(test)
     return ans
 
-def get_test_cmd(path, jitflags, lib_dir):
+def get_test_cmd(path, jitflags, lib_dir, shell_args):
     libdir_var = lib_dir
     if not libdir_var.endswith('/'):
         libdir_var += '/'
     expr = "const platform=%r; const libdir=%r;"%(sys.platform, libdir_var)
     # We may have specified '-a' or '-d' twice: once via --jitflags, once
     # via the "|jit-test|" line.  Remove dups because they are toggles.
-    return [ JS ] + list(set(jitflags)) + [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'),
-             '-f', path ]
+    return ([ JS ] + list(set(jitflags)) + shell_args +
+            [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'), '-f', path ])
 
-def run_cmd(cmdline, env):
-    # close_fds is not supported on Windows and will cause a ValueError.
-    close_fds = sys.platform != 'win32'
-    p = Popen(cmdline, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=close_fds, env=env)
-    out, err = p.communicate()
-    return out.decode(), err.decode(), p.returncode
+def set_limits():
+    # resource module not supported on all platforms
+    try:
+        import resource
+        GB = 2**30
+        resource.setrlimit(resource.RLIMIT_AS, (1*GB, 1*GB))
+    except:
+        return
 
 def tmppath(token):
     fd, path = tempfile.mkstemp(prefix=token)
@@ -151,21 +154,55 @@ def read_and_unlink(path):
     os.unlink(path)
     return d
 
-def run_cmd_avoid_stdio(cmdline, env):
+def th_run_cmd(cmdline, options, l):
+    # close_fds and preexec_fn are not supported on Windows and will
+    # cause a ValueError.
+    if sys.platform != 'win32':
+        options["close_fds"] = True
+        options["preexec_fn"] = set_limits
+    p = Popen(cmdline, stdin=PIPE, stdout=PIPE, stderr=PIPE, **options)
+
+    l[0] = p
+    out, err = p.communicate()
+    l[1] = (out, err, p.returncode)
+
+def run_timeout_cmd(cmdline, options, timeout=60.0):
+    l = [ None, None ]
+    timed_out = False
+    th = Thread(target=th_run_cmd, args=(cmdline, options, l))
+    th.start()
+    th.join(timeout)
+    while th.isAlive():
+        if l[0] is not None:
+            try:
+                # In Python 3, we could just do l[0].kill().
+                import signal
+                if sys.platform != 'win32':
+                    os.kill(l[0].pid, signal.SIGKILL)
+                time.sleep(.1)
+                timed_out = True
+            except OSError:
+                # Expecting a "No such process" error
+                pass
+    th.join()
+    (out, err, code) = l[1]
+    return (out, err, code, timed_out)
+
+def run_cmd(cmdline, env, timeout):
+    return run_timeout_cmd(cmdline, { 'env': env }, timeout)
+
+def run_cmd_avoid_stdio(cmdline, env, timeout):
     stdoutPath, stderrPath = tmppath('jsstdout'), tmppath('jsstderr')
     env['JS_STDOUT'] = stdoutPath
     env['JS_STDERR'] = stderrPath       
-    # close_fds is not supported on Windows and will cause a ValueError.
-    close_fds = sys.platform != 'win32'
-    p = Popen(cmdline, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=close_fds, env=env)
-    _, __ = p.communicate()
-    return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), p.returncode
+    _, __, code = run_timeout_cmd(cmdline, { 'env': env }, timeout)
+    return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), code
 
-def run_test(test, lib_dir):
+def run_test(test, lib_dir, shell_args):
     env = os.environ.copy()
     if test.tmflags:
         env['TMFLAGS'] = test.tmflags
-    cmd = get_test_cmd(test.path, test.jitflags, lib_dir)
+    cmd = get_test_cmd(test.path, test.jitflags, lib_dir, shell_args)
 
     if (test.valgrind and
         any([os.path.exists(os.path.join(d, 'valgrind'))
@@ -183,9 +220,10 @@ def run_test(test, lib_dir):
         print(subprocess.list2cmdline(cmd))
 
     if OPTIONS.avoid_stdio:
-        out, err, code = run_cmd_avoid_stdio(cmd, env)
+        run = run_cmd_avoid_stdio
     else:
-        out, err, code = run_cmd(cmd, env)
+        run = run_cmd
+    out, err, code, timed_out = run(cmd, env, OPTIONS.timeout)
 
     if OPTIONS.show_output:
         sys.stdout.write(out)
@@ -194,7 +232,7 @@ def run_test(test, lib_dir):
     if test.valgrind:
         sys.stdout.write(err)
     return (check_output(out, err, code, test.allow_oom, test.error), 
-            out, err, code)
+            out, err, code, timed_out)
 
 def check_output(out, err, rc, allow_oom, expectedError):
     if expectedError:
@@ -222,7 +260,7 @@ def print_tinderbox(label, test, message=None):
         result += ": " + message
     print result
 
-def run_tests(tests, test_dir, lib_dir):
+def run_tests(tests, test_dir, lib_dir, shell_args):
     pb = None
     if not OPTIONS.hide_progress and not OPTIONS.show_cmd:
         try:
@@ -237,11 +275,11 @@ def run_tests(tests, test_dir, lib_dir):
     try:
         for i, test in enumerate(tests):
             doing = 'on %s'%test.path
-            ok, out, err, code = run_test(test, lib_dir)
+            ok, out, err, code, timed_out = run_test(test, lib_dir, shell_args)
             doing = 'after %s'%test.path
 
             if not ok:
-                failures.append([ test, out, err, code ])
+                failures.append([ test, out, err, code, timed_out ])
 
             if OPTIONS.tinderbox:
                 if ok:
@@ -272,7 +310,7 @@ def run_tests(tests, test_dir, lib_dir):
                 out = open(OPTIONS.write_failures, 'w')
                 # Don't write duplicate entries when we are doing multiple failures per job.
                 written = set()
-                for test, fout, ferr, fcode in failures:
+                for test, fout, ferr, fcode, _ in failures:
                     if test.path not in written:
                         out.write(os.path.relpath(test.path, test_dir) + '\n')
                         if OPTIONS.write_failure_output:
@@ -287,12 +325,22 @@ def run_tests(tests, test_dir, lib_dir):
                 traceback.print_exc()
                 sys.stderr.write('---\n')
 
-        print('FAILURES:')
-        for test, _, __, ___ in failures:
+        def show_test(test):
             if OPTIONS.show_failed:
                 print('    ' + subprocess.list2cmdline(get_test_cmd(test.path, test.jitflags, lib_dir)))
             else:
                 print('    ' + ' '.join(test.jitflags + [ test.path ]))
+
+        print('FAILURES:')
+        for test, _, __, ___, timed_out in failures:
+            if not timed_out:
+                show_test(test)
+
+        print('TIMEOUTS:')
+        for test, _, __, ___, timed_out in failures:
+            if timed_out:
+                show_test(test)
+
         return False
     else:
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)'%doing))
@@ -347,10 +395,14 @@ def main(argv):
                   help='exclude given test dir or path')
     op.add_option('--no-slow', dest='run_slow', action='store_false',
                   help='do not run tests marked as slow')
+    op.add_option('-t', '--timeout', dest='timeout',  type=float, default=150.0,
+                  help='set test timeout in seconds')
     op.add_option('--no-progress', dest='hide_progress', action='store_true',
                   help='hide progress bar')
     op.add_option('--tinderbox', dest='tinderbox', action='store_true',
                   help='Tinderbox-parseable output format')
+    op.add_option('--args', dest='shell_args', default='',
+                  help='extra args to pass to the JS shell')
     op.add_option('-w', '--write-failures', dest='write_failures', metavar='FILE',
                   help='Write a list of failed tests to [FILE]')
     op.add_option('-r', '--read-tests', dest='read_tests', metavar='FILE',
@@ -454,8 +506,10 @@ def main(argv):
         call(cmd)
         sys.exit()
 
+    shell_args = shlex.split(OPTIONS.shell_args)
+
     try:
-        ok = run_tests(job_list, test_dir, lib_dir)
+        ok = run_tests(job_list, test_dir, lib_dir, shell_args)
         if not ok:
             sys.exit(2)
     except OSError:

@@ -124,20 +124,6 @@ FileSystemDataSource::isDirURI(nsIRDFResource* source)
     rv = aDir->IsDirectory(&isDirFlag);
     if (NS_FAILED(rv)) return(PR_FALSE);
 
-#ifdef  XP_MAC
-    // Hide directory structure of packages under Mac OS 9/X
-    nsCOMPtr<nsILocalFileMac>   aMacFile = do_QueryInterface(aDir);
-    if (aMacFile)
-    {
-        PRBool isPackageFlag = PR_FALSE;
-        rv = aMacFile->IsPackage(&isPackageFlag);
-        if (NS_SUCCEEDED(rv) && isPackageFlag)
-        {
-            isDirFlag = PR_FALSE;
-        }
-    }
-#endif
-
     return(isDirFlag);
 }
 
@@ -874,7 +860,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 
     nsCOMPtr<nsIRDFResource> vol;
 
-#if defined (XP_WIN) && !defined (WINCE)
+#ifdef XP_WIN
 
     PRInt32         driveType;
     PRUnichar       drive[32];
@@ -901,7 +887,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
     }
 #endif
 
-#if defined(XP_UNIX) || defined(WINCE)
+#ifdef XP_UNIX
     mRDFService->GetResource(NS_LITERAL_CSTRING("file:///"), getter_AddRefs(vol));
     volumes->AppendElement(vol);
 #endif
@@ -1202,17 +1188,8 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
         return(NS_RDF_NO_VALUE);
 
     PRInt64     aFileSize64;
-#ifdef  XP_MAC
-    // on Mac, get total file size (data + resource fork)
-    nsCOMPtr<nsILocalFileMac>   aMacFile = do_QueryInterface(aFile);
-    if (!aMacFile)
-        return(NS_ERROR_UNEXPECTED);
-    if (NS_FAILED(rv = aMacFile->GetFileSizeWithResFork(&aFileSize64)))
-        return(rv);
-#else
     if (NS_FAILED(rv = aFile->GetFileSize(&aFileSize64)))
         return(rv);
-#endif
 
     // convert 64bits to 32bits
     PRInt32     aFileSize32 = 0;
@@ -1261,24 +1238,6 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
         return(rv);
     if (name.IsEmpty())
         return(NS_ERROR_UNEXPECTED);
-
-#ifdef  XP_MAC
-    nsCOMPtr<nsILocalFileMac>   aMacFile = do_QueryInterface(aFile);
-    if (aMacFile)
-    {
-        PRBool isPackageFlag = PR_FALSE;
-        rv = aMacFile->IsPackage(&isPackageFlag);
-        if (NS_SUCCEEDED(rv) && isPackageFlag)
-        {
-            // mungle package names under Mac OS 9/X
-            PRUint32 len = name.Length();
-            if (name.RFind(".app", PR_TRUE) == len - 4)
-            {
-                name.SetLength(len-4);
-            }
-        }
-    }
-#endif
 
 #ifdef  XP_WIN
     // special hack for IE favorites under Windows; strip off the

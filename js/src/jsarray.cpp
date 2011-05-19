@@ -278,7 +278,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
             return JS_TRUE;
         }
     } else {
-        atom = js_AtomizeChars(cx, start, JS_ARRAY_END(buf) - start, 0);
+        atom = js_AtomizeChars(cx, start, JS_ARRAY_END(buf) - start);
         if (!atom)
             return JS_FALSE;
     }
@@ -800,8 +800,7 @@ array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Val
         }
 
         vp->setUndefined();
-        if (js_LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags,
-                                       &obj2, &prop) < 0)
+        if (!LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop))
             return JS_FALSE;
 
         if (prop && obj2->isNative()) {

@@ -117,8 +117,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xe5c2efd1, 0xfbae, 0x4a74, \
-    { 0xb2, 0xeb, 0xf3, 0x49, 0xf5, 0x72, 0xca, 0x71 } }
+  { 0xac809e35, 0x632c, 0x448d, \
+    { 0x9e, 0x34, 0x11, 0x62, 0x32, 0x60, 0x5e, 0xe6 } }
 
 /*
  * Window shadow styles
@@ -939,14 +939,11 @@ class nsIWidget : public nsISupports {
     virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) = 0;
 
     /**
-     * Informs the widget about the region of the window that is partially
-     * transparent. Widgets should assume that the initial transparent
-     * region is empty.
+     * Informs the widget about the region of the window that is opaque.
      *
-     * @param aTransparentRegion the region of the window that is partially
-     * transparent.
+     * @param aOpaqueRegion the region of the window that is opaque.
      */
-    virtual void UpdateTransparentRegion(const nsIntRegion &aTransparentRegion) {};
+    virtual void UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion) {};
 
     /** 
      * Internal methods

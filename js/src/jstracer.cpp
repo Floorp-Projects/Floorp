@@ -9520,22 +9520,17 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 RETURN_STOP_A("cannot cache name");
         } else {
             TraceMonitor &localtm = *traceMonitor;
-            int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id,
-                                                        cx->resolveFlags,
-                                                        &obj2, &prop);
+            if (!LookupPropertyWithFlags(cx, aobj, id, cx->resolveFlags, &obj2, &prop))
+                RETURN_ERROR_A("error in LookupPropertyWithFlags");
 
-            if (protoIndex < 0)
-                RETURN_ERROR_A("error in js_LookupPropertyWithFlags");
-
-            /* js_LookupPropertyWithFlags can reenter the interpreter and kill |this|. */
+            /* LookupPropertyWithFlags can reenter the interpreter and kill |this|. */
             if (!localtm.recorder)
                 return ARECORD_ABORTED;
 
             if (prop) {
                 if (!obj2->isNative())
                     RETURN_STOP_A("property found on non-native object");
-                entry = JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2,
-                                                   (Shape*) prop);
+                entry = JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, obj2, (Shape*) prop);
                 JS_ASSERT(entry);
                 if (entry == JS_NO_PROP_CACHE_FILL)
                     entry = NULL;
@@ -10544,10 +10539,9 @@ TraceRecorder::record_JSOP_IFNE()
 LIns*
 TraceRecorder::newArguments(LIns* callee_ins)
 {
-    LIns* global_ins = w.immpObjGC(globalObj);
     LIns* argc_ins = w.nameImmi(cx->fp()->numActualArgs());
 
-    LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
+    LIns* args[] = { callee_ins, argc_ins, cx_ins };
     LIns* argsobj_ins = w.call(&js_NewArgumentsOnTrace_ci, args);
     guard(false, w.eqp0(argsobj_ins), OOM_EXIT);
 
@@ -12475,11 +12469,11 @@ RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
 {
     JSString* name = *namep;
     if (name->isAtom()) {
-        *idp = INTERNED_STRING_TO_JSID(name);
+        *idp = ATOM_TO_JSID(&name->asAtom());
         return true;
     }
 
-    JSAtom* atom = js_AtomizeString(cx, name, 0);
+    JSAtom* atom = js_AtomizeString(cx, name);
     if (!atom)
         return false;
     *namep = atom; /* write back to GC root */
@@ -15126,7 +15120,7 @@ TraceRecorder::record_JSOP_BINDNAME()
 #ifdef DEBUG
             // NB: fp2 can't be a generator frame, because !fp->hasFunction.
             while (obj->getPrivate() != fp2) {
-                JS_ASSERT(fp2->isEvalOrDebuggerFrame());
+                JS_ASSERT(fp2->isDirectEvalOrDebuggerFrame());
                 fp2 = fp2->prev();
                 if (!fp2)
                     JS_NOT_REACHED("bad stack frame");

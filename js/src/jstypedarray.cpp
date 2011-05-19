@@ -542,7 +542,7 @@ class TypedArrayTemplate
             }
 
             vp->setUndefined();
-            if (js_LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop) < 0)
+            if (!LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop))
                 return false;
 
             if (prop) {

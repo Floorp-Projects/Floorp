@@ -418,7 +418,10 @@ struct JITScript {
     void purgePICs();
 
     size_t scriptDataSize();
-
+#ifdef DEBUG
+    /* length script->length array of execution counters for every JSOp in the compiled script */
+    int             *pcProfile;
+#endif
     jsbytecode *nativeToPC(void *returnAddress) const;
 
   private:
@@ -489,6 +492,9 @@ ResetTraceHint(JSScript *script, jsbytecode *pc, uint16_t index, bool full);
 
 uintN
 GetCallTargetCount(JSScript *script, jsbytecode *pc);
+
+void
+DumpAllProfiles(JSContext *cx);
 
 inline void * bsearch_nmap(NativeMapEntry *nmap, size_t nPairs, size_t bcOff)
 {

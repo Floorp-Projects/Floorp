@@ -96,6 +96,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
+#include "methodjit/MethodJIT.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -3720,7 +3721,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
 
     *objp = NULL;
     if (referent->isNative()) {
-        if (js_LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &prop) < 0)
+        if (!LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &prop))
             return false;
         if (obj2 != referent)
             return true;
@@ -3767,9 +3768,8 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
     }
 
     *objp = obj;
-    return js_DefineNativeProperty(cx, obj, id, desc.value,
-                                   desc.getter, desc.setter, desc.attrs, propFlags,
-                                   desc.shortid, &prop);
+    return !!DefineNativeProperty(cx, obj, id, desc.value, desc.getter, desc.setter,
+                                  desc.attrs, propFlags, desc.shortid);
 }
 
 static JSBool
@@ -4653,7 +4653,9 @@ MJitDataStats(JSContext *cx, uintN argc, jsval *vp)
 JSBool
 StringStats(JSContext *cx, uintN argc, jsval *vp)
 {
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(cx->runtime->stringMemoryUsed));
+    // XXX: should report something meaningful;  bug 625305 will probably fix
+    // this.
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(0));
     return true;
 }
 
@@ -5931,6 +5933,10 @@ Shell(JSContext *cx, int argc, char **argv, char **envp)
         JSD_DebuggerOff(jsdc);
     }
 #endif  /* JSDEBUGGER */
+
+#ifdef JS_METHODJIT
+    mjit::DumpAllProfiles(cx);
+#endif
 
     return result;
 }

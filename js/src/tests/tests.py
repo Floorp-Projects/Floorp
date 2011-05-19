@@ -44,6 +44,7 @@ def run_cmd(cmd, timeout=60.0):
         return do_run_cmd(cmd)
 
     l = [ None, None ]
+    timed_out = False
     th = Thread(target=th_run_cmd, args=(cmd, l))
     th.start()
     th.join(timeout)
@@ -55,11 +56,12 @@ def run_cmd(cmd, timeout=60.0):
                 if sys.platform != 'win32':
                     os.kill(l[0].pid, signal.SIGKILL)
                 time.sleep(.1)
+                timed_out = True
             except OSError:
                 # Expecting a "No such process" error
                 pass
     th.join()
-    return l[1]
+    return l[1] + (timed_out,)
 
 class Test(object):
     """A runnable test."""
@@ -76,23 +78,28 @@ class Test(object):
 
     def get_command(self, js_cmd_prefix):
         dir, filename = os.path.split(self.path)
+        cmd = js_cmd_prefix + Test.prefix_command(dir)
+        if self.debugMode:
+            cmd += [ '-d' ]
         # There is a test that requires the path to start with './'.
-        return js_cmd_prefix + Test.prefix_command(dir) + [ '-f', './' + self.path ]
+        cmd += [ '-f', './' + self.path ]
+        return cmd
 
     def run(self, js_cmd_prefix, timeout=30.0):
         cmd = self.get_command(js_cmd_prefix)
-        out, err, rc, dt = run_cmd(cmd, timeout)
-        return TestOutput(self, cmd, out, err, rc, dt);
+        out, err, rc, dt, timed_out = run_cmd(cmd, timeout)
+        return TestOutput(self, cmd, out, err, rc, dt, timed_out)
 
 class TestCase(Test):
     """A test case consisting of a test and an expected result."""
 
-    def __init__(self, path, enable, expect, random, slow):
+    def __init__(self, path, enable, expect, random, slow, debugMode):
         Test.__init__(self, path)
         self.enable = enable     # bool: True => run test, False => don't run
         self.expect = expect     # bool: expected result, True => pass
         self.random = random     # bool: True => ignore output as 'random'
         self.slow = slow         # bool: True => test may run slowly
+        self.debugMode = debugMode # bool: True => must be run in debug mode
 
     def __str__(self):
         ans = self.path
@@ -104,17 +111,20 @@ class TestCase(Test):
             ans += ', random'
         if self.slow:
             ans += ', slow'
+        if self.debugMode:
+            ans += ', debugMode'
         return ans
 
 class TestOutput:
     """Output from a test run."""
-    def __init__(self, test, cmd, out, err, rc, dt):
+    def __init__(self, test, cmd, out, err, rc, dt, timed_out):
         self.test = test   # Test
         self.cmd = cmd     # str:   command line of test
         self.out = out     # str:   stdout
         self.err = err     # str:   stderr
         self.rc = rc       # int:   return code
         self.dt = dt       # float: run time
+        self.timed_out = timed_out # bool: did the test time out
 
 class NullTestOutput:
     """Variant of TestOutput that indicates a test was not run."""
@@ -125,6 +135,7 @@ class NullTestOutput:
         self.err = ''
         self.rc = 0
         self.dt = 0.0
+        self.timed_out = False
 
 class TestResult:
     PASS = 'PASS'
