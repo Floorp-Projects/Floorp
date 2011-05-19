@@ -113,6 +113,8 @@ function test() {
 
   showTabView(function () {
     cw = TabView.getContentWindow();
+    assertNumberOfGroups('start', 1);
+
     createGroupItem();
 
     afterAllTabsLoaded(function () {
