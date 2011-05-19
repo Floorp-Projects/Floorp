@@ -14962,10 +14962,10 @@ ctx.fillStyle = '#f00';
 ctx.fillStyle = pattern;
 ctx.fillRect(0, 0, 100, 50);
 
-todo_isPixel(ctx, 1,1, 0,255,0,255, 0);
-todo_isPixel(ctx, 98,1, 0,255,0,255, 0);
-todo_isPixel(ctx, 1,48, 0,255,0,255, 0);
-todo_isPixel(ctx, 98,48, 0,255,0,255, 0);
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
 
 
 }
@@ -21294,6 +21294,33 @@ function test_2d_imageSmoothing() {
 
 </script>
 
+<p>Canvas test: zero_dimensions</p>
+<canvas id="c684" width="0" height="0"></canvas>
+<script type="text/javascript">
+function test_zero_dimensions() {
+  var c = document.getElementById("c684");
+  ok(c.width == 0, "c.width not 0");
+  ok(c.height == 0, "c.height not 0");
+}
+</script>
+
+<p>Canvas test: zero_dimensions_image_data</p>
+<canvas id="c685" width="0" height="0"></canvas>
+<script type="text/javascript">
+function test_zero_dimensions_imagedata() {
+  var c = document.getElementById("c685");
+  var ctx = c.getContext("2d");
+  ctx.fillStyle = "blue";
+  ctx.fillRect(0, 0, 100, 100);
+  var imgdata = ctx.getImageData(0, 0, 100, 100);
+  var isTransparentBlack = true;
+  for (var i = 0; i < imgdata.data.length; ++i)
+      if (imgdata.data[i] !== 0)
+          isTransparentBlack = false;
+  ok(isTransparentBlack, "isTransparentBlack");
+}
+</script>
+
 <script>
 
 function asyncTestsDone() {
@@ -24552,6 +24579,16 @@ function runTests() {
   test_2d_imageSmoothing();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_imageSmoothing");
+ }
+ try {
+  test_zero_dimensions();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_zero_dimensions");
+ }
+ try {
+  test_zero_dimensions_imagedata();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_zero_dimensions_imagedata");
  }
  try {
   // run this test last since it replaces the getContext method
