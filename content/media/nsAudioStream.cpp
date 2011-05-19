@@ -321,9 +321,9 @@ static mozilla::Mutex* gVolumeScaleLock = nsnull;
 static double gVolumeScale = 1.0;
 
 static int VolumeScaleChanged(const char* aPref, void *aClosure) {
-  mozilla::MutexAutoLock lock(*gVolumeScaleLock);
   nsAdoptingString value =
     nsContentUtils::GetStringPref("media.volume_scale");
+  mozilla::MutexAutoLock lock(*gVolumeScaleLock);
   if (value.IsEmpty()) {
     gVolumeScale = 1.0;
   } else {
