@@ -226,6 +226,8 @@ GetDefCount(JSScript *script, unsigned offset)
 {
     JS_ASSERT(offset < script->length);
     jsbytecode *pc = script->code + offset;
+    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
+
     if (js_CodeSpec[*pc].ndefs == -1)
         return js_GetEnterBlockStackDefs(NULL, script, pc);
 
@@ -251,6 +253,8 @@ GetUseCount(JSScript *script, unsigned offset)
 {
     JS_ASSERT(offset < script->length);
     jsbytecode *pc = script->code + offset;
+    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
+
     if (js_CodeSpec[*pc].nuses == -1)
         return js_GetVariableStackUses(JSOp(*pc), pc);
     return js_CodeSpec[*pc].nuses;
@@ -263,6 +267,8 @@ GetUseCount(JSScript *script, unsigned offset)
 static inline bool
 ExtendedDef(jsbytecode *pc)
 {
+    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
+
     switch ((JSOp)*pc) {
       case JSOP_SETARG:
       case JSOP_INCARG:
@@ -308,6 +314,8 @@ ExtendedUse(jsbytecode *pc)
 static inline ptrdiff_t
 GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 {
+    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
+
     uint32 type = JOF_OPTYPE(*pc);
     if (JOF_TYPE_IS_EXTENDED_JUMP(type))
         return GET_JUMPX_OFFSET(pc2);

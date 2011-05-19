@@ -1679,13 +1679,16 @@ TypeCompartment::newInitializerTypeObject(JSContext *cx, JSScript *script,
         res->initializerObject = true;
     res->initializerOffset = offset;
 
-    if (JSOp(script->code[offset]) == JSOP_NEWOBJECT) {
+    jsbytecode *pc = script->code + offset;
+    UntrapOpcode untrap(cx, script, pc);
+
+    if (JSOp(*pc) == JSOP_NEWOBJECT) {
         /*
          * This object is always constructed the same way and will not be
          * observed by other code before all properties have been added. Mark
          * all the properties as definite properties of the object.
          */
-        JSObject *baseobj = script->getObject(GET_SLOTNO(script->code + offset));
+        JSObject *baseobj = script->getObject(GET_SLOTNO(pc));
 
         if (!res->addDefiniteProperties(cx, baseobj))
             return NULL;
@@ -1726,6 +1729,8 @@ bool
 types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
+
+    UntrapOpcode untrap(cx, script, pc);
 
     /*
      * Make a heuristic guess at a use of JSOP_NEW that the constructed object
@@ -2109,12 +2114,15 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset)
     if (script->analysis(cx)->getCode(offset).monitoredTypes)
         return;
 
+    jsbytecode *pc = script->code + offset;
+    UntrapOpcode untrap(cx, script, pc);
+
     /*
      * Make sure monitoring is limited to property sets and calls where the
      * target of the set/call could be statically unknown, and mark the bytecode
      * results as unknown.
      */
-    JSOp op = JSOp(script->code[offset]);
+    JSOp op = JSOp(*pc);
     switch (op) {
       case JSOP_SETNAME:
       case JSOP_SETGNAME:
@@ -2830,43 +2838,6 @@ TypeObject::print(JSContext *cx)
 // Type Analysis
 /////////////////////////////////////////////////////////////////////
 
-static inline ptrdiff_t
-GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
-{
-    uint32 type = JOF_OPTYPE(*pc);
-    if (JOF_TYPE_IS_EXTENDED_JUMP(type))
-        return GET_JUMPX_OFFSET(pc2);
-    return GET_JUMP_OFFSET(pc2);
-}
-
-/* Return whether op bytecodes do not fallthrough (they may do a jump). */
-static inline bool
-BytecodeNoFallThrough(JSOp op)
-{
-    switch (op) {
-      case JSOP_GOTO:
-      case JSOP_GOTOX:
-      case JSOP_DEFAULT:
-      case JSOP_DEFAULTX:
-      case JSOP_RETURN:
-      case JSOP_STOP:
-      case JSOP_RETRVAL:
-      case JSOP_THROW:
-      case JSOP_TABLESWITCH:
-      case JSOP_TABLESWITCHX:
-      case JSOP_LOOKUPSWITCH:
-      case JSOP_LOOKUPSWITCHX:
-      case JSOP_FILTER:
-        return true;
-      case JSOP_GOSUB:
-      case JSOP_GOSUBX:
-        /* These fall through indirectly, after executing a 'finally'. */
-        return false;
-      default:
-        return false;
-    }
-}
-
 /*
  * If the bytecode immediately following code/pc is a test of the value
  * pushed by code, that value should be marked as possibly void.
@@ -2887,6 +2858,7 @@ CheckNextTest(jsbytecode *pc)
       case JSOP_TYPEOFEXPR:
         return true;
       default:
+        /* TRAP ok here */
         return false;
     }
 }
@@ -2896,6 +2868,8 @@ GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     if (!script->global)
         return NULL;
+
+    UntrapOpcode untrap(cx, script, pc);
 
     JSOp op = JSOp(*pc);
     JS_ASSERT(op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT || op == JSOP_NEWINIT);
@@ -2910,7 +2884,7 @@ ScriptAnalysis::setForTypes(JSContext *cx, jsbytecode *pc, TypeSet *types)
     /* Find the initial ITER opcode which constructed the active iterator. */
     const SSAValue &iterv = poppedValue(pc, 0);
     jsbytecode *iterpc = script->code + iterv.pushedOffset();
-    JS_ASSERT(JSOp(*iterpc) == JSOP_ITER);
+    JS_ASSERT(JSOp(*iterpc) == JSOP_ITER || JSOp(*iterpc) == JSOP_TRAP);
 
     uintN flags = iterpc[1];
     if (flags & JSITER_FOREACH) {
@@ -3967,6 +3941,8 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
     while (nextOffset < script->length) {
         unsigned offset = nextOffset;
         jsbytecode *pc = script->code + offset;
+        UntrapOpcode untrap(cx, script, pc);
+
         JSOp op = JSOp(*pc);
 
         nextOffset += GetBytecodeLength(pc);
@@ -4023,6 +3999,8 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
             return false;
 
         pc = script->code + uses->offset;
+        UntrapOpcode untrapUse(cx, script, pc);
+
         op = JSOp(*pc);
 
         JSObject *obj = *pbaseobj;
@@ -4088,14 +4066,15 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
 
             /* Callee/this must have been pushed by a CALLPROP. */
             SSAValue calleev = analysis->poppedValue(pc, GET_ARGC(pc) + 1);
-            if (calleev.kind() != SSAValue::PUSHED ||
-                JSOp(script->code[calleev.pushedOffset()]) != JSOP_CALLPROP ||
-                calleev.pushedIndex() != 0) {
+            if (calleev.kind() != SSAValue::PUSHED)
                 return false;
-            }
+            jsbytecode *calleepc = script->code + calleev.pushedOffset();
+            UntrapOpcode untrapCallee(cx, script, calleepc);
+            if (JSOp(*calleepc) != JSOP_CALLPROP || calleev.pushedIndex() != 0)
+                return false;
 
-            TypeSet *funcallTypes = analysis->pushedTypes(calleev.pushedOffset(), 0);
-            TypeSet *scriptTypes = analysis->pushedTypes(calleev.pushedOffset(), 1);
+            TypeSet *funcallTypes = analysis->pushedTypes(calleepc, 0);
+            TypeSet *scriptTypes = analysis->pushedTypes(calleepc, 1);
 
             /* Need to definitely be calling Function.call on a specific script. */
             TypeObject *funcallObj = funcallTypes->getSingleObject();
@@ -4177,6 +4156,9 @@ ScriptAnalysis::printTypes(JSContext *cx)
         if (!maybeCode(offset))
             continue;
 
+        jsbytecode *pc = script->code + offset;
+        UntrapOpcode untrap(cx, script, pc);
+
         unsigned defCount = GetDefCount(script, offset);
         if (!defCount)
             continue;
@@ -4251,10 +4233,13 @@ ScriptAnalysis::printTypes(JSContext *cx)
         if (!maybeCode(offset))
             continue;
 
-        PrintBytecode(cx, script, script->code + offset);
+        jsbytecode *pc = script->code + offset;
+        UntrapOpcode untrap(cx, script, pc);
 
-        if (js_CodeSpec[script->code[offset]].format & JOF_TYPESET) {
-            TypeSet *types = script->bytecodeTypes(script->code + offset);
+        PrintBytecode(cx, script, pc);
+
+        if (js_CodeSpec[*pc].format & JOF_TYPESET) {
+            TypeSet *types = script->bytecodeTypes(pc);
             printf("  typeset %d:", (int) (types - script->typeArray));
             types->print(cx);
             printf("\n");
@@ -4298,6 +4283,8 @@ ScriptAnalysis::printTypes(JSContext *cx)
 static inline bool
 IgnorePushed(const jsbytecode *pc, unsigned index)
 {
+    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
+
     switch (JSOp(*pc)) {
       /* We keep track of the scopes pushed by BINDNAME separately. */
       case JSOP_BINDNAME:

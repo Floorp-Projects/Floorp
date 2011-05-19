@@ -595,7 +595,7 @@ struct JSScript {
     inline void typeMonitorUnknown(JSContext *cx, const jsbytecode *pc);
 
     /* Monitor a JOF_TYPESET bytecode pushing any value into its pushed type set. */
-    inline void typeMonitor(JSContext *cx, const jsbytecode *pc, const js::Value &val);
+    inline void typeMonitor(JSContext *cx, jsbytecode *pc, const js::Value &val);
 
     /* Monitor an assignment at a SETELEM on a non-integer identifier. */
     inline void typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
