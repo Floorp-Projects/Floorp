@@ -275,6 +275,7 @@ class MInstruction : public TempObject
 
     virtual Opcode op() const = 0;
     void printName(FILE *fp);
+    void printOpcode(FILE *fp);
 
     uint32 id() const {
         JS_ASSERT(block_);

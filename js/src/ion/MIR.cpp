@@ -73,9 +73,15 @@ PrintOpcodeName(FILE *fp, MInstruction::Opcode op)
 void
 MInstruction::printName(FILE *fp)
 {
-    PrintOpcodeName(fp, op());
+    printOpcode(fp);
     fprintf(fp, "%u", id());
     fprintf(fp, ":v");
+}
+
+void
+MInstruction::printOpcode(FILE *fp)
+{
+    PrintOpcodeName(fp, op());
 }
 
 void
