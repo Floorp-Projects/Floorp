@@ -1579,10 +1579,10 @@ Loader::ParseSheet(nsIUnicharInputStream* aStream,
   mParsingDatas.AppendElement(aLoadData);
   nsIURI* sheetURI = aLoadData->mSheet->GetSheetURI();
   nsIURI* baseURI = aLoadData->mSheet->GetBaseURI();
-  nsresult rv = parser.Parse(aStream, sheetURI, baseURI,
-                             aLoadData->mSheet->Principal(),
-                             aLoadData->mLineNumber,
-                             aLoadData->mAllowUnsafeRules);
+  nsresult rv = parser.ParseSheet(*aStream, sheetURI, baseURI,
+                                  aLoadData->mSheet->Principal(),
+                                  aLoadData->mLineNumber,
+                                  aLoadData->mAllowUnsafeRules);
   mParsingDatas.RemoveElementAt(mParsingDatas.Length() - 1);
 
   if (NS_FAILED(rv)) {

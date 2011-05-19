@@ -1167,9 +1167,9 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
           sheet->SetPrincipal(mTargetDocument->NodePrincipal());
           // Create the CSS parser, and parse the CSS text.
           nsCSSParser parser(nsnull, sheet);
-          rv = parser.Parse(uin, mTargetDocument->GetDocumentURI(),
-                            baseURI, mTargetDocument->NodePrincipal(),
-                            0, PR_FALSE);
+          rv = parser.ParseSheet(*uin, mTargetDocument->GetDocumentURI(),
+                                 baseURI, mTargetDocument->NodePrincipal(),
+                                 0, PR_FALSE);
           // Mark the sheet as complete.
           if (NS_SUCCEEDED(rv)) {
             NS_ABORT_IF_FALSE(!sheet->IsModified(),
