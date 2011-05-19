@@ -135,6 +135,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_585956_console_trace.js \
 	browser_webconsole_bug_595223_file_uri.js \
 	browser_webconsole_bug_632275_getters_document_width.js \
+	browser_webconsole_bug_644419_log_limits.js \
 	browser_webconsole_bug_646025_console_file_location.js \
 	browser_webconsole_position_ui.js \
 	browser_webconsole_bug_642615_autocomplete.js \
@@ -207,6 +208,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-621644-jsterm-dollar.html \
 	test-bug-632347-iterators-generators.html \
 	test-bug-585956-console-trace.html \
+	test-bug-644419-log-limits.html \
 	test-bug-632275-getters.html \
 	test-bug-646025-console-file-location.html \
 	test-file-location.js \
