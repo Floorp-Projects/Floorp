@@ -8986,7 +8986,7 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, uintN argc, jsval *vp)
   }
 
   nsCOMPtr<nsIDOMDocument> retval;
-  nsresult rv = doc->Open(contentType, replace, getter_AddRefs(retval));
+  nsresult rv = doc->Open(contentType, replace, cx, getter_AddRefs(retval));
   if (NS_FAILED(rv)) {
     nsDOMClassInfo::ThrowJSException(cx, rv);
 

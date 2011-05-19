@@ -1518,7 +1518,8 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
 
 // XXX TBI: accepting arguments to the open method.
 nsresult
-nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
+nsHTMLDocument::OpenCommon(JSContext *cx, const nsACString& aContentType,
+                           PRBool aReplace)
 {
   if (!IsHTML() || mDisableDocWrite) {
     // No calling document.open() on XHTML
@@ -1686,7 +1687,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     nsCOMPtr<nsIScriptGlobalObject> newScope(do_QueryReferent(mScopeObject));
     if (oldScope && newScope != oldScope) {
-      nsContentUtils::ReparentContentWrappersInScope(oldScope, newScope);
+      nsContentUtils::ReparentContentWrappersInScope(cx, oldScope, newScope);
     }
   }
 
@@ -1767,9 +1768,9 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
 NS_IMETHODIMP
 nsHTMLDocument::Open(const nsACString& aContentType, PRBool aReplace,
-                     nsIDOMDocument** aReturn)
+                     JSContext *cx, nsIDOMDocument** aReturn)
 {
-  nsresult rv = OpenCommon(aContentType, aReplace);
+  nsresult rv = OpenCommon(cx, aContentType, aReplace);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(this, aReturn);
@@ -1843,7 +1844,8 @@ nsHTMLDocument::Close()
 }
 
 nsresult
-nsHTMLDocument::WriteCommon(const nsAString& aText,
+nsHTMLDocument::WriteCommon(JSContext *cx,
+                            const nsAString& aText,
                             PRBool aNewlineTerminate)
 {
   mTooDeepWriteRecursion =
@@ -1892,7 +1894,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
       return NS_OK;
     }
     nsCOMPtr<nsIDOMDocument> ignored;
-    rv = Open(NS_LITERAL_CSTRING("text/html"), PR_FALSE,
+    rv = Open(NS_LITERAL_CSTRING("text/html"), PR_FALSE, cx,
               getter_AddRefs(ignored));
 
     // If Open() fails, or if it didn't create a parser (as it won't
@@ -1940,15 +1942,15 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Write(const nsAString& aText)
+nsHTMLDocument::Write(const nsAString& aText, JSContext *cx)
 {
-  return WriteCommon(aText, PR_FALSE);
+  return WriteCommon(cx, aText, PR_FALSE);
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Writeln(const nsAString& aText)
+nsHTMLDocument::Writeln(const nsAString& aText, JSContext *cx)
 {
-  return WriteCommon(aText, PR_TRUE);
+  return WriteCommon(cx, aText, PR_TRUE);
 }
 
 PRBool
