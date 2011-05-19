@@ -309,42 +309,52 @@ nsPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
   return NS_OK;
 }
 
+PRBool
+nsPrincipal::CertificateEquals(nsIPrincipal *aOther)
+{
+  PRBool otherHasCert;
+  aOther->GetHasCertificate(&otherHasCert);
+  if (otherHasCert != (mCert != nsnull)) {
+    // One has a cert while the other doesn't.  Not equal.
+    return PR_FALSE;
+  }
+
+  if (!mCert)
+    return PR_TRUE;
+
+  nsCAutoString str;
+  aOther->GetFingerprint(str);
+  if (!str.Equals(mCert->fingerprint))
+    return PR_FALSE;
+
+  // If either subject name is empty, just let the result stand (so that
+  // nsScriptSecurityManager::SetCanEnableCapability works), but if they're
+  // both non-empty, only claim equality if they're equal.
+  if (!mCert->subjectName.IsEmpty()) {
+    // Check the other principal's subject name
+    aOther->GetSubjectName(str);
+    return str.Equals(mCert->subjectName) || str.IsEmpty();
+  }
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
 {
-  *aResult = PR_FALSE;
-
   if (!aOther) {
     NS_WARNING("Need a principal to compare this to!");
+    *aResult = PR_FALSE;
     return NS_OK;
   }
 
   if (this != aOther) {
-    PRBool otherHasCert;
-    aOther->GetHasCertificate(&otherHasCert);
-    if (otherHasCert != (mCert != nsnull)) {
-      // One has a cert while the other doesn't.  Not equal.
+    if (!CertificateEquals(aOther)) {
+      *aResult = PR_FALSE;
       return NS_OK;
     }
 
     if (mCert) {
-      nsCAutoString str;
-      aOther->GetFingerprint(str);
-      *aResult = str.Equals(mCert->fingerprint);
-
-      // If either subject name is empty, just let the result stand (so that
-      // nsScriptSecurityManager::SetCanEnableCapability works), but if they're
-      // both non-empty, only claim equality if they're equal.
-      if (*aResult && !mCert->subjectName.IsEmpty()) {
-        // Check the other principal's subject name
-        aOther->GetSubjectName(str);
-        *aResult = str.Equals(mCert->subjectName) || str.IsEmpty();
-      }
-
-      if (!*aResult) {
-        return NS_OK;
-      }
-
       // If either principal has no URI, it's the saved principal from
       // preferences; in that case, test true.  Do NOT test true if the two
       // principals have URIs with different codebases.
@@ -356,6 +366,7 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
       }
 
       if (!otherURI || !mCodebase) {
+        *aResult = PR_TRUE;
         return NS_OK;
       }
 
@@ -370,6 +381,34 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
   }
 
   *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, PRBool *aResult)
+{
+  if (this == aOther) {
+    *aResult = PR_TRUE;
+    return NS_OK;
+  }
+
+  *aResult = PR_FALSE;
+  if (!CertificateEquals(aOther)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> otherURI;
+  nsresult rv = aOther->GetURI(getter_AddRefs(otherURI));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  NS_ASSERTION(mCodebase,
+               "shouldn't be calling this on principals from preferences");
+
+  // Compare codebases.
+  *aResult = nsScriptSecurityManager::SecurityCompareURIs(mCodebase,
+                                                          otherURI);
   return NS_OK;
 }
 

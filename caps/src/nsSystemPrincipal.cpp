@@ -111,6 +111,12 @@ nsSystemPrincipal::Equals(nsIPrincipal *other, PRBool *result)
 }
 
 NS_IMETHODIMP
+nsSystemPrincipal::EqualsIgnoringDomain(nsIPrincipal *other, PRBool *result)
+{
+    return Equals(other, result);
+}
+
+NS_IMETHODIMP
 nsSystemPrincipal::Subsumes(nsIPrincipal *other, PRBool *result)
 {
     *result = PR_TRUE;

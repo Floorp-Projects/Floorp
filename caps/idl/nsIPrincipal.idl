@@ -52,7 +52,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(799ab95c-0038-4e0f-b705-74c21f185bb5)]
+[scriptable, uuid(B406A2DB-E547-4C95-B8E2-AD09ECB54CE0)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -85,6 +85,11 @@ interface nsIPrincipal : nsISerializable
      * they have the same origin, or have the same certificate fingerprint ID
      */
     boolean equals(in nsIPrincipal other);
+
+    /**
+     * Like equals, but doesn't take document.domain changes into account.
+     */
+    boolean equalsIgnoringDomain(in nsIPrincipal other);
 
     /**
      * Returns a hash value for the principal.

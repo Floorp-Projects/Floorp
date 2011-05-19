@@ -91,6 +91,8 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug636097.html \
 		test_bug650273.html \
 		file_bug650273.html \
+		test_bug657267.html \
+		bug657267.jar \
 		$(NULL)
 
 		#test_bug484107.html \

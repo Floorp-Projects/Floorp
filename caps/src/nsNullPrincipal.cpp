@@ -163,6 +163,12 @@ nsNullPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsNullPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, PRBool *aResult)
+{
+  return Equals(aOther, aResult);
+}
+
+NS_IMETHODIMP
 nsNullPrincipal::GetHashValue(PRUint32 *aResult)
 {
   *aResult = (NS_PTR_TO_INT32(this) >> 2);
