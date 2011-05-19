@@ -1559,7 +1559,9 @@ js_InitJSONClass(JSContext *cx, JSObject *obj)
     if (!JSON)
         return NULL;
 
-    TypeObject *type = cx->newTypeObject(js_JSON_str, JSON->getProto());
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, js_JSON_str, "",
+                                                            false, false,
+                                                            JSON->getProto());
     if (!type || !JSON->setTypeAndUniqueShape(cx, type))
         return NULL;
 

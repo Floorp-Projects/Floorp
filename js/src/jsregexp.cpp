@@ -869,7 +869,10 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
     if (!proto)
         return NULL;
 
-    TypeObject *protoType = cx->newTypeObject("RegExp", "prototype", proto->getProto(), false);
+    types::TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
+                                                                        "RegExp", "prototype",
+                                                                        false, false,
+                                                                        proto->getProto());
     if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
         return NULL;
 

@@ -1460,7 +1460,10 @@ js_InitProxyClass(JSContext *cx, JSObject *obj)
     if (!module)
         return NULL;
 
-    types::TypeObject *type = cx->newTypeObject(js_ProxyClass.name, module->getProto());
+    types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
+                                                                   js_ProxyClass.name, "",
+                                                                   false, false,
+                                                                   module->getProto());
     if (!type || !module->setTypeAndUniqueShape(cx, type))
         return NULL;
 

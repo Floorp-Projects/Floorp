@@ -114,7 +114,8 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     if (!obj)
         return NULL;
 
-    types::TypeObject *type = cx->newTypeObject("Global", NULL);
+    types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "Global", "",
+                                                                   false, false, NULL);
     if (!type || !obj->setTypeAndUniqueShape(cx, type))
         return NULL;
     if (clasp->ext.equality)

@@ -1600,10 +1600,17 @@ TypeCompartment::init(JSContext *cx)
 }
 
 TypeObject *
-TypeCompartment::newTypeObject(JSContext *cx, JSScript *script, const char *name,
+TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
+                               const char *name, const char *postfix,
                                bool isFunction, bool isArray, JSObject *proto)
 {
 #ifdef DEBUG
+    if (*postfix) {
+        unsigned len = strlen(name) + strlen(postfix) + 2;
+        char *newName = (char *) alloca(len);
+        JS_snprintf(newName, len, "%s:%s", name, postfix);
+        name = newName;
+    }
 #if 0
     /* Add a unique counter to the name, to distinguish objects from different globals. */
     static unsigned nameCount = 0;
@@ -1662,7 +1669,7 @@ TypeCompartment::newInitializerTypeObject(JSContext *cx, JSScript *script,
     if (!js_GetClassPrototype(cx, script->getGlobal(), key, &proto, NULL))
         return NULL;
 
-    TypeObject *res = newTypeObject(cx, script, name, false, isArray, proto);
+    TypeObject *res = newTypeObject(cx, script, name, "", false, isArray, proto);
     if (!res)
         return NULL;
 
@@ -2287,11 +2294,14 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
     if (p) {
         obj->setType(p->value);
     } else {
+        char *name = NULL;
+#ifdef DEBUG
         static unsigned count = 0;
-        char *name = (char *) alloca(20);
+        name = (char *) alloca(20);
         JS_snprintf(name, 20, "TableArray:%u", ++count);
+#endif
 
-        TypeObject *objType = newTypeObject(cx, NULL, name, false, true, obj->getProto());
+        TypeObject *objType = newTypeObject(cx, NULL, name, "", false, true, obj->getProto());
         if (!objType) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2418,11 +2428,14 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         }
         AutoObjectRooter xvr(cx, xobj);
 
+        char *name = NULL;
+#ifdef DEBUG
         static unsigned count = 0;
-        char *name = (char *) alloca(20);
+        name = (char *) alloca(20);
         JS_snprintf(name, 20, "TableObject:%u", ++count);
+#endif
 
-        TypeObject *objType = newTypeObject(cx, NULL, name, false, false, obj->getProto());
+        TypeObject *objType = newTypeObject(cx, NULL, name, "", false, false, obj->getProto());
         if (!objType) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2537,13 +2550,9 @@ TypeObject::splicePrototype(JSContext *cx, JSObject *proto)
         *plist = this->instanceNext;
     }
 
-    /*
-     * Make sure this is not the shared 'empty' type object. :TODO: once we
-     * can mark type objects as singletons, assert that instead.
-     */
-    JS_ASSERT(this != &cx->compartment->types.typeEmpty);
-
     this->proto = proto;
+
+    /* Link with the new proto. */
     this->instanceNext = proto->getType()->instanceList;
     proto->getType()->instanceList = this;
 
@@ -2558,9 +2567,8 @@ TypeObject::splicePrototype(JSContext *cx, JSObject *proto)
     }
 
     /*
-     * Note: we require (but do not assert) that any property in the prototype
-     * or its own prototypes must not share a name with a property already
-     * added to an instance of this object.
+     * Update properties on this type with any shared with the prototype.
+     * :FIXME: do this for instances of this object too.
      */
     unsigned count = getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
@@ -4280,35 +4288,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
 }
 
 /////////////////////////////////////////////////////////////////////
-// JSContext
-/////////////////////////////////////////////////////////////////////
-
-TypeFunction *
-JSContext::newTypeFunction(const char *name, JSObject *proto)
-{
-    return (TypeFunction *)
-        compartment->types.newTypeObject(this, NULL, name, true, false, proto);
-}
-
-TypeObject *
-JSContext::newTypeObject(const char *name, JSObject *proto)
-{
-    return compartment->types.newTypeObject(this, NULL, name, false, false, proto);
-}
-
-TypeObject *
-JSContext::newTypeObject(const char *base, const char *postfix, JSObject *proto, bool isFunction)
-{
-    char *name = NULL;
-#ifdef DEBUG
-    unsigned len = strlen(base) + strlen(postfix) + 5;
-    name = (char *)alloca(len);
-    JS_snprintf(name, len, "%s:%s", base, postfix);
-#endif
-    return compartment->types.newTypeObject(this, NULL, name, isFunction, false, proto);
-}
-
-/////////////////////////////////////////////////////////////////////
 // JSScript
 /////////////////////////////////////////////////////////////////////
 
@@ -4433,7 +4412,9 @@ JSScript::typeSetFunction(JSContext *cx, JSFunction *fun)
     name = (char *) alloca(10);
     JS_snprintf(name, 10, "#%u", id());
 #endif
-    TypeObject *type = cx->newTypeFunction(name, fun->getProto());
+
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, this, name, "",
+                                                            true, false, fun->getProto());
     if (!type)
         return false;
 
@@ -4504,7 +4485,8 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript)
 {
     JS_ASSERT(!newType);
 
-    TypeObject *type = cx->newTypeObject(getType()->name(), "new", this);
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, getType()->name(), "new",
+                                                            false, false, this);
     if (!type)
         return;
 

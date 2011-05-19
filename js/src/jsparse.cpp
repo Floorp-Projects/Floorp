@@ -1160,6 +1160,9 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 bool
 Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
 {
+    if (!globalScope.defs.length())
+        return true;
+
     JSObject *globalObj = globalScope.globalObj;
 
     /* Define and update global properties. */
@@ -1217,11 +1220,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
 
         if (JSScript::isValidOffset(inner->objectsOffset)) {
             JSObjectArray *arr = inner->objects();
-
-            /* Skip any caller function entrained in the first object. */
-            size_t start = inner->savedCallerFun ? 1 : 0;
-
-            for (size_t i = start; i < arr->length; i++) {
+            for (size_t i = 0; i < arr->length; i++) {
                 JSObject *obj = arr->vector[i];
                 if (!obj->isFunction())
                     continue;
