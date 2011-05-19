@@ -190,7 +190,7 @@ PRBool InitializeMember(JSContext * cx, ITypeInfo * pTypeInfo,
     pInfo = new (pInfo) XPCDispInterface::Member;
     if(!pInfo)
         return PR_FALSE;
-    pInfo->SetName(INTERNED_STRING_TO_JSID(str));
+    pInfo->SetName(INTERNED_STRING_TO_JSID(cx, str));
     pInfo->ResetType();
     ConvertInvokeKind(pFuncDesc->invkind, *pInfo);
     pInfo->SetTypeInfo(pFuncDesc->memid, pTypeInfo, pFuncDesc);

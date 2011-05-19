@@ -6,12 +6,9 @@
 <!ENTITY organize.accesskey    "O">
 <!ENTITY organize.tooltip      "Organize your bookmarks">
 
-<!ENTITY file.accesskey                 "F">
 <!ENTITY file.close.label               "Close">
 <!ENTITY file.close.accesskey           "C">
 <!ENTITY cmd.close.key                  "w">
-<!ENTITY edit.label                     "Edit">
-<!ENTITY edit.accesskey                 "E">
 <!ENTITY views.label                    "Views">
 <!ENTITY views.accesskey                "V">
 <!ENTITY views.tooltip                  "Change your view">
@@ -111,17 +108,14 @@
 <!ENTITY maintenance.accesskey  "I">
 <!ENTITY maintenance.tooltip    "Import and backup your bookmarks">
 
-<!ENTITY backCmd.label       "Back">
 <!ENTITY backButton.tooltip  "Go back">
 
-<!ENTITY forwardCmd.label       "Forward">
 <!ENTITY forwardButton.tooltip  "Go forward">
 
 <!ENTITY detailsPane.more.label "More">
 <!ENTITY detailsPane.more.accesskey "e">
 <!ENTITY detailsPane.less.label "Less">
 <!ENTITY detailsPane.less.accesskey "e">
-<!ENTITY detailsPane.noPreviewAvailable.label "Preview">
 <!ENTITY detailsPane.selectAnItemText.description "Select an item to view and edit its properties">
 
 <!ENTITY find.label               "Search:">

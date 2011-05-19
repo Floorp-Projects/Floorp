@@ -145,11 +145,8 @@ class ArgumentsObject : public ::JSObject
     void setCalleeAndData(JSObject &callee, ArgumentsData *data);
 
   public:
-    /*
-     * Create arguments parented to parent, for the given callee function.
-     * Is parent redundant with callee->getGlobal()?
-     */
-    static ArgumentsObject *create(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee);
+    /* Create an arguments object for the given callee function. */
+    static ArgumentsObject *create(JSContext *cx, uint32 argc, JSObject &callee);
 
     /*
      * Return the initial length of the arguments.  This may differ from the
@@ -183,7 +180,7 @@ class NormalArgumentsObject : public ArgumentsObject
     friend bool JSObject::isNormalArguments() const;
     friend struct EmptyShape; // for EmptyShape::getEmptyArgumentsShape
     friend ArgumentsObject *
-    ArgumentsObject::create(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee);
+    ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee);
 
   public:
     /*
@@ -208,7 +205,7 @@ class StrictArgumentsObject : public ArgumentsObject
 
     friend bool JSObject::isStrictArguments() const;
     friend ArgumentsObject *
-    ArgumentsObject::create(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee);
+    ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee);
 };
 
 } // namespace js

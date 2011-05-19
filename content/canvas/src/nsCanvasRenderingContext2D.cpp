@@ -172,8 +172,11 @@ static PRInt64 GetCanvasMemoryUsed(void *) {
     return gCanvasMemoryUsed;
 }
 
+// This isn't "heap-used/content/canvas/2d-pixel-bytes" because the pixels of a
+// canvas may not be stored on the heap. And if they are, they will be tracked
+// by the underlying surface implementations.  See bug 655638 for details.
 NS_MEMORY_REPORTER_IMPLEMENT(CanvasMemory,
-                             "heap-used/content/canvas/2d-pixel-bytes",
+                             "canvas-2d-pixel-bytes",
                              "Memory used by 2D canvases. Each canvas "
                              "requires (width * height * 4) bytes.",
                              GetCanvasMemoryUsed,

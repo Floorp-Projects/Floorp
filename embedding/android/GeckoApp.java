@@ -206,6 +206,10 @@ abstract public class GeckoApp
                        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT,
                                                   ViewGroup.LayoutParams.FILL_PARENT));
 
+        mConnectivityFilter = new IntentFilter();
+        mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        mConnectivityReceiver = new GeckoConnectivityReceiver();
+
         if (!checkAndSetLaunchState(LaunchState.PreLaunch,
                                     LaunchState.Launching))
             return;
@@ -255,10 +259,6 @@ abstract public class GeckoApp
                                    })
                 .show();
         }
-
-        mConnectivityFilter = new IntentFilter();
-        mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        mConnectivityReceiver = new GeckoConnectivityReceiver();
     }
 
     boolean IsNewInstall() {

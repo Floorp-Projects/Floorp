@@ -184,8 +184,8 @@ function checkContextMenu(event)
   var frombase = (gTestId == -1 || gTestId == 1);
   if (!frombase)
     rect = event.originalTarget.getBoundingClientRect();
-  left = frombase ? rect.left + 7 : rect.left;
-  top = frombase ? rect.top + 4 : rect.bottom;
+  var left = frombase ? rect.left + 7 : rect.left;
+  var top = frombase ? rect.top + 4 : rect.bottom;
 
   isRoundedX(event.clientX, left, gTestElement + " clientX " + gSelectionStep + " " + gTestId + "," + frombase);
   isRoundedY(event.clientY, top, gTestElement + " clientY " + gSelectionStep + " " + gTestId);

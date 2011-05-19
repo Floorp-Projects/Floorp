@@ -2719,28 +2719,16 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
 
   // Get the focused element.
   nsCOMPtr<nsPIDOMWindow> window = GetWindow();
-  if (!window) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsCOMPtr<nsPIDOMWindow> focusedWindow;
-  nsIContent* focusedContent =
-    nsFocusManager::GetFocusedDescendant(window, PR_FALSE, getter_AddRefs(focusedWindow));
-
-  // an element in this document is focused, so return it
-  if (focusedContent) {
+  if (window) {
+    nsCOMPtr<nsPIDOMWindow> focusedWindow;
+    nsIContent* focusedContent =
+      nsFocusManager::GetFocusedDescendant(window, PR_FALSE,
+                                           getter_AddRefs(focusedWindow));
     // be safe and make sure the element is from this document
-    if (focusedContent->GetOwnerDoc() != this) {
-      NS_WARNING("Focused element found from another document");
-      return NS_ERROR_FAILURE;
+    if (focusedContent && focusedContent->GetOwnerDoc() == this) {
+      CallQueryInterface(focusedContent, aElement);
+      return NS_OK;
     }
-
-    CallQueryInterface(focusedContent, aElement);
-    return NS_OK;
   }
 
   // No focused element anywhere in this document.  Try to get the BODY.

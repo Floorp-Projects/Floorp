@@ -637,7 +637,9 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   nsresult res = TruncateInsertionIfNeeded(aSelection, inString, outString,
                                            aMaxLength, &truncated);
   NS_ENSURE_SUCCESS(res, res);
-  if (truncated && outString->IsEmpty()) {
+  // If we're exceeding the maxlength when composing IME, we need to clean up
+  // the composing text, so we shouldn't return early.
+  if (truncated && outString->IsEmpty() && aAction != kInsertTextIME) {
     *aCancel = PR_TRUE;
     return NS_OK;
   }

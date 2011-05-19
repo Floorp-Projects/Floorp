@@ -283,9 +283,6 @@ JSRope::flatten(JSContext *maybecx)
     if (!wholeChars)
         return NULL;
 
-    if (maybecx)
-        maybecx->runtime->stringMemoryUsed += wholeLength * 2;
-
     pos = wholeChars;
     first_visit_node: {
         JSString &left = *str->d.u1.left;
@@ -389,8 +386,6 @@ JSDependentString::undepend(JSContext *cx)
     jschar *s = (jschar *) cx->malloc_(size);
     if (!s)
         return NULL;
-
-    cx->runtime->stringMemoryUsed += size;
 
     PodCopy(s, chars(), n);
     s[n] = 0;
@@ -771,6 +766,8 @@ Class js_StringClass = {
 static JS_ALWAYS_INLINE JSString *
 ThisToStringForStringProto(JSContext *cx, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return NULL);
+
     if (vp[1].isString())
         return vp[1].toString();
 
@@ -2073,7 +2070,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         if (str->isAtom()) {
             atom = &str->asAtom();
         } else {
-            atom = js_AtomizeString(cx, str, 0);
+            atom = js_AtomizeString(cx, str);
             if (!atom)
                 return false;
         }
@@ -2081,7 +2078,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
 
         JSObject *holder;
         JSProperty *prop = NULL;
-        if (js_LookupPropertyWithFlags(cx, base, id, JSRESOLVE_QUALIFIED, &holder, &prop) < 0)
+        if (!LookupPropertyWithFlags(cx, base, id, JSRESOLVE_QUALIFIED, &holder, &prop))
             return false;
 
         /* Only handle the case where the property exists and is on this object. */
@@ -3726,7 +3723,7 @@ StringBuffer::finishAtom()
     if (length == 0)
         return cx->runtime->atomState.emptyAtom;
 
-    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length, 0);
+    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length);
     cb.clear();
     return atom;
 }

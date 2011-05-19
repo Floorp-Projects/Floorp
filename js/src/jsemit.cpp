@@ -1323,8 +1323,8 @@ JSTreeContext::ensureSharpSlots()
     JS_ASSERT(!(flags & TCF_HAS_SHARPS));
     if (inFunction()) {
         JSContext *cx = parser->context;
-        JSAtom *sharpArrayAtom = js_Atomize(cx, "#array", 6, 0);
-        JSAtom *sharpDepthAtom = js_Atomize(cx, "#depth", 6, 0);
+        JSAtom *sharpArrayAtom = js_Atomize(cx, "#array", 6);
+        JSAtom *sharpDepthAtom = js_Atomize(cx, "#depth", 6);
         if (!sharpArrayAtom || !sharpDepthAtom)
             return false;
 
@@ -4487,10 +4487,10 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
                 JS_ASSERT(pnid->pn_type == TOK_NAME ||
                           pnid->pn_type == TOK_STRING);
                 jsid id = ATOM_TO_JSID(pnid->pn_atom);
-                if (!((pnid->pn_atom == cx->runtime->atomState.protoAtom)
-                      ? js_SetPropertyHelper(cx, obj, id, 0, &value, strictChecks)
-                      : js_DefineNativeProperty(cx, obj, id, value, NULL, NULL,
-                                                JSPROP_ENUMERATE, 0, 0, NULL, 0))) {
+                if ((pnid->pn_atom == cx->runtime->atomState.protoAtom)
+                    ? !js_SetPropertyHelper(cx, obj, id, 0, &value, strictChecks)
+                    : !DefineNativeProperty(cx, obj, id, value, NULL, NULL,
+                                            JSPROP_ENUMERATE, 0, 0)) {
                     return false;
                 }
             }
@@ -6988,10 +6988,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
                 if (obj) {
                     JS_ASSERT(!obj->inDictionaryMode());
-                    if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(pn3->pn_atom),
-                                                 UndefinedValue(), NULL, NULL,
-                                                 JSPROP_ENUMERATE, 0, 0, NULL)) {
-                        return JS_FALSE;
+                    if (!DefineNativeProperty(cx, obj, ATOM_TO_JSID(pn3->pn_atom),
+                                              UndefinedValue(), NULL, NULL,
+                                              JSPROP_ENUMERATE, 0, 0)) {
+                        return false;
                     }
                     if (obj->inDictionaryMode())
                         obj = NULL;
