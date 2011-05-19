@@ -5311,7 +5311,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
       {
         // Ignore mouse-moved events that happen as part of a dragging
         // operation that started over another frame.  See bug 525078.
-        nsCOMPtr<nsFrameSelection> frameselection = mObjectFrame->GetFrameSelection();
+        nsRefPtr<nsFrameSelection> frameselection = mObjectFrame->GetFrameSelection();
         if (!frameselection->GetMouseDownState() ||
             (nsIPresShell::GetCapturingContent() == mObjectFrame->GetContent())) {
 #ifndef NP_NO_CARBON

@@ -1866,7 +1866,7 @@ nsEventStateManager::FireContextClick()
       // stop selection tracking, we're in control now
       if (mCurrentTarget)
       {
-        nsCOMPtr<nsFrameSelection> frameSel =
+        nsRefPtr<nsFrameSelection> frameSel =
           mCurrentTarget->GetFrameSelection();
         
         if (frameSel && frameSel->GetMouseDownState()) {
@@ -1991,7 +1991,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     // don't interfere!
     if (mCurrentTarget)
     {
-      nsCOMPtr<nsFrameSelection> frameSel = mCurrentTarget->GetFrameSelection();
+      nsRefPtr<nsFrameSelection> frameSel = mCurrentTarget->GetFrameSelection();
       if (frameSel && frameSel->GetMouseDownState()) {
         StopTrackingDragGesture();
         return;
@@ -3034,7 +3034,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
       nsIPresShell *shell = presContext->GetPresShell();
       if (shell) {
-        nsCOMPtr<nsFrameSelection> frameSelection = shell->FrameSelection();
+        nsRefPtr<nsFrameSelection> frameSelection = shell->FrameSelection();
         frameSelection->SetMouseDownState(PR_FALSE);
       }
     }
