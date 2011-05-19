@@ -477,8 +477,7 @@ public:
 
     void newType(JSContext *cx, TypeSet*, jstype) { checkAnalysis(cx); }
     void newPropertyState(JSContext *cx, TypeSet*) { checkAnalysis(cx); }
-    void newObjectState(JSContext *cx, TypeObject*) { checkAnalysis(cx); }
-    void slotsReallocation(JSContext *cx) { checkAnalysis(cx); }
+    void newObjectState(JSContext *cx, TypeObject*, bool) { checkAnalysis(cx); }
 
     bool condensed() { return true; }
 };
@@ -686,35 +685,6 @@ ScriptAnalysis::pruneTypeBarriers(JSContext *removecx, uint32 offset)
             pbarrier = &barrier->next;
         }
     }
-}
-
-void
-ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *target, jstype type)
-{
-    Bytecode &code = getCode(pc);
-
-    if (TypeIsObject(type) && target->getObjectCount() >= BARRIER_OBJECT_LIMIT) {
-        /* Ignore this barrier, just add the type to the target. */
-        target->addType(cx, type);
-        return;
-    }
-
-    if (!code.typeBarriers) {
-        /*
-         * Adding type barriers at a bytecode which did not have them before
-         * will trigger recompilation. If there were already type barriers,
-         * however, do not trigger recompilation (the script will be recompiled
-         * if any of the barriers is ever violated).
-         */
-        cx->compartment->types.addPendingRecompile(cx, script);
-    }
-
-    TypeBarrier *barrier = ArenaNew<TypeBarrier>(cx->compartment->pool);
-    barrier->target = target;
-    barrier->type = type;
-
-    barrier->next = code.typeBarriers;
-    code.typeBarriers = barrier;
 }
 
 /*
@@ -1362,10 +1332,12 @@ public:
 
     void newType(JSContext *cx, TypeSet *source, jstype type) {}
 
-    void newObjectState(JSContext *cx, TypeObject *object)
+    void newObjectState(JSContext *cx, TypeObject *object, bool force)
     {
         if (object->hasAnyFlags(flags) && !*pmarked) {
             *pmarked = true;
+            cx->compartment->types.addPendingRecompile(cx, script);
+        } else if (force) {
             cx->compartment->types.addPendingRecompile(cx, script);
         }
     }
@@ -1464,8 +1436,11 @@ TypeSet::HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags flags
 }
 
 static inline void
-ObjectStateChange(JSContext *cx, TypeObject *object, bool markingUnknown)
+ObjectStateChange(JSContext *cx, TypeObject *object, bool markingUnknown, bool force)
 {
+    if (object->unknownProperties())
+        return;
+
     /* All constraints listening to state changes are on the element types. */
     TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
     if (!elementTypes)
@@ -1474,26 +1449,13 @@ ObjectStateChange(JSContext *cx, TypeObject *object, bool markingUnknown)
         /* Mark as unknown after getting the element types, to avoid assertion. */
         object->flags = OBJECT_FLAG_UNKNOWN_MASK;
     }
+
     TypeConstraint *constraint = elementTypes->constraintList;
     while (constraint) {
-        constraint->newObjectState(cx, object);
+        constraint->newObjectState(cx, object, force);
         constraint = constraint->next;
     }
 }
-
-class TypeConstraintWatchReallocation : public TypeConstraint
-{
-public:
-    TypeConstraintWatchReallocation(JSScript *script)
-        : TypeConstraint("watchReallocation", script)
-    {}
-
-    void newType(JSContext *cx, TypeSet *source, jstype type) {}
-
-    void slotsReallocation(JSContext *cx) {
-        cx->compartment->types.addPendingRecompile(cx, script);
-    }
-};
 
 void
 TypeSet::WatchObjectReallocation(JSContext *cx, JSObject *obj)
@@ -1503,8 +1465,14 @@ TypeSet::WatchObjectReallocation(JSContext *cx, JSObject *obj)
     if (!types)
         return;
 
-    types->add(cx, ArenaNew<TypeConstraintWatchReallocation>(cx->compartment->pool,
-                                                             cx->compartment->types.compiledScript), false);
+    /*
+     * Reallocating the slots on a global object triggers an object state
+     * change on the object with the 'force' parameter set, so we just need
+     * a constraint which watches for such changes but no actual object flags.
+     */
+    types->add(cx, ArenaNew<TypeConstraintFreezeObjectFlags>(cx->compartment->pool,
+                                                             cx->compartment->types.compiledScript,
+                                                             0));
 }
 
 class TypeConstraintFreezeOwnProperty : public TypeConstraint
@@ -1971,16 +1939,9 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
         analysis->analyzeTypes(cx);
     }
 
-    /*
-     * If this script was inlined into a parent, we need to make sure the
-     * parent has constraints listening to type changes in this one (it won't
-     * necessarily, if we have condensed the constraints but not reanalyzed the
-     * parent). The parent is listening for isUninlineable changes on the
-     * function, so we can treat this as a state change on the function to
-     * trigger any necessary reanalysis.
-     */
-    if (script->fun && !script->fun->getType()->unknownProperties())
-        ObjectStateChange(cx, script->fun->getType(), false);
+    /* Trigger recompilation of any inline callers. */
+    if (script->fun)
+        ObjectStateChange(cx, script->fun->getType(), false, true);
 }
 
 void
@@ -2174,9 +2135,48 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset)
 
     script->analysis(cx)->getCode(offset).monitoredTypes = true;
 
-    /* :FIXME: Also mark scripts this was inlined into as needing recompilation? */
     if (script->hasJITCode())
         cx->compartment->types.addPendingRecompile(cx, script);
+
+    /* Trigger recompilation of any inline callers. */
+    if (script->fun)
+        ObjectStateChange(cx, script->fun->getType(), false, true);
+}
+
+void
+ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *target, jstype type)
+{
+    Bytecode &code = getCode(pc);
+
+    if (TypeIsObject(type) && target->getObjectCount() >= BARRIER_OBJECT_LIMIT) {
+        /* Ignore this barrier, just add the type to the target. */
+        target->addType(cx, type);
+        return;
+    }
+
+    if (!code.typeBarriers) {
+        /*
+         * Adding type barriers at a bytecode which did not have them before
+         * will trigger recompilation. If there were already type barriers,
+         * however, do not trigger recompilation (the script will be recompiled
+         * if any of the barriers is ever violated).
+         */
+        cx->compartment->types.addPendingRecompile(cx, script);
+
+        /* Trigger recompilation of any inline callers. */
+        if (script->fun)
+            ObjectStateChange(cx, script->fun->getType(), false, true);
+    }
+
+    InferSpew(ISpewOps, "typeBarrier: #%u:%05u: T%p %s",
+              script->id(), pc - script->code, target, TypeString(type));
+
+    TypeBarrier *barrier = ArenaNew<TypeBarrier>(cx->compartment->pool);
+    barrier->target = target;
+    barrier->type = type;
+
+    barrier->next = code.typeBarriers;
+    code.typeBarriers = barrier;
 }
 
 void
@@ -2652,7 +2652,7 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
 
     InferSpew(ISpewOps, "%s: setFlags %u", name(), flags);
 
-    ObjectStateChange(cx, this, false);
+    ObjectStateChange(cx, this, false, false);
 }
 
 void
@@ -2663,7 +2663,7 @@ TypeObject::markUnknown(JSContext *cx)
 
     InferSpew(ISpewOps, "UnknownProperties: %s", name());
 
-    ObjectStateChange(cx, this, true);
+    ObjectStateChange(cx, this, true, true);
 
     /* Mark existing instances as unknown. */
 
