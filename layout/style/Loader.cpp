@@ -902,7 +902,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   mSheet->SetURIs(channelURI, originalURI, channelURI);
 
   PRBool completed;
-  return mLoader->ParseSheet(aDataStream, this, completed);
+  return mLoader->ParseSheet(*aDataStream, this, completed);
 }
 
 #ifdef MOZ_XUL
@@ -1405,7 +1405,8 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     }
 
     PRBool completed;
-    rv = ParseSheet(converterStream, aLoadData, completed);
+    rv = ParseSheet(static_cast<nsIUnicharInputStream&>(*converterStream),
+                    aLoadData, completed);
     NS_ASSERTION(completed, "sync load did not complete");
     return rv;
   }
@@ -1555,13 +1556,13 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
  * the CSS parser at the data stream.  That lets us handle @import
  * correctly.
  */
+template <typename T>
 nsresult
-Loader::ParseSheet(nsIUnicharInputStream* aStream,
+Loader::ParseSheet(T& aInput,
                    SheetLoadData* aLoadData,
                    PRBool& aCompleted)
 {
   LOG(("css::Loader::ParseSheet"));
-  NS_PRECONDITION(aStream, "Must have data to parse");
   NS_PRECONDITION(aLoadData, "Must have load data");
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
 
@@ -1579,7 +1580,7 @@ Loader::ParseSheet(nsIUnicharInputStream* aStream,
   mParsingDatas.AppendElement(aLoadData);
   nsIURI* sheetURI = aLoadData->mSheet->GetSheetURI();
   nsIURI* baseURI = aLoadData->mSheet->GetBaseURI();
-  nsresult rv = parser.ParseSheet(*aStream, sheetURI, baseURI,
+  nsresult rv = parser.ParseSheet(aInput, sheetURI, baseURI,
                                   aLoadData->mSheet->Principal(),
                                   aLoadData->mLineNumber,
                                   aLoadData->mAllowUnsafeRules);
@@ -1745,7 +1746,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
 
 nsresult
 Loader::LoadInlineStyle(nsIContent* aElement,
-                        nsIUnicharInputStream* aStream,
+                        const nsAString& aBuffer,
                         PRUint32 aLineNumber,
                         const nsAString& aTitle,
                         const nsAString& aMedia,
@@ -1754,7 +1755,6 @@ Loader::LoadInlineStyle(nsIContent* aElement,
                         PRBool* aIsAlternate)
 {
   LOG(("css::Loader::LoadInlineStyle"));
-  NS_PRECONDITION(aStream, "Must have a stream to parse!");
   NS_ASSERTION(mParsingDatas.Length() == 0, "We're in the middle of a parse?");
 
   *aCompleted = PR_TRUE;
@@ -1803,7 +1803,7 @@ Loader::LoadInlineStyle(nsIContent* aElement,
   NS_ADDREF(data);
   data->mLineNumber = aLineNumber;
   // Parse completion releases the load data
-  rv = ParseSheet(aStream, data, *aCompleted);
+  rv = ParseSheet(aBuffer, data, *aCompleted);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If aCompleted is true, |data| may well be deleted by now.
