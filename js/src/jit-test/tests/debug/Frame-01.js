@@ -8,42 +8,61 @@ g.eval("(" + function () {
         var dbg = Debug(debuggeeGlobal);
         dbg.hooks = {
             debuggerHandler: function (f) {
+                // print(uneval(expected));
                 assertEq(Object.getPrototypeOf(f), Debug.Frame.prototype);
-                assertEq(f.type, ftype);
-                assertEq(f.generator, fgen);
+                assertEq(f.type, expected.type);
+                assertEq(f.generator, expected.generator);
+                assertEq(f.constructing, expected.constructing);
                 hits++;
             }
         };
     } + ")()");
 
-g.ftype = "global";
-g.fgen = false;
+g.expected = { type:"global", generator:false, constructing:false };
 g.hits = 0;
 debugger;
 assertEq(g.hits, 1);
 
-g.ftype = "call";
+g.expected = { type:"call", generator:false, constructing:false };
 g.hits = 0;
 (function () { debugger; })();
 assertEq(g.hits, 1);
 
-g.ftype = "eval";
+g.expected = { type:"call", generator:false, constructing:true };
+g.hits = 0;
+new function() { debugger; };
+assertEq(g.hits, 1);
+
+g.expected = { type:"call", generator:false, constructing:false };
+g.hits = 0;
+new function () {
+    (function() { debugger; })();
+    assertEq(g.hits, 1);
+}
+
+g.expected = { type:"eval", generator:false, constructing:false };
 g.hits = 0;
 eval("debugger;");
 assertEq(g.hits, 1);
 
-g.ftype = "eval";
+g.expected = { type:"eval", generator:false, constructing:false };
 g.hits = 0;
 this.eval("debugger;");  // indirect eval
 assertEq(g.hits, 1);
 
-g.ftype = "eval";
+g.expected = { type:"eval", generator:false, constructing:false };
 g.hits = 0;
 (function () { eval("debugger;"); })();
 assertEq(g.hits, 1);
 
-g.ftype = "call";
-g.fgen = true;
+g.expected = { type:"eval", generator:false, constructing:false };
+g.hits = 0;
+new function () {
+    eval("debugger");
+    assertEq(g.hits, 1);
+}
+
+g.expected = { type:"call", generator:true, constructing:false };
 g.hits = 0;
 function gen() { debugger; yield 1; debugger; }
 for (var x in gen()) {
