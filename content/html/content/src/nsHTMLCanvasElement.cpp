@@ -473,12 +473,6 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return NS_ERROR_FAILURE;
     }
 
-    rv = mCurrentContext->SetCanvasElement(this);
-    if (NS_FAILED(rv)) {
-      mCurrentContext = nsnull;
-      return rv;
-    }
-
     nsCOMPtr<nsIPropertyBag> contextProps;
     if (!JSVAL_IS_NULL(aContextOptions) &&
         !JSVAL_IS_VOID(aContextOptions))
