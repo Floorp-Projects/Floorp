@@ -141,8 +141,7 @@ FinalizeKind slotsToThingKind[] = {
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT);
 
-#ifdef DEBUG
-const uint8 GCThingSizeMap[] = {
+JS_FRIEND_DATA(const uint8) GCThingSizeMap[] = {
     sizeof(JSObject),           /* FINALIZE_OBJECT0             */
     sizeof(JSObject),           /* FINALIZE_OBJECT0_BACKGROUND  */
     sizeof(JSObject_Slots2),    /* FINALIZE_OBJECT2             */
@@ -162,17 +161,10 @@ const uint8 GCThingSizeMap[] = {
 #endif
     sizeof(JSShortString),      /* FINALIZE_SHORT_STRING        */
     sizeof(JSString),           /* FINALIZE_STRING              */
-    sizeof(JSString),           /* FINALIZE_EXTERNAL_STRING     */
+    sizeof(JSExternalString),   /* FINALIZE_EXTERNAL_STRING     */
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(GCThingSizeMap) == FINALIZE_LIMIT);
-
-JS_FRIEND_API(size_t)
-ArenaHeader::getThingSize() const
-{
-    return GCThingSizeMap[getThingKind()];
-}
-#endif
 
 inline FreeCell *
 ArenaHeader::getFreeList() const
@@ -189,68 +181,54 @@ ArenaHeader::getFreeList() const
     return freeList;
 }
 
-/* Initialize the arena and setup the free list. */
-template<typename T>
-inline FreeCell *
-Arena<T>::buildFreeList()
-{
-    T *first = &t.things[0];
-    T *last = &t.things[JS_ARRAY_LENGTH(t.things) - 1];
-    for (T *thing = first; thing != last;) {
-        T *following = thing + 1;
-        thing->asFreeCell()->link = following->asFreeCell();
-        thing = following;
-    }
-    last->asFreeCell()->link = NULL;
-    return first->asFreeCell();
-}
-
 template<typename T>
 inline bool
-Arena<T>::finalize(JSContext *cx)
+Arena::finalize(JSContext *cx)
 {
     JS_ASSERT(aheader.compartment);
     JS_ASSERT(!aheader.getMarkingDelay()->link);
 
-    FreeCell *nextFree = aheader.getFreeList();
+    uintptr_t nextFree = reinterpret_cast<uintptr_t>(aheader.getFreeList());
     FreeCell *freeList = NULL;
     FreeCell **tailp = &freeList;
     bool allClear = true;
 
-    T *thingsEnd = &t.things[ThingsPerArena-1];
-    T *thing = &t.things[0];
-    thingsEnd++;
+    uintptr_t thing = thingsStart(sizeof(T));
+    uintptr_t end = thingsEnd();
 
     if (!nextFree) {
-        nextFree = thingsEnd->asFreeCell();
+        nextFree = end;
     } else {
-        JS_ASSERT(thing->asFreeCell() <= nextFree);
-        JS_ASSERT(nextFree < thingsEnd->asFreeCell());
+        JS_ASSERT(thing <= nextFree);
+        JS_ASSERT(nextFree < end);
     }
 
-    for (;; thing++) {
-        if (thing->asFreeCell() == nextFree) {
-            if (thing == thingsEnd)
+    for (;; thing += sizeof(T)) {
+        if (thing == nextFree) {
+            if (thing == end)
                 break;
-            nextFree = nextFree->link;
-            if (!nextFree) {
-                nextFree = thingsEnd->asFreeCell();
+            FreeCell *nextLink = reinterpret_cast<FreeCell *>(nextFree)->link;
+            if (!nextLink) {
+                nextFree = end;
             } else {
-                JS_ASSERT(thing->asFreeCell() < nextFree);
-                JS_ASSERT(nextFree < thingsEnd->asFreeCell());
+                nextFree = reinterpret_cast<uintptr_t>(nextLink);
+                JS_ASSERT(thing < nextFree);
+                JS_ASSERT(nextFree < end);
             }
-        } else if (thing->asFreeCell()->isMarked()) {
-            allClear = false;
-            continue;
         } else {
-            thing->finalize(cx);
+            T *t = reinterpret_cast<T *>(thing);
+            if (t->isMarked()) {
+                allClear = false;
+                continue;
+            }
+            t->finalize(cx);
 #ifdef DEBUG
-            memset(thing, JS_FREE_PATTERN, sizeof(T));
+            memset(t, JS_FREE_PATTERN, sizeof(T));
 #endif
         }
-        FreeCell *t = thing->asFreeCell();
-        *tailp = t;
-        tailp = &t->link;
+        FreeCell *freeCell = reinterpret_cast<FreeCell *>(thing);
+        *tailp = freeCell;
+        tailp = &freeCell->link;
     }
 
 #ifdef DEBUG
@@ -258,21 +236,21 @@ Arena<T>::finalize(JSContext *cx)
     unsigned nfree = 0;
     if (freeList) {
         JS_ASSERT(tailp != &freeList);
-        FreeCell *t = freeList;
+        FreeCell *freeCell = freeList;
         for (;;) {
             ++nfree;
-            if (&t->link == tailp)
+            if (&freeCell->link == tailp)
                 break;
-            JS_ASSERT(t < t->link);
-            t = t->link;
+            JS_ASSERT(freeCell < freeCell->link);
+            freeCell = freeCell->link;
         }
     }
     if (allClear) {
-        JS_ASSERT(nfree == ThingsPerArena);
-        JS_ASSERT(freeList == static_cast<Cell *>(&t.things[0]));
-        JS_ASSERT(tailp == &t.things[ThingsPerArena-1].asFreeCell()->link);
+        JS_ASSERT(nfree == Arena::thingsPerArena(sizeof(T)));
+        JS_ASSERT(freeList->address() == thingsStart(sizeof(T)));
+        JS_ASSERT(tailp == &reinterpret_cast<FreeCell *>(end - sizeof(T))->link);
     } else {
-        JS_ASSERT(nfree < ThingsPerArena);
+        JS_ASSERT(nfree < Arena::thingsPerArena(sizeof(T)));
     }
 #endif
     *tailp = NULL;
@@ -290,7 +268,7 @@ FinalizeArenas(JSContext *cx, ArenaHeader **listHeadp)
 {
     ArenaHeader **ap = listHeadp;
     while (ArenaHeader *aheader = *ap) {
-        bool allClear = aheader->getArena<T>()->finalize(cx);
+        bool allClear = aheader->getArena()->finalize<T>(cx);
         if (allClear) {
             *ap = aheader->next;
             aheader->chunk()->releaseArena(aheader);
@@ -365,7 +343,33 @@ Chunk::withinArenasRange(Cell *cell)
     return false;
 }
 
-template <typename T>
+/* Turn arena cells into a free list starting from the first thing. */
+template<size_t thingSize>
+static inline FreeCell *
+BuildFreeList(ArenaHeader *aheader)
+{
+    uintptr_t thing = aheader->getArena()->thingsStart(thingSize);
+    uintptr_t end = aheader->getArena()->thingsEnd();
+    FreeCell *first = reinterpret_cast<FreeCell *>(thing);
+    FreeCell **prevp = &first->link;
+
+    for (thing += thingSize; thing != end; thing += thingSize) {
+        JS_ASSERT(thing < end);
+        FreeCell *cell = reinterpret_cast<FreeCell *>(thing);
+
+        /*
+         * Here prevp points to the link field of the previous cell in the
+         * list. Write the address of the following cell into it.
+         */
+        *prevp = cell;
+        prevp = &cell->link;
+    }
+
+    *prevp = NULL;
+    return first;
+}
+
+template <size_t thingSize>
 ArenaHeader *
 Chunk::allocateArena(JSContext *cx, unsigned thingKind)
 {
@@ -374,7 +378,7 @@ Chunk::allocateArena(JSContext *cx, unsigned thingKind)
     ArenaHeader *aheader = info.emptyArenaLists.getTypedFreeList(thingKind);
     if (!aheader) {
         aheader = info.emptyArenaLists.getOtherArena();
-        aheader->setFreeList(aheader->getArena<T>()->buildFreeList());
+        aheader->setFreeList(BuildFreeList<thingSize>(aheader));
     }
     JS_ASSERT(!aheader->compartment);
     JS_ASSERT(!aheader->getMarkingDelay()->link);
@@ -651,12 +655,13 @@ MarkArenaPtrConservatively(JSTracer *trc, ArenaHeader *aheader, uintptr_t addr)
     JS_ASSERT(aheader->compartment);
     JS_ASSERT(sizeof(T) == aheader->getThingSize());
 
-    uintptr_t offset = (addr & ArenaMask) - Arena<T>::FirstThingOffset;
-    if (offset >= Arena<T>::ThingsSpan)
+    uintptr_t offset = addr & ArenaMask;
+    uintptr_t minOffset = Arena::thingsStartOffset(sizeof(T));
+    if (offset < minOffset)
         return CGCT_NOTARENA;
 
     /* addr can point inside the thing so we must align the address. */
-    uintptr_t shift = offset % sizeof(T);
+    uintptr_t shift = (offset - minOffset) % sizeof(T);
     T *thing = reinterpret_cast<T *>(addr - shift);
 
     if (InFreeList(aheader, thing))
@@ -1125,7 +1130,7 @@ ArenaList::searchForFreeArena()
     return NULL;
 }
 
-template <typename T>
+template <size_t thingSize>
 inline ArenaHeader *
 ArenaList::getArenaWithFreeList(JSContext *cx, unsigned thingKind)
 {
@@ -1191,7 +1196,7 @@ ArenaList::getArenaWithFreeList(JSContext *cx, unsigned thingKind)
      * to the head of the list before the cursor to prevent checking the arena
      * for the free things.
      */
-    ArenaHeader *aheader = chunk->allocateArena<T>(cx, thingKind);
+    ArenaHeader *aheader = chunk->allocateArena<thingSize>(cx, thingKind);
     aheader->next = head;
     if (cursor == &head)
         cursor = &aheader->next;
@@ -1391,7 +1396,8 @@ RefillTypedFreeList(JSContext *cx, unsigned thingKind)
             if (Cell *thing = compartment->freeLists.getNext(thingKind))
                 return thing;
         }
-        ArenaHeader *aheader = compartment->arenas[thingKind].getArenaWithFreeList<T>(cx, thingKind);
+        ArenaHeader *aheader =
+            compartment->arenas[thingKind].getArenaWithFreeList<sizeof(T)>(cx, thingKind);
         if (aheader) {
             JS_ASSERT(sizeof(T) == aheader->getThingSize());
             return compartment->freeLists.populate(aheader, thingKind);
@@ -1556,15 +1562,17 @@ GCMarker::delayMarkingChildren(const void *thing)
     METER_UPDATE_MAX(cell->compartment()->rt->gcStats.maxunmarked, markLaterArenas);
 }
 
-template<typename T>
 static void
-MarkDelayedChilderen(JSTracer *trc, ArenaHeader *aheader)
+MarkDelayedChildren(JSTracer *trc, ArenaHeader *aheader)
 {
-    Arena<T> *a = aheader->getArena<T>();
-    T *end = &a->t.things[Arena<T>::ThingsPerArena];
-    for (T* thing = &a->t.things[0]; thing != end; ++thing) {
-        if (thing->isMarked())
-            js::gc::MarkChildren(trc, thing);
+    unsigned traceKind = GetFinalizableTraceKind(aheader->getThingKind());
+    size_t thingSize = aheader->getThingSize();
+    Arena *a = aheader->getArena();
+    uintptr_t end = a->thingsEnd();
+    for (uintptr_t thing = a->thingsStart(thingSize); thing != end; thing += thingSize) {
+        Cell *t = reinterpret_cast<Cell *>(thing);
+        if (t->isMarked())
+            JS_TraceChildren(trc, t, traceKind);
     }
 }
 
@@ -1585,55 +1593,7 @@ GCMarker::markDelayedChildren()
         JS_ASSERT(markLaterArenas);
         markLaterArenas--;
 #endif
-
-        switch (aheader->getThingKind()) {
-          case FINALIZE_OBJECT0:
-          case FINALIZE_OBJECT0_BACKGROUND:
-            MarkDelayedChilderen<JSObject>(this, aheader);
-            break;
-          case FINALIZE_OBJECT2:
-          case FINALIZE_OBJECT2_BACKGROUND:
-            MarkDelayedChilderen<JSObject_Slots2>(this, aheader);
-            break;
-          case FINALIZE_OBJECT4:
-          case FINALIZE_OBJECT4_BACKGROUND:
-            MarkDelayedChilderen<JSObject_Slots4>(this, aheader);
-            break;
-          case FINALIZE_OBJECT8:
-          case FINALIZE_OBJECT8_BACKGROUND:
-            MarkDelayedChilderen<JSObject_Slots8>(this, aheader);
-            break;
-          case FINALIZE_OBJECT12:
-          case FINALIZE_OBJECT12_BACKGROUND:
-            MarkDelayedChilderen<JSObject_Slots12>(this, aheader);
-            break;
-          case FINALIZE_OBJECT16:
-          case FINALIZE_OBJECT16_BACKGROUND:
-            MarkDelayedChilderen<JSObject_Slots16>(this, aheader);
-            break;
-          case FINALIZE_STRING:
-            MarkDelayedChilderen<JSString>(this, aheader);
-            break;
-          case FINALIZE_EXTERNAL_STRING:
-            MarkDelayedChilderen<JSExternalString>(this, aheader);
-            break;
-          case FINALIZE_SHORT_STRING:
-            JS_NOT_REACHED("no delayed marking");
-            break;
-          case FINALIZE_FUNCTION:
-            MarkDelayedChilderen<JSFunction>(this, aheader);
-            break;
-          case FINALIZE_SHAPE:
-            MarkDelayedChilderen<Shape>(this, aheader);
-            break;
-#if JS_HAS_XML_SUPPORT
-          case FINALIZE_XML:
-            MarkDelayedChilderen<JSXML>(this, aheader);
-            break;
-#endif
-          default:
-            JS_NOT_REACHED("wrong thingkind");
-        }
+        MarkDelayedChildren(this, aheader);
     }
     JS_ASSERT(!markLaterArenas);
 }
@@ -2807,22 +2767,6 @@ TraceRuntime(JSTracer *trc)
     MarkRuntime(trc);
 }
 
-template<typename T>
-static void
-IterateArenaCells(JSContext *cx, ArenaHeader *aheader, void *data, IterateCallback callback)
-{
-    Arena<T> *a = aheader->getArena<T>();
-    FreeCell *nextFree = aheader->getFreeList();
-    size_t traceKind = GetFinalizableTraceKind(aheader->getThingKind());
-    T *end = &a->t.things[Arena<T>::ThingsPerArena];
-    for (T *thing = &a->t.things[0]; thing != end; ++thing) {
-        if (thing->asFreeCell() == nextFree)
-            nextFree = nextFree->link;
-        else
-            (*callback)(cx, data, traceKind, (void *)thing);
-    }
-}
-
 static void
 IterateCompartmentCells(JSContext *cx, JSCompartment *comp, uint64 traceKindMask,
                         void *data, IterateCallback callback)
@@ -2832,57 +2776,18 @@ IterateCompartmentCells(JSContext *cx, JSCompartment *comp, uint64 traceKindMask
         if (traceKindMask && !TraceKindInMask(traceKind, traceKindMask))
             continue;
 
-        for (ArenaHeader *aheader = comp->arenas[thingKind].getHead();
-             aheader;
-             aheader = aheader->next)
-        {
-            switch (thingKind) {
-              case FINALIZE_OBJECT0:
-              case FINALIZE_OBJECT0_BACKGROUND:
-                IterateArenaCells<JSObject>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_OBJECT2:
-              case FINALIZE_OBJECT2_BACKGROUND:
-                IterateArenaCells<JSObject_Slots2>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_OBJECT4:
-              case FINALIZE_OBJECT4_BACKGROUND:
-                IterateArenaCells<JSObject_Slots4>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_OBJECT8:
-              case FINALIZE_OBJECT8_BACKGROUND:
-                IterateArenaCells<JSObject_Slots8>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_OBJECT12:
-              case FINALIZE_OBJECT12_BACKGROUND:
-                IterateArenaCells<JSObject_Slots12>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_OBJECT16:
-              case FINALIZE_OBJECT16_BACKGROUND:
-                IterateArenaCells<JSObject_Slots16>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_STRING:
-                IterateArenaCells<JSString>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_EXTERNAL_STRING:
-                IterateArenaCells<JSExternalString>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_SHORT_STRING:
-                IterateArenaCells<JSShortString>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_FUNCTION:
-                IterateArenaCells<JSFunction>(cx, aheader, data, callback);
-                break;
-              case FINALIZE_SHAPE:
-                IterateArenaCells<Shape>(cx, aheader, data, callback);
-                break;
-#if JS_HAS_XML_SUPPORT
-              case FINALIZE_XML:
-                IterateArenaCells<JSXML>(cx, aheader, data, callback);
-                break;
-#endif
-              default:
-                JS_NOT_REACHED("wrong thingkind");
+        size_t thingSize = GCThingSizeMap[thingKind];
+        ArenaHeader *aheader = comp->arenas[thingKind].getHead();
+        for (; aheader; aheader = aheader->next) {
+            Arena *a = aheader->getArena();
+            uintptr_t end = a->thingsEnd();
+            FreeCell *nextFree = aheader->getFreeList();
+            for (uintptr_t thing = a->thingsStart(thingSize); thing != end; thing += thingSize) {
+                Cell *t = reinterpret_cast<Cell *>(thing);
+                if (t == nextFree)
+                    nextFree = nextFree->link;
+                else
+                    (*callback)(cx, data, traceKind, t);
             }
         }
     }
