@@ -56,7 +56,6 @@ class nsICSSLoaderObserver;
 class nsCSSStyleSheet;
 class nsIContent;
 class nsIDocument;
-class nsIUnicharInputStream;
 class nsCSSParser;
 class nsMediaList;
 
@@ -443,8 +442,7 @@ private:
   // Set aCompleted to true if the parse finished, false otherwise (e.g. if the
   // sheet had an @import).  If aCompleted is true when this returns, then
   // ParseSheet also called SheetComplete on aLoadData.
-  template <typename T>
-  nsresult ParseSheet(T& aStream,
+  nsresult ParseSheet(const nsAString& aInput,
                       SheetLoadData* aLoadData,
                       PRBool& aCompleted);
 
