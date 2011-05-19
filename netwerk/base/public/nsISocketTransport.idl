@@ -51,7 +51,7 @@ native PRNetAddr(union PRNetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(19c37caa-fb41-4c32-bbf1-c6b31b75d789)]
+[scriptable, uuid(bbee8fef-6ac2-4819-9089-61169bdf5074)]
 interface nsISocketTransport : nsITransport 
 {
     /**
@@ -95,8 +95,12 @@ interface nsISocketTransport : nsITransport
    
     /**
      * Test if this socket transport is (still) connected.
+     *
+     * @param aPassive indicates that the IsAlive() method should not
+     *                 read, even non-destructively, from the network.
+     *                 SSL based transports may deadlock if called without this.
      */
-    boolean isAlive();
+    boolean isAlive(in boolean aPassive);
 
     /**
      * Socket timeouts in seconds.  To specify no timeout, pass PR_UINT32_MAX
