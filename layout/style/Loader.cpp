@@ -51,6 +51,7 @@
 #include "mozilla/css/Loader.h"
 #include "nsIRunnable.h"
 #include "nsIUnicharStreamLoader.h"
+#include "nsSyncLoadService.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
@@ -59,10 +60,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSDocumentStyle.h"
-#include "nsIUnicharInputStream.h"
-#include "nsIConverterInputStream.h"
 #include "nsICharsetAlias.h"
-#include "nsUnicharUtils.h"
 #include "nsHashtable.h"
 #include "nsIURI.h"
 #include "nsIServiceManager.h"
@@ -804,7 +802,11 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   result = NS_ERROR_NOT_AVAILABLE;
   if (secMan) {  // Could be null if we already shut down
-    result = secMan->GetChannelPrincipal(channel, getter_AddRefs(principal));
+    if (mUseSystemPrincipal) {
+      result = secMan->GetSystemPrincipal(getter_AddRefs(principal));
+    } else {
+      result = secMan->GetChannelPrincipal(channel, getter_AddRefs(principal));
+    }
   }
 
   if (NS_FAILED(result)) {
@@ -895,7 +897,9 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   mSheet->SetURIs(channelURI, originalURI, channelURI);
 
   PRBool completed;
-  return mLoader->ParseSheet(aBuffer, this, completed);
+  result = mLoader->ParseSheet(aBuffer, this, completed);
+  NS_ASSERTION(completed || !mSyncLoad, "sync load did not complete");
+  return result;
 }
 
 #ifdef MOZ_XUL
@@ -1340,6 +1344,17 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     NS_ASSERTION(aSheetState == eSheetNeedsParser,
                  "Sync loads can't reuse existing async loads");
 
+    // Create a nsIUnicharStreamLoader instance to which we will feed
+    // the data from the sync load.  Do this before creating the
+    // channel to make error recovery simpler.
+    nsCOMPtr<nsIUnicharStreamLoader> streamLoader;
+    rv = NS_NewUnicharStreamLoader(getter_AddRefs(streamLoader), aLoadData);
+    if (NS_FAILED(rv)) {
+      LOG_ERROR(("  Failed to create stream loader for sync load"));
+      SheetComplete(aLoadData, rv);
+      return rv;
+    }
+
     // Just load it
     nsCOMPtr<nsIInputStream> stream;
     nsCOMPtr<nsIChannel> channel;
@@ -1354,54 +1369,18 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
 
     NS_ASSERTION(channel, "NS_OpenURI lied?");
 
-    // Get the principal for this sheet
-    nsCOMPtr<nsIPrincipal> principal;
-    if (aLoadData->mUseSystemPrincipal) {
-      rv = nsContentUtils::GetSecurityManager()->
-        GetSystemPrincipal(getter_AddRefs(principal));
-    } else {
-      rv = nsContentUtils::GetSecurityManager()->
-        GetChannelPrincipal(channel, getter_AddRefs(principal));
-    }
+    // Force UA sheets to be UTF-8.
+    // XXX this is only necessary because the default in
+    // SheetLoadData::OnDetermineCharset is wrong (bug 521039).
+    channel->SetContentCharset(NS_LITERAL_CSTRING("UTF-8"));
 
-    if (NS_FAILED(rv)) {
-      LOG_ERROR(("  Failed to get a principal for the sheet"));
-      SheetComplete(aLoadData, rv);
-      return rv;
-    }
-
-    aLoadData->mSheet->SetPrincipal(principal);
-
-    nsCOMPtr<nsIConverterInputStream> converterStream =
-      do_CreateInstance("@mozilla.org/intl/converter-input-stream;1", &rv);
-
-    if (NS_FAILED(rv)) {
-      LOG_ERROR(("  Failed to create converter stream"));
-      SheetComplete(aLoadData, rv);
-      return rv;
-    }
-
-    // This forces UA sheets to be UTF-8.  We should really look for
-    // @charset rules here via ReadSegments on the raw stream...
-
-    // 8192 is a nice magic number that happens to be what a lot of
-    // other things use for buffer sizes.
-    rv = converterStream->Init(stream, "UTF-8",
-                               8192,
-                               nsIConverterInputStream::
-                                    DEFAULT_REPLACEMENT_CHARACTER);
-
-    if (NS_FAILED(rv)) {
-      LOG_ERROR(("  Failed to initialize converter stream"));
-      SheetComplete(aLoadData, rv);
-      return rv;
-    }
-
-    PRBool completed;
-    rv = ParseSheet(static_cast<nsIUnicharInputStream&>(*converterStream),
-                    aLoadData, completed);
-    NS_ASSERTION(completed, "sync load did not complete");
-    return rv;
+    // Manually feed the streamloader the contents of the stream we
+    // got from NS_OpenURI.  This will call back into OnStreamComplete
+    // and thence to ParseSheet.  Regardless of whether this fails,
+    // SheetComplete has been called.
+    return nsSyncLoadService::PushSyncStreamToListener(stream,
+                                                       streamLoader,
+                                                       channel);
   }
 
   SheetLoadData* existingData = nsnull;
