@@ -68,10 +68,15 @@ class IonBuilder : public MIRGenerator
     };
 
     struct LoopInfo {
+        // Entry in the cfgStack.
         uint32 cfgEntry;
 
-        LoopInfo(uint32 cfgEntry)
-          : cfgEntry(cfgEntry)
+        // Label that continues go to.
+        jsbytecode *continuepc;
+
+        LoopInfo(uint32 cfgEntry, jsbytecode *continuepc)
+          : cfgEntry(cfgEntry),
+            continuepc(continuepc)
         { }
     };
 
@@ -175,7 +180,8 @@ class IonBuilder : public MIRGenerator
     ControlStatus processBreak(JSOp op, jssrcnote *sn);
     ControlStatus maybeLoop(JSOp op, jssrcnote *sn);
     bool pushLoop(CFGState::State state, jsbytecode *stopAt, MBasicBlock *entry,
-                  jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc);
+                  jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc,
+                  jsbytecode *continuepc = NULL);
 
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc);

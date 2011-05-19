@@ -140,9 +140,13 @@ IonBuilder::popCfgStack()
 
 bool
 IonBuilder::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBlock *entry,
-                           jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc)
+                     jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc,
+                     jsbytecode *continuepc)
 {
-    LoopInfo loop(cfgStack_.length());
+    if (!continuepc)
+        continuepc = entry->pc();
+
+    LoopInfo loop(cfgStack_.length(), continuepc);
     if (!loops_.append(loop))
         return false;
 
@@ -348,6 +352,9 @@ bool
 IonBuilder::inspectOpcode(JSOp op)
 {
     switch (op) {
+      case JSOP_NOP:
+        return true;
+
       case JSOP_PUSH:
         return pushConstant(UndefinedValue());
 
@@ -509,18 +516,17 @@ IonBuilder::processCfgEntry(CFGState &state)
 IonBuilder::ControlStatus
 IonBuilder::processIfEnd(CFGState &state)
 {
-    if (!current)
-        return ControlStatus_Ended;
+    if (current) {
+        // Here, the false block is the join point. Create an edge from the
+        // current block to the false block. Note that a RETURN opcode
+        // could have already ended the block.
+        MGoto *ins = MGoto::New(this, state.branch.ifFalse);
+        if (!current->end(ins))
+            return ControlStatus_Error;
 
-    // Here, the false block is the join point. Create an edge from the
-    // current block to the false block. Note that a RETURN opcode
-    // could have already ended the block.
-    MGoto *ins = MGoto::New(this, state.branch.ifFalse);
-    if (!current->end(ins))
-        return ControlStatus_Error;
-
-    if (!current->addPredecessor(state.branch.ifFalse))
-        return ControlStatus_Error;
+        if (!current->addPredecessor(state.branch.ifFalse))
+            return ControlStatus_Error;
+    }
 
     current = state.branch.ifFalse;
     return ControlStatus_Joined;
@@ -814,9 +820,8 @@ IonBuilder::processContinue(JSOp op, jssrcnote *sn)
     CFGState *found = NULL;
     jsbytecode *target = pc + GetJumpOffset(pc);
     for (size_t i = loops_.length() - 1; i < loops_.length(); i--) {
-        CFGState &cfg = cfgStack_[loops_[i].cfgEntry];
-        if (cfg.loop.entry->pc() == target) {
-            found = &cfg;
+        if (loops_[i].continuepc == target) {
+            found = &cfgStack_[loops_[i].cfgEntry];
             break;
         }
     }
@@ -1023,7 +1028,7 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
         initial = CFGState::FOR_LOOP_BODY;
     }
 
-    if (!pushLoop(initial, ifne, header, bodyStart, bodyEnd, exitpc))
+    if (!pushLoop(initial, ifne, header, bodyStart, bodyEnd, exitpc, updatepc))
         return ControlStatus_Error;
 
     CFGState &state = cfgStack_.back();
