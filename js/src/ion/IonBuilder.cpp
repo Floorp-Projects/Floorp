@@ -39,6 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "IonAnalysis.h"
 #include "IonBuilder.h"
 #include "MIRGraph.h"
 #include "Ion.h"
@@ -63,8 +64,11 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 
     if (!analyzer.analyze())
         return false;
+    spew.spew("Build SSA");
 
-    spew.spew("Building SSA");
+    if (!InferRepresentations(&analyzer, graph))
+        return false;
+    spew.spew("Infer Representations");
 
     return false;
 }

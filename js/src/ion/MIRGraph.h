@@ -122,6 +122,10 @@ class MBasicBlock : public TempObject
     MInstruction *getSlot(uint32 index);
 
   public:
+    ///////////////////////////////////////////////////////
+    ////////// BEGIN GRAPH BUILDING INSTRUCTIONS //////////
+    ///////////////////////////////////////////////////////
+
     // Creates a new basic block for a MIR generator. If |pred| is not NULL,
     // its slots and stack depth are initialized from |pred|.
     static MBasicBlock *New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
@@ -176,6 +180,10 @@ class MBasicBlock : public TempObject
     // the current loop as necessary, and corrects the successor block's initial
     // state at the same time. There may be only one backedge per block.
     bool setBackedge(MBasicBlock *block, MBasicBlock *successor);
+
+    ///////////////////////////////////////////////////////
+    /////////// END GRAPH BUILDING INSTRUCTIONS ///////////
+    ///////////////////////////////////////////////////////
 
     jsbytecode *pc() const {
         return pc_;
