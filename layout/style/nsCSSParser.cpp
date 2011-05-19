@@ -55,7 +55,6 @@
 #include "mozilla/css/ImportRule.h"
 #include "nsCSSRules.h"
 #include "mozilla/css/NameSpaceRule.h"
-#include "nsIUnicharInputStream.h"
 #include "nsCSSStyleSheet.h"
 #include "mozilla/css/Declaration.h"
 #include "nsStyleConsts.h"
@@ -203,8 +202,7 @@ public:
   // Clears everything set by the above Set*() functions.
   void Reset();
 
-  template <typename T>
-  nsresult ParseSheet(T&               aInput,
+  nsresult ParseSheet(const nsAString& aInput,
                       nsIURI*          aSheetURI,
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
@@ -296,9 +294,6 @@ protected:
       CSSParserImpl* mParser;
   };
 
-  void InitScanner(nsIUnicharInputStream& aInput, nsIURI* aSheetURI,
-                   PRUint32 aLineNumber, nsIURI* aBaseURI,
-                   nsIPrincipal* aSheetPrincipal);
   // the caller must hold on to aString until parsing is done
   void InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
                    PRUint32 aLineNumber, nsIURI* aBaseURI,
@@ -837,25 +832,6 @@ CSSParserImpl::Reset()
 }
 
 void
-CSSParserImpl::InitScanner(nsIUnicharInputStream& aInput, nsIURI* aSheetURI,
-                           PRUint32 aLineNumber, nsIURI* aBaseURI,
-                           nsIPrincipal* aSheetPrincipal)
-{
-  NS_ASSERTION(! mScannerInited, "already have scanner");
-
-  mScanner.Init(&aInput, nsnull, 0, aSheetURI, aLineNumber, mSheet,
-                mChildLoader);
-#ifdef DEBUG
-  mScannerInited = PR_TRUE;
-#endif
-  mBaseURI = aBaseURI;
-  mSheetURI = aSheetURI;
-  mSheetPrincipal = aSheetPrincipal;
-
-  mHavePushBack = PR_FALSE;
-}
-
-void
 CSSParserImpl::InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
                            PRUint32 aLineNumber, nsIURI* aBaseURI,
                            nsIPrincipal* aSheetPrincipal)
@@ -889,9 +865,8 @@ CSSParserImpl::ReleaseScanner(void)
   mSheetPrincipal = nsnull;
 }
 
-template <typename T>
 nsresult
-CSSParserImpl::ParseSheet(T&               aInput,
+CSSParserImpl::ParseSheet(const nsAString& aInput,
                           nsIURI*          aSheetURI,
                           nsIURI*          aBaseURI,
                           nsIPrincipal*    aSheetPrincipal,
@@ -8756,19 +8731,6 @@ nsCSSParser::SetChildLoader(mozilla::css::Loader* aChildLoader)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     SetChildLoader(aChildLoader);
-}
-
-nsresult
-nsCSSParser::ParseSheet(nsIUnicharInputStream& aInput,
-                        nsIURI*                aSheetURI,
-                        nsIURI*                aBaseURI,
-                        nsIPrincipal*          aSheetPrincipal,
-                        PRUint32               aLineNumber,
-                        PRBool                 aAllowUnsafeRules)
-{
-  return static_cast<CSSParserImpl*>(mImpl)->
-    ParseSheet(aInput, aSheetURI, aBaseURI, aSheetPrincipal, aLineNumber,
-               aAllowUnsafeRules);
 }
 
 nsresult
