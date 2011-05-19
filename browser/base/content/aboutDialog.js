@@ -359,7 +359,6 @@ appUpdater.prototype =
       // notified with the normal app update user interface so this is safe.
       gAppUpdater.isChecking = false;
       gAppUpdater.selectPanel("noUpdatesFound");
-      return;
     },
 
     /**
@@ -613,6 +612,8 @@ var gChannelSelector = {
     // Change app update channel.
     Services.prefs.setCharPref("app.update.desiredChannel", this.channelValue);
 
+    // Stop any downloads in progress
+    gAppUpdater.aus.pauseDownload();
     // App updater will look at app.update.desiredChannel for new channel value
     // and will clear it when the update is complete.
     gAppUpdater.isChecking = true;
