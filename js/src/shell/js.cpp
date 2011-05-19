@@ -1592,6 +1592,30 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+InternalConst(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 1) {
+        JS_ReportError(cx, "the function takes exactly one argument");
+        return false;
+    }
+
+    JSString *str = JS_ValueToString(cx, vp[2]);
+    if (!str)
+        return false;
+    JSFlatString *flat = JS_FlattenString(cx, str);
+    if (!flat)
+        return false;
+
+    if (JS_FlatStringEqualsAscii(flat, "OBJECT_MARK_STACK_LENGTH")) {
+        vp[0] = UINT_TO_JSVAL(js::OBJECT_MARK_STACK_SIZE / sizeof(JSObject *));
+    } else {
+        JS_ReportError(cx, "unknown const name");
+        return false;
+    }
+    return true;
+}
+
 #ifdef JS_GC_ZEAL
 static JSBool
 GCZeal(JSContext *cx, uintN argc, jsval *vp)
@@ -4803,6 +4827,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("gczeal",         GCZeal,         2,0),
     JS_FN("schedulegc",     ScheduleGC,     1,0),
 #endif
+    JS_FN("internalConst",  InternalConst,  1,0),
     JS_FN("setDebug",       SetDebug,       1,0),
     JS_FN("setDebuggerHandler", SetDebuggerHandler, 1,0),
     JS_FN("setThrowHook",   SetThrowHook,   1,0),
@@ -4929,6 +4954,9 @@ static const char *const shell_help_messages[] = {
 "schedulegc(num, [compartmentGC?])\n"
 "                         Schedule a GC to happen after num allocations",
 #endif
+"internalConst(name)\n"
+"  Query an internal constant for the engine. See InternalConst source for the\n"
+"  list of constant names",
 "setDebug(debug)          Set debug mode",
 "setDebuggerHandler(f)    Set handler for debugger keyword to f",
 "setThrowHook(f)          Set throw hook to f",

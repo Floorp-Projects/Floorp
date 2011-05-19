@@ -119,8 +119,7 @@ JSCompartment::init()
     chunk = NULL;
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
         arenas[i].init();
-    for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
-        freeLists.finalizables[i] = NULL;
+    freeLists.init();
     if (!crossCompartmentWrappers.init())
         return false;
 
