@@ -1997,6 +1997,8 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
     LookupStatus status = cc.updateForXName();
     if (status == Lookup_Error)
         THROW();
+    if (status == Lookup_Cacheable && !cc.updateTypes())
+        THROW();
 
     Value rval;
     if (!cc.retrieve(&rval))
