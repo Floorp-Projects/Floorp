@@ -37,15 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <math.h>
-
-#include "mozilla/Util.h"
 
 /* tokenization of CSS style sheets */
+
+#include <math.h> // must be first due to symbol conflicts
 
 #include "nsCSSScanner.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "mozilla/Util.h"
 
 // for #ifdef CSS_REPORT_PARSE_ERRORS
 #include "nsCOMPtr.h"
@@ -70,12 +70,6 @@ static nsIConsoleService *gConsoleService;
 static nsIFactory *gScriptErrorFactory;
 static nsIStringBundle *gStringBundle;
 #endif
-
-// Don't bother collecting whitespace characters in token's mIdent buffer
-#undef COLLECT_WHITESPACE
-
-// Table of character classes
-static const PRUnichar CSS_ESCAPE  = PRUnichar('\\');
 
 static const PRUint8 IS_HEX_DIGIT  = 0x01;
 static const PRUint8 START_IDENT   = 0x02;
@@ -231,7 +225,7 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_Percentage:
       NS_ASSERTION(!mIntegerValid, "How did a percentage token get this set?");
       aBuffer.AppendFloat(mNumber * 100.0f);
-      aBuffer.Append(PRUnichar('%')); // STRING USE WARNING: technically, this should be |AppendWithConversion|
+      aBuffer.Append(PRUnichar('%'));
       break;
     case eCSSToken_Dimension:
       if (mIntegerValid) {
@@ -619,10 +613,6 @@ nsCSSScanner::Close()
   }
 }
 
-#ifdef CSS_REPORT_PARSE_ERRORS
-#define TAB_STOP_WIDTH 8
-#endif
-
 // Returns -1 on error or eof
 PRInt32
 nsCSSScanner::Read()
@@ -651,18 +641,11 @@ nsCSSScanner::Read()
         ++mLineNumber;
 #ifdef CSS_REPORT_PARSE_ERRORS
       mColNumber = 0;
-#endif
-    } 
-#ifdef CSS_REPORT_PARSE_ERRORS
-    else if (rv == '\t') {
-      mColNumber = ((mColNumber - 1 + TAB_STOP_WIDTH) / TAB_STOP_WIDTH)
-                   * TAB_STOP_WIDTH;
-    } else if (rv != '\n') {
+    } else {
       mColNumber++;
-    }
 #endif
+    }
   }
-//printf("Read => %x\n", rv);
   return rv;
 }
 
@@ -677,7 +660,6 @@ nsCSSScanner::Peek()
     mPushback[0] = PRUnichar(ch);
     mPushbackCount++;
   }
-//printf("Peek => %x\n", mLookAhead);
   return PRInt32(mPushback[mPushbackCount - 1]);
 }
 
@@ -808,17 +790,8 @@ nsCSSScanner::Next(nsCSSToken& aToken)
     if (ch == '/' && !IsSVGMode()) {
       PRInt32 nextChar = Peek();
       if (nextChar == '*') {
-        (void) Read();
-#if 0
-        // If we change our storage data structures such that comments are
-        // stored (for Editor), we should reenable this code, condition it
-        // on being in editor mode, and apply glazou's patch from bug
-        // 60290.
-        aToken.mIdent.SetCapacity(2);
-        aToken.mIdent.Assign(PRUnichar(ch));
-        aToken.mIdent.Append(PRUnichar(nextChar));
-        return ParseCComment(aToken);
-#endif
+        Read();
+        // FIXME: Editor wants comments to be preserved (bug 60290).
         if (!SkipCComment()) {
           return false;
         }
@@ -937,7 +910,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   for (;;) {
     ch = Read();
     if (ch < 0) break;
-    if (ch == CSS_ESCAPE) {
+    if (ch == '\\') {
       if (!ParseAndAppendEscape(ident, false)) {
         ok = false;
         Pushback(ch);
@@ -1065,7 +1038,7 @@ nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, bool aInString)
 bool
 nsCSSScanner::GatherIdent(PRInt32 aChar, nsString& aIdent)
 {
-  if (aChar == CSS_ESCAPE) {
+  if (aChar == '\\') {
     if (!ParseAndAppendEscape(aIdent, false)) {
       return false;
     }
@@ -1094,7 +1067,7 @@ nsCSSScanner::GatherIdent(PRInt32 aChar, nsString& aIdent)
 
     aChar = Read();
     if (aChar < 0) break;
-    if (aChar == CSS_ESCAPE) {
+    if (aChar == '\\') {
       if (!ParseAndAppendEscape(aIdent, false)) {
         Pushback(aChar);
         break;
@@ -1120,7 +1093,7 @@ nsCSSScanner::ParseRef(PRInt32 aChar, nsCSSToken& aToken)
   if (ch < 0) {
     return true;
   }
-  if (IsIdent(ch) || ch == CSS_ESCAPE) {
+  if (IsIdent(ch) || ch == '\\') {
     // First char after the '#' is a valid ident char (or an escape),
     // so it makes sense to keep going
     nsCSSTokenType type =
@@ -1341,17 +1314,12 @@ nsCSSScanner::ParseString(PRInt32 aStop, nsCSSToken& aToken)
       // Count number of characters that can be processed
       for (;n < mCount; ++n) {
         PRUnichar nextChar = mReadPointer[n];
-        if ((nextChar == aStop) || (nextChar == CSS_ESCAPE) ||
+        if ((nextChar == aStop) || (nextChar == '\\') ||
             (nextChar == '\n') || (nextChar == '\r') || (nextChar == '\f')) {
           break;
         }
 #ifdef CSS_REPORT_PARSE_ERRORS
-        if (nextChar == '\t') {
-          mColNumber = ((mColNumber - 1 + TAB_STOP_WIDTH) / TAB_STOP_WIDTH)
-                       * TAB_STOP_WIDTH;
-        } else {
-          ++mColNumber;
-        }
+        ++mColNumber;
 #endif
       }
       // Add to the token what we have so far
@@ -1371,7 +1339,7 @@ nsCSSScanner::ParseString(PRInt32 aStop, nsCSSToken& aToken)
 #endif
       break;
     }
-    if (ch == CSS_ESCAPE) {
+    if (ch == '\\') {
       if (!ParseAndAppendEscape(aToken.mIdent, true)) {
         aToken.mType = eCSSToken_Bad_String;
         Pushback(ch);
