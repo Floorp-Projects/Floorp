@@ -484,8 +484,13 @@ nsDiskCacheStreamIO::Flush()
     CACHE_LOG_DEBUG(("CACHE: Flush [%x doomed=%u]\n",
         mBinding->mRecord.HashNumber(), mBinding->mDoomed));
 
-    if (!mBufDirty)
+    if (!mBufDirty) {
+        if (mFD) {
+            (void) PR_Close(mFD);
+            mFD = nsnull;
+        }
         return NS_OK;
+    }
 
     // write data to cache blocks, or flush mBuffer to file
     nsDiskCacheMap *cacheMap = mDevice->CacheMap();  // get map reference
