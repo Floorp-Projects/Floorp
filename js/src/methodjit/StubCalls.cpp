@@ -438,6 +438,7 @@ stubs::GetElem(VMFrame &f)
             if (!str)
                 THROW();
             f.regs.sp[-2].setString(str);
+            f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
             return;
         }
     }

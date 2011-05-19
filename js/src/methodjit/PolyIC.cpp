@@ -2483,6 +2483,7 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
             f.regs.sp[-1].setObject(*thisObj);
             if (!JSID_IS_INT(id))
                 f.script()->typeMonitorUnknown(cx, f.pc());
+            f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
             return;
         }
     }
@@ -2548,6 +2549,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
             JS_ASSERT(!f.regs.sp[-2].isMagic());
             if (!JSID_IS_INT(id))
                 f.script()->typeMonitorUnknown(cx, f.pc());
+            f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
             return;
         }
     }
