@@ -1096,7 +1096,8 @@ mjit::Compiler::jsop_setelem_dense()
     RegisterID slotsReg;
     analyze::CrossSSAValue objv(a->inlineIndex, analysis->poppedValue(PC, 2));
     analyze::CrossSSAValue indexv(a->inlineIndex, analysis->poppedValue(PC, 1));
-    bool hoisted = loop && loop->hoistArrayLengthCheck(objv, indexv);
+    bool hoisted = loop && id->isType(JSVAL_TYPE_INT32) &&
+        loop->hoistArrayLengthCheck(objv, indexv);
 
     if (hoisted) {
         FrameEntry *slotsFe = loop->invariantSlots(objv);
@@ -1417,7 +1418,8 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
 
     analyze::CrossSSAValue objv(a->inlineIndex, analysis->poppedValue(PC, 1));
     analyze::CrossSSAValue indexv(a->inlineIndex, analysis->poppedValue(PC, 0));
-    bool hoisted = loop && loop->hoistArrayLengthCheck(objv, indexv);
+    bool hoisted = loop && id->isType(JSVAL_TYPE_INT32) &&
+        loop->hoistArrayLengthCheck(objv, indexv);
 
     // Get a register with either the object or its slots, depending on whether
     // we are hoisting the bounds check.
