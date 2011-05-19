@@ -4427,7 +4427,7 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     }
 
     if (changed && isGlobal())
-        cx->markGlobalReallocation(this);  /* :XXX: Handle failure? */
+        cx->markGlobalReallocation(this);
 
     return true;
 }
@@ -4472,7 +4472,7 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     }
 
     if (changed && isGlobal())
-        cx->markGlobalReallocation(this);  /* :XXX: Handle failure? */
+        cx->markGlobalReallocation(this);
 }
 
 bool
