@@ -69,12 +69,6 @@
 
 namespace nanojit
 {
-#if defined VMCFG_DOUBLE_MSW_FIRST || defined _MSC_VER
-#  undef  NJ_ARM_EABI
-#else
-#  define NJ_ARM_EABI  1
-#endif
-
 // GCC defines __ARM_PCS_VFP if it uses hardware floating point ABI
 // See http://gcc.gnu.org/viewcvs?view=revision&revision=162637
 #ifdef __ARM_PCS_VFP
@@ -153,7 +147,6 @@ static const Register
     SBZ = { 0 } ;   // Used for 'should-be-zero' fields in instructions with
                     // unused register fields.
 
-/* winmo builds error with C2057 and C2229 on usage of First/LastRegNum as R0/D7 */
 static const uint32_t FirstRegNum = 0; /* R0 */
 static const uint32_t LastRegNum = 23; /* D7 */
 }

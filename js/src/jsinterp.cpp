@@ -200,9 +200,8 @@ js::GetBlockChainFast(JSContext *cx, StackFrame *fp, JSOp op, size_t oplen)
 
     pc += oplen;
     op = JSOp(*pc);
-    JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == op);
 
-    /* The fast paths assume no JSOP_RESETBASE/INDEXBASE noise. */
+    /* The fast paths assume no JSOP_RESETBASE/INDEXBASE or JSOP_TRAP noise. */
     if (op == JSOP_NULLBLOCKCHAIN)
         return NULL;
     if (op == JSOP_BLOCKCHAIN)
@@ -858,9 +857,9 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
     JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
 
     Value *sharps = &fp->slots()[script->nfixed - SHARP_NSLOTS];
-    if (prev && prev->script()->hasSharps) {
+    if (!fp->isGlobalFrame() && prev->script()->hasSharps) {
         JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
-        int base = (prev->isFunctionFrame() && !prev->isEvalOrDebuggerFrame())
+        int base = (prev->isFunctionFrame() && !prev->isDirectEvalOrDebuggerFrame())
                    ? prev->fun()->script()->bindings.sharpSlotBase(cx)
                    : prev->numFixed() - SHARP_NSLOTS;
         if (base < 0)
@@ -876,8 +875,8 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
 #endif
 
 bool
-Execute(JSContext *cx, JSObject &chain, JSScript *script,
-        StackFrame *prev, uintN flags, Value *result)
+Execute(JSContext *cx, JSObject &chain, JSScript *script, StackFrame *prev, uintN flags,
+        Value *result)
 {
     JS_ASSERT_IF(prev, !prev->isDummyFrame());
     JS_ASSERT_IF(prev, prev->compartment() == cx->compartment);
@@ -928,7 +927,7 @@ Execute(JSContext *cx, JSObject &chain, JSScript *script,
             return false;
         }
 
-        frame.fp()->initGlobalFrame(script, *innerizedChain, flags);
+        frame.fp()->initGlobalFrame(script, *innerizedChain, cx->maybefp(), flags);
 
         /* If scope chain is an inner window, outerize for 'this'. */
         JSObject *thisp = chain.thisObject(cx);
@@ -2139,7 +2138,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_INTERP);
 #endif
-    JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
+    JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
 # ifdef DEBUG
     /*
@@ -2260,7 +2259,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(regs.fp()->hasImacropc()                                    \
-                  ? atoms == COMMON_ATOMS_START(&rt->atomState) &&            \
+                  ? atoms == rt->atomState.commonAtomsStart() &&              \
                     GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
                   : (size_t)(atoms - script->atomMap.vector) <                \
                     (size_t)(script->atomMap.length -                         \
@@ -2509,7 +2508,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
     }
 
     if (regs.fp()->hasImacropc())
-        atoms = COMMON_ATOMS_START(&rt->atomState);
+        atoms = rt->atomState.commonAtomsStart();
 #endif
 
     /* Don't call the script prologue if executing between Method and Trace JIT. */
@@ -2675,7 +2674,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
                 break;
               case ARECORD_IMACRO:
               case ARECORD_IMACRO_ABORTED:
-                atoms = COMMON_ATOMS_START(&rt->atomState);
+                atoms = rt->atomState.commonAtomsStart();
                 op = JSOp(*regs.pc);
                 CLEAR_LEAVE_ON_TRACE_POINT();
                 if (status == ARECORD_IMACRO)
@@ -4362,11 +4361,11 @@ BEGIN_CASE(JSOP_SETMETHOD)
         if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
             if (op == JSOP_SETMETHOD)
-                defineHow = JSDNP_CACHE_RESULT | JSDNP_SET_METHOD;
+                defineHow = DNP_CACHE_RESULT | DNP_SET_METHOD;
             else if (op == JSOP_SETNAME)
-                defineHow = JSDNP_CACHE_RESULT | JSDNP_UNQUALIFIED;
+                defineHow = DNP_CACHE_RESULT | DNP_UNQUALIFIED;
             else
-                defineHow = JSDNP_CACHE_RESULT;
+                defineHow = DNP_CACHE_RESULT;
             if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode))
                 goto error;
         } else {
@@ -5248,8 +5247,8 @@ BEGIN_CASE(JSOP_DEFVAR)
 
     /* Bind a variable only if it's not yet defined. */
     if (shouldDefine &&
-        !js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
-                                 PropertyStub, StrictPropertyStub, attrs, 0, 0, NULL)) {
+        !DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, StrictPropertyStub,
+                              attrs, 0, 0)) {
         goto error;
     }
 }
@@ -5510,7 +5509,7 @@ BEGIN_CASE(JSOP_LAMBDA)
 
                 if (op2 == JSOP_SETMETHOD) {
 #ifdef DEBUG
-                    op2 = JSOp(pc2[JSOP_SETMETHOD_LENGTH]);
+                    op2 = js_GetOpcode(cx, script, pc2 + JSOP_SETMETHOD_LENGTH);
                     JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
 #endif
                     const Value &lref = regs.sp[-1];
@@ -5854,13 +5853,12 @@ BEGIN_CASE(JSOP_INITMETHOD)
         jsid id = ATOM_TO_JSID(atom);
 
         uintN defineHow = (op == JSOP_INITMETHOD)
-                          ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
-                          : JSDNP_CACHE_RESULT;
-        if (!(JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-              ? js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
-              : js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
-                                        JSPROP_ENUMERATE, 0, 0, NULL,
-                                        defineHow))) {
+                          ? DNP_CACHE_RESULT | DNP_SET_METHOD
+                          : DNP_CACHE_RESULT;
+        if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
+            ? !js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
+            : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
+                                    JSPROP_ENUMERATE, 0, 0, defineHow)) {
             goto error;
         }
     }

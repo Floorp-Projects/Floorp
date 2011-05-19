@@ -1809,11 +1809,11 @@ mjit::Compiler::jsop_initprop()
     JSObject *holder;
     JSProperty *prop = NULL;
 #ifdef DEBUG
-    int res =
+    bool res =
 #endif
-    js_LookupPropertyWithFlags(cx, baseobj, ATOM_TO_JSID(atom),
-                               JSRESOLVE_QUALIFIED, &holder, &prop);
-    JS_ASSERT(res >= 0 && prop && holder == baseobj);
+    LookupPropertyWithFlags(cx, baseobj, ATOM_TO_JSID(atom),
+                            JSRESOLVE_QUALIFIED, &holder, &prop);
+    JS_ASSERT(res && prop && holder == baseobj);
 
     RegisterID objReg = frame.copyDataIntoReg(obj);
     masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);

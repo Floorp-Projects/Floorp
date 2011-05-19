@@ -47,7 +47,7 @@
   background: #5e6166;
 }
 
-#toolbar-moveable-container[mode="discover"],
+#toolbar-moveable-container[mode="discovery"],
 #toolbar-moveable-container[top="0"] {
   position: fixed;
   left: 0;
@@ -1436,17 +1436,30 @@ richlistitem.appmenu-downloads-button > image,
 }
 
 /* Sidebar peeking */
-.sidebar[mode="discovery"] {
+:-moz-any(.sidebar, #browsers)[mode="discovery"] {
   -moz-animation-delay: 1s;
   -moz-animation-duration: 5s;
   -moz-animation-name: sidebardiscovery;
 }
 
+:-moz-any(.sidebar, #browsers)[mode="discovery"]:-moz-locale-dir(rtl) {
+  -moz-animation-name: sidebardiscoveryrtl;
+}
+
 @-moz-keyframes sidebardiscovery {
-  from { -moz-transform: translateX(0%); }
-  10% { -moz-transform: translateX(100%); }
-  45% { -moz-transform: translateX(100%); }
-  55% { -moz-transform: translateX(-100%); }
-  90% { -moz-transform: translateX(-100%); }
-  to { -moz-transform: translateX(0%); }
+  from { -moz-transform: translateX(0); }
+  10% { -moz-transform: translateX(-moz-calc(121px + @border_width_large@ + 2*@padding_normal@)); }
+  45% { -moz-transform: translateX(-moz-calc(121px + @border_width_large@ + 2*@padding_normal@)); }
+  55% { -moz-transform: translateX(-@sidebar_width_minimum@); }
+  90% { -moz-transform: translateX(-@sidebar_width_minimum@); }
+  to { -moz-transform: translateX(0); }
+}
+
+@-moz-keyframes sidebardiscoveryrtl {
+  from { -moz-transform: translateX(0); }
+  10% { -moz-transform: translateX(-moz-calc(-121px - @border_width_large@ - 2*@padding_normal@)); }
+  45% { -moz-transform: translateX(-moz-calc(-121px - @border_width_large@ - 2*@padding_normal@)); }
+  55% { -moz-transform: translateX(@sidebar_width_minimum@); }
+  90% { -moz-transform: translateX(@sidebar_width_minimum@); }
+  to { -moz-transform: translateX(0); }
 }

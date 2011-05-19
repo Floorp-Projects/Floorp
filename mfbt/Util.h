@@ -113,6 +113,8 @@ struct DebugOnly
     operator T&() { return value; }
     operator const T&() const { return value; }
 
+    T& operator->() { return value; }
+
 #else
     DebugOnly() {}
     DebugOnly(const T&) {}

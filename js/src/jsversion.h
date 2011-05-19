@@ -219,13 +219,3 @@
  * support likely to be made opt-in at some future time.
  */
 #define OLD_GETTER_SETTER_METHODS       1
-
-/*
- * Embedders: don't change this: it's a bake-until-ready hack only!
- *
- * NB: Changing this value requires adjusting the pass/fail state of a handful
- *     of tests in ecma_5/JSON/ which the old parser implemented incorrectly.
- *     Also make sure to rename JSONSourceParser to just JSONParser when the
- *     old parser is removed completely.
- */
-#define USE_OLD_AND_BUSTED_JSON_PARSER 0

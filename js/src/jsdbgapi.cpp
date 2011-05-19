@@ -1099,11 +1099,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         JSWatchPoint *wp = FindWatchPoint(rt, obj, propid);
         if (!wp) {
             /* Make a new property in obj so we can watch for the first set. */
-            if (!js_DefineNativeProperty(cx, obj, propid, UndefinedValue(), NULL, NULL,
-                                         JSPROP_ENUMERATE, 0, 0, &prop)) {
+            shape = DefineNativeProperty(cx, obj, propid, UndefinedValue(), NULL, NULL,
+                                         JSPROP_ENUMERATE, 0, 0);
+            if (!shape)
                 return false;
-            }
-            shape = (Shape *) prop;
         }
     } else if (pobj != obj) {
         /* Clone the prototype property so we can watch the right object. */
@@ -1141,12 +1140,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         }
 
         /* Recall that obj is native, whether or not pobj is native. */
-        if (!js_DefineNativeProperty(cx, obj, propid, valroot.value(),
-                                     getter, setter, attrs, flags,
-                                     shortid, &prop)) {
+        shape = DefineNativeProperty(cx, obj, propid, valroot.value(), getter, setter,
+                                     attrs, flags, shortid);
+        if (!shape)
             return false;
-        }
-        shape = (Shape *) prop;
     }
 
     /*
@@ -1536,6 +1533,12 @@ JS_PUBLIC_API(JSBool)
 JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
 {
     return Valueify(fp)->isDebuggerFrame();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsGlobalFrame(JSContext *cx, JSStackFrame *fp)
+{
+    return Valueify(fp)->isGlobalFrame();
 }
 
 JS_PUBLIC_API(jsval)

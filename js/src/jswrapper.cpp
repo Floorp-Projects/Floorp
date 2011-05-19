@@ -261,9 +261,9 @@ JSWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc, Value *argv, 
 bool
 JSWrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp)
 {
-    *bp = true; // default result if we refuse to perform this action
+    *bp = false; // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
-    JSBool b;
+    JSBool b = JS_FALSE;
     GET(JS_HasInstance(cx, wrappedObject(wrapper), Jsvalify(*vp), &b) && Cond(b, bp));
 }
 
@@ -357,12 +357,30 @@ TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, J
 
 }
 
+ForceFrame::ForceFrame(JSContext *cx, JSObject *target)
+    : context(cx),
+      target(target)
+{
+}
+
+bool
+ForceFrame::enter()
+{
+    LeaveTrace(context);
+
+    JS_ASSERT(context->compartment == target->compartment());
+
+    JSObject *scopeChain = target->getGlobal();
+    JS_ASSERT(scopeChain->isNative());
+
+    return context->stack.pushDummyFrame(context, *scopeChain, &frame);
+}
+
 AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
     : context(cx),
       origin(cx->compartment),
       target(target),
       destination(target->getCompartment()),
-      input(cx),
       entered(false)
 {
 }

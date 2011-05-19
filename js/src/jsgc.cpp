@@ -399,8 +399,8 @@ Chunk::releaseArena(ArenaHeader *aheader)
         comp->reduceGCTriggerBytes(GC_HEAP_GROWTH_FACTOR * ArenaSize);
     }
 #endif
-    JS_ATOMIC_ADD(&rt->gcBytes, -ArenaSize);
-    JS_ATOMIC_ADD(&comp->gcBytes, -ArenaSize);
+    JS_ATOMIC_ADD(&rt->gcBytes, -int32(ArenaSize));
+    JS_ATOMIC_ADD(&comp->gcBytes, -int32(ArenaSize));
     info.emptyArenaLists.insert(aheader);
     aheader->compartment = NULL;
     ++info.numFree;
@@ -1106,8 +1106,13 @@ FreeLists::purge()
      * Return the free list back to the arena so the GC finalization will not
      * run the finalizers over unitialized bytes from free things.
      */
-    for (FreeCell ***p = finalizables; p != JS_ARRAY_END(finalizables); ++p)
-        *p = NULL;
+    for (FreeCell **p = finalizables; p != JS_ARRAY_END(finalizables); ++p) {
+        if (FreeCell *thing = *p) {
+            JS_ASSERT(!thing->arenaHeader()->freeList);
+            thing->arenaHeader()->freeList = thing;
+            *p = NULL;
+        }
+    }
 }
 
 inline ArenaHeader *
@@ -1305,9 +1310,6 @@ ArenaList::backgroundFinalize(JSContext *cx, ArenaHeader *listHead)
 
 #endif /* JS_THREADSAFE */
 
-} /* namespace gc */
-} /* namespace js */
-
 #ifdef DEBUG
 bool
 CheckAllocation(JSContext *cx)
@@ -1358,16 +1360,11 @@ RunLastDitchGC(JSContext *cx)
 }
 
 template <typename T>
-inline bool
+inline Cell *
 RefillTypedFreeList(JSContext *cx, unsigned thingKind)
 {
     JSCompartment *compartment = cx->compartment;
-    JS_ASSERT_IF(compartment->freeLists.finalizables[thingKind],
-                 !*compartment->freeLists.finalizables[thingKind]);
-
-    JS_ASSERT(!cx->runtime->gcRunning);
-    if (cx->runtime->gcRunning)
-        return false;
+    JS_ASSERT(!compartment->freeLists.finalizables[thingKind]);
 
     bool canGC = !JS_ON_TRACE(cx) && !JS_THREAD_DATA(cx)->waiveGCQuota;
     bool runGC = canGC && JS_UNLIKELY(NeedLastDitchGC(cx));
@@ -1381,15 +1378,13 @@ RefillTypedFreeList(JSContext *cx, unsigned thingKind)
              * things and populate the free list. If that happens, just
              * return that list head.
              */
-            if (compartment->freeLists.finalizables[thingKind])
-                return true;
+            if (Cell *thing = compartment->freeLists.getNext(thingKind))
+                return thing;
         }
         ArenaHeader *aheader = compartment->arenas[thingKind].getArenaWithFreeList<T>(cx, thingKind);
         if (aheader) {
-            JS_ASSERT(aheader->freeList);
             JS_ASSERT(sizeof(T) == aheader->getThingSize());
-            compartment->freeLists.populate(aheader, thingKind);
-            return true;
+            return compartment->freeLists.populate(aheader, thingKind);
         }
 
         /*
@@ -1403,10 +1398,10 @@ RefillTypedFreeList(JSContext *cx, unsigned thingKind)
 
     METER(cx->runtime->gcStats.fail++);
     js_ReportOutOfMemory(cx);
-    return false;
+    return NULL;
 }
 
-bool
+Cell *
 RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
 {
     switch (thingKind) {
@@ -1444,9 +1439,12 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
 #endif
       default:
         JS_NOT_REACHED("bad finalize kind");
-        return false;
+        return NULL;
     }
 }
+
+} /* namespace gc */
+} /* namespace js */
 
 uint32
 js_GetGCThingTraceKind(void *thing)
@@ -2143,6 +2141,7 @@ GCHelperThread::doSweep()
     for (ArenaHeader **i = finalizeVector.begin(); i != finalizeVector.end(); ++i)
         ArenaList::backgroundFinalize(cx, *i);
     finalizeVector.resize(0);
+    ExpireGCChunks(cx->runtime);
     cx = NULL;
 
     if (freeCursor) {
@@ -2416,11 +2415,14 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         js_SweepScriptFilenames(rt);
     }
 
+#ifndef JS_THREADSAFE
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
      * use IsAboutToBeFinalized().
+     * This is done on the GCHelperThread if JS_THREADSAFE is defined.
      */
     ExpireGCChunks(rt);
+#endif
     TIMESTAMP(sweepDestroyEnd);
 
     if (rt->gcCallback)
@@ -2680,6 +2682,10 @@ void
 js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 {
     JSRuntime *rt = cx->runtime;
+
+    /* Don't GC while reporting an OOM. */
+    if (rt->inOOMReport)
+        return;
 
     /*
      * Don't collect garbage if the runtime isn't up, and cx is not the last

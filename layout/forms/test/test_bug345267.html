@@ -61,6 +61,7 @@ is($("u4").value, "abcdefghijkl",
 // Now start the editing tests
 is($("target").value, "abcdefghijklm", "Test starting state incorrect");
 $("target").focus();
+$("target").selectionStart = $("target").selectionEnd = 13;
 sendKey("back_space");
 is($("target").value, "abcdefghijkl", "Should only delete one char");
 sendKey("back_space");

@@ -405,9 +405,6 @@ extern JSObject *
 js_InitArgumentsClass(JSContext *cx, JSObject *obj);
 
 extern void
-js_TraceFunction(JSTracer *trc, JSFunction *fun);
-
-extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
 extern JSObject * JS_FASTCALL
