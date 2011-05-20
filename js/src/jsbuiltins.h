@@ -585,8 +585,8 @@ JS_DECLARE_CALLINFO(js_ArrayCompPush_tn)
 JS_DECLARE_CALLINFO(js_EnsureDenseArrayCapacity)
 
 /* Defined in jsbuiltins.cpp. */
-JS_DECLARE_CALLINFO(js_UnboxDouble)
-JS_DECLARE_CALLINFO(js_UnboxInt32)
+JS_DECLARE_CALLINFO(js_UnboxNumberAsDouble)
+JS_DECLARE_CALLINFO(js_UnboxNumberAsInt32)
 JS_DECLARE_CALLINFO(js_dmod)
 JS_DECLARE_CALLINFO(js_imod)
 JS_DECLARE_CALLINFO(js_DoubleToInt32)
