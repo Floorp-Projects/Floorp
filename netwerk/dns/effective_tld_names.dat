@@ -4709,6 +4709,9 @@ edu.ws
 //http://nic.ae/english/arabicdomain/rules.jsp
 امارات
 
+// xn--54b7fta0cc ("Bangla" Bangla) : BD  
+বাংলা
+
 // xn--fiqs8s ("China" Chinese-Han-Simplified <.Zhonggou>) : CN 
 // CNNIC
 // http://cnnic.cn/html/Dir/2005/10/11/3218.htm
@@ -4719,18 +4722,61 @@ edu.ws
 // http://cnnic.cn/html/Dir/2005/10/11/3218.htm
 中國
 
+// xn--lgbbat1ad8j ("Algeria / Al Jazair" Arabic) : DZ  
+الجزائر
+
 // xn--wgbh1c ("Egypt" Arabic .masr) : EG
 // http://www.dotmasr.eg/
 مصر
+
+// xn--node ("ge" Georgian (Mkhedruli)) : GE  
+გე
 
 // xn--j6w193g ("Hong Kong" Chinese-Han) : HK
 // https://www2.hkirc.hk/register/rules.jsp
 香港
 
+// xn--h2brj9c ("Bharat" Devanagari) : IN  
+// India
+भारत
+
+// xn--mgbbh1a71e ("Bharat" Arabic) : IN  
+// India
+بھارت
+
+// xn--fpcrj9c3d ("Bharat" Telugu) : IN  
+// India
+భారత్
+
+// xn--gecrj9c ("Bharat" Gujarati) : IN  
+// India
+ભારત
+
+// xn--s9brj9c ("Bharat" Gurmukhi) : IN  
+// India
+ਭਾਰਤ
+
+// xn--45brj9c ("Bharat" Bengali) : IN  
+// India
+ভারত
+
+// xn--xkc2dl3a5ee0h ("India" Tamil) : IN  
+// India
+இந்தியா
+
+// xn--mgba3a4f16a ("Iran" Persian) : IR  
+ایران
+
+// xn--mgba3a4fra ("Iran" Arabic) : IR  
+ايران
+
 //xn--mgbayh7gpa ("al-Ordon" Arabic) JO
 //National Information Technology Center (NITC) 
 //Royal Scientific Society, Al-Jubeiha
 الاردن
+
+// xn--3e0b707e ("Republic of Korea" Hangul) : KR  
+한국
 
 // xn--fzc2c9e2c ("Lanka" Sinhalese-Sinhala) : LK
 // http://nic.lk
@@ -4740,10 +4786,25 @@ edu.ws
 // http://nic.lk
 இலங்கை
 
+// xn--mgbc0a9azcg ("Morocco / al-Maghrib" Arabic) : MA  
+المغرب
+
+// xn--mgb9awbf ("Oman" Arabic) : OM  
+عمان
+
+// xn--mgbai9azgqp6j ("Pakistan" Arabic) : PK  
+‎‎پاکستان
+
+// xn--mgbai9a5eva00b ("Pakistan" Arabic) variant : PK  
+‎‎پاكستان
+
 // xn--ygbi2ammx ("Falasteen" Arabic) : PS
 // The Palestinian National Internet Naming Authority (PNINA)
 // http://www.pnina.ps
 فلسطين
+
+// xn--90a3ac ("srb" Cyrillic) : RS  
+срб
 
 // xn--p1ai ("rf" Russian-Cyrillic) : RU
 // http://www.cctld.ru/en/docs/rulesrf.php
@@ -4751,11 +4812,26 @@ edu.ws
 
 // xn--wgbl6a ("Qatar" Arabic) : QA
 // http://www.ict.gov.qa/
-قطر 
+قطر
 
 // xn--mgberp4a5d4ar ("AlSaudiah" Arabic) : SA
 // http://www.nic.net.sa/
 السعودية
+
+// xn--mgberp4a5d4a87g ("AlSaudiah" Arabic) variant : SA  
+السعودیة
+
+// xn--mgbqly7c0a67fbc ("AlSaudiah" Arabic) variant : SA  
+السعودیۃ
+
+// xn--mgbqly7cvafr ("AlSaudiah" Arabic) variant : SA  
+السعوديه
+
+// xn--ogbpf8fl ("Syria" Arabic) : SY  
+سورية
+
+// xn--mgbtf8fl ("Syria" Arabic) variant : SY  
+سوريا
 
 // xn--yfro4i67o Singapore ("Singapore" Chinese-Han) : SG
 新加坡
@@ -4778,6 +4854,18 @@ edu.ws
 // xn--kprw13d ("Taiwan" Chinese-Han-Simplified) : TW
 // http://www.twnic.net/english/dn/dn_07a.htm
 台湾
+
+// xn--nnx388a ("Taiwan") variant : TW  
+臺灣
+
+// xn--j1amh ("ukr" Cyrillic) : UA  
+укр
+
+// xn--mgb2ddes ("AlYemen" Arabic) : YE  
+اليمن
+
+// xxx : http://icmregistry.com
+xxx
 
 // ye : http://www.y.net.ye/services/domain_name.htm
 *.ye
