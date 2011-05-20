@@ -174,12 +174,11 @@ class ManifestParser(object):
         self.tests = []
         self.strict = strict
         self.rootdir = None
-        self.relativeRoot = None
         if manifests:
             self.read(*manifests)
 
-    def getRelativeRoot(self):
-        return self.relativeRoot
+    def getRelativeRoot(self, root):
+        return root
 
     def read(self, *filenames, **defaults):
 
@@ -195,7 +194,6 @@ class ManifestParser(object):
             # set the per file defaults
             defaults = defaults.copy() or self._defaults.copy()
             here = os.path.dirname(os.path.abspath(filename))
-            self.relativeRoot = here
             defaults['here'] = here
 
             if self.rootdir is None:
@@ -216,7 +214,7 @@ class ManifestParser(object):
                     include_file = section.split('include:', 1)[-1]
                     include_file = normalize_path(include_file)
                     if not os.path.isabs(include_file):
-                        include_file = os.path.join(self.getRelativeRoot(), include_file)
+                        include_file = os.path.join(self.getRelativeRoot(here), include_file)
                     if not os.path.exists(include_file):
                         if self.strict:
                             raise IOError("File '%s' does not exist" % include_file)
