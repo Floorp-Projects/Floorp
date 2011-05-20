@@ -1179,6 +1179,10 @@ namespace JSC {
 
         static ARMWord getOp2(ARMWord imm);
 
+        // Get an operand-2 field for immediate-shifted-registers in arithmetic
+        // instructions.
+        static ARMWord getOp2RegScale(RegisterID reg, ARMWord scale);
+
 #if WTF_ARM_ARCH_VERSION >= 7
         static ARMWord getImm16Op2(ARMWord imm)
         {
@@ -1206,6 +1210,7 @@ namespace JSC {
         void dataTransfer8(bool isLoad, RegisterID srcDst, RegisterID base, int32_t offset);
         void baseIndexTransfer32(bool isLoad, RegisterID srcDst, RegisterID base, RegisterID index, int scale, int32_t offset);
         void doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset);
+        void doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID base, int32_t offset, RegisterID index, int32_t scale);
 
         // Constant pool hnadlers
 
