@@ -2869,4 +2869,119 @@ TraceRuntime(JSTracer *trc)
     MarkRuntime(trc);
 }
 
+template<typename T>
+static void
+IterateArenaCells(JSContext *cx, ArenaHeader *aheader, void *data, IterateCallback callback)
+{
+    Arena<T> *a = aheader->getArena<T>();
+    FreeCell *nextFree = aheader->freeList;
+    FreeLists &freeLists = aheader->compartment->freeLists;
+    if (FreeCell *cell = freeLists.finalizables[aheader->getThingKind()]) {
+        if (cell->arenaHeader() == aheader) {
+            JS_ASSERT(!nextFree);
+            nextFree = cell;
+        }
+    }
+
+    size_t traceKind = GetFinalizableTraceKind(aheader->getThingKind());
+    T *end = &a->t.things[Arena<T>::ThingsPerArena];
+    for (T *thing = &a->t.things[0]; thing != end; ++thing) {
+        if (thing->asFreeCell() == nextFree)
+            nextFree = nextFree->link;
+        else
+            (*callback)(cx, data, traceKind, (void *)thing);
+    }
+}
+
+static void
+IterateCompartmentCells(JSContext *cx, JSCompartment *comp, uint64 traceKindMask,
+                        void *data, IterateCallback callback)
+{
+    for (unsigned thingKind = 0; thingKind < FINALIZE_LIMIT; thingKind++) {
+        size_t traceKind = GetFinalizableTraceKind(thingKind);
+        if (traceKindMask && !TraceKindInMask(traceKind, traceKindMask))
+            continue;
+
+        for (ArenaHeader *aheader = comp->arenas[thingKind].getHead();
+             aheader;
+             aheader = aheader->next)
+        {
+            switch (thingKind) {
+              case FINALIZE_OBJECT0:
+              case FINALIZE_OBJECT0_BACKGROUND:
+                IterateArenaCells<JSObject>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_OBJECT2:
+              case FINALIZE_OBJECT2_BACKGROUND:
+                IterateArenaCells<JSObject_Slots2>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_OBJECT4:
+              case FINALIZE_OBJECT4_BACKGROUND:
+                IterateArenaCells<JSObject_Slots4>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_OBJECT8:
+              case FINALIZE_OBJECT8_BACKGROUND:
+                IterateArenaCells<JSObject_Slots8>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_OBJECT12:
+              case FINALIZE_OBJECT12_BACKGROUND:
+                IterateArenaCells<JSObject_Slots12>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_OBJECT16:
+              case FINALIZE_OBJECT16_BACKGROUND:
+                IterateArenaCells<JSObject_Slots16>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_STRING:
+                IterateArenaCells<JSString>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_EXTERNAL_STRING:
+                IterateArenaCells<JSExternalString>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_SHORT_STRING:
+                IterateArenaCells<JSShortString>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_FUNCTION:
+                IterateArenaCells<JSFunction>(cx, aheader, data, callback);
+                break;
+              case FINALIZE_SHAPE:
+                IterateArenaCells<Shape>(cx, aheader, data, callback);
+                break;
+#if JS_HAS_XML_SUPPORT
+              case FINALIZE_XML:
+                IterateArenaCells<JSXML>(cx, aheader, data, callback);
+                break;
+#endif
+              default:
+                JS_NOT_REACHED("wrong thingkind");
+            }
+        }
+    }
+}
+
+void
+IterateCells(JSContext *cx, JSCompartment *comp, uint64 traceKindMask,
+             void *data, IterateCallback callback)
+{
+    LeaveTrace(cx);
+
+    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(!rt->gcRunning);
+
+    AutoLockGC lock(rt);
+    AutoGCSession gcsession(cx);
+
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.waitBackgroundSweepEnd(rt, false);
+#endif
+
+    AutoUnlockGC unlock(rt);
+
+    if (comp) {
+        IterateCompartmentCells(cx, comp, traceKindMask, data, callback);
+    } else {
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            IterateCompartmentCells(cx, *c, traceKindMask, data, callback);
+    }
+}
+
 } /* namespace js */
