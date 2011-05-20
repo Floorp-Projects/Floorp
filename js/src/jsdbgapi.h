@@ -107,9 +107,9 @@ extern JS_PUBLIC_API(JSBool)
 JS_GetDebugMode(JSContext *cx);
 
 /*
- * Turn on/off debugging mode for a single compartment. This must be
- * called from the main thread and the compartment must be associated
- * with the main thread.
+ * Turn on/off debugging mode for a single compartment. This should only be
+ * used when no code from this compartment is running or on the stack in any
+ * thread.
  */
 JS_FRIEND_API(JSBool)
 JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug);
