@@ -4555,7 +4555,7 @@ BEGIN_CASE(JSOP_NEW)
     if (IsFunctionObject(vp[0], &callee)) {
         newfun = callee->getFunctionPrivate();
         if (newfun->isInterpretedConstructor()) {
-            if (newfun->u.i.script->isEmpty()) {
+            if (newfun->script()->isEmpty()) {
                 JSObject *obj2 = js_CreateThisForFunction(cx, callee);
                 if (!obj2)
                     goto error;

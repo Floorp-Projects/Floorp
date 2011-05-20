@@ -4250,7 +4250,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     if (!clone)
         return NULL;
 
-    JSUpvarArray *uva = fun->u.i.script->upvars();
+    JSUpvarArray *uva = fun->script()->upvars();
     uint32 i = uva->length;
     JS_ASSERT(i != 0);
 
