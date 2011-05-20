@@ -1331,6 +1331,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(XULCommandEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MozBlobBuilder, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CommandEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1350,8 +1352,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(FileReader, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozURLProperty, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MozBlobBuilder, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(DOMStringMap, nsDOMStringMapSH,
@@ -4028,12 +4028,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozURLProperty)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(MozBlobBuilder, nsIDOMBlobBuilder)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBlobBuilder)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(DOMStringMap, nsIDOMDOMStringMap)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMStringMap)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozBlobBuilder, nsIDOMBlobBuilder)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBlobBuilder)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
