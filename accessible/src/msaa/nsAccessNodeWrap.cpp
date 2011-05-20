@@ -275,7 +275,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributes(
 __try{
   *aNumAttribs = 0;
 
-  if (IsDefunct() || IsDocument())
+  if (IsDefunct() || IsDocumentNode())
     return E_FAIL;
 
   PRUint32 numAttribs = mContent->GetAttrCount();
@@ -348,7 +348,7 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyle(
 __try{
   *aNumStyleProperties = 0;
 
-  if (IsDefunct() || IsDocument())
+  if (IsDefunct() || IsDocumentNode())
     return E_FAIL;
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
@@ -383,7 +383,7 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyleForProperties(
     /* [length_is][size_is][out] */ BSTR __RPC_FAR *aStyleValues)
 {
 __try {
-  if (IsDefunct() || IsDocument())
+  if (IsDefunct() || IsDocumentNode())
     return E_FAIL;
  
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
