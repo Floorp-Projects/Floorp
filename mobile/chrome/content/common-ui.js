@@ -829,6 +829,9 @@ var FormHelperUI = {
         break;
 
       case "FormAssist:Resize":
+        if (!ViewableAreaObserver.isKeyboardOpened)
+          return;
+
         let element = json.current;
         this._zoom(Rect.fromRect(element.rect), Rect.fromRect(element.caretRect));
         break;
@@ -838,6 +841,9 @@ var FormHelperUI = {
         break;
 
        case "FormAssist:Update":
+        if (!ViewableAreaObserver.isKeyboardOpened)
+          return;
+
         Browser.hideSidebars();
         Browser.hideTitlebar();
         this._zoom(null, Rect.fromRect(json.caretRect));
