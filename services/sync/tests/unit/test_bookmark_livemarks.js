@@ -91,8 +91,8 @@ add_test(function test_livemark_descriptions() {
   
   // Attempt to provoke an error by adding a bad description anno.
   let id = store.idForGUID(record.id);
-  Svc.Annos.setItemAnnotation(id, DESCRIPTION_ANNO, "", 0,
-                              Svc.Annos.EXPIRE_NEVER);
+  PlacesUtils.annotations.setItemAnnotation(id, DESCRIPTION_ANNO, "", 0,
+                                            PlacesUtils.annotations.EXPIRE_NEVER);
 
   run_next_test();
 });
@@ -106,7 +106,7 @@ add_test(function test_livemark_invalid() {
   store.create(noParentRec);
   let recID = store.idForGUID(noParentRec.id, true);
   do_check_true(recID > 0);
-  do_check_eq(Svc.Bookmark.getFolderIdForItem(recID), Svc.Bookmark.unfiledBookmarksFolder);
+  do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(recID), PlacesUtils.bookmarks.unfiledBookmarksFolder);
   
   _("Parent is unknown. Will be set to unfiled.");
   let lateParentRec = makeLivemark(record631361.payload, true);
@@ -118,7 +118,8 @@ add_test(function test_livemark_invalid() {
   store.create(lateParentRec);
   recID = store.idForGUID(lateParentRec.id, true);
   do_check_true(recID > 0);
-  do_check_eq(Svc.Bookmark.getFolderIdForItem(recID), Svc.Bookmark.unfiledBookmarksFolder);
+  do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(recID),
+              PlacesUtils.bookmarks.unfiledBookmarksFolder);
   
   _("No feed URI, which is invalid. Will be skipped.");
   let noFeedURIRec = makeLivemark(record631361.payload, true);
