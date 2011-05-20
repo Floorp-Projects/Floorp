@@ -60,6 +60,7 @@ const KEYS_WBO = "keys";
 const LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
@@ -490,13 +491,8 @@ WeaveSvc.prototype = {
 
     let enabled = Svc.Prefs.get("log.appender.debugLog.enabled", false);
     if (enabled) {
-      let verbose = Services.dirsvc.get("ProfD", Ci.nsIFile);
-      verbose.QueryInterface(Ci.nsILocalFile);
-      verbose.append("weave");
-      verbose.append("logs");
-      verbose.append("verbose-log.txt");
-      if (!verbose.exists())
-        verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
+      let verbose = FileUtils.getFile(
+        "ProfD", ["weave", "logs", "verbose-log.txt"], true);
 
       if (Svc.Prefs.get("log.appender.debugLog.rotate", true)) {
         let maxSize = Svc.Prefs.get("log.appender.debugLog.maxSize");
