@@ -42,9 +42,10 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
-const PREF_EM_UPDATE_ENABLED   = "extensions.update.enabled";
-const PREF_EM_LAST_APP_VERSION = "extensions.lastAppVersion";
-const PREF_EM_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
+const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
+const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
+const PREF_EM_LAST_PLATFORM_VERSION   = "extensions.lastPlatformVersion";
+const PREF_EM_AUTOUPDATE_DEFAULT      = "extensions.update.autoUpdateDefault";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -231,9 +232,16 @@ var AddonManagerInternal = {
 
     let appChanged = undefined;
 
+    let oldAppVersion = null;
     try {
-      appChanged = Services.appinfo.version !=
-                   Services.prefs.getCharPref(PREF_EM_LAST_APP_VERSION);
+      oldAppVersion = Services.prefs.getCharPref(PREF_EM_LAST_APP_VERSION);
+      appChanged = Services.appinfo.version != oldAppVersion;
+    }
+    catch (e) { }
+
+    let oldPlatformVersion = null;
+    try {
+      oldPlatformVersion = Services.prefs.getCharPref(PREF_EM_LAST_PLATFORM_VERSION);
     }
     catch (e) { }
 
@@ -241,6 +249,8 @@ var AddonManagerInternal = {
       LOG("Application has been upgraded");
       Services.prefs.setCharPref(PREF_EM_LAST_APP_VERSION,
                                  Services.appinfo.version);
+      Services.prefs.setCharPref(PREF_EM_LAST_PLATFORM_VERSION,
+                                 Services.appinfo.platformVersion);
       Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION,
                                 (appChanged === undefined ? 0 : -1));
     }
@@ -273,7 +283,8 @@ var AddonManagerInternal = {
     }
 
     this.providers.forEach(function(provider) {
-      callProvider(provider, "startup", null, appChanged);
+      callProvider(provider, "startup", null, appChanged, oldAppVersion,
+                   oldPlatformVersion);
     });
     gStarted = true;
   },

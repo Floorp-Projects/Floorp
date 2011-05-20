@@ -552,6 +552,9 @@ let UI = {
 
       TabItems.resumePainting();
     }
+
+    if (gTabView.firstUseExperienced)
+      gTabView.enableSessionRestore();
   },
 
   // ----------

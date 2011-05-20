@@ -1296,7 +1296,7 @@ function sortElements(aElements, aSortBy, aAscending) {
     if (aObj.hasAttribute(aKey))
       return aObj.getAttribute(aKey);
 
-    addon = aObj.mAddon || aObj.mInstall;
+    var addon = aObj.mAddon || aObj.mInstall;
     if (!addon)
       return null;
 

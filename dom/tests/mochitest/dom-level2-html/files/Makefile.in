@@ -92,6 +92,7 @@ _TEST_FILES	= \
 		dl.xhtml \
 		dl.xml \
 		document.html \
+		document-with-applet.html \
 		document.xhtml \
 		document.xml \
 		element.html \

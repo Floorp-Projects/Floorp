@@ -1358,11 +1358,10 @@ generate_composite_function \
      *
      * output: updated dest in {d28, d29, d30, d31}
      */
-    vmvn.8      d24, d24
-    vmvn.8      d25, d25
+    vmvn.8      q12, q12
+    vmvn.8      d26, d26
     vmull.u8    q8,  d24, d4
     vmull.u8    q9,  d25, d5
-    vmvn.8      d26, d26
     vmvn.8      d27, d3
     vmull.u8    q10, d26, d6
     vmull.u8    q11, d27, d7
@@ -1424,6 +1423,175 @@ generate_composite_function \
     pixman_composite_over_n_8888_8888_ca_process_pixblock_head, \
     pixman_composite_over_n_8888_8888_ca_process_pixblock_tail, \
     pixman_composite_over_n_8888_8888_ca_process_pixblock_tail_head
+
+/******************************************************************************/
+
+.macro pixman_composite_over_n_8888_0565_ca_process_pixblock_head
+    /*
+     * 'combine_mask_ca' replacement
+     *
+     * input:  solid src (n) in {d8,  d9,  d10, d11}  [B, G, R, A]
+     *         mask in          {d24, d25, d26}       [B, G, R]
+     * output: updated src in   {d0,  d1,  d2 }       [B, G, R]
+     *         updated mask in  {d24, d25, d26}       [B, G, R]
+     */
+    vmull.u8    q0,  d24, d8
+    vmull.u8    q1,  d25, d9
+    vmull.u8    q6,  d26, d10
+    vmull.u8    q9,  d11, d25
+    vmull.u8    q12, d11, d24
+    vmull.u8    q13, d11, d26
+    vrshr.u16   q8,  q0,  #8
+    vrshr.u16   q10, q1,  #8
+    vrshr.u16   q11, q6,  #8
+    vraddhn.u16 d0,  q0,  q8
+    vraddhn.u16 d1,  q1,  q10
+    vraddhn.u16 d2,  q6,  q11
+    vrshr.u16   q11, q12, #8
+    vrshr.u16   q8,  q9,  #8
+    vrshr.u16   q6,  q13, #8
+    vraddhn.u16 d24, q12, q11
+    vraddhn.u16 d25, q9,  q8
+    /*
+     * convert 8 r5g6b5 pixel data from {d4, d5} to planar 8-bit format
+     * and put data into d16 - blue, d17 - green, d18 - red
+     */
+       vshrn.u16   d17, q2,  #3
+       vshrn.u16   d18, q2,  #8
+    vraddhn.u16 d26, q13, q6
+       vsli.u16    q2,  q2,  #5
+       vsri.u8     d18, d18, #5
+       vsri.u8     d17, d17, #6
+    /*
+     * 'combine_over_ca' replacement
+     *
+     * output: updated dest in d16 - blue, d17 - green, d18 - red
+     */
+    vmvn.8      q12, q12
+       vshrn.u16   d16, q2,  #2
+    vmvn.8      d26, d26
+    vmull.u8    q6,  d16, d24
+    vmull.u8    q7,  d17, d25
+    vmull.u8    q11, d18, d26
+.endm
+
+.macro pixman_composite_over_n_8888_0565_ca_process_pixblock_tail
+    /* ... continue 'combine_over_ca' replacement */
+    vrshr.u16   q10, q6,  #8
+    vrshr.u16   q14, q7,  #8
+    vrshr.u16   q15, q11, #8
+    vraddhn.u16 d16, q10, q6
+    vraddhn.u16 d17, q14, q7
+    vraddhn.u16 d18, q15, q11
+    vqadd.u8    q8,  q0,  q8
+    vqadd.u8    d18, d2,  d18
+    /*
+     * convert the results in d16, d17, d18 to r5g6b5 and store
+     * them into {d28, d29}
+     */
+    vshll.u8    q14, d18, #8
+    vshll.u8    q10, d17, #8
+    vshll.u8    q15, d16, #8
+    vsri.u16    q14, q10, #5
+    vsri.u16    q14, q15, #11
+.endm
+
+.macro pixman_composite_over_n_8888_0565_ca_process_pixblock_tail_head
+    fetch_mask_pixblock
+        vrshr.u16   q10, q6, #8
+        vrshr.u16   q14, q7, #8
+    vld1.16     {d4, d5}, [DST_R, :128]!
+        vrshr.u16   q15, q11, #8
+        vraddhn.u16 d16, q10, q6
+        vraddhn.u16 d17, q14, q7
+        vraddhn.u16 d22, q15, q11
+            /* process_pixblock_head */
+            /*
+             * 'combine_mask_ca' replacement
+             *
+             * input:  solid src (n) in {d8,  d9,  d10, d11}  [B, G, R, A]
+             *         mask in          {d24, d25, d26}       [B, G, R]
+             * output: updated src in   {d0,  d1,  d2 }       [B, G, R]
+             *         updated mask in  {d24, d25, d26}       [B, G, R]
+             */
+            vmull.u8    q1,  d25, d9
+        vqadd.u8    q8,  q0, q8
+            vmull.u8    q0,  d24, d8
+        vqadd.u8    d22, d2, d22
+            vmull.u8    q6,  d26, d10
+        /*
+         * convert the result in d16, d17, d22 to r5g6b5 and store
+         * it into {d28, d29}
+         */
+        vshll.u8    q14, d22, #8
+        vshll.u8    q10, d17, #8
+        vshll.u8    q15, d16, #8
+            vmull.u8    q9,  d11, d25
+        vsri.u16    q14, q10, #5
+            vmull.u8    q12, d11, d24
+            vmull.u8    q13, d11, d26
+        vsri.u16    q14, q15, #11
+    cache_preload 8, 8
+            vrshr.u16   q8,  q0,  #8
+            vrshr.u16   q10, q1,  #8
+            vrshr.u16   q11, q6,  #8
+            vraddhn.u16 d0,  q0,  q8
+            vraddhn.u16 d1,  q1,  q10
+            vraddhn.u16 d2,  q6,  q11
+            vrshr.u16   q11, q12, #8
+            vrshr.u16   q8,  q9,  #8
+            vrshr.u16   q6,  q13, #8
+            vraddhn.u16 d25, q9,  q8
+                /*
+                 * convert 8 r5g6b5 pixel data from {d4, d5} to planar
+	         * 8-bit format and put data into d16 - blue, d17 - green,
+	         * d18 - red
+                 */
+                vshrn.u16   d17, q2,  #3
+                vshrn.u16   d18, q2,  #8
+            vraddhn.u16 d24, q12, q11
+            vraddhn.u16 d26, q13, q6
+                vsli.u16    q2,  q2,  #5
+                vsri.u8     d18, d18, #5
+                vsri.u8     d17, d17, #6
+            /*
+             * 'combine_over_ca' replacement
+             *
+             * output: updated dest in d16 - blue, d17 - green, d18 - red
+             */
+            vmvn.8      q12, q12
+                vshrn.u16   d16, q2,  #2
+            vmvn.8      d26, d26
+            vmull.u8    q7,  d17, d25
+            vmull.u8    q6,  d16, d24
+            vmull.u8    q11, d18, d26
+    vst1.16     {d28, d29}, [DST_W, :128]!
+.endm
+
+.macro pixman_composite_over_n_8888_0565_ca_init
+    add         DUMMY, sp, #ARGS_STACK_OFFSET
+    vpush       {d8-d15}
+    vld1.32     {d11[0]}, [DUMMY]
+    vdup.8      d8, d11[0]
+    vdup.8      d9, d11[1]
+    vdup.8      d10, d11[2]
+    vdup.8      d11, d11[3]
+.endm
+
+.macro pixman_composite_over_n_8888_0565_ca_cleanup
+    vpop        {d8-d15}
+.endm
+
+generate_composite_function \
+    pixman_composite_over_n_8888_0565_ca_asm_neon, 0, 32, 16, \
+    FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
+    8, /* number of pixels, processed in a single block */ \
+    5, /* prefetch distance */ \
+    pixman_composite_over_n_8888_0565_ca_init, \
+    pixman_composite_over_n_8888_0565_ca_cleanup, \
+    pixman_composite_over_n_8888_0565_ca_process_pixblock_head, \
+    pixman_composite_over_n_8888_0565_ca_process_pixblock_tail, \
+    pixman_composite_over_n_8888_0565_ca_process_pixblock_tail_head
 
 /******************************************************************************/
 
@@ -2412,21 +2580,19 @@ fname:
  */
 
 .macro bilinear_load_8888 reg1, reg2, tmp
-    mov       TMP2, X, asr #16
+    mov       TMP1, X, asr #16
     add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #2
-    add       TMP2, BOTTOM, TMP2, asl #2
-    vld1.32   {reg1}, [TMP1]
-    vld1.32   {reg2}, [TMP2]
+    add       TMP1, TOP, TMP1, asl #2
+    vld1.32   {reg1}, [TMP1], STRIDE
+    vld1.32   {reg2}, [TMP1]
 .endm
 
 .macro bilinear_load_0565 reg1, reg2, tmp
-    mov       TMP2, X, asr #16
+    mov       TMP1, X, asr #16
     add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    vld1.32   {reg2[0]}, [TMP1]
-    vld1.32   {reg2[1]}, [TMP2]
+    add       TMP1, TOP, TMP1, asl #1
+    vld1.32   {reg2[0]}, [TMP1], STRIDE
+    vld1.32   {reg2[1]}, [TMP1]
     convert_four_0565_to_x888_packed reg2, reg1, reg2, tmp
 .endm
 
@@ -2454,18 +2620,16 @@ fname:
 .macro bilinear_load_and_vertical_interpolate_two_0565 \
                 acc1, acc2, reg1, reg2, reg3, reg4, acc2lo, acc2hi
 
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
-    mov       TMP4, X, asr #16
-    add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    add       TMP3, TOP, TMP4, asl #1
-    add       TMP4, BOTTOM, TMP4, asl #1
-    vld1.32   {acc2lo[0]}, [TMP1]
-    vld1.32   {acc2hi[0]}, [TMP3]
-    vld1.32   {acc2lo[1]}, [TMP2]
-    vld1.32   {acc2hi[1]}, [TMP4]
+    add       TMP2, TOP, TMP2, asl #1
+    vld1.32   {acc2lo[0]}, [TMP1], STRIDE
+    vld1.32   {acc2hi[0]}, [TMP2], STRIDE
+    vld1.32   {acc2lo[1]}, [TMP1]
+    vld1.32   {acc2hi[1]}, [TMP2]
     convert_0565_to_x888 acc2, reg3, reg2, reg1
     vzip.u8   reg1, reg3
     vzip.u8   reg2, reg4
@@ -2481,34 +2645,30 @@ fname:
                 xacc1, xacc2, xreg1, xreg2, xreg3, xreg4, xacc2lo, xacc2hi \
                 yacc1, yacc2, yreg1, yreg2, yreg3, yreg4, yacc2lo, yacc2hi
 
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
-    mov       TMP4, X, asr #16
-    add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    add       TMP3, TOP, TMP4, asl #1
-    add       TMP4, BOTTOM, TMP4, asl #1
-    vld1.32   {xacc2lo[0]}, [TMP1]
-    vld1.32   {xacc2hi[0]}, [TMP3]
-    vld1.32   {xacc2lo[1]}, [TMP2]
-    vld1.32   {xacc2hi[1]}, [TMP4]
+    add       TMP2, TOP, TMP2, asl #1
+    vld1.32   {xacc2lo[0]}, [TMP1], STRIDE
+    vld1.32   {xacc2hi[0]}, [TMP2], STRIDE
+    vld1.32   {xacc2lo[1]}, [TMP1]
+    vld1.32   {xacc2hi[1]}, [TMP2]
     convert_0565_to_x888 xacc2, xreg3, xreg2, xreg1
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
-    mov       TMP4, X, asr #16
-    add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    add       TMP3, TOP, TMP4, asl #1
-    add       TMP4, BOTTOM, TMP4, asl #1
-    vld1.32   {yacc2lo[0]}, [TMP1]
+    add       TMP2, TOP, TMP2, asl #1
+    vld1.32   {yacc2lo[0]}, [TMP1], STRIDE
     vzip.u8   xreg1, xreg3
-    vld1.32   {yacc2hi[0]}, [TMP3]
+    vld1.32   {yacc2hi[0]}, [TMP2], STRIDE
     vzip.u8   xreg2, xreg4
-    vld1.32   {yacc2lo[1]}, [TMP2]
+    vld1.32   {yacc2lo[1]}, [TMP1]
     vzip.u8   xreg3, xreg4
-    vld1.32   {yacc2hi[1]}, [TMP4]
+    vld1.32   {yacc2hi[1]}, [TMP2]
     vzip.u8   xreg1, xreg2
     convert_0565_to_x888 yacc2, yreg3, yreg2, yreg1
     vmull.u8  xacc1, xreg1, d28
@@ -2527,9 +2687,9 @@ fname:
 
 .macro bilinear_store_8888 numpix, tmp1, tmp2
 .if numpix == 4
-    vst1.32   {d0, d1}, [OUT]!
+    vst1.32   {d0, d1}, [OUT, :128]!
 .elseif numpix == 2
-    vst1.32   {d0}, [OUT]!
+    vst1.32   {d0}, [OUT, :64]!
 .elseif numpix == 1
     vst1.32   {d0[0]}, [OUT, :32]!
 .else
@@ -2544,11 +2704,11 @@ fname:
     vuzp.u8 d0, d2
     convert_8888_to_0565 d2, d1, d0, q1, tmp1, tmp2
 .if numpix == 4
-    vst1.16   {d2}, [OUT]!
+    vst1.16   {d2}, [OUT, :64]!
 .elseif numpix == 2
-    vst1.32   {d2[0]}, [OUT]!
+    vst1.32   {d2[0]}, [OUT, :32]!
 .elseif numpix == 1
-    vst1.16   {d2[0]}, [OUT]!
+    vst1.16   {d2[0]}, [OUT, :16]!
 .else
     .error bilinear_store_0565 numpix is unsupported
 .endif
@@ -2558,8 +2718,7 @@ fname:
     bilinear_load_&src_fmt d0, d1, d2
     vmull.u8  q1, d0, d28
     vmlal.u8  q1, d1, d29
-    vshr.u16  d30, d24, #8
-    /* 4 cycles bubble */
+    /* 5 cycles bubble */
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
@@ -2574,17 +2733,17 @@ fname:
 .macro bilinear_interpolate_two_pixels src_fmt, dst_fmt
     bilinear_load_and_vertical_interpolate_two_&src_fmt \
                 q1, q11, d0, d1, d20, d21, d22, d23
-    vshr.u16  q15, q12, #8
-    vadd.u16  q12, q12, q13
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
     vshll.u16 q10, d22, #8
     vmlsl.u16 q10, d22, d31
     vmlal.u16 q10, d23, d31
-    vshrn.u32 d30, q0, #16
-    vshrn.u32 d31, q10, #16
-    vmovn.u16 d0, q15
+    vshrn.u32 d0, q0, #16
+    vshrn.u32 d1, q10, #16
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
+    vmovn.u16 d0, q0
     bilinear_store_&dst_fmt 2, q2, q3
 .endm
 
@@ -2593,8 +2752,7 @@ fname:
                 q1, q11, d0, d1, d20, d21, d22, d23 \
                 q3, q9,  d4, d5, d16, d17, d18, d19
     pld       [TMP1, PF_OFFS]
-    vshr.u16  q15, q12, #8
-    vadd.u16  q12, q12, q13
+    sub       TMP1, TMP1, STRIDE
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
@@ -2614,17 +2772,68 @@ fname:
     vshrn.u32 d1, q10, #16
     vshrn.u32 d4, q2, #16
     vshrn.u32 d5, q8, #16
+    vshr.u16  q15, q12, #8
     vmovn.u16 d0, q0
     vmovn.u16 d1, q2
+    vadd.u16  q12, q12, q13
     bilinear_store_&dst_fmt 4, q2, q3
 .endm
+
+.macro bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_head
+.else
+    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+.endif
+.endm
+
+.macro bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_tail
+.endif
+.endm
+
+.macro bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_tail_head
+.else
+    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+.endif
+.endm
+
+.macro bilinear_interpolate_eight_pixels_head src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_head
+.else
+    bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+.endif
+.endm
+
+.macro bilinear_interpolate_eight_pixels_tail src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_tail
+.else
+    bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
+.endif
+.endm
+
+.macro bilinear_interpolate_eight_pixels_tail_head src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_tail_head
+.else
+    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+.endif
+.endm
+
+.set BILINEAR_FLAG_UNROLL_4,          0
+.set BILINEAR_FLAG_UNROLL_8,          1
+.set BILINEAR_FLAG_USE_ALL_NEON_REGS, 2
 
 /*
  * Main template macro for generating NEON optimized bilinear scanline
  * functions.
- *
- * TODO: use software pipelining and aligned writes to the destination buffer
- *       in order to improve performance
  *
  * Bilinear scanline scaler macro template uses the following arguments:
  *  fname             - name of the function to generate
@@ -2636,7 +2845,8 @@ fname:
  */
 
 .macro generate_bilinear_scanline_func fname, src_fmt, dst_fmt, \
-                                       bpp_shift, prefetch_distance
+                                       src_bpp_shift, dst_bpp_shift, \
+                                       prefetch_distance, flags
 
 pixman_asm_function fname
     OUT       .req      r0
@@ -2652,12 +2862,20 @@ pixman_asm_function fname
     PF_OFFS   .req      r7
     TMP3      .req      r8
     TMP4      .req      r9
+    STRIDE    .req      r2
 
     mov       ip, sp
     push      {r4, r5, r6, r7, r8, r9}
     mov       PF_OFFS, #prefetch_distance
     ldmia     ip, {WB, X, UX, WIDTH}
     mul       PF_OFFS, PF_OFFS, UX
+
+.if ((flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
+    vpush     {d8-d15}
+.endif
+
+    sub       STRIDE, BOTTOM, TOP
+    .unreq    BOTTOM
 
     cmp       WIDTH, #0
     ble       3f
@@ -2667,16 +2885,72 @@ pixman_asm_function fname
     vdup.u8   d28, WT
     vdup.u8   d29, WB
     vadd.u16  d25, d25, d26
-    vadd.u16  q13, q13, q13
 
+    /* ensure good destination alignment  */
+    cmp       WIDTH, #1
+    blt       0f
+    tst       OUT, #(1 << dst_bpp_shift)
+    beq       0f
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
+    bilinear_interpolate_last_pixel src_fmt, dst_fmt
+    sub       WIDTH, WIDTH, #1
+0:
+    vadd.u16  q13, q13, q13
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
+
+    cmp       WIDTH, #2
+    blt       0f
+    tst       OUT, #(1 << (dst_bpp_shift + 1))
+    beq       0f
+    bilinear_interpolate_two_pixels src_fmt, dst_fmt
+    sub       WIDTH, WIDTH, #2
+0:
+.if ((flags) & BILINEAR_FLAG_UNROLL_8) != 0
+/*********** 8 pixels per iteration *****************/
+    cmp       WIDTH, #4
+    blt       0f
+    tst       OUT, #(1 << (dst_bpp_shift + 2))
+    beq       0f
+    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    sub       WIDTH, WIDTH, #4
+0:
+    subs      WIDTH, WIDTH, #8
+    blt       1f
+    mov       PF_OFFS, PF_OFFS, asr #(16 - src_bpp_shift)
+    bilinear_interpolate_eight_pixels_head src_fmt, dst_fmt
+    subs      WIDTH, WIDTH, #8
+    blt       5f
+0:
+    bilinear_interpolate_eight_pixels_tail_head src_fmt, dst_fmt
+    subs      WIDTH, WIDTH, #8
+    bge       0b
+5:
+    bilinear_interpolate_eight_pixels_tail src_fmt, dst_fmt
+1:
+    tst       WIDTH, #4
+    beq       2f
+    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+2:
+.else
+/*********** 4 pixels per iteration *****************/
     subs      WIDTH, WIDTH, #4
     blt       1f
-    mov       PF_OFFS, PF_OFFS, asr #(16 - bpp_shift)
+    mov       PF_OFFS, PF_OFFS, asr #(16 - src_bpp_shift)
+    bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
+    subs      WIDTH, WIDTH, #4
+    blt       5f
 0:
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
     subs      WIDTH, WIDTH, #4
     bge       0b
+5:
+    bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
 1:
+/****************************************************/
+.endif
+    /* handle the remaining trailing pixels */
     tst       WIDTH, #2
     beq       2f
     bilinear_interpolate_two_pixels src_fmt, dst_fmt
@@ -2685,12 +2959,14 @@ pixman_asm_function fname
     beq       3f
     bilinear_interpolate_last_pixel src_fmt, dst_fmt
 3:
+.if ((flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
+    vpop      {d8-d15}
+.endif
     pop       {r4, r5, r6, r7, r8, r9}
     bx        lr
 
     .unreq    OUT
     .unreq    TOP
-    .unreq    BOTTOM
     .unreq    WT
     .unreq    WB
     .unreq    X
@@ -2701,18 +2977,393 @@ pixman_asm_function fname
     .unreq    PF_OFFS
     .unreq    TMP3
     .unreq    TMP4
+    .unreq    STRIDE
 .endfunc
 
 .endm
 
-generate_bilinear_scanline_func \
-    pixman_scaled_bilinear_scanline_8888_8888_SRC_asm_neon, 8888, 8888, 2, 28
+/*****************************************************************************/
+
+.set have_bilinear_interpolate_four_pixels_8888_8888, 1
+
+.macro bilinear_interpolate_four_pixels_8888_8888_head
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+
+    vld1.32   {d22}, [TMP1], STRIDE
+    vld1.32   {d23}, [TMP1]
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    vmull.u8  q8, d22, d28
+    vmlal.u8  q8, d23, d29
+
+    vld1.32   {d22}, [TMP2], STRIDE
+    vld1.32   {d23}, [TMP2]
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmull.u8  q9, d22, d28
+    vmlal.u8  q9, d23, d29
+
+    vld1.32   {d22}, [TMP3], STRIDE
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+
+    vshll.u16 q0, d16, #8
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+
+    vshll.u16 q1, d18, #8
+    vmlsl.u16 q1, d18, d31
+.endm
+
+.macro bilinear_interpolate_four_pixels_8888_8888_tail
+    vmlal.u16 q1, d19, d31
+    vshr.u16  q15, q12, #8
+    vshll.u16 q2, d20, #8
+    vmlsl.u16 q2, d20, d30
+    vmlal.u16 q2, d21, d30
+    vshll.u16 q3, d22, #8
+    vmlsl.u16 q3, d22, d31
+    vmlal.u16 q3, d23, d31
+    vadd.u16  q12, q12, q13
+    vshrn.u32 d0, q0, #16
+    vshrn.u32 d1, q1, #16
+    vshrn.u32 d4, q2, #16
+    vshr.u16  q15, q12, #8
+    vshrn.u32 d5, q3, #16
+    vmovn.u16 d6, q0
+    vmovn.u16 d7, q2
+    vadd.u16  q12, q12, q13
+    vst1.32   {d6, d7}, [OUT, :128]!
+.endm
+
+.macro bilinear_interpolate_four_pixels_8888_8888_tail_head
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+        vmlal.u16 q1, d19, d31
+        vshr.u16  q15, q12, #8
+        vshll.u16 q2, d20, #8
+        vmlsl.u16 q2, d20, d30
+        vmlal.u16 q2, d21, d30
+        vshll.u16 q3, d22, #8
+    vld1.32   {d20}, [TMP1], STRIDE
+        vmlsl.u16 q3, d22, d31
+        vmlal.u16 q3, d23, d31
+    vld1.32   {d21}, [TMP1]
+    vmull.u8  q8, d20, d28
+    vmlal.u8  q8, d21, d29
+        vshrn.u32 d0, q0, #16
+        vshrn.u32 d1, q1, #16
+        vshrn.u32 d4, q2, #16
+    vld1.32   {d22}, [TMP2], STRIDE
+        vshrn.u32 d5, q3, #16
+        vadd.u16  q12, q12, q13
+    vld1.32   {d23}, [TMP2]
+    vmull.u8  q9, d22, d28
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmlal.u8  q9, d23, d29
+    vld1.32   {d22}, [TMP3], STRIDE
+        vshr.u16  q15, q12, #8
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+        vmovn.u16 d6, q0
+    vshll.u16 q0, d16, #8
+        vmovn.u16 d7, q2
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+        vadd.u16  q12, q12, q13
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+        vst1.32   {d6, d7}, [OUT, :128]!
+    vshll.u16 q1, d18, #8
+    vmlsl.u16 q1, d18, d31
+.endm
+
+/*****************************************************************************/
+
+.set have_bilinear_interpolate_eight_pixels_8888_0565, 1
+
+.macro bilinear_interpolate_eight_pixels_8888_0565_head
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+    vld1.32   {d20}, [TMP1], STRIDE
+    vld1.32   {d21}, [TMP1]
+    vmull.u8  q8, d20, d28
+    vmlal.u8  q8, d21, d29
+    vld1.32   {d22}, [TMP2], STRIDE
+    vld1.32   {d23}, [TMP2]
+    vmull.u8  q9, d22, d28
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmlal.u8  q9, d23, d29
+    vld1.32   {d22}, [TMP3], STRIDE
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+    vshll.u16 q0, d16, #8
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+    vshll.u16 q1, d18, #8
+    vmlsl.u16 q1, d18, d31
+
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+        vmlal.u16 q1, d19, d31
+        vshr.u16  q15, q12, #8
+        vshll.u16 q2, d20, #8
+        vmlsl.u16 q2, d20, d30
+        vmlal.u16 q2, d21, d30
+        vshll.u16 q3, d22, #8
+    vld1.32   {d20}, [TMP1], STRIDE
+        vmlsl.u16 q3, d22, d31
+        vmlal.u16 q3, d23, d31
+    vld1.32   {d21}, [TMP1]
+    vmull.u8  q8, d20, d28
+    vmlal.u8  q8, d21, d29
+        vshrn.u32 d0, q0, #16
+        vshrn.u32 d1, q1, #16
+        vshrn.u32 d4, q2, #16
+    vld1.32   {d22}, [TMP2], STRIDE
+        vshrn.u32 d5, q3, #16
+        vadd.u16  q12, q12, q13
+    vld1.32   {d23}, [TMP2]
+    vmull.u8  q9, d22, d28
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmlal.u8  q9, d23, d29
+    vld1.32   {d22}, [TMP3], STRIDE
+        vshr.u16  q15, q12, #8
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+        vmovn.u16 d8, q0
+    vshll.u16 q0, d16, #8
+        vmovn.u16 d9, q2
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+        vadd.u16  q12, q12, q13
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+    vshll.u16 q1, d18, #8
+    vmlsl.u16 q1, d18, d31
+.endm
+
+.macro bilinear_interpolate_eight_pixels_8888_0565_tail
+    vmlal.u16 q1, d19, d31
+    vshr.u16  q15, q12, #8
+    vshll.u16 q2, d20, #8
+    vmlsl.u16 q2, d20, d30
+    vmlal.u16 q2, d21, d30
+    vshll.u16 q3, d22, #8
+    vmlsl.u16 q3, d22, d31
+    vmlal.u16 q3, d23, d31
+    vadd.u16  q12, q12, q13
+    vshrn.u32 d0, q0, #16
+    vshrn.u32 d1, q1, #16
+    vshrn.u32 d4, q2, #16
+    vshr.u16  q15, q12, #8
+    vshrn.u32 d5, q3, #16
+    vmovn.u16 d10, q0
+    vmovn.u16 d11, q2
+    vadd.u16  q12, q12, q13
+
+    vuzp.u8   d8, d9
+    vuzp.u8   d10, d11
+    vuzp.u8   d9, d11
+    vuzp.u8   d8, d10
+    vshll.u8  q6, d9, #8
+    vshll.u8  q5, d10, #8
+    vshll.u8  q7, d8, #8
+    vsri.u16  q5, q6, #5
+    vsri.u16  q5, q7, #11
+    vst1.32   {d10, d11}, [OUT, :128]!
+.endm
+
+.macro bilinear_interpolate_eight_pixels_8888_0565_tail_head
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+        vmlal.u16 q1, d19, d31
+        vshr.u16  q15, q12, #8
+            vuzp.u8 d8, d9
+        vshll.u16 q2, d20, #8
+        vmlsl.u16 q2, d20, d30
+        vmlal.u16 q2, d21, d30
+        vshll.u16 q3, d22, #8
+    vld1.32   {d20}, [TMP1], STRIDE
+        vmlsl.u16 q3, d22, d31
+        vmlal.u16 q3, d23, d31
+    vld1.32   {d21}, [TMP1]
+    vmull.u8  q8, d20, d28
+    vmlal.u8  q8, d21, d29
+        vshrn.u32 d0, q0, #16
+        vshrn.u32 d1, q1, #16
+        vshrn.u32 d4, q2, #16
+    vld1.32   {d22}, [TMP2], STRIDE
+        vshrn.u32 d5, q3, #16
+        vadd.u16  q12, q12, q13
+    vld1.32   {d23}, [TMP2]
+    vmull.u8  q9, d22, d28
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmlal.u8  q9, d23, d29
+    vld1.32   {d22}, [TMP3], STRIDE
+        vshr.u16  q15, q12, #8
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+        vmovn.u16 d10, q0
+    vshll.u16 q0, d16, #8
+        vmovn.u16 d11, q2
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+        vadd.u16  q12, q12, q13
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+            vuzp.u8 d10, d11
+    vshll.u16 q1, d18, #8
+    vmlsl.u16 q1, d18, d31
+
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+        vmlal.u16 q1, d19, d31
+            vuzp.u8 d9, d11
+        vshr.u16  q15, q12, #8
+        vshll.u16 q2, d20, #8
+            vuzp.u8 d8, d10
+        vmlsl.u16 q2, d20, d30
+        vmlal.u16 q2, d21, d30
+        vshll.u16 q3, d22, #8
+    vld1.32   {d20}, [TMP1], STRIDE
+        vmlsl.u16 q3, d22, d31
+        vmlal.u16 q3, d23, d31
+    vld1.32   {d21}, [TMP1]
+    vmull.u8  q8, d20, d28
+    vmlal.u8  q8, d21, d29
+            vshll.u8  q6, d9, #8
+            vshll.u8  q5, d10, #8
+            vshll.u8  q7, d8, #8
+        vshrn.u32 d0, q0, #16
+            vsri.u16  q5, q6, #5
+        vshrn.u32 d1, q1, #16
+            vsri.u16  q5, q7, #11
+        vshrn.u32 d4, q2, #16
+    vld1.32   {d22}, [TMP2], STRIDE
+        vshrn.u32 d5, q3, #16
+        vadd.u16  q12, q12, q13
+    vld1.32   {d23}, [TMP2]
+    vmull.u8  q9, d22, d28
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmlal.u8  q9, d23, d29
+    vld1.32   {d22}, [TMP3], STRIDE
+        vshr.u16  q15, q12, #8
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+        vmovn.u16 d8, q0
+    vshll.u16 q0, d16, #8
+        vmovn.u16 d9, q2
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+        vadd.u16  q12, q12, q13
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+    vshll.u16 q1, d18, #8
+            vst1.32   {d10, d11}, [OUT, :128]!
+    vmlsl.u16 q1, d18, d31
+.endm
+/*****************************************************************************/
 
 generate_bilinear_scanline_func \
-    pixman_scaled_bilinear_scanline_8888_0565_SRC_asm_neon, 8888, 0565, 2, 28
+    pixman_scaled_bilinear_scanline_8888_8888_SRC_asm_neon, 8888, 8888, \
+    2, 2, 28, BILINEAR_FLAG_UNROLL_4
 
 generate_bilinear_scanline_func \
-    pixman_scaled_bilinear_scanline_0565_x888_SRC_asm_neon, 0565, 8888, 1, 28
+    pixman_scaled_bilinear_scanline_8888_0565_SRC_asm_neon, 8888, 0565, \
+    2, 1, 28, BILINEAR_FLAG_UNROLL_8 | BILINEAR_FLAG_USE_ALL_NEON_REGS
 
 generate_bilinear_scanline_func \
-    pixman_scaled_bilinear_scanline_0565_0565_SRC_asm_neon, 0565, 0565, 1, 28
+    pixman_scaled_bilinear_scanline_0565_x888_SRC_asm_neon, 0565, 8888, \
+    1, 2, 28, BILINEAR_FLAG_UNROLL_4
+
+generate_bilinear_scanline_func \
+    pixman_scaled_bilinear_scanline_0565_0565_SRC_asm_neon, 0565, 0565, \
+    1, 1, 28, BILINEAR_FLAG_UNROLL_4
