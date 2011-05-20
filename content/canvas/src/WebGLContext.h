@@ -579,6 +579,13 @@ protected:
 
     WebGLint mStencilRef;
     WebGLuint mStencilValueMask, mStencilWriteMask;
+    realGLboolean mColorWriteMask[4];
+    realGLboolean mDepthWriteMask;
+    realGLboolean mScissorTestEnabled;
+    realGLboolean mDitherEnabled;
+    WebGLfloat mColorClearValue[4];
+    WebGLint mStencilClearValue;
+    WebGLfloat mDepthClearValue;
 
 public:
     // console logging helpers

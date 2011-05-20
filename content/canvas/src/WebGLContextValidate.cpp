@@ -574,10 +574,6 @@ WebGLContext::InitAndValidateGL()
     gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT,   (GLint*) &mPixelStorePackAlignment);
     gl->fGetIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, (GLint*) &mPixelStoreUnpackAlignment);
 
-    gl->fGetIntegerv(LOCAL_GL_STENCIL_WRITEMASK, (GLint*) &mStencilWriteMask);
-    gl->fGetIntegerv(LOCAL_GL_STENCIL_VALUE_MASK, (GLint*) &mStencilValueMask);
-    gl->fGetIntegerv(LOCAL_GL_STENCIL_REF, (GLint*) &mStencilRef);
-
     // Check the shader validator pref
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
