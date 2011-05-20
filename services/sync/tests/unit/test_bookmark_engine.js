@@ -18,15 +18,15 @@ add_test(function bad_record_allIDs() {
   _("Ensure that bad Places queries don't cause an error in getAllIDs.");
   let engine = new BookmarksEngine();
   let store = engine._store;
-  let badRecordID = Svc.Bookmark.insertBookmark(
-      Svc.Bookmark.toolbarFolder,
+  let badRecordID = PlacesUtils.bookmarks.insertBookmark(
+      PlacesUtils.bookmarks.toolbarFolder,
       Utils.makeURI("place:folder=1138"),
-      Svc.Bookmark.DEFAULT_INDEX,
+      PlacesUtils.bookmarks.DEFAULT_INDEX,
       null);
 
   do_check_true(badRecordID > 0);
   _("Record is " + badRecordID);
-  _("Type: " + Svc.Bookmark.getItemType(badRecordID));
+  _("Type: " + PlacesUtils.bookmarks.getItemType(badRecordID));
 
   _("Fetching children.");
   store._getChildren("toolbar", {});
@@ -39,7 +39,7 @@ add_test(function bad_record_allIDs() {
   do_check_true("toolbar" in all);
   
   _("Clean up.");
-  Svc.Bookmark.removeItem(badRecordID);
+  PlacesUtils.bookmarks.removeItem(badRecordID);
   run_next_test();
 });
   
@@ -54,7 +54,7 @@ add_test(function test_ID_caching() {
   let mobileID = store.idForGUID("mobile");
   _("Change the GUID for that item, and drop the mobile anno.");
   store._setGUID(mobileID, "abcdefghijkl");
-  Svc.Annos.removeItemAnnotation(mobileID, "mobile/bookmarksRoot");
+  PlacesUtils.annotations.removeItemAnnotation(mobileID, "mobile/bookmarksRoot");
 
   let err;
   let newMobileID;
@@ -102,18 +102,18 @@ add_test(function test_processIncoming_error_orderChildren() {
 
   try {
 
-    let folder1_id = Svc.Bookmark.createFolder(
-      Svc.Bookmark.toolbarFolder, "Folder 1", 0);
+    let folder1_id = PlacesUtils.bookmarks.createFolder(
+      PlacesUtils.bookmarks.toolbarFolder, "Folder 1", 0);
     let folder1_guid = store.GUIDForId(folder1_id);
 
     let fxuri = Utils.makeURI("http://getfirefox.com/");
     let tburi = Utils.makeURI("http://getthunderbird.com/");
 
-    let bmk1_id = Svc.Bookmark.insertBookmark(
-      folder1_id, fxuri, Svc.Bookmark.DEFAULT_INDEX, "Get Firefox!");
+    let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
+      folder1_id, fxuri, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
     let bmk1_guid = store.GUIDForId(bmk1_id);
-    let bmk2_id = Svc.Bookmark.insertBookmark(
-      folder1_id, tburi, Svc.Bookmark.DEFAULT_INDEX, "Get Thunderbird!");
+    let bmk2_id = PlacesUtils.bookmarks.insertBookmark(
+      folder1_id, tburi, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Thunderbird!");
     let bmk2_guid = store.GUIDForId(bmk2_id);
 
     // Create a server record for folder1 where we flip the order of
@@ -151,8 +151,8 @@ add_test(function test_processIncoming_error_orderChildren() {
     do_check_eq(new_children[0], folder1_payload.children[0]);
     do_check_eq(new_children[1], folder1_payload.children[1]);
 
-    do_check_eq(Svc.Bookmark.getItemIndex(bmk1_id), 1);
-    do_check_eq(Svc.Bookmark.getItemIndex(bmk2_id), 0);
+    do_check_eq(PlacesUtils.bookmarks.getItemIndex(bmk1_id), 1);
+    do_check_eq(PlacesUtils.bookmarks.getItemIndex(bmk2_id), 0);
 
   } finally {
     store.wipe();
@@ -185,8 +185,8 @@ add_test(function test_restorePromptsReupload() {
 
   try {
 
-    let folder1_id = Svc.Bookmark.createFolder(
-      Svc.Bookmark.toolbarFolder, "Folder 1", 0);
+    let folder1_id = PlacesUtils.bookmarks.createFolder(
+      PlacesUtils.bookmarks.toolbarFolder, "Folder 1", 0);
     let folder1_guid = store.GUIDForId(folder1_id);
     _("Folder 1: " + folder1_id + ", " + folder1_guid);
 
@@ -194,8 +194,8 @@ add_test(function test_restorePromptsReupload() {
     let tburi = Utils.makeURI("http://getthunderbird.com/");
 
     _("Create a single record.");
-    let bmk1_id = Svc.Bookmark.insertBookmark(
-      folder1_id, fxuri, Svc.Bookmark.DEFAULT_INDEX, "Get Firefox!");
+    let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
+      folder1_id, fxuri, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
     let bmk1_guid = store.GUIDForId(bmk1_id);
     _("Get Firefox!: " + bmk1_id + ", " + bmk1_guid);
 
@@ -213,12 +213,12 @@ add_test(function test_restorePromptsReupload() {
     PlacesUtils.backupBookmarksToFile(backupFile);
 
     _("Create a different record and sync.");
-    let bmk2_id = Svc.Bookmark.insertBookmark(
-      folder1_id, tburi, Svc.Bookmark.DEFAULT_INDEX, "Get Thunderbird!");
+    let bmk2_id = PlacesUtils.bookmarks.insertBookmark(
+      folder1_id, tburi, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Thunderbird!");
     let bmk2_guid = store.GUIDForId(bmk2_id);
     _("Get Thunderbird!: " + bmk2_id + ", " + bmk2_guid);
 
-    Svc.Bookmark.removeItem(bmk1_id);
+    PlacesUtils.bookmarks.removeItem(bmk1_id);
 
     let error;
     try {
@@ -249,8 +249,8 @@ add_test(function test_restorePromptsReupload() {
       count++;
       let id = store.idForGUID(guid, true);
       // Only one bookmark, so _all_ should be Firefox!
-      if (Svc.Bookmark.getItemType(id) == Svc.Bookmark.TYPE_BOOKMARK) {
-        let uri = Svc.Bookmark.getBookmarkURI(id);
+      if (PlacesUtils.bookmarks.getItemType(id) == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+        let uri = PlacesUtils.bookmarks.getBookmarkURI(id);
         _("Found URI " + uri.spec + " for GUID " + guid);
         do_check_eq(uri.spec, fxuri.spec);
         newFX = guid;   // Save the new GUID after restore.
@@ -356,18 +356,18 @@ add_test(function test_mismatched_types() {
   });
 
   try {
-    let bms = store._bms;
+    let bms = PlacesUtils.bookmarks;
     let oldR = new FakeRecord(BookmarkFolder, oldRecord);
     let newR = new FakeRecord(Livemark, newRecord);
-    oldR._parent = Svc.Bookmark.toolbarFolder;
-    newR._parent = Svc.Bookmark.toolbarFolder;
+    oldR._parent = PlacesUtils.bookmarks.toolbarFolder;
+    newR._parent = PlacesUtils.bookmarks.toolbarFolder;
 
     store.applyIncoming(oldR);
     _("Applied old. It's a folder.");
     let oldID = store.idForGUID(oldR.id);
     _("Old ID: " + oldID);
     do_check_eq(bms.getItemType(oldID), bms.TYPE_FOLDER);
-    do_check_false(store._ls.isLivemark(oldID));
+    do_check_false(PlacesUtils.livemarks.isLivemark(oldID));
 
     store.applyIncoming(newR);
     let newID = store.idForGUID(newR.id);
@@ -375,7 +375,7 @@ add_test(function test_mismatched_types() {
 
     _("Applied new. It's a livemark.");
     do_check_eq(bms.getItemType(newID), bms.TYPE_FOLDER);
-    do_check_true(store._ls.isLivemark(newID));
+    do_check_true(PlacesUtils.livemarks.isLivemark(newID));
 
   } finally {
     store.wipe();

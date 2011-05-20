@@ -13,14 +13,13 @@ function test_tracking() {
   let tracker = engine._tracker;
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
 
-  let folder = Svc.Bookmark.createFolder(Svc.Bookmark.bookmarksMenuFolder,
-                                         "Test Folder",
-                                         Svc.Bookmark.DEFAULT_INDEX);
+  let folder = PlacesUtils.bookmarks.createFolder(
+    PlacesUtils.bookmarks.bookmarksMenuFolder,
+    "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
   function createBmk() {
-    return Svc.Bookmark.insertBookmark(folder,
-                                       Utils.makeURI("http://getfirefox.com"),
-                                       Svc.Bookmark.DEFAULT_INDEX,
-                                       "Get Firefox!");
+    return PlacesUtils.bookmarks.insertBookmark(
+      folder, Utils.makeURI("http://getfirefox.com"),
+      PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
   }
 
   try {
@@ -69,21 +68,21 @@ function test_onItemChanged() {
 
   try {
     Svc.Obs.notify("weave:engine:stop-tracking");
-    let folder = Svc.Bookmark.createFolder(Svc.Bookmark.bookmarksMenuFolder,
-                                           "Parent",
-                                           Svc.Bookmark.DEFAULT_INDEX);
+    let folder = PlacesUtils.bookmarks.createFolder(
+      PlacesUtils.bookmarks.bookmarksMenuFolder, "Parent",
+      PlacesUtils.bookmarks.DEFAULT_INDEX);
     _("Track changes to annos.");
-    let b = Svc.Bookmark.insertBookmark(folder,
-                                        Utils.makeURI("http://getfirefox.com"),
-                                        Svc.Bookmark.DEFAULT_INDEX,
-                                        "Get Firefox!");
+    let b = PlacesUtils.bookmarks.insertBookmark(
+      folder, Utils.makeURI("http://getfirefox.com"),
+      PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
     let bGUID = engine._store.GUIDForId(b);
     _("New item is " + b);
     _("GUID: " + bGUID);
 
     Svc.Obs.notify("weave:engine:start-tracking");
-    Svc.Annos.setItemAnnotation(b, DESCRIPTION_ANNO, "A test description", 0,
-                                Svc.Annos.EXPIRE_NEVER);
+    PlacesUtils.annotations.setItemAnnotation(
+      b, DESCRIPTION_ANNO, "A test description", 0,
+      PlacesUtils.annotations.EXPIRE_NEVER);
     do_check_true(tracker.changedIDs[bGUID] > 0);
 
   } finally {
@@ -100,23 +99,24 @@ function test_onItemMoved() {
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
 
   try {
-    let fx_id = Svc.Bookmark.insertBookmark(
-      Svc.Bookmark.bookmarksMenuFolder,
+    let fx_id = PlacesUtils.bookmarks.insertBookmark(
+      PlacesUtils.bookmarks.bookmarksMenuFolder,
       Utils.makeURI("http://getfirefox.com"),
-      Svc.Bookmark.DEFAULT_INDEX,
+      PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     let fx_guid = engine._store.GUIDForId(fx_id);
-    let tb_id = Svc.Bookmark.insertBookmark(
-      Svc.Bookmark.bookmarksMenuFolder,
+    let tb_id = PlacesUtils.bookmarks.insertBookmark(
+      PlacesUtils.bookmarks.bookmarksMenuFolder,
       Utils.makeURI("http://getthunderbird.com"),
-      Svc.Bookmark.DEFAULT_INDEX,
+      PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
     let tb_guid = engine._store.GUIDForId(tb_id);
 
     Svc.Obs.notify("weave:engine:start-tracking");
 
     // Moving within the folder will just track the folder.
-    Svc.Bookmark.moveItem(tb_id, Svc.Bookmark.bookmarksMenuFolder, 0);
+    PlacesUtils.bookmarks.moveItem(
+      tb_id, PlacesUtils.bookmarks.bookmarksMenuFolder, 0);
     do_check_true(tracker.changedIDs['menu'] > 0);
     do_check_eq(tracker.changedIDs['toolbar'], undefined);
     do_check_eq(tracker.changedIDs[fx_guid], undefined);
@@ -125,8 +125,8 @@ function test_onItemMoved() {
 
     // Moving a bookmark to a different folder will track the old
     // folder, the new folder and the bookmark.
-    Svc.Bookmark.moveItem(tb_id, Svc.Bookmark.toolbarFolder,
-                          Svc.Bookmark.DEFAULT_INDEX);
+    PlacesUtils.bookmarks.moveItem(tb_id, PlacesUtils.bookmarks.toolbarFolder,
+                                   PlacesUtils.bookmarks.DEFAULT_INDEX);
     do_check_true(tracker.changedIDs['menu'] > 0);
     do_check_true(tracker.changedIDs['toolbar'] > 0);
     do_check_eq(tracker.changedIDs[fx_guid], undefined);
