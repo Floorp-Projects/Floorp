@@ -375,6 +375,11 @@ public:
     // all context resources to be lost.
     PRUint32 Generation() { return mGeneration.value(); }
 
+    // this is similar to GLContext::ClearSafely, but is more comprehensive
+    // (takes care of scissor, stencil write mask, dithering, viewport...)
+    // WebGL has more complex needs than GLContext as content controls GL state.
+    void ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntRect& viewportRect);
+
 protected:
     void SetDontKnowIfNeedFakeBlack() {
         mFakeBlackStatus = DontKnowIfNeedFakeBlack;
@@ -1790,97 +1795,37 @@ protected:
         if (mContext->gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE)
             return;
 
-        PRBool initializeColorBuffer = mColorAttachment.HasUninitializedRenderbuffer();
-        PRBool initializeDepthBuffer = mDepthAttachment.HasUninitializedRenderbuffer() ||
-                                       mDepthStencilAttachment.HasUninitializedRenderbuffer();
-        PRBool initializeStencilBuffer = mStencilAttachment.HasUninitializedRenderbuffer() ||
-                                         mDepthStencilAttachment.HasUninitializedRenderbuffer();
+        PRUint32 mask = 0;
 
-        realGLboolean savedColorMask[4] = {0};
-        realGLboolean savedDepthMask = 0;
-        GLuint savedStencilMask = 0;
-        GLfloat savedColorClearValue[4] = {0.f};
-        GLfloat savedDepthClearValue = 0.f;
-        GLint savedStencilClearValue = 0;
-        GLuint clearBits = 0;
+        if (mColorAttachment.HasUninitializedRenderbuffer())
+            mask |= LOCAL_GL_COLOR_BUFFER_BIT;
 
-        realGLboolean wasScissorTestEnabled = mContext->gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST);
-        mContext->gl->fDisable(LOCAL_GL_SCISSOR_TEST);
-
-        realGLboolean wasDitherEnabled = mContext->gl->fIsEnabled(LOCAL_GL_DITHER);
-        mContext->gl->fDisable(LOCAL_GL_DITHER);
-
-        mContext->gl->PushViewportRect(nsIntRect(0,0,width(),height()));
-
-        if (initializeColorBuffer) {
-            mContext->gl->fGetBooleanv(LOCAL_GL_COLOR_WRITEMASK, savedColorMask);
-            mContext->gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, savedColorClearValue);
-            mContext->gl->fColorMask(1, 1, 1, 1);
-            mContext->gl->fClearColor(0.f, 0.f, 0.f, 0.f);
-            clearBits |= LOCAL_GL_COLOR_BUFFER_BIT;
+        if (mDepthAttachment.HasUninitializedRenderbuffer() ||
+            mDepthStencilAttachment.HasUninitializedRenderbuffer())
+        {
+            mask |= LOCAL_GL_DEPTH_BUFFER_BIT;
         }
 
-        if (initializeDepthBuffer) {
-            mContext->gl->fGetBooleanv(LOCAL_GL_DEPTH_WRITEMASK, &savedDepthMask);
-            mContext->gl->fGetFloatv(LOCAL_GL_DEPTH_CLEAR_VALUE, &savedDepthClearValue);
-            mContext->gl->fDepthMask(1);
-            mContext->gl->fClearDepth(0.f);
-            clearBits |= LOCAL_GL_DEPTH_BUFFER_BIT;
-        }
-
-        if (initializeStencilBuffer) {
-            mContext->gl->fGetIntegerv(LOCAL_GL_STENCIL_WRITEMASK, reinterpret_cast<GLint*>(&savedStencilMask));
-            mContext->gl->fGetIntegerv(LOCAL_GL_STENCIL_CLEAR_VALUE, &savedStencilClearValue);
-            mContext->gl->fStencilMask(0xffffffff);
-            mContext->gl->fClearStencil(0);
-            clearBits |= LOCAL_GL_STENCIL_BUFFER_BIT;
+        if (mStencilAttachment.HasUninitializedRenderbuffer() ||
+            mDepthStencilAttachment.HasUninitializedRenderbuffer())
+        {
+            mask |= LOCAL_GL_STENCIL_BUFFER_BIT;
         }
 
         // the one useful line of code
-        mContext->gl->fClear(clearBits);
+        mContext->ForceClearFramebufferWithDefaultValues(mask, nsIntRect(0,0,width(),height()));
 
-        if (initializeColorBuffer) {
-            mContext->gl->fColorMask(savedColorMask[0],
-                                     savedColorMask[1],
-                                     savedColorMask[2],
-                                     savedColorMask[3]);
-            mContext->gl->fClearColor(savedColorClearValue[0],
-                                      savedColorClearValue[1],
-                                      savedColorClearValue[2],
-                                      savedColorClearValue[3]);
+        if (mColorAttachment.HasUninitializedRenderbuffer())
             mColorAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
-        }
 
-        if (initializeDepthBuffer) {
-            mContext->gl->fDepthMask(savedDepthMask);
-            mContext->gl->fClearDepth(savedDepthClearValue);
-            if (mDepthAttachment.Renderbuffer())
-                mDepthAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
-        }
+        if (mDepthAttachment.HasUninitializedRenderbuffer())
+            mDepthAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
 
-        if (initializeStencilBuffer) {
-            mContext->gl->fStencilMask(savedStencilMask);
-            mContext->gl->fClearStencil(savedStencilClearValue);
-            if (mStencilAttachment.Renderbuffer())
-                mStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
-        }
+        if (mStencilAttachment.HasUninitializedRenderbuffer())
+            mStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
 
-        if (initializeDepthBuffer && initializeStencilBuffer) {
-            if (mDepthStencilAttachment.Renderbuffer())
-                mDepthStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
-        }
-
-        mContext->gl->PopViewportRect();
-
-        if (wasDitherEnabled)
-            mContext->gl->fEnable(LOCAL_GL_DITHER);
-        else
-            mContext->gl->fDisable(LOCAL_GL_DITHER);
-
-        if (wasScissorTestEnabled)
-            mContext->gl->fEnable(LOCAL_GL_DITHER);
-        else
-            mContext->gl->fDisable(LOCAL_GL_SCISSOR_TEST);
+        if (mDepthStencilAttachment.HasUninitializedRenderbuffer())
+            mDepthStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
     }
 
     WebGLuint mName;
