@@ -688,15 +688,20 @@ var FormHelperUI = {
     this._currentBrowser = Browser.selectedBrowser;
     this._currentCaretRect = null;
 
+#ifndef ANDROID
     // Update the next/previous commands
     this._cmdPrevious.setAttribute("disabled", !aHasPrevious);
     this._cmdNext.setAttribute("disabled", !aHasNext);
 
     // If both next and previous are disabled don't bother showing arrows
-    if (!aHasNext && !aHasPrevious)
-      this._container.setAttribute("disabled", "true");
-    else
+    if (aHasNext || aHasPrevious)
       this._container.removeAttribute("disabled");
+    else
+      this._container.setAttribute("disabled", "true");
+#else
+    // Always hide the arrows on Android
+    this._container.setAttribute("disabled", "true");
+#endif
 
     this._open = true;
 
