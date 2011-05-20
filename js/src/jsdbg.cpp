@@ -552,8 +552,9 @@ Debug::trace(JSTracer *trc, JSObject *obj)
         // Mark Debug.Frame objects that are reachable from JS if we look them up
         // again (because the corresponding StackFrame is still on the stack).
         for (FrameMap::Enum e(dbg->frames); !e.empty(); e.popFront()) {
-            if (e.front().value->getPrivate())
-                MarkObject(trc, *obj, "live Debug.Frame");
+            JSObject *frameobj = e.front().value;
+            JS_ASSERT(frameobj->getPrivate());
+            MarkObject(trc, *frameobj, "live Debug.Frame");
         }
     }
 }
@@ -571,12 +572,6 @@ Debug::sweepCompartment(JSCompartment *compartment)
     const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
     for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
         Debug *dbg = *p;
-
-        // Sweep FrameMap entries for objects being collected.
-        for (FrameMap::Enum e(dbg->frames); !e.empty(); e.popFront()) {
-            if (!e.front().value->isMarked())
-                e.removeFront();
-        }
 
         // Sweep ObjectMap entries for objects being collected.
         for (ObjectMap::Enum e(dbg->objects); !e.empty(); e.popFront()) {
