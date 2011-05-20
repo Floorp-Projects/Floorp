@@ -642,3 +642,6 @@ pref("urlclassifier.updatecachemax", 4194304);
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 #endif
 
+// prevent focus to show/hide the virtual keyboard if the action is not
+// initiated by a user
+pref("content.ime.strict_policy", true);

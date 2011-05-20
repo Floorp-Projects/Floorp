@@ -48,14 +48,23 @@
 #                         uploading. The full path of the symbol index
 #                         file will be appended to the commandline.
 #
+# The script expects two command-line arguments, in this order:
+#   - The symbol index name
+#   - The symbol archive
+#
+
 set -e
 
-: ${SYMBOL_SERVER_HOST?} ${SYMBOL_SERVER_USER?} ${SYMBOL_SERVER_PATH?} ${1?"You must specify a symbol archive to upload"}
-hash=`openssl dgst -sha1 "$1" | sed 's/^.*)=//' | sed 's/\ //g'`
-archive="${hash}-"`basename "$1" | sed 's/\ //g'`
-echo "Transferring symbols... $1"
+: ${SYMBOL_SERVER_HOST?} ${SYMBOL_SERVER_USER?} ${SYMBOL_SERVER_PATH?} ${1?"You must specify a symbol index name."} ${2?"You must specify a symbol archive to upload"}
+
+SYMBOL_INDEX_NAME="$1"
+SYMBOL_ARCHIVE="$2"
+
+hash=`openssl dgst -sha1 "${SYMBOL_ARCHIVE}" | sed 's/^.*)=//' | sed 's/\ //g'`
+archive="${hash}-"`basename "${SYMBOL_ARCHIVE}" | sed 's/\ //g'`
+echo "Transferring symbols... ${SYMBOL_ARCHIVE}"
 scp ${SYMBOL_SERVER_PORT:+-P $SYMBOL_SERVER_PORT} \
-  ${SYMBOL_SERVER_SSH_KEY:+-i "$SYMBOL_SERVER_SSH_KEY"} "$1" \
+  ${SYMBOL_SERVER_SSH_KEY:+-i "$SYMBOL_SERVER_SSH_KEY"} "${SYMBOL_ARCHIVE}" \
   ${SYMBOL_SERVER_USER}@${SYMBOL_SERVER_HOST}:"${SYMBOL_SERVER_PATH}/${archive}"
 echo "Unpacking symbols on remote host..."
 ssh -2 ${SYMBOL_SERVER_PORT:+-p $SYMBOL_SERVER_PORT} \
