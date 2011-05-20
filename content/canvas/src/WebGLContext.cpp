@@ -140,9 +140,13 @@ WebGLContext::WebGLContext()
     mColorClearValue[3] = 0.f;
     mDepthClearValue = 1.f;
     mStencilClearValue = 0;
-    mStencilRef = 0;
-    mStencilValueMask = 0xffffffff;
-    mStencilWriteMask = 0xffffffff;
+    mStencilRefFront = 0;
+    mStencilRefBack = 0;
+    mStencilValueMaskFront = 0xffffffff;
+    mStencilValueMaskBack  = 0xffffffff;
+    mStencilWriteMaskFront = 0xffffffff;
+    mStencilWriteMaskBack  = 0xffffffff;
+
     mScissorTestEnabled = 0;
     mDitherEnabled = 1;
     mBackbufferClearingStatus = BackbufferClearingStatus::NotClearedSinceLastPresented;
@@ -860,7 +864,8 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntR
     }
 
     if (initializeStencilBuffer) {
-        gl->fStencilMask(mStencilWriteMask);
+        gl->fStencilMaskSeparate(LOCAL_GL_FRONT, mStencilWriteMaskFront);
+        gl->fStencilMaskSeparate(LOCAL_GL_BACK, mStencilWriteMaskBack);
         gl->fClearStencil(mStencilClearValue);
     }
 
