@@ -190,6 +190,8 @@ namespace nanojit
     #define DECLARE_PLATFORM_ASSEMBLER()    \
         const static Register argRegs[2], retRegs[2]; \
         int32_t max_stk_args;\
+        debug_only( int32_t _fpuStkDepth; ) \
+        debug_only( int32_t _sv_fpuStkDepth; ) \
         void nativePageReset();\
         void nativePageSetup();\
         void underrunProtect(int);\
@@ -433,6 +435,8 @@ namespace nanojit
         void SSE_UCOMISD(Register rl, Register rr); \
         void SSE_XORPD(Register r, const uint32_t* maskaddr); \
         void SSE_XORPDr(Register rd, Register rs); \
+        void fpu_push(); \
+        void fpu_pop(); \
         void FPUc(int32_t o); \
         void FPU(int32_t o, Register r) { \
             underrunProtect(2); \
