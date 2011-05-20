@@ -3595,11 +3595,9 @@ WebGLContext::ValidateProgram(nsIWebGLProgram *pobj)
     MakeContextCurrent();
 
 #ifdef XP_MACOSX
-    if (gl->Vendor() == gl::GLContext::VendorNVIDIA) {
-        LogMessageIfVerbose("validateProgram: implemented as a no-operation "
-                            "on Mac/NVIDIA to work around a driver crash");
-        return NS_OK;
-    }
+    // see bug 593867 for NVIDIA and bug 657201 for ATI. The latter is confirmed with Mac OS 10.6.7
+    LogMessageIfVerbose("validateProgram: implemented as a no-operation on Mac to work around crashes");
+    return NS_OK;
 #endif
 
     gl->fValidateProgram(progname);
