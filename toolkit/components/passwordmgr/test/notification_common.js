@@ -32,9 +32,7 @@ function getPopup(aPopupNote, aKind) {
 function clickPopupButton(aPopup, aButtonIndex) {
     ok(true, "Looking for action at index " + aButtonIndex);
 
-    var panel = aPopup.owner.panel.querySelector(".notification-popup-children")
-                || aPopup.owner.panel;
-    var notifications = panel.childNodes;
+    var notifications = aPopup.owner.panel.childNodes;
     ok(notifications.length > 0, "at least one notification displayed");
     ok(true, notifications.length + " notifications");
     var notification = notifications[0];

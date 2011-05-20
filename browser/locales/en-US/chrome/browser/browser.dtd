@@ -559,18 +559,13 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!-- LOCALIZATION NOTE (syncTabsMenu.label): This appears in the history menu -->
 <!ENTITY syncTabsMenu.label     "Tabs From Other Computers">
 
+<!ENTITY syncBrand.shortName.label    "Sync">
+
 <!ENTITY syncSetup.label              "Set Up &syncBrand.shortName.label;…">
 <!ENTITY syncSetup.accesskey          "Y">
 <!ENTITY syncSyncNowItem.label        "Sync Now">
 <!ENTITY syncSyncNowItem.accesskey    "S">
 <!ENTITY syncToolbarButton.label      "Sync">
-
-<!-- LOCALIZATION NOTE (syncPromoNotification.bookmarks.label): This appears in the new bookmark panel -->
-<!ENTITY syncPromoNotification.bookmarks.label "You can access your bookmarks on all your devices with &syncBrand.fullName.label;.">
-<!-- LOCALIZATION NOTE (syncPromoNotification.passwords.label): This appears in the remember password panel -->
-<!ENTITY syncPromoNotification.passwords.label "You can access your passwords on all your devices with &syncBrand.fullName.label;.">
-<!ENTITY syncPromoNotification.learnMoreLinkText "Learn More">
-<!ENTITY syncPromoNotification.closeButtonTooltip "Close this message">
 
 <!ENTITY addonBarCloseButton.tooltip  "Close Add-on Bar">
 <!ENTITY toggleAddonBarCmd.key        "/">

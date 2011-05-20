@@ -3,8 +3,6 @@
 %brandDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
 %browserDTD;
-<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
-%syncBrandDTD;
 <!ENTITY % baseMenuDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd" >
 %baseMenuDTD;
 <!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetOverlay.dtd" >
