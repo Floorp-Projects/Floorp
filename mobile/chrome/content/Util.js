@@ -180,6 +180,13 @@ let Util = {
 #else
     return (window.innerWidth <= window.innerHeight);
 #endif
+  },
+
+  get isKeyboardOpened() {
+    if (this.isParentProcess())
+      return ViewableAreaObserver.isKeyboardOpened;
+
+    return (sendSyncMessage("Content:IsKeyboardOpened", {}))[0];
   }
 };
 
