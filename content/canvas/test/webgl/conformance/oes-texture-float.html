@@ -84,6 +84,7 @@ if (!gl) {
       testPassed("No OES_texture_float support -- this is legal");
   } else {
       testPassed("Successfully enabled OES_texture_float extension");
+      dump('XXXXXX ' + gl.getExtension("OES_texture_float") + '\n');
       runTextureCreationTest(testProgram, true);
       runRenderTargetTest(testProgram);
       runUniqueObjectTest();

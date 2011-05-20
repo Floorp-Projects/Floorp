@@ -89,7 +89,8 @@ NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult)
 
 WebGLContext::WebGLContext()
     : mCanvasElement(nsnull),
-      gl(nsnull)
+      gl(nsnull),
+      mEnabledExtensions(WebGLExtensionID_Max)
 {
     mWidth = mHeight = 0;
     mGeneration = 0;
@@ -127,6 +128,8 @@ WebGLContext::WebGLContext()
     mFakeVertexAttrib0BufferObjectSize = 0;
     mFakeVertexAttrib0BufferObject = 0;
     mFakeVertexAttrib0BufferStatus = VertexAttrib0Status::Default;
+
+    mEnabledExtensions.SetLength(WebGLExtensionID_Max);
 }
 
 WebGLContext::~WebGLContext()
@@ -766,6 +769,32 @@ WebGLContext::MozGetUnderlyingParamString(PRUint32 pname, nsAString& retval)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
+{
+    *retval = nsnull;
+
+    // handle simple extensions that don't need custom objects first
+    WebGLExtensionID ei = WebGLExtensionID_Max;
+    if (aName.EqualsLiteral("OES_texture_float")) {
+        MakeContextCurrent();
+
+        PRBool avail = gl->IsExtensionSupported(gl->IsGLES2() ? "GL_OES_texture_float" : "GL_ARB_texture_float");
+        if (avail)
+            ei = WebGL_OES_texture_float;
+    }
+
+    // create a WebGLExtension object for extensions that don't
+    // have any additional tokens or methods
+    if (ei != WebGLExtensionID_Max) {
+        if (!IsExtensionEnabled(ei)) {
+            mEnabledExtensions[ei] = new WebGLExtension(this);
+        }
+        NS_ADDREF(*retval = mEnabledExtensions[ei]);
+    }
+
+    return NS_OK;
+}
 
 //
 // XPCOM goop
@@ -901,6 +930,18 @@ NAME_NOT_SUPPORTED(WebGLShader)
 NAME_NOT_SUPPORTED(WebGLFramebuffer)
 NAME_NOT_SUPPORTED(WebGLRenderbuffer)
 
+NS_IMPL_ADDREF(WebGLExtension)
+NS_IMPL_RELEASE(WebGLExtension)
+
+DOMCI_DATA(WebGLExtension, WebGLExtension)
+
+NS_INTERFACE_MAP_BEGIN(WebGLExtension)
+  NS_INTERFACE_MAP_ENTRY(WebGLExtension)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtension)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtension)
+NS_INTERFACE_MAP_END
+
 /* [noscript] attribute WebGLint location; */
 NS_IMETHODIMP
 WebGLUniformLocation::GetLocation(WebGLint *aLocation)
@@ -969,9 +1010,3 @@ WebGLContext::IsContextLost(WebGLboolean *retval)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-WebGLContext::GetExtension(const nsAString& aName, nsISupports **retval)
-{
-    *retval = nsnull;
-    return NS_OK;
-}

@@ -553,7 +553,7 @@ public:
     /**
      * Returns PR_TRUE if either this is the GLES2 API, or had the GL_ARB_ES2_compatibility extension
      */
-    PRBool HasES2Compatibility() const {
+    PRBool HasES2Compatibility() {
         return mIsGLES2 || IsExtensionSupported(ARB_ES2_compatibility);
     }
 
@@ -882,9 +882,12 @@ public:
         Extensions_Max
     };
 
-    PRBool IsExtensionSupported(GLExtensions aKnownExtension) const {
+    PRBool IsExtensionSupported(GLExtensions aKnownExtension) {
         return mAvailableExtensions[aKnownExtension];
     }
+
+    // for unknown extensions
+    PRBool IsExtensionSupported(const char *extension);
 
     // Shared code for GL extensions and GLX extensions.
     static PRBool ListHasExtension(const GLubyte *extensions,
@@ -892,6 +895,25 @@ public:
 
     GLint GetMaxTextureSize() { return mMaxTextureSize; }
     void SetFlipped(PRBool aFlipped) { mFlipped = aFlipped; }
+
+    // this should just be a std::bitset, but that ended up breaking
+    // MacOS X builds; see bug 584919.  We can replace this with one
+    // later on.  This is handy to use in WebGL contexts as well,
+    // so making it public.
+    template<size_t setlen>
+    struct ExtensionBitset {
+        ExtensionBitset() {
+            for (size_t i = 0; i < setlen; ++i)
+                values[i] = false;
+        }
+
+        bool& operator[](size_t index) {
+            NS_ASSERTION(index < setlen, "out of range");
+            return values[index];
+        }
+
+        bool values[setlen];
+    };
 
 protected:
     PRPackedBool mInitialized;
@@ -942,27 +964,6 @@ protected:
     GLuint mOffscreenDepthRB;
     GLuint mOffscreenStencilRB;
 
-    // this should just be a std::bitset, but that ended up breaking
-    // MacOS X builds; see bug 584919.  We can replace this with one
-    // later on.
-    template<size_t setlen>
-    struct ExtensionBitset {
-        ExtensionBitset() {
-            for (size_t i = 0; i < setlen; ++i)
-                values[i] = false;
-        }
-
-        bool& operator[](size_t index) {
-            NS_ASSERTION(index < setlen, "out of range");
-            return values[index];
-        }
-
-        const bool& operator[](size_t index) const {
-            return const_cast<ExtensionBitset*>(this)->operator[](index);
-        }
-
-        bool values[setlen];
-    };
     ExtensionBitset<Extensions_Max> mAvailableExtensions;
 
     // Clear to transparent black, with 0 depth and stencil,
@@ -980,7 +981,6 @@ protected:
     PRBool InitWithPrefix(const char *prefix, PRBool trygl);
 
     void InitExtensions();
-    PRBool IsExtensionSupported(const char *extension);
 
     virtual already_AddRefed<TextureImage>
     CreateBasicTextureImage(GLuint aTexture,
