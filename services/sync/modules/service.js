@@ -492,7 +492,7 @@ WeaveSvc.prototype = {
 
     let enabled = Svc.Prefs.get("log.appender.debugLog.enabled", false);
     if (enabled) {
-      let verbose = Svc.Directory.get("ProfD", Ci.nsIFile);
+      let verbose = Services.dirsvc.get("ProfD", Ci.nsIFile);
       verbose.QueryInterface(Ci.nsILocalFile);
       verbose.append("weave");
       verbose.append("logs");
@@ -551,7 +551,8 @@ WeaveSvc.prototype = {
         this._checkSyncStatus();
         break;
       case "weave:service:login:error":
-        if (Status.login == LOGIN_FAILED_NETWORK_ERROR && !Svc.IO.offline) {
+        if (Status.login == LOGIN_FAILED_NETWORK_ERROR &&
+            !Services.io.offline) {
           this._ignorableErrorCount += 1;
         }
         break;
@@ -559,7 +560,7 @@ WeaveSvc.prototype = {
         this._handleSyncError();
         switch (Status.sync) {
           case LOGIN_FAILED_NETWORK_ERROR:
-            if (!Svc.IO.offline) {
+            if (!Services.io.offline) {
               this._ignorableErrorCount += 1;
             }
             break;
@@ -1087,8 +1088,8 @@ WeaveSvc.prototype = {
     // Find weave logins and remove them.
     this.password = "";
     this.passphrase = "";
-    Svc.Login.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
-      Svc.Login.removeLogin(login);
+    Services.logins.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
+      Services.logins.removeLogin(login);
     });
     Svc.Obs.notify("weave:service:start-over");
     Svc.Obs.notify("weave:engine:stop-tracking");
@@ -1152,7 +1153,7 @@ WeaveSvc.prototype = {
     this._catch(this._lock("service.js: login",
           this._notify("login", "", function() {
       this._loggedIn = false;
-      if (Svc.IO.offline) {
+      if (Services.io.offline) {
         Status.login = LOGIN_FAILED_NETWORK_ERROR;
         throw "Application is offline, login should not be called";
       }
@@ -1443,7 +1444,7 @@ WeaveSvc.prototype = {
    */
   _shouldLogin: function _shouldLogin() {
     return this.enabled &&
-           !Svc.IO.offline &&
+           !Services.io.offline &&
            !this.isLoggedIn;
   },
 
@@ -1459,7 +1460,7 @@ WeaveSvc.prototype = {
     let reason = "";
     if (!this.enabled)
       reason = kSyncWeaveDisabled;
-    else if (Svc.IO.offline)
+    else if (Services.io.offline)
       reason = kSyncNetworkOffline;
     else if (Status.minimumNextSync > Date.now())
       reason = kSyncBackoffNotMet;

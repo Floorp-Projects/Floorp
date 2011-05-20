@@ -4,7 +4,7 @@ Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const PREFS_GUID = Utils.encodeBase64url(Svc.AppInfo.ID);
+const PREFS_GUID = Utils.encodeBase64url(Services.appinfo.ID);
 
 function makePersona(id) {
   return {

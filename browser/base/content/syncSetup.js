@@ -867,7 +867,7 @@ var gSyncSetup = {
         }
 
         if (Weave.Engines.get("passwords").enabled) {
-          let logins = Weave.Svc.Login.getAllLogins({});
+          let logins = Services.logins.getAllLogins({});
           // Support %S for historical reasons (see bug 600141)
           document.getElementById("passwordCount").value =
             PluralForm.get(logins.length,

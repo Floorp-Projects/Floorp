@@ -633,7 +633,7 @@ function run_test() {
     let res14 = new AsyncResource("http://localhost:8080/json");
     res14._onProgress = function(rec) {
       // Provoke an XPC exception without a Javascript wrapper.
-      Svc.IO.newURI("::::::::", null, null);
+      Services.io.newURI("::::::::", null, null);
     };
     let warnings = [];
     res14._log.warn = function(msg) { warnings.push(msg) };

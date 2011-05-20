@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Utils', 'Svc', 'Str'];
+const EXPORTED_SYMBOLS = ['Utils', 'Svc', 'Services', 'Str'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -47,6 +47,7 @@ Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Constants for makeSyncCallback, waitForSyncCallback
@@ -334,7 +335,7 @@ let Utils = {
       arg = {path: arg};
 
     let pathParts = arg.path.split("/");
-    let file = Svc.Directory.get("ProfD", Ci.nsIFile);
+    let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
     file.QueryInterface(Ci.nsILocalFile);
     for (let i = 0; i < pathParts.length; i++)
       file.append(pathParts[i]);
@@ -1001,7 +1002,7 @@ let Utils = {
     if (!URIString)
       return null;
     try {
-      return Svc.IO.newURI(URIString, null, null);
+      return Services.io.newURI(URIString, null, null);
     } catch (e) {
       let log = Log4Moz.repository.getLogger("Service.Util");
       log.debug("Could not create URI: " + Utils.exceptionStr(e));
@@ -1025,7 +1026,7 @@ let Utils = {
   },
 
   getTmp: function Weave_getTmp(name) {
-    let tmp = Svc.Directory.get("ProfD", Ci.nsIFile);
+    let tmp = Services.dirsvc.get("ProfD", Ci.nsIFile);
     tmp.QueryInterface(Ci.nsILocalFile);
 
     tmp.append("weave");
@@ -1481,7 +1482,7 @@ let FakeSvc = {
     getBrowserState: function() {
       // Fennec should have only one window. Not more, not less.
       let state = { windows: [{ tabs: [] }] };
-      let window = Svc.WinMediator.getMostRecentWindow("navigator:browser");
+      let window = Services.wm.getMostRecentWindow("navigator:browser");
 
       // Extract various pieces of tab data
       window.Browser._tabs.forEach(function(tab) {
@@ -1543,32 +1544,23 @@ Svc.DefaultPrefs = new Preferences({branch: PREFS_BRANCH, defaultBranch: true});
 Svc.Obs = Observers;
 
 this.__defineGetter__("_sessionCID", function() {
-  //sets session CID based on browser type
-  let appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-  return appInfo.ID == SEAMONKEY_ID ? "@mozilla.org/suite/sessionstore;1"
+  let appinfo_id = Services.appinfo.ID;
+  return appinfo_id == SEAMONKEY_ID ? "@mozilla.org/suite/sessionstore;1"
                                     : "@mozilla.org/browser/sessionstore;1";
 });
 [["Annos", "@mozilla.org/browser/annotation-service;1", "nsIAnnotationService"],
- ["AppInfo", "@mozilla.org/xre/app-info;1", "nsIXULAppInfo"],
  ["Bookmark", "@mozilla.org/browser/nav-bookmarks-service;1", "nsINavBookmarksService"],
- ["Directory", "@mozilla.org/file/directory_service;1", "nsIProperties"],
  ["Env", "@mozilla.org/process/environment;1", "nsIEnvironment"],
  ["Favicon", "@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
  ["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
  ["History", "@mozilla.org/browser/nav-history-service;1", "nsPIPlacesDatabase"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
- ["IO", "@mozilla.org/network/io-service;1", "nsIIOService"],
  ["KeyFactory", "@mozilla.org/security/keyobjectfactory;1", "nsIKeyObjectFactory"],
- ["Login", "@mozilla.org/login-manager;1", "nsILoginManager"],
  ["Memory", "@mozilla.org/xpcom/memory-service;1", "nsIMemory"],
  ["Private", "@mozilla.org/privatebrowsing;1", "nsIPrivateBrowsingService"],
  ["Profiles", "@mozilla.org/toolkit/profile-service;1", "nsIToolkitProfileService"],
- ["Prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
- ["Script", "@mozilla.org/moz/jssubscript-loader;1", "mozIJSSubScriptLoader"],
  ["SysInfo", "@mozilla.org/system-info;1", "nsIPropertyBag2"],
  ["Version", "@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],
- ["WinMediator", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
- ["WinWatcher", "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
  ["Session", this._sessionCID, "nsISessionStore"],
 ].forEach(function(lazy) Utils.lazySvc(Svc, lazy[0], lazy[1], lazy[2]));
 
