@@ -2761,43 +2761,6 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 namespace js {
 namespace gc {
 
-bool
-SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
-{
-    /*
-     * This function cannot be called during the GC and always requires a
-     * request.
-     */
-#ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread()->data.requestDepth);
-
-    /*
-     * This is only necessary if AutoGCSession below would wait for GC to
-     * finish on another thread, but to capture the minimal stack space and
-     * for code simplicity we do it here unconditionally.
-     */
-    RecordNativeStackTopForGC(cx);
-#endif
-
-    JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
-    AutoGCSession gcsession(cx);
-    AutoUnlockGC unlock(rt);
-
-    bool cycle = false;
-    for (JSObject *obj2 = proto; obj2;) {
-        if (obj2 == obj) {
-            cycle = true;
-            break;
-        }
-        obj2 = obj2->getProto();
-    }
-    if (!cycle)
-        obj->setProto(proto);
-
-    return !cycle;
-}
-
 JSCompartment *
 NewCompartment(JSContext *cx, JSPrincipals *principals)
 {
