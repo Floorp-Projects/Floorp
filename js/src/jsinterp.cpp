@@ -2289,7 +2289,9 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
+#if defined(JS_TRACER) || defined(JS_METHODJIT)
     bool useMethodJIT = false;
+#endif
 
 #ifdef JS_METHODJIT
 
