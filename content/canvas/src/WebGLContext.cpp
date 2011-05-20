@@ -89,8 +89,7 @@ NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult)
 
 WebGLContext::WebGLContext()
     : mCanvasElement(nsnull),
-      gl(nsnull),
-      mEnabledExtensions(WebGLExtensionID_Max)
+      gl(nsnull)
 {
     mWidth = mHeight = 0;
     mGeneration = 0;
@@ -128,8 +127,6 @@ WebGLContext::WebGLContext()
     mFakeVertexAttrib0BufferObjectSize = 0;
     mFakeVertexAttrib0BufferObject = 0;
     mFakeVertexAttrib0BufferStatus = VertexAttrib0Status::Default;
-
-    mEnabledExtensions.SetLength(WebGLExtensionID_Max);
 }
 
 WebGLContext::~WebGLContext()

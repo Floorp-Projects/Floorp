@@ -431,10 +431,9 @@ protected:
         WebGL_OES_texture_float,
         WebGLExtensionID_Max
     };
-    nsTArray<nsCOMPtr<nsIWebGLExtension> > mEnabledExtensions; // size is WebGLExtension_Max
-
-    PRBool IsExtensionEnabled(WebGLExtensionID ext) {
-        NS_ASSERTION(ext >= 0 && ext < WebGLExtensionID_Max, "bogus index!");
+    nsCOMPtr<nsIWebGLExtension> mEnabledExtensions[WebGLExtensionID_Max];
+    PRBool IsExtensionEnabled(WebGLExtensionID ext) const {
+        NS_ABORT_IF_FALSE(ext >= 0 && ext < WebGLExtensionID_Max, "bogus index!");
         return mEnabledExtensions[ext] != nsnull;
     }
 
@@ -1963,22 +1962,19 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLActiveInfo, WEBGLACTIVEINFO_PRIVATE_IID)
 #define WEBGLEXTENSION_PRIVATE_IID \
     {0x457dd0b2, 0x9f77, 0x4c23, {0x95, 0x70, 0x9d, 0x62, 0x65, 0xc1, 0xa4, 0x81}}
 class WebGLExtension :
-    public nsIWebGLExtension
+    public nsIWebGLExtension,
+    public WebGLContextBoundObject,
+    public WebGLZeroingObject
 {
 public:
     WebGLExtension(WebGLContext *baseContext)
-        : mContext(baseContext)
-    { }        
+        : WebGLContextBoundObject(baseContext)
+    {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLEXTENSION
 
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLEXTENSION_PRIVATE_IID)
-
-    void ClearContext() { mContext = nsnull; }
-    WebGLContext *BaseContext() { return mContext; }
-protected:
-    nsRefPtr<WebGLContext> mContext;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLExtension, WEBGLACTIVEINFO_PRIVATE_IID)
