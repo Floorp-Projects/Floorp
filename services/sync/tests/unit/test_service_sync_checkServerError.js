@@ -173,7 +173,7 @@ add_test(function test_service_networkError() {
 add_test(function test_service_offline() {
   _("Test: Wanting to sync in offline mode leads to the right status code but does not increment the ignorable error count.");
   setUp();
-  Svc.IO.offline = true;
+  Services.io.offline = true;
   Service._ignorableErrorCount = 0;
 
   try {
@@ -188,7 +188,7 @@ add_test(function test_service_offline() {
     Status.resetSync();
     Service.startOver();
   }
-  Svc.IO.offline = false;
+  Services.io.offline = false;
   run_next_test();
 });
 

@@ -118,7 +118,7 @@ Identity.prototype = {
       if (login.username == this.username && login.password == this._password)
         exists = true;
       else
-        Svc.Login.removeLogin(login);
+        Services.logins.removeLogin(login);
     }
 
     // No need to create the login after clearing out the other ones
@@ -134,8 +134,8 @@ Identity.prototype = {
       "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
     let newLogin = new nsLoginInfo(PWDMGR_HOST, null, this.realm,
       this.username, this.password, "", "");
-    Svc.Login.addLogin(newLogin);
+    Services.logins.addLogin(newLogin);
   },
 
-  get _logins() Svc.Login.findLogins({}, PWDMGR_HOST, null, this.realm)
+  get _logins() Services.logins.findLogins({}, PWDMGR_HOST, null, this.realm)
 };

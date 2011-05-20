@@ -152,9 +152,9 @@ AsyncResource.prototype = {
   //   Firefox Aurora/5.0a1 FxSync/1.9.0.20110409.desktop
   //
   _userAgent:
-    Svc.AppInfo.name + "/" + Svc.AppInfo.version +     // Product.
-    " FxSync/" + WEAVE_VERSION + "." +                 // Sync.
-    Svc.AppInfo.appBuildID + ".",                      // Build.
+    Services.appinfo.name + "/" + Services.appinfo.version +  // Product.
+    " FxSync/" + WEAVE_VERSION + "." +                        // Sync.
+    Services.appinfo.appBuildID + ".",                        // Build.
 
   // Wait 5 minutes before killing a request.
   ABORT_TIMEOUT: 300000,
@@ -228,8 +228,9 @@ AsyncResource.prototype = {
   // to obtain a request channel.
   //
   _createRequest: function Res__createRequest() {
-    let channel = Svc.IO.newChannel(this.spec, null, null).
-      QueryInterface(Ci.nsIRequest).QueryInterface(Ci.nsIHttpChannel);
+    let channel = Services.io.newChannel(this.spec, null, null)
+                          .QueryInterface(Ci.nsIRequest)
+                          .QueryInterface(Ci.nsIHttpChannel);
 
     // Always validate the cache:
     channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
