@@ -95,6 +95,7 @@
 #include "nsFocusManager.h"
 #include "ThirdPartyUtil.h"
 #include "mozilla/Services.h"
+#include "nsStructuredCloneContainer.h"
 
 #include "nsIEventListenerService.h"
 #include "nsIFrameMessageManager.h"
@@ -720,6 +721,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityNameSet)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemPrincipal,
     nsScriptSecurityManager::SystemPrincipalSingletonConstructor)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNullPrincipal, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStructuredCloneContainer)
 
 static nsresult
 Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID, 
@@ -873,6 +875,7 @@ NS_DEFINE_NAMED_CID(NS_NULLPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_SECURITYNAMESET_CID);
 NS_DEFINE_NAMED_CID(THIRDPARTYUTIL_CID);
 NS_DEFINE_NAMED_CID(NS_WORKERFACTORY_CID);
+NS_DEFINE_NAMED_CID(NS_STRUCTUREDCLONECONTAINER_CID);
 
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
@@ -1030,6 +1033,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
   { &kNS_WORKERFACTORY_CID, false, NULL, nsWorkerFactoryConstructor },
+  { &kNS_STRUCTUREDCLONECONTAINER_CID, false, NULL, nsStructuredCloneContainerConstructor },
   { NULL }
 };
 
@@ -1174,6 +1178,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NS_WORKERFACTORY_CONTRACTID, &kNS_WORKERFACTORY_CID },
+  { NS_STRUCTUREDCLONECONTAINER_CONTRACTID, &kNS_STRUCTUREDCLONECONTAINER_CID },
   { NULL }
 };
 
