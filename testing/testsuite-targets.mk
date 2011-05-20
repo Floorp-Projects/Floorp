@@ -165,7 +165,7 @@ xpcshell-tests:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
 	  -I$(topsrcdir)/build \
 	  $(topsrcdir)/testing/xpcshell/runxpcshelltests.py \
-	  --manifest=$(DEPTH)/_tests/xpcshell/all-test-dirs.list \
+	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
 	  --no-logfiles \
           $(SYMBOLS_PATH) \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \
