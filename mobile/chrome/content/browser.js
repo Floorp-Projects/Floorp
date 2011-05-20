@@ -3020,7 +3020,22 @@ var ViewableAreaObserver = {
     return (this._height || window.innerHeight);
   },
 
-  isKeyboardOpened: false,
+  _isKeyboardOpened: false,
+  get isKeyboardOpened() {
+    return this._isKeyboardOpened;
+  },
+
+  set isKeyboardOpened(aValue) {
+    let oldValue = this._isKeyboardOpened;
+
+    if (oldValue != aValue) {
+      this._isKeyboardOpened = aValue;
+
+      let event = document.createEvent("UIEvents");
+      event.initUIEvent("KeyboardChanged", true, false, window, aValue);
+      window.dispatchEvent(event);
+    }
+  },
 
   observe: function va_observe(aSubject, aTopic, aData) {
 #if MOZ_PLATFORM_MAEMO == 6
