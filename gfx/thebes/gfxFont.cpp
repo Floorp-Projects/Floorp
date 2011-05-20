@@ -99,6 +99,11 @@ gfxFontEntry::~gfxFontEntry()
     delete mUserFontData;
 }
 
+PRBool gfxFontEntry::IsSymbolFont() 
+{
+    return mSymbolFont;
+}
+
 PRBool gfxFontEntry::TestCharacterMap(PRUint32 aCh)
 {
     if (!mCmapInitialized) {
