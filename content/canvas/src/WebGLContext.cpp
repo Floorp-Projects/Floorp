@@ -807,6 +807,73 @@ WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
     return NS_OK;
 }
 
+void
+WebGLContext::ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntRect& viewportRect)
+{
+    MakeContextCurrent();
+
+    PRBool initializeColorBuffer = 0 != (mask & LOCAL_GL_COLOR_BUFFER_BIT);
+    PRBool initializeDepthBuffer = 0 != (mask & LOCAL_GL_DEPTH_BUFFER_BIT);
+    PRBool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
+
+    // prepare GL state for clearing
+    gl->fDisable(LOCAL_GL_SCISSOR_TEST);
+    gl->fDisable(LOCAL_GL_DITHER);
+    gl->PushViewportRect(viewportRect);
+
+    if (initializeColorBuffer) {
+        gl->fColorMask(1, 1, 1, 1);
+        gl->fClearColor(0.f, 0.f, 0.f, 0.f);
+    }
+
+    if (initializeDepthBuffer) {
+        gl->fDepthMask(1);
+        gl->fClearDepth(1.0f);
+    }
+
+    if (initializeStencilBuffer) {
+        gl->fStencilMask(0xffffffff);
+        gl->fClearStencil(0);
+    }
+
+    // do clear
+    gl->fClear(mask);
+
+    // restore GL state after clearing
+    if (initializeColorBuffer) {
+        gl->fColorMask(mColorWriteMask[0],
+                       mColorWriteMask[1],
+                       mColorWriteMask[2],
+                       mColorWriteMask[3]);
+        gl->fClearColor(mColorClearValue[0],
+                        mColorClearValue[1],
+                        mColorClearValue[2],
+                        mColorClearValue[3]);
+    }
+
+    if (initializeDepthBuffer) {
+        gl->fDepthMask(mDepthWriteMask);
+        gl->fClearDepth(mDepthClearValue);
+    }
+
+    if (initializeStencilBuffer) {
+        gl->fStencilMask(mStencilWriteMask);
+        gl->fClearStencil(mStencilClearValue);
+    }
+
+    gl->PopViewportRect();
+
+    if (mDitherEnabled)
+        gl->fEnable(LOCAL_GL_DITHER);
+    else
+        gl->fDisable(LOCAL_GL_DITHER);
+
+    if (mScissorTestEnabled)
+        gl->fEnable(LOCAL_GL_SCISSOR_TEST);
+    else
+        gl->fDisable(LOCAL_GL_SCISSOR_TEST);
+}
+
 //
 // XPCOM goop
 //
