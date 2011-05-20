@@ -49,6 +49,10 @@ const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_DSS_ENABLED    = "extensions.dss.enabled";
 const ADDON_TYPE             = "theme";
 
+const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
+
+const STRING_TYPE_NAME       = "type.%ID%.name";
+
 const DEFAULT_MAX_USED_THEMES_COUNT = 30;
 
 const MAX_PREVIEW_SECONDS = 30;
@@ -803,4 +807,8 @@ function _persistProgressListener(successCallback) {
   };
 }
 
-AddonManagerPrivate.registerProvider(LightweightThemeManager);
+AddonManagerPrivate.registerProvider(LightweightThemeManager, [
+  new AddonManagerPrivate.AddonType("theme", URI_EXTENSION_STRINGS,
+                                    STRING_TYPE_NAME,
+                                    AddonManager.VIEW_TYPE_LIST, 5000)
+]);

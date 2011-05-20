@@ -78,6 +78,9 @@ const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
+const URI_EXTENSION_STRINGS           = "chrome://mozapps/locale/extensions/extensions.properties";
+
+const STRING_TYPE_NAME                = "type.%ID%.name";
 
 const DIR_EXTENSIONS                  = "extensions";
 const DIR_STAGE                       = "staged";
@@ -7655,4 +7658,15 @@ WinRegInstallLocation.prototype = {
 };
 #endif
 
-AddonManagerPrivate.registerProvider(XPIProvider);
+AddonManagerPrivate.registerProvider(XPIProvider, [
+  new AddonManagerPrivate.AddonType("extension", URI_EXTENSION_STRINGS,
+                                    STRING_TYPE_NAME,
+                                    AddonManager.VIEW_TYPE_LIST, 4000),
+  new AddonManagerPrivate.AddonType("theme", URI_EXTENSION_STRINGS,
+                                    STRING_TYPE_NAME,
+                                    AddonManager.VIEW_TYPE_LIST, 5000),
+  new AddonManagerPrivate.AddonType("locale", URI_EXTENSION_STRINGS,
+                                    STRING_TYPE_NAME,
+                                    AddonManager.VIEW_TYPE_LIST, 2000,
+                                    AddonManager.TYPE_UI_HIDE_EMPTY)
+]);
