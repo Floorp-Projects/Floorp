@@ -144,9 +144,9 @@ NPIdentifierToString(NPIdentifier id)
 }
 
 static inline NPIdentifier
-StringToNPIdentifier(JSString *str)
+StringToNPIdentifier(JSContext *cx, JSString *str)
 {
-    return JSIdToNPIdentifier(INTERNED_STRING_TO_JSID(str));
+    return JSIdToNPIdentifier(INTERNED_STRING_TO_JSID(cx, str));
 }
 
 static inline bool

@@ -260,7 +260,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
 JSBool FASTCALL
 js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 {
-    JSAtom *atom = js_AtomizeString(cx, idstr, 0);
+    JSAtom *atom = js_AtomizeString(cx, idstr);
     if (!atom)
         return JS_NEITHER;
 

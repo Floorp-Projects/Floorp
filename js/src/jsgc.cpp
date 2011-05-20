@@ -400,8 +400,8 @@ Chunk::releaseArena(ArenaHeader *aheader)
         comp->reduceGCTriggerBytes(GC_HEAP_GROWTH_FACTOR * ArenaSize);
     }
 #endif
-    JS_ATOMIC_ADD(&rt->gcBytes, -ArenaSize);
-    JS_ATOMIC_ADD(&comp->gcBytes, -ArenaSize);
+    JS_ATOMIC_ADD(&rt->gcBytes, -int32(ArenaSize));
+    JS_ATOMIC_ADD(&comp->gcBytes, -int32(ArenaSize));
     info.emptyArenaLists.insert(aheader);
     aheader->compartment = NULL;
     ++info.numFree;
@@ -1364,6 +1364,15 @@ template <typename T>
 inline Cell *
 RefillTypedFreeList(JSContext *cx, unsigned thingKind)
 {
+    JS_ASSERT(!cx->runtime->gcRunning);
+
+    /*
+     * For compatibility with older code we tolerate calling the allocator
+     * during the GC in optimized builds.
+     */
+    if (cx->runtime->gcRunning)
+        return NULL;
+
     JSCompartment *compartment = cx->compartment;
     JS_ASSERT(!compartment->freeLists.finalizables[thingKind]);
 
@@ -2690,6 +2699,10 @@ void
 js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 {
     JSRuntime *rt = cx->runtime;
+
+    /* Don't GC while reporting an OOM. */
+    if (rt->inOOMReport)
+        return;
 
     /*
      * Don't collect garbage if the runtime isn't up, and cx is not the last
