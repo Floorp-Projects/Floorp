@@ -3271,7 +3271,7 @@ GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, 
         stackOffset -= fi->callerHeight;
         JSObject* callee = *(JSObject**)(&state->stackBase[stackOffset]);
         JSFunction* fun = GET_FUNCTION_PRIVATE(cx, callee);
-        uintN calleeLevel = fun->u.i.script->staticLevel;
+        uintN calleeLevel = fun->script()->staticLevel;
         if (calleeLevel == upvarLevel) {
             /*
              * Now find the upvar's value in the native stack. stackOffset is
@@ -13737,7 +13737,7 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     debug_only_print0(LC_TMTracer, "\n");
 #endif
 
-    updateAtoms(fun->u.i.script);
+    updateAtoms(fun->script());
     return RECORD_CONTINUE;
 }
 

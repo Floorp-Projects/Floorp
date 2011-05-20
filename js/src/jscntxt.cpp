@@ -488,7 +488,7 @@ DumpFunctionCountMap(const char *title, JSRuntime::FunctionCountMap &map, FILE *
         JSFunction *fun = r.front().key;
         int32 count = r.front().value;
 
-        fprintf(fp, "%10d %s:%u\n", count, fun->u.i.script->filename, fun->u.i.script->lineno);
+        fprintf(fp, "%10d %s:%u\n", count, fun->script()->filename, fun->script()->lineno);
     }
 }
 
