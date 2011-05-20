@@ -1394,49 +1394,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   text-align: end;
 }
 
-.sync-promo-notification {
-  margin: 8px -16px -16px -16px;
-  padding: 8px 16px;
-  background-color: hsla(0,0%,7%,.3);
-  border-top: 1px solid hsla(0,0%,100%,.1);
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-  box-shadow: 0 1px 1px hsla(0,0%,0%,.25) inset;
-}
-
-.sync-promo-icon {
-  list-style-image: url("chrome://browser/skin/sync-24.png");
-  -moz-margin-end: 10px;
-  vertical-align: middle;
-}
-
-.sync-promo-description > .text-link {
-  margin: 0;
-  padding: 0;
-  color: hsl(210,100%,75%);
-}
-
-.sync-promo-closebutton {
-  list-style-image: url("chrome://global/skin/notification/close.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-  border: none;
-  -moz-margin-end: -14px;
-  margin-top: -8px;
-}
-
-.sync-promo-closebutton:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.sync-promo-closebutton:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
-.sync-promo-closebutton > .toolbarbutton-text {
-  padding: 0;
-  margin: 0;
-}
-
 /* ----- SIDEBAR ELEMENTS ----- */
 
 #sidebar,
