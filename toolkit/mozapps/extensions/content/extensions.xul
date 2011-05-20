@@ -211,43 +211,20 @@
     <richlistbox id="categories">
       <richlistitem id="category-search" value="addons://search/"
                     class="category"
-                    name="&view.search.label;"
+                    name="&view.search.label;" priority="0"
                     tooltiptext="&view.search.label;" disabled="true"/>
       <richlistitem id="category-discover" value="addons://discover/"
                     class="category"
-                    name="&view.discover.label;"
+                    name="&view.discover.label;" priority="1000"
                     tooltiptext="&view.discover.label;"/>
-      <richlistitem id="category-languages" value="addons://list/locale"
-                    class="category"
-                    name="&view.locales.label;"
-                    tooltiptext="&view.locales.label;"
-                    hidden="true" persist="hidden"/>
-      <richlistitem id="category-searchengines"
-                    value="addons://list/searchengine"
-                    class="category"
-                    name="&view.searchengines.label;"
-                    tooltiptext="&view.searchengines.label;"
-                    hidden="true" persist="hidden"/>
-      <richlistitem id="category-extensions" value="addons://list/extension"
-                    class="category"
-                    name="&view.features.label;"
-                    tooltiptext="&view.features.label;"/>
-      <richlistitem id="category-themes" value="addons://list/theme"
-                    class="category"
-                    name="&view.appearance2.label;"
-                    tooltiptext="&view.appearance2.label;"/>
-      <richlistitem id="category-plugins" value="addons://list/plugin"
-                    class="category"
-                    name="&view.plugins.label;"
-                    tooltiptext="&view.plugins.label;"/>
       <richlistitem id="category-availableUpdates" value="addons://updates/available"
                     class="category"
-                    name="&view.availableUpdates.label;"
+                    name="&view.availableUpdates.label;" priority="100000"
                     tooltiptext="&view.availableUpdates.label;"
                     disabled="true"/>
       <richlistitem id="category-recentUpdates" value="addons://updates/recent"
                     class="category"
-                    name="&view.recentUpdates.label;"
+                    name="&view.recentUpdates.label;" priority="101000"
                     tooltiptext="&view.recentUpdates.label;" disabled="true"/>
     </richlistbox>
 
