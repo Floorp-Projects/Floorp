@@ -114,6 +114,7 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLVideoElement.idl		\
 	nsIDOMHTMLAudioElement.idl		\
 	nsIDOMValidityState.idl		\
+	nsIDOMDOMStringMap.idl		\
 	$(NULL)
 
 XPIDLSRCS = 					\

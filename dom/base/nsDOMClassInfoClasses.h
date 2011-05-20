@@ -407,6 +407,8 @@ DOMCI_CLASS(FileError)
 DOMCI_CLASS(FileReader)
 DOMCI_CLASS(MozURLProperty)
 
+DOMCI_CLASS(DOMStringMap)
+
 // DOM modal content window class, almost identical to Window
 DOMCI_CLASS(ModalContentWindow)
 
