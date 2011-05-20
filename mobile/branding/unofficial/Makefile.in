@@ -11,15 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla.
+# The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# The Initial Developer of the Original Code is Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Mark Finkle <mfinkle@mozilla.com>
+#   Justin Dolske <dolske@mozilla.com> (original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,29 +34,16 @@
 #
 # ***** END LICENSE BLOCK *****
 
-MOZ_APP_NAME=fennec
-MOZ_APP_UA_NAME=Fennec
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
-MOZ_APP_VERSION=6.0a1
+include $(DEPTH)/config/autoconf.mk
 
-MOZ_BRANDING_DIRECTORY=mobile/branding/unofficial
-MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
-# MOZ_APP_DISPLAYNAME is set by branding/configure.sh
+DIRS = \
+	content \
+	locales \
+	$(NULL)
 
-MOZ_SAFE_BROWSING=
-MOZ_SERVICES_SYNC=1
-
-MOZ_ENABLE_LIBXUL=1
-MOZ_DISABLE_DOMCRYPTO=1
-
-if test "$LIBXUL_SDK"; then
-MOZ_XULRUNNER=1
-else
-MOZ_XULRUNNER=
-MOZ_MORK=
-MOZ_PLACES=1
-fi
-
-# Needed for building our components as part of libxul
-MOZ_APP_COMPONENT_LIBS="browsercomps"
-MOZ_APP_COMPONENT_INCLUDE=nsBrowserComponents.h
+include $(topsrcdir)/config/rules.mk
