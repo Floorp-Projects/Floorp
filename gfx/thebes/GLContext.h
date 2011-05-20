@@ -994,11 +994,18 @@ protected:
         return teximage.forget();
     }
 
+    bool IsOffscreenSizeAllowed(const gfxIntSize& aSize) const {
+        PRInt32 biggerDimension = NS_MAX(aSize.width, aSize.height);
+        PRInt32 maxAllowed = NS_MIN(mMaxRenderbufferSize, mMaxTextureSize);
+        return biggerDimension <= maxAllowed;
+    }
+
 protected:
     nsTArray<nsIntRect> mViewportStack;
     nsTArray<nsIntRect> mScissorStack;
 
     GLint mMaxTextureSize;
+    GLint mMaxRenderbufferSize;
 
 public:
 
