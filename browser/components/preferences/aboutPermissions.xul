@@ -74,7 +74,7 @@
       </richlistbox>
     </vbox>
 
-    <vbox id="permissions-box" hidden="true" flex="1">
+    <vbox id="permissions-box" flex="1">
 
       <deck id="header-deck">
         <hbox id="site-header" class="pref-item" align="center">

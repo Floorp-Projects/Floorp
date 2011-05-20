@@ -587,12 +587,10 @@ let AboutPermissions = {
     for each (let site in this._sites) {
       if (site.host.hasRootDomain(aHost)) {
         if (site == this._selectedSite) {
-          // Clear site data from the DOM to maximize privacy.
-          document.getElementById("site-label").value = "";
-          document.getElementById("permissions-box").hidden = true;
-          this._selectedSite = null;
+          // Replace site-specific interface with "All Sites" interface.
+          this.sitesList.selectedItem = document.getElementById("all-sites-item");
         }
-        
+
         this.sitesList.removeChild(site.listitem);
         delete this._sites[site.host];
       }
@@ -604,6 +602,8 @@ let AboutPermissions = {
    */
   onSitesListSelect: function(event) {
     if (event.target.selectedItem.id == "all-sites-item") {
+      // Clear the header label value from the previously selected site.
+      document.getElementById("site-label").value = "";
       this.manageDefaultPermissions();
       return;
     }
@@ -641,8 +641,6 @@ let AboutPermissions = {
 
     this.updatePasswordsCount();
     this.updateCookiesCount();
-
-    document.getElementById("permissions-box").hidden = false;
   },
 
   /**
