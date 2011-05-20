@@ -9,7 +9,6 @@ conformance/read-pixels-test.html
 conformance/tex-input-validation.html
 conformance/tex-sub-image-2d-bad-args.html
 conformance/uninitialized-test.html
-conformance/webgl-specific.html
 conformance/more/functions/copyTexImage2D.html
 conformance/more/functions/copyTexSubImage2D.html
 conformance/more/functions/copyTexSubImage2DBadArgs.html

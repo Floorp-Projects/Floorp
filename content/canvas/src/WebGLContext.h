@@ -465,6 +465,7 @@ protected:
                                       PRUint32 *texelSize, const char *info);
     PRBool ValidateDrawModeEnum(WebGLenum mode, const char *info);
     PRBool ValidateAttribIndex(WebGLuint index, const char *info);
+    PRBool ValidateStencilParamsForDrawCall();
 
     void Invalidate();
     void DestroyResourcesAndContext();
@@ -591,8 +592,9 @@ protected:
     GLuint mFakeVertexAttrib0BufferObject;
     int mFakeVertexAttrib0BufferStatus;
 
-    WebGLint mStencilRef;
-    WebGLuint mStencilValueMask, mStencilWriteMask;
+    WebGLint mStencilRefFront, mStencilRefBack;
+    WebGLuint mStencilValueMaskFront, mStencilValueMaskBack,
+              mStencilWriteMaskFront, mStencilWriteMaskBack;
     realGLboolean mColorWriteMask[4];
     realGLboolean mDepthWriteMask;
     realGLboolean mScissorTestEnabled;

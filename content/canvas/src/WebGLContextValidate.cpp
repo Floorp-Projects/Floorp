@@ -419,6 +419,24 @@ PRBool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
     }
 }
 
+PRBool WebGLContext::ValidateStencilParamsForDrawCall()
+{
+  const char *msg = "%s set different front and back stencil %s. Drawing in this configuration is not allowed.";
+  if (mStencilRefFront != mStencilRefBack) {
+      ErrorInvalidOperation(msg, "stencilFuncSeparate", "reference values");
+      return PR_FALSE;
+  }
+  if (mStencilValueMaskFront != mStencilValueMaskBack) {
+      ErrorInvalidOperation(msg, "stencilFuncSeparate", "value masks");
+      return PR_FALSE;
+  }
+  if (mStencilWriteMaskFront != mStencilWriteMaskBack) {
+      ErrorInvalidOperation(msg, "stencilMaskSeparate", "write masks");
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 PRBool
 WebGLContext::InitAndValidateGL()
 {
