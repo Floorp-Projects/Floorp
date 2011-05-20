@@ -19,16 +19,19 @@ href="https://bugzilla.mozilla.org/show_bug.cgi?id=657267">Mozilla Bug 657267</a
 <pre id="test">
 <script type="application/javascript">
 
+SimpleTest.waitForExplicitFinish();
+
 /** Test for Bug 657267 **/
 function go() {
     var win = $('ifr').contentWindow;
     try {
-        win.a();
+        is(win.a(), undefined, "Shouldn't be seeing this");
         var thrown = false;
     } catch (e) {
         thrown = /Permission denied/i.test(e);
     }
     ok(thrown, "Should have thrown");
+    SimpleTest.finish();
 }
 
 </script>
