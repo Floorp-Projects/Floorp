@@ -45,17 +45,17 @@ script 7.4.3-10-n.js
 script 7.4.3-11-n.js
 script 7.4.3-12-n.js
 script 7.4.3-13-n.js
-fails-if(Android) script 7.4.3-14-n.js
-fails-if(Android) script 7.4.3-15-n.js
+script 7.4.3-14-n.js
+script 7.4.3-15-n.js
 script 7.4.3-16-n.js
 script 7.4.3-2-n.js
 skip script 7.4.3-3-n.js # obsolete test
-fails-if(Android) script 7.4.3-4-n.js
+script 7.4.3-4-n.js
 script 7.4.3-5-n.js
 script 7.4.3-6-n.js
-fails-if(Android) script 7.4.3-7-n.js
+script 7.4.3-7-n.js
 script 7.4.3-8-n.js
-fails-if(Android) script 7.4.3-9-n.js
+script 7.4.3-9-n.js
 script 7.5-1.js
 script 7.5-10-n.js
 script 7.5-2-n.js
