@@ -56,6 +56,9 @@ _BROWSER_TEST_FILES =	\
 		file_bug503832.html \
 		browser_bug554155.js \
 		browser_bug655273.js \
+		browser_bug655270.js \
+		file_bug655270.html \
+		favicon_bug655270.ico \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
