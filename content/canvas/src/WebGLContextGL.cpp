@@ -3522,7 +3522,10 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
         return NS_OK;                                                   \
     if (isNull)                                                         \
         return NS_OK;                                                   \
-    if (mCurrentProgram != location_object->Program())                  \
+    /* the need to check specifically for !mCurrentProgram here is explained in bug 657556 */ \
+    if (!mCurrentProgram) \
+        return ErrorInvalidOperation("%s: no program is currently bound", info); \
+    if (mCurrentProgram != location_object->Program()) \
         return ErrorInvalidOperation("%s: this uniform location doesn't correspond to the current program", info); \
     if (mCurrentProgram->Generation() != location_object->ProgramGeneration())            \
         return ErrorInvalidOperation("%s: This uniform location is obsolete since the program has been relinked", info); \
