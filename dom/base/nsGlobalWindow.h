@@ -1140,6 +1140,7 @@ protected:
 
   nsresult CheckURL(nsIURI *url, nsIDocShellLoadInfo** aLoadInfo);
 
+  nsString mCachedHash;
   nsWeakPtr mDocShell;
 };
 
