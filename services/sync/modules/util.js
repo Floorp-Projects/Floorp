@@ -35,7 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Utils', 'Svc', 'Services', 'PlacesUtils', 'Str'];
+const EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "NetUtil", "PlacesUtils",
+                          "Utils", "Svc", "Str"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -47,6 +48,7 @@ Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -363,55 +365,6 @@ let Utils = {
    */
   isArray: function Utils_isArray(val) val != null && typeof val == "object" &&
     val.constructor.name == "Array",
-
-  // lazy load objects from a constructor on first access.  It will
-  // work with the global object ('this' in the global context).
-  lazy: function Weave_lazy(dest, prop, ctr) {
-    delete dest[prop];
-    dest.__defineGetter__(prop, Utils.lazyCb(dest, prop, ctr));
-  },
-  lazyCb: function Weave_lazyCb(dest, prop, ctr) {
-    return function() {
-      delete dest[prop];
-      dest[prop] = new ctr();
-      return dest[prop];
-    };
-  },
-
-  // like lazy, but rather than new'ing the 3rd arg we use its return value
-  lazy2: function Weave_lazy2(dest, prop, fn) {
-    delete dest[prop];
-    dest.__defineGetter__(prop, Utils.lazyCb2(dest, prop, fn));
-  },
-  lazyCb2: function Weave_lazyCb2(dest, prop, fn) {
-    return function() {
-      delete dest[prop];
-      return dest[prop] = fn();
-    };
-  },
-
-  lazySvc: function Weave_lazySvc(dest, prop, cid, iface) {
-    let getter = function() {
-      delete dest[prop];
-      let svc = null;
-
-      // Use the platform's service if it exists
-      if (cid in Cc && iface in Ci)
-        svc = Cc[cid].getService(Ci[iface]);
-      else {
-        svc = FakeSvc[cid];
-
-        let log = Log4Moz.repository.getLogger("Service.Util");
-        if (svc == null)
-          log.warn("Component " + cid + " doesn't exist on this platform.");
-        else
-          log.debug("Using a fake svc object for " + cid);
-      }
-
-      return dest[prop] = svc;
-    };
-    dest.__defineGetter__(prop, getter);
-  },
 
   lazyStrings: function Weave_lazyStrings(name) {
     let bundle = "chrome://weave/locale/services/" + name + ".properties";
@@ -1506,7 +1459,7 @@ let FakeSvc = {
     isFake: true
   }
 };
-Utils.lazy2(Utils, "_utf8Converter", function() {
+XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
@@ -1521,22 +1474,18 @@ Svc.Prefs = new Preferences(PREFS_BRANCH);
 Svc.DefaultPrefs = new Preferences({branch: PREFS_BRANCH, defaultBranch: true});
 Svc.Obs = Observers;
 
-this.__defineGetter__("_sessionCID", function() {
-  let appinfo_id = Services.appinfo.ID;
-  return appinfo_id == SEAMONKEY_ID ? "@mozilla.org/suite/sessionstore;1"
-                                    : "@mozilla.org/browser/sessionstore;1";
-});
-[["Env", "@mozilla.org/process/environment;1", "nsIEnvironment"],
- ["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
+let _sessionCID = Services.appinfo.ID == SEAMONKEY_ID ?
+  "@mozilla.org/suite/sessionstore;1" :
+  "@mozilla.org/browser/sessionstore;1";
+
+[["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
  ["KeyFactory", "@mozilla.org/security/keyobjectfactory;1", "nsIKeyObjectFactory"],
- ["Memory", "@mozilla.org/xpcom/memory-service;1", "nsIMemory"],
  ["Private", "@mozilla.org/privatebrowsing;1", "nsIPrivateBrowsingService"],
- ["Profiles", "@mozilla.org/toolkit/profile-service;1", "nsIToolkitProfileService"],
- ["SysInfo", "@mozilla.org/system-info;1", "nsIPropertyBag2"],
- ["Version", "@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],
- ["Session", this._sessionCID, "nsISessionStore"],
-].forEach(function(lazy) Utils.lazySvc(Svc, lazy[0], lazy[1], lazy[2]));
+ ["Session", _sessionCID, "nsISessionStore"]
+].forEach(function([name, contract, iface]) {
+  XPCOMUtils.defineLazyServiceGetter(Svc, name, contract, iface);
+});
 
 Svc.__defineGetter__("Crypto", function() {
   let cryptoSvc;
@@ -1548,8 +1497,9 @@ Svc.__defineGetter__("Crypto", function() {
 });
 
 let Str = {};
-["errors", "sync"]
-  .forEach(function(lazy) Utils.lazy2(Str, lazy, Utils.lazyStrings(lazy)));
+["errors", "sync"].forEach(function(lazy) {
+  XPCOMUtils.defineLazyGetter(Str, lazy, Utils.lazyStrings(lazy));
+});
 
 Svc.Obs.add("xpcom-shutdown", function () {
   for (let name in Svc)
