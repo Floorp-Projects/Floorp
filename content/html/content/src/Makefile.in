@@ -112,6 +112,7 @@ CPPSRCS		= \
 		nsDOMValidityState.cpp \
 		nsIConstraintValidation.cpp \
 		nsRadioVisitor.cpp \
+		nsDOMStringMap.cpp \
 		$(NULL)
 
 ifdef MOZ_MEDIA
