@@ -1,5 +1,3 @@
-conformance/buffer-preserve-test.html
-conformance/context-attributes.html
 conformance/gl-getshadersource.html
 conformance/gl-get-active-attribute.html
 conformance/gl-uniform-bool.html

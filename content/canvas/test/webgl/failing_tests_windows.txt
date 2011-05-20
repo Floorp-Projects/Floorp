@@ -1,5 +1,3 @@
-conformance/buffer-preserve-test.html
-conformance/context-attributes.html
 conformance/gl-getshadersource.html
 conformance/glsl-conformance.html
 conformance/invalid-passed-params.html
