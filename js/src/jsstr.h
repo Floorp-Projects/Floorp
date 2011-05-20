@@ -486,10 +486,11 @@ class JSFixedString : public JSFlatString
     static inline JSFixedString *new_(JSContext *cx, const jschar *chars, size_t length);
 
     /*
-     * Once a JSFixedString has been added to the atom table, this operation
-     * changes the type (in place) of the JSFixedString into a JSAtom.
+     * Once a JSFixedString has been added to the atom state, this operation
+     * changes the type (in place, as reflected by the flag bits) of the
+     * JSFixedString into a JSAtom.
      */
-    inline JSAtom *morphInternedStringIntoAtom();
+    inline JSAtom *morphAtomizedStringIntoAtom();
 };
 
 JS_STATIC_ASSERT(sizeof(JSFixedString) == sizeof(JSString));

@@ -377,7 +377,7 @@ CallMethodIfPresent(JSContext *cx, JSObject *obj, const char *name, int argc, Va
                     Value *rval)
 {
     rval->setUndefined();
-    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name));
     Value fval;
     return atom &&
            js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, &fval) &&
@@ -1023,7 +1023,7 @@ DebugObject_getClass(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, vp, "get class", refobj);
     const char *s = refobj->clasp->name;
-    JSAtom *str = js_Atomize(cx, s, strlen(s), 0);
+    JSAtom *str = js_Atomize(cx, s, strlen(s));
     if (!str)
         return false;
     vp->setString(str);
