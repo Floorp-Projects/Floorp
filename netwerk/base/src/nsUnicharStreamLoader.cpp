@@ -37,31 +37,21 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsUnicharStreamLoader.h"
-#include "nsNetUtil.h"
-#include "nsProxiedService.h"
-#include "nsIChannel.h"
-#include "nsIUnicharInputStream.h"
-#include "nsIConverterInputStream.h"
-#include "nsIPipe.h"
+#include "nsIInputStream.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIServiceManager.h"
 
-#ifdef DEBUG // needed for IsASCII assertion
-#include "nsReadableUtils.h"
-#endif // DEBUG
 
 NS_IMETHODIMP
-nsUnicharStreamLoader::Init(nsIUnicharStreamLoaderObserver *aObserver,
-                            PRUint32 aSegmentSize)
+nsUnicharStreamLoader::Init(nsIUnicharStreamLoaderObserver *aObserver)
 {
   NS_ENSURE_ARG_POINTER(aObserver);
 
-  if (aSegmentSize <= 0) {
-    aSegmentSize = nsIUnicharStreamLoader::DEFAULT_SEGMENT_SIZE;
-  }
-  
   mObserver = aObserver;
-  mCharset.Truncate();
-  mChannel = nsnull; // Leave this null till OnStopRequest
-  mSegmentSize = aSegmentSize;
+
+  if (!mRawData.SetCapacity(512))
+    return NS_ERROR_OUT_OF_MEMORY;
+
   return NS_OK;
 }
 
@@ -73,8 +63,6 @@ nsUnicharStreamLoader::Create(nsISupports *aOuter,
   if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
   nsUnicharStreamLoader* it = new nsUnicharStreamLoader();
-  if (it == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(it);
   nsresult rv = it->QueryInterface(aIID, aResult);
   NS_RELEASE(it);
@@ -85,7 +73,7 @@ NS_IMPL_ISUPPORTS3(nsUnicharStreamLoader, nsIUnicharStreamLoader,
                    nsIRequestObserver, nsIStreamListener)
 
 /* readonly attribute nsIChannel channel; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsUnicharStreamLoader::GetChannel(nsIChannel **aChannel)
 {
   NS_IF_ADDREF(*aChannel = mChannel);
@@ -102,142 +90,178 @@ nsUnicharStreamLoader::GetCharset(nsACString& aCharset)
 
 /* nsIRequestObserver implementation */
 NS_IMETHODIMP
-nsUnicharStreamLoader::OnStartRequest(nsIRequest* request,
-                                      nsISupports *ctxt)
+nsUnicharStreamLoader::OnStartRequest(nsIRequest*, nsISupports*)
 {
-  mContext = ctxt;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStopRequest(nsIRequest *request,
-                                     nsISupports *ctxt,
+NS_IMETHODIMP
+nsUnicharStreamLoader::OnStopRequest(nsIRequest *aRequest,
+                                     nsISupports *aContext,
                                      nsresult aStatus)
 {
-  // if we trigger this assertion, then it means that the channel called
-  // OnStopRequest before returning from AsyncOpen, which is totally
-  // unexpected behavior.
   if (!mObserver) {
-    NS_ERROR("No way we should not have an mObserver here!");
+    NS_ERROR("nsUnicharStreamLoader::OnStopRequest called before ::Init");
     return NS_ERROR_UNEXPECTED;
   }
 
-  // Make sure mChannel points to the channel that we ended up with
-  mChannel = do_QueryInterface(request);
+  mContext = aContext;
+  mChannel = do_QueryInterface(aRequest);
 
-  if (mInputStream) {
-    nsresult rv;
-    // We got some data at some point.  I guess we should tell our
-    // observer about it or something....
-
-    // Determine the charset
-    PRUint32 readCount = 0;
-    rv = mInputStream->ReadSegments(WriteSegmentFun,
-                                    this,
-                                    mSegmentSize, 
-                                    &readCount);
-    if (NS_FAILED(rv)) {
-      rv = mObserver->OnStreamComplete(this, mContext, rv, nsnull);
-      goto cleanup;
-    }
-
-    nsCOMPtr<nsIConverterInputStream> uin =
-      do_CreateInstance("@mozilla.org/intl/converter-input-stream;1",
-                        &rv);
-    if (NS_FAILED(rv)) {
-      rv = mObserver->OnStreamComplete(this, mContext, rv, nsnull);
-      goto cleanup;
-    }
-
-    rv = uin->Init(mInputStream,
-                   mCharset.get(),
-                   mSegmentSize,
-                   nsIConverterInputStream::DEFAULT_REPLACEMENT_CHARACTER);
-    
-    if (NS_FAILED(rv)) {
-      rv = mObserver->OnStreamComplete(this, mContext, rv, nsnull);
-      goto cleanup;
-    }
-    
-    mObserver->OnStreamComplete(this, mContext, aStatus, uin);
-
-  } else {
-    // We never got any data, so just tell our observer that we are
-    // done and give them no stream
-    mObserver->OnStreamComplete(this, mContext, aStatus, nsnull);
+  nsresult rv = NS_OK;
+  if (mRawData.Length() > 0 && NS_SUCCEEDED(aStatus)) {
+    NS_ABORT_IF_FALSE(mBuffer.Length() == 0,
+                      "should not have both decoded and raw data");
+    rv = DetermineCharset();
   }
-  
-  // Clean up.
- cleanup:
+
+  if (NS_FAILED(rv)) {
+    // Call the observer but pass it no data.
+    mObserver->OnStreamComplete(this, mContext, rv, EmptyString());
+  } else {
+    mObserver->OnStreamComplete(this, mContext, aStatus, mBuffer);
+  }
+
   mObserver = nsnull;
-  mChannel = nsnull;
+  mDecoder = nsnull;
   mContext = nsnull;
-  mInputStream = nsnull;
-  mOutputStream = nsnull;
-  return NS_OK;
+  mChannel = nsnull;
+  mCharset.Truncate();
+  mBuffer.Truncate();
+  return rv;
 }
 
 /* nsIStreamListener implementation */
-NS_METHOD
-nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *aInputStream,
-                                       void *aClosure,
-                                       const char *aSegment,
-                                       PRUint32 aToOffset,
-                                       PRUint32 aCount,
-                                       PRUint32 *aWriteCount)
-{
-  nsUnicharStreamLoader *self = (nsUnicharStreamLoader *) aClosure;
-  if (self->mCharset.IsEmpty()) {
-    // First time through.  Call our observer.
-    NS_ASSERTION(self->mObserver, "This should never be possible");
-
-    nsresult rv = self->mObserver->OnDetermineCharset(self,
-                                                      self->mContext,
-                                                      aSegment,
-                                                      aCount,
-                                                      self->mCharset);
-    
-    if (NS_FAILED(rv) || self->mCharset.IsEmpty()) {
-      // The observer told us nothing useful
-      self->mCharset.AssignLiteral("ISO-8859-1");
-    }
-
-    NS_ASSERTION(IsASCII(self->mCharset),
-                 "Why is the charset name non-ascii?  Whose bright idea was that?");
-  }
-  // Don't consume any data
-  *aWriteCount = 0;
-  return NS_BASE_STREAM_WOULD_BLOCK;
-}
-
-
 NS_IMETHODIMP
 nsUnicharStreamLoader::OnDataAvailable(nsIRequest *aRequest,
                                        nsISupports *aContext,
-                                       nsIInputStream *aInputStream, 
+                                       nsIInputStream *aInputStream,
                                        PRUint32 aSourceOffset,
                                        PRUint32 aCount)
 {
-  nsresult rv = NS_OK;
-  if (!mInputStream) {
-    // We are not initialized.  Time to set things up.
-    NS_ASSERTION(!mOutputStream, "Why are we sorta-initialized?");
-    rv = NS_NewPipe(getter_AddRefs(mInputStream),
-                    getter_AddRefs(mOutputStream),
-                    mSegmentSize,
-                    PRUint32(-1),  // give me all the data you can!
-                    PR_TRUE,  // non-blocking input
-                    PR_TRUE); // non-blocking output
-    if (NS_FAILED(rv))
-      return rv;
+  if (!mObserver) {
+    NS_ERROR("nsUnicharStreamLoader::OnDataAvailable called before ::Init");
+    return NS_ERROR_UNEXPECTED;
   }
 
-  PRUint32 writeCount = 0;
-  do {
-    rv = mOutputStream->WriteFrom(aInputStream, aCount, &writeCount);
-    if (NS_FAILED(rv)) return rv;
-    aCount -= writeCount;
-  } while (aCount > 0);
+  mContext = aContext;
+  mChannel = do_QueryInterface(aRequest);
 
+  nsresult rv = NS_OK;
+  if (mDecoder) {
+    // process everything we've got
+    PRUint32 dummy;
+    aInputStream->ReadSegments(WriteSegmentFun, this, aCount, &dummy);
+  } else {
+    // no decoder yet.  Read up to 512 octets into mRawData (this is
+    // the cutoff specified in draft-abarth-mime-sniff-06).  If we can
+    // get that much, then go ahead and fire charset detection and
+    // read the rest.  Otherwise wait for more data.
+
+    PRUint32 haveRead = mRawData.Length();
+    PRUint32 toRead = 512 - haveRead;
+    PRUint32 n;
+    char *here = mRawData.BeginWriting() + haveRead;
+
+    rv = aInputStream->Read(here, toRead, &n);
+    if (NS_SUCCEEDED(rv)) {
+      mRawData.SetLength(haveRead + n);
+      if (mRawData.Length() == 512) {
+        rv = DetermineCharset();
+        if (NS_SUCCEEDED(rv)) {
+          // process what's left
+          PRUint32 dummy;
+          aInputStream->ReadSegments(WriteSegmentFun, this, aCount - n, &dummy);
+        }
+      } else {
+        NS_ABORT_IF_FALSE(n == aCount, "didn't read as much as was available");
+      }
+    }
+  }
+
+  mContext = nsnull;
+  mChannel = nsnull;
+  return rv;
+}
+
+/* internal */
+static NS_DEFINE_CID(kCharsetConverterManagerCID,
+                     NS_ICHARSETCONVERTERMANAGER_CID);
+
+nsresult
+nsUnicharStreamLoader::DetermineCharset()
+{
+  nsresult rv = mObserver->OnDetermineCharset(this, mContext,
+                                              mRawData, mCharset);
+  if (NS_FAILED(rv) || mCharset.IsEmpty()) {
+    // The observer told us nothing useful
+    mCharset.AssignLiteral("UTF-8");
+  }
+
+  // Create the decoder for this character set
+  nsCOMPtr<nsICharsetConverterManager> ccm =
+    do_GetService(kCharsetConverterManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = ccm->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mDecoder));
+  if (NS_FAILED(rv)) return rv;
+
+  // Process the data into mBuffer
+  PRUint32 dummy;
+  rv = WriteSegmentFun(nsnull, this,
+                       mRawData.BeginReading(),
+                       0, mRawData.Length(),
+                       &dummy);
+  mRawData.Truncate();
+  return rv;
+}
+
+NS_METHOD
+nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *,
+                                       void *aClosure,
+                                       const char *aSegment,
+                                       PRUint32,
+                                       PRUint32 aCount,
+                                       PRUint32 *aWriteCount)
+{
+  nsUnicharStreamLoader* self = static_cast<nsUnicharStreamLoader*>(aClosure);
+
+  PRUint32 haveRead = self->mBuffer.Length();
+  PRUint32 consumed = 0;
+  nsresult rv;
+  do {
+    PRInt32 srcLen = aCount - consumed;
+    PRInt32 dstLen;
+    self->mDecoder->GetMaxLength(aSegment + consumed, srcLen, &dstLen);
+
+    PRUint32 capacity = haveRead + dstLen;
+    if (!self->mBuffer.SetCapacity(capacity)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    rv = self->mDecoder->Convert(aSegment + consumed,
+                                 &srcLen,
+                                 self->mBuffer.BeginWriting() + haveRead,
+                                 &dstLen);
+    haveRead += dstLen;
+    // XXX if srcLen is negative, we want to drop the _first_ byte in
+    // the erroneous byte sequence and try again.  This is not quite
+    // possible right now -- see bug 160784
+    consumed += srcLen;
+    if (NS_FAILED(rv)) {
+      NS_ASSERTION(0 < capacity - haveRead,
+                   "Decoder returned an error but filled the output buffer! "
+                   "Should not happen.");
+      self->mBuffer.BeginWriting()[haveRead++] = 0xFFFD;
+      ++consumed;
+      // XXX this is needed to make sure we don't underrun our buffer;
+      // bug 160784 again
+      consumed = PR_MAX(consumed, 0);
+      self->mDecoder->Reset();
+    }
+  } while (consumed < aCount);
+
+  self->mBuffer.SetLength(haveRead);
+  *aWriteCount = aCount;
   return NS_OK;
 }

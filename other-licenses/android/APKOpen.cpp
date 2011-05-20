@@ -767,7 +767,7 @@ ChildProcessInit(int argc, char* argv[])
 {
   int i;
   for (i = 0; i < (argc - 1); i++) {
-    if (strcmp(argv[i], "-omnijar"))
+    if (strcmp(argv[i], "-greomni"))
       continue;
 
     i = i + 1;

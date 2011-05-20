@@ -55,6 +55,7 @@ _BROWSER_TEST_FILES =	\
 		browser_loadDisallowInherit.js \
 		file_bug503832.html \
 		browser_bug554155.js \
+		browser_bug655273.js \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

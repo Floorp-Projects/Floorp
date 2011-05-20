@@ -31,9 +31,9 @@ include zoom/reftest.list
 == canvas-drawImage-simple-1a.html lime100x100-ref.html
 == canvas-drawImage-simple-1b.html lime100x100-ref.html
 
-fails-if(Android) fails-if(gtk2Widget) fails-if(winWidget) == canvas-drawImage-scale-1a.html lime100x100-ref.html # XXX top & left edges fuzzy
-fails-if(Android) fails-if(gtk2Widget) fails-if(winWidget) == canvas-drawImage-scale-1b.html lime100x100-ref.html # XXX top & left edges fuzzy
-fails-if(Android) fails-if(gtk2Widget) fails-if(winWidget) == canvas-drawImage-scale-1c.html lime100x100-ref.html # XXX all edges fuzzy
+== canvas-drawImage-scale-1a.html lime100x100-ref.html
+== canvas-drawImage-scale-1b.html lime100x100-ref.html
+== canvas-drawImage-scale-1c.html lime100x100-ref.html
 
 fails == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html # XXX all edges fuzzy
 fails == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html # XXX all edges fuzzy

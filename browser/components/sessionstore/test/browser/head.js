@@ -112,18 +112,33 @@ function waitForBrowserState(aState, aSetStateCallback) {
 // waitForSaveState waits for a state write but not necessarily for the state to
 // turn dirty.
 function waitForSaveState(aSaveStateCallback) {
-  let topic = "sessionstore-state-write";
   let observing = false;
+  let topic = "sessionstore-state-write";
+
+  let sessionSaveTimeout = 1000 +
+    Services.prefs.getIntPref("browser.sessionstore.interval");
+
+  let timeout = setTimeout(function () {
+    Services.obs.removeObserver(observer, topic, false);
+    aSaveStateCallback();
+  }, sessionSaveTimeout);
+
   function observer(aSubject, aTopic, aData) {
     Services.obs.removeObserver(observer, topic, false);
+    timeout = clearTimeout(timeout);
     observing = false;
     executeSoon(aSaveStateCallback);
   }
+
   registerCleanupFunction(function() {
     if (observing) {
       Services.obs.removeObserver(observer, topic, false);
     }
+    if (timeout) {
+      clearTimeout(timeout);
+    }
   });
+
   observing = true;
   Services.obs.addObserver(observer, topic, false);
 };

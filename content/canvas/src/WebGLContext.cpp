@@ -359,6 +359,12 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (gl && mWidth == width && mHeight == height)
         return NS_OK;
 
+    // Zero-sized surfaces can cause problems.
+    if (width == 0 || height == 0) {
+        width = 1;
+        height = 1;
+    }
+
     // If we already have a gl context, then we just need to resize
     // FB0.
     if (gl &&

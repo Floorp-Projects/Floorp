@@ -1832,7 +1832,7 @@ nsSocketTransport::SetEventSink(nsITransportEventSink *sink,
 }
 
 NS_IMETHODIMP
-nsSocketTransport::IsAlive(PRBool *result)
+nsSocketTransport::IsAlive(PRBool aPassive, PRBool *result)
 {
     *result = PR_FALSE;
 
@@ -1848,12 +1848,32 @@ nsSocketTransport::IsAlive(PRBool *result)
 
     // XXX do some idle-time based checks??
 
-    char c;
-    PRInt32 rval = PR_Recv(fd, &c, 1, PR_MSG_PEEK, 0);
+    if (aPassive) {
+        *result = PR_TRUE;                        /* presume true */
 
-    if ((rval > 0) || (rval < 0 && PR_GetError() == PR_WOULD_BLOCK_ERROR))
-        *result = PR_TRUE;
+        PRPollDesc desc;
+        desc.fd = mFD;
 
+        // include POLL_READ in the in_flags in order to take
+        // conditions PK11LoggedOut / AlreadyShutDown into account on SSL
+        // sockets as a workaround for bug 658138
+        desc.in_flags = PR_POLL_READ | PR_POLL_EXCEPT;
+        desc.out_flags = 0;
+
+        if ((PR_Poll(&desc, 1, 0) == 1) &&
+            (desc.out_flags &
+             (PR_POLL_EXCEPT | PR_POLL_ERR | PR_POLL_NVAL | PR_POLL_HUP))) {
+            *result = PR_FALSE;
+        }
+    }
+    else {
+        char c;
+        PRInt32 rval = PR_Recv(fd, &c, 1, PR_MSG_PEEK, 0);
+        
+        if ((rval > 0) || (rval < 0 && PR_GetError() == PR_WOULD_BLOCK_ERROR))
+            *result = PR_TRUE;
+    }
+    
     {
         MutexAutoLock lock(mLock);
         ReleaseFD_Locked(fd);

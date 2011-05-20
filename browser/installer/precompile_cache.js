@@ -65,20 +65,7 @@ function load(url) {
 function load_entries(entries, prefix) {
   while (entries.hasMore()) {
     var c = entries.getNext();
-    // Required to ensure sync js is only loaded in load_custom_entries.
-    // That function loads the sync js with the right URIs.
-    if (c.indexOf("services-sync") >= 0)
-      continue;
-    if (c.indexOf("services-crypto") >= 0)
-      continue;
     load(prefix + c);
-  }
-}
-
-function load_custom_entries(entries, subst) {
-  while (entries.hasMore()) {
-    var c = entries.getNext();
-    load("resource://" + subst + "/" + c.replace("modules/" + subst + "/", ""));
   }
 }
 
@@ -103,27 +90,10 @@ function populate_startupcache(omnijarName, startupcacheName) {
   scFile.append(startupcacheName);
   setenv("MOZ_STARTUP_CACHE", scFile.path);
 
-  // the sync part below doesn't work as smoothly
-  let ioService = Cc["@mozilla.org/network/io-service;1"].
-    getService(Ci.nsIIOService);
-  let uri = ioService.newURI("resource:///modules/services-sync/",
-                             null, null);
-  let resProt = ioService.getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("services-sync", uri);
+  let prefix = "resource:///";
 
-  uri = ioService.newURI("resource:///modules/services-crypto/",
-                         null, null);
-  resProt.setSubstitution("services-crypto", uri);
-
-  load_entries(zipreader.findEntries("components/*js"), "resource://gre/");
-
-  load_custom_entries(zipreader.findEntries("modules/services-sync/*js"),
-                      "services-sync");
-  load_custom_entries(zipreader.findEntries("modules/services-crypto/*js"),
-                      "services-crypto");
-
-  load_entries(zipreader.findEntries("modules/*js"), "resource://gre/");
-  load_entries(zipreader.findEntries("modules/*jsm"), "resource://gre/");
+  load_entries(zipreader.findEntries("components/*js"), prefix);
+  load_entries(zipreader.findEntries("modules/*js"), prefix);
+  load_entries(zipreader.findEntries("modules/*jsm"), prefix);
   zipreader.close();
 }
