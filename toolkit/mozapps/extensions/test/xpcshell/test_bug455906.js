@@ -239,7 +239,7 @@ function load_blocklist(file) {
 }
 
 function check_addon_state(addon) {
-  return addon.userDisabled + "," + addon.appDisabled;
+  return addon.userDisabled + "," + addon.softDisabled + "," + addon.appDisabled;
 }
 
 function check_plugin_state(plugin) {
@@ -278,13 +278,13 @@ function run_test() {
 // Before every main test this is the state the add-ons are meant to be in
 function check_initial_state(callback) {
   AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
-    do_check_eq(check_addon_state(addons[0]), "true,false");
-    do_check_eq(check_addon_state(addons[1]), "false,false");
-    do_check_eq(check_addon_state(addons[2]), "false,false");
-    do_check_eq(check_addon_state(addons[3]), "true,false");
-    do_check_eq(check_addon_state(addons[4]), "false,false");
-    do_check_eq(check_addon_state(addons[5]), "false,true");
-    do_check_eq(check_addon_state(addons[6]), "false,true");
+    do_check_eq(check_addon_state(addons[0]), "true,false,false");
+    do_check_eq(check_addon_state(addons[1]), "false,false,false");
+    do_check_eq(check_addon_state(addons[2]), "false,false,false");
+    do_check_eq(check_addon_state(addons[3]), "true,true,false");
+    do_check_eq(check_addon_state(addons[4]), "false,false,false");
+    do_check_eq(check_addon_state(addons[5]), "false,false,true");
+    do_check_eq(check_addon_state(addons[6]), "false,false,true");
   
     do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
     do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
@@ -307,17 +307,17 @@ function check_test_pt1() {
         do_throw("Addon " + (i + 1) + " did not get installed correctly");
     }
   
-    do_check_eq(check_addon_state(addons[0]), "false,false");
-    do_check_eq(check_addon_state(addons[1]), "false,false");
-    do_check_eq(check_addon_state(addons[2]), "false,false");
+    do_check_eq(check_addon_state(addons[0]), "false,false,false");
+    do_check_eq(check_addon_state(addons[1]), "false,false,false");
+    do_check_eq(check_addon_state(addons[2]), "false,false,false");
   
-    // Warn add-ons should be user disabled automatically
-    do_check_eq(check_addon_state(addons[3]), "true,false");
-    do_check_eq(check_addon_state(addons[4]), "true,false");
+    // Warn add-ons should be soft disabled automatically
+    do_check_eq(check_addon_state(addons[3]), "true,true,false");
+    do_check_eq(check_addon_state(addons[4]), "true,true,false");
   
     // Blocked and incompatible should be app disabled only
-    do_check_eq(check_addon_state(addons[5]), "false,true");
-    do_check_eq(check_addon_state(addons[6]), "false,true");
+    do_check_eq(check_addon_state(addons[5]), "false,false,true");
+    do_check_eq(check_addon_state(addons[6]), "false,false,true");
   
     // We've overridden the plugin host so we cannot tell what that would have
     // initialised the plugins as
@@ -376,19 +376,19 @@ function check_test_pt2() {
 
   AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
     // Should have disabled this add-on as requested
-    do_check_eq(check_addon_state(addons[2]), "true,false");
+    do_check_eq(check_addon_state(addons[2]), "true,true,false");
     do_check_eq(check_plugin_state(PLUGINS[2]), "true,false");
 
-    // The blocked add-on should have changed to user disabled
-    do_check_eq(check_addon_state(addons[5]), "true,false");
+    // The blocked add-on should have changed to soft disabled
+    do_check_eq(check_addon_state(addons[5]), "true,true,false");
     do_check_eq(check_plugin_state(PLUGINS[5]), "true,false");
 
     // These should have been unchanged
-    do_check_eq(check_addon_state(addons[0]), "true,false");
-    do_check_eq(check_addon_state(addons[1]), "false,false");
-    do_check_eq(check_addon_state(addons[3]), "true,false");
-    do_check_eq(check_addon_state(addons[4]), "false,false");
-    do_check_eq(check_addon_state(addons[6]), "false,true");
+    do_check_eq(check_addon_state(addons[0]), "true,false,false");
+    do_check_eq(check_addon_state(addons[1]), "false,false,false");
+    do_check_eq(check_addon_state(addons[3]), "true,true,false");
+    do_check_eq(check_addon_state(addons[4]), "false,false,false");
+    do_check_eq(check_addon_state(addons[6]), "false,false,true");
     do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
     do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
     do_check_eq(check_plugin_state(PLUGINS[3]), "true,false");
@@ -460,20 +460,22 @@ function check_test_pt3() {
 
   AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
     // All should have gained the blocklist state, user disabled as previously
-    do_check_eq(check_addon_state(addons[0]), "true,true");
-    do_check_eq(check_addon_state(addons[1]), "false,true");
-    do_check_eq(check_addon_state(addons[2]), "false,true");
-    do_check_eq(check_addon_state(addons[3]), "true,true");
-    do_check_eq(check_addon_state(addons[4]), "false,true");
+    do_check_eq(check_addon_state(addons[0]), "true,false,true");
+    do_check_eq(check_addon_state(addons[1]), "false,false,true");
+    do_check_eq(check_addon_state(addons[2]), "false,false,true");
+    do_check_eq(check_addon_state(addons[4]), "false,false,true");
     do_check_eq(check_plugin_state(PLUGINS[0]), "true,true");
     do_check_eq(check_plugin_state(PLUGINS[1]), "false,true");
     do_check_eq(check_plugin_state(PLUGINS[2]), "false,true");
     do_check_eq(check_plugin_state(PLUGINS[3]), "true,true");
     do_check_eq(check_plugin_state(PLUGINS[4]), "false,true");
 
+    // Should have gained the blocklist state but no longer be soft disabled
+    do_check_eq(check_addon_state(addons[3]), "false,false,true");
+
     // Shouldn't be changed
-    do_check_eq(check_addon_state(addons[5]), "false,true");
-    do_check_eq(check_addon_state(addons[6]), "false,true");
+    do_check_eq(check_addon_state(addons[5]), "false,false,true");
+    do_check_eq(check_addon_state(addons[6]), "false,false,true");
     do_check_eq(check_plugin_state(PLUGINS[5]), "false,true");
 
     // Back to starting state
@@ -511,16 +513,18 @@ function check_test_pt4() {
 
   AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
     // This should have become unblocked
-    do_check_eq(check_addon_state(addons[5]), "false,false");
+    do_check_eq(check_addon_state(addons[5]), "false,false,false");
     do_check_eq(check_plugin_state(PLUGINS[5]), "false,false");
 
+    // Should get re-enabled
+    do_check_eq(check_addon_state(addons[3]), "false,false,false");
+
     // No change for anything else
-    do_check_eq(check_addon_state(addons[0]), "true,false");
-    do_check_eq(check_addon_state(addons[1]), "false,false");
-    do_check_eq(check_addon_state(addons[2]), "false,false");
-    do_check_eq(check_addon_state(addons[3]), "true,false");
-    do_check_eq(check_addon_state(addons[4]), "false,false");
-    do_check_eq(check_addon_state(addons[6]), "false,true");
+    do_check_eq(check_addon_state(addons[0]), "true,false,false");
+    do_check_eq(check_addon_state(addons[1]), "false,false,false");
+    do_check_eq(check_addon_state(addons[2]), "false,false,false");
+    do_check_eq(check_addon_state(addons[4]), "false,false,false");
+    do_check_eq(check_addon_state(addons[6]), "false,false,true");
     do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
     do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
     do_check_eq(check_plugin_state(PLUGINS[2]), "false,false");

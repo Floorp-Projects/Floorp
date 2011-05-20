@@ -1,0 +1,112 @@
+/* background styles borrowed from extensions.css */
+#permissions-page {
+  -moz-appearance: none;
+  padding: 18px;
+  background-repeat: repeat;
+  color: -moz-dialogText;
+  background-color: -moz-dialog;
+  background-image: /* Fade-out texture at the top, and blend with browser tab */
+                    -moz-linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0) 30%),
+                    /* Texture */
+                    url("chrome://mozapps/skin/extensions/background-texture.png");
+}
+
+#permissions-content {
+  background-color: rgba(255, 255, 255, 0.35);
+  background-image: -moz-linear-gradient(top,
+                                         rgba(255, 255, 255, 0),
+                                         rgba(255, 255, 255, 0.75));
+  border: 1px solid #C3CEDF;
+  border-radius: 5px;
+}
+
+/* sites box */
+
+#sites-box {
+  padding: 10px;
+}
+
+.site {
+  width: 250px;
+  overflow-x: hidden;
+  padding: 4px;
+  border-bottom: 1px solid ThreeDLightShadow;
+}
+
+.site-favicon {
+  height: 16px;
+  width: 16px;
+  -moz-margin-end: 4px;
+}
+
+.site-domain {
+  max-width: 200px; /* crop set in XBL will ellipsize the domain if it's too long */
+}
+
+/* permissions box */
+
+#permissions-box {
+  padding-top: 10px;
+  overflow-y: auto;
+}
+
+#site-description {
+  font-size: 125%;
+  -moz-margin-start: 6px; /* to match button margin */
+}
+
+#site-label {
+  font-weight: bold;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#defaults-description {
+  font-size: 125%;
+  font-weight: bold;
+  -moz-margin-start: 6px;
+}
+
+.pref-item {
+  margin-bottom: 10px;
+}
+
+.pref-icon {
+  width: 36px;
+  height: 36px;
+  -moz-margin-end: 10px;
+}
+
+.pref-icon[type="password"] {
+  list-style-image: url(chrome://mozapps/skin/passwordmgr/key-64.png);
+}
+.pref-icon[type="cookie"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+.pref-icon[type="geo"] {
+  list-style-image: url(chrome://browser/skin/Geolocation-64.png);
+}
+.pref-icon[type="indexedDB"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+.pref-icon[type="install"] {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
+}
+.pref-icon[type="popup"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+.pref-icon[type="image"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+
+.pref-title {
+  font-size: 125%;
+  margin-bottom: 0;
+  font-weight: bold;
+}
+
+.pref-menulist {
+  margin-left: 6px;
+  margin-right: 6px;
+  min-width: 10em; /* native menulists ellipsize their longest entries by default on many themes */
+}

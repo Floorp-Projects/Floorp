@@ -40,7 +40,7 @@ MOZ_APP_UA_NAME=Fennec
 
 MOZ_APP_VERSION=6.0a1
 
-MOZ_BRANDING_DIRECTORY=mobile/branding/nightly
+MOZ_BRANDING_DIRECTORY=mobile/branding/unofficial
 MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
 # MOZ_APP_DISPLAYNAME is set by branding/configure.sh
 

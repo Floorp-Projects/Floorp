@@ -185,7 +185,7 @@ add_test(function() {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
-    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -303,7 +303,7 @@ add_test(function() {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
-    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -356,7 +356,7 @@ add_test(function() {
     info("Part 1");
     is_in_list(aManager, "addons://list/plugin", false, false);
 
-    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-extensions"), { }, aManager);
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-extension"), { }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -625,7 +625,7 @@ add_test(function() {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
-    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -783,7 +783,7 @@ add_test(function() {
         waitForLoad(aManager, function() {
           is_in_discovery(aManager, SECOND_URL, true, false);
 
-          EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
+          EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
 
           wait_for_view_load(aManager, function(aManager) {
             is_in_list(aManager, "addons://list/plugin", true, false);
@@ -831,7 +831,7 @@ add_test(function() {
           waitForLoad(aManager, function() {
             is_in_discovery(aManager, SECOND_URL, true, false);
 
-            EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
+            EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
 
             wait_for_view_load(aManager, function(aManager) {
               is_in_list(aManager, "addons://list/plugin", true, false);

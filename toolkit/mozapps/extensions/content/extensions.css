@@ -156,8 +156,12 @@ xhtml|link {
 
 /* Plugins aren't yet disabled by safemode (bug 342333),
    so don't show that warning when viewing plugins. */
-#addons-page[warning="safemode"] .view-pane[type="plugin"] .global-warning,
+#addons-page[warning="safemode"] .view-pane[type="plugin"] .global-warning-container,
 #addons-page[warning="safemode"] #detail-view[loading="true"] .global-warning {
+  display: none;
+}
+
+#addons-page .view-pane:not([type="plugin"]) .global-info-container {
   display: none;
 }
 

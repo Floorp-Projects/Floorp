@@ -1813,6 +1813,15 @@ CSS_PROP_DISPLAY(
     nsnull,
     offsetof(nsStyleDisplay, mOpacity),
     eStyleAnimType_float) // XXX bug 3935
+CSS_PROP_DISPLAY(
+    -moz-orient,
+    orient,
+    CSS_PROP_DOMPROP_PREFIXED(Orient),
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_HK,
+    kOrientKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_BACKENDONLY(
     orphans,
     orphans,
