@@ -742,9 +742,9 @@ let UI = {
       } else {
         // If we're currently in the process of entering private browsing,
         // we don't want to go to the Tab View UI. 
-        if (self._privateBrowsing.transitionMode)
-          return; 
-          
+        if (self._storageBusyCount)
+          return;
+
         // if not closing the last tab
         if (gBrowser.tabs.length > 1) {
           // Don't return to TabView if there are any app tabs

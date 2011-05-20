@@ -506,7 +506,7 @@ class XPCShellTests(object):
             print "<<<<<<<"
 
           if (self.getReturnCode(proc) != 0) or \
-              (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-FAIL", stdout, re.MULTILINE)) or \
+              (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-", stdout, re.MULTILINE)) or \
               (stdout and re.search(": SyntaxError:", stdout, re.MULTILINE)):
             print "TEST-UNEXPECTED-FAIL | %s | test failed (with xpcshell return code: %d), see following log:" % (test, self.getReturnCode(proc))
             print_stdout(stdout)

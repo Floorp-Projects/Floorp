@@ -62,7 +62,10 @@ function test() {
   let testStateAfterEnteringPB = function () {
     let prefix = 'enter';
     ok(!pb.privateBrowsingEnabled, prefix + ': private browsing is disabled');
-    registerCleanupFunction(function () pb.privateBrowsingEnabled = false);
+    registerCleanupFunction(function () {
+      if (pb.privateBrowsingEnabled)
+        pb.privateBrowsingEnabled = false
+    });
 
     togglePrivateBrowsing(function () {
       assertTabViewIsHidden(prefix);
@@ -110,6 +113,8 @@ function test() {
 
   showTabView(function () {
     cw = TabView.getContentWindow();
+    assertNumberOfGroups('start', 1);
+
     createGroupItem();
 
     afterAllTabsLoaded(function () {

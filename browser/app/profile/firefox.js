@@ -785,6 +785,8 @@ pref("browser.sessionstore.max_resumed_crashes", 1);
 //       Other tabs won't be restored until they are selected
 //   N = The number of tabs to restore at the same time
 pref("browser.sessionstore.max_concurrent_tabs", 3);
+// Whether to automatically restore hidden tabs (i.e., tabs in other tab groups) or not
+pref("browser.sessionstore.restore_hidden_tabs", false);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
