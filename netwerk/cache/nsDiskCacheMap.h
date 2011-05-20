@@ -78,9 +78,9 @@ struct nsDiskCacheEntry;
  *      2 = 1k block file
  *      3 = 4k block file
  *
- *  eFileSizeMask note:  Files larger than 64 MiB have zero size stored in the
- *                       location.  The file itself must be examined to determine
- *                       its actual size.  (XXX This is broken in places -darin)
+ *  eFileSizeMask note:  Files larger than 65535 KiB have this limit stored in
+ *                       the location.  The file itself must be examined to
+ *                       determine its actual size if necessary.
  *
  *****************************************************************************/
 
@@ -99,9 +99,17 @@ struct nsDiskCacheEntry;
 #define kMinRecordCount    512
 
 #define kSeparateFile      0
-// #define must always  be <= 65535KB, or overflow. See bug 443067 Comment 8
 #define kMaxDataFileSize   5 * 1024 * 1024  // 5 MB (in bytes) 
 #define kBuckets           (1 << 5)    // must be a power of 2!
+
+// Maximum size in K which can be stored in the location (see eFileSizeMask).
+// Both data and metadata can be larger, but only up to kMaxDataSizeK can be
+// counted into total cache size. I.e. if there are entries where either data or
+// metadata is larger than kMaxDataSizeK, the total cache size will be
+// inaccurate (smaller) than the actual cache size. The alternative is to stat
+// the files to find the real size, which was decided against for performance
+// reasons. See bug #651100 comment #21.
+#define kMaxDataSizeK      0xFFFF
 
 // preallocate up to 1MB of separate cache file
 #define kPreallocateLimit  1 * 1024 * 1024
