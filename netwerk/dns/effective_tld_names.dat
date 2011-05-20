@@ -834,7 +834,16 @@ org.ee
 fie.ee
 
 // eg : http://en.wikipedia.org/wiki/.eg
-*.eg
+eg  
+com.eg
+edu.eg
+eun.eg
+gov.eg
+mil.eg
+name.eg
+net.eg
+org.eg
+sci.eg
 
 // er : http://en.wikipedia.org/wiki/.er
 *.er
@@ -4399,6 +4408,7 @@ or.ug
 !nls.uk
 !national-library-scotland.uk
 !parliament.uk
+!police.uk
 
 // us : http://en.wikipedia.org/wiki/.us
 us
