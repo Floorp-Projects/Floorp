@@ -52,6 +52,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 // Constants for makeSyncCallback, waitForSyncCallback
 const CB_READY = {};
@@ -296,32 +297,12 @@ let Utils = {
     window.addEventListener("unload", function() windows[url] = null, false);
   },
 
-  // Returns a nsILocalFile representing a file relative to the
-  // current user's profile directory.  If the argument is a string,
-  // it should be a string with unix-style slashes for directory names
-  // (these slashes are automatically converted to platform-specific
-  // path separators).
-  //
-  // Alternatively, if the argument is an object, it should contain
-  // the following attributes:
-  //
-  //   path: the path to the file, relative to the current user's
-  //   profile dir.
-  //
-  //   autoCreate: whether or not the file should be created if it
-  //   doesn't already exist.
-  getProfileFile: function getProfileFile(arg) {
-    if (typeof arg == "string")
-      arg = {path: arg};
-
-    let pathParts = arg.path.split("/");
-    let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    file.QueryInterface(Ci.nsILocalFile);
-    for (let i = 0; i < pathParts.length; i++)
-      file.append(pathParts[i]);
-    if (arg.autoCreate && !file.exists())
-      file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
-    return file;
+  // Returns a nsILocalFile representing a file relative to the current
+  // user's profile directory.  The argument should be a string with
+  // unix-style slashes for directory names (these slashes are automatically
+  // converted to platform-specific path separators).
+  getProfileFile: function getProfileFile(path) {
+    return FileUtils.getFile("ProfD", path.split("/"), true);
   },
 
   /**
@@ -1031,14 +1012,11 @@ let Utils = {
     if (that._log)
       that._log.trace("Saving json to disk: " + filePath);
 
-    let file = Utils.getProfileFile({ autoCreate: true, path: filePath });
+    let file = Utils.getProfileFile(filePath);
     let json = typeof obj == "function" ? obj.call(that) : obj;
     let out = JSON.stringify(json);
 
-    let fos = Cc["@mozilla.org/network/safe-file-output-stream;1"]
-                .createInstance(Ci.nsIFileOutputStream);
-    fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE,
-             fos.DEFER_OPEN);
+    let fos = FileUtils.openSafeFileOutputStream(file);
     let is = this._utf8Converter.convertToInputStream(out);
     NetUtil.asyncCopy(is, fos, function (result) {
       if (typeof callback == "function") {
