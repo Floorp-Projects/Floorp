@@ -224,7 +224,9 @@ public:
   /**
    * Record aItem as a display item that is rendered by aLayer.
    */
-  void AddLayerDisplayItem(Layer* aLayer, nsDisplayItem* aItem);
+  void AddLayerDisplayItem(Layer* aLayer,
+                           nsDisplayItem* aItem,
+                           LayerState aLayerState);
 
   /**
    * Record aItem as a display item that is rendered by the ThebesLayer
@@ -297,15 +299,16 @@ public:
   static PRBool HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
 
   /**
-   * Save aMatrix as the transform that was in aLayer when we last painted.
+   * Save transform that was in aLayer when we last painted. It must be an integer
+   * translation.
    */
-  void SaveLastPaintTransform(ThebesLayer* aLayer, const gfx3DMatrix& aMatrix);
+  void SaveLastPaintOffset(ThebesLayer* aLayer);
   /**
-   * Get the transform that was in aLayer when we last painted. It's either
+   * Get the translation transform that was in aLayer when we last painted. It's either
    * the transform saved by SaveLastPaintTransform, or else the transform
-   * that's currently in the layer.
+   * that's currently in the layer (which must be an integer translation).
    */
-  const gfx3DMatrix& GetLastPaintTransform(ThebesLayer* aLayer);
+  nsIntPoint GetLastPaintOffset(ThebesLayer* aLayer);
 
   /**
    * Clip represents the intersection of an optional rectangle with a
@@ -381,11 +384,12 @@ protected:
    */
   class DisplayItemData {
   public:
-    DisplayItemData(Layer* aLayer, PRUint32 aKey)
-      : mLayer(aLayer), mDisplayItemKey(aKey) {}
+    DisplayItemData(Layer* aLayer, PRUint32 aKey, LayerState aLayerState)
+      : mLayer(aLayer), mDisplayItemKey(aKey), mLayerState(aLayerState) {}
 
     nsRefPtr<Layer> mLayer;
     PRUint32        mDisplayItemKey;
+    LayerState    mLayerState;
   };
 
   static void InternalDestroyDisplayItemData(nsIFrame* aFrame,
@@ -415,7 +419,7 @@ protected:
       NS_ERROR("Should never be called, since we ALLOW_MEMMOVE");
     }
 
-    PRBool HasContainerLayer();
+    PRBool HasNonEmptyContainerLayer();
 
     nsTArray<DisplayItemData> mData;
 
@@ -451,7 +455,7 @@ protected:
   public:
     ThebesLayerItemsEntry(const ThebesLayer *key) :
         nsPtrHashKey<ThebesLayer>(key), mContainerLayerFrame(nsnull),
-        mHasExplicitLastPaintTransform(PR_FALSE) {}
+        mHasExplicitLastPaintOffset(PR_FALSE) {}
     ThebesLayerItemsEntry(const ThebesLayerItemsEntry &toCopy) :
       nsPtrHashKey<ThebesLayer>(toCopy.mKey), mItems(toCopy.mItems)
     {
@@ -460,10 +464,10 @@ protected:
 
     nsTArray<ClippedDisplayItem> mItems;
     nsIFrame* mContainerLayerFrame;
-    // The transform set on this ThebesLayer before we started updating the
+    // The translation set on this ThebesLayer before we started updating the
     // layer tree.
-    gfx3DMatrix mLastPaintTransform;
-    PRPackedBool mHasExplicitLastPaintTransform;
+    nsIntPoint mLastPaintOffset;
+    PRPackedBool mHasExplicitLastPaintOffset;
 
     enum { ALLOW_MEMMOVE = PR_TRUE };
   };

@@ -166,6 +166,7 @@ endif
 ifdef USE_ARM_NEON_GCC
 CSRCS += pixman-arm-neon.c
 SSRCS += pixman-arm-neon-asm.S
+SSRCS += pixman-arm-neon-asm-bilinear.S
 DEFINES += -DUSE_ARM_NEON
 ARM_NEON_CFLAGS = -mfpu=neon
 endif

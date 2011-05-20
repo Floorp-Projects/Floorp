@@ -438,7 +438,7 @@ class Mochitest(object):
     elif options.browserChrome:
       testURL = "about:blank"
     elif options.ipcplugins:
-      testURL = testHost + self.TEST_PATH + "modules/plugin/test"
+      testURL = testHost + self.TEST_PATH + "dom/plugins/test"
     return testURL
 
   def startWebSocketServer(self, options, debuggerInfo):

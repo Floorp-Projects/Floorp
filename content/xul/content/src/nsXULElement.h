@@ -93,8 +93,6 @@ class StyleRule;
 }
 }
 
-static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
-
 ////////////////////////////////////////////////////////////////////////
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING

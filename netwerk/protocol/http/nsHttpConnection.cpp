@@ -76,6 +76,7 @@ nsHttpConnection::nsHttpConnection()
     , mKeepAliveMask(PR_TRUE)
     , mSupportsPipelining(PR_FALSE) // assume low-grade server
     , mIsReused(PR_FALSE)
+    , mIsActivated(PR_FALSE)
     , mCompletedProxyConnect(PR_FALSE)
     , mLastTransactionExpectedNoContent(PR_FALSE)
 {
@@ -164,6 +165,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
 
     // take ownership of the transaction
     mTransaction = trans;
+    mIsActivated = PR_TRUE;
 
     // set mKeepAlive according to what will be requested
     mKeepAliveMask = mKeepAlive = (caps & NS_HTTP_ALLOW_KEEPALIVE);
@@ -265,8 +267,15 @@ nsHttpConnection::IsAlive()
     if (!mSocketTransport)
         return PR_FALSE;
 
+    // Calling IsAlive() non passively on an SSL socket transport that has
+    // not yet completed the SSL handshake can result
+    // in the event loop being run. All code that calls
+    // nsHttpConnection::IsAlive() is not re-entrant so we need to avoid
+    // having IsAlive() trigger a real SSL read in that circumstance.
+
     PRBool alive;
-    nsresult rv = mSocketTransport->IsAlive(&alive);
+    PRBool passiveRead = mConnInfo->UsingSSL() && !mIsActivated;
+    nsresult rv = mSocketTransport->IsAlive(passiveRead, &alive);
     if (NS_FAILED(rv))
         alive = PR_FALSE;
 
