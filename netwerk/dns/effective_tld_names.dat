@@ -774,7 +774,17 @@ edu.dm
 gov.dm
 
 // do : http://en.wikipedia.org/wiki/.do
-*.do
+do
+art.do
+com.do
+edu.do
+gob.do
+gov.do
+mil.do
+net.do
+org.do
+sld.do
+web.do
 
 // dz : http://en.wikipedia.org/wiki/.dz
 dz
