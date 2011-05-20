@@ -458,32 +458,6 @@ let Utils = {
     return ex && ex.indexOf && (ex.indexOf(hmacFail) == 0);
   },
   
-  checkStatus: function Weave_checkStatus(code, msg, ranges) {
-    if (!ranges)
-      ranges = [[200,300]];
-
-    for (let i = 0; i < ranges.length; i++) {
-      var rng = ranges[i];
-      if (typeof(rng) == "object" && code >= rng[0] && code < rng[1])
-        return true;
-      else if (typeof(rng) == "number" && code == rng) {
-        return true;
-      }
-    }
-
-    if (msg) {
-      let log = Log4Moz.repository.getLogger("Service.Util");
-      log.error(msg + " Error code: " + code);
-    }
-
-    return false;
-  },
-
-  ensureStatus: function Weave_ensureStatus(args) {
-    if (!Utils.checkStatus.apply(Utils, arguments))
-      throw 'checkStatus failed';
-  },
-
   /**
    * UTF8-encode a message and hash it with the given hasher. Returns a
    * string containing bytes. The hasher is reset if it's an HMAC hasher.
@@ -928,30 +902,6 @@ let Utils = {
     return url;
   },
 
-  xpath: function Weave_xpath(xmlDoc, xpathString) {
-    let root = xmlDoc.ownerDocument == null ?
-      xmlDoc.documentElement : xmlDoc.ownerDocument.documentElement;
-    let nsResolver = xmlDoc.createNSResolver(root);
-
-    return xmlDoc.evaluate(xpathString, xmlDoc, nsResolver,
-                           Ci.nsIDOMXPathResult.ANY_TYPE, null);
-  },
-
-  getTmp: function Weave_getTmp(name) {
-    let tmp = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    tmp.QueryInterface(Ci.nsILocalFile);
-
-    tmp.append("weave");
-    tmp.append("tmp");
-    if (!tmp.exists())
-      tmp.create(tmp.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
-    if (name)
-      tmp.append(name);
-
-    return tmp;
-  },
-
   /**
    * Load a json object from disk
    *
@@ -1212,38 +1162,6 @@ let Utils = {
     return over ? atob(b64.substr(0, len - over)) : atob(b64);
   },
 
-  /*
-   * Calculate the strength of a passphrase provided by the user
-   * according to the NIST algorithm (NIST 800-63 Appendix A.1).
-   */
-  passphraseStrength: function passphraseStrength(value) {
-    let bits = 0;
-
-    // The entropy of the first character is taken to be 4 bits.
-    if (value.length)
-      bits = 4;
-
-    // The entropy of the next 7 characters are 2 bits per character.
-    if (value.length > 1)
-      bits += Math.min(value.length - 1, 7) * 2;
-
-    // For the 9th through the 20th character the entropy is taken to
-    // be 1.5 bits per character.
-    if (value.length > 8)
-      bits += Math.min(value.length - 8, 12) * 1.5;
-
-    // For characters 21 and above the entropy is taken to be 1 bit per character.
-    if (value.length > 20)
-      bits += value.length - 20;
-
-    // Bonus of 6 bits if we find non-alphabetic characters
-    if ([char.charCodeAt() for each (char in value.toLowerCase())]
-        .some(function(chr) chr < 97 || chr > 122))
-      bits += 6;
-      
-    return bits;
-  },
-
   /**
    * Create an array like the first but without elements of the second
    */
@@ -1292,17 +1210,6 @@ let Utils = {
     return false;
   },
   
-  __prefs: null,
-  get prefs() {
-    if (!this.__prefs) {
-      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
-        .getService(Ci.nsIPrefService);
-      this.__prefs = this.__prefs.getBranch(PREFS_BRANCH);
-      this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
-    }
-    return this.__prefs;
-  },
-
   /**
    * Helpers for making asynchronous calls within a synchronous API possible.
    * 
@@ -1375,68 +1282,6 @@ let Utils = {
   }
 };
 
-let FakeSvc = {
-  // Private Browsing
-  "@mozilla.org/privatebrowsing;1": {
-    autoStarted: false,
-    privateBrowsingEnabled: false
-  },
-  // Session Restore
-  "@mozilla.org/browser/sessionstore;1": {
-    setTabValue: function(tab, key, value) {
-      if (!tab.__SS_extdata)
-        tab.__SS_extdata = {};
-      tab.__SS_extData[key] = value;
-    },
-    getBrowserState: function() {
-      // Fennec should have only one window. Not more, not less.
-      let state = { windows: [{ tabs: [] }] };
-      let window = Services.wm.getMostRecentWindow("navigator:browser");
-
-      // Extract various pieces of tab data
-      window.Browser._tabs.forEach(function(tab) {
-        let tabState = { entries: [{}] };
-        let browser = tab.browser;
-
-        // Cases when we want to skip the tab. Could come up if we get
-        // state as a tab is opening or closing.
-        if (!browser || !browser.currentURI || !browser.sessionHistory)
-          return;
-
-        let history = browser.sessionHistory;
-        if (history.count > 0) {
-          // We're only grabbing the current history entry for now.
-          let entry = history.getEntryAtIndex(history.index, false);
-          tabState.entries[0].url = entry.URI.spec;
-          // Like SessionStore really does it...
-          if (entry.title && entry.title != entry.url)
-            tabState.entries[0].title = entry.title;
-        }
-        // index is 1-based
-        tabState.index = 1;
-
-        // Get the image for the tab. Fennec doesn't quite work the same
-        // way as Firefox, so we'll just get this from the browser object.
-        tabState.attributes = { image: browser.mIconURL };
-
-        // Collect the extdata
-        if (tab.__SS_extdata) {
-          tabState.extData = {};
-          for (let key in tab.__SS_extdata)
-            tabState.extData[key] = tab.__SS_extdata[key];
-        }
-
-        // Add the tab to the window
-        state.windows[0].tabs.push(tabState);
-      });
-      return JSON.stringify(state);
-    }
-  },
-  // A fake service only used for testing
-  "@labs.mozilla.com/Fake/Thing;1": {
-    isFake: true
-  }
-};
 XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
