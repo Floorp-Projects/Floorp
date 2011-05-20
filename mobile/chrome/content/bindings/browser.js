@@ -403,18 +403,10 @@ let ContentScroll =  {
         if (content != doc.defaultView) // We are only interested in root scroll pane changes
           return;
 
-        // Adjust width and height from the incoming event properties so that we
-        // ignore changes to width and height contributed by growth in page
-        // quadrants other than x > 0 && y > 0.
-        let scrollOffset = this.getScrollOffset(content);
-        let x = aEvent.x + scrollOffset.x;
-        let y = aEvent.y + scrollOffset.y;
-        let width = aEvent.width + (x < 0 ? x : 0);
-        let height = aEvent.height + (y < 0 ? y : 0);
-
         sendAsyncMessage("MozScrolledAreaChanged", {
-          width: width,
-          height: height
+          width: aEvent.width,
+          height: aEvent.height,
+          left: aEvent.x
         });
 
         break;
