@@ -432,9 +432,8 @@ net.bo
 mil.bo
 tv.bo
 
-// br : http://en.wikipedia.org/wiki/.br
-// http://registro.br/info/dpn.html
-// Confirmed by registry <fneves@registro.br> 2008-06-24
+// br : http://registro.br/dominio/dpn.html
+// Updated by registry <fneves@registro.br> 2011-03-01
 br
 adm.br
 adv.br
@@ -443,6 +442,7 @@ am.br
 arq.br
 art.br
 ato.br
+b.br
 bio.br
 blog.br
 bmd.br
@@ -454,6 +454,7 @@ com.br
 coop.br
 ecn.br
 edu.br
+emp.br
 eng.br
 esp.br
 etc.br
@@ -488,9 +489,12 @@ pro.br
 psc.br
 psi.br
 qsl.br
+radio.br
 rec.br
 slg.br
 srv.br
+taxi.br
+teo.br
 tmp.br
 trd.br
 tur.br
