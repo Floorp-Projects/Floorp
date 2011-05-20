@@ -144,8 +144,6 @@ public:
 
     nsresult ReadCMAP();
 
-    virtual PRBool IsSymbolFont();
-
     void FillLogFont(LOGFONTW *aLogFont, PRBool aItalic,
                      PRUint16 aWeight, gfxFloat aSize, PRBool aUseCleartype);
 
@@ -179,6 +177,11 @@ public:
         return (mFontType == GFX_FONT_TYPE_TRUETYPE ||
                 mFontType == GFX_FONT_TYPE_PS_OPENTYPE ||
                 mFontType == GFX_FONT_TYPE_TT_OPENTYPE);
+    }
+
+    PRBool IsCrappyFont() const {
+        /* return if it is a bitmap not a unicode font */
+        return (!mUnicodeFont || IsSymbolFont() || IsType1());
     }
 
     virtual PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
@@ -290,6 +293,7 @@ public:
     gfxWindowsFontType mFontType;
     PRPackedBool mForceGDI    : 1;
     PRPackedBool mUnknownCMAP : 1;
+    PRPackedBool mUnicodeFont : 1;
 
     gfxSparseBitSet mCharset;
     gfxSparseBitSet mUnicodeRanges;
