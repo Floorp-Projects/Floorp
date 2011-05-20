@@ -162,10 +162,14 @@ let Util = {
   },
 
   isTablet: function isTablet() {
+    let dpi = Util.getWindowUtils(window).displayDPI;
+    if (dpi <= 96)
+      return (window.innerWidth > 1024);
+
     // See the tablet_panel_minwidth from mobile/themes/core/defines.inc
     let tablet_panel_minwidth = 124;
-    let dpmm = Util.getWindowUtils(window).displayDPI / 25.4;
-    return (window.innerWidth / dpmm <= tablet_panel_minwidth);
+    let dpmm = 25.4 * window.innerWidth / dpi;
+    return (dpmm >= tablet_panel_minwidth);
   },
 
   isPortrait: function isPortrait() {
