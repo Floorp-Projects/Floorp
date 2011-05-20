@@ -829,7 +829,7 @@ var FormHelperUI = {
         break;
 
       case "FormAssist:Resize":
-        if (!ViewableAreaObserver.isKeyboardOpened)
+        if (!Util.isKeyboardOpened)
           return;
 
         let element = json.current;
@@ -841,7 +841,7 @@ var FormHelperUI = {
         break;
 
        case "FormAssist:Update":
-        if (!ViewableAreaObserver.isKeyboardOpened)
+        if (!Util.isKeyboardOpened)
           return;
 
         Browser.hideSidebars();
