@@ -719,6 +719,7 @@ FormAssistant.prototype = {
   _getJSON: function() {
     let element = this.currentElement;
     let choices = getListForElement(element);
+    let editable = (element instanceof HTMLInputElement && element.mozIsTextField(false)) || this._isEditable(element);
 
     let labels = this._getLabels();
     return {
@@ -733,7 +734,8 @@ FormAssistant.prototype = {
         isAutocomplete: this._isAutocomplete(element),
         list: this._getListSuggestions(element),
         rect: this._getRect(),
-        caretRect: this._getCaretRect()
+        caretRect: this._getCaretRect(),
+        editable: editable
       },
       hasPrevious: !!this._elements[this._currentIndex - 1],
       hasNext: !!this._elements[this._currentIndex + 1]
