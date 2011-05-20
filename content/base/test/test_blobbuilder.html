@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=648997
+-->
+<head>
+  <title>Test for Bug 648997</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="fileutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=648997">Mozilla Bug 648997</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+// We're prefixing still
+window.BlobBuilder = window.MozBlobBuilder;
+
+/** Test for Bug 648997 **/
+var blobBuilder = BlobBuilder();
+ok(blobBuilder, "BlobBuilder should exist");
+
+ok(blobBuilder.append, "BlobBuilder should have an append method");
+ok(blobBuilder.getBlob, "BlobBuilder should have a getBlob method");
+
+try {
+blobBuilder.append();
+ok(false, "NOT REACHED");
+} catch(e) {
+ok(true, "an empty argument to append should throw");
+}
+
+blobBuilder.append("squiggle");
+let blob1 = blobBuilder.getBlob();
+blobBuilder.append("ohai");
+let blob2 = blobBuilder.getBlob();
+
+let aB = new ArrayBuffer(16);
+var int8View = new Int8Array(aB);
+for (var i = 0; i < 16; i++) {
+  int8View[i] = i+65;
+}
+
+let testData = 
+ [
+    // Test 3 strings
+    [["foo", "bar", "baz"], [{start: 0, length: 9, contents: "foobarbaz"},
+                             {start: 0, length: 3, contents: "foo"},
+                             {start: 3, length:6, contents:  "barbaz"},
+                             {start: 6, length: 3, contents:  "baz"},
+                             {start: 6, length: 6, elength: 3, contents: "baz"},
+                             {start: 0, length: 9, contents:  "foobarbaz"},
+                             {start: 0, length: 11, elength: 9, contents: "foobarbaz"},
+                             {start: 10, length: 5, elength: 0, contents: ""}]],
+    // Test string, Blob, string
+    [["foo", blob1, "baz"], [{start: 0, length: 3, contents:  "foo"},
+                             {start: 3, length: 8, contents:  "squiggle"},
+                             {start: 2, length: 2, contents:  "os"},
+                             {start: 10, length: 2, contents: "eb"}]],
+    // Test blob, string, blob
+    [[blob1, "foo", blob1], [{start: 0, length: 8, contents:  "squiggle"},
+                             {start: 7, length: 2, contents:  "ef"},
+                             {start: 10, length: 2, contents: "os"},
+                             {start: 1, length: 3, contents:  "qui"},
+                             {start: 12, length: 3, contents: "qui"},
+                             {start: 40, length: 20, elength: 0, contents: ""}]],
+    // Test blobs all the way down
+    [[blob2, blob1, blob2], [{start: 0, length: 4, contents:  "ohai"},
+                             {start: 4, length: 8, contents:  "squiggle"},
+                             {start: 12, length: 4, contents: "ohai"},
+                             {start: 1, length: 2, contents:  "ha"},
+                             {start: 5, length: 4, contents:  "quig"}]],
+    // Test an array buffer
+    [[aB, blob1, "foo"],    [{start: 0, length: 8, contents:  "ABCDEFGH"},
+                             {start: 8, length:10, contents:  "IJKLMNOPsq"},
+                             {start: 17, length: 3, contents: "qui"},
+                             {start: 4, length: 8, contents:  "EFGHIJKL"}]],
+    // Test type coercion of a number
+    [[3, aB, "foo"],        [{start: 0, length: 8, contents:  "3ABCDEFG"},
+                             {start: 8, length:10, contents:  "HIJKLMNOPf"},
+                             {start: 17, length: 4, elength: 3, contents: "foo"},
+                             {start: 4, length: 8, contents:  "DEFGHIJK"}]]
+ ];
+
+let testCounter = 0;
+
+function doTest(data) {
+  testCounter++;
+
+  [blobs, tests] = data;
+
+  function runTest(test) {
+
+    let bb = new BlobBuilder();
+    ok(bb, "BlobBuilder should exist");
+
+    function doAppend(blob) {
+      bb.append(blob);
+	  blob.expando = bb; // Do we leak?
+    }
+
+    blobs.forEach(doAppend);
+    ok(true, "Test " + testCounter + " appended all successfully");
+    let blob = bb.getBlob();
+    ok(blob, "Test " + testCounter + " got blob");
+    ok(blob instanceof Blob, "Test " + testCounter + " blob is a Blob");
+    //ok(!(blob instanceof File), "Test " + testCounter + " blob is not a File");
+
+    let slice = blob.mozSlice(test.start, test.start + test.length);
+    ok(slice, "Test " + testCounter + " got slice");
+    ok(slice instanceof Blob, "Test " + testCounter + " slice is a Blob");
+    //ok(!(slice instanceof File), "Test " + testCounter + " slice is not a File");
+    is(slice.size,"elength" in test ? test.elength : test.length,
+       "Test " + testCounter + " slice is correct size");
+
+    testFile(slice, test.contents, "Test " + testCounter,
+             "elength" in test ? test.elength : test.length);
+  }
+  tests.forEach(runTest);
+  SpecialPowers.gc();
+}
+
+SimpleTest.waitForExplicitFinish();
+testData.forEach(doTest);
+
+</script>
+</pre>
+</body>
+</html>
