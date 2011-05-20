@@ -1331,6 +1331,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(XULCommandEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MozBlobBuilder, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CommandEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1573,6 +1575,7 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ChromeWorker, nsDOMWorker::NewChromeWorker)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFile::NewFile)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozBlobBuilder, NS_NewBlobBuilder)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -3999,12 +4002,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Blob, nsIDOMBlob)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMBlob)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBlob_MOZILLA_2_0_BRANCH)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(File, nsIDOMFile)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMBlob)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBlob_MOZILLA_2_0_BRANCH)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMFile)
   DOM_CLASSINFO_MAP_END
 
@@ -4027,6 +4028,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DOMStringMap, nsIDOMDOMStringMap)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMStringMap)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozBlobBuilder, nsIDOMBlobBuilder)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBlobBuilder)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
