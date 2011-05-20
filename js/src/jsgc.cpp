@@ -2300,7 +2300,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     /*
      * Mark phase.
      */
-    TIMESTAMP(startMark);
+    GCTIMESTAMP(startMark);
     GCMarker gcmarker(cx);
     JS_ASSERT(IS_GC_MARKING_TRACER(&gcmarker));
     JS_ASSERT(gcmarker.getMarkColor() == BLACK);
@@ -2356,7 +2356,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * unique. This works since the atomization API must not be called during
      * the GC.
      */
-    TIMESTAMP(startSweep);
+    GCTIMESTAMP(startSweep);
 
     /* Finalize unreachable (key,value) pairs in all weak maps. */
     WeakMap::sweep(cx);
@@ -2376,27 +2376,27 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     if (comp) {
         comp->sweep(cx, 0);
         comp->finalizeObjectArenaLists(cx);
-        TIMESTAMP(sweepObjectEnd);
+        GCTIMESTAMP(sweepObjectEnd);
         comp->finalizeStringArenaLists(cx);
-        TIMESTAMP(sweepStringEnd);
+        GCTIMESTAMP(sweepStringEnd);
         comp->finalizeShapeArenaLists(cx);
-        TIMESTAMP(sweepShapeEnd);
+        GCTIMESTAMP(sweepShapeEnd);
     } else {
         SweepCrossCompartmentWrappers(cx);
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
             (*c)->finalizeObjectArenaLists(cx);
 
-        TIMESTAMP(sweepObjectEnd);
+        GCTIMESTAMP(sweepObjectEnd);
 
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
             (*c)->finalizeStringArenaLists(cx);
 
-        TIMESTAMP(sweepStringEnd);
+        GCTIMESTAMP(sweepStringEnd);
 
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
             (*c)->finalizeShapeArenaLists(cx);
 
-        TIMESTAMP(sweepShapeEnd);
+        GCTIMESTAMP(sweepShapeEnd);
 
 #ifdef DEBUG
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
@@ -2432,7 +2432,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      */
     ExpireGCChunks(rt);
 #endif
-    TIMESTAMP(sweepDestroyEnd);
+    GCTIMESTAMP(sweepDestroyEnd);
 
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
@@ -2719,7 +2719,7 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 # endif
 #endif
 
-    GCTIMER_BEGIN();
+    GCTIMER_BEGIN(rt, comp);
 
     do {
         /*
