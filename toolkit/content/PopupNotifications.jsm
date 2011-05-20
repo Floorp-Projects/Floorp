@@ -376,19 +376,12 @@ PopupNotifications.prototype = {
     this._ignoreDismissal = false;
   },
 
-  get panelChildrenElement() {
-    delete this.panelChildrenElement;
-    return this.panelChildrenElement =
-      this.panel.querySelector(".notification-popup-children") || this.panel;
-  },
-
   /**
    *
    */
   _refreshPanel: function PopupNotifications_refreshPanel(notificationsToShow) {
-    while (this.panelChildrenElement.lastChild) {
-      this.panelChildrenElement.removeChild(this.panelChildrenElement.lastChild);
-    }
+    while (this.panel.lastChild)
+      this.panel.removeChild(this.panel.lastChild);
 
     const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -427,7 +420,7 @@ PopupNotifications.prototype = {
         }
       }
 
-      this.panelChildrenElement.appendChild(popupnotification);
+      this.panel.appendChild(popupnotification);
     }, this);
   },
 
@@ -551,14 +544,14 @@ PopupNotifications.prototype = {
     if (event.target != this.panel || this._ignoreDismissal)
       return;
 
-    let browser = this.panelChildrenElement.firstChild &&
-                  this.panelChildrenElement.firstChild.notification.browser;
+    let browser = this.panel.firstChild &&
+                  this.panel.firstChild.notification.browser;
     if (!browser)
       return;
 
     let notifications = this._getNotificationsForBrowser(browser);
     // Mark notifications as dismissed and call dismissal callbacks
-    Array.forEach(this.panelChildrenElement.childNodes, function (nEl) {
+    Array.forEach(this.panel.childNodes, function (nEl) {
       let notificationObj = nEl.notification;
       // Never call a dismissal handler on a notification that's been removed.
       if (notifications.indexOf(notificationObj) == -1)
