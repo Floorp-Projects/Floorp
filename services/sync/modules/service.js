@@ -72,8 +72,6 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/main.js");
 
-Utils.lazy(this, 'Service', WeaveSvc);
-
 /*
  * Service singleton
  * Main entry point into Weave's sync framework
@@ -2341,4 +2339,5 @@ WeaveSvc.prototype = {
 };
 
 // Load Weave on the first time this file is loaded
+let Service = new WeaveSvc();
 Service.onStartup();

@@ -52,7 +52,9 @@ __defineGetter__("Service", function() {
   return this.Service;
 });
 
-Utils.lazy(this, 'ID', IDManager);
+XPCOMUtils.defineLazyGetter(this, "ID", function () {
+  return new IDManager();
+});
 
 // For storing identities we'll use throughout Weave
 function IDManager() {

@@ -52,7 +52,9 @@ Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
-Utils.lazy(this, 'Auth', AuthMgr);
+XPCOMUtils.defineLazyGetter(this, "Auth", function () {
+  return new AuthMgr();
+});
 
 // XXX: the authenticator api will probably need to be changed to support
 // other methods (digest, oauth, etc)
@@ -379,7 +381,7 @@ AsyncResource.prototype = {
     // Make a lazy getter to convert the json response into an object.
     // Note that this can cause a parse error to be thrown far away from the
     // actual fetch, so be warned!
-    Utils.lazy2(ret, "obj", function() JSON.parse(ret));
+    XPCOMUtils.defineLazyGetter(ret, "obj", function() JSON.parse(ret));
 
     // Notify if we get a 401 to maybe try again with a new URI.
     // TODO: more retry logic.

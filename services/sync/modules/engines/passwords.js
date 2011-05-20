@@ -115,7 +115,7 @@ function PasswordStore(name) {
   this._nsLoginInfo = new Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
 
-  Utils.lazy2(this, "DBConnection", function() {
+  XPCOMUtils.defineLazyGetter(this, "DBConnection", function() {
     return Services.logins.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.mozIStorageConnection);
   });
