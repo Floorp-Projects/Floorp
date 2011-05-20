@@ -98,6 +98,18 @@ is(onloadHasRunBinary, false, "binary loading must be async");
 is(onloadStartHasRunBinary, true, "binary loadstart should fire sync");
 expectedTestCount++;
 
+var onloadHasRunArrayBuffer = false;
+var onloadStartHasRunArrayBuffer = false;
+r = new FileReader();
+is(r.readyState, FileReader.EMPTY, "correct initial arrayBuffer readyState");
+r.addEventListener("load", function() { onloadHasRunArrayBuffer = true }, false);
+r.addEventListener("loadstart", function() { onloadStartHasRunArrayBuffer = true }, false);
+r.readAsArrayBuffer(binaryFile);
+r.onload = getLoadHandlerForArrayBuffer(testBinaryData, testBinaryData.length, "array buffer reading");
+is(r.readyState, FileReader.LOADING, "correct loading arrayBuffer readyState");
+is(onloadHasRunArrayBuffer, false, "arrayBuffer loading must be async");
+is(onloadStartHasRunArrayBuffer, true, "arrayBuffer loadstart should fire sync");
+expectedTestCount++;
 
 // Test a variety of encodings, and make sure they work properly
 r = new FileReader();
@@ -124,6 +136,14 @@ r.onload = getLoadHandler(testTextData,
                           "utf16 reading");
 expectedTestCount++;
 
+// Test get result without reading
+r = new FileReader();
+is(r.readyState, FileReader.EMPTY,
+  "readyState in test reader get result without reading");
+is(r.error, null,
+  "no error in test reader get result without reading");
+is(r.result, null,
+  "result in test reader get result without reading");
 
 // Test loading an empty file works (and doesn't crash!)
 var emptyFile = createFileWithData("");
@@ -146,6 +166,11 @@ expectedTestCount++;
 r = new FileReader();
 r.onload = getLoadHandler("", 0, "empty binary string reading");
 r.readAsBinaryString(emptyFile);
+expectedTestCount++;
+
+r = new FileReader();
+r.onload = getLoadHandlerForArrayBuffer("", 0, "empty array buffer reading");
+r.readAsArrayBuffer(emptyFile);
 expectedTestCount++;
 
 r = new FileReader();
@@ -203,6 +228,21 @@ r.addEventListener("load", makeAnotherReadListener3, false);
 r.readAsDataURL(binaryFile);
 expectedTestCount += 2;
 
+r = new FileReader();
+r.onload = getLoadHandlerForArrayBuffer(testBinaryData,
+                          testBinaryData.length,
+                          "to-be-reused reading arrayBuffer")
+var makeAnotherReadListener4 = function(event) {
+  r = event.target;
+  r.removeEventListener("load", makeAnotherReadListener4, false);
+  r.onload = getLoadHandlerForArrayBuffer(testBinaryData,
+                            testBinaryData.length,
+                            "reused reading arrayBuffer");
+  r.readAsArrayBuffer(binaryFile);
+};
+r.addEventListener("load", makeAnotherReadListener4, false);
+r.readAsArrayBuffer(binaryFile);
+expectedTestCount += 2;
 
 //Test data-URI encoding on differing file sizes
 dataurldata = testBinaryData.substr(0, testBinaryData.length -
@@ -310,9 +350,30 @@ function getLoadHandler(expectedResult, expectedLength, testName) {
     is(event.lengthComputable, true,
        "lengthComputable in test " + testName);
     is(event.loaded, expectedLength,
-       "lengthComputable in test " + testName);
+       "loaded in test " + testName);
     is(event.total, expectedLength,
+       "total in test " + testName);
+    testHasRun();
+  }
+}
+
+function getLoadHandlerForArrayBuffer(expectedResult, expectedLength, testName) {
+  return function (event) {
+    is(event.target.readyState, FileReader.DONE,
+       "readyState in test " + testName);
+    is(event.target.error, null,
+       "no error in test " +  testName);
+    is(event.lengthComputable, true,
        "lengthComputable in test " + testName);
+    is(event.loaded, expectedLength,
+       "loaded in test " + testName);
+    is(event.total, expectedLength,
+       "total in test " + testName);
+    is(event.target.result.byteLength, expectedLength,
+       "array buffer size in test " + testName);
+    var u8v = new Uint8Array(event.target.result);
+    is(String.fromCharCode.apply(String, u8v), expectedResult,
+       "array buffer contents in test " + testName);
     testHasRun();
   }
 }
