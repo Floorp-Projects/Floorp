@@ -1,134 +1,97 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let newTabOne;
-let originalTab;
+let win;
+let cw;
 
 function test() {
   waitForExplicitFinish();
 
-  originalTab = gBrowser.visibleTabs[0];
-  newTabOne = gBrowser.addTab("http://mochi.test:8888/");
-
-  let browser = gBrowser.getBrowserForTab(newTabOne);
-  let onLoad = function() {
-    browser.removeEventListener("load", onLoad, true);
-    
-    // show the tab view
-    window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
-    TabView.toggle();
-  }
-  browser.addEventListener("load", onLoad, true);
-}
-
-function onTabViewWindowLoaded() {
-  window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
-  ok(TabView.isVisible(), "Tab View is visible");
-
-  afterAllTabItemsUpdated(function() { 
-    let contentWindow = document.getElementById("tab-view").contentWindow;
-    testOne(contentWindow);
-  });
-}
-
-function testOne(contentWindow) {
-  onSearchEnabledAndDisabled(contentWindow, function() {
-    testTwo(contentWindow); 
-  });
-  // press cmd/ctrl F
-  EventUtils.synthesizeKey("f", { accelKey: true });
-}
-
-function testTwo(contentWindow) {
-  onSearchEnabledAndDisabled(contentWindow, function() { 
-    testThree(contentWindow);
-  });
-  // press /
-  EventUtils.synthesizeKey("VK_SLASH", { type: "keydown" }, contentWindow);
-}
-
-function testThree(contentWindow) {
-  let groupItem = createEmptyGroupItem(contentWindow, 200);
-
-  let onTabViewHidden = function() {
-    window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-    TabView.toggle();
+  let onLoad = function (tvwin) {
+    win = tvwin;
+    registerCleanupFunction(function () win.close());
+    win.gBrowser.loadOneTab("http://mochi.test:8888/", {inBackground: true});
   };
-  let onTabViewShown = function() {
-    window.removeEventListener("tabviewshown", onTabViewShown, false);
 
-    is(contentWindow.UI.getActiveTab(), groupItem.getChild(0), 
+  let onShow = function () {
+    cw = win.TabView.getContentWindow();
+    ok(win.TabView.isVisible(), "Tab View is visible");
+    afterAllTabItemsUpdated(testOne, win);
+  };
+
+  newWindowWithTabView(onShow, onLoad);
+}
+
+function testOne() {
+  whenSearchEnabledAndDisabled(testTwo);
+  // press cmd/ctrl F
+  EventUtils.synthesizeKey("f", {accelKey: true}, cw);
+}
+
+function testTwo() {
+  whenSearchEnabledAndDisabled(testThree);
+  // press /
+  EventUtils.synthesizeKey("VK_SLASH", {}, cw);
+}
+
+function testThree() {
+  let onTabViewShown = function () {
+    is(cw.UI.getActiveTab(), groupItem.getChild(0), 
        "The active tab is newly created tab item");
 
-    let onSearchEnabled = function() {
-      contentWindow.removeEventListener(
-        "tabviewsearchenabled", onSearchEnabled, false);
+    let onSearchEnabled = function () {
+      let doc = cw.document;
+      let searchBox = cw.iQ("#searchbox");
+      let hasFocus = doc.hasFocus() && doc.activeElement == searchBox[0];
+      ok(hasFocus, "The search box has focus");
 
-      let searchBox = contentWindow.iQ("#searchbox");
+      let tab = win.gBrowser.tabs[1];
+      searchBox.val(tab._tabViewTabItem.$tabTitle[0].innerHTML);
 
-      ok(contentWindow.document.hasFocus() && 
-         contentWindow.document.activeElement == searchBox[0], 
-         "The search box has focus");
-      searchBox.val(newTabOne._tabViewTabItem.$tabTitle[0].innerHTML);
+      cw.performSearch();
 
-      contentWindow.performSearch();
-
-      let checkSelectedTab = function() {
-        window.removeEventListener("tabviewhidden", checkSelectedTab, false);
-        is(newTabOne, gBrowser.selectedTab, "The search result tab is shown");
-        cleanUpAndFinish(groupItem.getChild(0), contentWindow);
-      };
-      window.addEventListener("tabviewhidden", checkSelectedTab, false);
+      whenTabViewIsHidden(function () {
+        is(tab, win.gBrowser.selectedTab, "The search result tab is shown");
+        waitForFocus(finish);
+      }, win);
 
       // use the tabview menu (the same as pressing cmd/ctrl + e)
-      document.getElementById("menu_tabview").doCommand();
-   };
-   contentWindow.addEventListener("tabviewsearchenabled", onSearchEnabled, false);
-   EventUtils.synthesizeKey("VK_SLASH", { type: "keydown" }, contentWindow);
+      win.document.getElementById("menu_tabview").doCommand();
+    };
+
+    whenSearchEnabled(onSearchEnabled);
+    EventUtils.synthesizeKey("VK_SLASH", {}, cw);
   };
-  window.addEventListener("tabviewhidden", onTabViewHidden, false);
-  window.addEventListener("tabviewshown", onTabViewShown, false);
-  
+
+  whenTabViewIsHidden(function () {
+    showTabView(onTabViewShown, win);
+  }, win);
+
   // click on the + button
+  let groupItem = createEmptyGroupItem(cw, 300, 300, 200);
   let newTabButton = groupItem.container.getElementsByClassName("newTabButton");
   ok(newTabButton[0], "New tab button exists");
 
-  EventUtils.sendMouseEvent({ type: "click" }, newTabButton[0], contentWindow);
+  EventUtils.sendMouseEvent({type: "click"}, newTabButton[0], cw);
 }
 
-function onSearchEnabledAndDisabled(contentWindow, callback) {
-  let onSearchEnabled = function() {
-    contentWindow.removeEventListener(
-      "tabviewsearchenabled", onSearchEnabled, false);
-    contentWindow.addEventListener("tabviewsearchdisabled", onSearchDisabled, false);
-    contentWindow.hideSearch();
-  }
-  let onSearchDisabled = function() {
-    contentWindow.removeEventListener(
-      "tabviewsearchdisabled", onSearchDisabled, false);
+function whenSearchEnabledAndDisabled(callback) {
+  whenSearchEnabled(function () {
+    whenSearchDisabled(callback);
+    cw.hideSearch();
+  });
+}
+
+function whenSearchEnabled(callback) {
+  cw.addEventListener("tabviewsearchenabled", function onSearchEnabled() {
+    cw.removeEventListener("tabviewsearchenabled", onSearchEnabled, false);
     callback();
-  }
-  contentWindow.addEventListener("tabviewsearchenabled", onSearchEnabled, false);
+  }, false);
 }
 
-function cleanUpAndFinish(tabItem, contentWindow) {
-  gBrowser.selectedTab = originalTab;
-  gBrowser.removeTab(newTabOne);
-  gBrowser.removeTab(tabItem.tab);
-  
-  finish();
+function whenSearchDisabled(callback) {
+  cw.addEventListener("tabviewsearchdisabled", function onSearchDisabled() {
+    cw.removeEventListener("tabviewsearchdisabled", onSearchDisabled, false);
+    callback();
+  }, false);
 }
-
-function createEmptyGroupItem(contentWindow, padding) {
-  let pageBounds = contentWindow.Items.getPageBounds();
-  pageBounds.inset(padding, padding);
-
-  let box = new contentWindow.Rect(pageBounds);
-  box.width = 300;
-  box.height = 300;
-
-  let emptyGroupItem = new contentWindow.GroupItem([], { bounds: box });
-
-  return emptyGroupItem;
-}
-

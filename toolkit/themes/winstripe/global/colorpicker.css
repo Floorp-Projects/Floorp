@@ -46,14 +46,9 @@
 /* colorpicker button */
 
 colorpicker[type="button"] {
+  -moz-appearance: button;
   width: 38px;
   height: 24px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
-  background-color: ThreeDFace;
   padding: 3px;
 }
 
@@ -61,41 +56,26 @@ colorpicker[type="button"] {
   border: 1px solid #000000;
 }
 
-colorpicker[type="button"]:focus {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight;
-}
-
-colorpicker[type="button"][open="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
-}
-
 /* ::::: colorpicker tiles ::::: */
 
 .colorpickertile {
-  width                 : 20px;
-  height                : 20px;
-  margin                : 1px;
-  border-left           : 1px solid ThreeDShadow;
-  border-top            : 1px solid ThreeDShadow;
-  border-right          : 1px solid ThreeDHighlight;
-  border-bottom         : 1px solid ThreeDHighlight;
+  width: 20px;
+  height: 20px;
+  margin: 1px;
+  border-left: 1px solid ThreeDShadow;
+  border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDHighlight;
 }
 
 .colorpickertile[selected="true"] {
-  border : 2px outset #C0C0C0;
-
+  border: 2px outset #C0C0C0;
 }
 
 .colorpickertile[hover="true"] {
-  border : 2px dotted #FFFFFF;
+  border: 2px dotted #FFFFFF;
 }
 
 .cp-light[hover="true"] {
-  border : 2px dotted #909090;
+  border: 2px dotted #909090;
 }

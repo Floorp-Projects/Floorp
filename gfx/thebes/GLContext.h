@@ -807,15 +807,34 @@ public:
     /** Helper for DecomposeIntoNoRepeatTriangles
      */
     struct RectTriangles {
-        RectTriangles() : numRects(0) { }
+        RectTriangles() { }
 
         void addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
                      GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1);
 
-        int numRects;
-        /* max is 4 rectangles, each made up of 2 triangles (3 2-coord vertices each) */
-        GLfloat vertexCoords[4*3*2*2];
-        GLfloat texCoords[4*3*2*2];
+        /**
+         * these return a float pointer to the start of each array respectively.
+         * Use it for glVertexAttribPointer calls.
+         * We can return NULL if we choose to use Vertex Buffer Objects here.
+         */
+        float* vertexPointer() {
+            return &vertexCoords[0].x;
+        };
+
+        float* texCoordPointer() {
+            return &texCoords[0].u;
+        };
+
+        unsigned int elements() {
+            return vertexCoords.Length();
+        };
+
+        typedef struct { GLfloat x,y; } vert_coord;
+        typedef struct { GLfloat u,v; } tex_coord;
+    private:
+        // default is 4 rectangles, each made up of 2 triangles (3 coord vertices each)
+        nsAutoTArray<vert_coord, 6> vertexCoords;
+        nsAutoTArray<tex_coord, 6>  texCoords;
     };
 
     /**

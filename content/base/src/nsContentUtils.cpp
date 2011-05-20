@@ -695,8 +695,10 @@ nsContentUtils::InitializeEventTable() {
     ,
     { nsGkAtoms::onanimationstart,              NS_ANIMATION_START, EventNameType_None, NS_ANIMATION_EVENT },
     { nsGkAtoms::onanimationend,                NS_ANIMATION_END, EventNameType_None, NS_ANIMATION_EVENT },
-    { nsGkAtoms::onanimationiteration,          NS_ANIMATION_ITERATION, EventNameType_None, NS_ANIMATION_EVENT }
+    { nsGkAtoms::onanimationiteration,          NS_ANIMATION_ITERATION, EventNameType_None, NS_ANIMATION_EVENT },
 #endif
+    { nsGkAtoms::onbeforeprint,                 NS_BEFOREPRINT, EventNameType_HTMLXUL, NS_EVENT },
+    { nsGkAtoms::onafterprint,                  NS_AFTERPRINT, EventNameType_HTMLXUL, NS_EVENT }
   };
 
   sAtomEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;
@@ -1521,24 +1523,6 @@ nsContentUtils::ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
   return sXPConnect->MoveWrappers(cx, oldScopeObj, newScopeObj);
 }
 
-nsIDocShell *
-nsContentUtils::GetDocShellFromCaller()
-{
-  JSContext *cx = nsnull;
-  sThreadJSContextStack->Peek(&cx);
-
-  if (cx) {
-    nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(sgo));
-
-    if (win) {
-      return win->GetDocShell();
-    }
-  }
-
-  return nsnull;
-}
-
 nsPIDOMWindow *
 nsContentUtils::GetWindowFromCaller()
 {
@@ -1842,53 +1826,6 @@ nsContentUtils::ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
 
   nsINode* child1 = parents1.ElementAt(--pos1);
   return parent->IndexOf(child1) < aOffset2 ? -1 : 1;
-}
-
-nsIContent*
-nsContentUtils::FindFirstChildWithResolvedTag(nsIContent* aParent,
-                                              PRInt32 aNamespace,
-                                              nsIAtom* aTag)
-{
-  nsIDocument* doc;
-  if (!aParent || !(doc = aParent->GetOwnerDoc())) {
-    return nsnull;
-  }
-  
-  nsBindingManager* bindingManager = doc->BindingManager();
-
-  PRInt32 namespaceID;
-  PRUint32 count = aParent->GetChildCount();
-
-  PRUint32 i;
-
-  for (i = 0; i < count; i++) {
-    nsIContent *child = aParent->GetChildAt(i);
-    nsIAtom* tag =  bindingManager->ResolveTag(child, &namespaceID);
-    if (tag == aTag && namespaceID == aNamespace) {
-      return child;
-    }
-  }
-
-  // now look for children in XBL
-  nsCOMPtr<nsIDOMNodeList> children;
-  bindingManager->GetXBLChildNodesFor(aParent, getter_AddRefs(children));
-  if (!children) {
-    return nsnull;
-  }
-
-  PRUint32 length;
-  children->GetLength(&length);
-  for (i = 0; i < length; i++) {
-    nsCOMPtr<nsIDOMNode> childNode;
-    children->Item(i, getter_AddRefs(childNode));
-    nsCOMPtr<nsIContent> childContent = do_QueryInterface(childNode);
-    nsIAtom* tag = bindingManager->ResolveTag(childContent, &namespaceID);
-    if (tag == aTag && namespaceID == aNamespace) {
-      return childContent;
-    }
-  }
-
-  return nsnull;
 }
 
 inline PRBool
@@ -3597,15 +3534,6 @@ nsContentUtils::CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
   }
 
   return found;
-}
-
-/* static */
-nsIContent*
-nsContentUtils::GetReferencedElement(nsIURI* aURI, nsIContent *aFromContent)
-{
-  nsReferencedElement ref;
-  ref.Reset(aFromContent, aURI);
-  return ref.get();
 }
 
 /* static */

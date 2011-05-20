@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Michael Wu <mwu@mozilla.com>
+ *   Mike Hommey <mh@glandium.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,64 +39,152 @@
 
 #include "Omnijar.h"
 
-#include "nsILocalFile.h"
-#include "nsXULAppAPI.h"
+#include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
 #include "nsZipArchive.h"
+#include "nsNetUtil.h"
 
-static nsILocalFile* sOmnijarPath = nsnull;
-static nsZipArchive* sOmnijarReader = nsnull;
+namespace mozilla {
 
-static void
-SetupReader()
+nsIFile *Omnijar::sPath[2] = { nsnull, nsnull };
+nsZipArchive *Omnijar::sReader[2] = { nsnull, nsnull };
+PRPackedBool Omnijar::sInitialized = PR_FALSE;
+static PRPackedBool sIsUnified = PR_FALSE;
+
+static const char *sProp[2] =
+    { NS_GRE_DIR, NS_XPCOM_CURRENT_PROCESS_DIR };
+
+#define SPROP(Type) ((Type == mozilla::Omnijar::GRE) ? sProp[GRE] : sProp[APP])
+
+void
+Omnijar::CleanUpOne(Type aType)
 {
-    if (!sOmnijarPath) {
+    if (sReader[aType]) {
+        sReader[aType]->CloseArchive();
+        delete sReader[aType];
+    }
+    sReader[aType] = nsnull;
+    NS_IF_RELEASE(sPath[aType]);
+}
+
+void
+Omnijar::InitOne(nsIFile *aPath, Type aType)
+{
+    nsCOMPtr<nsIFile> file;
+    if (aPath) {
+        file = aPath;
+    } else {
+        nsCOMPtr<nsIFile> dir;
+        nsDirectoryService::gService->Get(SPROP(aType), NS_GET_IID(nsIFile), getter_AddRefs(dir));
+        if (NS_FAILED(dir->Clone(getter_AddRefs(file))) ||
+            NS_FAILED(file->AppendNative(NS_LITERAL_CSTRING("omni.jar"))))
+            return;
+    }
+    PRBool isFile;
+    if (NS_FAILED(file->IsFile(&isFile)) || !isFile) {
+        // If we're not using an omni.jar for GRE, and we don't have an
+        // omni.jar for APP, check if both directories are the same.
+        if ((aType == APP) && (!sPath[GRE])) {
+            nsCOMPtr<nsIFile> greDir, appDir;
+            PRBool equals;
+            nsDirectoryService::gService->Get(SPROP(GRE), NS_GET_IID(nsIFile), getter_AddRefs(greDir));
+            nsDirectoryService::gService->Get(SPROP(APP), NS_GET_IID(nsIFile), getter_AddRefs(appDir));
+            if (NS_SUCCEEDED(greDir->Equals(appDir, &equals)) && equals)
+                sIsUnified = PR_TRUE;
+        }
+        return;
+    }
+
+    PRBool equals;
+    if ((aType == APP) && (sPath[GRE]) &&
+        NS_SUCCEEDED(sPath[GRE]->Equals(file, &equals)) && equals) {
+        // If we're using omni.jar on both GRE and APP and their path
+        // is the same, we're in the unified case.
+        sIsUnified = PR_TRUE;
         return;
     }
 
     nsZipArchive* zipReader = new nsZipArchive();
-    if (!zipReader) {
-        NS_IF_RELEASE(sOmnijarPath);
+    if (!zipReader)
         return;
-    }
 
-    if (NS_FAILED(zipReader->OpenArchive(sOmnijarPath))) {
+    if (NS_FAILED(zipReader->OpenArchive(file))) {
         delete zipReader;
-        NS_IF_RELEASE(sOmnijarPath);
         return;
     }
 
-    sOmnijarReader = zipReader;
-}
-
-nsILocalFile*
-mozilla::OmnijarPath()
-{
-    if (!sOmnijarReader)
-        SetupReader();
-
-    return sOmnijarPath;
-}
-
-nsZipArchive*
-mozilla::OmnijarReader()
-{
-    if (!sOmnijarReader)
-        SetupReader();
-
-    return sOmnijarReader;
+    CleanUpOne(aType);
+    sReader[aType] = zipReader;
+    sPath[aType] = file;
+    NS_IF_ADDREF(file);
 }
 
 void
-mozilla::SetOmnijar(nsILocalFile* aPath)
+Omnijar::Init(nsIFile *aGrePath, nsIFile *aAppPath)
 {
-    NS_IF_RELEASE(sOmnijarPath);
-    if (sOmnijarReader) {
-        sOmnijarReader->CloseArchive();
-        delete sOmnijarReader;
-        sOmnijarReader = nsnull;
-    }
-
-    sOmnijarPath = aPath;
-    NS_IF_ADDREF(sOmnijarPath);
+    InitOne(aGrePath, GRE);
+    InitOne(aAppPath, APP);
+    sInitialized = PR_TRUE;
 }
 
+void
+Omnijar::CleanUp()
+{
+    CleanUpOne(GRE);
+    CleanUpOne(APP);
+    sInitialized = PR_FALSE;
+}
+
+nsZipArchive *
+Omnijar::GetReader(nsIFile *aPath)
+{
+    NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
+
+    PRBool equals;
+    nsresult rv;
+
+    if (sPath[GRE]) {
+        rv = sPath[GRE]->Equals(aPath, &equals);
+        if (NS_SUCCEEDED(rv) && equals)
+            return sReader[GRE];
+    }
+    if (sPath[APP]) {
+        rv = sPath[APP]->Equals(aPath, &equals);
+        if (NS_SUCCEEDED(rv) && equals)
+            return sReader[APP];
+    }
+    return nsnull;
+}
+
+nsresult
+Omnijar::GetURIString(Type aType, nsACString &result)
+{
+    NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
+
+    result.Truncate();
+
+    // Return an empty string for APP in the unified case.
+    if ((aType == APP) && sIsUnified) {
+        return NS_OK;
+    }
+
+    nsCAutoString omniJarSpec;
+    if (sPath[aType]) {
+        nsresult rv = NS_GetURLSpecFromActualFile(sPath[aType], omniJarSpec);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        result = "jar:";
+        result += omniJarSpec;
+        result += "!";
+    } else {
+        nsCOMPtr<nsIFile> dir;
+        nsDirectoryService::gService->Get(SPROP(aType), NS_GET_IID(nsIFile), getter_AddRefs(dir));
+        nsresult rv = NS_GetURLSpecFromActualFile(dir, result);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    result += "/";
+    return NS_OK;
+}
+
+} /* namespace mozilla */

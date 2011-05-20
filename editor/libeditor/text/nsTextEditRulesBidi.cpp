@@ -76,7 +76,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
   nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(aSelection));
   NS_ENSURE_TRUE(privateSelection, NS_ERROR_NULL_POINTER);
   
-  nsCOMPtr<nsFrameSelection> frameSelection;
+  nsRefPtr<nsFrameSelection> frameSelection;
   privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
   NS_ENSURE_TRUE(frameSelection, NS_ERROR_NULL_POINTER);
   

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * 
+ *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -53,8 +53,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMText.h"
-#include "nsIUnicharInputStream.h"
-#include "nsISimpleUnicharStreamFactory.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
@@ -281,20 +279,12 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
   PRBool doneLoading = PR_FALSE;
   nsresult rv = NS_OK;
   if (isInline) {
-    nsAutoString content;
-    nsContentUtils::GetNodeTextContent(thisContent, PR_FALSE, content);
+    nsAutoString text;
+    nsContentUtils::GetNodeTextContent(thisContent, PR_FALSE, text);
 
-    nsCOMPtr<nsIUnicharInputStream> uin;
-    rv = nsSimpleUnicharStreamFactory::GetInstance()->
-      CreateInstanceFromString(content, getter_AddRefs(uin));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Now that we have a url and a unicode input stream, parse the
-    // style sheet.
+    // Parse the style sheet.
     rv = doc->CSSLoader()->
-      LoadInlineStyle(thisContent, uin, mLineNumber, title, media,
+      LoadInlineStyle(thisContent, text, mLineNumber, title, media,
                       aObserver, &doneLoading, &isAlternate);
   }
   else {
@@ -318,4 +308,3 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
 
   return NS_OK;
 }
-

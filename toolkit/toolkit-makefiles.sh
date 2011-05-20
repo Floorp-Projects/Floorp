@@ -85,6 +85,9 @@ MAKEFILES_dom="
   dom/locales/Makefile
   dom/plugins/base/Makefile
   dom/plugins/ipc/Makefile
+  dom/plugins/test/Makefile
+  dom/plugins/test/mochitest/Makefile
+  dom/plugins/test/testplugin/Makefile
   js/jetpack/Makefile
 "
 
@@ -352,10 +355,6 @@ MAKEFILES_libnestegg="
   media/libnestegg/Makefile
   media/libnestegg/include/Makefile
   media/libnestegg/src/Makefile
-"
-
-MAKEFILES_plugin="
-  modules/plugin/Makefile
 "
 
 MAKEFILES_netwerk="
@@ -715,10 +714,6 @@ MAKEFILES_libmar="
   modules/libmar/tool/Makefile
 "
 
-MAKEFILES_lib7z="
-  modules/lib7z/Makefile
-"
-
 MAKEFILES_extensions="
   extensions/cookie/Makefile
   extensions/permissions/Makefile
@@ -770,7 +765,6 @@ add_makefiles "
   $MAKEFILES_accessible
   $MAKEFILES_zlib
   $MAKEFILES_libmar
-  $MAKEFILES_lib7z
   $MAKEFILES_extensions
   $MAKEFILES_startupcache
 "
@@ -872,9 +866,6 @@ if [ "$ENABLE_TESTS" ]; then
     modules/libpr0n/test/Makefile
     modules/libpr0n/test/mochitest/Makefile
     modules/libpref/test/Makefile
-    modules/plugin/test/Makefile
-    modules/plugin/test/mochitest/Makefile
-    modules/plugin/test/testplugin/Makefile
     netwerk/test/httpserver/Makefile
     parser/htmlparser/tests/mochitest/Makefile
     parser/xml/test/Makefile

@@ -304,7 +304,7 @@ nsContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
   NS_ASSERTION(*aXPOffset >= 0 && *aXPOffset <= aContent->TextLength(),
                "offset is out of range.");
 
-  nsCOMPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
+  nsRefPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
   PRInt32 offsetInFrame;
   nsFrameSelection::HINT hint =
     aForward ? nsFrameSelection::HINTLEFT : nsFrameSelection::HINTRIGHT;
@@ -921,7 +921,7 @@ nsContentEventHandler::GetStartFrameAndOffset(nsIRange* aRange,
     content = static_cast<nsIContent*>(node);
   NS_ASSERTION(content, "the start node doesn't have nsIContent!");
 
-  nsCOMPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
+  nsRefPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
   *aFrame = fs->GetFrameForNodeOffset(content, aRange->StartOffset(),
                                       fs->GetHint(), aOffsetInFrame);
   NS_ENSURE_TRUE((*aFrame), NS_ERROR_FAILURE);
