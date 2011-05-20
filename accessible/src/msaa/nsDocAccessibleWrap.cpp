@@ -99,22 +99,6 @@ STDMETHODIMP nsDocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   return S_OK;
 }
 
-nsAccessible*
-nsDocAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
-{
-  // If lVal negative then it is treated as child ID and we should look for
-  // accessible through whole accessible subtree including subdocuments.
-  // Otherwise we treat lVal as index in parent.
-
-  if (aVarChild.vt == VT_I4 && aVarChild.lVal < 0) {
-    // Convert child ID to unique ID.
-    void* uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
-    return GetAccessibleByUniqueIDInSubtree(uniqueID);
-  }
-
-  return nsAccessibleWrap::GetXPAccessibleFor(aVarChild);
-}
-
 STDMETHODIMP nsDocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
 {
 __try {

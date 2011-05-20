@@ -552,4 +552,11 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDocAccessible,
                               NS_DOCACCESSIBLE_IMPL_CID)
 
+inline nsDocAccessible*
+nsAccessible::AsDoc()
+{
+  return mFlags & eDocAccessible ?
+    static_cast<nsDocAccessible*>(this) : nsnull;
+}
+
 #endif
