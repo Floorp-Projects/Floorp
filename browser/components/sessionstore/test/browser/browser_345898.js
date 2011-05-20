@@ -72,9 +72,7 @@ function test() {
      "Invalid index for undoCloseTab throws");
   ok(test(function() ss.getWindowValue({}, "")),
      "Invalid window for getWindowValue throws");
-  ok(test(function() ss.getWindowValue({}, "")),
-     "Invalid window for getWindowValue throws");
-  ok(test(function() ss.getWindowValue({}, "", "")),
+  ok(test(function() ss.setWindowValue({}, "", "")),
      "Invalid window for setWindowValue throws");
   ok(test(function() ss.deleteWindowValue({}, "")),
      "Invalid window for deleteWindowValue throws");
