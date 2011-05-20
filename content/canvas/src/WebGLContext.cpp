@@ -145,6 +145,7 @@ WebGLContext::WebGLContext()
     mStencilWriteMask = 0xffffffff;
     mScissorTestEnabled = 0;
     mDitherEnabled = 1;
+    mBackbufferClearingStatus = BackbufferClearingStatus::NotClearedSinceLastPresented;
 }
 
 WebGLContext::~WebGLContext()
@@ -714,6 +715,8 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
     mResetLayer = PR_FALSE;
 
+    mBackbufferClearingStatus = BackbufferClearingStatus::NotClearedSinceLastPresented;
+
     return canvasLayer.forget().get();
 }
 
@@ -872,6 +875,28 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntR
         gl->fEnable(LOCAL_GL_SCISSOR_TEST);
     else
         gl->fDisable(LOCAL_GL_SCISSOR_TEST);
+}
+
+void
+WebGLContext::EnsureBackbufferClearedAsNeeded()
+{
+    if (mOptions.preserveDrawingBuffer)
+        return;
+
+    NS_ABORT_IF_FALSE(!mBoundFramebuffer,
+                      "EnsureBackbufferClearedAsNeeded must not be called when a FBO is bound");
+
+    if (mBackbufferClearingStatus != BackbufferClearingStatus::NotClearedSinceLastPresented)
+        return;
+
+    mBackbufferClearingStatus = BackbufferClearingStatus::ClearedToDefaultValues;
+
+    ForceClearFramebufferWithDefaultValues(LOCAL_GL_COLOR_BUFFER_BIT |
+                                           LOCAL_GL_DEPTH_BUFFER_BIT |
+                                           LOCAL_GL_STENCIL_BUFFER_BIT,
+                                           nsIntRect(0, 0, mWidth, mHeight));
+
+    Invalidate();
 }
 
 //

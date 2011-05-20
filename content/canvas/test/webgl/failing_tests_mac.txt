@@ -1,7 +1,4 @@
-conformance/buffer-preserve-test.html
 conformance/canvas-test.html
-conformance/canvas-test.html
-conformance/context-attributes.html
 conformance/gl-getshadersource.html
 conformance/gl-object-get-calls.html
 conformance/texture-npot.html

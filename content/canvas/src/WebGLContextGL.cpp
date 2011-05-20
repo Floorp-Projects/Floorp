@@ -587,16 +587,36 @@ WebGLContext::Clear(PRUint32 mask)
 {
     MakeContextCurrent();
 
-    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-        return NS_OK;
-
     PRUint32 m = mask & (LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
-    if (mask != m) {
+    if (mask != m)
         return ErrorInvalidValue("clear: invalid mask bits");
+
+    PRBool needClearCallHere = PR_TRUE;
+
+    if (mBoundFramebuffer) {
+        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+            return NS_OK;
+    } else {
+        // no FBO is bound, so we are clearing the backbuffer here
+        EnsureBackbufferClearedAsNeeded();
+        PRBool valuesAreDefault = mColorClearValue[0] == 0.0f &&
+                                  mColorClearValue[1] == 0.0f &&
+                                  mColorClearValue[2] == 0.0f &&
+                                  mColorClearValue[3] == 0.0f &&
+                                  mDepthClearValue    == 1.0f &&
+                                  mStencilClearValue  == 0;
+        if (valuesAreDefault &&
+            mBackbufferClearingStatus == BackbufferClearingStatus::ClearedToDefaultValues)
+        {
+            needClearCallHere = PR_FALSE;
+        }
     }
 
-    gl->fClear(mask);
-    Invalidate();
+    if (needClearCallHere) {
+        gl->fClear(mask);
+        mBackbufferClearingStatus = BackbufferClearingStatus::HasBeenDrawnTo;
+        Invalidate();
+    }
 
     return NS_OK;
 }
@@ -1366,8 +1386,12 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 
     MakeContextCurrent();
 
-    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-        return NS_OK;
+    if (mBoundFramebuffer) {
+        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+            return NS_OK;
+    } else {
+        EnsureBackbufferClearedAsNeeded();
+    }
 
     BindFakeBlackTextures();
     DoFakeVertexAttrib0(checked_firstPlusCount.value());
@@ -1377,6 +1401,7 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     UndoFakeVertexAttrib0();
     UnbindFakeBlackTextures();
 
+    mBackbufferClearingStatus = BackbufferClearingStatus::HasBeenDrawnTo;
     Invalidate();
 
     return NS_OK;
@@ -1464,8 +1489,12 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
 
     MakeContextCurrent();
 
-    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-        return NS_OK;
+    if (mBoundFramebuffer) {
+        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+            return NS_OK;
+    } else {
+        EnsureBackbufferClearedAsNeeded();
+    }
 
     BindFakeBlackTextures();
     DoFakeVertexAttrib0(checked_maxIndexPlusOne.value());
@@ -1475,6 +1504,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
     UndoFakeVertexAttrib0();
     UnbindFakeBlackTextures();
 
+    mBackbufferClearingStatus = BackbufferClearingStatus::HasBeenDrawnTo;
     Invalidate();
 
     return NS_OK;
@@ -2917,9 +2947,14 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
 
     MakeContextCurrent();
 
-    // prevent readback of arbitrary video memory through uninitialized renderbuffers!
-    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-        return NS_OK;
+    if (mBoundFramebuffer) {
+        // prevent readback of arbitrary video memory through uninitialized renderbuffers!
+        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+            return NS_OK;
+    } else {
+        EnsureBackbufferClearedAsNeeded();
+    }
+
 
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, boundWidth, boundHeight)) {
         // the easy case: we're not reading out-of-range pixels

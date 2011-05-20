@@ -84,6 +84,10 @@ struct VertexAttrib0Status {
     enum { Default, EmulatedUninitializedArray, EmulatedInitializedArray };
 };
 
+struct BackbufferClearingStatus {
+    enum { NotClearedSinceLastPresented, ClearedToDefaultValues, HasBeenDrawnTo };
+};
+
 struct WebGLTexelFormat {
     enum { Generic, Auto, RGBA8, RGB8, RGBX8, BGRA8, BGR8, BGRX8, RGBA5551, RGBA4444, RGB565, R8, RA8, A8,
            RGBA32F, RGB32F, A32F, R32F, RA32F };
@@ -380,6 +384,11 @@ public:
     // WebGL has more complex needs than GLContext as content controls GL state.
     void ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntRect& viewportRect);
 
+    // if the preserveDrawingBuffer context option is false, we need to clear the back buffer
+    // after it's been presented to the compositor. This function does that if needed.
+    // See section 2.2 in the WebGL spec.
+    void EnsureBackbufferClearedAsNeeded();
+
 protected:
     void SetDontKnowIfNeedFakeBlack() {
         mFakeBlackStatus = DontKnowIfNeedFakeBlack;
@@ -591,6 +600,8 @@ protected:
     WebGLfloat mColorClearValue[4];
     WebGLint mStencilClearValue;
     WebGLfloat mDepthClearValue;
+
+    int mBackbufferClearingStatus;
 
 public:
     // console logging helpers
