@@ -39,11 +39,13 @@
 #ifndef nsFaviconService_h_
 #define nsFaviconService_h_
 
-#include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
 #include "nsIFaviconService.h"
-#include "nsServiceManagerUtils.h"
+#include "mozIAsyncFavicons.h"
+
+#include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsDataHashtable.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsToolkitCompsCID.h"
 
@@ -65,6 +67,7 @@ class mozIStorageStatementCallback;
 class FaviconLoadListener;
 
 class nsFaviconService : public nsIFaviconService
+                       , public mozIAsyncFavicons
 {
 public:
   nsFaviconService();
@@ -152,6 +155,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
+  NS_DECL_MOZIASYNCFAVICONS
 
 private:
   ~nsFaviconService();

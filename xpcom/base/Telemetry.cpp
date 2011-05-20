@@ -48,22 +48,23 @@
 #include "nsStringGlue.h"
 #include "nsITelemetry.h"
 
+namespace {
+
 using namespace base;
-using namespace mozilla;
 
 class Telemetry : public nsITelemetry
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSITELEMETRY
 
-  public:
+public:
   static Telemetry* GetSingleton();
 };
 
-// A static initializer to initialize histogram collection
-static StatisticsRecorder gStatisticsRecorder;
+// A initializer to initialize histogram collection
+StatisticsRecorder gStatisticsRecorder;
 
-static bool
+bool
 FillRanges(JSContext *cx, JSObject *array, Histogram *h)
 {
   for (size_t i = 0;i < h->bucket_count();i++) {
@@ -73,7 +74,7 @@ FillRanges(JSContext *cx, JSObject *array, Histogram *h)
   return true;
 }
 
-static JSBool
+JSBool
 ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
 {
   Histogram::SampleSet ss;
@@ -101,7 +102,7 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
   return JS_TRUE;
 }
 
-static JSBool
+JSBool
 JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
 {
   jsval *argv = JS_ARGV(cx, vp);
@@ -116,7 +117,7 @@ JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
   return JS_TRUE;
 }
 
-static JSBool
+JSBool
 JSHistogram_Snapshot(JSContext *cx, uintN argc, jsval *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -128,7 +129,7 @@ JSHistogram_Snapshot(JSContext *cx, uintN argc, jsval *vp)
   return ReflectHistogramSnapshot(cx, snapshot, h);
 }
 
-static nsresult 
+nsresult 
 WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
 {
   static JSClass JSHistogram_class = {
@@ -149,16 +150,24 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
 }
   
 NS_IMETHODIMP
-Telemetry::NewExponentialHistogram(const nsACString &name, PRInt32 min, PRInt32 max, PRUint32 size, JSContext *cx, jsval *ret)
+Telemetry::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, PRUint32 bucket_count, PRUint32 histogram_type, JSContext *cx, jsval *ret)
 {
-  Histogram *h = base::Histogram::FactoryGet(name.BeginReading(), min, max, size, base::Histogram::kNoFlags);
-  return WrapAndReturnHistogram(h, cx, ret);
-}
+  // Sanity checks on histogram parameters.
+  if (min < 1)
+    return NS_ERROR_ILLEGAL_VALUE;
 
-NS_IMETHODIMP
-Telemetry::NewLinearHistogram(const nsACString &name, PRInt32 min, PRInt32 max, PRUint32 size, JSContext *cx, jsval *ret)
-{
-  Histogram *h = base::LinearHistogram::FactoryGet(name.BeginReading(), min, max, size, base::Histogram::kNoFlags);
+  if (min >= max)
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  if (bucket_count <= 2)
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  Histogram *h;
+  if (histogram_type == nsITelemetry::HISTOGRAM_EXPONENTIAL) {
+    h = Histogram::FactoryGet(name.BeginReading(), min, max, bucket_count, Histogram::kNoFlags);
+  } else {
+    h = LinearHistogram::FactoryGet(name.BeginReading(), min, max, bucket_count, Histogram::kNoFlags);
+  }
   return WrapAndReturnHistogram(h, cx, ret);
 }
 
@@ -187,9 +196,9 @@ Telemetry::GetHistogramSnapshots(JSContext *cx, jsval *ret)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(Telemetry, nsITelemetry)
 
-static Telemetry *gJarHandler = nsnull;
+Telemetry *gJarHandler = nsnull;
 
-static void ShutdownTelemetry()
+void ShutdownTelemetry()
 {
   NS_IF_RELEASE(gJarHandler);
 }
@@ -207,20 +216,20 @@ Telemetry* Telemetry::GetSingleton()
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Telemetry, Telemetry::GetSingleton)
 
 #define NS_TELEMETRY_CID \
-  {0xf880b792, 0xe6cd, 0x46e7, {0x9c, 0x22, 0x3e, 0x12, 0xc3, 0x8b, 0xc6, 0xca}}
+  {0xaea477f2, 0xb3a2, 0x469c, {0xaa, 0x29, 0x0a, 0x82, 0xd1, 0x32, 0xb8, 0x29}}
 NS_DEFINE_NAMED_CID(NS_TELEMETRY_CID);
 
-static const mozilla::Module::CIDEntry kTelemetryCIDs[] = {
+const mozilla::Module::CIDEntry kTelemetryCIDs[] = {
   { &kNS_TELEMETRY_CID, false, NULL, TelemetryConstructor },
   { NULL }
 };
 
-static const mozilla::Module::ContractIDEntry kTelemetryContracts[] = {
+const mozilla::Module::ContractIDEntry kTelemetryContracts[] = {
   { "@mozilla.org/base/telemetry;1", &kNS_TELEMETRY_CID },
   { NULL }
 };
 
-static const mozilla::Module kTelemetryModule = {
+const mozilla::Module kTelemetryModule = {
   mozilla::Module::kVersion,
   kTelemetryCIDs,
   kTelemetryContracts,
@@ -229,5 +238,7 @@ static const mozilla::Module kTelemetryModule = {
   NULL,
   ShutdownTelemetry,
 };
+
+} // anonymous namespace
 
 NSMODULE_DEFN(nsTelemetryModule) = &kTelemetryModule;
