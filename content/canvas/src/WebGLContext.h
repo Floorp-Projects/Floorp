@@ -85,7 +85,8 @@ struct VertexAttrib0Status {
 };
 
 struct WebGLTexelFormat {
-    enum { Generic, Auto, RGBA8, RGB8, RGBX8, BGRA8, BGR8, BGRX8, RGBA5551, RGBA4444, RGB565, R8, RA8, A8 };
+    enum { Generic, Auto, RGBA8, RGB8, RGBX8, BGRA8, BGR8, BGRX8, RGBA5551, RGBA4444, RGB565, R8, RA8, A8,
+           RGBA32F, RGB32F, A32F, R32F, RA32F };
 };
 
 struct WebGLTexelPremultiplicationOp {
@@ -425,6 +426,18 @@ protected:
     PRInt32 mGLMaxFragmentUniformVectors;
     PRInt32 mGLMaxVertexUniformVectors;
 
+    // extensions
+    enum WebGLExtensionID {
+        WebGL_OES_texture_float,
+        WebGLExtensionID_Max
+    };
+    nsTArray<nsCOMPtr<nsIWebGLExtension> > mEnabledExtensions; // size is WebGLExtension_Max
+
+    PRBool IsExtensionEnabled(WebGLExtensionID ext) {
+        NS_ASSERTION(ext >= 0 && ext < WebGLExtensionID_Max, "bogus index!");
+        return mEnabledExtensions[ext] != nsnull;
+    }
+
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRInt32* maxAllowedCount, const char *info);
@@ -438,7 +451,7 @@ protected:
     PRBool ValidateStencilOpEnum(WebGLenum action, const char *info);
     PRBool ValidateFaceEnum(WebGLenum face, const char *info);
     PRBool ValidateBufferUsageEnum(WebGLenum target, const char *info);
-    PRBool ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
+    PRBool ValidateTexFormatAndType(WebGLenum format, WebGLenum type, int jsArrayType,
                                       PRUint32 *texelSize, const char *info);
     PRBool ValidateDrawModeEnum(WebGLenum mode, const char *info);
     PRBool ValidateAttribIndex(WebGLuint index, const char *info);
@@ -453,12 +466,14 @@ protected:
                              WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero, WebGLint border,
                              WebGLenum format, WebGLenum type,
                              void *data, PRUint32 byteLength,
+                             int jsArrayType,
                              int srcFormat, PRBool srcPremultiplied);
     nsresult TexSubImage2D_base(WebGLenum target, WebGLint level,
                                 WebGLint xoffset, WebGLint yoffset,
                                 WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero,
                                 WebGLenum format, WebGLenum type,
                                 void *pixels, PRUint32 byteLength,
+                                int jsArrayType,
                                 int srcFormat, PRBool srcPremultiplied);
     nsresult ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
                              WebGLenum format, WebGLenum type, void *data, PRUint32 byteLength);
@@ -878,7 +893,7 @@ protected:
 
 public:
 
-    ImageInfo& ImageInfoAt(size_t level, size_t face) {
+    ImageInfo& ImageInfoAt(size_t level, size_t face = 0) {
 #ifdef DEBUG
         if (face >= mFacesCount)
             NS_ERROR("wrong face index, must be 0 for TEXTURE_2D and at most 5 for cube maps");
@@ -915,6 +930,12 @@ protected:
     void EnsureMaxLevelWithCustomImagesAtLeast(size_t aMaxLevelWithCustomImages) {
         mMaxLevelWithCustomImages = PR_MAX(mMaxLevelWithCustomImages, aMaxLevelWithCustomImages);
         mImageInfos.EnsureLengthAtLeast((mMaxLevelWithCustomImages + 1) * mFacesCount);
+    }
+
+    PRBool CheckFloatTextureFilterParams() const {
+        // Without OES_texture_float_linear, only NEAREST and NEAREST_MIMPAMP_NEAREST are supported
+        return (mMagFilter == LOCAL_GL_NEAREST) &&
+            (mMinFilter == LOCAL_GL_NEAREST || mMinFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST);
     }
 
     PRBool DoesMinFilterRequireMipmap() const {
@@ -1143,7 +1164,7 @@ public:
                             ("%s is a 2D texture, with a minification filter requiring a mipmap, "
                              "and is not mipmap complete (as defined in section 3.7.10).", msg_rendering_as_black);
                         mFakeBlackStatus = DoNeedFakeBlack;
-                    } else if (!ImageInfoAt(0, 0).IsPowerOfTwo()) {
+                    } else if (!ImageInfoAt(0).IsPowerOfTwo()) {
                         mContext->LogMessageIfVerbose
                             ("%s is a 2D texture, with a minification filter requiring a mipmap, "
                              "and either its width or height is not a power of two.", msg_rendering_as_black);
@@ -1152,12 +1173,12 @@ public:
                 }
                 else // no mipmap required
                 {
-                    if (!ImageInfoAt(0, 0).IsPositive()) {
+                    if (!ImageInfoAt(0).IsPositive()) {
                         mContext->LogMessageIfVerbose
                             ("%s is a 2D texture and its width or height is equal to zero.",
                              msg_rendering_as_black);
                         mFakeBlackStatus = DoNeedFakeBlack;
-                    } else if (!AreBothWrapModesClampToEdge() && !ImageInfoAt(0, 0).IsPowerOfTwo()) {
+                    } else if (!AreBothWrapModesClampToEdge() && !ImageInfoAt(0).IsPowerOfTwo()) {
                         mContext->LogMessageIfVerbose
                             ("%s is a 2D texture, with a minification filter not requiring a mipmap, "
                              "with its width or height not a power of two, and with a wrap mode "
@@ -1938,6 +1959,29 @@ protected:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLActiveInfo, WEBGLACTIVEINFO_PRIVATE_IID)
+
+#define WEBGLEXTENSION_PRIVATE_IID \
+    {0x457dd0b2, 0x9f77, 0x4c23, {0x95, 0x70, 0x9d, 0x62, 0x65, 0xc1, 0xa4, 0x81}}
+class WebGLExtension :
+    public nsIWebGLExtension
+{
+public:
+    WebGLExtension(WebGLContext *baseContext)
+        : mContext(baseContext)
+    { }        
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLEXTENSION
+
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLEXTENSION_PRIVATE_IID)
+
+    void ClearContext() { mContext = nsnull; }
+    WebGLContext *BaseContext() { return mContext; }
+protected:
+    nsRefPtr<WebGLContext> mContext;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLExtension, WEBGLACTIVEINFO_PRIVATE_IID)
 
 /**
  ** Template implementations

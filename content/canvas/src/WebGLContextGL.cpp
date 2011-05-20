@@ -65,6 +65,7 @@
 using namespace mozilla;
 
 static PRBool BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize);
+static WebGLenum InternalFormatForFormatAndType(WebGLenum format, WebGLenum type, bool isGLES2);
 
 /* Helper macros for when we're just wrapping a gl method, so that
  * we can avoid having to type this 500 times.  Note that these MUST
@@ -642,7 +643,7 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
         // first, compute the size of the buffer we should allocate to initialize the texture as black
 
         PRUint32 texelSize = 0;
-        if (!ValidateTexFormatAndType(internalformat, LOCAL_GL_UNSIGNED_BYTE, &texelSize, info))
+        if (!ValidateTexFormatAndType(internalformat, LOCAL_GL_UNSIGNED_BYTE, -1, &texelSize, info))
             return NS_OK;
 
         CheckedUint32 checked_plainRowSize = CheckedUint32(width) * texelSize;
@@ -3163,18 +3164,21 @@ struct WebGLImageConverter
         memset(this, 0, sizeof(WebGLImageConverter));
     }
 
-    template<typename SrcType, typename DstType,
-         void unpackingFunc(const SrcType*, PRUint8*),
-         void packingFunc(const PRUint8*, DstType*)>
+    template<typename SrcType, typename DstType, typename UnpackType,
+         void unpackingFunc(const SrcType*, UnpackType*),
+         void packingFunc(const UnpackType*, DstType*)>
     void run()
     {
+        // Note -- even though the functions take UnpackType, the
+        // pointers below are all in terms of PRUint8; otherwise
+        // pointer math starts getting tricky.
         for (size_t src_row = 0; src_row < height; ++src_row) {
             size_t dst_row = flip ? (height - 1 - src_row) : src_row;
             PRUint8 *dst_row_ptr = dst + dst_row * dstStride;
             const PRUint8 *src_row_ptr = src + src_row * srcStride;
             const PRUint8 *src_row_end = src_row_ptr + width * srcTexelSize; // != src_row_ptr + byteStride
             while (src_row_ptr != src_row_end) {
-                PRUint8 tmp[4];
+                UnpackType tmp[4];
                 unpackingFunc(reinterpret_cast<const SrcType*>(src_row_ptr), tmp);
                 packingFunc(tmp, reinterpret_cast<DstType*>(dst_row_ptr));
                 src_row_ptr += srcTexelSize;
@@ -3204,6 +3208,8 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
         //
         // So the case we're handling here is when even though no format conversion is needed,
         // we still might have to flip vertically and/or to adjust to a different stride.
+
+        NS_ASSERTION(mPixelStoreFlipY || srcStride != dstStride, "Performance trap -- should handle this case earlier, to avoid memcpy");
 
         size_t row_size = width * dstTexelSize; // doesn't matter, src and dst formats agree
         const PRUint8* src_row = src;
@@ -3239,17 +3245,17 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
         case WebGLTexelFormat::format: \
             switch (premultiplicationOp) { \
                 case WebGLTexelPremultiplicationOp::Premultiply: \
-                    converter.run<SrcType, DstType, \
+                    converter.run<SrcType, DstType, PRUint8,          \
                                   WebGLTexelConversions::unpackFunc, \
                                   WebGLTexelConversions::packFunc##Premultiply>(); \
                 break; \
                 case WebGLTexelPremultiplicationOp::Unmultiply: \
-                    converter.run<SrcType, DstType, \
+                    converter.run<SrcType, DstType, PRUint8, \
                                   WebGLTexelConversions::unpackFunc, \
                                   WebGLTexelConversions::packFunc##Unmultiply>(); \
                 break; \
                 default: \
-                    converter.run<SrcType, DstType, \
+                    converter.run<SrcType, DstType, PRUint8, \
                                   WebGLTexelConversions::unpackFunc, \
                                   WebGLTexelConversions::packFunc>(); \
                 break; \
@@ -3269,7 +3275,7 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
                 HANDLE_DSTFORMAT(RGB565,   SrcType, PRUint16, unpackFunc, packRGBA8ToUnsignedShort565) \
                 /* A8 needs to be special-cased as it doesn't have color channels to premultiply */ \
                 case WebGLTexelFormat::A8: \
-                    converter.run<SrcType, PRUint8, \
+                    converter.run<SrcType, PRUint8, PRUint8,          \
                                   WebGLTexelConversions::unpackFunc, \
                                   WebGLTexelConversions::packRGBA8ToA8>(); \
                     break; \
@@ -3279,6 +3285,39 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
             } \
             break;
 
+#define HANDLE_FLOAT_DSTFORMAT(format, unpackFunc, packFunc) \
+        case WebGLTexelFormat::format: \
+            switch (premultiplicationOp) { \
+                case WebGLTexelPremultiplicationOp::Premultiply: \
+                    converter.run<float, float, float,                \
+                                  WebGLTexelConversions::unpackFunc, \
+                                  WebGLTexelConversions::packFunc##Premultiply>(); \
+                break; \
+                case WebGLTexelPremultiplicationOp::Unmultiply: \
+                    NS_ASSERTION(PR_FALSE, "Floating point can't be un-premultiplied -- we have no premultiplied source data!"); \
+                break; \
+                default: \
+                    converter.run<float, float, float,                \
+                                  WebGLTexelConversions::unpackFunc, \
+                                  WebGLTexelConversions::packFunc>(); \
+                break; \
+            } \
+            break;
+
+#define HANDLE_FLOAT_SRCFORMAT(format, size, unpackFunc)                \
+        case WebGLTexelFormat::format:                                  \
+            converter.srcTexelSize = size;                              \
+            switch (dstFormat) {                                        \
+                HANDLE_FLOAT_DSTFORMAT(RGB32F, unpackFunc, packRGBA32FToRGB32F) \
+                HANDLE_FLOAT_DSTFORMAT(A32F,   unpackFunc, packRGBA32FToA32F) \
+                HANDLE_FLOAT_DSTFORMAT(R32F,   unpackFunc, packRGBA32FToR32F) \
+                HANDLE_FLOAT_DSTFORMAT(RA32F,  unpackFunc, packRGBA32FToRA32F) \
+                default: \
+                    NS_ASSERTION(PR_FALSE, "Coding error?! Should never reach this point."); \
+                    return; \
+            } \
+            break;
+        
     switch (srcFormat) {
         HANDLE_SRCFORMAT(RGBA8,    4, PRUint8,  unpackRGBA8ToRGBA8)
         HANDLE_SRCFORMAT(RGBX8,    4, PRUint8,  unpackRGB8ToRGBA8)
@@ -3292,6 +3331,10 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
         HANDLE_SRCFORMAT(RGBA5551, 2, PRUint16, unpackRGBA5551ToRGBA8)
         HANDLE_SRCFORMAT(RGBA4444, 2, PRUint16, unpackRGBA4444ToRGBA8)
         HANDLE_SRCFORMAT(RGB565,   2, PRUint16, unpackRGB565ToRGBA8)
+        HANDLE_FLOAT_SRCFORMAT(RGB32F,  12, unpackRGB32FToRGBA32F)
+        HANDLE_FLOAT_SRCFORMAT(RA32F,    8, unpackRA32FToRGBA32F)
+        HANDLE_FLOAT_SRCFORMAT(R32F,     4, unpackR32FToRGBA32F)
+        HANDLE_FLOAT_SRCFORMAT(A32F,     4, unpackA32FToRGBA32F)
         default:
             NS_ASSERTION(PR_FALSE, "Coding error?! Should never reach this point.");
             return;
@@ -3938,6 +3981,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
                               WebGLint border,
                               WebGLenum format, WebGLenum type,
                               void *data, PRUint32 byteLength,
+                              int jsArrayType, // a TypedArray format enum, or -1 if not relevant
                               int srcFormat, PRBool srcPremultiplied)
 {
     switch (target) {
@@ -3994,7 +4038,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         return ErrorInvalidValue("TexImage2D: border must be 0");
 
     PRUint32 texelSize = 0;
-    if (!ValidateTexFormatAndType(format, type, &texelSize, "texImage2D"))
+    if (!ValidateTexFormatAndType(format, type, jsArrayType, &texelSize, "texImage2D"))
         return NS_OK;
 
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * texelSize;
@@ -4025,6 +4069,10 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     tex->SetImageInfo(target, level, width, height, format, type);
 
     MakeContextCurrent();
+
+    // Handle ES2 and GL differences in floating point internal formats.  Note that
+    // format == internalformat, as checked above and as required by ES.
+    internalformat = InternalFormatForFormatAndType(format, type, gl->IsGLES2());
 
     if (byteLength) {
         int dstFormat = GetWebGLTexelFormat(format, type);
@@ -4079,6 +4127,7 @@ WebGLContext::TexImage2D_buf(WebGLenum target, WebGLint level, WebGLenum interna
     return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
                            pixels ? pixels->data : 0,
                            pixels ? pixels->byteLength : 0,
+                           -1,
                            WebGLTexelFormat::Auto, PR_FALSE);
 }
 
@@ -4091,6 +4140,7 @@ WebGLContext::TexImage2D_array(WebGLenum target, WebGLint level, WebGLenum inter
     return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
                            pixels ? pixels->data : 0,
                            pixels ? pixels->byteLength : 0,
+                           (int) pixels->type,
                            WebGLTexelFormat::Auto, PR_FALSE);
 }
 
@@ -4103,6 +4153,7 @@ WebGLContext::TexImage2D_imageData(WebGLenum target, WebGLint level, WebGLenum i
     return TexImage2D_base(target, level, internalformat, width, height, 4*width, border, format, type,
                            pixels ? pixels->data : 0,
                            pixels ? pixels->byteLength : 0,
+                           -1,
                            WebGLTexelFormat::RGBA8, PR_FALSE);
 }
 
@@ -4123,6 +4174,7 @@ WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level, WebGLenum interna
                            isurf->Width(), isurf->Height(), isurf->Stride(), 0,
                            format, type,
                            isurf->Data(), byteLength,
+                           -1,
                            srcFormat, mPixelStorePremultiplyAlpha);
 }
 
@@ -4138,6 +4190,7 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
                                  WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero,
                                  WebGLenum format, WebGLenum type,
                                  void *pixels, PRUint32 byteLength,
+                                 int jsArrayType,
                                  int srcFormat, PRBool srcPremultiplied)
 {
     switch (target) {
@@ -4174,7 +4227,7 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     }
 
     PRUint32 texelSize = 0;
-    if (!ValidateTexFormatAndType(format, type, &texelSize, "texSubImage2D"))
+    if (!ValidateTexFormatAndType(format, type, jsArrayType, &texelSize, "texSubImage2D"))
         return NS_OK;
 
     if (width == 0 || height == 0)
@@ -4252,6 +4305,7 @@ WebGLContext::TexSubImage2D_buf(WebGLenum target, WebGLint level,
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               width, height, 0, format, type,
                               pixels->data, pixels->byteLength,
+                              -1,
                               WebGLTexelFormat::Auto, PR_FALSE);
 }
 
@@ -4268,6 +4322,7 @@ WebGLContext::TexSubImage2D_array(WebGLenum target, WebGLint level,
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               width, height, 0, format, type,
                               pixels->data, pixels->byteLength,
+                              pixels->type,
                               WebGLTexelFormat::Auto, PR_FALSE);
 }
 
@@ -4284,6 +4339,7 @@ WebGLContext::TexSubImage2D_imageData(WebGLenum target, WebGLint level,
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               width, height, 4*width, format, type,
                               pixels->data, pixels->byteLength,
+                              -1,
                               WebGLTexelFormat::RGBA8, PR_FALSE);
 }
 
@@ -4307,6 +4363,7 @@ WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
                               isurf->Width(), isurf->Height(), isurf->Stride(),
                               format, type,
                               isurf->Data(), byteLength,
+                              -1,
                               srcFormat, PR_TRUE);
 }
 
@@ -4383,8 +4440,7 @@ BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *u
 
 int mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
 {
-    if (type == LOCAL_GL_UNSIGNED_BYTE)
-    {
+    if (type == LOCAL_GL_UNSIGNED_BYTE) {
         switch (format) {
             case LOCAL_GL_RGBA:
                 return WebGLTexelFormat::RGBA8;
@@ -4396,6 +4452,23 @@ int mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
                 return WebGLTexelFormat::R8;
             case LOCAL_GL_LUMINANCE_ALPHA:
                 return WebGLTexelFormat::RA8;
+            default:
+                NS_ASSERTION(PR_FALSE, "Coding mistake?! Should never reach this point.");
+                return WebGLTexelFormat::Generic;
+        }
+    } else if (type == LOCAL_GL_FLOAT) {
+        // OES_texture_float
+        switch (format) {
+            case LOCAL_GL_RGBA:
+                return WebGLTexelFormat::RGBA32F;
+            case LOCAL_GL_RGB:
+                return WebGLTexelFormat::RGB32F;
+            case LOCAL_GL_ALPHA:
+                return WebGLTexelFormat::A32F;
+            case LOCAL_GL_LUMINANCE:
+                return WebGLTexelFormat::R32F;
+            case LOCAL_GL_LUMINANCE_ALPHA:
+                return WebGLTexelFormat::RA32F;
             default:
                 NS_ASSERTION(PR_FALSE, "Coding mistake?! Should never reach this point.");
                 return WebGLTexelFormat::Generic;
@@ -4414,3 +4487,43 @@ int mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
         }
     }
 }
+
+WebGLenum
+InternalFormatForFormatAndType(WebGLenum format, WebGLenum type, bool isGLES2)
+{
+    // ES2 requires that format == internalformat; floating-point is
+    // indicated purely by the type that's loaded.  For desktop GL, we
+    // have to specify a floating point internal format.
+    if (isGLES2)
+        return format;
+
+    switch (type) {
+    case LOCAL_GL_UNSIGNED_BYTE:
+    case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
+    case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
+    case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
+        return format;
+
+    case LOCAL_GL_FLOAT:
+        switch (format) {
+        case LOCAL_GL_RGBA:
+            return LOCAL_GL_RGBA32F_ARB;
+        case LOCAL_GL_RGB:
+            return LOCAL_GL_RGB32F_ARB;
+        case LOCAL_GL_ALPHA:
+            return LOCAL_GL_ALPHA32F_ARB;
+        case LOCAL_GL_LUMINANCE:
+            return LOCAL_GL_LUMINANCE32F_ARB;
+        case LOCAL_GL_LUMINANCE_ALPHA:
+            return LOCAL_GL_LUMINANCE_ALPHA32F_ARB;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    NS_ASSERTION(PR_FALSE, "Coding mistake -- bad format/type passed?");
+    return 0;
+}
+
