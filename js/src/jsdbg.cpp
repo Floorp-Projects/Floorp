@@ -74,9 +74,10 @@ enum {
 bool
 ReportMoreArgsNeeded(JSContext *cx, const char *name, uintN required)
 {
-    JS_ASSERT(required < 10);
+    JS_ASSERT(required > 0);
+    JS_ASSERT(required <= 10);
     char s[2];
-    s[0] = '0' + required;
+    s[0] = '0' + (required - 1);
     s[1] = '\0';
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                          name, s, required == 1 ? "" : "s");
@@ -592,6 +593,7 @@ Debug::finalize(JSContext *cx, JSObject *obj)
     Debug *dbg = (Debug *) obj->getPrivate();
     if (dbg && dbg->debuggeeCompartment)
         dbg->detachFrom(dbg->debuggeeCompartment);
+    cx->delete_(dbg);
 }
 
 void
