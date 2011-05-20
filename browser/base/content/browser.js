@@ -8671,3 +8671,54 @@ XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
 #endif
 });
 
+let gSyncPromoNotification = {
+  // This preference counts down the number of times the promotion notification
+  // must be shown yet.
+  VIEWS_LEFT_PREF: "browser.syncPromoViewsLeft",
+  onPopupShowing: function SPN_onPopupShowing(event)
+  {
+    if (event.target != event.currentTarget)
+      return;
+    this._panel = event.target;
+
+    let viewsLeft = 5;
+    try {
+      viewsLeft = Services.prefs.getIntPref(this.VIEWS_LEFT_PREF);
+    } catch(ex) {}
+
+    if (viewsLeft) {
+      if (Services.prefs.prefHasUserValue("services.sync.username")) {
+        // If the user has already setup Sync, don't show the notification.
+        Services.prefs.setIntPref(this.VIEWS_LEFT_PREF, 0);
+        // Be sure to hide the panel, in case it was visible and the user
+        // decided to setup Sync after noticing it.
+        viewsLeft = 0;
+      }
+      else {
+        Services.prefs.setIntPref(this.VIEWS_LEFT_PREF, viewsLeft - 1);
+      }
+    }
+
+    // This has to be done regardless, since the panel could have been made
+    // visible by a previous call.
+    this._panel.querySelector(".sync-promo-notification").hidden = !viewsLeft;
+
+    if (viewsLeft) {
+      // HACK: The description element doesn't wrap correctly in panels, thus
+      // set a width on it, based on the available space.
+      let descElt = this._panel.querySelector(".sync-promo-description");
+      let textContent = descElt.firstChild.textContent;
+      descElt.firstChild.textContent = "";
+      this._panel.addEventListener("popupshown", function () {
+        event.target.removeEventListener("popupshown", arguments.callee, true);
+        descElt.width = descElt.getBoundingClientRect().width;
+        descElt.firstChild.textContent = textContent;
+      }, true);
+    }
+  },
+
+  onCloseButtonCommand: function SPN_onCloseButtonCommand() {
+    Services.prefs.setIntPref(this.VIEWS_LEFT_PREF, 0);
+    this._panel.querySelector(".sync-promo-notification").hidden = true;
+  }
+}

@@ -180,6 +180,7 @@
            orient="vertical"
            ignorekeys="true"
            hidden="true"
+           onpopupshowing="gSyncPromoNotification.onPopupShowing(event);"
            onpopupshown="StarUI.panelShown(event);"
            aria-labelledby="editBookmarkPanelTitle">
       <row id="editBookmarkPanelHeader" align="center" hidden="true">
@@ -220,6 +221,17 @@
                 default="true"
                 oncommand="StarUI.panel.hidePopup();"/>
 #endif
+      </hbox>
+      <hbox class="sync-promo-notification" hidden="true" align="start">
+        <hbox align="center" flex="1">
+          <image class="sync-promo-icon"/>
+          <description flex="1" class="sync-promo-description">
+            &syncPromoNotification.bookmarks.label; <description class="text-link" href="https://services.mozilla.com/">&syncPromoNotification.learnMoreLinkText;</description>
+          </description>
+        </hbox>
+        <toolbarbutton class="sync-promo-closebutton"
+                       tooltiptext="&syncPromoNotification.closeButtonTooltip;"
+                       oncommand="gSyncPromoNotification.onCloseButtonCommand();"/>
       </hbox>
     </panel>
 
@@ -338,7 +350,21 @@
     <menupopup id="placesContext"/>
 
     <panel id="notification-popup" type="arrow" position="after_start"
-           hidden="true" orient="vertical"/>
+           hidden="true" orient="vertical"
+           onpopupshowing="if (/^password-/.test(event.target.firstChild.firstChild.getAttribute('id'))) gSyncPromoNotification.onPopupShowing(event);">
+      <hbox class="notification-popup-children"/>
+      <hbox class="sync-promo-notification" hidden="true" align="start">
+        <hbox align="center" flex="1">
+          <image class="sync-promo-icon"/>
+          <description flex="1" class="sync-promo-description">
+            &syncPromoNotification.passwords.label; <description class="text-link inline-link" href="https://services.mozilla.com/">&syncPromoNotification.learnMoreLinkText;</description>
+          </description>
+        </hbox>
+        <toolbarbutton class="sync-promo-closebutton"
+                       tooltiptext="&syncPromoNotification.closeButtonTooltip;"
+                       oncommand="gSyncPromoNotification.onCloseButtonCommand();"/>
+      </hbox>
+    </panel>
 
     <!-- Popup for site identity information -->
     <panel id="identity-popup"

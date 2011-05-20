@@ -1515,6 +1515,50 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   min-width: 27em;
 }
 
+.sync-promo-notification {
+  margin: 8px -16px -16px -16px;
+  padding: 8px 16px;
+  background-color: #f1f5fb;
+%ifndef WINSTRIPE_AERO
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+%endif
+  box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+}
+
+.sync-promo-icon {
+  list-style-image: url("chrome://browser/skin/sync-24.png");
+  -moz-margin-end: 10px;
+  vertical-align: middle;
+}
+
+.sync-promo-description > .text-link {
+  margin: 0;
+  padding: 0;
+}
+
+.sync-promo-closebutton {
+  -moz-appearance: none;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  border: none;
+  -moz-margin-end: -12px;
+  margin-top: -8px;
+}
+
+.sync-promo-closebutton:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.sync-promo-closebutton:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
+.sync-promo-closebutton > .toolbarbutton-text {
+  padding: 0;
+  margin: 0;
+}
+
 /* ::::: content area ::::: */
 
 #sidebar {
