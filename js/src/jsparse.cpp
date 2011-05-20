@@ -981,7 +981,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
              * Save eval program source in script->atomMap.vector[0] for the
              * eval cache (see EvalCacheLookup in jsobj.cpp).
              */
-            JSAtom *atom = js_AtomizeString(cx, source, 0);
+            JSAtom *atom = js_AtomizeString(cx, source);
             if (!atom || !cg.atomList.add(&parser, atom))
                 goto out;
         }
@@ -8880,7 +8880,7 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
                 JSString *str = js_NumberToString(cx, pn->pn_dval);
                 if (!str)
                     return JS_FALSE;
-                pn->pn_atom = js_AtomizeString(cx, str, 0);
+                pn->pn_atom = js_AtomizeString(cx, str);
                 if (!pn->pn_atom)
                     return JS_FALSE;
                 pn->pn_type = TOK_STRING;
@@ -9064,7 +9064,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                 pn1->pn_type = TOK_XMLTEXT;
                 pn1->pn_op = JSOP_STRING;
                 pn1->pn_arity = PN_NULLARY;
-                pn1->pn_atom = js_AtomizeString(cx, accum, 0);
+                pn1->pn_atom = js_AtomizeString(cx, accum);
                 if (!pn1->pn_atom)
                     return JS_FALSE;
                 JS_ASSERT(pnp != &pn1->pn_next);
@@ -9117,7 +9117,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         pn1->pn_type = TOK_XMLTEXT;
         pn1->pn_op = JSOP_STRING;
         pn1->pn_arity = PN_NULLARY;
-        pn1->pn_atom = js_AtomizeString(cx, accum, 0);
+        pn1->pn_atom = js_AtomizeString(cx, accum);
         if (!pn1->pn_atom)
             return JS_FALSE;
         JS_ASSERT(pnp != &pn1->pn_next);
@@ -9481,7 +9481,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             JS_ASSERT(*chars == 0);
 
             /* Atomize the result string and mutate pn to refer to it. */
-            pn->pn_atom = js_AtomizeString(cx, str, 0);
+            pn->pn_atom = js_AtomizeString(cx, str);
             if (!pn->pn_atom)
                 return JS_FALSE;
             pn->pn_type = TOK_STRING;
@@ -9506,7 +9506,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             str = js_ConcatStrings(cx, left, right);
             if (!str)
                 return JS_FALSE;
-            pn->pn_atom = js_AtomizeString(cx, str, 0);
+            pn->pn_atom = js_AtomizeString(cx, str);
             if (!pn->pn_atom)
                 return JS_FALSE;
             pn->pn_type = TOK_STRING;

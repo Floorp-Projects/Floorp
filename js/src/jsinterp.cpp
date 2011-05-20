@@ -200,9 +200,8 @@ js::GetBlockChainFast(JSContext *cx, StackFrame *fp, JSOp op, size_t oplen)
 
     pc += oplen;
     op = JSOp(*pc);
-    JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == op);
 
-    /* The fast paths assume no JSOP_RESETBASE/INDEXBASE noise. */
+    /* The fast paths assume no JSOP_RESETBASE/INDEXBASE or JSOP_TRAP noise. */
     if (op == JSOP_NULLBLOCKCHAIN)
         return NULL;
     if (op == JSOP_BLOCKCHAIN)
@@ -2247,7 +2246,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(regs.fp()->hasImacropc()                                    \
-                  ? atoms == COMMON_ATOMS_START(&rt->atomState) &&            \
+                  ? atoms == rt->atomState.commonAtomsStart() &&              \
                     GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
                   : (size_t)(atoms - script->atomMap.vector) <                \
                     (size_t)(script->atomMap.length -                         \
@@ -2496,7 +2495,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
     }
 
     if (regs.fp()->hasImacropc())
-        atoms = COMMON_ATOMS_START(&rt->atomState);
+        atoms = rt->atomState.commonAtomsStart();
 #endif
 
     /* Don't call the script prologue if executing between Method and Trace JIT. */
@@ -2662,7 +2661,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
                 break;
               case ARECORD_IMACRO:
               case ARECORD_IMACRO_ABORTED:
-                atoms = COMMON_ATOMS_START(&rt->atomState);
+                atoms = rt->atomState.commonAtomsStart();
                 op = JSOp(*regs.pc);
                 CLEAR_LEAVE_ON_TRACE_POINT();
                 if (status == ARECORD_IMACRO)
@@ -5494,7 +5493,7 @@ BEGIN_CASE(JSOP_LAMBDA)
 
                 if (op2 == JSOP_SETMETHOD) {
 #ifdef DEBUG
-                    op2 = JSOp(pc2[JSOP_SETMETHOD_LENGTH]);
+                    op2 = js_GetOpcode(cx, script, pc2 + JSOP_SETMETHOD_LENGTH);
                     JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
 #endif
                     const Value &lref = regs.sp[-1];

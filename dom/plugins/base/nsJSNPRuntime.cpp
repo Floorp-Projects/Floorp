@@ -985,7 +985,7 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
 
           return PR_FALSE;
       }
-      id = StringToNPIdentifier(str);
+      id = StringToNPIdentifier(cx, str);
     } else {
       NS_ASSERTION(JSVAL_IS_INT(v),
                    "The element in ida must be either string or int!\n");
@@ -1473,8 +1473,8 @@ CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (npobj->_class->invoke) {
       JSFunction *fun = (JSFunction *)::JS_GetPrivate(cx, funobj);
-      JSString *name = ::JS_GetFunctionId(fun);
-      NPIdentifier id = StringToNPIdentifier(name);
+      JSString *name = ::JS_InternJSString(cx, ::JS_GetFunctionId(fun));
+      NPIdentifier id = StringToNPIdentifier(cx, name);
 
       ok = npobj->_class->invoke(npobj, id, npargs, argc, &v);
     } else {

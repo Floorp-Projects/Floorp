@@ -10539,10 +10539,9 @@ TraceRecorder::record_JSOP_IFNE()
 LIns*
 TraceRecorder::newArguments(LIns* callee_ins)
 {
-    LIns* global_ins = w.immpObjGC(globalObj);
     LIns* argc_ins = w.nameImmi(cx->fp()->numActualArgs());
 
-    LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
+    LIns* args[] = { callee_ins, argc_ins, cx_ins };
     LIns* argsobj_ins = w.call(&js_NewArgumentsOnTrace_ci, args);
     guard(false, w.eqp0(argsobj_ins), OOM_EXIT);
 
@@ -12470,11 +12469,11 @@ RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
 {
     JSString* name = *namep;
     if (name->isAtom()) {
-        *idp = INTERNED_STRING_TO_JSID(name);
+        *idp = ATOM_TO_JSID(&name->asAtom());
         return true;
     }
 
-    JSAtom* atom = js_AtomizeString(cx, name, 0);
+    JSAtom* atom = js_AtomizeString(cx, name);
     if (!atom)
         return false;
     *namep = atom; /* write back to GC root */

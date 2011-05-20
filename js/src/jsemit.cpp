@@ -1323,8 +1323,8 @@ JSTreeContext::ensureSharpSlots()
     JS_ASSERT(!(flags & TCF_HAS_SHARPS));
     if (inFunction()) {
         JSContext *cx = parser->context;
-        JSAtom *sharpArrayAtom = js_Atomize(cx, "#array", 6, 0);
-        JSAtom *sharpDepthAtom = js_Atomize(cx, "#depth", 6, 0);
+        JSAtom *sharpArrayAtom = js_Atomize(cx, "#array", 6);
+        JSAtom *sharpDepthAtom = js_Atomize(cx, "#depth", 6);
         if (!sharpArrayAtom || !sharpDepthAtom)
             return false;
 

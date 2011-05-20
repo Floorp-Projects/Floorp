@@ -745,7 +745,7 @@ namespace nanojit
             if (isInReg()) {
                 Register r = { sharedFields.regnum };
                 return r;
-            } else { 
+            } else {
                 return deprecated_UnknownReg;
             }
         }
@@ -985,8 +985,16 @@ namespace nanojit
             return isImmI() || isImmQorD();
         }
 
+        bool isConditionalBranch() const {
+            return isop(LIR_jt) || isop(LIR_jf) || isJov();
+        }
+
+        bool isUnConditionalBranch() const {
+            return isop(LIR_j) || isop(LIR_jtbl);
+        }
+
         bool isBranch() const {
-            return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j) || isop(LIR_jtbl) || isJov();
+            return isConditionalBranch() || isUnConditionalBranch();
         }
 
         LTy retType() const {
@@ -1035,7 +1043,7 @@ namespace nanojit
 
     typedef SeqBuilder<LIns*> InsList;
     typedef SeqBuilder<char*> StringList;
-
+    typedef HashMap<LIns*,bool> InsSet;
 
     // 0-operand form.  Used for LIR_start and LIR_label.
     class LInsOp0
@@ -1990,7 +1998,7 @@ namespace nanojit
         // be true, else we would have side-exited.  So if we see 'cmp' again
         // we can treat it like a constant.  This table records such
         // comparisons.
-        HashMap <LIns*, bool> knownCmpValues;
+        InsSet knownCmpValues;
 
         // If true, we will not add new instructions to the CSE tables, but we
         // will continue to CSE instructions that match existing table
@@ -2469,6 +2477,100 @@ namespace nanojit
         void finish();
         LIns* read();
     };
+
+    /**
+      * A reverse filter for LIR that generates a control-flow graph in gml format.
+      * More information on Graph Modelling Language (gml) can be found here:
+      *   http://en.wikipedia.org/wiki/Graph_Modelling_Language
+      * An excellent tool for manipulating the graphs produced by this code
+      * is yED (http://www.yworks.com/en/products_yed_about.html).
+      *
+      * The raw output produced by this class contains connectively (i,e edge)
+      * information (including formatting), and node (i.e. vertex) data, but
+      * does not contain any positional information.
+      * Thus when opening the .gml file, all the nodes will likely appear stacked
+      * on one another.  An auto-layout tool like yEd can then re-position the
+      * nodes for better viewing.  E.g. Tools->Fit Node to Label followed by
+      * Layout->Hierarchical->Interactive produces a relatively convential
+      * looking flow-control graph.
+      *
+      * Usage:
+      *
+      *         LirReader  reader(frag->lastIns);
+      *         CfgLister  cfg(&reader, alloc);
+      *
+      *         for (LIns* ins = cfg.read(); !ins->isop(LIR_start); ins = cfg.read()) {}
+      *
+      *         cfg.printGmlCfg(f, frag->lirbuf->printer, proxiesFor);
+      *         fclose(f);
+      *
+      *  The first and second parameters to printGmlCfg() are an open FILE* and
+      *  a populated LInsPrinter, respectively.  The printer must be able to produce
+      *  a name from either the lirNameMap or a call to formatIns().
+      *
+      *  The 3rd parameter to primtGmlCfg(), proxiesFor can be used to limit
+      *  the number of edges in the graph. If an edge points to a vertex (LIns) in
+      *  this set, then a new node is created, with the same name as the original,
+      *  and the edge will point to that node.
+      *
+      * Algortihm:
+      *
+      *  During the first pass (i.e. CfgLister::read()), we capture edges and vertices
+      *  at an instruction level.  Recall that this is during a backwards pass, so for
+      *  forward branches we won't know whether an instruction we've seen already is
+      *  the target of a branch or not, until we reach the branch.  I.e. we see the
+      *  target instructions first and don't yet know they are targets.
+      *
+      *  On the 2nd pass (i.e. printGmlCfg) we use the list of branch targets from the
+      *  first pass (i.e. _vertices) and group instructions into them.  This is where
+      *  _alt comes into play, it provides a map from any instruction to the first
+      *  instruction of the containing block.
+      */
+    class CfgLister : public LirFilter
+    {
+    public:
+        virtual LIns* read();
+
+        typedef enum _CfgMode
+        {
+              CFG_EBB   // extended basic blocks
+            , CFG_BB    // basic blocks
+            , CFG_INS   // 1 block per instruction
+        }
+        CfgMode;
+
+        CfgLister(LirFilter* in, Allocator& alloc, CfgMode mode=CFG_EBB);
+
+        void printGmlCfg(FILE* f, LInsPrinter* printer, InsSet* makeProxyNodesFor);
+
+    private:
+        void        addEdge(LIns* from, LIns* to);
+        uint32_t    node2id(LIns* i);
+        const char* nodeName(LIns* i, InsBuf& b, LInsPrinter* printer);
+        const char* nodeShape(LIns* i, InsSet* pseudo);
+        uint32_t    edgeCountOf(LIns* i);
+
+        void printEdges(FILE* f, LInsPrinter* printer, InsSet* pseudo);
+        void printNode(FILE* f, InsList* nodeIns, LInsPrinter* printer, InsSet* pseudo);
+
+        void gmlNode(FILE* f, uint32_t id, const char* shape, const char* title);
+        void gmlEdge(FILE* f, uint32_t srcId, uint32_t dstId, const char* style, const char* fill, const char* width, const char* text);
+
+        //alternate form of gmlNode
+        void gmlNodePrefix(FILE* f, uint32_t id, const char* shape);
+        void gmlNodeSuffix(FILE* f);
+        void gmlNodeTextLine(FILE* f, const char* text, int32_t tabCount);
+
+        Allocator&                  _alloc;
+        HashMap<LIns*, LIns*>       _alt;       // allow edge src/dst to be re-mapped to another instruction
+        HashMap<LIns*, InsList*>    _edges;     // from,to list
+        InsSet                      _vertices;  // node list
+        HashMap<LIns*, uint32_t>    _ids;       // ins -> unique id
+        LIns*                       _prior;     // state maintained during read()
+        uint32_t                    _count;     // state maintained during read()
+        CfgMode                     _mode;      // mode selector
+    };
+
 #endif
 
 }

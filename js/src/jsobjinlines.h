@@ -1261,6 +1261,16 @@ out:
 } /* namespace detail */
 
 static JS_ALWAYS_INLINE JSObject *
+NewFunction(JSContext *cx, js::GlobalObject &global)
+{
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, &global, JSProto_Function, &proto))
+        return NULL;
+    return detail::NewObject<WithProto::Given, true>(cx, &js_FunctionClass, proto, &global,
+                                                     gc::FINALIZE_OBJECT2);
+}
+
+static JS_ALWAYS_INLINE JSObject *
 NewFunction(JSContext *cx, JSObject *parent)
 {
     return detail::NewObject<WithProto::Class, true>(cx, &js_FunctionClass, NULL, parent,
