@@ -17,4 +17,3 @@ conformance/object-deletion-behaviour.html
 conformance/read-pixels-test.html
 conformance/tex-sub-image-2d-bad-args.html
 conformance/uninitialized-test.html
-conformance/webgl-specific.html
