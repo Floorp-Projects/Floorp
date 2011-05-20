@@ -390,7 +390,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
     }
   }
 
-  nsCOMPtr<nsFrameSelection> fs = aPresShell->FrameSelection();
+  nsRefPtr<nsFrameSelection> fs = aPresShell->FrameSelection();
   nsIContent* content = fs->GetLimiter();
   if (!content) {
     content = fs->GetAncestorLimiter();

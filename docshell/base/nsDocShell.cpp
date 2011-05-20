@@ -162,6 +162,8 @@
 #include "nsIStrictTransportSecurityService.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsIStructuredCloneContainer.h"
+#include "nsIFaviconService.h"
+#include "mozIAsyncFavicons.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -9435,6 +9437,43 @@ nsDocShell::SetReferrerURI(nsIURI * aURI)
 // nsDocShell: Session History
 //*****************************************************************************
 
+namespace
+{
+    // Callback used in nsDocShell::AddState.  When we change URIs with
+    // push/replaceState, we use this callback to ensure that Places associates
+    // a favicon with the new URI.
+    class nsAddStateFaviconCallback : public nsIFaviconDataCallback
+    {
+    public:
+        NS_DECL_ISUPPORTS
+
+        nsAddStateFaviconCallback(nsIURI *aNewURI)
+          : mNewURI(aNewURI)
+        {
+        }
+
+        NS_IMETHODIMP
+        OnFaviconDataAvailable(nsIURI *aFaviconURI, PRUint32 aDataLen,
+                               const PRUint8 *aData, const nsACString &aMimeType)
+        {
+            NS_ASSERTION(aDataLen == 0,
+                         "We weren't expecting the callback to deliver data.");
+            nsCOMPtr<mozIAsyncFavicons> favSvc =
+                do_GetService("@mozilla.org/browser/favicon-service;1");
+            NS_ENSURE_STATE(favSvc);
+
+            return favSvc->SetAndFetchFaviconForPage(mNewURI, aFaviconURI,
+                                                     PR_FALSE, nsnull);
+        }
+
+    private:
+        nsCOMPtr<nsIURI> mNewURI;
+    };
+
+    NS_IMPL_ISUPPORTS1(nsAddStateFaviconCallback, nsIFaviconDataCallback)
+
+} // anonymous namespace
+
 NS_IMETHODIMP
 nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
                      const nsAString& aURL, PRBool aReplace, JSContext* aCx)
@@ -9660,6 +9699,11 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         NS_ENSURE_SUCCESS(newSHEntry->SetDocIdentifier(ourDocIdent),
                           NS_ERROR_FAILURE);
 
+        // Set the new SHEntry's title (bug 655273).
+        nsString title;
+        mOSHE->GetTitle(getter_Copies(title));
+        newSHEntry->SetTitle(title);
+
         // AddToSessionHistory may not modify mOSHE.  In case it doesn't,
         // we'll just set mOSHE here.
         mOSHE = newSHEntry;
@@ -9716,6 +9760,16 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
             else if (mGlobalHistory) {
                 mGlobalHistory->SetPageTitle(newURI, mTitle);
             }
+        }
+
+        // Inform the favicon service that our old favicon applies to this new
+        // URI.
+        nsCOMPtr<mozIAsyncFavicons> favSvc =
+            do_GetService("@mozilla.org/browser/favicon-service;1");
+        if (favSvc) {
+            nsCOMPtr<nsIFaviconDataCallback> callback =
+                new nsAddStateFaviconCallback(newURI);
+            favSvc->GetFaviconURLForPage(oldURI, callback);
         }
     }
     else {

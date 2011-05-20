@@ -3429,6 +3429,10 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
       text->SetDecorationColorToForeground();
     }
   }
+  else if (eCSSUnit_EnumColor == decorationColorValue->GetUnit() &&
+           decorationColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) {
+    text->SetDecorationColorToForeground();
+  }
   else if (SetColor(*decorationColorValue, 0, mPresContext, aContext,
                     decorationColor, canStoreInRuleTree)) {
     text->SetDecorationColor(decorationColor);
@@ -3439,9 +3443,6 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
                       decorationColorValue->GetIntValue() ==
                         NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
                       "unexpected enumerated value");
-    text->SetDecorationColorToForeground();
-  }
-  else if (eCSSUnit_Initial == decorationColorValue->GetUnit()) {
     text->SetDecorationColorToForeground();
   }
 
