@@ -20,7 +20,7 @@ add_test(function() {
     is_element_hidden(button, "Plugin Check message button should be hidden");
 
     info("Changing view to plugins")
-    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       var button = aManager.document.querySelector("#list-view hbox.global-info-plugincheck button.button-link");
