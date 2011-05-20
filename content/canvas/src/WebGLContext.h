@@ -285,7 +285,8 @@ struct WebGLContextOptions {
     // these are defaults
     WebGLContextOptions()
         : alpha(true), depth(true), stencil(false),
-          premultipliedAlpha(true), antialiasHint(false)
+          premultipliedAlpha(true), antialias(false),
+          preserveDrawingBuffer(false)
     { }
 
     bool operator==(const WebGLContextOptions& other) const {
@@ -294,24 +295,20 @@ struct WebGLContextOptions {
             depth == other.depth &&
             stencil == other.stencil &&
             premultipliedAlpha == other.premultipliedAlpha &&
-            antialiasHint == other.antialiasHint;
+            antialias == other.antialias &&
+            preserveDrawingBuffer == other.preserveDrawingBuffer;
     }
 
     bool operator!=(const WebGLContextOptions& other) const {
-        return
-            alpha != other.alpha ||
-            depth != other.depth ||
-            stencil != other.stencil ||
-            premultipliedAlpha != other.premultipliedAlpha ||
-            antialiasHint != other.antialiasHint;
+        return !operator==(other);
     }
 
     bool alpha;
     bool depth;
     bool stencil;
-
     bool premultipliedAlpha;
-    bool antialiasHint;
+    bool antialias;
+    bool preserveDrawingBuffer;
 };
 
 class WebGLContext :
