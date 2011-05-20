@@ -369,9 +369,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   const unsigned long VALIDATE_STATUS                  = 0x8B83;
   const unsigned long ATTACHED_SHADERS                 = 0x8B85;
   const unsigned long ACTIVE_UNIFORMS                  = 0x8B86;
-  const unsigned long ACTIVE_UNIFORM_MAX_LENGTH        = 0x8B87;
   const unsigned long ACTIVE_ATTRIBUTES                = 0x8B89;
-  const unsigned long ACTIVE_ATTRIBUTE_MAX_LENGTH      = 0x8B8A;
   const unsigned long SHADING_LANGUAGE_VERSION         = 0x8B8C;
   const unsigned long CURRENT_PROGRAM                  = 0x8B8D;
 
@@ -501,8 +499,6 @@ interface nsIDOMWebGLRenderingContext : nsISupports
 
   /* Shader Source */
   const unsigned long COMPILE_STATUS                 = 0x8B81;
-  const unsigned long INFO_LOG_LENGTH                = 0x8B84;
-  const unsigned long SHADER_SOURCE_LENGTH           = 0x8B88;
   const unsigned long SHADER_COMPILER                = 0x8DFA;
 
   /* Shader Precision-Specified Types */
