@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Utils', 'Svc', 'Services', 'Str'];
+const EXPORTED_SYMBOLS = ['Utils', 'Svc', 'Services', 'PlacesUtils', 'Str'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -48,6 +48,7 @@ Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Constants for makeSyncCallback, waitForSyncCallback
@@ -171,29 +172,6 @@ let Utils = {
           throw ex;
         }
       };
-    };
-  },
-
-  batchSync: function batchSync(service, engineType) {
-    return function batchedSync() {
-      let engine = this;
-      let batchEx = null;
-
-      // Try running sync in batch mode
-      Svc[service].runInBatchMode({
-        runBatched: function wrappedSync() {
-          try {
-            engineType.prototype._sync.call(engine);
-          }
-          catch(ex) {
-            batchEx = ex;
-          }
-        }
-      }, null);
-
-      // Expose the exception if something inside the batch failed
-      if (batchEx!= null)
-        throw batchEx;
     };
   },
 
@@ -1159,12 +1137,12 @@ let Utils = {
   getIcon: function(iconUri, defaultIcon) {
     try {
       let iconURI = Utils.makeURI(iconUri);
-      return Svc.Favicon.getFaviconLinkForIcon(iconURI).spec;
+      return PlacesUtils.favicons.getFaviconLinkForIcon(iconURI).spec;
     }
     catch(ex) {}
 
     // Just give the provided default icon or the system's default
-    return defaultIcon || Svc.Favicon.defaultFavicon.spec;
+    return defaultIcon || PlacesUtils.favicons.defaultFavicon.spec;
   },
 
   getErrorString: function Utils_getErrorString(error, args) {
@@ -1548,12 +1526,8 @@ this.__defineGetter__("_sessionCID", function() {
   return appinfo_id == SEAMONKEY_ID ? "@mozilla.org/suite/sessionstore;1"
                                     : "@mozilla.org/browser/sessionstore;1";
 });
-[["Annos", "@mozilla.org/browser/annotation-service;1", "nsIAnnotationService"],
- ["Bookmark", "@mozilla.org/browser/nav-bookmarks-service;1", "nsINavBookmarksService"],
- ["Env", "@mozilla.org/process/environment;1", "nsIEnvironment"],
- ["Favicon", "@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
+[["Env", "@mozilla.org/process/environment;1", "nsIEnvironment"],
  ["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
- ["History", "@mozilla.org/browser/nav-history-service;1", "nsPIPlacesDatabase"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
  ["KeyFactory", "@mozilla.org/security/keyobjectfactory;1", "nsIKeyObjectFactory"],
  ["Memory", "@mozilla.org/xpcom/memory-service;1", "nsIMemory"],
