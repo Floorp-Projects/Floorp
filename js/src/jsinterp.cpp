@@ -59,6 +59,7 @@
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -476,6 +477,13 @@ BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 const uint32 JSSLOT_FOUND_FUNCTION  = 0;
 const uint32 JSSLOT_SAVED_ID        = 1;
 
+static void
+no_such_method_trace(JSTracer *trc, JSObject *obj)
+{
+    gc::MarkValue(trc, obj->getSlot(JSSLOT_FOUND_FUNCTION), "found function");
+    gc::MarkValue(trc, obj->getSlot(JSSLOT_SAVED_ID), "saved id");
+}
+
 Class js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
@@ -486,6 +494,14 @@ Class js_NoSuchMethodClass = {
     EnumerateStub,
     ResolveStub,
     ConvertStub,
+    NULL,                 /* finalize */
+    NULL,                 /* reserved0 */
+    NULL,                 /* checkAccess */
+    NULL,                 /* call */
+    NULL,                 /* construct */
+    NULL,                 /* XDR */
+    NULL,                 /* hasInstance */
+    no_such_method_trace  /* trace */
 };
 
 /*
@@ -529,13 +545,8 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
         if (!obj)
             return false;
 
-        /*
-         * Null map to cause prompt and safe crash if this object were to
-         * escape due to a bug. This will make the object appear to be a
-         * stillborn instance that needs no finalization, which is sound:
-         * NoSuchMethod helper objects own no manually allocated resources.
-         */
         obj->init(cx, &js_NoSuchMethodClass, NULL, NULL, NULL, false);
+        obj->setSharedNonNativeMap();
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
         vp[0].setObject(*obj);
