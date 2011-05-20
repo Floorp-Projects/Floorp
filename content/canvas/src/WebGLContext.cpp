@@ -312,31 +312,24 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
 
     WebGLContextOptions newOpts;
 
-    // defaults are: yes: depth, alpha, premultipliedAlpha; no: stencil
-    if (!GetBoolFromPropertyBag(aOptions, "stencil", &newOpts.stencil))
-        newOpts.stencil = false;
-
-    if (!GetBoolFromPropertyBag(aOptions, "depth", &newOpts.depth))
-        newOpts.depth = true;
-
-    if (!GetBoolFromPropertyBag(aOptions, "alpha", &newOpts.alpha))
-        newOpts.alpha = true;
-
-    if (!GetBoolFromPropertyBag(aOptions, "premultipliedAlpha", &newOpts.premultipliedAlpha))
-        newOpts.premultipliedAlpha = true;
-
-    GetBoolFromPropertyBag(aOptions, "antialiasHint", &newOpts.antialiasHint);
+    GetBoolFromPropertyBag(aOptions, "stencil", &newOpts.stencil);
+    GetBoolFromPropertyBag(aOptions, "depth", &newOpts.depth);
+    GetBoolFromPropertyBag(aOptions, "alpha", &newOpts.alpha);
+    GetBoolFromPropertyBag(aOptions, "premultipliedAlpha", &newOpts.premultipliedAlpha);
+    GetBoolFromPropertyBag(aOptions, "antialias", &newOpts.antialias);
+    GetBoolFromPropertyBag(aOptions, "preserveDrawingBuffer", &newOpts.preserveDrawingBuffer);
 
     // enforce that if stencil is specified, we also give back depth
     newOpts.depth |= newOpts.stencil;
 
 #if 0
-    LogMessage("aaHint: %d stencil: %d depth: %d alpha: %d premult: %d\n",
-               newOpts.antialiasHint ? 1 : 0,
+    LogMessage("aaHint: %d stencil: %d depth: %d alpha: %d premult: %d preserve: %d\n",
+               newOpts.antialias ? 1 : 0,
                newOpts.stencil ? 1 : 0,
                newOpts.depth ? 1 : 0,
                newOpts.alpha ? 1 : 0,
-               newOpts.premultipliedAlpha ? 1 : 0);
+               newOpts.premultipliedAlpha ? 1 : 0,
+               newOpts.preserveDrawingBuffer ? 1 : 0);
 #endif
 
     if (mOptionsFrozen && newOpts != mOptions) {
@@ -731,6 +724,9 @@ WebGLContext::GetContextAttributes(jsval *aResult)
                            NULL, NULL, JSPROP_ENUMERATE) ||
         !JS_DefineProperty(cx, obj, "premultipliedAlpha",
                            mOptions.premultipliedAlpha ? JSVAL_TRUE : JSVAL_FALSE,
+                           NULL, NULL, JSPROP_ENUMERATE) ||
+        !JS_DefineProperty(cx, obj, "preserveDrawingBuffer",
+                           mOptions.preserveDrawingBuffer ? JSVAL_TRUE : JSVAL_FALSE,
                            NULL, NULL, JSPROP_ENUMERATE))
     {
         *aResult = JSVAL_VOID;
