@@ -4170,12 +4170,16 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
         oldproto = oldproto->getProto();
     }
 
-    if (!proto || !checkForCycles) {
-        obj->setProto(proto);
-    } else if (!SetProtoCheckingForCycles(cx, obj, proto)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE, js_proto_str);
-        return false;
+    if (checkForCycles) {
+        for (JSObject *obj2 = proto; obj2; obj2 = obj2->getProto()) {
+            if (obj2 == obj) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE,
+                                     js_proto_str);
+                return false;
+            }
+        }
     }
+    obj->setProto(proto);
     return true;
 }
 
