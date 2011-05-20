@@ -155,6 +155,8 @@ const TYPES = {
   multipackage: 32
 };
 
+const MSG_JAR_FLUSH = "AddonJarFlush";
+
 /**
  * Valid IDs fit this pattern.
  */
@@ -901,6 +903,18 @@ function buildJarURI(aJarfile, aPath) {
   let uri = Services.io.newFileURI(aJarfile);
   uri = "jar:" + uri.spec + "!/" + aPath;
   return NetUtil.newURI(uri);
+}
+
+/**
+ * Sends local and remote notifications to flush a JAR file cache entry
+ *
+ * @param aJarFile
+ *        The ZIP/XPI/JAR file as a nsIFile
+ */
+function flushJarCache(aJarFile) {
+  Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
+  Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIChromeFrameMessageManager)
+    .sendAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
 }
 
 /**
@@ -5438,7 +5452,7 @@ AddonInstall.prototype = {
       LOG("Cancelling install of " + this.addon.id);
       let xpi = this.installLocation.getStagingDir();
       xpi.append(this.addon.id + ".xpi");
-      Services.obs.notifyObservers(xpi, "flush-cache-entry", null);
+      flushJarCache(xpi);
       cleanStagingDir(this.installLocation.getStagingDir(),
                       [this.addon.id, this.addon.id + ".xpi",
                        this.addon.id + ".json"]);
@@ -7363,7 +7377,7 @@ DirectoryInstallLocation.prototype = {
       file = self._directory.clone().QueryInterface(Ci.nsILocalFile);
       file.append(aId + ".xpi");
       if (file.exists()) {
-        Services.obs.notifyObservers(file, "flush-cache-entry", null);
+        flushJarCache(file);
         transaction.move(file, trashDir);
       }
     }
@@ -7380,7 +7394,7 @@ DirectoryInstallLocation.prototype = {
       }
       else {
         if (aSource.isFile())
-          Services.obs.notifyObservers(aSource, "flush-cache-entry", null);
+          flushJarCache(aSource);
 
         transaction.move(aSource, this._directory);
       }
@@ -7443,7 +7457,7 @@ DirectoryInstallLocation.prototype = {
     let trashDir = this.getTrashDir();
 
     if (file.leafName != aId)
-      Services.obs.notifyObservers(file, "flush-cache-entry", null);
+      flushJarCache(file);
 
     let transaction = new SafeInstallOperation();
 
