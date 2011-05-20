@@ -95,6 +95,12 @@ _TEST_FILES =	bug500931_helper.html \
 		bug657267.jar \
 		$(NULL)
 
+ifndef MOZ_PLATFORM_MAEMO
+_TEST_FILES +=	test_bug657267.html \
+		bug657267.jar
+endif
+
+
 		#test_bug484107.html \
 
 libs:: $(_TEST_FILES)
