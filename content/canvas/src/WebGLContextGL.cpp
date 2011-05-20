@@ -601,13 +601,47 @@ WebGLContext::Clear(PRUint32 mask)
     return NS_OK;
 }
 
-GL_SAME_METHOD_4(ClearColor, ClearColor, WebGLfloat, WebGLfloat, WebGLfloat, WebGLfloat)
+NS_IMETHODIMP
+WebGLContext::ClearColor(WebGLfloat r, WebGLfloat g, WebGLfloat b, WebGLfloat a)
+{
+    MakeContextCurrent();
+    mColorClearValue[0] = r;
+    mColorClearValue[1] = g;
+    mColorClearValue[2] = b;
+    mColorClearValue[3] = a;
+    gl->fClearColor(r, g, b, a);
+    return NS_OK;
+}
 
-GL_SAME_METHOD_1(ClearDepth, ClearDepth, WebGLfloat)
+NS_IMETHODIMP
+WebGLContext::ClearDepth(WebGLfloat v)
+{
+    MakeContextCurrent();
+    mDepthClearValue = v;
+    gl->fClearDepth(v);
+    return NS_OK;
+}
 
-GL_SAME_METHOD_1(ClearStencil, ClearStencil, WebGLint)
+NS_IMETHODIMP
+WebGLContext::ClearStencil(WebGLint v)
+{
+    MakeContextCurrent();
+    mStencilClearValue = v;
+    gl->fClearStencil(v);
+    return NS_OK;
+}
 
-GL_SAME_METHOD_4(ColorMask, ColorMask, WebGLboolean, WebGLboolean, WebGLboolean, WebGLboolean)
+NS_IMETHODIMP
+WebGLContext::ColorMask(WebGLboolean r, WebGLboolean g, WebGLboolean b, WebGLboolean a)
+{
+    MakeContextCurrent();
+    mColorWriteMask[0] = r;
+    mColorWriteMask[1] = g;
+    mColorWriteMask[2] = b;
+    mColorWriteMask[3] = a;
+    gl->fColorMask(r, g, b, a);
+    return NS_OK;
+}
 
 nsresult
 WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
@@ -1081,7 +1115,14 @@ WebGLContext::DepthFunc(WebGLenum func)
     return NS_OK;
 }
 
-GL_SAME_METHOD_1(DepthMask, DepthMask, WebGLboolean)
+NS_IMETHODIMP
+WebGLContext::DepthMask(WebGLboolean b)
+{
+    MakeContextCurrent();
+    mDepthWriteMask = b;
+    gl->fDepthMask(b);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 WebGLContext::DepthRange(WebGLfloat zNear, WebGLfloat zFar)
@@ -1444,6 +1485,15 @@ NS_IMETHODIMP WebGLContext::Enable(WebGLenum cap)
     if (!ValidateCapabilityEnum(cap, "enable"))
         return NS_OK;
 
+    switch(cap) {
+        case LOCAL_GL_SCISSOR_TEST:
+            mScissorTestEnabled = 1;
+            break;
+        case LOCAL_GL_DITHER:
+            mDitherEnabled = 1;
+            break;
+    }
+
     MakeContextCurrent();
     gl->fEnable(cap);
     return NS_OK;
@@ -1453,6 +1503,15 @@ NS_IMETHODIMP WebGLContext::Disable(WebGLenum cap)
 {
     if (!ValidateCapabilityEnum(cap, "disable"))
         return NS_OK;
+
+    switch(cap) {
+        case LOCAL_GL_SCISSOR_TEST:
+            mScissorTestEnabled = 0;
+            break;
+        case LOCAL_GL_DITHER:
+            mDitherEnabled = 0;
+            break;
+    }
 
     MakeContextCurrent();
     gl->fDisable(cap);

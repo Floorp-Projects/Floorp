@@ -127,6 +127,24 @@ WebGLContext::WebGLContext()
     mFakeVertexAttrib0BufferObjectSize = 0;
     mFakeVertexAttrib0BufferObject = 0;
     mFakeVertexAttrib0BufferStatus = VertexAttrib0Status::Default;
+
+    // these are de default values, see 6.2 State tables in the OpenGL ES 2.0.25 spec
+    mColorWriteMask[0] = 1;
+    mColorWriteMask[1] = 1;
+    mColorWriteMask[2] = 1;
+    mColorWriteMask[3] = 1;
+    mDepthWriteMask = 1;
+    mColorClearValue[0] = 0.f;
+    mColorClearValue[1] = 0.f;
+    mColorClearValue[2] = 0.f;
+    mColorClearValue[3] = 0.f;
+    mDepthClearValue = 1.f;
+    mStencilClearValue = 0;
+    mStencilRef = 0;
+    mStencilValueMask = 0xffffffff;
+    mStencilWriteMask = 0xffffffff;
+    mScissorTestEnabled = 0;
+    mDitherEnabled = 1;
 }
 
 WebGLContext::~WebGLContext()
