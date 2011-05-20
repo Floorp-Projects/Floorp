@@ -1233,12 +1233,8 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str);
 extern void
 js_MarkTraps(JSTracer *trc);
 
-namespace js {
-namespace gc {
-
 /*
- * Macro to test if a traversal is the marking phase of GC to avoid exposing
- * ScriptFilenameEntry to traversal implementations.
+ * Macro to test if a traversal is the marking phase of the GC.
  */
 #define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
 
@@ -1248,15 +1244,8 @@ namespace gc {
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_SHAPE)
 #endif
 
-/*
- * Set object's prototype while checking that doing so would not create
- * a cycle in the proto chain. The cycle check and proto change are done
- * only when all other requests are finished or suspended to ensure exclusive
- * access to the chain. If there is a cycle, return false without reporting
- * an error. Otherwise, set the proto and return true.
- */
-extern bool
-SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto);
+namespace js {
+namespace gc {
 
 JSCompartment *
 NewCompartment(JSContext *cx, JSPrincipals *principals);
