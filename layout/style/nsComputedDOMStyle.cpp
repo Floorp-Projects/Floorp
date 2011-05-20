@@ -2280,12 +2280,32 @@ nsComputedDOMStyle::DoGetTextDecoration()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
-  PRUint8 line = GetStyleTextReset()->mTextDecorationLine;
+  const nsStyleTextReset* textReset = GetStyleTextReset();
+
+  // If decoration style or color wasn't initial value, the author knew the
+  // text-decoration is a shorthand property in CSS 3.
+  // Return NULL in such cases.
+  if (textReset->GetDecorationStyle() != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
+    return nsnull;
+  }
+
+  nscolor color;
+  PRBool isForegroundColor;
+  textReset->GetDecorationColor(color, isForegroundColor);
+  if (!isForegroundColor) {
+    return nsnull;
+  }
+
+  // Otherwise, the web pages may have been written for CSS 2.1 or earlier,
+  // i.e., text-decoration was assumed as a longhand property.  In that case,
+  // we should return computed value same as CSS 2.1 for backward compatibility.
+
+  PRUint8 line = textReset->mTextDecorationLine;
   // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
   // don't want these to appear in the computed style.
   line &= ~(NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS |
             NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL);
-  PRUint8 blink = GetStyleTextReset()->mTextBlink;
+  PRUint8 blink = textReset->mTextBlink;
 
   if (blink == NS_STYLE_TEXT_BLINK_NONE &&
       line == NS_STYLE_TEXT_DECORATION_LINE_NONE) {
