@@ -10,12 +10,18 @@ StartupNotify=true
 Terminal=false
 Type=Application
 Categories=Application;Network;
+#if MOZ_PLATFORM_MAEMO == 6
+Icon=/usr/share/themes/blanco/meegotouch/icons/@MOZ_APP_NAME@.png
+Categories=X-MeeGo;
+OnlyShownIn=X-MeeGo;
+#else
 Icon=@MOZ_APP_NAME@
 X-Icon-Path=/usr/share/icons
 X-Window-Icon=@MOZ_APP_NAME@
 X-Window-Icon-dimmed=@MOZ_APP_NAME@
-X-Osso-Type=application/x-executable
 X-Osso-Service=mozilla.@MOZ_APP_NAME@
+#endif
+X-Osso-Type=application/x-executable
 MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/vnd.mozilla.xul+xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;
 
 [X-Osso-URI-Actions]

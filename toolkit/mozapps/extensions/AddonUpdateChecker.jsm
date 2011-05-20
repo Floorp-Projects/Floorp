@@ -386,6 +386,7 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
       }
 
       let result = {
+        id: aId,
         version: version,
         updateURL: getProperty(ds, targetApp, "updateLink"),
         updateHash: getProperty(ds, targetApp, "updateHash"),
@@ -440,16 +441,21 @@ function UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver) {
   }
 
   LOG("Requesting " + aUrl);
-  this.request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                 createInstance(Ci.nsIXMLHttpRequest);
-  this.request.open("GET", aUrl, true);
-  this.request.channel.notificationCallbacks = new BadCertHandler(!requireBuiltIn);
-  this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
-  this.request.overrideMimeType("text/xml");
-  var self = this;
-  this.request.onload = function(event) { self.onLoad() };
-  this.request.onerror = function(event) { self.onError() };
-  this.request.send(null);
+  try {
+    this.request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                   createInstance(Ci.nsIXMLHttpRequest);
+    this.request.open("GET", aUrl, true);
+    this.request.channel.notificationCallbacks = new BadCertHandler(!requireBuiltIn);
+    this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    this.request.overrideMimeType("text/xml");
+    var self = this;
+    this.request.onload = function(event) { self.onLoad() };
+    this.request.onerror = function(event) { self.onError() };
+    this.request.send(null);
+  }
+  catch (e) {
+    ERROR("Failed to request update manifest", e);
+  }
 }
 
 UpdateParser.prototype = {
@@ -533,7 +539,7 @@ UpdateParser.prototype = {
     this.timer = null;
 
     if (!Components.isSuccessCode(this.request.status)) {
-      WARN("Request failed: " + request.status);
+      WARN("Request failed: " + this.request.status);
     }
     else if (this.request.channel instanceof Ci.nsIHttpChannel) {
       try {
@@ -679,9 +685,16 @@ var AddonUpdateChecker = {
     if (!aPlatformVersion)
       aPlatformVersion = Services.appinfo.platformVersion;
 
+    let blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                    getService(Ci.nsIBlocklistService);
+
     let newest = null;
     for (let i = 0; i < aUpdates.length; i++) {
       if (!aUpdates[i].updateURL)
+        continue;
+      let state = blocklist.getAddonBlocklistState(aUpdates[i].id, aUpdates[i].version,
+                                                   aAppVersion, aPlatformVersion);
+      if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
         continue;
       if ((newest == null || (Services.vc.compare(newest.version, aUpdates[i].version) < 0)) &&
           matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion))

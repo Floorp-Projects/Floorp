@@ -61,8 +61,9 @@ static void
 TouchBadMemory()
 {
     // XXX this should use the frame poisoning code
-    gDummyCounter += *((int *) 0);   // TODO annotation saying we know 
-                                     // this is crazy
+    volatile int *p = 0;
+    gDummyCounter += *p;   // TODO annotation saying we know 
+                           // this is crazy
 }
 
 void

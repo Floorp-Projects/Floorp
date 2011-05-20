@@ -220,7 +220,7 @@ script regress-90596-002.js
 script regress-96284-001.js
 script regress-96284-002.js
 script scope-001.js
-fails-if(Android) script toLocaleFormat-01.js
+script toLocaleFormat-01.js
 fails-if(xulRuntime.OS=="WINNT") script toLocaleFormat-02.js
 script regress-543839.js
 script regress-564577.js

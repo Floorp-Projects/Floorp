@@ -552,14 +552,10 @@ nsEditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_OK);
 
-  if (!mCaret)
-  {
-    NS_NewCaret(getter_AddRefs(mCaret));
-    if (mCaret)
-    {
-      mCaret->Init(presShell);
-      mCaret->SetCaretReadOnly(PR_TRUE);
-    }
+  if (!mCaret) {
+    mCaret = new nsCaret();
+    mCaret->Init(presShell);
+    mCaret->SetCaretReadOnly(PR_TRUE);
   }
 
   presShell->SetCaret(mCaret);

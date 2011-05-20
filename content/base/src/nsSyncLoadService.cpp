@@ -475,28 +475,32 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
     }
 
     // Load
-    aListener->OnStartRequest(aChannel, nsnull);
-    PRUint32 sourceOffset = 0;
-    while (1) {
-        PRUint32 readCount = 0;
-        rv = aIn->Available(&readCount);
-        if (NS_FAILED(rv) || !readCount) {
-            if (rv == NS_BASE_STREAM_CLOSED) {
-                // End of file, but not an error
-                rv = NS_OK;
+    rv = aListener->OnStartRequest(aChannel, nsnull);
+    if (NS_SUCCEEDED(rv)) {
+        PRUint32 sourceOffset = 0;
+        while (1) {
+            PRUint32 readCount = 0;
+            rv = aIn->Available(&readCount);
+            if (NS_FAILED(rv) || !readCount) {
+                if (rv == NS_BASE_STREAM_CLOSED) {
+                    // End of file, but not an error
+                    rv = NS_OK;
+                }
+                break;
             }
-            break;
-        }
 
-        rv = aListener->OnDataAvailable(aChannel, nsnull, aIn, sourceOffset,
-                                        readCount);
-        if (NS_FAILED(rv)) {
-            break;
+            rv = aListener->OnDataAvailable(aChannel, nsnull, aIn,
+                                            sourceOffset, readCount);
+            if (NS_FAILED(rv)) {
+                break;
+            }
+            sourceOffset += readCount;
         }
-
-        sourceOffset += readCount;
+    }
+    if (NS_FAILED(rv)) {
+        aChannel->Cancel(rv);
     }
     aListener->OnStopRequest(aChannel, nsnull, rv);
-    
+
     return rv;
 }

@@ -51,7 +51,7 @@ var OfflineApps = {
       }];
 
       const priority = notificationBox.PRIORITY_INFO_LOW;
-      let message = strings.formatStringFromName("offlineApps.available", [host], 1);
+      let message = strings.formatStringFromName("offlineApps.available2", [host], 1);
       notification = notificationBox.appendNotification(message, notificationID, "", priority, buttons);
       notification.documents = [aRequest];
     }
