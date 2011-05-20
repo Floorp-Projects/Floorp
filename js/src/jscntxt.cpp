@@ -1619,6 +1619,7 @@ JSContext::purge()
     FreeOldArenas(runtime, &regExpPool);
 }
 
+#if defined(JS_TRACER) || defined(JS_METHODJIT)
 static bool
 ComputeIsJITBroken()
 {
@@ -1689,6 +1690,7 @@ IsJITBrokenHere()
     }
     return isBroken;
 }
+#endif
 
 void
 JSContext::updateJITEnabled()
