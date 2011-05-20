@@ -3019,6 +3019,8 @@ var ViewableAreaObserver = {
     return (this._height || window.innerHeight);
   },
 
+  isKeyboardOpened: false,
+
   observe: function va_observe(aSubject, aTopic, aData) {
 #if MOZ_PLATFORM_MAEMO == 6
     let rect = Rect.fromRect(JSON.parse(aData));
@@ -3044,6 +3046,9 @@ var ViewableAreaObserver = {
     let newHeight = this.height;
     if (newHeight == oldHeight && newWidth == oldWidth)
       return;
+
+    // Guess if the window has been resize to handle a virtual keyboard
+    this.isKeyboardOpened = (newHeight < oldHeight && newWidth == oldWidth);
 
     Browser.styles["viewable-height"].height = newHeight + "px";
     Browser.styles["viewable-height"].maxHeight = newHeight + "px";
@@ -3076,3 +3081,4 @@ var ViewableAreaObserver = {
     }, 0);
   }
 };
+
