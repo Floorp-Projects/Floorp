@@ -174,6 +174,21 @@ ArenaHeader::getThingSize() const
 }
 #endif
 
+inline FreeCell *
+ArenaHeader::getFreeList() const
+{
+    /*
+     * Do not allow to access the free list when its real head is still stored
+     * in FreeLists and is not synchronized with this one.
+     */
+    JS_ASSERT(compartment);
+    JS_ASSERT_IF(freeList &&
+                 compartment->freeLists.finalizables[getThingKind()] &&
+                 this == compartment->freeLists.finalizables[getThingKind()]->arenaHeader(),
+                 freeList == compartment->freeLists.finalizables[getThingKind()]);
+    return freeList;
+}
+
 /* Initialize the arena and setup the free list. */
 template<typename T>
 inline FreeCell *
@@ -197,7 +212,7 @@ Arena<T>::finalize(JSContext *cx)
     JS_ASSERT(aheader.compartment);
     JS_ASSERT(!aheader.getMarkingDelay()->link);
 
-    FreeCell *nextFree = aheader.freeList;
+    FreeCell *nextFree = aheader.getFreeList();
     FreeCell *freeList = NULL;
     FreeCell **tailp = &freeList;
     bool allClear = true;
@@ -261,7 +276,7 @@ Arena<T>::finalize(JSContext *cx)
     }
 #endif
     *tailp = NULL;
-    aheader.freeList = freeList;
+    aheader.setFreeList(freeList);
     return allClear;
 }
 
@@ -359,7 +374,7 @@ Chunk::allocateArena(JSContext *cx, unsigned thingKind)
     ArenaHeader *aheader = info.emptyArenaLists.getTypedFreeList(thingKind);
     if (!aheader) {
         aheader = info.emptyArenaLists.getOtherArena();
-        aheader->freeList = aheader->getArena<T>()->buildFreeList();
+        aheader->setFreeList(aheader->getArena<T>()->buildFreeList());
     }
     JS_ASSERT(!aheader->compartment);
     JS_ASSERT(!aheader->getMarkingDelay()->link);
@@ -614,7 +629,7 @@ namespace js {
 inline bool
 InFreeList(ArenaHeader *aheader, void *thing)
 {
-    for (FreeCell *cursor = aheader->freeList; cursor; cursor = cursor->link) {
+    for (FreeCell *cursor = aheader->getFreeList(); cursor; cursor = cursor->link) {
         JS_ASSERT(!cursor->isMarked());
         JS_ASSERT_IF(cursor->link, cursor < cursor->link);
 
@@ -1099,28 +1114,12 @@ JSCompartment::reduceGCTriggerBytes(uint32 amount) {
 namespace js {
 namespace gc {
 
-void
-FreeLists::purge()
-{
-    /*
-     * Return the free list back to the arena so the GC finalization will not
-     * run the finalizers over unitialized bytes from free things.
-     */
-    for (FreeCell **p = finalizables; p != JS_ARRAY_END(finalizables); ++p) {
-        if (FreeCell *thing = *p) {
-            JS_ASSERT(!thing->arenaHeader()->freeList);
-            thing->arenaHeader()->freeList = thing;
-            *p = NULL;
-        }
-    }
-}
-
 inline ArenaHeader *
 ArenaList::searchForFreeArena()
 {
     while (ArenaHeader *aheader = *cursor) {
         cursor = &aheader->next;
-        if (aheader->freeList)
+        if (aheader->hasFreeList())
             return aheader;
     }
     return NULL;
@@ -2497,6 +2496,12 @@ LetOtherGCFinish(JSContext *cx)
         rt->requestCount -= requestDebit;
         if (rt->requestCount == 0)
             JS_NOTIFY_REQUEST_DONE(rt);
+
+        /*
+         * Update the native stack before we wait so the GC thread see the
+         * correct stack bounds.
+         */
+        RecordNativeStackTopForGC(cx);
     }
 
     /*
@@ -2707,18 +2712,6 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 
     RecordNativeStackTopForGC(cx);
 
-#ifdef DEBUG
-    int stackDummy;
-# if JS_STACK_GROWTH_DIRECTION > 0
-    /* cx->stackLimit is set to jsuword(-1) by default. */
-    JS_ASSERT_IF(cx->stackLimit != jsuword(-1),
-                 JS_CHECK_STACK_SIZE(cx->stackLimit + (1 << 14), &stackDummy));
-# else
-    /* -16k because it is possible to perform a GC during an overrecursion report. */
-    JS_ASSERT_IF(cx->stackLimit, JS_CHECK_STACK_SIZE(cx->stackLimit - (1 << 14), &stackDummy));
-# endif
-#endif
-
     GCTIMER_BEGIN(rt, comp);
 
     do {
@@ -2802,6 +2795,22 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
 
 } /* namespace gc */
 
+class AutoCopyFreeListToArenas {
+    JSRuntime *rt;
+
+  public:
+    AutoCopyFreeListToArenas(JSRuntime *rt)
+      : rt(rt) {
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            (*c)->freeLists.copyToArenas();
+    }
+
+    ~AutoCopyFreeListToArenas() {
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            (*c)->freeLists.clearInArenas();
+    }
+};
+
 void
 TraceRuntime(JSTracer *trc)
 {
@@ -2811,17 +2820,21 @@ TraceRuntime(JSTracer *trc)
     {
         JSContext *cx = trc->context;
         JSRuntime *rt = cx->runtime;
-        AutoLockGC lock(rt);
-
         if (rt->gcThread != cx->thread()) {
+            AutoLockGC lock(rt);
             AutoGCSession gcsession(cx);
+
+            rt->gcHelperThread.waitBackgroundSweepEnd(rt, false);
             AutoUnlockGC unlock(rt);
+
+            AutoCopyFreeListToArenas copy(rt);
             RecordNativeStackTopForGC(trc->context);
             MarkRuntime(trc);
             return;
         }
     }
 #else
+    AutoCopyFreeListToArenas copy(rt);
     RecordNativeStackTopForGC(trc->context);
 #endif
 
@@ -2837,15 +2850,7 @@ static void
 IterateArenaCells(JSContext *cx, ArenaHeader *aheader, void *data, IterateCallback callback)
 {
     Arena<T> *a = aheader->getArena<T>();
-    FreeCell *nextFree = aheader->freeList;
-    FreeLists &freeLists = aheader->compartment->freeLists;
-    if (FreeCell *cell = freeLists.finalizables[aheader->getThingKind()]) {
-        if (cell->arenaHeader() == aheader) {
-            JS_ASSERT(!nextFree);
-            nextFree = cell;
-        }
-    }
-
+    FreeCell *nextFree = aheader->getFreeList();
     size_t traceKind = GetFinalizableTraceKind(aheader->getThingKind());
     T *end = &a->t.things[Arena<T>::ThingsPerArena];
     for (T *thing = &a->t.things[0]; thing != end; ++thing) {
@@ -2932,13 +2937,12 @@ IterateCells(JSContext *cx, JSCompartment *comp, uint64 traceKindMask,
 
     AutoLockGC lock(rt);
     AutoGCSession gcsession(cx);
-
 #ifdef JS_THREADSAFE
     rt->gcHelperThread.waitBackgroundSweepEnd(rt, false);
 #endif
-
     AutoUnlockGC unlock(rt);
 
+    AutoCopyFreeListToArenas copy(rt);
     if (comp) {
         IterateCompartmentCells(cx, comp, traceKindMask, data, callback);
     } else {

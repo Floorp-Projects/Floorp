@@ -125,10 +125,12 @@ template <typename T> struct Arena;
 struct ArenaHeader {
     JSCompartment   *compartment;
     ArenaHeader     *next;
-    FreeCell        *freeList;
 
   private:
+    FreeCell        *freeList;
     unsigned        thingKind;
+
+    friend class FreeLists;
 
   public:
     inline uintptr_t address() const;
@@ -137,6 +139,21 @@ struct ArenaHeader {
     template <typename T>
     Arena<T> *getArena() {
         return reinterpret_cast<Arena<T> *>(address());
+    }
+
+    bool hasFreeList() const {
+        return !!freeList;
+    }
+
+    inline FreeCell *getFreeList() const;
+
+    void setFreeList(FreeCell *head) {
+        JS_ASSERT_IF(head, head->arenaHeader() == this);
+        freeList = head;
+    }
+
+    void clearFreeList() {
+        freeList = NULL;
     }
 
     unsigned getThingKind() const {
@@ -719,7 +736,46 @@ CheckGCFreeListLink(FreeCell *cell)
 struct FreeLists {
     FreeCell       *finalizables[FINALIZE_LIMIT];
 
-    void purge();
+    /*
+     * Return the free list back to the arena so the GC finalization will not
+     * run the finalizers over unitialized bytes from free things.
+     */
+    void purge() {
+        for (FreeCell **p = finalizables; p != JS_ARRAY_END(finalizables); ++p) {
+            if (FreeCell *head = *p) {
+                JS_ASSERT(!head->arenaHeader()->freeList);
+                head->arenaHeader()->freeList = head;
+                *p = NULL;
+            }
+        }
+    }
+
+    /*
+     * Temporarily copy the free list heads to the arenas so the code can see
+     * the proper value in ArenaHeader::freeList when accessing the latter
+     * outside the GC.
+     */
+    void copyToArenas() {
+        for (FreeCell **p = finalizables; p != JS_ARRAY_END(finalizables); ++p) {
+            if (FreeCell *head = *p) {
+                JS_ASSERT(!head->arenaHeader()->freeList);
+                head->arenaHeader()->freeList = head;
+            }
+        }
+    }
+
+    /*
+     * Clear the free lists in arenas that were temporarily set there using
+     * copyToArenas.
+     */
+    void clearInArenas() {
+        for (FreeCell **p = finalizables; p != JS_ARRAY_END(finalizables); ++p) {
+            if (FreeCell *head = *p) {
+                JS_ASSERT(head->arenaHeader()->freeList == head);
+                head->arenaHeader()->clearFreeList();
+            }
+        }
+    }
 
     FreeCell *getNext(unsigned kind) {
         FreeCell *top = finalizables[kind];
@@ -731,6 +787,7 @@ struct FreeLists {
     }
 
     Cell *populate(ArenaHeader *aheader, uint32 thingKind) {
+        JS_ASSERT(!finalizables[thingKind]);
         FreeCell *cell = aheader->freeList;
         JS_ASSERT(cell);
         CheckGCFreeListLink(cell);
