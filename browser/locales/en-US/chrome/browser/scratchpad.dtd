@@ -124,5 +124,9 @@
 <!ENTITY webConsoleCmd.accesskey      "W">
 <!ENTITY webConsoleCmd.commandkey     "k">
 
-<!ENTITY textbox.placeholder          "// Enter some JavaScript, select it, right click and select Execute, Inspect or Print.">
+<!-- LOCALIZATION NOTE (textbox.placeholder1): This is some placeholder text
+  -  that appears when the Scratchpad's text area is empty and unfocused.
+  -  It should be a one-line JavaScript comment, i.e., preceded by '//'
+  -->
+<!ENTITY textbox.placeholder1         "// Enter some JavaScript, select it, right click and select Run, Inspect or Display.">
 

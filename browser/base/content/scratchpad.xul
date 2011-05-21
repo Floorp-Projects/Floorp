@@ -333,7 +333,7 @@
          multiline="true"
          flex="1"
          context="scratchpad-text-popup"
-         placeholder="&textbox.placeholder;" />
+         placeholder="&textbox.placeholder1;" />
 <statusbar id="scratchpad-statusbar" align="end">
   <statusbarpanel id="scratchpad-status"
                   label="&contentContext.label;"
