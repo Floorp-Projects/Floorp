@@ -84,23 +84,10 @@ MInstruction::printOpcode(FILE *fp)
     PrintOpcodeName(fp, op());
 }
 
-void
-MInstruction::unlinkUse(MOperand *prev, MOperand *use)
-{
-    JS_ASSERT(use->ins() == this);
-    if (!prev) {
-        JS_ASSERT(uses_ = use);
-        uses_ = use->next();
-    } else {
-        JS_ASSERT(prev->next() == use);
-        prev->next_ = use->next();
-    }
-}
-
 size_t
 MInstruction::useCount() const
 {
-    MOperand *use = uses();
+    MUse *use = uses();
     size_t count = 0;
     while (use) {
         count++;
@@ -110,13 +97,33 @@ MInstruction::useCount() const
 }
 
 void
-MInstruction::replaceOperand(MOperand *prev, MOperand *use, MInstruction *ins)
+MInstruction::removeUse(MUse *prev, MUse *use)
 {
-    JS_ASSERT_IF(prev, prev->ins() == use->ins());
+    if (!prev) {
+        JS_ASSERT(uses_ = use);
+        uses_ = use->next();
+    } else {
+        JS_ASSERT(prev->next() == use);
+        prev->next_ = use->next();
+    }
+}
 
-    use->ins()->unlinkUse(prev, use);
-    use->setIns(ins);
-    ins->linkUse(use);
+void
+MInstruction::replaceOperand(MUse *prev, MUse *use, MInstruction *ins)
+{
+    MInstruction *used = getOperand(use->index())->ins();
+    if (used == ins)
+        return;
+
+    used->removeUse(prev, use);
+    setOperand(use->index(), ins);
+    ins->addUse(use, ins);
+}
+
+void
+MInstruction::setOperand(size_t index, MInstruction *ins)
+{
+    getOperand(index)->setInstruction(ins);
 }
 
 MConstant *
@@ -133,20 +140,20 @@ MConstant::MConstant(const js::Value &vp)
       case MIRType_Int32:
       case MIRType_Boolean:
       case MIRType_Magic:
-        setRepresentation(Representation::Int32);
+        //setRepresentation(Representation::Int32);
         break;
       case MIRType_Double:
-        setRepresentation(Representation::Double);
+        //setRepresentation(Representation::Double);
         break;
       case MIRType_String:
       case MIRType_Object:
       case MIRType_Function:
-        setRepresentation(Representation::Pointer);
+        //setRepresentation(Representation::Pointer);
         break;
       case MIRType_Undefined:
       case MIRType_Null:
         // These are special singletons that shouldn't be broken up.
-        setRepresentation(Representation::Box);
+        //setRepresentation(Representation::Box);
         break;
       default:
         JS_NOT_REACHED("unexpected constant type");
@@ -168,7 +175,7 @@ MCopy::New(MIRGenerator *gen, MInstruction *ins)
 
     // Don't create nested copies.
     if (ins->isCopy())
-        ins = ins->toCopy()->getOperand(0);
+        ins = ins->toCopy()->getOperand(0)->ins();
 
     MCopy *copy = new (gen->temp()) MCopy();
     if (!copy || !copy->init(gen, ins))
@@ -205,16 +212,17 @@ bool
 MPhi::addInput(MIRGenerator *gen, MInstruction *ins)
 {
     for (size_t i = 0; i < inputs_.length(); i++) {
-        if (getOperand(i) == ins)
+        if (getOperand(i)->ins() == ins)
             return true;
     }
 
-    MOperand *operand = MOperand::New(gen, this, inputs_.length(), ins);
-    if (!operand)
+    if (!ins->addUse(gen, this, inputs_.length()))
         return false;
-    ins->linkUse(operand);
 
-    return inputs_.append(operand);
+    MOperand *operand = MOperand::New(gen, ins);
+    if (!operand || !inputs_.append(operand))
+        return false;
+    return true;
 }
 
 MReturn *
