@@ -867,9 +867,6 @@ static void math_TypeArith(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
 {
     types::TypeCallsite *site = Valueify(jssite);
 
-    if (!site->returnTypes)
-        return;
-
     if (site->isNew)
         site->returnTypes->addType(cx, types::TYPE_UNKNOWN);
 

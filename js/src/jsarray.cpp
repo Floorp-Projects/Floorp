@@ -3222,14 +3222,9 @@ array_TypeSort(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
 
-    if (!site->forceThisTypes(cx))
-        return;
-
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->thisTypes->addSubset(cx, site->script, site->returnTypes);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->thisTypes->addSubset(cx, site->script, site->returnTypes);
 }
 
 static void
@@ -3237,15 +3232,10 @@ array_TypeInsert(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
 
-    if (site->returnTypes) {
-        /* The return type is an integer (array length). */
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->returnTypes->addType(cx, TYPE_INT32);
-    }
-
-    if (!site->forceThisTypes(cx))
-        return;
+    /* The return type is an integer (array length). */
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->returnTypes->addType(cx, TYPE_INT32);
 
     for (size_t ind = 0; ind < site->argumentCount; ind++) {
         site->thisTypes->addSetProperty(cx, site->script, site->pc,
@@ -3258,14 +3248,8 @@ array_TypeRemove(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
 
-    if (!site->returnTypes)
-        return;
-
     if (site->isNew)
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
-
-    if (!site->forceThisTypes(cx))
-        return;
     site->thisTypes->addGetProperty(cx, site->script, site->pc, site->returnTypes, JSID_VOID);
 }
 
@@ -3274,15 +3258,10 @@ array_TypeSplice(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
 
-    if (!site->forceThisTypes(cx))
-        return;
-
-    if (site->returnTypes) {
-        /* Treat the returned array the same as the 'this' array. */
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->thisTypes->addSubset(cx, site->script, site->returnTypes);
-    }
+    /* Treat the returned array the same as the 'this' array. */
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->thisTypes->addSubset(cx, site->script, site->returnTypes);
 
     /* All arguments beyond the first two are new array elements. */
     for (size_t ind = 2; ind < site->argumentCount; ind++) {
@@ -3297,19 +3276,13 @@ array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
     TypeCallsite *site = Valueify(jssite);
 
     if (!site->hasGlobal()) {
-        if (site->returnTypes)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
         return;
     }
 
-    if (!site->forceThisTypes(cx))
-        return;
-
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->thisTypes->addSubset(cx, site->script, site->returnTypes);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->thisTypes->addSubset(cx, site->script, site->returnTypes);
 }
 
 static void
@@ -3317,14 +3290,9 @@ array_TypeSlice(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
 
-    if (!site->forceThisTypes(cx))
-        return;
-
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->thisTypes->addFilterPrimitives(cx, site->script, site->returnTypes, false);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->thisTypes->addFilterPrimitives(cx, site->script, site->returnTypes, false);
 }
 
 /* Handler for all higher order array builtins. */
@@ -3333,9 +3301,6 @@ array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite,
                 ArrayExtraMode mode)
 {
     TypeCallsite *site = Valueify(jssite);
-
-    if (!site->returnTypes)
-        return;
 
     if (site->isNew)
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
@@ -3504,16 +3469,14 @@ array_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
     TypeCallsite *site = Valueify(jssite);
 
     if (!site->hasGlobal()) {
-        if (site->returnTypes)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
         return;
     }
 
     TypeObject *object = site->getInitObject(cx, true);
     if (!object)
         return;
-    if (site->returnTypes)
-        site->returnTypes->addType(cx, (jstype) object);
+    site->returnTypes->addType(cx, (jstype) object);
 
     if (object->unknownProperties())
         return;
