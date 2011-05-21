@@ -2017,18 +2017,6 @@ nsObjectLoadingContent::GetPrintFrame(nsIFrame** aFrame)
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::SetAbsoluteScreenPosition(nsIDOMElement* element,
-                                                  nsIDOMClientRect* position,
-                                                  nsIDOMClientRect* clip)
-{
-  nsIObjectFrame* frame = GetExistingFrame(eFlushLayout);
-  if (!frame)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  return frame->SetAbsoluteScreenPosition(element, position, clip);
-}
-
-NS_IMETHODIMP
 nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
                                       const nsAString& pluginDumpID,
                                       const nsAString& browserDumpID,
