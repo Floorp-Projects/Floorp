@@ -2635,10 +2635,13 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   nsresult rv = PrepareInstanceOwner();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
+  if (NS_FAILED(rv)) {
     return rv;
-  mInstanceOwner->SetPluginHost(pluginHost);
+  }
+
+  mInstanceOwner->SetPluginHost(pluginHostCOM);
 
   // This must be done before instantiating the plugin
   FixupWindow(GetContentRectRelativeToSelf().Size());
@@ -3174,9 +3177,10 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 {
   // create nsPluginNativeWindow object, it is derived from NPWindow
   // struct and allows to manipulate native window procedure
-  nsCOMPtr<nsIPluginHost> ph = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-  if (ph)
-    ph->NewPluginNativeWindow(&mPluginWindow);
+  nsCOMPtr<nsIPluginHost> pluginHostCOM = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());  
+  if (pluginHost)
+    pluginHost->NewPluginNativeWindow(&mPluginWindow);
   else
     mPluginWindow = nsnull;
 
@@ -3276,9 +3280,10 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   }
 
   // clean up plugin native window object
-  nsCOMPtr<nsIPluginHost> ph = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-  if (ph) {
-    ph->DeletePluginNativeWindow(mPluginWindow);
+  nsCOMPtr<nsIPluginHost> pluginHostCOM = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
+  if (pluginHost) {
+    pluginHost->DeletePluginNativeWindow(mPluginWindow);
     mPluginWindow = nsnull;
   }
 
