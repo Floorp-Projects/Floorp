@@ -87,7 +87,8 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     lastIns_(NULL),
     pc_(pc),
     header_(NULL),
-    headerSlots_(gen->firstStackSlot())
+    headerSlots_(gen->firstStackSlot()),
+    loopSuccessor_(NULL)
 {
 }
 
@@ -525,6 +526,9 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
             successor->header_[i] = phi;
         }
     }
+
+    // Set the predecessor's loop successor for use in the register allocator.
+    loopSuccessor_ = successor;
 
     return predecessors_.append(pred);
 }
