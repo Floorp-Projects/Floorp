@@ -42,11 +42,11 @@
 #ifndef jsion_temp_alloc_policy_h__
 #define jsion_temp_alloc_policy_h__
 
-namespace js {
-namespace ion {
-
 #include "jscntxt.h"
 #include "jsarena.h"
+
+namespace js {
+namespace ion {
 
 class TempAllocPolicy
 {

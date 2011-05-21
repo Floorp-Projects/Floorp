@@ -101,7 +101,7 @@ class MBasicBlock : public TempObject
     bool init();
     void copySlots(MBasicBlock *from);
     bool inherit(MBasicBlock *pred);
-    void assertUsesAreNotWithin(MOperand *use);
+    void assertUsesAreNotWithin(MUse *use);
 
     // Sets a slot, taking care to rewrite copies.
     void setSlot(uint32 slot, MInstruction *ins);

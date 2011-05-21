@@ -412,7 +412,7 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
 }
 
 void
-MBasicBlock::assertUsesAreNotWithin(MOperand *use)
+MBasicBlock::assertUsesAreNotWithin(MUse *use)
 {
 #ifdef DEBUG
     for (; use; use = use->next())
@@ -451,10 +451,10 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
         if (!addPhi(phi))
             return false;
 
-        MOperand *use = entryDef->uses();
-        MOperand *prev = NULL;
+        MUse *use = entryDef->uses();
+        MUse *prev = NULL;
         while (use) {
-            JS_ASSERT(use->ins() == entryDef);
+            JS_ASSERT(use->owner()->getOperand(use->index())->ins() == entryDef);
 
             // Uses are initially sorted, with the head of the list being the
             // most recently inserted. This ordering is maintained while
@@ -467,7 +467,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
             // Replace the instruction's use with the phi. Note that |prev|
             // does not change, and is really NULL since we always remove
             // from the head of the list,
-            MOperand *next = use->next();
+            MUse *next = use->next();
             use->owner()->replaceOperand(prev, use, phi); 
             use = next;
         }

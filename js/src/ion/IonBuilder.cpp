@@ -66,9 +66,9 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
         return false;
     spew.spew("Build SSA");
 
-    if (!InferRepresentations(&analyzer, graph))
+    if (!ApplyTypeInformation(&analyzer, graph))
         return false;
-    spew.spew("Infer Representations");
+    spew.spew("Apply Types");
 
     return false;
 }

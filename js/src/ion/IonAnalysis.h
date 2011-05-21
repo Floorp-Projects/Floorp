@@ -49,7 +49,7 @@ class MIRGenerator;
 class MIRGraph;
 
 bool
-InferRepresentations(MIRGenerator *gen, MIRGraph &graph);
+ApplyTypeInformation(MIRGenerator *gen, MIRGraph &graph);
 
 } // namespace js
 } // namespace ion

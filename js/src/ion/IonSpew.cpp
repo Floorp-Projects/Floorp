@@ -103,7 +103,7 @@ DumpInstruction(FILE *fp, MInstruction *ins)
     ins->printOpcode(fp);
     fprintf(fp, " ");
     for (size_t j = 0; j < ins->numOperands(); j++) {
-        ins->getOperand(j)->printName(fp);
+        ins->getOperand(j)->ins()->printName(fp);
         if (j != ins->numOperands() - 1)
             fprintf(fp, " ");
     }
