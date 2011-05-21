@@ -141,6 +141,16 @@ Debug::Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment)
     uncaughtExceptionHook(NULL), enabled(true), hasDebuggerHandler(false),
     hasThrowHandler(false)
 {
+    // This always happens within a request on some cx.
+    AutoLockGC lock(compartment->rt);
+    JS_APPEND_LINK(&link, &compartment->rt->debuggerList);
+}
+
+Debug::~Debug()
+{
+    // This always happens in the GC thread, so no locking is required.
+    JS_ASSERT(object->compartment()->rt->gcRunning);
+    JS_REMOVE_LINK(&link);
 }
 
 bool
@@ -234,11 +244,12 @@ Debug::wrapDebuggeeValue(JSContext *cx, Value *vp)
         JSObject *ccwobj = &vp->toObject();
         vp->setUndefined();
 
-        JSObject *refobj = ccwobj;
-        if (refobj->isWrapper())  // XXX TODO assert instead
-            refobj = JSWrapper::wrappedObject(refobj);
-        else if (!(cx)->compartment->wrap(cx, &refobj))
+        // Debug.Object can't reflect objects from the current compartment.
+        // FIXME Ideally this shouldn't be possible. See FIXME comment above.
+        if (!ccwobj->isCrossCompartmentWrapper()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_STREAMS_CROSSED);
             return false;
+        }
 
         ObjectMap::AddPtr p = objects.lookupForAdd(ccwobj);
         if (p) {
@@ -567,18 +578,9 @@ Debug::trace(JSTracer *trc, JSObject *obj)
 void
 Debug::sweepAll(JSRuntime *rt)
 {
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
-        sweepCompartment(*c);
-}
-
-void
-Debug::sweepCompartment(JSCompartment *compartment)
-{
-    const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
-    for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
-        Debug *dbg = *p;
-
-        // Sweep ObjectMap entries for objects being collected.
+    // Sweep ObjectMap entries for objects being collected.
+    for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
+        Debug *dbg = (Debug *) ((unsigned char *) p - offsetof(Debug, link));
         for (ObjectMap::Enum e(dbg->objects); !e.empty(); e.popFront()) {
             JS_ASSERT(e.front().key->isMarked() == e.front().value->isMarked());
             if (!e.front().value->isMarked())
@@ -716,9 +718,7 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
     if (!arg.isObject())
         return ReportObjectRequired(cx);
     JSObject *argobj = &arg.toObject();
-    if (!argobj->isWrapper() ||
-        (!argobj->getWrapperHandler()->flags() & JSWrapper::CROSS_COMPARTMENT))
-    {
+    if (!argobj->isCrossCompartmentWrapper()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CCW_REQUIRED, "Debug");
         return false;
     }
@@ -753,11 +753,11 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
     Debug *dbg = cx->new_<Debug>(obj, hooks, debuggeeCompartment);
     if (!dbg)
         return false;
+    obj->setPrivate(dbg);
     if (!dbg->init() || !debuggeeCompartment->addDebug(dbg)) {
         js_ReportOutOfMemory(cx);
         return false;
     }
-    obj->setPrivate(dbg);
 
     vp->setObject(*obj);
     return true;
@@ -990,18 +990,17 @@ DebugObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
     return thisobj;
 }
 
-#define THIS_DEBUGOBJECT_CCW(cx, vp, fnname, ccwobj)                         \
-    JSObject *ccwobj = DebugObject_checkThis(cx, vp, fnname);                \
-    if (!ccwobj)                                                             \
+#define THIS_DEBUGOBJECT_CCW(cx, vp, fnname, obj)                            \
+    JSObject *obj = DebugObject_checkThis(cx, vp, fnname);                   \
+    if (!obj)                                                                \
         return false;                                                        \
-    ccwobj = &ccwobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).toObject()
+    obj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).toObject();          \
+    JS_ASSERT(obj->isCrossCompartmentWrapper())
 
-#define THIS_DEBUGOBJECT_REFERENT(cx, vp, fnname, refobj)                    \
-    THIS_DEBUGOBJECT_CCW(cx, vp, fnname, refobj);                            \
-    if (refobj->isWrapper()) /* XXX TODO would love to assert instead */     \
-        refobj = JSWrapper::wrappedObject(refobj);                           \
-    else if (!(cx)->compartment->wrap(cx, &refobj))                          \
-        return false
+#define THIS_DEBUGOBJECT_REFERENT(cx, vp, fnname, obj)                       \
+    THIS_DEBUGOBJECT_CCW(cx, vp, fnname, obj);                               \
+    JS_ASSERT(obj->isCrossCompartmentWrapper());                             \
+    obj = JSWrapper::wrappedObject(obj)
 
 static JSBool
 DebugObject_construct(JSContext *cx, uintN argc, Value *vp)

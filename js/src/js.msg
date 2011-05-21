@@ -354,3 +354,4 @@ MSG_DEF(JSMSG_CCW_REQUIRED,           271, 1, JSEXN_TYPEERR, "{0}: argument must
 MSG_DEF(JSMSG_DEBUG_BAD_RESUMPTION,   272, 0, JSEXN_TYPEERR, "debugger resumption value must be undefined, {throw: val}, {return: val}, or null")
 MSG_DEF(JSMSG_ASSIGN_FUNCTION_OR_NULL, 273, 1, JSEXN_TYPEERR, "value assigned to {0} must be a function or null")
 MSG_DEF(JSMSG_DEBUG_FRAME_NOT_LIVE,   274, 0, JSEXN_ERR, "stack frame is not live")
+MSG_DEF(JSMSG_DEBUG_STREAMS_CROSSED,  275, 0, JSEXN_INTERNALERR, "the debuggee has a cross-compartment wrapper of an object in the debugger compartment; can't create a Debug.Object with that wrapper as its referent")

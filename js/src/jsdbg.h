@@ -55,16 +55,17 @@ class Debug {
     friend JSBool ::JS_DefineDebugObject(JSContext *cx, JSObject *obj);
 
   private:
-    JSObject *object;  // The Debug object. Strong reference.
-    JSCompartment *debuggeeCompartment;  // Weak reference.
-    JSObject *hooksObject;  // See Debug.prototype.hooks. Strong reference.
-    JSObject *uncaughtExceptionHook;  // Strong reference.
+    JSCList link;                       // See JSRuntime::debuggerList.
+    JSObject *object;                   // The Debug object. Strong reference.
+    JSCompartment *debuggeeCompartment; // Weak reference.
+    JSObject *hooksObject;              // See Debug.prototype.hooks. Strong reference.
+    JSObject *uncaughtExceptionHook;    // Strong reference.
     bool enabled;
 
     // True if hooksObject had a property of the respective name when the hooks
     // property was set.
-    bool hasDebuggerHandler;  // hooks.debuggerHandler
-    bool hasThrowHandler;     // hooks.throw
+    bool hasDebuggerHandler;            // hooks.debuggerHandler
+    bool hasThrowHandler;               // hooks.throw
 
     typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, SystemAllocPolicy>
         FrameMap;
@@ -111,6 +112,8 @@ class Debug {
 
   public:
     Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment);
+    ~Debug();
+
     bool init();
     inline JSObject *toJSObject() const;
     static inline Debug *fromJSObject(JSObject *obj);
@@ -135,7 +138,6 @@ class Debug {
     //
     static bool mark(GCMarker *trc, JSCompartment *compartment, JSGCInvocationKind gckind);
     static void sweepAll(JSRuntime *rt);
-    static void sweepCompartment(JSCompartment *compartment);
 
     inline bool observesCompartment(JSCompartment *c) const;
     void detachFrom(JSCompartment *c);
