@@ -784,19 +784,6 @@ customMethodCalls = {
         'thisType': 'nsGenericElement',
         'code': '    PRBool result = self->MozMatchesSelector(arg0, &rv);',
         },
-    'nsIDOM3Text_': {
-        'thisType': 'nsGenericTextNode'
-        },
-    'nsIDOM3Text_IsElementContentWhitespace': {
-        'thisType': 'nsGenericTextNode',
-        'code': '    PRBool result = self->IsElementContentWhitespace();',
-        'canFail': False
-        },
-    'nsIDOM3Text_ReplaceWholeText': {
-        'thisType': 'nsGenericTextNode',
-        'code': '    nsIContent* result = '
-                'self->ReplaceWholeText(PromiseFlatString(arg0), &rv);'
-        },
     'nsIDOMNodeSelector_QuerySelector': {
         'thisType': 'nsINode',
         'code': '    nsIContent* result = '
