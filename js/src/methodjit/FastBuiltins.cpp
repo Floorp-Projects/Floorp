@@ -459,6 +459,13 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
     if (!callee->isFunction())
         return Compile_InlineAbort;
 
+    /*
+     * The callee must have the same parent as the script's global, otherwise
+     * inference may not have accounted for any side effects correctly.
+     */
+    if (!globalObj || globalObj != callee->getGlobal())
+        return Compile_InlineAbort;
+
     JSFunction *fun = callee->getFunctionPrivate();
     Native native = fun->maybeNative();
 
