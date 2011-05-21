@@ -1233,6 +1233,7 @@ struct JSObject : js::gc::Cell {
     inline bool isFunctionProxy() const;
 
     JS_FRIEND_API(bool) isWrapper() const;
+    bool isCrossCompartmentWrapper() const;
     JS_FRIEND_API(JSObject *) unwrap(uintN *flagsp = NULL);
 
     inline void initArrayClass();
