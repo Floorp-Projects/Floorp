@@ -1013,12 +1013,23 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
     TypeFunction *function = object->asFunction();
 
     if (!function->script) {
-        JS_ASSERT(function->handler);
+        JS_ASSERT(function->handler && function->singleton);
+
+        /*
+         * When creating objects, natives may use the wrong type/prototype for
+         * the result if called by a frame parented to a different global
+         * :FIXME: bug 631135. Rather than try to model this, just mark the
+         * result of cross-global native calls as unknown.
+         */
+        if (!script->global || script->global != function->singleton->getGlobal()) {
+            callsite->returnTypes->addType(cx, TYPE_UNKNOWN);
+            return;
+        }
 
         if (function->isGeneric) {
             if (callsite->argumentCount == 0) {
                 /* Generic methods called with zero arguments generate runtime errors. */
-                return;
+                return; 
             }
 
             /*
