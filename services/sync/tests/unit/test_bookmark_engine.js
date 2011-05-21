@@ -8,13 +8,11 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 Engines.register(BookmarksEngine);
-
-function makeEngine() {
-  return new BookmarksEngine();
-}
-var syncTesting = new SyncTestingInfrastructure(makeEngine);
+var syncTesting = new SyncTestingInfrastructure();
 
 add_test(function bad_record_allIDs() {
+  let syncTesting = new SyncTestingInfrastructure();
+
   _("Ensure that bad Places queries don't cause an error in getAllIDs.");
   let engine = new BookmarksEngine();
   let store = engine._store;
@@ -45,6 +43,7 @@ add_test(function bad_record_allIDs() {
   
   
 add_test(function test_ID_caching() {
+  let syncTesting = new SyncTestingInfrastructure();
 
   _("Ensure that Places IDs are not cached.");
   let engine = new BookmarksEngine();
@@ -85,7 +84,7 @@ add_test(function test_ID_caching() {
 
 add_test(function test_processIncoming_error_orderChildren() {
   _("Ensure that _orderChildren() is called even when _processIncoming() throws an error.");
-
+  let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
@@ -158,13 +157,13 @@ add_test(function test_processIncoming_error_orderChildren() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    syncTesting = new SyncTestingInfrastructure(makeEngine);
     server.stop(run_next_test);
   }
 });
 
 add_test(function test_restorePromptsReupload() {
   _("Ensure that restoring from a backup will reupload all records.");
+  let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("username", "foo");
   Service.serverURL = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
@@ -297,7 +296,6 @@ add_test(function test_restorePromptsReupload() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    syncTesting = new SyncTestingInfrastructure(makeEngine);
     server.stop(run_next_test);
   }
 });
@@ -338,6 +336,7 @@ add_test(function test_mismatched_types() {
     "parentid": "toolbar"
   };
 
+  let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("username", "foo");
   Service.serverURL = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
@@ -381,7 +380,6 @@ add_test(function test_mismatched_types() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    syncTesting = new SyncTestingInfrastructure(makeEngine);
     server.stop(run_next_test);
   }
 });
