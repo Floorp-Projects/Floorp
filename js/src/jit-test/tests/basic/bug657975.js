@@ -22,3 +22,18 @@ f3()
 function f4(){ for(y in x); }
 trap(f4, 10, '')
 f4()
+
+// bug 658464
+function f5() {
+  for ([, x] in 0) {}
+}
+trap(f5, 9, '')
+f5()
+
+// bug 658465
+function f6() {
+  "use strict";
+  print(Math.min(0, 1));
+}
+trap(f6, 10, '')
+f6()
