@@ -580,13 +580,14 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
           }
 
-          case JSOP_GETLOCAL:
+          case JSOP_GETLOCAL: {
             /*
              * Watch for uses of variables not known to be defined, and mark
              * them as having possible uses before definitions.  Ignore GETLOCAL
              * followed by a POP, these are generated for, e.g. 'var x;'
              */
-            if (pc[JSOP_GETLOCAL_LENGTH] != JSOP_POP) {
+            jsbytecode *next = pc + JSOP_GETLOCAL_LENGTH;
+            if (JSOp(*next) != JSOP_POP || jumpTarget(next)) {
                 uint32 local = GET_SLOTNO(pc);
                 if (local < script->nfixed && !localDefined(local, offset)) {
                     setLocal(local, LOCAL_USE_BEFORE_DEF);
@@ -594,6 +595,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
                 }
             }
             break;
+          }
 
           case JSOP_CALLLOCAL:
           case JSOP_INCLOCAL:
