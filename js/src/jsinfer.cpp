@@ -931,9 +931,9 @@ TypeConstraintProp::newType(JSContext *cx, TypeSet *source, jstype type)
 
     TypeObject *object = GetPropertyObject(cx, script, type);
     if (object) {
+        UntrapOpcode untrap(cx, script, pc);
         PropertyAccess(cx, script, pc, object, assign, target, id);
 
-        UntrapOpcode untrap(cx, script, pc);
         if (!object->unknownProperties() &&
             (JSOp(*pc) == JSOP_CALLPROP || JSOp(*pc) == JSOP_CALLELEM)) {
             JS_ASSERT(!assign);
