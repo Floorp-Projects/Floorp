@@ -121,6 +121,11 @@ var Scratchpad = {
     return recentWin ? recentWin.gBrowser : null;
   },
 
+  insertIntro: function SP_insertIntro()
+  {
+    this.textbox.value = this.strings.GetStringFromName("scratchpadIntro");
+  },
+
   /**
    * Cached Cu.Sandbox object for the active tab content window object.
    */
@@ -623,6 +628,7 @@ var Scratchpad = {
       errorConsoleCommand.removeAttribute("disabled");
       chromeContextCommand.removeAttribute("disabled");
     }
+    this.insertIntro();
   },
 };
 
