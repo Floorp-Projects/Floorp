@@ -646,6 +646,7 @@ class Compiler : public BaseCompiler
     bool jsop_callprop_obj(JSAtom *atom);
     bool jsop_callprop_str(JSAtom *atom);
     bool jsop_callprop_generic(JSAtom *atom);
+    bool jsop_callprop_dispatch(JSAtom *atom);
     bool jsop_instanceof();
     void jsop_name(JSAtom *atom, JSValueType type);
     bool jsop_xname(JSAtom *atom);

@@ -4337,74 +4337,61 @@ JS_PUBLIC_API(void)
 JS_TypeHandlerDynamic(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->returnTypes->addType(cx, TYPE_UNKNOWN);
 }
 
 JS_PUBLIC_API(void)
 JS_TypeHandlerVoid(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->returnTypes->addType(cx, TYPE_UNDEFINED);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->returnTypes->addType(cx, TYPE_UNDEFINED);
 }
 
 JS_PUBLIC_API(void)
 JS_TypeHandlerNull(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->returnTypes->addType(cx, TYPE_NULL);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->returnTypes->addType(cx, TYPE_NULL);
 }
 
 JS_PUBLIC_API(void)
 JS_TypeHandlerBool(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->returnTypes->addType(cx, TYPE_BOOLEAN);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->returnTypes->addType(cx, TYPE_BOOLEAN);
 }
 
 JS_PUBLIC_API(void)
 JS_TypeHandlerInt(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->returnTypes->addType(cx, TYPE_INT32);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->returnTypes->addType(cx, TYPE_INT32);
 }
 
 JS_PUBLIC_API(void)
 JS_TypeHandlerFloat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->returnTypes->addType(cx, TYPE_DOUBLE);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->returnTypes->addType(cx, TYPE_DOUBLE);
 }
 
 JS_PUBLIC_API(void)
 JS_TypeHandlerString(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        site->returnTypes->addType(cx, TYPE_STRING);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->returnTypes->addType(cx, TYPE_STRING);
 }
 
 JS_PUBLIC_API(void)
@@ -4412,9 +4399,6 @@ JS_TypeHandlerNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeFunction *fun = Valueify(jsfun);
     TypeCallsite *site = Valueify(jssite);
-
-    if (!site->returnTypes)
-        return;
 
     TypeSet *prototypeTypes =
         fun->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), true);
@@ -4428,14 +4412,9 @@ JS_TypeHandlerThis(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
 
-    if (site->returnTypes) {
-        if (site->isNew)
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        if (site->thisTypes)
-            site->thisTypes->addSubset(cx, site->script, site->returnTypes);
-        else
-            site->returnTypes->addType(cx, site->thisType);
-    }
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+    site->thisTypes->addSubset(cx, site->script, site->returnTypes);
 }
 
 JS_PUBLIC_API(JSObject *)

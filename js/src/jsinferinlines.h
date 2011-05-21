@@ -92,6 +92,8 @@ GetValueType(JSContext *cx, const Value &val)
 inline jsid
 MakeTypeId(JSContext *cx, jsid id)
 {
+    JS_ASSERT(!JSID_IS_EMPTY(id));
+
     /*
      * All integers must map to the aggregate property for index types, including
      * negative integers.
@@ -1237,24 +1239,13 @@ TypeSet::make(JSContext *cx, const char *name)
 /////////////////////////////////////////////////////////////////////
 
 inline
-TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, const jsbytecode *pc,
+TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
                            bool isNew, unsigned argumentCount)
     : script(script), pc(pc), isNew(isNew), argumentCount(argumentCount),
-      thisTypes(NULL), thisType(0), returnTypes(NULL)
+      thisTypes(NULL), returnTypes(NULL)
 {
     /* Caller must check for failure. */
     argumentTypes = ArenaArray<TypeSet*>(cx->compartment->pool, argumentCount);
-}
-
-inline bool
-TypeCallsite::forceThisTypes(JSContext *cx)
-{
-    if (thisTypes)
-        return true;
-    thisTypes = TypeSet::make(cx, "site_this");
-    if (thisTypes)
-        thisTypes->addType(cx, thisType);
-    return thisTypes != NULL;
 }
 
 inline TypeObject *
@@ -1281,6 +1272,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
 {
     JS_ASSERT(cx->compartment->activeInference);
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
+    JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == MakeTypeId(cx, id));
     JS_ASSERT_IF(JSID_IS_STRING(id), JSID_TO_STRING(id) != NULL);
     JS_ASSERT(!unknownProperties());
 
