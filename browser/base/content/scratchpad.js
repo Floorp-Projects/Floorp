@@ -129,8 +129,9 @@ var Scratchpad = {
   /**
    * Get the Cu.Sandbox object for the active tab content window object. Note
    * that the returned object is cached for later reuse. The cached object is
-   * kept only for the current browser window and it is reset for each context
-   * switch or navigator:browser window switch.
+   * kept only for the current location in the current tab of the current
+   * browser window and it is reset for each context switch,
+   * navigator:browser window switch, tab switch or navigation.
    */
   get contentSandbox()
   {
@@ -141,12 +142,16 @@ var Scratchpad = {
     }
 
     if (!this._contentSandbox ||
-        this.browserWindow != this._previousBrowserWindow) {
+        this.browserWindow != this._previousBrowserWindow ||
+        this._previousBrowser != this.gBrowser.selectedBrowser ||
+        this._previousLocation != this.gBrowser.contentWindow.location.href) {
       let contentWindow = this.gBrowser.selectedBrowser.contentWindow;
       this._contentSandbox = new Cu.Sandbox(contentWindow,
         { sandboxPrototype: contentWindow, wantXrays: false });
 
       this._previousBrowserWindow = this.browserWindow;
+      this._previousBrowser = this.gBrowser.selectedBrowser;
+      this._previousLocation = contentWindow.location.href;
     }
 
     return this._contentSandbox;
@@ -558,8 +563,8 @@ var Scratchpad = {
     let content = document.getElementById("sp-menu-content");
     document.getElementById("sp-menu-browser").removeAttribute("checked");
     content.setAttribute("checked", true);
-    this.statusbarStatus.label = content.getAttribute("label");
     this.executionContext = SCRATCHPAD_CONTEXT_CONTENT;
+    this.statusbarStatus.label = content.getAttribute("label");
     this.resetContext();
   },
 
@@ -568,11 +573,11 @@ var Scratchpad = {
    */
   setBrowserContext: function SP_setBrowserContext()
   {
-    let chrome = document.getElementById("sp-menu-browser");
+    let browser = document.getElementById("sp-menu-browser");
     document.getElementById("sp-menu-content").removeAttribute("checked");
-    chrome.setAttribute("checked", true);
-    this.statusbarStatus.label = chrome.getAttribute("label");
+    browser.setAttribute("checked", true);
     this.executionContext = SCRATCHPAD_CONTEXT_BROWSER;
+    this.statusbarStatus.label = browser.getAttribute("label");
     this.resetContext();
   },
 
@@ -584,6 +589,8 @@ var Scratchpad = {
     this._chromeSandbox = null;
     this._contentSandbox = null;
     this._previousWindow = null;
+    this._previousBrowser = null;
+    this._previousLocation = null;
   },
 
   /**
