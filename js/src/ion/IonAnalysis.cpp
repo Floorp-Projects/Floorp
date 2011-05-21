@@ -214,3 +214,59 @@ ion::ApplyTypeInformation(MIRGraph &graph)
     return true;
 }
 
+bool
+ion::RenumberInstructions(MIRGraph &graph)
+{
+    Vector<MBasicBlock *, 0, IonAllocPolicy> pending;
+    Vector<unsigned int, 0, IonAllocPolicy> successors;
+    Vector<MBasicBlock *, 0, IonAllocPolicy> done;
+
+    MBasicBlock *current = graph.getBlock(0);
+    unsigned int nextSuccessor = 0;
+
+    graph.reset();
+
+    // Build up a postorder traversal non-recursively.
+    while (true) {
+        if (!current->isMarked()) {
+            current->mark();
+
+            if (nextSuccessor < current->lastIns()->numSuccessors()) {
+                if (!pending.append(current))
+                    return false;
+                if (!successors.append(nextSuccessor))
+                    return false;
+
+                current = current->lastIns()->getSuccessor(nextSuccessor);
+                nextSuccessor = 0;
+                continue;
+            }
+
+            if (!done.append(current))
+                return false;
+        }
+
+        if (pending.empty())
+            break;
+
+        current = pending.popCopy();
+        current->unmark();
+        nextSuccessor = successors.popCopy() + 1;
+    }
+
+    JS_ASSERT(pending.empty());
+    JS_ASSERT(successors.empty());
+
+    // Allocate block and instruction IDs in reverse postorder.
+    while (!done.empty()) {
+        current = done.popCopy();
+        current->unmark();
+
+        if (!graph.addBlock(current))
+            return false;
+        for (MInstructionIterator i = current->begin(); i != current->end(); i++)
+            graph.allocInstructionId(*i);
+    }
+
+    return true;
+}

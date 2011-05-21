@@ -590,8 +590,7 @@ class MAryControlInstruction : public MControlInstruction
 
 class MGoto : public MAryControlInstruction<0>
 {
-    MGoto(MBasicBlock *target)
-    {
+    MGoto(MBasicBlock *target) { 
         successors[0] = target;
     }
 
@@ -748,8 +747,7 @@ class MPhi : public MInstruction
 
     MPhi(uint32 slot)
       : slot_(slot)
-    {
-    }
+    { }
 
   protected:
     void setOperand(size_t index, MOperand *operand) {
