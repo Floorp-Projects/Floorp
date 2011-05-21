@@ -323,8 +323,8 @@ public:
     gfxRect DeviceToUser(const gfxRect& rect) const;
 
     /**
-     * Converts a point from user to device coordinates using the inverse
-     * transformation matrix.
+     * Converts a point from user to device coordinates using the transformation
+     * matrix.
      */
     gfxPoint UserToDevice(const gfxPoint& point) const;
 
