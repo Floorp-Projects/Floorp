@@ -5,11 +5,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
 
-function makeSteamEngine() {
-  return new SteamEngine();
-}
-
-var syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+var syncTesting = new SyncTestingInfrastructure();
 
 function test_processIncoming_mobile_history_batched() {
   _("SyncEngine._processIncoming works on history engine.");
