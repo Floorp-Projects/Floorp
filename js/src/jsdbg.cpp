@@ -296,6 +296,7 @@ Debug::handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook)
             cx->clearPendingException();
         }
     }
+    ac.leave();
     return JSTRAP_ERROR;
 }
 
@@ -339,10 +340,14 @@ Debug::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value
     vp->setUndefined();
     if (!ok)
         return handleUncaughtException(ac, vp, callHook);
-    if (rv.isUndefined())
+    if (rv.isUndefined()) {
+        ac.leave();
         return JSTRAP_CONTINUE;
-    if (rv.isNull())
+    }
+    if (rv.isNull()) {
+        ac.leave();
         return JSTRAP_ERROR;
+    }
 
     // Check that rv is {return: val} or {throw: val}.
     JSContext *cx = ac.context;
@@ -404,7 +409,7 @@ Debug::handleDebuggerStatement(JSContext *cx, Value *vp)
 
     Value argv[1];
     if (!getScriptFrame(cx, fp, argv))
-        return JSTRAP_ERROR;
+        return handleUncaughtException(ac, vp, false);
 
     Value rv;
     bool ok = CallMethodIfPresent(cx, hooksObject, "debuggerHandler", 1, argv, &rv);
@@ -433,13 +438,13 @@ Debug::handleThrow(JSContext *cx, Value *vp)
     Value argv[2];
     argv[1] = exc;
     if (!getScriptFrame(cx, fp, &argv[0]) || !wrapDebuggeeValue(cx, &argv[1]))
-        return JSTRAP_ERROR;
+        return handleUncaughtException(ac, vp, false);
 
     Value rv;
     bool ok = CallMethodIfPresent(cx, hooksObject, "throw", 2, argv, &rv);
     JSTrapStatus st = parseResumptionValue(ac, ok, rv, vp);
     if (st == JSTRAP_CONTINUE)
-        cx->setPendingException(argv[1]);
+        cx->setPendingException(exc);
     return st;
 }
 
