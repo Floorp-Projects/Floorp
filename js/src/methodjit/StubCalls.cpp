@@ -2752,14 +2752,14 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
     result = f.regs.sp[0];
 
     /*
-     * Prune type barriers at this bytecode if we have added many objects to
+     * Break type barriers at this bytecode if we have added many objects to
      * the target already. This isn't needed if inference results for the
      * script have been destroyed, as we will reanalyze and prune type barriers
      * as they are regenerated.
      */
     if (f.script()->hasAnalysis() && f.script()->analysis(f.cx)->ranInference()) {
         AutoEnterTypeInference enter(f.cx);
-        f.script()->analysis(f.cx)->pruneTypeBarriers(f.cx, f.pc() - f.script()->code);
+        f.script()->analysis(f.cx)->breakTypeBarriers(f.cx, f.pc() - f.script()->code, false);
     }
 
     f.script()->typeMonitor(f.cx, f.pc(), result);

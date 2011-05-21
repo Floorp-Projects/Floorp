@@ -4210,12 +4210,13 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
      * without using an IC.
      */
     JSOp op = JSOp(*PC);
+    jsid id = ATOM_TO_JSID(atom);
     types::TypeSet *types = frame.extra(top).types;
     if (op == JSOP_GETPROP && types && !types->unknown() && types->getObjectCount() == 1 &&
-        !types->getObject(0)->unknownProperties()) {
+        !types->getObject(0)->unknownProperties() && id == types::MakeTypeId(cx, id)) {
         JS_ASSERT(usePropCache);
         types::TypeObject *object = types->getObject(0);
-        types::TypeSet *propertyTypes = object->getProperty(cx, ATOM_TO_JSID(atom), false);
+        types::TypeSet *propertyTypes = object->getProperty(cx, id, false);
         if (!propertyTypes)
             return false;
         if (propertyTypes->isDefiniteProperty() && !propertyTypes->isOwnProperty(cx, true)) {
@@ -4705,10 +4706,155 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
 }
 
 bool
+mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
+{
+    /*
+     * Check for a CALLPROP which is a dynamic dispatch: every value it can
+     * push is a singleton, and the pushed value is determined by the type of
+     * the object being accessed. Return true if the CALLPROP has been fully
+     * processed, false if no code was generated.
+     */
+    FrameEntry *top = frame.peek(-1);
+    if (top->isNotType(JSVAL_TYPE_OBJECT))
+        return false;
+
+    jsid id = ATOM_TO_JSID(atom);
+    if (id != types::MakeTypeId(cx, id))
+        return false;
+
+    types::TypeSet *pushedTypes = pushedTypeSet(0);
+    if (pushedTypes->unknown() || pushedTypes->baseFlags() != 0)
+        return false;
+
+    /* Check every pushed value is a singleton. */
+    for (unsigned i = 0; i < pushedTypes->getObjectCount(); i++) {
+        types::TypeObject *object = pushedTypes->getObject(i);
+        if (object && !object->singleton)
+            return false;
+    }
+
+    types::TypeSet *objTypes = analysis->poppedTypes(PC, 0);
+    if (objTypes->unknown() || objTypes->getObjectCount() == 0)
+        return false;
+
+    pushedTypes->addFreeze(cx);
+
+    /* Map each type in the object to the resulting pushed value. */
+    Vector<JSObject *> results(CompilerAllocPolicy(cx, *this));
+
+    /*
+     * For each type of the base object, check it has no 'own' property for the
+     * accessed id and that its prototype does have such a property.
+     */
+    uint32 last = 0;
+    for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
+        types::TypeObject *object = objTypes->getObject(i);
+        if (!object) {
+            results.append(NULL);
+            continue;
+        }
+        if (object->unknownProperties() || !object->proto)
+            return false;
+        types::TypeSet *ownTypes = object->getProperty(cx, id, false);
+        if (ownTypes->isOwnProperty(cx, false))
+            return false;
+
+        if (!testSingletonProperty(object->proto, id))
+            return false;
+
+        types::TypeSet *protoTypes = object->proto->getType()->getProperty(cx, id, false);
+        JSObject *singleton = protoTypes->getSingleton(cx);
+        if (!singleton)
+            return false;
+
+        results.append(singleton);
+        last = i;
+    }
+
+    if (oomInVector)
+        return false;
+
+    objTypes->addFreeze(cx);
+
+    /* Done filtering, now generate code which dispatches on the type. */
+
+    if (!top->isType(JSVAL_TYPE_OBJECT)) {
+        Jump notObject = frame.testObject(Assembler::NotEqual, top);
+        stubcc.linkExit(notObject, Uses(1));
+    }
+
+    RegisterID reg = frame.tempRegForData(top);
+    frame.pinReg(reg);
+    RegisterID pushreg = frame.allocReg();
+    frame.unpinReg(reg);
+
+    Address typeAddress(reg, offsetof(JSObject, type));
+
+    Vector<Jump> rejoins(CompilerAllocPolicy(cx, *this));
+    MaybeJump lastMiss;
+
+    for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
+        types::TypeObject *object = objTypes->getObject(i);
+        if (!object) {
+            JS_ASSERT(results[i] == NULL);
+            continue;
+        }
+        if (lastMiss.isSet())
+            lastMiss.get().linkTo(masm.label(), &masm);
+
+        /*
+         * Check that the pushed result is actually in the known pushed types
+         * for the bytecode; this bytecode may have type barriers. Redirect to
+         * the stub to update said pushed types.
+         */
+        if (!pushedTypes->hasType((types::jstype) results[i]->getType())) {
+            JS_ASSERT(hasTypeBarriers(PC));
+            if (i == last) {
+                stubcc.linkExit(masm.jump(), Uses(1));
+                break;
+            } else {
+                lastMiss.setJump(masm.branchPtr(Assembler::NotEqual, typeAddress, ImmPtr(object)));
+                stubcc.linkExit(masm.jump(), Uses(1));
+                continue;
+            }
+        }
+
+        if (i == last) {
+            masm.move(ImmPtr(results[i]), pushreg);
+            break;
+        } else {
+            lastMiss.setJump(masm.branchPtr(Assembler::NotEqual, typeAddress, ImmPtr(object)));
+            masm.move(ImmPtr(results[i]), pushreg);
+            rejoins.append(masm.jump());
+        }
+    }
+
+    for (unsigned i = 0; i < rejoins.length(); i++)
+        rejoins[i].linkTo(masm.label(), &masm);
+
+    stubcc.leave();
+    stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::CallProp, REJOIN_FALLTHROUGH);
+
+    frame.dup();
+    // THIS THIS
+
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, pushreg);
+    // THIS THIS FUN
+
+    frame.shift(-2);
+    // FUN THIS
+
+    stubcc.rejoin(Changes(2));
+    return true;
+}
+
+bool
 mjit::Compiler::jsop_callprop(JSAtom *atom)
 {
     FrameEntry *top = frame.peek(-1);
 
+    /* If the CALLPROP will definitely be fetching a particular value, nop it. */
     bool testObject;
     JSObject *singleton = pushedSingleton(0);
     if (singleton && singleton->isFunction() && !hasTypeBarriers(PC) &&
@@ -4736,6 +4882,12 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
             stubcc.rejoin(Changes(2));
 
         return true;
+    }
+
+    /* Check for a dynamic dispatch. */
+    if (cx->typeInferenceEnabled()) {
+        if (jsop_callprop_dispatch(atom))
+            return true;
     }
 
     /* If the incoming type will never PIC, take slow path. */
@@ -4766,13 +4918,14 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
      * Set the property directly if we are accessing a known object which
      * always has the property in a particular inline slot.
      */
+    jsid id = ATOM_TO_JSID(atom);
     types::TypeSet *types = frame.extra(lhs).types;
-    if (JSOp(*PC) == JSOP_SETPROP &&
+    if (JSOp(*PC) == JSOP_SETPROP && id == types::MakeTypeId(cx, id) &&
         types && !types->unknown() && types->getObjectCount() == 1 &&
         !types->getObject(0)->unknownProperties()) {
         JS_ASSERT(usePropCache);
         types::TypeObject *object = types->getObject(0);
-        types::TypeSet *propertyTypes = object->getProperty(cx, ATOM_TO_JSID(atom), false);
+        types::TypeSet *propertyTypes = object->getProperty(cx, id, false);
         if (!propertyTypes)
             return false;
         if (propertyTypes->isDefiniteProperty() && !propertyTypes->isOwnProperty(cx, true)) {
@@ -5679,8 +5832,9 @@ mjit::Compiler::jsop_getgname(uint32 index)
     }
 
     /* Get the type of the global. */
+    jsid id = ATOM_TO_JSID(atom);
     JSValueType type = JSVAL_TYPE_UNKNOWN;
-    if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
+    if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::MakeTypeId(cx, id) &&
         !globalObj->getType()->unknownProperties()) {
         /*
          * Get the type tag for the global either straight off it (in case this
@@ -5692,7 +5846,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
         if (JSOp(*PC) == JSOP_GETGNAME || JSOp(*PC) == JSOP_CALLGNAME)
             types = pushedTypeSet(0);
         else
-            types = globalObj->getType()->getProperty(cx, ATOM_TO_JSID(atom), false);
+            types = globalObj->getType()->getProperty(cx, id, false);
         if (!types)
             return;
         type = types->getKnownTypeTag(cx);
@@ -5895,7 +6049,8 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
         return;
     }
 
-    if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
+    jsid id = ATOM_TO_JSID(atom);
+    if (cx->typeInferenceEnabled() && globalObj->isGlobal() && id == types::MakeTypeId(cx, id) &&
         !globalObj->getType()->unknownProperties()) {
         /*
          * Note: object branding is disabled when inference is enabled. With
@@ -5903,7 +6058,7 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
          * can't get a function later and cause the global object to become
          * branded, requiring a shape change if it changes again.
          */
-        types::TypeSet *types = globalObj->getType()->getProperty(cx, ATOM_TO_JSID(atom), false);
+        types::TypeSet *types = globalObj->getType()->getProperty(cx, id, false);
         if (!types)
             return;
         const js::Shape *shape = globalObj->nativeLookup(ATOM_TO_JSID(atom));
