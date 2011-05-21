@@ -224,7 +224,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsDOMAttribute.h"
 #include "nsIDOMText.h"
-#include "nsIDOM3Text.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -2547,7 +2546,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Text)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Comment, nsIDOMComment)
@@ -2562,7 +2560,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Text)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(ProcessingInstruction, nsIDOMProcessingInstruction)
