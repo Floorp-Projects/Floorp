@@ -28,9 +28,9 @@ function runTests()
 
   let sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
-  is(typeof sp.execute, "function", "Scratchpad.execute() exists");
+  is(typeof sp.run, "function", "Scratchpad.run() exists");
   is(typeof sp.inspect, "function", "Scratchpad.inspect() exists");
-  is(typeof sp.print, "function", "Scratchpad.print() exists");
+  is(typeof sp.display, "function", "Scratchpad.display() exists");
 
   let chromeContextMenu = gScratchpadWindow.document.
                           getElementById("sp-menu-browser");

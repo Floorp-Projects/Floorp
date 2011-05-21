@@ -70,9 +70,9 @@
  -->
 
   <command id="sp-cmd-close" oncommand="window.close();"/>
-  <command id="sp-cmd-execute" oncommand="Scratchpad.execute();"/>
+  <command id="sp-cmd-run" oncommand="Scratchpad.run();"/>
   <command id="sp-cmd-inspect" oncommand="Scratchpad.inspect();"/>
-  <command id="sp-cmd-print" oncommand="Scratchpad.print();"/>
+  <command id="sp-cmd-display" oncommand="Scratchpad.display();"/>
   <command id="sp-cmd-contentContext" oncommand="Scratchpad.setContentContext();"/>
   <command id="sp-cmd-browserContext" oncommand="Scratchpad.setBrowserContext();" disabled="true"/>
   <command id="sp-cmd-resetContext" oncommand="Scratchpad.resetContext();"/>
@@ -118,17 +118,17 @@
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
   <key id="key_undo" key="&undoCmd.key;" modifiers="accel"/>
   <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift"/>
-  <key id="sp-key-execute"
-       key="&execute.key;"
-       command="sp-cmd-execute"
+  <key id="sp-key-run"
+       key="&run.key;"
+       command="sp-cmd-run"
        modifiers="accel"/>
   <key id="sp-key-inspect"
        key="&inspect.key;"
        command="sp-cmd-inspect"
        modifiers="accel"/>
-  <key id="sp-key-print"
-       key="&print.key;"
-       command="sp-cmd-print"
+  <key id="sp-key-display"
+       key="&display.key;"
+       command="sp-cmd-display"
        modifiers="accel"/>
   <key id="sp-key-errorConsole"
        key="&errorConsoleCmd.commandkey;"
@@ -220,7 +220,6 @@
                 key="key_selectAll"
                 accesskey="&selectAllCmd.accesskey;"
                 command="cmd_selectAll"/>
-      <menuseparator/>
 
       <!-- TODO: bug 650345 - implement search and replace
       <menuitem id="sp-menu-find"
@@ -238,21 +237,27 @@
       <menuseparator id="sp-execute-separator"/>
       -->
 
-      <menuitem id="sp-text-execute"
-                label="&execute.label;"
-                accesskey="&execute.accesskey;"
-                key="sp-key-execute"
-                command="sp-cmd-execute"/>
+    </menupopup>
+  </menu>
+
+  <menu id="sp-execute-menu" label="&executeMenu.label;"
+        accesskey="&executeMenu.accesskey;">
+    <menupopup id="sp-menu_executepopup">
+      <menuitem id="sp-text-run"
+                label="&run.label;"
+                accesskey="&run.accesskey;"
+                key="sp-key-run"
+                command="sp-cmd-run"/>
       <menuitem id="sp-text-inspect"
                 label="&inspect.label;"
                 accesskey="&inspect.accesskey;"
                 key="sp-key-inspect"
                 command="sp-cmd-inspect"/>
-      <menuitem id="sp-text-print"
-                label="&print.label;"
-                accesskey="&print.accesskey;"
-                key="sp-key-print"
-                command="sp-cmd-print"/>
+      <menuitem id="sp-text-display"
+                label="&display.label;"
+                accesskey="&display.accesskey;"
+                key="sp-key-display"
+                command="sp-cmd-display"/>
     </menupopup>
   </menu>
 
@@ -306,21 +311,21 @@
     <menuseparator/>
     <menuitem id="menu_selectAll"/>
     <menuseparator/>
-    <menuitem id="sp-text-execute"
-              label="&execute.label;"
-              accesskey="&execute.accesskey;"
-              key="sp-key-execute"
-              command="sp-cmd-execute"/>
+    <menuitem id="sp-text-run"
+              label="&run.label;"
+              accesskey="&run.accesskey;"
+              key="sp-key-run"
+              command="sp-cmd-run"/>
     <menuitem id="sp-text-inspect"
               label="&inspect.label;"
               accesskey="&inspect.accesskey;"
               key="sp-key-inspect"
               command="sp-cmd-inspect"/>
-    <menuitem id="sp-text-print"
-              label="&print.label;"
-              accesskey="&print.accesskey;"
-              key="sp-key-print"
-              command="sp-cmd-print"/>
+    <menuitem id="sp-text-display"
+              label="&display.label;"
+              accesskey="&display.accesskey;"
+              key="sp-key-display"
+              command="sp-cmd-display"/>
   </menupopup>
 </popupset>
 

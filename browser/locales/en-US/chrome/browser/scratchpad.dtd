@@ -61,17 +61,17 @@
 <!ENTITY selectAllCmd.key             "A">
 <!ENTITY selectAllCmd.accesskey       "A">
 
-<!ENTITY execute.label                "Execute">
-<!ENTITY execute.accesskey            "E">
-<!ENTITY execute.key                  "t">
+<!ENTITY run.label                    "Run">
+<!ENTITY run.accesskey                "R">
+<!ENTITY run.key                      "r">
 
 <!ENTITY inspect.label                "Inspect">
 <!ENTITY inspect.accesskey            "I">
 <!ENTITY inspect.key                  "i">
 
-<!ENTITY print.label                  "Print">
-<!ENTITY print.accesskey              "p">
-<!ENTITY print.key                    "r">
+<!ENTITY display.label                "Display">
+<!ENTITY display.accesskey            "D">
+<!ENTITY display.key                  "l">
 
 <!-- LOCALIZATION NOTE (environmentMenu.label, accesskey): This menu item was
   -  renamed from "Context" to avoid confusion with the right-click context
@@ -109,6 +109,9 @@
   -->
 <!ENTITY resetContext.label           "Reset">
 <!ENTITY resetContext.accesskey       "R">
+
+<!ENTITY executeMenu.label            "Execute">
+<!ENTITY executeMenu.accesskey        "X">
 
 <!ENTITY toolsMenu.label              "Tools">
 <!ENTITY toolsMenu.accesskey          "T">
