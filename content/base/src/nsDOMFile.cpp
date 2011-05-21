@@ -49,6 +49,7 @@
 #include "nsIConverterInputStream.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
 #include "nsIIPCSerializable.h"
@@ -139,6 +140,7 @@ DOMCI_DATA(Blob, nsDOMFile)
 NS_INTERFACE_MAP_BEGIN(nsDOMFile)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMBlob_MOZILLA_2_0_BRANCH)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, mIsFullFile)
   NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
   NS_INTERFACE_MAP_ENTRY(nsICharsetDetectionObserver)
@@ -292,13 +294,20 @@ ParseSize(PRInt64 aSize, PRInt64& aStart, PRInt64& aEnd)
 }
 
 NS_IMETHODIMP
+nsDOMFile::Slice(PRUint64 aStart, PRUint64 aLength,
+                 const nsAString& aContentType, nsIDOMBlob **aBlob)
+{
+  return MozSlice(aStart, aStart + aLength, aContentType, 2, aBlob);
+}
+
+NS_IMETHODIMP
 nsDOMFile::MozSlice(PRInt64 aStart, PRInt64 aEnd,
                     const nsAString& aContentType, PRUint8 optional_argc,
                     nsIDOMBlob **aBlob)
 {
   *aBlob = nsnull;
 
-  // Truncate aStart and aEnd so that we stay within this file.
+  // Truncate aLength and aStart so that we stay within this file.
   PRUint64 thisLength;
   nsresult rv = GetSize(&thisLength);
   NS_ENSURE_SUCCESS(rv, rv);
