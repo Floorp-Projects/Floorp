@@ -2261,7 +2261,8 @@ mjit::Compiler::generateMethod()
              * Sync is not guaranteed for types of dead locals, and GETLOCAL
              * followed by POP is not regarded as a use of the variable.
              */
-            if (PC[JSOP_GETLOCAL_LENGTH] != JSOP_POP)
+            jsbytecode *next = &PC[JSOP_GETLOCAL_LENGTH];
+            if (JSOp(*next) != JSOP_POP || analysis->jumpTarget(next))
                 restoreVarType();
             uint32 slot = GET_SLOTNO(PC);
             frame.pushLocal(slot);
