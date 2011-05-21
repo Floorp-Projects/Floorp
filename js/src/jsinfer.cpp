@@ -2857,7 +2857,10 @@ TypeObject::clearNewScript(JSContext *cx)
             jsbytecode *pc = fp->pc(cx, NULL, &inline_);
             JS_ASSERT(!inline_);
 
-            /* Number of properties that have been added. */
+            /* Whether all identified 'new' properties have been initialized. */
+            bool finished = false;
+
+            /* If not finished, number of properties that have been added. */
             uint32 numProperties = 0;
 
             /*
@@ -2900,12 +2903,13 @@ TypeObject::clearNewScript(JSContext *cx)
                     }
                 } else {
                     JS_ASSERT(init->kind == TypeNewScript::Initializer::DONE);
-                    JS_ASSERT(numProperties == obj->slotSpan());
+                    finished = true;
                     break;
                 }
             }
 
-            obj->rollbackProperties(numProperties);
+            if (!finished)
+                obj->rollbackProperties(numProperties);
         }
     }
 
