@@ -1,21 +1,69 @@
 == inline-horizontal-1.html inline-horizontal-1-ref.html
 != inline-horizontal-1.html inline-horizontal-1-noref.html
+== inline-horizontal-2.html inline-horizontal-2-ref.html
+!= inline-horizontal-2.html inline-horizontal-2-noref.html
+== inline-horizontal-1-dyn.html inline-horizontal-1-ref.html
+!= inline-horizontal-1-dyn.html inline-horizontal-1-noref.html
+== inline-horizontal-2-dyn.html inline-horizontal-2-ref.html
+!= inline-horizontal-2-dyn.html inline-horizontal-2-noref.html
 == block-horizontal-1.html block-horizontal-1-ref.html
 != block-horizontal-1.html block-horizontal-1-noref.html
 == block-horizontal-2.html block-horizontal-2-ref.html
 != block-horizontal-2.html block-horizontal-2-noref.html
+== block-horizontal-3.html block-horizontal-3-ref.html
+!= block-horizontal-3.html block-horizontal-3-noref.html
+== block-horizontal-4.html block-horizontal-4-ref.html
+!= block-horizontal-4.html block-horizontal-4-noref.html
+== block-horizontal-1-dyn.html block-horizontal-1-ref.html
+!= block-horizontal-1-dyn.html block-horizontal-1-noref.html
+== block-horizontal-2-dyn.html block-horizontal-2-ref.html
+!= block-horizontal-2-dyn.html block-horizontal-2-noref.html
+== block-horizontal-3-dyn.html block-horizontal-3-ref.html
+!= block-horizontal-3-dyn.html block-horizontal-3-noref.html
+== block-horizontal-4-dyn.html block-horizontal-4-ref.html
+!= block-horizontal-4-dyn.html block-horizontal-4-noref.html
 == inline-block-horizontal-1.html inline-block-horizontal-1-ref.html
 != inline-block-horizontal-1.html inline-block-horizontal-1-noref.html
+== inline-block-horizontal-2.html inline-block-horizontal-2-ref.html
+!= inline-block-horizontal-2.html inline-block-horizontal-2-noref.html
+== inline-block-horizontal-1-dyn.html inline-block-horizontal-1-ref.html
+!= inline-block-horizontal-1-dyn.html inline-block-horizontal-1-noref.html
+== inline-block-horizontal-2-dyn.html inline-block-horizontal-2-ref.html
+!= inline-block-horizontal-2-dyn.html inline-block-horizontal-2-noref.html
 == inline-table-horizontal-1.html inline-table-horizontal-1-ref.html
 != inline-table-horizontal-1.html inline-table-horizontal-1-noref.html
+== inline-table-horizontal-1-dyn.html inline-table-horizontal-1-ref.html
+!= inline-table-horizontal-1-dyn.html inline-table-horizontal-1-noref.html
 == block-sibling-1a.html block-sibling-1-ref.html
 == block-sibling-1a.html block-sibling-1-ref2.html
+!= block-sibling-1a.html block-sibling-1-noref.html
 == block-sibling-1b.html block-sibling-1-ref.html
 == block-sibling-1b.html block-sibling-1-ref2.html
+!= block-sibling-1b.html block-sibling-1-noref.html
 == block-sibling-1c.html block-sibling-1-ref.html
 == block-sibling-1c.html block-sibling-1-ref2.html
+!= block-sibling-1c.html block-sibling-1-noref2.html
 == block-sibling-2.html block-sibling-2-ref.html
 == block-sibling-2.html block-sibling-2-ref2.html
+!= block-sibling-2.html block-sibling-2-noref.html
+== block-sibling-3.html block-sibling-1-ref.html
+== block-sibling-3.html block-sibling-1-ref2.html
+!= block-sibling-3.html block-sibling-1-noref.html
+== block-sibling-1a-dyn.html block-sibling-1-ref.html
+== block-sibling-1a-dyn.html block-sibling-1-ref2.html
+!= block-sibling-1a-dyn.html block-sibling-1-noref.html
+== block-sibling-1b-dyn.html block-sibling-1-ref.html
+== block-sibling-1b-dyn.html block-sibling-1-ref2.html
+!= block-sibling-1b-dyn.html block-sibling-1-noref.html
+== block-sibling-1c-dyn.html block-sibling-1-ref.html
+== block-sibling-1c-dyn.html block-sibling-1-ref2.html
+!= block-sibling-1c-dyn.html block-sibling-1-noref2.html
+== block-sibling-2-dyn.html block-sibling-2-ref.html
+== block-sibling-2-dyn.html block-sibling-2-ref2.html
+!= block-sibling-2-dyn.html block-sibling-2-noref.html
+== block-sibling-3-dyn.html block-sibling-1-ref.html
+== block-sibling-3-dyn.html block-sibling-1-ref2.html
+!= block-sibling-3-dyn.html block-sibling-1-noref.html
 == block-negative-1a.html block-negative-1-ref.html
 == block-negative-1b.html block-negative-1-ref.html
 == block-negative-2a.html block-negative-2-ref.html
@@ -90,12 +138,32 @@
 == block-overflow-5c.html block-overflow-5c-ref2.html
 == block-overflow-5d.html block-overflow-5-ref.html
 == block-overflow-5d.html block-overflow-5-ref2.html
-fails == table-sibling-1a.html table-sibling-1-ref.html # Bug 372303
-fails == table-sibling-1b.html table-sibling-1-ref.html # Bug 372303
-fails == table-sibling-1c.html table-sibling-1-ref.html # Bug 372303
+fails == table-sibling-1a.html table-sibling-1-ref.html # Bug 87277
+fails != table-sibling-1a.html table-sibling-1-noref.html # Bug 87277
+fails == table-sibling-1b.html table-sibling-1-ref.html # Bug 87277
+fails != table-sibling-1b.html table-sibling-1-noref.html # Bug 87277
+fails == table-sibling-1c.html table-sibling-1-ref.html # Bug 87277
+fails != table-sibling-1c.html table-sibling-1-noref2.html # Bug 87277
 fails == table-sibling-2a.html table-sibling-2-ref.html # Bug 87277
+fails != table-sibling-2a.html table-sibling-2-noref.html # Bug 87277
 fails == table-sibling-2b.html table-sibling-2-ref.html # Bug 87277
+fails != table-sibling-2b.html table-sibling-2-noref.html # Bug 87277
 fails == table-sibling-2c.html table-sibling-2-ref.html # Bug 87277
+fails != table-sibling-2c.html table-sibling-2-noref2.html # Bug 87277
+fails == table-sibling-1a-dyn.html table-sibling-1-ref.html # Bug 87277
+fails != table-sibling-1a-dyn.html table-sibling-1-noref.html # Bug 87277
+fails == table-sibling-1b-dyn.html table-sibling-1-ref.html # Bug 87277
+fails != table-sibling-1b-dyn.html table-sibling-1-noref.html # Bug 87277
+fails == table-sibling-1c-dyn.html table-sibling-1-ref.html # Bug 87277
+fails != table-sibling-1c-dyn.html table-sibling-1-noref2.html # Bug 87277
+fails == table-sibling-2a-dyn.html table-sibling-2-ref.html # Bug 87277
+fails != table-sibling-2a-dyn.html table-sibling-2-noref.html # Bug 87277
+fails == table-sibling-2b-dyn.html table-sibling-2-ref.html # Bug 87277
+fails != table-sibling-2b-dyn.html table-sibling-2-noref.html # Bug 87277
+fails == table-sibling-2c-dyn.html table-sibling-2-ref.html # Bug 87277
+fails != table-sibling-2c-dyn.html table-sibling-2-noref2.html # Bug 87277
+fails == table-sibling-3-dyn.html table-sibling-3-ref.html # Bug 87277
+fails != table-sibling-3-dyn.html table-sibling-3-noref.html # Bug 87277
 == table-caption-1a.html table-caption-1-ref.html
 == table-caption-1b.html table-caption-1-ref.html
 == table-caption-2a.html table-caption-2-ref.html
@@ -106,8 +174,19 @@ fails == table-sibling-2c.html table-sibling-2-ref.html # Bug 87277
 == table-caption-bottom-1.html table-caption-bottom-1-ref.html
 == table-caption-bottom-2.html table-caption-bottom-2-ref.html
 fails == caption-sibling-1a.html caption-sibling-1-ref.html # Bug 144517
+!= caption-sibling-1a.html caption-sibling-1-noref.html
 fails == caption-sibling-1b.html caption-sibling-1-ref.html # Bug 144517
+!= caption-sibling-1b.html caption-sibling-1-noref.html
 fails == caption-sibling-1c.html caption-sibling-1-ref.html # Bug 144517
+!= caption-sibling-1c.html caption-sibling-1-noref2.html
+fails == caption-sibling-1a-dyn.html caption-sibling-1-ref.html # Bug 144517
+!= caption-sibling-1a-dyn.html caption-sibling-1-noref.html
+fails == caption-sibling-1b-dyn.html caption-sibling-1-ref.html # Bug 144517
+!= caption-sibling-1b-dyn.html caption-sibling-1-noref.html
+fails == caption-sibling-1c-dyn.html caption-sibling-1-ref.html # Bug 144517
+!= caption-sibling-1c-dyn.html caption-sibling-1-noref2.html
+fails == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 144517
+!= caption-sibling-2-dyn.html caption-sibling-2-noref.html
 == fieldset-sibling-1a.html fieldset-sibling-1-ref.html
 == fieldset-sibling-1b.html fieldset-sibling-1-ref.html
 == fieldset-sibling-1c.html fieldset-sibling-1-ref.html
@@ -244,4 +323,4 @@ fails == block-clear-7g-left.html block-clear-7efgh-left-ref2.html # Bug 493380
 == block-zero-min-height-3c.html block-zero-min-height-3-ref.html
 == block-zero-min-height-3d.html block-zero-min-height-3-ref.html
 == block-percent-1.html block-percent-1-ref.html
-== dynamic-add-text-1.html dynamic-add-text-1-ref.html
+== dynamic-add-text-1.html dynamic-add-text-1-ref.html # Bug 467321
