@@ -224,6 +224,13 @@ class MBasicBlock : public TempObject
     MInstructionIterator end() {
         return instructions_.end();
     }
+    bool isLoopHeader() const {
+        return loopSuccessor_ != NULL;
+    }
+    MBasicBlock *getLoopSuccessor() const {
+        JS_ASSERT(isLoopHeader());
+        return loopSuccessor_;
+    }
 
   private:
     MIRGenerator *gen;
@@ -241,6 +248,10 @@ class MBasicBlock : public TempObject
     // blocks, anyway, to assist in debugging.
     MInstruction **header_;
     uint32 headerSlots_;
+
+    // If not NULL, the successor block of the loop for which this block is the
+    // header.
+    MBasicBlock *loopSuccessor_;
 };
 
 } // namespace ion
