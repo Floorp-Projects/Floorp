@@ -37,33 +37,37 @@
 
 #include "domstubs.idl"
 
-%{C++
-#include "jsapi.h"
-%}
-
 interface nsIDOMFileError;
 interface nsIInputStream;
 interface nsIURI;
 interface nsIPrincipal;
 interface nsIDOMBlob;
 
-[scriptable, uuid(d5237f31-443a-460b-9e42-449a135346f0)]
+[scriptable, uuid(5822776a-049c-4de7-adb6-dd9efc39d082)]
 interface nsIDOMBlob : nsISupports
 {
   readonly attribute unsigned long long size;
   readonly attribute DOMString type;
 
+  [noscript] nsIDOMBlob slice(in unsigned long long start,
+                              in unsigned long long length,
+                              [optional] in DOMString contentType);
+
   [noscript] readonly attribute nsIInputStream internalStream;
   // The caller is responsible for releasing the internalUrl from the
   // moz-filedata: protocol handler
   [noscript] DOMString getInternalUrl(in nsIPrincipal principal);
+};
 
+[scriptable, uuid(cb5b4191-a555-4e57-b8d2-88091184b59f)]
+interface nsIDOMBlob_MOZILLA_2_0_BRANCH : nsISupports
+{
   [optional_argc] nsIDOMBlob mozSlice(in long long start,
                                       [optional] in long long end,
                                       [optional] in DOMString contentType);
 };
 
-[scriptable, uuid(91c9ebd9-2a4a-4a38-9412-ef492a2799be)]
+[scriptable, uuid(ae1405b0-e411-481e-9606-b29ec7982687)]
 interface nsIDOMFile : nsIDOMBlob
 {
   readonly attribute DOMString name;
@@ -79,11 +83,4 @@ interface nsIDOMFile : nsIDOMBlob
   DOMString getAsText(in DOMString encoding); // raises(FileException) on retrieval
   DOMString getAsDataURL();             // raises(FileException) on retrieval
   DOMString getAsBinary();              // raises(FileException) on retrieval
-};
-
-[scriptable, uuid(c4a77171-039b-4f84-97f9-820fb51626af)]
-interface nsIDOMBlobBuilder : nsISupports
-{
-  nsIDOMBlob getBlob([optional] in DOMString contentType);
-  [implicit_jscontext] void append(in jsval data);
 };
