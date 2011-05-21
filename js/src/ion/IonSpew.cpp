@@ -97,7 +97,7 @@ static void
 DumpInstruction(FILE *fp, MInstruction *ins)
 {
     fprintf(fp, "      ");
-    fprintf(fp, "0 %d ", ins->useCount());
+    fprintf(fp, "0 %ld ", ins->useCount());
     ins->printName(fp);
     fprintf(fp, " ");
     ins->printOpcode(fp);
@@ -133,7 +133,7 @@ C1Spewer::spew(FILE *fp, MBasicBlock *block)
     fprintf(fp, "    begin_states\n");
 
     fprintf(fp, "      begin_locals\n");
-    fprintf(fp, "        size %d\n", block->numEntrySlots());
+    fprintf(fp, "        size %ld\n", block->numEntrySlots());
     fprintf(fp, "        method \"None\"\n");
     for (uint32 i = 0; i < block->numEntrySlots(); i++) {
         MInstruction *ins = block->getEntrySlot(i);

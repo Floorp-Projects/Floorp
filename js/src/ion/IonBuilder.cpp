@@ -65,6 +65,7 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
 
     MIRGraph graph;
+
     DummyOracle oracle;
     C1Spewer spew(graph, script);
     IonBuilder analyzer(cx, script, fun, temp, graph, &oracle);
@@ -79,6 +80,10 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
     if (!Lower(graph))
         return false;
     spew.spew("Lower");
+
+    if (!RenumberInstructions(graph))
+        return false;
+    spew.spew("Renumber Instructions");
 
     return false;
 }

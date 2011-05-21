@@ -47,15 +47,24 @@
 namespace js {
 namespace ion {
 
+typedef HashMap<uint32,
+                MInstruction *,
+                DefaultHasher<uint32>,
+                IonAllocPolicy> InstructionMap;
+
 class MIRGraph
 {
     Vector<MBasicBlock *, 8, IonAllocPolicy> blocks_;
     uint32 idGen_;
 
   public:
-    MIRGraph();
+    MIRGraph()
+      : idGen_(0)
+    {  }
 
     bool addBlock(MBasicBlock *block);
+
+    void reset();
 
     size_t numBlocks() const {
         return blocks_.length();
@@ -63,8 +72,11 @@ class MIRGraph
     MBasicBlock *getBlock(size_t i) const {
         return blocks_[i];
     }
-    uint32 allocInstructionId() {
+    void allocInstructionId(MInstruction *ins) {
         idGen_ += 2;
+        ins->setId(idGen_);
+    }
+    uint32 getMaxInstructionId() {
         return idGen_;
     }
 };
@@ -226,6 +238,15 @@ class MBasicBlock : public TempObject
     uint32 stackDepth() const {
         return stackPosition_;
     }
+    bool isMarked() const {
+        return mark_;
+    }
+    void mark() {
+        mark_ = true;
+    }
+    void unmark() {
+        mark_ = false;
+    }
 
     // This function retrieves the internal instruction associated with a
     // slot, and should not be used for normal stack operations. It is an
@@ -257,6 +278,9 @@ class MBasicBlock : public TempObject
     // If not NULL, the successor block of the loop for which this block is the
     // header.
     MBasicBlock *loopSuccessor_;
+
+    // Utility mark for traversal algorithms.
+    bool mark_;
 };
 
 } // namespace ion
