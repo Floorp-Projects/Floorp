@@ -416,7 +416,7 @@ MBasicBlock::assertUsesAreNotWithin(MUse *use)
 {
 #ifdef DEBUG
     for (; use; use = use->next())
-        JS_ASSERT(use->owner()->block()->id() < id());
+        JS_ASSERT(use->ins()->block()->id() < id());
 #endif
 }
 
@@ -454,12 +454,12 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
         MUse *use = entryDef->uses();
         MUse *prev = NULL;
         while (use) {
-            JS_ASSERT(use->owner()->getOperand(use->index())->ins() == entryDef);
+            JS_ASSERT(use->ins()->getOperand(use->index())->ins() == entryDef);
 
             // Uses are initially sorted, with the head of the list being the
             // most recently inserted. This ordering is maintained while
             // placing phis.
-            if (use->owner()->block()->id() < id()) {
+            if (use->ins()->block()->id() < id()) {
                 assertUsesAreNotWithin(use);
                 break;
             }
@@ -468,7 +468,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
             // does not change, and is really NULL since we always remove
             // from the head of the list,
             MUse *next = use->next();
-            use->owner()->replaceOperand(prev, use, phi); 
+            use->ins()->replaceOperand(prev, use, phi); 
             use = next;
         }
 

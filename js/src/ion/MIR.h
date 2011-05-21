@@ -184,16 +184,16 @@ class MUse : public TempObject
     friend class MInstruction;
 
     MUse *next_;            // Next use in the use chain.
-    MInstruction *owner_;   // The instruction that is using this operand.
+    MInstruction *ins_;   // The instruction that is using this operand.
     uint32 index_;          // The index of this operand in its owner.
 
     MUse(MUse *next, MInstruction *owner, uint32 index)
-      : next_(next), owner_(owner), index_(index)
+      : next_(next), ins_(owner), index_(index)
     { }
 
     void set(MUse *next, MInstruction *owner) {
         next_ = next;
-        owner_ = owner;
+        ins_ = owner;
     }
 
   public:
@@ -202,8 +202,8 @@ class MUse : public TempObject
         return new (gen->temp()) MUse(next, owner, index);
     }
 
-    MInstruction *owner() const {
-        return owner_;
+    MInstruction *ins() const {
+        return ins_;
     }
     uint32 index() const {
         return index_;
@@ -401,7 +401,7 @@ class MUseIterator
     void next() {
         use = use->next();
     }
-    MUse * operator *() const {
+    MUse * operator ->() const {
         return use;
     }
 };

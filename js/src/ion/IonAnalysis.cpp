@@ -107,6 +107,8 @@ TypeAnalyzer::reflow(MInstruction *ins)
             return false;
     }
     for (MUseIterator iter(ins); iter.more(); iter.next()) {
+        if (!addToWorklist(iter->ins()))
+            return false;
     }
     return true;
 }
