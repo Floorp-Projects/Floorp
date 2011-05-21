@@ -1364,6 +1364,9 @@ LoopState::getLoopTestAccess(const SSAValue &v, uint32 *pslot, int32 *pconstant)
 void
 LoopState::analyzeLoopTest()
 {
+    if (cc.debugMode())
+        return;
+
     /* Don't handle do-while loops. */
     if (lifetime->entry == lifetime->head)
         return;
@@ -1450,6 +1453,9 @@ LoopState::analyzeLoopTest()
 void
 LoopState::analyzeLoopIncrements()
 {
+    if (cc.debugMode())
+        return;
+
     /*
      * Find locals and arguments which are used in exactly one inc/dec operation in every
      * iteration of the loop (we only match against the last basic block, but could
@@ -1550,6 +1556,11 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
 void
 LoopState::analyzeLoopBody(unsigned frame)
 {
+    if (cc.debugMode()) {
+        skipAnalysis = true;
+        return;
+    }
+
     JSScript *script = ssa->getFrame(frame).script;
     analyze::ScriptAnalysis *analysis = script->analysis(cx);
     JS_ASSERT(analysis && !analysis->failed() && analysis->ranInference());
