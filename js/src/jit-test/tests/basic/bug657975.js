@@ -37,3 +37,10 @@ function f6() {
 }
 trap(f6, 10, '')
 f6()
+
+// bug 658491
+function f7() {
+  try { y = w; } catch(y) {}
+}
+trap(f7, 16, '')
+f7()
