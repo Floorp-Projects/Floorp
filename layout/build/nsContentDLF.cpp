@@ -67,6 +67,7 @@
 
 // plugins
 #include "nsIPluginHost.h"
+#include "nsPluginHost.h"
 static NS_DEFINE_CID(kPluginDocumentCID, NS_PLUGINDOCUMENT_CID);
 
 // Factory code for creating variations on html documents
@@ -306,8 +307,10 @@ nsContentDLF::CreateInstance(const char* aCommand,
                           aDocListener, aDocViewer);
   }
 
-  nsCOMPtr<nsIPluginHost> ph (do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-  if(ph && NS_SUCCEEDED(ph->IsPluginEnabledForType(aContentType))) {
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
+  if(pluginHost &&
+     NS_SUCCEEDED(pluginHost->IsPluginEnabledForType(aContentType))) {
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kPluginDocumentCID,

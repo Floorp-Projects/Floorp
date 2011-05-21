@@ -38,6 +38,7 @@
 #ifndef nsPluginArray_h___
 #define nsPluginArray_h___
 
+#include "nsCOMPtr.h"
 #include "nsIDOMPluginArray.h"
 #include "nsIDOMPlugin.h"
 #include "nsIPluginHost.h"
@@ -45,7 +46,6 @@
 
 class nsNavigator;
 class nsIDocShell;
-class nsIPluginHost;
 
 // NB: Due to weak references, nsNavigator has intimate knowledge of our
 // internals.

@@ -40,7 +40,7 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir = toolkit/components/telemetry/test
+relativesrcdir = toolkit/components/telemetry/tests
 
 include $(DEPTH)/config/autoconf.mk
 

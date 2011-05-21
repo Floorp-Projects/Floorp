@@ -201,6 +201,8 @@
     // Returns an array of browserTest objects for all the selected tests
     function listTests() {
       [links, singleTestPath] = getTestList();
+      if (!links)
+        return [];
 
       // load server.js in so we can share template functions
       var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].

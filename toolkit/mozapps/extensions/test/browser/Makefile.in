@@ -86,6 +86,7 @@ _MAIN_TEST_FILES = \
   browser_updateid.js \
   browser_purchase.js \
   browser_openDialog.js \
+  browser_types.js \
   $(NULL)
 
 _TEST_FILES = \

@@ -260,7 +260,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
-#if defined(ANDROID)
+#if defined(ANDROID) && defined(MOZ_CRASHREPORTER)
     PCrashReporterChild* crashreporter = SendPCrashReporterConstructor();
     InfallibleTArray<Mapping> mappings;
     const struct mapping_info *info = getLibraryMapping();
