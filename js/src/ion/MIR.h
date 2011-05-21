@@ -58,17 +58,6 @@ namespace ion {
     _(Return)                                                               \
     _(Copy)
 
-// Representations of IR results.
-namespace Representation {
-    enum Kind {
-        None,           // No representation
-        Int32,          // 32-bit integer
-        Double,         // 64-bit double
-        Box,            // Value box
-        Pointer         // GC-thing
-    };
-}
-
 enum MIRType
 {
     MIRType_Double,
@@ -116,7 +105,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
 
 class MInstruction;
 class MBasicBlock;
-class MOperand;
+class MUse;
 class MIRGraph;
 
 class MIRGenerator
@@ -190,29 +179,27 @@ class MIRGenerator
 };
 
 // Represents a use of a definition.
-class MOperand : public TempObject
+class MUse : public TempObject
 {
     friend class MInstruction;
 
-    MOperand *next_;        // Next use in the use chain.
+    MUse *next_;            // Next use in the use chain.
     MInstruction *owner_;   // The instruction that is using this operand.
     uint32 index_;          // The index of this operand in its owner.
-    MInstruction *ins_;     // The actual instruction being used.
 
-    MOperand(MInstruction *owner, uint32 index, MInstruction *ins)
-      : owner_(owner), index_(index), ins_(ins)
+    MUse(MUse *next, MInstruction *owner, uint32 index)
+      : next_(next), owner_(owner), index_(index)
     { }
 
-  private:
-    void setIns(MInstruction *ins) {
-        ins_ = ins;
+    void set(MUse *next, MInstruction *owner) {
+        next_ = next;
+        owner_ = owner;
     }
 
   public:
-    static inline MOperand *New(MIRGenerator *gen, MInstruction *owner, uint32 index,
-                                MInstruction *ins)
+    static inline MUse *New(MIRGenerator *gen, MUse *next, MInstruction *owner, uint32 index)
     {
-        return new (gen->temp()) MOperand(owner, index, ins);
+        return new (gen->temp()) MUse(next, owner, index);
     }
 
     MInstruction *owner() const {
@@ -221,11 +208,33 @@ class MOperand : public TempObject
     uint32 index() const {
         return index_;
     }
+    MUse *next() const {
+        return next_;
+    }
+};
+
+class MOperand : public TempObject
+{
+    friend class MInstruction;
+
+    MInstruction *ins_;
+
+    MOperand(MInstruction *ins)
+      : ins_(ins)
+    { }
+
+    void setInstruction(MInstruction *ins) {
+        ins_ = ins;
+    }
+
+  public:
+    static MOperand *New(MIRGenerator *gen, MInstruction *ins)
+    {
+        return new (gen->temp()) MOperand(ins);
+    }
+
     MInstruction *ins() const {
         return ins_;
-    }
-    MOperand *next() const {
-        return next_;
     }
 };
 
@@ -247,18 +256,19 @@ class MInstruction : public TempObject
     // Basic block this instruction lives in.
     MBasicBlock *block_;
 
-    // Dictates how the result of this instruction should be encoded.
-    Representation::Kind representation_;
-
-    // The high-level result type of this instruction; must be encodable
-    // via the Representation. For example, a double type cannot be
-    // represented via an int32, but it can via a Box.
+    // Output type.
     MIRType type_;
 
+    // Union of types desired by uses.
+    uint32 usedAsType_;
+
     // Use chain.
-    MOperand *uses_;
+    MUse *uses_;
 
     uint32 id_;
+
+    // Generic flag for whether the instruction is in a worklist.
+    bool inWorklist_;
 
   private:
     void setBlock(MBasicBlock *block) {
@@ -268,9 +278,10 @@ class MInstruction : public TempObject
   public:
     MInstruction()
       : block_(NULL),
-        representation_(Representation::None),
         type_(MIRType_Box),
-        uses_(NULL)
+        uses_(NULL),
+        id_(0),
+        inWorklist_(0)
     { }
 
     virtual Opcode op() const = 0;
@@ -284,17 +295,22 @@ class MInstruction : public TempObject
     void setId(uint32 id) {
         id_ = id;
     }
-    Representation::Kind representation() const {
-        return representation_;
-    }
-    void setRepresentation(Representation::Kind representation) {
-        representation_ = representation;
-    }
     MIRType type() const {
         return type_;
     }
     void setType(MIRType type) {
         type_ = type;
+    }
+    bool inWorklist() const {
+        return inWorklist_;
+    }
+    void setInWorklist() {
+        JS_ASSERT(!inWorklist());
+        inWorklist_ = true;
+    }
+    void setNotInWorklist() {
+        JS_ASSERT(inWorklist());
+        inWorklist_ = false;
     }
 
     // The block that contains this instruction.
@@ -304,30 +320,30 @@ class MInstruction : public TempObject
     }
 
     // Returns this instruction's use chain.
-    MOperand *uses() const {
+    MUse *uses() const {
         return uses_;
     }
-
-    // Adds an operand to this instruction's use chain.
-    void linkUse(MOperand *operand) {
-        operand->next_ = uses_;
-        uses_ = operand;
-    }
-
-    // Removes an operand from this instruction's use chain.
-    void unlinkUse(MOperand *prev, MOperand *use);
+    void removeUse(MUse *prev, MUse *use);
 
     // Number of uses of this instruction.
     size_t useCount() const;
 
     // Returns the instruction at a given operand.
-    virtual MInstruction *getOperand(size_t index) const = 0;
+    virtual MOperand *getOperand(size_t index) const = 0;
     virtual size_t numOperands() const = 0;
 
-    // Replaces an operand in this instruction to use a new instruction.
-    // The use is unlinked from its old use chain and relinked into the new
-    // one.
-    void replaceOperand(MOperand *prev, MOperand *use, MInstruction *ins);
+    // Replaces an operand, taking care to update use chains. No memory is
+    // allocated; the existing data structures are re-linked.
+    void replaceOperand(MUse *prev, MUse *use, MInstruction *ins);
+
+    bool addUse(MIRGenerator *gen, MInstruction *ins, size_t index) {
+        uses_ = MUse::New(gen, uses_, ins, index);
+        return !!uses_;
+    }
+    void addUse(MUse *use, MInstruction *ins) {
+        use->set(uses_, ins);
+        uses_ = use;
+    }
 
     // Opcode testing and casts.
 #   define OPCODE_CASTS(opcode)                                             \
@@ -341,15 +357,15 @@ class MInstruction : public TempObject
   protected:
     // Sets a raw operand; instruction implementation dependent.
     virtual void setOperand(size_t index, MOperand *operand) = 0;
+    void setOperand(size_t index, MInstruction *ins);
 
     // Initializes an operand for the first time.
     bool initOperand(MIRGenerator *gen, size_t index, MInstruction *ins) {
-        MOperand *operand = MOperand::New(gen, this, index, ins);
+        MOperand *operand = MOperand::New(gen, ins);
         if (!operand)
             return false;
-        ins->linkUse(operand);
         setOperand(index, operand);
-        return true;
+        return ins->addUse(gen, this, index);
     }
 };
 
@@ -368,6 +384,28 @@ class MFixedArityList
         return list_[index];
     }
 };
+
+class MUseIterator
+{
+    MInstruction *def;
+    MUse *use;
+
+  public:
+    MUseIterator(MInstruction *def)
+      : use(def->uses())
+    { }
+
+    bool more() const {
+        return !!use;
+    }
+    void next() {
+        use = use->next();
+    }
+    MUse * operator *() const {
+        return use;
+    }
+};
+
 
 template <typename T>
 class MFixedArityList<T, 0>
@@ -396,8 +434,8 @@ class MAryInstruction : public MInstruction
     }
 
   public:
-    MInstruction *getOperand(size_t index) const {
-        return operands_[index]->ins();
+    MOperand *getOperand(size_t index) const {
+        return operands_[index];
     }
     size_t numOperands() const {
         return Arity;
@@ -432,7 +470,6 @@ class MParameter : public MAryInstruction<0>
     MParameter(int32 index)
       : index_(index)
     {
-        setRepresentation(Representation::Box);
     }
 
   public:
@@ -482,8 +519,8 @@ class MAryControlInstruction : public MControlInstruction
     }
 
   public:
-    MInstruction *getOperand(size_t index) const {
-        return operands_[index]->ins();
+    MOperand *getOperand(size_t index) const {
+        return operands_[index];
     }
     size_t numOperands() const {
         return Arity;
@@ -597,8 +634,8 @@ class MPhi : public MInstruction
         return MInstruction::Op_Phi;
     }
 
-    MInstruction *getOperand(size_t index) const {
-        return inputs_[index]->ins();
+    MOperand *getOperand(size_t index) const {
+        return inputs_[index];
     }
     size_t numOperands() const {
         return inputs_.length();
