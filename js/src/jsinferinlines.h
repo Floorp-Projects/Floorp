@@ -1321,7 +1321,7 @@ TypeObject::name()
 
 inline TypeObject::TypeObject(jsid name, JSObject *proto)
     : proto(proto), emptyShapes(NULL),
-      flags(0), isFunction(false), marked(false),
+      flags(0), isFunction(false), marked(false), newScriptCleared(false),
       newScript(NULL), initializerObject(false), initializerArray(false), initializerOffset(0),
       contribution(0), propertySet(NULL), propertyCount(0),
       instanceList(NULL), instanceNext(NULL), next(NULL),
