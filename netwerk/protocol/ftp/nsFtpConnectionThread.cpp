@@ -2015,6 +2015,7 @@ nsFtpState::OnTransportStatus(nsITransport *transport, nsresult status,
     if (mControlConnection && transport == mControlConnection->Transport()) {
         switch (status) {
         case NS_NET_STATUS_RESOLVING_HOST:
+        case NS_NET_STATUS_RESOLVED_HOST:
         case NS_NET_STATUS_CONNECTING_TO:
         case NS_NET_STATUS_CONNECTED_TO:
             break;
