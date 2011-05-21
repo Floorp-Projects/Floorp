@@ -45,7 +45,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
 #include "base/basictypes.h"
+#endif 
 
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
@@ -68,6 +70,7 @@
 #include "nsDNSPrefetch.h"
 #include "nsChannelClassifier.h"
 #include "nsIRedirectResultListener.h"
+#include "mozilla/TimeStamp.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -134,6 +137,8 @@ nsHttpChannel::nsHttpChannel()
     , mRequestTimeInitialized(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
+    mChannelCreationTime = PR_Now();
+    mChannelCreationTimestamp = mozilla::TimeStamp::Now();
     // Subfields of unions cannot be targeted in an initializer list
     mSelfAddr.raw.family = PR_AF_UNSPEC;
     mPeerAddr.raw.family = PR_AF_UNSPEC;
@@ -662,6 +667,9 @@ nsHttpChannel::SetupTransaction()
     // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
     if (mLoadFlags & LOAD_ANONYMOUS)
         mCaps |= NS_HTTP_LOAD_ANONYMOUS;
+
+    if (mTimingEnabled)
+        mCaps |= NS_HTTP_TIMING_ENABLED;
 
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
 
@@ -2857,6 +2865,9 @@ nsHttpChannel::ReadFromCache()
     rv = mCachePump->AsyncRead(this, mListenerContext);
     if (NS_FAILED(rv)) return rv;
 
+    if (mTimingEnabled)
+        mCacheReadStart = mozilla::TimeStamp::Now();
+
     PRUint32 suspendCount = mSuspendCount;
     while (suspendCount--)
         mCachePump->Suspend();
@@ -3545,6 +3556,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
     NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
+    NS_INTERFACE_MAP_ENTRY(nsITimedChannel)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -3641,6 +3653,9 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     if (mCanceled)
         return mStatus;
+
+    if (mTimingEnabled)
+        mAsyncOpenTime = mozilla::TimeStamp::Now();
 
     rv = NS_CheckPortSafety(mURI);
     if (NS_FAILED(rv))
@@ -3784,6 +3799,137 @@ nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
     }
     return NS_OK;
 }
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsITimedChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::SetTimingEnabled(PRBool enabled) {
+    mTimingEnabled = enabled;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetTimingEnabled(PRBool* _retval) {
+    *_retval = mTimingEnabled;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetChannelCreation(mozilla::TimeStamp* _retval) {
+    *_retval = mChannelCreationTimestamp;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetAsyncOpen(mozilla::TimeStamp* _retval) {
+    *_retval = mAsyncOpenTime;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetDomainLookupStart(mozilla::TimeStamp* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().domainLookupStart;
+    else
+        *_retval = mTransactionTimings.domainLookupStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetDomainLookupEnd(mozilla::TimeStamp* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().domainLookupEnd;
+    else
+        *_retval = mTransactionTimings.domainLookupEnd;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetConnectStart(mozilla::TimeStamp* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().connectStart;
+    else
+        *_retval = mTransactionTimings.connectStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetConnectEnd(mozilla::TimeStamp* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().connectEnd;
+    else
+        *_retval = mTransactionTimings.connectEnd;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetRequestStart(mozilla::TimeStamp* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().requestStart;
+    else
+        *_retval = mTransactionTimings.requestStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetResponseStart(mozilla::TimeStamp* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().responseStart;
+    else
+        *_retval = mTransactionTimings.responseStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetResponseEnd(mozilla::TimeStamp* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().responseEnd;
+    else
+        *_retval = mTransactionTimings.responseEnd;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetCacheReadStart(mozilla::TimeStamp* _retval) {
+    *_retval = mCacheReadStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetCacheReadEnd(mozilla::TimeStamp* _retval) {
+    *_retval = mCacheReadEnd;
+    return NS_OK;
+}
+
+#define IMPL_TIMING_ATTR(name)                                 \
+NS_IMETHODIMP                                                  \
+nsHttpChannel::Get##name##Time(PRTime* _retval) {              \
+    mozilla::TimeStamp stamp;                                  \
+    Get##name(&stamp);                                         \
+    if (stamp.IsNull()) {                                      \
+        *_retval = 0;                                          \
+        return NS_OK;                                          \
+    }                                                          \
+    *_retval = mChannelCreationTime +                          \
+        (stamp - mChannelCreationTimestamp).ToSeconds() * 1e6; \
+    return NS_OK;                                              \
+}
+
+IMPL_TIMING_ATTR(ChannelCreation)
+IMPL_TIMING_ATTR(AsyncOpen)
+IMPL_TIMING_ATTR(DomainLookupStart)
+IMPL_TIMING_ATTR(DomainLookupEnd)
+IMPL_TIMING_ATTR(ConnectStart)
+IMPL_TIMING_ATTR(ConnectEnd)
+IMPL_TIMING_ATTR(RequestStart)
+IMPL_TIMING_ATTR(ResponseStart)
+IMPL_TIMING_ATTR(ResponseEnd)
+IMPL_TIMING_ATTR(CacheReadStart)
+IMPL_TIMING_ATTR(CacheReadEnd)
+
+#undef IMPL_TIMING_ATTR
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIHttpAuthenticableChannel
@@ -3981,6 +4127,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     LOG(("nsHttpChannel::OnStopRequest [this=%p request=%p status=%x]\n",
         this, request, status));
 
+    if (mTimingEnabled && request == mCachePump) {
+        mCacheReadEnd = mozilla::TimeStamp::Now();
+    }
+
      // allow content to be cached if it was loaded successfully (bug #482935)
      PRBool contentComplete = NS_SUCCEEDED(status);
 
@@ -4037,6 +4187,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             stickyConn = mTransaction->Connection();
         
         // at this point, we're done with the transaction
+        mTransactionTimings = mTransaction->Timings();
         mTransaction = nsnull;
         mTransactionPump = 0;
 

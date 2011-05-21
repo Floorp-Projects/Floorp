@@ -48,6 +48,7 @@
 
 #include "nsICachingChannel.h"
 #include "nsISeekableStream.h"
+#include "nsITimedChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsIApplicationCacheChannel.h"
@@ -78,6 +79,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mChooseApplicationCache(PR_FALSE)
   , mLoadedFromApplicationCache(PR_FALSE)
   , mChannelIsForDownload(PR_FALSE)
+  , mTimingEnabled(PR_FALSE)
   , mRedirectedCachekeys(nsnull)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
@@ -1489,6 +1491,11 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   nsCOMPtr<nsIWritablePropertyBag> bag(do_QueryInterface(newChannel));
   if (bag)
     mPropertyHash.EnumerateRead(CopyProperties, bag.get());
+
+  // transfer timed channel enabled status
+  nsCOMPtr<nsITimedChannel> timed(do_QueryInterface(newChannel));
+  if (timed)
+    timed->SetTimingEnabled(mTimingEnabled);
 
   return NS_OK;
 }

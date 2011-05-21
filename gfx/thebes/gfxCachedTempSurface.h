@@ -71,14 +71,12 @@ public:
    * different format.
    */
   already_AddRefed<gfxContext> Get(gfxASurface::gfxContentType aContentType,
-                                   const gfxRect& aRect,
+                                   const gfxIntSize& aSize,
                                    gfxASurface* aSimilarTo);
 
   void Expire() { mSurface = nsnull; }
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
   ~gfxCachedTempSurface();
-
-  PRBool IsSurface(gfxASurface* aSurface) { return mSurface == aSurface; }
 
 private:
   nsRefPtr<gfxASurface> mSurface;

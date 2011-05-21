@@ -493,12 +493,10 @@ nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
   nsCAutoString path;
   uri->GetPath(path);
 
-  nsCAutoString::const_iterator start, end;
-  path.BeginReading(start);
-  path.EndReading(end);
-
   NS_NAMED_LITERAL_CSTRING(neterror, "neterror");
-  return FindInReadable(neterror, start, end);
+  NS_NAMED_LITERAL_CSTRING(certerror, "certerror");
+
+  return StringBeginsWith(path, neterror) || StringBeginsWith(path, certerror);
 }
 
 PRBool

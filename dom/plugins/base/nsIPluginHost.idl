@@ -37,41 +37,16 @@
 
 #include "nspluginroot.idl"
 #include "nsISupports.idl"
-#include "nsIPluginInstanceOwner.idl"
-#include "nsIStreamListener.idl"
-#include "nsIStringStream.idl"
 #include "nsIPluginTag.idl"
-#include "nsIFile.idl"
 
 %{C++
-#include "nsPluginNativeWindow.h"
-#ifdef MOZILLA_INTERNAL_API
-#include "nsString.h"
-#include "nsNetUtil.h"
-#endif
-#include "prlink.h"  // for PRLibrary
-
 #define MOZ_PLUGIN_HOST_CONTRACTID \
   "@mozilla.org/plugin/host;1"
 %}
 
-interface nsIURI;
-interface nsIDOMPlugin;
-interface nsIChannel;
-interface nsIPluginStreamListener;
-
-[ptr] native PRLibraryPtr(PRLibrary);
-[ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
-
-[scriptable, uuid(17523504-EC17-4B6A-B803-2B465D26DB44)]
+[scriptable, uuid(28F1F9E1-CD23-4FE2-BCC8-BBB0B2D49A4A)]
 interface nsIPluginHost : nsISupports
 {
-  [noscript] void init();
-
-  [noscript] void destroy();
-
-  [noscript] void loadPlugins();
-
   /**
    * Causes the plugins directory to be searched again for new plugin 
    * libraries.
@@ -81,175 +56,8 @@ interface nsIPluginHost : nsISupports
    */
   void reloadPlugins(in boolean reloadPages);
 
-  /**
-   * Instantiate an embedded plugin for an existing channel. The caller is
-   * responsible for opening the channel. It may or may not be already opened
-   * when this function is called.
-   */
-  [noscript] nsIStreamListener instantiatePluginForChannel(in nsIChannel aChannel, in nsIPluginInstanceOwner aOwner);
-
-  [noscript] void setUpPluginInstance(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
-
-  // The return code is NS_OK if the plugin is enabled,
-  // NS_ERROR_PLUGIN_DISABLED if the plugin is explicitly disabled, and
-  // NS_ERROR_FAILURE if there is no plugin for this type.
-  [noscript] void isPluginEnabledForType(in string aMimeType);
-
-  // The return code is NS_OK if the plugin is enabled and NS_ERROR_FAILURE if
-  // the plugin is explicitly disabled or there is no plugin.
-  [noscript] void isPluginEnabledForExtension(in string aExtension, in constCharStarRef aMimeType);
-
-  [noscript] readonly attribute unsigned long pluginCount;
-  
-  [noscript] void getPlugins(in unsigned long aPluginCount, out /*array*/ nsIDOMPlugin aPluginArray);
-
   void getPluginTags([optional] out unsigned long aPluginCount,
     [retval, array, size_is(aPluginCount)] out nsIPluginTag aResults);
-  
-  /**
-   * Fetches a URL.
-   *
-   * (Corresponds to NPN_GetURL and NPN_GetURLNotify.)
-   *
-   * @param pluginInst - the plugin making the request. If NULL, the URL
-   *  is fetched in the background.
-   * @param url - the URL to fetch
-   * @param target - the target window into which to load the URL, or NULL if
-   *  the data should be returned to the plugin via streamListener.
-   * @param streamListener - a stream listener to be used to return data to
-   *  the plugin. May be NULL if target is not NULL.
-   * @param altHost - an IP-address string that will be used instead of the 
-   *  host specified in the URL. This is used to prevent DNS-spoofing 
-   *  attacks. Can be defaulted to NULL meaning use the host in the URL.
-   * @param referrer - the referring URL (may be NULL)
-   * @param forceJSEnabled - forces JavaScript to be enabled for 'javascript:'
-   *  URLs, even if the user currently has JavaScript disabled (usually 
-   *  specify PR_FALSE) 
-   * @result - NS_OK if this operation was successful
-   */
-  [noscript] void getURL(in nsISupports pluginInt,
-                         in string url,
-                         in string target,
-                         in nsIPluginStreamListener streamListener,
-                         in string altHost,
-                         in string referrer,
-                         in boolean forceJSEnabled);
-
-  /**
-   * Posts to a URL with post data and/or post headers.
-   *
-   * (Corresponds to NPN_PostURL and NPN_PostURLNotify.)
-   *
-   * @param pluginInst - the plugin making the request. If NULL, the URL
-   *  is fetched in the background.
-   * @param url - the URL to fetch
-   * @param postDataLength - the length of postData (if non-NULL)
-   * @param postData - the data to POST. NULL specifies that there is not post
-   *  data
-   * @param isFile - whether the postData specifies the name of a file to 
-   *  post instead of data. The file will be deleted afterwards.
-   * @param target - the target window into which to load the URL, or NULL if
-   *  the data should be returned to the plugin via streamListener.
-   * @param streamListener - a stream listener to be used to return data to
-   *  the plugin. May be NULL if target is not NULL.
-   * @param altHost - an IP-address string that will be used instead of the 
-   *  host specified in the URL. This is used to prevent DNS-spoofing 
-   *  attacks. Can be defaulted to NULL meaning use the host in the URL.
-   * @param referrer - the referring URL (may be NULL)
-   * @param forceJSEnabled - forces JavaScript to be enabled for 'javascript:'
-   *  URLs, even if the user currently has JavaScript disabled (usually 
-   *  specify PR_FALSE) 
-   * @param postHeadersLength - the length of postHeaders (if non-NULL)
-   * @param postHeaders - the headers to POST. Must be in the form of
-   * "HeaderName: HeaderValue\r\n".  Each header, including the last,
-   * must be followed by "\r\n".  NULL specifies that there are no
-   * post headers
-   * @result - NS_OK if this operation was successful
-   */
-  [noscript] void postURL(in nsISupports pluginInst,
-                          in string url,
-                          in PRUint32 postDataLen,
-                          in string postData,
-                          in boolean isFile,
-                          in string target,
-                          in nsIPluginStreamListener streamListener,
-                          in string altHost,
-                          in string referrer,
-                          in boolean forceJSEnabled,
-                          in PRUint32 postHeadersLength,
-                          in string postHeaders);
-
-  /**
-   * Returns the proxy info for a given URL. The caller is required to
-   * free the resulting memory with nsIMalloc::Free. The result will be in the
-   * following format
-   * 
-   *   i)   "DIRECT"  -- no proxy
-   *   ii)  "PROXY xxx.xxx.xxx.xxx"   -- use proxy
-   *   iii) "SOCKS xxx.xxx.xxx.xxx"  -- use SOCKS
-   *   iv)  Mixed. e.g. "PROXY 111.111.111.111;PROXY 112.112.112.112",
-   *                    "PROXY 111.111.111.111;SOCKS 112.112.112.112"....
-   *
-   * Which proxy/SOCKS to use is determined by the plugin.
-   */
-  [noscript] void findProxyForURL(in string aURL, out string aResult);
-
-  [noscript] void UserAgent(in nativeChar resultingAgentString);
-
-  /**
-   * This method parses post buffer to find out case insensitive "Content-length" string
-   * and CR or LF some where after that, then it assumes there is http headers in
-   * the input buffer and continue to search for end of headers (CRLFCRLF or LFLF).
-   * It will *always malloc()* output buffer (caller is responsible to free it) 
-   * if input buffer starts with LF, which comes from 4.x spec 
-   * http://developer.netscape.com/docs/manuals/communicator/plugin/pgfn2.htm#1007754
-   * "If no custom headers are required, simply add a blank
-   * line ('\n') to the beginning of the file or buffer.",
-   * it skips that '\n' and considers rest of the input buffer as data.
-   * If "Content-length" string and end of headers is found 
-   *   it substitutes single LF with CRLF in the headers, so the end of headers
-   *   always will be CRLFCRLF (single CR in headers, if any, remain untouched)
-   * else
-   *   it puts "Content-length: "+size_of_data+CRLFCRLF at the beginning of the output buffer
-   * and memcpy data to the output buffer 
-   *
-   * On failure outPostData and outPostDataLen will be set in 0.  
-   * @param aInPostData      - the post data
-   * @param aInPostDataLen   - the length aInPostData
-   * @param aOutPostData     - the buffer
-   * @param aOutPostDataLen  - the length of aOutPostData
-   */
-  [noscript] void parsePostBufferToFixHeaders(in string aInPostData, 
-                                              in unsigned long aInPostDataLen, 
-                                              out string aOutPostData, 
-                                              out unsigned long aOutPostDataLen);
-
-  /**
-   * To create temp file with Content len header in, it will use by http POST
-   */
-  [noscript] nsIFile createTempFileToPost(in string aPostDataURL);
-
-  /**
-   *  Creates a new plugin native window object
-   */
-  [noscript] void newPluginNativeWindow(out nsPluginNativeWindowPtr aPluginNativeWindow);
-
-  /**
-   *  Deletes plugin native window object created by NewPluginNativeWindow
-   */
-  [noscript] void deletePluginNativeWindow(in nsPluginNativeWindowPtr aPluginNativeWindow);
-
-  /**
-   * Instantiate a "dummy" java plugin if a java plugin that supports
-   * NPRuntime is installed. This plugin is used for exposing
-   * window.java and window.Packages. If the java plugin supports
-   * NPRuntime and instantiation was successful, aOwners instance will
-   * be non-null, if not, it will be null.
-   */
-  [noscript] void instantiateDummyJavaPlugin(in nsIPluginInstanceOwner aOwner);
-  
-  [noscript, notxpcom] void addIdleTimeTarget(in nsIPluginInstanceOwner objectFrame, in boolean isVisible);
-  [noscript, notxpcom] void removeIdleTimeTarget(in nsIPluginInstanceOwner objectFrame);
 
   /*
    * Flags for use with clearSiteData.
