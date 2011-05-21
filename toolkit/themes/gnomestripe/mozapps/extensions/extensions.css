@@ -256,19 +256,19 @@
 #category-discover > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-discover.png");
 }
-#category-languages > .category-icon {
+#category-locale > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-languages.png");
 }
-#category-searchengines > .category-icon {
+#category-searchengine > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-searchengines.png");
 }
-#category-extensions > .category-icon {
+#category-extension > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.png");
 }
-#category-themes > .category-icon {
+#category-theme > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-themes.png");
 }
-#category-plugins > .category-icon {
+#category-plugin > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-plugins.png");
 }
 #category-availableUpdates > .category-icon {

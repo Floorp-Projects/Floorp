@@ -1344,8 +1344,6 @@ SessionStoreService.prototype = {
     if (aWindow.__SSi && this._windows[aWindow.__SSi].extData &&
         this._windows[aWindow.__SSi].extData[aKey])
       delete this._windows[aWindow.__SSi].extData[aKey];
-    else
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   getTabValue: function sss_getTabValue(aTab, aKey) {
@@ -1392,8 +1390,6 @@ SessionStoreService.prototype = {
 
     if (deleteFrom && deleteFrom[aKey])
       delete deleteFrom[aKey];
-    else
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   persistTabAttribute: function sss_persistTabAttribute(aName) {
