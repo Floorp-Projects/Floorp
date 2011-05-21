@@ -47,16 +47,18 @@
 using namespace js;
 using namespace js::ion;
 
-MIRGraph::MIRGraph()
-  : idGen_(0)
-{
-}
-
 bool
 MIRGraph::addBlock(MBasicBlock *block)
 {
     block->setId(blocks_.length());
     return blocks_.append(block);
+}
+
+void
+MIRGraph::reset()
+{
+    blocks_.clear();
+    idGen_ = 0;
 }
 
 MBasicBlock *
@@ -84,7 +86,8 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     stackPosition_(gen->firstStackSlot()),
     lastIns_(NULL),
     pc_(pc),
-    loopSuccessor_(NULL)
+    loopSuccessor_(NULL),
+    mark_(false)
 {
 }
 
@@ -335,7 +338,7 @@ void
 MBasicBlock::insertBefore(MInstruction *at, MInstruction *ins)
 {
     ins->setBlock(this);
-    ins->setId(gen()->graph().allocInstructionId());
+    gen()->graph().allocInstructionId(ins);
     instructions_.insertBefore(at, ins);
 }
 
@@ -343,7 +346,7 @@ void
 MBasicBlock::insertAfter(MInstruction *at, MInstruction *ins)
 {
     ins->setBlock(this);
-    ins->setId(gen()->graph().allocInstructionId());
+    gen()->graph().allocInstructionId(ins);
     instructions_.insertAfter(at, ins);
 }
 
@@ -352,7 +355,7 @@ MBasicBlock::add(MInstruction *ins)
 {
     JS_ASSERT(!lastIns_);
     ins->setBlock(this);
-    ins->setId(gen()->graph().allocInstructionId());
+    gen()->graph().allocInstructionId(ins);
     instructions_.insert(ins);
 }
 
@@ -369,7 +372,7 @@ MBasicBlock::addPhi(MPhi *phi)
     if (!phis_.append(phi))
         return false;
     phi->setBlock(this);
-    phi->setId(gen()->graph().allocInstructionId());
+    gen()->graph().allocInstructionId(phi);
     return true;
 }
 
