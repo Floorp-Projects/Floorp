@@ -18,6 +18,4 @@ g.eval("f(Function.prototype, true);");
 g.eval("f(f, true);");
 g.eval("f(Proxy.create({}), false);");
 g.eval("f(Proxy.createFunction(f, f), true);");
-g.f({}, false);
-g.f(Function.prototype, true);
-assertEq(hits, 7);
+assertEq(hits, 5);

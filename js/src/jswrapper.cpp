@@ -73,6 +73,12 @@ JSObject::isWrapper() const
     return isProxy() && getProxyHandler()->family() == &sWrapperFamily;
 }
 
+bool
+JSObject::isCrossCompartmentWrapper() const
+{
+    return isWrapper() && !!(getWrapperHandler()->flags() & JSWrapper::CROSS_COMPARTMENT);
+}
+
 JSWrapper *
 JSObject::getWrapperHandler() const
 {

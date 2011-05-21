@@ -2369,9 +2369,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     /* Finalize watch points associated with unreachable objects. */
     js_SweepWatchPoints(cx);
 
-    if (comp)
-        Debug::sweepCompartment(comp);
-    else
+    if (!comp)
         Debug::sweepAll(rt);
 
     /*

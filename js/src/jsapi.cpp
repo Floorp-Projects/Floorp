@@ -649,6 +649,7 @@ JSRuntime::JSRuntime()
     JS_INIT_CLIST(&contextList);
     JS_INIT_CLIST(&trapList);
     JS_INIT_CLIST(&watchPointList);
+    JS_INIT_CLIST(&debuggerList);
 }
 
 bool
