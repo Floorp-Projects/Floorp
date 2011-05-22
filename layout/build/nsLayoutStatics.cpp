@@ -80,7 +80,6 @@
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsCrossSiteListenerProxy.h"
-#include "nsWebSocket.h"
 #include "nsDOMThreadService.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsHtml5Module.h"
@@ -368,8 +367,6 @@ nsLayoutStatics::Shutdown()
 #endif
 
   nsCORSListenerProxy::Shutdown();
-  
-  nsWebSocket::ReleaseGlobals();
   
   nsIPresShell::ReleaseStatics();
 

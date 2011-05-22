@@ -1,0 +1,190 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Patrick McManus <mcmanus@ducksong.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+interface nsIURI;
+interface nsIInterfaceRequestor;
+interface nsIRunnable;
+interface nsILoadGroup;
+
+#include "nsISupports.idl"
+
+/**
+ * nsIWebSocketListener
+ */
+[scriptable, uuid(b0c27050-31e9-42e5-bc59-499d54b52f99)]
+interface nsIWebSocketListener : nsISupports
+{
+    /**
+     * Called to signify the establishment of the message stream.
+     * Any listener that receives onStart will also receive OnStop.
+     *
+     * @param aContext user defined context
+     */
+    void onStart(in nsISupports aContext);
+
+    /**
+     * Called to signify the completion of the message stream.
+     * OnStop is the final notification the listener will receive and it
+     * completes the WebSocket connection. This event can be received in error
+     * cases even if nsIWebSocketProtocol::Close() has not been called.
+     *
+     * @param aContext user defined context
+     * @param aStatusCode reason for stopping (NS_OK if completed successfully)
+     */
+    void onStop(in nsISupports aContext,
+                in nsresult aStatusCode);
+
+    /**
+     * Called to deliver text message.
+     *
+     * @param aContext user defined context
+     * @param aMsg the message data
+     */
+    void onMessageAvailable(in nsISupports aContext,
+                            in AUTF8String aMsg);
+
+    /**
+     * Called to deliver binary message.
+     *
+     * @param aContext user defined context
+     * @param aMsg the message data
+     */
+    void onBinaryMessageAvailable(in nsISupports aContext,
+                                  in ACString aMsg);
+
+    /**
+     * Called to acknowledge message sent via sendMsg() or sendBinaryMsg.
+     *
+     * @param aContext user defined context
+     * @param aSize number of bytes placed in OS send buffer
+     */
+    void onAcknowledge(in nsISupports aContext, in PRUint32 aSize);
+
+    /**
+     * Called to inform receipt of WebSocket Close message from server.
+     * In the case of errors onStop() can be called without ever
+     * receiving server close.
+     *
+     * No additional messages through onMessageAvailable(),
+     * onBinaryMessageAvailable() or onAcknowledge() will be delievered
+     * to the listener after onServerClose(), though outgoing messages can still
+     * be sent through the nsIWebSocketProtocol connection.
+     */
+    void onServerClose(in nsISupports aContext);
+    
+};
+
+[scriptable, uuid(dc01db59-a513-4c90-824b-085cce06c0aa)]
+interface nsIWebSocketProtocol : nsISupports
+{
+    /**
+     * The original URI used to construct the protocol connection. This is used
+     * in the case of a redirect or URI "resolution" (e.g. resolving a
+     * resource: URI to a file: URI) so that the original pre-redirect
+     * URI can still be obtained.  This is never null.
+     */
+    readonly attribute nsIURI originalURI;
+
+    /**
+     * The readonly URI corresponding to the protocol connection after any
+     * redirections are completed.
+     */
+    readonly attribute nsIURI URI;
+
+    /**
+     * The notification callbacks for authorization, etc..
+     */
+    attribute nsIInterfaceRequestor notificationCallbacks;
+
+    /**
+     * Transport-level security information (if any)
+     */
+    readonly attribute nsISupports securityInfo;
+
+    /**
+     * The load group of the websockets code.
+     */
+    attribute nsILoadGroup loadGroup;
+
+    /**
+     * Sec-Websocket-Protocol value
+     */
+    attribute ACString protocol;
+
+    /**
+     * Asynchronously open the websocket connection.  Received messages are fed
+     * to the socket listener as they arrive.  The socket listener's methods
+     * are called on the thread that calls asyncOpen and are not called until
+     * after asyncOpen returns.  If asyncOpen returns successfully, the
+     * protocol implementation promises to call at least onStart and onStop of
+     * the listener.
+     *
+     * NOTE: Implementations should throw NS_ERROR_ALREADY_OPENED if the
+     * websocket connection is reopened.
+     *
+     * @param aURI the uri of the websocket protocol - may be redirected
+     * @param aOrigin the uri of the originating resource
+     * @param aListener the nsIWebSocketListener implementation
+     * @param aContext an opaque parameter forwarded to aListener's methods
+     */
+    void asyncOpen(in nsIURI aURI,
+                   in ACString aOrigin,
+                   in nsIWebSocketListener aListener,
+                   in nsISupports aContext);
+
+    /*
+     * Close the websocket connection for writing - no more calls to sendMsg
+     * or sendBinaryMsg should be made after calling this. The listener object
+     * may receive more messages if a server close has not yet been received.
+     */
+    void close();
+    
+    /**
+     * Use to send text message down the connection to WebSocket peer.
+     *
+     * @param aMsg the utf8 string to send
+     */
+    void sendMsg(in AUTF8String aMsg);
+
+    /**
+     * Use to send binary message down the connection to WebSocket peer.
+     *
+     * @param aMsg the data to send
+     */
+    void sendBinaryMsg(in ACString aMsg);
+};
