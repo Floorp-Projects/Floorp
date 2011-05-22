@@ -1,1 +1,29 @@
-This is mod_pywebsocket 0.5, from http://code.google.com/p/pywebsocket/
+mod_pywebsocket http://pywebsocket.googlecode.com/svn
+version 470
+supporting ietf-07
+
+includes the following minor patch::
+
+diff --git a/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py b/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py
+--- a/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py
++++ b/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py
+@@ -60,17 +60,18 @@ def _normalize_path(path):
+         path: the path to normalize.
+ 
+     Path is converted to the absolute path.
+     The input path can use either '\\' or '/' as the separator.
+     The normalized path always uses '/' regardless of the platform.
+     """
+ 
+     path = path.replace('\\', os.path.sep)
+-    path = os.path.realpath(path)
++    # do not normalize away symlinks in mochitest
++    # path = os.path.realpath(path)
+     path = path.replace('\\', '/')
+     return path
+ 
+ 
+ def _create_path_to_resource_converter(base_dir):
+     base_dir = _normalize_path(base_dir)
+ 
+     base_len = len(base_dir)
