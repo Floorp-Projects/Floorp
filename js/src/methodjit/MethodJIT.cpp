@@ -1007,7 +1007,7 @@ JITScript::monoICSectionsLimit() const
 char *
 JITScript::monoICSectionsLimit() const
 {
-    return commonSectionsLimit();
+    return commonSectionLimit();
 }
 #endif  // JS_MONOIC
 

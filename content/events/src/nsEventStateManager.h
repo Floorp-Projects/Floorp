@@ -324,10 +324,19 @@ protected:
                             nsMouseScrollEvent* aEvent,
                             nsPresContext* aPresContext,
                             nsEventStatus* aStatus);
+  /**
+   * @param aQueryEvent If you set vailid pointer for this, DoScrollText()
+   *                    computes the line-height and page size of current
+   *                    mouse wheel scroll target and sets it to the event.
+   *                    And then, this method does NOT scroll any scrollable
+   *                    elements.  I.e., you can just query the scroll target
+   *                    information.
+   */
   nsresult DoScrollText(nsIFrame* aTargetFrame,
                         nsMouseScrollEvent* aMouseEvent,
                         nsIScrollableFrame::ScrollUnit aScrollQuantity,
-                        PRBool aAllowScrollSpeedOverride);
+                        PRBool aAllowScrollSpeedOverride,
+                        nsQueryContentEvent* aQueryEvent = nsnull);
   void DoScrollHistory(PRInt32 direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
   nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
@@ -396,6 +405,9 @@ protected:
 
   nsresult DoContentCommandEvent(nsContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(nsContentCommandEvent* aEvent);
+
+  void DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
+                               nsIFrame* aTargetFrame);
 
   PRBool RemoteQueryContentEvent(nsEvent *aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();

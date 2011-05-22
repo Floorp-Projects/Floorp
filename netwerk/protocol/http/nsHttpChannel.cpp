@@ -665,6 +665,16 @@ nsHttpChannel::SetupTransaction()
 
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
 
+    if (mUpgradeProtocolCallback) {
+        mRequestHead.SetHeader(nsHttp::Upgrade, mUpgradeProtocol, PR_FALSE);
+        mRequestHead.SetHeader(nsHttp::Connection,
+                               nsDependentCString(nsHttp::Upgrade.get()),
+                               PR_TRUE);
+        mCaps |=  NS_HTTP_STICKY_CONNECTION;
+        mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
+        mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
+    }
+
     nsCOMPtr<nsIAsyncInputStream> responseStream;
     rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead,
                             mUploadStream, mUploadStreamHasHeaders,
@@ -4004,11 +4014,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         PRBool authRetry = mAuthRetryPending && NS_SUCCEEDED(status);
 
         //
-        // grab reference to connection in case we need to retry an
-        // authentication request over it.  this applies to connection based
-        // authentication schemes only.  for request based schemes, conn is not
-        // needed, so it may be null.
-        // 
+        // grab references to connection in case we need to retry an
+        // authentication request over it or use it for an upgrade
+        // to another protocol.
+        //
         // this code relies on the code in nsHttpTransaction::Close, which
         // tests for NS_HTTP_STICKY_CONNECTION to determine whether or not to
         // keep the connection around after the transaction is finished.
@@ -4023,6 +4032,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                 conn = nsnull;
         }
 
+        nsRefPtr<nsAHttpConnection> stickyConn;
+        if (mCaps & NS_HTTP_STICKY_CONNECTION)
+            stickyConn = mTransaction->Connection();
+        
         // at this point, we're done with the transaction
         mTransaction = nsnull;
         mTransactionPump = 0;
@@ -4047,6 +4060,22 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // if this transaction has been replaced, then bail.
         if (mTransactionReplaced)
             return NS_OK;
+        
+        if (mUpgradeProtocolCallback && stickyConn &&
+            mResponseHead && mResponseHead->Status() == 101) {
+            nsCOMPtr<nsISocketTransport>    socketTransport;
+            nsCOMPtr<nsIAsyncInputStream>   socketIn;
+            nsCOMPtr<nsIAsyncOutputStream>  socketOut;
+
+            nsresult rv;
+            rv = stickyConn->TakeTransport(getter_AddRefs(socketTransport),
+                                           getter_AddRefs(socketIn),
+                                           getter_AddRefs(socketOut));
+            if (NS_SUCCEEDED(rv))
+                mUpgradeProtocolCallback->OnTransportAvailable(socketTransport,
+                                                               socketIn,
+                                                               socketOut);
+        }
     }
 
     mIsPending = PR_FALSE;

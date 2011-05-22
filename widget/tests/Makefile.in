@@ -108,6 +108,8 @@ _CHROME_FILES += native_menus_window.xul \
                test_bug586713.xul \
                bug586713_window.xul \
                test_key_event_counts.xul \
+               test_bug596600.xul \
+               window_bug596600.xul \
                $(NULL)
 endif
 

@@ -1771,11 +1771,6 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
   }
   while (i < count) {
     child = new nsMathMLChar(this);
-    if (!child) {
-      if (mSibling) delete mSibling; // don't leave a dangling list ...
-      mSibling = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     last->mSibling = child;
     last = child;
     i++;

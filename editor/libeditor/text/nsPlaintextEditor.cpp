@@ -87,9 +87,6 @@
 
 #include "mozilla/FunctionTimer.h"
 
-// prototype for rules creation shortcut
-nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
-
 nsPlaintextEditor::nsPlaintextEditor()
 : nsEditor()
 , mIgnoreSpuriousDragEvent(PR_FALSE)
@@ -329,9 +326,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet)
 NS_IMETHODIMP nsPlaintextEditor::InitRules()
 {
   // instantiate the rules for this text editor
-  nsresult res = NS_NewTextEditRules(getter_AddRefs(mRules));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(mRules, NS_ERROR_UNEXPECTED);
+  mRules = new nsTextEditRules();
   return mRules->Init(this);
 }
 

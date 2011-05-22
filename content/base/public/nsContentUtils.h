@@ -320,20 +320,6 @@ public:
                                PRBool* aDisconnected = nsnull);
 
   /**
-   * Find the first child of aParent with a resolved tag matching
-   * aNamespace and aTag. Both the explicit and anonymous children of
-   * aParent are examined. The return value is not addrefed.
-   *
-   * XXXndeakin this should return the first child whether in anonymous or
-   * explicit children, but currently XBL doesn't tell us the relative
-   * ordering of anonymous vs explicit children, so instead it searches
-   * the explicit children first then the anonymous children.
-   */
-  static nsIContent* FindFirstChildWithResolvedTag(nsIContent* aParent,
-                                                   PRInt32 aNamespace,
-                                                   nsIAtom* aTag);
-
-  /**
    * Brute-force search of the element subtree rooted at aContent for
    * an element with the given id.  aId must be nonempty, otherwise
    * this method may return nodes even if they have no id!
@@ -344,24 +330,6 @@ public:
    * Similar to above, but to be used if one already has an atom for the ID
    */
   static Element* MatchElementId(nsIContent *aContent, const nsIAtom* aId);
-
-  /**
-   * Given a URI containing an element reference (#whatever),
-   * resolve it to the target content element with the given ID.
-   *
-   * If aFromContent is anonymous XBL content then the URI
-   * must refer to its binding document and we will return
-   * a node in the same anonymous content subtree as aFromContent,
-   * if one exists with the correct ID.
-   *
-   * @param aFromContent the context of the reference;
-   *   currently we only support references to elements in the
-   *   same document as the context, so this must be non-null
-   *
-   * @return the element, or nsnull on failure
-   */
-  static nsIContent* GetReferencedElement(nsIURI* aURI,
-                                          nsIContent *aFromContent);
 
   /**
    * Reverses the document position flags passed in.
@@ -439,14 +407,6 @@ public:
   // Check if the (JS) caller can access aWindow.
   // aWindow can be either outer or inner window.
   static PRBool CanCallerAccess(nsPIDOMWindow* aWindow);
-
-  /**
-   * Get the docshell through the JS context that's currently on the stack.
-   * If there's no JS context currently on the stack aDocShell will be null.
-   *
-   * @param aDocShell The docshell or null if no JS context
-   */
-  static nsIDocShell *GetDocShellFromCaller();
 
   /**
    * Get the window through the JS context that's currently on the stack.

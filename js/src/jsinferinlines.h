@@ -333,7 +333,7 @@ JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, js::typ
     if (typeInferenceEnabled() && !obj->unknownProperties()) {
         jsid id = JSID_VOID;
         if (name) {
-            JSAtom *atom = js_Atomize(this, name, strlen(name), 0);
+            JSAtom *atom = js_Atomize(this, name, strlen(name));
             if (!atom) {
                 js::types::AutoEnterTypeInference enter(this);
                 compartment->types.setPendingNukeTypes(this);

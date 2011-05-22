@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<body onload="start()">
+<iframe id="i" style="margin-top:100px; width:100%; height:600px;" src="layer-change-1-frame.html"></iframe>
+<script>
+var subw = document.getElementById("i").contentWindow;
+function doTest() {
+  subw.scrollTo(0,0);
+  document.documentElement.removeAttribute("class");
+}
+function start() {
+  subw.scrollTo(0,2000);
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

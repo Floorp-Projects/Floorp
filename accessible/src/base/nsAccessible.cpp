@@ -57,7 +57,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNodeFilter.h"
@@ -3220,16 +3219,15 @@ nsAccessible::GetFirstAvailableAccessible(nsINode *aStartNode) const
   if (accessible)
     return accessible;
 
-  nsCOMPtr<nsIDOMDocumentTraversal> trav =
-    do_QueryInterface(aStartNode->GetOwnerDoc());
-  NS_ENSURE_TRUE(trav, nsnull);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aStartNode->GetOwnerDoc());
+  NS_ENSURE_TRUE(domDoc, nsnull);
 
   nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(aStartNode);
-  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(GetNode()));
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(GetNode());
   nsCOMPtr<nsIDOMTreeWalker> walker;
-  trav->CreateTreeWalker(rootNode,
-                         nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_TEXT,
-                         nsnull, PR_FALSE, getter_AddRefs(walker));
+  domDoc->CreateTreeWalker(rootNode,
+                           nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_TEXT,
+                           nsnull, PR_FALSE, getter_AddRefs(walker));
   NS_ENSURE_TRUE(walker, nsnull);
 
   walker->SetCurrentNode(currentNode);
