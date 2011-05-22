@@ -73,6 +73,7 @@ main(int argc, char* argv[])
     // avoid it for unsupported plugins.  See PluginProcessChild::Init for
     // the details.
     if (proctype != GeckoProcessType_Plugin) {
+        mozilla::SanitizeEnvironmentVariables();
         mozilla::NS_SetDllDirectory(L"");
     }
 #endif

@@ -54,8 +54,6 @@
 #include "nsStringGlue.h"
 
 #ifdef XP_WIN
-// we want to use the DLL blocklist if possible
-#define XRE_WANT_DLL_BLOCKLIST
 // we want a wmain entry point
 #include "nsWindowsWMain.cpp"
 #endif
@@ -109,6 +107,10 @@ public:
 int main(int argc, char* argv[])
 {
   ScopedLogging log;
+
+#ifdef XRE_HAS_DLL_BLOCKLIST
+  XRE_SetupDllBlocklist();
+#endif
 
   nsCOMPtr<nsILocalFile> appini;
   nsresult rv = XRE_GetBinaryPath(argv[0], getter_AddRefs(appini));
