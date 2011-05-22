@@ -807,7 +807,7 @@ pref("network.websocket.timeout.ping.response", 10);
 
 // Defines whether or not to try and negotiate the stream-deflate compression
 // extension with the websocket server
-pref("network.websocket.extensions.stream-deflate", true);
+pref("network.websocket.extensions.stream-deflate", false);
 
 // </ws>
 
