@@ -3,12 +3,12 @@ setDebug(true);
 x = "notset";
 function main() {
   /* JSOP_STOP in main. */
-  untrap(main, 27);
+  untrap(main, 26);
   x = "success";
 }
 function failure() { x = "failure"; }
 
 /* JSOP_STOP in main. */
-trap(main, 27, "failure()");
+trap(main, 26, "failure()");
 main();
 assertEq(x, "success");

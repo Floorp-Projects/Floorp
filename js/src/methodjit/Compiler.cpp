@@ -5856,19 +5856,18 @@ mjit::Compiler::jsop_getgname(uint32 index)
          * pushed type set (if this is a GETGNAME op, and the property may have
          * a type barrier on it).
          */
-        types::TypeSet *types;
-        if (JSOp(*PC) == JSOP_GETGNAME || JSOp(*PC) == JSOP_CALLGNAME)
-            types = pushedTypeSet(0);
-        else
-            types = globalObj->getType()->getProperty(cx, id, false);
-        if (!types)
+        types::TypeSet *propertyTypes = globalObj->getType()->getProperty(cx, id, false);
+        if (!propertyTypes)
             return;
+        types::TypeSet *types = (JSOp(*PC) == JSOP_GETGNAME || JSOp(*PC) == JSOP_CALLGNAME)
+            ? pushedTypeSet(0)
+            : propertyTypes;
         type = types->getKnownTypeTag(cx);
 
         const js::Shape *shape = globalObj->nativeLookup(ATOM_TO_JSID(atom));
         if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
             Value *value = &globalObj->getSlotRef(shape->slot);
-            if (!value->isUndefined() && !types->isOwnProperty(cx, true)) {
+            if (!value->isUndefined() && !propertyTypes->isOwnProperty(cx, true)) {
                 watchGlobalReallocation();
                 RegisterID reg = frame.allocReg();
                 masm.move(ImmPtr(value), reg);

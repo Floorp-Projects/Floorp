@@ -4,7 +4,7 @@ var x = "failure";
 function main() { x = "success"; }
 
 /* The JSOP_STOP in a. */
-trap(main, 11, "");
+trap(main, 10, "");
 main();
 
 assertEq(x, "success");
