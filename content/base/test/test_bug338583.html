@@ -1,0 +1,454 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=338583
+-->
+<head>
+  <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+  <title>Test for Bug 338583</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+</head>
+<body bgColor=white>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=338583">Mozilla Bug 338583</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 338583 **/
+
+// we test:
+//   1) the EventSource behaviour
+//   2) if the events are trusted
+//   3) possible invalid eventsources
+//   4) the close method when the object is just been used
+//   5) access-control
+//   6) the data parameter
+//   7) delayed server responses
+
+// --
+
+  function fn_onmessage(e) {
+    if (e.currentTarget == e.target && e.target.hits != null)
+      e.target.hits['fn_onmessage']++;
+  }
+
+  function fn_event_listener_message(e) {
+    if (e.currentTarget == e.target && e.target.hits != null)
+      e.target.hits['fn_event_listener_message']++;
+  }
+
+  function fn_other_event_name(e) {
+    if (e.currentTarget == e.target && e.target.hits != null)
+      e.target.hits['fn_other_event_name']++;
+  }
+
+  var domBranch;
+  var oldPrefVal;
+
+  var gEventSourceObj1 = null;
+  var gEventSourceObj2 = null;
+  var gEventSourceObj3 = null;
+  var gEventSourceObj4 = null;
+  var gEventSourceObj5 = null;
+  var gEventSourceObj6 = null;
+  var gEventSourceObj7 = null;
+  var stress_factor;  // used in the setTimeouts in order to help
+                      // the test when running in slow machines
+
+  function hasBeenHitFor1And2(obj, min) {
+    if (obj.hits['fn_onmessage'] < min ||
+        obj.hits['fn_event_listener_message'] < min ||
+        obj.hits['fn_other_event_name'] < min)
+      return false;
+    return true;
+  }
+
+// in order to test (1):
+//   a) if the EventSource constructor parameter is equal to its url attribute
+//   b) let its fn_onmessage, fn_event_listener_message, and fn_other_event_name functions listeners be hit four times each
+//   c) the close method (we expect readyState == CLOSED)
+//   d) the close method (we expect no message events anymore)
+
+  function doTest1() {
+    gEventSourceObj1 = new EventSource("eventsource.resource");
+    ok(gEventSourceObj1.url == "http://mochi.test:8888/tests/content/base/test/eventsource.resource", "Test 1.a failed.");
+    ok(gEventSourceObj1.readyState == 0 || gEventSourceObj1.readyState == 1, "Test 1.a failed.");
+
+    doTest1_b();
+  }
+
+  function doTest1_b() {
+    gEventSourceObj1.hits = [];
+    gEventSourceObj1.hits['fn_onmessage'] = 0;
+    gEventSourceObj1.onmessage = fn_onmessage;
+    gEventSourceObj1.hits['fn_event_listener_message'] = 0;
+    gEventSourceObj1.addEventListener('message', fn_event_listener_message, true);
+    gEventSourceObj1.hits['fn_other_event_name'] = 0;
+    gEventSourceObj1.addEventListener('other_event_name', fn_other_event_name, true);
+
+    // the eventsources.res always use a retry of 0.5 second, so for four hits a timeout of 3 seconds is enough
+    setTimeout(function(){
+      bhits = hasBeenHitFor1And2(gEventSourceObj1, 4);
+      ok(bhits, "Test 1.b failed.");
+
+      doTest1_c();
+    }, parseInt(3000*stress_factor));
+  }
+
+  function doTest1_c() {
+    gEventSourceObj1.close();
+    ok(gEventSourceObj1.readyState == 2, "Test 1.c failed.");
+
+    doTest1_d();
+  }
+
+  function doTest1_d() {
+    gEventSourceObj1.hits['fn_onmessage'] = 0;
+    gEventSourceObj1.hits['fn_event_listener_message'] = 0;
+    gEventSourceObj1.hits['fn_other_event_name'] = 0;
+
+    setTimeout(function(){
+      bhits = hasBeenHitFor1And2(gEventSourceObj1, 1);
+      ok(!bhits, "Test 1.d failed.");
+      gEventSourceObj1.close();
+
+      doTest2();
+    }, parseInt(2000*stress_factor));
+  }
+
+// in order to test (2)
+//   a) set a eventsource that give the dom events messages
+//   b) expect trusted events
+
+  function doTest2() {
+    var func = function(e) {
+      ok(e.isTrusted, "Test 2 failed");
+      gEventSourceObj2.close();
+    };
+
+    gEventSourceObj2 = new EventSource("eventsource.resource");
+    gEventSourceObj2.onmessage = func;
+
+    setTimeout(function(){  // just to clean...
+      gEventSourceObj2.close();
+    }, parseInt(5000*stress_factor));
+
+    doTest3();
+  }
+
+// in order to test (3)
+//   a) XSite domain error test
+//   b) protocol file:/// test
+//   c) protocol javascript: test
+//   d) wrong Content-Type test
+//   e) bad http response code test
+//   f) message eventsource without a data test
+//   g) eventsource with invalid NCName char in the event field test
+//   h) DNS error
+
+  function doTest3() {
+    gEventSourceObj3 = new EventSource("http://example.org/tests/content/base/test/eventsource.resource");
+
+    gEventSourceObj3.onmessage = fn_onmessage;
+    gEventSourceObj3.hits = [];
+    gEventSourceObj3.hits['fn_onmessage'] = 0;
+
+    setTimeout(function() {
+      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.a failed");
+      gEventSourceObj3.close();
+
+      doTest3_b();
+    }, parseInt(1500*stress_factor));
+  }
+
+  function doTest3_b() {
+    gEventSourceObj3 = new EventSource("file:///home/wellington/src/content/base/test/eventsource.resource");
+
+    gEventSourceObj3.onmessage = fn_onmessage;
+    gEventSourceObj3.hits = [];
+    gEventSourceObj3.hits['fn_onmessage'] = 0;
+
+    setTimeout(function() {
+      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.b failed");
+      gEventSourceObj3.close();
+
+      doTest3_c();
+    }, parseInt(1500*stress_factor));
+  }
+
+  function jsEvtSource()
+  {
+    return "event: message\n" +
+           "data: 1\n\n";
+  }
+
+  function doTest3_c() {
+    gEventSourceObj3 = new EventSource("javascript: return jsEvtSource()");
+
+    gEventSourceObj3.onmessage = fn_onmessage;
+    gEventSourceObj3.hits = [];
+    gEventSourceObj3.hits['fn_onmessage'] = 0;
+
+    setTimeout(function() {
+      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.c failed");
+      gEventSourceObj3.close();
+
+      doTest3_d();
+    }, parseInt(1500*stress_factor));
+  }
+
+  function doTest3_d() {
+    gEventSourceObj3 = new EventSource("badContentType.eventsource");
+
+    gEventSourceObj3.onmessage = fn_onmessage;
+    gEventSourceObj3.hits = [];
+    gEventSourceObj3.hits['fn_onmessage'] = 0;
+
+    setTimeout(function() {
+      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.d failed");
+      gEventSourceObj3.close();
+
+      doTest3_e();
+    }, parseInt(1500*stress_factor));
+  }
+
+  function doTest3_e() {
+    gEventSourceObj3 = new EventSource("badHTTPResponseCode.eventsource");
+
+    gEventSourceObj3.onmessage = fn_onmessage;
+    gEventSourceObj3.hits = [];
+    gEventSourceObj3.hits['fn_onmessage'] = 0;
+
+    setTimeout(function() {
+      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.e failed");
+      gEventSourceObj3.close();
+
+      doTest3_f();
+    }, parseInt(1500*stress_factor));
+  }
+
+  function doTest3_f() {
+    gEventSourceObj3 = new EventSource("badMessageEvent.eventsource");
+
+    gEventSourceObj3.onmessage = fn_onmessage;
+    gEventSourceObj3.hits = [];
+    gEventSourceObj3.hits['fn_onmessage'] = 0;
+
+    setTimeout(function() {
+      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.f failed");
+      gEventSourceObj3.close();
+
+      doTest3_g();
+    }, parseInt(1500*stress_factor));
+  }
+
+  function fnInvalidNCName() {
+    fnInvalidNCName.hits++;
+  }
+
+  function doTest3_g() {
+    gEventSourceObj3 = new EventSource("badEventFieldName.eventsource");
+
+    fnInvalidNCName.hits = 0;
+    gEventSourceObj3.addEventListener('message event', fnInvalidNCName, true);
+
+    setTimeout(function() {
+      ok(fnInvalidNCName.hits != 0, "Test 3.g failed");
+      gEventSourceObj3.close();
+
+      doTest3_h();
+    }, parseInt(1500*stress_factor));
+  }
+
+  function doTest3_h() {
+    gEventSourceObj3 = new EventSource("http://hdfskjghsbg.jtiyoejowe.dafsgbhjab.com");
+
+    gEventSourceObj3.onmessage = fn_onmessage;
+    gEventSourceObj3.hits = [];
+    gEventSourceObj3.hits['fn_onmessage'] = 0;
+
+    setTimeout(function() {
+      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.h failed");
+      gEventSourceObj3.close();
+
+      doTest4();
+    }, parseInt(1500*stress_factor));
+  }
+
+// in order to test (4)
+//   a) close the object when it is in use, which is being processed and that is expected
+//      to dispatch more eventlisteners
+//   b) remove an eventlistener in use
+
+  function fn_onmessage4_a(e)
+  {
+    if (e.data > gEventSourceObj4.lastData)
+      gEventSourceObj4.lastData = e.data;
+    if (e.data == 2)
+      gEventSourceObj4.close();
+  }
+
+  function fn_onmessage4_b(e)
+  {
+    if (e.data > gEventSourceObj4.lastData)
+      gEventSourceObj4.lastData = e.data;
+    if (e.data == 2)
+      gEventSourceObj4.removeEventListener('message', fn_onmessage4_b, true);
+  }
+
+  function doTest4() {
+    gEventSourceObj4 = new EventSource("forRemoval.resource");
+    gEventSourceObj4.lastData = 0;
+    gEventSourceObj4.onmessage = fn_onmessage4_a;
+
+    setTimeout(function() {
+      ok(gEventSourceObj4.lastData == 2, "Test 4.a failed");
+      gEventSourceObj4.close();
+
+      doTest4_b();
+    }, parseInt(3000*stress_factor));
+  }
+
+  function doTest4_b()
+  {
+    gEventSourceObj4 = new EventSource("forRemoval.resource");
+    gEventSourceObj4.lastData = 0;
+    gEventSourceObj4.addEventListener('message', fn_onmessage4_b, true);
+
+    setTimeout(function() {
+      ok(gEventSourceObj4.lastData == 2, "Test 4.b failed");
+      gEventSourceObj4.close();
+
+      doTest5();
+    }, parseInt(3000*stress_factor));
+  }
+
+// in order to test (5)
+//   a) valid access-control xsite request (but must fail)
+//   b) invalid access-control xsite request
+
+  function doTest5()
+  {
+    gEventSourceObj5 = new EventSource("http://example.org/tests/content/base/test/accesscontrol.resource");
+
+    gEventSourceObj5.onmessage = fn_onmessage;
+    gEventSourceObj5.hits = [];
+    gEventSourceObj5.hits['fn_onmessage'] = 0;
+
+    setTimeout(function() {
+      ok(gEventSourceObj5.hits['fn_onmessage'] == 0, "Test 5.a failed");
+      gEventSourceObj5.close();
+
+      doTest5_b();
+    }, parseInt(3000*stress_factor));
+  }
+
+  function doTest5_b()
+  {
+    gEventSourceObj5 = new EventSource("http://example.org/tests/content/base/test/invalid_accesscontrol.resource");
+
+    gEventSourceObj5.onmessage = fn_onmessage;
+    gEventSourceObj5.hits = [];
+    gEventSourceObj5.hits['fn_onmessage'] = 0;
+
+    setTimeout(function() {
+      ok(gEventSourceObj5.hits['fn_onmessage'] == 0, "Test 5.b failed");
+      gEventSourceObj5.close();
+
+      doTest6();
+    }, parseInt(3000*stress_factor));
+  }
+
+  function doTest6()
+  {
+    gEventSourceObj6 = new EventSource("somedatas.resource");
+    var fn_somedata = function(e) {
+      if (fn_somedata.expected == 0) {
+        ok(e.data == "123456789\n123456789123456789\n123456789123456789123456789123456789\n 123456789123456789123456789123456789123456789123456789123456789123456789\nçãá\"\'@`~Ý Ḿyyyy",
+          "Test 6.a failed");
+      } else if (fn_somedata.expected == 1) {
+        ok(e.data == " :xxabcdefghij\nçãá\"\'@`~Ý Ḿyyyy : zz",
+          "Test 6.b failed");
+      } else if (fn_somedata.expected == 2) {
+        ok(e.data == "1", "Test 6.c failed");
+        gEventSourceObj6.close();
+      } else {
+        ok(false, "Test 6 failed (unexpected message event)");
+      }
+      fn_somedata.expected++;
+    }
+    fn_somedata.expected = 0;
+    gEventSourceObj6.onmessage = fn_somedata;
+
+    setTimeout(function() {
+      gEventSourceObj6.close();
+
+      doTest7();
+    }, parseInt(2500*stress_factor));
+  }
+
+  function doTest7()
+  {
+    gEventSourceObj7 = new EventSource("delayedServerEvents.sjs");
+    gEventSourceObj7.msg_received = [];
+    gEventSourceObj7.onmessage = function(e)
+    {
+      e.target.msg_received.push(e.data);
+    }
+    
+    setTimeout(function() {
+      gEventSourceObj7.close();
+      
+      ok(gEventSourceObj7.msg_received[0] == "" &&
+         gEventSourceObj7.msg_received[1] == "delayed1" &&
+         gEventSourceObj7.msg_received[2] == "delayed2", "Test 7 failed");
+
+      SpecialPowers.setBoolPref("dom.server-events.enabled", oldPrefVal);
+      document.getElementById('waitSpan').innerHTML = '';
+      SimpleTest.finish();
+    }, parseInt(50000*stress_factor));
+  }
+
+  function doTest()
+  {
+    oldPrefVal = SpecialPowers.getBoolPref("dom.server-events.enabled");
+    SpecialPowers.setBoolPref("dom.server-events.enabled", true);
+
+    // we get a good stress_factor by testing 10 setTimeouts and some float
+    // arithmetic taking my machine as stress_factor==1 (time=589)
+
+    var begin_time = (new Date()).getTime();
+
+    var f = function() {
+      for (var j=0; j<f.i; ++j)
+        eval("Math.log(Math.atan(Math.sqrt(Math.pow(3.1415, 13.1415))/0.0007))");
+      if (f.i < 10) {
+        f.i++;
+        setTimeout(f, 10 + 10*f.i);
+      } else {
+        stress_factor = ((new Date()).getTime()-begin_time)*1/589;
+        stress_factor *= 1.10; // also, a margin of 10%
+
+        doTest1();
+      }
+    }
+    f.i = 0;
+
+    setTimeout(f, 10);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(doTest);
+
+</script>
+</pre>
+  <span id=waitSpan>Wait please...</span>
+</body>
+</html>
+

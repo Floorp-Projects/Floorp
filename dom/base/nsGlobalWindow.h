@@ -760,11 +760,13 @@ protected:
   {
     NS_ASSERTION(!IsFrozen(), "Double-freezing?");
     mIsFrozen = PR_TRUE;
+    NotifyDOMWindowFrozen(this);
   }
 
   void Thaw()
   {
     mIsFrozen = PR_FALSE;
+    NotifyDOMWindowThawed(this);
   }
 
   PRBool IsInModalState();
@@ -810,6 +812,9 @@ protected:
 
   static void NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow);
   void NotifyWindowIDDestroyed(const char* aTopic);
+
+  static void NotifyDOMWindowFrozen(nsGlobalWindow* aWindow);
+  static void NotifyDOMWindowThawed(nsGlobalWindow* aWindow);
   
   void ClearStatus();
 
