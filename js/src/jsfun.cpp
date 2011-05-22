@@ -186,12 +186,12 @@ js_GetArgsProperty(JSContext *cx, StackFrame *fp, jsid id, Value *vp)
 }
 
 js::ArgumentsObject *
-ArgumentsObject::create(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
+ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 {
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
 
     JSObject *proto;
-    if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+    if (!js_GetClassPrototype(cx, callee.getGlobal(), JSProto_Object, &proto))
         return NULL;
 
     TypeObject *type = proto->getNewType(cx);
@@ -219,7 +219,7 @@ ArgumentsObject::create(JSContext *cx, JSObject *parent, uint32 argc, JSObject &
     obj->init(cx, callee.getFunctionPrivate()->inStrictMode()
               ? &StrictArgumentsObject::jsClass
               : &NormalArgumentsObject::jsClass,
-              type, parent, NULL, false);
+              type, proto->getParent(), NULL, false);
     obj->setMap(emptyArgumentsShape);
 
     ArgumentsObject *argsobj = obj->asArguments();
@@ -260,10 +260,8 @@ js_GetArgsObject(JSContext *cx, StackFrame *fp)
     if (fp->hasArgsObj())
         return &fp->argsObj();
 
-    /* Compute the arguments object's parent slot from fp's scope chain. */
-    JSObject *global = fp->scopeChain().getGlobal();
     ArgumentsObject *argsobj =
-        ArgumentsObject::create(cx, global, fp->numActualArgs(), fp->callee());
+        ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee());
     if (!argsobj)
         return argsobj;
 
@@ -304,9 +302,9 @@ js_PutArgsObject(StackFrame *fp)
  * Traced versions of js_GetArgsObject and js_PutArgsObject.
  */
 JSObject * JS_FASTCALL
-js_NewArgumentsOnTrace(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
+js_NewArgumentsOnTrace(JSContext *cx, uint32 argc, JSObject *callee)
 {
-    ArgumentsObject *argsobj = ArgumentsObject::create(cx, parent, argc, *callee);
+    ArgumentsObject *argsobj = ArgumentsObject::create(cx, argc, *callee);
     if (!argsobj)
         return NULL;
 
@@ -322,7 +320,7 @@ js_NewArgumentsOnTrace(JSContext *cx, JSObject *parent, uint32 argc, JSObject *c
 
     return argsobj;
 }
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewArgumentsOnTrace, CONTEXT, OBJECT, UINT32, OBJECT,
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewArgumentsOnTrace, CONTEXT, UINT32, OBJECT,
                      0, nanojit::ACCSET_STORE_ANY)
 
 /* FIXME change the return type to void. */
@@ -1662,16 +1660,18 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                                 : cx->runtime->emptyString);
         break;
 
-      case FUN_CALLER:
+      case FUN_CALLER: {
         vp->setNull();
-        if (fp && fp->prev() && !fp->prev()->getValidCalleeObject(cx, vp))
+
+        StackFrame *callerframe = (fp && fp->prev()) ? js_GetScriptedCaller(cx, fp->prev()) : NULL;
+        if (callerframe && !callerframe->getValidCalleeObject(cx, vp))
             return false;
 
         if (vp->isObject()) {
             JSObject &caller = vp->toObject();
 
             /* Censor the caller if it is from another compartment. */
-            if (caller.getCompartment() != cx->compartment) {
+            if (caller.compartment() != cx->compartment) {
                 vp->setNull();
             } else if (caller.isFunction()) {
                 JSFunction *callerFun = caller.getFunctionPrivate();
@@ -1683,6 +1683,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             }
         }
         break;
+      }
 
       default:
         JS_NOT_REACHED("fun_getProperty");
@@ -2395,7 +2396,7 @@ fun_isGenerator(JSContext *cx, uintN argc, Value *vp)
 
     bool result = false;
     if (fun->isInterpreted()) {
-        JSScript *script = fun->u.i.script;
+        JSScript *script = fun->script();
         JS_ASSERT(script->length != 0);
         result = script->code[0] == JSOP_GENERATOR;
     }
@@ -2493,36 +2494,27 @@ Function(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs call = CallArgsFromVp(argc, vp);
 
-    JS::Anchor<JSObject *> obj(NewFunction(cx, NULL));
+    /* Block this call if security callbacks forbid it. */
+    GlobalObject *global = call.callee().getGlobal();
+    if (!global->isEvalAllowed(cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
+        return false;
+    }
+
+    JS::Anchor<JSObject *> obj(NewFunction(cx, *global));
     if (!obj.get())
         return false;
-
-    JSObject &calleeParent = *call.callee().getParent();
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an
      * anonymous function in the top-level scope that its constructor inhabits.
      * Thus 'var x = 42; f = new Function("return x"); print(f())' prints 42,
      * and so would a call to f from another top-level's script or function.
-     *
-     * In older versions, before call objects, a new Function was adopted by
-     * its running context's globalObject, which might be different from the
-     * top-level reachable from scopeChain (in HTML frames, e.g.).
      */
     JSFunction *fun = js_NewFunction(cx, obj.get(), NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                     &calleeParent, cx->runtime->atomState.anonymousAtom, NULL, NULL);
+                                     global, cx->runtime->atomState.anonymousAtom, NULL, NULL);
     if (!fun)
         return false;
-
-    /*
-     * CSP check: whether new Function() is allowed at all.
-     * Report errors via CSP is done in the script security manager.
-     * js_CheckContentSecurityPolicy is defined in jsobj.cpp
-     */
-    if (!js_CheckContentSecurityPolicy(cx, &calleeParent)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
-        return false;
-    }
 
     Bindings bindings(cx);
     AutoBindingsRooter root(cx, bindings);
@@ -2884,13 +2876,13 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         cfun->atom = fun->atom;
         clone->setPrivate(cfun);
         if (cfun->isInterpreted()) {
-            JSScript *script = cfun->u.i.script;
+            JSScript *script = cfun->script();
             JS_ASSERT(script);
             JS_ASSERT(script->compartment == fun->compartment());
             JS_ASSERT(script->compartment != cx->compartment);
 
             cfun->u.i.script = js_CloneScript(cx, script);
-            if (!cfun->u.i.script)
+            if (!cfun->script())
                 return NULL;
             if (!cfun->u.i.script->typeSetFunction(cx, cfun))
                 return NULL;
@@ -2972,7 +2964,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
         return closure;
 
     Value *upvars = closure->getFlatClosureUpvars();
-    uintN level = fun->u.i.script->staticLevel;
+    uintN level = fun->script()->staticLevel;
     JSUpvarArray *uva = fun->script()->upvars();
 
     for (uint32 i = 0, n = uva->length; i < n; i++) {

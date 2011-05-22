@@ -1693,7 +1693,7 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
     JS_snprintf(newName, len, "%u:%s", ++nameCount, name);
     name = newName;
 #endif
-    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
     jsid id = ATOM_TO_JSID(atom);

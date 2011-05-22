@@ -215,8 +215,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
 //******************************************************************************
 RasterImage::~RasterImage()
 {
-  if (mAnim)
-    delete mAnim;
+  delete mAnim;
 
   for (unsigned int i = 0; i < mFrames.Length(); ++i)
     delete mFrames[i];

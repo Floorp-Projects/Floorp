@@ -1038,6 +1038,12 @@ const PRInt32 nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kOrientKTable[] = {
+  eCSSKeyword_horizontal, NS_STYLE_ORIENT_HORIZONTAL,
+  eCSSKeyword_vertical,   NS_STYLE_ORIENT_VERTICAL,
+  eCSSKeyword_UNKNOWN,    -1
+};
+
 // Same as kBorderStyleKTable except 'hidden'.
 const PRInt32 nsCSSProps::kOutlineStyleKTable[] = {
   eCSSKeyword_none,   NS_STYLE_BORDER_STYLE_NONE,

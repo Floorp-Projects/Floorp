@@ -119,8 +119,8 @@ nsMathMLmfencedFrame::ChildListChanged(PRInt32 aModType)
 void
 nsMathMLmfencedFrame::RemoveFencesAndSeparators()
 {
-  if (mOpenChar) delete mOpenChar;
-  if (mCloseChar) delete mCloseChar;
+  delete mOpenChar;
+  delete mCloseChar;
   if (mSeparatorsChar) delete[] mSeparatorsChar;
 
   mOpenChar = nsnull;

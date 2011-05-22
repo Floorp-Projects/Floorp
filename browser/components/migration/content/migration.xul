@@ -68,43 +68,21 @@
       <!-- If you are adding a migrator, please add the appropriate
            hooks to GetDefaultBrowserMigratorKey in
            browser/components/migration/src/nsProfileMigrator.cpp -->
-      <radio id="phoenix"   label="&importFromPhoenix.label;"   accesskey="&importFromPhoenix.accesskey;"/>
-#ifdef XP_UNIX
 #ifdef XP_MACOSX
       <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
-      <radio id="macie"     label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
-<!-- XXXben - uncomment these as we write migrators for them
-      <radio id="camino"    label="&importFromCamino.label;"    accesskey="&importFromCamino.accesskey;"/>
-      <radio id="omniweb"   label="&importFromOmniWeb.label;"   accesskey="&importFromOmniWeb.accesskey;"/>
-      <radio id="icab"      label="&importFromICab.label;"      accesskey="&importFromICab.accesskey;"/>
--->
       <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
-      <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
       <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
-#else
+#elifdef XP_UNIX
       <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
-      <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
       <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
-<!-- XXXben - uncomment these as we write migrators for them
-      <radio id="konqueror" label="&importFromKonqueror.label;" accesskey="&importFromKonqueror.accesskey;"/>
-      <radio id="epiphany"  label="&importFromEpiphany.label;"  accesskey="&importFromEpiphany.accesskey;"/>
-      <radio id="galeon"    label="&importFromGaleon.label;"    accesskey="&importFromGaleon.accesskey;"/>
-  -->
-#endif
-#endif
-#ifdef XP_WIN
+#elifdef XP_WIN
 #ifndef NO_IE_MIGRATOR
       <radio id="ie"        label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
 #endif
       <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
-      <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
       <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
-#endif
-#ifndef XP_UNIX
-#ifndef XP_WIN
+#else
       <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
-      <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
-#endif
 #endif
       <radio id="fromfile"  label="&importFromHTMLFile.label;"  accesskey="&importFromHTMLFile.accesskey;" hidden="true"/>
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>

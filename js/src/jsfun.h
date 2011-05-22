@@ -107,7 +107,7 @@
 #define FUN_INTERPRETED(fun) (FUN_KIND(fun) >= JSFUN_INTERPRETED)
 #define FUN_FLAT_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_FLAT_CLOSURE)
 #define FUN_NULL_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_NULL_CLOSURE)
-#define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->u.i.script : NULL)
+#define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->script() : NULL)
 #define FUN_CLASP(fun)       (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
                               fun->u.n.clasp)
 #define FUN_TRCINFO(fun)     (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
@@ -404,9 +404,6 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_InitArgumentsClass(JSContext *cx, JSObject *obj);
-
-extern void
-js_TraceFunction(JSTracer *trc, JSFunction *fun);
 
 extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
