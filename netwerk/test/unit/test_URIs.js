@@ -196,6 +196,7 @@ function do_test_uri_basic(aTest) {
   // Sanity-check
   do_info("testing " + aTest.spec + " equals a clone of itself");
   do_check_uri_eq(URI, URI.clone());
+  do_check_uri_eq(URI, URI.cloneIgnoringRef());
   do_info("testing " + aTest.spec + " instanceof nsIURL");
   do_check_eq(URI instanceof Ci.nsIURL, aTest.nsIURL);
   do_info("testing " + aTest.spec + " instanceof nsINestedURI");
@@ -248,6 +249,17 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
     do_info("testing " + aTest.spec +
           " is equalExceptRef to self with '" + aSuffix + "' appended");
     do_check_uri_eqExceptRef(origURI, testURI);
+
+    do_info("testing cloneIgnoringRef on " + testURI.spec +
+            " is equal to no-ref version but not equal to ref version");
+    var cloneNoRef = testURI.cloneIgnoringRef();
+    if (aTest.spec == "http://" && aSuffix == "#") {
+      do_info("TODO: bug 657033");
+      do_check_uri_eq(cloneNoRef, origURI, todo_check_true);
+    } else {
+      do_check_uri_eq(cloneNoRef, origURI);
+    }
+    do_check_false(cloneNoRef.equals(testURI));
   }
 }
 
