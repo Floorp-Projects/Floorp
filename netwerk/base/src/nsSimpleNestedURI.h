@@ -73,8 +73,10 @@ public:
 
     // Overrides for various methods nsSimpleURI implements follow.
   
-    // nsIURI overrides
-    NS_IMETHOD Equals(nsIURI* other, PRBool *result);
+    // nsSimpleURI overrides
+    virtual nsresult EqualsInternal(nsIURI* other,
+                                    RefHandlingEnum refHandlingMode,
+                                    PRBool* result);
     virtual nsSimpleURI* StartClone();
 
     // nsISerializable overrides

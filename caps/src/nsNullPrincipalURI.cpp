@@ -257,6 +257,14 @@ nsNullPrincipalURI::Equals(nsIURI *aOther, PRBool *_equals)
 }
 
 NS_IMETHODIMP
+nsNullPrincipalURI::EqualsExceptRef(nsIURI *aOther, PRBool *_equals)
+{
+  // GetRef/SetRef not supported by nsNullPrincipalURI, so
+  // EqualsExceptRef() is the same as Equals().
+  return Equals(aOther, _equals);
+}
+
+NS_IMETHODIMP
 nsNullPrincipalURI::Resolve(const nsACString &aRelativePath,
                             nsACString &_resolvedURI)
 {

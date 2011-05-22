@@ -94,6 +94,17 @@ public:
     nsresult SetSpecWithBase(const nsACString& aSpec, nsIURI* aBaseURL);
 
 protected:
+    // enum used in a few places to specify how .ref attribute should be handled
+    enum RefHandlingEnum {
+        eIgnoreRef,
+        eHonorRef
+    };
+
+    // Helper to share code between Equals methods.
+    virtual nsresult EqualsInternal(nsIURI* other,
+                                    RefHandlingEnum refHandlingMode,
+                                    PRBool* result);
+
     nsCOMPtr<nsIURI> mJARFile;
     // mJarEntry stored as a URL so that we can easily access things
     // like extensions, refs, etc.
