@@ -328,6 +328,20 @@ nsSimpleURI::SetPath(const nsACString &path)
 }
 
 NS_IMETHODIMP
+nsSimpleURI::GetRef(nsACString &result)
+{
+    // XXXdholbert Implement this.
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::SetRef(const nsACString &ref)
+{
+    // XXXdholbert Implement this.
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsSimpleURI::Equals(nsIURI* other, PRBool *result)
 {
     PRBool eq = PR_FALSE;
