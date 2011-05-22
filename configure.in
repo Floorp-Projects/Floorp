@@ -2027,8 +2027,8 @@ case "$target" in
         MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
     fi
     _PEDANTIC=
-    CFLAGS="$CFLAGS -fpascal-strings -fno-common"
-    CXXFLAGS="$CXXFLAGS -fpascal-strings -fno-common"
+    CFLAGS="$CFLAGS -fno-common"
+    CXXFLAGS="$CXXFLAGS -fno-common"
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
