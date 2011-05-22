@@ -52,6 +52,7 @@
 #include "nsISocketTransportService.h"
 #include "nsITransport.h"
 #include "nsIEventTarget.h"
+#include "TimingStruct.h"
 
 //-----------------------------------------------------------------------------
 
@@ -134,6 +135,8 @@ public:
     void    SetPriority(PRInt32 priority) { mPriority = priority; }
     PRInt32    Priority()                 { return mPriority; }
 
+    const TimingStruct& Timings() const { return mTimings; }
+
 private:
     nsresult Restart();
     char    *LocateHttpStart(char *buf, PRUint32 len,
@@ -150,6 +153,8 @@ private:
                                         PRUint32, PRUint32, PRUint32 *);
     static NS_METHOD WritePipeSegment(nsIOutputStream *, void *, char *,
                                       PRUint32, PRUint32, PRUint32 *);
+
+    PRBool TimingEnabled() const { return mCaps & NS_HTTP_TIMING_ENABLED; }
 
 private:
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
@@ -188,6 +193,8 @@ private:
 
     nsHttpChunkedDecoder           *mChunkedDecoder;
 
+    TimingStruct                    mTimings;
+
     nsresult                        mStatus;
 
     PRInt16                         mPriority;
@@ -211,6 +218,7 @@ private:
     PRPackedBool                    mHasRequestBody;
     PRPackedBool                    mSSLConnectFailed;
     PRPackedBool                    mHttpResponseMatched;
+    PRPackedBool                    mPreserveStream;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

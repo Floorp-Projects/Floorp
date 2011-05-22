@@ -1,12 +1,8 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
+<html>
   <link rel='stylesheet' type='text/css' href='style.css'>
-  <body onload="if (!document.getElementById('i').mozMatchesSelector(':invalid')) {
-                  document.body.textContent='FAIL';
-                } else {
-                  document.body.textContent='SUCCESS';
-                }
-                document.documentElement.className='';">
-    <input id='i' type='radio' required>
+  <body>
+    <input class='invalid' id='i' type='radio' required>
+    <input class='notinvalid' type='radio'> <!-- adding this one so we don't have to create a second ref -->
   </body>
 </html>

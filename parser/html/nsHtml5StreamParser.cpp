@@ -1159,13 +1159,11 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       mSpeculations.RemoveElementAt(0);
       if (mSpeculations.IsEmpty()) {
         // yes, it was still the only speculation. Now stop speculating
-        if (mTreeBuilder->IsDiscretionaryFlushSafe()) {
-          // However, before telling the executor to read from stage, flush
-          // any pending ops straight to the executor, because otherwise
-          // they remain unflushed until we get more data from the network.
-          mTreeBuilder->SetOpSink(mExecutor);
-          mTreeBuilder->Flush();
-        }
+        // However, before telling the executor to read from stage, flush
+        // any pending ops straight to the executor, because otherwise
+        // they remain unflushed until we get more data from the network.
+        mTreeBuilder->SetOpSink(mExecutor);
+        mTreeBuilder->Flush(PR_TRUE);
         mTreeBuilder->SetOpSink(mExecutor->GetStage());
         mExecutor->StartReadingFromStage();
         mSpeculating = PR_FALSE;
@@ -1268,15 +1266,9 @@ nsHtml5StreamParser::TimerFlush()
 
   // we aren't speculating and we don't know when new data is
   // going to arrive. Send data to the main thread.
-  // However, don't do if the current element on the stack is a 
-  // foster-parenting element and there's pending text, because flushing in 
-  // that case would make the tree shape dependent on where the flush points 
-  // fall.
-  if (mTreeBuilder->IsDiscretionaryFlushSafe()) {
-    if (mTreeBuilder->Flush()) {
-      if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
-        NS_WARNING("failed to dispatch executor flush event");
-      }
+  if (mTreeBuilder->Flush(PR_TRUE)) {
+    if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
+      NS_WARNING("failed to dispatch executor flush event");
     }
   }
 }

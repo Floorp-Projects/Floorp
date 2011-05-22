@@ -124,7 +124,7 @@ function getMetadata(reason) {
     OS: ai.OS,
     XPCOMABI: ai.XPCOMABI,
     ID: ai.ID,
-    vesion: ai.version,
+    version: ai.version,
     name: ai.name,
     appBuildID: ai.appBuildID,
     platformBuildID: ai.platformBuildID,
@@ -163,7 +163,7 @@ TelemetryPing.prototype = {
       let name = "Memory:" + mr.path + " (KB)";
       let h = this._histograms[name];
       if (!h) {
-        h = Telemetry.newExponentialHistogram(name, specs[0], specs[1], specs[2]);
+        h = Telemetry.newHistogram(name, specs[0], specs[1], specs[2], Telemetry.HISTOGRAM_EXPONENTIAL);
         this._histograms[name] = h;
       }
       let v = Math.floor(mr.memoryUsed / 1024);
@@ -192,8 +192,8 @@ TelemetryPing.prototype = {
     const TELEMETRY_PING = "telemetry.ping (ms)";
     const TELEMETRY_SUCCESS = "telemetry.success (No, Yes)";
 
-    let hping = Telemetry.newExponentialHistogram(TELEMETRY_PING, 1, 3000, 10);
-    let hsuccess = Telemetry.newLinearHistogram(TELEMETRY_SUCCESS, 1, 2, 3);
+    let hping = Telemetry.newHistogram(TELEMETRY_PING, 1, 3000, 10, Telemetry.HISTOGRAM_EXPONENTIAL);
+    let hsuccess = Telemetry.newHistogram(TELEMETRY_SUCCESS, 1, 2, 3, Telemetry.HISTOGRAM_LINEAR);
 
     let url = server + this._path;
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -234,10 +234,24 @@ TelemetryPing.prototype = {
     let timerCallback = function() {
       let idleService = Cc["@mozilla.org/widget/idleservice;1"].
                         getService(Ci.nsIIdleService);
-      idleService.addIdleObserver(self, TELEMETRY_INTERVAL); 
+      idleService.addIdleObserver(self, TELEMETRY_INTERVAL);
+      Services.obs.addObserver(self, "idle-daily", false);
+      Services.obs.addObserver(self, "profile-before-change", false);
       self.gatherMemory();
+      delete self._timer
     }
     this._timer.initWithCallback(timerCallback, TELEMETRY_DELAY, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  /** 
+   * Remove observers to avoid leaks
+   */
+  uninstall: function uninstall() {
+    let idleService = Cc["@mozilla.org/widget/idleservice;1"].
+                      getService(Ci.nsIIdleService);
+    idleService.removeIdleObserver(this, TELEMETRY_INTERVAL);
+    Services.obs.removeObserver(this, "idle-daily");
+    Services.obs.removeObserver(this, "profile-before-change");
   },
 
   /**
@@ -250,6 +264,9 @@ TelemetryPing.prototype = {
     switch (aTopic) {
     case "profile-after-change":
       this.setup();
+      break;
+    case "profile-before-change":
+      this.uninstall();
       break;
     case "idle":
       this.gatherMemory();

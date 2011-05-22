@@ -103,6 +103,8 @@
 
 #include "nsIDOMText.h"
 
+#include "nsDOMStringMap.h"
+
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsEventDispatcher.h"
@@ -302,7 +304,7 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
   NS_INTERFACE_MAP_END
 
 // No closing bracket, because NS_INTERFACE_MAP_END does that for us.
-    
+
 nsresult
 nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
 {
@@ -362,6 +364,33 @@ nsGenericHTMLElement::SetAttribute(const nsAString& aName,
 
   return SetAttr(name->NamespaceID(), name->LocalName(), name->GetPrefix(),
                  aValue, PR_TRUE);
+}
+
+nsresult
+nsGenericHTMLElement::GetDataset(nsIDOMDOMStringMap** aDataset)
+{
+  nsDOMSlots *slots = DOMSlots();
+
+  if (!slots->mDataset) {
+    // mDataset is a weak reference so assignment will not AddRef.
+    // AddRef is called before assigning to out parameter.
+    slots->mDataset = new nsDOMStringMap(this);
+  }
+
+  NS_ADDREF(*aDataset = slots->mDataset);
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::ClearDataset()
+{
+  nsDOMSlots *slots = GetExistingDOMSlots();
+
+  NS_ASSERTION(slots && slots->mDataset,
+               "Slots should exist and dataset should not be null.");
+  slots->mDataset = nsnull;
+
+  return NS_OK;
 }
 
 // Implementation for nsIDOMHTMLElement
@@ -1090,15 +1119,9 @@ nsGenericHTMLElement::GetHrefURIForAnchors() const
 
   // We use the nsAttrValue's copy of the URI string to avoid copying.
   nsCOMPtr<nsIURI> uri;
-  GetURIAttr(nsGkAtoms::href, nsnull, PR_FALSE, getter_AddRefs(uri));
+  GetURIAttr(nsGkAtoms::href, nsnull, getter_AddRefs(uri));
 
   return uri.forget();
-}
-
-void
-nsGenericHTMLElement::GetHrefURIToMutate(nsIURI** aURI)
-{
-  GetURIAttr(nsGkAtoms::href, nsnull, PR_TRUE, aURI);
 }
 
 nsresult
@@ -1236,6 +1259,12 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
       if (manager) {
         manager->RemoveScriptEventListener(aAttribute);
       }
+    }
+
+    // Remove dataset property if necessary.
+    nsDOMSlots *slots = GetExistingDOMSlots();
+    if (slots && slots->mDataset) {
+      slots->mDataset->RemoveProp(aAttribute);
     }
   }
 
@@ -2193,7 +2222,7 @@ nsresult
 nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult)
 {
   nsCOMPtr<nsIURI> uri;
-  PRBool hadAttr = GetURIAttr(aAttr, aBaseAttr, PR_FALSE, getter_AddRefs(uri));
+  PRBool hadAttr = GetURIAttr(aAttr, aBaseAttr, getter_AddRefs(uri));
   if (!hadAttr) {
     aResult.Truncate();
     return NS_OK;
@@ -2212,8 +2241,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& 
 }
 
 PRBool
-nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
-                                 PRBool aCloneIfCached, nsIURI** aURI) const
+nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsIURI** aURI) const
 {
   *aURI = nsnull;
 

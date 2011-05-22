@@ -194,12 +194,13 @@ let gSyncUtils = {
    */
   passphraseSave: function(elid) {
     let dialogTitle = this.bundle.GetStringFromName("save.synckey.title");
+    let defaultSaveName = this.bundle.GetStringFromName("save.default.label");
     this._preparePPiframe(elid, function(iframe) {
       let filepicker = Cc["@mozilla.org/filepicker;1"]
                          .createInstance(Ci.nsIFilePicker);
       filepicker.init(window, dialogTitle, Ci.nsIFilePicker.modeSave);
       filepicker.appendFilters(Ci.nsIFilePicker.filterHTML);
-      filepicker.defaultString = "Firefox Sync Key.html";
+      filepicker.defaultString = defaultSaveName;
       let rv = filepicker.show();
       if (rv == Ci.nsIFilePicker.returnOK
           || rv == Ci.nsIFilePicker.returnReplace) {

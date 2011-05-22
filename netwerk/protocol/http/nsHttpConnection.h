@@ -130,12 +130,15 @@ public:
     nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, PRBool *reset);
     void     CloseTransaction(nsAHttpTransaction *, nsresult reason);
     void     GetConnectionInfo(nsHttpConnectionInfo **ci) { NS_IF_ADDREF(*ci = mConnInfo); }
+    nsresult TakeTransport(nsISocketTransport **,
+                           nsIAsyncInputStream **,
+                           nsIAsyncOutputStream **);
     void     GetSecurityInfo(nsISupports **);
     PRBool   IsPersistent() { return IsKeepAlive(); }
     PRBool   IsReused();
     void     SetIsReusedAfter(PRUint32 afterMilliseconds);
     void     SetIdleTimeout(PRUint16 val) {mIdleTimeout = val;}
-    nsresult PushBack(const char *data, PRUint32 length) { NS_NOTREACHED("PushBack"); return NS_ERROR_UNEXPECTED; }
+    nsresult PushBack(const char *data, PRUint32 length);
     nsresult ResumeSend();
     nsresult ResumeRecv();
     PRInt64  MaxBytesRead() {return mMaxBytesRead;}
@@ -184,10 +187,13 @@ private:
     PRInt64                         mCurrentBytesRead;   // data read per activation
     PRInt64                         mMaxBytesRead;       // max read in 1 activation
 
+    nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
+
     PRPackedBool                    mKeepAlive;
     PRPackedBool                    mKeepAliveMask;
     PRPackedBool                    mSupportsPipelining;
     PRPackedBool                    mIsReused;
+    PRPackedBool                    mIsActivated;
     PRPackedBool                    mCompletedProxyConnect;
     PRPackedBool                    mLastTransactionExpectedNoContent;
 };

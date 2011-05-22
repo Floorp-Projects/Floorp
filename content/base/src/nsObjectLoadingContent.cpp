@@ -56,8 +56,7 @@
 #include "nsEventStates.h"
 #include "nsIObjectFrame.h"
 #include "nsIPluginDocument.h"
-#include "nsIPluginHost.h"
-#include "nsIPluginInstance.h"
+#include "nsPluginHost.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIScriptGlobalObject.h"
@@ -424,11 +423,12 @@ IsSupportedImage(const nsCString& aMimeType)
 static PRBool
 IsSupportedPlugin(const nsCString& aMIMEType)
 {
-  nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-  if (!host) {
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
+  if (!pluginHost) {
     return PR_FALSE;
   }
-  nsresult rv = host->IsPluginEnabledForType(aMIMEType.get());
+  nsresult rv = pluginHost->IsPluginEnabledForType(aMIMEType.get());
   return NS_SUCCEEDED(rv);
 }
 
@@ -459,13 +459,18 @@ IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
   nsCAutoString ext;
   GetExtensionFromURI(uri, ext);
 
-  if (ext.IsEmpty())
+  if (ext.IsEmpty()) {
     return PR_FALSE;
+  }
 
-  nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
+  if (!pluginHost) {
+    return PR_FALSE;
+  }
+
   const char* typeFromExt;
-  if (host &&
-      NS_SUCCEEDED(host->IsPluginEnabledForExtension(ext.get(), typeFromExt))) {
+  if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(ext.get(), typeFromExt))) {
     mimeType = typeFromExt;
     return PR_TRUE;
   }
@@ -844,7 +849,7 @@ nsObjectLoadingContent::GetDisplayedType(PRUint32* aType)
 
 
 NS_IMETHODIMP
-nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
+nsObjectLoadingContent::EnsureInstantiation(nsNPAPIPluginInstance** aInstance)
 {
   // Must set our out parameter to null as we have various early returns with
   // an NS_OK result.
@@ -912,11 +917,11 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
   nsWeakFrame weakFrame(nsiframe);
 
   // We may have a plugin instance already; if so, do nothing
-  nsresult rv = frame->GetPluginInstance(*aInstance);
+  nsresult rv = frame->GetPluginInstance(aInstance);
   if (!*aInstance && weakFrame.IsAlive()) {
     rv = Instantiate(frame, mContentType, mURI);
     if (NS_SUCCEEDED(rv) && weakFrame.IsAlive()) {
-      rv = frame->GetPluginInstance(*aInstance);
+      rv = frame->GetPluginInstance(aInstance);
     } else {
       Fallback(PR_TRUE);
     }
@@ -942,8 +947,8 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
   // date data (frame pointer etc).
   mPendingInstantiateEvent = nsnull;
 
-  nsCOMPtr<nsIPluginInstance> instance;
-  aFrame->GetPluginInstance(*getter_AddRefs(instance));
+  nsRefPtr<nsNPAPIPluginInstance> instance;
+  aFrame->GetPluginInstance(getter_AddRefs(instance));
 
   if (instance) {
     // The frame already has a plugin instance, that means the plugin
@@ -990,7 +995,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::GetPluginInstance(nsIPluginInstance** aInstance)
+nsObjectLoadingContent::GetPluginInstance(nsNPAPIPluginInstance** aInstance)
 {
   *aInstance = nsnull;
 
@@ -999,7 +1004,7 @@ nsObjectLoadingContent::GetPluginInstance(nsIPluginInstance** aInstance)
     return NS_OK;
   }
 
-  return objFrame->GetPluginInstance(*aInstance);
+  return objFrame->GetPluginInstance(aInstance);
 }
 
 NS_IMETHODIMP
@@ -1723,8 +1728,8 @@ nsresult
 nsObjectLoadingContent::TypeForClassID(const nsAString& aClassID,
                                        nsACString& aType)
 {
-  // Need a plugin host for any class id support
-  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
   if (!pluginHost) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1834,8 +1839,8 @@ nsObjectLoadingContent::TryInstantiate(const nsACString& aMIMEType,
     return NS_OK; // Not a failure to have no frame
   }
 
-  nsCOMPtr<nsIPluginInstance> instance;
-  frame->GetPluginInstance(*getter_AddRefs(instance));
+  nsRefPtr<nsNPAPIPluginInstance> instance;
+  frame->GetPluginInstance(getter_AddRefs(instance));
 
   if (!instance) {
     // The frame has no plugin instance yet. If the frame hasn't been
@@ -1899,14 +1904,15 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
 
   mInstantiating = oldInstantiatingValue;
 
-  nsCOMPtr<nsIPluginInstance> pluginInstance;
+  nsRefPtr<nsNPAPIPluginInstance> pluginInstance;
   if (weakFrame.IsAlive()) {
-    aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance));
+    aFrame->GetPluginInstance(getter_AddRefs(pluginInstance));
   }
   if (pluginInstance) {
     nsCOMPtr<nsIPluginTag> pluginTag;
     nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-    host->GetPluginTagForInstance(pluginInstance, getter_AddRefs(pluginTag));
+    static_cast<nsPluginHost*>(host.get())->
+      GetPluginTagForInstance(pluginInstance, getter_AddRefs(pluginTag));
 
     nsCOMPtr<nsIBlocklistService> blocklist =
       do_GetService("@mozilla.org/extensions/blocklist;1");
@@ -1962,11 +1968,13 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
 /* static */ PluginSupportState
 nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
 {
-  nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-  if (!host) {
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
+  if (!pluginHost) {
     return ePluginUnsupported;
   }
-  nsresult rv = host->IsPluginEnabledForType(aContentType.get());
+
+  nsresult rv = pluginHost->IsPluginEnabledForType(aContentType.get());
   if (rv == NS_ERROR_PLUGIN_DISABLED)
     return ePluginDisabled;
   if (rv == NS_ERROR_PLUGIN_BLOCKLISTED)
@@ -2006,18 +2014,6 @@ nsObjectLoadingContent::GetPrintFrame(nsIFrame** aFrame)
 {
   *aFrame = mPrintFrame.GetFrame();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::SetAbsoluteScreenPosition(nsIDOMElement* element,
-                                                  nsIDOMClientRect* position,
-                                                  nsIDOMClientRect* clip)
-{
-  nsIObjectFrame* frame = GetExistingFrame(eFlushLayout);
-  if (!frame)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  return frame->SetAbsoluteScreenPosition(element, position, clip);
 }
 
 NS_IMETHODIMP

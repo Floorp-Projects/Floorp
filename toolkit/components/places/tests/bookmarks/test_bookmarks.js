@@ -50,7 +50,8 @@ let bookmarksObserver = {
   onEndUpdateBatch: function() {
     this._endUpdateBatch = true;
   },
-  onItemAdded: function(id, folder, index, itemType, uri) {
+  onItemAdded: function(id, folder, index, itemType, uri, title, dateAdded,
+                        guid) {
     this._itemAddedId = id;
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
@@ -66,6 +67,7 @@ let bookmarksObserver = {
     do_check_true(stmt.executeStep());
     do_check_false(stmt.getIsNull(0));
     do_check_valid_places_guid(stmt.row.guid);
+    do_check_eq(stmt.row.guid, guid);
     stmt.finalize();
   },
   onBeforeItemRemoved: function(){},

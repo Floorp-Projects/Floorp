@@ -108,7 +108,7 @@ append_remove_instructions() {
                 fixedprefix=""
               else
                 f=$(echo $f | sed -e 's:^\.\.\/::')
-                fixedprefix=$(echo "$prefix" | sed -e 's:^[^\/]*\/::')
+                fixedprefix=$(echo "$prefix" | sed -e 's:[^\/]*\/$::')
               fi
             fi
           fi
