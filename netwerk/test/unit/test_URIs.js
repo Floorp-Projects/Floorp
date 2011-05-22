@@ -207,13 +207,7 @@ function do_test_uri_basic(aTest) {
   do_check_property(aTest, URI, "scheme");
   do_check_property(aTest, URI, "prePath");
   do_check_property(aTest, URI, "path");
-
-  // XXXdholbert Only URLs (not URIs) support 'ref', until bug 308590's fix
-  // lands, so the following only checks 'ref' on URLs.
-  if (aTest.nsIURL) {
-    var URL = URI.QueryInterface(Ci.nsIURL);
-    do_check_property(aTest, URL, "ref");
-  }
+  do_check_property(aTest, URI, "ref");
 }
 
 // Test that a given URI parses correctly when we add a given ref to the end
@@ -234,33 +228,27 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
 
   do_check_false(origURI.equals(testURI));
 
+  do_info("testing " + aTest.spec +
+          " is equalExceptRef to self with '" + aSuffix + "' appended");
+  do_check_uri_eqExceptRef(origURI, testURI);
+
+  do_info("testing cloneIgnoringRef on " + testURI.spec +
+          " is equal to no-ref version but not equal to ref version");
+  var cloneNoRef = testURI.cloneIgnoringRef();
+  if (aTest.spec == "http://" && aSuffix == "#") {
+    do_info("TODO: bug 657033");
+    do_check_uri_eq(cloneNoRef, origURI, todo_check_true);
+  } else {
+    do_check_uri_eq(cloneNoRef, origURI);
+  }
+  do_check_false(cloneNoRef.equals(testURI));
+
   do_check_property(aTest, testURI, "scheme");
   do_check_property(aTest, testURI, "prePath");
   do_check_property(aTest, testURI, "path",
                     function(aStr) { return aStr + aSuffix; });
-
-  // XXXdholbert Only URLs (not URIs) support 'ref', until bug 308590's fix
-  // lands, so the following only checks 'ref' on URLs.
-  if (aTest.nsIURL) {
-    var URL = testURI.QueryInterface(Ci.nsIURL);
-    do_check_property(aTest, URL, "ref",
-                      function(aStr) { return aSuffix.substr(1); });
-
-    do_info("testing " + aTest.spec +
-          " is equalExceptRef to self with '" + aSuffix + "' appended");
-    do_check_uri_eqExceptRef(origURI, testURI);
-
-    do_info("testing cloneIgnoringRef on " + testURI.spec +
-            " is equal to no-ref version but not equal to ref version");
-    var cloneNoRef = testURI.cloneIgnoringRef();
-    if (aTest.spec == "http://" && aSuffix == "#") {
-      do_info("TODO: bug 657033");
-      do_check_uri_eq(cloneNoRef, origURI, todo_check_true);
-    } else {
-      do_check_uri_eq(cloneNoRef, origURI);
-    }
-    do_check_false(cloneNoRef.equals(testURI));
-  }
+  do_check_property(aTest, testURI, "ref",
+                    function(aStr) { return aSuffix.substr(1); });
 }
 
 // Tests various ways of setting & clearing a ref on a URI.
@@ -268,16 +256,10 @@ function do_test_mutate_ref(aTest, aSuffix) {
   do_info("making sure caller is using suffix that starts with '#'");
   do_check_eq(aSuffix[0], "#");
 
-  // XXXdholbert Only URLs (not URIs) support 'ref', until bug 308590's fix
-  // lands, so this function only works with URLs right now.
-  if (!aTest.nsIURL) {
-    return;
-  }
+  var refURIWithSuffix    = NetUtil.newURI(aTest.spec + aSuffix);
+  var refURIWithoutSuffix = NetUtil.newURI(aTest.spec);
 
-  var refURIWithSuffix    = NetUtil.newURI(aTest.spec + aSuffix).QueryInterface(Ci.nsIURL);
-  var refURIWithoutSuffix = NetUtil.newURI(aTest.spec).QueryInterface(Ci.nsIURL);
-
-  var testURI             = NetUtil.newURI(aTest.spec).QueryInterface(Ci.nsIURL);
+  var testURI             = NetUtil.newURI(aTest.spec);
 
   if (aTest.spec == "file://") {
     do_info("TODO: bug 656853");
@@ -329,7 +311,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
   if (!(testURI instanceof Ci.nsIJARURI)) {
     // Now try setting .path directly (including suffix) and then clearing .ref
     // (same as above, but with now with .path instead of .spec)
-    testURI = NetUtil.newURI(aTest.spec).QueryInterface(Ci.nsIURL);
+    testURI = NetUtil.newURI(aTest.spec);
 
     var pathWithSuffix = aTest.path + aSuffix;
     do_info("testing that setting path to " +
