@@ -625,13 +625,13 @@ nsresult nsPluginHost::GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPr
   return rv;
 }
 
-NS_IMETHODIMP nsPluginHost::GetURL(nsISupports* pluginInst,
-                                   const char* url,
-                                   const char* target,
-                                   nsIPluginStreamListener* streamListener,
-                                   const char* altHost,
-                                   const char* referrer,
-                                   PRBool forceJSEnabled)
+nsresult nsPluginHost::GetURL(nsISupports* pluginInst,
+                              const char* url,
+                              const char* target,
+                              nsIPluginStreamListener* streamListener,
+                              const char* altHost,
+                              const char* referrer,
+                              PRBool forceJSEnabled)
 {
   return GetURLWithHeaders(static_cast<nsNPAPIPluginInstance*>(pluginInst),
                            url, target, streamListener, altHost, referrer,
@@ -681,7 +681,7 @@ nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
   return rv;
 }
 
-NS_IMETHODIMP nsPluginHost::PostURL(nsISupports* pluginInst,
+nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
                                     const char* url,
                                     PRUint32 postDataLen,
                                     const char* postData,
@@ -785,7 +785,7 @@ NS_IMETHODIMP nsPluginHost::PostURL(nsISupports* pluginInst,
  * with the exception that multiple values are not implemented.
  */
 
-NS_IMETHODIMP nsPluginHost::FindProxyForURL(const char* url, char* *result)
+nsresult nsPluginHost::FindProxyForURL(const char* url, char* *result)
 {
   if (!url || !result) {
     return NS_ERROR_INVALID_ARG;
@@ -849,12 +849,12 @@ NS_IMETHODIMP nsPluginHost::FindProxyForURL(const char* url, char* *result)
   return res;
 }
 
-NS_IMETHODIMP nsPluginHost::Init()
+nsresult nsPluginHost::Init()
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginHost::Destroy()
+nsresult nsPluginHost::Destroy()
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::Destroy Called\n"));
 
@@ -933,9 +933,9 @@ nsPluginHost::GetPluginTempDir(nsIFile **aDir)
   return sPluginTempDir->Clone(aDir);
 }
 
-NS_IMETHODIMP nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
-                                                        nsIPluginInstanceOwner* aOwner,
-                                                        nsIStreamListener** aListener)
+nsresult nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
+                                                   nsIPluginInstanceOwner* aOwner,
+                                                   nsIStreamListener** aListener)
 {
   NS_PRECONDITION(aChannel && aOwner,
                   "Invalid arguments to InstantiatePluginForChannel");
@@ -1064,11 +1064,12 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
     ("nsPluginHost::InstantiateEmbeddedPlugin FoundStopped mime=%s\n", aMimeType));
 
-    nsCOMPtr<nsIPluginInstance> instanceCOMPtr;
-    aOwner->GetInstance(getter_AddRefs(instanceCOMPtr));
-    nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get());
-    if (!isJava && bCanHandleInternally)
-      rv = NewEmbeddedPluginStream(aURL, aOwner, instance);
+    if (!isJava && bCanHandleInternally) {
+      nsNPAPIPluginInstance* instance;
+      aOwner->GetInstance(&instance);
+      NewEmbeddedPluginStream(aURL, aOwner, instance);
+      NS_IF_RELEASE(instance);
+    }
 
     return NS_OK;
   }
@@ -1083,15 +1084,12 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPluginInstance> instanceCOMPtr;
-  rv = aOwner->GetInstance(getter_AddRefs(instanceCOMPtr));
+  nsRefPtr<nsNPAPIPluginInstance> instance;
+  rv = aOwner->GetInstance(getter_AddRefs(instance));
   // if we have a failure error, it means we found a plugin for the mimetype,
   // but we had a problem with the entry point
   if (rv == NS_ERROR_FAILURE)
     return rv;
-
-  // if we are here then we have loaded a plugin for this mimetype
-  nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get());
 
   if (instance) {
     instance->Start();
@@ -1113,7 +1111,7 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
     }
 
     if (havedata && !isJava && bCanHandleInternally)
-      rv = NewEmbeddedPluginStream(aURL, aOwner, instance);
+      rv = NewEmbeddedPluginStream(aURL, aOwner, instance.get());
   }
 
 #ifdef PLUGIN_LOGGING
@@ -1150,9 +1148,9 @@ nsresult nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
 
     nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
     if (!pluginTag || !pluginTag->mIsJavaPlugin) {
-      nsCOMPtr<nsIPluginInstance> instanceCOMPtr;
-      aOwner->GetInstance(getter_AddRefs(instanceCOMPtr));
-      NewFullPagePluginStream(aURI, static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get()), aStreamListener);
+      nsRefPtr<nsNPAPIPluginInstance> instance;
+      aOwner->GetInstance(getter_AddRefs(instance));
+      NewFullPagePluginStream(aURI, instance.get(), aStreamListener);
     }
     return NS_OK;
   }
@@ -1160,9 +1158,8 @@ nsresult nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
   nsresult rv = SetUpPluginInstance(aMimeType, aURI, aOwner);
 
   if (NS_OK == rv) {
-    nsCOMPtr<nsIPluginInstance> instanceCOMPtr;
-    aOwner->GetInstance(getter_AddRefs(instanceCOMPtr));
-    nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get());
+    nsRefPtr<nsNPAPIPluginInstance> instance;
+    aOwner->GetInstance(getter_AddRefs(instance));
 
     NPWindow* win = nsnull;
     aOwner->GetWindow(win);
@@ -1174,7 +1171,7 @@ nsresult nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
       // If we've got a native window, the let the plugin know about it.
       aOwner->SetWindow();
 
-      rv = NewFullPagePluginStream(aURI, instance, aStreamListener);
+      rv = NewFullPagePluginStream(aURI, instance.get(), aStreamListener);
 
       // If we've got a native window, the let the plugin know about it.
       aOwner->SetWindow();
@@ -1239,9 +1236,9 @@ nsresult nsPluginHost::FindStoppedPluginForURL(nsIURI* aURL,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginHost::SetUpPluginInstance(const char *aMimeType,
-                                                nsIURI *aURL,
-                                                nsIPluginInstanceOwner *aOwner)
+nsresult nsPluginHost::SetUpPluginInstance(const char *aMimeType,
+                                           nsIURI *aURL,
+                                           nsIPluginInstanceOwner *aOwner)
 {
   NS_ENSURE_ARG_POINTER(aOwner);
 
@@ -1325,7 +1322,8 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   nsRefPtr<nsNPAPIPlugin> plugin;
   GetPlugin(mimetype, getter_AddRefs(plugin));
 
-  nsCOMPtr<nsIPluginInstance> instance;
+  nsRefPtr<nsNPAPIPluginInstance> instance;
+
   if (plugin) {
 #if defined(XP_WIN)
     static BOOL firstJavaPlugin = FALSE;
@@ -1361,7 +1359,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
     return rv;
 
   // it is adreffed here
-  aOwner->SetInstance(instance);
+  aOwner->SetInstance(instance.get());
 
   // this should not addref the instance or owner
   // except in some cases not Java, see bug 140931
@@ -1372,7 +1370,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
     return rv;
   }
 
-  mInstances.AppendElement(static_cast<nsNPAPIPluginInstance*>(instance.get()));
+  mInstances.AppendElement(instance.get());
 
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec2;
@@ -1389,7 +1387,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
 {
   nsPluginTag *plugin = FindPluginForType(aMimeType, PR_TRUE);
@@ -1437,7 +1435,7 @@ static int CompareExtensions(const char *aExtensionList, const char *aExtension)
   return PL_strcasecmp(pExt, aExtension);
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::IsPluginEnabledForExtension(const char* aExtension,
                                           const char* &aMimeType)
 {
@@ -1567,7 +1565,7 @@ private:
 
 NS_IMPL_ISUPPORTS1(DOMPluginImpl, nsIDOMPlugin)
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::GetPluginCount(PRUint32* aPluginCount)
 {
   LoadPlugins();
@@ -1587,7 +1585,7 @@ nsPluginHost::GetPluginCount(PRUint32* aPluginCount)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray)
 {
   LoadPlugins();
@@ -2343,7 +2341,7 @@ nsresult nsPluginHost::ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
     return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginHost::LoadPlugins()
+nsresult nsPluginHost::LoadPlugins()
 {
   // do not do anything if it is already done
   // use ReloadPlugins() to enforce loading
@@ -3293,8 +3291,8 @@ nsPluginHost::AddHeadersToChannel(const char *aHeadersData,
   return rv;
 }
 
-NS_IMETHODIMP
-nsPluginHost::StopPluginInstance(nsIPluginInstance* aInstance)
+nsresult
+nsPluginHost::StopPluginInstance(nsNPAPIPluginInstance* aInstance)
 {
   if (PluginDestructionGuard::DelayDestroy(aInstance)) {
     return NS_OK;
@@ -3303,7 +3301,7 @@ nsPluginHost::StopPluginInstance(nsIPluginInstance* aInstance)
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHost::StopPluginInstance called instance=%p\n",aInstance));
 
-  nsNPAPIPluginInstance* instance = static_cast<nsNPAPIPluginInstance*>(aInstance);
+  nsNPAPIPluginInstance* instance = aInstance;
   if (instance->HasStartedDestroying())
     return NS_OK;
 
@@ -3444,8 +3442,8 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInstance)
+nsresult
+nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsNPAPIPluginInstance *aInstance)
 {
   // the |aLibrary| parameter is not needed anymore, after we added |aInstance| which
   // can also be used to look up the plugin name, but we cannot get rid of it because
@@ -3501,9 +3499,7 @@ nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInstance)
   if (NS_FAILED(rv))
     return rv;
 
-  nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(aInstance);
-
-  nsNPAPIPlugin *plugin = instance->GetPlugin();
+  nsNPAPIPlugin *plugin = aInstance->GetPlugin();
   if (!plugin)
     return NS_ERROR_FAILURE;
 
@@ -3539,7 +3535,7 @@ nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInstance)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPostDataLen,
                                           char **outPostData, PRUint32 *outPostDataLen)
 {
@@ -3691,7 +3687,7 @@ nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPos
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile)
 {
   nsresult rv;
@@ -3792,19 +3788,19 @@ nsPluginHost::CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow)
 {
   return PLUG_NewPluginNativeWindow(aPluginNativeWindow);
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow)
 {
   return PLUG_DeletePluginNativeWindow(aPluginNativeWindow);
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner)
 {
   // Pass PR_FALSE as the second arg, we want the answer to be the
@@ -3821,8 +3817,8 @@ nsPluginHost::InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner)
   nsresult rv = SetUpPluginInstance("application/x-java-vm", nsnull, aOwner);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPluginInstance> instance;
-  aOwner->GetInstance(*getter_AddRefs(instance));
+  nsRefPtr<nsNPAPIPluginInstance> instance;
+  aOwner->GetInstance(getter_AddRefs(instance));
   if (!instance)
     return NS_OK;
 
@@ -3831,8 +3827,8 @@ nsPluginHost::InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPluginHost::GetPluginName(nsIPluginInstance *aPluginInstance,
+nsresult
+nsPluginHost::GetPluginName(nsNPAPIPluginInstance *aPluginInstance,
                             const char** aPluginName)
 {
   nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(aPluginInstance);
@@ -3848,15 +3844,14 @@ nsPluginHost::GetPluginName(nsIPluginInstance *aPluginInstance,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPluginHost::GetPluginTagForInstance(nsIPluginInstance *aPluginInstance,
+nsresult
+nsPluginHost::GetPluginTagForInstance(nsNPAPIPluginInstance *aPluginInstance,
                                       nsIPluginTag **aPluginTag)
 {
   NS_ENSURE_ARG_POINTER(aPluginInstance);
   NS_ENSURE_ARG_POINTER(aPluginTag);
 
-  nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(aPluginInstance);
-  nsNPAPIPlugin *plugin = instance->GetPlugin();
+  nsNPAPIPlugin *plugin = aPluginInstance->GetPlugin();
   if (!plugin)
     return NS_ERROR_FAILURE;
 
@@ -4160,7 +4155,7 @@ class nsPluginDestroyRunnable : public nsRunnable,
                                 public PRCList
 {
 public:
-  nsPluginDestroyRunnable(nsIPluginInstance *aInstance)
+  nsPluginDestroyRunnable(nsNPAPIPluginInstance *aInstance)
     : mInstance(aInstance)
   {
     PR_INIT_CLIST(this);
@@ -4174,7 +4169,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    nsCOMPtr<nsIPluginInstance> instance;
+    nsRefPtr<nsNPAPIPluginInstance> instance;
 
     // Null out mInstance to make sure this code in another runnable
     // will do the right thing even if someone was holding on to this
@@ -4213,7 +4208,7 @@ public:
   }
 
 protected:
-  nsCOMPtr<nsIPluginInstance> mInstance;
+  nsRefPtr<nsNPAPIPluginInstance> mInstance;
 
   static PRCList sRunnableListHead;
 };
@@ -4243,7 +4238,7 @@ PluginDestructionGuard::~PluginDestructionGuard()
 
 // static
 PRBool
-PluginDestructionGuard::DelayDestroy(nsIPluginInstance *aInstance)
+PluginDestructionGuard::DelayDestroy(nsNPAPIPluginInstance *aInstance)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread");
   NS_ASSERTION(aInstance, "Uh, I need an instance!");

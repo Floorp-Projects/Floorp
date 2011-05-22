@@ -121,7 +121,7 @@ endif
 ifdef WRAP_SYSTEM_INCLUDES
 export::
 	if test ! -d system_wrappers; then mkdir system_wrappers; fi
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
 		-DBUILD_STATIC_LIBS=$(BUILD_STATIC_LIBS) \
 		-DMOZ_TREE_CAIRO=$(MOZ_TREE_CAIRO) \
 		-DMOZ_TREE_PIXMAN=$(MOZ_TREE_PIXMAN) \

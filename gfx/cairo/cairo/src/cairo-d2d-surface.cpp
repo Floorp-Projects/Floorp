@@ -3161,6 +3161,7 @@ _cairo_d2d_mask(void			*surface,
     cairo_rectangle_int_t extents;
 
     cairo_clip_t *actual_clip = clip;
+    cairo_clip_t temporary_clip;
 
     cairo_int_status_t status;
 
@@ -3207,10 +3208,21 @@ _cairo_d2d_mask(void			*surface,
 	    box.p2.y = MIN(box.p2.y, boxes->p2.y);
 
 	    if (clip->path != d2dsurf->clip.path) {
-		// Only reset the clip if we don't have the right clip set. Otherwise
-		// just leave the clip as it is. If we have the right clip set we
-		// should not do a needless pop of the clip.
-		actual_clip = NULL;
+		// If we have a clip set, but it's not the right one. We want to
+		// pop as much as we need to, to be sure the area affected by
+		// the operation is not clipped. To do this we set the clip path
+		// to the common ancestor of the currently set clip path and the
+		// clip path for this operation. This will cause
+		// _cairo_d2d_set_clip to pop to that common ancestor, but not
+		// needlessly push the additional clips we're trying to avoid.
+		temporary_clip.path = find_common_ancestor(clip->path, d2dsurf->clip.path);
+
+		// We're not going to be using this down the line so it doesn't
+		// really matter what the value is. If all -was- clipped this
+		// call shouldn't even have reached the surface backend.
+		temporary_clip.all_clipped = FALSE;
+
+		actual_clip = &temporary_clip;
 	    }
 	}
 

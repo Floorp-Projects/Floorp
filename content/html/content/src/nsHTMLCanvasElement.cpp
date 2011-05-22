@@ -103,7 +103,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLCanvasElement)
 nsIntSize
 nsHTMLCanvasElement::GetWidthHeight()
 {
-  nsIntSize size(0,0);
+  nsIntSize size(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
   const nsAttrValue* value;
 
   if ((value = GetParsedAttr(nsGkAtoms::width)) &&
@@ -117,11 +117,6 @@ nsHTMLCanvasElement::GetWidthHeight()
   {
       size.height = value->GetIntegerValue();
   }
-
-  if (size.width <= 0)
-    size.width = DEFAULT_CANVAS_WIDTH;
-  if (size.height <= 0)
-    size.height = DEFAULT_CANVAS_HEIGHT;
 
   return size;
 }
@@ -333,6 +328,12 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
 {
   bool fallbackToPNG = false;
 
+  nsIntSize size = GetWidthHeight();
+  if (size.height == 0 || size.width == 0) {
+    aDataURL = NS_LITERAL_STRING("data:,");
+    return NS_OK;
+  }
+
   nsAutoString type;
   nsContentUtils::ASCIIToLower(aMimeType, type);
 
@@ -473,12 +474,6 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return NS_ERROR_FAILURE;
     }
 
-    rv = mCurrentContext->SetCanvasElement(this);
-    if (NS_FAILED(rv)) {
-      mCurrentContext = nsnull;
-      return rv;
-    }
-
     nsCOMPtr<nsIPropertyBag> contextProps;
     if (!JSVAL_IS_NULL(aContextOptions) &&
         !JSVAL_IS_VOID(aContextOptions))
@@ -596,19 +591,25 @@ nsHTMLCanvasElement::UpdateContext(nsIPropertyBag *aNewContextOptions)
     return NS_OK;
 
   nsresult rv = NS_OK;
+  nsIntSize sz = GetWidthHeight();
 
   rv = mCurrentContext->SetIsOpaque(GetIsOpaque());
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nsnull;
     return rv;
+  }
 
   rv = mCurrentContext->SetContextOptions(aNewContextOptions);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nsnull;
     return rv;
+  }
 
-  nsIntSize sz = GetWidthHeight();
   rv = mCurrentContext->SetDimensions(sz.width, sz.height);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nsnull;
     return rv;
+  }
 
   return rv;
 }
@@ -652,18 +653,20 @@ nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
   nsRect contentArea = frame->GetContentRect();
   if (damageRect) {
     nsIntSize size = GetWidthHeight();
+    if (size.width != 0 && size.height != 0) {
 
-    // damageRect and size are in CSS pixels; contentArea is in appunits
-    // We want a rect in appunits; so avoid doing pixels-to-appunits and
-    // vice versa conversion here.
-    gfxRect realRect(*damageRect);
-    realRect.Scale(contentArea.width / gfxFloat(size.width),
-                   contentArea.height / gfxFloat(size.height));
-    realRect.RoundOut();
+      // damageRect and size are in CSS pixels; contentArea is in appunits
+      // We want a rect in appunits; so avoid doing pixels-to-appunits and
+      // vice versa conversion here.
+      gfxRect realRect(*damageRect);
+      realRect.Scale(contentArea.width / gfxFloat(size.width),
+                     contentArea.height / gfxFloat(size.height));
+      realRect.RoundOut();
 
-    // then make it a nsRect
-    invalRect = nsRect(realRect.X(), realRect.Y(),
-                       realRect.Width(), realRect.Height());
+      // then make it a nsRect
+      invalRect = nsRect(realRect.X(), realRect.Y(),
+                         realRect.Width(), realRect.Height());
+    }
   } else {
     invalRect = nsRect(nsPoint(0, 0), contentArea.Size());
   }

@@ -868,7 +868,7 @@ nsresult nsXMLHttpRequest::GetResponseArrayBuffer(jsval *aResult)
 }
 
 /* attribute AString responseType; */
-NS_IMETHODIMP nsXMLHttpRequest::GetMozResponseType(nsAString& aResponseType)
+NS_IMETHODIMP nsXMLHttpRequest::GetResponseType(nsAString& aResponseType)
 {
   switch (mResponseType) {
   case XML_HTTP_RESPONSE_TYPE_DEFAULT:
@@ -894,7 +894,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetMozResponseType(nsAString& aResponseType)
 }
 
 /* attribute AString responseType; */
-NS_IMETHODIMP nsXMLHttpRequest::SetMozResponseType(const nsAString& aResponseType)
+NS_IMETHODIMP nsXMLHttpRequest::SetResponseType(const nsAString& aResponseType)
 {
   // If the state is not OPENED or HEADERS_RECEIVED raise an
   // INVALID_STATE_ERR exception and terminate these steps.
@@ -933,7 +933,7 @@ NS_IMETHODIMP nsXMLHttpRequest::SetMozResponseType(const nsAString& aResponseTyp
 }
 
 /* readonly attribute jsval response; */
-NS_IMETHODIMP nsXMLHttpRequest::GetMozResponse(JSContext *aCx, jsval *aResult)
+NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
 {
   nsresult rv = NS_OK;
 

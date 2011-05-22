@@ -616,14 +616,13 @@ NS_NewStreamLoader(nsIStreamLoader        **result,
 
 inline nsresult
 NS_NewUnicharStreamLoader(nsIUnicharStreamLoader        **result,
-                          nsIUnicharStreamLoaderObserver *observer,
-                          PRUint32                        segmentSize = nsIUnicharStreamLoader::DEFAULT_SEGMENT_SIZE)
+                          nsIUnicharStreamLoaderObserver *observer)
 {
     nsresult rv;
     nsCOMPtr<nsIUnicharStreamLoader> loader =
         do_CreateInstance(NS_UNICHARSTREAMLOADER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = loader->Init(observer, segmentSize);
+        rv = loader->Init(observer);
         if (NS_SUCCEEDED(rv)) {
             *result = nsnull;
             loader.swap(*result);

@@ -125,7 +125,7 @@ public:
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
-  NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
+  NS_METHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance);
   virtual nsresult Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener);
   virtual nsresult Instantiate(const char* aMimeType, nsIURI* aURI);
   virtual void TryNotifyContentObjectWrapper();
@@ -274,10 +274,6 @@ protected:
   void ComputeWidgetGeometry(const nsRegion& aRegion,
                              const nsPoint& aPluginOrigin,
                              nsTArray<nsIWidget::Configuration>* aConfigurations);
-
-  nsresult SetAbsoluteScreenPosition(nsIDOMElement* element,
-                                     nsIDOMClientRect* position,
-                                     nsIDOMClientRect* clip);
 
   void NotifyPluginReflowObservers();
 

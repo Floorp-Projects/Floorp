@@ -213,8 +213,8 @@ nsOuterDocAccessible::RemoveChild(nsAccessible *aAccessible)
     return PR_FALSE;
   }
 
-  NS_LOG_ACCDOCDESTROY("remove document from outerdoc",
-                       child->GetDocumentNode())
+  NS_LOG_ACCDOCDESTROY_FOR("remove document from outerdoc",
+                           child->GetDocumentNode(), child)
   NS_LOG_ACCDOCDESTROY_ACCADDRESS("outerdoc", this)
 
   PRBool wasRemoved = nsAccessible::RemoveChild(child);

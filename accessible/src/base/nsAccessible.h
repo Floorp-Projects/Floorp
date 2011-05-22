@@ -376,6 +376,9 @@ public:
 
   inline bool IsApplication() const { return mFlags & eApplicationAccessible; }
 
+  inline bool IsDoc() const { return mFlags & eDocAccessible; }
+  nsDocAccessible* AsDoc();
+
   inline bool IsHyperText() const { return mFlags & eHyperTextAccessible; }
   nsHyperTextAccessible* AsHyperText();
 
@@ -529,10 +532,11 @@ protected:
    */
   enum AccessibleTypes {
     eApplicationAccessible = 1 << 2,
-    eHyperTextAccessible = 1 << 3,
-    eHTMLListItemAccessible = 1 << 4,
-    eRootAccessible = 1 << 5,
-    eTextLeafAccessible = 1 << 6
+    eDocAccessible = 1 << 3,
+    eHyperTextAccessible = 1 << 4,
+    eHTMLListItemAccessible = 1 << 5,
+    eRootAccessible = 1 << 6,
+    eTextLeafAccessible = 1 << 7
   };
 
   //////////////////////////////////////////////////////////////////////////////

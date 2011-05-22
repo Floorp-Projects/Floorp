@@ -132,6 +132,13 @@ interface nsIWebGLUniformLocation : nsISupports
     [noscript] attribute WebGLint location;
 };
 
+/* Base class for all WebGL extensions, and for those without
+ * any additional tokens/methods.
+ */
+[scriptable, uuid(70814f32-a5c5-4b95-83d5-ac653bac3316)]
+interface nsIWebGLExtension : nsISupports
+{
+};
 
 [scriptable, uuid(44119fc2-b5f0-4acc-b836-5d28cc43e8fb)]
 interface nsIDOMWebGLRenderingContext : nsISupports
@@ -362,9 +369,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   const unsigned long VALIDATE_STATUS                  = 0x8B83;
   const unsigned long ATTACHED_SHADERS                 = 0x8B85;
   const unsigned long ACTIVE_UNIFORMS                  = 0x8B86;
-  const unsigned long ACTIVE_UNIFORM_MAX_LENGTH        = 0x8B87;
   const unsigned long ACTIVE_ATTRIBUTES                = 0x8B89;
-  const unsigned long ACTIVE_ATTRIBUTE_MAX_LENGTH      = 0x8B8A;
   const unsigned long SHADING_LANGUAGE_VERSION         = 0x8B8C;
   const unsigned long CURRENT_PROGRAM                  = 0x8B8D;
 
@@ -494,8 +499,6 @@ interface nsIDOMWebGLRenderingContext : nsISupports
 
   /* Shader Source */
   const unsigned long COMPILE_STATUS                 = 0x8B81;
-  const unsigned long INFO_LOG_LENGTH                = 0x8B84;
-  const unsigned long SHADER_SOURCE_LENGTH           = 0x8B88;
   const unsigned long SHADER_COMPILER                = 0x8DFA;
 
   /* Shader Precision-Specified Types */
@@ -836,7 +839,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname);
 
   // extensions
-  nsISupports getExtension(in DOMString name);
+  nsIWebGLExtension getExtension(in DOMString name);
 
   nsIVariant getSupportedExtensions();
   WebGLboolean isContextLost();

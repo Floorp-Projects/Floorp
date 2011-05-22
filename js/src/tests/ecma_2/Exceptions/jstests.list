@@ -47,17 +47,17 @@ script lexical-007.js
 script lexical-008.js
 script lexical-009.js
 skip script lexical-010.js # obsolete test
-fails-if(Android) script lexical-011.js
+script lexical-011.js
 script lexical-012.js
 script lexical-013.js
-fails-if(Android) script lexical-014.js
+script lexical-014.js
 script lexical-015.js
-fails-if(Android) script lexical-016.js
+script lexical-016.js
 script lexical-017.js
 script lexical-018.js
 script lexical-019.js
 script lexical-020.js
-fails-if(Android) script lexical-021.js
+script lexical-021.js
 skip script lexical-022.js # obsolete test
 script lexical-023.js
 script lexical-024.js

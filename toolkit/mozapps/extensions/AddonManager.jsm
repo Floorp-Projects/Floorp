@@ -42,9 +42,12 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
-const PREF_EM_UPDATE_ENABLED   = "extensions.update.enabled";
-const PREF_EM_LAST_APP_VERSION = "extensions.lastAppVersion";
-const PREF_EM_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
+const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
+const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
+const PREF_EM_LAST_PLATFORM_VERSION   = "extensions.lastPlatformVersion";
+const PREF_EM_AUTOUPDATE_DEFAULT      = "extensions.update.autoUpdateDefault";
+
+const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -210,6 +213,54 @@ AddonScreenshot.prototype = {
   }
 }
 
+/**
+ * A type of add-on, used by the UI to determine how to display different types
+ * of add-ons.
+ *
+ * @param  aId
+ *         The add-on type ID
+ * @param  aLocaleURI
+ *         The URI of a localized properties file to get the displayable name
+ *         for the type from
+ * @param  aLocaleKey
+ *         The key for the string in the properties file or the actual display
+ *         name if aLocaleURI is null. Include %ID% to include the type ID in
+ *         the key
+ * @param  aViewType
+ *         The optional type of view to use in the UI
+ * @param  aUIPriority
+ *         The priority is used by the UI to list the types in order. Lower
+ *         values push the type higher in the list.
+ * @param  aFlags
+ *         An option set of flags that customize the display of the add-on in
+ *         the UI.
+ */
+function AddonType(aId, aLocaleURI, aLocaleKey, aViewType, aUIPriority, aFlags) {
+  if (!aId)
+    throw new Error("An AddonType must have an ID");
+  if (aViewType && aUIPriority === undefined)
+    throw new Error("An AddonType with a defined view must have a set UI priority");
+  if (!aLocaleKey)
+    throw new Error("An AddonType must have a displayable name");
+
+  this.id = aId;
+  this.uiPriority = aUIPriority;
+  this.viewType = aViewType;
+  this.flags = aFlags;
+
+  if (aLocaleURI) {
+    this.__defineGetter__("name", function() {
+      delete this.name;
+      let bundle = Services.strings.createBundle(aLocaleURI);
+      this.name = bundle.GetStringFromName(aLocaleKey.replace("%ID%", aId));
+      return this.name;
+    });
+  }
+  else {
+    this.name = aLocaleKey;
+  }
+}
+
 var gStarted = false;
 
 /**
@@ -219,7 +270,56 @@ var gStarted = false;
 var AddonManagerInternal = {
   installListeners: [],
   addonListeners: [],
+  typeListeners: [],
   providers: [],
+  types: {},
+
+  // A read-only wrapper around the types dictionary
+  typesProxy: Proxy.create({
+    getOwnPropertyDescriptor: function(aName) {
+      if (!(aName in AddonManagerInternal.types))
+        return undefined;
+
+      return {
+        value: AddonManagerInternal.types[aName].type,
+        writable: false,
+        configurable: false,
+        enumerable: true
+      }
+    },
+
+    getPropertyDescriptor: function(aName) {
+      return this.getOwnPropertyDescriptor(aName);
+    },
+
+    getOwnPropertyNames: function() {
+      return Object.keys(AddonManagerInternal.types);
+    },
+
+    getPropertyNames: function() {
+      return this.getOwnPropertyNames();
+    },
+
+    delete: function(aName) {
+      // Not allowed to delete properties
+      return false;
+    },
+
+    defineProperty: function(aName, aProperty) {
+      // Ignore attempts to define properties
+    },
+
+    fix: function() {
+      return undefined;
+    },
+
+    // Despite MDC's claims to the contrary, it is required that this trap
+    // be defined
+    enumerate: function() {
+      // All properties are enumerable
+      return this.getPropertyNames();
+    }
+  }),
 
   /**
    * Initializes the AddonManager, loading any known providers and initializing
@@ -231,9 +331,16 @@ var AddonManagerInternal = {
 
     let appChanged = undefined;
 
+    let oldAppVersion = null;
     try {
-      appChanged = Services.appinfo.version !=
-                   Services.prefs.getCharPref(PREF_EM_LAST_APP_VERSION);
+      oldAppVersion = Services.prefs.getCharPref(PREF_EM_LAST_APP_VERSION);
+      appChanged = Services.appinfo.version != oldAppVersion;
+    }
+    catch (e) { }
+
+    let oldPlatformVersion = null;
+    try {
+      oldPlatformVersion = Services.prefs.getCharPref(PREF_EM_LAST_PLATFORM_VERSION);
     }
     catch (e) { }
 
@@ -241,6 +348,8 @@ var AddonManagerInternal = {
       LOG("Application has been upgraded");
       Services.prefs.setCharPref(PREF_EM_LAST_APP_VERSION,
                                  Services.appinfo.version);
+      Services.prefs.setCharPref(PREF_EM_LAST_PLATFORM_VERSION,
+                                 Services.appinfo.platformVersion);
       Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION,
                                 (appChanged === undefined ? 0 : -1));
     }
@@ -273,7 +382,8 @@ var AddonManagerInternal = {
     }
 
     this.providers.forEach(function(provider) {
-      callProvider(provider, "startup", null, appChanged);
+      callProvider(provider, "startup", null, appChanged, oldAppVersion,
+                   oldPlatformVersion);
     });
     gStarted = true;
   },
@@ -283,9 +393,36 @@ var AddonManagerInternal = {
    *
    * @param  aProvider
    *         The provider to register
+   * @param  aTypes
+   *         An array of add-on types
    */
-  registerProvider: function AMI_registerProvider(aProvider) {
+  registerProvider: function AMI_registerProvider(aProvider, aTypes) {
     this.providers.push(aProvider);
+
+    if (aTypes) {
+      aTypes.forEach(function(aType) {
+        if (!(aType.id in this.types)) {
+          if (!VALID_TYPES_REGEXP.test(aType.id)) {
+            WARN("Ignoring invalid type " + aType.id);
+            return;
+          }
+
+          this.types[aType.id] = {
+            type: aType,
+            providers: [aProvider]
+          };
+
+          this.typeListeners.forEach(function(aListener) {
+            safeCall(function() {
+              aListener.onTypeAdded(aType);
+            });
+          });
+        }
+        else {
+          this.types[aType.id].providers.push(aProvider);
+        }
+      }, this);
+    }
 
     // If we're registering after startup call this provider's startup.
     if (gStarted)
@@ -307,6 +444,20 @@ var AddonManagerInternal = {
         pos++;
     }
 
+    for (let type in this.types) {
+      this.types[type].providers = this.types[type].providers.filter(function(p) p != aProvider);
+      if (this.types[type].providers.length == 0) {
+        let oldType = this.types[type].type;
+        delete this.types[type];
+
+        this.typeListeners.forEach(function(aListener) {
+          safeCall(function() {
+            aListener.onTypeRemoved(oldType);
+          });
+        });
+      }
+    }
+
     // If we're unregistering after startup call this provider's shutdown.
     if (gStarted)
       callProvider(aProvider, "shutdown");
@@ -323,6 +474,7 @@ var AddonManagerInternal = {
 
     this.installListeners.splice(0);
     this.addonListeners.splice(0);
+    this.typeListeners.splice(0);
     gStarted = false;
   },
 
@@ -858,6 +1010,25 @@ var AddonManagerInternal = {
     }
   },
 
+  addTypeListener: function AMI_addTypeListener(aListener) {
+    if (!this.typeListeners.some(function(i) { return i == aListener; }))
+      this.typeListeners.push(aListener);
+  },
+
+  removeTypeListener: function AMI_removeTypeListener(aListener) {
+    let pos = 0;
+    while (pos < this.typeListeners.length) {
+      if (this.typeListeners[pos] == aListener)
+        this.typeListeners.splice(pos, 1);
+      else
+        pos++;
+    }
+  },
+
+  get addonTypes() {
+    return this.typesProxy;
+  },
+
   get autoUpdateDefault() {
     try {
       return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
@@ -877,8 +1048,8 @@ var AddonManagerPrivate = {
     AddonManagerInternal.startup();
   },
 
-  registerProvider: function AMP_registerProvider(aProvider) {
-    AddonManagerInternal.registerProvider(aProvider);
+  registerProvider: function AMP_registerProvider(aProvider, aTypes) {
+    AddonManagerInternal.registerProvider(aProvider, aTypes);
   },
 
   unregisterProvider: function AMP_unregisterProvider(aProvider) {
@@ -912,7 +1083,9 @@ var AddonManagerPrivate = {
 
   AddonAuthor: AddonAuthor,
 
-  AddonScreenshot: AddonScreenshot
+  AddonScreenshot: AddonScreenshot,
+
+  AddonType: AddonType
 };
 
 /**
@@ -1025,6 +1198,11 @@ var AddonManager = {
   // The combination of all scopes.
   SCOPE_ALL: 15,
 
+  // 1-15 are different built-in views for the add-on type
+  VIEW_TYPE_LIST: "list",
+
+  TYPE_UI_HIDE_EMPTY: 16,
+
   // Constants for Addon.applyBackgroundUpdates.
   // Indicates that the Addon should not update automatically.
   AUTOUPDATE_DISABLE: 0,
@@ -1101,6 +1279,18 @@ var AddonManager = {
 
   removeAddonListener: function AM_removeAddonListener(aListener) {
     AddonManagerInternal.removeAddonListener(aListener);
+  },
+
+  addTypeListener: function AM_addTypeListener(aListener) {
+    AddonManagerInternal.addTypeListener(aListener);
+  },
+
+  removeTypeListener: function AM_removeTypeListener(aListener) {
+    AddonManagerInternal.removeTypeListener(aListener);
+  },
+
+  get addonTypes() {
+    return AddonManagerInternal.addonTypes;
   },
 
   get autoUpdateDefault() {

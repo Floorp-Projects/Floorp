@@ -104,7 +104,7 @@ FormAssistant.prototype = {
 
     if (this._isVisibleElement(element)) {
       this._currentIndex = aIndex;
-      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
+      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL | Ci.nsIFocusManager.FLAG_BYMOUSE);
 
       // To ensure we get the current caret positionning of the focused
       // element we need to delayed a bit the event
@@ -156,17 +156,16 @@ FormAssistant.prototype = {
     if (this._isEditable(aElement))
       aElement = this._getTopLevelEditable(aElement);
 
+    // hack bug 604351
+    // if the element is the same editable element and the VKB is closed, reopen it
+    if (aElement instanceof HTMLInputElement && aElement.mozIsTextField(false) && !Util.isKeyboardOpened) {
+      aElement.blur();
+      gFocusManager.setFocus(aElement, Ci.nsIFocusManager.FLAG_NOSCROLL | Ci.nsIFocusManager.FLAG_BYMOUSE);
+    }
+
     // Checking if the element is the current focused one while the form assistant is open
     // allow the user to reposition the caret into an input element
     if (this._open && aElement == this.currentElement) {
-      //hack bug 604351
-      // if the element is the same editable element and the VKB is closed, reopen it
-      let utils = Util.getWindowUtils(content);
-      if (utils.IMEStatus == utils.IME_STATUS_DISABLED && aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) {
-        aElement.blur();
-        aElement.focus();
-      }
-
       // If the element is a <select/> element and the user has manually click
       // it we need to inform the UI of such a change to keep in sync with the
       // new selected options once the event is finished
@@ -179,10 +178,12 @@ FormAssistant.prototype = {
       return false;
     }
 
-    // If form assistant is disabled but the element is a type of choice list
-    // we still want to show the simple select list
+    // There is some case where we still want some data to be send to the
+    // parent process even if form assistant is disabled:
+    //  - the element is a choice list
+    //  - the element has autocomplete suggestions
     this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
-    if (!this._enabled && !this._isSelectElement(aElement))
+    if (!this._enabled && !this._isSelectElement(aElement) && !this._isAutocomplete(aElement))
       return this.close();
 
     if (this._enabled) {
@@ -210,7 +211,7 @@ FormAssistant.prototype = {
 
   receiveMessage: function receiveMessage(aMessage) {
     let currentElement = this.currentElement;
-    if ((!this._enabled && !getWrapperForElement(currentElement)) || !currentElement)
+    if ((!this._enabled && !this._isAutocomplete(currentElement) && !getWrapperForElement(currentElement)) || !currentElement)
       return;
 
     let json = aMessage.json;
@@ -718,6 +719,7 @@ FormAssistant.prototype = {
   _getJSON: function() {
     let element = this.currentElement;
     let choices = getListForElement(element);
+    let editable = (element instanceof HTMLInputElement && element.mozIsTextField(false)) || this._isEditable(element);
 
     let labels = this._getLabels();
     return {
@@ -729,10 +731,11 @@ FormAssistant.prototype = {
         maxLength: element.maxLength,
         type: (element.getAttribute("type") || "").toLowerCase(),
         choices: choices,
-        isAutocomplete: this._isAutocomplete(this.currentElement),
-        list: this._getListSuggestions(this.currentElement),
+        isAutocomplete: this._isAutocomplete(element),
+        list: this._getListSuggestions(element),
         rect: this._getRect(),
-        caretRect: this._getCaretRect()
+        caretRect: this._getCaretRect(),
+        editable: editable
       },
       hasPrevious: !!this._elements[this._currentIndex - 1],
       hasNext: !!this._elements[this._currentIndex + 1]

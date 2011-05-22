@@ -70,7 +70,6 @@
 using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
-static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 
 static nsINativeKeyBindings *sNativeInputBindings = nsnull;
 static nsINativeKeyBindings *sNativeTextAreaBindings = nsnull;
@@ -218,7 +217,7 @@ public:
   NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
 
 private:
-  nsCOMPtr<nsFrameSelection> mFrameSelection;
+  nsRefPtr<nsFrameSelection> mFrameSelection;
   nsCOMPtr<nsIContent>       mLimiter;
   nsIScrollableFrame        *mScrollFrame;
   nsWeakPtr mPresShellWeak;
@@ -1090,10 +1089,7 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
   // Create selection
-  nsresult rv;
-  nsCOMPtr<nsFrameSelection> frameSel;
-  frameSel = do_CreateInstance(kFrameSelectionCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsFrameSelection> frameSel = new nsFrameSelection();
 
   // Create a SelectionController
   mSelCon = new nsTextInputSelectionImpl(frameSel, shell, rootNode);
@@ -1131,7 +1127,7 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
 
     // Set the correct direction on the newly created root node
     PRUint32 flags;
-    rv = mEditor->GetFlags(&flags);
+    nsresult rv = mEditor->GetFlags(&flags);
     NS_ENSURE_SUCCESS(rv, rv);
     if (flags & nsIPlaintextEditor::eEditorRightToLeft) {
       rootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), PR_FALSE);

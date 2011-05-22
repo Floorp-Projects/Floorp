@@ -290,7 +290,10 @@ public:
                            PRBool aIsAnnotationProperty,
                            const nsACString &aValue,
                            PRTime aNewLastModified,
-                           PRUint16 aItemType);
+                           PRUint16 aItemType,
+                           PRInt64 aParentId,
+                           const nsACString& aGUID,
+                           const nsACString& aParentGUID);
 
 public:
 

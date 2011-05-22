@@ -162,7 +162,7 @@ ifdef MOZ_SYMBOLS_EXTRA_BUILDID
 EXTRA_BUILDID := -$(MOZ_SYMBOLS_EXTRA_BUILDID)
 endif
 
-export SYMBOL_INDEX_NAME = \
+SYMBOL_INDEX_NAME = \
   $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_TARGET)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
 
 buildsymbols:
@@ -194,7 +194,7 @@ endif # MOZ_CRASHREPORTER
 
 uploadsymbols:
 ifdef MOZ_CRASHREPORTER
-	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh "$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip"
+	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_INDEX_NAME) "$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip"
 endif
 
 # defined in package-name.mk

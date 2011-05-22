@@ -1585,8 +1585,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
     }
 }
 
-/* static */
-void
+static void
 invisibleSourceDragDataGet(GtkWidget        *aWidget,
                            GdkDragContext   *aContext,
                            GtkSelectionData *aSelectionData,
@@ -1600,8 +1599,7 @@ invisibleSourceDragDataGet(GtkWidget        *aWidget,
                                aSelectionData, aInfo, aTime);
 }
 
-/* static */
-gboolean
+static gboolean
 invisibleSourceDragFailed(GtkWidget        *aWidget,
                           GdkDragContext   *aContext,
                           gint              aResult,
@@ -1620,8 +1618,7 @@ invisibleSourceDragFailed(GtkWidget        *aWidget,
     return FALSE;
 }
 
-/* static */
-void
+static void
 invisibleSourceDragEnd(GtkWidget        *aWidget,
                        GdkDragContext   *aContext,
                        gpointer          aData)
