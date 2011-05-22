@@ -83,16 +83,11 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
     nsIURI *baseURI = aDocument->GetDocBaseURI();
     rv = NS_NewURI( getter_AddRefs(handlerURI), handlerURIStr, nsnull, baseURI);
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIURL> handlerURL(do_QueryInterface(handlerURI));
-      if (handlerURL) {
-        handlerURL->GetRef(handlerRef);
-        handlerURL->SetRef(EmptyCString());
-        //We support only XML Events Basic.
-        docURI->Equals(handlerURL, &equals);
-        if (equals) {
-          handler =
-            aDocument->GetElementById(NS_ConvertUTF8toUTF16(handlerRef));
-        }
+      handlerURI->GetRef(handlerRef);
+      // We support only XML Events Basic.
+      rv = docURI->EqualsExceptRef(handlerURI, &equals);
+      if (NS_SUCCEEDED(rv) && equals) {
+        handler = aDocument->GetElementById(NS_ConvertUTF8toUTF16(handlerRef));
       }
     }
   }
