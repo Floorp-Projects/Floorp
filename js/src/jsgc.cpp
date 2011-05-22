@@ -2834,7 +2834,7 @@ TraceRuntime(JSTracer *trc)
         }
     }
 #else
-    AutoCopyFreeListToArenas copy(rt);
+    AutoCopyFreeListToArenas copy(trc->context->runtime);
     RecordNativeStackTopForGC(trc->context);
 #endif
 
