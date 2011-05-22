@@ -2222,7 +2222,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
         {
             JS_ASSERT(compartment->freeLists.isEmpty());
             if (callback)
-                (void) callback(cx, compartment, JSCOMPARTMENT_DESTROY);
+                JS_ALWAYS_TRUE(callback(cx, compartment, JSCOMPARTMENT_DESTROY));
             if (compartment->principals)
                 JSPRINCIPALS_DROP(cx, compartment->principals);
             cx->delete_(compartment);
@@ -2752,48 +2752,6 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 }
 
 namespace js {
-namespace gc {
-
-JSCompartment *
-NewCompartment(JSContext *cx, JSPrincipals *principals)
-{
-    JSRuntime *rt = cx->runtime;
-    JSCompartment *compartment = cx->new_<JSCompartment>(rt);
-    if (!compartment || !compartment->init()) {
-        Foreground::delete_(compartment);
-        JS_ReportOutOfMemory(cx);
-        return NULL;
-    }
-
-    if (principals) {
-        compartment->principals = principals;
-        JSPRINCIPALS_HOLD(cx, principals);
-    }
-
-    compartment->setGCLastBytes(8192);
-
-    {
-        AutoLockGC lock(rt);
-
-        if (!rt->compartments.append(compartment)) {
-            AutoUnlockGC unlock(rt);
-            Foreground::delete_(compartment);
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
-    }
-
-    JSCompartmentCallback callback = rt->compartmentCallback;
-    if (callback && !callback(cx, compartment, JSCOMPARTMENT_NEW)) {
-        AutoLockGC lock(rt);
-        rt->compartments.popBack();
-        Foreground::delete_(compartment);
-        return NULL;
-    }
-    return compartment;
-}
-
-} /* namespace gc */
 
 class AutoCopyFreeListToArenas {
     JSRuntime *rt;
@@ -2950,5 +2908,31 @@ IterateCells(JSContext *cx, JSCompartment *comp, uint64 traceKindMask,
             IterateCompartmentCells(cx, *c, traceKindMask, data, callback);
     }
 }
+
+namespace gc {
+
+JSCompartment *
+NewCompartment(JSContext *cx, JSPrincipals *principals)
+{
+    JSRuntime *rt = cx->runtime;
+    JSCompartment *compartment = cx->new_<JSCompartment>(rt);
+    if (compartment && compartment->init()) {
+        if (principals) {
+            compartment->principals = principals;
+            JSPRINCIPALS_HOLD(cx, principals);
+        }
+
+        compartment->setGCLastBytes(8192);
+
+        AutoLockGC lock(rt);
+        if (rt->compartments.append(compartment))
+            return compartment;
+    }
+    Foreground::delete_(compartment);
+    JS_ReportOutOfMemory(cx);
+    return NULL;
+}
+
+} /* namespace gc */
 
 } /* namespace js */
