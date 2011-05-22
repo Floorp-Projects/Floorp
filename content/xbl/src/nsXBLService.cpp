@@ -862,9 +862,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
     return NS_ERROR_FAILURE;
 
   nsCAutoString ref;
-  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
-  if (url)
-    url->GetRef(ref);
+  aURI->GetRef(ref);
 
   nsCOMPtr<nsIDocument> boundDocument = aBoundElement->GetOwnerDoc();
 
@@ -1129,12 +1127,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   nsRefPtr<nsXBLDocumentInfo> info;
 
   nsCOMPtr<nsIURI> documentURI;
-  rv = aBindingURI->Clone(getter_AddRefs(documentURI));
+  rv = aBindingURI->CloneIgnoringRef(getter_AddRefs(documentURI));
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIURL> documentURL(do_QueryInterface(documentURI));
-  if (documentURL)
-    documentURL->SetRef(EmptyCString());
 
 #ifdef MOZ_XUL
   // We've got a file.  Check our XBL document cache.
