@@ -548,7 +548,6 @@ typedef JSObject *
 (* JSPreWrapCallback)(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags);
 
 typedef enum {
-    JSCOMPARTMENT_NEW, /* XXX Does it make sense to have a NEW? */
     JSCOMPARTMENT_DESTROY
 } JSCompartmentOp;
 
