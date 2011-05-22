@@ -735,6 +735,26 @@
 }
 
 /******************************************************************************
+ * netwerk/protocol/websocket/ classes
+ */
+
+#define NS_WEBSOCKETPROTOCOLHANDLER_CID              \
+{ /* {dc01db59-a513-4c90-824b-085cce06c0aa} */       \
+  0xdc01db59,                                        \
+  0xa513,                                            \
+  0x4c90,                                            \
+  {0x82, 0x4b, 0x08, 0x5c, 0xce, 0x06, 0xc0, 0xaa}   \
+}
+
+#define NS_WEBSOCKETSSLPROTOCOLHANDLER_CID           \
+{ /* {dc01dbbb-a5bb-4cbb-82bb-085cce06c0bb} */       \
+  0xdc01dbbb,                                        \
+  0xa5bb,                                            \
+  0x4cbb,                                            \
+  {0x82, 0xbb, 0x08, 0x5c, 0xce, 0x06, 0xc0, 0xbb}   \
+}
+
+/******************************************************************************
  * netwerk/protocol/about/ classes
  */
 

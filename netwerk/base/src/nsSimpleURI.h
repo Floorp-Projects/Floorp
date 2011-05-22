@@ -47,11 +47,11 @@
 #include "nsIMutable.h"
 
 #define NS_THIS_SIMPLEURI_IMPLEMENTATION_CID         \
-{ /* 22b8f64a-2f7b-11d3-8cd0-0060b0fc14a3 */         \
-    0x22b8f64a,                                      \
-    0x2f7b,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+{ /* 0b9bb0c2-fee6-470b-b9b9-9fd9462b5e19 */         \
+    0x0b9bb0c2,                                      \
+    0xfee6,                                          \
+    0x470b,                                          \
+    {0xb9, 0xb9, 0x9f, 0xd9, 0x46, 0x2b, 0x5e, 0x19} \
 }
 
 class nsSimpleURI : public nsIURI,
@@ -74,11 +74,31 @@ public:
     virtual ~nsSimpleURI();
 
 protected:
-    virtual nsSimpleURI* StartClone();
+    // enum used in a few places to specify how .ref attribute should be handled
+    enum RefHandlingEnum {
+        eIgnoreRef,
+        eHonorRef
+    };
 
+    // Helper to share code between Equals methods.
+    virtual nsresult EqualsInternal(nsIURI* other,
+                                    RefHandlingEnum refHandlingMode,
+                                    PRBool* result);
+
+    // NOTE: This takes the refHandlingMode as an argument because
+    // nsSimpleNestedURI's specialized version needs to know how to clone
+    // its inner URI.
+    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode);
+
+    // Helper to share code between Clone methods.
+    virtual nsresult CloneInternal(RefHandlingEnum refHandlingMode,
+                                   nsIURI** clone);
+    
     nsCString mScheme;
-    nsCString mPath;
-    PRBool mMutable;
+    nsCString mPath; // NOTE: mPath does not include ref, as an optimization
+    nsCString mRef;  // so that URIs with different refs can share string data.
+    PRPackedBool mMutable;
+    PRPackedBool mIsRefValid; // To distinguish between empty-ref and no-ref.
 };
 
 #endif // nsSimpleURI_h__

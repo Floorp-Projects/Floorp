@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#table1 {
+ display: table;
+ height: 20px; width: 100px;
+ background-color: green;
+ margin-bottom: 20px;
+}
+#table2 {
+ display: none;
+ height: 20px; width: 100px;
+ background-color: red;
+ margin-top: 10px;
+ margin-bottom: 10px;
+}
+#table3 {
+ display: table;
+ height: 20px; width: 100px;
+ background-color: blue;
+ margin-top: 20px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('table2').style.display = 'table';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="table1"></div>
+<div id="table2"></div>
+<div id="table3"></div>
+</body>
+</html>

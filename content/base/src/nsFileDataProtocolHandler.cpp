@@ -147,12 +147,15 @@ public:
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
 
-  // Override Clone() and Equals()
-  NS_IMETHOD Clone(nsIURI** aClone);
-  NS_IMETHOD Equals(nsIURI* aOther, PRBool *aResult);
+  // Override CloneInternal() and EqualsInternal()
+  virtual nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
+                                 nsIURI** aClone);
+  virtual nsresult EqualsInternal(nsIURI* aOther,
+                                  RefHandlingEnum aRefHandlingMode,
+                                  PRBool* aResult);
 
   // Override StartClone to hand back a nsFileDataURI
-  virtual nsSimpleURI* StartClone()
+  virtual nsSimpleURI* StartClone(RefHandlingEnum /* unused */)
   { return new nsFileDataURI(); }
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -213,12 +216,13 @@ nsFileDataURI::Write(nsIObjectOutputStream* aStream)
 }
 
 // nsIURI methods:
-
-NS_IMETHODIMP
-nsFileDataURI::Clone(nsIURI** aClone)
+nsresult
+nsFileDataURI::CloneInternal(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
+                             nsIURI** aClone)
 {
   nsCOMPtr<nsIURI> simpleClone;
-  nsresult rv = nsSimpleURI::Clone(getter_AddRefs(simpleClone));
+  nsresult rv =
+    nsSimpleURI::CloneInternal(aRefHandlingMode, getter_AddRefs(simpleClone));
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -236,8 +240,10 @@ nsFileDataURI::Clone(nsIURI** aClone)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFileDataURI::Equals(nsIURI* aOther, PRBool *aResult)
+/* virtual */ nsresult
+nsFileDataURI::EqualsInternal(nsIURI* aOther,
+                              nsSimpleURI::RefHandlingEnum aRefHandlingMode,
+                              PRBool* aResult)
 {
   if (!aOther) {
     *aResult = PR_FALSE;
@@ -258,7 +264,8 @@ nsFileDataURI::Equals(nsIURI* aOther, PRBool *aResult)
     return NS_OK;
   }
 
-  return nsSimpleURI::Equals(otherFileDataUri, aResult);
+  return nsSimpleURI::EqualsInternal(otherFileDataUri, aRefHandlingMode,
+                                     aResult);
 }
 
 // nsIClassInfo methods:
