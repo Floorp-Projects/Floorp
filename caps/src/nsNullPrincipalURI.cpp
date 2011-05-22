@@ -151,6 +151,19 @@ nsNullPrincipalURI::SetPath(const nsACString &aPath)
 }
 
 NS_IMETHODIMP
+nsNullPrincipalURI::GetRef(nsACString &_ref)
+{
+  _ref.Truncate();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNullPrincipalURI::SetRef(const nsACString &aRef)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsNullPrincipalURI::GetPrePath(nsACString &_prePath)
 {
   _prePath = mScheme + NS_LITERAL_CSTRING(":");

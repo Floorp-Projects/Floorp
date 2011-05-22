@@ -54,7 +54,7 @@
  *                            |
  *                        filePath
  */
-[scriptable, uuid(d6116970-8034-11d3-9399-00104ba0fd40)]
+[scriptable, uuid(d55f7915-6ff7-4b17-8795-d3b447bfe1f8)]
 interface nsIURL : nsIURI
 {
     /*************************************************************************
@@ -84,14 +84,6 @@ interface nsIURL : nsIURI
      * Some characters may be escaped.
      */
     attribute AUTF8String query;
-
-    /**
-     * Returns the reference portion (the part after the "#") of the URL.
-     * If there isn't one, an empty string is returned.
-     *
-     * Some characters may be escaped.
-     */
-    attribute AUTF8String ref;
 
 
     /*************************************************************************
