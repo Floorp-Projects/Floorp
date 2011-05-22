@@ -281,6 +281,7 @@ void XXXNeverCalled()
     sXPCOMHasLoadedNewDLLs = !sXPCOMHasLoadedNewDLLs;
     NS_SetHasLoadedNewDLLs();
     NS_NewWindowsRegKey(nsnull);
+    NS_SetDllDirectory(nsnull);
 #if defined (DEBUG)
     PurePrintf(0);
 #endif

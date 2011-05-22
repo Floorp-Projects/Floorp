@@ -40,12 +40,6 @@
 
 #include <stdio.h>
 
-#ifdef XRE_WANT_DLL_BLOCKLIST
-#define XRE_SetupDllBlocklist SetupDllBlocklist
-#else
-#include "nsXULAppAPI.h"
-#endif
-
 #include "nsAutoPtr.h"
 
 #include "prlog.h"
@@ -214,7 +208,7 @@ continue_loading:
 WindowsDllInterceptor NtDllIntercept;
 
 void
-XRE_SetupDllBlocklist()
+SetupDllBlocklist()
 {
   NtDllIntercept.Init("ntdll.dll");
 

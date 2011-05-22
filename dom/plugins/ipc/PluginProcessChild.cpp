@@ -110,7 +110,6 @@ PluginProcessChild::Init()
         protectCurrentDirectory = false;
     }
     if (protectCurrentDirectory) {
-        SanitizeEnvironmentVariables();
         NS_SetDllDirectory(L"");
     }
 

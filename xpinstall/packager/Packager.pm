@@ -317,13 +317,6 @@ sub do_copyfile
       }
     }
     unlink("$destpath$destname$destsuffix") if ( -e "$destpath$destname$destsuffix");
-    # If source is a symbolic link pointing in the same directory, create a
-    # symbolic link
-    if ((-l "$srcpath$srcname$srcsuffix") && (readlink("$srcpath$srcname$srcsuffix") !~ /\//)) {
-      symlink(readlink("$srcpath$srcname$srcsuffix"), "$destpath$destname$destsuffix") ||
-        die "Error: copy of symbolic link $srcpath$srcname$srcsuffix failed ($package, $component, $lineno): $!.  Exiting...\n";
-      return;
-    }
     copy ("$srcpath$srcname$srcsuffix", "$destpath$destname$destsuffix") ||
       die "Error: copy of file $srcpath$srcname$srcsuffix failed ($package, $component, $lineno): $!.  Exiting...\n";
 
