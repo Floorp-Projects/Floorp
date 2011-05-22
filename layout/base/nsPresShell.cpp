@@ -1675,6 +1675,7 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 }
 
 nsTHashtable<PresShell::PresShellPtrKey> *nsIPresShell::sLiveShells = 0;
+static PRBool sSynthMouseMove = PR_TRUE;
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
     "explicit/layout/all",
@@ -1719,6 +1720,8 @@ PresShell::PresShell()
   if (!registeredReporter) {
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutBidi));
+    nsContentUtils::AddBoolPrefVarCache("layout.reflow.synthMouseMove",
+                                        &sSynthMouseMove, PR_TRUE);
     registeredReporter = true;
   }
 
@@ -7856,7 +7859,9 @@ PresShell::DidDoReflow(PRBool aInterruptible)
   mFrameConstructor->EndUpdate();
   
   HandlePostedReflowCallbacks(aInterruptible);
-  SynthesizeMouseMove(PR_FALSE);
+  if (sSynthMouseMove) {
+    SynthesizeMouseMove(PR_FALSE);
+  }
   if (mCaret) {
     // Update the caret's position now to account for any changes created by
     // the reflow.
