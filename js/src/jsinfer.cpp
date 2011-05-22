@@ -3985,7 +3985,7 @@ public:
          * an object if the source type set could be a setter (its type set
          * becomes unknown).
          */
-        if (type == TYPE_UNKNOWN)
+        if (!object->newScriptCleared && type == TYPE_UNKNOWN)
             object->clearNewScript(cx);
     }
 
