@@ -441,20 +441,23 @@ function FindProxyForURL(url, host)
   var isHttp = matches[1] == 'http';
   var isHttps = matches[1] == 'https';
   var isWebSocket = matches[1] == 'ws';
+  var isWebSocketSSL = matches[1] == 'wss';
   if (!matches[3])
   {
     if (isHttp | isWebSocket) matches[3] = '80';
-    if (isHttps) matches[3] = '443';
+    if (isHttps | isWebSocketSSL) matches[3] = '443';
   }
   if (isWebSocket)
     matches[1] = 'http';
+  if (isWebSocketSSL)
+    matches[1] = 'https';
 
   var origin = matches[1] + '://' + matches[2] + ':' + matches[3];
   if (origins.indexOf(origin) < 0)
     return 'DIRECT';
   if (isHttp)
     return 'PROXY %(remote)s:%(httpport)s';
-  if (isHttps || isWebSocket)
+  if (isHttps || isWebSocket || isWebSocketSSL)
     return 'PROXY %(remote)s:%(sslport)s';
   return 'DIRECT';
 }""" % { "origins": origins,
