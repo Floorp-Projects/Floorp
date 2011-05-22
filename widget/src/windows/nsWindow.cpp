@@ -6417,6 +6417,38 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   sLastMouseWheelUnitIsPage = isPageScroll;
   sLastMouseWheelTime = now;
 
+  *aRetValue = isVertical ? FALSE : TRUE; // means we process this message
+  nsModifierKeyState modKeyState;
+
+  // Our positive delta value means to bottom or right.
+  // But positive nativeDelta value means to top or right.
+  // Use orienter for computing our delta value.
+  PRInt32 orienter = isVertical ? -1 : 1;
+
+  // Assume the Control key is down if the Elantech touchpad has sent the
+  // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
+  // OnKeyUp.)
+  PRBool isControl;
+  if (mAssumeWheelIsZoomUntil &&
+      static_cast<DWORD>(::GetMessageTime()) < mAssumeWheelIsZoomUntil) {
+    isControl = PR_TRUE;
+  } else {
+    isControl = modKeyState.mIsControlDown;
+  }
+
+  // Create line (or page) scroll event.
+  nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
+
+  // Initialize common members on line scroll event, pixel scroll event and
+  // test event.
+  InitEvent(scrollEvent);
+  scrollEvent.isShift     = modKeyState.mIsShiftDown;
+  scrollEvent.isControl   = isControl;
+  scrollEvent.isMeta      = PR_FALSE;
+  scrollEvent.isAlt       = modKeyState.mIsAltDown;
+
+  // Before dispatching line scroll event, we should get the current scroll
+  // event target information for pixel scroll.
   PRBool dispatchPixelScrollEvent = PR_FALSE;
   PRInt32 pixelsPerUnit = 0;
 
@@ -6426,6 +6458,10 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     testEvent.scrollFlags = isPageScroll ? nsMouseScrollEvent::kIsFullPage : 0;
     testEvent.scrollFlags |= isVertical ? nsMouseScrollEvent::kIsVertical :
                                           nsMouseScrollEvent::kIsHorizontal;
+    testEvent.isShift     = scrollEvent.isShift;
+    testEvent.isControl   = scrollEvent.isControl;
+    testEvent.isMeta      = scrollEvent.isMeta;
+    testEvent.isAlt       = scrollEvent.isAlt;
     testEvent.delta = sLastMouseWheelDeltaIsPositive ? -1 : 1;
     nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_SCROLL_TARGET_INFO, this);
     InitEvent(queryEvent);
@@ -6447,33 +6483,10 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     }
   }
 
-  *aRetValue = isVertical ? FALSE : TRUE; // means we process this message
-  nsModifierKeyState modKeyState;
-
-  // Our positive delta value means to bottom or right.
-  // But positive nativeDelta value means to top or right.
-  // Use orienter for computing our delta value.
-  PRInt32 orienter = isVertical ? -1 : 1;
-
-  // Assume the Control key is down if the Elantech touchpad has sent the
-  // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
-  // OnKeyUp.)
-  PRBool isControl;
-  if (mAssumeWheelIsZoomUntil &&
-      static_cast<DWORD>(::GetMessageTime()) < mAssumeWheelIsZoomUntil) {
-    isControl = PR_TRUE;
-  } else {
-    isControl = modKeyState.mIsControlDown;
-  }
-
-  nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
-  InitEvent(scrollEvent);
+  // If we dispatch pixel scroll event after the line scroll event,
+  // we should set kHasPixels flag to the line scroll event.
   scrollEvent.scrollFlags =
     dispatchPixelScrollEvent ? nsMouseScrollEvent::kHasPixels : 0;
-  scrollEvent.isShift     = modKeyState.mIsShiftDown;
-  scrollEvent.isControl   = isControl;
-  scrollEvent.isMeta      = PR_FALSE;
-  scrollEvent.isAlt       = modKeyState.mIsAltDown;
 
   PRInt32 nativeDeltaForScroll = nativeDelta + sRemainingDeltaForScroll;
 
@@ -6521,10 +6534,11 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   InitEvent(pixelEvent);
   pixelEvent.scrollFlags = nsMouseScrollEvent::kAllowSmoothScroll |
     (scrollEvent.scrollFlags & ~nsMouseScrollEvent::kHasPixels);
-  pixelEvent.isShift     = modKeyState.mIsShiftDown;
-  pixelEvent.isControl   = modKeyState.mIsControlDown;
-  pixelEvent.isMeta      = PR_FALSE;
-  pixelEvent.isAlt       = modKeyState.mIsAltDown;
+  // Use same modifier state for pixel scroll event.
+  pixelEvent.isShift     = scrollEvent.isShift;
+  pixelEvent.isControl   = scrollEvent.isControl;
+  pixelEvent.isMeta      = scrollEvent.isMeta;
+  pixelEvent.isAlt       = scrollEvent.isAlt;
 
   PRInt32 nativeDeltaForPixel = nativeDelta + sRemainingDeltaForPixel;
 

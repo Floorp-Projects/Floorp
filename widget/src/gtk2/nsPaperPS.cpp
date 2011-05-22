@@ -41,8 +41,7 @@
 #include "nsPaperPS.h"
 #include "plstr.h"
 #include "nsCoord.h"
-
-#define COUNTOF(x) (sizeof(x) / sizeof((x)[0]))
+#include "nsMemory.h"
 
 const nsPaperSizePS_ nsPaperSizePS::mList[] =
 {
@@ -59,7 +58,7 @@ const nsPaperSizePS_ nsPaperSizePS::mList[] =
 #undef SIZE_MM
 };
 
-const unsigned int nsPaperSizePS::mCount = COUNTOF(mList);
+const unsigned int nsPaperSizePS::mCount = NS_ARRAY_LENGTH(mList);
 
 PRBool
 nsPaperSizePS::Find(const char *aName)

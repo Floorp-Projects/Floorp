@@ -427,7 +427,7 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &cer
 }
 
 /**
- * This function examines the buffer for a S5ec-WebSocket-Location: field, 
+ * This function examines the buffer for a Sec-WebSocket-Location: field, 
  * and if it's present, it replaces the hostname in that field with the
  * value in the server's original_host field.  This function works
  * in the reverse direction as AdjustWebSocketHost(), replacing the real
@@ -500,6 +500,8 @@ bool AdjustWebSocketHost(relayBuffer& buffer, connection_info_t *ci)
   h1 += strlen(HEADER_UPGRADE);
   h1 += strspn(h1, " \t");
   char* h2 = strstr(h1, "WebSocket\r\n");
+  if (!h2) h2 = strstr(h1, "websocket\r\n");
+  if (!h2) h2 = strstr(h1, "Websocket\r\n");
   if (!h2)
     return false;
 

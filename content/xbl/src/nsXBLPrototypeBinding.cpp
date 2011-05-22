@@ -305,16 +305,13 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
   nsresult rv = aInfo->DocumentURI()->Clone(getter_AddRefs(mBindingURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // The binding URI might not be a nsIURL (e.g. for data: URIs). In that case,
-  // we always use the first binding, so we don't need to keep track of the ID.
-  nsCOMPtr<nsIURL> bindingURL = do_QueryInterface(mBindingURI);
-  if (bindingURL) {
-    if (aFirstBinding) {
-      rv = mBindingURI->Clone(getter_AddRefs(mAlternateBindingURI));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    bindingURL->SetRef(aID);
+  // The binding URI might be an immutable URI (e.g. for about: URIs). In that case,
+  // we'll fail in SetRef below, but that doesn't matter much for now.
+  if (aFirstBinding) {
+    rv = mBindingURI->Clone(getter_AddRefs(mAlternateBindingURI));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+  mBindingURI->SetRef(aID);
 
   mXBLDocInfoWeak = aInfo;
 
