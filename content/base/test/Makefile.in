@@ -483,6 +483,26 @@ _TEST_FILES2 = \
 		test_bug656283.html \
 		test_blobbuilder.html \
 		fileutils.js \
+		test_bug338583.html \
+		eventsource.resource \
+		eventsource.resource^headers^ \
+		badContentType.eventsource \
+		badContentType.eventsource^headers^ \
+		badEventFieldName.eventsource \
+		badEventFieldName.eventsource^headers^ \
+		badHTTPResponseCode.eventsource \
+		badHTTPResponseCode.eventsource^headers^ \
+		badMessageEvent.eventsource \
+		badMessageEvent.eventsource^headers^ \
+		forRemoval.resource \
+		forRemoval.resource^headers^ \
+		accesscontrol.resource \
+		accesscontrol.resource^headers^ \
+		invalid_accesscontrol.resource \
+		invalid_accesscontrol.resource^headers^ \
+		somedatas.resource \
+		somedatas.resource^headers^ \
+		delayedServerEvents.sjs \
 		$(NULL)
 
 # This test fails on the Mac for some reason

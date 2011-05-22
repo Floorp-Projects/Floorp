@@ -811,6 +811,12 @@ pref("network.websocket.extensions.stream-deflate", false);
 
 // </ws>
 
+// Server-Sent Events
+
+pref("dom.server-events.enabled", true);
+// Equal to the DEFAULT_RECONNECTION_TIME_VALUE value in nsEventSource.cpp
+pref("dom.server-events.default-reconnection-time", 5000); // in milliseconds
+
 // If false, remote JAR files that are served with a content type other than
 // application/java-archive or application/x-jar will not be opened
 // by the jar channel.
