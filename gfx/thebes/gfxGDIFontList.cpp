@@ -215,7 +215,6 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontT
     mWindowsFamily(0), mWindowsPitch(0),
     mFontType(aFontType),
     mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
-    mUnicodeFont(PR_FALSE),
     mCharset(), mUnicodeRanges()
 {
     mUserFontData = aUserFontData;
@@ -254,7 +253,6 @@ GDIFontEntry::ReadCMAP()
     nsresult rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
                                          mCharacterMap, mUVSOffset,
                                          unicodeFont, symbolFont);
-    mUnicodeFont = unicodeFont;
     mSymbolFont = symbolFont;
     mHasCmapTable = NS_SUCCEEDED(rv);
 
@@ -263,6 +261,14 @@ GDIFontEntry::ReadCMAP()
                   NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
 #endif
     return rv;
+}
+
+PRBool
+GDIFontEntry::IsSymbolFont()
+{
+    // initialize cmap first
+    HasCmapTable();
+    return mSymbolFont;  
 }
 
 gfxFont *
@@ -334,10 +340,6 @@ PRBool
 GDIFontEntry::TestCharacterMap(PRUint32 aCh)
 {
     if (ReadCMAP() != NS_OK) {
-        // Type1 fonts aren't necessarily Unicode but
-        // this is the best guess we can make here
-        mUnicodeFont = IsType1();
-
         // For fonts where we failed to read the character map,
         // we can take a slow path to look up glyphs character by character
         mUnknownCMAP = PR_TRUE;
@@ -446,20 +448,6 @@ GDIFontEntry::CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontTy
 
     GDIFontEntry *fe = new GDIFontEntry(aName, aFontType, aItalic, aWeight,
                                         aUserFontData);
-
-    // ReadCMAP may change the values of mUnicodeFont and mSymbolFont
-    if (NS_FAILED(fe->ReadCMAP())) {
-        // Type1 fonts aren't necessarily Unicode but
-        // this is the best guess we can make here
-        if (fe->IsType1())
-            fe->mUnicodeFont = PR_TRUE;
-        else
-            fe->mUnicodeFont = PR_FALSE;
-
-        // For fonts where we failed to read the character map,
-        // we can take a slow path to look up glyphs character by character
-        fe->mUnknownCMAP = PR_TRUE;
-    } 
 
     return fe;
 }

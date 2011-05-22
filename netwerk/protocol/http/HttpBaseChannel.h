@@ -166,6 +166,8 @@ public:
           mRedirectedCachekeys = nsnull;
       }
   }
+  NS_IMETHOD HTTPUpgrade(const nsACString & aProtocolName,
+                         nsIHttpUpgradeListener *aListener); 
 
   // nsISupportsPriority
   NS_IMETHOD GetPriority(PRInt32 *value);
@@ -246,6 +248,10 @@ protected:
   PRNetAddr                         mSelfAddr;
   PRNetAddr                         mPeerAddr;
 
+  // HTTP Upgrade Data
+  nsCString                        mUpgradeProtocol;
+  nsCOMPtr<nsIHttpUpgradeListener> mUpgradeProtocolCallback;
+
   // Resumable channel specific data
   nsCString                         mEntityID;
   PRUint64                          mStartPos;
@@ -268,6 +274,8 @@ protected:
   PRUint32                          mChooseApplicationCache     : 1;
   PRUint32                          mLoadedFromApplicationCache : 1;
   PRUint32                          mChannelIsForDownload       : 1;
+  // True if timing collection is enabled
+  PRUint32                          mTimingEnabled : 1;
 
   nsTArray<nsCString>              *mRedirectedCachekeys;
 };

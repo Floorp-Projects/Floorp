@@ -1498,7 +1498,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 #endif
 
   // Mark the display list items for absolutely positioned children
-  MarkAbsoluteFramesForDisplayList(aBuilder, aDirtyRect);
+  MarkAbsoluteFramesForDisplayList(aBuilder, dirtyRect);
 
   nsDisplayListCollection set;
   nsresult rv;
@@ -2217,7 +2217,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   PRBool control = me->isControl;
 #endif
 
-  nsCOMPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
+  nsRefPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
   if (me->clickCount >1 )
   {
     // These methods aren't const but can't actually delete anything,
@@ -2487,7 +2487,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   }
   nsIPresShell *presShell = aPresContext->PresShell();
 
-  nsCOMPtr<nsFrameSelection> frameselection = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> frameselection = GetFrameSelection();
   PRBool mouseDown = frameselection->GetMouseDownState();
   if (!mouseDown)
     return NS_OK;

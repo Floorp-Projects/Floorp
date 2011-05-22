@@ -59,7 +59,7 @@ nsRootAccessibleWrap::~nsRootAccessibleWrap()
 {
 }
 
-objc_class*
+Class
 nsRootAccessibleWrap::GetNativeType ()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;

@@ -199,23 +199,32 @@ private:
   printf("uri: %s", spec);
 
 #define NS_LOG_ACCDOC_TYPE(aDocument)                                          \
-  PRBool isContent = nsCoreUtils::IsContentDocument(aDocument);                \
-  printf("%s document", (isContent ? "content" : "chrome"));
+  if (aDocument->IsActive()) {                                                 \
+    PRBool isContent = nsCoreUtils::IsContentDocument(aDocument);              \
+    printf("%s document", (isContent ? "content" : "chrome"));                 \
+  } else {                                                                     \
+    printf("document type: [failed]");                                         \
+  }
 
 #define NS_LOG_ACCDOC_SHELLSTATE(aDocument)                                    \
-  nsCOMPtr<nsISupports> container = aDocument->GetContainer();                 \
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);               \
-  PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;                           \
-  docShell->GetBusyFlags(&busyFlags);                                          \
   nsCAutoString docShellBusy;                                                  \
-  if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE)                               \
-    docShellBusy.AppendLiteral("'none'");                                      \
-  if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY)                                \
-    docShellBusy.AppendLiteral("'busy'");                                      \
-  if (busyFlags & nsIDocShell::BUSY_FLAGS_BEFORE_PAGE_LOAD)                    \
-    docShellBusy.AppendLiteral(", 'before page load'");                        \
-  if (busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING)                        \
-    docShellBusy.AppendLiteral(", 'page loading'");                            \
+  nsCOMPtr<nsISupports> container = aDocument->GetContainer();                 \
+  if (container) {                                                             \
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);             \
+    PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;                         \
+    docShell->GetBusyFlags(&busyFlags);                                        \
+    if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE)                             \
+      docShellBusy.AppendLiteral("'none'");                                    \
+    if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY)                              \
+      docShellBusy.AppendLiteral("'busy'");                                    \
+    if (busyFlags & nsIDocShell::BUSY_FLAGS_BEFORE_PAGE_LOAD)                  \
+      docShellBusy.AppendLiteral(", 'before page load'");                      \
+    if (busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING)                      \
+      docShellBusy.AppendLiteral(", 'page loading'");                          \
+  }                                                                            \
+  else {                                                                       \
+    docShellBusy.AppendLiteral("[failed]");                                    \
+  }                                                                            \
   printf("docshell busy: %s", docShellBusy.get());
 
 #define NS_LOG_ACCDOC_DOCSTATES(aDocument)                                     \
@@ -336,20 +345,22 @@ private:
     printf("    ");                                                            \
     NS_LOG_ACCDOC_ADDRESS(aDocument, aDocAcc)                                  \
     printf("\n    ");                                                          \
-    NS_LOG_ACCDOC_URI(aDocument)                                               \
-    printf("\n    ");                                                          \
-    NS_LOG_ACCDOC_SHELLSTATE(aDocument)                                        \
-    printf("; ");                                                              \
-    NS_LOG_ACCDOC_TYPE(aDocument)                                              \
-    printf("\n    ");                                                          \
-    NS_LOG_ACCDOC_DOCSTATES(aDocument)                                         \
-    printf("\n    ");                                                          \
-    NS_LOG_ACCDOC_DOCPRESSHELL(aDocument)                                      \
-    printf("\n    ");                                                          \
-    NS_LOG_ACCDOC_DOCLOADGROUP(aDocument)                                      \
-    printf(", ");                                                              \
-    NS_LOG_ACCDOC_DOCPARENT(aDocument)                                         \
-    printf("\n");                                                              \
+    if (aDocument) {                                                           \
+      NS_LOG_ACCDOC_URI(aDocument)                                             \
+      printf("\n    ");                                                        \
+      NS_LOG_ACCDOC_SHELLSTATE(aDocument)                                      \
+      printf("; ");                                                            \
+      NS_LOG_ACCDOC_TYPE(aDocument)                                            \
+      printf("\n    ");                                                        \
+      NS_LOG_ACCDOC_DOCSTATES(aDocument)                                       \
+      printf("\n    ");                                                        \
+      NS_LOG_ACCDOC_DOCPRESSHELL(aDocument)                                    \
+      printf("\n    ");                                                        \
+      NS_LOG_ACCDOC_DOCLOADGROUP(aDocument)                                    \
+      printf(", ");                                                            \
+      NS_LOG_ACCDOC_DOCPARENT(aDocument)                                       \
+      printf("\n");                                                            \
+    }                                                                          \
   }
 #define NS_LOG_ACCDOC_DOCINFO_END                                              \
   printf("  }\n");

@@ -142,9 +142,10 @@ SOLO_FILE ?= $(error Specify a test filename in SOLO_FILE when using check-inter
 
 libs::
 	$(foreach dir,$(XPCSHELL_TESTS),$(_INSTALL_TESTS))
-	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py \
-	  $(testxpcobjdir)/all-test-dirs.list \
-	  $(addprefix $(relativesrcdir)/,$(XPCSHELL_TESTS))
+	$(PYTHON) $(MOZILLA_DIR)/build/xpccheck.py \
+	  $(topsrcdir) \
+	  $(topsrcdir)/testing/xpcshell/xpcshell.ini \
+	  $(addprefix $(MOZILLA_DIR)/$(relativesrcdir)/,$(XPCSHELL_TESTS))
 
 testxpcsrcdir = $(topsrcdir)/testing/xpcshell
 

@@ -1,0 +1,106 @@
+/* background styles borrowed from extensions.css */
+#permissions-page {
+  -moz-appearance: none;
+  padding: 18px;
+  background-color: Window;  
+  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 160px),
+                    -moz-linear-gradient(-moz-dialog, Window 160px);
+  color: WindowText;
+}
+
+#permissions-content {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  border: 1px solid ThreeDShadow;
+  border-radius: 5px;
+}
+
+/* sites box */
+
+#sites-box {
+  padding: 10px;
+}
+
+.site {
+  width: 250px;
+  overflow-x: hidden;
+  padding: 4px;
+  border-bottom: 1px solid ThreeDLightShadow;
+}
+
+.site-favicon {
+  height: 16px;
+  width: 16px;
+  -moz-margin-end: 4px;
+}
+
+.site-domain {
+  max-width: 200px; /* crop set in XBL will ellipsize the domain if it's too long */
+}
+
+/* permissions box */
+
+#permissions-box {
+  padding-top: 10px;
+  overflow-y: auto;
+}
+
+#site-description {
+  font-size: 125%;
+  -moz-margin-start: 6px; /* to match button margin */
+}
+
+#site-label {
+  font-weight: bold;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#defaults-description {
+  font-size: 125%;
+  font-weight: bold;
+  -moz-margin-start: 6px;
+}
+
+.pref-item {
+  margin-bottom: 10px;
+}
+
+.pref-icon {
+  width: 36px;
+  height: 36px;
+  -moz-margin-end: 10px;
+}
+
+.pref-icon[type="password"] {
+  list-style-image: url(chrome://mozapps/skin/passwordmgr/key-64.png);
+}
+.pref-icon[type="cookie"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+.pref-icon[type="geo"] {
+  list-style-image: url(chrome://browser/skin/Geolocation-64.png);
+}
+.pref-icon[type="indexedDB"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+.pref-icon[type="install"] {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
+}
+.pref-icon[type="popup"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+.pref-icon[type="image"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+
+.pref-title {
+  font-size: 125%;
+  margin-bottom: 0;
+  font-weight: bold;
+}
+
+.pref-menulist {
+  margin-left: 6px;
+  margin-right: 6px;
+}
