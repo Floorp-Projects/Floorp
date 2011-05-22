@@ -710,7 +710,7 @@ struct JSRuntime {
      * OOM reporting (in js_ReportOutOfMemory). If a GC is requested while
      * reporting the OOM, we ignore it.
      */
-    bool                 inOOMReport;
+    int32               inOOMReport;
 
 #if defined(MOZ_GCTIMER) || defined(JSGC_TESTPILOT)
     struct GCData {
