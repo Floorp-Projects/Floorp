@@ -143,7 +143,7 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>firefox-bin</string>
+	<string>firefox</string>
 	<key>CFBundleGetInfoString</key>
 	<string>%APP_NAME% %APP_VERSION%</string>
 	<key>CFBundleIconFile</key>
