@@ -47,6 +47,7 @@
 #include "jsapi.h" 
 #include "nsStringGlue.h"
 #include "nsITelemetry.h"
+#include "nsXULAppAPI.h"
 
 namespace {
 
@@ -149,10 +150,10 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
           && JS_DefineFunction (cx, obj, "snapshot", JSHistogram_Snapshot, 1, 0)) ? NS_OK : NS_ERROR_FAILURE;
 }
   
-NS_IMETHODIMP
-Telemetry::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, PRUint32 bucket_count, PRUint32 histogram_type, JSContext *cx, jsval *ret)
+static nsresult
+HistogramGet(const char *name, PRUint32 min, PRUint32 max, PRUint32 bucket_count,
+             PRUint32 histogram_type, Histogram **aResult)
 {
-  // Sanity checks on histogram parameters.
   if (min < 1)
     return NS_ERROR_ILLEGAL_VALUE;
 
@@ -162,12 +163,22 @@ Telemetry::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, PRUi
   if (bucket_count <= 2)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  Histogram *h;
   if (histogram_type == nsITelemetry::HISTOGRAM_EXPONENTIAL) {
-    h = Histogram::FactoryGet(name.BeginReading(), min, max, bucket_count, Histogram::kNoFlags);
+    *aResult = Histogram::FactoryGet(name, min, max, bucket_count, Histogram::kNoFlags);
   } else {
-    h = LinearHistogram::FactoryGet(name.BeginReading(), min, max, bucket_count, Histogram::kNoFlags);
+    *aResult = LinearHistogram::FactoryGet(name, min, max, bucket_count, Histogram::kNoFlags);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Telemetry::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, PRUint32 bucket_count, PRUint32 histogram_type, JSContext *cx, jsval *ret)
+{
+  Histogram *h;
+  nsresult rv = HistogramGet(name.BeginReading(), min, max, bucket_count, histogram_type, &h);
+  if (NS_FAILED(rv))
+    return rv;
+  // Sanity checks on histogram parameters.
   return WrapAndReturnHistogram(h, cx, ret);
 }
 
@@ -242,3 +253,19 @@ const mozilla::Module kTelemetryModule = {
 } // anonymous namespace
 
 NSMODULE_DEFN(nsTelemetryModule) = &kTelemetryModule;
+
+/**
+ * The XRE_TelemetryAdd function is to be used by embedding applications
+ * that can't use histogram.h directly.
+ */
+nsresult
+XRE_TelemetryAdd(const char *name, int sample, PRUint32 min, PRUint32 max,
+                 PRUint32 bucket_count, HistogramTypes histogram_type)
+{
+  base::Histogram *h;
+  nsresult rv = HistogramGet(name, min, max, bucket_count, histogram_type, &h);
+  if (NS_FAILED(rv))
+    return rv;
+  h->Add(sample);
+  return NS_OK;
+}

@@ -45,6 +45,9 @@ interface nsITelemetry : nsISupports
    * Histogram types:
    * HISTOGRAM_EXPONENTIAL - buckets increase exponentially
    * HISTOGRAM_LINEAR - buckets increase linearly
+   *
+   * Please update the HistogramTypes enum in xpcom/build/nsXULAppAPI.h when
+   * adding/changing values.
    */
   const unsigned long HISTOGRAM_EXPONENTIAL = 0;
   const unsigned long HISTOGRAM_LINEAR = 1;
