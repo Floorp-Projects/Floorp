@@ -74,6 +74,18 @@ public:
     virtual ~nsSimpleURI();
 
 protected:
+    // enum used in a few places to specify how .ref attribute should be handled
+    enum RefHandlingEnum {
+        eIgnoreRef,
+        eHonorRef
+    };
+
+    // Helper to share code between Equals methods.  Subclasses can override
+    // for custom Equals behavior.
+    virtual nsresult EqualsInternal(nsIURI* other,
+                                    RefHandlingEnum refHandlingMode,
+                                    PRBool* result);
+
     virtual nsSimpleURI* StartClone();
 
     nsCString mScheme;
