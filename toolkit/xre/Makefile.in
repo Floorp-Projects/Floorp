@@ -92,6 +92,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += nsNativeAppSupportWin.cpp
+CPPSRCS += nsWindowsDllBlocklist.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN -DUNICODE -D_UNICODE
 EXPORTS = nsWindowsDllInterceptor.h
 else
