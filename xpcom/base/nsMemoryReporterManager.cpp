@@ -257,7 +257,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(Resident,
  **/
 
 #if defined(MOZ_MEMORY)
-#  if defined(XP_WIN) || defined(SOLARIS) || defined(ANDROID)
+#  if defined(XP_WIN) || defined(SOLARIS) || defined(ANDROID) || defined(XP_MACOSX)
 #    define HAVE_JEMALLOC_STATS 1
 #    include "jemalloc.h"
 #  elif defined(XP_LINUX)
