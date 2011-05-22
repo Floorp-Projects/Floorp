@@ -52,9 +52,11 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
                            PRBool aWatch, PRBool aReferenceImage)
 {
   NS_ABORT_IF_FALSE(aFromContent, "Reset() expects non-null content pointer");
-  NS_ABORT_IF_FALSE(aURI, "Reset() expects non-null URI for referenced elem");
 
   Unlink();
+
+  if (!aURI)
+    return;
 
   nsCAutoString refPart;
   aURI->GetRef(refPart);
