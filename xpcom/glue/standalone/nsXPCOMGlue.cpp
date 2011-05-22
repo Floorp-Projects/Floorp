@@ -55,13 +55,6 @@
 #endif
 
 static XPCOMFunctions xpcomFunctions;
-static PRBool do_preload = PR_FALSE;
-
-extern "C"
-void XPCOMGlueEnablePreload()
-{
-    do_preload = PR_TRUE;
-}
 
 extern "C"
 nsresult XPCOMGlueStartup(const char* xpcomFile)
@@ -135,7 +128,7 @@ XPCOMGlueLoadDependentLibs(const char *xpcomDir, DependentLibsCallback cb)
         snprintf(buffer2, sizeof(buffer2),
                  "%s" XPCOM_FILE_PATH_SEPARATOR "%s",
                  xpcomDir, buffer);
-        cb(buffer2, do_preload);
+        cb(buffer2);
     }
 
     fclose(flist);

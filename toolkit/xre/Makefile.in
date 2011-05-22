@@ -95,7 +95,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += nsNativeAppSupportWin.cpp
-CPPSRCS += nsWindowsDllBlocklist.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN -DUNICODE -D_UNICODE
 EXPORTS = nsWindowsDllInterceptor.h
 else
@@ -195,7 +194,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/ipc \
   -I$(topsrcdir)/toolkit/crashreporter \
   -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/xpcom/build \
   $(NULL)
 
 ifdef BUILD_STATIC_LIBS
