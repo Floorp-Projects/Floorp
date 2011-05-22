@@ -194,10 +194,7 @@ interface nsIURI : nsISupports
     boolean schemeIs(in string scheme);
 
     /**
-     * Clones the current URI.  For some protocols, this is more than just an
-     * optimization.  For example, under MacOS, the spec of a file URL does not
-     * necessarily uniquely identify a file since two volumes could share the
-     * same name.
+     * Clones the current URI.
      */
     nsIURI clone();
 
