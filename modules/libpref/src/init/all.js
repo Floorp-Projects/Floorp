@@ -782,6 +782,33 @@ pref("network.ftp.control.qos", 0);
 
 // <ws>: WebSocket
 pref("network.websocket.enabled", true);
+
+// mobile might want to set this much smaller
+pref("network.websocket.max-message-size", 16000000);
+
+// Should we automatically follow http 3xx redirects during handshake
+pref("network.websocket.auto-follow-http-redirects", false);
+
+// the number of seconds to wait for websocket connection to be opened
+pref("network.websocket.timeout.open", 20);
+
+// the number of seconds to wait for a clean close after sending the client
+// close message
+pref("network.websocket.timeout.close", 20);
+
+// the number of seconds of idle read activity to sustain before sending a
+// ping probe. 0 to disable.
+pref("network.websocket.timeout.ping.request", 0);
+
+// the deadline, expressed in seconds, for some read activity to occur after
+// generating a ping. If no activity happens then an error and unclean close
+// event is sent to the javascript websockets application
+pref("network.websocket.timeout.ping.response", 10);
+
+// Defines whether or not to try and negotiate the stream-deflate compression
+// extension with the websocket server
+pref("network.websocket.extensions.stream-deflate", true);
+
 // </ws>
 
 // If false, remote JAR files that are served with a content type other than
