@@ -76,6 +76,10 @@ interface nsITimerCallback : nsISupports
   void notify(in nsITimer timer);
 };
 
+%{C++
+// Two timer deadlines must differ by less than half the PRIntervalTime domain.
+#define DELAY_INTERVAL_LIMIT    PR_BIT(8 * sizeof(PRIntervalTime) - 1)
+%}
 
 /**
  * nsITimer instances must be initialized by calling one of the "init" methods

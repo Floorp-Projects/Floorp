@@ -154,6 +154,7 @@
 #define TEXT_ECMASCRIPT                     "text/ecmascript"
 #define TEXT_JAVASCRIPT                     "text/javascript"
 #define TEXT_XSL                            "text/xsl"
+#define TEXT_EVENT_STREAM                   "text/event-stream"
 
 #define VIDEO_MPEG                          "video/mpeg"
 #define VIDEO_RAW                           "video/x-raw-yuv"

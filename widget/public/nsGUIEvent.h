@@ -531,6 +531,14 @@ class nsHashKey;
 #define NS_BEFOREPRINT               (NS_PRINT_EVENT_START)
 #define NS_AFTERPRINT                (NS_PRINT_EVENT_START + 1)
 
+#define NS_MESSAGE_EVENT_START       4700
+#define NS_MESSAGE                   (NS_MESSAGE_EVENT_START)
+
+// Open and close events
+#define NS_OPENCLOSE_EVENT_START     4800
+#define NS_OPEN                      (NS_OPENCLOSE_EVENT_START)
+#define NS_CLOSE                     (NS_OPENCLOSE_EVENT_START+1)
+
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.

@@ -124,6 +124,7 @@ XPIDLSRCS	= \
 		nsIContentSecurityPolicy.idl \
 		nsIFrameMessageManager.idl \
 		nsIWebSocket.idl \
+		nsIEventSource.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

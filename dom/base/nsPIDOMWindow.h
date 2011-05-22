@@ -52,6 +52,8 @@
 #include "nsIURI.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
+#define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
+#define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"
 
 class nsIPrincipal;
 
