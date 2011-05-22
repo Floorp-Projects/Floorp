@@ -46,16 +46,16 @@
  *
  * This interface follows Tim Berners-Lee's URI spec (RFC2396) [1], where the
  * basic URI components are defined as such:
- * <pre> 
- *      ftp://username:password@hostname:portnumber/pathname
- *      \ /   \               / \      / \        /\       /
- *       -     ---------------   ------   --------  -------
- *       |            |             |        |         |
- *       |            |             |        |        Path
- *       |            |             |       Port         
- *       |            |            Host      /
- *       |         UserPass                 /
- *     Scheme                              /
+ * <pre>
+ *      ftp://username:password@hostname:portnumber/pathname#ref
+ *      \ /   \               / \      / \        /\         \ /
+ *       -     ---------------   ------   --------  |         -
+ *       |            |             |        |      |         |
+ *       |            |             |        |      |        Ref
+ *       |            |             |       Port    \        /
+ *       |            |            Host      /       --------
+ *       |         UserPass                 /	         |
+ *     Scheme                              /	        Path
  *       \                                /
  *        --------------------------------
  *                       |
@@ -63,6 +63,10 @@
  * </pre>
  * The definition of the URI components has been extended to allow for
  * internationalized domain names [2] and the more generic IRI structure [3].
+ *
+ * Note also that the RFC defines #-separated fragment identifiers as being
+ * "not part of the URI".  Despite this, we bundle them as part of the URI, for
+ * convenience.
  *
  * [1] http://www.ietf.org/rfc/rfc2396.txt
  * [2] http://www.ietf.org/internet-drafts/draft-ietf-idn-idna-06.txt
@@ -91,7 +95,7 @@
  * The correct way to create an nsIURI from a string is via
  * nsIIOService.newURI.
  */
-[scriptable, uuid(07a22cc0-0ce5-11d3-9331-00104ba0fd40)]
+[scriptable, uuid(70d94a92-2b13-4e03-9f84-c1684aeea0f2)]
 interface nsIURI : nsISupports
 {
     /************************************************************************
@@ -173,6 +177,14 @@ interface nsIURI : nsISupports
      * Some characters may be escaped.
      */
     attribute AUTF8String path;
+
+    /**
+     * Returns the reference portion (the part after the "#") of the URI.
+     * If there isn't one, an empty string is returned.
+     *
+     * Some characters may be escaped.
+     */
+    attribute AUTF8String ref;
 
 
     /************************************************************************

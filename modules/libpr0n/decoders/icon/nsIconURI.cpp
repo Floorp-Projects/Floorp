@@ -385,6 +385,19 @@ nsMozIconURI::SetPath(const nsACString &aPath)
 }
 
 NS_IMETHODIMP
+nsMozIconURI::GetRef(nsACString &aRef)
+{
+  aRef.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::SetRef(const nsACString &aRef)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsMozIconURI::Equals(nsIURI *other, PRBool *result)
 {
   NS_ENSURE_ARG_POINTER(other);
