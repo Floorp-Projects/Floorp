@@ -390,7 +390,7 @@ nsEventSource::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  mozilla::DebugOnly<nsresult> rv;
+  nsresult rv;
   if (strcmp(aTopic, DOM_WINDOW_FROZEN_TOPIC) == 0) {
     rv = Freeze();
     NS_ASSERTION(rv, "Freeze() failed");
