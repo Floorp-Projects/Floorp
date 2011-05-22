@@ -83,6 +83,14 @@ DEPENDENT_LIBS_LIST += \
 
 ifdef MOZ_ENABLE_LIBXUL
 
+ifndef MOZ_NATIVE_SQLITE
+ifeq ($(OS_TARGET),OS2)
+DEPENDENT_LIBS_LIST += mozsqlt3.dll
+else
+DEPENDENT_LIBS_LIST += $(DLL_PREFIX)mozsqlite3$(DLL_SUFFIX)
+endif
+endif
+
 DEPENDENT_LIBS_LIST += \
 	$(DLL_PREFIX)nssutil3$(DLL_SUFFIX) \
 	$(DLL_PREFIX)softokn3$(DLL_SUFFIX) \
@@ -93,14 +101,6 @@ DEPENDENT_LIBS_LIST += \
 
 ifdef JS_SHARED_LIBRARY
 DEPENDENT_LIBS_LIST += $(DLL_PREFIX)mozjs$(DLL_SUFFIX)
-endif
-
-ifndef MOZ_NATIVE_SQLITE
-ifeq ($(OS_TARGET),OS2)
-DEPENDENT_LIBS_LIST += mozsqlt3.dll
-else
-DEPENDENT_LIBS_LIST += $(DLL_PREFIX)mozsqlite3$(DLL_SUFFIX)
-endif
 endif
 
 ifeq (bundle,$(MOZ_FS_LAYOUT))
