@@ -39,35 +39,28 @@
 #include "nspluginroot.idl"
 #include "nsIInputStream.idl"
 
-interface nsIPluginInstance;
 interface nsIDocument;
 
 %{C++
 #include "npapi.h"
+#include "nsNPAPIPluginInstance.h"
 class nsPluginEvent;
 %}
 
-[ref] native nsIPluginInstanceRef(nsIPluginInstance*);
+[ptr] native nsNPAPIPluginInstancePtr(nsNPAPIPluginInstance);
 
-[uuid(B48DC23E-C20B-4292-974E-E8FF97B9F1CC)]
+[uuid(17E89C1F-AE62-448E-83D5-C33FA6E07A19)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
    * Let the owner know what its instance is
    */
-  void setInstance(in nsIPluginInstance aInstance);
+  void setInstance(in nsNPAPIPluginInstancePtr aInstance);
 
   /**
    * Get the instance associated with this owner.
    */
-  void getInstance(in nsIPluginInstanceRef aInstance);
-
-%{C++
-  // make getter_AddRefs work
-  inline nsresult GetInstance(nsIPluginInstance** aInstance) {
-    return GetInstance(*aInstance);
-  }
-%}
+  nsNPAPIPluginInstancePtr getInstance();
 
   /**
    * Get a handle to the window structure of the owner.

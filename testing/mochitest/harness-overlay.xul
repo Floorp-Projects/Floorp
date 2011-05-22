@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/static/harness.css" 
+                 type="text/css"?>
 
-<overlay id="browserTestOverlay"
+<overlay id="chromeTestOverlay"
          xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -15,30 +17,21 @@
           src="chrome://mochikit/content/tests/SimpleTest/MozillaFileLogger.js"/>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/quit.js" />
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
   <script type="application/javascript"
           src="chrome://mochikit/content/chrome-harness.js" />
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
   <script type="application/javascript;version=1.7"><![CDATA[
+
+if (Cc === undefined) {
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+}
 
 function loadTests()
 {
   window.removeEventListener("load", loadTests, false);
-
-  var baseurl = 'chrome://mochitests/content';
-  var testsURI = Components.classes["@mozilla.org/file/directory_service;1"]
-                      .getService(Components.interfaces.nsIProperties)
-                      .get("ProfD", Components.interfaces.nsILocalFile);
-  testsURI.append("tests.manifest");
-  var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
-              getService(Components.interfaces.nsIIOService);
-  var manifestFile = ioSvc.newFileURI(testsURI)
-                  .QueryInterface(Components.interfaces.nsIFileURL).file;
-
-  Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar).
-    autoRegister(manifestFile);
-
-  var dir = document.documentElement.getAttribute('directory');
+  [links, singleTestPath] = getTestList();
 
   // load server.js in so we can share template functions
   var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
@@ -46,18 +39,9 @@ function loadTests()
   var srvScope = {};
   scriptLoader.loadSubScript('chrome://mochikit/content/server.js',
                              srvScope);
+
   // generate our test list
   srvScope.makeTags();
-
-  var singleTestPath;
-  var links;
-
-  if (getResolvedURI(baseurl).JARFile) {
-    [links, singleTestPath] = getMochitestJarListing(baseurl, params.testPath, dir);
-  } else {
-    [links, singleTestPath] = getFileListing(baseurl, params.testPath, dir, srvScope);
-  }
-  
   var tableContent = srvScope.linksToTableRows(links, 0);
 
   function populate() {

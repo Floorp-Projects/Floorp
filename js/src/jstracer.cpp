@@ -3272,7 +3272,7 @@ GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, 
         stackOffset -= fi->callerHeight;
         JSObject* callee = *(JSObject**)(&state->stackBase[stackOffset]);
         JSFunction* fun = GET_FUNCTION_PRIVATE(cx, callee);
-        uintN calleeLevel = fun->u.i.script->staticLevel;
+        uintN calleeLevel = fun->script()->staticLevel;
         if (calleeLevel == upvarLevel) {
             /*
              * Now find the upvar's value in the native stack. stackOffset is
@@ -8562,16 +8562,16 @@ TraceRecorder::d2i(LIns* d, bool resultCanBeImpreciseIfFractional)
     }
     if (d->isCall()) {
         const CallInfo* ci = d->callInfo();
-        if (ci == &js_UnboxDouble_ci) {
+        if (ci == &js_UnboxNumberAsDouble_ci) {
 #if JS_BITS_PER_WORD == 32
             LIns *tag_ins = d->callArgN(0);
             LIns *payload_ins = d->callArgN(1);
             LIns* args[] = { payload_ins, tag_ins };
-            return w.call(&js_UnboxInt32_ci, args);
+            return w.call(&js_UnboxNumberAsInt32_ci, args);
 #else
             LIns* val_ins = d->callArgN(0);
             LIns* args[] = { val_ins };
-            return w.call(&js_UnboxInt32_ci, args);
+            return w.call(&js_UnboxNumberAsInt32_ci, args);
 #endif
         }
         if (ci == &js_StringToNumber_ci) {
@@ -9693,7 +9693,7 @@ TraceRecorder::unbox_number_as_double(Address addr, LIns *tag_ins, VMSideExit *e
     guard(true, w.leui(tag_ins, w.nameImmui(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET)), exit);
     LIns *val_ins = w.ldiValuePayload(addr);
     LIns* args[] = { val_ins, tag_ins };
-    return w.call(&js_UnboxDouble_ci, args);
+    return w.call(&js_UnboxNumberAsDouble_ci, args);
 }
 
 inline LIns*
@@ -9785,7 +9785,7 @@ TraceRecorder::box_value_into(const Value &v, LIns *v_ins, Address addr)
 {
     if (v.isNumber()) {
         JS_ASSERT(v_ins->isD());
-        if (fcallinfo(v_ins) == &js_UnboxDouble_ci) {
+        if (fcallinfo(v_ins) == &js_UnboxNumberAsDouble_ci) {
             w.stiValueTag(v_ins->callArgN(0), addr);
             w.stiValuePayload(v_ins->callArgN(1), addr);
         } else if (IsPromotedInt32(v_ins)) {
@@ -9843,7 +9843,7 @@ TraceRecorder::unbox_number_as_double(LIns *v_ins, VMSideExit *exit)
           w.ltuq(v_ins, w.nameImmq(JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET)),
           exit);
     LIns* args[] = { v_ins };
-    return w.call(&js_UnboxDouble_ci, args);
+    return w.call(&js_UnboxNumberAsDouble_ci, args);
 }
 
 inline nanojit::LIns*
@@ -9937,7 +9937,7 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
 {
     if (v.isNumber()) {
         JS_ASSERT(v_ins->isD());
-        if (fcallinfo(v_ins) == &js_UnboxDouble_ci)
+        if (fcallinfo(v_ins) == &js_UnboxNumberAsDouble_ci)
             return v_ins->callArgN(0);
         if (IsPromotedInt32(v_ins)) {
             return w.orq(w.ui2uq(w.demoteToInt32(v_ins)),
@@ -10544,10 +10544,9 @@ TraceRecorder::record_JSOP_IFNE()
 LIns*
 TraceRecorder::newArguments(LIns* callee_ins)
 {
-    LIns* global_ins = w.immpObjGC(globalObj);
     LIns* argc_ins = w.nameImmi(cx->fp()->numActualArgs());
 
-    LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
+    LIns* args[] = { callee_ins, argc_ins, cx_ins };
     LIns* argsobj_ins = w.call(&js_NewArgumentsOnTrace_ci, args);
     guard(false, w.eqp0(argsobj_ins), OOM_EXIT);
 
@@ -12476,11 +12475,11 @@ RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
 {
     JSString* name = *namep;
     if (name->isAtom()) {
-        *idp = INTERNED_STRING_TO_JSID(name);
+        *idp = ATOM_TO_JSID(&name->asAtom());
         return true;
     }
 
-    JSAtom* atom = js_AtomizeString(cx, name, 0);
+    JSAtom* atom = js_AtomizeString(cx, name);
     if (!atom)
         return false;
     *namep = atom; /* write back to GC root */
@@ -13745,7 +13744,7 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     debug_only_print0(LC_TMTracer, "\n");
 #endif
 
-    updateAtoms(fun->u.i.script);
+    updateAtoms(fun->script());
     return RECORD_CONTINUE;
 }
 

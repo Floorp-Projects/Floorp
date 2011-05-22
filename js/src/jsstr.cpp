@@ -768,6 +768,8 @@ Class js_StringClass = {
 static JS_ALWAYS_INLINE JSString *
 ThisToStringForStringProto(JSContext *cx, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return NULL);
+
     if (vp[1].isString())
         return vp[1].toString();
 
@@ -2071,7 +2073,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         if (str->isAtom()) {
             atom = &str->asAtom();
         } else {
-            atom = js_AtomizeString(cx, str, 0);
+            atom = js_AtomizeString(cx, str);
             if (!atom)
                 return false;
         }
@@ -2504,7 +2506,7 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
                  * encode large scripts.  We only handle the code patterns generated
                  * by such packers here.
                  */
-                JSScript *script = fun->u.i.script;
+                JSScript *script = fun->script();
                 jsbytecode *pc = script->code;
 
                 Value table = UndefinedValue();
@@ -3776,7 +3778,7 @@ StringBuffer::finishAtom()
     if (length == 0)
         return cx->runtime->atomState.emptyAtom;
 
-    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length, 0);
+    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length);
     cb.clear();
     return atom;
 }

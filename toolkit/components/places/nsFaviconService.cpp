@@ -64,6 +64,7 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "plbase64.h"
+#include "nsIClassInfoImpl.h"
 
 // For large favicons optimization.
 #include "imgITools.h"
@@ -106,9 +107,11 @@ private:
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsFaviconService, gFaviconService)
 
-NS_IMPL_ISUPPORTS1(
+NS_IMPL_CLASSINFO(nsFaviconService, NULL, 0, NS_FAVICONSERVICE_CID)
+NS_IMPL_ISUPPORTS2_CI(
   nsFaviconService
 , nsIFaviconService
+, mozIAsyncFavicons
 )
 
 nsFaviconService::nsFaviconService()
@@ -429,6 +432,15 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPageURI,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
+                                            nsIURI* aFaviconURI,
+                                            PRBool aForceReload,
+                                            nsIFaviconDataCallback* aCallback)
+{
+  return SetAndLoadFaviconForPage(aPageURI, aFaviconURI,
+                                  aForceReload, aCallback);
+}
 
 // nsFaviconService::SetFaviconData
 //
@@ -715,6 +727,19 @@ nsFaviconService::GetFaviconForPage(nsIURI* aPageURI, nsIURI** _retval)
 
 
 NS_IMETHODIMP
+nsFaviconService::GetFaviconURLForPage(nsIURI *aPageURI,
+                                       nsIFaviconDataCallback* aCallback)
+{
+  NS_ENSURE_ARG(aPageURI);
+  NS_ENSURE_ARG(aCallback);
+
+  nsresult rv = AsyncGetFaviconURLForPage::start(aPageURI, mDBConn, aCallback);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsFaviconService::GetFaviconImageForPage(nsIURI* aPageURI, nsIURI** _retval)
 {
   NS_ENSURE_ARG(aPageURI);
@@ -942,7 +967,8 @@ nsFaviconService::FinalizeStatements() {
 
   // Finalize the statementCache on the correct thread.
   nsRefPtr<FinalizeStatementCacheProxy<mozIStorageStatement> > event =
-    new FinalizeStatementCacheProxy<mozIStorageStatement>(mSyncStatements, this);
+    new FinalizeStatementCacheProxy<mozIStorageStatement>(
+        mSyncStatements, NS_ISUPPORTS_CAST(nsIFaviconService*, this));
   nsCOMPtr<nsIEventTarget> target = do_GetInterface(mDBConn);
   NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
   nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);

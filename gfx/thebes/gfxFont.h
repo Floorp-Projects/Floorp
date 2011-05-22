@@ -234,8 +234,9 @@ public:
     PRBool IsFixedPitch() const { return mFixedPitch; }
     PRBool IsItalic() const { return mItalic; }
     PRBool IsBold() const { return mWeight >= 600; } // bold == weights 600 and above
-    PRBool IsSymbolFont() const { return mSymbolFont; }
     PRBool IgnoreGDEF() const { return mIgnoreGDEF; }
+
+    virtual PRBool IsSymbolFont();
 
     inline PRBool HasCmapTable() {
         if (!mCmapInitialized) {

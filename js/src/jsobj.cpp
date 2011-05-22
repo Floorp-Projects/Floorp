@@ -1187,22 +1187,17 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
      * Try the JSON parser first because it's much faster.  If the eval string
      * isn't JSON, JSON parsing will probably fail quickly, so little time
      * will be lost.
+     *
+     * Don't use the JSON parser if the caller is strict mode code, because in
+     * strict mode object literals must not have repeated properties, and the
+     * JSON parser cheerfully (and correctly) accepts them.  If you're parsing
+     * JSON with eval and using strict mode, you deserve to be slow.
      */
-    if (length > 2 && chars[0] == '(' && chars[length - 1] == ')') {
-#if USE_OLD_AND_BUSTED_JSON_PARSER
-        Value tmp;
-        JSONParser *jp = js_BeginJSONParse(cx, &tmp, /* suppressErrors = */true);
-        if (jp != NULL) {
-            /* Run JSON-parser on string inside ( and ). */
-            bool ok = js_ConsumeJSONText(cx, jp, chars + 1, length - 2);
-            ok &= js_FinishJSONParse(cx, jp, NullValue());
-            if (ok) {
-                call.rval() = tmp;
-                return true;
-            }
-#else
-        JSONSourceParser parser(cx, chars + 1, length - 2, JSONSourceParser::StrictJSON,
-                                JSONSourceParser::NoError);
+    if (length > 2 &&
+        chars[0] == '(' && chars[length - 1] == ')' &&
+        (!caller || !caller->script()->strictModeCode))
+    {
+        JSONParser parser(cx, chars + 1, length - 2, JSONParser::StrictJSON, JSONParser::NoError);
         Value tmp;
         if (!parser.parse(&tmp))
             return false;
@@ -1210,7 +1205,6 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
             call.rval() = tmp;
             return true;
         }
-#endif
     }
 
     /*
@@ -4243,7 +4237,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *protoProto,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
-    JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
+    JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name));
     if (!atom)
         return NULL;
 
@@ -4538,12 +4532,17 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
     cx->markTypeObjectUnknownProperties(obj->getType());
     cx->markTypeObjectUnknownProperties(type);
 
-    if (!proto || !checkForCycles) {
-        obj->setType(type);
-    } else if (!SetTypeCheckingForCycles(cx, obj, type)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE, js_proto_str);
-        return false;
+    if (checkForCycles) {
+        for (JSObject *obj2 = proto; obj2; obj2 = obj2->getProto()) {
+            if (obj2 == obj) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE,
+                                     js_proto_str);
+                return false;
+            }
+        }
     }
+
+    obj->setType(type);
     return true;
 }
 
@@ -4633,7 +4632,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         }
         id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
     } else {
-        JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
+        JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name));
         if (!atom)
             return false;
         id = ATOM_TO_JSID(atom);
@@ -6700,7 +6699,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
             if (protoKey != JSProto_Null) {
                 classDef |= (protoKey << 1);
             } else {
-                atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
+                atom = js_Atomize(cx, clasp->name, strlen(clasp->name));
                 if (!atom)
                     return JS_FALSE;
             }

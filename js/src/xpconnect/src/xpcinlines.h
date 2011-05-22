@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -47,14 +48,19 @@
 PRBool
 xpc::PtrAndPrincipalHashKey::KeyEquals(const PtrAndPrincipalHashKey* aKey) const
 {
-  if(aKey->mPtr != mPtr)
-    return PR_FALSE;
+    if(aKey->mPtr != mPtr)
+        return PR_FALSE;
+    if(aKey->mPrincipal == mPrincipal)
+        return PR_TRUE;
 
-  if(!mURI || !aKey->mURI)
-      return mURI == aKey->mURI;
+    PRBool equals;
+    if(NS_FAILED(mPrincipal->EqualsIgnoringDomain(aKey->mPrincipal, &equals)))
+    {
+        NS_ERROR("we failed, guessing!");
+        return PR_FALSE;
+    }
 
-  nsIScriptSecurityManager *ssm = nsXPConnect::gScriptSecurityManager;
-  return !ssm || NS_SUCCEEDED(ssm->CheckSameOriginURI(mURI, aKey->mURI, PR_FALSE));
+    return equals;
 }
 
 inline void

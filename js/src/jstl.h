@@ -503,6 +503,25 @@ ImplicitCast(U &u)
     return t;
 }
 
+template<typename T>
+class AutoScopedAssign
+{
+  private:
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    T *addr;
+    T old;
+
+  public:
+    AutoScopedAssign(T *addr, const T &value JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : addr(addr), old(*addr)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        *addr = value;
+    }
+
+    ~AutoScopedAssign() { *addr = old; }
+};
+
 } /* namespace js */
 
 #endif /* jstl_h_ */

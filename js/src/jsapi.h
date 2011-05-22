@@ -333,16 +333,22 @@ JSID_IS_ZERO(jsid id)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_StringHasBeenInterned(JSString *str);
+JS_StringHasBeenInterned(JSContext *cx, JSString *str);
 
-/* A jsid may only hold an interned JSString. */
+/*
+ * Only JSStrings that have been interned via the JSAPI can be turned into
+ * jsids by API clients.
+ *
+ * N.B. if a jsid is backed by a string which has not been interned, that
+ * string must be appropriately rooted to avoid being collected by the GC.
+ */
 static JS_ALWAYS_INLINE jsid
-INTERNED_STRING_TO_JSID(JSString *str)
+INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str)
 {
     jsid id;
     JS_ASSERT(str);
-    JS_ASSERT(JS_StringHasBeenInterned(str));
     JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
+    JS_ASSERT(JS_StringHasBeenInterned(cx, str));
     JSID_BITS(id) = (size_t)str;
     return id;
 }
@@ -3776,6 +3782,15 @@ JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN
 extern JS_PUBLIC_API(JSBool)
 JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *reobj, jschar *chars, size_t length,
                           size_t *indexp, JSBool test, jsval *rval);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ObjectIsRegExp(JSContext *cx, JSObject *obj);
+
+extern JS_PUBLIC_API(uintN)
+JS_GetRegExpFlags(JSContext *cx, JSObject *obj);
+
+extern JS_PUBLIC_API(JSString *)
+JS_GetRegExpSource(JSContext *cx, JSObject *obj);
 
 /************************************************************************/
 

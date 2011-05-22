@@ -49,6 +49,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = \
   head.js \
   remote_autocomplete.js \
+  remote_contentpopup.js \
   remote_head.js \
   remote_forms.js \
   remote_formsZoom.js \
@@ -67,6 +68,8 @@ _BROWSER_FILES = \
   browser_click_content.html \
   browser_click_content.js \
   browser_contacts.js \
+  browser_contentpopup.html \
+  browser_contentpopup.js \
   browser_dragger.js \
   browser_find.js \
   browser_forms.html \

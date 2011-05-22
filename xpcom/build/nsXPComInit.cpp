@@ -457,25 +457,11 @@ NS_InitXPCOM2(nsIServiceManager* *result,
         if (NS_FAILED(rv)) return rv;
     }
 
-#ifdef MOZ_OMNIJAR
     NS_TIME_FUNCTION_MARK("Next: Omnijar init");
 
-    if (!mozilla::OmnijarPath()) {
-        nsCOMPtr<nsILocalFile> omnijar;
-        nsCOMPtr<nsIFile> file;
-
-        rv = NS_ERROR_FAILURE;
-        nsDirectoryService::gService->Get(NS_GRE_DIR,
-                                          NS_GET_IID(nsIFile),
-                                          getter_AddRefs(file));
-        if (file)
-            rv = file->Append(NS_LITERAL_STRING("omni.jar"));
-        if (NS_SUCCEEDED(rv))
-            omnijar = do_QueryInterface(file);
-        if (NS_SUCCEEDED(rv))
-            mozilla::SetOmnijar(omnijar);
+    if (!mozilla::Omnijar::IsInitialized()) {
+        mozilla::Omnijar::Init();
     }
-#endif
 
     if ((sCommandLineWasInitialized = !CommandLine::IsInitialized())) {
         NS_TIME_FUNCTION_MARK("Next: IPC command line init");
@@ -755,9 +741,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         sExitManager = nsnull;
     }
 
-#ifdef MOZ_OMNIJAR
-    mozilla::SetOmnijar(nsnull);
-#endif
+    mozilla::Omnijar::CleanUp();
 
     NS_LogTerm();
 

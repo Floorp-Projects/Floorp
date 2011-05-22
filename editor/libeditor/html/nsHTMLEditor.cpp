@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Daniel Glazman <glazman@netscape.com>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -105,10 +106,6 @@ static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 
 nsIRangeUtils* nsHTMLEditor::sRangeHelper;
-
-// some prototypes for rules creation shortcuts
-nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
-nsresult NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult);
 
 #define IsLinkTag(s) (s.EqualsIgnoreCase(hrefText))
 #define IsNamedAnchorTag(s) (s.EqualsIgnoreCase(anchorTxt) || s.EqualsIgnoreCase(namedanchorText))
@@ -305,9 +302,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     }
 
     // Init the HTML-CSS utils
-    result = NS_NewHTMLCSSUtils(getter_Transfers(mHTMLCSSUtils));
-    if (NS_FAILED(result)) { return result; }
-    mHTMLCSSUtils->Init(this);
+    mHTMLCSSUtils = new nsHTMLCSSUtils(this);
 
     // disable links
     nsCOMPtr<nsIPresShell> presShell;
@@ -323,11 +318,9 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
 
     // init the type-in state
     mTypeInState = new TypeInState();
-    if (!mTypeInState) {return NS_ERROR_NULL_POINTER;}
 
     // init the selection listener for image resizing
     mSelectionListenerP = new ResizerSelectionListener(this);
-    if (!mSelectionListenerP) {return NS_ERROR_NULL_POINTER;}
 
     if (!IsInteractionAllowed()) {
       // ignore any errors from this in case the file is missing
@@ -536,12 +529,8 @@ NS_IMETHODIMP
 nsHTMLEditor::InitRules()
 {
   // instantiate the rules for the html editor
-  nsresult res = NS_NewHTMLEditRules(getter_AddRefs(mRules));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(mRules, NS_ERROR_UNEXPECTED);
-  res = mRules->Init(static_cast<nsPlaintextEditor*>(this));
-  
-  return res;
+  mRules = new nsHTMLEditRules();
+  return mRules->Init(static_cast<nsPlaintextEditor*>(this));
 }
 
 NS_IMETHODIMP

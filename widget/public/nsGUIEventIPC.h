@@ -110,6 +110,50 @@ struct ParamTraits<nsInputEvent>
 };
 
 template<>
+struct ParamTraits<nsMouseEvent_base>
+{
+  typedef nsMouseEvent_base paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<nsInputEvent>(aParam));
+    WriteParam(aMsg, aParam.button);
+    WriteParam(aMsg, aParam.pressure);
+    WriteParam(aMsg, aParam.inputSource);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->button) &&
+           ReadParam(aMsg, aIter, &aResult->pressure) &&
+           ReadParam(aMsg, aIter, &aResult->inputSource);
+  }
+};
+
+template<>
+struct ParamTraits<nsMouseScrollEvent>
+{
+  typedef nsMouseScrollEvent paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<nsMouseEvent_base>(aParam));
+    WriteParam(aMsg, aParam.scrollFlags);
+    WriteParam(aMsg, aParam.delta);
+    WriteParam(aMsg, aParam.scrollOverflow);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->scrollFlags) &&
+           ReadParam(aMsg, aIter, &aResult->delta) &&
+           ReadParam(aMsg, aIter, &aResult->scrollOverflow);
+  }
+};
+
+template<>
 struct ParamTraits<nsTextRangeStyle>
 {
   typedef nsTextRangeStyle paramType;
@@ -235,12 +279,16 @@ struct ParamTraits<nsQueryContentEvent>
     WriteParam(aMsg, aParam.mSucceeded);
     WriteParam(aMsg, aParam.mInput.mOffset);
     WriteParam(aMsg, aParam.mInput.mLength);
+    WriteParam(aMsg, *aParam.mInput.mMouseScrollEvent);
     WriteParam(aMsg, aParam.mReply.mOffset);
     WriteParam(aMsg, aParam.mReply.mString);
     WriteParam(aMsg, aParam.mReply.mRect);
     WriteParam(aMsg, aParam.mReply.mReversed);
     WriteParam(aMsg, aParam.mReply.mHasSelection);
     WriteParam(aMsg, aParam.mReply.mWidgetIsHit);
+    WriteParam(aMsg, aParam.mReply.mLineHeight);
+    WriteParam(aMsg, aParam.mReply.mPageHeight);
+    WriteParam(aMsg, aParam.mReply.mPageWidth);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -250,12 +298,16 @@ struct ParamTraits<nsQueryContentEvent>
            ReadParam(aMsg, aIter, &aResult->mSucceeded) &&
            ReadParam(aMsg, aIter, &aResult->mInput.mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mInput.mLength) &&
+           ReadParam(aMsg, aIter, aResult->mInput.mMouseScrollEvent) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mString) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mRect) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mReversed) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mHasSelection) &&
-           ReadParam(aMsg, aIter, &aResult->mReply.mWidgetIsHit);
+           ReadParam(aMsg, aIter, &aResult->mReply.mWidgetIsHit) &&
+           ReadParam(aMsg, aIter, &aResult->mReply.mLineHeight) &&
+           ReadParam(aMsg, aIter, &aResult->mReply.mPageHeight) &&
+           ReadParam(aMsg, aIter, &aResult->mReply.mPageWidth);
   }
 };
 

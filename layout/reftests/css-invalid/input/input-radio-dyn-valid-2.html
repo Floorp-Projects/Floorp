@@ -4,14 +4,8 @@
              group, all radio should not suffer from being missing. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('i1').required = false;
-                if (document.getElementById('i1').mozMatchesSelector(':invalid') ||
-                    document.getElementById('i2').mozMatchesSelector(':invalid')) {
-                  document.body.textContent='FAIL';
-                } else {
-                  document.body.textContent='SUCCESS';
-                }
                 document.documentElement.className='';">
-    <input id='i1' name='foo' type='radio' required>
-    <input id='i2' name='foo' type='radio'>
+    <input class='notinvalid' id='i1' name='foo' type='radio' required>
+    <input class='notinvalid' id='i2' name='foo' type='radio'>
   </body>
 </html>

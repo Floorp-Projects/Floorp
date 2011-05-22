@@ -4910,7 +4910,7 @@ js_DecompileFunctionBody(JSPrinter *jp)
         return JS_TRUE;
     }
 
-    script = jp->fun->u.i.script;
+    script = jp->fun->script();
     return DecompileBody(jp, script, script->code);
 }
 
@@ -4951,7 +4951,7 @@ js_DecompileFunction(JSPrinter *jp)
         jp->indent -= 4;
         js_printf(jp, "\t}");
     } else {
-        JSScript *script = fun->u.i.script;
+        JSScript *script = fun->script();
 #if JS_HAS_DESTRUCTURING
         SprintStack ss;
         void *mark;
