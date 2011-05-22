@@ -1697,7 +1697,22 @@ nsStandardURL::StartClone()
 NS_IMETHODIMP
 nsStandardURL::Clone(nsIURI **result)
 {
-    nsStandardURL *clone = StartClone();
+    return CloneInternal(eHonorRef, result);
+}
+
+
+NS_IMETHODIMP
+nsStandardURL::CloneIgnoringRef(nsIURI **result)
+{
+    return CloneInternal(eIgnoreRef, result);
+}
+
+nsresult
+nsStandardURL::CloneInternal(nsStandardURL::RefHandlingEnum refHandlingMode,
+                             nsIURI **result)
+
+{
+    nsRefPtr<nsStandardURL> clone = StartClone();
     if (!clone)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1727,7 +1742,11 @@ nsStandardURL::Clone(nsIURI **result)
     clone->mHostEncoding = mHostEncoding;
     clone->mSpecEncoding = mSpecEncoding;
 
-    NS_ADDREF(*result = clone);
+    if (refHandlingMode == eIgnoreRef) {
+        clone->SetRef(EmptyCString());
+    }
+
+    clone.forget(result);
     return NS_OK;
 }
 

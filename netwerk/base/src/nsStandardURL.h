@@ -167,6 +167,10 @@ protected:
 
     virtual nsStandardURL* StartClone();
 
+    // Helper to share code between Clone methods.
+    nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
+                           nsIURI** aClone);
+
     // Helper for subclass implementation of GetFile().  Subclasses that map
     // URIs to files in a special way should implement this method.  It should
     // ensure that our mFile is initialized, if it's possible.

@@ -80,14 +80,20 @@ protected:
         eHonorRef
     };
 
-    // Helper to share code between Equals methods.  Subclasses can override
-    // for custom Equals behavior.
+    // Helper to share code between Equals methods.
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
                                     PRBool* result);
 
-    virtual nsSimpleURI* StartClone();
+    // NOTE: This takes the refHandlingMode as an argument because
+    // nsSimpleNestedURI's specialized version needs to know how to clone
+    // its inner URI.
+    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode);
 
+    // Helper to share code between Clone methods.
+    virtual nsresult CloneInternal(RefHandlingEnum refHandlingMode,
+                                   nsIURI** clone);
+    
     nsCString mScheme;
     nsCString mPath;
     PRBool mMutable;

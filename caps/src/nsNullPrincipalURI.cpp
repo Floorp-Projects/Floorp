@@ -237,9 +237,16 @@ nsNullPrincipalURI::Clone(nsIURI **_newURI)
 {
   nsCOMPtr<nsIURI> uri =
     new nsNullPrincipalURI(mScheme + NS_LITERAL_CSTRING(":") + mPath);
-  NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
   uri.forget(_newURI);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNullPrincipalURI::CloneIgnoringRef(nsIURI **_newURI)
+{
+  // GetRef/SetRef not supported by nsNullPrincipalURI, so
+  // CloneIgnoringRef() is the same as Clone().
+  return Clone(_newURI);
 }
 
 NS_IMETHODIMP
