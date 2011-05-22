@@ -569,4 +569,17 @@ XRE_API(void,
         XRE_SetupDllBlocklist, ())
 #endif
 
+enum HistogramTypes {
+  HISTOGRAM_EXPONENTIAL = 0,
+  HISTOGRAM_LINEAR = 1
+};
+
+XRE_API(nsresult,
+        XRE_TelemetryAdd, (const char *name,
+                           int sample,
+                           PRUint32 min,
+                           PRUint32 max,
+                           PRUint32 bucket_count,
+                           HistogramTypes histogram_type))
+
 #endif // _nsXULAppAPI_h__
