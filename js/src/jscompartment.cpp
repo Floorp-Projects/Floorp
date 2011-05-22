@@ -145,12 +145,12 @@ JSCompartment::init()
         return false;
 
 #ifdef JS_METHODJIT
-    if (!(jaegerCompartment = rt->new_<mjit::JaegerCompartment>()))
+    jaegerCompartment = rt->new_<mjit::JaegerCompartment>();
+    if (!jaegerCompartment || !jaegerCompartment->Initialize())
         return false;
-    return jaegerCompartment->Initialize();
-#else
-    return true;
 #endif
+        
+    return true;
 }
 
 #ifdef JS_METHODJIT
