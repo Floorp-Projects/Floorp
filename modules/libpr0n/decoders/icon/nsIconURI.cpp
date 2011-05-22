@@ -449,9 +449,6 @@ nsMozIconURI::Clone(nsIURI **result)
   }
 
   nsMozIconURI *uri = new nsMozIconURI();
-  if (!uri)
-    return NS_ERROR_OUT_OF_MEMORY;
- 
   newIconURL.swap(uri->mIconURL);
   uri->mSize = mSize;
   uri->mContentType = mContentType;
@@ -462,6 +459,14 @@ nsMozIconURI::Clone(nsIURI **result)
   NS_ADDREF(*result = uri);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::CloneIgnoringRef(nsIURI **result)
+{
+  // GetRef/SetRef not supported by nsMozIconURI, so
+  // CloneIgnoringRef() is the same as Clone().
+  return Clone(result);
 }
 
 NS_IMETHODIMP

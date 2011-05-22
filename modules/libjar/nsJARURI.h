@@ -105,6 +105,10 @@ protected:
                                     RefHandlingEnum refHandlingMode,
                                     PRBool* result);
 
+    // Helper to share code between Clone methods.
+    nsresult CloneWithJARFileInternal(nsIURI *jarFile,
+                                      RefHandlingEnum refHandlingMode,
+                                      nsIJARURI **result);
     nsCOMPtr<nsIURI> mJARFile;
     // mJarEntry stored as a URL so that we can easily access things
     // like extensions, refs, etc.
