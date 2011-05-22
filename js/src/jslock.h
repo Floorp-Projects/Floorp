@@ -218,8 +218,11 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #endif
 
-#ifdef JS_THREADSAFE
+#ifdef __cplusplus
+
 namespace js {
+
+#ifdef JS_THREADSAFE
 class AutoLock {
   private:
     JSLock *lock;
@@ -228,10 +231,29 @@ class AutoLock {
     AutoLock(JSLock *lock) : lock(lock) { JS_ACQUIRE_LOCK(lock); }
     ~AutoLock() { JS_RELEASE_LOCK(lock); }
 };
-}  /* namespace js */
 # define JS_AUTO_LOCK_GUARD(name, l) AutoLock name((l));
 #else
 # define JS_AUTO_LOCK_GUARD(name, l)
+#endif
+
+class AutoAtomicIncrement {
+    int32 *p;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+  public:
+    AutoAtomicIncrement(int32 *p JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : p(p) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ATOMIC_INCREMENT(p);
+    }
+
+    ~AutoAtomicIncrement() {
+        JS_ATOMIC_DECREMENT(p);
+    }
+};
+
+} /* namespace js */
+
 #endif
 
 #endif /* jslock_h___ */

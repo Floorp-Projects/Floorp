@@ -2623,9 +2623,6 @@ AutoGCSession::~AutoGCSession()
 static JS_NEVER_INLINE void
 GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_PARAM)
 {
-    if (JS_ON_TRACE(cx))
-        return;
-
     JSRuntime *rt = cx->runtime;
 
     /*
@@ -2644,6 +2641,17 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_P
     }
 
     AutoGCSession gcsession(cx);
+
+    /*
+     * Don't GC if any thread is reporting an OOM. We check the flag after we
+     * have set up the GC session and know that the thread that reported OOM
+     * is either the current thread or waits for the GC to complete on this
+     * thread.
+     */
+    if (rt->inOOMReport) {
+        JS_ASSERT(gckind != GC_LAST_CONTEXT);
+        return;
+    }
 
     /*
      * We should not be depending on cx->compartment in the GC, so set it to
@@ -2697,10 +2705,6 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 {
     JSRuntime *rt = cx->runtime;
 
-    /* Don't GC while reporting an OOM. */
-    if (rt->inOOMReport)
-        return;
-
     /*
      * Don't collect garbage if the runtime isn't up, and cx is not the last
      * context in the runtime.  The last context must force a GC, and nothing
@@ -2709,6 +2713,11 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
      */
     if (rt->state != JSRTS_UP && gckind != GC_LAST_CONTEXT)
         return;
+
+    if (JS_ON_TRACE(cx)) {
+        JS_ASSERT(gckind != GC_LAST_CONTEXT);
+        return;
+    }
 
     RecordNativeStackTopForGC(cx);
 
