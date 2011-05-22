@@ -340,6 +340,8 @@ JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
            JSTrapHandler handler, jsval closure)
 {
+    JS_ASSERT(uint32(pc - script->code) < script->length);
+
     JSTrap *junk, *trap, *twin;
     JSRuntime *rt;
     uint32 sample;

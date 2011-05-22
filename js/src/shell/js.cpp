@@ -1903,6 +1903,10 @@ Trap(JSContext *cx, uintN argc, jsval *vp)
     argv[argc] = STRING_TO_JSVAL(str);
     if (!GetTrapArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
+    if (uint32(i) >= script->length) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_TRAP_USAGE);
+        return JS_FALSE;
+    }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_SetTrap(cx, script, script->code + i, TrapHandler, STRING_TO_JSVAL(str));
 }
