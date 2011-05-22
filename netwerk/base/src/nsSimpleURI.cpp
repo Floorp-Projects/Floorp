@@ -344,6 +344,22 @@ nsSimpleURI::SetRef(const nsACString &ref)
 NS_IMETHODIMP
 nsSimpleURI::Equals(nsIURI* other, PRBool *result)
 {
+    return EqualsInternal(other, eHonorRef, result);
+}
+
+NS_IMETHODIMP
+nsSimpleURI::EqualsExceptRef(nsIURI* other, PRBool *result)
+{
+    return EqualsInternal(other, eIgnoreRef, result);
+}
+
+/* virtual */ nsresult
+nsSimpleURI::EqualsInternal(nsIURI* other,
+                            nsSimpleURI::RefHandlingEnum refHandlingMode,
+                            PRBool* result)
+{
+    // XXXdholbert Currently ignoring refHandlingMode.  I'll make use of it
+    // in next patch, when I add support for .ref to this class.
     PRBool eq = PR_FALSE;
     if (other) {
         nsSimpleURI* otherUrl;

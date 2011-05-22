@@ -416,6 +416,14 @@ nsMozIconURI::Equals(nsIURI *other, PRBool *result)
 }
 
 NS_IMETHODIMP
+nsMozIconURI::EqualsExceptRef(nsIURI *other, PRBool *result)
+{
+  // GetRef/SetRef not supported by nsMozIconURI, so
+  // EqualsExceptRef() is the same as Equals().
+  return Equals(other, result);
+}
+
+NS_IMETHODIMP
 nsMozIconURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 {
   NS_ENSURE_ARG_POINTER(o_Equals);

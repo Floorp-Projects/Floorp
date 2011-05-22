@@ -95,7 +95,7 @@
  * The correct way to create an nsIURI from a string is via
  * nsIIOService.newURI.
  */
-[scriptable, uuid(70d94a92-2b13-4e03-9f84-c1684aeea0f2)]
+[scriptable, uuid(d6d04c36-0fa4-4db3-be05-4a18397103e2)]
 interface nsIURI : nsISupports
 {
     /************************************************************************
@@ -197,6 +197,15 @@ interface nsIURI : nsISupports
      * eg. http://foo.com:80/ == http://foo.com/
      */
     boolean equals(in nsIURI other);
+
+    /**
+     * URI equivalence test (not a strict string comparison), ignoring
+     * the value of the .ref member.
+     *
+     * eg. http://foo.com/# == http://foo.com/
+     *     http://foo.com/#aaa == http://foo.com/#bbb
+     */
+    boolean equalsExceptRef(in nsIURI other);
 
     /**
      * An optimization to do scheme checks without requiring the users of nsIURI
