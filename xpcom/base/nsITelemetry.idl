@@ -38,16 +38,24 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(5c9afdb5-0532-47f3-be31-79e13a6db642)]
+[scriptable, uuid(29464d3d-f838-4afb-a737-319fe0c6cc04)]
 interface nsITelemetry : nsISupports
 {
+  /**
+   * Histogram types:
+   * HISTOGRAM_EXPONENTIAL - buckets increase exponentially
+   * HISTOGRAM_LINEAR - buckets increase linearly
+   */
+  const unsigned long HISTOGRAM_EXPONENTIAL = 0;
+  const unsigned long HISTOGRAM_LINEAR = 1;
+
   /*
    * An object containing a snapshot from all of the currently registered histograms.
    * { name1: {data1}, name2:{data2}...}
    * where data is consists of the following properties:
    *   min - Minimal bucket size
    *   max - Maximum bucket size
-   *   histogram_type - 0:Exponential, 1:Linear
+   *   histogram_type - HISTOGRAM_EXPONENTIAL or HISTOGRAM_LINEAR
    *   counts - array representing contents of the buckets in the histogram
    *   ranges -  an array with calculated bucket sizes
    *   sum - sum of the bucket contents
@@ -61,16 +69,11 @@ interface nsITelemetry : nsISupports
    * @param min - Minimal bucket size
    * @param max - Maximum bucket size
    * @param bucket_count - number of buckets in the histogram.
+   * @param type - HISTOGRAM_EXPONENTIAL or HISTOGRAM_LINEAR
    * The returned object has the following functions:
    *   add(int) - Adds an int value to the appropriate bucket
    *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
    */
   [implicit_jscontext]
-  jsval newExponentialHistogram(in ACString name, in PRInt32 min, in PRInt32 max, in PRUint32 bucket_count);
-
-  /*
-    Same as newExponentialHistogram, but for linear histograms
-   */
-  [implicit_jscontext]
-  jsval newLinearHistogram(in ACString name, in PRInt32 min, in PRInt32 max, in PRUint32 bucket_count);
+  jsval newHistogram(in ACString name, in PRUint32 min, in PRUint32 max, in PRUint32 bucket_count, in unsigned long histogram_type);
 };

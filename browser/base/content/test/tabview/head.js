@@ -93,9 +93,13 @@ function newWindowWithTabView(shownCallback, loadCallback, width, height) {
 
 // ----------
 function afterAllTabsLoaded(callback, win) {
+  const TAB_STATE_NEEDS_RESTORE = 1;
+
   win = win || window;
 
   let stillToLoad = 0;
+  let restoreHiddenTabs = Services.prefs.getBoolPref(
+                          "browser.sessionstore.restore_hidden_tabs");
 
   function onLoad() {
     this.removeEventListener("load", onLoad, true);
@@ -105,8 +109,14 @@ function afterAllTabsLoaded(callback, win) {
   }
 
   for (let a = 0; a < win.gBrowser.tabs.length; a++) {
-    let browser = win.gBrowser.tabs[a].linkedBrowser;
-    if (browser.contentDocument.readyState != "complete" ||
+    let tab = win.gBrowser.tabs[a];
+    let browser = tab.linkedBrowser;
+
+    let isRestorable = !(tab.hidden && !restoreHiddenTabs &&
+                         browser.__SS_restoreState &&
+                         browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE);
+
+    if (isRestorable && browser.contentDocument.readyState != "complete" ||
         browser.webProgress.isLoadingDocument) {
       stillToLoad++;
       browser.addEventListener("load", onLoad, true);
@@ -114,7 +124,7 @@ function afterAllTabsLoaded(callback, win) {
   }
 
   if (!stillToLoad)
-    callback();
+    executeSoon(callback);
 }
 
 // ----------

@@ -71,6 +71,7 @@ browser.jar:
 #endif
 * skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
+  skin/classic/browser/preferences/aboutPermissions.css (preferences/aboutPermissions.css)
   skin/classic/browser/tabbrowser/alltabs.png          (tabbrowser/alltabs.png)
   skin/classic/browser/tabbrowser/connecting.png      (tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/loading.png         (tabbrowser/loading.png)

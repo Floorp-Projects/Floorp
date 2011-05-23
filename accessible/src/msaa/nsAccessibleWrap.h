@@ -327,7 +327,7 @@ public: // construction, destruction
   /**
    * Find an accessible by the given child ID in cached documents.
    */
-  virtual nsAccessible *GetXPAccessibleFor(const VARIANT& aVarChild);
+  nsAccessible* GetXPAccessibleFor(const VARIANT& aVarChild);
 
   NS_IMETHOD GetNativeInterface(void **aOutAccessible);
 

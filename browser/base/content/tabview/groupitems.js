@@ -2163,7 +2163,16 @@ let GroupItems = {
         }
 
         toClose.forEach(function(groupItem) {
-          groupItem.destroy({immediately: true});
+          // All remaining children in to-be-closed groups are re-used by
+          // session restore. Reconnect them so that they're put into their
+          // right groups.
+          groupItem.getChildren().forEach(function (tabItem) {
+            if (tabItem.parent && tabItem.parent.hidden)
+              iQ(tabItem.container).show();
+            tabItem._reconnected = false;
+            tabItem._reconnect();
+          });
+          groupItem.close({immediately: true});
         });
       }
 

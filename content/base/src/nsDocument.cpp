@@ -694,13 +694,9 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
   
   // First, make sure we strip the ref from aURI.
   nsCOMPtr<nsIURI> clone;
-  aURI->Clone(getter_AddRefs(clone));
-  if (!clone) {
+  nsresult rv = aURI->CloneIgnoringRef(getter_AddRefs(clone));
+  if (NS_FAILED(rv) || !clone) {
     return nsnull;
-  }
-  nsCOMPtr<nsIURL> url(do_QueryInterface(clone));
-  if (url) {
-    url->SetRef(EmptyCString());
   }
   
   ExternalResource* resource;
@@ -712,14 +708,11 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
   nsRefPtr<PendingLoad> load;
   mPendingLoads.Get(clone, getter_AddRefs(load));
   if (load) {
-    NS_ADDREF(*aPendingLoad = load);
+    load.forget(aPendingLoad);
     return nsnull;
   }
 
   load = new PendingLoad(aDisplayDocument);
-  if (!load) {
-    return nsnull;
-  }
 
   if (!mPendingLoads.Put(clone, load)) {
     return nsnull;
@@ -730,7 +723,7 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
     // chances are it failed for good reasons (security check, etc).
     AddExternalResource(clone, nsnull, nsnull, aDisplayDocument);
   } else {
-    NS_ADDREF(*aPendingLoad = load);
+    load.forget(aPendingLoad);
   }
 
   return nsnull;

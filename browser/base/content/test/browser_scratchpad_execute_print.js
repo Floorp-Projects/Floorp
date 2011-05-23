@@ -17,7 +17,7 @@ function test()
     gScratchpadWindow.addEventListener("load", runTests, false);
   }, true);
 
-  content.location = "data:text/html,<p>test execute() and print() in Scratchpad";
+  content.location = "data:text/html,<p>test run() and display() in Scratchpad";
 }
 
 function runTests()
@@ -31,7 +31,7 @@ function runTests()
   ok(sp.textbox, "textbox exists");
   sp.textbox.value = "++window.foobarBug636725";
 
-  let exec = sp.execute();
+  let exec = sp.run();
   is(exec[0], sp.textbox.value, "execute()[0] is correct");
   is(exec[1], content.wrappedJSObject.foobarBug636725,
      "execute()[1] is correct");
@@ -42,7 +42,7 @@ function runTests()
   is(content.wrappedJSObject.foobarBug636725, 2,
      "execute() updated window.foobarBug636725");
 
-  sp.print();
+  sp.display();
 
   is(content.wrappedJSObject.foobarBug636725, 3,
      "print() updated window.foobarBug636725");
@@ -69,7 +69,7 @@ function runTests()
   is(sp.textbox.selectionStart, 0, "selectionStart is 0");
   is(sp.textbox.selectionEnd, 29, "selectionEnd is 29");
 
-  exec = sp.execute();
+  exec = sp.run();
 
   is(exec[0], "window.foobarBug636725 = 'a';",
      "execute()[0] is correct");
@@ -88,7 +88,7 @@ function runTests()
 
   sp.selectRange(0, 22);
 
-  sp.print();
+  sp.display();
 
   is(content.wrappedJSObject.foobarBug636725, "a",
      "print() worked for the selected range");

@@ -419,6 +419,15 @@ function runTest() {
            },
            ];
 
+  for (let i = 0; i < 110; i++) {
+    tests.push({ newTest: "*******" },
+               { pass: 1,
+                 method: "DELETE",
+                 allowMethods: "DELETE",
+                 cacheTime: 3600,
+               });
+  }
+
   baseURL = "http://mochi.test:8888/tests/content/base/test/" +
              "file_CrossSiteXHR_cache_server.sjs?";
   setStateURL = baseURL + "setState=";

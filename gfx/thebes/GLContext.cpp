@@ -383,6 +383,7 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
 
         fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
+        fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
 
         UpdateActualFormat();
     }
@@ -702,6 +703,9 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
 PRBool
 GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 {
+    if (!IsOffscreenSizeAllowed(aSize))
+        return PR_FALSE;
+
     MakeCurrent();
 
     bool alpha = mCreationFormat.alpha > 0;

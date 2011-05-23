@@ -328,6 +328,12 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
 {
   bool fallbackToPNG = false;
 
+  nsIntSize size = GetWidthHeight();
+  if (size.height == 0 || size.width == 0) {
+    aDataURL = NS_LITERAL_STRING("data:,");
+    return NS_OK;
+  }
+
   nsAutoString type;
   nsContentUtils::ASCIIToLower(aMimeType, type);
 
@@ -585,19 +591,25 @@ nsHTMLCanvasElement::UpdateContext(nsIPropertyBag *aNewContextOptions)
     return NS_OK;
 
   nsresult rv = NS_OK;
+  nsIntSize sz = GetWidthHeight();
 
   rv = mCurrentContext->SetIsOpaque(GetIsOpaque());
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nsnull;
     return rv;
+  }
 
   rv = mCurrentContext->SetContextOptions(aNewContextOptions);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nsnull;
     return rv;
+  }
 
-  nsIntSize sz = GetWidthHeight();
   rv = mCurrentContext->SetDimensions(sz.width, sz.height);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nsnull;
     return rv;
+  }
 
   return rv;
 }

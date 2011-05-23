@@ -781,12 +781,34 @@ pref("network.ftp.control.qos", 0);
 // </http>
 
 // <ws>: WebSocket
-// The -76 websocket network protocol may be subject to HTTP cache poisoning
-// attacks. Until there is a secure open standard available and implemented
-// in necko the override-security-block preference must be set to true before
-// the normal enabled preference is considered. Bug 616733
-pref("network.websocket.override-security-block", false);
 pref("network.websocket.enabled", true);
+
+// mobile might want to set this much smaller
+pref("network.websocket.max-message-size", 16000000);
+
+// Should we automatically follow http 3xx redirects during handshake
+pref("network.websocket.auto-follow-http-redirects", false);
+
+// the number of seconds to wait for websocket connection to be opened
+pref("network.websocket.timeout.open", 20);
+
+// the number of seconds to wait for a clean close after sending the client
+// close message
+pref("network.websocket.timeout.close", 20);
+
+// the number of seconds of idle read activity to sustain before sending a
+// ping probe. 0 to disable.
+pref("network.websocket.timeout.ping.request", 0);
+
+// the deadline, expressed in seconds, for some read activity to occur after
+// generating a ping. If no activity happens then an error and unclean close
+// event is sent to the javascript websockets application
+pref("network.websocket.timeout.ping.response", 10);
+
+// Defines whether or not to try and negotiate the stream-deflate compression
+// extension with the websocket server
+pref("network.websocket.extensions.stream-deflate", false);
+
 // </ws>
 
 // If false, remote JAR files that are served with a content type other than
@@ -1432,22 +1454,22 @@ pref("font.name-list.serif.he", "Narkisim, David");
 pref("font.name-list.monospace.he", "Fixed Miriam Transparent, Miriam Fixed, Rod, Courier New");
 pref("font.name-list.cursive.he", "Guttman Yad, Ktav, Arial");
 
-pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
-pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
-pref("font.name.monospace.ja", "ＭＳ ゴシック"); // "MS Gothic"
+pref("font.name.serif.ja", "MS PMincho");
+pref("font.name.sans-serif.ja", "MS PGothic");
+pref("font.name.monospace.ja", "MS Gothic");
 pref("font.name-list.serif.ja", "MS PMincho, MS Mincho, MS PGothic, MS Gothic");
 pref("font.name-list.sans-serif.ja", "MS PGothic, MS Gothic, MS PMincho, MS Mincho");
 pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, MS PGothic, MS PMincho");
 
-pref("font.name.serif.ko", "바탕"); // "Batang" 
-pref("font.name.sans-serif.ko", "굴림"); // "Gulim" 
-pref("font.name.monospace.ko", "굴림체"); // "GulimChe" 
-pref("font.name.cursive.ko", "궁서"); // "Gungseo"
+pref("font.name.serif.ko", "Batang");
+pref("font.name.sans-serif.ko", "Gulim");
+pref("font.name.monospace.ko", "GulimChe");
+pref("font.name.cursive.ko", "Gungsuh");
 
-pref("font.name-list.serif.ko", "Batang, Gulim"); 
-pref("font.name-list.sans-serif.ko", "Gulim"); 
-pref("font.name-list.monospace.ko", "GulimChe"); 
-pref("font.name-list.cursive.ko", "Gungseo"); 
+pref("font.name-list.serif.ko", "Batang, Gulim");
+pref("font.name-list.sans-serif.ko", "Gulim");
+pref("font.name-list.monospace.ko", "GulimChe");
+pref("font.name-list.cursive.ko", "Gungsuh");
 
 pref("font.name.serif.th", "Tahoma");
 pref("font.name.sans-serif.th", "Tahoma");
@@ -1484,9 +1506,9 @@ pref("font.name.sans-serif.x-western", "Arial");
 pref("font.name.monospace.x-western", "Courier New");
 pref("font.name.cursive.x-western", "Comic Sans MS");
 
-pref("font.name.serif.zh-CN", "宋体"); //MS Song
-pref("font.name.sans-serif.zh-CN", "宋体"); //MS Song
-pref("font.name.monospace.zh-CN", "宋体"); //MS Song
+pref("font.name.serif.zh-CN", "SimSun");
+pref("font.name.sans-serif.zh-CN", "SimSun");
+pref("font.name.monospace.zh-CN", "SimSun");
 pref("font.name-list.serif.zh-CN", "MS Song, SimSun");
 pref("font.name-list.sans-serif.zh-CN", "MS Song, SimSun");
 pref("font.name-list.monospace.zh-CN", "MS Song, SimSun");
@@ -1495,18 +1517,18 @@ pref("font.name-list.monospace.zh-CN", "MS Song, SimSun");
 // rendering Latin letters. (bug 88579)
 pref("font.name.serif.zh-TW", "Times New Roman"); 
 pref("font.name.sans-serif.zh-TW", "Arial");
-pref("font.name.monospace.zh-TW", "細明體");  // MingLiU
+pref("font.name.monospace.zh-TW", "MingLiU");
 pref("font.name-list.serif.zh-TW", "PMingLiu, MingLiU"); 
 pref("font.name-list.sans-serif.zh-TW", "PMingLiU, MingLiU");
 pref("font.name-list.monospace.zh-TW", "MingLiU");
 
-// hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs 
-// Hong Kong users have the same demand about glyphs for Latin letters (bug 88579) 
-pref("font.name.serif.zh-HK", "Times New Roman"); 
+// hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs
+// Hong Kong users have the same demand about glyphs for Latin letters (bug 88579)
+pref("font.name.serif.zh-HK", "Times New Roman");
 pref("font.name.sans-serif.zh-HK", "Arial");
-pref("font.name.monospace.zh-HK", "細明體_HKSCS"); 
-pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU"); 
-pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");  
+pref("font.name.monospace.zh-HK", "MingLiu_HKSCS");
+pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU");
+pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");
 pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");
 
 pref("font.name.serif.x-devanagari", "Mangal");
@@ -1552,19 +1574,19 @@ pref("font.name-list.monospace.x-ethi", "Ethiopia Jiret, Code2000");
 pref("font.name.serif.x-geor", "Sylfaen");
 pref("font.name.sans-serif.x-geor", "BPG Classic 99U");
 pref("font.name.monospace.x-geor", "Code2000");
-pref("font.name-list.serif.x-geor", "Sylfaen, BPG Paata Khutsuri U, TITUS Cyberbit Basic"); 
+pref("font.name-list.serif.x-geor", "Sylfaen, BPG Paata Khutsuri U, TITUS Cyberbit Basic");
 pref("font.name-list.monospace.x-geor", "BPG Classic 99U, Code2000, Arial Unicode MS");
 
 pref("font.name.serif.x-gujr", "Shruti");
 pref("font.name.sans-serif.x-gujr", "Shruti");
 pref("font.name.monospace.x-gujr", "Code2000");
-pref("font.name-list.serif.x-gujr", "Shruti, Code2000, Arial Unicode MS"); 
+pref("font.name-list.serif.x-gujr", "Shruti, Code2000, Arial Unicode MS");
 pref("font.name-list.monospace.x-gujr", "Code2000, Shruti, Arial Unicode MS");
 
 pref("font.name.serif.x-guru", "Raavi");
 pref("font.name.sans-serif.x-guru", "Code2000");
 pref("font.name.monospace.x-guru", "Code2000");
-pref("font.name-list.serif.x-guru", "Raavi, Saab, Code2000, Arial Unicode MS"); 
+pref("font.name-list.serif.x-guru", "Raavi, Saab, Code2000, Arial Unicode MS");
 pref("font.name-list.monospace.x-guru", "Code2000, Raavi, Saab, Arial Unicode MS");
 
 pref("font.name.serif.x-khmr", "PhnomPenh OT");
