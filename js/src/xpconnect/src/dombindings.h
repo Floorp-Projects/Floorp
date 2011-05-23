@@ -73,6 +73,11 @@ class NodeList : public NodeListBase {
 
     static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj);
 
+    // Prototype-creation code that's the same (modulo templating) for
+    // all specializations.
+    static JSObject *getPrototypeShared(JSContext *cx);
+
+    // Specialization-specific prototype setup.
     static JSObject *getPrototype(JSContext *cx);
 
     static T *getNodeList(JSObject *obj);
@@ -86,6 +91,7 @@ class NodeList : public NodeListBase {
     static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
     static JSBool item(JSContext *cx, uintN argc, jsval *vp);
+    static JSBool namedItem(JSContext *cx, uintN argc, jsval *vp);
 
     static bool cacheItemAndLength(JSContext *cx, JSObject *proxy, JSObject *proto);
     static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
