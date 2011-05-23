@@ -52,16 +52,16 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 #endif
 #endif
 
-#if WTF_OS_IOS
+#if WTF_PLATFORM_IPHONE
 #include <libkern/OSCacheControl.h>
 #include <sys/mman.h>
 #endif
 
-#if WTF_OS_SYMBIAN
+#if WTF_PLATFORM_SYMBIAN
 #include <e32std.h>
 #endif
 
-#if WTF_CPU_MIPS && WTF_OS_LINUX
+#if WTF_CPU_MIPS && WTF_PLATFORM_LINUX
 #include <sys/cachectl.h>
 #endif
 
@@ -90,7 +90,7 @@ private:
     struct Allocation {
         char* pages;
         size_t size;
-#if WTF_OS_SYMBIAN
+#if WTF_PLATFORM_SYMBIAN
         RChunk* chunk;
 #endif
     };
@@ -269,7 +269,6 @@ private:
         return pool;
     }
 
-public:
     ExecutablePool* poolForSize(size_t n)
     {
 #ifndef DEBUG_STRESS_JSC_ALLOCATOR
@@ -328,6 +327,7 @@ public:
         return pool;
     }
 
+public:
 #if ENABLE_ASSEMBLER_WX_EXCLUSIVE
     static void makeWritable(void* start, size_t size)
     {
@@ -374,13 +374,13 @@ public:
         _flush_cache(reinterpret_cast<char*>(code), size, BCACHE);
 #endif
     }
-#elif WTF_CPU_ARM_THUMB2 && WTF_OS_IOS
+#elif WTF_CPU_ARM_THUMB2 && WTF_PLATFORM_IPHONE
     static void cacheFlush(void* code, size_t size)
     {
         sys_dcache_flush(code, size);
         sys_icache_invalidate(code, size);
     }
-#elif WTF_CPU_ARM_THUMB2 && WTF_IOS
+#elif WTF_CPU_ARM_THUMB2 && WTF_PLATFORM_LINUX
     static void cacheFlush(void* code, size_t size)
     {
         asm volatile (
@@ -396,14 +396,14 @@ public:
             : "r" (code), "r" (reinterpret_cast<char*>(code) + size)
             : "r0", "r1", "r2");
     }
-#elif WTF_OS_SYMBIAN
+#elif WTF_PLATFORM_SYMBIAN
     static void cacheFlush(void* code, size_t size)
     {
         User::IMB_Range(code, static_cast<char*>(code) + size);
     }
-#elif WTF_CPU_ARM_TRADITIONAL && WTF_OS_LINUX && WTF_COMPILER_RVCT
+#elif WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX && WTF_COMPILER_RVCT
     static __asm void cacheFlush(void* code, size_t size);
-#elif WTF_CPU_ARM_TRADITIONAL && (WTF_OS_LINUX || WTF_OS_ANDROID) && WTF_COMPILER_GCC
+#elif WTF_CPU_ARM_TRADITIONAL && (WTF_PLATFORM_LINUX || WTF_PLATFORM_ANDROID) && WTF_COMPILER_GCC
     static void cacheFlush(void* code, size_t size)
     {
         asm volatile (
