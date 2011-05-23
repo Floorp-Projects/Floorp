@@ -130,7 +130,7 @@ struct ArenaHeader {
     FreeCell        *freeList;
     unsigned        thingKind;
 
-    friend class FreeLists;
+    friend struct FreeLists;
 
   public:
     inline uintptr_t address() const;
