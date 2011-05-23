@@ -52,15 +52,32 @@ using namespace js;
 namespace xpc {
 namespace dom {
 
-static int NodeListFamily;
+int NodeListBase::NodeListFamily;
 
-NodeList::NodeList() : ProxyHandler(&NodeListFamily)
+JSObject *
+NodeListBase::create(JSContext *cx, nsINodeList *aNodeList)
+{
+    return NodeList<nsINodeList>::create(cx, aNodeList, aNodeList);
+}
+
+JSObject *
+NodeListBase::create(JSContext *cx, nsIHTMLCollection *aHTMLCollection,
+                     nsWrapperCache *aWrapperCache)
+{
+    return NodeList<nsIHTMLCollection>::create(cx, aHTMLCollection,
+                                               aWrapperCache);
+}
+
+template<class T>
+NodeList<T>::NodeList()
 {
 }
 
-NodeList NodeList::instance;
+template<class T>
+NodeList<T> NodeList<T>::instance;
 
-static Class NodeListProtoClass = {
+template<>
+Class NodeList<nsINodeList>::NodeListProtoClass = {
     "NodeList",
     0,
     JS_PropertyStub,        /* addProperty */
@@ -72,45 +89,64 @@ static Class NodeListProtoClass = {
     JS_ConvertStub
 };
 
-nsINodeList *
-NodeList::getNodeList(JSObject *obj)
+template<>
+Class NodeList<nsIHTMLCollection>::NodeListProtoClass = {
+    "HTMLCollection",
+    0,
+    JS_PropertyStub,        /* addProperty */
+    JS_PropertyStub,        /* delProperty */
+    JS_PropertyStub,        /* getProperty */
+    JS_StrictPropertyStub,  /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
+};
+
+template<class T>
+T*
+NodeList<T>::getNodeList(JSObject *obj)
 {
     JS_ASSERT(objIsNodeList(obj));
-    return static_cast<nsINodeList *>(js::GetProxyPrivate(obj).toPrivate());
+    return static_cast<T *>(js::GetProxyPrivate(obj).toPrivate());
 }
 
+template<class T>
 uint32
-NodeList::getProtoShape(JSObject *obj)
+NodeList<T>::getProtoShape(JSObject *obj)
 {
-    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList::instance);
+    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
     return js::GetProxyExtra(obj, 0).toPrivateUint32();
 }
 
+template<class T>
 void
-NodeList::setProtoShape(JSObject *obj, uint32 shape)
+NodeList<T>::setProtoShape(JSObject *obj, uint32 shape)
 {
-    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList::instance);
+    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
     js::SetProxyExtra(obj, 0, PrivateUint32Value(shape));
 }
 
+template<class T>
 JSObject *
-NodeList::getItemFunction(JSObject *obj)
+NodeList<T>::getItemFunction(JSObject *obj)
 {
-    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList::instance);
+    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
     return &js::GetProxyExtra(obj, 1).toObject();
 }
 
+template<class T>
 void
-NodeList::setItemFunction(JSObject *obj, JSObject *funobj)
+NodeList<T>::setItemFunction(JSObject *obj, JSObject *funobj)
 {
-    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList::instance);
+    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
     js::SetProxyExtra(obj, 1, ObjectValue(*funobj));
 }
 
+template<class T>
 bool
-NodeList::instanceIsNodeListObject(JSContext *cx, JSObject *obj)
+NodeList<T>::instanceIsNodeListObject(JSContext *cx, JSObject *obj)
 {
-    if (!js::IsProxy(obj) || (js::GetProxyHandler(obj) != &NodeList::instance)) {
+    if (!js::IsProxy(obj) || (js::GetProxyHandler(obj) != &NodeList<T>::instance)) {
         // FIXME: Throw a proper DOM exception.
         JS_ReportError(cx, "type error: wrong object");
         return false;
@@ -130,8 +166,9 @@ WrapObject(JSContext *cx, JSObject *scope, nsIContent *result, jsval *vp)
                                     &interfaces[k_nsIDOMNode], vp);
 }
 
+template<class T>
 JSBool
-NodeList::length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+NodeList<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     if (!instanceIsNodeListObject(cx, obj))
         return false;
@@ -142,8 +179,9 @@ NodeList::length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return true;
 }
 
+template<class T>
 JSBool
-NodeList::item(JSContext *cx, uintN argc, jsval *vp)
+NodeList<T>::item(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !instanceIsNodeListObject(cx, obj))
@@ -154,13 +192,14 @@ NodeList::item(JSContext *cx, uintN argc, jsval *vp)
     uint32 u;
     if (!JS_ValueToECMAUint32(cx, argv[0], &u))
         return false;
-    nsINodeList *nodeList = getNodeList(obj);
+    T *nodeList = getNodeList(obj);
     nsIContent *result = nodeList->GetNodeAt(u);
     return WrapObject(cx, obj, result, vp);
 }
 
+template<class T>
 JSObject *
-NodeList::getPrototype(JSContext *cx)
+NodeList<T>::getPrototype(JSContext *cx)
 {
     // FIXME: This should be cached, not recreated every time.
     JSObject *proto = JS_NewObject(cx, Jsvalify(&NodeListProtoClass), NULL, NULL);
@@ -184,13 +223,14 @@ NodeList::getPrototype(JSContext *cx)
     return proto;
 }
 
+template<class T>
 JSObject *
-NodeList::create(JSContext *cx, nsINodeList *aNodeList)
+NodeList<T>::create(JSContext *cx, T *aNodeList, nsWrapperCache* aWrapperCache)
 {
     JSObject *proto = getPrototype(cx);
     if (!proto)
         return NULL;
-    JSObject *obj = NewProxyObject(cx, &NodeList::instance,
+    JSObject *obj = NewProxyObject(cx, &NodeList<T>::instance,
                                    PrivateValue(aNodeList),
                                    proto, NULL);
     if (!obj)
@@ -199,19 +239,20 @@ NodeList::create(JSContext *cx, nsINodeList *aNodeList)
     NS_ADDREF(aNodeList);
     setProtoShape(obj, -1);
 
-    aNodeList->SetWrapper(obj);
+    aWrapperCache->SetWrapper(obj);
 
     return obj;
 }
 
+template<class T>
 bool
-NodeList::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
-                                   PropertyDescriptor *desc)
+NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
+                                      PropertyDescriptor *desc)
 {
     // FIXME: expandos
     int32 index;
     if (JSID_IS_INT(id) && ((index = JSID_TO_INT(id)) >= 0)) {
-        nsINodeList *nodeList = getNodeList(proxy);
+        T *nodeList = getNodeList(proxy);
         nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
         if (result) {
             jsval v;
@@ -230,9 +271,10 @@ NodeList::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool
     return true;
 }
 
+template<class T>
 bool
-NodeList::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
-                                PropertyDescriptor *desc)
+NodeList<T>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
+                                   PropertyDescriptor *desc)
 {
     if (!getOwnPropertyDescriptor(cx, proxy, id, set, desc))
         return false;
@@ -242,16 +284,18 @@ NodeList::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool se
                                         desc);
 }
 
+template<class T>
 bool
-NodeList::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
-                         PropertyDescriptor *desc)
+NodeList<T>::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
+                            PropertyDescriptor *desc)
 {
     // FIXME: expandos
     return true;
 }
 
+template<class T>
 bool
-NodeList::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+NodeList<T>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     // FIXME: expandos
     PRUint32 length;
@@ -264,29 +308,33 @@ NodeList::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &prop
     return true;
 }
 
+template<class T>
 bool
-NodeList::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+NodeList<T>::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     // FIXME: expandos
     return true;
 }
 
+template<class T>
 bool
-NodeList::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+NodeList<T>::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     // FIXME: enumerate proto as well
     return getOwnPropertyNames(cx, proxy, props);
 }
 
+template<class T>
 bool
-NodeList::fix(JSContext *cx, JSObject *proxy, Value *vp)
+NodeList<T>::fix(JSContext *cx, JSObject *proxy, Value *vp)
 {
     vp->setUndefined();
     return true;
 }
 
+template<class T>
 bool
-NodeList::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+NodeList<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     // FIXME: expandos
     int32 index;
@@ -300,8 +348,9 @@ NodeList::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
     return true;
 }
 
+template<class T>
 bool
-NodeList::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+NodeList<T>::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     if (!hasOwn(cx, proxy, id, bp))
         return false;
@@ -314,8 +363,9 @@ NodeList::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
     return true;
 }
 
+template<class T>
 bool
-NodeList::cacheItemAndLength(JSContext *cx, JSObject *proxy, JSObject *proto)
+NodeList<T>::cacheItemAndLength(JSContext *cx, JSObject *proxy, JSObject *proto)
 {
     JSPropertyDescriptor desc;
     if (!JS_GetPropertyDescriptorById(cx, proto, nsDOMClassInfo::sLength_id, JSRESOLVE_QUALIFIED, &desc))
@@ -333,8 +383,9 @@ NodeList::cacheItemAndLength(JSContext *cx, JSObject *proxy, JSObject *proto)
     return true;
 }
 
+template<class T>
 bool
-NodeList::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
+NodeList<T>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
                            jsid id, Value *vp, bool *hitp)
 {
     if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
@@ -349,13 +400,14 @@ NodeList::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, J
     return true;
 }
 
+template<class T>
 bool
-NodeList::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
+NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
     // FIXME: expandos
     int32 index;
     if (JSID_IS_INT(id) && ((index = JSID_TO_INT(id)) >= 0)) {
-        nsINodeList *nodeList = getNodeList(proxy);
+        T *nodeList = getNodeList(proxy);
         nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
         if (result)
             return WrapObject(cx, proxy, result, vp);
@@ -387,45 +439,58 @@ NodeList::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value
     return JS_GetPropertyById(cx, proto, id, vp);
 }
 
+template<class T>
 bool
-NodeList::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
+NodeList<T>::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
               Value *vp)
 {
     // FIXME: expandos
     return true;
 }
 
+template<class T>
 bool
-NodeList::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+NodeList<T>::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     // FIXME: expandos
     return getOwnPropertyNames(cx, proxy, props);
 }
 
+template<class T>
 bool
-NodeList::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
+NodeList<T>::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
 {
     JS_ReportError(cx, "FIXME");
     return false;
 }
 
+template<class T>
 bool
-NodeList::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
+NodeList<T>::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
 {
     *bp = vp->isObject() && js::GetObjectClass(&vp->toObject()) == &NodeListProtoClass;
     return true;
 }
 
+template<>
 JSString *
-NodeList::obj_toString(JSContext *cx, JSObject *proxy)
+NodeList<nsIHTMLCollection>::obj_toString(JSContext *cx, JSObject *proxy)
+{
+    return JS_NewStringCopyZ(cx, "[object HTMLCollection]");
+}
+
+template<>
+JSString *
+NodeList<nsINodeList>::obj_toString(JSContext *cx, JSObject *proxy)
 {
     return JS_NewStringCopyZ(cx, "[object NodeList]");
 }
 
+template<class T>
 void
-NodeList::finalize(JSContext *cx, JSObject *proxy)
+NodeList<T>::finalize(JSContext *cx, JSObject *proxy)
 {
-    nsINodeList *nodeList = getNodeList(proxy);
+    T *nodeList = getNodeList(proxy);
     nsWrapperCache* cache;
     CallQueryInterface(nodeList, &cache);
     if (cache) {

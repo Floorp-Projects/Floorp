@@ -44,18 +44,38 @@
 #include "jsproxy.h"
 
 class nsINodeList;
+class nsIHTMLCollection;
 
 namespace xpc {
 namespace dom {
 
-class NodeList : public js::ProxyHandler {
+class NodeListBase : public js::ProxyHandler {
+public:
+    NodeListBase() : js::ProxyHandler(ProxyFamily()) {}
+
+    static void* ProxyFamily() { return &NodeListFamily; }
+
+    static JSObject *create(JSContext *cx, nsINodeList *aNodeList);
+    static JSObject *create(JSContext *cx, nsIHTMLCollection *aHTMLCollection,
+                            nsWrapperCache *aWrapperCache);
+private:
+    static int NodeListFamily;
+};
+
+/**
+ * T must be either nsINodeList or nsIHTMLCollection.
+ */
+template<class T>
+class NodeList : public NodeListBase {
     static NodeList instance;
+
+    static js::Class NodeListProtoClass;
 
     static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj);
 
     static JSObject *getPrototype(JSContext *cx);
 
-    static nsINodeList *getNodeList(JSObject *obj);
+    static T *getNodeList(JSObject *obj);
 
     static uint32 getProtoShape(JSObject *obj);
     static void setProtoShape(JSObject *obj, uint32 shape);
@@ -97,7 +117,7 @@ class NodeList : public js::ProxyHandler {
     JSString *obj_toString(JSContext *cx, JSObject *proxy);
     void finalize(JSContext *cx, JSObject *proxy);
 
-    static JSObject *create(JSContext *cx, nsINodeList *);
+    static JSObject *create(JSContext *cx, T *, nsWrapperCache* aWrapperCache);
 
     static bool objIsNodeList(JSObject *obj) {
         return js::IsProxy(obj) && js::GetProxyHandler(obj) == &instance;
