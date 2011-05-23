@@ -93,8 +93,22 @@ NodeList::setProtoShape(JSObject *obj, uint32 shape)
     js::SetProxyExtra(obj, 0, PrivateUint32Value(shape));
 }
 
+JSObject *
+NodeList::getItemFunction(JSObject *obj)
+{
+    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList::instance);
+    return &js::GetProxyExtra(obj, 1).toObject();
+}
+
+void
+NodeList::setItemFunction(JSObject *obj, JSObject *funobj)
+{
+    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList::instance);
+    js::SetProxyExtra(obj, 1, ObjectValue(*funobj));
+}
+
 bool
-NodeList::InstanceIsNodeListObject(JSContext *cx, JSObject *obj)
+NodeList::instanceIsNodeListObject(JSContext *cx, JSObject *obj)
 {
     if (!js::IsProxy(obj) || (js::GetProxyHandler(obj) != &NodeList::instance)) {
         // FIXME: Throw a proper DOM exception.
@@ -119,7 +133,7 @@ WrapObject(JSContext *cx, JSObject *scope, nsIContent *result, jsval *vp)
 JSBool
 NodeList::length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    if (!InstanceIsNodeListObject(cx, obj))
+    if (!instanceIsNodeListObject(cx, obj))
         return false;
     PRUint32 length;
     getNodeList(obj)->GetLength(&length);
@@ -132,7 +146,7 @@ JSBool
 NodeList::item(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !InstanceIsNodeListObject(cx, obj))
+    if (!obj || !instanceIsNodeListObject(cx, obj))
         return false;
     if (argc < 1)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
@@ -176,9 +190,9 @@ NodeList::create(JSContext *cx, nsINodeList *aNodeList)
     JSObject *proto = getPrototype(cx);
     if (!proto)
         return NULL;
-    JSObject *obj = js::NewProxyObject(cx, &NodeList::instance,
-                                       PrivateValue(aNodeList),
-                                       proto, NULL);
+    JSObject *obj = NewProxyObject(cx, &NodeList::instance,
+                                   PrivateValue(aNodeList),
+                                   proto, NULL);
     if (!obj)
         return NULL;
 
@@ -235,7 +249,7 @@ NodeList::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
 }
 
 bool
-NodeList::getOwnPropertyNames(JSContext *cx, JSObject *proxy, js::AutoIdVector &props)
+NodeList::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     // FIXME: expandos
     PRUint32 length;
@@ -256,7 +270,7 @@ NodeList::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 }
 
 bool
-NodeList::enumerate(JSContext *cx, JSObject *proxy, js::AutoIdVector &props)
+NodeList::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     // FIXME: enumerate proto as well
     return getOwnPropertyNames(cx, proxy, props);
@@ -299,7 +313,42 @@ NodeList::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 }
 
 bool
-NodeList::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, js::Value *vp)
+NodeList::cacheItemAndLength(JSContext *cx, JSObject *proxy, JSObject *proto)
+{
+    JSPropertyDescriptor desc;
+    if (!JS_GetPropertyDescriptorById(cx, proto, nsDOMClassInfo::sLength_id, JSRESOLVE_QUALIFIED, &desc))
+        return false;
+    if (desc.obj != proto || desc.getter != length_getter)
+        return true; // don't cache
+    if (!JS_GetPropertyDescriptorById(cx, proto, nsDOMClassInfo::sItem_id, JSRESOLVE_QUALIFIED, &desc))
+        return false;
+    if (desc.obj != proto || desc.getter || JSVAL_IS_PRIMITIVE(desc.value) ||
+        !JS_IsNativeFunction(JSVAL_TO_OBJECT(desc.value), item)) {
+        return true; // don't cache
+    }
+    setProtoShape(proxy, js::GetObjectShape(proto));
+    setItemFunction(proxy, JSVAL_TO_OBJECT(desc.value));
+    return true;
+}
+
+bool
+NodeList::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
+                           jsid id, Value *vp, bool *hitp)
+{
+    if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
+        if (!cacheItemAndLength(cx, proxy, proto))
+            return false;
+        if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
+            *hitp = false;
+            return JS_GetPropertyById(cx, proto, id, vp);
+        }
+    }
+    *hitp = true;
+    return true;
+}
+
+bool
+NodeList::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
     // FIXME: expandos
     int32 index;
@@ -311,32 +360,26 @@ NodeList::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, js::V
     }
 
     JSObject *proto = js::GetObjectProto(proxy);
-
     if (id == nsDOMClassInfo::sLength_id) {
-        uint32 kshape = getProtoShape(proxy);
-        uint32 pshape = js::GetObjectShape(proto);
-        do {
-            if (kshape != pshape) {
-                JSPropertyDescriptor desc;
-                if (!JS_GetPropertyDescriptorById(cx, proto, id,
-                                                  JSRESOLVE_QUALIFIED,
-                                                  &desc)) {
-                    return false;
-                }
-                if (desc.obj == proto &&
-                    desc.getter == length_getter) {
-                    setProtoShape(proxy, pshape);
-                } else {
-                    break;
-                }
-            }
-
+        bool hit;
+        if (!checkForCacheHit(cx, proxy, receiver, proto, id, vp, &hit))
+            return false;
+        if (hit) {
             PRUint32 length;
             getNodeList(proxy)->GetLength(&length);
             JS_ASSERT(int32(length) >= 0);
             vp->setInt32(length);
             return true;
-        } while (0);
+        }
+    }
+    else if (id == nsDOMClassInfo::sItem_id) {
+        bool hit;
+        if (!checkForCacheHit(cx, proxy, receiver, proto, id, vp, &hit))
+            return false;
+        if (hit) {
+            vp->setObject(*getItemFunction(proxy));
+            return true;
+        }
     }
 
     return JS_GetPropertyById(cx, proto, id, vp);
@@ -344,28 +387,28 @@ NodeList::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, js::V
 
 bool
 NodeList::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
-              js::Value *vp)
+              Value *vp)
 {
     // FIXME: expandos
     return true;
 }
 
 bool
-NodeList::keys(JSContext *cx, JSObject *proxy, js::AutoIdVector &props)
+NodeList::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     // FIXME: expandos
     return getOwnPropertyNames(cx, proxy, props);
 }
 
 bool
-NodeList::iterate(JSContext *cx, JSObject *proxy, uintN flags, js::Value *vp)
+NodeList::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
 {
     JS_ReportError(cx, "FIXME");
     return false;
 }
 
 bool
-NodeList::hasInstance(JSContext *cx, JSObject *proxy, const js::Value *vp, bool *bp)
+NodeList::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
 {
     *bp = vp->isObject() && js::GetObjectClass(&vp->toObject()) == &NodeListProtoClass;
     return true;
