@@ -49,11 +49,13 @@
 
 class nsIFile;
 
-class nsPrefService : public nsIPrefService,
-                      public nsIPrefServiceInternal,
-                      public nsIObserver,
-                      public nsIPrefBranchInternal,
-                      public nsSupportsWeakReference
+namespace mozilla {
+
+class Preferences : public nsIPrefService,
+                    public nsIPrefServiceInternal,
+                    public nsIObserver,
+                    public nsIPrefBranchInternal,
+                    public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -63,8 +65,8 @@ public:
   NS_FORWARD_NSIPREFBRANCH2(mRootBranch->)
   NS_DECL_NSIOBSERVER
 
-  nsPrefService();
-  virtual ~nsPrefService();
+  Preferences();
+  virtual ~Preferences();
 
   nsresult Init();
                            
@@ -82,5 +84,7 @@ private:
   nsCOMPtr<nsIPrefBranch2> mRootBranch;
   nsCOMPtr<nsIFile>        mCurrentFile;
 };
+
+} // namespace mozilla
 
 #endif // nsPrefService_h__
