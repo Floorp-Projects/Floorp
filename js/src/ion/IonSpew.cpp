@@ -155,8 +155,8 @@ C1Spewer::spew(FILE *fp, MBasicBlock *block)
     fprintf(fp, "    begin_HIR\n");
     for (size_t i = 0; i < block->numPhis(); i++)
         DumpInstruction(fp, block->getPhi(i));
-    for (size_t i = 0; i < block->numInstructions(); i++)
-        DumpInstruction(fp, block->getInstruction(i));
+    for (MInstructionIterator i = block->begin(); i != block->end(); i++)
+        DumpInstruction(fp, *i);
     fprintf(fp, "    end_HIR\n");
 
     fprintf(fp, "  end_block\n");

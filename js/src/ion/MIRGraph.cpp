@@ -83,7 +83,6 @@ MBasicBlock::NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *ent
 
 MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
   : gen(gen),
-    instructions_(TempAllocPolicy(gen->cx)),
     predecessors_(TempAllocPolicy(gen->cx)),
     phis_(TempAllocPolicy(gen->cx)),
     slots_(NULL),
@@ -341,7 +340,8 @@ MBasicBlock::add(MInstruction *ins)
         return false;
     ins->setBlock(this);
     ins->setId(gen->graph().allocInstructionId());
-    return instructions_.append(ins);
+    instructions_.insert(ins);
+    return true;
 }
 
 bool
