@@ -41,6 +41,9 @@
 #ifndef Stack_inl_h__
 #define Stack_inl_h__
 
+#include "jscntxt.h"
+#include "jstracer.h"
+
 #include "Stack.h"
 
 #include "ArgumentsObject-inl.h"
@@ -738,6 +741,7 @@ StackSpace::activeFirstUnused() const
     return max;
 }
 
+#ifdef JS_TRACER
 JS_ALWAYS_INLINE bool
 StackSpace::ensureEnoughSpaceToEnterTrace()
 {
@@ -749,6 +753,7 @@ StackSpace::ensureEnoughSpaceToEnterTrace()
     return end_ - firstUnused() > needed;
 #endif
 }
+#endif
 
 STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
