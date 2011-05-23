@@ -700,6 +700,10 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   //  -. transition rules                   = Transition   normal
   // [most important]
 
+  // Save off the last rule before we start walking our agent sheets;
+  // this will be either the root or one of the restriction rules.
+  nsRuleNode* lastRestrictionRN = aRuleWalker->CurrentNode();
+
   aRuleWalker->SetLevel(eAgentSheet, PR_FALSE, PR_TRUE);
   if (mRuleProcessors[eAgentSheet])
     (*aCollectorFunc)(mRuleProcessors[eAgentSheet], aData);
@@ -786,12 +790,16 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 
   if (haveImportantUARules) {
     aRuleWalker->SetLevel(eAgentSheet, PR_TRUE, PR_FALSE);
-    AddImportantRules(lastAgentRN, mRuleTree, aRuleWalker);     //agent
+    AddImportantRules(lastAgentRN, lastRestrictionRN, aRuleWalker); //agent
   }
 #ifdef DEBUG
   else {
-    AssertNoImportantRules(lastAgentRN, mRuleTree);
+    AssertNoImportantRules(lastAgentRN, lastRestrictionRN);
   }
+#endif
+
+#ifdef DEBUG
+  AssertNoCSSRules(lastRestrictionRN, mRuleTree);
 #endif
 
 #ifdef DEBUG
@@ -1022,6 +1030,7 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   if (treeContext.HaveRelevantLink()) {
     treeContext.ResetForVisitedMatching();
     ruleWalker.Reset();
+    WalkRestrictionRule(aType, &ruleWalker);
     FileRules(EnumRulesMatching<PseudoElementRuleProcessorData>, &data,
               aParentElement, &ruleWalker);
     visitedRuleNode = ruleWalker.CurrentNode();
@@ -1081,6 +1090,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   if (aTreeMatchContext.HaveRelevantLink()) {
     aTreeMatchContext.ResetForVisitedMatching();
     ruleWalker.Reset();
+    WalkRestrictionRule(aType, &ruleWalker);
     FileRules(EnumRulesMatching<PseudoElementRuleProcessorData>, &data,
               aParentElement, &ruleWalker);
     visitedRuleNode = ruleWalker.CurrentNode();
