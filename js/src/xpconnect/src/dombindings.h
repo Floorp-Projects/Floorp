@@ -51,6 +51,8 @@ namespace dom {
 class NodeList : public js::ProxyHandler {
     static NodeList instance;
 
+    static bool InstanceIsNodeListObject(JSContext *cx, JSObject *obj);
+
     static JSObject *getPrototype(JSContext *cx);
 
     static nsINodeList *getNodeList(JSObject *obj);
@@ -59,6 +61,7 @@ class NodeList : public js::ProxyHandler {
 
     static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
+    static JSBool item(JSContext *cx, uintN argc, jsval *vp);
   public:
     NodeList();
 
