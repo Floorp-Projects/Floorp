@@ -199,12 +199,10 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
     comp->debugMode = !!debug;
 
     // Detach any debuggers attached to this compartment.
-    if (debug) {
-        JS_ASSERT(comp->getDebuggers().empty());
-    } else {
-        while (!comp->getDebuggers().empty())
-            comp->getDebuggers().back()->detachFrom(comp);
-    }
+    if (debug)
+        JS_ASSERT(comp->getDebuggees().empty());
+    else
+        Debug::detachFromCompartment(comp);
 
     // Discard JIT code for any scripts that change debugMode. This function
     // assumes that 'comp' is in the same thread as 'cx'.

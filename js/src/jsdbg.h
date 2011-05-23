@@ -48,6 +48,7 @@
 #include "jshashtable.h"
 #include "jswrapper.h"
 #include "jsvalue.h"
+#include "vm/GlobalObject.h"
 
 namespace js {
 
@@ -57,7 +58,7 @@ class Debug {
   private:
     JSCList link;                       // See JSRuntime::debuggerList.
     JSObject *object;                   // The Debug object. Strong reference.
-    JSCompartment *debuggeeCompartment; // Weak reference.
+    GlobalObject *debuggeeGlobal;       // The debuggee. Cross-compartment weak reference.
     JSObject *hooksObject;              // See Debug.prototype.hooks. Strong reference.
     JSObject *uncaughtExceptionHook;    // Strong reference.
     bool enabled;
@@ -67,10 +68,15 @@ class Debug {
     bool hasDebuggerHandler;            // hooks.debuggerHandler
     bool hasThrowHandler;               // hooks.throw
 
+    // Weak references to stack frames that are currently on the stack
+    // and thus necessarily alive. (Removed in slowPathLeaveStackFrame.)
     typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, SystemAllocPolicy>
         FrameMap;
     FrameMap frames;
 
+    // Keys are referents, values are Debug.Object objects. The combination of
+    // the a key being live and this Debug being live keeps the corresponding
+    // Debug.Object alive.
     typedef HashMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, SystemAllocPolicy>
         ObjectMap;
     ObjectMap objects;
@@ -111,17 +117,18 @@ class Debug {
     JSTrapStatus handleThrow(JSContext *cx, Value *vp);
 
   public:
-    Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment);
+    Debug(JSObject *dbg, JSObject *hooks);
     ~Debug();
 
-    bool init();
+    bool init(JSContext *cx);
     inline JSObject *toJSObject() const;
     static inline Debug *fromJSObject(JSObject *obj);
     static Debug *fromChildJSObject(JSObject *obj);
+    void removeDebuggee(GlobalObject *global, GlobalObjectSet::Enum *e);
+    static void detachFromCompartment(JSCompartment *comp);
 
     /*********************************** Methods for interaction with the GC. */
 
-    //
     // A Debug object is live if:
     //   * the Debug JSObject is live (Debug::trace handles this case); OR
     //   * it is in the middle of dispatching an event (the event dispatching
@@ -138,9 +145,7 @@ class Debug {
     //
     static bool mark(GCMarker *trc, JSCompartment *compartment, JSGCInvocationKind gckind);
     static void sweepAll(JSRuntime *rt);
-
-    inline bool observesCompartment(JSCompartment *c) const;
-    void detachFrom(JSCompartment *c);
+    static void sweepCompartment(JSCompartment *compartment);
 
     static inline void leaveStackFrame(JSContext *cx);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
@@ -188,6 +193,11 @@ class Debug {
     // is false.)
     //
     bool newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
+
+  private:
+    // Prohibit copying.
+    Debug(const Debug &);
+    Debug & operator=(const Debug &);
 };
 
 bool
@@ -199,20 +209,13 @@ Debug::hasAnyLiveHooks() const
 bool
 Debug::observesScope(JSObject *obj) const
 {
-    return observesCompartment(obj->compartment());
+    return obj->getGlobal() == debuggeeGlobal;
 }
 
 bool
 Debug::observesFrame(StackFrame *fp) const
 {
     return observesScope(&fp->scopeChain());
-}
-
-bool
-Debug::observesCompartment(JSCompartment *c) const
-{
-    JS_ASSERT(c);
-    return debuggeeCompartment == c;
 }
 
 JSObject *
@@ -232,14 +235,14 @@ Debug::fromJSObject(JSObject *obj)
 void
 Debug::leaveStackFrame(JSContext *cx)
 {
-    if (!cx->compartment->getDebuggers().empty())
+    if (!cx->compartment->getDebuggees().empty())
         slowPathLeaveStackFrame(cx);
 }
 
 JSTrapStatus
 Debug::onDebuggerStatement(JSContext *cx, js::Value *vp)
 {
-    return cx->compartment->getDebuggers().empty()
+    return cx->compartment->getDebuggees().empty()
            ? JSTRAP_CONTINUE
            : dispatchHook(cx, vp,
                           DebugObservesMethod(&Debug::observesDebuggerStatement),
@@ -249,7 +252,7 @@ Debug::onDebuggerStatement(JSContext *cx, js::Value *vp)
 JSTrapStatus
 Debug::onThrow(JSContext *cx, js::Value *vp)
 {
-    return cx->compartment->getDebuggers().empty()
+    return cx->compartment->getDebuggees().empty()
            ? JSTRAP_CONTINUE
            : dispatchHook(cx, vp,
                           DebugObservesMethod(&Debug::observesThrow),

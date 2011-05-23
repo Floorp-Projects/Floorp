@@ -6643,7 +6643,7 @@ END_CASE(JSOP_ARRAYPUSH)
         atoms = script->atomMap.vector;
 
         /* Call debugger throw hook if set. */
-        if (cx->debugHooks->throwHook || !cx->compartment->getDebuggers().empty()) {
+        if (cx->debugHooks->throwHook || !cx->compartment->getDebuggees().empty()) {
             Value rval;
             JSTrapStatus st = Debug::onThrow(cx, &rval);
             if (st == JSTRAP_CONTINUE) {
