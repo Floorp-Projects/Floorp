@@ -30,41 +30,49 @@
   // Setup various fake-but-deterministic reporters.
   const KB = 1024;
   const MB = KB * KB;
+  const kUnknown = -1;
+  const MAPPED = Ci.nsIMemoryReporter.MR_MAPPED;
+  const HEAP   = Ci.nsIMemoryReporter.MR_HEAP;
+  const OTHER  = Ci.nsIMemoryReporter.MR_OTHER;
+
   fakeReporters = [
-    { path: "mapped",               memoryUsed: 1000 * MB },
-    { path: "mapped/heap/used",     memoryUsed:  500 * MB },
-    { path: "mapped/heap/unused",   memoryUsed:  100 * MB },
-    { path: "mapped/a",             memoryUsed:  222 * MB },
-    { path: "heap-used/a",          memoryUsed:   99 * MB },
-    { path: "heap-used/b/a",        memoryUsed:   80 * MB },
-    { path: "heap-used/b/b",        memoryUsed:   75 * MB },
-    { path: "heap-used/b/c/a",      memoryUsed:   44 * MB },
-    { path: "heap-used/b/c/b",      memoryUsed:   33 * MB }, // aggregated
-    { path: "heap-used/c",          memoryUsed:  123 * MB },
-    { path: "heap-used/d",          memoryUsed:  499 * KB }, // aggregated
-    { path: "heap-used/e",          memoryUsed:  100 * KB }, // aggregated
-    { path: "heap-used/f/g/h/i",    memoryUsed:   20 * MB },
-    { path: "heap-used/g",          memoryUsed:   15 * MB }, // internal
-    { path: "heap-used/g/a",        memoryUsed:    6 * MB },
-    { path: "heap-used/g/b",        memoryUsed:    5 * MB },
-    { path: "other1",               memoryUsed:  111 * MB },
-    { path: "other2",               memoryUsed:  222 * MB },
+    { path: "heap-used",        kind: OTHER, memoryUsed:  500 * MB },
+    { path: "heap-unused",      kind: OTHER, memoryUsed:  100 * MB },
+    { path: "explicit/a",       kind: HEAP,  memoryUsed:  222 * MB },
+    { path: "explicit/b/a",     kind: HEAP,  memoryUsed:   85 * MB },
+    { path: "explicit/b/b",     kind: HEAP,  memoryUsed:   75 * MB },
+    { path: "explicit/b/c/a",   kind: HEAP,  memoryUsed:   70 * MB },
+    { path: "explicit/b/c/b",   kind: HEAP,  memoryUsed:    2 * MB }, // omitted
+    { path: "explicit/c",       kind: MAPPED,memoryUsed:  123 * MB },
+    { path: "explicit/d",       kind: MAPPED,memoryUsed:  499 * KB }, // omitted
+    { path: "explicit/e",       kind: MAPPED,memoryUsed:  100 * KB }, // omitted
+    { path: "explicit/f/g/h/i", kind: HEAP,  memoryUsed:   20 * MB },
+    { path: "explicit/g",       kind: HEAP,  memoryUsed:   14 * MB }, // internal
+    { path: "explicit/g",       kind: HEAP,  memoryUsed:    1 * MB }, // internal, dup: merge
+    { path: "explicit/g/a",     kind: HEAP,  memoryUsed:    6 * MB },
+    { path: "explicit/g/b",     kind: HEAP,  memoryUsed:    5 * MB },
+    { path: "other1",           kind: OTHER, memoryUsed:  111 * MB },
+    { path: "other2",           kind: OTHER, memoryUsed:  222 * MB },
 
-    { path: "2nd:mapped",           memoryUsed: 1000 * MB },
-    { path: "2nd:mapped/heap/used", memoryUsed:  500 * MB },
-    { path: "2nd:mapped/a/b/c",     memoryUsed:  499 * MB },
-    { path: "2nd:heap-used/a",      memoryUsed:  400 * MB },
-    { path: "2nd:other1",           memoryUsed:  777 * MB },
+    { path: "2nd:heap-used",    kind: OTHER, memoryUsed: 1000 * MB },
+    { path: "2nd:heap-unused",  kind: OTHER, memoryUsed:  100 * MB },
+    { path: "2nd:explicit/a/b/c",kind: HEAP, memoryUsed:  498 * MB },
+    { path: "2nd:explicit/a/b/c",kind: HEAP, memoryUsed:    1 * MB }, // dup: merge
+    { path: "2nd:explicit/b",   kind: HEAP,  memoryUsed:  400 * MB },
+    { path: "2nd:other1",       kind: OTHER, memoryUsed:  777 * MB },
 
-    // -1 means "don't know";  this should be handled gracefully for
-    // "mapped" and "mapped/heap/used".
-    { path: "3rd:mapped",           memoryUsed: -1        },
-    { path: "3rd:mapped/heap/used", memoryUsed: -1        },
-    { path: "3rd:mapped/a/b",       memoryUsed:  333 * MB },
-    { path: "3rd:heap-used/a/b",    memoryUsed:  444 * MB },
-    { path: "3rd:other1",           memoryUsed:  555 * MB }
+    // kUnknown should be handled gracefully for "heap-used", non-leaf
+    // reporters, leaf-reporters, and "other" reporters.
+    { path: "3rd:heap-used",    kind: OTHER, memoryUsed: kUnknown },
+    { path: "3rd:explicit/a",   kind: HEAP,  memoryUsed: kUnknown },
+    { path: "3rd:explicit/a/b", kind: HEAP,  memoryUsed: 333 * MB },
+    { path: "3rd:explicit/a/c", kind: HEAP,  memoryUsed: 444 * MB },
+    { path: "3rd:explicit/a/d", kind: HEAP,  memoryUsed: kUnknown },
+    { path: "3rd:explicit/b",   kind: MAPPED,memoryUsed: kUnknown },
+    { path: "3rd:other1",       kind: OTHER, memoryUsed: kUnknown }
   ];
   for (var i = 0; i < fakeReporters.length; i++) {
+    fakeReporters[i].description = "(description)";
     mgr.registerReporter(fakeReporters[i]);
   }
   ]]>
@@ -79,74 +87,61 @@
 "\
 Main Process\n\
 \n\
-Mapped Memory\n\
-1,000.00 MB (100.0%) -- mapped\n\
-├────600.00 MB (60.00%) -- heap\n\
-│    ├──500.00 MB (50.00%) -- used\n\
-│    └──100.00 MB (10.00%) -- unused\n\
-├────222.00 MB (22.20%) -- a\n\
-└────178.00 MB (17.80%) -- other\n\
-\n\
-Used Heap Memory\n\
-500.00 MB (100.0%) -- heap-used\n\
-├──232.00 MB (46.40%) -- b\n\
-│  ├───80.00 MB (16.00%) -- a\n\
-│  ├───77.00 MB (15.40%) -- c\n\
-│  │   ├──44.00 MB (08.80%) -- a\n\
-│  │   └──33.00 MB (06.60%) -- b\n\
-│  └───75.00 MB (15.00%) -- b\n\
-├──123.00 MB (24.60%) -- c\n\
-├───99.00 MB (19.80%) -- a\n\
-├───20.00 MB (04.00%) -- f\n\
-│   └──20.00 MB (04.00%) -- g\n\
-│      └──20.00 MB (04.00%) -- h\n\
-│         └──20.00 MB (04.00%) -- i\n\
-├───15.00 MB (03.00%) -- g\n\
-│   ├───6.00 MB (01.20%) -- a\n\
-│   ├───5.00 MB (01.00%) -- b\n\
-│   └───4.00 MB (00.80%) -- other\n\
-├───10.42 MB (02.08%) -- other\n\
-└────0.58 MB (00.12%) -- (2 omitted)\n\
+Explicit Allocations\n\
+623.58 MB (100.0%) -- explicit\n\
+├──232.00 MB (37.20%) -- b\n\
+│  ├───85.00 MB (13.63%) -- a\n\
+│  ├───75.00 MB (12.03%) -- b\n\
+│  └───72.00 MB (11.55%) -- c\n\
+│      ├──70.00 MB (11.23%) -- a\n\
+│      └───2.00 MB (00.32%) -- (1 omitted)\n\
+├──222.00 MB (35.60%) -- a\n\
+├──123.00 MB (19.72%) -- c\n\
+├───20.00 MB (03.21%) -- f\n\
+│   └──20.00 MB (03.21%) -- g\n\
+│      └──20.00 MB (03.21%) -- h\n\
+│         └──20.00 MB (03.21%) -- i\n\
+├───15.00 MB (02.41%) -- g\n\
+│   ├───6.00 MB (00.96%) -- a\n\
+│   ├───5.00 MB (00.80%) -- b\n\
+│   └───4.00 MB (00.64%) -- other\n\
+├───11.00 MB (01.76%) -- heap-unclassified\n\
+└────0.58 MB (00.09%) -- (2 omitted)\n\
 \n\
 Other Measurements\n\
-111.00 MB -- other1\n\
+500.00 MB -- heap-used\n\
 222.00 MB -- other2\n\
+111.00 MB -- other1\n\
+100.00 MB -- heap-unused\n\
 \n\
 2nd Process\n\
 \n\
-Mapped Memory\n\
-1,000.00 MB (100.0%) -- mapped\n\
-├────500.00 MB (50.00%) -- heap\n\
-│    └──500.00 MB (50.00%) -- used\n\
+Explicit Allocations\n\
+1,000.00 MB (100.0%) -- explicit\n\
 ├────499.00 MB (49.90%) -- a\n\
 │    └──499.00 MB (49.90%) -- b\n\
 │       └──499.00 MB (49.90%) -- c\n\
-└──────1.00 MB (00.10%) -- other\n\
-\n\
-Used Heap Memory\n\
-500.00 MB (100.0%) -- heap-used\n\
-├──400.00 MB (80.00%) -- a\n\
-└──100.00 MB (20.00%) -- other\n\
+├────400.00 MB (40.00%) -- b\n\
+└────101.00 MB (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
-777.00 MB -- other1\n\
+1,000.00 MB -- heap-used\n\
+  777.00 MB -- other1\n\
+  100.00 MB -- heap-unused\n\
 \n\
 3rd Process\n\
 \n\
-Mapped Memory\n\
-??? MB -- mapped\n\
-├──333.00 MB -- a\n\
-│  └──333.00 MB -- b\n\
-└──0.00 MB -- heap\n\
-   └───??? MB -- used\n\
-\n\
-Used Heap Memory\n\
-??? MB -- heap-used\n\
-└──444.00 MB -- a\n\
-   └──444.00 MB -- b\n\
+Explicit Allocations\n\
+777.00 MB (100.0%) -- explicit\n\
+├──777.00 MB (100.0%) -- a [*]\n\
+│  ├──444.00 MB (57.14%) -- c\n\
+│  ├──333.00 MB (42.86%) -- b\n\
+│  └────0.00 MB (00.00%) -- (1 omitted)\n\
+└────0.00 MB (00.00%) -- (2 omitted)\n\
 \n\
 Other Measurements\n\
-555.00 MB -- other1\n\
+0.00 MB -- heap-used [*]\n\
+0.00 MB -- other1 [*]\n\
 \n\
 ";
 
@@ -154,75 +149,63 @@ Other Measurements\n\
 "\
 Main Process\n\
 \n\
-Mapped Memory\n\
-1,048,576,000 B (100.0%) -- mapped\n\
-├────629,145,600 B (60.00%) -- heap\n\
-│    ├──524,288,000 B (50.00%) -- used\n\
-│    └──104,857,600 B (10.00%) -- unused\n\
-├────232,783,872 B (22.20%) -- a\n\
-└────186,646,528 B (17.80%) -- other\n\
-\n\
-Used Heap Memory\n\
-524,288,000 B (100.0%) -- heap-used\n\
-├──243,269,632 B (46.40%) -- b\n\
-│  ├───83,886,080 B (16.00%) -- a\n\
-│  ├───80,740,352 B (15.40%) -- c\n\
-│  │   ├──46,137,344 B (08.80%) -- a\n\
-│  │   └──34,603,008 B (06.60%) -- b\n\
-│  └───78,643,200 B (15.00%) -- b\n\
-├──128,974,848 B (24.60%) -- c\n\
-├──103,809,024 B (19.80%) -- a\n\
-├───20,971,520 B (04.00%) -- f\n\
-│   └──20,971,520 B (04.00%) -- g\n\
-│      └──20,971,520 B (04.00%) -- h\n\
-│         └──20,971,520 B (04.00%) -- i\n\
-├───15,728,640 B (03.00%) -- g\n\
-│   ├───6,291,456 B (01.20%) -- a\n\
-│   ├───5,242,880 B (01.00%) -- b\n\
-│   └───4,194,304 B (00.80%) -- other\n\
-├───10,920,960 B (02.08%) -- other\n\
-├──────510,976 B (00.10%) -- d\n\
+Explicit Allocations\n\
+653,876,224 B (100.0%) -- explicit\n\
+├──243,269,632 B (37.20%) -- b\n\
+│  ├───89,128,960 B (13.63%) -- a\n\
+│  ├───78,643,200 B (12.03%) -- b\n\
+│  └───75,497,472 B (11.55%) -- c\n\
+│      ├──73,400,320 B (11.23%) -- a\n\
+│      └───2,097,152 B (00.32%) -- b\n\
+├──232,783,872 B (35.60%) -- a\n\
+├──128,974,848 B (19.72%) -- c\n\
+├───20,971,520 B (03.21%) -- f\n\
+│   └──20,971,520 B (03.21%) -- g\n\
+│      └──20,971,520 B (03.21%) -- h\n\
+│         └──20,971,520 B (03.21%) -- i\n\
+├───15,728,640 B (02.41%) -- g\n\
+│   ├───6,291,456 B (00.96%) -- a\n\
+│   ├───5,242,880 B (00.80%) -- b\n\
+│   └───4,194,304 B (00.64%) -- other\n\
+├───11,534,336 B (01.76%) -- heap-unclassified\n\
+├──────510,976 B (00.08%) -- d\n\
 └──────102,400 B (00.02%) -- e\n\
 \n\
 Other Measurements\n\
-116,391,936 B -- other1\n\
+524,288,000 B -- heap-used\n\
 232,783,872 B -- other2\n\
+116,391,936 B -- other1\n\
+104,857,600 B -- heap-unused\n\
 \n\
 2nd Process\n\
 \n\
-Mapped Memory\n\
-1,048,576,000 B (100.0%) -- mapped\n\
-├────524,288,000 B (50.00%) -- heap\n\
-│    └──524,288,000 B (50.00%) -- used\n\
+Explicit Allocations\n\
+1,048,576,000 B (100.0%) -- explicit\n\
 ├────523,239,424 B (49.90%) -- a\n\
 │    └──523,239,424 B (49.90%) -- b\n\
 │       └──523,239,424 B (49.90%) -- c\n\
-└──────1,048,576 B (00.10%) -- other\n\
-\n\
-Used Heap Memory\n\
-524,288,000 B (100.0%) -- heap-used\n\
-├──419,430,400 B (80.00%) -- a\n\
-└──104,857,600 B (20.00%) -- other\n\
+├────419,430,400 B (40.00%) -- b\n\
+└────105,906,176 B (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
-814,743,552 B -- other1\n\
+1,048,576,000 B -- heap-used\n\
+  814,743,552 B -- other1\n\
+  104,857,600 B -- heap-unused\n\
 \n\
 3rd Process\n\
 \n\
-Mapped Memory\n\
-??? B -- mapped\n\
-├──349,175,808 B -- a\n\
-│  └──349,175,808 B -- b\n\
-└────0 B -- heap\n\
-     └──??? B -- used\n\
-\n\
-Used Heap Memory\n\
-??? B -- heap-used\n\
-└──465,567,744 B -- a\n\
-   └──465,567,744 B -- b\n\
+Explicit Allocations\n\
+814,743,552 B (100.0%) -- explicit\n\
+├──814,743,552 B (100.0%) -- a [*]\n\
+│  ├──465,567,744 B (57.14%) -- c\n\
+│  ├──349,175,808 B (42.86%) -- b\n\
+│  └────────────0 B (00.00%) -- d [*]\n\
+├────────────0 B (00.00%) -- b [*]\n\
+└────────────0 B (00.00%) -- heap-unclassified [*]\n\
 \n\
 Other Measurements\n\
-581,959,680 B -- other1\n\
+0 B -- heap-used [*]\n\
+0 B -- other1 [*]\n\
 \n\
 "
 

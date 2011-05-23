@@ -109,6 +109,7 @@
 #endif
 
 #include "nsIPluginHost.h" // XXX needed for ext->type mapping (bug 233289)
+#include "nsPluginHost.h"
 #include "nsEscape.h"
 
 #include "nsIStringBundle.h" // XXX needed to localize error msgs
@@ -2758,7 +2759,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
   const nsCString& flatExt = PromiseFlatCString(aFileExt);
   // Try the plugins
   const char* mimeType;
-  nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
+  nsPluginHost* pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
   if (NS_SUCCEEDED(rv)) {
     if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(flatExt.get(), mimeType))) {
       aContentType = mimeType;

@@ -151,6 +151,19 @@ nsNullPrincipalURI::SetPath(const nsACString &aPath)
 }
 
 NS_IMETHODIMP
+nsNullPrincipalURI::GetRef(nsACString &_ref)
+{
+  _ref.Truncate();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNullPrincipalURI::SetRef(const nsACString &aRef)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsNullPrincipalURI::GetPrePath(nsACString &_prePath)
 {
   _prePath = mScheme + NS_LITERAL_CSTRING(":");
@@ -224,9 +237,16 @@ nsNullPrincipalURI::Clone(nsIURI **_newURI)
 {
   nsCOMPtr<nsIURI> uri =
     new nsNullPrincipalURI(mScheme + NS_LITERAL_CSTRING(":") + mPath);
-  NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
   uri.forget(_newURI);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNullPrincipalURI::CloneIgnoringRef(nsIURI **_newURI)
+{
+  // GetRef/SetRef not supported by nsNullPrincipalURI, so
+  // CloneIgnoringRef() is the same as Clone().
+  return Clone(_newURI);
 }
 
 NS_IMETHODIMP
@@ -241,6 +261,14 @@ nsNullPrincipalURI::Equals(nsIURI *aOther, PRBool *_equals)
     NS_RELEASE(otherURI);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNullPrincipalURI::EqualsExceptRef(nsIURI *aOther, PRBool *_equals)
+{
+  // GetRef/SetRef not supported by nsNullPrincipalURI, so
+  // EqualsExceptRef() is the same as Equals().
+  return Equals(aOther, _equals);
 }
 
 NS_IMETHODIMP
