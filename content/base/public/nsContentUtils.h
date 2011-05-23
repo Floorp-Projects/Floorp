@@ -928,7 +928,7 @@ public:
   /**
    * This method creates and dispatches a trusted event.
    * Works only with events which can be created by calling
-   * nsIDOMDocumentEvent::CreateEvent() with parameter "Events".
+   * nsIDOMDocument::CreateEvent() with parameter "Events".
    * @param aDoc           The document which will be used to create the event.
    * @param aTarget        The target of the event, should be QIable to
    *                       nsIDOMEventTarget.
@@ -949,7 +949,7 @@ public:
    * This method creates and dispatches a trusted event to the chrome
    * event handler.
    * Works only with events which can be created by calling
-   * nsIDOMDocumentEvent::CreateEvent() with parameter "Events".
+   * nsIDOMDocument::CreateEvent() with parameter "Events".
    * @param aDocument      The document which will be used to create the event,
    *                       and whose window's chrome handler will be used to
    *                       dispatch the event.

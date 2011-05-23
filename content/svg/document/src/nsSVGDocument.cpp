@@ -64,9 +64,8 @@ nsSVGDocument::~nsSVGDocument()
 DOMCI_NODE_DATA(SVGDocument, nsSVGDocument)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGDocument)
-  NS_INTERFACE_TABLE_INHERITED2(nsSVGDocument,
-                                nsIDOMSVGDocument,
-                                nsIDOMDocumentEvent)
+  NS_INTERFACE_TABLE_INHERITED1(nsSVGDocument,
+                                nsIDOMSVGDocument)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)

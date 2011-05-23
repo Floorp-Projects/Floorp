@@ -50,7 +50,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDataContainerEvent.h"
-#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsEventStates.h"
@@ -257,16 +257,16 @@ nsPluginCrashedEvent::Run()
   LOG(("OBJLC []: Firing plugin crashed event for content %p\n",
        mContent.get()));
 
-  nsCOMPtr<nsIDOMDocumentEvent> domEventDoc =
+  nsCOMPtr<nsIDOMDocument> domDoc =
     do_QueryInterface(mContent->GetDocument());
-  if (!domEventDoc) {
+  if (!domDoc) {
     NS_WARNING("Couldn't get document for PluginCrashed event!");
     return NS_OK;
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  domEventDoc->CreateEvent(NS_LITERAL_STRING("datacontainerevents"),
-                           getter_AddRefs(event));
+  domDoc->CreateEvent(NS_LITERAL_STRING("datacontainerevents"),
+                      getter_AddRefs(event));
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
   nsCOMPtr<nsIDOMDataContainerEvent> containerEvent(do_QueryInterface(event));
   if (!privateEvent || !containerEvent) {

@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define CreateEvent CreateEventA
+#include "nsIDOMDocument.h"
+
 #include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
@@ -48,7 +51,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
@@ -76,11 +78,8 @@
 #include "nsReadableUtils.h"
 #include "nsRootAccessible.h"
 #include "nsIDOMNSEventTarget.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsFocusManager.h"
-#include "mozilla/dom/Element.h"
-
 
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
@@ -415,11 +414,11 @@ nsRootAccessible::FireCurrentFocusEvent()
     return; // No current focus
   }
 
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(mDocument);
-  if (docEvent) {
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
+  if (domDoc) {
     nsCOMPtr<nsIDOMEvent> event;
-    if (NS_SUCCEEDED(docEvent->CreateEvent(NS_LITERAL_STRING("Events"),
-                                           getter_AddRefs(event))) &&
+    if (NS_SUCCEEDED(domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
+                                         getter_AddRefs(event))) &&
         NS_SUCCEEDED(event->InitEvent(NS_LITERAL_STRING("focus"), PR_TRUE, PR_TRUE))) {
 
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
