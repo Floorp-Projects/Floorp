@@ -40,7 +40,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "nsXULAppAPI.h"
 
-#include "nsPrefService.h"
+#include "mozilla/Preferences.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"

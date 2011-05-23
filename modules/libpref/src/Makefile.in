@@ -55,10 +55,10 @@ LIBXUL_LIBRARY = 1
 
 CPPSRCS		= \
 			  nsPrefBranch.cpp	\
-			  nsPrefService.cpp	\
 			  nsPrefsFactory.cpp	\
 			  prefapi.cpp \
 			  prefread.cpp \
+			  Preferences.cpp	\
 			 $(NULL)
 
 DEFINES += -DOS_ARCH=$(OS_ARCH) \

@@ -37,8 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPrefService_h__
-#define nsPrefService_h__
+#ifndef mozilla_Preferences_h
+#define mozilla_Preferences_h
+
+#ifndef MOZILLA_INTERNAL_API
+#error "This header is only usable from within libxul (MOZILLA_INTERNAL_API)."
+#endif
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -87,4 +91,4 @@ private:
 
 } // namespace mozilla
 
-#endif // nsPrefService_h__
+#endif // mozilla_Preferences_h
