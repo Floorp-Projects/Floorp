@@ -188,7 +188,6 @@ ContainerLayerD3D10::RenderLayer()
 
   gfx3DMatrix oldViewMatrix;
 
-  gfxMatrix contTransform;
   if (useIntermediate) {
     device()->OMGetRenderTargets(1, getter_AddRefs(previousRTView), NULL);
  
@@ -253,9 +252,6 @@ ContainerLayerD3D10::RenderLayer()
 
     previousViewportSize = mD3DManager->GetViewport();
     mD3DManager->SetViewport(nsIntSize(visibleRect.Size()));
-  } else {
-    PRBool is2d = GetEffectiveTransform().Is2D(&contTransform);
-    NS_ASSERTION(is2d, "Transform must be 2D");
   }
     
   D3D10_RECT oldD3D10Scissor;
@@ -280,11 +276,7 @@ ContainerLayerD3D10::RenderLayer()
     }
     
     nsIntRect scissorRect =
-      layerToRender->GetLayer()->CalculateScissorRect(useIntermediate,
-                                                      visibleRect,
-                                                      oldScissor,
-                                                      contTransform);
-
+        layerToRender->GetLayer()->CalculateScissorRect(oldScissor, nsnull);
     if (scissorRect.IsEmpty()) {
       continue;
     }
@@ -298,7 +290,7 @@ ContainerLayerD3D10::RenderLayer()
 
     layerToRender->RenderLayer();
   }
-      
+
   device()->RSSetScissorRects(1, &oldD3D10Scissor);
 
   if (useIntermediate) {
