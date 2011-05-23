@@ -467,7 +467,7 @@ function createInstallRDF(aData) {
   rdf += '<Description about="urn:mozilla:install-manifest">\n';
 
   ["id", "version", "type", "internalName", "updateURL", "updateKey",
-   "optionsURL", "aboutURL", "iconURL", "icon64URL",
+   "optionsURL", "optionsType", "aboutURL", "iconURL", "icon64URL",
    "skinnable", "bootstrap"].forEach(function(aProp) {
     if (aProp in aData)
       rdf += "<em:" + aProp + ">" + escapeXML(aData[aProp]) + "</em:" + aProp + ">\n";
