@@ -149,6 +149,40 @@ var noframe_container = document.getElementById("content");
   p.parentNode.removeChild(p);
 })();
 
+(function test_bug_647885_2() {
+  // Test that various background-size styles round-trip correctly
+  var backgroundSizes = [
+    [ "0 0", "0px 0px", "unitless 0" ],
+    [ "0px 0px", "0px 0px", "0 with units" ],
+    [ "0% 0%", "0% 0%", "0%" ],
+    [ "-moz-calc(0px) 0", "0px 0px", "0 calc with units horizontal" ],
+    [ "0 -moz-calc(0px)", "0px 0px", "0 calc with units vertical" ],
+    [ "-moz-calc(3px - 3px) 0", "0px 0px", "computed 0 calc with units horizontal" ],
+    [ "0 -moz-calc(3px - 3px)", "0px 0px", "computed 0 calc with units vertical" ],
+    [ "-moz-calc(0%) 0", "0% 0px", "0% calc horizontal"],
+    [ "0 -moz-calc(0%)", "0px 0%", "0% calc vertical"],
+    [ "-moz-calc(3px + 2% - 2%) 0", "-moz-calc(3px + 0%) 0px",
+                      "computed 0% calc horizontal"],
+    [ "0 -moz-calc(3px + 2% - 2%)", "0px -moz-calc(3px + 0%)",
+                      "computed 0% calc vertical"],
+    [ "-moz-calc(3px - 5px) -moz-calc(6px - 9px)",
+      "-moz-calc(-2px) -moz-calc(-3px)", "negative pixel width" ],
+    [ "", "auto auto", "initial value" ],
+  ];
+
+  var p = document.createElement("p");
+  var cs = getComputedStyle(p, "");
+  frame_container.appendChild(p);
+
+  for (var i = 0; i < backgroundSizes.length; ++i) {
+    var test = backgroundSizes[i];
+    p.style.backgroundSize = test[0];
+    is(cs.backgroundSize, test[1], "computed value of " + test[2] + " background-size");
+  }
+
+  p.parentNode.removeChild(p);
+})();
+
 </script>
 </pre>
 </body>
