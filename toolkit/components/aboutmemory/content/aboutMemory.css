@@ -48,6 +48,11 @@
   color: #004;
 }
 
+.mrStar {
+  font-style: italic;
+  color: #604;
+}
+
 .treeLine {
   color: #888;
 }
