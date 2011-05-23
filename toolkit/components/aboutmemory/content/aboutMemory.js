@@ -222,9 +222,17 @@ function update()
     "</div>";
 
   // Generate verbosity option link at the bottom.
+  text += "<div>";
   text += gVerbose
         ? "<span class='option'><a href='about:memory'>Less verbose</a></span>"
         : "<span class='option'><a href='about:memory?verbose'>More verbose</a></span>";
+  text += "</div>";
+
+  text += "<div>" +
+          "<span class='legend'>Hover the pointer over the name of a memory " +
+          "reporter to see a detailed description of what it measures.</span>"
+          "</div>";
+
 
   var div = document.createElement("div");
   div.innerHTML = text;
@@ -609,7 +617,7 @@ function genMrNameText(aKind, aDesc, aName, aHasProblem)
     "Warning: this memory reporter was unable to compute a useful value. " +
     "The reported value is the sum of all entries below '" + aName + "', " +
     "which is probably less than the true value.";
-  var text = "-- <span class='mrName' title='" +
+  var text = "-- <span class='mrName hasDesc' title='" +
              kindToString(aKind) + escapeQuotes(aDesc) +
              "'>" + aName + "</span>";
   text += aHasProblem
@@ -725,7 +733,7 @@ function genTreeText(aT)
     "heap), and therefore it is the single best number to focus on when " +
     "trying to reduce memory usage.";
                
-  return "<h2 title='" + escapeQuotes(desc) +
+  return "<h2 class='hasDesc' title='" + escapeQuotes(desc) +
          "'>Explicit Allocations</h2>\n" + "<pre>" + text + "</pre>\n";
 }
 
@@ -779,7 +787,7 @@ function genOtherText(aTmrs)
   // Nb: the newlines give nice spacing if we cut+paste into a text buffer.
   const desc = "This list contains other memory measurements that cross-cut " +
                "the requested memory measurements above."
-  return "<h2 title='" + desc + "'>Other Measurements</h2>\n" +
+  return "<h2 class='hasDesc' title='" + desc + "'>Other Measurements</h2>\n" +
          "<pre>" + text + "</pre>\n";
 }
 
