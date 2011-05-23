@@ -216,7 +216,7 @@ endif # ENABLE_TESTS
 #
 # Library rules
 #
-# If BUILD_STATIC_LIBS or FORCE_STATIC_LIB is set, build a static library.
+# If FORCE_STATIC_LIB is set, build a static library.
 # Otherwise, build a shared library.
 #
 
@@ -239,7 +239,7 @@ endif
 endif
 
 ifdef LIBRARY
-ifneq (_1,$(FORCE_SHARED_LIB)_$(BUILD_STATIC_LIBS))
+ifdef FORCE_SHARED_LIB
 ifdef MKSHLIB
 
 ifdef LIB_IS_C_ONLY
@@ -266,23 +266,11 @@ ifeq ($(OS_ARCH),OS2)
 DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 endif
 
-ifdef MOZ_ENABLE_LIBXUL
 EMBED_MANIFEST_AT=2
-endif
 
 endif # MKSHLIB
-endif # FORCE_SHARED_LIB && !BUILD_STATIC_LIBS
+endif # FORCE_SHARED_LIB
 endif # LIBRARY
-
-ifeq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
-LIBRARY			:= $(NULL)
-endif
-
-ifeq (_1,$(FORCE_SHARED_LIB)_$(BUILD_STATIC_LIBS))
-SHARED_LIBRARY		:= $(NULL)
-DEF_FILE		:= $(NULL)
-IMPORT_LIBRARY		:= $(NULL)
-endif
 
 ifdef FORCE_STATIC_LIB
 ifndef FORCE_SHARED_LIB
@@ -294,7 +282,7 @@ endif
 
 ifdef FORCE_SHARED_LIB
 ifndef FORCE_STATIC_LIB
-LIBRARY			:= $(NULL)
+LIBRARY := $(NULL)
 endif
 endif
 
@@ -785,12 +773,6 @@ export::
 ifdef LIBRARY_NAME
 ifdef EXPORT_LIBRARY
 ifdef IS_COMPONENT
-ifdef BUILD_STATIC_LIBS
-	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_LINK_COMPS) $(STATIC_LIBRARY_NAME)
-ifdef MODULE_NAME
-	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_LINK_COMP_NAMES) $(MODULE_NAME)
-endif
-endif # BUILD_STATIC_LIBS
 else # !IS_COMPONENT
 	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_LINK_LIBS) $(STATIC_LIBRARY_NAME)
 endif # IS_COMPONENT

@@ -48,7 +48,7 @@
 #include "prprf.h"
 #include "GfxDriverInfo.h"
 
-#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
@@ -533,7 +533,7 @@ GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
   return NS_OK;
 }
 
-#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#if defined(MOZ_CRASHREPORTER)
 /* Cisco's VPN software can cause corruption of the floating point state.
  * Make a note of this in our crash reports so that some weird crashes
  * make more sense */
@@ -553,7 +553,7 @@ CheckForCiscoVPN() {
 void
 GfxInfo::AddCrashReportAnnotations()
 {
-#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#if defined(MOZ_CRASHREPORTER)
   CheckForCiscoVPN();
 
   nsCAutoString deviceIDString, vendorIDString;

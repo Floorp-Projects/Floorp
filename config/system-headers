@@ -70,9 +70,6 @@ bstring.h
 builtin.h
 Button.h
 byteswap.h
-#if MOZ_ENABLE_LIBXUL!=1
-#define WRAP_CAIRO_HEADERS
-#endif
 #if MOZ_TREE_CAIRO!=1
 #define WRAP_CAIRO_HEADERS
 #endif
@@ -993,15 +990,6 @@ png.h
 #endif
 #if MOZ_NATIVE_ZLIB==1
 zlib.h
-#endif
-#if MOZ_ENABLE_LIBXUL!=1
-#if BUILD_STATIC_LIBS!=1
-#define WRAP_LCMS_HEADERS
-#endif
-#endif
-#ifdef WRAP_LCMS_HEADERS
-icc34.h
-lcms.h
 #endif
 #ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
 libsn/sn.h

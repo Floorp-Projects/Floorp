@@ -194,14 +194,12 @@ _cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared
     cairo_status_t status;
 
     depth++;
-#ifdef MOZ_ENABLE_LIBXUL
     if (depth == 200) {
         CrashSpline(tolerance_squared, s1->a.x, s1->a.y,
                 s1->b.x, s1->b.y,
                 s1->c.x, s1->c.y,
                 s1->d.x, s1->d.y);
     }
-#endif
 
     if (_cairo_spline_error_squared (s1) < tolerance_squared) {
         depth--;
@@ -227,7 +225,6 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
     cairo_spline_knots_t s1;
     cairo_status_t status;
 
-#ifdef MOZ_ENABLE_LIBXUL
     StoreSpline(spline->knots.a.x,
                 spline->knots.a.y,
                 spline->knots.b.x,
@@ -236,7 +233,6 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
                 spline->knots.c.y,
                 spline->knots.d.x,
                 spline->knots.d.y);
-#endif
     s1 = spline->knots;
     spline->last_point = s1.a;
     status = _cairo_spline_decompose_into (&s1, tolerance * tolerance, spline);

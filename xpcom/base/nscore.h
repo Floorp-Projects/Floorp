@@ -295,15 +295,7 @@
 #define XPCOM_API(type) IMPORT_XPCOM_API(type)
 #endif
 
-#ifdef MOZ_ENABLE_LIBXUL
 #define NS_COM
-#elif defined(_IMPL_NS_COM)
-#define NS_COM NS_EXPORT
-#elif defined(XPCOM_GLUE)
-#define NS_COM
-#else
-#define NS_COM NS_IMPORT
-#endif
 
 #ifdef MOZILLA_INTERNAL_API
 #  define NS_COM_GLUE NS_COM

@@ -83,12 +83,4 @@ NS_IsCycleCollectorThread()
   return PR_GetCurrentThread() == gCycleCollectorThread;
 }
 
-#elif !defined(MOZ_ENABLE_LIBXUL)
-
-bool
-NS_IsCycleCollectorThread()
-{
-  return gTLSThreadID == mozilla::threads::CycleCollector;
-}
-
 #endif

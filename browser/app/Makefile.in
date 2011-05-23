@@ -102,50 +102,19 @@ CPPSRCS = nsBrowserApp.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 
-ifdef BUILD_STATIC_LIBS
-ifdef _MSC_VER
-STATIC_COMPONENTS_LINKER_PATH = -LIBPATH:$(DEPTH)/staticlib
-else
-STATIC_COMPONENTS_LINKER_PATH = -L$(DEPTH)/staticlib
-endif
-LIBS += $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
-else
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 LIBS += $(DIST)/bin/XUL
+TK_LIBS := $(TK_LIBS)
 else
 EXTRA_DSO_LIBS += xul
-endif
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-TK_LIBS := $(TK_LIBS)
-endif
-
-ifdef MOZ_ENABLE_LIBXUL
-APP_XPCOM_LIBS = $(XPCOM_GLUE_LDOPTS)
-else
-MOZILLA_INTERNAL_API = 1
-APP_XPCOM_LIBS = $(XPCOM_LIBS)
 endif
 
 LIBS += \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
-	$(APP_XPCOM_LIBS) \
+	$(XPCOM_GLUE_LDOPTS) \
 	$(NSPR_LIBS) \
 	$(NULL)
-
-ifdef BUILD_STATIC_LIBS
-LIBS += \
-	$(MOZ_JS_LIBS) \
-	$(TK_LIBS) \
-	$(NULL)
-
-# Add explicit X11 dependency when building against X11 toolkits
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-LIBS += $(XLDFLAGS) $(XLIBS) $(ZLIB_LIBS)
-endif
-endif
 
 ifdef MOZ_JPROF
 LIBS += -ljprof
@@ -171,18 +140,6 @@ ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 
-ifdef BUILD_STATIC_LIBS
-include $(topsrcdir)/config/static-config.mk
-
-EXTRA_DEPS	+= \
-	$(STATIC_EXTRA_DEPS) \
-	$(NULL)
-DEFINES		+= $(STATIC_DEFINES)
-CPPSRCS		+= $(STATIC_CPPSRCS)
-EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
-EXTRA_LIBS	+= $(STATIC_EXTRA_LIBS)
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32)
@@ -195,9 +152,6 @@ RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
 else
 RCFLAGS += -DMOZ_PHOENIX --include-dir $(srcdir)
 endif
-ifdef BUILD_STATIC_LIBS
-RCFLAGS += -DMOZ_STATIC_BUILD
-endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
 endif
@@ -206,9 +160,6 @@ endif
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 RCFLAGS += -DMOZ_PHOENIX
-ifdef BUILD_STATIC_LIBS
-RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include
-endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
 endif
@@ -216,12 +167,6 @@ RCFLAGS += -DFIREFOX_ICO=\"$(DIST)/branding/firefox-os2.ico\" -DDOCUMENT_ICO=\"$
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-ifdef BUILD_STATIC_LIBS
-include $(topsrcdir)/config/static-rules.mk
-
-DEFINES += -DIMPL_XREAPI
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 LIBS += -lphexlib

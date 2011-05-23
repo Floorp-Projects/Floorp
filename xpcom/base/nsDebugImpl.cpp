@@ -329,7 +329,7 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
      return;
 
    case NS_DEBUG_ABORT: {
-#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#if defined(MOZ_CRASHREPORTER)
      nsCString note("xpcom_runtime_abort(");
      note += buf.buffer;
      note += ")";

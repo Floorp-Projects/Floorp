@@ -4433,8 +4433,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-MOZ_ENABLE_LIBXUL=1
-
 MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
   LIBXUL_SDK_DIR=$withval)
@@ -4448,7 +4446,6 @@ elif test -n "$LIBXUL_SDK_DIR" -a "$LIBXUL_SDK_DIR" != "no"; then
         AC_MSG_ERROR([$LIBXUL_SDK/include/xpcom-config.h doesn't exist])
     fi
 
-    MOZ_ENABLE_LIBXUL=1
 fi
 AC_SUBST(LIBXUL_SDK)
 
@@ -4464,10 +4461,6 @@ SYSTEM_LIBXUL=
 MOZ_ARG_WITH_BOOL(system-libxul,
 [  --with-system-libxul    Use system installed libxul SDK],
     SYSTEM_LIBXUL=1)
-
-if test -n "$SYSTEM_LIBXUL" -a -z "$MOZ_ENABLE_LIBXUL"; then
-    AC_MSG_ERROR([--with-system-libxul needs --with-libxul-sdk])
-fi
 
 dnl ========================================================
 dnl = If NSPR was not detected in the system, 
@@ -4796,7 +4789,6 @@ dnl ========================================================
 
 MOZ_ARG_HEADER(Application)
 
-BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
 MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
@@ -8101,22 +8093,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
 
-MOZ_ARG_ENABLE_BOOL(static,
-[  --enable-static         Enable building internal static libs],
-    BUILD_STATIC_LIBS=1,
-    BUILD_STATIC_LIBS=)
-
-MOZ_ENABLE_LIBXUL=1
-
-MOZ_ARG_DISABLE_BOOL(libxul,
-[  --disable-libxul        Disable building libxul (not supported)],
-    MOZ_ENABLE_LIBXUL=,
-    MOZ_ENABLE_LIBXUL=1)
-
-if test -z "$MOZ_ENABLE_LIBXUL"; then
-  AC_MSG_ERROR([--disable-libxul is no longer supported.])
-fi
-
 # split JS out by default to avoid VS2005 PGO crash (bug 591836).
 if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" != "x86_64" ; then
   ENABLE_SHARED_JS=1
@@ -8137,17 +8113,8 @@ else
 fi
 AC_SUBST(JS_SHARED_LIBRARY)
 
-if test -n "$MOZ_STATIC_BUILD_UNSUPPORTED" -a -n "$BUILD_STATIC_LIBS"; then
-  AC_MSG_ERROR([--enable-static is not supported for building $MOZ_BUILD_APP.])
-fi
-
-if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
-  AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
-fi
-
 AC_SUBST(LIBXUL_LIBS)
 XPCOM_LIBS="$LIBXUL_LIBS"
-AC_DEFINE(MOZ_ENABLE_LIBXUL)
 
 dnl ========================================================
 dnl =
@@ -8798,8 +8765,6 @@ AC_SUBST(JAR)
 
 AC_SUBST(MOZ_PROFILELOCKING)
 
-AC_SUBST(BUILD_STATIC_LIBS)
-AC_SUBST(MOZ_ENABLE_LIBXUL)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)

@@ -46,9 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpconnect
 DIRS		= public idl wrappers loader src
 
-ifndef BUILD_STATIC_LIBS
 TOOL_DIRS    += shell
-endif
 
 ifdef ENABLE_TESTS
 TOOL_DIRS    += tests

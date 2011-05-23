@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE       = nptest
 LIBRARY_NAME = nptest
 MODULE_NAME  = TestPlugin
+FORCE_SHARED_LIB = 1
 
 # Don't use STL wrappers; nptest isn't Gecko code
 STL_FLAGS =

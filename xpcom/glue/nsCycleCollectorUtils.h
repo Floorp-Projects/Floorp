@@ -47,14 +47,10 @@ NS_COM bool NS_IsCycleCollectorThread();
 #elif defined(NS_TLS)
 // Defined in nsThreadManager.cpp.
 extern NS_TLS mozilla::threads::ID gTLSThreadID;
-#ifdef MOZ_ENABLE_LIBXUL
 inline bool NS_IsCycleCollectorThread()
 {
   return gTLSThreadID == mozilla::threads::CycleCollector;
 }
-#else
-NS_COM bool NS_IsCycleCollectorThread();
-#endif
 #else
 NS_COM_GLUE bool NS_IsCycleCollectorThread();
 #endif

@@ -204,13 +204,6 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 
 
-ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LIBS	= gkgfx ycbcr
-ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
-CPPSRCS += gfxDllDeps.cpp
-endif
-endif
-
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_CAIRO_LIBS) \
 	$(LIBS_DIR) \
