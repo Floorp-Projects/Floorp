@@ -392,13 +392,19 @@ Debug::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value
     const Shape *shape;
     jsid returnId = ATOM_TO_JSID(cx->runtime->atomState.returnAtom);
     jsid throwId = ATOM_TO_JSID(cx->runtime->atomState.throwAtom);
-    if (!rv.isObject() ||
-        !(obj = &rv.toObject())->isObject() ||
-        !(shape = obj->lastProperty())->previous() ||
-        shape->previous()->previous() ||
-        (shape->propid != returnId && shape->propid != throwId) ||
-        !shape->isDataDescriptor())
-    {
+    bool okResumption = rv.isObject();
+    if (okResumption) {
+        obj = &rv.toObject();
+        okResumption = obj->isObject();
+    }
+    if (okResumption) {
+        shape = obj->lastProperty();
+        okResumption = shape->previous() && 
+             !shape->previous()->previous() &&
+             (shape->propid == returnId || shape->propid == throwId) &&
+             shape->isDataDescriptor();
+    }
+    if (!okResumption) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_BAD_RESUMPTION);
         return handleUncaughtException(ac, vp, callHook);
     }
