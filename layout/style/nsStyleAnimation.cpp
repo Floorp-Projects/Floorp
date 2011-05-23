@@ -2496,27 +2496,25 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             resultTail = &item->mNext;
 
             const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
-            if (pos.mXPosition.mLength == 0) {
-              item->mXValue.SetPercentValue(pos.mXPosition.mPercent);
-            } else if (pos.mXPosition.mPercent == 0.0f) {
+            // XXXbz is there a good reason we can't just
+            // SetCalcValue(&pos.mXPosition, item->mXValue) here?
+            if (!pos.mXPosition.mHasPercent) {
+              NS_ABORT_IF_FALSE(pos.mXPosition.mPercent == 0.0f,
+                                "Shouldn't have mPercent!");
               nscoordToCSSValue(pos.mXPosition.mLength, item->mXValue);
+            } else if (pos.mXPosition.mLength == 0) {
+              item->mXValue.SetPercentValue(pos.mXPosition.mPercent);
             } else {
-              nsStyleCoord::Calc calc;
-              calc.mLength = pos.mXPosition.mLength;
-              calc.mPercent = pos.mXPosition.mPercent;
-              calc.mHasPercent = PR_TRUE;
-              SetCalcValue(&calc, item->mXValue);
+              SetCalcValue(&pos.mXPosition, item->mXValue);
             }
-            if (pos.mYPosition.mLength == 0) {
-              item->mYValue.SetPercentValue(pos.mYPosition.mPercent);
-            } else if (pos.mYPosition.mPercent == 0.0f) {
+            if (!pos.mYPosition.mHasPercent) {
+              NS_ABORT_IF_FALSE(pos.mYPosition.mPercent == 0.0f,
+                                "Shouldn't have mPercent!");
               nscoordToCSSValue(pos.mYPosition.mLength, item->mYValue);
+            } else if (pos.mYPosition.mLength == 0) {
+              item->mYValue.SetPercentValue(pos.mYPosition.mPercent);
             } else {
-              nsStyleCoord::Calc calc;
-              calc.mLength = pos.mYPosition.mLength;
-              calc.mPercent = pos.mYPosition.mPercent;
-              calc.mHasPercent = PR_TRUE;
-              SetCalcValue(&calc, item->mYValue);
+              SetCalcValue(&pos.mYPosition, item->mYValue);
             }
           }
 
