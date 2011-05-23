@@ -124,11 +124,11 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
         JSObject* wrapper = cache->GetWrapper();
         NS_ASSERTION(!wrapper ||
                      !cache->IsProxy() ||
-                     !IS_SLIM_WRAPPER_OBJECT(wrapper),
+                     !IS_SLIM_WRAPPER(wrapper),
                      "Should never have a slim wrapper when IsProxy()");
         if (wrapper &&
             js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope) &&
-            (IS_SLIM_WRAPPER_OBJECT(wrapper) ||
+            (IS_SLIM_WRAPPER(wrapper) ||
              xpc_OkToHandOutWrapper(cache))) {
             *vp = OBJECT_TO_JSVAL(wrapper);
             return wrapper;

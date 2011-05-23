@@ -53,6 +53,8 @@
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
 
+#include "dombindings.h"
+
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
 #define ILLEGAL_RANGE(c) (0!=((c) & 0xFF80))
@@ -1166,8 +1168,12 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             if(!ccx.IsValid())
                 return JS_FALSE;
 
-            if(!flat)
-                flat = ConstructProxyObject(ccx, aHelper, xpcscope);
+            if(!flat) {
+                flat = cache->WrapObject(lccx.GetJSContext());
+                if (!flat) {
+                    flat = ConstructProxyObject(ccx, aHelper, xpcscope);
+                }
+            }
 
             if(!JS_WrapObject(ccx, &flat))
                 return JS_FALSE;

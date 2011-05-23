@@ -43,7 +43,7 @@
 #include "jsapi.h"
 #include "jsproxy.h"
 
-#include "nsINodeList.h"
+class nsINodeList;
 
 namespace xpc {
 namespace dom {
