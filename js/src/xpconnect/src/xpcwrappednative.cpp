@@ -60,8 +60,13 @@ xpc_OkToHandOutWrapper(nsWrapperCache *cache)
     NS_ABORT_IF_FALSE(cache->GetWrapper(), "Must have wrapper");
     NS_ABORT_IF_FALSE(cache->IsProxy() || IS_WN_WRAPPER(cache->GetWrapper()),
                       "Must have proxy or XPCWrappedNative wrapper");
+    NS_ABORT_IF_FALSE(cache->IsProxy() == js::IsProxy(cache->GetWrapper()),
+                      "There's serious confusion about whether this is a "
+                      "proxy");
     return
-        xpc::dom::NodeList::objIsNodeList(cache->GetWrapper()) ||
+        (cache->IsProxy() &&
+         js::GetProxyHandler(cache->GetWrapper())->family() ==
+           xpc::dom::NodeListBase::ProxyFamily()) ||
         (!cache->IsProxy() &&
          !static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cache->GetWrapper()))->
            NeedsSOW());

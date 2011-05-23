@@ -499,7 +499,9 @@ nsContentList::~nsContentList()
 JSObject*
 nsContentList::WrapObject(JSContext *cx)
 {
-  return xpc::dom::NodeList::create(cx, this);
+  return xpc::dom::NodeListBase::create(cx,
+                                        static_cast<nsIHTMLCollection*>(this),
+                                        this);
 }
 
 DOMCI_DATA(ContentList, nsContentList)
