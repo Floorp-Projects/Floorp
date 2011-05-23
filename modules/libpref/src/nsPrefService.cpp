@@ -73,6 +73,8 @@
 #include "mozilla/Omnijar.h"
 #include "nsZipArchive.h"
 
+namespace mozilla {
+
 // Definitions
 #define INITIAL_PREF_FILES 10
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
@@ -88,11 +90,11 @@ static nsresult pref_LoadPrefsInDirList(const char *listId);
  * Constructor/Destructor
  */
 
-nsPrefService::nsPrefService()
+Preferences::Preferences()
 {
 }
 
-nsPrefService::~nsPrefService()
+Preferences::~Preferences()
 {
   PREF_Cleanup();
 }
@@ -102,10 +104,10 @@ nsPrefService::~nsPrefService()
  * nsISupports Implementation
  */
 
-NS_IMPL_THREADSAFE_ADDREF(nsPrefService)
-NS_IMPL_THREADSAFE_RELEASE(nsPrefService)
+NS_IMPL_THREADSAFE_ADDREF(Preferences)
+NS_IMPL_THREADSAFE_RELEASE(Preferences)
 
-NS_INTERFACE_MAP_BEGIN(nsPrefService)
+NS_INTERFACE_MAP_BEGIN(Preferences)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefService)
     NS_INTERFACE_MAP_ENTRY(nsIPrefService)
     NS_INTERFACE_MAP_ENTRY(nsIPrefServiceInternal)
@@ -121,7 +123,8 @@ NS_INTERFACE_MAP_END
  * nsIPrefService Implementation
  */
 
-nsresult nsPrefService::Init()
+nsresult
+Preferences::Init()
 {
   nsPrefBranch *rootBranch = new nsPrefBranch("", PR_FALSE); 
   if (!rootBranch)
@@ -180,7 +183,9 @@ nsresult nsPrefService::Init()
   return(rv);
 }
 
-NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP
+Preferences::Observe(nsISupports *aSubject, const char *aTopic,
+                     const PRUnichar *someData)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content)
     return NS_ERROR_NOT_AVAILABLE;
@@ -209,7 +214,8 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const char *aTopic, 
 }
 
 
-NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
+NS_IMETHODIMP
+Preferences::ReadUserPrefs(nsIFile *aFile)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     NS_ERROR("cannot load prefs from content process");
@@ -230,7 +236,8 @@ NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
   return rv;
 }
 
-NS_IMETHODIMP nsPrefService::ResetPrefs()
+NS_IMETHODIMP
+Preferences::ResetPrefs()
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     NS_ERROR("cannot set prefs from content process");
@@ -246,7 +253,8 @@ NS_IMETHODIMP nsPrefService::ResetPrefs()
   return pref_InitInitialObjects();
 }
 
-NS_IMETHODIMP nsPrefService::ResetUserPrefs()
+NS_IMETHODIMP
+Preferences::ResetUserPrefs()
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     NS_ERROR("cannot set prefs from content process");
@@ -257,7 +265,8 @@ NS_IMETHODIMP nsPrefService::ResetUserPrefs()
   return NS_OK;    
 }
 
-NS_IMETHODIMP nsPrefService::SavePrefFile(nsIFile *aFile)
+NS_IMETHODIMP
+Preferences::SavePrefFile(nsIFile *aFile)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     NS_ERROR("cannot save prefs from content process");
@@ -268,7 +277,8 @@ NS_IMETHODIMP nsPrefService::SavePrefFile(nsIFile *aFile)
 }
 
 /* part of nsIPrefServiceInternal */
-NS_IMETHODIMP nsPrefService::ReadExtensionPrefs(nsILocalFile *aFile)
+NS_IMETHODIMP
+Preferences::ReadExtensionPrefs(nsILocalFile *aFile)
 {
   nsresult rv;
   nsCOMPtr<nsIZipReader> reader = do_CreateInstance(kZipReaderCID, &rv);
@@ -316,25 +326,27 @@ NS_IMETHODIMP nsPrefService::ReadExtensionPrefs(nsILocalFile *aFile)
   return rv;
 }
 
-NS_IMETHODIMP nsPrefService::PrefHasUserValue(const nsACString& aPrefName,
-                                              PRBool* aHasValue)
+NS_IMETHODIMP
+Preferences::PrefHasUserValue(const nsACString& aPrefName, PRBool* aHasValue)
 {
   *aHasValue = PREF_HasUserPref(aPrefName.BeginReading());
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrefService::SetPreference(const PrefTuple *aPref)
+NS_IMETHODIMP
+Preferences::SetPreference(const PrefTuple *aPref)
 {
   return pref_SetPrefTuple(*aPref, PR_TRUE);
 }
 
-NS_IMETHODIMP nsPrefService::ClearContentPref(const nsACString& aPrefName)
+NS_IMETHODIMP
+Preferences::ClearContentPref(const nsACString& aPrefName)
 {
   return PREF_ClearUserPref(aPrefName.BeginReading());
 }
 
-NS_IMETHODIMP nsPrefService::MirrorPreference(const nsACString& aPrefName,
-                                              PrefTuple *aPref)
+NS_IMETHODIMP
+Preferences::MirrorPreference(const nsACString& aPrefName, PrefTuple *aPref)
 {
   PrefHashEntry *pref = pref_HashTableLookup(PromiseFlatCString(aPrefName).get());
 
@@ -346,7 +358,9 @@ NS_IMETHODIMP nsPrefService::MirrorPreference(const nsACString& aPrefName,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrefService::MirrorPreferences(nsTArray<PrefTuple, nsTArrayInfallibleAllocator> *aArray)
+NS_IMETHODIMP
+Preferences::MirrorPreferences(nsTArray<PrefTuple,
+                                        nsTArrayInfallibleAllocator> *aArray)
 {
   aArray->SetCapacity(PL_DHASH_TABLE_SIZE(&gHashTable));
 
@@ -355,7 +369,8 @@ NS_IMETHODIMP nsPrefService::MirrorPreferences(nsTArray<PrefTuple, nsTArrayInfal
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
+NS_IMETHODIMP
+Preferences::GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
 {
   nsresult rv;
 
@@ -373,7 +388,8 @@ NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_r
   return rv;
 }
 
-NS_IMETHODIMP nsPrefService::GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
+NS_IMETHODIMP
+Preferences::GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
 {
   nsresult rv;
 
@@ -387,7 +403,8 @@ NS_IMETHODIMP nsPrefService::GetDefaultBranch(const char *aPrefRoot, nsIPrefBran
 }
 
 
-nsresult nsPrefService::NotifyServiceObservers(const char *aTopic)
+nsresult
+Preferences::NotifyServiceObservers(const char *aTopic)
 {
   nsCOMPtr<nsIObserverService> observerService = 
     mozilla::services::GetObserverService();  
@@ -400,7 +417,8 @@ nsresult nsPrefService::NotifyServiceObservers(const char *aTopic)
   return NS_OK;
 }
 
-nsresult nsPrefService::UseDefaultPrefFile()
+nsresult
+Preferences::UseDefaultPrefFile()
 {
   nsresult rv, rv2;
   nsCOMPtr<nsIFile> aFile;
@@ -420,7 +438,8 @@ nsresult nsPrefService::UseDefaultPrefFile()
   return rv;
 }
 
-nsresult nsPrefService::UseUserPrefFile()
+nsresult
+Preferences::UseUserPrefFile()
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIFile> aFile;
@@ -442,7 +461,8 @@ nsresult nsPrefService::UseUserPrefFile()
   return rv;
 }
 
-nsresult nsPrefService::MakeBackupPrefFile(nsIFile *aFile)
+nsresult
+Preferences::MakeBackupPrefFile(nsIFile *aFile)
 {
   // Example: this copies "prefs.js" to "Invalidprefs.js" in the same directory.
   // "Invalidprefs.js" is removed if it exists, prior to making the copy.
@@ -466,7 +486,8 @@ nsresult nsPrefService::MakeBackupPrefFile(nsIFile *aFile)
   return rv;
 }
 
-nsresult nsPrefService::ReadAndOwnUserPrefFile(nsIFile *aFile)
+nsresult
+Preferences::ReadAndOwnUserPrefFile(nsIFile *aFile)
 {
   NS_ENSURE_ARG(aFile);
   
@@ -492,7 +513,8 @@ nsresult nsPrefService::ReadAndOwnUserPrefFile(nsIFile *aFile)
   return rv;
 }
 
-nsresult nsPrefService::SavePrefFileInternal(nsIFile *aFile)
+nsresult
+Preferences::SavePrefFileInternal(nsIFile *aFile)
 {
   if (nsnull == aFile) {
     // the gDirty flag tells us if we should write to mCurrentFile
@@ -511,7 +533,8 @@ nsresult nsPrefService::SavePrefFileInternal(nsIFile *aFile)
   }
 }
 
-nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
+nsresult
+Preferences::WritePrefFile(nsIFile* aFile)
 {
   const char                outHeader[] =
     "# Mozilla User Preferences"
@@ -927,3 +950,5 @@ static nsresult pref_InitInitialObjects()
 
   return pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
 }
+
+} // namespace mozilla
