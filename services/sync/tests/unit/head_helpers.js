@@ -8,10 +8,8 @@ let provider = {
     switch (prop) {
       case "ExtPrefDL":
         return [Services.dirsvc.get("CurProcD", Ci.nsIFile)];
-      case "ProfD":
-        return Services.dirsvc.get("CurProcD", Ci.nsIFile);
       case "UHist":
-        let histFile = Services.dirsvc.get("CurProcD", Ci.nsIFile);
+        let histFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
         histFile.append("history.dat");
         return histFile;
       default:
