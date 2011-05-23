@@ -62,8 +62,10 @@ public:
   }
 
   void Forward(nsIStyleRule* aRule) {
-    NS_PRECONDITION(!nsRefPtr<mozilla::css::StyleRule>(do_QueryObject(aRule)),
-                    "Calling the wrong Forward() overload");
+    // We'd like to assert that this is not a StyleRule, but unfortunately
+    // ResolveStyleByAddingRules can be passed both style and non-style rules.
+    // NS_PRECONDITION(!nsRefPtr<mozilla::css::StyleRule>(do_QueryObject(aRule)),
+    //                 "Calling the wrong Forward() overload");
     DoForward(aRule);
   }
   void Forward(mozilla::css::StyleRule* aRule) {
