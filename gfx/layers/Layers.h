@@ -809,17 +809,16 @@ public:
   
   /**
    * Calculate the scissor rect required when rendering this layer.
-   *
-   * @param aIntermediate true if the layer is being rendered to an
-   * intermediate surface, false otherwise.
-   * @param aVisibleRect The bounds of the parent's visible region.
-   * @param aParentScissor The existing scissor rect set for the parent.
-   * @param aTransform The current 2d transform of the parent.
+   * Returns a rectangle relative to the intermediate surface belonging to the
+   * nearest ancestor that has an intermediate surface, or relative to the root
+   * viewport if no ancestor has an intermediate surface, corresponding to the
+   * clip rect for this layer intersected with aCurrentScissorRect.
+   * If no ancestor has an intermediate surface, the clip rect is transformed
+   * by aWorldTransform before being combined with aCurrentScissorRect, if
+   * aWorldTransform is non-null.
    */
-  nsIntRect CalculateScissorRect(bool aIntermediate,
-                                 const nsIntRect& aVisibleRect,
-                                 const nsIntRect& aParentScissor,
-                                 const gfxMatrix& aTransform);
+  nsIntRect CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
+                                 const gfxMatrix* aWorldTransform);
 
   virtual const char* Name() const =0;
   virtual LayerType GetType() const =0;
@@ -1058,6 +1057,16 @@ public:
    * backend-dependent, but it affects the operation of GetEffectiveOpacity().
    */
   PRBool UseIntermediateSurface() { return mUseIntermediateSurface; }
+
+  /**
+   * Returns the rectangle covered by the intermediate surface,
+   * in this layer's coordinate system
+   */
+  nsIntRect GetIntermediateSurfaceRect()
+  {
+    NS_ASSERTION(mUseIntermediateSurface, "Must have intermediate surface");
+    return mVisibleRegion.GetBounds();
+  }
 
   /**
    * Returns true if this container has more than one non-empty child
