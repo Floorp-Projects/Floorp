@@ -1724,21 +1724,8 @@ mjit::Compiler::generateMethod()
                     } else {
                         if (fused == JSOP_IFEQ)
                             result = !result;
-
-                        if (result) {
-                            if (!frame.syncForBranch(target, Uses(0)))
-                                return Compile_Error;
-                            Jump j = masm.jump();
-                            if (!jumpAndTrace(j, target))
-                                return Compile_Error;
-                        } else {
-                            /*
-                             * Branch is never taken, but clean up any loop
-                             * if this is a backedge.
-                             */
-                            if (target < PC && !finishLoop(target))
-                                return Compile_Error;
-                        }
+                        if (!constantFoldBranch(target, result))
+                            return Compile_Error;
                     }
                 } else {
                     if (!emitStubCmpOp(stub, target, fused))
@@ -4033,6 +4020,26 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
 
     JS_NOT_REACHED("NYI");
     return false;
+}
+
+bool
+mjit::Compiler::constantFoldBranch(jsbytecode *target, bool taken)
+{
+    if (taken) {
+        if (!frame.syncForBranch(target, Uses(0)))
+            return false;
+        Jump j = masm.jump();
+        if (!jumpAndTrace(j, target))
+            return false;
+    } else {
+        /*
+         * Branch is never taken, but clean up any loop
+         * if this is a backedge.
+         */
+        if (target < PC && !finishLoop(target))
+            return false;
+    }
+    return true;
 }
 
 bool
