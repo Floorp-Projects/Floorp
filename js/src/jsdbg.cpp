@@ -192,6 +192,8 @@ Debug::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
             uintN argc = fp->numActualArgs();
             JS_ASSERT(uint(argc) == argc);
             argsobj = NewDenseAllocatedArray(cx, uint(argc), NULL);
+            if (!argsobj)
+                return false;
             Value *argv = fp->actualArgs();
             for (uintN i = 0; i < argc; i++) {
                 Value v = argv[i];
@@ -199,8 +201,6 @@ Debug::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
                     return false;
                 argsobj->setDenseArrayElement(i, v);
             }
-            if (!argsobj)
-                return false;
         } else {
             argsobj = NULL;
         }
