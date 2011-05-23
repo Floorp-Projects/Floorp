@@ -4,7 +4,6 @@ x = "notset";
 
 function doNothing() { }
 
-dis(myparent);
 function myparent(nested) {
   if (nested) {
     /* JSOP_CALL to doNothing in myparent with nested = true. */

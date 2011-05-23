@@ -2,7 +2,6 @@
 setDebug(true);
 x = "notset";
 
-dis(myparent);
 function myparent(nested) {
   if (nested) {
     /* noop call in myparent */
