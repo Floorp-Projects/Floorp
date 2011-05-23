@@ -1339,9 +1339,32 @@ nsEventSource::DispatchAllMessageEvents()
     return;
   }
 
+  // Let's play get the JSContext
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(mOwner);
+  NS_ENSURE_TRUE(sgo,);
+
+  nsIScriptContext* scriptContext = sgo->GetContext();
+  NS_ENSURE_TRUE(scriptContext,);
+
+  JSContext* cx = (JSContext*)scriptContext->GetNativeContext();
+  NS_ENSURE_TRUE(cx,);
+
   while (mMessagesToDispatch.GetSize() > 0) {
     nsAutoPtr<Message>
       message(static_cast<Message*>(mMessagesToDispatch.PopFront()));
+
+    // Now we can turn our string into a jsval
+    jsval jsData;
+    {
+      JSString* jsString;
+      JSAutoRequest ar(cx);
+      jsString = JS_NewUCStringCopyN(cx,
+                                     message->mData.get(),
+                                     message->mData.Length());
+      NS_ENSURE_TRUE(jsString,);
+
+      jsData = STRING_TO_JSVAL(jsString);
+    }
 
     // create an event that uses the MessageEvent interface,
     // which does not bubble, is not cancelable, and has no default action
@@ -1356,7 +1379,7 @@ nsEventSource::DispatchAllMessageEvents()
     nsCOMPtr<nsIDOMMessageEvent> messageEvent = do_QueryInterface(event);
     rv = messageEvent->InitMessageEvent(message->mEventName,
                                         PR_FALSE, PR_FALSE,
-                                        message->mData,
+                                        jsData,
                                         NS_ConvertUTF8toUTF16(mOrigin),
                                         message->mLastEventID, nsnull);
     if (NS_FAILED(rv)) {
