@@ -226,8 +226,6 @@ can reach it easily. -->
 <!ENTITY inspectObjectButton.label       "Object">
 <!ENTITY inspectObjectButton.accesskey   "O">
 
-<!ENTITY getMoreDevtoolsCmd.label        "Get More Tools…">
-
 <!ENTITY fileMenu.label         "File"> 
 <!ENTITY fileMenu.accesskey       "F">
 <!ENTITY newNavigatorCmd.label        "New Window">
