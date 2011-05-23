@@ -51,17 +51,25 @@ namespace dom {
 class NodeList : public js::ProxyHandler {
     static NodeList instance;
 
-    static bool InstanceIsNodeListObject(JSContext *cx, JSObject *obj);
+    static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj);
 
     static JSObject *getPrototype(JSContext *cx);
 
     static nsINodeList *getNodeList(JSObject *obj);
+
     static uint32 getProtoShape(JSObject *obj);
     static void setProtoShape(JSObject *obj, uint32 shape);
+
+    static JSObject *getItemFunction(JSObject *obj);
+    static void setItemFunction(JSObject *obj, JSObject *funobj);
 
     static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
     static JSBool item(JSContext *cx, uintN argc, jsval *vp);
+
+    static bool cacheItemAndLength(JSContext *cx, JSObject *proxy, JSObject *proto);
+    static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
+                                 jsid id, js::Value *vp, bool *hitp);
   public:
     NodeList();
 
