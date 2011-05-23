@@ -4,8 +4,6 @@
 
 #include "tests.h"
 
-#include "jscntxt.h"
-#include "jstracer.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
