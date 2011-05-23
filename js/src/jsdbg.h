@@ -81,9 +81,9 @@ class Debug {
         ObjectMap;
     ObjectMap objects;
 
-    bool addDebuggee(JSContext *cx, GlobalObject *obj);
-    void removeDebuggee(GlobalObject *global, GlobalObjectSet::Enum *compartmentEnum,
-                        GlobalObjectSet::Enum *debugEnum);
+    bool addDebuggeeGlobal(JSContext *cx, GlobalObject *obj);
+    void removeDebuggeeGlobal(GlobalObject *global, GlobalObjectSet::Enum *compartmentEnum,
+                              GlobalObjectSet::Enum *debugEnum);
 
     JSTrapStatus handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook);
     JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
