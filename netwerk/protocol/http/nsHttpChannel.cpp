@@ -3659,10 +3659,16 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         // Start a DNS lookup very early in case the real open is queued the DNS can 
         // happen in parallel. Do not do so in the presence of an HTTP proxy as 
         // all lookups other than for the proxy itself are done by the proxy.
-        nsRefPtr<nsDNSPrefetch> prefetch = new nsDNSPrefetch(mURI);
-        if (prefetch) {
-            prefetch->PrefetchHigh();
-        }
+        //
+        // We keep the DNS prefetch object around so that we can retrieve
+        // timing information from it. There is no guarantee that we actually
+        // use the DNS prefetch data for the real connection, but as we keep
+        // this data around for 3 minutes by default, this should almost always
+        // be correct, and even when it isn't, the timing still represents _a_
+        // valid DNS lookup timing for the site, even if it is not _the_
+        // timing we used.
+        mDNSPrefetch = new nsDNSPrefetch(mURI, mTimingEnabled);
+        mDNSPrefetch->PrefetchHigh();
     }
     
     // Remember the cookie header that was set, if any
@@ -3830,7 +3836,9 @@ nsHttpChannel::GetAsyncOpen(mozilla::TimeStamp* _retval) {
 
 NS_IMETHODIMP
 nsHttpChannel::GetDomainLookupStart(mozilla::TimeStamp* _retval) {
-    if (mTransaction)
+    if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
+        *_retval = mDNSPrefetch->StartTimestamp();
+    else if (mTransaction)
         *_retval = mTransaction->Timings().domainLookupStart;
     else
         *_retval = mTransactionTimings.domainLookupStart;
@@ -3839,7 +3847,9 @@ nsHttpChannel::GetDomainLookupStart(mozilla::TimeStamp* _retval) {
 
 NS_IMETHODIMP
 nsHttpChannel::GetDomainLookupEnd(mozilla::TimeStamp* _retval) {
-    if (mTransaction)
+    if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
+        *_retval = mDNSPrefetch->EndTimestamp();
+    else if (mTransaction)
         *_retval = mTransaction->Timings().domainLookupEnd;
     else
         *_retval = mTransactionTimings.domainLookupEnd;
@@ -4190,6 +4200,15 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         mTransactionTimings = mTransaction->Timings();
         mTransaction = nsnull;
         mTransactionPump = 0;
+
+        // We no longer need the dns prefetch object
+        if (mDNSPrefetch && mDNSPrefetch->TimingsValid()) {
+            mTransactionTimings.domainLookupStart =
+                mDNSPrefetch->StartTimestamp();
+            mTransactionTimings.domainLookupEnd =
+                mDNSPrefetch->EndTimestamp();
+        }
+        mDNSPrefetch = nsnull;
 
         // handle auth retry...
         if (authRetry) {

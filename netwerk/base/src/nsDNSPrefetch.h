@@ -41,6 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "mozilla/TimeStamp.h"
 
 #include "nsIDNSListener.h"
 
@@ -53,7 +54,13 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
   
-    nsDNSPrefetch(nsIURI *aURI);
+    nsDNSPrefetch(nsIURI *aURI, PRBool storeTiming);
+    bool TimingsValid() const {
+        return !mStartTimestamp.IsNull() && !mEndTimestamp.IsNull();
+    }
+    // Only use the two timings if TimingsValid() returns true
+    const mozilla::TimeStamp& StartTimestamp() const { return mStartTimestamp; }
+    const mozilla::TimeStamp& EndTimestamp() const { return mEndTimestamp; }
 
     static nsresult Initialize(nsIDNSService *aDNSService);
     static nsresult Shutdown();
@@ -64,8 +71,11 @@ public:
     nsresult PrefetchLow();
   
 private:
-    nsCString  mHostname;
-    
+    nsCString mHostname;
+    PRBool mStoreTiming;
+    mozilla::TimeStamp mStartTimestamp;
+    mozilla::TimeStamp mEndTimestamp;
+
     nsresult Prefetch(PRUint16 flags);
 };
 
