@@ -46,6 +46,7 @@
 
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
+#include "StyleRule.h"
 
 class nsRuleWalker {
 public:
@@ -55,11 +56,20 @@ public:
     mCurrent = aNode;
   }
 
-  void Forward(nsIStyleRule* aRule) { 
+  void DoForward(nsIStyleRule* aRule) {
     mCurrent = mCurrent->Transition(aRule, mLevel, mImportance);
+    NS_POSTCONDITION(mCurrent, "Transition messed up");
+  }
+
+  void Forward(nsIStyleRule* aRule) {
+    NS_PRECONDITION(!nsRefPtr<mozilla::css::StyleRule>(do_QueryObject(aRule)),
+                    "Calling the wrong Forward() overload");
+    DoForward(aRule);
+  }
+  void Forward(mozilla::css::StyleRule* aRule) {
+    DoForward(aRule);
     mCheckForImportantRules =
       mCheckForImportantRules && !aRule->GetImportantRule();
-    NS_POSTCONDITION(mCurrent, "Transition messed up");
   }
 
   void Reset() { mCurrent = mRoot; }
