@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/ModuleUtils.h"
-#include "nsPrefService.h"
+#include "mozilla/Preferences.h"
 #include "nsPrefBranch.h"
 #include "prefapi.h"
 
