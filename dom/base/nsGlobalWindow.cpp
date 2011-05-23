@@ -52,6 +52,8 @@
 #include "nsGlobalWindow.h"
 #include "nsScreen.h"
 #include "nsHistory.h"
+#include "nsPerformance.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsBarProps.h"
 #include "nsDOMStorage.h"
 #include "nsDOMOfflineResourceList.h"
@@ -1117,6 +1119,7 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   mIndexedDB = nsnull;
   mPendingStorageEventsObsolete = nsnull;
 
+  mPerformance = nsnull;
 
   ClearControllers();
 
@@ -1341,6 +1344,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowPerformance)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
   OUTER_WINDOW_ONLY
     NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -2720,7 +2724,6 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // be a pres context available). Since we're not firing a GUI
       // event we don't need a pres context anyway so we just pass
       // null as the pres context all the time here.
-
       nsEventDispatcher::Dispatch(content, nsnull, &event, nsnull, &status);
     }
   }
@@ -2947,6 +2950,25 @@ nsGlobalWindow::GetHistory(nsIDOMHistory** aHistory)
   }
 
   NS_IF_ADDREF(*aHistory = mHistory);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetPerformance(nsIDOMPerformance** aPerformance)
+{
+  FORWARD_TO_INNER(GetPerformance, (aPerformance), NS_ERROR_NOT_INITIALIZED);
+
+  *aPerformance = nsnull;
+
+  if (nsGlobalWindow::HasPerformanceSupport()) {
+    if (!mPerformance) {
+      nsRefPtr<nsDOMNavigationTiming> timing = mDoc->GetNavigationTiming();
+      if (timing) {
+        mPerformance = new nsPerformance(timing);
+      }
+    }
+    NS_IF_ADDREF(*aPerformance = mPerformance);
+  }
   return NS_OK;
 }
 
