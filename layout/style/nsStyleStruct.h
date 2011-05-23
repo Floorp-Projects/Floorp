@@ -351,7 +351,17 @@ struct nsStyleBackground {
   struct Position;
   friend struct Position;
   struct Position {
-    typedef nsStyleCoord::Calc PositionCoord;
+    struct PositionCoord {
+      // A 'background-position' can be a linear combination of length
+      // and percent (thanks to calc(), which can combine them).
+      nscoord mLength;
+      float   mPercent;
+
+      bool operator==(const PositionCoord& aOther) const
+        { return mLength == aOther.mLength && mPercent == aOther.mPercent; }
+      bool operator!=(const PositionCoord& aOther) const
+        { return !(*this == aOther); }
+    };
     PositionCoord mXPosition, mYPosition;
 
     // Initialize nothing
@@ -378,7 +388,17 @@ struct nsStyleBackground {
   struct Size;
   friend struct Size;
   struct Size {
-    typedef nsStyleCoord::Calc Dimension;
+    struct Dimension {
+      // A 'background-size' can be a linear combination of length
+      // and percent (thanks to calc(), which can combine them).
+      nscoord mLength;
+      float   mPercent;
+
+      bool operator==(const Dimension& aOther) const
+        { return mLength == aOther.mLength && mPercent == aOther.mPercent; }
+      bool operator!=(const Dimension& aOther) const
+        { return !(*this == aOther); }
+    };
     Dimension mWidth, mHeight;
 
     // Except for eLengthPercentage, Dimension types which might change

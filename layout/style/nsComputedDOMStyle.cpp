@@ -1265,7 +1265,7 @@ nsComputedDOMStyle::DoGetBackgroundColor()
 
 
 static void
-SetValueToCalc(const nsStyleCoord::Calc *aCalc, nsROCSSPrimitiveValue *aValue)
+SetValueToCalc(nsStyleCoord::Calc *aCalc, nsROCSSPrimitiveValue *aValue)
 {
   nsRefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue();
   nsAutoString tmp, result;
@@ -1524,24 +1524,28 @@ nsComputedDOMStyle::DoGetBackgroundPosition()
 
     const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
 
-    if (!pos.mXPosition.mHasPercent) {
-      NS_ABORT_IF_FALSE(pos.mXPosition.mPercent == 0.0f,
-                        "Shouldn't have mPercent!");
-      valX->SetAppUnits(pos.mXPosition.mLength);
-    } else if (pos.mXPosition.mLength == 0) {
+    if (pos.mXPosition.mLength == 0) {
       valX->SetPercent(pos.mXPosition.mPercent);
+    } else if (pos.mXPosition.mPercent == 0.0f) {
+      valX->SetAppUnits(pos.mXPosition.mLength);
     } else {
-      SetValueToCalc(&pos.mXPosition, valX);
+      nsStyleCoord::Calc calc;
+      calc.mPercent = pos.mXPosition.mPercent;
+      calc.mLength  = pos.mXPosition.mLength;
+      calc.mHasPercent = PR_TRUE;
+      SetValueToCalc(&calc, valX);
     }
 
-    if (!pos.mYPosition.mHasPercent) {
-      NS_ABORT_IF_FALSE(pos.mYPosition.mPercent == 0.0f,
-                        "Shouldn't have mPercent!");
-      valY->SetAppUnits(pos.mYPosition.mLength);
-    } else if (pos.mYPosition.mLength == 0) {
+    if (pos.mYPosition.mLength == 0) {
       valY->SetPercent(pos.mYPosition.mPercent);
+    } else if (pos.mYPosition.mPercent == 0.0f) {
+      valY->SetAppUnits(pos.mYPosition.mLength);
     } else {
-      SetValueToCalc(&pos.mYPosition, valY);
+      nsStyleCoord::Calc calc;
+      calc.mPercent = pos.mYPosition.mPercent;
+      calc.mLength  = pos.mYPosition.mLength;
+      calc.mHasPercent = PR_TRUE;
+      SetValueToCalc(&calc, valY);
     }
   }
 
@@ -1594,18 +1598,20 @@ nsComputedDOMStyle::DoGetMozBackgroundSize()
           NS_ABORT_IF_FALSE(size.mWidthType ==
                               nsStyleBackground::Size::eLengthPercentage,
                             "bad mWidthType");
-          if (!size.mWidth.mHasPercent &&
+          if (size.mWidth.mLength == 0 &&
               // negative values must have come from calc()
-              size.mWidth.mLength >= 0) {
-            NS_ABORT_IF_FALSE(size.mWidth.mPercent == 0.0f,
-                              "Shouldn't have mPercent");
-            valX->SetAppUnits(size.mWidth.mLength);
-          } else if (size.mWidth.mLength == 0 &&
-                     // negative values must have come from calc()
-                     size.mWidth.mPercent >= 0.0f) {
+              size.mWidth.mPercent > 0.0f) {
             valX->SetPercent(size.mWidth.mPercent);
+          } else if (size.mWidth.mPercent == 0.0f &&
+                     // negative values must have come from calc()
+                     size.mWidth.mLength > 0) {
+            valX->SetAppUnits(size.mWidth.mLength);
           } else {
-            SetValueToCalc(&size.mWidth, valX);
+            nsStyleCoord::Calc calc;
+            calc.mPercent = size.mWidth.mPercent;
+            calc.mLength  = size.mWidth.mLength;
+            calc.mHasPercent = PR_TRUE;
+            SetValueToCalc(&calc, valX);
           }
         }
 
@@ -1615,18 +1621,20 @@ nsComputedDOMStyle::DoGetMozBackgroundSize()
           NS_ABORT_IF_FALSE(size.mHeightType ==
                               nsStyleBackground::Size::eLengthPercentage,
                             "bad mHeightType");
-          if (!size.mHeight.mHasPercent &&
+          if (size.mHeight.mLength == 0 &&
               // negative values must have come from calc()
-              size.mHeight.mLength >= 0) {
-            NS_ABORT_IF_FALSE(size.mHeight.mPercent == 0.0f,
-                              "Shouldn't have mPercent");
-            valY->SetAppUnits(size.mHeight.mLength);
-          } else if (size.mHeight.mLength == 0 &&
-                     // negative values must have come from calc()
-                     size.mHeight.mPercent >= 0.0f) {
+              size.mHeight.mPercent > 0.0f) {
             valY->SetPercent(size.mHeight.mPercent);
+          } else if (size.mHeight.mPercent == 0.0f &&
+                     // negative values must have come from calc()
+                     size.mHeight.mLength > 0) {
+            valY->SetAppUnits(size.mHeight.mLength);
           } else {
-            SetValueToCalc(&size.mHeight, valY);
+            nsStyleCoord::Calc calc;
+            calc.mPercent = size.mHeight.mPercent;
+            calc.mLength  = size.mHeight.mLength;
+            calc.mHasPercent = PR_TRUE;
+            SetValueToCalc(&calc, valY);
           }
         }
         break;
