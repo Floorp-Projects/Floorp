@@ -155,9 +155,9 @@ NodeList<T>::instanceIsNodeListObject(JSContext *cx, JSObject *obj)
 }
 
 static bool
-WrapObject(JSContext *cx, JSObject *scope, nsIContent *result, jsval *vp)
+WrapObject(JSContext *cx, JSObject *scope, nsISupports *result,
+           nsWrapperCache *cache, jsval *vp)
 {
-    nsWrapperCache *cache = result;
     if (xpc_FastGetCachedWrapper(cache, scope, vp))
         return true;
     XPCLazyCallContext lccx(JS_CALLER, cx, scope);
@@ -194,14 +194,34 @@ NodeList<T>::item(JSContext *cx, uintN argc, jsval *vp)
         return false;
     T *nodeList = getNodeList(obj);
     nsIContent *result = nodeList->GetNodeAt(u);
-    return WrapObject(cx, obj, result, vp);
+    return WrapObject(cx, obj, result, result, vp);
+}
+
+template<>
+JSBool
+NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj || !instanceIsNodeListObject(cx, obj))
+        return false;
+    if (argc < 1)
+        return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+    jsval *argv = JS_ARGV(cx, vp);
+    xpc_qsDOMString name(cx, argv[0], &argv[0],
+                         xpc_qsDOMString::eDefaultNullBehavior,
+                         xpc_qsDOMString::eDefaultUndefinedBehavior);
+    if (!name.IsValid())
+        return JS_FALSE;
+    nsIHTMLCollection *htmlCollection = getNodeList(obj);
+    nsWrapperCache *cache;
+    nsISupports *result = htmlCollection->GetNamedItem(name, &cache);
+    return WrapObject(cx, obj, result, cache, vp);
 }
 
 template<class T>
 JSObject *
-NodeList<T>::getPrototype(JSContext *cx)
+NodeList<T>::getPrototypeShared(JSContext *cx)
 {
-    // FIXME: This should be cached, not recreated every time.
     JSObject *proto = JS_NewObject(cx, Jsvalify(&NodeListProtoClass), NULL, NULL);
     if (!proto)
         return NULL;
@@ -218,6 +238,35 @@ NodeList<T>::getPrototype(JSContext *cx)
         return NULL;
     JSObject *funobj = JS_GetFunctionObject(fun);
     if (!JS_DefinePropertyById(cx, proto, nsDOMClassInfo::sItem_id, OBJECT_TO_JSVAL(funobj),
+                               NULL, NULL, JSPROP_ENUMERATE))
+        return NULL;
+    return proto;
+}
+
+template<>
+JSObject *
+NodeList<nsINodeList>::getPrototype(JSContext *cx)
+{
+    // FIXME: This should be cached, not recreated every time.
+    return getPrototypeShared(cx);
+}
+
+template<>
+JSObject *
+NodeList<nsIHTMLCollection>::getPrototype(JSContext *cx)
+{
+    // FIXME: This should be cached, not recreated every time.
+    JSObject *proto = getPrototypeShared(cx);
+    if (!proto)
+        return NULL;
+
+    JSFunction *fun = JS_NewFunctionById(cx, item, 1, 0, js::GetObjectParent(proto),
+                                         nsDOMClassInfo::sNamedItem_id);
+    if (!fun)
+        return NULL;
+    JSObject *funobj = JS_GetFunctionObject(fun);
+    if (!JS_DefinePropertyById(cx, proto, nsDOMClassInfo::sNamedItem_id,
+                               OBJECT_TO_JSVAL(funobj),
                                NULL, NULL, JSPROP_ENUMERATE))
         return NULL;
     return proto;
@@ -256,7 +305,7 @@ NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, b
         nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
         if (result) {
             jsval v;
-            if (!WrapObject(cx, proxy, result, &v))
+            if (!WrapObject(cx, proxy, result, result, &v))
                 return false;
             desc->obj = proxy;
             desc->value = v;
@@ -410,7 +459,7 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
         T *nodeList = getNodeList(proxy);
         nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
         if (result)
-            return WrapObject(cx, proxy, result, vp);
+            return WrapObject(cx, proxy, result, result, vp);
     }
 
     JSObject *proto = js::GetObjectProto(proxy);
