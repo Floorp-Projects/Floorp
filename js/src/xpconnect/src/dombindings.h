@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef dombindings_h
+#define dombindings_h
+
 #include "jsapi.h"
 #include "jsproxy.h"
 
@@ -84,7 +87,13 @@ class NodeList : public js::ProxyHandler {
     void finalize(JSContext *cx, JSObject *proxy);
 
     static JSObject *create(JSContext *cx, nsINodeList *);
+
+    static bool objIsNodeList(JSObject *obj) {
+        return js::IsProxy(obj) && js::GetProxyHandler(obj) == &instance;
+    }
 };
 
 }
 }
+
+#endif /* dombindings_h */
