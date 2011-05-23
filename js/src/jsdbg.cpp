@@ -1323,13 +1323,13 @@ DebugObject_getName(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, vp, "get name", obj);
     if (!obj->isFunction()) {
-        vp->setNull();
+        vp->setUndefined();
         return true;
     }
 
     JSString *name = obj->getFunctionPrivate()->atom;
     if (!name) {
-        vp->setNull();
+        vp->setUndefined();
         return true;
     }
         

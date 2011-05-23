@@ -9,6 +9,8 @@ dbg.hooks = {debuggerHandler: function (frame) { hits++; assertEq(frame.callee.n
 hits = 0;
 name = "f";
 g.eval("(function f() { debugger; })();");
-name = null;
+name = undefined;
 g.eval("(function () { debugger; })();");
-assertEq(hits, 2);
+name = "anonymous";
+g.eval("Function('debugger;')();");
+assertEq(hits, 3);

@@ -8,7 +8,7 @@ var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
         var proxy = frame.arguments[0];
-        assertEq(proxy.name, null);
+        assertEq(proxy.name, undefined);
         assertEq(proxy.apply(null, [33]).return, 34);
         hits++;
     }
