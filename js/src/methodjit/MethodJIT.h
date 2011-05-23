@@ -263,6 +263,13 @@ enum RejoinState {
     REJOIN_NATIVE,
     REJOIN_NATIVE_LOWERED,
 
+    /*
+     * Placeholder for a VMFrame's stubRejoin on which a native call was
+     * performed (so the frame return address is incoherent and can't be
+     * examined), but the native has already been stolen.
+     */
+    REJOIN_NATIVE_EXPANDED,
+
     /* Call returns a payload, which should be pushed before starting next bytecode. */
     REJOIN_PUSH_BOOLEAN,
     REJOIN_PUSH_OBJECT,
