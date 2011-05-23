@@ -519,8 +519,18 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
     return;
   }
 
-  switch (aEvent->message) {
+  PRInt32 message = aEvent->message;
+  // If the event is query scroll target info event, that causes modifying
+  // wheel transaction because DoScrollText() needs to use them.  Therefore,
+  // we should handle the event as its mouse scroll event here.
+  if (message == NS_QUERY_SCROLL_TARGET_INFO) {
+    nsQueryContentEvent* queryEvent = static_cast<nsQueryContentEvent*>(aEvent);
+    message = queryEvent->mInput.mMouseScrollEvent->message;
+  }
+
+  switch (message) {
     case NS_MOUSE_SCROLL:
+    case NS_MOUSE_PIXEL_SCROLL:
       if (sMouseMoved != 0 &&
           OutOfTime(sMouseMoved, GetIgnoreMoveDelayTime())) {
         // Terminate the current mousewheel transaction if the mouse moved more
