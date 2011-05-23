@@ -2544,16 +2544,20 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                 item->mXValue.SetAutoValue();
                 break;
               case nsStyleBackground::Size::eLengthPercentage:
-                if (size.mWidth.mLength == 0) {
-                  item->mXValue.SetPercentValue(size.mWidth.mPercent);
-                } else if (size.mWidth.mPercent == 0.0f) {
+                // XXXbz is there a good reason we can't just
+                // SetCalcValue(&size.mWidth, item->mXValue) here?
+                if (!size.mWidth.mHasPercent &&
+                    // negative values must have come from calc()
+                    size.mWidth.mLength >= 0) {
+                  NS_ABORT_IF_FALSE(size.mWidth.mPercent == 0.0f,
+                                    "Shouldn't have mPercent");
                   nscoordToCSSValue(size.mWidth.mLength, item->mXValue);
+                } else if (size.mWidth.mLength == 0 &&
+                           // negative values must have come from calc()
+                           size.mWidth.mPercent >= 0.0f) {
+                  item->mXValue.SetPercentValue(size.mWidth.mPercent);
                 } else {
-                  nsStyleCoord::Calc calc;
-                  calc.mLength = size.mWidth.mLength;
-                  calc.mPercent = size.mWidth.mPercent;
-                  calc.mHasPercent = PR_TRUE;
-                  SetCalcValue(&calc, item->mXValue);
+                  SetCalcValue(&size.mWidth, item->mXValue);
                 }
                 break;
             }
@@ -2567,16 +2571,20 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                 item->mYValue.SetAutoValue();
                 break;
               case nsStyleBackground::Size::eLengthPercentage:
-                if (size.mHeight.mLength == 0) {
-                  item->mYValue.SetPercentValue(size.mHeight.mPercent);
-                } else if (size.mHeight.mPercent == 0.0f) {
+                // XXXbz is there a good reason we can't just
+                // SetCalcValue(&size.mHeight, item->mYValue) here?
+                if (!size.mHeight.mHasPercent &&
+                    // negative values must have come from calc()
+                    size.mHeight.mLength >= 0) {
+                  NS_ABORT_IF_FALSE(size.mHeight.mPercent == 0.0f,
+                                    "Shouldn't have mPercent");
                   nscoordToCSSValue(size.mHeight.mLength, item->mYValue);
+                } else if (size.mHeight.mLength == 0 &&
+                           // negative values must have come from calc()
+                           size.mHeight.mPercent >= 0.0f) {
+                  item->mYValue.SetPercentValue(size.mHeight.mPercent);
                 } else {
-                  nsStyleCoord::Calc calc;
-                  calc.mLength = size.mHeight.mLength;
-                  calc.mPercent = size.mHeight.mPercent;
-                  calc.mHasPercent = PR_TRUE;
-                  SetCalcValue(&calc, item->mYValue);
+                  SetCalcValue(&size.mHeight, item->mYValue);
                 }
                 break;
             }
