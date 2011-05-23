@@ -622,6 +622,8 @@ MockProvider.prototype = {
         }
         addon[prop] = aAddonProp[prop];
       }
+      if (!addon.optionsType && !!addon.optionsURL)
+        addon.optionsType = AddonManager.OPTIONS_TYPE_DIALOG;
       this.addAddon(addon);
       newAddons.push(addon);
     }, this);
