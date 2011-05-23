@@ -147,10 +147,11 @@ JSCompartment::init()
 #ifdef JS_METHODJIT
     if (!(jaegerCompartment = rt->new_<mjit::JaegerCompartment>()))
         return false;
-    return jaegerCompartment->Initialize();
-#else
-    return true;
+    if (!jaegerCompartment->Initialize())
+        return false;
 #endif
+
+    return debuggees.init();
 }
 
 #ifdef JS_METHODJIT
@@ -601,16 +602,4 @@ bool
 JSCompartment::isAboutToBeCollected(JSGCInvocationKind gckind)
 {
     return !hold && (arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT);
-}
-
-void
-JSCompartment::removeDebug(Debug *dbg)
-{
-    for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
-        if (*p == dbg) {
-            debuggers.erase(p);
-            return;
-        }
-    }
-    JS_NOT_REACHED("JSCompartment::removeDebug");
 }

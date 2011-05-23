@@ -201,4 +201,65 @@ GlobalObject::isEvalAllowed(JSContext *cx)
     return !v.isFalse();
 }
 
+void
+GlobalDebuggees_finalize(JSContext *cx, JSObject *obj)
+{
+    cx->delete_((GlobalObject::DebugVector *) obj->getPrivate());
+}
+
+static Class
+GlobalDebuggees_class = {
+    "GlobalDebuggee", JSCLASS_HAS_PRIVATE,
+    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
+    EnumerateStub, ResolveStub, ConvertStub, GlobalDebuggees_finalize
+};
+
+GlobalObject::DebugVector *
+GlobalObject::getDebuggers()
+{
+    Value debuggers = getReservedSlot(DEBUGGERS);
+    if (debuggers.isUndefined())
+        return NULL;
+    JS_ASSERT(debuggers.toObject().clasp == &GlobalDebuggees_class);
+    return (DebugVector *) debuggers.toObject().getPrivate();
+}
+
+GlobalObject::DebugVector *
+GlobalObject::getOrCreateDebuggers(JSContext *cx)
+{
+    DebugVector *vec = getDebuggers();
+    if (vec)
+        return vec;
+
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &GlobalDebuggees_class, NULL, NULL);
+    if (!obj)
+        return NULL;
+    vec = cx->new_<DebugVector>();
+    if (!vec)
+        return NULL;
+    obj->setPrivate(vec);
+    if (!js_SetReservedSlot(cx, this, DEBUGGERS, ObjectValue(*obj)))
+        return NULL;
+    return vec;
+}
+
+bool
+GlobalObject::addDebug(JSContext *cx, Debug *dbg)
+{
+    DebugVector *vec = getOrCreateDebuggers(cx);
+    if (!vec)
+        return false;
+#ifdef DEBUG
+    for (Debug **p = vec->begin(); p != vec->end(); p++)
+        JS_ASSERT(*p != dbg);
+#endif
+    if (vec->empty() && !compartment()->addDebuggee(this))
+        return false;
+    if (!vec->append(dbg)) {
+        compartment()->removeDebuggee(this);
+        return false;
+    }
+    return true;
+}
+
 } // namespace js

@@ -48,6 +48,7 @@
 #include "jsgcstats.h"
 #include "jsclist.h"
 #include "jsxml.h"
+#include "vm/GlobalObject.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -381,8 +382,6 @@ class DtoaCache {
 } /* namespace js */
 
 struct JS_FRIEND_API(JSCompartment) {
-    typedef js::Vector<js::Debug *, 0, js::SystemAllocPolicy> DebugVector;
-
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
     js::gc::Chunk                *chunk;
@@ -518,7 +517,11 @@ struct JS_FRIEND_API(JSCompartment) {
 
     BackEdgeMap                  backEdgeTable;
 
-    DebugVector debuggers;
+    /*
+     * Weak reference to each global in this compartment that is a debuggee.
+     * Each global has its own list of debuggers.
+     */
+    js::GlobalObjectSet              debuggees;
 
     JSCompartment *thisForCtor() { return this; }
   public:
@@ -529,13 +532,14 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
 
-    const DebugVector &getDebuggers() const { return debuggers; }
-
-    bool addDebug(js::Debug *dbg) {
+    js::GlobalObjectSet &getDebuggees() { return debuggees; }
+    bool addDebuggee(js::GlobalObject *global) {
         JS_ASSERT(debugMode);
-        return debuggers.append(dbg);
+        return !!debuggees.put(global);
     }
-    void removeDebug(js::Debug *dbg);
+    void removeDebuggee(js::GlobalObject *global) {
+        debuggees.remove(global);
+    }
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
