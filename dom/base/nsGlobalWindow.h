@@ -138,6 +138,7 @@ class nsLocation;
 class nsNavigator;
 class nsScreen;
 class nsHistory;
+class nsPerformance;
 class nsIDocShellLoadInfo;
 class WindowStateHolder;
 class nsGlobalWindowObserver;
@@ -285,7 +286,8 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIInterfaceRequestor,
                        public nsIDOMWindow_2_0_BRANCH,
                        public nsWrapperCache,
-                       public PRCListStr
+                       public PRCListStr,
+                       public nsIDOMWindowPerformance
 {
 public:
   friend class nsDOMMozURLProperty;
@@ -332,6 +334,9 @@ public:
 
   // nsIDOMWindowInternal
   NS_DECL_NSIDOMWINDOWINTERNAL
+
+  // nsIDOMWindowPerformance
+  NS_DECL_NSIDOMWINDOWPERFORMANCE
 
   // nsIDOMJSWindow
   NS_DECL_NSIDOMJSWINDOW
@@ -570,6 +575,14 @@ public:
 
   static bool HasIndexedDBSupport() {
     return nsContentUtils::GetBoolPref("indexedDB.feature.enabled", PR_TRUE);
+  }
+
+  static bool HasPerformanceSupport() {
+#ifdef DEBUG
+    return nsContentUtils::GetBoolPref("dom.enable_performance", PR_TRUE);
+#else
+    return nsContentUtils::GetBoolPref("dom.enable_performance", PR_FALSE);
+#endif
   }
 
 private:
@@ -906,6 +919,7 @@ protected:
   nsCOMPtr<nsIPrincipal>        mArgumentsOrigin;
   nsRefPtr<nsNavigator>         mNavigator;
   nsRefPtr<nsScreen>            mScreen;
+  nsRefPtr<nsPerformance>       mPerformance;
   nsRefPtr<nsDOMWindowList>     mFrames;
   nsRefPtr<nsBarProp>           mMenubar;
   nsRefPtr<nsBarProp>           mToolbar;
