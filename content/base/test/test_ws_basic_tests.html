@@ -17,8 +17,6 @@
 <script class="testbody" type="text/javascript">
 
 var ws;
-var oldPrefVal;
-var domBranch;
 
 var params = ["protocol", "resource", "origin", "end"];
 var results = ["test", "/tests/content/base/test/file_ws_basic_tests", "http://mochi.test:8888", "end"];
@@ -32,20 +30,10 @@ function forcegc(){
 }
 
 function finishWSTest() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    domBranch.setBoolPref("override-security-block", oldPrefVal);
     SimpleTest.finish();
 }
 
 function testWebSocket () {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefService =
-      Components.classes["@mozilla.org/preferences-service;1"]
-      .getService(Components.interfaces.nsIPrefService);
-  domBranch = prefService.getBranch("network.websocket.");
-  oldPrefVal = domBranch.getBoolPref("override-security-block");
-  domBranch.setBoolPref("override-security-block", true);
-
   var url = "ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests";
   ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
   is(ws.url, url, "Wrong Websocket.url!");

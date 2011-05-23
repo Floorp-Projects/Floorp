@@ -22,6 +22,7 @@
  *  David Dahl <ddahl@mozilla.com>
  *  Rob Campbell <rcampbell@mozilla.com>
  *  Mihai Sucan <mihai.sucan@gmail.com>
+ *  Panos Astithas <past@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,7 +40,7 @@
 
 const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
 
-var gWindow;
+var gWindow, gLevel, gArgs;
 
 function test() {
   waitForExplicitFinish();
@@ -65,8 +66,6 @@ function test() {
   }, false);
 }
 
-var gWindow;
-
 function testConsoleData(aMessageObject) {
   let messageWindow = getWindowByWindowId(aMessageObject.ID);
   is(messageWindow, gWindow, "found correct window by window ID");
@@ -79,9 +78,8 @@ function testConsoleData(aMessageObject) {
     is(aMessageObject.arguments.toSource(), gArgs.toSource(),
        "stack trace is correct");
 
-    // Test finished
-    ConsoleObserver.destroy();
-    finish();
+    // Now test the location information in console.log()
+    startLocationTest();
   }
   else {
     gArgs.forEach(function (a, i) {
@@ -93,6 +91,26 @@ function testConsoleData(aMessageObject) {
     // Now test console.trace()
     startTraceTest();
   }
+}
+
+function testLocationData(aMessageObject) {
+  let messageWindow = getWindowByWindowId(aMessageObject.ID);
+  is(messageWindow, gWindow, "found correct window by window ID");
+
+  is(aMessageObject.level, gLevel, "expected level received");
+  ok(aMessageObject.arguments, "we have arguments");
+
+  is(aMessageObject.filename, gArgs[0].filename, "filename matches");
+  is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
+  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
+  is(aMessageObject.arguments.length, gArgs[0].arguments.length, "arguments.length matches");
+  gArgs[0].arguments.forEach(function (a, i) {
+    is(aMessageObject.arguments[i], a, "correct arg " + i);
+  });
+
+  // Test finished
+  ConsoleObserver.destroy();
+  finish();
 }
 
 function startTraceTest() {
@@ -109,7 +127,27 @@ function startTraceTest() {
   EventUtils.synthesizeMouse(button, 2, 2, {}, gWindow);
 }
 
-var gLevel, gArgs;
+function startLocationTest() {
+  // Reset the observer function to cope with the fabricated test data.
+  ConsoleObserver.observe = function CO_observe(aSubject, aTopic, aData) {
+    try {
+      testLocationData(aSubject.wrappedJSObject);
+    } catch (ex) {
+      // XXX Exceptions in this function currently aren't reported, because of
+      // some XPConnect weirdness, so report them manually
+      ok(false, "Exception thrown in CO_observe: " + ex);
+    }
+  };
+  gLevel = "log";
+  gArgs = [
+    {filename: TEST_URI, lineNumber: 19, functionName: "foobar646025", arguments: ["omg", "o", "d"]}
+  ];
+
+  let button = gWindow.document.getElementById("test-location");
+  ok(button, "found #test-location button");
+  EventUtils.synthesizeMouse(button, 2, 2, {}, gWindow);
+}
+
 function expect(level) {
   gLevel = level;
   gArgs = Array.slice(arguments, 1);

@@ -57,6 +57,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsJSNPRuntime.h"
 #include "nsPluginStreamListenerPeer.h"
+#include "nsSize.h"
+#include "nsNetCID.h"
 
 using namespace mozilla;
 using namespace mozilla::plugins::parent;

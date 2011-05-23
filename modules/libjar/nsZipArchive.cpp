@@ -618,10 +618,9 @@ MOZ_WIN_MEM_TRY_BEGIN
 
   //-- Read the central directory headers
   buf = startp + centralOffset;
-  if (endp - buf < PRInt32(sizeof(PRUint32)))
-      return NS_ERROR_FILE_CORRUPTED;
-  PRUint32 sig = xtolong(buf);
-  while (sig == CENTRALSIG) {
+  PRUint32 sig = 0;
+  while (buf + PRInt32(sizeof(PRUint32)) <= endp &&
+         (sig = xtolong(buf)) == CENTRALSIG) {
     // Make sure there is enough data available.
     if (endp - buf < ZIPCENTRAL_SIZE)
       return NS_ERROR_FILE_CORRUPTED;
@@ -654,7 +653,7 @@ MOZ_WIN_MEM_TRY_BEGIN
     item->next = mFiles[hash];
     mFiles[hash] = item;
 
-    sig = xtolong(buf);
+    sig = 0;
   } /* while reading central directory records */
 
   if (sig != ENDSIG)
