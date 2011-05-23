@@ -43,6 +43,8 @@
 
 #include "nsIDOMNode.h"
 
+#include "nsDOMClassInfo.h"
+
 extern XPCNativeInterface* interfaces[];
 
 using namespace js;
@@ -73,7 +75,7 @@ static Class NodeListProtoClass = {
 nsINodeList *
 NodeList::getNodeList(JSObject *obj)
 {
-    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList::instance);
+    JS_ASSERT(objIsNodeList(obj));
     return static_cast<nsINodeList *>(js::GetProxyPrivate(obj).toPrivate());
 }
 
@@ -274,7 +276,37 @@ NodeList::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, js::V
         if (result)
             return WrapObject(cx, proxy, result, vp);
     }
-    return JS_GetPropertyById(cx, js::GetObjectProto(proxy), id, vp);
+
+    JSObject *proto = js::GetObjectProto(proxy);
+
+    if (id == nsDOMClassInfo::sLength_id) {
+        uint32 kshape = getProtoShape(proxy);
+        uint32 pshape = js::GetObjectShape(proto);
+        do {
+            if (kshape != pshape) {
+                JSPropertyDescriptor desc;
+                if (!JS_GetPropertyDescriptorById(cx, proto, id,
+                                                  JSRESOLVE_QUALIFIED,
+                                                  &desc)) {
+                    return false;
+                }
+                if (desc.obj == proto &&
+                    desc.getter == length_getter) {
+                    setProtoShape(proxy, pshape);
+                } else {
+                    break;
+                }
+            }
+
+            PRUint32 length;
+            getNodeList(proxy)->GetLength(&length);
+            JS_ASSERT(int32(length) >= 0);
+            vp->setInt32(length);
+            return true;
+        } while (0);
+    }
+
+    return JS_GetPropertyById(cx, proto, id, vp);
 }
 
 bool
