@@ -782,7 +782,7 @@ nsBaseWidget::GetShouldAccelerate()
 
   PRBool disableAcceleration = PR_FALSE;
   PRBool forceAcceleration = PR_FALSE;
-#if defined(XP_WIN) || defined(ANDROID) || (MOZ_PLATFORM_MAEMO > 5) || (!defined(MOZ_PLATFORM_MAEMO) && defined(MOZ_X11))
+#if defined(XP_WIN) || defined(ANDROID) || (MOZ_PLATFORM_MAEMO > 5)
   PRBool accelerateByDefault = PR_TRUE;
 #elif defined(XP_MACOSX)
 /* quickdraw plugins don't work with OpenGL so we need to avoid OpenGL when we want to support
