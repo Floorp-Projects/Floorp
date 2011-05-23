@@ -271,7 +271,7 @@ NS_IMETHODIMP
 nsDOMFileReader::Abort()
 {
   if (mReadyState != nsIDOMFileReader::LOADING)
-    return NS_OK;
+    return NS_ERROR_DOM_FILE_ABORT_ERR;
 
   //Clear progress and file data
   mProgressEventWasDelayed = PR_FALSE;
