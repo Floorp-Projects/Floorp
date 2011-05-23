@@ -1533,7 +1533,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 nsChildContentList::WrapObject(JSContext *cx)
 {
-  return xpc::dom::NodeList::create(cx, this);
+  return xpc::dom::NodeListBase::create(cx, this);
 }
 
 NS_IMETHODIMP
