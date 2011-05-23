@@ -121,7 +121,7 @@ using namespace XrayUtils;
 static JSObject *
 GetHolder(JSObject *obj)
 {
-    return &js::GetProxyExtra(obj).toObject();
+    return &js::GetProxyExtra(obj, 0).toObject();
 }
 
 static XPCWrappedNative *
