@@ -3651,9 +3651,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (mCanceled)
         return mStatus;
 
-    if (mTimingEnabled)
-        mAsyncOpenTime = mozilla::TimeStamp::Now();
-
     rv = NS_CheckPortSafety(mURI);
     if (NS_FAILED(rv))
         return rv;
@@ -3699,6 +3696,12 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // all failures asynchronously.
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nsnull);
+
+    // Collect mAsyncOpenTime after we have called all obsrevers like
+    // "http-on-modify-request" and load group observers that may set
+    // mTimingEnabled flag.
+    if (mTimingEnabled)
+        mAsyncOpenTime = mozilla::TimeStamp::Now();
 
     // We may have been cancelled already, either by on-modify-request
     // listeners or by load group observers; in that case, we should
