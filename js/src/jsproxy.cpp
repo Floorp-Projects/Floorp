@@ -1121,7 +1121,8 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 {
     GetProxyHandler(obj)->trace(trc, obj);
     MarkCrossCompartmentValue(trc, GetProxyPrivate(obj), "private");
-    MarkCrossCompartmentValue(trc, GetProxyExtra(obj), "extra");
+    MarkCrossCompartmentValue(trc, GetProxyExtra(obj, 0), "extra0");
+    MarkCrossCompartmentValue(trc, GetProxyExtra(obj, 1), "extra1");
     if (IsFunctionProxy(obj)) {
         MarkCrossCompartmentValue(trc, GetCall(obj), "call");
         MarkCrossCompartmentValue(trc, GetConstruct(obj), "construct");
@@ -1184,7 +1185,7 @@ proxy_TypeOf(JSContext *cx, JSObject *proxy)
 
 JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(3),
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(4),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -1240,7 +1241,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
 
 JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(3),
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(4),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -1318,7 +1319,7 @@ proxy_Construct(JSContext *cx, uintN argc, Value *vp)
 
 JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(5),
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(6),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
