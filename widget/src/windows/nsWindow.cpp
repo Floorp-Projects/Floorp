@@ -6422,7 +6422,7 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
 
   // Our positive delta value means to bottom or right.
   // But positive nativeDelta value means to top or right.
-  // Use orienter for computing our delta value.
+  // Use orienter for computing our delta value with native delta value.
   PRInt32 orienter = isVertical ? -1 : 1;
 
   // Assume the Control key is down if the Elantech touchpad has sent the
@@ -6451,6 +6451,9 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   // event target information for pixel scroll.
   PRBool dispatchPixelScrollEvent = PR_FALSE;
   PRInt32 pixelsPerUnit = 0;
+  // the amount is the number of lines (or pages) per WHEEL_DELTA
+  PRInt32 computedScrollAmount = isPageScroll ? 1 :
+    (isVertical ? sMouseWheelScrollLines : sMouseWheelScrollChars);
 
   if (sEnablePixelScrolling) {
     nsMouseScrollEvent testEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
@@ -6462,7 +6465,12 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     testEvent.isControl   = scrollEvent.isControl;
     testEvent.isMeta      = scrollEvent.isMeta;
     testEvent.isAlt       = scrollEvent.isAlt;
-    testEvent.delta = sLastMouseWheelDeltaIsPositive ? -1 : 1;
+
+    testEvent.delta       = computedScrollAmount;
+    if ((isVertical && sLastMouseWheelDeltaIsPositive) ||
+        (!isVertical && !sLastMouseWheelDeltaIsPositive)) {
+      testEvent.delta *= -1;
+    }
     nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_SCROLL_TARGET_INFO, this);
     InitEvent(queryEvent);
     queryEvent.InitForQueryScrollTargetInfo(&testEvent);
@@ -6479,7 +6487,14 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
       } else {
         pixelsPerUnit = queryEvent.mReply.mLineHeight;
       }
-      dispatchPixelScrollEvent = (pixelsPerUnit > 0);
+      // XXX Currently, we don't support the case that the computed delta has
+      //     different sign.
+      computedScrollAmount = queryEvent.mReply.mComputedScrollAmount;
+      if (testEvent.delta < 0) {
+        computedScrollAmount *= -1;
+      }
+      dispatchPixelScrollEvent =
+        (pixelsPerUnit > 0) && (computedScrollAmount > 0);
     }
   }
 
@@ -6490,6 +6505,8 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
 
   PRInt32 nativeDeltaForScroll = nativeDelta + sRemainingDeltaForScroll;
 
+  // NOTE: Don't use computedScrollAmount for computing the delta value of
+  //       line/page scroll event.  The value will be recomputed in ESM.
   if (isPageScroll) {
     scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
     if (isVertical) {
@@ -6542,17 +6559,8 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
 
   PRInt32 nativeDeltaForPixel = nativeDelta + sRemainingDeltaForPixel;
 
-  double deltaPerPixel;
-  if (isPageScroll) {
-    deltaPerPixel = (double)WHEEL_DELTA / pixelsPerUnit;
-  } else {
-    if (isVertical) {
-      deltaPerPixel = (double)WHEEL_DELTA / sMouseWheelScrollLines;
-    } else {
-      deltaPerPixel = (double)WHEEL_DELTA / sMouseWheelScrollChars;
-    }
-    deltaPerPixel /= pixelsPerUnit;
-  }
+  double deltaPerPixel =
+    (double)WHEEL_DELTA / computedScrollAmount / pixelsPerUnit;
   pixelEvent.delta =
     RoundDelta((double)nativeDeltaForPixel * orienter / deltaPerPixel);
   PRInt32 recomputedNativeDelta =
