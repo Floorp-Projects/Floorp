@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <setting pref="extensions.inlinesettings2.bool1" type="bool" title="Bool 1" desc="Description Attribute"/>
+  <setting pref="extensions.inlinesettings2.bool2" type="bool" title="Bool 2">Description Text Node</setting>
+</vbox>
