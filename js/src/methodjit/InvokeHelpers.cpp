@@ -503,7 +503,7 @@ js_InternalThrow(VMFrame &f)
     for (;;) {
         // Call the throw hook if necessary
         JSThrowHook handler = cx->debugHooks->throwHook;
-        if (handler || !cx->compartment->getDebuggers().empty()) {
+        if (handler || !cx->compartment->getDebuggees().empty()) {
             Value rval;
             JSTrapStatus st = Debug::onThrow(cx, &rval);
             if (st == JSTRAP_CONTINUE && handler) {

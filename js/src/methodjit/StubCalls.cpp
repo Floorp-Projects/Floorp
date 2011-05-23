@@ -1169,7 +1169,7 @@ void JS_FASTCALL
 stubs::Debugger(VMFrame &f, jsbytecode *pc)
 {
     JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
-    if (handler || !f.cx->compartment->getDebuggers().empty()) {
+    if (handler || !f.cx->compartment->getDebuggees().empty()) {
         JSTrapStatus st = JSTRAP_CONTINUE;
         Value rval;
         if (handler) {

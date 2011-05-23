@@ -136,27 +136,37 @@ enum {
     JSSLOT_DEBUG_COUNT
 };
 
-Debug::Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment)
-  : object(dbg), debuggeeCompartment(compartment), hooksObject(hooks),
-    uncaughtExceptionHook(NULL), enabled(true), hasDebuggerHandler(false),
-    hasThrowHandler(false)
+Debug::Debug(JSObject *dbg, JSObject *hooks)
+  : object(dbg), debuggeeGlobal(NULL), hooksObject(hooks), uncaughtExceptionHook(NULL),
+    enabled(true), hasDebuggerHandler(false), hasThrowHandler(false)
 {
     // This always happens within a request on some cx.
-    AutoLockGC lock(compartment->rt);
-    JS_APPEND_LINK(&link, &compartment->rt->debuggerList);
+    JSRuntime *rt = dbg->compartment()->rt;
+    AutoLockGC lock(rt);
+    JS_APPEND_LINK(&link, &rt->debuggerList);
 }
 
 Debug::~Debug()
 {
-    // This always happens in the GC thread, so no locking is required.
     JS_ASSERT(object->compartment()->rt->gcRunning);
+    if (debuggeeGlobal) {
+        // This happens only during per-compartment GC. See comment in
+        // Debug::sweepAll.
+        JS_ASSERT(object->compartment()->rt->gcCurrentCompartment == object->compartment());
+        removeDebuggee(debuggeeGlobal, NULL);
+    }
+
+    // This always happens in the GC thread, so no locking is required.
     JS_REMOVE_LINK(&link);
 }
 
 bool
-Debug::init()
+Debug::init(JSContext *cx)
 {
-    return frames.init() && objects.init();
+    bool ok = frames.init() && objects.init();
+    if (!ok)
+        js_ReportOutOfMemory(cx);
+    return ok;
 }
 
 JS_STATIC_ASSERT(uintN(JSSLOT_DEBUGFRAME_OWNER) == uintN(JSSLOT_DEBUGOBJECT_OWNER));
@@ -216,14 +226,18 @@ void
 Debug::slowPathLeaveStackFrame(JSContext *cx)
 {
     StackFrame *fp = cx->fp();
-    JSCompartment *compartment = cx->compartment;
-    const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
-    for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
-        Debug *dbg = *p;
-        if (FrameMap::Ptr p = dbg->frames.lookup(fp)) {
-            JSObject *frameobj = p->value;
-            frameobj->setPrivate(NULL);
-            dbg->frames.remove(p);
+    GlobalObject *global = fp->scopeChain().getGlobal();
+
+    // FIXME This assumes that only current debuggers of global have Frame
+    // objects for fp. Adding .removeDebuggee will therefore break this code.
+    if (GlobalObject::DebugVector *debuggers = global->getDebuggers()) {
+        for (Debug **p = debuggers->begin(); p != debuggers->end(); p++) {
+            Debug *dbg = *p;
+            if (FrameMap::Ptr p = dbg->frames.lookup(fp)) {
+                JSObject *frameobj = p->value;
+                frameobj->setPrivate(NULL);
+                dbg->frames.remove(p);
+            }
         }
     }
 }
@@ -469,13 +483,14 @@ Debug::dispatchHook(JSContext *cx, js::Value *vp, DebugObservesMethod observesEv
     // Note: In the general case, 'triggered' contains references to objects in
     // different compartments--every compartment *except* this one.
     AutoValueVector triggered(cx);
-    JSCompartment *compartment = cx->compartment;
-    const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
-    for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
-        Debug *dbg = *p;
-        if ((dbg->*observesEvent)()) {
-            if (!triggered.append(ObjectValue(*dbg->toJSObject())))
-                return JSTRAP_ERROR;
+    GlobalObject *global = cx->fp()->scopeChain().getGlobal();
+    if (GlobalObject::DebugVector *debuggers = global->getDebuggers()) {
+        for (Debug **p = debuggers->begin(); p != debuggers->end(); p++) {
+            Debug *dbg = *p;
+            if ((dbg->*observesEvent)()) {
+                if (!triggered.append(ObjectValue(*dbg->toJSObject())))
+                    return JSTRAP_ERROR;
+            }
         }
     }
 
@@ -483,7 +498,7 @@ Debug::dispatchHook(JSContext *cx, js::Value *vp, DebugObservesMethod observesEv
     // should still be delivered.
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debug *dbg = Debug::fromJSObject(&p->toObject());
-        if (dbg->observesCompartment(compartment) && (dbg->*observesEvent)()) {
+        if (dbg->debuggeeGlobal == global && (dbg->*observesEvent)()) {
             JSTrapStatus st = (dbg->*handleEvent)(cx, vp);
             if (st != JSTRAP_CONTINUE)
                 return st;
@@ -497,9 +512,13 @@ Debug::dispatchHook(JSContext *cx, js::Value *vp, DebugObservesMethod observesEv
 bool
 Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
 {
+    // Debuggers are marked during the incremental long tail of the GC mark
+    // phase. This method returns true if it has to mark anything; GC calls it
+    // repeatedly until it returns false.
+    bool markedAny = false;
+
     // Search for Debug objects in the given compartment. We do this by
     // searching all the compartments being debugged.
-    bool markedAny = false;
     JSRuntime *rt = trc->context->runtime;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
         JSCompartment *dc = *c;
@@ -509,45 +528,53 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
         // debug itself). If comp is null, this is a global GC and we
         // search every dc that is live.
         if (comp ? dc != comp : !dc->isAboutToBeCollected(gckind)) {
-            const JSCompartment::DebugVector &debuggers = dc->getDebuggers();
-            for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
-                Debug *dbg = *p;
-                JSObject *obj = dbg->toJSObject();
+            const GlobalObjectSet &debuggees = dc->getDebuggees();
+            for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+                GlobalObject *global = r.front();
 
-                // We only need to examine obj if it's in a compartment
-                // being GC'd and it isn't already marked.
-                if ((!comp || obj->compartment() == comp) && !obj->isMarked()) {
-                    if (dbg->hasAnyLiveHooks()) {
-                        // obj could be reachable only via its live, enabled
-                        // debugger hooks, which may yet be called.
-                        MarkObject(trc, *obj, "enabled Debug");
-                        markedAny = true;
-                    }
-                }
+                // Every debuggee has at least one debugger, so in this case
+                // getDebuggers can't return NULL.
+                const GlobalObject::DebugVector *debuggers = global->getDebuggers();
+                for (Debug **p = debuggers->begin(); p != debuggers->end(); p++) {
+                    Debug *dbg = *p;
+                    JSObject *obj = dbg->toJSObject();
 
-                // Handling Debug.Objects:
-                //
-                // If comp is the debuggee's compartment, do nothing. No
-                // referent objects will be collected, since we have a wrapper
-                // of each one.
-                //
-                // If comp is the debugger's compartment, mark all
-                // Debug.Objects, since the referents might be alive and
-                // therefore the table entries must remain.
-                //
-                // If comp is null, then for each key (referent-wrapper) that
-                // is marked, mark the corresponding value.
-                //
-                if (!comp || obj->compartment() == comp) {
-                    for (ObjectMap::Range r = dbg->objects.all(); !r.empty(); r.popFront()) {
-                        // The unwrap() call below has the following effect: we
-                        // mark the Debug.Object if the *referent* is alive,
-                        // even if the CCW of the referent seems unreachable.
-                        if (!r.front().value->isMarked() &&
-                            (comp || r.front().key->unwrap()->isMarked()))
-                        {
-                            MarkObject(trc, *r.front().value, "Debug.Object with live referent");
+                    // We only need to examine obj if it's in a compartment
+                    // being GC'd and it isn't already marked.
+                    if ((!comp || obj->compartment() == comp) && !obj->isMarked()) {
+                        if (dbg->hasAnyLiveHooks()) {
+                            // obj could be reachable only via its live, enabled
+                            // debugger hooks, which may yet be called.
+                            MarkObject(trc, *obj, "enabled Debug");
                             markedAny = true;
+                        }
+                    }
+
+                    // Handling Debug.Objects:
+                    //
+                    // If comp is the debuggee's compartment, do nothing. No
+                    // referent objects will be collected, since we have a
+                    // wrapper of each one.
+                    //
+                    // If comp is the debugger's compartment, mark all
+                    // Debug.Objects, since the referents might be alive and
+                    // therefore the table entries must remain.
+                    //
+                    // If comp is null, then for each key (referent-wrapper)
+                    // that is marked, mark the corresponding value.
+                    //
+                    if (!comp || obj->compartment() == comp) {
+                        for (ObjectMap::Range r = dbg->objects.all(); !r.empty(); r.popFront()) {
+                            // The unwrap() call below has the following effect: we
+                            // mark the Debug.Object if the *referent* is alive,
+                            // even if the CCW of the referent seems unreachable.
+                            if (!r.front().value->isMarked() &&
+                                (comp || r.front().key->unwrap()->isMarked()))
+                            {
+                                MarkObject(trc, *r.front().value,
+                                           "Debug.Object with live referent");
+                                markedAny = true;
+                            }
                         }
                     }
                 }
@@ -578,32 +605,90 @@ Debug::trace(JSTracer *trc, JSObject *obj)
 void
 Debug::sweepAll(JSRuntime *rt)
 {
-    // Sweep ObjectMap entries for objects being collected.
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
         Debug *dbg = (Debug *) ((unsigned char *) p - offsetof(Debug, link));
+
+        // If this Debug is being GC'd, detach it from its debuggees.  In the
+        // case of runtime-wide GC, the debuggee might be GC'd too. Since
+        // detaching requires access to both objects, this must be done before
+        // finalize time. However, in a per-compartment GC, it is impossible
+        // for both objects to be GC'd (since they are in different
+        // compartments), so in that case we just wait for Debug::finalize.
+        if (!dbg->object->isMarked()) {
+            if (dbg->debuggeeGlobal)
+                dbg->removeDebuggee(dbg->debuggeeGlobal, NULL);
+        }
+
+        // Sweep ObjectMap entries for referents being collected.
         for (ObjectMap::Enum e(dbg->objects); !e.empty(); e.popFront()) {
             JS_ASSERT(e.front().key->isMarked() == e.front().value->isMarked());
             if (!e.front().value->isMarked())
                 e.removeFront();
         }
     }
+
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        sweepCompartment(*c);
+}
+
+void
+Debug::sweepCompartment(JSCompartment *compartment)
+{
+    // For each debuggee being GC'd, detach it from all its debuggers.
+    GlobalObjectSet &debuggees = compartment->getDebuggees();
+    for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
+        GlobalObject *global = e.front();
+        if (!global->isMarked()) {
+            const GlobalObject::DebugVector *debuggers = global->getDebuggers();
+            JS_ASSERT(!debuggers->empty());
+            for (size_t i = debuggers->length(); i--; )
+                (*debuggers)[i]->removeDebuggee(global, &e);
+        }
+    }
+}
+
+void
+Debug::detachFromCompartment(JSCompartment *comp)
+{
+    for (GlobalObjectSet::Enum e(comp->getDebuggees()); !e.empty(); e.popFront()) {
+        GlobalObject *global = e.front();
+        for (;;) {
+            GlobalObject::DebugVector *debuggers = global->getDebuggers();
+            if (!debuggers || debuggers->empty())
+                break;
+            debuggers->back()->removeDebuggee(global, &e);
+        }
+        e.removeFront();
+    }
+}
+
+void
+Debug::removeDebuggee(GlobalObject *global, GlobalObjectSet::Enum *e)
+{
+    JS_ASSERT(global == debuggeeGlobal);
+
+    GlobalObject::DebugVector *v = global->getDebuggers();
+    for (Debug **p = v->begin(); p != v->end(); p++) {
+        if (*p == this) {
+            v->erase(p);
+            if (v->empty()) {
+                if (e)
+                    e->removeFront();
+                else
+                    global->compartment()->removeDebuggee(global);
+            }
+            debuggeeGlobal = NULL;
+            return;
+        }
+    }
+    JS_NOT_REACHED("Debug::removeDebugee");
 }
 
 void
 Debug::finalize(JSContext *cx, JSObject *obj)
 {
     Debug *dbg = (Debug *) obj->getPrivate();
-    if (dbg && dbg->debuggeeCompartment)
-        dbg->detachFrom(dbg->debuggeeCompartment);
     cx->delete_(dbg);
-}
-
-void
-Debug::detachFrom(JSCompartment *c)
-{
-    JS_ASSERT(c == debuggeeCompartment);
-    c->removeDebug(this);
-    debuggeeCompartment = NULL;
 }
 
 Class Debug::jsclass = {
@@ -724,8 +809,8 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
     }
 
     // Check that the target compartment is in debug mode.
-    JSCompartment *debuggeeCompartment = argobj->getProxyPrivate().toObject().compartment();
-    if (!debuggeeCompartment->debugMode) {
+    GlobalObject *debuggee = argobj->getProxyPrivate().toObject().getGlobal();
+    if (!debuggee->compartment()->debugMode) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DEBUG_MODE);
         return false;
     }
@@ -750,15 +835,15 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
     if (!hooks)
         return false;
 
-    Debug *dbg = cx->new_<Debug>(obj, hooks, debuggeeCompartment);
+    Debug *dbg = cx->new_<Debug>(obj, hooks);
     if (!dbg)
         return false;
     obj->setPrivate(dbg);
-    if (!dbg->init() || !debuggeeCompartment->addDebug(dbg)) {
-        js_ReportOutOfMemory(cx);
+    if (!dbg->init(cx) || !debuggee->addDebug(cx, dbg)) {
+        cx->delete_(dbg);
         return false;
     }
-
+    dbg->debuggeeGlobal = debuggee;
     vp->setObject(*obj);
     return true;
 }

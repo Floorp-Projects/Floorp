@@ -42,6 +42,8 @@
 #define GlobalObject_h___
 
 #include "jsfun.h"
+#include "jsprvtd.h"
+#include "jsvector.h"
 
 extern JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj);
@@ -89,9 +91,10 @@ class GlobalObject : public ::JSObject {
     static const uintN EVAL_ALLOWED          = FUNCTION_NS + 1;
     static const uintN EVAL                  = EVAL_ALLOWED + 1;
     static const uintN FLAGS                 = EVAL + 1;
+    static const uintN DEBUGGERS             = FLAGS + 1;
 
     /* Total reserved-slot count for global objects. */
-    static const uintN RESERVED_SLOTS = FLAGS + 1;
+    static const uintN RESERVED_SLOTS = DEBUGGERS + 1;
 
     void staticAsserts() {
         /*
@@ -150,7 +153,21 @@ class GlobalObject : public ::JSObject {
     bool getFunctionNamespace(JSContext *cx, Value *vp);
 
     bool initStandardClasses(JSContext *cx);
+
+    typedef js::Vector<js::Debug *, 0, js::SystemAllocPolicy> DebugVector;
+
+    // The collection of Debug objects debugging this global. If this global is
+    // not a debuggee, this returns either NULL or an empty vector.
+    DebugVector *getDebuggers();
+
+    // The same, but create the empty vector if one does not already
+    // exist. Returns NULL only on OOM.
+    DebugVector *getOrCreateDebuggers(JSContext *cx);
+
+    bool addDebug(JSContext *cx, Debug *dbg);
 };
+
+typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy> GlobalObjectSet;
 
 } // namespace js
 
