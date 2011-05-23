@@ -53,7 +53,6 @@
 #include "nsIVariant.h"
 
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIPrivateDOMEvent.h"

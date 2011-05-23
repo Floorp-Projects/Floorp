@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsWebSocket.h"
+
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
@@ -57,7 +58,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsThreadUtils.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsIPromptFactory.h"
 #include "nsIWindowWatcher.h"

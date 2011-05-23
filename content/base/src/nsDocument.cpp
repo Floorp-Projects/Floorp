@@ -4130,14 +4130,13 @@ nsDocument::DispatchContentLoadedEvents()
   if (target_frame) {
     nsCOMPtr<nsIDocument> parent = mParentDocument;
     do {
-      nsCOMPtr<nsIDOMDocumentEvent> document_event =
-        do_QueryInterface(parent);
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(parent);
 
       nsCOMPtr<nsIDOMEvent> event;
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent;
-      if (document_event) {
-        document_event->CreateEvent(NS_LITERAL_STRING("Events"),
-                                    getter_AddRefs(event));
+      if (domDoc) {
+        domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
+                            getter_AddRefs(event));
 
         privateEvent = do_QueryInterface(event);
       }

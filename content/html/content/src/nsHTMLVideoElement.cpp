@@ -61,7 +61,6 @@
 #include "nsITimer.h"
 
 #include "nsEventDispatcher.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsMediaError.h"
 

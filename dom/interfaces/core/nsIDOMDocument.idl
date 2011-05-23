@@ -24,6 +24,7 @@
  *   Johnny Stenback <jst@netscape.com>
  *   Jonas Sicking <sicking@bigfoot.com>
  *   Ms2ger <ms2ger@gmail.com>
+ *   Tom Pixley <joki@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -58,7 +59,7 @@ interface nsIDOMTreeWalker;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(e286fcde-873d-4902-874b-49255737ee7d)]
+[scriptable, uuid(238bdcb3-8645-4b3e-bf67-e82437acded4)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -139,4 +140,7 @@ interface nsIDOMDocument : nsIDOMNode
                                       in nsIDOMNodeFilter filter,
                                       in boolean entityReferenceExpansion)
                                         raises(DOMException);
+
+  nsIDOMEvent               createEvent(in DOMString eventType)
+                                               raises(DOMException);
 };

@@ -46,7 +46,7 @@
 #include "nsCocoaWindow.h"
 #include "nsWidgetAtoms.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -57,12 +57,12 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
   NS_PRECONDITION(aTargetContent, "null ptr");
 
   nsIDocument* doc = aTargetContent->GetOwnerDoc();
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(doc);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTargetContent);
-  if (docEvent && target) {
+  if (domDoc && target) {
     nsCOMPtr<nsIDOMEvent> event;
-    docEvent->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
-                          getter_AddRefs(event));
+    domDoc->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
+                        getter_AddRefs(event));
     nsCOMPtr<nsIDOMXULCommandEvent> command = do_QueryInterface(event);
     nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(command);
 
