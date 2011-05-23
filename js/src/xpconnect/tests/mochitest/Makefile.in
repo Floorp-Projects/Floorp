@@ -91,6 +91,7 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug636097.html \
 		test_bug650273.html \
 		file_bug650273.html \
+		file_bug658560.html \
 		$(NULL)
 
 ifndef MOZ_PLATFORM_MAEMO
