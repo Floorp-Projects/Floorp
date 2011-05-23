@@ -844,6 +844,7 @@ fail2:
     JS_ASSERT(v->back() == this);
     v->popBack();
 fail1:
+    js_ReportOutOfMemory(cx);
     return false;
 }
 
