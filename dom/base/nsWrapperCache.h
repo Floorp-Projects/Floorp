@@ -42,13 +42,14 @@
 #include "nsCycleCollectionParticipant.h"
 
 struct JSObject;
+struct JSContext;
 class nsContentUtils;
 
 typedef PRUptrdiff PtrBits;
 
 #define NS_WRAPPERCACHE_IID \
-{ 0x3a51ca81, 0xddab, 0x422c, \
-  { 0x95, 0x3a, 0x13, 0x06, 0x28, 0x0e, 0xee, 0x14 } }
+{ 0x6f3179a1, 0x36f7, 0x4a5c, \
+  { 0x8c, 0xf1, 0xad, 0xc8, 0x7c, 0xde, 0x3e, 0x87 } }
 
 /**
  * Class to store the XPCWrappedNative for an object. This can only be used
@@ -122,6 +123,15 @@ public:
   bool IsProxy()
   {
     return (mWrapperPtrBits & WRAPPER_IS_PROXY) != 0;
+  }
+
+  /**
+   * Wrap the object corresponding to this wrappe cache; this can return null
+   * if the object doesn't know how to wrap itself.  If non-null is returned,
+   * the object has already been stored in the wrapper cache.
+   */
+  virtual JSObject* WrapObject(JSContext *cx) {
+    return nsnull;
   }
 
 private:

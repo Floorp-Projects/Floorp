@@ -199,6 +199,8 @@ NodeList::create(JSContext *cx, nsINodeList *aNodeList)
     NS_ADDREF(aNodeList);
     setProtoShape(obj, -1);
 
+    aNodeList->SetWrapper(obj);
+
     return obj;
 }
 
@@ -424,6 +426,11 @@ void
 NodeList::finalize(JSContext *cx, JSObject *proxy)
 {
     nsINodeList *nodeList = getNodeList(proxy);
+    nsWrapperCache* cache;
+    CallQueryInterface(nodeList, &cache);
+    if (cache) {
+        cache->ClearWrapper();
+    }
     NS_RELEASE(nodeList);
 }
 

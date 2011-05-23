@@ -100,9 +100,13 @@ public:
   nsChildContentList(nsINode* aNode)
     : mNode(aNode)
   {
+    SetIsProxy();
   }
 
   NS_DECL_ISUPPORTS
+
+  // nsWrapperCache
+  virtual JSObject* WrapObject(JSContext *cx);
 
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST

@@ -52,6 +52,7 @@
 #include "jsproxy.h"
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
+#include "dombindings.h"
 
 bool
 xpc_OkToHandOutWrapper(nsWrapperCache *cache)
@@ -60,9 +61,10 @@ xpc_OkToHandOutWrapper(nsWrapperCache *cache)
     NS_ABORT_IF_FALSE(cache->IsProxy() || IS_WN_WRAPPER(cache->GetWrapper()),
                       "Must have proxy or XPCWrappedNative wrapper");
     return
-        !cache->IsProxy() &&
-        !static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cache->GetWrapper()))->
-                    NeedsSOW();
+        xpc::dom::NodeList::objIsNodeList(cache->GetWrapper()) ||
+        (!cache->IsProxy() &&
+         !static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cache->GetWrapper()))->
+           NeedsSOW());
 }
 
 /***************************************************************************/
