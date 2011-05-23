@@ -352,12 +352,15 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   }
 
   nsPoint offset;
+  // Offset from widget origin to the frame origin, which includes chrome
+  // on the widget.
   *aOutWidget = frame->GetNearestWidget(offset);
   NS_ENSURE_TRUE(*aOutWidget, nsIntRect());
   rect.MoveBy(offset);
 
   caretRect = rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel());
-  caretRect.MoveBy((*aOutWidget)->WidgetToScreenOffset());
+  // ((content screen origin) - (content offset in the widget)) = widget origin on the screen
+  caretRect.MoveBy((*aOutWidget)->WidgetToScreenOffset() - (*aOutWidget)->GetClientOffset());
 
   // Correct for character size, so that caret always matches the size of the character
   // This is important for font size transitions, and is necessary because the Gecko caret uses the
