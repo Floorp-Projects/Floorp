@@ -872,22 +872,15 @@ Debug::getYoungestFrame(JSContext *cx, uintN argc, Value *vp)
 JSBool
 Debug::construct(JSContext *cx, uintN argc, Value *vp)
 {
-    // Check arguments.
+    // Check that the arguments, if any, are cross-compartment wrappers.
     Value *argv = vp + 2, *argvEnd = argv + argc;
     for (Value *p = argv; p != argvEnd; p++) {
-        // Check that the argument is a cross-compartment wrapper.
         const Value &arg = *p;
         if (!arg.isObject())
             return ReportObjectRequired(cx);
         JSObject *argobj = &arg.toObject();
         if (!argobj->isCrossCompartmentWrapper()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CCW_REQUIRED, "Debug");
-            return false;
-        }
-
-        // Check that the target compartment is in debug mode.
-        if (!argobj->getProxyPrivate().toObject().compartment()->debugMode) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DEBUG_MODE);
             return false;
         }
     }
@@ -935,6 +928,11 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
 bool
 Debug::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
 {
+    if (!obj->compartment()->debugMode) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DEBUG_MODE);
+        return false;
+    }
+
     // Check for cycles. If obj's compartment is reachable from this Debug
     // object's compartment by following debuggee-to-debugger links, then
     // adding obj would create a cycle. (Typically nobody is debugging the
