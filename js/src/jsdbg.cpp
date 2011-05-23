@@ -154,7 +154,7 @@ Debug::~Debug()
         // Debug::sweepAll.
         JS_ASSERT(object->compartment()->rt->gcCurrentCompartment == object->compartment());
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront())
-            removeDebuggee(e.front(), NULL, &e);
+            removeDebuggeeGlobal(e.front(), NULL, &e);
     }
 
     // This always happens in the GC thread, so no locking is required.
@@ -230,7 +230,7 @@ Debug::slowPathLeaveStackFrame(JSContext *cx)
     GlobalObject *global = fp->scopeChain().getGlobal();
 
     // FIXME This notifies only current debuggers, so it relies on a hack in
-    // Debug::removeDebuggee to make sure only current debuggers have
+    // Debug::removeDebuggeeGlobal to make sure only current debuggers have
     // Frame objects with .live === true.
     if (GlobalObject::DebugVector *debuggers = global->getDebuggers()) {
         for (Debug **p = debuggers->begin(); p != debuggers->end(); p++) {
@@ -618,7 +618,7 @@ Debug::sweepAll(JSRuntime *rt)
         // compartments), so in that case we just wait for Debug::finalize.
         if (!dbg->object->isMarked()) {
             for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-                dbg->removeDebuggee(e.front(), NULL, &e);
+                dbg->removeDebuggeeGlobal(e.front(), NULL, &e);
         }
 
         // Sweep ObjectMap entries for referents being collected.
@@ -639,7 +639,7 @@ Debug::detachAllDebuggersFromGlobal(GlobalObject *global, GlobalObjectSet::Enum 
     const GlobalObject::DebugVector *debuggers = global->getDebuggers();
     JS_ASSERT(!debuggers->empty());
     while (!debuggers->empty())
-        debuggers->back()->removeDebuggee(global, compartmentEnum, NULL);
+        debuggers->back()->removeDebuggeeGlobal(global, compartmentEnum, NULL);
 }
 
 void
@@ -816,7 +816,7 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
     if (!dbg)
         return false;
     obj->setPrivate(dbg);
-    if (!dbg->init(cx) || !dbg->addDebuggee(cx, debuggee)) {
+    if (!dbg->init(cx) || !dbg->addDebuggeeGlobal(cx, debuggee)) {
         cx->delete_(dbg);
         return false;
     }
@@ -825,7 +825,7 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
 }
 
 bool
-Debug::addDebuggee(JSContext *cx, GlobalObject *obj)
+Debug::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
 {
     // Each debugger-debuggee relation must be stored in up to three places.
     GlobalObject::DebugVector *v = obj->getOrCreateDebuggers(cx);
@@ -849,8 +849,8 @@ fail1:
 }
 
 void
-Debug::removeDebuggee(GlobalObject *global, GlobalObjectSet::Enum *compartmentEnum,
-                      GlobalObjectSet::Enum *debugEnum)
+Debug::removeDebuggeeGlobal(GlobalObject *global, GlobalObjectSet::Enum *compartmentEnum,
+                            GlobalObjectSet::Enum *debugEnum)
 {
     // Each debuggee is in two HashSets: one for its compartment and one for
     // its debugger (this). The caller might be enumerating either set; if so,
