@@ -47,6 +47,12 @@
 #include "nsGUIEvent.h"
 #include "nsIRange.h"
 
+// IID for the nsFrameSelection interface
+// 3c6ae2d0-4cf1-44a1-9e9d-2411867f19c6
+#define NS_FRAME_SELECTION_IID      \
+{ 0x3c6ae2d0, 0x4cf1, 0x44a1, \
+  { 0x9e, 0x9d, 0x24, 0x11, 0x86, 0x7f, 0x19, 0xc6 } }
+
 #ifdef IBMBIDI // Constant for Set/Get CaretBidiLevel
 #define BIDI_LEVEL_UNDEFINED 0x80
 #endif
@@ -271,7 +277,7 @@ public:
    *
    * @param  aCell  [in] HTML td element.
    */
-  nsresult SelectCellElement(nsIContent *aCell);
+  virtual nsresult SelectCellElement(nsIContent *aCell);
 
   /**
    * Add cells to the selection inside of the given cells range.
@@ -282,11 +288,11 @@ public:
    * @param  aEndRowIndex       [in] row index where the cells range ends
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
-  nsresult AddCellsToSelection(nsIContent *aTable,
-                               PRInt32 aStartRowIndex,
-                               PRInt32 aStartColumnIndex,
-                               PRInt32 aEndRowIndex,
-                               PRInt32 aEndColumnIndex);
+  virtual nsresult AddCellsToSelection(nsIContent *aTable,
+                                       PRInt32 aStartRowIndex,
+                                       PRInt32 aStartColumnIndex,
+                                       PRInt32 aEndRowIndex,
+                                       PRInt32 aEndColumnIndex);
 
   /**
    * Remove cells from selection inside of the given cell range.
@@ -297,11 +303,11 @@ public:
    * @param  aEndRowIndex       [in] row index where the cells range ends
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
-  nsresult RemoveCellsFromSelection(nsIContent *aTable,
-                                    PRInt32 aStartRowIndex,
-                                    PRInt32 aStartColumnIndex,
-                                    PRInt32 aEndRowIndex,
-                                    PRInt32 aEndColumnIndex);
+  virtual nsresult RemoveCellsFromSelection(nsIContent *aTable,
+                                            PRInt32 aStartRowIndex,
+                                            PRInt32 aStartColumnIndex,
+                                            PRInt32 aEndRowIndex,
+                                            PRInt32 aEndColumnIndex);
 
   /**
    * Remove cells from selection outside of the given cell range.
@@ -312,11 +318,11 @@ public:
    * @param  aEndRowIndex       [in] row index where the cells range ends
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
-  nsresult RestrictCellsToSelection(nsIContent *aTable,
-                                    PRInt32 aStartRowIndex,
-                                    PRInt32 aStartColumnIndex,
-                                    PRInt32 aEndRowIndex,
-                                    PRInt32 aEndColumnIndex);
+  virtual nsresult RestrictCellsToSelection(nsIContent *aTable,
+                                            PRInt32 aStartRowIndex,
+                                            PRInt32 aStartColumnIndex,
+                                            PRInt32 aEndRowIndex,
+                                            PRInt32 aEndColumnIndex);
 
   /** StartAutoScrollTimer is responsible for scrolling frames so that
    *  aPoint is always visible, and for selecting any frame that contains
@@ -405,10 +411,10 @@ public:
    * @param aOffset offset into above node.
    * @param aReturnOffset will contain offset into frame.
    */
-  nsIFrame* GetFrameForNodeOffset(nsIContent *aNode,
-                                  PRInt32     aOffset,
-                                  HINT        aHint,
-                                  PRInt32    *aReturnOffset) const;
+  virtual nsIFrame* GetFrameForNodeOffset(nsIContent *aNode,
+                                          PRInt32     aOffset,
+                                          HINT        aHint,
+                                          PRInt32    *aReturnOffset) const;
 
   /**
    * Scrolling then moving caret placement code in common to text areas and 
@@ -433,14 +439,17 @@ public:
 #ifdef IBMBIDI
   /** SetCaretBidiLevel sets the caret bidi level
    *  @param aLevel the caret bidi level
+   *  This method is virtual since it gets called from outside of layout.
    */
-  void SetCaretBidiLevel (PRUint8 aLevel);
+  virtual void SetCaretBidiLevel (PRUint8 aLevel);
   /** GetCaretBidiLevel gets the caret bidi level
+   *  This method is virtual since it gets called from outside of layout.
    */
-  PRUint8 GetCaretBidiLevel() const;
+  virtual PRUint8 GetCaretBidiLevel() const;
   /** UndefineCaretBidiLevel sets the caret bidi level to "undefined"
+   *  This method is virtual since it gets called from outside of layout.
    */
-  void UndefineCaretBidiLevel();
+  virtual void UndefineCaretBidiLevel();
 #endif
 
   /** CharacterMove will generally be called from the nsiselectioncontroller implementations.
@@ -556,10 +565,12 @@ public:
    *   Bidi level equal to the paragraph embedding level.
    *  In these cases the before frame and after frame respectively will be 
    *   nsnull.
+   *
+   *  This method is virtual since it gets called from outside of layout. 
    */
-  nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent *aNode,
-                                             PRUint32 aContentOffset,
-                                             PRBool aJumpLines) const;
+  virtual nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent *aNode,
+                                                     PRUint32 aContentOffset,
+                                                     PRBool aJumpLines) const;
 
   /** GetFrameFromLevel will scan in a given direction
    *   until it finds a frame with a Bidi level less than or equal to a given level.
