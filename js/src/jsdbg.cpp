@@ -111,8 +111,9 @@ CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
         return NULL;
     }
 
-    // Check for e.g. Debug.prototype, which is of the Debug JSClass but isn't
-    // really a Debug object.
+    // Forbid e.g. Debug.prototype, which is of the Debug JSClass but isn't
+    // really a Debug object. The prototype object is distinguished by
+    // having a NULL private value.
     if ((clasp->flags & JSCLASS_HAS_PRIVATE) && !thisobj->getPrivate()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              clasp->name, fnname, "prototype object");
@@ -1077,8 +1078,9 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
         return NULL;
     }
 
-    // Check for Debug.Frame.prototype, which is of class DebugFrame_class but
-    // isn't really a working Debug.Frame object.
+    // Forbid Debug.Frame.prototype, which is of class DebugFrame_class but
+    // isn't really a working Debug.Frame object. The prototype object is
+    // distinguished by having a NULL private value. Also, forbid popped frames.
     if (!thisobj->getPrivate()) {
         if (thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
@@ -1259,8 +1261,9 @@ DebugObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
         return NULL;
     }
 
-    // Check for Debug.Object.prototype, which is of class DebugObject_class
-    // but isn't a real working Debug.Object.
+    // Forbid Debug.Object.prototype, which is of class DebugObject_class
+    // but isn't a real working Debug.Object. The prototype object is
+    // distinguished by having an 'undefined' referent.
     if (thisobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).isUndefined()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Debug.Object", fnname, "prototype object");
