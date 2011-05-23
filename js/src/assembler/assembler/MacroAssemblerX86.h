@@ -60,7 +60,7 @@ public:
     using MacroAssemblerX86Common::storeDouble;
     using MacroAssemblerX86Common::convertInt32ToDouble;
 
-    void add32(TrustedImm32 imm, RegisterID src, RegisterID dest)
+    void add32(Imm32 imm, RegisterID src, RegisterID dest)
     {
         m_assembler.leal_mr(imm.m_value, src, dest);
     }
@@ -90,12 +90,12 @@ public:
         m_assembler.andl_im(imm.m_value, address.m_ptr);
     }
     
-    void or32(TrustedImm32 imm, AbsoluteAddress address)
+    void or32(Imm32 imm, AbsoluteAddress address)
     {
         m_assembler.orl_im(imm.m_value, address.m_ptr);
     }
 
-    void sub32(TrustedImm32 imm, AbsoluteAddress address)
+    void sub32(Imm32 imm, AbsoluteAddress address)
     {
         m_assembler.subl_im(imm.m_value, address.m_ptr);
     }
@@ -148,7 +148,7 @@ public:
         addDouble(Address(srcDest), dest);
     }
 
-    void store32(TrustedImm32 imm, void* address)
+    void store32(Imm32 imm, void* address)
     {
         m_assembler.movl_i32m(imm.m_value, address);
     }
@@ -164,7 +164,7 @@ public:
         return Jump(m_assembler.jCC(x86Condition(cond)));
     }
 
-    Jump branch32(Condition cond, AbsoluteAddress left, TrustedImm32 right)
+    Jump branch32(Condition cond, AbsoluteAddress left, Imm32 right)
     {
         m_assembler.cmpl_im(right.m_value, left.m_ptr);
         return Jump(m_assembler.jCC(x86Condition(cond)));
@@ -186,7 +186,7 @@ public:
     }
 
 
-    DataLabelPtr moveWithPatch(TrustedImmPtr initialValue, RegisterID dest)
+    DataLabelPtr moveWithPatch(ImmPtr initialValue, RegisterID dest)
     {
         m_assembler.movl_i32r(initialValue.asIntptr(), dest);
         return DataLabelPtr(this);
@@ -206,7 +206,7 @@ public:
         return Jump(m_assembler.jCC(x86Condition(cond)));
     }
 
-    DataLabelPtr storePtrWithPatch(TrustedImmPtr initialValue, ImplicitAddress address)
+    DataLabelPtr storePtrWithPatch(ImmPtr initialValue, ImplicitAddress address)
     {
         m_assembler.movl_i32m(initialValue.asIntptr(), address.offset, address.base);
         return DataLabelPtr(this);
