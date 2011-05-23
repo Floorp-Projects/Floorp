@@ -44,6 +44,8 @@
 #include "MIRGraph.h"
 #include "Ion.h"
 #include "IonSpew.h"
+#include "IonAnalysis.h"
+#include "IonLowering.h"
 #include "jsemit.h"
 #include "jsscriptinlines.h"
 
@@ -68,7 +70,9 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 
     if (!ApplyTypeInformation(&analyzer, graph))
         return false;
-    spew.spew("Apply Types");
+    //if (!Lower(&analyzer, graph))
+    //    return false;
+    spew.spew("Lower");
 
     return false;
 }

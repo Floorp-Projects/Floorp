@@ -69,6 +69,8 @@ class MIRGraph
     }
 };
 
+typedef InlineList<MInstruction>::iterator MInstructionIterator;
+
 class MBasicBlock : public TempObject
 {
     static const uint32 NotACopy = uint32(-1);
@@ -207,22 +209,22 @@ class MBasicBlock : public TempObject
         JS_ASSERT(i < numEntrySlots());
         return header_[i];
     }
-    size_t numInstructions() const {
-        return instructions_.length();
-    }
-    MInstruction *getInstruction(size_t i) const {
-        return instructions_[i];
-    }
     size_t numPhis() const {
         return phis_.length();
     }
     MPhi *getPhi(size_t i) const {
         return phis_[i];
     }
+    MInstructionIterator begin() {
+        return instructions_.begin();
+    }
+    MInstructionIterator end() {
+        return instructions_.end();
+    }
 
   private:
     MIRGenerator *gen;
-    Vector<MInstruction *, 4, TempAllocPolicy> instructions_;
+    InlineList<MInstruction> instructions_;
     Vector<MBasicBlock *, 1, TempAllocPolicy> predecessors_;
     Vector<MPhi *, 2, TempAllocPolicy> phis_;
     StackSlot *slots_;

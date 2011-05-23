@@ -39,8 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
+#ifndef jsion_ion_lowering_h__
+#define jsion_ion_lowering_h__
 
 namespace js {
 namespace ion {
@@ -49,13 +49,10 @@ class MIRGenerator;
 class MIRGraph;
 
 bool
-ApplyTypeInformation(MIRGenerator *gen, MIRGraph &graph);
-
-bool
 Lower(MIRGenerator *gen, MIRGraph &graph);
 
 } // namespace js
 } // namespace ion
 
-#endif // jsion_ion_analysis_h__
+#endif // jsion_ion_lowering_h__
 

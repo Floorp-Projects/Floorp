@@ -48,6 +48,33 @@
 using namespace js;
 using namespace js::ion;
 
+// The type analyzer attempts to decide every instruction's output type. The
+// following properties of instructions are used:
+//
+//  * Assumed Type. This encodes information from the TypeOracle. For example,
+//    it may suggest that a BitAnd is known to not be specialized, or that a
+//    getprop is known to be an integer.
+//
+//  * Requested Types. This is a bit vector of the types required by uses.
+//
+//  * Result Type. This is the type that will be used based on analysis of
+//    uses. Some operations have a fixed result type. For example, a BitAnd
+//    always returns an integer, and uses which request a wider type must
+//    explicitly convert it.
+//
+// The algorithm works as follows:
+//  * Each instruction is added to a worklist.
+//  * For each instruction in the worklist,
+//    * The instruction decides, based on its assumed type, its ideal inputs
+//      types. These are propagated to its inputs' requested types.
+//    * The instruction decides, based on its inputs, if it should widen its
+//      result type.
+//    * If any type information changes, its uses and inputs are re-added to
+//      the worklist.
+//  * During the lowering phase, each instruction decides whether to specialize
+//    as a specific type, and whether to add conversion operations to its
+//    inputs.
+//
 class TypeAnalyzer
 {
     MIRGenerator *gen;
@@ -62,8 +89,8 @@ class TypeAnalyzer
     TypeAnalyzer(MIRGenerator *gen, MIRGraph &graph);
 
     bool analyze();
-    bool inspectOperands(MInstruction *ins);
-    bool reflow(MInstruction *ins);
+    void inspectOperands(MInstruction *ins);
+    bool propagateUsedTypes(MInstruction *ins);
 };
 
 TypeAnalyzer::TypeAnalyzer(MIRGenerator *gen, MIRGraph &graph)
@@ -91,48 +118,72 @@ TypeAnalyzer::popFromWorklist()
     return ins;
 }
 
-bool
+void
 TypeAnalyzer::inspectOperands(MInstruction *ins)
 {
     for (size_t i = 0; i < ins->numOperands(); i++) {
+        MIRType required = ins->requiredInputType(i);
+        if (required >= MIRType_Value)
+            continue;
+        ins->getInput(i)->useAsType(required);
     }
-    return true;
 }
 
 bool
-TypeAnalyzer::reflow(MInstruction *ins)
+TypeAnalyzer::propagateUsedTypes(MInstruction *ins)
 {
-    for (size_t i = 0; i < ins->numOperands(); i++) {
-        if (!addToWorklist(ins->getOperand(i)->ins()))
-            return false;
+    // If this is a copy, just propagate to its sole input.
+    if (ins->isCopy()) {
+        MCopy *copy = ins->toCopy();
+        MInstruction *input = copy->getInput(0);
+        input->addUsedTypes(copy->usedTypes());
+        return true;
     }
-    for (MUseIterator iter(ins); iter.more(); iter.next()) {
-        if (!addToWorklist(iter->ins()))
-            return false;
+
+    // Otherwise, propagate the phi's used types to each input.
+    MPhi *phi = ins->toPhi();
+    for (size_t i = 0; i < phi->numOperands(); i++) {
+        MInstruction *input = phi->getInput(i);
+        bool changed = input->addUsedTypes(phi->usedTypes());
+        if (changed && (input->isPhi() || ins->isCopy())) {
+            // If the set of types on the input changed, and the input will
+            // need to propagate its information again, then re-add it to the
+            // worklist.
+            if (!addToWorklist(input))
+                return false;
+        }
     }
+
     return true;
 }
 
 bool
 TypeAnalyzer::analyze()
 {
-    // Populate the worklist.
+    // Populate the worklist in block order. Instructions will be popped in
+    // LIFO order, as we would like to see uses before their defs.
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i);
         for (size_t i = 0; i < block->numPhis(); i++) {
             if (!addToWorklist(block->getPhi(i)))
                 return false;
         }
-        for (size_t i = 0; i < block->numInstructions(); i++) {
-            if (!addToWorklist(block->getInstruction(i)))
+        for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
+            if (!addToWorklist(*i))
                 return false;
         }
     }
 
     while (!worklist.empty()) {
         MInstruction *ins = popFromWorklist();
-        if (!inspectOperands(ins))
-            return false;
+        if (ins->isPhi() || ins->isCopy()) {
+            if (!propagateUsedTypes(ins))
+                return false;
+        } else {
+            // We see all uses before their defs, so we do not reflow type
+            // information on a normal instruction.
+            inspectOperands(ins);
+        }
     }
 
     return true;
