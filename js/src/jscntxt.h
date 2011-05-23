@@ -2009,7 +2009,7 @@ class AutoReleaseNullablePtr {
 
 class AutoLocalNameArray {
   public:
-    explicit AutoLocalNameArray(JSContext *cx, JSFunction *fun
+    explicit AutoLocalNameArray(JSContext *cx, const JSFunction *fun
                                 JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : context(cx),
         mark(JS_ARENA_MARK(&cx->tempPool)),
