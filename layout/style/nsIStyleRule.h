@@ -103,8 +103,6 @@ public:
    */
   virtual void MapRuleInfoInto(nsRuleData* aRuleData)=0;
 
-  virtual nsIStyleRule* GetImportantRule(void) { return nsnull; }
-
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 #endif
