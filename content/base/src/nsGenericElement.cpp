@@ -131,6 +131,7 @@
 #include "nsRuleProcessorData.h"
 #include "nsPLDOMEvent.h"
 #include "nsTextNode.h"
+#include "dombindings.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
@@ -1528,6 +1529,12 @@ NS_INTERFACE_TABLE_HEAD(nsChildContentList)
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(NodeList)
 NS_INTERFACE_MAP_END
+
+JSObject*
+nsChildContentList::WrapObject(JSContext *cx)
+{
+  return xpc::dom::NodeList::create(cx, this);
+}
 
 NS_IMETHODIMP
 nsChildContentList::GetLength(PRUint32* aLength)

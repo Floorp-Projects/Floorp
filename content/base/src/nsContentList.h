@@ -276,6 +276,9 @@ public:
                 bool aFuncMayDependOnAttr = true);
   virtual ~nsContentList();
 
+  // nsWrapperCache
+  virtual JSObject* WrapObject(JSContext *cx);
+
   // nsIDOMHTMLCollection
   NS_DECL_NSIDOMHTMLCOLLECTION
 
