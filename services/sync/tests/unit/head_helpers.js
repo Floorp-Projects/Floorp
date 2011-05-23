@@ -9,7 +9,7 @@ let provider = {
       case "ExtPrefDL":
         return [Services.dirsvc.get("CurProcD", Ci.nsIFile)];
       case "ProfD":
-        return ds.get("CurProcD", Ci.nsIFile);
+        return Services.dirsvc.get("CurProcD", Ci.nsIFile);
       case "UHist":
         let histFile = Services.dirsvc.get("CurProcD", Ci.nsIFile);
         histFile.append("history.dat");
