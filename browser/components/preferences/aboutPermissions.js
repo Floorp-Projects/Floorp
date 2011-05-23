@@ -145,6 +145,15 @@ Site.prototype = {
    * @return A boolean indicating whether or not a permission is set.
    */
   getPermission: function Site_getPermission(aType, aResultObj) {
+    // Password saving isn't a nsIPermissionManager permission type, so handle
+    // it seperately.
+    if (aType == "password") {
+      aResultObj.value =  this.loginSavingEnabled ?
+                          Ci.nsIPermissionManager.ALLOW_ACTION :
+                          Ci.nsIPermissionManager.DENY_ACTION;
+      return true;
+    }
+
     let permissionValue;
     if (TEST_EXACT_PERM_TYPES.indexOf(aType) == -1) {
       permissionValue = Services.perms.testPermission(this.httpURI, aType);
@@ -167,6 +176,13 @@ Site.prototype = {
    *        be one of the constants defined in nsIPermissionManager.
    */
   setPermission: function Site_setPermission(aType, aPerm) {
+    // Password saving isn't a nsIPermissionManager permission type, so handle
+    // it seperately.
+    if (aType == "password") {
+      this.loginSavingEnabled = aPerm == Ci.nsIPermissionManager.ALLOW_ACTION;
+      return;
+    }
+
     // Using httpURI is kind of bogus, but the permission manager stores the
     // permission for the host, so the right thing happens in the end.
     Services.perms.add(this.httpURI, aType, aPerm);
@@ -685,14 +701,8 @@ let AboutPermissions = {
     let permissionMenulist = document.getElementById(aType + "-menulist");
     let permissionValue;    
     if (!this._selectedSite) {
-
       // If there is no selected site, we are updating the default permissions interface.
       permissionValue = PermissionDefaults[aType];
-    } else if (aType == "password") {
-      // Services.logins.getLoginSavingEnabled already looks at the default
-      // permission, so we don't need to.
-      permissionValue = this._selectedSite.loginSavingEnabled ?
-                        PermissionDefaults.ALLOW : PermissionDefaults.DENY;
     } else {
       let result = {};
       permissionValue = this._selectedSite.getPermission(aType, result) ?
@@ -709,9 +719,6 @@ let AboutPermissions = {
     if (!this._selectedSite) {
       // If there is no selected site, we are setting the default permission.
       PermissionDefaults[permissionType] = permissionValue;
-    } else if (permissionType == "password") {
-      let isEnabled = permissionValue == PermissionDefaults.ALLOW;
-      this._selectedSite.loginSavingEnabled = isEnabled;
     } else {
       this._selectedSite.setPermission(permissionType, permissionValue);
     }
