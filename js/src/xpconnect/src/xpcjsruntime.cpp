@@ -1279,7 +1279,11 @@ protected:
 static XPConnectGCChunkAllocator gXPCJSChunkAllocator;
 
 NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
+#ifdef MOZ_MEMORY
                              "heap-used/js/gc-heap",
+#else
+                             "mapped/js/gc-heap",
+#endif
                              "Memory used by the garbage-collected JavaScript "
                              "heap.",
                              XPConnectGCChunkAllocator::GetGCChunkBytesInUse,
