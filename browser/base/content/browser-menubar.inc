@@ -567,9 +567,6 @@
                             accesskey="&errorConsoleCmd.accesskey;"
                             key="key_errorConsole"
                             oncommand="toJavaScriptConsole();"/>
-                  <menuitem id="getMoreDevtools"
-                            label="&getMoreDevtoolsCmd.label;"
-                            oncommand="Devtools.getMoreLink();"/>
                 </menupopup>
               </menu>
               <menuitem id="menu_pageInfo"
