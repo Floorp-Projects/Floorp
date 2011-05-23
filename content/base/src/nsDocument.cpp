@@ -1685,7 +1685,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3DocumentEvent)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentStyle)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocumentStyle)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
@@ -6357,19 +6356,6 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
   // Create event even without presContext.
   return nsEventDispatcher::CreateEvent(presContext, nsnull,
                                         aEventType, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDOMEventGroup> group(do_CreateInstance(kDOMEventGroupCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aInstancePtrResult = group;
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
 }
 
 void

@@ -59,7 +59,7 @@ interface nsIDOMTreeWalker;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(238bdcb3-8645-4b3e-bf67-e82437acded4)]
+[scriptable, uuid(61b2159c-614e-4aff-a626-f34af9bb1759)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
