@@ -1313,13 +1313,58 @@ static JSBool
 DebugObject_getName(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, vp, "get name", obj);
-    if (obj->isFunction()) {
-        if (JSString *name = obj->getFunctionPrivate()->atom) {
-            vp->setString(name);
-            return Debug::fromChildJSObject(&vp[1].toObject())->wrapDebuggeeValue(cx, vp);
-        }
+    if (!obj->isFunction()) {
+        vp->setNull();
+        return true;
     }
-    vp->setNull();
+
+    JSString *name = obj->getFunctionPrivate()->atom;
+    if (!name) {
+        vp->setNull();
+        return true;
+    }
+        
+    vp->setString(name);
+    return Debug::fromChildJSObject(&vp[1].toObject())->wrapDebuggeeValue(cx, vp);
+}
+
+static JSBool
+DebugObject_getParameterNames(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get parameterNames", obj);
+    if (!obj->isFunction()) {
+        vp->setUndefined();
+        return true;
+    }
+
+    const JSFunction *fun = obj->getFunctionPrivate();
+    JSObject *result = NewDenseAllocatedArray(cx, fun->nargs, NULL);
+    if (!result)
+        return false;
+
+    if (fun->isInterpreted()) {
+        JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
+
+        if (fun->nargs > 0) {
+            const AutoLocalNameArray names(cx, fun);
+            if (!names)
+                return false;
+
+            for (size_t i = 0; i < fun->nargs; i++) {
+                JSAtom *name = JS_LOCAL_NAME_TO_ATOM(names[i]);
+                Value *elt = result->addressOfDenseArrayElement(i);
+                if (name)
+                    elt->setString(name);
+                else
+                    elt->setUndefined();
+            }
+        }
+    } else {
+        for (size_t i = 0; i < fun->nargs; i++)
+            result->addressOfDenseArrayElement(i)->setUndefined();
+    }
+
+    vp->setObject(*result);
     return true;
 }
 
@@ -1385,6 +1430,7 @@ static JSPropertySpec DebugObject_properties[] = {
     JS_PSG("class", DebugObject_getClass, 0),
     JS_PSG("callable", DebugObject_getCallable, 0),
     JS_PSG("name", DebugObject_getName, 0),
+    JS_PSG("parameterNames", DebugObject_getParameterNames, 0),
     JS_PS_END
 };
 
