@@ -64,6 +64,7 @@ class nsIEditor;
 struct nsRect;
 struct nsSize;
 class nsHTMLFormElement;
+class nsIDOMDOMStringMap;
 
 typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 
@@ -150,6 +151,9 @@ public:
   nsresult GetContentEditable(nsAString& aContentEditable);
   nsresult GetIsContentEditable(PRBool* aContentEditable);
   nsresult SetContentEditable(const nsAString &aContentEditable);
+  nsresult GetDataset(nsIDOMDOMStringMap** aDataset);
+  // Callback for destructor of of dataset to ensure to null out weak pointer.
+  nsresult ClearDataset();
 
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,

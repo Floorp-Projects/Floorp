@@ -1132,7 +1132,10 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
         }
 
         gCanvasMemoryUsed += width * height * 4;
-        JS_updateMallocCounter(nsContentUtils::GetCurrentJSContext(), width * height * 4);
+        JSContext* context = nsContentUtils::GetCurrentJSContext();
+        if (context) {
+            JS_updateMallocCounter(context, width * height * 4);
+        }
     }
 
     return InitializeWithSurface(NULL, surface, width, height);

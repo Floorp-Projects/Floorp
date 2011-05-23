@@ -244,7 +244,7 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     if (action == nsEditor::kOpInsertText
         || action == nsEditor::kOpInsertIMEText) {
       nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(selection));
-      nsCOMPtr<nsFrameSelection> frameSelection;
+      nsRefPtr<nsFrameSelection> frameSelection;
       privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));      
       if (frameSelection) {
         frameSelection->UndefineCaretBidiLevel();

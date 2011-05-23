@@ -50,7 +50,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsDOMEventTargetWrapperCache.h"
 #include "nsAutoPtr.h"
-#include "nsIProxiedProtocolHandler.h"
 
 #define DEFAULT_WS_SCHEME_PORT  80
 #define DEFAULT_WSS_SCHEME_PORT 443
@@ -101,8 +100,6 @@ public:
                               PRBool aWantsUntrusted,
                               PRUint8 optional_argc);
 
-  static void ReleaseGlobals();
-
   // Determine if preferences allow WebSocket
   static PRBool PrefEnabled();
 
@@ -116,7 +113,7 @@ protected:
   nsresult EstablishConnection();
 
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
-  nsresult CreateAndDispatchMessageEvent(nsCString *aData);
+  nsresult CreateAndDispatchMessageEvent(const nsACString& aData);
   nsresult CreateAndDispatchCloseEvent(PRBool aWasClean);
 
   // called from mConnection accordingly to the situation
@@ -147,7 +144,8 @@ protected:
   nsCString mAsciiHost;  // hostname
   PRUint32  mPort;
   nsCString mResource; // [filepath[?query]]
-  nsCString mOrigin;
+  nsString  mUTF16Origin;
+  
   nsCOMPtr<nsIURI> mURI;
   nsCString mProtocol;
 
@@ -173,46 +171,6 @@ protected:
 private:
   nsWebSocket(const nsWebSocket& x);   // prevent bad usage
   nsWebSocket& operator=(const nsWebSocket& x);
-};
-
-#define NS_WSPROTOCOLHANDLER_CONTRACTID \
-    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ws"
-
-#define NS_WSSPROTOCOLHANDLER_CONTRACTID \
-    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wss"
-
-#define NS_WSPROTOCOLHANDLER_CID                     \
-{ /* a4e6aa3b-b6db-4809-aa11-e292e074cbc4 */         \
-    0xa4e6aa3b,                                      \
-    0xb6db,                                          \
-    0x4809,                                          \
-    {0xaa, 0x11, 0xe2, 0x92, 0xe0, 0x74, 0xcb, 0xc4} \
-}
-
-#define NS_WSSPROTOCOLHANDLER_CID                    \
-{ /* c6531804-b5c8-4a53-80bf-e339b82d3161 */         \
-    0xc6531804,                                      \
-    0xb5c8,                                          \
-    0x4a53,                                          \
-    {0x80, 0xbf, 0xe3, 0x39, 0xb8, 0x2d, 0x31, 0x61} \
-}
-
-class nsWSProtocolHandler: public nsIProxiedProtocolHandler
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPROTOCOLHANDLER
-  NS_DECL_NSIPROXIEDPROTOCOLHANDLER
-
-  nsWSProtocolHandler() {};
-};
-
-class nsWSSProtocolHandler: public nsWSProtocolHandler
-{
-public:
-  NS_IMETHOD GetScheme(nsACString & aScheme);
-  NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort);
-  nsWSSProtocolHandler() {};
 };
 
 #endif

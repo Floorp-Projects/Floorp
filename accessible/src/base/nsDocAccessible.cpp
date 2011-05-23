@@ -109,6 +109,8 @@ nsDocAccessible::
   mDocument(aDocument), mScrollPositionChangedTicks(0), mIsLoaded(PR_FALSE),
   mCacheRoot(nsnull), mIsPostCacheProcessing(PR_FALSE)
 {
+  mFlags |= eDocAccessible;
+
   mDependentIDsHash.Init();
   // XXX aaronl should we use an algorithm for the initial cache size?
   mAccessibleCache.Init(kDefaultCacheSize);
