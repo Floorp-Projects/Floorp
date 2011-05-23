@@ -204,17 +204,13 @@ class nsIScrollableFrame;
  * or they may cause other objects to be deleted.
  */
 
-class NS_FINAL_CLASS nsFrameSelection {
+class NS_FINAL_CLASS nsFrameSelection : public nsISupports {
 public:
   enum HINT { HINTLEFT = 0, HINTRIGHT = 1};  //end of this line or beginning of next
-
-  nsFrameSelection();
-private:
-  ~nsFrameSelection();
-public:
-
-  NS_INLINE_DECL_REFCOUNTING(nsFrameSelection)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsFrameSelection)
+  /*interfaces for addref and release and queryinterface*/
+  
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsFrameSelection)
 
   /** Init will initialize the frame selector with the necessary pres shell to 
    *  be used by most of the methods
@@ -589,6 +585,8 @@ public:
    */
   nsresult MaintainSelection(nsSelectionAmount aAmount = eSelectNoAmount);
 
+
+  nsFrameSelection();
 
   void StartBatchChanges();
   void EndBatchChanges();
