@@ -97,8 +97,8 @@ private:
     JSScript *script;
 
     static void patchCall(JITScript *jit, StackFrame *fp, void **location);
-    static void patchNative(JSContext *cx, JITScript *jit, StackFrame *fp, jsbytecode *pc,
-                            RejoinState rejoin);
+    static void patchNative(JSContext *cx, JITScript *jit, StackFrame *fp,
+                            jsbytecode *pc, CallSite *inline_, RejoinState rejoin);
 
     static StackFrame *
     expandInlineFrameChain(JSContext *cx, StackFrame *outer, InlineFrame *inner);

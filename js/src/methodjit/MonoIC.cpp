@@ -626,12 +626,6 @@ class CallCompiler : public BaseCompiler
 
     bool generateFullCallStub(JITScript *from, JSScript *script, uint32 flags)
     {
-        /* We don't support calling CompileFunction from IC stubs in inlined frames. */
-        if (f.regs.inlined()) {
-            disable(from);
-            return true;
-        }
-
         /*
          * Create a stub that works with arity mismatches. Like the fast-path,
          * this allocates a frame on the caller side, but also performs extra
@@ -667,7 +661,7 @@ class CallCompiler : public BaseCompiler
              * made from an IC (the recompiler cannot detect calls made from
              * ICs automatically).
              */
-            masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.regs.pc, false)),
+            masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.pc(), false)),
                           FrameAddress(offsetof(VMFrame, stubRejoin)));
         }
 
@@ -847,10 +841,6 @@ class CallCompiler : public BaseCompiler
         if (ic.fastGuardedNative || ic.hasJsFunCheck)
             return true;
 
-        /* Don't generate native MICs within inlined frames, we can't recompile them yet. */
-        if (f.regs.inlined())
-            return true;
-
         /* Native MIC needs to warm up first. */
         if (!ic.hit) {
             ic.hit = true;
@@ -870,7 +860,7 @@ class CallCompiler : public BaseCompiler
              * store the return value than FASTCALLs, and without additional
              * information we cannot tell which one is active on a VMFrame.
              */
-            masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.regs.pc, true)),
+            masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.pc(), true)),
                           FrameAddress(offsetof(VMFrame, stubRejoin)));
         }
 
@@ -890,11 +880,11 @@ class CallCompiler : public BaseCompiler
         RegisterID t0 = tempRegs.takeAnyReg().reg();
 
         /* Store pc. */
-        masm.storePtr(ImmPtr(cx->regs().pc),
+        masm.storePtr(ImmPtr(f.regs.pc),
                       FrameAddress(offsetof(VMFrame, regs.pc)));
 
-        /* Store inlined (NULL). */
-        masm.storePtr(ImmPtr(NULL),
+        /* Store inlined. */
+        masm.storePtr(ImmPtr(f.regs.inlined()),
                       FrameAddress(VMFrame::offsetOfInlined));
 
         /* Store sp (if not already set by ic::SplatApplyArgs). */
@@ -965,7 +955,7 @@ class CallCompiler : public BaseCompiler
          * break inferred types for the call's result and any subsequent test,
          * as RegExp.exec has a type handler with unknown result.
          */
-        if (native == js_regexp_exec && !CallResultEscapes(f.regs.pc))
+        if (native == js_regexp_exec && !CallResultEscapes(f.pc()))
             native = js_regexp_test;
 
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, native), false);
