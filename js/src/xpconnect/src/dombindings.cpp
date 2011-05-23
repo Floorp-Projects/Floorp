@@ -93,19 +93,56 @@ NodeList::setProtoShape(JSObject *obj, uint32 shape)
     js::SetProxyExtra(obj, 0, PrivateUint32Value(shape));
 }
 
-JSBool
-NodeList::length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+bool
+NodeList::InstanceIsNodeListObject(JSContext *cx, JSObject *obj)
 {
     if (!js::IsProxy(obj) || (js::GetProxyHandler(obj) != &NodeList::instance)) {
         // FIXME: Throw a proper DOM exception.
         JS_ReportError(cx, "type error: wrong object");
         return false;
     }
+    return true;
+}
+
+static bool
+WrapObject(JSContext *cx, JSObject *scope, nsIContent *result, jsval *vp)
+{
+    nsWrapperCache *cache = result;
+    if (xpc_FastGetCachedWrapper(cache, scope, vp))
+        return true;
+    XPCLazyCallContext lccx(JS_CALLER, cx, scope);
+    qsObjectHelper helper(result, cache);
+    return xpc_qsXPCOMObjectToJsval(lccx, helper, &NS_GET_IID(nsIDOMNode),
+                                    &interfaces[k_nsIDOMNode], vp);
+}
+
+JSBool
+NodeList::length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+{
+    if (!InstanceIsNodeListObject(cx, obj))
+        return false;
     PRUint32 length;
     getNodeList(obj)->GetLength(&length);
     JS_ASSERT(int32(length) >= 0);
     vp->setInt32(length);
     return true;
+}
+
+JSBool
+NodeList::item(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj || !InstanceIsNodeListObject(cx, obj))
+        return false;
+    if (argc < 1)
+        return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+    jsval *argv = JS_ARGV(cx, vp);
+    uint32 u;
+    if (!JS_ValueToECMAUint32(cx, argv[0], &u))
+        return false;
+    nsINodeList *nodeList = getNodeList(obj);
+    nsIContent *result = nodeList->GetNodeAt(u);
+    return WrapObject(cx, obj, result, vp);
 }
 
 JSObject *
@@ -118,9 +155,17 @@ NodeList::getPrototype(JSContext *cx)
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, proto))
         return NULL;
-    if (!JS_DefineProperty(cx, proto, "length", JSVAL_VOID,
-                           length_getter, NULL,
-                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_SHARED))
+    if (!JS_DefinePropertyById(cx, proto, nsDOMClassInfo::sLength_id, JSVAL_VOID,
+                               length_getter, NULL,
+                               JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_SHARED))
+        return NULL;
+    JSFunction *fun = JS_NewFunctionById(cx, item, 1, 0, js::GetObjectParent(proto),
+                                         nsDOMClassInfo::sItem_id);
+    if (!fun)
+        return NULL;
+    JSObject *funobj = JS_GetFunctionObject(fun);
+    if (!JS_DefinePropertyById(cx, proto, nsDOMClassInfo::sItem_id, OBJECT_TO_JSVAL(funobj),
+                               NULL, NULL, JSPROP_ENUMERATE))
         return NULL;
     return proto;
 }
@@ -141,18 +186,6 @@ NodeList::create(JSContext *cx, nsINodeList *aNodeList)
     setProtoShape(obj, -1);
 
     return obj;
-}
-
-static bool
-WrapObject(JSContext *cx, JSObject *scope, nsIContent *result, jsval *vp)
-{
-    nsWrapperCache *cache = xpc_qsGetWrapperCache(result);
-    if (xpc_FastGetCachedWrapper(cache, scope, vp))
-        return true;
-    XPCLazyCallContext lccx(JS_CALLER, cx, scope);
-    qsObjectHelper helper(result, cache);
-    return xpc_qsXPCOMObjectToJsval(lccx, helper, &NS_GET_IID(nsIDOMNode),
-                                    &interfaces[k_nsIDOMNode], vp);
 }
 
 bool
