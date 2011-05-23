@@ -44,6 +44,7 @@
 
 #include "jscntxt.h"
 #include "TempAllocPolicy.h"
+#include "InlineList.h"
 
 namespace js {
 namespace ion {
@@ -56,20 +57,22 @@ namespace ion {
     _(Phi)                                                                  \
     _(BitAnd)                                                               \
     _(Return)                                                               \
-    _(Copy)
+    _(Copy)                                                                 \
+    _(Box)                                                                  \
+    _(Convert)
 
 enum MIRType
 {
-    MIRType_Double,
-    MIRType_Int32,
     MIRType_Undefined,
-    MIRType_String,
-    MIRType_Boolean,
-    MIRType_Magic,
     MIRType_Null,
+    MIRType_Boolean,
+    MIRType_Int32,
+    MIRType_String,
     MIRType_Object,
-    MIRType_Function,
-    MIRType_Box
+    MIRType_Double,
+    MIRType_Value,
+    MIRType_Any,        // Any type.
+    MIRType_None        // Invalid, used as a placeholder.
 };
 
 static const inline
@@ -89,12 +92,10 @@ MIRType MIRTypeFromValue(const js::Value &vp)
       case JSVAL_TYPE_NULL:
         return MIRType_Null;
       case JSVAL_TYPE_OBJECT:
-        return vp.toObject().isFunction()
-               ? MIRType_Function
-               : MIRType_Object;
+        return MIRType_Object;
       default:
         JS_NOT_REACHED("unexpected jsval type");
-        return MIRType_Magic;
+        return MIRType_None;
     }
 }
 
@@ -184,16 +185,15 @@ class MUse : public TempObject
     friend class MInstruction;
 
     MUse *next_;            // Next use in the use chain.
-    MInstruction *ins_;   // The instruction that is using this operand.
+    MInstruction *ins_;     // The instruction that is using this operand.
     uint32 index_;          // The index of this operand in its owner.
 
     MUse(MUse *next, MInstruction *owner, uint32 index)
       : next_(next), ins_(owner), index_(index)
     { }
 
-    void set(MUse *next, MInstruction *owner) {
+    void setNext(MUse *next) {
         next_ = next;
-        ins_ = owner;
     }
 
   public:
@@ -211,6 +211,37 @@ class MUse : public TempObject
     MUse *next() const {
         return next_;
     }
+};
+
+class MUseIterator
+{
+    MInstruction *def;
+    MUse *use;
+    MUse *prev_;
+
+  public:
+    inline MUseIterator(MInstruction *def);
+
+    bool more() const {
+        return !!use;
+    }
+    void next() {
+        prev_ = use;
+        use = use->next();
+    }
+    MUse * operator ->() const {
+        return use;
+    }
+    MUse * operator *() const {
+        return use;
+    }
+    MUse *prev() const {
+        return prev_;
+    }
+
+    // Unlink the current entry from the use chain, advancing to the next
+    // instruction at the same time. The old use node is returned.
+    inline MUse *unlink();
 };
 
 class MOperand : public TempObject
@@ -238,9 +269,19 @@ class MOperand : public TempObject
     }
 };
 
+class MInstructionVisitor
+{
+  public:
+#define VISIT_INS(op) virtual bool visit(M##op *) { JS_NOT_REACHED("implement " #op); return false; }
+    MIR_OPCODE_LIST(VISIT_INS)
+#undef VISIT_INS
+};
+
 // An MInstruction is an SSA name and definition. It has an opcode, a list of
 // operands, and a list of its uses by subsequent instructions.
-class MInstruction : public TempObject
+class MInstruction
+  : public TempObject,
+    public InlineListNode<MInstruction>
 {
     friend class MBasicBlock;
 
@@ -253,22 +294,13 @@ class MInstruction : public TempObject
     };
 
   private:
-    // Basic block this instruction lives in.
-    MBasicBlock *block_;
-
-    // Output type.
-    MIRType type_;
-
-    // Union of types desired by uses.
-    uint32 usedAsType_;
-
-    // Use chain.
-    MUse *uses_;
-
-    uint32 id_;
-
-    // Generic flag for whether the instruction is in a worklist.
-    bool inWorklist_;
+    MBasicBlock *block_;    // Containing basic block.
+    MUse *uses_;            // Use chain.
+    uint32 id_;             // Ordered id for register allocation.
+    MIRType assumedType_;   // Assumed type from MIR generation.
+    MIRType resultType_;    // Actual result type.
+    uint32 usedTypes_;      // Set of used types.
+    bool inWorklist_;       // Flag for worklist algorithms.
 
   private:
     void setBlock(MBasicBlock *block) {
@@ -278,9 +310,11 @@ class MInstruction : public TempObject
   public:
     MInstruction()
       : block_(NULL),
-        type_(MIRType_Box),
         uses_(NULL),
         id_(0),
+        assumedType_(MIRType_Value),
+        resultType_(MIRType_None),
+        usedTypes_(0),
         inWorklist_(0)
     { }
 
@@ -295,12 +329,6 @@ class MInstruction : public TempObject
     void setId(uint32 id) {
         id_ = id;
     }
-    MIRType type() const {
-        return type_;
-    }
-    void setType(MIRType type) {
-        type_ = type;
-    }
     bool inWorklist() const {
         return inWorklist_;
     }
@@ -312,18 +340,33 @@ class MInstruction : public TempObject
         JS_ASSERT(inWorklist());
         inWorklist_ = false;
     }
+    void assumeType(MIRType type) {
+        assumedType_ = type;
+    }
 
-    // The block that contains this instruction.
     MBasicBlock *block() const {
         JS_ASSERT(block_);
         return block_;
     }
+    MIRType assumedType() const {
+        return assumedType_;
+    }
+    MIRType type() const {
+        return resultType_;
+    }
+
+    // Returns a normalized type this instruction should be used as. If exactly
+    // one type was requested, then that type is returned. If more than one
+    // type was requested, then Value is returned.
+    MIRType usedAsType() const;
 
     // Returns this instruction's use chain.
     MUse *uses() const {
         return uses_;
     }
-    void removeUse(MUse *prev, MUse *use);
+
+    // Removes a use, returning the next use in the use list.
+    MUse *removeUse(MUse *prev, MUse *use);
 
     // Number of uses of this instruction.
     size_t useCount() const;
@@ -331,20 +374,50 @@ class MInstruction : public TempObject
     // Returns the instruction at a given operand.
     virtual MOperand *getOperand(size_t index) const = 0;
     virtual size_t numOperands() const = 0;
+    inline MInstruction *getInput(size_t index) const {
+        return getOperand(index)->ins();
+    }
+    virtual MIRType requiredInputType(size_t index) const {
+        return MIRType_None;
+    }
 
     // Replaces an operand, taking care to update use chains. No memory is
     // allocated; the existing data structures are re-linked.
     void replaceOperand(MUse *prev, MUse *use, MInstruction *ins);
+    void replaceOperand(MUseIterator &use, MInstruction *ins);
 
     bool addUse(MIRGenerator *gen, MInstruction *ins, size_t index) {
         uses_ = MUse::New(gen, uses_, ins, index);
         return !!uses_;
     }
-    void addUse(MUse *use, MInstruction *ins) {
-        use->set(uses_, ins);
+
+    // Adds a use from a node that is being recycled during operand
+    // replacement.
+    void addUse(MUse *use) {
+        JS_ASSERT(use->ins()->getInput(use->index()) == this);
+        use->setNext(uses_);
         uses_ = use;
     }
 
+  public:   // Functions for analysis phases.
+    // Analyzes inputs and uses and updates type information. If type
+    // information changed, returns true, otherwise, returns false.
+    bool addUsedTypes(uint32 types) {
+        uint32 newTypes = types | usedTypes();
+        if (newTypes == usedTypes())
+            return false;
+        usedTypes_ = newTypes;
+        return true;
+    }
+    bool useAsType(MIRType type) {
+        JS_ASSERT(type < MIRType_Value);
+        return addUsedTypes(1 << uint32(type));
+    }
+    uint32 usedTypes() const {
+        return usedTypes_;
+    }
+
+  public:
     // Opcode testing and casts.
 #   define OPCODE_CASTS(opcode)                                             \
     bool is##opcode() const {                                               \
@@ -353,6 +426,8 @@ class MInstruction : public TempObject
     inline M##opcode *to##opcode();
     MIR_OPCODE_LIST(OPCODE_CASTS)
 #   undef OPCODE_CASTS
+
+    virtual bool accept(MInstructionVisitor *visitor) = 0;
 
   protected:
     // Sets a raw operand; instruction implementation dependent.
@@ -367,7 +442,19 @@ class MInstruction : public TempObject
         setOperand(index, operand);
         return ins->addUse(gen, this, index);
     }
+
+    void setResultType(MIRType type) {
+        resultType_ = type;
+    }
 };
+
+#define INSTRUCTION_HEADER(opcode)                                          \
+    Opcode op() const {                                                     \
+        return MInstruction::Op_##opcode;                                   \
+    }                                                                       \
+    bool accept(MInstructionVisitor *visitor) {                             \
+        return visitor->visit(this);                                        \
+    }
 
 template <typename T, size_t Arity>
 class MFixedArityList
@@ -384,28 +471,6 @@ class MFixedArityList
         return list_[index];
     }
 };
-
-class MUseIterator
-{
-    MInstruction *def;
-    MUse *use;
-
-  public:
-    MUseIterator(MInstruction *def)
-      : use(def->uses())
-    { }
-
-    bool more() const {
-        return !!use;
-    }
-    void next() {
-        use = use->next();
-    }
-    MUse * operator ->() const {
-        return use;
-    }
-};
-
 
 template <typename T>
 class MFixedArityList<T, 0>
@@ -449,11 +514,9 @@ class MConstant : public MAryInstruction<0>
     MConstant(const Value &v);
 
   public:
+    INSTRUCTION_HEADER(Constant);
     static MConstant *New(MIRGenerator *gen, const Value &v);
 
-    virtual Opcode op() const {
-        return MInstruction::Op_Constant;
-    }
     const js::Value &value() const {
         return value_;
     }
@@ -470,14 +533,12 @@ class MParameter : public MAryInstruction<0>
     MParameter(int32 index)
       : index_(index)
     {
+        setResultType(MIRType_Value);
     }
 
   public:
+    INSTRUCTION_HEADER(Parameter);
     static MParameter *New(MIRGenerator *gen, int32 index);
-
-    virtual Opcode op() const {
-        return MInstruction::Op_Parameter;
-    }
 
     int32 index() const {
         return index_;
@@ -529,16 +590,14 @@ class MAryControlInstruction : public MControlInstruction
 
 class MGoto : public MAryControlInstruction<0>
 {
-    MGoto(MBasicBlock *target) {
+    MGoto(MBasicBlock *target)
+    {
         successors[0] = target;
     }
 
   public:
+    INSTRUCTION_HEADER(Goto);
     static MGoto *New(MIRGenerator *gen, MBasicBlock *target);
-
-    virtual Opcode op() const {
-        return MInstruction::Op_Goto;
-    }
 };
 
 class MTest : public MAryControlInstruction<1>
@@ -550,21 +609,23 @@ class MTest : public MAryControlInstruction<1>
     }
 
   public:
+    INSTRUCTION_HEADER(Test);
     static MTest *New(MIRGenerator *gen, MInstruction *ins,
                       MBasicBlock *ifTrue, MBasicBlock *ifFalse);
 
-    virtual Opcode op() const {
-        return MInstruction::Op_Test;
+    MIRType requiredInputType(size_t index) const {
+        return MIRType_Any;
     }
 };
 
 class MReturn : public MAryControlInstruction<1>
 {
   public:
+    INSTRUCTION_HEADER(Return);
     static MReturn *New(MIRGenerator *gen, MInstruction *ins);
 
-    virtual Opcode op() const {
-        return MInstruction::Op_Return;
+    MIRType requiredInputType(size_t index) const {
+        return MIRType_Value;
     }
 };
 
@@ -594,21 +655,71 @@ class MBinaryInstruction : public MAryInstruction<2>
 
 class MCopy : public MUnaryInstruction
 {
-  public:
-    static MCopy *New(MIRGenerator  *gen, MInstruction *ins);
+    MCopy(MInstruction *ins)
+    {
+        setResultType(ins->type());
+    }
 
-    virtual Opcode op() const {
-        return MInstruction::Op_Copy;
+  public:
+    INSTRUCTION_HEADER(Copy);
+    static MCopy *New(MIRGenerator *gen, MInstruction *ins);
+
+    MIRType requiredInputType(size_t index) const {
+        return MIRType_Any;
+    }
+};
+
+class MBox : public MUnaryInstruction
+{
+  public:
+    INSTRUCTION_HEADER(Box);
+    static MBox *New(MIRGenerator *gen, MInstruction *ins)
+    {
+        // Cannot box a box.
+        JS_ASSERT(!ins->type() == MIRType_Value);
+
+        MBox *box = new (gen->temp()) MBox();
+        if (!box || !box->init(gen, ins))
+            return NULL;
+        return box;
+    }
+
+    MIRType requiredInputType(size_t index) const {
+        return MIRType_Any;
+    }
+};
+
+class MConvert : public MUnaryInstruction
+{
+    MConvert(MIRType type)
+    {
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Convert);
+    static MConvert *New(MIRGenerator *gen, MInstruction *ins, MIRType type)
+    {
+        MConvert *convert = new (gen->temp()) MConvert(type);
+        if (!convert || !convert->init(gen, ins))
+            return NULL;
+        return convert;
     }
 };
 
 class MBitAnd : public MBinaryInstruction
 {
+    MBitAnd()
+    {
+        setResultType(MIRType_Int32);
+    }
+
   public:
+    INSTRUCTION_HEADER(BitAnd);
     static MBitAnd *New(MIRGenerator *gen, MInstruction *left, MInstruction *right);
 
-    virtual Opcode op() const {
-        return MInstruction::Op_BitAnd;
+    MIRType requiredInputType(size_t index) const {
+        return assumedType();
     }
 };
 
@@ -620,7 +731,8 @@ class MPhi : public MInstruction
     MPhi(JSContext *cx, uint32 slot)
       : inputs_(TempAllocPolicy(cx)),
         slot_(slot)
-    { }
+    {
+    }
 
   protected:
     void setOperand(size_t index, MOperand *operand) {
@@ -628,11 +740,8 @@ class MPhi : public MInstruction
     }
 
   public:
+    INSTRUCTION_HEADER(Phi);
     static MPhi *New(MIRGenerator *gen, uint32 slot);
-
-    virtual Opcode op() const {
-        return MInstruction::Op_Phi;
-    }
 
     MOperand *getOperand(size_t index) const {
         return inputs_[index];
@@ -644,7 +753,28 @@ class MPhi : public MInstruction
         return slot_;
     }
     bool addInput(MIRGenerator *gen, MInstruction *ins);
+    MIRType requiredInputType(size_t index) const {
+        return MIRType_Any;
+    }
 };
+
+#undef INSTRUCTION_HEADER
+
+inline
+MUseIterator::MUseIterator(MInstruction *def)
+  : def(def),
+    use(def->uses()),
+    prev_(NULL)
+{
+}
+
+inline MUse *
+MUseIterator::unlink()
+{
+    MUse *old = use;
+    use = def->removeUse(prev(), use);
+    return old;
+}
 
 // Implement opcode casts now that the compiler can see the inheritance.
 #define OPCODE_CASTS(opcode)                                                \

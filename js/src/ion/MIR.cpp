@@ -96,34 +96,68 @@ MInstruction::useCount() const
     return count;
 }
 
-void
+MUse *
 MInstruction::removeUse(MUse *prev, MUse *use)
 {
     if (!prev) {
         JS_ASSERT(uses_ = use);
         uses_ = use->next();
-    } else {
-        JS_ASSERT(prev->next() == use);
-        prev->next_ = use->next();
+        return uses_;
     }
+    JS_ASSERT(prev->next() == use);
+    prev->next_ = use->next();
+    return prev->next_;
 }
 
 void
 MInstruction::replaceOperand(MUse *prev, MUse *use, MInstruction *ins)
 {
-    MInstruction *used = getOperand(use->index())->ins();
+    MInstruction *used = getInput(use->index());
     if (used == ins)
         return;
 
     used->removeUse(prev, use);
     setOperand(use->index(), ins);
-    ins->addUse(use, ins);
+    ins->addUse(use);
+}
+
+void
+MInstruction::replaceOperand(MUseIterator &use, MInstruction *ins)
+{
+    JS_ASSERT(use->ins() == this);
+
+    MUse *old = use.unlink();
+    setOperand(old->index(), ins);
+    ins->addUse(old);
 }
 
 void
 MInstruction::setOperand(size_t index, MInstruction *ins)
 {
     getOperand(index)->setInstruction(ins);
+}
+
+static inline bool
+IsPowerOfTwo(uint32 n)
+{
+    return (n > 0) && ((n & (n - 1)) == 0);
+}
+
+MIRType
+MInstruction::usedAsType() const
+{
+    // usedTypes() should never have MIRType_Value in its set.
+    JS_ASSERT(!(usedTypes() & (1 << MIRType_Value)));
+
+    if (IsPowerOfTwo(usedTypes())) {
+        // If all uses of this instruction want a specific type, then set the
+        // result as that type. 
+        int t;
+        JS_FLOOR_LOG2(t, usedTypes());
+        return MIRType(t);
+    }
+
+    return MIRType_Value;
 }
 
 MConstant *
@@ -135,29 +169,7 @@ MConstant::New(MIRGenerator *gen, const Value &v)
 MConstant::MConstant(const js::Value &vp)
   : value_(vp)
 {
-    setType(MIRTypeFromValue(vp));
-    switch (type()) {
-      case MIRType_Int32:
-      case MIRType_Boolean:
-      case MIRType_Magic:
-        //setRepresentation(Representation::Int32);
-        break;
-      case MIRType_Double:
-        //setRepresentation(Representation::Double);
-        break;
-      case MIRType_String:
-      case MIRType_Object:
-      case MIRType_Function:
-        //setRepresentation(Representation::Pointer);
-        break;
-      case MIRType_Undefined:
-      case MIRType_Null:
-        // These are special singletons that shouldn't be broken up.
-        //setRepresentation(Representation::Box);
-        break;
-      default:
-        JS_NOT_REACHED("unexpected constant type");
-    }
+    setResultType(MIRTypeFromValue(vp));
 }
 
 MParameter *
@@ -175,11 +187,12 @@ MCopy::New(MIRGenerator *gen, MInstruction *ins)
 
     // Don't create nested copies.
     if (ins->isCopy())
-        ins = ins->toCopy()->getOperand(0)->ins();
+        ins = ins->toCopy()->getInput(0);
 
-    MCopy *copy = new (gen->temp()) MCopy();
+    MCopy *copy = new (gen->temp()) MCopy(ins);
     if (!copy || !copy->init(gen, ins))
         return NULL;
+
     return copy;
 }
 
@@ -212,7 +225,7 @@ bool
 MPhi::addInput(MIRGenerator *gen, MInstruction *ins)
 {
     for (size_t i = 0; i < inputs_.length(); i++) {
-        if (getOperand(i)->ins() == ins)
+        if (getInput(i) == ins)
             return true;
     }
 
