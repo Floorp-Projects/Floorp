@@ -74,7 +74,6 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMWindowInternal.h"
@@ -550,14 +549,9 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
   }
 
   // create the event
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(doc, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   nsCOMPtr<nsIDOMEvent> event;
-  rv = docEvent->CreateEvent(NS_LITERAL_STRING("Events"), 
-                             getter_AddRefs(event));
+  rv = doc->CreateEvent(NS_LITERAL_STRING("Events"), 
+                        getter_AddRefs(event));
   if (NS_FAILED(rv)) {
     return rv;
   }
