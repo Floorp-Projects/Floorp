@@ -17,7 +17,7 @@ dbg.hooks = {
                 frame = frame.older;
             }
             assertEq(frame.type, 'call');
-            assertEq(frame.callee.name, null);
+            assertEq(frame.callee.name, undefined);
             frame = frame.older;
             assertEq(frame.type, 'eval');
             hits++;
