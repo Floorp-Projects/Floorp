@@ -353,7 +353,7 @@ public:
   {
     nsCString path;
 
-    path.AppendLiteral("heap-used/storage/sqlite/");
+    path.AppendLiteral("explicit/storage/sqlite/");
     path.Append(mDBConn.getFilename());
 
     if (mType == LookAside_Used) {
@@ -373,6 +373,12 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD GetKind(PRInt32 *kind)
+  {
+    *kind = MR_HEAP;
+    return NS_OK;
+  }
+
   NS_IMETHOD GetDescription(char **desc)
   {
     if (mType == LookAside_Used) {
@@ -382,7 +388,8 @@ public:
       *desc = ::strdup("Memory (approximate) used by all pager caches.");
     }
     else if (mType == Schema_Used) {
-      *desc = ::strdup("Memory (approximate) used to store the schema for all databases associated with the connection");
+      *desc = ::strdup("Memory (approximate) used to store the schema "
+                       "for all databases associated with the connection");
     }
     else if (mType == Stmt_Used) {
       *desc = ::strdup("Memory (approximate) used by all prepared statements");
