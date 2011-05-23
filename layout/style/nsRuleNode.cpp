@@ -4652,12 +4652,14 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
       if (eCSSUnit_Percent == specified.GetUnit()) {
         (position.*(axis->result)).mLength = 0;
         (position.*(axis->result)).mPercent = specified.GetPercentValue();
+        (position.*(axis->result)).mHasPercent = PR_TRUE;
       }
       else if (specified.IsLengthUnit()) {
         (position.*(axis->result)).mLength =
           CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
                      aCanStoreInRuleTree);
         (position.*(axis->result)).mPercent = 0.0f;
+        (position.*(axis->result)).mHasPercent = PR_FALSE;
       }
       else if (specified.IsCalcUnit()) {
         LengthPercentPairCalcOps ops(aStyleContext,
@@ -4666,11 +4668,13 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
         nsRuleNode::ComputedCalc vals = ComputeCalc(specified, ops);
         (position.*(axis->result)).mLength = vals.mLength;
         (position.*(axis->result)).mPercent = vals.mPercent;
+        (position.*(axis->result)).mHasPercent = ops.mHasPercent;
       }
       else if (eCSSUnit_Enumerated == specified.GetUnit()) {
         (position.*(axis->result)).mLength = 0;
         (position.*(axis->result)).mPercent =
           GetFloatFromBoxPosition(specified.GetIntValue());
+        (position.*(axis->result)).mHasPercent = PR_TRUE;
       } else {
         NS_NOTREACHED("unexpected unit");
       }
