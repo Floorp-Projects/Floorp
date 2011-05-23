@@ -48,10 +48,9 @@ DIRS = \
 	mochitest \
 	$(NULL)
 
-ifndef MOZ_ENABLE_LIBXUL
-DIRS += \
-	outsinks \
-	$(NULL)
-endif
+# XXX This doesn't work in libxul builds.
+#DIRS += \
+#	outsinks \
+#	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

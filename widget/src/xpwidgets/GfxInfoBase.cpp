@@ -55,7 +55,7 @@
 #include "nsTArray.h"
 #include "mozilla/Preferences.h"
 
-#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
 #endif
 
@@ -87,7 +87,7 @@ StoreSpline(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
 
 void
 CrashSpline(double tolerance, int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
-#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#if defined(MOZ_CRASHREPORTER)
   static bool annotated;
 
   if (!annotated) {
@@ -644,7 +644,7 @@ GfxInfoBase::LogFailure(const nsACString &failure)
     mFailures[mFailureCount++] = failure;
 
     /* record it in the crash notes too */
-#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#if defined(MOZ_CRASHREPORTER)
     CrashReporter::AppendAppNotesToCrashReport(failure);
 #endif
   }

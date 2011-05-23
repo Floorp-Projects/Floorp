@@ -57,11 +57,6 @@ EXPORTS = \
 		  nsDocShellCID.h \
 		  $(NULL)
 
-ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),WINNT)
-EXTRA_DSO_LIBS	= gkgfx
-endif
-
-
 CPPSRCS		= \
 		nsDocShellModule.cpp		\
 		$(NULL)

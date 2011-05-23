@@ -32,10 +32,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_ENABLE_LIBXUL
-VISIBILITY_FLAGS =
-endif
-
 MODULE         = harfbuzz
 LIBRARY_NAME   = mozharfbuzz
 LIBXUL_LIBRARY = 1

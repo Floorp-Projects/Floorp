@@ -78,10 +78,8 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-ifdef MOZ_ENABLE_LIBXUL
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LIBS	= xul
-endif
 endif
 
 LIBS		+= \
@@ -93,10 +91,8 @@ LIBS		+= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-ifdef MOZ_ENABLE_LIBXUL
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 LIBS += $(DIST)/bin/XUL
-endif
 endif
 
 ifdef HAVE_BOUTELL_GD

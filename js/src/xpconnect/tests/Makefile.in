@@ -50,9 +50,9 @@ SIMPLE_PROGRAMS = TestXPC$(BIN_SUFFIX)
 
 DIRS		= idl mochitest chrome
 
-ifndef MOZ_ENABLE_LIBXUL
-DIRS += components
-endif
+# XXX Doesn't work in libxul builds.
+#DIRS += components
+#
 
 XPCSHELL_TESTS = unit
 

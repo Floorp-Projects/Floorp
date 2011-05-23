@@ -71,18 +71,17 @@ SIMPLE_PROGRAMS	= \
 		TestProtocols$(BIN_SUFFIX) \
 		$(NULL)
 
-ifndef MOZ_ENABLE_LIBXUL
-SIMPLE_PROGRAMS += \
-		TestPerf$(BIN_SUFFIX) \
-		TestIDN$(BIN_SUFFIX) \
-		TestSocketTransport$(BIN_SUFFIX) \
-		TestStreamTransport$(BIN_SUFFIX) \
-		TestStreamChannel$(BIN_SUFFIX) \
-		TestStreamPump$(BIN_SUFFIX) \
-		TestIOThreads$(BIN_SUFFIX) \
-		TestUDPSocketProvider$(BIN_SUFFIX) \
-		$(NULL)
-endif
+# XXX Make this work in libxul builds.
+#SIMPLE_PROGRAMS += \
+#		TestPerf$(BIN_SUFFIX) \
+#		TestIDN$(BIN_SUFFIX) \
+#		TestSocketTransport$(BIN_SUFFIX) \
+#		TestStreamTransport$(BIN_SUFFIX) \
+#		TestStreamChannel$(BIN_SUFFIX) \
+#		TestStreamPump$(BIN_SUFFIX) \
+#		TestIOThreads$(BIN_SUFFIX) \
+#		TestUDPSocketProvider$(BIN_SUFFIX) \
+#		$(NULL)
 
 CPP_UNIT_TESTS = \
 		 TestSTSParser.cpp \
