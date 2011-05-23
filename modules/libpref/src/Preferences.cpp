@@ -84,6 +84,49 @@ static nsresult openPrefFile(nsIFile* aFile);
 static nsresult pref_InitInitialObjects(void);
 static nsresult pref_LoadPrefsInDirList(const char *listId);
 
+Preferences* Preferences::sPreferences = nsnull;
+PRBool Preferences::sShutdown = PR_FALSE;
+
+// static
+Preferences*
+Preferences::GetInstance()
+{
+  NS_ENSURE_TRUE(!sShutdown, nsnull);
+
+  if (sPreferences) {
+    NS_ADDREF(sPreferences);
+    return sPreferences;
+  }
+
+  InitStaticMembers();
+  NS_IF_ADDREF(sPreferences);
+  return sPreferences;
+}
+
+// static
+PRBool
+Preferences::InitStaticMembers()
+{
+  if (sShutdown || sPreferences) {
+    return sPreferences != nsnull;
+  }
+
+  sPreferences = new Preferences();
+  NS_ADDREF(sPreferences);
+  if (NS_FAILED(sPreferences->Init()) || !sPreferences->mRootBranch) {
+    NS_RELEASE(sPreferences);
+  }
+  return sPreferences != nsnull;
+}
+
+// static
+void
+Preferences::Shutdown()
+{
+  sShutdown = PR_TRUE; // Don't create the singleton instance after here.
+  NS_IF_RELEASE(sPreferences);
+}
+
 //-----------------------------------------------------------------------------
 
 /*
@@ -949,6 +992,163 @@ static nsresult pref_InitInitialObjects()
   observerService->NotifyObservers(nsnull, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID, nsnull);
 
   return pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
+}
+
+
+/******************************************************************************
+ *
+ * static utilities
+ *
+ ******************************************************************************/
+
+// static
+nsresult
+Preferences::GetBool(const char* aPref, PRBool* aResult)
+{
+  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return sPreferences->mRootBranch->GetBoolPref(aPref, aResult);
+}
+
+// static
+nsresult
+Preferences::GetInt(const char* aPref, PRInt32* aResult)
+{
+  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return sPreferences->mRootBranch->GetIntPref(aPref, aResult);
+}
+
+// static
+nsresult
+Preferences::GetChar(const char* aPref, nsCString* aResult)
+{
+  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  nsAdoptingCString result;
+  nsresult rv =
+    sPreferences->mRootBranch->GetCharPref(aPref, getter_Copies(result));
+  if (NS_SUCCEEDED(rv)) {
+    *aResult = result;
+  }
+  return rv;
+}
+
+// static
+nsresult
+Preferences::GetChar(const char* aPref, nsString* aResult)
+{
+  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  nsAdoptingCString result;
+  nsresult rv =
+    sPreferences->mRootBranch->GetCharPref(aPref, getter_Copies(result));
+  if (NS_SUCCEEDED(rv)) {
+    CopyUTF8toUTF16(result, *aResult);
+  }
+  return rv;
+}
+
+// static
+nsresult
+Preferences::GetLocalizedString(const char* aPref, nsString* aResult)
+{
+  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
+  nsresult rv = sPreferences->mRootBranch->GetComplexValue(aPref,
+                                             NS_GET_IID(nsIPrefLocalizedString),
+                                             getter_AddRefs(prefLocalString));
+  if (NS_SUCCEEDED(rv)) {
+    if (prefLocalString) {
+      prefLocalString->GetData(getter_Copies(*aResult));
+    } else {
+      aResult->Truncate();
+    }
+  }
+  return rv;
+}
+
+// static
+nsresult
+Preferences::SetChar(const char* aPref, const char* aValue)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  return sPreferences->mRootBranch->SetCharPref(aPref, aValue);
+}
+
+// static
+nsresult
+Preferences::SetChar(const char* aPref, const nsCString &aValue)
+{
+  return SetChar(aPref, nsPromiseFlatCString(aValue).get());
+}
+
+// static
+nsresult
+Preferences::SetChar(const char* aPref, const PRUnichar* aValue)
+{
+  NS_ConvertUTF16toUTF8 utf8(aValue);
+  return SetChar(aPref, utf8.get());
+}
+
+// static
+nsresult
+Preferences::SetChar(const char* aPref, const nsString &aValue)
+{
+  NS_ConvertUTF16toUTF8 utf8(aValue);
+  return SetChar(aPref, utf8.get());
+}
+
+// static
+nsresult
+Preferences::SetBool(const char* aPref, PRBool aValue)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  return sPreferences->mRootBranch->SetBoolPref(aPref, aValue);
+}
+
+// static
+nsresult
+Preferences::SetInt(const char* aPref, PRInt32 aValue)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  return sPreferences->mRootBranch->SetIntPref(aPref, aValue);
+}
+
+// static
+nsresult
+Preferences::ClearUser(const char* aPref)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  return sPreferences->mRootBranch->ClearUserPref(aPref);
+}
+
+// static
+nsresult
+Preferences::AddStrongObserver(nsIObserver* aObserver,
+                               const char* aPref)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return sPreferences->mRootBranch->AddObserver(aPref, aObserver, PR_FALSE);
+}
+
+// static
+nsresult
+Preferences::AddWeakObserver(nsIObserver* aObserver,
+                             const char* aPref)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return sPreferences->mRootBranch->AddObserver(aPref, aObserver, PR_TRUE);
+}
+
+// static
+nsresult
+Preferences::RemoveObserver(nsIObserver* aObserver,
+                            const char* aPref)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return sPreferences->mRootBranch->RemoveObserver(aPref, aObserver);
 }
 
 } // namespace mozilla

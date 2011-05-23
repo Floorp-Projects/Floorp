@@ -52,6 +52,8 @@
 #include "nsWeakReference.h"
 
 class nsIFile;
+class nsCString;
+class nsString;
 
 namespace mozilla {
 
@@ -73,7 +75,96 @@ public:
   virtual ~Preferences();
 
   nsresult Init();
-                           
+
+  /**
+   * Returns the singleton instance which is addreffed.
+   */
+  static Preferences* GetInstance();
+
+  /**
+   * Finallizes global members.
+   */
+  static void Shutdown();
+
+  /**
+   * Returns shared pref service instance
+   * NOTE: not addreffed.
+   */
+  static nsIPrefService* GetService() { return sPreferences; }
+
+  /**
+   * Returns shared pref branch instance.
+   * NOTE: not addreffed.
+   */
+  static nsIPrefBranch2* GetRootBranch()
+  {
+    return sPreferences ? sPreferences->mRootBranch.get() : nsnull;
+  }
+
+  /**
+   * Gets int or bool type pref value with default value if failed to get
+   * the pref.
+   */
+  static PRBool GetBool(const char* aPref, PRBool aDefault = PR_FALSE)
+  {
+    PRBool result = aDefault;
+    GetBool(aPref, &result);
+    return result;
+  }
+
+  static PRInt32 GetInt(const char* aPref, PRInt32 aDefault = 0)
+  {
+    PRInt32 result = aDefault;
+    GetInt(aPref, &result);
+    return result;
+  }
+
+  /**
+   * Gets int or bool type pref value with raw return value of nsIPrefBranch.
+   *
+   * @param aPref       A pref name.
+   * @param aResult     Must not be NULL.  The value is never modified when
+   *                    these methods fail.
+   */
+  static nsresult GetBool(const char* aPref, PRBool* aResult);
+  static nsresult GetInt(const char* aPref, PRInt32* aResult);
+
+  /**
+   * Gets string type pref value with raw return value of nsIPrefBranch.
+   *
+   * @param aPref       A pref name.
+   * @param aResult     Must not be NULL.  The value is never modified when
+   *                    these methods fail.
+   */
+  static nsresult GetChar(const char* aPref, nsCString* aResult);
+  static nsresult GetChar(const char* aPref, nsString* aResult);
+  static nsresult GetLocalizedString(const char* aPref, nsString* aResult);
+
+  /**
+   * Sets various type pref values.
+   */
+  static nsresult SetBool(const char* aPref, PRBool aValue);
+  static nsresult SetInt(const char* aPref, PRInt32 aValue);
+  static nsresult SetChar(const char* aPref, const char* aValue);
+  static nsresult SetChar(const char* aPref, const nsCString &aValue);
+  static nsresult SetChar(const char* aPref, const PRUnichar* aValue);
+  static nsresult SetChar(const char* aPref, const nsString &aValue);
+
+  /**
+   * Clears user set pref.
+   */
+  static nsresult ClearUser(const char* aPref);
+
+  /**
+   * Adds/Removes the observer for the root pref branch.
+   * The observer is referenced strongly if AddStrongObserver is used.  On the
+   * other hand, it is referenced weakly, if AddWeakObserver is used.
+   * See nsIPrefBran2.idl for the detail.
+   */
+  static nsresult AddStrongObserver(nsIObserver* aObserver, const char* aPref);
+  static nsresult AddWeakObserver(nsIObserver* aObserver, const char* aPref);
+  static nsresult RemoveObserver(nsIObserver* aObserver, const char* aPref);
+
 protected:
   nsresult NotifyServiceObservers(const char *aSubject);
   nsresult UseDefaultPrefFile();
@@ -87,6 +178,14 @@ protected:
 private:
   nsCOMPtr<nsIPrefBranch2> mRootBranch;
   nsCOMPtr<nsIFile>        mCurrentFile;
+
+  static Preferences*      sPreferences;
+  static PRBool            sShutdown;
+
+  /**
+   * Init static members.  TRUE if it succeeded.  Otherwise, FALSE.
+   */
+  static PRBool InitStaticMembers();
 };
 
 } // namespace mozilla
