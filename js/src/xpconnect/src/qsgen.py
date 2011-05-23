@@ -1680,6 +1680,7 @@ def writeDefiner(f, conf, interfaces):
     f.write("    return xpc_qsDefineQuickStubs("
             "cx, proto, flags, count, iids, %d, tableData);\n" % size)
     f.write("}\n\n\n")
+    f.write("#include \"dombindings.cpp\"");
 
 
 stubTopTemplate = '''\
