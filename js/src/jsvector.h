@@ -419,6 +419,13 @@ class Vector : private AllocPolicy
      * shifting existing elements from |t + 1| onward one position lower.
      */
     void erase(T *t);
+
+    /*
+     * Return a pointer to the first element that is == v, or end() if there is
+     * no such element.
+     */
+    const T *find(const T &v) const;
+    T *find(const T &v);
 };
 
 /* This does the re-entrancy check plus several other sanity checks. */
@@ -718,6 +725,24 @@ Vector<T,N,AP>::erase(T *it)
         ++it;
     }
     popBack();
+}
+
+template<typename T, size_t N, class AP>
+inline const T *
+Vector<T,N,AP>::find(const T &v) const
+{
+    T *p;
+    for (p = begin(); p != end(); ++p)
+        if (*p == v)
+            break;
+    return p;
+}
+
+template<typename T, size_t N, class AP>
+inline T *
+Vector<T,N,AP>::find(const T &v)
+{
+    return const_cast<T *>(const_cast<const Vector *>(this)->find(v));
 }
 
 template <class T, size_t N, class AP>

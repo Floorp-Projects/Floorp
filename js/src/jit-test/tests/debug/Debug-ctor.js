@@ -3,14 +3,12 @@
 load(libdir + 'asserts.js');
 
 // Debug rejects arguments that aren't cross-compartment wrappers.
-assertThrowsInstanceOf(function () { Debug(); }, TypeError);
 assertThrowsInstanceOf(function () { Debug(null); }, TypeError);
 assertThrowsInstanceOf(function () { Debug(true); }, TypeError);
 assertThrowsInstanceOf(function () { Debug(42); }, TypeError);
 assertThrowsInstanceOf(function () { Debug("bad"); }, TypeError);
 assertThrowsInstanceOf(function () { Debug(function () {}); }, TypeError);
 assertThrowsInstanceOf(function () { Debug(this); }, TypeError);
-assertThrowsInstanceOf(function () { new Debug(); }, TypeError);
 assertThrowsInstanceOf(function () { new Debug(null); }, TypeError);
 assertThrowsInstanceOf(function () { new Debug(true); }, TypeError);
 assertThrowsInstanceOf(function () { new Debug(42); }, TypeError);
