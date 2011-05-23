@@ -1272,7 +1272,6 @@ DebugObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
 
 #define THIS_DEBUGOBJECT_REFERENT(cx, vp, fnname, obj)                       \
     THIS_DEBUGOBJECT_CCW(cx, vp, fnname, obj);                               \
-    JS_ASSERT(obj->isCrossCompartmentWrapper());                             \
     obj = JSWrapper::wrappedObject(obj)
 
 static JSBool
