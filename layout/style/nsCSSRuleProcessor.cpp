@@ -2172,7 +2172,7 @@ void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
                                      data->mTreeMatchContext,
                                      !nodeContext.mIsRelevantLink)) {
       aRule->RuleMatched();
-      data->mRuleWalker->Forward(static_cast<nsIStyleRule*>(aRule));
+      data->mRuleWalker->Forward(aRule);
       // nsStyleSet will deal with the !important rule
     }
   }
@@ -2219,7 +2219,7 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
            value != end; ++value) {
         value->mRule->RuleMatched();
-        aData->mRuleWalker->Forward(static_cast<nsIStyleRule*>(value->mRule));
+        aData->mRuleWalker->Forward(value->mRule);
       }
     }
   }
