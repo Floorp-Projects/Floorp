@@ -8590,7 +8590,8 @@ nsDOMStringMapSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
 
-  nsDependentJSString prop(id);
+  nsAutoString prop;
+  NS_ENSURE_TRUE(JSIDToProp(id, prop), NS_ERROR_UNEXPECTED);
 
   if (dataset->HasDataAttr(prop)) {
     *_retval = JS_DefinePropertyById(cx, obj, id, JSVAL_VOID,
@@ -8658,9 +8659,10 @@ nsDOMStringMapSH::DelProperty(nsIXPConnectWrappedNative *wrapper,
 {
   nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
-  *_retval = PR_TRUE;
 
-  nsDependentJSString prop(id);
+  nsAutoString prop;
+  NS_ENSURE_TRUE(JSIDToProp(id, prop), NS_ERROR_UNEXPECTED);
+
   dataset->RemoveDataAttr(prop);
 
   return NS_OK;
@@ -8674,21 +8676,22 @@ nsDOMStringMapSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
 
-  nsDependentJSString propName(id);
-  nsAutoString prop;
-  
-  nsresult rv = dataset->GetDataAttr(propName, prop);
+  nsAutoString propName;
+  NS_ENSURE_TRUE(JSIDToProp(id, propName), NS_ERROR_UNEXPECTED);
+
+  nsAutoString propVal;
+  nsresult rv = dataset->GetDataAttr(propName, propVal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (prop.IsVoid()) {
+  if (propVal.IsVoid()) {
     *vp = JSVAL_VOID;
     return NS_SUCCESS_I_DID_SOMETHING;
   }
 
   nsStringBuffer* valBuf;
-  *vp = XPCStringConvert::ReadableToJSVal(cx, prop, &valBuf);
+  *vp = XPCStringConvert::ReadableToJSVal(cx, propVal, &valBuf);
   if (valBuf) {
-    prop.ForgetSharedBuffer();
+    propVal.ForgetSharedBuffer();
   }
 
   return NS_SUCCESS_I_DID_SOMETHING;
@@ -8702,10 +8705,12 @@ nsDOMStringMapSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
 
+  nsAutoString propName;
+  NS_ENSURE_TRUE(JSIDToProp(id, propName), NS_ERROR_UNEXPECTED);
+
   JSString *val = JS_ValueToString(cx, *vp);
   NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
-  nsDependentJSString propName(id);
   nsDependentJSString propVal;
   NS_ENSURE_TRUE(propVal.init(cx, val), NS_ERROR_UNEXPECTED);
 
@@ -8713,6 +8718,20 @@ nsDOMStringMapSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_SUCCESS_I_DID_SOMETHING;
+}
+
+bool
+nsDOMStringMapSH::JSIDToProp(const jsid& aId, nsAString& aResult)
+{
+  if (JSID_IS_INT(aId)) {
+    aResult.AppendInt(JSID_TO_INT(aId));
+  } else if (JSID_IS_STRING(aId)) {
+    aResult = nsDependentJSString(aId);
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
 NS_IMETHODIMP
