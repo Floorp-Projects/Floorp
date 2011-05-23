@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<div style="opacity:0.8; background-color: gray;">
+  <div style="overflow: hidden; -moz-transform: translate(0,10px);">
+    <canvas id="canvas" width="256" height="256"></canvas>
+  </div>
+</div>
+<script>
+var ctx = document.getElementById("canvas").getContext("2d");
+ctx.fillStyle = "yellow";
+ctx.fillRect(0, 0, 256, 50);
+ctx.fillStyle = "lime";
+ctx.fillRect(0, 50, 256, 206);
+</script>
+</body>
+</html>
