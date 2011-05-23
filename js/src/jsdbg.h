@@ -68,8 +68,9 @@ class Debug {
     bool hasDebuggerHandler;            // hooks.debuggerHandler
     bool hasThrowHandler;               // hooks.throw
 
-    // Weak references to stack frames that are currently on the stack
-    // and thus necessarily alive. (Removed in slowPathLeaveStackFrame.)
+    // Weak references to stack frames that are currently on the stack and thus
+    // necessarily alive. We drop them as soon as they leave the stack (see
+    // slowPathLeaveStackFrame) and in removeDebuggee.
     typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, SystemAllocPolicy>
         FrameMap;
     FrameMap frames;
@@ -88,6 +89,7 @@ class Debug {
     JSTrapStatus handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook);
     JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
                                       bool callHook = true);
+    JSObject *unwrapDebuggeeArgument(JSContext *cx, Value *vp);
 
     static void trace(JSTracer *trc, JSObject *obj);
     static void finalize(JSContext *cx, JSObject *obj);
@@ -99,6 +101,10 @@ class Debug {
     static JSBool setEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool getUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
     static JSBool setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
+    static JSBool addDebuggee(JSContext *cx, uintN argc, Value *vp);
+    static JSBool removeDebuggee(JSContext *cx, uintN argc, Value *vp);
+    static JSBool hasDebuggee(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getDebuggees(JSContext *cx, uintN argc, Value *vp);
     static JSBool getYoungestFrame(JSContext *cx, uintN argc, Value *vp);
     static JSBool construct(JSContext *cx, uintN argc, Value *vp);
     static JSPropertySpec properties[];

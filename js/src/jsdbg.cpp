@@ -299,6 +299,16 @@ Debug::unwrapDebuggeeValue(JSContext *cx, Value *vp)
                                  "Debug", "Debug.Object", dobj->clasp->name);
             return false;
         }
+
+        Value owner = dobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
+        if (owner.toObjectOrNull() != object) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 owner.isNull()
+                                 ? JSMSG_DEBUG_OBJECT_PROTO
+                                 : JSMSG_DEBUG_OBJECT_WRONG_OWNER);
+            return false;
+        }
+
         *vp = dobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW);
     }
     return true;
@@ -756,6 +766,95 @@ Debug::setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+JSObject *
+Debug::unwrapDebuggeeArgument(JSContext *cx, Value *vp)
+{
+    // The argument to {add,remove,has}Debuggee may be
+    //   - a Debug.Object belonging to this Debug: return its referent
+    //   - a cross-compartment wrapper: return the wrapped object
+    //   - any other non-Debug.Object object: return it
+    // If it is a primitive, or a Debug.Object that belongs to some other
+    // Debug, throw a TypeError.
+    Value v = JS_ARGV(cx, vp)[0];
+    JSObject *obj = NonNullObject(cx, v);
+    if (obj) {
+        if (obj->clasp == &DebugObject_class) {
+            // Get the cross-compartment wrapper (which we unwrap in the next if-block).
+            if (!unwrapDebuggeeValue(cx, &v))
+                return NULL;
+            obj = &v.toObject();
+        }
+        if (obj->isCrossCompartmentWrapper()) {
+            obj = &obj->getProxyPrivate().toObject();
+        }
+    }
+    return obj;
+}
+
+JSBool
+Debug::addDebuggee(JSContext *cx, uintN argc, Value *vp)
+{
+    REQUIRE_ARGC("Debug.addDebuggee", 1);
+    THISOBJ(cx, vp, Debug, "addDebuggee", thisobj, dbg);
+    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, vp);
+    if (!referent)
+        return false;
+    GlobalObject *global = referent->getGlobal();
+    if (!dbg->debuggees.has(global) && !dbg->addDebuggeeGlobal(cx, global))
+        return false;
+
+    Value v = ObjectValue(*referent);
+    if (!dbg->wrapDebuggeeValue(cx, &v))
+        return false;
+    *vp = v;
+    return true;
+}
+
+JSBool
+Debug::removeDebuggee(JSContext *cx, uintN argc, Value *vp)
+{
+    REQUIRE_ARGC("Debug.removeDebuggee", 1);
+    THISOBJ(cx, vp, Debug, "removeDebuggee", thisobj, dbg);
+    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, vp);
+    if (!referent)
+        return false;
+    GlobalObject *global = referent->getGlobal();
+    if (dbg->debuggees.has(global))
+        dbg->removeDebuggeeGlobal(global, NULL, NULL);
+    vp->setUndefined();
+    return true;
+}
+
+JSBool
+Debug::hasDebuggee(JSContext *cx, uintN argc, Value *vp)
+{
+    REQUIRE_ARGC("Debug.hasDebuggee", 1);
+    THISOBJ(cx, vp, Debug, "hasDebuggee", thisobj, dbg);
+    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, vp);
+    if (!referent)
+        return false;
+    vp->setBoolean(!!dbg->debuggees.lookup(referent->getGlobal()));
+    return true;
+}
+
+JSBool
+Debug::getDebuggees(JSContext *cx, uintN argc, Value *vp)
+{
+    THISOBJ(cx, vp, Debug, "getDebuggees", thisobj, dbg);
+    JSObject *arrobj = NewDenseAllocatedArray(cx, dbg->debuggees.count(), NULL);
+    if (!arrobj)
+        return false;
+    uintN i = 0;
+    for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
+        Value v = ObjectValue(*e.front());
+        if (!dbg->wrapDebuggeeValue(cx, &v))
+            return false;
+        arrobj->setDenseArrayElement(i++, v);
+    }
+    vp->setObject(*arrobj);
+    return true;
+}
+
 JSBool
 Debug::getYoungestFrame(JSContext *cx, uintN argc, Value *vp)
 {
@@ -773,23 +872,24 @@ Debug::getYoungestFrame(JSContext *cx, uintN argc, Value *vp)
 JSBool
 Debug::construct(JSContext *cx, uintN argc, Value *vp)
 {
-    REQUIRE_ARGC("Debug", 1);
+    // Check arguments.
+    Value *argv = vp + 2, *argvEnd = argv + argc;
+    for (Value *p = argv; p != argvEnd; p++) {
+        // Check that the argument is a cross-compartment wrapper.
+        const Value &arg = *p;
+        if (!arg.isObject())
+            return ReportObjectRequired(cx);
+        JSObject *argobj = &arg.toObject();
+        if (!argobj->isCrossCompartmentWrapper()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CCW_REQUIRED, "Debug");
+            return false;
+        }
 
-    // Confirm that the first argument is a cross-compartment wrapper.
-    const Value &arg = vp[2];
-    if (!arg.isObject())
-        return ReportObjectRequired(cx);
-    JSObject *argobj = &arg.toObject();
-    if (!argobj->isCrossCompartmentWrapper()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CCW_REQUIRED, "Debug");
-        return false;
-    }
-
-    // Check that the target compartment is in debug mode.
-    GlobalObject *debuggee = argobj->getProxyPrivate().toObject().getGlobal();
-    if (!debuggee->compartment()->debugMode) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DEBUG_MODE);
-        return false;
+        // Check that the target compartment is in debug mode.
+        if (!argobj->getProxyPrivate().toObject().compartment()->debugMode) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DEBUG_MODE);
+            return false;
+        }
     }
 
     // Get Debug.prototype.
@@ -816,10 +916,18 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
     if (!dbg)
         return false;
     obj->setPrivate(dbg);
-    if (!dbg->init(cx) || !dbg->addDebuggeeGlobal(cx, debuggee)) {
+    if (!dbg->init(cx)) {
         cx->delete_(dbg);
         return false;
     }
+
+    // Add the initial debuggees, if any.
+    for (Value *p = argv; p != argvEnd; p++) {
+        GlobalObject *debuggee = p->toObject().getProxyPrivate().toObject().getGlobal();
+        if (!dbg->addDebuggeeGlobal(cx, debuggee))
+            return false;
+    }
+
     vp->setObject(*obj);
     return true;
 }
@@ -827,6 +935,33 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
 bool
 Debug::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
 {
+    // Check for cycles. If obj's compartment is reachable from this Debug
+    // object's compartment by following debuggee-to-debugger links, then
+    // adding obj would create a cycle. (Typically nobody is debugging the
+    // debugger, in which case we zip through this code without looping.)
+    Vector<JSCompartment *> visited(cx);
+    if (!visited.append(object->compartment()))
+        return false;
+    JSCompartment *dest = obj->compartment();
+    for (size_t i = 0; i < visited.length(); i++) {
+        JSCompartment *c = visited[i];
+        if (c == dest) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_LOOP);
+            return false;
+        }
+
+        // Find all compartments containing debuggers debugging global objects
+        // in c. Add those compartments to visited.
+        for (GlobalObjectSet::Range r = c->getDebuggees().all(); !r.empty(); r.popFront()) {
+            GlobalObject::DebugVector *v = r.front()->getDebuggers();
+            for (Debug **p = v->begin(); p != v->end(); p++) {
+                JSCompartment *next = (*p)->object->compartment();
+                if (visited.find(next) == visited.end() && !visited.append(next))
+                    return false;
+            }
+        }
+    }
+
     // Each debugger-debuggee relation must be stored in up to three places.
     GlobalObject::DebugVector *v = obj->getOrCreateDebuggers(cx);
     if (!v || !v->append(this))
@@ -908,6 +1043,10 @@ JSPropertySpec Debug::properties[] = {
 };
 
 JSFunctionSpec Debug::methods[] = {
+    JS_FN("addDebuggee", Debug::addDebuggee, 1, 0),
+    JS_FN("removeDebuggee", Debug::removeDebuggee, 1, 0),
+    JS_FN("hasDebuggee", Debug::hasDebuggee, 1, 0),
+    JS_FN("getDebuggees", Debug::getDebuggees, 0, 0),
     JS_FN("getYoungestFrame", Debug::getYoungestFrame, 0, 0),
     JS_FS_END
 };
