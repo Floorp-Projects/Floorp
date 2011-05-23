@@ -54,15 +54,20 @@
     </resources>
 
     <content>
-        <xul:vbox class="mainBox" role="link" flex="1" chromedir="&locale.dir;">
+        <xul:vbox class="mainBox" flex="1" chromedir="&locale.dir;">
             <xul:spacer flex="1"/>
             <xul:box class="icon"/>
-            <html:div class="msg msgUnsupported">&missingPlugin.label;</html:div>
-            <html:div class="msg msgDisabled">&disabledPlugin.label;</html:div>
+            <html:div class="msg msgUnsupported">&missingPlugin;</html:div>
+            <html:div class="msg msgDisabled">&disabledPlugin;</html:div>
             <html:div class="msg msgBlocked">&blockedPlugin.label;</html:div>
             <html:div class="msg msgCrashed"><!-- set at runtime --></html:div>
+
+            <html:div class="installStatus">
+                <html:div class="msg msgInstallPlugin"><html:a class="installPluginLink" href="">&installPlugin;</html:a></html:div>
+            </html:div>
+            <html:div class="msg msgManagePlugins"><html:a class="managePluginsLink" href="">&managePlugins;</html:a></html:div>
             <html:div class="submitStatus">
-                <!-- link href set at runtime -->
+                <!-- links set at runtime -->
                 <html:div class="msg msgPleaseSubmit"><html:a class="pleaseSubmitLink" href="">&report.please;</html:a></html:div>
                 <html:div class="msg msgSubmitting">&report.submitting;<html:span class="throbber"> </html:span></html:div>
                 <html:div class="msg msgSubmitted">&report.submitted;</html:div>

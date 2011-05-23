@@ -281,6 +281,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 #endif
 
+#ifdef NECKO_PROTOCOL_websocket
+#include "nsWebSocketHandler.h"
+namespace mozilla {
+namespace net {
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocketHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocketSSLHandler)
+} // namespace mozilla::net
+} // namespace mozilla
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsURIChecker.h"
@@ -624,6 +634,9 @@ static void nsNetShutdown()
     
     // Release DNS service reference.
     nsDNSPrefetch::Shutdown();
+
+    // Release the Websocket Admission Manager
+    mozilla::net::nsWebSocketHandler::Shutdown();
 }
 
 NS_DEFINE_NAMED_CID(NS_IOSERVICE_CID);
@@ -739,6 +752,10 @@ NS_DEFINE_NAMED_CID(NS_VIEWSOURCEHANDLER_CID);
 #endif
 #ifdef NECKO_PROTOCOL_wyciwyg
 NS_DEFINE_NAMED_CID(NS_WYCIWYGPROTOCOLHANDLER_CID);
+#endif
+#ifdef NECKO_PROTOCOL_websocket
+NS_DEFINE_NAMED_CID(NS_WEBSOCKETPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_WEBSOCKETSSLPROTOCOLHANDLER_CID);
 #endif
 #if defined(XP_WIN)
 NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
@@ -868,6 +885,12 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 #endif
 #ifdef NECKO_PROTOCOL_wyciwyg
     { &kNS_WYCIWYGPROTOCOLHANDLER_CID, false, NULL, nsWyciwygProtocolHandlerConstructor },
+#endif
+#ifdef NECKO_PROTOCOL_websocket
+    { &kNS_WEBSOCKETPROTOCOLHANDLER_CID, false, NULL,
+      mozilla::net::nsWebSocketHandlerConstructor },
+    { &kNS_WEBSOCKETSSLPROTOCOLHANDLER_CID, false, NULL,
+      mozilla::net::nsWebSocketSSLHandlerConstructor },
 #endif
 #if defined(XP_WIN)
     { &kNS_NETWORK_LINK_SERVICE_CID, false, NULL, nsNotifyAddrListenerConstructor },
@@ -1004,6 +1027,10 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
 #endif
 #ifdef NECKO_PROTOCOL_wyciwyg
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wyciwyg", &kNS_WYCIWYGPROTOCOLHANDLER_CID },
+#endif
+#ifdef NECKO_PROTOCOL_websocket
+    { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ws", &kNS_WEBSOCKETPROTOCOLHANDLER_CID },
+    { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wss", &kNS_WEBSOCKETSSLPROTOCOLHANDLER_CID },
 #endif
 #if defined(XP_WIN)
     { NS_NETWORK_LINK_SERVICE_CONTRACTID, &kNS_NETWORK_LINK_SERVICE_CID },

@@ -274,6 +274,8 @@ protected:
   PRUint32                          mChooseApplicationCache     : 1;
   PRUint32                          mLoadedFromApplicationCache : 1;
   PRUint32                          mChannelIsForDownload       : 1;
+  // True if timing collection is enabled
+  PRUint32                          mTimingEnabled : 1;
 
   nsTArray<nsCString>              *mRedirectedCachekeys;
 };
