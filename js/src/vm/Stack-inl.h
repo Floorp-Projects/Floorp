@@ -42,7 +42,7 @@
 #define Stack_inl_h__
 
 #include "jscntxt.h"
-#include "jstracer.h"
+#include "jscompartment.h"
 
 #include "Stack.h"
 
