@@ -43,13 +43,14 @@
 #include "nsIdleService.h"
 #include "nsString.h"
 #include "nsIObserverService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsDebug.h"
 #include "nsCOMArray.h"
 #include "prinrval.h"
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 // observer topics used:
 #define OBSERVER_TOPIC_IDLE "idle"
@@ -102,11 +103,8 @@ nsIdleServiceDaily::Observe(nsISupports *,
   (void)mIdleService->RemoveIdleObserver(this, MAX_IDLE_POLL_INTERVAL);
 
   // Set the last idle-daily time pref.
-  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (pref) {
-    PRInt32 nowSec = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
-    (void)pref->SetIntPref(PREF_LAST_DAILY, nowSec);
-  }
+  PRInt32 nowSec = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
+  Preferences::SetInt(PREF_LAST_DAILY, nowSec);
 
   // Start timer for the next check in one day.
   (void)mTimer->InitWithFuncCallback(DailyCallback, this, SECONDS_PER_DAY * 1000,
@@ -127,15 +125,11 @@ nsIdleServiceDaily::Init()
 {
   // Check time of the last idle-daily notification.  If it was more than 24
   // hours ago listen for idle, otherwise set a timer for 24 hours from now.
-  PRInt32 lastDaily = 0;
   PRInt32 nowSec = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
-  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (pref) {
-    if (NS_FAILED(pref->GetIntPref(PREF_LAST_DAILY, &lastDaily)) ||
-        lastDaily < 0 || lastDaily > nowSec) {
-      // The time is bogus, use default.
-      lastDaily = 0;
-    }
+  PRInt32 lastDaily = Preferences::GetInt(PREF_LAST_DAILY, 0);
+  if (lastDaily < 0 || lastDaily > nowSec) {
+    // The time is bogus, use default.
+    lastDaily = 0;
   }
 
   // Check if it has been a day since the last notification.

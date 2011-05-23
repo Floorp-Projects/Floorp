@@ -390,7 +390,8 @@ public:
   static PRUint32 GetTimeoutTime();
   static PRInt32 AccelerateWheelDelta(PRInt32 aScrollLines,
                    PRBool aIsHorizontal, PRBool aAllowScrollSpeedOverride,
-                   nsIScrollableFrame::ScrollUnit *aScrollQuantity);
+                   nsIScrollableFrame::ScrollUnit *aScrollQuantity,
+                   PRBool aLimitToMaxOnePageScroll = PR_TRUE);
   static PRBool IsAccelerationEnabled();
 
   enum {
@@ -518,8 +519,18 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
     return;
   }
 
-  switch (aEvent->message) {
+  PRInt32 message = aEvent->message;
+  // If the event is query scroll target info event, that causes modifying
+  // wheel transaction because DoScrollText() needs to use them.  Therefore,
+  // we should handle the event as its mouse scroll event here.
+  if (message == NS_QUERY_SCROLL_TARGET_INFO) {
+    nsQueryContentEvent* queryEvent = static_cast<nsQueryContentEvent*>(aEvent);
+    message = queryEvent->mInput.mMouseScrollEvent->message;
+  }
+
+  switch (message) {
     case NS_MOUSE_SCROLL:
+    case NS_MOUSE_PIXEL_SCROLL:
       if (sMouseMoved != 0 &&
           OutOfTime(sMouseMoved, GetIgnoreMoveDelayTime())) {
         // Terminate the current mousewheel transaction if the mouse moved more
@@ -662,7 +673,8 @@ PRInt32
 nsMouseWheelTransaction::AccelerateWheelDelta(PRInt32 aScrollLines,
                            PRBool aIsHorizontal,
                            PRBool aAllowScrollSpeedOverride,
-                           nsIScrollableFrame::ScrollUnit *aScrollQuantity)
+                           nsIScrollableFrame::ScrollUnit *aScrollQuantity,
+                           PRBool aLimitToMaxOnePageScroll)
 {
   if (aAllowScrollSpeedOverride) {
     aScrollLines = OverrideSystemScrollSpeed(aScrollLines, aIsHorizontal);
@@ -679,7 +691,8 @@ nsMouseWheelTransaction::AccelerateWheelDelta(PRInt32 aScrollLines,
 
   // If the computed delta is larger than the page, we should limit
   // the delta value to the one page size.
-  return LimitToOnePageScroll(aScrollLines, aIsHorizontal, aScrollQuantity);
+  return !aLimitToMaxOnePageScroll ? aScrollLines :
+    LimitToOnePageScroll(aScrollLines, aIsHorizontal, aScrollQuantity);
 }
 
 PRInt32
@@ -2703,6 +2716,27 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
   }
 
   if (!passToParent && frameToScroll) {
+    if (aScrollQuantity == nsIScrollableFrame::LINES) {
+      // When this is called for querying the scroll target information,
+      // we shouldn't limit the scrolling amount to less one page.
+      // Otherwise, we shouldn't scroll more one page at once.
+      numLines =
+        nsMouseWheelTransaction::AccelerateWheelDelta(numLines, isHorizontal,
+                                                      aAllowScrollSpeedOverride,
+                                                      &aScrollQuantity,
+                                                      !aQueryEvent);
+    }
+#ifdef DEBUG
+    else {
+      NS_ASSERTION(!aAllowScrollSpeedOverride,
+        "aAllowScrollSpeedOverride is true but the quantity isn't by-line scrolling.");
+    }
+#endif
+
+    if (aScrollQuantity == nsIScrollableFrame::PAGES) {
+      numLines = (numLines > 0) ? 1 : -1;
+    }
+
     if (aQueryEvent) {
       // If acceleration is enabled, pixel scroll shouldn't be used for
       // high resolution scrolling.
@@ -2718,34 +2752,23 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
         frameToScroll->GetPageScrollAmount().height / appUnitsPerDevPixel;
       aQueryEvent->mReply.mPageWidth =
         frameToScroll->GetPageScrollAmount().width / appUnitsPerDevPixel;
+
+      // Returns computed numLines to widget which is needed to compute the
+      // pixel scrolling amout for high resolution scrolling.
+      aQueryEvent->mReply.mComputedScrollAmount = numLines;
+
       aQueryEvent->mSucceeded = PR_TRUE;
       return NS_OK;
     }
 
-    if (aScrollQuantity == nsIScrollableFrame::LINES) {
-      numLines =
-        nsMouseWheelTransaction::AccelerateWheelDelta(numLines, isHorizontal,
-                                                      aAllowScrollSpeedOverride,
-                                                      &aScrollQuantity);
-    }
-#ifdef DEBUG
-    else {
-      NS_ASSERTION(!aAllowScrollSpeedOverride,
-        "aAllowScrollSpeedOverride is true but the quantity isn't by-line scrolling.");
-    }
-#endif
-
     PRInt32 scrollX = 0;
     PRInt32 scrollY = numLines;
 
-    if (aScrollQuantity == nsIScrollableFrame::PAGES)
-      scrollY = (scrollY > 0) ? 1 : -1;
-      
     if (isHorizontal) {
       scrollX = scrollY;
       scrollY = 0;
     }
-    
+
     nsIScrollableFrame::ScrollMode mode;
     if (aMouseEvent->scrollFlags & nsMouseScrollEvent::kNoDefer) {
       mode = nsIScrollableFrame::INSTANT;
@@ -2756,6 +2779,8 @@ nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
     } else {
       mode = nsIScrollableFrame::NORMAL;
     }
+
+    // XXX Why don't we limit the pixel scroll amount to less one page??
 
     nsIntPoint overflow;
     frameToScroll->ScrollBy(nsIntPoint(scrollX, scrollY), aScrollQuantity,

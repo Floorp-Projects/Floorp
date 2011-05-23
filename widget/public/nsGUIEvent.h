@@ -1346,6 +1346,13 @@ public:
     PRInt32 mLineHeight;
     PRInt32 mPageWidth;
     PRInt32 mPageHeight;
+    // used by NS_QUERY_SCROLL_TARGET_INFO
+    // the mouse wheel scrolling amount may be overridden by prefs or
+    // overriding system scrolling speed mechanism.
+    // If mMouseScrollEvent is a line scroll event, the unit of this value is
+    // line.  If mMouseScrollEvent is a page scroll event, the unit of this
+    // value is page.
+    PRInt32 mComputedScrollAmount;
   } mReply;
 
   enum {
