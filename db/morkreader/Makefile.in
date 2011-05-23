@@ -43,10 +43,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_ENABLE_LIBXUL
 DIRS = external
-endif
-
 MODULE = morkreader
 LIBRARY_NAME  = morkreader_s
 LIBXUL_LIBRARY = 1

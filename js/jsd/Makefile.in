@@ -47,10 +47,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jsdebug
 LIBRARY_NAME	= jsd
-FORCE_SHARED_LIB= 1
-ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),WINNT)
-LIBRARY_NAME	= jsd32$(VERSION_NUMBER)
-endif
+DIRS	= idl
+CPPSRCS	 = jsd_xpc.cpp
+IS_COMPONENT = 1
+LIBXUL_LIBRARY = 1
+
+MODULE_NAME = JavaScript_Debugger
+EXPORT_LIBRARY = 1
+
 
 # REQUIRES	= java js
 
@@ -78,21 +82,6 @@ CSRCS		= \
 		  jsd_text.c \
 		  jsd_val.c \
 		  $(NULL)
-
-ifdef JSD_STANDALONE
-DIRS	+= jsdb
-else
-DIRS	+= idl
-CPPSRCS	 = jsd_xpc.cpp
-IS_COMPONENT = 1
-LIBXUL_LIBRARY = 1
-
-ifdef MOZ_ENABLE_LIBXUL
-FORCE_SHARED_LIB=
-MODULE_NAME = JavaScript_Debugger
-EXPORT_LIBRARY = 1
-endif
-endif
 
 ifdef ENABLE_TESTS
 TOOL_DIRS		+= test

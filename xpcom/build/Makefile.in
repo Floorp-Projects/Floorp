@@ -50,11 +50,7 @@ MODULE		= xpcom
 LIBRARY_NAME	= xpcom_core
 SHORT_LIBNAME	= xpcomcor
 LIBXUL_LIBRARY = 1
-
-# This is only a static library in libxul builds
-ifdef MOZ_ENABLE_LIBXUL
 EXPORT_LIBRARY = 1
-endif
 
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
@@ -71,12 +67,6 @@ CPPSRCS		= \
 		Services.cpp \
 		Omnijar.cpp \
 		$(NULL)
-
-ifndef MOZ_ENABLE_LIBXUL
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
-CPPSRCS += dlldeps.cpp
-endif
-endif
 
 SHARED_LIBRARY_LIBS = \
 		$(DEPTH)/chrome/src/$(LIB_PREFIX)chrome_s.$(LIB_SUFFIX) \
@@ -138,10 +128,6 @@ EXPORTS_mozilla = \
 # Force use of PIC
 FORCE_USE_PIC	= 1 
 
-ifndef MOZ_ENABLE_LIBXUL
-FORCE_SHARED_LIB = 1
-endif
-
 # UNIX98 iconv support
 OS_LIBS += $(LIBICONV)
 
@@ -188,9 +174,6 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 OS_LIBS += $(call EXPAND_LIBNAME,imagehlp)
-endif
-ifndef MOZ_ENABLE_LIBXUL
-OS_LIBS += $(call EXPAND_LIBNAME,psapi)
 endif
 endif # WINNT
 

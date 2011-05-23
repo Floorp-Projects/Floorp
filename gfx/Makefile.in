@@ -48,22 +48,7 @@ ifdef MOZ_TREE_CAIRO
 DIRS		= cairo
 endif
 
-# In static builds, ycbcr must appear after layers in
-# the link line on linux. This order is defined by the
-# order listed in DIRS. On shared builds ycbcr must
-# be built first so the order is reversed.
-ifndef BUILD_STATIC_LIBS
-DIRS		+= ycbcr
-endif
-
-DIRS		+= angle
-
-
-DIRS		+= src qcms layers harfbuzz/src ots/src thebes ipc
-
-ifdef BUILD_STATIC_LIBS
-DIRS		+= ycbcr
-endif
+DIRS		+= ycbcr angle src qcms layers harfbuzz/src ots/src thebes ipc
 
 ifdef ENABLE_TESTS
 TOOL_DIRS	+= tests

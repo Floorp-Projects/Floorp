@@ -11,7 +11,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-compiler.h b/gfx/cairo/libpixman/src
  #endif
  
 +/* In libxul builds we don't ever want to export pixman symbols */
-+#ifdef MOZ_ENABLE_LIBXUL
++#if 1
 +#   define PIXMAN_EXPORT cairo_public
 +#else
 +
@@ -25,7 +25,7 @@ diff --git a/gfx/cairo/libpixman/src/pixman-compiler.h b/gfx/cairo/libpixman/src
  #   define PIXMAN_EXPORT
  #endif
  
-+#endif /* MOZ_ENABLE_LIBXUL */
++#endif
 +
  /* TLS */
  #if defined(PIXMAN_NO_TLS)

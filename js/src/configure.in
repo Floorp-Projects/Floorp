@@ -4392,7 +4392,6 @@ dnl ========================================================
 
 MOZ_ARG_HEADER(Application)
 
-BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
 
 MOZ_THUMB2=
@@ -5392,18 +5391,6 @@ AC_SUBST(CXX_WRAPPER)
 
 
 dnl ========================================================
-dnl =
-dnl = Static Build Options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Static build options)
-
-MOZ_ARG_ENABLE_BOOL(static,
-[  --enable-static         Enable building of internal static libs],
-    BUILD_STATIC_LIBS=1,
-    BUILD_STATIC_LIBS=)
-
-dnl ========================================================
 dnl = Link js shell to system readline
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(readline,
@@ -5521,7 +5508,6 @@ AC_SUBST(MOZ_PROFILING)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(LIBICONV)
 
-AC_SUBST(BUILD_STATIC_LIBS)
 AC_SUBST(ENABLE_TESTS)
 
 AC_SUBST(ENABLE_STRIP)
