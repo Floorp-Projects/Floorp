@@ -414,8 +414,18 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
         /* What's the other mask? */
         FrameEntry *test = lhsTest ? rhs : lhs;
 
-        if (test->isTypeKnown())
+        if (test->isType(JSVAL_TYPE_NULL) || test->isType(JSVAL_TYPE_UNDEFINED)) {
             return emitStubCmpOp(stub, target, fused);
+        } else if (test->isTypeKnown()) {
+            /* The test will not succeed, constant fold the compare. */
+            bool result = GetCompareCondition(op, fused) == Assembler::NotEqual;
+            frame.pop();
+            frame.pop();
+            if (target)
+                return constantFoldBranch(target, result);
+            frame.push(BooleanValue(result));
+            return true;
+        }
 
         /* The other side must be null or undefined. */
         RegisterID reg = frame.ownRegForType(test);
