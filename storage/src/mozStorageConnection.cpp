@@ -335,7 +335,6 @@ public:
   NS_DECL_ISUPPORTS
 
   enum ReporterType {
-    LookAside_Used,
     Cache_Used,
     Schema_Used,
     Stmt_Used
@@ -356,10 +355,7 @@ public:
     path.AppendLiteral("explicit/storage/sqlite/");
     path.Append(mDBConn.getFilename());
 
-    if (mType == LookAside_Used) {
-      path.AppendLiteral("/lookaside-used");
-    }
-    else if (mType == Cache_Used) {
+    if (mType == Cache_Used) {
       path.AppendLiteral("/cache-used");
     }
     else if (mType == Schema_Used) {
@@ -381,10 +377,7 @@ public:
 
   NS_IMETHOD GetDescription(char **desc)
   {
-    if (mType == LookAside_Used) {
-      *desc = ::strdup("Number of lookaside memory slots currently checked out.");
-    }
-    else if (mType == Cache_Used) {
+    if (mType == Cache_Used) {
       *desc = ::strdup("Memory (approximate) used by all pager caches.");
     }
     else if (mType == Schema_Used) {
@@ -400,10 +393,7 @@ public:
   NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed)
   {
     int type = 0;
-    if (mType == LookAside_Used) {
-      type = SQLITE_DBSTATUS_LOOKASIDE_USED;
-    }
-    else if (mType == Cache_Used) {
+    if (mType == Cache_Used) {
       type = SQLITE_DBSTATUS_CACHE_USED;
     }
     else if (mType == Schema_Used) {
@@ -583,12 +573,6 @@ Connection::initialize(nsIFile *aDatabaseFile,
   }
 
   nsRefPtr<nsIMemoryReporter> reporter;
-#if 0
-  // FIXME: Bug 649867 explains why this is disabled.
-  reporter =
-    new StorageMemoryReporter(*this, StorageMemoryReporter::LookAside_Used);
-  mMemoryReporters.AppendElement(reporter);
-#endif
 
   reporter =
     new StorageMemoryReporter(*this, StorageMemoryReporter::Cache_Used);
