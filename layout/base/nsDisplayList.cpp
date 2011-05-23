@@ -432,9 +432,12 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder,
 {
   nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, aTransparentBackground);
   if (aBuilder->IsForPluginGeometry()) {
-    // Treat all chrome items as opaque
+    // Treat all chrome items as opaque, unless their frames are opacity:0.
+    // Since opacity:0 frames generate an nsDisplayOpacity, that item will
+    // not be treated as opaque here, so opacity:0 chrome content will be
+    // effectively ignored, as it should be.
     nsIFrame* f = aItem->GetUnderlyingFrame();
-    if (f && f->PresContext()->IsChrome()) {
+    if (f && f->PresContext()->IsChrome() && f->GetStyleDisplay()->mOpacity != 0.0) {
       opaque = aItem->GetBounds(aBuilder);
     }
   }

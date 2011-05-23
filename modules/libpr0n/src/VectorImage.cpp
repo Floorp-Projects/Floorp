@@ -573,6 +573,9 @@ VectorImage::Draw(gfxContext* aContext,
 nsIFrame*
 VectorImage::GetRootLayoutFrame()
 {
+  if (mError)
+    return nsnull;
+
   return mSVGDocumentWrapper->GetRootLayoutFrame();
 }
 
@@ -697,6 +700,9 @@ VectorImage::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
                              nsIInputStream* aInStr, PRUint32 aSourceOffset,
                              PRUint32 aCount)
 {
+  if (mError)
+    return NS_ERROR_FAILURE;
+
   return mSVGDocumentWrapper->OnDataAvailable(aRequest, aCtxt, aInStr,
                                               aSourceOffset, aCount);
 }
