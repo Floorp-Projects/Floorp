@@ -889,6 +889,9 @@ pref("network.IDN.whitelist.xn--mgba3a4f16a", true);
 pref("network.IDN.whitelist.xn--mgba3a4fra", true);
 // jo, Jordan, .<Al-Ordon>
 pref("network.IDN.whitelist.xn--mgbayh7gpa", true);
+// lk, Sri Lanka, .<Lanka> and .<Ilangai>
+pref("network.IDN.whitelist.xn--fzc2c9e2c", true);
+pref("network.IDN.whitelist.xn--xkc2al3hye2a", true);
 // qa, Qatar, .<Qatar>
 pref("network.IDN.whitelist.xn--wgbl6a", true);
 // ru, Russian Federation, .<RF>
