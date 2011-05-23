@@ -1265,7 +1265,7 @@ nsComputedDOMStyle::DoGetBackgroundColor()
 
 
 static void
-SetValueToCalc(nsStyleCoord::Calc *aCalc, nsROCSSPrimitiveValue *aValue)
+SetValueToCalc(const nsStyleCoord::Calc *aCalc, nsROCSSPrimitiveValue *aValue)
 {
   nsRefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue();
   nsAutoString tmp, result;
@@ -1524,28 +1524,24 @@ nsComputedDOMStyle::DoGetBackgroundPosition()
 
     const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
 
-    if (pos.mXPosition.mLength == 0) {
-      valX->SetPercent(pos.mXPosition.mPercent);
-    } else if (pos.mXPosition.mPercent == 0.0f) {
+    if (!pos.mXPosition.mHasPercent) {
+      NS_ABORT_IF_FALSE(pos.mXPosition.mPercent == 0.0f,
+                        "Shouldn't have mPercent!");
       valX->SetAppUnits(pos.mXPosition.mLength);
+    } else if (pos.mXPosition.mLength == 0) {
+      valX->SetPercent(pos.mXPosition.mPercent);
     } else {
-      nsStyleCoord::Calc calc;
-      calc.mPercent = pos.mXPosition.mPercent;
-      calc.mLength  = pos.mXPosition.mLength;
-      calc.mHasPercent = PR_TRUE;
-      SetValueToCalc(&calc, valX);
+      SetValueToCalc(&pos.mXPosition, valX);
     }
 
-    if (pos.mYPosition.mLength == 0) {
-      valY->SetPercent(pos.mYPosition.mPercent);
-    } else if (pos.mYPosition.mPercent == 0.0f) {
+    if (!pos.mYPosition.mHasPercent) {
+      NS_ABORT_IF_FALSE(pos.mYPosition.mPercent == 0.0f,
+                        "Shouldn't have mPercent!");
       valY->SetAppUnits(pos.mYPosition.mLength);
+    } else if (pos.mYPosition.mLength == 0) {
+      valY->SetPercent(pos.mYPosition.mPercent);
     } else {
-      nsStyleCoord::Calc calc;
-      calc.mPercent = pos.mYPosition.mPercent;
-      calc.mLength  = pos.mYPosition.mLength;
-      calc.mHasPercent = PR_TRUE;
-      SetValueToCalc(&calc, valY);
+      SetValueToCalc(&pos.mYPosition, valY);
     }
   }
 
