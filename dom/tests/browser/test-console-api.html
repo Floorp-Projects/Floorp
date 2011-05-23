@@ -15,6 +15,10 @@
         return foobar585956b(omg + "a");
       }
 
+      function foobar646025(omg) {
+        console.log(omg, "o", "d");
+      }
+
       function test() {
         var str = "Test Message."
         console.foobar(str); // if this throws, we don't execute following funcs
@@ -29,5 +33,6 @@
     <h1>Console API Test Page</h1>
     <button onclick="test();">Log stuff</button>
     <button id="test-trace" onclick="foobar585956a('omg');">Test trace</button>
+    <button id="test-location" onclick="foobar646025('omg');">Test location</button>
   </body>
 </html>

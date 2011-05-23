@@ -1,18 +1,26 @@
 /* Override default style */
+input {
+  -moz-appearance: none;
+  background: none;
+}
 input:invalid {
   box-shadow: none;
 }
 
 input.notinvalid {
-  background-color: green;
+  box-shadow: 0 0 1.5px 1px green;
 }
 input.notinvalid:invalid {
-  background-color: red;
+  box-shadow: 0 0 1.5px 1px red;
 }
 
 input.invalid {
-  background-color: red;
+  box-shadow: 0 0 1.5px 1px red;
 }
 input.invalid:invalid {
-  background-color: green;
+  box-shadow: 0 0 1.5px 1px green;
+}
+
+input.ref {
+  box-shadow: 0 0 1.5px 1px green;
 }

@@ -44,6 +44,8 @@
 
 #include "CheckedInt.h"
 
+#include "jstypedarray.h"
+
 #if defined(USE_ANGLE)
 #include "angle/ShaderLang.h"
 #endif
@@ -327,53 +329,78 @@ PRBool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
     }
 }
 
-PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
-                                                PRUint32 *texelSize, const char *info)
+PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, int jsArrayType,
+                                              PRUint32 *texelSize, const char *info)
 {
-    if (type == LOCAL_GL_UNSIGNED_BYTE)
+    if (type == LOCAL_GL_UNSIGNED_BYTE ||
+        (IsExtensionEnabled(WebGL_OES_texture_float) && type == LOCAL_GL_FLOAT))
     {
+        if (jsArrayType != -1) {
+            if ((type == LOCAL_GL_UNSIGNED_BYTE && jsArrayType != js::TypedArray::TYPE_UINT8) ||
+                (type == LOCAL_GL_FLOAT && jsArrayType != js::TypedArray::TYPE_FLOAT32))
+            {
+                ErrorInvalidOperation("%s: invalid typed array type for given format", info);
+                return PR_FALSE;
+            }
+        }
+
+        int texMultiplier = type == LOCAL_GL_FLOAT ? 4 : 1;
         switch (format) {
             case LOCAL_GL_ALPHA:
             case LOCAL_GL_LUMINANCE:
-                *texelSize = 1;
+                *texelSize = 1 * texMultiplier;
                 return PR_TRUE;
             case LOCAL_GL_LUMINANCE_ALPHA:
-                *texelSize = 2;
+                *texelSize = 2 * texMultiplier;
                 return PR_TRUE;
             case LOCAL_GL_RGB:
-                *texelSize = 3;
+                *texelSize = 3 * texMultiplier;
                 return PR_TRUE;
             case LOCAL_GL_RGBA:
-                *texelSize = 4;
+                *texelSize = 4 * texMultiplier;
                 return PR_TRUE;
             default:
-                ErrorInvalidEnum("%s: invalid format 0x%x", info, format);
-                return PR_FALSE;
+                break;
         }
-    } else {
-        switch (type) {
-            case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
-            case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-                if (format == LOCAL_GL_RGBA) {
-                    *texelSize = 2;
-                    return PR_TRUE;
-                } else {
-                    ErrorInvalidOperation("%s: mutually incompatible format and type", info);
-                    return PR_FALSE;
-                }
-            case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-                if (format == LOCAL_GL_RGB) {
-                    *texelSize = 2;
-                    return PR_TRUE;
-                } else {
-                    ErrorInvalidOperation("%s: mutually incompatible format and type", info);
-                    return PR_FALSE;
-                }
-            default:
-                ErrorInvalidEnum("%s: invalid type 0x%x", info, type);
-                return PR_FALSE;
-        }
+
+        ErrorInvalidEnum("%s: invalid format 0x%x", info, format);
+        return PR_FALSE;
     }
+
+    switch (type) {
+        case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
+        case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
+            if (jsArrayType != -1 && jsArrayType != js::TypedArray::TYPE_UINT16) {
+                ErrorInvalidOperation("%s: invalid typed array type for given format", info);
+                return PR_FALSE;
+            }
+
+            if (format == LOCAL_GL_RGBA) {
+                *texelSize = 2;
+                return PR_TRUE;
+            }
+            ErrorInvalidOperation("%s: mutually incompatible format and type", info);
+            return PR_FALSE;
+
+        case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
+            if (jsArrayType != -1 && jsArrayType != js::TypedArray::TYPE_UINT16) {
+                ErrorInvalidOperation("%s: invalid typed array type for given format", info);
+                return PR_FALSE;
+            }
+
+            if (format == LOCAL_GL_RGB) {
+                *texelSize = 2;
+                return PR_TRUE;
+            }
+            ErrorInvalidOperation("%s: mutually incompatible format and type", info);
+            return PR_FALSE;
+
+        default:
+            break;
+        }
+
+    ErrorInvalidEnum("%s: invalid type 0x%x", info, type);
+    return PR_FALSE;
 }
 
 PRBool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
@@ -390,6 +417,24 @@ PRBool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
     } else {
         return PR_TRUE;
     }
+}
+
+PRBool WebGLContext::ValidateStencilParamsForDrawCall()
+{
+  const char *msg = "%s set different front and back stencil %s. Drawing in this configuration is not allowed.";
+  if (mStencilRefFront != mStencilRefBack) {
+      ErrorInvalidOperation(msg, "stencilFuncSeparate", "reference values");
+      return PR_FALSE;
+  }
+  if (mStencilValueMaskFront != mStencilValueMaskBack) {
+      ErrorInvalidOperation(msg, "stencilFuncSeparate", "value masks");
+      return PR_FALSE;
+  }
+  if (mStencilWriteMaskFront != mStencilWriteMaskBack) {
+      ErrorInvalidOperation(msg, "stencilMaskSeparate", "write masks");
+      return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 PRBool
@@ -546,10 +591,6 @@ WebGLContext::InitAndValidateGL()
 
     gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT,   (GLint*) &mPixelStorePackAlignment);
     gl->fGetIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, (GLint*) &mPixelStoreUnpackAlignment);
-
-    gl->fGetIntegerv(LOCAL_GL_STENCIL_WRITEMASK, (GLint*) &mStencilWriteMask);
-    gl->fGetIntegerv(LOCAL_GL_STENCIL_VALUE_MASK, (GLint*) &mStencilValueMask);
-    gl->fGetIntegerv(LOCAL_GL_STENCIL_REF, (GLint*) &mStencilRef);
 
     // Check the shader validator pref
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);

@@ -2902,7 +2902,7 @@
             tabWidth += "px";
             for (let i = numPinned; i < tabs.length; i++) {
               let tab = tabs[i];
-              tab.style.maxWidth = tabWidth;
+              tab.style.setProperty("max-width", tabWidth, "important");
               if (!isEndTab) { // keep tabs the same width
                 tab.style.MozTransition = "none";
                 tab.clientTop; // flush styles to skip animation; see bug 649247

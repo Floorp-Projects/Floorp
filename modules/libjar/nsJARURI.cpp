@@ -458,11 +458,24 @@ nsJARURI::GetOriginCharset(nsACString &aOriginCharset)
 NS_IMETHODIMP
 nsJARURI::Equals(nsIURI *other, PRBool *result)
 {
-    nsresult rv;
+    return EqualsInternal(other, eHonorRef, result);
+}
 
+NS_IMETHODIMP
+nsJARURI::EqualsExceptRef(nsIURI *other, PRBool *result)
+{
+    return EqualsInternal(other, eIgnoreRef, result);
+}
+
+// Helper method:
+/* virtual */ nsresult
+nsJARURI::EqualsInternal(nsIURI *other,
+                         nsJARURI::RefHandlingEnum refHandlingMode,
+                         PRBool *result)
+{
     *result = PR_FALSE;
 
-    if (other == nsnull)
+    if (!other)
         return NS_OK;	// not equal
 
     nsRefPtr<nsJARURI> otherJAR;
@@ -471,13 +484,14 @@ nsJARURI::Equals(nsIURI *other, PRBool *result)
         return NS_OK;   // not equal
 
     PRBool equal;
-    rv = mJARFile->Equals(otherJAR->mJARFile, &equal);
+    nsresult rv = mJARFile->Equals(otherJAR->mJARFile, &equal);
     if (NS_FAILED(rv) || !equal) {
         return rv;   // not equal
     }
 
-    rv = mJAREntry->Equals(otherJAR->mJAREntry, result);
-    return rv;
+    return refHandlingMode == eHonorRef ?
+        mJAREntry->Equals(otherJAR->mJAREntry, result) :
+        mJAREntry->EqualsExceptRef(otherJAR->mJAREntry, result);
 }
 
 NS_IMETHODIMP
@@ -500,7 +514,19 @@ nsJARURI::Clone(nsIURI **result)
     nsresult rv;
 
     nsCOMPtr<nsIJARURI> uri;
-    rv = CloneWithJARFile(mJARFile, getter_AddRefs(uri));
+    rv = CloneWithJARFileInternal(mJARFile, eHonorRef, getter_AddRefs(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    return CallQueryInterface(uri, result);
+}
+
+NS_IMETHODIMP
+nsJARURI::CloneIgnoringRef(nsIURI **result)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIJARURI> uri;
+    rv = CloneWithJARFileInternal(mJARFile, eIgnoreRef, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
     return CallQueryInterface(uri, result);
@@ -768,6 +794,14 @@ nsJARURI::SetJAREntry(const nsACString &entryPath)
 NS_IMETHODIMP
 nsJARURI::CloneWithJARFile(nsIURI *jarFile, nsIJARURI **result)
 {
+    return CloneWithJARFileInternal(jarFile, eHonorRef, result);
+}
+
+nsresult
+nsJARURI::CloneWithJARFileInternal(nsIURI *jarFile,
+                                   nsJARURI::RefHandlingEnum refHandlingMode,
+                                   nsIJARURI **result)
+{
     if (!jarFile) {
         return NS_ERROR_INVALID_ARG;
     }
@@ -781,24 +815,22 @@ nsJARURI::CloneWithJARFile(nsIURI *jarFile, nsIJARURI **result)
     NS_TryToSetImmutable(newJARFile);
 
     nsCOMPtr<nsIURI> newJAREntryURI;
-    rv = mJAREntry->Clone(getter_AddRefs(newJAREntryURI));
+    rv = refHandlingMode == eHonorRef ?
+        mJAREntry->Clone(getter_AddRefs(newJAREntryURI)) :
+        mJAREntry->CloneIgnoringRef(getter_AddRefs(newJAREntryURI));
+
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURL> newJAREntry(do_QueryInterface(newJAREntryURI));
     NS_ASSERTION(newJAREntry, "This had better QI to nsIURL!");
     
     nsJARURI* uri = new nsJARURI();
-    if (uri) {
-        NS_ADDREF(uri);
-        uri->mJARFile = newJARFile;
-        uri->mJAREntry = newJAREntry;
-        *result = uri;
-        rv = NS_OK;
-    } else {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    }
+    NS_ADDREF(uri);
+    uri->mJARFile = newJARFile;
+    uri->mJAREntry = newJAREntry;
+    *result = uri;
 
-    return rv;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -47,8 +47,20 @@ function waitForBrowserState(aState, aSetStateCallback) {
   let windowsOpen = 1;
   let listening = false;
   let windowObserving = false;
+  let restoreHiddenTabs = Services.prefs.getBoolPref(
+                          "browser.sessionstore.restore_hidden_tabs");
 
-  aState.windows.forEach(function(winState) expectedTabsRestored += winState.tabs.length);
+  aState.windows.forEach(function (winState) {
+    winState.tabs.forEach(function (tabState) {
+      if (restoreHiddenTabs || !tabState.hidden)
+        expectedTabsRestored++;
+    });
+  });
+
+  // There must be only hidden tabs and restoreHiddenTabs = false. We still
+  // expect one of them to be restored because it gets shown automatically.
+  if (!expectedTabsRestored)
+    expectedTabsRestored = 1;
 
   function onSSTabRestored(aEvent) {
     if (++tabsRestored == expectedTabsRestored) {
@@ -118,22 +130,26 @@ function waitForSaveState(aSaveStateCallback) {
   let sessionSaveTimeout = 1000 +
     Services.prefs.getIntPref("browser.sessionstore.interval");
 
-  let timeout = setTimeout(function () {
+  function removeObserver() {
+    if (!observing)
+      return;
     Services.obs.removeObserver(observer, topic, false);
+    observing = false;
+  }
+
+  let timeout = setTimeout(function () {
+    removeObserver();
     aSaveStateCallback();
   }, sessionSaveTimeout);
 
   function observer(aSubject, aTopic, aData) {
-    Services.obs.removeObserver(observer, topic, false);
+    removeObserver();
     timeout = clearTimeout(timeout);
-    observing = false;
     executeSoon(aSaveStateCallback);
   }
 
   registerCleanupFunction(function() {
-    if (observing) {
-      Services.obs.removeObserver(observer, topic, false);
-    }
+    removeObserver();
     if (timeout) {
       clearTimeout(timeout);
     }

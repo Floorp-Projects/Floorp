@@ -257,9 +257,7 @@ nsEditorEventListener::GetPresShell()
 {
   NS_PRECONDITION(mEditor,
     "The caller must check whether this is connected to an editor");
-  nsCOMPtr<nsIPresShell> ps;
-  mEditor->GetPresShell(getter_AddRefs(ps));
-  return ps.forget();
+  return mEditor->GetPresShell();
 }
 
 /**

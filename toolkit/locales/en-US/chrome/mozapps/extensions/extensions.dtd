@@ -30,11 +30,6 @@
 <!-- categories / views -->
 <!ENTITY view.search.label                    "Search">
 <!ENTITY view.discover.label                  "Get Add-ons">
-<!ENTITY view.locales.label                   "Languages">
-<!ENTITY view.searchengines.label             "Search Engines">
-<!ENTITY view.features.label                  "Extensions">
-<!ENTITY view.appearance2.label               "Appearance">
-<!ENTITY view.plugins.label                   "Plugins">
 <!ENTITY view.recentUpdates.label             "Recent Updates">
 <!ENTITY view.availableUpdates.label          "Available Updates">
 

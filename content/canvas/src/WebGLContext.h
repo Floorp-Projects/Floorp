@@ -84,8 +84,13 @@ struct VertexAttrib0Status {
     enum { Default, EmulatedUninitializedArray, EmulatedInitializedArray };
 };
 
+struct BackbufferClearingStatus {
+    enum { NotClearedSinceLastPresented, ClearedToDefaultValues, HasBeenDrawnTo };
+};
+
 struct WebGLTexelFormat {
-    enum { Generic, Auto, RGBA8, RGB8, RGBX8, BGRA8, BGR8, BGRX8, RGBA5551, RGBA4444, RGB565, R8, RA8, A8 };
+    enum { Generic, Auto, RGBA8, RGB8, RGBX8, BGRA8, BGR8, BGRX8, RGBA5551, RGBA4444, RGB565, R8, RA8, A8,
+           RGBA32F, RGB32F, A32F, R32F, RA32F };
 };
 
 struct WebGLTexelPremultiplicationOp {
@@ -284,7 +289,8 @@ struct WebGLContextOptions {
     // these are defaults
     WebGLContextOptions()
         : alpha(true), depth(true), stencil(false),
-          premultipliedAlpha(true), antialiasHint(false)
+          premultipliedAlpha(true), antialias(false),
+          preserveDrawingBuffer(false)
     { }
 
     bool operator==(const WebGLContextOptions& other) const {
@@ -293,24 +299,20 @@ struct WebGLContextOptions {
             depth == other.depth &&
             stencil == other.stencil &&
             premultipliedAlpha == other.premultipliedAlpha &&
-            antialiasHint == other.antialiasHint;
+            antialias == other.antialias &&
+            preserveDrawingBuffer == other.preserveDrawingBuffer;
     }
 
     bool operator!=(const WebGLContextOptions& other) const {
-        return
-            alpha != other.alpha ||
-            depth != other.depth ||
-            stencil != other.stencil ||
-            premultipliedAlpha != other.premultipliedAlpha ||
-            antialiasHint != other.antialiasHint;
+        return !operator==(other);
     }
 
     bool alpha;
     bool depth;
     bool stencil;
-
     bool premultipliedAlpha;
-    bool antialiasHint;
+    bool antialias;
+    bool preserveDrawingBuffer;
 };
 
 class WebGLContext :
@@ -377,6 +379,16 @@ public:
     // all context resources to be lost.
     PRUint32 Generation() { return mGeneration.value(); }
 
+    // this is similar to GLContext::ClearSafely, but is more comprehensive
+    // (takes care of scissor, stencil write mask, dithering, viewport...)
+    // WebGL has more complex needs than GLContext as content controls GL state.
+    void ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntRect& viewportRect);
+
+    // if the preserveDrawingBuffer context option is false, we need to clear the back buffer
+    // after it's been presented to the compositor. This function does that if needed.
+    // See section 2.2 in the WebGL spec.
+    void EnsureBackbufferClearedAsNeeded();
+
 protected:
     void SetDontKnowIfNeedFakeBlack() {
         mFakeBlackStatus = DontKnowIfNeedFakeBlack;
@@ -425,6 +437,17 @@ protected:
     PRInt32 mGLMaxFragmentUniformVectors;
     PRInt32 mGLMaxVertexUniformVectors;
 
+    // extensions
+    enum WebGLExtensionID {
+        WebGL_OES_texture_float,
+        WebGLExtensionID_Max
+    };
+    nsCOMPtr<nsIWebGLExtension> mEnabledExtensions[WebGLExtensionID_Max];
+    PRBool IsExtensionEnabled(WebGLExtensionID ext) const {
+        NS_ABORT_IF_FALSE(ext >= 0 && ext < WebGLExtensionID_Max, "bogus index!");
+        return mEnabledExtensions[ext] != nsnull;
+    }
+
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRInt32* maxAllowedCount, const char *info);
@@ -438,10 +461,11 @@ protected:
     PRBool ValidateStencilOpEnum(WebGLenum action, const char *info);
     PRBool ValidateFaceEnum(WebGLenum face, const char *info);
     PRBool ValidateBufferUsageEnum(WebGLenum target, const char *info);
-    PRBool ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
+    PRBool ValidateTexFormatAndType(WebGLenum format, WebGLenum type, int jsArrayType,
                                       PRUint32 *texelSize, const char *info);
     PRBool ValidateDrawModeEnum(WebGLenum mode, const char *info);
     PRBool ValidateAttribIndex(WebGLuint index, const char *info);
+    PRBool ValidateStencilParamsForDrawCall();
 
     void Invalidate();
     void DestroyResourcesAndContext();
@@ -453,12 +477,14 @@ protected:
                              WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero, WebGLint border,
                              WebGLenum format, WebGLenum type,
                              void *data, PRUint32 byteLength,
+                             int jsArrayType,
                              int srcFormat, PRBool srcPremultiplied);
     nsresult TexSubImage2D_base(WebGLenum target, WebGLint level,
                                 WebGLint xoffset, WebGLint yoffset,
                                 WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero,
                                 WebGLenum format, WebGLenum type,
                                 void *pixels, PRUint32 byteLength,
+                                int jsArrayType,
                                 int srcFormat, PRBool srcPremultiplied);
     nsresult ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
                              WebGLenum format, WebGLenum type, void *data, PRUint32 byteLength);
@@ -566,8 +592,18 @@ protected:
     GLuint mFakeVertexAttrib0BufferObject;
     int mFakeVertexAttrib0BufferStatus;
 
-    WebGLint mStencilRef;
-    WebGLuint mStencilValueMask, mStencilWriteMask;
+    WebGLint mStencilRefFront, mStencilRefBack;
+    WebGLuint mStencilValueMaskFront, mStencilValueMaskBack,
+              mStencilWriteMaskFront, mStencilWriteMaskBack;
+    realGLboolean mColorWriteMask[4];
+    realGLboolean mDepthWriteMask;
+    realGLboolean mScissorTestEnabled;
+    realGLboolean mDitherEnabled;
+    WebGLfloat mColorClearValue[4];
+    WebGLint mStencilClearValue;
+    WebGLfloat mDepthClearValue;
+
+    int mBackbufferClearingStatus;
 
 public:
     // console logging helpers
@@ -878,7 +914,7 @@ protected:
 
 public:
 
-    ImageInfo& ImageInfoAt(size_t level, size_t face) {
+    ImageInfo& ImageInfoAt(size_t level, size_t face = 0) {
 #ifdef DEBUG
         if (face >= mFacesCount)
             NS_ERROR("wrong face index, must be 0 for TEXTURE_2D and at most 5 for cube maps");
@@ -915,6 +951,12 @@ protected:
     void EnsureMaxLevelWithCustomImagesAtLeast(size_t aMaxLevelWithCustomImages) {
         mMaxLevelWithCustomImages = PR_MAX(mMaxLevelWithCustomImages, aMaxLevelWithCustomImages);
         mImageInfos.EnsureLengthAtLeast((mMaxLevelWithCustomImages + 1) * mFacesCount);
+    }
+
+    PRBool CheckFloatTextureFilterParams() const {
+        // Without OES_texture_float_linear, only NEAREST and NEAREST_MIMPAMP_NEAREST are supported
+        return (mMagFilter == LOCAL_GL_NEAREST) &&
+            (mMinFilter == LOCAL_GL_NEAREST || mMinFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST);
     }
 
     PRBool DoesMinFilterRequireMipmap() const {
@@ -1143,7 +1185,7 @@ public:
                             ("%s is a 2D texture, with a minification filter requiring a mipmap, "
                              "and is not mipmap complete (as defined in section 3.7.10).", msg_rendering_as_black);
                         mFakeBlackStatus = DoNeedFakeBlack;
-                    } else if (!ImageInfoAt(0, 0).IsPowerOfTwo()) {
+                    } else if (!ImageInfoAt(0).IsPowerOfTwo()) {
                         mContext->LogMessageIfVerbose
                             ("%s is a 2D texture, with a minification filter requiring a mipmap, "
                              "and either its width or height is not a power of two.", msg_rendering_as_black);
@@ -1152,12 +1194,12 @@ public:
                 }
                 else // no mipmap required
                 {
-                    if (!ImageInfoAt(0, 0).IsPositive()) {
+                    if (!ImageInfoAt(0).IsPositive()) {
                         mContext->LogMessageIfVerbose
                             ("%s is a 2D texture and its width or height is equal to zero.",
                              msg_rendering_as_black);
                         mFakeBlackStatus = DoNeedFakeBlack;
-                    } else if (!AreBothWrapModesClampToEdge() && !ImageInfoAt(0, 0).IsPowerOfTwo()) {
+                    } else if (!AreBothWrapModesClampToEdge() && !ImageInfoAt(0).IsPowerOfTwo()) {
                         mContext->LogMessageIfVerbose
                             ("%s is a 2D texture, with a minification filter not requiring a mipmap, "
                              "with its width or height not a power of two, and with a wrap mode "
@@ -1766,97 +1808,37 @@ protected:
         if (mContext->gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE)
             return;
 
-        PRBool initializeColorBuffer = mColorAttachment.HasUninitializedRenderbuffer();
-        PRBool initializeDepthBuffer = mDepthAttachment.HasUninitializedRenderbuffer() ||
-                                       mDepthStencilAttachment.HasUninitializedRenderbuffer();
-        PRBool initializeStencilBuffer = mStencilAttachment.HasUninitializedRenderbuffer() ||
-                                         mDepthStencilAttachment.HasUninitializedRenderbuffer();
+        PRUint32 mask = 0;
 
-        realGLboolean savedColorMask[4] = {0};
-        realGLboolean savedDepthMask = 0;
-        GLuint savedStencilMask = 0;
-        GLfloat savedColorClearValue[4] = {0.f};
-        GLfloat savedDepthClearValue = 0.f;
-        GLint savedStencilClearValue = 0;
-        GLuint clearBits = 0;
+        if (mColorAttachment.HasUninitializedRenderbuffer())
+            mask |= LOCAL_GL_COLOR_BUFFER_BIT;
 
-        realGLboolean wasScissorTestEnabled = mContext->gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST);
-        mContext->gl->fDisable(LOCAL_GL_SCISSOR_TEST);
-
-        realGLboolean wasDitherEnabled = mContext->gl->fIsEnabled(LOCAL_GL_DITHER);
-        mContext->gl->fDisable(LOCAL_GL_DITHER);
-
-        mContext->gl->PushViewportRect(nsIntRect(0,0,width(),height()));
-
-        if (initializeColorBuffer) {
-            mContext->gl->fGetBooleanv(LOCAL_GL_COLOR_WRITEMASK, savedColorMask);
-            mContext->gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, savedColorClearValue);
-            mContext->gl->fColorMask(1, 1, 1, 1);
-            mContext->gl->fClearColor(0.f, 0.f, 0.f, 0.f);
-            clearBits |= LOCAL_GL_COLOR_BUFFER_BIT;
+        if (mDepthAttachment.HasUninitializedRenderbuffer() ||
+            mDepthStencilAttachment.HasUninitializedRenderbuffer())
+        {
+            mask |= LOCAL_GL_DEPTH_BUFFER_BIT;
         }
 
-        if (initializeDepthBuffer) {
-            mContext->gl->fGetBooleanv(LOCAL_GL_DEPTH_WRITEMASK, &savedDepthMask);
-            mContext->gl->fGetFloatv(LOCAL_GL_DEPTH_CLEAR_VALUE, &savedDepthClearValue);
-            mContext->gl->fDepthMask(1);
-            mContext->gl->fClearDepth(0.f);
-            clearBits |= LOCAL_GL_DEPTH_BUFFER_BIT;
-        }
-
-        if (initializeStencilBuffer) {
-            mContext->gl->fGetIntegerv(LOCAL_GL_STENCIL_WRITEMASK, reinterpret_cast<GLint*>(&savedStencilMask));
-            mContext->gl->fGetIntegerv(LOCAL_GL_STENCIL_CLEAR_VALUE, &savedStencilClearValue);
-            mContext->gl->fStencilMask(0xffffffff);
-            mContext->gl->fClearStencil(0);
-            clearBits |= LOCAL_GL_STENCIL_BUFFER_BIT;
+        if (mStencilAttachment.HasUninitializedRenderbuffer() ||
+            mDepthStencilAttachment.HasUninitializedRenderbuffer())
+        {
+            mask |= LOCAL_GL_STENCIL_BUFFER_BIT;
         }
 
         // the one useful line of code
-        mContext->gl->fClear(clearBits);
+        mContext->ForceClearFramebufferWithDefaultValues(mask, nsIntRect(0,0,width(),height()));
 
-        if (initializeColorBuffer) {
-            mContext->gl->fColorMask(savedColorMask[0],
-                                     savedColorMask[1],
-                                     savedColorMask[2],
-                                     savedColorMask[3]);
-            mContext->gl->fClearColor(savedColorClearValue[0],
-                                      savedColorClearValue[1],
-                                      savedColorClearValue[2],
-                                      savedColorClearValue[3]);
+        if (mColorAttachment.HasUninitializedRenderbuffer())
             mColorAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
-        }
 
-        if (initializeDepthBuffer) {
-            mContext->gl->fDepthMask(savedDepthMask);
-            mContext->gl->fClearDepth(savedDepthClearValue);
-            if (mDepthAttachment.Renderbuffer())
-                mDepthAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
-        }
+        if (mDepthAttachment.HasUninitializedRenderbuffer())
+            mDepthAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
 
-        if (initializeStencilBuffer) {
-            mContext->gl->fStencilMask(savedStencilMask);
-            mContext->gl->fClearStencil(savedStencilClearValue);
-            if (mStencilAttachment.Renderbuffer())
-                mStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
-        }
+        if (mStencilAttachment.HasUninitializedRenderbuffer())
+            mStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
 
-        if (initializeDepthBuffer && initializeStencilBuffer) {
-            if (mDepthStencilAttachment.Renderbuffer())
-                mDepthStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
-        }
-
-        mContext->gl->PopViewportRect();
-
-        if (wasDitherEnabled)
-            mContext->gl->fEnable(LOCAL_GL_DITHER);
-        else
-            mContext->gl->fDisable(LOCAL_GL_DITHER);
-
-        if (wasScissorTestEnabled)
-            mContext->gl->fEnable(LOCAL_GL_DITHER);
-        else
-            mContext->gl->fDisable(LOCAL_GL_SCISSOR_TEST);
+        if (mDepthStencilAttachment.HasUninitializedRenderbuffer())
+            mDepthStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
     }
 
     WebGLuint mName;
@@ -1938,6 +1920,26 @@ protected:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLActiveInfo, WEBGLACTIVEINFO_PRIVATE_IID)
+
+#define WEBGLEXTENSION_PRIVATE_IID \
+    {0x457dd0b2, 0x9f77, 0x4c23, {0x95, 0x70, 0x9d, 0x62, 0x65, 0xc1, 0xa4, 0x81}}
+class WebGLExtension :
+    public nsIWebGLExtension,
+    public WebGLContextBoundObject,
+    public WebGLZeroingObject
+{
+public:
+    WebGLExtension(WebGLContext *baseContext)
+        : WebGLContextBoundObject(baseContext)
+    {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLEXTENSION
+
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLEXTENSION_PRIVATE_IID)
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLExtension, WEBGLACTIVEINFO_PRIVATE_IID)
 
 /**
  ** Template implementations

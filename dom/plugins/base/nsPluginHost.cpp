@@ -625,13 +625,13 @@ nsresult nsPluginHost::GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPr
   return rv;
 }
 
-NS_IMETHODIMP nsPluginHost::GetURL(nsISupports* pluginInst,
-                                   const char* url,
-                                   const char* target,
-                                   nsIPluginStreamListener* streamListener,
-                                   const char* altHost,
-                                   const char* referrer,
-                                   PRBool forceJSEnabled)
+nsresult nsPluginHost::GetURL(nsISupports* pluginInst,
+                              const char* url,
+                              const char* target,
+                              nsIPluginStreamListener* streamListener,
+                              const char* altHost,
+                              const char* referrer,
+                              PRBool forceJSEnabled)
 {
   return GetURLWithHeaders(static_cast<nsNPAPIPluginInstance*>(pluginInst),
                            url, target, streamListener, altHost, referrer,
@@ -681,7 +681,7 @@ nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
   return rv;
 }
 
-NS_IMETHODIMP nsPluginHost::PostURL(nsISupports* pluginInst,
+nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
                                     const char* url,
                                     PRUint32 postDataLen,
                                     const char* postData,
@@ -785,7 +785,7 @@ NS_IMETHODIMP nsPluginHost::PostURL(nsISupports* pluginInst,
  * with the exception that multiple values are not implemented.
  */
 
-NS_IMETHODIMP nsPluginHost::FindProxyForURL(const char* url, char* *result)
+nsresult nsPluginHost::FindProxyForURL(const char* url, char* *result)
 {
   if (!url || !result) {
     return NS_ERROR_INVALID_ARG;
@@ -849,12 +849,12 @@ NS_IMETHODIMP nsPluginHost::FindProxyForURL(const char* url, char* *result)
   return res;
 }
 
-NS_IMETHODIMP nsPluginHost::Init()
+nsresult nsPluginHost::Init()
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginHost::Destroy()
+nsresult nsPluginHost::Destroy()
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::Destroy Called\n"));
 
@@ -933,9 +933,9 @@ nsPluginHost::GetPluginTempDir(nsIFile **aDir)
   return sPluginTempDir->Clone(aDir);
 }
 
-NS_IMETHODIMP nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
-                                                        nsIPluginInstanceOwner* aOwner,
-                                                        nsIStreamListener** aListener)
+nsresult nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
+                                                   nsIPluginInstanceOwner* aOwner,
+                                                   nsIStreamListener** aListener)
 {
   NS_PRECONDITION(aChannel && aOwner,
                   "Invalid arguments to InstantiatePluginForChannel");
@@ -1236,9 +1236,9 @@ nsresult nsPluginHost::FindStoppedPluginForURL(nsIURI* aURL,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginHost::SetUpPluginInstance(const char *aMimeType,
-                                                nsIURI *aURL,
-                                                nsIPluginInstanceOwner *aOwner)
+nsresult nsPluginHost::SetUpPluginInstance(const char *aMimeType,
+                                           nsIURI *aURL,
+                                           nsIPluginInstanceOwner *aOwner)
 {
   NS_ENSURE_ARG_POINTER(aOwner);
 
@@ -1387,7 +1387,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
 {
   nsPluginTag *plugin = FindPluginForType(aMimeType, PR_TRUE);
@@ -1435,7 +1435,7 @@ static int CompareExtensions(const char *aExtensionList, const char *aExtension)
   return PL_strcasecmp(pExt, aExtension);
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::IsPluginEnabledForExtension(const char* aExtension,
                                           const char* &aMimeType)
 {
@@ -1565,7 +1565,7 @@ private:
 
 NS_IMPL_ISUPPORTS1(DOMPluginImpl, nsIDOMPlugin)
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::GetPluginCount(PRUint32* aPluginCount)
 {
   LoadPlugins();
@@ -1585,7 +1585,7 @@ nsPluginHost::GetPluginCount(PRUint32* aPluginCount)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray)
 {
   LoadPlugins();
@@ -2341,7 +2341,7 @@ nsresult nsPluginHost::ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
     return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginHost::LoadPlugins()
+nsresult nsPluginHost::LoadPlugins()
 {
   // do not do anything if it is already done
   // use ReloadPlugins() to enforce loading
@@ -3535,7 +3535,7 @@ nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsNPAPIPluginInstance *aInsta
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPostDataLen,
                                           char **outPostData, PRUint32 *outPostDataLen)
 {
@@ -3687,7 +3687,7 @@ nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPos
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile)
 {
   nsresult rv;
@@ -3788,19 +3788,19 @@ nsPluginHost::CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow)
 {
   return PLUG_NewPluginNativeWindow(aPluginNativeWindow);
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow)
 {
   return PLUG_DeletePluginNativeWindow(aPluginNativeWindow);
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginHost::InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner)
 {
   // Pass PR_FALSE as the second arg, we want the answer to be the

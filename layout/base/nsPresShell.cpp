@@ -260,9 +260,6 @@ ChangeFlag(PRUint32 aFlags, PRBool aOnOff, PRUint32 aFlag)
 // *  - initially created for bugs 31816, 20760, 22963
 static void ColorToString(nscolor aColor, nsAutoString &aString);
 
-// Class ID's
-static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
-
 // RangePaintInfo is used to paint ranges to offscreen buffers
 struct RangePaintInfo {
   nsCOMPtr<nsIRange> mRange;
@@ -1125,7 +1122,7 @@ protected:
 
   void MaybeReleaseCapturingContent()
   {
-    nsCOMPtr<nsFrameSelection> frameSelection = FrameSelection();
+    nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
     if (frameSelection) {
       frameSelection->SetMouseDownState(PR_FALSE);
     }
@@ -1831,11 +1828,7 @@ PresShell::Init(nsIDocument* aDocument,
   // before creating any frames.
   SetPreferenceStyleRules(PR_FALSE);
 
-  result = CallCreateInstance(kFrameSelectionCID, &mSelection);
-  if (NS_FAILED(result)) {
-    mStyleSet = nsnull;
-    return result;
-  }
+  NS_ADDREF(mSelection = new nsFrameSelection());
 
   // Create and initialize the frame manager
   result = FrameManager()->Init(this, mStyleSet);
@@ -5679,7 +5672,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   // temporarily hide the selection so that text is drawn normally. If a
   // selection is being rendered, use that, otherwise use the presshell's
   // selection.
-  nsCOMPtr<nsFrameSelection> frameSelection;
+  nsRefPtr<nsFrameSelection> frameSelection;
   if (aSelection) {
     nsCOMPtr<nsISelectionPrivate> selpriv = do_QueryInterface(aSelection);
     selpriv->GetFrameSelection(getter_AddRefs(frameSelection));
