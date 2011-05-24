@@ -558,6 +558,9 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
 
                     // Handling Debug.Objects:
                     //
+                    // If obj (the Debug object) hasn't been marked
+                    // yet, it may not be live, so don't mark anything.
+                    //
                     // If comp is the debuggee's compartment, do nothing. No
                     // referent objects will be collected, since we have a
                     // wrapper of each one.
@@ -569,14 +572,13 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
                     // If comp is null, then for each key (referent-wrapper)
                     // that is marked, mark the corresponding value.
                     //
-                    if (!comp || obj->compartment() == comp) {
+                    if (obj->isMarked() && (!comp || obj->compartment() == comp)) {
                         for (ObjectMap::Range r = dbg->objects.all(); !r.empty(); r.popFront()) {
                             // The unwrap() call below has the following effect: we
                             // mark the Debug.Object if the *referent* is alive,
                             // even if the CCW of the referent seems unreachable.
                             if (!r.front().value->isMarked() &&
-                                (comp || r.front().key->unwrap()->isMarked()))
-                            {
+                                (comp || r.front().key->unwrap()->isMarked())) {
                                 MarkObject(trc, *r.front().value,
                                            "Debug.Object with live referent");
                                 markedAny = true;
