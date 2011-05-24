@@ -70,8 +70,8 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 
     if (!ApplyTypeInformation(&analyzer, graph))
         return false;
-    //if (!Lower(&analyzer, graph))
-    //    return false;
+    if (!Lower(&analyzer, graph))
+        return false;
     spew.spew("Lower");
 
     return false;

@@ -312,7 +312,7 @@ class MInstruction
       : block_(NULL),
         uses_(NULL),
         id_(0),
-        assumedType_(MIRType_Value),
+        assumedType_(MIRType_None),
         resultType_(MIRType_None),
         usedTypes_(0),
         inWorklist_(0)
@@ -320,7 +320,7 @@ class MInstruction
 
     virtual Opcode op() const = 0;
     void printName(FILE *fp);
-    void printOpcode(FILE *fp);
+    virtual void printOpcode(FILE *fp);
 
     uint32 id() const {
         JS_ASSERT(block_);
@@ -520,6 +520,7 @@ class MConstant : public MAryInstruction<0>
     const js::Value &value() const {
         return value_;
     }
+    void printOpcode(FILE *fp);
 };
 
 class MParameter : public MAryInstruction<0>
@@ -676,7 +677,7 @@ class MBox : public MUnaryInstruction
     static MBox *New(MIRGenerator *gen, MInstruction *ins)
     {
         // Cannot box a box.
-        JS_ASSERT(!ins->type() == MIRType_Value);
+        JS_ASSERT(ins->type() != MIRType_Value);
 
         MBox *box = new (gen->temp()) MBox();
         if (!box || !box->init(gen, ins))

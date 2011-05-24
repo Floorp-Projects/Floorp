@@ -73,15 +73,35 @@ PrintOpcodeName(FILE *fp, MInstruction::Opcode op)
 void
 MInstruction::printName(FILE *fp)
 {
-    printOpcode(fp);
+    PrintOpcodeName(fp, op());
     fprintf(fp, "%u", id());
-    fprintf(fp, ":v");
 }
+
+static const char *MirTypeNames[] =
+{
+    "",
+    "v",
+    "n",
+    "b",
+    "i",
+    "s",
+    "d",
+    "x",
+    "a"
+};
 
 void
 MInstruction::printOpcode(FILE *fp)
 {
+    if (assumedType() != MIRType_None)
+        fprintf(fp, "%s:", MirTypeNames[assumedType()]);
     PrintOpcodeName(fp, op());
+    fprintf(fp, " ");
+    for (size_t j = 0; j < numOperands(); j++) {
+        getInput(j)->printName(fp);
+        if (j != numOperands() - 1)
+            fprintf(fp, " ");
+    }
 }
 
 size_t
@@ -170,6 +190,40 @@ MConstant::MConstant(const js::Value &vp)
   : value_(vp)
 {
     setResultType(MIRTypeFromValue(vp));
+}
+
+void
+MConstant::printOpcode(FILE *fp)
+{
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " ");
+    switch (type()) {
+      case MIRType_Undefined:
+        fprintf(fp, "undefined");
+        break;
+      case MIRType_Null:
+        fprintf(fp, "null");
+        break;
+      case MIRType_Boolean:
+        fprintf(fp, value().toBoolean() ? "true" : "false");
+        break;
+      case MIRType_Int32:
+        fprintf(fp, "%x", value().toInt32());
+        break;
+      case MIRType_Double:
+        fprintf(fp, "%f", value().toDouble());
+        break;
+      case MIRType_Object:
+        fprintf(fp, "object %p (%s)", (void *)&value().toObject(),
+                value().toObject().getClass()->name);
+        break;
+      case MIRType_String:
+        fprintf(fp, "string %p", (void *)value().toString());
+        break;
+      default:
+        JS_NOT_REACHED("unexpected type");
+        break;
+    }
 }
 
 MParameter *

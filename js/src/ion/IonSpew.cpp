@@ -101,12 +101,6 @@ DumpInstruction(FILE *fp, MInstruction *ins)
     ins->printName(fp);
     fprintf(fp, " ");
     ins->printOpcode(fp);
-    fprintf(fp, " ");
-    for (size_t j = 0; j < ins->numOperands(); j++) {
-        ins->getOperand(j)->ins()->printName(fp);
-        if (j != ins->numOperands() - 1)
-            fprintf(fp, " ");
-    }
     fprintf(fp, " <|@\n");
 }
 

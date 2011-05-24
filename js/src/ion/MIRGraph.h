@@ -183,6 +183,9 @@ class MBasicBlock : public TempObject
     // state at the same time. There may be only one backedge per block.
     bool setBackedge(MBasicBlock *block, MBasicBlock *successor);
 
+    bool insertBefore(MInstruction *at, MInstruction *ins);
+    bool insertAfter(MInstruction *at, MInstruction *ins);
+
     ///////////////////////////////////////////////////////
     /////////// END GRAPH BUILDING INSTRUCTIONS ///////////
     ///////////////////////////////////////////////////////
