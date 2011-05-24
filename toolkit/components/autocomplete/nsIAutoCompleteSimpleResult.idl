@@ -75,6 +75,12 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
   void setSearchResult(in unsigned short aSearchResult);
 
   /**
+   * A writer for the readonly attribute 'isURLResult'.
+   * Sets whether the values in this result are URLs.
+   */
+  void setIsURLResult(in boolean aIsURLResult);
+
+  /**
    * Appends a result item consisting of the given value, comment, image and style.
    * This is how you add results.  Note:  image and style are optional. 
    */
