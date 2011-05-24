@@ -795,8 +795,13 @@ mjit::Compiler::generatePrologue()
     if (debugMode() || Probes::callTrackingActive(cx))
         INLINE_STUBCALL(stubs::ScriptDebugPrologue, REJOIN_RESUME);
 
-    if (cx->typeInferenceEnabled())
+    if (cx->typeInferenceEnabled()) {
+#ifdef DEBUG
+        if (script->fun)
+            INLINE_STUBCALL(stubs::AssertArgumentTypes, REJOIN_NONE);
+#endif
         ensureDoubleArguments();
+    }
 
     recompileCheckHelper();
 
