@@ -203,21 +203,6 @@ codesighs:
 # defined in package-name.mk
 export MOZ_SOURCE_STAMP
 
-#XXX: this is a hack, since we don't want to clobber for MSVC
-# PGO support, but we can't do this test in client.mk
-ifneq ($(OS_ARCH)_$(GNU_CC), WINNT_)
-# No point in clobbering if PGO has been explicitly disabled.
-ifndef NO_PROFILE_GUIDED_OPTIMIZE
-maybe_clobber_profiledbuild: clean
-else
-maybe_clobber_profiledbuild:
-endif
-else
-maybe_clobber_profiledbuild:
-endif
-
-.PHONY: maybe_clobber_profiledbuild
-
 # Look for R_386_PC32 relocations in shared libs, these
 # break x86_64 builds and SELinux users.
 ifeq ($(OS_TARGET)_$(TARGET_XPCOM_ABI),Linux_x86-gcc3)
