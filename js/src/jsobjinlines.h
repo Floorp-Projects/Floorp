@@ -1114,7 +1114,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
     JSObject *global;
-    if (!cx->running()) {
+    if (!cx->hasfp()) {
         global = cx->globalObject;
         OBJ_TO_INNER_OBJECT(cx, global);
         if (!global)

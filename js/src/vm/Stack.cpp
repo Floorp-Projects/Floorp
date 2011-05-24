@@ -79,7 +79,7 @@ StackFrame::prevpcSlow()
     JS_ASSERT(!(flags_ & HAS_PREVPC));
 #if defined(JS_METHODJIT) && defined(JS_MONOIC)
     StackFrame *p = prev();
-    js::mjit::JITScript *jit = p->script()->getJIT(p->isConstructing());
+    mjit::JITScript *jit = p->script()->getJIT(p->isConstructing());
     prevpc_ = jit->nativeToPC(ncode_);
     flags_ |= HAS_PREVPC;
     return prevpc_;

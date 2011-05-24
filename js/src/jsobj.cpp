@@ -6165,7 +6165,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
 
     if (protoKey != JSProto_Null) {
         if (!scopeobj) {
-            if (cx->running())
+            if (cx->hasfp())
                 scopeobj = &cx->fp()->scopeChain();
             if (!scopeobj) {
                 scopeobj = cx->globalObject;

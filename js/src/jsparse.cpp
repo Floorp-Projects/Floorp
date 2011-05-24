@@ -8762,7 +8762,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
 
         JSObject *obj;
-        if (context->running()) {
+        if (context->hasfp()) {
             obj = RegExp::createObject(context, context->regExpStatics(),
                                        tokenStream.getTokenbuf().begin(),
                                        tokenStream.getTokenbuf().length(),

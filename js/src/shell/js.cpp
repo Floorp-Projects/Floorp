@@ -3722,7 +3722,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
                         ? !!(JSVAL_TO_BOOLEAN(argv[2]))
                         : false;
 
-    JS_ASSERT(cx->running());
+    JS_ASSERT(cx->hasfp());
 
     FrameRegsIter fi(cx);
     for (uint32 i = 0; i < upCount; ++i, ++fi) {

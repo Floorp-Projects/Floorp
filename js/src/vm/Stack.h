@@ -296,15 +296,15 @@ class StackFrame
     void                *ncode_;        /* return address for method JIT */
 
     /* Lazily initialized */
-    js::Value           rval_;          /* return value of the frame */
+    Value               rval_;          /* return value of the frame */
     jsbytecode          *prevpc_;       /* pc of previous frame*/
     jsbytecode          *imacropc_;     /* pc of macro caller */
     void                *hookData_;     /* closure returned by call hook */
     void                *annotation_;   /* perhaps remove with bug 546848 */
 
     static void staticAsserts() {
-        JS_STATIC_ASSERT(offsetof(StackFrame, rval_) % sizeof(js::Value) == 0);
-        JS_STATIC_ASSERT(sizeof(StackFrame) % sizeof(js::Value) == 0);
+        JS_STATIC_ASSERT(offsetof(StackFrame, rval_) % sizeof(Value) == 0);
+        JS_STATIC_ASSERT(sizeof(StackFrame) % sizeof(Value) == 0);
     }
 
     inline void initPrev(JSContext *cx);
@@ -426,15 +426,15 @@ class StackFrame
      * values. A frame's 'base' is the base of the expression stack.
      */
 
-    js::Value *slots() const {
-        return (js::Value *)(this + 1);
+    Value *slots() const {
+        return (Value *)(this + 1);
     }
 
-    js::Value *base() const {
+    Value *base() const {
         return slots() + script()->nfixed;
     }
 
-    js::Value &varSlot(uintN i) {
+    Value &varSlot(uintN i) {
         JS_ASSERT(i < script()->nfixed);
         JS_ASSERT_IF(maybeFun(), i < script()->bindings.countVars());
         return slots()[i];
@@ -548,32 +548,32 @@ class StackFrame
         return fun()->nargs;
     }
 
-    js::Value &formalArg(uintN i) const {
+    Value &formalArg(uintN i) const {
         JS_ASSERT(i < numFormalArgs());
         return formalArgs()[i];
     }
 
-    js::Value *formalArgs() const {
+    Value *formalArgs() const {
         JS_ASSERT(hasArgs());
-        return (js::Value *)this - numFormalArgs();
+        return (Value *)this - numFormalArgs();
     }
 
-    js::Value *formalArgsEnd() const {
+    Value *formalArgsEnd() const {
         JS_ASSERT(hasArgs());
-        return (js::Value *)this;
+        return (Value *)this;
     }
 
-    js::Value *maybeFormalArgs() const {
+    Value *maybeFormalArgs() const {
         return (flags_ & (FUNCTION | EVAL)) == FUNCTION
                ? formalArgs()
                : NULL;
     }
 
     inline uintN numActualArgs() const;
-    inline js::Value *actualArgs() const;
-    inline js::Value *actualArgsEnd() const;
+    inline Value *actualArgs() const;
+    inline Value *actualArgsEnd() const;
 
-    inline js::Value &canonicalActualArg(uintN i) const;
+    inline Value &canonicalActualArg(uintN i) const;
     template <class Op>
     inline bool forEachCanonicalActualArg(Op op, uintN start = 0, uintN count = uintN(-1));
     template <class Op> inline bool forEachFormalArg(Op op);
@@ -608,10 +608,10 @@ class StackFrame
      * respectively, allow more efficient access.
      */
 
-    js::Value &functionThis() const {
+    Value &functionThis() const {
         JS_ASSERT(isFunctionFrame());
         if (isEvalFrame())
-            return ((js::Value *)this)[-1];
+            return ((Value *)this)[-1];
         return formalArgs()[-1];
     }
 
@@ -620,14 +620,14 @@ class StackFrame
         return formalArgs()[-1].toObject();
     }
 
-    js::Value &globalThis() const {
+    Value &globalThis() const {
         JS_ASSERT(isGlobalFrame());
-        return ((js::Value *)this)[-1];
+        return ((Value *)this)[-1];
     }
 
-    js::Value &thisValue() const {
+    Value &thisValue() const {
         if (flags_ & (EVAL | GLOBAL))
-            return ((js::Value *)this)[-1];
+            return ((Value *)this)[-1];
         return formalArgs()[-1];
     }
 
@@ -645,15 +645,15 @@ class StackFrame
         return calleev().toObject();
     }
 
-    const js::Value &calleev() const {
+    const Value &calleev() const {
         JS_ASSERT(isFunctionFrame());
         return mutableCalleev();
     }
 
-    const js::Value &maybeCalleev() const {
+    const Value &maybeCalleev() const {
         JS_ASSERT(isScriptFrame());
         Value &calleev = flags_ & (EVAL | GLOBAL)
-                         ? ((js::Value *)this)[-2]
+                         ? ((Value *)this)[-2]
                          : formalArgs()[-2];
         JS_ASSERT(calleev.isObjectOrNull());
         return calleev;
@@ -669,10 +669,10 @@ class StackFrame
         mutableCalleev().setObject(newCallee);
     }
 
-    js::Value &mutableCalleev() const {
+    Value &mutableCalleev() const {
         JS_ASSERT(isFunctionFrame());
         if (isEvalFrame())
-            return ((js::Value *)this)[-2];
+            return ((Value *)this)[-2];
         return formalArgs()[-2];
     }
 
@@ -682,10 +682,10 @@ class StackFrame
      * methodReadBarrier. For a non-function frame, return true with *vp set
      * from calleev, which may not be an object (it could be undefined).
      */
-    bool getValidCalleeObject(JSContext *cx, js::Value *vp);
+    bool getValidCalleeObject(JSContext *cx, Value *vp);
 
-    js::CallReceiver callReceiver() const {
-        return js::CallReceiverFromArgv(formalArgs());
+    CallReceiver callReceiver() const {
+        return CallReceiverFromArgv(formalArgs());
     }
 
     /*
@@ -837,7 +837,7 @@ class StackFrame
 
     /* Return value */
 
-    const js::Value &returnValue() {
+    const Value &returnValue() {
         if (!(flags_ & HAS_RVAL))
             rval_.setUndefined();
         return rval_;
@@ -847,7 +847,7 @@ class StackFrame
         flags_ |= HAS_RVAL;
     }
 
-    void setReturnValue(const js::Value &v) {
+    void setReturnValue(const Value &v) {
         rval_ = v;
         markReturnValue();
     }
@@ -1005,26 +1005,26 @@ class StackFrame
 
     static ptrdiff_t offsetOfCallee(JSFunction *fun) {
         JS_ASSERT(fun != NULL);
-        return -(fun->nargs + 2) * sizeof(js::Value);
+        return -(fun->nargs + 2) * sizeof(Value);
     }
 
     static ptrdiff_t offsetOfThis(JSFunction *fun) {
         return fun == NULL
-               ? -1 * ptrdiff_t(sizeof(js::Value))
-               : -(fun->nargs + 1) * ptrdiff_t(sizeof(js::Value));
+               ? -1 * ptrdiff_t(sizeof(Value))
+               : -(fun->nargs + 1) * ptrdiff_t(sizeof(Value));
     }
 
     static ptrdiff_t offsetOfFormalArg(JSFunction *fun, uintN i) {
         JS_ASSERT(i < fun->nargs);
-        return (-(int)fun->nargs + i) * sizeof(js::Value);
+        return (-(int)fun->nargs + i) * sizeof(Value);
     }
 
     static size_t offsetOfFixed(uintN i) {
-        return sizeof(StackFrame) + i * sizeof(js::Value);
+        return sizeof(StackFrame) + i * sizeof(Value);
     }
 
 #ifdef JS_METHODJIT
-    js::mjit::JITScript *jit() {
+    mjit::JITScript *jit() {
         return script()->getJIT(isConstructing());
     }
 #endif
@@ -1295,12 +1295,18 @@ class ContextStack
     ~ContextStack();
 
     /*
-     * A context is "empty" if it has no code, running or suspended, on its
-     * stack. Running code can be stopped (via JS_SaveFrameChain) which leads
-     * to the state |!cx->empty() && cx->running()|.
+     * A context's stack is "empty" if there are no scripts or natives
+     * executing. Note that JS_SaveFrameChain does factor into this definition.
      */
     bool empty() const           { JS_ASSERT_IF(regs_, seg_); return !seg_; }
-    bool running() const         { JS_ASSERT_IF(regs_, regs_->fp()); return !!regs_; }
+
+    /*
+     * Return whether there has been at least one frame pushed since the most
+     * recent call to JS_SaveFrameChain. Note that natives do not have frames
+     * and dummy frames are frames that do not represent script execution hence
+     * this query has little semantic meaning past "you can call fp()".
+     */
+    bool hasfp() const           { JS_ASSERT_IF(regs_, regs_->fp()); return !!regs_; }
 
     /* Current regs of the current segment (see VM stack layout comment). */
     FrameRegs &regs() const      { JS_ASSERT(regs_); return *regs_; }
@@ -1330,7 +1336,7 @@ class ContextStack
     }
 
     /* Return the current segment, which may or may not be active. */
-    js::StackSegment *currentSegment() const {
+    StackSegment *currentSegment() const {
         assertSegmentsInSync();
         return seg_;
     }
