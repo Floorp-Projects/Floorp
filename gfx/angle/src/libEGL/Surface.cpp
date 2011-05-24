@@ -13,6 +13,7 @@
 #include "libEGL/Surface.h"
 
 #include "common/debug.h"
+#include "libGLESv2/Texture.h"
 
 #include "libEGL/main.h"
 #include "libEGL/Display.h"
@@ -27,6 +28,9 @@ Surface::Surface(Display *display, const Config *config, HWND window)
     mRenderTarget = NULL;
     mOffscreenTexture = NULL;
     mShareHandle = NULL;
+    mTexture = NULL;
+    mTextureFormat = EGL_NO_TEXTURE;
+    mTextureTarget = EGL_NO_TEXTURE;
 
     mPixelAspectRatio = (EGLint)(1.0 * EGL_DISPLAY_SCALING);   // FIXME: Determine actual pixel aspect ratio
     mRenderBuffer = EGL_BACK_BUFFER;
@@ -34,19 +38,22 @@ Surface::Surface(Display *display, const Config *config, HWND window)
     mSwapInterval = -1;
     setSwapInterval(1);
 
+    mIsPendingDestroy = false;
+
     subclassWindow();
-    resetSwapChain();
 }
 
-Surface::Surface(Display *display, const Config *config, EGLint width, EGLint height)
-    : mDisplay(display), mWindow(NULL), mConfig(config), mWidth(width), mHeight(height)
+Surface::Surface(Display *display, const Config *config, HANDLE shareHandle, EGLint width, EGLint height, EGLenum textureFormat, EGLenum textureType)
+    : mDisplay(display), mWindow(NULL), mConfig(config), mShareHandle(shareHandle), mWidth(width), mHeight(height)
 {
     mSwapChain = NULL;
     mDepthStencil = NULL;
     mRenderTarget = NULL;
     mOffscreenTexture = NULL;
-    mShareHandle = NULL;
     mWindowSubclassed = false;
+    mTexture = NULL;
+    mTextureFormat = textureFormat;
+    mTextureTarget = textureType;
 
     mPixelAspectRatio = (EGLint)(1.0 * EGL_DISPLAY_SCALING);   // FIXME: Determine actual pixel aspect ratio
     mRenderBuffer = EGL_BACK_BUFFER;
@@ -54,13 +61,19 @@ Surface::Surface(Display *display, const Config *config, EGLint width, EGLint he
     mSwapInterval = -1;
     setSwapInterval(1);
 
-    resetSwapChain(width, height);
+    mIsPendingDestroy = false;
 }
 
 Surface::~Surface()
 {
     unsubclassWindow();
     release();
+}
+
+bool Surface::initialize()
+{
+    ASSERT(!mSwapChain && !mOffscreenTexture && !mDepthStencil);
+    return resetSwapChain();
 }
 
 void Surface::release()
@@ -88,13 +101,19 @@ void Surface::release()
         mOffscreenTexture->Release();
         mOffscreenTexture = NULL;
     }
+
+    if (mTexture)
+    {
+        mTexture->releaseTexImage();
+        mTexture = NULL;
+    }
 }
 
-void Surface::resetSwapChain()
+bool Surface::resetSwapChain()
 {
-    if (!mWindow) {
-        resetSwapChain(mWidth, mHeight);
-        return;
+    if (!mWindow)
+    {
+        return resetSwapChain(mWidth, mHeight);
     }
 
     RECT windowRect;
@@ -103,19 +122,19 @@ void Surface::resetSwapChain()
         ASSERT(false);
 
         ERR("Could not retrieve the window dimensions");
-        return;
+        return false;
     }
 
-    resetSwapChain(windowRect.right - windowRect.left, windowRect.bottom - windowRect.top);
+    return resetSwapChain(windowRect.right - windowRect.left, windowRect.bottom - windowRect.top);
 }
 
-void Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
+bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 {
     IDirect3DDevice9 *device = mDisplay->getDevice();
 
     if (device == NULL)
     {
-        return;
+        return false;
     }
 
     // Evict all non-render target textures to system memory and release all resources
@@ -145,7 +164,7 @@ void Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
         result = device->CreateAdditionalSwapChain(&presentParameters, &mSwapChain);
     } else {
         HANDLE *pShareHandle = NULL;
-        if (mDisplay->isD3d9exDevice()) {
+        if (mDisplay->isD3d9ExDevice()) {
             pShareHandle = &mShareHandle;
         }
 
@@ -159,12 +178,15 @@ void Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
         ERR("Could not create additional swap chains or offscreen surfaces: %08lX", result);
         release();
-        return error(EGL_BAD_ALLOC);
+        return error(EGL_BAD_ALLOC, false);
     }
 
-    result = device->CreateDepthStencilSurface(presentParameters.BackBufferWidth, presentParameters.BackBufferHeight,
-                                               presentParameters.AutoDepthStencilFormat, presentParameters.MultiSampleType,
-                                               presentParameters.MultiSampleQuality, FALSE, &mDepthStencil, NULL);
+    if (mConfig->mDepthStencilFormat != D3DFMT_UNKNOWN)
+    {
+        result = device->CreateDepthStencilSurface(presentParameters.BackBufferWidth, presentParameters.BackBufferHeight,
+                                                   presentParameters.AutoDepthStencilFormat, presentParameters.MultiSampleType,
+                                                   presentParameters.MultiSampleQuality, FALSE, &mDepthStencil, NULL);
+    }
 
     if (FAILED(result))
     {
@@ -172,7 +194,7 @@ void Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
         ERR("Could not create depthstencil surface for new swap chain: %08lX", result);
         release();
-        return error(EGL_BAD_ALLOC);
+        return error(EGL_BAD_ALLOC, false);
     }
 
     if (mWindow) {
@@ -186,6 +208,7 @@ void Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
     mHeight = presentParameters.BackBufferHeight;
 
     mPresentIntervalDirty = false;
+    return true;
 }
 
 HWND Surface::getWindowHandle()
@@ -347,6 +370,16 @@ IDirect3DSurface9 *Surface::getDepthStencil()
     return mDepthStencil;
 }
 
+IDirect3DTexture9 *Surface::getOffscreenTexture()
+{
+    if (mOffscreenTexture)
+    {
+        mOffscreenTexture->AddRef();
+    }
+
+    return mOffscreenTexture;
+}
+
 void Surface::setSwapInterval(EGLint interval)
 {
     if (mSwapInterval == interval)
@@ -361,4 +394,38 @@ void Surface::setSwapInterval(EGLint interval)
     mPresentInterval = convertInterval(mSwapInterval);
     mPresentIntervalDirty = true;
 }
+
+EGLenum Surface::getTextureFormat() const
+{
+    return mTextureFormat;
+}
+
+EGLenum Surface::getTextureTarget() const
+{
+    return mTextureTarget;
+}
+
+void Surface::setBoundTexture(gl::Texture2D *texture)
+{
+    mTexture = texture;
+}
+
+gl::Texture2D *Surface::getBoundTexture() const
+{
+    return mTexture;
+}
+
+D3DFORMAT Surface::getFormat() const
+{
+    return mConfig->mRenderTargetFormat;
+}
+
+void Surface::setPendingDestroy() {
+    mIsPendingDestroy = true;
+}
+
+bool Surface::isPendingDestroy() const {
+    return mIsPendingDestroy;
+}
+
 }

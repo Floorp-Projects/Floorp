@@ -91,6 +91,8 @@ CPPSRCS = \
   ossource_win.cpp \
   util.cpp \
   ValidateLimitations.cpp \
+  ForLoopUnroll.cpp \
+  MapLongVariableNames.cpp \
   $(NULL)
 
 # flex/yacc generated files

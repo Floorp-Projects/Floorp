@@ -81,7 +81,7 @@ struct TParseContext {
     bool parameterSamplerErrorCheck(int line, TQualifier qualifier, const TType& type);
     bool containsSampler(TType& type);
     bool nonInitConstErrorCheck(int line, TString& identifier, TPublicType& type);
-    bool nonInitErrorCheck(int line, TString& identifier, TPublicType& type);
+    bool nonInitErrorCheck(int line, TString& identifier, TPublicType& type, TVariable*& variable);
     bool paramErrorCheck(int line, TQualifier qualifier, TQualifier paramQualifier, TType* type);
     bool extensionErrorCheck(int line, const TString&);
     const TFunction* findFunction(int line, TFunction* pfnCall, bool *builtIn = 0);
