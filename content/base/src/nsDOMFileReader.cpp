@@ -77,9 +77,6 @@
 #include "nsLayoutStatics.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsFileDataProtocolHandler.h"
-#include "xpcprivate.h"
-#include "xpcquickstubs.h"
-#include "jstypedarray.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -96,7 +93,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMFileReader)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMFileReader,
                                                   nsXHREventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFile)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrincipal)
@@ -105,20 +101,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMFileReader,
                                                 nsXHREventTarget)
-  tmp->UnrootResultArrayBuffer();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFile)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChannel)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsDOMFileReader,
-                                               nsXHREventTarget)
-  if(tmp->mResultArrayBuffer) {
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mResultArrayBuffer,
-                                               "mResultArrayBuffer")
-  }
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMCI_DATA(FileReader, nsDOMFileReader)
 
@@ -136,19 +123,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 NS_IMPL_ADDREF_INHERITED(nsDOMFileReader, nsXHREventTarget)
 NS_IMPL_RELEASE_INHERITED(nsDOMFileReader, nsXHREventTarget)
 
-//array buffer holder root/unroot
-void
-nsDOMFileReader::RootResultArrayBuffer()
-{
-  NS_HOLD_JS_OBJECTS(this, nsDOMFileReader);
-}
-
-void
-nsDOMFileReader::UnrootResultArrayBuffer()
-{
-  NS_DROP_JS_OBJECTS(this, nsDOMFileReader);
-}
-
 //nsICharsetDetectionObserver
 
 NS_IMETHODIMP
@@ -163,20 +137,16 @@ nsDOMFileReader::Notify(const char *aCharset, nsDetectionConfident aConf)
 nsDOMFileReader::nsDOMFileReader()
   : mFileData(nsnull),
     mDataLen(0), mDataFormat(FILE_AS_BINARY),
-    mResultArrayBuffer(nsnull),
     mReadyState(nsIDOMFileReader::EMPTY),
     mProgressEventWasDelayed(PR_FALSE),
     mTimerIsActive(PR_FALSE),
     mReadTotal(0), mReadTransferred(0)
 {
   nsLayoutStatics::AddRef();
-  SetDOMStringToNull(mResult);
 }
 
 nsDOMFileReader::~nsDOMFileReader()
 {
-  UnrootResultArrayBuffer();
-  
   if (mListenerManager) 
     mListenerManager->Disconnect();
 
@@ -265,21 +235,9 @@ nsDOMFileReader::GetReadyState(PRUint16 *aReadyState)
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::GetResult(JSContext* aCx, jsval* aResult)
+nsDOMFileReader::GetResult(nsAString& aResult)
 {
-  if (mDataFormat == FILE_AS_ARRAYBUFFER) {
-    if (mReadyState == nsIDOMFileReader::DONE) {
-      *aResult = OBJECT_TO_JSVAL(mResultArrayBuffer);
-    } else {
-      *aResult = JSVAL_NULL;
-    }
-    return NS_OK;
-  }
- 
-  nsString tmpResult = mResult;
-  if (!xpc_qsStringToJsval(aCx, tmpResult, aResult)) {
-    return NS_ERROR_FAILURE;
-  }
+  aResult = mResult;
   return NS_OK;
 }
 
@@ -291,28 +249,22 @@ nsDOMFileReader::GetError(nsIDOMFileError** aError)
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::ReadAsArrayBuffer(nsIDOMBlob* aFile, JSContext* aCx)
-{
-  return ReadFileContent(aCx, aFile, EmptyString(), FILE_AS_ARRAYBUFFER);
-}
-
-NS_IMETHODIMP
 nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aFile)
 {
-  return ReadFileContent(nsnull, aFile, EmptyString(), FILE_AS_BINARY);
+  return ReadFileContent(aFile, EmptyString(), FILE_AS_BINARY);
 }
 
 NS_IMETHODIMP
 nsDOMFileReader::ReadAsText(nsIDOMBlob* aFile,
                             const nsAString &aCharset)
 {
-  return ReadFileContent(nsnull, aFile, aCharset, FILE_AS_TEXT);
+  return ReadFileContent(aFile, aCharset, FILE_AS_TEXT);
 }
 
 NS_IMETHODIMP
 nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aFile)
 {
-  return ReadFileContent(nsnull, aFile, EmptyString(), FILE_AS_DATAURL);
+  return ReadFileContent(aFile, EmptyString(), FILE_AS_DATAURL);
 }
 
 NS_IMETHODIMP
@@ -330,7 +282,6 @@ nsDOMFileReader::Abort()
 
   //Revert status, result and readystate attributes
   SetDOMStringToNull(mResult);
-  mResultArrayBuffer = nsnull;
   mReadyState = nsIDOMFileReader::DONE;
   mError = new nsDOMFileError(nsIDOMFileError::ABORT_ERR);
     
@@ -433,14 +384,6 @@ nsDOMFileReader::OnDataAvailable(nsIRequest *aRequest,
                                &bytesRead);
     NS_ASSERTION(bytesRead == aCount, "failed to read data");
   }
-  else if (mDataFormat == FILE_AS_ARRAYBUFFER) {
-    js::ArrayBuffer* abuf = js::ArrayBuffer::fromJSObject(mResultArrayBuffer);
-    NS_ASSERTION(abuf, "What happened?");
-  
-    PRUint32 bytesRead = 0;
-    aInputStream->Read((char*)abuf->data + aOffset, aCount, &bytesRead);
-    NS_ASSERTION(bytesRead == aCount, "failed to read data");
-  }
   else {
     //Update memory buffer to reflect the contents of the file
     mFileData = (char *)PR_Realloc(mFileData, aOffset + aCount);
@@ -496,8 +439,6 @@ nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
 
   nsresult rv = NS_OK;
   switch (mDataFormat) {
-    case FILE_AS_ARRAYBUFFER:
-      break; //Already accumulated mResultArrayBuffer
     case FILE_AS_BINARY:
       break; //Already accumulated mResult
     case FILE_AS_TEXT:
@@ -527,8 +468,7 @@ nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
 // Helper methods
 
 nsresult
-nsDOMFileReader::ReadFileContent(JSContext* aCx,
-                                 nsIDOMBlob* aFile,
+nsDOMFileReader::ReadFileContent(nsIDOMBlob* aFile,
                                  const nsAString &aCharset,
                                  eDataFormat aDataFormat)
 {
@@ -573,15 +513,6 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
   //FileReader should be in loading state here
   mReadyState = nsIDOMFileReader::LOADING;
   DispatchProgressEvent(NS_LITERAL_STRING(LOADSTART_STR));
-  
-  if (mDataFormat == FILE_AS_ARRAYBUFFER) {
-    mResultArrayBuffer = js_CreateArrayBuffer(aCx, mReadTotal);
-    if (!mResultArrayBuffer) {
-      NS_WARNING("Failed to create JS array buffer");
-      return NS_ERROR_FAILURE;
-    }
-    RootResultArrayBuffer();
-  }
  
   return NS_OK;
 }

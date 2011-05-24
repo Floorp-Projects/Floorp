@@ -426,8 +426,7 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mErrorLoad(PR_FALSE), mTimerIsActive(PR_FALSE),
     mProgressEventWasDelayed(PR_FALSE),
     mLoadLengthComputable(PR_FALSE), mLoadTotal(0),
-    mFirstStartRequestSeen(PR_FALSE),
-    mResultArrayBuffer(nsnull) 
+    mFirstStartRequestSeen(PR_FALSE)
 {
   mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   nsLayoutStatics::AddRef();
@@ -435,8 +434,6 @@ nsXMLHttpRequest::nsXMLHttpRequest()
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
 {
-  UnrootResultArrayBuffer();
-
   if (mListenerManager) {
     mListenerManager->Disconnect();
   }
@@ -451,19 +448,6 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
   nsLayoutStatics::Release();
-}
-
-void 	
-nsXMLHttpRequest::RootResultArrayBuffer()
-{
-  NS_HOLD_JS_OBJECTS(this, nsXMLHttpRequest);
-}
-
-void
-nsXMLHttpRequest::UnrootResultArrayBuffer()
-{
-  NS_DROP_JS_OBJECTS(this, nsXMLHttpRequest);
-  mResultArrayBuffer = nsnull;
 }
 
 /**
@@ -570,7 +554,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
                                                   nsXHREventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mReadRequest)
@@ -589,9 +572,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
                                                        nsIXMLHttpRequestUpload)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
                                                 nsXHREventTarget)
-  tmp->UnrootResultArrayBuffer();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChannel)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mReadRequest)
@@ -608,14 +591,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mUpload)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsXMLHttpRequest,
-                                               nsXHREventTarget)
-  if(tmp->mResultArrayBuffer) {
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mResultArrayBuffer,
-                                               "mResultArrayBuffer")
-  }
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMCI_DATA(XMLHttpRequest, nsXMLHttpRequest)
 
@@ -864,21 +839,27 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
   return rv;
 }
 
-nsresult nsXMLHttpRequest::CreateResponseArrayBuffer(JSContext *aCx)
+nsresult nsXMLHttpRequest::GetResponseArrayBuffer(jsval *aResult)
 {
-  if (!aCx)
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+  if (!cx)
     return NS_ERROR_FAILURE;
 
-  mResultArrayBuffer = nsnull;
-  PRInt32 dataLen = mResponseBody.Length();
-  mResultArrayBuffer = js_CreateArrayBuffer(aCx, dataLen);
-  if (!mResultArrayBuffer) {
-    return NS_ERROR_FAILURE;
+  if (!(mState & (XML_HTTP_REQUEST_DONE |
+                  XML_HTTP_REQUEST_LOADING))) {
+    *aResult = JSVAL_NULL;
+    return NS_OK;
   }
-  RootResultArrayBuffer();
+
+  PRInt32 dataLen = mResponseBody.Length();
+  JSObject *obj = js_CreateArrayBuffer(cx, dataLen);
+  if (!obj)
+    return NS_ERROR_FAILURE;
+
+  *aResult = OBJECT_TO_JSVAL(obj);
 
   if (dataLen > 0) {
-    js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(mResultArrayBuffer);
+    js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(obj);
     NS_ASSERTION(abuf, "What happened?");
     memcpy(abuf->data, mResponseBody.BeginReading(), dataLen);
   }
@@ -973,11 +954,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
 
   case XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER:
     if (mState & XML_HTTP_REQUEST_DONE) {
-      if (!mResultArrayBuffer) {  
-         rv = CreateResponseArrayBuffer(aCx);
-         NS_ENSURE_SUCCESS(rv, rv);
-      }
-      *aResult = OBJECT_TO_JSVAL(mResultArrayBuffer);
+      rv = GetResponseArrayBuffer(aResult);
     } else {
       *aResult = JSVAL_NULL;
     }
@@ -1096,8 +1073,7 @@ nsXMLHttpRequest::Abort()
   mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   mResponseBlob = nsnull;
   mState |= XML_HTTP_REQUEST_ABORTED;
-  mResultArrayBuffer = nsnull;
-  
+
   if (!(mState & (XML_HTTP_REQUEST_UNSENT |
                   XML_HTTP_REQUEST_OPENED |
                   XML_HTTP_REQUEST_DONE))) {
