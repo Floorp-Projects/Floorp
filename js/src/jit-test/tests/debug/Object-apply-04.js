@@ -1,5 +1,5 @@
 // |jit-test| debug
-// Debug.Object.prototype.apply works with function proxies
+// Debug.Object.prototype.apply/call works with function proxies
 
 var g = newGlobal('new-compartment');
 g.eval("function f() { debugger; }");
@@ -10,6 +10,7 @@ dbg.hooks = {
         var proxy = frame.arguments[0];
         assertEq(proxy.name, undefined);
         assertEq(proxy.apply(null, [33]).return, 34);
+        assertEq(proxy.call(null, 33).return, 34);
         hits++;
     }
 };
