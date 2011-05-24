@@ -93,7 +93,7 @@ TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where,
 
     Label entry = masm.label();
     CHECK_RESULT(generator(masm));
-    JS_ASSERT(entry.isSet());
+    JS_ASSERT(entry.isValid());
 
     bool ok;
     JSC::LinkBuffer buffer(&masm, execAlloc, poolp, &ok);
