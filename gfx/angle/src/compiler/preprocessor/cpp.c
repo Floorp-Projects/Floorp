@@ -468,6 +468,17 @@ static int eval(int token, int prec, int *res, int *err, yystypepp * yylvalpp)
         val = *res;
         token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
         token = eval(token, binop[i].prec, res, err, yylvalpp);
+        
+        if (binop[i].op == op_div || binop[i].op == op_mod)
+        {
+            if (*res == 0)
+            {
+                CPPErrorToInfoLog("preprocessor divide or modulo by zero");
+                *err = 1;
+                return token;
+            }
+        }
+
         *res = binop[i].op(val, *res);
     }
     return token;
