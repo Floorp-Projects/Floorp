@@ -6,7 +6,7 @@ var dbg = new Debug(g);
 var log = '';
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	log += frame.arguments[0];
+        log += frame.arguments[0];
     }
 };
 
