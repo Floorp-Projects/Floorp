@@ -247,17 +247,20 @@ class PtrAndPrincipalHashKey : public PLDHashEntryHdr
     typedef const PtrAndPrincipalHashKey *KeyTypePointer;
 
     PtrAndPrincipalHashKey(const PtrAndPrincipalHashKey *aKey)
-      : mPtr(aKey->mPtr), mURI(aKey->mURI), mSavedHash(aKey->mSavedHash)
+      : mPtr(aKey->mPtr), mPrincipal(aKey->mPrincipal),
+        mSavedHash(aKey->mSavedHash)
     {
         MOZ_COUNT_CTOR(PtrAndPrincipalHashKey);
     }
 
-    PtrAndPrincipalHashKey(nsISupports *aPtr, nsIURI *aURI)
-      : mPtr(aPtr), mURI(aURI)
+    PtrAndPrincipalHashKey(nsISupports *aPtr, nsIPrincipal *aPrincipal)
+      : mPtr(aPtr), mPrincipal(aPrincipal)
     {
         MOZ_COUNT_CTOR(PtrAndPrincipalHashKey);
-        mSavedHash = mURI
-                     ? NS_SecurityHashURI(mURI)
+        nsCOMPtr<nsIURI> uri;
+        aPrincipal->GetURI(getter_AddRefs(uri));
+        mSavedHash = uri
+                     ? NS_SecurityHashURI(uri)
                      : (NS_PTR_TO_UINT32(mPtr.get()) >> 2);
     }
 
@@ -285,7 +288,7 @@ class PtrAndPrincipalHashKey : public PLDHashEntryHdr
 
   protected:
     nsCOMPtr<nsISupports> mPtr;
-    nsCOMPtr<nsIURI> mURI;
+    nsCOMPtr<nsIPrincipal> mPrincipal;
 
     // During shutdown, when we GC, we need to remove these keys from the hash
     // table. However, computing the saved hash, NS_SecurityHashURI calls back

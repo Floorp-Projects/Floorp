@@ -59,7 +59,9 @@ function test() {
     var fileInput = document.getElementById("file");
     var rect = fileInput.getBoundingClientRect();
 
-    fileInput.addEventListener ("DOMActivate", function () {
+    fileInput.addEventListener ("DOMActivate", function (e) {
+      ok("detail" in e, "DOMActivate should have .detail!");
+      is(e.detail, 1, "detail should be 1!");
       domActivateEvents++;
     }, false);
 

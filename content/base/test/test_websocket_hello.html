@@ -17,24 +17,8 @@
 <script class="testbody" type="text/javascript">
 
 var ws;
-var oldPrefVal;
-var domBranch;
-
-function finishWSTest() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    domBranch.setBoolPref("override-security-block", oldPrefVal);
-    SimpleTest.finish();
-}
 
 function testWebSocket () {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefService =
-      Components.classes["@mozilla.org/preferences-service;1"]
-      .getService(Components.interfaces.nsIPrefService);
-  domBranch = prefService.getBranch("network.websocket.");
-  oldPrefVal = domBranch.getBoolPref("override-security-block");
-  domBranch.setBoolPref("override-security-block", true);
-
   ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_hello");
   ws.onopen = function(e) {
     ws.send("data");
@@ -43,12 +27,12 @@ function testWebSocket () {
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    finishWSTest();
+    SimpleTest.finish();
   }
   ws.onmessage = function(e) {
     is(e.data, "Hello world!", "Wrong data");
     ws.close();
-    finishWSTest();
+    SimpleTest.finish();
   }
 }
 

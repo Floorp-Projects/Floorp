@@ -45,6 +45,9 @@ class nsHttpRequestHead;
 class nsHttpResponseHead;
 class nsHttpConnectionInfo;
 class nsHttpConnection;
+class nsISocketTransport;
+class nsIAsyncInputStream;
+class nsIAsyncOutputStream;
 
 //-----------------------------------------------------------------------------
 // Abstract base class for a HTTP connection
@@ -93,6 +96,12 @@ public:
     // get a reference to the connection's connection info object.
     virtual void GetConnectionInfo(nsHttpConnectionInfo **) = 0;
 
+    // get the transport level information for this connection. This may fail
+    // if it is in use.
+    virtual nsresult TakeTransport(nsISocketTransport **,
+                                   nsIAsyncInputStream **,
+                                   nsIAsyncOutputStream **) = 0;
+
     // called by a transaction to get the security info from the socket.
     virtual void GetSecurityInfo(nsISupports **) = 0;
 
@@ -123,6 +132,9 @@ public:
     nsresult ResumeRecv(); \
     void CloseTransaction(nsAHttpTransaction *, nsresult); \
     void GetConnectionInfo(nsHttpConnectionInfo **); \
+    nsresult TakeTransport(nsISocketTransport **,    \
+                           nsIAsyncInputStream **,   \
+                           nsIAsyncOutputStream **); \
     void GetSecurityInfo(nsISupports **); \
     PRBool IsPersistent(); \
     PRBool IsReused(); \

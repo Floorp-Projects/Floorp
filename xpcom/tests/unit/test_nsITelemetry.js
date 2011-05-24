@@ -6,8 +6,8 @@ const Ci = Components.interfaces;
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 
-function test_histogram(histogram_constructor, name, min, max, bucket_count) {
-  var h = histogram_constructor(name, min, max, bucket_count);
+function test_histogram(histogram_type, name, min, max, bucket_count) {
+  var h = Telemetry.newHistogram(name, min, max, bucket_count, histogram_type);
   
   var r = h.snapshot().ranges;
   var sum = 0;
@@ -25,14 +25,32 @@ function test_histogram(histogram_constructor, name, min, max, bucket_count) {
   }
   var hgrams = Telemetry.histogramSnapshots
   gh = hgrams[name]
-  do_check_eq(gh.histogram_type, 
-              histogram_constructor == Telemetry.newExponentialHistogram ? 0 : 1);
+  do_check_eq(gh.histogram_type, histogram_type);
+
   do_check_eq(gh.min, min)
   do_check_eq(gh.max, max)
 }
 
+function expect_fail(f) {
+  let failed = false;
+  try {
+    f();
+    failed = false;
+  } catch (e) {
+    failed = true;
+  }
+  do_check_true(failed);
+}
+
 function run_test()
 {
-  test_histogram(Telemetry.newExponentialHistogram, "test::Exponential", 1, 10000, 10);
-  test_histogram(Telemetry.newLinearHistogram, "test::Linear", 1, 10000, 10);
+  let kinds = [Telemetry.HISTOGRAM_EXPONENTIAL, Telemetry.HISTOGRAM_LINEAR]
+  for each (let histogram_type in kinds) {
+    let [min, max, bucket_count] = [1, 10000, 10]
+    test_histogram(histogram_type, "test::"+histogram_type, min, max, bucket_count);
+    
+    const nh = Telemetry.newHistogram;
+    expect_fail(function () nh("test::min", 0, max, bucket_count, histogram_type));
+    expect_fail(function () nh("test::bucket_count", min, max, 1, histogram_type));
+  }
 }

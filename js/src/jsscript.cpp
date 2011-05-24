@@ -262,7 +262,7 @@ Bindings::sharpSlotBase(JSContext *cx)
 {
     JS_ASSERT(lastBinding);
 #if JS_HAS_SHARP_VARS
-    if (JSAtom *name = js_Atomize(cx, "#array", 6, 0)) {
+    if (JSAtom *name = js_Atomize(cx, "#array", 6)) {
         uintN index = uintN(-1);
         DebugOnly<BindingKind> kind = lookup(cx, name, &index);
         JS_ASSERT(kind == VARIABLE);
@@ -1674,7 +1674,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
         pc += js_CodeSpec[op].length;
     if (*pc == JSOP_DEFFUN) {
         GET_FUNCTION_FROM_BYTECODE(script, pc, 0, fun);
-        return fun->u.i.script->lineno;
+        return fun->script()->lineno;
     }
 
     /*

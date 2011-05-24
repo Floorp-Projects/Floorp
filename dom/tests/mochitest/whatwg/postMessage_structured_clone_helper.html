@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage structured clone page</title>
+  <script type="application/javascript;version=1.7"
+          src="postMessage_structured_clone_helper.js"></script>
+  <script type="application/javascript">
+    var generator = new getTestContent()
+
+    function eq(lhs, rhs)
+    {
+      for(p in lhs)
+      {
+        switch(typeof(lhs[p]))
+        {
+          case 'object':
+            if (!eq(lhs[p], rhs[p])) { return false }; break;
+          case 'function':
+            if (typeof(rhs[p])=='undefined' || (p != 'equals' && lhs[p].toString() != rhs[p].toString())) { return false; }; break;
+          default:
+            if (lhs[p] != rhs[p]) { return false; }
+        }
+      }
+
+      for(p in rhs)
+      {
+        if(typeof(lhs[p])=='undefined') {return false;}
+      }
+
+      return true;
+    }
+
+    function receiveMessage(evt)
+    {
+      if (eq(evt.data,generator.next()))
+        window.parent.postMessage("TEST-PASS", "*");
+      else
+        window.parent.postMessage("TEST-FAIL", "*");
+    }
+    window.addEventListener("message", receiveMessage, false);
+  </script>
+</head>
+<body>
+</body>
+</html>

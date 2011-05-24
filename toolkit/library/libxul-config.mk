@@ -50,7 +50,6 @@ endif
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 CPPSRCS += \
-	dlldeps.cpp \
 	nsGFXDeps.cpp \
 	$(NULL)
 
@@ -73,7 +72,6 @@ ifeq ($(OS_ARCH),OS2)
 REQUIRES += widget gfx
 
 CPPSRCS += \
-	dlldeps.cpp \
 	nsGFXDeps.cpp \
 	$(NULL)
 
@@ -81,10 +79,8 @@ ifndef MOZ_NATIVE_ZLIB
 CPPSRCS += dlldeps-zlib.cpp
 endif
 
-ifdef MOZ_ENABLE_LIBXUL
 RESFILE = xulrunos2.res
 RCFLAGS += -i $(topsrcdir)/widget/src/os2
-endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/os2
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base

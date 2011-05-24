@@ -298,6 +298,7 @@ PRUint32        nsWindow::sOOPPPluginFocusEvent   =
 
 MSG             nsWindow::sRedirectedKeyDown;
 
+PRBool          nsWindow::sEnablePixelScrolling = PR_TRUE;
 PRBool          nsWindow::sNeedsToInitMouseWheelSettings = PR_TRUE;
 ULONG           nsWindow::sMouseWheelScrollLines  = 0;
 ULONG           nsWindow::sMouseWheelScrollChars  = 0;
@@ -667,6 +668,11 @@ nsWindow::Create(nsIWidget *aParent,
         if (NS_SUCCEEDED(prefBranch->GetBoolPref("mozilla.widget.disable-native-theme",
                                                  &temp)))
           gDisableNativeTheme = temp;
+
+        if (NS_SUCCEEDED(prefBranch->GetBoolPref("mousewheel.enable_pixel_scrolling",
+                                                 &temp))) {
+          sEnablePixelScrolling = temp;
+        }
       }
     }
   }
@@ -6411,36 +6417,12 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   sLastMouseWheelUnitIsPage = isPageScroll;
   sLastMouseWheelTime = now;
 
-  nsMouseScrollEvent testEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
-  InitEvent(testEvent);
-  testEvent.scrollFlags = isPageScroll ? nsMouseScrollEvent::kIsFullPage : 0;
-  testEvent.scrollFlags |= isVertical ? nsMouseScrollEvent::kIsVertical :
-                                        nsMouseScrollEvent::kIsHorizontal;
-  testEvent.delta = sLastMouseWheelDeltaIsPositive ? -1 : 1;
-  nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_SCROLL_TARGET_INFO, this);
-  InitEvent(queryEvent);
-  queryEvent.InitForQueryScrollTargetInfo(&testEvent);
-  DispatchWindowEvent(&queryEvent);
-  // If the necessary interger isn't larger than 0, we should assume that
-  // the event failed for us.
-  if (queryEvent.mSucceeded) {
-    if (isPageScroll) {
-      if (isVertical) {
-        queryEvent.mSucceeded = (queryEvent.mReply.mPageHeight > 0);
-      } else {
-        queryEvent.mSucceeded = (queryEvent.mReply.mPageWidth > 0);
-      }
-    } else {
-      queryEvent.mSucceeded = (queryEvent.mReply.mLineHeight > 0);
-    }
-  }
-
   *aRetValue = isVertical ? FALSE : TRUE; // means we process this message
   nsModifierKeyState modKeyState;
 
   // Our positive delta value means to bottom or right.
   // But positive nativeDelta value means to top or right.
-  // Use orienter for computing our delta value.
+  // Use orienter for computing our delta value with native delta value.
   PRInt32 orienter = isVertical ? -1 : 1;
 
   // Assume the Control key is down if the Elantech touchpad has sent the
@@ -6454,18 +6436,77 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     isControl = modKeyState.mIsControlDown;
   }
 
+  // Create line (or page) scroll event.
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
+
+  // Initialize common members on line scroll event, pixel scroll event and
+  // test event.
   InitEvent(scrollEvent);
-  // If the query event failed, we cannot send pixel events.
-  scrollEvent.scrollFlags =
-    queryEvent.mSucceeded ? nsMouseScrollEvent::kHasPixels : 0;
   scrollEvent.isShift     = modKeyState.mIsShiftDown;
   scrollEvent.isControl   = isControl;
   scrollEvent.isMeta      = PR_FALSE;
   scrollEvent.isAlt       = modKeyState.mIsAltDown;
 
+  // Before dispatching line scroll event, we should get the current scroll
+  // event target information for pixel scroll.
+  PRBool dispatchPixelScrollEvent = PR_FALSE;
+  PRInt32 pixelsPerUnit = 0;
+  // the amount is the number of lines (or pages) per WHEEL_DELTA
+  PRInt32 computedScrollAmount = isPageScroll ? 1 :
+    (isVertical ? sMouseWheelScrollLines : sMouseWheelScrollChars);
+
+  if (sEnablePixelScrolling) {
+    nsMouseScrollEvent testEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
+    InitEvent(testEvent);
+    testEvent.scrollFlags = isPageScroll ? nsMouseScrollEvent::kIsFullPage : 0;
+    testEvent.scrollFlags |= isVertical ? nsMouseScrollEvent::kIsVertical :
+                                          nsMouseScrollEvent::kIsHorizontal;
+    testEvent.isShift     = scrollEvent.isShift;
+    testEvent.isControl   = scrollEvent.isControl;
+    testEvent.isMeta      = scrollEvent.isMeta;
+    testEvent.isAlt       = scrollEvent.isAlt;
+
+    testEvent.delta       = computedScrollAmount;
+    if ((isVertical && sLastMouseWheelDeltaIsPositive) ||
+        (!isVertical && !sLastMouseWheelDeltaIsPositive)) {
+      testEvent.delta *= -1;
+    }
+    nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_SCROLL_TARGET_INFO, this);
+    InitEvent(queryEvent);
+    queryEvent.InitForQueryScrollTargetInfo(&testEvent);
+    DispatchWindowEvent(&queryEvent);
+    // If the necessary interger isn't larger than 0, we should assume that
+    // the event failed for us.
+    if (queryEvent.mSucceeded) {
+      if (isPageScroll) {
+        if (isVertical) {
+          pixelsPerUnit = queryEvent.mReply.mPageHeight;
+        } else {
+          pixelsPerUnit = queryEvent.mReply.mPageWidth;
+        }
+      } else {
+        pixelsPerUnit = queryEvent.mReply.mLineHeight;
+      }
+      // XXX Currently, we don't support the case that the computed delta has
+      //     different sign.
+      computedScrollAmount = queryEvent.mReply.mComputedScrollAmount;
+      if (testEvent.delta < 0) {
+        computedScrollAmount *= -1;
+      }
+      dispatchPixelScrollEvent =
+        (pixelsPerUnit > 0) && (computedScrollAmount > 0);
+    }
+  }
+
+  // If we dispatch pixel scroll event after the line scroll event,
+  // we should set kHasPixels flag to the line scroll event.
+  scrollEvent.scrollFlags =
+    dispatchPixelScrollEvent ? nsMouseScrollEvent::kHasPixels : 0;
+
   PRInt32 nativeDeltaForScroll = nativeDelta + sRemainingDeltaForScroll;
 
+  // NOTE: Don't use computedScrollAmount for computing the delta value of
+  //       line/page scroll event.  The value will be recomputed in ESM.
   if (isPageScroll) {
     scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
     if (isVertical) {
@@ -6501,7 +6542,7 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   }
 
   // If the query event failed, we cannot send pixel events.
-  if (!queryEvent.mSucceeded) {
+  if (!dispatchPixelScrollEvent) {
     sRemainingDeltaForPixel = 0;
     return PR_FALSE;
   }
@@ -6510,28 +6551,16 @@ nsWindow::OnMouseWheel(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   InitEvent(pixelEvent);
   pixelEvent.scrollFlags = nsMouseScrollEvent::kAllowSmoothScroll |
     (scrollEvent.scrollFlags & ~nsMouseScrollEvent::kHasPixels);
-  pixelEvent.isShift     = modKeyState.mIsShiftDown;
-  pixelEvent.isControl   = modKeyState.mIsControlDown;
-  pixelEvent.isMeta      = PR_FALSE;
-  pixelEvent.isAlt       = modKeyState.mIsAltDown;
+  // Use same modifier state for pixel scroll event.
+  pixelEvent.isShift     = scrollEvent.isShift;
+  pixelEvent.isControl   = scrollEvent.isControl;
+  pixelEvent.isMeta      = scrollEvent.isMeta;
+  pixelEvent.isAlt       = scrollEvent.isAlt;
 
   PRInt32 nativeDeltaForPixel = nativeDelta + sRemainingDeltaForPixel;
 
-  double deltaPerPixel;
-  if (isPageScroll) {
-    if (isVertical) {
-      deltaPerPixel = (double)WHEEL_DELTA / queryEvent.mReply.mPageHeight;
-    } else {
-      deltaPerPixel = (double)WHEEL_DELTA / queryEvent.mReply.mPageWidth;
-    }
-  } else {
-    if (isVertical) {
-      deltaPerPixel = (double)WHEEL_DELTA / sMouseWheelScrollLines;
-    } else {
-      deltaPerPixel = (double)WHEEL_DELTA / sMouseWheelScrollChars;
-    }
-    deltaPerPixel /= queryEvent.mReply.mLineHeight;
-  }
+  double deltaPerPixel =
+    (double)WHEEL_DELTA / computedScrollAmount / pixelsPerUnit;
   pixelEvent.delta =
     RoundDelta((double)nativeDeltaForPixel * orienter / deltaPerPixel);
   PRInt32 recomputedNativeDelta =
