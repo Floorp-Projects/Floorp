@@ -8,12 +8,12 @@ dbg.hooks = {
     debuggerHandler: function (frame) {
         var args = frame.arguments;
         assertEq(args[0], 1);
-	assertEq(args.length, 4);
+        assertEq(args.length, 4);
 
         assertEq(args[1] instanceof Debug.Object, true);
         assertEq(args[1].class, "Array");
         var getprop = frame.eval("(function (p) { return this[p]; })").return;
-	assertEq(getprop instanceof Debug.Object, true);
+        assertEq(getprop instanceof Debug.Object, true);
         assertEq(getprop.apply(args[1], ["length"]).return, 2);
         assertEq(getprop.apply(args[1], [0]).return, 2);
         assertEq(getprop.apply(args[1], [1]).return, 3);
