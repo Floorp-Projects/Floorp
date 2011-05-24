@@ -180,6 +180,17 @@ namespace nanojit
         /** make this extent ready to modify (might remove exec) */
         void markCodeChunkWrite(void* addr, size_t nbytes);
 
+        /**
+         * Check the permission bits of the region specified by 'addr' for 'nbytes' bytes
+         * to ensure that they are set as expected for the given state. (Exec or Write)
+         * This callback is only issued in DEBUG builds for validation purposes.
+         * It is up to the service provider to decide how to interprete the request; i.e
+         * it will most likely return true if the markCodeChunkXXX() methods are
+         * stubbed out.  Otherwise, the chunk's memory should be interrogated for
+         * correct permission bits.
+         */
+        bool checkChunkMark(void* addr, size_t nbytes, bool isExec);
+
     public:
         CodeAlloc();
         ~CodeAlloc();

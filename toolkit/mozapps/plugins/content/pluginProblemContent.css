@@ -12,10 +12,6 @@ html|applet:not([height]), html|applet[height=""] {
   height: 200px;
 }
 
-:-moz-type-unsupported .mainBox {
-  cursor: pointer;
-}
-
 :-moz-type-unsupported .mainBox,
 :-moz-handler-disabled .mainBox,
 :-moz-handler-blocked .mainBox {
@@ -45,8 +41,13 @@ html|applet:not([height]), html|applet[height=""] {
 
 :-moz-type-unsupported .msgUnsupported,
 :-moz-handler-disabled .msgDisabled,
+:-moz-handler-disabled .msgManagePlugins,
 :-moz-handler-blocked .msgBlocked,
 :-moz-handler-crashed .msgCrashed {
+  display: block;
+}
+
+.installStatus[status="ready"] .msgInstallPlugin {
   display: block;
 }
 

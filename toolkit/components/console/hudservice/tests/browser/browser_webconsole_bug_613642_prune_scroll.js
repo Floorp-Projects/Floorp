@@ -15,13 +15,9 @@ function tabLoad(aEvent) {
   let hudId = HUDService.getHudIdByWindow(content);
   let hud = HUDService.hudReferences[hudId];
   let outputNode = hud.outputNode;
-  let oldPref = 200;
-  try {
-    oldPref = Services.prefs.getIntPref("devtools.hud.loglimit");
-  }
-  catch (ex) { }
+  let oldPref = Services.prefs.getIntPref("devtools.hud.loglimit.console");
 
-  Services.prefs.setIntPref("devtools.hud.loglimit", 140);
+  Services.prefs.setIntPref("devtools.hud.loglimit.console", 140);
   let scrollBoxElement = outputNode.scrollBoxObject.element;
   let boxObject = outputNode.scrollBoxObject;
 
@@ -57,7 +53,7 @@ function tabLoad(aEvent) {
   isnot(outputNode.firstChild, firstNode,
         "first message removed");
 
-  Services.prefs.setIntPref("devtools.hud.loglimit", oldPref);
+  Services.prefs.setIntPref("devtools.hud.loglimit.console", oldPref);
   finishTest();
 }
 

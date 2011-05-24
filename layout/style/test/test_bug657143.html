@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=657143
+-->
+<head>
+  <title>Test for Bug 657143</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=657143">Mozilla Bug 657143</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 657143 **/
+
+// Checks ordering of CSS properties in nsComputedDOMStyle.cpp
+// by splitting the getComputedStyle() into the three sublists
+// then cloning and sort()ing the lists and comparing with originals 
+
+var styleList = window.getComputedStyle(document.documentElement);
+    cssA = [], mozA = [], svgA = [], mozList = false,
+    svgList = false, noMozInSVG = true;
+// Need to split into sublists to compare
+for (var i = 0, j = styleList.length; i < j; i++) {
+  var prop = styleList.item(i);
+  // Check for start of -moz- list
+  if (!mozList && /^-moz-/.test(prop)) {
+    // Make sure no -moz- in the SVG list
+    if (!svgList) {
+      mozList = true;
+    } else {
+      noMozInSVG = false;
+      // Don't add to svgA so can still test SVG order
+      continue;
+    }
+  }
+  // Add properties to the three lists
+  if (mozList) {
+    // Check for start of SVG list
+    // Will break if any SVG props added before, unlikely though?
+    if (prop == 'clip-path') {
+      svgList = true;
+      mozList = false;
+      svgA.push(prop);
+    } else {
+      mozA.push(prop);
+    }
+  } else if (svgList) {
+    svgA.push(prop);
+  } else {
+    cssA.push(prop);
+  }
+}
+var cssB = cssA.slice(0),
+mozB = mozA.slice(0),
+svgB = svgA.slice(0);
+cssB.sort();
+mozB.sort();
+svgB.sort();
+is(cssA.toString(), cssB.toString(), 'CSS property list should be alphabetical');
+is(mozA.toString(), mozB.toString(), 'Experimental -moz- CSS property list should be alphabetical and not contain mature properties');
+is(svgA.toString(), svgB.toString(), 'SVG property list should be alphabetical');
+ok(noMozInSVG, 'Experimental -moz- CSS properties should not be in the SVG property list');
+
+</script>
+</pre>
+</body>
+</html>

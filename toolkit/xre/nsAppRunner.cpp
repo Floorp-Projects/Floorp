@@ -1134,16 +1134,6 @@ ScopedXPCOMStartup::Initialize()
 
   nsresult rv;
 
-#ifndef MOZ_ENABLE_LIBXUL
-#ifndef _BUILD_STATIC_BIN
-  XRE_AddStaticComponent(&kXREModule);
-#else
-  for (const mozilla::Module *const *const *staticModules = kPStaticModules;
-       *staticModules; ++staticModules)
-      XRE_AddStaticComponent(**staticModules);
-#endif
-#endif
-
   rv = NS_InitXPCOM2(&mServiceManager, gDirServiceProvider->GetAppDir(),
                      gDirServiceProvider);
   if (NS_FAILED(rv)) {
@@ -1707,9 +1697,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
 #if defined(XP_MACOSX)
   CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
   PRUint32 restartMode = 0;
-#if defined(MOZ_ENABLE_LIBXUL)
   restartMode = gRestartMode;
-#endif
   LaunchChildMac(gRestartArgc, gRestartArgv, restartMode);
 #else
   nsCOMPtr<nsILocalFile> lf;
@@ -3826,24 +3814,39 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
   delete[] canonArgs;
 #endif
 
-#ifdef MOZ_OMNIJAR
-  const char *omnijarPath = nsnull;
-  ArgResult ar = CheckArg("omnijar", PR_FALSE, &omnijarPath);
+  const char *path = nsnull;
+  ArgResult ar = CheckArg("greomni", PR_FALSE, &path);
   if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR, "Error: argument -omnijar requires an omnijar path\n");
+    PR_fprintf(PR_STDERR, "Error: argument -greomni requires a path argument\n");
     return NS_ERROR_FAILURE;
   }
 
-  if (!omnijarPath)
+  if (!path)
     return rv;
 
-  nsCOMPtr<nsILocalFile> omnijar;
-  rv = NS_NewNativeLocalFile(nsDependentCString(omnijarPath), PR_TRUE,
-                             getter_AddRefs(omnijar));
-  if (NS_SUCCEEDED(rv))
-    mozilla::SetOmnijar(omnijar);
-#endif
+  nsCOMPtr<nsILocalFile> greOmni;
+  rv = XRE_GetFileFromPath(path, getter_AddRefs(greOmni));
+  if (NS_FAILED(rv)) {
+    PR_fprintf(PR_STDERR, "Error: argument -greomni requires a valid path\n");
+    return rv;
+  }
 
+  ar = CheckArg("appomni", PR_FALSE, &path);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -appomni requires a path argument\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsILocalFile> appOmni;
+  if (path) {
+      rv = XRE_GetFileFromPath(path, getter_AddRefs(appOmni));
+      if (NS_FAILED(rv)) {
+        PR_fprintf(PR_STDERR, "Error: argument -appomni requires a valid path\n");
+        return rv;
+      }
+  }
+
+  mozilla::Omnijar::Init(greOmni, appOmni);
   return rv;
 }
 

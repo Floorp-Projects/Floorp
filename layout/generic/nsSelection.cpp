@@ -503,16 +503,6 @@ private:
 
 NS_IMPL_ISUPPORTS1(nsAutoScrollTimer, nsITimerCallback)
 
-nsresult NS_NewSelection(nsFrameSelection **aFrameSelection)
-{
-  nsFrameSelection *rlist = new nsFrameSelection;
-  if (!rlist)
-    return NS_ERROR_OUT_OF_MEMORY;
-  *aFrameSelection = rlist;
-  NS_ADDREF(rlist);
-  return NS_OK;
-}
-
 nsresult NS_NewDomSelection(nsISelection **aDomSelection)
 {
   nsTypedSelection *rlist = new nsTypedSelection;
@@ -793,7 +783,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameSelection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameSelection)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameSelection)
-  NS_INTERFACE_MAP_ENTRY(nsFrameSelection)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 

@@ -1021,6 +1021,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStatus(
         switch ( status )
         {
         case NS_NET_STATUS_RESOLVING_HOST:
+        case NS_NET_STATUS_RESOLVED_HOST:
         case NS_NET_STATUS_BEGIN_FTP_TRANSACTION:
         case NS_NET_STATUS_END_FTP_TRANSACTION:
         case NS_NET_STATUS_CONNECTING_TO:
@@ -2581,10 +2582,7 @@ nsWebBrowserPersist::EnumCleanupOutputMap(nsHashKey *aKey, void *aData, void* cl
         channel->Cancel(NS_BINDING_ABORTED);
     }
     OutputData *data = (OutputData *) aData;
-    if (data)
-    {
-        delete data;
-    }
+    delete data;
     return PR_TRUE;
 }
 
@@ -2593,10 +2591,7 @@ PRBool
 nsWebBrowserPersist::EnumCleanupURIMap(nsHashKey *aKey, void *aData, void* closure)
 {
     URIData *data = (URIData *) aData;
-    if (data)
-    {
-        delete data; // Delete data associated with key
-    }
+    delete data; // Delete data associated with key
     return PR_TRUE;
 }
 
@@ -2612,10 +2607,7 @@ nsWebBrowserPersist::EnumCleanupUploadList(nsHashKey *aKey, void *aData, void* c
         channel->Cancel(NS_BINDING_ABORTED);
     }
     UploadData *data = (UploadData *) aData;
-    if (data)
-    {
-        delete data; // Delete data associated with key
-    }
+    delete data; // Delete data associated with key
     return PR_TRUE;
 }
 

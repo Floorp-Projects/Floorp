@@ -224,6 +224,9 @@ SessionStoreService.prototype = {
 
   // number of tabs to restore concurrently, pref controlled.
   _maxConcurrentTabRestores: null,
+  
+  // whether to restore hidden tabs or not, pref controlled.
+  _restoreHiddenTabs: null,
 
   // The state from the previous session (after restoring pinned tabs)
   _lastSessionState: null,
@@ -280,6 +283,10 @@ SessionStoreService.prototype = {
     this._maxConcurrentTabRestores =
       this._prefBranch.getIntPref("sessionstore.max_concurrent_tabs");
     this._prefBranch.addObserver("sessionstore.max_concurrent_tabs", this, true);
+
+    this._restoreHiddenTabs =
+      this._prefBranch.getBoolPref("sessionstore.restore_hidden_tabs");
+    this._prefBranch.addObserver("sessionstore.restore_hidden_tabs", this, true);
 
     // Make sure gRestoreTabsProgressListener has a reference to sessionstore
     // so that it can make calls back in
@@ -597,6 +604,10 @@ SessionStoreService.prototype = {
       case "sessionstore.max_concurrent_tabs":
         this._maxConcurrentTabRestores =
           this._prefBranch.getIntPref("sessionstore.max_concurrent_tabs");
+        break;
+      case "sessionstore.restore_hidden_tabs":
+        this._restoreHiddenTabs =
+          this._prefBranch.getBoolPref("sessionstore.restore_hidden_tabs");
         break;
       }
       break;
@@ -1078,6 +1089,10 @@ SessionStoreService.prototype = {
       this._tabsToRestore.hidden.splice(this._tabsToRestore.hidden.indexOf(aTab));
       // Just put it at the end of the list of visible tabs;
       this._tabsToRestore.visible.push(aTab);
+
+      // let's kick off tab restoration again to ensure this tab gets restored
+      // with "restore_hidden_tabs" == false (now that it has become visible)
+      this.restoreNextTab();
     }
 
     // Default delay of 2 seconds gives enough time to catch multiple TabShow
@@ -1329,8 +1344,6 @@ SessionStoreService.prototype = {
     if (aWindow.__SSi && this._windows[aWindow.__SSi].extData &&
         this._windows[aWindow.__SSi].extData[aKey])
       delete this._windows[aWindow.__SSi].extData[aKey];
-    else
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   getTabValue: function sss_getTabValue(aTab, aKey) {
@@ -1377,8 +1390,6 @@ SessionStoreService.prototype = {
 
     if (deleteFrom && deleteFrom[aKey])
       delete deleteFrom[aKey];
-    else
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   persistTabAttribute: function sss_persistTabAttribute(aName) {
@@ -2944,7 +2955,7 @@ SessionStoreService.prototype = {
     if (this._tabsToRestore.visible.length) {
       nextTabArray = this._tabsToRestore.visible;
     }
-    else if (this._tabsToRestore.hidden.length) {
+    else if (this._restoreHiddenTabs && this._tabsToRestore.hidden.length) {
       nextTabArray = this._tabsToRestore.hidden;
     }
 
@@ -3974,7 +3985,8 @@ SessionStoreService.prototype = {
     this._removeTabsProgressListener(window);
 
     if (previousState == TAB_STATE_RESTORING) {
-      this._tabsRestoringCount--;
+      if (this._tabsRestoringCount)
+        this._tabsRestoringCount--;
     }
     else if (previousState == TAB_STATE_NEEDS_RESTORE) {
       // Make sure the session history listener is removed. This is normally

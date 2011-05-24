@@ -148,7 +148,7 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
-#include "nsIPluginInstance.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsIObjectFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsNetUtil.h"
@@ -259,9 +259,6 @@ ChangeFlag(PRUint32 aFlags, PRBool aOnOff, PRUint32 aFlag)
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
 static void ColorToString(nscolor aColor, nsAutoString &aString);
-
-// Class ID's
-static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 
 // RangePaintInfo is used to paint ranges to offscreen buffers
 struct RangePaintInfo {
@@ -1125,7 +1122,7 @@ protected:
 
   void MaybeReleaseCapturingContent()
   {
-    nsCOMPtr<nsFrameSelection> frameSelection = FrameSelection();
+    nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
     if (frameSelection) {
       frameSelection->SetMouseDownState(PR_FALSE);
     }
@@ -1679,17 +1676,18 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 nsTHashtable<PresShell::PresShellPtrKey> *nsIPresShell::sLiveShells = 0;
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
-                             "heap-used/layout/all",
-                             "Memory used by layout PresShell, PresContext, "
-                             "and other related areas.",
-                             PresShell::SizeOfLayoutMemoryReporter,
-                             nsnull)
+    "explicit/layout/all",
+    MR_HEAP,
+    "Memory used by layout PresShell, PresContext, and other related areas.",
+    PresShell::SizeOfLayoutMemoryReporter,
+    nsnull)
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
-                             "heap-used/layout/bidi",
-                             "Memory used by layout Bidi processor.",
-                             PresShell::SizeOfBidiMemoryReporter,
-                             nsnull)
+    "explicit/layout/bidi",
+    MR_HEAP,
+    "Memory used by layout Bidi processor.",
+    PresShell::SizeOfBidiMemoryReporter,
+    nsnull)
 
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
@@ -1831,11 +1829,7 @@ PresShell::Init(nsIDocument* aDocument,
   // before creating any frames.
   SetPreferenceStyleRules(PR_FALSE);
 
-  result = CallCreateInstance(kFrameSelectionCID, &mSelection);
-  if (NS_FAILED(result)) {
-    mStyleSet = nsnull;
-    return result;
-  }
+  NS_ADDREF(mSelection = new nsFrameSelection());
 
   // Create and initialize the frame manager
   result = FrameManager()->Init(this, mStyleSet);
@@ -5679,7 +5673,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   // temporarily hide the selection so that text is drawn normally. If a
   // selection is being rendered, use that, otherwise use the presshell's
   // selection.
-  nsCOMPtr<nsFrameSelection> frameSelection;
+  nsRefPtr<nsFrameSelection> frameSelection;
   if (aSelection) {
     nsCOMPtr<nsISelectionPrivate> selpriv = do_QueryInterface(aSelection);
     selpriv->GetFrameSelection(getter_AddRefs(frameSelection));
@@ -7760,7 +7754,7 @@ ThawElement(nsIContent *aContent, void *aShell)
 {
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(aContent));
   if (objlc) {
-    nsCOMPtr<nsIPluginInstance> inst;
+    nsRefPtr<nsNPAPIPluginInstance> inst;
     objlc->EnsureInstantiation(getter_AddRefs(inst));
   }
 }
@@ -9425,16 +9419,7 @@ nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
 nsAccessibilityService*
 nsIPresShell::AccService()
 {
-#ifdef MOZ_ENABLE_LIBXUL
   return GetAccService();
-#else
-  if (gIsAccessibilityActive) {
-    nsCOMPtr<nsIAccessibilityService> srv =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    return static_cast<nsAccessibilityService*>(srv.get());
-  }
-  return nsnull;
-#endif
 }
 #endif
 

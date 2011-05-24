@@ -49,6 +49,9 @@ function onMessageReceived(event)
 
     // Any other message indicates error, succes or todo message of a test
     default:
+      if (typeof event.data == "undefined")
+        break; // XXXkhuey this receives undefined values
+               // (which used to become empty strings) on occasion ...
       if (event.data.match(todoRegExp))
         SimpleTest.todo(false, event.data);
       else

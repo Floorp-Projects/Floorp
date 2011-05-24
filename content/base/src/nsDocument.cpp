@@ -694,13 +694,9 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
   
   // First, make sure we strip the ref from aURI.
   nsCOMPtr<nsIURI> clone;
-  aURI->Clone(getter_AddRefs(clone));
-  if (!clone) {
+  nsresult rv = aURI->CloneIgnoringRef(getter_AddRefs(clone));
+  if (NS_FAILED(rv) || !clone) {
     return nsnull;
-  }
-  nsCOMPtr<nsIURL> url(do_QueryInterface(clone));
-  if (url) {
-    url->SetRef(EmptyCString());
   }
   
   ExternalResource* resource;
@@ -712,14 +708,11 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
   nsRefPtr<PendingLoad> load;
   mPendingLoads.Get(clone, getter_AddRefs(load));
   if (load) {
-    NS_ADDREF(*aPendingLoad = load);
+    load.forget(aPendingLoad);
     return nsnull;
   }
 
   load = new PendingLoad(aDisplayDocument);
-  if (!load) {
-    return nsnull;
-  }
 
   if (!mPendingLoads.Put(clone, load)) {
     return nsnull;
@@ -730,7 +723,7 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
     // chances are it failed for good reasons (security check, etc).
     AddExternalResource(clone, nsnull, nsnull, aDisplayDocument);
   } else {
-    NS_ADDREF(*aPendingLoad = load);
+    load.forget(aPendingLoad);
   }
 
   return nsnull;
@@ -1692,7 +1685,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3DocumentEvent)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentStyle)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocumentStyle)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
@@ -4137,14 +4129,13 @@ nsDocument::DispatchContentLoadedEvents()
   if (target_frame) {
     nsCOMPtr<nsIDocument> parent = mParentDocument;
     do {
-      nsCOMPtr<nsIDOMDocumentEvent> document_event =
-        do_QueryInterface(parent);
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(parent);
 
       nsCOMPtr<nsIDOMEvent> event;
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent;
-      if (document_event) {
-        document_event->CreateEvent(NS_LITERAL_STRING("Events"),
-                                    getter_AddRefs(event));
+      if (domDoc) {
+        domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
+                            getter_AddRefs(event));
 
         privateEvent = do_QueryInterface(event);
       }
@@ -6365,19 +6356,6 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
   // Create event even without presContext.
   return nsEventDispatcher::CreateEvent(presContext, nsnull,
                                         aEventType, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDOMEventGroup> group(do_CreateInstance(kDOMEventGroupCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aInstancePtrResult = group;
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
 }
 
 void
