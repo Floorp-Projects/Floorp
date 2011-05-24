@@ -53,6 +53,8 @@
 
 #content-navigator > .previous-button,
 #content-navigator > .next-button {
+  min-width: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_small@ !important; /* button size */
   border: @border_width_tiny@ solid rgba(0,0,0,0.2) !important;
   border-bottom: @border_width_large@ solid #53565a !important;
   background-color: #5e6166;
@@ -117,10 +119,8 @@
   margin: @margin_normal@;
   -moz-margin-end: 0;
   padding: @padding_xnormal@;
-  border-radius: @border_radius_normal@;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  border: @border_width_tiny@ solid rgba(0,0,0,0.2) !important;
   width: 10em;
 }
 
