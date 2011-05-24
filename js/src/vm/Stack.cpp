@@ -757,6 +757,8 @@ AllFramesIter::operator++()
     JS_ASSERT(!done());
     if (fp_ == seg_->initialFrame()) {
         seg_ = seg_->previousInMemory();
+        while (seg_ && seg_->empty())
+            seg_ = seg_->previousInMemory();
         fp_ = seg_ ? seg_->currentFrame() : NULL;
     } else {
         fp_ = fp_->prev();
