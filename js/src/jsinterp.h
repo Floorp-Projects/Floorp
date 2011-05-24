@@ -145,28 +145,6 @@ inline bool
 ComputeThis(JSContext *cx, StackFrame *fp);
 
 /*
- * Choose enumerator values so that the enum can be passed used directly as the
- * stack frame flags.
- */
-enum ConstructOption {
-    INVOKE_NORMAL = 0,
-    INVOKE_CONSTRUCTOR = StackFrame::CONSTRUCTING
-};
-JS_STATIC_ASSERT(INVOKE_CONSTRUCTOR != INVOKE_NORMAL);
-
-static inline uintN
-ToReportFlags(ConstructOption option)
-{
-    return (uintN)option;
-}
-
-static inline uint32
-ToFrameFlags(ConstructOption option)
-{
-    return (uintN)option;
-}
-
-/*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
  * immediately-enclosing successful call to js::StackSpace::pushInvokeArgs,
  * i.e., there must have been no un-popped pushes to cx->stack. Furthermore,
@@ -175,7 +153,7 @@ ToFrameFlags(ConstructOption option)
  * be initialized actual arguments.
  */
 extern JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, const CallArgs &args, ConstructOption option = INVOKE_NORMAL);
+Invoke(JSContext *cx, const CallArgs &args, MaybeConstruct construct = NO_CONSTRUCT);
 
 /*
  * Natives like sort/forEach/replace call Invoke repeatedly with the same
@@ -235,13 +213,18 @@ extern bool
 ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
                           Value *rval);
 
+extern bool
+ExternalExecute(JSContext *cx, JSScript *script, JSObject &scopeChain, Value *rval);
+
 /*
- * Executes a script with the given scope chain in the context of the given
- * frame.
+ * Executes a script with the given scopeChain/this. The 'type' indicates
+ * whether this is eval code or global code. To support debugging, the
+ * evalFrame parameter can point to an arbitrary frame in the context's call
+ * stack to simulate executing an eval in that frame.
  */
-extern JS_FORCES_STACK bool
-Execute(JSContext *cx, JSObject &chain, JSScript *script,
-        StackFrame *prev, uintN flags, Value *result);
+extern bool
+Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
+        ExecuteType type, StackFrame *evalInFrame, Value *result);
 
 /* Flags to toggle js::Interpret() execution. */
 enum InterpMode

@@ -1568,7 +1568,7 @@ JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 {
-    return Valueify(fp)->maybeCallee();
+    return Valueify(fp)->maybeCalleev().toObjectOrNull();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1690,8 +1690,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     if (!script)
         return false;
 
-    uintN evalFlags = StackFrame::DEBUGGER | StackFrame::EVAL;
-    bool ok = Execute(cx, *scobj, script, fp, evalFlags, Valueify(rval));
+    bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, Valueify(rval));
 
     js_DestroyScript(cx, script);
     return ok;

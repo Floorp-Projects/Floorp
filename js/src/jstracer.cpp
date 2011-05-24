@@ -1803,7 +1803,7 @@ VisitFrameSlots(Visitor &visitor, JSContext *cx, unsigned depth, StackFrame *fp,
 
         if (JS_UNLIKELY(fp->isEvalFrame())) {
             visitor.setStackSlotKind("eval");
-            if (!visitor.visitStackSlots(&fp->calleev(), 2, fp))
+            if (!visitor.visitStackSlots(&fp->mutableCalleev(), 2, fp))
                 return false;
         } else {
             /*
@@ -3188,7 +3188,7 @@ public:
             JS_ASSERT(p == fp->addressOfScopeChain());
             if (frameobj->isCall() &&
                 !frameobj->getPrivate() &&
-                fp->maybeCallee() == frameobj->getCallObjCallee())
+                fp->maybeCalleev().toObjectOrNull() == frameobj->getCallObjCallee())
             {
                 JS_ASSERT(&fp->scopeChain() == StackFrame::sInvalidScopeChain);
                 frameobj->setPrivate(fp);
@@ -5660,41 +5660,25 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     if (fi.imacpc)
         fp->setImacropc(fi.imacpc);
 
-    /* Set argc/flags then mimic JSOP_CALL. */
-    uintN argc = fi.get_argc();
-    uint32 flags = fi.is_constructing() ? StackFrame::CONSTRUCTING : 0;
-
-    /* Get pointer to new/frame/slots, prepare arguments. */
-    StackFrame *newfp = cx->stack.getInlineFrame(cx, regs.sp, argc, newfun,
-                                                 newscript, &flags);
-
-    /* Initialize frame; do not need to initialize locals. */
-    newfp->initCallFrame(cx, *callee, newfun, argc, flags);
+    /* Push a frame for the call. */
+    CallArgs args = CallArgsFromSp(fi.get_argc(), regs.sp);
+    cx->stack.pushInlineFrame(cx, regs, args, *callee, newfun, newscript,
+                              MaybeConstructFromBool(fi.is_constructing()),
+                              NoCheck());
 
 #ifdef DEBUG
-    /* The stack is conservatively marked, so we can leave non-canonical args uninitialized. */
-    if (newfp->hasOverflowArgs()) {
-        Value *beg = newfp->actualArgs() - 2;
-        Value *end = newfp->actualArgs() + newfp->numFormalArgs();
-        for (Value *p = beg; p != end; ++p)
-            p->setMagic(JS_ARG_POISON);
-    }
-
     /* These should be initialized by FlushNativeStackFrame. */
-    newfp->thisValue().setMagic(JS_THIS_POISON);
-    newfp->setScopeChainNoCallObj(*StackFrame::sInvalidScopeChain);
+    regs.fp()->thisValue().setMagic(JS_THIS_POISON);
+    regs.fp()->setScopeChainNoCallObj(*StackFrame::sInvalidScopeChain);
 #endif
-
-    /* Officially push the frame. */
-    cx->stack.pushInlineFrame(newscript, newfp, cx->regs());
 
     /* Call object will be set by FlushNativeStackFrame. */
 
     /* Call the debugger hook if present. */
     JSInterpreterHook hook = cx->debugHooks->callHook;
     if (hook) {
-        newfp->setHookData(hook(cx, Jsvalify(newfp), JS_TRUE, 0,
-                                cx->debugHooks->callHookData));
+        regs.fp()->setHookData(hook(cx, Jsvalify(regs.fp()), JS_TRUE, 0,
+                                    cx->debugHooks->callHookData));
     }
 }
 
@@ -15157,7 +15141,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     // We don't have the scope chain on trace, so instead we get a start object
     // that is on the scope chain and doesn't skip the target object (the one
     // that contains the property).
-    Value *callee = &cx->fp()->calleev();
+    const Value *callee = &cx->fp()->calleev();
     obj = callee->toObject().getParent();
     if (obj == globalObj) {
         stack(0, w.immpObjGC(obj));
