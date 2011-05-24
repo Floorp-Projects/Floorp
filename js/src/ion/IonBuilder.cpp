@@ -191,7 +191,7 @@ IonBuilder::analyze()
         current->initSlot(thisSlot(), param);
 
         for (uint32 i = 0; i < nargs(); i++) {
-            param = MParameter::New(this, int(i) - 2);
+            param = MParameter::New(this, int(i));
             if (!current->add(param))
                 return false;
             current->initSlot(argSlot(i), param);

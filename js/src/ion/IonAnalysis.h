@@ -51,9 +51,6 @@ class MIRGraph;
 bool
 ApplyTypeInformation(MIRGenerator *gen, MIRGraph &graph);
 
-bool
-Lower(MIRGenerator *gen, MIRGraph &graph);
-
 } // namespace js
 } // namespace ion
 

@@ -544,6 +544,7 @@ class MParameter : public MAryInstruction<0>
     int32 index() const {
         return index_;
     }
+    void printOpcode(FILE *fp);
 };
 
 class MControlInstruction : public MInstruction
@@ -701,6 +702,12 @@ class MConvert : public MUnaryInstruction
     INSTRUCTION_HEADER(Convert);
     static MConvert *New(MIRGenerator *gen, MInstruction *ins, MIRType type)
     {
+        // Conversions must be pure, for now. The front-end is responsible for
+        // downgrading specializations that would result in impure conversions.
+        // This assertion is also too strict, it will have to be modified
+        // later.
+        JS_ASSERT(ins->type() != MIRType_Object);
+
         MConvert *convert = new (gen->temp()) MConvert(type);
         if (!convert || !convert->init(gen, ins))
             return NULL;
