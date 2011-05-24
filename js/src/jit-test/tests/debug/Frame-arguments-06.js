@@ -10,24 +10,24 @@ var hits = 0;
 var fframe, farguments, fgetter;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	if (hits === 0) {
-	    fframe = frame;
-	    farguments = frame.arguments;
-	    fgetter = Object.getOwnPropertyDescriptor(farguments, "0").get;
-	    assertEq(fgetter instanceof Function, true);
+        if (hits === 0) {
+            fframe = frame;
+            farguments = frame.arguments;
+            fgetter = Object.getOwnPropertyDescriptor(farguments, "0").get;
+            assertEq(fgetter instanceof Function, true);
 
-	    // Calling the getter without an appropriate this-object
-	    // fails, but shouldn't assert or crash.
-	    assertThrowsInstanceOf(function () { fgetter.call(Math); }, TypeError);
-	} else {
-	    // Since fframe is still on the stack, fgetter can be applied to it.
-	    assertEq(fframe.live, true);
-	    assertEq(fgetter.call(farguments), 100);
+            // Calling the getter without an appropriate this-object
+            // fails, but shouldn't assert or crash.
+            assertThrowsInstanceOf(function () { fgetter.call(Math); }, TypeError);
+        } else {
+            // Since fframe is still on the stack, fgetter can be applied to it.
+            assertEq(fframe.live, true);
+            assertEq(fgetter.call(farguments), 100);
 
-	    // Since h was called without arguments, there is no argument 0.
-	    assertEq(fgetter.call(frame.arguments), undefined);
-	}
-	hits++;
+            // Since h was called without arguments, there is no argument 0.
+            assertEq(fgetter.call(frame.arguments), undefined);
+        }
+        hits++;
     }
 };
 
