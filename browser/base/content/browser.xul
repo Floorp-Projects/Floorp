@@ -343,7 +343,8 @@
            footertype="promobox"
            position="after_start"
            hidden="true"
-           orient="vertical"/>
+           orient="vertical"
+           role="alert"/>
 
     <!-- Popup for site identity information -->
     <panel id="identity-popup"
