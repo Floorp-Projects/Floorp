@@ -15,12 +15,12 @@ function test() {
   }
 
   // very long page that produces black bars at the right
-  let html1 = '<html><body style="background-color: #00f;">' +
-              '<div style="background: #fff; width: 95%; height: 10000px; ' +
+  let html1 = '<html><body style="background-color: %2300f;">' +
+              '<div style="background: %23fff; width: 95%; height: 10000px; ' +
               ' margin: 0 auto;"></div></body></html>';
 
   // very short page that produces black bars at the bottom
-  let html2 = '<html><body style="background-color: #00f;"></body></html>';
+  let html2 = '<html><body style="background-color: %2300f;"></body></html>';
 
   let tests = [{
     url: 'data:text/html,' + html1,

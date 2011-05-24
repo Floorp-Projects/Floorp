@@ -36,7 +36,7 @@
    - ***** END LICENSE BLOCK ***** -->
 <?xml-stylesheet type="text/css" href="data:text/css,
 
-#_box_windowsDefaultTheme:-moz-system-metric(windows-default-theme) {
+%23_box_windowsDefaultTheme:-moz-system-metric(windows-default-theme) {
   display: none;
 }
 
