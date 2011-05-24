@@ -112,7 +112,7 @@ _BROWSER_FILES = \
                  browser_bug416661.js \
                  browser_bug417483.js \
                  browser_bug419612.js \
-                 browser_bug420160.js \
+                 browser_identity_UI.js \
                  browser_bug422590.js \
                  browser_bug424101.js \
                  browser_bug427559.js \

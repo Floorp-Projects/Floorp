@@ -1676,17 +1676,18 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 nsTHashtable<PresShell::PresShellPtrKey> *nsIPresShell::sLiveShells = 0;
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
-                             "heap-used/layout/all",
-                             "Memory used by layout PresShell, PresContext, "
-                             "and other related areas.",
-                             PresShell::SizeOfLayoutMemoryReporter,
-                             nsnull)
+    "explicit/layout/all",
+    MR_HEAP,
+    "Memory used by layout PresShell, PresContext, and other related areas.",
+    PresShell::SizeOfLayoutMemoryReporter,
+    nsnull)
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
-                             "heap-used/layout/bidi",
-                             "Memory used by layout Bidi processor.",
-                             PresShell::SizeOfBidiMemoryReporter,
-                             nsnull)
+    "explicit/layout/bidi",
+    MR_HEAP,
+    "Memory used by layout Bidi processor.",
+    PresShell::SizeOfBidiMemoryReporter,
+    nsnull)
 
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
@@ -9418,16 +9419,7 @@ nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
 nsAccessibilityService*
 nsIPresShell::AccService()
 {
-#ifdef MOZ_ENABLE_LIBXUL
   return GetAccService();
-#else
-  if (gIsAccessibilityActive) {
-    nsCOMPtr<nsIAccessibilityService> srv =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    return static_cast<nsAccessibilityService*>(srv.get());
-  }
-  return nsnull;
-#endif
 }
 #endif
 

@@ -115,7 +115,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMKeyEvent.h"
@@ -294,7 +293,7 @@ nsGlobalWindow::DOMMinTimeoutValue() const {
 // The longest interval (as PRIntervalTime) we permit, or that our
 // timer code can handle, really. See DELAY_INTERVAL_LIMIT in
 // nsTimerImpl.h for details.
-#define DOM_MAX_TIMEOUT_VALUE    PR_BIT(8 * sizeof(PRIntervalTime) - 1)
+#define DOM_MAX_TIMEOUT_VALUE    DELAY_INTERVAL_LIMIT
 
 #define FORWARD_TO_OUTER(method, args, err_rval)                              \
   PR_BEGIN_MACRO                                                              \
@@ -5513,10 +5512,9 @@ nsGlobalWindow::FirePopupBlockedEvent(nsIDOMDocument* aDoc,
   if (aDoc) {
     // Fire a "DOMPopupBlocked" event so that the UI can hear about
     // blocked popups.
-    nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
     nsCOMPtr<nsIDOMEvent> event;
-    docEvent->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"),
-                          getter_AddRefs(event));
+    aDoc->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"),
+                      getter_AddRefs(event));
     if (event) {
       nsCOMPtr<nsIDOMPopupBlockedEvent> pbev(do_QueryInterface(event));
       pbev->InitPopupBlockedEvent(NS_LITERAL_STRING("DOMPopupBlocked"),
@@ -5845,13 +5843,13 @@ class PostMessageEvent : public nsRunnable
 
     PostMessageEvent(nsGlobalWindow* aSource,
                      const nsAString& aCallerOrigin,
-                     const nsAString& aMessage,
                      nsGlobalWindow* aTargetWindow,
                      nsIURI* aProvidedOrigin,
                      PRBool aTrustedCaller)
     : mSource(aSource),
       mCallerOrigin(aCallerOrigin),
-      mMessage(aMessage),
+      mMessage(nsnull),
+      mMessageLen(0),
       mTargetWindow(aTargetWindow),
       mProvidedOrigin(aProvidedOrigin),
       mTrustedCaller(aTrustedCaller)
@@ -5861,13 +5859,21 @@ class PostMessageEvent : public nsRunnable
     
     ~PostMessageEvent()
     {
+      NS_ASSERTION(!mMessage, "Message should have been deserialized!");
       MOZ_COUNT_DTOR(PostMessageEvent);
+    }
+
+    void SetJSData(JSAutoStructuredCloneBuffer& aBuffer)
+    {
+      NS_ASSERTION(!mMessage && mMessageLen == 0, "Don't call twice!");
+      aBuffer.steal(&mMessage, &mMessageLen);
     }
 
   private:
     nsRefPtr<nsGlobalWindow> mSource;
     nsString mCallerOrigin;
-    nsString mMessage;
+    uint64* mMessage;
+    size_t mMessageLen;
     nsRefPtr<nsGlobalWindow> mTargetWindow;
     nsCOMPtr<nsIURI> mProvidedOrigin;
     PRBool mTrustedCaller;
@@ -5880,6 +5886,22 @@ PostMessageEvent::Run()
                     "should have been passed an outer window!");
   NS_ABORT_IF_FALSE(!mSource || mSource->IsOuterWindow(),
                     "should have been passed an outer window!");
+
+  // Get the JSContext for the target window
+  nsIScriptContext* scriptContext = mTargetWindow->GetContext();
+  NS_ENSURE_TRUE(scriptContext, NS_ERROR_FAILURE);
+
+  JSContext* cx = (JSContext*)scriptContext->GetNativeContext();
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  // If we bailed before this point we're going to leak mMessage, but
+  // that's probably better than crashing.
+
+  // Ensure that the buffer is freed even if we fail to post the message
+  JSAutoStructuredCloneBuffer buffer;
+  buffer.adopt(cx, mMessage, mMessageLen);
+  mMessage = nsnull;
+  mMessageLen = 0;
 
   nsRefPtr<nsGlobalWindow> targetWindow;
   if (mTargetWindow->IsClosedOrClosing() ||
@@ -5926,15 +5948,22 @@ PostMessageEvent::Run()
       return NS_OK;
   }
 
+  // Deserialize the structured clone data
+  jsval messageData;
+  {
+    JSAutoRequest ar(cx);
+
+    if (!buffer.read(&messageData, cx, nsnull))
+      return NS_ERROR_DOM_DATA_CLONE_ERR;
+  }
 
   // Create the event
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent =
-    do_QueryInterface(targetWindow->mDocument);
-  if (!docEvent)
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(targetWindow->mDocument);
+  if (!domDoc)
     return NS_OK;
   nsCOMPtr<nsIDOMEvent> event;
-  docEvent->CreateEvent(NS_LITERAL_STRING("MessageEvent"),
-                        getter_AddRefs(event));
+  domDoc->CreateEvent(NS_LITERAL_STRING("MessageEvent"),
+                      getter_AddRefs(event));
   if (!event)
     return NS_OK;
 
@@ -5942,7 +5971,7 @@ PostMessageEvent::Run()
   nsresult rv = message->InitMessageEvent(NS_LITERAL_STRING("message"),
                                           PR_FALSE /* non-bubbling */,
                                           PR_TRUE /* cancelable */,
-                                          mMessage,
+                                          messageData,
                                           mCallerOrigin,
                                           EmptyString(),
                                           mSource);
@@ -5974,9 +6003,12 @@ PostMessageEvent::Run()
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrigin)
+nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
+                               const nsAString& aOrigin,
+                               JSContext* aCx)
 {
-  FORWARD_TO_OUTER(PostMessageMoz, (aMessage, aOrigin), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_OUTER(PostMessageMoz, (aMessage, aOrigin, aCx),
+                   NS_ERROR_NOT_INITIALIZED);
 
   //
   // Window.postMessage is an intentional subversion of the same-origin policy.
@@ -6040,10 +6072,19 @@ nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrig
                          ? nsnull
                          : callerInnerWin->GetOuterWindowInternal(),
                          origin,
-                         aMessage,
                          this,
                          providedOrigin,
                          nsContentUtils::IsCallerTrustedForWrite());
+
+  // We *must* clone the data here, or the jsval could be modified
+  // by script
+  JSAutoStructuredCloneBuffer buffer;
+
+  if (!buffer.write(aCx, aMessage, nsnull, nsnull))
+    return NS_ERROR_DOM_DATA_CLONE_ERR;
+
+  event->SetJSData(buffer);
+
   return NS_DispatchToCurrentThread(event);
 }
 
@@ -6534,6 +6575,34 @@ nsGlobalWindow::NotifyWindowIDDestroyed(const char* aTopic)
   nsresult rv = NS_DispatchToCurrentThread(runnable);
   if (NS_SUCCEEDED(rv)) {
     mNotifiedIDDestroyed = PR_TRUE;
+  }
+}
+
+// static
+void
+nsGlobalWindow::NotifyDOMWindowFrozen(nsGlobalWindow* aWindow) {
+  if (aWindow && aWindow->IsInnerWindow()) {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      observerService->
+        NotifyObservers(static_cast<nsIScriptGlobalObject*>(aWindow),
+                        DOM_WINDOW_FROZEN_TOPIC, nsnull);
+    }
+  }
+}
+
+// static
+void
+nsGlobalWindow::NotifyDOMWindowThawed(nsGlobalWindow* aWindow) {
+  if (aWindow && aWindow->IsInnerWindow()) {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      observerService->
+        NotifyObservers(static_cast<nsIScriptGlobalObject*>(aWindow),
+                        DOM_WINDOW_THAWED_TOPIC, nsnull);
+    }
   }
 }
 

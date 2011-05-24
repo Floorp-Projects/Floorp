@@ -213,6 +213,7 @@
 #include "nsXMLHttpRequest.h"
 #include "nsWebSocket.h"
 #include "nsIDOMCloseEvent.h"
+#include "nsEventSource.h"
 
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
@@ -221,7 +222,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsDOMAttribute.h"
 #include "nsIDOMText.h"
 #include "nsIDOM3Text.h"
@@ -1321,6 +1321,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(EventSource, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(ClientRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ClientRectList, nsClientRectListSH,
@@ -1561,6 +1564,7 @@ static const nsContractIDMapData kConstructorMap[] =
   NS_DEFINE_CONSTRUCTOR_DATA(XPathEvaluator, NS_XPATH_EVALUATOR_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XSLTProcessor,
                              "@mozilla.org/document-transformer;1?type=xslt")
+  NS_DEFINE_CONSTRUCTOR_DATA(EventSource, NS_EVENTSOURCE_CONTRACTID)
 };
 
 struct nsConstructorFuncMapData
@@ -1917,7 +1921,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
 {
 #define SET_JSID_TO_STRING(_id, _cx, _str)                                    \
   if (JSString *str = ::JS_InternString(_cx, _str))                           \
-      _id = INTERNED_STRING_TO_JSID(str);                                     \
+      _id = INTERNED_STRING_TO_JSID(_cx, str);                                \
   else                                                                        \
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2323,7 +2327,6 @@ nsDOMClassInfo::RegisterExternalClasses()
 
 #define DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES                                    \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)                                 \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocumentStyle)                            \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)                                \
@@ -3963,6 +3966,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLSProgressEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMProgressEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(EventSource, nsIEventSource)
+    DOM_CLASSINFO_MAP_ENTRY(nsIEventSource)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGForeignObjectElement, nsIDOMSVGForeignObjectElement)
@@ -6072,6 +6081,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
 {
   // No need to look these up in the hash.
+  *bp = PR_FALSE;
   if (JSVAL_IS_PRIMITIVE(v)) {
     return NS_OK;
   }
@@ -6551,6 +6561,13 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // For now don't expose web sockets unless user has explicitly enabled them
     if (name_struct->mDOMClassInfoID == eDOMClassInfo_WebSocket_id) {
       if (!nsWebSocket::PrefEnabled()) {
+        return NS_OK;
+      }
+    }
+
+    // For now don't expose server events unless user has explicitly enabled them
+    if (name_struct->mDOMClassInfoID == eDOMClassInfo_EventSource_id) {
+      if (!nsEventSource::PrefEnabled()) {
         return NS_OK;
       }
     }
@@ -8573,7 +8590,8 @@ nsDOMStringMapSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
 
-  nsDependentJSString prop(id);
+  nsAutoString prop;
+  NS_ENSURE_TRUE(JSIDToProp(id, prop), NS_ERROR_UNEXPECTED);
 
   if (dataset->HasDataAttr(prop)) {
     *_retval = JS_DefinePropertyById(cx, obj, id, JSVAL_VOID,
@@ -8641,9 +8659,10 @@ nsDOMStringMapSH::DelProperty(nsIXPConnectWrappedNative *wrapper,
 {
   nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
-  *_retval = PR_TRUE;
 
-  nsDependentJSString prop(id);
+  nsAutoString prop;
+  NS_ENSURE_TRUE(JSIDToProp(id, prop), NS_ERROR_UNEXPECTED);
+
   dataset->RemoveDataAttr(prop);
 
   return NS_OK;
@@ -8657,21 +8676,22 @@ nsDOMStringMapSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
 
-  nsDependentJSString propName(id);
-  nsAutoString prop;
-  
-  nsresult rv = dataset->GetDataAttr(propName, prop);
+  nsAutoString propName;
+  NS_ENSURE_TRUE(JSIDToProp(id, propName), NS_ERROR_UNEXPECTED);
+
+  nsAutoString propVal;
+  nsresult rv = dataset->GetDataAttr(propName, propVal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (prop.IsVoid()) {
+  if (propVal.IsVoid()) {
     *vp = JSVAL_VOID;
     return NS_SUCCESS_I_DID_SOMETHING;
   }
 
   nsStringBuffer* valBuf;
-  *vp = XPCStringConvert::ReadableToJSVal(cx, prop, &valBuf);
+  *vp = XPCStringConvert::ReadableToJSVal(cx, propVal, &valBuf);
   if (valBuf) {
-    prop.ForgetSharedBuffer();
+    propVal.ForgetSharedBuffer();
   }
 
   return NS_SUCCESS_I_DID_SOMETHING;
@@ -8685,10 +8705,12 @@ nsDOMStringMapSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
   NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
 
+  nsAutoString propName;
+  NS_ENSURE_TRUE(JSIDToProp(id, propName), NS_ERROR_UNEXPECTED);
+
   JSString *val = JS_ValueToString(cx, *vp);
   NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
-  nsDependentJSString propName(id);
   nsDependentJSString propVal;
   NS_ENSURE_TRUE(propVal.init(cx, val), NS_ERROR_UNEXPECTED);
 
@@ -8696,6 +8718,20 @@ nsDOMStringMapSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_SUCCESS_I_DID_SOMETHING;
+}
+
+bool
+nsDOMStringMapSH::JSIDToProp(const jsid& aId, nsAString& aResult)
+{
+  if (JSID_IS_INT(aId)) {
+    aResult.AppendInt(JSID_TO_INT(aId));
+  } else if (JSID_IS_STRING(aId)) {
+    aResult = nsDependentJSString(aId);
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
 NS_IMETHODIMP

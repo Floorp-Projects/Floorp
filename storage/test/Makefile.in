@@ -61,6 +61,7 @@ CPP_UNIT_TESTS = \
   test_StatementCache.cpp \
   test_async_callbacks_with_spun_event_loops.cpp \
   test_file_perms.cpp \
+  test_asyncStatementExecution_transaction.cpp \
   $(NULL)
 
 ifdef MOZ_DEBUG

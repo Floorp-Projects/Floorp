@@ -74,8 +74,6 @@ interface nsIDOMSVGSVGElement
     nsIDOMSVGFitToViewBox,
     nsIDOMSVGZoomAndPan,
     events::nsIDOMEventTarget,
-    events::nsIDOMDocumentEvent,
-    css::nsIDOMViewCSS,
     css::nsIDOMDocumentCSS
 */
 { 
@@ -125,8 +123,3 @@ interface nsIDOMSVGSVGElement
   nsIDOMSVGTransform    createSVGTransformFromMatrix(in nsIDOMSVGMatrix matrix);
   nsIDOMElement         getElementById(in DOMString elementId);
 };
-
-
-
-
-
