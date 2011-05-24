@@ -46,7 +46,17 @@ function printpreview() {
   prefs.setBoolPref('print.show_print_progress', false);
   //XXX I would have thought this would work, instead I'm forced to use prefs service
   gWbp.globalPrintSettings.showPrintProgress = false;
+  var before = 0;
+  var after = 0;
+  function beforeprint() { ++before; }
+  function afterprint() { ++after; }
+  window.frames[0].addEventListener("beforeprint", beforeprint, true);
+  window.frames[0].addEventListener("afterprint", afterprint, true);
   gWbp.printPreview(gWbp.globalPrintSettings, window.frames[0], listener);
+  is(before, 1, "Should have called beforeprint listener!");
+  is(after, 1, "Should have called afterprint listener!");
+  window.frames[0].removeEventListener("beforeprint", beforeprint, true);
+  window.frames[0].removeEventListener("afterprint", afterprint, true);
   prefs.clearUserPref('print.show_print_progress');
 }
 

@@ -319,11 +319,13 @@ var bookmarksObserver = {
   onItemVisited: function() {},
 
   onItemChanged: function PSB_onItemChanged(aItemId, aProperty,
-                                            aIsAnnotationProperty, aNewValue) {
+                                            aIsAnnotationProperty, aNewValue,
+                                            aLastModified, aItemType,
+                                            aParentId) {
     if (aProperty !== "title")
       return;
 
-    var views = getViewsForFolder(PlacesUtils.bookmarks.getFolderIdForItem(aItemId));
+    var views = getViewsForFolder(aParentId);
     ok(views.length > 0, "Found affected views (" + views.length + "): " + views);
 
     // Check that item has been moved in the correct position.

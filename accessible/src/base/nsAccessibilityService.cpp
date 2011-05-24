@@ -68,7 +68,7 @@
 #include "nsImageFrame.h"
 #include "nsILink.h"
 #include "nsIObserverService.h"
-#include "nsIPluginInstance.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsISupportsUtils.h"
 #include "nsObjectFrame.h"
 #include "nsOuterDocAccessible.h"
@@ -346,8 +346,8 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
 
 #if defined(XP_WIN) || defined(MOZ_ACCESSIBILITY_ATK)
   // 2) for plugins
-  nsCOMPtr<nsIPluginInstance> pluginInstance;
-  if (NS_SUCCEEDED(aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance))) &&
+  nsRefPtr<nsNPAPIPluginInstance> pluginInstance;
+  if (NS_SUCCEEDED(aFrame->GetPluginInstance(getter_AddRefs(pluginInstance))) &&
       pluginInstance) {
 #ifdef XP_WIN
     // Note: pluginPort will be null if windowless.
@@ -842,6 +842,8 @@ nsAccessibilityService::GetAccessibleInShell(nsINode* aNode,
 nsAccessible*
 nsAccessibilityService::GetAccessible(nsINode* aNode)
 {
+  NS_PRECONDITION(aNode, "Getting an accessible for null node! Crash.");
+
   nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
   return document ? document->GetAccessible(aNode) : nsnull;
 }

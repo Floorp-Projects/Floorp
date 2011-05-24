@@ -109,6 +109,6 @@ function restore(groupId) {
     }]
   };
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-  ss.setWindowState(win, JSON.stringify(newState), false);
+  ss.setWindowState(win, JSON.stringify(newState), true);
 }
 

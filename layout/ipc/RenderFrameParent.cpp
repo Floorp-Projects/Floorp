@@ -48,6 +48,7 @@
 #include "nsFrameLoader.h"
 #include "nsViewportFrame.h"
 #include "nsSubDocumentFrame.h"
+#include "nsIObserver.h"
 
 typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::layers;
@@ -57,6 +58,28 @@ namespace layout {
 
 typedef FrameMetrics::ViewID ViewID;
 typedef RenderFrameParent::ViewMap ViewMap;
+
+nsRefPtr<ImageContainer> sCheckerboard = nsnull;
+
+class CheckerBoardPatternDeleter : public nsIObserver
+{
+public:
+  NS_DECL_NSIOBSERVER
+  NS_DECL_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS1(CheckerBoardPatternDeleter, nsIObserver)
+
+NS_IMETHODIMP
+CheckerBoardPatternDeleter::Observe(nsISupports* aSubject,
+                                    const char* aTopic,
+                                    const PRUnichar* aData)
+{
+  if (!strcmp(aTopic, "xpcom-shutdown")) {
+    sCheckerboard = nsnull;
+  }
+  return NS_OK;
+}
 
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
@@ -389,64 +412,34 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
   }
 }
 
+#define BOARDSIZE 32
+#define CHECKERSIZE 16
 already_AddRefed<gfxASurface>
 GetBackgroundImage()
 {
-  // XXX TODO FIXME/bug XXXXXX: this is obviously a hacky placeloader
-  // impl.  Unclear how the background pattern source should be set.
-#define WHT 0xffff
-#define GRY 0xD69A
-#define WLINE8 WHT,WHT,WHT,WHT,WHT,WHT,WHT,WHT
-#define GLINE8 GRY,GRY,GRY,GRY,GRY,GRY,GRY,GRY
-#define WROW16 WLINE8, GLINE8
-#define GROW16 GLINE8, WLINE8
-  static const unsigned short kCheckerboard[] = {
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-    WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,WROW16,
-
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,
-    GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16,GROW16
-  };
+  static unsigned int data[BOARDSIZE * BOARDSIZE];
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    for (unsigned int y = 0; y < BOARDSIZE; y++) {
+      for (unsigned int x = 0; x < BOARDSIZE; x++) {
+        bool col_odd = (x / CHECKERSIZE) & 1;
+        bool row_odd = (y / CHECKERSIZE) & 1;
+        if (col_odd ^ row_odd) { // xor
+          data[y * BOARDSIZE + x] = 0xFFFFFFFF;
+        }
+        else {
+          data[y * BOARDSIZE + x] = 0xFFDDDDDD;
+        }
+      }
+    }
+  }
 
   nsRefPtr<gfxASurface> s =
-    new gfxImageSurface((unsigned char*)kCheckerboard,
-                        gfxIntSize(64, 64),
-                        64 * 2,
-                        gfxASurface::ImageFormatRGB16_565);
+    new gfxImageSurface((unsigned char*) data,
+                        gfxIntSize(BOARDSIZE, BOARDSIZE),
+                        BOARDSIZE * sizeof(unsigned int),
+                        gfxASurface::ImageFormatARGB32);
   return s.forget();
 }
 
@@ -505,15 +498,26 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
   gfxIntSize bgImageSize = bgImage->GetSize();
 
   // Set up goop needed to get a cairo image into its own layer
-  nsRefPtr<ImageContainer> c = aManager->CreateImageContainer();
-  const Image::Format fmts[] = { Image::CAIRO_SURFACE };
-  nsRefPtr<Image> img = c->CreateImage(fmts, 1);
-  CairoImage::Data data = { bgImage.get(), bgImageSize };
-  static_cast<CairoImage*>(img.get())->SetData(data);
-  c->SetCurrentImage(img);
+  if (!sCheckerboard) {
+    sCheckerboard = aManager->CreateImageContainer().get();
+    const Image::Format fmts[] = { Image::CAIRO_SURFACE };
+    nsRefPtr<Image> img = sCheckerboard->CreateImage(fmts, 1);
+    CairoImage::Data data = { bgImage.get(), bgImageSize };
+    static_cast<CairoImage*>(img.get())->SetData(data);
+    sCheckerboard->SetCurrentImage(img);
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (!observerService) {
+      return;
+    }
+    nsresult rv = observerService->AddObserver(new CheckerBoardPatternDeleter, "xpcom-shutdown", PR_FALSE);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+  }
 
   nsRefPtr<ImageLayer> layer = aManager->CreateImageLayer();
-  layer->SetContainer(c);
+  layer->SetContainer(sCheckerboard);
 
   // The tile source is the entire background image
   nsIntRect tileSource(0, 0, bgImageSize.width, bgImageSize.height);

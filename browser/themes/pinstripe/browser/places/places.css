@@ -103,7 +103,7 @@ treechildren::-moz-tree-image(title) {
 }
 
 treechildren::-moz-tree-image(title, livemarkItem) {
-  list-style-image: url("chrome://browser/skin/places/livemarkItem.png");
+  list-style-image: url("chrome://browser/skin/livemark-item.png");
 }
 
 treechildren::-moz-tree-image(title, container),

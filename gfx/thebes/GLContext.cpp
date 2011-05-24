@@ -383,6 +383,7 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
 
         fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
+        fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
 
         UpdateActualFormat();
     }
@@ -702,6 +703,9 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
 PRBool
 GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 {
+    if (!IsOffscreenSizeAllowed(aSize))
+        return PR_FALSE;
+
     MakeCurrent();
 
     bool alpha = mCreationFormat.alpha > 0;
@@ -1217,10 +1221,10 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
 
         // now put the coords into the d[xy]0 .. d[xy]1 coordinate space
         // from the 0..1 that it comes out of decompose
-        GLfloat *v = rects.vertexCoords;
-        for (int i = 0; i < rects.numRects * 6; ++i) {
-            v[i*2] = (v[i*2] * (dx1 - dx0)) + dx0;
-            v[i*2+1] = (v[i*2+1] * (dy1 - dy0)) + dy0;
+        RectTriangles::vert_coord* v = (RectTriangles::vert_coord*)rects.vertexPointer();
+        for (int i = 0; i < rects.elements(); ++i) {
+            v[i].x = (v[i].x * (dx1 - dx0)) + dx0;
+            v[i].y = (v[i].y * (dy1 - dy0)) + dy0;
         }
     }
 
@@ -1230,13 +1234,13 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
 
     fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 
-    fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.vertexCoords);
-    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.texCoords);
+    fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.vertexPointer());
+    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.texCoordPointer());
 
     fEnableVertexAttribArray(0);
     fEnableVertexAttribArray(1);
 
-    fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.numRects * 6);
+    fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.elements());
 
     fDisableVertexAttribArray(0);
     fDisableVertexAttribArray(1);
@@ -1462,28 +1466,35 @@ void
 GLContext::RectTriangles::addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
                                   GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1)
 {
-    NS_ASSERTION(numRects < 4, "Overflow in number of rectangles, max 4!");
+    vert_coord v;
+    v.x = x0; v.y = y0;
+    vertexCoords.AppendElement(v);
+    v.x = x1; v.y = y0;
+    vertexCoords.AppendElement(v);
+    v.x = x0; v.y = y1;
+    vertexCoords.AppendElement(v);
 
-    GLfloat *v = &vertexCoords[numRects*6*2];
-    GLfloat *t = &texCoords[numRects*6*2];
+    v.x = x0; v.y = y1;
+    vertexCoords.AppendElement(v);
+    v.x = x1; v.y = y0;
+    vertexCoords.AppendElement(v);
+    v.x = x1; v.y = y1;
+    vertexCoords.AppendElement(v);
 
-    *v++ = x0; *v++ = y0;
-    *v++ = x1; *v++ = y0;
-    *v++ = x0; *v++ = y1;
+    tex_coord t;
+    t.u = tx0; t.v = ty0;
+    texCoords.AppendElement(t);
+    t.u = tx1; t.v = ty0;
+    texCoords.AppendElement(t);
+    t.u = tx0; t.v = ty1;
+    texCoords.AppendElement(t);
 
-    *v++ = x0; *v++ = y1;
-    *v++ = x1; *v++ = y0;
-    *v++ = x1; *v++ = y1;
-
-    *t++ = tx0; *t++ = ty0;
-    *t++ = tx1; *t++ = ty0;
-    *t++ = tx0; *t++ = ty1;
-
-    *t++ = tx0; *t++ = ty1;
-    *t++ = tx1; *t++ = ty0;
-    *t++ = tx1; *t++ = ty1;
-
-    numRects++;
+    t.u = tx0; t.v = ty1;
+    texCoords.AppendElement(t);
+    t.u = tx1; t.v = ty0;
+    texCoords.AppendElement(t);
+    t.u = tx1; t.v = ty1;
+    texCoords.AppendElement(t);
 }
 
 static GLfloat

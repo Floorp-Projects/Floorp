@@ -1540,8 +1540,10 @@
             }
 
             this._removingTabs.push(aTab);
-
-            this.tabContainer.updateVisibility();
+            if (newTab)
+              this.addTab("about:blank", {skipAnimation: true});
+            else
+              this.tabContainer.updateVisibility();
 
             // We're committed to closing the tab now.
             // Dispatch a notification.
@@ -1597,8 +1599,6 @@
 
             // update the UI early for responsiveness
             aTab.collapsed = true;
-            if (aNewTab)
-              this.addTab("about:blank", {skipAnimation: true});
             this.tabContainer._fillTrailingGap();
             this._blurTab(aTab);
 
@@ -2902,7 +2902,7 @@
             tabWidth += "px";
             for (let i = numPinned; i < tabs.length; i++) {
               let tab = tabs[i];
-              tab.style.maxWidth = tabWidth;
+              tab.style.setProperty("max-width", tabWidth, "important");
               if (!isEndTab) { // keep tabs the same width
                 tab.style.MozTransition = "none";
                 tab.clientTop; // flush styles to skip animation; see bug 649247
@@ -3142,11 +3142,14 @@
       <method name="_handleNewTab">
         <parameter name="tab"/>
         <body><![CDATA[
-          if (tab.parentNode != this || tab._fullyOpen)
+          if (tab.parentNode != this)
             return;
-          tab._fullyOpen = true;
 
           this.adjustTabstrip();
+
+          if (tab._fullyOpen)
+            return;
+          tab._fullyOpen = true;
 
           if (tab.getAttribute("selected") == "true") {
             this._fillTrailingGap();
@@ -3735,7 +3738,12 @@
 
           var tabstripBO = tabContainer.mTabstrip.scrollBoxObject;
           for (var i = 0; i < this.childNodes.length; i++) {
-            var curTabBO = this.childNodes[i].tab.boxObject;
+            let curTab = this.childNodes[i].tab;
+            if (!curTab) // "Tab Groups" menuitem and its menuseparator
+              continue;
+            let curTabBO = curTab.boxObject;
+            if (!curTabBO) // "Tabs From Other Computers" menuitem
+              continue;
             if (curTabBO.screenX >= tabstripBO.screenX &&
                 curTabBO.screenX + curTabBO.width <= tabstripBO.screenX + tabstripBO.width)
               this.childNodes[i].setAttribute("tabIsVisible", "true"); 
@@ -3812,7 +3820,7 @@
         // clear out the menu popup and remove the listeners
         for (let i = this.childNodes.length - 1; i > 0; i--) {
           let menuItem = this.childNodes[i];
-          if (!menuItem.hasAttribute("keepme")) {
+          if (menuItem.tab) {
             menuItem.removeEventListener("command", this, false);
             menuItem.tab.mCorrespondingMenuitem = null;
             this.removeChild(menuItem);

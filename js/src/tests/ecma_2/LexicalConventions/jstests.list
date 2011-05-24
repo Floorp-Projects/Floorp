@@ -1,4 +1,4 @@
 url-prefix ../../jsreftest.html?test=ecma_2/LexicalConventions/
-fails-if(Android) script keywords-001.js
+script keywords-001.js
 script regexp-literals-001.js
 script regexp-literals-002.js

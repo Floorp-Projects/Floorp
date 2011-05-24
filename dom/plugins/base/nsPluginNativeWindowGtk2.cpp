@@ -67,7 +67,7 @@ public:
   nsPluginNativeWindowGtk2();
   virtual ~nsPluginNativeWindowGtk2();
 
-  virtual nsresult CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance);
+  virtual nsresult CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance);
 private:
   NPSetWindowCallbackStruct mWsInfo;
   /**
@@ -179,7 +179,7 @@ nsPluginNativeWindowGtk2::plugin_composite_filter_func (GdkXEvent *xevent,
 }
 #endif
 
-nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance)
+nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance)
 {
   if (aPluginInstance) {
     if (type == NPWindowTypeWindow) {

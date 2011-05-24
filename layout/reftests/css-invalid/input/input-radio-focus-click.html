@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <body class="reftest-wait">
+    <!-- See bug 658282. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function loadHandler() {
+      var button = document.getElementsByTagName('button')[0];
+      var radios = document.getElementsByName('foo');
+
+      button.onclick = function() {
+        for (var i = 0; i < radios.length; i++) {
+          radios[i].checked = false;
+        }
+        button.parentNode.removeChild(button);
+        document.documentElement.className='';
+      };
+
+      radios[0].focus();
+      radios[0].checked = true;
+      button.focus();
+      button.click();
+    }
+  </script>
+  <body onload="loadHandler();">
+    <input class='invalid' id='i1' name='foo' type='radio' required>
+    <input class='invalid' id='i2' name='foo' type='radio' required>
+    <button></button>
+  </body>
+</html>

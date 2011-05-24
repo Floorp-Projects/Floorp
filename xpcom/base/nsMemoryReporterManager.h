@@ -13,6 +13,7 @@ public:
 
   nsMemoryReporter(nsCString& prefix,
                    nsCString& path, 
+                   PRInt32 kind,
                    nsCString& desc,
                    PRInt64 memoryUsed);
 
@@ -20,6 +21,7 @@ public:
 
 protected:
   nsCString mPath, mDesc;
+  PRInt32 mKind;
   PRInt64 mMemoryUsed;
 };
 

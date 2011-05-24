@@ -404,7 +404,7 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
     case nsIDOMSVGPathSeg::PATHSEG_ARC_REL:
     {
       gfxPoint radii(mData[i], mData[i+1]);
-      gfxPoint segEnd = gfxPoint(mData[i+5], mData[i+6]);
+      segEnd = gfxPoint(mData[i+5], mData[i+6]);
       if (segType == nsIDOMSVGPathSeg::PATHSEG_ARC_REL) {
         segEnd += segStart;
       }

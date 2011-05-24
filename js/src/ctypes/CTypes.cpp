@@ -39,6 +39,8 @@
 #include "CTypes.h"
 #include "Library.h"
 #include "jsnum.h"
+#include "jscompartment.h"
+#include "jsobjinlines.h"
 #include <limits>
 
 #include <math.h>
@@ -456,6 +458,7 @@ static JSFunctionSpec sUInt64Functions[] = {
 static JSFunctionSpec sModuleFunctions[] = {
   JS_FN("open", Library::Open, 1, CTYPESFN_FLAGS),
   JS_FN("cast", CData::Cast, 2, CTYPESFN_FLAGS),
+  JS_FN("getRuntime", CData::GetRuntime, 1, CTYPESFN_FLAGS),
   JS_FN("libraryName", Library::Name, 1, CTYPESFN_FLAGS),
   JS_FS_END
 };
@@ -2753,8 +2756,6 @@ CType::FinalizeProtoClass(JSContext* cx, JSObject* obj)
 void
 CType::Trace(JSTracer* trc, JSObject* obj)
 {
-  JSContext* cx = trc->context;
-
   // Make sure our TypeCode slot is legit. If it's not, bail.
   jsval slot = js::Jsvalify(obj->getSlot(SLOT_TYPECODE));
   if (JSVAL_IS_VOID(slot))
@@ -2763,7 +2764,7 @@ CType::Trace(JSTracer* trc, JSObject* obj)
   // The contents of our slots depends on what kind of type we are.
   switch (TypeCode(JSVAL_TO_INT(slot))) {
   case TYPE_struct: {
-    ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
+    slot = Jsvalify(obj->getReservedSlot(SLOT_FIELDINFO));
     if (JSVAL_IS_VOID(slot))
       return;
 
@@ -2778,7 +2779,7 @@ CType::Trace(JSTracer* trc, JSObject* obj)
   }
   case TYPE_function: {
     // Check if we have a FunctionInfo.
-    ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FNINFO, &slot));
+    slot = Jsvalify(obj->getReservedSlot(SLOT_FNINFO));
     if (JSVAL_IS_VOID(slot))
       return;
 
@@ -5672,6 +5673,38 @@ CData::Cast(JSContext* cx, uintN argc, jsval* vp)
   // of 'sourceData'.
   void* data = CData::GetData(cx, sourceData);
   JSObject* result = CData::Create(cx, targetType, sourceData, data, false);
+  if (!result)
+    return JS_FALSE;
+
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(result));
+  return JS_TRUE;
+}
+
+JSBool
+CData::GetRuntime(JSContext* cx, uintN argc, jsval* vp)
+{
+  if (argc != 1) {
+    JS_ReportError(cx, "getRuntime takes one argument");
+    return JS_FALSE;
+  }
+
+  jsval* argv = JS_ARGV(cx, vp);
+  if (JSVAL_IS_PRIMITIVE(argv[0]) ||
+      !CType::IsCType(cx, JSVAL_TO_OBJECT(argv[0]))) {
+    JS_ReportError(cx, "first argument must be a CType");
+    return JS_FALSE;
+  }
+
+  JSObject* targetType = JSVAL_TO_OBJECT(argv[0]);
+  size_t targetSize;
+  if (!CType::GetSafeSize(cx, targetType, &targetSize) ||
+      targetSize != sizeof(void*)) {
+    JS_ReportError(cx, "target CType has non-pointer size");
+    return JS_FALSE;
+  }
+
+  void* data = static_cast<void*>(cx->runtime);
+  JSObject* result = CData::Create(cx, targetType, NULL, &data, true);
   if (!result)
     return JS_FALSE;
 

@@ -406,4 +406,49 @@ FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
                        src_type, uint32_t, dst_type, PAD, FALSE, FALSE)
 
+
+#define PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_A8_DST(flags, cputype, name, op,  \
+                                                src_type, dst_type)           \
+void                                                                          \
+pixman_scaled_bilinear_scanline_##name##_##op##_asm_##cputype (               \
+                                                dst_type *       dst,         \
+                                                const uint8_t *  mask,        \
+                                                const src_type * top,         \
+                                                const src_type * bottom,      \
+                                                int              wt,          \
+                                                int              wb,          \
+                                                pixman_fixed_t   x,           \
+                                                pixman_fixed_t   ux,          \
+                                                int              width);      \
+                                                                              \
+static force_inline void                                                      \
+scaled_bilinear_scanline_##cputype##_##name##_##op (                          \
+                                                dst_type *       dst,         \
+                                                const uint8_t *  mask,        \
+                                                const src_type * src_top,     \
+                                                const src_type * src_bottom,  \
+                                                int32_t          w,           \
+                                                int              wt,          \
+                                                int              wb,          \
+                                                pixman_fixed_t   vx,          \
+                                                pixman_fixed_t   unit_x,      \
+                                                pixman_fixed_t   max_vx,      \
+                                                pixman_bool_t    zero_src)    \
+{                                                                             \
+    if ((flags & SKIP_ZERO_SRC) && zero_src)                                  \
+	return;                                                                   \
+    pixman_scaled_bilinear_scanline_##name##_##op##_asm_##cputype (           \
+                      dst, mask, src_top, src_bottom, wt, wb, vx, unit_x, w); \
+}                                                                             \
+                                                                              \
+FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_cover_##op,                 \
+                       scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+                       src_type, uint8_t, dst_type, COVER, TRUE, FALSE)       \
+FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_none_##op,                  \
+                       scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+                       src_type, uint8_t, dst_type, NONE, TRUE, FALSE)        \
+FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
+                       scaled_bilinear_scanline_##cputype##_##name##_##op,    \
+                       src_type, uint8_t, dst_type, PAD, TRUE, FALSE)
+
 #endif

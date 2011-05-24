@@ -92,9 +92,6 @@ public:
   // nsAccessNode
   virtual void Shutdown();
 
-  // nsAccessibleWrap
-  virtual nsAccessible *GetXPAccessibleFor(const VARIANT& varChild);
-
   // nsDocAccessible
   virtual void* GetNativeWindow() const;
 

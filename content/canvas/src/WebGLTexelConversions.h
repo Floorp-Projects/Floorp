@@ -148,6 +148,38 @@ void unpackA8ToRGBA8(const uint8_t* __restrict source, uint8_t* __restrict desti
     destination[3] = source[0];
 }
 
+void unpackRGB32FToRGBA32F(const float* __restrict source, float* __restrict destination)
+{
+    destination[0] = source[0];
+    destination[1] = source[1];
+    destination[2] = source[2];
+    destination[3] = 1;
+}
+
+void unpackR32FToRGBA32F(const float* __restrict source, float* __restrict destination)
+{
+    destination[0] = source[0];
+    destination[1] = source[0];
+    destination[2] = source[0];
+    destination[3] = 1;
+}
+
+void unpackRA32FToRGBA32F(const float* __restrict source, float* __restrict destination)
+{
+    destination[0] = source[0];
+    destination[1] = source[0];
+    destination[2] = source[0];
+    destination[3] = source[1];
+}
+
+void unpackA32FToRGBA32F(const float* __restrict source, float* __restrict destination)
+{
+    destination[0] = 0;
+    destination[1] = 0;
+    destination[2] = 0;
+    destination[3] = source[0];
+}
+
 //----------------------------------------------------------------------
 // Pixel packing routines.
 //
@@ -358,6 +390,66 @@ void packRGBA8ToUnsignedShort565Unmultiply(const uint8_t* __restrict source, uin
     *destination = (((sourceR & 0xF8) << 8)
                     | ((sourceG & 0xFC) << 3)
                     | ((sourceB & 0xF8) >> 3));
+}
+
+void packRGBA32FToRGB32F(const float* __restrict source, float* __restrict destination)
+{
+    destination[0] = source[0];
+    destination[1] = source[1];
+    destination[2] = source[2];
+}
+
+void packRGBA32FToRGB32FPremultiply(const float* __restrict source, float* __restrict destination)
+{
+    float scaleFactor = source[3];
+    destination[0] = source[0] * scaleFactor;
+    destination[1] = source[1] * scaleFactor;
+    destination[2] = source[2] * scaleFactor;
+}
+
+void packRGBA32FToRGBA32FPremultiply(const float* __restrict source, float* __restrict destination)
+{
+    float scaleFactor = source[3];
+    destination[0] = source[0] * scaleFactor;
+    destination[1] = source[1] * scaleFactor;
+    destination[2] = source[2] * scaleFactor;
+    destination[3] = source[3];
+}
+
+void packRGBA32FToA32F(const float* __restrict source, float* __restrict destination)
+{
+    destination[0] = source[3];
+}
+
+// identical to above, to avoid special-casing
+void packRGBA32FToA32FPremultiply(const float* __restrict source, float* __restrict destination)
+{
+    destination[0] = source[3];
+}
+
+void packRGBA32FToR32F(const float* __restrict source, float* __restrict destination)
+{
+    destination[0] = source[0];
+}
+
+void packRGBA32FToR32FPremultiply(const float* __restrict source, float* __restrict destination)
+{
+    float scaleFactor = source[3];
+    destination[0] = source[0] * scaleFactor;
+}
+
+
+void packRGBA32FToRA32F(const float* __restrict source, float* __restrict destination)
+{
+    destination[0] = source[0];
+    destination[1] = source[3];
+}
+
+void packRGBA32FToRA32FPremultiply(const float* __restrict source, float* __restrict destination)
+{
+    float scaleFactor = source[3];
+    destination[0] = source[0] * scaleFactor;
+    destination[1] = scaleFactor;
 }
 
 /****** END CODE TAKEN FROM WEBKIT ******/

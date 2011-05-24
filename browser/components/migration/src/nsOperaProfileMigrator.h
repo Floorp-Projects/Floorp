@@ -46,6 +46,7 @@
 #include "nsStringAPI.h"
 #include "nsTArray.h"
 #include "nsINavHistoryService.h"
+#include "nsIStringBundle.h"
 
 class nsICookieManager2;
 class nsILineInputStream;

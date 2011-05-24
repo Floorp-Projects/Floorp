@@ -343,22 +343,25 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       aMetric = 4;
       break;
     case eMetric_ScrollArrowStyle:
-    {
-      NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
-      if ([buttonPlacement isEqualToString:@"Single"]) {
-        aMetric = eMetric_ScrollArrowStyleSingle;
-      } else if ([buttonPlacement isEqualToString:@"DoubleMin"]) {
-        aMetric = eMetric_ScrollArrowStyleBothAtTop;
-      } else if ([buttonPlacement isEqualToString:@"DoubleBoth"]) {
-        aMetric = eMetric_ScrollArrowStyleBothAtEachEnd;
+      if (nsToolkit::OnLionOrLater()) {
+        // OS X Lion's scrollbars have no arrows
+        aMetric = eMetric_ScrollArrowNone;
       } else {
-        aMetric = eMetric_ScrollArrowStyleBothAtBottom; // The default is BothAtBottom.
+        NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
+        if ([buttonPlacement isEqualToString:@"Single"]) {
+          aMetric = eMetric_ScrollArrowStyleSingle;
+        } else if ([buttonPlacement isEqualToString:@"DoubleMin"]) {
+          aMetric = eMetric_ScrollArrowStyleBothAtTop;
+        } else if ([buttonPlacement isEqualToString:@"DoubleBoth"]) {
+          aMetric = eMetric_ScrollArrowStyleBothAtEachEnd;
+        } else {
+          aMetric = eMetric_ScrollArrowStyleBothAtBottom; // The default is BothAtBottom.
+        }
       }
-    }
-        break;
+      break;
     case eMetric_ScrollSliderStyle:
-        aMetric = eMetric_ScrollThumbStyleProportional;
-        break;
+      aMetric = eMetric_ScrollThumbStyleProportional;
+      break;
     case eMetric_TreeOpenDelay:
       aMetric = 1000;
       break;

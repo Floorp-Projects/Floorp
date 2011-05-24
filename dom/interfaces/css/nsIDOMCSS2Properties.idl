@@ -555,6 +555,9 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozOpacity;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        MozOrient;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozOutline;
                                         // raises(DOMException) on setting
 
