@@ -1169,7 +1169,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                 return JS_FALSE;
 
             if(!flat) {
-                flat = cache->WrapObject(lccx.GetJSContext());
+                flat = cache->WrapObject(lccx.GetJSContext(), xpcscope);
                 if (!flat) {
                     flat = ConstructProxyObject(ccx, aHelper, xpcscope);
                 }

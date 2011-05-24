@@ -1070,6 +1070,40 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     return true;
 }
 
+#ifdef DEBUG
+struct VerifyTraceXPCGlobalCalledTracer
+{
+    JSTracer base;
+    bool ok;
+};
+
+static void
+VerifyTraceXPCGlobalCalled(JSTracer *trc, void *thing, JSGCTraceKind kind)
+{
+    // We don't do anything here, we only want to verify that TraceXPCGlobal
+    // was called.
+}
+#endif
+
+void
+TraceXPCGlobal(JSTracer *trc, JSObject *obj)
+{
+#ifdef DEBUG
+    if(trc->callback == VerifyTraceXPCGlobalCalled)
+    {
+        // We don't do anything here, we only want to verify that TraceXPCGlobal
+        // was called.
+        reinterpret_cast<VerifyTraceXPCGlobalCalledTracer*>(trc)->ok = JS_TRUE;
+        return;
+    }
+#endif
+
+    XPCWrappedNativeScope *scope =
+        XPCWrappedNativeScope::GetNativeScope(trc->context, obj);
+    if(scope)
+        scope->TraceDOMPrototypes(trc);
+}
+
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        nsIPrincipal *principal, nsISupports *ptr,
@@ -1104,6 +1138,17 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
             return UnexpectedFailure(NS_ERROR_FAILURE);
         *global = tempGlobal;
     }
+
+#ifdef DEBUG
+    if(clasp->flags & JSCLASS_XPCONNECT_GLOBAL)
+    {
+        VerifyTraceXPCGlobalCalledTracer trc;
+        JS_TRACER_INIT(&trc.base, cx, VerifyTraceXPCGlobalCalled);
+        trc.ok = JS_FALSE;
+        JS_TraceChildren(&trc.base, *global, JSTRACE_OBJECT);
+        NS_ABORT_IF_FALSE(trc.ok, "Trace hook needs to call TraceXPCGlobal if JSCLASS_XPCONNECT_GLOBAL is set.");
+    }
+#endif
 
     return NS_OK;
 }

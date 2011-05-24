@@ -55,8 +55,10 @@ public:
 
     static void* ProxyFamily() { return &NodeListFamily; }
 
-    static JSObject *create(JSContext *cx, nsINodeList *aNodeList);
-    static JSObject *create(JSContext *cx, nsIHTMLCollection *aHTMLCollection,
+    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
+                            nsINodeList *aNodeList);
+    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
+                            nsIHTMLCollection *aHTMLCollection,
                             nsWrapperCache *aWrapperCache);
 private:
     static int NodeListFamily;
@@ -69,31 +71,29 @@ template<class T>
 class NodeList : public NodeListBase {
     static NodeList instance;
 
-    static js::Class NodeListProtoClass;
+    static js::Class sProtoClass;
+
+    struct Methods {
+        jsid &id;
+        JSNative native;
+        uintN nargs;
+    };
+
+    static Methods sProtoMethods[];
 
     static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj);
-
-    // Prototype-creation code that's the same (modulo templating) for
-    // all specializations.
-    static JSObject *getPrototypeShared(JSContext *cx);
-
-    // Specialization-specific prototype setup.
-    static JSObject *getPrototype(JSContext *cx);
+    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
 
     static T *getNodeList(JSObject *obj);
 
     static uint32 getProtoShape(JSObject *obj);
     static void setProtoShape(JSObject *obj, uint32 shape);
 
-    static JSObject *getItemFunction(JSObject *obj);
-    static void setItemFunction(JSObject *obj, JSObject *funobj);
-
     static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
-
     static JSBool item(JSContext *cx, uintN argc, jsval *vp);
     static JSBool namedItem(JSContext *cx, uintN argc, jsval *vp);
 
-    static bool cacheItemAndLength(JSContext *cx, JSObject *proxy, JSObject *proto);
+    static bool cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto);
     static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
                                  jsid id, js::Value *vp, bool *hitp);
   public:
@@ -123,7 +123,8 @@ class NodeList : public NodeListBase {
     JSString *obj_toString(JSContext *cx, JSObject *proxy);
     void finalize(JSContext *cx, JSObject *proxy);
 
-    static JSObject *create(JSContext *cx, T *, nsWrapperCache* aWrapperCache);
+    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, T *,
+                            nsWrapperCache* aWrapperCache);
 
     static bool objIsNodeList(JSObject *obj) {
         return js::IsProxy(obj) && js::GetProxyHandler(obj) == &instance;

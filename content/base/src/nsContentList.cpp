@@ -497,9 +497,9 @@ nsContentList::~nsContentList()
 }
 
 JSObject*
-nsContentList::WrapObject(JSContext *cx)
+nsContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope)
 {
-  return xpc::dom::NodeListBase::create(cx,
+  return xpc::dom::NodeListBase::create(cx, scope,
                                         static_cast<nsIHTMLCollection*>(this),
                                         this);
 }

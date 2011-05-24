@@ -44,6 +44,7 @@
 #include "nsIDOMNode.h"
 
 #include "nsDOMClassInfo.h"
+#include "nsGlobalWindow.h"
 
 extern XPCNativeInterface* interfaces[];
 
@@ -55,16 +56,18 @@ namespace dom {
 int NodeListBase::NodeListFamily;
 
 JSObject *
-NodeListBase::create(JSContext *cx, nsINodeList *aNodeList)
+NodeListBase::create(JSContext *cx, XPCWrappedNativeScope *scope,
+                     nsINodeList *aNodeList)
 {
-    return NodeList<nsINodeList>::create(cx, aNodeList, aNodeList);
+    return NodeList<nsINodeList>::create(cx, scope, aNodeList, aNodeList);
 }
 
 JSObject *
-NodeListBase::create(JSContext *cx, nsIHTMLCollection *aHTMLCollection,
+NodeListBase::create(JSContext *cx, XPCWrappedNativeScope *scope,
+                     nsIHTMLCollection *aHTMLCollection,
                      nsWrapperCache *aWrapperCache)
 {
-    return NodeList<nsIHTMLCollection>::create(cx, aHTMLCollection,
+    return NodeList<nsIHTMLCollection>::create(cx, scope, aHTMLCollection,
                                                aWrapperCache);
 }
 
@@ -77,7 +80,7 @@ template<class T>
 NodeList<T> NodeList<T>::instance;
 
 template<>
-Class NodeList<nsINodeList>::NodeListProtoClass = {
+Class NodeList<nsINodeList>::sProtoClass = {
     "NodeList",
     0,
     JS_PropertyStub,        /* addProperty */
@@ -90,7 +93,16 @@ Class NodeList<nsINodeList>::NodeListProtoClass = {
 };
 
 template<>
-Class NodeList<nsIHTMLCollection>::NodeListProtoClass = {
+JSBool
+NodeList<nsINodeList>::namedItem(JSContext *cx, uintN argc, jsval *vp);
+
+template<>
+NodeList<nsINodeList>::Methods NodeList<nsINodeList>::sProtoMethods[] = {
+    { nsDOMClassInfo::sItem_id, &item, 1 }
+};
+
+template<>
+Class NodeList<nsIHTMLCollection>::sProtoClass = {
     "HTMLCollection",
     0,
     JS_PropertyStub,        /* addProperty */
@@ -100,6 +112,16 @@ Class NodeList<nsIHTMLCollection>::NodeListProtoClass = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub
+};
+
+template<>
+JSBool
+NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp);
+
+template<>
+NodeList<nsIHTMLCollection>::Methods NodeList<nsIHTMLCollection>::sProtoMethods[] = {
+    { nsDOMClassInfo::sItem_id, &item, 1 },
+    { nsDOMClassInfo::sNamedItem_id, &namedItem, 1 }
 };
 
 template<class T>
@@ -124,22 +146,6 @@ NodeList<T>::setProtoShape(JSObject *obj, uint32 shape)
 {
     JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
     js::SetProxyExtra(obj, 0, PrivateUint32Value(shape));
-}
-
-template<class T>
-JSObject *
-NodeList<T>::getItemFunction(JSObject *obj)
-{
-    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
-    return &js::GetProxyExtra(obj, 1).toObject();
-}
-
-template<class T>
-void
-NodeList<T>::setItemFunction(JSObject *obj, JSObject *funobj)
-{
-    JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
-    js::SetProxyExtra(obj, 1, ObjectValue(*funobj));
 }
 
 template<class T>
@@ -220,63 +226,56 @@ NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp)
 
 template<class T>
 JSObject *
-NodeList<T>::getPrototypeShared(JSContext *cx)
+NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
 {
-    JSObject *proto = JS_NewObject(cx, Jsvalify(&NodeListProtoClass), NULL, NULL);
+    nsDataHashtable<nsIDHashKey, JSObject*> &cache =
+        scope->GetCachedDOMPrototypes();
+
+    JSObject *proto;
+    if (cache.IsInitialized()) {
+        if (cache.Get(NS_GET_TEMPLATE_IID(T), &proto))
+            return proto;
+    }
+    else if (!cache.Init()) {
+        return NULL;
+    }
+
+    proto = JS_NewObject(cx, Jsvalify(&sProtoClass), NULL, NULL);
     if (!proto)
         return NULL;
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, proto))
         return NULL;
+
     if (!JS_DefinePropertyById(cx, proto, nsDOMClassInfo::sLength_id, JSVAL_VOID,
                                length_getter, NULL,
                                JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_SHARED))
         return NULL;
-    JSFunction *fun = JS_NewFunctionById(cx, item, 1, 0, js::GetObjectParent(proto),
-                                         nsDOMClassInfo::sItem_id);
-    if (!fun)
-        return NULL;
-    JSObject *funobj = JS_GetFunctionObject(fun);
-    if (!JS_DefinePropertyById(cx, proto, nsDOMClassInfo::sItem_id, OBJECT_TO_JSVAL(funobj),
-                               NULL, NULL, JSPROP_ENUMERATE))
-        return NULL;
-    return proto;
-}
 
-template<>
-JSObject *
-NodeList<nsINodeList>::getPrototype(JSContext *cx)
-{
-    // FIXME: This should be cached, not recreated every time.
-    return getPrototypeShared(cx);
-}
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
+        jsid id = sProtoMethods[n].id;
+        JSFunction *fun = JS_NewFunctionById(cx, sProtoMethods[n].native, sProtoMethods[n].nargs,
+                                             0, js::GetObjectParent(proto), id);
+        if (!fun)
+            return NULL;
+        JSObject *funobj = JS_GetFunctionObject(fun);
+        if (!JS_DefinePropertyById(cx, proto, id, OBJECT_TO_JSVAL(funobj),
+                                   NULL, NULL, JSPROP_ENUMERATE))
+            return NULL;
+    }
 
-template<>
-JSObject *
-NodeList<nsIHTMLCollection>::getPrototype(JSContext *cx)
-{
-    // FIXME: This should be cached, not recreated every time.
-    JSObject *proto = getPrototypeShared(cx);
-    if (!proto)
+    if (!cache.Put(NS_GET_TEMPLATE_IID(T), proto))
         return NULL;
 
-    JSFunction *fun = JS_NewFunctionById(cx, item, 1, 0, js::GetObjectParent(proto),
-                                         nsDOMClassInfo::sNamedItem_id);
-    if (!fun)
-        return NULL;
-    JSObject *funobj = JS_GetFunctionObject(fun);
-    if (!JS_DefinePropertyById(cx, proto, nsDOMClassInfo::sNamedItem_id,
-                               OBJECT_TO_JSVAL(funobj),
-                               NULL, NULL, JSPROP_ENUMERATE))
-        return NULL;
     return proto;
 }
 
 template<class T>
 JSObject *
-NodeList<T>::create(JSContext *cx, T *aNodeList, nsWrapperCache* aWrapperCache)
+NodeList<T>::create(JSContext *cx, XPCWrappedNativeScope *scope, T *aNodeList,
+                    nsWrapperCache* aWrapperCache)
 {
-    JSObject *proto = getPrototype(cx);
+    JSObject *proto = getPrototype(cx, scope);
     if (!proto)
         return NULL;
     JSObject *obj = NewProxyObject(cx, &NodeList<T>::instance,
@@ -414,21 +413,26 @@ NodeList<T>::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 
 template<class T>
 bool
-NodeList<T>::cacheItemAndLength(JSContext *cx, JSObject *proxy, JSObject *proto)
+NodeList<T>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
 {
     JSPropertyDescriptor desc;
     if (!JS_GetPropertyDescriptorById(cx, proto, nsDOMClassInfo::sLength_id, JSRESOLVE_QUALIFIED, &desc))
         return false;
     if (desc.obj != proto || desc.getter != length_getter)
         return true; // don't cache
-    if (!JS_GetPropertyDescriptorById(cx, proto, nsDOMClassInfo::sItem_id, JSRESOLVE_QUALIFIED, &desc))
-        return false;
-    if (desc.obj != proto || desc.getter || JSVAL_IS_PRIMITIVE(desc.value) ||
-        !JS_IsNativeFunction(JSVAL_TO_OBJECT(desc.value), item)) {
-        return true; // don't cache
+
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
+        jsid id = sProtoMethods[n].id;
+        if (!JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc))
+            return false;
+        if (desc.obj != proto || desc.getter || JSVAL_IS_PRIMITIVE(desc.value) ||
+            n >= js::GetNumSlots(proto) || js::GetSlot(proto, n) != desc.value ||
+            !JS_IsNativeFunction(JSVAL_TO_OBJECT(desc.value), sProtoMethods[n].native)) {
+            return true; // don't cache
+        }
     }
+
     setProtoShape(proxy, js::GetObjectShape(proto));
-    setItemFunction(proxy, JSVAL_TO_OBJECT(desc.value));
     return true;
 }
 
@@ -438,7 +442,7 @@ NodeList<T>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver
                            jsid id, Value *vp, bool *hitp)
 {
     if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
-        if (!cacheItemAndLength(cx, proxy, proto))
+        if (!cacheProtoShape(cx, proxy, proto))
             return false;
         if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
             *hitp = false;
@@ -463,25 +467,23 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
     }
 
     JSObject *proto = js::GetObjectProto(proxy);
-    if (id == nsDOMClassInfo::sLength_id) {
-        bool hit;
-        if (!checkForCacheHit(cx, proxy, receiver, proto, id, vp, &hit))
-            return false;
-        if (hit) {
+    bool hit;
+    if (!checkForCacheHit(cx, proxy, receiver, proto, id, vp, &hit))
+        return false;
+    if (hit) {
+        if (id == nsDOMClassInfo::sLength_id) {
             PRUint32 length;
             getNodeList(proxy)->GetLength(&length);
             JS_ASSERT(int32(length) >= 0);
             vp->setInt32(length);
             return true;
         }
-    }
-    else if (id == nsDOMClassInfo::sItem_id) {
-        bool hit;
-        if (!checkForCacheHit(cx, proxy, receiver, proto, id, vp, &hit))
-            return false;
-        if (hit) {
-            vp->setObject(*getItemFunction(proxy));
-            return true;
+        for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
+            if (id == sProtoMethods[n].id) {
+                *vp = js::GetSlot(proto, n);
+                JS_ASSERT(JS_IsNativeFunction(&vp->toObject(), sProtoMethods[n].native));
+                return true;
+            }
         }
     }
 
@@ -517,7 +519,7 @@ template<class T>
 bool
 NodeList<T>::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
 {
-    *bp = vp->isObject() && js::GetObjectClass(&vp->toObject()) == &NodeListProtoClass;
+    *bp = vp->isObject() && js::GetObjectClass(&vp->toObject()) == &sProtoClass;
     return true;
 }
 

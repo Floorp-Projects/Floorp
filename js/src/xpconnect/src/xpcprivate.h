@@ -1600,6 +1600,23 @@ public:
     XPCContext *GetContext() { return mContext; }
     void SetContext(XPCContext *xpcc) { mContext = nsnull; }
 
+    nsDataHashtable<nsIDHashKey, JSObject*>& GetCachedDOMPrototypes()
+    {
+        return mCachedDOMPrototypes;
+    }
+
+    static XPCWrappedNativeScope *GetNativeScope(JSContext *cx, JSObject *obj)
+    {
+        JS_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
+
+        jsval vp;
+        JS_ALWAYS_TRUE(JS_GetReservedSlot(cx, obj, JSCLASS_GLOBAL_SLOT_COUNT,
+                                          &vp));
+        return JSVAL_IS_VOID(vp) ? nsnull :
+               static_cast<XPCWrappedNativeScope*>(JSVAL_TO_PRIVATE(vp));
+    }
+    void TraceDOMPrototypes(JSTracer *trc);
+
 protected:
     XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal);
     virtual ~XPCWrappedNativeScope();
@@ -1639,6 +1656,8 @@ private:
     // How do we deal?  Do we need to?  I suspect this isn't worth worrying
     // about, since all of our scope objects are verified as not doing that.
     nsIScriptObjectPrincipal* mScriptObjectPrincipal;
+
+    nsDataHashtable<nsIDHashKey, JSObject*> mCachedDOMPrototypes;
 };
 
 JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,
@@ -2666,6 +2685,9 @@ public:
         JSObject* wrapper = GetWrapperPreserveColor();
         if(wrapper)
             JS_CALL_OBJECT_TRACER(trc, wrapper, "XPCWrappedNative::mWrapper");
+        if(mScriptableInfo &&
+           (mScriptableInfo->GetJSClass()->flags & JSCLASS_XPCONNECT_GLOBAL))
+            GetScope()->TraceDOMPrototypes(trc);
     }
 
     inline void AutoTrace(JSTracer* trc)

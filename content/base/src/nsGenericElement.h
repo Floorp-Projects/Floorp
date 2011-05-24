@@ -106,7 +106,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext *cx);
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope);
 
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
