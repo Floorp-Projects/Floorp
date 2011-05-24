@@ -1037,6 +1037,14 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     return;
   }
 
+  if (aAttribute == nsAccessibilityAtoms::aria_busy) {
+    PRBool isOn = !aContent->AttrValueIs(aNameSpaceID, aAttribute,
+                                         nsAccessibilityAtoms::_true, eCaseMatters);
+    nsRefPtr<AccEvent> event = new AccStateChangeEvent(aContent, states::BUSY, isOn);
+    FireDelayedAccessibleEvent(event);
+    return;
+  }
+
   if (aAttribute == nsAccessibilityAtoms::selected ||
       aAttribute == nsAccessibilityAtoms::aria_selected) {
     // ARIA or XUL selection
