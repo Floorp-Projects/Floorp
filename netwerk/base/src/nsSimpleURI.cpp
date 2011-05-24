@@ -115,10 +115,8 @@ nsSimpleURI::Read(nsIObjectInputStream* aStream)
     mIsRefValid = isRefValid;
 
     if (isRefValid) {
-        rv = aStream->ReadCString(mRef);
-        if (NS_FAILED(rv)) return rv;
-    } else {
-        mRef.Truncate(); // invariant: mRef should be empty when it's not valid
+      rv = aStream->ReadCString(mRef);
+      if (NS_FAILED(rv)) return rv;
     }
 
     return NS_OK;
@@ -168,7 +166,6 @@ nsSimpleURI::Read(const IPC::Message *aMsg, void **aIter)
     if (mIsRefValid) {
         return ReadParam(aMsg, aIter, &mRef);
     }
-    mRef.Truncate(); // invariant: mRef should be empty when it's not valid
 
     return PR_TRUE;
 }
@@ -194,8 +191,6 @@ nsSimpleURI::GetSpec(nsACString &result)
     result = mScheme + NS_LITERAL_CSTRING(":") + mPath;
     if (mIsRefValid) {
         result += NS_LITERAL_CSTRING("#") + mRef;
-    } else {
-        NS_ABORT_IF_FALSE(mRef.IsEmpty(), "mIsRefValid/mRef invariant broken");
     }
     return NS_OK;
 }
@@ -373,7 +368,6 @@ nsSimpleURI::SetPath(const nsACString &path)
     PRInt32 hashPos = path.FindChar('#');
     if (hashPos < 0) {
         mIsRefValid = PR_FALSE;
-        mRef.Truncate(); // invariant: mRef should be empty when it's not valid
         mPath = path;
         return NS_OK;
     }
@@ -386,7 +380,6 @@ NS_IMETHODIMP
 nsSimpleURI::GetRef(nsACString &result)
 {
     if (!mIsRefValid) {
-      NS_ABORT_IF_FALSE(mRef.IsEmpty(), "mIsRefValid/mRef invariant broken");
       result.Truncate();
     } else {
       result = mRef;
@@ -405,7 +398,7 @@ nsSimpleURI::SetRef(const nsACString &aRef)
     if (aRef.IsEmpty()) {
       // Empty string means to remove ref completely.
       mIsRefValid = PR_FALSE;
-      mRef.Truncate(); // invariant: mRef should be empty when it's not valid
+      mRef.Truncate();
       return NS_OK;
     }
 
@@ -510,7 +503,6 @@ nsSimpleURI::CloneInternal(nsSimpleURI::RefHandlingEnum refHandlingMode,
     url->mPath = mPath;
     if (refHandlingMode == eHonorRef) {
         url->mRef = mRef;
-        url->mIsRefValid = mIsRefValid;
     }
 
     url.forget(result);

@@ -62,10 +62,10 @@ nsDataChannel::OpenContentStream(PRBool async, nsIInputStream **result,
     rv = URI()->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
-    nsCString contentType, contentCharset, dataBuffer, hashRef;
+    nsCString contentType, contentCharset, dataBuffer;
     PRBool lBase64;
     rv = nsDataHandler::ParseURI(spec, contentType, contentCharset,
-                                 lBase64, dataBuffer, hashRef);
+                                 lBase64, dataBuffer);
 
     NS_UnescapeURL(dataBuffer);
 
