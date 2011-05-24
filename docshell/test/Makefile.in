@@ -104,8 +104,6 @@ _TEST_FILES = \
 		test_framedhistoryframes.html \
 		test_windowedhistoryframes.html \
 		historyframes.html \
-		test_bug570341.html \
-		bug570341_recordevents.html \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
