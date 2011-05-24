@@ -867,6 +867,7 @@ ContentParent::RecvSetURITitle(const IPC::URI& uri,
 bool
 ContentParent::RecvShowFilePicker(const PRInt16& mode,
                                   const PRInt16& selectedType,
+                                  const PRBool& addToRecentDocs,
                                   const nsString& title,
                                   const nsString& defaultFile,
                                   const nsString& defaultExtension,
@@ -892,7 +893,9 @@ ContentParent::RecvShowFilePicker(const PRInt16& mode,
     *result = filePicker->Init(window, title, mode);
     if (NS_FAILED(*result))
         return true;
-    
+
+    filePicker->SetAddToRecentDocs(addToRecentDocs);
+
     PRUint32 count = filters.Length();
     for (PRUint32 i = 0; i < count; ++i) {
         filePicker->AppendFilter(filterNames[i], filters[i]);

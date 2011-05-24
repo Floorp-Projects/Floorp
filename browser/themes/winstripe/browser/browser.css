@@ -1515,6 +1515,46 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   min-width: 27em;
 }
 
+.panel-promo-box {
+  margin: 8px -16px -16px -16px;
+  padding: 8px 16px;
+  background-color: #f1f5fb;
+  color: GrayText;
+%ifndef WINSTRIPE_AERO
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+%endif
+  box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+}
+
+.panel-promo-icon {
+  list-style-image: url("chrome://browser/skin/sync-24.png");
+  -moz-margin-end: 10px;
+  vertical-align: middle;
+}
+
+.panel-promo-closebutton {
+  -moz-appearance: none;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  border: none;
+  -moz-margin-end: -10px;
+  margin-top: -5px;
+}
+
+.panel-promo-closebutton:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.panel-promo-closebutton:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
+.panel-promo-closebutton > .toolbarbutton-text {
+  padding: 0;
+  margin: 0;
+}
+
 /* ::::: content area ::::: */
 
 #sidebar {

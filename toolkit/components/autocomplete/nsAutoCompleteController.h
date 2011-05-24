@@ -97,6 +97,21 @@ protected:
 private:
   nsresult GetResultValueLabelAt(PRInt32 aIndex, PRBool aValueOnly,
                                  PRBool aGetValue, nsAString & _retval);
+  /**
+   * Searches for a suitable value to complete to, by comparing all values
+   * as URLs, and completing only up to the next URL separator.
+   *
+   * @param aResult
+   *        An autocomplete result to search in.
+   * @param aPreserveCasing
+   *        Preserve the casing of what the user typed in.
+   * @param [out] _retval
+   *        The value to complete to.
+   * @return A result, NS_OK if there is a value to complete to.
+   */
+  nsresult GetDefaultCompleteURLValue(nsIAutoCompleteResult *aResult,
+                                      PRBool aPreserveCasing,
+                                      nsAString &_retval);
 protected:
   nsresult GetDefaultCompleteValue(PRInt32 aSearchIndex, PRBool aPreserveCasing,
                                    nsAString &_retval);

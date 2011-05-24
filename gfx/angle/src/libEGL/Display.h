@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -42,14 +42,14 @@ class Display
     bool getConfigs(EGLConfig *configs, const EGLint *attribList, EGLint configSize, EGLint *numConfig);
     bool getConfigAttrib(EGLConfig config, EGLint attribute, EGLint *value);
 
-    egl::Surface *createWindowSurface(HWND window, EGLConfig config);
-    egl::Surface *createOffscreenSurface(int width, int height, EGLConfig config);
+    EGLSurface createWindowSurface(HWND window, EGLConfig config, const EGLint *attribList);
+    EGLSurface createOffscreenSurface(EGLConfig config, HANDLE shareHandle, const EGLint *attribList);
     EGLContext createContext(EGLConfig configHandle, const gl::Context *shareContext);
 
     void destroySurface(egl::Surface *surface);
     void destroyContext(gl::Context *context);
 
-    bool isInitialized();
+    bool isInitialized() const;
     bool isValidConfig(EGLConfig config);
     bool isValidContext(gl::Context *context);
     bool isValidSurface(egl::Surface *surface);
@@ -60,6 +60,7 @@ class Display
 
     virtual IDirect3DDevice9 *getDevice();
     virtual D3DCAPS9 getDeviceCaps();
+    bool isDeviceLost();
     virtual void getMultiSampleSupport(D3DFORMAT format, bool *multiSampleArray);
     virtual bool getCompressedTextureSupport();
     virtual bool getEventQuerySupport();
@@ -67,9 +68,12 @@ class Display
     virtual bool getHalfFloatTextureSupport(bool *filtering, bool *renderable);
     virtual bool getLuminanceTextureSupport();
     virtual bool getLuminanceAlphaTextureSupport();
+    virtual bool getNonPow2TextureSupport();
+    virtual bool getVertexTextureSupport() const;
     virtual D3DPOOL getBufferPool(DWORD usage) const;
 
-    bool isD3d9exDevice() { return mD3d9ex != NULL; }
+    bool isD3d9ExDevice() { return mD3d9Ex != NULL; }
+    const char *getExtensionString() const;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Display);
@@ -83,8 +87,9 @@ class Display
     UINT mAdapter;
     D3DDEVTYPE mDeviceType;
     IDirect3D9 *mD3d9;  // Always valid after successful initialization.
-    IDirect3D9Ex *mD3d9ex;  // Might be null if D3D9Ex is not supported.
+    IDirect3D9Ex *mD3d9Ex;  // Might be null if D3D9Ex is not supported.
     IDirect3DDevice9 *mDevice;
+    IDirect3DDevice9Ex *mDeviceEx;  // Might be null if D3D9Ex is not supported.
     D3DCAPS9 mDeviceCaps;
     HWND mDeviceWindow;
 
@@ -102,6 +107,9 @@ class Display
 
     bool createDevice();
     bool resetDevice();
+
+    void initExtensionString();
+    std::string mExtensionString;
 };
 }
 

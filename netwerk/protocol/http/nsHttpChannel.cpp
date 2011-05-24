@@ -130,7 +130,6 @@ nsHttpChannel::nsHttpChannel()
     , mCacheForOfflineUse(PR_FALSE)
     , mCachingOpportunistically(PR_FALSE)
     , mFallbackChannel(PR_FALSE)
-    , mTracingEnabled(PR_TRUE)
     , mCustomConditionalRequest(PR_FALSE)
     , mFallingBack(PR_FALSE)
     , mWaitingForRedirectCallback(PR_FALSE)
@@ -3549,7 +3548,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyCallback)
     NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIHttpAuthenticableChannel)
-    NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
     NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
@@ -3651,9 +3649,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (mCanceled)
         return mStatus;
 
-    if (mTimingEnabled)
-        mAsyncOpenTime = mozilla::TimeStamp::Now();
-
     rv = NS_CheckPortSafety(mURI);
     if (NS_FAILED(rv))
         return rv;
@@ -3662,10 +3657,16 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         // Start a DNS lookup very early in case the real open is queued the DNS can 
         // happen in parallel. Do not do so in the presence of an HTTP proxy as 
         // all lookups other than for the proxy itself are done by the proxy.
-        nsRefPtr<nsDNSPrefetch> prefetch = new nsDNSPrefetch(mURI);
-        if (prefetch) {
-            prefetch->PrefetchHigh();
-        }
+        //
+        // We keep the DNS prefetch object around so that we can retrieve
+        // timing information from it. There is no guarantee that we actually
+        // use the DNS prefetch data for the real connection, but as we keep
+        // this data around for 3 minutes by default, this should almost always
+        // be correct, and even when it isn't, the timing still represents _a_
+        // valid DNS lookup timing for the site, even if it is not _the_
+        // timing we used.
+        mDNSPrefetch = new nsDNSPrefetch(mURI, mTimingEnabled);
+        mDNSPrefetch->PrefetchHigh();
     }
     
     // Remember the cookie header that was set, if any
@@ -3699,6 +3700,12 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // all failures asynchronously.
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nsnull);
+
+    // Collect mAsyncOpenTime after we have called all obsrevers like
+    // "http-on-modify-request" and load group observers that may set
+    // mTimingEnabled flag.
+    if (mTimingEnabled)
+        mAsyncOpenTime = mozilla::TimeStamp::Now();
 
     // We may have been cancelled already, either by on-modify-request
     // listeners or by load group observers; in that case, we should
@@ -3827,7 +3834,9 @@ nsHttpChannel::GetAsyncOpen(mozilla::TimeStamp* _retval) {
 
 NS_IMETHODIMP
 nsHttpChannel::GetDomainLookupStart(mozilla::TimeStamp* _retval) {
-    if (mTransaction)
+    if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
+        *_retval = mDNSPrefetch->StartTimestamp();
+    else if (mTransaction)
         *_retval = mTransaction->Timings().domainLookupStart;
     else
         *_retval = mTransactionTimings.domainLookupStart;
@@ -3836,7 +3845,9 @@ nsHttpChannel::GetDomainLookupStart(mozilla::TimeStamp* _retval) {
 
 NS_IMETHODIMP
 nsHttpChannel::GetDomainLookupEnd(mozilla::TimeStamp* _retval) {
-    if (mTransaction)
+    if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
+        *_retval = mDNSPrefetch->EndTimestamp();
+    else if (mTransaction)
         *_retval = mTransaction->Timings().domainLookupEnd;
     else
         *_retval = mTransactionTimings.domainLookupEnd;
@@ -4187,6 +4198,15 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         mTransactionTimings = mTransaction->Timings();
         mTransaction = nsnull;
         mTransactionPump = 0;
+
+        // We no longer need the dns prefetch object
+        if (mDNSPrefetch && mDNSPrefetch->TimingsValid()) {
+            mTransactionTimings.domainLookupStart =
+                mDNSPrefetch->StartTimestamp();
+            mTransactionTimings.domainLookupEnd =
+                mDNSPrefetch->EndTimestamp();
+        }
+        mDNSPrefetch = nsnull;
 
         // handle auth retry...
         if (authRetry) {
@@ -4946,58 +4966,10 @@ nsHttpChannel::PopRedirectAsyncFunc(nsContinueRedirectionFunc func)
     mRedirectFuncStack.TruncateLength(mRedirectFuncStack.Length() - 1);
 }
 
-//-----------------------------------------------------------------------------
-// nsStreamListenerWrapper <private>
-//-----------------------------------------------------------------------------
-
-// Wrapper class to make replacement of nsHttpChannel's listener
-// from JavaScript possible. It is workaround for bug 433711.
-class nsStreamListenerWrapper : public nsIStreamListener
-{
-public:
-    nsStreamListenerWrapper(nsIStreamListener *listener);
-
-    NS_DECL_ISUPPORTS
-    NS_FORWARD_NSIREQUESTOBSERVER(mListener->)
-    NS_FORWARD_NSISTREAMLISTENER(mListener->)
-
-private:
-    ~nsStreamListenerWrapper() {}
-    nsCOMPtr<nsIStreamListener> mListener;
-};
-
-nsStreamListenerWrapper::nsStreamListenerWrapper(nsIStreamListener *listener)
-    : mListener(listener) 
-{
-    NS_ASSERTION(mListener, "no stream listener specified");
-}
-
-NS_IMPL_ISUPPORTS2(nsStreamListenerWrapper,
-                   nsIStreamListener,
-                   nsIRequestObserver)
 
 //-----------------------------------------------------------------------------
-// nsHttpChannel::nsITraceableChannel
+// nsHttpChannel internal functions
 //-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener **_retval)
-{
-    if (!mTracingEnabled)
-        return NS_ERROR_FAILURE;
-
-    NS_ENSURE_ARG_POINTER(aListener);
-
-    nsCOMPtr<nsIStreamListener> wrapper = 
-        new nsStreamListenerWrapper(mListener);
-
-    if (!wrapper)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    wrapper.forget(_retval);
-    mListener = aListener;
-    return NS_OK;
-}
 
 void
 nsHttpChannel::MaybeInvalidateCacheEntryForSubsequentGet()

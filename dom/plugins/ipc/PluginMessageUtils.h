@@ -56,6 +56,12 @@
 #ifdef MOZ_CRASHREPORTER
 #  include "nsExceptionHandler.h"
 #endif
+#ifdef XP_MACOSX
+#include "PluginInterposeOSX.h"
+#else
+namespace mac_plugin_interposing { class NSCursorInfo { }; }
+#endif
+using mac_plugin_interposing::NSCursorInfo;
 
 namespace mozilla {
 namespace plugins {
@@ -537,6 +543,100 @@ struct ParamTraits<NPNSString*>
   }
 };
 #endif
+
+#ifdef XP_MACOSX
+template <>
+struct ParamTraits<NSCursorInfo>
+{
+  typedef NSCursorInfo paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    NSCursorInfo::Type type = aParam.GetType();
+
+    aMsg->WriteInt(type);
+
+    nsPoint hotSpot = aParam.GetHotSpot();
+    WriteParam(aMsg, hotSpot.x);
+    WriteParam(aMsg, hotSpot.y);
+
+    uint32_t dataLength = aParam.GetCustomImageDataLength();
+    WriteParam(aMsg, dataLength);
+    if (dataLength == 0) {
+      return;
+    }
+
+    uint8_t* buffer = (uint8_t*)moz_xmalloc(dataLength);
+    memcpy(buffer, aParam.GetCustomImageData(), dataLength);
+    aMsg->WriteBytes(buffer, dataLength);
+    free(buffer);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    NSCursorInfo::Type type;
+    if (!aMsg->ReadInt(aIter, (int*)&type)) {
+      return false;
+    }
+
+    nscoord hotSpotX, hotSpotY;
+    if (!ReadParam(aMsg, aIter, &hotSpotX) ||
+        !ReadParam(aMsg, aIter, &hotSpotY)) {
+      return false;
+    }
+
+    uint32_t dataLength;
+    if (!ReadParam(aMsg, aIter, &dataLength)) {
+      return false;
+    }
+
+    uint8_t* data = NULL;
+    if (dataLength != 0) {
+      if (!aMsg->ReadBytes(aIter, (const char**)&data, dataLength) || !data) {
+        return false;
+      }
+    }
+
+    aResult->SetType(type);
+    aResult->SetHotSpot(nsPoint(hotSpotX, hotSpotY));
+    aResult->SetCustomImageData(data, dataLength);
+
+    return true;
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    const char* typeName = aParam.GetTypeName();
+    nsPoint hotSpot = aParam.GetHotSpot();
+    int hotSpotX, hotSpotY;
+#ifdef NS_COORD_IS_FLOAT
+    hotSpotX = rint(hotSpot.x);
+    hotSpotY = rint(hotSpot.y);
+#else
+    hotSpotX = hotSpot.x;
+    hotSpotY = hotSpot.y;
+#endif
+    uint32_t dataLength = aParam.GetCustomImageDataLength();
+    uint8_t* data = aParam.GetCustomImageData();
+
+    aLog->append(StringPrintf(L"[%s, (%i %i), %u, %p]",
+                              typeName, hotSpotX, hotSpotY, dataLength, data));
+  }
+};
+#else
+template<>
+struct ParamTraits<NSCursorInfo>
+{
+  typedef NSCursorInfo paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    NS_RUNTIMEABORT("NSCursorInfo isn't meaningful on this platform");
+  }
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
+    NS_RUNTIMEABORT("NSCursorInfo isn't meaningful on this platform");
+    return false;
+  }
+};
+#endif // #ifdef XP_MACOSX
 
 template <>
 struct ParamTraits<NPVariant>
