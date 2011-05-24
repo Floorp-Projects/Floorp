@@ -542,7 +542,7 @@ interface jsdIContextEnumerator : nsISupports
 /**
  * Set jsdIDebuggerService::scriptHook to an instance of one of these.
  */
-[scriptable, uuid(d030d1a2-a58a-4f19-b9e3-96da4e2cdd09)]
+[scriptable, uuid(bb722893-0f63-45c5-b547-7a0947c7b6b6)]
 interface jsdIScriptHook : nsISupports
 {
     /**
@@ -811,7 +811,7 @@ interface jsdIContext : jsdIEphemeral
  * interface. Once a jsdIStackFrame has been invalidated all method and
  * property accesses will throw a NS_ERROR_NOT_AVAILABLE exception.
  */
-[scriptable, uuid(7c95422c-7579-4a6f-8ef7-e5b391552ee5)]
+[scriptable, uuid(0633ca73-105e-4e8e-bcc5-13405d61754a)]
 interface jsdIStackFrame : jsdIEphemeral
 {
     /** Internal use only. */
@@ -884,7 +884,7 @@ interface jsdIStackFrame : jsdIEphemeral
  * Script object. In JavaScript engine terms, there's a single script for each
  * function, and one for the top level script.
  */
-[scriptable, uuid(721724e0-7716-4bf4-b48f-92b78d056141)]
+[scriptable, uuid(e7935220-7def-4c8e-832f-fbc948a97490)]
 interface jsdIScript : jsdIEphemeral
 {
     /** Internal use only. */
@@ -1030,17 +1030,6 @@ interface jsdIScript : jsdIEphemeral
      * The |pcmap| argument specifies which pc to source line map to use.
      */
     boolean isLineExecutable(in unsigned long line, in unsigned long pcmap);
-
-    /**
-     * Return a list of all executable lines in a script.
-     * |pcmap| specifies which pc to source line map to use.
-     * |startLine| and |maxLines| may be used to retrieve a chunk at a time.
-     */
-    void getExecutableLines(in unsigned long pcmap,
-                            in unsigned long startLine, in unsigned long maxLines,
-                            out unsigned long count,
-                            [array, size_is(count), retval] out unsigned long executableLines);
- 
     /**
      * Set a breakpoint at a PC in this script.
      */
@@ -1065,7 +1054,7 @@ interface jsdIScript : jsdIEphemeral
  * jsdIValue adds a root for the underlying JavaScript value, so don't keep it
  * if you don't need to.
  */
-[scriptable, uuid(861c4d37-e115-4a52-9f76-273cb6b21c3b)]
+[scriptable, uuid(fd1311f7-096c-44a3-847b-9d478c8176c3)]
 interface jsdIValue : jsdIEphemeral
 {
     /** Internal use only. */

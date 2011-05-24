@@ -581,44 +581,6 @@ jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc)
 }
 
 JSBool
-jsd_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
-               uintN startLine, uintN maxLines,
-               uintN* count, uintN** retLines, jsuword** retPCs)
-{
-    JSCrossCompartmentCall *call;
-    uintN first = jsdscript->lineBase;
-    uintN last = first + jsd_GetScriptLineExtent(jsdc, jsdscript) - 1;
-    JSBool ok;
-    uintN *lines;
-    jsbytecode **pcs;
-    uintN i;
-
-    if (last < startLine)
-        return JS_TRUE;
-
-    call = JS_EnterCrossCompartmentCallScript(jsdc->dumbContext, jsdscript->script);
-    if (!call)
-        return JS_FALSE;
-
-    ok = JS_GetLinePCs(jsdc->dumbContext, jsdscript->script,
-                       startLine, maxLines,
-                       count, retLines, &pcs);
-
-    if (ok) {
-        if (retPCs) {
-            for (i = 0; i < *count; ++i) {
-                (*retPCs)[i] = (*pcs)[i];
-            }
-        }
-
-        JS_free(jsdc->dumbContext, pcs);
-    }
-
-    JS_LeaveCrossCompartmentCall(call);
-    return ok;
-}
-
-JSBool
 jsd_SetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc hook, void* callerdata)
 {
     JSD_LOCK();
