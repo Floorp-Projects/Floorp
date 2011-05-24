@@ -243,55 +243,6 @@ abstract public class GeckoApp
             surfaceView.mSplashStatusMsg =
                 getResources().getString(R.string.splash_screen_label);
         mLibLoadThread.start();
-        if (IsNewInstall() && IsUnsupportedDevice()) {
-            new AlertDialog.Builder(this)
-                .setMessage(R.string.incompatable_device)
-                .setCancelable(false)
-                .setPositiveButton(R.string.continue_label, null)
-                .setNegativeButton(R.string.exit_label,
-                                   new DialogInterface.OnClickListener() {
-                                       public void onClick(DialogInterface dialog,
-                                                           int id)
-                                       {
-                                           GeckoApp.this.finish();
-                                           System.exit(0);
-                                       }
-                                   })
-                .show();
-        }
-    }
-
-    boolean IsNewInstall() {
-        File appIni = new File(sGREDir, "application.ini");
-        return !appIni.exists();
-    }
-
-    boolean IsUnsupportedDevice() {
-        // We don't currently support devices with less than 512Mb of RAM, 
-        // and want to warn if run on such devices. Most 512Mb devices
-        // report about 350Mb available, so we check - somewhat arbitrarily - 
-        // for a minimum of 300Mb here.
-        File meminfo = new File("/proc/meminfo");
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(meminfo));
-            String totalMem = "";
-            while(!totalMem.contains("MemTotal:") && totalMem != null)
-                totalMem = br.readLine();
-            StringTokenizer st = new StringTokenizer(totalMem, " ");
-            st.nextToken(); // "MemInfo:"
-            totalMem = st.nextToken();
-
-            Log.i("GeckoMemory", "MemTotal: " + Integer.parseInt(totalMem));
-            return Integer.parseInt(totalMem) < 300000L;
-        } catch (Exception ex) {
-            // Will catch  NullPointerException if totalMem isn't found,
-            // a NumberFormatException if the token isn't parsible
-            // IOException from the file reading or NoSuchElementException
-            // if totalMem doesn't have 2 tokens. None of these are fatal,
-            // so log it and move on.
-            Log.w("GeckoMemTest", "Exception when finding total memory", ex);
-        }
-        return false;
     }
 
     @Override
