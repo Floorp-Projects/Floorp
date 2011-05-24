@@ -4581,7 +4581,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         fun = pn->pn_funbox->function();
         JS_ASSERT(FUN_INTERPRETED(fun));
-        if (fun->u.i.script) {
+        if (fun->script()) {
             /*
              * This second pass is needed to emit JSOP_NOP with a source note
              * for the already-emitted function definition prolog opcode. See

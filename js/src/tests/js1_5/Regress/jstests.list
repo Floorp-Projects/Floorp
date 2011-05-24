@@ -114,7 +114,7 @@ script regress-295666.js
 script regress-299209.js
 script regress-299641.js
 skip-if(!xulRuntime.shell) script regress-303213.js # bug 524731
-fails-if(Android) script regress-306633.js
+script regress-306633.js
 script regress-306727.js
 script regress-306794.js
 script regress-308085.js

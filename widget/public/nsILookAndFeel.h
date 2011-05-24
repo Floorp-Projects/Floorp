@@ -43,10 +43,10 @@
   // for |#ifdef NS_DEBUG|
 struct nsSize;
 
-// 2e89c566-0a31-4c93-bdff-222651df45a0
+// 89401022-94b3-413e-a6b8-2203dab824f3
 #define NS_ILOOKANDFEEL_IID \
-{ 0x2e89c566, 0x0a31, 0x4c93, \
-  { 0xbd, 0xff, 0x22, 0x26, 0x51, 0xdf, 0x45, 0xa0 } }
+{ 0x89401022, 0x94b3, 0x413e, \
+  { 0xa6, 0xb8, 0x22, 0x03, 0xda, 0xb8, 0x24, 0xf3 } }
 
 class nsILookAndFeel: public nsISupports {
 public:
@@ -326,6 +326,7 @@ public:
   };
 
   enum {
+    eMetric_ScrollArrowNone = 0,
     eMetric_ScrollArrowStartBackward = 0x1000,
     eMetric_ScrollArrowStartForward = 0x0100,
     eMetric_ScrollArrowEndBackward = 0x0010,

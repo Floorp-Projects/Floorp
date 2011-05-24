@@ -160,22 +160,28 @@ public:
   NS_IMETHOD GetPath(char **memoryPath)
   {
     if (mType == ChromeUsedRaw) {
-      *memoryPath = strdup("heap-used/images/chrome/used/raw");
+      *memoryPath = strdup("explicit/images/chrome/used/raw");
     } else if (mType == ChromeUsedUncompressed) {
-      *memoryPath = strdup("heap-used/images/chrome/used/uncompressed");
+      *memoryPath = strdup("explicit/images/chrome/used/uncompressed");
     } else if (mType == ChromeUnusedRaw) {
-      *memoryPath = strdup("heap-used/images/chrome/unused/raw");
+      *memoryPath = strdup("explicit/images/chrome/unused/raw");
     } else if (mType == ChromeUnusedUncompressed) {
-      *memoryPath = strdup("heap-used/images/chrome/unused/uncompressed");
+      *memoryPath = strdup("explicit/images/chrome/unused/uncompressed");
     } else if (mType == ContentUsedRaw) {
-      *memoryPath = strdup("heap-used/images/content/used/raw");
+      *memoryPath = strdup("explicit/images/content/used/raw");
     } else if (mType == ContentUsedUncompressed) {
-      *memoryPath = strdup("heap-used/images/content/used/uncompressed");
+      *memoryPath = strdup("explicit/images/content/used/uncompressed");
     } else if (mType == ContentUnusedRaw) {
-      *memoryPath = strdup("heap-used/images/content/unused/raw");
+      *memoryPath = strdup("explicit/images/content/unused/raw");
     } else if (mType == ContentUnusedUncompressed) {
-      *memoryPath = strdup("heap-used/images/content/unused/uncompressed");
+      *memoryPath = strdup("explicit/images/content/unused/uncompressed");
     }
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetKind(PRInt32 *kind)
+  {
+    *kind = MR_HEAP;
     return NS_OK;
   }
 

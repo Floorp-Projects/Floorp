@@ -29,7 +29,7 @@ var failFiles = [['//example.com' + path + 'file_XHR_pass1.xml', 'GET'],
 
 for (i = 0; i < passFiles.length; ++i) {
   xhr = new XMLHttpRequest();
-  is(xhr.mozResponseType, "", "wrong initial responseType");
+  is(xhr.responseType, "", "wrong initial responseType");
   xhr.open(passFiles[i][1], passFiles[i][0], false); 
   xhr.send(null);
   is(xhr.status, 200, "wrong status");
@@ -37,11 +37,11 @@ for (i = 0; i < passFiles.length; ++i) {
     is((new XMLSerializer()).serializeToString(xhr.responseXML.documentElement),
        "<res>hello</res>",
        "wrong responseXML");
-    is(xhr.mozResponse, "<res>hello</res>\n", "wrong response");
+    is(xhr.response, "<res>hello</res>\n", "wrong response");
   }
   else {
     is(xhr.responseText, "hello pass\n", "wrong responseText");
-    is(xhr.mozResponse, "hello pass\n", "wrong response");
+    is(xhr.response, "hello pass\n", "wrong response");
   }
 }
 
@@ -77,30 +77,30 @@ function checkResponseXMLAccessThrows(xhr) {
 }
 function checkSetResponseTypeThrows(xhr) {
   var didthrow = false;
-  try { xhr.mozResponseType = 'document'; } catch (e) { didthrow = true; }
+  try { xhr.responseType = 'document'; } catch (e) { didthrow = true; }
   ok(didthrow, "should have thrown when accessing responseType");
 }
 
 xhr = new XMLHttpRequest();
 checkSetResponseTypeThrows(xhr);
 xhr.open("GET", 'file_XHR_pass1.xml', false); 
-xhr.mozResponseType = 'document';
+xhr.responseType = 'document';
 xhr.send(null);
 checkSetResponseTypeThrows(xhr);
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
-is((new XMLSerializer()).serializeToString(xhr.mozResponse.documentElement),
+is((new XMLSerializer()).serializeToString(xhr.response.documentElement),
    "<res>hello</res>",
    "wrong response");
 
 // test response (responseType='text')
 xhr = new XMLHttpRequest();
 xhr.open("GET", 'file_XHR_pass2.txt', false); 
-xhr.mozResponseType = 'text';
+xhr.responseType = 'text';
 xhr.send(null);
 is(xhr.status, 200, "wrong status");
 checkResponseXMLAccessThrows(xhr);
-is(xhr.mozResponse, "hello pass\n", "wrong response");
+is(xhr.response, "hello pass\n", "wrong response");
 
 // test response (responseType='arraybuffer')
 function arraybuffer_equals_to(ab, s) {
@@ -113,24 +113,24 @@ function arraybuffer_equals_to(ab, s) {
 // with a simple text file
 xhr = new XMLHttpRequest();
 xhr.open("GET", 'file_XHR_pass2.txt', false); 
-xhr.mozResponseType = 'arraybuffer';
+xhr.responseType = 'arraybuffer';
 xhr.send(null);
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
 checkResponseXMLAccessThrows(xhr);
-ab = xhr.mozResponse;
+ab = xhr.response;
 ok(ab != null, "should have a non-null arraybuffer");
 arraybuffer_equals_to(ab, "hello pass\n");
 
 // with a binary file
 xhr = new XMLHttpRequest();
 xhr.open("GET", 'file_XHR_binary1.bin', false); 
-xhr.mozResponseType = 'arraybuffer';
+xhr.responseType = 'arraybuffer';
 xhr.send(null)
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
 checkResponseXMLAccessThrows(xhr);
-ab = xhr.mozResponse;
+ab = xhr.response;
 ok(ab != null, "should have a non-null arraybuffer");
 arraybuffer_equals_to(ab, "\xaa\xee\0\x03\xff\xff\xff\xff\xbb\xbb\xbb\xbb");
 
@@ -143,12 +143,12 @@ function checkOnloadCount() {
 // with a simple text file
 xhr = new XMLHttpRequest();
 xhr.open("GET", 'file_XHR_pass2.txt', false); 
-xhr.mozResponseType = 'blob';
+xhr.responseType = 'blob';
 xhr.send(null);
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
 checkResponseXMLAccessThrows(xhr);
-b = xhr.mozResponse;
+b = xhr.response;
 ok(b, "should have a non-null blob");
 is(b.size, "hello pass\n".length, "wrong blob size");
 
@@ -165,10 +165,10 @@ xhr.onreadystatechange = function() {
   switch (xhr.readyState) {
   case 2:
     is(xhr.status, 200, "wrong status");
-    xhr.mozResponseType = 'blob';
+    xhr.responseType = 'blob';
     break;
   case 4:
-    b = xhr.mozResponse;
+    b = xhr.response;
     ok(b != null, "should have a non-null blob");
     is(b.size, 12, "wrong blob size");
 
@@ -192,7 +192,7 @@ client.onreadystatechange = function() {
       try {
         is(client.responseXML, null, "responseXML should be null.");
         is(client.responseText, "", "responseText should be empty string.");
-        is(client.mozResponse, "", "response should be empty string.");
+        is(client.response, "", "response should be empty string.");
         is(client.status, 0, "status should be 0.");
         is(client.statusText, "", "statusText should be empty string.");
         is(client.getAllResponseHeaders(), "",

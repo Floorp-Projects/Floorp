@@ -47,7 +47,7 @@
  *
  * The nsIURL methods operate on the <jar-entry> part of the spec.
  */
-[scriptable, uuid(b0922a89-f87b-4cb5-8612-305a285fcca7)]
+[scriptable, uuid(ba32f809-5adf-4191-866a-1cddf60548f7)]
 interface nsIJARURI : nsIURL {
 
     /**

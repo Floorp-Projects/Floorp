@@ -110,7 +110,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(a05a6424-a644-461a-a1ff-c7bbe96ea9e2)]
+[scriptable, uuid(5cf8d518-51d0-4cd6-a69a-c3674c2de599)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -148,14 +148,14 @@ interface nsIXMLHttpRequest : nsISupports
    * "blob": as a File API Blob.
    * "document": as a DOM Document object.
    */
-  attribute AString mozResponseType;
+  attribute AString responseType;
 
   /**
    * The response to the request as a specified format by responseType.
    * NULL if the request is unsuccessful or
    * has not yet been sent.
    */
-  [implicit_jscontext] readonly attribute jsval /* any */ mozResponse;
+  [implicit_jscontext] readonly attribute jsval /* any */ response;
 
   /**
    * The status of the response to the request for HTTP requests.

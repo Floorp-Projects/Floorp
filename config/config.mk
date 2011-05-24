@@ -326,11 +326,6 @@ STATIC_LIBRARY_NAME=$(LIBRARY_NAME)
 endif
 endif
 
-# This comes from configure
-ifdef MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif
-
 # No sense in profiling tools
 ifdef INTERNAL_TOOLS
 NO_PROFILE_GUIDED_OPTIMIZE = 1

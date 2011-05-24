@@ -151,8 +151,7 @@ nsBaseWidget::~nsBaseWidget()
 
   NS_IF_RELEASE(mToolkit);
   NS_IF_RELEASE(mContext);
-  if (mOriginalBounds)
-    delete mOriginalBounds;
+  delete mOriginalBounds;
 }
 
 
