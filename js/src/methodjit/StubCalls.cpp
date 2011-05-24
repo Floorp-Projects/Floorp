@@ -2825,11 +2825,19 @@ stubs::AssertArgumentTypes(VMFrame &f)
     JSFunction *fun = fp->fun();
     JSScript *script = fun->script();
 
-    if (!f.fp()->isConstructing())
-        JS_ASSERT(script->thisTypes()->hasType(types::GetValueType(f.cx, fp->thisValue())));
+    types::jstype type = types::GetValueType(f.cx, fp->thisValue());
+    if (!script->thisTypes()->hasType(type)) {
+        types::TypeFailure(f.cx, "Missing type for #%u this: %s", script->id(),
+                           types::TypeString(type));
+    }
 
-    for (unsigned i = 0; i < fun->nargs; i++)
-        JS_ASSERT(script->argTypes(i)->hasType(types::GetValueType(f.cx, fp->formalArg(i))));
+    for (unsigned i = 0; i < fun->nargs; i++) {
+        type = types::GetValueType(f.cx, fp->formalArg(i));
+        if (!script->argTypes(i)->hasType(type)) {
+            types::TypeFailure(f.cx, "Missing type for #%u arg %d: %s", script->id(), i,
+                               types::TypeString(type));
+        }
+    }
 }
 #endif
 
