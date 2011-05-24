@@ -25,7 +25,7 @@
 
 #include "ExecutableAllocator.h"
 
-#if ENABLE_ASSEMBLER && WTF_OS_UNIX && !WTF_OS_SYMBIAN
+#if ENABLE_ASSEMBLER && WTF_PLATFORM_UNIX && !WTF_PLATFORM_SYMBIAN
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -74,7 +74,7 @@ void ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSe
 }
 #endif
 
-#if WTF_CPU_ARM_TRADITIONAL && WTF_OS_LINUX && WTF_COMPILER_RVCT
+#if WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX && WTF_COMPILER_RVCT
 __asm void ExecutableAllocator::cacheFlush(void* code, size_t size)
 {
     ARM
