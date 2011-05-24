@@ -115,7 +115,6 @@
 #include "nsIClipboardHelper.h"
 
 #include "nsPIDOMWindow.h"
-#include "nsDOMNavigationTiming.h"
 #include "nsPIWindowRoot.h"
 #include "nsJSEnvironment.h"
 #include "nsFocusManager.h"
@@ -324,11 +323,6 @@ public:
    * be displayed.
    */
   virtual nsIView* FindContainerView();
-
-  /**
-   * Set collector for navigation timing data (load, unload events).
-   */
-  virtual void SetNavigationTiming(nsDOMNavigationTiming* timing);
 
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
@@ -998,14 +992,6 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
   return rv;
 }
 
-void DocumentViewerImpl::SetNavigationTiming(nsDOMNavigationTiming* timing)
-{
-  NS_ASSERTION(mDocument, "Must have a document to set navigation timing.");
-  if (mDocument) {
-    mDocument->SetNavigationTiming(timing);
-  }
-}
-
 //
 // LoadComplete(aStatus)
 //
@@ -1067,15 +1053,8 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 
     docShell->GetRestoringDocument(&restoring);
     if (!restoring) {
-      nsRefPtr<nsDOMNavigationTiming> timing(mDocument->GetNavigationTiming());
-      if (timing) {
-        timing->NotifyLoadEventStart();
-      }
       nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull,
                                   &status);
-      if (timing) {
-        timing->NotifyLoadEventEnd();
-      }
 #ifdef MOZ_TIMELINE
       // if navigator.xul's load is complete, the main nav window is visible
       // mark that point.
