@@ -201,6 +201,10 @@
                     label="&errorConsoleCmd.label;"
                     key="key_errorConsole"
                     oncommand="toJavaScriptConsole();"/>
+          <menuseparator id="appmenu_devToolsEndSeparator"/>
+          <menuitem id="appmenu_getMoreDevtools"
+                    label="&getMoreDevtoolsCmd.label;"
+                    oncommand="openUILinkIn('https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/', 'tab');"/>
           <menuseparator/>
 #define ID_PREFIX appmenu_developer_
 #define OMIT_ACCESSKEYS
