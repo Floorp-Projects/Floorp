@@ -61,6 +61,13 @@ enum {
     JSSLOT_DEBUGFRAME_COUNT
 };
 
+extern Class DebugArguments_class;
+
+enum {
+    JSSLOT_DEBUGARGUMENTS_FRAME,
+    JSSLOT_DEBUGARGUMENTS_COUNT
+};
+
 extern Class DebugObject_class;
 
 enum {
@@ -187,33 +194,13 @@ Debug::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
     JS_ASSERT(fp->isScriptFrame());
     FrameMap::AddPtr p = frames.lookupForAdd(fp);
     if (!p) {
-        // Create script Debug.Frame. First copy the arguments.
-        JSObject *argsobj;
-        if (fp->hasArgs()) {
-            uintN argc = fp->numActualArgs();
-            JS_ASSERT(uint(argc) == argc);
-            argsobj = NewDenseAllocatedArray(cx, uint(argc), NULL);
-            if (!argsobj)
-                return false;
-            Value *argv = fp->actualArgs();
-            for (uintN i = 0; i < argc; i++) {
-                Value v = argv[i];
-                if (!wrapDebuggeeValue(cx, &v))
-                    return false;
-                argsobj->setDenseArrayElement(i, v);
-            }
-        } else {
-            argsobj = NULL;
-        }
-
-        // Now create and populate the Debug.Frame object.
+        // Create and populate the Debug.Frame object.
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
         JSObject *frameobj = NewNonFunction<WithProto::Given>(cx, &DebugFrame_class, proto, NULL);
         if (!frameobj || !frameobj->ensureClassReservedSlots(cx))
             return false;
         frameobj->setPrivate(fp);
         frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*object));
-        frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS, ObjectOrNullValue(argsobj));
 
         if (!frames.add(p, fp, frameobj)) {
             js_ReportOutOfMemory(cx);
@@ -1061,7 +1048,7 @@ JSFunctionSpec Debug::methods[] = {
 Class DebugFrame_class = {
     "Frame", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGFRAME_COUNT),
     PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
+    EnumerateStub, ResolveStub, ConvertStub
 };
 
 static JSObject *
@@ -1169,12 +1156,96 @@ DebugFrame_getOlder(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+Class DebugArguments_class = {
+    "Arguments", JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGARGUMENTS_COUNT),
+    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
+    EnumerateStub, ResolveStub, ConvertStub
+};
+
+// The getter used for each element of frame.arguments. See DebugFrame_getArguments.
+JSBool
+DebugArguments_getArg(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *callee = &CallArgsFromVp(argc, vp).callee();
+    int32 i = callee->getReservedSlot(0).toInt32();
+
+    // Check that the this value is an Arguments object.
+    if (!vp[1].isObject()) {
+        ReportObjectRequired(cx);
+        return false;
+    }
+    JSObject *argsobj = &vp[1].toObject();
+    if (argsobj->getClass() != &DebugArguments_class) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Arguments", "getArgument", argsobj->getClass()->name);
+        return false;
+    }
+
+    // Put the Debug.Frame into the this-value slot, then use THIS_FRAME
+    // to check that it is still live and get the fp.
+    vp[1] = argsobj->getReservedSlot(JSSLOT_DEBUGARGUMENTS_FRAME);
+    THIS_FRAME(cx, vp, "get argument", thisobj, fp);
+
+    // Since getters can be extracted and applied to other objects,
+    // there is no guarantee this object has an ith argument.
+    JS_ASSERT(i >= 0);
+    if (uintN(i) < fp->numActualArgs())
+        *vp = fp->actualArgs()[i];
+    else
+        vp->setUndefined();
+    return Debug::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, vp);
+}
+
 JSBool
 DebugFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get arguments", thisobj, fp);
-    (void) fp;  // quell warning that fp is unused
-    *vp = thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS);
+    Value argumentsv = thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS);
+    if (!argumentsv.isUndefined()) {
+        JS_ASSERT(argumentsv.isObjectOrNull());
+        *vp = argumentsv;
+        return true;
+    }
+
+    JSObject *argsobj;
+    if (fp->hasArgs()) {
+        // Create an arguments object.
+        GlobalObject *global = CallArgsFromVp(argc, vp).callee().getGlobal();
+        JSObject *proto;
+        if (!js_GetClassPrototype(cx, global, JSProto_Array, &proto))
+            return false;
+        argsobj = NewNonFunction<WithProto::Given>(cx, &DebugArguments_class, proto, global);
+        if (!argsobj ||
+            !js_SetReservedSlot(cx, argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj)))
+        {
+            return false;
+        }
+
+        JS_ASSERT(fp->numActualArgs() <= 0x7fffffff);
+        int32 fargc = int32(fp->numActualArgs());
+        if (!DefineNativeProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                                  Int32Value(fargc), NULL, NULL,
+                                  JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
+        {
+            return false;
+        }
+
+        for (int32 i = 0; i < fargc; i++) {
+            JSObject *getobj = js_NewFunction(cx, NULL, DebugArguments_getArg, 0, 0, global, NULL);
+            if (!getobj ||
+                !js_SetReservedSlot(cx, getobj, 0, Int32Value(i)) ||
+                !DefineNativeProperty(cx, argsobj, INT_TO_JSID(i), UndefinedValue(),
+                                      JS_DATA_TO_FUNC_PTR(PropertyOp, getobj), NULL,
+                                      JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER, 0, 0))
+            {
+                return false;
+            }
+        }
+    } else {
+        argsobj = NULL;
+    }
+    *vp = ObjectOrNullValue(argsobj);
+    thisobj->setReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS, *vp);
     return true;
 }
 
