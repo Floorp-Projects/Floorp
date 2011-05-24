@@ -23,10 +23,10 @@ g.eval("function f() { debugger; }");
 hits = 0;
 g.eval("args = []; f();");
 g.eval("this.f();");
-g.eval("args = ['hello', 3.14, true, false, null, undefined]; " +
-       "f('hello', 3.14, true, false, null, undefined);");
+g.eval("args = ['hello', 3.14, true, false, null, undefined]; f.apply(undefined, args);");
+g.eval("f('hello', 3.14, true, false, null, undefined);");
 g.eval("args = [-0, NaN, -1/0]; this.f(-0, NaN, -1/0);");
-assertEq(hits, 4);
+assertEq(hits, 5);
 
 // with formal parameters
 g.eval("function f(a, b) { debugger; }");
