@@ -1456,14 +1456,17 @@ DebugObject_getParameterNames(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+enum ApplyOrCallMode { ApplyMode, CallMode };
+
 static JSBool
-DebugObject_apply(JSContext *cx, uintN argc, Value *vp)
+ApplyOrCall(JSContext *cx, uintN argc, Value *vp, ApplyOrCallMode mode)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, vp, "apply", obj);
     Debug *dbg = Debug::fromChildJSObject(&vp[1].toObject());
 
     // Any JS exceptions thrown must be in the debugger compartment, so do
     // sanity checks and fallible conversions before entering the debuggee.
+    Value calleev = ObjectValue(*obj);
     if (!obj->isCallable()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Debug.Object", "apply", obj->getClass()->name);
@@ -1472,28 +1475,33 @@ DebugObject_apply(JSContext *cx, uintN argc, Value *vp)
 
     // Unwrap Debug.Objects. This happens in the debugger's compartment since
     // that is where any exceptions must be reported.
-    Value calleev = vp[1];
     Value thisv = argc > 0 ? vp[2] : UndefinedValue();
-    AutoValueVector argv(cx);
-    if (!dbg->unwrapDebuggeeValue(cx, &calleev) || !dbg->unwrapDebuggeeValue(cx, &thisv))
+    if (!dbg->unwrapDebuggeeValue(cx, &thisv))
         return false;
-    if (argc >= 2 && !vp[3].isNullOrUndefined()) {
-        if (!vp[3].isObject()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS, js_apply_str);
-            return false;
-        }
-        JSObject *argsobj = &vp[3].toObject();
-        uintN length;
-        if (!js_GetLengthProperty(cx, argsobj, &length))
-            return false;
-        length = uintN(JS_MIN(length, JS_ARGS_LENGTH_MAX));
-
-        if (!argv.growBy(length) || !GetElements(cx, argsobj, length, argv.begin()))
-            return false;
-        for (uintN i = 0; i < length; i++) {
-            if (!dbg->unwrapDebuggeeValue(cx, &argv[i]))
+    uintN callArgc = 0;
+    Value *callArgv = NULL;
+    AutoValueVector argv(cx);
+    if (mode == ApplyMode) {
+        if (argc >= 2 && !vp[3].isNullOrUndefined()) {
+            if (!vp[3].isObject()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS, js_apply_str);
                 return false;
+            }
+            JSObject *argsobj = &vp[3].toObject();
+            if (!js_GetLengthProperty(cx, argsobj, &callArgc))
+                return false;
+            callArgc = uintN(JS_MIN(callArgc, JS_ARGS_LENGTH_MAX));
+            if (!argv.growBy(callArgc) || !GetElements(cx, argsobj, callArgc, argv.begin()))
+                return false;
+            callArgv = argv.begin();
         }
+    } else {
+        callArgc = argc > 0 ? uintN(JS_MIN(argc - 1, JS_ARGS_LENGTH_MAX)) : 0;
+        callArgv = vp + 3;
+    }
+    for (uintN i = 0; i < callArgc; i++) {
+        if (!dbg->unwrapDebuggeeValue(cx, &callArgv[i]))
+            return false;
     }
 
     // Enter the debuggee compartment and rewrap all input value for that compartment.
@@ -1501,16 +1509,28 @@ DebugObject_apply(JSContext *cx, uintN argc, Value *vp)
     AutoCompartment ac(cx, obj);
     if (!ac.enter() || !cx->compartment->wrap(cx, &calleev) || !cx->compartment->wrap(cx, &thisv))
         return false;
-    for (Value *p = argv.begin(); p != argv.end(); ++p) {
-        if (!cx->compartment->wrap(cx, p))
+    for (uintN i = 0; i < callArgc; i++) {
+        if (!cx->compartment->wrap(cx, &callArgv[i]))
             return false;
     }
 
     // Call the function. Use newCompletionValue to return to the debugger
     // compartment and populate *vp.
     Value rval;
-    bool ok = ExternalInvoke(cx, thisv, calleev, argv.length(), argv.begin(), &rval);
+    bool ok = ExternalInvoke(cx, thisv, calleev, callArgc, callArgv, &rval);
     return dbg->newCompletionValue(ac, ok, rval, vp);
+}
+
+static JSBool
+DebugObject_apply(JSContext *cx, uintN argc, Value *vp)
+{
+    return ApplyOrCall(cx, argc, vp, ApplyMode);
+}
+
+static JSBool
+DebugObject_call(JSContext *cx, uintN argc, Value *vp)
+{
+    return ApplyOrCall(cx, argc, vp, CallMode);
 }
 
 static JSPropertySpec DebugObject_properties[] = {
@@ -1524,6 +1544,7 @@ static JSPropertySpec DebugObject_properties[] = {
 
 static JSFunctionSpec DebugObject_methods[] = {
     JS_FN("apply", DebugObject_apply, 0, 0),
+    JS_FN("call", DebugObject_call, 0, 0),
     JS_FS_END
 };
 
