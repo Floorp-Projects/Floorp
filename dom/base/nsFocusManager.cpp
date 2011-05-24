@@ -728,7 +728,7 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
   if (presShell) {
     // disable selection mousedown state on activation
     // XXXndeakin P3 not sure if this is necessary, but it doesn't hurt
-    nsCOMPtr<nsFrameSelection> frameSelection = presShell->FrameSelection();
+    nsRefPtr<nsFrameSelection> frameSelection = presShell->FrameSelection();
     frameSelection->SetMouseDownState(PR_FALSE);
   }
 
@@ -2012,7 +2012,7 @@ nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
   // domDoc is a document interface we can create a range with
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aPresShell->GetDocument());
   if (domDoc) {
-    nsCOMPtr<nsFrameSelection> frameSelection = aPresShell->FrameSelection();
+    nsRefPtr<nsFrameSelection> frameSelection = aPresShell->FrameSelection();
     nsCOMPtr<nsISelection> domSelection = frameSelection->
       GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (domSelection) {
@@ -2062,7 +2062,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
   if (!aVisible && !caretVisible)
     return NS_OK;
 
-  nsCOMPtr<nsFrameSelection> frameSelection;
+  nsRefPtr<nsFrameSelection> frameSelection;
   if (aContent) {
     NS_ASSERTION(aContent->GetDocument() == aPresShell->GetDocument(),
                  "Wrong document?");
@@ -2071,7 +2071,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
       frameSelection = focusFrame->GetFrameSelection();
   }
 
-  nsCOMPtr<nsFrameSelection> docFrameSelection = aPresShell->FrameSelection();
+  nsRefPtr<nsFrameSelection> docFrameSelection = aPresShell->FrameSelection();
 
   if (docFrameSelection && caret &&
      (frameSelection == docFrameSelection || !aContent)) {
@@ -2112,8 +2112,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
   nsPresContext* presContext = aPresShell->GetPresContext();
   NS_ASSERTION(presContext, "mPresContent is null!!");
 
-  nsCOMPtr<nsFrameSelection> frameSelection;
-  frameSelection = aPresShell->FrameSelection();
+  nsRefPtr<nsFrameSelection> frameSelection = aPresShell->FrameSelection();
 
   nsCOMPtr<nsISelection> domSelection;
   if (frameSelection) {

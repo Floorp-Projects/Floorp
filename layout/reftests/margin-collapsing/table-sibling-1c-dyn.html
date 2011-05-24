@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#block1 {
+ display: block;
+ height: 20px;
+ background-color: green;
+ margin-bottom: 20px;
+}
+#table {
+ display: none;
+ height: 20px; width: 100px;
+ background-color: red;
+ margin-top: 20px;
+ margin-bottom: 20px;
+}
+#block2 {
+ display: block;
+ height: 20px;
+ background-color: blue;
+ margin-top: 20px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('table').style.display = 'table';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="block1"></div>
+<div id="table"></div>
+<div id="block2"></div>
+</body>
+</html>

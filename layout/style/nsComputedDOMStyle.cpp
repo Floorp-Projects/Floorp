@@ -2280,12 +2280,32 @@ nsComputedDOMStyle::DoGetTextDecoration()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
-  PRUint8 line = GetStyleTextReset()->mTextDecorationLine;
+  const nsStyleTextReset* textReset = GetStyleTextReset();
+
+  // If decoration style or color wasn't initial value, the author knew the
+  // text-decoration is a shorthand property in CSS 3.
+  // Return NULL in such cases.
+  if (textReset->GetDecorationStyle() != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
+    return nsnull;
+  }
+
+  nscolor color;
+  PRBool isForegroundColor;
+  textReset->GetDecorationColor(color, isForegroundColor);
+  if (!isForegroundColor) {
+    return nsnull;
+  }
+
+  // Otherwise, the web pages may have been written for CSS 2.1 or earlier,
+  // i.e., text-decoration was assumed as a longhand property.  In that case,
+  // we should return computed value same as CSS 2.1 for backward compatibility.
+
+  PRUint8 line = textReset->mTextDecorationLine;
   // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
   // don't want these to appear in the computed style.
   line &= ~(NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS |
             NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL);
-  PRUint8 blink = GetStyleTextReset()->mTextBlink;
+  PRUint8 blink = textReset->mTextBlink;
 
   if (blink == NS_STYLE_TEXT_BLINK_NONE &&
       line == NS_STYLE_TEXT_DECORATION_LINE_NONE) {
@@ -4256,6 +4276,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(font_variant,                  FontVariant),
     COMPUTED_STYLE_MAP_ENTRY(font_weight,                   FontWeight),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(height,                 Height),
+    COMPUTED_STYLE_MAP_ENTRY(ime_mode,                      IMEMode),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(left,                   Left),
     COMPUTED_STYLE_MAP_ENTRY(letter_spacing,                LetterSpacing),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(line_height,            LineHeight),
@@ -4274,14 +4295,13 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(max_width,              MaxWidth),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(min_height,             MinHeight),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(min_width,              MinWidth),
-    COMPUTED_STYLE_MAP_ENTRY(ime_mode,                      IMEMode),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
     // COMPUTED_STYLE_MAP_ENTRY(orphans,                    Orphans),
     //// COMPUTED_STYLE_MAP_ENTRY(outline,                  Outline),
     COMPUTED_STYLE_MAP_ENTRY(outline_color,                 OutlineColor),
+    COMPUTED_STYLE_MAP_ENTRY(outline_offset,                OutlineOffset),
     COMPUTED_STYLE_MAP_ENTRY(outline_style,                 OutlineStyle),
     COMPUTED_STYLE_MAP_ENTRY(outline_width,                 OutlineWidth),
-    COMPUTED_STYLE_MAP_ENTRY(outline_offset,                OutlineOffset),
     COMPUTED_STYLE_MAP_ENTRY(overflow,                      Overflow),
     COMPUTED_STYLE_MAP_ENTRY(overflow_x,                    OverflowX),
     COMPUTED_STYLE_MAP_ENTRY(overflow_y,                    OverflowY),
@@ -4347,18 +4367,19 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(box_pack,                      BoxPack),
     COMPUTED_STYLE_MAP_ENTRY(box_sizing,                    BoxSizing),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_count,             ColumnCount),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_gap,               ColumnGap),
     //// COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule,         ColumnRule),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_color,        ColumnRuleColor),
-    COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_width,        ColumnRuleWidth),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_style,        ColumnRuleStyle),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_width,        ColumnRuleWidth),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
     COMPUTED_STYLE_MAP_ENTRY(font_feature_settings,         MozFontFeatureSettings),
     COMPUTED_STYLE_MAP_ENTRY(font_language_override,        MozFontLanguageOverride),
     COMPUTED_STYLE_MAP_ENTRY(force_broken_image_icon,       ForceBrokenImageIcon),
     COMPUTED_STYLE_MAP_ENTRY(hyphens,                       Hyphens),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
+    COMPUTED_STYLE_MAP_ENTRY(orient,                        Orient),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),
@@ -4396,13 +4417,12 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(filter,                        Filter),
     COMPUTED_STYLE_MAP_ENTRY(flood_color,                   FloodColor),
     COMPUTED_STYLE_MAP_ENTRY(flood_opacity,                 FloodOpacity),
-    COMPUTED_STYLE_MAP_ENTRY(lighting_color,                LightingColor),
     COMPUTED_STYLE_MAP_ENTRY(image_rendering,               ImageRendering),
-    COMPUTED_STYLE_MAP_ENTRY(mask,                          Mask),
+    COMPUTED_STYLE_MAP_ENTRY(lighting_color,                LightingColor),
     COMPUTED_STYLE_MAP_ENTRY(marker_end,                    MarkerEnd),
     COMPUTED_STYLE_MAP_ENTRY(marker_mid,                    MarkerMid),
     COMPUTED_STYLE_MAP_ENTRY(marker_start,                  MarkerStart),
-    COMPUTED_STYLE_MAP_ENTRY(orient,                        Orient),
+    COMPUTED_STYLE_MAP_ENTRY(mask,                          Mask),
     COMPUTED_STYLE_MAP_ENTRY(shape_rendering,               ShapeRendering),
     COMPUTED_STYLE_MAP_ENTRY(stop_color,                    StopColor),
     COMPUTED_STYLE_MAP_ENTRY(stop_opacity,                  StopOpacity),

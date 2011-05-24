@@ -14,7 +14,7 @@ const pref_block = "network.websocket.override-security-block";
 
 let errors = 0;
 let lastWindowId = 0;
-let oldPref_ws, oldPref_block;
+let oldPref_ws;
 
 let TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
@@ -63,16 +63,13 @@ function performTest() {
 
   Services.console.unregisterListener(TestObserver);
   Services.prefs.setBoolPref(pref_ws, oldPref_ws);
-  Services.prefs.setBoolPref(pref_block, oldPref_block);
   finishTest();
 }
 
 function test() {
   oldPref_ws = Services.prefs.getBoolPref(pref_ws);
-  oldPref_block = Services.prefs.getBoolPref(pref_block);
 
   Services.prefs.setBoolPref(pref_ws, true);
-  Services.prefs.setBoolPref(pref_block, true);
 
   addTab("data:text/html,Web Console test for bug 603750: Web Socket errors");
   browser.addEventListener("load", tabLoad, true);

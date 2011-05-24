@@ -441,6 +441,11 @@ ImageLayerOGL::RenderLayer(int,
     CairoImageOGL *cairoImage =
       static_cast<CairoImageOGL*>(image.get());
 
+    cairoImage->SetTiling(mUseTileSourceRect);
+    gl()->MakeCurrent();
+    unsigned int iwidth  = cairoImage->mSize.width;
+    unsigned int iheight = cairoImage->mSize.height;
+
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, cairoImage->mTexture.GetTextureID());
 
@@ -452,23 +457,108 @@ ImageLayerOGL::RenderLayer(int,
         sGLXLibrary.BindTexImage(pixmap);
     }
 #endif
-    
+
     ColorTextureLayerProgram *program = 
       mOGLManager->GetColorTextureLayerProgram(cairoImage->mLayerProgram);
 
     ApplyFilter(mFilter);
 
     program->Activate();
-    program->SetLayerQuadRect(nsIntRect(0, 0,
-                                        cairoImage->mSize.width,
-                                        cairoImage->mSize.height));
+    // The following uniform controls the scaling of the vertex coords.
+    // Instead of setting the scale here and using coords in the range [0,1], we
+    // set an identity transform and use pixel coordinates below
+    program->SetLayerQuadRect(nsIntRect(0, 0, 1, 1));
     program->SetLayerTransform(GetEffectiveTransform());
     program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
 
-    mOGLManager->BindAndDrawQuad(program);
+    nsIntRect rect = GetVisibleRegion().GetBounds();
 
+    bool tileIsWholeImage = (mTileSourceRect == nsIntRect(0, 0, iwidth, iheight)) 
+                            || !mUseTileSourceRect;
+    bool imageIsPowerOfTwo = ((iwidth  & (iwidth - 1)) == 0 &&
+                              (iheight & (iheight - 1)) == 0);
+    bool canDoNPOT = (
+          gl()->IsExtensionSupported(GLContext::ARB_texture_non_power_of_two) ||
+          gl()->IsExtensionSupported(GLContext::OES_texture_npot));
+
+    GLContext::RectTriangles triangleBuffer;
+    // do GL_REPEAT if we can - should be the fastest option.
+    // draw a single rect for the whole region, a little overdraw
+    // on the gpu should be faster than tesselating
+    // maybe we can write a shader that can also handle texture subrects
+    // and repeat?
+    if (tileIsWholeImage && (imageIsPowerOfTwo || canDoNPOT)) {
+        // we need to anchor the repeating texture appropriately
+        // otherwise it will start from the region border instead
+        // of the layer origin. This is the offset into the texture
+        // that the region border represents
+        float tex_offset_u = (float)(rect.x % iwidth) / iwidth;
+        float tex_offset_v = (float)(rect.y % iheight) / iheight;
+        triangleBuffer.addRect(rect.x, rect.y,
+                               rect.x + rect.width, rect.y + rect.height,
+                               tex_offset_u, tex_offset_v,
+                               tex_offset_u + (float)rect.width / (float)iwidth,
+                               tex_offset_v + (float)rect.height / (float)iheight);
+    }
+    // can't do fast path via GL_REPEAT - we have to tessellate individual rects.
+    else {
+        unsigned int twidth = mTileSourceRect.width;
+        unsigned int theight = mTileSourceRect.height;
+
+        nsIntRegion region = GetVisibleRegion();
+        // image subrect in texture coordinates
+        float subrect_tl_u = float(mTileSourceRect.x) / float(iwidth);
+        float subrect_tl_v = float(mTileSourceRect.y) / float(iheight);
+        float subrect_br_u = float(mTileSourceRect.width + mTileSourceRect.x) / float(iwidth);
+        float subrect_br_v = float(mTileSourceRect.height + mTileSourceRect.y) / float(iheight);
+
+        // round rect position down to multiples of texture size
+        // this way we start at multiples of rect positions
+        rect.x = (rect.x / iwidth) * iwidth;
+        rect.y = (rect.y / iheight) * iheight;
+        // round up size to accomodate for rounding down above
+        rect.width  = (rect.width / iwidth + 2) * iwidth;
+        rect.height = (rect.height / iheight + 2) * iheight;
+
+        // tesselate the visible region with tiles of subrect size
+        for (int y = rect.y; y < rect.y + rect.height;  y += theight) {
+            for (int x = rect.x; x < rect.x + rect.width; x += twidth) {
+                // when we already tessellate, we might as well save on overdraw here
+                if (!region.Intersects(nsIntRect(x, y, twidth, theight))) {
+                    continue;
+                }
+                triangleBuffer.addRect(x, y,
+                                       x + twidth, y + theight,
+                                       subrect_tl_u, subrect_tl_v,
+                                       subrect_br_u, subrect_br_v);
+            }
+        }
+    }
+    GLuint vertAttribIndex =
+        program->AttribLocation(LayerProgram::VertexAttrib);
+    GLuint texCoordAttribIndex =
+        program->AttribLocation(LayerProgram::TexCoordAttrib);
+    NS_ASSERTION(texCoordAttribIndex != GLuint(-1), "no texture coords?");
+
+    gl()->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+    gl()->fVertexAttribPointer(vertAttribIndex, 2,
+                               LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                               triangleBuffer.vertexPointer());
+
+    gl()->fVertexAttribPointer(texCoordAttribIndex, 2,
+                               LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                               triangleBuffer.texCoordPointer());
+    {
+        gl()->fEnableVertexAttribArray(texCoordAttribIndex);
+        {
+            gl()->fEnableVertexAttribArray(vertAttribIndex);
+            gl()->fDrawArrays(LOCAL_GL_TRIANGLES, 0, triangleBuffer.elements());
+            gl()->fDisableVertexAttribArray(vertAttribIndex);
+        }
+        gl()->fDisableVertexAttribArray(texCoordAttribIndex);
+    }
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
     if (cairoImage->mSurface) {
         sGLXLibrary.ReleaseTexImage(pixmap);
@@ -741,7 +831,7 @@ PlanarYCbCrImageOGL::UpdateTextures(GLContext *gl)
 }
 
 CairoImageOGL::CairoImageOGL(LayerManagerOGL *aManager)
-  : CairoImage(nsnull), mSize(0, 0)
+  : CairoImage(nsnull), mSize(0, 0), mTiling(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread to create a cairo image");
 
@@ -786,6 +876,25 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
     gl->UploadSurfaceToTexture(aData.mSurface,
                                nsIntRect(0,0, mSize.width, mSize.height),
                                tex);
+}
+
+void CairoImageOGL::SetTiling(bool aTiling)
+{
+  if (aTiling == mTiling)
+      return;
+  mozilla::gl::GLContext *gl = mTexture.GetGLContext();
+  gl->MakeCurrent();
+  gl->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture.GetTextureID());
+  mTiling = aTiling;
+
+  if (aTiling) {
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_REPEAT);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_REPEAT);
+  } else {
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+  }
 }
 
 ShadowImageLayerOGL::ShadowImageLayerOGL(LayerManagerOGL* aManager)

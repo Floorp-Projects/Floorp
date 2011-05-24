@@ -531,6 +531,14 @@ class nsHashKey;
 #define NS_BEFOREPRINT               (NS_PRINT_EVENT_START)
 #define NS_AFTERPRINT                (NS_PRINT_EVENT_START + 1)
 
+#define NS_MESSAGE_EVENT_START       4700
+#define NS_MESSAGE                   (NS_MESSAGE_EVENT_START)
+
+// Open and close events
+#define NS_OPENCLOSE_EVENT_START     4800
+#define NS_OPEN                      (NS_OPENCLOSE_EVENT_START)
+#define NS_CLOSE                     (NS_OPENCLOSE_EVENT_START+1)
+
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
@@ -1338,6 +1346,13 @@ public:
     PRInt32 mLineHeight;
     PRInt32 mPageWidth;
     PRInt32 mPageHeight;
+    // used by NS_QUERY_SCROLL_TARGET_INFO
+    // the mouse wheel scrolling amount may be overridden by prefs or
+    // overriding system scrolling speed mechanism.
+    // If mMouseScrollEvent is a line scroll event, the unit of this value is
+    // line.  If mMouseScrollEvent is a page scroll event, the unit of this
+    // value is page.
+    PRInt32 mComputedScrollAmount;
   } mReply;
 
   enum {

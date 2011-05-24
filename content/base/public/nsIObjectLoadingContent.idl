@@ -39,15 +39,19 @@
 
 interface nsIFrame;
 interface nsIObjectFrame;
-interface nsIPluginInstance;
 interface nsIPluginTag;
 interface nsIDOMElement;
 interface nsIDOMClientRect;
 
+%{C++
+#include "nsNPAPIPluginInstance.h"
+%}
+[ptr] native nsNPAPIPluginInstancePtr(nsNPAPIPluginInstance);
+
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(9558649a-7255-4b00-afb4-1171e9cdcead)]
+[scriptable, uuid(107e8048-d00f-4711-bd21-97184ccae0b1)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -80,7 +84,7 @@ interface nsIObjectLoadingContent : nsISupports
    * will never instantiate the plugin and so is safe to call even when
    * content script must not execute.
    */
-  [noscript] readonly attribute nsIPluginInstance pluginInstance;
+  [noscript] readonly attribute nsNPAPIPluginInstancePtr pluginInstance;
 
   /**
    * Makes sure that a frame for this object exists, and that the plugin is
@@ -98,7 +102,7 @@ interface nsIObjectLoadingContent : nsISupports
    * trigger fallback to replacement content, and the type will change (and
    * this method will return a failure code)
    */
-  [noscript] nsIPluginInstance ensureInstantiation();
+  [noscript] nsNPAPIPluginInstancePtr ensureInstantiation();
 
   /**
    * Tells the content about an associated object frame.
@@ -108,14 +112,6 @@ interface nsIObjectLoadingContent : nsISupports
    * because nsIObjectFrame is unscriptable.
    */
   [noscript] void hasNewFrame(in nsIObjectFrame aFrame);
-
-  /**
-   * Tells the object to paint directly in this location ignoring any
-   * positioning information that may have been provided otherwise
-   */
-  void setAbsoluteScreenPosition(in nsIDOMElement element,
-                                 in nsIDOMClientRect position,
-                                 in nsIDOMClientRect clip);
 
   /**
    * If this object is in going to be printed, this method

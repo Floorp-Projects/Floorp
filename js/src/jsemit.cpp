@@ -1323,8 +1323,8 @@ JSTreeContext::ensureSharpSlots()
     JS_ASSERT(!(flags & TCF_HAS_SHARPS));
     if (inFunction()) {
         JSContext *cx = parser->context;
-        JSAtom *sharpArrayAtom = js_Atomize(cx, "#array", 6, 0);
-        JSAtom *sharpDepthAtom = js_Atomize(cx, "#depth", 6, 0);
+        JSAtom *sharpArrayAtom = js_Atomize(cx, "#array", 6);
+        JSAtom *sharpDepthAtom = js_Atomize(cx, "#depth", 6);
         if (!sharpArrayAtom || !sharpDepthAtom)
             return false;
 
@@ -4581,7 +4581,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         fun = pn->pn_funbox->function();
         JS_ASSERT(FUN_INTERPRETED(fun));
-        if (fun->u.i.script) {
+        if (fun->script()) {
             /*
              * This second pass is needed to emit JSOP_NOP with a source note
              * for the already-emitted function definition prolog opcode. See

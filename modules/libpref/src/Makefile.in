@@ -47,18 +47,15 @@ LIBRARY_NAME	= pref
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPrefModule
-ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),WINNT)
-LIBRARY_NAME	= xppref32
-endif
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
 CPPSRCS		= \
 			  nsPrefBranch.cpp	\
-			  nsPrefService.cpp	\
 			  nsPrefsFactory.cpp	\
 			  prefapi.cpp \
 			  prefread.cpp \
+			  Preferences.cpp	\
 			 $(NULL)
 
 DEFINES += -DOS_ARCH=$(OS_ARCH) \

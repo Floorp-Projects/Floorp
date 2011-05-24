@@ -50,6 +50,9 @@ function step0(event) {
   // Wait until we get the MozAfterPaint following the load event
   // before starting.
   window.addEventListener("MozAfterPaint", step1, false);
+
+  // Ensure a MozAfterPaint event is fired
+  div.style.backgroundColor = "yellow";
 }
 
 var start;
@@ -57,7 +60,7 @@ var div = document.getElementById("display");
 
 function step1(event)
 {
-  //ok(true, "step1 event: " + print_event(event));
+  ok(true, "step1 reached: " + print_event(event));
   window.removeEventListener("MozAfterPaint", step1, false);
 
   start = Date.now();
@@ -69,7 +72,7 @@ function step1(event)
 
 function step2(event)
 {
-  //ok(true, "step2 event: " + print_event(event));
+  ok(true, "step2 reached: " + print_event(event));
   window.removeEventListener("MozAfterPaint", step2, false);
 
   var end = Date.now();
@@ -85,8 +88,9 @@ function step2(event)
   // next listener after a zero timeout.
   setTimeout(step3, 0, timeout);
 }
-function step3(timeout) {
-
+function step3(timeout)
+{
+  ok(true, "step3 reached");
   window.addEventListener("MozAfterPaint", failstep, false);
 
   div.style.backgroundColor = "fuchsia";
@@ -96,16 +100,16 @@ function step3(timeout) {
 
 function failstep(event)
 {
-  //ok(true, "failstep event: " + print_event(event));
+  ok(true, "failstep reached: " + print_event(event));
   ok(false, "got MozAfterPaint when we should not have");
 }
 
 function step4()
 {
-  window.removeEventListener("MozAfterPaint", failstep, false);
+  ok(true, "step4 reached"); // If we didn't get the failure in failstep,
+                             // then we passed.
 
-  ok(true, "got final step"); // If we didn't get the failure in failstep,
-                              // then we passed.
+  window.removeEventListener("MozAfterPaint", failstep, false);
 
   // Set the pref back in its initial state.
   set_pref(true);

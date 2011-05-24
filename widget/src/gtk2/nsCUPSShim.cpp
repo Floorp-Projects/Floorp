@@ -53,7 +53,7 @@ static const char gSymName[][sizeof("cupsPrintFile")] = {
     { "cupsPrintFile" },
     { "cupsTempFd" },
 };
-static const int gSymNameCt = sizeof(gSymName) / sizeof(gSymName[0]);
+static const int gSymNameCt = NS_ARRAY_LENGTH(gSymName);
 
 
 PRBool

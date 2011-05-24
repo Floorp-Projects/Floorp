@@ -39,7 +39,7 @@
 #define nsPluginSafety_h_
 
 #include "npapi.h"
-#include "nsIPluginHost.h"
+#include "nsPluginHost.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include <prinrval.h>
@@ -78,7 +78,7 @@ PR_BEGIN_MACRO                                     \
       nsresult res;                                \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\
       if(NS_SUCCEEDED(res) && (host != nsnull))    \
-        host->HandleBadPlugin(nsnull, pluginInst); \
+        static_cast<nsPluginHost*>(host.get())->HandleBadPlugin(nsnull, pluginInst); \
       ret = (NPError)NS_ERROR_FAILURE;             \
     }                                              \
   }                                                \
@@ -101,7 +101,7 @@ PR_BEGIN_MACRO                              \
       nsresult res;                         \
       nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res));\
       if(NS_SUCCEEDED(res) && (host != nsnull))\
-        host->HandleBadPlugin(nsnull, pluginInst);\
+        static_cast<nsPluginHost*>(host.get())->HandleBadPlugin(nsnull, pluginInst);\
     }                                       \
   }                                         \
   NS_NotifyPluginCall(startTime);		   \

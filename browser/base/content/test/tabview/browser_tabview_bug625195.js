@@ -16,10 +16,8 @@ function test() {
 
   showTabView(function() {
     registerCleanupFunction(function () {
-      if (gBrowser.tabs[1])
+      while (gBrowser.tabs.length > 1)
         gBrowser.removeTab(gBrowser.tabs[1]);
-      if (gBrowser.tabs[2])
-        gBrowser.removeTab(gBrowser.tabs[2]);
       TabView.hide();
     });
 

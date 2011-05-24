@@ -208,11 +208,12 @@ public:
 
   void SetRequestObserver(nsIRequestObserver* aObserver);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLHttpRequest,
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsXMLHttpRequest,
                                            nsXHREventTarget)
-
   PRBool AllowUploadProgress();
-
+  void RootResultArrayBuffer();
+  void UnrootResultArrayBuffer();
+  
 protected:
   friend class nsMultipartProxyListener;
 
@@ -224,7 +225,7 @@ protected:
                 PRUint32 toOffset,
                 PRUint32 count,
                 PRUint32 *writeCount);
-  nsresult GetResponseArrayBuffer(jsval *aResult);
+  nsresult CreateResponseArrayBuffer(JSContext* aCx);
   void CreateResponseBlob(nsIRequest *request);
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
@@ -345,6 +346,8 @@ protected:
   
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
+  
+  JSObject* mResultArrayBuffer;
 };
 
 // helper class to expose a progress DOM Event

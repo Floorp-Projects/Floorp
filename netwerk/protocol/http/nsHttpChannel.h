@@ -64,6 +64,9 @@
 #include "nsIHttpChannelAuthProvider.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsICryptoHash.h"
+#include "nsITimedChannel.h"
+#include "nsDNSPrefetch.h"
+#include "TimingStruct.h"
 
 class nsAHttpConnection;
 class AutoRedirectVetoNotifier;
@@ -84,6 +87,7 @@ class nsHttpChannel : public HttpBaseChannel
                     , public nsITraceableChannel
                     , public nsIApplicationCacheChannel
                     , public nsIAsyncVerifyRedirectCallback
+                    , public nsITimedChannel
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -99,6 +103,7 @@ public:
     NS_DECL_NSIAPPLICATIONCACHECONTAINER
     NS_DECL_NSIAPPLICATIONCACHECHANNEL
     NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
+    NS_DECL_NSITIMEDCHANNEL
 
     // nsIHttpAuthenticableChannel. We can't use
     // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and
@@ -350,6 +355,17 @@ private:
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
     nsCOMPtr<nsICryptoHash>        mHasher;
+
+    PRTime                            mChannelCreationTime;
+    mozilla::TimeStamp                mChannelCreationTimestamp;
+    mozilla::TimeStamp                mAsyncOpenTime;
+    mozilla::TimeStamp                mCacheReadStart;
+    mozilla::TimeStamp                mCacheReadEnd;
+    // copied from the transaction before we null out mTransaction
+    // so that the timing can still be queried from OnStopRequest
+    TimingStruct                      mTransactionTimings;
+    // Needed for accurate DNS timing
+    nsRefPtr<nsDNSPrefetch>           mDNSPrefetch;
 
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);

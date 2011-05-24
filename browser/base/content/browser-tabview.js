@@ -40,10 +40,13 @@ let TabView = {
   _deck: null,
   _iframe: null,
   _window: null,
-  _firstUseExperienced: false,
   _browserKeyHandlerInitialized: false,
   _isFrameLoading: false,
   _initFrameCallbacks: [],
+  PREF_BRANCH: "browser.panorama.",
+  PREF_FIRST_RUN: "browser.panorama.experienced_first_run",
+  PREF_STARTUP_PAGE: "browser.startup.page",
+  PREF_RESTORE_ENABLED_ONCE: "browser.panorama.session_restore_enabled_once",
   VISIBILITY_IDENTIFIER: "tabview-visibility",
 
   // ----------
@@ -57,24 +60,35 @@ let TabView = {
 
   // ----------
   get firstUseExperienced() {
-    return this._firstUseExperienced;
+    let pref = this.PREF_FIRST_RUN;
+    if (Services.prefs.prefHasUserValue(pref))
+      return Services.prefs.getBoolPref(pref);
+
+    return false;
   },
 
   // ----------
   set firstUseExperienced(val) {
-    if (val != this._firstUseExperienced)
-      Services.prefs.setBoolPref("browser.panorama.experienced_first_run", val);
+    Services.prefs.setBoolPref(this.PREF_FIRST_RUN, val);
+  },
+
+  // ----------
+  get sessionRestoreEnabledOnce() {
+    let pref = this.PREF_RESTORE_ENABLED_ONCE;
+    if (Services.prefs.prefHasUserValue(pref))
+      return Services.prefs.getBoolPref(pref);
+
+    return false;
+  },
+
+  // ----------
+  set sessionRestoreEnabledOnce(val) {
+    Services.prefs.setBoolPref(this.PREF_RESTORE_ENABLED_ONCE, val);
   },
 
   // ----------
   init: function TabView_init() {
-    if (!Services.prefs.prefHasUserValue("browser.panorama.experienced_first_run") ||
-        !Services.prefs.getBoolPref("browser.panorama.experienced_first_run")) {
-      Services.prefs.addObserver(
-        "browser.panorama.experienced_first_run", this, false);
-    } else {
-      this._firstUseExperienced = true;
-
+    if (this.firstUseExperienced) {
       if ((gBrowser.tabs.length - gBrowser.visibleTabs.length) > 0)
         this._setBrowserKeyHandlers();
 
@@ -100,26 +114,24 @@ let TabView = {
           "TabShow", this._tabShowEventListener, true);
       }
     }
+
+    Services.prefs.addObserver(this.PREF_BRANCH, this, false);
   },
 
   // ----------
   // Observes topic changes.
   observe: function TabView_observe(subject, topic, data) {
-    if (topic == "nsPref:changed") {
-      Services.prefs.removeObserver(
-        "browser.panorama.experienced_first_run", this);
-      this._firstUseExperienced = true;
+    if (data == this.PREF_FIRST_RUN && this.firstUseExperienced) {
       this._addToolbarButton();
+      this.enableSessionRestore();
     }
   },
 
   // ----------
   // Uninitializes TabView.
   uninit: function TabView_uninit() {
-    if (!this._firstUseExperienced) {
-      Services.prefs.removeObserver(
-        "browser.panorama.experienced_first_run", this);
-    }
+    Services.prefs.removeObserver(this.PREF_BRANCH, this);
+
     if (this._tabShowEventListener) {
       gBrowser.tabContainer.removeEventListener(
         "TabShow", this._tabShowEventListener, true);
@@ -366,5 +378,23 @@ let TabView = {
     toolbar.currentSet = currentSet;
     toolbar.setAttribute("currentset", currentSet);
     document.persist(toolbar.id, "currentset");
+  },
+
+  // ----------
+  // Function: enableSessionRestore
+  // Enables automatic session restore when the browser is started. Does
+  // nothing if we already did that once in the past.
+  enableSessionRestore: function UI_enableSessionRestore() {
+    if (!this._window || !this.firstUseExperienced)
+      return;
+
+    // do nothing if we already enabled session restore once
+    if (this.sessionRestoreEnabledOnce)
+      return;
+
+    this.sessionRestoreEnabledOnce = true;
+
+    // enable session restore
+    Services.prefs.setIntPref(this.PREF_STARTUP_PAGE, 3);
   }
 };

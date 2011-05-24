@@ -49,6 +49,8 @@ XPCSHELL_TESTS = unit
 LIBRARY_NAME = testcrasher
 NO_DIST_INSTALL = 1
 
+FORCE_SHARED_LIB = 1
+
 VPATH += \
   $(srcdir)/../google-breakpad/src/processor/ \
   $(srcdir)/../google-breakpad/src/common/ \
@@ -70,23 +72,7 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../google-breakpad/src/ \
   $(NULL)
 EXTRA_DSO_LIBS += xpcom
-EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(MOZ_COMPONENT_LIBS)
-
-ifdef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS)
-else
-
-MOZILLA_INTERNAL_API = 1
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(DIST)/bin/XUL
-else
-EXTRA_DSO_LIBS += xul
-endif
-
-EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS) $(XPCOM_LIBS)
-
-endif
+EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(MOZ_COMPONENT_LIBS) $(XPCOM_GLUE_LDOPTS)
 
 EXTRA_JS_MODULES = CrashTestUtils.jsm
 
