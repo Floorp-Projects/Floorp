@@ -180,8 +180,7 @@ private:
 class MacroAssemblerCodeRef {
 public:
     MacroAssemblerCodeRef()
-        : m_executablePool(NULL),
-          m_size(0)
+        : m_size(0)
     {
     }
 
@@ -190,20 +189,6 @@ public:
         , m_executablePool(executablePool)
         , m_size(size)
     {
-    }
-
-    // Release the code memory in this code ref.
-    void release()
-    {
-        if (!m_executablePool)
-            return;
-
-#if defined DEBUG && (defined WTF_CPU_X86 || defined WTF_CPU_X86_64) 
-        void *addr = m_code.executableAddress();
-        memset(addr, 0xcc, m_size);
-#endif
-        m_executablePool->release();
-        m_executablePool = NULL;
     }
 
     MacroAssemblerCodePtr m_code;

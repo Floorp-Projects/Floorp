@@ -59,6 +59,8 @@
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 
+#include "yarr/RegexParser.h"
+
 #ifdef JS_TRACER
 #include "jstracer.h"
 using namespace nanojit;
@@ -191,11 +193,11 @@ js_ObjectIsRegExp(JSObject *obj)
  */
 
 void
-RegExp::reportYarrError(JSContext *cx, JSC::Yarr::ErrorCode error)
+RegExp::handleYarrError(JSContext *cx, int error)
 {
     switch (error) {
       case JSC::Yarr::NoError:
-        JS_NOT_REACHED("Called reportYarrError with value for no error");
+        JS_NOT_REACHED("Precondition violation: an error must have occurred.");
         return;
 #define COMPILE_EMSG(__code, __msg) \
       case JSC::Yarr::__code: \
@@ -208,14 +210,47 @@ RegExp::reportYarrError(JSContext *cx, JSC::Yarr::ErrorCode error)
       COMPILE_EMSG(ParenthesesUnmatched, JSMSG_UNMATCHED_RIGHT_PAREN);
       COMPILE_EMSG(ParenthesesTypeInvalid, JSMSG_BAD_QUANTIFIER); /* "(?" with bad next char */
       COMPILE_EMSG(CharacterClassUnmatched, JSMSG_BAD_CLASS_RANGE);
-      COMPILE_EMSG(CharacterClassInvalidRange, JSMSG_BAD_CLASS_RANGE);
       COMPILE_EMSG(CharacterClassOutOfOrder, JSMSG_BAD_CLASS_RANGE);
-      COMPILE_EMSG(QuantifierTooLarge, JSMSG_BAD_QUANTIFIER);
+      COMPILE_EMSG(CharacterClassRangeSingleChar, JSMSG_BAD_CLASS_RANGE);
       COMPILE_EMSG(EscapeUnterminated, JSMSG_TRAILING_SLASH);
+      COMPILE_EMSG(QuantifierTooLarge, JSMSG_BAD_QUANTIFIER);
+      COMPILE_EMSG(HitRecursionLimit, JSMSG_REGEXP_TOO_COMPLEX);
 #undef COMPILE_EMSG
       default:
-        JS_NOT_REACHED("Unknown Yarr error code");
+        JS_NOT_REACHED("Precondition violation: unknown Yarr error code.");
     }
+}
+
+void
+RegExp::handlePCREError(JSContext *cx, int error)
+{
+#define REPORT(msg_) \
+    JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, msg_); \
+    return
+    switch (error) {
+      case -2: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 0: JS_NOT_REACHED("Precondition violation: an error must have occurred.");
+      case 1: REPORT(JSMSG_TRAILING_SLASH);
+      case 2: REPORT(JSMSG_TRAILING_SLASH);
+      case 3: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 4: REPORT(JSMSG_BAD_QUANTIFIER);
+      case 5: REPORT(JSMSG_BAD_QUANTIFIER);
+      case 6: REPORT(JSMSG_BAD_CLASS_RANGE);
+      case 7: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 8: REPORT(JSMSG_BAD_CLASS_RANGE);
+      case 9: REPORT(JSMSG_BAD_QUANTIFIER);
+      case 10: REPORT(JSMSG_UNMATCHED_RIGHT_PAREN);
+      case 11: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 12: REPORT(JSMSG_UNMATCHED_RIGHT_PAREN);
+      case 13: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 14: REPORT(JSMSG_MISSING_PAREN);
+      case 15: REPORT(JSMSG_BAD_BACKREF);
+      case 16: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 17: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      default:
+        JS_NOT_REACHED("Precondition violation: unknown PCRE error code.");
+    }
+#undef REPORT
 }
 
 bool
@@ -894,4 +929,3 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
 
     return proto;
 }
-
