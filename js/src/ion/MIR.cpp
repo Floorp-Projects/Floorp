@@ -233,6 +233,13 @@ MParameter::New(MIRGenerator *gen, int32 index)
     return new (gen->temp()) MParameter(index);
 }
 
+void
+MParameter::printOpcode(FILE *fp)
+{
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " %d", index());
+}
+
 MCopy *
 MCopy::New(MIRGenerator *gen, MInstruction *ins)
 {
