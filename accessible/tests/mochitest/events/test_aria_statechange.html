@@ -26,35 +26,60 @@
      */
     var gQueue = null;
 
+    // Debug stuff.
+    //gA11yEventDumpID = "eventdump";
+    // gA11yEventDumpToConsole = true;
+
     function expandNode(aNodeOrID, bExpand)
     {
       this.DOMNode = getNode(aNodeOrID);
 
-      this.invoke = function expand_invoke() {
+      this.invoke = function expandNode_invoke() {
         // Note: this should fire an EVENT_STATE_CHANGE
         this.DOMNode.setAttribute("aria-expanded", bExpand);
       };
 
-      this.check = function expand_check() {
+      this.check = function expandNode_check() {
         testStates(aNodeOrID,
                    bExpand ? STATE_EXPANDED : STATE_COLLAPSED,
                    EXT_STATE_EXPANDABLE);
       };
 
-      this.getID = function changeValue_getID() {
+      this.getID = function expandNode_getID() {
         return prettyName(aNodeOrID) + " aria-expanded changed";
+      };
+    }
+
+    function busyify(aNodeOrID, aBusy)
+    {
+      this.DOMNode = getNode(aNodeOrID);
+
+      this.invoke = function busyify_invoke() {
+        this.DOMNode.setAttribute("aria-busy", aBusy);
+      };
+
+      this.check = function busyify_check(event) {
+        testStates(aNodeOrID,
+                   (aBusy ? STATE_BUSY : 0), 0,
+                   (aBusy ? 0 : STATE_BUSY), 0);
+      };
+
+      this.getID = function busyify_getID() {
+        return prettyName(aNodeOrID) + " aria-busy changed to " + aBusy;
       };
     }
 
     function doTests()
     {
-      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_STATE_CHANGE);
+      gQueue = new eventQueue(EVENT_STATE_CHANGE);
 
       gQueue.push(new expandNode("section", true));
       gQueue.push(new expandNode("section", false));
       gQueue.push(new expandNode("div", true));
       gQueue.push(new expandNode("div", false));
 
+      gQueue.push(new busyify("aria_doc", true));
+      gQueue.push(new busyify("aria_doc", false));
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -71,6 +96,11 @@
     Mozilla Bug 551684
   </a>
 
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=648133"
+     title="fire state change event for aria-busy"
+    Mozilla Bug 648133
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -81,5 +111,7 @@
   <div id="section" role="section" aria-expanded="false">expandable section</div>
   <div id="div" aria-expanded="false">expandable native div</div>
 
+  <!-- aria-busy -->
+  <div id="aria_doc" role="document" tabindex="0">A document</div>
 </body>
 </html>
