@@ -372,6 +372,7 @@ CPPSRCS +=	MIR.cpp \
 		MIRGraph.cpp \
 		IonAnalysis.cpp \
 		IonLowering.cpp \
+		Ion.cpp \
 		$(NULL)
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

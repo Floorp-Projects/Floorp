@@ -49,11 +49,11 @@ namespace ion {
 
 class MIRGraph
 {
-    Vector<MBasicBlock *, 8, TempAllocPolicy> blocks_;
+    Vector<MBasicBlock *, 8, IonAllocPolicy> blocks_;
     uint32 idGen_;
 
   public:
-    MIRGraph(JSContext *cx);
+    MIRGraph();
 
     bool addBlock(MBasicBlock *block);
 
@@ -228,8 +228,8 @@ class MBasicBlock : public TempObject
   private:
     MIRGenerator *gen;
     InlineList<MInstruction> instructions_;
-    Vector<MBasicBlock *, 1, TempAllocPolicy> predecessors_;
-    Vector<MPhi *, 2, TempAllocPolicy> phis_;
+    Vector<MBasicBlock *, 1, IonAllocPolicy> predecessors_;
+    Vector<MPhi *, 2, IonAllocPolicy> phis_;
     StackSlot *slots_;
     uint32 stackPosition_;
     MControlInstruction *lastIns_;

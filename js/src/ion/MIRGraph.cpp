@@ -47,9 +47,8 @@
 using namespace js;
 using namespace js::ion;
 
-MIRGraph::MIRGraph(JSContext *cx)
-  : blocks_(TempAllocPolicy(cx)),
-    idGen_(0)
+MIRGraph::MIRGraph()
+  : idGen_(0)
 {
 }
 
@@ -65,7 +64,7 @@ MIRGraph::addBlock(MBasicBlock *block)
 MBasicBlock *
 MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
 {
-    MBasicBlock *block = new (gen->temp()) MBasicBlock(gen, entryPc);
+    MBasicBlock *block = new MBasicBlock(gen, entryPc);
     if (!block || !block->init())
         return NULL;
 
@@ -83,8 +82,6 @@ MBasicBlock::NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *ent
 
 MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
   : gen(gen),
-    predecessors_(TempAllocPolicy(gen->cx)),
-    phis_(TempAllocPolicy(gen->cx)),
     slots_(NULL),
     stackPosition_(gen->firstStackSlot()),
     lastIns_(NULL),
@@ -222,7 +219,7 @@ MBasicBlock::setVariable(uint32 index)
         // make |top| a copy of |var|. There is no need, because we only care
         // about (1) popping being fast, thus the backwarding ordering of
         // copies, and (2) knowing when a GET flows into a SET.
-        ins = MCopy::New(gen, ins);
+        ins = MCopy::New(ins);
         if (!add(ins))
             return false;
     }
@@ -410,8 +407,8 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
                 phi = mine->toPhi();
             } else {
                 // Otherwise, create a new phi node.
-                phi = MPhi::New(gen, i);
-                if (!addPhi(phi) || !phi->addInput(gen, mine))
+                phi = MPhi::New(i);
+                if (!addPhi(phi) || !phi->addInput(mine))
                     return false;
 
 #ifdef DEBUG
@@ -425,7 +422,7 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
                 header_[i] = phi;
             }
 
-            if (!phi->addInput(gen, other))
+            if (!phi->addInput(other))
                 return false;
         }
     }
@@ -469,7 +466,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
 
         // Create a new phi. Do not add inputs yet, as we don't want to
         // accidentally rewrite the phi's operands.
-        MPhi *phi = MPhi::New(gen, i);
+        MPhi *phi = MPhi::New(i);
         if (!addPhi(phi))
             return false;
 
@@ -506,7 +503,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
             JS_ASSERT(slots_[j].ins != entryDef);
 #endif
 
-        if (!phi->addInput(gen, entryDef) || !phi->addInput(gen, exitDef))
+        if (!phi->addInput(entryDef) || !phi->addInput(exitDef))
             return false;
 
         setSlot(i, phi);

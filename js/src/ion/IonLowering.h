@@ -45,11 +45,10 @@
 namespace js {
 namespace ion {
 
-class MIRGenerator;
 class MIRGraph;
 
 bool
-Lower(MIRGenerator *gen, MIRGraph &graph);
+Lower(MIRGraph &graph);
 
 } // namespace js
 } // namespace ion
