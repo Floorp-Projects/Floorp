@@ -49,19 +49,23 @@ class nsIHTMLCollection;
 namespace xpc {
 namespace dom {
 
+extern int HandlerFamily;
+inline void* ProxyFamily() { return &HandlerFamily; }
+inline bool instanceIsDOMProxy(JSObject *obj)
+{
+    return js::IsProxy(obj) &&
+           js::GetProxyHandler(obj)->family() == ProxyFamily();
+}
+
 class NodeListBase : public js::ProxyHandler {
 public:
     NodeListBase() : js::ProxyHandler(ProxyFamily()) {}
-
-    static void* ProxyFamily() { return &NodeListFamily; }
 
     static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
                             nsINodeList *aNodeList);
     static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
                             nsIHTMLCollection *aHTMLCollection,
                             nsWrapperCache *aWrapperCache);
-private:
-    static int NodeListFamily;
 };
 
 /**

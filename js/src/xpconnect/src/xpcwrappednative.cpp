@@ -66,7 +66,7 @@ xpc_OkToHandOutWrapper(nsWrapperCache *cache)
     return
         (cache->IsProxy() &&
          js::GetProxyHandler(cache->GetWrapper())->family() ==
-           xpc::dom::NodeListBase::ProxyFamily()) ||
+           xpc::dom::ProxyFamily()) ||
         (!cache->IsProxy() &&
          !static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cache->GetWrapper()))->
            NeedsSOW());
