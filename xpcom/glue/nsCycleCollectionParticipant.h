@@ -436,6 +436,20 @@ public:
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = Downcast(s);
 
+#define NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(_class, _base_class)    \
+  void                                                                         \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Trace(void *p,                        \
+                                               TraceCallback aCallback,        \
+                                               void *aClosure)                 \
+  {                                                                            \
+    nsISupports *s = static_cast<nsISupports*>(p);                             \
+    NS_ASSERTION(CheckForRightISupports(s),                                    \
+                 "not the nsISupports pointer we expect");                     \
+    _class *tmp = static_cast<_class*>(Downcast(s));                           \
+    NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Trace(s,                       \
+                                                      aCallback,               \
+                                                      aClosure);
+
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_NATIVE_BEGIN(_class)                    \
   void                                                                         \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Trace(void *p,                        \

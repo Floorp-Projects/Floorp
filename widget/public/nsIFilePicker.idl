@@ -44,7 +44,7 @@ interface nsIURI;
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(d24ef0aa-d555-4117-84af-9cbbb7406909)]
+[scriptable, uuid(f2c0e216-5d07-4df4-bbcb-37683077ae7e)]
 interface nsIFilePicker : nsISupports
 {
   const short modeOpen        = 0;              // Load a file or directory
@@ -161,6 +161,14 @@ interface nsIFilePicker : nsISupports
   * @return Returns the files currently selected
   */
   readonly attribute nsISimpleEnumerator files;
+
+ /**
+  * Controls whether the chosen file(s) should be added to the system's recent
+  * documents list. This attribute will be ignored if the system has no "Recent
+  * Docs" concept, or if the application is in private browsing mode (in which
+  * case the file will not be added). Defaults to true.
+  */
+  attribute boolean addToRecentDocs;
 
  /**
   * Show File Dialog. The dialog is displayed modally.
