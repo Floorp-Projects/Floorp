@@ -70,16 +70,8 @@ class StackSegment
     /* If this segment is suspended, |cx->regs| when it was suspended. */
     FrameRegs           *suspendedRegs_;
 
-    /* The varobj on entry to initialFrame. */
-    JSObject            *initialVarObj_;
-
     /* Whether this segment was suspended by JS_SaveFrameChain. */
     bool                saved_;
-
-    /* Align at 8 bytes on all platforms. */
-#if JS_BITS_PER_WORD == 32
-    void                *padding;
-#endif
 
     /*
      * To make isActive a single null-ness check, this non-null constant is
@@ -91,7 +83,7 @@ class StackSegment
     StackSegment()
       : stack_(NULL), previousInContext_(NULL), previousInMemory_(NULL),
         initialFrame_(NULL), suspendedRegs_(NON_NULL_SUSPENDED_REGS),
-        initialVarObj_(NULL), saved_(false)
+        saved_(false)
     {
         JS_ASSERT(empty());
     }
@@ -255,21 +247,6 @@ class StackSegment
 
     StackSegment *previousInMemory() const  {
         return previousInMemory_;
-    }
-
-    void setInitialVarObj(JSObject *obj) {
-        JS_ASSERT(!empty());
-        initialVarObj_ = obj;
-    }
-
-    bool hasInitialVarObj() {
-        JS_ASSERT(!empty());
-        return initialVarObj_ != NULL;
-    }
-
-    JSObject &initialVarObj() const {
-        JS_ASSERT(!empty() && initialVarObj_);
-        return *initialVarObj_;
     }
 
     bool contains(const StackFrame *fp) const;
@@ -1030,14 +1007,6 @@ InvokeFrameGuard::~InvokeFrameGuard()
 {
     if (pushed())
         pop();
-}
-
-JS_ALWAYS_INLINE JSObject &
-ContextStack::currentVarObj() const
-{
-    if (regs_->fp()->hasCallObj())
-        return regs_->fp()->callObj();
-    return seg_->initialVarObj();
 }
 
 inline StackFrame *

@@ -698,6 +698,28 @@ class StackFrame
     inline void markActivationObjectsAsPut();
 
     /*
+     * Variables object
+     *
+     * Given that a (non-dummy) StackFrame corresponds roughly to a ES5
+     * Execution Context (ES5 10.3), StackFrame::varObj corresponds to the
+     * VariableEnvironment component of a Exection Context. Intuitively, the
+     * variables object is where new bindings (variables and functions) are
+     * stored. One might expect that this is either the callObj or
+     * scopeChain.globalObj for function or global code, respectively, however
+     * the JSAPI allows calls of Execute to specify a variables object on the
+     * scope chain other than the call/global object. This allows embeddings to
+     * run multiple scripts under the same global, each time using a new
+     * variables object to collect and discard the script's global variables.
+     */
+
+    JSObject &varObj() {
+        JSObject *obj = &scopeChain();
+        while (!obj->isVarObj())
+            obj = obj->getParent();
+        return *obj;
+    }
+
+    /*
      * Frame compartment
      *
      * A stack frame's compartment is the frame's containing context's
@@ -1087,12 +1109,6 @@ class StackSpace
     /* Get the segment containing the target frame. */
     StackSegment &containingSegment(const StackFrame *target) const;
 
-    /*
-     * Retrieve the 'variables object' (ES3 term) associated with the given
-     * frame's Execution Context's VariableEnvironment (ES5 10.3).
-     */
-    JSObject &varObjForFrame(const StackFrame *fp);
-
 #ifdef JS_TRACER
     /*
      * LeaveTree requires stack allocation to rebuild the stack. There is no
@@ -1227,9 +1243,6 @@ class ContextStack
         return seg_;
     }
 
-    /* This is an optimization of StackSpace::varObjForFrame. */
-    inline JSObject &currentVarObj() const;
-
     /* Search the call stack for the nearest frame with static level targetLevel. */
     inline StackFrame *findFrameAtLevel(uintN targetLevel) const;
 
@@ -1276,8 +1289,7 @@ class ContextStack
     /* These functions are called inside Execute, not Execute clients. */
     bool getExecuteFrame(JSContext *cx, JSScript *script,
                          ExecuteFrameGuard *frameGuard) const;
-    void pushExecuteFrame(JSObject *initialVarObj,
-                          ExecuteFrameGuard *frameGuard);
+    void pushExecuteFrame(ExecuteFrameGuard *frameGuard);
 
     /* These functions are called inside SendToGenerator. */
     bool getGeneratorFrame(JSContext *cx, uintN vplen, uintN nslots,
