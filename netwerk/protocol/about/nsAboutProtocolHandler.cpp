@@ -352,21 +352,24 @@ nsNestedAboutURI::Write(IPC::Message *aMsg)
 
 // nsSimpleURI
 /* virtual */ nsSimpleURI*
-nsNestedAboutURI::StartClone()
+nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode)
 {
     // Sadly, we can't make use of nsSimpleNestedURI::StartClone here.
+    // However, this function is expected to exactly match that function,
+    // aside from the "new ns***URI()" call.
     NS_ENSURE_TRUE(mInnerURI, nsnull);
 
     nsCOMPtr<nsIURI> innerClone;
-    nsresult rv = mInnerURI->Clone(getter_AddRefs(innerClone));
+    nsresult rv = aRefHandlingMode == eHonorRef ?
+        mInnerURI->Clone(getter_AddRefs(innerClone)) :
+        mInnerURI->CloneIgnoringRef(getter_AddRefs(innerClone));
+
     if (NS_FAILED(rv)) {
         return nsnull;
     }
 
     nsNestedAboutURI* url = new nsNestedAboutURI(innerClone, mBaseURI);
-    if (url) {
-        url->SetMutable(PR_FALSE);
-    }
+    url->SetMutable(PR_FALSE);
 
     return url;
 }
