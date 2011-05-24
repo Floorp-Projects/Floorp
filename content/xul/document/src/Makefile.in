@@ -75,7 +75,6 @@ LOCAL_INCLUDES	= -I$(srcdir)/../../../base/src \
 		  -I$(srcdir)/../../../xml/document/src \
 		  -I$(srcdir)/../../../xbl/src \
 		  -I$(srcdir)/../../../events/src \
-		  -I$(topsrcdir)/xpcom/ds \
 		  $(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

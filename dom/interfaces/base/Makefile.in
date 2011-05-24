@@ -88,9 +88,6 @@ XPIDLSRCS =					\
 	nsITabParent.idl			\
 	nsIDOMGlobalPropertyInitializer.idl	\
 	nsIStructuredCloneContainer.idl		\
-	nsIDOMPerformance.idl			\
-	nsIDOMPerformanceTiming.idl		\
-	nsIDOMPerformanceNavigation.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
