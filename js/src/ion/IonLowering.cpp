@@ -64,32 +64,11 @@ class LoweringPhase : public MInstructionVisitor
     bool lowerBlock(MBasicBlock *block);
     bool lowerInstruction(MInstruction *ins);
     bool analyze();
-    bool insertBox(MInstruction *def, MOperand *operand);
-    bool insertUnbox(MInstruction *def, MOperand *operand, MIRType type);
-    bool insertConversion(MInstruction *def, MOperand *operand, MIRType type);
 
-#define VISITOR(op) bool visit(M##op *ins) { return false; }
+#define VISITOR(op) bool visit(M##op *ins) { return true; }
     MIR_OPCODE_LIST(VISITOR)
 #undef VISITOR
 };
-
-bool
-LoweringPhase::insertBox(MInstruction *def, MOperand *operand)
-{
-    return false;
-}
-
-bool
-LoweringPhase::insertUnbox(MInstruction *def, MOperand *operand, MIRType type)
-{
-    return false;
-}
-
-bool
-LoweringPhase::insertConversion(MInstruction *def, MOperand *operand, MIRType type)
-{
-    return false;
-}
 
 static inline bool
 IsConversionPure(MIRType from, MIRType to)
@@ -121,6 +100,12 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
         MInstruction *use = uses->ins();
         MIRType required = use->requiredInputType(uses->index());
 
+        // Ignore instructions that don't return values, such as guards.
+        if (ins->type() == MIRType_None) {
+            uses.next();
+            continue;
+        }
+
         // An instruction cannot return an abstract type, or if it has inputs,
         // can it accept "none" as a type.
         JS_ASSERT(ins->type() < MIRType_Any);
@@ -141,7 +126,7 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
         //
         // We also take the more specialized version if the input accepts any
         // type.
-        if (required == usedAs || (required == MIRType_Any && narrowed)) {
+        if ((usedAs != MIRType_Value && required == usedAs) || (required == MIRType_Any && narrowed)) {
             JS_ASSERT(narrowed);
             use->replaceOperand(uses, narrowed);
             continue;
@@ -154,6 +139,8 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
         // If a value is desired, create a box instruction near the use.
         if (required == MIRType_Value) {
             MBox *box = MBox::New(gen, ins);
+            if (!use->block()->insertBefore(use, box))
+                return false;
             use->replaceOperand(uses, box);
             continue;
         }
@@ -166,6 +153,8 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
         // conversion.
         JS_ASSERT(required < MIRType_Value);
         MConvert *converted = MConvert::New(gen, ins, required);
+        if (!use->block()->insertBefore(use, converted))
+            return false;
         use->replaceOperand(uses, converted);
     }
 
