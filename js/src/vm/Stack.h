@@ -63,7 +63,6 @@ class GeneratorFrameGuard;
 class ArgumentsObject;
 
 namespace mjit { struct JITScript; }
-namespace detail { struct OOMCheck; }
 
 /*
  * VM stack layout
@@ -144,18 +143,16 @@ namespace detail { struct OOMCheck; }
 
 class CallReceiver
 {
+  protected:
 #ifdef DEBUG
     mutable bool usedRval_;
+    void setUsedRval() const { usedRval_ = true; }
+    void clearUsedRval() const { usedRval_ = false; }
+#else
+    void setUsedRval() const {}
+    void clearUsedRval() const {}
 #endif
-  protected:
     Value *argv_;
-    CallReceiver() {}
-    CallReceiver(Value *argv) : argv_(argv) {
-#ifdef DEBUG
-        usedRval_ = false;
-#endif
-    }
-
   public:
     friend CallReceiver CallReceiverFromVp(Value *);
     friend CallReceiver CallReceiverFromArgv(Value *);
@@ -165,29 +162,33 @@ class CallReceiver
     Value &thisv() const { return argv_[-1]; }
 
     Value &rval() const {
-#ifdef DEBUG
-        usedRval_ = true;
-#endif
+        setUsedRval();
         return argv_[-2];
     }
 
+    Value *spAfterCall() const {
+        setUsedRval();
+        return argv_ - 1;
+    }
+
     void calleeHasBeenReset() const {
-#ifdef DEBUG
-        usedRval_ = false;
-#endif
+        clearUsedRval();
     }
 };
 
 JS_ALWAYS_INLINE CallReceiver
-CallReceiverFromVp(Value *vp)
+CallReceiverFromArgv(Value *argv)
 {
-    return CallReceiver(vp + 2);
+    CallReceiver receiver;
+    receiver.clearUsedRval();
+    receiver.argv_ = argv;
+    return receiver;
 }
 
 JS_ALWAYS_INLINE CallReceiver
-CallReceiverFromArgv(Value *argv)
+CallReceiverFromVp(Value *vp)
 {
-    return CallReceiver(argv);
+    return CallReceiverFromArgv(vp + 2);
 }
 
 /*****************************************************************************/
@@ -195,28 +196,51 @@ CallReceiverFromArgv(Value *argv)
 class CallArgs : public CallReceiver
 {
     uintN argc_;
-  protected:
-    CallArgs() {}
-    CallArgs(uintN argc, Value *argv) : CallReceiver(argv), argc_(argc) {}
   public:
     friend CallArgs CallArgsFromVp(uintN, Value *);
     friend CallArgs CallArgsFromArgv(uintN, Value *);
+    friend CallArgs CallArgsFromSp(uintN, Value *);
     Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
     Value *argv() const { return argv_; }
     uintN argc() const { return argc_; }
+    Value *end() const { return argv_ + argc_; }
 };
-
-JS_ALWAYS_INLINE CallArgs
-CallArgsFromVp(uintN argc, Value *vp)
-{
-    return CallArgs(argc, vp + 2);
-}
 
 JS_ALWAYS_INLINE CallArgs
 CallArgsFromArgv(uintN argc, Value *argv)
 {
-    return CallArgs(argc, argv);
+    CallArgs args;
+    args.clearUsedRval();
+    args.argv_ = argv;
+    args.argc_ = argc;
+    return args;
 }
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromVp(uintN argc, Value *vp)
+{
+    return CallArgsFromArgv(argc, vp + 2);
+}
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromSp(uintN argc, Value *sp)
+{
+    return CallArgsFromArgv(argc, sp - argc);
+}
+
+/*****************************************************************************/
+
+enum MaybeConstruct {
+    NO_CONSTRUCT           =          0, /* == false */
+    CONSTRUCT              =       0x80  /* == StackFrame::CONSTRUCTING, asserted below */
+};
+
+enum ExecuteType {
+    EXECUTE_GLOBAL         =        0x1, /* == StackFrame::GLOBAL */
+    EXECUTE_DIRECT_EVAL    =        0x8, /* == StackFrame::EVAL */
+    EXECUTE_INDIRECT_EVAL  =        0x9, /* == StackFrame::GLOBAL | EVAL */
+    EXECUTE_DEBUG          =       0x18  /* == StackFrame::EVAL | DEBUGGER */
+};
 
 /*****************************************************************************/
 
@@ -296,29 +320,26 @@ class StackFrame
      */
 
     /* Used for Invoke, Interpret, trace-jit LeaveTree, and method-jit stubs. */
-    inline void initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
-                              uint32 nactual, uint32 flags);
+    void initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
+                       JSScript *script, uint32 nactual, StackFrame::Flags flags);
 
     /* Used for SessionInvoke. */
-    inline void resetInvokeCallFrame();
+    void resetCallFrame(JSScript *script);
 
-    /* Called by method-jit stubs and serve as a specification for jit-code. */
-    inline void initCallFrameCallerHalf(JSContext *cx, uint32 flags, void *ncode);
-    inline void initCallFrameEarlyPrologue(JSFunction *fun, uint32 nactual);
-    inline void initCallFrameLatePrologue();
+    /* Called by jit stubs and serve as a specification for jit-code. */
+    void initJitFrameCallerHalf(JSContext *cx, StackFrame::Flags flags, void *ncode);
+    void initJitFrameEarlyPrologue(JSFunction *fun, uint32 nactual);
+    void initJitFrameLatePrologue();
 
     /* Used for eval. */
-    inline void initEvalFrame(JSContext *cx, JSScript *script, StackFrame *prev,
-                              uint32 flags);
-    inline void initGlobalFrame(JSScript *script, JSObject &chain, StackFrame *prev,
-                                uint32 flags);
+    void initExecuteFrame(JSScript *script, StackFrame *prev, const Value &thisv,
+                          JSObject &scopeChain, ExecuteType type);
 
     /* Used when activating generators. */
-    inline void stealFrameAndSlots(js::Value *vp, StackFrame *otherfp,
-                                   js::Value *othervp, js::Value *othersp);
+    void stealFrameAndSlots(Value *vp, StackFrame *otherfp, Value *othervp, Value *othersp);
 
     /* Perhaps one fine day we will remove dummy frames. */
-    inline void initDummyFrame(JSContext *cx, JSObject &chain);
+    void initDummyFrame(JSContext *cx, JSObject &chain);
 
     /*
      * Stack frame type
@@ -557,8 +578,6 @@ class StackFrame
     inline bool forEachCanonicalActualArg(Op op, uintN start = 0, uintN count = uintN(-1));
     template <class Op> inline bool forEachFormalArg(Op op);
 
-    inline void clearMissingArgs();
-
     bool hasArgsObj() const {
         return !!(flags_ & HAS_ARGS_OBJ);
     }
@@ -616,27 +635,45 @@ class StackFrame
      * Callee
      *
      * Only function frames have a callee. An eval frame in a function has the
-     * same caller as its containing function frame.
+     * same caller as its containing function frame. maybeCalleev can be used
+     * to return a value that is either caller object (for function frames) or
+     * null (for global frames).
      */
-
-    js::Value &calleev() const {
-        JS_ASSERT(isFunctionFrame());
-        if (isEvalFrame())
-            return ((js::Value *)this)[-2];
-        return formalArgs()[-2];
-    }
 
     JSObject &callee() const {
         JS_ASSERT(isFunctionFrame());
         return calleev().toObject();
     }
 
-    JSObject *maybeCallee() const {
-        return isFunctionFrame() ? &callee() : NULL;
+    const js::Value &calleev() const {
+        JS_ASSERT(isFunctionFrame());
+        return mutableCalleev();
     }
 
-    js::CallReceiver callReceiver() const {
-        return js::CallReceiverFromArgv(formalArgs());
+    const js::Value &maybeCalleev() const {
+        JS_ASSERT(isScriptFrame());
+        Value &calleev = flags_ & (EVAL | GLOBAL)
+                         ? ((js::Value *)this)[-2]
+                         : formalArgs()[-2];
+        JS_ASSERT(calleev.isObjectOrNull());
+        return calleev;
+    }
+
+    /*
+     * Beware! Ad hoc changes can corrupt the stack layout; the callee should
+     * only be changed to something that is equivalent to the current callee in
+     * terms of numFormalArgs etc. Prefer overwriteCallee since it checks.
+     */
+    void overwriteCallee(JSObject &newCallee) {
+        JS_ASSERT(callee().getFunctionPrivate() == newCallee.getFunctionPrivate());
+        mutableCalleev().setObject(newCallee);
+    }
+
+    js::Value &mutableCalleev() const {
+        JS_ASSERT(isFunctionFrame());
+        if (isEvalFrame())
+            return ((js::Value *)this)[-2];
+        return formalArgs()[-2];
     }
 
     /*
@@ -646,6 +683,10 @@ class StackFrame
      * from calleev, which may not be an object (it could be undefined).
      */
     bool getValidCalleeObject(JSContext *cx, js::Value *vp);
+
+    js::CallReceiver callReceiver() const {
+        return js::CallReceiverFromArgv(formalArgs());
+    }
 
     /*
      * Scope chain
@@ -875,14 +916,10 @@ class StackFrame
      * Other flags
      */
 
-    bool isConstructing() const {
-        return !!(flags_ & CONSTRUCTING);
-    }
-
-    uint32 isConstructingFlag() const {
-        JS_ASSERT(isFunctionFrame());
-        JS_ASSERT((flags_ & ~(CONSTRUCTING | FUNCTION)) == 0);
-        return flags_;
+    MaybeConstruct isConstructing() const {
+        JS_STATIC_ASSERT((int)CONSTRUCT == (int)CONSTRUCTING);
+        JS_STATIC_ASSERT((int)NO_CONSTRUCT == 0);
+        return MaybeConstruct(flags_ & CONSTRUCTING);
     }
 
     bool isDebuggerFrame() const {
@@ -997,6 +1034,26 @@ class StackFrame
 
 static const size_t VALUES_PER_STACK_FRAME = sizeof(StackFrame) / sizeof(Value);
 
+static inline uintN
+ToReportFlags(MaybeConstruct construct)
+{
+    return uintN(construct);
+}
+
+static inline StackFrame::Flags
+ToFrameFlags(MaybeConstruct construct)
+{
+    JS_STATIC_ASSERT((int)CONSTRUCT == (int)StackFrame::CONSTRUCTING);
+    JS_STATIC_ASSERT((int)NO_CONSTRUCT == 0);
+    return StackFrame::Flags(construct);
+}
+
+static inline MaybeConstruct
+MaybeConstructFromBool(bool b)
+{
+    return b ? CONSTRUCT : NO_CONSTRUCT;
+}
+
 inline StackFrame *          Valueify(JSStackFrame *fp) { return (StackFrame *)fp; }
 static inline JSStackFrame * Jsvalify(StackFrame *fp)   { return (JSStackFrame *)fp; }
 
@@ -1019,9 +1076,10 @@ class FrameRegs
     }
 
     /* For generator: */
-    void rebaseFromTo(StackFrame *from, StackFrame *to) {
+    void rebaseFromTo(const FrameRegs &from, StackFrame *to) {
         fp_ = to;
-        sp = to->slots() + (sp - from->slots());
+        sp = to->slots() + (from.sp - from.fp_->slots());
+        pc = from.pc;
     }
 
     /* For ContextStack: */
@@ -1087,7 +1145,7 @@ class StackSpace
 #endif
 
     friend class ContextStack;
-    friend struct detail::OOMCheck;
+    friend class OOMCheck;
     inline bool ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const;
     void pushSegment(StackSegment &seg);
     void popSegment();
@@ -1145,6 +1203,36 @@ class StackSpace
 
 /*****************************************************************************/
 
+/*
+ * For pushInlineFrame, there are three different ways the caller may want to
+ * check for stack overflow:
+ *  - NoCheck: the caller has already ensured there is enough space
+ *  - OOMCheck: perform normal checking against the end of the stack
+ *  - LimitCheck: check against the given stack limit (see getStackLimit)
+ */
+
+class NoCheck
+{
+  public:
+    bool operator()(JSContext *, StackSpace &, Value *, uintN) { return true; }
+};
+
+class OOMCheck
+{
+  public:
+    bool operator()(JSContext *cx, StackSpace &space, Value *from, uintN nvals);
+};
+
+class LimitCheck
+{
+    Value **limit;
+  public:
+    LimitCheck(Value **limit) : limit(limit) {}
+    bool operator()(JSContext *cx, StackSpace &space, Value *from, uintN nvals);
+};
+
+/*****************************************************************************/
+
 class ContextStack
 {
     FrameRegs *regs_;
@@ -1176,16 +1264,20 @@ class ContextStack
 #endif
 
     friend class FrameGuard;
-    bool getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nslots,
-                            FrameGuard *frameGuard) const;
-    void pushSegmentAndFrame(FrameRegs &regs, FrameGuard *frameGuard);
+    StackFrame *getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nslots,
+                                   FrameGuard *frameGuard) const;
+    void pushSegmentAndFrame(FrameGuard *frameGuard);
     void pushSegmentAndFrameImpl(FrameRegs &regs, StackSegment &seg);
     void popSegmentAndFrame();
     void popSegmentAndFrameImpl();
 
+    friend class GeneratorFrameGuard;
+    void popGeneratorFrame(GeneratorFrameGuard *gfg);
+
     template <class Check>
-    inline StackFrame *getCallFrame(JSContext *cx, Value *sp, uintN nactual,
-                                    JSFunction *fun, JSScript *script, uint32 *pflags,
+    inline StackFrame *getCallFrame(JSContext *cx, const CallArgs &args,
+                                    JSFunction *fun, JSScript *script,
+                                    StackFrame::Flags *pflags,
                                     Check check) const;
 
     friend class InvokeArgsGuard;
@@ -1258,19 +1350,6 @@ class ContextStack
     void restoreSegment();
 
     /*
-     * For the five sets of stack operations below:
-     *  - The boolean-valued functions call js_ReportOverRecursed on OOM.
-     *  - The "get*Frame" functions do not change any global state, they just
-     *    check OOM and return pointers to an uninitialized frame with the
-     *    requested missing arguments/slots. Only once the "push*Frame"
-     *    function has been called is global state updated. Thus, between
-     *    "get*Frame" and "push*Frame", the frame and slots are unrooted.
-     *  - Functions taking "*Guard" arguments will use the guard's destructor
-     *    to pop the stack. The caller must ensure the guard has the
-     *    appropriate lifetime.
-     */
-
-    /*
      * pushInvokeArgs allocates |argc + 2| rooted values that will be passed as
      * the arguments to Invoke. A single allocation can be used for multiple
      * Invoke calls. The InvokeArgumentsGuard passed to Invoke must come from
@@ -1278,44 +1357,44 @@ class ContextStack
      */
     bool pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *ag);
 
-    /* These functions are called inside Invoke, not Invoke clients. */
-    inline StackFrame *
-    getInvokeFrame(JSContext *cx, const CallArgs &args,
-                   JSFunction *fun, JSScript *script, uint32 *flags,
-                   InvokeFrameGuard *frameGuard) const;
-    void pushInvokeFrame(const CallArgs &args,
-                         InvokeFrameGuard *frameGuard);
+    /* Called by Invoke for a scripted function call. */
+    bool pushInvokeFrame(JSContext *cx, const CallArgs &args, MaybeConstruct,
+                         JSObject &callee, JSFunction *fun, JSScript *script,
+                         InvokeFrameGuard *ifg);
 
-    /* These functions are called inside Execute, not Execute clients. */
-    bool getExecuteFrame(JSContext *cx, JSScript *script,
-                         ExecuteFrameGuard *frameGuard) const;
-    void pushExecuteFrame(ExecuteFrameGuard *frameGuard);
+    /* Called by Execute for execution of eval or global code. */
+    bool pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thisv,
+                          JSObject &scopeChain, ExecuteType type,
+                          StackFrame *evalInFrame, ExecuteFrameGuard *efg);
 
-    /* These functions are called inside SendToGenerator. */
-    bool getGeneratorFrame(JSContext *cx, uintN vplen, uintN nslots,
-                           GeneratorFrameGuard *frameGuard);
-    void pushGeneratorFrame(FrameRegs &regs,
-                            GeneratorFrameGuard *frameGuard);
+    /* Called by SendToGenerator to resume a yielded generator. */
+    bool pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrameGuard *gfg);
 
-    /* Pushes a StackFrame::isDummyFrame. */
-    bool pushDummyFrame(JSContext *cx, JSObject &scopeChain,
-                        DummyFrameGuard *frameGuard);
+    /* Pushes a "dummy" frame; should be removed one day. */
+    bool pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *dfg);
 
     /*
      * An "inline frame" may only be pushed from within the top, active
      * segment. This is the case for calls made inside mjit code and Interpret.
-     * The *WithinLimit variant stays within the stack quota using the given
-     * limit (see StackSpace::getStackLimit).
+     * For the Check parameter, see OOMCheck et al above.
      */
-    inline StackFrame *
-    getInlineFrame(JSContext *cx, Value *sp, uintN nactual,
-                   JSFunction *fun, JSScript *script, uint32 *flags) const;
-    inline StackFrame *
-    getInlineFrameWithinLimit(JSContext *cx, Value *sp, uintN nactual,
-                              JSFunction *fun, JSScript *script, uint32 *flags,
-                              Value **limit) const;
-    inline void pushInlineFrame(JSScript *script, StackFrame *fp, FrameRegs &regs);
-    inline void popInlineFrame();
+    template <class Check>
+    bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
+                         JSObject &callee, JSFunction *fun, JSScript *script,
+                         MaybeConstruct construct, Check check);
+    void popInlineFrame();
+
+    /*
+     * Called by the methodjit for an arity mismatch. Arity mismatch can be
+     * hot, so getFixupFrame avoids doing call setup performed by jit code when
+     * FixupArity returns. In terms of work done:
+     *
+     *   getFixupFrame = pushInlineFrame -
+     *                   (fp->initJitFrameLatePrologue + regs->prepareToRun)
+     */
+    StackFrame *getFixupFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
+                              JSFunction *fun, JSScript *script, void *ncode,
+                              MaybeConstruct construct, LimitCheck check);
 
     /* For jit use: */
     static size_t offsetOfRegs() { return offsetof(ContextStack, regs_); }
@@ -1333,15 +1412,6 @@ class InvokeArgsGuard : public CallArgs
     InvokeArgsGuard() : stack_(NULL), seg_(NULL) {}
     ~InvokeArgsGuard();
     bool pushed() const { return stack_ != NULL; }
-};
-
-/*
- * This type can be used to call Invoke when the arguments have already been
- * pushed onto the stack as part of normal execution.
- */
-struct InvokeArgsAlreadyOnTheStack : CallArgs
-{
-    InvokeArgsAlreadyOnTheStack(uintN argc, Value *vp) : CallArgs(argc, vp + 2) {}
 };
 
 class InvokeFrameGuard
@@ -1362,34 +1432,32 @@ class InvokeFrameGuard
 /* Reusable base; not for direct use. */
 class FrameGuard
 {
+  protected:
     friend class ContextStack;
     ContextStack *stack_;  /* null implies nothing pushed */
     StackSegment *seg_;
-    Value *vp_;
-    StackFrame *fp_;
+    FrameRegs regs_;
   public:
-    FrameGuard() : stack_(NULL), vp_(NULL), fp_(NULL) {}
+    FrameGuard() : stack_(NULL) {}
     ~FrameGuard();
     bool pushed() const { return stack_ != NULL; }
-    StackSegment *segment() const { return seg_; }
-    Value *vp() const { return vp_; }
-    StackFrame *fp() const { return fp_; }
+    StackFrame *fp() const { return regs_.fp(); }
 };
 
 class ExecuteFrameGuard : public FrameGuard
-{
-    friend class ContextStack;
-    FrameRegs regs_;
-};
+{};
 
 class DummyFrameGuard : public FrameGuard
-{
-    friend class ContextStack;
-    FrameRegs regs_;
-};
+{};
 
 class GeneratorFrameGuard : public FrameGuard
-{};
+{
+    friend class ContextStack;
+    JSGenerator *gen_;
+    Value *stackvp_;
+  public:
+    ~GeneratorFrameGuard();
+};
 
 /*****************************************************************************/
 

@@ -1253,6 +1253,12 @@ operator==(const JSObject &lhs, const JSObject &rhs)
     return &lhs == &rhs;
 }
 
+static JS_ALWAYS_INLINE bool
+operator!=(const JSObject &lhs, const JSObject &rhs)
+{
+    return &lhs != &rhs;
+}
+
 inline js::Value*
 JSObject::fixedSlots() const {
     return (js::Value*) (jsuword(this) + sizeof(JSObject));

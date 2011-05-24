@@ -435,11 +435,9 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, js::Native native,
                   uintN nargs, uintN flags);
 
 /*
- * Flags for js_ValueToFunction and js_ReportIsNotFunction.  We depend on the
- * fact that JSINVOKE_CONSTRUCT (aka JSFRAME_CONSTRUCTING) is 1, and test that
- * with #if/#error in jsfun.c.
+ * Flags for js_ValueToFunction and js_ReportIsNotFunction.
  */
-#define JSV2F_CONSTRUCT         ((uintN)js::INVOKE_CONSTRUCTOR)
+#define JSV2F_CONSTRUCT         CONSTRUCT
 #define JSV2F_SEARCH_STACK      0x10000
 
 extern JSFunction *

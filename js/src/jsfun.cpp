@@ -1488,7 +1488,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                         if (shape->isMethod() && shape->methodObject() == funobj) {
                             if (!thisp->methodReadBarrier(cx, *shape, vp))
                                 return false;
-                            calleev().setObject(vp->toObject());
+                            overwriteCallee(vp->toObject());
                             return true;
                         }
 
@@ -1501,7 +1501,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                                 clone->hasMethodObj(*thisp)) {
                                 JS_ASSERT(clone != &funobj);
                                 *vp = v;
-                                calleev().setObject(*clone);
+                                overwriteCallee(*clone);
                                 return true;
                             }
                         }
@@ -1530,7 +1530,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
             if (!newfunobj)
                 return false;
             newfunobj->setMethodObj(*first_barriered_thisp);
-            calleev().setObject(*newfunobj);
+            overwriteCallee(*newfunobj);
             vp->setObject(*newfunobj);
             return true;
         }

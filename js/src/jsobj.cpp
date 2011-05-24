@@ -1109,6 +1109,9 @@ class EvalScriptGuard
     }
 };
 
+/* Define subset of ExecuteType so that casting performs the injection. */
+enum EvalType { DIRECT_EVAL = EXECUTE_DIRECT_EVAL, INDIRECT_EVAL = EXECUTE_INDIRECT_EVAL };
+
 /*
  * Common code implementing direct and indirect eval.
  *
@@ -1119,8 +1122,6 @@ class EvalScriptGuard
  *
  * On success, store the completion value in call.rval and return true.
  */
-enum EvalType { DIRECT_EVAL, INDIRECT_EVAL };
-
 static bool
 EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *caller,
            JSObject &scopeobj)
@@ -1156,8 +1157,18 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
      * may not exist in the current frame if it doesn't see 'eval'.)
      */
     uintN staticLevel;
+    Value thisv;
     if (evalType == DIRECT_EVAL) {
         staticLevel = caller->script()->staticLevel + 1;
+
+        /*
+         * Direct calls to eval are supposed to see the caller's |this|. If we
+         * haven't wrapped that yet, do so now, before we make a copy of it for
+         * the eval code to use.
+         */
+        if (!ComputeThis(cx, caller))
+            return false;
+        thisv = caller->thisValue();
 
 #ifdef DEBUG
         jsbytecode *callerPC = caller->pcQuadratic(cx);
@@ -1167,6 +1178,12 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
     } else {
         JS_ASSERT(call.callee().getGlobal() == &scopeobj);
         staticLevel = 0;
+
+        /* Use the global as 'this', modulo outerization. */
+        JSObject *thisobj = scopeobj.thisObject(cx);
+        if (!thisobj)
+            return false;
+        thisv = ObjectValue(*thisobj);
     }
 
     JSLinearString *linearStr = str->ensureLinear(cx);
@@ -1216,14 +1233,6 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
         }
     }
 
-    /*
-     * Direct calls to eval are supposed to see the caller's |this|. If we
-     * haven't wrapped that yet, do so now, before we make a copy of it for
-     * the eval code to use.
-     */
-    if (evalType == DIRECT_EVAL && !ComputeThis(cx, caller))
-        return false;
-
     EvalScriptGuard esg(cx, linearStr);
 
     JSPrincipals *principals = PrincipalsForCompiledCode(call, cx);
@@ -1247,7 +1256,8 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
         esg.setNewScript(compiled);
     }
 
-    return Execute(cx, scopeobj, esg.script(), caller, StackFrame::EVAL, &call.rval());
+    return Execute(cx, esg.script(), scopeobj, thisv, ExecuteType(evalType),
+                   NULL /* evalInFrame */, &call.rval());
 }
 
 /*
@@ -5879,7 +5889,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
                             JSObject *tmp = &fp->thisValue().toObject();
                             do {
                                 if (tmp == obj) {
-                                    fp->calleev().setObject(*funobj);
+                                    fp->overwriteCallee(*funobj);
                                     break;
                                 }
                             } while ((tmp = tmp->getProto()) != NULL);
