@@ -41,11 +41,9 @@ interface nsIDOMEventListener;
 interface nsIDOMBlob;
 interface nsIDOMFileError;
 
-[scriptable, uuid(3d77e784-1459-4206-b8a2-0855d826f569)]
+[scriptable, uuid(f186170f-f07c-4f0b-9e3c-08f7dd496e74)]
 interface nsIDOMFileReader : nsISupports 
 {
-  [implicit_jscontext]
-  void readAsArrayBuffer(in nsIDOMBlob filedata);
   void readAsBinaryString(in nsIDOMBlob filedata);
   void readAsText(in nsIDOMBlob filedata, [optional] in DOMString encoding);
   void readAsDataURL(in nsIDOMBlob file);
@@ -57,8 +55,7 @@ interface nsIDOMFileReader : nsISupports
   const unsigned short DONE = 2;
   readonly attribute unsigned short readyState;
 
-  [implicit_jscontext]
-  readonly attribute jsval result;
+  readonly attribute DOMString result;
   readonly attribute nsIDOMFileError error;
 };
 
