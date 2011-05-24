@@ -184,19 +184,14 @@ InlineReturn(VMFrame &f)
 void JS_FASTCALL
 stubs::SlowCall(VMFrame &f, uint32 argc)
 {
-    Value *vp = f.regs.sp - (argc + 2);
-
-    if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
+    if (!Invoke(f.cx, CallArgsFromSp(argc, f.regs.sp)))
         THROW();
 }
 
 void JS_FASTCALL
 stubs::SlowNew(VMFrame &f, uint32 argc)
 {
-    JSContext *cx = f.cx;
-    Value *vp = f.regs.sp - (argc + 2);
-
-    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
+    if (!InvokeConstructor(f.cx, CallArgsFromSp(argc, f.regs.sp)))
         THROW();
 }
 
@@ -244,21 +239,22 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
     /*
      * Grossssss! *move* the stack frame. If this ends up being perf-critical,
      * we can figure out how to spot-optimize it. Be careful to touch only the
-     * members that have been initialized by initCallFrameCallerHalf and the
+     * members that have been initialized by initJitFrameCallerHalf and the
      * early prologue.
      */
-    uint32 flags         = oldfp->isConstructingFlag();
-    JSFunction *fun      = oldfp->fun();
-    void *ncode          = oldfp->nativeReturnAddress();
+    MaybeConstruct construct = oldfp->isConstructing();
+    JSFunction *fun          = oldfp->fun();
+    JSScript *script         = fun->script();
+    void *ncode              = oldfp->nativeReturnAddress();
 
     /* Pop the inline frame. */
     f.regs.popPartialFrame((Value *)oldfp);
 
     /* Reserve enough space for a callee frame. */
-    StackFrame *newfp = cx->stack.getInlineFrameWithinLimit(cx, (Value*) oldfp, nactual,
-                                                            fun, fun->script(), &flags,
-                                                            &f.stackLimit);
-    if (!newfp) {
+    CallArgs args = CallArgsFromSp(nactual, f.regs.sp);
+    StackFrame *fp = cx->stack.getFixupFrame(cx, f.regs, args, fun, script, ncode,
+                                             construct, LimitCheck(&f.stackLimit));
+    if (!fp) {
         /*
          * The PC is not coherent with the current frame, so fix it up for
          * exception handling.
@@ -267,14 +263,8 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
         THROWV(NULL);
     }
 
-    /* Reset the part of the stack frame set by the caller. */
-    newfp->initCallFrameCallerHalf(cx, flags, ncode);
-
-    /* Reset the part of the stack frame set by the prologue up to now. */
-    newfp->initCallFrameEarlyPrologue(fun, nactual);
-
     /* The caller takes care of assigning fp to regs. */
-    return newfp;
+    return fp;
 }
 
 void * JS_FASTCALL
@@ -288,7 +278,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     StackFrame *fp = f.fp();
 
     /*
-     * Since we can only use members set by initCallFrameCallerHalf,
+     * Since we can only use members set by initJitFrameCallerHalf,
      * we must carefully extract the callee from the nactual.
      */
     JSObject &callee = fp->formalArgsEnd()[-(int(nactual) + 2)].toObject();
@@ -299,7 +289,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
      * FixupArity/RemovePartialFrame expect to be called after the early
      * prologue.
      */
-    fp->initCallFrameEarlyPrologue(fun, nactual);
+    fp->initJitFrameEarlyPrologue(fun, nactual);
 
     if (nactual != fp->numFormalArgs()) {
         fp = (StackFrame *)FixupArity(f, nactual);
@@ -308,7 +298,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     }
 
     /* Finish frame initialization. */
-    fp->initCallFrameLatePrologue();
+    fp->initJitFrameLatePrologue();
 
     /* These would have been initialized by the prologue. */
     f.regs.prepareToRun(fp, script);
@@ -331,36 +321,26 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
 }
 
 static inline bool
-UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint32 argc)
+UncachedInlineCall(VMFrame &f, MaybeConstruct construct, void **pret, bool *unjittable, uint32 argc)
 {
     JSContext *cx = f.cx;
-    Value *vp = f.regs.sp - (argc + 2);
-    JSObject &callee = vp->toObject();
+    CallArgs args = CallArgsFromSp(argc, f.regs.sp);
+    JSObject &callee = args.callee();
     JSFunction *newfun = callee.getFunctionPrivate();
     JSScript *newscript = newfun->script();
 
     /* Get pointer to new frame/slots, prepare arguments. */
-    StackFrame *newfp = cx->stack.getInlineFrameWithinLimit(cx, f.regs.sp, argc,
-                                                            newfun, newscript, &flags,
-                                                            &f.stackLimit);
-    if (JS_UNLIKELY(!newfp))
+    LimitCheck check(&f.stackLimit);
+    if (!cx->stack.pushInlineFrame(cx, f.regs, args, callee, newfun, newscript, construct, check))
         return false;
 
-    /* Initialize frame, locals. */
-    newfp->initCallFrame(cx, callee, newfun, argc, flags);
-    SetValueRangeToUndefined(newfp->slots(), newscript->nfixed);
-
-    /* Officially push the frame. */
-    cx->stack.pushInlineFrame(newscript, newfp, f.regs);
-    JS_ASSERT(newfp == f.fp());
-
     /* Scope with a call object parented by callee's parent. */
-    if (newfun->isHeavyweight() && !js::CreateFunCallObject(cx, newfp))
+    if (newfun->isHeavyweight() && !js::CreateFunCallObject(cx, f.fp()))
         return false;
 
     /* Try to compile if not already compiled. */
-    if (newscript->getJITStatus(newfp->isConstructing()) == JITScript_None) {
-        CompileStatus status = CanMethodJIT(cx, newscript, newfp, CompileRequest_Interpreter);
+    if (newscript->getJITStatus(f.fp()->isConstructing()) == JITScript_None) {
+        CompileStatus status = CanMethodJIT(cx, newscript, f.fp(), CompileRequest_Interpreter);
         if (status == Compile_Error) {
             /* A runtime exception was thrown, get out. */
             InlineReturn(f);
@@ -371,7 +351,7 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     }
 
     /* If newscript was successfully compiled, run it. */
-    if (JITScript *jit = newscript->getJIT(newfp->isConstructing())) {
+    if (JITScript *jit = newscript->getJIT(f.fp()->isConstructing())) {
         *pret = jit->invokeEntry;
         return true;
     }
@@ -397,14 +377,15 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 {
     ucr->init();
     JSContext *cx = f.cx;
-    Value *vp = f.regs.sp - (argc + 2);
+    CallArgs args = CallArgsFromSp(argc, f.regs.sp);
+
     /* Try to do a fast inline call before the general Invoke path. */
-    if (IsFunctionObject(*vp, &ucr->fun) && ucr->fun->isInterpretedConstructor()) {
-        ucr->callee = &vp->toObject();
-        if (!UncachedInlineCall(f, StackFrame::CONSTRUCTING, &ucr->codeAddr, &ucr->unjittable, argc))
+    if (IsFunctionObject(args.calleev(), &ucr->fun) && ucr->fun->isInterpretedConstructor()) {
+        ucr->callee = &args.callee();
+        if (!UncachedInlineCall(f, CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))
             THROW();
     } else {
-        if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
+        if (!InvokeConstructor(cx, args))
             THROW();
     }
 }
@@ -420,19 +401,19 @@ stubs::UncachedCall(VMFrame &f, uint32 argc)
 void JS_FASTCALL
 stubs::Eval(VMFrame &f, uint32 argc)
 {
-    Value *vp = f.regs.sp - (argc + 2);
+    CallArgs args = CallArgsFromSp(argc, f.regs.sp);
 
-    if (!IsBuiltinEvalForScope(&f.fp()->scopeChain(), *vp)) {
-        if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
+    if (!IsBuiltinEvalForScope(&f.fp()->scopeChain(), args.calleev())) {
+        if (!Invoke(f.cx, args))
             THROW();
         return;
     }
 
     JS_ASSERT(f.fp() == f.cx->fp());
-    if (!DirectEval(f.cx, CallArgsFromVp(argc, vp)))
+    if (!DirectEval(f.cx, args))
         THROW();
 
-    f.regs.sp = vp + 1;
+    f.regs.sp = args.spAfterCall();
 }
 
 void
@@ -441,26 +422,26 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
     ucr->init();
 
     JSContext *cx = f.cx;
-    Value *vp = f.regs.sp - (argc + 2);
+    CallArgs args = CallArgsFromSp(argc, f.regs.sp);
 
-    if (IsFunctionObject(*vp, &ucr->callee)) {
-        ucr->callee = &vp->toObject();
+    if (IsFunctionObject(args.calleev(), &ucr->callee)) {
+        ucr->callee = &args.callee();
         ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
 
         if (ucr->fun->isInterpreted()) {
-            if (!UncachedInlineCall(f, 0, &ucr->codeAddr, &ucr->unjittable, argc))
+            if (!UncachedInlineCall(f, NO_CONSTRUCT, &ucr->codeAddr, &ucr->unjittable, argc))
                 THROW();
             return;
         }
 
         if (ucr->fun->isNative()) {
-            if (!CallJSNative(cx, ucr->fun->u.n.native, argc, vp))
+            if (!CallJSNative(cx, ucr->fun->u.n.native, args))
                 THROW();
             return;
         }
     }
 
-    if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
+    if (!Invoke(f.cx, args))
         THROW();
 
     return;

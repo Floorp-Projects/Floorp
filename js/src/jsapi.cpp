@@ -4937,7 +4937,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, scriptObj);
 
-    JSBool ok = Execute(cx, *obj, scriptObj->getScript(), NULL, 0, Valueify(rval));
+    JSBool ok = ExternalExecute(cx, scriptObj->getScript(), *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4970,7 +4970,8 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
         return false;
     }
     JS_ASSERT(script->getVersion() == compileVersion);
-    bool ok = Execute(cx, *obj, script, NULL, 0, Valueify(rval));
+
+    bool ok = ExternalExecute(cx, script, *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     js_DestroyScript(cx, script);
     return ok;

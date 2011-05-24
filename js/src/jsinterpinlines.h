@@ -74,7 +74,7 @@ class AutoPreserveEnumerators {
 class InvokeSessionGuard
 {
     InvokeArgsGuard args_;
-    InvokeFrameGuard frame_;
+    InvokeFrameGuard ifg_;
     Value savedCallee_, savedThis_;
     Value *formals_, *actuals_;
     unsigned nformals_;
@@ -82,10 +82,10 @@ class InvokeSessionGuard
     Value *stackLimit_;
     jsbytecode *stop_;
 
-    bool optimized() const { return frame_.pushed(); }
+    bool optimized() const { return ifg_.pushed(); }
 
   public:
-    InvokeSessionGuard() : args_(), frame_() {}
+    InvokeSessionGuard() : args_(), ifg_() {}
     ~InvokeSessionGuard() {}
 
     bool start(JSContext *cx, const Value &callee, const Value &thisv, uintN argc);
@@ -98,7 +98,7 @@ class InvokeSessionGuard
     Value &operator[](unsigned i) const {
         JS_ASSERT(i < argc());
         Value &arg = i < nformals_ ? formals_[i] : actuals_[i];
-        JS_ASSERT_IF(optimized(), &arg == &frame_.fp()->canonicalActualArg(i));
+        JS_ASSERT_IF(optimized(), &arg == &ifg_.fp()->canonicalActualArg(i));
         JS_ASSERT_IF(!optimized(), &arg == &args_[i]);
         return arg;
     }
@@ -108,7 +108,7 @@ class InvokeSessionGuard
     }
 
     const Value &rval() const {
-        return optimized() ? frame_.fp()->returnValue() : args_.rval();
+        return optimized() ? ifg_.fp()->returnValue() : args_.rval();
     }
 };
 
@@ -133,10 +133,8 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         return Invoke(cx, args_);
 
     /* Clear any garbage left from the last Invoke. */
-    StackFrame *fp = frame_.fp();
-    fp->clearMissingArgs();
-    fp->resetInvokeCallFrame();
-    SetValueRangeToUndefined(fp->slots(), script_->nfixed);
+    StackFrame *fp = ifg_.fp();
+    fp->resetCallFrame(script_);
 
     JSBool ok;
     {
