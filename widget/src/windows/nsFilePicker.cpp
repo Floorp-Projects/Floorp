@@ -46,6 +46,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIPrivateBrowsingService.h"
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
 #include "nsIURL.h"
@@ -69,21 +70,11 @@ char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 
 #define MAX_EXTENSION_LENGTH 10
 
-//-------------------------------------------------------------------------
-//
-// nsFilePicker constructor
-//
-//-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
 {
   mSelectedType   = 1;
 }
 
-//-------------------------------------------------------------------------
-//
-// nsFilePicker destructor
-//
-//-------------------------------------------------------------------------
 nsFilePicker::~nsFilePicker()
 {
   if (mLastUsedUnicodeDirectory) {
@@ -92,12 +83,7 @@ nsFilePicker::~nsFilePicker()
   }
 }
 
-//-------------------------------------------------------------------------
-//
 // Show - Display the file dialog
-//
-//-------------------------------------------------------------------------
-
 int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
   if (uMsg == BFFM_INITIALIZED)
@@ -195,7 +181,20 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = FILE_BUFFER_SIZE;
 
-    ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+    ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE |
+                OFN_LONGNAMES | OFN_OVERWRITEPROMPT |
+                OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+
+    // Handle add to recent docs settings
+    nsCOMPtr<nsIPrivateBrowsingService> pbs =
+      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+    PRBool privacyModeEnabled = PR_FALSE;
+    if (pbs) {
+      pbs->GetPrivateBrowsingEnabled(&privacyModeEnabled);
+    }
+    if (privacyModeEnabled || !mAddToRecentDocs) {
+      ofn.Flags |= OFN_DONTADDTORECENT;
+    }
 
     if (!mDefaultExtension.IsEmpty()) {
       ofn.lpstrDefExt = mDefaultExtension.get();
@@ -405,7 +404,6 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
   *aFileURL = nsnull;
@@ -423,11 +421,7 @@ NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
   return NS_NewArrayEnumerator(aFiles, mFiles);
 }
 
-//-------------------------------------------------------------------------
-//
 // Get the file + path
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString)
 {
   mDefault = aString;
@@ -465,11 +459,7 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(nsAString& aString)
   return NS_ERROR_FAILURE;
 }
 
-//-------------------------------------------------------------------------
-//
 // The default extension to use for files
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetDefaultExtension(nsAString& aExtension)
 {
   aExtension = mDefaultExtension;
@@ -482,11 +472,7 @@ NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
 // Set the filter index
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
 {
   // Windows' filter index is 1-based, we use a 0-based system.
@@ -501,7 +487,6 @@ NS_IMETHODIMP nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
 void nsFilePicker::InitNative(nsIWidget *aParent,
                               const nsAString& aTitle,
                               PRInt16 aMode)
