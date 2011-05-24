@@ -130,7 +130,6 @@ nsHttpChannel::nsHttpChannel()
     , mCacheForOfflineUse(PR_FALSE)
     , mCachingOpportunistically(PR_FALSE)
     , mFallbackChannel(PR_FALSE)
-    , mTracingEnabled(PR_TRUE)
     , mCustomConditionalRequest(PR_FALSE)
     , mFallingBack(PR_FALSE)
     , mWaitingForRedirectCallback(PR_FALSE)
@@ -3549,7 +3548,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyCallback)
     NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIHttpAuthenticableChannel)
-    NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
     NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
@@ -4968,58 +4966,10 @@ nsHttpChannel::PopRedirectAsyncFunc(nsContinueRedirectionFunc func)
     mRedirectFuncStack.TruncateLength(mRedirectFuncStack.Length() - 1);
 }
 
-//-----------------------------------------------------------------------------
-// nsStreamListenerWrapper <private>
-//-----------------------------------------------------------------------------
-
-// Wrapper class to make replacement of nsHttpChannel's listener
-// from JavaScript possible. It is workaround for bug 433711.
-class nsStreamListenerWrapper : public nsIStreamListener
-{
-public:
-    nsStreamListenerWrapper(nsIStreamListener *listener);
-
-    NS_DECL_ISUPPORTS
-    NS_FORWARD_NSIREQUESTOBSERVER(mListener->)
-    NS_FORWARD_NSISTREAMLISTENER(mListener->)
-
-private:
-    ~nsStreamListenerWrapper() {}
-    nsCOMPtr<nsIStreamListener> mListener;
-};
-
-nsStreamListenerWrapper::nsStreamListenerWrapper(nsIStreamListener *listener)
-    : mListener(listener) 
-{
-    NS_ASSERTION(mListener, "no stream listener specified");
-}
-
-NS_IMPL_ISUPPORTS2(nsStreamListenerWrapper,
-                   nsIStreamListener,
-                   nsIRequestObserver)
 
 //-----------------------------------------------------------------------------
-// nsHttpChannel::nsITraceableChannel
+// nsHttpChannel internal functions
 //-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener **_retval)
-{
-    if (!mTracingEnabled)
-        return NS_ERROR_FAILURE;
-
-    NS_ENSURE_ARG_POINTER(aListener);
-
-    nsCOMPtr<nsIStreamListener> wrapper = 
-        new nsStreamListenerWrapper(mListener);
-
-    if (!wrapper)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    wrapper.forget(_retval);
-    mListener = aListener;
-    return NS_OK;
-}
 
 void
 nsHttpChannel::MaybeInvalidateCacheEntryForSubsequentGet()
