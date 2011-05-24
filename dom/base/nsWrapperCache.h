@@ -44,6 +44,7 @@
 struct JSObject;
 struct JSContext;
 class nsContentUtils;
+class XPCWrappedNativeScope;
 
 typedef PRUptrdiff PtrBits;
 
@@ -126,11 +127,10 @@ public:
   }
 
   /**
-   * Wrap the object corresponding to this wrappe cache; this can return null
-   * if the object doesn't know how to wrap itself.  If non-null is returned,
-   * the object has already been stored in the wrapper cache.
+   * Wrap the object corresponding to this wrapper cache.  If non-null is
+   * returned, the object has already been stored in the wrapper cache.
    */
-  virtual JSObject* WrapObject(JSContext *cx) {
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope) {
     return nsnull;
   }
 

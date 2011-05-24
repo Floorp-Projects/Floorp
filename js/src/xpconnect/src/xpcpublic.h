@@ -68,6 +68,13 @@ xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
                          nsISupports *ptr, JSObject **global,
                          JSCompartment **compartment);
 
+#define XPCONNECT_GLOBAL_FLAGS \
+    JSCLASS_XPCONNECT_GLOBAL | JSCLASS_HAS_PRIVATE | \
+    JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(1)
+
+void
+TraceXPCGlobal(JSTracer *trc, JSObject *obj);
+
 // XXX where should this live?
 NS_EXPORT_(void)
 xpc_LocalizeContext(JSContext *cx);

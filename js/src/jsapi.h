@@ -3046,6 +3046,8 @@ struct JSClass {
 #define JSCLASS_FREEZE_PROTO            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
 #define JSCLASS_FREEZE_CTOR             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
 
+#define JSCLASS_XPCONNECT_GLOBAL        (1<<(JSCLASS_HIGH_FLAGS_SHIFT+7))
+
 /* Global flags. */
 #define JSGLOBAL_FLAGS_CLEARED          0x1
 
@@ -3061,8 +3063,13 @@ struct JSClass {
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
 #define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 8)
+#define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                                    \
+    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
 #define JSCLASS_GLOBAL_FLAGS                                                  \
-    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT))
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0)
+#define JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(clasp)                              \
+  (((clasp)->flags & JSCLASS_IS_GLOBAL)                                       \
+   && JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT)
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
