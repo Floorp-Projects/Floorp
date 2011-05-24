@@ -12,14 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is implementation of Web Timing draft specification
+ * http://dev.w3.org/2006/webapi/WebTiming/
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Sergey Novikov <sergeyn@google.com> (original author)
+ *   Igor Bazarny <igor.bazarny@gmail.com> (update to match bearly-final spec)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,47 +36,60 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsPerformance_h___
+#define nsPerformance_h___
 
-/* container for a document and its presentation */
-
-#ifndef nsIDocumentViewer_h___
-#define nsIDocumentViewer_h___
-
-#include "nsIContentViewer.h"
+#include "nsIDOMPerformance.h"
+#include "nsIDOMPerformanceTiming.h"
+#include "nsIDOMPerformanceNavigation.h"
+#include "nscore.h"
+#include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 class nsIDocument;
-class nsPresContext;
-class nsIPresShell;
-class nsIStyleSheet;
-class nsIView;
-
+class nsIURI;
 class nsDOMNavigationTiming;
 
-#define NS_IDOCUMENT_VIEWER_IID \
-  { 0x5a5c9a1d, 0x49c4, 0x4f3f, \
-    { 0x80, 0xcd, 0x12, 0x09, 0x5b, 0x1e, 0x1f, 0x61 } }
-
-/**
- * A document viewer is a kind of content viewer that uses NGLayout
- * to manage the presentation of the content.
- */
-class nsIDocumentViewer : public nsIContentViewer
+// Script "performance.timing" object
+class nsPerformanceTiming : public nsIDOMPerformanceTiming
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_IID)
-  
-  NS_IMETHOD GetPresShell(nsIPresShell** aResult) = 0;
-  
-  NS_IMETHOD GetPresContext(nsPresContext** aResult) = 0;
-
-  NS_IMETHOD SetDocumentInternal(nsIDocument* aDocument,
-                                 PRBool aForceReuseInnerWindow) = 0;
-
-  virtual nsIView* FindContainerView() = 0;
-
-  virtual void SetNavigationTiming(nsDOMNavigationTiming* timing) = 0;
+  nsPerformanceTiming(nsDOMNavigationTiming* data);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMPERFORMANCETIMING
+private:
+  ~nsPerformanceTiming();
+  nsRefPtr<nsDOMNavigationTiming> mData;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewer, NS_IDOCUMENT_VIEWER_IID)
+// Script "performance.navigation" object
+class nsPerformanceNavigation : public nsIDOMPerformanceNavigation
+{
+public:
+  nsPerformanceNavigation(nsDOMNavigationTiming* data);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMPERFORMANCENAVIGATION
+private:
+  ~nsPerformanceNavigation();
+  nsRefPtr<nsDOMNavigationTiming> mData;
+};
 
-#endif /* nsIDocumentViewer_h___ */
+// Script "performance" object
+class nsPerformance : public nsIDOMPerformance
+{
+public:
+  nsPerformance(nsDOMNavigationTiming* timing);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMPERFORMANCE
+
+private:
+  ~nsPerformance();
+
+  nsRefPtr<nsDOMNavigationTiming> mData;
+  nsCOMPtr<nsIDOMPerformanceTiming> mTiming;
+  nsCOMPtr<nsIDOMPerformanceNavigation> mNavigation;
+};
+
+#endif /* nsPerformance_h___ */
+

@@ -1,0 +1,25 @@
+<html>
+<head>
+<script>
+    var start = Date.now();
+    window._testing_js_start = Math.floor(start);
+    window._testing_js_start_fine = start;
+    window['_testing_js_after_' + document.readyState] = Math.floor(start);
+    document.addEventListener('DOMContentLoaded',
+      function () {
+        window._testing_evt_DOMContentLoaded = Math.floor(Date.now());
+        window._testing_evt_DOMContentLoaded_fine = Date.now();
+      }, true);
+    document.addEventListener('readystatechange', function(){
+      window['_testing_evt_DOM_' + document.readyState] = Math.floor(Date.now());
+      window['_testing_evt_DOM_' + document.readyState + '_fine'] = Date.now();
+    }, true);
+    function recordLoad() {
+      window._testing_evt_load = Math.floor(Date.now());
+      window._testing_evt_load_fine = Date.now();
+    }
+</script>
+</head>
+<body onload="recordLoad()">This document collects time
+for events related to the page load progress.</body>
+</html>
