@@ -63,8 +63,7 @@ public:
                                          nsCString& contentType,
                                          nsCString& contentCharset,
                                          PRBool&    isBase64,
-                                         nsCString& dataBuffer,
-                                         nsCString& hashRef);
+                                         nsCString& dataBuffer);
 };
 
 #endif /* nsDataHandler_h___ */
