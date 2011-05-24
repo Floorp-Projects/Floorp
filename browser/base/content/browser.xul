@@ -177,6 +177,7 @@
 
     <panel id="editBookmarkPanel"
            type="arrow"
+           footertype="promobox"
            orient="vertical"
            ignorekeys="true"
            hidden="true"
@@ -337,8 +338,12 @@
 
     <menupopup id="placesContext"/>
 
-    <panel id="notification-popup" type="arrow" position="after_start"
-           hidden="true" orient="vertical"/>
+    <panel id="notification-popup"
+           type="arrow"
+           footertype="promobox"
+           position="after_start"
+           hidden="true"
+           orient="vertical"/>
 
     <!-- Popup for site identity information -->
     <panel id="identity-popup"
