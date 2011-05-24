@@ -43,7 +43,7 @@
 #define jsion_mir_h__
 
 #include "jscntxt.h"
-#include "TempAllocPolicy.h"
+#include "IonAllocPolicy.h"
 #include "InlineList.h"
 
 namespace js {
@@ -112,8 +112,7 @@ class MIRGraph;
 class MIRGenerator
 {
   public:
-    MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun,
-                 MIRGraph &graph);
+    MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fun, MIRGraph &graph);
 
     TempAllocator &temp() {
         return temp_;
@@ -168,7 +167,6 @@ class MIRGenerator
     }
 
   public:
-    JSContext *cx;
     JSScript *script;
 
   protected:
@@ -197,9 +195,9 @@ class MUse : public TempObject
     }
 
   public:
-    static inline MUse *New(MIRGenerator *gen, MUse *next, MInstruction *owner, uint32 index)
+    static inline MUse *New(MUse *next, MInstruction *owner, uint32 index)
     {
-        return new (gen->temp()) MUse(next, owner, index);
+        return new MUse(next, owner, index);
     }
 
     MInstruction *ins() const {
@@ -259,9 +257,9 @@ class MOperand : public TempObject
     }
 
   public:
-    static MOperand *New(MIRGenerator *gen, MInstruction *ins)
+    static MOperand *New(MInstruction *ins)
     {
-        return new (gen->temp()) MOperand(ins);
+        return new MOperand(ins);
     }
 
     MInstruction *ins() const {
@@ -386,8 +384,8 @@ class MInstruction
     void replaceOperand(MUse *prev, MUse *use, MInstruction *ins);
     void replaceOperand(MUseIterator &use, MInstruction *ins);
 
-    bool addUse(MIRGenerator *gen, MInstruction *ins, size_t index) {
-        uses_ = MUse::New(gen, uses_, ins, index);
+    bool addUse(MInstruction *ins, size_t index) {
+        uses_ = MUse::New(uses_, ins, index);
         return !!uses_;
     }
 
@@ -435,12 +433,12 @@ class MInstruction
     void setOperand(size_t index, MInstruction *ins);
 
     // Initializes an operand for the first time.
-    bool initOperand(MIRGenerator *gen, size_t index, MInstruction *ins) {
-        MOperand *operand = MOperand::New(gen, ins);
+    bool initOperand(size_t index, MInstruction *ins) {
+        MOperand *operand = MOperand::New(ins);
         if (!operand)
             return false;
         setOperand(index, operand);
-        return ins->addUse(gen, this, index);
+        return ins->addUse(this, index);
     }
 
     void setResultType(MIRType type) {
@@ -515,7 +513,7 @@ class MConstant : public MAryInstruction<0>
 
   public:
     INSTRUCTION_HEADER(Constant);
-    static MConstant *New(MIRGenerator *gen, const Value &v);
+    static MConstant *New(const Value &v);
 
     const js::Value &value() const {
         return value_;
@@ -539,7 +537,7 @@ class MParameter : public MAryInstruction<0>
 
   public:
     INSTRUCTION_HEADER(Parameter);
-    static MParameter *New(MIRGenerator *gen, int32 index);
+    static MParameter *New(int32 index);
 
     int32 index() const {
         return index_;
@@ -599,7 +597,7 @@ class MGoto : public MAryControlInstruction<0>
 
   public:
     INSTRUCTION_HEADER(Goto);
-    static MGoto *New(MIRGenerator *gen, MBasicBlock *target);
+    static MGoto *New(MBasicBlock *target);
 };
 
 class MTest : public MAryControlInstruction<1>
@@ -612,7 +610,7 @@ class MTest : public MAryControlInstruction<1>
 
   public:
     INSTRUCTION_HEADER(Test);
-    static MTest *New(MIRGenerator *gen, MInstruction *ins,
+    static MTest *New(MInstruction *ins,
                       MBasicBlock *ifTrue, MBasicBlock *ifFalse);
 
     MIRType requiredInputType(size_t index) const {
@@ -624,7 +622,7 @@ class MReturn : public MAryControlInstruction<1>
 {
   public:
     INSTRUCTION_HEADER(Return);
-    static MReturn *New(MIRGenerator *gen, MInstruction *ins);
+    static MReturn *New(MInstruction *ins);
 
     MIRType requiredInputType(size_t index) const {
         return MIRType_Value;
@@ -634,9 +632,9 @@ class MReturn : public MAryControlInstruction<1>
 class MUnaryInstruction : public MAryInstruction<1>
 {
   protected:
-    inline bool init(MIRGenerator *gen, MInstruction *ins)
+    inline bool init(MInstruction *ins)
     {
-        if (!initOperand(gen, 0, ins))
+        if (!initOperand(0, ins))
             return false;
         return true;
     }
@@ -645,10 +643,10 @@ class MUnaryInstruction : public MAryInstruction<1>
 class MBinaryInstruction : public MAryInstruction<2>
 {
   protected:
-    inline bool init(MIRGenerator *gen, MInstruction *left, MInstruction *right)
+    inline bool init(MInstruction *left, MInstruction *right)
     {
-        if (!initOperand(gen, 0, left) ||
-            !initOperand(gen, 1, right)) {
+        if (!initOperand(0, left) ||
+            !initOperand(1, right)) {
             return false;
         }
         return true;
@@ -664,7 +662,7 @@ class MCopy : public MUnaryInstruction
 
   public:
     INSTRUCTION_HEADER(Copy);
-    static MCopy *New(MIRGenerator *gen, MInstruction *ins);
+    static MCopy *New(MInstruction *ins);
 
     MIRType requiredInputType(size_t index) const {
         return MIRType_Any;
@@ -675,13 +673,13 @@ class MBox : public MUnaryInstruction
 {
   public:
     INSTRUCTION_HEADER(Box);
-    static MBox *New(MIRGenerator *gen, MInstruction *ins)
+    static MBox *New(MInstruction *ins)
     {
         // Cannot box a box.
         JS_ASSERT(ins->type() != MIRType_Value);
 
-        MBox *box = new (gen->temp()) MBox();
-        if (!box || !box->init(gen, ins))
+        MBox *box = new MBox();
+        if (!box || !box->init(ins))
             return NULL;
         return box;
     }
@@ -700,7 +698,7 @@ class MConvert : public MUnaryInstruction
 
   public:
     INSTRUCTION_HEADER(Convert);
-    static MConvert *New(MIRGenerator *gen, MInstruction *ins, MIRType type)
+    static MConvert *New(MInstruction *ins, MIRType type)
     {
         // Conversions must be pure, for now. The front-end is responsible for
         // downgrading specializations that would result in impure conversions.
@@ -708,8 +706,8 @@ class MConvert : public MUnaryInstruction
         // later.
         JS_ASSERT(ins->type() != MIRType_Object);
 
-        MConvert *convert = new (gen->temp()) MConvert(type);
-        if (!convert || !convert->init(gen, ins))
+        MConvert *convert = new MConvert(type);
+        if (!convert || !convert->init(ins))
             return NULL;
         return convert;
     }
@@ -724,7 +722,7 @@ class MBitAnd : public MBinaryInstruction
 
   public:
     INSTRUCTION_HEADER(BitAnd);
-    static MBitAnd *New(MIRGenerator *gen, MInstruction *left, MInstruction *right);
+    static MBitAnd *New(MInstruction *left, MInstruction *right);
 
     MIRType requiredInputType(size_t index) const {
         return assumedType();
@@ -733,12 +731,11 @@ class MBitAnd : public MBinaryInstruction
 
 class MPhi : public MInstruction
 {
-    js::Vector<MOperand *, 2, TempAllocPolicy> inputs_;
+    js::Vector<MOperand *, 2, IonAllocPolicy> inputs_;
     uint32 slot_;
 
-    MPhi(JSContext *cx, uint32 slot)
-      : inputs_(TempAllocPolicy(cx)),
-        slot_(slot)
+    MPhi(uint32 slot)
+      : slot_(slot)
     {
     }
 
@@ -749,7 +746,7 @@ class MPhi : public MInstruction
 
   public:
     INSTRUCTION_HEADER(Phi);
-    static MPhi *New(MIRGenerator *gen, uint32 slot);
+    static MPhi *New(uint32 slot);
 
     MOperand *getOperand(size_t index) const {
         return inputs_[index];
@@ -760,7 +757,7 @@ class MPhi : public MInstruction
     uint32 slot() const {
         return slot_;
     }
-    bool addInput(MIRGenerator *gen, MInstruction *ins);
+    bool addInput(MInstruction *ins);
     MIRType requiredInputType(size_t index) const {
         return MIRType_Any;
     }

@@ -43,10 +43,8 @@
 using namespace js;
 using namespace js::ion;
 
-MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun,
-                           MIRGraph &graph)
-  : cx(cx),
-    script(script),
+MIRGenerator::MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fun, MIRGraph &graph)
+  : script(script),
     pc(NULL),
     temp_(temp),
     fun_(fun),
@@ -181,9 +179,9 @@ MInstruction::usedAsType() const
 }
 
 MConstant *
-MConstant::New(MIRGenerator *gen, const Value &v)
+MConstant::New(const Value &v)
 {
-    return new (gen->temp()) MConstant(v);
+    return new MConstant(v);
 }
 
 MConstant::MConstant(const js::Value &vp)
@@ -227,10 +225,9 @@ MConstant::printOpcode(FILE *fp)
 }
 
 MParameter *
-MParameter::New(MIRGenerator *gen, int32 index)
+MParameter::New(int32 index)
 {
-    JS_ASSERT(index >= CALLEE_SLOT && index < int32(gen->fun()->nargs));
-    return new (gen->temp()) MParameter(index);
+    return new MParameter(index);
 }
 
 void
@@ -241,7 +238,7 @@ MParameter::printOpcode(FILE *fp)
 }
 
 MCopy *
-MCopy::New(MIRGenerator *gen, MInstruction *ins)
+MCopy::New(MInstruction *ins)
 {
     if (!ins)
         return NULL;
@@ -250,69 +247,69 @@ MCopy::New(MIRGenerator *gen, MInstruction *ins)
     if (ins->isCopy())
         ins = ins->toCopy()->getInput(0);
 
-    MCopy *copy = new (gen->temp()) MCopy(ins);
-    if (!copy || !copy->init(gen, ins))
+    MCopy *copy = new MCopy(ins);
+    if (!copy || !copy->init(ins))
         return NULL;
 
     return copy;
 }
 
 MTest *
-MTest::New(MIRGenerator *gen, MInstruction *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+MTest::New(MInstruction *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
 {
     if (!ins || !ifTrue || !ifFalse)
         return NULL;
-    MTest *test = new (gen->temp()) MTest(ifTrue, ifFalse);
-    if (!test || !test->initOperand(gen, 0, ins))
+    MTest *test = new MTest(ifTrue, ifFalse);
+    if (!test || !test->initOperand(0, ins))
         return NULL;
     return test;
 }
 
 MGoto *
-MGoto::New(MIRGenerator *gen, MBasicBlock *target)
+MGoto::New(MBasicBlock *target)
 {
     if (!target)
         return NULL;
-    return new (gen->temp()) MGoto(target);
+    return new MGoto(target);
 }
 
 MPhi *
-MPhi::New(MIRGenerator *gen, uint32 slot)
+MPhi::New(uint32 slot)
 {
-    return new (gen->temp()) MPhi(gen->cx, slot);
+    return new MPhi(slot);
 }
 
 bool
-MPhi::addInput(MIRGenerator *gen, MInstruction *ins)
+MPhi::addInput(MInstruction *ins)
 {
     for (size_t i = 0; i < inputs_.length(); i++) {
         if (getInput(i) == ins)
             return true;
     }
 
-    if (!ins->addUse(gen, this, inputs_.length()))
+    if (!ins->addUse(this, inputs_.length()))
         return false;
 
-    MOperand *operand = MOperand::New(gen, ins);
+    MOperand *operand = MOperand::New(ins);
     if (!operand || !inputs_.append(operand))
         return false;
     return true;
 }
 
 MReturn *
-MReturn::New(MIRGenerator *gen, MInstruction *ins)
+MReturn::New(MInstruction *ins)
 {
-    MReturn *ret = new (gen->temp()) MReturn();
-    if (!ret || !ret->initOperand(gen, 0, ins))
+    MReturn *ret = new MReturn();
+    if (!ret || !ret->initOperand(0, ins))
         return NULL;
     return ret;
 }
 
 MBitAnd *
-MBitAnd::New(MIRGenerator *gen, MInstruction *left, MInstruction *right)
+MBitAnd::New(MInstruction *left, MInstruction *right)
 {
-    MBitAnd *ins = new (gen->temp()) MBitAnd();
-    if (!ins || !ins->init(gen, left, right))
+    MBitAnd *ins = new MBitAnd();
+    if (!ins || !ins->init(left, right))
         return NULL;
     return ins;
 }

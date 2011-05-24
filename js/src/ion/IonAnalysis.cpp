@@ -77,26 +77,23 @@ using namespace js::ion;
 //
 class TypeAnalyzer
 {
-    MIRGenerator *gen;
     MIRGraph &graph;
-    js::Vector<MInstruction *, 0, ContextAllocPolicy> worklist;
+    js::Vector<MInstruction *, 0, IonAllocPolicy> worklist;
 
   private:
     bool addToWorklist(MInstruction *ins);
     MInstruction *popFromWorklist();
 
   public:
-    TypeAnalyzer(MIRGenerator *gen, MIRGraph &graph);
+    TypeAnalyzer(MIRGraph &graph);
 
     bool analyze();
     void inspectOperands(MInstruction *ins);
     bool propagateUsedTypes(MInstruction *ins);
 };
 
-TypeAnalyzer::TypeAnalyzer(MIRGenerator *gen, MIRGraph &graph)
-  : gen(gen),
-    graph(graph),
-    worklist(gen->cx)
+TypeAnalyzer::TypeAnalyzer(MIRGraph &graph)
+  : graph(graph)
 {
 }
 
@@ -190,9 +187,9 @@ TypeAnalyzer::analyze()
 }
 
 bool
-ion::ApplyTypeInformation(MIRGenerator *gen, MIRGraph &graph)
+ion::ApplyTypeInformation(MIRGraph &graph)
 {
-    TypeAnalyzer analysis(gen, graph);
+    TypeAnalyzer analysis(graph);
     if (!analysis.analyze())
         return false;
     return true;
