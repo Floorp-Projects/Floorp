@@ -1392,7 +1392,7 @@ js_GetCurrentBytecodePC(JSContext* cx)
 #endif
     {
         JS_ASSERT_NOT_ON_TRACE(cx);  /* for static analysis */
-        pc = cx->running() ? cx->regs().pc : NULL;
+        pc = cx->hasfp() ? cx->regs().pc : NULL;
         if (!pc)
             return NULL;
         imacpc = cx->fp()->maybeImacropc();
@@ -1492,7 +1492,7 @@ void
 JSContext::resetCompartment()
 {
     JSObject *scopeobj;
-    if (stack.running()) {
+    if (stack.hasfp()) {
         scopeobj = &fp()->scopeChain();
     } else {
         scopeobj = globalObject;

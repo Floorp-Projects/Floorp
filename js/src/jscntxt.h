@@ -1091,7 +1091,7 @@ struct JSContext
     js::ContextStack    stack;
 
     /* ContextStack convenience functions */
-    bool running() const              { return stack.running(); }
+    bool hasfp() const                { return stack.hasfp(); }
     js::StackFrame* fp() const        { return stack.fp(); }
     js::StackFrame* maybefp() const   { return stack.maybefp(); }
     js::FrameRegs& regs() const       { return stack.regs(); }
@@ -1144,7 +1144,7 @@ struct JSContext
      * This typically occurs via the JSAPI right after a context is constructed.
      */
     bool canSetDefaultVersion() const {
-        return !stack.running() && !hasVersionOverride;
+        return !stack.hasfp() && !hasVersionOverride;
     }
 
     /* Force a version for future script compilation. */
@@ -1204,7 +1204,7 @@ struct JSContext
         if (hasVersionOverride)
             return versionOverride;
 
-        if (stack.running()) {
+        if (stack.hasfp()) {
             /* There may be a scripted function somewhere on the stack! */
             js::StackFrame *f = fp();
             while (f && !f->isScriptFrame())
