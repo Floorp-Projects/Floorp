@@ -64,7 +64,8 @@ using namespace mozilla::widget;
 #define FILEPICKER_TITLES "chrome://global/locale/filepicker.properties"
 #define FILEPICKER_FILTERS "chrome://global/content/filepicker.properties"
 
-nsBaseFilePicker::nsBaseFilePicker()
+nsBaseFilePicker::nsBaseFilePicker() :
+  mAddToRecentDocs(PR_TRUE)
 {
 
 }
@@ -74,7 +75,6 @@ nsBaseFilePicker::~nsBaseFilePicker()
 
 }
 
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
                                      const nsAString& aTitle,
                                      PRInt16 aMode)
@@ -161,11 +161,7 @@ nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
 // Set the filter index
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
 {
   *aFilterIndex = 0;
@@ -197,11 +193,8 @@ NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 }
 
 #ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY
-//-------------------------------------------------------------------------
-//
+
 // Set the display directory
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
 {
   if (!aDirectory) {
@@ -216,11 +209,7 @@ NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
   return rv;
 }
 
-//-------------------------------------------------------------------------
-//
 // Get the display directory
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 {
   *aDirectory = nsnull;
@@ -233,3 +222,17 @@ NS_IMETHODIMP nsBaseFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
   return CallQueryInterface(directory, aDirectory);
 }
 #endif
+
+NS_IMETHODIMP
+nsBaseFilePicker::GetAddToRecentDocs(PRBool *aFlag)
+{
+  *aFlag = mAddToRecentDocs;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseFilePicker::SetAddToRecentDocs(PRBool aFlag)
+{
+  mAddToRecentDocs = aFlag;
+  return NS_OK;
+}
