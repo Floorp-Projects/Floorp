@@ -53,7 +53,7 @@ using namespace js;
 namespace xpc {
 namespace dom {
 
-int NodeListBase::NodeListFamily;
+int HandlerFamily;
 
 JSObject *
 NodeListBase::create(JSContext *cx, XPCWrappedNativeScope *scope,

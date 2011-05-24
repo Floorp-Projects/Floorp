@@ -66,6 +66,7 @@
 #include "jsdIDebuggerService.h"
 
 #include "xpcquickstubs.h"
+#include "dombindings.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -906,6 +907,13 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
+    }
+    else if(xpc::dom::instanceIsDOMProxy(obj))
+    {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "js::GetProxyPrivate(obj)");
+        nsISupports *identity =
+            static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
+        cb.NoteXPCOMChild(identity);
     }
 
     return NS_OK;
