@@ -240,6 +240,15 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     return DoubleWrap(cx, obj, flags);
 }
 
+static XPCWrappedNative *
+GetWrappedNative(JSContext *cx, JSObject *obj)
+{
+    OBJ_TO_INNER_OBJECT(cx, obj);
+    return IS_WN_WRAPPER(obj)
+           ? static_cast<XPCWrappedNative *>(obj->getPrivate())
+           : nsnull;
+}
+
 JSObject *
 WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
                        uintN flags)
@@ -299,12 +308,10 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             }
         }
 
-        JSObject *inner = obj;
-        OBJ_TO_INNER_OBJECT(cx, inner);
         XPCWrappedNative *wn;
-        if (IS_WN_WRAPPER(inner) &&
-            (wn = static_cast<XPCWrappedNative *>(inner->getPrivate()))->HasProto() &&
-            wn->GetProto()->ClassIsDOMObject()) {
+        if (targetdata &&
+            (wn = GetWrappedNative(cx, obj)) &&
+            wn->HasProto() && wn->GetProto()->ClassIsDOMObject()) {
             typedef XrayWrapper<JSCrossCompartmentWrapper> Xray;
             wrapper = &FilteringWrapper<Xray,
                                         CrossOriginAccessiblePropertiesOnly>::singleton;
