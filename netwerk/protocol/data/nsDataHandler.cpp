@@ -114,9 +114,9 @@ nsDataHandler::NewURI(const nsACString &aSpec,
         rv = uri->SetRef(spec);
     } else {
         // Otherwise, we'll assume |spec| is a fully-specified data URI
-        nsCAutoString contentType, contentCharset, dataBuffer, hashRef;
+        nsCAutoString contentType, contentCharset, dataBuffer;
         PRBool base64;
-        rv = ParseURI(spec, contentType, contentCharset, base64, dataBuffer, hashRef);
+        rv = ParseURI(spec, contentType, contentCharset, base64, dataBuffer);
         if (NS_FAILED(rv))
             return rv;
 
@@ -171,8 +171,7 @@ nsDataHandler::ParseURI(nsCString& spec,
                         nsCString& contentType,
                         nsCString& contentCharset,
                         PRBool&    isBase64,
-                        nsCString& dataBuffer,
-                        nsCString& hashRef) {
+                        nsCString& dataBuffer) {
     isBase64 = PR_FALSE;
 
     // move past "data:"
@@ -231,16 +230,7 @@ nsDataHandler::ParseURI(nsCString& spec,
     contentType.StripWhitespace();
     contentCharset.StripWhitespace();
 
-    // Split encoded data from terminal "#ref" (if present)
-    char *data = comma + 1;
-    char *hash = strchr(data, '#');
-    if (!hash) {
-        dataBuffer.Assign(data);
-        hashRef.Truncate();
-    } else {
-        dataBuffer.Assign(data, hash - data);
-        hashRef.Assign(hash);
-    }
+    dataBuffer.Assign(comma + 1);
 
     return NS_OK;
 }
