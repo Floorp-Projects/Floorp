@@ -164,7 +164,6 @@ struct JSArenaPool {
     (JS_UPTRDIFF(mark, (a)->base) <= JS_UPTRDIFF((a)->avail, (a)->base))
 
 #ifdef DEBUG
-#define JS_FREE_PATTERN         0xDA
 #define JS_CLEAR_UNUSED(a)      (JS_ASSERT((a)->avail <= (a)->limit),         \
                                  memset((void*)(a)->avail, JS_FREE_PATTERN,   \
                                         (a)->limit - (a)->avail))

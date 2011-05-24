@@ -64,12 +64,6 @@ SHARED_LIBRARY_LIBS = \
 		../datasource/src/$(LIB_PREFIX)rdfdatasource_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-ifndef MOZ_ENABLE_LIBXUL
-SHARED_LIBRARY_LIBS += \
-		../util/src/internal/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \

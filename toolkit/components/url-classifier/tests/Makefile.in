@@ -56,23 +56,10 @@ DIRS += mochitest \
 # xpcshell tests
 XPCSHELL_TESTS=unit
 
-ifndef MOZ_ENABLE_LIBXUL
-# simple c++ tests (no xpcom)
-CPP_UNIT_TESTS = \
-	TestUrlClassifierUtils.cpp \
-	$(NULL)
-
-LOCAL_INCLUDES = \
-	-I$(srcdir)/../src \
-	-I$(srcdir)/../public \
-	$(NULL)
-
-LIBS = \
-	../src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(XPCOM_LIBS) \
-	$(NSPR_LIBS) \
-	$(NULL)
-endif
+# XXX Get this to work in libxul builds.
+## simple c++ tests (no xpcom)
+#CPP_UNIT_TESTS = \
+#	TestUrlClassifierUtils.cpp \
+#	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

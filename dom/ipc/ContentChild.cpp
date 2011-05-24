@@ -313,9 +313,11 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
       r->GetNext(getter_AddRefs(report));
 
       nsCString path;
+      PRInt32 kind;
       nsCString desc;
       PRInt64 memoryUsed;
       report->GetPath(getter_Copies(path));
+      report->GetKind(&kind);
       report->GetDescription(getter_Copies(desc));
       report->GetMemoryUsed(&memoryUsed);
 
@@ -323,6 +325,7 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
       MemoryReport memreport(nsPrintfCString(maxLength, "Content (%d)",
                                              getpid()),
                              path,
+                             kind,
                              desc,
                              memoryUsed);
 

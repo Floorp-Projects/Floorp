@@ -534,6 +534,21 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(
   mozIStoragePendingStatement
 )
 
+bool
+AsyncExecuteStatements::statementsNeedTransaction()
+{
+  // If there is more than one write statement, run in a transaction.
+  // Additionally, if we have only one statement but it needs a transaction, due
+  // to multiple BindingParams, we will wrap it in one.
+  for (PRUint32 i = 0, transactionsCount = 0; i < mStatements.Length(); ++i) {
+    transactionsCount += mStatements[i].needsTransaction();
+    if (transactionsCount > 1) {
+      return true;
+    }
+  }
+  return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// mozIStoragePendingStatement
 
@@ -575,13 +590,7 @@ AsyncExecuteStatements::Run()
   if (mState == CANCELED)
     return notifyComplete();
 
-  // If there is more than one statement, run it in a transaction.  We assume
-  // that we have been given write statements since getting a batch of read
-  // statements doesn't make a whole lot of sense.
-  // Additionally, if we have only one statement and it needs a transaction, we
-  // will wrap it in one.
-  if (mStatements.Length() > 1 || mStatements[0].needsTransaction()) {
-    // We don't error if this failed because it's not terrible if it does.
+  if (statementsNeedTransaction()) {
     mTransactionManager = new mozStorageTransaction(mConnection, PR_FALSE,
                                                     mozIStorageConnection::TRANSACTION_IMMEDIATE);
   }
