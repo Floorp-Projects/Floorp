@@ -270,6 +270,9 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
                                      requestHeaders[i].mValue);
   }
 
+  // notify "http-on-examine-response" observers
+  gHttpHandler->OnExamineResponse(this);
+
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
   if (NS_FAILED(rv)) {
     Cancel(rv);
