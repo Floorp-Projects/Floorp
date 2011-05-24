@@ -69,12 +69,15 @@ public:
   NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
 #endif
+  NS_IMETHOD GetAddToRecentDocs(PRBool *aFlag);
+  NS_IMETHOD SetAddToRecentDocs(PRBool aFlag);
 
 protected:
 
   virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
                           PRInt16 aMode) = 0;
 
+  PRBool mAddToRecentDocs;
 #ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
 #endif
