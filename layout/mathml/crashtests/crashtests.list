@@ -32,7 +32,7 @@ load 375562-1.xhtml
 load 377824-1.xhtml
 load 379418-1.xhtml
 load 385226-1.xhtml
-asserts(2-3) load 393760-1.xhtml # Bug 541620
+load 393760-1.xhtml
 load 397518-1.xhtml
 load 400475-1.xhtml
 load 402400-1.xhtml

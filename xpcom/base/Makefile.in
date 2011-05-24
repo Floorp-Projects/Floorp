@@ -70,7 +70,7 @@ CPPSRCS		= \
 		nsStackWalk.cpp \
 		nsMemoryReporterManager.cpp \
 		FunctionTimer.cpp \
-		nsTelemetry.cpp \
+		Telemetry.cpp \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

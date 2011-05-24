@@ -517,6 +517,10 @@ abstract public class GeckoApp
             outFile.length() == fileEntry.getSize())
             return false;
 
+        surfaceView.mSplashStatusMsg =
+                    getResources().getString(R.string.splash_firstrun);
+        surfaceView.drawSplashScreen();
+
         if (!haveKilledZombies) {
             haveKilledZombies = true;
             GeckoAppShell.killAnyZombies();

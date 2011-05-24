@@ -55,7 +55,6 @@
 #include "mozISpellI18NUtil.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsIDOMDocumentRange;
 class nsIDOMMouseEventListener;
 class mozInlineSpellWordUtil;
 class mozInlineSpellChecker;
@@ -134,8 +133,8 @@ protected:
 
   nsresult FillNoCheckRangeFromAnchor(mozInlineSpellWordUtil& aWordUtil);
 
-  nsresult GetDocumentRange(nsIDOMDocumentRange** aDocRange);
-  nsresult PositionToCollapsedRange(nsIDOMDocumentRange* aDocRange,
+  nsresult GetDocument(nsIDOMDocument** aDocument);
+  nsresult PositionToCollapsedRange(nsIDOMDocument* aDocument,
                                     nsIDOMNode* aNode, PRInt32 aOffset,
                                     nsIDOMRange** aRange);
 };

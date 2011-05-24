@@ -849,8 +849,10 @@ nsPlacesExpiration.prototype = {
         // when expiration does not run on user action.
         if (aAction != ACTION.TIMED && aAction != ACTION.TIMED_OVERLIMIT &&
             aAction != ACTION.IDLE) {
-          // NULL is automatically bound otherwise.
           params.null_skips_last = -1;
+        }
+        else {
+          params.null_skips_last = null;
         }
         params.limit_uris = baseLimit;
         break;
