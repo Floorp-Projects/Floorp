@@ -811,6 +811,12 @@ pref("network.websocket.extensions.stream-deflate", false);
 
 // </ws>
 
+// Server-Sent Events
+
+pref("dom.server-events.enabled", true);
+// Equal to the DEFAULT_RECONNECTION_TIME_VALUE value in nsEventSource.cpp
+pref("dom.server-events.default-reconnection-time", 5000); // in milliseconds
+
 // If false, remote JAR files that are served with a content type other than
 // application/java-archive or application/x-jar will not be opened
 // by the jar channel.
@@ -855,6 +861,7 @@ pref("network.IDN.whitelist.kr", true);
 pref("network.IDN.whitelist.li", true);
 pref("network.IDN.whitelist.lt", true);
 pref("network.IDN.whitelist.lu", true);
+pref("network.IDN.whitelist.lv", true);
 pref("network.IDN.whitelist.no", true);
 pref("network.IDN.whitelist.nu", true);
 pref("network.IDN.whitelist.nz", true);
@@ -883,6 +890,9 @@ pref("network.IDN.whitelist.xn--mgba3a4f16a", true);
 pref("network.IDN.whitelist.xn--mgba3a4fra", true);
 // jo, Jordan, .<Al-Ordon>
 pref("network.IDN.whitelist.xn--mgbayh7gpa", true);
+// lk, Sri Lanka, .<Lanka> and .<Ilangai>
+pref("network.IDN.whitelist.xn--fzc2c9e2c", true);
+pref("network.IDN.whitelist.xn--xkc2al3hye2a", true);
 // qa, Qatar, .<Qatar>
 pref("network.IDN.whitelist.xn--wgbl6a", true);
 // ru, Russian Federation, .<RF>
@@ -892,11 +902,14 @@ pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true);
 pref("network.IDN.whitelist.xn--mgberp4a5d4a87g", true);
 pref("network.IDN.whitelist.xn--mgbqly7c0a67fbc", true);
 pref("network.IDN.whitelist.xn--mgbqly7cvafr", true);
+// sy, Syria, .<Souria>
+pref("network.IDN.whitelist.xn--ogbpf8fl", true);
 // tw, Taiwan, <.Taiwan> with variants
 pref("network.IDN.whitelist.xn--kpry57d", true);  // Traditional
 pref("network.IDN.whitelist.xn--kprw13d", true);  // Simplified
 
 // gTLDs
+pref("network.IDN.whitelist.asia", true);
 pref("network.IDN.whitelist.biz", true);
 pref("network.IDN.whitelist.cat", true);
 pref("network.IDN.whitelist.info", true);
@@ -1872,7 +1885,7 @@ pref("ui.panel.default_level_parent", false);
 pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
 
 // High resolution scrolling with supported mouse drivers on Vista or later.
-pref("mousewheel.enable_pixel_scrolling", false);
+pref("mousewheel.enable_pixel_scrolling", true);
 
 // If your mouse drive sends WM_*SCROLL messages when you turn your mouse wheel,
 // set this to true.  Then, gecko processes them as mouse wheel messages.

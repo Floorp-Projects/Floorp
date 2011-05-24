@@ -1385,7 +1385,7 @@ function prepareForStartup() {
   gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
 #ifdef XP_MACOSX
   gBrowser.addEventListener("npapi-carbon-event-model-failure", gPluginHandler, true);
-#endif 
+#endif
 
   Services.obs.addObserver(gPluginHandler.pluginCrashed, "plugin-crashed", false);
 
@@ -6698,11 +6698,14 @@ var gPluginHandler = {
   handleEvent : function(event) {
     let self = gPluginHandler;
     let plugin = event.target;
-    let hideBarPrefName;
+    let doc = plugin.ownerDocument;
 
     // We're expecting the target to be a plugin.
     if (!(plugin instanceof Ci.nsIObjectLoadingContent))
       return;
+
+    // Force a style flush, so that we ensure our binding is attached.
+    plugin.clientTop;
 
     switch (event.type) {
       case "PluginCrashed":
@@ -6713,31 +6716,37 @@ var gPluginHandler = {
         // For non-object plugin tags, register a click handler to install the
         // plugin. Object tags can, and often do, deal with that themselves,
         // so don't stomp on the page developers toes.
-        if (!(plugin instanceof HTMLObjectElement))
-          self.addLinkClickCallback(plugin, "installSinglePlugin");
+        if (!(plugin instanceof HTMLObjectElement)) {
+          // We don't yet check to see if there's actually an installer available.
+          let installStatus = doc.getAnonymousElementByAttribute(plugin, "class", "installStatus");
+          installStatus.setAttribute("status", "ready");
+          let iconStatus = doc.getAnonymousElementByAttribute(plugin, "class", "icon");
+          iconStatus.setAttribute("status", "ready");
+
+          let installLink = doc.getAnonymousElementByAttribute(plugin, "class", "installPluginLink");
+          self.addLinkClickCallback(installLink, "installSinglePlugin", plugin);
+        }
         /* FALLTHRU */
+
       case "PluginBlocklisted":
       case "PluginOutdated":
-        hideBarPrefName = event.type == "PluginOutdated" ?
-                                "plugins.hide_infobar_for_outdated_plugin" :
-                                "plugins.hide_infobar_for_missing_plugin";
-        if (gPrefService.getBoolPref(hideBarPrefName))
-          return;
-
-        self.pluginUnavailable(plugin, event.type);
-        break;
 #ifdef XP_MACOSX
       case "npapi-carbon-event-model-failure":
-        hideBarPrefName = "plugins.hide_infobar_for_carbon_failure_plugin";
-        if (gPrefService.getBoolPref(hideBarPrefName))
-          return;
-
+#endif
         self.pluginUnavailable(plugin, event.type);
         break;
-#endif
+
       case "PluginDisabled":
-        self.addLinkClickCallback(plugin, "managePlugins");
+        let manageLink = doc.getAnonymousElementByAttribute(plugin, "class", "managePluginsLink");
+        self.addLinkClickCallback(manageLink, "managePlugins");
         break;
+    }
+
+    // Hide the in-content UI if it's too big. The crashed plugin handler already did this.
+    if (event.type != "PluginCrashed") {
+      let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+      if (self.isTooSmall(plugin, overlay))
+          overlay.style.visibility = "hidden";
     }
   },
 
@@ -6757,10 +6766,10 @@ var gPluginHandler = {
   },
 
   // Callback for user clicking on a missing (unsupported) plugin.
-  installSinglePlugin: function (aEvent) {
+  installSinglePlugin: function (plugin) {
     var missingPluginsArray = {};
 
-    var pluginInfo = getPluginInfo(aEvent.target);
+    var pluginInfo = getPluginInfo(plugin);
     missingPluginsArray[pluginInfo.mimetype] = pluginInfo;
 
     openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
@@ -6810,9 +6819,6 @@ var gPluginHandler = {
     let blockedNotification  = notificationBox.getNotificationWithValue("blocked-plugins");
     let missingNotification  = notificationBox.getNotificationWithValue("missing-plugins");
 
-    // If there is already an outdated plugin notification then do nothing
-    if (outdatedNotification)
-      return;
 
     function showBlocklistInfo() {
       var url = formatURL("extensions.blocklist.detailsURL", true);
@@ -6844,7 +6850,7 @@ var gPluginHandler = {
       let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
                          createInstance(Ci.nsISupportsPRBool);
       Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
- 
+
       // Something aborted the quit process.
       if (cancelQuit.data)
         return;
@@ -6908,10 +6914,17 @@ var gPluginHandler = {
                             }
 #endif
     };
+
+    // If there is already an outdated plugin notification then do nothing
+    if (outdatedNotification)
+      return;
+
 #ifdef XP_MACOSX
     if (eventType == "npapi-carbon-event-model-failure") {
+      if (gPrefService.getBoolPref("plugins.hide_infobar_for_carbon_failure_plugin"))
+        return;
 
-      let carbonFailureNotification = 
+      let carbonFailureNotification =
         notificationBox.getNotificationWithValue("carbon-failure-plugins");
 
       if (carbonFailureNotification)
@@ -6923,11 +6936,18 @@ var gPluginHandler = {
         eventType = "PluginNotFound";
     }
 #endif
+
     if (eventType == "PluginBlocklisted") {
+      if (gPrefService.getBoolPref("plugins.hide_infobar_for_missing_plugin")) // XXX add a new pref?
+        return;
+
       if (blockedNotification || missingNotification)
         return;
     }
     else if (eventType == "PluginOutdated") {
+      if (gPrefService.getBoolPref("plugins.hide_infobar_for_outdated_plugin"))
+        return;
+
       // Cancel any notification about blocklisting/missing plugins
       if (blockedNotification)
         blockedNotification.close();
@@ -6935,6 +6955,9 @@ var gPluginHandler = {
         missingNotification.close();
     }
     else if (eventType == "PluginNotFound") {
+      if (gPrefService.getBoolPref("plugins.hide_infobar_for_missing_plugin"))
+        return;
+
       if (missingNotification)
         return;
 
@@ -6990,9 +7013,6 @@ var gPluginHandler = {
     // Remap the plugin name to a more user-presentable form.
     pluginName = this.makeNicePluginName(pluginName, pluginFilename);
 
-    // Force a style flush, so that we ensure our binding is attached.
-    plugin.clientTop;
-
     let messageString = gNavigatorBundle.getFormattedString("crashedpluginsMessage.title", [pluginName]);
 
     //
@@ -7000,12 +7020,6 @@ var gPluginHandler = {
     //
     let doc = plugin.ownerDocument;
     let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-
-    // The binding has role="link" here, since missing/disabled/blocked
-    // plugin UI has a onclick handler on the whole thing. This isn't needed
-    // for the plugin-crashed UI, because we use actual HTML links in the text.
-    overlay.removeAttribute("role");
-
     let statusDiv = doc.getAnonymousElementByAttribute(plugin, "class", "submitStatus");
 #ifdef MOZ_CRASHREPORTER
     let status;
@@ -7659,12 +7673,6 @@ var gIdentityHandler = {
           icon_label = this.getEffectiveHost();
       }
 
-      // We need a port number for all lookups.  If one hasn't been specified, use
-      // the https default
-      var lookupHost = this._lastLocation.host;
-      if (lookupHost.indexOf(':') < 0)
-        lookupHost += ":443";
-
       // Verifier is either the CA Org, for a normal cert, or a special string
       // for certs that are trusted because of a security exception.
       var tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
@@ -7674,7 +7682,12 @@ var gIdentityHandler = {
       // thing here in terms of converting _lastLocation.port from string to int, but
       // the overrideService doesn't like undefined ports, so make sure we have
       // something in the default case (bug 432241).
-      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
+      // .hostname can return an empty string in some exceptional cases -
+      // hasMatchingOverride does not handle that, so avoid calling it.
+      // Updating the tooltip value in those cases isn't critical.
+      // FIXME: Fixing bug 646690 would probably makes this check unnecessary
+      if (this._lastLocation.hostname &&
+          this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
                                                     (this._lastLocation.port || 443),
                                                     iData.cert, {}, {}))
         tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");

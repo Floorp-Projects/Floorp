@@ -48,7 +48,7 @@
 namespace mozilla {
 namespace layers {
 
-#if defined(DEBUG) && defined(MOZ_ENABLE_LIBXUL)
+#if defined(DEBUG)
 #define CHECK_CURRENT_PROGRAM 1
 #define ASSERT_THIS_PROGRAM                                             \
   do {                                                                  \

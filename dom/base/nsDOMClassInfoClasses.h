@@ -388,6 +388,9 @@ DOMCI_CLASS(XMLSerializer)
 DOMCI_CLASS(XMLHttpProgressEvent)
 DOMCI_CLASS(XMLHttpRequest)
 
+// Server-sent events
+DOMCI_CLASS(EventSource)
+
 DOMCI_CLASS(ClientRect)
 DOMCI_CLASS(ClientRectList)
 

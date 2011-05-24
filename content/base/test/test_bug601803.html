@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=601803
 SimpleTest.waitForExplicitFinish();
 
 window.onmessage = function (event) {
-    is(event.data, "false", "Shouldn't throw when adopting a node cross-compartment");
+    is(event.data, false, "Shouldn't throw when adopting a node cross-compartment");
     SimpleTest.finish();
 }
 

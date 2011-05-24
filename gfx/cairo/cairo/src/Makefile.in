@@ -43,10 +43,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_ENABLE_LIBXUL
-VISIBILITY_FLAGS =
-endif
-
 MODULE          = cairo
 LIBRARY_NAME    = mozcairo
 LIBXUL_LIBRARY = 1

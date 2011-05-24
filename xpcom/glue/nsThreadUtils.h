@@ -106,14 +106,10 @@ NS_COM bool NS_IsMainThread();
 // This is defined in nsThreadManager.cpp and initialized to `Main` for the
 // main thread by nsThreadManager::Init.
 extern NS_TLS mozilla::threads::ID gTLSThreadID;
-#ifdef MOZ_ENABLE_LIBXUL
 inline bool NS_IsMainThread()
 {
   return gTLSThreadID == mozilla::threads::Main;
 }
-#else
-NS_COM bool NS_IsMainThread();
-#endif
 #else
 /**
  * Test to see if the current thread is the main thread.

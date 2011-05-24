@@ -47,12 +47,9 @@
 #include "jsvalue.h"
 
 /*
- * This class should be JSONParser, but the old JSON parser uses that name, so
- * until we remove the old parser the class name will be overlong.
- *
  * NB: This class must only be used on the stack as it contains a js::Value.
  */
-class JSONSourceParser
+class JSONParser
 {
   public:
     enum ErrorHandling { RaiseError, NoError };
@@ -88,9 +85,9 @@ class JSONSourceParser
      * Description of this syntax is deliberately omitted: new code should only
      * use strict JSON parsing.
      */
-    JSONSourceParser(JSContext *cx, const jschar *data, size_t length,
-                     ParsingMode parsingMode = StrictJSON,
-                     ErrorHandling errorHandling = RaiseError)
+    JSONParser(JSContext *cx, const jschar *data, size_t length,
+               ParsingMode parsingMode = StrictJSON,
+               ErrorHandling errorHandling = RaiseError)
       : cx(cx),
         current(data, data, length),
         end(data + length, data, length),

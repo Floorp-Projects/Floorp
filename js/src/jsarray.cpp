@@ -278,7 +278,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
             return JS_TRUE;
         }
     } else {
-        atom = js_AtomizeChars(cx, start, JS_ARRAY_END(buf) - start, 0);
+        atom = js_AtomizeChars(cx, start, JS_ARRAY_END(buf) - start);
         if (!atom)
             return JS_FALSE;
     }
@@ -357,16 +357,9 @@ GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp
         return JS_TRUE;
     }
     if (obj->isArguments()) {
-        ArgumentsObject *argsobj = obj->asArguments();
-        if (index < argsobj->initialLength() &&
-            !(*vp = argsobj->element(uint32(index))).isMagic(JS_ARGS_HOLE)) {
+        if (obj->asArguments()->getElement(uint32(index), vp)) {
             *hole = JS_FALSE;
-            StackFrame *fp = reinterpret_cast<StackFrame *>(argsobj->getPrivate());
-            if (fp != JS_ARGUMENTS_OBJECT_ON_TRACE) {
-                if (fp)
-                    *vp = fp->canonicalActualArg(index);
-                return JS_TRUE;
-            }
+            return true;
         }
     }
 
@@ -397,19 +390,6 @@ GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp
 
 namespace js {
 
-struct STATIC_SKIP_INFERENCE CopyNonHoleArgsTo
-{
-    CopyNonHoleArgsTo(ArgumentsObject *argsobj, Value *dst) : argsobj(argsobj), dst(dst) {}
-    ArgumentsObject *argsobj;
-    Value *dst;
-    bool operator()(uintN argi, Value *src) {
-        if (argsobj->element(argi).isMagic(JS_ARGS_HOLE))
-            return false;
-        *dst++ = *src;
-        return true;
-    }
-};
-
 static bool
 GetElementsSlow(JSContext *cx, JSObject *aobj, uint32 length, Value *vp)
 {
@@ -436,29 +416,9 @@ GetElements(JSContext *cx, JSObject *aobj, jsuint length, Value *vp)
 
     if (aobj->isArguments()) {
         ArgumentsObject *argsobj = aobj->asArguments();
-        if (!argsobj->hasOverriddenLength() && !js_PrototypeHasIndexedProperties(cx, argsobj)) {
-            /*
-             * If the argsobj is for an active call, then the elements are the
-             * live args on the stack. Otherwise, the elements are the args that
-             * were copied into the argsobj by PutActivationObjects when the
-             * function returned. In both cases, it is necessary to fall off the
-             * fast path for deleted properties (MagicValue(JS_ARGS_HOLE) since
-             * this requires general-purpose property lookup.
-             */
-            if (StackFrame *fp = reinterpret_cast<StackFrame *>(argsobj->getPrivate())) {
-                JS_ASSERT(fp->numActualArgs() <= JS_ARGS_LENGTH_MAX);
-                if (fp->forEachCanonicalActualArg(CopyNonHoleArgsTo(argsobj, vp)))
-                    return true;
-            } else {
-                Value *srcbeg = argsobj->elements();
-                Value *srcend = srcbeg + length;
-                for (Value *dst = vp, *src = srcbeg; src < srcend; ++dst, ++src) {
-                    if (src->isMagic(JS_ARGS_HOLE))
-                        return GetElementsSlow(cx, argsobj, length, vp);
-                    *dst = *src;
-                }
+        if (!argsobj->hasOverriddenLength()) {
+            if (argsobj->getElements(0, length, vp))
                 return true;
-            }
         }
     }
 

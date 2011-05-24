@@ -264,13 +264,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         return Address(reg, slot * sizeof(Value));
     }
 
-#ifdef JS_CPU_X86
-    void idiv(RegisterID reg) {
-        m_assembler.cdq();
-        m_assembler.idivl_r(reg);
-    }
-#endif
-
     /* Prepare for a call that might THROW. */
     void *getFallibleCallTarget(void *fun) {
 #ifdef JS_CPU_ARM

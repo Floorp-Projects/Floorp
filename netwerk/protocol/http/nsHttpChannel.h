@@ -65,6 +65,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsICryptoHash.h"
 #include "nsITimedChannel.h"
+#include "nsDNSPrefetch.h"
 #include "TimingStruct.h"
 
 class nsAHttpConnection;
@@ -363,6 +364,8 @@ private:
     // copied from the transaction before we null out mTransaction
     // so that the timing can still be queried from OnStopRequest
     TimingStruct                      mTransactionTimings;
+    // Needed for accurate DNS timing
+    nsRefPtr<nsDNSPrefetch>           mDNSPrefetch;
 
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);
