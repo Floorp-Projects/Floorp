@@ -64,6 +64,8 @@ void Config::setDefaults()
 
 void Config::set(D3DDISPLAYMODE displayMode, EGLint minInterval, EGLint maxInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight)
 {
+    mBindToTextureRGB = EGL_FALSE;
+    mBindToTextureRGBA = EGL_FALSE;
     switch (renderTargetFormat)
     {
       case D3DFMT_A1R5G5B5:
@@ -86,6 +88,7 @@ void Config::set(D3DDISPLAYMODE displayMode, EGLint minInterval, EGLint maxInter
         mGreenSize = 8;
         mBlueSize = 8;
         mAlphaSize = 8;
+        mBindToTextureRGBA = true;
         break;
       case D3DFMT_R5G6B5:
         mBufferSize = 16;
@@ -100,6 +103,7 @@ void Config::set(D3DDISPLAYMODE displayMode, EGLint minInterval, EGLint maxInter
         mGreenSize = 8;
         mBlueSize = 8;
         mAlphaSize = 0;
+        mBindToTextureRGB = true;
         break;
       default:
         UNREACHABLE();   // Other formats should not be valid
@@ -107,8 +111,6 @@ void Config::set(D3DDISPLAYMODE displayMode, EGLint minInterval, EGLint maxInter
 
     mLuminanceSize = 0;
     mAlphaMaskSize = 0;
-    mBindToTextureRGB = EGL_FALSE;
-    mBindToTextureRGBA = EGL_FALSE;
     mColorBufferType = EGL_RGB_BUFFER;
     mConfigCaveat = (displayMode.Format == renderTargetFormat) ? EGL_NONE : EGL_SLOW_CONFIG;
     mConfigID = 0;
@@ -116,6 +118,10 @@ void Config::set(D3DDISPLAYMODE displayMode, EGLint minInterval, EGLint maxInter
 
     switch (depthStencilFormat)
     {
+      case D3DFMT_UNKNOWN:
+        mDepthSize = 0;
+        mStencilSize = 0;
+        break;
 //    case D3DFMT_D16_LOCKABLE:
 //      mDepthSize = 16;
 //      mStencilSize = 0;

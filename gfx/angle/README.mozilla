@@ -1,24 +1,25 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/.
 
-Current revision: r550
+Current revision: r653
 
-Applied local patches:
-    angle-shared.patch - add declspec dllexport/dllimport support on win32
+== Applied local patches ==
 
-    angle-fixes.patch - fix angle issues 51 & 52
+In this order:
+  angle-nspr-misc.patch - don't bother with ANGLE_OS detection with NSPR
+  angle-renaming.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
+  angle-makefiles.patch - Mozilla Makefiles for ANGLE
 
-    angle-nspr-misc.patch - don't bother with ANGLE_OS detection with NSPR
+== How to update this ANGLE copy ==
 
-    angle-pbuffers.patch - add pbuffer support to ANGLE, and d3d texture handle query (angle issue 91)
+1. Unapply patches
+2. Apply diff with new ANGLE version
+3. Reapply patches. Check for newly created/deleted files.
+4. For each file creation/deletetion recorded in step 3, update our makefiles (angle-makefiles.patch) accordingly
 
 == Visual Studio Solution Files ==
 
-The VS solution/project files that are used to build ANGLE are built
-with VS2008 in upstream ANGLE.  Because our build machines use VS2005,
-they need to be downgraded using
-http://www.emmet-gray.com/Articles/ProjectConverter.htm before being
-checked in with an ANGLE update.
+Ignore these. We don't use them anymore. We use custom Makefiles (see angle-makefiles.patch)
 
-== Regenerating Parser ==
+== Generated parser code==
 
-The parser is now generated and included in the ANGLE svn repo.
+Don't bother about that anymore. The parser is now generated and included in the ANGLE svn repo.

@@ -6140,9 +6140,12 @@ if test -n "$MOZ_ANGLE"; then
     # Otherwise just take whatever comes first
     MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
   fi
-  echo "MOZ_DIRECTX_SDK_REG_KEY=$MOZ_DIRECTX_SDK_REG_KEY"
-  MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/'`
-  echo "MOZ_DIRECTX_SDK_PATH=$MOZ_DIRECTX_SDK_PATH"
+
+  if test -n "`echo $MOZ_DIRECTX_SDK_REG_KEY | grep 'February 2010'`" ; then
+    AC_MSG_WARN([Found the February 2010 DirectX SDK. This is too old. We now require the June 2010 DirectX SDK, or newer.])
+  else
+    MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/'`
+  fi
 
   MOZ_ANGLE=
 
@@ -6154,12 +6157,12 @@ if test -n "$MOZ_ANGLE"; then
   fi
 
   if test -z "$MOZ_ANGLE" ; then
-    AC_MSG_WARN([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (February 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
+    AC_MSG_WARN([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (June 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
     AC_MSG_WARN([This will become an error in the future.])
   fi
 
   if test -n "$MOZ_ANGLE" ; then
-    # Get the SDK numeric version (e.g. 42 or 43) by looking at the dependencies of d3dx9.lib
+    # Get the SDK numeric version (e.g. 43) by looking at the dependencies of d3dx9.lib
     MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
 
     if test -z "$MOZ_D3DX9_VERSION" ; then
