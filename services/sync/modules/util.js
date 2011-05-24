@@ -35,7 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Utils', 'Svc', 'Str'];
+const EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "NetUtil", "PlacesUtils",
+                          "Utils", "Svc", "Str"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -47,7 +48,11 @@ Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 // Constants for makeSyncCallback, waitForSyncCallback
 const CB_READY = {};
@@ -173,29 +178,6 @@ let Utils = {
     };
   },
 
-  batchSync: function batchSync(service, engineType) {
-    return function batchedSync() {
-      let engine = this;
-      let batchEx = null;
-
-      // Try running sync in batch mode
-      Svc[service].runInBatchMode({
-        runBatched: function wrappedSync() {
-          try {
-            engineType.prototype._sync.call(engine);
-          }
-          catch(ex) {
-            batchEx = ex;
-          }
-        }
-      }, null);
-
-      // Expose the exception if something inside the batch failed
-      if (batchEx!= null)
-        throw batchEx;
-    };
-  },
-
   runInTransaction: function(db, callback, thisObj) {
     let hasTransaction = false;
     try {
@@ -315,32 +297,12 @@ let Utils = {
     window.addEventListener("unload", function() windows[url] = null, false);
   },
 
-  // Returns a nsILocalFile representing a file relative to the
-  // current user's profile directory.  If the argument is a string,
-  // it should be a string with unix-style slashes for directory names
-  // (these slashes are automatically converted to platform-specific
-  // path separators).
-  //
-  // Alternatively, if the argument is an object, it should contain
-  // the following attributes:
-  //
-  //   path: the path to the file, relative to the current user's
-  //   profile dir.
-  //
-  //   autoCreate: whether or not the file should be created if it
-  //   doesn't already exist.
-  getProfileFile: function getProfileFile(arg) {
-    if (typeof arg == "string")
-      arg = {path: arg};
-
-    let pathParts = arg.path.split("/");
-    let file = Svc.Directory.get("ProfD", Ci.nsIFile);
-    file.QueryInterface(Ci.nsILocalFile);
-    for (let i = 0; i < pathParts.length; i++)
-      file.append(pathParts[i]);
-    if (arg.autoCreate && !file.exists())
-      file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
-    return file;
+  // Returns a nsILocalFile representing a file relative to the current
+  // user's profile directory.  The argument should be a string with
+  // unix-style slashes for directory names (these slashes are automatically
+  // converted to platform-specific path separators).
+  getProfileFile: function getProfileFile(path) {
+    return FileUtils.getFile("ProfD", path.split("/"), true);
   },
 
   /**
@@ -384,55 +346,6 @@ let Utils = {
    */
   isArray: function Utils_isArray(val) val != null && typeof val == "object" &&
     val.constructor.name == "Array",
-
-  // lazy load objects from a constructor on first access.  It will
-  // work with the global object ('this' in the global context).
-  lazy: function Weave_lazy(dest, prop, ctr) {
-    delete dest[prop];
-    dest.__defineGetter__(prop, Utils.lazyCb(dest, prop, ctr));
-  },
-  lazyCb: function Weave_lazyCb(dest, prop, ctr) {
-    return function() {
-      delete dest[prop];
-      dest[prop] = new ctr();
-      return dest[prop];
-    };
-  },
-
-  // like lazy, but rather than new'ing the 3rd arg we use its return value
-  lazy2: function Weave_lazy2(dest, prop, fn) {
-    delete dest[prop];
-    dest.__defineGetter__(prop, Utils.lazyCb2(dest, prop, fn));
-  },
-  lazyCb2: function Weave_lazyCb2(dest, prop, fn) {
-    return function() {
-      delete dest[prop];
-      return dest[prop] = fn();
-    };
-  },
-
-  lazySvc: function Weave_lazySvc(dest, prop, cid, iface) {
-    let getter = function() {
-      delete dest[prop];
-      let svc = null;
-
-      // Use the platform's service if it exists
-      if (cid in Cc && iface in Ci)
-        svc = Cc[cid].getService(Ci[iface]);
-      else {
-        svc = FakeSvc[cid];
-
-        let log = Log4Moz.repository.getLogger("Service.Util");
-        if (svc == null)
-          log.warn("Component " + cid + " doesn't exist on this platform.");
-        else
-          log.debug("Using a fake svc object for " + cid);
-      }
-
-      return dest[prop] = svc;
-    };
-    dest.__defineGetter__(prop, getter);
-  },
 
   lazyStrings: function Weave_lazyStrings(name) {
     let bundle = "chrome://weave/locale/services/" + name + ".properties";
@@ -545,32 +458,6 @@ let Utils = {
     return ex && ex.indexOf && (ex.indexOf(hmacFail) == 0);
   },
   
-  checkStatus: function Weave_checkStatus(code, msg, ranges) {
-    if (!ranges)
-      ranges = [[200,300]];
-
-    for (let i = 0; i < ranges.length; i++) {
-      var rng = ranges[i];
-      if (typeof(rng) == "object" && code >= rng[0] && code < rng[1])
-        return true;
-      else if (typeof(rng) == "number" && code == rng) {
-        return true;
-      }
-    }
-
-    if (msg) {
-      let log = Log4Moz.repository.getLogger("Service.Util");
-      log.error(msg + " Error code: " + code);
-    }
-
-    return false;
-  },
-
-  ensureStatus: function Weave_ensureStatus(args) {
-    if (!Utils.checkStatus.apply(Utils, arguments))
-      throw 'checkStatus failed';
-  },
-
   /**
    * UTF8-encode a message and hash it with the given hasher. Returns a
    * string containing bytes. The hasher is reset if it's an HMAC hasher.
@@ -1001,7 +888,7 @@ let Utils = {
     if (!URIString)
       return null;
     try {
-      return Svc.IO.newURI(URIString, null, null);
+      return Services.io.newURI(URIString, null, null);
     } catch (e) {
       let log = Log4Moz.repository.getLogger("Service.Util");
       log.debug("Could not create URI: " + Utils.exceptionStr(e));
@@ -1013,30 +900,6 @@ let Utils = {
     let url = Utils.makeURI(URIString);
     url.QueryInterface(Ci.nsIURL);
     return url;
-  },
-
-  xpath: function Weave_xpath(xmlDoc, xpathString) {
-    let root = xmlDoc.ownerDocument == null ?
-      xmlDoc.documentElement : xmlDoc.ownerDocument.documentElement;
-    let nsResolver = xmlDoc.createNSResolver(root);
-
-    return xmlDoc.evaluate(xpathString, xmlDoc, nsResolver,
-                           Ci.nsIDOMXPathResult.ANY_TYPE, null);
-  },
-
-  getTmp: function Weave_getTmp(name) {
-    let tmp = Svc.Directory.get("ProfD", Ci.nsIFile);
-    tmp.QueryInterface(Ci.nsILocalFile);
-
-    tmp.append("weave");
-    tmp.append("tmp");
-    if (!tmp.exists())
-      tmp.create(tmp.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
-    if (name)
-      tmp.append(name);
-
-    return tmp;
   },
 
   /**
@@ -1099,14 +962,11 @@ let Utils = {
     if (that._log)
       that._log.trace("Saving json to disk: " + filePath);
 
-    let file = Utils.getProfileFile({ autoCreate: true, path: filePath });
+    let file = Utils.getProfileFile(filePath);
     let json = typeof obj == "function" ? obj.call(that) : obj;
     let out = JSON.stringify(json);
 
-    let fos = Cc["@mozilla.org/network/safe-file-output-stream;1"]
-                .createInstance(Ci.nsIFileOutputStream);
-    fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE,
-             fos.DEFER_OPEN);
+    let fos = FileUtils.openSafeFileOutputStream(file);
     let is = this._utf8Converter.convertToInputStream(out);
     NetUtil.asyncCopy(is, fos, function (result) {
       if (typeof callback == "function") {
@@ -1158,12 +1018,12 @@ let Utils = {
   getIcon: function(iconUri, defaultIcon) {
     try {
       let iconURI = Utils.makeURI(iconUri);
-      return Svc.Favicon.getFaviconLinkForIcon(iconURI).spec;
+      return PlacesUtils.favicons.getFaviconLinkForIcon(iconURI).spec;
     }
     catch(ex) {}
 
     // Just give the provided default icon or the system's default
-    return defaultIcon || Svc.Favicon.defaultFavicon.spec;
+    return defaultIcon || PlacesUtils.favicons.defaultFavicon.spec;
   },
 
   getErrorString: function Utils_getErrorString(error, args) {
@@ -1302,38 +1162,6 @@ let Utils = {
     return over ? atob(b64.substr(0, len - over)) : atob(b64);
   },
 
-  /*
-   * Calculate the strength of a passphrase provided by the user
-   * according to the NIST algorithm (NIST 800-63 Appendix A.1).
-   */
-  passphraseStrength: function passphraseStrength(value) {
-    let bits = 0;
-
-    // The entropy of the first character is taken to be 4 bits.
-    if (value.length)
-      bits = 4;
-
-    // The entropy of the next 7 characters are 2 bits per character.
-    if (value.length > 1)
-      bits += Math.min(value.length - 1, 7) * 2;
-
-    // For the 9th through the 20th character the entropy is taken to
-    // be 1.5 bits per character.
-    if (value.length > 8)
-      bits += Math.min(value.length - 8, 12) * 1.5;
-
-    // For characters 21 and above the entropy is taken to be 1 bit per character.
-    if (value.length > 20)
-      bits += value.length - 20;
-
-    // Bonus of 6 bits if we find non-alphabetic characters
-    if ([char.charCodeAt() for each (char in value.toLowerCase())]
-        .some(function(chr) chr < 97 || chr > 122))
-      bits += 6;
-      
-    return bits;
-  },
-
   /**
    * Create an array like the first but without elements of the second
    */
@@ -1382,17 +1210,6 @@ let Utils = {
     return false;
   },
   
-  __prefs: null,
-  get prefs() {
-    if (!this.__prefs) {
-      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
-        .getService(Ci.nsIPrefService);
-      this.__prefs = this.__prefs.getBranch(PREFS_BRANCH);
-      this.__prefs.QueryInterface(Ci.nsIPrefBranch2);
-    }
-    return this.__prefs;
-  },
-
   /**
    * Helpers for making asynchronous calls within a synchronous API possible.
    * 
@@ -1465,69 +1282,7 @@ let Utils = {
   }
 };
 
-let FakeSvc = {
-  // Private Browsing
-  "@mozilla.org/privatebrowsing;1": {
-    autoStarted: false,
-    privateBrowsingEnabled: false
-  },
-  // Session Restore
-  "@mozilla.org/browser/sessionstore;1": {
-    setTabValue: function(tab, key, value) {
-      if (!tab.__SS_extdata)
-        tab.__SS_extdata = {};
-      tab.__SS_extData[key] = value;
-    },
-    getBrowserState: function() {
-      // Fennec should have only one window. Not more, not less.
-      let state = { windows: [{ tabs: [] }] };
-      let window = Svc.WinMediator.getMostRecentWindow("navigator:browser");
-
-      // Extract various pieces of tab data
-      window.Browser._tabs.forEach(function(tab) {
-        let tabState = { entries: [{}] };
-        let browser = tab.browser;
-
-        // Cases when we want to skip the tab. Could come up if we get
-        // state as a tab is opening or closing.
-        if (!browser || !browser.currentURI || !browser.sessionHistory)
-          return;
-
-        let history = browser.sessionHistory;
-        if (history.count > 0) {
-          // We're only grabbing the current history entry for now.
-          let entry = history.getEntryAtIndex(history.index, false);
-          tabState.entries[0].url = entry.URI.spec;
-          // Like SessionStore really does it...
-          if (entry.title && entry.title != entry.url)
-            tabState.entries[0].title = entry.title;
-        }
-        // index is 1-based
-        tabState.index = 1;
-
-        // Get the image for the tab. Fennec doesn't quite work the same
-        // way as Firefox, so we'll just get this from the browser object.
-        tabState.attributes = { image: browser.mIconURL };
-
-        // Collect the extdata
-        if (tab.__SS_extdata) {
-          tabState.extData = {};
-          for (let key in tab.__SS_extdata)
-            tabState.extData[key] = tab.__SS_extdata[key];
-        }
-
-        // Add the tab to the window
-        state.windows[0].tabs.push(tabState);
-      });
-      return JSON.stringify(state);
-    }
-  },
-  // A fake service only used for testing
-  "@labs.mozilla.com/Fake/Thing;1": {
-    isFake: true
-  }
-};
-Utils.lazy2(Utils, "_utf8Converter", function() {
+XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
@@ -1542,35 +1297,18 @@ Svc.Prefs = new Preferences(PREFS_BRANCH);
 Svc.DefaultPrefs = new Preferences({branch: PREFS_BRANCH, defaultBranch: true});
 Svc.Obs = Observers;
 
-this.__defineGetter__("_sessionCID", function() {
-  //sets session CID based on browser type
-  let appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-  return appInfo.ID == SEAMONKEY_ID ? "@mozilla.org/suite/sessionstore;1"
-                                    : "@mozilla.org/browser/sessionstore;1";
-});
-[["Annos", "@mozilla.org/browser/annotation-service;1", "nsIAnnotationService"],
- ["AppInfo", "@mozilla.org/xre/app-info;1", "nsIXULAppInfo"],
- ["Bookmark", "@mozilla.org/browser/nav-bookmarks-service;1", "nsINavBookmarksService"],
- ["Directory", "@mozilla.org/file/directory_service;1", "nsIProperties"],
- ["Env", "@mozilla.org/process/environment;1", "nsIEnvironment"],
- ["Favicon", "@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
- ["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
- ["History", "@mozilla.org/browser/nav-history-service;1", "nsPIPlacesDatabase"],
+let _sessionCID = Services.appinfo.ID == SEAMONKEY_ID ?
+  "@mozilla.org/suite/sessionstore;1" :
+  "@mozilla.org/browser/sessionstore;1";
+
+[["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
- ["IO", "@mozilla.org/network/io-service;1", "nsIIOService"],
  ["KeyFactory", "@mozilla.org/security/keyobjectfactory;1", "nsIKeyObjectFactory"],
- ["Login", "@mozilla.org/login-manager;1", "nsILoginManager"],
- ["Memory", "@mozilla.org/xpcom/memory-service;1", "nsIMemory"],
  ["Private", "@mozilla.org/privatebrowsing;1", "nsIPrivateBrowsingService"],
- ["Profiles", "@mozilla.org/toolkit/profile-service;1", "nsIToolkitProfileService"],
- ["Prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
- ["Script", "@mozilla.org/moz/jssubscript-loader;1", "mozIJSSubScriptLoader"],
- ["SysInfo", "@mozilla.org/system-info;1", "nsIPropertyBag2"],
- ["Version", "@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],
- ["WinMediator", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
- ["WinWatcher", "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
- ["Session", this._sessionCID, "nsISessionStore"],
-].forEach(function(lazy) Utils.lazySvc(Svc, lazy[0], lazy[1], lazy[2]));
+ ["Session", _sessionCID, "nsISessionStore"]
+].forEach(function([name, contract, iface]) {
+  XPCOMUtils.defineLazyServiceGetter(Svc, name, contract, iface);
+});
 
 Svc.__defineGetter__("Crypto", function() {
   let cryptoSvc;
@@ -1582,8 +1320,9 @@ Svc.__defineGetter__("Crypto", function() {
 });
 
 let Str = {};
-["errors", "sync"]
-  .forEach(function(lazy) Utils.lazy2(Str, lazy, Utils.lazyStrings(lazy)));
+["errors", "sync"].forEach(function(lazy) {
+  XPCOMUtils.defineLazyGetter(Str, lazy, Utils.lazyStrings(lazy));
+});
 
 Svc.Obs.add("xpcom-shutdown", function () {
   for (let name in Svc)

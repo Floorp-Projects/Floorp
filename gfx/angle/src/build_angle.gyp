@@ -6,6 +6,7 @@
   'target_defaults': {
     'defines': [
       'ANGLE_DISABLE_TRACE',
+      'ANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL0',
     ],
   },
   'targets': [
@@ -40,6 +41,8 @@
         'compiler/intermOut.cpp',
         'compiler/IntermTraverse.cpp',
         'compiler/localintermediate.h',
+        'compiler/MapLongVariableNames.cpp',
+        'compiler/MapLongVariableNames.h',
         'compiler/MMap.h',
         'compiler/osinclude.h',
         'compiler/parseConst.cpp',
@@ -99,6 +102,8 @@
       ],
       'sources': [
         'compiler/CodeGenGLSL.cpp',
+        'compiler/ForLoopUnroll.cpp',
+        'compiler/ForLoopUnroll.h',
         'compiler/OutputGLSL.cpp',
         'compiler/OutputGLSL.h',
         'compiler/TranslatorGLSL.cpp',
@@ -145,11 +150,11 @@
             'common/debug.cpp',
             'common/debug.h',
             'common/version.h',
-            'libGLESv2/geometry/IndexDataManager.cpp',
-            'libGLESv2/geometry/IndexDataManager.h',
-            'libGLESv2/geometry/vertexconversion.h',
-            'libGLESv2/geometry/VertexDataManager.cpp',
-            'libGLESv2/geometry/VertexDataManager.h',
+            'libGLESv2/IndexDataManager.cpp',
+            'libGLESv2/IndexDataManager.h',
+            'libGLESv2/vertexconversion.h',
+            'libGLESv2/VertexDataManager.cpp',
+            'libGLESv2/VertexDataManager.h',
             'libGLESv2/Blit.cpp',
             'libGLESv2/Blit.h',
             'libGLESv2/Buffer.cpp',
@@ -160,6 +165,8 @@
             'libGLESv2/Fence.h',
             'libGLESv2/Framebuffer.cpp',
             'libGLESv2/Framebuffer.h',
+            'libGLESv2/HandleAllocator.cpp',
+            'libGLESv2/HandleAllocator.h',
             'libGLESv2/libGLESv2.cpp',
             'libGLESv2/libGLESv2.def',
             'libGLESv2/main.cpp',
@@ -186,6 +193,7 @@
               'AdditionalDependencies': [
                 'd3d9.lib',
                 'd3dx9.lib',
+                'd3dcompiler.lib',
               ],
             }
           },

@@ -58,6 +58,7 @@
 #endif
 #ifdef XP_MACOSX
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@.app/
+@BINPATH@/@DLL_PREFIX@plugin_child_interpose@DLL_SUFFIX@
 #else
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif

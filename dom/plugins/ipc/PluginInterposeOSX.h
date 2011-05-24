@@ -27,12 +27,84 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef DOM_PLUGINS_IPC_PLUGININTERPOSEOSX_H
+#define DOM_PLUGINS_IPC_PLUGININTERPOSEOSX_H
+
+#include "base/basictypes.h"
+#include "nsPoint.h"
+
+// Make this includable from non-Objective-C code.
+#ifndef __OBJC__
+class NSCursor;
+#else
+#import <Cocoa/Cocoa.h>
+#endif
+
 namespace mac_plugin_interposing {
+
+// Class used to serialize NSCursor objects over IPC between processes.
+class NSCursorInfo {
+public:
+  enum Type {
+    TypeCustom,
+    TypeArrow,
+    TypeClosedHand,
+    TypeContextualMenu,   // Only supported on OS X 10.6 and up
+    TypeCrosshair,
+    TypeDisappearingItem,
+    TypeDragCopy,         // Only supported on OS X 10.6 and up
+    TypeDragLink,         // Only supported on OS X 10.6 and up
+    TypeIBeam,
+    TypeNotAllowed,       // Only supported on OS X 10.6 and up
+    TypeOpenHand,
+    TypePointingHand,
+    TypeResizeDown,
+    TypeResizeLeft,
+    TypeResizeLeftRight,
+    TypeResizeRight,
+    TypeResizeUp,
+    TypeResizeUpDown,
+    TypeTransparent       // Special type
+  };
+
+  NSCursorInfo();
+  NSCursorInfo(NSCursor* aCursor);
+  NSCursorInfo(const Cursor* aCursor);
+  ~NSCursorInfo();
+
+  NSCursor* GetNSCursor() const;
+  Type GetType() const;
+  const char* GetTypeName() const;
+  nsPoint GetHotSpot() const;
+  uint8_t* GetCustomImageData() const;
+  uint32_t GetCustomImageDataLength() const;
+
+  void SetType(Type aType);
+  void SetHotSpot(nsPoint aHotSpot);
+  void SetCustomImageData(uint8_t* aData, uint32_t aDataLength);
+
+  static PRBool GetNativeCursorsSupported();
+
+private:
+  NSCursor* GetTransparentCursor() const;
+
+  Type mType;
+  // The hot spot's coordinate system is the cursor's coordinate system, and
+  // has an upper-left origin (in both Cocoa and pre-Cocoa systems).
+  nsPoint mHotSpot;
+  uint8_t* mCustomImageData;
+  uint32_t mCustomImageDataLength;
+  static int32_t mNativeCursorsSupported;
+};
 
 namespace parent {
 
 void OnPluginShowWindow(uint32_t window_id, CGRect window_bounds, bool modal);
 void OnPluginHideWindow(uint32_t window_id, pid_t aPluginPid);
+void OnSetCursor(const NSCursorInfo& cursorInfo);
+void OnShowCursor(bool show);
+void OnPushCursor(const NSCursorInfo& cursorInfo);
+void OnPopCursor();
 
 }
 
@@ -43,3 +115,5 @@ void SetUpCocoaInterposing();
 }
 
 }
+
+#endif /* DOM_PLUGINS_IPC_PLUGININTERPOSEOSX_H */

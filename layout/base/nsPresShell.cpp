@@ -9419,16 +9419,7 @@ nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
 nsAccessibilityService*
 nsIPresShell::AccService()
 {
-#ifdef MOZ_ENABLE_LIBXUL
   return GetAccService();
-#else
-  if (gIsAccessibilityActive) {
-    nsCOMPtr<nsIAccessibilityService> srv =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    return static_cast<nsAccessibilityService*>(srv.get());
-  }
-  return nsnull;
-#endif
 }
 #endif
 

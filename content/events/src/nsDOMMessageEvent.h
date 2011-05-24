@@ -54,21 +54,23 @@ class nsDOMMessageEvent : public nsDOMEvent,
                           public nsIDOMMessageEvent
 {
 public:
-  nsDOMMessageEvent(nsPresContext* aPresContext, nsEvent* aEvent)
-    : nsDOMEvent(aPresContext, aEvent)
-  {
-  }
+  nsDOMMessageEvent(nsPresContext* aPresContext, nsEvent* aEvent);
+  ~nsDOMMessageEvent();
                      
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMMessageEvent, nsDOMEvent)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsDOMMessageEvent,
+                                                         nsDOMEvent)
 
   NS_DECL_NSIDOMMESSAGEEVENT
 
   // Forward to base class
   NS_FORWARD_TO_NSDOMEVENT
 
+  void RootData();
+  void UnrootData();
 private:
-  nsString mData;
+  jsval mData;
+  bool mDataRooted;
   nsString mOrigin;
   nsString mLastEventId;
   nsCOMPtr<nsIDOMWindow> mSource;

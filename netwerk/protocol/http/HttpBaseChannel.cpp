@@ -79,6 +79,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mChooseApplicationCache(PR_FALSE)
   , mLoadedFromApplicationCache(PR_FALSE)
   , mChannelIsForDownload(PR_FALSE)
+  , mTracingEnabled(PR_TRUE)
   , mTimingEnabled(PR_FALSE)
   , mRedirectedCachekeys(nsnull)
 {
@@ -167,7 +168,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
 // HttpBaseChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED8(HttpBaseChannel,
+NS_IMPL_ISUPPORTS_INHERITED9(HttpBaseChannel,
                              nsHashPropertyBag, 
                              nsIRequest,
                              nsIChannel,
@@ -176,7 +177,8 @@ NS_IMPL_ISUPPORTS_INHERITED8(HttpBaseChannel,
                              nsIHttpChannelInternal,
                              nsIUploadChannel,
                              nsIUploadChannel2,
-                             nsISupportsPriority)
+                             nsISupportsPriority,
+                             nsITraceableChannel)
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIRequest
@@ -1316,7 +1318,54 @@ HttpBaseChannel::GetEntityID(nsACString& aEntityID)
   return NS_OK;
 }
 
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// nsStreamListenerWrapper <private>
+//-----------------------------------------------------------------------------
+
+// Wrapper class to make replacement of nsHttpChannel's listener
+// from JavaScript possible. It is workaround for bug 433711.
+class nsStreamListenerWrapper : public nsIStreamListener
+{
+public:
+  nsStreamListenerWrapper(nsIStreamListener *listener);
+
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_NSIREQUESTOBSERVER(mListener->)
+  NS_FORWARD_NSISTREAMLISTENER(mListener->)
+
+private:
+  ~nsStreamListenerWrapper() {}
+  nsCOMPtr<nsIStreamListener> mListener;
+};
+
+nsStreamListenerWrapper::nsStreamListenerWrapper(nsIStreamListener *listener)
+  : mListener(listener)
+{
+  NS_ASSERTION(mListener, "no stream listener specified");
+}
+
+NS_IMPL_ISUPPORTS2(nsStreamListenerWrapper,
+                   nsIStreamListener,
+                   nsIRequestObserver)
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsITraceableChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpBaseChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener **_retval)
+{
+  if (!mTracingEnabled)
+    return NS_ERROR_FAILURE;
+
+  NS_ENSURE_ARG_POINTER(aListener);
+
+  nsCOMPtr<nsIStreamListener> wrapper = new nsStreamListenerWrapper(mListener);
+
+  wrapper.forget(_retval);
+  mListener = aListener;
+  return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel helpers

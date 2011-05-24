@@ -64,6 +64,7 @@ CPPSRCS = \
   nsNativeAppSupportBase.cpp \
   nsAppData.cpp \
   nsSigHandlers.cpp \
+  nsEmbedFunctions.cpp \
   $(NULL)
 
 ifdef MOZ_X11
@@ -81,10 +82,6 @@ CPPSRCS += nsSplashScreenDummy.cpp
 endif
 
 DEFINES += -DIMPL_XREAPI -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'
-
-ifndef BUILD_STATIC_LIBS
-CPPSRCS += nsEmbedFunctions.cpp
-endif
 
 ifdef MOZ_UPDATER
 ifneq ($(OS_TARGET),Android)
@@ -196,11 +193,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/base \
   $(NULL)
 
-ifdef BUILD_STATIC_LIBS
-export::
-	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_LINK_COMP_NAMES) Apprunner
-endif
-
 LOCAL_INCLUDES += \
   -I$(srcdir) \
   -I$(srcdir)/../profile \
@@ -211,10 +203,6 @@ CXXFLAGS += $(TK_CFLAGS) $(MOZ_DBUS_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CXXFLAGS += $(MOZ_PANGO_CFLAGS)
-endif
-
-ifdef BUILD_STATIC_LIBS
-DEFINES += -D_BUILD_STATIC_BIN
 endif
 
 DEFINES += \

@@ -89,23 +89,11 @@ function HistoryStore(name) {
   Svc.Obs.add("places-shutdown", function() {
     for each ([query, stmt] in Iterator(this._stmts))
       stmt.finalize();
-    this.__hsvc = null;
     this._stmts = [];
   }, this);
 }
 HistoryStore.prototype = {
   __proto__: Store.prototype,
-
-  __hsvc: null,
-  get _hsvc() {
-    if (!this.__hsvc)
-      this.__hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                    getService(Ci.nsINavHistoryService).
-                    QueryInterface(Ci.nsIGlobalHistory2).
-                    QueryInterface(Ci.nsIBrowserHistory).
-                    QueryInterface(Ci.nsPIPlacesDatabase);
-    return this.__hsvc;
-  },
 
   __asyncHistory: null,
   get _asyncHistory() {
@@ -122,8 +110,9 @@ HistoryStore.prototype = {
       return this._stmts[query];
 
     this._log.trace("Creating SQL statement: " + query);
-    return this._stmts[query] = this._hsvc.DBConnection
-                                    .createAsyncStatement(query);
+    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                        .DBConnection;
+    return this._stmts[query] = db.createAsyncStatement(query);
   },
 
   get _setGUIDStm() {
@@ -299,7 +288,7 @@ HistoryStore.prototype = {
     }
     record.guid = record.id;
 
-    if (!this._hsvc.canAddURI(record.uri)) {
+    if (!PlacesUtils.history.canAddURI(record.uri)) {
       this._log.trace("Ignoring record " + record.id + " with URI "
                       + record.uri.spec + ": can't add this URI.");
       return false;
@@ -325,8 +314,8 @@ HistoryStore.prototype = {
                        + visit.date);
         throw "Visit has no date!";
       }
-      if (!visit.type || !(visit.type >= Svc.History.TRANSITION_LINK &&
-                           visit.type <= Svc.History.TRANSITION_FRAMED_LINK)) {
+      if (!visit.type || !(visit.type >= PlacesUtils.history.TRANSITION_LINK &&
+                           visit.type <= PlacesUtils.history.TRANSITION_FRAMED_LINK)) {
         this._log.warn("Encountered record with invalid visit type: "
                        + visit.type);
         throw "Invalid visit type!";
@@ -366,7 +355,7 @@ HistoryStore.prototype = {
     }
 
     let uri = Utils.makeURI(page.url);
-    Svc.History.removePage(uri);
+    PlacesUtils.history.removePage(uri);
     this._log.trace("Removed page: " + [record.id, page.url, page.title]);
   },
 
@@ -380,7 +369,7 @@ HistoryStore.prototype = {
     if (typeof(url) == "string")
       url = Utils.makeURI(url);
     // Don't call isVisited on a null URL to work around crasher bug 492442.
-    return url ? this._hsvc.isVisited(url) : false;
+    return url ? PlacesUtils.history.isVisited(url) : false;
   },
 
   createRecord: function createRecord(id, collection) {
@@ -399,7 +388,7 @@ HistoryStore.prototype = {
   },
 
   wipe: function HistStore_wipe() {
-    this._hsvc.removeAllPages();
+    PlacesUtils.history.removeAllPages();
   }
 };
 
@@ -416,13 +405,13 @@ HistoryTracker.prototype = {
     switch (topic) {
       case "weave:engine:start-tracking":
         if (!this._enabled) {
-          Svc.History.addObserver(this, true);
+          PlacesUtils.history.addObserver(this, true);
           this._enabled = true;
         }
         break;
       case "weave:engine:stop-tracking":
         if (this._enabled) {
-          Svc.History.removeObserver(this);
+          PlacesUtils.history.removeObserver(this);
           this._enabled = false;
         }
         break;

@@ -5,6 +5,12 @@ const Ci = Components.interfaces;
 // TEST DATA
 // ---------
 var gTests = [
+  { spec:    "about:blank",
+    scheme:  "about",
+    prePath: "about:",
+    path:    "blank",
+    ref:     "",
+    nsIURL:  false, nsINestedURI: true, immutable: true },
   { spec:    "about:foobar",
     scheme:  "about",
     prePath: "about:",
@@ -77,6 +83,12 @@ var gTests = [
     path:    "resource://gre/chrome.toolkit.jar!/",
     ref:     "",
     nsIURL:  true, nsINestedURI: true },
+  { spec:    "place:redirectsMode=2&sort=8&maxResults=10",
+    scheme:  "place",
+    prePath: "place:",
+    path:    "redirectsMode=2&sort=8&maxResults=10",
+    ref:     "",
+    nsIURL:  false, nsINestedURI: false },
   { spec:    "resource://gre/",
     scheme:  "resource",
     prePath: "resource://gre",
@@ -217,6 +229,10 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
 
   var testURI = NetUtil.newURI(aTest.spec + aSuffix);
   var origURI = NetUtil.newURI(aTest.spec);
+
+  do_info("testing " + aTest.spec + " with '" + aSuffix + "' appended " +
+           "equals a clone of itself");
+  do_check_uri_eq(testURI, testURI.clone());
 
   do_info("testing " + aTest.spec +
           " doesn't equal self with '" + aSuffix + "' appended");

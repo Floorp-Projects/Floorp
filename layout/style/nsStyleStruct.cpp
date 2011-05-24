@@ -1822,10 +1822,13 @@ PRBool nsStyleBackground::IsTransparent() const
 void
 nsStyleBackground::Position::SetInitialValues()
 {
+  // Initial value is "0% 0%"
   mXPosition.mPercent = 0.0f;
   mXPosition.mLength = 0;
+  mXPosition.mHasPercent = PR_TRUE;
   mYPosition.mPercent = 0.0f;
   mYPosition.mLength = 0;
+  mYPosition.mHasPercent = PR_TRUE;
 }
 
 void

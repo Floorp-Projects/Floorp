@@ -28,7 +28,7 @@ function run_test() {
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
   // This test expects a clean slate -- no saved passphrase.
-  Weave.Svc.Login.removeAllLogins();
+  Services.logins.removeAllLogins();
   let johnHelper = track_collections_helper();
   let johnU      = johnHelper.with_updated_collection;
   let johnColls  = johnHelper.collections;

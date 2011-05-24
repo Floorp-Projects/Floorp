@@ -264,7 +264,7 @@ pref("browser.urlbar.doubleClickSelectsAll", true);
 #else
 pref("browser.urlbar.doubleClickSelectsAll", false);
 #endif
-pref("browser.urlbar.autoFill", false);
+pref("browser.urlbar.autoFill", true);
 // 0: Match anywhere (e.g., middle of words)
 // 1: Match on word boundaries and then try matching anywhere
 // 2: Match only on word boundaries (e.g., after / or .)
@@ -899,6 +899,17 @@ pref("dom.ipc.plugins.enabled.i386.javaappletplugin.plugin", true);
 pref("dom.ipc.plugins.enabled.x86_64", true);
 #else
 pref("dom.ipc.plugins.enabled", true);
+#endif
+
+// This pref governs whether we attempt to work around problems caused by
+// plugins using OS calls to manipulate the cursor while running out-of-
+// process.  These workarounds all involve intercepting (hooking) certain
+// OS calls in the plugin process, then arranging to make certain OS calls
+// in the browser process.  Eventually plugins will be required to use the
+// NPAPI to manipulate the cursor, and these workarounds will be removed.
+// See bug 621117.
+#ifdef XP_MACOSX
+pref("dom.ipc.plugins.nativeCursorSupport", true);
 #endif
 
 #ifdef XP_WIN

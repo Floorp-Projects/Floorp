@@ -25,7 +25,7 @@ function run_test() {
   _("Verify that the URI has been rewritten.");
   do_check_neq(tagRecord.bmkUri, uri);
   
-  let tags = store._getNode(store._bms.tagsFolder);
+  let tags = store._getNode(PlacesUtils.tagsFolderId);
   tags.containerOpen = true;
   let tagID;
   for (let i = 0; i < tags.childCount; ++i) {
