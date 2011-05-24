@@ -217,11 +217,6 @@ JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno);
 extern JS_PUBLIC_API(jsbytecode *)
 JS_EndPC(JSContext *cx, JSScript *script);
 
-extern JS_PUBLIC_API(JSBool)
-JS_GetLinePCs(JSContext *cx, JSScript *script,
-              uintN startLine, uintN maxLines,
-              uintN* count, uintN** lines, jsbytecode*** pcs);
-
 extern JS_PUBLIC_API(uintN)
 JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun);
 
