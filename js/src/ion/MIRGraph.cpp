@@ -333,6 +333,28 @@ MBasicBlock::peek(int32 depth)
 }
 
 bool
+MBasicBlock::insertBefore(MInstruction *at, MInstruction *ins)
+{
+    if (!ins)
+        return false;
+    ins->setBlock(this);
+    ins->setId(gen->graph().allocInstructionId());
+    instructions_.insertBefore(at, ins);
+    return true;
+}
+
+bool
+MBasicBlock::insertAfter(MInstruction *at, MInstruction *ins)
+{
+    if (!ins)
+        return false;
+    ins->setBlock(this);
+    ins->setId(gen->graph().allocInstructionId());
+    instructions_.insertAfter(at, ins);
+    return true;
+}
+
+bool
 MBasicBlock::add(MInstruction *ins)
 {
     JS_ASSERT(!lastIns_);

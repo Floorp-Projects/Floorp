@@ -123,6 +123,20 @@ class InlineList
         return iter;
     }
 
+    void insertBefore(Node *at, Node *item) {
+        item->next = at;
+        item->prev = at->prev;
+        at->prev->next = item;
+        at->prev = item;
+    }
+
+    void insertAfter(Node *at, Node *item) {
+        item->next = at->next;
+        item->prev = at;
+        at->next->prev = item;
+        at->next = item;
+    }
+
     void insert(Node *t) {
         t->prev = head.prev;
         t->next = &head;
