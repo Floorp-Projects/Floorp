@@ -914,15 +914,9 @@ Execute(JSContext *cx, JSObject &chain, JSScript *script, StackFrame *prev, uint
     SetValueRangeToNull(frame.fp()->slots(), script->nfixed);
 
     /* Initialize frame and locals. */
-    JSObject *initialVarObj;
     if (prev) {
         JS_ASSERT(chain == prev->scopeChain());
         frame.fp()->initEvalFrame(cx, script, prev, flags);
-
-        /* NB: prev may not be in cx->currentSegment. */
-        initialVarObj = (prev == cx->maybefp())
-                        ? &cx->stack.currentVarObj()
-                        : &cx->stack.space().varObjForFrame(prev);
     } else {
         /* The scope chain could be anything, so innerize just in case. */
         JSObject *innerizedChain = &chain;
@@ -936,6 +930,7 @@ Execute(JSContext *cx, JSObject &chain, JSScript *script, StackFrame *prev, uint
                                  JSMSG_NON_NATIVE_SCOPE);
             return false;
         }
+        JS_ASSERT(!innerizedChain->getOps()->defineProperty);
 
         frame.fp()->initGlobalFrame(script, *innerizedChain, cx->maybefp(), flags);
 
@@ -945,22 +940,16 @@ Execute(JSContext *cx, JSObject &chain, JSScript *script, StackFrame *prev, uint
             return false;
         frame.fp()->globalThis().setObject(*thisp);
 
-        initialVarObj = cx->hasRunOption(JSOPTION_VAROBJFIX)
-                        ? chain.getGlobal()
-                        : &chain;
+        if (!cx->hasRunOption(JSOPTION_VAROBJFIX))
+            innerizedChain->makeVarObj();
     }
-    JS_ASSERT(!initialVarObj->getOps()->defineProperty);
 
-    if (frame.fp()->isStrictEvalFrame()) {
-        /* Give strict mode eval its own fresh lexical environment. */
-        initialVarObj = CreateEvalCallObject(cx, frame.fp());
-        if (!initialVarObj)
-            return false;
-        JS_ASSERT(initialVarObj == &frame.fp()->scopeChain());
-    }
+    /* Give strict mode eval its own fresh lexical environment. */
+    if (frame.fp()->isStrictEvalFrame() && !CreateEvalCallObject(cx, frame.fp()))
+        return false;
 
     /* Officially push the frame. ~FrameGuard pops. */
-    cx->stack.pushExecuteFrame(initialVarObj, &frame);
+    cx->stack.pushExecuteFrame(&frame);
 
 #if JS_HAS_SHARP_VARS
     if (script->hasSharps && !InitSharpSlots(cx, frame.fp()))
@@ -3261,7 +3250,7 @@ BEGIN_CASE(JSOP_SETCONST)
 {
     JSAtom *atom;
     LOAD_ATOM(0, atom);
-    JSObject &obj = cx->stack.currentVarObj();
+    JSObject &obj = regs.fp()->varObj();
     const Value &ref = regs.sp[-1];
     if (!obj.defineProperty(cx, ATOM_TO_JSID(atom), ref,
                             PropertyStub, StrictPropertyStub,
@@ -5213,7 +5202,7 @@ BEGIN_CASE(JSOP_DEFVAR)
     uint32 index = GET_INDEX(regs.pc);
     JSAtom *atom = atoms[index];
 
-    JSObject *obj = &cx->stack.currentVarObj();
+    JSObject *obj = &regs.fp()->varObj();
     JS_ASSERT(!obj->getOps()->defineProperty);
     uintN attrs = JSPROP_ENUMERATE;
     if (!regs.fp()->isEvalFrame())
@@ -5310,7 +5299,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * current scope chain even for the case of function expression statements
      * and functions defined by eval inside let or with blocks.
      */
-    JSObject *parent = &cx->stack.currentVarObj();
+    JSObject *parent = &regs.fp()->varObj();
 
     /* ES5 10.5 (NB: with subsequent errata). */
     jsid id = ATOM_TO_JSID(fun->atom);
@@ -5381,7 +5370,7 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
                   ? JSPROP_ENUMERATE
                   : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
-    JSObject &parent = cx->stack.currentVarObj();
+    JSObject &parent = regs.fp()->varObj();
 
     jsid id = ATOM_TO_JSID(fun->atom);
     if (!CheckRedeclaration(cx, &parent, id, attrs))

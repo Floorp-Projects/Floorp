@@ -191,7 +191,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp)
     tokenStream(cx),
     principals(NULL),
     callerFrame(cfp),
-    callerVarObj(cfp ? &cx->stack.space().varObjForFrame(cfp) : NULL),
+    callerVarObj(cfp ? &cfp->varObj() : NULL),
     nodeList(NULL),
     functionCount(0),
     traceListHead(NULL),
