@@ -121,9 +121,6 @@
 #include "nsIDOMMediaList.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
-#include "nsIDOMPerformanceTiming.h"
-#include "nsIDOMPerformanceNavigation.h"
-#include "nsIDOMPerformance.h"
 #include "nsClientRect.h"
 
 // DOM core includes
@@ -698,12 +695,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(History, nsHistorySH,
                            ARRAY_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE)
-  NS_DEFINE_CLASSINFO_DATA(PerformanceTiming, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(PerformanceNavigation, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(Performance, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Screen, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
@@ -2406,53 +2397,26 @@ nsDOMClassInfo::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (nsGlobalWindow::HasIndexedDBSupport()) {
-    if (nsGlobalWindow::HasPerformanceSupport()) {
-      DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)
-      DOM_CLASSINFO_MAP_END
-    } else {
-      DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
-      DOM_CLASSINFO_MAP_END
-    }
+    DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
+    DOM_CLASSINFO_MAP_END
   } else {
-    if (nsGlobalWindow::HasPerformanceSupport()) {
-      DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)
-      DOM_CLASSINFO_MAP_END
-    } else {
-      DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
-      DOM_CLASSINFO_MAP_END
-    }
+    DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
+      DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
+    DOM_CLASSINFO_MAP_END
   }
 
   DOM_CLASSINFO_MAP_BEGIN(WindowUtils, nsIDOMWindowUtils)
@@ -2500,21 +2464,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(PerformanceTiming, nsIDOMPerformanceTiming,
-                                        !nsGlobalWindow::HasPerformanceSupport())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPerformanceTiming)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(PerformanceNavigation, nsIDOMPerformanceNavigation,
-                                        !nsGlobalWindow::HasPerformanceSupport())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPerformanceNavigation)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(Performance, nsIDOMPerformance,
-                                        !nsGlobalWindow::HasPerformanceSupport())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPerformance)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
