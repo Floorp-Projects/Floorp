@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
+ *   Andrew Drake <drakedevel@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,75 +39,64 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_temp_alloc_policy_h__
-#define jsion_temp_alloc_policy_h__
+#include "Ion.h"
 
-#include "jscntxt.h"
-#include "jsarena.h"
+using namespace js;
+using namespace js::ion;
 
-namespace js {
-namespace ion {
+#ifdef JS_THREADSAFE
+static bool IonTLSInitialized = false;
+static PRUintn IonTLSIndex;
+#else
+static IonContext *GlobalIonContext;
+#endif
 
-class TempAllocPolicy
+IonContext::IonContext(JSContext *cx, TempAllocator *temp)
+  : cx(cx),
+    temp(temp)
 {
-    JSContext *cx;
-
-  public:
-    TempAllocPolicy(JSContext *cx)
-      : cx(cx)
-    { }
-    TempAllocPolicy(const TempAllocPolicy &policy)
-      : cx(policy.cx)
-    { }
-    void *malloc_(size_t bytes) {
-        void *p;
-        JS_ARENA_ALLOCATE(p, &cx->tempPool, bytes);
-        return p;
-    }
-    void *realloc_(void *p, size_t bytes) {
-        return malloc_(bytes);
-    }
-    void free_(void *p) {
-    }
-    void reportAllocOverflow() const {
-    }
+    SetIonContext(this);
 };
 
-struct TempAllocator
+IonContext::~IonContext()
 {
-    JSArenaPool *arena;
+    SetIonContext(NULL);
+}
 
-    TempAllocator(JSArenaPool *arena)
-      : arena(arena),
-        mark(JS_ARENA_MARK(arena))
-    { }
-
-    ~TempAllocator()
-    {
-        JS_ARENA_RELEASE(arena, mark);
-    }
-
-    void *allocate(size_t bytes)
-    {
-        void *p;
-        JS_ARENA_ALLOCATE(p, arena, bytes);
-        return p;
-    }
-
-  private:
-    void *mark;
-};
-
-struct TempObject
+bool ion::InitializeIon()
 {
-    void *operator new(size_t nbytes);
-    inline void *operator new(size_t nbytes, TempAllocator &alloc) {
-        return alloc.allocate(nbytes);
+#ifdef JS_THREADSAFE
+    if (!IonTLSInitialized) {
+        PRStatus status = PR_NewThreadPrivateIndex(&IonTLSIndex, NULL);
+        if (status != PR_SUCCESS)
+            return false;
+        IonTLSInitialized = true;
     }
-};
+#endif
+    return true;
+}
 
-} // namespace ion
-} // namespace js
+#ifdef JS_THREADSAFE
+IonContext *ion::GetIonContext()
+{
+    return (IonContext *)PR_GetThreadPrivate(IonTLSIndex);
+}
 
-#endif // jsion_temp_alloc_policy_h__
+bool ion::SetIonContext(IonContext *ctx)
+{
+    return PR_SetThreadPrivate(IonTLSIndex, ctx) == PR_SUCCESS;
+}
+#else
+IonContext *ion::GetIonContext()
+{
+    JS_ASSERT(GlobalIonContext);
+    return GlobalIonContext;
+}
+
+bool ion::SetIonContext(IonContext *ctx)
+{
+    GlobalIonContext = ctx;
+    return true;
+}
+#endif
 

@@ -49,6 +49,10 @@
 #include "jsemit.h"
 #include "jsscriptinlines.h"
 
+#ifdef JS_THREADSAFE
+# include "prthread.h"
+#endif
+
 using namespace js;
 using namespace js::ion;
 
@@ -56,10 +60,11 @@ bool
 ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 {
     TempAllocator temp(&cx->tempPool);
+    IonContext ictx(cx, &temp);
 
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
 
-    MIRGraph graph(cx);
+    MIRGraph graph;
     C1Spewer spew(graph, script);
     IonBuilder analyzer(cx, script, fun, temp, graph);
     spew.enable("/tmp/ion.cfg");
@@ -68,9 +73,9 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
         return false;
     spew.spew("Build SSA");
 
-    if (!ApplyTypeInformation(&analyzer, graph))
+    if (!ApplyTypeInformation(graph))
         return false;
-    if (!Lower(&analyzer, graph))
+    if (!Lower(graph))
         return false;
     spew.spew("Lower");
 
@@ -78,10 +83,9 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 }
 
 IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
-                                   MIRGraph &graph)
-  : MIRGenerator(cx, temp, script, fun, graph),
-    cfgStack_(TempAllocPolicy(cx)),
-    loops_(TempAllocPolicy(cx))
+                       MIRGraph &graph)
+  : MIRGenerator(temp, script, fun, graph),
+    cx(cx)
 {
     pc = script->code;
     atoms = script->atomMap.vector;
@@ -180,18 +184,18 @@ IonBuilder::analyze()
 
     // Initialize argument references if inside a function frame.
     if (fun()) {
-        MParameter *param = MParameter::New(this, MParameter::CALLEE_SLOT);
+        MParameter *param = MParameter::New(MParameter::CALLEE_SLOT);
         if (!current->add(param))
             return false;
         current->initSlot(calleeSlot(), param);
 
-        param = MParameter::New(this, MParameter::THIS_SLOT);
+        param = MParameter::New(MParameter::THIS_SLOT);
         if (!current->add(param))
             return false;
         current->initSlot(thisSlot(), param);
 
         for (uint32 i = 0; i < nargs(); i++) {
-            param = MParameter::New(this, int(i));
+            param = MParameter::New(int(i));
             if (!current->add(param))
                 return false;
             current->initSlot(argSlot(i), param);
@@ -200,7 +204,7 @@ IonBuilder::analyze()
 
     // Initialize local variables.
     for (uint32 i = 0; i < nlocals(); i++) {
-        MConstant *undef = MConstant::New(this, UndefinedValue());
+        MConstant *undef = MConstant::New(UndefinedValue());
         if (!current->add(undef))
             return false;
         current->initSlot(localSlot(i), undef);
@@ -528,7 +532,7 @@ IonBuilder::processIfEnd(CFGState &state)
         // Here, the false block is the join point. Create an edge from the
         // current block to the false block. Note that a RETURN opcode
         // could have already ended the block.
-        MGoto *ins = MGoto::New(this, state.branch.ifFalse);
+        MGoto *ins = MGoto::New(state.branch.ifFalse);
         if (!current->end(ins))
             return ControlStatus_Error;
 
@@ -575,11 +579,11 @@ IonBuilder::processIfElseFalseEnd(CFGState &state)
         return ControlStatus_Error;
   
     // Create edges from the true and false blocks as needed.
-    MGoto *edge = MGoto::New(this, join);
+    MGoto *edge = MGoto::New(join);
     if (!pred->end(edge))
         return ControlStatus_Error;
     if (other) {
-        edge = MGoto::New(this, join);
+        edge = MGoto::New(join);
         if (!other->end(edge))
             return ControlStatus_Error;
         if (!join->addPredecessor(other))
@@ -603,7 +607,7 @@ IonBuilder::finalizeLoop(CFGState &state, MInstruction *last)
 
         DeferredEdge *edge = state.loop.breaks;
         while (edge) {
-            MGoto *ins = MGoto::New(this, breaks);
+            MGoto *ins = MGoto::New(breaks);
             if (!edge->block->end(ins))
                 return false;
             if (!breaks->addPredecessor(edge->block))
@@ -626,9 +630,9 @@ IonBuilder::finalizeLoop(CFGState &state, MInstruction *last)
 
         MControlInstruction *ins;
         if (last)
-            ins = MTest::New(this, last, state.loop.entry, state.loop.successor);
+            ins = MTest::New(last, state.loop.entry, state.loop.successor);
         else
-            ins = MGoto::New(this, state.loop.entry);
+            ins = MGoto::New(state.loop.entry);
         if (!current->end(ins))
             return false;
 
@@ -639,7 +643,7 @@ IonBuilder::finalizeLoop(CFGState &state, MInstruction *last)
     // Now that phis are computed in the successor block, see if we need to
     // link the successor and break blocks together.
     if (successor && breaks && (successor != breaks)) {
-        MGoto *ins = MGoto::New(this, successor);
+        MGoto *ins = MGoto::New(successor);
         if (!breaks->end(ins))
             return false;
         if (!successor->addPredecessor(breaks))
@@ -677,7 +681,7 @@ IonBuilder::processWhileCondEnd(CFGState &state)
     // Create the body and successor blocks.
     MBasicBlock *body = newBlock(current, state.loop.bodyStart);
     state.loop.successor = newBlock(current, state.loop.exitpc);
-    MTest *test = MTest::New(this, ins, body, state.loop.successor);
+    MTest *test = MTest::New(ins, body, state.loop.successor);
     if (!current->end(test))
         return ControlStatus_Error;
 
@@ -715,7 +719,7 @@ IonBuilder::processForCondEnd(CFGState &state)
     // Create the body and successor blocks.
     MBasicBlock *body = newBlock(current, state.loop.bodyStart);
     state.loop.successor = newBlock(current, state.loop.exitpc);
-    MTest *test = MTest::New(this, ins, body, state.loop.successor);
+    MTest *test = MTest::New(ins, body, state.loop.successor);
     if (!current->end(test))
         return ControlStatus_Error;
 
@@ -734,7 +738,7 @@ IonBuilder::processDeferredContinues(CFGState &state)
     if (state.loop.continues) {
         MBasicBlock *update = newBlock(pc);
         if (current) {
-            MGoto *ins = MGoto::New(this, update);
+            MGoto *ins = MGoto::New(update);
             if (!current->end(ins))
                 return ControlStatus_Error;
             if (!update->addPredecessor(current))
@@ -743,7 +747,7 @@ IonBuilder::processDeferredContinues(CFGState &state)
 
         DeferredEdge *edge = state.loop.continues;
         while (edge) {
-            MGoto *ins = MGoto::New(this, update);
+            MGoto *ins = MGoto::New(update);
             if (!edge->block->end(ins))
                 return ControlStatus_Error;
             if (!update->addPredecessor(edge->block))
@@ -809,7 +813,7 @@ IonBuilder::processBreak(JSOp op, jssrcnote *sn)
     JS_ASSERT(found);
     CFGState &state = *found;
 
-    DeferredEdge *edge = new (temp()) DeferredEdge(current, state.loop.breaks);
+    DeferredEdge *edge = new DeferredEdge(current, state.loop.breaks);
     if (!edge)
         return ControlStatus_Error;
     state.loop.breaks = edge;
@@ -839,7 +843,7 @@ IonBuilder::processContinue(JSOp op, jssrcnote *sn)
     JS_ASSERT(found);
     CFGState &state = *found;
 
-    DeferredEdge *edge = new (temp()) DeferredEdge(current, state.loop.continues);
+    DeferredEdge *edge = new DeferredEdge(current, state.loop.continues);
     if (!edge)
         return ControlStatus_Error;
     state.loop.continues = edge;
@@ -931,7 +935,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     //    ...
     //    IFNE ->     ; goes to TRACE
     MBasicBlock *header = newLoopHeader(current, pc);
-    MGoto *ins = MGoto::New(this, header);
+    MGoto *ins = MGoto::New(header);
     if (!current->end(ins))
         return ControlStatus_Error;
 
@@ -963,7 +967,7 @@ IonBuilder::whileLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
 
     MBasicBlock *header = newLoopHeader(current, pc);
-    MGoto *ins = MGoto::New(this, header);
+    MGoto *ins = MGoto::New(header);
     if (!current->end(ins))
         return ControlStatus_Error;
 
@@ -1018,7 +1022,7 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     bodyStart = GetNextPc(bodyStart);
 
     MBasicBlock *header = newLoopHeader(current, pc);
-    MGoto *ins = MGoto::New(this, header);
+    MGoto *ins = MGoto::New(header);
     if (!current->end(ins))
         return ControlStatus_Error;
 
@@ -1069,7 +1073,7 @@ IonBuilder::jsop_ifeq(JSOp op)
     // Create true and false branches.
     MBasicBlock *ifTrue = newBlock(current, trueStart);
     MBasicBlock *ifFalse = newBlock(current, falseStart);
-    MTest *test = MTest::New(this, ins, ifTrue, ifFalse);
+    MTest *test = MTest::New(ins, ifTrue, ifFalse);
     if (!current->end(test))
         return false;
 
@@ -1139,7 +1143,7 @@ IonBuilder::processReturn(JSOp op)
         break;
 
       case JSOP_STOP:
-        ins = MConstant::New(this, UndefinedValue());
+        ins = MConstant::New(UndefinedValue());
         if (!current->add(ins))
             return ControlStatus_Error;
         break;
@@ -1150,7 +1154,7 @@ IonBuilder::processReturn(JSOp op)
         break;
     }
 
-    MReturn *ret = MReturn::New(this, ins);
+    MReturn *ret = MReturn::New(ins);
     if (!current->end(ret))
         return ControlStatus_Error;
 
@@ -1162,7 +1166,7 @@ IonBuilder::processReturn(JSOp op)
 bool
 IonBuilder::pushConstant(const Value &v)
 {
-    MConstant *ins = MConstant::New(this, v);
+    MConstant *ins = MConstant::New(v);
     if (!current->add(ins))
         return false;
     current->push(ins);
@@ -1178,7 +1182,7 @@ IonBuilder::jsop_binary(JSOp op)
     MInstruction *ins;
     switch (op) {
       case JSOP_BITAND:
-        ins = MBitAnd::New(this, left, right);
+        ins = MBitAnd::New(left, right);
         break;
 
       default:

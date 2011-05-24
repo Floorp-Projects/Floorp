@@ -39,20 +39,69 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
+#ifndef jsion_ion_alloc_policy_h__
+#define jsion_ion_alloc_policy_h__
+
+#include "jscntxt.h"
+#include "jsarena.h"
+
+#include "Ion.h"
 
 namespace js {
 namespace ion {
 
-class MIRGenerator;
-class MIRGraph;
+class IonAllocPolicy
+{
+  public:
+    void *malloc_(size_t bytes) {
+        JSContext *cx = GetIonContext()->cx;
+        void *p;
+        JS_ARENA_ALLOCATE(p, &cx->tempPool, bytes);
+        return p;
+    }
+    void *realloc_(void *p, size_t bytes) {
+        return malloc_(bytes);
+    }
+    void free_(void *p) {
+    }
+    void reportAllocOverflow() const {
+    }
+};
 
-bool
-ApplyTypeInformation(MIRGraph &graph);
+struct TempAllocator
+{
+    JSArenaPool *arena;
 
-} // namespace js
+    TempAllocator(JSArenaPool *arena)
+      : arena(arena),
+        mark(JS_ARENA_MARK(arena))
+    { }
+
+    ~TempAllocator()
+    {
+        JS_ARENA_RELEASE(arena, mark);
+    }
+
+    void *allocate(size_t bytes)
+    {
+        void *p;
+        JS_ARENA_ALLOCATE(p, arena, bytes);
+        return p;
+    }
+
+  private:
+    void *mark;
+};
+
+struct TempObject
+{
+    inline void *operator new(size_t nbytes) {
+        return GetIonContext()->temp->allocate(nbytes);
+    }
+};
+
 } // namespace ion
+} // namespace js
 
-#endif // jsion_ion_analysis_h__
+#endif // jsion_temp_alloc_policy_h__
 

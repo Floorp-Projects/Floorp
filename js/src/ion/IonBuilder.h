@@ -150,7 +150,7 @@ class IonBuilder : public MIRGenerator
 
   public:
     IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
-                     MIRGraph &graph);
+               MIRGraph &graph);
 
   public:
     bool analyze();
@@ -204,10 +204,11 @@ class IonBuilder : public MIRGenerator
     bool jsop_binary(JSOp op);
 
   private:
+    JSContext *cx;
     JSAtom **atoms;
     MBasicBlock *current;
-    Vector<CFGState, 8, TempAllocPolicy> cfgStack_;
-    Vector<LoopInfo, 4, TempAllocPolicy> loops_;
+    Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
+    Vector<LoopInfo, 4, IonAllocPolicy> loops_;
 };
 
 } // namespace ion

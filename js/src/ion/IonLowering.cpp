@@ -52,13 +52,11 @@ using namespace js::ion;
 // types.
 class LoweringPhase : public MInstructionVisitor
 {
-    MIRGenerator *gen;
     MIRGraph &graph;
 
   public:
-    LoweringPhase(MIRGenerator *gen, MIRGraph &graph)
-      : gen(gen),
-        graph(graph)
+    LoweringPhase(MIRGraph &graph)
+      : graph(graph)
     { }
 
     bool lowerBlock(MBasicBlock *block);
@@ -83,7 +81,7 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
         // needed. Note that we can only hoist conversions like this if the
         // definition has a snapshot attached, because the conversion is
         // fallible.
-        narrowed = MConvert::New(gen, ins, usedAs);
+        narrowed = MConvert::New(ins, usedAs);
         if (!narrowed)
             return false;
     }
@@ -131,7 +129,7 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
 
         // If a value is desired, create a box instruction near the use.
         if (required == MIRType_Value) {
-            MBox *box = MBox::New(gen, ins);
+            MBox *box = MBox::New(ins);
             if (!use->block()->insertBefore(use, box))
                 return false;
             use->replaceOperand(uses, box);
@@ -145,7 +143,7 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
         // specialization, but a boolean input could be okay at the cost of a
         // conversion.
         JS_ASSERT(required < MIRType_Value);
-        MConvert *converted = MConvert::New(gen, ins, required);
+        MConvert *converted = MConvert::New(ins, required);
         if (!use->block()->insertBefore(use, converted))
             return false;
         use->replaceOperand(uses, converted);
@@ -182,9 +180,9 @@ LoweringPhase::analyze()
 }
 
 bool
-ion::Lower(MIRGenerator *gen, MIRGraph &graph)
+ion::Lower(MIRGraph &graph)
 {
-    LoweringPhase phase(gen, graph);
+    LoweringPhase phase(graph);
     return phase.analyze();
 }
 
