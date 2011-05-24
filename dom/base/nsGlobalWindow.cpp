@@ -5888,11 +5888,25 @@ PostMessageEvent::Run()
                     "should have been passed an outer window!");
 
   // Get the JSContext for the target window
+  JSContext* cx = nsnull;
   nsIScriptContext* scriptContext = mTargetWindow->GetContext();
-  NS_ENSURE_TRUE(scriptContext, NS_ERROR_FAILURE);
+  if (scriptContext) {
+    cx = (JSContext*)scriptContext->GetNativeContext();
+  }
 
-  JSContext* cx = (JSContext*)scriptContext->GetNativeContext();
-  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+  if (!cx) {
+    // This can happen if mTargetWindow has been closed.  To avoid leaking,
+    // we need to find a JSContext.
+    nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
+    if (cxStack) {
+      cxStack->GetSafeJSContext(&cx);
+    }
+
+    if (!cx) {
+      NS_WARNING("Cannot find a JSContext!  Leaking PostMessage buffer.");
+      return NS_ERROR_FAILURE;
+    }
+  }
 
   // If we bailed before this point we're going to leak mMessage, but
   // that's probably better than crashing.
