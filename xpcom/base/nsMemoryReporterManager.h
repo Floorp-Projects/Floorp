@@ -20,9 +20,10 @@ public:
   ~nsMemoryReporter();
 
 protected:
-  nsCString mPath, mDesc;
-  PRInt32 mKind;
-  PRInt64 mMemoryUsed;
+  nsCString mPath;
+  PRInt32   mKind;
+  nsCString mDesc;
+  PRInt64   mMemoryUsed;
 };
 
 

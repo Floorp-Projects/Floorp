@@ -52,7 +52,9 @@ Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
-Utils.lazy(this, 'Auth', AuthMgr);
+XPCOMUtils.defineLazyGetter(this, "Auth", function () {
+  return new AuthMgr();
+});
 
 // XXX: the authenticator api will probably need to be changed to support
 // other methods (digest, oauth, etc)
@@ -134,7 +136,7 @@ AuthMgr.prototype = {
 function AsyncResource(uri) {
   this._log = Log4Moz.repository.getLogger(this._logName);
   this._log.level =
-    Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
+    Log4Moz.Level[Svc.Prefs.get("log.logger.network.resources")];
   this.uri = uri;
   this._headers = {};
   this._onComplete = Utils.bind2(this, this._onComplete);
@@ -152,9 +154,9 @@ AsyncResource.prototype = {
   //   Firefox Aurora/5.0a1 FxSync/1.9.0.20110409.desktop
   //
   _userAgent:
-    Svc.AppInfo.name + "/" + Svc.AppInfo.version +     // Product.
-    " FxSync/" + WEAVE_VERSION + "." +                 // Sync.
-    Svc.AppInfo.appBuildID + ".",                      // Build.
+    Services.appinfo.name + "/" + Services.appinfo.version +  // Product.
+    " FxSync/" + WEAVE_VERSION + "." +                        // Sync.
+    Services.appinfo.appBuildID + ".",                        // Build.
 
   // Wait 5 minutes before killing a request.
   ABORT_TIMEOUT: 300000,
@@ -228,8 +230,9 @@ AsyncResource.prototype = {
   // to obtain a request channel.
   //
   _createRequest: function Res__createRequest() {
-    let channel = Svc.IO.newChannel(this.spec, null, null).
-      QueryInterface(Ci.nsIRequest).QueryInterface(Ci.nsIHttpChannel);
+    let channel = Services.io.newChannel(this.spec, null, null)
+                          .QueryInterface(Ci.nsIRequest)
+                          .QueryInterface(Ci.nsIHttpChannel);
 
     // Always validate the cache:
     channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
@@ -378,7 +381,7 @@ AsyncResource.prototype = {
     // Make a lazy getter to convert the json response into an object.
     // Note that this can cause a parse error to be thrown far away from the
     // actual fetch, so be warned!
-    Utils.lazy2(ret, "obj", function() JSON.parse(ret));
+    XPCOMUtils.defineLazyGetter(ret, "obj", function() JSON.parse(ret));
 
     // Notify if we get a 401 to maybe try again with a new URI.
     // TODO: more retry logic.
@@ -633,7 +636,7 @@ BadCertListener.prototype = {
     // Silently ignore?
     let log = Log4Moz.repository.getLogger("Service.CertListener");
     log.level =
-      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
+      Log4Moz.Level[Svc.Prefs.get("log.logger.network.resources")];
     log.debug("Invalid HTTPS certificate encountered, ignoring!");
 
     return true;

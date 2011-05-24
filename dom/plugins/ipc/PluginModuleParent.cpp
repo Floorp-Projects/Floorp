@@ -41,6 +41,8 @@
 #elif XP_MACOSX
 #include "PluginUtilsOSX.h"
 #include "PluginInterposeOSX.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #endif
 #ifdef MOZ_WIDGET_QT
 #include <QtCore/QCoreApplication>
@@ -1044,6 +1046,84 @@ PluginModuleParent::RecvPluginHideWindow(const uint32_t& aWindowId)
 #else
     NS_NOTREACHED(
         "PluginInstanceParent::RecvPluginHideWindow not implemented!");
+    return false;
+#endif
+}
+
+bool
+PluginModuleParent::RecvSetCursor(const NSCursorInfo& aCursorInfo)
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+#if defined(XP_MACOSX)
+    mac_plugin_interposing::parent::OnSetCursor(aCursorInfo);
+    return true;
+#else
+    NS_NOTREACHED(
+        "PluginInstanceParent::RecvSetCursor not implemented!");
+    return false;
+#endif
+}
+
+bool
+PluginModuleParent::RecvShowCursor(const bool& aShow)
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+#if defined(XP_MACOSX)
+    mac_plugin_interposing::parent::OnShowCursor(aShow);
+    return true;
+#else
+    NS_NOTREACHED(
+        "PluginInstanceParent::RecvShowCursor not implemented!");
+    return false;
+#endif
+}
+
+bool
+PluginModuleParent::RecvPushCursor(const NSCursorInfo& aCursorInfo)
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+#if defined(XP_MACOSX)
+    mac_plugin_interposing::parent::OnPushCursor(aCursorInfo);
+    return true;
+#else
+    NS_NOTREACHED(
+        "PluginInstanceParent::RecvPushCursor not implemented!");
+    return false;
+#endif
+}
+
+bool
+PluginModuleParent::RecvPopCursor()
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+#if defined(XP_MACOSX)
+    mac_plugin_interposing::parent::OnPopCursor();
+    return true;
+#else
+    NS_NOTREACHED(
+        "PluginInstanceParent::RecvPopCursor not implemented!");
+    return false;
+#endif
+}
+
+bool
+PluginModuleParent::RecvGetNativeCursorsSupported(bool* supported)
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+#if defined(XP_MACOSX)
+    PRBool nativeCursorsSupported = PR_FALSE;
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+      if (NS_FAILED(prefs->GetBoolPref("dom.ipc.plugins.nativeCursorSupport",
+          &nativeCursorsSupported))) {
+        nativeCursorsSupported = PR_FALSE;
+      }
+    }
+    *supported = nativeCursorsSupported;
+    return true;
+#else
+    NS_NOTREACHED(
+        "PluginInstanceParent::RecvGetNativeCursorSupportLevel not implemented!");
     return false;
 #endif
 }

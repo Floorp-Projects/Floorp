@@ -39,6 +39,10 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
+ifeq (,$(filter aurora beta release,$(MOZ_UPDATE_CHANNEL)))
+DEFINES += -DMOZ_COMPATABILITY_NIGHTLY=1
+endif
+
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = extensions

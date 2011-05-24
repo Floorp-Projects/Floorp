@@ -37,7 +37,8 @@ static void getVariableInfo(ShShaderInfo varType,
                             int* length,
                             int* size,
                             ShDataType* type,
-                            char* name)
+                            char* name,
+                            char* mappedName)
 {
     if (!handle || !size || !type || !name)
         return;
@@ -59,6 +60,8 @@ static void getVariableInfo(ShShaderInfo varType,
     *size = varInfo.size;
     *type = varInfo.type;
     strcpy(name, varInfo.name.c_str());
+    if (mappedName)
+        strcpy(mappedName, varInfo.mappedName.c_str());
 }
 
 //
@@ -194,7 +197,9 @@ void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params)
     case SH_ACTIVE_ATTRIBUTE_MAX_LENGTH:
         *params = getVariableMaxLength(compiler->getAttribs());
         break;
-
+    case SH_MAPPED_NAME_MAX_LENGTH:
+        *params = compiler->getMappedNameMaxLength();
+        break;
     default: UNREACHABLE();
     }
 }
@@ -236,10 +241,11 @@ void ShGetActiveAttrib(const ShHandle handle,
                        int* length,
                        int* size,
                        ShDataType* type,
-                       char* name)
+                       char* name,
+                       char* mappedName)
 {
     getVariableInfo(SH_ACTIVE_ATTRIBUTES,
-                    handle, index, length, size, type, name);
+                    handle, index, length, size, type, name, mappedName);
 }
 
 void ShGetActiveUniform(const ShHandle handle,
@@ -247,8 +253,9 @@ void ShGetActiveUniform(const ShHandle handle,
                         int* length,
                         int* size,
                         ShDataType* type,
-                        char* name)
+                        char* name,
+                        char* mappedName)
 {
     getVariableInfo(SH_ACTIVE_UNIFORMS,
-                    handle, index, length, size, type, name);
+                    handle, index, length, size, type, name, mappedName);
 }

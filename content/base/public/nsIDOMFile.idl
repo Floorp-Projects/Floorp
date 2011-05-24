@@ -82,7 +82,7 @@ interface nsIDOMFile : nsIDOMBlob
 };
 
 [scriptable, uuid(c4a77171-039b-4f84-97f9-820fb51626af)]
-interface nsIDOMBlobBuilder : nsISupports
+interface nsIDOMMozBlobBuilder : nsISupports
 {
   nsIDOMBlob getBlob([optional] in DOMString contentType);
   [implicit_jscontext] void append(in jsval data);

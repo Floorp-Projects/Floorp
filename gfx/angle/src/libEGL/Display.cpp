@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "common/debug.h"
+#include "libGLESv2/mathutil.h"
 
 #include "libEGL/main.h"
 
@@ -27,8 +28,9 @@ Display::Display(HDC deviceContext) : mDc(deviceContext)
     mD3d9Module = NULL;
     
     mD3d9 = NULL;
-    mD3d9ex = NULL;
+    mD3d9Ex = NULL;
     mDevice = NULL;
+    mDeviceEx = NULL;
     mDeviceWindow = NULL;
 
     mAdapter = D3DADAPTER_DEFAULT;
@@ -68,10 +70,10 @@ bool Display::initialize()
     // Use Direct3D9Ex if available. Among other things, this version is less
     // inclined to report a lost context, for example when the user switches
     // desktop. Direct3D9Ex is available in Windows Vista and later if suitable drivers are available.
-    if (ENABLE_D3D9EX && Direct3DCreate9ExPtr && SUCCEEDED(Direct3DCreate9ExPtr(D3D_SDK_VERSION, &mD3d9ex)))
+    if (ENABLE_D3D9EX && Direct3DCreate9ExPtr && SUCCEEDED(Direct3DCreate9ExPtr(D3D_SDK_VERSION, &mD3d9Ex)))
     {
-        ASSERT(mD3d9ex);
-        mD3d9ex->QueryInterface(IID_IDirect3D9, reinterpret_cast<void**>(&mD3d9));
+        ASSERT(mD3d9Ex);
+        mD3d9Ex->QueryInterface(IID_IDirect3D9, reinterpret_cast<void**>(&mD3d9));
         ASSERT(mD3d9);
     }
     else
@@ -143,6 +145,7 @@ bool Display::initialize()
 
         const D3DFORMAT depthStencilFormats[] =
         {
+            D3DFMT_UNKNOWN,
         //  D3DFMT_D16_LOCKABLE,
             D3DFMT_D32,
         //  D3DFMT_D15S1,
@@ -170,11 +173,19 @@ bool Display::initialize()
                 for (int depthStencilIndex = 0; depthStencilIndex < sizeof(depthStencilFormats) / sizeof(D3DFORMAT); depthStencilIndex++)
                 {
                     D3DFORMAT depthStencilFormat = depthStencilFormats[depthStencilIndex];
-                    HRESULT result = mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, depthStencilFormat);
+                    HRESULT result = D3D_OK;
+                    
+                    if(depthStencilFormat != D3DFMT_UNKNOWN)
+                    {
+                        result = mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, depthStencilFormat);
+                    }
 
                     if (SUCCEEDED(result))
                     {
-                        HRESULT result = mD3d9->CheckDepthStencilMatch(mAdapter, mDeviceType, currentDisplayMode.Format, renderTargetFormat, depthStencilFormat);
+                        if(depthStencilFormat != D3DFMT_UNKNOWN)
+                        {
+                            result = mD3d9->CheckDepthStencilMatch(mAdapter, mDeviceType, currentDisplayMode.Format, renderTargetFormat, depthStencilFormat);
+                        }
 
                         if (SUCCEEDED(result))
                         {
@@ -207,6 +218,8 @@ bool Display::initialize()
         return false;
     }
 
+    initExtensionString();
+
     static const TCHAR windowName[] = TEXT("AngleHiddenWindow");
     static const TCHAR className[] = TEXT("STATIC");
 
@@ -230,13 +243,19 @@ void Display::terminate()
     if (mDevice)
     {
         // If the device is lost, reset it first to prevent leaving the driver in an unstable state
-        if (FAILED(mDevice->TestCooperativeLevel()))
+        if (isDeviceLost())
         {
             resetDevice();
         }
 
         mDevice->Release();
         mDevice = NULL;
+    }
+
+    if (mDeviceEx)
+    {
+        mDeviceEx->Release();
+        mDeviceEx = NULL;
     }
 
     if (mD3d9)
@@ -251,10 +270,10 @@ void Display::terminate()
         mDeviceWindow = NULL;
     }
     
-    if (mD3d9ex)
+    if (mD3d9Ex)
     {
-        mD3d9ex->Release();
-        mD3d9ex = NULL;
+        mD3d9Ex->Release();
+        mD3d9Ex = NULL;
     }
 
     if (mD3d9Module)
@@ -356,6 +375,12 @@ bool Display::createDevice()
         }
     }
 
+    if (mD3d9Ex)
+    {
+        result = mDevice->QueryInterface(IID_IDirect3DDevice9Ex, (void**) &mDeviceEx);
+        ASSERT(SUCCEEDED(result));
+    }
+
     // Permanent non-default states
     mDevice->SetRenderState(D3DRS_POINTSPRITEENABLE, TRUE);
 
@@ -387,24 +412,162 @@ bool Display::resetDevice()
     return true;
 }
 
-Surface *Display::createWindowSurface(HWND window, EGLConfig config)
+EGLSurface Display::createWindowSurface(HWND window, EGLConfig config, const EGLint *attribList)
 {
     const Config *configuration = mConfigSet.get(config);
+
+    if (attribList)
+    {
+        while (*attribList != EGL_NONE)
+        {
+            switch (attribList[0])
+            {
+              case EGL_RENDER_BUFFER:
+                switch (attribList[1])
+                {
+                  case EGL_BACK_BUFFER:
+                    break;
+                  case EGL_SINGLE_BUFFER:
+                    return error(EGL_BAD_MATCH, EGL_NO_SURFACE);   // Rendering directly to front buffer not supported
+                  default:
+                    return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+                }
+                break;
+              case EGL_VG_COLORSPACE:
+                return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
+              case EGL_VG_ALPHA_FORMAT:
+                return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
+              default:
+                return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+            }
+
+            attribList += 2;
+        }
+    }
+
+    if (hasExistingWindowSurface(window))
+    {
+        return error(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+    }
 
     Surface *surface = new Surface(this, configuration, window);
+
+    if (!surface->initialize())
+    {
+        delete surface;
+        return EGL_NO_SURFACE;
+    }
+
     mSurfaceSet.insert(surface);
 
-    return surface;
+    return success(surface);
 }
 
-Surface *Display::createOffscreenSurface(int width, int height, EGLConfig config)
+EGLSurface Display::createOffscreenSurface(EGLConfig config, HANDLE shareHandle, const EGLint *attribList)
 {
+    EGLint width = 0, height = 0;
+    EGLenum textureFormat = EGL_NO_TEXTURE;
+    EGLenum textureTarget = EGL_NO_TEXTURE;
     const Config *configuration = mConfigSet.get(config);
 
-    Surface *surface = new Surface(this, configuration, width, height);
+    if (attribList)
+    {
+        while (*attribList != EGL_NONE)
+        {
+            switch (attribList[0])
+            {
+              case EGL_WIDTH:
+                width = attribList[1];
+                break;
+              case EGL_HEIGHT:
+                height = attribList[1];
+                break;
+              case EGL_LARGEST_PBUFFER:
+                if (attribList[1] != EGL_FALSE)
+                  UNIMPLEMENTED(); // FIXME
+                break;
+              case EGL_TEXTURE_FORMAT:
+                switch (attribList[1])
+                {
+                  case EGL_NO_TEXTURE:
+                  case EGL_TEXTURE_RGB:
+                  case EGL_TEXTURE_RGBA:
+                    textureFormat = attribList[1];
+                    break;
+                  default:
+                    return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+                }
+                break;
+              case EGL_TEXTURE_TARGET:
+                switch (attribList[1])
+                {
+                  case EGL_NO_TEXTURE:
+                  case EGL_TEXTURE_2D:
+                    textureTarget = attribList[1];
+                    break;
+                  default:
+                    return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+                }
+                break;
+              case EGL_MIPMAP_TEXTURE:
+                if (attribList[1] != EGL_FALSE)
+                  return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+                break;
+              case EGL_VG_COLORSPACE:
+                return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
+              case EGL_VG_ALPHA_FORMAT:
+                return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
+              default:
+                return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+            }
+
+            attribList += 2;
+        }
+    }
+
+    if (width < 0 || height < 0)
+    {
+        return error(EGL_BAD_PARAMETER, EGL_NO_SURFACE);
+    }
+
+    if (width == 0 || height == 0)
+    {
+        return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+    }
+
+    if (textureFormat != EGL_NO_TEXTURE && !getNonPow2TextureSupport() && (!gl::isPow2(width) || !gl::isPow2(height)))
+    {
+        return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
+    }
+
+    if ((textureFormat != EGL_NO_TEXTURE && textureTarget == EGL_NO_TEXTURE) ||
+        (textureFormat == EGL_NO_TEXTURE && textureTarget != EGL_NO_TEXTURE))
+    {
+        return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
+    }
+
+    if (!(configuration->mSurfaceType & EGL_PBUFFER_BIT))
+    {
+        return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
+    }
+
+    if ((textureFormat == EGL_TEXTURE_RGB && configuration->mBindToTextureRGB != EGL_TRUE) ||
+        (textureFormat == EGL_TEXTURE_RGBA && configuration->mBindToTextureRGBA != EGL_TRUE))
+    {
+        return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+    }
+
+    Surface *surface = new Surface(this, configuration, shareHandle, width, height, textureFormat, textureTarget);
+
+    if (!surface->initialize())
+    {
+        delete surface;
+        return EGL_NO_SURFACE;
+    }
+
     mSurfaceSet.insert(surface);
 
-    return surface;
+    return success(surface);
 }
 
 EGLContext Display::createContext(EGLConfig configHandle, const gl::Context *shareContext)
@@ -416,7 +579,7 @@ EGLContext Display::createContext(EGLConfig configHandle, const gl::Context *sha
             return NULL;
         }
     }
-    else if (FAILED(mDevice->TestCooperativeLevel()))   // Lost device
+    else if (isDeviceLost())   // Lost device
     {
         if (!resetDevice())
         {
@@ -440,8 +603,15 @@ EGLContext Display::createContext(EGLConfig configHandle, const gl::Context *sha
 
 void Display::destroySurface(egl::Surface *surface)
 {
-    delete surface;
-    mSurfaceSet.erase(surface);
+    if (surface == egl::getCurrentDrawSurface() || surface == egl::getCurrentReadSurface())
+    {
+        surface->setPendingDestroy();
+    }
+    else
+    {
+        delete surface;
+        mSurfaceSet.erase(surface);
+    }
 }
 
 void Display::destroyContext(gl::Context *context)
@@ -449,7 +619,7 @@ void Display::destroyContext(gl::Context *context)
     glDestroyContext(context);
     mContextSet.erase(context);
 
-    if (mContextSet.empty() && mDevice && FAILED(mDevice->TestCooperativeLevel()))   // Last context of a lost device
+    if (mContextSet.empty() && mDevice && isDeviceLost())   // Last context of a lost device
     {
         for (SurfaceSet::iterator surface = mSurfaceSet.begin(); surface != mSurfaceSet.end(); surface++)
         {
@@ -458,7 +628,7 @@ void Display::destroyContext(gl::Context *context)
     }
 }
 
-bool Display::isInitialized()
+bool Display::isInitialized() const
 {
     return mD3d9 != NULL && mConfigSet.size() > 0;
 }
@@ -475,7 +645,7 @@ bool Display::isValidContext(gl::Context *context)
 
 bool Display::isValidSurface(egl::Surface *surface)
 {
-    return mSurfaceSet.find(surface) != mSurfaceSet.end();
+    return mSurfaceSet.find(surface) != mSurfaceSet.end() && !surface->isPendingDestroy();
 }
 
 bool Display::hasExistingWindowSurface(HWND window)
@@ -517,6 +687,18 @@ IDirect3DDevice9 *Display::getDevice()
 D3DCAPS9 Display::getDeviceCaps()
 {
     return mDeviceCaps;
+}
+
+bool Display::isDeviceLost()
+{
+    if (mDeviceEx)
+    {
+        return FAILED(mDeviceEx->CheckDeviceState(NULL));
+    }
+    else
+    {
+        return FAILED(mDevice->TestCooperativeLevel());
+    }
 }
 
 void Display::getMultiSampleSupport(D3DFORMAT format, bool *multiSampleArray)
@@ -610,9 +792,14 @@ bool Display::getLuminanceAlphaTextureSupport()
     return SUCCEEDED(mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, 0, D3DRTYPE_TEXTURE, D3DFMT_A8L8));
 }
 
+bool Display::getNonPow2TextureSupport()
+{
+    return !(mDeviceCaps.TextureCaps & (D3DPTEXTURECAPS_POW2 | D3DPTEXTURECAPS_NONPOW2CONDITIONAL));
+}
+
 D3DPOOL Display::getBufferPool(DWORD usage) const
 {
-    if (mD3d9ex != NULL)
+    if (mD3d9Ex != NULL)
     {
         return D3DPOOL_DEFAULT;
     }
@@ -660,4 +847,43 @@ D3DPRESENT_PARAMETERS Display::getDefaultPresentParameters()
 
     return presentParameters;
 }
+
+void Display::initExtensionString()
+{
+    mExtensionString += "EGL_ANGLE_query_surface_pointer ";
+
+    if (isD3d9ExDevice()) {
+        mExtensionString += "EGL_ANGLE_surface_d3d_texture_2d_share_handle ";
+        mExtensionString += "EGL_ANGLE_d3d_share_handle_client_buffer ";
+    }
+
+    std::string::size_type end = mExtensionString.find_last_not_of(' ');
+    if (end != std::string::npos)
+    {
+        mExtensionString.resize(end+1);
+    }
+}
+
+const char *Display::getExtensionString() const
+{
+    return mExtensionString.c_str();
+}
+
+// Only Direct3D 10 ready devices support all the necessary vertex texture formats.
+// We test this using D3D9 by checking support for the R16F format.
+bool Display::getVertexTextureSupport() const
+{
+    if (!isInitialized() || mDeviceCaps.PixelShaderVersion < D3DPS_VERSION(3, 0))
+    {
+        return false;
+    }
+
+    D3DDISPLAYMODE currentDisplayMode;
+    mD3d9->GetAdapterDisplayMode(mAdapter, &currentDisplayMode);
+
+    HRESULT result = mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, D3DUSAGE_QUERY_VERTEXTEXTURE, D3DRTYPE_TEXTURE, D3DFMT_R16F);
+
+    return SUCCEEDED(result);
+}
+
 }
