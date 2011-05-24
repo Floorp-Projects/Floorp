@@ -53,10 +53,10 @@ namespace nanojit
         static const int64_t ONE = 1;
         static const int SHIFT = 6;
 
-        inline int bitnum2word(int i) {
+        inline int bitnum2word(int i) const {
             return i >> 6;
         }
-        inline int64_t bitnum2mask(int i) {
+        inline int64_t bitnum2mask(int i) const {
             return ONE << (i & 63);
         }
 
@@ -74,7 +74,7 @@ namespace nanojit
         bool setFrom(BitSet& other);
 
         /** return bit i as a bool */
-        bool get(int i) {
+        bool get(int i) const {
             NanoAssert(i >= 0);
             int w = bitnum2word(i);
             if (w < cap)
