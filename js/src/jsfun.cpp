@@ -978,6 +978,7 @@ NewCallObject(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *c
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
     callobj->initCall(cx, bindings, &scopeChain);
+    callobj->makeVarObj();
 
     /* This must come after callobj->lastProp has been set. */
     if (!callobj->ensureInstanceReservedSlots(cx, argsVars))
