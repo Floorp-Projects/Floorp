@@ -46,11 +46,12 @@
 interface nsIPrompt;
 interface nsIControllers;
 interface nsIDOMLocation;
+interface nsIDOMPerformance;
 interface nsIVariant;
 interface nsIAnimationFrameListener;
 interface nsIDOMMediaQueryList;
 
-[scriptable, uuid(3a7b0839-b9d6-42ff-8ba6-910aba60a966)]
+[scriptable, uuid(5930f197-259e-4f6b-aeca-c96a74518cc6)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -256,3 +257,13 @@ interface nsIDOMWindow_2_0_BRANCH : nsISupports
 {
   readonly attribute nsIDOMMozURLProperty URL;
 };
+
+[scriptable, uuid(2146c906-57f7-486c-a1b4-8cdb57ef577f)]
+interface nsIDOMWindowPerformance : nsISupports
+{
+  /**
+   * A namespace to hold performance related data and statistics.
+   */
+  readonly attribute nsIDOMPerformance performance;
+};
+
