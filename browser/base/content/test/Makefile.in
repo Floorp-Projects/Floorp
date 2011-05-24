@@ -232,7 +232,6 @@ _BROWSER_FILES = \
                  browser_visibleTabs_bookmarkAllPages.js \
                  browser_visibleTabs_bookmarkAllTabs.js \
                  browser_visibleTabs_tabPreview.js \
-                 browser_webdev_menu.js \
                  bug592338.html \
                  disablechrome.html \
                  discovery.html \
