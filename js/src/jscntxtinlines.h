@@ -63,7 +63,7 @@ GetGlobalForScopeChain(JSContext *cx)
      */
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    if (cx->running())
+    if (cx->hasfp())
         return cx->fp()->scopeChain().getGlobal();
 
     JSObject *scope = cx->globalObject;
@@ -108,7 +108,7 @@ class CompartmentChecker
 
   public:
     explicit CompartmentChecker(JSContext *cx) : context(cx), compartment(cx->compartment) {
-        check(cx->running() ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
+        check(cx->hasfp() ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
         VOUCH_DOES_NOT_REQUIRE_STACK();
     }
 

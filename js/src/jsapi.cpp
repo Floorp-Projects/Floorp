@@ -1525,7 +1525,7 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     cx->globalObject = obj;
-    if (!cx->running())
+    if (!cx->hasfp())
         cx->resetCompartment();
 }
 
@@ -4219,7 +4219,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
-        if (cx->running())
+        if (cx->hasfp())
             parent = GetScopeChain(cx, cx->fp());
         if (!parent)
             parent = cx->globalObject;
@@ -5193,7 +5193,7 @@ JS_IsRunning(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
 #ifdef JS_TRACER
-    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->running());
+    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->hasfp());
 #endif
     StackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
@@ -5217,7 +5217,7 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT_NOT_ON_TRACE(cx);
-    JS_ASSERT(!cx->running());
+    JS_ASSERT(!cx->hasfp());
     if (!fp)
         return;
     cx->stack.restoreSegment();
