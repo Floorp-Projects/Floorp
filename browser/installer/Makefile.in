@@ -118,8 +118,7 @@ GENERATE_CACHE = \
   rm -rf jsloader && \
   $(UNZIP) startupCache.zip && \
   rm startupCache.zip && \
-  find jsloader | xargs touch -t 201001010000 && \
-  $(ZIP) -r9mX omni.jar jsloader
+  $(ZIP) -r9m omni.jar jsloader
 endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
