@@ -122,15 +122,9 @@ public:
   /**
    * Returns the content state of aContent.
    * @param aContent      The control whose state is requested.
-   * @param aFollowLabels Whether to reflect a label's content state on its
-   *                      associated control. If aFollowLabels is true and
-   *                      aContent is a control which has a label that has the 
-   *                      hover or active content state set, GetContentState
-   *                      will pretend that those states are also set on aContent.
    * @return              The content state.
    */
-  virtual nsEventStates GetContentState(nsIContent *aContent,
-                                        PRBool aFollowLabels = PR_FALSE);
+  virtual nsEventStates GetContentState(nsIContent *aContent);
 
   /**
    * Notify that the given NS_EVENT_STATE_* bit has changed for this content.

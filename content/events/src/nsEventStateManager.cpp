@@ -153,6 +153,7 @@
 #include "nsICommandParams.h"
 #include "mozilla/Services.h"
 #include "mozAutoDocUpdate.h"
+#include "nsHTMLLabelElement.h"
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
@@ -4227,35 +4228,26 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent)
   return content;
 }
 
-static already_AddRefed<nsIContent>
-GetLabelTarget(nsIContent* aLabel)
+static Element*
+GetLabelTarget(nsIContent* aPossibleLabel)
 {
-  nsCOMPtr<nsIDOMHTMLLabelElement> label = do_QueryInterface(aLabel);
+  nsHTMLLabelElement* label = nsHTMLLabelElement::FromContent(aPossibleLabel);
   if (!label)
     return nsnull;
 
-  nsCOMPtr<nsIDOMHTMLElement> target;
-  label->GetControl(getter_AddRefs(target));
-  nsIContent* targetContent = nsnull;
-  if (target) {
-    CallQueryInterface(target, &targetContent);
-  }
-  return targetContent;
+  return label->GetLabeledElement();
 }
 
 static bool
-IsAncestorOf(nsIContent* aPossibleAncestor, nsIContent* aPossibleDescendant,
-             PRBool aFollowLabels)
+IsAncestorOf(nsIContent* aPossibleAncestor, nsIContent* aPossibleDescendant)
 {
   for (; aPossibleDescendant; aPossibleDescendant = aPossibleDescendant->GetParent()) {
     if (aPossibleAncestor == aPossibleDescendant)
       return true;
 
-    if (aFollowLabels) {
-      nsCOMPtr<nsIContent> labelTarget = GetLabelTarget(aPossibleDescendant);
-      if (labelTarget == aPossibleAncestor)
-        return true;
-    }
+    Element* labelTarget = GetLabelTarget(aPossibleDescendant);
+    if (labelTarget == aPossibleAncestor)
+      return true;
   }
   return false;
 }
@@ -4273,14 +4265,14 @@ ShouldShowFocusRing(nsIContent* aContent)
 }
 
 nsEventStates
-nsEventStateManager::GetContentState(nsIContent *aContent, PRBool aFollowLabels)
+nsEventStateManager::GetContentState(nsIContent *aContent)
 {
   nsEventStates state = aContent->IntrinsicState();
 
-  if (IsAncestorOf(aContent, mActiveContent, aFollowLabels)) {
+  if (IsAncestorOf(aContent, mActiveContent)) {
     state |= NS_EVENT_STATE_ACTIVE;
   }
-  if (IsAncestorOf(aContent, mHoverContent, aFollowLabels)) {
+  if (IsAncestorOf(aContent, mHoverContent)) {
     state |= NS_EVENT_STATE_HOVER;
   }
 
@@ -4352,7 +4344,7 @@ NotifyAncestors(nsIDocument* aDocument, nsIContent* aStartNode,
 {
   while (aStartNode && aStartNode != aStopBefore) {
     aDocument->ContentStateChanged(aStartNode, aState);
-    nsCOMPtr<nsIContent> labelTarget = GetLabelTarget(aStartNode);
+    Element* labelTarget = GetLabelTarget(aStartNode);
     if (labelTarget) {
       aDocument->ContentStateChanged(labelTarget, aState);
     }
