@@ -6,6 +6,9 @@ import sys
 # see the list of tests in test_websocket.html
 
 def web_socket_do_extra_handshake(request):
+  # must set request.ws_protocol to the selected version from ws_requested_protocols
+  request.ws_protocol = request.ws_requested_protocols[0]
+
   if request.ws_protocol == "test 2.1":
     time.sleep(5)
     pass
@@ -42,6 +45,7 @@ def web_socket_transfer_data(request):
     if msgutil.receive_message(request) == "5":
       resp = "あいうえお"
     msgutil.send_message(request, resp.decode('utf-8'))
+    msgutil.close_connection(request)
   elif request.ws_protocol == "test 7":
     try:
       while not request.client_terminated:
@@ -62,6 +66,9 @@ def web_socket_transfer_data(request):
     if msgutil.receive_message(request) == "client data":
       resp = "server data"
     msgutil.send_message(request, resp.decode('utf-8'))
+    msgutil.close_connection(request)
+  elif request.ws_protocol == "test 12":
+    msgutil.close_connection(request)
   elif request.ws_protocol == "test 13":
     # first one binary message containing the byte 0x61 ('a')
     request.connection.write('\xff\x01\x61')
@@ -69,7 +76,7 @@ def web_socket_transfer_data(request):
     request.connection.write('\x01\x61\xff')
     msgutil.close_connection(request)
   elif request.ws_protocol == "test 14":
-    request.connection.write('\xff\x00')
+    msgutil.close_connection(request)
     msgutil.send_message(request, "server data")
   elif request.ws_protocol == "test 15":
     msgutil.close_connection(request, True)

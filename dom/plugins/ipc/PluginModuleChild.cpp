@@ -2295,6 +2295,20 @@ PluginModuleChild::ResetEventHooks()
 }
 #endif
 
+bool
+PluginModuleChild::RecvProcessNativeEventsInRPCCall()
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+#if defined(OS_WIN)
+    ProcessNativeEventsInRPCCall();
+    return true;
+#else
+    NS_RUNTIMEABORT(
+        "PluginModuleChild::RecvProcessNativeEventsInRPCCall not implemented!");
+    return false;
+#endif
+}
+
 #ifdef OS_MACOSX
 void
 PluginModuleChild::ProcessNativeEvents() {

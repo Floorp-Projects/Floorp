@@ -72,8 +72,6 @@
 
     ~nsHtml5TreeBuilder();
     
-    PRBool IsDiscretionaryFlushSafe();
-
     PRBool HasScript();
     
     void SetOpSink(nsAHtml5TreeOpSink* aOpSink) {
@@ -84,7 +82,7 @@
       mOpQueue.Clear();
     }
     
-    PRBool Flush();
+    PRBool Flush(PRBool aDiscretionary = PR_FALSE);
     
     void FlushLoads();
 

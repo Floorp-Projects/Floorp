@@ -321,6 +321,7 @@ var Browser = {
 #if MOZ_PLATFORM_MAEMO == 6
     os.addObserver(ViewableAreaObserver, "softkb-change", false);
 #endif
+   messageManager.addMessageListener("Content:IsKeyboardOpened", ViewableAreaObserver);
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
@@ -339,24 +340,26 @@ var Browser = {
     // Should we restore the previous session (crash or some other event)
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
     if (ss.shouldRestore()) {
-      // Initial window resizes call functions that assume a tab is in the tab list
-      // and restored tabs are added too late. We add a dummy to to satisfy the resize
-      // code and then remove the dummy after the session has been restored.
-      let dummy = this.addTab("about:blank");
-      let dummyCleanup = {
-        observe: function() {
-          Services.obs.removeObserver(dummyCleanup, "sessionstore-windows-restored");
-          dummy.chromeTab.ignoreUndo = true;
-          Browser.closeTab(dummy, { forceClose: true });
-        }
-      };
-      Services.obs.addObserver(dummyCleanup, "sessionstore-windows-restored", false);
-
-      ss.restoreLastSession();
-
-      // Also open any commandline URLs, except the homepage
-      if (commandURL && commandURL != this.getHomePage())
+      let bringFront = false;
+      // First open any commandline URLs, except the homepage
+      if (commandURL && commandURL != this.getHomePage()) {
         this.addTab(commandURL, true);
+      } else {
+        bringFront = true;
+        // Initial window resizes call functions that assume a tab is in the tab list
+        // and restored tabs are added too late. We add a dummy to to satisfy the resize
+        // code and then remove the dummy after the session has been restored.
+        let dummy = this.addTab("about:blank");
+        let dummyCleanup = {
+          observe: function() {
+            Services.obs.removeObserver(dummyCleanup, "sessionstore-windows-restored");
+            dummy.chromeTab.ignoreUndo = true;
+            Browser.closeTab(dummy, { forceClose: true });
+          }
+        };
+        Services.obs.addObserver(dummyCleanup, "sessionstore-windows-restored", false);
+      }
+      ss.restoreLastSession(bringFront);
     } else {
       this.addTab(commandURL || this.getHomePage(), true);
     }
@@ -920,7 +923,7 @@ var Browser = {
     function visibility(aSidebarRect, aVisibleRect) {
       let width = aSidebarRect.width;
       aSidebarRect.restrictTo(aVisibleRect);
-      return aSidebarRect.width / width;
+      return (aSidebarRect.width ? aSidebarRect.width / width : 0);
     }
 
     if (!dx) dx = 0;
@@ -2331,7 +2334,7 @@ var XPInstallObserver = {
             buttons = [];
           }
           else {
-            messageString = strings.formatStringFromName("xpinstallDisabledMessage", [brandShortName, host], 2);
+            messageString = strings.formatStringFromName("xpinstallDisabledMessage2", [brandShortName, host], 2);
             buttons = [{
               label: strings.GetStringFromName("xpinstallDisabledButton"),
               accessKey: null,
@@ -2345,7 +2348,7 @@ var XPInstallObserver = {
         }
         else {
           notificationName = "xpinstall";
-          messageString = strings.formatStringFromName("xpinstallPromptWarning", [brandShortName, host], 2);
+          messageString = strings.formatStringFromName("xpinstallPromptWarning2", [brandShortName, host], 2);
 
           buttons = [{
             label: strings.GetStringFromName("xpinstallPromptAllowButton"),
@@ -3017,6 +3020,23 @@ var ViewableAreaObserver = {
     return (this._height || window.innerHeight);
   },
 
+  _isKeyboardOpened: false,
+  get isKeyboardOpened() {
+    return this._isKeyboardOpened;
+  },
+
+  set isKeyboardOpened(aValue) {
+    let oldValue = this._isKeyboardOpened;
+
+    if (oldValue != aValue) {
+      this._isKeyboardOpened = aValue;
+
+      let event = document.createEvent("UIEvents");
+      event.initUIEvent("KeyboardChanged", true, false, window, aValue);
+      window.dispatchEvent(event);
+    }
+  },
+
   observe: function va_observe(aSubject, aTopic, aData) {
 #if MOZ_PLATFORM_MAEMO == 6
     let rect = Rect.fromRect(JSON.parse(aData));
@@ -3034,6 +3054,10 @@ var ViewableAreaObserver = {
 #endif
   },
 
+  receiveMessage: function receiveMessage(aMessage) {
+    return this.isKeyboardOpened;
+  },
+
   update: function va_update() {
     let oldHeight = parseInt(Browser.styles["viewable-height"].height);
     let oldWidth = parseInt(Browser.styles["viewable-width"].width);
@@ -3042,6 +3066,9 @@ var ViewableAreaObserver = {
     let newHeight = this.height;
     if (newHeight == oldHeight && newWidth == oldWidth)
       return;
+
+    // Guess if the window has been resize to handle a virtual keyboard
+    this.isKeyboardOpened = (newHeight < oldHeight && newWidth == oldWidth);
 
     Browser.styles["viewable-height"].height = newHeight + "px";
     Browser.styles["viewable-height"].maxHeight = newHeight + "px";
@@ -3074,3 +3101,4 @@ var ViewableAreaObserver = {
     }, 0);
   }
 };
+

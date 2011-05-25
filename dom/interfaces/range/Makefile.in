@@ -48,7 +48,6 @@ GRE_MODULE	= 1
 
 SDK_XPIDLSRCS = 				\
 	nsIDOMRange.idl				\
-	nsIDOMDocumentRange.idl			\
 	$(NULL)
 
 XPIDLSRCS =					\

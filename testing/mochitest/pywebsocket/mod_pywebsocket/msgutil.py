@@ -1,4 +1,4 @@
-# Copyright 2009, Google Inc.
+# Copyright 2011, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,153 +40,52 @@ not suitable because they don't allow direct raw bytes writing/reading.
 import Queue
 import threading
 
-from mod_pywebsocket import util
-from time import time,sleep
+
+# Export Exception symbols from msgutil for backward compatibility
+from mod_pywebsocket._stream_base import ConnectionTerminatedException
+from mod_pywebsocket._stream_base import InvalidFrameException
+from mod_pywebsocket._stream_base import BadOperationException
+from mod_pywebsocket._stream_base import UnsupportedFrameException
 
 
-class MsgUtilException(Exception):
-    pass
-
-
-class ConnectionTerminatedException(MsgUtilException):
-    pass
-
-
-def _read(request, length):
-    bytes = request.connection.read(length)
-    if not bytes:
-        raise MsgUtilException(
-                'Failed to receive message from %r' %
-                        (request.connection.remote_addr,))
-    return bytes
-
-
-def _write(request, bytes):
-    try:
-        request.connection.write(bytes)
-    except Exception, e:
-        util.prepend_message_to_exception(
-                'Failed to send message to %r: ' %
-                        (request.connection.remote_addr,),
-                e)
-        raise
-
-
-def close_connection(request, abort=False):
+# An API for handler to send/receive WebSocket messages.
+def close_connection(request):
     """Close connection.
 
     Args:
         request: mod_python request.
     """
-    if request.server_terminated:
-        return
-    # 5.3 the server may decide to terminate the WebSocket connection by
-    # running through the following steps:
-    # 1. send a 0xFF byte and a 0x00 byte to the client to indicate the start
-    # of the closing handshake.
-    got_exception = False
-    if not abort:
-        _write(request, '\xff\x00')
-        # timeout of 20 seconds to get the client's close frame ack
-        initial_time = time()
-        end_time = initial_time + 20
-        while time() < end_time:
-            try:
-                receive_message(request)
-            except ConnectionTerminatedException, e:
-                got_exception = True
-                sleep(1)
-    request.server_terminated = True
-    if got_exception:
-        util.prepend_message_to_exception(
-            'client initiated closing handshake for %s: ' % (
-            request.ws_resource),
-            e)
-        raise ConnectionTerminatedException
-    # TODO: 3. close the WebSocket connection.
-    # note: mod_python Connection (mp_conn) doesn't have close method.
+    request.ws_stream.close_connection()
 
 
-def send_message(request, message):
+def send_message(request, message, end=True):
     """Send message.
 
     Args:
         request: mod_python request.
         message: unicode string to send.
+        end: False to send message as a fragment. All messages until the first
+             call with end=True (inclusive) will be delivered to the client
+             in separate frames but as one WebSocket message.
     Raises:
-        ConnectionTerminatedException: when server already terminated.
+        BadOperationException: when server already terminated.
     """
-    if request.server_terminated:
-        raise ConnectionTerminatedException
-    _write(request, '\x00' + message.encode('utf-8') + '\xff')
+    request.ws_stream.send_message(message, end)
 
 
 def receive_message(request):
-    """Receive a Web Socket frame and return its payload as unicode string.
+    """Receive a WebSocket frame and return its payload as unicode string.
 
     Args:
         request: mod_python request.
     Raises:
-        ConnectionTerminatedException: when client already terminated.
+        BadOperationException: when client already terminated.
     """
-
-    if request.client_terminated:
-        raise ConnectionTerminatedException
-    while True:
-        # Read 1 byte.
-        # mp_conn.read will block if no bytes are available.
-        # Timeout is controlled by TimeOut directive of Apache.
-        frame_type_str = _read(request, 1)
-        frame_type = ord(frame_type_str[0])
-        if (frame_type & 0x80) == 0x80:
-            # The payload length is specified in the frame.
-            # Read and discard.
-            length = _payload_length(request)
-            _receive_bytes(request, length)
-            # 5.3 3. 12. if /type/ is 0xFF and /length/ is 0, then set the
-            # /client terminated/ flag and abort these steps.
-            if frame_type == 0xFF and length == 0:
-                request.client_terminated = True
-                raise ConnectionTerminatedException
-        else:
-            # The payload is delimited with \xff.
-            bytes = _read_until(request, '\xff')
-            # The Web Socket protocol section 4.4 specifies that invalid
-            # characters must be replaced with U+fffd REPLACEMENT CHARACTER.
-            message = bytes.decode('utf-8', 'replace')
-            if frame_type == 0x00:
-                return message
-            # Discard data of other types.
+    return request.ws_stream.receive_message()
 
 
-def _payload_length(request):
-    length = 0
-    while True:
-        b_str = _read(request, 1)
-        b = ord(b_str[0])
-        length = length * 128 + (b & 0x7f)
-        if (b & 0x80) == 0:
-            break
-    return length
-
-
-def _receive_bytes(request, length):
-    bytes = []
-    while length > 0:
-        new_bytes = _read(request, length)
-        bytes.append(new_bytes)
-        length -= len(new_bytes)
-    return ''.join(bytes)
-
-
-def _read_until(request, delim_char):
-    bytes = []
-    while True:
-        ch = _read(request, 1)
-        if ch == delim_char:
-            break
-        bytes.append(ch)
-    return ''.join(bytes)
+def send_ping(request, body=''):
+    request.ws_stream.send_ping(body)
 
 
 class MessageReceiver(threading.Thread):
@@ -199,6 +98,7 @@ class MessageReceiver(threading.Thread):
     because pyOpenSSL used by the server raises a fatal error if the socket
     is accessed from multiple threads.
     """
+
     def __init__(self, request, onmessage=None):
         """Construct an instance.
 
@@ -210,6 +110,7 @@ class MessageReceiver(threading.Thread):
                        and MessageReceiver.receive_nowait are useless because
                        they will never return any messages.
         """
+
         threading.Thread.__init__(self)
         self._request = request
         self._queue = Queue.Queue()
@@ -269,6 +170,7 @@ class MessageSender(threading.Thread):
     because pyOpenSSL used by the server raises a fatal error if the socket
     is accessed from multiple threads.
     """
+
     def __init__(self, request):
         """Construct an instance.
 

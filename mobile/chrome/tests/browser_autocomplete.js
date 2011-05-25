@@ -20,7 +20,14 @@ function test() {
     }
   });
 
-  newTab = Browser.addTab(testURL, true);
+  let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup).getStartupInfo();
+  if (!("firstPaint" in startupInfo))
+    waitFor(function() { newTab = Browser.addTab(testURL, true); }, function() {
+      let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup).getStartupInfo();
+      return ("firstPaint" in startupInfo);
+    }, Date.now() + 3000);
+  else
+    newTab = Browser.addTab(testURL, true);
 }
 
 //------------------------------------------------------------------------------
@@ -36,6 +43,9 @@ function runNextTest() {
     // Cleanup. All tests are completed at this point
     try {
       // Add any cleanup code here
+
+      // Close our tab when finished
+      Browser.closeTab(newTab);
     }
     finally {
       // We must finialize the tests
@@ -130,11 +140,43 @@ gTests.push({
     // Close the form assistant
     FormHelperUI.hide();
 
-    // Close our tab when finished
-    Browser.closeTab(newTab);
 
-    // We must finalize the tests
-    finish();
+    AsyncTests.waitFor("TestRemoteAutocomplete:Reset", { id: "input-datalist-1" }, function(json) {
+      runNextTest();
+    });
+  }
+});
+
+//------------------------------------------------------------------------------
+// Case: Check arrows visibility
+gTests.push({
+  desc: "Check arrows visibility",
+
+  run: function() {
+    let popup = document.getElementById("form-helper-suggestions-container");
+    popup.addEventListener("contentpopupshown", function(aEvent) {
+      aEvent.target.removeEventListener(aEvent.type, arguments.callee, false);
+      waitFor(gCurrentTest.checkNoArrows, function() {
+        return FormHelperUI._open;
+      });
+    }, false);
+
+    AsyncTests.waitFor("TestRemoteAutocomplete:Click",
+                        { id: "input-datalist-3" }, function(json) {});
+  },
+
+  checkNoArrows: function() {
+    let scrollbox = document.getElementById("form-helper-suggestions");
+    todo_is(scrollbox._scrollButtonUp.collapsed, true, "Left button should be collapsed");
+    todo_is(scrollbox._scrollButtonDown.collapsed, true, "Right button should be collapsed");
+    gCurrentTest.finish();
+  },
+
+  finish: function() {
+    // Close the form assistant
+    FormHelperUI.hide();
+
+    runNextTest();
   }
 });
 

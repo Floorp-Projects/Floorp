@@ -51,6 +51,7 @@ PARALLEL_DIRS = \
   http \
   res \
   viewsource \
+  websocket \
   wyciwyg \
   $(NULL)
 

@@ -153,7 +153,23 @@ public: /* internal -- HPUX compiler can't handle this being private */
     friend class nsSegmentEncoder;
 
 protected:
+    // enum used in a few places to specify how .ref attribute should be handled
+    enum RefHandlingEnum {
+        eIgnoreRef,
+        eHonorRef
+    };
+
+    // Helper to share code between Equals and EqualsExceptRef
+    // NOTE: *not* virtual, because no one needs to override this so far...
+    nsresult EqualsInternal(nsIURI* unknownOther,
+                            RefHandlingEnum refHandlingMode,
+                            PRBool* result);
+
     virtual nsStandardURL* StartClone();
+
+    // Helper to share code between Clone methods.
+    nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
+                           nsIURI** aClone);
 
     // Helper for subclass implementation of GetFile().  Subclasses that map
     // URIs to files in a special way should implement this method.  It should
