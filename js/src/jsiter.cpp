@@ -1251,7 +1251,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
             JSScript *script = gen->floatingFrame()->script();
 
             jsbytecode *yieldpc = gen->regs.pc - JSOP_YIELD_LENGTH;
-            JS_ASSERT(JSOp(*yieldpc) == JSOP_YIELD);
+            JS_ASSERT(JSOp(*yieldpc) == JSOP_YIELD || JSOp(*yieldpc) == JSOP_TRAP);
 
             script->typeMonitorUnknown(cx, yieldpc);
 
