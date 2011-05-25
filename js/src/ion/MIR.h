@@ -792,6 +792,8 @@ class MSnapshot : public MInstruction
     INSTRUCTION_HEADER(Snapshot);
     static MSnapshot *New(MBasicBlock *block, jsbytecode *pc);
 
+    void printOpcode(FILE *fp);
+
     size_t numOperands() const {
         return stackDepth_;
     }
