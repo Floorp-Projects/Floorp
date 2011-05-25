@@ -1051,6 +1051,58 @@ XrayWrapper<Base>::createHolder(JSContext *cx, JSObject *wrappedNative, JSObject
     return holder;
 }
 
+XrayProxy::XrayProxy(uintN flags)
+  : XrayWrapper<CrossCompartmentWrapper>(flags)
+{
+}
+
+XrayProxy::~XrayProxy()
+{
+}
+
+bool
+XrayProxy::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                 bool set, js::PropertyDescriptor *desc)
+{
+    return Proxy::getPropertyDescriptor(cx, wrapper, id, set, desc);
+}
+
+bool
+XrayProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                    bool set, js::PropertyDescriptor *desc)
+{
+    return Proxy::getOwnPropertyDescriptor(cx, wrapper, id, set, desc);
+}
+
+bool
+XrayProxy::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+                          js::PropertyDescriptor *desc)
+{
+    return Proxy::defineProperty(cx, wrapper, id, desc);
+}
+
+bool
+XrayProxy::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
+{
+    return Proxy::getOwnPropertyNames(cx, wrapper, props);
+}
+
+bool
+XrayProxy::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
+{
+    return Proxy::delete_(cx, wrapper, id, bp);
+}
+
+bool
+XrayProxy::enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
+{
+    return Proxy::enumerate(cx, wrapper, props);
+}
+
+XrayProxy
+XrayProxy::singleton(0);
+
+
 #define XPCNW XrayWrapper<CrossCompartmentWrapper>
 #define SCNW XrayWrapper<Wrapper>
 

@@ -40,6 +40,8 @@
 #include "dombindings.h"
 #include "xpcprivate.h"
 #include "xpcquickstubs.h"
+#include "XPCWrapper.h"
+#include "WrapperFactory.h"
 
 #include "nsIDOMNode.h"
 
@@ -150,8 +152,19 @@ NodeList<T>::setProtoShape(JSObject *obj, uint32 shape)
 
 template<class T>
 bool
-NodeList<T>::instanceIsNodeListObject(JSContext *cx, JSObject *obj)
+NodeList<T>::instanceIsNodeListObject(JSContext *cx, JSObject *obj, JSObject *callee)
 {
+    if (XPCWrapper::IsSecurityWrapper(obj)) {
+        if (callee && js::GetObjectGlobal(obj) == js::GetObjectGlobal(callee)) {
+            obj = js::UnwrapObject(obj);
+        }
+        else {
+            obj = XPCWrapper::Unwrap(cx, obj);
+            if (!obj)
+                return xpc_qsThrow(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+        }
+    }
+
     if (!js::IsProxy(obj) || (js::GetProxyHandler(obj) != &NodeList<T>::instance)) {
         // FIXME: Throw a proper DOM exception.
         JS_ReportError(cx, "type error: wrong object");
@@ -176,7 +189,7 @@ template<class T>
 JSBool
 NodeList<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    if (!instanceIsNodeListObject(cx, obj))
+    if (!instanceIsNodeListObject(cx, obj, NULL))
         return false;
     PRUint32 length;
     getNodeList(obj)->GetLength(&length);
@@ -190,7 +203,8 @@ JSBool
 NodeList<T>::item(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !instanceIsNodeListObject(cx, obj))
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    if (!obj || !instanceIsNodeListObject(cx, obj, callee))
         return false;
     if (argc < 1)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
@@ -208,7 +222,8 @@ JSBool
 NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !instanceIsNodeListObject(cx, obj))
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    if (!obj || !instanceIsNodeListObject(cx, obj, callee))
         return false;
     if (argc < 1)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
@@ -242,9 +257,6 @@ NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
 
     proto = JS_NewObject(cx, Jsvalify(&sProtoClass), NULL, NULL);
     if (!proto)
-        return NULL;
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, proto))
         return NULL;
 
     if (!JS_DefinePropertyById(cx, proto, nsDOMClassInfo::sLength_id, JSVAL_VOID,
@@ -328,6 +340,8 @@ NodeList<T>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool
         return false;
     if (desc->obj)
         return true;
+    if (WrapperFactory::IsXrayWrapper(proxy))
+        return resolveNativeName(cx, proxy, id, desc);
     return JS_GetPropertyDescriptorById(cx, js::GetObjectProto(proxy), id, JSRESOLVE_QUALIFIED,
                                         desc);
 }
@@ -439,7 +453,7 @@ NodeList<T>::cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto)
 template<class T>
 bool
 NodeList<T>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
-                           jsid id, Value *vp, bool *hitp)
+                              jsid id, Value *vp, bool *hitp)
 {
     if (getProtoShape(proxy) != js::GetObjectShape(proto)) {
         if (!cacheProtoShape(cx, proxy, proto))
@@ -450,6 +464,39 @@ NodeList<T>::checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver
         }
     }
     *hitp = true;
+    return true;
+}
+
+template<class T>
+bool
+NodeList<T>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
+{
+    JS_ASSERT(WrapperFactory::IsXrayWrapper(proxy));
+
+    if (id == nsDOMClassInfo::sLength_id) {
+        desc->attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_SHARED;
+        desc->obj = proxy;
+        desc->setter = nsnull;
+        desc->getter = length_getter;
+        return true;
+    }
+
+    for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
+        if (id == sProtoMethods[n].id) {
+            JSFunction *fun = JS_NewFunctionById(cx, sProtoMethods[n].native,
+                                                 sProtoMethods[n].nargs, 0, proxy, id);
+            if (!fun)
+                return false;
+            JSObject *funobj = JS_GetFunctionObject(fun);
+            desc->value.setObject(*funobj);
+            desc->attrs = JSPROP_ENUMERATE;
+            desc->obj = proxy;
+            desc->setter = nsnull;
+            desc->getter = nsnull;
+            return true;
+        }
+    }
+
     return true;
 }
 

@@ -93,6 +93,7 @@ _TEST_FILES =	bug500931_helper.html \
 		file_bug650273.html \
 		file_bug658560.html \
 		test_bug655297.html \
+		file_nodelists.html \
 		$(NULL)
 
 _CHROME_FILES	= \

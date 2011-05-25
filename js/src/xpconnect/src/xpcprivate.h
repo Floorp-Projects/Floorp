@@ -1609,11 +1609,10 @@ public:
     {
         JS_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
 
-        jsval vp;
-        JS_ALWAYS_TRUE(JS_GetReservedSlot(cx, obj, JSCLASS_GLOBAL_SLOT_COUNT,
-                                          &vp));
-        return JSVAL_IS_VOID(vp) ? nsnull :
-               static_cast<XPCWrappedNativeScope*>(JSVAL_TO_PRIVATE(vp));
+        const js::Value &v = js::GetSlot(obj, JSCLASS_GLOBAL_SLOT_COUNT);
+        return v.isUndefined()
+               ? nsnull
+               : static_cast<XPCWrappedNativeScope *>(v.toPrivate());
     }
     void TraceDOMPrototypes(JSTracer *trc);
 
