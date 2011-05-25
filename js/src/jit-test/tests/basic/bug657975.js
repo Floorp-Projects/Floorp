@@ -44,3 +44,36 @@ function f7() {
 }
 trap(f7, 16, '')
 f7()
+
+// bug 658950
+f8 = (function() {
+  let x;
+  yield
+})
+trap(f8, 6, undefined);
+for (a in f8())
+  (function() {})()
+
+// bug 659043
+f9 = (function() {
+  for (let a = 0; a < 0; ++a) {
+    for each(let w in []) {}
+  }
+})
+trap(f9, 27, undefined);
+for (b in f9())
+  (function() {})()
+
+// bug 659233
+f10 = (function() {
+    while (h) {
+        continue
+    }
+})
+trap(f10, 0, '');
+try { f10() } catch (e) {}
+
+// bug 659337
+f11 = Function("for (x = 0; x < 6; x++) { gc() }");
+trap(f11, 23, '');
+f11()
