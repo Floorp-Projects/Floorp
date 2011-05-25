@@ -42,6 +42,7 @@
 #include "jsdbg.h"
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsemit.h"
 #include "jsgcmark.h"
 #include "jsobj.h"
 #include "jswrapper.h"
@@ -95,7 +96,7 @@ ReportMoreArgsNeeded(JSContext *cx, const char *name, uintN required)
 
 #define REQUIRE_ARGC(name, n) \
     JS_BEGIN_MACRO \
-        if (argc < n) \
+        if (argc < (n)) \
             return ReportMoreArgsNeeded(cx, name, n); \
     JS_END_MACRO
 
@@ -1095,7 +1096,8 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
     JSObject *thisobj = CheckThisFrame(cx, vp, fnname, true);                \
     if (!thisobj)                                                            \
         return false;                                                        \
-    StackFrame *fp = (StackFrame *) thisobj->getPrivate()
+    StackFrame *fp = (StackFrame *) thisobj->getPrivate();                   \
+    JS_ASSERT((cx)->stack.contains(fp))
 
 static JSBool
 DebugFrame_getType(JSContext *cx, uintN argc, Value *vp)
@@ -1268,13 +1270,46 @@ DebugFrame_getLive(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static JSBool
-DebugFrame_eval(JSContext *cx, uintN argc, Value *vp)
+namespace js {
+
+JSBool
+EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *chars,
+                uintN length, const char *filename, uintN lineno, Value *rval)
 {
-    REQUIRE_ARGC("Debug.Frame.eval", 1);
-    THIS_FRAME(cx, vp, "eval", thisobj, fp);
+    assertSameCompartment(cx, scobj, fp);
+
+    /*
+     * NB: This function breaks the assumption that the compiler can see all
+     * calls and properly compute a static level. In order to get around this,
+     * we use a static level that will cause us not to attempt to optimize
+     * variable references made by this frame.
+     */
+    JSScript *script = Compiler::compileScript(cx, scobj, fp, fp->scopeChain().principals(cx),
+                                               TCF_COMPILE_N_GO, chars, length,
+                                               filename, lineno, cx->findVersion(),
+                                               NULL, UpvarCookie::UPVAR_LEVEL_LIMIT);
+
+    if (!script)
+        return false;
+
+    bool ok = Execute(cx, *scobj, script, fp, StackFrame::DEBUGGER | StackFrame::EVAL, rval);
+    js_DestroyScript(cx, script);
+    return ok;
+}
+
+}
+
+enum EvalBindingsMode { WithoutBindings, WithBindings };
+
+static JSBool
+DebugFrameEval(JSContext *cx, uintN argc, Value *vp, EvalBindingsMode mode)
+{
+    REQUIRE_ARGC(mode == WithBindings ? "Debug.Frame.evalWithBindings" : "Debug.Frame.eval",
+                 mode == WithBindings ? 2 : 1);
+    THIS_FRAME(cx, vp, mode == WithBindings ? "evalWithBindings" : "eval", thisobj, fp);
     Debug *dbg = Debug::fromChildJSObject(&vp[1].toObject());
 
+    // Check the first argument, the eval code string.
     if (!vp[2].isString()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
                              "Debug.Frame.eval", "string", InformalValueTypeName(vp[2]));
@@ -1283,15 +1318,74 @@ DebugFrame_eval(JSContext *cx, uintN argc, Value *vp)
     JSLinearString *linearStr = vp[2].toString()->ensureLinear(cx);
     if (!linearStr)
         return false;
-    JS::Anchor<JSString *> anchor(linearStr);
+
+    // Gather keys and values of bindings, if any. This must be done in the
+    // debugger compartment, since that is where any exceptions must be
+    // thrown.
+    AutoIdVector keys(cx);
+    AutoValueVector values(cx);
+    if (mode == WithBindings) {
+        JSObject *bindingsobj = NonNullObject(cx, vp[3]);
+        if (!bindingsobj ||
+            !GetPropertyNames(cx, bindingsobj, JSITER_OWNONLY, &keys) ||
+            !values.growBy(keys.length()))
+        {
+            return false;
+        }
+        for (size_t i = 0; i < keys.length(); i++) {
+            Value *vp = &values[i];
+            if (!bindingsobj->getProperty(cx, bindingsobj, keys[i], vp) ||
+                !dbg->unwrapDebuggeeValue(cx, vp))
+            {
+                return false;
+            }
+        }
+    }
 
     AutoCompartment ac(cx, &fp->scopeChain());
     if (!ac.enter())
         return false;
+
+    // Get a scope object.
+    if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj() && !CreateFunCallObject(cx, fp))
+        return false;
+    JSObject *scobj = GetScopeChain(cx, fp);
+    if (!scobj)
+        return false;
+
+    // If evalWithBindings, create the inner scope object.
+    if (mode == WithBindings) {
+        // TODO - Should probably create a With object here.
+        scobj = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, NULL, scobj);
+        if (!scobj)
+            return false;
+        for (size_t i = 0; i < keys.length(); i++) {
+            if (!cx->compartment->wrap(cx, &values[i]) ||
+                !DefineNativeProperty(cx, scobj, keys[i], values[i], NULL, NULL, 0, 0, 0))
+            {
+                return false;
+            }
+        }
+    }
+
+    // Run the code and produce the completion value.
     Value rval;
-    bool ok = JS_EvaluateUCInStackFrame(cx, Jsvalify(fp), linearStr->chars(), linearStr->length(),
-                                        "debugger eval code", 1, Jsvalify(&rval));
+    JS::Anchor<JSString *> anchor(linearStr);
+    bool ok = EvaluateInScope(cx, scobj, fp, linearStr->chars(), linearStr->length(),
+                              "debugger eval code", 1, &rval);
     return dbg->newCompletionValue(ac, ok, rval, vp);
+}
+
+static JSBool
+DebugFrame_eval(JSContext *cx, uintN argc, Value *vp)
+{
+    return DebugFrameEval(cx, argc, vp, WithoutBindings);
+}
+
+static JSBool
+DebugFrame_evalWithBindings(JSContext *cx, uintN argc, Value *vp)
+{
+    return DebugFrameEval(cx, argc, vp, WithBindings);
 }
 
 static JSBool
@@ -1315,6 +1409,7 @@ static JSPropertySpec DebugFrame_properties[] = {
 
 static JSFunctionSpec DebugFrame_methods[] = {
     JS_FN("eval", DebugFrame_eval, 1, 0),
+    JS_FN("evalWithBindings", DebugFrame_evalWithBindings, 1, 0),
     JS_FS_END
 };
 

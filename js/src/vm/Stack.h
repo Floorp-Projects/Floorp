@@ -308,7 +308,7 @@ class StackFrame
     inline void initCallFrameLatePrologue();
 
     /* Used for eval. */
-    inline void initEvalFrame(JSContext *cx, JSScript *script, StackFrame *prev,
+    inline void initEvalFrame(JSContext *cx, JSScript *script, StackFrame *prev, JSObject *chain,
                               uint32 flags);
     inline void initGlobalFrame(JSScript *script, JSObject &chain, StackFrame *prev,
                                 uint32 flags);
