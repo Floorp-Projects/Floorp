@@ -1,4 +1,8 @@
 browser.jar:
+*   content/browser/preferences/aboutPermissions.xul
+*   content/browser/preferences/aboutPermissions.js
+*   content/browser/preferences/aboutPermissions.css
+*   content/browser/preferences/aboutPermissions.xml
 *   content/browser/preferences/advanced.xul
 *   content/browser/preferences/advanced.js
 *   content/browser/preferences/advanced-scripts.xul

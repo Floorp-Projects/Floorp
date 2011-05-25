@@ -247,9 +247,9 @@ function run_test() {
 
   // Check that trying to change channels for a complete update changes the
   // update channel (the channel-prefs.js file should be updated).
-  let force = updatesDir.clone();
-  force.append(CHANNEL_CHANGE_FILE);
-  force.create(AUS_Ci.nsIFile.FILE_TYPE, PERMS_FILE);
+  let channelchange = updatesDir.clone();
+  channelchange.append(CHANNEL_CHANGE_FILE);
+  channelchange.create(AUS_Ci.nsIFile.FILE_TYPE, PERMS_FILE);
 
   // For Mac OS X set the last modified time for the root directory to a date in
   // the past to test that the last modified time is updated on a successful

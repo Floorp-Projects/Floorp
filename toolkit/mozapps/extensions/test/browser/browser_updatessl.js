@@ -22,10 +22,28 @@ var gTests = [];
 var gStart = 0;
 var gLast = 0;
 
+var HTTPObserver = {
+  observeActivity: function(aChannel, aType, aSubtype, aTimestamp, aSizeData,
+                            aStringData) {
+    aChannel.QueryInterface(Ci.nsIChannel);
+
+    dump("*** HTTP Activity 0x" + aType.toString(16) + " 0x" + aSubtype.toString(16) +
+         " " + aChannel.URI.spec + "\n");
+  }
+};
+
 function test() {
   gStart = Date.now();
   requestLongerTimeout(4);
   waitForExplicitFinish();
+
+  let observerService = Cc["@mozilla.org/network/http-activity-distributor;1"].
+                        getService(Ci.nsIHttpActivityDistributor);
+  observerService.addObserver(HTTPObserver);
+
+  registerCleanupFunction(function() {
+    observerService.removeObserver(HTTPObserver);
+  });
 
   run_next_test();
 }

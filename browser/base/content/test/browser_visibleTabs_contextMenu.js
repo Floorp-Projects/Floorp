@@ -56,7 +56,7 @@ function test() {
   // Check the context menu with one tab.
   popup(testTab);
   is(TabContextMenu.contextTab, testTab, "TabContextMenu context is the test tab");
-  is(document.getElementById("context_closeTab").disabled, true, "Close Tab is disabled");
+  is(document.getElementById("context_closeTab").disabled, false, "Close Tab is enabled when more than one tab exists");
   is(document.getElementById("context_reloadAllTabs").disabled, true, "Reload All Tabs is disabled");
   
   // Add a tab that will get pinned

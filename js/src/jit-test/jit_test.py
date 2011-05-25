@@ -327,7 +327,7 @@ def run_tests(tests, test_dir, lib_dir, shell_args):
 
         def show_test(test):
             if OPTIONS.show_failed:
-                print('    ' + subprocess.list2cmdline(get_test_cmd(test.path, test.jitflags, lib_dir)))
+                print('    ' + subprocess.list2cmdline(get_test_cmd(test.path, test.jitflags, lib_dir, shell_args)))
             else:
                 print('    ' + ' '.join(test.jitflags + [ test.path ]))
 

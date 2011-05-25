@@ -488,7 +488,7 @@ DumpFunctionCountMap(const char *title, JSRuntime::FunctionCountMap &map, FILE *
         JSFunction *fun = r.front().key;
         int32 count = r.front().value;
 
-        fprintf(fp, "%10d %s:%u\n", count, fun->u.i.script->filename, fun->u.i.script->lineno);
+        fprintf(fp, "%10d %s:%u\n", count, fun->script()->filename, fun->script()->lineno);
     }
 }
 
@@ -821,7 +821,7 @@ js_ReportOutOfMemory(JSContext *cx)
     }
 
     if (onError) {
-        AutoScopedAssign<bool> ss(&cx->runtime->inOOMReport, true);
+        AutoAtomicIncrement incr(&cx->runtime->inOOMReport);
         onError(cx, msg, &report);
     }
 }
@@ -1619,6 +1619,7 @@ JSContext::purge()
     FreeOldArenas(runtime, &regExpPool);
 }
 
+#if defined(JS_TRACER) || defined(JS_METHODJIT)
 static bool
 ComputeIsJITBroken()
 {
@@ -1689,6 +1690,7 @@ IsJITBrokenHere()
     }
     return isBroken;
 }
+#endif
 
 void
 JSContext::updateJITEnabled()

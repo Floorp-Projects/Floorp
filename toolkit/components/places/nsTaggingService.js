@@ -385,73 +385,58 @@ TaggingService.prototype = {
     return !isBookmarked && tagIds.length > 0 ? tagIds : null;
   },
 
-  // boolean to indicate if we're in a batch
-  _inBatch: false,
-
-  // maps the IDs of bookmarks in the process of being removed to their URIs
-  _itemsInRemoval: {},
-
   // nsINavBookmarkObserver
-  onBeginUpdateBatch: function() {
-    this._inBatch = true;
-  },
-  onEndUpdateBatch: function() {
-    this._inBatch = false;
-  },
-
-  onItemAdded: function(aItemId, aFolderId, aIndex, aItemType, aURI) {
+  onItemAdded: function TS_onItemAdded(aItemId, aFolderId, aIndex, aItemType,
+                                       aURI, aTitle) {
     // Nothing to do if this is not a tag.
     if (aFolderId != PlacesUtils.tagsFolderId ||
         aItemType != PlacesUtils.bookmarks.TYPE_FOLDER)
       return;
 
-    this._tagFolders[aItemId] = PlacesUtils.bookmarks.getItemTitle(aItemId);
+    this._tagFolders[aItemId] = aTitle;
   },
 
-  onBeforeItemRemoved: function(aItemId, aItemType) {
-    if (aItemType == PlacesUtils.bookmarks.TYPE_BOOKMARK)
-      this._itemsInRemoval[aItemId] = PlacesUtils.bookmarks.getBookmarkURI(aItemId);
-  },
-
-  onItemRemoved: function(aItemId, aFolderId, aIndex, aItemType) {
-    var itemURI = this._itemsInRemoval[aItemId];
-    delete this._itemsInRemoval[aItemId];
-
+  onItemRemoved: function TS_onItemRemoved(aItemId, aFolderId, aIndex,
+                                           aItemType, aURI) {
     // Item is a tag folder.
     if (aFolderId == PlacesUtils.tagsFolderId && this._tagFolders[aItemId])
       delete this._tagFolders[aItemId];
 
     // Item is a bookmark that was removed from a non-tag folder.
-    else if (itemURI && !this._tagFolders[aFolderId]) {
+    else if (aURI && !this._tagFolders[aFolderId]) {
 
       // If the only bookmark items now associated with the bookmark's URI are
       // contained in tag folders, the URI is no longer properly bookmarked, so
       // untag it.
-      var tagIds = this._getTagsIfUnbookmarkedURI(itemURI);
+      var tagIds = this._getTagsIfUnbookmarkedURI(aURI);
       if (tagIds)
-        this.untagURI(itemURI, tagIds);
+        this.untagURI(aURI, tagIds);
     }
 
     // Item is a tag entry.  If this was the last entry for this tag, remove it.
-    else if (itemURI && this._tagFolders[aFolderId]) {
+    else if (aURI && this._tagFolders[aFolderId]) {
       this._removeTagIfEmpty(aFolderId);
     }
   },
 
-  onItemChanged: function(aItemId, aProperty, aIsAnnotationProperty, aNewValue,
-                          aLastModified, aItemType) {
+  onItemChanged: function TS_onItemChanged(aItemId, aProperty,
+                                           aIsAnnotationProperty, aNewValue,
+                                           aLastModified, aItemType) {
     if (aProperty == "title" && this._tagFolders[aItemId])
-      this._tagFolders[aItemId] = PlacesUtils.bookmarks.getItemTitle(aItemId);
+      this._tagFolders[aItemId] = aNewValue;
   },
 
-  onItemVisited: function(aItemId, aVisitID, time) {},
-
-  onItemMoved: function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex,
-                        aItemType) {
+  onItemMoved: function TS_onItemMoved(aItemId, aOldParent, aOldIndex,
+                                      aNewParent, aNewIndex, aItemType) {
     if (this._tagFolders[aItemId] && PlacesUtils.tagsFolderId == aOldParent &&
         PlacesUtils.tagsFolderId != aNewParent)
       delete this._tagFolders[aItemId];
   },
+
+  onItemVisited: function () {},
+  onBeforeItemRemoved: function () {},
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch: function () {},
 
   // nsISupports
   classID: Components.ID("{bbc23860-2553-479d-8b78-94d9038334f7}"),
