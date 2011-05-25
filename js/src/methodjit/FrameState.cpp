@@ -2235,7 +2235,7 @@ FrameState::storeTop(FrameEntry *target)
         backing = top->copyOf();
         JS_ASSERT(backing->trackerIndex() < top->trackerIndex());
 
-        if (backing < target) {
+        if (backing < target || isTemporary(backing)) {
             /* local.idx < backing.idx means local cannot be a copy yet */
             if (target->trackerIndex() < backing->trackerIndex())
                 swapInTracker(backing, target);
