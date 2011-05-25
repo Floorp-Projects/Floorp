@@ -336,6 +336,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/js/src/xpconnect/src \
 		   -I$(topsrcdir)/js/src/xpconnect/loader \
 		   -I$(topsrcdir)/caps/include \
+                   -I$(topsrcdir)/netwerk/base/src \
 		   $(NULL)
 
 ifdef MOZ_MATHML
