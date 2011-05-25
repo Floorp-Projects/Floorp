@@ -31,13 +31,7 @@
 #define MacroAssemblerCodeRef_h
 
 #include "assembler/wtf/Platform.h"
-#if !ENABLE_ASSEMBLER
-# warning "assembler not enabled at point 1"
-#endif
 #include "assembler/jit/ExecutableAllocator.h"
-#if !ENABLE_ASSEMBLER
-# warning "assembler not enabled at point 2"
-#endif
 
 #if ENABLE_ASSEMBLER
 
