@@ -75,8 +75,8 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 
     if (!ApplyTypeInformation(graph))
         return false;
-    if (!Lower(graph))
-        return false;
+    //if (!Lower(graph))
+    //    return false;
     spew.spew("Lower");
 
     return false;
@@ -1176,6 +1176,10 @@ IonBuilder::pushConstant(const Value &v)
 bool
 IonBuilder::jsop_binary(JSOp op)
 {
+    // Take snapshot before killing inputs.
+    MSnapshot *snapshot = takeSnapshot();
+
+    // Pop inputs.
     MInstruction *right = current->pop();
     MInstruction *left = current->pop();
 
@@ -1192,8 +1196,9 @@ IonBuilder::jsop_binary(JSOp op)
 
     if (!current->add(ins))
         return false;
-    current->push(ins);
+    ins->assignSnapshot(snapshot);
 
+    current->push(ins);
     return true;
 }
 
@@ -1213,5 +1218,14 @@ IonBuilder::newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
     if (!graph().addBlock(block))
         return NULL;
     return block;
+}
+
+MSnapshot *
+IonBuilder::takeSnapshot()
+{
+    MSnapshot *snapshot = MSnapshot::New(current, pc);
+    if (!current->add(snapshot))
+        return NULL;
+    return snapshot;
 }
 
