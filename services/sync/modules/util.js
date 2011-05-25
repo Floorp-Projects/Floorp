@@ -1304,10 +1304,19 @@ let _sessionCID = Services.appinfo.ID == SEAMONKEY_ID ?
 [["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
  ["KeyFactory", "@mozilla.org/security/keyobjectfactory;1", "nsIKeyObjectFactory"],
- ["Private", "@mozilla.org/privatebrowsing;1", "nsIPrivateBrowsingService"],
  ["Session", _sessionCID, "nsISessionStore"]
 ].forEach(function([name, contract, iface]) {
   XPCOMUtils.defineLazyServiceGetter(Svc, name, contract, iface);
+});
+
+// nsIPrivateBrowsingService is not implemented in mobile Firefox.
+// Svc.Private should just return undefined in this case instead of throwing.
+XPCOMUtils.defineLazyGetter(Svc, "Private", function() {
+  try {
+    return Cc["@mozilla.org/privatebrowsing;1"].getService(Ci["nsIPrivateBrowsingService"]);
+  } catch (e) {
+    return undefined;
+  }
 });
 
 Svc.__defineGetter__("Crypto", function() {
