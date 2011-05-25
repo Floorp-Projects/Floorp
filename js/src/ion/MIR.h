@@ -345,10 +345,12 @@ class MInstruction
     void assumeType(MIRType type) {
         assumedType_ = type;
     }
-    void assignSnapshot(MSnapshot *snapshot) {
-        JS_ASSERT(!snapshot_);
-        snapshot_ = snapshot;
-    }
+
+    // To assign a snapshot, the snapshot must be before this actual
+    // instruction, and in addition, this instruction have been added to the
+    // instruction stream already. They must also be in the same block as a
+    // sanity check.
+    inline void assignSnapshot(MSnapshot *snapshot);
 
     MBasicBlock *block() const {
         JS_ASSERT(block_);
@@ -825,6 +827,15 @@ MUseIterator::unlink()
     MUse *old = use;
     use = def->removeUse(prev(), use);
     return old;
+}
+
+void
+MInstruction::assignSnapshot(MSnapshot *snapshot)
+{
+    JS_ASSERT(!snapshot_);
+    JS_ASSERT(snapshot->id() < id());
+    JS_ASSERT(snapshot->block() == block());
+    snapshot_ = snapshot;
 }
 
 // Implement opcode casts now that the compiler can see the inheritance.
