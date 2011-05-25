@@ -461,11 +461,11 @@ JSVAL_TO_BOOLEAN_IMPL(jsval_layout l)
 static JS_ALWAYS_INLINE jsval_layout
 BOOLEAN_TO_JSVAL_IMPL(JSBool b)
 {
-    jsval_layout l;
     // This assertion exists to catch JSAPI users who accidentally create bogo-booleans thanks to
     // the fact that JSBool is, in reality, an integer. These users must convert to JS_TRUE or
     // JS_FALSE before packing the boolean into a jsval.
     JS_ASSERT(b == JS_TRUE || b == JS_FALSE);
+    jsval_layout l;
     l.s.tag = JSVAL_TAG_BOOLEAN;
     l.s.payload.boo = b;
     return l;
@@ -657,11 +657,11 @@ JSVAL_TO_BOOLEAN_IMPL(jsval_layout l)
 static JS_ALWAYS_INLINE jsval_layout
 BOOLEAN_TO_JSVAL_IMPL(JSBool b)
 {
-    jsval_layout l;
     // This assertion exists to catch JSAPI users who accidentally create bogo-booleans thanks to
     // the fact that JSBool is, in reality, an integer. These users must convert to JS_TRUE or
     // JS_FALSE before packing the boolean into a jsval.
     JS_ASSERT(b == JS_TRUE || b == JS_FALSE);
+    jsval_layout l;
     l.asBits = ((uint64)(uint32)b) | JSVAL_SHIFTED_TAG_BOOLEAN;
     return l;
 }
