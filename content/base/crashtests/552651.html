@@ -9,14 +9,12 @@ function testCancel() {
   xhr.addEventListener("readystatechange", function(e) {
     if (xhr.readyState == 3) // NOTE : only leaks for state == 3
       xhr.abort();
+    else if (xhr.readyState == 4)
+      document.documentElement.className = "";
   }, false);
 
   xhr.open("GET", "552651.xml", true);
   xhr.send();
-
-  setTimeout(function f() {
-      document.documentElement.className = "";
-  }, 1000);
 }
 </script>
 </head>
