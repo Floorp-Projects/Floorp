@@ -12,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Maemo code.
+ * The Original Code is Mozilla code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,54 +36,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHapticFeedback.h"
-#if (MOZ_PLATFORM_MAEMO == 5)
-#include <dbus/dbus.h>
-#include <mce/dbus-names.h>
-#endif
 
 NS_IMPL_ISUPPORTS1(nsHapticFeedback, nsIHapticFeedback)
 
 NS_IMETHODIMP
 nsHapticFeedback::PerformSimpleAction(PRInt32 aType)
 {
-#if (MOZ_PLATFORM_MAEMO == 5)
-    DBusError err;
-    dbus_error_init(&err);
-
-    DBusConnection  *connection;
-    connection = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
-    if (dbus_error_is_set(&err)) {
-        dbus_error_free(&err);
-        return NS_ERROR_FAILURE;
-    }
-    if (nsnull == connection) {
-        return NS_ERROR_FAILURE;
-    }
-
-    dbus_connection_set_exit_on_disconnect(connection,false);
-
-    DBusMessage* msg =
-        dbus_message_new_method_call(MCE_SERVICE, MCE_REQUEST_PATH,
-                                     MCE_REQUEST_IF, MCE_ACTIVATE_VIBRATOR_PATTERN);
-
-    if (!msg) {
-        return NS_ERROR_FAILURE;
-    }
-
-    dbus_message_set_no_reply(msg, PR_TRUE);
-
-    DBusMessageIter iter;
-    dbus_message_iter_init_append(msg, &iter);
-    const char* pattern = "PatternTouchscreen";
-    dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &pattern);
-
-    if (dbus_connection_send(connection, msg, NULL)) {
-        dbus_connection_flush(connection);
-        dbus_message_unref(msg);
-    } else {
-        dbus_message_unref(msg);
-        return NS_ERROR_FAILURE;
-    }
-#endif
+    // Todo
     return NS_OK;
 }

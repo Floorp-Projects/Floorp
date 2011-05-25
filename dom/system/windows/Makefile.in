@@ -53,6 +53,7 @@ include $(topsrcdir)/config/config.mk
 
 CPPSRCS     = \
         nsDeviceMotionSystem.cpp \
+        nsHapticFeedback.cpp \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk
