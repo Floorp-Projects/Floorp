@@ -72,6 +72,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
+#include "mozilla/Preferences.h"
 
 #include <math.h>
 
@@ -91,6 +92,7 @@
 #define MAX_GEO_REQUESTS_PER_WINDOW  1500
 
 using mozilla::unused;          // <snicker>
+using namespace mozilla;
 using namespace mozilla::dom;
 
 class RequestPromptEvent : public nsRunnable
@@ -499,15 +501,15 @@ static PRBool sGeoIgnoreLocationFilter = PR_FALSE;
 static int
 GeoEnabledChangedCallback(const char *aPrefName, void *aClosure)
 {
-  sGeoEnabled = nsContentUtils::GetBoolPref("geo.enabled", PR_TRUE);
+  sGeoEnabled = Preferences::GetBool("geo.enabled", PR_TRUE);
   return 0;
 }
 
 static int
 GeoIgnoreLocationFilterChangedCallback(const char *aPrefName, void *aClosure)
 {
-  sGeoIgnoreLocationFilter = nsContentUtils::GetBoolPref("geo.ignore.location_filter",
-                                                         PR_TRUE);
+  sGeoIgnoreLocationFilter =
+    Preferences::GetBool("geo.ignore.location_filter", PR_TRUE);
   return 0;
 }
 
@@ -1053,9 +1055,10 @@ nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
     return true;
   }
 
-  if (nsContentUtils::GetBoolPref("geo.prompt.testing", PR_FALSE))
-  {
-    nsCOMPtr<nsIRunnable> ev  = new RequestAllowEvent(nsContentUtils::GetBoolPref("geo.prompt.testing.allow", PR_FALSE), request);
+  if (Preferences::GetBool("geo.prompt.testing", PR_FALSE)) {
+    nsCOMPtr<nsIRunnable> ev =
+      new RequestAllowEvent(Preferences::GetBool("geo.prompt.testing.allow",
+                                                 PR_FALSE), request);
     NS_DispatchToMainThread(ev);
     return true;
   }

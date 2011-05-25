@@ -69,6 +69,7 @@
 #include "nsJSEnvironment.h"
 #include "nsCharSeparatedTokenizer.h" // for Accept-Language parsing
 #include "nsUnicharUtils.h"
+#include "mozilla/Preferences.h"
 
 // Other Classes
 #include "nsIEventListenerManager.h"
@@ -244,6 +245,7 @@ static PRLogModuleInfo* gDOMLeakPRLog;
 
 static const char kStorageEnabled[] = "dom.storage.enabled";
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
@@ -5077,7 +5079,7 @@ nsGlobalWindow::Print()
     nsCOMPtr<nsIPrintSettings> printSettings;
     if (printSettingsService) {
       PRBool printSettingsAreGlobal =
-        nsContentUtils::GetBoolPref("print.use_global_printsettings", PR_FALSE);
+        Preferences::GetBool("print.use_global_printsettings", PR_FALSE);
 
       if (printSettingsAreGlobal) {
         printSettingsService->GetGlobalPrintSettings(getter_AddRefs(printSettings));
@@ -5101,7 +5103,7 @@ nsGlobalWindow::Print()
       LeaveModalState(callerWin);
 
       PRBool savePrintSettings =
-        nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
+        Preferences::GetBool("print.save_print_settings", PR_FALSE);
       if (printSettingsAreGlobal && savePrintSettings) {
         printSettingsService->
           SavePrintSettingsToPrefs(printSettings,
@@ -5551,7 +5553,7 @@ nsGlobalWindow::CanSetProperty(const char *aPrefName)
 
   // If the pref is set to true, we can not set the property
   // and vice versa.
-  return !nsContentUtils::GetBoolPref(aPrefName, PR_TRUE);
+  return !Preferences::GetBool(aPrefName, PR_TRUE);
 }
 
 PRBool
@@ -6187,8 +6189,7 @@ nsGlobalWindow::Close()
   // that were not opened by script
   if (!mHadOriginalOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
     PRBool allowClose =
-      nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
-                                  PR_TRUE);
+      Preferences::GetBool("dom.allow_scripts_to_close_windows", PR_TRUE);
     if (!allowClose) {
       // We're blocking the close operation
       // report localized error msg in JS console
@@ -7844,8 +7845,9 @@ nsGlobalWindow::DispatchSyncPopState()
                "Must be safe to run script here.");
 
   // Check that PopState hasn't been pref'ed off.
-  if (!nsContentUtils::GetBoolPref(sPopStatePrefStr, PR_FALSE))
+  if (!Preferences::GetBool(sPopStatePrefStr, PR_FALSE)) {
     return NS_OK;
+  }
 
   nsresult rv = NS_OK;
 
@@ -8022,7 +8024,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     return NS_OK;
   }
 
-  if (!nsContentUtils::GetBoolPref(kStorageEnabled)) {
+  if (!Preferences::GetBool(kStorageEnabled)) {
     *aSessionStorage = nsnull;
     return NS_OK;
   }
@@ -8086,7 +8088,7 @@ nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
   NS_ENSURE_ARG_POINTER(aGlobalStorage);
 
 #ifdef MOZ_STORAGE
-  if (!nsContentUtils::GetBoolPref(kStorageEnabled)) {
+  if (!Preferences::GetBool(kStorageEnabled)) {
     *aGlobalStorage = nsnull;
     return NS_OK;
   }
@@ -8112,7 +8114,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 
   NS_ENSURE_ARG(aLocalStorage);
 
-  if (!nsContentUtils::GetBoolPref(kStorageEnabled)) {
+  if (!Preferences::GetBool(kStorageEnabled)) {
     *aLocalStorage = nsnull;
     return NS_OK;
   }
@@ -10067,6 +10069,13 @@ nsGlobalWindow::GetURL(nsIDOMMozURLProperty** aURL)
   return NS_OK;
 }
 
+// static
+bool
+nsGlobalWindow::HasIndexedDBSupport()
+{
+  return Preferences::GetBool("indexedDB.feature.enabled", PR_TRUE);
+}
+
 // nsGlobalChromeWindow implementation
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
@@ -10975,7 +10984,7 @@ nsNavigator::RefreshMIMEArray()
 bool
 nsNavigator::HasDesktopNotificationSupport()
 {
-  return nsContentUtils::GetBoolPref("notification.feature.enabled", PR_FALSE);
+  return Preferences::GetBool("notification.feature.enabled", PR_FALSE);
 }
 
 //*****************************************************************************

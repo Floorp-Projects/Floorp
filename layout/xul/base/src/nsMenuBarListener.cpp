@@ -58,6 +58,9 @@
 #include "nsIDOMElement.h"
 
 #include "nsContentUtils.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 /*
  * nsMenuBarListener implementation
@@ -130,8 +133,7 @@ void nsMenuBarListener::InitAccessKey()
   else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_META)
     mAccessKeyMask = MODIFIER_META;
 
-  mAccessKeyFocuses =
-    nsContentUtils::GetBoolPref("ui.key.menuAccessKeyFocuses");
+  mAccessKeyFocuses = Preferences::GetBool("ui.key.menuAccessKeyFocuses");
 }
 
 void

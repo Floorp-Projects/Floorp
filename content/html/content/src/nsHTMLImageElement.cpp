@@ -75,7 +75,9 @@
 #include "nsEventDispatcher.h"
 
 #include "nsLayoutUtils.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 // XXX nav attrs: suppress
@@ -500,7 +502,7 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     // If caller is not chrome and dom.disable_image_src_set is true,
     // prevent setting image.src by exiting early
-    if (nsContentUtils::GetBoolPref("dom.disable_image_src_set") &&
+    if (Preferences::GetBool("dom.disable_image_src_set") &&
         !nsContentUtils::IsCallerChrome()) {
       return NS_OK;
     }
