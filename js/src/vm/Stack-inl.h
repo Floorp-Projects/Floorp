@@ -401,11 +401,18 @@ StackFrame::initCallFrameLatePrologue()
 }
 
 inline void
-StackFrame::initEvalFrame(JSContext *cx, JSScript *script, StackFrame *prev, uint32 flagsArg)
+StackFrame::initEvalFrame(JSContext *cx, JSScript *script, StackFrame *prev, JSObject *chain, uint32 flagsArg)
 {
     JS_ASSERT(flagsArg & EVAL);
     JS_ASSERT((flagsArg & ~(EVAL | DEBUGGER)) == 0);
     JS_ASSERT(prev->isScriptFrame());
+
+    /*
+     * eval code always runs in prev's scope, except when executed via
+     * DebugFrame_evalWithBindings. Strict eval is another special case, dealt
+     * with specially in js::Execute after this method returns.
+     */
+    JS_ASSERT_IF(!(flagsArg & DEBUGGER), chain == &prev->scopeChain());
 
     /* Copy (callee, thisv). */
     Value *dstvp = (Value *)this - 2;
@@ -427,7 +434,7 @@ StackFrame::initEvalFrame(JSContext *cx, JSScript *script, StackFrame *prev, uin
         exec.script = script;
     }
 
-    scopeChain_ = &prev->scopeChain();
+    scopeChain_ = chain;
     prev_ = prev;
     prevpc_ = prev->pc(cx);
     JS_ASSERT(!hasImacropc());
