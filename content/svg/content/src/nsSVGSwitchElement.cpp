@@ -121,10 +121,9 @@ nsSVGSwitchElement::InsertChildAt(nsIContent* aKid,
 }
 
 nsresult
-nsSVGSwitchElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent)
+nsSVGSwitchElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  NS_ASSERTION(aMutationEvent, "Someone tried to inhibit mutations on switch child removal.");
-  nsresult rv = nsSVGSwitchElementBase::RemoveChildAt(aIndex, aNotify, aMutationEvent);
+  nsresult rv = nsSVGSwitchElementBase::RemoveChildAt(aIndex, aNotify);
   if (NS_SUCCEEDED(rv)) {
     MaybeInvalidate();
   }
