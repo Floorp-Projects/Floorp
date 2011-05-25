@@ -95,7 +95,7 @@
       <property name="visibleTabs" readonly="true">
         <getter><![CDATA[
           return Array.filter(this.tabs, function(tab) {
-            return !tab.hidden && this._removingTabs.indexOf(tab) == -1;
+            return !tab.hidden && !tab.closing;
           }, this);
         ]]></getter>
       </property>
@@ -208,7 +208,7 @@
           //
           // Fixing bug 630826 could make that happen automatically.
           // Fixing bug 630830 could avoid the ugly hack below.
-          
+
           let closeMenuItem = document.getElementById("menu_close");
           let parentPopup = closeMenuItem.parentNode;
           let nextItem = closeMenuItem.nextSibling;
@@ -999,7 +999,7 @@
       <method name="_tabAttrModified">
         <parameter name="aTab"/>
         <body><![CDATA[
-          if (this._removingTabs.indexOf(aTab) > -1)
+          if (aTab.closing)
             return;
 
           // This event should be dispatched when any of these attributes change:
@@ -1455,7 +1455,7 @@
             // Handle requests for synchronously removing an already
             // asynchronously closing tab.
             if (!animate &&
-                this._removingTabs.indexOf(aTab) > -1) {
+                aTab.closing) {
               this._endRemoveTab(aTab);
               return;
             }
@@ -1509,7 +1509,7 @@
         <parameter name="aCloseWindowFastpath"/>
         <body>
           <![CDATA[
-            if (this._removingTabs.indexOf(aTab) > -1 || this._windowIsClosing)
+            if (aTab.closing || this._windowIsClosing)
               return false;
 
             var browser = this.getBrowserForTab(aTab);
@@ -1539,6 +1539,7 @@
               newTab = true;
             }
 
+            aTab.closing = true;
             this._removingTabs.push(aTab);
             if (newTab)
               this.addTab("about:blank", {skipAnimation: true});
@@ -1707,7 +1708,7 @@
 
             if (aTab.owner &&
                 !aTab.owner.hidden &&
-                this._removingTabs.indexOf(aTab.owner) == -1 &&
+                !aTab.owner.closing &&
                 Services.prefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
               this.selectedTab = aTab.owner;
               return;
@@ -1718,7 +1719,7 @@
             let numTabs = remainingTabs.length;
             if (numTabs == 0 || numTabs == 1 && remainingTabs[0] == aTab) {
               remainingTabs = Array.filter(this.tabs, function(tab) {
-                return this._removingTabs.indexOf(tab) == -1;
+                return !tab.closing;
               }, this);
             }
 
@@ -1933,7 +1934,7 @@
         <body>
         <![CDATA[
           if (!aTab.hidden && !aTab.pinned && !aTab.selected &&
-              this._removingTabs.indexOf(aTab) == -1) {
+              !aTab.closing) {
             aTab.setAttribute("hidden", "true");
             this.tabContainer.adjustTabstrip();
             let event = document.createEvent("Events");
@@ -3076,7 +3077,7 @@
           var tab = this._getDragTargetTab(event);
           if (window.getComputedStyle(this, null).direction == "ltr") {
             for (let i = tab ? tab._tPos : 0; i < tabs.length; i++)
-              if (event.screenX < tabs[i].boxObject.screenX + tabs[i].boxObject.width / 2) 
+              if (event.screenX < tabs[i].boxObject.screenX + tabs[i].boxObject.width / 2)
                 return i;
           } else {
             for (let i = tab ? tab._tPos : 0; i < tabs.length; i++)
@@ -3170,7 +3171,7 @@
         <parameter name="aTab"/>
         <body>
         <![CDATA[
-          return this.tabbrowser._removingTabs.indexOf(aTab) == -1;
+          return !aTab.closing;
         ]]>
         </body>
       </method>
@@ -3193,7 +3194,7 @@
 
         if (tab.getAttribute("fadein") == "true")
           this._handleNewTab(tab);
-        else if (this.tabbrowser._removingTabs.indexOf(tab) > -1)
+        else if (tab.closing)
           this.tabbrowser._endRemoveTab(tab);
       ]]></handler>
 
@@ -3336,7 +3337,7 @@
         var scrollRect = tabStrip.scrollClientRect;
         var rect = this.getBoundingClientRect();
         var minMargin = scrollRect.left - rect.left;
-        var maxMargin = Math.min(minMargin + scrollRect.width, 
+        var maxMargin = Math.min(minMargin + scrollRect.width,
                                  scrollRect.right);
         if (!ltr)
           [minMargin, maxMargin] = [this.clientWidth - maxMargin,
@@ -3634,6 +3635,7 @@
       <field name="mOverCloseButton">false</field>
       <field name="mCorrespondingMenuitem">null</field>
       <field name="_fullyOpen">false</field>
+      <field name="closing">false</field>
     </implementation>
 
     <handlers>
@@ -3745,7 +3747,7 @@
               continue;
             if (curTabBO.screenX >= tabstripBO.screenX &&
                 curTabBO.screenX + curTabBO.width <= tabstripBO.screenX + tabstripBO.width)
-              this.childNodes[i].setAttribute("tabIsVisible", "true"); 
+              this.childNodes[i].setAttribute("tabIsVisible", "true");
             else
               this.childNodes[i].removeAttribute("tabIsVisible");
           }
@@ -3756,7 +3758,7 @@
         <parameter name="aTab"/>
         <body><![CDATA[
           var menuItem = document.createElementNS(
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
             "menuitem");
 
           menuItem.setAttribute("class", "menuitem-iconic alltabs-item menuitem-with-favicon");
