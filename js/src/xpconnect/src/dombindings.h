@@ -85,7 +85,7 @@ class NodeList : public NodeListBase {
 
     static Methods sProtoMethods[];
 
-    static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj);
+    static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj, JSObject *callee);
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
 
     static T *getNodeList(JSObject *obj);
@@ -100,6 +100,9 @@ class NodeList : public NodeListBase {
     static bool cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto);
     static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
                                  jsid id, js::Value *vp, bool *hitp);
+
+    static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id,
+                                  js::PropertyDescriptor *desc);
   public:
     NodeList();
 

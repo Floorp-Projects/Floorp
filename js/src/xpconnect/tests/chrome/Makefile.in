@@ -71,6 +71,7 @@ _CHROME_FILES = \
 		test_APIExposer.xul \
 		test_bug664689.xul \
 		test_precisegc.xul \
+		test_nodelists.xul \
 		$(NULL)
 
 # Disabled until this test gets updated to test the new proxy based
