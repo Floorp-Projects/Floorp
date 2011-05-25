@@ -1544,10 +1544,11 @@ if test "$GNU_CC"; then
     # -Wall - turn on all warnings
     # -pedantic - make compiler warn about non-ANSI stuff, and
     #             be a little bit stricter
+    # -Wdeclaration-after-statement - MSVC doesn't like these
     # Warnings slamm took out for now (these were giving more noise than help):
     # -Wbad-function-cast - warns when casting a function to a new return type
     # -Wshadow - removed because it generates more noise than help --pete
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith -Wdeclaration-after-statement"
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
