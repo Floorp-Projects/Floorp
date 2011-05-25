@@ -1,61 +1,34 @@
-
 /* Toolbar */
 #placesToolbar {
-  padding: 3px;  /* b/f buttons have a 1px image padding */
-  -moz-padding-end: 4px;
+  padding: 3px;
+  -moz-padding-end: 6px;
 }
 
-/* back & forward buttons */
-#back-button, #forward-button {
-  list-style-image: url(libraryNavigation.png);
-  -moz-appearance: none;
-  padding: 0;
-  border: none;
-}
-
-#placesToolbar > toolbarbutton > .toolbarbutton-icon,
-#placesToolbar > toolbarbutton > .toolbarbutton-text {
-  margin: 0;
-  padding: 0;
+#placesToolbar > toolbarbutton[disabled] > .toolbarbutton-icon {
+  opacity: .4;
 }
 
 #back-button,
-#forward-button:-moz-locale-dir(rtl) {  
-  -moz-image-region: rect(0px, 24px, 24px, 0px);
-}
-#back-button:not([disabled="true"]):hover,
-#forward-button:not([disabled="true"]):hover:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(24px, 24px, 48px, 0px);
-}
-#back-button[disabled="true"],
-#forward-button:-moz-locale-dir(rtl)[disabled="true"] {
-  -moz-image-region: rect(48px, 24px, 72px, 0px) !important;
-}
-#back-button:not([disabled="true"]):hover:active,
-#forward-button:not([disabled="true"]):hover:active:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(72px, 24px, 96px, 0px);
+#forward-button {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-#forward-button,
-#back-button:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0px, 48px, 24px, 24px);
+#back-button {
+  -moz-image-region: rect(0, 18px, 18px, 0);
 }
-#forward-button:not([disabled="true"]):hover,
-#back-button:not([disabled="true"]):hover:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(24px, 48px, 48px, 24px);
+
+#forward-button {
+  -moz-image-region: rect(0, 36px, 18px, 18px);
 }
-#forward-button[disabled="true"],
-#back-button:-moz-locale-dir(rtl)[disabled="true"] {
-  -moz-image-region: rect(48px, 48px, 72px, 24px) !important;
-}
-#forward-button:not([disabled="true"]):hover:active,
-#back-button:not([disabled="true"]):hover:active:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(72px, 48px, 96px, 24px);
+
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
 }
 
 /* Menu */
 #placesMenu {
-  -moz-margin-start: 8px;
+  -moz-margin-start: 6px;
   -moz-appearance: none;
   border: none;
 }
@@ -206,4 +179,8 @@
 
 #organizerScopeBar > toolbarbutton[checked="true"] {
   border-color: ThreeDDarkShadow !important;
+}
+
+#searchFilter {
+  margin: 0;
 }

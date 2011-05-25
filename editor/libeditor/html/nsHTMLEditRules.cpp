@@ -171,19 +171,6 @@ class nsEditableTextFunctor : public nsBoolDomIterFunctor
 
 
 /********************************************************
- *  routine for making new rules instance
- ********************************************************/
-
-nsresult
-NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult)
-{
-  nsHTMLEditRules * rules = new nsHTMLEditRules();
-  if (rules)
-    return rules->QueryInterface(NS_GET_IID(nsIEditRules), (void**) aInstancePtrResult);
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
-/********************************************************
  *  Constructor/Destructor 
  ********************************************************/
 
@@ -425,7 +412,7 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
       NS_ENSURE_SUCCESS(res, res);
       nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(selection));
-      nsCOMPtr<nsFrameSelection> frameSelection;
+      nsRefPtr<nsFrameSelection> frameSelection;
       privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
       if (frameSelection) {
         frameSelection->UndefineCaretBidiLevel();

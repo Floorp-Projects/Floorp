@@ -171,7 +171,7 @@ public:
     nsINode* node = GetNode();
     return node && node->IsElement();
   }
-  PRBool IsDocument() const
+  bool IsDocumentNode() const
   {
     return GetNode() && GetNode()->IsNodeOfType(nsINode::eDOCUMENT);
   }

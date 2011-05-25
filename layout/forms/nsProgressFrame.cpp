@@ -171,10 +171,12 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)
 {
+  bool vertical = GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL;
   nsHTMLReflowState reflowState(aPresContext, aReflowState, aBarFrame,
                                 nsSize(aReflowState.ComputedWidth(),
                                        NS_UNCONSTRAINEDSIZE));
-  nscoord width = aReflowState.ComputedWidth();
+  nscoord size = vertical ? aReflowState.ComputedHeight()
+                          : aReflowState.ComputedWidth();
   nscoord xoffset = aReflowState.mComputedBorderPadding.left;
   nscoord yoffset = aReflowState.mComputedBorderPadding.top;
 
@@ -183,28 +185,43 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
     do_QueryInterface(mContent);
   progressElement->GetPosition(&position);
 
-  // Force the bar's width to match the current progress.
-  // When indeterminate, the progress' width will be 100%.
+  // Force the bar's size to match the current progress.
+  // When indeterminate, the progress' size will be 100%.
   if (position >= 0.0) {
-    width *= position;
+    size *= position;
   }
 
-  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-    xoffset += aReflowState.ComputedWidth() - width;
+  if (!vertical && GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+    xoffset += aReflowState.ComputedWidth() - size;
   }
 
-  // The bar width is fixed in these cases:
-  // - the progress position is determined: the bar width is fixed according
+  // The bar size is fixed in these cases:
+  // - the progress position is determined: the bar size is fixed according
   //   to it's value.
   // - the progress position is indeterminate and the bar appearance should be
-  //   shown as native: the bar width is forced to 100%.
+  //   shown as native: the bar size is forced to 100%.
   // Otherwise (when the progress is indeterminate and the bar appearance isn't
-  // native), the bar width isn't fixed and can be set by the author.
+  // native), the bar size isn't fixed and can be set by the author.
   if (position != -1 || ShouldUseNativeStyle()) {
-    width -= reflowState.mComputedMargin.LeftRight() +
-             reflowState.mComputedBorderPadding.LeftRight();
-    width = NS_MAX(width, 0);
-    reflowState.SetComputedWidth(width);
+    if (vertical) {
+      // We want the bar to begin at the bottom.
+      yoffset += aReflowState.ComputedHeight() - size;
+
+      size -= reflowState.mComputedMargin.TopBottom() +
+              reflowState.mComputedBorderPadding.TopBottom();
+      size = NS_MAX(size, 0);
+      reflowState.SetComputedHeight(size);
+    } else {
+      size -= reflowState.mComputedMargin.LeftRight() +
+              reflowState.mComputedBorderPadding.LeftRight();
+      size = NS_MAX(size, 0);
+      reflowState.SetComputedWidth(size);
+    }
+  } else if (vertical) {
+    // For vertical progress bars, we need to position the bar specificly when
+    // the width isn't constrained (position == -1 and !ShouldUseNativeStyle())
+    // because aReflowState.ComputedHeight() - size == 0.
+    yoffset += aReflowState.ComputedHeight() - reflowState.ComputedHeight();
   }
 
   xoffset += reflowState.mComputedMargin.left;

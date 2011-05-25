@@ -1,4 +1,4 @@
-# Copyright 2010, Google Inc.
+# Copyright 2011, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,30 +28,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""Web Socket handshaking.
-
-Note: request.connection.write/read are used in this module, even though
-mod_python document says that they should be used only in connection handlers.
-Unfortunately, we have no other options. For example, request.write/read are
-not suitable because they don't allow direct raw bytes writing/reading.
+"""WebSocket opening handshake processor. This class try to apply available
+opening handshake processors for each protocol version until a connection is
+successfully established.
 """
 
 
 import logging
-import re
 
+from mod_pywebsocket import util
 from mod_pywebsocket.handshake import draft75
-from mod_pywebsocket.handshake import handshake
-from mod_pywebsocket.handshake._base import DEFAULT_WEB_SOCKET_PORT
-from mod_pywebsocket.handshake._base import DEFAULT_WEB_SOCKET_SECURE_PORT
-from mod_pywebsocket.handshake._base import WEB_SOCKET_SCHEME
-from mod_pywebsocket.handshake._base import WEB_SOCKET_SECURE_SCHEME
+from mod_pywebsocket.handshake import hybi00
+from mod_pywebsocket.handshake import hybi06
 from mod_pywebsocket.handshake._base import HandshakeError
-from mod_pywebsocket.handshake._base import validate_protocol
 
 
 class Handshaker(object):
-    """This class performs Web Socket handshake."""
+    """This class performs WebSocket handshake."""
 
     def __init__(self, request, dispatcher, allowDraft75=False, strict=False):
         """Construct an instance.
@@ -68,28 +61,38 @@ class Handshaker(object):
         handshake.
         """
 
-        self._logger = logging.getLogger("mod_pywebsocket.handshake")
+        self._logger = util.get_class_logger(self)
+
         self._request = request
         self._dispatcher = dispatcher
         self._strict = strict
-        self._handshaker = handshake.Handshaker(request, dispatcher)
-        self._fallbackHandshaker = None
+        self._hybi07Handshaker = hybi06.Handshaker(request, dispatcher)
+        self._hybi00Handshaker = hybi00.Handshaker(request, dispatcher)
+        self._hixie75Handshaker = None
         if allowDraft75:
-            self._fallbackHandshaker = draft75.Handshaker(
+            self._hixie75Handshaker = draft75.Handshaker(
                 request, dispatcher, strict)
 
     def do_handshake(self):
-        """Perform Web Socket Handshake."""
+        """Perform WebSocket Handshake."""
 
-        try:
-            self._handshaker.do_handshake()
-        except HandshakeError, e:
-            self._logger.error('Handshake error: %s' % e)
-            if self._fallbackHandshaker:
-                self._logger.warning('fallback to old protocol')
-                self._fallbackHandshaker.do_handshake()
-                return
-            raise e
+        self._logger.debug(
+            'Opening handshake headers: %s' % self._request.headers_in)
 
+        handshakers = [
+            ('HyBi 07', self._hybi07Handshaker),
+            ('HyBi 00', self._hybi00Handshaker),
+            ('Hixie 75', self._hixie75Handshaker)]
+        last_error = HandshakeError('No handshaker available')
+        for name, handshaker in handshakers:
+            if handshaker:
+                self._logger.info('Trying %s protocol' % name)
+                try:
+                    handshaker.do_handshake()
+                    return
+                except HandshakeError, e:
+                    self._logger.info('%s handshake failed: %s' % (name, e))
+                    last_error = e
+        raise last_error
 
 # vi:sts=4 sw=4 et

@@ -553,7 +553,7 @@ public:
     /**
      * Returns PR_TRUE if either this is the GLES2 API, or had the GL_ARB_ES2_compatibility extension
      */
-    PRBool HasES2Compatibility() const {
+    PRBool HasES2Compatibility() {
         return mIsGLES2 || IsExtensionSupported(ARB_ES2_compatibility);
     }
 
@@ -807,15 +807,34 @@ public:
     /** Helper for DecomposeIntoNoRepeatTriangles
      */
     struct RectTriangles {
-        RectTriangles() : numRects(0) { }
+        RectTriangles() { }
 
         void addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
                      GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1);
 
-        int numRects;
-        /* max is 4 rectangles, each made up of 2 triangles (3 2-coord vertices each) */
-        GLfloat vertexCoords[4*3*2*2];
-        GLfloat texCoords[4*3*2*2];
+        /**
+         * these return a float pointer to the start of each array respectively.
+         * Use it for glVertexAttribPointer calls.
+         * We can return NULL if we choose to use Vertex Buffer Objects here.
+         */
+        float* vertexPointer() {
+            return &vertexCoords[0].x;
+        };
+
+        float* texCoordPointer() {
+            return &texCoords[0].u;
+        };
+
+        unsigned int elements() {
+            return vertexCoords.Length();
+        };
+
+        typedef struct { GLfloat x,y; } vert_coord;
+        typedef struct { GLfloat u,v; } tex_coord;
+    private:
+        // default is 4 rectangles, each made up of 2 triangles (3 coord vertices each)
+        nsAutoTArray<vert_coord, 6> vertexCoords;
+        nsAutoTArray<tex_coord, 6>  texCoords;
     };
 
     /**
@@ -863,9 +882,12 @@ public:
         Extensions_Max
     };
 
-    PRBool IsExtensionSupported(GLExtensions aKnownExtension) const {
+    PRBool IsExtensionSupported(GLExtensions aKnownExtension) {
         return mAvailableExtensions[aKnownExtension];
     }
+
+    // for unknown extensions
+    PRBool IsExtensionSupported(const char *extension);
 
     // Shared code for GL extensions and GLX extensions.
     static PRBool ListHasExtension(const GLubyte *extensions,
@@ -873,6 +895,25 @@ public:
 
     GLint GetMaxTextureSize() { return mMaxTextureSize; }
     void SetFlipped(PRBool aFlipped) { mFlipped = aFlipped; }
+
+    // this should just be a std::bitset, but that ended up breaking
+    // MacOS X builds; see bug 584919.  We can replace this with one
+    // later on.  This is handy to use in WebGL contexts as well,
+    // so making it public.
+    template<size_t setlen>
+    struct ExtensionBitset {
+        ExtensionBitset() {
+            for (size_t i = 0; i < setlen; ++i)
+                values[i] = false;
+        }
+
+        bool& operator[](size_t index) {
+            NS_ASSERTION(index < setlen, "out of range");
+            return values[index];
+        }
+
+        bool values[setlen];
+    };
 
 protected:
     PRPackedBool mInitialized;
@@ -923,27 +964,6 @@ protected:
     GLuint mOffscreenDepthRB;
     GLuint mOffscreenStencilRB;
 
-    // this should just be a std::bitset, but that ended up breaking
-    // MacOS X builds; see bug 584919.  We can replace this with one
-    // later on.
-    template<size_t setlen>
-    struct ExtensionBitset {
-        ExtensionBitset() {
-            for (size_t i = 0; i < setlen; ++i)
-                values[i] = false;
-        }
-
-        bool& operator[](size_t index) {
-            NS_ASSERTION(index < setlen, "out of range");
-            return values[index];
-        }
-
-        const bool& operator[](size_t index) const {
-            return const_cast<ExtensionBitset*>(this)->operator[](index);
-        }
-
-        bool values[setlen];
-    };
     ExtensionBitset<Extensions_Max> mAvailableExtensions;
 
     // Clear to transparent black, with 0 depth and stencil,
@@ -961,7 +981,6 @@ protected:
     PRBool InitWithPrefix(const char *prefix, PRBool trygl);
 
     void InitExtensions();
-    PRBool IsExtensionSupported(const char *extension);
 
     virtual already_AddRefed<TextureImage>
     CreateBasicTextureImage(GLuint aTexture,
@@ -975,11 +994,18 @@ protected:
         return teximage.forget();
     }
 
+    bool IsOffscreenSizeAllowed(const gfxIntSize& aSize) const {
+        PRInt32 biggerDimension = NS_MAX(aSize.width, aSize.height);
+        PRInt32 maxAllowed = NS_MIN(mMaxRenderbufferSize, mMaxTextureSize);
+        return biggerDimension <= maxAllowed;
+    }
+
 protected:
     nsTArray<nsIntRect> mViewportStack;
     nsTArray<nsIntRect> mScissorStack;
 
     GLint mMaxTextureSize;
+    GLint mMaxRenderbufferSize;
 
 public:
 

@@ -79,6 +79,8 @@
 #include "nsICachingChannel.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
+#include "nsPluginHost.h"
+#include "nsIPluginInstanceOwner.h"
 #include "nsGeolocation.h"
 #include "nsDesktopNotification.h"
 #include "nsContentCID.h"
@@ -459,7 +461,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDummyJavaPluginOwner)
 
 private:
-  nsCOMPtr<nsIPluginInstance> mInstance;
+  nsRefPtr<nsNPAPIPluginInstance> mInstance;
   nsCOMPtr<nsIDocument> mDocument;
 };
 
@@ -489,7 +491,7 @@ nsDummyJavaPluginOwner::Destroy()
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::SetInstance(nsIPluginInstance *aInstance)
+nsDummyJavaPluginOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
 {
   // If we're going to null out mInstance after use, be sure to call
   // mInstance->InvalidateOwner() here, since it now won't be called
@@ -503,9 +505,10 @@ nsDummyJavaPluginOwner::SetInstance(nsIPluginInstance *aInstance)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetInstance(nsIPluginInstance *&aInstance)
+nsDummyJavaPluginOwner::GetInstance(nsNPAPIPluginInstance **aInstance)
 {
-  NS_IF_ADDREF(aInstance = mInstance);
+  NS_IF_ADDREF(mInstance);
+  *aInstance = mInstance;
 
   return NS_OK;
 }
@@ -6326,7 +6329,7 @@ nsGlobalWindow::EnterModalState()
       activeShell->SetCapturingContent(nsnull, 0);
 
       if (activeShell) {
-        nsCOMPtr<nsFrameSelection> frameSelection = activeShell->FrameSelection();
+        nsRefPtr<nsFrameSelection> frameSelection = activeShell->FrameSelection();
         frameSelection->SetMouseDownState(PR_FALSE);
       }
     }
@@ -6547,20 +6550,17 @@ nsGlobalWindow::InitJavaProperties()
   // can fail. If it fails, we won't try again...
   mDidInitJavaProperties = PR_TRUE;
 
-  // Check whether the plugin supports NPRuntime, if so, init through
-  // it.
-
-  nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-  if (!host) {
-    return;
-  }
-
   mDummyJavaPluginOwner = new nsDummyJavaPluginOwner(mDoc);
   if (!mDummyJavaPluginOwner) {
     return;
   }
 
-  host->InstantiateDummyJavaPlugin(mDummyJavaPluginOwner);
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
+  if (!pluginHost) {
+    return;
+  }  
+  pluginHost->InstantiateDummyJavaPlugin(mDummyJavaPluginOwner);
 
   // It's possible for us (or the Java plugin, rather) to process
   // events during the above call, which can lead to this window being
@@ -6570,8 +6570,8 @@ nsGlobalWindow::InitJavaProperties()
     return;
   }
 
-  nsCOMPtr<nsIPluginInstance> dummyPlugin;
-  mDummyJavaPluginOwner->GetInstance(*getter_AddRefs(dummyPlugin));
+  nsRefPtr<nsNPAPIPluginInstance> dummyPlugin;
+  mDummyJavaPluginOwner->GetInstance(getter_AddRefs(dummyPlugin));
 
   if (dummyPlugin) {
     // A dummy plugin was instantiated. This means we have a Java
@@ -8447,8 +8447,6 @@ nsGlobalWindow::FireDelayedDOMEvents()
   if (mPendingStorageEventsObsolete) {
     // Fire pending storage events.
     mPendingStorageEventsObsolete->EnumerateRead(FirePendingStorageEvents, this);
-
-    delete mPendingStorageEventsObsolete;
     mPendingStorageEventsObsolete = nsnull;
   }
 

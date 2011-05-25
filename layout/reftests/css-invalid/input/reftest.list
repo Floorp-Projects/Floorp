@@ -23,12 +23,13 @@ fails-if(Android) == input-dyn-disabled.html input-ref.html
 == input-disabled-fieldset-1.html input-fieldset-ref.html
 == input-disabled-fieldset-2.html input-fieldset-ref.html
 == input-fieldset-legend.html input-fieldset-legend-ref.html
-== input-radio-required.html success-ref.html
-== input-radio-customerror.html success-ref.html
-== input-radio-dyn-valid-1.html success-ref.html
-== input-radio-dyn-valid-2.html success-ref.html
-== input-radio-nogroup-required-valid.html success-ref.html
-== input-radio-nogroup-required-invalid.html success-ref.html
+== input-radio-required.html input-radio-ref.html
+== input-radio-customerror.html input-radio-ref.html
+== input-radio-dyn-valid-1.html input-radio-checked-ref.html
+== input-radio-dyn-valid-2.html input-radio-ref.html
+== input-radio-nogroup-required-valid.html input-radio-ref.html
+== input-radio-nogroup-required-invalid.html input-radio-checked-ref.html
+== input-radio-focus-click.html input-radio-ref.html
 == input-submit.html input-submit-ref.html
 == input-image.html input-image-ref.html
 # input type='hidden' shouldn't show

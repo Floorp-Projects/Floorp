@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Daniel Glazman <glazman@netscape.com>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -106,10 +107,6 @@ static char namedanchorText[] = "namedanchor";
 
 nsIRangeUtils* nsHTMLEditor::sRangeHelper;
 
-// some prototypes for rules creation shortcuts
-nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
-nsresult NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult);
-
 #define IsLinkTag(s) (s.EqualsIgnoreCase(hrefText))
 #define IsNamedAnchorTag(s) (s.EqualsIgnoreCase(anchorTxt) || s.EqualsIgnoreCase(namedanchorText))
 
@@ -178,8 +175,7 @@ nsHTMLEditor::~nsHTMLEditor()
 
   if (mLinkHandler && mDocWeak)
   {
-    nsCOMPtr<nsIPresShell> ps;
-    GetPresShell(getter_AddRefs(ps));
+    nsCOMPtr<nsIPresShell> ps = GetPresShell();
 
     if (ps && ps->GetPresContext())
     {
@@ -305,13 +301,10 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     }
 
     // Init the HTML-CSS utils
-    result = NS_NewHTMLCSSUtils(getter_Transfers(mHTMLCSSUtils));
-    if (NS_FAILED(result)) { return result; }
-    mHTMLCSSUtils->Init(this);
+    mHTMLCSSUtils = new nsHTMLCSSUtils(this);
 
     // disable links
-    nsCOMPtr<nsIPresShell> presShell;
-    GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
     nsPresContext *context = presShell->GetPresContext();
     NS_ENSURE_TRUE(context, NS_ERROR_NULL_POINTER);
@@ -323,11 +316,9 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
 
     // init the type-in state
     mTypeInState = new TypeInState();
-    if (!mTypeInState) {return NS_ERROR_NULL_POINTER;}
 
     // init the selection listener for image resizing
     mSelectionListenerP = new ResizerSelectionListener(this);
-    if (!mSelectionListenerP) {return NS_ERROR_NULL_POINTER;}
 
     if (!IsInteractionAllowed()) {
       // ignore any errors from this in case the file is missing
@@ -536,12 +527,8 @@ NS_IMETHODIMP
 nsHTMLEditor::InitRules()
 {
   // instantiate the rules for the html editor
-  nsresult res = NS_NewHTMLEditRules(getter_AddRefs(mRules));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(mRules, NS_ERROR_UNEXPECTED);
-  res = mRules->Init(static_cast<nsPlaintextEditor*>(this));
-  
-  return res;
+  mRules = new nsHTMLEditRules();
+  return mRules->Init(static_cast<nsPlaintextEditor*>(this));
 }
 
 NS_IMETHODIMP
@@ -3509,8 +3496,7 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
 
   // Make sure the pres shell doesn't disappear during the load.
   NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIPresShell> ps;
-  GetPresShell(getter_AddRefs(ps));
+  nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIURI> uaURI;
@@ -3554,8 +3540,7 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
     return NS_OK;
 
   // Make sure the pres shell doesn't disappear during the load.
-  nsCOMPtr<nsIPresShell> ps;
-  GetPresShell(getter_AddRefs(ps));
+  nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIURI> uaURI;
@@ -3619,8 +3604,7 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
   NS_ENSURE_TRUE(sheet, NS_OK); /// Don't fail if sheet not found
 
   NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIPresShell> ps;
-  GetPresShell(getter_AddRefs(ps));
+  nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   ps->RemoveOverrideStyleSheet(sheet);
@@ -4213,8 +4197,7 @@ nsHTMLEditor::SelectAll()
     return selection->SelectAllChildren(mRootElement);
   }
 
-  nsCOMPtr<nsIPresShell> ps;
-  GetPresShell(getter_AddRefs(ps));
+  nsCOMPtr<nsIPresShell> ps = GetPresShell();
   nsIContent *rootContent = anchorContent->GetSelectionRootContent(ps);
   NS_ENSURE_TRUE(rootContent, NS_ERROR_UNEXPECTED);
 
@@ -5607,8 +5590,7 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   aY = 0;
 
   NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIPresShell> ps;
-  GetPresShell(getter_AddRefs(ps));
+  nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);

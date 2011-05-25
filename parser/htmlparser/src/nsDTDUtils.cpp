@@ -1041,9 +1041,7 @@ nsObserverEntry::nsObserverEntry(const nsAString& aTopic) : mTopic(aTopic)
 
 nsObserverEntry::~nsObserverEntry() {
   for (PRInt32 i = 0; i <= NS_HTML_TAG_MAX; ++i){
-    if (mObservers[i]) {
-      delete mObservers[i];
-    }
+    delete mObservers[i];
   }
 }
 

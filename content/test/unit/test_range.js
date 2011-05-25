@@ -217,9 +217,8 @@ function getRange(aSourceNode, aFragment) {
 function getParsedDocument(aPath) {
   var doc = do_parse_document(aPath, "application/xml");
   do_check_true(doc.documentElement.localName != "parsererror");
-  do_check_true(doc instanceof C_i.nsIDOMDocumentTraversal);
   do_check_true(doc instanceof C_i.nsIDOMXPathEvaluator);
-  do_check_true(doc instanceof C_i.nsIDOMDocumentRange);
+  do_check_true(doc instanceof C_i.nsIDOMDocument);
 
   // Clean out whitespace.
   var walker = doc.createTreeWalker(doc,
@@ -517,7 +516,7 @@ function run_miscellaneous_tests() {
 
   // Requested by smaug:  A range involving a comment as a document child.
   doc = parser.parseFromString("<!-- foo --><foo/>", "application/xml");
-  do_check_true(doc instanceof C_i.nsIDOMDocumentRange);
+  do_check_true(doc instanceof C_i.nsIDOMDocument);
   do_check_eq(doc.childNodes.length, 2);
   baseRange = doc.createRange();
   baseRange.setStart(doc.firstChild, 1);

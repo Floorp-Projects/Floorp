@@ -245,7 +245,8 @@ nsDownloadManager::RemoveDownloadsForURI(nsIURI *aURI)
   nsresult rv = aURI->GetSpec(source);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mGetIdsForURIStatement->BindUTF8StringParameter(0, source);
+  rv = mGetIdsForURIStatement->BindUTF8StringByName(
+    NS_LITERAL_CSTRING("source"), source);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
@@ -623,14 +624,13 @@ nsDownloadManager::RestoreDatabaseState()
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
-    "SET state = ?1 "
-    "WHERE state = ?2"), getter_AddRefs(stmt));
+    "SET state = :state "
+    "WHERE state = :state_cond"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 i = 0;
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_FINISHED);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("state"), nsIDownloadManager::DOWNLOAD_FINISHED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_SCANNING);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("state_cond"), nsIDownloadManager::DOWNLOAD_SCANNING);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -639,20 +639,19 @@ nsDownloadManager::RestoreDatabaseState()
   // Convert supposedly-active downloads into downloads that should auto-resume
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
-    "SET autoResume = ?1 "
-    "WHERE state = ?2 "
-      "OR state = ?3 "
-      "OR state = ?4"), getter_AddRefs(stmt));
+    "SET autoResume = :autoResume "
+    "WHERE state = :notStarted "
+      "OR state = :queued "
+      "OR state = :downloading"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  i = 0;
-  rv = stmt->BindInt32Parameter(i++, nsDownload::AUTO_RESUME);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("autoResume"), nsDownload::AUTO_RESUME);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_NOTSTARTED);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("notStarted"), nsIDownloadManager::DOWNLOAD_NOTSTARTED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_QUEUED);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("queued"), nsIDownloadManager::DOWNLOAD_QUEUED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("downloading"), nsIDownloadManager::DOWNLOAD_DOWNLOADING);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -662,18 +661,17 @@ nsDownloadManager::RestoreDatabaseState()
   // finished state to *not* automatically resume.  See Bug 409179 for details.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
-    "SET autoResume = ?1 "
-    "WHERE state = ?2 "
-      "AND autoResume = ?3"),
+    "SET autoResume = :autoResume "
+    "WHERE state = :state "
+      "AND autoResume = :autoResume_cond"),
     getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  i = 0;
-  rv = stmt->BindInt32Parameter(i++, nsDownload::DONT_RESUME);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("autoResume"), nsDownload::DONT_RESUME);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_FINISHED);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("state"), nsIDownloadManager::DOWNLOAD_FINISHED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(i++, nsDownload::AUTO_RESUME);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("autoResume_cond"), nsDownload::AUTO_RESUME);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -689,13 +687,13 @@ nsDownloadManager::RestoreActiveDownloads()
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id "
     "FROM moz_downloads "
-    "WHERE (state = ?1 AND LENGTH(entityID) > 0) "
-      "OR autoResume != ?2"), getter_AddRefs(stmt));
+    "WHERE (state = :state AND LENGTH(entityID) > 0) "
+      "OR autoResume != :autoResume"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stmt->BindInt32Parameter(0, nsIDownloadManager::DOWNLOAD_PAUSED);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("state"), nsIDownloadManager::DOWNLOAD_PAUSED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(1, nsDownload::DONT_RESUME);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("autoResume"), nsDownload::DONT_RESUME);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsresult retVal = NS_OK;
@@ -732,49 +730,40 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_downloads "
     "(name, source, target, tempPath, startTime, endTime, state, "
-     "mimeType, preferredApplication, preferredAction) "
-    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"), getter_AddRefs(stmt));
+     "mimeType, preferredApplication, preferredAction) VALUES "
+    "(:name, :source, :target, :tempPath, :startTime, :endTime, :state, "
+     ":mimeType, :preferredApplication, :preferredAction)"),
+    getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, 0);
 
-  PRInt32 i = 0;
-  // name
-  rv = stmt->BindStringParameter(i++, aName);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), aName);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // source
-  rv = stmt->BindUTF8StringParameter(i++, aSource);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("source"), aSource);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // target
-  rv = stmt->BindUTF8StringParameter(i++, aTarget);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("target"), aTarget);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // tempPath
-  rv = stmt->BindStringParameter(i++, aTempPath);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("tempPath"), aTempPath);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // startTime
-  rv = stmt->BindInt64Parameter(i++, aStartTime);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("startTime"), aStartTime);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // endTime
-  rv = stmt->BindInt64Parameter(i++, aEndTime);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("endTime"), aEndTime);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // state
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_NOTSTARTED);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("state"), nsIDownloadManager::DOWNLOAD_NOTSTARTED);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // mimeType
-  rv = stmt->BindUTF8StringParameter(i++, aMimeType);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("mimeType"), aMimeType);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // preferredApplication
-  rv = stmt->BindUTF8StringParameter(i++, aPreferredApp);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("preferredApplication"), aPreferredApp);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // preferredAction
-  rv = stmt->BindInt32Parameter(i++, aPreferredAction);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("preferredAction"), aPreferredAction);
   NS_ENSURE_SUCCESS(rv, 0);
 
   PRBool hasMore;
@@ -811,16 +800,16 @@ nsDownloadManager::InitDB()
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
-    "SET tempPath = ?1, startTime = ?2, endTime = ?3, state = ?4, "
-        "referrer = ?5, entityID = ?6, currBytes = ?7, maxBytes = ?8, "
-        "autoResume = ?9 "
-    "WHERE id = ?10"), getter_AddRefs(mUpdateDownloadStatement));
+    "SET tempPath = :tempPath, startTime = :startTime, endTime = :endTime, "
+      "state = :state, referrer = :referrer, entityID = :entityID, "
+      "currBytes = :currBytes, maxBytes = :maxBytes, autoResume = :autoResume "
+    "WHERE id = :id"), getter_AddRefs(mUpdateDownloadStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id "
     "FROM moz_downloads "
-    "WHERE source = ?1"), getter_AddRefs(mGetIdsForURIStatement));
+    "WHERE source = :source"), getter_AddRefs(mGetIdsForURIStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
@@ -962,10 +951,10 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
            "entityID, currBytes, maxBytes, mimeType, preferredAction, "
            "preferredApplication, autoResume "
     "FROM moz_downloads "
-    "WHERE id = ?1"), getter_AddRefs(stmt));
+    "WHERE id = :id"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stmt->BindInt64Parameter(0, aID);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), aID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasResults = PR_FALSE;
@@ -1598,10 +1587,10 @@ nsDownloadManager::RemoveDownload(PRUint32 aID)
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_downloads "
-    "WHERE id = ?1"), getter_AddRefs(stmt));
+    "WHERE id = :id"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stmt->BindInt64Parameter(0, aID); // unsigned; 64-bit to prevent overflow
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), aID); // unsigned; 64-bit to prevent overflow
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -1626,23 +1615,23 @@ nsDownloadManager::RemoveDownloadsByTimeframe(PRInt64 aStartTime,
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_downloads "
-    "WHERE startTime >= ?1 "
-    "AND startTime <= ?2 "
-    "AND state NOT IN (?3, ?4, ?5)"), getter_AddRefs(stmt));
+    "WHERE startTime >= :startTime "
+    "AND startTime <= :endTime "
+    "AND state NOT IN (:downloading, :paused, :queued)"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Bind the times
-  rv = stmt->BindInt64Parameter(0, aStartTime);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("startTime"), aStartTime);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt64Parameter(1, aEndTime);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("endTime"), aEndTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Bind the active states
-  rv = stmt->BindInt32Parameter(2, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("downloading"), nsIDownloadManager::DOWNLOAD_DOWNLOADING);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(3, nsIDownloadManager::DOWNLOAD_PAUSED);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("paused"), nsIDownloadManager::DOWNLOAD_PAUSED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(4, nsIDownloadManager::DOWNLOAD_QUEUED);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("queued"), nsIDownloadManager::DOWNLOAD_QUEUED);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Execute
@@ -1668,15 +1657,15 @@ nsDownloadManager::CleanUp()
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_downloads "
-    "WHERE state = ?1 "
-      "OR state = ?2 "
-      "OR state = ?3 "
-      "OR state = ?4 "
-      "OR state = ?5 "
-      "OR state = ?6"), getter_AddRefs(stmt));
+    "WHERE state = ? "
+      "OR state = ? "
+      "OR state = ? "
+      "OR state = ? "
+      "OR state = ? "
+      "OR state = ?"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(states); ++i) {
-    rv = stmt->BindInt32Parameter(i, states[i]);
+    rv = stmt->BindInt32ByIndex(i, states[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1705,15 +1694,15 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT COUNT(*) "
     "FROM moz_downloads "
-    "WHERE state = ?1 "
-      "OR state = ?2 "
-      "OR state = ?3 "
-      "OR state = ?4 "
-      "OR state = ?5 "
-      "OR state = ?6"), getter_AddRefs(stmt));
+    "WHERE state = ? "
+      "OR state = ? "
+      "OR state = ? "
+      "OR state = ? "
+      "OR state = ? "
+      "OR state = ?"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(states); ++i) {
-    rv = stmt->BindInt32Parameter(i, states[i]);
+    rv = stmt->BindInt32ByIndex(i, states[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3012,58 +3001,47 @@ nsDownload::UpdateDB()
 
   mozIStorageStatement *stmt = mDownloadManager->mUpdateDownloadStatement;
 
-  PRInt32 i = 0;
-  // tempPath
   nsAutoString tempPath;
   if (mTempFile)
     (void)mTempFile->GetPath(tempPath);
-  nsresult rv = stmt->BindStringParameter(i++, tempPath);
+  nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("tempPath"), tempPath);
 
-  // startTime
-  rv = stmt->BindInt64Parameter(i++, mStartTime);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("startTime"), mStartTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // endTime
-  rv = stmt->BindInt64Parameter(i++, mLastUpdate);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("endTime"), mLastUpdate);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // state
-  rv = stmt->BindInt32Parameter(i++, mDownloadState);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("state"), mDownloadState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // referrer
   if (mReferrer) {
     nsCAutoString referrer;
     rv = mReferrer->GetSpec(referrer);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindUTF8StringParameter(i++, referrer);
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("referrer"), referrer);
   } else {
-    rv = stmt->BindNullParameter(i++);
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("referrer"));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // entityID
-  rv = stmt->BindUTF8StringParameter(i++, mEntityID);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("entityID"), mEntityID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // currBytes
   PRInt64 currBytes;
   (void)GetAmountTransferred(&currBytes);
-  rv = stmt->BindInt64Parameter(i++, currBytes);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("currBytes"), currBytes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // maxBytes
   PRInt64 maxBytes;
   (void)GetSize(&maxBytes);
-  rv = stmt->BindInt64Parameter(i++, maxBytes);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("maxBytes"), maxBytes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // autoResume
-  rv = stmt->BindInt32Parameter(i++, mAutoResume);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("autoResume"), mAutoResume);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // id
-  rv = stmt->BindInt64Parameter(i++, mID);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return stmt->Execute();

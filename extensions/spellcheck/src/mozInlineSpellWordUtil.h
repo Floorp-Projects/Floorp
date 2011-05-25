@@ -37,7 +37,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentRange.h"
 #include "nsIDocument.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -115,7 +114,7 @@ public:
   // so we can access characters directly.
   static void NormalizeWord(nsSubstring& aWord);
 
-  nsIDOMDocumentRange* GetDocumentRange() const { return mDOMDocumentRange; }
+  nsIDOMDocument* GetDOMDocument() const { return mDOMDocument; }
   nsIDocument* GetDocument() const { return mDocument; }
   nsIDOMNode* GetRootNode() { return mRootNode; }
   nsIUGenCategory* GetCategories() { return mCategories; }
@@ -123,7 +122,7 @@ public:
 private:
 
   // cached stuff for the editor, set by Init
-  nsCOMPtr<nsIDOMDocumentRange> mDOMDocumentRange;
+  nsCOMPtr<nsIDOMDocument> mDOMDocument;
   nsCOMPtr<nsIDocument>         mDocument;
   nsCOMPtr<nsIDOMWindow>        mCSSView;
   nsCOMPtr<nsIUGenCategory>     mCategories;

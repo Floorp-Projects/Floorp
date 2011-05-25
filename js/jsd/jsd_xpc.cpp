@@ -1542,6 +1542,58 @@ jsdScript::EnableSingleStepInterrupts(PRBool enable)
 }
 
 NS_IMETHODIMP
+jsdScript::GetExecutableLines(PRUint32 aPcmap, PRUint32 aStartLine, PRUint32 aMaxLines,
+                              PRUint32* aCount, PRUint32** aExecutableLines)
+{
+    ASSERT_VALID_EPHEMERAL;
+    if (aPcmap == PCMAP_SOURCETEXT) {
+        jsuword start = JSD_GetClosestPC(mCx, mScript, 0);
+        uintN lastLine = JSD_GetScriptBaseLineNumber(mCx, mScript)
+                       + JSD_GetScriptLineExtent(mCx, mScript) - 1;
+        jsuword end = JSD_GetClosestPC(mCx, mScript, lastLine + 1);
+
+        *aExecutableLines = static_cast<PRUint32*>(NS_Alloc((end - start + 1) * sizeof(PRUint32)));
+        if (!JSD_GetLinePCs(mCx, mScript, aStartLine, aMaxLines, aCount, aExecutableLines, NULL))
+            return NS_ERROR_OUT_OF_MEMORY;
+        
+        return NS_OK;
+    }
+
+    if (aPcmap == PCMAP_PRETTYPRINT) {
+        if (!mPPLineMap) {
+            if (!CreatePPLineMap())
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        nsTArray<PRUint32> lines;
+        PRUint32 i;
+
+        for (i = 0; i < mPCMapSize; ++i) {
+            if (mPPLineMap[i].line >= aStartLine)
+                break;
+        }
+
+        for (; i < mPCMapSize && lines.Length() < aMaxLines; ++i) {
+            lines.AppendElement(mPPLineMap[i].line);
+        }
+
+        if (aCount)
+            *aCount = lines.Length();
+
+        *aExecutableLines = static_cast<PRUint32*>(NS_Alloc(lines.Length() * sizeof(PRUint32)));
+        if (!*aExecutableLines)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        for (i = 0; i < lines.Length(); ++i)
+            (*aExecutableLines)[i] = lines[i];
+
+        return NS_OK;
+    }
+
+    return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP
 jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, PRBool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;

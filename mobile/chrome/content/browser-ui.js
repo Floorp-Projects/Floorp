@@ -1196,15 +1196,11 @@ var BrowserUI = {
         this.activePanel = HistoryList;
         break;
       case "cmd_remoteTabs":
-        // remove the checked state set by the click it will be reset by setting
-        // checked on the command element if we decide to show this panel (see AwesomePanel.js)
-        document.getElementById("remotetabs-button").removeAttribute("checked");
-
         if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
-          this.activePanel = null;
-
           WeaveGlue.open();
         } else if (!Weave.Service.isLoggedIn) {
+          // unchecked the relative command button
+          document.getElementById("remotetabs-button").removeAttribute("checked");
           this.activePanel = null;
 
           BrowserUI.showPanel("prefs-container");
@@ -1217,9 +1213,11 @@ var BrowserUI = {
               prefsBox.scrollBoxObject.scrollTo(0, syncAreaY - prefsBoxY);
             }, 0);
           }
-        } else {
-          this.activePanel = RemoteTabsList;
+
+          return;
         }
+
+        this.activePanel = RemoteTabsList;
         break;
       case "cmd_quit":
         GlobalOverlay.goQuitApplication();

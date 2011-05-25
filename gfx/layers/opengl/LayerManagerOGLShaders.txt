@@ -80,7 +80,11 @@ $FRAGMENT_SHADER_HEADER$
 uniform float uLayerOpacity;
 #endif
 
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range
+varying mediump vec2 vTexCoord;
+#else
 varying vec2 vTexCoord;
+#endif
 @end
 
 // This is a basic Layer vertex shader.  It's used for all
@@ -97,7 +101,11 @@ uniform vec4 uRenderTargetOffset;
 attribute vec4 aVertexCoord;
 attribute vec2 aTexCoord;
 
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range
+varying mediump vec2 vTexCoord;
+#else
 varying vec2 vTexCoord;
+#endif
 
 void main()
 {

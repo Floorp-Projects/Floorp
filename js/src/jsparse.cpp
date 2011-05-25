@@ -1229,7 +1229,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
                     continue;
                 JSFunction *fun = obj->getFunctionPrivate();
                 JS_ASSERT(fun->isInterpreted());
-                JSScript *inner = fun->u.i.script;
+                JSScript *inner = fun->script();
                 if (!JSScript::isValidOffset(inner->globalsOffset) &&
                     !JSScript::isValidOffset(inner->objectsOffset)) {
                     continue;

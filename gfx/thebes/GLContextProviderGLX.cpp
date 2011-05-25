@@ -199,6 +199,8 @@ GLXLibrary::EnsureInitialized()
         // Not possible to query for extensions.
         return PR_FALSE;
 
+    extensionsStr = xQueryExtensionsString(display, screen);
+
     LibrarySymbolLoader::SymLoadStruct *sym13;
     if (!GLXVersionCheck(1, 3)) {
         // Even if we don't have 1.3, we might have equivalent extensions

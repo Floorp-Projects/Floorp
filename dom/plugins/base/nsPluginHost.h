@@ -62,11 +62,13 @@
 #include "nsPluginTags.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIIDNService.h"
+#include "nsCRT.h"
 
 class nsNPAPIPlugin;
 class nsIComponentManager;
 class nsIFile;
 class nsIChannel;
+class nsPluginNativeWindow;
 
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
 #define MAC_CARBON_PLUGINS
@@ -105,6 +107,57 @@ public:
   NS_DECL_NSIPLUGINHOST
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
+
+  nsresult Init();
+  nsresult Destroy();
+  nsresult LoadPlugins();
+  nsresult InstantiatePluginForChannel(nsIChannel* aChannel,
+                                       nsIPluginInstanceOwner* aOwner,
+                                       nsIStreamListener** aListener);
+  nsresult SetUpPluginInstance(const char *aMimeType,
+                               nsIURI *aURL,
+                               nsIPluginInstanceOwner *aOwner);
+  nsresult IsPluginEnabledForType(const char* aMimeType);
+  nsresult IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
+  nsresult GetPluginCount(PRUint32* aPluginCount);
+  nsresult GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray);
+
+  nsresult GetURL(nsISupports* pluginInst,
+                  const char* url,
+                  const char* target,
+                  nsIPluginStreamListener* streamListener,
+                  const char* altHost,
+                  const char* referrer,
+                  PRBool forceJSEnabled);
+  nsresult PostURL(nsISupports* pluginInst,
+                   const char* url,
+                   PRUint32 postDataLen,
+                   const char* postData,
+                   PRBool isFile,
+                   const char* target,
+                   nsIPluginStreamListener* streamListener,
+                   const char* altHost,
+                   const char* referrer,
+                   PRBool forceJSEnabled,
+                   PRUint32 postHeadersLength,
+                   const char* postHeaders);
+
+  nsresult FindProxyForURL(const char* url, char* *result);
+  nsresult UserAgent(const char **retstring);
+  nsresult ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPostDataLen,
+                                       char **outPostData, PRUint32 *outPostDataLen);
+  nsresult CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile);
+  nsresult NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);
+  nsresult DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow);
+  nsresult InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner);
+
+  void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, PRBool isVisible);
+  void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame);
+
+  nsresult GetPluginName(nsNPAPIPluginInstance *aPluginInstance, const char** aPluginName);
+  nsresult StopPluginInstance(nsNPAPIPluginInstance* aInstance);
+  nsresult HandleBadPlugin(PRLibrary* aLibrary, nsNPAPIPluginInstance *aInstance);
+  nsresult GetPluginTagForInstance(nsNPAPIPluginInstance *aPluginInstance, nsIPluginTag **aPluginTag);
 
   nsresult
   NewPluginURLStream(const nsString& aURL, 
@@ -301,7 +354,7 @@ private:
 class NS_STACK_CLASS PluginDestructionGuard : protected PRCList
 {
 public:
-  PluginDestructionGuard(nsIPluginInstance *aInstance)
+  PluginDestructionGuard(nsNPAPIPluginInstance *aInstance)
     : mInstance(aInstance)
   {
     Init();
@@ -315,7 +368,7 @@ public:
 
   ~PluginDestructionGuard();
 
-  static PRBool DelayDestroy(nsIPluginInstance *aInstance);
+  static PRBool DelayDestroy(nsNPAPIPluginInstance *aInstance);
 
 protected:
   void Init()
@@ -328,7 +381,7 @@ protected:
     PR_INSERT_BEFORE(this, &sListHead);
   }
 
-  nsCOMPtr<nsIPluginInstance> mInstance;
+  nsRefPtr<nsNPAPIPluginInstance> mInstance;
   PRBool mDelayedDestroy;
 
   static PRCList sListHead;

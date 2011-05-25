@@ -72,7 +72,7 @@ class nsIDOMSVGTransformList;
 class nsIDOMWindow;
 class nsIForm;
 class nsIHTMLDocument;
-class nsIPluginInstance;
+class nsNPAPIPluginInstance;
 class nsSVGTransformList;
 
 struct nsDOMClassInfoData;
@@ -365,6 +365,8 @@ public:
   static jsid sOntouchenter_id;
   static jsid sOntouchleave_id;
   static jsid sOntouchcancel_id;
+  static jsid sOnbeforeprint_id;
+  static jsid sOnafterprint_id;
 
 protected:
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
@@ -894,6 +896,41 @@ public:
 };
 
 
+// DOMStringMap helper for .dataset property on elements.
+
+class nsDOMStringMapSH : public nsDOMGenericSH
+{
+public:
+  nsDOMStringMapSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsDOMStringMapSH()
+  {
+  }
+
+public:
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsid id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
+  NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                       JSObject *obj, PRBool *_retval);
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj);
+  NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper,
+                         JSContext *cx, JSObject *obj, jsid id,
+                         jsval *vp, PRBool *_retval);
+  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsDOMStringMapSH(aData);
+  }
+};
+
 
 // Document helper, for document.location and document.on*
 
@@ -1091,10 +1128,10 @@ protected:
 
   static nsresult GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *aWrapper,
                                           JSObject *obj,
-                                          nsIPluginInstance **aResult);
+                                          nsNPAPIPluginInstance **aResult);
 
   static nsresult GetPluginJSObject(JSContext *cx, JSObject *obj,
-                                    nsIPluginInstance *plugin_inst,
+                                    nsNPAPIPluginInstance *plugin_inst,
                                     JSObject **plugin_obj,
                                     JSObject **plugin_proto);
 

@@ -92,9 +92,9 @@ var gSyncSetup = {
   init: function () {
     let obs = [
       ["weave:service:changepph:finish", "onResetPassphrase"],
-      ["weave:service:verify-login:start",  "onLoginStart"],
-      ["weave:service:verify-login:error",  "onLoginEnd"],
-      ["weave:service:verify-login:finish", "onLoginEnd"]];
+      ["weave:service:login:start",  "onLoginStart"],
+      ["weave:service:login:error",  "onLoginEnd"],
+      ["weave:service:login:finish", "onLoginEnd"]];
 
     // Add the observers now and remove them on unload
     let self = this;
@@ -216,6 +216,8 @@ var gSyncSetup = {
         feedback = server;
         break;
       case Weave.LOGIN_FAILED_LOGIN_REJECTED:
+      case Weave.LOGIN_FAILED_NO_USERNAME:
+      case Weave.LOGIN_FAILED_NO_PASSWORD:
         feedback = password;
         break;
       case Weave.LOGIN_FAILED_INVALID_PASSPHRASE:

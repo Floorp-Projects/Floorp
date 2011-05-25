@@ -571,7 +571,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
 
       aGtkWidgetType = IsIndeterminateProgress(stateFrame, eventStates)
-                         ? MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE
+                         ? (stateFrame->GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL)
+                           ? MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE
+                           : MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE
                          : MOZ_GTK_PROGRESS_CHUNK;
     }
     break;
@@ -881,7 +883,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
   }
 
   // Indeterminate progress bar are animated.
-  if (gtkWidgetType == MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE) {
+  if (gtkWidgetType == MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE ||
+      gtkWidgetType == MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE) {
     if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
       NS_WARNING("unable to animate widget!");
     }
@@ -1034,6 +1037,25 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
         aResult->width = 0;
         aResult->height = metrics;
       }
+      *aIsOverridable = PR_FALSE;
+    }
+    break;
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    {
+      /* While we enforce a minimum size for the thumb, this is ignored
+       * for the some scrollbars if buttons are hidden (bug 513006) because
+       * the thumb isn't a direct child of the scrollbar, unlike the buttons
+       * or track. So add a minimum size to the track as well to prevent a
+       * 0-width scrollbar. */
+      MozGtkScrollbarMetrics metrics;
+      moz_gtk_get_scrollbar_metrics(&metrics);
+
+      if (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL)
+        aResult->width = metrics.slider_width;
+      else
+        aResult->height = metrics.slider_width;
+
       *aIsOverridable = PR_FALSE;
     }
     break;
