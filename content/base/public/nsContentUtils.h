@@ -1488,29 +1488,6 @@ public:
     return sScriptBlockerCount == 0;
   }
 
-  /**
-   * Get/Set the current number of removable updates. Currently only
-   * UPDATE_CONTENT_MODEL updates are removable, and only when firing mutation
-   * events. These functions should only be called by mozAutoDocUpdateRemover.
-   * The count is also adjusted by the normal calls to BeginUpdate/EndUpdate.
-   */
-  static void AddRemovableScriptBlocker()
-  {
-    AddScriptBlocker();
-    ++sRemovableScriptBlockerCount;
-  }
-  static void RemoveRemovableScriptBlocker()
-  {
-    NS_ASSERTION(sRemovableScriptBlockerCount != 0,
-                "Number of removable blockers should never go below zero");
-    --sRemovableScriptBlockerCount;
-    RemoveScriptBlocker();
-  }
-  static PRUint32 GetRemovableScriptBlockerLevel()
-  {
-    return sRemovableScriptBlockerCount;
-  }
-
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
    * the document header and use it later on after rendering.
@@ -1861,7 +1838,6 @@ private:
 
   static PRBool sInitialized;
   static PRUint32 sScriptBlockerCount;
-  static PRUint32 sRemovableScriptBlockerCount;
 #ifdef DEBUG
   static PRUint32 sDOMNodeRemovedSuppressCount;
 #endif
@@ -1926,33 +1902,6 @@ public:
     nsContentUtils::RemoveScriptBlocker();
   }
 private:
-  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class NS_STACK_CLASS nsAutoRemovableScriptBlocker {
-public:
-  nsAutoRemovableScriptBlocker(MOZILLA_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
-    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-    nsContentUtils::AddRemovableScriptBlocker();
-  }
-  ~nsAutoRemovableScriptBlocker() {
-    nsContentUtils::RemoveRemovableScriptBlocker();
-  }
-private:
-  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class NS_STACK_CLASS mozAutoRemovableBlockerRemover
-{
-public:
-  mozAutoRemovableBlockerRemover(nsIDocument* aDocument
-                                 MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM);
-  ~mozAutoRemovableBlockerRemover();
-
-private:
-  PRUint32 mNestingLevel;
-  nsCOMPtr<nsIDocument> mDocument;
-  nsCOMPtr<nsIDocumentObserver> mObserver;
   MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

@@ -72,7 +72,7 @@ nsresult
 nsXMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                         PRBool aNotify)
 {
-  nsAutoRemovableScriptBlocker scriptBlocker;
+  nsAutoScriptBlocker scriptBlocker;
   PRBool isId = PR_FALSE;
   if (aAttribute == GetIDAttributeName() &&
       aNameSpaceID == kNameSpaceID_None) {
