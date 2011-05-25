@@ -152,7 +152,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mHasPainted(false)
     , mSurfaceDifferenceRect(0,0,0,0)
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
-    , mMaemoImageRendering(PR_FALSE)
+    , mMaemoImageRendering(PR_TRUE)
 #endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
