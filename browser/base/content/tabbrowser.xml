@@ -2948,8 +2948,7 @@
         <body><![CDATA[
           var numPinned = this.tabbrowser._numPinnedTabs;
           var doPosition = this.getAttribute("overflow") == "true" &&
-                           numPinned > 0 &&
-                           numPinned < this.tabbrowser.visibleTabs.length;
+                           numPinned > 0;
 
           if (doPosition) {
             this.setAttribute("positionpinnedtabs", "true");
