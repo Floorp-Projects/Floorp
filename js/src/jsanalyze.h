@@ -322,26 +322,6 @@ GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
     return GET_JUMP_OFFSET(pc2);
 }
 
-static inline unsigned
-FollowBranch(JSScript *script, unsigned offset)
-{
-    /*
-     * Get the target offset of a branch. For GOTO opcodes implementing
-     * 'continue' statements, short circuit any artificial backwards jump
-     * inserted by the emitter.
-     */
-    jsbytecode *pc = script->code + offset;
-    unsigned targetOffset = offset + GetJumpOffset(pc, pc);
-    if (targetOffset < offset) {
-        JSOp nop = JSOp(script->code[targetOffset]);
-        if (nop == JSOP_GOTO || nop == JSOP_GOTOX) {
-            jsbytecode *target = script->code + targetOffset;
-            return targetOffset + GetJumpOffset(target, target);
-        }
-    }
-    return targetOffset;
-}
-
 static inline JSOp
 ReverseCompareOp(JSOp op)
 {
@@ -386,6 +366,26 @@ struct UntrapOpcode
         retrap();
     }
 };
+
+static inline unsigned
+FollowBranch(JSContext *cx, JSScript *script, unsigned offset)
+{
+    /*
+     * Get the target offset of a branch. For GOTO opcodes implementing
+     * 'continue' statements, short circuit any artificial backwards jump
+     * inserted by the emitter.
+     */
+    jsbytecode *pc = script->code + offset;
+    unsigned targetOffset = offset + GetJumpOffset(pc, pc);
+    if (targetOffset < offset) {
+        jsbytecode *target = script->code + targetOffset;
+        UntrapOpcode untrap(cx, script, target);
+        JSOp nop = JSOp(*target);
+        if (nop == JSOP_GOTO || nop == JSOP_GOTOX)
+            return targetOffset + GetJumpOffset(target, target);
+    }
+    return targetOffset;
+}
 
 /* Common representation of slots throughout analyses and the compiler. */
 static inline uint32 CalleeSlot() {

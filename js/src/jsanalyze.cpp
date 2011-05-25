@@ -901,7 +901,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
              * their target offset --- the variables live before the jump are
              * the union of those live at the fallthrough and at the target.
              */
-            uint32 targetOffset = FollowBranch(script, offset);
+            uint32 targetOffset = FollowBranch(cx, script, offset);
 
             /*
              * Watch for 'continue' statements in the loop body, which are
@@ -1540,7 +1540,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
         uint32 type = JOF_TYPE(js_CodeSpec[op].format);
         if (type == JOF_JUMP || type == JOF_JUMPX) {
-            unsigned targetOffset = FollowBranch(script, offset);
+            unsigned targetOffset = FollowBranch(cx, script, offset);
             checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
 
             /*

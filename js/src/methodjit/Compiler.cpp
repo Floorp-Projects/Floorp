@@ -937,6 +937,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         for (size_t i = 0; i < script->length; i++) {
             Bytecode *opinfo = analysis->maybeCode(i);
             if (opinfo && opinfo->safePoint) {
+                if (cx->typeInferenceEnabled() && opinfo->loopHead)
+                    continue;
                 Label L = jumpMap[i];
                 JS_ASSERT(L.isValid());
                 jitNmap[ix].bcOff = i;
@@ -1575,7 +1577,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GOTO)
           BEGIN_CASE(JSOP_DEFAULT)
           {
-            unsigned targetOffset = FollowBranch(script, PC - script->code);
+            unsigned targetOffset = FollowBranch(cx, script, PC - script->code);
             jsbytecode *target = script->code + targetOffset;
 
             fixDoubleTypes(target);
