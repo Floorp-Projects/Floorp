@@ -80,8 +80,13 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
         needInt = (L.isInt32() && R.isInt32() &&
                    L.toInt32() >= 0 && R.toInt32() > 0);
         break;
-
+      
       case JSOP_RSH:
+      case JSOP_URSH:
+      case JSOP_LSH:
+      case JSOP_BITOR:
+      case JSOP_BITXOR:
+      case JSOP_BITAND:
         needInt = true;
         break;
 
@@ -143,6 +148,29 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
 
       case JSOP_RSH:
         nL >>= (nR & 31);
+        break;
+      
+      case JSOP_URSH:
+        uint32_t uL;
+        ValueToECMAUint32(cx, L, &uL);        
+        dL = (double)uint32(uL >> (nR & 31));
+        needInt = false;
+        break;
+      
+      case JSOP_LSH:
+        nL <<= nR;
+        break;
+        
+      case JSOP_BITOR:
+        nL |= nR;
+        break;
+    
+      case JSOP_BITXOR:
+        nL ^= nR;
+        break;
+        
+      case JSOP_BITAND:
+        nL &= nR;
         break;
 
       default:
