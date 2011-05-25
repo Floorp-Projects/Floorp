@@ -2580,8 +2580,8 @@ nsGlobalWindow::DialogOpenAttempted()
                               topWindow->mLastDialogQuitTime);
 
   if (dialogDuration.ToSeconds() <
-      nsContentUtils::GetIntPref("dom.successive_dialog_time_limit",
-                                 SUCCESSIVE_DIALOG_TIME_LIMIT)) {
+        Preferences::GetInt("dom.successive_dialog_time_limit",
+                            SUCCESSIVE_DIALOG_TIME_LIMIT)) {
     topWindow->mDialogAbuseCount++;
 
     return (topWindow->GetPopupControlState() > openAllowed ||
@@ -5611,7 +5611,7 @@ nsGlobalWindow::RevisePopupAbuseLevel(PopupControlState aControl)
 
   // limit the number of simultaneously open popups
   if (abuse == openAbused || abuse == openControlled) {
-    PRInt32 popupMax = nsContentUtils::GetIntPref("dom.popup_maximum", -1);
+    PRInt32 popupMax = Preferences::GetInt("dom.popup_maximum", -1);
     if (popupMax >= 0 && gOpenPopupSpamCount >= popupMax)
       abuse = openOverridden;
   }
@@ -8956,7 +8956,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
     // "dom.disable_open_click_delay" is set to (in ms).
 
     PRInt32 delay =
-      nsContentUtils::GetIntPref("dom.disable_open_click_delay");
+      Preferences::GetInt("dom.disable_open_click_delay");
 
     // This is checking |interval|, not realInterval, on purpose,
     // because our lower bound for |realInterval| could be pretty high
@@ -10859,9 +10859,8 @@ NS_IMETHODIMP
 nsNavigator::GetCookieEnabled(PRBool *aCookieEnabled)
 {
   *aCookieEnabled =
-    (nsContentUtils::GetIntPref("network.cookie.cookieBehavior",
-                                COOKIE_BEHAVIOR_REJECT) !=
-     COOKIE_BEHAVIOR_REJECT);
+    (Preferences::GetInt("network.cookie.cookieBehavior",
+                         COOKIE_BEHAVIOR_REJECT) != COOKIE_BEHAVIOR_REJECT);
 
   return NS_OK;
 }

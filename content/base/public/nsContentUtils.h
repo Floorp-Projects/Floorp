@@ -551,7 +551,6 @@ public:
                              nsIAtom **aTagName, PRInt32 *aNameSpaceID);
 
   static nsAdoptingCString GetCharPref(const char *aPref);
-  static PRInt32 GetIntPref(const char *aPref, PRInt32 aDefault = 0);
   static nsAdoptingString GetLocalizedStringPref(const char *aPref);
   static nsAdoptingString GetStringPref(const char *aPref);
   static void RegisterPrefCallback(const char *aPref,

@@ -516,7 +516,7 @@ GeoIgnoreLocationFilterChangedCallback(const char *aPrefName, void *aClosure)
 
 nsresult nsGeolocationService::Init()
 {
-  mTimeout = nsContentUtils::GetIntPref("geo.timeout", 6000);
+  mTimeout = Preferences::GetInt("geo.timeout", 6000);
 
   nsContentUtils::RegisterPrefCallback("geo.ignore.location_filter",
                                        GeoIgnoreLocationFilterChangedCallback,

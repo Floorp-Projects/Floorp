@@ -328,7 +328,7 @@ GetDocumentFromWindow(nsIDOMWindow *aWindow)
 static PRInt32
 GetAccessModifierMaskFromPref(PRInt32 aItemType)
 {
-  PRInt32 accessKey = nsContentUtils::GetIntPref("ui.key.generalAccessKey", -1);
+  PRInt32 accessKey = Preferences::GetInt("ui.key.generalAccessKey", -1);
   switch (accessKey) {
     case -1:                             break; // use the individual prefs
     case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
@@ -340,9 +340,9 @@ GetAccessModifierMaskFromPref(PRInt32 aItemType)
 
   switch (aItemType) {
   case nsIDocShellTreeItem::typeChrome:
-    return nsContentUtils::GetIntPref("ui.key.chromeAccess", 0);
+    return Preferences::GetInt("ui.key.chromeAccess", 0);
   case nsIDocShellTreeItem::typeContent:
-    return nsContentUtils::GetIntPref("ui.key.contentAccess", 0);
+    return Preferences::GetInt("ui.key.contentAccess", 0);
   default:
     return 0;
   }
@@ -654,15 +654,13 @@ nsMouseWheelTransaction::GetScreenPoint(nsGUIEvent* aEvent)
 PRUint32
 nsMouseWheelTransaction::GetTimeoutTime()
 {
-  return (PRUint32)
-    nsContentUtils::GetIntPref("mousewheel.transaction.timeout", 1500);
+  return Preferences::GetUint("mousewheel.transaction.timeout", 1500);
 }
 
 PRUint32
 nsMouseWheelTransaction::GetIgnoreMoveDelayTime()
 {
-  return (PRUint32)
-    nsContentUtils::GetIntPref("mousewheel.transaction.ignoremovedelay", 100);
+  return Preferences::GetUint("mousewheel.transaction.ignoremovedelay", 100);
 }
 
 PRBool
@@ -711,13 +709,13 @@ nsMouseWheelTransaction::ComputeAcceleratedWheelDelta(PRInt32 aDelta,
 PRInt32
 nsMouseWheelTransaction::GetAccelerationStart()
 {
-  return nsContentUtils::GetIntPref("mousewheel.acceleration.start", -1);
+  return Preferences::GetInt("mousewheel.acceleration.start", -1);
 }
 
 PRInt32
 nsMouseWheelTransaction::GetAccelerationFactor()
 {
-  return nsContentUtils::GetIntPref("mousewheel.acceleration.factor", -1);
+  return Preferences::GetInt("mousewheel.acceleration.factor", -1);
 }
 
 PRInt32
@@ -1723,7 +1721,7 @@ nsEventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
   mClickHoldTimer = do_CreateInstance("@mozilla.org/timer;1");
   if (mClickHoldTimer) {
     PRInt32 clickHoldDelay =
-      nsContentUtils::GetIntPref("ui.click_hold_context_menus.delay", 500);
+      Preferences::GetInt("ui.click_hold_context_menus.delay", 500);
     mClickHoldTimer->InitWithFuncCallback(sClickHoldCallback, this,
                                           clickHoldDelay,
                                           nsITimer::TYPE_ONE_SHOT);
@@ -2404,8 +2402,8 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   NS_ENSURE_SUCCESS(rv, rv);
 
   float textzoom;
-  float zoomMin = ((float)nsContentUtils::GetIntPref("zoom.minPercent", 50)) / 100;
-  float zoomMax = ((float)nsContentUtils::GetIntPref("zoom.maxPercent", 300)) / 100;
+  float zoomMin = ((float)Preferences::GetInt("zoom.minPercent", 50)) / 100;
+  float zoomMax = ((float)Preferences::GetInt("zoom.maxPercent", 300)) / 100;
   mv->GetTextZoom(&textzoom);
   textzoom += ((float)change) / 10;
   if (textzoom < zoomMin)
@@ -2425,8 +2423,8 @@ nsEventStateManager::ChangeFullZoom(PRInt32 change)
   NS_ENSURE_SUCCESS(rv, rv);
 
   float fullzoom;
-  float zoomMin = ((float)nsContentUtils::GetIntPref("zoom.minPercent", 50)) / 100;
-  float zoomMax = ((float)nsContentUtils::GetIntPref("zoom.maxPercent", 300)) / 100;
+  float zoomMin = ((float)Preferences::GetInt("zoom.minPercent", 50)) / 100;
+  float zoomMax = ((float)Preferences::GetInt("zoom.maxPercent", 300)) / 100;
   mv->GetFullZoom(&fullzoom);
   fullzoom += ((float)change) / 10;
   if (fullzoom < zoomMin)
@@ -2612,7 +2610,7 @@ nsEventStateManager::GetWheelActionFor(nsMouseScrollEvent* aMouseEvent)
   nsCAutoString prefName;
   GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
   prefName.Append(".action");
-  return nsContentUtils::GetIntPref(prefName.get());
+  return Preferences::GetInt(prefName.get());
 }
 
 PRInt32
@@ -2623,7 +2621,7 @@ nsEventStateManager::GetScrollLinesFor(nsMouseScrollEvent* aMouseEvent)
   nsCAutoString prefName;
   GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
   prefName.Append(".numlines");
-  return nsContentUtils::GetIntPref(prefName.get());
+  return Preferences::GetInt(prefName.get());
 }
 
 PRBool
