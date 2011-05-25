@@ -779,7 +779,7 @@ LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
     if (objTypes->unknown() || objTypes->getObjectCount() != 1)
         return NULL;
     TypeObject *object = objTypes->getObject(0);
-    if (object->unknownProperties() || hasModifiedProperty(object, id))
+    if (object->unknownProperties() || hasModifiedProperty(object, id) || id != MakeTypeId(cx, id))
         return NULL;
     TypeSet *propertyTypes = object->getProperty(cx, id, false);
     if (!propertyTypes)
