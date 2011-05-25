@@ -39,6 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "MIR.h"
+#include "MIRGraph.h"
 
 using namespace js;
 using namespace js::ion;
@@ -312,5 +313,35 @@ MBitAnd::New(MInstruction *left, MInstruction *right)
     if (!ins || !ins->init(left, right))
         return NULL;
     return ins;
+}
+
+MSnapshot *
+MSnapshot::New(MBasicBlock *block, jsbytecode *pc)
+{
+    MSnapshot *snapshot = new MSnapshot(block, pc);
+    if (!snapshot || !snapshot->init(block))
+        return NULL;
+    return snapshot;
+}
+
+MSnapshot::MSnapshot(MBasicBlock *block, jsbytecode *pc)
+  : stackDepth_(block->stackDepth()),
+    pc_(pc)
+{
+}
+
+bool
+MSnapshot::init(MBasicBlock *block)
+{
+    operands_ = block->gen()->allocate<MOperand *>(stackDepth());
+    if (!operands_)
+        return false;
+
+    for (size_t i = 0; i < stackDepth(); i++) {
+        if (!initOperand(i, block->getSlot(i)))
+            return false;
+    }
+
+    return true;
 }
 
