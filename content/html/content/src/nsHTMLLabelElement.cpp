@@ -34,11 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/**
+ * Implementation of HTML <label> elements.
+ */
+#include "nsHTMLLabelElement.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -50,71 +53,6 @@
 #include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
-
-class nsHTMLLabelElement : public nsGenericHTMLFormElement,
-                           public nsIDOMHTMLLabelElement
-{
-public:
-  nsHTMLLabelElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLLabelElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
-
-  // nsIDOMHTMLLabelElement
-  NS_DECL_NSIDOMHTMLLABELELEMENT
-
-  // Forward nsIDOMHTMLElement -- We don't override Click()
-  NS_FORWARD_NSIDOMHTMLELEMENT_NOFOCUSCLICK(nsGenericHTMLFormElement::)
-  NS_IMETHOD Click() { 
-    return nsGenericHTMLFormElement::Click(); 
-  }
-  NS_IMETHOD Focus();
-
-  // nsIFormControl
-  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_LABEL; }
-  NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
-
-  virtual bool IsDisabled() const { return PR_FALSE; }
-
-  // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
-
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
-  virtual void PerformAccesskey(PRBool aKeyCausesActivation,
-                                PRBool aIsTrustedEvent);
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-protected:
-  already_AddRefed<nsIContent> GetControlContent();
-  already_AddRefed<nsIContent> GetFirstFormControl(nsIContent *current);
-
-  // XXX It would be nice if we could use an event flag instead.
-  PRPackedBool mHandlingEvent;
-};
 
 // construction, destruction
 
