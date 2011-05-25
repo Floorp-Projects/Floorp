@@ -130,6 +130,8 @@
 #include "CSSCalc.h"
 #include "nsAbsoluteContainingBlock.h"
 
+#include "mozilla/Preferences.h"
+
 using namespace mozilla;
 using namespace mozilla::layers;
 
@@ -2354,7 +2356,7 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   if (me->clickCount == 4) {
     beginAmount = endAmount = eSelectParagraph;
   } else if (me->clickCount == 3) {
-    if (nsContentUtils::GetBoolPref("browser.triple_click_selects_paragraph")) {
+    if (Preferences::GetBool("browser.triple_click_selects_paragraph")) {
       beginAmount = endAmount = eSelectParagraph;
     } else {
       beginAmount = eSelectBeginLine;
@@ -2924,7 +2926,7 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
     // up with a line or the beginning or end of the frame; 0 on Windows,
     // 1 on other platforms by default at the writing of this code
     PRInt32 dragOutOfFrame =
-            nsContentUtils::GetIntPref("browser.drag_out_of_frame_style");
+      Preferences::GetInt("browser.drag_out_of_frame_style");
 
     if (prevLine == end) {
       if (dragOutOfFrame == 1 || nextLine == end)
@@ -5650,7 +5652,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         // This pref only affects whether moving forward by word should go to the end of this word or start of the next word.
         // When going backwards, the start of the word is always used, on every operating system.
         wordSelectEatSpace = aPos->mDirection == eDirNext &&
-          nsContentUtils::GetBoolPref("layout.word_select.eat_space_to_next_word");
+          Preferences::GetBool("layout.word_select.eat_space_to_next_word");
       }
       
       // mSawBeforeType means "we already saw characters of the type
@@ -5958,7 +5960,7 @@ nsFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
     // We always stop between whitespace and punctuation
     return PR_TRUE;
   }
-  if (!nsContentUtils::GetBoolPref("layout.word_select.stop_at_punctuation")) {
+  if (!Preferences::GetBool("layout.word_select.stop_at_punctuation")) {
     // When this pref is false, we never stop at a punctuation boundary unless
     // it's after whitespace
     return PR_FALSE;

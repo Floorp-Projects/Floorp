@@ -4836,6 +4836,7 @@ MOZ_SPELLCHECK=1
 MOZ_SPLASHSCREEN=
 MOZ_STORAGE=1
 MOZ_SVG=1
+MOZ_SVG_DLISTS=
 MOZ_THUMB2=
 MOZ_TIMELINE=
 MOZ_TOOLKIT_SEARCH=1
@@ -6406,6 +6407,13 @@ dnl ========================================================
 dnl Keeping AC_DEFINE(MOZ_SVG) for the moment in case of something needs it.
 dnl ========================================================
 AC_DEFINE(MOZ_SVG)
+
+dnl ========================================================
+dnl SVG Display Lists
+dnl ========================================================
+if test -n "$MOZ_SVG_DLISTS"; then
+  AC_DEFINE(MOZ_SVG_DLISTS)
+fi
 
 dnl ========================================================
 dnl SMIL

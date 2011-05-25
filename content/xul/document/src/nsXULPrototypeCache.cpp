@@ -63,6 +63,10 @@
 
 #include "jsxdrapi.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+
 static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
 
 static PRBool gDisableXULCache = PR_FALSE; // enabled by default
@@ -74,7 +78,7 @@ static int
 DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
 {
     gDisableXULCache =
-        nsContentUtils::GetBoolPref(kDisableXULCachePref, gDisableXULCache);
+        Preferences::GetBool(kDisableXULCachePref, gDisableXULCache);
 
     // Flush the cache, regardless
     nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
@@ -132,7 +136,7 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
     // XXX Ignore return values.
     gDisableXULCache =
-        nsContentUtils::GetBoolPref(kDisableXULCachePref, gDisableXULCache);
+        Preferences::GetBool(kDisableXULCachePref, gDisableXULCache);
     nsContentUtils::RegisterPrefCallback(kDisableXULCachePref,
                                          DisableXULCacheChangedCallback,
                                          nsnull);
@@ -596,8 +600,7 @@ FastLoadPrefChangedCallback(const char* aPref, void* aClosure)
 {
     PRBool wasEnabled = !gDisableXULFastLoad;
     gDisableXULFastLoad =
-        nsContentUtils::GetBoolPref(kDisableXULFastLoadPref,
-                                    gDisableXULFastLoad);
+        Preferences::GetBool(kDisableXULFastLoadPref, gDisableXULFastLoad);
 
     if (wasEnabled && gDisableXULFastLoad) {
         static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
@@ -609,8 +612,8 @@ FastLoadPrefChangedCallback(const char* aPref, void* aClosure)
     }
 
     gChecksumXULFastLoadFile =
-        nsContentUtils::GetBoolPref(kChecksumXULFastLoadFilePref,
-                                    gChecksumXULFastLoadFile);
+        Preferences::GetBool(kChecksumXULFastLoadFilePref,
+                             gChecksumXULFastLoadFile);
 
     return 0;
 }
@@ -725,11 +728,10 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
         return NS_ERROR_FAILURE;
 
     gDisableXULFastLoad =
-        nsContentUtils::GetBoolPref(kDisableXULFastLoadPref,
-                                    gDisableXULFastLoad);
+        Preferences::GetBool(kDisableXULFastLoadPref, gDisableXULFastLoad);
     gChecksumXULFastLoadFile =
-        nsContentUtils::GetBoolPref(kChecksumXULFastLoadFilePref,
-                                    gChecksumXULFastLoadFile);
+        Preferences::GetBool(kChecksumXULFastLoadFilePref,
+                             gChecksumXULFastLoadFile);
     nsContentUtils::RegisterPrefCallback(kDisableXULFastLoadPref,
                                          FastLoadPrefChangedCallback,
                                          nsnull);

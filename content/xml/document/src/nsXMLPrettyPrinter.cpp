@@ -52,7 +52,9 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsBindingManager.h"
 #include "nsIScriptSecurityManager.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS2(nsXMLPrettyPrinter,
@@ -114,7 +116,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     }
 
     // check the pref
-    if (!nsContentUtils::GetBoolPref("layout.xml.prettyprint", PR_TRUE)) {
+    if (!Preferences::GetBool("layout.xml.prettyprint", PR_TRUE)) {
         return NS_OK;
     }
 
