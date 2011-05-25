@@ -119,6 +119,9 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
@@ -838,7 +841,7 @@ void nsHTMLMediaElement::ResumeLoad(PreloadAction aAction)
 
 static PRBool IsAutoplayEnabled()
 {
-  return nsContentUtils::GetBoolPref("media.autoplay.enabled");
+  return Preferences::GetBool("media.autoplay.enabled");
 }
 
 void nsHTMLMediaElement::UpdatePreloadAction()
@@ -1536,7 +1539,7 @@ static const char* gRawCodecs[] = {
 
 static PRBool IsRawEnabled()
 {
-  return nsContentUtils::GetBoolPref("media.raw.enabled");
+  return Preferences::GetBool("media.raw.enabled");
 }
 
 static PRBool IsRawType(const nsACString& aType)
@@ -1568,7 +1571,7 @@ char const *const nsHTMLMediaElement::gOggCodecs[3] = {
 bool
 nsHTMLMediaElement::IsOggEnabled()
 {
-  return nsContentUtils::GetBoolPref("media.ogg.enabled");
+  return Preferences::GetBool("media.ogg.enabled");
 }
 
 bool
@@ -1603,7 +1606,7 @@ char const *const nsHTMLMediaElement::gWaveCodecs[2] = {
 bool
 nsHTMLMediaElement::IsWaveEnabled()
 {
-  return nsContentUtils::GetBoolPref("media.wave.enabled");
+  return Preferences::GetBool("media.wave.enabled");
 }
 
 bool
@@ -1635,7 +1638,7 @@ char const *const nsHTMLMediaElement::gWebMCodecs[4] = {
 bool
 nsHTMLMediaElement::IsWebMEnabled()
 {
-  return nsContentUtils::GetBoolPref("media.webm.enabled");
+  return Preferences::GetBool("media.webm.enabled");
 }
 
 bool
@@ -2083,8 +2086,7 @@ void nsHTMLMediaElement::DownloadStalled()
 
 PRBool nsHTMLMediaElement::ShouldCheckAllowOrigin()
 {
-  return nsContentUtils::GetBoolPref("media.enforce_same_site_origin",
-                                     PR_TRUE);
+  return Preferences::GetBool("media.enforce_same_site_origin", PR_TRUE);
 }
 
 void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)

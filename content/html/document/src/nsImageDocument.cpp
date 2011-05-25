@@ -74,7 +74,9 @@
 #include "nsThreadUtils.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
@@ -288,10 +290,8 @@ nsImageDocument::Init()
   nsresult rv = nsMediaDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mResizeImageByDefault =
-    nsContentUtils::GetBoolPref(AUTOMATIC_IMAGE_RESIZING_PREF);
-  mClickResizingEnabled =
-    nsContentUtils::GetBoolPref(CLICK_IMAGE_RESIZING_PREF);
+  mResizeImageByDefault = Preferences::GetBool(AUTOMATIC_IMAGE_RESIZING_PREF);
+  mClickResizingEnabled = Preferences::GetBool(CLICK_IMAGE_RESIZING_PREF);
   mShouldResize = mResizeImageByDefault;
   mFirstResize = PR_TRUE;
 
@@ -316,8 +316,7 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
   }
 
   mOriginalZoomLevel =
-    nsContentUtils::GetBoolPref(SITE_SPECIFIC_ZOOM, PR_FALSE) ?
-      1.0 : GetZoomLevel();
+    Preferences::GetBool(SITE_SPECIFIC_ZOOM, PR_FALSE) ? 1.0 : GetZoomLevel();
 
   NS_ASSERTION(aDocListener, "null aDocListener");
   *aDocListener = new ImageListener(this);
@@ -398,8 +397,7 @@ nsImageDocument::OnPageShow(PRBool aPersisted,
 {
   if (aPersisted) {
     mOriginalZoomLevel =
-      nsContentUtils::GetBoolPref(SITE_SPECIFIC_ZOOM, PR_FALSE) ?
-        1.0 : GetZoomLevel();
+      Preferences::GetBool(SITE_SPECIFIC_ZOOM, PR_FALSE) ? 1.0 : GetZoomLevel();
   }
   nsMediaDocument::OnPageShow(aPersisted, aDispatchStartTarget);
 }

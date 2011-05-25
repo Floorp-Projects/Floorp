@@ -70,6 +70,9 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 PRBool nsSliderFrame::gMiddlePref = PR_FALSE;
 PRInt32 nsSliderFrame::gSnapMultiplier;
@@ -117,7 +120,7 @@ nsSliderFrame::Init(nsIContent*      aContent,
   if (!gotPrefs) {
     gotPrefs = PR_TRUE;
 
-    gMiddlePref = nsContentUtils::GetBoolPref("middlemouse.scrollbarPosition");
+    gMiddlePref = Preferences::GetBool("middlemouse.scrollbarPosition");
     gSnapMultiplier = nsContentUtils::GetIntPref("slider.snapMultiplier");
   }
 

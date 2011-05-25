@@ -103,6 +103,10 @@
 #include "gfxRect.h"
 #include "ImageLayers.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+
 // sizes (pixels) for image icon, padding and border frame
 #define ICON_SIZE        (16)
 #define ICON_PADDING     (3)
@@ -1916,11 +1920,10 @@ nsImageFrame::IconLoad::Observe(nsISupports *aSubject, const char* aTopic,
 void nsImageFrame::IconLoad::GetPrefs()
 {
   mPrefForceInlineAltText =
-    nsContentUtils::GetBoolPref("browser.display.force_inline_alttext");
+    Preferences::GetBool("browser.display.force_inline_alttext");
 
   mPrefShowPlaceholders =
-    nsContentUtils::GetBoolPref("browser.display.show_image_placeholders",
-                                PR_TRUE);
+    Preferences::GetBool("browser.display.show_image_placeholders", PR_TRUE);
 }
 
 

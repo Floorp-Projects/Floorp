@@ -116,6 +116,9 @@
 #include "mozilla/dom/Element.h"
 #include "nsHTMLFieldSetElement.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 using namespace mozilla::dom;
 
 #include "nsThreadUtils.h"
@@ -2545,7 +2548,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
   if (IsAutofocusable() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
-      nsContentUtils::GetBoolPref("browser.autofocus", PR_TRUE)) {
+      Preferences::GetBool("browser.autofocus", PR_TRUE)) {
     nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
     rv = NS_DispatchToCurrentThread(event);
     NS_ENSURE_SUCCESS(rv, rv);

@@ -43,6 +43,7 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxContext.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
@@ -170,7 +171,7 @@ nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
     // If caller is not chrome and dom.disable_image_src_set is true,
     // prevent setting image.src by exiting early
-    if (nsContentUtils::GetBoolPref("dom.disable_image_src_set") &&
+    if (Preferences::GetBool("dom.disable_image_src_set") &&
         !nsContentUtils::IsCallerChrome()) {
       return NS_OK;
     }

@@ -57,6 +57,9 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define REPLACEMENT_CHAR     (PRUnichar)0xFFFD
 #define BOM_CHAR             (PRUnichar)0xFEFF
@@ -775,7 +778,7 @@ nsEventSource::GetInterface(const nsIID & aIID,
 PRBool
 nsEventSource::PrefEnabled()
 {
-  return nsContentUtils::GetBoolPref("dom.server-events.enabled", PR_FALSE);
+  return Preferences::GetBool("dom.server-events.enabled", PR_FALSE);
 }
 
 nsresult

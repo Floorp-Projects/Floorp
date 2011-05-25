@@ -71,6 +71,9 @@ using mozilla::dom::StorageChild;
 #include "nsDOMString.h"
 #include "nsNetCID.h"
 #include "nsIProxyObjectManager.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 static const PRUint32 ASK_BEFORE_ACCEPT = 1;
 static const PRUint32 ACCEPT_SESSION = 2;
@@ -1459,8 +1462,9 @@ nsDOMStorage::CanUseStorage(PRPackedBool* aSessionOnly)
   NS_ASSERTION(aSessionOnly, "null session flag");
   *aSessionOnly = PR_FALSE;
 
-  if (!nsContentUtils::GetBoolPref(kStorageEnabled))
+  if (!Preferences::GetBool(kStorageEnabled)) {
     return PR_FALSE;
+  }
 
   // chrome can always use storage regardless of permission preferences
   if (nsContentUtils::IsCallerChrome())

@@ -56,6 +56,7 @@
 #include "nsIPercentHeightObserver.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/Preferences.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #endif
@@ -1613,7 +1614,7 @@ static int
 PrefsChanged(const char *aPrefName, void *instance)
 {
   sBlinkIsAllowed =
-    nsContentUtils::GetBoolPref("browser.blink_allowed", sBlinkIsAllowed);
+    Preferences::GetBool("browser.blink_allowed", sBlinkIsAllowed);
 
   return 0; /* PREF_OK */
 }
