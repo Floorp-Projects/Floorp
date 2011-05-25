@@ -434,11 +434,11 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowImageLayer* image =
         static_cast<ShadowImageLayer*>(shadow->AsLayer());
 
-      SurfaceDescriptor newFront = op.newFrontBuffer();
+      SharedImage newFront = op.newFrontBuffer();
       SharedImage newBack;
       image->Swap(op.newFrontBuffer(), &newBack);
-      if (newFront == newBack.get_SurfaceDescriptor()) {
-        newFront = SurfaceDescriptor();
+      if (newFront == newBack) {
+        newFront = SharedImage();
       }
 
       replyv.push_back(OpImageSwap(shadow, NULL,
