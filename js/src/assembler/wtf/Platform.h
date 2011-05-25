@@ -686,9 +686,6 @@
    This prevents unnecessary invals. */
 #define ENABLE_TEXT_CARET 1
 #define ENABLE_JAVASCRIPT_DEBUGGER 0
-#if !defined(ENABLE_JIT) && !ENABLE_ANDROID_JSC_JIT
-#define ENABLE_JIT 0
-#endif
 #endif
 
 #if WTF_PLATFORM_WIN && !WTF_OS_WINCE
