@@ -81,29 +81,29 @@ function Site(host) {
 
   this.httpURI = NetUtil.newURI("http://" + this.host);
   this.httpsURI = NetUtil.newURI("https://" + this.host);
-
-  this._favicon = "";
 }
 
 Site.prototype = {
   /**
-   * Gets the favicon to use for the site. This will return the default favicon
-   * if there is no favicon stored for the site.
+   * Gets the favicon to use for the site. The callback only gets called if
+   * a favicon is found for either the http URI or the https URI.
    *
-   * @return A favicon image URL.
+   * @param aCallback
+   *        A callback function that takes a favicon image URL as a parameter.
    */
-  get favicon() {
-    if (!this._favicon) {
-      // TODO: Bug 657961: Make this async when bug 655270 is fixed.
+  getFavicon: function Site_getFavicon(aCallback) {
+    function faviconDataCallback(aURI, aDataLen, aData, aMimeType) {
       try {
-        // First try to see if a favicon is stored for the http URI.
-        this._favicon = gFaviconService.getFaviconForPage(this.httpURI).spec;
+        aCallback(aURI.spec);
       } catch (e) {
-        // getFaviconImageForPage returns the default favicon if no stored favicon is found.
-        this._favicon = gFaviconService.getFaviconImageForPage(this.httpsURI).spec;
+        Cu.reportError("AboutPermissions: " + e);
       }
     }
-    return this._favicon;
+
+    // Try to find favicion for both URIs. Callback will only be called if a
+    // favicon URI is found, so this means we'll always prefer the https favicon.
+    gFaviconService.getFaviconURLForPage(this.httpURI, faviconDataCallback);
+    gFaviconService.getFaviconURLForPage(this.httpsURI, faviconDataCallback);
   },
 
   /**
@@ -542,7 +542,10 @@ let AboutPermissions = {
     let item = document.createElement("richlistitem");
     item.setAttribute("class", "site");
     item.setAttribute("value", aSite.host);
-    item.setAttribute("favicon", aSite.favicon);
+
+    aSite.getFavicon(function(aURL) {
+      item.setAttribute("favicon", aURL);
+    });
     aSite.listitem = item;
 
     this.sitesList.appendChild(item);    

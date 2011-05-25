@@ -62,6 +62,9 @@
 #endif
 #include "nsIRootBox.h"
 #include "nsEventDispatcher.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 nsXULTooltipListener* nsXULTooltipListener::mInstance = nsnull;
 
@@ -323,8 +326,8 @@ int
 nsXULTooltipListener::ToolbarTipsPrefChanged(const char *aPref,
                                              void *aClosure)
 {
-  sShowTooltips = nsContentUtils::GetBoolPref("browser.chrome.toolbar_tips",
-                                              sShowTooltips);
+  sShowTooltips =
+    Preferences::GetBool("browser.chrome.toolbar_tips", sShowTooltips);
 
   return 0;
 }
