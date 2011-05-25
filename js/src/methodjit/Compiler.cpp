@@ -2941,11 +2941,10 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 {
     prepareStubCall(Uses(2));
     INLINE_STUBCALL(stub);
-    frame.pop();
-    frame.pop();
+    frame.popn(2);
+    frame.takeReg(Registers::ReturnReg);
 
     if (!target) {
-        frame.takeReg(Registers::ReturnReg);
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
         return true;
     }
