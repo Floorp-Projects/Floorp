@@ -1289,13 +1289,9 @@ mjit::DumpAllProfiles(JSContext *cx)
 }
 
 jsbytecode *
-mjit::NativeToPC(JITScript *jit, void *ncode)
-
+mjit::NativeToPC(JITScript *jit, void *ncode, mjit::CallSite **pinline)
 {
-    CallSite *inline_;
-    jsbytecode *pc = jit->nativeToPC(ncode, &inline_);
-    JS_ASSERT(!inline_);
-    return pc;
+    return jit->nativeToPC(ncode, pinline);
 }
 
 void
