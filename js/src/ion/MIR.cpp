@@ -345,3 +345,9 @@ MSnapshot::init(MBasicBlock *block)
     return true;
 }
 
+void
+MSnapshot::printOpcode(FILE *fp)
+{
+    PrintOpcodeName(fp, op());
+}
+
