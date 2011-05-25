@@ -119,6 +119,13 @@ public:
     return result;
   }
 
+  static PRUint32 GetUint(const char* aPref, PRUint32 aDefault = 0)
+  {
+    PRUint32 result = aDefault;
+    GetUint(aPref, &result);
+    return result;
+  }
+
   /**
    * Gets int or bool type pref value with raw return value of nsIPrefBranch.
    *
@@ -128,6 +135,15 @@ public:
    */
   static nsresult GetBool(const char* aPref, PRBool* aResult);
   static nsresult GetInt(const char* aPref, PRInt32* aResult);
+  static nsresult GetUint(const char* aPref, PRUint32* aResult)
+  {
+    PRInt32 result;
+    nsresult rv = GetInt(aPref, &result);
+    if (NS_SUCCEEDED(rv)) {
+      *aResult = static_cast<PRUint32>(result);
+    }
+    return rv;
+  }
 
   /**
    * Gets string type pref value with raw return value of nsIPrefBranch.
@@ -145,6 +161,10 @@ public:
    */
   static nsresult SetBool(const char* aPref, PRBool aValue);
   static nsresult SetInt(const char* aPref, PRInt32 aValue);
+  static nsresult SetUint(const char* aPref, PRUint32 aValue)
+  {
+    return SetInt(aPref, static_cast<PRInt32>(aValue));
+  }
   static nsresult SetChar(const char* aPref, const char* aValue);
   static nsresult SetChar(const char* aPref, const nsCString &aValue);
   static nsresult SetChar(const char* aPref, const PRUnichar* aValue);
