@@ -59,7 +59,8 @@ namespace ion {
     _(Return)                                                               \
     _(Copy)                                                                 \
     _(Box)                                                                  \
-    _(Convert)
+    _(Convert)                                                              \
+    _(Snapshot)
 
 enum MIRType
 {
@@ -108,6 +109,7 @@ class MInstruction;
 class MBasicBlock;
 class MUse;
 class MIRGraph;
+class MSnapshot;
 
 class MIRGenerator
 {
@@ -298,6 +300,7 @@ class MInstruction
     MIRType assumedType_;   // Assumed type from MIR generation.
     MIRType resultType_;    // Actual result type.
     uint32 usedTypes_;      // Set of used types.
+    MSnapshot *snapshot_;   // Snapshot for bailouts.
     bool inWorklist_;       // Flag for worklist algorithms.
 
   private:
@@ -313,6 +316,7 @@ class MInstruction
         assumedType_(MIRType_None),
         resultType_(MIRType_None),
         usedTypes_(0),
+        snapshot_(NULL),
         inWorklist_(0)
     { }
 
@@ -340,6 +344,10 @@ class MInstruction
     }
     void assumeType(MIRType type) {
         assumedType_ = type;
+    }
+    void assignSnapshot(MSnapshot *snapshot) {
+        JS_ASSERT(!snapshot_);
+        snapshot_ = snapshot;
     }
 
     MBasicBlock *block() const {
@@ -760,6 +768,42 @@ class MPhi : public MInstruction
     bool addInput(MInstruction *ins);
     MIRType requiredInputType(size_t index) const {
         return MIRType_Any;
+    }
+};
+
+// A snapshot contains the information needed to reconstruct the interpreter
+// state from a position in the JIT.
+class MSnapshot : public MInstruction
+{
+    MOperand **operands_;
+    uint32 stackDepth_;
+    jsbytecode *pc_;
+
+    MSnapshot(MBasicBlock *block, jsbytecode *pc);
+    bool init(MBasicBlock *state);
+
+  protected:
+    void setOperand(size_t index, MOperand *operand) {
+        JS_ASSERT(index < stackDepth_);
+        operands_[index] = operand;
+    }
+
+  public:
+    INSTRUCTION_HEADER(Snapshot);
+    static MSnapshot *New(MBasicBlock *block, jsbytecode *pc);
+
+    size_t numOperands() const {
+        return stackDepth_;
+    }
+    MOperand *getOperand(size_t index) const {
+        JS_ASSERT(index < stackDepth_);
+        return operands_[index];
+    }
+    jsbytecode *pc() const {
+        return pc_;
+    }
+    uint32 stackDepth() const {
+        return stackDepth_;
     }
 };
 

@@ -81,7 +81,7 @@ MBasicBlock::NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *ent
 }
 
 MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
-  : gen(gen),
+  : gen_(gen),
     slots_(NULL),
     stackPosition_(gen->firstStackSlot()),
     lastIns_(NULL),
@@ -95,7 +95,7 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
 bool
 MBasicBlock::init()
 {
-    slots_ = gen->allocate<StackSlot>(gen->nslots());
+    slots_ = gen()->allocate<StackSlot>(gen()->nslots());
     if (!slots_)
         return false;
     return true;
@@ -108,7 +108,7 @@ MBasicBlock::initHeader()
 
     // Save the basic block's initial slot mapping, both for debugging and for
     // computing phis on the backedge of a loop.
-    header_ = gen->allocate<MInstruction *>(headerSlots_);
+    header_ = gen()->allocate<MInstruction *>(headerSlots_);
     if (!header_)
         return false;
     for (uint32 i = 0; i < headerSlots_; i++)
@@ -210,7 +210,7 @@ MBasicBlock::setSlot(uint32 slot, MInstruction *ins)
 bool
 MBasicBlock::setVariable(uint32 index)
 {
-    JS_ASSERT(stackPosition_ > gen->firstStackSlot());
+    JS_ASSERT(stackPosition_ > gen()->firstStackSlot());
     StackSlot &top = slots_[stackPosition_ - 1];
 
     MInstruction *ins = top.ins;
@@ -250,20 +250,20 @@ bool
 MBasicBlock::setArg(uint32 arg)
 {
     // :TODO:  assert not closed
-    return setVariable(gen->argSlot(arg));
+    return setVariable(gen()->argSlot(arg));
 }
 
 bool
 MBasicBlock::setLocal(uint32 local)
 {
     // :TODO:  assert not closed
-    return setVariable(gen->localSlot(local));
+    return setVariable(gen()->localSlot(local));
 }
 
 void
 MBasicBlock::push(MInstruction *ins)
 {
-    JS_ASSERT(stackPosition_ < gen->nslots());
+    JS_ASSERT(stackPosition_ < gen()->nslots());
     slots_[stackPosition_].set(ins);
     stackPosition_++;
 }
@@ -274,7 +274,7 @@ MBasicBlock::pushVariable(uint32 slot)
     if (slots_[slot].isCopy())
         slot = slots_[slot].copyOf;
 
-    JS_ASSERT(stackPosition_ < gen->nslots());
+    JS_ASSERT(stackPosition_ < gen()->nslots());
     StackSlot &to = slots_[stackPosition_];
     StackSlot &from = slots_[slot];
 
@@ -290,20 +290,20 @@ void
 MBasicBlock::pushArg(uint32 arg)
 {
     // :TODO:  assert not closed
-    pushVariable(gen->argSlot(arg));
+    pushVariable(gen()->argSlot(arg));
 }
 
 void
 MBasicBlock::pushLocal(uint32 local)
 {
     // :TODO:  assert not closed
-    pushVariable(gen->localSlot(local));
+    pushVariable(gen()->localSlot(local));
 }
 
 MInstruction *
 MBasicBlock::pop()
 {
-    JS_ASSERT(stackPosition_ > gen->firstStackSlot());
+    JS_ASSERT(stackPosition_ > gen()->firstStackSlot());
 
     StackSlot &slot = slots_[--stackPosition_];
     if (slot.isCopy()) {
@@ -326,7 +326,7 @@ MInstruction *
 MBasicBlock::peek(int32 depth)
 {
     JS_ASSERT(depth < 0);
-    JS_ASSERT(stackPosition_ + depth >= gen->firstStackSlot());
+    JS_ASSERT(stackPosition_ + depth >= gen()->firstStackSlot());
     return getSlot(stackPosition_ + depth);
 }
 
@@ -336,7 +336,7 @@ MBasicBlock::insertBefore(MInstruction *at, MInstruction *ins)
     if (!ins)
         return false;
     ins->setBlock(this);
-    ins->setId(gen->graph().allocInstructionId());
+    ins->setId(gen()->graph().allocInstructionId());
     instructions_.insertBefore(at, ins);
     return true;
 }
@@ -347,7 +347,7 @@ MBasicBlock::insertAfter(MInstruction *at, MInstruction *ins)
     if (!ins)
         return false;
     ins->setBlock(this);
-    ins->setId(gen->graph().allocInstructionId());
+    ins->setId(gen()->graph().allocInstructionId());
     instructions_.insertAfter(at, ins);
     return true;
 }
@@ -359,7 +359,7 @@ MBasicBlock::add(MInstruction *ins)
     if (!ins)
         return false;
     ins->setBlock(this);
-    ins->setId(gen->graph().allocInstructionId());
+    ins->setId(gen()->graph().allocInstructionId());
     instructions_.insert(ins);
     return true;
 }
@@ -379,7 +379,7 @@ MBasicBlock::addPhi(MPhi *phi)
     if (!phi || !phis_.append(phi))
         return false;
     phi->setBlock(this);
-    phi->setId(gen->graph().allocInstructionId());
+    phi->setId(gen()->graph().allocInstructionId());
     return true;
 }
 

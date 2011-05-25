@@ -118,11 +118,6 @@ class MBasicBlock : public TempObject
     // as needed.
     bool setVariable(uint32 slot);
 
-    // This function retrieves the internal instruction associated with a
-    // slot, and should not be used for normal stack operations. It is an
-    // internal helper that is also used to enhance spew.
-    MInstruction *getSlot(uint32 index);
-
   public:
     ///////////////////////////////////////////////////////
     ////////// BEGIN GRAPH BUILDING INSTRUCTIONS //////////
@@ -231,9 +226,20 @@ class MBasicBlock : public TempObject
         JS_ASSERT(isLoopHeader());
         return loopSuccessor_;
     }
+    MIRGenerator *gen() {
+        return gen_;
+    }
+    uint32 stackDepth() const {
+        return stackPosition_;
+    }
+
+    // This function retrieves the internal instruction associated with a
+    // slot, and should not be used for normal stack operations. It is an
+    // internal helper that is also used to enhance spew.
+    MInstruction *getSlot(uint32 index);
 
   private:
-    MIRGenerator *gen;
+    MIRGenerator *gen_;
     InlineList<MInstruction> instructions_;
     Vector<MBasicBlock *, 1, IonAllocPolicy> predecessors_;
     Vector<MPhi *, 2, IonAllocPolicy> phis_;
