@@ -57,7 +57,6 @@ better code
 - disp64 branch/call
 - spill gp values to xmm registers?
 - prefer xmm registers for copies since gprs are in higher demand?
-- stack arg doubles
 - stack based LIR_paramp
 
 tracing
@@ -629,6 +628,7 @@ namespace nanojit
     void Assembler::MOVBMI(R r, I d, I32 imm) { emitrm_imm8(X64_movbmi,r,d,imm); asm_output("movb %d(%s), %d",d,RQ(r),imm); }
 
     void Assembler::MOVQSPR(I d, R r)   { emit(X64_movqspr | U64(d) << 56 | U64((REGNUM(r)&7)<<3) << 40 | U64((REGNUM(r)&8)>>1) << 24); asm_output("movq %d(rsp), %s", d, RQ(r)); }    // insert r into mod/rm and rex bytes
+    void Assembler::MOVQSPX(I d, R r)   { emit(rexprb(X64_movqspx,RSP,r) | U64(d) << 56 | U64((REGNUM(r)&7)<<3) << 40); asm_output("movq %d(rsp), %s", d, RQ(r)); }
 
     void Assembler::XORPSA(R r, I32 i32)    { emitxm_abs(X64_xorpsa, r, i32); asm_output("xorps %s, (0x%x)",RQ(r), i32); }
     void Assembler::XORPSM(R r, NIns* a64)  { emitxm_rel(X64_xorpsm, r, a64); asm_output("xorps %s, (%p)",  RQ(r), a64); }
@@ -1077,6 +1077,10 @@ namespace nanojit
                 NanoAssert(ty == ARGTYPE_Q);
                 // Do nothing.
             }
+        } else if (ty == ARGTYPE_D) {
+            NanoAssert(p->isD());
+            Register r = findRegFor(p, FpRegs);
+            MOVQSPX(stk_off, r);    // movsd [rsp+d8], xmm
         } else {
             TODO(asm_stkarg_non_int);
         }
