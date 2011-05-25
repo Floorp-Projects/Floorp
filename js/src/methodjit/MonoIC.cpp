@@ -841,6 +841,10 @@ class CallCompiler : public BaseCompiler
         if (ic.fastGuardedNative || ic.hasJsFunCheck)
             return true;
 
+        /* Don't generate native MICs within inlined frames, we can't recompile them yet. */
+        if (f.regs.inlined())
+            return true;
+
         /* Native MIC needs to warm up first. */
         if (!ic.hit) {
             ic.hit = true;
