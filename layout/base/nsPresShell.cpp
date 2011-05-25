@@ -209,6 +209,7 @@
 #include "gfxPlatform.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Preferences.h"
 
 #include "Layers.h"
 
@@ -1859,8 +1860,7 @@ PresShell::Init(nsIDocument* aDocument,
   
   if (gMaxRCProcessingTime == -1) {
     gMaxRCProcessingTime =
-      nsContentUtils::GetIntPref("layout.reflow.timeslice",
-                                 NS_MAX_REFLOW_TIME);
+      Preferences::GetInt("layout.reflow.timeslice", NS_MAX_REFLOW_TIME);
   }
 
   {
@@ -1885,13 +1885,13 @@ PresShell::Init(nsIDocument* aDocument,
 #ifdef MOZ_REFLOW_PERF
     if (mReflowCountMgr) {
       PRBool paintFrameCounts =
-        nsContentUtils::GetBoolPref("layout.reflow.showframecounts");
+        Preferences::GetBool("layout.reflow.showframecounts");
 
       PRBool dumpFrameCounts =
-        nsContentUtils::GetBoolPref("layout.reflow.dumpframecounts");
+        Preferences::GetBool("layout.reflow.dumpframecounts");
 
       PRBool dumpFrameByFrameCounts =
-        nsContentUtils::GetBoolPref("layout.reflow.dumpframebyframecounts");
+        Preferences::GetBool("layout.reflow.dumpframebyframecounts");
 
       mReflowCountMgr->SetDumpFrameCounts(dumpFrameCounts);
       mReflowCountMgr->SetDumpFrameByFrameCounts(dumpFrameByFrameCounts);
@@ -2816,8 +2816,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
       // Default to PAINTLOCK_EVENT_DELAY if we can't get the pref value.
       PRInt32 delay =
-        nsContentUtils::GetIntPref("nglayout.initialpaint.delay",
-                                   PAINTLOCK_EVENT_DELAY);
+        Preferences::GetInt("nglayout.initialpaint.delay",
+                            PAINTLOCK_EVENT_DELAY);
 
       mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback,
                                                    this, delay, 
@@ -3920,7 +3920,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
 
     // Should we select the target? This action is controlled by a
     // preference: the default is to not select.
-    PRBool selectAnchor = nsContentUtils::GetBoolPref("layout.selectanchor");
+    PRBool selectAnchor = Preferences::GetBool("layout.selectanchor");
 
     // Even if select anchor pref is false, we must still move the
     // caret there. That way tabbing will start from the new

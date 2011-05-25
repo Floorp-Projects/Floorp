@@ -110,39 +110,10 @@
   border-top: 1px solid ThreeDDarkShadow;
 }
 
-/* Place List, Place Content */
-.placesTree {
-  margin: 0px;
-}
-
-#placesList {
-  -moz-appearance: none;
-  margin: 0px;
-  border: none;
-  padding: 0;
-}
-
-#placeContent {
-  -moz-appearance: none;
-  border: 0px;
-}
-
-#infoPaneBox {
+/* Info box */
+#detailsDeck {
   border-top: 1px solid ThreeDShadow;
   padding: 5px;
-}
-
-.small, .small[disabled="true"] {
-  min-width: 0px;
-  padding: 0px 4px 0px 4px;
-  margin: 0px;  
-  border: 0px;
-}
-
-.small .button-text,
-.small .button-box {
-  padding: 0px;
-  border: 0px;
 }
 
 #infoBoxExpanderLabel {
@@ -150,7 +121,6 @@
 }
 
 #organizerScopeBar {
-  -moz-appearance: toolbox;
   padding: 2px 0;
   -moz-padding-end: 3px;
 }

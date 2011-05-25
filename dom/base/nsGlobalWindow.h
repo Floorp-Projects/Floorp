@@ -109,7 +109,6 @@
 #include "nsIIDBFactory.h"
 #include "nsFrameMessageManager.h"
 #include "mozilla/TimeStamp.h"
-#include "nsContentUtils.h"
 
 // JS includes
 #include "jsapi.h"
@@ -568,9 +567,7 @@ public:
     return sOuterWindowsById ? sOuterWindowsById->Get(aWindowID) : nsnull;
   }
 
-  static bool HasIndexedDBSupport() {
-    return nsContentUtils::GetBoolPref("indexedDB.feature.enabled", PR_TRUE);
-  }
+  static bool HasIndexedDBSupport();
 
 private:
   // Enable updates for the accelerometer.

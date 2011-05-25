@@ -87,6 +87,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Preferences.h"
 
 //included for desired x position;
 #include "nsPresContext.h"
@@ -112,6 +113,8 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #endif // IBMBIDI
 
 #include "nsDOMError.h"
+
+using namespace mozilla;
 
 //#define DEBUG_TABLE 1
 
@@ -730,7 +733,7 @@ nsFrameSelection::nsFrameSelection()
 
   // Check to see if the autocopy pref is enabled
   //   and add the autocopy listener if it is
-  if (nsContentUtils::GetBoolPref("clipboard.autocopy")) {
+  if (Preferences::GetBool("clipboard.autocopy")) {
     nsAutoCopyListener *autoCopy = nsAutoCopyListener::GetInstance();
 
     if (autoCopy) {
@@ -1081,7 +1084,8 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
   mMouseDownState = PR_FALSE;
   mDesiredXSet = PR_FALSE;
   mLimiter = aLimiter;
-  mCaretMovementStyle = nsContentUtils::GetIntPref("bidi.edit.caret_movement_style", 2);
+  mCaretMovementStyle =
+    Preferences::GetInt("bidi.edit.caret_movement_style", 2);
 }
 
 nsresult
@@ -1140,7 +1144,8 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     SetDesiredX(desiredX);
   }
 
-  PRInt32 caretStyle = nsContentUtils::GetIntPref("layout.selection.caret_style", 0);
+  PRInt32 caretStyle =
+    Preferences::GetInt("layout.selection.caret_style", 0);
 #ifdef XP_MACOSX
   if (caretStyle == 0) {
     caretStyle = 2; // put caret at the selection edge in the |aKeycode| direction

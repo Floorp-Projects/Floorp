@@ -203,6 +203,9 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsXULAppAPI.h"
 #include "nsDOMTouchEvent.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 using namespace mozilla::dom;
 
 typedef nsTArray<Link*> LinkArray;
@@ -8261,7 +8264,7 @@ nsresult
 nsDocument::SetImageLockingState(PRBool aLocked)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content &&
-      !nsContentUtils::GetBoolPref("content.image.allow_locking", PR_TRUE)) {
+      !Preferences::GetBool("content.image.allow_locking", PR_TRUE)) {
     return NS_OK;
   }
 
