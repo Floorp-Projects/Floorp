@@ -1860,8 +1860,7 @@ PresShell::Init(nsIDocument* aDocument,
   
   if (gMaxRCProcessingTime == -1) {
     gMaxRCProcessingTime =
-      nsContentUtils::GetIntPref("layout.reflow.timeslice",
-                                 NS_MAX_REFLOW_TIME);
+      Preferences::GetInt("layout.reflow.timeslice", NS_MAX_REFLOW_TIME);
   }
 
   {
@@ -2817,8 +2816,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
       // Default to PAINTLOCK_EVENT_DELAY if we can't get the pref value.
       PRInt32 delay =
-        nsContentUtils::GetIntPref("nglayout.initialpaint.delay",
-                                   PAINTLOCK_EVENT_DELAY);
+        Preferences::GetInt("nglayout.initialpaint.delay",
+                            PAINTLOCK_EVENT_DELAY);
 
       mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback,
                                                    this, delay, 

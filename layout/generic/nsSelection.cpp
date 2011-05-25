@@ -1084,7 +1084,8 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
   mMouseDownState = PR_FALSE;
   mDesiredXSet = PR_FALSE;
   mLimiter = aLimiter;
-  mCaretMovementStyle = nsContentUtils::GetIntPref("bidi.edit.caret_movement_style", 2);
+  mCaretMovementStyle =
+    Preferences::GetInt("bidi.edit.caret_movement_style", 2);
 }
 
 nsresult
@@ -1143,7 +1144,8 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     SetDesiredX(desiredX);
   }
 
-  PRInt32 caretStyle = nsContentUtils::GetIntPref("layout.selection.caret_style", 0);
+  PRInt32 caretStyle =
+    Preferences::GetInt("layout.selection.caret_style", 0);
 #ifdef XP_MACOSX
   if (caretStyle == 0) {
     caretStyle = 2; // put caret at the selection edge in the |aKeycode| direction

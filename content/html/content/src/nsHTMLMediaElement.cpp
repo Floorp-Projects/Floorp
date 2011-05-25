@@ -857,10 +857,12 @@ void nsHTMLMediaElement::UpdatePreloadAction()
     // Find the appropriate preload action by looking at the attribute.
     const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsGkAtoms::preload,
                                                        kNameSpaceID_None);
-    PRUint32 preloadDefault = nsContentUtils::GetIntPref("media.preload.default",
-                            nsHTMLMediaElement::PRELOAD_ATTR_METADATA);
-    PRUint32 preloadAuto = nsContentUtils::GetIntPref("media.preload.auto",
-                            nsHTMLMediaElement::PRELOAD_ENOUGH);
+    PRUint32 preloadDefault =
+      Preferences::GetInt("media.preload.default",
+                          nsHTMLMediaElement::PRELOAD_ATTR_METADATA);
+    PRUint32 preloadAuto =
+      Preferences::GetInt("media.preload.auto",
+                          nsHTMLMediaElement::PRELOAD_ENOUGH);
     if (!val) {
       // Attribute is not set. Use the preload action specified by the 
       // media.preload.default pref, or just preload metadata if not present.

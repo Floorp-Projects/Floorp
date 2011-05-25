@@ -491,7 +491,7 @@ nsPresContext::GetFontPreferences()
   pref.Assign("font.minimum-size.");
   pref.Append(langGroup);
 
-  PRInt32 size = nsContentUtils::GetIntPref(pref.get());
+  PRInt32 size = Preferences::GetInt(pref.get());
   if (unit == eUnit_px) {
     mMinimumFontSizePref = CSSPixelsToAppUnits(size);
   }
@@ -557,7 +557,7 @@ nsPresContext::GetFontPreferences()
     // get font.size.[generic].[langGroup]
     // size=0 means 'Auto', i.e., generic fonts retain the size of the variable font
     MAKE_FONT_PREF_KEY(pref, "font.size", generic_dot_langGroup);
-    size = nsContentUtils::GetIntPref(pref.get());
+    size = Preferences::GetInt(pref.get());
     if (size > 0) {
       if (unit == eUnit_px) {
         font->size = CSSPixelsToAppUnits(size);
@@ -651,12 +651,11 @@ nsPresContext::GetUserPreferences()
   }
     
   mFontScaler =
-    nsContentUtils::GetIntPref("browser.display.base_font_scaler",
-                               mFontScaler);
+    Preferences::GetInt("browser.display.base_font_scaler", mFontScaler);
 
 
   mAutoQualityMinFontSizePixelsPref =
-    nsContentUtils::GetIntPref("browser.display.auto_quality_min_font_size");
+    Preferences::GetInt("browser.display.auto_quality_min_font_size");
 
   // * document colors
   GetDocumentColorPreferences();
@@ -709,26 +708,23 @@ nsPresContext::GetUserPreferences()
   }
 
   mFocusRingWidth =
-    nsContentUtils::GetIntPref("browser.display.focus_ring_width",
-                               mFocusRingWidth);
+    Preferences::GetInt("browser.display.focus_ring_width", mFocusRingWidth);
 
   mFocusRingOnAnything =
     Preferences::GetBool("browser.display.focus_ring_on_anything",
                          mFocusRingOnAnything);
 
   mFocusRingStyle =
-          nsContentUtils::GetIntPref("browser.display.focus_ring_style",
-                                      mFocusRingStyle);
+    Preferences::GetInt("browser.display.focus_ring_style", mFocusRingStyle);
   // * use fonts?
   mUseDocumentFonts =
-    nsContentUtils::GetIntPref("browser.display.use_document_fonts") != 0;
+    Preferences::GetInt("browser.display.use_document_fonts") != 0;
 
   // * replace backslashes with Yen signs? (bug 245770)
   mEnableJapaneseTransform =
     Preferences::GetBool("layout.enable_japanese_specific_transform");
 
-  mPrefScrollbarSide =
-    nsContentUtils::GetIntPref("layout.scrollbar.side");
+  mPrefScrollbarSide = Preferences::GetInt("layout.scrollbar.side");
 
   GetFontPreferences();
 
@@ -747,24 +743,24 @@ nsPresContext::GetUserPreferences()
   PRUint32 bidiOptions = GetBidi();
 
   PRInt32 prefInt =
-    nsContentUtils::GetIntPref(IBMBIDI_TEXTDIRECTION_STR,
-                               GET_BIDI_OPTION_DIRECTION(bidiOptions));
+    Preferences::GetInt(IBMBIDI_TEXTDIRECTION_STR,
+                        GET_BIDI_OPTION_DIRECTION(bidiOptions));
   SET_BIDI_OPTION_DIRECTION(bidiOptions, prefInt);
   mPrefBidiDirection = prefInt;
 
   prefInt =
-    nsContentUtils::GetIntPref(IBMBIDI_TEXTTYPE_STR,
-                               GET_BIDI_OPTION_TEXTTYPE(bidiOptions));
+    Preferences::GetInt(IBMBIDI_TEXTTYPE_STR,
+                        GET_BIDI_OPTION_TEXTTYPE(bidiOptions));
   SET_BIDI_OPTION_TEXTTYPE(bidiOptions, prefInt);
 
   prefInt =
-    nsContentUtils::GetIntPref(IBMBIDI_NUMERAL_STR,
-                               GET_BIDI_OPTION_NUMERAL(bidiOptions));
+    Preferences::GetInt(IBMBIDI_NUMERAL_STR,
+                        GET_BIDI_OPTION_NUMERAL(bidiOptions));
   SET_BIDI_OPTION_NUMERAL(bidiOptions, prefInt);
 
   prefInt =
-    nsContentUtils::GetIntPref(IBMBIDI_SUPPORTMODE_STR,
-                               GET_BIDI_OPTION_SUPPORT(bidiOptions));
+    Preferences::GetInt(IBMBIDI_SUPPORTMODE_STR,
+                        GET_BIDI_OPTION_SUPPORT(bidiOptions));
   SET_BIDI_OPTION_SUPPORT(bidiOptions, prefInt);
 
   // We don't need to force reflow: either we are initializing a new

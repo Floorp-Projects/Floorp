@@ -211,7 +211,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
     mStructs = Preferences::GetBool(PREF_STRUCTS, mStructs);
 
     mHeaderStrategy =
-      nsContentUtils::GetIntPref(PREF_HEADER_STRATEGY, mHeaderStrategy);
+      Preferences::GetInt(PREF_HEADER_STRATEGY, mHeaderStrategy);
 
     // The quotesPreformatted pref is a temporary measure. See bug 69638.
     mQuotesPreformatted =
