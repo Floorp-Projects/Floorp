@@ -232,7 +232,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
                      * new property, not updating an existing slot's value that
                      * might contain a method of a branded shape.
                      */
-                    obj->setSlot(slot, rval);
+                    obj->nativeSetSlotWithType(cx, shape, rval);
 
                     /*
                      * Purge the property cache of the id we may have just
