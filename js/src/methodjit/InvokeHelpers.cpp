@@ -1191,7 +1191,7 @@ FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
 
     JSContext *cx = f.cx;
 
-    JSOp op = JSOp(*f.pc());
+    JSOp op = js_GetOpcode(cx, f.script(), f.pc());
     const JSCodeSpec *cs = &js_CodeSpec[op];
 
     unsigned i = GET_SLOTNO(f.pc());
@@ -1224,7 +1224,7 @@ FinishObjIncOp(VMFrame &f, RejoinState rejoin, Value objv, Value ov, Value nv, V
     if (!obj)
         return false;
 
-    JSOp op = JSOp(*f.pc());
+    JSOp op = js_GetOpcode(cx, f.script(), f.pc());
     const JSCodeSpec *cs = &js_CodeSpec[op];
     JS_ASSERT(JOF_TYPE(cs->format) == JOF_ATOM);
 
@@ -1606,6 +1606,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
          * cannot trigger recompilation.
          */
         bool takeBranch = false;
+        analyze::UntrapOpcode untrap(cx, script, nextpc);
         switch (JSOp(*nextpc)) {
           case JSOP_IFNE:
           case JSOP_IFNEX:
