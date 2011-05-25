@@ -81,7 +81,8 @@ function FormAssistant() {
   addEventListener("pagehide", this, false);
   addEventListener("submit", this, false);
 
-  this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
+  this._enabled = Services.prefs.prefHasUserValue("formhelper.enabled") ?
+                    Services.prefs.getBoolPref("formhelper.enabled") : false;
 };
 
 FormAssistant.prototype = {
