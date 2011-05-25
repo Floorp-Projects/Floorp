@@ -270,6 +270,10 @@ Debug::onThrow(JSContext *cx, js::Value *vp)
                           DebugHandleMethod(&Debug::handleThrow));
 }
 
+extern JSBool
+EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *chars,
+                uintN length, const char *filename, uintN lineno, Value *rval);
+
 }
 
 #endif /* jsdbg_h__ */
