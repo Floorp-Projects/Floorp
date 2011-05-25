@@ -54,8 +54,11 @@
 #pragma warning(disable:4251) /* Silence warning about JS_FRIEND_API and data members. */
 #endif
 
-namespace JSC { class ExecutableAllocator; }
-namespace WTF { class BumpPointerAllocator; }
+namespace JSC {
+
+class ExecutableAllocator;
+
+}
 
 namespace js {
 
@@ -417,7 +420,6 @@ struct JS_FRIEND_API(JSCompartment) {
      */
     size_t getMjitCodeSize() const;
 #endif
-    WTF::BumpPointerAllocator    *regExpAllocator;
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
@@ -463,6 +465,8 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool                         debugMode;  // true iff debug mode on
     JSCList                      scripts;    // scripts in this compartment
+
+    JSC::ExecutableAllocator     *regExpAllocator;
 
     js::NativeIterCache          nativeIterCache;
 

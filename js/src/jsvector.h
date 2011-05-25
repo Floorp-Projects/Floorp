@@ -208,30 +208,12 @@ class Vector : private AllocPolicy
 
     /* compute constants */
 
-    /*
-     * Consider element size to be 1 for buffer sizing if there are
-     * 0 inline elements. This allows us to compile when the definition
-     * of the element type is not visible here.
-     *
-     * Explicit specialization is only allowed at namespace scope, so
-     * in order to keep everything here, we use a dummy template
-     * parameter with partial specialization.
-     */
-    template <int M, int Dummy>
-    struct ElemSize {
-        static const size_t result = sizeof(T);
-    };
-    template <int Dummy>
-    struct ElemSize<0, Dummy> {
-        static const size_t result = 1;
-    };
-
     static const size_t sInlineCapacity =
-        tl::Min<N, sMaxInlineBytes / ElemSize<N, 0>::result>::result;
+        tl::Min<N, sMaxInlineBytes / sizeof(T)>::result;
 
     /* Calculate inline buffer size; avoid 0-sized array. */
     static const size_t sInlineBytes =
-        tl::Max<1, sInlineCapacity * ElemSize<N, 0>::result>::result;
+        tl::Max<1, sInlineCapacity * sizeof(T)>::result;
 
     /* member data */
 
