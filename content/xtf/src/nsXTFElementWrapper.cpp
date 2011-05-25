@@ -271,13 +271,12 @@ nsXTFElementWrapper::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsXTFElementWrapper::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent)
+nsXTFElementWrapper::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  NS_ASSERTION(aMutationEvent, "Someone tried to inhibit mutations on xtf child removal.");
   nsresult rv;
   if (mNotificationMask & nsIXTFElement::NOTIFY_WILL_REMOVE_CHILD)
     GetXTFElement()->WillRemoveChild(aIndex);
-  rv = nsXTFElementWrapperBase::RemoveChildAt(aIndex, aNotify, aMutationEvent);
+  rv = nsXTFElementWrapperBase::RemoveChildAt(aIndex, aNotify);
   if (mNotificationMask & nsIXTFElement::NOTIFY_CHILD_REMOVED)
     GetXTFElement()->ChildRemoved(aIndex);
   return rv;

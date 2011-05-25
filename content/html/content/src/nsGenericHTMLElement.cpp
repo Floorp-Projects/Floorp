@@ -782,12 +782,12 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     PRInt32 newChildCount = GetChildCount();
     if (newChildCount && nsContentUtils::
           HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsCOMArray<nsIContent> childNodes;
+      nsAutoTArray<nsCOMPtr<nsIContent>, 50> childNodes;
       NS_ASSERTION(newChildCount - oldChildCount >= 0,
                    "What, some unexpected dom mutation has happened?");
       childNodes.SetCapacity(newChildCount - oldChildCount);
       for (nsINode::ChildIterator iter(this); !iter.IsDone(); iter.Next()) {
-        childNodes.AppendObject(iter);
+        childNodes.AppendElement(iter);
       }
       nsGenericElement::FireNodeInserted(doc, this, childNodes);
     }
