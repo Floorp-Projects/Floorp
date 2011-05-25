@@ -918,7 +918,7 @@ var FormHelperUI = {
     this._container.dispatchEvent(evt);
   },
 
-  _updateSuggestionsFor: function _formHelperUpdateAutocompleteFor(aElement) {
+  _updateSuggestionsFor: function _formHelperUpdateSuggestionsFor(aElement) {
     let suggestions = this._getAutocompleteSuggestions(aElement);
     if (!suggestions.length) {
       ContentPopupHelper.popup = null;
