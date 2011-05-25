@@ -94,9 +94,10 @@
 #include "mozilla/dom/Element.h"
 #include "nsGenericElement.h"
 #include "nsNthIndexCache.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
-namespace css = mozilla::css;
 
 #define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
 
@@ -964,8 +965,7 @@ nsCSSRuleProcessor::Startup()
   nsContentUtils::AddBoolPrefVarCache(VISITED_PSEUDO_PREF,
                                       &gSupportVisitedPseudo);
   // We want to default to true, not false as AddBoolPrefVarCache does.
-  gSupportVisitedPseudo =
-    nsContentUtils::GetBoolPref(VISITED_PSEUDO_PREF, PR_TRUE);
+  gSupportVisitedPseudo = Preferences::GetBool(VISITED_PSEUDO_PREF, PR_TRUE);
 
   gPrivateBrowsingObserver = new nsPrivateBrowsingObserver();
   NS_ENSURE_TRUE(gPrivateBrowsingObserver, NS_ERROR_OUT_OF_MEMORY);

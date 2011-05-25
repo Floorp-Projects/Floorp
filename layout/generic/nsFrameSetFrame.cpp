@@ -73,6 +73,9 @@
 #include "nsDisplayList.h"
 #include "nsNodeUtils.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -263,8 +266,7 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
   }
 
   frame->mForceFrameResizability =
-    nsContentUtils::GetBoolPref(kFrameResizePref,
-                                frame->mForceFrameResizability);
+    Preferences::GetBool(kFrameResizePref, frame->mForceFrameResizability);
 
   frame->RecalculateBorderResize();
   if (doc) {
@@ -974,8 +976,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
   if (firstTime) {
     nsContentUtils::RegisterPrefCallback(kFrameResizePref,
                                          FrameResizePrefCallback, this);
-    mForceFrameResizability =
-      nsContentUtils::GetBoolPref(kFrameResizePref);
+    mForceFrameResizability = Preferences::GetBool(kFrameResizePref);
   }
   
   // subtract out the width of all of the potential borders. There are

@@ -58,7 +58,9 @@
 #include "nsCRT.h"
 #include "nsIParserService.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 #define PREF_STRUCTS "converter.html2txt.structs"
@@ -206,28 +208,27 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
 
   if (mFlags & nsIDocumentEncoder::OutputFormatted) {
     // Get some prefs that controls how we do formatted output
-    mStructs = nsContentUtils::GetBoolPref(PREF_STRUCTS, mStructs);
+    mStructs = Preferences::GetBool(PREF_STRUCTS, mStructs);
 
     mHeaderStrategy =
       nsContentUtils::GetIntPref(PREF_HEADER_STRATEGY, mHeaderStrategy);
 
     // The quotesPreformatted pref is a temporary measure. See bug 69638.
     mQuotesPreformatted =
-      nsContentUtils::GetBoolPref("editor.quotesPreformatted",
-                                  mQuotesPreformatted);
+      Preferences::GetBool("editor.quotesPreformatted", mQuotesPreformatted);
 
     // DontWrapAnyQuotes is set according to whether plaintext mail
     // is wrapping to window width -- see bug 134439.
     // We'll only want this if we're wrapping and formatted.
     if (mFlags & nsIDocumentEncoder::OutputWrap || mWrapColumn > 0) {
       mDontWrapAnyQuotes =
-        nsContentUtils::GetBoolPref("mail.compose.wrap_to_window_width",
-                                    mDontWrapAnyQuotes);
+        Preferences::GetBool("mail.compose.wrap_to_window_width",
+                             mDontWrapAnyQuotes);
     }
   }
 
   // XXX We should let the caller pass this in.
-  if (nsContentUtils::GetBoolPref("browser.frames.enabled")) {
+  if (Preferences::GetBool("browser.frames.enabled")) {
     mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
   }
   else {

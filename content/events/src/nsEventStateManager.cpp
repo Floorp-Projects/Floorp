@@ -154,10 +154,13 @@
 #include "mozilla/Services.h"
 #include "mozAutoDocUpdate.h"
 
+#include "mozilla/Preferences.h"
+
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
 #endif
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //#define DEBUG_DOCSHELL_FOCUS
@@ -584,7 +587,7 @@ nsMouseWheelTransaction::OnFailToScrollTarget()
 {
   NS_PRECONDITION(sTargetFrame, "We don't have mouse scrolling transaction");
 
-  if (nsContentUtils::GetBoolPref("test.mousescroll", PR_FALSE)) {
+  if (Preferences::GetBool("test.mousescroll", PR_FALSE)) {
     // This event is used for automated tests, see bug 442774.
     nsContentUtils::DispatchTrustedEvent(
                       sTargetFrame->GetContent()->GetOwnerDoc(),
@@ -612,7 +615,7 @@ nsMouseWheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure)
   // the next DOM event might create strange situation for us.
   EndTransaction();
 
-  if (nsContentUtils::GetBoolPref("test.mousescroll", PR_FALSE)) {
+  if (Preferences::GetBool("test.mousescroll", PR_FALSE)) {
     // This event is used for automated tests, see bug 442774.
     nsContentUtils::DispatchTrustedEvent(
                       frame->GetContent()->GetOwnerDoc(),
@@ -843,8 +846,8 @@ nsEventStateManager::Init()
   if (prefBranch) {
     if (sESMInstanceCount == 1) {
       sLeftClickOnly =
-        nsContentUtils::GetBoolPref("nglayout.events.dispatchLeftClickOnly",
-                                    sLeftClickOnly);
+        Preferences::GetBool("nglayout.events.dispatchLeftClickOnly",
+                             sLeftClickOnly);
       sChromeAccessModifier =
         GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeChrome);
       sContentAccessModifier =
@@ -875,7 +878,7 @@ nsEventStateManager::Init()
   }
 
   mClickHoldContextMenu =
-    nsContentUtils::GetBoolPref("ui.click_hold_context_menus", PR_FALSE);
+    Preferences::GetBool("ui.click_hold_context_menus", PR_FALSE);
 
   return NS_OK;
 }
@@ -968,12 +971,12 @@ nsEventStateManager::Observe(nsISupports *aSubject,
     nsDependentString data(someData);
     if (data.EqualsLiteral("accessibility.accesskeycausesactivation")) {
       sKeyCausesActivation =
-        nsContentUtils::GetBoolPref("accessibility.accesskeycausesactivation",
-                                    sKeyCausesActivation);
+        Preferences::GetBool("accessibility.accesskeycausesactivation",
+                             sKeyCausesActivation);
     } else if (data.EqualsLiteral("nglayout.events.dispatchLeftClickOnly")) {
       sLeftClickOnly =
-        nsContentUtils::GetBoolPref("nglayout.events.dispatchLeftClickOnly",
-                                    sLeftClickOnly);
+        Preferences::GetBool("nglayout.events.dispatchLeftClickOnly",
+                             sLeftClickOnly);
     } else if (data.EqualsLiteral("ui.key.generalAccessKey")) {
       sChromeAccessModifier =
         GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeChrome);
@@ -987,7 +990,7 @@ nsEventStateManager::Observe(nsISupports *aSubject,
         GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeContent);
     } else if (data.EqualsLiteral("ui.click_hold_context_menus")) {
       mClickHoldContextMenu =
-        nsContentUtils::GetBoolPref("ui.click_hold_context_menus", PR_FALSE);
+        Preferences::GetBool("ui.click_hold_context_menus", PR_FALSE);
 #if 0
     } else if (data.EqualsLiteral("mousewheel.withaltkey.action")) {
     } else if (data.EqualsLiteral("mousewheel.withaltkey.numlines")) {
@@ -2464,10 +2467,11 @@ nsEventStateManager::DoScrollZoom(nsIFrame *aTargetFrame,
       // positive adjustment to decrease zoom, negative to increase
       PRInt32 change = (adjustment > 0) ? -1 : 1;
 
-      if (nsContentUtils::GetBoolPref("browser.zoom.full"))
+      if (Preferences::GetBool("browser.zoom.full")) {
         ChangeFullZoom(change);
-      else
+      } else {
         ChangeTextSize(change);
+      }
     }
 }
 
@@ -2628,7 +2632,7 @@ nsEventStateManager::UseSystemScrollSettingFor(nsMouseScrollEvent* aMouseEvent)
   nsCAutoString prefName;
   GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
   prefName.Append(".sysnumlines");
-  return nsContentUtils::GetBoolPref(prefName.get());
+  return Preferences::GetBool(prefName.get());
 }
 
 nsresult
@@ -3467,7 +3471,7 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
       hotspotY = framecursor.mHotspotY;
   }
 
-  if (nsContentUtils::GetBoolPref("ui.use_activity_cursor", PR_FALSE)) {
+  if (Preferences::GetBool("ui.use_activity_cursor", PR_FALSE)) {
     // Check whether or not to show the busy cursor
     nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));

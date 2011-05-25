@@ -112,6 +112,7 @@
 
 #include "nsContentUtils.h"
 #include "nsPIWindowRoot.h"
+#include "mozilla/Preferences.h"
 
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
@@ -603,8 +604,7 @@ nsPresContext::GetDocumentColorPreferences()
   }
   if (usePrefColors) {
     usePrefColors =
-      !nsContentUtils::GetBoolPref("browser.display.use_system_colors",
-                                   PR_FALSE);
+      !Preferences::GetBool("browser.display.use_system_colors", PR_FALSE);
   }
 
   if (usePrefColors) {
@@ -637,8 +637,8 @@ nsPresContext::GetDocumentColorPreferences()
                                       mBackgroundColor);
 
   mUseDocumentColors = !useAccessibilityTheme &&
-    nsContentUtils::GetBoolPref("browser.display.use_document_colors",
-                                mUseDocumentColors);
+    Preferences::GetBool("browser.display.use_document_colors",
+                         mUseDocumentColors);
 }
 
 void
@@ -662,12 +662,12 @@ nsPresContext::GetUserPreferences()
   GetDocumentColorPreferences();
 
   mSendAfterPaintToContent =
-    nsContentUtils::GetBoolPref("dom.send_after_paint_to_content",
-                                mSendAfterPaintToContent);
+    Preferences::GetBool("dom.send_after_paint_to_content",
+                         mSendAfterPaintToContent);
 
   // * link colors
   mUnderlineLinks =
-    nsContentUtils::GetBoolPref("browser.underline_anchors", mUnderlineLinks);
+    Preferences::GetBool("browser.underline_anchors", mUnderlineLinks);
 
   nsAdoptingCString colorStr =
     nsContentUtils::GetCharPref("browser.anchor_color");
@@ -690,8 +690,7 @@ nsPresContext::GetUserPreferences()
   }
 
   mUseFocusColors =
-    nsContentUtils::GetBoolPref("browser.display.use_focus_colors",
-                                mUseFocusColors);
+    Preferences::GetBool("browser.display.use_focus_colors", mUseFocusColors);
 
   mFocusTextColor = mDefaultColor;
   mFocusBackgroundColor = mBackgroundColor;
@@ -714,8 +713,8 @@ nsPresContext::GetUserPreferences()
                                mFocusRingWidth);
 
   mFocusRingOnAnything =
-    nsContentUtils::GetBoolPref("browser.display.focus_ring_on_anything",
-                                mFocusRingOnAnything);
+    Preferences::GetBool("browser.display.focus_ring_on_anything",
+                         mFocusRingOnAnything);
 
   mFocusRingStyle =
           nsContentUtils::GetIntPref("browser.display.focus_ring_style",
@@ -726,7 +725,7 @@ nsPresContext::GetUserPreferences()
 
   // * replace backslashes with Yen signs? (bug 245770)
   mEnableJapaneseTransform =
-    nsContentUtils::GetBoolPref("layout.enable_japanese_specific_transform");
+    Preferences::GetBool("layout.enable_japanese_specific_transform");
 
   mPrefScrollbarSide =
     nsContentUtils::GetIntPref("layout.scrollbar.side");
