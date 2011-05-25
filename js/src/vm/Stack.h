@@ -61,7 +61,7 @@ class GeneratorFrameGuard;
 namespace mjit {
     struct JITScript;
     struct CallSite;
-    jsbytecode *NativeToPC(JITScript *jit, void *ncode);
+    jsbytecode *NativeToPC(JITScript *jit, void *ncode, CallSite **pinline);
 }
 namespace detail { struct OOMCheck; }
 
@@ -1083,6 +1083,13 @@ class FrameRegs
         fp_ = innerfp;
         inlined_ = NULL;
     }
+
+#ifdef JS_METHODJIT
+    /* For LimitCheck: */
+    void updateForNcode(mjit::JITScript *jit, void *ncode) {
+        pc = mjit::NativeToPC(jit, ncode, &inlined_);
+    }
+#endif
 };
 
 /*****************************************************************************/
