@@ -2612,20 +2612,6 @@ nsContentUtils::GetCharPref(const char *aPref)
 }
 
 // static
-PRInt32
-nsContentUtils::GetIntPref(const char *aPref, PRInt32 aDefault)
-{
-  PRInt32 result;
-
-  if (!sPrefBranch ||
-      NS_FAILED(sPrefBranch->GetIntPref(aPref, &result))) {
-    result = aDefault;
-  }
-
-  return result;
-}
-
-// static
 nsAdoptingString
 nsContentUtils::GetLocalizedStringPref(const char *aPref)
 {
@@ -2746,7 +2732,7 @@ IntVarChanged(const char *aPref, void *aClosure)
 {
   PrefCacheData* cache = static_cast<PrefCacheData*>(aClosure);
   *((PRInt32*)cache->cacheLocation) =
-    nsContentUtils::GetIntPref(aPref, cache->defaultValueInt);
+    Preferences::GetInt(aPref, cache->defaultValueInt);
   
   return 0;
 }
@@ -2756,7 +2742,7 @@ nsContentUtils::AddIntPrefVarCache(const char *aPref,
                                    PRInt32* aCache,
                                    PRInt32 aDefault)
 {
-  *aCache = GetIntPref(aPref, aDefault);
+  *aCache = Preferences::GetInt(aPref, aDefault);
   PrefCacheData* data = new PrefCacheData;
   data->cacheLocation = aCache;
   data->defaultValueInt = aDefault;

@@ -299,8 +299,8 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
   mOrigin = origin;
 
   mReconnectionTime =
-    nsContentUtils::GetIntPref("dom.server-events.default-reconnection-time",
-                               DEFAULT_RECONNECTION_TIME_VALUE);
+    Preferences::GetInt("dom.server-events.default-reconnection-time",
+                        DEFAULT_RECONNECTION_TIME_VALUE);
 
   nsCOMPtr<nsICharsetConverterManager> convManager =
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);

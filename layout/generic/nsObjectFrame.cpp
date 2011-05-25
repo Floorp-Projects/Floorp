@@ -133,6 +133,7 @@ enum { XKeyPress = KeyPress };
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
 #include "nsIScrollableFrame.h"
+#include "mozilla/Preferences.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -3373,7 +3374,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
   }
 
   PRInt32 blockPopups =
-    nsContentUtils::GetIntPref("privacy.popups.disable_from_plugins");
+    Preferences::GetInt("privacy.popups.disable_from_plugins");
   nsAutoPopupStatePusher popupStatePusher((PopupControlState)blockPopups);
 
   rv = lh->OnLinkClick(mContent, uri, unitarget.get(), 

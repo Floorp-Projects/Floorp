@@ -121,7 +121,7 @@ nsSliderFrame::Init(nsIContent*      aContent,
     gotPrefs = PR_TRUE;
 
     gMiddlePref = Preferences::GetBool("middlemouse.scrollbarPosition");
-    gSnapMultiplier = nsContentUtils::GetIntPref("slider.snapMultiplier");
+    gSnapMultiplier = Preferences::GetInt("slider.snapMultiplier");
   }
 
   mCurPos = GetCurrentPosition(aContent);

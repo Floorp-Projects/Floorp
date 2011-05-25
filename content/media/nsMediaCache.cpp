@@ -40,7 +40,6 @@
 #include "mozilla/XPCOM.h"
 
 #include "nsMediaCache.h"
-#include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetUtil.h"
@@ -50,6 +49,7 @@
 #include "nsMathUtils.h"
 #include "prlog.h"
 #include "nsIPrivateBrowsingService.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
@@ -739,7 +739,7 @@ static PRInt32 GetMaxBlocks()
   // We look up the cache size every time. This means dynamic changes
   // to the pref are applied.
   // Cache size is in KB
-  PRInt32 cacheSize = nsContentUtils::GetIntPref("media.cache_size", 500*1024);
+  PRInt32 cacheSize = Preferences::GetInt("media.cache_size", 500*1024);
   PRInt64 maxBlocks = static_cast<PRInt64>(cacheSize)*1024/nsMediaCache::BLOCK_SIZE;
   maxBlocks = PR_MAX(maxBlocks, 1);
   return PRInt32(PR_MIN(maxBlocks, PR_INT32_MAX));
