@@ -57,7 +57,6 @@ better code
 - disp64 branch/call
 - spill gp values to xmm registers?
 - prefer xmm registers for copies since gprs are in higher demand?
-- stack arg doubles
 - stack based LIR_paramp
 
 tracing
@@ -494,7 +493,7 @@ namespace nanojit
     void Assembler::CVTSQ2SD(R l, R r)  { emitprr(X64_cvtsq2sd,l,r); asm_output("cvtsq2sd %s, %s",RQ(l),RQ(r)); }
     void Assembler::CVTSI2SD(R l, R r)  { emitprr(X64_cvtsi2sd,l,r); asm_output("cvtsi2sd %s, %s",RQ(l),RL(r)); }
     void Assembler::CVTSS2SD(R l, R r)  { emitprr(X64_cvtss2sd,l,r); asm_output("cvtss2sd %s, %s",RQ(l),RL(r)); }
-    void Assembler::CVTSD2SS(R l, R r)  { emitprr(X64_cvtsd2ss,l,r); asm_output("cvtsd2ss %s, %s",RQ(l),RQ(r)); }
+    void Assembler::CVTSD2SS(R l, R r)  { emitprr(X64_cvtsd2ss,l,r); asm_output("cvtsd2ss %s, %s",RL(l),RQ(r)); }
     void Assembler::CVTSD2SI(R l, R r)  { emitprr(X64_cvtsd2si,l,r); asm_output("cvtsd2si %s, %s",RL(l),RQ(r)); }
     void Assembler::CVTTSD2SI(R l, R r) { emitprr(X64_cvttsd2si,l,r);asm_output("cvttsd2si %s, %s",RL(l),RQ(r));}
     void Assembler::UCOMISD( R l, R r)  { emitprr(X64_ucomisd, l,r); asm_output("ucomisd %s, %s", RQ(l),RQ(r)); }
@@ -629,6 +628,7 @@ namespace nanojit
     void Assembler::MOVBMI(R r, I d, I32 imm) { emitrm_imm8(X64_movbmi,r,d,imm); asm_output("movb %d(%s), %d",d,RQ(r),imm); }
 
     void Assembler::MOVQSPR(I d, R r)   { emit(X64_movqspr | U64(d) << 56 | U64((REGNUM(r)&7)<<3) << 40 | U64((REGNUM(r)&8)>>1) << 24); asm_output("movq %d(rsp), %s", d, RQ(r)); }    // insert r into mod/rm and rex bytes
+    void Assembler::MOVQSPX(I d, R r)   { emit(rexprb(X64_movqspx,RSP,r) | U64(d) << 56 | U64((REGNUM(r)&7)<<3) << 40); asm_output("movq %d(rsp), %s", d, RQ(r)); }
 
     void Assembler::XORPSA(R r, I32 i32)    { emitxm_abs(X64_xorpsa, r, i32); asm_output("xorps %s, (0x%x)",RQ(r), i32); }
     void Assembler::XORPSM(R r, NIns* a64)  { emitxm_rel(X64_xorpsm, r, a64); asm_output("xorps %s, (%p)",  RQ(r), a64); }
@@ -1077,6 +1077,10 @@ namespace nanojit
                 NanoAssert(ty == ARGTYPE_Q);
                 // Do nothing.
             }
+        } else if (ty == ARGTYPE_D) {
+            NanoAssert(p->isD());
+            Register r = findRegFor(p, FpRegs);
+            MOVQSPX(stk_off, r);    // movsd [rsp+d8], xmm
         } else {
             TODO(asm_stkarg_non_int);
         }
@@ -1723,12 +1727,9 @@ namespace nanojit
                 break;
             }
             case LIR_std2f: {
+                Register b = getBaseReg(base, d, BaseRegs);
                 Register r = findRegFor(value, FpRegs);
                 Register t = registerAllocTmp(FpRegs & ~rmask(r));
-                // Here, it is safe to call getBaseReg after registerAllocTmp
-                // because BaseRegs does not overlap with FpRegs, so getBaseReg
-                // will not allocate register |t|.
-                Register b = getBaseReg(base, d, BaseRegs);
 
                 MOVSSMR(t, d, b);   // store
                 CVTSD2SS(t, r);     // cvt to single-precision

@@ -1,5 +1,8 @@
-/*
- * Copyright (C) 2009 Apple Inc. All rights reserved.
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99 ft=cpp:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Copyright (C) 2011 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,18 +24,20 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#ifndef RegexCompiler_h
-#define RegexCompiler_h
+#ifndef YarrSyntaxChecker_h
+#define YarrSyntaxChecker_h
 
-#include "RegexParser.h"
-#include "RegexPattern.h"
+#include "wtfbridge.h"
+#include "YarrParser.h"
 
 namespace JSC { namespace Yarr {
 
-int compileRegex(const UString& patternString, RegexPattern& pattern);
+ErrorCode checkSyntax(const UString& pattern);
 
-} } // namespace JSC::Yarr
+}} // JSC::YARR
 
-#endif // RegexCompiler_h
+#endif // YarrSyntaxChecker_h
+
