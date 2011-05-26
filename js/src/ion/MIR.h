@@ -366,6 +366,9 @@ class MInstruction
     virtual MIRType requiredInputType(size_t index) const {
         return MIRType_None;
     }
+    virtual bool adjustForInputs() {
+        return false;
+    }
 
     // Replaces an operand, taking care to update use chains. No memory is
     // allocated; the existing data structures are re-linked.
@@ -649,20 +652,8 @@ class MBinaryInstruction : public MAryInstruction<2>
     }
 
   public:
-    void infer(const TypeOracle::Binary &b) {
-        if (b.lhs == MIRType_Int32 && b.rhs == MIRType_Int32) {
-            specialization_ = MIRType_Int32;
-            setResultType(specialization_);
-        } else if (b.lhs == MIRType_Double && b.rhs == MIRType_Double) {
-            specialization_ = MIRType_Double;
-            setResultType(specialization_);
-        } else if (b.lhs < MIRType_String && b.rhs < MIRType_String) {
-            specialization_ = MIRType_Any;
-            setResultType(b.rval);
-        } else {
-            specialization_ = MIRType_Value;
-        }
-    }
+    void infer(const TypeOracle::Binary &b);
+    bool adjustForInputs();
 };
 
 class MCopy : public MUnaryInstruction

@@ -88,7 +88,7 @@ class TypeAnalyzer
     TypeAnalyzer(MIRGraph &graph);
 
     bool analyze();
-    void inspectOperands(MInstruction *ins);
+    bool inspectOperands(MInstruction *ins);
     bool propagateUsedTypes(MInstruction *ins);
 };
 
@@ -115,15 +115,27 @@ TypeAnalyzer::popFromWorklist()
     return ins;
 }
 
-void
+bool
 TypeAnalyzer::inspectOperands(MInstruction *ins)
 {
+    // If this instruction needs to change its specialization, reflow to all
+    // its uses. Specializations only widen, ensuring that this algorithm will
+    // reach a fixpoint.
+    if (ins->adjustForInputs()) {
+        for (MUseIterator uses(ins); uses.more(); uses.next()) {
+            if (!addToWorklist(uses->ins()))
+                return false;
+        }
+    }
+
     for (size_t i = 0; i < ins->numOperands(); i++) {
         MIRType required = ins->requiredInputType(i);
         if (required >= MIRType_Value)
             continue;
         ins->getInput(i)->useAsType(required);
     }
+
+    return true;
 }
 
 bool
@@ -179,7 +191,8 @@ TypeAnalyzer::analyze()
         } else {
             // We see all uses before their defs, so we do not reflow type
             // information on a normal instruction.
-            inspectOperands(ins);
+            if (!inspectOperands(ins))
+                return false;
         }
     }
 
