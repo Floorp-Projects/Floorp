@@ -1217,7 +1217,7 @@
                 [this.mAddon.name], 1
               );
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.blocked.link");
-              this._errorLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
+              this._errorLink.href = this.mAddon.blocklistURL;
               this._errorLink.hidden = false;
             } else if (!isUpgrade && !this.mAddon.isCompatible) {
               this.setAttribute("notification", "warning");
@@ -1234,7 +1234,7 @@
                 [this.mAddon.name], 1
               );
               this._warningLink.value = gStrings.ext.GetStringFromName("notification.softblocked.link");
-              this._warningLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
+              this._warningLink.href = this.mAddon.blocklistURL;
               this._warningLink.hidden = false;
               this._warningBtn.hidden = true;
             } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {

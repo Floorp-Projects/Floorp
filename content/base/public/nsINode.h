@@ -514,8 +514,7 @@ public:
    * Note: If there is no child at aIndex, this method will simply do nothing.
    */
   virtual nsresult RemoveChildAt(PRUint32 aIndex, 
-                                 PRBool aNotify, 
-                                 PRBool aMutationEvent = PR_TRUE) = 0;
+                                 PRBool aNotify) = 0;
 
   /**
    * Get a property associated with this node.
@@ -1295,8 +1294,7 @@ protected:
    * @param aMutationEvent whether to fire a mutation event for this removal.
    */
   nsresult doRemoveChildAt(PRUint32 aIndex, PRBool aNotify, nsIContent* aKid,
-                           nsAttrAndChildArray& aChildArray,
-                           PRBool aMutationEvent);
+                           nsAttrAndChildArray& aChildArray);
 
   /**
    * Most of the implementation of the nsINode InsertChildAt method.

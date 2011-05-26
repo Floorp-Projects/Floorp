@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<title>Canvas test: toDataURL parameters (Bug 564388)</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<p>
+This test covers the JPEG quality parameter. If (when) the HTML5 spec changes the
+allowed parameters for ToDataURL, new tests should go here.
+</p>
+<canvas id="c" width="100" height="100"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext("2d");
+
+ctx.strokeStyle = '#FF0000';
+ctx.fillStyle = '#00FF00';
+ctx.fillRect(0, 0, 100, 100);
+ctx.beginPath();
+ctx.moveTo(10, 10);
+ctx.lineTo(90, 90);
+ctx.stroke();
+
+var pngData = canvas.toDataURL('image/png');
+var pngQuality = canvas.toDataURL('image/png', 0.1);
+is(pngQuality, pngData, "Quality is not supported for PNG images");
+
+var data = canvas.toDataURL('image/jpeg');
+if (data.match(/^data:image\/jpeg[;,]/)) {
+    // Test the JPEG quality parameter
+    
+    var fullQuality = canvas.toDataURL('image/jpeg', 1.0);
+    var lowQuality = canvas.toDataURL('image/jpeg', 0.1);
+    isnot(lowQuality, fullQuality, "A low quality (0.1) should differ from high quality (1.0)");
+    
+    var medQuality = canvas.toDataURL('image/jpeg', 0.5);
+    isnot(medQuality, fullQuality, "A medium quality (0.5) should differ from high (1.0)");
+    isnot(medQuality, lowQuality, "A medium quality (0.5) should differ from low (0.5)");
+    
+    var tooHigh = canvas.toDataURL('image/jpeg', 2.0);
+    is(tooHigh, data, "Quality above 1.0 is treated as unspecified");
+    
+    var tooLow = canvas.toDataURL('image/jpeg', -1.0);
+    is(tooLow, data, "Quality below 0.0 is treated as unspecified");
+    
+    var lowQualityExtra = canvas.toDataURL('image/jpeg', 0.1, 'foo', 'bar', null);
+    is(lowQualityExtra, lowQuality, "Quality applies even if extra arguments are present");
+    
+    var lowQualityUppercase = canvas.toDataURL('IMAGE/JPEG', 0.1);
+    is(lowQualityUppercase, lowQuality, "Quality applies to image/jpeg regardless of case");
+    
+    var lowQualityString = canvas.toDataURL('image/jpeg', '0.1');
+    isnot(lowQualityString, lowQuality, "Quality must be a number (should not be a string)");
+}
+</script>

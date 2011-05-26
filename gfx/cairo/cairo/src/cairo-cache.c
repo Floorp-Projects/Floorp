@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -37,6 +37,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 static void
 _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
@@ -174,9 +175,7 @@ _cairo_cache_thaw (cairo_cache_t *cache)
 {
     assert (cache->freeze_count > 0);
 
-    cache->freeze_count--;
-
-    if (cache->freeze_count == 0)
+    if (--cache->freeze_count == 0)
 	_cairo_cache_shrink_to_accommodate (cache, 0);
 }
 
@@ -240,9 +239,6 @@ static void
 _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
 				    unsigned long  additional)
 {
-    if (cache->freeze_count)
-	return;
-
     while (cache->size + additional > cache->max_size) {
 	if (! _cairo_cache_remove_random (cache))
 	    return;
@@ -267,7 +263,8 @@ _cairo_cache_insert (cairo_cache_t	 *cache,
 {
     cairo_status_t status;
 
-    _cairo_cache_shrink_to_accommodate (cache, entry->size);
+    if (entry->size && ! cache->freeze_count)
+	_cairo_cache_shrink_to_accommodate (cache, entry->size);
 
     status = _cairo_hash_table_insert (cache->hash_table,
 				       (cairo_hash_entry_t *) entry);

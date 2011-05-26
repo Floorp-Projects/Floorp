@@ -49,6 +49,7 @@ _TEST_FILES =\
 		test_aria.html \
 		test_aria_imgmap.html \
 		test_aria_tabs.html \
+		test_comboboxes.xul \
 		test_doc.html \
 		test_docarticle.html \
 		test_editablebody.html \
