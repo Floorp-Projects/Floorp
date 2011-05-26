@@ -541,6 +541,7 @@ IonBuilder::processIfEnd(CFGState &state)
     }
 
     current = state.branch.ifFalse;
+    pc = current->pc();
     return ControlStatus_Joined;
 }
 
@@ -626,11 +627,11 @@ IonBuilder::finalizeLoop(CFGState &state, MInstruction *last)
     // successor block. If there is no |current|, then the successor is still
     // reachable via the original test branch, and thus its state is coherent.
     if (current) {
-        JS_ASSERT_IF(last, state.loop.successor);
+        JS_ASSERT_IF(last, successor);
 
         MControlInstruction *ins;
         if (last)
-            ins = MTest::New(last, state.loop.entry, state.loop.successor);
+            ins = MTest::New(last, state.loop.entry, successor);
         else
             ins = MGoto::New(state.loop.entry);
         if (!current->end(ins))
@@ -659,7 +660,16 @@ IonBuilder::processDoWhileEnd(CFGState &state)
 {
     if (!processDeferredContinues(state))
         return ControlStatus_Error;
-    if (!finalizeLoop(state, NULL))
+
+    MInstruction *last = NULL;
+    if (current) {
+        last = current->pop();
+        state.loop.successor = newBlock(current, GetNextPc(pc));
+        if (!state.loop.successor)
+            return ControlStatus_Error;
+    }
+
+    if (!finalizeLoop(state, last))
         return ControlStatus_Error;
 
     current = state.loop.successor;
@@ -945,6 +955,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     if (!pushLoop(CFGState::DO_WHILE_LOOP, ifne, header, bodyStart, ifne, exitpc))
         return ControlStatus_Error;
 
+    pc = GetNextPc(GetNextPc(pc));
     return ControlStatus_Jumped;
 }
 
