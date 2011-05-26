@@ -84,7 +84,7 @@ public:
                               PRBool aNullParent = PR_TRUE);
   nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                          PRBool aNotify);
-  nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent = PR_TRUE);
+  nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   nsIAtom *GetIDAttributeName() const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    nsIAtom* aPrefix, const nsAString& aValue,

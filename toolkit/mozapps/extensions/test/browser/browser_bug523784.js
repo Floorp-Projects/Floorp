@@ -19,6 +19,7 @@ let args = {
     icon: "chrome://mozapps/skin/plugins/pluginGeneric.png",
     disable: false,
     blocked: false,
+    url: 'http://example.com/bug523784_1',
   }],
 };
 
@@ -49,6 +50,7 @@ function bug523784_test1(win) {
   let bundle = Services.strings.
               createBundle("chrome://mozapps/locale/update/updates.properties");
   let cancelButton = win.document.documentElement.getButton("cancel");
+  let moreInfoLink = win.document.getElementById("moreInfo");
 
   is(cancelButton.getAttribute("label"),
      bundle.GetStringFromName("restartLaterButton"),
@@ -56,7 +58,9 @@ function bug523784_test1(win) {
   is(cancelButton.getAttribute("accesskey"),
      bundle.GetStringFromName("restartLaterButton.accesskey"),
      "Accesskey should also be changed on Cancel button");
-
+  is(moreInfoLink.getAttribute("href"),
+     'http://example.com/bug523784_1',
+     "More Info link should link to a detailed blocklist page.");
   let windowObserver = function(aSubject, aTopic, aData) {
     if (aTopic != "domwindowclosed")
       return;
@@ -66,9 +70,56 @@ function bug523784_test1(win) {
     ok(args.list[0].disable, "Should be blocking add-on");
     ok(!args.restart, "Should not restart browser immediately");
 
-    executeSoon(finish);
+    executeSoon(bug523784_test2);
   };
   Services.ww.registerNotification(windowObserver);
 
   cancelButton.doCommand();
+}
+
+function bug523784_test2(win) {
+  let windowObserver = function(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened")
+      return;
+
+    Services.ww.unregisterNotification(windowObserver);
+    let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    win.addEventListener("load", function() {
+      win.removeEventListener("load", arguments.callee, false);
+
+    executeSoon(function(){
+      let moreInfoLink = win.document.getElementById("moreInfo");
+      let cancelButton = win.document.documentElement.getButton("cancel");
+      is(moreInfoLink.getAttribute("href"),
+         Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL"),
+         "More Info link should link to the general blocklist page.");
+      cancelButton.doCommand();
+      executeSoon(finish);
+    })
+    }, false);
+  };
+  Services.ww.registerNotification(windowObserver);
+
+  // Add 2 more addons to the blocked list to check that the more info link
+  // points to the general blocked list page.
+  args.list.push({
+    name: "Bug 523784 softblocked addon 2",
+    version: "2",
+    icon: "chrome://mozapps/skin/plugins/pluginGeneric.png",
+    disable: false,
+    blocked: false,
+    url: 'http://example.com/bug523784_2'
+  });
+  args.list.push({
+    name: "Bug 523784 softblocked addon 3",
+    version: "4",
+    icon: "chrome://mozapps/skin/plugins/pluginGeneric.png",
+    disable: false,
+    blocked: false,
+    url: 'http://example.com/bug523784_3'
+  });
+
+  args.wrappedJSObject = args;
+  Services.ww.openWindow(null, URI_BLOCKLIST_DIALOG, "",
+                         "chrome,centerscreen,dialog,titlebar", args);
 }

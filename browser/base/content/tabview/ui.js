@@ -995,7 +995,8 @@ let UI = {
 #ifdef XP_MACOSX
       "preferencesCmdMac", "minimizeWindow",
 #endif
-      "newNavigator", "newNavigatorTab", "find"
+      "newNavigator", "newNavigatorTab", "undo", "cut", "copy", "paste", 
+      "selectAll", "find"
      ].forEach(function(key) {
       let element = gWindow.document.getElementById("key_" + key);
       keys[key] = element.getAttribute("key").toLocaleLowerCase().charCodeAt(0);
@@ -1004,7 +1005,7 @@ let UI = {
     // for key combinations with shift key, the charCode of upper case letters 
     // are different to the lower case ones so need to handle them differently.
     ["closeWindow", "tabview", "undoCloseTab", "undoCloseWindow",
-     "privatebrowsing"].forEach(function(key) {
+     "privatebrowsing", "redo"].forEach(function(key) {
       let element = gWindow.document.getElementById("key_" + key);
       keys[key] = element.getAttribute("key").toLocaleUpperCase().charCodeAt(0);
     });
@@ -1043,6 +1044,7 @@ let UI = {
               case self._browserKeys.undoCloseTab:
               case self._browserKeys.undoCloseWindow:
               case self._browserKeys.closeWindow:
+              case self._browserKeys.redo:
                 preventDefault = false;
                 break;
               case self._browserKeys.tabview:
@@ -1056,6 +1058,11 @@ let UI = {
                 break;
               case self._browserKeys.newNavigator:
               case self._browserKeys.newNavigatorTab:
+              case self._browserKeys.undo:
+              case self._browserKeys.cut:
+              case self._browserKeys.copy:
+              case self._browserKeys.paste:
+              case self._browserKeys.selectAll:
                 preventDefault = false;
                 break;
 #ifdef XP_UNIX
