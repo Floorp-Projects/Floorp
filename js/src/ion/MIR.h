@@ -394,9 +394,8 @@ class MInstruction
     void replaceOperand(MUse *prev, MUse *use, MInstruction *ins);
     void replaceOperand(MUseIterator &use, MInstruction *ins);
 
-    bool addUse(MInstruction *ins, size_t index) {
+    void addUse(MInstruction *ins, size_t index) {
         uses_ = MUse::New(uses_, ins, index);
-        return !!uses_;
     }
 
     // Adds a use from a node that is being recycled during operand
@@ -443,12 +442,9 @@ class MInstruction
     void setOperand(size_t index, MInstruction *ins);
 
     // Initializes an operand for the first time.
-    bool initOperand(size_t index, MInstruction *ins) {
-        MOperand *operand = MOperand::New(ins);
-        if (!operand)
-            return false;
-        setOperand(index, operand);
-        return ins->addUse(this, index);
+    void initOperand(size_t index, MInstruction *ins) {
+        setOperand(index, MOperand::New(ins));
+        ins->addUse(this, index);
     }
 
     void setResultType(MIRType type) {
@@ -612,10 +608,11 @@ class MGoto : public MAryControlInstruction<0>
 
 class MTest : public MAryControlInstruction<1>
 {
-    MTest(MBasicBlock *if_true, MBasicBlock *if_false)
+    MTest(MInstruction *ins, MBasicBlock *if_true, MBasicBlock *if_false)
     {
         successors[0] = if_true;
         successors[1] = if_false;
+        initOperand(0, ins);
     }
 
   public:
@@ -630,6 +627,11 @@ class MTest : public MAryControlInstruction<1>
 
 class MReturn : public MAryControlInstruction<1>
 {
+    MReturn(MInstruction *ins)
+    {
+        initOperand(0, ins);
+    }
+
   public:
     INSTRUCTION_HEADER(Return);
     static MReturn *New(MInstruction *ins);
@@ -642,24 +644,19 @@ class MReturn : public MAryControlInstruction<1>
 class MUnaryInstruction : public MAryInstruction<1>
 {
   protected:
-    inline bool init(MInstruction *ins)
+    inline void init(MInstruction *ins)
     {
-        if (!initOperand(0, ins))
-            return false;
-        return true;
+        initOperand(0, ins);
     }
 };
 
 class MBinaryInstruction : public MAryInstruction<2>
 {
   protected:
-    inline bool init(MInstruction *left, MInstruction *right)
+    inline void init(MInstruction *left, MInstruction *right)
     {
-        if (!initOperand(0, left) ||
-            !initOperand(1, right)) {
-            return false;
-        }
-        return true;
+        initOperand(0, left);
+        initOperand(1, right);
     }
 };
 
@@ -668,6 +665,7 @@ class MCopy : public MUnaryInstruction
     MCopy(MInstruction *ins)
     {
         setResultType(ins->type());
+        init(ins);
     }
 
   public:
@@ -681,6 +679,11 @@ class MCopy : public MUnaryInstruction
 
 class MBox : public MUnaryInstruction
 {
+    MBox(MInstruction *ins)
+    {
+        init(ins);
+    }
+
   public:
     INSTRUCTION_HEADER(Box);
     static MBox *New(MInstruction *ins)
@@ -688,10 +691,7 @@ class MBox : public MUnaryInstruction
         // Cannot box a box.
         JS_ASSERT(ins->type() != MIRType_Value);
 
-        MBox *box = new MBox();
-        if (!box || !box->init(ins))
-            return NULL;
-        return box;
+        return new MBox(ins);
     }
 
     MIRType requiredInputType(size_t index) const {
@@ -701,9 +701,10 @@ class MBox : public MUnaryInstruction
 
 class MConvert : public MUnaryInstruction
 {
-    MConvert(MIRType type)
+    MConvert(MInstruction *ins, MIRType type)
     {
         setResultType(type);
+        init(ins);
     }
 
   public:
@@ -715,19 +716,16 @@ class MConvert : public MUnaryInstruction
         // This assertion is also too strict, it will have to be modified
         // later.
         JS_ASSERT(ins->type() != MIRType_Object);
-
-        MConvert *convert = new MConvert(type);
-        if (!convert || !convert->init(ins))
-            return NULL;
-        return convert;
+        return new MConvert(ins, type);
     }
 };
 
 class MBitAnd : public MBinaryInstruction
 {
-    MBitAnd()
+    MBitAnd(MInstruction *left, MInstruction *right)
     {
         setResultType(MIRType_Int32);
+        init(left, right);
     }
 
   public:
