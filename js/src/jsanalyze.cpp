@@ -329,6 +329,10 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         isInlineable = false;
     }
 
+    modifiesArguments_ = false;
+    if (script->nClosedArgs || (script->fun && script->fun->isHeavyweight()))
+        modifiesArguments_ = true;
+
     canTrackVars = true;
 
     /*
@@ -641,15 +645,19 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
           }
 
-          /* Additional opcodes which can be compiled but which can't be inlined. */
-          case JSOP_ARGUMENTS:
-          case JSOP_EVAL:
           case JSOP_FORARG:
           case JSOP_SETARG:
           case JSOP_INCARG:
           case JSOP_DECARG:
           case JSOP_ARGINC:
           case JSOP_ARGDEC:
+            modifiesArguments_ = true;
+            isInlineable = false;
+            break;
+
+          /* Additional opcodes which can be compiled but which can't be inlined. */
+          case JSOP_ARGUMENTS:
+          case JSOP_EVAL:
           case JSOP_THROW:
           case JSOP_EXCEPTION:
           case JSOP_DEFLOCALFUN:

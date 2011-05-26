@@ -654,7 +654,7 @@ class Compiler : public BaseCompiler
     void enterBlock(JSObject *obj);
     void leaveBlock();
     void emitEval(uint32 argc);
-    void jsop_arguments();
+    void jsop_arguments(RejoinState rejoin);
     bool jsop_tableswitch(jsbytecode *pc);
     void jsop_forprop(JSAtom *atom);
     void jsop_forname(JSAtom *atom);
@@ -707,6 +707,7 @@ class Compiler : public BaseCompiler
     bool jsop_setelem(bool popGuaranteed);
     bool jsop_getelem(bool isCall);
     void jsop_getelem_dense(bool isPacked);
+    void jsop_getelem_args();
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
     void jsop_stricteq(JSOp op);
     bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);

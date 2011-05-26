@@ -465,7 +465,8 @@ struct JSScript {
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
     bool            isUncachedEval:1; /* script came from EvaluateScript */
     bool            calledWithNew:1;  /* script has been called using 'new' */
-    bool            analyzed:1;       /* script has been analyzed by type inference */
+    bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
+    bool            ranInference:1;   /* script has been analyzed by type inference */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */

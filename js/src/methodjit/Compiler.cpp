@@ -787,6 +787,22 @@ mjit::Compiler::generatePrologue()
             masm.storePtr(t0, Address(JSFrameReg, StackFrame::offsetOfScopeChain()));
             hasScope.linkTo(masm.label(), &masm);
         }
+
+        if (outerScript->usesArguments && !script->fun->isHeavyweight()) {
+            /*
+             * Make sure that fp->args.nactual is always coherent. This may be
+             * inspected directly by JIT code, and is not guaranteed to be
+             * correct if the UNDERFLOW and OVERFLOW flags are not set.
+             */
+            Jump hasArgs = masm.branchTest32(Assembler::NonZero, FrameFlagsAddress(),
+                                             Imm32(StackFrame::OVERRIDE_ARGS |
+                                                   StackFrame::UNDERFLOW_ARGS |
+                                                   StackFrame::OVERFLOW_ARGS |
+                                                   StackFrame::HAS_ARGS_OBJ));
+            masm.store32(Imm32(script->fun->nargs),
+                         Address(JSFrameReg, StackFrame::offsetOfArgs()));
+            hasArgs.linkTo(masm.label(), &masm);
+        }
     }
 
     if (isConstructing)
@@ -1619,11 +1635,16 @@ mjit::Compiler::generateMethod()
              * 'apply' actually refers to js_fun_apply. If this is not true,
              * the slow path in JSOP_FUNAPPLY will create the args object.
              */
-            if (canUseApplyTricks())
+            if (canUseApplyTricks()) {
                 applyTricks = LazyArgsObj;
-            else
-                jsop_arguments();
-            pushSyncedEntry(0);
+                pushSyncedEntry(0);
+            } else if (cx->typeInferenceEnabled() && !script->strictModeCode &&
+                       !script->fun->getType()->hasAnyFlags(types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
+                frame.push(MagicValue(JS_LAZY_ARGUMENTS));
+            } else {
+                jsop_arguments(REJOIN_FALLTHROUGH);
+                pushSyncedEntry(0);
+            }
           END_CASE(JSOP_ARGUMENTS)
 
           BEGIN_CASE(JSOP_FORARG)
@@ -3401,7 +3422,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
 #endif
         if (applyTricks == LazyArgsObj) {
             /* frame.pop() above reset us to pre-JSOP_ARGUMENTS state */
-            jsop_arguments();
+            jsop_arguments(REJOIN_RESUME);
             frame.pushSynced(JSVAL_TYPE_UNKNOWN);
         }
         emitUncachedCall(callImmArgc, callingNew);
@@ -4170,19 +4191,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
         return true;
     }
 
-    /* If the incoming type will never PIC, take slow path. */
-    if (top->isNotType(JSVAL_TYPE_OBJECT)) {
-        jsop_getprop_slow(atom, usePropCache);
-        return true;
-    }
-
-    frame.forgetMismatchedObject(top);
-
     if (JSOp(*PC) == JSOP_LENGTH && cx->typeInferenceEnabled() && !hasTypeBarriers(PC)) {
-        /*
-         * Check if this is an array we can make a loop invariant entry for.
-         * This will fail for objects which are not definitely dense arrays.
-         */
+        /* Check if this is an array we can make a loop invariant entry for. */
         if (loop && loop->generatingInvariants()) {
             CrossSSAValue topv(a->inlineIndex, analysis->poppedValue(PC, 0));
             FrameEntry *fe = loop->invariantLength(topv);
@@ -4194,12 +4204,13 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             }
         }
 
+        types::TypeSet *types = analysis->poppedTypes(PC, 0);
+
         /*
          * Check if we are accessing the 'length' property of a known dense array.
          * Note that if the types are known to indicate dense arrays, their lengths
          * must fit in an int32.
          */
-        types::TypeSet *types = analysis->poppedTypes(PC, 0);
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY)) {
             bool isObject = top->isTypeKnown();
             if (!isObject) {
@@ -4215,7 +4226,26 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
                 stubcc.rejoin(Changes(1));
             return true;
         }
+
+        /*
+         * Check if we are accessing the 'length' of the lazy arguments for the
+         * current frame. No actual arguments object has ever been constructed
+         * for the script, so we can go straight to nactual.
+         */
+        if (types->isLazyArguments(cx)) {
+            frame.pop();
+            frame.push(Address(JSFrameReg, StackFrame::offsetOfArgs()), JSVAL_TYPE_INT32);
+            return true;
+        }
     }
+
+    /* If the incoming type will never PIC, take slow path. */
+    if (top->isNotType(JSVAL_TYPE_OBJECT)) {
+        jsop_getprop_slow(atom, usePropCache);
+        return true;
+    }
+
+    frame.forgetMismatchedObject(top);
 
     /* Check if this is a property access we can make a loop invariant entry for. */
     if (loop && loop->generatingInvariants() && !hasTypeBarriers(PC)) {
@@ -6307,10 +6337,10 @@ mjit::Compiler::emitEval(uint32 argc)
 }
 
 void
-mjit::Compiler::jsop_arguments()
+mjit::Compiler::jsop_arguments(RejoinState rejoin)
 {
     prepareStubCall(Uses(0));
-    INLINE_STUBCALL(stubs::Arguments, REJOIN_NONE);
+    INLINE_STUBCALL(stubs::Arguments, rejoin);
 }
 
 bool

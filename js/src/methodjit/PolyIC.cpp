@@ -1723,6 +1723,10 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
             f.regs.sp[-1].setInt32(str->length());
             f.script()->typeMonitor(f.cx, f.pc(), f.regs.sp[-1]);
             return;
+        } else if (f.regs.sp[-1].isMagic(JS_LAZY_ARGUMENTS)) {
+            f.regs.sp[-1].setInt32(f.regs.fp()->numActualArgs());
+            f.script()->typeMonitor(f.cx, f.pc(), f.regs.sp[-1]);
+            return;
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
             if (obj->isArray() ||
@@ -2519,7 +2523,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 {
     JSContext *cx = f.cx;
 
-    // Right now, we don't optimize for strings.
+    // Right now, we don't optimize for strings or lazy arguments.
     if (!f.regs.sp[-2].isObject()) {
         ic->disable(cx, "non-object");
         stubs::GetElem(f);

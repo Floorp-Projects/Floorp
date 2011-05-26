@@ -506,8 +506,8 @@ bool
 LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &index)
 {
     /*
-     * Note: this method requires that obj is either a dense array or not an
-     * object, and that the index is definitely an integer.
+     * Note: this method requires that the index is definitely an integer, and
+     * that obj is either a dense array or not an object.
      */
     if (skipAnalysis)
         return false;
@@ -629,6 +629,58 @@ LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &
 }
 
 bool
+LoopState::hoistArgsLengthCheck(const CrossSSAValue &index)
+{
+    if (skipAnalysis)
+        return false;
+
+    JaegerSpew(JSpew_Analysis, "Trying to hoist argument range check\n");
+
+    uint32 indexSlot;
+    int32 indexConstant;
+    if (!getEntryValue(index, &indexSlot, &indexConstant)) {
+        JaegerSpew(JSpew_Analysis, "Could not compute index in terms of loop entry state\n");
+        return false;
+    }
+
+    /*
+     * We only hoist arguments checks which can be completely eliminated, for
+     * now just tests with 'i < arguments.length' or similar in the condition.
+     */
+
+    if (indexSlot == UNASSIGNED || loopInvariantEntry(indexSlot)) {
+        JaegerSpew(JSpew_Analysis, "Index is constant or loop invariant\n");
+        return false;
+    }
+
+    if (!outerAnalysis->liveness(indexSlot).nonDecreasing(outerScript, lifetime)) {
+        JaegerSpew(JSpew_Analysis, "Index may decrease in future iterations\n");
+        return false;
+    }
+
+    if (indexSlot == testLHS && indexConstant == 0 && testConstant == -1 && testLessEqual) {
+        bool found = false;
+        for (unsigned i = 0; i < invariantEntries.length(); i++) {
+            const InvariantEntry &entry = invariantEntries[i];
+            if (entry.kind == InvariantEntry::INVARIANT_ARGS_LENGTH) {
+                uint32 slot = frame.outerSlot(frame.getTemporary(entry.u.array.temporary));
+                if (slot == testRHS)
+                    found = true;
+                break;
+            }
+        }
+        if (found) {
+            addNegativeCheck(indexSlot, indexConstant);
+            JaegerSpew(JSpew_Analysis, "Access implied by loop test\n");
+            return true;
+        }
+    }
+
+    JaegerSpew(JSpew_Analysis, "No match found\n");
+    return false;
+}
+
+bool
 LoopState::hasTestLinearRelationship(uint32 slot)
 {
     /*
@@ -667,8 +719,10 @@ LoopState::hasTestLinearRelationship(uint32 slot)
 }
 
 FrameEntry *
-LoopState::invariantSlots(const CrossSSAValue &obj)
+LoopState::invariantArraySlots(const CrossSSAValue &obj)
 {
+    JS_ASSERT(!skipAnalysis);
+
     uint32 objSlot;
     int32 objConstant;
     if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0) {
@@ -690,6 +744,33 @@ LoopState::invariantSlots(const CrossSSAValue &obj)
 }
 
 FrameEntry *
+LoopState::invariantArguments()
+{
+    if (skipAnalysis)
+        return NULL;
+
+    for (unsigned i = 0; i < invariantEntries.length(); i++) {
+        InvariantEntry &entry = invariantEntries[i];
+        if (entry.kind == InvariantEntry::INVARIANT_ARGS_BASE)
+            return frame.getTemporary(entry.u.array.temporary);
+    }
+
+    uint32 which = frame.allocTemporary();
+    if (which == uint32(-1))
+        return NULL;
+    FrameEntry *fe = frame.getTemporary(which);
+
+    InvariantEntry entry;
+    entry.kind = InvariantEntry::INVARIANT_ARGS_BASE;
+    entry.u.array.temporary = which;
+    invariantEntries.append(entry);
+
+    JaegerSpew(JSpew_Analysis, "Using %s for loop invariant args base\n",
+               frame.entryName(fe));
+    return fe;
+}
+
+FrameEntry *
 LoopState::invariantLength(const CrossSSAValue &obj)
 {
     if (skipAnalysis)
@@ -699,6 +780,32 @@ LoopState::invariantLength(const CrossSSAValue &obj)
     int32 objConstant;
     if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0)
         return NULL;
+    TypeSet *objTypes = ssa->getValueTypes(obj);
+
+    /* Check for 'length' on the lazy arguments for the current frame. */
+    if (objTypes->isLazyArguments(cx)) {
+        JS_ASSERT(obj.frame == CrossScriptSSA::OUTER_FRAME);
+
+        for (unsigned i = 0; i < invariantEntries.length(); i++) {
+            InvariantEntry &entry = invariantEntries[i];
+            if (entry.kind == InvariantEntry::INVARIANT_ARGS_LENGTH)
+                return frame.getTemporary(entry.u.array.temporary);
+        }
+
+        uint32 which = frame.allocTemporary();
+        if (which == uint32(-1))
+            return NULL;
+        FrameEntry *fe = frame.getTemporary(which);
+
+        InvariantEntry entry;
+        entry.kind = InvariantEntry::INVARIANT_ARGS_LENGTH;
+        entry.u.array.temporary = which;
+        invariantEntries.append(entry);
+
+        JaegerSpew(JSpew_Analysis, "Using %s for loop invariant args length\n",
+                   frame.entryName(fe));
+        return fe;
+    }
 
     for (unsigned i = 0; i < invariantEntries.length(); i++) {
         InvariantEntry &entry = invariantEntries[i];
@@ -711,7 +818,6 @@ LoopState::invariantLength(const CrossSSAValue &obj)
     if (!loopInvariantEntry(objSlot))
         return NULL;
 
-    TypeSet *objTypes = ssa->getValueTypes(obj);
     if (objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY))
         return NULL;
 
@@ -1237,6 +1343,20 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
                 masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T0, address);
             else
                 masm.storePtr(T0, address);
+            break;
+          }
+
+          case InvariantEntry::INVARIANT_ARGS_BASE: {
+            Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
+            masm.loadFrameActuals(outerScript->fun, T0);
+            masm.storePtr(T0, address);
+            break;
+          }
+
+          case InvariantEntry::INVARIANT_ARGS_LENGTH: {
+            Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
+            masm.load32(Address(JSFrameReg, StackFrame::offsetOfArgs()), T0);
+            masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T0, address);
             break;
           }
 

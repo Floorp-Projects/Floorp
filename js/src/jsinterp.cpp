@@ -4117,6 +4117,10 @@ BEGIN_CASE(JSOP_LENGTH)
                 rval = Int32Value(vp->toString()->length());
                 break;
             }
+            if (vp->isMagic(JS_LAZY_ARGUMENTS)) {
+                rval = Int32Value(regs.fp()->numActualArgs());
+                break;
+            }
             if (vp->isObject()) {
                 JSObject *obj = &vp->toObject();
                 if (obj->isArray()) {
@@ -4457,6 +4461,19 @@ BEGIN_CASE(JSOP_GETELEM)
             len = JSOP_GETELEM_LENGTH;
             DO_NEXT_OP(len);
         }
+    }
+
+    if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
+        if (rref.isInt32() && size_t(rref.toInt32()) < regs.fp()->numActualArgs()) {
+            regs.sp--;
+            regs.sp[-1] = regs.fp()->canonicalActualArg(rref.toInt32());
+            script->typeMonitor(cx, regs.pc, regs.sp[-1]);
+            len = JSOP_GETELEM_LENGTH;
+            DO_NEXT_OP(len);
+        }
+        cx->markTypeObjectFlags(script->fun->getType(),
+                                types::OBJECT_FLAG_CREATED_ARGUMENTS);
+        JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
     }
 
     JSObject *obj;
@@ -5157,8 +5174,24 @@ BEGIN_CASE(JSOP_TRAP)
 BEGIN_CASE(JSOP_ARGUMENTS)
 {
     Value rval;
-    if (!js_GetArgsValue(cx, regs.fp(), &rval))
-        goto error;
+    if (cx->typeInferenceEnabled() && !script->strictModeCode) {
+        analyze::ScriptAnalysis *analysis = script->analysis(cx);
+        if (analysis && !analysis->ranInference()) {
+            AutoEnterTypeInference enter(cx);
+            analysis->analyzeTypes(cx);
+        }
+        if (!analysis || analysis->OOM())
+            goto error;
+        if (script->fun->getType()->hasAnyFlags(types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
+            if (!js_GetArgsValue(cx, regs.fp(), &rval))
+                goto error;
+        } else {
+            rval = MagicValue(JS_LAZY_ARGUMENTS);
+        }
+    } else {
+        if (!js_GetArgsValue(cx, regs.fp(), &rval))
+            goto error;
+    }
     PUSH_COPY(rval);
 }
 END_CASE(JSOP_ARGUMENTS)

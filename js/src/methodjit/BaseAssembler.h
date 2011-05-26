@@ -785,6 +785,20 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
             add32(Imm32(delta), key.reg());
     }
 
+    void loadFrameActuals(JSFunction *fun, RegisterID reg) {
+        /* Bias for the case where there was an arguments overflow. */
+        load32(Address(JSFrameReg, StackFrame::offsetOfArgs()), reg);
+        add32(Imm32(fun->nargs + 2), reg);
+        Jump overflowArgs = branchTest32(Assembler::NonZero,
+                                         Address(JSFrameReg, StackFrame::offsetOfFlags()),
+                                         Imm32(StackFrame::OVERFLOW_ARGS));
+        move(Imm32(fun->nargs), reg);
+        overflowArgs.linkTo(label(), this);
+        lshift32(Imm32(3), reg);
+        neg32(reg);
+        addPtr(JSFrameReg, reg);
+    }
+
     void loadObjClass(RegisterID objReg, RegisterID destReg) {
         loadPtr(Address(objReg, offsetof(JSObject, clasp)), destReg);
     }

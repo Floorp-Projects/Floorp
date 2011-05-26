@@ -2824,7 +2824,8 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
             /* Try to optimize arguments.length into JSOP_ARGCNT */
             if (!BindNameToSlot(cx, cg, pn2))
                 return JS_FALSE;
-            if (pn->pn_atom == cx->runtime->atomState.lengthAtom) {
+            if (!cx->typeInferenceEnabled() &&
+                pn->pn_atom == cx->runtime->atomState.lengthAtom) {
                 if (pn2->pn_op == JSOP_ARGUMENTS)
                     return js_Emit1(cx, cg, JSOP_ARGCNT) >= 0;
             }
@@ -2916,6 +2917,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT32(next->pn_dval, &slot) &&
                 jsuint(slot) < JS_BIT(16) &&
+                !cx->typeInferenceEnabled() &&
                 (!cg->inStrictMode() ||
                  (!cg->mutatesParameter() && !cg->callsEval()))) {
                 /*
@@ -2992,6 +2994,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT32(right->pn_dval, &slot) &&
                 jsuint(slot) < JS_BIT(16) &&
+                !cx->typeInferenceEnabled() &&
                 (!cg->inStrictMode() ||
                  (!cg->mutatesParameter() && !cg->callsEval()))) {
                 left->pn_offset = right->pn_offset = top;
