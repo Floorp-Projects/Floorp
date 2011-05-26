@@ -147,6 +147,7 @@
 
 #include "nsSVGFeatures.h"
 #include "nsDOMMemoryReporter.h"
+#include "nsWrapperCacheInlines.h"
 
 #include "xpcpublic.h"
 
@@ -160,6 +161,18 @@ bool nsIContent::sTabFocusModelAppliesToXUL = false;
 PRUint32 nsMutationGuard::sMutationCount = 0;
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
+
+void
+nsWrapperCache::RemoveExpandoObject()
+{
+  JSObject *expando = GetExpandoObjectPreserveColor();
+  if (expando) {
+    JSCompartment *compartment = js::GetObjectCompartment(expando);
+    xpc::CompartmentPrivate *priv =
+      static_cast<xpc::CompartmentPrivate *>(js_GetCompartmentPrivate(compartment));
+    priv->RemoveDOMExpandoObject(expando);
+  }
+}
 
 //----------------------------------------------------------------------
 
@@ -1517,8 +1530,19 @@ nsIContent::GetBaseURI() const
 
 //----------------------------------------------------------------------
 
-NS_IMPL_ADDREF(nsChildContentList)
-NS_IMPL_RELEASE(nsChildContentList)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsChildContentList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsChildContentList)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsChildContentList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsChildContentList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsChildContentList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsChildContentList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_TABLE_HEAD(nsChildContentList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -1527,6 +1551,7 @@ NS_INTERFACE_TABLE_HEAD(nsChildContentList)
     NS_INTERFACE_TABLE_ENTRY(nsChildContentList, nsIDOMNodeList)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsChildContentList)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(NodeList)
 NS_INTERFACE_MAP_END
 

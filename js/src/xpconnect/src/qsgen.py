@@ -1701,6 +1701,7 @@ stubTopTemplate = '''\
 #include "nsDependentString.h"
 #include "xpcprivate.h"  // for XPCCallContext
 #include "xpcquickstubs.h"
+#include "nsWrapperCacheInlines.h"
 #include "jsbuiltins.h"
 '''
 

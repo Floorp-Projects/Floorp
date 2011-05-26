@@ -45,6 +45,7 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jspubtd.h"
+#include "jsproxy.h"
 
 #include "nsISupports.h"
 #include "nsIPrincipal.h"
@@ -183,14 +184,6 @@ xpc_UnmarkGrayObject(JSObject *obj)
         xpc_UnmarkGrayObjectRecursive(obj);
 }
 
-inline JSObject*
-nsWrapperCache::GetWrapper() const
-{
-  JSObject* obj = GetWrapperPreserveColor();
-  xpc_UnmarkGrayObject(obj);
-  return obj;
-}
-
 class nsIMemoryMultiReporterCallback;
 
 namespace mozilla {
@@ -269,5 +262,29 @@ ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
 } // namespace memory
 } // namespace xpconnect
 } // namespace mozilla
+
+namespace xpc {
+namespace dom {
+
+extern int HandlerFamily;
+inline void* ProxyFamily() { return &HandlerFamily; }
+inline bool instanceIsProxy(JSObject *obj)
+{
+    return js::IsProxy(obj) &&
+           js::GetProxyHandler(obj)->family() == ProxyFamily();
+}
+extern JSClass ExpandoClass;
+inline bool isExpandoObject(JSObject *obj)
+{
+    return js::GetObjectJSClass(obj) == &ExpandoClass;
+}
+
+enum {
+    JSPROXYSLOT_PROTOSHAPE = 0,
+    JSPROXYSLOT_EXPANDO = 1
+};
+
+}
+}
 
 #endif

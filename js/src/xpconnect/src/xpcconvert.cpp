@@ -54,6 +54,7 @@
 #include "nsJSUtils.h"
 
 #include "dombindings.h"
+#include "nsWrapperCacheInlines.h"
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
