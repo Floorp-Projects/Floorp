@@ -458,7 +458,6 @@ nsPlacesAutoComplete.prototype = {
                  createInstance(Ci.nsIAutoCompleteSimpleResult);
     result.setSearchString(aSearchString);
     result.setListener(this);
-    result.setIsURLResult(true);
     this._result = result;
 
     // If we are not enabled, we need to return now.
@@ -738,6 +737,7 @@ nsPlacesAutoComplete.prototype = {
     if (aSearchOngoing)
       resultCode += "_ONGOING";
     result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
+    result.setDefaultIndex(result.matchCount ? 0 : -1);
     this._listener.onSearchResult(this, result);
   },
 
