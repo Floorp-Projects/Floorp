@@ -177,7 +177,8 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
                                      const URLSegment &seg,
                                      PRInt16 mask,
                                      nsAFlatCString &result,
-                                     PRBool &appended)
+                                     PRBool &appended,
+                                     PRUint32 extraLen)
 {
     appended = PR_FALSE;
     if (!str)
@@ -220,6 +221,8 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
             len = encBuf.Length();
             appended = PR_TRUE;
         }
+
+        len += extraLen;
     }
     return len;
 }
@@ -498,16 +501,19 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
       encBasename, encExtension, encParam, encQuery, encRef;
     PRBool useEncUsername, useEncPassword, useEncHost, useEncDirectory,
       useEncBasename, useEncExtension, useEncParam, useEncQuery, useEncRef;
+    nsCAutoString portbuf;
 
     //
     // escape each URL segment, if necessary, and calculate approximate normalized
     // spec length.
     //
-    PRUint32 approxLen = 3; // includes room for "://"
+    // [scheme://][username[:password]@]host[:port]/path[;param][?query_string][#ref]
+
+    PRUint32 approxLen = 0;
 
     // the scheme is already ASCII
     if (mScheme.mLen > 0)
-        approxLen += mScheme.mLen;
+        approxLen += mScheme.mLen + 3; // includes room for "://";
 
     // encode URL segments; convert UTF-8 to origin charset and possibly escape.
     // results written to encXXX variables only if |spec| is not already in the
@@ -515,14 +521,30 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     {
         GET_SEGMENT_ENCODER(encoder);
         GET_QUERY_ENCODER(queryEncoder);
-        approxLen += encoder.EncodeSegmentCount(spec, mUsername,  esc_Username,      encUsername,  useEncUsername);
-        approxLen += encoder.EncodeSegmentCount(spec, mPassword,  esc_Password,      encPassword,  useEncPassword);
-        approxLen += encoder.EncodeSegmentCount(spec, mDirectory, esc_Directory,     encDirectory, useEncDirectory);
+        // Username@
+        approxLen += encoder.EncodeSegmentCount(spec, mUsername,  esc_Username,      encUsername,  useEncUsername,1);
+        // :Password
+        approxLen += encoder.EncodeSegmentCount(spec, mPassword,  esc_Password,      encPassword,  useEncPassword,1);
+        // mHost is handled differently below due to encoding differences
+        if (mPort != -1 && mPort != mDefaultPort)
+        {
+            // :port
+            portbuf.AppendInt(mPort);
+            approxLen += portbuf.Length() + 1;
+        }
+
+        approxLen += 1; // reserve space for possible leading '/' - may not be needed
+        // Should just use mPath?  These are pessimistic, and thus waste space
+        approxLen += encoder.EncodeSegmentCount(spec, mDirectory, esc_Directory,     encDirectory, useEncDirectory,1);
         approxLen += encoder.EncodeSegmentCount(spec, mBasename,  esc_FileBaseName,  encBasename,  useEncBasename);
-        approxLen += encoder.EncodeSegmentCount(spec, mExtension, esc_FileExtension, encExtension, useEncExtension);
-        approxLen += encoder.EncodeSegmentCount(spec, mParam,     esc_Param,         encParam,     useEncParam);
-        approxLen += queryEncoder.EncodeSegmentCount(spec, mQuery, esc_Query,        encQuery,     useEncQuery);
-        approxLen += encoder.EncodeSegmentCount(spec, mRef,       esc_Ref,           encRef,       useEncRef);
+        approxLen += encoder.EncodeSegmentCount(spec, mExtension, esc_FileExtension, encExtension, useEncExtension,1);
+
+        // ;param
+        approxLen += encoder.EncodeSegmentCount(spec, mParam,     esc_Param,         encParam,     useEncParam,1);
+        // ?query
+        approxLen += queryEncoder.EncodeSegmentCount(spec, mQuery, esc_Query,        encQuery,     useEncQuery,1);
+        // #ref
+        approxLen += encoder.EncodeSegmentCount(spec, mRef,       esc_Ref,           encRef,       useEncRef,1);
     }
 
     // do not escape the hostname, if IPv6 address literal, mHost will
@@ -545,7 +567,8 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     //
     // generate the normalized URL string
     //
-    if (!EnsureStringLength(mSpec, approxLen + 32))
+    // approxLen should be correct or 1 high
+    if (!EnsureStringLength(mSpec, approxLen+1)) // buf needs a trailing '\0' below
         return NS_ERROR_OUT_OF_MEMORY;
     char *buf;
     mSpec.BeginWriting(buf);
@@ -573,9 +596,8 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         i = AppendSegmentToBuf(buf, i, spec, mHost, &encHost, useEncHost);
         net_ToLowerCase(buf + mHost.mPos, mHost.mLen);
         if (mPort != -1 && mPort != mDefaultPort) {
-            nsCAutoString portbuf;
-            portbuf.AppendInt(mPort);
             buf[i++] = ':';
+            // Already formatted while building approxLen
             i = AppendToBuf(buf, i, portbuf.get(), portbuf.Length());
         }
     }
@@ -663,7 +685,8 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         CoalescePath(coalesceFlag, buf + mDirectory.mPos);
     }
     mSpec.SetLength(strlen(buf));
-    NS_ASSERTION(mSpec.Length() <= approxLen+32, "We've overflowed the mSpec buffer!");
+    LOG(("BuildNormalizedSpec: %s (len %d : approxLen %d - saved %d)",buf,strlen(buf),approxLen,old_approxLen+32 - approxLen));
+    NS_ASSERTION(mSpec.Length() <= approxLen, "We've overflowed the mSpec buffer!");
     return NS_OK;
 }
 
