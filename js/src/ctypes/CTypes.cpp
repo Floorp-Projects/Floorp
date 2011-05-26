@@ -1842,7 +1842,7 @@ ImplicitConvert(JSContext* cx,
       case TYPE_unsigned_char: {
         // Convert from UTF-16 to UTF-8.
         size_t nbytes =
-          js_GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
+          GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
         if (nbytes == (size_t) -1)
           return false;
 
@@ -1853,7 +1853,7 @@ ImplicitConvert(JSContext* cx,
           return false;
         }
 
-        ASSERT_OK(js_DeflateStringToUTF8Buffer(cx, sourceChars, sourceLength,
+        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceChars, sourceLength,
                     *charBuffer, &nbytes));
         (*charBuffer)[nbytes] = 0;
         *freePointer = true;
@@ -1899,7 +1899,7 @@ ImplicitConvert(JSContext* cx,
       case TYPE_unsigned_char: {
         // Convert from UTF-16 to UTF-8.
         size_t nbytes =
-          js_GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
+          GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
         if (nbytes == (size_t) -1)
           return false;
 
@@ -1909,7 +1909,7 @@ ImplicitConvert(JSContext* cx,
         }
 
         char* charBuffer = static_cast<char*>(buffer);
-        ASSERT_OK(js_DeflateStringToUTF8Buffer(cx, sourceChars, sourceLength,
+        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceChars, sourceLength,
                     charBuffer, &nbytes));
 
         if (targetLength > nbytes)
@@ -3584,7 +3584,7 @@ ArrayType::ConstructData(JSContext* cx,
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
         // Determine the UTF-8 length.
-        length = js_GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
+        length = GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
         if (length == (size_t) -1)
           return false;
 
@@ -5766,7 +5766,7 @@ CData::ReadString(JSContext* cx, uintN argc, jsval* vp)
 
     // Determine the length.
     size_t dstlen;
-    if (!js_InflateUTF8StringToBuffer(cx, bytes, length, NULL, &dstlen))
+    if (!InflateUTF8StringToBuffer(cx, bytes, length, NULL, &dstlen))
       return JS_FALSE;
 
     jschar* dst =
@@ -5774,7 +5774,7 @@ CData::ReadString(JSContext* cx, uintN argc, jsval* vp)
     if (!dst)
       return JS_FALSE;
 
-    ASSERT_OK(js_InflateUTF8StringToBuffer(cx, bytes, length, dst, &dstlen));
+    ASSERT_OK(InflateUTF8StringToBuffer(cx, bytes, length, dst, &dstlen));
     dst[dstlen] = 0;
 
     result = JS_NewUCString(cx, dst, dstlen);

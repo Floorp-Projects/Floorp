@@ -902,7 +902,7 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     PodZero(&report);
     report.flags = flags;
     report.errorNumber = JSMSG_USER_DEFINED_ERROR;
-    report.ucmessage = ucmessage = js_InflateString(cx, message, &messagelen);
+    report.ucmessage = ucmessage = InflateString(cx, message, &messagelen);
     PopulateReportBlame(cx, &report);
 
     warning = JSREPORT_IS_WARNING(report.flags);
@@ -962,8 +962,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 if (charArgs) {
                     char *charArg = va_arg(ap, char *);
                     size_t charArgLength = strlen(charArg);
-                    reportp->messageArgs[i]
-                        = js_InflateString(cx, charArg, &charArgLength);
+                    reportp->messageArgs[i] = InflateString(cx, charArg, &charArgLength);
                     if (!reportp->messageArgs[i])
                         goto error;
                 } else {
@@ -986,7 +985,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 size_t expandedLength;
                 size_t len = strlen(efs->format);
 
-                buffer = fmt = js_InflateString (cx, efs->format, &len);
+                buffer = fmt = InflateString(cx, efs->format, &len);
                 if (!buffer)
                     goto error;
                 expandedLength = len
@@ -1021,9 +1020,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 JS_ASSERT(expandedArgs == argCount);
                 *out = 0;
                 cx->free_(buffer);
-                *messagep =
-                    js_DeflateString(cx, reportp->ucmessage,
-                                     (size_t)(out - reportp->ucmessage));
+                *messagep = DeflateString(cx, reportp->ucmessage,
+                                          size_t(out - reportp->ucmessage));
                 if (!*messagep)
                     goto error;
             }
@@ -1038,7 +1036,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 if (!*messagep)
                     goto error;
                 len = strlen(*messagep);
-                reportp->ucmessage = js_InflateString(cx, *messagep, &len);
+                reportp->ucmessage = InflateString(cx, *messagep, &len);
                 if (!reportp->ucmessage)
                     goto error;
             }
