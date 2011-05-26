@@ -192,6 +192,11 @@ public:
         and32(Imm32(ptr), srcDest);
     }
 
+    void negPtr(RegisterID srcDest)
+    {
+        neg32(srcDest);
+    }
+
     void notPtr(RegisterID srcDest)
     {
         not32(srcDest);
