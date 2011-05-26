@@ -37,10 +37,12 @@
 
 #include <assert.h>
 
-#include "cairo-features.h"
-#ifdef CAIRO_HAS_QT_SURFACE
-#include "cairo-qt.h"
 #include "gfxQPainterSurface.h"
+
+#ifdef CAIRO_HAS_QT_SURFACE
+#include "gfxImageSurface.h"
+
+#include "cairo-qt.h"
 
 gfxQPainterSurface::gfxQPainterSurface(QPainter *painter)
 {

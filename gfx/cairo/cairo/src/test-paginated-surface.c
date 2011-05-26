@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -49,7 +49,6 @@
 
 #include "test-paginated-surface.h"
 
-#include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 
 typedef struct _test_paginated_surface {
@@ -76,9 +75,7 @@ _cairo_test_paginated_surface_create (cairo_surface_t *target)
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&surface->base,
-			 &test_paginated_surface_backend,
-			 NULL, /* device */
+    _cairo_surface_init (&surface->base, &test_paginated_surface_backend,
 			 target->content);
 
     surface->target = cairo_surface_reference (target);
@@ -152,9 +149,9 @@ _test_paginated_surface_stroke (void				*abstract_surface,
 				cairo_operator_t		 op,
 				const cairo_pattern_t		*source,
 				cairo_path_fixed_t		*path,
-				const cairo_stroke_style_t		*style,
-				const cairo_matrix_t			*ctm,
-				const cairo_matrix_t			*ctm_inverse,
+				cairo_stroke_style_t		*style,
+				cairo_matrix_t			*ctm,
+				cairo_matrix_t			*ctm_inverse,
 				double				 tolerance,
 				cairo_antialias_t		 antialias,
 				cairo_clip_t			*clip)

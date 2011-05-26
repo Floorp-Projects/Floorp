@@ -1,4 +1,3 @@
 fails-if(Android) == background-image-zoom-1.html background-image-zoom-1-ref.html
-== background-image-zoom-2.html about:blank
 fails-if(Android) == image-zoom-1.html image-zoom-1-ref.html
 == invalid-url-image-1.html invalid-url-image-1-ref.html
