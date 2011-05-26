@@ -150,7 +150,7 @@ class IonBuilder : public MIRGenerator
 
   public:
     IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
-               MIRGraph &graph);
+               MIRGraph &graph, TypeOracle *oracle);
 
   public:
     bool analyze();
@@ -211,6 +211,7 @@ class IonBuilder : public MIRGenerator
     MBasicBlock *current;
     Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
     Vector<LoopInfo, 4, IonAllocPolicy> loops_;
+    TypeOracle *oracle;
 };
 
 } // namespace ion
