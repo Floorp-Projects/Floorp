@@ -19537,21 +19537,23 @@ var canvas = document.getElementById('c614');
 var ctx = canvas.getContext('2d');
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+var _threw = false;
 try {
   var data = canvas.toDataURL('image/png', 'quality=100');
-  ok(false, "Should have thrown an exception for invalid args to png encoder");
 }
 catch (e) {
-  is(e.result, Components.results.NS_ERROR_INVALID_ARG, "Exception was wrong for png encoder");
+  _threw = true;
 }
+ok(!_threw, "Should not throw an exception for invalid args to png encoder");
 
+_threw = false;
 try {
   var data = canvas.toDataURL('image/jpeg', 'foobar=true');
-  ok(false, "Should have thrown an exception for invalid args to jpeg encoder");
 }
 catch (e) {
-  is(e.result, Components.results.NS_ERROR_INVALID_ARG, "Exception was wrong for jpeg encoder");
+  _threw = true;
 }
+ok(!_threw, "Should not throw an exception for invalid args to jpeg encoder");
 
 }
 </script>
@@ -20761,7 +20763,7 @@ ok(/^data:image\/png[;,]/.test(data), "data =~ /^data:image\\/png[;,]/");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -20788,7 +20790,7 @@ ok(/^data:image\/png[;,]/.test(data), "data =~ /^data:image\\/png[;,]/");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -20816,7 +20818,7 @@ ok(/^data:image\/png[;,]/.test(data), "data =~ /^data:image\\/png[;,]/");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
