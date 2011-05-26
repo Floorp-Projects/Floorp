@@ -2751,7 +2751,7 @@ var gDetailView = {
         );
         var errorLink = document.getElementById("detail-error-link");
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.blocked.link");
-        errorLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
+        errorLink.href = this._addon.blocklistURL;
         errorLink.hidden = false;
       } else if (!this._addon.isCompatible) {
         this.node.setAttribute("notification", "warning");
@@ -2768,7 +2768,7 @@ var gDetailView = {
         );
         var warningLink = document.getElementById("detail-warning-link");
         warningLink.value = gStrings.ext.GetStringFromName("details.notification.softblocked.link");
-        warningLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
+        warningLink.href = this._addon.blocklistURL;
         warningLink.hidden = false;
       } else if (this._addon.blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
         this.node.setAttribute("notification", "warning");

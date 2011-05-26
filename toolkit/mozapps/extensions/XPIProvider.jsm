@@ -6627,6 +6627,12 @@ AddonInternal.prototype = {
     return bs.getAddonBlocklistState(this.id, this.version);
   },
 
+  get blocklistURL() {
+    let bs = Cc["@mozilla.org/extensions/blocklist;1"].
+             getService(Ci.nsIBlocklistService);
+    return bs.getAddonBlocklistURL(this.id, this.version);
+  },
+
   applyCompatibilityUpdate: function(aUpdate, aSyncCompatibility) {
     this.targetApplications.forEach(function(aTargetApp) {
       aUpdate.targetApplications.forEach(function(aUpdateTarget) {
@@ -6781,7 +6787,7 @@ function AddonWrapper(aAddon) {
   }
 
   ["id", "version", "type", "isCompatible", "isPlatformCompatible",
-   "providesUpdatesSecurely", "blocklistState", "appDisabled",
+   "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
    "softDisabled", "skinnable", "size"].forEach(function(aProp) {
      this.__defineGetter__(aProp, function() aAddon[aProp]);
   }, this);

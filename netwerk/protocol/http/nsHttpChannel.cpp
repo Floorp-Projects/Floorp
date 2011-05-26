@@ -2719,9 +2719,6 @@ nsHttpChannel::CheckCache()
                 mRequestHead.SetHeader(nsHttp::If_None_Match,
                                        nsDependentCString(val));
         }
-
-        // We don't need this info anymore
-        CleanRedirectCacheChainIfNecessary();
     }
 
     LOG(("nsHTTPChannel::CheckCache exit [this=%p doValidation=%d]\n", this, doValidation));

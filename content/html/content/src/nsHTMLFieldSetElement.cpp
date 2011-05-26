@@ -217,8 +217,7 @@ nsHTMLFieldSetElement::InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
 }
 
 nsresult
-nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify,
-                                     PRBool aMutationEvent /* = PR_TRUE */)
+nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   bool firstLegendHasChanged = false;
 
@@ -236,7 +235,7 @@ nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify,
     }
   }
 
-  nsresult rv = nsGenericHTMLFormElement::RemoveChildAt(aIndex, aNotify, aMutationEvent);
+  nsresult rv = nsGenericHTMLFormElement::RemoveChildAt(aIndex, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (firstLegendHasChanged) {
