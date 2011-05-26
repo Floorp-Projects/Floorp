@@ -956,12 +956,11 @@ let UI = {
   
   // ----------
   updateTabButton: function UI__updateTabButton() {
-    let groupsNumber = gWindow.document.getElementById("tabviewGroupsNumber");
     let exitButton = document.getElementById("exit-button");
     let numberOfGroups = GroupItems.groupItems.length;
 
-    groupsNumber.setAttribute("groups", numberOfGroups);
     exitButton.setAttribute("groups", numberOfGroups);
+    gTabView.updateGroupNumberBroadcaster(numberOfGroups);
   },
 
   // ----------
