@@ -794,8 +794,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
                                          Imm32(StackFrame::OVERFLOW_ARGS));
         move(Imm32(fun->nargs), reg);
         overflowArgs.linkTo(label(), this);
-        lshift32(Imm32(3), reg);
-        neg32(reg);
+        lshiftPtr(Imm32(3), reg);
+        negPtr(reg);
         addPtr(JSFrameReg, reg);
     }
 

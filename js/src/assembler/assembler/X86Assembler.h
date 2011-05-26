@@ -691,6 +691,13 @@ public:
     }
 
 #if WTF_CPU_X86_64
+    void negq_r(RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "negq       %s\n", MAYBE_PAD, nameIReg(8,dst));
+        m_formatter.oneByteOp64(OP_GROUP3_Ev, GROUP3_OP_NEG, dst);
+    }
+
     void orq_rr(RegisterID src, RegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
