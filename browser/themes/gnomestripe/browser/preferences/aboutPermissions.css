@@ -32,7 +32,7 @@
   height: 16px;
   width: 16px;
   -moz-margin-end: 4px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
 }
 
 #all-sites-item > .site-container > .site-favicon {
