@@ -374,6 +374,9 @@ nsPrefetchNode::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     if (NS_FAILED(rv))
         return rv;
 
+    nsCOMPtr<nsICachingChannel> oldCachingChannel =
+        do_QueryInterface(aOldChannel);
+
     PRBool match;
     rv = newURI->SchemeIs("http", &match); 
     if (NS_FAILED(rv) || !match) {
