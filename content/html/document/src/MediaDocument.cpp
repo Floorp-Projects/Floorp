@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMediaDocument.h"
+#include "MediaDocument.h"
 #include "nsGkAtoms.h"
 #include "nsRect.h"
 #include "nsPresContext.h"
@@ -53,29 +53,32 @@
 #include "nsIDocumentCharsetInfo.h" 
 #include "nsNodeInfoManager.h"
 
-nsMediaDocumentStreamListener::nsMediaDocumentStreamListener(nsMediaDocument *aDocument)
+namespace mozilla {
+namespace dom {
+
+MediaDocumentStreamListener::MediaDocumentStreamListener(MediaDocument *aDocument)
 {
   mDocument = aDocument;
 }
 
-nsMediaDocumentStreamListener::~nsMediaDocumentStreamListener()
+MediaDocumentStreamListener::~MediaDocumentStreamListener()
 {
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsMediaDocumentStreamListener,
+NS_IMPL_THREADSAFE_ISUPPORTS2(MediaDocumentStreamListener,
                               nsIRequestObserver,
                               nsIStreamListener)
 
 
 void
-nsMediaDocumentStreamListener::SetStreamListener(nsIStreamListener *aListener)
+MediaDocumentStreamListener::SetStreamListener(nsIStreamListener *aListener)
 {
   mNextStream = aListener;
 }
 
 NS_IMETHODIMP
-nsMediaDocumentStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
+MediaDocumentStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
@@ -89,9 +92,9 @@ nsMediaDocumentStreamListener::OnStartRequest(nsIRequest* request, nsISupports *
 }
 
 NS_IMETHODIMP
-nsMediaDocumentStreamListener::OnStopRequest(nsIRequest* request,
-                                             nsISupports *ctxt,
-                                             nsresult status)
+MediaDocumentStreamListener::OnStopRequest(nsIRequest* request,
+                                           nsISupports *ctxt,
+                                           nsresult status)
 {
   nsresult rv = NS_OK;
   if (mNextStream) {
@@ -105,11 +108,11 @@ nsMediaDocumentStreamListener::OnStopRequest(nsIRequest* request,
 }
 
 NS_IMETHODIMP
-nsMediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
-                                               nsISupports *ctxt,
-                                               nsIInputStream *inStr,
-                                               PRUint32 sourceOffset,
-                                               PRUint32 count)
+MediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
+                                             nsISupports *ctxt,
+                                             nsIInputStream *inStr,
+                                             PRUint32 sourceOffset,
+                                             PRUint32 count)
 {
   if (mNextStream) {
     return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
@@ -118,8 +121,8 @@ nsMediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
   return NS_OK;
 }
 
-// default format names for nsMediaDocument. 
-const char* const nsMediaDocument::sFormatNames[4] = 
+// default format names for MediaDocument. 
+const char* const MediaDocument::sFormatNames[4] = 
 {
   "MediaTitleWithNoInfo",    // eWithNoInfo
   "MediaTitleWithFile",      // eWithFile
@@ -127,15 +130,15 @@ const char* const nsMediaDocument::sFormatNames[4] =
   ""                         // eWithDimAndFile
 };
 
-nsMediaDocument::nsMediaDocument()
+MediaDocument::MediaDocument()
 {
 }
-nsMediaDocument::~nsMediaDocument()
+MediaDocument::~MediaDocument()
 {
 }
 
 nsresult
-nsMediaDocument::Init()
+MediaDocument::Init()
 {
   nsresult rv = nsHTMLDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -152,13 +155,13 @@ nsMediaDocument::Init()
 }
 
 nsresult
-nsMediaDocument::StartDocumentLoad(const char*         aCommand,
-                                   nsIChannel*         aChannel,
-                                   nsILoadGroup*       aLoadGroup,
-                                   nsISupports*        aContainer,
-                                   nsIStreamListener** aDocListener,
-                                   PRBool              aReset,
-                                   nsIContentSink*     aSink)
+MediaDocument::StartDocumentLoad(const char*         aCommand,
+                                 nsIChannel*         aChannel,
+                                 nsILoadGroup*       aLoadGroup,
+                                 nsISupports*        aContainer,
+                                 nsIStreamListener** aDocListener,
+                                 PRBool              aReset,
+                                 nsIContentSink*     aSink)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
                                               aContainer, aDocListener, aReset,
@@ -227,7 +230,7 @@ nsMediaDocument::StartDocumentLoad(const char*         aCommand,
 }
 
 nsresult
-nsMediaDocument::CreateSyntheticDocument()
+MediaDocument::CreateSyntheticDocument()
 {
   // Synthesize an empty html document
   nsresult rv;
@@ -273,7 +276,7 @@ nsMediaDocument::CreateSyntheticDocument()
 }
 
 nsresult
-nsMediaDocument::StartLayout()
+MediaDocument::StartLayout()
 {
   mMayStartLayout = PR_TRUE;
   nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -289,7 +292,7 @@ nsMediaDocument::StartLayout()
 }
 
 void
-nsMediaDocument::GetFileName(nsAString& aResult)
+MediaDocument::GetFileName(nsAString& aResult)
 {
   aResult.Truncate();
 
@@ -329,10 +332,10 @@ nsMediaDocument::GetFileName(nsAString& aResult)
 }
 
 void 
-nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
-                                       const char* const* aFormatNames,
-                                       PRInt32 aWidth, PRInt32 aHeight,
-                                       const nsAString& aStatus)
+MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
+                                     const char* const* aFormatNames,
+                                     PRInt32 aWidth, PRInt32 aHeight,
+                                     const nsAString& aStatus)
 {
   nsXPIDLString fileStr;
   GetFileName(fileStr);
@@ -394,3 +397,6 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
     SetTitle(titleWithStatus);
   }
 }
+
+} // namespace dom
+} // namespace mozilla
