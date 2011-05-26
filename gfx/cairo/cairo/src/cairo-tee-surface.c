@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -40,9 +40,6 @@
 
 #include "cairoint.h"
 
-#include "cairo-tee.h"
-
-#include "cairo-error-private.h"
 #include "cairo-tee-surface-private.h"
 #include "cairo-surface-wrapper-private.h"
 
@@ -301,9 +298,9 @@ _cairo_tee_surface_stroke (void				*abstract_surface,
 			   cairo_operator_t		 op,
 			   const cairo_pattern_t	*source,
 			   cairo_path_fixed_t		*path,
-			   const cairo_stroke_style_t	*style,
-			   const cairo_matrix_t		*ctm,
-			   const cairo_matrix_t		*ctm_inverse,
+			   cairo_stroke_style_t		*style,
+			   cairo_matrix_t		*ctm,
+			   cairo_matrix_t		*ctm_inverse,
 			   double			 tolerance,
 			   cairo_antialias_t		 antialias,
 			   cairo_clip_t			*clip)
@@ -546,7 +543,6 @@ cairo_tee_surface_create (cairo_surface_t *master)
 
     _cairo_surface_init (&surface->base,
 			 &cairo_tee_surface_backend,
-			 master->device,
 			 master->content);
 
     _cairo_surface_wrapper_init (&surface->master, master);
@@ -570,11 +566,6 @@ cairo_tee_surface_add (cairo_surface_t *abstract_surface,
 
     if (unlikely (abstract_surface->status))
 	return;
-    if (unlikely (abstract_surface->finished)) {
-	status = _cairo_surface_set_error (abstract_surface,
-					   _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
-	return;
-    }
 
     if (abstract_surface->backend != &cairo_tee_surface_backend) {
 	status = _cairo_surface_set_error (abstract_surface,
@@ -606,14 +597,6 @@ cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
     cairo_surface_wrapper_t *slaves;
     int n, num_slaves;
     cairo_status_t status;
-
-    if (unlikely (abstract_surface->status))
-	return;
-    if (unlikely (abstract_surface->finished)) {
-	status = _cairo_surface_set_error (abstract_surface,
-					   _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
-	return;
-    }
 
     if (abstract_surface->backend != &cairo_tee_surface_backend) {
 	status = _cairo_surface_set_error (abstract_surface,
@@ -655,8 +638,6 @@ cairo_tee_surface_index (cairo_surface_t *abstract_surface,
 
     if (unlikely (abstract_surface->status))
 	return _cairo_surface_create_in_error (abstract_surface->status);
-    if (unlikely (abstract_surface->finished))
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (abstract_surface->backend != &cairo_tee_surface_backend)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
