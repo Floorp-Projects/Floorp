@@ -647,7 +647,8 @@ js_AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNot
 
 extern JSAtom *
 js_Atomize(JSContext *cx, const char *bytes, size_t length,
-           js::InternBehavior ib = js::DoNotInternAtom, bool useCESU8 = false);
+           js::InternBehavior ib = js::DoNotInternAtom,
+           js::FlationCoding fc = js::NormalEncoding);
 
 extern JSAtom *
 js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length,

@@ -16629,7 +16629,7 @@ StartTraceVisNative(JSContext *cx, uintN argc, jsval *vp)
 
     if (argc > 0 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
         JSString *str = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
-        char *filename = js_DeflateString(cx, str->chars(), str->length());
+        char *filename = DeflateString(cx, str->chars(), str->length());
         if (!filename)
             goto error;
         ok = StartTraceVis(filename);

@@ -687,14 +687,13 @@ SprintString(Sprinter *sp, JSString *str)
     if (!chars)
         return -1;
 
-    size_t size = js_GetDeflatedStringLength(sp->context, chars, length);
+    size_t size = GetDeflatedStringLength(sp->context, chars, length);
     if (size == (size_t)-1 || !SprintEnsureBuffer(sp, size))
         return -1;
 
     ptrdiff_t offset = sp->offset;
     sp->offset += size;
-    js_DeflateStringToBuffer(sp->context, chars, length, sp->base + offset,
-                             &size);
+    DeflateStringToBuffer(sp->context, chars, length, sp->base + offset, &size);
     sp->base[sp->offset] = 0;
     return offset;
 }
@@ -5220,7 +5219,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     const jschar *chars = fallback->getChars(cx);
     if (!chars)
         return NULL;
-    return js_DeflateString(cx, chars, length);
+    return DeflateString(cx, chars, length);
 }
 
 static char *

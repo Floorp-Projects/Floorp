@@ -1710,7 +1710,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
     if (!CheckDebugMode(cx))
         return JS_FALSE;
 
-    chars = js_InflateString(cx, bytes, &len);
+    chars = InflateString(cx, bytes, &len);
     if (!chars)
         return JS_FALSE;
     length = (uintN) len;
@@ -2244,7 +2244,7 @@ js_StartVtune(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        params.tb5Filename = js_DeflateString(cx, str->chars(), str->length());
+        params.tb5Filename = DeflateString(cx, str->chars(), str->length());
     }
 
     status = VTStartSampling(&params);
@@ -2582,7 +2582,7 @@ ethogram_addScript(JSContext *cx, uintN argc, jsval *vp)
     }
     if (JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        filename = js_DeflateString(cx, str->chars(), str->length());
+        filename = DeflateString(cx, str->chars(), str->length());
         if (!filename)
             return false;
     }
