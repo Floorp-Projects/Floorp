@@ -42,20 +42,13 @@
 
 #include "jsapi.h"
 #include "jsproxy.h"
+#include "xpcpublic.h"
 
 class nsINodeList;
 class nsIHTMLCollection;
 
 namespace xpc {
 namespace dom {
-
-extern int HandlerFamily;
-inline void* ProxyFamily() { return &HandlerFamily; }
-inline bool instanceIsDOMProxy(JSObject *obj)
-{
-    return js::IsProxy(obj) &&
-           js::GetProxyHandler(obj)->family() == ProxyFamily();
-}
 
 class NodeListBase : public js::ProxyHandler {
 public:
@@ -89,6 +82,8 @@ class NodeList : public NodeListBase {
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
 
     static T *getNodeList(JSObject *obj);
+
+    static JSObject *ensureExpandoObject(JSContext *cx, JSObject *obj);
 
     static uint32 getProtoShape(JSObject *obj);
     static void setProtoShape(JSObject *obj, uint32 shape);

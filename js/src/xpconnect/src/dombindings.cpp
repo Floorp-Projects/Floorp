@@ -47,6 +47,8 @@
 
 #include "nsDOMClassInfo.h"
 #include "nsGlobalWindow.h"
+#include "jsiter.h"
+#include "nsWrapperCacheInlines.h"
 
 extern XPCNativeInterface* interfaces[];
 
@@ -139,7 +141,7 @@ uint32
 NodeList<T>::getProtoShape(JSObject *obj)
 {
     JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
-    return js::GetProxyExtra(obj, 0).toPrivateUint32();
+    return js::GetProxyExtra(obj, JSPROXYSLOT_PROTOSHAPE).toPrivateUint32();
 }
 
 template<class T>
@@ -147,7 +149,7 @@ void
 NodeList<T>::setProtoShape(JSObject *obj, uint32 shape)
 {
     JS_ASSERT(js::IsProxy(obj) && js::GetProxyHandler(obj) == &NodeList<T>::instance);
-    js::SetProxyExtra(obj, 0, PrivateUint32Value(shape));
+    js::SetProxyExtra(obj, JSPROXYSLOT_PROTOSHAPE, PrivateUint32Value(shape));
 }
 
 template<class T>
@@ -304,12 +306,29 @@ NodeList<T>::create(JSContext *cx, XPCWrappedNativeScope *scope, T *aNodeList,
     return obj;
 }
 
+static JSObject *
+getExpandoObject(JSObject *obj)
+{
+    NS_ASSERTION(instanceIsProxy(obj), "expected a DOM proxy object");
+    Value v = js::GetProxyExtra(obj, JSPROXYSLOT_EXPANDO);
+    return v.isUndefined() ? NULL : v.toObjectOrNull();
+}
+
 template<class T>
 bool
 NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                       PropertyDescriptor *desc)
 {
-    // FIXME: expandos
+    JSObject *expando = getExpandoObject(proxy);
+    uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
+    if (expando && !JS_GetPropertyDescriptorById(cx, expando, id, flags, desc))
+        return false;
+    if (desc->obj) {
+        // Pretend the property lives on the wrapper.
+        desc->obj = proxy;
+        return true;
+    }
+
     bool isNumber;
     int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
     if (isNumber && index >= 0) {
@@ -347,20 +366,63 @@ NodeList<T>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool
                                         desc);
 }
 
+JSClass ExpandoClass = {
+    "DOM proxy binding expando object",
+    JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub,
+    JS_PropertyStub,
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
+};
+
+template<class T>
+JSObject *
+NodeList<T>::ensureExpandoObject(JSContext *cx, JSObject *obj)
+{
+    NS_ASSERTION(instanceIsProxy(obj), "expected a DOM proxy object");
+    JSObject *expando = getExpandoObject(obj);
+    if (!expando) {
+        expando = JS_NewObjectWithGivenProto(cx, &ExpandoClass, nsnull,
+                                             js::GetObjectParent(obj));
+        if (!expando)
+            return NULL;
+
+        JSCompartment *compartment = js::GetObjectCompartment(obj);
+        xpc::CompartmentPrivate *priv =
+            static_cast<xpc::CompartmentPrivate *>(js_GetCompartmentPrivate(compartment));
+        if (!priv->RegisterDOMExpandoObject(expando))
+            return NULL;
+
+        js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, ObjectValue(*expando));
+        expando->setPrivate(js::GetProxyPrivate(obj).toPrivate());
+    }
+    return expando;
+}
+
 template<class T>
 bool
 NodeList<T>::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                             PropertyDescriptor *desc)
 {
-    // FIXME: expandos
-    return true;
+    JSObject *expando = ensureExpandoObject(cx, proxy);
+    if (!expando)
+        return false;
+
+    return JS_DefinePropertyById(cx, expando, id, desc->value, desc->getter, desc->setter,
+                                 desc->attrs);
 }
 
 template<class T>
 bool
 NodeList<T>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
-    // FIXME: expandos
+    JSObject *expando = getExpandoObject(proxy);
+    if (expando && !GetPropertyNames(cx, expando, JSITER_OWNONLY | JSITER_HIDDEN, &props))
+        return false;
+
     PRUint32 length;
     getNodeList(proxy)->GetLength(&length);
     JS_ASSERT(int32(length) >= 0);
@@ -375,7 +437,18 @@ template<class T>
 bool
 NodeList<T>::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    // FIXME: expandos
+    JSBool b = true;
+
+    JSObject *expando;
+    if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = getExpandoObject(proxy))) {
+        jsval v;
+        if (!JS_DeletePropertyById2(cx, expando, id, &v) ||
+            !JS_ValueToBoolean(cx, v, &b)) {
+            return false;
+        }
+    }
+
+    *bp = !!b;
     return true;
 }
 
@@ -399,7 +472,15 @@ template<class T>
 bool
 NodeList<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    // FIXME: expandos
+    JSObject *expando = getExpandoObject(proxy);
+    if (expando) {
+        JSBool b = JS_TRUE;
+        JSBool ok = JS_HasPropertyById(cx, expando, id, &b);
+        *bp = !!b;
+        if (!ok || *bp)
+            return ok;
+    }
+
     bool isNumber;
     int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
     if (isNumber && index >= 0) {
@@ -416,15 +497,7 @@ template<class T>
 bool
 NodeList<T>::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
-    if (!hasOwn(cx, proxy, id, bp))
-        return false;
-    if (*bp)
-        return true;
-    JSBool found;
-    if (!JS_HasPropertyById(cx, js::GetObjectProto(proxy), id, &found))
-        return false;
-    *bp = !!found;
-    return true;
+    return ProxyHandler::has(cx, proxy, id, bp);
 }
 
 template<class T>
@@ -506,7 +579,15 @@ template<class T>
 bool
 NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
-    // FIXME: expandos
+    JSObject *expando = getExpandoObject(proxy);
+    if (expando) {
+        JSBool hasProp;
+        if (!JS_HasPropertyById(cx, expando, id, &hasProp))
+            return false;
+        if (hasProp)
+            return JS_GetPropertyById(cx, expando, id, vp);
+    }
+
     bool isNumber;
     int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
     if (isNumber && index >= 0) {
@@ -543,18 +624,16 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
 template<class T>
 bool
 NodeList<T>::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
-              Value *vp)
+                 Value *vp)
 {
-    // FIXME: expandos
-    return true;
+    return ProxyHandler::set(cx, proxy, proxy, id, strict, vp);
 }
 
 template<class T>
 bool
 NodeList<T>::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
-    // FIXME: expandos
-    return getOwnPropertyNames(cx, proxy, props);
+    return ProxyHandler::keys(cx, proxy, props);
 }
 
 template<class T>
@@ -592,7 +671,7 @@ void
 NodeList<T>::finalize(JSContext *cx, JSObject *proxy)
 {
     T *nodeList = getNodeList(proxy);
-    nsWrapperCache* cache;
+    nsWrapperCache *cache;
     CallQueryInterface(nodeList, &cache);
     if (cache) {
         cache->ClearWrapper();

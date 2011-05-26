@@ -260,6 +260,7 @@ xpc::CompartmentPrivate::~CompartmentPrivate()
 {
     delete waiverWrapperMap;
     delete expandoMap;
+    delete domExpandoMap;
     MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
 }
 
@@ -428,12 +429,22 @@ TraceExpandos(XPCWrappedNative *wn, JSObject *&expando, void *aClosure)
 }
 
 static PLDHashOperator
+TraceDOMExpandos(nsPtrHashKey<JSObject> *expando, void *aClosure)
+{
+    JS_CALL_OBJECT_TRACER(static_cast<JSTracer *>(aClosure), expando->GetKey(),
+                          "DOM expando object");
+    return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
 TraceCompartment(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compartment, void *aClosure)
 {
     xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
         JS_GetCompartmentPrivate(static_cast<JSTracer *>(aClosure)->context, compartment);
     if (priv->expandoMap)
         priv->expandoMap->Enumerate(TraceExpandos, aClosure);
+    if (priv->domExpandoMap)
+        priv->domExpandoMap->EnumerateEntries(TraceDOMExpandos, aClosure);
     return PL_DHASH_NEXT;
 }
 
@@ -530,11 +541,19 @@ XPCJSRuntime::SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
 }
 
 static PLDHashOperator
-SuspectExpandos(XPCWrappedNative *wrapper, JSObject *&expando, void *arg)
+SuspectExpandos(XPCWrappedNative *wrapper, JSObject *expando, void *arg)
 {
     Closure* closure = static_cast<Closure*>(arg);
     XPCJSRuntime::SuspectWrappedNative(closure->cx, wrapper, *closure->cb);
 
+    return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+SuspectDOMExpandos(nsPtrHashKey<JSObject> *expando, void *arg)
+{
+    Closure *closure = static_cast<Closure*>(arg);
+    closure->cb->NoteXPCOMRoot(static_cast<nsISupports*>(expando->GetKey()->getPrivate()));
     return PL_DHASH_NEXT;
 }
 
@@ -545,7 +564,9 @@ SuspectCompartment(xpc::PtrAndPrincipalHashKey *key, JSCompartment *compartment,
     xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
         JS_GetCompartmentPrivate(closure->cx, compartment);
     if (priv->expandoMap)
-        priv->expandoMap->Enumerate(SuspectExpandos, arg);
+        priv->expandoMap->EnumerateRead(SuspectExpandos, arg);
+    if (priv->domExpandoMap)
+        priv->domExpandoMap->EnumerateEntries(SuspectDOMExpandos, arg);
     return PL_DHASH_NEXT;
 }
 

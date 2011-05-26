@@ -44,7 +44,7 @@
 #include "xpcprivate.h"
 #include "nsCRT.h"
 #include "XPCWrapper.h"
-#include "nsWrapperCache.h"
+#include "nsWrapperCacheInlines.h"
 #include "xpclog.h"
 #include "jstl.h"
 #include "nsINode.h"

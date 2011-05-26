@@ -4430,7 +4430,8 @@ struct CompartmentPrivate
           wantXrays(wantXrays),
           cycleCollectionEnabled(cycleCollectionEnabled),
           waiverWrapperMap(nsnull),
-          expandoMap(nsnull)
+          expandoMap(nsnull),
+          domExpandoMap(nsnull)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
@@ -4441,7 +4442,8 @@ struct CompartmentPrivate
           wantXrays(wantXrays),
           cycleCollectionEnabled(cycleCollectionEnabled),
           waiverWrapperMap(nsnull),
-          expandoMap(nsnull)
+          expandoMap(nsnull),
+          domExpandoMap(nsnull)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
@@ -4456,6 +4458,7 @@ struct CompartmentPrivate
     JSObject2JSObjectMap *waiverWrapperMap;
     // NB: we don't want this map to hold a strong reference to the wrapper.
     nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> *expandoMap;
+    nsTHashtable<nsPtrHashKey<JSObject> > *domExpandoMap;
     nsCString location;
 
     bool RegisterExpandoObject(XPCWrappedNative *wn, JSObject *expando) {
@@ -4487,6 +4490,22 @@ struct CompartmentPrivate
         JSObject *obj = LookupExpandoObjectPreserveColor(wn);
         xpc_UnmarkGrayObject(obj);
         return obj;
+    }
+
+    bool RegisterDOMExpandoObject(JSObject *expando) {
+        if (!domExpandoMap) {
+            domExpandoMap = new nsTHashtable<nsPtrHashKey<JSObject> >();
+            if(!domExpandoMap->Init(8))
+            {
+                domExpandoMap = nsnull;
+                return false;
+            }
+        }
+        return domExpandoMap->PutEntry(expando);
+    }
+    void RemoveDOMExpandoObject(JSObject *expando) {
+        if(domExpandoMap)
+            domExpandoMap->RemoveEntry(expando);
     }
 };
 
