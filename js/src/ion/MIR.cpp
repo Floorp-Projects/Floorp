@@ -92,8 +92,6 @@ static const char *MirTypeNames[] =
 void
 MInstruction::printOpcode(FILE *fp)
 {
-    if (assumedType() != MIRType_None)
-        fprintf(fp, "%s:", MirTypeNames[assumedType()]);
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");
     for (size_t j = 0; j < numOperands(); j++) {

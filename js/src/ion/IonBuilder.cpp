@@ -65,8 +65,9 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
 
     MIRGraph graph;
+    DummyOracle oracle;
     C1Spewer spew(graph, script);
-    IonBuilder analyzer(cx, script, fun, temp, graph);
+    IonBuilder analyzer(cx, script, fun, temp, graph, &oracle);
     spew.enable("/tmp/ion.cfg");
 
     if (!analyzer.analyze())
@@ -83,9 +84,10 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 }
 
 IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
-                       MIRGraph &graph)
+                       MIRGraph &graph, TypeOracle *oracle)
   : MIRGenerator(temp, script, fun, graph),
-    cx(cx)
+    cx(cx),
+    oracle(oracle)
 {
     pc = script->code;
     atoms = script->atomMap.vector;
@@ -1180,7 +1182,7 @@ IonBuilder::jsop_binary(JSOp op)
     MInstruction *right = current->pop();
     MInstruction *left = current->pop();
 
-    MInstruction *ins;
+    MBinaryInstruction *ins;
     switch (op) {
       case JSOP_BITAND:
         ins = MBitAnd::New(left, right);
@@ -1192,6 +1194,7 @@ IonBuilder::jsop_binary(JSOp op)
     }
 
     current->add(ins);
+    ins->infer(oracle->binaryOp(script, pc));
     ins->assignSnapshot(snapshot);
 
     current->push(ins);
