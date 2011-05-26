@@ -772,7 +772,34 @@ public class GeckoAppShell
         } else if (aMimeType.length() > 0) {
             intent.setDataAndType(Uri.parse(aUriSpec), aMimeType);
         } else {
-            intent.setData(Uri.parse(aUriSpec));
+            Uri uri = Uri.parse(aUriSpec);
+            if ("sms".equals(uri.getScheme())) {
+                // Have a apecial handling for the SMS, as the message body
+                // is not extracted from the URI automatically
+                final String query = uri.getEncodedQuery();
+                if (query != null && query.length() > 0) {
+                    final String[] fields = query.split("&");
+                    boolean foundBody = false;
+                    String resultQuery = "";
+                    for (int i = 0; i < fields.length; i++) {
+                        final String field = fields[i];
+                        if (field.length() > 5 && "body=".equals(field.substring(0, 5))) {
+                            final String body = Uri.decode(field.substring(5));
+                            intent.putExtra("sms_body", body);
+                            foundBody = true;
+                        }
+                        else {
+                            resultQuery = resultQuery.concat(resultQuery.length() > 0 ? "&" + field : field);
+                        }
+                    }
+                    if (foundBody) {
+                        // Put the query without the body field back into the URI
+                        final String prefix = aUriSpec.substring(0, aUriSpec.indexOf('?'));
+                        uri = Uri.parse(resultQuery.length() > 0 ? prefix + "?" + resultQuery : prefix);
+                    }
+                }
+            }
+            intent.setData(uri);
         }
         if (aPackageName.length() > 0 && aClassName.length() > 0)
             intent.setClassName(aPackageName, aClassName);
