@@ -432,15 +432,21 @@ function expectConsoleMessage(ref, id, isNew, isActive, extra)
 
 function compareConsoleMessages()
 {
-   var consoleService = Components.classes["@mozilla.org/consoleservice;1"].
-                          getService(Components.interfaces.nsIConsoleService);
-   var out = {};
-   consoleService.getMessageArray(out, {});
-   var messages = out.value || [];
-   is(messages.length, expectedConsoleMessages.length, "correct number of logged messages");
-   for (var m = 0; m < messages.length; m++) {
-     is(messages[m].message, expectedConsoleMessages.shift(), "logged message " + (m + 1));
-   }
+  var consoleService = Components.classes["@mozilla.org/consoleservice;1"].
+                         getService(Components.interfaces.nsIConsoleService);
+  var out = {};
+  consoleService.getMessageArray(out, {});
+  var messages = (out.value || []).map(function (m) m.message);
+  // Copy to avoid modifying expectedConsoleMessages
+  var expect = expectedConsoleMessages.concat();
+  for (var m = 0; m < messages.length; m++) {
+    if (messages[m] == expect[0]) {
+      ok(true, "found message " + expect.shift());
+    }
+  }
+  if (expect.length != 0) {
+    ok(false, "failed to find expected console messages: " + expect);
+  }
 }
 
 function copyToProfile(filename)
