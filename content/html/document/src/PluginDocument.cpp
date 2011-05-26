@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMediaDocument.h"
+#include "MediaDocument.h"
 #include "nsIPluginDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
@@ -48,14 +48,15 @@
 #include "nsIPropertyBag2.h"
 #include "mozilla/dom/Element.h"
 
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
-class nsPluginDocument : public nsMediaDocument,
-                         public nsIPluginDocument
+class PluginDocument : public MediaDocument
+                     , public nsIPluginDocument
 {
 public:
-  nsPluginDocument();
-  virtual ~nsPluginDocument();
+  PluginDocument();
+  virtual ~PluginDocument();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPLUGINDOCUMENT
@@ -78,14 +79,14 @@ public:
     mWillHandleInstantiation = PR_FALSE;
   }
 
-  void StartLayout() { nsMediaDocument::StartLayout(); }
+  void StartLayout() { MediaDocument::StartLayout(); }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsPluginDocument, nsMediaDocument)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PluginDocument, MediaDocument)
 protected:
   nsresult CreateSyntheticPluginDocument();
 
   nsCOMPtr<nsIContent>                     mPluginContent;
-  nsRefPtr<nsMediaDocumentStreamListener>  mStreamListener;
+  nsRefPtr<MediaDocumentStreamListener>    mStreamListener;
   nsCString                                mMimeType;
 
   // Hack to handle the fact that plug-in loading lives in frames and that the
@@ -94,21 +95,23 @@ protected:
   PRBool                                   mWillHandleInstantiation;
 };
 
-class nsPluginStreamListener : public nsMediaDocumentStreamListener
+class PluginStreamListener : public MediaDocumentStreamListener
 {
 public:
-  nsPluginStreamListener(nsPluginDocument* doc) :
-    nsMediaDocumentStreamListener(doc),  mPluginDoc(doc) {}
+  PluginStreamListener(PluginDocument* doc)
+    : MediaDocumentStreamListener(doc)
+    , mPluginDoc(doc)
+  {}
   NS_IMETHOD OnStartRequest(nsIRequest* request, nsISupports *ctxt);
 private:
   nsresult SetupPlugin();
 
-  nsRefPtr<nsPluginDocument> mPluginDoc;
+  nsRefPtr<PluginDocument> mPluginDoc;
 };
 
 
 NS_IMETHODIMP
-nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
+PluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
   // Have to set up our plugin stuff before we call OnStartRequest, so
   // that the plugin listener can get that call.
@@ -116,12 +119,12 @@ nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
   NS_ASSERTION(NS_FAILED(rv) || mNextStream,
                "We should have a listener by now");
-  nsresult rv2 = nsMediaDocumentStreamListener::OnStartRequest(request, ctxt);
+  nsresult rv2 = MediaDocumentStreamListener::OnStartRequest(request, ctxt);
   return NS_SUCCEEDED(rv) ? rv2 : rv;
 }
 
 nsresult
-nsPluginStreamListener::SetupPlugin()
+PluginStreamListener::SetupPlugin()
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
   mPluginDoc->StartLayout();
@@ -170,38 +173,38 @@ nsPluginStreamListener::SetupPlugin()
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
-nsPluginDocument::nsPluginDocument()
+PluginDocument::PluginDocument()
   : mWillHandleInstantiation(PR_TRUE)
 {
 }
 
-nsPluginDocument::~nsPluginDocument()
+PluginDocument::~PluginDocument()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsPluginDocument)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PluginDocument)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsPluginDocument, nsMediaDocument)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PluginDocument, MediaDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPluginContent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsPluginDocument, nsMediaDocument)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PluginDocument, MediaDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPluginContent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(nsPluginDocument, nsMediaDocument)
-NS_IMPL_RELEASE_INHERITED(nsPluginDocument, nsMediaDocument)
+NS_IMPL_ADDREF_INHERITED(PluginDocument, MediaDocument)
+NS_IMPL_RELEASE_INHERITED(PluginDocument, MediaDocument)
 
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsPluginDocument)
-  NS_INTERFACE_TABLE_INHERITED1(nsPluginDocument, nsIPluginDocument)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsMediaDocument)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(PluginDocument)
+  NS_INTERFACE_TABLE_INHERITED1(PluginDocument, nsIPluginDocument)
+NS_INTERFACE_TABLE_TAIL_INHERITING(MediaDocument)
 
 void
-nsPluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
+PluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 {
   // Set the script global object on the superclass before doing
   // anything that might require it....
-  nsMediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
+  MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject) {
     if (!mPluginContent) {
@@ -219,7 +222,7 @@ nsPluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObje
 
 
 PRBool
-nsPluginDocument::CanSavePresentation(nsIRequest *aNewRequest)
+PluginDocument::CanSavePresentation(nsIRequest *aNewRequest)
 {
   // Full-page plugins cannot be cached, currently, because we don't have
   // the stream listener data to feed to the plugin instance.
@@ -228,13 +231,13 @@ nsPluginDocument::CanSavePresentation(nsIRequest *aNewRequest)
 
 
 nsresult
-nsPluginDocument::StartDocumentLoad(const char*         aCommand,
-                                    nsIChannel*         aChannel,
-                                    nsILoadGroup*       aLoadGroup,
-                                    nsISupports*        aContainer,
-                                    nsIStreamListener** aDocListener,
-                                    PRBool              aReset,
-                                    nsIContentSink*     aSink)
+PluginDocument::StartDocumentLoad(const char*         aCommand,
+                                  nsIChannel*         aChannel,
+                                  nsILoadGroup*       aLoadGroup,
+                                  nsISupports*        aContainer,
+                                  nsIStreamListener** aDocListener,
+                                  PRBool              aReset,
+                                  nsIContentSink*     aSink)
 {
   // do not allow message panes to host full-page plugins
   // returning an error causes helper apps to take over
@@ -248,9 +251,8 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
   }
 
   nsresult rv =
-    nsMediaDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
-                                       aContainer, aDocListener, aReset,
-                                       aSink);
+    MediaDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer,
+                                     aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -260,7 +262,7 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  mStreamListener = new nsPluginStreamListener(this);
+  mStreamListener = new PluginStreamListener(this);
   if (!mStreamListener) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -271,13 +273,13 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
 }
 
 nsresult
-nsPluginDocument::CreateSyntheticPluginDocument()
+PluginDocument::CreateSyntheticPluginDocument()
 {
   NS_ASSERTION(!GetShell() || !GetShell()->DidInitialReflow(),
                "Creating synthetic plugin document content too late");
 
   // make our generic document
-  nsresult rv = nsMediaDocument::CreateSyntheticDocument();
+  nsresult rv = MediaDocument::CreateSyntheticDocument();
   NS_ENSURE_SUCCESS(rv, rv);
   // then attach our plugin
 
@@ -333,19 +335,19 @@ nsPluginDocument::CreateSyntheticPluginDocument()
 }
 
 NS_IMETHODIMP
-nsPluginDocument::SetStreamListener(nsIStreamListener *aListener)
+PluginDocument::SetStreamListener(nsIStreamListener *aListener)
 {
   if (mStreamListener) {
     mStreamListener->SetStreamListener(aListener);
   }
 
-  nsMediaDocument::UpdateTitleAndCharset(mMimeType);
+  MediaDocument::UpdateTitleAndCharset(mMimeType);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPluginDocument::Print()
+PluginDocument::Print()
 {
   NS_ENSURE_TRUE(mPluginContent, NS_ERROR_FAILURE);
 
@@ -369,16 +371,19 @@ nsPluginDocument::Print()
 }
 
 NS_IMETHODIMP
-nsPluginDocument::GetWillHandleInstantiation(PRBool* aWillHandle)
+PluginDocument::GetWillHandleInstantiation(PRBool* aWillHandle)
 {
   *aWillHandle = mWillHandleInstantiation;
   return NS_OK;
 }
 
+} // namespace dom
+} // namespace mozilla
+
 nsresult
 NS_NewPluginDocument(nsIDocument** aResult)
 {
-  nsPluginDocument* doc = new nsPluginDocument();
+  mozilla::dom::PluginDocument* doc = new mozilla::dom::PluginDocument();
   if (!doc) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
