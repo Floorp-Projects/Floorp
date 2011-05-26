@@ -71,6 +71,7 @@ class LoweringPhase : public MInstructionVisitor
 bool
 LoweringPhase::lowerInstruction(MInstruction *ins)
 {
+#if 0
     MInstruction *narrowed = NULL;
     MIRType usedAs = ins->usedAsType();
     if (usedAs != MIRType_Value && usedAs != ins->type()) {
@@ -146,6 +147,7 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
         use->block()->insertBefore(use, converted);
         use->replaceOperand(uses, converted);
     }
+#endif
 
     // Finally, ask the instruction to reserve its register allocation
     // structures.
