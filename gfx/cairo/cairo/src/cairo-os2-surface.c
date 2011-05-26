@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -39,6 +39,7 @@
 #include "cairoint.h"
 
 #include "cairo-os2-private.h"
+#include "cairo-error-private.h"
 
 #if CAIRO_HAS_FC_FONT
 #include <fontconfig/fontconfig.h>
@@ -782,7 +783,7 @@ cairo_os2_surface_create (HPS hps_client_window,
                            0,
                            FALSE))
     {
-        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        status = _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
         goto error_exit;
     }
 
@@ -791,7 +792,7 @@ cairo_os2_surface_create (HPS hps_client_window,
                            0,
                            FALSE))
     {
-        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        status = _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
         goto error_exit;
     }
 
@@ -829,6 +830,7 @@ cairo_os2_surface_create (HPS hps_client_window,
     /* Initialize base surface */
     _cairo_surface_init (&local_os2_surface->base,
                          &cairo_os2_surface_backend,
+                         NULL, /* device */
                          _cairo_content_from_format (CAIRO_FORMAT_ARGB32));
 
     /* Successful exit */

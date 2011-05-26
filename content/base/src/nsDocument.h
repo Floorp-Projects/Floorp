@@ -54,7 +54,6 @@
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNSDocument.h"
-#include "nsIDOMNSDocumentStyle.h"
 #include "nsStubDocumentObserver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
@@ -491,7 +490,6 @@ protected:
 class nsDocument : public nsIDocument,
                    public nsIDOMXMLDocument, // inherits nsIDOMDocument
                    public nsIDOMNSDocument,
-                   public nsIDOMNSDocumentStyle,
                    public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
                    public nsIDOMEventTarget,
@@ -730,7 +728,7 @@ public:
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent = PR_TRUE);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
@@ -793,12 +791,6 @@ public:
 
   // nsIDOMNSDocument
   NS_DECL_NSIDOMNSDOCUMENT
-
-  // nsIDOMDocumentStyle
-  NS_DECL_NSIDOMDOCUMENTSTYLE
-
-  // nsIDOMNSDocumentStyle
-  NS_DECL_NSIDOMNSDOCUMENTSTYLE
 
   // nsIDOMDocumentXBL
   NS_DECL_NSIDOMDOCUMENTXBL

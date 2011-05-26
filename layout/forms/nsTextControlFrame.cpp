@@ -1488,7 +1488,7 @@ nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
   }
 
   if (aBeforeEditorInit && value.IsEmpty()) {
-    rootNode->RemoveChildAt(0, PR_TRUE, PR_FALSE);
+    rootNode->RemoveChildAt(0, PR_TRUE);
     return NS_OK;
   }
 

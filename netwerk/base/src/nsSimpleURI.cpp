@@ -449,15 +449,22 @@ nsSimpleURI::EqualsInternal(nsIURI* other,
         return NS_OK;
     }
 
-    *result = (mScheme == otherUri->mScheme &&
-               mPath   == otherUri->mPath);
+    *result = EqualsInternal(otherUri, refHandlingMode);
+    return NS_OK;
+}
 
-    if (*result && refHandlingMode == eHonorRef) {
-        *result = (mIsRefValid == otherUri->mIsRefValid &&
-                   (!mIsRefValid || mRef == otherUri->mRef));
+bool
+nsSimpleURI::EqualsInternal(nsSimpleURI* otherUri, RefHandlingEnum refHandlingMode)
+{
+    bool result = (mScheme == otherUri->mScheme &&
+                   mPath   == otherUri->mPath);
+
+    if (result && refHandlingMode == eHonorRef) {
+        result = (mIsRefValid == otherUri->mIsRefValid &&
+                  (!mIsRefValid || mRef == otherUri->mRef));
     }
 
-    return NS_OK;
+    return result;
 }
 
 NS_IMETHODIMP

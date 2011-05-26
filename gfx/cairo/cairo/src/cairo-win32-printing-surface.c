@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -46,6 +46,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 
 #include "cairo-clip-private.h"
@@ -262,7 +263,7 @@ _cairo_win32_printing_surface_analyze_operation (cairo_win32_surface_t *surface,
 	return analyze_surface_pattern_transparency (surface_pattern);
     }
 
-    if (_cairo_pattern_is_opaque (pattern))
+    if (_cairo_pattern_is_opaque (pattern, NULL))
 	return CAIRO_STATUS_SUCCESS;
     else
 	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
@@ -284,9 +285,9 @@ _cairo_win32_printing_surface_init_clear_color (cairo_win32_surface_t *surface,
 						cairo_solid_pattern_t *color)
 {
     if (surface->content == CAIRO_CONTENT_COLOR_ALPHA)
-	_cairo_pattern_init_solid (color, CAIRO_COLOR_WHITE, CAIRO_CONTENT_COLOR);
+	_cairo_pattern_init_solid (color, CAIRO_COLOR_WHITE);
     else
-	_cairo_pattern_init_solid (color, CAIRO_COLOR_BLACK, CAIRO_CONTENT_COLOR);
+	_cairo_pattern_init_solid (color, CAIRO_COLOR_BLACK);
 }
 
 static COLORREF
@@ -438,13 +439,9 @@ _cairo_win32_printing_surface_paint_recording_pattern (cairo_win32_surface_t   *
 
     old_content = surface->content;
     if (recording_surface->base.content == CAIRO_CONTENT_COLOR) {
-	cairo_pattern_t  *source;
-	cairo_solid_pattern_t black;
-
 	surface->content = CAIRO_CONTENT_COLOR;
-	_cairo_pattern_init_solid (&black, CAIRO_COLOR_BLACK, CAIRO_CONTENT_COLOR);
-	source = (cairo_pattern_t*) &black;
-	status = _cairo_win32_printing_surface_paint_solid_pattern (surface, source);
+	status = _cairo_win32_printing_surface_paint_solid_pattern (surface,
+								    &_cairo_pattern_black.base);
 	if (status)
 	    return status;
     }
@@ -500,7 +497,7 @@ _cairo_win32_printing_surface_paint_recording_pattern (cairo_win32_surface_t   *
 	    SelectClipPath (surface->dc, RGN_AND);
 
 	    SaveDC (surface->dc); /* Allow clip path to be reset during replay */
-	    status = _cairo_recording_surface_replay_region (&recording_surface->base,
+	    status = _cairo_recording_surface_replay_region (&recording_surface->base, NULL,
 							     &surface->base,
 							     CAIRO_RECORDING_REGION_NATIVE);
 	    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
@@ -524,11 +521,11 @@ static cairo_int_status_t
 _cairo_win32_printing_surface_check_jpeg (cairo_win32_surface_t   *surface,
 					  cairo_surface_t         *source,
 					  const unsigned char    **data,
-					  unsigned int            *length,
+					  unsigned long           *length,
 					  cairo_image_info_t      *info)
 {
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
     cairo_int_status_t status;
     DWORD result;
 
@@ -562,11 +559,11 @@ static cairo_int_status_t
 _cairo_win32_printing_surface_check_png (cairo_win32_surface_t   *surface,
 					 cairo_surface_t         *source,
 					 const unsigned char    **data,
-					 unsigned int            *length,
+					 unsigned long           *length,
 					 cairo_image_info_t      *info)
 {
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
 
     cairo_int_status_t status;
     DWORD result;
@@ -614,7 +611,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     RECT clip;
     const cairo_color_t *background_color;
     const unsigned char *mime_data;
-    unsigned int mime_size;
+    unsigned long mime_size;
     cairo_image_info_t mime_info;
     cairo_bool_t use_mime;
     DWORD mime_type;
@@ -680,8 +677,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 	}
 
 	_cairo_pattern_init_solid (&background_pattern,
-				   background_color,
-				   CAIRO_CONTENT_COLOR);
+				   background_color);
 	status = _cairo_surface_paint (opaque_surface,
 				       CAIRO_OPERATOR_SOURCE,
 				       &background_pattern.base,
@@ -791,7 +787,7 @@ _cairo_win32_printing_surface_paint_surface_pattern (cairo_win32_surface_t   *su
 }
 
 static void
-vertex_set_color (TRIVERTEX *vert, cairo_color_t *color)
+vertex_set_color (TRIVERTEX *vert, cairo_color_stop_t *color)
 {
     /* MSDN says that the range here is 0x0000 .. 0xff00;
      * that may well be a typo, but just chop the low bits
@@ -1161,6 +1157,7 @@ _cairo_win32_printing_surface_get_font_options (void                  *abstract_
     cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
     cairo_font_options_set_antialias (options, CAIRO_ANTIALIAS_GRAY);
+    _cairo_font_options_set_round_glyph_positions (options, CAIRO_ROUND_GLYPH_POS_ON);
 }
 
 static cairo_int_status_t
@@ -1245,9 +1242,9 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
                                       cairo_operator_t		 op,
                                       const cairo_pattern_t	*source,
                                       cairo_path_fixed_t	*path,
-                                      cairo_stroke_style_t	*style,
-                                      cairo_matrix_t		*stroke_ctm,
-                                      cairo_matrix_t		*stroke_ctm_inverse,
+                                      const cairo_stroke_style_t *style,
+                                      const cairo_matrix_t	*stroke_ctm,
+                                      const cairo_matrix_t	*stroke_ctm_inverse,
                                       double			tolerance,
                                       cairo_antialias_t		antialias,
 				      cairo_clip_t    *clip)
@@ -1835,6 +1832,7 @@ cairo_win32_printing_surface_create (HDC hdc)
     _cairo_win32_printing_surface_init_language_pack (surface);
     _cairo_surface_init (&surface->base,
 			 &cairo_win32_printing_surface_backend,
+			 NULL, /* device */
                          CAIRO_CONTENT_COLOR_ALPHA);
 
     paginated = _cairo_paginated_surface_create (&surface->base,
