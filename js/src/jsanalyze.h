@@ -742,6 +742,12 @@ class SSAValue
         u.var.offset = offset;
     }
 
+    static SSAValue WrittenVar(uint32 slot, uint32 offset) {
+        SSAValue v;
+        v.initWritten(slot, offset);
+        return v;
+    }
+
     void initPhi(uint32 offset, SSAPhiNode *node) {
         clear();
         u.phi.kind = PHI;
@@ -864,6 +870,7 @@ class ScriptAnalysis
     bool canTrackVars;
     bool isInlineable;
     uint32 numReturnSites_;
+    bool modifiesArguments_;
 
     /* Offsets at which each local becomes unconditionally defined, or a value below. */
     uint32 *definedLocals;
@@ -905,6 +912,12 @@ class ScriptAnalysis
     bool usesThisValue() const { return usesThis; }
     bool hasFunctionCalls() const { return hasCalls; }
     uint32 numReturnSites() const { return numReturnSites_; }
+
+    /*
+     * True if all named formal arguments are not modified. If the arguments
+     * object cannot escape, the arguments are never modified within the script.
+     */
+    bool modifiesArguments() { return modifiesArguments_; }
 
     /* Accessors for bytecode information. */
 
@@ -1151,6 +1164,8 @@ class ScriptAnalysis
 
     /* Type inference helpers */
     bool analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferenceState &state);
+    bool followEscapingArguments(JSContext *cx, const SSAValue &v, Vector<SSAValue> *seen);
+    bool followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<SSAValue> *seen);
     inline void setForTypes(JSContext *cx, jsbytecode *pc, types::TypeSet *types);
 };
 

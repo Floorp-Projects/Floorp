@@ -443,6 +443,17 @@ stubs::GetElem(VMFrame &f)
         }
     }
 
+    if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
+        if (rref.isInt32() && size_t(rref.toInt32()) < regs.fp()->numActualArgs()) {
+            regs.sp[-2] = regs.fp()->canonicalActualArg(rref.toInt32());
+            f.script()->typeMonitor(cx, f.pc(), regs.sp[-2]);
+            return;
+        }
+        cx->markTypeObjectFlags(f.script()->fun->getType(),
+                                types::OBJECT_FLAG_CREATED_ARGUMENTS);
+        JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
+    }
+
     JSObject *obj = ValueToObject(cx, &lref);
     if (!obj)
         THROW();
@@ -1965,6 +1976,14 @@ InlineGetProp(VMFrame &f)
     FrameRegs &regs = f.regs;
 
     Value *vp = &f.regs.sp[-1];
+
+    if (vp->isMagic(JS_LAZY_ARGUMENTS)) {
+        JS_ASSERT(js_GetOpcode(cx, f.script(), f.pc()) == JSOP_LENGTH);
+        regs.sp[-1] = Int32Value(regs.fp()->numActualArgs());
+        f.script()->typeMonitor(cx, f.pc(), regs.sp[-1]);
+        return true;
+    }
+
     JSObject *obj = ValueToObject(f.cx, vp);
     if (!obj)
         return false;
@@ -2826,14 +2845,14 @@ stubs::AssertArgumentTypes(VMFrame &f)
     JSScript *script = fun->script();
 
     types::jstype type = types::GetValueType(f.cx, fp->thisValue());
-    if (!script->thisTypes()->hasType(type)) {
+    if (!types::TypeMatches(f.cx, script->thisTypes(), type)) {
         types::TypeFailure(f.cx, "Missing type for #%u this: %s", script->id(),
                            types::TypeString(type));
     }
 
     for (unsigned i = 0; i < fun->nargs; i++) {
         type = types::GetValueType(f.cx, fp->formalArg(i));
-        if (!script->argTypes(i)->hasType(type)) {
+        if (!types::TypeMatches(f.cx, script->argTypes(i), type)) {
             types::TypeFailure(f.cx, "Missing type for #%u arg %d: %s", script->id(), i,
                                types::TypeString(type));
         }

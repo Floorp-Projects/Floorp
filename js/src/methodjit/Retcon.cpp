@@ -232,9 +232,6 @@ Recompiler::expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *in
      */
     cx->compartment->types.frameExpansions++;
 
-    RejoinState rejoin = (RejoinState) f->stubRejoin;
-    JS_ASSERT(rejoin != REJOIN_NATIVE && rejoin != REJOIN_NATIVE_LOWERED);
-
     /*
      * Patch the VMFrame's return address if it is returning at the given inline site.
      * Note there is no worry about handling a native or CompileFunction call here,
@@ -249,13 +246,12 @@ Recompiler::expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *in
     StackFrame *innerfp = expandInlineFrameChain(cx, fp, inner);
 
     /* Check if the VMFrame returns into the inlined frame. */
-    if (f->stubRejoin) {
+    if (f->stubRejoin && (f->stubRejoin & 0x1) && f->regs.fp()->prev() == fp) {
         /* The VMFrame is calling CompileFunction. */
-        if (f->regs.fp()->prev() == fp) {
-            fp->prev()->setRejoin(StubRejoin(rejoin));
-            *frameAddr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
-        }
-    } else if (*frameAddr == codeStart + inlined->codeOffset) {
+        fp->prev()->setRejoin(StubRejoin((RejoinState) f->stubRejoin));
+        *frameAddr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
+    }
+    if (*frameAddr == codeStart + inlined->codeOffset) {
         /* The VMFrame returns directly into the expanded frame. */
         SetRejoinState(innerfp, *inlined, frameAddr);
     }

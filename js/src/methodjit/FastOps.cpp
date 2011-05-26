@@ -1110,7 +1110,7 @@ mjit::Compiler::jsop_setelem_dense()
         loop->hoistArrayLengthCheck(objv, indexv);
 
     if (hoisted) {
-        FrameEntry *slotsFe = loop->invariantSlots(objv);
+        FrameEntry *slotsFe = loop->invariantArraySlots(objv);
         slotsReg = frame.tempRegForData(slotsFe);
 
         frame.unpinEntry(vr);
@@ -1375,8 +1375,6 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
 static inline bool
 IsCacheableGetElem(FrameEntry *obj, FrameEntry *id)
 {
-    if (obj->isTypeKnown() && obj->getKnownType() != JSVAL_TYPE_OBJECT)
-        return false;
     if (id->isTypeKnown() &&
         !(id->getKnownType() == JSVAL_TYPE_INT32
 #if defined JS_POLYIC
@@ -1435,7 +1433,7 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     // we are hoisting the bounds check.
     RegisterID baseReg;
     if (hoisted) {
-        FrameEntry *slotsFe = loop->invariantSlots(objv);
+        FrameEntry *slotsFe = loop->invariantArraySlots(objv);
         baseReg = frame.tempRegForData(slotsFe);
     } else {
         baseReg = frame.tempRegForData(obj);
@@ -1521,6 +1519,78 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
 }
 
+void
+mjit::Compiler::jsop_getelem_args()
+{
+    FrameEntry *id = frame.peek(-1);
+
+    // Test for integer index.
+    if (!id->isTypeKnown()) {
+        Jump guard = frame.testInt32(Assembler::NotEqual, id);
+        stubcc.linkExit(guard, Uses(2));
+    }
+
+    // Allocate registers.
+
+    analyze::CrossSSAValue indexv(a->inlineIndex, analysis->poppedValue(PC, 0));
+    bool hoistedLength = loop && id->isType(JSVAL_TYPE_INT32) &&
+        loop->hoistArgsLengthCheck(indexv);
+    FrameEntry *actualsFe = loop ? loop->invariantArguments() : NULL;
+
+    Int32Key key = id->isConstant()
+                 ? Int32Key::FromConstant(id->getValue().toInt32())
+                 : Int32Key::FromRegister(frame.tempRegForData(id));
+    if (!key.isConstant())
+        frame.pinReg(key.reg());
+
+    RegisterID dataReg = frame.allocReg();
+    RegisterID typeReg = frame.allocReg();
+
+    if (!key.isConstant())
+        frame.unpinReg(key.reg());
+
+    // Guard on nactual.
+    if (!hoistedLength) {
+        Address nactualAddr(JSFrameReg, StackFrame::offsetOfArgs());
+        MaybeJump rangeGuard;
+        if (key.isConstant()) {
+            JS_ASSERT(key.index() >= 0);
+            rangeGuard = masm.branch32(Assembler::BelowOrEqual, nactualAddr, Imm32(key.index()));
+        } else {
+            rangeGuard = masm.branch32(Assembler::BelowOrEqual, nactualAddr, key.reg());
+        }
+        stubcc.linkExit(rangeGuard.get(), Uses(2));
+    }
+
+    RegisterID actualsReg;
+    if (actualsFe) {
+        actualsReg = frame.tempRegForData(actualsFe);
+    } else {
+        actualsReg = dataReg;
+        masm.loadFrameActuals(outerScript->fun, actualsReg);
+    }
+
+    if (key.isConstant()) {
+        Address arg(actualsReg, key.index() * sizeof(Value));
+        masm.loadValueAsComponents(arg, typeReg, dataReg);
+    } else {
+        JS_ASSERT(key.reg() != dataReg);
+        BaseIndex arg(actualsReg, key.reg(), masm.JSVAL_SCALE);
+        masm.loadValueAsComponents(arg, typeReg, dataReg);
+    }
+
+    stubcc.leave();
+    OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
+
+    frame.popn(2);
+    frame.pushRegs(typeReg, dataReg, knownPushedType(0));
+    BarrierState barrier = testBarrier(typeReg, dataReg, false);
+
+    stubcc.rejoin(Changes(2));
+
+    finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
+}
+
 bool
 mjit::Compiler::jsop_getelem(bool isCall)
 {
@@ -1535,11 +1605,13 @@ mjit::Compiler::jsop_getelem(bool isCall)
         return true;
     }
 
-    frame.forgetMismatchedObject(obj);
-
-    if (cx->typeInferenceEnabled()) {
+    if (cx->typeInferenceEnabled() && id->mightBeType(JSVAL_TYPE_INT32) && !isCall) {
         types::TypeSet *types = analysis->poppedTypes(PC, 1);
-        if (!isCall && id->mightBeType(JSVAL_TYPE_INT32) &&
+        if (types->isLazyArguments(cx) && !outerScript->analysis(cx)->modifiesArguments()) {
+            jsop_getelem_args();
+            return true;
+        }
+        if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
             !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
             !arrayPrototypeHasIndexedProperty()) {
             // this is definitely a dense array, generate code directly without
@@ -1549,6 +1621,8 @@ mjit::Compiler::jsop_getelem(bool isCall)
             return true;
         }
     }
+
+    frame.forgetMismatchedObject(obj);
 
     GetElementICInfo ic = GetElementICInfo(JSOp(*PC));
 

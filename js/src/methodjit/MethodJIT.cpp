@@ -874,6 +874,8 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     FrameRegs &oldRegs = cx->regs();
 
     fp->scopeChain();
+    if (fp->isFunctionFrame() && fp->script()->usesArguments)
+        fp->ensureCoherentArgCount();
 
     JSBool ok;
     {

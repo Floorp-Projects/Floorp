@@ -496,10 +496,6 @@ StackFrame::stealFrameAndSlots(Value *vp, StackFrame *otherfp,
     PodCopy(vp, othervp, othersp - othervp);
     JS_ASSERT(vp == this->actualArgs() - 2);
 
-    /* Catch bad-touching of non-canonical args (e.g., generator_trace). */
-    if (otherfp->hasOverflowArgs())
-        Debug_SetValueRangeToCrashOnTouch(othervp, othervp + 2 + otherfp->numFormalArgs());
-
     /*
      * Repoint Call, Arguments, Block and With objects to the new live frame.
      * Call and Arguments are done directly because we have pointers to them.
@@ -604,6 +600,13 @@ StackFrame::numActualArgs() const
     if (JS_UNLIKELY(flags_ & (OVERFLOW_ARGS | UNDERFLOW_ARGS)))
         return hasArgsObj() ? argsObj().initialLength() : args.nactual;
     return numFormalArgs();
+}
+
+inline void
+StackFrame::ensureCoherentArgCount()
+{
+    if (!hasArgsObj())
+        args.nactual = numActualArgs();
 }
 
 inline Value *
@@ -903,7 +906,6 @@ ContextStack::getCallFrame(JSContext *cx, Value *firstUnused, uintN nactual,
     Value *dst = firstUnused;
     Value *src = firstUnused - (2 + nactual);
     PodCopy(dst, src, ncopy);
-    Debug_SetValueRangeToCrashOnTouch(src, ncopy);
     return reinterpret_cast<StackFrame *>(firstUnused + ncopy);
 }
 

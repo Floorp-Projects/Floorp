@@ -539,6 +539,11 @@ class Value
         return JSVAL_IS_MAGIC_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
+    bool isMagicCheck(JSWhyMagic why) const {
+        return isMagic() && data.s.payload.why == why;
+    }
+
 #if JS_BITS_PER_WORD == 64
     JS_ALWAYS_INLINE
     bool hasPtrPayload() const {
@@ -557,13 +562,11 @@ class Value
         return JSVAL_TRACE_KIND_IMPL(data);
     }
 
-#ifdef DEBUG
     JS_ALWAYS_INLINE
     JSWhyMagic whyMagic() const {
         JS_ASSERT(isMagic());
         return data.s.payload.why;
     }
-#endif
 
     /*** Comparison ***/
 
