@@ -109,6 +109,9 @@ js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
 {
     JSObject *argsobj;
 
+    cx->markTypeObjectFlags(fp->fun()->getType(),
+                            OBJECT_FLAG_CREATED_ARGUMENTS | OBJECT_FLAG_UNINLINEABLE);
+
     if (fp->hasOverriddenArgs()) {
         JS_ASSERT(fp->hasCallObj());
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);

@@ -73,6 +73,14 @@ GetValueType(JSContext *cx, const Value &val)
         return TYPE_STRING;
       case JSVAL_TYPE_NULL:
         return TYPE_NULL;
+      case JSVAL_TYPE_MAGIC:
+        switch (val.whyMagic()) {
+          case JS_LAZY_ARGUMENTS:
+            return TYPE_LAZYARGS;
+          default:
+            JS_NOT_REACHED("Unknown value");
+            return (jstype) 0;
+        }
       case JSVAL_TYPE_OBJECT: {
         JSObject *obj = &val.toObject();
         JS_ASSERT(obj->type);
@@ -752,7 +760,7 @@ JSScript::typeSetNewCalled(JSContext *cx)
      * of 'this' when the script is analyzed or reanalyzed after an invoke with 'new',
      * and if 'new' is first invoked after the script has already been analyzed.
      */
-    if (analyzed) {
+    if (ranInference) {
         /* Regenerate types for the function. */
         js::types::AutoEnterTypeInference enter(cx);
         js::analyze::ScriptAnalysis *analysis = this->analysis(cx);

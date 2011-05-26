@@ -577,6 +577,7 @@ class StackFrame
     inline uintN numActualArgs() const;
     inline js::Value *actualArgs() const;
     inline js::Value *actualArgsEnd() const;
+    inline void ensureCoherentArgCount();
 
     inline js::Value &canonicalActualArg(uintN i) const;
     template <class Op> inline bool forEachCanonicalActualArg(Op op);
@@ -956,6 +957,10 @@ class StackFrame
 
     void *addressOfArgs() {
         return &args;
+    }
+
+    static size_t offsetOfArgs() {
+        return offsetof(StackFrame, args);
     }
 
     static size_t offsetOfScopeChain() {

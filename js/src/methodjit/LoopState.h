@@ -172,9 +172,15 @@ class LoopState : public MacroAssemblerTypedefs
             /* constant >= value1 + value2 */
             RANGE_CHECK,
 
+            /* For dense arrays */
             INVARIANT_SLOTS,
             INVARIANT_LENGTH,
 
+            /* For lazy arguments */
+            INVARIANT_ARGS_BASE,
+            INVARIANT_ARGS_LENGTH,
+
+            /* For definite properties */
             INVARIANT_PROPERTY
         } kind;
         union {
@@ -276,7 +282,12 @@ class LoopState : public MacroAssemblerTypedefs
      */
     bool hoistArrayLengthCheck(const analyze::CrossSSAValue &obj,
                                const analyze::CrossSSAValue &index);
-    FrameEntry *invariantSlots(const analyze::CrossSSAValue &obj);
+    FrameEntry *invariantArraySlots(const analyze::CrossSSAValue &obj);
+
+    /* Methods for accesses on lazy arguments. */
+    bool hoistArgsLengthCheck(const analyze::CrossSSAValue &index);
+    FrameEntry *invariantArguments();
+
     FrameEntry *invariantLength(const analyze::CrossSSAValue &obj);
     FrameEntry *invariantProperty(const analyze::CrossSSAValue &obj, jsid id);
 
