@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -75,11 +75,8 @@ _cairo_surface_clipper_set_clip (cairo_surface_clipper_t *clipper,
     if (clip == NULL && clipper->clip.path == NULL)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (clip != NULL && clipper->clip.path != NULL &&
-	_cairo_clip_equal (clip, &clipper->clip))
-    {
+    if (clip != NULL && clip->path == clipper->clip.path)
 	return CAIRO_STATUS_SUCCESS;
-    }
 
     /* all clipped out state should never propagate this far */
     assert (clip == NULL || clip->path != NULL);

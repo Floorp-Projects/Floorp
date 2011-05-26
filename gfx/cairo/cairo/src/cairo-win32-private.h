@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -48,9 +48,6 @@
 #endif
 
 #define WIN32_FONT_LOGICAL_SCALE 1
-
-
-CAIRO_BEGIN_DECLS
 
 typedef struct _cairo_win32_surface {
     cairo_surface_t base;
@@ -238,6 +235,7 @@ inline BOOL ModifyWorldTransform(HDC hdc, CONST XFORM * lpxf, DWORD mode) { retu
 #endif
 
 #ifdef CAIRO_HAS_DWRITE_FONT
+CAIRO_BEGIN_DECLS
 
 cairo_int_status_t
 _cairo_dwrite_show_glyphs_on_surface(void			*surface,
@@ -252,6 +250,6 @@ cairo_int_status_t
 _cairo_dwrite_scaled_font_create_win32_scaled_font(cairo_scaled_font_t *scaled_font,
                                                    cairo_scaled_font_t **new_font);
 
-#endif /* CAIRO_HAS_DWRITE_FONT */
 CAIRO_END_DECLS
+#endif /* CAIRO_HAS_DWRITE_FONT */
 #endif /* CAIRO_WIN32_PRIVATE_H */

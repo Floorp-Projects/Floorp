@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -46,17 +46,12 @@ CAIRO_BEGIN_DECLS
 struct _cairo_surface_wrapper {
     cairo_surface_t *target;
 
-    cairo_bool_t has_extents;
-    cairo_rectangle_int_t extents;
+    /* any other information? */
 };
 
 cairo_private void
 _cairo_surface_wrapper_init (cairo_surface_wrapper_t *wrapper,
 			     cairo_surface_t *target);
-
-cairo_private void
-_cairo_surface_wrapper_set_extents (cairo_surface_wrapper_t *wrapper,
-				    const cairo_rectangle_int_t *extents);
 
 cairo_private void
 _cairo_surface_wrapper_fini (cairo_surface_wrapper_t *wrapper);
@@ -90,9 +85,9 @@ _cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
 			       cairo_operator_t		 op,
 			       const cairo_pattern_t	*source,
 			       cairo_path_fixed_t	*path,
-			       const cairo_stroke_style_t	*stroke_style,
-			       const cairo_matrix_t		*ctm,
-			       const cairo_matrix_t		*ctm_inverse,
+			       cairo_stroke_style_t	*stroke_style,
+			       cairo_matrix_t		*ctm,
+			       cairo_matrix_t		*ctm_inverse,
 			       double			 tolerance,
 			       cairo_antialias_t	 antialias,
 			       cairo_clip_t		*clip);
@@ -107,9 +102,9 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 				    cairo_path_fixed_t	    *path,
 				    cairo_operator_t	     stroke_op,
 				    const cairo_pattern_t   *stroke_source,
-				    const cairo_stroke_style_t    *stroke_style,
-				    const cairo_matrix_t	    *stroke_ctm,
-				    const cairo_matrix_t	    *stroke_ctm_inverse,
+				    cairo_stroke_style_t    *stroke_style,
+				    cairo_matrix_t	    *stroke_ctm,
+				    cairo_matrix_t	    *stroke_ctm_inverse,
 				    double		     stroke_tolerance,
 				    cairo_antialias_t	     stroke_antialias,
 				    cairo_clip_t	    *clip);

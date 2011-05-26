@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -41,26 +41,6 @@
 #include "cairo-quartz.h"
 #include "cairo-quartz-private.h"
 
-#include "cairo-error-private.h"
-
-/**
- * SECTION:cairo-quartz-fonts
- * @Title: Quartz (CGFont) Fonts
- * @Short_Description: Font support via CGFont on OS X
- * @See_Also: #cairo_font_face_t
- *
- * The Quartz font backend is primarily used to render text on Apple
- * MacOS X systems.  The CGFont API is used for the internal
- * implementation of the font backend methods.
- */
-
-/**
- * CAIRO_HAS_QUARTZ_FONT:
- *
- * Defined if the Quartz font backend is available.
- * This macro can be used to conditionally compile backend-specific code.
- */
-
 /* CreateWithFontName exists in 10.5, but not in 10.4; CreateWithName isn't public in 10.4 */
 static CGFontRef (*CGFontCreateWithFontNamePtr) (CFStringRef) = NULL;
 static CGFontRef (*CGFontCreateWithNamePtr) (const char *) = NULL;
@@ -73,8 +53,6 @@ static CGRect (*CGFontGetFontBBoxPtr) (CGFontRef) = NULL;
 
 /* Not public, but present */
 static void (*CGFontGetGlyphsForUnicharsPtr) (CGFontRef, const UniChar[], const CGGlyph[], size_t) = NULL;
-static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
-static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 
 /* Not public in the least bit */
 static CGPathRef (*CGFontGetGlyphPathPtr) (CGFontRef fontRef, CGAffineTransform *textTransform, int unknown, CGGlyph glyph) = NULL;
@@ -123,9 +101,6 @@ quartz_font_ensure_symbols(void)
     CGFontGetAscentPtr = dlsym(RTLD_DEFAULT, "CGFontGetAscent");
     CGFontGetDescentPtr = dlsym(RTLD_DEFAULT, "CGFontGetDescent");
     CGFontGetLeadingPtr = dlsym(RTLD_DEFAULT, "CGFontGetLeading");
-
-    CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
-    CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
 
     if ((CGFontCreateWithFontNamePtr || CGFontCreateWithNamePtr) &&
 	CGFontGetGlyphBBoxesPtr &&
@@ -351,8 +326,7 @@ cairo_quartz_font_face_create_for_cgfont (CGFontRef font)
 
     font_face = malloc (sizeof (cairo_quartz_font_face_t));
     if (!font_face) {
-	cairo_status_t ignore_status;
-	ignore_status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_face_t *)&_cairo_font_face_nil;
     }
 
@@ -391,6 +365,36 @@ _cairo_quartz_scaled_glyph_index (cairo_scaled_glyph_t *scaled_glyph) {
     return (CGGlyph) index;
 }
 
+static inline cairo_status_t
+_cairo_matrix_to_unit_quartz_matrix (const cairo_matrix_t *m, CGAffineTransform *txout,
+				     double *xout, double *yout)
+{
+    CGAffineTransform transform;
+    double xscale, yscale;
+    cairo_status_t status;
+
+    status = _cairo_matrix_compute_basis_scale_factors (m, &xscale, &yscale, 1);
+    if (status)
+	return status;
+
+    transform = CGAffineTransformMake (m->xx, - m->yx,
+				       - m->xy, m->yy,
+				       0.0f, 0.0f);
+    if (xout)
+	*xout = xscale;
+    if (yout)
+	*yout = yscale;
+
+    if (xscale)
+	xscale = 1.0 / xscale;
+    if (yscale)
+	yscale = 1.0 / yscale;
+
+    *txout = CGAffineTransformScale (transform, xscale, yscale);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _cairo_quartz_init_glyph_metrics (cairo_quartz_scaled_font_t *font,
 				  cairo_scaled_glyph_t *scaled_glyph)
@@ -399,6 +403,7 @@ _cairo_quartz_init_glyph_metrics (cairo_quartz_scaled_font_t *font,
 
     cairo_quartz_font_face_t *font_face = _cairo_quartz_scaled_to_face(font);
     cairo_text_extents_t extents = {0, 0, 0, 0, 0, 0};
+    CGAffineTransform textMatrix;
     CGGlyph glyph = _cairo_quartz_scaled_glyph_index (scaled_glyph);
     int advance;
     CGRect bbox;
@@ -485,20 +490,17 @@ static void
 _cairo_quartz_path_apply_func (void *info, const CGPathElement *el)
 {
     cairo_path_fixed_t *path = (cairo_path_fixed_t *) info;
-    cairo_status_t status;
 
     switch (el->type) {
 	case kCGPathElementMoveToPoint:
-	    status = _cairo_path_fixed_move_to (path,
-						_cairo_fixed_from_double(el->points[0].x),
-						_cairo_fixed_from_double(el->points[0].y));
-	    assert(!status);
+	    _cairo_path_fixed_move_to (path,
+				       _cairo_fixed_from_double(el->points[0].x),
+				       _cairo_fixed_from_double(el->points[0].y));
 	    break;
 	case kCGPathElementAddLineToPoint:
-	    status = _cairo_path_fixed_line_to (path,
-						_cairo_fixed_from_double(el->points[0].x),
-						_cairo_fixed_from_double(el->points[0].y));
-	    assert(!status);
+	    _cairo_path_fixed_line_to (path,
+				       _cairo_fixed_from_double(el->points[0].x),
+				       _cairo_fixed_from_double(el->points[0].y));
 	    break;
 	case kCGPathElementAddQuadCurveToPoint: {
 	    cairo_fixed_t fx, fy;
@@ -508,29 +510,26 @@ _cairo_quartz_path_apply_func (void *info, const CGPathElement *el)
 	    x = _cairo_fixed_to_double (fx);
 	    y = _cairo_fixed_to_double (fy);
 
-	    status = _cairo_path_fixed_curve_to (path,
-						 _cairo_fixed_from_double((x + el->points[0].x * 2.0) / 3.0),
-						 _cairo_fixed_from_double((y + el->points[0].y * 2.0) / 3.0),
-						 _cairo_fixed_from_double((el->points[0].x * 2.0 + el->points[1].x) / 3.0),
-						 _cairo_fixed_from_double((el->points[0].y * 2.0 + el->points[1].y) / 3.0),
-						 _cairo_fixed_from_double(el->points[1].x),
-						 _cairo_fixed_from_double(el->points[1].y));
+	    _cairo_path_fixed_curve_to (path,
+					_cairo_fixed_from_double((x + el->points[0].x * 2.0) / 3.0),
+					_cairo_fixed_from_double((y + el->points[0].y * 2.0) / 3.0),
+					_cairo_fixed_from_double((el->points[0].x * 2.0 + el->points[1].x) / 3.0),
+					_cairo_fixed_from_double((el->points[0].y * 2.0 + el->points[1].y) / 3.0),
+					_cairo_fixed_from_double(el->points[1].x),
+					_cairo_fixed_from_double(el->points[1].y));
 	}
-	    assert(!status);
 	    break;
 	case kCGPathElementAddCurveToPoint:
-	    status = _cairo_path_fixed_curve_to (path,
-						 _cairo_fixed_from_double(el->points[0].x),
-						 _cairo_fixed_from_double(el->points[0].y),
-						 _cairo_fixed_from_double(el->points[1].x),
-						 _cairo_fixed_from_double(el->points[1].y),
-						 _cairo_fixed_from_double(el->points[2].x),
-						 _cairo_fixed_from_double(el->points[2].y));
-	    assert(!status);	    
+	    _cairo_path_fixed_curve_to (path,
+					_cairo_fixed_from_double(el->points[0].x),
+					_cairo_fixed_from_double(el->points[0].y),
+					_cairo_fixed_from_double(el->points[1].x),
+					_cairo_fixed_from_double(el->points[1].y),
+					_cairo_fixed_from_double(el->points[2].x),
+					_cairo_fixed_from_double(el->points[2].y));
 	    break;
 	case kCGPathElementCloseSubpath:
-	    status = _cairo_path_fixed_close_path (path);
-	    assert(!status);
+	    _cairo_path_fixed_close_path (path);
 	    break;
     }
 }
@@ -550,12 +549,14 @@ _cairo_quartz_init_glyph_path (cairo_quartz_scaled_font_t *font,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    /* scale(1,-1) * font->base.scale */
     textMatrix = CGAffineTransformMake (font->base.scale.xx,
-					font->base.scale.yx,
+					-font->base.scale.yx,
 					-font->base.scale.xy,
-					-font->base.scale.yy,
-					0, 0);
+					font->base.scale.yy,
+					font->base.scale.x0,
+					font->base.scale.y0);
+
+    textMatrix = CGAffineTransformConcat (textMatrix, CGAffineTransformMake (1.0, 0.0, 0.0, -1.0, 0.0, 0.0));
 
     glyphPath = CGFontGetGlyphPathPtr (font_face->cgFont, &textMatrix, 0, glyph);
     if (!glyphPath)
@@ -594,6 +595,7 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     double xscale, yscale;
     double emscale = CGFontGetUnitsPerEmPtr (font_face->cgFont);
 
+    CGColorSpaceRef gray;
     CGContextRef cgContext = NULL;
     CGAffineTransform textMatrix;
     CGRect glyphRect, glyphRectInt;
@@ -628,12 +630,11 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     if (status)
 	return status;
 
-    /* scale(1,-1) * font->base.scale * scale(1,-1) */
     textMatrix = CGAffineTransformMake (font->base.scale.xx,
 					-font->base.scale.yx,
 					-font->base.scale.xy,
 					font->base.scale.yy,
-					0, -0);
+					0.0f, 0.0f);
     glyphRect = CGRectMake (bbox.origin.x / emscale,
 			    bbox.origin.y / emscale,
 			    bbox.size.width / emscale,
@@ -666,50 +667,29 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     if (surface->base.status)
 	return surface->base.status;
 
-    if (surface->width != 0 && surface->height != 0) {
-	cgContext = CGBitmapContextCreate (surface->data,
-					   surface->width,
-					   surface->height,
-					   8,
-					   surface->stride,
-					   NULL,
-					   kCGImageAlphaOnly);
+    gray = CGColorSpaceCreateDeviceGray ();
+    cgContext = CGBitmapContextCreate (surface->data,
+				       surface->width,
+				       surface->height,
+				       8,
+				       surface->stride,
+				       gray,
+				       kCGImageAlphaNone);
+    CGColorSpaceRelease (gray);
 
-	if (cgContext == NULL) {
-	    cairo_surface_destroy (&surface->base);
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
+    CGContextSetFont (cgContext, font_face->cgFont);
+    CGContextSetFontSize (cgContext, 1.0);
+    CGContextSetTextMatrix (cgContext, textMatrix);
 
-	CGContextSetFont (cgContext, font_face->cgFont);
-	CGContextSetFontSize (cgContext, 1.0);
-	CGContextSetTextMatrix (cgContext, textMatrix);
+    CGContextClearRect (cgContext, CGRectMake (0.0f, 0.0f, width, height));
 
-	switch (font->base.options.antialias) {
-	case CAIRO_ANTIALIAS_SUBPIXEL:
-	    CGContextSetShouldAntialias (cgContext, TRUE);
-	    CGContextSetShouldSmoothFonts (cgContext, TRUE);
-	    if (CGContextSetAllowsFontSmoothingPtr &&
-		!CGContextGetAllowsFontSmoothingPtr (cgContext))
-		CGContextSetAllowsFontSmoothingPtr (cgContext, TRUE);
-	    break;
-	case CAIRO_ANTIALIAS_NONE:
-	    CGContextSetShouldAntialias (cgContext, FALSE);
-	    break;
-	case CAIRO_ANTIALIAS_GRAY:
-	    CGContextSetShouldAntialias (cgContext, TRUE);
-	    CGContextSetShouldSmoothFonts (cgContext, FALSE);
-	    break;
-	case CAIRO_ANTIALIAS_DEFAULT:
-	default:
-	    /* Don't do anything */
-	    break;
-	}
+    if (font->base.options.antialias == CAIRO_ANTIALIAS_NONE)
+	CGContextSetShouldAntialias (cgContext, false);
 
-	CGContextSetAlpha (cgContext, 1.0);
-	CGContextShowGlyphsAtPoint (cgContext, - glyphOrigin.x, - glyphOrigin.y, &glyph, 1);
+    CGContextSetRGBFillColor (cgContext, 1.0, 1.0, 1.0, 1.0);
+    CGContextShowGlyphsAtPoint (cgContext, - glyphOrigin.x, - glyphOrigin.y, &glyph, 1);
 
-	CGContextRelease (cgContext);
-    }
+    CGContextRelease (cgContext);
 
     cairo_surface_set_device_offset (&surface->base,
 				     - glyphOrigin.x,
