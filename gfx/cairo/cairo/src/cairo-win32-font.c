@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -45,6 +45,7 @@
 #include "cairoint.h"
 
 #include "cairo-win32-private.h"
+#include "cairo-error-private.h"
 
 #ifndef SPI_GETFONTSMOOTHINGTYPE
 #define SPI_GETFONTSMOOTHINGTYPE 0x200a
@@ -60,6 +61,23 @@
 #endif
 
 #define CMAP_TAG 0x70616d63
+
+/**
+ * SECTION:cairo-win32-fonts
+ * @Title: Win32 Fonts
+ * @Short_Description: Font support for Microsoft Windows
+ * @See_Also: #cairo_font_face_t
+ *
+ * The Microsoft Windows font backend is primarily used to render text on
+ * Microsoft Windows systems.
+ */
+
+/**
+ * CAIRO_HAS_WIN32_FONT:
+ *
+ * Defined if the Microsoft Windows font backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
 
 const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend;
 
@@ -966,7 +984,7 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 	extents.height = scaled_font->base.ctm.yy * (font_extents.ascent + font_extents.descent) / scaled_font->y_scale;
 	extents.x_advance = extents.width;
 	extents.y_advance = 0;
-    } else if (scaled_font->preserve_axes && scaled_font->base.options.hint_style != CAIRO_HINT_METRICS_OFF) {
+    } else if (scaled_font->preserve_axes && scaled_font->base.options.hint_metrics != CAIRO_HINT_METRICS_OFF) {
 	/* If we aren't rotating / skewing the axes, then we get the metrics
 	 * from the GDI in device space and convert to font space.
 	 */

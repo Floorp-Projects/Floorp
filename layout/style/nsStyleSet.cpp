@@ -943,7 +943,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
   // matter.
   ruleWalker.SetLevel(eDocSheet, PR_FALSE, PR_FALSE);
   for (PRInt32 i = 0; i < aRules.Count(); i++) {
-    ruleWalker.Forward(aRules.ObjectAt(i));
+    ruleWalker.ForwardOnPossiblyCSSRule(aRules.ObjectAt(i));
   }
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nsnull,
@@ -964,7 +964,7 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
   // matter.
   ruleWalker.SetLevel(eDocSheet, PR_FALSE, PR_FALSE);
   for (PRInt32 i = 0; i < aRules.Count(); i++) {
-    ruleWalker.Forward(aRules.ObjectAt(i));
+    ruleWalker.ForwardOnPossiblyCSSRule(aRules.ObjectAt(i));
   }
 
   nsRuleNode *ruleNode = ruleWalker.CurrentNode();
@@ -973,7 +973,7 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
   if (aBaseContext->GetStyleIfVisited()) {
     ruleWalker.SetCurrentNode(aBaseContext->GetStyleIfVisited()->GetRuleNode());
     for (PRInt32 i = 0; i < aRules.Count(); i++) {
-      ruleWalker.Forward(aRules.ObjectAt(i));
+      ruleWalker.ForwardOnPossiblyCSSRule(aRules.ObjectAt(i));
     }
     visitedRuleNode = ruleWalker.CurrentNode();
   }

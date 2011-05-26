@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -41,7 +41,9 @@
 #include "cairo-xlib-xrender-private.h"
 
 #include "cairo-compiler-private.h"
-#include "cairo-mutex-private.h"
+#include "cairo-device-private.h"
+#include "cairo-freelist-type-private.h"
+#include "cairo-list-private.h"
 #include "cairo-reference-count-private.h"
 #include "cairo-types-private.h"
 
@@ -63,7 +65,30 @@ struct _cairo_xlib_hook {
 /* size of gray ramp */
 #define RAMP_SIZE 16
 
+struct _cairo_xlib_display {
+    cairo_device_t base;
+
+    cairo_xlib_display_t *next;
+
+    Display *display;
+    cairo_list_t screens;
+
+    int render_major;
+    int render_minor;
+    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_RGB16_565 + 1];
+
+    cairo_xlib_job_t *workqueue;
+    cairo_freelist_t wq_freelist;
+
+    cairo_xlib_hook_t *close_display_hooks;
+    unsigned int buggy_gradients :1;
+    unsigned int buggy_pad_reflect :1;
+    unsigned int buggy_repeat :1;
+    unsigned int closed :1;
+};
+
 typedef struct _cairo_xlib_visual_info {
+    cairo_list_t link;
     VisualID visualid;
     struct { uint8_t a, r, g, b; } colors[256];
     uint8_t cube_to_pseudocolor[CUBE_SIZE][CUBE_SIZE][CUBE_SIZE];
@@ -73,13 +98,10 @@ typedef struct _cairo_xlib_visual_info {
 } cairo_xlib_visual_info_t;
 
 struct _cairo_xlib_screen {
-    cairo_xlib_screen_t *next;
-    cairo_reference_count_t ref_count;
-    cairo_mutex_t mutex;
+    cairo_list_t link;
 
-    cairo_xlib_display_t *display;
+    cairo_device_t *device;
     Screen *screen;
-    cairo_bool_t has_render;
 
     cairo_bool_t has_font_options;
     cairo_font_options_t font_options;
@@ -87,39 +109,15 @@ struct _cairo_xlib_screen {
     GC gc[4];
     cairo_atomic_int_t gc_depths; /* 4 x uint8_t */
 
-    cairo_array_t visuals;
+    cairo_list_t visuals;
 };
 
-cairo_private cairo_status_t
-_cairo_xlib_display_get (Display *display, cairo_xlib_display_t **out);
+cairo_private cairo_device_t *
+_cairo_xlib_device_create (Display *display);
 
-cairo_private cairo_xlib_display_t *
-_cairo_xlib_display_reference (cairo_xlib_display_t *info);
-
-cairo_private void
-_cairo_xlib_display_destroy (cairo_xlib_display_t *info);
-
-cairo_private void
-_cairo_xlib_display_lock (cairo_xlib_display_t *display);
-
-cairo_private void
-_cairo_xlib_display_unlock (cairo_xlib_display_t *display);
-
-cairo_private Display *
-_cairo_xlib_display_get_dpy (cairo_xlib_display_t *info);
-
-cairo_private void
-_cairo_xlib_display_add_screen (cairo_xlib_display_t *display,
-				cairo_xlib_screen_t *screen);
-
-cairo_private cairo_status_t
+cairo_private cairo_xlib_screen_t *
 _cairo_xlib_display_get_screen (cairo_xlib_display_t *display,
-				Screen *screen,
-				cairo_xlib_screen_t **out);
-
-cairo_private void
-_cairo_xlib_display_remove_screen (cairo_xlib_display_t *display,
-				   cairo_xlib_screen_t *screen);
+				Screen *screen);
 
 cairo_private void
 _cairo_xlib_add_close_display_hook (cairo_xlib_display_t *display, cairo_xlib_hook_t *hook);
@@ -136,21 +134,22 @@ cairo_private cairo_status_t
 _cairo_xlib_display_queue_resource (cairo_xlib_display_t *display,
 	                           cairo_xlib_notify_resource_func notify,
 				   XID resource);
-cairo_private void
-_cairo_xlib_display_notify (cairo_xlib_display_t *display);
+cairo_private cairo_status_t
+_cairo_xlib_display_acquire (cairo_device_t *device,
+                             cairo_xlib_display_t **display);
 
 cairo_private void
 _cairo_xlib_display_get_xrender_version (cairo_xlib_display_t *display,
 					 int *major, int *minor);
 
 cairo_private cairo_bool_t
-_cairo_xlib_display_has_repeat (cairo_xlib_display_t *display);
+_cairo_xlib_display_has_repeat (cairo_device_t *device);
 
 cairo_private cairo_bool_t
-_cairo_xlib_display_has_reflect (cairo_xlib_display_t *display);
+_cairo_xlib_display_has_reflect (cairo_device_t *device);
 
 cairo_private cairo_bool_t
-_cairo_xlib_display_has_gradients (cairo_xlib_display_t *display);
+_cairo_xlib_display_has_gradients (cairo_device_t *device);
 
 cairo_private XRenderPictFormat *
 _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
@@ -161,21 +160,22 @@ _cairo_xlib_screen_get (Display *dpy,
 			Screen *screen,
 			cairo_xlib_screen_t **out);
 
-cairo_private cairo_xlib_screen_t *
-_cairo_xlib_screen_reference (cairo_xlib_screen_t *info);
 cairo_private void
 _cairo_xlib_screen_destroy (cairo_xlib_screen_t *info);
 
 cairo_private void
-_cairo_xlib_screen_close_display (cairo_xlib_screen_t *info);
+_cairo_xlib_screen_close_display (cairo_xlib_display_t *display,
+                                  cairo_xlib_screen_t *info);
 
 cairo_private GC
-_cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
+_cairo_xlib_screen_get_gc (cairo_xlib_display_t *display,
+                           cairo_xlib_screen_t *info,
 			   int depth,
 			   Drawable drawable);
 
 cairo_private void
-_cairo_xlib_screen_put_gc (cairo_xlib_screen_t *info,
+_cairo_xlib_screen_put_gc (cairo_xlib_display_t *display,
+                           cairo_xlib_screen_t *info,
 			   int depth,
 			   GC gc);
 
@@ -183,7 +183,8 @@ cairo_private cairo_font_options_t *
 _cairo_xlib_screen_get_font_options (cairo_xlib_screen_t *info);
 
 cairo_private cairo_status_t
-_cairo_xlib_screen_get_visual_info (cairo_xlib_screen_t *info,
+_cairo_xlib_screen_get_visual_info (cairo_xlib_display_t *display,
+                                    cairo_xlib_screen_t *info,
 				    Visual *visual,
 				    cairo_xlib_visual_info_t **out);
 
@@ -194,6 +195,6 @@ _cairo_xlib_visual_info_create (Display *dpy,
 				cairo_xlib_visual_info_t **out);
 
 cairo_private void
-_cairo_xlib_visual_info_destroy (Display *dpy, cairo_xlib_visual_info_t *info);
+_cairo_xlib_visual_info_destroy (cairo_xlib_visual_info_t *info);
 
 #endif /* CAIRO_XLIB_PRIVATE_H */

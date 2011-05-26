@@ -255,7 +255,6 @@ PRUint32 nsContentUtils::sJSGCThingRootCount;
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nsnull;
 #endif
 PRUint32 nsContentUtils::sScriptBlockerCount = 0;
-PRUint32 nsContentUtils::sRemovableScriptBlockerCount = 0;
 #ifdef DEBUG
 PRUint32 nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
 #endif
@@ -6167,35 +6166,6 @@ nsContentUtils::CheckCCWrapperTraversal(nsISupports* aScriptObjectHolder,
                "This will probably crash.");
 }
 #endif
-
-mozAutoRemovableBlockerRemover::mozAutoRemovableBlockerRemover(nsIDocument* aDocument MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-{
-  MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-  mNestingLevel = nsContentUtils::GetRemovableScriptBlockerLevel();
-  mDocument = aDocument;
-  nsISupports* sink = aDocument ? aDocument->GetCurrentContentSink() : nsnull;
-  mObserver = do_QueryInterface(sink);
-  for (PRUint32 i = 0; i < mNestingLevel; ++i) {
-    if (mObserver) {
-      mObserver->EndUpdate(mDocument, UPDATE_CONTENT_MODEL);
-    }
-    nsContentUtils::RemoveRemovableScriptBlocker();
-  }
-
-  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(), "killing mutation events");
-}
-
-mozAutoRemovableBlockerRemover::~mozAutoRemovableBlockerRemover()
-{
-  NS_ASSERTION(nsContentUtils::GetRemovableScriptBlockerLevel() == 0,
-               "Should have had none");
-  for (PRUint32 i = 0; i < mNestingLevel; ++i) {
-    nsContentUtils::AddRemovableScriptBlocker();
-    if (mObserver) {
-      mObserver->BeginUpdate(mDocument, UPDATE_CONTENT_MODEL);
-    }
-  }
-}
 
 // static
 PRBool

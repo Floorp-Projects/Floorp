@@ -26,6 +26,7 @@
  */
 #include "cairoint.h"
 
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-fixed-private.h"
 
 static cairo_scan_converter_t *
@@ -38,10 +39,10 @@ _create_scan_converter (cairo_fill_rule_t			 fill_rule,
 	return NULL;
     }
 
-    return _cairo_tor_scan_converter_create (rects->mask.x,
-					     rects->mask.y,
-					     rects->mask.x + rects->width,
-					     rects->mask.y + rects->height,
+    return _cairo_tor_scan_converter_create (rects->bounded.x,
+					     rects->bounded.y,
+					     rects->bounded.x + rects->bounded.width,
+					     rects->bounded.y + rects->bounded.height,
 					     fill_rule);
 }
 
@@ -69,71 +70,6 @@ _cairo_surface_composite_polygon (cairo_surface_t	*surface,
 
     renderer = _cairo_surface_create_span_renderer (op, pattern, surface,
 						    antialias, rects,
-						    clip_region);
-    status = converter->generate (converter, renderer);
-    if (unlikely (status))
-	goto CLEANUP_RENDERER;
-
-    status = renderer->finish (renderer);
-
- CLEANUP_RENDERER:
-    renderer->destroy (renderer);
- CLEANUP_CONVERTER:
-    converter->destroy (converter);
-    return status;
-}
-
-cairo_status_t
-_cairo_surface_composite_trapezoids_as_polygon (cairo_surface_t	*surface,
-						cairo_operator_t	 op,
-						const cairo_pattern_t	*pattern,
-						cairo_antialias_t	antialias,
-						int src_x, int src_y,
-						int dst_x, int dst_y,
-						int width, int height,
-						cairo_trapezoid_t	*traps,
-						int num_traps,
-						cairo_region_t	*clip_region)
-{
-    cairo_span_renderer_t *renderer;
-    cairo_scan_converter_t *converter;
-    cairo_composite_rectangles_t rects;
-    cairo_status_t status;
-
-    rects.src.x = src_x;
-    rects.src.y = src_y;
-    rects.dst.x = dst_x;
-    rects.dst.y = dst_y;
-    rects.mask.x = dst_x;
-    rects.mask.y = dst_y;
-    rects.width  = width;
-    rects.height = height;
-
-    converter = _create_scan_converter (CAIRO_FILL_RULE_WINDING,
-					antialias,
-					&rects);
-    status = converter->status;
-    if (unlikely (status))
-	goto CLEANUP_CONVERTER;
-
-    while (num_traps--) {
-	status = converter->add_edge (converter,
-				      &traps->left.p1, &traps->left.p2,
-				      traps->top, traps->bottom, 1);
-	if (unlikely (status))
-	    goto CLEANUP_CONVERTER;
-
-	status = converter->add_edge (converter,
-				      &traps->right.p1, &traps->right.p2,
-				      traps->top, traps->bottom, -1);
-	if (unlikely (status))
-	    goto CLEANUP_CONVERTER;
-
-	traps++;
-    }
-
-    renderer = _cairo_surface_create_span_renderer (op, pattern, surface,
-						    antialias, &rects,
 						    clip_region);
     status = converter->generate (converter, renderer);
     if (unlikely (status))
@@ -266,6 +202,8 @@ _cairo_scan_converter_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_NO_MEMORY: RETURN_NIL;
     case CAIRO_STATUS_INVALID_SIZE: RETURN_NIL;
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_TYPE_MISMATCH: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_ERROR: RETURN_NIL;
     default:
 	break;
     }
@@ -374,6 +312,8 @@ _cairo_span_renderer_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_NO_MEMORY: RETURN_NIL;
     case CAIRO_STATUS_INVALID_SIZE: RETURN_NIL;
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_TYPE_MISMATCH: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_ERROR: RETURN_NIL;
     default:
 	break;
     }
