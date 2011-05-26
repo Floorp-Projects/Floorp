@@ -69,6 +69,10 @@ namespace nanojit
         /** clear all bits */
         void reset();
 
+        /** allocates new bits and clears them;  any old bits are lost and will
+         * be freed according to their allocator's policy. */
+        void resetAndAlloc();
+
         /** perform a bitwise or with BitSet other, return true if
          *  this bitset was modified */
         bool setFrom(BitSet& other);
