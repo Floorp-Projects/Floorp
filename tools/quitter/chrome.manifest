@@ -1,0 +1,4 @@
+content quitter chrome/quitter/content/
+component {c235a986-5ac1-4f28-ad73-825dae9bad90} components/QuitterObserver.js
+contract @mozilla.org/quitter-observer;1 {c235a986-5ac1-4f28-ad73-825dae9bad90}
+category profile-after-change @mozilla.org/quitter-observer;1 @mozilla.org/quitter-observer;1
