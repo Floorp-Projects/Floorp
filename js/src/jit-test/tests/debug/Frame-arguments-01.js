@@ -10,6 +10,8 @@ dbg.hooks = {
     debuggerHandler: function (frame) {
         hits++;
         var args = frame.arguments;
+        assertEq(args instanceof Array, true);
+        assertEq(Array.isArray(args), false);
         assertEq(args, frame.arguments);
         assertEq(args.length, g.args.length);
         for (var i = 0; i < args.length; i++)
