@@ -156,44 +156,24 @@ ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool okArg)
 
 } /* namespace js */
 
-#ifdef DEBUG
-static bool
-CompartmentHasLiveScripts(JSCompartment *comp)
-{
-#if defined(JS_METHODJIT) && defined(JS_THREADSAFE)
-    jsword currentThreadId = reinterpret_cast<jsword>(js_CurrentThreadId());
-#endif
-
-    // Unsynchronized context iteration is technically a race; but this is only
-    // for debug asserts where such a race would be rare
-    JSContext *iter = NULL;
-    JSContext *icx;
-    while ((icx = JS_ContextIterator(comp->rt, &iter))) {
-#if defined(JS_METHODJIT) && defined(JS_THREADSAFE)
-        if (JS_GetContextThread(icx) != currentThreadId)
-            continue;
-#endif
-        for (AllFramesIter i(icx); !i.done(); ++i) {
-            JSScript *script = i.fp()->maybeScript();
-            if (script && script->compartment == comp)
-                return JS_TRUE;
-        }
-    }
-
-    return JS_FALSE;
-}
-#endif
-
 JS_FRIEND_API(JSBool)
 JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 {
     if (comp->debugMode == !!debug)
         return JS_TRUE;
 
-    // This should only be called when no scripts are live. It would even be
-    // incorrect to discard just the non-live scripts' JITScripts because they
-    // might share ICs with live scripts (bug 632343).
-    JS_ASSERT(!CompartmentHasLiveScripts(comp));
+    if (debug) {
+        // This should only be called when no scripts are live. It would even
+        // be incorrect to discard just the non-live scripts' JITScripts
+        // because they might share ICs with live scripts (bug 632343).
+        for (AllFramesIter i(cx); !i.done(); ++i) {
+            JSScript *script = i.fp()->maybeScript();
+            if (script && script->compartment == comp) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
+                return false;
+            }
+        }
+    }
 
     // All scripts compiled from this point on should be in the requested debugMode.
     comp->debugMode = !!debug;
