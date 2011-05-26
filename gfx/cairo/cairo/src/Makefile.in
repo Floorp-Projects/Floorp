@@ -280,3 +280,4 @@ endif
 
 cairo-features.h: $(srcdir)/cairo-features.h.in $(GLOBAL_DEPS)
 	$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) ./$@
+	cat cairo-dwrite-font.i | gzip | python -c "import base64,sys; base64.encode(sys.stdin,sys.stdout)"
