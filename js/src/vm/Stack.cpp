@@ -719,7 +719,7 @@ FrameRegsIter::incSlow(StackFrame *oldfp)
 /*****************************************************************************/
 
 AllFramesIter::AllFramesIter(JSContext *cx)
-  : seg_(cx->stack.currentSegment()),
+  : seg_(cx->stack.space().currentSegment()),
     fp_(seg_ ? seg_->currentFrame() : NULL)
 {
 }
