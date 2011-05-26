@@ -3,11 +3,11 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <?xml-stylesheet href="data:text/css,
 
-#box {
+%23box {
   background: blue;
 }
 
-#box:-moz-window-inactive {
+%23box:-moz-window-inactive {
   background: cyan;
 }
 

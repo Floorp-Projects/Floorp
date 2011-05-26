@@ -8,18 +8,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=405818
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <link rel="stylesheet" type="text/css" href="data:text/css,#nosuchid{color:green;}">
+  <link rel="stylesheet" type="text/css" href="data:text/css,%23myDiv{color:green;}">
   <link rel="stylesheet" type="text/css" href="chrome://global/skin/global.css">
   <!-- Script to make sure sheets gets a chance to load fully in Gecko 1.8 and earlier -->
   <script type="text/javascript" src="data:text/javascript,"></script>
-  <link rel="stylesheet" type="text/css" href="data:text/css,#nosuchid{color:green;}">
+  <link rel="stylesheet" type="text/css" href="data:text/css,%23myDiv{color:green;}">
   <link rel="stylesheet" type="text/css" href="chrome://global/skin/global.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=405818">Mozilla Bug 405818</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+  <div id="myDiv"></div>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -29,10 +29,10 @@ SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
   is(document.styleSheets[1].href,
-     "data:text/css,#nosuchid{color:green;}",
+     "data:text/css,%23myDiv{color:green;}",
      "Unexpected href for linked sheet before cloning");
   is(document.styleSheets[3].href,
-     "data:text/css,#nosuchid{color:green;}",
+     "data:text/css,%23myDiv{color:green;}",
      "Unexpected href for later linked sheet before cloning");
 
   is(document.styleSheets[2].href,
@@ -50,10 +50,10 @@ addLoadEvent(function() {
   })();
   
   is(document.styleSheets[1].href,
-     "data:text/css,#nosuchid{color:green;}",
+     "data:text/css,%23myDiv{color:green;}",
      "Unexpected href for linked sheet after cloning");
   is(document.styleSheets[3].href,
-     "data:text/css,#nosuchid{color:green;}",
+     "data:text/css,%23myDiv{color:green;}",
      "Unexpected href for later linked sheet after cloning");
 
   is(document.styleSheets[2].href,
@@ -62,6 +62,10 @@ addLoadEvent(function() {
   is(document.styleSheets[4].href,
      "chrome://global/skin/global.css",
      "Unexpected href for later linked chrome sheet after cloning");
+
+  var myDiv = document.getElementById("myDiv");
+  is(getComputedStyle(myDiv, "").color, "rgb(0, 128, 0)",
+     "Unexpected color for div (data URI stylesheet not being honored?)");
 
   SimpleTest.finish();
 });
