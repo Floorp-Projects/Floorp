@@ -130,8 +130,7 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
         // If a value is desired, create a box instruction near the use.
         if (required == MIRType_Value) {
             MBox *box = MBox::New(ins);
-            if (!use->block()->insertBefore(use, box))
-                return false;
+            use->block()->insertBefore(use, box);
             use->replaceOperand(uses, box);
             continue;
         }
@@ -144,8 +143,7 @@ LoweringPhase::lowerInstruction(MInstruction *ins)
         // conversion.
         JS_ASSERT(required < MIRType_Value);
         MConvert *converted = MConvert::New(ins, required);
-        if (!use->block()->insertBefore(use, converted))
-            return false;
+        use->block()->insertBefore(use, converted);
         use->replaceOperand(uses, converted);
     }
 

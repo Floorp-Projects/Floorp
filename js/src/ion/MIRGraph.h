@@ -159,11 +159,11 @@ class MBasicBlock : public TempObject
 
     // Adds an instruction to this block's instruction list. |ins| may be NULL
     // to simplify OOM checking.
-    bool add(MInstruction *ins);
+    void add(MInstruction *ins);
 
     // Marks the last instruction of the block; no further instructions
     // can be added.
-    bool end(MControlInstruction *ins);
+    void end(MControlInstruction *ins);
 
     // Adds a phi instruction.
     bool addPhi(MPhi *phi);
@@ -178,8 +178,8 @@ class MBasicBlock : public TempObject
     // state at the same time. There may be only one backedge per block.
     bool setBackedge(MBasicBlock *block, MBasicBlock *successor);
 
-    bool insertBefore(MInstruction *at, MInstruction *ins);
-    bool insertAfter(MInstruction *at, MInstruction *ins);
+    void insertBefore(MInstruction *at, MInstruction *ins);
+    void insertAfter(MInstruction *at, MInstruction *ins);
 
     ///////////////////////////////////////////////////////
     /////////// END GRAPH BUILDING INSTRUCTIONS ///////////

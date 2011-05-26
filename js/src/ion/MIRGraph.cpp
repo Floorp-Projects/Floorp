@@ -55,8 +55,6 @@ MIRGraph::MIRGraph()
 bool
 MIRGraph::addBlock(MBasicBlock *block)
 {
-    if (!block)
-        return false;
     block->setId(blocks_.length());
     return blocks_.append(block);
 }
@@ -65,7 +63,7 @@ MBasicBlock *
 MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
 {
     MBasicBlock *block = new MBasicBlock(gen, entryPc);
-    if (!block || !block->init())
+    if (!block->init())
         return NULL;
 
     if (pred && !block->inherit(pred))
@@ -221,8 +219,7 @@ MBasicBlock::setVariable(uint32 index)
         // about (1) popping being fast, thus the backwarding ordering of
         // copies, and (2) knowing when a GET flows into a SET.
         ins = MCopy::New(ins);
-        if (!add(ins))
-            return false;
+        add(ins);
     }
 
     setSlot(index, ins);
@@ -330,53 +327,42 @@ MBasicBlock::peek(int32 depth)
     return getSlot(stackPosition_ + depth);
 }
 
-bool
+void
 MBasicBlock::insertBefore(MInstruction *at, MInstruction *ins)
 {
-    if (!ins)
-        return false;
     ins->setBlock(this);
     ins->setId(gen()->graph().allocInstructionId());
     instructions_.insertBefore(at, ins);
-    return true;
 }
 
-bool
+void
 MBasicBlock::insertAfter(MInstruction *at, MInstruction *ins)
 {
-    if (!ins)
-        return false;
     ins->setBlock(this);
     ins->setId(gen()->graph().allocInstructionId());
     instructions_.insertAfter(at, ins);
-    return true;
 }
 
-bool
+void
 MBasicBlock::add(MInstruction *ins)
 {
     JS_ASSERT(!lastIns_);
-    if (!ins)
-        return false;
     ins->setBlock(this);
     ins->setId(gen()->graph().allocInstructionId());
     instructions_.insert(ins);
-    return true;
 }
 
-bool
+void
 MBasicBlock::end(MControlInstruction *ins)
 {
-    if (!add(ins))
-        return false;
+    add(ins);
     lastIns_ = ins;
-    return true;
 }
 
 bool
 MBasicBlock::addPhi(MPhi *phi)
 {
-    if (!phi || !phis_.append(phi))
+    if (!phis_.append(phi))
         return false;
     phi->setBlock(this);
     phi->setId(gen()->graph().allocInstructionId());

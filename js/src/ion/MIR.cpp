@@ -241,36 +241,22 @@ MParameter::printOpcode(FILE *fp)
 MCopy *
 MCopy::New(MInstruction *ins)
 {
-    if (!ins)
-        return NULL;
-
     // Don't create nested copies.
     if (ins->isCopy())
         ins = ins->toCopy()->getInput(0);
 
-    MCopy *copy = new MCopy(ins);
-    if (!copy || !copy->init(ins))
-        return NULL;
-
-    return copy;
+    return new MCopy(ins);
 }
 
 MTest *
 MTest::New(MInstruction *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
 {
-    if (!ins || !ifTrue || !ifFalse)
-        return NULL;
-    MTest *test = new MTest(ifTrue, ifFalse);
-    if (!test || !test->initOperand(0, ins))
-        return NULL;
-    return test;
+    return new MTest(ins, ifTrue, ifFalse);
 }
 
 MGoto *
 MGoto::New(MBasicBlock *target)
 {
-    if (!target)
-        return NULL;
     return new MGoto(target);
 }
 
@@ -288,11 +274,10 @@ MPhi::addInput(MInstruction *ins)
             return true;
     }
 
-    if (!ins->addUse(this, inputs_.length()))
-        return false;
+    ins->addUse(this, inputs_.length());
 
     MOperand *operand = MOperand::New(ins);
-    if (!operand || !inputs_.append(operand))
+    if (!inputs_.append(operand))
         return false;
     return true;
 }
@@ -300,26 +285,20 @@ MPhi::addInput(MInstruction *ins)
 MReturn *
 MReturn::New(MInstruction *ins)
 {
-    MReturn *ret = new MReturn();
-    if (!ret || !ret->initOperand(0, ins))
-        return NULL;
-    return ret;
+    return new MReturn(ins);
 }
 
 MBitAnd *
 MBitAnd::New(MInstruction *left, MInstruction *right)
 {
-    MBitAnd *ins = new MBitAnd();
-    if (!ins || !ins->init(left, right))
-        return NULL;
-    return ins;
+    return new MBitAnd(left, right);
 }
 
 MSnapshot *
 MSnapshot::New(MBasicBlock *block, jsbytecode *pc)
 {
     MSnapshot *snapshot = new MSnapshot(block, pc);
-    if (!snapshot || !snapshot->init(block))
+    if (!snapshot->init(block))
         return NULL;
     return snapshot;
 }
@@ -337,10 +316,8 @@ MSnapshot::init(MBasicBlock *block)
     if (!operands_)
         return false;
 
-    for (size_t i = 0; i < stackDepth(); i++) {
-        if (!initOperand(i, block->getSlot(i)))
-            return false;
-    }
+    for (size_t i = 0; i < stackDepth(); i++)
+        initOperand(i, block->getSlot(i));
 
     return true;
 }

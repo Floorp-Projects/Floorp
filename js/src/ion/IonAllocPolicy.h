@@ -86,7 +86,13 @@ struct TempAllocator
     {
         void *p;
         JS_ARENA_ALLOCATE(p, arena, bytes);
+        if (!ensureBallast())
+            return NULL;
         return p;
+    }
+
+    bool ensureBallast() {
+        return true;
     }
 
   private:
