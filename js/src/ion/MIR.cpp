@@ -286,6 +286,43 @@ MReturn::New(MInstruction *ins)
     return new MReturn(ins);
 }
 
+void
+MBinaryInstruction::infer(const TypeOracle::Binary &b)
+{
+    if (b.lhs == MIRType_Int32 && b.rhs == MIRType_Int32) {
+        specialization_ = MIRType_Int32;
+        setResultType(specialization_);
+    } else if (b.lhs == MIRType_Double && b.rhs == MIRType_Double) {
+        specialization_ = MIRType_Double;
+        setResultType(specialization_);
+    } else if (b.lhs < MIRType_String && b.rhs < MIRType_String) {
+        specialization_ = MIRType_Any;
+        setResultType(b.rval);
+    } else {
+        specialization_ = MIRType_Value;
+    }
+}
+
+static inline bool
+HasComplexNumberConversion(MIRType type)
+{
+    return type >= MIRType_String && type < MIRType_Value;
+}
+
+bool
+MBinaryInstruction::adjustForInputs()
+{
+    MIRType adjusted = specialization();
+    if (HasComplexNumberConversion(getInput(0)->type()) ||
+        HasComplexNumberConversion(getInput(1)->type())) {
+        adjusted = MIRType_Value;
+    }
+    if (adjusted == specialization())
+        return false;
+    specialization_ = adjusted;
+    return true;
+}
+
 MBitAnd *
 MBitAnd::New(MInstruction *left, MInstruction *right)
 {
