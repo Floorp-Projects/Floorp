@@ -1430,7 +1430,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetTransform(float m11, float m12, float m21, float m22, float dx, float dy)
 {
     if (!FloatValidate(m11,m12,m21,m22,dx,dy))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     gfxMatrix matrix(m11, m12, m21, m22, dx, dy);
     mThebes->SetMatrix(matrix);
