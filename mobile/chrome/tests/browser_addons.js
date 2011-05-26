@@ -104,12 +104,13 @@ function run_next_test() {
   if (gTestsRun > 0)
     info("Test " + gTestsRun + " took " + (Date.now() - gTestStart) + "ms");
 
-  if (gPendingTests.length == 0) {
+   if (!gPendingTests.length) {
     finish();
+    return;
   }
 
   gTestsRun++;
-  var test = gPendingTests.shift();
+  let test = gPendingTests.shift();
   if (test.name)
     info("Running test " + gTestsRun + " (" + test.name + ")");
   else
@@ -129,7 +130,7 @@ function installExtension(elt, aListener) {
   elt.parentNode.ensureElementIsVisible(elt);
   elt.install.addListener(aListener)
 
-  var button = document.getAnonymousElementByAttribute(elt, "class", "addon-install hide-on-install hide-on-restart");
+  let button = document.getAnonymousElementByAttribute(elt, "class", "addon-install hide-on-install hide-on-restart");
   ok(!!button, "Extension has install button");
   ExtensionsView.installFromRepo(elt);
 }
@@ -284,7 +285,7 @@ function open_manager(aView, aCallback) {
 }
 
 function close_manager(aCallback) {
-  var prefsButton = document.getElementById("tool-preferences");
+  let prefsButton = document.getElementById("tool-preferences");
   prefsButton.click();
 
   ExtensionsView.clearSection();
@@ -369,10 +370,10 @@ function installFromURLBar(aAddon) {
               let elt = get_addon_element(aAddon.id);
               if (aAddon.bootstrapped) {
                 checkAddonListing(aAddon, elt, "local");
-                var button = document.getAnonymousElementByAttribute(elt, "anonid", "uninstall-button");
+                let button = document.getAnonymousElementByAttribute(elt, "anonid", "uninstall-button");
                 ok(!!button, "Extension has uninstall button");
 
-                var updateButton = document.getElementById("addons-update-all");
+                let updateButton = document.getElementById("addons-update-all");
                 is(updateButton.disabled, false, "Update button is enabled");
 
                 ExtensionsView.uninstall(elt);
@@ -384,7 +385,7 @@ function installFromURLBar(aAddon) {
               } else {
                 ok(!elt, "Extension not in list");
                 AddonManager.getAllInstalls(function(aInstalls) {
-                  for(var i = 0; i < aInstalls.length; i++) {
+                  for(let i = 0; i < aInstalls.length; i++) {
                     aInstalls[i].cancel();
                   }
                   Browser.closeTab(gCurrentTab);
@@ -413,7 +414,7 @@ function installFromURLBar(aAddon) {
 function installFromAddonsPage(aAddon, aDoUpdate) {
   return function() {
     open_manager(null, function() {
-      var elt = get_addon_element(aAddon.id);
+      let elt = get_addon_element(aAddon.id);
       checkAddonListing(aAddon, elt);
       installExtension(elt, new installListener({
         addon: aAddon,

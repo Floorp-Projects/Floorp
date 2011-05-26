@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -34,6 +34,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 void
 _cairo_stroke_style_init (cairo_stroke_style_t *style)
@@ -52,7 +53,7 @@ _cairo_stroke_style_init (cairo_stroke_style_t *style)
 
 cairo_status_t
 _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
-			       cairo_stroke_style_t *other)
+			       const cairo_stroke_style_t *other)
 {
     if (CAIRO_INJECT_FAULT ())
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -144,6 +145,22 @@ _cairo_stroke_style_dash_period (const cairo_stroke_style_t *style)
 /*
  * Coefficient of the linear approximation (minimizing square difference)
  * of the surface covered by round caps
+ *
+ * This can be computed in the following way:
+ * the area inside the circle with radius w/2 and the region -d/2 <= x <= d/2 is:
+ *   f(w,d) = 2 * integrate (sqrt (w*w/4 - x*x), x, -d/2, d/2)
+ * The square difference to a generic linear approximation (c*d) in the range (0,w) would be:
+ *   integrate ((f(w,d) - c*d)^2, d, 0, w)
+ * To minimize this difference it is sufficient to find a solution of the differential with
+ * respect to c:
+ *   solve ( diff (integrate ((f(w,d) - c*d)^2, d, 0, w), c), c)
+ * Which leads to c = 9/32*pi*w
+ * Since we're not interested in the true area, but just in a coverage extimate,
+ * we always divide the real area by the line width (w).
+ * The same computation for square caps would be
+ *   f(w,d) = 2 * integrate(w/2, x, -d/2, d/2)
+ *   c = 1*w
+ * but in this case it would not be an approximation, since f is already linear in d.
  */
 #define ROUND_MINSQ_APPROXIMATION (9*M_PI/32)
 
@@ -222,8 +239,8 @@ _cairo_stroke_style_dash_approximate (const cairo_stroke_style_t *style,
     scale = tolerance / _cairo_matrix_transformed_circle_major_axis (ctm, 1.0);
 
     /* We stop searching for a starting point as soon as the
-       offset reaches zero.  Otherwise when an initial dash
-       segment shrinks to zero it will be skipped over. */
+     * offset reaches zero.  Otherwise when an initial dash
+     * segment shrinks to zero it will be skipped over. */
     offset = style->dash_offset;
     while (offset > 0.0 && offset >= style->dash[i]) {
 	offset -= style->dash[i];
@@ -234,8 +251,60 @@ _cairo_stroke_style_dash_approximate (const cairo_stroke_style_t *style,
 
     *num_dashes = 2;
 
-    dashes[0] = scale * coverage;
-    dashes[1] = scale * (1.0 - coverage);
+    /*
+     * We want to create a new dash pattern with the same relative coverage,
+     * but composed of just 2 elements with total length equal to scale.
+     * Based on the formula in _cairo_stroke_style_dash_stroked:
+     * scale * coverage = dashes[0] + cap_scale * MIN (dashes[1], line_width)
+     *                  = MIN (dashes[0] + cap_scale * (scale - dashes[0]),
+     *                         dashes[0] + cap_scale * line_width) = 
+     *                  = MIN (dashes[0] * (1 - cap_scale) + cap_scale * scale,
+     *	                       dashes[0] + cap_scale * line_width)
+     *
+     * Solving both cases we get:
+     *   dashes[0] = scale * (coverage - cap_scale) / (1 - cap_scale)
+     *	  when scale - dashes[0] <= line_width
+     *	dashes[0] = scale * coverage - cap_scale * line_width
+     *	  when scale - dashes[0] > line_width.
+     *
+     * Comparing the two cases we get:
+     *   second > first
+     *   second > scale * (coverage - cap_scale) / (1 - cap_scale)
+     *   second - cap_scale * second - scale * coverage + scale * cap_scale > 0
+     * 	 (scale * coverage - cap_scale * line_width) - cap_scale * second - scale * coverage + scale * cap_scale > 0
+     *   - line_width - second + scale > 0
+     *   scale - second > line_width
+     * which is the condition for the second solution to be the valid one.
+     * So when second > first, the second solution is the correct one (i.e.
+     * the solution is always MAX (first, second).
+     */
+    switch (style->line_cap) {
+    default:
+        ASSERT_NOT_REACHED;
+	dashes[0] = 0.0;
+	break;
+
+    case CAIRO_LINE_CAP_BUTT:
+        /* Simplified formula (substituting 0 for cap_scale): */
+        dashes[0] = scale * coverage;
+	break;
+
+    case CAIRO_LINE_CAP_ROUND:
+        dashes[0] = MAX(scale * (coverage - ROUND_MINSQ_APPROXIMATION) / (1.0 - ROUND_MINSQ_APPROXIMATION),
+			scale * coverage - ROUND_MINSQ_APPROXIMATION * style->line_width);
+	break;
+
+    case CAIRO_LINE_CAP_SQUARE:
+        /*
+	 * Special attention is needed to handle the case cap_scale == 1 (since the first solution
+	 * is either indeterminate or -inf in this case). Since dash lengths are always >=0, using
+	 * 0 as first solution always leads to the correct solution.
+	 */
+        dashes[0] = MAX(0.0, scale * coverage - style->line_width);
+	break;
+    }
+
+    dashes[1] = scale - dashes[0];
 
     *dash_offset = on ? 0.0 : dashes[0];
 }

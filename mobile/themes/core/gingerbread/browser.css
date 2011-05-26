@@ -382,6 +382,28 @@ toolbarbutton.choice-remotetabs {
   list-style-image: url(chrome://browser/skin/images/remotetabs-48.png);
 }
 
+/* awesomescreen panels ---------------------------------------------------- */
+historylist > hbox.history-throbber-box,
+remotetabslist > hbox.remotetabs-throbber-box {
+  display: none;
+}
+
+.history-throbber-box > image,
+.remotetabs-throbber-box > image {
+  list-style-image: url("chrome://browser/skin/images/throbber.png");
+}
+
+historylist[loading="true"] > hbox.history-throbber-box,
+remotetabslist[loading="true"] > hbox.remotetabs-throbber-box {
+  background-color: white;
+  display: -moz-box;
+}
+
+historylist[loading="true"] > richlistbox.history-list-children,
+remotetabslist[loading="true"] > richlistbox.remotetabs-list-children {
+  visibility: collapse;
+}
+
 /* browsers ---------------------------------------------------------------- */
 .input-overlay:-moz-focusring {
   outline: 0 !important;

@@ -42,7 +42,7 @@
 interface nsIPluginTag;
 interface nsIVariant;
 
-[scriptable, uuid(8439f9c0-da03-4260-8b21-dc635eed28fb)]
+[scriptable, uuid(31845f85-718a-4581-a672-a45c0327cb21)]
 interface nsIBlocklistService : nsISupports
 {
   // Indicates that the item does not appear in the blocklist.
@@ -114,6 +114,24 @@ interface nsIBlocklistService : nsISupports
   unsigned long getPluginBlocklistState(in nsIPluginTag plugin,
                                         [optional] in AString appVersion,
                                         [optional] in AString toolkitVersion);
+
+  /**
+   * Determine the blocklist web page of an add-on.
+   * @param   id
+   *          The ID of the blocked add-on.
+   * @returns The URL of the description page.
+   */
+  AString getAddonBlocklistURL(in AString id, in AString version,
+                              [optional] in AString appVersion,
+                              [optional] in AString toolkitVersion);
+
+  /**
+   * Determine the blocklist web page of a plugin.
+   * @param   plugin
+   *          The blocked plugin that we are determining the web page for.
+   * @returns The URL of the description page.
+   */
+  AString getPluginBlocklistURL(in nsIPluginTag plugin);
 };
 
 /**

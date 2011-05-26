@@ -138,6 +138,11 @@ public:
     // preference to the specified connection.
     nsresult ProcessPendingQ(nsHttpConnectionInfo *);
 
+    // This is used to force an idle connection to be closed and removed from
+    // the idle connection list. It is called when the idle connection detects
+    // that the network peer has closed the transport.
+    nsresult CloseIdleConnection(nsHttpConnection *);
+
 private:
     virtual ~nsHttpConnectionMgr();
     class nsHalfOpenSocket;

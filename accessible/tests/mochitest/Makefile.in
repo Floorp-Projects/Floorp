@@ -90,8 +90,8 @@ _TEST_FILES =\
 		test_aria_roles.xul \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
-	$(warning   test_childAtPoint.html temporarily disabled) \
-	$(warning	test_childAtPoint.xul temporarily disabled) \
+		test_childAtPoint.html \
+		test_childAtPoint.xul \
 		test_descr.html \
 		test_elm_landmarks.html \
 		test_elm_listbox.xul \
