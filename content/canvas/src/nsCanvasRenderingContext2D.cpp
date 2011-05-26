@@ -2111,7 +2111,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float radius)
 {
     if (!FloatValidate(x1,y1,x2,y2,radius))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     if (radius < 0)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
