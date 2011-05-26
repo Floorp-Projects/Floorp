@@ -16,9 +16,9 @@
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
 
   <script type="application/javascript"
-          src="common.js" />
+          src="../common.js" />
   <script type="application/javascript"
-          src="events.js" />        
+          src="../events.js" />
 
   <script type="application/javascript">
   <![CDATA[
@@ -64,6 +64,7 @@
       //var searchbar = document.getElementById("searchbar");
       //gQueue.push(new openHideCombobox(searchbar, true));
       //gQueue.push(new openHideCombobox(searchbar, false));
+      todo(false, "Enable states test for XUL searchbar widget!");
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
