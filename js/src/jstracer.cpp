@@ -1285,7 +1285,11 @@ PCHash(jsbytecode* pc)
     return int(uintptr_t(pc) & ORACLE_MASK);
 }
 
-Oracle::Oracle()
+Oracle::Oracle(VMAllocator* allocator)
+:   _stackDontDemote(*allocator),
+    _globalDontDemote(*allocator),
+    _pcDontDemote(*allocator),
+    _pcSlowZeroTest(*allocator)
 {
     /* Grow the oracle bitsets to their (fixed) size here, once. */
     _stackDontDemote.set(ORACLE_SIZE-1);
@@ -1364,10 +1368,10 @@ Oracle::isInstructionSlowZeroTest(jsbytecode* pc) const
 void
 Oracle::clearDemotability()
 {
-    _stackDontDemote.reset();
-    _globalDontDemote.reset();
-    _pcDontDemote.reset();
-    _pcSlowZeroTest.reset();
+    _stackDontDemote.resetAndAlloc();
+    _globalDontDemote.resetAndAlloc();
+    _pcDontDemote.resetAndAlloc();
+    _pcSlowZeroTest.resetAndAlloc();
 }
 
 JS_REQUIRES_STACK void
@@ -7639,8 +7643,10 @@ TraceMonitor::~TraceMonitor ()
 #endif
 
     Foreground::delete_(recordAttempts);
+    recordAttempts = NULL;
+
     Foreground::delete_(loopProfiles);
-    Foreground::delete_(oracle);
+    loopProfiles = NULL;
 
     PodArrayZero(vmfragments);
 
@@ -7664,6 +7670,9 @@ TraceMonitor::~TraceMonitor ()
 
     Foreground::delete_(cachedTempTypeMap);
     cachedTempTypeMap = NULL;
+
+    Foreground::delete_(oracle);
+    oracle = NULL;
 }
 
 bool
@@ -7681,7 +7690,6 @@ TraceMonitor::init(JSRuntime* rt)
     CHECK_NEW(profAlloc, VMAllocator, (rt, (char*)NULL, 0));
     CHECK_ALLOC(profTab, new (*profAlloc) FragStatsMap(*profAlloc));
 #endif /* defined JS_JIT_SPEW */
-    CHECK_NEW(oracle, Oracle, ());
 
     CHECK_NEW(recordAttempts, RecordAttemptMap, ());
     if (!recordAttempts->init(PC_HASH_COUNT))
@@ -7703,6 +7711,8 @@ TraceMonitor::init(JSRuntime* rt)
     CHECK_NEW(storage, TraceNativeStorage, ());
     CHECK_NEW(cachedTempTypeMap, TypeMap, ((Allocator*)NULL, oracle));
     verbose_only( branches = NULL; )
+
+    CHECK_NEW(oracle, Oracle, (dataAlloc));
 
     if (!tracedScripts.init())
         return false;

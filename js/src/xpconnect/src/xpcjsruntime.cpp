@@ -255,8 +255,7 @@ xpc::CompartmentPrivate::~CompartmentPrivate()
 static JSBool
 CompartmentCallback(JSContext *cx, JSCompartment *compartment, uintN op)
 {
-    if(op == JSCOMPARTMENT_NEW)
-        return JS_TRUE;
+    JS_ASSERT(op == JSCOMPARTMENT_DESTROY);
 
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if(!self)

@@ -1,5 +1,8 @@
-/*
- * Copyright (C) 2009 Apple Inc. All rights reserved.
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99 ft=cpp:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Copyright (C) 2011 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,30 +24,39 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#ifndef RegexCommon_h
-#define RegexCommon_h
+#include "YarrSyntaxChecker.h"
+
+#include "YarrParser.h"
 
 namespace JSC { namespace Yarr {
 
-enum ErrorCode {
-    HitRecursionLimit = -2,
-    NoError = 0,
-    PatternTooLarge,
-    QuantifierOutOfOrder,
-    QuantifierWithoutAtom,
-    MissingParentheses,
-    ParenthesesUnmatched,
-    ParenthesesTypeInvalid,
-    CharacterClassUnmatched,
-    CharacterClassOutOfOrder,
-    CharacterClassRangeSingleChar,
-    EscapeUnterminated,
-    QuantifierTooLarge,
-    NumberOfErrorCodes
+class SyntaxChecker {
+public:
+    void assertionBOL() {}
+    void assertionEOL() {}
+    void assertionWordBoundary(bool) {}
+    void atomPatternCharacter(UChar) {}
+    void atomBuiltInCharacterClass(BuiltInCharacterClassID, bool) {}
+    void atomCharacterClassBegin(bool = false) {}
+    void atomCharacterClassAtom(UChar) {}
+    void atomCharacterClassRange(UChar, UChar) {}
+    void atomCharacterClassBuiltIn(BuiltInCharacterClassID, bool) {}
+    void atomCharacterClassEnd() {}
+    void atomParenthesesSubpatternBegin(bool = true) {}
+    void atomParentheticalAssertionBegin(bool = false) {}
+    void atomParenthesesEnd() {}
+    void atomBackReference(unsigned) {}
+    void quantifyAtom(unsigned, unsigned, bool) {}
+    void disjunction() {}
 };
 
-}}
+ErrorCode checkSyntax(const UString& pattern)
+{
+    SyntaxChecker syntaxChecker;
+    return parse(syntaxChecker, pattern);
+}
 
-#endif
+}} // JSC::YARR

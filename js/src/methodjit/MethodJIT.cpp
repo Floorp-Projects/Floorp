@@ -846,12 +846,7 @@ static inline void Destroy(T &t)
 
 mjit::JITScript::~JITScript()
 {
-#if defined DEBUG && (defined JS_CPU_X86 || defined JS_CPU_X64) 
-    void *addr = code.m_code.executableAddress();
-    memset(addr, 0xcc, code.m_size);
-#endif
-
-    code.m_executablePool->release();
+    code.release();
 
 #if defined JS_POLYIC
     ic::GetElementIC *getElems_ = getElems();

@@ -280,12 +280,12 @@ extern void FragProfiling_FragFinalizer(nanojit::Fragment* f, TraceMonitor*);
 #define ORACLE_SIZE 4096
 
 class Oracle {
-    avmplus::BitSet _stackDontDemote;
-    avmplus::BitSet _globalDontDemote;
-    avmplus::BitSet _pcDontDemote;
-    avmplus::BitSet _pcSlowZeroTest;
+    nanojit::BitSet _stackDontDemote;
+    nanojit::BitSet _globalDontDemote;
+    nanojit::BitSet _pcDontDemote;
+    nanojit::BitSet _pcSlowZeroTest;
 public:
-    Oracle();
+    Oracle(VMAllocator* allocator);
 
     JS_REQUIRES_STACK void markGlobalSlotUndemotable(JSContext* cx, unsigned slot);
     JS_REQUIRES_STACK bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;

@@ -179,8 +179,11 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     linebase = base;
     prevLinebase = NULL;
 
-    listener = cx->debugHooks->sourceHandler;
-    listenerData = cx->debugHooks->sourceHandlerData;
+    JSSourceHandler listener = cx->debugHooks->sourceHandler;
+    void *listenerData = cx->debugHooks->sourceHandlerData;
+
+    if (listener)
+        listener(fn, ln, base, length, &listenerTSData, listenerData);
 
     /*
      * This table holds all the token kinds that satisfy these properties:

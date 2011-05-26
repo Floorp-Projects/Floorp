@@ -1,5 +1,9 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99 ft=cpp:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Copyright (C) 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2010 Peter Varga (pvarga@inf.u-szeged.hu), University of Szeged
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,26 +25,32 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#ifndef RegexPattern_h
-#define RegexPattern_h
+#ifndef YarrPattern_h
+#define YarrPattern_h
 
-#include "jsvector.h"
-#include "yarr/jswtfbridge.h"
-#include "yarr/yarr/RegexCommon.h"
-
+#include "wtfbridge.h"
+#include "ASCIICType.h"
 
 namespace JSC { namespace Yarr {
 
-#define RegexStackSpaceForBackTrackInfoPatternCharacter 1 // Only for !fixed quantifiers.
-#define RegexStackSpaceForBackTrackInfoCharacterClass 1 // Only for !fixed quantifiers.
-#define RegexStackSpaceForBackTrackInfoBackReference 2
-#define RegexStackSpaceForBackTrackInfoAlternative 1 // One per alternative.
-#define RegexStackSpaceForBackTrackInfoParentheticalAssertion 1
-#define RegexStackSpaceForBackTrackInfoParenthesesOnce 1 // Only for !fixed quantifiers.
-#define RegexStackSpaceForBackTrackInfoParenthesesTerminal 1
-#define RegexStackSpaceForBackTrackInfoParentheses 4
+enum ErrorCode {
+    NoError,
+    PatternTooLarge,
+    QuantifierOutOfOrder,
+    QuantifierWithoutAtom,
+    MissingParentheses,
+    ParenthesesUnmatched,
+    ParenthesesTypeInvalid,
+    CharacterClassUnmatched,
+    CharacterClassInvalidRange,
+    CharacterClassOutOfOrder,
+    EscapeUnterminated,
+    QuantifierTooLarge,
+    NumberOfErrorCodes
+};
 
 struct PatternDisjunction;
 
@@ -55,60 +65,42 @@ struct CharacterRange {
     }
 };
 
-/*
- * Wraps a table and indicates inversion. Can be efficiently borrowed
- * between character classes, so it's refcounted.
- */
-struct CharacterClassTable {
-
-    JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR;
-
+struct CharacterClassTable : RefCounted<CharacterClassTable> {
+    friend class js::OffTheBooks;
     const char* m_table;
     bool m_inverted;
-    jsrefcount m_refcount;
-
-    /* Ownership transferred to caller. */
-    static CharacterClassTable *create(const char* table, bool inverted)
+    static PassRefPtr<CharacterClassTable> create(const char* table, bool inverted)
     {
-        // FIXME: bug 574459 -- no NULL checks done by any of the callers, all
-        // of which are in RegExpJitTables.h.
-        return js::OffTheBooks::new_<CharacterClassTable>(table, inverted);
+        return adoptRef(js::OffTheBooks::new_<CharacterClassTable>(table, inverted));
     }
-
-    void incref() { JS_ATOMIC_INCREMENT(&m_refcount); }
-    void decref() { if (JS_ATOMIC_DECREMENT(&m_refcount) == 0) js::Foreground::delete_(this); }
 
 private:
     CharacterClassTable(const char* table, bool inverted)
         : m_table(table)
         , m_inverted(inverted)
-        , m_refcount(0)
     {
     }
 };
 
 struct CharacterClass {
+    WTF_MAKE_FAST_ALLOCATED
+public:
     // All CharacterClass instances have to have the full set of matches and ranges,
     // they may have an optional table for faster lookups (which must match the
     // specified matches and ranges)
-    CharacterClass(CharacterClassTable *table)
+    CharacterClass(PassRefPtr<CharacterClassTable> table)
         : m_table(table)
     {
-        if (m_table)
-            m_table->incref();
     }
     ~CharacterClass()
     {
-        if (m_table)
-            m_table->decref();
+        js::Foreground::delete_(m_table.get());
     }
-    typedef js::Vector<UChar, 0, js::SystemAllocPolicy> UChars;
-    typedef js::Vector<CharacterRange, 0, js::SystemAllocPolicy> CharacterRanges;
-    UChars m_matches;
-    CharacterRanges m_ranges;
-    UChars m_matchesUnicode;
-    CharacterRanges m_rangesUnicode;
-    CharacterClassTable *m_table;
+    Vector<UChar> m_matches;
+    Vector<CharacterRange> m_ranges;
+    Vector<UChar> m_matchesUnicode;
+    Vector<CharacterRange> m_rangesUnicode;
+    RefPtr<CharacterClassTable> m_table;
 };
 
 enum QuantifierType {
@@ -129,11 +121,12 @@ struct PatternTerm {
         TypeParenthesesSubpattern,
         TypeParentheticalAssertion
     } type;
-    bool invertOrCapture;
+    bool m_capture :1;
+    bool m_invert :1;
     union {
         UChar patternCharacter;
         CharacterClass* characterClass;
-        unsigned subpatternId;
+        unsigned backReferenceSubpatternId;
         struct {
             PatternDisjunction* disjunction;
             unsigned subpatternId;
@@ -147,8 +140,21 @@ struct PatternTerm {
     int inputPosition;
     unsigned frameLocation;
 
+    // No-argument constructor for js::Vector.
+    PatternTerm()
+        : type(PatternTerm::TypePatternCharacter)
+        , m_capture(false)
+        , m_invert(false)
+    {
+        patternCharacter = 0;
+        quantityType = QuantifierFixedCount;
+        quantityCount = 1;
+    }
+
     PatternTerm(UChar ch)
         : type(PatternTerm::TypePatternCharacter)
+        , m_capture(false)
+        , m_invert(false)
     {
         patternCharacter = ch;
         quantityType = QuantifierFixedCount;
@@ -157,16 +163,18 @@ struct PatternTerm {
 
     PatternTerm(CharacterClass* charClass, bool invert)
         : type(PatternTerm::TypeCharacterClass)
-        , invertOrCapture(invert)
+        , m_capture(false)
+        , m_invert(invert)
     {
         characterClass = charClass;
         quantityType = QuantifierFixedCount;
         quantityCount = 1;
     }
 
-    PatternTerm(Type type, unsigned subpatternId, PatternDisjunction* disjunction, bool invertOrCapture)
+    PatternTerm(Type type, unsigned subpatternId, PatternDisjunction* disjunction, bool capture = false, bool invert = false)
         : type(type)
-        , invertOrCapture(invertOrCapture)
+        , m_capture(capture)
+        , m_invert(invert)
     {
         parentheses.disjunction = disjunction;
         parentheses.subpatternId = subpatternId;
@@ -178,7 +186,8 @@ struct PatternTerm {
     
     PatternTerm(Type type, bool invert = false)
         : type(type)
-        , invertOrCapture(invert)
+        , m_capture(false)
+        , m_invert(invert)
     {
         quantityType = QuantifierFixedCount;
         quantityCount = 1;
@@ -186,9 +195,10 @@ struct PatternTerm {
 
     PatternTerm(unsigned spatternId)
         : type(TypeBackReference)
-        , invertOrCapture(false)
+        , m_capture(false)
+        , m_invert(false)
     {
-        subpatternId = spatternId;
+        backReferenceSubpatternId = spatternId;
         quantityType = QuantifierFixedCount;
         quantityCount = 1;
     }
@@ -215,12 +225,12 @@ struct PatternTerm {
     
     bool invert()
     {
-        return invertOrCapture;
+        return m_invert;
     }
 
     bool capture()
     {
-        return invertOrCapture;
+        return m_capture;
     }
     
     void quantify(unsigned count, QuantifierType type)
@@ -231,9 +241,8 @@ struct PatternTerm {
 };
 
 struct PatternAlternative {
-
-    JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR;
-
+    WTF_MAKE_FAST_ALLOCATED
+public:
     PatternAlternative(PatternDisjunction* disjunction)
         : m_parent(disjunction)
         , m_onceThrough(false)
@@ -245,14 +254,14 @@ struct PatternAlternative {
 
     PatternTerm& lastTerm()
     {
-        JS_ASSERT(m_terms.length());
-        return m_terms[m_terms.length() - 1];
+        ASSERT(m_terms.size());
+        return m_terms[m_terms.size() - 1];
     }
     
     void removeLastTerm()
     {
-        JS_ASSERT(m_terms.length());
-        m_terms.popBack();
+        ASSERT(m_terms.size());
+        m_terms.shrink(m_terms.size() - 1);
     }
     
     void setOnceThrough()
@@ -265,7 +274,7 @@ struct PatternAlternative {
         return m_onceThrough;
     }
 
-    js::Vector<PatternTerm, 0, js::SystemAllocPolicy> m_terms;
+    Vector<PatternTerm> m_terms;
     PatternDisjunction* m_parent;
     unsigned m_minimumSize;
     bool m_onceThrough : 1;
@@ -274,18 +283,9 @@ struct PatternAlternative {
     bool m_containsBOL : 1;
 };
 
-template<typename T, size_t N, class AP>
-static inline void
-deleteAllValues(js::Vector<T*,N,AP> &vector)
-{
-    for (T** t = vector.begin(); t < vector.end(); ++t)
-        js::Foreground::delete_(*t);
-}
-
 struct PatternDisjunction {
-
-    JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR;
-
+    WTF_MAKE_FAST_ALLOCATED
+public:
     PatternDisjunction(PatternAlternative* parent = 0)
         : m_parent(parent)
         , m_hasFixedSize(false)
@@ -299,13 +299,12 @@ struct PatternDisjunction {
 
     PatternAlternative* addNewAlternative()
     {
-        // FIXME: bug 574459 -- no NULL check
         PatternAlternative* alternative = js::OffTheBooks::new_<PatternAlternative>(this);
         m_alternatives.append(alternative);
         return alternative;
     }
 
-    js::Vector<PatternAlternative*, 0, js::SystemAllocPolicy> m_alternatives;
+    Vector<PatternAlternative*> m_alternatives;
     PatternAlternative* m_parent;
     unsigned m_minimumSize;
     unsigned m_callFrameSize;
@@ -314,7 +313,7 @@ struct PatternDisjunction {
 
 // You probably don't want to be calling these functions directly
 // (please to be calling newlineCharacterClass() et al on your
-// friendly neighborhood RegexPattern instance to get nicely
+// friendly neighborhood YarrPattern instance to get nicely
 // cached copies).
 CharacterClass* newlineCreate();
 CharacterClass* digitsCreate();
@@ -324,25 +323,34 @@ CharacterClass* nondigitsCreate();
 CharacterClass* nonspacesCreate();
 CharacterClass* nonwordcharCreate();
 
-struct RegexPattern {
-    RegexPattern(bool ignoreCase, bool multiline)
-        : m_ignoreCase(ignoreCase)
-        , m_multiline(multiline)
-        , m_containsBackreferences(false)
-        , m_containsBOL(false)
-        , m_numSubpatterns(0)
-        , m_maxBackReference(0)
-        , newlineCached(0)
-        , digitsCached(0)
-        , spacesCached(0)
-        , wordcharCached(0)
-        , nondigitsCached(0)
-        , nonspacesCached(0)
-        , nonwordcharCached(0)
-    {
-    }
+struct TermChain {
+    TermChain(PatternTerm term)
+        : term(term)
+    {}
 
-    ~RegexPattern()
+    PatternTerm term;
+    Vector<TermChain> hotTerms;
+};
+
+struct BeginChar {
+    BeginChar()
+        : value(0)
+        , mask(0)
+    {}
+
+    BeginChar(unsigned value, unsigned mask)
+        : value(value)
+        , mask(mask)
+    {}
+
+    unsigned value;
+    unsigned mask;
+};
+
+struct YarrPattern {
+    YarrPattern(const UString& pattern, bool ignoreCase, bool multiline, ErrorCode* error);
+
+    ~YarrPattern()
     {
         deleteAllValues(m_disjunctions);
         deleteAllValues(m_userCharacterClasses);
@@ -354,6 +362,7 @@ struct RegexPattern {
         m_maxBackReference = 0;
 
         m_containsBackreferences = false;
+        m_containsBeginChars = false;
         m_containsBOL = false;
 
         newlineCached = 0;
@@ -368,6 +377,7 @@ struct RegexPattern {
         m_disjunctions.clear();
         deleteAllValues(m_userCharacterClasses);
         m_userCharacterClasses.clear();
+        m_beginChars.clear();
     }
 
     bool containsIllegalBackReference()
@@ -418,19 +428,21 @@ struct RegexPattern {
         return nonwordcharCached;
     }
 
-    typedef js::Vector<PatternDisjunction*, 4, js::SystemAllocPolicy> PatternDisjunctions;
-    typedef js::Vector<CharacterClass*, 0, js::SystemAllocPolicy> CharacterClasses;
     bool m_ignoreCase : 1;
     bool m_multiline : 1;
     bool m_containsBackreferences : 1;
+    bool m_containsBeginChars : 1;
     bool m_containsBOL : 1;
     unsigned m_numSubpatterns;
     unsigned m_maxBackReference;
-    PatternDisjunction *m_body;
-    PatternDisjunctions m_disjunctions;
-    CharacterClasses m_userCharacterClasses;
+    PatternDisjunction* m_body;
+    Vector<PatternDisjunction*, 4> m_disjunctions;
+    Vector<CharacterClass*> m_userCharacterClasses;
+    Vector<BeginChar> m_beginChars;
 
 private:
+    ErrorCode compile(const UString& patternString);
+
     CharacterClass* newlineCached;
     CharacterClass* digitsCached;
     CharacterClass* spacesCached;
@@ -442,4 +454,4 @@ private:
 
 } } // namespace JSC::Yarr
 
-#endif // RegexPattern_h
+#endif // YarrPattern_h
