@@ -13,15 +13,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="events.js"></script>
+          src="../events.js"></script>
   <script type="application/javascript"
-          src="actions.js"></script>
+          src="../actions.js"></script>
   <script type="application/javascript"
-          src="role.js"></script>
+          src="../role.js"></script>
   <script type="application/javascript"
-          src="states.js"></script>
+          src="../states.js"></script>
 
   <script type="application/javascript">
 
@@ -59,47 +59,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
-      // test the accessible tree
-
-      var accTree = {
-        role: ROLE_GROUPING,
-        children: [
-          { // start/stop button
-            role: ROLE_PUSHBUTTON,
-            name: "Play",
-            states: {
-              states: STATE_FOCUSABLE
-            }
-          },
-          { // buffer bar
-            role: ROLE_PROGRESSBAR
-          },
-          { // progress bar
-            role: ROLE_PROGRESSBAR
-          },
-          { // slider of progress bar
-            role: ROLE_SLIDER,
-            name: "0:00 of 0:01 elapsed",
-            states: {
-              states: STATE_FOCUSABLE
-            }
-          },
-          { // duration label, role="presentation"
-            role: ROLE_NOTHING
-          },
-          { // mute button
-            role: ROLE_PUSHBUTTON,
-            name: "Mute",
-            states: {
-              states: STATE_FOCUSABLE
-            }
-          }
-        ]
-      };
-      testAccessibleTree("audio", accTree);
-
-      //////////////////////////////////////////////////////////////////////////
       // test actions of audio controls
+
+      todo(false, "Focus test are disabled until bug 494175 is fixed.");
 
       var audioElm = getAccessible("audio");
       var playBtn = audioElm.firstChild;
@@ -112,24 +74,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
           actionName: "press",
           events: CLICK_EVENTS,
           eventSeq: [
-            new focusChecker(muteBtn),
+     //       new focusChecker(muteBtn),
             new nameChecker(muteBtn, "Unmute"),
           ]
         },
-        {
-          ID: scrubber,
-          actionName: "activate",
-          events: null,
-          eventSeq: [
-            new focusChecker(scrubber)
-          ]
-        },
+     //   {
+     //     ID: scrubber,
+     //     actionName: "activate",
+     //     events: null,
+     //     eventSeq: [
+     //       new focusChecker(scrubber)
+     //     ]
+     //   },
         {
           ID: playBtn,
           actionName: "press",
           events: CLICK_EVENTS,
           eventSeq: [
-            new focusChecker(playBtn),
+     //       new focusChecker(playBtn),
             new nameChecker(playBtn, "Pause"),
           ]
         }
@@ -152,7 +114,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
   <pre id="test">
   </pre>
 
-  <audio id="audio" src="bug461281.ogg"
+  <audio id="audio" src="../bug461281.ogg"
          controls="true"></audio>
 
   <div id="eventDump"></div>
