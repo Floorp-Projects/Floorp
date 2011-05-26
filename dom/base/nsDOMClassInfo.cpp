@@ -502,6 +502,8 @@
 #include "nsDOMTouchEvent.h"
 #include "nsIDOMCustomEvent.h"
 
+#include "nsWrapperCacheInlines.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 

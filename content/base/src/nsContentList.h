@@ -99,7 +99,7 @@ public:
     return mElements.Count();
   }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsBaseContentList, nsINodeList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsBaseContentList)
 
   void AppendElement(nsIContent *aContent);
   void MaybeAppendElement(nsIContent* aContent)
