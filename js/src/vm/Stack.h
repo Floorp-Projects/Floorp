@@ -43,6 +43,8 @@
 
 #include "jsfun.h"
 
+struct JSContext;
+
 namespace js {
 
 class StackFrame;
@@ -580,7 +582,8 @@ class StackFrame
     inline void ensureCoherentArgCount();
 
     inline js::Value &canonicalActualArg(uintN i) const;
-    template <class Op> inline bool forEachCanonicalActualArg(Op op);
+    template <class Op>
+    inline bool forEachCanonicalActualArg(Op op, uintN start = 0, uintN count = uintN(-1));
     template <class Op> inline bool forEachFormalArg(Op op);
 
     inline void clearMissingArgs();
@@ -1163,6 +1166,7 @@ class StackSpace
      */
     JSObject &varObjForFrame(const StackFrame *fp);
 
+#ifdef JS_TRACER
     /*
      * LeaveTree requires stack allocation to rebuild the stack. There is no
      * good way to handle an OOM for these allocations, so this function checks
@@ -1170,6 +1174,7 @@ class StackSpace
      * conservative upper bound.
      */
     inline bool ensureEnoughSpaceToEnterTrace();
+#endif
 
     /*
      * If we let infinite recursion go until it hit the end of the contiguous

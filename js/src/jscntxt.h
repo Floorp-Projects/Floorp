@@ -291,7 +291,7 @@ struct JSThread {
 #define JS_THREAD_DATA(cx)      (&(cx)->thread()->data)
 
 extern JSThread *
-js_CurrentThread(JSRuntime *rt);
+js_CurrentThreadAndLockGC(JSRuntime *rt);
 
 /*
  * The function takes the GC lock and does not release in successful return.
@@ -299,7 +299,7 @@ js_CurrentThread(JSRuntime *rt);
  * the error reporting to the caller.
  */
 extern JSBool
-js_InitContextThread(JSContext *cx);
+js_InitContextThreadAndLockGC(JSContext *cx);
 
 /*
  * On entrance the GC lock must be held and it will be held on exit.
@@ -713,7 +713,7 @@ struct JSRuntime {
      * OOM reporting (in js_ReportOutOfMemory). If a GC is requested while
      * reporting the OOM, we ignore it.
      */
-    bool                 inOOMReport;
+    int32               inOOMReport;
 
 #if defined(MOZ_GCTIMER) || defined(JSGC_TESTPILOT)
     struct GCData {

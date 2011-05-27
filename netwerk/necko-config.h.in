@@ -51,6 +51,7 @@
 #undef NECKO_PROTOCOL_http
 #undef NECKO_PROTOCOL_res
 #undef NECKO_PROTOCOL_viewsource
+#undef NECKO_PROTOCOL_websocket
 #undef NECKO_PROTOCOL_wyciwyg
 
 #endif

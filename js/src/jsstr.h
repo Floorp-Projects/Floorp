@@ -1108,60 +1108,68 @@ js_SkipWhiteSpace(const jschar *s, const jschar *end)
     return s;
 }
 
+namespace js {
+
 /*
- * Some string functions have an optional bool useCESU8 argument.
- * CESU-8 (Compatibility Encoding Scheme for UTF-16: 8-bit) is a
- * variant of UTF-8 that allows us to store any wide character
- * string as a narrow character string. For strings containing
- * mostly ascii, it saves space.
+ * On encodings:
+ *
+ * - Some string functions have an optional FlationCoding argument that allow
+ *   the caller to force CESU-8 encoding handling. 
+ * - Functions that don't take a FlationCoding base their NormalEncoding
+ *   behavior on the js_CStringsAreUTF8 value. NormalEncoding is either raw
+ *   (simple zero-extension) or UTF-8 depending on js_CStringsAreUTF8.
+ * - Functions that explicitly state their encoding do not use the
+ *   js_CStringsAreUTF8 value.
+ *
+ * CESU-8 (Compatibility Encoding Scheme for UTF-16: 8-bit) is a variant of
+ * UTF-8 that allows us to store any wide character string as a narrow
+ * character string. For strings containing mostly ascii, it saves space.
  * http://www.unicode.org/reports/tr26/
  */
 
+enum FlationCoding
+{
+    NormalEncoding,
+    CESU8Encoding
+};
+
 /*
- * Inflate bytes to JS chars and vice versa.  Report out of memory via cx and
- * return null on error, otherwise return the jschar or byte vector that was
- * JS_malloc'ed. length is updated to the length of the new string in jschars.
- * Using useCESU8 = true treats 'bytes' as CESU-8.
+ * Inflate bytes to jschars. Return null on error, otherwise return the jschar
+ * or byte vector that was malloc'ed. length is updated to the length of the
+ * new string (in jschars).
  */
 extern jschar *
-js_InflateString(JSContext *cx, const char *bytes, size_t *length, bool useCESU8 = false);
+InflateString(JSContext *cx, const char *bytes, size_t *length,
+              FlationCoding fc = NormalEncoding);
 
 extern char *
-js_DeflateString(JSContext *cx, const jschar *chars, size_t length);
+DeflateString(JSContext *cx, const jschar *chars, size_t length);
 
 /*
- * Inflate bytes to JS chars into a buffer. 'chars' must be large enough for
- * 'length' jschars. The buffer is NOT null-terminated. The destination length
- * must be be initialized with the buffer size and will contain on return the
- * number of copied chars. Conversion behavior depends on js_CStringsAreUTF8.
+ * Inflate bytes to JS chars in an existing buffer. 'chars' must be large
+ * enough for 'length' jschars. The buffer is NOT null-terminated.
+ * 
+ * charsLength must be be initialized with the destination buffer size and, on
+ * return, will contain on return the number of copied chars.
  */
-extern JSBool
-js_InflateStringToBuffer(JSContext *cx, const char *bytes, size_t length,
-                         jschar *chars, size_t *charsLength);
+extern bool
+InflateStringToBuffer(JSContext *cx, const char *bytes, size_t length,
+                      jschar *chars, size_t *charsLength);
 
-/*
- * Same as js_InflateStringToBuffer, but treats 'bytes' as UTF-8 or CESU-8.
- */
-extern JSBool
-js_InflateUTF8StringToBuffer(JSContext *cx, const char *bytes, size_t length,
-                             jschar *chars, size_t *charsLength,
-                             bool useCESU8 = false);
+extern bool
+InflateUTF8StringToBuffer(JSContext *cx, const char *bytes, size_t length,
+                          jschar *chars, size_t *charsLength,
+                          FlationCoding fc = NormalEncoding);
 
-/*
- * Get number of bytes in the deflated sequence of characters. Behavior depends
- * on js_CStringsAreUTF8.
- */
+/* Get number of bytes in the deflated sequence of characters. */
 extern size_t
-js_GetDeflatedStringLength(JSContext *cx, const jschar *chars,
-                           size_t charsLength);
+GetDeflatedStringLength(JSContext *cx, const jschar *chars, size_t charsLength);
 
-/*
- * Same as js_GetDeflatedStringLength, but treats the result as UTF-8 or CESU-8.
- * This function will never fail (return -1) in CESU-8 mode.
- */
+/* This function will never fail (return -1) in CESU-8 mode. */
 extern size_t
-js_GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
-                               size_t charsLength, bool useCESU8 = false);
+GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
+                            size_t charsLength,
+                            FlationCoding fc = NormalEncoding);
 
 /*
  * Deflate JS chars to bytes into a buffer. 'bytes' must be large enough for
@@ -1169,17 +1177,19 @@ js_GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
  * must to be initialized with the buffer size and will contain on return the
  * number of copied bytes. Conversion behavior depends on js_CStringsAreUTF8.
  */
-extern JSBool
-js_DeflateStringToBuffer(JSContext *cx, const jschar *chars,
-                         size_t charsLength, char *bytes, size_t *length);
+extern bool
+DeflateStringToBuffer(JSContext *cx, const jschar *chars,
+                      size_t charsLength, char *bytes, size_t *length);
 
 /*
- * Same as js_DeflateStringToBuffer, but treats 'bytes' as UTF-8 or CESU-8.
+ * Same as DeflateStringToBuffer, but treats 'bytes' as UTF-8 or CESU-8.
  */
-extern JSBool
-js_DeflateStringToUTF8Buffer(JSContext *cx, const jschar *chars,
-                             size_t charsLength, char *bytes, size_t *length,
-                             bool useCESU8 = false);
+extern bool
+DeflateStringToUTF8Buffer(JSContext *cx, const jschar *chars,
+                          size_t charsLength, char *bytes, size_t *length,
+                          FlationCoding fc = NormalEncoding);
+
+} /* namespace js */
 
 /* Export a few natives and a helper to other files in SpiderMonkey. */
 extern JSBool

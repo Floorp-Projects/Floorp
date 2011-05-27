@@ -44,8 +44,8 @@ function populateConsole(aHudRef) {
 }
 
 function testCSSPruning() {
-  let prefBranch = Services.prefs.getBranch("devtools.hud.");
-  prefBranch.setIntPref("loglimit", LOG_LIMIT);
+  let prefBranch = Services.prefs.getBranch("devtools.hud.loglimit.");
+  prefBranch.setIntPref("cssparser", LOG_LIMIT);
 
   browser.removeEventListener("DOMContentLoaded",testCSSPruning, false);
 

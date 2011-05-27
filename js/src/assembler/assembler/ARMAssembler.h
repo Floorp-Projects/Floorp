@@ -855,7 +855,7 @@ namespace JSC {
 
         JmpSrc blx(int rm, Condition cc = AL)
         {
-#if WTF_ARM_ARCH_AT_LEAST(5)
+#if WTF_CPU_ARM && WTF_ARM_ARCH_VERSION >= 5
             int s = m_buffer.uncheckedSize();
             js::JaegerSpew(
                     js::JSpew_Insns,
@@ -988,7 +988,7 @@ namespace JSC {
 
         static ARMWord* getLdrImmAddress(ARMWord* insn)
         {
-#if WTF_ARM_ARCH_AT_LEAST(5)
+#if WTF_CPU_ARM && WTF_ARM_ARCH_VERSION >= 5
             // Check for call
             if ((*insn & 0x0f7f0000) != 0x051f0000) {
                 // Must be BLX

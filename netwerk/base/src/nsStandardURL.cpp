@@ -1577,6 +1577,20 @@ nsStandardURL::SetPath(const nsACString &input)
 NS_IMETHODIMP
 nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
 {
+    return EqualsInternal(unknownOther, eHonorRef, result);
+}
+
+NS_IMETHODIMP
+nsStandardURL::EqualsExceptRef(nsIURI *unknownOther, PRBool *result)
+{
+    return EqualsInternal(unknownOther, eIgnoreRef, result);
+}
+
+nsresult
+nsStandardURL::EqualsInternal(nsIURI *unknownOther,
+                              nsStandardURL::RefHandlingEnum refHandlingMode,
+                              PRBool *result)
+{
     NS_ENSURE_ARG_POINTER(unknownOther);
     NS_PRECONDITION(result, "null pointer");
 
@@ -1602,13 +1616,18 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
         // ignore the host!
         !SegmentIs(mHost, other->mSpec.get(), other->mHost) ||
         !SegmentIs(mQuery, other->mSpec.get(), other->mQuery) ||
-        !SegmentIs(mRef, other->mSpec.get(), other->mRef) ||
         !SegmentIs(mUsername, other->mSpec.get(), other->mUsername) ||
         !SegmentIs(mPassword, other->mSpec.get(), other->mPassword) ||
         Port() != other->Port() ||
         !SegmentIs(mParam, other->mSpec.get(), other->mParam)) {
         // No need to compare files or other URI parts -- these are different
         // beasties
+        *result = PR_FALSE;
+        return NS_OK;
+    }
+
+    if (refHandlingMode == eHonorRef &&
+        !SegmentIs(mRef, other->mSpec.get(), other->mRef)) {
         *result = PR_FALSE;
         return NS_OK;
     }
@@ -1678,7 +1697,22 @@ nsStandardURL::StartClone()
 NS_IMETHODIMP
 nsStandardURL::Clone(nsIURI **result)
 {
-    nsStandardURL *clone = StartClone();
+    return CloneInternal(eHonorRef, result);
+}
+
+
+NS_IMETHODIMP
+nsStandardURL::CloneIgnoringRef(nsIURI **result)
+{
+    return CloneInternal(eIgnoreRef, result);
+}
+
+nsresult
+nsStandardURL::CloneInternal(nsStandardURL::RefHandlingEnum refHandlingMode,
+                             nsIURI **result)
+
+{
+    nsRefPtr<nsStandardURL> clone = StartClone();
     if (!clone)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1708,7 +1742,11 @@ nsStandardURL::Clone(nsIURI **result)
     clone->mHostEncoding = mHostEncoding;
     clone->mSpecEncoding = mSpecEncoding;
 
-    NS_ADDREF(*result = clone);
+    if (refHandlingMode == eIgnoreRef) {
+        clone->SetRef(EmptyCString());
+    }
+
+    clone.forget(result);
     return NS_OK;
 }
 
