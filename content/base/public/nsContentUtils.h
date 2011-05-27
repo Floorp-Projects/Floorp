@@ -871,16 +871,6 @@ public:
   static PRBool IsInChromeDocshell(nsIDocument *aDocument);
 
   /**
-   * Release *aSupportsPtr when the shutdown notification is received
-   */
-  static nsresult ReleasePtrOnShutdown(nsISupports** aSupportsPtr) {
-    NS_ASSERTION(aSupportsPtr, "Expect to crash!");
-    NS_ASSERTION(*aSupportsPtr, "Expect to crash!");
-    return sPtrsToPtrsToRelease->AppendElement(aSupportsPtr) != nsnull ? NS_OK :
-      NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  /**
    * Return the content policy service
    */
   static nsIContentPolicy *GetContentPolicy();
@@ -1832,9 +1822,6 @@ private:
   static nsILineBreaker* sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
   static nsIUGenCategory* sGenCat;
-
-  // Holds pointers to nsISupports* that should be released at shutdown
-  static nsTArray<nsISupports**>* sPtrsToPtrsToRelease;
 
   static nsIScriptRuntime* sScriptRuntimes[NS_STID_ARRAY_UBOUND];
   static PRInt32 sScriptRootCount[NS_STID_ARRAY_UBOUND];
