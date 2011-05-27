@@ -6074,12 +6074,11 @@ JS_SetContextThread(JSContext *cx)
         return reinterpret_cast<jsword>(cx->thread()->id);
     }
 
-    if (!js_InitContextThread(cx)) {
+    if (!js_InitContextThreadAndLockGC(cx)) {
         js_ReportOutOfMemory(cx);
         return -1;
     }
 
-    /* Here the GC lock is still held after js_InitContextThread took it. */
     JS_UNLOCK_GC(cx->runtime);
 #endif
     return 0;

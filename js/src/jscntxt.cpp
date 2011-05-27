@@ -149,7 +149,7 @@ ThreadData::triggerOperationCallback(JSRuntime *rt)
 #ifdef JS_THREADSAFE
 
 JSThread *
-js_CurrentThread(JSRuntime *rt)
+js_CurrentThreadAndLockGC(JSRuntime *rt)
 {
     void *id = js_CurrentThreadId();
     JS_LOCK_GC(rt);
@@ -205,9 +205,9 @@ js_CurrentThread(JSRuntime *rt)
 }
 
 JSBool
-js_InitContextThread(JSContext *cx)
+js_InitContextThreadAndLockGC(JSContext *cx)
 {
-    JSThread *thread = js_CurrentThread(cx->runtime);
+    JSThread *thread = js_CurrentThreadAndLockGC(cx->runtime);
     if (!thread)
         return false;
 
@@ -237,7 +237,7 @@ ThreadData *
 js_CurrentThreadData(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
-    JSThread *thread = js_CurrentThread(rt);
+    JSThread *thread = js_CurrentThreadAndLockGC(rt);
     if (!thread)
         return NULL;
 
@@ -335,14 +335,14 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     }
 
 #ifdef JS_THREADSAFE
-    if (!js_InitContextThread(cx)) {
+    if (!js_InitContextThreadAndLockGC(cx)) {
         Foreground::delete_(cx);
         return NULL;
     }
 #endif
 
     /*
-     * Here the GC lock is still held after js_InitContextThread took it and
+     * Here the GC lock is still held after js_InitContextThreadAndLockGC took it and
      * the GC is not running on another thread.
      */
     for (;;) {
