@@ -1,4 +1,5 @@
 /* -*- Mode: js2; js2-basic-offset: 2; indent-tabs-mode: nil; -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -44,7 +45,8 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["PropertyPanel", "PropertyTreeView", "namesAndValuesOf"];
+var EXPORTED_SYMBOLS = ["PropertyPanel", "PropertyTreeView",
+                        "namesAndValuesOf", "isNonNativeGetter"];
 
 ///////////////////////////////////////////////////////////////////////////
 //// Helper for PropertyTreeView
@@ -112,11 +114,20 @@ function presentableValueFor(aObject)
       presentable = aObject.toString();
       let m = /^\[object (\S+)\]/.exec(presentable);
 
-      if (typeof aObject == "object" && typeof aObject.next == "function" &&
-          m && m[1] == "Generator") {
+      try {
+        if (typeof aObject == "object" && typeof aObject.next == "function" &&
+            m && m[1] == "Generator") {
+          return {
+            type: TYPE_OTHER,
+            display: m[1]
+          };
+        }
+      }
+      catch (ex) {
+        // window.history.next throws in the typeof check above.
         return {
-          type: TYPE_OTHER,
-          display: m[1]
+          type: TYPE_OBJECT,
+          display: m ? m[1] : "Object"
         };
       }
 
@@ -149,6 +160,49 @@ function isNativeFunction(aFunction)
 }
 
 /**
+ * Tells if the given property of the provided object is a non-native getter or
+ * not.
+ *
+ * @param object aScope
+ *        Scope to use for the check.
+ *
+ * @param object aObject
+ *        The object that contains the property.
+ *
+ * @param string aProp
+ *        The property you want to check if it is a getter or not.
+ *
+ * @return boolean
+ *         True if the given property is a getter, false otherwise.
+ */
+function isNonNativeGetter(aScope, aObject, aProp) {
+  if (typeof aObject != "object") {
+    return false;
+  }
+  let desc;
+  while (aObject) {
+    try {
+      if (desc = aScope.Object.getOwnPropertyDescriptor(aObject, aProp)) {
+        break;
+      }
+    }
+    catch (ex) {
+      // Native getters throw here. See bug 520882.
+      if (ex.name == "NS_ERROR_XPC_BAD_CONVERT_JS" ||
+          ex.name == "NS_ERROR_XPC_BAD_OP_ON_WN_PROTO") {
+        return false;
+      }
+      throw ex;
+    }
+    aObject = Object.getPrototypeOf(aObject);
+  }
+  if (desc && desc.get && !isNativeFunction(desc.get)) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Get an array of property name value pairs for the tree.
  *
  * @param object aObject
@@ -159,7 +213,7 @@ function isNativeFunction(aFunction)
 function namesAndValuesOf(aObject)
 {
   let pairs = [];
-  let value, presentable, getter;
+  let value, presentable;
 
   let isDOMDocument = aObject instanceof Ci.nsIDOMDocument;
 
@@ -169,11 +223,11 @@ function namesAndValuesOf(aObject)
       continue;
     }
 
-    // Also skip non-native getters.
-    // TODO: implement a safer way to skip non-native getters. See bug 647235.
-    getter = aObject.__lookupGetter__ ?
-             aObject.__lookupGetter__(propName) : null;
-    if (getter && !isNativeFunction(getter)) {
+    // Also skip non-native getters. Pass the content window so that
+    // getOwnPropertyDescriptor can work later on.
+    let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    let contentWindow = chromeWindow.gBrowser.selectedBrowser.contentWindow;
+    if (isNonNativeGetter(contentWindow.wrappedJSObject, aObject, propName)) {
       value = ""; // Value is never displayed.
       presentable = {type: TYPE_OTHER, display: "Getter"};
     }
