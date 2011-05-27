@@ -310,8 +310,9 @@ NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, b
                                       PropertyDescriptor *desc)
 {
     // FIXME: expandos
-    int32 index;
-    if (JSID_IS_INT(id) && ((index = JSID_TO_INT(id)) >= 0)) {
+    bool isNumber;
+    int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
+    if (isNumber && index >= 0) {
         T *nodeList = getNodeList(proxy);
         nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
         if (result) {
@@ -399,8 +400,9 @@ bool
 NodeList<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     // FIXME: expandos
-    int32 index;
-    if (JSID_IS_INT(id) && ((index = JSID_TO_INT(id)) >= 0)) {
+    bool isNumber;
+    int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
+    if (isNumber && index >= 0) {
         if (getNodeList(proxy)->GetNodeAt(PRUint32(index))) {
             *bp = true;
             return true;
@@ -505,8 +507,9 @@ bool
 NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
     // FIXME: expandos
-    int32 index;
-    if (JSID_IS_INT(id) && ((index = JSID_TO_INT(id)) >= 0)) {
+    bool isNumber;
+    int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
+    if (isNumber && index >= 0) {
         T *nodeList = getNodeList(proxy);
         nsIContent *result = nodeList->GetNodeAt(PRUint32(index));
         if (result)
