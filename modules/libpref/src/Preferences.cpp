@@ -1051,6 +1051,19 @@ Preferences::GetChar(const char* aPref, nsAString* aResult)
 
 // static
 nsresult
+Preferences::GetLocalizedString(const char* aPref, nsACString* aResult)
+{
+  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  nsAutoString result;
+  nsresult rv = GetLocalizedString(aPref, &result);
+  if (NS_SUCCEEDED(rv)) {
+    CopyUTF16toUTF8(result, *aResult);
+  }
+  return rv;
+}
+
+// static
+nsresult
 Preferences::GetLocalizedString(const char* aPref, nsAString* aResult)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
