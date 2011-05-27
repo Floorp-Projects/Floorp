@@ -135,7 +135,8 @@ public: /* internal -- HPUX compiler can't handle this being private */
                                    const URLSegment &segment,
                                    PRInt16 mask,
                                    nsAFlatCString &buf,
-                                   PRBool& appended);
+                                   PRBool& appended,
+                                   PRUint32 extraLen = 0);
          
         // Encode the given string if necessary, and return a reference to
         // the encoded string.  Returns a reference to |buf| if encoding
