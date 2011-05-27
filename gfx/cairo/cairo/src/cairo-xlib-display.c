@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -37,32 +37,10 @@
 
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
-
 #include "cairo-freelist-private.h"
+#include "cairo-error-private.h"
 
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
-
-struct _cairo_xlib_display {
-    cairo_xlib_display_t *next;
-    cairo_reference_count_t ref_count;
-    cairo_mutex_t mutex;
-
-    Display *display;
-    cairo_xlib_screen_t *screens;
-
-    int render_major;
-    int render_minor;
-    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_RGB16_565 + 1];
-
-    cairo_xlib_job_t *workqueue;
-    cairo_freelist_t wq_freelist;
-
-    cairo_xlib_hook_t *close_display_hooks;
-    unsigned int buggy_gradients :1;
-    unsigned int buggy_pad_reflect :1;
-    unsigned int buggy_repeat :1;
-    unsigned int closed :1;
-};
 
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
@@ -95,14 +73,11 @@ _cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
 static void
 _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 {
-    cairo_xlib_screen_t	    *screen;
-    cairo_xlib_hook_t		    *hook;
+    cairo_xlib_screen_t *screen;
+    cairo_xlib_hook_t *hook;
 
-    /* call all registered shutdown routines */
-    CAIRO_MUTEX_LOCK (display->mutex);
-
-    for (screen = display->screens; screen != NULL; screen = screen->next)
-	_cairo_xlib_screen_close_display (screen);
+    cairo_list_foreach_entry (screen, cairo_xlib_screen_t, &display->screens, link)
+	_cairo_xlib_screen_close_display (display, screen);
 
     while (TRUE) {
 	hook = display->close_display_hooks;
@@ -111,50 +86,23 @@ _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 
 	_cairo_xlib_remove_close_display_hook_internal (display, hook);
 
-	CAIRO_MUTEX_UNLOCK (display->mutex);
 	hook->func (display, hook);
-	CAIRO_MUTEX_LOCK (display->mutex);
     }
     display->closed = TRUE;
-
-    CAIRO_MUTEX_UNLOCK (display->mutex);
 }
 
 static void
-_cairo_xlib_display_discard_screens (cairo_xlib_display_t *display)
+_cairo_xlib_display_finish (void *abstract_display)
 {
-    cairo_xlib_screen_t *screens;
+    cairo_xlib_display_t *display = abstract_display;
 
-    CAIRO_MUTEX_LOCK (display->mutex);
-    screens = display->screens;
-    display->screens = NULL;
-    CAIRO_MUTEX_UNLOCK (display->mutex);
-
-    while (screens != NULL) {
-	cairo_xlib_screen_t *screen = screens;
-	screens = screen->next;
-
-	_cairo_xlib_screen_destroy (screen);
-    }
+    display->display = NULL;
 }
 
-cairo_xlib_display_t *
-_cairo_xlib_display_reference (cairo_xlib_display_t *display)
+static void
+_cairo_xlib_display_destroy (void *abstract_display)
 {
-    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&display->ref_count));
-
-    _cairo_reference_count_inc (&display->ref_count);
-
-    return display;
-}
-
-void
-_cairo_xlib_display_destroy (cairo_xlib_display_t *display)
-{
-    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&display->ref_count));
-
-    if (! _cairo_reference_count_dec_and_test (&display->ref_count))
-	return;
+    cairo_xlib_display_t *display = abstract_display;
 
     /* destroy all outstanding notifies */
     while (display->workqueue != NULL) {
@@ -168,7 +116,11 @@ _cairo_xlib_display_destroy (cairo_xlib_display_t *display)
     }
     _cairo_freelist_fini (&display->wq_freelist);
 
-    CAIRO_MUTEX_FINI (display->mutex);
+    while (! cairo_list_is_empty (&display->screens)) {
+	_cairo_xlib_screen_destroy (cairo_list_first_entry (&display->screens,
+                                                            cairo_xlib_screen_t,
+                                                            link));
+    }
 
     free (display);
 }
@@ -179,6 +131,60 @@ _noop_error_handler (Display     *display,
 {
     return False;		/* return value is ignored */
 }
+
+static void
+_cairo_xlib_display_notify (cairo_xlib_display_t *display)
+{
+    cairo_xlib_job_t *jobs, *job, *freelist;
+    Display *dpy = display->display;
+
+    /* Optimistic atomic pointer read -- don't care if it is wrong due to
+     * contention as we will check again very shortly.
+     */
+    if (display->workqueue == NULL)
+	return;
+
+    jobs = display->workqueue;
+    while (jobs != NULL) {
+	display->workqueue = NULL;
+
+	/* reverse the list to obtain FIFO order */
+	job = NULL;
+	do {
+	    cairo_xlib_job_t *next = jobs->next;
+	    jobs->next = job;
+	    job = jobs;
+	    jobs = next;
+	} while (jobs != NULL);
+	freelist = jobs = job;
+
+	do {
+	    job = jobs;
+	    jobs = job->next;
+
+	    switch (job->type){
+	    case WORK:
+		job->func.work.notify (dpy, job->func.work.data);
+		if (job->func.work.destroy != NULL)
+		    job->func.work.destroy (job->func.work.data);
+		break;
+
+	    case RESOURCE:
+		job->func.resource.notify (dpy, job->func.resource.xid);
+		break;
+	    }
+	} while (jobs != NULL);
+
+	do {
+	    job = freelist;
+	    freelist = job->next;
+	    _cairo_freelist_free (&display->wq_freelist, job);
+	} while (freelist != NULL);
+
+	jobs = display->workqueue;
+    }
+}
+
 static int
 _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 {
@@ -193,19 +199,22 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     if (display == NULL)
 	return 0;
 
-    /* protect the notifies from triggering XErrors */
-    XSync (dpy, False);
-    old_handler = XSetErrorHandler (_noop_error_handler);
+    if (! cairo_device_acquire (&display->base)) {
+      /* protect the notifies from triggering XErrors */
+      XSync (dpy, False);
+      old_handler = XSetErrorHandler (_noop_error_handler);
 
-    _cairo_xlib_display_notify (display);
-    _cairo_xlib_call_close_display_hooks (display);
-    _cairo_xlib_display_discard_screens (display);
+      _cairo_xlib_display_notify (display);
+      _cairo_xlib_call_close_display_hooks (display);
 
-    /* catch any that arrived before marking the display as closed */
-    _cairo_xlib_display_notify (display);
+      /* catch any that arrived before marking the display as closed */
+      _cairo_xlib_display_notify (display);
 
-    XSync (dpy, False);
-    XSetErrorHandler (old_handler);
+      XSync (dpy, False);
+      XSetErrorHandler (old_handler);
+
+      cairo_device_release (&display->base);
+    }
 
     /*
      * Unhook from the global list
@@ -223,24 +232,46 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
 
     assert (display != NULL);
-    _cairo_xlib_display_destroy (display);
+
+    cairo_device_finish (&display->base);
+    cairo_device_destroy (&display->base);
 
     /* Return value in accordance with requirements of
      * XESetCloseDisplay */
     return 0;
 }
 
-cairo_status_t
-_cairo_xlib_display_get (Display *dpy,
-			 cairo_xlib_display_t **out)
+static const cairo_device_backend_t _cairo_xlib_device_backend = {
+    CAIRO_DEVICE_TYPE_XLIB,
+
+    NULL,
+    NULL,
+
+    NULL, /* flush */
+    _cairo_xlib_display_finish,
+    _cairo_xlib_display_destroy,
+};
+
+/**
+ * cairo_xlib_device_create:
+ * @dpy: the display to create the device for
+ *
+ * Gets the device belonging to @dpy, or creates it if it doesn't exist yet.
+ *
+ * Returns: the device belonging to @dpy
+ **/
+cairo_device_t *
+_cairo_xlib_device_create (Display *dpy)
 {
     cairo_xlib_display_t *display;
     cairo_xlib_display_t **prev;
+    cairo_device_t *device;
     XExtCodes *codes;
     const char *env;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     static int buggy_repeat_force = -1;
+
+    CAIRO_MUTEX_INITIALIZE ();
 
     /* There is an apparent deadlock between this mutex and the
      * mutex for the display, but it's actually safe. For the
@@ -262,18 +293,14 @@ _cairo_xlib_display_get (Display *dpy,
 		display->next = _cairo_xlib_display_list;
 		_cairo_xlib_display_list = display;
 	    }
-	    break;
+            device = cairo_device_reference (&display->base);
+	    goto UNLOCK;
 	}
-    }
-
-    if (display != NULL) {
-	display = _cairo_xlib_display_reference (display);
-	goto UNLOCK;
     }
 
     display = malloc (sizeof (cairo_xlib_display_t));
     if (unlikely (display == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNLOCK;
     }
 
@@ -304,20 +331,20 @@ _cairo_xlib_display_get (Display *dpy,
 
     codes = XAddExtension (dpy);
     if (unlikely (codes == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 	free (display);
-	display = NULL;
 	goto UNLOCK;
     }
+
+    _cairo_device_init (&display->base, &_cairo_xlib_device_backend);
 
     XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
 
     _cairo_freelist_init (&display->wq_freelist, sizeof (cairo_xlib_job_t));
 
-    CAIRO_REFERENCE_COUNT_INIT (&display->ref_count, 2); /* add one for the CloseDisplay */
-    CAIRO_MUTEX_INIT (display->mutex);
+    cairo_device_reference (&display->base); /* add one for the CloseDisplay */
     display->display = dpy;
-    display->screens = NULL;
+    cairo_list_init (&display->screens);
     display->workqueue = NULL;
     display->close_display_hooks = NULL;
     display->closed = FALSE;
@@ -434,26 +461,24 @@ _cairo_xlib_display_get (Display *dpy,
     display->next = _cairo_xlib_display_list;
     _cairo_xlib_display_list = display;
 
+    device = &display->base;
+
 UNLOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
-    *out = display;
-    return status;
+    return device;
 }
 
 void
 _cairo_xlib_add_close_display_hook (cairo_xlib_display_t	*display,
 				    cairo_xlib_hook_t		*hook)
 {
-    CAIRO_MUTEX_LOCK (display->mutex);
     hook->prev = NULL;
     hook->next = display->close_display_hooks;
     if (hook->next != NULL)
 	hook->next->prev = hook;
     display->close_display_hooks = hook;
-    CAIRO_MUTEX_UNLOCK (display->mutex);
 }
 
-/* display->mutex must be held */
 static void
 _cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
 						cairo_xlib_hook_t *hook)
@@ -474,9 +499,7 @@ void
 _cairo_xlib_remove_close_display_hook (cairo_xlib_display_t	*display,
 				       cairo_xlib_hook_t	*hook)
 {
-    CAIRO_MUTEX_LOCK (display->mutex);
     _cairo_xlib_remove_close_display_hook_internal (display, hook);
-    CAIRO_MUTEX_UNLOCK (display->mutex);
 }
 
 cairo_status_t
@@ -487,7 +510,6 @@ _cairo_xlib_display_queue_resource (cairo_xlib_display_t *display,
     cairo_xlib_job_t *job;
     cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
 
-    CAIRO_MUTEX_LOCK (display->mutex);
     if (display->closed == FALSE) {
 	job = _cairo_freelist_alloc (&display->wq_freelist);
 	if (job != NULL) {
@@ -501,7 +523,6 @@ _cairo_xlib_display_queue_resource (cairo_xlib_display_t *display,
 	    status = CAIRO_STATUS_SUCCESS;
 	}
     }
-    CAIRO_MUTEX_UNLOCK (display->mutex);
 
     return status;
 }
@@ -515,7 +536,6 @@ _cairo_xlib_display_queue_work (cairo_xlib_display_t *display,
     cairo_xlib_job_t *job;
     cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
 
-    CAIRO_MUTEX_LOCK (display->mutex);
     if (display->closed == FALSE) {
 	job = _cairo_freelist_alloc (&display->wq_freelist);
 	if (job != NULL) {
@@ -530,66 +550,22 @@ _cairo_xlib_display_queue_work (cairo_xlib_display_t *display,
 	    status = CAIRO_STATUS_SUCCESS;
 	}
     }
-    CAIRO_MUTEX_UNLOCK (display->mutex);
 
     return status;
 }
 
-void
-_cairo_xlib_display_notify (cairo_xlib_display_t *display)
+cairo_status_t
+_cairo_xlib_display_acquire (cairo_device_t *device, cairo_xlib_display_t **display)
 {
-    cairo_xlib_job_t *jobs, *job, *freelist;
-    Display *dpy = display->display;
+    cairo_status_t status;
 
-    /* Optimistic atomic pointer read -- don't care if it is wrong due to
-     * contention as we will check again very shortly.
-     */
-    if (display->workqueue == NULL)
-	return;
+    status = cairo_device_acquire (device);
+    if (status)
+        return status;
 
-    CAIRO_MUTEX_LOCK (display->mutex);
-    jobs = display->workqueue;
-    while (jobs != NULL) {
-	display->workqueue = NULL;
-	CAIRO_MUTEX_UNLOCK (display->mutex);
-
-	/* reverse the list to obtain FIFO order */
-	job = NULL;
-	do {
-	    cairo_xlib_job_t *next = jobs->next;
-	    jobs->next = job;
-	    job = jobs;
-	    jobs = next;
-	} while (jobs != NULL);
-	freelist = jobs = job;
-
-	do {
-	    job = jobs;
-	    jobs = job->next;
-
-	    switch (job->type){
-	    case WORK:
-		job->func.work.notify (dpy, job->func.work.data);
-		if (job->func.work.destroy != NULL)
-		    job->func.work.destroy (job->func.work.data);
-		break;
-
-	    case RESOURCE:
-		job->func.resource.notify (dpy, job->func.resource.xid);
-		break;
-	    }
-	} while (jobs != NULL);
-
-	CAIRO_MUTEX_LOCK (display->mutex);
-	do {
-	    job = freelist;
-	    freelist = job->next;
-	    _cairo_freelist_free (&display->wq_freelist, job);
-	} while (freelist != NULL);
-
-	jobs = display->workqueue;
-    }
-    CAIRO_MUTEX_UNLOCK (display->mutex);
+    *display = (cairo_xlib_display_t *) device;
+    _cairo_xlib_display_notify (*display);
+    return status;
 }
 
 XRenderPictFormat *
@@ -604,7 +580,6 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	return xrender_format;
 #endif
 
-    CAIRO_MUTEX_LOCK (display->mutex);
     xrender_format = display->cached_xrender_formats[format];
     if (xrender_format == NULL) {
 	int pict_format;
@@ -630,13 +605,12 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	            break;
 	        }
 	    }
-	    if (!visual) {
-	        CAIRO_MUTEX_UNLOCK (display->mutex);
+	    if (!visual)
 	        return NULL;
-	    }
 	    xrender_format = XRenderFindVisualFormat(display->display, visual);
 	    break;
 	}
+	case CAIRO_FORMAT_INVALID:
 	default:
 	    ASSERT_NOT_REACHED;
 	case CAIRO_FORMAT_ARGB32:
@@ -647,75 +621,25 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 		                                        pict_format);
 	display->cached_xrender_formats[format] = xrender_format;
     }
-    CAIRO_MUTEX_UNLOCK (display->mutex);
 
     return xrender_format;
 }
 
-Display *
-_cairo_xlib_display_get_dpy (cairo_xlib_display_t *display)
-{
-    return display->display;
-}
-
-void
-_cairo_xlib_display_remove_screen (cairo_xlib_display_t *display,
-				   cairo_xlib_screen_t *screen)
-{
-    cairo_xlib_screen_t **prev;
-    cairo_xlib_screen_t *list;
-
-    CAIRO_MUTEX_LOCK (display->mutex);
-    for (prev = &display->screens; (list = *prev); prev = &list->next) {
-	if (list == screen) {
-	    *prev = screen->next;
-	    break;
-	}
-    }
-    CAIRO_MUTEX_UNLOCK (display->mutex);
-}
-
-cairo_status_t
+cairo_xlib_screen_t *
 _cairo_xlib_display_get_screen (cairo_xlib_display_t *display,
-				Screen *screen,
-				cairo_xlib_screen_t **out)
+				Screen *screen)
 {
-    cairo_xlib_screen_t *info = NULL, **prev;
+    cairo_xlib_screen_t *info;
 
-    CAIRO_MUTEX_LOCK (display->mutex);
-    if (display->closed) {
-	CAIRO_MUTEX_UNLOCK (display->mutex);
-	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
-    }
-
-    for (prev = &display->screens; (info = *prev); prev = &(*prev)->next) {
+    cairo_list_foreach_entry (info, cairo_xlib_screen_t, &display->screens, link) {
 	if (info->screen == screen) {
-	    /*
-	     * MRU the list
-	     */
-	    if (prev != &display->screens) {
-		*prev = info->next;
-		info->next = display->screens;
-		display->screens = info;
-	    }
-	    break;
-	}
+            if (display->screens.next != &info->link)
+                cairo_list_move (&info->link, &display->screens);
+            return info;
+        }
     }
-    CAIRO_MUTEX_UNLOCK (display->mutex);
 
-    *out = info;
-    return CAIRO_STATUS_SUCCESS;
-}
-
-
-void
-_cairo_xlib_display_add_screen (cairo_xlib_display_t *display,
-				cairo_xlib_screen_t *screen)
-{
-    CAIRO_MUTEX_LOCK (display->mutex);
-    screen->next = display->screens;
-    display->screens = screen;
-    CAIRO_MUTEX_UNLOCK (display->mutex);
+    return NULL;
 }
 
 void
@@ -727,19 +651,19 @@ _cairo_xlib_display_get_xrender_version (cairo_xlib_display_t *display,
 }
 
 cairo_bool_t
-_cairo_xlib_display_has_repeat (cairo_xlib_display_t *display)
+_cairo_xlib_display_has_repeat (cairo_device_t *device)
 {
-    return ! display->buggy_repeat;
+    return ! ((cairo_xlib_display_t *) device)->buggy_repeat;
 }
 
 cairo_bool_t
-_cairo_xlib_display_has_reflect (cairo_xlib_display_t *display)
+_cairo_xlib_display_has_reflect (cairo_device_t *device)
 {
-    return ! display->buggy_pad_reflect;
+    return ! ((cairo_xlib_display_t *) device)->buggy_pad_reflect;
 }
 
 cairo_bool_t
-_cairo_xlib_display_has_gradients (cairo_xlib_display_t *display)
+_cairo_xlib_display_has_gradients (cairo_device_t *device)
 {
-    return ! display->buggy_gradients;
+    return ! ((cairo_xlib_display_t *) device)->buggy_gradients;
 }

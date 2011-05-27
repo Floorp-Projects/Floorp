@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -37,6 +37,7 @@
 #include "cairoint.h"
 
 #include "cairo-output-stream-private.h"
+#include "cairo-error-private.h"
 #include "cairo-compiler-private.h"
 
 #include <stdio.h>
@@ -694,7 +695,7 @@ _cairo_memory_stream_create (void)
 cairo_status_t
 _cairo_memory_stream_destroy (cairo_output_stream_t *abstract_stream,
 			      unsigned char **data_out,
-			      unsigned int *length_out)
+			      unsigned long *length_out)
 {
     memory_stream_t *stream;
     cairo_status_t status;

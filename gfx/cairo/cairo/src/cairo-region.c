@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -38,15 +38,77 @@
 
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-region-private.h"
 
 /* XXX need to update pixman headers to be const as appropriate */
 #define CONST_CAST (pixman_region32_t *)
 
+/**
+ * SECTION:cairo-region
+ * @Title: Regions
+ * @Short_Description: Representing a pixel-aligned area
+ *
+ * Regions are a simple graphical data type representing an area of 
+ * integer-aligned rectangles. They are often used on raster surfaces 
+ * to track areas of interest, such as change or clip areas.
+ */
+
 static const cairo_region_t _cairo_region_nil = {
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     CAIRO_STATUS_NO_MEMORY,		/* status */
 };
+
+cairo_region_t *
+_cairo_region_create_in_error (cairo_status_t status)
+{
+    switch (status) {
+    case CAIRO_STATUS_NO_MEMORY:
+	return (cairo_region_t *) &_cairo_region_nil;
+
+    case CAIRO_STATUS_SUCCESS:
+    case CAIRO_STATUS_LAST_STATUS:
+	ASSERT_NOT_REACHED;
+	/* fall-through */
+    case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
+    case CAIRO_STATUS_INVALID_STATUS:
+    case CAIRO_STATUS_INVALID_CONTENT:
+    case CAIRO_STATUS_INVALID_FORMAT:
+    case CAIRO_STATUS_INVALID_VISUAL:
+    case CAIRO_STATUS_READ_ERROR:
+    case CAIRO_STATUS_WRITE_ERROR:
+    case CAIRO_STATUS_FILE_NOT_FOUND:
+    case CAIRO_STATUS_TEMP_FILE_ERROR:
+    case CAIRO_STATUS_INVALID_STRIDE:
+    case CAIRO_STATUS_INVALID_SIZE:
+    case CAIRO_STATUS_DEVICE_TYPE_MISMATCH:
+    case CAIRO_STATUS_DEVICE_ERROR:
+    case CAIRO_STATUS_INVALID_RESTORE:
+    case CAIRO_STATUS_INVALID_POP_GROUP:
+    case CAIRO_STATUS_NO_CURRENT_POINT:
+    case CAIRO_STATUS_INVALID_MATRIX:
+    case CAIRO_STATUS_NULL_POINTER:
+    case CAIRO_STATUS_INVALID_STRING:
+    case CAIRO_STATUS_INVALID_PATH_DATA:
+    case CAIRO_STATUS_SURFACE_FINISHED:
+    case CAIRO_STATUS_PATTERN_TYPE_MISMATCH:
+    case CAIRO_STATUS_INVALID_DASH:
+    case CAIRO_STATUS_INVALID_DSC_COMMENT:
+    case CAIRO_STATUS_INVALID_INDEX:
+    case CAIRO_STATUS_CLIP_NOT_REPRESENTABLE:
+    case CAIRO_STATUS_FONT_TYPE_MISMATCH:
+    case CAIRO_STATUS_USER_FONT_IMMUTABLE:
+    case CAIRO_STATUS_USER_FONT_ERROR:
+    case CAIRO_STATUS_NEGATIVE_COUNT:
+    case CAIRO_STATUS_INVALID_CLUSTERS:
+    case CAIRO_STATUS_INVALID_SLANT:
+    case CAIRO_STATUS_INVALID_WEIGHT:
+    case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
+    default:
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_region_t *) &_cairo_region_nil;
+    }
+}
 
 /**
  * _cairo_region_set_error:
@@ -144,6 +206,21 @@ cairo_region_create (void)
 }
 slim_hidden_def (cairo_region_create);
 
+/**
+ * cairo_region_create_rectangles:
+ * @rects: an array of @count rectangles
+ * @count: number of rectangles
+ *
+ * Allocates a new region object containing the union of all given @rects.
+ *
+ * Return value: A newly allocated #cairo_region_t. Free with
+ *   cairo_region_destroy(). This function always returns a
+ *   valid pointer; if memory cannot be allocated, then a special
+ *   error object is returned where all operations on the object do nothing.
+ *   You can check for this with cairo_region_status().
+ *
+ * Since: 1.10
+ **/
 cairo_region_t *
 cairo_region_create_rectangles (const cairo_rectangle_int_t *rects,
 				int count)
@@ -154,17 +231,14 @@ cairo_region_create_rectangles (const cairo_rectangle_int_t *rects,
     int i;
 
     region = _cairo_malloc (sizeof (cairo_region_t));
-    if (unlikely (region == NULL)) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_region_t *) &_cairo_region_nil;
-    }
+    if (unlikely (region == NULL))
+	return _cairo_region_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     if (count > ARRAY_LENGTH (stack_pboxes)) {
 	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
 	if (unlikely (pboxes == NULL)) {
 	    free (region);
-	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	    return (cairo_region_t *) &_cairo_region_nil;
+	    return _cairo_region_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	}
     }
 
@@ -182,8 +256,7 @@ cairo_region_create_rectangles (const cairo_rectangle_int_t *rects,
 
     if (unlikely (i == 0)) {
 	free (region);
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_region_t *) &_cairo_region_nil;
+	return _cairo_region_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     CAIRO_REFERENCE_COUNT_INIT (&region->ref_count, 1);
@@ -369,7 +442,7 @@ slim_hidden_def (cairo_region_get_rectangle);
 /**
  * cairo_region_get_extents:
  * @region: a #cairo_region_t
- * @rectangle: rectangle into which to store the extents
+ * @extents: rectangle into which to store the extents
  *
  * Gets the bounding rectangle of @region as a #cairo_rectangle_int_t
  *
@@ -491,7 +564,7 @@ slim_hidden_def (cairo_region_subtract_rectangle);
  * Since: 1.10
  **/
 cairo_status_t
-cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
+cairo_region_intersect (cairo_region_t *dst, const cairo_region_t *other)
 {
     if (dst->status)
 	return dst->status;
@@ -499,7 +572,7 @@ cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
     if (other->status)
 	return _cairo_region_set_error (dst, other->status);
 
-    if (! pixman_region32_intersect (&dst->rgn, &dst->rgn, &other->rgn))
+    if (! pixman_region32_intersect (&dst->rgn, &dst->rgn, CONST_CAST &other->rgn))
 	return _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
@@ -554,7 +627,7 @@ slim_hidden_def (cairo_region_intersect_rectangle);
  **/
 cairo_status_t
 cairo_region_union (cairo_region_t *dst,
-		    cairo_region_t *other)
+		    const cairo_region_t *other)
 {
     if (dst->status)
 	return dst->status;
@@ -562,7 +635,7 @@ cairo_region_union (cairo_region_t *dst,
     if (other->status)
 	return _cairo_region_set_error (dst, other->status);
 
-    if (! pixman_region32_union (&dst->rgn, &dst->rgn, &other->rgn))
+    if (! pixman_region32_union (&dst->rgn, &dst->rgn, CONST_CAST &other->rgn))
 	return _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
@@ -604,6 +677,86 @@ cairo_region_union_rectangle (cairo_region_t *dst,
 slim_hidden_def (cairo_region_union_rectangle);
 
 /**
+ * cairo_region_xor:
+ * @dst: a #cairo_region_t
+ * @other: another #cairo_region_t
+ *
+ * Computes the exclusive difference of @dst with @other and places the
+ * result in @dst. That is, @dst will be set to contain all areas that
+ * are either in @dst or in @other, but not in both.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
+ *
+ * Since: 1.10
+ **/
+cairo_status_t
+cairo_region_xor (cairo_region_t *dst, const cairo_region_t *other)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    pixman_region32_t tmp;
+
+    if (dst->status)
+	return dst->status;
+
+    if (other->status)
+	return _cairo_region_set_error (dst, other->status);
+
+    pixman_region32_init (&tmp);
+
+    /* XXX: get an xor function into pixman */
+    if (! pixman_region32_subtract (&tmp, CONST_CAST &other->rgn, &dst->rgn) ||
+        ! pixman_region32_subtract (&dst->rgn, &dst->rgn, CONST_CAST &other->rgn) || 
+        ! pixman_region32_union (&dst->rgn, &dst->rgn, &tmp))
+	status = _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+
+    pixman_region32_fini (&tmp);
+
+    return status;
+}
+slim_hidden_def (cairo_region_xor);
+
+/**
+ * cairo_region_xor_rectangle:
+ * @dst: a #cairo_region_t
+ * @rectangle: a #cairo_rectangle_int_t
+ *
+ * Computes the exclusive difference of @dst with @rectangle and places the
+ * result in @dst. That is, @dst will be set to contain all areas that are 
+ * either in @dst or in @rectangle, but not in both.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
+ *
+ * Since: 1.10
+ **/
+cairo_status_t
+cairo_region_xor_rectangle (cairo_region_t *dst,
+			    const cairo_rectangle_int_t *rectangle)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    pixman_region32_t region, tmp;
+
+    if (dst->status)
+	return dst->status;
+
+    pixman_region32_init_rect (&region,
+			       rectangle->x, rectangle->y,
+			       rectangle->width, rectangle->height);
+    pixman_region32_init (&tmp);
+
+    /* XXX: get an xor function into pixman */
+    if (! pixman_region32_subtract (&tmp, &region, &dst->rgn) ||
+        ! pixman_region32_subtract (&dst->rgn, &dst->rgn, &region) || 
+        ! pixman_region32_union (&dst->rgn, &dst->rgn, &tmp))
+	status = _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+
+    pixman_region32_fini (&tmp);
+    pixman_region32_fini (&region);
+
+    return status;
+}
+slim_hidden_def (cairo_region_xor_rectangle);
+
+/**
  * cairo_region_is_empty:
  * @region: a #cairo_region_t
  *
@@ -643,6 +796,16 @@ cairo_region_translate (cairo_region_t *region,
     pixman_region32_translate (&region->rgn, dx, dy);
 }
 slim_hidden_def (cairo_region_translate);
+
+/**
+ * cairo_region_overlap_t:
+ * @CAIRO_REGION_OVERLAP_IN: The contents are entirely inside the region
+ * @CAIRO_REGION_OVERLAP_OUT: The contents are entirely outside the region
+ * @CAIRO_REGION_OVERLAP_PART: The contents are partially inside and
+ *     partially outside the region.
+ * 
+ * Used as the return value for cairo_region_contains_rectangle().
+ */
 
 /**
  * cairo_region_contains_rectangle:
@@ -712,13 +875,14 @@ slim_hidden_def (cairo_region_contains_point);
 
 /**
  * cairo_region_equal:
- * @region_a: a #cairo_region_t
- * @region_b: a #cairo_region_t
+ * @a: a #cairo_region_t or %NULL
+ * @b: a #cairo_region_t or %NULL
  *
- * Compares whether region_a is equivalent to region_b.
+ * Compares whether region_a is equivalent to region_b. %NULL as an argument
+ * is equal to itself, but not to any non-%NULL region.
  *
  * Return value: %TRUE if both regions contained the same coverage,
- * %FALSE if it is not.
+ * %FALSE if it is not or any region is in an error status.
  *
  * Since: 1.10
  **/

@@ -121,9 +121,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsITheme.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
-#include "nsIPrefService.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
 #include "imgIContainer.h"
@@ -160,6 +157,7 @@
 #include "nsWindowGfx.h"
 #include "gfxWindowsPlatform.h"
 #include "Layers.h"
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -212,6 +210,7 @@
 
 using namespace mozilla::widget;
 using namespace mozilla::layers;
+using namespace mozilla;
 
 /**************************************************************
  **************************************************************
@@ -648,33 +647,12 @@ nsWindow::Create(nsIWidget *aParent,
        that a Mozilla app hogs too much memory while minimized, they
        will have that entire bug tattooed on their backside. */
 
-    sTrimOnMinimize = 0;
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-      nsCOMPtr<nsIPrefBranch> prefBranch;
-      prefs->GetBranch(0, getter_AddRefs(prefBranch));
-      if (prefBranch) {
-
-        PRBool temp;
-        if (NS_SUCCEEDED(prefBranch->GetBoolPref("config.trim_on_minimize",
-                                                 &temp))
-            && temp)
-          sTrimOnMinimize = 1;
-
-        if (NS_SUCCEEDED(prefBranch->GetBoolPref("intl.keyboard.per_window_layout",
-                                                 &temp)))
-          sSwitchKeyboardLayout = temp;
-
-        if (NS_SUCCEEDED(prefBranch->GetBoolPref("mozilla.widget.disable-native-theme",
-                                                 &temp)))
-          gDisableNativeTheme = temp;
-
-        if (NS_SUCCEEDED(prefBranch->GetBoolPref("mousewheel.enable_pixel_scrolling",
-                                                 &temp))) {
-          sEnablePixelScrolling = temp;
-        }
-      }
-    }
+    sTrimOnMinimize =
+      Preferences::GetBool("config.trim_on_minimize", PR_FALSE) ? 1 : 0;
+    sSwitchKeyboardLayout =
+      Preferences::GetBool("intl.keyboard.per_window_layout", PR_FALSE);
+    gDisableNativeTheme =
+      Preferences::GetBool("mozilla.widget.disable-native-theme", PR_FALSE);
   }
 
   return NS_OK;
@@ -3173,17 +3151,14 @@ struct LayerManagerPrefs {
 static void
 GetLayerManagerPrefs(LayerManagerPrefs* aManagerPrefs)
 {
-  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    prefs->GetBoolPref("layers.acceleration.disabled",
+  Preferences::GetBool("layers.acceleration.disabled",
                        &aManagerPrefs->mDisableAcceleration);
-    prefs->GetBoolPref("layers.acceleration.force-enabled",
+  Preferences::GetBool("layers.acceleration.force-enabled",
                        &aManagerPrefs->mForceAcceleration);
-    prefs->GetBoolPref("layers.prefer-opengl",
+  Preferences::GetBool("layers.prefer-opengl",
                        &aManagerPrefs->mPreferOpenGL);
-    prefs->GetBoolPref("layers.prefer-d3d9",
+  Preferences::GetBool("layers.prefer-d3d9",
                        &aManagerPrefs->mPreferD3D9);
-  }
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
   aManagerPrefs->mAccelerateByDefault =
@@ -3355,16 +3330,8 @@ nsWindow::OnDefaultButtonLoaded(const nsIntRect &aButtonRect)
     return NS_OK;
   }
 
-  PRBool isAlwaysSnapCursor = PR_FALSE;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    if (prefBranch) {
-      prefBranch->GetBoolPref("ui.cursor_snapping.always_enabled",
-                              &isAlwaysSnapCursor);
-    }
-  }
+  PRBool isAlwaysSnapCursor =
+    Preferences::GetBool("ui.cursor_snapping.always_enabled", PR_FALSE);
 
   if (!isAlwaysSnapCursor) {
     BOOL snapDefaultButton;
@@ -4660,16 +4627,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
           // Changing nsIPrefBranch entry which triggers callbacks
           // and flows into calling mDeviceContext->FlushFontCache()
           // to update the font cache in all the instance of Browsers
-          nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-          if (prefs) {
-            nsCOMPtr<nsIPrefBranch> fiPrefs;
-            prefs->GetBranch("font.internaluseonly.", getter_AddRefs(fiPrefs));
-            if (fiPrefs) {
-              PRBool fontInternalChange = PR_FALSE;
-              fiPrefs->GetBoolPref("changed", &fontInternalChange);
-              fiPrefs->SetBoolPref("changed", !fontInternalChange);
-            }
-          }
+          const char* kPrefName = "font.internaluseonly.changed";
+          PRBool fontInternalChange =
+            Preferences::GetBool(kPrefName, PR_FALSE);
+          Preferences::SetBool(kPrefName, !fontInternalChange);
         }
       } //if (NS_SUCCEEDED(rv))
     }
@@ -6335,6 +6296,9 @@ nsWindow::InitMouseWheelScrollData()
     // See the comments for the case sMouseWheelScrollLines > WHEEL_DELTA.
     sMouseWheelScrollChars = WHEEL_PAGESCROLL;
   }
+
+  sEnablePixelScrolling =
+    Preferences::GetBool("mousewheel.enable_pixel_scrolling", PR_TRUE);
 }
 
 /* static */
@@ -7707,15 +7671,8 @@ PRBool nsWindow::OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 {
   static PRInt8 sMouseWheelEmulation = -1;
   if (sMouseWheelEmulation < 0) {
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(prefs, PR_FALSE);
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefs->GetBranch(0, getter_AddRefs(prefBranch));
-    NS_ENSURE_TRUE(prefBranch, PR_FALSE);
-    PRBool emulate;
-    nsresult rv =
-      prefBranch->GetBoolPref("mousewheel.emulate_at_wm_scroll", &emulate);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    PRBool emulate =
+      Preferences::GetBool("mousewheel.emulate_at_wm_scroll", PR_FALSE);
     sMouseWheelEmulation = PRInt8(emulate);
   }
 
@@ -8078,10 +8035,8 @@ nsWindow::GetRootAccessible()
   static int accForceDisable = -1;
 
   if (accForceDisable == -1) {
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    PRBool b = PR_FALSE;
-    nsresult rv = prefs->GetBoolPref("accessibility.win32.force_disabled", &b);
-    if (NS_SUCCEEDED(rv) && b) {
+    const char* kPrefName = "accessibility.win32.force_disabled";
+    if (Preferences::GetBool(kPrefName, PR_FALSE)) {
       accForceDisable = 1;
     } else {
       accForceDisable = 0;
@@ -8785,17 +8740,11 @@ PRBool nsWindow::CanTakeFocus()
 
 void nsWindow::GetMainWindowClass(nsAString& aClass)
 {
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv) && prefs) {
-    nsXPIDLCString name;
-    rv = prefs->GetCharPref("ui.window_class_override", getter_Copies(name));
-    if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
-      aClass.AssignASCII(name.get());
-      return;
-    }
+  NS_PRECONDITION(aClass.IsEmpty(), "aClass should be empty string");
+  nsresult rv = Preferences::GetString("ui.window_class_override", &aClass);
+  if (NS_FAILED(rv) || aClass.IsEmpty()) {
+    aClass.AssignASCII(sDefaultMainWindowClass);
   }
-  aClass.AssignASCII(sDefaultMainWindowClass);
 }
 
 /**
@@ -8815,20 +8764,15 @@ PRBool nsWindow::GetInputWorkaroundPref(const char* aPrefName,
     return aValueIfAutomatic;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv) && prefs) {
-    PRInt32 lHackValue;
-    rv = prefs->GetIntPref(aPrefName, &lHackValue);
-    if (NS_SUCCEEDED(rv)) {
-      switch (lHackValue) {
-        case 0: // disabled
-          return PR_FALSE;
-        case 1: // enabled
-          return PR_TRUE;
-        default: // -1: autodetect
-          break;
-      }
+  PRInt32 lHackValue = 0;
+  if (NS_SUCCEEDED(Preferences::GetInt(aPrefName, &lHackValue))) {
+    switch (lHackValue) {
+      case 0: // disabled
+        return PR_FALSE;
+      case 1: // enabled
+        return PR_TRUE;
+      default: // -1: autodetect
+        break;
     }
   }
   return aValueIfAutomatic;

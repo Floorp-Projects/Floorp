@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -67,13 +67,14 @@ _cairo_stock_color (cairo_stock_t stock)
 	return &cairo_color_black;
     case CAIRO_STOCK_TRANSPARENT:
 	return &cairo_color_transparent;
+
+    case CAIRO_STOCK_NUM_COLORS:
+    default:
+	ASSERT_NOT_REACHED;
+	/* If the user can get here somehow, give a color that indicates a
+	 * problem. */
+	return &cairo_color_magenta;
     }
-
-    ASSERT_NOT_REACHED;
-
-    /* If the user can get here somehow, give a color that indicates a
-     * problem. */
-    return &cairo_color_magenta;
 }
 
 void
@@ -161,6 +162,7 @@ _cairo_color_get_rgba_premultiplied (cairo_color_t *color,
     *alpha = color->alpha;
 }
 
+/* NB: This function works both for unmultiplied and premultiplied colors */
 cairo_bool_t
 _cairo_color_equal (const cairo_color_t *color_a,
 	            const cairo_color_t *color_b)
@@ -168,8 +170,42 @@ _cairo_color_equal (const cairo_color_t *color_a,
     if (color_a == color_b)
 	return TRUE;
 
+    if (color_a->alpha_short != color_b->alpha_short)
+        return FALSE;
+
+    if (color_a->alpha_short == 0)
+        return TRUE;
+
     return color_a->red_short   == color_b->red_short   &&
            color_a->green_short == color_b->green_short &&
-           color_a->blue_short  == color_b->blue_short  &&
-           color_a->alpha_short == color_b->alpha_short;
+           color_a->blue_short  == color_b->blue_short;
+}
+
+cairo_bool_t
+_cairo_color_stop_equal (const cairo_color_stop_t *color_a,
+			 const cairo_color_stop_t *color_b)
+{
+    if (color_a == color_b)
+	return TRUE;
+
+    return color_a->alpha_short == color_b->alpha_short &&
+           color_a->red_short   == color_b->red_short   &&
+           color_a->green_short == color_b->green_short &&
+           color_a->blue_short  == color_b->blue_short;
+}
+
+cairo_content_t
+_cairo_color_get_content (const cairo_color_t *color)
+{
+    if (CAIRO_COLOR_IS_OPAQUE (color))
+        return CAIRO_CONTENT_COLOR;
+
+    if (color->red_short == 0 &&
+	color->green_short == 0 &&
+	color->blue_short == 0)
+    {
+        return CAIRO_CONTENT_ALPHA;
+    }
+
+    return CAIRO_CONTENT_COLOR_ALPHA;
 }

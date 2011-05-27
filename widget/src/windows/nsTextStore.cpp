@@ -41,10 +41,11 @@
 #include "nscore.h"
 #include "nsTextStore.h"
 #include "nsWindow.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "prlog.h"
 #include "nsPrintfCString.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 /******************************************************************/
 /* nsTextStore                                                    */
@@ -1331,19 +1332,8 @@ GetLayoutChangeIntervalTime()
   if (sTime > 0)
     return PRUint32(sTime);
 
-  sTime = 100;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (!prefs)
-    return PRUint32(sTime);
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-  if (!prefBranch)
-    return PRUint32(sTime);
-  nsresult rv =
-    prefBranch->GetIntPref("intl.tsf.on_layout_change_interval", &sTime);
-  if (NS_FAILED(rv))
-    return PRUint32(sTime);
-  sTime = PR_MAX(10, sTime);
+  sTime = NS_MAX(10,
+    Preferences::GetInt("intl.tsf.on_layout_change_interval", 100));
   return PRUint32(sTime);
 }
 
@@ -1625,15 +1615,8 @@ nsTextStore::Initialize(void)
     sTextStoreLog = PR_NewLogModule("nsTextStoreWidgets");
 #endif
   if (!sTsfThreadMgr) {
-    PRBool enableTsf = PR_TRUE;
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-      nsCOMPtr<nsIPrefBranch> prefBranch;
-      prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-      if (prefBranch && NS_FAILED(prefBranch->GetBoolPref(
-            "intl.enable_tsf_support", &enableTsf)))
-        enableTsf = PR_TRUE;
-    }
+    PRBool enableTsf =
+      Preferences::GetBool("intl.enable_tsf_support", PR_FALSE);
     if (enableTsf) {
       if (SUCCEEDED(CoCreateInstance(CLSID_TF_ThreadMgr, NULL,
             CLSCTX_INPROC_SERVER, IID_ITfThreadMgr,

@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -42,7 +42,7 @@ COMPILE_TIME_ASSERT(sizeof(void*) == sizeof(int) ||
 		    sizeof(void*) == sizeof(long long));
 #else
 void
-_cairo_atomic_int_inc (int *x)
+_cairo_atomic_int_inc (cairo_atomic_intptr_t *x)
 {
     CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
     *x += 1;
@@ -50,7 +50,7 @@ _cairo_atomic_int_inc (int *x)
 }
 
 cairo_bool_t
-_cairo_atomic_int_dec_and_test (int *x)
+_cairo_atomic_int_dec_and_test (cairo_atomic_intptr_t *x)
 {
     cairo_bool_t ret;
 
@@ -61,10 +61,10 @@ _cairo_atomic_int_dec_and_test (int *x)
     return ret;
 }
 
-int
-_cairo_atomic_int_cmpxchg (int *x, int oldv, int newv)
+cairo_atomic_intptr_t
+_cairo_atomic_int_cmpxchg_return_old_impl (cairo_atomic_intptr_t *x, cairo_atomic_intptr_t oldv, cairo_atomic_intptr_t newv)
 {
-    int ret;
+    cairo_atomic_intptr_t ret;
 
     CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
     ret = *x;
@@ -76,7 +76,7 @@ _cairo_atomic_int_cmpxchg (int *x, int oldv, int newv)
 }
 
 void *
-_cairo_atomic_ptr_cmpxchg (void **x, void *oldv, void *newv)
+_cairo_atomic_ptr_cmpxchg_return_old_impl (void **x, void *oldv, void *newv)
 {
     void *ret;
 
@@ -88,13 +88,12 @@ _cairo_atomic_ptr_cmpxchg (void **x, void *oldv, void *newv)
 
     return ret;
 }
-#endif
 
 #ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
-int
-_cairo_atomic_int_get (int *x)
+cairo_atomic_intptr_t
+_cairo_atomic_int_get (cairo_atomic_intptr_t *x)
 {
-    int ret;
+    cairo_atomic_intptr_t ret;
 
     CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
     ret = *x;
@@ -102,12 +101,6 @@ _cairo_atomic_int_get (int *x)
 
     return ret;
 }
+#endif
 
-void
-_cairo_atomic_int_set (int *x, int value)
-{
-    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
-    *x = value;
-    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
-}
 #endif

@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -39,6 +39,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-boxes-private.h"
+#include "cairo-error-private.h"
 #include "cairo-region-private.h"
 #include "cairo-slope-private.h"
 
@@ -156,45 +158,45 @@ _cairo_traps_add_trap (cairo_traps_t *traps,
  **/
 cairo_status_t
 _cairo_traps_init_boxes (cairo_traps_t	    *traps,
-		         const cairo_box_t  *boxes,
-			 int		     num_boxes)
+		         const cairo_boxes_t *boxes)
 {
     cairo_trapezoid_t *trap;
+    const struct _cairo_boxes_chunk *chunk;
 
     _cairo_traps_init (traps);
 
-    while (traps->traps_size < num_boxes) {
+    while (traps->traps_size < boxes->num_boxes) {
 	if (unlikely (! _cairo_traps_grow (traps))) {
 	    _cairo_traps_fini (traps);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
     }
 
-    traps->num_traps = num_boxes;
+    traps->num_traps = boxes->num_boxes;
     traps->is_rectilinear = TRUE;
     traps->is_rectangular = TRUE;
+    traps->maybe_region = boxes->is_pixel_aligned;
 
     trap = &traps->traps[0];
-    while (num_boxes--) {
-	trap->top    = boxes->p1.y;
-	trap->bottom = boxes->p2.y;
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	const cairo_box_t *box;
+	int i;
 
-	trap->left.p1   = boxes->p1;
-	trap->left.p2.x = boxes->p1.x;
-	trap->left.p2.y = boxes->p2.y;
+	box = chunk->base;
+	for (i = 0; i < chunk->count; i++) {
+	    trap->top    = box->p1.y;
+	    trap->bottom = box->p2.y;
 
-	trap->right.p1.x = boxes->p2.x;
-	trap->right.p1.y = boxes->p1.y;
-	trap->right.p2   = boxes->p2;
+	    trap->left.p1   = box->p1;
+	    trap->left.p2.x = box->p1.x;
+	    trap->left.p2.y = box->p2.y;
 
-	if (traps->maybe_region) {
-	    traps->maybe_region  = _cairo_fixed_is_integer (boxes->p1.x) &&
-		                   _cairo_fixed_is_integer (boxes->p1.y) &&
-		                   _cairo_fixed_is_integer (boxes->p2.x) &&
-		                   _cairo_fixed_is_integer (boxes->p2.y);
+	    trap->right.p1.x = box->p2.x;
+	    trap->right.p1.y = box->p1.y;
+	    trap->right.p2   = box->p2;
+
+	    box++, trap++;
 	}
-
-	trap++, boxes++;
     }
 
     return CAIRO_STATUS_SUCCESS;

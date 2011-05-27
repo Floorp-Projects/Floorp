@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -44,8 +44,6 @@ typedef struct _cairo_xlib_surface cairo_xlib_surface_t;
 struct _cairo_xlib_surface {
     cairo_surface_t base;
 
-    Display *dpy;
-    cairo_xlib_display_t *display;
     cairo_xlib_screen_t *screen;
     cairo_xlib_hook_t close_display_hook;
 
@@ -96,6 +94,7 @@ struct _cairo_xlib_surface {
     cairo_filter_t filter;
     cairo_extend_t extend;
     cairo_bool_t has_component_alpha;
+    int precision;
     XTransform xtransform;
 
     uint32_t a_mask;

@@ -49,13 +49,15 @@
 
 #include "nsGtkIMModule.h"
 #include "nsWindow.h"
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_PLATFORM_MAEMO
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
-#include "nsIPrefService.h"
 #include "mozilla/Services.h"
 #endif
+
+using namespace mozilla;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gGtkIMLog = nsnull;
@@ -594,14 +596,11 @@ nsGtkIMModule::SetInputMode(nsWindow* aCaller, const IMEContext* aContext)
             if (mIMEContext.mStatus != nsIWidget::IME_STATUS_DISABLED && 
                 mIMEContext.mStatus != nsIWidget::IME_STATUS_PLUGIN) {
 
-                nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-
-                PRBool useStrictPolicy = PR_FALSE;
-                if (NS_SUCCEEDED(prefs->GetBoolPref("content.ime.strict_policy", &useStrictPolicy))) {
-                    if (useStrictPolicy && !mIMEContext.FocusMovedByUser() && 
-                        mIMEContext.FocusMovedInContentProcess()) {
-                        return NS_OK;
-                    }
+                PRBool useStrictPolicy =
+                    Preferences::GetBool("content.ime.strict_policy", PR_FALSE);
+                if (useStrictPolicy && !mIMEContext.FocusMovedByUser() && 
+                    mIMEContext.FocusMovedInContentProcess()) {
+                    return NS_OK;
                 }
             }
 
