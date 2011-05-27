@@ -3357,7 +3357,7 @@ nsJSContext::PokeGC()
   CallCreateInstance("@mozilla.org/timer;1", &sGCTimer);
 
   if (!sGCTimer) {
-    NS_WARNING("Failed to create timer");
+    // Failed to create timer (probably because we're in XPCOM shutdown)
     return;
   }
 
