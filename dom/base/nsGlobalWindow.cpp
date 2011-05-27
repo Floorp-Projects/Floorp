@@ -5007,7 +5007,7 @@ nsGlobalWindow::Home()
     return NS_OK;
 
   nsAdoptingString homeURL =
-    nsContentUtils::GetLocalizedStringPref(PREF_BROWSER_STARTUP_HOMEPAGE);
+    Preferences::GetLocalizedString(PREF_BROWSER_STARTUP_HOMEPAGE);
 
   if (homeURL.IsEmpty()) {
     // if all else fails, use this
@@ -10691,7 +10691,7 @@ nsNavigator::GetLanguage(nsAString& aLanguage)
 {
   // e.g. "de-de, en-us,en"
   const nsAdoptingString& acceptLang =
-      nsContentUtils::GetLocalizedStringPref("intl.accept_languages");
+    Preferences::GetLocalizedString("intl.accept_languages");
   // take everything before the first "," or ";", without trailing space
   nsCharSeparatedTokenizer langTokenizer(acceptLang, ',');
   const nsSubstring &firstLangPart = langTokenizer.nextToken();
