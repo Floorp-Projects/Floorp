@@ -52,11 +52,12 @@
 
 struct nsID {
   /**
-   * @name Identifier values
+   * @name Identifier values.  Align these to start at an 8-byte (64-bit)
+   * boundary so we can use 64-bit loads in nsID::Equals.
    */
 
   //@{
-  PRUint32 m0;
+  NS_DEFINE_ALIGNED(PRUint32, m0, 8);
   PRUint16 m1;
   PRUint16 m2;
   PRUint8 m3[8];
@@ -73,6 +74,8 @@ struct nsID {
    */
 
   inline PRBool Equals(const nsID& other) const {
+    PR_STATIC_ASSERT(sizeof(nsID) == 64);
+
     // First cast to void* in order to silence the alignment warnings.
     return
       ((PRUint64*)(void*) &m0)[0] == ((PRUint64*)(void*) &other.m0)[0] &&
