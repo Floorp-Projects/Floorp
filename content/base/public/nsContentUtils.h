@@ -561,7 +561,6 @@ public:
   static void SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
                              nsIAtom **aTagName, PRInt32 *aNameSpaceID);
 
-  static nsAdoptingString GetLocalizedStringPref(const char *aPref);
   static void RegisterPrefCallback(const char *aPref,
                                    PrefChangedFunc aCallback,
                                    void * aClosure);
