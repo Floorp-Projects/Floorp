@@ -226,9 +226,6 @@ add_test(function test_locally_changed_keys() {
     do_check_false(store.urlExists("http://foo/bar?record-no--8"));
     do_check_false(store.urlExists("http://foo/bar?record-no--9"));
     
-    // Clean up.
-    Weave.Service.startOver();
-    
   } finally {
     Weave.Svc.Prefs.resetBranch("");
     server.stop(run_next_test);
