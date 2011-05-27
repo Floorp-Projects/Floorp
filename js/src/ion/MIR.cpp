@@ -149,6 +149,20 @@ MInstruction::replaceOperand(MUseIterator &use, MInstruction *ins)
 }
 
 void
+MInstruction::replaceOperand(size_t index, MInstruction *ins)
+{
+    MInstruction *old = getInput(index);
+    for (MUseIterator uses(old); uses.more(); uses.next()) {
+        if (uses->index() == index && uses->ins() == this) {
+            replaceOperand(uses, ins);
+            return;
+        }
+    }
+
+    JS_NOT_REACHED("could not find use");
+}
+
+void
 MInstruction::setOperand(size_t index, MInstruction *ins)
 {
     getOperand(index)->setInstruction(ins);
@@ -335,6 +349,7 @@ MSnapshot::New(MBasicBlock *block, jsbytecode *pc)
     MSnapshot *snapshot = new MSnapshot(block, pc);
     if (!snapshot->init(block))
         return NULL;
+    snapshot->inherit(block);
     return snapshot;
 }
 
@@ -350,11 +365,14 @@ MSnapshot::init(MBasicBlock *block)
     operands_ = block->gen()->allocate<MOperand *>(stackDepth());
     if (!operands_)
         return false;
+    return true;
+}
 
+void
+MSnapshot::inherit(MBasicBlock *block)
+{
     for (size_t i = 0; i < stackDepth(); i++)
         initOperand(i, block->getSlot(i));
-
-    return true;
 }
 
 void

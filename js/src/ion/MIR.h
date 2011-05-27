@@ -60,6 +60,7 @@ namespace ion {
     _(Return)                                                               \
     _(Copy)                                                                 \
     _(Box)                                                                  \
+    _(Unbox)                                                                \
     _(Snapshot)
 
 static const inline
@@ -366,6 +367,10 @@ class MInstruction
     virtual MIRType requiredInputType(size_t index) const {
         return MIRType_None;
     }
+
+    // Allows an instruction to despecialize if its input types are too complex
+    // to handle. Returns false on no change, true if the specialization was
+    // downgraded.
     virtual bool adjustForInputs() {
         return false;
     }
@@ -374,6 +379,7 @@ class MInstruction
     // allocated; the existing data structures are re-linked.
     void replaceOperand(MUse *prev, MUse *use, MInstruction *ins);
     void replaceOperand(MUseIterator &use, MInstruction *ins);
+    void replaceOperand(size_t index, MInstruction *ins);
 
     void addUse(MInstruction *ins, size_t index) {
         uses_ = MUse::New(uses_, ins, index);
@@ -403,6 +409,13 @@ class MInstruction
     }
     uint32 usedTypes() const {
         return usedTypes_;
+    }
+
+    // Asks a typed instruction to specialize itself to a specific type. If
+    // this is not possible, or not desireable, then the caller must insert an
+    // unbox operation.
+    virtual bool specializeTo(MIRType type) {
+        return false;
     }
 
   public:
@@ -677,8 +690,7 @@ class MBox : public MUnaryInstruction
 {
     MBox(MInstruction *ins)
       : MUnaryInstruction(ins)
-    {
-    }
+    { }
 
   public:
     INSTRUCTION_HEADER(Box);
@@ -692,6 +704,23 @@ class MBox : public MUnaryInstruction
 
     MIRType requiredInputType(size_t index) const {
         return MIRType_Any;
+    }
+};
+
+class MUnbox : public MUnaryInstruction
+{
+    MUnbox(MInstruction *ins, MIRType type)
+      : MUnaryInstruction(ins)
+    {
+        JS_ASSERT(ins->type() == MIRType_Value);
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Unbox);
+    static MUnbox *New(MInstruction *ins, MIRType type)
+    {
+        return new MUnbox(ins, type);
     }
 };
 
@@ -742,7 +771,7 @@ class MPhi : public MInstruction
     }
     bool addInput(MInstruction *ins);
     MIRType requiredInputType(size_t index) const {
-        return MIRType_Any;
+        return MIRType_Value;
     }
 };
 
@@ -750,12 +779,15 @@ class MPhi : public MInstruction
 // state from a position in the JIT.
 class MSnapshot : public MInstruction
 {
+    friend class MBasicBlock;
+
     MOperand **operands_;
     uint32 stackDepth_;
     jsbytecode *pc_;
 
     MSnapshot(MBasicBlock *block, jsbytecode *pc);
     bool init(MBasicBlock *state);
+    void inherit(MBasicBlock *state);
 
   protected:
     void setOperand(size_t index, MOperand *operand) {

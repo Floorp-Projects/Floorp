@@ -103,13 +103,48 @@ class InlineList
         }
     };
 
+    class const_iterator
+    {
+        friend class InlineList;
+        const Node *iter;
+      public:
+        const_iterator(const Node *iter) : iter(iter) { }
+
+        const_iterator & operator ++() {
+            iter = iter->next;
+            return *iter;
+        }
+        const_iterator operator ++(int) {
+            const_iterator old(*this);
+            iter = iter->next;
+            return old;
+        }
+        T * operator *() const {
+            return const_cast<T *>(static_cast<const T *>(iter));
+        }
+        T * operator ->() {
+            return const_cast<T *>(static_cast<const T *>(iter));
+        }
+        bool operator != (const const_iterator &where) const {
+            return iter != where.iter;
+        }
+        bool operator == (const const_iterator &where) const {
+            return iter == where.iter;
+        }
+    };
+
   public:
     iterator begin() {
         return iterator(head.next);
     }
-
     iterator end() {
         return iterator(&head);
+    }
+    const_iterator begin() const {
+        return const_iterator(head.next);
+    }
+    const_iterator end() const {
+        return const_iterator(&head);
     }
 
     iterator removeAt(iterator &where) {
