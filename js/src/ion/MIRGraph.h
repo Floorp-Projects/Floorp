@@ -118,6 +118,10 @@ class MBasicBlock : public TempObject
     // as needed.
     bool setVariable(uint32 slot);
 
+    bool hasHeader() const {
+        return instructions_.begin() != instructions_.end();
+    }
+
   public:
     ///////////////////////////////////////////////////////
     ////////// BEGIN GRAPH BUILDING INSTRUCTIONS //////////
@@ -127,11 +131,6 @@ class MBasicBlock : public TempObject
     // its slots and stack depth are initialized from |pred|.
     static MBasicBlock *New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
     static MBasicBlock *NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
-
-    // Copies the stack state to the header. This should only be called if the
-    // block was created with no predecessor, and should be called once the
-    // stack state is initialized.
-    bool initHeader();
 
     void setId(uint32 id) {
         id_ = id;
@@ -180,6 +179,8 @@ class MBasicBlock : public TempObject
 
     void insertBefore(MInstruction *at, MInstruction *ins);
     void insertAfter(MInstruction *at, MInstruction *ins);
+    void remove(MInstruction *ins);
+    MInstructionIterator removeAt(MInstructionIterator &iter);
 
     ///////////////////////////////////////////////////////
     /////////// END GRAPH BUILDING INSTRUCTIONS ///////////
@@ -199,13 +200,6 @@ class MBasicBlock : public TempObject
     }
     MControlInstruction *lastIns() const {
         return lastIns_;
-    }
-    size_t numEntrySlots() const {
-        return headerSlots_;
-    }
-    MInstruction *getEntrySlot(size_t i) const {
-        JS_ASSERT(i < numEntrySlots());
-        return header_[i];
     }
     size_t numPhis() const {
         return phis_.length();
@@ -238,6 +232,17 @@ class MBasicBlock : public TempObject
     // internal helper that is also used to enhance spew.
     MInstruction *getSlot(uint32 index);
 
+    MSnapshot *entrySnapshot() const {
+        return instructions_.begin()->toSnapshot();
+    }
+    size_t numEntrySlots() const {
+        return entrySnapshot()->numOperands();
+    }
+    MInstruction *getEntrySlot(size_t i) const {
+        JS_ASSERT(i < numEntrySlots());
+        return entrySnapshot()->getInput(i);
+    }
+
   private:
     MIRGenerator *gen_;
     InlineList<MInstruction> instructions_;
@@ -248,12 +253,6 @@ class MBasicBlock : public TempObject
     MControlInstruction *lastIns_;
     jsbytecode *pc_;
     uint32 id_;
-
-    // Stack state at the entry point to the basic block. This is required to
-    // compute phi nodes at the back edge to a loop header. It is placed on all
-    // blocks, anyway, to assist in debugging.
-    MInstruction **header_;
-    uint32 headerSlots_;
 
     // If not NULL, the successor block of the loop for which this block is the
     // header.

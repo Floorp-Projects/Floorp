@@ -76,8 +76,8 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 
     if (!ApplyTypeInformation(graph))
         return false;
-    //if (!Lower(graph))
-    //    return false;
+    if (!Lower(graph))
+        return false;
     spew.spew("Lower");
 
     return false;
@@ -207,8 +207,6 @@ IonBuilder::analyze()
         current->add(undef);
         current->initSlot(localSlot(i), undef);
     }
-    if (!current->initHeader())
-        return false;
 
     if (!traverseBytecode())
         return false;

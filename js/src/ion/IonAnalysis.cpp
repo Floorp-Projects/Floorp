@@ -118,16 +118,6 @@ TypeAnalyzer::popFromWorklist()
 bool
 TypeAnalyzer::inspectOperands(MInstruction *ins)
 {
-    // If this instruction needs to change its specialization, reflow to all
-    // its uses. Specializations only widen, ensuring that this algorithm will
-    // reach a fixpoint.
-    if (ins->adjustForInputs()) {
-        for (MUseIterator uses(ins); uses.more(); uses.next()) {
-            if (!addToWorklist(uses->ins()))
-                return false;
-        }
-    }
-
     for (size_t i = 0; i < ins->numOperands(); i++) {
         MIRType required = ins->requiredInputType(i);
         if (required >= MIRType_Value)
@@ -141,14 +131,6 @@ TypeAnalyzer::inspectOperands(MInstruction *ins)
 bool
 TypeAnalyzer::propagateUsedTypes(MInstruction *ins)
 {
-    // If this is a copy, just propagate to its sole input.
-    if (ins->isCopy()) {
-        MCopy *copy = ins->toCopy();
-        MInstruction *input = copy->getInput(0);
-        input->addUsedTypes(copy->usedTypes());
-        return true;
-    }
-
     // Otherwise, propagate the phi's used types to each input.
     MPhi *phi = ins->toPhi();
     for (size_t i = 0; i < phi->numOperands(); i++) {
@@ -177,15 +159,39 @@ TypeAnalyzer::analyze()
             if (!addToWorklist(block->getPhi(i)))
                 return false;
         }
-        for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
-            if (!addToWorklist(*i))
-                return false;
+        MInstructionIterator i = block->begin();
+        while (i != block->end()) {
+            if (i->isCopy()) {
+                // Remove copies.
+                MCopy *copy = i->toCopy();
+                MUseIterator uses(copy);
+                while (uses.more())
+                    uses->ins()->replaceOperand(uses, copy->getInput(0));
+                i = copy->block()->removeAt(i);
+            }
+            addToWorklist(*i);
+            i++;
         }
     }
 
+    // Propagate information about desired types.
     while (!worklist.empty()) {
         MInstruction *ins = popFromWorklist();
-        if (ins->isPhi() || ins->isCopy()) {
+
+        // If this instruction needs to change its specialization, reflow to all
+        // its uses. Specializations only widen, ensuring that this algorithm will
+        // reach a fixpoint.
+        if (ins->adjustForInputs()) {
+            for (MUseIterator uses(ins); uses.more(); uses.next()) {
+                if (!addToWorklist(uses->ins()))
+                    return false;
+            }
+        }
+
+        // Copies should have been removed earlier.
+        JS_ASSERT(!ins->isCopy());
+
+        if (ins->isPhi()) {
             if (!propagateUsedTypes(ins))
                 return false;
         } else {
