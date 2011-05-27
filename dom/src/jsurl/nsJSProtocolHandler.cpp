@@ -1333,12 +1333,13 @@ nsJSURI::Write(nsIObjectOutputStream* aStream)
     return NS_OK;
 }
 
-// nsIURI methods:
+// nsSimpleURI methods:
 /* virtual */ nsSimpleURI*
 nsJSURI::StartClone(nsSimpleURI::RefHandlingEnum /* ignored */)
 {
     nsCOMPtr<nsIURI> baseClone;
     if (mBaseURI) {
+      // Note: We preserve ref on *base* URI, regardless of ref handling mode.
       nsresult rv = mBaseURI->Clone(getter_AddRefs(baseClone));
       if (NS_FAILED(rv)) {
         return nsnull;
@@ -1348,33 +1349,37 @@ nsJSURI::StartClone(nsSimpleURI::RefHandlingEnum /* ignored */)
     return new nsJSURI(baseClone);
 }
 
-NS_IMETHODIMP
-nsJSURI::Equals(nsIURI* other, PRBool *result)
+/* virtual */ nsresult
+nsJSURI::EqualsInternal(nsIURI* aOther,
+                        nsSimpleURI::RefHandlingEnum aRefHandlingMode,
+                        PRBool* aResult)
 {
-    *result = PR_FALSE;
+    NS_ENSURE_ARG_POINTER(aOther);
+    NS_PRECONDITION(aResult, "null pointer for outparam");
 
-    if (other) {
-      nsRefPtr<nsJSURI> otherJSURI;
-      nsresult rv = other->QueryInterface(kJSURICID,
-                                     getter_AddRefs(otherJSURI));
-      if (!otherJSURI) {
-        *result = PR_FALSE;
+    nsRefPtr<nsJSURI> otherJSURI;
+    nsresult rv = aOther->QueryInterface(kJSURICID,
+                                         getter_AddRefs(otherJSURI));
+    if (NS_FAILED(rv)) {
+        *aResult = PR_FALSE; // aOther is not a nsJSURI --> not equal.
         return NS_OK;
-      }
-
-      *result = nsSimpleURI::EqualsInternal(otherJSURI, eHonorRef);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!*result)
-          return NS_OK;
-
-      nsIURI* otherBaseURI = otherJSURI->GetBaseURI();
-
-      if (mBaseURI)
-          return mBaseURI->Equals(otherBaseURI, result);
-
-      *result = !otherBaseURI;
     }
 
+    // Compare the member data that our base class knows about.
+    if (!nsSimpleURI::EqualsInternal(otherJSURI, aRefHandlingMode)) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+
+    // Compare the piece of additional member data that we add to base class.
+    nsIURI* otherBaseURI = otherJSURI->GetBaseURI();
+
+    if (mBaseURI) {
+        // (As noted in StartClone, we always honor refs on mBaseURI)
+        return mBaseURI->Equals(otherBaseURI, aResult);
+    }
+
+    *aResult = !otherBaseURI;
     return NS_OK;
 }
 
