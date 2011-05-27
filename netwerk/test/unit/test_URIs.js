@@ -125,6 +125,12 @@ var gTests = [
     path:    "new%20Date()",
     ref:     "",
     nsIURL:  false, nsINestedURI: false },
+  { spec:    "moz-filedata:123456",
+    scheme:  "moz-filedata",
+    prePath: "moz-filedata:",
+    path:    "123456",
+    ref:     "",
+    nsIURL:  false, nsINestedURI: false, immutable: true },
   { spec:    "place:redirectsMode=2&sort=8&maxResults=10",
     scheme:  "place",
     prePath: "place:",
@@ -256,6 +262,20 @@ function do_test_uri_basic(aTest) {
   do_info("testing " + aTest.spec + " instanceof nsINestedURI");
   do_check_eq(URI instanceof Ci.nsINestedURI,
               aTest.nsINestedURI);
+
+  do_info("testing that " + aTest.spec + " throws or returns false " +
+          "from equals(null)");
+  // XXXdholbert At some point it'd probably be worth making this behavior
+  // (throwing vs. returning false) consistent across URI implementations.
+  var threw = false;
+  var isEqualToNull;
+  try {
+    isEqualToNull = URI.equals(null);
+  } catch(e) {
+    threw = true;
+  }
+  do_check_true(threw || !isEqualToNull);
+
 
   // Check the various components
   do_check_property(aTest, URI, "scheme");

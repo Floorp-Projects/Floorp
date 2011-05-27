@@ -257,15 +257,20 @@ nsFileDataURI::EqualsInternal(nsIURI* aOther,
     return NS_OK;
   }
 
-  nsresult rv = mPrincipal->Equals(otherFileDataUri->mPrincipal, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (!*aResult) {
+  // Compare the member data that our base class knows about.
+  if (!nsSimpleURI::EqualsInternal(otherFileDataUri, aRefHandlingMode)) {
+    *aResult = PR_FALSE;
     return NS_OK;
-  }
+   }
 
-  return nsSimpleURI::EqualsInternal(otherFileDataUri, aRefHandlingMode,
-                                     aResult);
+  // Compare the piece of additional member data that we add to base class.
+  if (mPrincipal && otherFileDataUri->mPrincipal) {
+    // Both of us have mPrincipals. Compare them.
+    return mPrincipal->Equals(otherFileDataUri->mPrincipal, aResult);
+  }
+  // else, at least one of us lacks a principal; only equal if *both* lack it.
+  *aResult = (!mPrincipal && !otherFileDataUri->mPrincipal);
+  return NS_OK;
 }
 
 // nsIClassInfo methods:
