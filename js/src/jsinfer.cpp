@@ -4154,28 +4154,36 @@ ScriptAnalysis::followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<
     jsbytecode *pc = script->code + use->offset;
     uint32 which = use->u.which;
 
+    JSOp op = JSOp(*pc);
+    JS_ASSERT(op != JSOP_TRAP);
+
+    if (op == JSOP_POP || op == JSOP_POPN)
+        return true;
+
     /* Allow GETELEM and LENGTH on arguments objects that don't escape. */
 
     /*
      * Note: if the element index is not an integer we will mark the arguments
      * as escaping at the access site.
      */
-    if (JSOp(*pc) == JSOP_GETELEM && which == 1)
+    if (op == JSOP_GETELEM && which == 1)
         return true;
 
-    if (JSOp(*pc) == JSOP_LENGTH)
+    if (op == JSOP_LENGTH)
         return true;
 
     /* Allow assignments to non-closed locals (but not arguments). */
 
-    if (JSOp(*pc) == JSOP_SETLOCAL) {
+    if (op == JSOP_SETLOCAL) {
         uint32 slot = GetBytecodeSlot(script, pc);
         if (slotEscapes(slot))
+            return false;
+        if (!followEscapingArguments(cx, SSAValue::PushedValue(use->offset, 0), seen))
             return false;
         return followEscapingArguments(cx, SSAValue::WrittenVar(slot, use->offset), seen);
     }
 
-    if (JSOp(*pc) == JSOP_GETLOCAL)
+    if (op == JSOP_GETLOCAL)
         return followEscapingArguments(cx, SSAValue::PushedValue(use->offset, 0), seen);
 
     return false;
