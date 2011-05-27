@@ -1198,7 +1198,7 @@ var BrowserUI = {
       case "cmd_remoteTabs":
         if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
           WeaveGlue.open();
-        } else if (!Weave.Service.isLoggedIn) {
+        } else if (!Weave.Service.isLoggedIn && !Services.prefs.getBoolPref("browser.sync.enabled")) {
           // unchecked the relative command button
           document.getElementById("remotetabs-button").removeAttribute("checked");
           this.activePanel = null;

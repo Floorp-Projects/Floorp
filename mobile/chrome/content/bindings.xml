@@ -1380,17 +1380,36 @@
     <implementation>
       <method name="open">
         <body><![CDATA[
+          let self = this;
           this.setAttribute("loading", "true");
 
-          setTimeout(function(self) {
-            let children = self._children;
-            while (children.lastChild)
-              children.removeChild(children.lastChild);
+          if (Weave.Service.isLoggedIn) {
+            setTimeout(function() self._loadChildren(), 0);
+          } else {
+            // Wait until login or setup finishes before loading items.
+            let topics = [
+              "browser:sync:setup:userabort",
+              "weave:service:login:finish",
+              "weave:service:login:error"
+            ];
+            function observe() {
+              topics.forEach(function(topic) Services.obs.removeObserver(observe, topic, false));
+              self._loadChildren();
+            }
+            topics.forEach(function(topic) Services.obs.addObserver(observe, topic, false));
+          }
+        ]]></body>
+      </method>
 
-            let items = self._getRemoteTabs();
-            children.setItems(items.map(self.createItem));
-            self.removeAttribute("loading");
-          }, 0, this);
+      <method name="_loadChildren">
+        <body><![CDATA[
+          let children = this._children;
+          while (children.lastChild)
+            children.removeChild(children.lastChild);
+
+          let items = this._getRemoteTabs();
+          children.setItems(items.map(this.createItem));
+          this.removeAttribute("loading");
         ]]></body>
       </method>
 
@@ -1404,6 +1423,8 @@
         <body><![CDATA[
           // Don't do anything if the Weave isn't ready
           if (document.getElementById("cmd_remoteTabs").getAttribute("disabled") == "true")
+            return [];
+          if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED)
             return [];
 
           // Don't do anything if the tabs engine isn't ready
