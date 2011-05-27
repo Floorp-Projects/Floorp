@@ -43,11 +43,11 @@
 #include "nscore.h"
 #include "nsWinGesture.h"
 #include "nsUXThemeData.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsIServiceManager.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsGUIEvent.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -140,17 +140,8 @@ PRBool nsWinGesture::InitLibrary()
 
   // Check to see if we want single finger gesture input. Only do this once
   // for the app so we don't have to look it up on every window create.
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefs->GetBranch(0, getter_AddRefs(prefBranch));
-    if (prefBranch) {
-      PRBool flag;
-      if (NS_SUCCEEDED(prefBranch->GetBoolPref("gestures.enable_single_finger_input", &flag))
-          && flag)
-        gEnableSingleFingerPanEvents = PR_TRUE;
-    }
-  }
+  gEnableSingleFingerPanEvents =
+    Preferences::GetBool("gestures.enable_single_finger_input", PR_FALSE);
 
   return PR_TRUE;
 }
