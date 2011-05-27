@@ -187,7 +187,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
 
     bool lhsIntOrDouble = !(lhs->isNotType(JSVAL_TYPE_DOUBLE) && 
                             lhs->isNotType(JSVAL_TYPE_INT32));
-    
+
     /* Fast-path double to int conversion. */
     if (!lhs->isConstant() && rhs->isConstant() && lhsIntOrDouble &&
         rhs->isType(JSVAL_TYPE_INT32) && rhs->getValue().toInt32() == 0 &&
@@ -275,19 +275,21 @@ mjit::Compiler::jsop_bitop(JSOp op)
 
         reg = frame.ownRegForData(lhs);
         if (rhs->isConstant()) {
+            int32 rhsInt = rhs->getValue().toInt32();
             if (op == JSOP_BITAND)
-                masm.and32(Imm32(rhs->getValue().toInt32()), reg);
+                masm.and32(Imm32(rhsInt), reg);
             else if (op == JSOP_BITXOR)
-                masm.xor32(Imm32(rhs->getValue().toInt32()), reg);
+                masm.xor32(Imm32(rhsInt), reg);
             else
-                masm.or32(Imm32(rhs->getValue().toInt32()), reg);
+                masm.or32(Imm32(rhsInt), reg);
         } else if (frame.shouldAvoidDataRemat(rhs)) {
+            Address rhsAddr = masm.payloadOf(frame.addressOf(rhs));
             if (op == JSOP_BITAND)
-                masm.and32(masm.payloadOf(frame.addressOf(rhs)), reg);
+                masm.and32(rhsAddr, reg);
             else if (op == JSOP_BITXOR)
-                masm.xor32(masm.payloadOf(frame.addressOf(rhs)), reg);
+                masm.xor32(rhsAddr, reg);
             else
-                masm.or32(masm.payloadOf(frame.addressOf(rhs)), reg);
+                masm.or32(rhsAddr, reg);
         } else {
             RegisterID rhsReg = frame.tempRegForData(rhs);
             if (op == JSOP_BITAND)

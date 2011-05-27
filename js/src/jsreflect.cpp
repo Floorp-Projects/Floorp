@@ -3235,7 +3235,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
                 if (!chars)
                     return JS_FALSE;
 
-                filename = js_DeflateString(cx, chars, length);
+                filename = DeflateString(cx, chars, length);
                 if (!filename)
                     return JS_FALSE;
                 filenamep.reset(filename);

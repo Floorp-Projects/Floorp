@@ -608,20 +608,61 @@ PRInt32 nsTextFrame::GetContentEnd() const {
   return next ? next->GetContentOffset() : mContent->GetText()->GetLength();
 }
 
-PRInt32 nsTextFrame::GetInFlowContentLength() {
-#ifdef IBMBIDI
-  nsTextFrame* nextBidi = nsnull;
-  PRInt32      start = -1, end;
+struct FlowLengthProperty {
+  PRInt32 mStartOffset;
+  // The offset of the next fixed continuation after mStartOffset, or
+  // of the end of the text if there is none
+  PRInt32 mEndFlowOffset;
 
-  if (mState & NS_FRAME_IS_BIDI) {
-    nextBidi = static_cast<nsTextFrame*>(GetLastInFlow()->GetNextContinuation());
-    if (nextBidi) {
-      nextBidi->GetOffsets(start, end);
-      return start - mContentOffset;
+  static void Destroy(void* aObject, nsIAtom* aPropertyName,
+                      void* aPropertyValue, void* aData)
+  {
+    delete static_cast<FlowLengthProperty*>(aPropertyValue);
+  }
+};
+
+PRInt32 nsTextFrame::GetInFlowContentLength() {
+  if (!(mState & NS_FRAME_IS_BIDI)) {
+    return mContent->TextLength() - mContentOffset;
+  }
+
+  nsTextFrame* nextBidi = nsnull;
+  PRInt32      start = -1, end, endFlow;
+  FlowLengthProperty* flowLength =
+    static_cast<FlowLengthProperty*>(mContent->GetProperty(nsGkAtoms::flowlength));
+
+  if (flowLength && flowLength->mStartOffset <= mContentOffset &&
+      flowLength->mEndFlowOffset > mContentOffset) {
+#ifdef DEBUG
+    GetOffsets(start, end);
+    NS_ASSERTION(flowLength->mEndFlowOffset >= end,
+                 "frame crosses fixed continuation boundary");
+#endif
+    return flowLength->mEndFlowOffset - mContentOffset;
+  }
+
+  nextBidi = static_cast<nsTextFrame*>(GetLastInFlow()->GetNextContinuation());
+  if (nextBidi) {
+    nextBidi->GetOffsets(start, end);
+    endFlow = start;
+  } else {
+    endFlow = mContent->TextLength();
+  }
+
+  if (!flowLength) {
+    flowLength = new FlowLengthProperty;
+    if (NS_FAILED(mContent->SetProperty(nsGkAtoms::flowlength, flowLength,
+                                        FlowLengthProperty::Destroy))) {
+      delete flowLength;
+      flowLength = nsnull;
     }
   }
-#endif //IBMBIDI
-  return mContent->TextLength() - mContentOffset;
+  if (flowLength) {
+    flowLength->mStartOffset = mContentOffset;
+    flowLength->mEndFlowOffset = endFlow;
+  }
+
+  return endFlow - mContentOffset;
 }
 
 // Smarter versions of XP_IS_SPACE.
@@ -3650,9 +3691,12 @@ nsTextFrame::Init(nsIContent*      aContent,
   NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eTEXT),
                   "Bogus content!");
 
-  // Remove any NewlineOffsetProperty since it might be invalid
-  // if the content was modified while there was no frame
+  // Remove any NewlineOffsetProperty or InFlowContentLengthProperty since they
+  // might be invalid if the content was modified while there was no frame
   aContent->DeleteProperty(nsGkAtoms::newline);
+  if (PresContext()->BidiEnabled()) {
+    aContent->DeleteProperty(nsGkAtoms::flowlength);
+  }
 
   // Since our content has a frame now, this flag is no longer needed.
   aContent->UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE);
@@ -4044,6 +4088,9 @@ NS_IMETHODIMP
 nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {
   mContent->DeleteProperty(nsGkAtoms::newline);
+  if (PresContext()->BidiEnabled()) {
+    mContent->DeleteProperty(nsGkAtoms::flowlength);
+  }
 
   // Find the first frame whose text has changed. Frames that are entirely
   // before the text change are completely unaffected.
@@ -7469,6 +7516,7 @@ void
 nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
 {
   AddStateBits(NS_FRAME_IS_BIDI);
+  mContent->DeleteProperty(nsGkAtoms::flowlength);
 
   /*
    * After Bidi resolution we may need to reassign text runs.

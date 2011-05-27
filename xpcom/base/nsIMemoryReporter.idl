@@ -47,39 +47,52 @@ interface nsIMemoryReporter : nsISupports
    * The path that this memory usage should be reported under.  Paths can
    * begin with a process name plus a colon, eg "Content:", but this is not
    * necessary for the main process.  After the process name, paths are
-   * '/'-delimited, eg. "a/b/c".  There are three categories of paths.
+   * '/'-delimited, eg. "a/b/c".  There are two categories of paths.
    *
-   * - Paths starting with "mapped" represent non-overlapping regions of mapped
-   *   memory.  Each one can be viewed as representing a path in a tree from
-   *   the root node ("mapped") to a node lower in the tree;  this lower node
-   *   may be a non-leaf or a leaf node.  So, for example, "mapped",
-   *   "mapped/heap/used", "mapped/heap/unused", "mapped/js/mjit-code",
-   *   and "mapped/js/tjit-code" define this tree:
+   * - Paths starting with "explicit" represent non-overlapping regions of 
+   *   memory that have been explicitly allocated with an OS-level allocation
+   *   (eg. mmap/VirtualAlloc/vm_allocate) or a heap-level allocation (eg.
+   *   malloc/calloc/operator new).  Each one can be viewed as representing a
+   *   path in a tree from the root node ("explicit") to a node lower in the
+   *   tree; this lower node does not have to be a leaf node.
    *
-   *     mapped [*]
-   *     |--heap
-   *     |  |--used [*]
-   *     |  \--unused [*]
-   *     \--js
-   *        |--mjit-code [*]
-   *        \--tjit-code [*]
+   *   So, for example, "explicit/a/b", "explicit/a/c", "explicit/d",
+   *   "explicit/d/e", and "explicit/d/f" define this tree:
+   *
+   *     explicit
+   *     |--a
+   *     |  |--b [*]
+   *     |  \--c [*]
+   *     \--d [*]
+   *        |--e [*]
+   *        \--f [*]
    *
    *   Nodes marked with a [*] have a reporter.
    *
-   * - Paths starting with "heap-used" represent non-overlapping regions of
-   *   used heap memory.  The "mapped" rules above apply equally here.  These
-   *   paths are actually sub-paths of "mapped/heap/used", but that reporter
-   *   is duplicated under the name "heap-used" to make the processing for
-   *   about:memory simpler.
-   *
    * - All other paths represent cross-cuttings memory regions, ie. ones that
-   *   may overlap arbitrarily with regions in the "mapped" and "heap-used"
-   *   trees.
+   *   may overlap arbitrarily with regions in the "explicit" tree.
    */
   readonly attribute string path;
 
   /*
-   * A human-readable description of this memory usage report
+   * Allocation kinds.  "MAPPED" means it is allocated directly by the OS, eg.
+   * by calling mmap, VirtualAlloc, vm_allocate, etc.  "HEAP" means it is
+   * allocated by the heap allocator, eg. by calling malloc, calloc, realloc,
+   * memalign, operator new, operator new[], etc.  "OTHER" means it doesn't fit
+   * into either of these categories;  such reporters should have a path that
+   * does *not* start with "explicit".
+   */
+  const PRInt32 MR_MAPPED = 0;
+  const PRInt32 MR_HEAP   = 1;
+  const PRInt32 MR_OTHER  = 2;
+
+  /*
+   * The memory kind, see MR_* above.
+   */
+  readonly attribute PRInt32 kind;
+
+  /*
+   * A human-readable description of this memory usage report.
    */
   readonly attribute string description;
 
@@ -119,11 +132,12 @@ interface nsIMemoryReporterManager : nsISupports
 
 %{C++
 
-#define NS_MEMORY_REPORTER_IMPLEMENT(_classname,_path,_desc,_usageFunction,_dataptr) \
+#define NS_MEMORY_REPORTER_IMPLEMENT(_classname,_path,_kind,_desc,_usageFunction,_dataptr) \
     class MemoryReporter_##_classname : public nsIMemoryReporter {      \
     public:                                                             \
       NS_DECL_ISUPPORTS                                                 \
       NS_IMETHOD GetPath(char **memoryPath) { *memoryPath = strdup(_path); return NS_OK; } \
+      NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; } \
       NS_IMETHOD GetDescription(char **desc) { *desc = strdup(_desc); return NS_OK; } \
       NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed) { *memoryUsed = _usageFunction(_dataptr); return NS_OK; } \
     };                                                                  \

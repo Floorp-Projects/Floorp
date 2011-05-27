@@ -608,7 +608,7 @@ class TypedArrayTemplate
             JS_ASSERT(vp->isString() || vp->isUndefined() || vp->isBoolean());
             if (vp->isString()) {
                 // note that ValueToNumber will always succeed with a string arg
-                ValueToNumber(cx, *vp, &d);
+                JS_ALWAYS_TRUE(ValueToNumber(cx, *vp, &d));
             } else if (vp->isUndefined()) {
                 d = js_NaN;
             } else {

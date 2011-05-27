@@ -342,6 +342,33 @@ protected:
   nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
   nsresult ChangeTextSize(PRInt32 change);
   nsresult ChangeFullZoom(PRInt32 change);
+  /**
+   * Computes the action for the aMouseEvent with prefs.  The result is
+   * MOUSE_SCROLL_N_LINES, MOUSE_SCROLL_PAGE, MOUSE_SCROLL_HISTORY,
+   * MOUSE_SCROLL_ZOOM, MOUSE_SCROLL_PIXELS or -1.
+   * When the result is -1, nothing happens for the event.
+   *
+   * @param aUseSystemSettings    Set the result of UseSystemScrollSettingFor().
+   */
+  PRInt32 ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent,
+                                PRBool aUseSystemSettings);
+  /**
+   * Gets the wheel action for the aMouseEvent ONLY with the pref.
+   * When you actually do something for the event, probably you should use
+   * ComputeWheelActionFor().
+   */
+  PRInt32 GetWheelActionFor(nsMouseScrollEvent* aMouseEvent);
+  /**
+   * Gets the pref value for line scroll amount for the aMouseEvent.
+   * Note that this method doesn't check whether the aMouseEvent is line scroll
+   * event and doesn't use system settings.
+   */
+  PRInt32 GetScrollLinesFor(nsMouseScrollEvent* aMouseEvent);
+  /**
+   * Whether use system scroll settings or settings in our prefs for the event.
+   * TRUE, if use system scroll settings.  Otherwise, FALSE.
+   */
+  PRBool UseSystemScrollSettingFor(nsMouseScrollEvent* aMouseEvent);
   // end mousewheel functions
 
   /*

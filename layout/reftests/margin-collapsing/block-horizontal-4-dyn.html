@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#float-blue {
+ float: right;
+ margin-left: 20px;
+ background-color: blue;
+ height: 100px;
+}
+.dyn {
+ display: none;
+}
+.float-green {
+ float: right;
+ margin: 0 20px;
+ background-color: green;
+ width: 40px;
+ height: 100px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementsByClassName('dyn')[0].style.display = 'block';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="float-blue"><div class="float-green dyn"></div></div><div class="float-green"></div>
+</body>
+</html>

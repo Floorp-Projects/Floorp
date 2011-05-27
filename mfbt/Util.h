@@ -52,6 +52,9 @@
  *
  * Once mfbt needs object files, this unholy union with JS_Assert()
  * will be broken.
+ *
+ * JS_Assert is present even in release builds, for the benefit of applications
+ * that build DEBUG and link against a non-DEBUG SpiderMonkey library.
  */
 MOZ_BEGIN_EXTERN_C
 
