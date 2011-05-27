@@ -26,9 +26,10 @@
  */
 
 #import "ComplexTextInputPanel.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsServiceManagerUtils.h"
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define kInputWindowHeight 20
 
@@ -91,12 +92,10 @@
     return;
   }
   if (sDoCancel < 0) {
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(prefs, );
     PRBool cancelComposition = PR_FALSE;
-    nsresult rv =
-      prefs->GetBoolPref("ui.plugin.cancel_composition_at_input_source_changed",
-                         &cancelComposition);
+    static const char* kPrefName =
+      "ui.plugin.cancel_composition_at_input_source_changed";
+    nsresult rv = Preferences::GetBool(kPrefName, &cancelComposition);
     NS_ENSURE_SUCCESS(rv, );
     sDoCancel = cancelComposition ? 1 : 0;
   }
