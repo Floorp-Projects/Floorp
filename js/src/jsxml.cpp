@@ -275,7 +275,7 @@ namespace_toString(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSFunctionSpec namespace_methods[] = {
-    JS_FN_TYPE(js_toString_str,  namespace_toString,        0,0, JS_TypeHandlerString),
+    JS_FN(js_toString_str,  namespace_toString,        0,0),
     JS_FS_END
 };
 
@@ -474,7 +474,7 @@ qname_toString(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSFunctionSpec qname_methods[] = {
-    JS_FN_TYPE(js_toString_str,  qname_toString,    0,0, JS_TypeHandlerString),
+    JS_FN(js_toString_str,  qname_toString,    0,0),
     JS_FS_END
 };
 
@@ -6780,46 +6780,46 @@ xml_valueOf(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec xml_methods[] = {
-    JS_FN_TYPE("addNamespace",          xml_addNamespace,          1,0, JS_TypeHandlerThis),
-    JS_FN_TYPE("appendChild",           xml_appendChild,           1,0, JS_TypeHandlerThis),
-    JS_FN_TYPE(js_attribute_str,        xml_attribute,             1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("attributes",            xml_attributes,            0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("child",                 xml_child,                 1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("childIndex",            xml_childIndex,            0,0, JS_TypeHandlerInt),
-    JS_FN_TYPE("children",              xml_children,              0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("comments",              xml_comments,              0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("contains",              xml_contains,              1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE("copy",                  xml_copy,                  0,0, JS_TypeHandlerThis),
-    JS_FN_TYPE("descendants",           xml_descendants,           1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("elements",              xml_elements,              1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("hasOwnProperty",        xml_hasOwnProperty,        1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE("hasComplexContent",     xml_hasComplexContent,     1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE("hasSimpleContent",      xml_hasSimpleContent,      1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE("inScopeNamespaces",     xml_inScopeNamespaces,     0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("insertChildAfter",      xml_insertChildAfter,      2,0, JS_TypeHandlerThis),
-    JS_FN_TYPE("insertChildBefore",     xml_insertChildBefore,     2,0, JS_TypeHandlerThis),
-    JS_FN_TYPE(js_length_str,           xml_length,                0,0, JS_TypeHandlerInt),
-    JS_FN_TYPE(js_localName_str,        xml_localName,             0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_name_str,             xml_name,                  0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE(js_namespace_str,        xml_namespace,             1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("namespaceDeclarations", xml_namespaceDeclarations, 0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("nodeKind",              xml_nodeKind,              0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("normalize",             xml_normalize,             0,0, JS_TypeHandlerThis),
-    JS_FN_TYPE(js_xml_parent_str,       xml_parent,                0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("processingInstructions",xml_processingInstructions,1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("prependChild",          xml_prependChild,          1,0, JS_TypeHandlerThis),
-    JS_FN_TYPE("propertyIsEnumerable",  xml_propertyIsEnumerable,  1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE("removeNamespace",       xml_removeNamespace,       1,0, JS_TypeHandlerThis),
-    JS_FN_TYPE("replace",               xml_replace,               2,0, JS_TypeHandlerThis),
-    JS_FN_TYPE("setChildren",           xml_setChildren,           1,0, JS_TypeHandlerThis),
-    JS_FN_TYPE("setLocalName",          xml_setLocalName,          1,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE("setName",               xml_setName,               1,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE("setNamespace",          xml_setNamespace,          1,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE(js_text_str,             xml_text,                  0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE(js_toSource_str,         xml_toSource,              0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_toString_str,         xml_toString,              0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_toXMLString_str,      xml_toXMLString,           0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_valueOf_str,          xml_valueOf,               0,0, JS_TypeHandlerThis),
+    JS_FN("addNamespace",          xml_addNamespace,          1,0),
+    JS_FN("appendChild",           xml_appendChild,           1,0),
+    JS_FN(js_attribute_str,        xml_attribute,             1,0),
+    JS_FN("attributes",            xml_attributes,            0,0),
+    JS_FN("child",                 xml_child,                 1,0),
+    JS_FN("childIndex",            xml_childIndex,            0,0),
+    JS_FN("children",              xml_children,              0,0),
+    JS_FN("comments",              xml_comments,              0,0),
+    JS_FN("contains",              xml_contains,              1,0),
+    JS_FN("copy",                  xml_copy,                  0,0),
+    JS_FN("descendants",           xml_descendants,           1,0),
+    JS_FN("elements",              xml_elements,              1,0),
+    JS_FN("hasOwnProperty",        xml_hasOwnProperty,        1,0),
+    JS_FN("hasComplexContent",     xml_hasComplexContent,     1,0),
+    JS_FN("hasSimpleContent",      xml_hasSimpleContent,      1,0),
+    JS_FN("inScopeNamespaces",     xml_inScopeNamespaces,     0,0),
+    JS_FN("insertChildAfter",      xml_insertChildAfter,      2,0),
+    JS_FN("insertChildBefore",     xml_insertChildBefore,     2,0),
+    JS_FN(js_length_str,           xml_length,                0,0),
+    JS_FN(js_localName_str,        xml_localName,             0,0),
+    JS_FN(js_name_str,             xml_name,                  0,0),
+    JS_FN(js_namespace_str,        xml_namespace,             1,0),
+    JS_FN("namespaceDeclarations", xml_namespaceDeclarations, 0,0),
+    JS_FN("nodeKind",              xml_nodeKind,              0,0),
+    JS_FN("normalize",             xml_normalize,             0,0),
+    JS_FN(js_xml_parent_str,       xml_parent,                0,0),
+    JS_FN("processingInstructions",xml_processingInstructions,1,0),
+    JS_FN("prependChild",          xml_prependChild,          1,0),
+    JS_FN("propertyIsEnumerable",  xml_propertyIsEnumerable,  1,0),
+    JS_FN("removeNamespace",       xml_removeNamespace,       1,0),
+    JS_FN("replace",               xml_replace,               2,0),
+    JS_FN("setChildren",           xml_setChildren,           1,0),
+    JS_FN("setLocalName",          xml_setLocalName,          1,0),
+    JS_FN("setName",               xml_setName,               1,0),
+    JS_FN("setNamespace",          xml_setNamespace,          1,0),
+    JS_FN(js_text_str,             xml_text,                  0,0),
+    JS_FN(js_toSource_str,         xml_toSource,              0,0),
+    JS_FN(js_toString_str,         xml_toString,              0,0),
+    JS_FN(js_toXMLString_str,      xml_toXMLString,           0,0),
+    JS_FN(js_valueOf_str,          xml_valueOf,               0,0),
     JS_FS_END
 };
 
@@ -6916,9 +6916,9 @@ xml_defaultSettings(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec xml_static_methods[] = {
-    JS_FN_TYPE("settings",         xml_settings,          0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("setSettings",      xml_setSettings,       1,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE("defaultSettings",  xml_defaultSettings,   0,0, JS_TypeHandlerDynamic),
+    JS_FN("settings",         xml_settings,          0,0),
+    JS_FN("setSettings",      xml_setSettings,       1,0),
+    JS_FN("defaultSettings",  xml_defaultSettings,   0,0),
     JS_FS_END
 };
 
@@ -7153,16 +7153,16 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     Shape *shape;
     jsval cval, vp[3];
 
-    /* Define the isXMLName function. */
-    if (!JS_DefineFunctionWithType(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0,
-                                   JS_TypeHandlerBool))
-        return NULL;
-
     /* Define the XML class constructor and prototype. */
     proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1, JS_TypeHandlerDynamic,
                          NULL, xml_methods,
                          xml_static_props, xml_static_methods);
     if (!proto)
+        return NULL;
+
+    /* Define the isXMLName function. */
+    if (!JS_DefineFunctionWithType(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0,
+                                   JS_TypeHandlerBool))
         return NULL;
 
     /* Properties of XML objects are not modeled by type inference. */
