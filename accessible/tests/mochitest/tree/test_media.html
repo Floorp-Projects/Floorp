@@ -30,24 +30,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
         role: ROLE_GROUPING,
         children: [
           { // start/stop button
-            role: ROLE_PUSHBUTTON
+            role: ROLE_PUSHBUTTON,
+            name: "Play",
+            children: []
           },
           { // buffer bar
-            role: ROLE_PROGRESSBAR
+            role: ROLE_PROGRESSBAR,
+            children: []
           },
           { // progress bar
-            role: ROLE_PROGRESSBAR
+            role: ROLE_PROGRESSBAR,
+            children: []
           },
           { // slider of progress bar
-            role: ROLE_SLIDER
+            role: ROLE_SLIDER,
+            //name: "0:00 of 0:02 elapsed",
+            children: []
           },
           { // mute button
-            role: ROLE_PUSHBUTTON
+            role: ROLE_PUSHBUTTON,
+            name: "Mute",
+            children: []
           }
         ]
       };
       testAccessibleTree("audio", accTree);
 
+      todo(false, "Enable name test for slider. Fail on Linux.");
       SimpleTest.finish();
     }
 

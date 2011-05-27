@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMediaDocument_h___
-#define nsMediaDocument_h___
+#ifndef mozilla_dom_MediaDocument_h
+#define mozilla_dom_MediaDocument_h
 
 #include "nsHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
@@ -45,11 +45,14 @@
 
 #define NSMEDIADOCUMENT_PROPERTIES_URI "chrome://global/locale/layout/MediaDocument.properties"
 
-class nsMediaDocument : public nsHTMLDocument
+namespace mozilla {
+namespace dom {
+
+class MediaDocument : public nsHTMLDocument
 {
 public:
-  nsMediaDocument();
-  virtual ~nsMediaDocument();
+  MediaDocument();
+  virtual ~MediaDocument();
 
   virtual nsresult Init();
 
@@ -64,7 +67,7 @@ public:
 protected:
   virtual nsresult CreateSyntheticDocument();
 
-  friend class nsMediaDocumentStreamListener;
+  friend class MediaDocumentStreamListener;
   nsresult StartLayout();
 
   void GetFileName(nsAString& aResult);
@@ -77,7 +80,7 @@ protected:
   // "ImageTitleWithDimesions",  "ImageTitleWithDimensionsAndFile".
   //
   // Also see MediaDocument.properties if you want to define format names
-  // for a new subclass. aWidth and aHeight are pixels for |nsImageDocument|,
+  // for a new subclass. aWidth and aHeight are pixels for |ImageDocument|,
   // but could be in other units for other 'media', in which case you have to 
   // define format names accordingly. 
   void UpdateTitleAndCharset(const nsACString&  aTypeStr,
@@ -94,11 +97,11 @@ private:
 };
 
 
-class nsMediaDocumentStreamListener: public nsIStreamListener
+class MediaDocumentStreamListener: public nsIStreamListener
 {
 public:
-  nsMediaDocumentStreamListener(nsMediaDocument *aDocument);
-  virtual ~nsMediaDocumentStreamListener();
+  MediaDocumentStreamListener(MediaDocument *aDocument);
+  virtual ~MediaDocumentStreamListener();
   void SetStreamListener(nsIStreamListener *aListener);
 
   NS_DECL_ISUPPORTS
@@ -107,9 +110,11 @@ public:
 
   NS_DECL_NSISTREAMLISTENER
 
-  nsRefPtr<nsMediaDocument>    mDocument;
+  nsRefPtr<MediaDocument>      mDocument;
   nsCOMPtr<nsIStreamListener>  mNextStream;
 };
 
+} // namespace dom
+} // namespace mozilla
 
-#endif /* nsMediaDocument_h___ */
+#endif /* mozilla_dom_MediaDocument_h */

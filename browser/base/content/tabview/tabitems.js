@@ -1558,6 +1558,6 @@ TabCanvas.prototype = {
   // ----------
   // Function: toImageData
   toImageData: function TabCanvas_toImageData() {
-    return this.canvas.toDataURL("image/png", "");
+    return this.canvas.toDataURL("image/png");
   }
 };

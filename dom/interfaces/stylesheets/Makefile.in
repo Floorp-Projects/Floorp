@@ -47,7 +47,6 @@ XPIDL_MODULE	= dom_stylesheets
 GRE_MODULE	= 1
 
 SDK_XPIDLSRCS =                                 \
-	nsIDOMDocumentStyle.idl			\
 	nsIDOMMediaList.idl			\
 	nsIDOMStyleSheet.idl			\
 	nsIDOMStyleSheetList.idl		\
@@ -55,7 +54,6 @@ SDK_XPIDLSRCS =                                 \
 
 XPIDLSRCS = 					\
 	nsIDOMLinkStyle.idl			\
-	nsIDOMNSDocumentStyle.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

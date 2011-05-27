@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsContentUtils.h"
 #include "txExpr.h"
-#include "txDouble.h"
 #include "txNodeSet.h"
 #include "txIXPathContext.h"
 #include "txXPathTreeWalker.h"
@@ -119,7 +119,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
                  rtype == txAExprResult::NUMBER) {
             double lval = aLeft->numberValue();
             double rval = aRight->numberValue();
-            result = TX_DOUBLE_COMPARE(lval, ==, rval);
+            result = DOUBLE_COMPARE(lval, ==, rval);
         }
 
         // Otherwise compare as strings. Try to use the stringobject in
@@ -154,19 +154,19 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
     switch (mOp) {
         case LESS_THAN:
         {
-            return TX_DOUBLE_COMPARE(leftDbl, <, rightDbl);
+            return DOUBLE_COMPARE(leftDbl, <, rightDbl);
         }
         case LESS_OR_EQUAL:
         {
-            return TX_DOUBLE_COMPARE(leftDbl, <=, rightDbl);
+            return DOUBLE_COMPARE(leftDbl, <=, rightDbl);
         }
         case GREATER_THAN:
         {
-            return TX_DOUBLE_COMPARE(leftDbl, >, rightDbl);
+            return DOUBLE_COMPARE(leftDbl, >, rightDbl);
         }
         case GREATER_OR_EQUAL:
         {
-            return TX_DOUBLE_COMPARE(leftDbl, >=, rightDbl);
+            return DOUBLE_COMPARE(leftDbl, >=, rightDbl);
         }
         default:
         {

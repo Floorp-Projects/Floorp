@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -42,7 +42,6 @@
 #include "cairo-output-stream-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-analysis-surface-private.h"
-#include "cairo-error-private.h"
 #include "cairo-surface-clipper-private.h"
 
 static const cairo_surface_backend_t cairo_type3_glyph_surface_backend;
@@ -84,9 +83,7 @@ _cairo_type3_glyph_surface_create (cairo_scaled_font_t			 *scaled_font,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&surface->base,
-			 &cairo_type3_glyph_surface_backend,
-			 NULL, /* device */
+    _cairo_surface_init (&surface->base, &cairo_type3_glyph_surface_backend,
 			 CAIRO_CONTENT_COLOR_ALPHA);
 
     surface->scaled_font = scaled_font;
@@ -120,7 +117,7 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
     cairo_status_t status;
 
     /* The only image type supported by Type 3 fonts are 1-bit masks */
-    image = _cairo_image_surface_coerce_to_format (image, CAIRO_FORMAT_A1);
+    image = _cairo_image_surface_coerce (image, CAIRO_FORMAT_A1);
     status = image->base.status;
     if (unlikely (status))
 	return status;
@@ -235,9 +232,9 @@ _cairo_type3_glyph_surface_stroke (void			*abstract_surface,
 				   cairo_operator_t	 op,
 				   const cairo_pattern_t *source,
 				   cairo_path_fixed_t	*path,
-				   const cairo_stroke_style_t	*style,
-				   const cairo_matrix_t	*ctm,
-				   const cairo_matrix_t	*ctm_inverse,
+				   cairo_stroke_style_t	*style,
+				   cairo_matrix_t	*ctm,
+				   cairo_matrix_t	*ctm_inverse,
 				   double		 tolerance,
 				   cairo_antialias_t	 antialias,
 				   cairo_clip_t		*clip)
@@ -291,15 +288,25 @@ _cairo_type3_glyph_surface_show_glyphs (void		     *abstract_surface,
     cairo_type3_glyph_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
     cairo_scaled_font_t *font;
-    cairo_matrix_t new_ctm, invert_y_axis;
+    cairo_matrix_t new_ctm, ctm_inverse;
+    int i;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
 	return status;
 
-    cairo_matrix_init_scale (&invert_y_axis, 1, -1);
-    cairo_matrix_multiply (&new_ctm, &invert_y_axis, &scaled_font->ctm);
-    cairo_matrix_multiply (&new_ctm, &surface->cairo_to_pdf, &new_ctm);
+    for (i = 0; i < num_glyphs; i++) {
+	cairo_matrix_transform_point (&surface->cairo_to_pdf,
+				      &glyphs[i].x, &glyphs[i].y);
+    }
+
+    /* We require the matrix to be invertable. */
+    ctm_inverse = scaled_font->ctm;
+    status = cairo_matrix_invert (&ctm_inverse);
+    if (unlikely (status))
+	return CAIRO_INT_STATUS_IMAGE_FALLBACK;
+
+    cairo_matrix_multiply (&new_ctm, &scaled_font->ctm, &ctm_inverse);
     font = cairo_scaled_font_create (scaled_font->font_face,
 				     &scaled_font->font_matrix,
 				     &new_ctm,
@@ -430,6 +437,7 @@ _cairo_type3_glyph_surface_analyze_glyph (void		     *abstract_surface,
     _cairo_scaled_font_freeze_cache (surface->scaled_font);
     status = _cairo_scaled_glyph_lookup (surface->scaled_font,
 					 glyph_index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS |
 					 CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE,
 					 &scaled_glyph);
 
@@ -446,7 +454,10 @@ _cairo_type3_glyph_surface_analyze_glyph (void		     *abstract_surface,
     if (unlikely (status))
 	goto cleanup;
 
-    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+    status2 = _cairo_pdf_operators_flush (&surface->pdf_operators);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
+
     if (status == CAIRO_INT_STATUS_IMAGE_FALLBACK)
 	status = CAIRO_STATUS_SUCCESS;
 
@@ -503,7 +514,7 @@ _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
     status2 = cairo_matrix_invert (&font_matrix_inverse);
 
     /* The invertability of font_matrix is tested in
-     * pdf_operators_show_glyphs before any glyphs are mapped to the
+     * pdf_operators_show_glyphs before any glyphs are mappped to the
      * subset. */
     assert (status2 == CAIRO_STATUS_SUCCESS);
 
