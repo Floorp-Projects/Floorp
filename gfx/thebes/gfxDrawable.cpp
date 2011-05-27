@@ -129,12 +129,6 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
             break;
         }
 
-        case gfxASurface::SurfaceTypeQuartz:
-        case gfxASurface::SurfaceTypeQuartzImage:
-            // Don't set EXTEND_PAD, Mac seems to be OK. Really?
-            aPattern->SetFilter(aDefaultFilter);
-            break;
-
         default:
             // turn on EXTEND_PAD.
             // This is what we really want for all surface types, if the

@@ -95,6 +95,7 @@
  */
 #include "cairoint.h"
 #include "cairo-spans-private.h"
+#include "cairo-error-private.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -1214,46 +1215,111 @@ active_list_init(struct active_list *active)
     active_list_reset(active);
 }
 
-/* Merge the edges in an unsorted list of edges into a sorted
- * list. The sort order is edges ascending by edge->x.quo.  Returns
- * the new head of the sorted list. */
+/*
+ * Merge two sorted edge lists.
+ * Input:
+ *  - head_a: The head of the first list.
+ *  - head_b: The head of the second list; head_b cannot be NULL.
+ * Output:
+ * Returns the head of the merged list.
+ *
+ * Implementation notes:
+ * To make it fast (in particular, to reduce to an insertion sort whenever
+ * one of the two input lists only has a single element) we iterate through
+ * a list until its head becomes greater than the head of the other list,
+ * then we switch their roles. As soon as one of the two lists is empty, we
+ * just attach the other one to the current list and exit.
+ * Writes to memory are only needed to "switch" lists (as it also requires
+ * attaching to the output list the list which we will be iterating next) and
+ * to attach the last non-empty list.
+ */
 static struct edge *
-merge_unsorted_edges(struct edge *sorted_head, struct edge *unsorted_head)
+merge_sorted_edges (struct edge *head_a, struct edge *head_b)
 {
-    struct edge **cursor = &sorted_head;
-    int x;
+    struct edge *head, **next;
 
-    if (sorted_head == NULL) {
-	sorted_head = unsorted_head;
-	unsorted_head = unsorted_head->next;
-	sorted_head->next = NULL;
-	if (unsorted_head == NULL)
-	    return sorted_head;
-    }
+    head = head_a;
+    next = &head;
 
-    do {
-	struct edge *next = unsorted_head->next;
-	struct edge *prev = *cursor;
-
-	x = unsorted_head->x.quo;
-	if (x < prev->x.quo)
-	    cursor = &sorted_head;
-
-	while (1) {
-	    UNROLL3({
-		prev = *cursor;
-		if (NULL == prev || prev->x.quo >= x)
-		    break;
-		cursor = &prev->next;
-	    });
+    while (1) {
+	while (head_a != NULL && head_a->x.quo <= head_b->x.quo) {
+	    next = &head_a->next;
+	    head_a = head_a->next;
 	}
 
-	unsorted_head->next = *cursor;
-	*cursor = unsorted_head;
-	unsorted_head = next;
-    } while (unsorted_head != NULL);
+	*next = head_b;
+	if (head_a == NULL)
+	    return head;
 
-    return sorted_head;
+	while (head_b != NULL && head_b->x.quo <= head_a->x.quo) {
+	    next = &head_b->next;
+	    head_b = head_b->next;
+	}
+
+	*next = head_a;
+	if (head_b == NULL)
+	    return head;
+    }
+}
+
+/*
+ * Sort (part of) a list.
+ * Input:
+ *  - list: The list to be sorted; list cannot be NULL.
+ *  - limit: Recursion limit.
+ * Output:
+ *  - head_out: The head of the sorted list containing the first 2^(level+1) elements of the
+ *              input list; if the input list has fewer elements, head_out be a sorted list
+ *              containing all the elements of the input list.
+ * Returns the head of the list of unprocessed elements (NULL if the sorted list contains
+ * all the elements of the input list).
+ *
+ * Implementation notes:
+ * Special case single element list, unroll/inline the sorting of the first two elements.
+ * Some tail recursion is used since we iterate on the bottom-up solution of the problem
+ * (we start with a small sorted list and keep merging other lists of the same size to it).
+ */
+static struct edge *
+sort_edges (struct edge  *list,
+	    unsigned int  level,
+	    struct edge **head_out)
+{
+    struct edge *head_other, *remaining;
+    unsigned int i;
+
+    head_other = list->next;
+
+    /* Single element list -> return */
+    if (head_other == NULL) {
+	*head_out = list;
+	return NULL;
+    }
+
+    /* Unroll the first iteration of the following loop (halves the number of calls to merge_sorted_edges):
+     *  - Initialize remaining to be the list containing the elements after the second in the input list.
+     *  - Initialize *head_out to be the sorted list containing the first two element.
+     */
+    remaining = head_other->next;
+    if (list->x.quo <= head_other->x.quo) {
+	*head_out = list;
+	/* list->next = head_other; */ /* The input list is already like this. */
+	head_other->next = NULL;
+    } else {
+	*head_out = head_other;
+	head_other->next = list;
+	list->next = NULL;
+    }
+
+    for (i = 0; i < level && remaining; i++) {
+	/* Extract a sorted list of the same size as *head_out
+	 * (2^(i+1) elements) from the list of remaining elements. */
+	remaining = sort_edges (remaining, i, &head_other);
+	*head_out = merge_sorted_edges (*head_out, head_other);
+    }
+
+    /* *head_out now contains (at most) 2^(level+1) elements. */
+
+    return remaining;
 }
 
 /* Test if the edges on the active list can be safely advanced by a
@@ -1344,7 +1410,8 @@ active_list_merge_edges_from_polygon(
 	}
     }
     if (subrow_edges) {
-	active->head = merge_unsorted_edges(active->head, subrow_edges);
+	sort_edges (subrow_edges, UINT_MAX, &subrow_edges);
+	active->head = merge_sorted_edges (active->head, subrow_edges);
 	active->min_height = min_height;
     }
 }
@@ -1390,8 +1457,10 @@ active_list_substep_edges(
 	});
     }
 
-    if (unsorted)
-	active->head = merge_unsorted_edges(active->head, unsorted);
+    if (unsorted) {
+	sort_edges (unsorted, UINT_MAX, &unsorted);
+	active->head = merge_sorted_edges (active->head, unsorted);
+    }
 }
 
 inline static glitter_status_t
@@ -1563,11 +1632,11 @@ apply_evenodd_fill_rule_and_step_edges (struct active_list *active,
 
 	    winding += right_edge->dir;
 	    if ((winding & 1) == 0) {
-	    if (right_edge->next == NULL ||
-		right_edge->next->x.quo != right_edge->x.quo)
-	    {
-		break;
-	    }
+		if (right_edge->next == NULL ||
+		    right_edge->next->x.quo != right_edge->x.quo)
+		{
+		    break;
+		}
 	    }
 
 	    if (! right_edge->vertical) {

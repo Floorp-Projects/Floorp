@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -214,7 +214,7 @@ _jpx_extract_info (const unsigned char *p, cairo_image_info_t *info)
 cairo_int_status_t
 _cairo_image_info_get_jpx_info (cairo_image_info_t	*info,
 				const unsigned char	*data,
-				long			 length)
+				unsigned long		 length)
 {
     const unsigned char *p = data;
     const unsigned char *end = data + length;
@@ -262,7 +262,7 @@ static const unsigned char _png_magic[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 cairo_int_status_t
 _cairo_image_info_get_png_info (cairo_image_info_t     *info,
                                const unsigned char     *data,
-                               long                     length)
+                               unsigned long            length)
 {
     const unsigned char *p = data;
     const unsigned char *end = data + length;

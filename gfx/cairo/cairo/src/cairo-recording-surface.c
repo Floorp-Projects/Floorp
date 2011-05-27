@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -37,7 +37,13 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
-/* A recording surface is a surface that records all drawing operations at
+/**
+ * SECTION:cairo-recording
+ * @Title: Recording Surfaces
+ * @Short_Description: Records all drawing operations
+ * @See_Also: #cairo_surface_t
+ *
+ * A recording surface is a surface that records all drawing operations at
  * the highest level of the surface backend interface, (that is, the
  * level of paint, mask, stroke, fill, and show_text_glyphs). The recording
  * surface can then be "replayed" against any target surface by using it
@@ -70,12 +76,11 @@
  * copy-on-write implementation for _cairo_surface_snapshot.
  */
 
-/* XXX Rename to recording surface */
-
 #include "cairoint.h"
 #include "cairo-analysis-surface-private.h"
-#include "cairo-recording-surface-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-surface-wrapper-private.h"
 
 typedef enum {
@@ -84,6 +89,16 @@ typedef enum {
 } cairo_recording_replay_type_t;
 
 static const cairo_surface_backend_t cairo_recording_surface_backend;
+
+/**
+ * CAIRO_HAS_RECORDING_SURFACE:
+ *
+ * Defined if the recording surface backend is available.
+ * The recording surface backend is always built in.
+ * This macro was added for completeness in cairo 1.10.
+ *
+ * Since: 1.10
+ */
 
 /* Currently all recording surfaces do have a size which should be passed
  * in as the maximum size of any target surface against which the
@@ -97,8 +112,8 @@ static const cairo_surface_backend_t cairo_recording_surface_backend;
 /**
  * cairo_recording_surface_create:
  * @content: the content of the recording surface
- * @extents_pixels: the extents to record in pixels, can be %NULL to record
- *                  unbounded operations.
+ * @extents: the extents to record in pixels, can be %NULL to record
+ *           unbounded operations.
  *
  * Creates a recording-surface which can be used to record all drawing operations
  * at the highest level (that is, the level of paint, mask, stroke, fill
@@ -109,7 +124,11 @@ static const cairo_surface_backend_t cairo_recording_surface_backend;
  * necessary objects (paths, patterns, etc.), in order to achieve
  * accurate replay.
  *
- * Since 1.10
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * Since: 1.10
  **/
 cairo_surface_t *
 cairo_recording_surface_create (cairo_content_t		 content,
@@ -122,9 +141,15 @@ cairo_recording_surface_create (cairo_content_t		 content,
     if (unlikely (recording_surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&recording_surface->base, &cairo_recording_surface_backend, content);
+    _cairo_surface_init (&recording_surface->base,
+			 &cairo_recording_surface_backend,
+			 NULL, /* device */
+			 content);
 
     recording_surface->content = content;
+
+    recording_surface->unbounded = TRUE;
+    _cairo_clip_init (&recording_surface->clip);
 
     /* unbounded -> 'infinite' extents */
     if (extents != NULL) {
@@ -136,22 +161,20 @@ cairo_recording_surface_create (cairo_content_t		 content,
 	recording_surface->extents.width = ceil (extents->x + extents->width) - recording_surface->extents.x;
 	recording_surface->extents.height = ceil (extents->y + extents->height) - recording_surface->extents.y;
 
-	status = _cairo_clip_init_rectangle (&recording_surface->clip, &recording_surface->extents);
+	status = _cairo_clip_rectangle (&recording_surface->clip,
+					&recording_surface->extents);
 	if (unlikely (status)) {
 	    free (recording_surface);
 	    return _cairo_surface_create_in_error (status);
 	}
 
 	recording_surface->unbounded = FALSE;
-    } else {
-	recording_surface->unbounded = TRUE;
-	_cairo_clip_init (&recording_surface->clip);
     }
 
     _cairo_array_init (&recording_surface->commands, sizeof (cairo_command_t *));
-    recording_surface->commands_owner = NULL;
 
     recording_surface->replay_start_idx = 0;
+    recording_surface->base.is_clear = TRUE;
 
     return &recording_surface->base;
 }
@@ -177,59 +200,50 @@ _cairo_recording_surface_finish (void *abstract_surface)
     cairo_command_t **elements;
     int i, num_elements;
 
-    if (recording_surface->commands_owner) {
-	cairo_surface_destroy (recording_surface->commands_owner);
-	return CAIRO_STATUS_SUCCESS;
-    }
-
     num_elements = recording_surface->commands.num_elements;
     elements = _cairo_array_index (&recording_surface->commands, 0);
     for (i = 0; i < num_elements; i++) {
 	cairo_command_t *command = elements[i];
 
-	_cairo_clip_reset (&command->header.clip);
-
 	switch (command->header.type) {
 	case CAIRO_COMMAND_PAINT:
-	    _cairo_pattern_fini_snapshot (&command->paint.source.base);
-	    free (command);
+	    _cairo_pattern_fini (&command->paint.source.base);
 	    break;
 
 	case CAIRO_COMMAND_MASK:
-	    _cairo_pattern_fini_snapshot (&command->mask.source.base);
-	    _cairo_pattern_fini_snapshot (&command->mask.mask.base);
-	    free (command);
+	    _cairo_pattern_fini (&command->mask.source.base);
+	    _cairo_pattern_fini (&command->mask.mask.base);
 	    break;
 
 	case CAIRO_COMMAND_STROKE:
-	    _cairo_pattern_fini_snapshot (&command->stroke.source.base);
+	    _cairo_pattern_fini (&command->stroke.source.base);
 	    _cairo_path_fixed_fini (&command->stroke.path);
 	    _cairo_stroke_style_fini (&command->stroke.style);
-	    free (command);
 	    break;
 
 	case CAIRO_COMMAND_FILL:
-	    _cairo_pattern_fini_snapshot (&command->fill.source.base);
+	    _cairo_pattern_fini (&command->fill.source.base);
 	    _cairo_path_fixed_fini (&command->fill.path);
-	    free (command);
 	    break;
 
 	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
-	    _cairo_pattern_fini_snapshot (&command->show_text_glyphs.source.base);
+	    _cairo_pattern_fini (&command->show_text_glyphs.source.base);
 	    free (command->show_text_glyphs.utf8);
 	    free (command->show_text_glyphs.glyphs);
 	    free (command->show_text_glyphs.clusters);
 	    cairo_scaled_font_destroy (command->show_text_glyphs.scaled_font);
-	    free (command);
 	    break;
 
 	default:
 	    ASSERT_NOT_REACHED;
 	}
+
+	_cairo_clip_fini (&command->header.clip);
+	free (command);
     }
 
     _cairo_array_fini (&recording_surface->commands);
-    _cairo_clip_reset (&recording_surface->clip);
+    _cairo_clip_fini (&recording_surface->clip);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -244,8 +258,7 @@ _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
     cairo_surface_t *image;
 
     image = _cairo_surface_has_snapshot (&surface->base,
-					 &_cairo_image_surface_backend,
-					 surface->content);
+					 &_cairo_image_surface_backend);
     if (image != NULL) {
 	*image_out = (cairo_image_surface_t *) cairo_surface_reference (image);
 	*image_extra = NULL;
@@ -268,11 +281,7 @@ _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
 	return status;
     }
 
-    status = _cairo_surface_attach_snapshot (&surface->base, image, NULL);
-    if (unlikely (status)) {
-	cairo_surface_destroy (image);
-	return status;
-    }
+    _cairo_surface_attach_snapshot (&surface->base, image, NULL);
 
     *image_out = (cairo_image_surface_t *) image;
     *image_extra = NULL;
@@ -342,8 +351,9 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 
   CLEANUP_SOURCE:
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
+    _cairo_clip_fini (&command->header.clip);
     free (command);
     return status;
 }
@@ -383,10 +393,11 @@ _cairo_recording_surface_mask (void			*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 
   CLEANUP_MASK:
-    _cairo_pattern_fini_snapshot (&command->mask.base);
+    _cairo_pattern_fini (&command->mask.base);
   CLEANUP_SOURCE:
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
+    _cairo_clip_fini (&command->header.clip);
     free (command);
     return status;
 }
@@ -396,9 +407,9 @@ _cairo_recording_surface_stroke (void			*abstract_surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
 				 cairo_path_fixed_t	*path,
-				 cairo_stroke_style_t	*style,
-				 cairo_matrix_t		*ctm,
-				 cairo_matrix_t		*ctm_inverse,
+				 const cairo_stroke_style_t	*style,
+				 const cairo_matrix_t		*ctm,
+				 const cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
 				 cairo_clip_t		*clip)
@@ -444,8 +455,9 @@ _cairo_recording_surface_stroke (void			*abstract_surface,
   CLEANUP_PATH:
     _cairo_path_fixed_fini (&command->path);
   CLEANUP_SOURCE:
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
+    _cairo_clip_fini (&command->header.clip);
     free (command);
     return status;
 }
@@ -494,8 +506,9 @@ _cairo_recording_surface_fill (void			*abstract_surface,
   CLEANUP_PATH:
     _cairo_path_fixed_fini (&command->path);
   CLEANUP_SOURCE:
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
+    _cairo_clip_fini (&command->header.clip);
     free (command);
     return status;
 }
@@ -587,8 +600,9 @@ _cairo_recording_surface_show_text_glyphs (void				*abstract_surface,
     free (command->glyphs);
     free (command->clusters);
 
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
+    _cairo_clip_fini (&command->header.clip);
     free (command);
     return status;
 }
@@ -611,24 +625,36 @@ _cairo_recording_surface_snapshot (void *abstract_other)
 {
     cairo_recording_surface_t *other = abstract_other;
     cairo_recording_surface_t *recording_surface;
+    cairo_status_t status;
 
     recording_surface = malloc (sizeof (cairo_recording_surface_t));
     if (unlikely (recording_surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&recording_surface->base, &cairo_recording_surface_backend,
+    _cairo_surface_init (&recording_surface->base,
+			 &cairo_recording_surface_backend,
+			 NULL, /* device */
 			 other->base.content);
 
     recording_surface->extents_pixels = other->extents_pixels;
     recording_surface->extents = other->extents;
     recording_surface->unbounded = other->unbounded;
-    recording_surface->replay_start_idx = other->replay_start_idx;
     recording_surface->content = other->content;
 
-    _cairo_array_init_snapshot (&recording_surface->commands, &other->commands);
-    recording_surface->commands_owner = cairo_surface_reference (&other->base);
-
     _cairo_clip_init_copy (&recording_surface->clip, &other->clip);
+
+    /* XXX We should in theory be able to reuse the original array, but we
+     * need to handle reference cycles during subsurface and self-copy.
+     */
+    recording_surface->replay_start_idx = 0;
+    recording_surface->base.is_clear = TRUE;
+
+    _cairo_array_init (&recording_surface->commands, sizeof (cairo_command_t *));
+    status = _cairo_recording_surface_replay (&other->base, &recording_surface->base);
+    if (unlikely (status)) {
+	cairo_surface_destroy (&recording_surface->base);
+	return _cairo_surface_create_in_error (status);
+    }
 
     return &recording_surface->base;
 }
@@ -782,6 +808,7 @@ _cairo_recording_surface_get_path (cairo_surface_t    *surface,
 #define _clip(c) ((c)->header.clip.path ? &(c)->header.clip : NULL)
 static cairo_status_t
 _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
+					  const cairo_rectangle_int_t *surface_extents,
 					  cairo_surface_t	     *target,
 					  cairo_recording_replay_type_t type,
 					  cairo_recording_region_type_t region)
@@ -796,15 +823,25 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 	return surface->status;
 
     if (unlikely (target->status))
-	return _cairo_surface_set_error (surface, target->status);
+	return target->status;
+
+    if (unlikely (surface->finished))
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+
+    if (surface->is_clear)
+	return CAIRO_STATUS_SUCCESS;
+
+    assert (_cairo_surface_is_recording (surface));
 
     _cairo_surface_wrapper_init (&wrapper, target);
+    _cairo_surface_wrapper_set_extents (&wrapper, surface_extents);
 
     recording_surface = (cairo_recording_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
 
     num_elements = recording_surface->commands.num_elements;
     elements = _cairo_array_index (&recording_surface->commands, 0);
+
     for (i = recording_surface->replay_start_idx; i < num_elements; i++) {
 	cairo_command_t *command = elements[i];
 
@@ -971,7 +1008,7 @@ cairo_status_t
 _cairo_recording_surface_replay (cairo_surface_t *surface,
 				 cairo_surface_t *target)
 {
-    return _cairo_recording_surface_replay_internal (surface,
+    return _cairo_recording_surface_replay_internal (surface, NULL,
 						     target,
 						     CAIRO_RECORDING_REPLAY,
 						     CAIRO_RECORDING_REGION_ALL);
@@ -987,7 +1024,7 @@ cairo_status_t
 _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
 						    cairo_surface_t *target)
 {
-    return _cairo_recording_surface_replay_internal (surface,
+    return _cairo_recording_surface_replay_internal (surface, NULL,
 						     target,
 						     CAIRO_RECORDING_CREATE_REGIONS,
 						     CAIRO_RECORDING_REGION_ALL);
@@ -995,10 +1032,11 @@ _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
 
 cairo_status_t
 _cairo_recording_surface_replay_region (cairo_surface_t          *surface,
+					const cairo_rectangle_int_t *surface_extents,
 					cairo_surface_t          *target,
 					cairo_recording_region_type_t  region)
 {
-    return _cairo_recording_surface_replay_internal (surface,
+    return _cairo_recording_surface_replay_internal (surface, surface_extents,
 						     target,
 						     CAIRO_RECORDING_REPLAY,
 						     region);

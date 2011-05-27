@@ -43,10 +43,8 @@
 #include <d3d10.h>
 #include <dxgi.h>
 
-extern "C" {
 #include "cairoint.h"
 #include "cairo-surface-clipper-private.h"
-}
 
 #include "cairo-win32-refptr.h"
 #include "cairo-d2d-private-fx.h"

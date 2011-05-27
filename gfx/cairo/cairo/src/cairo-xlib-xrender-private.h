@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -38,13 +38,6 @@
 
 #include <X11/Xlib.h>
 
-#if CAIRO_HAS_XLIB_XRENDER_SURFACE
-
-#include "cairo-xlib-xrender.h"
-
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/renderproto.h>
-
 /* These prototypes are used when defining interfaces missing from the
  * render headers.  As it happens, it is the case that all libxrender
  * functions take a pointer as first argument. */
@@ -54,6 +47,13 @@ __attribute__((__unused__)) static void * _voidp_consume       (void *p, ...)   
 __attribute__((__unused__)) static int    _int_consume         (void *p, ...)   { return 0; }
 __attribute__((__unused__)) static void   _void_consume_free   (Display *p, XID n) { }
 
+
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+
+#include "cairo-xlib-xrender.h"
+
+#include <X11/extensions/Xrender.h>
+#include <X11/extensions/renderproto.h>
 
 /* We require Render >= 0.6.  The following defines were only added in
  * 0.10.  Make sure they are defined.
