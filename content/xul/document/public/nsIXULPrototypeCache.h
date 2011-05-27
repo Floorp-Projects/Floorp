@@ -65,9 +65,9 @@ public:
     virtual PRBool IsCached(nsIURI* aURI) = 0;
 
     /**
-     * Stop the FastLoad process abruptly, removing the FastLoad file.
+     * Stop the caching process abruptly, removing the cache file.
      */
-    virtual void AbortFastLoads() = 0;
+    virtual void AbortCaching() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULPrototypeCache, NS_IXULPROTOTYPECACHE_IID)

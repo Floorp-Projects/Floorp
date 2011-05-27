@@ -86,7 +86,7 @@ protected:
                                     PRBool* result);
 
     // Helper to be used by inherited classes who want to test
-    // equality given and assumed nsSimpleURI.  This must NOT check
+    // equality given an assumed nsSimpleURI.  This must NOT check
     // the passed-in other for QI to our CID.
     bool EqualsInternal(nsSimpleURI* otherUri, RefHandlingEnum refHandlingMode);
 

@@ -109,7 +109,6 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIURI overrides
-    NS_IMETHOD Equals(nsIURI* other, PRBool *result);
     virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode);
 
     // nsISerializable overrides
@@ -121,6 +120,10 @@ public:
     NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc);
     //NS_IMETHOD QueryInterface( const nsIID& aIID, void** aInstancePtr );
 
+protected:
+    virtual nsresult EqualsInternal(nsIURI* other,
+                                    RefHandlingEnum refHandlingMode,
+                                    PRBool* result);
 private:
     nsCOMPtr<nsIURI> mBaseURI;
 };
