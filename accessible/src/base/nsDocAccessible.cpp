@@ -607,6 +607,12 @@ nsDocAccessible::Init()
   if (!mNotificationController)
     return PR_FALSE;
 
+  // Mark the document accessible as loaded if its DOM document was loaded at
+  // this point (this can happen because a11y is started late or DOM document
+  // having no container was loaded.
+  if (mDocument->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE)
+    mIsLoaded = PR_TRUE;
+
   AddEventListeners();
   return PR_TRUE;
 }
