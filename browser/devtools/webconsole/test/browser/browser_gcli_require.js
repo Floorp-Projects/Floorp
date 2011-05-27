@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// For more information on GCLI see:
+// - https://github.com/mozilla/gcli/blob/master/docs/index.md
+// - https://wiki.mozilla.org/DevTools/Features/GCLI
+
 // Tests that source URLs in the Web Console can be clicked to display the
 // standard View Source window.
 
