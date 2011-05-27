@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<!-- dbaron thinks the validity of this test is questionable, see
+     https://bugzilla.mozilla.org/show_bug.cgi?id=477462#c20 and #c21 -->
+<style type="text/css">
+#table {
+ display: table;
+ width: 100px;
+}
+#caption1 {
+ display: table-caption;
+ height: 20px;
+ background-color: red;
+ margin-bottom: 20px;
+}
+#caption2 {
+ display: none;
+ height: 20px;
+ background-color: blue;
+ margin: 10px 0;
+}
+#caption3 {
+ display: table-caption;
+ height: 20px;
+ background-color: green;
+ margin-top: 20px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('caption2').style.display = 'table-caption';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="table">
+ <div id="caption1"></div>
+ <div id="caption2"></div>
+ <div id="caption3"></div>
+</div>
+</body>
+</html>

@@ -1314,6 +1314,59 @@ JS_EndPC(JSContext *cx, JSScript *script)
     return script->code + script->length;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_GetLinePCs(JSContext *cx, JSScript *script,
+              uintN startLine, uintN maxLines,
+              uintN* count, uintN** retLines, jsbytecode*** retPCs)
+{
+    uintN* lines;
+    jsbytecode** pcs;
+    size_t len = (script->length > maxLines ? maxLines : script->length);
+    lines = (uintN*) cx->malloc_(len * sizeof(uintN));
+    if (!lines)
+        return JS_FALSE;
+
+    pcs = (jsbytecode**) cx->malloc_(len * sizeof(jsbytecode*));
+    if (!pcs) {
+        cx->free_(lines);
+        return JS_FALSE;
+    }
+
+    uintN lineno = script->lineno;
+    uintN offset = 0;
+    uintN i = 0;
+    for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+        offset += SN_DELTA(sn);
+        JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+        if (type == SRC_SETLINE || type == SRC_NEWLINE) {
+            if (type == SRC_SETLINE)
+                lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
+            else
+                lineno++;
+
+            if (lineno >= startLine) {
+                lines[i] = lineno;
+                pcs[i] = script->code + offset;
+                if (++i >= maxLines)
+                    break;
+            }
+        }
+    }
+
+    *count = i;
+    if (retLines)
+        *retLines = lines;
+    else
+        cx->free_(lines);
+
+    if (retPCs)
+        *retPCs = pcs;
+    else
+        cx->free_(pcs);
+
+    return JS_TRUE;
+}
+
 JS_PUBLIC_API(uintN)
 JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
 {
@@ -1673,7 +1726,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
     if (!CheckDebugMode(cx))
         return JS_FALSE;
 
-    chars = js_InflateString(cx, bytes, &len);
+    chars = InflateString(cx, bytes, &len);
     if (!chars)
         return JS_FALSE;
     length = (uintN) len;
@@ -2207,7 +2260,7 @@ js_StartVtune(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        params.tb5Filename = js_DeflateString(cx, str->chars(), str->length());
+        params.tb5Filename = DeflateString(cx, str->chars(), str->length());
     }
 
     status = VTStartSampling(&params);
@@ -2545,7 +2598,7 @@ ethogram_addScript(JSContext *cx, uintN argc, jsval *vp)
     }
     if (JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        filename = js_DeflateString(cx, str->chars(), str->length());
+        filename = DeflateString(cx, str->chars(), str->length());
         if (!filename)
             return false;
     }

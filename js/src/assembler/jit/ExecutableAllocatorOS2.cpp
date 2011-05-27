@@ -26,7 +26,7 @@
 
 #include "ExecutableAllocator.h"
 
-#if ENABLE_ASSEMBLER && WTF_PLATFORM_OS2
+#if ENABLE_ASSEMBLER && WTF_OS_OS2
 
 #define INCL_DOS
 #include <os2.h>

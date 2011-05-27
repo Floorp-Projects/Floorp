@@ -1225,20 +1225,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
       nsMouseScrollEvent* msEvent = static_cast<nsMouseScrollEvent*>(aEvent);
 
-      NS_NAMED_LITERAL_CSTRING(actionslot,      ".action");
-      NS_NAMED_LITERAL_CSTRING(numlinesslot,    ".numlines");
-      NS_NAMED_LITERAL_CSTRING(sysnumlinesslot, ".sysnumlines");
-
-      nsCAutoString baseKey;
-      GetBasePrefKeyForMouseWheel(msEvent, baseKey);
-
-      nsCAutoString sysNumLinesKey(baseKey);
-      sysNumLinesKey.Append(sysnumlinesslot);
-      PRBool useSysNumLines = nsContentUtils::GetBoolPref(sysNumLinesKey.get());
-
-      nsCAutoString actionKey(baseKey);
-      actionKey.Append(actionslot);
-      PRInt32 action = nsContentUtils::GetIntPref(actionKey.get());
+      PRBool useSysNumLines = UseSystemScrollSettingFor(msEvent);
+      PRInt32 action = GetWheelActionFor(msEvent);
 
       if (!useSysNumLines) {
         // If the scroll event's delta isn't to our liking, we can
@@ -1254,9 +1242,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         // second item, if the parameter is negative we swap
         // directions.
 
-        nsCAutoString numLinesKey(baseKey);
-        numLinesKey.Append(numlinesslot);
-        PRInt32 numLines = nsContentUtils::GetIntPref(numLinesKey.get());
+        PRInt32 numLines = GetScrollLinesFor(msEvent);
 
         PRBool swapDirs = (numLines < 0);
         PRInt32 userSize = swapDirs ? -numLines : numLines;
@@ -2573,6 +2559,66 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   nsEventDispatcher::Dispatch(targetContent, aPresContext, &event, nsnull, aStatus);
 }
 
+PRInt32
+nsEventStateManager::ComputeWheelActionFor(nsMouseScrollEvent* aMouseEvent,
+                                           PRBool aUseSystemSettings)
+{
+  PRInt32 action = GetWheelActionFor(aMouseEvent);
+  if (aUseSystemSettings &&
+      (aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)) {
+    action = MOUSE_SCROLL_PAGE;
+  }
+
+  if (aMouseEvent->message == NS_MOUSE_PIXEL_SCROLL) {
+    if (action == MOUSE_SCROLL_N_LINES || action == MOUSE_SCROLL_PAGE ||
+        (aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
+      action = MOUSE_SCROLL_PIXELS;
+    } else {
+      // Do not scroll pixels when zooming
+      action = -1;
+    }
+  } else if (aMouseEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) {
+    if (aUseSystemSettings ||
+        action == MOUSE_SCROLL_N_LINES || action == MOUSE_SCROLL_PAGE ||
+        (aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
+      // Don't scroll lines when a pixel scroll event will follow.
+      // Also, don't do history scrolling or zooming for momentum scrolls.
+      action = -1;
+    }
+  }
+
+  return action;
+}
+
+PRInt32
+nsEventStateManager::GetWheelActionFor(nsMouseScrollEvent* aMouseEvent)
+{
+  nsCAutoString prefName;
+  GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
+  prefName.Append(".action");
+  return nsContentUtils::GetIntPref(prefName.get());
+}
+
+PRInt32
+nsEventStateManager::GetScrollLinesFor(nsMouseScrollEvent* aMouseEvent)
+{
+  NS_ASSERTION(!UseSystemScrollSettingFor(aMouseEvent),
+    "GetScrollLinesFor() called when should use system settings");
+  nsCAutoString prefName;
+  GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
+  prefName.Append(".numlines");
+  return nsContentUtils::GetIntPref(prefName.get());
+}
+
+PRBool
+nsEventStateManager::UseSystemScrollSettingFor(nsMouseScrollEvent* aMouseEvent)
+{
+  nsCAutoString prefName;
+  GetBasePrefKeyForMouseWheel(aMouseEvent, prefName);
+  prefName.Append(".sysnumlines");
+  return nsContentUtils::GetBoolPref(prefName.get());
+}
+
 nsresult
 nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
                                   nsMouseScrollEvent* aMouseEvent,
@@ -3062,45 +3108,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
 
       if (*aStatus != nsEventStatus_eConsumeNoDefault) {
-        // Build the preference keys, based on the event properties.
-        NS_NAMED_LITERAL_CSTRING(actionslot,      ".action");
-        NS_NAMED_LITERAL_CSTRING(sysnumlinesslot, ".sysnumlines");
-
-        nsCAutoString baseKey;
-        GetBasePrefKeyForMouseWheel(msEvent, baseKey);
-
-        // Extract the preferences
-        nsCAutoString actionKey(baseKey);
-        actionKey.Append(actionslot);
-
-        nsCAutoString sysNumLinesKey(baseKey);
-        sysNumLinesKey.Append(sysnumlinesslot);
-
-        PRInt32 action = nsContentUtils::GetIntPref(actionKey.get());
-        PRBool useSysNumLines =
-          nsContentUtils::GetBoolPref(sysNumLinesKey.get());
-
-        if (useSysNumLines) {
-          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
-            action = MOUSE_SCROLL_PAGE;
-        }
-
-        if (aEvent->message == NS_MOUSE_PIXEL_SCROLL) {
-          if (action == MOUSE_SCROLL_N_LINES || action == MOUSE_SCROLL_PAGE ||
-              (msEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
-             action = MOUSE_SCROLL_PIXELS;
-          } else {
-            // Do not scroll pixels when zooming
-            action = -1;
-          }
-        } else if (msEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) {
-          if (useSysNumLines || action == MOUSE_SCROLL_N_LINES ||
-              (msEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
-            // Don't scroll lines when a pixel scroll event will follow.
-            // Also, don't do history scrolling or zooming for momentum scrolls.
-            action = -1;
-          }
-        }
+        PRBool useSysNumLines = UseSystemScrollSettingFor(msEvent);
+        PRInt32 action = ComputeWheelActionFor(msEvent, useSysNumLines);
 
         switch (action) {
         case MOUSE_SCROLL_N_LINES:
@@ -4686,13 +4695,35 @@ nsEventStateManager::DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
                                              nsIFrame* aTargetFrame)
 {
   nsMouseScrollEvent* msEvent = aEvent->mInput.mMouseScrollEvent;
-  nsIScrollableFrame::ScrollUnit unit;
-  if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage) {
-    unit = nsIScrollableFrame::PAGES;
-  } else {
-    unit = nsIScrollableFrame::LINES;
+
+  // Don't use high resolution scrolling when user customize the scrolling
+  // speed.
+  if (!UseSystemScrollSettingFor(msEvent)) {
+    return;
   }
-  DoScrollText(aTargetFrame, msEvent, unit, PR_FALSE, aEvent);
+
+  nsIScrollableFrame::ScrollUnit unit;
+  PRBool allowOverrideSystemSettings;
+  switch (ComputeWheelActionFor(msEvent, PR_TRUE)) {
+    case MOUSE_SCROLL_N_LINES:
+      unit = nsIScrollableFrame::LINES;
+      allowOverrideSystemSettings = PR_TRUE;
+      break;
+    case MOUSE_SCROLL_PAGE:
+      unit = nsIScrollableFrame::PAGES;
+      allowOverrideSystemSettings = PR_FALSE;
+      break;
+    case MOUSE_SCROLL_PIXELS:
+      unit = nsIScrollableFrame::DEVICE_PIXELS;
+      allowOverrideSystemSettings = PR_FALSE;
+    default:
+      // Don't use high resolution scrolling when the action doesn't scroll
+      // contents.
+      return;
+  }
+
+  DoScrollText(aTargetFrame, msEvent, unit,
+               allowOverrideSystemSettings, aEvent);
 }
 
 void

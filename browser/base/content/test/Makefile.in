@@ -194,6 +194,7 @@ _BROWSER_FILES = \
                  browser_inspector_treePanel_result.html \
                  browser_scratchpad_initialization.js \
                  browser_scratchpad_contexts.js \
+                 browser_scratchpad_tab_switch.js \
                  browser_scratchpad_execute_print.js \
                  browser_scratchpad_inspect.js \
                  browser_scratchpad_files.js \

@@ -1005,6 +1005,19 @@ pref("devtools.chrome.enabled", false);
 // Change to -1 if you do not want the Web Console to remember its last height.
 pref("devtools.hud.height", 0);
 
+// Remember the Web Console position. Possible values:
+//   above - above the web page,
+//   below - below the web page,
+//   window - in a separate window/popup panel.
+pref("devtools.webconsole.position", "above");
+
+// The number of lines that are displayed in the web console for the Net,
+// CSS, JS and Web Developer categories.
+pref("devtools.hud.loglimit.network", 200);
+pref("devtools.hud.loglimit.cssparser", 200);
+pref("devtools.hud.loglimit.exception", 200);
+pref("devtools.hud.loglimit.console", 200);
+
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
