@@ -47,6 +47,7 @@ EXTRA_JS_MODULES = HUDService.jsm \
 		PropertyPanel.jsm \
 		NetworkHelper.jsm \
 		AutocompletePopup.jsm \
+		gcli.jsm \
 		$(NULL)
 
 ifdef ENABLE_TESTS
