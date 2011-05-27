@@ -1185,6 +1185,7 @@ struct LargeMarkItem
 };
 
 static const size_t OBJECT_MARK_STACK_SIZE = 32768 * sizeof(JSObject *);
+static const size_t ROPES_MARK_STACK_SIZE = 1024 * sizeof(JSString *);
 static const size_t XML_MARK_STACK_SIZE = 1024 * sizeof(JSXML *);
 static const size_t LARGE_MARK_STACK_SIZE = 64 * sizeof(LargeMarkItem);
 
@@ -1212,6 +1213,7 @@ struct GCMarker : public JSTracer {
 #endif
 
     MarkStack<JSObject *> objStack;
+    MarkStack<JSRope *> ropeStack;
     MarkStack<JSXML *> xmlStack;
     MarkStack<LargeMarkItem> largeStack;
 
@@ -1234,7 +1236,10 @@ struct GCMarker : public JSTracer {
     void markDelayedChildren();
 
     bool isMarkStackEmpty() {
-        return objStack.isEmpty() && xmlStack.isEmpty() && largeStack.isEmpty();
+        return objStack.isEmpty() &&
+               ropeStack.isEmpty() &&
+               xmlStack.isEmpty() &&
+               largeStack.isEmpty();
     }
 
     JS_FRIEND_API(void) drainMarkStack();
@@ -1242,6 +1247,11 @@ struct GCMarker : public JSTracer {
     void pushObject(JSObject *obj) {
         if (!objStack.push(obj))
             delayMarkingChildren(obj);
+    }
+
+    void pushRope(JSRope *rope) {
+        if (!ropeStack.push(rope))
+            delayMarkingChildren(rope);
     }
 
     void pushXML(JSXML *xml) {
