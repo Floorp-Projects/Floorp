@@ -4176,7 +4176,7 @@ ScriptAnalysis::followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<
 
     if (op == JSOP_SETLOCAL) {
         uint32 slot = GetBytecodeSlot(script, pc);
-        if (slotEscapes(slot))
+        if (!trackSlot(slot))
             return false;
         if (!followEscapingArguments(cx, SSAValue::PushedValue(use->offset, 0), seen))
             return false;
