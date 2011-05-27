@@ -1285,7 +1285,7 @@ DirectEval(JSContext *cx, const CallArgs &call)
     StackFrame *caller = cx->fp();
     JS_ASSERT(caller->isScriptFrame());
     JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), call.calleev()));
-    JS_ASSERT(*cx->regs().pc == JSOP_EVAL);
+    JS_ASSERT(js_GetOpcode(cx, cx->fp()->script(), cx->regs().pc) == JSOP_EVAL);
 
     AutoFunctionCallProbe callProbe(cx, call.callee().getFunctionPrivate(), caller->script());
 
