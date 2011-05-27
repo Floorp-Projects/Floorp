@@ -1239,7 +1239,21 @@ class ScopeNameCompiler : public PICStubCompiler
         JSC::CodeLocationJump inlineJump = labels.getInlineJump(pic.fastPathStart);
         repatcher.relink(inlineJump, pic.slowPathStart);
 
-        VoidStubPIC stub = (pic.kind == ic::PICInfo::NAME) ? ic::Name : ic::XName;
+        VoidStubPIC stub;
+        switch (pic.kind) {
+          case ic::PICInfo::NAME:
+            stub = ic::Name;
+            break;
+          case ic::PICInfo::XNAME:
+            stub = ic::XName;
+            break;
+          case ic::PICInfo::CALLNAME:
+            stub = ic::CallName;
+            break;
+          default:
+            JS_NOT_REACHED("Invalid pic kind in ScopeNameCompiler::reset");
+            return;
+        }
         FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
         repatcher.relink(pic.slowPathCall, target);
     }
@@ -1251,7 +1265,7 @@ class ScopeNameCompiler : public PICStubCompiler
         ScopeNameLabels &labels = pic.scopeNameLabels();
 
         /* For GETXPROP, the object is already in objReg. */
-        if (pic.kind == ic::PICInfo::NAME)
+        if (pic.kind == ic::PICInfo::NAME || pic.kind == ic::PICInfo::CALLNAME)
             masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == getprop.holder);
@@ -1263,12 +1277,49 @@ class ScopeNameCompiler : public PICStubCompiler
 
         /* If a scope chain walk was required, the final object needs a NULL test. */
         MaybeJump finalNull;
-        if (pic.kind == ic::PICInfo::NAME)
+        if (pic.kind == ic::PICInfo::NAME || pic.kind == ic::PICInfo::CALLNAME)
             finalNull = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump finalShape = masm.branch32(Assembler::NotEqual, pic.shapeReg, Imm32(getprop.holder->shape()));
 
         masm.loadObjProp(obj, pic.objReg, getprop.shape, pic.shapeReg, pic.objReg);
+
+        /*
+         * For CALLNAME we have to store the this-value. Guard that the callee's parent is
+         * the global object, so that we can just store undefined.
+         */
+        MaybeJump calleeNotObject;
+        MaybeJump calleeNotFunction;
+        MaybeJump calleeParent;
+        if (pic.kind == ic::PICInfo::CALLNAME) {
+            /* Need compile-and-go to bake in the global. */
+            if (!f.fp()->script()->compileAndGo)
+                return disable("callname global stub without compile-and-go");
+
+            /* Only handle functions here. */
+            Value funval = getprop.holder->nativeGetSlot(getprop.shape->slot);
+            if (!funval.isObject() || !funval.toObject().isFunction())
+                return disable("unsupported value");
+
+            /* Don't handle functions with parent other than the global object. */
+            JSObject *funobj = &funval.toObject();
+            if (funobj->getParent() != getprop.holder)
+                return disable("not scoped to global object");
+
+            /* Guard that the callee is a function. */
+            calleeNotObject = masm.testObject(Assembler::NotEqual, pic.shapeReg);
+            calleeNotFunction = masm.testFunction(Assembler::NotEqual, pic.objReg);
+
+            /* Guard that the callee's parent is the global object. */
+            Address parent(pic.objReg, offsetof(JSObject, parent));
+            calleeParent = masm.branchPtr(Assembler::NotEqual, parent, ImmPtr(getprop.holder));
+
+            /* Store undefined this-value. */
+            Value *thisVp = &cx->regs().sp[1];
+            Address thisSlot(JSFrameReg, StackFrame::offsetOfFixed(thisVp - cx->fp()->slots()));
+            masm.storeValue(UndefinedValue(), thisSlot);
+        }
+
         Jump done = masm.jump();
 
         /* All failures flow to here, so there is a common point to patch. */
@@ -1277,6 +1328,12 @@ class ScopeNameCompiler : public PICStubCompiler
         if (finalNull.isSet())
             finalNull.get().linkTo(masm.label(), &masm);
         finalShape.linkTo(masm.label(), &masm);
+        if (calleeNotObject.isSet())
+            calleeNotObject.get().linkTo(masm.label(), &masm);
+        if (calleeNotFunction.isSet())
+            calleeNotFunction.get().linkTo(masm.label(), &masm);
+        if (calleeParent.isSet())
+            calleeParent.get().linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
 
@@ -1319,7 +1376,7 @@ class ScopeNameCompiler : public PICStubCompiler
         ScopeNameLabels &labels = pic.scopeNameLabels();
 
         /* For GETXPROP, the object is already in objReg. */
-        if (pic.kind == ic::PICInfo::NAME)
+        if (pic.kind == ic::PICInfo::NAME || pic.kind == ic::PICInfo::CALLNAME)
             masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == getprop.holder);
@@ -1341,10 +1398,22 @@ class ScopeNameCompiler : public PICStubCompiler
 
         /* If a scope chain walk was required, the final object needs a NULL test. */
         MaybeJump finalNull;
-        if (pic.kind == ic::PICInfo::NAME)
+        if (pic.kind == ic::PICInfo::NAME || pic.kind == ic::PICInfo::CALLNAME)
             finalNull = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump finalShape = masm.branch32(Assembler::NotEqual, pic.shapeReg, Imm32(getprop.holder->shape()));
+
+        /*
+         * For CALLNAME we have to store the this-value. Since we guarded on
+         * IsCacheableNonGlobalScope it's always undefined. This matches the decision
+         * tree in ComputeImplicitThis.
+         */
+        if (pic.kind == ic::PICInfo::CALLNAME) {
+            JS_ASSERT(obj->getClass() == &js_CallClass);
+            Value *thisVp = &cx->regs().sp[1];
+            Address thisSlot(JSFrameReg, StackFrame::offsetOfFixed(thisVp - cx->fp()->slots()));
+            masm.storeValue(UndefinedValue(), thisSlot);
+        }
 
         /* Get callobj's stack frame. */
         masm.loadObjPrivate(pic.objReg, pic.shapeReg);
@@ -1454,7 +1523,7 @@ class ScopeNameCompiler : public PICStubCompiler
         return disable("scope object not handled yet");
     }
 
-    bool retrieve(Value *vp)
+    bool retrieve(Value *vp, Value *thisvp)
     {
         JSObject *obj = getprop.obj;
         JSObject *holder = getprop.holder;
@@ -1476,15 +1545,21 @@ class ScopeNameCompiler : public PICStubCompiler
 
         // If the property was found, but we decided not to cache it, then
         // take a slow path and do a full property fetch.
-        if (!getprop.shape)
-            return obj->getProperty(cx, ATOM_TO_JSID(atom), vp);
+        if (!getprop.shape) {
+            if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
+                return false;
+            if (thisvp)
+                return ComputeImplicitThis(cx, obj, *vp, thisvp);
+            return true;
+        }
 
         const Shape *shape = getprop.shape;
         JSObject *normalized = obj;
         if (obj->getClass() == &js_WithClass && !shape->hasDefaultGetter())
             normalized = js_UnwrapWithObject(cx, obj);
         NATIVE_GET(cx, normalized, holder, shape, JSGET_METHOD_BARRIER, vp, return false);
-
+        if (thisvp)
+            return ComputeImplicitThis(cx, normalized, *vp, thisvp);
         return true;
     }
 };
@@ -1891,7 +1966,7 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
         THROW();
 
     Value rval;
-    if (!cc.retrieve(&rval))
+    if (!cc.retrieve(&rval, NULL))
         THROW();
     f.regs.sp[-1] = rval;
 }
@@ -1908,9 +1983,34 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
         THROW();
 
     Value rval;
-    if (!cc.retrieve(&rval))
+    if (!cc.retrieve(&rval, NULL))
         THROW();
     f.regs.sp[0] = rval;
+}
+
+static void JS_FASTCALL
+DisabledCallNameIC(VMFrame &f, ic::PICInfo *pic)
+{
+    stubs::CallName(f);
+}
+
+void JS_FASTCALL
+ic::CallName(VMFrame &f, ic::PICInfo *pic)
+{
+    JSScript *script = f.fp()->script();
+
+    ScopeNameCompiler cc(f, script, &f.fp()->scopeChain(), *pic, pic->atom, DisabledCallNameIC);
+
+    LookupStatus status = cc.updateForName();
+    if (status == Lookup_Error)
+        THROW();
+
+    Value rval, thisval;
+    if (!cc.retrieve(&rval, &thisval))
+        THROW();
+
+    f.regs.sp[0] = rval;
+    f.regs.sp[1] = thisval;
 }
 
 static void JS_FASTCALL
@@ -2713,6 +2813,7 @@ JITScript::purgePICs()
             break;
           case ic::PICInfo::NAME:
           case ic::PICInfo::XNAME:
+          case ic::PICInfo::CALLNAME:
             ScopeNameCompiler::reset(repatcher, pic);
             break;
           case ic::PICInfo::BIND:
