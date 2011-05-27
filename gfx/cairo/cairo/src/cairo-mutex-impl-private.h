@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -168,6 +168,13 @@
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) CAIRO_MUTEX_IMPL_NOOP1(mutex)
 # define CAIRO_MUTEX_IMPL_NIL_INITIALIZER 0
 
+# define CAIRO_MUTEX_HAS_RECURSIVE_IMPL 1
+
+  typedef int cairo_recursive_mutex_impl_t;
+
+# define CAIRO_RECURSIVE_MUTEX_IMPL_INIT(mutex)
+# define CAIRO_RECURSIVE_MUTEX_IMPL_NIL_INITIALIZER 0
+
 #elif defined(_WIN32) /******************************************************/
 
 #define WIN32_LEAN_AND_MEAN
@@ -221,6 +228,7 @@
 # include <pthread.h>
 
   typedef pthread_mutex_t cairo_mutex_impl_t;
+  typedef pthread_mutex_t cairo_recursive_mutex_impl_t;
 
 # define CAIRO_MUTEX_IMPL_PTHREAD 1
 #if HAVE_LOCKDEP
@@ -239,11 +247,31 @@
 #endif
 # define CAIRO_MUTEX_IMPL_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
+# define CAIRO_MUTEX_HAS_RECURSIVE_IMPL 1
+# define CAIRO_RECURSIVE_MUTEX_IMPL_INIT(mutex) do { \
+    pthread_mutexattr_t attr; \
+    pthread_mutexattr_init (&attr); \
+    pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE); \
+    pthread_mutex_init (&(mutex), &attr); \
+    pthread_mutexattr_destroy (&attr); \
+} while (0)
+# define CAIRO_RECURSIVE_MUTEX_IMPL_NIL_INITIALIZER PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 
 #else /**********************************************************************/
 
 # error "XXX: No mutex implementation found.  Cairo will not work with multiple threads.  Define CAIRO_NO_MUTEX to 1 to acknowledge and accept this limitation and compile cairo without thread-safety support."
 
+#endif
+
+/* By default mutex implementations are assumed to be recursive */
+#if ! CAIRO_MUTEX_HAS_RECURSIVE_IMPL
+
+# define CAIRO_MUTEX_HAS_RECURSIVE_IMPL 1
+
+  typedef cairo_mutex_impl_t cairo_recursive_mutex_impl_t;
+
+# define CAIRO_RECURSIVE_MUTEX_IMPL_INIT(mutex) CAIRO_MUTEX_IMPL_INIT(mutex)
+# define CAIRO_RECURSIVE_MUTEX_IMPL_NIL_INITIALIZER CAIRO_MUTEX_IMPL_NIL_INITIALIZER
 
 #endif
 

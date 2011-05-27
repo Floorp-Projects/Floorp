@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -38,6 +38,7 @@
 /* Provide definitions for standalone compilation */
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-freelist-private.h"
 #include "cairo-combsort-private.h"
 
@@ -129,21 +130,25 @@ static void
 dump_traps (cairo_traps_t *traps, const char *filename)
 {
     FILE *file;
+    cairo_box_t extents;
     int n;
 
     if (getenv ("CAIRO_DEBUG_TRAPS") == NULL)
 	return;
 
+#if 0
     if (traps->has_limits) {
 	printf ("%s: limits=(%d, %d, %d, %d)\n",
 		filename,
 		traps->limits.p1.x, traps->limits.p1.y,
 		traps->limits.p2.x, traps->limits.p2.y);
     }
+#endif
+    _cairo_traps_extents (traps, &extents);
     printf ("%s: extents=(%d, %d, %d, %d)\n",
 	    filename,
-	    traps->extents.p1.x, traps->extents.p1.y,
-	    traps->extents.p2.x, traps->extents.p2.y);
+	    extents.p1.x, extents.p1.y,
+	    extents.p2.x, extents.p2.y);
 
     file = fopen (filename, "a");
     if (file != NULL) {

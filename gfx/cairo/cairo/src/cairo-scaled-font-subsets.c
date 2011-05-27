@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -42,6 +42,7 @@
 
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 #if CAIRO_HAS_FONT_SUBSET
 
@@ -400,7 +401,7 @@ _cairo_sub_font_glyph_map_to_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 	    /* No existing mapping. Use the requested mapping */
 	    sub_font_glyph->utf8 = malloc (utf8_len + 1);
 	    if (unlikely (sub_font_glyph->utf8 == NULL))
-		return CAIRO_STATUS_NO_MEMORY;
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	    memcpy (sub_font_glyph->utf8, utf8, utf8_len);
 	    sub_font_glyph->utf8[utf8_len] = 0;

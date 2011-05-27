@@ -11,7 +11,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -36,6 +36,8 @@
 #define CAIRO_ANALYSIS_SURFACE_H
 
 #include "cairoint.h"
+
+CAIRO_BEGIN_DECLS
 
 cairo_private cairo_surface_t *
 _cairo_analysis_surface_create (cairo_surface_t		*target);
@@ -70,5 +72,7 @@ _cairo_analysis_surface_merge_status (cairo_int_status_t status_a,
 
 cairo_private cairo_surface_t *
 _cairo_null_surface_create (cairo_content_t content);
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_ANALYSIS_SURFACE_H */

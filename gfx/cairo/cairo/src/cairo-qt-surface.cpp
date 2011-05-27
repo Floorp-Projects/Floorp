@@ -45,6 +45,7 @@
 
 #include "cairo-ft.h"
 #include "cairo-qt.h"
+#include "cairo-error-private.h"
 
 #include <memory>
 
@@ -304,7 +305,7 @@ _qmatrix_from_cairo_matrix (const cairo_matrix_t& m)
 /** Path conversion **/
 typedef struct _qpainter_path_transform {
     QPainterPath path;
-    cairo_matrix_t *ctm_inverse;
+    const cairo_matrix_t *ctm_inverse;
 } qpainter_path_data;
 
 /* cairo path -> execute in context */
@@ -372,7 +373,7 @@ _cairo_path_to_qpainterpath_close_path (void *closure)
 
 static inline QPainterPath
 path_to_qt (cairo_path_fixed_t *path,
-	    cairo_matrix_t *ctm_inverse = NULL)
+	    const cairo_matrix_t *ctm_inverse = NULL)
 {
     qpainter_path_data data;
     cairo_status_t status;
@@ -1016,7 +1017,7 @@ struct PatternToBrushConverter {
 
 struct PatternToPenConverter {
     PatternToPenConverter (const cairo_pattern_t *source,
-                           cairo_stroke_style_t *style) :
+                           const cairo_stroke_style_t *style) :
         mBrushConverter(source)
     {
         Qt::PenJoinStyle join = Qt::MiterJoin;
@@ -1304,9 +1305,9 @@ _cairo_qt_surface_stroke (void *abstract_surface,
 			  cairo_operator_t op,
 			  const cairo_pattern_t *source,
 			  cairo_path_fixed_t *path,
-			  cairo_stroke_style_t *style,
-			  cairo_matrix_t *ctm,
-			  cairo_matrix_t *ctm_inverse,
+			  const cairo_stroke_style_t *style,
+			  const cairo_matrix_t *ctm,
+			  const cairo_matrix_t *ctm_inverse,
 			  double tolerance,
 			  cairo_antialias_t antialias,
 			  cairo_clip_t *clip)
@@ -1567,6 +1568,7 @@ cairo_qt_surface_create (QPainter *painter)
 
     _cairo_surface_init (&qs->base,
 			 &cairo_qt_surface_backend,
+			 NULL,
 			 CAIRO_CONTENT_COLOR_ALPHA);
 
     _cairo_surface_clipper_init (&qs->clipper,
@@ -1605,6 +1607,7 @@ cairo_qt_surface_create_with_qimage (cairo_format_t format,
 
     _cairo_surface_init (&qs->base,
 			 &cairo_qt_surface_backend,
+			 NULL,
 			 _cairo_content_from_format (format));
 
     _cairo_surface_clipper_init (&qs->clipper,
@@ -1672,7 +1675,7 @@ cairo_qt_surface_create_with_qpixmap (cairo_content_t content,
     if (content == CAIRO_CONTENT_COLOR_ALPHA)
 	pixmap->fill(Qt::transparent);
 
-    _cairo_surface_init (&qs->base, &cairo_qt_surface_backend, content);
+    _cairo_surface_init (&qs->base, &cairo_qt_surface_backend, NULL, content);
 
     _cairo_surface_clipper_init (&qs->clipper,
 				 _cairo_qt_surface_clipper_intersect_clip_path);

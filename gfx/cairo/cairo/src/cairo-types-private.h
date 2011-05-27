@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -44,18 +44,31 @@
 #include "cairo-list-private.h"
 #include "cairo-reference-count-private.h"
 
+/**
+ * SECTION:cairo-types
+ * @Title: Types
+ * @Short_Description: Generic data types
+ *
+ * This section lists generic data types used in the cairo API.
+ */
+
 typedef struct _cairo_array cairo_array_t;
 typedef struct _cairo_backend cairo_backend_t;
+typedef struct _cairo_boxes_t cairo_boxes_t;
 typedef struct _cairo_cache cairo_cache_t;
+typedef struct _cairo_composite_rectangles cairo_composite_rectangles_t;
 typedef struct _cairo_clip cairo_clip_t;
 typedef struct _cairo_clip_path cairo_clip_path_t;
 typedef struct _cairo_color cairo_color_t;
+typedef struct _cairo_color_stop cairo_color_stop_t;
+typedef struct _cairo_device_backend cairo_device_backend_t;
 typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 typedef struct _cairo_gstate cairo_gstate_t;
 typedef struct _cairo_hash_entry cairo_hash_entry_t;
 typedef struct _cairo_hash_table cairo_hash_table_t;
 typedef struct _cairo_image_surface cairo_image_surface_t;
 typedef struct _cairo_mime_data cairo_mime_data_t;
+typedef struct _cairo_observer cairo_observer_t;
 typedef struct _cairo_output_stream cairo_output_stream_t;
 typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
 typedef struct _cairo_path_fixed cairo_path_fixed_t;
@@ -64,11 +77,18 @@ typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
 typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
 typedef struct _cairo_surface_backend cairo_surface_backend_t;
+typedef struct _cairo_surface_snapshot cairo_surface_snapshot_t;
+typedef struct _cairo_surface_subsurface cairo_surface_subsurface_t;
 typedef struct _cairo_surface_wrapper cairo_surface_wrapper_t;
 typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
 typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
 
 typedef cairo_array_t cairo_user_data_array_t;
+
+struct _cairo_observer {
+    cairo_list_t link;
+    void (*callback) (cairo_observer_t *self, void *arg);
+};
 
 /**
  * cairo_hash_entry_t:
@@ -117,11 +137,43 @@ struct _cairo_array {
     cairo_bool_t is_snapshot;
 };
 
+/**
+ * cairo_lcd_filter_t:
+ * @CAIRO_LCD_FILTER_DEFAULT: Use the default LCD filter for
+ *   font backend and target device
+ * @CAIRO_LCD_FILTER_NONE: Do not perform LCD filtering
+ * @CAIRO_LCD_FILTER_INTRA_PIXEL: Intra-pixel filter
+ * @CAIRO_LCD_FILTER_FIR3: FIR filter with a 3x3 kernel
+ * @CAIRO_LCD_FILTER_FIR5: FIR filter with a 5x5 kernel
+ *
+ * The LCD filter specifies the low-pass filter applied to LCD-optimized
+ * bitmaps generated with an antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
+ *
+ * Note: This API was temporarily made available in the public
+ * interface during the 1.7.x development series, but was made private
+ * before 1.8.
+ **/
+typedef enum _cairo_lcd_filter {
+    CAIRO_LCD_FILTER_DEFAULT,
+    CAIRO_LCD_FILTER_NONE,
+    CAIRO_LCD_FILTER_INTRA_PIXEL,
+    CAIRO_LCD_FILTER_FIR3,
+    CAIRO_LCD_FILTER_FIR5
+} cairo_lcd_filter_t;
+
+typedef enum _cairo_round_glyph_positions {
+    CAIRO_ROUND_GLYPH_POS_DEFAULT,
+    CAIRO_ROUND_GLYPH_POS_ON,
+    CAIRO_ROUND_GLYPH_POS_OFF
+} cairo_round_glyph_positions_t;
+
 struct _cairo_font_options {
     cairo_antialias_t antialias;
     cairo_subpixel_order_t subpixel_order;
+    cairo_lcd_filter_t lcd_filter;
     cairo_hint_style_t hint_style;
     cairo_hint_metrics_t hint_metrics;
+    cairo_round_glyph_positions_t round_glyph_positions;
 };
 
 /* XXX: Right now, the _cairo_color structure puts unpremultiplied
@@ -140,6 +192,20 @@ struct _cairo_color {
     unsigned short green_short;
     unsigned short blue_short;
     unsigned short alpha_short;
+};
+
+struct _cairo_color_stop {
+    /* unpremultiplied */
+    double red;
+    double green;
+    double blue;
+    double alpha;
+
+    /* unpremultipled, for convenience */
+    uint16_t red_short;
+    uint16_t green_short;
+    uint16_t blue_short;
+    uint16_t alpha_short;
 };
 
 typedef enum _cairo_paginated_mode {
@@ -164,7 +230,8 @@ typedef enum _cairo_int_status {
 } cairo_int_status_t;
 
 typedef enum _cairo_internal_surface_type {
-    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED = 0x1000,
+    CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT = 0x1000,
+    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
     CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
@@ -208,29 +275,6 @@ typedef struct _cairo_point_int {
 
 #define CAIRO_RECT_INT_MIN (INT_MIN >> CAIRO_FIXED_FRAC_BITS)
 #define CAIRO_RECT_INT_MAX (INT_MAX >> CAIRO_FIXED_FRAC_BITS)
-
-/* Rectangles that take part in a composite operation.
- *
- * This defines four translations that define which pixels of the
- * source pattern, mask, clip and destination surface take part in a
- * general composite operation.  The idea is that the pixels at
- *
- *	(i,j)+(src.x, src.y) of the source,
- *      (i,j)+(mask.x, mask.y) of the mask,
- *      (i,j)+(clip.x, clip.y) of the clip and
- *      (i,j)+(dst.x, dst.y) of the destination
- *
- * all combine together to form the result at (i,j)+(dst.x,dst.y),
- * for i,j ranging in [0,width) and [0,height) respectively.
- */
-typedef struct _cairo_composite_rectangles {
-        cairo_point_int_t src;
-        cairo_point_int_t mask;
-        cairo_point_int_t clip;
-        cairo_point_int_t dst;
-        int width;
-        int height;
-} cairo_composite_rectangles_t;
 
 typedef enum _cairo_direction {
     CAIRO_DIRECTION_FORWARD,
@@ -322,7 +366,8 @@ typedef struct _cairo_format_masks {
 typedef enum {
     CAIRO_STOCK_WHITE,
     CAIRO_STOCK_BLACK,
-    CAIRO_STOCK_TRANSPARENT
+    CAIRO_STOCK_TRANSPARENT,
+    CAIRO_STOCK_NUM_COLORS,
 } cairo_stock_t;
 
 typedef enum _cairo_image_transparency {
@@ -335,7 +380,7 @@ typedef enum _cairo_image_transparency {
 struct _cairo_mime_data {
     cairo_reference_count_t ref_count;
     unsigned char *data;
-    unsigned int length;
+    unsigned long length;
     cairo_destroy_func_t destroy;
     void *closure;
 };
@@ -356,7 +401,6 @@ struct _cairo_pattern {
 struct _cairo_solid_pattern {
     cairo_pattern_t base;
     cairo_color_t color;
-    cairo_content_t content;
 };
 
 typedef struct _cairo_surface_pattern {
@@ -367,7 +411,7 @@ typedef struct _cairo_surface_pattern {
 
 typedef struct _cairo_gradient_stop {
     double offset;
-    cairo_color_t color;
+    cairo_color_stop_t color;
 } cairo_gradient_stop_t;
 
 typedef struct _cairo_gradient_pattern {
@@ -411,4 +455,30 @@ typedef union {
     cairo_gradient_pattern_union_t  gradient;
 } cairo_pattern_union_t;
 
+/*
+ * A #cairo_unscaled_font_t is just an opaque handle we use in the
+ * glyph cache.
+ */
+typedef struct _cairo_unscaled_font {
+    cairo_hash_entry_t			 hash_entry;
+    cairo_reference_count_t		 ref_count;
+    const cairo_unscaled_font_backend_t	*backend;
+} cairo_unscaled_font_t;
+
+typedef struct _cairo_scaled_glyph {
+    cairo_hash_entry_t hash_entry;
+
+    cairo_text_extents_t    metrics;		/* user-space metrics */
+    cairo_text_extents_t    fs_metrics;		/* font-space metrics */
+    cairo_box_t		    bbox;		/* device-space bounds */
+    int16_t                 x_advance;		/* device-space rounded X advance */
+    int16_t                 y_advance;		/* device-space rounded Y advance */
+
+    unsigned int	    has_info;
+    cairo_image_surface_t   *surface;		/* device-space image */
+    cairo_path_fixed_t	    *path;		/* device-space outline */
+    cairo_surface_t         *recording_surface;	/* device-space recording-surface */
+
+    void		    *surface_private;	/* for the surface backend */
+} cairo_scaled_glyph_t;
 #endif /* CAIRO_TYPES_PRIVATE_H */

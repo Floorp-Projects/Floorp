@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -41,6 +41,7 @@
 
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 #if CAIRO_HAS_FONT_SUBSET
 
@@ -117,6 +118,7 @@ typedef struct _cairo_cff_font {
     cairo_array_t        local_sub_index;
     int                  num_glyphs;
     cairo_bool_t         is_cid;
+    int  		 units_per_em;
 
     /* CID Font Data */
     int                 *fdselect;
@@ -1772,6 +1774,9 @@ _cairo_cff_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     font->y_max = (int16_t) be16_to_cpu (head.y_max);
     font->ascent = (int16_t) be16_to_cpu (hhea.ascender);
     font->descent = (int16_t) be16_to_cpu (hhea.descender);
+    font->units_per_em = (int16_t) be16_to_cpu (head.units_per_em);
+    if (font->units_per_em == 0)
+        font->units_per_em = 1000;
 
     font->font_name = NULL;
     status = _cairo_truetype_read_font_name (scaled_font_subset->scaled_font,
@@ -1955,20 +1960,20 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
 	cff_subset->font_name = NULL;
     }
 
-    cff_subset->widths = calloc (sizeof (int), font->scaled_font_subset->num_glyphs);
+    cff_subset->widths = calloc (sizeof (double), font->scaled_font_subset->num_glyphs);
     if (unlikely (cff_subset->widths == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail3;
     }
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
-        cff_subset->widths[i] = font->widths[i];
+        cff_subset->widths[i] = (double)font->widths[i]/font->units_per_em;
 
-    cff_subset->x_min = font->x_min;
-    cff_subset->y_min = font->y_min;
-    cff_subset->x_max = font->x_max;
-    cff_subset->y_max = font->y_max;
-    cff_subset->ascent = font->ascent;
-    cff_subset->descent = font->descent;
+    cff_subset->x_min = (double)font->x_min/font->units_per_em;
+    cff_subset->y_min = (double)font->y_min/font->units_per_em;
+    cff_subset->x_max = (double)font->x_max/font->units_per_em;
+    cff_subset->y_max = (double)font->y_max/font->units_per_em;
+    cff_subset->ascent = (double)font->ascent/font->units_per_em;
+    cff_subset->descent = (double)font->descent/font->units_per_em;
 
     cff_subset->data = malloc (length);
     if (unlikely (cff_subset->data == NULL)) {
@@ -2212,21 +2217,21 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
 	goto fail2;
     }
 
-    cff_subset->widths = calloc (sizeof (int), font->scaled_font_subset->num_glyphs);
+    cff_subset->widths = calloc (sizeof (double), font->scaled_font_subset->num_glyphs);
     if (unlikely (cff_subset->widths == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail3;
     }
 
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
-        cff_subset->widths[i] = type2_subset.widths[i];
+        cff_subset->widths[i] = (double)type2_subset.widths[i]/1000;
 
-    cff_subset->x_min = type2_subset.x_min;
-    cff_subset->y_min = type2_subset.y_min;
-    cff_subset->x_max = type2_subset.x_max;
-    cff_subset->y_max = type2_subset.y_max;
-    cff_subset->ascent = type2_subset.y_max;
-    cff_subset->descent = type2_subset.y_min;
+    cff_subset->x_min = (double)type2_subset.x_min/1000;
+    cff_subset->y_min = (double)type2_subset.y_min/1000;
+    cff_subset->x_max = (double)type2_subset.x_max/1000;
+    cff_subset->y_max = (double)type2_subset.y_max/1000;
+    cff_subset->ascent = (double)type2_subset.y_max/1000;
+    cff_subset->descent = (double)type2_subset.y_min/1000;
 
     cff_subset->data = malloc (length);
     if (unlikely (cff_subset->data == NULL)) {
