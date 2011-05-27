@@ -247,7 +247,6 @@ PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsIUGenCategory *nsContentUtils::sGenCat;
-nsTArray<nsISupports**> *nsContentUtils::sPtrsToPtrsToRelease;
 nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
 PRInt32 nsContentUtils::sScriptRootCount[NS_STID_ARRAY_UBOUND];
 PRUint32 nsContentUtils::sJSGCThingRootCount;
@@ -468,11 +467,6 @@ nsContentUtils::Init()
 
   rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  sPtrsToPtrsToRelease = new nsTArray<nsISupports**>();
-  if (!sPtrsToPtrsToRelease) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   if (!InitializeEventTable())
     return NS_ERROR_FAILURE;
@@ -1206,15 +1200,6 @@ nsContentUtils::Shutdown()
   sStringEventTable = nsnull;
   delete sUserDefinedEvents;
   sUserDefinedEvents = nsnull;
-
-  if (sPtrsToPtrsToRelease) {
-    for (i = 0; i < sPtrsToPtrsToRelease->Length(); ++i) {
-      nsISupports** ptrToPtr = sPtrsToPtrsToRelease->ElementAt(i);
-      NS_RELEASE(*ptrToPtr);
-    }
-    delete sPtrsToPtrsToRelease;
-    sPtrsToPtrsToRelease = nsnull;
-  }
 
   if (sEventListenerManagersHash.ops) {
     NS_ASSERTION(sEventListenerManagersHash.entryCount == 0,
