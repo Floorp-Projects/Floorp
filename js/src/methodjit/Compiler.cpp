@@ -768,7 +768,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         if (pics[i].kind == ic::PICInfo::SET ||
             pics[i].kind == ic::PICInfo::SETMETHOD) {
             jitPics[i].u.vr = pics[i].vr;
-        } else if (pics[i].kind != ic::PICInfo::NAME) {
+        } else if (pics[i].kind != ic::PICInfo::NAME &&
+                   pics[i].kind != ic::PICInfo::CALLNAME) {
             if (pics[i].hasTypeCheck) {
                 int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
                                  stubcc.masm.distanceOf(pics[i].slowPathStart);
@@ -1419,14 +1420,6 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_SETELEM);
 
-          BEGIN_CASE(JSOP_CALLNAME)
-            prepareStubCall(Uses(0));
-            masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::CallName);
-            frame.pushSynced();
-            frame.pushSynced();
-          END_CASE(JSOP_CALLNAME)
-
           BEGIN_CASE(JSOP_EVAL)
           {
             JaegerSpew(JSpew_Insns, " --- EVAL --- \n");
@@ -1446,8 +1439,12 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_CALL)
 
           BEGIN_CASE(JSOP_NAME)
-            jsop_name(script->getAtom(fullAtomIndex(PC)));
+            jsop_name(script->getAtom(fullAtomIndex(PC)), false);
           END_CASE(JSOP_NAME)
+
+          BEGIN_CASE(JSOP_CALLNAME)
+            jsop_name(script->getAtom(fullAtomIndex(PC)), true);
+          END_CASE(JSOP_CALLNAME)
 
           BEGIN_CASE(JSOP_DOUBLE)
           {
@@ -3551,9 +3548,9 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
 }
 
 void
-mjit::Compiler::jsop_name(JSAtom *atom)
+mjit::Compiler::jsop_name(JSAtom *atom, bool isCall)
 {
-    PICGenInfo pic(ic::PICInfo::NAME, JSOp(*PC), true);
+    PICGenInfo pic(isCall ? ic::PICInfo::CALLNAME : ic::PICInfo::NAME, JSOp(*PC), true);
 
     RESERVE_IC_SPACE(masm);
 
@@ -3572,7 +3569,7 @@ mjit::Compiler::jsop_name(JSAtom *atom)
         pic.slowPathStart = stubcc.linkExit(inlineJump, Uses(0));
         stubcc.leave();
         passICAddress(&pic);
-        pic.slowPathCall = OOL_STUBCALL(ic::Name);
+        pic.slowPathCall = OOL_STUBCALL(isCall ? ic::CallName : ic::Name);
         CHECK_OOL_SPACE();
     }
     pic.fastPathRejoin = masm.label();
@@ -3582,8 +3579,10 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     labels.setInlineJump(masm, pic.fastPathStart, inlineJump);
 
     frame.pushRegs(pic.shapeReg, pic.objReg);
+    if (isCall)
+        frame.pushSynced();
 
-    stubcc.rejoin(Changes(1));
+    stubcc.rejoin(Changes(isCall ? 2 : 1));
 
     pics.append(pic);
 }
@@ -3692,11 +3691,13 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
 #else /* !JS_POLYIC */
 
 void
-mjit::Compiler::jsop_name(JSAtom *atom)
+mjit::Compiler::jsop_name(JSAtom *atom, bool isCall)
 {
     prepareStubCall(Uses(0));
-    INLINE_STUBCALL(stubs::Name);
+    INLINE_STUBCALL(isCall ? stubs::CallName : stubs::Name);
     frame.pushSynced();
+    if (isCall)
+        frame.pushSynced();
 }
 
 bool
@@ -3881,7 +3882,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     if (pop || (op == JSOP_INCNAME || op == JSOP_DECNAME)) {
         /* These cases are easy, the original value is not observed. */
 
-        jsop_name(atom);
+        jsop_name(atom, false);
         // V
 
         frame.push(Int32Value(amt));
@@ -3912,7 +3913,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     } else {
         /* The pre-value is observed, making this more tricky. */
 
-        jsop_name(atom);
+        jsop_name(atom, false);
         // V
 
         jsop_pos();
