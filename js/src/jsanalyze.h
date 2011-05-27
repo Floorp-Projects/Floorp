@@ -755,6 +755,12 @@ class SSAValue
         u.phi.node = node;
     }
 
+    static SSAValue PhiValue(uint32 offset, SSAPhiNode *node) {
+        SSAValue v;
+        v.initPhi(offset, node);
+        return v;
+    }
+
   private:
     union {
         struct {

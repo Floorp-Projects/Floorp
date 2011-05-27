@@ -4148,14 +4148,8 @@ ScriptAnalysis::followEscapingArguments(JSContext *cx, const SSAValue &v, Vector
 bool
 ScriptAnalysis::followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<SSAValue> *seen)
 {
-    if (!use->popped) {
-        for (unsigned i = 0; i < use->u.phi->length; i++) {
-            const SSAValue &v = use->u.phi->options[i];
-            if (!followEscapingArguments(cx, v, seen))
-                return false;
-        }
-        return true;
-    }
+    if (!use->popped)
+        return followEscapingArguments(cx, SSAValue::PhiValue(use->offset, use->u.phi), seen);
 
     jsbytecode *pc = script->code + use->offset;
     uint32 which = use->u.which;
