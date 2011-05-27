@@ -920,8 +920,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   }
 
   if (gDumpFile == nsnull) {
-    const nsAdoptingCString& fname = 
-      nsContentUtils::GetCharPref("browser.dom.window.dump.file");
+    const nsAdoptingCString& fname =
+      Preferences::GetCString("browser.dom.window.dump.file");
     if (!fname.IsEmpty()) {
       // if this fails to open, Dump() knows to just go to stdout
       // on null.
@@ -10547,11 +10547,11 @@ nsresult
 NS_GetNavigatorPlatform(nsAString& aPlatform)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.platform.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.platform.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aPlatform);
+      aPlatform = override;
       return NS_OK;
     }
   }
@@ -10591,11 +10591,11 @@ nsresult
 NS_GetNavigatorAppVersion(nsAString& aAppVersion)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override = 
-      nsContentUtils::GetCharPref("general.appversion.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.appversion.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aAppVersion);
+      aAppVersion = override;
       return NS_OK;
     }
   }
@@ -10628,11 +10628,11 @@ nsresult
 NS_GetNavigatorAppName(nsAString& aAppName)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.appname.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.appname.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aAppName);
+      aAppName = override;
       return NS_OK;
     }
   }
@@ -10736,11 +10736,11 @@ NS_IMETHODIMP
 nsNavigator::GetOscpu(nsAString& aOSCPU)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.oscpu.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.oscpu.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aOSCPU);
+      aOSCPU = override;
       return NS_OK;
     }
   }
@@ -10791,21 +10791,21 @@ NS_IMETHODIMP
 nsNavigator::GetProductSub(nsAString& aProductSub)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.productSub.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.productSub.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aProductSub);
+      aProductSub = override;
       return NS_OK;
-    } else {
-      // 'general.useragent.productSub' backwards compatible with 1.8 branch.
-      const nsAdoptingCString& override2 =
-        nsContentUtils::GetCharPref("general.useragent.productSub");
+    }
 
-      if (override2) {
-        CopyUTF8toUTF16(override2, aProductSub);
-        return NS_OK;
-      }
+    // 'general.useragent.productSub' backwards compatible with 1.8 branch.
+    const nsAdoptingString& override2 =
+      Preferences::GetString("general.useragent.productSub");
+
+    if (override2) {
+      aProductSub = override2;
+      return NS_OK;
     }
   }
 
@@ -10878,11 +10878,11 @@ NS_IMETHODIMP
 nsNavigator::GetBuildID(nsAString& aBuildID)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.buildID.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.buildID.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aBuildID);
+      aBuildID = override;
       return NS_OK;
     }
   }

@@ -2598,19 +2598,6 @@ nsContentUtils::IsDraggableLink(const nsIContent* aContent) {
 }
 
 // static
-nsAdoptingCString
-nsContentUtils::GetCharPref(const char *aPref)
-{
-  nsAdoptingCString result;
-
-  if (sPrefBranch) {
-    sPrefBranch->GetCharPref(aPref, getter_Copies(result));
-  }
-
-  return result;
-}
-
-// static
 nsAdoptingString
 nsContentUtils::GetLocalizedStringPref(const char *aPref)
 {
@@ -2622,24 +2609,6 @@ nsContentUtils::GetLocalizedStringPref(const char *aPref)
                                  getter_AddRefs(prefLocalString));
     if (prefLocalString) {
       prefLocalString->GetData(getter_Copies(result));
-    }
-  }
-
-  return result;
-}
-
-// static
-nsAdoptingString
-nsContentUtils::GetStringPref(const char *aPref)
-{
-  nsAdoptingString result;
-
-  if (sPrefBranch) {
-    nsCOMPtr<nsISupportsString> theString;
-    sPrefBranch->GetComplexValue(aPref, NS_GET_IID(nsISupportsString),
-                                 getter_AddRefs(theString));
-    if (theString) {
-      theString->ToString(getter_Copies(result));
     }
   }
 

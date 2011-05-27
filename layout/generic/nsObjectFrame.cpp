@@ -4052,7 +4052,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   // "plugins.force.wmode" preference is forcing wmode type for plugins
   // possible values - "opaque", "transparent", "windowed"
-  nsAdoptingCString wmodeType = nsContentUtils::GetCharPref("plugins.force.wmode");
+  nsAdoptingCString wmodeType = Preferences::GetCString("plugins.force.wmode");
   if (!wmodeType.IsEmpty()) {
     mNumCachedAttrs++;
   }
