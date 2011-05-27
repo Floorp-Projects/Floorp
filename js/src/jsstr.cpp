@@ -111,90 +111,12 @@ JSString::isExternal() const
     return is_external;
 }
 
-static JS_ALWAYS_INLINE JSString *
-Tag(JSRope *str)
-{
-    JS_ASSERT(!(size_t(str) & 1));
-    return (JSString *)(size_t(str) | 1);
-}
-
-static JS_ALWAYS_INLINE bool
-Tagged(JSString *str)
-{
-    return (size_t(str) & 1) != 0;
-}
-
-static JS_ALWAYS_INLINE JSRope *
-Untag(JSString *str)
-{
-    JS_ASSERT((size_t(str) & 1) == 1);
-    return (JSRope *)(size_t(str) & ~size_t(1));
-}
-
 void
 JSLinearString::mark(JSTracer *)
 {
     JSLinearString *str = this;
     while (!str->isStaticAtom() && str->markIfUnmarked() && str->isDependent())
         str = str->asDependent().base();
-}
-
-void
-JSString::mark(JSTracer *trc)
-{
-    if (isLinear()) {
-        asLinear().mark(trc);
-        return;
-    }
-
-    /*
-     * This function must not fail, so a simple stack-based traversal must not
-     * be used (since it may oom if the stack grows large). Instead, strings
-     * are temporarily mutated to embed parent pointers as they are traversed.
-     * This algorithm is homomorphic to JSString::flatten.
-     */
-    JSRope *str = &asRope();
-    JSRope *parent = NULL;
-    first_visit_node: {
-        if (!str->markIfUnmarked())
-            goto finish_node;
-        JS_ASSERT(!Tagged(str->d.u1.left) && !Tagged(str->d.s.u2.right));
-        JSString *left = str->d.u1.left;
-        if (left->isRope()) {
-            str->d.u1.left = Tag(parent);
-            parent = str;
-            str = &left->asRope();
-            goto first_visit_node;
-        }
-        left->asLinear().mark(trc);
-    }
-    visit_right_child: {
-        JSString *right = str->d.s.u2.right;
-        if (right->isRope()) {
-            str->d.s.u2.right = Tag(parent);
-            parent = str;
-            str = &right->asRope();
-            goto first_visit_node;
-        }
-        right->asLinear().mark(trc);
-    }
-    finish_node: {
-        if (!parent)
-            return;
-        if (Tagged(parent->d.u1.left)) {
-            JS_ASSERT(!Tagged(parent->d.s.u2.right));
-            JSRope *nextParent = Untag(parent->d.u1.left);
-            parent->d.u1.left = str;
-            str = parent;
-            parent = nextParent;
-            goto visit_right_child;
-        }
-        JSRope *nextParent = Untag(parent->d.s.u2.right);
-        parent->d.s.u2.right = str;
-        str = parent;
-        parent = nextParent;
-        goto finish_node;
-    }
 }
 
 static JS_ALWAYS_INLINE size_t
