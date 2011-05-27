@@ -1,0 +1,241 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the GCLI.
+ *
+ * The Initial Developer of the Original Code is
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Walker <jwalker@mozilla.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* From: $GCLI/mozilla/gcli/ui/gcliterm.css */
+.gcliterm-input-node,
+.gcliterm-complete-node {
+  border: none;
+  -moz-appearance: none;
+  height: 100%;
+  vertical-align: middle;
+  background-color: transparent;
+  font: 12px Consolas, "Lucida Console", monospace;
+  padding: 2px 0 0 16px;
+}
+
+.gcliterm-complete-node {
+  color: #FFF;
+  padding: 4px 4px 2px 21px;
+}
+
+.gcliVALID {
+  border-bottom: none;
+}
+
+.gcliINCOMPLETE {
+  color: #DDD;
+  border-bottom: 1px dotted #999;
+}
+
+.gcliERROR {
+  color: #DDD;
+  border-bottom: 1px dotted #F00;
+}
+
+.gcliCompl {
+  color: #999;
+}
+
+.gcliterm-stack-node {
+  background: url("chrome://global/skin/icons/commandline.png") 4px center no-repeat;
+  width: 100%;
+}
+
+.gcliterm-hint-node {
+  color: #000;
+  background: rgba(250, 250, 250, 0.8);
+  border: 1px solid #AAA;
+  border-bottom: 0px !important;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
+  display: inline-block;
+  overflow: auto;
+  padding: 10px;
+}
+
+.gcliterm-hint-parent {
+  border-bottom: 1px solid #AAA;
+}
+
+.gcliCmdHelpRight {
+  text-align: right;
+}
+
+/* From: $GCLI/lib/gcli/ui/arg_fetch.css */
+.gcliCmdDesc {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 3px;
+}
+
+.gcliParamGroup {
+  font-weight: bold;
+}
+
+.gcliParamName {
+  text-align: right;
+  font-size: 90%;
+}
+
+.gcliParamError {
+  font-size: 80%;
+  color: #900;
+}
+
+.gcliParamSubmit {
+  text-align: right;
+}
+
+.gcliGroupSymbol {
+  font-size: 90%;
+  color: #666;
+}
+
+.gcliRequired {
+  font-size: 80%;
+  color: #666;
+}
+
+.gcliParams {
+  width: 100%;
+}
+
+/* From: $GCLI/lib/gcli/ui/hinter.css */
+.gcliHintParent {
+  color: #000;
+  background: rgba(250, 250, 250, 0.8);
+  border: 1px solid #AAA;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.gcliHints {
+  overflow: auto;
+  padding: 10px;
+  display: inline-block;
+}
+
+.gcliHints ul {
+  margin: 0;
+  padding: 0 15px;
+}
+
+/* From: $GCLI/lib/gcli/ui/menu.css */
+.gcliOption {
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.gcliOption:hover {
+  background-color: rgb(230, 230, 230);
+}
+
+.gcliOptionName {
+  padding-right: 5px;
+}
+
+.gcliOptionDesc {
+  font-size: 80%;
+  color: #999;
+}
+
+.gcliMenuError {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 8px 2px 2px 2px;
+  font-size: 80%;
+  color: red;
+}
+
+.gcliMenuField {
+  background-color: white;
+  color: black;
+  border: 1px solid #aaa;
+  padding: 2px;
+  max-height: 300px;
+  overflow-y: auto;
+  max-width: 220px;
+  overflow-x: hidden;
+  margin: 0px 10px;
+  border-top: 0px !important;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+/* From: $GCLI/lib/gcli/ui/inputter.css */
+.gcliCompletion {
+  position: absolute;
+  z-index: -1000;
+  background-color: #DDD;
+  border: 1px transparent solid;
+  padding: 1px 1px 1px 2px;
+}
+
+.gcliCompletion {
+  color: #DDD;
+}
+
+.gcliINCOMPLETE {
+  border-bottom: 2px dotted #999;
+}
+
+.gcliERROR {
+  border-bottom: 2px dotted #F00;
+}
+
+.gcliPrompt {
+  color: #66F;
+  font-weight: bold;
+}
+
+.gcliCompl {
+  color: #999;
+}
+
+.gcliCloseBrace {
+  color: #999;
+}
