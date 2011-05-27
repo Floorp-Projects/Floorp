@@ -685,6 +685,22 @@ function run_test() {
 
   }, function (next) {
 
+    _("Testing URI construction.");
+    let args = [];
+    args.push("newer=" + 1234);
+    args.push("limit=" + 1234);
+    args.push("sort=" + 1234);
+
+    let query = "?" + args.join("&");
+
+    let uri1 = Utils.makeURL("http://foo/" + query);
+    let uri2 = Utils.makeURL("http://foo/");
+    uri2.query = query;
+    do_check_eq(uri1.query, uri2.query);
+    next();
+
+  }, function (next) {
+
     // Don't quit test harness before server shuts down.
     server.stop(do_test_finished);
 
