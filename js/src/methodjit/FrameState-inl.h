@@ -552,7 +552,13 @@ inline void
 FrameState::forgetMismatchedObject(FrameEntry *fe)
 {
     if (fe->isNotType(JSVAL_TYPE_OBJECT)) {
-        syncAndForgetFe(fe);
+        if (fe->isCopied()) {
+            syncFe(fe);
+            uncopy(fe);
+            fe->resetSynced();
+        } else {
+            syncAndForgetFe(fe);
+        }
         fe->clear();
     }
 
