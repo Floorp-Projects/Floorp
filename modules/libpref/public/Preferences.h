@@ -154,6 +154,7 @@ public:
    */
   static nsresult GetChar(const char* aPref, nsACString* aResult);
   static nsresult GetChar(const char* aPref, nsAString* aResult);
+  static nsresult GetLocalizedString(const char* aPref, nsACString* aResult);
   static nsresult GetLocalizedString(const char* aPref, nsAString* aResult);
 
   /**
