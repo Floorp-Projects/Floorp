@@ -8833,7 +8833,7 @@ TraceRecorder::incHelper(const Value &v, LIns*& v_ins, Value &v_after,
         jsdouble num;
         AutoValueRooter tvr(cx);
         *tvr.addr() = v;
-        ValueToNumber(cx, tvr.value(), &num);
+        JS_ALWAYS_TRUE(ValueToNumber(cx, tvr.value(), &num));
         v_ins_after = tryToDemote(LIR_addd, num, incr, v_ins, w.immd(incr));
         v_after.setDouble(num + incr);
     }

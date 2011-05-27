@@ -1221,7 +1221,7 @@ mjit::Compiler::generateMethod()
             FrameEntry *top = frame.peek(-1);
             if (top->isConstant() && top->getValue().isPrimitive()) {
                 int32_t i;
-                ValueToECMAInt32(cx, top->getValue(), &i);
+                JS_ALWAYS_TRUE(ValueToECMAInt32(cx, top->getValue(), &i));
                 i = ~i;
                 frame.pop();
                 frame.push(Int32Value(i));
@@ -1236,7 +1236,7 @@ mjit::Compiler::generateMethod()
             FrameEntry *top = frame.peek(-1);
             if (top->isConstant() && top->getValue().isPrimitive()) {
                 double d;
-                ValueToNumber(cx, top->getValue(), &d);
+                JS_ALWAYS_TRUE(ValueToNumber(cx, top->getValue(), &d));
                 d = -d;
                 frame.pop();
                 frame.push(NumberValue(d));
@@ -2900,8 +2900,8 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
         double ld, rd;
         
         /* These should be infallible w/ primitives. */
-        ValueToNumber(cx, lhs, &ld);
-        ValueToNumber(cx, rhs, &rd);
+        JS_ALWAYS_TRUE(ValueToNumber(cx, lhs, &ld));
+        JS_ALWAYS_TRUE(ValueToNumber(cx, rhs, &rd));
         switch(op) {
           case JSOP_LT:
             return ld < rd;

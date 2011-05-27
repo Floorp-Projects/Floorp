@@ -103,11 +103,11 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
      * is infallible.
      */
     if (needInt) {
-        ValueToECMAInt32(cx, L, &nL);
-        ValueToECMAInt32(cx, R, &nR);
+        JS_ALWAYS_TRUE(ValueToECMAInt32(cx, L, &nL));
+        JS_ALWAYS_TRUE(ValueToECMAInt32(cx, R, &nR));
     } else {
-        ValueToNumber(cx, L, &dL);
-        ValueToNumber(cx, R, &dR);
+        JS_ALWAYS_TRUE(ValueToNumber(cx, L, &dL));
+        JS_ALWAYS_TRUE(ValueToNumber(cx, R, &dR));
     }
 
     switch (op) {
