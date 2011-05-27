@@ -39,6 +39,9 @@
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsSVGUtils.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////
 // implementation
@@ -162,7 +165,7 @@ nsSVGSwitchElement::FindActiveChild() const
                                     nsGkAtoms::yes, eCaseMatters);
 
   const nsAdoptingString& acceptLangs =
-    nsContentUtils::GetLocalizedStringPref("intl.accept_languages");
+    Preferences::GetLocalizedString("intl.accept_languages");
 
   PRUint32 count = GetChildCount();
 

@@ -68,7 +68,6 @@ CPPSRCS		= \
 		nsHTMLButtonElement.cpp \
 		nsHTMLCanvasElement.cpp \
 		nsHTMLDataListElement.cpp \
-		nsHTMLDelElement.cpp \
 		nsHTMLDivElement.cpp \
 		nsHTMLFieldSetElement.cpp \
 		nsHTMLFontElement.cpp \
@@ -86,6 +85,7 @@ CPPSRCS		= \
 		nsHTMLLinkElement.cpp \
 		nsHTMLMapElement.cpp \
 		nsHTMLMetaElement.cpp \
+		nsHTMLModElement.cpp \
 		nsHTMLObjectElement.cpp \
 		nsHTMLOListElement.cpp \
 		nsHTMLSharedObjectElement.cpp \

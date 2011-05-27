@@ -83,14 +83,6 @@ interface nsIAutoCompleteResult : nsISupports
   readonly attribute unsigned long matchCount;
 
   /**
-   * Whether the values in this result are URLs. This will cause
-   * slightly different behaviour where defaultIndex is intelligently chosen
-   * for you (while the attribute defaultIndex is ignored), and
-   * searching is fine-tuned for URLs.
-   */
-  readonly attribute boolean isURLResult;
-
-  /**
    * Get the value of the result at the given index
    */
   AString getValueAt(in long index);
