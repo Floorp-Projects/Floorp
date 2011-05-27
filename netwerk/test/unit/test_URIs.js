@@ -53,6 +53,36 @@ var gTests = [
     path:    "/myFile.html",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
+  { spec:    "ftp://",
+    scheme:  "ftp",
+    prePath: "ftp://",
+    path:    "/",
+    ref:     "",
+    nsIURL:  true, nsINestedURI: false },
+  { spec:    "ftp:///",
+    scheme:  "ftp",
+    prePath: "ftp://",
+    path:    "/",
+    ref:     "",
+    nsIURL:  true, nsINestedURI: false },
+  { spec:    "ftp://ftp.mozilla.org/pub/mozilla.org/README",
+    scheme:  "ftp",
+    prePath: "ftp://ftp.mozilla.org",
+    path:    "/pub/mozilla.org/README",
+    ref:     "",
+    nsIURL:  true, nsINestedURI: false },
+  { spec:    "ftp://foo:bar@ftp.mozilla.org:100/pub/mozilla.org/README",
+    scheme:  "ftp",
+    prePath: "ftp://foo:bar@ftp.mozilla.org:100",
+    path:    "/pub/mozilla.org/README",
+    ref:     "",
+    nsIURL:  true, nsINestedURI: false },
+  { spec:    "gopher://mozilla.org/",
+    scheme:  "gopher",
+    prePath: "gopher:",
+    path:    "//mozilla.org/",
+    ref:     "",
+    nsIURL:  false, nsINestedURI: false },
   { spec:    "http://",
     scheme:  "http",
     prePath: "http://",
@@ -83,6 +113,12 @@ var gTests = [
     path:    "resource://gre/chrome.toolkit.jar!/",
     ref:     "",
     nsIURL:  true, nsINestedURI: true },
+  { spec:    "mailto:webmaster@mozilla.com",
+    scheme:  "mailto",
+    prePath: "mailto:",
+    path:    "webmaster@mozilla.com",
+    ref:     "",
+    nsIURL:  false, nsINestedURI: false },
   { spec:    "javascript:new Date()",
     scheme:  "javascript",
     prePath: "javascript:",
@@ -257,7 +293,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
   do_info("testing cloneIgnoringRef on " + testURI.spec +
           " is equal to no-ref version but not equal to ref version");
   var cloneNoRef = testURI.cloneIgnoringRef();
-  if (aTest.spec == "http://" && aSuffix == "#") {
+  if ((aTest.spec == "http://" || aTest.spec == "ftp://") && aSuffix == "#") {
     do_info("TODO: bug 657033");
     do_check_uri_eq(cloneNoRef, origURI, todo_check_true);
   } else {
@@ -320,7 +356,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
           specWithSuffix + " and then clearing ref does what we expect");
   testURI.spec = specWithSuffix
   testURI.ref = "";
-  if (aTest.spec == "http://" && aSuffix == "#") {
+  if ((aTest.spec == "http://" || aTest.spec == "ftp://") && aSuffix == "#") {
     do_info("TODO: bug 657033");
     do_check_uri_eq(testURI, refURIWithoutSuffix, todo_check_true);
     do_check_uri_eqExceptRef(testURI, refURIWithSuffix, todo_check_true);
