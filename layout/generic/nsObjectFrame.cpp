@@ -1069,7 +1069,7 @@ nsObjectFrame::InstantiatePlugin(nsPluginHost* aPluginHost,
     if (NS_SUCCEEDED(rv))
       pDoc->SetStreamListener(stream);
   } else {   /* embedded mode */
-    rv = aPluginHost->InstantiateEmbeddedPlugin(aMimeType, aURI, mInstanceOwner, PR_TRUE);
+    rv = aPluginHost->InstantiateEmbeddedPlugin(aMimeType, aURI, mInstanceOwner);
   }
 
   // Note that |this| may very well be destroyed already!
@@ -4052,7 +4052,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   // "plugins.force.wmode" preference is forcing wmode type for plugins
   // possible values - "opaque", "transparent", "windowed"
-  nsAdoptingCString wmodeType = nsContentUtils::GetCharPref("plugins.force.wmode");
+  nsAdoptingCString wmodeType = Preferences::GetCString("plugins.force.wmode");
   if (!wmodeType.IsEmpty()) {
     mNumCachedAttrs++;
   }

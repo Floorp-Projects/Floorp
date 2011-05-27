@@ -105,7 +105,7 @@ function afterAllTabsLoaded(callback, win) {
     this.removeEventListener("load", onLoad, true);
     stillToLoad--;
     if (!stillToLoad)
-      callback();
+      executeSoon(callback);
   }
 
   for (let a = 0; a < win.gBrowser.tabs.length; a++) {
@@ -299,5 +299,23 @@ function newWindowWithState(state, callback) {
 
   whenWindowStateReady(win, function () {
     afterAllTabsLoaded(function () callback(win), win);
+  });
+}
+
+// ----------
+function restoreTab(callback, index, win) {
+  win = win || window;
+
+  let tab = win.undoCloseTab(index || 0);
+  let tabItem = tab._tabViewTabItem;
+
+  if (tabItem._reconnected) {
+    afterAllTabsLoaded(callback, win);
+    return;
+  }
+
+  tab._tabViewTabItem.addSubscriber(tab, "reconnected", function onReconnected() {
+    tab._tabViewTabItem.removeSubscriber(tab, "reconnected");
+    afterAllTabsLoaded(callback, win);
   });
 }

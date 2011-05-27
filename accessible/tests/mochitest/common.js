@@ -93,7 +93,7 @@ function addA11yLoadEvent(aFunc)
         if (state.value & STATE_BUSY)
           return waitForDocLoad();
 
-        window.setTimeout(aFunc, 150);
+        window.setTimeout(aFunc, 0);
       },
       0
     );

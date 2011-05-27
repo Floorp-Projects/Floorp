@@ -247,7 +247,6 @@ PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsIUGenCategory *nsContentUtils::sGenCat;
-nsTArray<nsISupports**> *nsContentUtils::sPtrsToPtrsToRelease;
 nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
 PRInt32 nsContentUtils::sScriptRootCount[NS_STID_ARRAY_UBOUND];
 PRUint32 nsContentUtils::sJSGCThingRootCount;
@@ -468,11 +467,6 @@ nsContentUtils::Init()
 
   rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  sPtrsToPtrsToRelease = new nsTArray<nsISupports**>();
-  if (!sPtrsToPtrsToRelease) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   if (!InitializeEventTable())
     return NS_ERROR_FAILURE;
@@ -1206,15 +1200,6 @@ nsContentUtils::Shutdown()
   sStringEventTable = nsnull;
   delete sUserDefinedEvents;
   sUserDefinedEvents = nsnull;
-
-  if (sPtrsToPtrsToRelease) {
-    for (i = 0; i < sPtrsToPtrsToRelease->Length(); ++i) {
-      nsISupports** ptrToPtr = sPtrsToPtrsToRelease->ElementAt(i);
-      NS_RELEASE(*ptrToPtr);
-    }
-    delete sPtrsToPtrsToRelease;
-    sPtrsToPtrsToRelease = nsnull;
-  }
 
   if (sEventListenerManagersHash.ops) {
     NS_ASSERTION(sEventListenerManagersHash.entryCount == 0,
@@ -2595,55 +2580,6 @@ PRBool
 nsContentUtils::IsDraggableLink(const nsIContent* aContent) {
   nsCOMPtr<nsIURI> absURI;
   return aContent->IsLink(getter_AddRefs(absURI));
-}
-
-// static
-nsAdoptingCString
-nsContentUtils::GetCharPref(const char *aPref)
-{
-  nsAdoptingCString result;
-
-  if (sPrefBranch) {
-    sPrefBranch->GetCharPref(aPref, getter_Copies(result));
-  }
-
-  return result;
-}
-
-// static
-nsAdoptingString
-nsContentUtils::GetLocalizedStringPref(const char *aPref)
-{
-  nsAdoptingString result;
-
-  if (sPrefBranch) {
-    nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-    sPrefBranch->GetComplexValue(aPref, NS_GET_IID(nsIPrefLocalizedString),
-                                 getter_AddRefs(prefLocalString));
-    if (prefLocalString) {
-      prefLocalString->GetData(getter_Copies(result));
-    }
-  }
-
-  return result;
-}
-
-// static
-nsAdoptingString
-nsContentUtils::GetStringPref(const char *aPref)
-{
-  nsAdoptingString result;
-
-  if (sPrefBranch) {
-    nsCOMPtr<nsISupportsString> theString;
-    sPrefBranch->GetComplexValue(aPref, NS_GET_IID(nsISupportsString),
-                                 getter_AddRefs(theString));
-    if (theString) {
-      theString->ToString(getter_Copies(result));
-    }
-  }
-
-  return result;
 }
 
 // RegisterPrefCallback/UnregisterPrefCallback are for backward compatiblity
@@ -4475,7 +4411,7 @@ nsContentUtils::GetLocalizedEllipsis()
 {
   static PRUnichar sBuf[4] = { 0, 0, 0, 0 };
   if (!sBuf[0]) {
-    nsAutoString tmp(GetLocalizedStringPref("intl.ellipsis"));
+    nsAdoptingString tmp = Preferences::GetLocalizedString("intl.ellipsis");
     PRUint32 len = NS_MIN(PRUint32(tmp.Length()),
                           PRUint32(NS_ARRAY_LENGTH(sBuf) - 1));
     CopyUnicodeTo(tmp, 0, sBuf, len);

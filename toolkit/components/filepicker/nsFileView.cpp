@@ -154,13 +154,6 @@ NS_IMETHODIMP nsFileResult::GetErrorDescription(nsAString & aErrorDescription)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::GetIsURLResult(PRBool *aIsURLResult)
-{
-  NS_ENSURE_ARG_POINTER(aIsURLResult);
-  *aIsURLResult = PR_FALSE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsFileResult::GetMatchCount(PRUint32 *aMatchCount)
 {
   NS_ENSURE_ARG_POINTER(aMatchCount);
