@@ -84,8 +84,6 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     stackPosition_(gen->firstStackSlot()),
     lastIns_(NULL),
     pc_(pc),
-    header_(NULL),
-    headerSlots_(gen->firstStackSlot()),
     loopSuccessor_(NULL)
 {
 }
@@ -96,21 +94,10 @@ MBasicBlock::init()
     slots_ = gen()->allocate<StackSlot>(gen()->nslots());
     if (!slots_)
         return false;
-    return true;
-}
-
-bool
-MBasicBlock::initHeader()
-{
-    JS_ASSERT(!header_);
-
-    // Save the basic block's initial slot mapping, both for debugging and for
-    // computing phis on the backedge of a loop.
-    header_ = gen()->allocate<MInstruction *>(headerSlots_);
-    if (!header_)
+    MSnapshot *snapshot = new MSnapshot(this, pc());
+    if (!snapshot->init(this))
         return false;
-    for (uint32 i = 0; i < headerSlots_; i++)
-        header_[i] = slots_[i].ins;
+    add(snapshot);
     return true;
 }
 
@@ -118,7 +105,6 @@ void
 MBasicBlock::copySlots(MBasicBlock *from)
 {
     stackPosition_ = from->stackPosition_;
-    headerSlots_ = stackPosition_;
 
     for (uint32 i = 0; i < stackPosition_; i++)
         slots_[i] = from->slots_[i];
@@ -130,7 +116,11 @@ MBasicBlock::inherit(MBasicBlock *pred)
     copySlots(pred);
     if (!predecessors_.append(pred))
         return false;
-    return initHeader();
+
+    for (size_t i = 0; i < stackDepth(); i++)
+        entrySnapshot()->initOperand(i, getSlot(i));
+
+    return true;
 }
 
 MInstruction *
@@ -144,6 +134,7 @@ void
 MBasicBlock::initSlot(uint32 slot, MInstruction *ins)
 {
     slots_[slot].set(ins);
+    entrySnapshot()->initOperand(slot, ins);
 }
 
 void
@@ -328,6 +319,19 @@ MBasicBlock::peek(int32 depth)
 }
 
 void
+MBasicBlock::remove(MInstruction *ins)
+{
+    MInstructionIterator iter(ins);
+    removeAt(iter);
+}
+
+MInstructionIterator
+MBasicBlock::removeAt(MInstructionIterator &iter)
+{
+    return instructions_.removeAt(iter);
+}
+
+void
 MBasicBlock::insertBefore(MInstruction *at, MInstruction *ins)
 {
     ins->setBlock(this);
@@ -372,7 +376,7 @@ MBasicBlock::addPhi(MPhi *phi)
 bool
 MBasicBlock::addPredecessor(MBasicBlock *pred)
 {
-    if (!header_)
+    if (!hasHeader())
         return inherit(pred);
 
     // Predecessors must be finished, and at the correct stack depth.
@@ -406,7 +410,7 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
 #endif
 
                 setSlot(i, phi);
-                header_[i] = phi;
+                entrySnapshot()->replaceOperand(i, phi);
             }
 
             if (!phi->addInput(other))
@@ -433,7 +437,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
     JS_ASSERT(lastIns_);
     JS_ASSERT(pred->lastIns_);
     JS_ASSERT(pred->stackPosition_ == stackPosition_);
-    JS_ASSERT(headerSlots_ == stackPosition_);
+    JS_ASSERT(entrySnapshot()->stackDepth() == stackPosition_);
 
     // Place minimal phi nodes by comparing the set of defintions at loop entry
     // with the loop exit. For each mismatching slot, we create a phi node, and
@@ -443,7 +447,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
     // give every assignment its own unique SSA name. See
     // MBasicBlock::setVariable for more information.
     for (uint32 i = 0; i < stackPosition_; i++) {
-        MInstruction *entryDef = header_[i];
+        MInstruction *entryDef = entrySnapshot()->getInput(i);
         MInstruction *exitDef = pred->slots_[i].ins;
 
         // If the entry definition and exit definition do not differ, then
@@ -509,7 +513,9 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
         // replace the phi.
         if (successor && successor->getSlot(i) == entryDef) {
             successor->setSlot(i, phi);
-            successor->header_[i] = phi;
+
+            // The use replacement should have updated the snapshot.
+            JS_ASSERT(successor->entrySnapshot()->getInput(i) == phi);
         }
     }
 

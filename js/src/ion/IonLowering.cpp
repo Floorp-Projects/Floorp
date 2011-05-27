@@ -71,9 +71,34 @@ class LoweringPhase : public MInstructionVisitor
 bool
 LoweringPhase::lowerInstruction(MInstruction *ins)
 {
-#if 0
     MInstruction *narrowed = NULL;
     MIRType usedAs = ins->usedAsType();
+
+#if 0
+    if (usedAs == ins->type()) {
+        narrowed = ins;
+    } else if (usedAs != MIRType_Value && ins->type() == MIRType_Value) {
+        // If all typed uses require the same type, and the actual return type
+        // is a value, try to either specialize the instruction, or unbox it.
+        // In order to unbox it, the instruction must (1) be idempotent and (2)
+        // have a snapshot to resume at.
+        if (ins->specializeTo(usedAs)) {
+            narrowed = ins;
+        } else if (ins->idempotent() && ins->snapshot()) {
+            narrowed = MUnbox::New(ins, usedAs);
+            if (ins->isPhi()) {
+                // The instruction is not in the normal stream, so add the
+                // unbox to the beginning of the block, and use the block's
+                // entry snapshot.
+                ins->block()->insertAfter(*ins->block()->begin(), narrowed);
+                narrowed->assignSnapshot(block->entrySnapshot());
+            } else {
+                ins->block()->insertAfter(ins, narrowed);
+                narrowed->assignSnapshot(ins->snapshot());
+            }
+        }
+    }
+
     if (usedAs != MIRType_Value && usedAs != ins->type()) {
         // This instruction returns something, but all of its uses accept
         // either any type, a value, or a narrower type X. In this case, it
