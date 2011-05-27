@@ -1060,11 +1060,43 @@ XrayProxy::~XrayProxy()
 {
 }
 
+static JSObject *
+GetHolderObject(JSContext *cx, JSObject *wrapper)
+{
+    if (!js::GetProxyExtra(wrapper, 0).isUndefined())
+        return &js::GetProxyExtra(wrapper, 0).toObject();
+
+    JSObject *obj = JS_NewObjectWithGivenProto(cx, nsnull, nsnull, js::GetObjectGlobal(wrapper));
+    if (!obj)
+        return nsnull;
+    js::SetProxyExtra(wrapper, 0, ObjectValue(*obj));
+    return obj;
+}
+
 bool
 XrayProxy::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                  bool set, js::PropertyDescriptor *desc)
 {
-    return Proxy::getPropertyDescriptor(cx, wrapper, id, set, desc);
+    JSObject *holder = GetHolderObject(cx, wrapper);
+    if (!holder)
+        return false;
+
+    if (!JS_GetPropertyDescriptorById(cx, holder, id, JSRESOLVE_QUALIFIED, desc))
+        return false;
+    if (desc->obj) {
+        desc->obj = wrapper;
+        return true;
+    }
+
+    if (!Proxy::getPropertyDescriptor(cx, wrapper, id, set, desc))
+        return false;
+
+    if (!desc->obj)
+        return true;
+
+    desc->obj = wrapper;
+    return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
+                                 desc->attrs);
 }
 
 bool
