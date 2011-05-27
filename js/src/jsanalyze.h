@@ -980,13 +980,15 @@ class ScriptAnalysis
         JS_ASSERT_IF(script->code[offset] != JSOP_TRAP,
                      which < GetDefCount(script, offset) +
                      (ExtendedDef(script->code + offset) ? 1 : 0));
-        types::TypeSet *array = (types::TypeSet *) (~0x1 & (size_t) getCode(offset).pushedTypes);
+        types::TypeSet *array = getCode(offset).pushedTypes;
         JS_ASSERT(array);
         return array + which;
     }
     types::TypeSet *pushedTypes(const jsbytecode *pc, uint32 which) {
         return pushedTypes(pc - script->code, which);
     }
+
+    bool hasPushedTypes(const jsbytecode *pc) { return getCode(pc).pushedTypes != NULL; }
 
     types::TypeBarrier *typeBarriers(uint32 offset) {
         if (getCode(offset).typeBarriers)
@@ -1082,6 +1084,15 @@ class ScriptAnalysis
         return getCode(offset).loop;
     }
     LoopAnalysis *getLoop(const jsbytecode *pc) { return getLoop(pc - script->code); }
+
+    /* For a JSOP_CALL* op, get the pc of the corresponding JSOP_CALL/NEW/etc. */
+    jsbytecode *getCallPC(jsbytecode *pc)
+    {
+        JS_ASSERT(js_CodeSpec[*pc].format & JOF_CALLOP);
+        SSAUseChain *uses = useChain(SSAValue::PushedValue(pc - script->code, 1));
+        JS_ASSERT(uses && !uses->next && uses->popped);
+        return script->code + uses->offset;
+    }
 
     /* Accessors for local variable information. */
 
