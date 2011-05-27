@@ -4308,7 +4308,6 @@ DisplaySystemMenu(HWND hWnd, nsSizeMode sizeMode, PRBool isRtl, PRInt32 x, PRInt
     mii.fState = MF_GRAYED;
     switch(sizeMode) {
       case nsSizeMode_Fullscreen:
-        SetMenuItemInfo(hMenu, SC_RESTORE, FALSE, &mii);
         // intentional fall through
       case nsSizeMode_Maximized:
         SetMenuItemInfo(hMenu, SC_SIZE, FALSE, &mii);
@@ -5226,6 +5225,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         DisplaySystemMenu(mWnd, mSizeMode, mIsRTL,
                           MOZ_SYSCONTEXT_X_POS,
                           MOZ_SYSCONTEXT_Y_POS);
+        result = PR_TRUE;
+      }
+      if (filteredWParam == SC_RESTORE &&
+          mSizeMode == nsSizeMode_Fullscreen) {
+        // Windows can handle restoring a normal window, but it doesn't
+        // understand our full screen mode.
+        MakeFullScreen(PR_FALSE);
         result = PR_TRUE;
       }
     }
