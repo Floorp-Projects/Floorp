@@ -2107,7 +2107,9 @@ let GroupItems = {
 
     let activeGroupId = this._activeGroupItem ? this._activeGroupItem.id : null;
     Storage.saveGroupItemsData(
-      gWindow, { nextID: this.nextID, activeGroupId: activeGroupId });
+      gWindow,
+      { nextID: this.nextID, activeGroupId: activeGroupId,
+        totalNumber: this.groupItems.length });
   },
 
   // ----------

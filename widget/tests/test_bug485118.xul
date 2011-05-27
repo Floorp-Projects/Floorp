@@ -54,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=485118
 
 SimpleTest.waitForExplicitFinish();
 
-SimpleTest.executeSoon(function start() {
+function runTest() {
   ["horizontal", "vertical"].forEach(function (orient) {
     ["", "Small"].forEach(function (size) {
       var elem = document.getElementById(orient + size);
@@ -65,8 +65,8 @@ SimpleTest.executeSoon(function start() {
     });
   });
   SimpleTest.finish();
-});
-
+}
+window.addEventListener("load", runTest, false);
 
 ]]>
 </script>

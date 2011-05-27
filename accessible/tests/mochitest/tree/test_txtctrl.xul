@@ -15,6 +15,8 @@
           src="../common.js" />
   <script type="application/javascript"
           src="../role.js" />
+  <script type="application/javascript"
+          src="../events.js" />
 
   <script type="application/javascript">
   <![CDATA[
@@ -108,6 +110,11 @@
         ]
       };
 
+      function test_txc7() {
+        testAccessibleTree("txc7", accTree);
+        SimpleTest.finish();
+      }
+
       // XPFE and Toolkit autocomplete widgets differ.
       var txc7 = document.getElementById("txc7");
       if ("clearResults" in txc7) {
@@ -139,11 +146,14 @@
               }
             ]
           }
-          );
+        );
+        test_txc7();
+
       } else {
         SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget.");
 
-        // Dumb access to trigger popup lazy creation. (See code below.)
+        // Dumb access to trigger popup lazy creation.
+        waitForEvent(EVENT_REORDER, txc7, test_txc7);
         txc7.popup;
 
         accTree.children.push(
@@ -161,17 +171,8 @@
               }
             ]
           }
-          );
+        );
       }
-
-      // Delay txc7 test a bit, to let Toolkit popup lazy creation complete.
-      function test_txc7() {
-        testAccessibleTree("txc7", accTree);
-  
-        SimpleTest.finish();
-      }
-      // SimpleTest.executeSoon() doesn't help here: use setTimeout() with a little delay.
-      setTimeout(test_txc7, 25);
     }
 
     SimpleTest.waitForExplicitFinish();

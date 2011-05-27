@@ -966,8 +966,7 @@ nsresult nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
 
 nsresult
 nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
-                                        nsIPluginInstanceOwner* aOwner,
-                                        PRBool aAllowOpeningStreams)
+                                        nsIPluginInstanceOwner* aOwner)
 {
   NS_ENSURE_ARG_POINTER(aOwner);
 
@@ -1000,14 +999,9 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
     return rv;
   }
 
-  // Security checks
-  // Can't do security checks without a URI - hopefully the plugin will take
-  // care of that
-  // No need to do the security check if aAllowOpeningStreams is
-  // false; we don't plan to do any network access in that case.
-  // Furthermore, doing it could reenter plugin instantiation, which
-  // would be Bad.
-  if (aURL && aAllowOpeningStreams) {
+  // Security checks. Can't do security checks without a URI - hopefully the plugin
+  // will take care of that.
+  if (aURL) {
     nsCOMPtr<nsIScriptSecurityManager> secMan =
                     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
@@ -1044,14 +1038,14 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
     isJava = pluginTag->mIsJavaPlugin;
   }
 
-  // Determine if the scheme of this URL is one we can handle internaly because we should
+  // Determine if the scheme of this URL is one we can handle internally because we should
   // only open the initial stream if it's one that we can handle internally. Otherwise
   // |NS_OpenURI| in |InstantiateEmbeddedPlugin| may open up a OS protocal registered helper app
   // Also set bCanHandleInternally to true if aAllowOpeningStreams is
   // false; we don't want to do any network traffic in that case.
   PRBool bCanHandleInternally = PR_FALSE;
   nsCAutoString scheme;
-  if (aURL && aAllowOpeningStreams && NS_SUCCEEDED(aURL->GetScheme(scheme))) {
+  if (aURL && NS_SUCCEEDED(aURL->GetScheme(scheme))) {
       nsCAutoString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
       contractID += scheme;
       ToLowerCase(contractID);

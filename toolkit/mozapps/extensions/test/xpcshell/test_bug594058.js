@@ -14,10 +14,6 @@ const Ci = Components.interfaces;
 const extDir = gProfD.clone();
 extDir.append("extensions");
 
-var gFastLoadService = AM_Cc["@mozilla.org/fast-load-service;1"].
-                       getService(AM_Ci.nsIFastLoadService);
-var gFastLoadFile = null;
-
 var gCachePurged = false;
 
 // Override the window watcher
@@ -64,19 +60,12 @@ function run_test() {
   }, "startupcache-invalidate", false);
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
-  gFastLoadFile = gFastLoadService.newFastLoadFile("XUL");
-  do_check_false(gFastLoadFile.exists());
-  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-
   startupManager();
   // nsAppRunner takes care of clearing this when a new app is installed
-  do_check_true(gFastLoadFile.exists());
   do_check_false(gCachePurged);
 
   installAllFiles([do_get_addon("test_bug594058")], function() {
     restartManager();
-    do_check_false(gFastLoadFile.exists());
-    gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
     do_check_true(gCachePurged);
     gCachePurged = false;
 
@@ -93,19 +82,14 @@ function run_test() {
     otherFile.lastModifiedTime = pastTime;
 
     restartManager();
-    do_check_false(gFastLoadFile.exists());
-    gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
     gCachePurged = false;
 
     otherFile.lastModifiedTime = pastTime + 5000;
     restartManager();
-    do_check_false(gFastLoadFile.exists());
-    gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
     do_check_true(gCachePurged);
     gCachePurged = false;
 
     restartManager();
-    do_check_true(gFastLoadFile.exists());
     do_check_false(gCachePurged);
 
     // Upgrading the app should force a cache flush due to potentially showing

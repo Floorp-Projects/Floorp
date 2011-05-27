@@ -43,8 +43,7 @@ NS_IMPL_ISUPPORTS2(nsAutoCompleteSimpleResult,
 
 nsAutoCompleteSimpleResult::nsAutoCompleteSimpleResult() :
   mDefaultIndex(-1),
-  mSearchResult(RESULT_NOMATCH),
-  mIsURLResult(PR_FALSE)
+  mSearchResult(RESULT_NOMATCH)
 {
 }
 
@@ -102,21 +101,6 @@ nsAutoCompleteSimpleResult::SetErrorDescription(
                                              const nsAString &aErrorDescription)
 {
   mErrorDescription.Assign(aErrorDescription);
-  return NS_OK;
-}
-
-// isURLResult
-NS_IMETHODIMP
-nsAutoCompleteSimpleResult::GetIsURLResult(PRBool *aIsURLResult)
-{
-  *aIsURLResult = mIsURLResult;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAutoCompleteSimpleResult::SetIsURLResult(PRBool aIsURLResult)
-{
-  mIsURLResult = aIsURLResult;
   return NS_OK;
 }
 

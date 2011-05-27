@@ -39,9 +39,10 @@
 #include "cairo-d2d-private.h"
 #include "cairo-dwrite-private.h"
 
+extern "C" {
 #include "cairo-win32.h"
 #include "cairo-analysis-surface-private.h"
-#include "cairo-error-private.h"
+}
 
 // Required for using placement new.
 #include <new>
@@ -648,9 +649,9 @@ _cairo_d2d_stroke(void			*surface,
 		  cairo_operator_t	 op,
 		  const cairo_pattern_t	*source,
 		  cairo_path_fixed_t	*path,
-		  const cairo_stroke_style_t	*style,
-		  const cairo_matrix_t	*ctm,
-		  const cairo_matrix_t	*ctm_inverse,
+		  cairo_stroke_style_t	*style,
+		  cairo_matrix_t	*ctm,
+		  cairo_matrix_t	*ctm_inverse,
 		  double		 tolerance,
 		  cairo_antialias_t	 antialias,
 		  cairo_clip_t		*clip);
@@ -761,16 +762,6 @@ _cairo_d2d_compute_surface_mem_size(cairo_d2d_surface_t *surface)
     size *= surface->rt->GetPixelFormat().format == DXGI_FORMAT_A8_UNORM ? 1 : 4;
     return size;
 }
-
-static D2D1_COLOR_F
-_cairo_d2d_color_from_cairo_color_stop(const cairo_color_stop_t &color)
-{
-    return D2D1::ColorF((FLOAT)color.red, 
-			(FLOAT)color.green, 
-			(FLOAT)color.blue,
-			(FLOAT)color.alpha);
-}
-
 
 /**
  * Gets the surface buffer texture for window surfaces whose backbuffer
@@ -1444,7 +1435,7 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 		    stops[i].position = (FLOAT)((repeat + source_pattern->base.stops[stop].offset) * stop_scale);
 		}
 		stops[i].color =
-		    _cairo_d2d_color_from_cairo_color_stop(source_pattern->base.stops[stop].color);
+		    _cairo_d2d_color_from_cairo_color(source_pattern->base.stops[stop].color);
 	    }
 	} else {
 	    // Simple case, we don't need to reflect.
@@ -1454,7 +1445,7 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 		// Calculate which stop this would be in the original pattern
 		cairo_gradient_stop_t *stop = &source_pattern->base.stops[i % source_pattern->base.n_stops];
 		stops[i].position = (FLOAT)((repeat + stop->offset) * stop_scale);
-		stops[i].color = _cairo_d2d_color_from_cairo_color_stop(stop->color);
+		stops[i].color = _cairo_d2d_color_from_cairo_color(stop->color);
 	    }
 	}
     } else if (source_pattern->base.base.extend == CAIRO_EXTEND_PAD) {
@@ -1467,7 +1458,7 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	for (unsigned int i = 0; i < source_pattern->base.n_stops; i++) {
 	    cairo_gradient_stop_t *stop = &source_pattern->base.stops[i];
 	    stops[i].position = (FLOAT)(global_offset + stop->offset * offset_factor);
-	    stops[i].color = _cairo_d2d_color_from_cairo_color_stop(stop->color);
+	    stops[i].color = _cairo_d2d_color_from_cairo_color(stop->color);
 	}
     } else if (source_pattern->base.base.extend == CAIRO_EXTEND_NONE) {
 	float offset_factor = (outer_radius - inner_radius) / outer_radius;
@@ -1491,7 +1482,7 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	for (unsigned int j = 0; j < source_pattern->base.n_stops; j++, i++) {
 	    cairo_gradient_stop_t *stop = &source_pattern->base.stops[j];
 	    stops[i].position = (FLOAT)(global_offset + stop->offset * offset_factor);
-	    stops[i].color = _cairo_d2d_color_from_cairo_color_stop(stop->color);
+	    stops[i].color = _cairo_d2d_color_from_cairo_color(stop->color);
 	}
 	stops[i].position = 1.0f;
 	stops[i].color = D2D1::ColorF(0, 0);
@@ -1523,7 +1514,7 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	// Cairo behavior in this situation is to draw a solid color the size of the last stop.
 	RefPtr<ID2D1SolidColorBrush> brush;
 	d2dsurf->rt->CreateSolidColorBrush(
-	    _cairo_d2d_color_from_cairo_color_stop(source_pattern->base.stops[source_pattern->base.n_stops - 1].color),
+	    _cairo_d2d_color_from_cairo_color(source_pattern->base.stops[source_pattern->base.n_stops - 1].color),
 	    &brush);
 	return brush;
     }
@@ -1628,7 +1619,7 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 		    stops[i].position = (FLOAT)((repeat + source_pattern->base.stops[stop].offset) * stop_scale);
 		}
 		stops[i].color =
-		    _cairo_d2d_color_from_cairo_color_stop(source_pattern->base.stops[stop].color);
+		    _cairo_d2d_color_from_cairo_color(source_pattern->base.stops[stop].color);
 	    }
 	} else {
 	    // Simple case, we don't need to reflect.
@@ -1638,7 +1629,7 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 		// Calculate which stop this would be in the original pattern
 		cairo_gradient_stop_t *stop = &source_pattern->base.stops[i % source_pattern->base.n_stops];
 		stops[i].position = (FLOAT)((repeat + stop->offset) * stop_scale);
-		stops[i].color = _cairo_d2d_color_from_cairo_color_stop(stop->color);
+		stops[i].color = _cairo_d2d_color_from_cairo_color(stop->color);
 	    }
 	}
     } else if (source_pattern->base.base.extend == CAIRO_EXTEND_PAD) {
@@ -1646,7 +1637,7 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	for (unsigned int i = 0; i < source_pattern->base.n_stops; i++) {
 	    cairo_gradient_stop_t *stop = &source_pattern->base.stops[i];
 	    stops[i].position = (FLOAT)stop->offset;
-	    stops[i].color = _cairo_d2d_color_from_cairo_color_stop(stop->color);
+	    stops[i].color = _cairo_d2d_color_from_cairo_color(stop->color);
 	}
     } else if (source_pattern->base.base.extend == CAIRO_EXTEND_NONE) {
 	num_stops += 2;
@@ -1656,7 +1647,7 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	for (unsigned int i = 1; i < source_pattern->base.n_stops + 1; i++) {
 	    cairo_gradient_stop_t *stop = &source_pattern->base.stops[i - 1];
 	    stops[i].position = (FLOAT)stop->offset;
-	    stops[i].color = _cairo_d2d_color_from_cairo_color_stop(stop->color);
+	    stops[i].color = _cairo_d2d_color_from_cairo_color(stop->color);
 	}
 	stops[source_pattern->base.n_stops + 1].position = 1.0f;
 	stops[source_pattern->base.n_stops + 1].color = D2D1::ColorF(0, 0);
@@ -2318,16 +2309,6 @@ static cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
     return op;
 }
 
-void
-_cairo_d2d_surface_init(cairo_d2d_surface_t *newSurf, cairo_d2d_device_t *d2d_device, cairo_format_t format)
-{
-    newSurf->format = format;
-
-    newSurf->device = d2d_device;
-    cairo_addref_device(&d2d_device->base);
-    d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
-}
-
 // Implementation
 static cairo_surface_t*
 _cairo_d2d_create_similar(void			*surface,
@@ -2339,7 +2320,7 @@ _cairo_d2d_create_similar(void			*surface,
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
     
     new (newSurf) cairo_d2d_surface_t();
-    _cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, NULL, content);
+    _cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, content);
 
 
     D2D1_SIZE_U sizePixels;
@@ -2444,7 +2425,9 @@ _cairo_d2d_create_similar(void			*surface,
 
     _d2d_clear_surface(newSurf);
 
-    _cairo_d2d_surface_init(newSurf, d2dsurf->device, _cairo_format_from_content(content));
+    newSurf->device = d2dsurf->device;
+    cairo_addref_device(&newSurf->device->base);
+    newSurf->device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
 
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 
@@ -2518,8 +2501,8 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
 	return _cairo_error(CAIRO_STATUS_NO_DEVICE);
     }
     *image_out = 
-	(cairo_image_surface_t*)cairo_image_surface_create_for_data((unsigned char*)data.pData,
-										  d2dsurf->format,
+	(cairo_image_surface_t*)_cairo_image_surface_create_for_data_with_content((unsigned char*)data.pData,
+										  d2dsurf->base.content,
 										  size.width,
 										  size.height,
 										  data.RowPitch);
@@ -2590,8 +2573,8 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
 	return _cairo_error(CAIRO_STATUS_NO_DEVICE);
     }
     *image_out = 
-	(cairo_image_surface_t*)cairo_image_surface_create_for_data((unsigned char*)data.pData,
-										  _cairo_format_from_content(d2dsurf->base.content),
+	(cairo_image_surface_t*)_cairo_image_surface_create_for_data_with_content((unsigned char*)data.pData,
+										  d2dsurf->base.content,
 										  size.width,
 										  size.height,
 										  data.RowPitch);
@@ -3195,7 +3178,7 @@ _cairo_d2d_mask(void			*surface,
     if (mask->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *solidPattern =
 	    (cairo_solid_pattern_t*)mask;
-	if (_cairo_color_get_content (&solidPattern->color) == CAIRO_CONTENT_ALPHA) {
+	if (solidPattern->content = CAIRO_CONTENT_ALPHA) {
 	    isSolidAlphaMask = true;
 	    solidAlphaValue = solidPattern->color.alpha;
 	}
@@ -3338,9 +3321,9 @@ _cairo_d2d_stroke(void			*surface,
 		  cairo_operator_t	 op,
 		  const cairo_pattern_t	*source,
 		  cairo_path_fixed_t	*path,
-		  const cairo_stroke_style_t	*style,
-		  const cairo_matrix_t	*ctm,
-		  const cairo_matrix_t	*ctm_inverse,
+		  cairo_stroke_style_t	*style,
+		  cairo_matrix_t	*ctm,
+		  cairo_matrix_t	*ctm_inverse,
 		  double		 tolerance,
 		  cairo_antialias_t	 antialias,
 		  cairo_clip_t		*clip)
@@ -3543,12 +3526,7 @@ _cairo_d2d_fill(void			*surface,
 
     if (target_rt.get() != d2dsurf->rt.get()) {
 	double x1, y1, x2, y2;
-        cairo_box_t box;
-        _cairo_path_fixed_extents (path, &box);
-        x1 = _cairo_fixed_to_double (box.p1.x);
-        y1 = _cairo_fixed_to_double (box.p1.y);
-        x2 = _cairo_fixed_to_double (box.p2.x);
-        y2 = _cairo_fixed_to_double (box.p2.y);
+	_cairo_path_fixed_bounds(path, &x1, &y1, &x2, &y2);
 	cairo_rectangle_int_t bounds;
 	_cairo_d2d_round_out_to_int_rect(&bounds, x1, y1, x2, y2);
 	return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip, &bounds);
@@ -4140,8 +4118,6 @@ _cairo_d2d_getextents(void		       *surface,
 
 /** Helper functions. */
 
-
-
 cairo_surface_t*
 cairo_d2d_surface_create_for_hwnd(cairo_device_t *cairo_device,
 				  HWND wnd,
@@ -4151,7 +4127,7 @@ cairo_d2d_surface_create_for_hwnd(cairo_device_t *cairo_device,
     cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
     new (newSurf) cairo_d2d_surface_t();
 
-    _cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, NULL, content);
+    _cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, content);
 
     RECT rc;
     HRESULT hr;
@@ -4253,7 +4229,9 @@ cairo_d2d_surface_create_for_hwnd(cairo_device_t *cairo_device,
 
     _d2d_clear_surface(newSurf);
 
-    _cairo_d2d_surface_init(newSurf, d2d_device, _cairo_format_from_content(content));
+    newSurf->device = d2d_device;
+    cairo_addref_device(cairo_device);
+    d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
 
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 
@@ -4262,8 +4240,6 @@ FAIL_HWND:
     free(newSurf);
     return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY));
 }
-
-
 
 cairo_surface_t *
 cairo_d2d_surface_create(cairo_device_t *device,
@@ -4282,12 +4258,12 @@ cairo_d2d_surface_create(cairo_device_t *device,
     DXGI_FORMAT dxgiformat = DXGI_FORMAT_B8G8R8A8_UNORM;
     D2D1_ALPHA_MODE alpha = D2D1_ALPHA_MODE_PREMULTIPLIED;
     if (format == CAIRO_FORMAT_ARGB32) {
-	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, NULL, CAIRO_CONTENT_COLOR_ALPHA);
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, CAIRO_CONTENT_COLOR_ALPHA);
     } else if (format == CAIRO_FORMAT_RGB24) {
-	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, NULL, CAIRO_CONTENT_COLOR);
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, CAIRO_CONTENT_COLOR);
 	alpha = D2D1_ALPHA_MODE_IGNORE;
     } else {
-	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, NULL, CAIRO_CONTENT_ALPHA);
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, CAIRO_CONTENT_ALPHA);
 	dxgiformat = DXGI_FORMAT_A8_UNORM;
     }
 
@@ -4367,7 +4343,9 @@ cairo_d2d_surface_create(cairo_device_t *device,
 
     _d2d_clear_surface(newSurf);
 
-    _cairo_d2d_surface_init(newSurf, d2d_device, format);
+    newSurf->device = d2d_device;
+    cairo_addref_device(device);
+    d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
 
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 
@@ -4420,7 +4398,7 @@ cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo
 	    status = CAIRO_STATUS_INVALID_CONTENT;
 	    goto FAIL_CREATEHANDLE;
 	}
-	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, NULL, content);
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, content);
 	if (content == CAIRO_CONTENT_COLOR) {
 	    alpha = D2D1_ALPHA_MODE_IGNORE;
 	}
@@ -4429,7 +4407,7 @@ cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo
 	    status = CAIRO_STATUS_INVALID_CONTENT;
 	    goto FAIL_CREATEHANDLE;
 	}
-	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, NULL, CAIRO_CONTENT_ALPHA);
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, CAIRO_CONTENT_ALPHA);
     } else {
 	status = CAIRO_STATUS_INVALID_FORMAT;
 	// We don't know how to support this format!
@@ -4466,7 +4444,9 @@ cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo
 
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
 
-    _cairo_d2d_surface_init(newSurf, d2d_device, _cairo_format_from_content(content));
+    newSurf->device = d2d_device;
+    cairo_addref_device(device);
+    d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
 
     return &newSurf->base;
    
@@ -4487,10 +4467,10 @@ cairo_d2d_surface_create_for_texture(cairo_device_t *device,
 
     D2D1_ALPHA_MODE alpha = D2D1_ALPHA_MODE_PREMULTIPLIED;
     if (content == CAIRO_CONTENT_COLOR) {
-	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, NULL, CAIRO_CONTENT_COLOR);
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, CAIRO_CONTENT_COLOR);
 	alpha = D2D1_ALPHA_MODE_IGNORE;
     } else {
-	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, NULL, content);
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, content);
     }
 
     D2D1_SIZE_U sizePixels;
@@ -4547,7 +4527,9 @@ cairo_d2d_surface_create_for_texture(cairo_device_t *device,
 
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
 
-    _cairo_d2d_surface_init(newSurf, d2d_device, _cairo_format_from_content(content));
+    newSurf->device = d2d_device;
+    cairo_addref_device(device);
+    d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
 
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 

@@ -1,4 +1,4 @@
-fails-if(Android) == display-types-01.html display-types-01-ref.html
+== display-types-01.html display-types-01-ref.html
 == dynamic-attr-01.html dynamic-attr-01-ref.html
 == dynamic-restyle-01.html dynamic-restyle-01-ref.html
 == floated-01.html floated-01-ref.html

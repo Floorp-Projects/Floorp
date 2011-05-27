@@ -30,11 +30,11 @@
       var menu1 = document.getElementById("menu_item1");
       menu1.open = true;
 
-      window.setTimeout(function() {
+      menu1.addEventListener("popupshown", function() {
         var menu2 = document.getElementById("menu_item2");
         menu2.open = true;
 
-        window.setTimeout(function() {
+        menu2.addEventListener("popupshown", function() {
           testGroupAttrs("menu_item1.1", 1, 1);
           testGroupAttrs("menu_item1.2", 1, 3);
           testGroupAttrs("menu_item1.4", 2, 3);
@@ -42,9 +42,12 @@
           testGroupAttrs("menu_item2.1", 1, 2, 1);
           testGroupAttrs("menu_item2.2", 2, 2, 1);
 
+          menu1.open = false;
+          menu2.open = false;
+
           SimpleTest.finish();
-        }, 200);
-      }, 200);
+        }, false);
+      }, false);
 
       //////////////////////////////////////////////////////////////////////////
       // xul:tab
