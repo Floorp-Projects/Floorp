@@ -40,17 +40,16 @@
 #include "nsPrintSettingsX.h"
 #include "nsObjCExceptions.h"
 
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsServiceManagerUtils.h"
-
 #include "plbase64.h"
 #include "plstr.h"
 
 #include "nsCocoaUtils.h"
 
-#define PRINTING_PREF_BRANCH            "print."
-#define MAC_OS_X_PAGE_SETUP_PREFNAME    "macosx.pagesetup-2"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+
+#define MAC_OS_X_PAGE_SETUP_PREFNAME    "print.macosx.pagesetup-2"
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsX, nsPrintSettings, nsPrintSettingsX)
 
@@ -136,19 +135,12 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsresult rv;
-  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
+  nsCAutoString encodedData;
+  nsresult rv =
+    Preferences::GetCString(MAC_OS_X_PAGE_SETUP_PREFNAME, &encodedData);
+  if (NS_FAILED(rv)) {
     return rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefService->GetBranch(PRINTING_PREF_BRANCH, getter_AddRefs(prefBranch));
-  if (NS_FAILED(rv))
-    return rv;
-      
-  nsXPIDLCString encodedData;
-  rv = prefBranch->GetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, getter_Copies(encodedData));
-  if (NS_FAILED(rv))
-    return rv;
+  }
 
   // decode the base64
   char* decodedData = PL_Base64Decode(encodedData.get(), encodedData.Length(), nsnull);
@@ -176,26 +168,17 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
   if (pageFormat == kPMNoPageFormat)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult rv;
-  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefService->GetBranch(PRINTING_PREF_BRANCH, getter_AddRefs(prefBranch));
-  if (NS_FAILED(rv))
-    return rv;
-
   NSData* data = nil;
   OSStatus err = ::PMPageFormatCreateDataRepresentation(pageFormat, (CFDataRef*)&data, kPMDataFormatXMLDefault);
   if (err != noErr)
     return NS_ERROR_FAILURE;
 
-  nsXPIDLCString encodedData;
+  nsCAutoString encodedData;
   encodedData.Adopt(PL_Base64Encode((char*)[data bytes], [data length], nsnull));
   if (!encodedData.get())
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return prefBranch->SetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, encodedData);
+  return Preferences::SetCString(MAC_OS_X_PAGE_SETUP_PREFNAME, encodedData);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
