@@ -422,8 +422,10 @@ remotetabslist[loading="true"] > richlistbox.remotetabs-list-children {
   margin: 0;
   padding: @padding_small@ @padding_normal@ @padding_normal@ @padding_normal@;
   font-weight: bold;
-  color: white !important;
-  background-color: rgb(101, 121, 227) !important;
+  color: @color_text_default@ !important;
+  background-image: url(images/row-header-bg.png);
+  background-repeat: repeat-x;
+  background-size: auto 100%;
 }
 
 #tool-addons {
@@ -461,7 +463,7 @@ remotetabslist[loading="true"] > richlistbox.remotetabs-list-children {
 @media (@orientation@: portrait) {
   #addons-repo {
     -moz-box-orient: vertical;
-    -moz-box-pack: center;
+    -moz-box-align: stretch;
   }
 }
 
@@ -525,12 +527,6 @@ richlistitem[isDisabled="true"] image {
   opacity: 0.25;
 }
 
-richlistitem[typeName="banner"],
-richlistitem[typeName="showmore"] {
-  background-color: rgb(255,255,255);
-  background: url(chrome://browser/skin/images/browseaddons-bg.jpg) repeat-x center top;
-}
-
 /* downloads panel UI   ---------------------------------------------------- */
 .download-retry-failed {
   color: red !important;
@@ -549,7 +545,7 @@ richlistitem[typeName="showmore"] {
 }
 
 #dl-empty-message:active {
-  background-color: white;
+  background-color: @color_background_default@;
 }
 
 #dl-empty-message > label {
@@ -803,8 +799,7 @@ autocompleteresult:not([badge]) .autocomplete-item-badge,
 
 /* special "no results", "awesome header row" and "title rows" items */
 autocompleteresult[class="history-item-title"],
-autocompleteresult[class="remotetabs-item-title"],
-.settings-title {
+autocompleteresult[class="remotetabs-item-title"] {
   min-height: 0;
   color: @color_text_default@;
   font-size: smaller;
@@ -991,6 +986,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 /* Popup Icons */
 #identity-popup-icon {
   padding: 0;
+  padding-top: @padding_snormal@; /* align to top of text */
   list-style-image: url("chrome://browser/skin/images/identity-default-hdpi.png");
 }
 
@@ -1034,6 +1030,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 }
 
 #identity-popup-encryption-icon {
+  padding-top: @padding_snormal@; /* align to top of text */
   list-style-image: url("chrome://browser/skin/images/unlocked-hdpi.png");
 }
 
@@ -1178,6 +1175,17 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 /* Preferences window   ---------------------------------------------------- */
+.settings-title {
+  min-height: 0;
+  color: @color_text_header@;
+  background-color: @color_background_header@;
+  font-size: smaller;
+  font-weight: bold;
+  margin: 0;
+  padding: @autocompleteresult_padding@ @padding_xnormal@;
+  border-bottom: @border_width_tiny@ solid @color_divider_border@;
+}
+
 .setting {
   padding-left: @padding_xnormal@;
   border-bottom: @border_width_tiny@ solid #cacdd5;
@@ -1186,7 +1194,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 /* XXX should be a richlistitem */
 .prefbox {
   padding: @padding_xsmall@;
-  border-bottom: @border_width_tiny@ solid rgb(207,207,207);
+  border-bottom: @border_width_tiny@ solid @color_divider_border@;
   min-height: @touch_row@; /* row size */
   -moz-box-align: center;
 }
@@ -1398,12 +1406,12 @@ richlistitem.appmenu-downloads-button > image,
 /* content scrollbars */
 .scroller {
   opacity: 0;
-  background-color: rgba(0, 0, 0, 0.4) !important;
+  background-color: @color_background_scroller@ !important;
   -moz-border-top-colors: none !important;
   -moz-border-bottom-colors: none !important;
   -moz-border-right-colors: none !important;
   -moz-border-left-colors: none !important;
-  border: @border_width_tiny@ solid rgba(255, 255, 255, 0.4) !important;
+  border: @border_width_tiny@ solid rgba(0, 0, 0, 0.4) !important;
 }
 
 .scroller[panning="true"] {
