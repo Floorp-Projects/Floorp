@@ -907,15 +907,15 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
   if (gRefCnt == 1) {
 #if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-    nsContentUtils::AddBoolPrefVarCache("browser.dom.window.dump.enabled",
-                                        &gDOMWindowDumpEnabled);
+    Preferences::AddBoolVarCache(&gDOMWindowDumpEnabled,
+                                 "browser.dom.window.dump.enabled");
 #endif
-    nsContentUtils::AddIntPrefVarCache("dom.min_timeout_value",
-                                       &gMinTimeoutValue,
-                                       DEFAULT_MIN_TIMEOUT_VALUE);
-    nsContentUtils::AddIntPrefVarCache("dom.min_background_timeout_value",
-                                       &gMinBackgroundTimeoutValue,
-                                       DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
+    Preferences::AddIntVarCache(&gMinTimeoutValue,
+                                "dom.min_timeout_value",
+                                DEFAULT_MIN_TIMEOUT_VALUE);
+    Preferences::AddIntVarCache(&gMinBackgroundTimeoutValue,
+                                "dom.min_background_timeout_value",
+                                DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
   }
 
   if (gDumpFile == nsnull) {

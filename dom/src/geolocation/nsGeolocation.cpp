@@ -518,16 +518,13 @@ nsresult nsGeolocationService::Init()
 {
   mTimeout = Preferences::GetInt("geo.timeout", 6000);
 
-  nsContentUtils::RegisterPrefCallback("geo.ignore.location_filter",
-                                       GeoIgnoreLocationFilterChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(GeoIgnoreLocationFilterChangedCallback,
+                                "geo.ignore.location_filter");
 
   GeoIgnoreLocationFilterChangedCallback("geo.ignore.location_filter", nsnull);
 
 
-  nsContentUtils::RegisterPrefCallback("geo.enabled",
-                                       GeoEnabledChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(GeoEnabledChangedCallback, "geo.enabled");
 
   GeoEnabledChangedCallback("geo.enabled", nsnull);
 
