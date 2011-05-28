@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(c4ef8a40-dd56-4b95-a007-630a0ac04341)]
+[scriptable, uuid(cf8a8744-ec3b-474e-8f2b-8def3da2344a)]
 interface nsIDOMHTMLImageElement : nsIDOMHTMLElement
 {
            attribute DOMString        alt;
@@ -71,9 +71,4 @@ interface nsIDOMHTMLImageElement : nsIDOMHTMLElement
            attribute DOMString        longDesc;
            attribute long             vspace;
            attribute DOMString        lowsrc;
-
-  // These attributes are offsets from the closest view (to mimic
-  // NS4's "offset-from-layer" behavior).
-  readonly attribute long             x;
-  readonly attribute long             y;
 };
