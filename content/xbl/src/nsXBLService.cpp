@@ -90,6 +90,9 @@
 #endif
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMEventGroup.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define NS_MAX_XBL_BINDING_RECURSION 20
 
@@ -511,9 +514,8 @@ nsXBLService::nsXBLService(void)
   if (gRefCnt == 1) {
     gClassTable = new nsHashtable();
   }
-  
-  nsContentUtils::AddBoolPrefVarCache("layout.debug.enable_data_xbl",
-                                      &gAllowDataURIs);
+
+  Preferences::AddBoolVarCache(&gAllowDataURIs, "layout.debug.enable_data_xbl");
 }
 
 nsXBLService::~nsXBLService(void)

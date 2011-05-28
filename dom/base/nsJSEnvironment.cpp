@@ -1035,9 +1035,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
     ::JS_SetOptions(mContext, mDefaultJSOptions);
 
     // Watch for the JS boolean options
-    nsContentUtils::RegisterPrefCallback(js_options_dot_str,
-                                         JSOptionChangedCallback,
-                                         this);
+    Preferences::RegisterCallback(JSOptionChangedCallback,
+                                  js_options_dot_str, this);
 
     ::JS_SetOperationCallback(mContext, DOMOperationCallback);
 
@@ -1089,9 +1088,8 @@ nsJSContext::DestroyJSContext()
   ::JS_SetContextPrivate(mContext, nsnull);
 
   // Unregister our "javascript.options.*" pref-changed callback.
-  nsContentUtils::UnregisterPrefCallback(js_options_dot_str,
-                                         JSOptionChangedCallback,
-                                         this);
+  Preferences::UnregisterCallback(JSOptionChangedCallback,
+                                  js_options_dot_str, this);
 
   PRBool do_gc = mGCOnDestruction && !sGCTimer;
 
@@ -3763,38 +3761,32 @@ nsJSRuntime::Init()
   JS_SetStructuredCloneCallbacks(sRuntime, &cloneCallbacks);
 
   // Set these global xpconnect options...
-  nsContentUtils::RegisterPrefCallback("dom.max_script_run_time",
-                                       MaxScriptRunTimePrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(MaxScriptRunTimePrefChangedCallback,
+                                "dom.max_script_run_time");
   MaxScriptRunTimePrefChangedCallback("dom.max_script_run_time", nsnull);
 
-  nsContentUtils::RegisterPrefCallback("dom.max_chrome_script_run_time",
-                                       MaxScriptRunTimePrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(MaxScriptRunTimePrefChangedCallback,
+                                "dom.max_chrome_script_run_time");
   MaxScriptRunTimePrefChangedCallback("dom.max_chrome_script_run_time",
                                       nsnull);
 
-  nsContentUtils::RegisterPrefCallback("dom.report_all_js_exceptions",
-                                       ReportAllJSExceptionsPrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(ReportAllJSExceptionsPrefChangedCallback,
+                                "dom.report_all_js_exceptions");
   ReportAllJSExceptionsPrefChangedCallback("dom.report_all_js_exceptions",
                                            nsnull);
 
-  nsContentUtils::RegisterPrefCallback("javascript.options.mem.high_water_mark",
-                                       SetMemoryHighWaterMarkPrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(SetMemoryHighWaterMarkPrefChangedCallback,
+                                "javascript.options.mem.high_water_mark");
   SetMemoryHighWaterMarkPrefChangedCallback("javascript.options.mem.high_water_mark",
                                             nsnull);
 
-  nsContentUtils::RegisterPrefCallback("javascript.options.mem.max",
-                                       SetMemoryMaxPrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(SetMemoryMaxPrefChangedCallback,
+                                "javascript.options.mem.max");
   SetMemoryMaxPrefChangedCallback("javascript.options.mem.max",
                                   nsnull);
 
-  nsContentUtils::RegisterPrefCallback("javascript.options.mem.gc_per_compartment",
-                                       SetMemoryGCModePrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(SetMemoryGCModePrefChangedCallback,
+                                "javascript.options.mem.gc_per_compartment");
   SetMemoryGCModePrefChangedCallback("javascript.options.mem.gc_per_compartment",
                                      nsnull);
 

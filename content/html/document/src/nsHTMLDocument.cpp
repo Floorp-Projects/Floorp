@@ -599,9 +599,8 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
       gPlugDetector = PR_TRUE;
     }
 
-    nsContentUtils::RegisterPrefCallback("intl.charset.detector",
-                                         MyPrefChangedCallback,
-                                         nsnull);
+    Preferences::RegisterCallback(MyPrefChangedCallback,
+                                  "intl.charset.detector");
 
     gInitDetector = PR_TRUE;
   }
