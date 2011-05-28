@@ -676,8 +676,8 @@ nsDocAccessible::GetFrame() const
   return root;
 }
 
-PRBool
-nsDocAccessible::IsDefunct()
+bool
+nsDocAccessible::IsDefunct() const
 {
   return nsHyperTextAccessibleWrap::IsDefunct() || !mDocument;
 }
