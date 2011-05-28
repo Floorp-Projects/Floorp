@@ -194,13 +194,6 @@ class nsCSSScanner {
   // "-1" back so we can read it again as a number.)
   void Pushback(PRUnichar aChar);
 
-  // Reports operating-system level errors, e.g. read failures and
-  // out of memory.
-  nsresult GetLowLevelError();
-
-  // sometimes the parser wants to make note of a low-level error
-  void SetLowLevelError(nsresult aErrorCode);
-  
 protected:
   PRInt32 Read();
   PRInt32 Peek();
@@ -226,7 +219,6 @@ protected:
   PRInt32 mPushbackCount;
   PRInt32 mPushbackSize;
   PRUnichar mLocalPushback[4];
-  nsresult mLowLevelError;
 
   PRUint32 mLineNumber;
   // True if we are in SVG mode; false in "normal" CSS
