@@ -160,14 +160,19 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsFocusManager* nsFocusManager::sInstance = nsnull;
 PRBool nsFocusManager::sMouseFocusesFormControl = PR_FALSE;
 
+static const char* kObservedPrefs[] = {
+  "accessibility.browsewithcaret",
+  "accessibility.tabfocus_applies_to_xul",
+  "accessibility.mouse_focuses_formcontrol",
+  NULL
+};
+
 nsFocusManager::nsFocusManager()
 { }
 
 nsFocusManager::~nsFocusManager()
 {
-  Preferences::RemoveObserver(this, "accessibility.browsewithcaret");
-  Preferences::RemoveObserver(this, "accessibility.tabfocus_applies_to_xul");
-  Preferences::RemoveObserver(this, "accessibility.mouse_focuses_formcontrol");
+  Preferences::RemoveObservers(this, kObservedPrefs);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -191,9 +196,7 @@ nsFocusManager::Init()
   sMouseFocusesFormControl =
     Preferences::GetBool("accessibility.mouse_focuses_formcontrol", PR_FALSE);
 
-  Preferences::AddWeakObserver(fm, "accessibility.browsewithcaret");
-  Preferences::AddWeakObserver(fm, "accessibility.tabfocus_applies_to_xul");
-  Preferences::AddWeakObserver(fm, "accessibility.mouse_focuses_formcontrol");
+  Preferences::AddWeakObservers(fm, kObservedPrefs);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {

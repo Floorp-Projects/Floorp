@@ -829,6 +829,31 @@ nsEventStateManager::UpdateUserActivityTimer(void)
   return NS_OK;
 }
 
+static const char* kObservedPrefs[] = {
+  "accessibility.accesskeycausesactivation",
+  "nglayout.events.dispatchLeftClickOnly",
+  "ui.key.generalAccessKey",
+  "ui.key.chromeAccess",
+  "ui.key.contentAccess",
+  "ui.click_hold_context_menus",
+#if 0
+  "mousewheel.withaltkey.action",
+  "mousewheel.withaltkey.numlines",
+  "mousewheel.withaltkey.sysnumlines",
+  "mousewheel.withcontrolkey.action",
+  "mousewheel.withcontrolkey.numlines",
+  "mousewheel.withcontrolkey.sysnumlines",
+  "mousewheel.withnokey.action",
+  "mousewheel.withnokey.numlines",
+  "mousewheel.withnokey.sysnumlines",
+  "mousewheel.withshiftkey.action",
+  "mousewheel.withshiftkey.numlines",
+  "mousewheel.withshiftkey.sysnumlines",
+#endif
+  "dom.popup_allowed_events",
+  nsnull
+};
+
 nsresult
 nsEventStateManager::Init()
 {
@@ -848,28 +873,7 @@ nsEventStateManager::Init()
     sContentAccessModifier =
       GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeContent);
   }
-  Preferences::AddWeakObserver(this, "accessibility.accesskeycausesactivation");
-  Preferences::AddWeakObserver(this, "nglayout.events.dispatchLeftClickOnly");
-  Preferences::AddWeakObserver(this, "ui.key.generalAccessKey");
-  Preferences::AddWeakObserver(this, "ui.key.chromeAccess");
-  Preferences::AddWeakObserver(this, "ui.key.contentAccess");
-  Preferences::AddWeakObserver(this, "ui.click_hold_context_menus");
-#if 0
-  Preferences::AddWeakObserver(this, "mousewheel.withaltkey.action");
-  Preferences::AddWeakObserver(this, "mousewheel.withaltkey.numlines");
-  Preferences::AddWeakObserver(this, "mousewheel.withaltkey.sysnumlines");
-  Preferences::AddWeakObserver(this, "mousewheel.withcontrolkey.action");
-  Preferences::AddWeakObserver(this, "mousewheel.withcontrolkey.numlines");
-  Preferences::AddWeakObserver(this, "mousewheel.withcontrolkey.sysnumlines");
-  Preferences::AddWeakObserver(this, "mousewheel.withnokey.action");
-  Preferences::AddWeakObserver(this, "mousewheel.withnokey.numlines");
-  Preferences::AddWeakObserver(this, "mousewheel.withnokey.sysnumlines");
-  Preferences::AddWeakObserver(this, "mousewheel.withshiftkey.action");
-  Preferences::AddWeakObserver(this, "mousewheel.withshiftkey.numlines");
-  Preferences::AddWeakObserver(this, "mousewheel.withshiftkey.sysnumlines");
-#endif
-
-  Preferences::AddWeakObserver(this, "dom.popup_allowed_events");
+  Preferences::AddWeakObservers(this, kObservedPrefs);
 
   mClickHoldContextMenu =
     Preferences::GetBool("ui.click_hold_context_menus", PR_FALSE);
@@ -920,29 +924,7 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  Preferences::RemoveObserver(this, "accessibility.accesskeycausesactivation");
-  Preferences::RemoveObserver(this, "nglayout.events.dispatchLeftClickOnly");
-  Preferences::RemoveObserver(this, "ui.key.generalAccessKey");
-  Preferences::RemoveObserver(this, "ui.key.chromeAccess");
-  Preferences::RemoveObserver(this, "ui.key.contentAccess");
-  Preferences::RemoveObserver(this, "ui.click_hold_context_menus");
-#if 0
-  Preferences::RemoveObserver(this, "mousewheel.withshiftkey.action");
-  Preferences::RemoveObserver(this, "mousewheel.withshiftkey.numlines");
-  Preferences::RemoveObserver(this, "mousewheel.withshiftkey.sysnumlines");
-  Preferences::RemoveObserver(this, "mousewheel.withcontrolkey.action");
-  Preferences::RemoveObserver(this, "mousewheel.withcontrolkey.numlines");
-  Preferences::RemoveObserver(this, "mousewheel.withcontrolkey.sysnumlines");
-  Preferences::RemoveObserver(this, "mousewheel.withaltkey.action");
-  Preferences::RemoveObserver(this, "mousewheel.withaltkey.numlines");
-  Preferences::RemoveObserver(this, "mousewheel.withaltkey.sysnumlines");
-  Preferences::RemoveObserver(this, "mousewheel.withnokey.action");
-  Preferences::RemoveObserver(this, "mousewheel.withnokey.numlines");
-  Preferences::RemoveObserver(this, "mousewheel.withnokey.sysnumlines");
-#endif
-
-  Preferences::RemoveObserver(this, "dom.popup_allowed_events");
-
+  Preferences::RemoveObservers(this, kObservedPrefs);
   m_haveShutdown = PR_TRUE;
   return NS_OK;
 }
