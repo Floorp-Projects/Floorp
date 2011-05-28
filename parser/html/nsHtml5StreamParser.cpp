@@ -52,9 +52,6 @@
 #include "nsHtml5Module.h"
 #include "nsHtml5RefPtr.h"
 #include "nsIScriptError.h"
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -203,12 +200,12 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   // Chardet is initialized here even if it turns out to be useless
   // to make the chardet refcount its observer (nsHtml5StreamParser)
   // on the main thread.
-  const nsAdoptingCString& detectorName =
-    Preferences::GetLocalizedCString("intl.charset.detector");
+  const nsAdoptingString& detectorName = 
+    nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
   if (!detectorName.IsEmpty()) {
     nsCAutoString detectorContractID;
     detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
-    detectorContractID += detectorName;
+    AppendUTF16toUTF8(detectorName, detectorContractID);
     if ((mChardet = do_CreateInstance(detectorContractID.get()))) {
       (void) mChardet->Init(this);
       mFeedChardet = PR_TRUE;

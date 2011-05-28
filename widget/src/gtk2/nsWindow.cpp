@@ -82,7 +82,6 @@
 #include <startup-notification-1.0/libsn/sn.h>
 #endif
 
-#include "mozilla/Preferences.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
@@ -98,9 +97,6 @@
 #include "nsIAccessibleDocument.h"
 #include "prenv.h"
 #include "stdlib.h"
-
-using namespace mozilla;
-
 static PRBool sAccessibilityChecked = PR_FALSE;
 /* static */
 PRBool nsWindow::sAccessibilityEnabled = PR_FALSE;
@@ -6155,10 +6151,20 @@ drag_data_received_event_cb(GtkWidget *aWidget,
 static nsresult
 initialize_prefs(void)
 {
-    gRaiseWindows =
-        Preferences::GetBool("mozilla.widget.raise-on-setfocus", PR_TRUE);
-    gDisableNativeTheme =
-        Preferences::GetBool("mozilla.widget.disable-native-theme", PR_FALSE);
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs)
+        return NS_OK;
+
+    PRBool val = PR_TRUE;
+    nsresult rv;
+
+    rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus", &val);
+    if (NS_SUCCEEDED(rv))
+        gRaiseWindows = val;
+
+    rv = prefs->GetBoolPref("mozilla.widget.disable-native-theme", &val);
+    if (NS_SUCCEEDED(rv))
+        gDisableNativeTheme = val;
 
     return NS_OK;
 }

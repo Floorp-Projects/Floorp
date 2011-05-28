@@ -308,7 +308,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
 
 #define GETSTRPREF(_prefname, _retval)                  \
   NS_SUCCEEDED(                                         \
-    Preferences::GetString(                             \
+    Preferences::GetChar(                               \
       GetPrefName(_prefname, aPrinterName), _retval     \
     )                                                   \
   )
@@ -623,7 +623,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
       DUMP_DBL(kWriteStr, kPrintPaperHeight, height);
       WritePrefDouble(GetPrefName(kPrintPaperHeight, aPrinterName), height);
       DUMP_STR(kWriteStr, kPrintPaperName, name);
-      Preferences::SetString(GetPrefName(kPrintPaperName, aPrinterName), name);
+      Preferences::SetChar(GetPrefName(kPrintPaperName, aPrinterName), name);
     }
   }
 
@@ -652,48 +652,48 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   if (aFlags & nsIPrintSettings::kInitSaveHeaderLeft) {
     if (NS_SUCCEEDED(aPS->GetHeaderStrLeft(&uStr))) {
       DUMP_STR(kWriteStr, kPrintHeaderStrLeft, uStr);
-      Preferences::SetString(GetPrefName(kPrintHeaderStrLeft, aPrinterName),
-                             uStr);
+      Preferences::SetChar(GetPrefName(kPrintHeaderStrLeft, aPrinterName),
+                           uStr);
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveHeaderCenter) {
     if (NS_SUCCEEDED(aPS->GetHeaderStrCenter(&uStr))) {
       DUMP_STR(kWriteStr, kPrintHeaderStrCenter, uStr);
-      Preferences::SetString(GetPrefName(kPrintHeaderStrCenter, aPrinterName),
-                             uStr);
+      Preferences::SetChar(GetPrefName(kPrintHeaderStrCenter, aPrinterName),
+                           uStr);
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveHeaderRight) {
     if (NS_SUCCEEDED(aPS->GetHeaderStrRight(&uStr))) {
       DUMP_STR(kWriteStr, kPrintHeaderStrRight, uStr);
-      Preferences::SetString(GetPrefName(kPrintHeaderStrRight, aPrinterName),
-                             uStr);
+      Preferences::SetChar(GetPrefName(kPrintHeaderStrRight, aPrinterName),
+                           uStr);
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveFooterLeft) {
     if (NS_SUCCEEDED(aPS->GetFooterStrLeft(&uStr))) {
       DUMP_STR(kWriteStr, kPrintFooterStrLeft, uStr);
-      Preferences::SetString(GetPrefName(kPrintFooterStrLeft, aPrinterName),
-                             uStr);
+      Preferences::SetChar(GetPrefName(kPrintFooterStrLeft, aPrinterName),
+                           uStr);
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveFooterCenter) {
     if (NS_SUCCEEDED(aPS->GetFooterStrCenter(&uStr))) {
       DUMP_STR(kWriteStr, kPrintFooterStrCenter, uStr);
-      Preferences::SetString(GetPrefName(kPrintFooterStrCenter, aPrinterName),
-                             uStr);
+      Preferences::SetChar(GetPrefName(kPrintFooterStrCenter, aPrinterName),
+                           uStr);
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveFooterRight) {
     if (NS_SUCCEEDED(aPS->GetFooterStrRight(&uStr))) {
       DUMP_STR(kWriteStr, kPrintFooterStrRight, uStr);
-      Preferences::SetString(GetPrefName(kPrintFooterStrRight, aPrinterName),
-                             uStr);
+      Preferences::SetChar(GetPrefName(kPrintFooterStrRight, aPrinterName),
+                           uStr);
     }
   }
 
@@ -728,7 +728,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   if (aFlags & nsIPrintSettings::kInitSavePlexName) {
     if (NS_SUCCEEDED(aPS->GetPlexName(&uStr))) {
       DUMP_STR(kWriteStr, kPrintPlexName, uStr);
-      Preferences::SetString(GetPrefName(kPrintPlexName, aPrinterName), uStr);
+      Preferences::SetChar(GetPrefName(kPrintPlexName, aPrinterName), uStr);
     }
   }
 
@@ -743,15 +743,15 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   if (aFlags & nsIPrintSettings::kInitSaveColorspace) {
     if (NS_SUCCEEDED(aPS->GetColorspace(&uStr))) {
       DUMP_STR(kWriteStr, kPrintColorspace, uStr);
-      Preferences::SetString(GetPrefName(kPrintColorspace, aPrinterName), uStr);
+      Preferences::SetChar(GetPrefName(kPrintColorspace, aPrinterName), uStr);
     }
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveResolutionName) {
     if (NS_SUCCEEDED(aPS->GetResolutionName(&uStr))) {
       DUMP_STR(kWriteStr, kPrintResolutionName, uStr);
-      Preferences::SetString(GetPrefName(kPrintResolutionName, aPrinterName),
-                             uStr);
+      Preferences::SetChar(GetPrefName(kPrintResolutionName, aPrinterName),
+                           uStr);
     }
   }
 
@@ -772,7 +772,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   if (aFlags & nsIPrintSettings::kInitSavePrintCommand) {
     if (NS_SUCCEEDED(aPS->GetPrintCommand(&uStr))) {
       DUMP_STR(kWriteStr, kPrintCommand, uStr);
-      Preferences::SetString(GetPrefName(kPrintCommand, aPrinterName), uStr);
+      Preferences::SetChar(GetPrefName(kPrintCommand, aPrinterName), uStr);
     }
   }
 
@@ -781,7 +781,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
       && aPrinterName.IsEmpty()) {
     if (NS_SUCCEEDED(aPS->GetPrinterName(&uStr))) {
       DUMP_STR(kWriteStr, kPrinterName, uStr);
-      Preferences::SetString(kPrinterName, uStr);
+      Preferences::SetChar(kPrinterName, uStr);
     }
   }
 
@@ -795,7 +795,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   if (aFlags & nsIPrintSettings::kInitSaveToFileName) {
     if (NS_SUCCEEDED(aPS->GetToFileName(&uStr))) {
       DUMP_STR(kWriteStr, kPrintToFileName, uStr);
-      Preferences::SetString(GetPrefName(kPrintToFileName, aPrinterName), uStr);
+      Preferences::SetChar(GetPrefName(kPrintToFileName, aPrinterName), uStr);
     }
   }
 
@@ -906,7 +906,7 @@ nsPrintOptions::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
 
   // Look up the printer from the last print job
   nsAutoString lastPrinterName;
-  Preferences::GetString(kPrinterName, &lastPrinterName);
+  Preferences::GetChar(kPrinterName, &lastPrinterName);
   if (!lastPrinterName.IsEmpty()) {
     // Verify it's still a valid printer
     nsCOMPtr<nsIStringEnumerator> printers;
@@ -1096,7 +1096,7 @@ nsPrintOptions::ReadPrefDouble(const char * aPrefId, double& aVal)
   NS_ENSURE_ARG_POINTER(aPrefId);
 
   nsCAutoString str;
-  nsresult rv = Preferences::GetCString(aPrefId, &str);
+  nsresult rv = Preferences::GetChar(aPrefId, &str);
   if (NS_SUCCEEDED(rv) && !str.IsEmpty()) {
     aVal = atof(str.get());
   }
@@ -1111,7 +1111,7 @@ nsPrintOptions::WritePrefDouble(const char * aPrefId, double aVal)
   nsPrintfCString str("%6.2f", aVal);
   NS_ENSURE_TRUE(!str.IsEmpty(), NS_ERROR_FAILURE);
 
-  return Preferences::SetCString(aPrefId, str);
+  return Preferences::SetChar(aPrefId, str);
 }
 
 void
@@ -1119,9 +1119,9 @@ nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, PRInt32& aTwips,
                                       const char * aMarginPref)
 {
   nsCAutoString str;
-  nsresult rv = Preferences::GetCString(aPrefId, &str);
+  nsresult rv = Preferences::GetChar(aPrefId, &str);
   if (NS_FAILED(rv) || str.IsEmpty()) {
-    rv = Preferences::GetCString(aMarginPref, &str);
+    rv = Preferences::GetChar(aMarginPref, &str);
   }
   if (NS_SUCCEEDED(rv) && !str.IsEmpty()) {
     nsAutoString justStr;
@@ -1143,7 +1143,7 @@ nsPrintOptions::WriteInchesFromTwipsPref(const char * aPrefId, PRInt32 aTwips)
   nsCAutoString inchesStr;
   inchesStr.AppendFloat(inches);
 
-  Preferences::SetCString(aPrefId, inchesStr);
+  Preferences::SetChar(aPrefId, inchesStr);
 }
 
 void
@@ -1175,7 +1175,7 @@ nsPrintOptions::ReadJustification(const char * aPrefId, PRInt16& aJust,
 {
   aJust = aInitValue;
   nsAutoString justStr;
-  if (NS_SUCCEEDED(Preferences::GetString(aPrefId, &justStr))) {
+  if (NS_SUCCEEDED(Preferences::GetChar(aPrefId, &justStr))) {
     if (justStr.EqualsASCII(kJustRight)) {
       aJust = nsIPrintSettings::kJustRight;
     } else if (justStr.EqualsASCII(kJustCenter)) {
@@ -1192,15 +1192,15 @@ nsPrintOptions::WriteJustification(const char * aPrefId, PRInt16 aJust)
 {
   switch (aJust) {
     case nsIPrintSettings::kJustLeft:
-      Preferences::SetCString(aPrefId, kJustLeft);
+      Preferences::SetChar(aPrefId, kJustLeft);
       break;
 
     case nsIPrintSettings::kJustCenter:
-      Preferences::SetCString(aPrefId, kJustCenter);
+      Preferences::SetChar(aPrefId, kJustCenter);
       break;
 
     case nsIPrintSettings::kJustRight:
-      Preferences::SetCString(aPrefId, kJustRight);
+      Preferences::SetChar(aPrefId, kJustRight);
       break;
   } //switch
 }

@@ -76,7 +76,6 @@
 #include "nsLayoutCID.h"
 #include "nsContentUtils.h"
 #include "nsLayoutStylesheetCache.h"
-#include "mozilla/Preferences.h"
 
 #include "nsViewsCID.h"
 #include "nsIDeviceContextSpec.h"
@@ -195,8 +194,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 //switch to page layout
 #include "nsGfxCIID.h"
-
-using namespace mozilla;
 
 #ifdef NS_DEBUG
 
@@ -2995,14 +2992,13 @@ DocumentViewerImpl::GetDefaultCharacterSet(nsACString& aDefaultCharacterSet)
 {
   if (mDefaultCharacterSet.IsEmpty())
   {
-    const nsAdoptingCString& defCharset =
-      Preferences::GetLocalizedCString("intl.charset.default");
+    const nsAdoptingString& defCharset =
+      nsContentUtils::GetLocalizedStringPref("intl.charset.default");
 
-    if (!defCharset.IsEmpty()) {
-      mDefaultCharacterSet = defCharset;
-    } else {
+    if (!defCharset.IsEmpty())
+      LossyCopyUTF16toASCII(defCharset, mDefaultCharacterSet);
+    else
       mDefaultCharacterSet.AssignLiteral("ISO-8859-1");
-    }
   }
   aDefaultCharacterSet = mDefaultCharacterSet;
   return NS_OK;
