@@ -375,9 +375,7 @@ public:
     : nsPrefObserverHashKey(aPref, aCallback) { }
 
   ~nsPrefOldCallback() {
-    nsIPrefBranch2 *prefBranch = nsContentUtils::GetPrefBranch();
-    if(prefBranch)
-      prefBranch->RemoveObserver(mPref.get(), this);
+    Preferences::RemoveObserver(this, mPref.get());
   }
 
   void AppendClosure(void *aClosure) {

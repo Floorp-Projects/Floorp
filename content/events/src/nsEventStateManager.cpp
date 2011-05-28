@@ -96,7 +96,6 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
-#include "nsIPrefBranch2.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
@@ -840,41 +839,37 @@ nsEventStateManager::Init()
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
 
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-
-  if (prefBranch) {
-    if (sESMInstanceCount == 1) {
-      sLeftClickOnly =
-        Preferences::GetBool("nglayout.events.dispatchLeftClickOnly",
-                             sLeftClickOnly);
-      sChromeAccessModifier =
-        GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeChrome);
-      sContentAccessModifier =
-        GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeContent);
-    }
-    prefBranch->AddObserver("accessibility.accesskeycausesactivation", this, PR_TRUE);
-    prefBranch->AddObserver("nglayout.events.dispatchLeftClickOnly", this, PR_TRUE);
-    prefBranch->AddObserver("ui.key.generalAccessKey", this, PR_TRUE);
-    prefBranch->AddObserver("ui.key.chromeAccess", this, PR_TRUE);
-    prefBranch->AddObserver("ui.key.contentAccess", this, PR_TRUE);
-    prefBranch->AddObserver("ui.click_hold_context_menus", this, PR_TRUE);
+  if (sESMInstanceCount == 1) {
+    sLeftClickOnly =
+      Preferences::GetBool("nglayout.events.dispatchLeftClickOnly",
+                           sLeftClickOnly);
+    sChromeAccessModifier =
+      GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeChrome);
+    sContentAccessModifier =
+      GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeContent);
+  }
+  Preferences::AddWeakObserver(this, "accessibility.accesskeycausesactivation");
+  Preferences::AddWeakObserver(this, "nglayout.events.dispatchLeftClickOnly");
+  Preferences::AddWeakObserver(this, "ui.key.generalAccessKey");
+  Preferences::AddWeakObserver(this, "ui.key.chromeAccess");
+  Preferences::AddWeakObserver(this, "ui.key.contentAccess");
+  Preferences::AddWeakObserver(this, "ui.click_hold_context_menus");
 #if 0
-    prefBranch->AddObserver("mousewheel.withaltkey.action", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withaltkey.numlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withaltkey.sysnumlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withcontrolkey.action", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withcontrolkey.numlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withcontrolkey.sysnumlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withnokey.action", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withnokey.numlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withnokey.sysnumlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withshiftkey.action", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withshiftkey.numlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withshiftkey.sysnumlines", this, PR_TRUE);
+  Preferences::AddWeakObserver(this, "mousewheel.withaltkey.action");
+  Preferences::AddWeakObserver(this, "mousewheel.withaltkey.numlines");
+  Preferences::AddWeakObserver(this, "mousewheel.withaltkey.sysnumlines");
+  Preferences::AddWeakObserver(this, "mousewheel.withcontrolkey.action");
+  Preferences::AddWeakObserver(this, "mousewheel.withcontrolkey.numlines");
+  Preferences::AddWeakObserver(this, "mousewheel.withcontrolkey.sysnumlines");
+  Preferences::AddWeakObserver(this, "mousewheel.withnokey.action");
+  Preferences::AddWeakObserver(this, "mousewheel.withnokey.numlines");
+  Preferences::AddWeakObserver(this, "mousewheel.withnokey.sysnumlines");
+  Preferences::AddWeakObserver(this, "mousewheel.withshiftkey.action");
+  Preferences::AddWeakObserver(this, "mousewheel.withshiftkey.numlines");
+  Preferences::AddWeakObserver(this, "mousewheel.withshiftkey.sysnumlines");
 #endif
 
-    prefBranch->AddObserver("dom.popup_allowed_events", this, PR_TRUE);
-  }
+  Preferences::AddWeakObserver(this, "dom.popup_allowed_events");
 
   mClickHoldContextMenu =
     Preferences::GetBool("ui.click_hold_context_menus", PR_FALSE);
@@ -925,32 +920,28 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-
-  if (prefBranch) {
-    prefBranch->RemoveObserver("accessibility.accesskeycausesactivation", this);
-    prefBranch->RemoveObserver("nglayout.events.dispatchLeftClickOnly", this);
-    prefBranch->RemoveObserver("ui.key.generalAccessKey", this);
-    prefBranch->RemoveObserver("ui.key.chromeAccess", this);
-    prefBranch->RemoveObserver("ui.key.contentAccess", this);
-    prefBranch->RemoveObserver("ui.click_hold_context_menus", this);
+  Preferences::RemoveObserver(this, "accessibility.accesskeycausesactivation");
+  Preferences::RemoveObserver(this, "nglayout.events.dispatchLeftClickOnly");
+  Preferences::RemoveObserver(this, "ui.key.generalAccessKey");
+  Preferences::RemoveObserver(this, "ui.key.chromeAccess");
+  Preferences::RemoveObserver(this, "ui.key.contentAccess");
+  Preferences::RemoveObserver(this, "ui.click_hold_context_menus");
 #if 0
-    prefBranch->RemoveObserver("mousewheel.withshiftkey.action", this);
-    prefBranch->RemoveObserver("mousewheel.withshiftkey.numlines", this);
-    prefBranch->RemoveObserver("mousewheel.withshiftkey.sysnumlines", this);
-    prefBranch->RemoveObserver("mousewheel.withcontrolkey.action", this);
-    prefBranch->RemoveObserver("mousewheel.withcontrolkey.numlines", this);
-    prefBranch->RemoveObserver("mousewheel.withcontrolkey.sysnumlines", this);
-    prefBranch->RemoveObserver("mousewheel.withaltkey.action", this);
-    prefBranch->RemoveObserver("mousewheel.withaltkey.numlines", this);
-    prefBranch->RemoveObserver("mousewheel.withaltkey.sysnumlines", this);
-    prefBranch->RemoveObserver("mousewheel.withnokey.action", this);
-    prefBranch->RemoveObserver("mousewheel.withnokey.numlines", this);
-    prefBranch->RemoveObserver("mousewheel.withnokey.sysnumlines", this);
+  Preferences::RemoveObserver(this, "mousewheel.withshiftkey.action");
+  Preferences::RemoveObserver(this, "mousewheel.withshiftkey.numlines");
+  Preferences::RemoveObserver(this, "mousewheel.withshiftkey.sysnumlines");
+  Preferences::RemoveObserver(this, "mousewheel.withcontrolkey.action");
+  Preferences::RemoveObserver(this, "mousewheel.withcontrolkey.numlines");
+  Preferences::RemoveObserver(this, "mousewheel.withcontrolkey.sysnumlines");
+  Preferences::RemoveObserver(this, "mousewheel.withaltkey.action");
+  Preferences::RemoveObserver(this, "mousewheel.withaltkey.numlines");
+  Preferences::RemoveObserver(this, "mousewheel.withaltkey.sysnumlines");
+  Preferences::RemoveObserver(this, "mousewheel.withnokey.action");
+  Preferences::RemoveObserver(this, "mousewheel.withnokey.numlines");
+  Preferences::RemoveObserver(this, "mousewheel.withnokey.sysnumlines");
 #endif
 
-    prefBranch->RemoveObserver("dom.popup_allowed_events", this);
-  }
+  Preferences::RemoveObserver(this, "dom.popup_allowed_events");
 
   m_haveShutdown = PR_TRUE;
   return NS_OK;
