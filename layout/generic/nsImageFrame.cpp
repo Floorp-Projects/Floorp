@@ -1880,17 +1880,16 @@ nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
 NS_IMPL_ISUPPORTS2(nsImageFrame::IconLoad, nsIObserver,
                    imgIDecoderObserver)
 
-static const char kIconLoadPrefs[][40] = {
+static const char* kIconLoadPrefs[] = {
   "browser.display.force_inline_alttext",
-  "browser.display.show_image_placeholders"
+  "browser.display.show_image_placeholders",
+  nsnull
 };
 
 nsImageFrame::IconLoad::IconLoad()
 {
   // register observers
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kIconLoadPrefs); ++i) {
-    Preferences::AddStrongObserver(this, kIconLoadPrefs[i]);
-  }
+  Preferences::AddStrongObservers(this, kIconLoadPrefs);
   GetPrefs();
 }
 
