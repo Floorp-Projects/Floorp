@@ -254,7 +254,6 @@
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -2645,14 +2644,12 @@ nsDOMClassInfo::Init()
   if (nsDOMTouchEvent::PrefEnabled()) {
     DOM_CLASSINFO_MAP_BEGIN(HTMLDocument, nsIDOMHTMLDocument)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTouch)
       DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
     DOM_CLASSINFO_MAP_END
   } else {
     DOM_CLASSINFO_MAP_BEGIN(HTMLDocument, nsIDOMHTMLDocument)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
       DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
     DOM_CLASSINFO_MAP_END
   }
@@ -3146,7 +3143,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(ImageDocument, nsIImageDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIImageDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
     DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -8929,7 +8925,7 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, uintN argc, jsval *vp)
     return JS_FALSE;
   }
 
-  nsCOMPtr<nsIDOMNSHTMLDocument> doc = do_QueryInterface(native);
+  nsCOMPtr<nsIDOMHTMLDocument> doc = do_QueryInterface(native);
   NS_ENSURE_TRUE(doc, JS_FALSE);
 
   nsCAutoString contentType("text/html");
