@@ -112,6 +112,16 @@ members = [
     'nsIDOMDocument.defaultView',
     'nsIDOMDocument.createNodeIterator',
     'nsIDOMDocument.createEvent',
+    'nsIDOMDocument.getElementsByClassName',
+    'nsIDOMDocument.title',
+    'nsIDOMDocument.referrer',
+    'nsIDOMDocument.hasFocus',
+    # This property is treated specially in nsDOMClassInfo in a way that
+    # would shadow any quick stub.  Also, document.location is a special
+    # case for security.
+    #'nsIDOMDocument.location',
+    'nsIDOMDocument.elementFromPoint',
+    'nsIDOMDocument.activeElement',
     'nsIDOMElement.removeAttributeNS',
     'nsIDOMElement.removeAttribute',
     'nsIDOMElement.getAttribute',
@@ -161,15 +171,6 @@ members = [
     'nsIDOMNameList.containsNS',
     'nsIDOMNameList.length',
     'nsIDOMNameList.getNamespaceURI',
-    'nsIDOMNSDocument.getElementsByClassName',
-    'nsIDOMNSDocument.title',
-    'nsIDOMNSDocument.hasFocus',
-    # This property is treated specially in nsDOMClassInfo in a way that
-    # would shadow any quick stub.  Also, document.location is a special
-    # case for security.
-    #'nsIDOMNSDocument.location',
-    'nsIDOMNSDocument.elementFromPoint',
-    'nsIDOMNSDocument.activeElement',
     'nsIDOMXULDocument.getBoxObjectFor',
     'nsIDOMNSElement.*',
 
@@ -235,9 +236,7 @@ members = [
     'nsIDOMHTMLDocument.getElementsByName',
     'nsIDOMHTMLDocument.anchors',
     'nsIDOMHTMLDocument.links',
-    'nsIDOMHTMLDocument.title',
     'nsIDOMHTMLDocument.URL',
-    'nsIDOMHTMLDocument.referrer',
     'nsIDOMHTMLDocument.forms',
     'nsIDOMHTMLDocument.cookie',
     'nsIDOMHTMLDocument.images',
@@ -879,9 +878,6 @@ customMethodCalls = {
         'code': '    nsRefPtr<nsContentList> result ='
                 'self->GetElementsByTagNameNS(arg0, arg1);',
         'canFail': False
-        },
-    'nsIDOMNSDocument_': {
-        'thisType': 'nsDocument'
         },
     'nsIDOMElement_': {
         'thisType': 'nsGenericElement'

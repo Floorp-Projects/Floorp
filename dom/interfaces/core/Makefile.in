@@ -72,7 +72,6 @@ XPIDLSRCS =                                     \
 	nsIDOM3Attr.idl				\
 	nsIDOMDOMStringList.idl			\
 	nsIDOMNameList.idl			\
-	nsIDOMNSDocument.idl			\
 	nsIDOMXMLDocument.idl			\
 	nsIDOMUserDataHandler.idl		\
 	nsIDOMNSEditableElement.idl		\
