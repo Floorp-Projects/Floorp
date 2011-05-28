@@ -732,6 +732,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
   NS_ConvertUTF16toUTF8 type(aType);
   if (type.EqualsIgnoreCase(TEXT_XSL) ||
+      type.EqualsIgnoreCase(APPLICATION_XSLT_XML) ||
       type.EqualsIgnoreCase(TEXT_XML) ||
       type.EqualsIgnoreCase(APPLICATION_XML)) {
     if (aAlternate) {
