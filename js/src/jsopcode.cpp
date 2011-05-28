@@ -2070,20 +2070,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
         token = CodeToken[op];
 
         if (pc + oplen == jp->dvgfence) {
-            StackFrame *fp;
-            uint32 format, mode, type;
-
             /*
              * Rewrite non-get ops to their "get" format if the error is in
              * the bytecode at pc, so we don't decompile more than the error
              * expression.
              */
-            fp = js_GetScriptedCaller(cx, NULL);
-            format = cs->format;
-            if (((fp && pc == fp->pc(cx)) ||
+            FrameRegsIter iter(cx);
+            while (!iter.done() && !iter.fp()->isScriptFrame())
+                ++iter;
+            uint32 format = cs->format;
+            if (((!iter.done() && pc == iter.pc()) ||
                  (pc == startpc && nuses != 0)) &&
                 format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_FOR|JOF_VARPROP)) {
-                mode = JOF_MODE(format);
+                uint32 mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*
                      * JOF_NAME does not imply JOF_ATOM, so we must check for
@@ -2091,7 +2090,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * JSOP_GETARG or JSOP_GETLOCAL appropriately, instead of
                      * to JSOP_NAME.
                      */
-                    type = JOF_TYPE(format);
+                    uint32 type = JOF_TYPE(format);
                     op = (type == JOF_QARG)
                          ? JSOP_GETARG
                          : (type == JOF_LOCAL)

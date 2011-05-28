@@ -90,17 +90,19 @@ StackFrame::prevpcSlow()
 }
 
 jsbytecode *
-StackFrame::pc(JSContext *cx, StackFrame *next)
+StackFrame::pcQuadratic(JSContext *cx)
 {
-    JS_ASSERT_IF(next, next->prev() == this);
-
     StackSegment &seg = cx->stack.space().containingSegment(this);
     FrameRegs &regs = seg.currentRegs();
+
+    /*
+     * This isn't just an optimization; seg->computeNextFrame(fp) is only
+     * defined if fp != seg->currentFrame.
+     */
     if (regs.fp() == this)
         return regs.pc;
-    if (!next)
-        next = seg.computeNextFrame(this);
-    return next->prevpc();
+
+    return seg.computeNextFrame(this)->prevpc();
 }
 
 /*****************************************************************************/
@@ -299,7 +301,7 @@ JS_FRIEND_API(bool)
 StackSpace::bumpCommit(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 {
     if (end_ - from < nvals) {
-        js_ReportOutOfScriptQuota(maybecx);
+        js_ReportOverRecursed(maybecx);
         return false;
     }
 
@@ -317,7 +319,7 @@ StackSpace::bumpCommit(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
     int32 size = static_cast<int32>(newCommit - commitEnd_) * sizeof(Value);
 
     if (!VirtualAlloc(commitEnd_, size, MEM_COMMIT, PAGE_READWRITE)) {
-        js_ReportOutOfScriptQuota(maybecx);
+        js_ReportOverRecursed(maybecx);
         return false;
     }
 
@@ -327,44 +329,15 @@ StackSpace::bumpCommit(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 #endif
 
 bool
-StackSpace::bumpLimitWithinQuota(JSContext *maybecx, StackFrame *fp, Value *sp,
-                                 uintN nvals, Value **limit) const
+StackSpace::tryBumpLimit(JSContext *maybecx, Value *from, uintN nvals, Value **limit)
 {
-    JS_ASSERT(sp >= firstUnused());
-    JS_ASSERT(sp + nvals >= *limit);
-#ifdef XP_WIN
-    Value *quotaEnd = (Value *)fp + STACK_QUOTA;
-    if (sp + nvals < quotaEnd) {
-        if (!ensureSpace(NULL, sp, nvals))
-            goto fail;
-        *limit = Min(quotaEnd, commitEnd_);
-        return true;
-    }
-  fail:
-#endif
-    js_ReportOverRecursed(maybecx);
-    return false;
-}
-
-bool
-StackSpace::bumpLimit(JSContext *cx, StackFrame *fp, Value *sp,
-                      uintN nvals, Value **limit) const
-{
-    JS_ASSERT(*limit > base_);
-    JS_ASSERT(sp < *limit);
-
-    /*
-     * Ideally, we would only ensure space for 'nvals', not 'nvals + remain',
-     * since this is ~500K. However, this whole call should be a rare case: some
-     * script is passing a obscene number of args to 'apply' and we are just
-     * trying to keep the stack limit heuristic from breaking the script.
-     */
-    Value *quota = (Value *)fp + STACK_QUOTA;
-    uintN remain = quota - sp;
-    uintN inc = nvals + remain;
-    if (!ensureSpace(NULL, sp, inc))
+    if (!ensureSpace(maybecx, from, nvals))
         return false;
-    *limit = sp + inc;
+#ifdef XP_WIN
+    *limit = commitEnd_;
+#else
+    *limit = end_;
+#endif
     return true;
 }
 
@@ -664,31 +637,44 @@ ContextStack::notifyIfNoCodeRunning()
 
 /*****************************************************************************/
 
-void
-FrameRegsIter::initSlow()
+FrameRegsIter::FrameRegsIter(JSContext *cx)
+  : cx_(cx)
 {
+    LeaveTrace(cx);
+    seg_ = cx->stack.currentSegment();
     if (!seg_) {
         fp_ = NULL;
         sp_ = NULL;
         pc_ = NULL;
         return;
     }
-
-    JS_ASSERT(seg_->isSuspended());
-    fp_ = seg_->suspendedFrame();
-    sp_ = seg_->suspendedRegs().sp;
-    pc_ = seg_->suspendedRegs().pc;
+    if (!seg_->isActive()) {
+        JS_ASSERT(seg_->isSuspended());
+        fp_ = seg_->suspendedFrame();
+        sp_ = seg_->suspendedRegs().sp;
+        pc_ = seg_->suspendedRegs().pc;
+        return;
+    }
+    fp_ = cx->fp();
+    sp_ = cx->regs().sp;
+    pc_ = cx->regs().pc;
+    return;
 }
 
-/*
- * Using the invariant described in the js::StackSegment comment, we know that,
- * when a pair of prev-linked stack frames are in the same segment, the
- * first frame's address is the top of the prev-frame's stack, modulo missing
- * arguments.
- */
-void
-FrameRegsIter::incSlow(StackFrame *oldfp)
+FrameRegsIter &
+FrameRegsIter::operator++()
 {
+    StackFrame *oldfp = fp_;
+    fp_ = fp_->prev();
+    if (!fp_)
+        return *this;
+
+    if (oldfp != seg_->initialFrame()) {
+        pc_ = oldfp->prevpc();
+        sp_ = oldfp->formalArgsEnd();
+        return *this;
+    }
+
     JS_ASSERT(oldfp == seg_->initialFrame());
     JS_ASSERT(fp_ == oldfp->prev());
 
@@ -714,6 +700,13 @@ FrameRegsIter::incSlow(StackFrame *oldfp)
             f = f->prev();
         }
     }
+    return *this;
+}
+
+bool
+FrameRegsIter::operator==(const FrameRegsIter &rhs) const
+{
+    return done() == rhs.done() && (done() || fp_ == rhs.fp_);
 }
 
 /*****************************************************************************/
