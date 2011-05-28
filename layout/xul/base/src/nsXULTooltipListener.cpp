@@ -49,7 +49,6 @@
 #include "nsMenuPopupFrame.h"
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
-#include "nsIDOMNSDocument.h"
 #include "nsITreeView.h"
 #endif
 #include "nsGUIEvent.h"

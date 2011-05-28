@@ -70,7 +70,6 @@
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMHTMLScriptElement.h"

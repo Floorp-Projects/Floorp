@@ -77,7 +77,6 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIWebProgressListener.h"
 #include "nsIAuthPrompt.h"
 #include "nsIPrompt.h"
@@ -1467,15 +1466,9 @@ nsWebBrowserPersist::GetDocEncoderContentType(nsIDOMDocument *aDocument, const P
     else
     {
         // Get the content type from the document
-        nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(aDocument);
-        if (nsDoc)
-        {
-            nsAutoString type;
-            if (NS_SUCCEEDED(nsDoc->GetContentType(type)) && !type.IsEmpty())
-            {
-                contentType.Assign(type);
-            }
-        }
+        nsAutoString type;
+        if (NS_SUCCEEDED(aDocument->GetContentType(type)) && !type.IsEmpty())
+            contentType.Assign(type);
     }
 
     // Check that an encoder actually exists for the desired output type. The

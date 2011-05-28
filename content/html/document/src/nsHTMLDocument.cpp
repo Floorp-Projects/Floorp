@@ -1147,12 +1147,6 @@ nsHTMLDocument::EndLoad()
   }
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::SetTitle(const nsAString& aTitle)
-{
-  return nsDocument::SetTitle(aTitle);
-}
-
 Element*
 nsHTMLDocument::GetImageMap(const nsAString& aMapName)
 {
@@ -1195,18 +1189,6 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 //
 // nsIDOMHTMLDocument interface implementation
 //
-NS_IMETHODIMP
-nsHTMLDocument::GetTitle(nsAString& aTitle)
-{
-  return nsDocument::GetTitle(aTitle);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetReferrer(nsAString& aReferrer)
-{
-  return nsDocument::GetReferrer(aReferrer);
-}
-
 void
 nsHTMLDocument::GetDomainURI(nsIURI **aURI)
 {

@@ -50,11 +50,9 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(a48d2e22-e0e7-49eb-bfd2-71386595cd9a)]
+[scriptable, uuid(aaa9dc9d-ed31-4fe0-82df-e4b4886feee1)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
-           attribute DOMString            title;
-  readonly attribute DOMString            referrer;
   // domain is readonly per spec, but it's settable in
   // nsIDOMNSHTMLDocument
   [noscript] readonly attribute DOMString domain;

@@ -82,7 +82,6 @@
 #include "nsIScriptObjectOwner.h" // for nsIScriptEventHandlerOwner
 #include "nsFocusManager.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNSDocument.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsIDOMEventGroup.h"

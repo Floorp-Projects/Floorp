@@ -128,9 +128,6 @@ public:
   NS_FORWARD_NSIDOMNODE(nsDocument::)
 
   // nsIDOMHTMLDocument interface
-  NS_IMETHOD GetTitle(nsAString & aTitle);
-  NS_IMETHOD SetTitle(const nsAString & aTitle);
-  NS_IMETHOD GetReferrer(nsAString & aReferrer);
   NS_IMETHOD GetURL(nsAString & aURL);
   NS_IMETHOD GetBody(nsIDOMHTMLElement * *aBody);
   NS_IMETHOD SetBody(nsIDOMHTMLElement * aBody);
