@@ -52,12 +52,8 @@
 #include "nsRefPtrHashtable.h"
 #include "nsURIHashKey.h"
 #include "nsXULPrototypeDocument.h"
-#include "nsIInputStream.h"
-#include "nsIStorageStream.h"
-#include "mozilla/scache/StartupCache.h"
 
-using namespace mozilla::scache;
-
+class nsIFastLoadService;
 class nsCSSStyleSheet;
 
 struct CacheScriptEntry
@@ -72,7 +68,7 @@ struct CacheScriptEntry
  *
  * The cache has two levels:
  *  1. In-memory hashtables
- *  2. The on-disk cache file.
+ *  2. The on-disk fastload file.
  */
 class nsXULPrototypeCache : public nsIXULPrototypeCache,
                                    nsIObserver
@@ -86,7 +82,7 @@ public:
     virtual PRBool IsCached(nsIURI* aURI) {
         return GetPrototype(aURI) != nsnull;
     }
-    virtual void AbortCaching();
+    virtual void AbortFastLoads();
 
 
     /**
@@ -100,6 +96,16 @@ public:
      */
     void Flush();
 
+    /**
+     * Remove a XUL document from the set of loading documents.
+     */
+    void RemoveFromFastLoadSet(nsIURI* aDocumentURI);
+
+    /**
+     * Write the XUL prototype document to fastload file. The proto must be
+     * fully loaded.
+     */
+    nsresult WritePrototype(nsXULPrototypeDocument* aPrototypeDocument);
 
     // The following methods are used to put and retrive various items into and
     // from the cache.
@@ -129,30 +135,9 @@ public:
      */
     nsresult PutStyleSheet(nsCSSStyleSheet* aStyleSheet);
 
-    /**
-     * Remove a XUL document from the set of loading documents.
-     */
-    void RemoveFromCacheSet(nsIURI* aDocumentURI);
-
-    /**
-     * Write the XUL prototype document to a cache file. The proto must be
-     * fully loaded.
-     */
-    nsresult WritePrototype(nsXULPrototypeDocument* aPrototypeDocument);
-
-    /**
-     * This interface allows partial reads and writes from the buffers in the
-     * startupCache.
-     */
-    nsresult GetInputStream(nsIURI* aURI, nsIObjectInputStream** objectInput);
-    nsresult FinishInputStream(nsIURI* aURI);
-    nsresult GetOutputStream(nsIURI* aURI, nsIObjectOutputStream** objectOutput);
-    nsresult FinishOutputStream(nsIURI* aURI);
-    nsresult HasData(nsIURI* aURI, PRBool* exists);
-
-    static StartupCache* GetStartupCache();
 
     static nsXULPrototypeCache* GetInstance();
+    static nsIFastLoadService* GetFastLoadService();
 
     static void ReleaseGlobals()
     {
@@ -177,16 +162,16 @@ protected:
     nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo>  mXBLDocTable;
 
     ///////////////////////////////////////////////////////////////////////////
-    // StartupCache
+    // FastLoad
     // this is really a hash set, with a dummy data parameter
-    nsDataHashtable<nsURIHashKey,PRUint32> mCacheURITable;
+    nsDataHashtable<nsURIHashKey,PRUint32> mFastLoadURITable;
 
-    static StartupCache* gStartupCache;
-    nsInterfaceHashtable<nsURIHashKey, nsIStorageStream> mOutputStreamTable;
-    nsInterfaceHashtable<nsURIHashKey, nsIObjectInputStream> mInputStreamTable;
- 
-    // Bootstrap caching service
-    nsresult BeginCaching(nsIURI* aDocumentURI);
+    static nsIFastLoadService*    gFastLoadService;
+    static nsIFile*               gFastLoadFile;
+
+    // Bootstrap FastLoad Service
+    nsresult StartFastLoad(nsIURI* aDocumentURI);
+    nsresult StartFastLoadingURI(nsIURI* aURI, PRInt32 aDirectionFlags);
 };
 
 #endif // nsXULPrototypeCache_h__
