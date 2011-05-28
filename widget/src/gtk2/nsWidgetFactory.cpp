@@ -62,8 +62,8 @@
 #include "nsDeviceContextSpecG.h"
 #endif
 
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
+#include "mozilla/Preferences.h"
+
 #include "nsImageToPixbuf.h"
 #include "nsPrintDialogGTK.h"
 
@@ -80,6 +80,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsAutoPtr.h"
 #include <gtk/gtk.h>
+
+using namespace mozilla;
 
 /* from nsFilePicker.js */
 #define XULFILEPICKER_CID \
@@ -164,17 +166,9 @@ nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  PRBool allowPlatformPicker = PR_TRUE;
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    PRBool prefAllow;
-    nsresult rv = prefs->GetBoolPref("ui.allow_platform_file_picker",
-                                     &prefAllow);
-    if (NS_SUCCEEDED(rv)) {
-        allowPlatformPicker = prefAllow;
-    }
-  }
-  
+  PRBool allowPlatformPicker =
+      Preferences::GetBool("ui.allow_platform_file_picker", PR_TRUE);
+
   nsCOMPtr<nsIFilePicker> picker;
   if (allowPlatformPicker && gtk_check_version(2,6,3) == NULL) {
       picker = new nsFilePicker;
