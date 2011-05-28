@@ -204,7 +204,7 @@ public:
   bool ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
                                    nsIURI*            aURL,
                                    PRUint32           aLineNumber,
-                                   nsTArray<float>&   aSelectorList);
+                                   InfallibleTArray<float>& aSelectorList);
 
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this

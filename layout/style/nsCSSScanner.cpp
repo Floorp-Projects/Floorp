@@ -274,7 +274,6 @@ nsCSSToken::AppendToString(nsString& aBuffer)
 
 nsCSSScanner::nsCSSScanner()
   : mReadPointer(nsnull)
-  , mLowLevelError(NS_OK)
   , mSVGMode(false)
 #ifdef CSS_REPORT_PARSE_ERRORS
   , mError(mErrorBuf, ArrayLength(mErrorBuf), 0)
@@ -299,20 +298,6 @@ nsCSSScanner::~nsCSSScanner()
   if (mLocalPushback != mPushback) {
     delete [] mPushback;
   }
-}
-
-nsresult
-nsCSSScanner::GetLowLevelError()
-{
-  return mLowLevelError;
-}
-
-void
-nsCSSScanner::SetLowLevelError(nsresult aErrorCode)
-{
-  NS_ASSERTION(aErrorCode != NS_OK, "SetLowLevelError() used to clear error");
-  NS_ASSERTION(mLowLevelError == NS_OK, "there is already a low-level error");
-  mLowLevelError = aErrorCode;
 }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -385,7 +370,6 @@ nsCSSScanner::Init(const nsAString& aBuffer,
   // Reset variables that we use to keep track of our progress through the input
   mOffset = 0;
   mPushbackCount = 0;
-  mLowLevelError = NS_OK;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   mColNumber = 0;
