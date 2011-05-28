@@ -969,8 +969,7 @@ mozJSComponentLoader::WriteScript(StartupCache* cache, JSObject *scriptObj,
     nsCOMPtr<nsIObjectOutputStream> oos;
     nsCOMPtr<nsIStorageStream> storageStream; 
     rv = NS_NewObjectOutputWrappedStorageStream(getter_AddRefs(oos),
-                                                getter_AddRefs(storageStream),
-                                                true);
+                                                getter_AddRefs(storageStream));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = WriteScriptToStream(cx, scriptObj, oos);
