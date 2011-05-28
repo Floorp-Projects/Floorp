@@ -2582,6 +2582,55 @@ nsContentUtils::IsDraggableLink(const nsIContent* aContent) {
   return aContent->IsLink(getter_AddRefs(absURI));
 }
 
+// static
+nsAdoptingCString
+nsContentUtils::GetCharPref(const char *aPref)
+{
+  nsAdoptingCString result;
+
+  if (sPrefBranch) {
+    sPrefBranch->GetCharPref(aPref, getter_Copies(result));
+  }
+
+  return result;
+}
+
+// static
+nsAdoptingString
+nsContentUtils::GetLocalizedStringPref(const char *aPref)
+{
+  nsAdoptingString result;
+
+  if (sPrefBranch) {
+    nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
+    sPrefBranch->GetComplexValue(aPref, NS_GET_IID(nsIPrefLocalizedString),
+                                 getter_AddRefs(prefLocalString));
+    if (prefLocalString) {
+      prefLocalString->GetData(getter_Copies(result));
+    }
+  }
+
+  return result;
+}
+
+// static
+nsAdoptingString
+nsContentUtils::GetStringPref(const char *aPref)
+{
+  nsAdoptingString result;
+
+  if (sPrefBranch) {
+    nsCOMPtr<nsISupportsString> theString;
+    sPrefBranch->GetComplexValue(aPref, NS_GET_IID(nsISupportsString),
+                                 getter_AddRefs(theString));
+    if (theString) {
+      theString->ToString(getter_Copies(result));
+    }
+  }
+
+  return result;
+}
+
 // RegisterPrefCallback/UnregisterPrefCallback are for backward compatiblity
 // with c-style observers.
 
@@ -4411,7 +4460,7 @@ nsContentUtils::GetLocalizedEllipsis()
 {
   static PRUnichar sBuf[4] = { 0, 0, 0, 0 };
   if (!sBuf[0]) {
-    nsAdoptingString tmp = Preferences::GetLocalizedString("intl.ellipsis");
+    nsAutoString tmp(GetLocalizedStringPref("intl.ellipsis"));
     PRUint32 len = NS_MIN(PRUint32(tmp.Length()),
                           PRUint32(NS_ARRAY_LENGTH(sBuf) - 1));
     CopyUnicodeTo(tmp, 0, sBuf, len);

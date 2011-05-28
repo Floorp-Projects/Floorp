@@ -59,9 +59,6 @@ extern "C" {
 }
 #include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
 
 #if defined(XP_MACOSX)
 #define SA_PER_STREAM_VOLUME 1
@@ -324,7 +321,8 @@ static mozilla::Mutex* gVolumeScaleLock = nsnull;
 static double gVolumeScale = 1.0;
 
 static int VolumeScaleChanged(const char* aPref, void *aClosure) {
-  nsAdoptingString value = Preferences::GetString("media.volume_scale");
+  nsAdoptingString value =
+    nsContentUtils::GetStringPref("media.volume_scale");
   mozilla::MutexAutoLock lock(*gVolumeScaleLock);
   if (value.IsEmpty()) {
     gVolumeScale = 1.0;

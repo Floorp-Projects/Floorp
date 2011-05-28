@@ -55,12 +55,15 @@
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
 #include "nsCRT.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "nsFontMetrics.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIViewManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIServiceManager.h"
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsGfxCIID.h"
@@ -87,8 +90,6 @@
 #include "LayerManagerOGL.h"
 #include "GLContext.h"
 
-#include "mozilla/Preferences.h"
-
 #include <dlfcn.h>
 
 #include <ApplicationServices/ApplicationServices.h>
@@ -96,7 +97,6 @@
 using namespace mozilla::layers;
 using namespace mozilla::gl;
 using namespace mozilla::widget;
-using namespace mozilla;
 
 #undef DEBUG_IME
 #undef DEBUG_UPDATE
@@ -2938,8 +2938,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!gRollupWidget)
     return;
 
-  if (Preferences::GetBool("ui.use_native_popup_windows", PR_FALSE)) {
-    return;
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool useNativeContextMenus;
+    nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows", &useNativeContextMenus);
+    if (NS_SUCCEEDED(rv) && useNativeContextMenus)
+      return;
   }
 
   NSWindow *popupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
@@ -3762,8 +3766,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   float scrollDelta = 0;
   float scrollDeltaPixels = 0;
-  PRBool checkPixels =
-    Preferences::GetBool("mousewheel.enable_pixel_scrolling", PR_TRUE);
+  PRBool checkPixels = PR_TRUE;
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs)
+    prefs->GetBoolPref("mousewheel.enable_pixel_scrolling", &checkPixels);
 
   // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
   // assertion and an Objective-C NSInternalInconsistencyException if the
