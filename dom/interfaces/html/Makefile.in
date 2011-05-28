@@ -124,7 +124,6 @@ XPIDLSRCS = 					\
 	nsIDOMNSHTMLElement.idl			\
 	nsIDOMNSHTMLFormElement.idl		\
 	nsIDOMNSHTMLFrameElement.idl		\
-	nsIDOMNSHTMLHRElement.idl		\
 	nsIDOMNSHTMLOptionCollectn.idl		\
 	nsIDOMNSHTMLTextAreaElement.idl		\
 	$(NULL)
