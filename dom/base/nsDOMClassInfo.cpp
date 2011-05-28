@@ -278,7 +278,6 @@
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIDOMNSHTMLFrameElement.h"
 #include "nsIDOMHTMLHRElement.h"
-#include "nsIDOMNSHTMLHRElement.h"
 #include "nsIDOMHTMLHeadElement.h"
 #include "nsIDOMHTMLHeadingElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
@@ -2768,7 +2767,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLHRElement, nsIDOMHTMLHRElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLHRElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLHRElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
