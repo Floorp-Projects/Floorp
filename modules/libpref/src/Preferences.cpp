@@ -1197,4 +1197,40 @@ Preferences::RemoveObserver(nsIObserver* aObserver,
   return sPreferences->mRootBranch->RemoveObserver(aPref, aObserver);
 }
 
+// static
+nsresult
+Preferences::AddStrongObservers(nsIObserver* aObserver,
+                                const char** aPrefs)
+{
+  for (PRUint32 i = 0; aPrefs[i]; i++) {
+    nsresult rv = AddStrongObserver(aObserver, aPrefs[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+// static
+nsresult
+Preferences::AddWeakObservers(nsIObserver* aObserver,
+                              const char** aPrefs)
+{
+  for (PRUint32 i = 0; aPrefs[i]; i++) {
+    nsresult rv = AddWeakObserver(aObserver, aPrefs[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+// static
+nsresult
+Preferences::RemoveObservers(nsIObserver* aObserver,
+                             const char** aPrefs)
+{
+  for (PRUint32 i = 0; aPrefs[i]; i++) {
+    nsresult rv = RemoveObserver(aObserver, aPrefs[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
 } // namespace mozilla
