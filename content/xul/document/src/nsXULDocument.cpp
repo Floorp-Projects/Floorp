@@ -289,11 +289,12 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kNC_attribute);
         NS_IF_RELEASE(kNC_value);
 
-        // Remove the current document here from the table in
+        // Remove the current document here from the FastLoad table in
         // case the document did not make it past StartLayout in
-        // ResumeWalk. 
+        // ResumeWalk. The FastLoad table must be clear of entries so
+        // that the FastLoad file footer can be properly written.
         if (mDocumentURI)
-            nsXULPrototypeCache::GetInstance()->RemoveFromCacheSet(mDocumentURI);
+            nsXULPrototypeCache::GetInstance()->RemoveFromFastLoadSet(mDocumentURI);
     }
 }
 
@@ -450,7 +451,7 @@ nsXULDocument::SetContentType(const nsAString& aContentType)
 }
 
 // This is called when the master document begins loading, whether it's
-// being cached or not.
+// fastloaded or not.
 nsresult
 nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
@@ -493,9 +494,9 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     // to trigger the fail-safe parse-from-disk solution. Example failure cases
     // (for reference) include:
     //
-    // NS_ERROR_NOT_AVAILABLE: the URI cannot be found in the startup cache,
+    // NS_ERROR_NOT_AVAILABLE: the URI cannot be found in the FastLoad cache,
     //                         parse from disk
-    // other: the startup cache file could not be found, probably
+    // other: the FastLoad cache file, XUL.mfl, could not be found, probably
     //        due to being accessed before a profile has been selected (e.g.
     //        loading chrome for the profile manager itself). This must be
     //        parsed from disk.
