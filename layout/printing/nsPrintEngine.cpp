@@ -113,7 +113,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsISelectionListener.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLElement.h"
@@ -1189,7 +1188,7 @@ nsPrintEngine::GetDocumentTitleAndURL(nsIDocument* aDoc,
   *aURLStr = nsnull;
 
   nsAutoString docTitle;
-  nsCOMPtr<nsIDOMNSDocument> doc = do_QueryInterface(aDoc);
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDoc);
   doc->GetTitle(docTitle);
   if (!docTitle.IsEmpty()) {
     *aTitle = ToNewUnicode(docTitle);

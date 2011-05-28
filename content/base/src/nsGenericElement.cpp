@@ -94,9 +94,7 @@
 #include "nsXBLBinding.h"
 #include "nsIXBLService.h"
 #include "nsPIDOMWindow.h"
-#include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMNSElement.h"
 #include "nsClientRect.h"
 #ifdef MOZ_SVG
