@@ -193,6 +193,17 @@ public:
   static nsresult AddWeakObserver(nsIObserver* aObserver, const char* aPref);
   static nsresult RemoveObserver(nsIObserver* aObserver, const char* aPref);
 
+  /**
+   * Adds/Removes two or more observers for the root pref branch.
+   * Pass to aPrefs an array of const char* whose last item is NULL.
+   */
+  static nsresult AddStrongObservers(nsIObserver* aObserver,
+                                     const char** aPrefs);
+  static nsresult AddWeakObservers(nsIObserver* aObserver,
+                                   const char** aPrefs);
+  static nsresult RemoveObservers(nsIObserver* aObserver,
+                                  const char** aPrefs);
+
 protected:
   nsresult NotifyServiceObservers(const char *aSubject);
   nsresult UseDefaultPrefFile();
