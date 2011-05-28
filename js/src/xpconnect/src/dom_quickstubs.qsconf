@@ -242,6 +242,9 @@ members = [
     'nsIDOMHTMLDocument.images',
     'nsIDOMHTMLDocument.write',
     'nsIDOMHTMLDocument.writeln',
+    'nsIDOMHTMLDocument.domain',
+    'nsIDOMHTMLDocument.getSelection',
+    'nsIDOMHTMLDocument.designMode',
     'nsIDOMHTMLElement.*',
     'nsIDOMHTMLFormElement.elements',
     'nsIDOMHTMLFormElement.name',
@@ -335,9 +338,6 @@ members = [
     'nsIDOMHTMLCanvasElement.height',
     'nsIDOMHTMLCanvasElement.getContext',
     'nsIDOMHTMLCanvasElement.toDataURL',
-    'nsIDOMNSHTMLDocument.domain',
-    'nsIDOMNSHTMLDocument.getSelection',
-    'nsIDOMNSHTMLDocument.designMode',
     'nsIDOMNSHTMLElement.contentEditable',
     'nsIDOMNSHTMLElement.isContentEditable',
     'nsIDOMNSHTMLElement.offsetParent',
@@ -668,9 +668,6 @@ customMethodCalls = {
         'code': '    nsRefPtr<nsContentList> result = '
                 'self->GetElementsByName(arg0);',
         'canFail': False
-        },
-    'nsIDOMNSHTMLDocument_': {
-        'thisType': 'nsHTMLDocument'
         },
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode

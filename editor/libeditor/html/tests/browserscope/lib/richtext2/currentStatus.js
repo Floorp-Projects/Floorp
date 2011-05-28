@@ -4484,7 +4484,7 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         }
       },
       "FB:BQ_BR.BR-1_SM": {
@@ -4515,7 +4515,7 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         }
       },
       "BC:blue_TEXT-1_SI": {
@@ -4861,7 +4861,7 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         }
       },
       "JC_TEXT-1_SC": {
@@ -13657,14 +13657,14 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004003 (NS_ERROR_INVALID_POINTER)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004003 (NS_ERROR_INVALID_POINTER)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004003 (NS_ERROR_INVALID_POINTER)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004003 (NS_ERROR_INVALID_POINTER)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         }
       },
       "DIV:ce:false-1_SL": {
@@ -16656,21 +16656,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         }
       },
       "IIMG:._IMG-1_SO": {
@@ -16679,21 +16679,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.execCommand]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 143\"  data: no]"
         }
       },
       "IOL_TEXT-1_SC": {
@@ -17021,21 +17021,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "UNSELECT_TEXT-1": {
@@ -17044,21 +17044,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "UNDO_TEXT-1": {
@@ -17067,21 +17067,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "REDO_TEXT-1": {
@@ -17090,21 +17090,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "BOLD_TEXT-1": {
@@ -17113,21 +17113,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "BOLD_B": {
@@ -17136,21 +17136,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "ITALIC_TEXT-1": {
@@ -17159,21 +17159,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "ITALIC_I": {
@@ -17182,21 +17182,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "UNDERLINE_TEXT-1": {
@@ -17205,21 +17205,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "STRIKETHROUGH_TEXT-1": {
@@ -17228,21 +17228,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "SUBSCRIPT_TEXT-1": {
@@ -17251,21 +17251,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "SUPERSCRIPT_TEXT-1": {
@@ -17274,21 +17274,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "FORMATBLOCK_TEXT-1": {
@@ -17297,21 +17297,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "CREATELINK_TEXT-1": {
@@ -17320,21 +17320,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "UNLINK_TEXT-1": {
@@ -17343,21 +17343,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INSERTHTML_TEXT-1": {
@@ -17366,21 +17366,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INSERTHORIZONTALRULE_TEXT-1": {
@@ -17389,21 +17389,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INSERTIMAGE_TEXT-1": {
@@ -17412,21 +17412,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INSERTLINEBREAK_TEXT-1": {
@@ -17435,21 +17435,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INSERTPARAGRAPH_TEXT-1": {
@@ -17458,21 +17458,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INSERTORDEREDLIST_TEXT-1": {
@@ -17481,21 +17481,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INSERTUNORDEREDLIST_TEXT-1": {
@@ -17504,21 +17504,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INSERTTEXT_TEXT-1": {
@@ -17527,21 +17527,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "DELETE_TEXT-1": {
@@ -17550,21 +17550,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "FORWARDDELETE_TEXT-1": {
@@ -17573,21 +17573,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "STYLEWITHCSS_TEXT-1": {
@@ -17596,21 +17596,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "CONTENTREADONLY_TEXT-1": {
@@ -17619,21 +17619,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "BACKCOLOR_TEXT-1": {
@@ -17642,21 +17642,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "FORECOLOR_TEXT-1": {
@@ -17665,21 +17665,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "HILITECOLOR_TEXT-1": {
@@ -17688,21 +17688,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "FONTNAME_TEXT-1": {
@@ -17711,21 +17711,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "FONTSIZE_TEXT-1": {
@@ -17734,21 +17734,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INCREASEFONTSIZE_TEXT-1": {
@@ -17757,21 +17757,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "DECREASEFONTSIZE_TEXT-1": {
@@ -17780,21 +17780,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "HEADING_TEXT-1": {
@@ -17803,21 +17803,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "INDENT_TEXT-1": {
@@ -17826,21 +17826,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "OUTDENT_TEXT-1": {
@@ -17849,21 +17849,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "CREATEBOOKMARK_TEXT-1": {
@@ -17872,21 +17872,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "UNBOOKMARK_TEXT-1": {
@@ -17895,21 +17895,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "JUSTIFYCENTER_TEXT-1": {
@@ -17918,21 +17918,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "JUSTIFYFULL_TEXT-1": {
@@ -17941,21 +17941,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "JUSTIFYLEFT_TEXT-1": {
@@ -17964,21 +17964,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "JUSTIFYRIGHT_TEXT-1": {
@@ -17987,21 +17987,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "REMOVEFORMAT_TEXT-1": {
@@ -18010,21 +18010,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "COPY_TEXT-1": {
@@ -18033,21 +18033,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "CUT_TEXT-1": {
@@ -18056,21 +18056,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "PASTE_TEXT-1": {
@@ -18079,21 +18079,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       },
       "garbage-1_TEXT-1": {
@@ -18102,21 +18102,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandSupported]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 148\"  data: no]"
         }
       }
     }
@@ -18152,21 +18152,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         }
       },
       "UNDO_TEXT-1": {
@@ -18497,21 +18497,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         }
       },
       "INSERTPARAGRAPH_TEXT-1": {
@@ -18589,21 +18589,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         }
       },
       "DELETE_TEXT-1": {
@@ -18635,21 +18635,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         }
       },
       "STYLEWITHCSS_TEXT-1": {
@@ -18934,21 +18934,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         }
       },
       "UNBOOKMARK_TEXT-1": {
@@ -18957,21 +18957,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         }
       },
       "JUSTIFYCENTER_TEXT-1": {
@@ -19164,21 +19164,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandEnabled]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 150\"  data: no]"
         }
       }
     }
@@ -19191,21 +19191,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "UNSELECT_TEXT-1": {
@@ -19214,21 +19214,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "UNDO_TEXT-1": {
@@ -19237,21 +19237,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "REDO_TEXT-1": {
@@ -19260,21 +19260,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "BOLD_TEXT-1": {
@@ -19421,21 +19421,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "CREATELINK_TEXT-1": {
@@ -19444,21 +19444,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "UNLINK_TEXT-1": {
@@ -19490,21 +19490,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "INSERTHORIZONTALRULE_TEXT-1": {
@@ -19513,21 +19513,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "INSERTIMAGE_TEXT-1": {
@@ -19536,21 +19536,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "INSERTLINEBREAK_TEXT-1": {
@@ -19559,21 +19559,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "INSERTPARAGRAPH_TEXT-1": {
@@ -19651,21 +19651,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "DELETE_TEXT-1": {
@@ -19674,21 +19674,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "FORWARDDELETE_TEXT-1": {
@@ -19697,21 +19697,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "STYLEWITHCSS_TEXT-1": {
@@ -19720,21 +19720,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "CONTENTREADONLY_TEXT-1": {
@@ -19743,21 +19743,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "BACKCOLOR_TEXT-1": {
@@ -19881,21 +19881,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "DECREASEFONTSIZE_TEXT-1": {
@@ -19904,21 +19904,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "HEADING_TEXT-1": {
@@ -19927,21 +19927,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "INDENT_TEXT-1": {
@@ -19950,21 +19950,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "OUTDENT_TEXT-1": {
@@ -19973,21 +19973,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "CREATEBOOKMARK_TEXT-1": {
@@ -19996,21 +19996,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "UNBOOKMARK_TEXT-1": {
@@ -20019,21 +20019,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "JUSTIFYCENTER_TEXT-1": {
@@ -20134,21 +20134,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "COPY_TEXT-1": {
@@ -20157,21 +20157,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "CUT_TEXT-1": {
@@ -20180,21 +20180,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "PASTE_TEXT-1": {
@@ -20203,21 +20203,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       },
       "garbage-1_TEXT-1": {
@@ -20226,21 +20226,21 @@ const TEST_RESULTS = {
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "body": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         },
         "div": {
           "valscore": 0,
           "selscore": 0,
           "valresult": 2,
           "selresult": 3,
-          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMNSHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
+          "output": "EXECUTION EXCEPTION: [Exception... \"Component returned failure code: 0x80004001 (NS_ERROR_NOT_IMPLEMENTED) [nsIDOMHTMLDocument.queryCommandIndeterm]\"  nsresult: \"0x80004001 (NS_ERROR_NOT_IMPLEMENTED)\"  location: \"JS frame :: http://mochi.test:8888/tests/editor/libeditor/html/tests/browserscope/lib/richtext2/richtext2/static/js/run.js :: runSingleTest :: line 152\"  data: no]"
         }
       }
     }

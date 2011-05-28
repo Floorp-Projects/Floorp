@@ -43,7 +43,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIDOMNSHTMLDocument.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMDocument.h"
@@ -714,9 +714,8 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
 
         if (htmlDoc && htmlDoc->IsWriting())
         {
-          nsCOMPtr<nsIDOMNSHTMLDocument> htmlDomDoc(do_QueryInterface(doc));
+          nsCOMPtr<nsIDOMHTMLDocument> htmlDomDoc = do_QueryInterface(doc);
           nsAutoString designMode;
-
           htmlDomDoc->GetDesignMode(designMode);
 
           if (designMode.EqualsLiteral("on"))
