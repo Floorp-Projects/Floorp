@@ -50,15 +50,10 @@ NS_NewObjectInputStreamFromBuffer(char* buffer, PRUint32 len,
                                   nsIObjectInputStream** stream);
 
 // We can't retrieve the wrapped stream from the objectOutputStream later,
-// so we return it here. We give callers in debug builds the option 
-// to wrap the outputstream in a debug stream, which will detect if
-// non-singleton objects are written out multiple times during a serialization.
-// This could cause them to be deserialized incorrectly (as multiple copies
-// instead of references).
+// so we return it here.
 NS_EXPORT nsresult
 NS_NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
-                                       nsIStorageStream** stream,
-                                       PRBool wantDebugStream);
+                                       nsIStorageStream** stream);
 
 NS_EXPORT nsresult
 NS_NewBufferFromStorageStream(nsIStorageStream *storageStream, 
