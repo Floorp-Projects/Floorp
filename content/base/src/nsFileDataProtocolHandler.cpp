@@ -161,12 +161,23 @@ public:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
+static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
+                     NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
+
 NS_IMPL_ADDREF_INHERITED(nsFileDataURI, nsSimpleURI)
 NS_IMPL_RELEASE_INHERITED(nsFileDataURI, nsSimpleURI)
+
 NS_INTERFACE_MAP_BEGIN(nsFileDataURI)
   NS_INTERFACE_MAP_ENTRY(nsIURIWithPrincipal)
   if (aIID.Equals(kFILEDATAURICID))
-      foundInterface = static_cast<nsIURI*>(this);
+    foundInterface = static_cast<nsIURI*>(this);
+  else if (aIID.Equals(kThisSimpleURIImplementationCID)) {
+    // Need to return explicitly here, because if we just set foundInterface
+    // to null the NS_INTERFACE_MAP_END_INHERITING will end up calling into
+    // nsSimplURI::QueryInterface and finding something for this CID.
+    *aInstancePtr = nsnull;
+    return NS_NOINTERFACE;
+  }
   else
 NS_INTERFACE_MAP_END_INHERITING(nsSimpleURI)
 
