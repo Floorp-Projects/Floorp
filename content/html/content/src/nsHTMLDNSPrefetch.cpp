@@ -54,7 +54,6 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
 #include "nsICancelable.h"
-#include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
@@ -97,8 +96,8 @@ nsHTMLDNSPrefetch::Initialize()
 
   sPrefetches->Activate();
 
-  nsContentUtils::AddBoolPrefVarCache("network.dns.disablePrefetchFromHTTPS", 
-                                      &sDisablePrefetchHTTPSPref);
+  Preferences::AddBoolVarCache(&sDisablePrefetchHTTPSPref,
+                               "network.dns.disablePrefetchFromHTTPS");
   
   // Default is false, so we need an explicit call to prime the cache.
   sDisablePrefetchHTTPSPref = 

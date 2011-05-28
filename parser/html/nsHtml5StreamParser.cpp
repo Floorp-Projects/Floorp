@@ -65,10 +65,10 @@ PRInt32 nsHtml5StreamParser::sTimerSubsequentDelay = 120;
 void
 nsHtml5StreamParser::InitializeStatics()
 {
-  nsContentUtils::AddIntPrefVarCache("html5.flushtimer.initialdelay",
-                                     &sTimerInitialDelay);
-  nsContentUtils::AddIntPrefVarCache("html5.flushtimer.subsequentdelay",
-                                     &sTimerSubsequentDelay);
+  Preferences::AddIntVarCache(&sTimerInitialDelay,
+                              "html5.flushtimer.initialdelay");
+  Preferences::AddIntVarCache(&sTimerSubsequentDelay,
+                              "html5.flushtimer.subsequentdelay");
 }
 
 /*

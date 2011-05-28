@@ -57,6 +57,11 @@ class nsString;
 class nsAdoptingString;
 class nsAdoptingCString;
 
+#ifndef have_PrefChangedFunc_typedef
+typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
+#define have_PrefChangedFunc_typedef
+#endif
+
 namespace mozilla {
 
 class Preferences : public nsIPrefService,
@@ -203,6 +208,32 @@ public:
                                    const char** aPrefs);
   static nsresult RemoveObservers(nsIObserver* aObserver,
                                   const char** aPrefs);
+
+  /**
+   * Registers/Unregisters the callback function for the aPref.
+   */
+  static nsresult RegisterCallback(PrefChangedFunc aCallback,
+                                   const char* aPref,
+                                   void* aClosure = nsnull);
+  static nsresult UnregisterCallback(PrefChangedFunc aCallback,
+                                     const char* aPref,
+                                     void* aClosure = nsnull);
+
+  /**
+   * Adds the aVariable to cache table.  aVariable must be a pointer for a
+   * static variable.  The value will be modified when the pref value is
+   * changed but note that even if you modified it, the value isn't assigned to
+   * the pref.
+   */
+  static nsresult AddBoolVarCache(PRBool* aVariable,
+                                  const char* aPref,
+                                  PRBool aDefault = PR_FALSE);
+  static nsresult AddIntVarCache(PRInt32* aVariable,
+                                 const char* aPref,
+                                 PRInt32 aDefault = 0);
+  static nsresult AddUintVarCache(PRUint32* aVariable,
+                                  const char* aPref,
+                                  PRUint32 aDefault = 0);
 
 protected:
   nsresult NotifyServiceObservers(const char *aSubject);
