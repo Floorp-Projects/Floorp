@@ -821,13 +821,8 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     // Allow the script to continue running
 
     if (neverShowDlgChk) {
-      nsIPrefBranch *prefBranch = nsContentUtils::GetPrefBranch();
-
-      if (prefBranch) {
-        prefBranch->SetIntPref(isTrackingChromeCodeTime ?
-                               "dom.max_chrome_script_run_time" :
-                               "dom.max_script_run_time", 0);
-      }
+      Preferences::SetInt(isTrackingChromeCodeTime ?
+        "dom.max_chrome_script_run_time" : "dom.max_script_run_time", 0);
     }
 
     ctx->mOperationCallbackTime = PR_Now();

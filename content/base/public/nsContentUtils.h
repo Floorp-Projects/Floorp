@@ -571,10 +571,6 @@ public:
                                   PRBool aDefault = PR_FALSE);
   static void AddIntPrefVarCache(const char* aPref, PRInt32* aVariable,
                                  PRInt32 aDefault = 0);
-  static nsIPrefBranch2 *GetPrefBranch()
-  {
-    return sPrefBranch;
-  }
 
   // Get a permission-manager setting for the given uri and type.
   // If the pref doesn't exist or if it isn't ALLOW_ACTION, PR_FALSE is
