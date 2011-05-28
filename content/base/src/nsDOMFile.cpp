@@ -64,7 +64,6 @@
 #include "nsStringStream.h"
 #include "CheckedInt.h"
 #include "nsJSUtils.h"
-#include "mozilla/Preferences.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -500,12 +499,12 @@ nsDOMFile::GuessCharset(nsIInputStream *aStream,
                         "universal_charset_detector");
   if (!detector) {
     // No universal charset detector, try the default charset detector
-    const nsAdoptingCString& detectorName =
-      Preferences::GetLocalizedCString("intl.charset.detector");
+    const nsAdoptingString& detectorName =
+      nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
     if (!detectorName.IsEmpty()) {
       nsCAutoString detectorContractID;
       detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
-      detectorContractID += detectorName;
+      AppendUTF16toUTF8(detectorName, detectorContractID);
       detector = do_CreateInstance(detectorContractID.get());
     }
   }

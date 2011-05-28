@@ -52,8 +52,11 @@
 #include "nsIBaseWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsToolkit.h"
 #include "nsPrintfCString.h"
+#include "nsIServiceManager.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
@@ -68,15 +71,12 @@
 #include "gfxPlatform.h"
 #include "qcms.h"
 
-#include "mozilla/Preferences.h"
-
 namespace mozilla {
 namespace layers {
 class LayerManager;
 }
 }
 using namespace mozilla::layers;
-using namespace mozilla;
 
 // defined in nsAppShell.mm
 extern nsCocoaAppModalWindowList *gCocoaAppModalWindowList;
@@ -227,7 +227,13 @@ static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *screen)
 // (native context menus, native tooltips)
 static PRBool UseNativePopupWindows()
 {
-  return Preferences::GetBool("ui.use_native_popup_windows", PR_FALSE);
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs)
+    return PR_FALSE;
+
+  PRBool useNativePopupWindows;
+  nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows", &useNativePopupWindows);
+  return (NS_SUCCEEDED(rv) && useNativePopupWindows);
 }
 
 nsresult nsCocoaWindow::Create(nsIWidget *aParent,

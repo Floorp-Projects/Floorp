@@ -54,8 +54,6 @@
 class nsIFile;
 class nsCString;
 class nsString;
-class nsAdoptingString;
-class nsAdoptingCString;
 
 namespace mozilla {
 
@@ -128,11 +126,6 @@ public:
     return result;
   }
 
-  static nsAdoptingCString GetCString(const char* aPref);
-  static nsAdoptingString GetString(const char* aPref);
-  static nsAdoptingCString GetLocalizedCString(const char* aPref);
-  static nsAdoptingString GetLocalizedString(const char* aPref);
-
   /**
    * Gets int or bool type pref value with raw return value of nsIPrefBranch.
    *
@@ -159,10 +152,9 @@ public:
    * @param aResult     Must not be NULL.  The value is never modified when
    *                    these methods fail.
    */
-  static nsresult GetCString(const char* aPref, nsACString* aResult);
-  static nsresult GetString(const char* aPref, nsAString* aResult);
-  static nsresult GetLocalizedCString(const char* aPref, nsACString* aResult);
-  static nsresult GetLocalizedString(const char* aPref, nsAString* aResult);
+  static nsresult GetChar(const char* aPref, nsCString* aResult);
+  static nsresult GetChar(const char* aPref, nsString* aResult);
+  static nsresult GetLocalizedString(const char* aPref, nsString* aResult);
 
   /**
    * Sets various type pref values.
@@ -173,10 +165,10 @@ public:
   {
     return SetInt(aPref, static_cast<PRInt32>(aValue));
   }
-  static nsresult SetCString(const char* aPref, const char* aValue);
-  static nsresult SetCString(const char* aPref, const nsACString &aValue);
-  static nsresult SetString(const char* aPref, const PRUnichar* aValue);
-  static nsresult SetString(const char* aPref, const nsAString &aValue);
+  static nsresult SetChar(const char* aPref, const char* aValue);
+  static nsresult SetChar(const char* aPref, const nsCString &aValue);
+  static nsresult SetChar(const char* aPref, const PRUnichar* aValue);
+  static nsresult SetChar(const char* aPref, const nsString &aValue);
 
   /**
    * Clears user set pref.

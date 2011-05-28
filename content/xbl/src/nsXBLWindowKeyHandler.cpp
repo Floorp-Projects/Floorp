@@ -70,9 +70,6 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsISelectionController.h"
 #include "nsGUIEvent.h"
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
 
 static nsINativeKeyBindings *sNativeEditorBindings = nsnull;
 
@@ -127,7 +124,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
                                       getter_AddRefs(mHTMLBindings));
 
   const nsAdoptingCString& userHTMLBindingStr =
-    Preferences::GetCString("dom.userHTMLBindings.uri");
+    nsContentUtils::GetCharPref("dom.userHTMLBindings.uri");
   if (!userHTMLBindingStr.IsEmpty()) {
     NS_NewURI(getter_AddRefs(bindingURI), userHTMLBindingStr);
     if (!bindingURI) {

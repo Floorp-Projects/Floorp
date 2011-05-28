@@ -38,18 +38,17 @@
 
 #include "nscore.h"
 #include "nsCUPSShim.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsPrintfCString.h"
 #include "nsPSPrinters.h"
 #include "nsReadableUtils.h"        // StringBeginsWith()
 #include "nsCUPSShim.h"
-#include "mozilla/Preferences.h"
 
 #include "prlink.h"
 #include "prenv.h"
 #include "plstr.h"
-
-using namespace mozilla;
 
 #define NS_CUPS_PRINTER "CUPS/"
 #define NS_CUPS_PRINTER_LEN (sizeof(NS_CUPS_PRINTER) - 1)
@@ -65,12 +64,16 @@ nsPSPrinterList::Init()
 {
     nsresult rv;
 
+    mPrefSvc = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = mPrefSvc->GetBranch("print.", getter_AddRefs(mPref));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
+
     // Should we try cups?
-    PRBool useCups =
-        Preferences::GetBool("print.postscript.cups.enabled", PR_TRUE);
-    if (useCups && !gCupsShim.IsInitialized()) {
+    PRBool useCups = PR_TRUE;
+    rv = mPref->GetBoolPref("postscript.cups.enabled", &useCups);
+    if (useCups && !gCupsShim.IsInitialized())
         gCupsShim.Init();
-    }
     return NS_OK;
 }
 
@@ -84,7 +87,9 @@ nsPSPrinterList::Enabled()
         return PR_FALSE;
 
     // is the PS module enabled?
-    return Preferences::GetBool("print.postscript.enabled", PR_TRUE);
+    PRBool setting = PR_TRUE;
+    mPref->GetBoolPref("postscript.enabled", &setting);
+    return setting;
 }
 
 
@@ -126,10 +131,10 @@ nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList)
     aList.AppendElement(
             NS_LITERAL_CSTRING(NS_POSTSCRIPT_DRIVER_NAME "default"));
 
-    nsCAutoString list(PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST"));
-    if (list.IsEmpty()) {
-        list = Preferences::GetCString("print.printer_list");
-    }
+    nsXPIDLCString list;
+    list.Assign(PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST"));
+    if (list.IsEmpty())
+        mPref->GetCharPref("printer_list", getter_Copies(list));
     if (!list.IsEmpty()) {
         // For each printer (except "default" which was already added),
         // construct a string "PostScript/<name>" and append it to the list.

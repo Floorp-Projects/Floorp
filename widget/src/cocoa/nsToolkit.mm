@@ -69,10 +69,8 @@ extern "C" {
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
-
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
@@ -271,8 +269,13 @@ nsToolkit::RegisterForAllProcessMouseEvents()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Don't do this for apps that (like Camino) use native context menus.
-  if (Preferences::GetBool("ui.use_native_popup_windows", PR_FALSE)) {
-    return;
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool useNativeContextMenus;
+    nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows",
+                                     &useNativeContextMenus);
+    if (NS_SUCCEEDED(rv) && useNativeContextMenus)
+      return;
   }
   if (!mEventMonitorHandler) {
     EventTypeSpec kEvents[] = {{kEventClassMouse, kEventMouseMoved}};
