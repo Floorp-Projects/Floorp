@@ -57,8 +57,6 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMDocumentFragment.idl		\
 	nsIDOMDocumentType.idl			\
 	nsIDOMElement.idl			\
-	nsIDOMEntity.idl			\
-	nsIDOMEntityReference.idl		\
 	nsIDOMNamedNodeMap.idl			\
 	nsIDOMNode.idl				\
 	nsIDOMNodeList.idl			\
