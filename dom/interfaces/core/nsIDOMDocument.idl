@@ -62,7 +62,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(9b0eb752-21dd-441b-9bd0-674ee3087cb1)]
+[scriptable, uuid(d53287e8-3752-4dbc-b7e2-155d39ec09fa)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -79,8 +79,6 @@ interface nsIDOMDocument : nsIDOMNode
                                                             in DOMString data)
                                   raises(DOMException);
   nsIDOMAttr                    createAttribute(in DOMString name)
-                                  raises(DOMException);
-  nsIDOMEntityReference         createEntityReference(in DOMString name)
                                   raises(DOMException);
   nsIDOMNodeList                getElementsByTagName(in DOMString tagname);
 
