@@ -2135,6 +2135,9 @@ ic::CallName(VMFrame &f, ic::PICInfo *pic)
 
     f.regs.sp[0] = rval;
     f.regs.sp[1] = thisval;
+
+    if (status == Lookup_Cacheable && !cc.updateTypes())
+        THROW();
     f.script()->typeMonitor(f.cx, f.pc(), rval);
 }
 
