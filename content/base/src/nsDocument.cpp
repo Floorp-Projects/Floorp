@@ -4533,20 +4533,6 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsDocument::CreateEntityReference(const nsAString& aName,
-                                  nsIDOMEntityReference** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  if (IsHTML()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn)
 {
