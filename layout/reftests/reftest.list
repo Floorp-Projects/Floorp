@@ -213,7 +213,7 @@ include percent-overflow-sizing/reftest.list
 include pixel-rounding/reftest.list
 
 # plugin/
-include ../../modules/plugin/test/reftest/reftest.list
+include ../../dom/plugins/test/reftest/reftest.list
 
 # printing
 include printing/reftest.list

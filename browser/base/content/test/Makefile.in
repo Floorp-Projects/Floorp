@@ -112,7 +112,7 @@ _BROWSER_FILES = \
                  browser_bug416661.js \
                  browser_bug417483.js \
                  browser_bug419612.js \
-                 browser_bug420160.js \
+                 browser_identity_UI.js \
                  browser_bug422590.js \
                  browser_bug424101.js \
                  browser_bug427559.js \
@@ -170,6 +170,8 @@ _BROWSER_FILES = \
                  browser_bug616836.js \
                  browser_bug623893.js \
                  browser_bug624734.js \
+                 browser_bug647886.js \
+                 browser_bug655584.js \
                  browser_findbarClose.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
@@ -194,12 +196,14 @@ _BROWSER_FILES = \
                  browser_inspector_treePanel_result.html \
                  browser_scratchpad_initialization.js \
                  browser_scratchpad_contexts.js \
+                 browser_scratchpad_tab_switch.js \
                  browser_scratchpad_execute_print.js \
                  browser_scratchpad_inspect.js \
                  browser_scratchpad_files.js \
                  browser_scratchpad_ui.js \
                  browser_scratchpad_bug_646070_chrome_context_pref.js \
                  browser_overflowScroll.js \
+                 browser_locationBarExternalLoad.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \
@@ -229,7 +233,6 @@ _BROWSER_FILES = \
                  browser_visibleTabs_bookmarkAllPages.js \
                  browser_visibleTabs_bookmarkAllTabs.js \
                  browser_visibleTabs_tabPreview.js \
-                 browser_webdev_menu.js \
                  bug592338.html \
                  disablechrome.html \
                  discovery.html \

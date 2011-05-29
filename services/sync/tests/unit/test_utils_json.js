@@ -68,8 +68,7 @@ add_test(function test_load_logging() {
   _("Verify that reads and read errors are logged.");
 
   // Write a file with some invalid JSON
-  let file = Utils.getProfileFile({ autoCreate: true,
-                                    path: "weave/log.json" });
+  let file = Utils.getProfileFile("weave/log.json");
   let fos = Cc["@mozilla.org/network/file-output-stream;1"]
               .createInstance(Ci.nsIFileOutputStream);
   fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE,

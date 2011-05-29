@@ -220,7 +220,7 @@ AC_SUBST(COMPILE_ENVIRONMENT)
 MOZ_ARG_WITH_STRING(l10n-base,
 [  --with-l10n-base=DIR    path to l10n repositories],
     L10NBASEDIR=$withval)
-if test ! -z "$L10NBASEDIR"; then
+if test -n "$L10NBASEDIR"; then
     if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
         AC_MSG_ERROR([--with-l10n-base must specify a path])
     elif test -d "$L10NBASEDIR"; then
@@ -264,7 +264,25 @@ MOZ_ARG_WITH_STRING(android-sdk,
                           location where the Android SDK can be found (base directory, e.g. .../android/platforms/android-6)],
     android_sdk=$withval)
 
-if test "$target" = "arm-android-eabi" ; then
+MOZ_ARG_WITH_STRING(android-platform,
+[  --with-android-platform=DIR
+                           location of platform dir, default NDK/build/platforms/android-5/arch-arm],
+    android_platform=$withval)
+
+case "$target" in
+arm-linux*-android*|*-linuxandroid*)
+    android_tool_prefix="arm-linux-androideabi"
+    ;;
+arm-android-eabi)
+    android_tool_prefix="arm-eabi"
+    ;;
+*)
+    android_tool_prefix="$target_os"
+    ;;
+esac
+
+case "$target" in
+*-android*|*-linuxandroid*)
     if test -z "$android_ndk" ; then
         AC_MSG_ERROR([You must specify --with-android-ndk=/path/to/ndk when targeting Android.])
     fi
@@ -287,24 +305,30 @@ if test "$target" = "arm-android-eabi" ; then
     fi
 
     dnl set up compilers
-    AS="$android_toolchain"/bin/arm-eabi-as
-    CC="$android_toolchain"/bin/arm-eabi-gcc
-    CXX="$android_toolchain"/bin/arm-eabi-g++
-    CPP="$android_toolchain"/bin/arm-eabi-cpp
-    LD="$android_toolchain"/bin/arm-eabi-ld
-    AR="$android_toolchain"/bin/arm-eabi-ar
-    RANLIB="$android_toolchain"/bin/arm-eabi-ranlib
-    STRIP="$android_toolchain"/bin/arm-eabi-strip
+    AS="$android_toolchain"/bin/"$android_tool_prefix"-as
+    CC="$android_toolchain"/bin/"$android_tool_prefix"-gcc
+    CXX="$android_toolchain"/bin/"$android_tool_prefix"-g++
+    CPP="$android_toolchain"/bin/"$android_tool_prefix"-cpp
+    LD="$android_toolchain"/bin/"$android_tool_prefix"-ld
+    AR="$android_toolchain"/bin/"$android_tool_prefix"-ar
+    RANLIB="$android_toolchain"/bin/"$android_tool_prefix"-ranlib
+    STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
 
-    CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
+    if test -e "$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
+       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/  -lstlport_static"
+    fi
+
+    CPPFLAGS="-I$android_platform/usr/include $STLPORT_CPPFLAGS $CPPFLAGS"
     CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CXXFLAGS"
+    LIBS="$LIBS $STLPORT_LDFLAGS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
     dnl undefined symbol (present on the hardware, just not in the
     dnl NDK.)
-    LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
+    LDFLAGS="-mandroid -L$android_platform/usr/lib -L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
     if test -z "$HOST_CPPFLAGS" ; then
@@ -336,7 +360,8 @@ if test "$target" = "arm-android-eabi" ; then
     CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
     ZLIB_DIR=yes
-fi
+    ;;
+esac
 
 AC_SUBST(ANDROID_NDK)
 AC_SUBST(ANDROID_TOOLCHAIN)
@@ -1220,7 +1245,7 @@ if test -n "$CROSS_COMPILE"; then
         darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
     esac
     case "${target}" in
-        arm-android-eabi) OS_ARCH=Linux OS_TARGET=Android ;;
+        *-android*|*-linuxandroid*) OS_ARCH=Linux OS_TARGET=Android ;;
     esac
 else
     OS_TARGET=`uname -s`
@@ -2024,8 +2049,8 @@ case "$target" in
         MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
     fi
     _PEDANTIC=
-    CFLAGS="$CFLAGS -fpascal-strings -fno-common"
-    CXXFLAGS="$CXXFLAGS -fpascal-strings -fno-common"
+    CFLAGS="$CFLAGS -fno-common"
+    CXXFLAGS="$CXXFLAGS -fno-common"
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
@@ -2166,6 +2191,23 @@ ia64*-hpux*)
     if test -z "$GNU_CXX"; then
       MIPSPRO_CXX=1
     fi
+    ;;
+
+*-android*|*-linuxandroid*)
+    AC_DEFINE(NO_PW_GECOS)
+    no_x=yes
+    _PLATFORM_DEFAULT_TOOLKIT=cairo-android
+    TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+
+    MOZ_GFX_OPTIMIZE_MOBILE=1
+    # If we're building with --enable-profiling, we need a frame pointer.
+    if test -z "$MOZ_PROFILING"; then
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer"
+    else
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fno-omit-frame-pointer"
+    fi
+    # The Maemo builders don't know about this flag
+    MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
     ;;
 
 *-*linux*)
@@ -2685,23 +2727,6 @@ alpha*-*-osf*)
 
 *-os2*)
     HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
-    ;;
-
-*-android*)
-    AC_DEFINE(NO_PW_GECOS)
-    no_x=yes
-    _PLATFORM_DEFAULT_TOOLKIT=cairo-android
-    TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
-
-    MOZ_GFX_OPTIMIZE_MOBILE=1
-    # If we're building with --enable-profiling, we need a frame pointer.
-    if test -z "$MOZ_PROFILING"; then
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer"
-    else
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fno-omit-frame-pointer"
-    fi
-    # The Maemo builders don't know about this flag
-    MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
     ;;
 
 esac
@@ -3318,25 +3343,6 @@ case $target in
     ;;
 *)
     AC_CHECK_LIB(socket, socket)
-esac
-
-dnl ========================================================
-dnl Check whether we can compile code for Core Text
-dnl (available on Mac OS X 10.5 or later)
-dnl ========================================================
-case "$target" in
-*-darwin*)
-  AC_MSG_CHECKING([for Core Text])
-  AC_TRY_COMPILE([#include <ApplicationServices/ApplicationServices.h>],
-                 [CTLineRef lineRef;],
-                  ac_cv_have_core_text="yes",
-                  ac_cv_have_core_text="no")
-  AC_MSG_RESULT([$ac_cv_have_core_text])
-
-  if test "$ac_cv_have_core_text" = "no"; then
-    AC_MSG_ERROR([Core Text is required (available on Mac OS X 10.5 or later).])
-  fi
-  ;;
 esac
 
 XLDFLAGS="$X_LIBS"
@@ -4296,7 +4302,7 @@ if test "$ac_cv_thread_keyword" = yes; then
     mips*-*)
       :
       ;;
-    *-android*)
+    *-android*|*-linuxandroid*)
       :
       ;;
     *)
@@ -4375,8 +4381,7 @@ if test "$ac_cv_i18n_lc_messages" = yes; then
 fi
 
 AC_HAVE_FUNCS(localeconv)
-
-fi # SKIP_COMPILER_CHECKS
+fi # ! SKIP_COMPILER_CHECKS
 
 TARGET_XPCOM_ABI=
 if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
@@ -4431,8 +4436,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-MOZ_ENABLE_LIBXUL=1
-
 MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
   LIBXUL_SDK_DIR=$withval)
@@ -4446,7 +4449,6 @@ elif test -n "$LIBXUL_SDK_DIR" -a "$LIBXUL_SDK_DIR" != "no"; then
         AC_MSG_ERROR([$LIBXUL_SDK/include/xpcom-config.h doesn't exist])
     fi
 
-    MOZ_ENABLE_LIBXUL=1
 fi
 AC_SUBST(LIBXUL_SDK)
 
@@ -4462,10 +4464,6 @@ SYSTEM_LIBXUL=
 MOZ_ARG_WITH_BOOL(system-libxul,
 [  --with-system-libxul    Use system installed libxul SDK],
     SYSTEM_LIBXUL=1)
-
-if test -n "$SYSTEM_LIBXUL" -a -z "$MOZ_ENABLE_LIBXUL"; then
-    AC_MSG_ERROR([--with-system-libxul needs --with-libxul-sdk])
-fi
 
 dnl ========================================================
 dnl = If NSPR was not detected in the system, 
@@ -4794,7 +4792,6 @@ dnl ========================================================
 
 MOZ_ARG_HEADER(Application)
 
-BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
 MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
@@ -4842,6 +4839,7 @@ MOZ_SPELLCHECK=1
 MOZ_SPLASHSCREEN=
 MOZ_STORAGE=1
 MOZ_SVG=1
+MOZ_SVG_DLISTS=
 MOZ_THUMB2=
 MOZ_TIMELINE=
 MOZ_TOOLKIT_SEARCH=1
@@ -4859,7 +4857,7 @@ NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
-NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource wyciwyg"
+NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
@@ -4889,7 +4887,7 @@ case "$target_os" in
 esac
 
 case "${target}" in
-    arm-android-eabi)
+    *-android*|*-linuxandroid*)
         NSS_DISABLE_DBM=1
         USE_ARM_KUSER=1
         MOZ_INSTALLER=
@@ -5257,6 +5255,18 @@ incorrect])
     fi
     MOC=$HOST_MOC
 
+    MOZ_ENABLE_QMSYSTEM2=
+    PKG_CHECK_MODULES(_QMSYSTEM2, qmsystem2,
+                      MOZ_ENABLE_QMSYSTEM2=1,
+                      MOZ_ENABLE_QMSYSTEM2=)
+
+    if test "$MOZ_ENABLE_QMSYSTEM2"; then
+      MOZ_ENABLE_QMSYSTEM2=1
+      MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QMSYSTEM2_CFLAGS"
+      MOZ_QT_LIBS="$MOZ_QT_LIBS $_QMSYSTEM2_LIBS"
+      AC_DEFINE(MOZ_ENABLE_QMSYSTEM2)
+    fi
+
     MOZ_ENABLE_QTNETWORK=
     PKG_CHECK_MODULES(_QTNETWORK, QtNetwork >= 4.7,
                       MOZ_ENABLE_QTNETWORK=1,
@@ -5296,6 +5306,7 @@ AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_QTNETWORK)
+AC_SUBST(MOZ_ENABLE_QMSYSTEM2)
 AC_SUBST(MOZ_ENABLE_QTMOBILITY)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST(MOZ_GTK2_CFLAGS)
@@ -6138,8 +6149,18 @@ if test -n "$MOZ_ANGLE"; then
   fi
 
   # Get the SDK path from the registry.
-  MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
-  MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's,  *, ,g' | cut -d' ' -f4-`
+  # First try to get the June 2010 SDK
+  MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK (June 2010)' | head -n 1`
+  if test -z "$MOZ_DIRECTX_SDK_REG_KEY" ; then
+    # Otherwise just take whatever comes first
+    MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
+  fi
+
+  if test -n "`echo $MOZ_DIRECTX_SDK_REG_KEY | grep 'February 2010'`" ; then
+    AC_MSG_WARN([Found the February 2010 DirectX SDK. This is too old. We now require the June 2010 DirectX SDK, or newer.])
+  else
+    MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/'`
+  fi
 
   MOZ_ANGLE=
 
@@ -6151,12 +6172,12 @@ if test -n "$MOZ_ANGLE"; then
   fi
 
   if test -z "$MOZ_ANGLE" ; then
-    AC_MSG_WARN([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (February 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
+    AC_MSG_WARN([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (June 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
     AC_MSG_WARN([This will become an error in the future.])
   fi
 
   if test -n "$MOZ_ANGLE" ; then
-    # Get the SDK numeric version (e.g. 42 or 43) by looking at the dependencies of d3dx9.lib
+    # Get the SDK numeric version (e.g. 43) by looking at the dependencies of d3dx9.lib
     MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
 
     if test -z "$MOZ_D3DX9_VERSION" ; then
@@ -6192,7 +6213,7 @@ i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
     MOZ_CRASHREPORTER=1
   fi
   ;;
-arm-android-eabi)
+*-android*|*-linuxandroid*)
   MOZ_CRASHREPORTER=1
   ;;
 *solaris*)
@@ -6402,6 +6423,13 @@ dnl ========================================================
 dnl Keeping AC_DEFINE(MOZ_SVG) for the moment in case of something needs it.
 dnl ========================================================
 AC_DEFINE(MOZ_SVG)
+
+dnl ========================================================
+dnl SVG Display Lists
+dnl ========================================================
+if test -n "$MOZ_SVG_DLISTS"; then
+  AC_DEFINE(MOZ_SVG_DLISTS)
+fi
 
 dnl ========================================================
 dnl SMIL
@@ -7320,6 +7348,13 @@ else
   *-*freebsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
+  *-android*|*-linuxandroid*)
+    AC_DEFINE(MOZ_MEMORY_LINUX)
+    AC_DEFINE(MOZ_MEMORY_ANDROID)
+    _WRAP_MALLOC=1
+    export WRAP_MALLOC_LIB="-L$_objdir/dist/lib -lmozalloc -lmozutils"
+    WRAP_MALLOC_CFLAGS="-Wl,--wrap=dlopen -Wl,--wrap=dlclose -Wl,--wrap=dlerror -Wl,--wrap=dlsym -Wl,--wrap=dladdr"
+    ;;
   *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
     ;;
@@ -7367,13 +7402,6 @@ else
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
-    ;;
-  *-android*)
-    AC_DEFINE(MOZ_MEMORY_LINUX)
-    AC_DEFINE(MOZ_MEMORY_ANDROID)
-    _WRAP_MALLOC=1
-    export WRAP_MALLOC_LIB="-L$_objdir/dist/lib -lmozalloc -lmozutils"
-    WRAP_MALLOC_CFLAGS="-Wl,--wrap=dlopen -Wl,--wrap=dlclose -Wl,--wrap=dlerror -Wl,--wrap=dlsym -Wl,--wrap=dladdr"
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -7809,19 +7837,10 @@ else
 fi
 
 dnl ========================================================
-dnl Profile guided optimization
+dnl Profile guided optimization (gcc checks)
 dnl ========================================================
 dnl Test for profiling options
 dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
-
-dnl Provide a switch to disable PGO even when called via profiledbuild.
-MOZ_ARG_DISABLE_BOOL(profile-guided-optimization,
-[  --disable-profile-guided-optimization
-                          Don't build with PGO even if called via make profiledbuild],
-MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=1,
-MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
-
-AC_SUBST(MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE)
 
 _SAVE_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
@@ -7960,7 +7979,7 @@ CXXFLAGS="$_SAVE_CXXFLAGS"
 if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
     AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
 fi
-fi # SKIP_COMPILER_CHECKS
+fi # ! SKIP_COMPILER_CHECKS
 
 dnl ========================================================
 dnl C++ exceptions (g++/VC/irix6/Sun only - for now)
@@ -8101,22 +8120,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
 
-MOZ_ARG_ENABLE_BOOL(static,
-[  --enable-static         Enable building internal static libs],
-    BUILD_STATIC_LIBS=1,
-    BUILD_STATIC_LIBS=)
-
-MOZ_ENABLE_LIBXUL=1
-
-MOZ_ARG_DISABLE_BOOL(libxul,
-[  --disable-libxul        Disable building libxul (not supported)],
-    MOZ_ENABLE_LIBXUL=,
-    MOZ_ENABLE_LIBXUL=1)
-
-if test -z "$MOZ_ENABLE_LIBXUL"; then
-  AC_MSG_ERROR([--disable-libxul is no longer supported.])
-fi
-
 # split JS out by default to avoid VS2005 PGO crash (bug 591836).
 if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" != "x86_64" ; then
   ENABLE_SHARED_JS=1
@@ -8137,17 +8140,8 @@ else
 fi
 AC_SUBST(JS_SHARED_LIBRARY)
 
-if test -n "$MOZ_STATIC_BUILD_UNSUPPORTED" -a -n "$BUILD_STATIC_LIBS"; then
-  AC_MSG_ERROR([--enable-static is not supported for building $MOZ_BUILD_APP.])
-fi
-
-if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
-  AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
-fi
-
 AC_SUBST(LIBXUL_LIBS)
 XPCOM_LIBS="$LIBXUL_LIBS"
-AC_DEFINE(MOZ_ENABLE_LIBXUL)
 
 dnl ========================================================
 dnl =
@@ -8410,6 +8404,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_DEFINE(HAVE_UINT64_T)
 
     # Define macros for cairo-features.h
+    TEE_SURFACE_FEATURE="#define CAIRO_HAS_TEE_SURFACE 1"
     if test "$MOZ_X11"; then
         XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
         XLIB_XRENDER_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_XRENDER_SURFACE 1"
@@ -8492,6 +8487,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(QUARTZ_FONT_FEATURE)
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
     AC_SUBST(QT_SURFACE_FEATURE)
+    AC_SUBST(TEE_SURFACE_FEATURE)
 
     MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src)'" $CAIRO_FT_LIBS"
 
@@ -8798,8 +8794,6 @@ AC_SUBST(JAR)
 
 AC_SUBST(MOZ_PROFILELOCKING)
 
-AC_SUBST(BUILD_STATIC_LIBS)
-AC_SUBST(MOZ_ENABLE_LIBXUL)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
@@ -8873,7 +8867,7 @@ AC_SUBST(MOZ_APP_UA_NAME)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_VERSION, "$MOZ_APP_VERSION")
 AC_SUBST(MOZ_APP_VERSION)
 AC_DEFINE_UNQUOTED(MOZ_UA_FIREFOX_VERSION, "$FIREFOX_VERSION")
-AC_SUBST(MOZ_UA_FIREFOX_VERSION)
+AC_DEFINE_UNQUOTED(FIREFOX_VERSION,$FIREFOX_VERSION)
 AC_SUBST(FIREFOX_VERSION)
 AC_DEFINE_UNQUOTED(MOZ_UA_BUILDID, "$MOZ_UA_BUILDID")
 AC_SUBST(MOZ_UA_BUILDID)
@@ -9082,7 +9076,7 @@ if test "$MOZ_X11"; then
     [ AC_MSG_ERROR([Could not compile basic X program.]) ])
     CFLAGS="$_SAVE_CFLAGS"
 
-    if test ! -z "$MISSING_X"; then
+    if test -n "$MISSING_X"; then
         AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
     fi
 

@@ -387,6 +387,19 @@ pixman_rasterize_trapezoid (pixman_image_t *          image,
     }
 }
 
+/*
+ * pixman_composite_trapezoids()
+ *
+ * All the trapezoids are conceptually rendered to an infinitely big image.
+ * The (0, 0) coordinates of this image are then aligned with the (x, y)
+ * coordinates of the source image, and then both images are aligned with
+ * the (x, y) coordinates of the destination. Then, in principle, compositing
+ * of these three images takes place across the entire destination.
+ *
+ * FIXME: However, there is currently a bug, where we restrict this compositing
+ * to the bounding box of the trapezoids. This is incorrect for operators such
+ * as SRC and IN where blank source pixels do have an effect on the destination.
+ */
 PIXMAN_EXPORT void
 pixman_composite_trapezoids (pixman_op_t		op,
 			     pixman_image_t *		src,
@@ -419,14 +432,13 @@ pixman_composite_trapezoids (pixman_op_t		op,
 	    if (!pixman_trapezoid_valid (trap))
 		continue;
 	    
-	    pixman_rasterize_trapezoid (dst, trap, 0, 0);
+	    pixman_rasterize_trapezoid (dst, trap, x_dst, y_dst);
 	}
     }
     else
     {
 	pixman_image_t *tmp;
 	pixman_box32_t box;
-	int x_rel, y_rel;
 	
 	box.x1 = INT32_MAX;
 	box.y1 = INT32_MAX;
@@ -482,11 +494,10 @@ pixman_composite_trapezoids (pixman_op_t		op,
 	    pixman_rasterize_trapezoid (tmp, trap, - box.x1, - box.y1);
 	}
 	
-	x_rel = box.x1 + x_src - x_dst;
-	y_rel = box.y1 + y_src - y_dst;
-	
 	pixman_image_composite (op, src, tmp, dst,
-				x_rel, y_rel, 0, 0, box.x1, box.y1,
+				x_src + box.x1, y_src + box.y1,
+				0, 0,
+				x_dst + box.x1, y_dst + box.y1,
 				box.x2 - box.x1, box.y2 - box.y1);
 	
 	pixman_image_unref (tmp);

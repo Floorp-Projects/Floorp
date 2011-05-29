@@ -96,9 +96,12 @@ static PRUint32 gGlyphExtentsSetupFallBackToTight = 0;
 
 gfxFontEntry::~gfxFontEntry() 
 {
-    if (mUserFontData) {
-        delete mUserFontData;
-    }
+    delete mUserFontData;
+}
+
+PRBool gfxFontEntry::IsSymbolFont() 
+{
+    return mSymbolFont;
 }
 
 PRBool gfxFontEntry::TestCharacterMap(PRUint32 aCh)
@@ -4191,7 +4194,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
         // different fonts to a base character and a following diacritic.
         // Example on OSX 10.5/10.6 with default fonts installed:
         //     data:text/html,<p style="font-family:helvetica, arial, sans-serif;">
-        //                    &#x043E;&#x0486;&#x20;&#x043E;&#x0486;
+        //                    &%23x043E;&%23x0486;&%23x20;&%23x043E;&%23x0486;
         // This means the rendering of the cluster will probably not be very good,
         // but it's the best we can do for now if the specified font only covered the
         // initial base character and not its applied marks.

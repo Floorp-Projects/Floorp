@@ -301,7 +301,7 @@ TabTracker.prototype = {
         if (!this._enabled) {
           Svc.Obs.add("private-browsing", this);
           Svc.Obs.add("domwindowopened", this);
-          let wins = Svc.WinMediator.getEnumerator("navigator:browser");
+          let wins = Services.wm.getEnumerator("navigator:browser");
           while (wins.hasMoreElements())
             this._registerListenersForWindow(wins.getNext());
           this._enabled = true;
@@ -311,7 +311,7 @@ TabTracker.prototype = {
         if (this._enabled) {
           Svc.Obs.remove("private-browsing", this);
           Svc.Obs.remove("domwindowopened", this);
-          let wins = Svc.WinMediator.getEnumerator("navigator:browser");
+          let wins = Services.wm.getEnumerator("navigator:browser");
           while (wins.hasMoreElements())
             this._unregisterListenersForWindow(wins.getNext());
           this._enabled = false;

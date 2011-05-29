@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Daniel Witte <dwitte@mozilla.com>
+ *   Jason Duell <jduell.mcbugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,6 +60,7 @@
 #include "nsISupportsPriority.h"
 #include "nsIApplicationCache.h"
 #include "nsIResumableChannel.h"
+#include "nsITraceableChannel.h"
 #include "mozilla/net/NeckoCommon.h"
 
 namespace mozilla {
@@ -79,11 +81,13 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsIUploadChannel2
                       , public nsISupportsPriority
                       , public nsIResumableChannel
+                      , public nsITraceableChannel
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIUPLOADCHANNEL
   NS_DECL_NSIUPLOADCHANNEL2
+  NS_DECL_NSITRACEABLECHANNEL
 
   HttpBaseChannel();
   virtual ~HttpBaseChannel();
@@ -166,6 +170,8 @@ public:
           mRedirectedCachekeys = nsnull;
       }
   }
+  NS_IMETHOD HTTPUpgrade(const nsACString & aProtocolName,
+                         nsIHttpUpgradeListener *aListener); 
 
   // nsISupportsPriority
   NS_IMETHOD GetPriority(PRInt32 *value);
@@ -246,6 +252,10 @@ protected:
   PRNetAddr                         mSelfAddr;
   PRNetAddr                         mPeerAddr;
 
+  // HTTP Upgrade Data
+  nsCString                        mUpgradeProtocol;
+  nsCOMPtr<nsIHttpUpgradeListener> mUpgradeProtocolCallback;
+
   // Resumable channel specific data
   nsCString                         mEntityID;
   PRUint64                          mStartPos;
@@ -268,6 +278,9 @@ protected:
   PRUint32                          mChooseApplicationCache     : 1;
   PRUint32                          mLoadedFromApplicationCache : 1;
   PRUint32                          mChannelIsForDownload       : 1;
+  PRUint32                          mTracingEnabled             : 1;
+  // True if timing collection is enabled
+  PRUint32                          mTimingEnabled              : 1;
 
   nsTArray<nsCString>              *mRedirectedCachekeys;
 };

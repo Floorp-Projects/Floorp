@@ -361,7 +361,7 @@ public:
   /**
    * Get the Content-Type of this document.
    * (This will always return NS_OK, but has this signature to be compatible
-   *  with nsIDOMNSDocument::GetContentType())
+   *  with nsIDOMDocument::GetContentType())
    */
   NS_IMETHOD GetContentType(nsAString& aContentType) = 0;
 
@@ -1079,7 +1079,7 @@ public:
                                      nsIDOMNodeList** aResult) = 0;
 
   /**
-   * Helper for nsIDOMNSDocument::elementFromPoint implementation that allows
+   * Helper for nsIDOMDocument::elementFromPoint implementation that allows
    * ignoring the scroll frame and/or avoiding layout flushes.
    *
    * @see nsIDOMWindowUtils::elementFromPoint

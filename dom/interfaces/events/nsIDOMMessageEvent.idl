@@ -38,6 +38,10 @@
 
 #include "nsIDOMEvent.idl"
 
+%{ C++
+#include "jspubtd.h"
+%}
+
 /**
  * The nsIDOMMessageEvent interface is used for server-sent events and for
  * cross-domain messaging.
@@ -45,13 +49,13 @@
  * For more information on this interface, please see
  * http://www.whatwg.org/specs/web-apps/current-work/#messageevent
  */
-[scriptable, uuid(d02e9a24-e5b2-47e4-bd80-7e980bf56b45)]
+[scriptable, uuid(dc8ec5c6-ebf2-4f95-be99-cd13e3c0d0c6)]
 interface nsIDOMMessageEvent : nsIDOMEvent
 {
   /**
    * Custom string data associated with this event.
    */
-  readonly attribute DOMString data;
+  readonly attribute jsval data;
   
   /**
    * The origin of the site from which this event originated, which is the
@@ -80,7 +84,7 @@ interface nsIDOMMessageEvent : nsIDOMEvent
   void initMessageEvent(in DOMString aType,
                         in boolean aCanBubble,
                         in boolean aCancelable,
-                        in DOMString aData,
+                        in jsval aData,
                         in DOMString aOrigin,
                         in DOMString aLastEventId,
                         in nsIDOMWindow aSource);

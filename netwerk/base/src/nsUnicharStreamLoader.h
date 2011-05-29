@@ -39,12 +39,13 @@
 #ifndef nsUnicharStreamLoader_h__
 #define nsUnicharStreamLoader_h__
 
-#include "nsIUnicharStreamLoader.h"
-#include "nsCOMPtr.h"
 #include "nsIChannel.h"
+#include "nsIUnicharStreamLoader.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIInputStream.h"
-#include "nsIOutputStream.h"
+
+class nsIInputStream;
 
 class nsUnicharStreamLoader : public nsIUnicharStreamLoader
 {
@@ -54,13 +55,14 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsUnicharStreamLoader() { }
+  nsUnicharStreamLoader() {}
   virtual ~nsUnicharStreamLoader() {}
 
-  static nsresult
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
+  nsresult DetermineCharset();
+
   /**
    * callback method used for ReadSegments
    */
@@ -68,13 +70,19 @@ protected:
                                    PRUint32, PRUint32, PRUint32 *);
 
   nsCOMPtr<nsIUnicharStreamLoaderObserver> mObserver;
-  nsCOMPtr<nsISupports>                    mContext;  // observer's context
-  nsCString                                mCharset;
+  nsCOMPtr<nsIUnicodeDecoder>              mDecoder;
+  nsCOMPtr<nsISupports>                    mContext;
   nsCOMPtr<nsIChannel>                     mChannel;
-  nsCOMPtr<nsIInputStream>                 mInputStream;
-  nsCOMPtr<nsIOutputStream>                mOutputStream;
-  PRUint32                                 mSegmentSize;
-  
+  nsCString                                mCharset;
+
+  // This holds the first up-to-512 bytes of the raw stream.
+  // It will be passed to the OnDetermineCharset callback.
+  nsCString                                mRawData;
+
+  // This holds the complete contents of the stream so far, after
+  // decoding to UTF-16.  It will be passed to the OnStreamComplete
+  // callback.
+  nsString                                 mBuffer;
 };
 
 #endif // nsUnicharStreamLoader_h__

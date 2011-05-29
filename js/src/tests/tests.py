@@ -44,6 +44,7 @@ def run_cmd(cmd, timeout=60.0):
         return do_run_cmd(cmd)
 
     l = [ None, None ]
+    timed_out = False
     th = Thread(target=th_run_cmd, args=(cmd, l))
     th.start()
     th.join(timeout)
@@ -55,11 +56,12 @@ def run_cmd(cmd, timeout=60.0):
                 if sys.platform != 'win32':
                     os.kill(l[0].pid, signal.SIGKILL)
                 time.sleep(.1)
+                timed_out = True
             except OSError:
                 # Expecting a "No such process" error
                 pass
     th.join()
-    return l[1]
+    return l[1] + (timed_out,)
 
 class Test(object):
     """A runnable test."""
@@ -85,8 +87,8 @@ class Test(object):
 
     def run(self, js_cmd_prefix, timeout=30.0):
         cmd = self.get_command(js_cmd_prefix)
-        out, err, rc, dt = run_cmd(cmd, timeout)
-        return TestOutput(self, cmd, out, err, rc, dt);
+        out, err, rc, dt, timed_out = run_cmd(cmd, timeout)
+        return TestOutput(self, cmd, out, err, rc, dt, timed_out)
 
 class TestCase(Test):
     """A test case consisting of a test and an expected result."""
@@ -115,13 +117,14 @@ class TestCase(Test):
 
 class TestOutput:
     """Output from a test run."""
-    def __init__(self, test, cmd, out, err, rc, dt):
+    def __init__(self, test, cmd, out, err, rc, dt, timed_out):
         self.test = test   # Test
         self.cmd = cmd     # str:   command line of test
         self.out = out     # str:   stdout
         self.err = err     # str:   stderr
         self.rc = rc       # int:   return code
         self.dt = dt       # float: run time
+        self.timed_out = timed_out # bool: did the test time out
 
 class NullTestOutput:
     """Variant of TestOutput that indicates a test was not run."""
@@ -132,6 +135,7 @@ class NullTestOutput:
         self.err = ''
         self.rc = 0
         self.dt = 0.0
+        self.timed_out = False
 
 class TestResult:
     PASS = 'PASS'

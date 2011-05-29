@@ -11880,7 +11880,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -12393,7 +12393,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -14962,10 +14962,10 @@ ctx.fillStyle = '#f00';
 ctx.fillStyle = pattern;
 ctx.fillRect(0, 0, 100, 50);
 
-todo_isPixel(ctx, 1,1, 0,255,0,255, 0);
-todo_isPixel(ctx, 98,1, 0,255,0,255, 0);
-todo_isPixel(ctx, 1,48, 0,255,0,255, 0);
-todo_isPixel(ctx, 98,48, 0,255,0,255, 0);
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
 
 
 }
@@ -18995,7 +18995,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -19537,21 +19537,23 @@ var canvas = document.getElementById('c614');
 var ctx = canvas.getContext('2d');
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+var _threw = false;
 try {
   var data = canvas.toDataURL('image/png', 'quality=100');
-  ok(false, "Should have thrown an exception for invalid args to png encoder");
 }
 catch (e) {
-  is(e.result, Components.results.NS_ERROR_INVALID_ARG, "Exception was wrong for png encoder");
+  _threw = true;
 }
+ok(!_threw, "Should not throw an exception for invalid args to png encoder");
 
+_threw = false;
 try {
   var data = canvas.toDataURL('image/jpeg', 'foobar=true');
-  ok(false, "Should have thrown an exception for invalid args to jpeg encoder");
 }
 catch (e) {
-  is(e.result, Components.results.NS_ERROR_INVALID_ARG, "Exception was wrong for jpeg encoder");
+  _threw = true;
 }
+ok(!_threw, "Should not throw an exception for invalid args to jpeg encoder");
 
 }
 </script>
@@ -20761,7 +20763,7 @@ ok(/^data:image\/png[;,]/.test(data), "data =~ /^data:image\\/png[;,]/");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -20788,7 +20790,7 @@ ok(/^data:image\/png[;,]/.test(data), "data =~ /^data:image\\/png[;,]/");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -20816,7 +20818,7 @@ ok(/^data:image\/png[;,]/.test(data), "data =~ /^data:image\\/png[;,]/");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -21029,7 +21031,7 @@ var canvas = document.getElementById('c674');
 var ctx = canvas.getContext('2d');
 
 var data = canvas.toDataURL();
-todo(data === 'data:,', "data === 'data:,'");
+ok(data === 'data:,', "data === 'data:,'");
 
 
 }
@@ -21292,6 +21294,33 @@ function test_2d_imageSmoothing() {
       "pixel is " + pixels.toSource() + " (expected [0,255,0,255])");
 }
 
+</script>
+
+<p>Canvas test: zero_dimensions</p>
+<canvas id="c684" width="0" height="0"></canvas>
+<script type="text/javascript">
+function test_zero_dimensions() {
+  var c = document.getElementById("c684");
+  ok(c.width == 0, "c.width not 0");
+  ok(c.height == 0, "c.height not 0");
+}
+</script>
+
+<p>Canvas test: zero_dimensions_image_data</p>
+<canvas id="c685" width="0" height="0"></canvas>
+<script type="text/javascript">
+function test_zero_dimensions_imagedata() {
+  var c = document.getElementById("c685");
+  var ctx = c.getContext("2d");
+  ctx.fillStyle = "blue";
+  ctx.fillRect(0, 0, 100, 100);
+  var imgdata = ctx.getImageData(0, 0, 100, 100);
+  var isTransparentBlack = true;
+  for (var i = 0; i < imgdata.data.length; ++i)
+      if (imgdata.data[i] !== 0)
+          isTransparentBlack = false;
+  ok(isTransparentBlack, "isTransparentBlack");
+}
 </script>
 
 <script>
@@ -24552,6 +24581,16 @@ function runTests() {
   test_2d_imageSmoothing();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_imageSmoothing");
+ }
+ try {
+  test_zero_dimensions();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_zero_dimensions");
+ }
+ try {
+  test_zero_dimensions_imagedata();
+ } catch(e) {
+  ok(false, "unexpected exception thrown in: test_zero_dimensions_imagedata");
  }
  try {
   // run this test last since it replaces the getContext method

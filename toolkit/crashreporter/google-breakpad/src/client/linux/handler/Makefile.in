@@ -68,4 +68,9 @@ CPPSRCS	= \
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 
+ifeq ($(OS_TARGET),Android)
+# NDK5 workarounds
+DEFINES += -D_STLP_CONST_CONSTRUCTOR_BUG -D_STLP_NO_MEMBER_TEMPLATES
+endif
+
 include $(topsrcdir)/config/rules.mk

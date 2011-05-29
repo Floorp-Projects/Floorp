@@ -57,6 +57,9 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptError.h"
 #include "nsDOMPopStateEvent.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
@@ -75,7 +78,7 @@ static const char* const sEventNames[] = {
   "DOMAttrModified", "DOMCharacterDataModified",
   "DOMActivate", "DOMFocusIn", "DOMFocusOut",
   "pageshow", "pagehide", "DOMMouseScroll", "MozMousePixelScroll",
-  "offline", "online", "copy", "cut", "paste",
+  "offline", "online", "copy", "cut", "paste", "open", "message",
 #ifdef MOZ_SVG
   "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
   "SVGZoom",
@@ -1088,8 +1091,7 @@ nsDOMEvent::PopupAllowedEventsChanged()
     nsMemory::Free(sPopupAllowedEvents);
   }
 
-  nsAdoptingCString str =
-    nsContentUtils::GetCharPref("dom.popup_allowed_events");
+  nsAdoptingCString str = Preferences::GetCString("dom.popup_allowed_events");
 
   // We'll want to do this even if str is empty to avoid looking up
   // this pref all the time if it's not set.
@@ -1261,6 +1263,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_cut];
   case NS_PASTE:
     return sEventNames[eDOMEvents_paste];
+  case NS_OPEN:
+    return sEventNames[eDOMEvents_open];
+  case NS_MESSAGE:
+    return sEventNames[eDOMEvents_message];
 #ifdef MOZ_SVG
   case NS_SVG_LOAD:
     return sEventNames[eDOMEvents_SVGLoad];

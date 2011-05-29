@@ -41,8 +41,8 @@ Shader::Shader(ResourceManager *manager, GLuint handle) : mHandle(handle), mReso
             resources.MaxVertexAttribs = MAX_VERTEX_ATTRIBS;
             resources.MaxVertexUniformVectors = MAX_VERTEX_UNIFORM_VECTORS;
             resources.MaxVaryingVectors = context->getMaximumVaryingVectors();
-            resources.MaxVertexTextureImageUnits = MAX_VERTEX_TEXTURE_IMAGE_UNITS;
-            resources.MaxCombinedTextureImageUnits = MAX_COMBINED_TEXTURE_IMAGE_UNITS;
+            resources.MaxVertexTextureImageUnits = context->getMaximumVertexTextureImageUnits();
+            resources.MaxCombinedTextureImageUnits = context->getMaximumCombinedTextureImageUnits();
             resources.MaxTextureImageUnits = MAX_TEXTURE_IMAGE_UNITS;
             resources.MaxFragmentUniformVectors = context->getMaximumFragmentUniformVectors();
             resources.MaxDrawBuffers = MAX_DRAW_BUFFERS;

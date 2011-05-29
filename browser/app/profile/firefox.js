@@ -70,6 +70,7 @@ pref("extensions.blocklist.interval", 86400);
 pref("extensions.blocklist.level", 2);
 pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PING_COUNT%/%TOTAL_PING_COUNT%/%DAYS_SINCE_LAST_PING%/");
 pref("extensions.blocklist.detailsURL", "https://www.mozilla.com/%LOCALE%/blocklist/");
+pref("extensions.blocklist.itemURL", "https://addons.mozilla.org/%LOCALE%/%APP%/blocked/%blockID%");
 
 pref("extensions.update.autoUpdateDefault", true);
 
@@ -785,6 +786,8 @@ pref("browser.sessionstore.max_resumed_crashes", 1);
 //       Other tabs won't be restored until they are selected
 //   N = The number of tabs to restore at the same time
 pref("browser.sessionstore.max_concurrent_tabs", 3);
+// Whether to automatically restore hidden tabs (i.e., tabs in other tab groups) or not
+pref("browser.sessionstore.restore_hidden_tabs", false);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
@@ -899,6 +902,17 @@ pref("dom.ipc.plugins.enabled.x86_64", true);
 pref("dom.ipc.plugins.enabled", true);
 #endif
 
+// This pref governs whether we attempt to work around problems caused by
+// plugins using OS calls to manipulate the cursor while running out-of-
+// process.  These workarounds all involve intercepting (hooking) certain
+// OS calls in the plugin process, then arranging to make certain OS calls
+// in the browser process.  Eventually plugins will be required to use the
+// NPAPI to manipulate the cursor, and these workarounds will be removed.
+// See bug 621117.
+#ifdef XP_MACOSX
+pref("dom.ipc.plugins.nativeCursorSupport", true);
+#endif
+
 #ifdef XP_WIN
 pref("browser.taskbar.previews.enable", false);
 pref("browser.taskbar.previews.max", 20);
@@ -1002,6 +1016,19 @@ pref("devtools.chrome.enabled", false);
 // Console will use the default height next time it shows.
 // Change to -1 if you do not want the Web Console to remember its last height.
 pref("devtools.hud.height", 0);
+
+// Remember the Web Console position. Possible values:
+//   above - above the web page,
+//   below - below the web page,
+//   window - in a separate window/popup panel.
+pref("devtools.webconsole.position", "above");
+
+// The number of lines that are displayed in the web console for the Net,
+// CSS, JS and Web Developer categories.
+pref("devtools.hud.loglimit.network", 200);
+pref("devtools.hud.loglimit.cssparser", 200);
+pref("devtools.hud.loglimit.exception", 200);
+pref("devtools.hud.loglimit.console", 200);
 
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.

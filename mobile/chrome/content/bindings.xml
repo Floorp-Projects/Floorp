@@ -1254,17 +1254,25 @@
       </handler>
     </handlers>
     <content orient="vertical" flex="1">
+      <xul:hbox class="history-throbber-box" flex="1" align="center" pack="center">
+        <xul:image src="chrome://browser/skin/images/throbber.png" />
+      </xul:hbox>
       <xul:richlistbox anonid="child-items" class="history-list-children" flex="1" batch="25"/>
     </content>
     <implementation>
       <method name="open">
         <body><![CDATA[
-          let children = this._children;
-          while (children.lastChild)
-            children.removeChild(children.lastChild);
+          this.setAttribute("loading", "true");
 
-          let items = this._getHistory();
-          children.setItems(items.map(this.createItem));
+          setTimeout(function(self) {
+            let children = self._children;
+            while (children.lastChild)
+              children.removeChild(children.lastChild);
+
+            let items = self._getHistory();
+            children.setItems(items.map(self.createItem));
+            self.removeAttribute("loading");
+          }, 0, this);
         ]]></body>
       </method>
 
@@ -1364,17 +1372,25 @@
       </handler>
     </handlers>
     <content orient="vertical" flex="1">
+      <xul:hbox class="remotetabs-throbber-box" flex="1" align="center" pack="center">
+        <xul:image src="chrome://browser/skin/images/throbber.png" />
+      </xul:hbox>
       <xul:richlistbox anonid="child-items" class="remotetabs-list-children" flex="1" batch="25"/>
     </content>
     <implementation>
       <method name="open">
         <body><![CDATA[
-          let children = this._children;
-          while (children.lastChild)
-            children.removeChild(children.lastChild);
+          this.setAttribute("loading", "true");
 
-          let items = this._getRemoteTabs();
-          children.setItems(items.map(this.createItem));
+          setTimeout(function(self) {
+            let children = self._children;
+            while (children.lastChild)
+              children.removeChild(children.lastChild);
+
+            let items = self._getRemoteTabs();
+            children.setItems(items.map(self.createItem));
+            self.removeAttribute("loading");
+          }, 0, this);
         ]]></body>
       </method>
 

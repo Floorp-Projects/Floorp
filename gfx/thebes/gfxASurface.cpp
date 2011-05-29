@@ -543,30 +543,31 @@ gfxASurface::MovePixels(const nsIntRect& aSourceRect,
 /** Memory reporting **/
 
 static const char *sSurfaceNamesForSurfaceType[] = {
-    "heap-used/gfx/surface/image",
-    "heap-used/gfx/surface/pdf",
-    "heap-used/gfx/surface/ps",
-    "heap-used/gfx/surface/xlib",
-    "heap-used/gfx/surface/xcb",
-    "heap-used/gfx/surface/glitz",
-    "heap-used/gfx/surface/quartz",
-    "heap-used/gfx/surface/win32",
-    "heap-used/gfx/surface/beos",
-    "heap-used/gfx/surface/directfb",
-    "heap-used/gfx/surface/svg",
-    "heap-used/gfx/surface/os2",
-    "heap-used/gfx/surface/win32printing",
-    "heap-used/gfx/surface/quartzimage",
-    "heap-used/gfx/surface/script",
-    "heap-used/gfx/surface/qpainter",
-    "heap-used/gfx/surface/recording",
-    "heap-used/gfx/surface/vg",
-    "heap-used/gfx/surface/gl",
-    "heap-used/gfx/surface/drm",
-    "heap-used/gfx/surface/tee",
-    "heap-used/gfx/surface/xml",
-    "heap-used/gfx/surface/skia",
-    "heap-used/gfx/surface/d2d"
+    "explicit/gfx/surface/image",
+    "explicit/gfx/surface/pdf",
+    "explicit/gfx/surface/ps",
+    "explicit/gfx/surface/xlib",
+    "explicit/gfx/surface/xcb",
+    "explicit/gfx/surface/glitz",
+    "explicit/gfx/surface/quartz",
+    "explicit/gfx/surface/win32",
+    "explicit/gfx/surface/beos",
+    "explicit/gfx/surface/directfb",
+    "explicit/gfx/surface/svg",
+    "explicit/gfx/surface/os2",
+    "explicit/gfx/surface/win32printing",
+    "explicit/gfx/surface/quartzimage",
+    "explicit/gfx/surface/script",
+    "explicit/gfx/surface/qpainter",
+    "explicit/gfx/surface/recording",
+    "explicit/gfx/surface/vg",
+    "explicit/gfx/surface/gl",
+    "explicit/gfx/surface/drm",
+    "explicit/gfx/surface/tee",
+    "explicit/gfx/surface/xml",
+    "explicit/gfx/surface/skia",
+    "explicit/gfx/surface/subsurface",
+    "explicit/gfx/surface/d2d"
 };
 
 PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceNamesForSurfaceType) == gfxASurface::SurfaceTypeMax);
@@ -580,7 +581,7 @@ SurfaceMemoryReporterPathForType(gfxASurface::gfxSurfaceType aType)
 {
     if (aType < 0 ||
         aType >= gfxASurface::SurfaceTypeMax)
-        return "heap-used/gfx/surface/unknown";
+        return "explicit/gfx/surface/unknown";
 
     return sSurfaceNamesForSurfaceType[aType];
 }
@@ -604,8 +605,13 @@ public:
         return NS_OK;
     }
 
+    NS_IMETHOD GetKind(PRInt32 *kind) {
+        *kind = MR_HEAP;
+        return NS_OK;
+    }
+
     NS_IMETHOD GetDescription(char **desc) {
-        *desc = strdup("Memory used by gfx surface of given type.");
+        *desc = strdup("Memory used by gfx surface of the given type.");
         return NS_OK;
     }
 

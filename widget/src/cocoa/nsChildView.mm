@@ -55,21 +55,18 @@
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
 #include "nsCRT.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 
 #include "nsFontMetrics.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIViewManager.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIServiceManager.h"
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsGfxCIID.h"
 #include "nsIMenuRollup.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "nsIPluginInstance.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsThemeConstants.h"
 
 #include "nsDragService.h"
@@ -90,6 +87,8 @@
 #include "LayerManagerOGL.h"
 #include "GLContext.h"
 
+#include "mozilla/Preferences.h"
+
 #include <dlfcn.h>
 
 #include <ApplicationServices/ApplicationServices.h>
@@ -97,6 +96,7 @@
 using namespace mozilla::layers;
 using namespace mozilla::gl;
 using namespace mozilla::widget;
+using namespace mozilla;
 
 #undef DEBUG_IME
 #undef DEBUG_UPDATE
@@ -717,8 +717,8 @@ void nsChildView::HidePlugin()
       [(ChildView*)mView pluginDrawingModel] == NPDrawingModelQuickDraw) {
     NPWindow* window;
     mPluginInstanceOwner->GetWindow(window);
-    nsCOMPtr<nsIPluginInstance> instance;
-    mPluginInstanceOwner->GetInstance(*getter_AddRefs(instance));
+    nsRefPtr<nsNPAPIPluginInstance> instance;
+    mPluginInstanceOwner->GetInstance(getter_AddRefs(instance));
     if (window && instance) {
        window->clipRect.top = 0;
        window->clipRect.left = 0;
@@ -1182,8 +1182,8 @@ void nsChildView::PaintQD()
   updateEvent.what = updateEvt;
   updateEvent.message = UInt32(window);
 
-  nsCOMPtr<nsIPluginInstance> instance;
-  mPluginInstanceOwner->GetInstance(*getter_AddRefs(instance));
+  nsRefPtr<nsNPAPIPluginInstance> instance;
+  mPluginInstanceOwner->GetInstance(getter_AddRefs(instance));
 
   instance->HandleEvent(&updateEvent, nsnull);
   EndDrawPlugin();
@@ -2938,12 +2938,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!gRollupWidget)
     return;
 
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    PRBool useNativeContextMenus;
-    nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows", &useNativeContextMenus);
-    if (NS_SUCCEEDED(rv) && useNativeContextMenus)
-      return;
+  if (Preferences::GetBool("ui.use_native_popup_windows", PR_FALSE)) {
+    return;
   }
 
   NSWindow *popupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
@@ -3766,11 +3762,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   float scrollDelta = 0;
   float scrollDeltaPixels = 0;
-  PRBool checkPixels = PR_TRUE;
-
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs)
-    prefs->GetBoolPref("mousewheel.enable_pixel_scrolling", &checkPixels);
+  PRBool checkPixels =
+    Preferences::GetBool("mousewheel.enable_pixel_scrolling", PR_TRUE);
 
   // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
   // assertion and an Objective-C NSInternalInconsistencyException if the
@@ -6330,7 +6323,6 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
 
 static CGWindowLevel kDockWindowLevel = 0;
 static CGWindowLevel kPopupWindowLevel = 0;
-static CGWindowLevel kFloatingWindowLevel = 0;
 
 static BOOL WindowNumberIsUnderPoint(NSInteger aWindowNumber, NSPoint aPoint) {
   NSWindow* window = [NSApp windowWithWindowNumber:aWindowNumber];
@@ -6345,14 +6337,12 @@ static BOOL WindowNumberIsUnderPoint(NSInteger aWindowNumber, NSPoint aPoint) {
     // These constants are in fact function calls, so cache them.
     kDockWindowLevel = kCGDockWindowLevel;
     kPopupWindowLevel = kCGPopUpMenuWindowLevel;
-    kFloatingWindowLevel = kCGFloatingWindowLevel;
   }
 
   // Some things put transparent windows on top of everything. Ignore them.
   CGWindowLevel level;
   if ((kCGErrorSuccess == CGSGetWindowLevel(cid, aWindowNumber, &level)) &&
       (level == kDockWindowLevel ||     // Transparent layer, spanning the whole screen
-       level == kFloatingWindowLevel || // invisible Jing window
        level > kPopupWindowLevel))      // Snapz Pro X while recording a screencast
     return false;
 

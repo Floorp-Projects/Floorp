@@ -38,16 +38,15 @@
 MOZ_APP_NAME=fennec
 MOZ_APP_UA_NAME=Fennec
 
-MOZ_APP_VERSION=6.0a1
+MOZ_APP_VERSION=7.0a1
 
-MOZ_BRANDING_DIRECTORY=mobile/branding/nightly
+MOZ_BRANDING_DIRECTORY=mobile/branding/unofficial
 MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
 # MOZ_APP_DISPLAYNAME is set by branding/configure.sh
 
 MOZ_SAFE_BROWSING=
 MOZ_SERVICES_SYNC=1
 
-MOZ_ENABLE_LIBXUL=1
 MOZ_DISABLE_DOMCRYPTO=1
 
 if test "$LIBXUL_SDK"; then

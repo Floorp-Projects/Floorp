@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -35,20 +35,6 @@
 
 #ifndef CAIRO_DEPRECATED_H
 #define CAIRO_DEPRECATED_H
-
-/* The %CAIRO_FORMAT_RGB16_565 value was added in cairo 1.2.0 as part
- * of fixing cairo's xlib backend to work with X servers advertising a
- * 16-bit, 565 visual. But as it turned out, adding this format to
- * #cairo_format_t was not necessary, and was a mistake, (cairo's xlib
- * backend can work fine with 16-bit visuals in the same way it works
- * with BGR visuals without any BGR formats in
- * #cairo_format_t).
- *
- * Additionally, the support for the RGB16_565 format was never
- * completely implemented. So while this format value is currently
- * deprecated, it may eventually acquire complete support in the future.
- */
-/* #define CAIRO_FORMAT_RGB16_565 4 */
 
 #define CAIRO_FONT_TYPE_ATSUI CAIRO_FONT_TYPE_QUARTZ
 
@@ -123,7 +109,6 @@
 #define cairo_matrix_copy		cairo_matrix_copy_DEPRECATED_BY_cairo_matrix_t
 #define cairo_matrix_get_affine		cairo_matrix_get_affine_DEPRECATED_BY_cairo_matrix_t
 #define cairo_set_target_surface	cairo_set_target_surface_DEPRECATED_BY_cairo_create
-#define cairo_set_target_glitz		cairo_set_target_glitz_DEPRECATED_BY_cairo_glitz_surface_create
 #define cairo_set_target_image		cairo_set_target_image_DEPRECATED_BY_cairo_image_surface_create_for_data
 #define cairo_set_target_pdf		cairo_set_target_pdf_DEPRECATED_BY_cairo_pdf_surface_create
 #define cairo_set_target_png		cairo_set_target_png_DEPRECATED_BY_cairo_surface_write_to_png

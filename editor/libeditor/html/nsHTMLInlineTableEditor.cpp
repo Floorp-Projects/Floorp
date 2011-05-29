@@ -124,8 +124,7 @@ nsHTMLEditor::HideInlineTableEditingUI()
   RemoveMouseClickListener(mAddRowAfterButton);
 
   // get the presshell's document observer interface.
-  nsCOMPtr<nsIPresShell> ps;
-  GetPresShell(getter_AddRefs(ps));
+  nsCOMPtr<nsIPresShell> ps = GetPresShell();
   // We allow the pres shell to be null; when it is, we presume there
   // are no document observers to notify, but we still want to
   // UnbindFromTree.

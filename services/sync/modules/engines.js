@@ -193,7 +193,7 @@ function Store(name) {
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log4Moz.Level[level];
 
-  Utils.lazy2(this, "_timer", function() {
+  XPCOMUtils.defineLazyGetter(this, "_timer", function() {
     return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   });
 }
@@ -267,7 +267,9 @@ Store.prototype = {
 
 // Singleton service, holds registered engines
 
-Utils.lazy(this, 'Engines', EngineManagerSvc);
+XPCOMUtils.defineLazyGetter(this, "Engines", function() {
+  return new EngineManagerSvc();
+});
 
 function EngineManagerSvc() {
   this._engines = {};

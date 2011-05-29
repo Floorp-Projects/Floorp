@@ -73,12 +73,7 @@
 #include "nsIAccessible.h"
 #endif
 
-#include "nsIDOMText.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIDOMHTMLHRElement.h"
-#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNode.h"
 #include "nsIEditorDocShell.h"
 #include "nsEventStateManager.h"
 #include "nsISelection.h"
@@ -129,6 +124,8 @@
 #include "gfxContext.h"
 #include "CSSCalc.h"
 #include "nsAbsoluteContainingBlock.h"
+
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -1466,8 +1463,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsRect absPosClip;
   const nsStyleDisplay* disp = GetStyleDisplay();
   // We can stop right away if this is a zero-opacity stacking context and
-  // we're not checking for event handling.
-  if (disp->mOpacity == 0.0 && !aBuilder->IsForEventDelivery())
+  // we're painting.
+  if (disp->mOpacity == 0.0 && aBuilder->IsForPainting())
     return NS_OK;
 
   PRBool applyAbsPosClipping =
@@ -1498,7 +1495,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 #endif
 
   // Mark the display list items for absolutely positioned children
-  MarkAbsoluteFramesForDisplayList(aBuilder, aDirtyRect);
+  MarkAbsoluteFramesForDisplayList(aBuilder, dirtyRect);
 
   nsDisplayListCollection set;
   nsresult rv;
@@ -2217,7 +2214,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   PRBool control = me->isControl;
 #endif
 
-  nsCOMPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
+  nsRefPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
   if (me->clickCount >1 )
   {
     // These methods aren't const but can't actually delete anything,
@@ -2354,7 +2351,7 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   if (me->clickCount == 4) {
     beginAmount = endAmount = eSelectParagraph;
   } else if (me->clickCount == 3) {
-    if (nsContentUtils::GetBoolPref("browser.triple_click_selects_paragraph")) {
+    if (Preferences::GetBool("browser.triple_click_selects_paragraph")) {
       beginAmount = endAmount = eSelectParagraph;
     } else {
       beginAmount = eSelectBeginLine;
@@ -2487,7 +2484,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   }
   nsIPresShell *presShell = aPresContext->PresShell();
 
-  nsCOMPtr<nsFrameSelection> frameselection = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> frameselection = GetFrameSelection();
   PRBool mouseDown = frameselection->GetMouseDownState();
   if (!mouseDown)
     return NS_OK;
@@ -2924,7 +2921,7 @@ static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
     // up with a line or the beginning or end of the frame; 0 on Windows,
     // 1 on other platforms by default at the writing of this code
     PRInt32 dragOutOfFrame =
-            nsContentUtils::GetIntPref("browser.drag_out_of_frame_style");
+      Preferences::GetInt("browser.drag_out_of_frame_style");
 
     if (prevLine == end) {
       if (dragOutOfFrame == 1 || nextLine == end)
@@ -5650,7 +5647,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         // This pref only affects whether moving forward by word should go to the end of this word or start of the next word.
         // When going backwards, the start of the word is always used, on every operating system.
         wordSelectEatSpace = aPos->mDirection == eDirNext &&
-          nsContentUtils::GetBoolPref("layout.word_select.eat_space_to_next_word");
+          Preferences::GetBool("layout.word_select.eat_space_to_next_word");
       }
       
       // mSawBeforeType means "we already saw characters of the type
@@ -5958,7 +5955,7 @@ nsFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
     // We always stop between whitespace and punctuation
     return PR_TRUE;
   }
-  if (!nsContentUtils::GetBoolPref("layout.word_select.stop_at_punctuation")) {
+  if (!Preferences::GetBool("layout.word_select.stop_at_punctuation")) {
     // When this pref is false, we never stop at a punctuation boundary unless
     // it's after whitespace
     return PR_FALSE;

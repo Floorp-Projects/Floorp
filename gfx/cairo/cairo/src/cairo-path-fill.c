@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -35,6 +35,8 @@
  */
 
 #include "cairoint.h"
+#include "cairo-boxes-private.h"
+#include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-region-private.h"
 
@@ -141,7 +143,8 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_polygon_init (&polygon);
-    _cairo_polygon_limit (&polygon, traps->limits, traps->num_limits);
+    if (traps->num_limits)
+	_cairo_polygon_limit (&polygon, traps->limits, traps->num_limits);
 
     status = _cairo_path_fixed_fill_to_polygon (path,
 						tolerance,
@@ -217,11 +220,8 @@ _cairo_path_fixed_fill_rectilinear_tessellate_to_region (const cairo_path_fixed_
   CLEANUP_TRAPS:
     _cairo_traps_fini (&traps);
 
-    if (unlikely (status)) { /* XXX _cairo_region_create_in_error() */
-	region = cairo_region_create ();
-	if (likely (region->status) == CAIRO_STATUS_SUCCESS)
-	    region->status = status;
-    }
+    if (unlikely (status))
+	region = _cairo_region_create_in_error (status);
 
     return region;
 }
@@ -390,4 +390,76 @@ _cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t *path,
 	_cairo_traps_clear (traps);
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
+}
+
+static cairo_status_t
+_cairo_path_fixed_fill_rectilinear_tessellate_to_boxes (const cairo_path_fixed_t *path,
+							cairo_fill_rule_t fill_rule,
+							cairo_boxes_t *boxes)
+{
+    cairo_polygon_t polygon;
+    cairo_status_t status;
+
+    _cairo_polygon_init (&polygon);
+    if (boxes->num_limits) {
+	_cairo_polygon_limit (&polygon, boxes->limits, boxes->num_limits);
+	boxes->num_limits = 0;
+    }
+
+    /* tolerance will be ignored as the path is rectilinear */
+    status = _cairo_path_fixed_fill_to_polygon (path, 0., &polygon);
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	status =
+	    _cairo_bentley_ottmann_tessellate_rectilinear_polygon_to_boxes (&polygon,
+									    fill_rule,
+									    boxes);
+    }
+
+    _cairo_polygon_fini (&polygon);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_path_fixed_fill_rectilinear_to_boxes (const cairo_path_fixed_t *path,
+					     cairo_fill_rule_t fill_rule,
+					     cairo_boxes_t *boxes)
+{
+    cairo_path_fixed_iter_t iter;
+    cairo_status_t status;
+    cairo_box_t box;
+
+    if (_cairo_path_fixed_is_box (path, &box))
+	return _cairo_boxes_add (boxes, &box);
+
+    _cairo_path_fixed_iter_init (&iter, path);
+    while (_cairo_path_fixed_iter_is_fill_box (&iter, &box)) {
+	if (box.p1.y == box.p2.y || box.p1.x == box.p2.x)
+	    continue;
+
+	if (box.p1.y > box.p2.y) {
+	    cairo_fixed_t t;
+
+	    t = box.p1.y;
+	    box.p1.y = box.p2.y;
+	    box.p2.y = t;
+
+	    t = box.p1.x;
+	    box.p1.x = box.p2.x;
+	    box.p2.x = t;
+	}
+
+	status = _cairo_boxes_add (boxes, &box);
+	if (unlikely (status))
+	    return status;
+    }
+
+    if (_cairo_path_fixed_iter_at_end (&iter))
+	return _cairo_bentley_ottmann_tessellate_boxes (boxes, fill_rule, boxes);
+
+    /* path is not rectangular, try extracting clipped rectilinear edges */
+    _cairo_boxes_clear (boxes);
+    return _cairo_path_fixed_fill_rectilinear_tessellate_to_boxes (path,
+								   fill_rule,
+								   boxes);
 }

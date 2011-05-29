@@ -94,7 +94,6 @@ DOMCI_CLASS(HTMLBodyElement)
 DOMCI_CLASS(HTMLButtonElement)
 DOMCI_CLASS(HTMLDataListElement)
 DOMCI_CLASS(HTMLDListElement)
-DOMCI_CLASS(HTMLDelElement)
 DOMCI_CLASS(HTMLDirectoryElement)
 DOMCI_CLASS(HTMLDivElement)
 DOMCI_CLASS(HTMLEmbedElement)
@@ -110,7 +109,6 @@ DOMCI_CLASS(HTMLHtmlElement)
 DOMCI_CLASS(HTMLIFrameElement)
 DOMCI_CLASS(HTMLImageElement)
 DOMCI_CLASS(HTMLInputElement)
-DOMCI_CLASS(HTMLInsElement)
 DOMCI_CLASS(HTMLIsIndexElement)
 DOMCI_CLASS(HTMLLIElement)
 DOMCI_CLASS(HTMLLabelElement)
@@ -119,6 +117,7 @@ DOMCI_CLASS(HTMLLinkElement)
 DOMCI_CLASS(HTMLMapElement)
 DOMCI_CLASS(HTMLMenuElement)
 DOMCI_CLASS(HTMLMetaElement)
+DOMCI_CLASS(HTMLModElement)
 DOMCI_CLASS(HTMLOListElement)
 DOMCI_CLASS(HTMLObjectElement)
 DOMCI_CLASS(HTMLOptGroupElement)
@@ -388,6 +387,9 @@ DOMCI_CLASS(XMLSerializer)
 DOMCI_CLASS(XMLHttpProgressEvent)
 DOMCI_CLASS(XMLHttpRequest)
 
+// Server-sent events
+DOMCI_CLASS(EventSource)
+
 DOMCI_CLASS(ClientRect)
 DOMCI_CLASS(ClientRectList)
 
@@ -406,6 +408,9 @@ DOMCI_CLASS(FileException)
 DOMCI_CLASS(FileError)
 DOMCI_CLASS(FileReader)
 DOMCI_CLASS(MozURLProperty)
+DOMCI_CLASS(MozBlobBuilder)
+
+DOMCI_CLASS(DOMStringMap)
 
 // DOM modal content window class, almost identical to Window
 DOMCI_CLASS(ModalContentWindow)
@@ -471,8 +476,8 @@ DOMCI_CLASS(WebGLFramebuffer)
 DOMCI_CLASS(WebGLRenderbuffer)
 DOMCI_CLASS(WebGLUniformLocation)
 DOMCI_CLASS(WebGLActiveInfo)
+DOMCI_CLASS(WebGLExtension)
 
-// WebGL Buffers
 DOMCI_CLASS(PaintRequest)
 DOMCI_CLASS(PaintRequestList)
 

@@ -261,9 +261,7 @@ void GeckoChildProcessHost::InitWindowsGroupID()
     taskbarInfo->GetAvailable(&isSupported);
     nsAutoString appId;
     if (isSupported && NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {
-      mGroupId.Assign(PRUnichar('\"'));
       mGroupId.Append(appId);
-      mGroupId.Append(PRUnichar('\"'));
     } else {
       mGroupId.AssignLiteral("-");
     }
@@ -436,6 +434,25 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     newEnvVars["LD_LIBRARY_PATH"] = path.get();
 #elif OS_MACOSX
     newEnvVars["DYLD_LIBRARY_PATH"] = path.get();
+    // XXX DYLD_INSERT_LIBRARIES should only be set when launching a plugin
+    //     process, and has no effect on other subprocesses (the hooks in
+    //     libplugin_child_interpose.dylib become noops).  But currently it
+    //     gets set when launching any kind of subprocess.
+    //
+    // Trigger "dyld interposing" for the dylib that contains
+    // plugin_child_interpose.mm.  This allows us to hook OS calls in the
+    // plugin process (ones that don't work correctly in a background
+    // process).  Don't break any other "dyld interposing" that has already
+    // been set up by whatever may have launched the browser.
+    const char* prevInterpose = PR_GetEnv("DYLD_INSERT_LIBRARIES");
+    nsCString interpose;
+    if (prevInterpose) {
+      interpose.Assign(prevInterpose);
+      interpose.AppendLiteral(":");
+    }
+    interpose.Append(path.get());
+    interpose.AppendLiteral("/libplugin_child_interpose.dylib");
+    newEnvVars["DYLD_INSERT_LIBRARIES"] = interpose.get();
 #endif
   }
 #endif
@@ -492,16 +509,19 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
   childArgv.insert(childArgv.end(), aExtraOpts.begin(), aExtraOpts.end());
 
-#ifdef MOZ_OMNIJAR
   // Make sure the child process can find the omnijar
   // See XRE_InitCommandLine in nsAppRunner.cpp
-  nsCAutoString omnijarPath;
-  if (mozilla::OmnijarPath()) {
-    mozilla::OmnijarPath()->GetNativePath(omnijarPath);
-    childArgv.push_back("-omnijar");
-    childArgv.push_back(omnijarPath.get());
+  nsCAutoString path;
+  nsCOMPtr<nsIFile> file = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
+  if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
+    childArgv.push_back("-greomni");
+    childArgv.push_back(path.get());
   }
-#endif
+  file = mozilla::Omnijar::GetPath(mozilla::Omnijar::APP);
+  if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
+    childArgv.push_back("-appomni");
+    childArgv.push_back(path.get());
+  }
 
   childArgv.push_back(pidstring);
 
@@ -604,16 +624,19 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
   cmdLine.AppendLooseValue(std::wstring(mGroupId.get()));
 
-#ifdef MOZ_OMNIJAR
   // Make sure the child process can find the omnijar
   // See XRE_InitCommandLine in nsAppRunner.cpp
-  nsAutoString omnijarPath;
-  if (mozilla::OmnijarPath()) {
-    mozilla::OmnijarPath()->GetPath(omnijarPath);
-    cmdLine.AppendLooseValue(UTF8ToWide("-omnijar"));
-    cmdLine.AppendLooseValue(omnijarPath.get());
+  nsAutoString path;
+  nsCOMPtr<nsIFile> file = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
+  if (file && NS_SUCCEEDED(file->GetPath(path))) {
+    cmdLine.AppendLooseValue(UTF8ToWide("-greomni"));
+    cmdLine.AppendLooseValue(path.get());
   }
-#endif
+  file = mozilla::Omnijar::GetPath(mozilla::Omnijar::APP);
+  if (file && NS_SUCCEEDED(file->GetPath(path))) {
+    cmdLine.AppendLooseValue(UTF8ToWide("-appomni"));
+    cmdLine.AppendLooseValue(path.get());
+  }
 
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));
 

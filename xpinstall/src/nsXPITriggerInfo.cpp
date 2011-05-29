@@ -188,8 +188,7 @@ nsXPITriggerInfo::~nsXPITriggerInfo()
     for(PRUint32 i=0; i < Size(); i++)
     {
         item = Get(i);
-        if (item)
-            delete item;
+        delete item;
     }
     mItems.Clear();
 

@@ -78,8 +78,10 @@ successfullyParsed = true;
 </script>
 </head>
 <body>
-<div id="description"></div>
+<!-- Important to put the canvas at the top so that it's always visible even in the test suite runner.
+     Otherwise it just doesn't get composited in Firefox. -->
 <canvas width="20" height="20" style="border: 1px solid blue;" id="c"></canvas>
+<div id="description"></div>
 <div id="console"></div>
 </body>
 </html>

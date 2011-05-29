@@ -115,9 +115,7 @@ ReplaceAll(const string& haystack, const string& needle, const string& with)
 string
 MungePluginDsoPath(const string& path)
 {
-#if defined(XP_WIN)
-  return "\""+ path +"\"";
-#elif defined(OS_LINUX)
+#if defined(OS_LINUX)
   // https://bugzilla.mozilla.org/show_bug.cgi?id=519601
   return ReplaceAll(path, "netscape", "netsc@pe");
 #else

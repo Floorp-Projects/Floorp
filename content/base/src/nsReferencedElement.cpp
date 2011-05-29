@@ -40,7 +40,6 @@
 #include "nsContentUtils.h"
 #include "nsIURI.h"
 #include "nsBindingManager.h"
-#include "nsIURL.h"
 #include "nsEscape.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIDOMNode.h"
@@ -48,50 +47,25 @@
 #include "nsIDOMElement.h"
 #include "nsCycleCollectionParticipant.h"
 
-static PRBool EqualExceptRef(nsIURL* aURL1, nsIURL* aURL2)
-{
-  nsCOMPtr<nsIURI> u1;
-  nsCOMPtr<nsIURI> u2;
-
-  nsresult rv = aURL1->Clone(getter_AddRefs(u1));
-  if (NS_SUCCEEDED(rv)) {
-    rv = aURL2->Clone(getter_AddRefs(u2));
-  }
-  if (NS_FAILED(rv))
-    return PR_FALSE;
-
-  nsCOMPtr<nsIURL> url1 = do_QueryInterface(u1);
-  nsCOMPtr<nsIURL> url2 = do_QueryInterface(u2);
-  if (!url1 || !url2) {
-    NS_WARNING("Cloning a URL produced a non-URL");
-    return PR_FALSE;
-  }
-  url1->SetRef(EmptyCString());
-  url2->SetRef(EmptyCString());
-
-  PRBool equal;
-  rv = url1->Equals(url2, &equal);
-  return NS_SUCCEEDED(rv) && equal;
-}
-
 void
 nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
                            PRBool aWatch, PRBool aReferenceImage)
 {
+  NS_ABORT_IF_FALSE(aFromContent, "Reset() expects non-null content pointer");
+
   Unlink();
 
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-  if (!url)
+  if (!aURI)
     return;
 
   nsCAutoString refPart;
-  url->GetRef(refPart);
+  aURI->GetRef(refPart);
   // Unescape %-escapes in the reference. The result will be in the
   // origin charset of the URL, hopefully...
   NS_UnescapeURL(refPart);
 
   nsCAutoString charset;
-  url->GetOriginCharset(charset);
+  aURI->GetOriginCharset(charset);
   nsAutoString ref;
   nsresult rv = nsContentUtils::ConvertStringFromCharset(charset, refPart, ref);
   if (NS_FAILED(rv)) {
@@ -109,9 +83,10 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
   if (bindingParent) {
     nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
     if (binding) {
-      nsCOMPtr<nsIURL> bindingDocumentURL =
-        do_QueryInterface(binding->PrototypeBinding()->DocURI());
-      if (EqualExceptRef(url, bindingDocumentURL)) {
+      PRBool isEqualExceptRef;
+      rv = aURI->EqualsExceptRef(binding->PrototypeBinding()->DocURI(),
+                                 &isEqualExceptRef);
+      if (NS_SUCCEEDED(rv) && isEqualExceptRef) {
         // XXX sXBL/XBL2 issue
         // Our content is an anonymous XBL element from a binding inside the
         // same document that the referenced URI points to. In order to avoid
@@ -139,13 +114,12 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
     }
   }
 
-  nsCOMPtr<nsIURL> documentURL = do_QueryInterface(doc->GetDocumentURI());
-  // We've already checked that |url| is an nsIURL.  So if the document URI is
-  // not an nsIURL then |url| is certainly not going to be pointing to the same
-  // document as the document URI.
-  if (!documentURL || !EqualExceptRef(url, documentURL)) {
+  PRBool isEqualExceptRef;
+  rv = aURI->EqualsExceptRef(doc->GetDocumentURI(), &isEqualExceptRef);
+  if (NS_FAILED(rv) || !isEqualExceptRef) {
     nsRefPtr<nsIDocument::ExternalResourceLoad> load;
-    doc = doc->RequestExternalResource(url, aFromContent, getter_AddRefs(load));
+    doc = doc->RequestExternalResource(aURI, aFromContent,
+                                       getter_AddRefs(load));
     if (!doc) {
       if (!load || !aWatch) {
         // Nothing will ever happen here

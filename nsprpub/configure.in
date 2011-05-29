@@ -152,7 +152,20 @@ AC_ARG_WITH(android-platform,
                            location of platform dir, default NDK/build/platforms/android-5/arch-arm],
     android_platform=$withval)
 
-if test "$target" = "arm-android-eabi" ; then
+case "$target" in
+arm-linux*-android*|*-linuxandroid*)
+    android_tool_prefix="arm-linux-androideabi"
+    ;;
+arm-android-eabi)
+    android_tool_prefix="arm-eabi"
+    ;;
+*)
+    android_tool_prefix="$target_os"
+    ;;
+esac
+
+case "$target" in
+*-android*|*-linuxandroid*)
     if test -z "$android_ndk" ; then
        AC_MSG_ERROR([You must specify --with-android-ndk=/path/to/ndk when targeting Android.])
     fi
@@ -166,14 +179,14 @@ if test "$target" = "arm-android-eabi" ; then
     fi
 
     dnl set up compilers
-    AS="$android_toolchain"/bin/arm-eabi-as
-    CC="$android_toolchain"/bin/arm-eabi-gcc
-    CXX="$android_toolchain"/bin/arm-eabi-g++
-    CPP="$android_toolchain"/bin/arm-eabi-cpp
-    LD="$android_toolchain"/bin/arm-eabi-ld
-    AR="$android_toolchain"/bin/arm-eabi-ar
-    RANLIB="$android_toolchain"/bin/arm-eabi-ranlib
-    STRIP="$android_toolchain"/bin/arm-eabi-strip
+    AS="$android_toolchain"/bin/"$android_tool_prefix"-as
+    CC="$android_toolchain"/bin/"$android_tool_prefix"-gcc
+    CXX="$android_toolchain"/bin/"$android_tool_prefix"-g++
+    CPP="$android_toolchain"/bin/"$android_tool_prefix"-cpp
+    LD="$android_toolchain"/bin/"$android_tool_prefix"-ld
+    AR="$android_toolchain"/bin/"$android_tool_prefix"-ar
+    RANLIB="$android_toolchain"/bin/"$android_tool_prefix"-ranlib
+    STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
     CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CFLAGS"
@@ -197,7 +210,8 @@ if test "$target" = "arm-android-eabi" ; then
     WRAP_MALLOC_CFLAGS="-Wl,--wrap=dlopen -Wl,--wrap=dlclose -Wl,--wrap=dlerror -Wl,--wrap=dlsym -Wl,--wrap=dladdr"
 
     AC_DEFINE(ANDROID)
-fi
+    ;;
+esac
 
 dnl ========================================================
 dnl =
@@ -1036,6 +1050,33 @@ case "$target" in
     RESOLVE_LINK_SYMBOLS=1
     ;;
         
+*-android*|*-linuxandroid*)
+    if test -z "$USE_NSPR_THREADS"; then
+        USE_PTHREADS=1
+        IMPL_STRATEGY=_PTH
+    fi
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(_GNU_SOURCE)
+    AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
+    AC_DEFINE(LINUX)
+    CFLAGS="$CFLAGS -Wall"
+    CXXFLAGS="$CXXFLAGS -Wall"
+    MDCPUCFG_H=_linux.cfg
+    PR_MD_CSRCS=linux.c
+    MKSHLIB='$(CC) $(DSO_LDOPTS) $(WRAP_MALLOC_LIB) -o $@'
+    DSO_CFLAGS=-fPIC
+    DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
+    _OPTIMIZE_FLAGS=-O2
+    _DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb, and that
+                                   # combo is not yet good at debugging inlined
+                                   # functions (even when using DWARF2 as the
+                                   # debugging format)
+    COMPILER_TAG=_glibc
+    CPU_ARCH=arm
+    CPU_ARCH_TAG=_arm
+    OS_TARGET=Android
+    ;;
+
 *-beos*)
     AC_DEFINE(XP_BEOS)
     AC_DEFINE(BeOS)
@@ -1561,33 +1602,6 @@ tools are selected during the Xcode/Developer Tools installation.])
 	esac
     ;;
 
-arm-android-eabi)
-    if test -z "$USE_NSPR_THREADS"; then
-        USE_PTHREADS=1
-        IMPL_STRATEGY=_PTH
-    fi
-    AC_DEFINE(XP_UNIX)
-    AC_DEFINE(_GNU_SOURCE)
-    AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    AC_DEFINE(LINUX)
-    CFLAGS="$CFLAGS -Wall"
-    CXXFLAGS="$CXXFLAGS -Wall"
-    MDCPUCFG_H=_linux.cfg
-    PR_MD_CSRCS=linux.c
-    MKSHLIB='$(CC) $(DSO_LDOPTS) $(WRAP_MALLOC_LIB) -o $@'
-    DSO_CFLAGS=-fPIC
-    DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
-    _OPTIMIZE_FLAGS=-O2
-    _DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb, and that
-                                   # combo is not yet good at debugging inlined
-                                   # functions (even when using DWARF2 as the
-                                   # debugging format)
-    COMPILER_TAG=_glibc
-    CPU_ARCH=arm
-    CPU_ARCH_TAG=_arm
-    OS_TARGET=Android
-    ;;
-
 *-linux*|*-gnu*|*-k*bsd*-gnu)
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
@@ -1669,8 +1683,8 @@ arm-android-eabi)
     RESOLVE_LINK_SYMBOLS=1
 
     if test -n "$GNU_CC"; then
-        CC="$CC -mno-cygwin"
-        CXX="$CXX -mno-cygwin"
+        CC="$CC -mwindows"
+        CXX="$CXX -mwindows"
         DLL_SUFFIX=dll
         MKSHLIB='$(CC) -shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY) $(DLLBASE) -o $(subst $(OBJDIR)/,,$(SHARED_LIBRARY))'
         RC=$WINDRES

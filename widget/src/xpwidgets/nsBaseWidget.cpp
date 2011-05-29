@@ -47,8 +47,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIContent.h"
 #include "nsIServiceManager.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch2.h"
+#include "mozilla/Preferences.h"
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
 #include "nsIXULRuntime.h"
@@ -68,6 +67,7 @@ static PRInt32 gNumWidgets;
 #endif
 
 using namespace mozilla::layers;
+using namespace mozilla;
 
 nsIContent* nsBaseWidget::mLastRollup = nsnull;
 
@@ -151,8 +151,7 @@ nsBaseWidget::~nsBaseWidget()
 
   NS_IF_RELEASE(mToolkit);
   NS_IF_RELEASE(mContext);
-  if (mOriginalBounds)
-    delete mOriginalBounds;
+  delete mOriginalBounds;
 }
 
 
@@ -779,10 +778,6 @@ nsBaseWidget::AutoUseBasicLayerManager::~AutoUseBasicLayerManager()
 PRBool
 nsBaseWidget::GetShouldAccelerate()
 {
-  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-  PRBool disableAcceleration = PR_FALSE;
-  PRBool forceAcceleration = PR_FALSE;
 #if defined(XP_WIN) || defined(ANDROID) || (MOZ_PLATFORM_MAEMO > 5)
   PRBool accelerateByDefault = PR_TRUE;
 #elif defined(XP_MACOSX)
@@ -816,17 +811,13 @@ nsBaseWidget::GetShouldAccelerate()
   PRBool accelerateByDefault = PR_FALSE;
 #endif
 
-  if (prefs) {
-    // we should use AddBoolPrefVarCache
-    prefs->GetBoolPref("layers.acceleration.disabled",
-                       &disableAcceleration);
-
-    prefs->GetBoolPref("layers.acceleration.force-enabled",
-                       &forceAcceleration);
-
-    prefs->GetBoolPref("layers.acceleration.draw-fps",
-                       &mDrawFPS);
-  }
+  // we should use AddBoolPrefVarCache
+  PRBool disableAcceleration =
+    Preferences::GetBool("layers.acceleration.disabled", PR_FALSE);
+  PRBool forceAcceleration =
+    Preferences::GetBool("layers.acceleration.force-enabled", PR_FALSE);
+  mDrawFPS =
+    Preferences::GetBool("layers.acceleration.draw-fps", PR_FALSE);
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
   accelerateByDefault = accelerateByDefault || 
@@ -1109,22 +1100,14 @@ nsBaseWidget::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
 {
   aOverriddenDelta = aOriginalDelta;
 
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(prefs, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  nsresult rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(prefBranch, NS_ERROR_FAILURE);
-
-  PRBool isOverrideEnabled;
   const char* kPrefNameOverrideEnabled =
     "mousewheel.system_scroll_override_on_root_content.enabled";
-  rv = prefBranch->GetBoolPref(kPrefNameOverrideEnabled, &isOverrideEnabled);
-  if (NS_FAILED(rv) || !isOverrideEnabled) {
+  PRBool isOverrideEnabled =
+    Preferences::GetBool(kPrefNameOverrideEnabled, PR_FALSE);
+  if (!isOverrideEnabled) {
     return NS_OK;
   }
 
-  PRInt32 iFactor;
   nsCAutoString factorPrefName(
     "mousewheel.system_scroll_override_on_root_content.");
   if (aIsHorizontal) {
@@ -1133,10 +1116,10 @@ nsBaseWidget::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
     factorPrefName.AppendLiteral("vertical.");
   }
   factorPrefName.AppendLiteral("factor");
-  rv = prefBranch->GetIntPref(factorPrefName.get(), &iFactor);
+  PRInt32 iFactor = Preferences::GetInt(factorPrefName.get(), 0);
   // The pref value must be larger than 100, otherwise, we don't override the
   // delta value.
-  if (NS_FAILED(rv) || iFactor <= 100) {
+  if (iFactor <= 100) {
     return NS_OK;
   }
   double factor = (double)iFactor / 100;
@@ -1348,32 +1331,13 @@ static PrefPair debug_PrefValues[] =
   { "nglayout.debug.paint_flashing", PR_FALSE }
 };
 
-static PRUint32 debug_NumPrefValues = 
-  (sizeof(debug_PrefValues) / sizeof(debug_PrefValues[0]));
-
-
-//////////////////////////////////////////////////////////////
-static PRBool debug_GetBoolPref(nsIPrefBranch * aPrefs,const char * aPrefName)
-{
-  NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
-  NS_ASSERTION(nsnull != aPrefs,"cmon, prefs are null.");
-
-  PRBool value = PR_FALSE;
-
-  if (aPrefs)
-  {
-    aPrefs->GetBoolPref(aPrefName,&value);
-  }
-
-  return value;
-}
 //////////////////////////////////////////////////////////////
 PRBool
 nsBaseWidget::debug_GetCachedBoolPref(const char * aPrefName)
 {
   NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
 
-  for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(debug_PrefValues); i++)
   {
     if (strcmp(debug_PrefValues[i].name, aPrefName) == 0)
     {
@@ -1388,7 +1352,7 @@ static void debug_SetCachedBoolPref(const char * aPrefName,PRBool aValue)
 {
   NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
 
-  for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(debug_PrefValues); i++)
   {
     if (strcmp(debug_PrefValues[i].name, aPrefName) == 0)
     {
@@ -1414,13 +1378,9 @@ NS_IMETHODIMP
 Debug_PrefObserver::Observe(nsISupports* subject, const char* topic,
                             const PRUnichar* data)
 {
-  nsCOMPtr<nsIPrefBranch> branch(do_QueryInterface(subject));
-  NS_ASSERTION(branch, "must implement nsIPrefBranch");
-
   NS_ConvertUTF16toUTF8 prefName(data);
 
-  PRBool value = PR_FALSE;
-  branch->GetBoolPref(prefName.get(), &value);
+  PRBool value = Preferences::GetBool(prefName.get(), PR_FALSE);
   debug_SetCachedBoolPref(prefName.get(), value);
   return NS_OK;
 }
@@ -1431,28 +1391,21 @@ debug_RegisterPrefCallbacks()
 {
   static PRBool once = PR_TRUE;
 
-  if (once)
-  {
-    once = PR_FALSE;
+  if (!once) {
+    return;
+  }
 
-    nsCOMPtr<nsIPrefBranch2> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    
-    NS_ASSERTION(prefs, "Prefs services is null.");
+  once = PR_FALSE;
 
-    if (prefs)
-    {
-      nsCOMPtr<nsIObserver> obs(new Debug_PrefObserver());
-      for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
-      {
-        // Initialize the pref values
-        debug_PrefValues[i].value = 
-          debug_GetBoolPref(prefs,debug_PrefValues[i].name);
+  nsCOMPtr<nsIObserver> obs(new Debug_PrefObserver());
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(debug_PrefValues); i++) {
+    // Initialize the pref values
+    debug_PrefValues[i].value =
+      Preferences::GetBool(debug_PrefValues[i].name, PR_FALSE);
 
-        if (obs) {
-          // Register callbacks for when these change
-          prefs->AddObserver(debug_PrefValues[i].name, obs, PR_FALSE);
-        }
-      }
+    if (obs) {
+      // Register callbacks for when these change
+      Preferences::AddStrongObserver(obs, debug_PrefValues[i].name);
     }
   }
 }

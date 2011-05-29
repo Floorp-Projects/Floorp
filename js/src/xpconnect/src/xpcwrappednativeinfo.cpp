@@ -382,7 +382,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
             failed = JS_TRUE;
             break;
         }
-        name = INTERNED_STRING_TO_JSID(str);
+        name = INTERNED_STRING_TO_JSID(ccx, str);
 
         if(info->IsSetter())
         {
@@ -426,7 +426,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
                 failed = JS_TRUE;
                 break;
             }
-            name = INTERNED_STRING_TO_JSID(str);
+            name = INTERNED_STRING_TO_JSID(ccx, str);
 
             // XXX need better way to find dups
             //NS_ASSERTION(!LookupMemberByID(name),"duplicate method/constant name");
@@ -445,7 +445,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
         {
             failed = JS_TRUE;
         }
-        interfaceName = INTERNED_STRING_TO_JSID(str);
+        interfaceName = INTERNED_STRING_TO_JSID(ccx, str);
     }
 
     if(!failed)

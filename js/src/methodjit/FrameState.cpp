@@ -75,6 +75,11 @@ FrameState::init()
         return true;
     }
 
+#if defined JS_NUNBOX32
+    if (!reifier.init(nentries))
+        return false;
+#endif
+
     eval = script->usesEval || cx->compartment->debugMode;
 
     size_t totalBytes = sizeof(FrameEntry) * nentries +                     // entries[], w/ callee+this
@@ -89,11 +94,6 @@ FrameState::init()
     uint8 *cursor = (uint8 *)cx->calloc_(totalBytes);
     if (!cursor)
         return false;
-
-#if defined JS_NUNBOX32
-    if (!reifier.init(nentries))
-        return false;
-#endif
 
     entries = (FrameEntry *)cursor;
     cursor += sizeof(FrameEntry) * nentries;

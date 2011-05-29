@@ -42,7 +42,6 @@
 #include "nsIEnumerator.h"
 #include "nsTPtrArray.h"
 #include "nsGkAtoms.h"
-#include "nsIPrefBranch2.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
@@ -53,7 +52,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLLegendElement.h"
-#include "nsIDOMDocumentRange.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIHTMLDocument.h"
 #include "nsIFormControlFrame.h"
@@ -85,12 +84,14 @@
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #endif
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //#define DEBUG_FOCUS 1
@@ -159,19 +160,20 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsFocusManager* nsFocusManager::sInstance = nsnull;
 PRBool nsFocusManager::sMouseFocusesFormControl = PR_FALSE;
 
+static const char* kObservedPrefs[] = {
+  "accessibility.browsewithcaret",
+  "accessibility.tabfocus_applies_to_xul",
+  "accessibility.mouse_focuses_formcontrol",
+  NULL
+};
+
 nsFocusManager::nsFocusManager()
 { }
 
 nsFocusManager::~nsFocusManager()
 {
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
+  Preferences::RemoveObservers(this, kObservedPrefs);
 
-  if (prefBranch) {
-    prefBranch->RemoveObserver("accessibility.browsewithcaret", this);
-    prefBranch->RemoveObserver("accessibility.tabfocus_applies_to_xul", this);
-    prefBranch->RemoveObserver("accessibility.mouse_focuses_formcontrol", this);
-  }
-  
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, "xpcom-shutdown");
@@ -188,18 +190,13 @@ nsFocusManager::Init()
   sInstance = fm;
 
   nsIContent::sTabFocusModelAppliesToXUL =
-    nsContentUtils::GetBoolPref("accessibility.tabfocus_applies_to_xul",
-                                nsIContent::sTabFocusModelAppliesToXUL);
+    Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
+                         nsIContent::sTabFocusModelAppliesToXUL);
 
   sMouseFocusesFormControl =
-    nsContentUtils::GetBoolPref("accessibility.mouse_focuses_formcontrol", PR_FALSE);
+    Preferences::GetBool("accessibility.mouse_focuses_formcontrol", PR_FALSE);
 
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-  if (prefBranch) {
-    prefBranch->AddObserver("accessibility.browsewithcaret", fm, PR_TRUE);
-    prefBranch->AddObserver("accessibility.tabfocus_applies_to_xul", fm, PR_TRUE);
-    prefBranch->AddObserver("accessibility.mouse_focuses_formcontrol", fm, PR_TRUE);
-  }
+  Preferences::AddWeakObservers(fm, kObservedPrefs);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -228,12 +225,13 @@ nsFocusManager::Observe(nsISupports *aSubject,
     }
     else if (data.EqualsLiteral("accessibility.tabfocus_applies_to_xul")) {
       nsIContent::sTabFocusModelAppliesToXUL =
-        nsContentUtils::GetBoolPref("accessibility.tabfocus_applies_to_xul",
-                                    nsIContent::sTabFocusModelAppliesToXUL);
+        Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
+                             nsIContent::sTabFocusModelAppliesToXUL);
     }
     else if (data.EqualsLiteral("accessibility.mouse_focuses_formcontrol")) {
       sMouseFocusesFormControl =
-        nsContentUtils::GetBoolPref("accessibility.mouse_focuses_formcontrol", PR_FALSE);
+        Preferences::GetBool("accessibility.mouse_focuses_formcontrol",
+                             PR_FALSE);
     }
   } else if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
     mActiveWindow = nsnull;
@@ -728,7 +726,7 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
   if (presShell) {
     // disable selection mousedown state on activation
     // XXXndeakin P3 not sure if this is necessary, but it doesn't hurt
-    nsCOMPtr<nsFrameSelection> frameSelection = presShell->FrameSelection();
+    nsRefPtr<nsFrameSelection> frameSelection = presShell->FrameSelection();
     frameSelection->SetMouseDownState(PR_FALSE);
   }
 
@@ -1955,7 +1953,7 @@ nsFocusManager::UpdateCaret(PRBool aMoveCaretToFocus,
     return;  // Never browse with caret in chrome
 
   PRPackedBool browseWithCaret =
-    nsContentUtils::GetBoolPref("accessibility.browsewithcaret");
+    Preferences::GetBool("accessibility.browsewithcaret");
 
   nsCOMPtr<nsIPresShell> presShell;
   focusedDocShell->GetPresShell(getter_AddRefs(presShell));
@@ -2009,10 +2007,10 @@ nsFocusManager::UpdateCaret(PRBool aMoveCaretToFocus,
 void
 nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  // rangeDoc is a document interface we can create a range with
-  nsCOMPtr<nsIDOMDocumentRange> rangeDoc(do_QueryInterface(aPresShell->GetDocument()));
-  if (rangeDoc) {
-    nsCOMPtr<nsFrameSelection> frameSelection = aPresShell->FrameSelection();
+  // domDoc is a document interface we can create a range with
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aPresShell->GetDocument());
+  if (domDoc) {
+    nsRefPtr<nsFrameSelection> frameSelection = aPresShell->FrameSelection();
     nsCOMPtr<nsISelection> domSelection = frameSelection->
       GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (domSelection) {
@@ -2022,7 +2020,7 @@ nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
       domSelection->RemoveAllRanges();
       if (currentFocusNode) {
         nsCOMPtr<nsIDOMRange> newRange;
-        nsresult rv = rangeDoc->CreateRange(getter_AddRefs(newRange));
+        nsresult rv = domDoc->CreateRange(getter_AddRefs(newRange));
         if (NS_SUCCEEDED(rv)) {
           // Set the range to the start of the currently focused node
           // Make sure it's collapsed
@@ -2062,7 +2060,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
   if (!aVisible && !caretVisible)
     return NS_OK;
 
-  nsCOMPtr<nsFrameSelection> frameSelection;
+  nsRefPtr<nsFrameSelection> frameSelection;
   if (aContent) {
     NS_ASSERTION(aContent->GetDocument() == aPresShell->GetDocument(),
                  "Wrong document?");
@@ -2071,7 +2069,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
       frameSelection = focusFrame->GetFrameSelection();
   }
 
-  nsCOMPtr<nsFrameSelection> docFrameSelection = aPresShell->FrameSelection();
+  nsRefPtr<nsFrameSelection> docFrameSelection = aPresShell->FrameSelection();
 
   if (docFrameSelection && caret &&
      (frameSelection == docFrameSelection || !aContent)) {
@@ -2112,8 +2110,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
   nsPresContext* presContext = aPresShell->GetPresContext();
   NS_ASSERTION(presContext, "mPresContent is null!!");
 
-  nsCOMPtr<nsFrameSelection> frameSelection;
-  frameSelection = aPresShell->FrameSelection();
+  nsRefPtr<nsFrameSelection> frameSelection = aPresShell->FrameSelection();
 
   nsCOMPtr<nsISelection> domSelection;
   if (frameSelection) {

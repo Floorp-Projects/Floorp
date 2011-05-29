@@ -47,6 +47,7 @@
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsMathUtils.h"
 
 #include "nsFrameManager.h"
 #include "nsDisplayList.h"
@@ -103,7 +104,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLCanvasElement)
 nsIntSize
 nsHTMLCanvasElement::GetWidthHeight()
 {
-  nsIntSize size(0,0);
+  nsIntSize size(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
   const nsAttrValue* value;
 
   if ((value = GetParsedAttr(nsGkAtoms::width)) &&
@@ -117,11 +118,6 @@ nsHTMLCanvasElement::GetWidthHeight()
   {
       size.height = value->GetIntegerValue();
   }
-
-  if (size.width <= 0)
-    size.width = DEFAULT_CANVAS_WIDTH;
-  if (size.height <= 0)
-    size.height = DEFAULT_CANVAS_HEIGHT;
 
   return size;
 }
@@ -201,30 +197,15 @@ nsHTMLCanvasElement::ParseAttribute(PRInt32 aNamespaceID,
 // nsHTMLCanvasElement::toDataURL
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::ToDataURL(const nsAString& aType, const nsAString& aParams,
+nsHTMLCanvasElement::ToDataURL(const nsAString& aType, nsIVariant* aParams,
                                PRUint8 optional_argc, nsAString& aDataURL)
 {
   // do a trust check if this is a write-only canvas
-  // or if we're trying to use the 2-arg form
-  if ((mWriteOnly || optional_argc >= 2) &&
-      !nsContentUtils::IsCallerTrustedForRead()) {
+  if (mWriteOnly && !nsContentUtils::IsCallerTrustedForRead()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   return ToDataURLImpl(aType, aParams, aDataURL);
-}
-
-
-// nsHTMLCanvasElement::toDataURLAs
-//
-// Native-callers only
-
-NS_IMETHODIMP
-nsHTMLCanvasElement::ToDataURLAs(const nsAString& aMimeType,
-                                 const nsAString& aEncoderOptions,
-                                 nsAString& aDataURL)
-{
-  return ToDataURLImpl(aMimeType, aEncoderOptions, aDataURL);
 }
 
 nsresult
@@ -328,19 +309,44 @@ nsHTMLCanvasElement::ExtractData(const nsAString& aType,
 
 nsresult
 nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
-                                   const nsAString& aEncoderOptions,
+                                   nsIVariant* aEncoderOptions,
                                    nsAString& aDataURL)
 {
   bool fallbackToPNG = false;
 
+  nsIntSize size = GetWidthHeight();
+  if (size.height == 0 || size.width == 0) {
+    aDataURL = NS_LITERAL_STRING("data:,");
+    return NS_OK;
+  }
+
   nsAutoString type;
   nsContentUtils::ASCIIToLower(aMimeType, type);
+
+  nsAutoString params;
+
+  // Quality parameter is only valid for the image/jpeg MIME type
+  if (type.EqualsLiteral("image/jpeg")) {
+    PRUint16 vartype;
+
+    if (aEncoderOptions &&
+        NS_SUCCEEDED(aEncoderOptions->GetDataType(&vartype)) &&
+        vartype <= nsIDataType::VTYPE_DOUBLE) {
+
+      double quality;
+      // Quality must be between 0.0 and 1.0, inclusive
+      if (NS_SUCCEEDED(aEncoderOptions->GetAsDouble(&quality)) &&
+          quality >= 0.0 && quality <= 1.0) {
+        params.AppendLiteral("quality=");
+        params.AppendInt(NS_lround(quality * 100.0));
+      }
+    }
+  }
 
   PRUint32 imgSize = 0;
   char* imgData;
 
-  nsresult rv = ExtractData(type, aEncoderOptions, imgData,
-                            imgSize, fallbackToPNG);
+  nsresult rv = ExtractData(type, params, imgData, imgSize, fallbackToPNG);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // base 64, result will be NULL terminated
@@ -473,12 +479,6 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return NS_ERROR_FAILURE;
     }
 
-    rv = mCurrentContext->SetCanvasElement(this);
-    if (NS_FAILED(rv)) {
-      mCurrentContext = nsnull;
-      return rv;
-    }
-
     nsCOMPtr<nsIPropertyBag> contextProps;
     if (!JSVAL_IS_NULL(aContextOptions) &&
         !JSVAL_IS_VOID(aContextOptions))
@@ -596,19 +596,25 @@ nsHTMLCanvasElement::UpdateContext(nsIPropertyBag *aNewContextOptions)
     return NS_OK;
 
   nsresult rv = NS_OK;
+  nsIntSize sz = GetWidthHeight();
 
   rv = mCurrentContext->SetIsOpaque(GetIsOpaque());
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nsnull;
     return rv;
+  }
 
   rv = mCurrentContext->SetContextOptions(aNewContextOptions);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nsnull;
     return rv;
+  }
 
-  nsIntSize sz = GetWidthHeight();
   rv = mCurrentContext->SetDimensions(sz.width, sz.height);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nsnull;
     return rv;
+  }
 
   return rv;
 }
@@ -652,18 +658,20 @@ nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
   nsRect contentArea = frame->GetContentRect();
   if (damageRect) {
     nsIntSize size = GetWidthHeight();
+    if (size.width != 0 && size.height != 0) {
 
-    // damageRect and size are in CSS pixels; contentArea is in appunits
-    // We want a rect in appunits; so avoid doing pixels-to-appunits and
-    // vice versa conversion here.
-    gfxRect realRect(*damageRect);
-    realRect.Scale(contentArea.width / gfxFloat(size.width),
-                   contentArea.height / gfxFloat(size.height));
-    realRect.RoundOut();
+      // damageRect and size are in CSS pixels; contentArea is in appunits
+      // We want a rect in appunits; so avoid doing pixels-to-appunits and
+      // vice versa conversion here.
+      gfxRect realRect(*damageRect);
+      realRect.Scale(contentArea.width / gfxFloat(size.width),
+                     contentArea.height / gfxFloat(size.height));
+      realRect.RoundOut();
 
-    // then make it a nsRect
-    invalRect = nsRect(realRect.X(), realRect.Y(),
-                       realRect.Width(), realRect.Height());
+      // then make it a nsRect
+      invalRect = nsRect(realRect.X(), realRect.Y(),
+                         realRect.Width(), realRect.Height());
+    }
   } else {
     invalRect = nsRect(nsPoint(0, 0), contentArea.Size());
   }

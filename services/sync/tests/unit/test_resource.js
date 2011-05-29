@@ -154,7 +154,7 @@ function run_test() {
     "/quota-error": server_quota_error
   });
 
-  Utils.prefs.setIntPref("network.numRetries", 1); // speed up test
+  Svc.Prefs.set("network.numRetries", 1); // speed up test
 
   _("Resource object members");
   let res = new Resource("http://localhost:8080/open");
@@ -430,7 +430,7 @@ function run_test() {
   let res18 = new Resource("http://localhost:8080/json");
   let onProgress = function(rec) {
     // Provoke an XPC exception without a Javascript wrapper.
-    Svc.IO.newURI("::::::::", null, null);
+    Services.io.newURI("::::::::", null, null);
   };
   res18._onProgress = onProgress;
   let oldWarn = res18._log.warn;

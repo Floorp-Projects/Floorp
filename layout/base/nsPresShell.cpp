@@ -148,7 +148,7 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
-#include "nsIPluginInstance.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsIObjectFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsNetUtil.h"
@@ -209,6 +209,7 @@
 #include "gfxPlatform.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Preferences.h"
 
 #include "Layers.h"
 
@@ -259,9 +260,6 @@ ChangeFlag(PRUint32 aFlags, PRBool aOnOff, PRUint32 aFlag)
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
 static void ColorToString(nscolor aColor, nsAutoString &aString);
-
-// Class ID's
-static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 
 // RangePaintInfo is used to paint ranges to offscreen buffers
 struct RangePaintInfo {
@@ -1125,7 +1123,7 @@ protected:
 
   void MaybeReleaseCapturingContent()
   {
-    nsCOMPtr<nsFrameSelection> frameSelection = FrameSelection();
+    nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
     if (frameSelection) {
       frameSelection->SetMouseDownState(PR_FALSE);
     }
@@ -1677,19 +1675,21 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 }
 
 nsTHashtable<PresShell::PresShellPtrKey> *nsIPresShell::sLiveShells = 0;
+static PRBool sSynthMouseMove = PR_TRUE;
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
-                             "heap-used/layout/all",
-                             "Memory used by layout PresShell, PresContext, "
-                             "and other related areas.",
-                             PresShell::SizeOfLayoutMemoryReporter,
-                             nsnull)
+    "explicit/layout/all",
+    MR_HEAP,
+    "Memory used by layout PresShell, PresContext, and other related areas.",
+    PresShell::SizeOfLayoutMemoryReporter,
+    nsnull)
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
-                             "heap-used/layout/bidi",
-                             "Memory used by layout Bidi processor.",
-                             PresShell::SizeOfBidiMemoryReporter,
-                             nsnull)
+    "explicit/layout/bidi",
+    MR_HEAP,
+    "Memory used by layout Bidi processor.",
+    PresShell::SizeOfBidiMemoryReporter,
+    nsnull)
 
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
@@ -1720,6 +1720,8 @@ PresShell::PresShell()
   if (!registeredReporter) {
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutBidi));
+    Preferences::AddBoolVarCache(&sSynthMouseMove,
+                                 "layout.reflow.synthMouseMove", PR_TRUE);
     registeredReporter = true;
   }
 
@@ -1831,11 +1833,7 @@ PresShell::Init(nsIDocument* aDocument,
   // before creating any frames.
   SetPreferenceStyleRules(PR_FALSE);
 
-  result = CallCreateInstance(kFrameSelectionCID, &mSelection);
-  if (NS_FAILED(result)) {
-    mStyleSet = nsnull;
-    return result;
-  }
+  NS_ADDREF(mSelection = new nsFrameSelection());
 
   // Create and initialize the frame manager
   result = FrameManager()->Init(this, mStyleSet);
@@ -1850,12 +1848,9 @@ PresShell::Init(nsIDocument* aDocument,
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
   // make the caret
-  nsresult  err = NS_NewCaret(getter_AddRefs(mCaret));
-  if (NS_SUCCEEDED(err))
-  {
-    mCaret->Init(this);
-    mOriginalCaret = mCaret;
-  }
+  mCaret = new nsCaret();
+  mCaret->Init(this);
+  mOriginalCaret = mCaret;
 
   //SetCaretEnabled(PR_TRUE);       // make it show in browser windows
 #endif  
@@ -1868,8 +1863,7 @@ PresShell::Init(nsIDocument* aDocument,
   
   if (gMaxRCProcessingTime == -1) {
     gMaxRCProcessingTime =
-      nsContentUtils::GetIntPref("layout.reflow.timeslice",
-                                 NS_MAX_REFLOW_TIME);
+      Preferences::GetInt("layout.reflow.timeslice", NS_MAX_REFLOW_TIME);
   }
 
   {
@@ -1894,13 +1888,13 @@ PresShell::Init(nsIDocument* aDocument,
 #ifdef MOZ_REFLOW_PERF
     if (mReflowCountMgr) {
       PRBool paintFrameCounts =
-        nsContentUtils::GetBoolPref("layout.reflow.showframecounts");
+        Preferences::GetBool("layout.reflow.showframecounts");
 
       PRBool dumpFrameCounts =
-        nsContentUtils::GetBoolPref("layout.reflow.dumpframecounts");
+        Preferences::GetBool("layout.reflow.dumpframecounts");
 
       PRBool dumpFrameByFrameCounts =
-        nsContentUtils::GetBoolPref("layout.reflow.dumpframebyframecounts");
+        Preferences::GetBool("layout.reflow.dumpframebyframecounts");
 
       mReflowCountMgr->SetDumpFrameCounts(dumpFrameCounts);
       mReflowCountMgr->SetDumpFrameByFrameCounts(dumpFrameByFrameCounts);
@@ -2825,8 +2819,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
       // Default to PAINTLOCK_EVENT_DELAY if we can't get the pref value.
       PRInt32 delay =
-        nsContentUtils::GetIntPref("nglayout.initialpaint.delay",
-                                   PAINTLOCK_EVENT_DELAY);
+        Preferences::GetInt("nglayout.initialpaint.delay",
+                            PAINTLOCK_EVENT_DELAY);
 
       mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback,
                                                    this, delay, 
@@ -3929,7 +3923,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
 
     // Should we select the target? This action is controlled by a
     // preference: the default is to not select.
-    PRBool selectAnchor = nsContentUtils::GetBoolPref("layout.selectanchor");
+    PRBool selectAnchor = Preferences::GetBool("layout.selectanchor");
 
     // Even if select anchor pref is false, we must still move the
     // caret there. That way tabbing will start from the new
@@ -5682,7 +5676,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   // temporarily hide the selection so that text is drawn normally. If a
   // selection is being rendered, use that, otherwise use the presshell's
   // selection.
-  nsCOMPtr<nsFrameSelection> frameSelection;
+  nsRefPtr<nsFrameSelection> frameSelection;
   if (aSelection) {
     nsCOMPtr<nsISelectionPrivate> selpriv = do_QueryInterface(aSelection);
     selpriv->GetFrameSelection(getter_AddRefs(frameSelection));
@@ -6725,10 +6719,15 @@ PresShell::HandleEvent(nsIView         *aView,
       }
     }
 
+    PRBool isWindowLevelMouseExit = (aEvent->message == NS_MOUSE_EXIT) &&
+      (static_cast<nsMouseEvent*>(aEvent)->exit == nsMouseEvent::eTopLevel);
+
     // Get the frame at the event point. However, don't do this if we're
     // capturing and retargeting the event because the captured frame will
-    // be used instead below.
-    if (!captureRetarget) {
+    // be used instead below. Also keep using the root frame if we're dealing
+    // with a window-level mouse exit event since we want to start sending
+    // mouse out events at the root EventStateManager.
+    if (!captureRetarget && !isWindowLevelMouseExit) {
       nsPoint eventPoint
           = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
       {
@@ -7758,7 +7757,7 @@ ThawElement(nsIContent *aContent, void *aShell)
 {
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(aContent));
   if (objlc) {
-    nsCOMPtr<nsIPluginInstance> inst;
+    nsRefPtr<nsNPAPIPluginInstance> inst;
     objlc->EnsureInstantiation(getter_AddRefs(inst));
   }
 }
@@ -7860,7 +7859,9 @@ PresShell::DidDoReflow(PRBool aInterruptible)
   mFrameConstructor->EndUpdate();
   
   HandlePostedReflowCallbacks(aInterruptible);
-  SynthesizeMouseMove(PR_FALSE);
+  if (sSynthMouseMove) {
+    SynthesizeMouseMove(PR_FALSE);
+  }
   if (mCaret) {
     // Update the caret's position now to account for any changes created by
     // the reflow.
@@ -9423,16 +9424,7 @@ nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
 nsAccessibilityService*
 nsIPresShell::AccService()
 {
-#ifdef MOZ_ENABLE_LIBXUL
   return GetAccService();
-#else
-  if (gIsAccessibilityActive) {
-    nsCOMPtr<nsIAccessibilityService> srv =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    return static_cast<nsAccessibilityService*>(srv.get());
-  }
-  return nsnull;
-#endif
 }
 #endif
 

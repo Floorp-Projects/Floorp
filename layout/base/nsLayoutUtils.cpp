@@ -92,6 +92,7 @@
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
 #include "ImageLayers.h"
+#include "mozilla/arm.h"
 #include "mozilla/dom/Element.h"
 #include "nsCanvasFrame.h"
 #include "gfxDrawable.h"
@@ -3061,10 +3062,11 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
 GraphicsFilter
 nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  GraphicsFilter defaultFilter = gfxPattern::FILTER_NEAREST;
-#else
   GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  if (!mozilla::supports_neon()) {
+    defaultFilter = gfxPattern::FILTER_NEAREST;
+  }
 #endif
 #ifdef MOZ_SVG
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?

@@ -75,7 +75,9 @@
 #include "nsEventDispatcher.h"
 
 #include "nsLayoutUtils.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 // XXX nav attrs: suppress
@@ -150,7 +152,6 @@ public:
   void MaybeLoadImage();
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  nsPoint GetXY();
   nsSize GetWidthHeight();
 };
 
@@ -246,42 +247,6 @@ nsHTMLImageElement::GetComplete(PRBool* aComplete)
   *aComplete =
     (status &
      (imgIRequest::STATUS_LOAD_COMPLETE | imgIRequest::STATUS_ERROR)) != 0;
-
-  return NS_OK;
-}
-
-nsPoint
-nsHTMLImageElement::GetXY()
-{
-  nsPoint point(0, 0);
-
-  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
-
-  if (!frame) {
-    return point;
-  }
-
-  nsIFrame* layer = nsLayoutUtils::GetClosestLayer(frame->GetParent());
-  nsPoint origin(frame->GetOffsetTo(layer));
-  // Convert to pixels using that scale
-  point.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
-  point.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
-
-  return point;
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::GetX(PRInt32* aX)
-{
-  *aX = GetXY().x;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::GetY(PRInt32* aY)
-{
-  *aY = GetXY().y;
 
   return NS_OK;
 }
@@ -500,7 +465,7 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     // If caller is not chrome and dom.disable_image_src_set is true,
     // prevent setting image.src by exiting early
-    if (nsContentUtils::GetBoolPref("dom.disable_image_src_set") &&
+    if (Preferences::GetBool("dom.disable_image_src_set") &&
         !nsContentUtils::IsCallerChrome()) {
       return NS_OK;
     }

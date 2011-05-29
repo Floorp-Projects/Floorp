@@ -495,6 +495,10 @@ RPCChannel::Incall(const Message& call, size_t stackDepth)
         // which will make it correct again
     }
 
+#ifdef OS_WIN
+    SyncStackFrame frame(this, true);
+#endif
+
     DispatchIncall(call);
 }
 

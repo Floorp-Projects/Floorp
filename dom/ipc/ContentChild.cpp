@@ -260,11 +260,11 @@ ContentChild::Init(MessageLoop* aIOLoop,
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
-#if defined(ANDROID)
+#if defined(ANDROID) && defined(MOZ_CRASHREPORTER)
     PCrashReporterChild* crashreporter = SendPCrashReporterConstructor();
     InfallibleTArray<Mapping> mappings;
     const struct mapping_info *info = getLibraryMapping();
-    while (info->name) {
+    while (info && info->name) {
         mappings.AppendElement(Mapping(nsDependentCString(info->name),
                                        nsDependentCString(info->file_id),
                                        info->base,
@@ -313,9 +313,11 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
       r->GetNext(getter_AddRefs(report));
 
       nsCString path;
+      PRInt32 kind;
       nsCString desc;
       PRInt64 memoryUsed;
       report->GetPath(getter_Copies(path));
+      report->GetKind(&kind);
       report->GetDescription(getter_Copies(desc));
       report->GetMemoryUsed(&memoryUsed);
 
@@ -323,6 +325,7 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
       MemoryReport memreport(nsPrintfCString(maxLength, "Content (%d)",
                                              getpid()),
                              path,
+                             kind,
                              desc,
                              memoryUsed);
 
