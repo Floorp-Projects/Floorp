@@ -1619,8 +1619,19 @@ class ScopeNameCompiler : public PICStubCompiler
             JS_ASSERT(shape->getterOp() == GetCallArg || shape->getterOp() == GetCallVar);
             JSScript *newscript = getprop.obj->getCallObjCalleeFunction()->script();
             uint16 slot = uint16(getprop.shape->shortid);
-            if (!newscript->ensureTypeArray(cx))
+
+            /*
+             * To determine the possible types that could be accessed by this NAME,
+             * we need to know the possible types of the arg/local. The interpreter
+             * does not keep track of this information, so ensure that we ran type
+             * inference on the parent script before doing propagation.
+             */
+            analyze::ScriptAnalysis *analysis = newscript->analysis(cx);
+            if (analysis && !analysis->ranInference())
+                analysis->analyzeTypes(cx);
+            if (!analysis || analysis->OOM())
                 return false;
+
             if (shape->getterOp() == GetCallArg)
                 types = newscript->argTypes(slot);
             else if (shape->getterOp() == GetCallVar)

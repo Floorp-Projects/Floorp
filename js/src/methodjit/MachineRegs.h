@@ -79,13 +79,14 @@ struct AnyRegisterID {
     inline const char * name();
 
   private:
-    void pin() {
+    unsigned * pin() {
         /*
          * Workaround for apparent compiler bug in GCC 4.2. If GCC thinks that reg_
          * cannot escape then it compiles isReg() and other accesses to reg_ incorrectly.
          */
         static unsigned *v;
         v = &reg_;
+        return v;
     }
 };
 
