@@ -183,7 +183,7 @@
       <field name="_formattingEnabled">true</field>
       <method name="formatValue">
         <body><![CDATA[
-          if (!this._formattingEnabled)
+          if (!this._formattingEnabled || this.focused)
             return;
 
           let controller = this.editor.selectionController;
@@ -192,7 +192,7 @@
 
           let textNode = this.editor.rootElement.firstChild;
           let value = textNode.textContent;
-          let matchedURL = value.match(/^((?:http|https|ftp):\/\/(?:[^\/]+@)?)([^\/:]+)/);
+          let matchedURL = value.match(/^((?:http|https|ftp):\/\/(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
           if (!matchedURL)
             return;
 
@@ -292,16 +292,26 @@
             Cu.reportError(ex);
           }
 
+          function loadCurrent() {
+            // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
+            // inheriting the currently loaded document's principal.
+            let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+                        Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+            gBrowser.loadURIWithFlags(url, flags, null, null, postData);
+          }
+
           if (aTriggeringEvent instanceof MouseEvent) {
             // We have a mouse event (from the go button), so use the standard
             // UI link behaviors
             let where = whereToOpenLink(aTriggeringEvent, false, false);
-            if (where != "current") {
+            if (where == "current") {
+              loadCurrent();
+            } else {
               this.handleRevert();
               content.focus();
+              openUILinkIn(url, where,
+                           { allowThirdPartyFixup: true, postData: postData });
             }
-            openUILinkIn(url, where,
-                        { allowThirdPartyFixup: true, postData: postData });
             return;
           }
 
@@ -316,9 +326,9 @@
                                 allowThirdPartyFixup: true});
             aTriggeringEvent.preventDefault();
             aTriggeringEvent.stopPropagation();
+          } else {
+            loadCurrent();
           }
-          else
-            loadURI(url, null, postData, true /* allow third party fixup */);
 
           gBrowser.selectedBrowser.focus();
         ]]></body>
@@ -897,7 +907,7 @@
       </xul:vbox>
       <xul:vbox pack="start">
         <xul:toolbarbutton anonid="closebutton"
-                           class="messageCloseButton popup-notification-closebutton"
+                           class="messageCloseButton popup-notification-closebutton tabbable"
                            xbl:inherits="oncommand=closebuttoncommand"
                            tooltiptext="&closeNotification.tooltip;"/>
       </xul:vbox>
@@ -944,7 +954,7 @@
       </xul:vbox>
       <xul:vbox pack="start">
         <xul:toolbarbutton anonid="closebutton"
-                           class="messageCloseButton popup-notification-closebutton"
+                           class="messageCloseButton popup-notification-closebutton tabbable"
                            xbl:inherits="oncommand=closebuttoncommand"
                            tooltiptext="&closeNotification.tooltip;"/>
       </xul:vbox>
@@ -1264,6 +1274,133 @@
         // 592424 is fixed
         document.getAnonymousElementByAttribute(this, "anonid", "accel").firstChild.setAttribute("value", "");
       ]]></constructor>
+    </implementation>
+  </binding>
+
+ <binding id="promobox">
+    <content>
+      <xul:hbox class="panel-promo-box" align="start" flex="1">
+        <xul:hbox align="center" flex="1">
+          <xul:image class="panel-promo-icon"/>
+          <xul:description anonid="promo-message" class="panel-promo-message" flex="1">
+            placeholder <xul:description anonid="promo-link" class="plain text-link inline-link"/>
+          </xul:description>
+        </xul:hbox>
+        <xul:toolbarbutton class="panel-promo-closebutton"
+                           oncommand="document.getBindingParent(this).onCloseButtonCommand();"
+                           tooltiptext="&closeNotification.tooltip;"/>
+      </xul:hbox>
+    </content>
+
+    <implementation implements="nsIDOMEventListener">
+      <constructor><![CDATA[
+        this._panel.addEventListener("popupshowing", this, false);
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        this._panel.removeEventListener("popupshowing", this, false);
+      ]]></destructor>
+
+      <field name="_panel" readonly="true"><![CDATA[
+        let node = this.parentNode;
+        while(node && node.localName != "panel") {
+          node = node.parentNode;
+        }
+        node;
+      ]]></field>
+      <field name="_promomessage" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "promo-message");
+      </field>
+      <field name="_promolink" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "promo-link");
+      </field>
+      <field name="_brandBundle" readonly="true">
+        Services.strings.createBundle("chrome://branding/locale/brand.properties");
+      </field>
+      <property name="_viewsLeft">
+        <getter><![CDATA[
+          try {
+            return Services.prefs.getIntPref("browser.syncPromoViewsLeft");
+          } catch(ex) {}
+          return 5;
+        ]]></getter>
+        <setter><![CDATA[
+          Services.prefs.setIntPref("browser.syncPromoViewsLeft", val);
+          return val;
+        ]]></setter>
+      </property>
+      <property name="_notificationType">
+        <getter><![CDATA[
+          // Use the popupid attribute to identify the notification type,
+          // otherwise just rely on the panel id for common arrowpanels.
+          let type = this._panel.firstChild.getAttribute("popupid") ||
+                     this._panel.id;
+          if (/^password-/.test(type))
+            return "passwords";
+          if (type == "editBookmarkPanel")
+            return "bookmarks";
+          return null;
+        ]]></getter>
+      </property>
+      <property name="_notificationMessage">
+        <getter><![CDATA[
+          return gNavigatorBundle.getFormattedString(
+            "syncPromoNotification." + this._notificationType + ".label",
+            [this._brandBundle.GetStringFromName("syncBrandShortName")]
+          );
+        ]]></getter>
+      </property>
+      <method name="onCloseButtonCommand">
+        <body><![CDATA[
+          this._viewsLeft = 0;
+          this.hidden = true;
+        ]]></body>
+      </method>
+      <method name="handleEvent">
+        <parameter name="event"/>
+        <body><![CDATA[
+          if (event.type != "popupshowing" || event.target != this._panel)
+            return;
+
+          // A previous notification may have unhidden this.
+          this.hidden = true;
+
+          // Only handle supported notification panels.
+          if (!this._notificationType) {
+            return;
+          }
+
+          let viewsLeft = this._viewsLeft;
+          if (viewsLeft) {
+            if (Services.prefs.prefHasUserValue("services.sync.username")) {
+              // If the user has already setup Sync, don't show the notification.
+              this._viewsLeft = 0;
+              // Be sure to hide the panel, in case it was visible and the user
+              // decided to setup Sync after noticing it.
+              viewsLeft = 0;
+              // The panel is still hidden, just bail out.
+              return;
+            }
+            else {
+              this._viewsLeft = viewsLeft - 1;
+            }
+
+            this._promolink.setAttribute("href", "https://services.mozilla.com/sync/");
+            this._promolink.value = gNavigatorBundle.getString("syncPromoNotification.learnMoreLinkText");
+
+            this.hidden = false;
+
+            // HACK: The description element doesn't wrap correctly in panels,
+            // thus set a width on it, based on the available space, before
+            // setting its textContent.
+            this._panel.addEventListener("popupshown", function (evt) {
+              this._panel.removeEventListener("popupshown", arguments.callee, true);
+              this._promomessage.width = this._promomessage.getBoundingClientRect().width;
+              this._promomessage.firstChild.textContent = this._notificationMessage;
+            }.bind(this), true);
+          }
+        ]]></body>
+      </method>
     </implementation>
   </binding>
 

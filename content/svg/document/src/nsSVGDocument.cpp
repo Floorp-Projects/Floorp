@@ -64,9 +64,8 @@ nsSVGDocument::~nsSVGDocument()
 DOMCI_NODE_DATA(SVGDocument, nsSVGDocument)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGDocument)
-  NS_INTERFACE_TABLE_INHERITED2(nsSVGDocument,
-                                nsIDOMSVGDocument,
-                                nsIDOMDocumentEvent)
+  NS_INTERFACE_TABLE_INHERITED1(nsSVGDocument,
+                                nsIDOMSVGDocument)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
@@ -76,20 +75,6 @@ NS_IMPL_RELEASE_INHERITED(nsSVGDocument, nsXMLDocument)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGDocument methods:
-
-/* readonly attribute DOMString title; */
-NS_IMETHODIMP
-nsSVGDocument::GetTitle(nsAString& aTitle)
-{
-  return nsXMLDocument::GetTitle(aTitle);
-}
-
-/* readonly attribute DOMString referrer; */
-NS_IMETHODIMP
-nsSVGDocument::GetReferrer(nsAString& aReferrer)
-{
-  return nsDocument::GetReferrer(aReferrer);
-}
 
 /* readonly attribute DOMString domain; */
 NS_IMETHODIMP

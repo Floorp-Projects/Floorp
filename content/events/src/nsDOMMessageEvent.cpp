@@ -38,16 +38,28 @@
 
 #include "nsDOMMessageEvent.h"
 #include "nsContentUtils.h"
+#include "jsapi.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMMessageEvent)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
+  if (tmp->mDataRooted) {
+    tmp->UnrootData();
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSource)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSource)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMMessageEvent)
+  if (JSVAL_IS_GCTHING(tmp->mData)) {
+    void *gcThing = JSVAL_TO_GCTHING(tmp->mData);
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mData")
+  }
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMCI_DATA(MessageEvent, nsDOMMessageEvent)
 
@@ -59,10 +71,41 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 NS_IMPL_ADDREF_INHERITED(nsDOMMessageEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMMessageEvent, nsDOMEvent)
 
-NS_IMETHODIMP
-nsDOMMessageEvent::GetData(nsAString& aData)
+nsDOMMessageEvent::nsDOMMessageEvent(nsPresContext* aPresContext,
+                                     nsEvent* aEvent)
+  : nsDOMEvent(aPresContext, aEvent),
+    mData(JSVAL_VOID),
+    mDataRooted(false)
 {
-  aData = mData;
+}
+
+nsDOMMessageEvent::~nsDOMMessageEvent()
+{
+  if (mDataRooted)
+    UnrootData();
+}
+
+void
+nsDOMMessageEvent::RootData()
+{
+  NS_ASSERTION(!mDataRooted, "...");
+  NS_HOLD_JS_OBJECTS(this, nsDOMMessageEvent);
+  mDataRooted = true;
+}
+
+void
+nsDOMMessageEvent::UnrootData()
+{
+  NS_ASSERTION(mDataRooted, "...");
+  NS_DROP_JS_OBJECTS(this, nsDOMMessageEvent);
+  mDataRooted = false;
+  mData = JSVAL_VOID;
+}
+
+NS_IMETHODIMP
+nsDOMMessageEvent::GetData(jsval* aData)
+{
+  *aData = mData;
   return NS_OK;
 }
 
@@ -91,7 +134,7 @@ NS_IMETHODIMP
 nsDOMMessageEvent::InitMessageEvent(const nsAString& aType,
                                     PRBool aCanBubble,
                                     PRBool aCancelable,
-                                    const nsAString& aData,
+                                    const jsval& aData,
                                     const nsAString& aOrigin,
                                     const nsAString& aLastEventId,
                                     nsIDOMWindow* aSource)
@@ -99,7 +142,12 @@ nsDOMMessageEvent::InitMessageEvent(const nsAString& aType,
   nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Allowing double-initialization seems a little silly, but we have a test
+  // for it so it might be important ...
+  if (mDataRooted)
+    UnrootData();
   mData = aData;
+  RootData();
   mOrigin = aOrigin;
   mLastEventId = aLastEventId;
   mSource = aSource;
@@ -113,8 +161,6 @@ NS_NewDOMMessageEvent(nsIDOMEvent** aInstancePtrResult,
                       nsEvent* aEvent) 
 {
   nsDOMMessageEvent* it = new nsDOMMessageEvent(aPresContext, aEvent);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   return CallQueryInterface(it, aInstancePtrResult);
 }

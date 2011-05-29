@@ -79,14 +79,6 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
-ifndef MOZ_ENABLE_LIBXUL
-ifeq (bundle,$(MOZ_FS_LAYOUT))
-LIBS += $(DIST)/bin/XUL
-else
-EXTRA_DSO_LIBS += xul
-endif
-endif
-
 LIBS += \
   $(EXTRA_DSO_LIBS) \
   $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
@@ -212,7 +204,7 @@ endif
 
 # XXX applications would need to supply this file
 #export:: brand.dtd.in
-#	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
+#	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > brand.dtd
 
 export::
 	$(NSINSTALL) -D $(DIST)/branding

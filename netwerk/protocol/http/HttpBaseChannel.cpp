@@ -48,6 +48,7 @@
 
 #include "nsICachingChannel.h"
 #include "nsISeekableStream.h"
+#include "nsITimedChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsIApplicationCacheChannel.h"
@@ -78,6 +79,8 @@ HttpBaseChannel::HttpBaseChannel()
   , mChooseApplicationCache(PR_FALSE)
   , mLoadedFromApplicationCache(PR_FALSE)
   , mChannelIsForDownload(PR_FALSE)
+  , mTracingEnabled(PR_TRUE)
+  , mTimingEnabled(PR_FALSE)
   , mRedirectedCachekeys(nsnull)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
@@ -165,7 +168,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
 // HttpBaseChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED8(HttpBaseChannel,
+NS_IMPL_ISUPPORTS_INHERITED9(HttpBaseChannel,
                              nsHashPropertyBag, 
                              nsIRequest,
                              nsIChannel,
@@ -174,7 +177,8 @@ NS_IMPL_ISUPPORTS_INHERITED8(HttpBaseChannel,
                              nsIHttpChannelInternal,
                              nsIUploadChannel,
                              nsIUploadChannel2,
-                             nsISupportsPriority)
+                             nsISupportsPriority,
+                             nsITraceableChannel)
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIRequest
@@ -863,16 +867,13 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
   //  (1) modify it
   //  (2) keep a reference to it after returning from this function
   //
-  rv = referrer->Clone(getter_AddRefs(clone));
+  // Use CloneIgnoringRef to strip away any fragment per RFC 2616 section 14.36
+  rv = referrer->CloneIgnoringRef(getter_AddRefs(clone));
   if (NS_FAILED(rv)) return rv;
 
   // strip away any userpass; we don't want to be giving out passwords ;-)
-  clone->SetUserPass(EmptyCString());
-
-  // strip away any fragment per RFC 2616 section 14.36
-  nsCOMPtr<nsIURL> url = do_QueryInterface(clone);
-  if (url)
-    url->SetRef(EmptyCString());
+  rv = clone->SetUserPass(EmptyCString());
+  if (NS_FAILED(rv)) return rv;
 
   nsCAutoString spec;
   rv = clone->GetAsciiSpec(spec);
@@ -1239,6 +1240,18 @@ HttpBaseChannel::GetRemotePort(PRInt32* port)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::HTTPUpgrade(const nsACString &aProtocolName,
+                             nsIHttpUpgradeListener *aListener)
+{
+    NS_ENSURE_ARG(!aProtocolName.IsEmpty());
+    NS_ENSURE_ARG_POINTER(aListener);
+    
+    mUpgradeProtocol = aProtocolName;
+    mUpgradeProtocolCallback = aListener;
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -1305,7 +1318,54 @@ HttpBaseChannel::GetEntityID(nsACString& aEntityID)
   return NS_OK;
 }
 
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// nsStreamListenerWrapper <private>
+//-----------------------------------------------------------------------------
+
+// Wrapper class to make replacement of nsHttpChannel's listener
+// from JavaScript possible. It is workaround for bug 433711.
+class nsStreamListenerWrapper : public nsIStreamListener
+{
+public:
+  nsStreamListenerWrapper(nsIStreamListener *listener);
+
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_NSIREQUESTOBSERVER(mListener->)
+  NS_FORWARD_NSISTREAMLISTENER(mListener->)
+
+private:
+  ~nsStreamListenerWrapper() {}
+  nsCOMPtr<nsIStreamListener> mListener;
+};
+
+nsStreamListenerWrapper::nsStreamListenerWrapper(nsIStreamListener *listener)
+  : mListener(listener)
+{
+  NS_ASSERTION(mListener, "no stream listener specified");
+}
+
+NS_IMPL_ISUPPORTS2(nsStreamListenerWrapper,
+                   nsIStreamListener,
+                   nsIRequestObserver)
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsITraceableChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpBaseChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener **_retval)
+{
+  if (!mTracingEnabled)
+    return NS_ERROR_FAILURE;
+
+  NS_ENSURE_ARG_POINTER(aListener);
+
+  nsCOMPtr<nsIStreamListener> wrapper = new nsStreamListenerWrapper(mListener);
+
+  wrapper.forget(_retval);
+  mListener = aListener;
+  return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel helpers
@@ -1477,6 +1537,11 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   nsCOMPtr<nsIWritablePropertyBag> bag(do_QueryInterface(newChannel));
   if (bag)
     mPropertyHash.EnumerateRead(CopyProperties, bag.get());
+
+  // transfer timed channel enabled status
+  nsCOMPtr<nsITimedChannel> timed(do_QueryInterface(newChannel));
+  if (timed)
+    timed->SetTimingEnabled(mTimingEnabled);
 
   return NS_OK;
 }

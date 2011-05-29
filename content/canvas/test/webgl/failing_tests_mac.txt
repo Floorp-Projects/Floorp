@@ -1,7 +1,3 @@
-conformance/buffer-preserve-test.html
-conformance/canvas-test.html
-conformance/canvas-test.html
-conformance/context-attributes.html
 conformance/gl-getshadersource.html
 conformance/gl-object-get-calls.html
 conformance/texture-npot.html
@@ -12,7 +8,6 @@ conformance/read-pixels-test.html
 conformance/tex-input-validation.html
 conformance/tex-sub-image-2d-bad-args.html
 conformance/uninitialized-test.html
-conformance/webgl-specific.html
 conformance/more/functions/copyTexImage2D.html
 conformance/more/functions/copyTexSubImage2D.html
 conformance/more/functions/copyTexSubImage2DBadArgs.html

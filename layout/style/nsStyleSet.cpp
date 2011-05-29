@@ -66,6 +66,7 @@
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 NS_IMPL_ISUPPORTS1(nsEmptyStyleRule, nsIStyleRule)
 
@@ -632,8 +633,12 @@ nsStyleSet::AddImportantRules(nsRuleNode* aCurrLevelNode,
   for (nsRuleNode *node = aCurrLevelNode; node != aLastPrevLevelNode;
        node = node->GetParent()) {
     // We guarantee that we never walk the root node here, so no need
-    // to null-check GetRule().
-    nsIStyleRule* impRule = node->GetRule()->GetImportantRule();
+    // to null-check GetRule().  Furthermore, it must be a CSS rule.
+    NS_ASSERTION(nsRefPtr<css::StyleRule>(do_QueryObject(node->GetRule())),
+                 "Unexpected non-CSS rule");
+
+    nsIStyleRule* impRule =
+      static_cast<css::StyleRule*>(node->GetRule())->GetImportantRule();
     if (impRule)
       importantRules.AppendElement(impRule);
   }
@@ -656,10 +661,10 @@ nsStyleSet::AssertNoImportantRules(nsRuleNode* aCurrLevelNode,
 
   for (nsRuleNode *node = aCurrLevelNode; node != aLastPrevLevelNode;
        node = node->GetParent()) {
-    nsIStyleRule* rule = node->GetRule();
-    if (rule) {
-      NS_ASSERTION(!rule->GetImportantRule(), "Unexpected important rule");
-    }
+    nsRefPtr<css::StyleRule> rule(do_QueryObject(node->GetRule()));
+    NS_ASSERTION(rule, "Unexpected non-CSS rule");
+
+    NS_ASSERTION(!rule->GetImportantRule(), "Unexpected important rule");
   }
 }
 
@@ -673,7 +678,7 @@ nsStyleSet::AssertNoCSSRules(nsRuleNode* aCurrLevelNode,
   for (nsRuleNode *node = aCurrLevelNode; node != aLastPrevLevelNode;
        node = node->GetParent()) {
     nsIStyleRule *rule = node->GetRule();
-    nsRefPtr<mozilla::css::StyleRule> cssRule(do_QueryObject(rule));
+    nsRefPtr<css::StyleRule> cssRule(do_QueryObject(rule));
     NS_ASSERTION(!cssRule || !cssRule->Selector(), "Unexpected CSS rule");
   }
 }
@@ -699,6 +704,10 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   //  9. UA !important rules                = Agent        !important
   //  -. transition rules                   = Transition   normal
   // [most important]
+
+  // Save off the last rule before we start walking our agent sheets;
+  // this will be either the root or one of the restriction rules.
+  nsRuleNode* lastRestrictionRN = aRuleWalker->CurrentNode();
 
   aRuleWalker->SetLevel(eAgentSheet, PR_FALSE, PR_TRUE);
   if (mRuleProcessors[eAgentSheet])
@@ -771,7 +780,6 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 
 #ifdef DEBUG
   AssertNoCSSRules(lastPresHintRN, lastUserRN);
-  AssertNoImportantRules(lastPresHintRN, lastUserRN); // preshints
 #endif
 
   if (haveImportantUserRules) {
@@ -786,12 +794,16 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 
   if (haveImportantUARules) {
     aRuleWalker->SetLevel(eAgentSheet, PR_TRUE, PR_FALSE);
-    AddImportantRules(lastAgentRN, mRuleTree, aRuleWalker);     //agent
+    AddImportantRules(lastAgentRN, lastRestrictionRN, aRuleWalker); //agent
   }
 #ifdef DEBUG
   else {
-    AssertNoImportantRules(lastAgentRN, mRuleTree);
+    AssertNoImportantRules(lastAgentRN, lastRestrictionRN);
   }
+#endif
+
+#ifdef DEBUG
+  AssertNoCSSRules(lastRestrictionRN, mRuleTree);
 #endif
 
 #ifdef DEBUG
@@ -801,7 +813,6 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   (*aCollectorFunc)(mRuleProcessors[eTransitionSheet], aData);
 #ifdef DEBUG
   AssertNoCSSRules(aRuleWalker->CurrentNode(), lastImportantRN);
-  AssertNoImportantRules(aRuleWalker->CurrentNode(), lastImportantRN);
 #endif
 
 }
@@ -932,7 +943,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
   // matter.
   ruleWalker.SetLevel(eDocSheet, PR_FALSE, PR_FALSE);
   for (PRInt32 i = 0; i < aRules.Count(); i++) {
-    ruleWalker.Forward(aRules.ObjectAt(i));
+    ruleWalker.ForwardOnPossiblyCSSRule(aRules.ObjectAt(i));
   }
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nsnull,
@@ -953,7 +964,7 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
   // matter.
   ruleWalker.SetLevel(eDocSheet, PR_FALSE, PR_FALSE);
   for (PRInt32 i = 0; i < aRules.Count(); i++) {
-    ruleWalker.Forward(aRules.ObjectAt(i));
+    ruleWalker.ForwardOnPossiblyCSSRule(aRules.ObjectAt(i));
   }
 
   nsRuleNode *ruleNode = ruleWalker.CurrentNode();
@@ -962,7 +973,7 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
   if (aBaseContext->GetStyleIfVisited()) {
     ruleWalker.SetCurrentNode(aBaseContext->GetStyleIfVisited()->GetRuleNode());
     for (PRInt32 i = 0; i < aRules.Count(); i++) {
-      ruleWalker.Forward(aRules.ObjectAt(i));
+      ruleWalker.ForwardOnPossiblyCSSRule(aRules.ObjectAt(i));
     }
     visitedRuleNode = ruleWalker.CurrentNode();
   }
@@ -1022,6 +1033,7 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   if (treeContext.HaveRelevantLink()) {
     treeContext.ResetForVisitedMatching();
     ruleWalker.Reset();
+    WalkRestrictionRule(aType, &ruleWalker);
     FileRules(EnumRulesMatching<PseudoElementRuleProcessorData>, &data,
               aParentElement, &ruleWalker);
     visitedRuleNode = ruleWalker.CurrentNode();
@@ -1081,6 +1093,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   if (aTreeMatchContext.HaveRelevantLink()) {
     aTreeMatchContext.ResetForVisitedMatching();
     ruleWalker.Reset();
+    WalkRestrictionRule(aType, &ruleWalker);
     FileRules(EnumRulesMatching<PseudoElementRuleProcessorData>, &data,
               aParentElement, &ruleWalker);
     visitedRuleNode = ruleWalker.CurrentNode();
@@ -1365,9 +1378,16 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
      }
   }
 
+  // If we're a style context for a link, then we already know whether
+  // our relevant link is visited, since that does not depend on our
+  // parent.  Otherwise, we need to match aNewParentContext.
+  PRBool relevantLinkVisited = aStyleContext->IsLinkContext() ?
+    aStyleContext->RelevantLinkVisited() :
+    aNewParentContext->RelevantLinkVisited();
+
   return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
                     aStyleContext->IsLinkContext(),
-                    aStyleContext->RelevantLinkVisited(),
+                    relevantLinkVisited,
                     pseudoTag, pseudoType,
                     pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
                     pseudoType == nsCSSPseudoElements::ePseudo_before ||

@@ -82,6 +82,7 @@
 #include <startup-notification-1.0/libsn/sn.h>
 #endif
 
+#include "mozilla/Preferences.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
@@ -97,6 +98,9 @@
 #include "nsIAccessibleDocument.h"
 #include "prenv.h"
 #include "stdlib.h"
+
+using namespace mozilla;
+
 static PRBool sAccessibilityChecked = PR_FALSE;
 /* static */
 PRBool nsWindow::sAccessibilityEnabled = PR_FALSE;
@@ -255,7 +259,7 @@ static gboolean drag_drop_event_cb        (GtkWidget *aWidget,
                                            gint aX,
                                            gint aY,
                                            guint aTime,
-                                           gpointer *aData);
+                                           gpointer aData);
 static void    drag_data_received_event_cb(GtkWidget *aWidget,
                                            GdkDragContext *aDragContext,
                                            gint aX,
@@ -1092,6 +1096,12 @@ nsWindow::Show(PRBool aState)
             NativeResize(mBounds.width, mBounds.height, PR_FALSE);
         }
     }
+
+#ifdef ACCESSIBILITY
+    if (aState && sAccessibilityEnabled) {
+        CreateRootAccessible();
+    }
+#endif
 
     NativeShow(aState);
 
@@ -3619,7 +3629,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
                           gint aX,
                           gint aY,
                           guint aTime,
-                          gpointer *aData)
+                          gpointer aData)
 
 {
     LOGDRAG(("nsWindow::OnDragDropSignal\n"));
@@ -4242,10 +4252,6 @@ nsWindow::Create(nsIWidget        *aParent,
             }
 
         }
-    }
-    if (sAccessibilityEnabled) {
-        LOG(("nsWindow:: Create Toplevel Accessibility\n"));
-        CreateRootAccessible();
     }
 #endif
 
@@ -5251,7 +5257,7 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     return NS_OK;
 }
 
-PRBool
+static PRBool
 check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
                  PRBool aIsWheel, PRBool aAlwaysRollup)
 {
@@ -5322,8 +5328,7 @@ nsWindow::DragInProgress(void)
     return (sLastDragMotionWindow || sIsDraggingOutOf);
 }
 
-/* static */
-PRBool
+static PRBool
 is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
 {
     gint x = 0;
@@ -5364,8 +5369,7 @@ is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
     return PR_FALSE;
 }
 
-/* static */
-nsWindow *
+static nsWindow *
 get_window_for_gtk_widget(GtkWidget *widget)
 {
     gpointer user_data = g_object_get_data(G_OBJECT(widget), "nsWindow");
@@ -5373,8 +5377,7 @@ get_window_for_gtk_widget(GtkWidget *widget)
     return static_cast<nsWindow *>(user_data);
 }
 
-/* static */
-nsWindow *
+static nsWindow *
 get_window_for_gdk_window(GdkWindow *window)
 {
     gpointer user_data = g_object_get_data(G_OBJECT(window), "nsWindow");
@@ -5382,8 +5385,7 @@ get_window_for_gdk_window(GdkWindow *window)
     return static_cast<nsWindow *>(user_data);
 }
 
-/* static */
-GtkWidget *
+static GtkWidget *
 get_gtk_widget_for_gdk_window(GdkWindow *window)
 {
     gpointer user_data = NULL;
@@ -5392,8 +5394,7 @@ get_gtk_widget_for_gdk_window(GdkWindow *window)
     return GTK_WIDGET(user_data);
 }
 
-/* static */
-GdkCursor *
+static GdkCursor *
 get_gtk_cursor(nsCursor aCursor)
 {
     GdkPixmap *cursor;
@@ -5548,8 +5549,7 @@ get_gtk_cursor(nsCursor aCursor)
 
 // gtk callbacks
 
-/* static */
-gboolean
+static gboolean
 expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
 {
     nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
@@ -5568,8 +5568,7 @@ expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
     return FALSE;
 }
 
-/* static */
-gboolean
+static gboolean
 configure_event_cb(GtkWidget *widget,
                    GdkEventConfigure *event)
 {
@@ -5580,8 +5579,7 @@ configure_event_cb(GtkWidget *widget,
     return window->OnConfigureEvent(widget, event);
 }
 
-/* static */
-void
+static void
 container_unrealize_cb (GtkWidget *widget)
 {
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
@@ -5591,8 +5589,7 @@ container_unrealize_cb (GtkWidget *widget)
     window->OnContainerUnrealize(widget);
 }
 
-/* static */
-void
+static void
 size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation)
 {
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
@@ -5602,8 +5599,7 @@ size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation)
     window->OnSizeAllocate(widget, allocation);
 }
 
-/* static */
-gboolean
+static gboolean
 delete_event_cb(GtkWidget *widget, GdkEventAny *event)
 {
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
@@ -5615,8 +5611,7 @@ delete_event_cb(GtkWidget *widget, GdkEventAny *event)
     return TRUE;
 }
 
-/* static */
-gboolean
+static gboolean
 enter_notify_event_cb(GtkWidget *widget,
                       GdkEventCrossing *event)
 {
@@ -5629,8 +5624,7 @@ enter_notify_event_cb(GtkWidget *widget,
     return TRUE;
 }
 
-/* static */
-gboolean
+static gboolean
 leave_notify_event_cb(GtkWidget *widget,
                       GdkEventCrossing *event)
 {
@@ -5657,7 +5651,7 @@ leave_notify_event_cb(GtkWidget *widget,
     return TRUE;
 }
 
-nsWindow*
+static nsWindow*
 GetFirstNSWindowForGDKWindow(GdkWindow *aGdkWindow)
 {
     nsWindow* window;
@@ -5674,8 +5668,7 @@ GetFirstNSWindowForGDKWindow(GdkWindow *aGdkWindow)
     return window;
 }
 
-/* static */
-gboolean
+static gboolean
 motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 {
     UpdateLastInputEventTime();
@@ -5692,8 +5685,7 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
     return TRUE;
 }
 
-/* static */
-gboolean
+static gboolean
 button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
     UpdateLastInputEventTime();
@@ -5707,8 +5699,7 @@ button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
     return TRUE;
 }
 
-/* static */
-gboolean
+static gboolean
 button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
     UpdateLastInputEventTime();
@@ -5722,8 +5713,7 @@ button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
     return TRUE;
 }
 
-/* static */
-gboolean
+static gboolean
 focus_in_event_cb(GtkWidget *widget, GdkEventFocus *event)
 {
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
@@ -5735,8 +5725,7 @@ focus_in_event_cb(GtkWidget *widget, GdkEventFocus *event)
     return FALSE;
 }
 
-/* static */
-gboolean
+static gboolean
 focus_out_event_cb(GtkWidget *widget, GdkEventFocus *event)
 {
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
@@ -5767,7 +5756,7 @@ focus_out_event_cb(GtkWidget *widget, GdkEventFocus *event)
 // example), a request to make the parent window active is issued.  When the
 // parent window becomes active, keyboard events will be received.
 
-GdkFilterReturn
+static GdkFilterReturn
 popup_take_focus_filter(GdkXEvent *gdk_xevent,
                         GdkEvent *event,
                         gpointer data)
@@ -5811,8 +5800,7 @@ popup_take_focus_filter(GdkXEvent *gdk_xevent,
     return GDK_FILTER_REMOVE;
 }
 
-/* static */
-GdkFilterReturn
+static GdkFilterReturn
 plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
 {
     GdkWindow *plugin_window;
@@ -5870,8 +5858,7 @@ plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
     return return_val;
 }
 
-/* static */
-GdkFilterReturn
+static GdkFilterReturn
 plugin_client_message_filter(GdkXEvent *gdk_xevent,
                              GdkEvent *event,
                              gpointer data)
@@ -5905,8 +5892,7 @@ plugin_client_message_filter(GdkXEvent *gdk_xevent,
 }
 #endif /* MOZ_X11 */
 
-/* static */
-gboolean
+static gboolean
 key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_press_event_cb\n"));
@@ -5949,7 +5935,7 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
     return focusWindow->OnKeyPressEvent(widget, event);
 }
 
-gboolean
+static gboolean
 key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_release_event_cb\n"));
@@ -5966,8 +5952,7 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
     return focusWindow->OnKeyReleaseEvent(widget, event);
 }
 
-/* static */
-gboolean
+static gboolean
 scroll_event_cb(GtkWidget *widget, GdkEventScroll *event)
 {
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
@@ -5979,8 +5964,7 @@ scroll_event_cb(GtkWidget *widget, GdkEventScroll *event)
     return TRUE;
 }
 
-/* static */
-gboolean
+static gboolean
 visibility_notify_event_cb (GtkWidget *widget, GdkEventVisibility *event)
 {
     nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
@@ -6030,8 +6014,7 @@ hierarchy_changed_cb (GtkWidget *widget,
     }
 }
 
-/* static */
-gboolean
+static gboolean
 window_state_event_cb (GtkWidget *widget, GdkEventWindowState *event)
 {
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
@@ -6043,8 +6026,7 @@ window_state_event_cb (GtkWidget *widget, GdkEventWindowState *event)
     return FALSE;
 }
 
-/* static */
-void
+static void
 theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
 {
     nsRefPtr<nsWindow> window = data;
@@ -6103,8 +6085,7 @@ nsWindow::UpdateDragStatus(GdkDragContext *aDragContext,
 }
 
 
-/* static */
-gboolean
+static gboolean
 drag_motion_event_cb(GtkWidget *aWidget,
                      GdkDragContext *aDragContext,
                      gint aX,
@@ -6120,8 +6101,8 @@ drag_motion_event_cb(GtkWidget *aWidget,
                                      aDragContext,
                                      aX, aY, aTime, aData);
 }
-/* static */
-void
+
+static void
 drag_leave_event_cb(GtkWidget *aWidget,
                     GdkDragContext *aDragContext,
                     guint aTime,
@@ -6135,14 +6116,13 @@ drag_leave_event_cb(GtkWidget *aWidget,
 }
 
 
-/* static */
-gboolean
+static gboolean
 drag_drop_event_cb(GtkWidget *aWidget,
                    GdkDragContext *aDragContext,
                    gint aX,
                    gint aY,
                    guint aTime,
-                   gpointer *aData)
+                   gpointer aData)
 {
     nsRefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
     if (!window)
@@ -6153,8 +6133,7 @@ drag_drop_event_cb(GtkWidget *aWidget,
                                    aX, aY, aTime, aData);
 }
 
-/* static */
-void
+static void
 drag_data_received_event_cb(GtkWidget *aWidget,
                             GdkDragContext *aDragContext,
                             gint aX,
@@ -6175,24 +6154,13 @@ drag_data_received_event_cb(GtkWidget *aWidget,
                                     aInfo, aTime, aData);
 }
 
-/* static */
-nsresult
+static nsresult
 initialize_prefs(void)
 {
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!prefs)
-        return NS_OK;
-
-    PRBool val = PR_TRUE;
-    nsresult rv;
-
-    rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus", &val);
-    if (NS_SUCCEEDED(rv))
-        gRaiseWindows = val;
-
-    rv = prefs->GetBoolPref("mozilla.widget.disable-native-theme", &val);
-    if (NS_SUCCEEDED(rv))
-        gDisableNativeTheme = val;
+    gRaiseWindows =
+        Preferences::GetBool("mozilla.widget.raise-on-setfocus", PR_TRUE);
+    gDisableNativeTheme =
+        Preferences::GetBool("mozilla.widget.disable-native-theme", PR_FALSE);
 
     return NS_OK;
 }
@@ -6221,8 +6189,7 @@ nsWindow::DragLeaveTimerCallback(nsITimer *aTimer, void *aClosure)
     window->FireDragLeaveTimer();
 }
 
-/* static */
-GdkWindow *
+static GdkWindow *
 get_inner_gdk_window (GdkWindow *aWindow,
                       gint x, gint y,
                       gint *retx, gint *rety)
@@ -6249,7 +6216,7 @@ get_inner_gdk_window (GdkWindow *aWindow,
     return aWindow;
 }
 
-inline PRBool
+static inline PRBool
 is_context_menu_key(const nsKeyEvent& aKeyEvent)
 {
     return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
@@ -6258,7 +6225,7 @@ is_context_menu_key(const nsKeyEvent& aKeyEvent)
              !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt));
 }
 
-void
+static void
 key_event_to_context_menu_event(nsMouseEvent &aEvent,
                                 GdkEventKey *aGdkEvent)
 {
@@ -6271,8 +6238,7 @@ key_event_to_context_menu_event(nsMouseEvent &aEvent,
     aEvent.clickCount = 1;
 }
 
-/* static */
-int
+static int
 is_parent_ungrab_enter(GdkEventCrossing *aEvent)
 {
     return (GDK_CROSSING_UNGRAB == aEvent->mode) &&
@@ -6281,8 +6247,7 @@ is_parent_ungrab_enter(GdkEventCrossing *aEvent)
 
 }
 
-/* static */
-int
+static int
 is_parent_grab_leave(GdkEventCrossing *aEvent)
 {
     return (GDK_CROSSING_GRAB == aEvent->mode) &&
@@ -6365,6 +6330,7 @@ void
 nsWindow::CreateRootAccessible()
 {
     if (mIsTopLevel && !mRootAccessible) {
+        LOG(("nsWindow:: Create Toplevel Accessibility\n"));
         nsAccessible *acc = DispatchAccessibleEvent();
 
         if (acc) {

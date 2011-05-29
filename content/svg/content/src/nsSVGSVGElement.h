@@ -226,13 +226,6 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
-#ifndef MOZ_ENABLE_LIBXUL
-  // XXXdholbert HACK to call static method
-  // nsSVGEffects::RemoveAllRenderingObservers() on myself, on behalf
-  // of imagelib in non-libxul builds.
-  virtual void RemoveAllRenderingObservers();
-#endif // !MOZ_LIBXUL
-
 private:
   // Methods for <image> elements to override my "PreserveAspectRatio" value.
   // These are private so that only our friends (nsSVGImageFrame in

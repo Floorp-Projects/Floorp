@@ -53,7 +53,7 @@ class MemorizingFile(object):
             file_: the file object to wrap.
             max_memorized_lines: the maximum number of lines to memorize.
                 Only the first max_memorized_lines are memorized.
-                Default: sys.maxint. 
+                Default: sys.maxint.
         """
         self._file = file_
         self._memorized_lines = []

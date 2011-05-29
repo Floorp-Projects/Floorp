@@ -90,16 +90,14 @@ _TEST_FILES =\
 		test_aria_roles.xul \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
-	$(warning   test_childAtPoint.html temporarily disabled) \
-	$(warning	test_childAtPoint.xul temporarily disabled) \
+		test_childAtPoint.html \
+		test_childAtPoint.xul \
 		test_descr.html \
 		test_elm_landmarks.html \
 		test_elm_listbox.xul \
-	$(warning   test_elm_media.html temporarily disabled) \
 		test_elm_nsApplicationAcc.html \
 		test_elm_plugin.html \
 		test_keys.html \
-	$(warning test_nsIAccessible_comboboxes.xul temporarily disabled) \
  		test_nsIAccessible_selects.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleImage.html \

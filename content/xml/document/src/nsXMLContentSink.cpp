@@ -37,15 +37,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsCOMPtr.h"
 #include "nsXMLContentSink.h"
 #include "nsIParser.h"
-#include "nsIUnicharInputStream.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMDOMImplementation.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -733,6 +732,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
   NS_ConvertUTF16toUTF8 type(aType);
   if (type.EqualsIgnoreCase(TEXT_XSL) ||
+      type.EqualsIgnoreCase(APPLICATION_XSLT_XML) ||
       type.EqualsIgnoreCase(TEXT_XML) ||
       type.EqualsIgnoreCase(APPLICATION_XML)) {
     if (aAlternate) {

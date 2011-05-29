@@ -5,10 +5,9 @@ function makeSteamEngine() {
   return new SyncEngine('Steam');
 }
 
-var syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
-
 function test_url_attributes() {
   _("SyncEngine url attributes");
+  let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "https://cluster/");
   let engine = makeSteamEngine();
   try {
@@ -22,6 +21,7 @@ function test_url_attributes() {
 
 function test_syncID() {
   _("SyncEngine.syncID corresponds to preference");
+  let syncTesting = new SyncTestingInfrastructure();
   let engine = makeSteamEngine();
   try {
     // Ensure pristine environment
@@ -36,12 +36,12 @@ function test_syncID() {
     do_check_eq(engine.syncID, "fake-guid-1");
   } finally {
     Svc.Prefs.resetBranch("");
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
 
 function test_lastSync() {
   _("SyncEngine.lastSync and SyncEngine.lastSyncLocal correspond to preferences");
+  let syncTesting = new SyncTestingInfrastructure();
   let engine = makeSteamEngine();
   try {
     // Ensure pristine environment
@@ -71,6 +71,7 @@ function test_lastSync() {
 
 function test_toFetch() {
   _("SyncEngine.toFetch corresponds to file on disk");
+  let syncTesting = new SyncTestingInfrastructure();
   const filename = "weave/toFetch/steam.json";
   let engine = makeSteamEngine();
   try {
@@ -100,6 +101,7 @@ function test_toFetch() {
 
 function test_resetClient() {
   _("SyncEngine.resetClient resets lastSync and toFetch");
+  let syncTesting = new SyncTestingInfrastructure();
   let engine = makeSteamEngine();
   try {
     // Ensure pristine environment
@@ -123,6 +125,7 @@ function test_resetClient() {
 
 function test_wipeServer() {
   _("SyncEngine.wipeServer deletes server data and resets the client.");
+  let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   let engine = makeSteamEngine();
 

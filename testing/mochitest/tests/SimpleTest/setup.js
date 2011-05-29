@@ -42,6 +42,24 @@ TestRunner.logger = new Logger();
 // Check the query string for arguments
 var params = parseQueryString(location.search.substring(1), true);
 
+var config = {};
+if (window.readConfig) {
+  config = readConfig();
+}
+
+if (config.testRoot == "chrome" || config.testRoot == "a11y") {
+  for (p in params) {
+    if (params[p] == 1) {
+      config[p] = true;
+    } else if (params[p] == 0) {
+      config[p] = false;
+    } else {
+      config[p] = params[p];
+    }
+  }
+  params = config;
+}
+
 // set the per-test timeout if specified in the query string
 if (params.timeout) {
   TestRunner.timeout = parseInt(params.timeout) * 1000;

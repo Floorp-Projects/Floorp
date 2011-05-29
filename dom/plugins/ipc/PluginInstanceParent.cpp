@@ -68,10 +68,6 @@ extern const PRUnichar* kOOPPPluginFocusEventId;
 UINT gOOPPPluginFocusEvent =
     RegisterWindowMessage(kOOPPPluginFocusEventId);
 extern const PRUnichar* kFlashFullscreenClass;
-UINT gOOPPSpinNativeLoopEvent =
-    RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
-UINT gOOPPStopNativeLoopEvent =
-    RegisterWindowMessage(L"SyncChannel Stop Inner Loop Message");
 #elif defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
 #elif defined(XP_MACOSX)
@@ -141,8 +137,7 @@ PluginInstanceParent::~PluginInstanceParent()
     }
     if (mShColorSpace)
         ::CGColorSpaceRelease(mShColorSpace);
-    if (mIOSurface)
-        delete mIOSurface;
+    delete mIOSurface;
     if (mDrawingModel == NPDrawingModelCoreAnimation) {
         mParent->RemoveFromRefreshTimer(this);
     }
@@ -870,9 +865,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     if (mShWidth != window.width || mShHeight != window.height) {
         if (mDrawingModel == NPDrawingModelCoreAnimation || 
             mDrawingModel == NPDrawingModelInvalidatingCoreAnimation) {
-            if (mIOSurface) {
-                delete mIOSurface;
-            }
+            delete mIOSurface;
             mIOSurface = nsIOSurface::CreateIOSurface(window.width, window.height);
         } else if (mShWidth * mShHeight != window.width * window.height) {
             if (mShWidth != 0 && mShHeight != 0) {

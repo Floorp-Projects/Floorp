@@ -64,6 +64,7 @@ const RECAPTCHA_DOMAIN = "https://www.google.com";
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 
 var gSyncSetup = {
@@ -92,9 +93,9 @@ var gSyncSetup = {
   init: function () {
     let obs = [
       ["weave:service:changepph:finish", "onResetPassphrase"],
-      ["weave:service:verify-login:start",  "onLoginStart"],
-      ["weave:service:verify-login:error",  "onLoginEnd"],
-      ["weave:service:verify-login:finish", "onLoginEnd"]];
+      ["weave:service:login:start",  "onLoginStart"],
+      ["weave:service:login:error",  "onLoginEnd"],
+      ["weave:service:login:finish", "onLoginEnd"]];
 
     // Add the observers now and remove them on unload
     let self = this;
@@ -216,6 +217,8 @@ var gSyncSetup = {
         feedback = server;
         break;
       case Weave.LOGIN_FAILED_LOGIN_REJECTED:
+      case Weave.LOGIN_FAILED_NO_USERNAME:
+      case Weave.LOGIN_FAILED_NO_PASSWORD:
         feedback = password;
         break;
       case Weave.LOGIN_FAILED_INVALID_PASSPHRASE:
@@ -820,7 +823,9 @@ var gSyncSetup = {
         if (this._case1Setup)
           break;
 
-        let places_db = Weave.Svc.History.DBConnection;
+        let places_db = PlacesUtils.history
+                                   .QueryInterface(Ci.nsPIPlacesDatabase)
+                                   .DBConnection;
         if (Weave.Engines.get("history").enabled) {
           let daysOfHistory = 0;
           let stm = places_db.createStatement(
@@ -851,7 +856,7 @@ var gSyncSetup = {
             "FROM moz_bookmarks b " +
             "LEFT JOIN moz_bookmarks t ON " +
             "b.parent = t.id WHERE b.type = 1 AND t.parent <> :tag");
-          stm.params.tag = Weave.Svc.Bookmark.tagsFolder;
+          stm.params.tag = PlacesUtils.tagsFolderId;
           if (stm.executeStep())
             bookmarks = stm.row.bookmarks;
           // Support %S for historical reasons (see bug 600141)
@@ -865,7 +870,7 @@ var gSyncSetup = {
         }
 
         if (Weave.Engines.get("passwords").enabled) {
-          let logins = Weave.Svc.Login.getAllLogins({});
+          let logins = Services.logins.getAllLogins({});
           // Support %S for historical reasons (see bug 600141)
           document.getElementById("passwordCount").value =
             PluralForm.get(logins.length,

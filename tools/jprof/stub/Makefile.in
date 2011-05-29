@@ -48,6 +48,9 @@ EXPORTS		=
 LIBRARY_NAME	= jprof
 EXPORT_LIBRARY	= 1
 
+# override optimization
+MOZ_OPTIMIZE_FLAGS = -fno-omit-frame-pointer
+
 CPPSRCS		= \
 		libmalloc.cpp \
 		$(NULL)

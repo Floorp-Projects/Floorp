@@ -143,7 +143,9 @@
 #include "nsHtml5Module.h"
 #include "prprf.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
@@ -184,14 +186,13 @@ static PRBool ConvertToMidasInternalCommand(const nsAString & inCommandID,
 static int
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
-  const nsAdoptingString& detector_name =
-    nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
+  const nsAdoptingCString& detector_name =
+    Preferences::GetLocalizedCString("intl.charset.detector");
 
-  if (detector_name.Length() > 0) {
+  if (!detector_name.IsEmpty()) {
     PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,
                DETECTOR_CONTRACTID_MAX);
-    PL_strncat(g_detector_contractid,
-               NS_ConvertUTF16toUTF8(detector_name).get(),
+    PL_strncat(g_detector_contractid, detector_name,
                DETECTOR_CONTRACTID_MAX);
     gPlugDetector = PR_TRUE;
   } else {
@@ -315,7 +316,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsHTMLDocument)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIHTMLDocument)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMHTMLDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMNSHTMLDocument)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLDocument)
@@ -542,11 +542,11 @@ nsHTMLDocument::UseWeakDocTypeDefault(PRInt32& aCharsetSource,
   // fallback value in case docshell return error
   aCharset.AssignLiteral("ISO-8859-1");
 
-  const nsAdoptingString& defCharset =
-    nsContentUtils::GetLocalizedStringPref("intl.charset.default");
+  const nsAdoptingCString& defCharset =
+    Preferences::GetLocalizedCString("intl.charset.default");
 
   if (!defCharset.IsEmpty()) {
-    LossyCopyUTF16toASCII(defCharset, aCharset);
+    aCharset = defCharset;
     aCharsetSource = kCharsetFromWeakDocTypeDefault;
   }
   return PR_TRUE;
@@ -588,21 +588,19 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
 
   nsresult rv_detect;
   if(!gInitDetector) {
-    const nsAdoptingString& detector_name =
-      nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
+    const nsAdoptingCString& detector_name =
+      Preferences::GetLocalizedCString("intl.charset.detector");
 
     if(!detector_name.IsEmpty()) {
       PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,
                  DETECTOR_CONTRACTID_MAX);
-      PL_strncat(g_detector_contractid,
-                 NS_ConvertUTF16toUTF8(detector_name).get(),
+      PL_strncat(g_detector_contractid, detector_name,
                  DETECTOR_CONTRACTID_MAX);
       gPlugDetector = PR_TRUE;
     }
 
-    nsContentUtils::RegisterPrefCallback("intl.charset.detector",
-                                         MyPrefChangedCallback,
-                                         nsnull);
+    Preferences::RegisterCallback(MyPrefChangedCallback,
+                                  "intl.charset.detector");
 
     gInitDetector = PR_TRUE;
   }
@@ -1147,12 +1145,6 @@ nsHTMLDocument::EndLoad()
   }
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::SetTitle(const nsAString& aTitle)
-{
-  return nsDocument::SetTitle(aTitle);
-}
-
 Element*
 nsHTMLDocument::GetImageMap(const nsAString& aMapName)
 {
@@ -1195,18 +1187,6 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 //
 // nsIDOMHTMLDocument interface implementation
 //
-NS_IMETHODIMP
-nsHTMLDocument::GetTitle(nsAString& aTitle)
-{
-  return nsDocument::GetTitle(aTitle);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetReferrer(nsAString& aReferrer)
-{
-  return nsDocument::GetReferrer(aReferrer);
-}
-
 void
 nsHTMLDocument::GetDomainURI(nsIURI **aURI)
 {
@@ -1812,13 +1792,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Open()
-{
-  nsCOMPtr<nsIDOMDocument> doc;
-  return Open(NS_LITERAL_CSTRING("text/html"), PR_FALSE, getter_AddRefs(doc));
-}
-
-NS_IMETHODIMP
 nsHTMLDocument::Open(const nsACString& aContentType, PRBool aReplace,
                      nsIDOMDocument** aReturn)
 {
@@ -1944,7 +1917,9 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
                                       "DOM Events", this);
       return NS_OK;
     }
-    rv = Open();
+    nsCOMPtr<nsIDOMDocument> ignored;
+    rv = Open(NS_LITERAL_CSTRING("text/html"), PR_FALSE,
+              getter_AddRefs(ignored));
 
     // If Open() fails, or if it didn't create a parser (as it won't
     // if the user chose to not discard the current document through
@@ -3322,7 +3297,7 @@ nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
     if (aPaste) {
       if (nsHTMLDocument::sPasteInternal_id == JSID_VOID) {
         nsHTMLDocument::sPasteInternal_id =
-          INTERNED_STRING_TO_JSID(::JS_InternString(cx, "paste"));
+          INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "paste"));
       }
       rv = secMan->CheckPropertyAccess(cx, nsnull, classNameStr.get(),
                                        nsHTMLDocument::sPasteInternal_id,
@@ -3330,7 +3305,7 @@ nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
     } else {
       if (nsHTMLDocument::sCutCopyInternal_id == JSID_VOID) {
         nsHTMLDocument::sCutCopyInternal_id =
-          INTERNED_STRING_TO_JSID(::JS_InternString(cx, "cutcopy"));
+          INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "cutcopy"));
       }
       rv = secMan->CheckPropertyAccess(cx, nsnull, classNameStr.get(),
                                        nsHTMLDocument::sCutCopyInternal_id,

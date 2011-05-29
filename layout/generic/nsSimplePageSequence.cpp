@@ -49,6 +49,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
+#include "mozilla/Preferences.h"
 
 // DateTime Includes
 #include "nsDateTimeFormatCID.h"
@@ -60,6 +61,8 @@
 #include "nsIPrintOptions.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
+
+using namespace mozilla;
 
 static const char sPrintOptionsContractID[] = "@mozilla.org/gfx/printsettings-service;1";
 
@@ -95,7 +98,7 @@ nsSharedPageData::nsSharedPageData() :
 nsSharedPageData::~nsSharedPageData()
 {
   nsMemory::Free(mDateTimeStr);
-  if (mHeadFootFont) delete mHeadFootFont;
+  delete mHeadFootFont;
   nsMemory::Free(mPageNumFormat);
   nsMemory::Free(mPageNumAndTotalsFormat);
   if (mDocTitle) nsMemory::Free(mDocTitle);
@@ -134,7 +137,7 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
 
 nsSimplePageSequenceFrame::~nsSimplePageSequenceFrame()
 {
-  if (mPageData) delete mPageData;
+  delete mPageData;
 }
 
 NS_QUERYFRAME_HEAD(nsSimplePageSequenceFrame)
@@ -226,7 +229,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // Compute the size of each page and the x coordinate that each page will
   // be placed at
   nscoord extraThreshold = NS_MAX(pageSize.width, pageSize.height)/10;
-  PRInt32 gapInTwips = nsContentUtils::GetIntPref("print.print_extra_margin");
+  PRInt32 gapInTwips = Preferences::GetInt("print.print_extra_margin");
   gapInTwips = NS_MAX(0, gapInTwips);
 
   nscoord extraGap = aPresContext->CSSTwipsToAppUnits(gapInTwips);

@@ -58,11 +58,6 @@ MODULE_NAME	= nsLayoutModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LIBS	= gkgfx
-EXTRA_DSO_LIBS += angle
-endif
-
 EXTRA_DSO_LIBS	+= thebes ycbcr
 
 
@@ -282,7 +277,7 @@ EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
 endif
 
 ifdef MOZ_SYDNEYAUDIO
-ifneq (,$(filter DragonFly FreeBSD GNU GNU_% NetBSD OpenBSD,$(OS_ARCH)))
+ifneq (,$(filter GNU GNU_% NetBSD OpenBSD,$(OS_ARCH)))
 EXTRA_DSO_LDOPTS += -lossaudio
 endif
 
@@ -341,6 +336,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/js/src/xpconnect/src \
 		   -I$(topsrcdir)/js/src/xpconnect/loader \
 		   -I$(topsrcdir)/caps/include \
+                   -I$(topsrcdir)/netwerk/base/src \
 		   $(NULL)
 
 ifdef MOZ_MATHML

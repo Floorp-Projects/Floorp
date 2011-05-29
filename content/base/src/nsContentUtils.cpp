@@ -49,9 +49,6 @@
 #include "nsAString.h"
 #include "nsPrintfCString.h"
 #include "nsUnicharUtils.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch2.h"
-#include "nsIPrefLocalizedString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
@@ -115,7 +112,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMDocumentEvent.h"
 #ifdef MOZ_XTF
 #include "nsIXTFService.h"
 static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
@@ -212,8 +208,11 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #endif
 #include "nsDOMTouchEvent.h"
 
+#include "mozilla/Preferences.h"
+
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla;
 
 const char kLoadAsData[] = "loadAsData";
 
@@ -231,7 +230,6 @@ nsIIOService *nsContentUtils::sIOService;
 #ifdef MOZ_XTF
 nsIXTFService *nsContentUtils::sXTFService = nsnull;
 #endif
-nsIPrefBranch2 *nsContentUtils::sPrefBranch = nsnull;
 imgILoader *nsContentUtils::sImgLoader;
 imgICache *nsContentUtils::sImgCache;
 nsIConsoleService *nsContentUtils::sConsoleService;
@@ -245,7 +243,6 @@ PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsIUGenCategory *nsContentUtils::sGenCat;
-nsTArray<nsISupports**> *nsContentUtils::sPtrsToPtrsToRelease;
 nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
 PRInt32 nsContentUtils::sScriptRootCount[NS_STID_ARRAY_UBOUND];
 PRUint32 nsContentUtils::sJSGCThingRootCount;
@@ -253,7 +250,6 @@ PRUint32 nsContentUtils::sJSGCThingRootCount;
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nsnull;
 #endif
 PRUint32 nsContentUtils::sScriptBlockerCount = 0;
-PRUint32 nsContentUtils::sRemovableScriptBlockerCount = 0;
 #ifdef DEBUG
 PRUint32 nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
 #endif
@@ -266,9 +262,6 @@ PRBool nsContentUtils::sIsHandlingKeyBoardEvent = PR_FALSE;
 PRBool nsContentUtils::sAllowXULXBL_for_file = PR_FALSE;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
-
-nsRefPtrHashtable<nsPrefObserverHashKey, nsPrefOldCallback>
-  *nsContentUtils::sPrefCallbackTable = nsnull;
 
 static PLDHashTable sEventListenerManagersHash;
 
@@ -319,110 +312,6 @@ class nsSameOriginChecker : public nsIChannelEventSink,
   NS_DECL_NSIINTERFACEREQUESTOR
 };
 
-class nsPrefObserverHashKey : public PLDHashEntryHdr {
-public:
-  typedef nsPrefObserverHashKey* KeyType;
-  typedef const nsPrefObserverHashKey* KeyTypePointer;
-
-  static const nsPrefObserverHashKey* KeyToPointer(nsPrefObserverHashKey *aKey)
-  {
-    return aKey;
-  }
-
-  static PLDHashNumber HashKey(const nsPrefObserverHashKey *aKey)
-  {
-    PRUint32 strHash = nsCRT::HashCode(aKey->mPref.BeginReading(),
-                                       aKey->mPref.Length());
-    return PR_ROTATE_LEFT32(strHash, 4) ^
-           NS_PTR_TO_UINT32(aKey->mCallback);
-  }
-
-  nsPrefObserverHashKey(const char *aPref, PrefChangedFunc aCallback) :
-    mPref(aPref), mCallback(aCallback) { }
-
-  nsPrefObserverHashKey(const nsPrefObserverHashKey *aOther) :
-    mPref(aOther->mPref), mCallback(aOther->mCallback)
-  { }
-
-  PRBool KeyEquals(const nsPrefObserverHashKey *aOther) const
-  {
-    return mCallback == aOther->mCallback &&
-           mPref.Equals(aOther->mPref);
-  }
-
-  nsPrefObserverHashKey *GetKey() const
-  {
-    return const_cast<nsPrefObserverHashKey*>(this);
-  }
-
-  enum { ALLOW_MEMMOVE = PR_TRUE };
-
-public:
-  nsCString mPref;
-  PrefChangedFunc mCallback;
-};
-
-// For nsContentUtils::RegisterPrefCallback/UnregisterPrefCallback
-class nsPrefOldCallback : public nsIObserver,
-                          public nsPrefObserverHashKey
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-public:
-  nsPrefOldCallback(const char *aPref, PrefChangedFunc aCallback)
-    : nsPrefObserverHashKey(aPref, aCallback) { }
-
-  ~nsPrefOldCallback() {
-    nsIPrefBranch2 *prefBranch = nsContentUtils::GetPrefBranch();
-    if(prefBranch)
-      prefBranch->RemoveObserver(mPref.get(), this);
-  }
-
-  void AppendClosure(void *aClosure) {
-    mClosures.AppendElement(aClosure);
-  }
-
-  void RemoveClosure(void *aClosure) {
-    mClosures.RemoveElement(aClosure);
-  }
-
-  PRBool HasNoClosures() {
-    return mClosures.Length() == 0;
-  }
-
-public:
-  nsTArray<void *>  mClosures;
-};
-
-NS_IMPL_ISUPPORTS1(nsPrefOldCallback, nsIObserver)
-
-NS_IMETHODIMP
-nsPrefOldCallback::Observe(nsISupports     *aSubject,
-                           const char      *aTopic,
-                           const PRUnichar *aData)
-{
-  NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
-               "invalid topic");
-  NS_LossyConvertUTF16toASCII data(aData);
-  for (PRUint32 i = 0; i < mClosures.Length(); i++) {
-    mCallback(data.get(), mClosures.ElementAt(i));
-  }
-
-  return NS_OK;
-}
-
-struct PrefCacheData {
-  void* cacheLocation;
-  union {
-    PRBool defaultValueBool;
-    PRInt32 defaultValueInt;
-  };
-};
-
-nsTArray<nsAutoPtr<PrefCacheData> >* sPrefCacheData = nsnull;
-
 // static
 nsresult
 nsContentUtils::Init()
@@ -432,11 +321,6 @@ nsContentUtils::Init()
 
     return NS_OK;
   }
-
-  sPrefCacheData = new nsTArray<nsAutoPtr<PrefCacheData> >();
-
-  // It's ok to not have a pref service.
-  CallGetService(NS_PREFSERVICE_CONTRACTID, &sPrefBranch);
 
   nsresult rv = NS_GetNameSpaceManager(&sNameSpaceManager);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -468,11 +352,6 @@ nsContentUtils::Init()
   rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  sPtrsToPtrsToRelease = new nsTArray<nsISupports**>();
-  if (!sPtrsToPtrsToRelease) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   if (!InitializeEventTable())
     return NS_ERROR_FAILURE;
 
@@ -500,8 +379,8 @@ nsContentUtils::Init()
   sBlockedScriptRunners = new nsCOMArray<nsIRunnable>;
   NS_ENSURE_TRUE(sBlockedScriptRunners, NS_ERROR_OUT_OF_MEMORY);
 
-  nsContentUtils::AddBoolPrefVarCache("dom.allow_XUL_XBL_for_file",
-                                      &sAllowXULXBL_for_file);
+  Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
+                               "dom.allow_XUL_XBL_for_file");
 
   sInitialized = PR_TRUE;
 
@@ -597,6 +476,8 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::oncopy,                        NS_COPY, EventNameType_HTMLXUL, NS_EVENT },
     { nsGkAtoms::oncut,                         NS_CUT, EventNameType_HTMLXUL, NS_EVENT },
     { nsGkAtoms::onpaste,                       NS_PASTE, EventNameType_HTMLXUL, NS_EVENT },
+    { nsGkAtoms::onopen,                        NS_OPEN, EventNameType_None, NS_EVENT },
+    { nsGkAtoms::onmessage,                     NS_MESSAGE, EventNameType_None, NS_EVENT },
     // XUL specific events
     { nsGkAtoms::ontext,                        NS_TEXT_TEXT, EventNameType_XUL, NS_EVENT_NULL },
 
@@ -1128,9 +1009,10 @@ nsContentUtils::OfflineAppAllowed(nsIURI *aURI)
   }
 
   PRBool allowed;
-  nsresult rv = updateService->OfflineAppAllowedForURI(aURI,
-                                                       sPrefBranch,
-                                                       &allowed);
+  nsresult rv =
+    updateService->OfflineAppAllowedForURI(aURI,
+                                           Preferences::GetRootBranch(),
+                                           &allowed);
   return NS_SUCCEEDED(rv) && allowed;
 }
 
@@ -1146,7 +1028,7 @@ nsContentUtils::OfflineAppAllowed(nsIPrincipal *aPrincipal)
 
   PRBool allowed;
   nsresult rv = updateService->OfflineAppAllowed(aPrincipal,
-                                                 sPrefBranch,
+                                                 Preferences::GetRootBranch(),
                                                  &allowed);
   return NS_SUCCEEDED(rv) && allowed;
 }
@@ -1166,15 +1048,6 @@ nsContentUtils::Shutdown()
   for (i = 0; i < PropertiesFile_COUNT; ++i)
     NS_IF_RELEASE(sStringBundles[i]);
 
-  // Clean up c-style's observer 
-  if (sPrefCallbackTable) {
-    delete sPrefCallbackTable;
-    sPrefCallbackTable = nsnull;
-  }
-
-  delete sPrefCacheData;
-  sPrefCacheData = nsnull;
-
   NS_IF_RELEASE(sStringBundleService);
   NS_IF_RELEASE(sConsoleService);
   NS_IF_RELEASE(sDOMScriptObjectFactory);
@@ -1192,7 +1065,6 @@ nsContentUtils::Shutdown()
 #endif
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sImgCache);
-  NS_IF_RELEASE(sPrefBranch);
 #ifdef IBMBIDI
   NS_IF_RELEASE(sBidiKeyboard);
 #endif
@@ -1203,15 +1075,6 @@ nsContentUtils::Shutdown()
   sStringEventTable = nsnull;
   delete sUserDefinedEvents;
   sUserDefinedEvents = nsnull;
-
-  if (sPtrsToPtrsToRelease) {
-    for (i = 0; i < sPtrsToPtrsToRelease->Length(); ++i) {
-      nsISupports** ptrToPtr = sPtrsToPtrsToRelease->ElementAt(i);
-      NS_RELEASE(*ptrToPtr);
-    }
-    delete sPtrsToPtrsToRelease;
-    sPtrsToPtrsToRelease = nsnull;
-  }
 
   if (sEventListenerManagersHash.ops) {
     NS_ASSERTION(sEventListenerManagersHash.entryCount == 0,
@@ -1523,24 +1386,6 @@ nsContentUtils::ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
   return sXPConnect->MoveWrappers(cx, oldScopeObj, newScopeObj);
 }
 
-nsIDocShell *
-nsContentUtils::GetDocShellFromCaller()
-{
-  JSContext *cx = nsnull;
-  sThreadJSContextStack->Peek(&cx);
-
-  if (cx) {
-    nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(sgo));
-
-    if (win) {
-      return win->GetDocShell();
-    }
-  }
-
-  return nsnull;
-}
-
 nsPIDOMWindow *
 nsContentUtils::GetWindowFromCaller()
 {
@@ -1844,53 +1689,6 @@ nsContentUtils::ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
 
   nsINode* child1 = parents1.ElementAt(--pos1);
   return parent->IndexOf(child1) < aOffset2 ? -1 : 1;
-}
-
-nsIContent*
-nsContentUtils::FindFirstChildWithResolvedTag(nsIContent* aParent,
-                                              PRInt32 aNamespace,
-                                              nsIAtom* aTag)
-{
-  nsIDocument* doc;
-  if (!aParent || !(doc = aParent->GetOwnerDoc())) {
-    return nsnull;
-  }
-  
-  nsBindingManager* bindingManager = doc->BindingManager();
-
-  PRInt32 namespaceID;
-  PRUint32 count = aParent->GetChildCount();
-
-  PRUint32 i;
-
-  for (i = 0; i < count; i++) {
-    nsIContent *child = aParent->GetChildAt(i);
-    nsIAtom* tag =  bindingManager->ResolveTag(child, &namespaceID);
-    if (tag == aTag && namespaceID == aNamespace) {
-      return child;
-    }
-  }
-
-  // now look for children in XBL
-  nsCOMPtr<nsIDOMNodeList> children;
-  bindingManager->GetXBLChildNodesFor(aParent, getter_AddRefs(children));
-  if (!children) {
-    return nsnull;
-  }
-
-  PRUint32 length;
-  children->GetLength(&length);
-  for (i = 0; i < length; i++) {
-    nsCOMPtr<nsIDOMNode> childNode;
-    children->Item(i, getter_AddRefs(childNode));
-    nsCOMPtr<nsIContent> childContent = do_QueryInterface(childNode);
-    nsIAtom* tag = bindingManager->ResolveTag(childContent, &namespaceID);
-    if (tag == aTag && namespaceID == aNamespace) {
-      return childContent;
-    }
-  }
-
-  return nsnull;
 }
 
 inline PRBool
@@ -2659,186 +2457,6 @@ nsContentUtils::IsDraggableLink(const nsIContent* aContent) {
   return aContent->IsLink(getter_AddRefs(absURI));
 }
 
-// static
-nsAdoptingCString
-nsContentUtils::GetCharPref(const char *aPref)
-{
-  nsAdoptingCString result;
-
-  if (sPrefBranch) {
-    sPrefBranch->GetCharPref(aPref, getter_Copies(result));
-  }
-
-  return result;
-}
-
-// static
-PRPackedBool
-nsContentUtils::GetBoolPref(const char *aPref, PRBool aDefault)
-{
-  PRBool result;
-
-  if (!sPrefBranch ||
-      NS_FAILED(sPrefBranch->GetBoolPref(aPref, &result))) {
-    result = aDefault;
-  }
-
-  return (PRPackedBool)result;
-}
-
-// static
-PRInt32
-nsContentUtils::GetIntPref(const char *aPref, PRInt32 aDefault)
-{
-  PRInt32 result;
-
-  if (!sPrefBranch ||
-      NS_FAILED(sPrefBranch->GetIntPref(aPref, &result))) {
-    result = aDefault;
-  }
-
-  return result;
-}
-
-// static
-nsAdoptingString
-nsContentUtils::GetLocalizedStringPref(const char *aPref)
-{
-  nsAdoptingString result;
-
-  if (sPrefBranch) {
-    nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-    sPrefBranch->GetComplexValue(aPref, NS_GET_IID(nsIPrefLocalizedString),
-                                 getter_AddRefs(prefLocalString));
-    if (prefLocalString) {
-      prefLocalString->GetData(getter_Copies(result));
-    }
-  }
-
-  return result;
-}
-
-// static
-nsAdoptingString
-nsContentUtils::GetStringPref(const char *aPref)
-{
-  nsAdoptingString result;
-
-  if (sPrefBranch) {
-    nsCOMPtr<nsISupportsString> theString;
-    sPrefBranch->GetComplexValue(aPref, NS_GET_IID(nsISupportsString),
-                                 getter_AddRefs(theString));
-    if (theString) {
-      theString->ToString(getter_Copies(result));
-    }
-  }
-
-  return result;
-}
-
-// RegisterPrefCallback/UnregisterPrefCallback are for backward compatiblity
-// with c-style observers.
-
-// static
-void
-nsContentUtils::RegisterPrefCallback(const char *aPref,
-                                     PrefChangedFunc aCallback,
-                                     void * aClosure)
-{
-  if (sPrefBranch) {
-    if (!sPrefCallbackTable) {
-      sPrefCallbackTable = 
-        new nsRefPtrHashtable<nsPrefObserverHashKey, nsPrefOldCallback>();
-      sPrefCallbackTable->Init();
-    }
-
-    nsPrefObserverHashKey hashKey(aPref, aCallback);
-    nsRefPtr<nsPrefOldCallback> callback;
-    sPrefCallbackTable->Get(&hashKey, getter_AddRefs(callback));
-    if (callback) {
-      callback->AppendClosure(aClosure);
-      return;
-    }
-
-    callback = new nsPrefOldCallback(aPref, aCallback);
-    callback->AppendClosure(aClosure);
-    if (NS_SUCCEEDED(sPrefBranch->AddObserver(aPref, callback, PR_FALSE))) {
-      sPrefCallbackTable->Put(callback, callback);
-    }
-  }
-}
-
-// static
-void
-nsContentUtils::UnregisterPrefCallback(const char *aPref,
-                                       PrefChangedFunc aCallback,
-                                       void * aClosure)
-{
-  if (sPrefBranch) {
-    if (!sPrefCallbackTable) {
-      return;
-    }
-
-    nsPrefObserverHashKey hashKey(aPref, aCallback);
-    nsRefPtr<nsPrefOldCallback> callback;
-    sPrefCallbackTable->Get(&hashKey, getter_AddRefs(callback));
-
-    if (callback) {
-      callback->RemoveClosure(aClosure);
-      if (callback->HasNoClosures()) {
-        // Delete the callback since its list of closures is empty.
-        sPrefCallbackTable->Remove(callback);
-      }
-    }
-  }
-}
-
-static int
-BoolVarChanged(const char *aPref, void *aClosure)
-{
-  PrefCacheData* cache = static_cast<PrefCacheData*>(aClosure);
-  *((PRBool*)cache->cacheLocation) =
-    nsContentUtils::GetBoolPref(aPref, cache->defaultValueBool);
-  
-  return 0;
-}
-
-void
-nsContentUtils::AddBoolPrefVarCache(const char *aPref,
-                                    PRBool* aCache,
-                                    PRBool aDefault)
-{
-  *aCache = GetBoolPref(aPref, aDefault);
-  PrefCacheData* data = new PrefCacheData;
-  data->cacheLocation = aCache;
-  data->defaultValueBool = aDefault;
-  sPrefCacheData->AppendElement(data);
-  RegisterPrefCallback(aPref, BoolVarChanged, data);
-}
-
-static int
-IntVarChanged(const char *aPref, void *aClosure)
-{
-  PrefCacheData* cache = static_cast<PrefCacheData*>(aClosure);
-  *((PRInt32*)cache->cacheLocation) =
-    nsContentUtils::GetIntPref(aPref, cache->defaultValueInt);
-  
-  return 0;
-}
-
-void
-nsContentUtils::AddIntPrefVarCache(const char *aPref,
-                                   PRInt32* aCache,
-                                   PRInt32 aDefault)
-{
-  *aCache = GetIntPref(aPref, aDefault);
-  PrefCacheData* data = new PrefCacheData;
-  data->cacheLocation = aCache;
-  data->defaultValueInt = aDefault;
-  sPrefCacheData->AppendElement(data);
-  RegisterPrefCallback(aPref, IntVarChanged, data);
-}
-
 PRBool
 nsContentUtils::IsSitePermAllow(nsIURI* aURI, const char* aType)
 {
@@ -3408,13 +3026,13 @@ nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
                            nsIDOMEvent** aEvent,
                            nsIDOMEventTarget** aTargetOut)
 {
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(aTarget));
-  NS_ENSURE_TRUE(docEvent && target, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(domDoc && target, NS_ERROR_INVALID_ARG);
 
   nsCOMPtr<nsIDOMEvent> event;
   nsresult rv =
-    docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+    domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
@@ -3599,15 +3217,6 @@ nsContentUtils::CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
   }
 
   return found;
-}
-
-/* static */
-nsIContent*
-nsContentUtils::GetReferencedElement(nsIURI* aURI, nsIContent *aFromContent)
-{
-  nsReferencedElement ref;
-  ref.Reset(aFromContent, aURI);
-  return ref.get();
 }
 
 /* static */
@@ -4574,7 +4183,7 @@ nsContentUtils::GetLocalizedEllipsis()
 {
   static PRUnichar sBuf[4] = { 0, 0, 0, 0 };
   if (!sBuf[0]) {
-    nsAutoString tmp(GetLocalizedStringPref("intl.ellipsis"));
+    nsAdoptingString tmp = Preferences::GetLocalizedString("intl.ellipsis");
     PRUint32 len = NS_MIN(PRUint32(tmp.Length()),
                           PRUint32(NS_ARRAY_LENGTH(sBuf) - 1));
     CopyUnicodeTo(tmp, 0, sBuf, len);
@@ -5602,11 +5211,11 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
 {
   NS_ENSURE_STATE(aTarget);
   nsIDocument* doc = aTarget->GetOwnerDoc();
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(doc);
-  NS_ENSURE_STATE(docEvent);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+  NS_ENSURE_STATE(domDoc);
   nsCOMPtr<nsIDOMEvent> event;
-  docEvent->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
-                        getter_AddRefs(event));
+  domDoc->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
+                      getter_AddRefs(event));
   nsCOMPtr<nsIDOMXULCommandEvent> xulCommand = do_QueryInterface(event);
   nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(xulCommand);
   NS_ENSURE_STATE(pEvent);
@@ -6265,35 +5874,6 @@ nsContentUtils::CheckCCWrapperTraversal(nsISupports* aScriptObjectHolder,
                "This will probably crash.");
 }
 #endif
-
-mozAutoRemovableBlockerRemover::mozAutoRemovableBlockerRemover(nsIDocument* aDocument MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-{
-  MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-  mNestingLevel = nsContentUtils::GetRemovableScriptBlockerLevel();
-  mDocument = aDocument;
-  nsISupports* sink = aDocument ? aDocument->GetCurrentContentSink() : nsnull;
-  mObserver = do_QueryInterface(sink);
-  for (PRUint32 i = 0; i < mNestingLevel; ++i) {
-    if (mObserver) {
-      mObserver->EndUpdate(mDocument, UPDATE_CONTENT_MODEL);
-    }
-    nsContentUtils::RemoveRemovableScriptBlocker();
-  }
-
-  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(), "killing mutation events");
-}
-
-mozAutoRemovableBlockerRemover::~mozAutoRemovableBlockerRemover()
-{
-  NS_ASSERTION(nsContentUtils::GetRemovableScriptBlockerLevel() == 0,
-               "Should have had none");
-  for (PRUint32 i = 0; i < mNestingLevel; ++i) {
-    nsContentUtils::AddRemovableScriptBlocker();
-    if (mObserver) {
-      mObserver->BeginUpdate(mDocument, UPDATE_CONTENT_MODEL);
-    }
-  }
-}
 
 // static
 PRBool

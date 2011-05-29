@@ -58,6 +58,7 @@ IS_COMPONENT = 1
 
 XPIDLSRCS += \
   mozIAsyncHistory.idl \
+  mozIAsyncFavicons.idl \
   mozIPlacesAutoComplete.idl \
   nsIAnnotationService.idl \
   nsIBrowserHistory.idl \
@@ -102,12 +103,6 @@ EXTRA_DSO_LDOPTS += \
   $(MOZ_UNICHARUTIL_LIBS) \
   $(MOZ_COMPONENT_LIBS) \
   $(NULL)
-
-ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LDOPTS += \
-  $(MOZ_JS_LIBS) \
-  $(NULL)
-endif
 
 LOCAL_INCLUDES += -I$(srcdir)/../build
 

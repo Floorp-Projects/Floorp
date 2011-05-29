@@ -302,9 +302,15 @@ def process_explicit_remove_files(dir_path, patch_info):
         for line in lines:
             # Exclude any blank and comment lines.
             if line and not line.startswith("#"):
+                if prefix != "":
+                    if line.startswith("../"):
+                        line = line.replace("../../", "")
+                        line = line.replace("../", "Contents/")
+                    else:
+                        line = os.path.join(prefix,line)
                 # Python on windows uses \ for path separators and the update
                 # manifests expects / for path separators on all platforms.
-                line=os.path.join(prefix,line).replace("\\", "/")
+                line = line.replace("\\", "/")
                 patch_info.append_remove_instruction(line)
 
 def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch_info, forced_updates):

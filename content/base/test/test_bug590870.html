@@ -23,10 +23,10 @@ var gen = runTest();
 function runTest() {
   var iframe = $('iframe');
   iframe.src = "http://noxul.example.com/tests/content/base/test/file_bug590870.html";
-  is((yield), "true", "shouldn't be able to create XUL elements");
+  is((yield), true, "shouldn't be able to create XUL elements");
 
   iframe.src = "file_bug590870.html";
-  is((yield), "false", "should be able to create XUL elements");
+  is((yield), false, "should be able to create XUL elements");
 
   SimpleTest.finish();
   yield;

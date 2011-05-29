@@ -135,22 +135,12 @@ nsGIOMimeApp::GetExpectsURIs(PRInt32* aExpects)
 NS_IMETHODIMP
 nsGIOMimeApp::Launch(const nsACString& aUri)
 {
-  char *uri = strdup(PromiseFlatCString(aUri).get());
+  GList uris = { 0 };
+  PromiseFlatCString flatUri(aUri);
+  uris.data = const_cast<char*>(flatUri.get());
 
-  if (!uri)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  GList *uris = g_list_append(NULL, uri);
-
-  if (!uris) {
-    g_free(uri);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   GError *error = NULL;
-  gboolean result = g_app_info_launch_uris(mApp, uris, NULL, &error);
-
-  g_free(uri);
-  g_list_free(uris);
+  gboolean result = g_app_info_launch_uris(mApp, &uris, NULL, &error);
 
   if (!result) {
     g_warning("Cannot launch application: %s", error->message);

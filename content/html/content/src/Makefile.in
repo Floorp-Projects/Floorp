@@ -68,7 +68,6 @@ CPPSRCS		= \
 		nsHTMLButtonElement.cpp \
 		nsHTMLCanvasElement.cpp \
 		nsHTMLDataListElement.cpp \
-		nsHTMLDelElement.cpp \
 		nsHTMLDivElement.cpp \
 		nsHTMLFieldSetElement.cpp \
 		nsHTMLFontElement.cpp \
@@ -86,6 +85,7 @@ CPPSRCS		= \
 		nsHTMLLinkElement.cpp \
 		nsHTMLMapElement.cpp \
 		nsHTMLMetaElement.cpp \
+		nsHTMLModElement.cpp \
 		nsHTMLObjectElement.cpp \
 		nsHTMLOListElement.cpp \
 		nsHTMLSharedObjectElement.cpp \
@@ -112,6 +112,7 @@ CPPSRCS		= \
 		nsDOMValidityState.cpp \
 		nsIConstraintValidation.cpp \
 		nsRadioVisitor.cpp \
+		nsDOMStringMap.cpp \
 		$(NULL)
 
 ifdef MOZ_MEDIA

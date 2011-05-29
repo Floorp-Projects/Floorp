@@ -48,7 +48,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMWindow.h"
@@ -103,6 +102,8 @@
 
 #include "nsIDOMText.h"
 
+#include "nsDOMStringMap.h"
+
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsEventDispatcher.h"
@@ -114,6 +115,9 @@
 #include "mozilla/dom/Element.h"
 #include "nsHTMLFieldSetElement.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 using namespace mozilla::dom;
 
 #include "nsThreadUtils.h"
@@ -302,7 +306,7 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
   NS_INTERFACE_MAP_END
 
 // No closing bracket, because NS_INTERFACE_MAP_END does that for us.
-    
+
 nsresult
 nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
 {
@@ -362,6 +366,33 @@ nsGenericHTMLElement::SetAttribute(const nsAString& aName,
 
   return SetAttr(name->NamespaceID(), name->LocalName(), name->GetPrefix(),
                  aValue, PR_TRUE);
+}
+
+nsresult
+nsGenericHTMLElement::GetDataset(nsIDOMDOMStringMap** aDataset)
+{
+  nsDOMSlots *slots = DOMSlots();
+
+  if (!slots->mDataset) {
+    // mDataset is a weak reference so assignment will not AddRef.
+    // AddRef is called before assigning to out parameter.
+    slots->mDataset = new nsDOMStringMap(this);
+  }
+
+  NS_ADDREF(*aDataset = slots->mDataset);
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::ClearDataset()
+{
+  nsDOMSlots *slots = GetExistingDOMSlots();
+
+  NS_ASSERTION(slots && slots->mDataset,
+               "Slots should exist and dataset should not be null.");
+  slots->mDataset = nsnull;
+
+  return NS_OK;
 }
 
 // Implementation for nsIDOMHTMLElement
@@ -750,12 +781,12 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     PRInt32 newChildCount = GetChildCount();
     if (newChildCount && nsContentUtils::
           HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsCOMArray<nsIContent> childNodes;
+      nsAutoTArray<nsCOMPtr<nsIContent>, 50> childNodes;
       NS_ASSERTION(newChildCount - oldChildCount >= 0,
                    "What, some unexpected dom mutation has happened?");
       childNodes.SetCapacity(newChildCount - oldChildCount);
       for (nsINode::ChildIterator iter(this); !iter.IsDone(); iter.Next()) {
-        childNodes.AppendObject(iter);
+        childNodes.AppendElement(iter);
       }
       nsGenericElement::FireNodeInserted(doc, this, childNodes);
     }
@@ -867,8 +898,7 @@ nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
   // NOTE: Do not reflect a pref value of 0 back to the DOM getter.
   // The web page should not know if the user has disabled spellchecking.
   // We'll catch this in the editor itself.
-  PRInt32 spellcheckLevel =
-    nsContentUtils::GetIntPref("layout.spellcheckDefault", 1);
+  PRInt32 spellcheckLevel = Preferences::GetInt("layout.spellcheckDefault", 1);
   if (spellcheckLevel == 2) {           // "Spellcheck multi- and single-line"
     *aSpellcheck = PR_TRUE;             // Spellchecked by default
   }
@@ -1090,15 +1120,9 @@ nsGenericHTMLElement::GetHrefURIForAnchors() const
 
   // We use the nsAttrValue's copy of the URI string to avoid copying.
   nsCOMPtr<nsIURI> uri;
-  GetURIAttr(nsGkAtoms::href, nsnull, PR_FALSE, getter_AddRefs(uri));
+  GetURIAttr(nsGkAtoms::href, nsnull, getter_AddRefs(uri));
 
   return uri.forget();
-}
-
-void
-nsGenericHTMLElement::GetHrefURIToMutate(nsIURI** aURI)
-{
-  GetURIAttr(nsGkAtoms::href, nsnull, PR_TRUE, aURI);
 }
 
 nsresult
@@ -1236,6 +1260,12 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
       if (manager) {
         manager->RemoveScriptEventListener(aAttribute);
       }
+    }
+
+    // Remove dataset property if necessary.
+    nsDOMSlots *slots = GetExistingDOMSlots();
+    if (slots && slots->mDataset) {
+      slots->mDataset->RemoveProp(aAttribute);
     }
   }
 
@@ -2193,7 +2223,7 @@ nsresult
 nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult)
 {
   nsCOMPtr<nsIURI> uri;
-  PRBool hadAttr = GetURIAttr(aAttr, aBaseAttr, PR_FALSE, getter_AddRefs(uri));
+  PRBool hadAttr = GetURIAttr(aAttr, aBaseAttr, getter_AddRefs(uri));
   if (!hadAttr) {
     aResult.Truncate();
     return NS_OK;
@@ -2212,8 +2242,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& 
 }
 
 PRBool
-nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
-                                 PRBool aCloneIfCached, nsIURI** aURI) const
+nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsIURI** aURI) const
 {
   *aURI = nsnull;
 
@@ -2517,7 +2546,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
   if (IsAutofocusable() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
-      nsContentUtils::GetBoolPref("browser.autofocus", PR_TRUE)) {
+      Preferences::GetBool("browser.autofocus", PR_TRUE)) {
     nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
     rv = NS_DispatchToCurrentThread(event);
     NS_ENSURE_SUCCESS(rv, rv);

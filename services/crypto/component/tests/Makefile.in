@@ -40,7 +40,7 @@ DEPTH     = ../../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
-relativesrcdir = services/crypto/components/tests
+relativesrcdir = services/crypto/component/tests
 
 include $(DEPTH)/config/autoconf.mk
 

@@ -125,10 +125,12 @@ template <typename T> struct Arena;
 struct ArenaHeader {
     JSCompartment   *compartment;
     ArenaHeader     *next;
-    FreeCell        *freeList;
 
   private:
+    FreeCell        *freeList;
     unsigned        thingKind;
+
+    friend struct FreeLists;
 
   public:
     inline uintptr_t address() const;
@@ -137,6 +139,21 @@ struct ArenaHeader {
     template <typename T>
     Arena<T> *getArena() {
         return reinterpret_cast<Arena<T> *>(address());
+    }
+
+    bool hasFreeList() const {
+        return !!freeList;
+    }
+
+    inline FreeCell *getFreeList() const;
+
+    void setFreeList(FreeCell *head) {
+        JS_ASSERT_IF(head, head->arenaHeader() == this);
+        freeList = head;
+    }
+
+    void clearFreeList() {
+        freeList = NULL;
     }
 
     unsigned getThingKind() const {
@@ -630,6 +647,8 @@ class ArenaList {
 #endif
     }
 
+    ArenaHeader *getHead() { return head; }
+
     inline ArenaHeader *searchForFreeArena();
 
     template <typename T>
@@ -717,7 +736,46 @@ CheckGCFreeListLink(FreeCell *cell)
 struct FreeLists {
     FreeCell       *finalizables[FINALIZE_LIMIT];
 
-    void purge();
+    /*
+     * Return the free list back to the arena so the GC finalization will not
+     * run the finalizers over unitialized bytes from free things.
+     */
+    void purge() {
+        for (FreeCell **p = finalizables; p != JS_ARRAY_END(finalizables); ++p) {
+            if (FreeCell *head = *p) {
+                JS_ASSERT(!head->arenaHeader()->freeList);
+                head->arenaHeader()->freeList = head;
+                *p = NULL;
+            }
+        }
+    }
+
+    /*
+     * Temporarily copy the free list heads to the arenas so the code can see
+     * the proper value in ArenaHeader::freeList when accessing the latter
+     * outside the GC.
+     */
+    void copyToArenas() {
+        for (FreeCell **p = finalizables; p != JS_ARRAY_END(finalizables); ++p) {
+            if (FreeCell *head = *p) {
+                JS_ASSERT(!head->arenaHeader()->freeList);
+                head->arenaHeader()->freeList = head;
+            }
+        }
+    }
+
+    /*
+     * Clear the free lists in arenas that were temporarily set there using
+     * copyToArenas.
+     */
+    void clearInArenas() {
+        for (FreeCell **p = finalizables; p != JS_ARRAY_END(finalizables); ++p) {
+            if (FreeCell *head = *p) {
+                JS_ASSERT(head->arenaHeader()->freeList == head);
+                head->arenaHeader()->clearFreeList();
+            }
+        }
+    }
 
     FreeCell *getNext(unsigned kind) {
         FreeCell *top = finalizables[kind];
@@ -729,6 +787,7 @@ struct FreeLists {
     }
 
     Cell *populate(ArenaHeader *aheader, uint32 thingKind) {
+        JS_ASSERT(!finalizables[thingKind]);
         FreeCell *cell = aheader->freeList;
         JS_ASSERT(cell);
         CheckGCFreeListLink(cell);
@@ -1194,6 +1253,31 @@ struct GCMarker : public JSTracer {
 void
 MarkStackRangeConservatively(JSTracer *trc, Value *begin, Value *end);
 
+static inline uint64
+TraceKindMask(unsigned kind)
+{
+    return uint64(1) << kind;
+}
+
+static inline bool
+TraceKindInMask(unsigned kind, uint64 mask)
+{
+    return !!(mask & TraceKindMask(kind));
+}
+
+typedef void (*IterateCallback)(JSContext *cx, void *data, size_t traceKind, void *obj);
+
+/*
+ * This function calls |callback| on every cell in the GC heap. If |comp| is
+ * non-null, then it only selects cells in that compartment. If |traceKindMask|
+ * is non-zero, then only cells whose traceKind belongs to the mask will be
+ * selected. The mask should be constructed by ORing |TraceKindMask(...)|
+ * results.
+ */
+void
+IterateCells(JSContext *cx, JSCompartment *comp, uint64 traceKindMask,
+             void *data, IterateCallback callback);
+
 } /* namespace js */
 
 extern void
@@ -1206,12 +1290,8 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str);
 extern void
 js_MarkTraps(JSTracer *trc);
 
-namespace js {
-namespace gc {
-
 /*
- * Macro to test if a traversal is the marking phase of GC to avoid exposing
- * ScriptFilenameEntry to traversal implementations.
+ * Macro to test if a traversal is the marking phase of the GC.
  */
 #define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
 
@@ -1221,15 +1301,8 @@ namespace gc {
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_SHAPE)
 #endif
 
-/*
- * Set object's prototype while checking that doing so would not create
- * a cycle in the proto chain. The cycle check and proto change are done
- * only when all other requests are finished or suspended to ensure exclusive
- * access to the chain. If there is a cycle, return false without reporting
- * an error. Otherwise, set the proto and return true.
- */
-extern bool
-SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto);
+namespace js {
+namespace gc {
 
 JSCompartment *
 NewCompartment(JSContext *cx, JSPrincipals *principals);

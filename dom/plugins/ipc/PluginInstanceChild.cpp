@@ -152,7 +152,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mHasPainted(false)
     , mSurfaceDifferenceRect(0,0,0,0)
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
-    , mMaemoImageRendering(PR_FALSE)
+    , mMaemoImageRendering(PR_TRUE)
 #endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
@@ -1553,53 +1553,11 @@ PluginInstanceChild::DestroyWinlessPopupSurrogate()
     mWinlessPopupSurrogateHWND = NULL;
 }
 
-/* windowless handle event helpers */
-
-static bool
-NeedsNestedEventCoverage(UINT msg)
-{
-    // Events we assume some sort of modal ui *might* be generated.
-    switch (msg) {
-        case WM_LBUTTONUP:
-        case WM_RBUTTONUP:
-        case WM_MBUTTONUP:
-        case WM_LBUTTONDOWN:
-        case WM_RBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-        case WM_CONTEXTMENU:
-            return true;
-    }
-    return false;
-}
-
-static bool
-IsMouseInputEvent(UINT msg)
-{
-    switch (msg) {
-        case WM_MOUSEMOVE:
-        case WM_LBUTTONUP:
-        case WM_RBUTTONUP:
-        case WM_MBUTTONUP:
-        case WM_LBUTTONDOWN:
-        case WM_RBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-        case WM_LBUTTONDBLCLK:
-        case WM_MBUTTONDBLCLK:
-        case WM_RBUTTONDBLCLK:
-            return true;
-    }
-    return false;
-}
-
 int16_t
 PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
 {
     if (!mPluginIface->event)
         return false;
-
-    if (!NeedsNestedEventCoverage(event.event)) {
-        return mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
-    }
 
     // Events that might generate nested event dispatch loops need
     // special handling during delivery.

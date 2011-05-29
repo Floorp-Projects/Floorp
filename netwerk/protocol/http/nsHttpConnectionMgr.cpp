@@ -383,6 +383,31 @@ nsHttpConnectionMgr::ProcessPendingQ(nsHttpConnectionInfo *ci)
     return rv;
 }
 
+nsresult
+nsHttpConnectionMgr::CloseIdleConnection(nsHttpConnection *conn)
+{
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    LOG(("nsHttpConnectionMgr::CloseIdleConnection %p conn=%p",
+         this, conn));
+
+    nsHttpConnectionInfo *ci = conn->ConnectionInfo();
+    if (!ci)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCStringKey key(ci->HashKey());
+    nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
+
+    if (!ent || !ent->mIdleConns.RemoveElement(conn))
+        return NS_ERROR_UNEXPECTED;
+
+    conn->Close(NS_ERROR_ABORT);
+    NS_RELEASE(conn);
+    mNumIdleConns--;
+    if (0 == mNumIdleConns)
+        StopPruneDeadConnectionsTimer();
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // enumeration callbacks
 
@@ -689,8 +714,11 @@ nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
                 conn->Close(NS_ERROR_ABORT);
                 NS_RELEASE(conn);
             }
-            else
+            else {
                 LOG(("   reusing connection [conn=%x]\n", conn));
+                conn->EndIdleMonitoring();
+            }
+
             ent->mIdleConns.RemoveElementAt(0);
             mNumIdleConns--;
 
@@ -1091,6 +1119,7 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(PRInt32, void *param)
             NS_ADDREF(conn);
             ent->mIdleConns.InsertElementAt(idx, conn);
             mNumIdleConns++;
+            conn->BeginIdleMonitoring();
 
             // If the added connection was first idle connection or has shortest
             // time to live among the idle connections, pruning dead
@@ -1187,6 +1216,15 @@ void
 nsHttpConnectionMgr::nsConnectionHandle::GetConnectionInfo(nsHttpConnectionInfo **result)
 {
     mConn->GetConnectionInfo(result);
+}
+
+nsresult
+nsHttpConnectionMgr::
+nsConnectionHandle::TakeTransport(nsISocketTransport  **aTransport,
+                                  nsIAsyncInputStream **aInputStream,
+                                  nsIAsyncOutputStream **aOutputStream)
+{
+    return mConn->TakeTransport(aTransport, aInputStream, aOutputStream);
 }
 
 void

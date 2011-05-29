@@ -72,7 +72,6 @@
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsIZipReader.h"
-#include "nsIPluginInstance.h"
 #include "nsIXPConnect.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
@@ -3289,27 +3288,6 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext* cx,
         }
     }
 
-    //-- If user allows scripting of plugins by untrusted scripts,
-    //   and the target object is a plugin, allow the access.
-    if(aObj)
-    {
-        nsresult rv;
-        nsCOMPtr<nsIPluginInstance> plugin(do_QueryInterface(aObj, &rv));
-        if (NS_SUCCEEDED(rv))
-        {
-            static PRBool prefSet = PR_FALSE;
-            static PRBool allowPluginAccess = PR_FALSE;
-            if (!prefSet)
-            {
-                rv = mPrefBranch->GetBoolPref("security.xpconnect.plugin.unrestricted",
-                                                       &allowPluginAccess);
-                prefSet = PR_TRUE;
-            }
-            if (allowPluginAccess)
-                return NS_OK;
-        }
-    }
-
     //-- Access tests failed
     return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
@@ -3427,7 +3405,7 @@ nsresult nsScriptSecurityManager::Init()
     
     ::JS_BeginRequest(cx);
     if (sEnabledID == JSID_VOID)
-        sEnabledID = INTERNED_STRING_TO_JSID(::JS_InternString(cx, "enabled"));
+        sEnabledID = INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "enabled"));
     ::JS_EndRequest(cx);
 
     InitPrefs();

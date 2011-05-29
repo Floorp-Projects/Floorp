@@ -38,6 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+
 /*
  * getChromeURI converts a URL to a URI
  * 
@@ -130,6 +132,9 @@ function getMochitestJarListing(aBasePath, aTestPath, aDir)
     }
     else if (zReader.hasEntry(pathToCheck + "/")) {
       base = pathToCheck + "/";
+    }
+    else {
+      return [];
     }
   }
   var [links, count] = zList(base, zReader, basePath, true);
@@ -353,3 +358,68 @@ function buildRelativePath(jarentryname, destdir, basepath)
   return targetFile;
 }
 
+function readConfig() {
+  var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].
+                    getService(Components.interfaces.nsIProperties);
+  var configFile = fileLocator.get("ProfD", Components.interfaces.nsIFile);
+  configFile.append("testConfig.js");
+
+  if (!configFile.exists())
+    return;
+
+  var fileInStream = Components.classes["@mozilla.org/network/file-input-stream;1"].
+                     createInstance(Components.interfaces.nsIFileInputStream);
+  fileInStream.init(configFile, -1, 0, 0);
+
+  var str = NetUtil.readInputStreamToString(fileInStream, fileInStream.available());
+  fileInStream.close();
+  return JSON.parse(str);
+}
+
+function getTestList() {
+  var params = {};
+  if (window.parseQueryString) {
+    params = parseQueryString(location.search.substring(1), true);
+  }
+
+  var config = readConfig();
+  for (p in params) {
+    if (params[p] == 1) {
+      config[p] = true;
+    } else if (params[p] == 0) {
+      config[p] = false;
+    } else {
+      config[p] = params[p];
+    }
+  }
+  params = config;
+
+  var baseurl = 'chrome://mochitests/content';
+  var testsURI = Components.classes["@mozilla.org/file/directory_service;1"]
+                      .getService(Components.interfaces.nsIProperties)
+                      .get("ProfD", Components.interfaces.nsILocalFile);
+  testsURI.append("tests.manifest");
+  var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
+              getService(Components.interfaces.nsIIOService);
+  var manifestFile = ioSvc.newFileURI(testsURI)
+                  .QueryInterface(Components.interfaces.nsIFileURL).file;
+
+  Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar).
+    autoRegister(manifestFile);
+
+  // load server.js in so we can share template functions
+  var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                       getService(Ci.mozIJSSubScriptLoader);
+  var srvScope = {};
+  scriptLoader.loadSubScript('chrome://mochikit/content/server.js',
+                             srvScope);
+  var singleTestPath;
+  var links;
+
+  if (getResolvedURI(baseurl).JARFile) {
+    [links, singleTestPath] = getMochitestJarListing(baseurl, params.testPath, params.testRoot);
+  } else {
+    [links, singleTestPath] = getFileListing(baseurl, params.testPath, params.testRoot, srvScope);
+  }
+  return [links, singleTestPath];
+}

@@ -201,6 +201,12 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mScrollEvent.Revoke();
 
+  EditorInitializer* initializer = (EditorInitializer*) Properties().Get(TextControlInitializer());
+  if (initializer) {
+    initializer->Revoke();
+    Properties().Delete(TextControlInitializer());
+  }
+
   // Unbind the text editor state object from the frame.  The editor will live
   // on, but things like controllers will be released.
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
@@ -445,10 +451,17 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   if (initEagerly) {
     NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                  "Someone forgot a script blocker?");
-
-    if (!nsContentUtils::AddScriptRunner(new EditorInitializer(this))) {
+    EditorInitializer* initializer = (EditorInitializer*) Properties().Get(TextControlInitializer());
+    if (initializer) {
+      initializer->Revoke();
+    }
+    initializer = new EditorInitializer(this);
+    if (!nsContentUtils::AddScriptRunner(initializer)) {
+      initializer->Revoke(); // paranoia
+      delete initializer;
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    Properties().Set(TextControlInitializer(),initializer);
   }
 
   return NS_OK;
@@ -1475,7 +1488,7 @@ nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
   }
 
   if (aBeforeEditorInit && value.IsEmpty()) {
-    rootNode->RemoveChildAt(0, PR_TRUE, PR_FALSE);
+    rootNode->RemoveChildAt(0, PR_TRUE);
     return NS_OK;
   }
 

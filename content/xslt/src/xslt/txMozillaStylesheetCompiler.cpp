@@ -498,7 +498,7 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     if (httpChannel) {
         httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                      NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
+                                      NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,application/xslt+xml,*/*;q=0.1"),
                                       PR_FALSE);
 
         nsCOMPtr<nsIURI> referrerURI;
@@ -743,15 +743,10 @@ TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
     nsIURI* docUri = doc->GetDocumentURI();
     NS_ENSURE_TRUE(docUri, NS_ERROR_FAILURE);
 
-    docUri->Clone(getter_AddRefs(uri));
-    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-
-    // We need to remove the ref, a URL with a ref would mean that we have an
+    // We need to remove the ref, a URI with a ref would mean that we have an
     // embedded stylesheet.
-    nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
-    if (url) {
-        url->SetRef(EmptyCString());
-    }
+    docUri->CloneIgnoringRef(getter_AddRefs(uri));
+    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
     uri->GetSpec(spec);
     NS_ConvertUTF8toUTF16 stylesheetURI(spec);
