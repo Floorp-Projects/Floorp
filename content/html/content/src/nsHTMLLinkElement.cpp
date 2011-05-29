@@ -52,7 +52,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsParserUtils.h"
 #include "nsContentUtils.h"

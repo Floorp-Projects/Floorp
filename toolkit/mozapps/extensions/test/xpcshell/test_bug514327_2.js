@@ -68,9 +68,13 @@ function run_test() {
   if (!plugin)
     do_throw("Plugin tag not found");
 
-  // should be marked as outdated by the blocklist
-  do_check_true(blocklist.getPluginBlocklistState(plugin, "1", "1.9") == nsIBLS.STATE_OUTDATED);
+  //run the code after the blocklist is closed
+  Services.obs.notifyObservers(null, "addon-blocklist-closed", null);
+  do_execute_soon(function() {
+    // should be marked as outdated by the blocklist
+    do_check_true(blocklist.getPluginBlocklistState(plugin, "1", "1.9") == nsIBLS.STATE_OUTDATED);
 
-  // should indicate that a warning should be shown
-  do_check_true(prefs.getBoolPref("plugins.update.notifyUser"));
+    // should indicate that a warning should be shown
+    do_check_true(prefs.getBoolPref("plugins.update.notifyUser"));
+  });
 }

@@ -77,8 +77,10 @@ PasswordEngine.prototype = {
     // Delete the weave credentials from the server once
     if (!Svc.Prefs.get("deletePwd", false)) {
       try {
-        let ids = Svc.Login.findLogins({}, PWDMGR_HOST, "", "").map(function(info)
-          info.QueryInterface(Components.interfaces.nsILoginMetaInfo).guid);
+        let ids = Services.logins.findLogins({}, PWDMGR_HOST, "", "")
+                          .map(function(info) {
+          return info.QueryInterface(Components.interfaces.nsILoginMetaInfo).guid;
+        });
         let coll = new Collection(this.engineURL);
         coll.ids = ids;
         let ret = coll.delete();
@@ -97,8 +99,8 @@ PasswordEngine.prototype = {
     if (!login)
       return;
 
-    let logins = Svc.Login.findLogins({}, login.hostname, login.formSubmitURL,
-                                      login.httpRealm);
+    let logins = Services.logins.findLogins(
+      {}, login.hostname, login.formSubmitURL, login.httpRealm);
     this._store._sleep(0); // Yield back to main thread after synchronous operation.
 
     // Look for existing logins that match the hostname but ignore the password
@@ -113,9 +115,9 @@ function PasswordStore(name) {
   this._nsLoginInfo = new Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
 
-  Utils.lazy2(this, "DBConnection", function() {
-    return Svc.Login.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.mozIStorageConnection);
+  XPCOMUtils.defineLazyGetter(this, "DBConnection", function() {
+    return Services.logins.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.mozIStorageConnection);
   });
 }
 PasswordStore.prototype = {
@@ -150,7 +152,7 @@ PasswordStore.prototype = {
       createInstance(Ci.nsIWritablePropertyBag2);
     prop.setPropertyAsAUTF8String("guid", id);
 
-    let logins = Svc.Login.searchLogins({}, prop);
+    let logins = Services.logins.searchLogins({}, prop);
     this._sleep(0); // Yield back to main thread after synchronous operation.
     if (logins.length > 0) {
       this._log.trace(logins.length + " items matching " + id + " found.");
@@ -178,7 +180,7 @@ PasswordStore.prototype = {
 
   getAllIDs: function PasswordStore__getAllIDs() {
     let items = {};
-    let logins = Svc.Login.getAllLogins({});
+    let logins = Services.logins.getAllLogins({});
 
     for (let i = 0; i < logins.length; i++) {
       // Skip over Weave password/passphrase entries
@@ -209,7 +211,7 @@ PasswordStore.prototype = {
       createInstance(Ci.nsIWritablePropertyBag2);
     prop.setPropertyAsAUTF8String("guid", newID);
 
-    Svc.Login.modifyLogin(oldLogin, prop);
+    Services.logins.modifyLogin(oldLogin, prop);
   },
 
   itemExists: function PasswordStore__itemExists(id) {
@@ -244,7 +246,7 @@ PasswordStore.prototype = {
     this._log.trace("httpRealm: " + JSON.stringify(login.httpRealm) + "; " +
                     "formSubmitURL: " + JSON.stringify(login.formSubmitURL));
     try {
-      Svc.Login.addLogin(login);
+      Services.logins.addLogin(login);
     } catch(ex) {
       this._log.debug("Adding record " + record.id +
                       " resulted in exception " + Utils.exceptionStr(ex));
@@ -260,7 +262,7 @@ PasswordStore.prototype = {
       return;
     }
 
-    Svc.Login.removeLogin(loginItem);
+    Services.logins.removeLogin(loginItem);
   },
 
   update: function PasswordStore__update(record) {
@@ -275,7 +277,7 @@ PasswordStore.prototype = {
     if (!newinfo)
       return;
     try {
-      Svc.Login.modifyLogin(loginItem, newinfo);
+      Services.logins.modifyLogin(loginItem, newinfo);
     } catch(ex) {
       this._log.debug("Modifying record " + record.id +
                       " resulted in exception " + Utils.exceptionStr(ex) +
@@ -284,7 +286,7 @@ PasswordStore.prototype = {
   },
 
   wipe: function PasswordStore_wipe() {
-    Svc.Login.removeAllLogins();
+    Services.logins.removeAllLogins();
   }
 };
 

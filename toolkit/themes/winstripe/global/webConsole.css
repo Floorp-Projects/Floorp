@@ -318,3 +318,13 @@
   border-top: none;
 }
 
+.web-console-panel {
+  -moz-appearance: none;
+  background-color: white;
+}
+
+.web-console-panel > .hud-box {
+  height: 100%;
+  width: 100%;
+  background-color: white;
+}

@@ -88,6 +88,7 @@
 #include "xpcpublic.h"
 
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
+#include "jswrapper.h"
 #include "jsxdrapi.h"
 #include "nsIArray.h"
 #include "nsIObjectInputStream.h"
@@ -115,6 +116,7 @@
 #include "prthread.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
@@ -819,13 +821,8 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     // Allow the script to continue running
 
     if (neverShowDlgChk) {
-      nsIPrefBranch *prefBranch = nsContentUtils::GetPrefBranch();
-
-      if (prefBranch) {
-        prefBranch->SetIntPref(isTrackingChromeCodeTime ?
-                               "dom.max_chrome_script_run_time" :
-                               "dom.max_script_run_time", 0);
-      }
+      Preferences::SetInt(isTrackingChromeCodeTime ?
+        "dom.max_chrome_script_run_time" : "dom.max_script_run_time", 0);
     }
 
     ctx->mOperationCallbackTime = PR_Now();
@@ -925,9 +922,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   PRUint32 oldDefaultJSOptions = context->mDefaultJSOptions;
   PRUint32 newDefaultJSOptions = oldDefaultJSOptions;
 
-  sPostGCEventsToConsole = nsContentUtils::GetBoolPref(js_memlog_option_str);
+  sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
 
-  PRBool strict = nsContentUtils::GetBoolPref(js_strict_option_str);
+  PRBool strict = Preferences::GetBool(js_strict_option_str);
   if (strict)
     newDefaultJSOptions |= JSOPTION_STRICT;
   else
@@ -938,16 +935,16 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   // XXX components be covered by the chrome pref instead of the content one?
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
 
-  PRBool useTraceJIT = nsContentUtils::GetBoolPref(chromeWindow ?
-                                                   js_tracejit_chrome_str :
-                                                   js_tracejit_content_str);
-  PRBool useMethodJIT = nsContentUtils::GetBoolPref(chromeWindow ?
-                                                    js_methodjit_chrome_str :
-                                                    js_methodjit_content_str);
-  PRBool useProfiling = nsContentUtils::GetBoolPref(chromeWindow ?
-                                                    js_profiling_chrome_str :
-                                                    js_profiling_content_str);
-  PRBool useMethodJITAlways = nsContentUtils::GetBoolPref(js_methodjit_always_str);
+  PRBool useTraceJIT = Preferences::GetBool(chromeWindow ?
+                                              js_tracejit_chrome_str :
+                                              js_tracejit_content_str);
+  PRBool useMethodJIT = Preferences::GetBool(chromeWindow ?
+                                               js_methodjit_chrome_str :
+                                               js_methodjit_content_str);
+  PRBool useProfiling = Preferences::GetBool(chromeWindow ?
+                                               js_profiling_chrome_str :
+                                               js_profiling_content_str);
+  PRBool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
     PRBool safeMode = PR_FALSE;
@@ -983,7 +980,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if
   // javascript.options.strict.debug is true
-  PRBool strictDebug = nsContentUtils::GetBoolPref(js_strict_debug_option_str);
+  PRBool strictDebug = Preferences::GetBool(js_strict_debug_option_str);
   // Note this callback is also called from context's InitClasses thus we don't
   // need to enable this directly from InitContext
   if (strictDebug && (newDefaultJSOptions & JSOPTION_STRICT) == 0) {
@@ -992,13 +989,13 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   }
 #endif
 
-  PRBool werror = nsContentUtils::GetBoolPref(js_werror_option_str);
+  PRBool werror = Preferences::GetBool(js_werror_option_str);
   if (werror)
     newDefaultJSOptions |= JSOPTION_WERROR;
   else
     newDefaultJSOptions &= ~JSOPTION_WERROR;
 
-  PRBool relimit = nsContentUtils::GetBoolPref(js_relimit_option_str);
+  PRBool relimit = Preferences::GetBool(js_relimit_option_str);
   if (relimit)
     newDefaultJSOptions |= JSOPTION_RELIMIT;
   else
@@ -1010,7 +1007,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   context->mDefaultJSOptions = newDefaultJSOptions;
 
 #ifdef JS_GC_ZEAL
-  PRInt32 zeal = nsContentUtils::GetIntPref(js_zeal_option_str, -1);
+  PRInt32 zeal = Preferences::GetInt(js_zeal_option_str, -1);
   if (zeal >= 0)
     ::JS_SetGCZeal(context->mContext, (PRUint8)zeal);
 #endif
@@ -1038,9 +1035,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
     ::JS_SetOptions(mContext, mDefaultJSOptions);
 
     // Watch for the JS boolean options
-    nsContentUtils::RegisterPrefCallback(js_options_dot_str,
-                                         JSOptionChangedCallback,
-                                         this);
+    Preferences::RegisterCallback(JSOptionChangedCallback,
+                                  js_options_dot_str, this);
 
     ::JS_SetOperationCallback(mContext, DOMOperationCallback);
 
@@ -1092,9 +1088,8 @@ nsJSContext::DestroyJSContext()
   ::JS_SetContextPrivate(mContext, nsnull);
 
   // Unregister our "javascript.options.*" pref-changed callback.
-  nsContentUtils::UnregisterPrefCallback(js_options_dot_str,
-                                         JSOptionChangedCallback,
-                                         this);
+  Preferences::UnregisterCallback(JSOptionChangedCallback,
+                                  js_options_dot_str, this);
 
   PRBool do_gc = mGCOnDestruction && !sGCTimer;
 
@@ -1881,7 +1876,9 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 
     jsval funval = OBJECT_TO_JSVAL(funobj);
     JSAutoEnterCompartment ac;
-    if (!ac.enter(mContext, funobj) || !JS_WrapObject(mContext, &target)) {
+    js::ForceFrame ff(mContext, funobj);
+    if (!ac.enter(mContext, funobj) || !ff.enter() ||
+        !JS_WrapObject(mContext, &target)) {
       sSecurityManager->PopContextPrincipal(mContext);
       return NS_ERROR_FAILURE;
     }
@@ -2176,10 +2173,19 @@ nsJSContext::GetGlobalObject()
     return nsnull;
   }
 
-  OBJ_TO_INNER_OBJECT(mContext, global);
-  if (!global) {
-    return nsnull;
+  if (mGlobalObjectRef)
+    return mGlobalObjectRef;
+
+#ifdef DEBUG
+  {
+    JSObject *inner = global;
+    OBJ_TO_INNER_OBJECT(mContext, inner);
+
+    // If this assertion hits then it means that we have a window object as
+    // our global, but we never called CreateOuterObject.
+    NS_ASSERTION(inner == global, "Shouldn't be able to innerize here");
   }
+#endif
 
   JSClass *c = JS_GET_CLASS(mContext, global);
 
@@ -2205,11 +2211,7 @@ nsJSContext::GetGlobalObject()
 
   // This'll return a pointer to something we're about to release, but
   // that's ok, the JS object will hold it alive long enough.
-  nsCOMPtr<nsPIDOMWindow> pwin(do_QueryInterface(sgo));
-  if (!pwin)
-    return sgo;
-
-  return static_cast<nsGlobalWindow *>(pwin->GetOuterWindow());
+  return sgo;
 }
 
 void *
@@ -3599,7 +3601,7 @@ MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
   // scripts run forever.
   PRBool isChromePref =
     strcmp(aPrefName, "dom.max_chrome_script_run_time") == 0;
-  PRInt32 time = nsContentUtils::GetIntPref(aPrefName, isChromePref ? 20 : 10);
+  PRInt32 time = Preferences::GetInt(aPrefName, isChromePref ? 20 : 10);
 
   PRTime t;
   if (time <= 0) {
@@ -3621,7 +3623,7 @@ MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
 static int
 ReportAllJSExceptionsPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
-  PRBool reportAll = nsContentUtils::GetBoolPref(aPrefName, PR_FALSE);
+  PRBool reportAll = Preferences::GetBool(aPrefName, PR_FALSE);
   nsContentUtils::XPConnect()->SetReportAllJSExceptions(reportAll);
   return 0;
 }
@@ -3629,7 +3631,7 @@ ReportAllJSExceptionsPrefChangedCallback(const char* aPrefName, void* aClosure)
 static int
 SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
-  PRInt32 highwatermark = nsContentUtils::GetIntPref(aPrefName, 128);
+  PRInt32 highwatermark = Preferences::GetInt(aPrefName, 128);
 
   JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
                     highwatermark * 1024L * 1024L);
@@ -3639,7 +3641,7 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
 static int
 SetMemoryMaxPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
-  PRInt32 pref = nsContentUtils::GetIntPref(aPrefName, -1);
+  PRInt32 pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   PRUint32 max = (pref <= 0 || pref >= 0x1000) ? -1 : (PRUint32)pref * 1024 * 1024;
   JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES, max);
@@ -3649,7 +3651,7 @@ SetMemoryMaxPrefChangedCallback(const char* aPrefName, void* aClosure)
 static int
 SetMemoryGCModePrefChangedCallback(const char* aPrefName, void* aClosure)
 {
-  PRBool enableCompartmentGC = nsContentUtils::GetBoolPref(aPrefName);
+  PRBool enableCompartmentGC = Preferences::GetBool(aPrefName);
   JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MODE, enableCompartmentGC
                                                       ? JSGC_MODE_COMPARTMENT
                                                       : JSGC_MODE_GLOBAL);
@@ -3759,38 +3761,32 @@ nsJSRuntime::Init()
   JS_SetStructuredCloneCallbacks(sRuntime, &cloneCallbacks);
 
   // Set these global xpconnect options...
-  nsContentUtils::RegisterPrefCallback("dom.max_script_run_time",
-                                       MaxScriptRunTimePrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(MaxScriptRunTimePrefChangedCallback,
+                                "dom.max_script_run_time");
   MaxScriptRunTimePrefChangedCallback("dom.max_script_run_time", nsnull);
 
-  nsContentUtils::RegisterPrefCallback("dom.max_chrome_script_run_time",
-                                       MaxScriptRunTimePrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(MaxScriptRunTimePrefChangedCallback,
+                                "dom.max_chrome_script_run_time");
   MaxScriptRunTimePrefChangedCallback("dom.max_chrome_script_run_time",
                                       nsnull);
 
-  nsContentUtils::RegisterPrefCallback("dom.report_all_js_exceptions",
-                                       ReportAllJSExceptionsPrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(ReportAllJSExceptionsPrefChangedCallback,
+                                "dom.report_all_js_exceptions");
   ReportAllJSExceptionsPrefChangedCallback("dom.report_all_js_exceptions",
                                            nsnull);
 
-  nsContentUtils::RegisterPrefCallback("javascript.options.mem.high_water_mark",
-                                       SetMemoryHighWaterMarkPrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(SetMemoryHighWaterMarkPrefChangedCallback,
+                                "javascript.options.mem.high_water_mark");
   SetMemoryHighWaterMarkPrefChangedCallback("javascript.options.mem.high_water_mark",
                                             nsnull);
 
-  nsContentUtils::RegisterPrefCallback("javascript.options.mem.max",
-                                       SetMemoryMaxPrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(SetMemoryMaxPrefChangedCallback,
+                                "javascript.options.mem.max");
   SetMemoryMaxPrefChangedCallback("javascript.options.mem.max",
                                   nsnull);
 
-  nsContentUtils::RegisterPrefCallback("javascript.options.mem.gc_per_compartment",
-                                       SetMemoryGCModePrefChangedCallback,
-                                       nsnull);
+  Preferences::RegisterCallback(SetMemoryGCModePrefChangedCallback,
+                                "javascript.options.mem.gc_per_compartment");
   SetMemoryGCModePrefChangedCallback("javascript.options.mem.gc_per_compartment",
                                      nsnull);
 

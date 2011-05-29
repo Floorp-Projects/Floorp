@@ -58,7 +58,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource:///modules/PropertyPanel.jsm");
 
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
-const SCRATCHPAD_CONTEXT_CHROME = 2;
+const SCRATCHPAD_CONTEXT_BROWSER = 2;
 const SCRATCHPAD_WINDOW_URL = "chrome://browser/content/scratchpad.xul";
 const SCRATCHPAD_L10N = "chrome://browser/locale/scratchpad.properties";
 const SCRATCHPAD_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
@@ -75,7 +75,7 @@ var Scratchpad = {
    * Possible values:
    *   - SCRATCHPAD_CONTEXT_CONTENT to execute code in the context of the current
    *   tab content window object.
-   *   - SCRATCHPAD_CONTEXT_CHROME to execute code in the context of the
+   *   - SCRATCHPAD_CONTEXT_BROWSER to execute code in the context of the
    *   currently active chrome window object.
    */
   executionContext: SCRATCHPAD_CONTEXT_CONTENT,
@@ -121,6 +121,11 @@ var Scratchpad = {
     return recentWin ? recentWin.gBrowser : null;
   },
 
+  insertIntro: function SP_insertIntro()
+  {
+    this.textbox.value = this.strings.GetStringFromName("scratchpadIntro");
+  },
+
   /**
    * Cached Cu.Sandbox object for the active tab content window object.
    */
@@ -129,8 +134,9 @@ var Scratchpad = {
   /**
    * Get the Cu.Sandbox object for the active tab content window object. Note
    * that the returned object is cached for later reuse. The cached object is
-   * kept only for the current browser window and it is reset for each context
-   * switch or navigator:browser window switch.
+   * kept only for the current location in the current tab of the current
+   * browser window and it is reset for each context switch,
+   * navigator:browser window switch, tab switch or navigation.
    */
   get contentSandbox()
   {
@@ -141,12 +147,16 @@ var Scratchpad = {
     }
 
     if (!this._contentSandbox ||
-        this.browserWindow != this._previousBrowserWindow) {
+        this.browserWindow != this._previousBrowserWindow ||
+        this._previousBrowser != this.gBrowser.selectedBrowser ||
+        this._previousLocation != this.gBrowser.contentWindow.location.href) {
       let contentWindow = this.gBrowser.selectedBrowser.contentWindow;
       this._contentSandbox = new Cu.Sandbox(contentWindow,
         { sandboxPrototype: contentWindow, wantXrays: false });
 
       this._previousBrowserWindow = this.browserWindow;
+      this._previousBrowser = this.gBrowser.selectedBrowser;
+      this._previousLocation = contentWindow.location.href;
     }
 
     return this._contentSandbox;
@@ -283,7 +293,7 @@ var Scratchpad = {
    * Execute the selected text (if any) or the entire textbox content in the
    * current context.
    */
-  execute: function SP_execute()
+  run: function SP_run()
   {
     let selection = this.selectedText || this.textbox.value;
     let result = this.evalForContext(selection);
@@ -298,7 +308,7 @@ var Scratchpad = {
    */
   inspect: function SP_inspect()
   {
-    let [selection, result] = this.execute();
+    let [selection, result] = this.run();
 
     if (result) {
       this.openPropertyPanel(selection, result);
@@ -307,11 +317,11 @@ var Scratchpad = {
 
   /**
    * Execute the selected text (if any) or the entire textbox content in the
-   * current context. The evaluation result is "printed" in the textbox after
+   * current context. The evaluation result is inserted into the textbox after
    * the selected text, or at the end of the textbox value if there is no
    * selected text.
    */
-  print: function SP_print()
+  display: function SP_display()
   {
     let selectionStart = this.textbox.selectionStart;
     let selectionEnd = this.textbox.selectionEnd;
@@ -319,7 +329,7 @@ var Scratchpad = {
       selectionEnd = this.textbox.value.length;
     }
 
-    let [selection, result] = this.execute();
+    let [selection, result] = this.run();
     if (!result) {
       return;
     }
@@ -556,23 +566,23 @@ var Scratchpad = {
   setContentContext: function SP_setContentContext()
   {
     let content = document.getElementById("sp-menu-content");
-    document.getElementById("sp-menu-chrome").removeAttribute("checked");
+    document.getElementById("sp-menu-browser").removeAttribute("checked");
     content.setAttribute("checked", true);
-    this.statusbarStatus.label = content.getAttribute("label");
     this.executionContext = SCRATCHPAD_CONTEXT_CONTENT;
+    this.statusbarStatus.label = content.getAttribute("label");
     this.resetContext();
   },
 
   /**
    * Set the current execution context to be the most recent chrome window.
    */
-  setChromeContext: function SP_setChromeContext()
+  setBrowserContext: function SP_setBrowserContext()
   {
-    let chrome = document.getElementById("sp-menu-chrome");
+    let browser = document.getElementById("sp-menu-browser");
     document.getElementById("sp-menu-content").removeAttribute("checked");
-    chrome.setAttribute("checked", true);
-    this.statusbarStatus.label = chrome.getAttribute("label");
-    this.executionContext = SCRATCHPAD_CONTEXT_CHROME;
+    browser.setAttribute("checked", true);
+    this.executionContext = SCRATCHPAD_CONTEXT_BROWSER;
+    this.statusbarStatus.label = browser.getAttribute("label");
     this.resetContext();
   },
 
@@ -584,6 +594,8 @@ var Scratchpad = {
     this._chromeSandbox = null;
     this._contentSandbox = null;
     this._previousWindow = null;
+    this._previousBrowser = null;
+    this._previousLocation = null;
   },
 
   /**
@@ -604,10 +616,10 @@ var Scratchpad = {
    */
   onLoad: function SP_onLoad()
   {
-    let chromeContextMenu = document.getElementById("sp-menu-chrome");
+    let chromeContextMenu = document.getElementById("sp-menu-browser");
     let errorConsoleMenu = document.getElementById("sp-menu-errorConsole");
     let errorConsoleCommand = document.getElementById("sp-cmd-errorConsole");
-    let chromeContextCommand = document.getElementById("sp-cmd-chromeContext");
+    let chromeContextCommand = document.getElementById("sp-cmd-browserContext");
 
     let chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
     if (chrome) {
@@ -616,6 +628,7 @@ var Scratchpad = {
       errorConsoleCommand.removeAttribute("disabled");
       chromeContextCommand.removeAttribute("disabled");
     }
+    this.insertIntro();
   },
 };
 

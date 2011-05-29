@@ -112,7 +112,6 @@ function testDocumentDisabledJS() {
     var msg = "The inner iframe should not be able to run Javascript";
     is(self_.ICanRunMyJS, false, msg);
     SimpleTest.finish();
-    endTest();
   }, false);
   var iframeSrc = "data:text/html,<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
   innerFrame.src = iframeSrc;

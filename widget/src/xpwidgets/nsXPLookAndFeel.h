@@ -41,7 +41,6 @@
 #include "nsILookAndFeel.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#include "nsIPrefBranch.h"
 
 #ifdef NS_DEBUG
 struct nsSize;
@@ -116,9 +115,9 @@ protected:
   void IntPrefChanged(nsLookAndFeelIntPref *data);
   void FloatPrefChanged(nsLookAndFeelFloatPref *data);
   void ColorPrefChanged(unsigned int index, const char *prefName);
-  void InitFromPref(nsLookAndFeelIntPref* aPref, nsIPrefBranch* aPrefBranch);
-  void InitFromPref(nsLookAndFeelFloatPref* aPref, nsIPrefBranch* aPrefBranch);
-  void InitColorFromPref(PRInt32 aIndex, nsIPrefBranch* aPrefBranch);
+  void InitFromPref(nsLookAndFeelIntPref* aPref);
+  void InitFromPref(nsLookAndFeelFloatPref* aPref);
+  void InitColorFromPref(PRInt32 aIndex);
   virtual nsresult NativeGetColor(const nsColorID aID, nscolor& aColor) = 0;
   PRBool IsSpecialColor(const nsColorID aID, nscolor &aColor);
 

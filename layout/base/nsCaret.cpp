@@ -68,6 +68,7 @@
 #include "nsMenuPopupFrame.h"
 #include "nsTextFragment.h"
 #include "nsThemeConstants.h"
+#include "mozilla/Preferences.h"
 
 // The bidi indicator hangs off the caret to one side, to show which
 // direction the typing is in. It needs to be at least 2x2 to avoid looking like 
@@ -78,6 +79,8 @@ static const PRInt32 kMinBidiIndicatorPixels = 2;
 #include "nsIBidiKeyboard.h"
 #include "nsContentUtils.h"
 #endif //IBMBIDI
+
+using namespace mozilla;
 
 /**
  * Find the first frame in an in-order traversal of the frame subtree rooted
@@ -225,7 +228,7 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
     StartBlinking();
   }
 #ifdef IBMBIDI
-  mBidiUI = nsContentUtils::GetBoolPref("bidi.browser.ui");
+  mBidiUI = Preferences::GetBool("bidi.browser.ui");
 #endif
 
   return NS_OK;
@@ -408,7 +411,7 @@ nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
   if (!contentNode)
     return nsnull;
 
-  nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
     return nsnull;
   PRUint8 bidiLevel = frameSelection->GetCaretBidiLevel();
@@ -461,7 +464,7 @@ nsresult nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   NS_ENSURE_ARG(aNode);
 
   PRUint8 bidiLevel;
-  nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
     return NS_ERROR_FAILURE;
   bidiLevel = frameSelection->GetCaretBidiLevel();
@@ -702,7 +705,7 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
 
     // If there has been a reflow, set the caret Bidi level to the level of the current frame
     if (aBidiLevel & BIDI_LEVEL_UNDEFINED) {
-      nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+      nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
       if (!frameSelection)
         return PR_FALSE;
       frameSelection->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
@@ -737,7 +740,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
       presShell->GetDocument() != aContentNode->GetCurrentDoc())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
     return NS_ERROR_FAILURE;
 
@@ -1044,7 +1047,7 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
     if (NS_FAILED(domSelection->GetFocusOffset(&offset)))
       return;
 
-    nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+    nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
     if (!frameSelection)
       return;
 
@@ -1183,17 +1186,3 @@ nsCaret::SetIgnoreUserModify(PRBool aIgnoreUserModify)
   }
   mIgnoreUserModify = aIgnoreUserModify;
 }
-
-//-----------------------------------------------------------------------------
-nsresult NS_NewCaret(nsCaret** aInstancePtrResult)
-{
-  NS_PRECONDITION(aInstancePtrResult, "null ptr");
-  
-  nsCaret* caret = new nsCaret();
-  if (nsnull == caret)
-      return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(caret);
-  *aInstancePtrResult = caret;
-  return NS_OK;
-}
-

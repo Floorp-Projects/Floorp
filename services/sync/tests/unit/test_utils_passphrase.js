@@ -67,22 +67,6 @@ function run_test() {
   do_check_eq(Utils.normalizePassphrase(" abcde-abcde-abcde-abcde "),
               "abcdeabcdeabcdeabcde");
 
-  _("Passphrase strength calculated according to the NIST algorithm.");
-  do_check_eq(Utils.passphraseStrength(""), 0);
-  do_check_eq(Utils.passphraseStrength("a"), 4);
-  do_check_eq(Utils.passphraseStrength("ab"), 6);
-  do_check_eq(Utils.passphraseStrength("abc"), 8);
-  do_check_eq(Utils.passphraseStrength("abcdefgh"), 18);
-  do_check_eq(Utils.passphraseStrength("abcdefghi"), 19.5);
-  do_check_eq(Utils.passphraseStrength("abcdefghij"), 21);
-  do_check_eq(Utils.passphraseStrength("abcdefghijklmnopqrst"), 36);
-  do_check_eq(Utils.passphraseStrength("abcdefghijklmnopqrstu"), 37);
-  do_check_eq(Utils.passphraseStrength("abcdefghijklmnopqrstuvwxyz"), 42);
-  do_check_eq(Utils.passphraseStrength("abcdefghijklmnopqrstuvwxyz!"), 49);
-  do_check_eq(Utils.passphraseStrength("1"), 10);
-  do_check_eq(Utils.passphraseStrength("12"), 12);
-  do_check_eq(Utils.passphraseStrength("a1"), 12);
-  
   _("Normalizing username.");
   do_check_eq(Utils.normalizeAccount("   QA1234+boo@mozilla.com	"), "QA1234+boo@mozilla.com");
   do_check_eq(Utils.normalizeAccount("QA1234+boo@mozilla.com"), "QA1234+boo@mozilla.com");

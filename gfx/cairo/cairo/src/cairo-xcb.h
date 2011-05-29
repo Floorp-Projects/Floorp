@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2009 Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -12,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -32,6 +33,7 @@
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #ifndef CAIRO_XCB_H
@@ -42,27 +44,48 @@
 #if CAIRO_HAS_XCB_SURFACE
 
 #include <xcb/xcb.h>
+#include <xcb/render.h>
 
 CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
-cairo_xcb_surface_create (xcb_connection_t *c,
+cairo_xcb_surface_create (xcb_connection_t	*connection,
 			  xcb_drawable_t	 drawable,
-			  xcb_visualtype_t *visual,
-			  int		 width,
-			  int		 height);
+			  xcb_visualtype_t	*visual,
+			  int			 width,
+			  int			 height);
 
 cairo_public cairo_surface_t *
-cairo_xcb_surface_create_for_bitmap (xcb_connection_t *c,
-				     xcb_pixmap_t	    bitmap,
-				     xcb_screen_t	   *screen,
-				     int	    width,
-				     int	    height);
+cairo_xcb_surface_create_for_bitmap (xcb_connection_t	*connection,
+				     xcb_screen_t	*screen,
+				     xcb_pixmap_t	 bitmap,
+				     int		 width,
+				     int		 height);
+
+cairo_public cairo_surface_t *
+cairo_xcb_surface_create_with_xrender_format (xcb_connection_t			*connection,
+					      xcb_screen_t			*screen,
+					      xcb_drawable_t			 drawable,
+					      xcb_render_pictforminfo_t		*format,
+					      int				 width,
+					      int				 height);
 
 cairo_public void
 cairo_xcb_surface_set_size (cairo_surface_t *surface,
 			    int		     width,
 			    int		     height);
+
+/* debug interface */
+
+cairo_public void
+cairo_xcb_device_debug_cap_xshm_version (cairo_device_t *device,
+                                         int major_version,
+                                         int minor_version);
+
+cairo_public void
+cairo_xcb_device_debug_cap_xrender_version (cairo_device_t *device,
+                                            int major_version,
+                                            int minor_version);
 
 CAIRO_END_DECLS
 

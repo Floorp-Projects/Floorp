@@ -383,6 +383,7 @@ public:
   static const PRInt32 kLineHeightKTable[];
   static const PRInt32 kListStylePositionKTable[];
   static const PRInt32 kListStyleKTable[];
+  static const PRInt32 kOrientKTable[];
   static const PRInt32 kOutlineStyleKTable[];
   static const PRInt32 kOutlineColorKTable[];
   static const PRInt32 kOverflowKTable[];

@@ -80,7 +80,7 @@ LayerManagerD3D9::Initialize()
   /* XXX: this preference and blacklist code should move out of the layer manager */
   PRBool forceAccelerate = PR_FALSE;
   if (prefs) {
-    // we should use AddBoolPrefVarCache
+    // we should use Preferences::AddBoolVarCache
     prefs->GetBoolPref("layers.acceleration.force-enabled",
                        &forceAccelerate);
   }

@@ -47,6 +47,7 @@ using NPError;
 using NPNVariable;
 using base::FileDescriptor;
 using mozilla::plugins::NativeThreadId;
+using mac_plugin_interposing::NSCursorInfo;
 
 namespace mozilla {
 namespace plugins {
@@ -67,6 +68,10 @@ both:
    */
   async PPluginIdentifier(nsCString aString,
                           int32_t aInt);
+
+  // Window-specific message which instructs the RPC mechanism to enter
+  // a nested event loop for the current RPC call.
+  async ProcessNativeEventsInRPCCall();
 
 child:
   // Forces the child process to update its plugin function table.
@@ -123,10 +128,6 @@ parent:
   // native events, then "livelock" and some other glitches can occur.
   rpc ProcessSomeEvents();
 
-  // Window-specific message which instructs the RPC mechanism to enter
-  // a nested event loop for the current RPC call.
-  async ProcessNativeEventsInRPCCall();
-
   sync AppendNotesToCrashReport(nsCString aNotes);
 
   // OS X Specific calls to manage the plugin's window
@@ -135,6 +136,13 @@ parent:
                          int32_t aX, int32_t aY,
                          size_t aWidth, size_t aHeight);
   async PluginHideWindow(uint32_t aWindowId);
+
+  // OS X Specific calls to allow the plugin to manage the cursor.
+  async SetCursor(NSCursorInfo cursorInfo);
+  async ShowCursor(bool show);
+  async PushCursor(NSCursorInfo cursorInfo);
+  async PopCursor();
+  sync GetNativeCursorsSupported() returns (bool supported);
 };
 
 } // namespace plugins

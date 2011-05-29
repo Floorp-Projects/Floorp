@@ -72,6 +72,14 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int 
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // Set the native cursor to the OS default (an arrow) before displaying the
+  // context menu.  Otherwise (if the plugin has changed the cursor) it may
+  // stay as the plugin has set it -- which means it may be invisible.  We
+  // need to do this because we display the context menu without making the
+  // plugin process the foreground process.  If we did, the cursor would
+  // change to an arrow cursor automatically -- as it does in Chrome.
+  [[NSCursor arrowCursor] set];
+
   // Create a timer to process browser events while waiting
   // on the menu. This prevents the browser from hanging
   // during the lifetime of the menu.

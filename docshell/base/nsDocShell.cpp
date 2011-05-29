@@ -52,7 +52,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorage.h"
@@ -162,6 +161,8 @@
 #include "nsIStrictTransportSecurityService.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsIStructuredCloneContainer.h"
+#include "nsIFaviconService.h"
+#include "mozIAsyncFavicons.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -1387,6 +1388,11 @@ nsDocShell::LoadURI(nsIURI * aURI,
             // Set it back to false
             inheritOwner = PR_FALSE;
         }
+    }
+
+    if (aLoadFlags & LOAD_FLAGS_DISALLOW_INHERIT_OWNER) {
+        inheritOwner = PR_FALSE;
+        owner = do_CreateInstance("@mozilla.org/nullprincipal;1");
     }
 
     PRUint32 flags = 0;
@@ -7751,8 +7757,12 @@ nsDocShell::SetDocCurrentStateObj(nsISHEntry *shEntry)
     NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIStructuredCloneContainer> scContainer;
-    nsresult rv = shEntry->GetStateData(getter_AddRefs(scContainer));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (shEntry) {
+        nsresult rv = shEntry->GetStateData(getter_AddRefs(scContainer));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // If shEntry is null, just set the document's state object to null.
+    }
 
     // It's OK for scContainer too be null here; that just means there's no
     // state data associated with this history entry.
@@ -7835,6 +7845,56 @@ nsDocShell::CheckLoadingPermissions()
 //*****************************************************************************
 // nsDocShell: Site Loading
 //*****************************************************************************   
+namespace
+{
+
+// Callback used by CopyFavicon to inform the favicon service that one URI
+// (mNewURI) has the same favicon URI (OnFaviconDataAvailable's aFaviconURI) as
+// another.
+class nsCopyFaviconCallback : public nsIFaviconDataCallback
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    nsCopyFaviconCallback(nsIURI *aNewURI)
+      : mNewURI(aNewURI)
+    {
+    }
+
+    NS_IMETHODIMP
+    OnFaviconDataAvailable(nsIURI *aFaviconURI, PRUint32 aDataLen,
+                           const PRUint8 *aData, const nsACString &aMimeType)
+    {
+        NS_ASSERTION(aDataLen == 0,
+                     "We weren't expecting the callback to deliver data.");
+        nsCOMPtr<mozIAsyncFavicons> favSvc =
+            do_GetService("@mozilla.org/browser/favicon-service;1");
+        NS_ENSURE_STATE(favSvc);
+
+        return favSvc->SetAndFetchFaviconForPage(mNewURI, aFaviconURI,
+                                                 PR_FALSE, nsnull);
+    }
+
+private:
+    nsCOMPtr<nsIURI> mNewURI;
+};
+
+NS_IMPL_ISUPPORTS1(nsCopyFaviconCallback, nsIFaviconDataCallback)
+
+// Tell the favicon service that aNewURI has the same favicon as aOldURI.
+void CopyFavicon(nsIURI *aOldURI, nsIURI *aNewURI)
+{
+    nsCOMPtr<mozIAsyncFavicons> favSvc =
+        do_GetService("@mozilla.org/browser/favicon-service;1");
+    if (favSvc) {
+        nsCOMPtr<nsIFaviconDataCallback> callback =
+            new nsCopyFaviconCallback(aNewURI);
+        favSvc->GetFaviconURLForPage(aOldURI, callback);
+    }
+}
+
+} // anonymous namespace
+
 class InternalLoadEvent : public nsRunnable
 {
 public:
@@ -8289,8 +8349,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             GetCurScrollPos(ScrollOrientation_X, &cx);
             GetCurScrollPos(ScrollOrientation_Y, &cy);
 
-            // We scroll the window precisely when we fire a hashchange event.
-            if (doHashchange) {
+            // We scroll whenever we're not doing a history load.  Note that
+            // sometimes we might scroll even if we don't fire a hashchange
+            // event!  See bug 653741.
+            if (!aSHEntry) {
                 // Take the '#' off the hashes before passing them to
                 // ScrollToAnchor.
                 nsDependentCSubstring curHashName(curHash, 1);
@@ -8436,6 +8498,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                   window->DispatchAsyncHashchange(oldURI, aURI);
                 }
             }
+
+            // Inform the favicon service that the favicon for oldURI also
+            // applies to aURI.
+            CopyFavicon(oldURI, aURI);
 
             return NS_OK;
         }
@@ -9651,6 +9717,11 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         NS_ENSURE_SUCCESS(newSHEntry->SetDocIdentifier(ourDocIdent),
                           NS_ERROR_FAILURE);
 
+        // Set the new SHEntry's title (bug 655273).
+        nsString title;
+        mOSHE->GetTitle(getter_Copies(title));
+        newSHEntry->SetTitle(title);
+
         // AddToSessionHistory may not modify mOSHE.  In case it doesn't,
         // we'll just set mOSHE here.
         mOSHE = newSHEntry;
@@ -9696,6 +9767,22 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         document->SetDocumentURI(newURI);
 
         AddURIVisit(newURI, oldURI, oldURI, 0);
+
+        // AddURIVisit doesn't set the title for the new URI in global history,
+        // so do that here.
+        if (mUseGlobalHistory) {
+            nsCOMPtr<IHistory> history = services::GetHistoryService();
+            if (history) {
+                history->SetURITitle(newURI, mTitle);
+            }
+            else if (mGlobalHistory) {
+                mGlobalHistory->SetPageTitle(newURI, mTitle);
+            }
+        }
+
+        // Inform the favicon service that our old favicon applies to this new
+        // URI.
+        CopyFavicon(oldURI, newURI);
     }
     else {
         FireDummyOnLocationChange();
@@ -10102,7 +10189,6 @@ struct NS_STACK_CLASS CloneAndReplaceData
 nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
                                  PRInt32 aEntryIndex, void *aData)
 {
-    nsresult result = NS_OK;
     nsCOMPtr<nsISHEntry> dest;
 
     CloneAndReplaceData *data = static_cast<CloneAndReplaceData*>(aData);
@@ -10112,55 +10198,44 @@ nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
     nsCOMPtr<nsISHContainer> container =
       do_QueryInterface(data->destTreeParent);
     if (!aEntry) {
-      if (container) {
-        container->AddChild(nsnull, aEntryIndex);
-      }
-      return NS_OK;
+        if (container) {
+            container->AddChild(nsnull, aEntryIndex);
+        }
+        return NS_OK;
     }
     
     PRUint32 srcID;
     aEntry->GetID(&srcID);
 
+    nsresult rv = NS_OK;
     if (srcID == cloneID) {
         // Replace the entry
         dest = replaceEntry;
-        dest->SetIsSubFrame(PR_TRUE);
-
-        if (data->cloneChildren) {
-            // Walk the children
-            CloneAndReplaceData childData(cloneID, replaceEntry,
-                                          data->cloneChildren, dest);
-            result = WalkHistoryEntries(aEntry, aShell,
-                                        CloneAndReplaceChild, &childData);
-            if (NS_FAILED(result))
-                return result;
-        }
     } else {
         // Clone the SHEntry...
-        result = aEntry->Clone(getter_AddRefs(dest));
-        if (NS_FAILED(result))
-            return result;
+        rv = aEntry->Clone(getter_AddRefs(dest));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    dest->SetIsSubFrame(PR_TRUE);
 
-        // This entry is for a subframe navigation
-        dest->SetIsSubFrame(PR_TRUE);
-
+    if (srcID != cloneID || data->cloneChildren) {
         // Walk the children
         CloneAndReplaceData childData(cloneID, replaceEntry,
                                       data->cloneChildren, dest);
-        result = WalkHistoryEntries(aEntry, aShell,
-                                    CloneAndReplaceChild, &childData);
-        if (NS_FAILED(result))
-            return result;
+        rv = WalkHistoryEntries(aEntry, aShell,
+                                CloneAndReplaceChild, &childData);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-        if (aShell)
-            aShell->SwapHistoryEntries(aEntry, dest);
+    if (srcID != cloneID && aShell) {
+        aShell->SwapHistoryEntries(aEntry, dest);
     }
 
     if (container)
         container->AddChild(dest, aEntryIndex);
 
     data->resultEntry = dest;
-    return result;
+    return rv;
 }
 
 /* static */ nsresult

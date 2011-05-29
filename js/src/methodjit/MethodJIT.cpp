@@ -796,7 +796,7 @@ JITScript::monoICSectionsLimit() const
 char *
 JITScript::monoICSectionsLimit() const
 {
-    return nmapSectionsLimit();
+    return nmapSectionLimit();
 }
 #endif  // JS_MONOIC
 

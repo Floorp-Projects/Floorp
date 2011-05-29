@@ -1,6 +1,6 @@
 <!ENTITY  splash_screen_label "loading">
 <!ENTITY  splash_screen_installing "installing libraries\u2026">
-<!ENTITY  incompatable_cpu_error "This device does not meet the minimum system requirements for &brandShortName;.">
+<!ENTITY  splash_firstrun "Setting up &brandShortName;\u2026">
 <!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
 <!ENTITY  error_loading_file "An error occurred when trying to load files required to run &brandShortName;">
 
@@ -13,6 +13,4 @@
 <!ENTITY  crash_restart_label "Restart &brandShortName;">
 <!ENTITY  sending_crash_report "Sending crash report\u2026">
 <!ENTITY  exit_label "Exit">
-<!ENTITY  incompatable_device "&brandShortName; does not support this device and you may experience
-problems.">
 <!ENTITY  continue_label "Continue">

@@ -25,6 +25,12 @@ function test() {
 
   Services.prefs.setBoolPref(prefname, true);
 
+  gURLBar.focus();
+
+  testVal("http://mozilla.org/");
+
+  gBrowser.selectedBrowser.focus();
+
   testVal("<http://>mozilla.org");
   testVal("<http://>mozilla.org</>");
   testVal("<http://>mözilla.org</>");
@@ -47,6 +53,9 @@ function test() {
   testVal("<http://>mozilla.org</sub/file.ext?foo&bar#top>");
 
   testVal("<http://sub.>mozilla.org<:666/file.ext>");
+
+  testVal("<http://>[fe80::222:19ff:fe11:8c76]</file.ext>");
+  testVal("<http://user:pass@>[fe80::222:19ff:fe11:8c76]<:666/file.ext>");
 
   testVal("mailto:admin@mozilla.org");
   testVal("gopher://mozilla.org/");

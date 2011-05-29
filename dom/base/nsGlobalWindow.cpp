@@ -69,6 +69,7 @@
 #include "nsJSEnvironment.h"
 #include "nsCharSeparatedTokenizer.h" // for Accept-Language parsing
 #include "nsUnicharUtils.h"
+#include "mozilla/Preferences.h"
 
 // Other Classes
 #include "nsIEventListenerManager.h"
@@ -79,6 +80,8 @@
 #include "nsICachingChannel.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
+#include "nsPluginHost.h"
+#include "nsIPluginInstanceOwner.h"
 #include "nsGeolocation.h"
 #include "nsDesktopNotification.h"
 #include "nsContentCID.h"
@@ -111,9 +114,7 @@
 #include "nsIDOMCrypto.h"
 #endif
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMKeyEvent.h"
@@ -243,6 +244,7 @@ static PRLogModuleInfo* gDOMLeakPRLog;
 
 static const char kStorageEnabled[] = "dom.storage.enabled";
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
@@ -292,7 +294,7 @@ nsGlobalWindow::DOMMinTimeoutValue() const {
 // The longest interval (as PRIntervalTime) we permit, or that our
 // timer code can handle, really. See DELAY_INTERVAL_LIMIT in
 // nsTimerImpl.h for details.
-#define DOM_MAX_TIMEOUT_VALUE    PR_BIT(8 * sizeof(PRIntervalTime) - 1)
+#define DOM_MAX_TIMEOUT_VALUE    DELAY_INTERVAL_LIMIT
 
 #define FORWARD_TO_OUTER(method, args, err_rval)                              \
   PR_BEGIN_MACRO                                                              \
@@ -459,7 +461,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDummyJavaPluginOwner)
 
 private:
-  nsCOMPtr<nsIPluginInstance> mInstance;
+  nsRefPtr<nsNPAPIPluginInstance> mInstance;
   nsCOMPtr<nsIDocument> mDocument;
 };
 
@@ -489,7 +491,7 @@ nsDummyJavaPluginOwner::Destroy()
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::SetInstance(nsIPluginInstance *aInstance)
+nsDummyJavaPluginOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
 {
   // If we're going to null out mInstance after use, be sure to call
   // mInstance->InvalidateOwner() here, since it now won't be called
@@ -503,9 +505,10 @@ nsDummyJavaPluginOwner::SetInstance(nsIPluginInstance *aInstance)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::GetInstance(nsIPluginInstance *&aInstance)
+nsDummyJavaPluginOwner::GetInstance(nsNPAPIPluginInstance **aInstance)
 {
-  NS_IF_ADDREF(aInstance = mInstance);
+  NS_IF_ADDREF(mInstance);
+  *aInstance = mInstance;
 
   return NS_OK;
 }
@@ -904,20 +907,20 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
   if (gRefCnt == 1) {
 #if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-    nsContentUtils::AddBoolPrefVarCache("browser.dom.window.dump.enabled",
-                                        &gDOMWindowDumpEnabled);
+    Preferences::AddBoolVarCache(&gDOMWindowDumpEnabled,
+                                 "browser.dom.window.dump.enabled");
 #endif
-    nsContentUtils::AddIntPrefVarCache("dom.min_timeout_value",
-                                       &gMinTimeoutValue,
-                                       DEFAULT_MIN_TIMEOUT_VALUE);
-    nsContentUtils::AddIntPrefVarCache("dom.min_background_timeout_value",
-                                       &gMinBackgroundTimeoutValue,
-                                       DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
+    Preferences::AddIntVarCache(&gMinTimeoutValue,
+                                "dom.min_timeout_value",
+                                DEFAULT_MIN_TIMEOUT_VALUE);
+    Preferences::AddIntVarCache(&gMinBackgroundTimeoutValue,
+                                "dom.min_background_timeout_value",
+                                DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
   }
 
   if (gDumpFile == nsnull) {
-    const nsAdoptingCString& fname = 
-      nsContentUtils::GetCharPref("browser.dom.window.dump.file");
+    const nsAdoptingCString& fname =
+      Preferences::GetCString("browser.dom.window.dump.file");
     if (!fname.IsEmpty()) {
       // if this fails to open, Dump() knows to just go to stdout
       // on null.
@@ -2576,8 +2579,8 @@ nsGlobalWindow::DialogOpenAttempted()
                               topWindow->mLastDialogQuitTime);
 
   if (dialogDuration.ToSeconds() <
-      nsContentUtils::GetIntPref("dom.successive_dialog_time_limit",
-                                 SUCCESSIVE_DIALOG_TIME_LIMIT)) {
+        Preferences::GetInt("dom.successive_dialog_time_limit",
+                            SUCCESSIVE_DIALOG_TIME_LIMIT)) {
     topWindow->mDialogAbuseCount++;
 
     return (topWindow->GetPopupControlState() > openAllowed ||
@@ -5003,7 +5006,7 @@ nsGlobalWindow::Home()
     return NS_OK;
 
   nsAdoptingString homeURL =
-    nsContentUtils::GetLocalizedStringPref(PREF_BROWSER_STARTUP_HOMEPAGE);
+    Preferences::GetLocalizedString(PREF_BROWSER_STARTUP_HOMEPAGE);
 
   if (homeURL.IsEmpty()) {
     // if all else fails, use this
@@ -5075,7 +5078,7 @@ nsGlobalWindow::Print()
     nsCOMPtr<nsIPrintSettings> printSettings;
     if (printSettingsService) {
       PRBool printSettingsAreGlobal =
-        nsContentUtils::GetBoolPref("print.use_global_printsettings", PR_FALSE);
+        Preferences::GetBool("print.use_global_printsettings", PR_FALSE);
 
       if (printSettingsAreGlobal) {
         printSettingsService->GetGlobalPrintSettings(getter_AddRefs(printSettings));
@@ -5099,7 +5102,7 @@ nsGlobalWindow::Print()
       LeaveModalState(callerWin);
 
       PRBool savePrintSettings =
-        nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
+        Preferences::GetBool("print.save_print_settings", PR_FALSE);
       if (printSettingsAreGlobal && savePrintSettings) {
         printSettingsService->
           SavePrintSettingsToPrefs(printSettings,
@@ -5510,10 +5513,9 @@ nsGlobalWindow::FirePopupBlockedEvent(nsIDOMDocument* aDoc,
   if (aDoc) {
     // Fire a "DOMPopupBlocked" event so that the UI can hear about
     // blocked popups.
-    nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
     nsCOMPtr<nsIDOMEvent> event;
-    docEvent->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"),
-                          getter_AddRefs(event));
+    aDoc->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"),
+                      getter_AddRefs(event));
     if (event) {
       nsCOMPtr<nsIDOMPopupBlockedEvent> pbev(do_QueryInterface(event));
       pbev->InitPopupBlockedEvent(NS_LITERAL_STRING("DOMPopupBlocked"),
@@ -5550,7 +5552,7 @@ nsGlobalWindow::CanSetProperty(const char *aPrefName)
 
   // If the pref is set to true, we can not set the property
   // and vice versa.
-  return !nsContentUtils::GetBoolPref(aPrefName, PR_TRUE);
+  return !Preferences::GetBool(aPrefName, PR_TRUE);
 }
 
 PRBool
@@ -5608,7 +5610,7 @@ nsGlobalWindow::RevisePopupAbuseLevel(PopupControlState aControl)
 
   // limit the number of simultaneously open popups
   if (abuse == openAbused || abuse == openControlled) {
-    PRInt32 popupMax = nsContentUtils::GetIntPref("dom.popup_maximum", -1);
+    PRInt32 popupMax = Preferences::GetInt("dom.popup_maximum", -1);
     if (popupMax >= 0 && gOpenPopupSpamCount >= popupMax)
       abuse = openOverridden;
   }
@@ -5842,13 +5844,13 @@ class PostMessageEvent : public nsRunnable
 
     PostMessageEvent(nsGlobalWindow* aSource,
                      const nsAString& aCallerOrigin,
-                     const nsAString& aMessage,
                      nsGlobalWindow* aTargetWindow,
                      nsIURI* aProvidedOrigin,
                      PRBool aTrustedCaller)
     : mSource(aSource),
       mCallerOrigin(aCallerOrigin),
-      mMessage(aMessage),
+      mMessage(nsnull),
+      mMessageLen(0),
       mTargetWindow(aTargetWindow),
       mProvidedOrigin(aProvidedOrigin),
       mTrustedCaller(aTrustedCaller)
@@ -5858,13 +5860,21 @@ class PostMessageEvent : public nsRunnable
     
     ~PostMessageEvent()
     {
+      NS_ASSERTION(!mMessage, "Message should have been deserialized!");
       MOZ_COUNT_DTOR(PostMessageEvent);
+    }
+
+    void SetJSData(JSAutoStructuredCloneBuffer& aBuffer)
+    {
+      NS_ASSERTION(!mMessage && mMessageLen == 0, "Don't call twice!");
+      aBuffer.steal(&mMessage, &mMessageLen);
     }
 
   private:
     nsRefPtr<nsGlobalWindow> mSource;
     nsString mCallerOrigin;
-    nsString mMessage;
+    uint64* mMessage;
+    size_t mMessageLen;
     nsRefPtr<nsGlobalWindow> mTargetWindow;
     nsCOMPtr<nsIURI> mProvidedOrigin;
     PRBool mTrustedCaller;
@@ -5877,6 +5887,36 @@ PostMessageEvent::Run()
                     "should have been passed an outer window!");
   NS_ABORT_IF_FALSE(!mSource || mSource->IsOuterWindow(),
                     "should have been passed an outer window!");
+
+  // Get the JSContext for the target window
+  JSContext* cx = nsnull;
+  nsIScriptContext* scriptContext = mTargetWindow->GetContext();
+  if (scriptContext) {
+    cx = (JSContext*)scriptContext->GetNativeContext();
+  }
+
+  if (!cx) {
+    // This can happen if mTargetWindow has been closed.  To avoid leaking,
+    // we need to find a JSContext.
+    nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
+    if (cxStack) {
+      cxStack->GetSafeJSContext(&cx);
+    }
+
+    if (!cx) {
+      NS_WARNING("Cannot find a JSContext!  Leaking PostMessage buffer.");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // If we bailed before this point we're going to leak mMessage, but
+  // that's probably better than crashing.
+
+  // Ensure that the buffer is freed even if we fail to post the message
+  JSAutoStructuredCloneBuffer buffer;
+  buffer.adopt(cx, mMessage, mMessageLen);
+  mMessage = nsnull;
+  mMessageLen = 0;
 
   nsRefPtr<nsGlobalWindow> targetWindow;
   if (mTargetWindow->IsClosedOrClosing() ||
@@ -5923,15 +5963,22 @@ PostMessageEvent::Run()
       return NS_OK;
   }
 
+  // Deserialize the structured clone data
+  jsval messageData;
+  {
+    JSAutoRequest ar(cx);
+
+    if (!buffer.read(&messageData, cx, nsnull))
+      return NS_ERROR_DOM_DATA_CLONE_ERR;
+  }
 
   // Create the event
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent =
-    do_QueryInterface(targetWindow->mDocument);
-  if (!docEvent)
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(targetWindow->mDocument);
+  if (!domDoc)
     return NS_OK;
   nsCOMPtr<nsIDOMEvent> event;
-  docEvent->CreateEvent(NS_LITERAL_STRING("MessageEvent"),
-                        getter_AddRefs(event));
+  domDoc->CreateEvent(NS_LITERAL_STRING("MessageEvent"),
+                      getter_AddRefs(event));
   if (!event)
     return NS_OK;
 
@@ -5939,7 +5986,7 @@ PostMessageEvent::Run()
   nsresult rv = message->InitMessageEvent(NS_LITERAL_STRING("message"),
                                           PR_FALSE /* non-bubbling */,
                                           PR_TRUE /* cancelable */,
-                                          mMessage,
+                                          messageData,
                                           mCallerOrigin,
                                           EmptyString(),
                                           mSource);
@@ -5971,9 +6018,12 @@ PostMessageEvent::Run()
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrigin)
+nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
+                               const nsAString& aOrigin,
+                               JSContext* aCx)
 {
-  FORWARD_TO_OUTER(PostMessageMoz, (aMessage, aOrigin), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_OUTER(PostMessageMoz, (aMessage, aOrigin, aCx),
+                   NS_ERROR_NOT_INITIALIZED);
 
   //
   // Window.postMessage is an intentional subversion of the same-origin policy.
@@ -6037,10 +6087,19 @@ nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrig
                          ? nsnull
                          : callerInnerWin->GetOuterWindowInternal(),
                          origin,
-                         aMessage,
                          this,
                          providedOrigin,
                          nsContentUtils::IsCallerTrustedForWrite());
+
+  // We *must* clone the data here, or the jsval could be modified
+  // by script
+  JSAutoStructuredCloneBuffer buffer;
+
+  if (!buffer.write(aCx, aMessage, nsnull, nsnull))
+    return NS_ERROR_DOM_DATA_CLONE_ERR;
+
+  event->SetJSData(buffer);
+
   return NS_DispatchToCurrentThread(event);
 }
 
@@ -6129,8 +6188,7 @@ nsGlobalWindow::Close()
   // that were not opened by script
   if (!mHadOriginalOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
     PRBool allowClose =
-      nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
-                                  PR_TRUE);
+      Preferences::GetBool("dom.allow_scripts_to_close_windows", PR_TRUE);
     if (!allowClose) {
       // We're blocking the close operation
       // report localized error msg in JS console
@@ -6326,7 +6384,7 @@ nsGlobalWindow::EnterModalState()
       activeShell->SetCapturingContent(nsnull, 0);
 
       if (activeShell) {
-        nsCOMPtr<nsFrameSelection> frameSelection = activeShell->FrameSelection();
+        nsRefPtr<nsFrameSelection> frameSelection = activeShell->FrameSelection();
         frameSelection->SetMouseDownState(PR_FALSE);
       }
     }
@@ -6534,6 +6592,34 @@ nsGlobalWindow::NotifyWindowIDDestroyed(const char* aTopic)
   }
 }
 
+// static
+void
+nsGlobalWindow::NotifyDOMWindowFrozen(nsGlobalWindow* aWindow) {
+  if (aWindow && aWindow->IsInnerWindow()) {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      observerService->
+        NotifyObservers(static_cast<nsIScriptGlobalObject*>(aWindow),
+                        DOM_WINDOW_FROZEN_TOPIC, nsnull);
+    }
+  }
+}
+
+// static
+void
+nsGlobalWindow::NotifyDOMWindowThawed(nsGlobalWindow* aWindow) {
+  if (aWindow && aWindow->IsInnerWindow()) {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      observerService->
+        NotifyObservers(static_cast<nsIScriptGlobalObject*>(aWindow),
+                        DOM_WINDOW_THAWED_TOPIC, nsnull);
+    }
+  }
+}
+
 void
 nsGlobalWindow::InitJavaProperties()
 {
@@ -6547,20 +6633,17 @@ nsGlobalWindow::InitJavaProperties()
   // can fail. If it fails, we won't try again...
   mDidInitJavaProperties = PR_TRUE;
 
-  // Check whether the plugin supports NPRuntime, if so, init through
-  // it.
-
-  nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-  if (!host) {
-    return;
-  }
-
   mDummyJavaPluginOwner = new nsDummyJavaPluginOwner(mDoc);
   if (!mDummyJavaPluginOwner) {
     return;
   }
 
-  host->InstantiateDummyJavaPlugin(mDummyJavaPluginOwner);
+  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
+  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
+  if (!pluginHost) {
+    return;
+  }  
+  pluginHost->InstantiateDummyJavaPlugin(mDummyJavaPluginOwner);
 
   // It's possible for us (or the Java plugin, rather) to process
   // events during the above call, which can lead to this window being
@@ -6570,8 +6653,8 @@ nsGlobalWindow::InitJavaProperties()
     return;
   }
 
-  nsCOMPtr<nsIPluginInstance> dummyPlugin;
-  mDummyJavaPluginOwner->GetInstance(*getter_AddRefs(dummyPlugin));
+  nsRefPtr<nsNPAPIPluginInstance> dummyPlugin;
+  mDummyJavaPluginOwner->GetInstance(getter_AddRefs(dummyPlugin));
 
   if (dummyPlugin) {
     // A dummy plugin was instantiated. This means we have a Java
@@ -7761,8 +7844,9 @@ nsGlobalWindow::DispatchSyncPopState()
                "Must be safe to run script here.");
 
   // Check that PopState hasn't been pref'ed off.
-  if (!nsContentUtils::GetBoolPref(sPopStatePrefStr, PR_FALSE))
+  if (!Preferences::GetBool(sPopStatePrefStr, PR_FALSE)) {
     return NS_OK;
+  }
 
   nsresult rv = NS_OK;
 
@@ -7939,7 +8023,7 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     return NS_OK;
   }
 
-  if (!nsContentUtils::GetBoolPref(kStorageEnabled)) {
+  if (!Preferences::GetBool(kStorageEnabled)) {
     *aSessionStorage = nsnull;
     return NS_OK;
   }
@@ -8003,7 +8087,7 @@ nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
   NS_ENSURE_ARG_POINTER(aGlobalStorage);
 
 #ifdef MOZ_STORAGE
-  if (!nsContentUtils::GetBoolPref(kStorageEnabled)) {
+  if (!Preferences::GetBool(kStorageEnabled)) {
     *aGlobalStorage = nsnull;
     return NS_OK;
   }
@@ -8029,7 +8113,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 
   NS_ENSURE_ARG(aLocalStorage);
 
-  if (!nsContentUtils::GetBoolPref(kStorageEnabled)) {
+  if (!Preferences::GetBool(kStorageEnabled)) {
     *aLocalStorage = nsnull;
     return NS_OK;
   }
@@ -8447,8 +8531,6 @@ nsGlobalWindow::FireDelayedDOMEvents()
   if (mPendingStorageEventsObsolete) {
     // Fire pending storage events.
     mPendingStorageEventsObsolete->EnumerateRead(FirePendingStorageEvents, this);
-
-    delete mPendingStorageEventsObsolete;
     mPendingStorageEventsObsolete = nsnull;
   }
 
@@ -8873,7 +8955,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
     // "dom.disable_open_click_delay" is set to (in ms).
 
     PRInt32 delay =
-      nsContentUtils::GetIntPref("dom.disable_open_click_delay");
+      Preferences::GetInt("dom.disable_open_click_delay");
 
     // This is checking |interval|, not realInterval, on purpose,
     // because our lower bound for |realInterval| could be pretty high
@@ -9986,6 +10068,13 @@ nsGlobalWindow::GetURL(nsIDOMMozURLProperty** aURL)
   return NS_OK;
 }
 
+// static
+bool
+nsGlobalWindow::HasIndexedDBSupport()
+{
+  return Preferences::GetBool("indexedDB.feature.enabled", PR_TRUE);
+}
+
 // nsGlobalChromeWindow implementation
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
@@ -10457,11 +10546,11 @@ nsresult
 NS_GetNavigatorPlatform(nsAString& aPlatform)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.platform.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.platform.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aPlatform);
+      aPlatform = override;
       return NS_OK;
     }
   }
@@ -10501,11 +10590,11 @@ nsresult
 NS_GetNavigatorAppVersion(nsAString& aAppVersion)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override = 
-      nsContentUtils::GetCharPref("general.appversion.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.appversion.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aAppVersion);
+      aAppVersion = override;
       return NS_OK;
     }
   }
@@ -10538,11 +10627,11 @@ nsresult
 NS_GetNavigatorAppName(nsAString& aAppName)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.appname.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.appname.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aAppName);
+      aAppName = override;
       return NS_OK;
     }
   }
@@ -10601,7 +10690,7 @@ nsNavigator::GetLanguage(nsAString& aLanguage)
 {
   // e.g. "de-de, en-us,en"
   const nsAdoptingString& acceptLang =
-      nsContentUtils::GetLocalizedStringPref("intl.accept_languages");
+    Preferences::GetLocalizedString("intl.accept_languages");
   // take everything before the first "," or ";", without trailing space
   nsCharSeparatedTokenizer langTokenizer(acceptLang, ',');
   const nsSubstring &firstLangPart = langTokenizer.nextToken();
@@ -10646,11 +10735,11 @@ NS_IMETHODIMP
 nsNavigator::GetOscpu(nsAString& aOSCPU)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.oscpu.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.oscpu.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aOSCPU);
+      aOSCPU = override;
       return NS_OK;
     }
   }
@@ -10701,21 +10790,21 @@ NS_IMETHODIMP
 nsNavigator::GetProductSub(nsAString& aProductSub)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.productSub.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.productSub.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aProductSub);
+      aProductSub = override;
       return NS_OK;
-    } else {
-      // 'general.useragent.productSub' backwards compatible with 1.8 branch.
-      const nsAdoptingCString& override2 =
-        nsContentUtils::GetCharPref("general.useragent.productSub");
+    }
 
-      if (override2) {
-        CopyUTF8toUTF16(override2, aProductSub);
-        return NS_OK;
-      }
+    // 'general.useragent.productSub' backwards compatible with 1.8 branch.
+    const nsAdoptingString& override2 =
+      Preferences::GetString("general.useragent.productSub");
+
+    if (override2) {
+      aProductSub = override2;
+      return NS_OK;
     }
   }
 
@@ -10769,9 +10858,8 @@ NS_IMETHODIMP
 nsNavigator::GetCookieEnabled(PRBool *aCookieEnabled)
 {
   *aCookieEnabled =
-    (nsContentUtils::GetIntPref("network.cookie.cookieBehavior",
-                                COOKIE_BEHAVIOR_REJECT) !=
-     COOKIE_BEHAVIOR_REJECT);
+    (Preferences::GetInt("network.cookie.cookieBehavior",
+                         COOKIE_BEHAVIOR_REJECT) != COOKIE_BEHAVIOR_REJECT);
 
   return NS_OK;
 }
@@ -10789,11 +10877,11 @@ NS_IMETHODIMP
 nsNavigator::GetBuildID(nsAString& aBuildID)
 {
   if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingCString& override =
-      nsContentUtils::GetCharPref("general.buildID.override");
+    const nsAdoptingString& override =
+      Preferences::GetString("general.buildID.override");
 
     if (override) {
-      CopyUTF8toUTF16(override, aBuildID);
+      aBuildID = override;
       return NS_OK;
     }
   }
@@ -10894,7 +10982,7 @@ nsNavigator::RefreshMIMEArray()
 bool
 nsNavigator::HasDesktopNotificationSupport()
 {
-  return nsContentUtils::GetBoolPref("notification.feature.enabled", PR_FALSE);
+  return Preferences::GetBool("notification.feature.enabled", PR_FALSE);
 }
 
 //*****************************************************************************

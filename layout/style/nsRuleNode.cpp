@@ -3429,6 +3429,10 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
       text->SetDecorationColorToForeground();
     }
   }
+  else if (eCSSUnit_EnumColor == decorationColorValue->GetUnit() &&
+           decorationColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) {
+    text->SetDecorationColorToForeground();
+  }
   else if (SetColor(*decorationColorValue, 0, mPresContext, aContext,
                     decorationColor, canStoreInRuleTree)) {
     text->SetDecorationColor(decorationColor);
@@ -3439,9 +3443,6 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
                       decorationColorValue->GetIntValue() ==
                         NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
                       "unexpected enumerated value");
-    text->SetDecorationColorToForeground();
-  }
-  else if (eCSSUnit_Initial == decorationColorValue->GetUnit()) {
     text->SetDecorationColorToForeground();
   }
 
@@ -4482,6 +4483,12 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
   }
 
+  // orient: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForOrient(),
+              display->mOrient, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentDisplay->mOrient,
+              NS_STYLE_ORIENT_HORIZONTAL, 0, 0, 0, 0);
+
   COMPUTE_END_RESET(Display, display)
 }
 
@@ -4645,12 +4652,14 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
       if (eCSSUnit_Percent == specified.GetUnit()) {
         (position.*(axis->result)).mLength = 0;
         (position.*(axis->result)).mPercent = specified.GetPercentValue();
+        (position.*(axis->result)).mHasPercent = PR_TRUE;
       }
       else if (specified.IsLengthUnit()) {
         (position.*(axis->result)).mLength =
           CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
                      aCanStoreInRuleTree);
         (position.*(axis->result)).mPercent = 0.0f;
+        (position.*(axis->result)).mHasPercent = PR_FALSE;
       }
       else if (specified.IsCalcUnit()) {
         LengthPercentPairCalcOps ops(aStyleContext,
@@ -4659,11 +4668,13 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
         nsRuleNode::ComputedCalc vals = ComputeCalc(specified, ops);
         (position.*(axis->result)).mLength = vals.mLength;
         (position.*(axis->result)).mPercent = vals.mPercent;
+        (position.*(axis->result)).mHasPercent = ops.mHasPercent;
       }
       else if (eCSSUnit_Enumerated == specified.GetUnit()) {
         (position.*(axis->result)).mLength = 0;
         (position.*(axis->result)).mPercent =
           GetFloatFromBoxPosition(specified.GetIntValue());
+        (position.*(axis->result)).mHasPercent = PR_TRUE;
       } else {
         NS_NOTREACHED("unexpected unit");
       }
@@ -4735,6 +4746,7 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
       else if (eCSSUnit_Percent == specified.GetUnit()) {
         (size.*(axis->result)).mLength = 0;
         (size.*(axis->result)).mPercent = specified.GetPercentValue();
+        (size.*(axis->result)).mHasPercent = PR_TRUE;
         size.*(axis->type) = nsStyleBackground::Size::eLengthPercentage;
       }
       else if (specified.IsLengthUnit()) {
@@ -4742,6 +4754,7 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
           CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
                      aCanStoreInRuleTree);
         (size.*(axis->result)).mPercent = 0.0f;
+        (size.*(axis->result)).mHasPercent = PR_FALSE;
         size.*(axis->type) = nsStyleBackground::Size::eLengthPercentage;
       } else {
         NS_ABORT_IF_FALSE(specified.IsCalcUnit(), "unexpected unit");
@@ -4751,6 +4764,7 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
         nsRuleNode::ComputedCalc vals = ComputeCalc(specified, ops);
         (size.*(axis->result)).mLength = vals.mLength;
         (size.*(axis->result)).mPercent = vals.mPercent;
+        (size.*(axis->result)).mHasPercent = ops.mHasPercent;
         size.*(axis->type) = nsStyleBackground::Size::eLengthPercentage;
       }
     }

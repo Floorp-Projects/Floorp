@@ -329,7 +329,7 @@
 /* PLATFORM(LINUX) */
 /* Operating system level dependencies for Linux-like systems that */
 /* should be used regardless of operating environment */
-#ifdef __linux__
+#if defined(__linux__) && !defined(ANDROID)
 #define WTF_PLATFORM_LINUX 1
 #endif
 

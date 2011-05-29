@@ -49,7 +49,6 @@
 #include "nsIConverterInputStream.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
 #include "nsIIPCSerializable.h"
@@ -65,6 +64,7 @@
 #include "nsStringStream.h"
 #include "CheckedInt.h"
 #include "nsJSUtils.h"
+#include "mozilla/Preferences.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -140,7 +140,6 @@ DOMCI_DATA(Blob, nsDOMFile)
 NS_INTERFACE_MAP_BEGIN(nsDOMFile)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMBlob_MOZILLA_2_0_BRANCH)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, mIsFullFile)
   NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
   NS_INTERFACE_MAP_ENTRY(nsICharsetDetectionObserver)
@@ -294,20 +293,13 @@ ParseSize(PRInt64 aSize, PRInt64& aStart, PRInt64& aEnd)
 }
 
 NS_IMETHODIMP
-nsDOMFile::Slice(PRUint64 aStart, PRUint64 aLength,
-                 const nsAString& aContentType, nsIDOMBlob **aBlob)
-{
-  return MozSlice(aStart, aStart + aLength, aContentType, 2, aBlob);
-}
-
-NS_IMETHODIMP
 nsDOMFile::MozSlice(PRInt64 aStart, PRInt64 aEnd,
                     const nsAString& aContentType, PRUint8 optional_argc,
                     nsIDOMBlob **aBlob)
 {
   *aBlob = nsnull;
 
-  // Truncate aLength and aStart so that we stay within this file.
+  // Truncate aStart and aEnd so that we stay within this file.
   PRUint64 thisLength;
   nsresult rv = GetSize(&thisLength);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -508,12 +500,12 @@ nsDOMFile::GuessCharset(nsIInputStream *aStream,
                         "universal_charset_detector");
   if (!detector) {
     // No universal charset detector, try the default charset detector
-    const nsAdoptingString& detectorName =
-      nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
+    const nsAdoptingCString& detectorName =
+      Preferences::GetLocalizedCString("intl.charset.detector");
     if (!detectorName.IsEmpty()) {
       nsCAutoString detectorContractID;
       detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
-      AppendUTF16toUTF8(detectorName, detectorContractID);
+      detectorContractID += detectorName;
       detector = do_CreateInstance(detectorContractID.get());
     }
   }

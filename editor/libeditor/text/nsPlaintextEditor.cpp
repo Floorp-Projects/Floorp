@@ -79,6 +79,7 @@
 #include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
 #include "nsDebug.h"
+#include "mozilla/Preferences.h"
 
 // Drag & Drop, Clipboard
 #include "nsIClipboard.h"
@@ -87,8 +88,7 @@
 
 #include "mozilla/FunctionTimer.h"
 
-// prototype for rules creation shortcut
-nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
+using namespace mozilla;
 
 nsPlaintextEditor::nsPlaintextEditor()
 : nsEditor()
@@ -174,10 +174,11 @@ static int
 EditorPrefsChangedCallback(const char *aPrefName, void *)
 {
   if (nsCRT::strcmp(aPrefName, "editor.singleLine.pasteNewlines") == 0) {
-    sNewlineHandlingPref = nsContentUtils::GetIntPref("editor.singleLine.pasteNewlines",
-                                                      nsIPlaintextEditor::eNewlinesPasteToFirst);
+    sNewlineHandlingPref =
+      Preferences::GetInt("editor.singleLine.pasteNewlines",
+                          nsIPlaintextEditor::eNewlinesPasteToFirst);
   } else if (nsCRT::strcmp(aPrefName, "layout.selection.caret_style") == 0) {
-    sCaretStylePref = nsContentUtils::GetIntPref("layout.selection.caret_style",
+    sCaretStylePref = Preferences::GetInt("layout.selection.caret_style",
 #ifdef XP_WIN
                                                  1);
     if (sCaretStylePref == 0)
@@ -195,13 +196,11 @@ nsPlaintextEditor::GetDefaultEditorPrefs(PRInt32 &aNewlineHandling,
                                          PRInt32 &aCaretStyle)
 {
   if (sNewlineHandlingPref == -1) {
-    nsContentUtils::RegisterPrefCallback("editor.singleLine.pasteNewlines",
-                                         EditorPrefsChangedCallback,
-                                         nsnull);
+    Preferences::RegisterCallback(EditorPrefsChangedCallback,
+                                  "editor.singleLine.pasteNewlines");
     EditorPrefsChangedCallback("editor.singleLine.pasteNewlines", nsnull);
-    nsContentUtils::RegisterPrefCallback("layout.selection.caret_style",
-                                         EditorPrefsChangedCallback,
-                                         nsnull);
+    Preferences::RegisterCallback(EditorPrefsChangedCallback,
+                                  "layout.selection.caret_style");
     EditorPrefsChangedCallback("layout.selection.caret_style", nsnull);
   }
 
@@ -329,9 +328,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet)
 NS_IMETHODIMP nsPlaintextEditor::InitRules()
 {
   // instantiate the rules for this text editor
-  nsresult res = NS_NewTextEditRules(getter_AddRefs(mRules));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(mRules, NS_ERROR_UNEXPECTED);
+  mRules = new nsTextEditRules();
   return mRules->Init(this);
 }
 
@@ -858,9 +855,8 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 
   // Batching the selection and moving nodes out from under the caret causes
   // caret turds. Ask the shell to invalidate the caret now to avoid the turds.
-  nsCOMPtr<nsIPresShell> shell;
-  res = GetPresShell(getter_AddRefs(shell));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_NOT_INITIALIZED);
   shell->MaybeInvalidateCaretPosition();
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertBreak);
@@ -953,8 +949,7 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsCOMPtr<nsIPresShell> ps;
-  GetPresShell(getter_AddRefs(ps));
+  nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsISelection> selection;
@@ -1277,8 +1272,7 @@ nsPlaintextEditor::FireClipboardEvent(PRInt32 aType)
   if (aType == NS_PASTE)
     ForceCompositionEnd();
 
-  nsCOMPtr<nsIPresShell> presShell;
-  GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, PR_FALSE);
 
   nsCOMPtr<nsISelection> selection;
@@ -1704,7 +1698,27 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
     return aSelection->Collapse(rootElement, 0);
   }
 
-  return nsEditor::SelectEntireDocument(aSelection);
+  nsresult rv = nsEditor::SelectEntireDocument(aSelection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Don't select the trailing BR node if we have one
+  PRInt32 selOffset;
+  nsCOMPtr<nsIDOMNode> selNode;
+  rv = GetEndNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> childNode = GetChildAt(selNode, selOffset - 1);
+
+  if (childNode && nsTextEditUtils::IsMozBR(childNode)) {
+    nsCOMPtr<nsIDOMNode> parentNode;
+    PRInt32 parentOffset;
+    rv = GetNodeLocation(childNode, address_of(parentNode), &parentOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return aSelection->Extend(parentNode, parentOffset);
+  }
+
+  return NS_OK;
 }
 
 already_AddRefed<nsPIDOMEventTarget>

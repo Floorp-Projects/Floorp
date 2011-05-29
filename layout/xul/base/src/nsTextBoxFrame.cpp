@@ -70,11 +70,14 @@
 #include "nsCSSRendering.h"
 #include "nsIReflowCallback.h"
 #include "nsBoxFrame.h"
+#include "mozilla/Preferences.h"
 
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
+
+using namespace mozilla;
 
 #define CROP_LEFT   "left"
 #define CROP_RIGHT  "right"
@@ -182,7 +185,7 @@ nsTextBoxFrame::AlwaysAppendAccessKey()
     gAccessKeyPrefInitialized = PR_TRUE;
 
     const char* prefName = "intl.menuitems.alwaysappendaccesskeys";
-    nsAdoptingString val = nsContentUtils::GetLocalizedStringPref(prefName);
+    nsAdoptingString val = Preferences::GetLocalizedString(prefName);
     gAlwaysAppendAccessKey = val.Equals(NS_LITERAL_STRING("true"));
   }
   return gAlwaysAppendAccessKey;
@@ -196,7 +199,7 @@ nsTextBoxFrame::InsertSeparatorBeforeAccessKey()
     gInsertSeparatorPrefInitialized = PR_TRUE;
 
     const char* prefName = "intl.menuitems.insertseparatorbeforeaccesskeys";
-    nsAdoptingString val = nsContentUtils::GetLocalizedStringPref(prefName);
+    nsAdoptingString val = Preferences::GetLocalizedString(prefName);
     gInsertSeparatorBeforeAccessKey = val.EqualsLiteral("true");
   }
   return gInsertSeparatorBeforeAccessKey;

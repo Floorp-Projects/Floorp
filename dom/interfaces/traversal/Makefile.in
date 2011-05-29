@@ -48,7 +48,6 @@ XPIDL_MODULE	= dom_traversal
 GRE_MODULE	= 1
 
 XPIDLSRCS =					\
-	nsIDOMDocumentTraversal.idl		\
 	nsIDOMNodeFilter.idl			\
 	nsIDOMNodeIterator.idl			\
 	nsIDOMTreeWalker.idl			\

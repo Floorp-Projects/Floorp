@@ -108,7 +108,7 @@ public:
   virtual PRBool Init();
   virtual void Shutdown();
   virtual nsIFrame* GetFrame() const;
-  virtual PRBool IsDefunct();
+  virtual bool IsDefunct() const;
   virtual nsINode* GetNode() const { return mDocument; }
   virtual nsIDocument* GetDocumentNode() const { return mDocument; }
 
@@ -551,5 +551,12 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDocAccessible,
                               NS_DOCACCESSIBLE_IMPL_CID)
+
+inline nsDocAccessible*
+nsAccessible::AsDoc()
+{
+  return mFlags & eDocAccessible ?
+    static_cast<nsDocAccessible*>(this) : nsnull;
+}
 
 #endif

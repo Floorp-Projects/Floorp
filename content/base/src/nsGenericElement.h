@@ -66,6 +66,7 @@
 #include "nsIDOMNodeSelector.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsPresContext.h"
+#include "nsIDOMDOMStringMap.h"
 
 #ifdef MOZ_SMIL
 #include "nsISMILAttr.h"
@@ -328,7 +329,7 @@ public:
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent = PR_TRUE);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
@@ -595,7 +596,7 @@ public:
    */
   static void FireNodeInserted(nsIDocument* aDoc,
                                nsINode* aParent,
-                               nsCOMArray<nsIContent>& aNodes);
+                               nsTArray<nsCOMPtr<nsIContent> >& aNodes);
 
   /**
    * Helper methods for implementing querySelector/querySelectorAll
@@ -934,8 +935,15 @@ public:
     /**
      * The .style attribute (an interface that forwards to the actual
      * style rules)
-     * @see nsGenericHTMLElement::GetStyle */
+     * @see nsGenericHTMLElement::GetStyle
+     */
     nsCOMPtr<nsICSSDeclaration> mStyle;
+
+    /**
+     * The .dataset attribute.
+     * @see nsGenericHTMLElement::GetDataset
+     */
+    nsIDOMDOMStringMap* mDataset; // [Weak]
 
     /**
      * SMIL Overridde style rules (for SMIL animation of CSS properties)

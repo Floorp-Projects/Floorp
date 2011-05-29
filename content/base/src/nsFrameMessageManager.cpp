@@ -51,6 +51,7 @@
 #include "nsIXULRuntime.h"
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
+#include "nsIProtocolHandler.h"
 
 static PRBool
 IsChromeProcess()
@@ -679,6 +680,16 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   if (NS_FAILED(rv)) {
     return;
   }
+  
+  PRBool hasFlags;
+  rv = NS_URIChainHasFlags(uri,
+                           nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
+                           &hasFlags);
+  if (NS_FAILED(rv) || !hasFlags) {
+    NS_WARNING("Will not load a frame script!");
+    return;
+  }
+  
   nsCOMPtr<nsIChannel> channel;
   NS_NewChannel(getter_AddRefs(channel), uri);
   if (!channel) {

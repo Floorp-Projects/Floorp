@@ -1356,8 +1356,7 @@ var gCSSProperties = {
 		domProp: "backgroundPosition",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* is "0px 0px" an initial value or not? */
-		initial_values: [ "top left", "left top", "0% 0%", "0% top", "left 0%", "0px 0px" ],
+		initial_values: [ "top left", "left top", "0% 0%", "0% top", "left 0%" ],
 		other_values: [ "top", "left", "right", "bottom", "center", "center bottom", "bottom center", "center right", "right center", "center top", "top center", "center left", "left center", "right bottom", "bottom right", "50%", "top left, top left", "top left, top right", "top right, top left", "left top, 0% 0%", "10% 20%, 30%, 40%", "top left, bottom right", "right bottom, left top", "0%", "0px", "30px", "0%, 10%, 20%, 30%", "top, top, top, top, top",
 			"-moz-calc(20px)",
 			"-moz-calc(20px) 10px",
@@ -1368,7 +1367,8 @@ var gCSSProperties = {
 			"-moz-calc(20px + 1em) -moz-calc(20px / 2)",
 			"-moz-calc(20px + 50%) -moz-calc(50% - 10px)",
 			"-moz-calc(-20px) -moz-calc(-50%)",
-			"-moz-calc(-20%) -moz-calc(-50%)"
+			"-moz-calc(-20%) -moz-calc(-50%)",
+			"0px 0px"
 		],
 		invalid_values: [ "50% left", "top 50%" ]
 	},
@@ -2160,6 +2160,14 @@ var gCSSProperties = {
 		initial_values: [ "1", "17", "397.376" ],
 		other_values: [ "0", "0.4", "0.0000", "-3" ],
 		invalid_values: [ "0px", "1px" ]
+	},
+	"-moz-orient": {
+		domProp: "MozOrient",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "horizontal" ],
+		other_values: [ "vertical" ],
+		invalid_values: [ "auto", "none" ]
 	},
 	"orphans": {
 		domProp: "orphans",
