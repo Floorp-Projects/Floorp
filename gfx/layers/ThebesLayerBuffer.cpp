@@ -247,7 +247,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     neededRegion = aLayer->GetVisibleRegion();
     destBufferDims = ScaledSize(neededRegion.GetBounds().Size(),
                                 aXResolution, aYResolution);
-    canReuseBuffer = BufferSizeOkFor(destBufferDims);
+    canReuseBuffer = mBuffer && BufferSizeOkFor(destBufferDims);
 
     if (canReuseBuffer) {
       if (mBufferRect.Contains(neededRegion.GetBounds())) {
