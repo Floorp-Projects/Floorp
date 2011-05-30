@@ -1037,9 +1037,7 @@ nsCanvasRenderingContext2D::Redraw()
         return NS_OK;
     }
 
-#ifdef MOZ_SVG
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
-#endif
 
     HTMLCanvasElement()->InvalidateCanvasContent(nsnull);
 
@@ -1064,9 +1062,7 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
         return NS_OK;
     }
 
-#ifdef MOZ_SVG
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
-#endif
 
     HTMLCanvasElement()->InvalidateCanvasContent(&r);
 

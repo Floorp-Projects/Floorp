@@ -96,10 +96,7 @@
 #include "nsIHTMLDocument.h"
 #include "mozAutoDocUpdate.h"
 #include "nsMimeTypes.h"
-
-#ifdef MOZ_SVG
 #include "nsHtml5SVGLoadDispatcher.h"
-#endif
 
 using namespace mozilla::dom;
 
@@ -507,9 +504,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML)
-#ifdef MOZ_SVG
       || aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)
-#endif
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
     sele->SetScriptLineNumber(aLineNumber);
@@ -596,9 +591,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
   nsresult rv = NS_OK;
 
   if (nodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML)
-#ifdef MOZ_SVG
       || nodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)
-#endif
     ) {
     mConstrainSize = PR_TRUE; 
 
@@ -1158,7 +1151,6 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
   }
   DidAddContent();
 
-#ifdef MOZ_SVG
   if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
       content->Tag() == nsGkAtoms::svg) {
     FlushTags();
@@ -1167,7 +1159,6 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
       NS_WARNING("failed to dispatch svg load dispatcher");
     }
   }
-#endif
 
   return aInterruptable && NS_SUCCEEDED(result) ? DidProcessATokenImpl() :
                                                   result;

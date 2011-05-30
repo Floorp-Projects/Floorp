@@ -507,7 +507,6 @@ nsContentUtils::InitializeEventTable() {
 
     { nsGkAtoms::onoverflow,                    NS_SCROLLPORT_OVERFLOW, EventNameType_XUL, NS_EVENT_NULL},
     { nsGkAtoms::onunderflow,                   NS_SCROLLPORT_UNDERFLOW, EventNameType_XUL, NS_EVENT_NULL},
-#ifdef MOZ_SVG
     { nsGkAtoms::onSVGLoad,                     NS_SVG_LOAD, EventNameType_None, NS_SVG_EVENT },
     { nsGkAtoms::onSVGUnload,                   NS_SVG_UNLOAD, EventNameType_None, NS_SVG_EVENT },
     { nsGkAtoms::onSVGAbort,                    NS_SVG_ABORT, EventNameType_None, NS_SVG_EVENT },
@@ -519,7 +518,6 @@ nsContentUtils::InitializeEventTable() {
 
     // This is a bit hackish, but SVG's event names are weird.
     { nsGkAtoms::onzoom,                        NS_SVG_ZOOM, EventNameType_SVGSVG, NS_EVENT_NULL },
-#endif // MOZ_SVG
 #ifdef MOZ_SMIL
     { nsGkAtoms::onbegin,                       NS_SMIL_BEGIN, EventNameType_SMIL, NS_EVENT_NULL },
     { nsGkAtoms::onbeginEvent,                  NS_SMIL_BEGIN, EventNameType_None, NS_SMIL_TIME_EVENT },
@@ -2713,9 +2711,7 @@ static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
   "chrome://global/locale/layout/HtmlForm.properties",
   "chrome://global/locale/printing.properties",
   "chrome://global/locale/dom/dom.properties",
-#ifdef MOZ_SVG
   "chrome://global/locale/svg/svg.properties",
-#endif
   "chrome://branding/locale/brand.properties",
   "chrome://global/locale/commonDialogs.properties"
 };

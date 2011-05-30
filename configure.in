@@ -4841,7 +4841,6 @@ MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_SPLASHSCREEN=
 MOZ_STORAGE=1
-MOZ_SVG=1
 MOZ_SVG_DLISTS=
 MOZ_THUMB2=
 MOZ_TIMELINE=
@@ -6421,11 +6420,6 @@ if test "$MOZ_MATHML"; then
 fi
 
 AC_DEFINE(MOZ_CSS_ANIMATIONS)
-
-dnl ========================================================
-dnl Keeping AC_DEFINE(MOZ_SVG) for the moment in case of something needs it.
-dnl ========================================================
-AC_DEFINE(MOZ_SVG)
 
 dnl ========================================================
 dnl SVG Display Lists
@@ -8760,7 +8754,6 @@ AC_SUBST(MOZ_CSS_ANIMATIONS)
 AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
-AC_SUBST(MOZ_SVG)
 AC_SUBST(MOZ_SMIL)
 AC_SUBST(MOZ_XSLT_STANDALONE)
 AC_SUBST(MOZ_JS_LIBS)
