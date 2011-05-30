@@ -181,7 +181,7 @@ protected:
                        PRUint32& aSize,
                        bool& aFellBackToPNG);
   nsresult ToDataURLImpl(const nsAString& aMimeType,
-                         const nsAString& aEncoderOptions,
+                         nsIVariant* aEncoderOptions,
                          nsAString& aDataURL);
   nsresult MozGetAsFileImpl(const nsAString& aName,
                             const nsAString& aType,

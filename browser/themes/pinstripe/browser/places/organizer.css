@@ -2,12 +2,6 @@
 
 /* Places Organizer Sidebars */
 
-#placesList {
-  -moz-appearance: none;
-  border: none;
-  margin: 0;
-}
-
 #placesList > treechildren::-moz-tree-row {
   background-color: transparent;
   border-color: transparent;
@@ -179,23 +173,17 @@
 }
 
 /* Place List, Place Content */
-.placesTree {
-  margin: 0px;
-}
-
 #placesList {
-  -moz-appearance: none;
   background-color: #d2d8e2;
   width: 160px;
-  margin: 0px;
-  border: 0px;
 }
 
 #placesList:-moz-window-inactive {
   background-color: #e8e8e8;
 }
 
-#infoPaneBox {
+/* Info box */
+#detailsDeck {
   border-top: 1px solid #919191;
   background-color: #f0f0f0;
   padding: 10px;
@@ -233,19 +221,6 @@
 
 #placeContent > treechildren::-moz-tree-cell(separator) {
   border-color: transparent;
-}
-
-.small {
-  min-width: 0px;
-  padding: 0px 4px 0px 4px;
-  margin: 0px;  
-  border: 0px;
-}
-
-.small .button-text,
-.small .button-box {
-  padding: 0px;
-  border: 0px;
 }
 
 /* Scope Bar */

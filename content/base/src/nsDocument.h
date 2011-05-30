@@ -53,8 +53,6 @@
 #include "nsHashSets.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsIDOMNSDocument.h"
-#include "nsIDOMNSDocumentStyle.h"
 #include "nsStubDocumentObserver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
@@ -490,8 +488,6 @@ protected:
 // the interface.
 class nsDocument : public nsIDocument,
                    public nsIDOMXMLDocument, // inherits nsIDOMDocument
-                   public nsIDOMNSDocument,
-                   public nsIDOMNSDocumentStyle,
                    public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
                    public nsIDOMEventTarget,
@@ -540,7 +536,7 @@ public:
    * Get the Content-Type of this document.
    */
   // NS_IMETHOD GetContentType(nsAString& aContentType);
-  // Already declared in nsIDOMNSDocument
+  // Already declared in nsIDOMDocument
 
   /**
    * Set the Content-Type of this document.
@@ -730,7 +726,7 @@ public:
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent = PR_TRUE);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
@@ -790,15 +786,6 @@ public:
 
   // nsIDOMXMLDocument
   NS_DECL_NSIDOMXMLDOCUMENT
-
-  // nsIDOMNSDocument
-  NS_DECL_NSIDOMNSDOCUMENT
-
-  // nsIDOMDocumentStyle
-  NS_DECL_NSIDOMDOCUMENTSTYLE
-
-  // nsIDOMNSDocumentStyle
-  NS_DECL_NSIDOMNSDOCUMENTSTYLE
 
   // nsIDOMDocumentXBL
   NS_DECL_NSIDOMDOCUMENTXBL
@@ -960,6 +947,8 @@ public:
   virtual NS_HIDDEN_(nsresult) SetImageLockingState(PRBool aLocked);
 
   virtual nsresult GetStateObject(nsIVariant** aResult);
+
+  virtual Element* FindImageMap(const nsAString& aNormalizedMapName);
 
 protected:
   friend class nsNodeUtils;
@@ -1225,6 +1214,8 @@ private:
 
   nsCOMPtr<nsIDOMDOMImplementation> mDOMImplementation;
 
+  nsRefPtr<nsContentList> mImageMaps;
+
   nsCString mScrollToRef;
   PRUint8 mScrolledToRefAlready : 1;
   PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
@@ -1241,7 +1232,6 @@ protected:
 #define NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                             \
   NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMDocument, nsDocument)      \
-  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNSDocument, nsDocument)    \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMEventTarget, nsDocument)   \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNode, nsDocument)
 

@@ -64,9 +64,7 @@
 
 #include "gfxCrashReporterUtils.h"
 
-#ifdef MOZ_SVG
 #include "nsSVGEffects.h"
-#endif
 
 #include "prenv.h"
 
@@ -277,9 +275,7 @@ WebGLContext::Invalidate()
     if (!mCanvasElement)
         return;
 
-#ifdef MOZ_SVG
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
-#endif
 
     mInvalidated = PR_TRUE;
     HTMLCanvasElement()->InvalidateCanvasContent(nsnull);

@@ -51,6 +51,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
 
 #include "IndexedDatabaseManager.h"
 
@@ -59,6 +60,7 @@
 #define TOPIC_PERMISSIONS_PROMPT "indexedDB-permissions-prompt"
 #define TOPIC_PERMISSIONS_RESPONSE "indexedDB-permissions-response"
 
+using namespace mozilla;
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::services;
 
@@ -71,7 +73,7 @@ GetIndexedDBPermissions(const nsACString& aASCIIOrigin,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!nsContentUtils::GetBoolPref(PREF_INDEXEDDB_ENABLED)) {
+  if (!Preferences::GetBool(PREF_INDEXEDDB_ENABLED)) {
     return nsIPermissionManager::DENY_ACTION;
   }
 

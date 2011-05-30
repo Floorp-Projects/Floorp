@@ -67,7 +67,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIImageDocument.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"

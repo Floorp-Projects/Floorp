@@ -85,6 +85,11 @@ protected:
                                     RefHandlingEnum refHandlingMode,
                                     PRBool* result);
 
+    // Helper to be used by inherited classes who want to test
+    // equality given an assumed nsSimpleURI.  This must NOT check
+    // the passed-in other for QI to our CID.
+    bool EqualsInternal(nsSimpleURI* otherUri, RefHandlingEnum refHandlingMode);
+
     // NOTE: This takes the refHandlingMode as an argument because
     // nsSimpleNestedURI's specialized version needs to know how to clone
     // its inner URI.

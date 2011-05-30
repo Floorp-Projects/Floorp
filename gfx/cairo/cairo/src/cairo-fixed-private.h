@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -53,7 +53,7 @@
 #define CAIRO_FIXED_ONE_FLOAT  ((float)(1 << CAIRO_FIXED_FRAC_BITS))
 #define CAIRO_FIXED_EPSILON    ((cairo_fixed_t)(1))
 
-#define CAIRO_FIXED_FRAC_MASK  (((cairo_fixed_unsigned_t)(-1)) >> (CAIRO_FIXED_BITS - CAIRO_FIXED_FRAC_BITS))
+#define CAIRO_FIXED_FRAC_MASK  ((cairo_fixed_t)(((cairo_fixed_unsigned_t)(-1)) >> (CAIRO_FIXED_BITS - CAIRO_FIXED_FRAC_BITS)))
 #define CAIRO_FIXED_WHOLE_MASK (~CAIRO_FIXED_FRAC_MASK)
 
 static inline cairo_fixed_t
@@ -136,6 +136,16 @@ _cairo_fixed_from_26_6 (uint32_t i)
 #endif
 }
 
+static inline cairo_fixed_t
+_cairo_fixed_from_16_16 (uint32_t i)
+{
+#if CAIRO_FIXED_FRAC_BITS > 16
+    return i << (CAIRO_FIXED_FRAC_BITS - 16);
+#else
+    return i >> (16 - CAIRO_FIXED_FRAC_BITS);
+#endif
+}
+
 static inline double
 _cairo_fixed_to_double (cairo_fixed_t f)
 {
@@ -154,10 +164,46 @@ _cairo_fixed_is_integer (cairo_fixed_t f)
     return (f & CAIRO_FIXED_FRAC_MASK) == 0;
 }
 
+static inline cairo_fixed_t
+_cairo_fixed_floor (cairo_fixed_t f)
+{
+    return f & ~CAIRO_FIXED_FRAC_MASK;
+}
+
+static inline cairo_fixed_t
+_cairo_fixed_round (cairo_fixed_t f)
+{
+    return _cairo_fixed_floor (f + (CAIRO_FIXED_FRAC_MASK+1)/2);
+}
+
+static inline cairo_fixed_t
+_cairo_fixed_round_down (cairo_fixed_t f)
+{
+    return _cairo_fixed_floor (f + CAIRO_FIXED_FRAC_MASK/2);
+}
+
 static inline int
 _cairo_fixed_integer_part (cairo_fixed_t f)
 {
     return f >> CAIRO_FIXED_FRAC_BITS;
+}
+
+static inline int
+_cairo_fixed_integer_round (cairo_fixed_t f)
+{
+    return _cairo_fixed_integer_part (f + (CAIRO_FIXED_FRAC_MASK+1)/2);
+}
+
+static inline int
+_cairo_fixed_integer_round_down (cairo_fixed_t f)
+{
+    return _cairo_fixed_integer_part (f + CAIRO_FIXED_FRAC_MASK/2);
+}
+
+static inline int
+_cairo_fixed_fractional_part (cairo_fixed_t f)
+{
+    return f & CAIRO_FIXED_FRAC_MASK;
 }
 
 static inline int
@@ -225,12 +271,18 @@ _cairo_fixed_16_16_from_double (double d)
 }
 
 static inline int
-_cairo_fixed_16_16_floor (cairo_fixed_t f)
+_cairo_fixed_16_16_floor (cairo_fixed_16_16_t f)
 {
     if (f >= 0)
-        return f >> 16;
+	return f >> 16;
     else
-        return -((-f - 1) >> 16) - 1;
+	return -((-f - 1) >> 16) - 1;
+}
+
+static inline double
+_cairo_fixed_16_16_to_double (cairo_fixed_16_16_t f)
+{
+    return ((double) f) / (double) (1 << 16);
 }
 
 #if CAIRO_FIXED_BITS == 32

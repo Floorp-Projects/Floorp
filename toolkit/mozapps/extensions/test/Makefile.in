@@ -74,6 +74,6 @@ libs::
 			(cd $$dir && zip -r $(TESTXPI)/$$base.xpi *) \
 		done \
 	fi
-	cd $(TESTROOT)/xpcshell/ && tar -cPf - . | (cd $(TESTROOT)/xpcshell-unpack && tar -xPvf - )
+	cd $(TESTROOT)/xpcshell/ && $(TAR) -cPf - . | (cd $(TESTROOT)/xpcshell-unpack && $(TAR) -xPvf - )
 	sed s/head_addons.js/head_addons.js\ head_unpack.js/ $(TESTROOT)/xpcshell-unpack/xpcshell.ini > $(TESTROOT)/xpcshell-unpack/xpcshell.in_
 	mv $(TESTROOT)/xpcshell-unpack/xpcshell.in_ $(TESTROOT)/xpcshell-unpack/xpcshell.ini

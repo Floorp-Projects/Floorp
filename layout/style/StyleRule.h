@@ -291,8 +291,32 @@ namespace mozilla {
 namespace css {
 
 class Declaration;
-class ImportantRule;
 class DOMCSSStyleRule;
+
+class StyleRule;
+
+class ImportantRule : public nsIStyleRule {
+public:
+  ImportantRule(Declaration *aDeclaration);
+
+  NS_DECL_ISUPPORTS
+
+  // nsIStyleRule interface
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+protected:
+  virtual ~ImportantRule();
+
+  // Not an owning reference; the StyleRule that owns this
+  // ImportantRule also owns the mDeclaration, and any rule node
+  // pointing to this rule keeps that StyleRule alive as well.
+  Declaration* mDeclaration;
+
+  friend class StyleRule;
+};
 
 class NS_FINAL_CLASS StyleRule : public Rule
 {
@@ -330,7 +354,7 @@ public:
   already_AddRefed<StyleRule>
   DeclarationChanged(Declaration* aDecl, PRBool aHandleContainer);
 
-  nsIStyleRule* GetImportantRule();
+  nsIStyleRule* GetImportantRule() const { return mImportantRule; }
 
   /**
    * The rule processor must call this method before calling

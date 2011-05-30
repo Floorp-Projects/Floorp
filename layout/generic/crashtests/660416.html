@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+  var n = document.getElementById("a").firstChild;
+  n.data = "";
+  n.data = "z";
+}
+
+</script>
+</head>
+<body onload="boom();" style="-moz-column-count: 3;"><span id="a">x&#x202E;</span><span>y</span></body>
+</html>

@@ -34,13 +34,12 @@
  *	Bas Schouten <bschouten@mozilla.com>
  */
 
-extern "C" {
 #include "cairoint.h"
 
 #include "cairo-win32-private.h"
 #include "cairo-surface-private.h"
 #include "cairo-clip-private.h"
-}
+
 #include "cairo-d2d-private.h"
 #include "cairo-dwrite-private.h"
 #include <float.h>

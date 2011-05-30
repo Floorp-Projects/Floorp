@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=483573
+-->
+<head>
+  <title>HTML5 audio/video tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../actions.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+
+    // gA11yEventDumpID = "eventDump";
+
+    function focusChecker(aAcc)
+    {
+      this.type = EVENT_FOCUS;
+      this.target = aAcc;
+      this.getID = function focusChecker_getID()
+      {
+        return "focus handling";
+      }
+      this.check = function focusChecker_check(aEvent)
+      {
+        testStates(this.target, STATE_FOCUSED);
+      }
+    }
+
+    function nameChecker(aAcc, aName)
+    {
+      this.type = EVENT_NAME_CHANGE;
+      this.target = aAcc;
+      this.getID = function nameChecker_getID()
+      {
+        return "name change handling";
+      },
+      this.check = function nameChecker_check(aEvent)
+      {
+        is(aEvent.accessible.name, aName,
+           "Wrong name of " + prettyName(aEvent.accessible) + " on focus");
+      }
+    }
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // test actions of audio controls
+
+      todo(false, "Focus test are disabled until bug 494175 is fixed.");
+
+      var audioElm = getAccessible("audio");
+      var playBtn = audioElm.firstChild;
+      var scrubber = playBtn.nextSibling.nextSibling.nextSibling;
+      var muteBtn = audioElm.lastChild;
+
+      var actions = [
+        {
+          ID: muteBtn,
+          actionName: "press",
+          events: CLICK_EVENTS,
+          eventSeq: [
+     //       new focusChecker(muteBtn),
+            new nameChecker(muteBtn, "Unmute"),
+          ]
+        },
+     //   {
+     //     ID: scrubber,
+     //     actionName: "activate",
+     //     events: null,
+     //     eventSeq: [
+     //       new focusChecker(scrubber)
+     //     ]
+     //   },
+        {
+          ID: playBtn,
+          actionName: "press",
+          events: CLICK_EVENTS,
+          eventSeq: [
+     //       new focusChecker(playBtn),
+            new nameChecker(playBtn, "Pause"),
+          ]
+        }
+      ];
+
+      testActions(actions); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Expose HTML5 video and audio elements' embedded controls through accessibility APIs"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=483573">Mozilla Bug 483573</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <audio id="audio" src="../bug461281.ogg"
+         controls="true"></audio>
+
+  <div id="eventDump"></div>
+</body>
+</html>

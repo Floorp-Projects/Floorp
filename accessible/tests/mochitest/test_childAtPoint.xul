@@ -24,8 +24,7 @@
     function doTest()
     {
       // Initialize the tree
-      var view = new inTreeView();
-      view.mRowCount = 5;
+      var view = new nsTableTreeView(5);
 
       var tree = getNode("tree");
       var treeBox = tree.treeBoxObject;

@@ -38,6 +38,7 @@
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "mozilla/arm.h"
 #ifdef MOZ_X11
 #include "cairo.h"
 #include "gfxXlibSurface.h"
@@ -128,12 +129,6 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
             break;
         }
 
-        case gfxASurface::SurfaceTypeQuartz:
-        case gfxASurface::SurfaceTypeQuartzImage:
-            // Don't set EXTEND_PAD, Mac seems to be OK. Really?
-            aPattern->SetFilter(aDefaultFilter);
-            break;
-
         default:
             // turn on EXTEND_PAD.
             // This is what we really want for all surface types, if the
@@ -173,7 +168,9 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
                                         surfaceType, currentTarget, filter);
     }
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    pattern->SetFilter(gfxPattern::FILTER_FAST); 
+    if (!mozilla::supports_neon()) {
+        pattern->SetFilter(gfxPattern::FILTER_FAST);
+    }
 #endif
     pattern->SetMatrix(gfxMatrix(aTransform).Multiply(mTransform));
     aContext->NewPath();

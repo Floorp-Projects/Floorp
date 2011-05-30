@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -76,10 +76,6 @@ struct _cairo_clip {
 cairo_private void
 _cairo_clip_init (cairo_clip_t *clip);
 
-cairo_private cairo_status_t
-_cairo_clip_init_rectangle (cairo_clip_t *clip,
-			    const cairo_rectangle_int_t *rect);
-
 cairo_private_no_warn cairo_clip_t *
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other);
 
@@ -90,6 +86,10 @@ _cairo_clip_init_copy_transformed (cairo_clip_t    *clip,
 
 cairo_private void
 _cairo_clip_reset (cairo_clip_t *clip);
+
+cairo_private cairo_bool_t
+_cairo_clip_equal (const cairo_clip_t *clip_a,
+		   const cairo_clip_t *clip_b);
 
 #define _cairo_clip_fini(clip) _cairo_clip_reset (clip)
 
@@ -112,12 +112,12 @@ cairo_private const cairo_rectangle_int_t *
 _cairo_clip_get_extents (const cairo_clip_t *clip);
 
 cairo_private cairo_surface_t *
-_cairo_clip_get_surface (cairo_clip_t *clip, cairo_surface_t *dst);
+_cairo_clip_get_surface (cairo_clip_t *clip, cairo_surface_t *dst, int *tx, int *ty);
 
 cairo_private cairo_status_t
 _cairo_clip_combine_with_surface (cairo_clip_t *clip,
 				  cairo_surface_t *dst,
-				  const cairo_rectangle_int_t *extents);
+				  int dst_x, int dst_y);
 
 cairo_private cairo_int_status_t
 _cairo_clip_get_region (cairo_clip_t *clip,
@@ -127,6 +127,20 @@ cairo_private cairo_int_status_t
 _cairo_clip_get_boxes (cairo_clip_t *clip,
 		       cairo_box_t **boxes,
 		       int *count);
+
+cairo_private cairo_status_t
+_cairo_clip_to_boxes (cairo_clip_t **clip,
+		      cairo_composite_rectangles_t *extents,
+		      cairo_box_t **boxes,
+		      int *num_boxes);
+
+cairo_private cairo_bool_t
+_cairo_clip_contains_rectangle (cairo_clip_t *clip,
+				const cairo_rectangle_int_t *rect);
+
+cairo_private cairo_bool_t
+_cairo_clip_contains_extents (cairo_clip_t *clip,
+				const cairo_composite_rectangles_t *extents);
 
 cairo_private void
 _cairo_clip_drop_cache (cairo_clip_t  *clip);
