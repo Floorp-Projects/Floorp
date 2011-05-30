@@ -88,7 +88,9 @@ function init(aEvent)
   gAppUpdater = new appUpdater();
 #endif
 
-  gChannelSelector.init();
+  let defaults = Services.prefs.getDefaultBranch("");
+  let channelLabel = document.getElementById("currentChannel");
+  channelLabel.value = defaults.getCharPref("app.update.channel");
 
 #ifdef XP_MACOSX
   // it may not be sized at this point, and we need its width to calculate its position
@@ -573,72 +575,3 @@ appUpdater.prototype =
   }
 };
 #endif
-
-var gChannelSelector = {
-  validChannels: { release: 1, beta: 1, aurora: 1 },
-  
-  init: function() {
-    try {
-      this.channelValue = Services.prefs.getCharPref("app.update.desiredChannel");
-    } catch (e) {
-      let defaults = Services.prefs.getDefaultBranch("");
-      this.channelValue = defaults.getCharPref("app.update.channel");
-    }
-
-    // Only show channel selector UI on valid update channels.
-    if (this.channelValue in this.validChannels) {
-      document.getElementById("currentChannelText").hidden = false;
-      this.setChannelLabel(this.channelValue);
-      this.setChannelMenuitem(this.channelValue);
-    }
-  },
-
-  selectChannel: function(aSelectedItem) {
-    document.getElementById("channelDescriptionDeck").selectedPanel =
-      document.getElementById(aSelectedItem.value + "Description");
-    document.getElementById("channelMenulist").setAttribute("aria-describedby",
-      aSelectedItem.value + "Description");
-  },
-
-  cancel: function() {
-    this.setChannelMenuitem(this.channelValue);
-    this.hide();
-  },
-
-  apply: function() {
-    this.channelValue = document.getElementById("channelMenulist").selectedItem.value;
-    this.setChannelLabel(this.channelValue);
-
-    // Change app update channel.
-    Services.prefs.setCharPref("app.update.desiredChannel", this.channelValue);
-
-    // Stop any downloads in progress
-    gAppUpdater.aus.pauseDownload();
-    // App updater will look at app.update.desiredChannel for new channel value
-    // and will clear it when the update is complete.
-    gAppUpdater.isChecking = true;
-    gAppUpdater.checker.checkForUpdates(gAppUpdater.updateCheckListener, true);
-
-    this.hide();
-  },
-
-  show: function() {
-    document.getElementById("contentDeck").selectedPanel =
-      document.getElementById("channelSelector");
-  },
-
-  hide: function() {
-    document.getElementById("contentDeck").selectedPanel =
-      document.getElementById("detailsBox");  
-  },
-
-  setChannelLabel: function(aValue) {
-    let channelLabel = document.getElementById("currentChannel");
-    channelLabel.value = document.getElementById(aValue + "Menuitem").label;
-  },
-
-  setChannelMenuitem: function(aValue) {
-    document.getElementById("channelMenulist").selectedItem =
-      document.getElementById(aValue + "Menuitem");
-  }
-}
