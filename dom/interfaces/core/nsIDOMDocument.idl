@@ -62,7 +62,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(d53287e8-3752-4dbc-b7e2-155d39ec09fa)]
+[scriptable, uuid(d53c3d3d-2413-4abc-b54e-11c5c8380776)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -114,8 +114,6 @@ interface nsIDOMDocument : nsIDOMNode
   // Introduced in DOM Level 3:
   nsIDOMNode         adoptNode(in nsIDOMNode source)
                                         raises(DOMException);
-  // Introduced in DOM Level 3:
-  void               normalizeDocument();
 
   /**
    * Create a range
