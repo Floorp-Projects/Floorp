@@ -2855,17 +2855,16 @@ JS_FinalizeStub(JSContext *cx, JSObject *obj)
 {}
 
 JS_PUBLIC_API(JSObject *)
-JS_InitClassWithType(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-                     JSClass *clasp, JSNative constructor, uintN nargs,
-                     JSTypeHandler ctorHandler,
-                     JSPropertySpec *ps, JSFunctionSpec *fs,
-                     JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
+JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+             JSClass *clasp, JSNative constructor, uintN nargs,
+             JSPropertySpec *ps, JSFunctionSpec *fs,
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, parent_proto);
     return js_InitClass(cx, obj, parent_proto, Valueify(clasp),
                         Valueify(constructor), nargs,
-                        ctorHandler, ps, fs, static_ps, static_fs);
+                        NULL, ps, fs, static_ps, static_fs);
 }
 
 #ifdef JS_THREADSAFE
@@ -2947,18 +2946,6 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
     return SetProto(cx, obj, proto, JS_FALSE);
-}
-
-JS_PUBLIC_API(void)
-JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto)
-{
-    /*
-     * Change the prototype of an object which hasn't been used anywhere
-     * and does not share its type with another object. Unlike JS_SetPrototype,
-     * does not nuke type information for the object.
-     */
-    CHECK_REQUEST(cx);
-    obj->getType()->splicePrototype(cx, proto);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -3078,26 +3065,6 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     }
 
     JS_ASSERT_IF(obj, obj->getParent());
-    return obj;
-}
-
-JS_PUBLIC_API(JSObject *)
-JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
-{
-    JSObject *obj = JS_NewObject(cx, clasp, proto, parent);
-    if (!obj)
-        return NULL;
-
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "Unique", "",
-                                                            false, false, proto);
-    if (!type)
-        return NULL;
-    if (obj->hasSpecialEquality())
-        cx->markTypeObjectFlags(type, OBJECT_FLAG_SPECIAL_EQUALITY);
-    if (!obj->setTypeAndUniqueShape(cx, type))
-        return NULL;
-    type->singleton = obj;
-
     return obj;
 }
 
@@ -4221,9 +4188,8 @@ JS_GetSecurityCallbacks(JSContext *cx)
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_NewFunctionWithType(JSContext *cx, JSNative native, uintN nargs, uintN flags,
-                       JSObject *parent, const char *name,
-                       JSTypeHandler handler)
+JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
+               JSObject *parent, const char *name)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     JSAtom *atom;
@@ -4238,7 +4204,7 @@ JS_NewFunctionWithType(JSContext *cx, JSNative native, uintN nargs, uintN flags,
         if (!atom)
             return NULL;
     }
-    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, atom, handler, name);
+    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, atom, NULL, name);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4498,6 +4464,10 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
     for (; fs->name; fs++) {
         flags = fs->flags;
 
+        JSAtom *atom = js_Atomize(cx, fs->name, strlen(fs->name));
+        if (!atom)
+            return JS_FALSE;
+
         /*
          * Define a generic arity N+1 static method for the arity N prototype
          * method if flags contains JSFUN_GENERIC_NATIVE.
@@ -4510,11 +4480,11 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             }
 
             flags &= ~JSFUN_GENERIC_NATIVE;
-            fun = JS_DefineFunctionWithType(cx, ctor, fs->name,
-                                            Jsvalify(js_generic_native_method_dispatcher),
-                                            fs->nargs + 1,
-                                            flags & ~JSFUN_TRCINFO,
-                                            fs->handler);
+            fun = js_DefineFunction(cx, ctor, ATOM_TO_JSID(atom),
+                                    js_generic_native_method_dispatcher,
+                                    fs->nargs + 1,
+                                    flags & ~JSFUN_TRCINFO,
+                                    fs->handler, fs->name);
             if (!fun)
                 return JS_FALSE;
 
@@ -4530,8 +4500,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
                 return JS_FALSE;
         }
 
-        fun = JS_DefineFunctionWithType(cx, obj, fs->name, fs->call, fs->nargs, flags,
-                                        fs->handler);
+        fun = js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(fs->call), fs->nargs, flags,
+                                fs->handler, fs->name);
         if (!fun)
             return JS_FALSE;
     }
@@ -4539,9 +4509,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_DefineFunctionWithType(JSContext *cx, JSObject *obj, const char *name, JSNative call,
-                          uintN nargs, uintN attrs,
-                          JSTypeHandler handler)
+JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
+                  uintN nargs, uintN attrs)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
@@ -4549,14 +4518,13 @@ JS_DefineFunctionWithType(JSContext *cx, JSObject *obj, const char *name, JSNati
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs, handler, name);
+    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs, NULL, name);
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_DefineUCFunctionWithType(JSContext *cx, JSObject *obj,
-                            const jschar *name, size_t namelen, JSNative call,
-                            uintN nargs, uintN attrs,
-                            JSTypeHandler handler)
+JS_DefineUCFunction(JSContext *cx, JSObject *obj,
+                    const jschar *name, size_t namelen, JSNative call,
+                    uintN nargs, uintN attrs)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
@@ -4564,7 +4532,7 @@ JS_DefineUCFunctionWithType(JSContext *cx, JSObject *obj,
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs, handler, "UCFunction");
+    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs, NULL, "UCFunction");
 }
 
 extern JS_PUBLIC_API(JSFunction *)

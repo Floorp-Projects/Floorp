@@ -49,6 +49,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
+#include "jsfriendapi.h"
 #include "jsprf.h"
 #include "nsXULAppAPI.h"
 #include "nsServiceManagerUtils.h"

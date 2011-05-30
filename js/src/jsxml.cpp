@@ -7159,8 +7159,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Define the isXMLName function. */
-    if (!JS_DefineFunctionWithType(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0,
-                                   JS_TypeHandlerBool))
+    if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
         return NULL;
 
     /* Properties of XML objects are not modeled by type inference. */
@@ -7201,8 +7200,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Define the XMLList function and give it the same prototype as XML. */
-    fun = JS_DefineFunctionWithType(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR,
-                                    JS_TypeHandlerDynamic);
+    fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
     if (!fun)
         return NULL;
     if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), proto,
