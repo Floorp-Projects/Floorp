@@ -948,6 +948,8 @@ public:
 
   virtual nsresult GetStateObject(nsIVariant** aResult);
 
+  virtual Element* FindImageMap(const nsAString& aNormalizedMapName);
+
 protected:
   friend class nsNodeUtils;
 
@@ -1211,6 +1213,8 @@ private:
   nsCOMArray<imgIRequest> mPreloadingImages;
 
   nsCOMPtr<nsIDOMDOMImplementation> mDOMImplementation;
+
+  nsRefPtr<nsContentList> mImageMaps;
 
   nsCString mScrollToRef;
   PRUint8 mScrolledToRefAlready : 1;
