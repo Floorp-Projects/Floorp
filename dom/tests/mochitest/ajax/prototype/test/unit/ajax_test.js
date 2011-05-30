@@ -34,7 +34,8 @@ new Test.Unit.Runner({
   
   testUpdater: function() {
     this.assertEqual("", $("content").innerHTML);
-    
+    this.waitForFinish();
+
     new Ajax.Updater("content", "../fixtures/content.html", { method:'get', onComplete: function() {
         this.assertEqual(sentence, $("content").innerHTML.strip().toLowerCase());
         $('content').update('');
@@ -49,17 +50,13 @@ new Test.Unit.Runner({
             new Ajax.Updater("", "../fixtures/content.html",
               { method:'get', parameters:"pet=monkey", onComplete: function() {
                 this.assertEqual("", $("content").innerHTML);
-                this.cancelWait();
+                this.finish();
               }.bind(this)
             });
           }.bind(this)
         });
       }.bind(this)
     });
-
-    this.wait(1000, function() {
-      this.flunk("The request was timeouted.");
-    }); 
   },
   
   testUpdaterWithInsertion: function() {
