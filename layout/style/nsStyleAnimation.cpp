@@ -1850,11 +1850,7 @@ BuildStyleRule(nsCSSProperty aProperty,
   nsCSSParser parser(doc->CSSLoader());
 
   if (aUseSVGMode) {
-#ifdef MOZ_SVG
     parser.SetSVGMode(PR_TRUE);
-#else
-    NS_NOTREACHED("aUseSVGMode should not be set");
-#endif
   }
 
   nsCSSProperty propertyToCheck = nsCSSProps::IsShorthand(aProperty) ?

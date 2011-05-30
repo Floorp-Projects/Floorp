@@ -39,7 +39,7 @@
 
 interface nsIInputStream;
 
-[scriptable, uuid(8821E259-7252-4464-B874-A55D8EF6B222)]
+[scriptable, uuid(AD9D3F1C-A8DE-4d0b-9714-1B922297AD65)]
 interface nsIUploadChannel2 : nsISupports
 {
     /**
@@ -70,4 +70,11 @@ interface nsIUploadChannel2 : nsISupports
                                  in long long aContentLength,
                                  in ACString aMethod,
                                  in boolean aStreamHasHeaders);
+
+    /**
+     * Value of aStreamHasHeaders from the last successful call to
+     * explicitSetUploadStream.  TRUE indicates the attached upload stream
+     * contians request headers.
+     */
+    readonly attribute boolean uploadStreamHasHeaders;
 };

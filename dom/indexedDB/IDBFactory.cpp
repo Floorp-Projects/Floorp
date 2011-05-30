@@ -67,6 +67,9 @@
 #include "IndexedDatabaseManager.h"
 #include "LazyIdleThread.h"
 #include "nsIObserverService.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define PREF_INDEXEDDB_QUOTA "dom.indexedDB.warningQuota"
 
@@ -536,8 +539,8 @@ IDBFactory::Create(nsPIDOMWindow* aWindow)
       return nsnull;
     }
 
-    nsContentUtils::AddIntPrefVarCache(PREF_INDEXEDDB_QUOTA, &gIndexedDBQuota,
-                                       DEFAULT_QUOTA);
+    Preferences::AddIntVarCache(&gIndexedDBQuota, PREF_INDEXEDDB_QUOTA,
+                                DEFAULT_QUOTA);
   }
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();

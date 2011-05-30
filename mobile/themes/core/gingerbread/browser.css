@@ -382,6 +382,28 @@ toolbarbutton.choice-remotetabs {
   list-style-image: url(chrome://browser/skin/images/remotetabs-48.png);
 }
 
+/* awesomescreen panels ---------------------------------------------------- */
+historylist > hbox.history-throbber-box,
+remotetabslist > hbox.remotetabs-throbber-box {
+  display: none;
+}
+
+.history-throbber-box > image,
+.remotetabs-throbber-box > image {
+  list-style-image: url("chrome://browser/skin/images/throbber.png");
+}
+
+historylist[loading="true"] > hbox.history-throbber-box,
+remotetabslist[loading="true"] > hbox.remotetabs-throbber-box {
+  background-color: white;
+  display: -moz-box;
+}
+
+historylist[loading="true"] > richlistbox.history-list-children,
+remotetabslist[loading="true"] > richlistbox.remotetabs-list-children {
+  visibility: collapse;
+}
+
 /* browsers ---------------------------------------------------------------- */
 .input-overlay:-moz-focusring {
   outline: 0 !important;
@@ -400,8 +422,10 @@ toolbarbutton.choice-remotetabs {
   margin: 0;
   padding: @padding_small@ @padding_normal@ @padding_normal@ @padding_normal@;
   font-weight: bold;
-  color: white !important;
-  background-color: rgb(101, 121, 227) !important;
+  color: @color_text_default@ !important;
+  background-image: url(images/row-header-bg.png);
+  background-repeat: repeat-x;
+  background-size: auto 100%;
 }
 
 #tool-addons {
@@ -439,7 +463,7 @@ toolbarbutton.choice-remotetabs {
 @media (@orientation@: portrait) {
   #addons-repo {
     -moz-box-orient: vertical;
-    -moz-box-pack: center;
+    -moz-box-align: stretch;
   }
 }
 
@@ -503,12 +527,6 @@ richlistitem[isDisabled="true"] image {
   opacity: 0.25;
 }
 
-richlistitem[typeName="banner"],
-richlistitem[typeName="showmore"] {
-  background-color: rgb(255,255,255);
-  background: url(chrome://browser/skin/images/browseaddons-bg.jpg) repeat-x center top;
-}
-
 /* downloads panel UI   ---------------------------------------------------- */
 .download-retry-failed {
   color: red !important;
@@ -527,7 +545,7 @@ richlistitem[typeName="showmore"] {
 }
 
 #dl-empty-message:active {
-  background-color: white;
+  background-color: @color_background_default@;
 }
 
 #dl-empty-message > label {
@@ -781,8 +799,7 @@ autocompleteresult:not([badge]) .autocomplete-item-badge,
 
 /* special "no results", "awesome header row" and "title rows" items */
 autocompleteresult[class="history-item-title"],
-autocompleteresult[class="remotetabs-item-title"],
-.settings-title {
+autocompleteresult[class="remotetabs-item-title"] {
   min-height: 0;
   color: @color_text_default@;
   font-size: smaller;
@@ -969,6 +986,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 /* Popup Icons */
 #identity-popup-icon {
   padding: 0;
+  padding-top: @padding_snormal@; /* align to top of text */
   list-style-image: url("chrome://browser/skin/images/identity-default-hdpi.png");
 }
 
@@ -1012,6 +1030,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 }
 
 #identity-popup-encryption-icon {
+  padding-top: @padding_snormal@; /* align to top of text */
   list-style-image: url("chrome://browser/skin/images/unlocked-hdpi.png");
 }
 
@@ -1040,8 +1059,8 @@ pageaction {
   -moz-border-left-colors: white;
   border-style: solid;
   border-width: @border_width_tiny@ !important;
-  height: @touch_button_large@;
-  min-height: @touch_button_large@;
+  height: @touch_button_xlarge@;
+  min-height: @touch_button_xlarge@;
   width: 100%;
   min-width: @touch_action_minwidth@; /* keep the button from being too narrow */
 }
@@ -1156,6 +1175,17 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 /* Preferences window   ---------------------------------------------------- */
+.settings-title {
+  min-height: 0;
+  color: @color_text_header@;
+  background-color: @color_background_header@;
+  font-size: smaller;
+  font-weight: bold;
+  margin: 0;
+  padding: @autocompleteresult_padding@ @padding_xnormal@;
+  border-bottom: @border_width_tiny@ solid @color_divider_border@;
+}
+
 .setting {
   padding-left: @padding_xnormal@;
   border-bottom: @border_width_tiny@ solid #cacdd5;
@@ -1164,7 +1194,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 /* XXX should be a richlistitem */
 .prefbox {
   padding: @padding_xsmall@;
-  border-bottom: @border_width_tiny@ solid rgb(207,207,207);
+  border-bottom: @border_width_tiny@ solid @color_divider_border@;
   min-height: @touch_row@; /* row size */
   -moz-box-align: center;
 }
@@ -1299,28 +1329,36 @@ pageaction:not([image]) > hbox >.pageaction-image {
   margin-bottom: @margin_small@ !important;
 }
 
-richlistitem.appmenu-site-button > image,
 .appmenu-site-button {
   list-style-image: url("chrome://browser/skin/images/appmenu-site-hdpi.png");
 }
 
-richlistitem.appmenu-addons-button > image,
 .appmenu-addons-button {
   list-style-image: url("chrome://browser/skin/images/appmenu-addons-hdpi.png");
 }
 
-richlistitem.appmenu-preferences-button > image,
 .appmenu-preferences-button {
   list-style-image: url("chrome://browser/skin/images/appmenu-preferences-hdpi.png");
 }
 
-richlistitem.appmenu-downloads-button > image,
 .appmenu-downloads-button {
   list-style-image: url("chrome://browser/skin/images/appmenu-downloads-hdpi.png");
 }
 
+.appmenu-findinpage-button {
+  list-style-image: url("chrome://browser/skin/images/appmenu-findinpage-hdpi.png");
+}
+
+.appmenu-saveas-button {
+  list-style-image: url("chrome://browser/skin/images/appmenu-downloads-hdpi.png");
+}
+
+.appmenu-share-button {
+  list-style-image: url("chrome://browser/skin/images/appmenu-share-hdpi.png");
+}
+
 #appmenu-more-button {
-  list-style-image: url("chrome://browser/skin/images/appmenu-site-hdpi.png");
+  list-style-image: url("chrome://browser/skin/images/appmenu-more-hdpi.png");
   display: none;
 }
 
@@ -1343,6 +1381,29 @@ richlistitem.appmenu-downloads-button > image,
   #appmenu[count="6"] > .appmenu-button {
     width: 33.33%;
   }
+}
+
+#appmenu-overflow {
+  background: @color_background_default@;
+  border-style: solid;
+  border-color: @color_dialog_border@;
+  border-width: @border_width_small@ @border_width_small@ 0 @border_width_small@;
+  margin: @margin_xxxnormal@ @margin_xxxnormal@ 0 @margin_xxxnormal@;
+}
+
+#appmenu-overflow-commands > .appmenu-button {
+  color: @color_text_default@;
+  background: transparent;
+  font-size: @font_normal@ !important;
+  height: @touch_button_xlarge@;
+  min-height: @touch_button_xlarge@;
+  width: 100%; 
+  -moz-box-align: center;
+}
+
+#appmenu-overflow-commands > .appmenu-button:hover:active {
+  background-image: url("chrome://browser/skin/images/appmenu-active-hdpi.png");
+  background-size: 100% 100%;
 }
 
 /* Sync setup ------------------------------------------------------------- */
@@ -1376,12 +1437,12 @@ richlistitem.appmenu-downloads-button > image,
 /* content scrollbars */
 .scroller {
   opacity: 0;
-  background-color: rgba(0, 0, 0, 0.4) !important;
+  background-color: @color_background_scroller@ !important;
   -moz-border-top-colors: none !important;
   -moz-border-bottom-colors: none !important;
   -moz-border-right-colors: none !important;
   -moz-border-left-colors: none !important;
-  border: @border_width_tiny@ solid rgba(255, 255, 255, 0.4) !important;
+  border: @border_width_tiny@ solid rgba(0, 0, 0, 0.4) !important;
 }
 
 .scroller[panning="true"] {

@@ -68,7 +68,6 @@ installer:
 	@$(MAKE) -C mobile/installer installer
 
 package:
-	rm -rf dist/fennec*
 	@$(MAKE) -C mobile/installer
 
 install::

@@ -91,6 +91,7 @@ protected:
 
   nsCOMPtr<nsITimer>      mSPTimer;
   mozilla::Mutex          mSPTimerLock;
+  PRInt32                 mSizeMode;
 
   void        SetPersistenceTimer(PRUint32 aDirtyFlags);
   static void FirePersistenceTimer(nsITimer *aTimer, void *aClosure);

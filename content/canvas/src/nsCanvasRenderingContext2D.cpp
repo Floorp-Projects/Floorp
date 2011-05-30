@@ -536,11 +536,9 @@ protected:
     {
         ContextState& state = CurrentState();
 
-        // The spec says we should not draw shadows when the alpha value is 0,
-        // regardless of the operator being used.
         return state.StyleIsColor(STYLE_SHADOW) &&
                NS_GET_A(state.colorStyles[STYLE_SHADOW]) > 0 &&
-               (state.shadowOffset != gfxPoint(0, 0) || state.shadowBlur != 0);
+               mThebes->CurrentOperator() == gfxContext::OPERATOR_OVER;
     }
 
     /**
@@ -1037,9 +1035,7 @@ nsCanvasRenderingContext2D::Redraw()
         return NS_OK;
     }
 
-#ifdef MOZ_SVG
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
-#endif
 
     HTMLCanvasElement()->InvalidateCanvasContent(nsnull);
 
@@ -1064,9 +1060,7 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
         return NS_OK;
     }
 
-#ifdef MOZ_SVG
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
-#endif
 
     HTMLCanvasElement()->InvalidateCanvasContent(&r);
 
@@ -1430,7 +1424,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetTransform(float m11, float m12, float m21, float m22, float dx, float dy)
 {
     if (!FloatValidate(m11,m12,m21,m22,dx,dy))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     gfxMatrix matrix(m11, m12, m21, m22, dx, dy);
     mThebes->SetMatrix(matrix);
@@ -2097,7 +2091,7 @@ nsCanvasRenderingContext2D::BezierCurveTo(float cp1x, float cp1y,
                                           float x, float y)
 {
     if (!FloatValidate(cp1x,cp1y,cp2x,cp2y,x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mHasPath = PR_TRUE;
     mThebes->CurveTo(gfxPoint(cp1x, cp1y),
@@ -2111,7 +2105,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float radius)
 {
     if (!FloatValidate(x1,y1,x2,y2,radius))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     if (radius < 0)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;

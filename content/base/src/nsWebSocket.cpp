@@ -75,6 +75,7 @@
 #include "nsIWebSocketProtocol.h"
 #include "nsILoadGroup.h"
 #include "nsIRequest.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
@@ -902,7 +903,7 @@ nsWebSocket::CreateAndDispatchCloseEvent(PRBool aWasClean)
 PRBool
 nsWebSocket::PrefEnabled()
 {
-  return nsContentUtils::GetBoolPref("network.websocket.enabled", PR_TRUE);
+  return Preferences::GetBool("network.websocket.enabled", PR_TRUE);
 }
 
 void

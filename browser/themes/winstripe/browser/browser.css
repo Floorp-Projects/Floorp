@@ -1881,6 +1881,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
+.alltabs-item[tabIsVisible] {
+  /* box-shadow instead of background-color to work around native styling */
+  box-shadow: inset 0 0 0 2em hsla(0,0%,50%,.15);
+}
+
 /* Tabstrip close button */
 .tabs-closebutton {
   -moz-appearance: none;

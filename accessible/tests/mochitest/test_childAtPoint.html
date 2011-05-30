@@ -25,19 +25,19 @@
       testChildAtPoint(list, 1, 1, true, image.firstChild);
 
       // ::MustPrune case (in this case childAtPoint doesn't look inside a
-      // button), point is inside of button.
-      var btn = getAccessible("btn");
-      testChildAtPoint(btn, 1, 1, false, btn);
-      testChildAtPoint(btn, 1, 1, true, btn);
+      // textbox), point is inside of textbox.
+      var txt = getAccessible("txt");
+      testChildAtPoint(txt, 1, 1, false, txt);
+      testChildAtPoint(txt, 1, 1, true, txt);
 
-      // ::MustPrune case, point is outside of button accessible but is in
+      // ::MustPrune case, point is outside of textbox accessible but is in
       // document.
-      testChildAtPoint(btn, -1, 1, false, null);
-      testChildAtPoint(btn, -1, 1, true, null);
+      testChildAtPoint(txt, -1, 1, false, null);
+      testChildAtPoint(txt, -1, 1, true, null);
 
       // ::MustPrune case, point is outside of root accessible.
-      testChildAtPoint(btn, -10000, 10000, false, null);
-      testChildAtPoint(btn, -10000, 10000, true, null);
+      testChildAtPoint(txt, -10000, 10000, false, null);
+      testChildAtPoint(txt, -10000, 10000, true, null);
 
       // Not specific case, point is inside of label accessible.
       var label = getAccessible("label");
@@ -82,7 +82,7 @@
 
   <span role="label">label1</span><span role="label" id="label">label2</span>
 
-  <span role="button">btn1</span><span role="button" id="btn">btn2</span>
+  <span role="textbox">textbox1</span><span role="textbox" id="txt">textbox2</span>
 
   <div id="outofflow" style="width: 10px; height: 10px; position: absolute; left: 0px; top: 0px; background-color: yellow;">
   </div>

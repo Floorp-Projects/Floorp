@@ -118,6 +118,25 @@
       }
     }
 
+    function makeIFrameVisible(aID)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.DOMNode.parentNode)
+      ];
+
+      this.invoke = function makeIFrameVisible_invoke()
+      {
+        this.DOMNode.style.visibility = "visible";
+      }
+
+      this.getID = function makeIFrameVisible_getID()
+      {
+        return "The accessible for DOM document loaded before it's shown shouldn't have busy state.";
+      }
+    }
+
     function openDialogWnd(aURL)
     {
       // Get application root accessible.
@@ -224,7 +243,7 @@
 
     // Debug stuff.
     // gA11yEventDumpID = "eventdump";
-    // gA11yEventDumpToConsole = true;
+    //gA11yEventDumpToConsole = true;
 
     function doTests()
     {
@@ -235,10 +254,28 @@
       gQueue.push(new morphIFrame("iframe", kHide));
       gQueue.push(new morphIFrame("iframe", kShow));
       gQueue.push(new morphIFrame("iframe", kRemove));
+      gQueue.push(new makeIFrameVisible("iframe2"));
       gQueue.push(new openDialogWnd("about:"));
       gQueue.push(new openWndShutdownDoc());
 
+      gQueue.onFinish = doLastCallTests;
+
       gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    function doLastCallTests()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // makeIFrameVisible() test, part2
+
+      // The document shouldn't have busy state (the DOM document was loaded
+      // before its accessible was created). Do this test lately to make sure
+      // the content of document accessible was created initially, prior to this
+      // the document accessible keeps busy state. The initial creation happens
+      // asynchronously after document creation, there are no events we could
+      // use to catch it.
+      var iframeDoc = getAccessible("iframe2").firstChild;
+      testStates(iframeDoc, 0, 0, STATE_BUSY);
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -268,6 +305,11 @@
      title="Shutdown document accessible when presshell goes away">
     Mozilla Bug 571459
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=658185"
+     title="The DOM document loaded before it's shown shouldn't have busy state">
+    Mozilla Bug 658185
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -275,6 +317,7 @@
   </pre>
 
   <div id="testContainer"><iframe id="iframe"></iframe></div>
+  <div id="testContainer2"><iframe id="iframe2" src="about:" style="visibility: hidden;"></iframe></div>
   <div id="eventdump"></div>
 </body>
 </html>

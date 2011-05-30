@@ -86,7 +86,7 @@ var MenuListHelperUI = {
   },
 
   sizeToContent: function sizeToContent() {
-    this._popup.maxWidth = window.innerWidth * 0.75;
+    this._popup.width = window.innerWidth * 0.8;
   },
 
   handleEvent: function handleEvent(aEvent) {

@@ -53,10 +53,11 @@
 #include "nsIURL.h"
 #include "nsArrayEnumerator.h"
 #include "nsIStringBundle.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsCocoaUtils.h"
 #include "nsToolkit.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 const float kAccessoryViewPadding = 5;
 const int   kSaveTypeControlTag = 1;
@@ -92,11 +93,8 @@ static void SetShowHiddenFileState(NSSavePanel* panel)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   PRBool show = PR_FALSE;
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    nsresult rv = prefs->GetBoolPref(kShowHiddenFilesPref, &show);
-    if (NS_SUCCEEDED(rv))
-      gCallSecretHiddenFileAPI = PR_TRUE;
+  if (NS_SUCCEEDED(Preferences::GetBool(kShowHiddenFilesPref, &show))) {
+    gCallSecretHiddenFileAPI = PR_TRUE;
   }
 
   if (gCallSecretHiddenFileAPI) {
@@ -147,12 +145,8 @@ nsFilePicker::InitNative(nsIWidget *aParent, const nsAString& aTitle,
   mMode = aMode;
 
   // read in initial type index from prefs
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    int prefIndex;
-    if (NS_SUCCEEDED(prefs->GetIntPref(kLastTypeIndexPref, &prefIndex)))
-      mSelectedTypeIndex = prefIndex;
-  }
+  mSelectedTypeIndex =
+    Preferences::GetInt(kLastTypeIndexPref, mSelectedTypeIndex);
 }
 
 NSView* nsFilePicker::GetAccessoryView()
@@ -512,9 +506,7 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   if (popupButton) {
     mSelectedTypeIndex = [popupButton indexOfSelectedItem];
     // save out to prefs for initializing other file picker instances
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs)
-      prefs->SetIntPref(kLastTypeIndexPref, mSelectedTypeIndex);
+    Preferences::SetInt(kLastTypeIndexPref, mSelectedTypeIndex);
   }
 
   NSURL* fileURL = [thePanel URL];

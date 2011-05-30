@@ -52,9 +52,12 @@
 #include "nsEventDispatcher.h"
 #include "jsapi.h"
 #include "nsContentUtils.h"
+#include "mozilla/Preferences.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
+
+using namespace mozilla;
 
 #define DEFAULT_FRAME_RATE 60
 #define DEFAULT_THROTTLED_FRAME_RATE 1
@@ -64,9 +67,9 @@ static PRBool sPrecisePref;
 /* static */ void
 nsRefreshDriver::InitializeStatics()
 {
-  nsContentUtils::AddBoolPrefVarCache("layout.frame_rate.precise",
-                                      &sPrecisePref,
-                                      PR_FALSE);
+  Preferences::AddBoolVarCache(&sPrecisePref,
+                               "layout.frame_rate.precise",
+                               PR_FALSE);
 }
 // Compute the interval to use for the refresh driver timer, in
 // milliseconds
@@ -75,7 +78,7 @@ nsRefreshDriver::GetRefreshTimerInterval() const
 {
   const char* prefName =
     mThrottled ? "layout.throttled_frame_rate" : "layout.frame_rate";
-  PRInt32 rate = nsContentUtils::GetIntPref(prefName, -1);
+  PRInt32 rate = Preferences::GetInt(prefName, -1);
   if (rate <= 0) {
     // TODO: get the rate from the platform
     rate = mThrottled ? DEFAULT_THROTTLED_FRAME_RATE : DEFAULT_FRAME_RATE;
