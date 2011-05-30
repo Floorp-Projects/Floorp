@@ -44,6 +44,8 @@
 #ifndef xpcinlines_h___
 #define xpcinlines_h___
 
+#include "jsfriendapi.h"
+
 /***************************************************************************/
 PRBool
 xpc::PtrAndPrincipalHashKey::KeyEquals(const PtrAndPrincipalHashKey* aKey) const

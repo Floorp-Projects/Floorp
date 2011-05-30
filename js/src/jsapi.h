@@ -2133,22 +2133,10 @@ struct JSFunctionSpec {
     {name, (JSNative) call, nargs, (flags) | JSFUN_STUB_GSOPS, handler}
 
 extern JS_PUBLIC_API(JSObject *)
-JS_InitClassWithType(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-                     JSClass *clasp, JSNative constructor, uintN nargs,
-                     JSTypeHandler ctorHandler,
-                     JSPropertySpec *ps, JSFunctionSpec *fs,
-                     JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
-
-static JS_ALWAYS_INLINE JSObject*
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSClass *clasp, JSNative constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
-{
-    return JS_InitClassWithType(cx, obj, parent_proto, clasp, constructor,
-                                nargs, NULL,
-                                ps, fs, static_ps, static_fs);
-}
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
 #ifdef JS_THREADSAFE
 extern JS_PUBLIC_API(JSClass *)
@@ -2184,9 +2172,6 @@ JS_GetPrototype(JSContext *cx, JSObject *obj);
 extern JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto);
 
-extern JS_PUBLIC_API(void)
-JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
-
 extern JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj);
 
@@ -2212,9 +2197,6 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 /* Queries the [[Extensible]] property of the object. */
 extern JS_PUBLIC_API(JSBool)
@@ -2630,16 +2612,8 @@ JS_GetSecurityCallbacks(JSContext *cx);
  * Functions and scripts.
  */
 extern JS_PUBLIC_API(JSFunction *)
-JS_NewFunctionWithType(JSContext *cx, JSNative call, uintN nargs, uintN flags,
-                       JSObject *parent, const char *name,
-                       JSTypeHandler handler);
-
-static JS_ALWAYS_INLINE JSFunction*
 JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
-               JSObject *parent, const char *name)
-{
-    return JS_NewFunctionWithType(cx, call, nargs, flags, parent, name, NULL);
-}
+               JSObject *parent, const char *name);
 
 /*
  * Create the function with the name given by the id. JSID_IS_STRING(id) must
@@ -2689,33 +2663,13 @@ extern JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_DefineFunctionWithType(JSContext *cx, JSObject *obj,
-                          const char *name, JSNative call,
-                          uintN nargs, uintN attrs,
-                          JSTypeHandler handler);
-
-static JS_ALWAYS_INLINE JSFunction*
-JS_DefineFunction(JSContext *cx, JSObject *obj,
-                  const char *name, JSNative call,
-                  uintN nargs, uintN attrs)
-{
-    return JS_DefineFunctionWithType(cx, obj, name, call, nargs, attrs, NULL);
-}
+JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
+                  uintN nargs, uintN attrs);
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_DefineUCFunctionWithType(JSContext *cx, JSObject *obj,
-                            const jschar *name, size_t namelen, JSNative call,
-                            uintN nargs, uintN attrs,
-                            JSTypeHandler handler);
-
-static JS_ALWAYS_INLINE JSFunction*
 JS_DefineUCFunction(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, JSNative call,
-                    uintN nargs, uintN attrs)
-{
-    return JS_DefineUCFunctionWithType(cx, obj, name, namelen, call,
-                                       nargs, attrs, NULL);
-}
+                    uintN nargs, uintN attrs);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
