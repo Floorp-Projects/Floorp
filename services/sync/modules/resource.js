@@ -545,8 +545,9 @@ ChannelListener.prototype = {
     this.abortTimer.clear();
 
     let success = Components.isSuccessCode(status);
+    let uri = channel && channel.URI && channel.URI.spec || "<unknown>";
     this._log.trace("Channel for " + channel.requestMethod + " " +
-                    channel.URI.spec + ": isSuccessCode(" + status + ")? " +
+                    uri + ": isSuccessCode(" + status + ")? " +
                     success);
 
     if (this._data == '')
@@ -563,7 +564,7 @@ ChannelListener.prototype = {
     }
 
     this._log.trace("Channel: flags = " + channel.loadFlags +
-                    ", URI = " + channel.URI.spec +
+                    ", URI = " + uri +
                     ", HTTP success? " + channel.requestSucceeded);
     this._onComplete(null, this._data);
   },
