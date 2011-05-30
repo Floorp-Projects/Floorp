@@ -373,14 +373,14 @@ PRIVATE PRBool uCheckAndScanAlways2ByteGR128(
 {
   /*
    * The first byte should be in  [0xa1,0xfe] 
-   * and the second byte can take any value with MSB = 1.
+   * and the second byte in [0x41,0xfe]
    * Used by CP949 -> Unicode converter.
    * Only 2nd byte range needs to be checked because 
-   * 1st byte is checked before calling this in nsUnicodeDecoerHelper.cpp 
+   * 1st byte is checked before calling this in nsUnicodeDecoderHelper.cpp 
    */
   if(inbuflen < 2)    /* will lead to NS_OK_UDEC_MOREINPUT */
     return PR_FALSE;
-  else if (!(in[1] & 0x80))     /* 2nd byte range check */
+  else if (in[1] < 0x41)     /* 2nd byte range check */
   {
     *inscanlen = 2; 
     *out = 0xFF;  /* for 2-byte table, uMap() is guaranteed to fail for 0xFF. */
