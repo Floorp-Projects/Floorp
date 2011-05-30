@@ -41,7 +41,6 @@
 #include "nsDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIScriptElement.h"
@@ -69,8 +68,7 @@ class nsICachingChannel;
 
 class nsHTMLDocument : public nsDocument,
                        public nsIHTMLDocument,
-                       public nsIDOMHTMLDocument,
-                       public nsIDOMNSHTMLDocument
+                       public nsIDOMHTMLDocument
 {
 public:
   using nsDocument::SetDocumentURI;
@@ -128,25 +126,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsDocument::)
 
   // nsIDOMHTMLDocument interface
-  NS_IMETHOD GetTitle(nsAString & aTitle);
-  NS_IMETHOD SetTitle(const nsAString & aTitle);
-  NS_IMETHOD GetReferrer(nsAString & aReferrer);
-  NS_IMETHOD GetURL(nsAString & aURL);
-  NS_IMETHOD GetBody(nsIDOMHTMLElement * *aBody);
-  NS_IMETHOD SetBody(nsIDOMHTMLElement * aBody);
-  NS_IMETHOD GetImages(nsIDOMHTMLCollection * *aImages);
-  NS_IMETHOD GetApplets(nsIDOMHTMLCollection * *aApplets);
-  NS_IMETHOD GetLinks(nsIDOMHTMLCollection * *aLinks);
-  NS_IMETHOD GetForms(nsIDOMHTMLCollection * *aForms);
-  NS_IMETHOD GetAnchors(nsIDOMHTMLCollection * *aAnchors);
-  NS_IMETHOD GetCookie(nsAString & aCookie);
-  NS_IMETHOD SetCookie(const nsAString & aCookie);
-  NS_IMETHOD Open(void);
-  NS_IMETHOD Close(void);
-  NS_IMETHOD Write(const nsAString & text);
-  NS_IMETHOD Writeln(const nsAString & text);
-  NS_IMETHOD GetElementsByName(const nsAString & elementName,
-                               nsIDOMNodeList **_retval);
+  NS_DECL_NSIDOMHTMLDOCUMENT
 
   /**
    * Returns the result of document.all[aID] which can either be a node
@@ -164,8 +144,6 @@ public:
                                        UseExistingNameString, aName);
   }
 
-  // nsIDOMNSHTMLDocument interface
-  NS_DECL_NSIDOMNSHTMLDOCUMENT
 
   virtual nsresult ResolveName(const nsAString& aName,
                                nsIContent *aForm,
@@ -378,7 +356,6 @@ protected:
 #define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                        \
     NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                                 \
     NS_INTERFACE_TABLE_ENTRY(_class, nsIHTMLDocument)                         \
-    NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMHTMLDocument)                      \
-    NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMNSHTMLDocument)
+    NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMHTMLDocument)
 
 #endif /* nsHTMLDocument_h___ */

@@ -316,7 +316,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsHTMLDocument)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIHTMLDocument)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMHTMLDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMNSHTMLDocument)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLDocument)
@@ -600,9 +599,8 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
       gPlugDetector = PR_TRUE;
     }
 
-    nsContentUtils::RegisterPrefCallback("intl.charset.detector",
-                                         MyPrefChangedCallback,
-                                         nsnull);
+    Preferences::RegisterCallback(MyPrefChangedCallback,
+                                  "intl.charset.detector");
 
     gInitDetector = PR_TRUE;
   }
@@ -1147,12 +1145,6 @@ nsHTMLDocument::EndLoad()
   }
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::SetTitle(const nsAString& aTitle)
-{
-  return nsDocument::SetTitle(aTitle);
-}
-
 Element*
 nsHTMLDocument::GetImageMap(const nsAString& aMapName)
 {
@@ -1195,18 +1187,6 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 //
 // nsIDOMHTMLDocument interface implementation
 //
-NS_IMETHODIMP
-nsHTMLDocument::GetTitle(nsAString& aTitle)
-{
-  return nsDocument::GetTitle(aTitle);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetReferrer(nsAString& aReferrer)
-{
-  return nsDocument::GetReferrer(aReferrer);
-}
-
 void
 nsHTMLDocument::GetDomainURI(nsIURI **aURI)
 {
@@ -1812,13 +1792,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Open()
-{
-  nsCOMPtr<nsIDOMDocument> doc;
-  return Open(NS_LITERAL_CSTRING("text/html"), PR_FALSE, getter_AddRefs(doc));
-}
-
-NS_IMETHODIMP
 nsHTMLDocument::Open(const nsACString& aContentType, PRBool aReplace,
                      nsIDOMDocument** aReturn)
 {
@@ -1944,7 +1917,9 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
                                       "DOM Events", this);
       return NS_OK;
     }
-    rv = Open();
+    nsCOMPtr<nsIDOMDocument> ignored;
+    rv = Open(NS_LITERAL_CSTRING("text/html"), PR_FALSE,
+              getter_AddRefs(ignored));
 
     // If Open() fails, or if it didn't create a parser (as it won't
     // if the user chose to not discard the current document through

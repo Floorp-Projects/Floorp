@@ -37,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsCOMPtr.h"
 #include "nsXMLContentSink.h"
 #include "nsIParser.h"
@@ -44,7 +45,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMDOMImplementation.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -96,10 +96,7 @@
 #include "nsIHTMLDocument.h"
 #include "mozAutoDocUpdate.h"
 #include "nsMimeTypes.h"
-
-#ifdef MOZ_SVG
 #include "nsHtml5SVGLoadDispatcher.h"
-#endif
 
 using namespace mozilla::dom;
 
@@ -507,9 +504,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML)
-#ifdef MOZ_SVG
       || aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)
-#endif
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
     sele->SetScriptLineNumber(aLineNumber);
@@ -596,9 +591,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
   nsresult rv = NS_OK;
 
   if (nodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML)
-#ifdef MOZ_SVG
       || nodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)
-#endif
     ) {
     mConstrainSize = PR_TRUE; 
 
@@ -732,6 +725,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
   NS_ConvertUTF16toUTF8 type(aType);
   if (type.EqualsIgnoreCase(TEXT_XSL) ||
+      type.EqualsIgnoreCase(APPLICATION_XSLT_XML) ||
       type.EqualsIgnoreCase(TEXT_XML) ||
       type.EqualsIgnoreCase(APPLICATION_XML)) {
     if (aAlternate) {
@@ -1157,7 +1151,6 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
   }
   DidAddContent();
 
-#ifdef MOZ_SVG
   if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
       content->Tag() == nsGkAtoms::svg) {
     FlushTags();
@@ -1166,7 +1159,6 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
       NS_WARNING("failed to dispatch svg load dispatcher");
     }
   }
-#endif
 
   return aInterruptable && NS_SUCCEEDED(result) ? DidProcessATokenImpl() :
                                                   result;

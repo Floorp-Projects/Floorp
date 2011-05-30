@@ -49,14 +49,12 @@
 #include "nsMenuPopupFrame.h"
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
-#include "nsIDOMNSDocument.h"
 #include "nsITreeView.h"
 #endif
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIScriptContext.h"
 #include "nsPIDOMWindow.h"
-#include "nsContentUtils.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
@@ -83,8 +81,8 @@ nsXULTooltipListener::nsXULTooltipListener()
 {
   if (sTooltipListenerCount++ == 0) {
     // register the callback so we get notified of updates
-    nsContentUtils::RegisterPrefCallback("browser.chrome.toolbar_tips",
-                                         ToolbarTipsPrefChanged, nsnull);
+    Preferences::RegisterCallback(ToolbarTipsPrefChanged,
+                                  "browser.chrome.toolbar_tips");
 
     // Call the pref callback to initialize our state.
     ToolbarTipsPrefChanged("browser.chrome.toolbar_tips", nsnull);
@@ -100,8 +98,8 @@ nsXULTooltipListener::~nsXULTooltipListener()
 
   if (--sTooltipListenerCount == 0) {
     // Unregister our pref observer
-    nsContentUtils::UnregisterPrefCallback("browser.chrome.toolbar_tips",
-                                           ToolbarTipsPrefChanged, nsnull);
+    Preferences::UnregisterCallback(ToolbarTipsPrefChanged,
+                                    "browser.chrome.toolbar_tips");
   }
 }
 

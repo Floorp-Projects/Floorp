@@ -39,7 +39,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrameSetFrame.h"
-#include "nsContentUtils.h"
 #include "nsGenericHTMLElement.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
@@ -241,8 +240,8 @@ nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
   delete[] mChildFrameborder;
   delete[] mChildBorderColors;
 
-  nsContentUtils::UnregisterPrefCallback(kFrameResizePref,
-                                         FrameResizePrefCallback, this);
+  Preferences::UnregisterCallback(FrameResizePrefCallback,
+                                  kFrameResizePref, this);
 }
 
 NS_QUERYFRAME_HEAD(nsHTMLFramesetFrame)
@@ -974,8 +973,8 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
 
   PRBool firstTime = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
   if (firstTime) {
-    nsContentUtils::RegisterPrefCallback(kFrameResizePref,
-                                         FrameResizePrefCallback, this);
+    Preferences::RegisterCallback(FrameResizePrefCallback,
+                                  kFrameResizePref, this);
     mForceFrameResizability = Preferences::GetBool(kFrameResizePref);
   }
   

@@ -115,7 +115,7 @@ public:
   NS_DECL_NSIACCESSIBLEAPPLICATION
 
   // nsAccessNode
-  virtual PRBool IsDefunct();
+  virtual bool IsDefunct() const;
   virtual PRBool Init();
   virtual void Shutdown();
   virtual bool IsPrimaryForNode() const;

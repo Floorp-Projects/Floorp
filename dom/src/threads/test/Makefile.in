@@ -45,12 +45,6 @@ relativesrcdir   = dom/src/threads/test
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_JS_MODULES = \
-  WorkerTest.jsm \
-  WorkerTest_worker.js \
-  WorkerTest_subworker.js \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
@@ -132,6 +126,9 @@ _CHROME_TEST_FILES = \
   test_chromeWorker.xul \
   test_chromeWorkerComponent.xul \
   test_chromeWorkerJSM.xul \
+  WorkerTest.jsm \
+  WorkerTest_worker.js \
+  WorkerTest_subworker.js \
   chromeWorker_worker.js \
   chromeWorker_subworker.js \
   $(NULL)

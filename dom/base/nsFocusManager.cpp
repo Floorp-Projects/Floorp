@@ -42,7 +42,6 @@
 #include "nsIEnumerator.h"
 #include "nsTPtrArray.h"
 #include "nsGkAtoms.h"
-#include "nsIPrefBranch2.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
@@ -161,19 +160,20 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsFocusManager* nsFocusManager::sInstance = nsnull;
 PRBool nsFocusManager::sMouseFocusesFormControl = PR_FALSE;
 
+static const char* kObservedPrefs[] = {
+  "accessibility.browsewithcaret",
+  "accessibility.tabfocus_applies_to_xul",
+  "accessibility.mouse_focuses_formcontrol",
+  NULL
+};
+
 nsFocusManager::nsFocusManager()
 { }
 
 nsFocusManager::~nsFocusManager()
 {
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
+  Preferences::RemoveObservers(this, kObservedPrefs);
 
-  if (prefBranch) {
-    prefBranch->RemoveObserver("accessibility.browsewithcaret", this);
-    prefBranch->RemoveObserver("accessibility.tabfocus_applies_to_xul", this);
-    prefBranch->RemoveObserver("accessibility.mouse_focuses_formcontrol", this);
-  }
-  
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, "xpcom-shutdown");
@@ -196,12 +196,7 @@ nsFocusManager::Init()
   sMouseFocusesFormControl =
     Preferences::GetBool("accessibility.mouse_focuses_formcontrol", PR_FALSE);
 
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-  if (prefBranch) {
-    prefBranch->AddObserver("accessibility.browsewithcaret", fm, PR_TRUE);
-    prefBranch->AddObserver("accessibility.tabfocus_applies_to_xul", fm, PR_TRUE);
-    prefBranch->AddObserver("accessibility.mouse_focuses_formcontrol", fm, PR_TRUE);
-  }
+  Preferences::AddWeakObservers(fm, kObservedPrefs);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {

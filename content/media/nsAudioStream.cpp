@@ -52,7 +52,6 @@ using namespace mozilla::dom;
 #include "nsAudioStream.h"
 #include "nsAlgorithm.h"
 #include "VideoUtils.h"
-#include "nsContentUtils.h"
 #include "mozilla/Mutex.h"
 extern "C" {
 #include "sydneyaudio/sydney_audio.h"
@@ -347,16 +346,12 @@ void nsAudioStream::InitLibrary()
 #endif
   gVolumeScaleLock = new mozilla::Mutex("nsAudioStream::gVolumeScaleLock");
   VolumeScaleChanged(nsnull, nsnull);
-  nsContentUtils::RegisterPrefCallback("media.volume_scale",
-                                       VolumeScaleChanged,
-                                       nsnull);
+  Preferences::RegisterCallback(VolumeScaleChanged, "media.volume_scale");
 }
 
 void nsAudioStream::ShutdownLibrary()
 {
-  nsContentUtils::UnregisterPrefCallback("media.volume_scale",
-                                         VolumeScaleChanged,
-                                         nsnull);
+  Preferences::UnregisterCallback(VolumeScaleChanged, "media.volume_scale");
   delete gVolumeScaleLock;
   gVolumeScaleLock = nsnull;
 }

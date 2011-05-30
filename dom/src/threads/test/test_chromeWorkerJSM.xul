@@ -72,7 +72,7 @@
         done();
       }
 
-      Components.utils.import("resource://gre/modules/WorkerTest.jsm");
+      Components.utils.import("chrome://mochitests/content/chrome/dom/src/threads/test/WorkerTest.jsm");
 
       worker = WorkerTest.go(window.location.href, messageCallback,
                              errorCallback);
