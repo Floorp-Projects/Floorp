@@ -69,8 +69,8 @@ struct THEBES_API gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> 
     // And if you need similar method which is using NS_round(), you should
     // create new |RoundAwayFromZero()| method.
     gfxPoint& Round() {
-        x = NS_floor(x + 0.5);
-        y = NS_floor(y + 0.5);
+        x = floor(x + 0.5);
+        y = floor(y + 0.5);
         return *this;
     }
 };
