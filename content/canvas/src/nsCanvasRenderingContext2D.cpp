@@ -536,11 +536,9 @@ protected:
     {
         ContextState& state = CurrentState();
 
-        // The spec says we should not draw shadows when the alpha value is 0,
-        // regardless of the operator being used.
         return state.StyleIsColor(STYLE_SHADOW) &&
                NS_GET_A(state.colorStyles[STYLE_SHADOW]) > 0 &&
-               (state.shadowOffset != gfxPoint(0, 0) || state.shadowBlur != 0);
+               mThebes->CurrentOperator() == gfxContext::OPERATOR_OVER;
     }
 
     /**
