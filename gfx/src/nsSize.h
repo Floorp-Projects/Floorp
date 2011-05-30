@@ -48,7 +48,6 @@ struct nsSize : public mozilla::BaseSize<nscoord, nsSize> {
   typedef mozilla::BaseSize<nscoord, nsSize> Super;
 
   nsSize() : Super() {}
-  nsSize(const nsSize& aSize) : Super(aSize) {}
   nsSize(nscoord aWidth, nscoord aHeight) : Super(aWidth, aHeight) {}
 
   // Converts this size from aFromAPP, an appunits per pixel ratio, to aToAPP.
@@ -59,7 +58,6 @@ struct nsIntSize : public mozilla::BaseSize<PRInt32, nsIntSize> {
   typedef mozilla::BaseSize<PRInt32, nsIntSize> Super;
 
   nsIntSize() : Super() {}
-  nsIntSize(const nsIntSize& aSize) : Super(aSize) {}
   nsIntSize(PRInt32 aWidth, PRInt32 aHeight) : Super(aWidth, aHeight) {}
 };
 
