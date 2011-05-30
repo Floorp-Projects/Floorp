@@ -272,7 +272,6 @@
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLFieldSetElement.h"
 #include "nsIDOMHTMLFontElement.h"
-#include "nsIDOMNSHTMLFormElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIDOMNSHTMLFrameElement.h"
@@ -2744,7 +2743,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLFormElement, nsIDOMHTMLFormElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFormElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLFormElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
