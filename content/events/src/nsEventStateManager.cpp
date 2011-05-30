@@ -78,8 +78,6 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMXULControlElement.h"
 #include "nsIDOMXULTextboxElement.h"
-#include "nsImageMapUtils.h"
-#include "nsIHTMLDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIBaseWindow.h"
 #include "nsIView.h"

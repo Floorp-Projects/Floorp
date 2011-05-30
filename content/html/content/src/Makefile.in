@@ -48,7 +48,6 @@ LIBXUL_LIBRARY	= 1
 
 
 EXPORTS		= \
-		nsImageMapUtils.h \
 		nsClientRect.h \
 		nsHTMLDNSPrefetch.h \
 		$(NULL)
@@ -58,7 +57,6 @@ CPPSRCS		= \
 		nsHTMLDNSPrefetch.cpp \
 		nsGenericHTMLElement.cpp \
 		nsFormSubmission.cpp \
-		nsImageMapUtils.cpp \
 		nsTextEditorState.cpp \
 		nsHTMLElement.cpp \
 		nsHTMLAnchorElement.cpp \

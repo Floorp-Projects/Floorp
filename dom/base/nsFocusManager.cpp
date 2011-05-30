@@ -78,7 +78,6 @@
 #include "nsIViewManager.h"
 #include "nsFrameSelection.h"
 #include "nsXULPopupManager.h"
-#include "nsImageMapUtils.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
@@ -2801,10 +2800,9 @@ nsFocusManager::GetNextTabbableMapArea(PRBool aForward,
 
   nsCOMPtr<nsIDocument> doc = aImageContent->GetDocument();
   if (doc) {
-    nsCOMPtr<nsIDOMHTMLMapElement> imageMap = nsImageMapUtils::FindImageMap(doc, useMap);
-    if (!imageMap)
+    nsCOMPtr<nsIContent> mapContent = doc->FindImageMap(useMap);
+    if (!mapContent)
       return nsnull;
-    nsCOMPtr<nsIContent> mapContent = do_QueryInterface(imageMap);
     PRUint32 count = mapContent->GetChildCount();
     // First see if the the start content is in this map
 
