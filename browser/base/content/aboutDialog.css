@@ -72,33 +72,3 @@
   padding: 0;
   font-weight: bold;
 }
-
-#channelSelector {
-  margin-top: 10px;
-}
-
-#channelSelectorStart {
-  -moz-margin-start: 0;
-}
-
-#channelMenulist {
-  margin: 0;
-}
-
-.channel-description {
-  margin: 10px 0;
-}
-
-#detailsBox,
-#channelSelector,
-.channel-description {
-  -moz-transition: opacity 250ms;
-}
-
-#contentDeck:not([selectedIndex="0"]) > #detailsBox,
-#contentDeck:not([selectedIndex="1"]) > #channelSelector,
-#channelDescriptionDeck:not([selectedIndex="0"]) > #releaseDescription,
-#channelDescriptionDeck:not([selectedIndex="1"]) > #betaDescription,
-#channelDescriptionDeck:not([selectedIndex="2"]) > #auroraDescription {
-  opacity: 0;
-}
