@@ -21412,6 +21412,11 @@ function runTests() {
  // they are in these tests
  //test_2d_shadow_composite_3();
  //test_2d_shadow_composite_4();
+ // Shadows should not be drawn if the operator is not source-over (the spec doesn't
+ // say this yet, but it should be changed). These tests assume shadows will
+ // be drawn with operators other than source-over:
+ //test_2d_shadow_composite_1();
+ //test_2d_shadow_composite_2();
  try {
   test_2d_canvas_readonly();
  } catch (e) {
@@ -23796,16 +23801,6 @@ function runTests() {
   test_2d_shadow_clip_3();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_shadow_clip_3");
- }
- try {
-  test_2d_shadow_composite_1();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_1");
- }
- try {
-  test_2d_shadow_composite_2();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_2");
  }
  try {
   test_2d_shadow_gradient_alpha();
