@@ -64,11 +64,8 @@ DIRS = \
   interfaces/geolocation \
   interfaces/threads \
   interfaces/notification \
+  interfaces/svg \
   $(NULL)
-
-ifdef MOZ_SVG
-DIRS += interfaces/svg
-endif
 
 ifdef MOZ_SMIL
 DIRS += interfaces/smil

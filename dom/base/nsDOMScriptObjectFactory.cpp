@@ -88,9 +88,7 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory() :
     if (xs) {
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM);
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_RANGE);
-#ifdef MOZ_SVG
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_SVG);
-#endif
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_XPATH);
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_INDEXEDDB);
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_XPCONNECT);
@@ -291,10 +289,8 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
                                         NS_ERROR_MODULE_DOM);
         xs->UnregisterExceptionProvider(gExceptionProvider,
                                         NS_ERROR_MODULE_DOM_RANGE);
-#ifdef MOZ_SVG
         xs->UnregisterExceptionProvider(gExceptionProvider,
                                         NS_ERROR_MODULE_SVG);
-#endif
         xs->UnregisterExceptionProvider(gExceptionProvider,
                                         NS_ERROR_MODULE_DOM_XPATH);
         xs->UnregisterExceptionProvider(gExceptionProvider,
@@ -392,10 +388,8 @@ nsDOMExceptionProvider::GetException(nsresult result,
   {
     case NS_ERROR_MODULE_DOM_RANGE:
       return NS_NewRangeException(result, aDefaultException, _retval);
-#ifdef MOZ_SVG
     case NS_ERROR_MODULE_SVG:
       return NS_NewSVGException(result, aDefaultException, _retval);
-#endif
     case NS_ERROR_MODULE_DOM_XPATH:
       return NS_NewXPathException(result, aDefaultException, _retval);
     case NS_ERROR_MODULE_XPCONNECT:

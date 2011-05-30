@@ -50,6 +50,7 @@ PARALLEL_DIRS = \
 		generic \
 		forms \
 		tables \
+		svg/base/src \
 		xul/base/public \
 		xul/base/src \
 		ipc \
@@ -63,10 +64,6 @@ ifdef MOZ_MATHML
 PARALLEL_DIRS += \
   mathml \
   $(NULL)
-endif
-
-ifdef MOZ_SVG
-PARALLEL_DIRS += svg/base/src
 endif
 
 PARALLEL_DIRS += inspector/public inspector/src

@@ -165,12 +165,10 @@ PRBool CheckTagNameWhiteList(PRInt32 aNameSpaceID, nsIAtom *aTagName)
       }
     }
   }
-#ifdef MOZ_SVG
   else if (aNameSpaceID == kNameSpaceID_SVG &&
            aTagName == nsGkAtoms::generic) {
     return PR_TRUE;
   }
-#endif
 
   return PR_FALSE;
 }
