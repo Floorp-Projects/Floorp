@@ -57,6 +57,7 @@
 #endif
 #include <stdio.h>
 #include <unistd.h>
+#include <ctype.h>
 #if !defined(__ANDROID__)
 #include <sys/ucontext.h>
 #include <sys/user.h>

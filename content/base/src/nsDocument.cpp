@@ -4533,20 +4533,6 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsDocument::CreateEntityReference(const nsAString& aName,
-                                  nsIDOMEntityReference** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  if (IsHTML()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn)
 {
@@ -5152,13 +5138,11 @@ nsDocument::GetTitle(nsAString& aTitle)
       rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
       break;
 #endif
-#ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       if (rootElement->Tag() == nsGkAtoms::svg) {
         GetTitleFromElement(kNameSpaceID_SVG, tmp);
         break;
       } // else fall through
-#endif
     default:
       GetTitleFromElement(kNameSpaceID_XHTML, tmp);
       break;
@@ -5177,10 +5161,8 @@ nsDocument::SetTitle(const nsAString& aTitle)
     return NS_OK;
 
   switch (rootElement->GetNameSpaceID()) {
-#ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       return NS_OK; // SVG doesn't support setting a title
-#endif
 #ifdef MOZ_XUL
     case kNameSpaceID_XUL:
       return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,

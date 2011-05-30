@@ -59,7 +59,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMDataContainerEvent.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
@@ -139,7 +138,7 @@ nsRootAccessible::GetName(nsAString& aName)
     }
   }
 
-  nsCOMPtr<nsIDOMNSDocument> document(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(mDocument);
   return document->GetTitle(aName);
 }
 

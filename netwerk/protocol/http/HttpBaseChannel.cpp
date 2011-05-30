@@ -498,6 +498,15 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::GetUploadStreamHasHeaders(PRBool *hasHeaders)
+{
+  NS_ENSURE_ARG(hasHeaders);
+
+  *hasHeaders = mUploadStreamHasHeaders;
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIEncodedChannel
 //-----------------------------------------------------------------------------

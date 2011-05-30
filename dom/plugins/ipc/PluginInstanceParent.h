@@ -349,7 +349,6 @@ private:
     HWND               mPluginHWND;
     WNDPROC            mPluginWndProc;
     bool               mNestedEventState;
-    bool               mInAnswerFocusChange;
 #endif // defined(XP_WIN)
 #if defined(OS_MACOSX)
 private:

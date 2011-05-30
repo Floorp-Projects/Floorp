@@ -53,7 +53,6 @@
 #include "nsHashSets.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsIDOMNSDocument.h"
 #include "nsStubDocumentObserver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
@@ -489,7 +488,6 @@ protected:
 // the interface.
 class nsDocument : public nsIDocument,
                    public nsIDOMXMLDocument, // inherits nsIDOMDocument
-                   public nsIDOMNSDocument,
                    public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
                    public nsIDOMEventTarget,
@@ -538,7 +536,7 @@ public:
    * Get the Content-Type of this document.
    */
   // NS_IMETHOD GetContentType(nsAString& aContentType);
-  // Already declared in nsIDOMNSDocument
+  // Already declared in nsIDOMDocument
 
   /**
    * Set the Content-Type of this document.
@@ -788,9 +786,6 @@ public:
 
   // nsIDOMXMLDocument
   NS_DECL_NSIDOMXMLDOCUMENT
-
-  // nsIDOMNSDocument
-  NS_DECL_NSIDOMNSDOCUMENT
 
   // nsIDOMDocumentXBL
   NS_DECL_NSIDOMDOCUMENTXBL
@@ -1233,7 +1228,6 @@ protected:
 #define NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                             \
   NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMDocument, nsDocument)      \
-  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNSDocument, nsDocument)    \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMEventTarget, nsDocument)   \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNode, nsDocument)
 

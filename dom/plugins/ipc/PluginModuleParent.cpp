@@ -59,7 +59,6 @@
 #include "PluginIdentifierParent.h"
 
 #include "nsAutoPtr.h"
-#include "nsContentUtils.h"
 #include "nsCRT.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -127,7 +126,7 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
         NS_ERROR("Out of memory");
     }
 
-    nsContentUtils::RegisterPrefCallback(kTimeoutPref, TimeoutChanged, this);
+    Preferences::RegisterCallback(TimeoutChanged, kTimeoutPref, this);
 }
 
 PluginModuleParent::~PluginModuleParent()
@@ -152,7 +151,7 @@ PluginModuleParent::~PluginModuleParent()
         mSubprocess = nsnull;
     }
 
-    nsContentUtils::UnregisterPrefCallback(kTimeoutPref, TimeoutChanged, this);
+    Preferences::UnregisterCallback(TimeoutChanged, kTimeoutPref, this);
 }
 
 #ifdef MOZ_CRASHREPORTER
