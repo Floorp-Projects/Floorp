@@ -1163,16 +1163,23 @@ let Utils = {
   },
 
   /**
-   * Create an array like the first but without elements of the second
+   * Create an array like the first but without elements of the second. Reuse
+   * arrays if possible.
    */
   arraySub: function arraySub(minuend, subtrahend) {
+    if (!minuend.length || !subtrahend.length)
+      return minuend;
     return minuend.filter(function(i) subtrahend.indexOf(i) == -1);
   },
 
   /**
-   * Build the union of two arrays.
+   * Build the union of two arrays. Reuse arrays if possible.
    */
   arrayUnion: function arrayUnion(foo, bar) {
+    if (!foo.length)
+      return bar;
+    if (!bar.length)
+      return foo;
     return foo.concat(Utils.arraySub(bar, foo));
   },
 
