@@ -79,6 +79,7 @@
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MethodJIT-inl.h"
 #include "methodjit/Logging.h"
+#include "ion/Ion.h"
 #endif
 #include "jsatominlines.h"
 #include "jsinterpinlines.h"
@@ -4655,6 +4656,9 @@ BEGIN_CASE(JSOP_FUNCALL)
             TRACE_0(EnterFrame);
 
             CHECK_INTERRUPT_HANDLER();
+
+            if (ion::Go(cx, script, regs.fp()))
+                return true;
 
 #ifdef JS_METHODJIT
             /* Try to ensure methods are method JIT'd.  */

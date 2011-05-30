@@ -363,6 +363,18 @@ CPPSRCS += 	MethodJIT.cpp \
 		TrampolineCompiler.cpp \
 		$(NULL)
 
+# Ion
+VPATH +=	$(srcdir)/ion
+
+CPPSRCS +=	MIR.cpp \
+		IonBuilder.cpp \
+		IonSpew.cpp \
+		MIRGraph.cpp \
+		IonAnalysis.cpp \
+		IonLowering.cpp \
+		Ion.cpp \
+		$(NULL)
+
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
