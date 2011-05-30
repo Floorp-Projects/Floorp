@@ -344,16 +344,32 @@ static nsRegion ConvertRegionBetweenViews(const nsRegion& aIn,
   return out;
 }
 
-static nsView* GetDisplayRootFor(nsView* aView)
+nsIView* nsIViewManager::GetDisplayRootFor(nsIView* aView)
 {
-  nsView *displayRoot = aView;
+  nsIView *displayRoot = aView;
   for (;;) {
-    nsView *displayParent = displayRoot->GetParent();
+    nsIView *displayParent = displayRoot->GetParent();
     if (!displayParent)
       return displayRoot;
 
     if (displayRoot->GetFloating() && !displayParent->GetFloating())
       return displayRoot;
+
+    // If we have a combobox dropdown popup within a panel popup, both the view
+    // for the dropdown popup and its parent will be floating, so we need to
+    // distinguish this situation. We do this by looking for a widget. Any view
+    // with a widget is a display root, except for plugins.
+    nsIWidget* widget = displayRoot->GetWidget();
+    if (widget) {
+      nsWindowType type;
+      widget->GetWindowType(type);
+      if (type == eWindowType_popup) {
+        NS_ASSERTION(displayRoot->GetFloating() && displayParent->GetFloating(),
+          "this should only happen with floating views that have floating parents");
+        return displayRoot;
+      }
+    }
+
     displayRoot = displayParent;
   }
 }
@@ -658,7 +674,7 @@ NS_IMETHODIMP nsViewManager::UpdateViewNoSuppression(nsIView *aView,
     return NS_OK;
   }
 
-  nsView* displayRoot = GetDisplayRootFor(view);
+  nsView* displayRoot = static_cast<nsView*>(GetDisplayRootFor(view));
   nsViewManager* displayRootVM = displayRoot->GetViewManager();
   // Propagate the update to the displayRoot, since iframes, for example,
   // can overlap each other and be translucent.  So we have to possibly
@@ -1011,7 +1027,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         if (NS_IsEventUsingCoordinates(aEvent)) {
           // will dispatch using coordinates. Pretty bogus but it's consistent
           // with what presshell does.
-          view = GetDisplayRootFor(baseView);
+          view = static_cast<nsView*>(GetDisplayRootFor(baseView));
         }
 
         if (nsnull != view) {
