@@ -124,8 +124,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0x26ef6218, 0xcd5e, 0x4953,  \
- { 0xbb, 0x57, 0xb8, 0x50, 0x29, 0xa1, 0xae, 0x40 } }
+{ 0x2ec7872f, 0x97c3, 0x43de, \
+  { 0x81, 0x0a, 0x8f, 0x18, 0xa0, 0xa0, 0xdf, 0x30 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1518,6 +1518,8 @@ public:
   virtual nsresult SetImageLockingState(PRBool aLocked) = 0;
 
   virtual nsresult GetStateObject(nsIVariant** aResult) = 0;
+
+  virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
 
 protected:
   ~nsIDocument()

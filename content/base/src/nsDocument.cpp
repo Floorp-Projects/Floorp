@@ -1871,6 +1871,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDOMImplementation)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mImageMaps,
+                                                       nsIDOMNodeList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedEncoder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStateObjectCached)
@@ -1923,6 +1925,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDOMImplementation)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedEncoder)
 
@@ -8133,6 +8136,27 @@ nsDocument::GetStateObject(nsIVariant** aState)
   NS_IF_ADDREF(*aState = mStateObjectCached);
   
   return NS_OK;
+}
+
+Element*
+nsDocument::FindImageMap(const nsAString& aNormalizedMapName)
+{
+  if (!mImageMaps) {
+    mImageMaps = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::map, nsGkAtoms::map);
+  }
+
+  PRUint32 i, n = mImageMaps->Length(PR_TRUE);
+  for (i = 0; i < n; ++i) {
+    nsIContent* map = mImageMaps->GetNodeAt(i);
+    if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aNormalizedMapName,
+                         eCaseMatters) ||
+        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aNormalizedMapName,
+                         eIgnoreCase)) {
+      return map->AsElement();
+    }
+  }
+
+  return nsnull;
 }
 
 nsresult
