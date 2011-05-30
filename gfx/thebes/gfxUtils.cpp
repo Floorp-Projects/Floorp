@@ -489,7 +489,7 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal)
   if (fabs(power - NS_round(power)) < 1e-6) {
     power = NS_round(power);
   } else {
-    power = NS_ceil(power);
+    power = ceil(power);
   }
 
   return pow(kScaleResolution, power);
