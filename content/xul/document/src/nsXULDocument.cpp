@@ -128,7 +128,9 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsURILoader.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
@@ -278,9 +280,8 @@ nsXULDocument::~nsXULDocument()
 
     delete mTemplateBuilderTable;
 
-    nsContentUtils::UnregisterPrefCallback("intl.uidirection.",
-                                           nsXULDocument::DirectionChanged,
-                                           this);
+    Preferences::UnregisterCallback(nsXULDocument::DirectionChanged,
+                                    "intl.uidirection.", this);
 
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(gRDFService);
@@ -1984,9 +1985,8 @@ nsXULDocument::Init()
         }
     }
 
-    nsContentUtils::RegisterPrefCallback("intl.uidirection.",
-                                         nsXULDocument::DirectionChanged,
-                                         this);
+    Preferences::RegisterCallback(nsXULDocument::DirectionChanged,
+                                  "intl.uidirection.", this);
 
 #ifdef PR_LOGGING
     if (! gXULLog)

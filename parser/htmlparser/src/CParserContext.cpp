@@ -87,9 +87,7 @@ CParserContext::SetMimeType(const nsACString& aMimeType)
            mMimeType.EqualsLiteral(APPLICATION_XML)       ||
            mMimeType.EqualsLiteral(APPLICATION_XHTML_XML) ||
            mMimeType.EqualsLiteral(TEXT_XUL)              ||
-#ifdef MOZ_SVG
            mMimeType.EqualsLiteral(IMAGE_SVG_XML)         ||
-#endif
 #ifdef MOZ_MATHML
            mMimeType.EqualsLiteral(APPLICATION_MATHML_XML) ||
 #endif

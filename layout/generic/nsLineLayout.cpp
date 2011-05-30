@@ -704,10 +704,8 @@ IsPercentageAware(const nsIFrame* aFrame)
 
     // Handle SVG, which doesn't map width/height into style
     if ((
-#ifdef MOZ_SVG
          fType == nsGkAtoms::svgOuterSVGFrame ||
          fType == nsGkAtoms::imageFrame ||
-#endif
          fType == nsGkAtoms::subDocumentFrame) &&
         const_cast<nsIFrame*>(aFrame)->GetIntrinsicSize().width.GetUnit() ==
         eStyleUnit_Percent) {

@@ -962,10 +962,8 @@ NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 /* static */ nsresult
 nsCSSRuleProcessor::Startup()
 {
-  nsContentUtils::AddBoolPrefVarCache(VISITED_PSEUDO_PREF,
-                                      &gSupportVisitedPseudo);
-  // We want to default to true, not false as AddBoolPrefVarCache does.
-  gSupportVisitedPseudo = Preferences::GetBool(VISITED_PSEUDO_PREF, PR_TRUE);
+  Preferences::AddBoolVarCache(&gSupportVisitedPseudo, VISITED_PSEUDO_PREF,
+                               PR_TRUE);
 
   gPrivateBrowsingObserver = new nsPrivateBrowsingObserver();
   NS_ENSURE_TRUE(gPrivateBrowsingObserver, NS_ERROR_OUT_OF_MEMORY);

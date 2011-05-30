@@ -103,7 +103,7 @@ _BROWSER_FILES = \
   mock_autocomplete.json\
   $(NULL)
 
-ifndef ANDROID
+ifneq ($(OS_TARGET),Android)
 ifndef MOZ_PLATFORM_MAEMO
 _BROWSER_FILES +=  browser_sidebars.js
 endif

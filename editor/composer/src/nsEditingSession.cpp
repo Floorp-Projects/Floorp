@@ -43,7 +43,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIDOMNSHTMLDocument.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMDocument.h"
@@ -78,7 +78,6 @@
 #include "nsIPlaintextEditor.h"
 #include "nsIEditor.h"
 
-#include "nsIDOMNSDocument.h"
 #include "nsIScriptContext.h"
 #include "imgIContainer.h"
 
@@ -349,33 +348,29 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   //then lets check the mime type
   if (NS_SUCCEEDED(aWindow->GetDocument(getter_AddRefs(doc))) && doc)
   {
-    nsCOMPtr<nsIDOMNSDocument> nsdoc = do_QueryInterface(doc);
-    if (nsdoc)
+    nsAutoString mimeType;
+    if (NS_SUCCEEDED(doc->GetContentType(mimeType)))
+      AppendUTF16toUTF8(mimeType, mimeCType);
+
+    if (IsSupportedTextType(mimeCType.get()))
     {
-      nsAutoString mimeType;
-      if (NS_SUCCEEDED(nsdoc->GetContentType(mimeType)))
-        AppendUTF16toUTF8(mimeType, mimeCType);
+      mEditorType.AssignLiteral("text");
+      mimeCType = "text/plain";
+    }
+    else if (!mimeCType.EqualsLiteral("text/html") &&
+             !mimeCType.EqualsLiteral("application/xhtml+xml"))
+    {
+      // Neither an acceptable text or html type.
+      mEditorStatus = eEditorErrorCantEditMimeType;
 
-      if (IsSupportedTextType(mimeCType.get()))
-      {
-        mEditorType.AssignLiteral("text");
-        mimeCType = "text/plain";
-      }
-      else if (!mimeCType.EqualsLiteral("text/html") &&
-               !mimeCType.EqualsLiteral("application/xhtml+xml"))
-      {
-        // Neither an acceptable text or html type.
-        mEditorStatus = eEditorErrorCantEditMimeType;
-
-        // Turn editor into HTML -- we will load blank page later
-        mEditorType.AssignLiteral("html");
-        mimeCType.AssignLiteral("text/html");
-      }
+      // Turn editor into HTML -- we will load blank page later
+      mEditorType.AssignLiteral("html");
+      mimeCType.AssignLiteral("text/html");
     }
 
     // Flush out frame construction to make sure that the subframe's
     // presshell is set up if it needs to be.
-    nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(doc);
     if (document) {
       document->FlushPendingNotifications(Flush_Frames);
       if (mMakeWholeDocumentEditable) {
@@ -719,9 +714,8 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
 
         if (htmlDoc && htmlDoc->IsWriting())
         {
-          nsCOMPtr<nsIDOMNSHTMLDocument> htmlDomDoc(do_QueryInterface(doc));
+          nsCOMPtr<nsIDOMHTMLDocument> htmlDomDoc = do_QueryInterface(doc);
           nsAutoString designMode;
-
           htmlDomDoc->GetDesignMode(designMode);
 
           if (designMode.EqualsLiteral("on"))

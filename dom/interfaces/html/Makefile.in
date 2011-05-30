@@ -120,11 +120,9 @@ SDK_XPIDLSRCS =					\
 XPIDLSRCS = 					\
 	nsIDOMHTMLCanvasElement.idl		\
 	nsIDOMHTMLUnknownElement.idl \
-	nsIDOMNSHTMLDocument.idl		\
 	nsIDOMNSHTMLElement.idl			\
 	nsIDOMNSHTMLFormElement.idl		\
 	nsIDOMNSHTMLFrameElement.idl		\
-	nsIDOMNSHTMLHRElement.idl		\
 	nsIDOMNSHTMLOptionCollectn.idl		\
 	nsIDOMNSHTMLTextAreaElement.idl		\
 	$(NULL)
