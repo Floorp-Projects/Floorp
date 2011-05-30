@@ -2502,10 +2502,7 @@ BasicShadowThebesLayer::PaintThebes(gfxContext* aContext,
     return;
   }
 
-  gfxContext* target = BasicManager()->GetTarget();
-  NS_ASSERTION(target, "We shouldn't be called if there's no target");
-
-  mFrontBuffer.DrawTo(this, target, GetEffectiveOpacity());
+  mFrontBuffer.DrawTo(this, aContext, GetEffectiveOpacity());
 }
 
 class BasicShadowContainerLayer : public ShadowContainerLayer, BasicImplData {
