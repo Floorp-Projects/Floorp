@@ -1652,7 +1652,6 @@ jsid nsDOMClassInfo::sScrollX_id         = JSID_VOID;
 jsid nsDOMClassInfo::sScrollY_id         = JSID_VOID;
 jsid nsDOMClassInfo::sScrollMaxX_id      = JSID_VOID;
 jsid nsDOMClassInfo::sScrollMaxY_id      = JSID_VOID;
-jsid nsDOMClassInfo::sOpen_id            = JSID_VOID;
 jsid nsDOMClassInfo::sItem_id            = JSID_VOID;
 jsid nsDOMClassInfo::sNamedItem_id       = JSID_VOID;
 jsid nsDOMClassInfo::sEnumerate_id       = JSID_VOID;
@@ -1988,7 +1987,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sScrollY_id,         cx, "scrollY");
   SET_JSID_TO_STRING(sScrollMaxX_id,      cx, "scrollMaxX");
   SET_JSID_TO_STRING(sScrollMaxY_id,      cx, "scrollMaxY");
-  SET_JSID_TO_STRING(sOpen_id,            cx, "open");
   SET_JSID_TO_STRING(sItem_id,            cx, "item");
   SET_JSID_TO_STRING(sNamedItem_id,       cx, "namedItem");
   SET_JSID_TO_STRING(sEnumerate_id,       cx, "enumerateProperties");
@@ -5115,7 +5113,6 @@ nsDOMClassInfo::ShutDown()
   sScrollY_id         = JSID_VOID;
   sScrollMaxX_id      = JSID_VOID;
   sScrollMaxY_id      = JSID_VOID;
-  sOpen_id            = JSID_VOID;
   sItem_id            = JSID_VOID;
   sEnumerate_id       = JSID_VOID;
   sNavigator_id       = JSID_VOID;
@@ -8917,86 +8914,6 @@ ResolveImpl(JSContext *cx, nsIXPConnectWrappedNative *wrapper, jsid id,
   return doc->ResolveName(depStr, nsnull, result, aCache);
 }
 
-// static
-JSBool
-nsHTMLDocumentSH::DocumentOpen(JSContext *cx, uintN argc, jsval *vp)
-{
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj)
-    return JS_FALSE;
-
-  jsval *argv = JS_ARGV(cx, vp);
-  if (argc > 2) {
-    JSObject *global = ::JS_GetGlobalForObject(cx, obj);
-
-    // DOM0 quirk that makes document.open() call window.open() if
-    // called with 3 or more arguments.
-
-    return ::JS_CallFunctionName(cx, global, "open", argc, JS_ARGV(cx, vp), vp);
-  }
-
-  nsCOMPtr<nsISupports> native = do_QueryWrapper(cx, obj);
-  if (!native) {
-    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_FAILURE);
-
-    return JS_FALSE;
-  }
-
-  nsCOMPtr<nsIDOMHTMLDocument> doc = do_QueryInterface(native);
-  NS_ENSURE_TRUE(doc, JS_FALSE);
-
-  nsCAutoString contentType("text/html");
-  if (argc > 0) {
-    JSString* jsstr = JS_ValueToString(cx, argv[0]);
-    if (!jsstr) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-      return JS_FALSE;
-    }
-    nsDependentJSString depStr;
-    if (!depStr.init(cx, jsstr)) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-      return JS_FALSE;
-    }
-    nsAutoString type;
-    type.Assign(depStr);
-    ToLowerCase(type);
-    nsCAutoString actualType, dummy;
-    NS_ParseContentType(NS_ConvertUTF16toUTF8(type), actualType, dummy);
-    if (!actualType.EqualsLiteral("text/html") &&
-        !type.EqualsLiteral("replace")) {
-      contentType = "text/plain";
-    }
-  }
-  
-  PRBool replace = PR_FALSE;
-  if (argc > 1) {
-    JSString* jsstr = JS_ValueToString(cx, argv[1]);
-    if (!jsstr) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-      return JS_FALSE;
-    }
-
-    const jschar *chars = ::JS_GetStringCharsZ(cx, jsstr);
-    if (!chars) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-      return JS_FALSE;
-    }
-
-    replace = NS_LITERAL_STRING("replace").Equals(chars);
-  }
-
-  nsCOMPtr<nsIDOMDocument> retval;
-  nsresult rv = doc->Open(contentType, replace, cx, getter_AddRefs(retval));
-  if (NS_FAILED(rv)) {
-    nsDOMClassInfo::ThrowJSException(cx, rv);
-
-    return JS_FALSE;
-  }
-
-  *vp = OBJECT_TO_JSVAL(obj);
-  return NS_SUCCEEDED(rv);
-}
-
 
 static JSClass sHTMLDocumentAllClass = {
   "HTML document.all class",
@@ -9494,14 +9411,6 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         return ok ? NS_OK : NS_ERROR_FAILURE;
       }
-    }
-
-    if (id == sOpen_id) {
-      JSFunction *fnc =::JS_DefineFunctionById(cx, obj, id, DocumentOpen, 0,
-                                               JSPROP_ENUMERATE);
-      *objp = obj;
-
-      return fnc ? NS_OK : NS_ERROR_UNEXPECTED;
     }
 
     if (id == sAll_id && !sDisableDocumentAllSupport &&
