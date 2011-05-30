@@ -273,11 +273,11 @@ toolbarbutton[open="true"] {
 
 .button-checkbox > .button-image-icon {
   -moz-margin-end: @margin_normal@;
-  list-style-image: url("chrome://browser/skin/images/check-unselected-46.png");
+  list-style-image: url("chrome://browser/skin/images/check-unselected-hdpi.png");
 }
 
 .button-checkbox[checked="true"] > .button-image-icon {
-  list-style-image: url("chrome://browser/skin/images/check-selected-46.png");
+  list-style-image: url("chrome://browser/skin/images/check-selected-hdpi.png");
 }
 
 .button-checkbox:hover:active > .button-box,
@@ -362,15 +362,15 @@ checkbox:focus > .checkbox-label-center-box > .checkbox-label-box {
   -moz-border-left-colors: -moz-initial;
   min-width: 46px;
   min-height: 46px;
-  background: url(images/check-unselected-46.png) no-repeat 50% 50%;
+  background: url("chrome://browser/skin/images/check-unselected-hdpi.png") no-repeat 50% 50%;
 }
 
 checkbox[checked="true"] > .checkbox-spacer-box > .checkbox-check {
-  background-image: url(images/check-selected-46.png);
+  background-image: url("chrome://browser/skin/images/check-selected-hdpi.png");
 }
 
 checkbox[checked="true"][disabled="true"] > .checkbox-spacer-box > .checkbox-check {
-  background-image: url(images/check-selected-46.png);
+  background-image: url("chrome://browser/skin/images/check-selected-hdpi.png");
 }
 
 /* richlistbox ------------------------------------------------------------- */
