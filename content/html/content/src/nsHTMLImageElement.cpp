@@ -70,7 +70,6 @@
 #include "nsRuleData.h"
 
 #include "nsIJSContextStack.h"
-#include "nsImageMapUtils.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsEventDispatcher.h"
 
@@ -421,9 +420,7 @@ nsHTMLImageElement::IsHTMLFocusable(PRBool aWithMouse,
     // XXXbz which document should this be using?  sXBL/XBL2 issue!  I
     // think that GetOwnerDoc() is right, since we don't want to
     // assume stuff about the document we're bound to.
-    nsCOMPtr<nsIDOMHTMLMapElement> imageMap =
-      nsImageMapUtils::FindImageMap(GetOwnerDoc(), usemap);
-    if (imageMap) {
+    if (GetOwnerDoc() && GetOwnerDoc()->FindImageMap(usemap)) {
       if (aTabIndex) {
         // Use tab index on individual map areas
         *aTabIndex = (sTabFocusModel & eTabFocus_linksMask)? 0 : -1;
