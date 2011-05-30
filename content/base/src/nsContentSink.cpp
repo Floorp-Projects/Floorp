@@ -89,7 +89,6 @@
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIRequest.h"
 #include "nsNodeUtils.h"
 #include "nsIDOMNode.h"
@@ -103,6 +102,9 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsISupportsPrimitives.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
@@ -233,11 +235,11 @@ PRBool  nsContentSink::sCanInterruptParser;
 void
 nsContentSink::InitializeStatics()
 {
-  nsContentUtils::AddBoolPrefVarCache("content.notify.ontimer",
-                                      &sNotifyOnTimer, PR_TRUE);
+  Preferences::AddBoolVarCache(&sNotifyOnTimer,
+                               "content.notify.ontimer", PR_TRUE);
   // -1 means never.
-  nsContentUtils::AddIntPrefVarCache("content.notify.backoffcount",
-                                     &sBackoffCount, -1);
+  Preferences::AddIntVarCache(&sBackoffCount,
+                              "content.notify.backoffcount", -1);
   // The gNotificationInterval has a dramatic effect on how long it
   // takes to initially display content for slow connections.
   // The current value provides good
@@ -245,29 +247,28 @@ nsContentSink::InitializeStatics()
   // in page load time. If this value is set below 1/10 of second
   // it starts to impact page load performance.
   // see bugzilla bug 72138 for more info.
-  nsContentUtils::AddIntPrefVarCache("content.notify.interval",
-                                     &sNotificationInterval,
-                                     120000);
-  nsContentUtils::AddIntPrefVarCache("content.sink.interactive_deflect_count",
-                                     &sInteractiveDeflectCount, 0);
-  nsContentUtils::AddIntPrefVarCache("content.sink.perf_deflect_count",
-                                     &sPerfDeflectCount, 200);
-  nsContentUtils::AddIntPrefVarCache("content.sink.pending_event_mode",
-                                     &sPendingEventMode, 1);
-  nsContentUtils::AddIntPrefVarCache("content.sink.event_probe_rate",
-                                     &sEventProbeRate, 1);
-  nsContentUtils::AddIntPrefVarCache("content.sink.interactive_parse_time",
-                                     &sInteractiveParseTime, 3000);
-  nsContentUtils::AddIntPrefVarCache("content.sink.perf_parse_time",
-                                     &sPerfParseTime, 360000);
-  nsContentUtils::AddIntPrefVarCache("content.sink.interactive_time",
-                                     &sInteractiveTime, 750000);
-  nsContentUtils::AddIntPrefVarCache("content.sink.initial_perf_time",
-                                     &sInitialPerfTime, 2000000);
-  nsContentUtils::AddIntPrefVarCache("content.sink.enable_perf_mode",
-                                     &sEnablePerfMode, 0);
-  nsContentUtils::AddBoolPrefVarCache("content.interrupt.parsing",
-                                      &sCanInterruptParser, PR_TRUE);
+  Preferences::AddIntVarCache(&sNotificationInterval,
+                              "content.notify.interval", 120000);
+  Preferences::AddIntVarCache(&sInteractiveDeflectCount,
+                              "content.sink.interactive_deflect_count", 0);
+  Preferences::AddIntVarCache(&sPerfDeflectCount,
+                              "content.sink.perf_deflect_count", 200);
+  Preferences::AddIntVarCache(&sPendingEventMode,
+                              "content.sink.pending_event_mode", 1);
+  Preferences::AddIntVarCache(&sEventProbeRate,
+                              "content.sink.event_probe_rate", 1);
+  Preferences::AddIntVarCache(&sInteractiveParseTime,
+                              "content.sink.interactive_parse_time", 3000);
+  Preferences::AddIntVarCache(&sPerfParseTime,
+                              "content.sink.perf_parse_time", 360000);
+  Preferences::AddIntVarCache(&sInteractiveTime,
+                              "content.sink.interactive_time", 750000);
+  Preferences::AddIntVarCache(&sInitialPerfTime,
+                              "content.sink.initial_perf_time", 2000000);
+  Preferences::AddIntVarCache(&sEnablePerfMode,
+                              "content.sink.enable_perf_mode", 0);
+  Preferences::AddBoolVarCache(&sCanInterruptParser,
+                               "content.interrupt.parsing", PR_TRUE);
 }
 
 nsresult

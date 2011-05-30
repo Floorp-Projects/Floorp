@@ -44,9 +44,7 @@
 #include "nsIDOMDOMException.h"
 #include "nsIDOMRangeException.h"
 #include "nsIDOMFileException.h"
-#ifdef MOZ_SVG
 #include "nsIDOMSVGException.h"
-#endif
 #include "nsIDOMXPathException.h"
 #include "nsIIDBDatabaseException.h"
 #include "nsString.h"
@@ -185,7 +183,6 @@ nsRangeException::GetCode(PRUint16* aCode)
   return NS_OK;
 }
 
-#ifdef MOZ_SVG
 IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsSVGException, nsIDOMSVGException)
   NS_DECL_NSIDOMSVGEXCEPTION
 IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsSVGException, nsIDOMSVGException,
@@ -202,7 +199,6 @@ nsSVGException::GetCode(PRUint16* aCode)
 
   return NS_OK;
 }
-#endif // MOZ_SVG
 
 IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsXPathException, nsIDOMXPathException)
   NS_DECL_NSIDOMXPATHEXCEPTION

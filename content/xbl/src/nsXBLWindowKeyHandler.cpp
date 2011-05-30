@@ -62,7 +62,6 @@
 #include "nsContentUtils.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSDocument.h"
 #include "nsPIWindowRoot.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"

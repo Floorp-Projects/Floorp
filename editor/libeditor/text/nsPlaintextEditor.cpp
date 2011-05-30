@@ -196,13 +196,11 @@ nsPlaintextEditor::GetDefaultEditorPrefs(PRInt32 &aNewlineHandling,
                                          PRInt32 &aCaretStyle)
 {
   if (sNewlineHandlingPref == -1) {
-    nsContentUtils::RegisterPrefCallback("editor.singleLine.pasteNewlines",
-                                         EditorPrefsChangedCallback,
-                                         nsnull);
+    Preferences::RegisterCallback(EditorPrefsChangedCallback,
+                                  "editor.singleLine.pasteNewlines");
     EditorPrefsChangedCallback("editor.singleLine.pasteNewlines", nsnull);
-    nsContentUtils::RegisterPrefCallback("layout.selection.caret_style",
-                                         EditorPrefsChangedCallback,
-                                         nsnull);
+    Preferences::RegisterCallback(EditorPrefsChangedCallback,
+                                  "layout.selection.caret_style");
     EditorPrefsChangedCallback("layout.selection.caret_style", nsnull);
   }
 

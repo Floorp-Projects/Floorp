@@ -2964,11 +2964,6 @@ function FillInHTMLTooltip(tipElement)
   var titleText = null;
   var XLinkTitleText = null;
   var SVGTitleText = null;
-#ifdef MOZ_SVG
-  var lookingForSVGTitle = true;
-#else
-  var lookingForSVGTitle = false;
-#endif // MOZ_SVG
   var direction = tipElement.ownerDocument.dir;
 
   // If the element is invalid per HTML5 Forms specifications and has no title,
@@ -2989,20 +2984,14 @@ function FillInHTMLTooltip(tipElement)
       titleText = tipElement.getAttribute("title");
       if ((tipElement instanceof HTMLAnchorElement && tipElement.href) ||
           (tipElement instanceof HTMLAreaElement && tipElement.href) ||
-          (tipElement instanceof HTMLLinkElement && tipElement.href)
-#ifdef MOZ_SVG
-          || (tipElement instanceof SVGAElement && tipElement.hasAttributeNS(XLinkNS, "href"))
-#endif // MOZ_SVG
-          ) {
+          (tipElement instanceof HTMLLinkElement && tipElement.href) ||
+          (tipElement instanceof SVGAElement && tipElement.hasAttributeNS(XLinkNS, "href"))) {
         XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
       }
-      if (lookingForSVGTitle &&
-          !(tipElement instanceof SVGElement &&
-            tipElement.parentNode instanceof SVGElement &&
-            !(tipElement.parentNode instanceof SVGForeignObjectElement))) {
-        lookingForSVGTitle = false;
-      }
-      if (lookingForSVGTitle) {
+      if (tipElement instanceof SVGElement &&
+          tipElement.parentNode instanceof SVGElement &&
+          !(tipElement.parentNode instanceof SVGForeignObjectElement)) {
+        // Looking for SVG title
         let length = tipElement.childNodes.length;
         for (let i = 0; i < length; i++) {
           let childNode = tipElement.childNodes[i];

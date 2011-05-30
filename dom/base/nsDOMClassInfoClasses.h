@@ -225,7 +225,6 @@ DOMCI_CLASS(CSSMozDocumentRule)
 
 DOMCI_CLASS(BeforeUnloadEvent)
 
-#ifdef MOZ_SVG
 // The SVG document
 DOMCI_CLASS(SVGDocument)
 
@@ -343,7 +342,6 @@ DOMCI_CLASS(SVGRect)
 DOMCI_CLASS(SVGTransform)
 DOMCI_CLASS(SVGTransformList)
 DOMCI_CLASS(SVGZoomEvent)
-#endif // MOZ_SVG
 
 // Canvas
 DOMCI_CLASS(HTMLCanvasElement)
@@ -393,9 +391,7 @@ DOMCI_CLASS(EventSource)
 DOMCI_CLASS(ClientRect)
 DOMCI_CLASS(ClientRectList)
 
-#ifdef MOZ_SVG
 DOMCI_CLASS(SVGForeignObjectElement)
-#endif
 
 DOMCI_CLASS(XULCommandEvent)
 DOMCI_CLASS(CommandEvent)
