@@ -47,7 +47,6 @@
 #include "nsIDOMText.h"
 #include "nsIDocumentTransformer.h"
 #include "nsNetUtil.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIParser.h"
 #include "nsICharsetAlias.h"
 #include "nsIPrincipal.h"

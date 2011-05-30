@@ -77,7 +77,6 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsTArray.h"
 #include "nsTextFragment.h"
 #include "nsReadableUtils.h"
-#include "nsIPrefBranch2.h"
 #include "mozilla/AutoRestore.h"
 #include "nsINode.h"
 #include "nsHashtable.h"
@@ -104,7 +103,6 @@ class imgIDecoderObserver;
 class imgIRequest;
 class imgILoader;
 class imgICache;
-class nsIPrefBranch2;
 class nsIImageLoadingContent;
 class nsIDOMHTMLFormElement;
 class nsIDOMDocument;
@@ -129,8 +127,6 @@ class nsPIDOMWindow;
 class nsPIDOMEventTarget;
 class nsIPresShell;
 class nsIXPConnectJSObjectHolder;
-class nsPrefOldCallback;
-class nsPrefObserverHashKey;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -145,11 +141,6 @@ class nsAutoScriptBlockerSuppressNodeRemoved;
 struct nsIntMargin;
 class nsPIDOMWindow;
 class nsIDocumentLoaderFactory;
-
-#ifndef have_PrefChangedFunc_typedef
-typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
-#define have_PrefChangedFunc_typedef
-#endif
 
 namespace mozilla {
 
@@ -225,7 +216,8 @@ public:
    * When a document's scope changes (e.g., from document.open(), call this
    * function to move all content wrappers from the old scope to the new one.
    */
-  static nsresult ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
+  static nsresult ReparentContentWrappersInScope(JSContext *cx,
+                                                 nsIScriptGlobalObject *aOldScope,
                                                  nsIScriptGlobalObject *aNewScope);
 
   static PRBool   IsCallerChrome();
@@ -561,21 +553,6 @@ public:
   static void SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
                              nsIAtom **aTagName, PRInt32 *aNameSpaceID);
 
-  static void RegisterPrefCallback(const char *aPref,
-                                   PrefChangedFunc aCallback,
-                                   void * aClosure);
-  static void UnregisterPrefCallback(const char *aPref,
-                                     PrefChangedFunc aCallback,
-                                     void * aClosure);
-  static void AddBoolPrefVarCache(const char* aPref, PRBool* aVariable,
-                                  PRBool aDefault = PR_FALSE);
-  static void AddIntPrefVarCache(const char* aPref, PRInt32* aVariable,
-                                 PRInt32 aDefault = 0);
-  static nsIPrefBranch2 *GetPrefBranch()
-  {
-    return sPrefBranch;
-  }
-
   // Get a permission-manager setting for the given uri and type.
   // If the pref doesn't exist or if it isn't ALLOW_ACTION, PR_FALSE is
   // returned, otherwise PR_TRUE is returned.
@@ -775,9 +752,7 @@ public:
     eFORMS_PROPERTIES,
     ePRINTING_PROPERTIES,
     eDOM_PROPERTIES,
-#ifdef MOZ_SVG
     eSVG_PROPERTIES,
-#endif
     eBRAND_PROPERTIES,
     eCOMMON_DIALOG_PROPERTIES,
     PropertiesFile_COUNT
@@ -1794,11 +1769,6 @@ private:
 #ifdef MOZ_XTF
   static nsIXTFService *sXTFService;
 #endif
-
-  static nsIPrefBranch2 *sPrefBranch;
-  // For old compatibility of RegisterPrefCallback
-  static nsRefPtrHashtable<nsPrefObserverHashKey, nsPrefOldCallback>
-    *sPrefCallbackTable;
 
   static bool sImgLoaderInitialized;
   static void InitImgLoader();

@@ -8,6 +8,9 @@
 %define color_dialog_border #5a5a5a
 %define color_background_dlgbuttons #9a9a9a
 %define color_background_panel #d6d6d6
+%define color_background_header #292929
+%define color_text_header #999999
+%define color_background_scroller #9a9a9a
 
 %define color_background_inverse #fff
 %define color_text_inverse #000

@@ -161,12 +161,23 @@ public:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
+static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
+                     NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
+
 NS_IMPL_ADDREF_INHERITED(nsFileDataURI, nsSimpleURI)
 NS_IMPL_RELEASE_INHERITED(nsFileDataURI, nsSimpleURI)
+
 NS_INTERFACE_MAP_BEGIN(nsFileDataURI)
   NS_INTERFACE_MAP_ENTRY(nsIURIWithPrincipal)
   if (aIID.Equals(kFILEDATAURICID))
-      foundInterface = static_cast<nsIURI*>(this);
+    foundInterface = static_cast<nsIURI*>(this);
+  else if (aIID.Equals(kThisSimpleURIImplementationCID)) {
+    // Need to return explicitly here, because if we just set foundInterface
+    // to null the NS_INTERFACE_MAP_END_INHERITING will end up calling into
+    // nsSimplURI::QueryInterface and finding something for this CID.
+    *aInstancePtr = nsnull;
+    return NS_NOINTERFACE;
+  }
   else
 NS_INTERFACE_MAP_END_INHERITING(nsSimpleURI)
 
@@ -257,15 +268,20 @@ nsFileDataURI::EqualsInternal(nsIURI* aOther,
     return NS_OK;
   }
 
-  nsresult rv = mPrincipal->Equals(otherFileDataUri->mPrincipal, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (!*aResult) {
+  // Compare the member data that our base class knows about.
+  if (!nsSimpleURI::EqualsInternal(otherFileDataUri, aRefHandlingMode)) {
+    *aResult = PR_FALSE;
     return NS_OK;
-  }
+   }
 
-  return nsSimpleURI::EqualsInternal(otherFileDataUri, aRefHandlingMode,
-                                     aResult);
+  // Compare the piece of additional member data that we add to base class.
+  if (mPrincipal && otherFileDataUri->mPrincipal) {
+    // Both of us have mPrincipals. Compare them.
+    return mPrincipal->Equals(otherFileDataUri->mPrincipal, aResult);
+  }
+  // else, at least one of us lacks a principal; only equal if *both* lack it.
+  *aResult = (!mPrincipal && !otherFileDataUri->mPrincipal);
+  return NS_OK;
 }
 
 // nsIClassInfo methods:

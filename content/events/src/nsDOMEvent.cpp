@@ -79,10 +79,8 @@ static const char* const sEventNames[] = {
   "DOMActivate", "DOMFocusIn", "DOMFocusOut",
   "pageshow", "pagehide", "DOMMouseScroll", "MozMousePixelScroll",
   "offline", "online", "copy", "cut", "paste", "open", "message",
-#ifdef MOZ_SVG
   "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
   "SVGZoom",
-#endif // MOZ_SVG
 #ifdef MOZ_SMIL
   "beginEvent", "endEvent", "repeatEvent",
 #endif // MOZ_SMIL
@@ -777,7 +775,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
                                static_cast<nsUIEvent*>(mEvent)->detail);
       break;
     }
-#ifdef MOZ_SVG
     case NS_SVG_EVENT:
     {
       newEvent = new nsEvent(PR_FALSE, msg);
@@ -792,7 +789,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent->eventStructType = NS_SVGZOOM_EVENT;
       break;
     }
-#endif // MOZ_SVG
 #ifdef MOZ_SMIL
     case NS_SMIL_TIME_EVENT:
     {
@@ -1267,7 +1263,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_open];
   case NS_MESSAGE:
     return sEventNames[eDOMEvents_message];
-#ifdef MOZ_SVG
   case NS_SVG_LOAD:
     return sEventNames[eDOMEvents_SVGLoad];
   case NS_SVG_UNLOAD:
@@ -1282,7 +1277,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_SVGScroll];
   case NS_SVG_ZOOM:
     return sEventNames[eDOMEvents_SVGZoom];
-#endif // MOZ_SVG
 #ifdef MOZ_SMIL
   case NS_SMIL_BEGIN:
     return sEventNames[eDOMEvents_beginEvent];

@@ -94,7 +94,6 @@
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLHeadElement.h"
 #include "nsINameSpaceManager.h"
@@ -284,8 +283,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mForms, nsIDOMNodeList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mFormControls,
                                                        nsIDOMNodeList)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mImageMaps,
-                                                       nsIDOMNodeList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mWyciwygChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMidasCommandManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFragmentParser)
@@ -299,7 +296,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAnchors)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mForms)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFormControls)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mWyciwygChannel)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mMidasCommandManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFragmentParser)
@@ -316,7 +312,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsHTMLDocument)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIHTMLDocument)
     NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMHTMLDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsHTMLDocument, nsIDOMNSHTMLDocument)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLDocument)
@@ -600,9 +595,8 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
       gPlugDetector = PR_TRUE;
     }
 
-    nsContentUtils::RegisterPrefCallback("intl.charset.detector",
-                                         MyPrefChangedCallback,
-                                         nsnull);
+    Preferences::RegisterCallback(MyPrefChangedCallback,
+                                  "intl.charset.detector");
 
     gInitDetector = PR_TRUE;
   }
@@ -1147,34 +1141,6 @@ nsHTMLDocument::EndLoad()
   }
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::SetTitle(const nsAString& aTitle)
-{
-  return nsDocument::SetTitle(aTitle);
-}
-
-Element*
-nsHTMLDocument::GetImageMap(const nsAString& aMapName)
-{
-  if (!mImageMaps) {
-    mImageMaps = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::map, nsGkAtoms::map);
-  }
-
-  nsAutoString name;
-  PRUint32 i, n = mImageMaps->Length(PR_TRUE);
-  for (i = 0; i < n; ++i) {
-    nsIContent* map = mImageMaps->GetNodeAt(i);
-    if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aMapName,
-                         eCaseMatters) ||
-        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aMapName,
-                         eIgnoreCase)) {
-      return map->AsElement();
-    }
-  }
-
-  return NULL;
-}
-
 void
 nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 {
@@ -1195,18 +1161,6 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 //
 // nsIDOMHTMLDocument interface implementation
 //
-NS_IMETHODIMP
-nsHTMLDocument::GetTitle(nsAString& aTitle)
-{
-  return nsDocument::GetTitle(aTitle);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetReferrer(nsAString& aReferrer)
-{
-  return nsDocument::GetReferrer(aReferrer);
-}
-
 void
 nsHTMLDocument::GetDomainURI(nsIURI **aURI)
 {
@@ -1562,9 +1516,9 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
   return NS_OK;
 }
 
-// XXX TBI: accepting arguments to the open method.
 nsresult
-nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
+nsHTMLDocument::OpenCommon(JSContext* cx, const nsAString& aContentType,
+                           PRBool aReplace)
 {
   if (!IsHTML() || mDisableDocWrite) {
     // No calling document.open() on XHTML
@@ -1732,7 +1686,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     nsCOMPtr<nsIScriptGlobalObject> newScope(do_QueryReferent(mScopeObject));
     if (oldScope && newScope != oldScope) {
-      nsContentUtils::ReparentContentWrappersInScope(oldScope, newScope);
+      nsContentUtils::ReparentContentWrappersInScope(cx, oldScope, newScope);
     }
   }
 
@@ -1754,7 +1708,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   }
 
   // This will be propagated to the parser when someone actually calls write()
-  SetContentTypeInternal(aContentType);
+  SetContentTypeInternal(NS_ConvertUTF16toUTF8(aContentType));
 
   mWriteState = eDocumentOpened;
 
@@ -1812,17 +1766,40 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Open()
+nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
+                     const nsAString& aReplaceOrName,
+                     const nsAString& aFeatures,
+                     JSContext* cx, PRUint8 aOptionalArgCount,
+                     nsISupports** aReturn)
 {
-  nsCOMPtr<nsIDOMDocument> doc;
-  return Open(NS_LITERAL_CSTRING("text/html"), PR_FALSE, getter_AddRefs(doc));
-}
+  // When called with 3 or more arguments, document.open() calls window.open().
+  if (aOptionalArgCount > 2) {
+    nsCOMPtr<nsIDOMWindowInternal> window = GetWindowInternal();
+    if (!window) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    nsresult rv = window->Open(aContentTypeOrUrl, aReplaceOrName, aFeatures,
+                               getter_AddRefs(newWindow));
+    *aReturn = newWindow.forget().get();
+    return rv;
+  }
 
-NS_IMETHODIMP
-nsHTMLDocument::Open(const nsACString& aContentType, PRBool aReplace,
-                     nsIDOMDocument** aReturn)
-{
-  nsresult rv = OpenCommon(aContentType, aReplace);
+  nsAutoString contentType;
+  contentType.AssignLiteral("text/html");
+  if (aOptionalArgCount > 0) {
+    nsAutoString type;
+    ToLowerCase(aContentTypeOrUrl, type);
+    nsCAutoString actualType, dummy;
+    NS_ParseContentType(NS_ConvertUTF16toUTF8(type), actualType, dummy);
+    if (!actualType.EqualsLiteral("text/html") &&
+        !type.EqualsLiteral("replace")) {
+      contentType.AssignLiteral("text/plain");
+    }
+  }
+
+  nsresult rv = OpenCommon(cx, contentType,
+    aOptionalArgCount > 1 && aReplaceOrName.EqualsLiteral("replace"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(this, aReturn);
@@ -1896,7 +1873,8 @@ nsHTMLDocument::Close()
 }
 
 nsresult
-nsHTMLDocument::WriteCommon(const nsAString& aText,
+nsHTMLDocument::WriteCommon(JSContext *cx,
+                            const nsAString& aText,
                             PRBool aNewlineTerminate)
 {
   mTooDeepWriteRecursion =
@@ -1944,7 +1922,9 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
                                       "DOM Events", this);
       return NS_OK;
     }
-    rv = Open();
+    nsCOMPtr<nsISupports> ignored;
+    rv = Open(NS_LITERAL_STRING("text/html"), EmptyString(), EmptyString(), cx,
+              1, getter_AddRefs(ignored));
 
     // If Open() fails, or if it didn't create a parser (as it won't
     // if the user chose to not discard the current document through
@@ -1991,15 +1971,15 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Write(const nsAString& aText)
+nsHTMLDocument::Write(const nsAString& aText, JSContext *cx)
 {
-  return WriteCommon(aText, PR_FALSE);
+  return WriteCommon(cx, aText, PR_FALSE);
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Writeln(const nsAString& aText)
+nsHTMLDocument::Writeln(const nsAString& aText, JSContext *cx)
 {
-  return WriteCommon(aText, PR_TRUE);
+  return WriteCommon(cx, aText, PR_TRUE);
 }
 
 PRBool

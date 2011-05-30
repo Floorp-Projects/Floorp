@@ -195,9 +195,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eSupportDocuments = PR_BIT(2), // Documents are supported
                                      // (nsIDocumentLoaderFactory)
                                      // This flag always includes SVG
-#ifdef MOZ_SVG
       eSupportSVG       = PR_BIT(3), // SVG is supported (image/svg+xml)
-#endif
       eSupportClassID   = PR_BIT(4), // The classid attribute is supported
       eOverrideServerType = PR_BIT(5) // The server-sent MIME type is ignored
                                       // (ignored if no type is specified)

@@ -70,7 +70,6 @@
 #include "nsRuleData.h"
 
 #include "nsIJSContextStack.h"
-#include "nsImageMapUtils.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsEventDispatcher.h"
 
@@ -152,7 +151,6 @@ public:
   void MaybeLoadImage();
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  nsPoint GetXY();
   nsSize GetWidthHeight();
 };
 
@@ -248,42 +246,6 @@ nsHTMLImageElement::GetComplete(PRBool* aComplete)
   *aComplete =
     (status &
      (imgIRequest::STATUS_LOAD_COMPLETE | imgIRequest::STATUS_ERROR)) != 0;
-
-  return NS_OK;
-}
-
-nsPoint
-nsHTMLImageElement::GetXY()
-{
-  nsPoint point(0, 0);
-
-  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
-
-  if (!frame) {
-    return point;
-  }
-
-  nsIFrame* layer = nsLayoutUtils::GetClosestLayer(frame->GetParent());
-  nsPoint origin(frame->GetOffsetTo(layer));
-  // Convert to pixels using that scale
-  point.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
-  point.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
-
-  return point;
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::GetX(PRInt32* aX)
-{
-  *aX = GetXY().x;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::GetY(PRInt32* aY)
-{
-  *aY = GetXY().y;
 
   return NS_OK;
 }
@@ -458,9 +420,7 @@ nsHTMLImageElement::IsHTMLFocusable(PRBool aWithMouse,
     // XXXbz which document should this be using?  sXBL/XBL2 issue!  I
     // think that GetOwnerDoc() is right, since we don't want to
     // assume stuff about the document we're bound to.
-    nsCOMPtr<nsIDOMHTMLMapElement> imageMap =
-      nsImageMapUtils::FindImageMap(GetOwnerDoc(), usemap);
-    if (imageMap) {
+    if (GetOwnerDoc() && GetOwnerDoc()->FindImageMap(usemap)) {
       if (aTabIndex) {
         // Use tab index on individual map areas
         *aTabIndex = (sTabFocusModel & eTabFocus_linksMask)? 0 : -1;
