@@ -108,10 +108,8 @@ class nsHashKey;
 #endif
 
 #define NS_UI_EVENT                       28
-#ifdef MOZ_SVG
 #define NS_SVG_EVENT                      30
 #define NS_SVGZOOM_EVENT                  31
-#endif // MOZ_SVG
 #ifdef MOZ_SMIL
 #define NS_SMIL_TIME_EVENT                32
 #endif // MOZ_SMIL
@@ -360,7 +358,6 @@ class nsHashKey;
 #define NS_PAGE_SHOW               (NS_PAGETRANSITION_START + 1)
 #define NS_PAGE_HIDE               (NS_PAGETRANSITION_START + 2)
 
-#ifdef MOZ_SVG
 // SVG events
 #define NS_SVG_EVENT_START              2800
 #define NS_SVG_LOAD                     (NS_SVG_EVENT_START)
@@ -373,7 +370,6 @@ class nsHashKey;
 // SVG Zoom events
 #define NS_SVGZOOM_EVENT_START          2900
 #define NS_SVG_ZOOM                     (NS_SVGZOOM_EVENT_START)
-#endif // MOZ_SVG
 
 // XUL command events
 #define NS_XULCOMMAND_EVENT_START       3000

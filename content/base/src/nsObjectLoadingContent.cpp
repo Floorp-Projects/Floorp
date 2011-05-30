@@ -1497,11 +1497,8 @@ nsObjectLoadingContent::GetCapabilities() const
 {
   return eSupportImages |
          eSupportPlugins |
-         eSupportDocuments
-#ifdef MOZ_SVG
-         | eSupportSVG
-#endif
-         ;
+         eSupportDocuments |
+         eSupportSVG;
 }
 
 void
@@ -1706,12 +1703,8 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
     return eType_Image;
   }
 
-#ifdef MOZ_SVG
   PRBool isSVG = aMIMEType.LowerCaseEqualsLiteral("image/svg+xml");
   PRBool supportedSVG = isSVG && (caps & eSupportSVG);
-#else
-  PRBool supportedSVG = PR_FALSE;
-#endif
   if (((caps & eSupportDocuments) || supportedSVG) &&
       IsSupportedDocument(aMIMEType)) {
     return eType_Document;

@@ -1796,10 +1796,8 @@ NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
 nsresult
 NS_NewXMLDocument(nsIDocument** aInstancePtrResult);
 
-#ifdef MOZ_SVG
 nsresult
 NS_NewSVGDocument(nsIDocument** aInstancePtrResult);
-#endif
 
 nsresult
 NS_NewImageDocument(nsIDocument** aInstancePtrResult);

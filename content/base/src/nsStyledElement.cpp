@@ -52,10 +52,7 @@
 #include "mozilla/css/Loader.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsXULElement.h"
-
-#ifdef MOZ_SVG
 #include "nsIDOMSVGStylable.h"
-#endif
 
 namespace css = mozilla::css;
 

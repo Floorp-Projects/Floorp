@@ -5,9 +5,7 @@ component {47cd0651-b1be-4a0f-b5c4-10e5a573ef71} nsBrowserContentHandler.js appl
 contract @mozilla.org/browser/final-clh;1 {47cd0651-b1be-4a0f-b5c4-10e5a573ef71} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 contract @mozilla.org/uriloader/content-handler;1?type=text/html {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 contract @mozilla.org/uriloader/content-handler;1?type=application/vnd.mozilla.xul+xml {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
-#ifdef MOZ_SVG
 contract @mozilla.org/uriloader/content-handler;1?type=image/svg+xml {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
-#endif
 contract @mozilla.org/uriloader/content-handler;1?type=text/rdf {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 contract @mozilla.org/uriloader/content-handler;1?type=text/xml {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 contract @mozilla.org/uriloader/content-handler;1?type=application/xhtml+xml {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}

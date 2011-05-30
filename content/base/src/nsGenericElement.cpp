@@ -97,9 +97,7 @@
 #include "nsPIBoxObject.h"
 #include "nsIDOMNSElement.h"
 #include "nsClientRect.h"
-#ifdef MOZ_SVG
 #include "nsSVGUtils.h"
-#endif
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
@@ -147,9 +145,7 @@
 #include "nsTPtrArray.h"
 #include "prprf.h"
 
-#ifdef MOZ_SVG
 #include "nsSVGFeatures.h"
-#endif /* MOZ_SVG */
 
 using namespace mozilla::dom;
 namespace css = mozilla::css;
