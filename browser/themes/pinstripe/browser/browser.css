@@ -2006,6 +2006,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
 }
 
+.alltabs-item[tabIsVisible] {
+  /* box-shadow instead of background-color to work around native styling */
+  box-shadow: inset 0 0 0 2em hsla(0,0%,50%,.15);
+}
+
 /* Tabstrip close button */
 .tabs-closebutton {
   -moz-padding-end: 4px;

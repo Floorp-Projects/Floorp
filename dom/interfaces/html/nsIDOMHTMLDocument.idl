@@ -39,43 +39,108 @@
 
 #include "nsIDOMDocument.idl"
 
+%{C++
+#include "jspubtd.h"
+%}
+
 /**
  * The nsIDOMHTMLDocument interface is the interface to a [X]HTML
  * document object.
  *
- * This interface is trying to follow the DOM Level 2 HTML specification:
- * http://www.w3.org/TR/DOM-Level-2-HTML/
- *
- * with changes from the work-in-progress WHATWG HTML specification:
- * http://www.whatwg.org/specs/web-apps/current-work/
+ * @see <http://www.whatwg.org/html/>
  */
 
-[scriptable, uuid(eb3750ae-d156-4b97-b200-f35276c6510f)]
+[scriptable, uuid(3c0ca40f-72c5-4d15-935e-ccaff7953f2c)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
-           attribute DOMString            title;
-  readonly attribute DOMString            referrer;
-  // domain is readonly per spec, but it's settable in
-  // nsIDOMNSHTMLDocument
-  [noscript] readonly attribute DOMString domain;
   readonly attribute DOMString            URL;
+           attribute DOMString            domain;
+           attribute DOMString            cookie;
+  // returns "BackCompat" if we're in quirks mode,
+  // or "CSS1Compat" if we're in strict mode
+  readonly attribute DOMString            compatMode;
+
+  readonly attribute nsIDOMHTMLHeadElement head;
            attribute nsIDOMHTMLElement    body;
+
   readonly attribute nsIDOMHTMLCollection images;
-  readonly attribute nsIDOMHTMLCollection applets;
+  readonly attribute nsIDOMHTMLCollection embeds;
+  // mapped to attribute embeds for NS4 compat
+  readonly attribute nsIDOMHTMLCollection plugins;
   readonly attribute nsIDOMHTMLCollection links;
   readonly attribute nsIDOMHTMLCollection forms;
-  readonly attribute nsIDOMHTMLCollection anchors;
-           attribute DOMString            cookie;
-                                             // raises(DOMException) on setting
+  nsIDOMNodeList            getElementsByName(in DOMString elementName);
 
-  // open() is noscript here since the DOM Level 0 version of open()
-  // returned nsIDOMDocument, and not void. The script version of
-  // open() is defined in nsIDOMNSHTMLDocument.
-  [noscript] void           open();
+  // If aContentType is not something supported by nsHTMLDocument and
+  // the HTML content sink, trying to write to the document will
+  // probably throw.
+  // Pass aReplace = true to trigger a replacement of the previous
+  // document in session history; pass false for normal history handling.
+  [implicit_jscontext, optional_argc]
+  nsISupports               open([optional] in DOMString aContentTypeOrUrl,
+                                 [optional] in DOMString aReplaceOrName,
+                                 [optional] in DOMString aFeatures);
   void                      close();
 
+  [implicit_jscontext]
   void                      write([optional, Null(Stringify)] in DOMString text);
+  [implicit_jscontext]
   void                      writeln([optional, Null(Stringify)] in DOMString text);
 
-  nsIDOMNodeList            getElementsByName(in DOMString elementName);
+  /**
+   * Midas additions
+   */
+  attribute DOMString       designMode;
+
+  boolean                   execCommand(in DOMString commandID,
+                                        in boolean doShowUI,
+                                        in DOMString value);
+
+  // returns true if the help is being shown for command (false if not)
+  boolean                   execCommandShowHelp(in DOMString commandID);
+
+  // returns true if the command is enabled (false otherwise)
+  boolean                   queryCommandEnabled(in DOMString commandID);
+  
+  // returns true if the command is in a indeterminate state (false otherwise)
+  boolean                   queryCommandIndeterm(in DOMString commandID);
+
+  // returns true if the command has been executed (false otherwise)
+  boolean                   queryCommandState(in DOMString commandID);
+
+  // returns true if the command is supported on the current range
+  boolean                   queryCommandSupported(in DOMString commandID);
+
+  //
+  DOMString                 queryCommandText(in DOMString commandID);
+
+  // returns the current value of the document or current selection for command
+  DOMString                 queryCommandValue(in DOMString commandID);
+
+
+  // Obsolete APIs
+           attribute DOMString            fgColor;
+           attribute DOMString            bgColor;
+           attribute DOMString            linkColor;
+           attribute DOMString            vlinkColor;
+           attribute DOMString            alinkColor;
+
+  readonly attribute nsIDOMHTMLCollection anchors;
+  readonly attribute nsIDOMHTMLCollection applets;
+
+  void                      clear();
+
+
+  // DOM Range
+  DOMString                 getSelection();
+
+
+  // Mozilla extensions
+  /**
+   * @deprecated These are old Netscape 4 methods. Do not use,
+   *             the implementation is no-op.
+   */
+  void                      captureEvents(in long eventFlags);
+  void                      releaseEvents(in long eventFlags);
+  void                      routeEvent(in nsIDOMEvent evt);
 };

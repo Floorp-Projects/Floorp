@@ -105,9 +105,7 @@ public:
   nsAttrValue(const nsAttrValue& aOther);
   explicit nsAttrValue(const nsAString& aValue);
   nsAttrValue(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
-#ifdef MOZ_SVG
   explicit nsAttrValue(nsISVGValue* aValue);
-#endif
   explicit nsAttrValue(const nsIntMargin& aValue);
   ~nsAttrValue();
 
@@ -127,9 +125,7 @@ public:
     // struct.
     eCSSStyleRule = 0x10,
     eAtomArray =    0x11 
-#ifdef MOZ_SVG
     ,eSVGValue =    0x12
-#endif
     ,eDoubleValue  = 0x13
     ,eIntMarginValue = 0x14
   };
@@ -142,9 +138,7 @@ public:
   void SetTo(const nsAString& aValue);
   void SetTo(PRInt16 aInt);
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
-#ifdef MOZ_SVG
   void SetTo(nsISVGValue* aValue);
-#endif
   void SetTo(const nsIntMargin& aValue);
 
   void SwapValueWith(nsAttrValue& aOther);
@@ -162,9 +156,7 @@ public:
   inline float GetPercentValue() const;
   inline AtomArray* GetAtomArrayValue() const;
   inline mozilla::css::StyleRule* GetCSSStyleRuleValue() const;
-#ifdef MOZ_SVG
   inline nsISVGValue* GetSVGValue() const;
-#endif
   inline double GetDoubleValue() const;
   PRBool GetIntMarginValue(nsIntMargin& aMargin) const;
 
@@ -343,9 +335,7 @@ private:
       PRInt32 mPercent;
       mozilla::css::StyleRule* mCSSStyleRule;
       AtomArray* mAtomArray;
-#ifdef MOZ_SVG
       nsISVGValue* mSVGValue;
-#endif
       double mDoubleValue;
       nsIntMargin* mIntMargin;
     };
@@ -449,14 +439,12 @@ nsAttrValue::GetCSSStyleRuleValue() const
   return GetMiscContainer()->mCSSStyleRule;
 }
 
-#ifdef MOZ_SVG
 inline nsISVGValue*
 nsAttrValue::GetSVGValue() const
 {
   NS_PRECONDITION(Type() == eSVGValue, "wrong type");
   return GetMiscContainer()->mSVGValue;
 }
-#endif
 
 inline double
 nsAttrValue::GetDoubleValue() const

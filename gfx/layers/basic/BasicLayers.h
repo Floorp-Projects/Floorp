@@ -180,6 +180,13 @@ public:
 
   void SetTransactionIncomplete() { mTransactionIncomplete = true; }
 
+  already_AddRefed<gfxContext> PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
+                                                 const nsIntRegion& aRegion,
+                                                 PRBool* aNeedsClipToVisibleRegion);
+  already_AddRefed<gfxContext> PushGroupWithCachedSurface(gfxContext *aTarget,
+                                                          gfxASurface::gfxContentType aContent);
+  void PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxContext *aPushed);
+
   virtual PRBool IsCompositingCheap() { return PR_FALSE; }
   virtual bool HasShadowManagerInternal() const { return false; }
   bool HasShadowManager() const { return HasShadowManagerInternal(); }
@@ -193,19 +200,14 @@ protected:
 #endif
 
   // Paints aLayer to mTarget.
-  void PaintLayer(Layer* aLayer,
+  void PaintLayer(gfxContext* aTarget,
+                  Layer* aLayer,
                   DrawThebesLayerCallback aCallback,
                   void* aCallbackData,
                   ReadbackProcessor* aReadback);
 
   // Clear the contents of a layer
   void ClearLayer(Layer* aLayer);
-
-  already_AddRefed<gfxContext> PushGroupWithCachedSurface(gfxContext *aTarget,
-                                                          gfxASurface::gfxContentType aContent,
-                                                          gfxPoint *aSavedOffset);
-  void PopGroupWithCachedSurface(gfxContext *aTarget,
-                                 const gfxPoint& aSavedOffset);
 
   bool EndTransactionInternal(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
@@ -227,6 +229,7 @@ protected:
 
   BufferMode   mDoubleBuffering;
   PRPackedBool mUsingDefaultTarget;
+  PRPackedBool mCachedSurfaceInUse;
   bool         mTransactionIncomplete;
 };
  

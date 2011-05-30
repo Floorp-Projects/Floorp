@@ -94,7 +94,6 @@ DOMCI_CLASS(HTMLBodyElement)
 DOMCI_CLASS(HTMLButtonElement)
 DOMCI_CLASS(HTMLDataListElement)
 DOMCI_CLASS(HTMLDListElement)
-DOMCI_CLASS(HTMLDelElement)
 DOMCI_CLASS(HTMLDirectoryElement)
 DOMCI_CLASS(HTMLDivElement)
 DOMCI_CLASS(HTMLEmbedElement)
@@ -110,7 +109,6 @@ DOMCI_CLASS(HTMLHtmlElement)
 DOMCI_CLASS(HTMLIFrameElement)
 DOMCI_CLASS(HTMLImageElement)
 DOMCI_CLASS(HTMLInputElement)
-DOMCI_CLASS(HTMLInsElement)
 DOMCI_CLASS(HTMLIsIndexElement)
 DOMCI_CLASS(HTMLLIElement)
 DOMCI_CLASS(HTMLLabelElement)
@@ -119,6 +117,7 @@ DOMCI_CLASS(HTMLLinkElement)
 DOMCI_CLASS(HTMLMapElement)
 DOMCI_CLASS(HTMLMenuElement)
 DOMCI_CLASS(HTMLMetaElement)
+DOMCI_CLASS(HTMLModElement)
 DOMCI_CLASS(HTMLOListElement)
 DOMCI_CLASS(HTMLObjectElement)
 DOMCI_CLASS(HTMLOptGroupElement)
@@ -226,7 +225,6 @@ DOMCI_CLASS(CSSMozDocumentRule)
 
 DOMCI_CLASS(BeforeUnloadEvent)
 
-#ifdef MOZ_SVG
 // The SVG document
 DOMCI_CLASS(SVGDocument)
 
@@ -344,7 +342,6 @@ DOMCI_CLASS(SVGRect)
 DOMCI_CLASS(SVGTransform)
 DOMCI_CLASS(SVGTransformList)
 DOMCI_CLASS(SVGZoomEvent)
-#endif // MOZ_SVG
 
 // Canvas
 DOMCI_CLASS(HTMLCanvasElement)
@@ -394,9 +391,7 @@ DOMCI_CLASS(EventSource)
 DOMCI_CLASS(ClientRect)
 DOMCI_CLASS(ClientRectList)
 
-#ifdef MOZ_SVG
 DOMCI_CLASS(SVGForeignObjectElement)
-#endif
 
 DOMCI_CLASS(XULCommandEvent)
 DOMCI_CLASS(CommandEvent)

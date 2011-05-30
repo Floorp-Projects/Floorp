@@ -193,9 +193,7 @@ public:
 
   nsresult SetQuirkMode(PRBool aQuirkMode);
 
-#ifdef  MOZ_SVG
   nsresult SetSVGMode(PRBool aSVGMode);
-#endif
 
   nsresult SetChildLoader(mozilla::css::Loader* aChildLoader);
 
@@ -299,11 +297,9 @@ protected:
                    PRUint32 aLineNumber, nsIURI* aBaseURI,
                    nsIPrincipal* aSheetPrincipal);
   void ReleaseScanner(void);
-#ifdef MOZ_SVG
   PRBool IsSVGMode() const {
     return mScanner.IsSVGMode();
   }
-#endif
 
   PRBool GetToken(PRBool aSkipWS);
   void UngetToken();
@@ -544,11 +540,9 @@ protected:
   PRBool ParseAnimation();
 #endif
 
-#ifdef MOZ_SVG
   PRBool ParsePaint(nsCSSProperty aPropID);
   PRBool ParseDasharray();
   PRBool ParseMarker();
-#endif
 
   // Reused utility parsing routines
   void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
@@ -801,7 +795,6 @@ CSSParserImpl::SetQuirkMode(PRBool aQuirkMode)
   return NS_OK;
 }
 
-#ifdef MOZ_SVG
 nsresult
 CSSParserImpl::SetSVGMode(PRBool aSVGMode)
 {
@@ -810,7 +803,6 @@ CSSParserImpl::SetSVGMode(PRBool aSVGMode)
   mScanner.SetSVGMode(aSVGMode);
   return NS_OK;
 }
-#endif
 
 nsresult
 CSSParserImpl::SetChildLoader(mozilla::css::Loader* aChildLoader)
@@ -825,9 +817,7 @@ CSSParserImpl::Reset()
   NS_ASSERTION(! mScannerInited, "resetting with scanner active");
   SetStyleSheet(nsnull);
   SetQuirkMode(PR_FALSE);
-#ifdef MOZ_SVG
   SetSVGMode(PR_FALSE);
-#endif // MOZ_SVG
   SetChildLoader(nsnull);
 }
 
@@ -4587,7 +4577,6 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     }
   }
 
-#ifdef  MOZ_SVG
   if (IsSVGMode() && !IsParsingCompoundProperty()) {
     // STANDARD: SVG Spec states that lengths and coordinates can be unitless
     // in which case they default to user-units (1 px = 1 user unit)
@@ -4597,7 +4586,6 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       return PR_TRUE;
     }
   }
-#endif
 
   if (((aVariantMask & VARIANT_URL) != 0) &&
       eCSSToken_URL == tk->mType) {
@@ -5575,8 +5563,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
 #endif
   case eCSSProperty_transition_property:
     return ParseTransitionProperty();
-
-#ifdef MOZ_SVG
   case eCSSProperty_fill:
   case eCSSProperty_stroke:
     return ParsePaint(aPropID);
@@ -5584,8 +5570,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseDasharray();
   case eCSSProperty_marker:
     return ParseMarker();
-#endif
-
   default:
     NS_ABORT_IF_FALSE(PR_FALSE, "should not be called");
     return PR_FALSE;
@@ -8582,7 +8566,6 @@ CSSParserImpl::SetDefaultNamespaceOnSelector(nsCSSSelector& aSelector)
   }
 }
 
-#ifdef MOZ_SVG
 PRBool
 CSSParserImpl::ParsePaint(nsCSSProperty aPropID)
 {
@@ -8649,7 +8632,6 @@ CSSParserImpl::ParseMarker()
   }
   return PR_FALSE;
 }
-#endif
 
 } // anonymous namespace
 
@@ -8717,14 +8699,12 @@ nsCSSParser::SetQuirkMode(PRBool aQuirkMode)
     SetQuirkMode(aQuirkMode);
 }
 
-#ifdef  MOZ_SVG
 nsresult
 nsCSSParser::SetSVGMode(PRBool aSVGMode)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     SetSVGMode(aSVGMode);
 }
-#endif
 
 nsresult
 nsCSSParser::SetChildLoader(mozilla::css::Loader* aChildLoader)

@@ -197,13 +197,14 @@ RemovePrefForFeature(PRInt32 aFeature)
 static bool
 GetPrefValueForDriverVersion(nsCString& aVersion)
 {
-  return NS_SUCCEEDED(Preferences::GetChar(SUGGESTED_VERSION_PREF, &aVersion));
+  return NS_SUCCEEDED(Preferences::GetCString(SUGGESTED_VERSION_PREF,
+                                              &aVersion));
 }
 
 static void
-SetPrefValueForDriverVersion(const nsString& aVersion)
+SetPrefValueForDriverVersion(const nsAString& aVersion)
 {
-  Preferences::SetChar(SUGGESTED_VERSION_PREF, aVersion);
+  Preferences::SetString(SUGGESTED_VERSION_PREF, aVersion);
 }
 
 static void

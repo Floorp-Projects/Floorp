@@ -121,7 +121,7 @@ struct cdir_end {
 
 static size_t zip_size;
 static int zip_fd;
-static struct mapping_info * lib_mapping;
+static struct mapping_info * lib_mapping = NULL;
 
 NS_EXPORT const struct mapping_info *
 getLibraryMapping()
@@ -646,8 +646,8 @@ loadLibs(const char *apkName)
 
   struct cdir_entry *cdir_start = (struct cdir_entry *)(zip + cdir_offset);
 
-#ifdef MOZ_CRASHREPORTER
   lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
+#ifdef MOZ_CRASHREPORTER
   file_ids = (char *)extractBuf("lib.id", zip, cdir_start, cdir_entries);
 #endif
 

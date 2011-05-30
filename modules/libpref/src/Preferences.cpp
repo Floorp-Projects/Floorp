@@ -73,6 +73,9 @@
 #include "mozilla/Omnijar.h"
 #include "nsZipArchive.h"
 
+#include "nsTArray.h"
+#include "nsRefPtrHashtable.h"
+
 namespace mozilla {
 
 // Definitions
@@ -86,6 +89,105 @@ static nsresult pref_LoadPrefsInDirList(const char *listId);
 
 Preferences* Preferences::sPreferences = nsnull;
 PRBool Preferences::sShutdown = PR_FALSE;
+
+class ValueObserverHashKey : public PLDHashEntryHdr {
+public:
+  typedef ValueObserverHashKey* KeyType;
+  typedef const ValueObserverHashKey* KeyTypePointer;
+
+  static const ValueObserverHashKey* KeyToPointer(ValueObserverHashKey *aKey)
+  {
+    return aKey;
+  }
+
+  static PLDHashNumber HashKey(const ValueObserverHashKey *aKey)
+  {
+    PRUint32 strHash = nsCRT::HashCode(aKey->mPrefName.BeginReading(),
+                                       aKey->mPrefName.Length());
+    return PR_ROTATE_LEFT32(strHash, 4) ^ NS_PTR_TO_UINT32(aKey->mCallback);
+  }
+
+  ValueObserverHashKey(const char *aPref, PrefChangedFunc aCallback) :
+    mPrefName(aPref), mCallback(aCallback) { }
+
+  ValueObserverHashKey(const ValueObserverHashKey *aOther) :
+    mPrefName(aOther->mPrefName), mCallback(aOther->mCallback)
+  { }
+
+  PRBool KeyEquals(const ValueObserverHashKey *aOther) const
+  {
+    return mCallback == aOther->mCallback && mPrefName == aOther->mPrefName;
+  }
+
+  ValueObserverHashKey *GetKey() const
+  {
+    return const_cast<ValueObserverHashKey*>(this);
+  }
+
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+  nsCString mPrefName;
+  PrefChangedFunc mCallback;
+};
+
+class ValueObserver : public nsIObserver,
+                      public ValueObserverHashKey
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  ValueObserver(const char *aPref, PrefChangedFunc aCallback)
+    : ValueObserverHashKey(aPref, aCallback) { }
+
+  ~ValueObserver() {
+    Preferences::RemoveObserver(this, mPrefName.get());
+  }
+
+  void AppendClosure(void *aClosure) {
+    mClosures.AppendElement(aClosure);
+  }
+
+  void RemoveClosure(void *aClosure) {
+    mClosures.RemoveElement(aClosure);
+  }
+
+  PRBool HasNoClosures() {
+    return mClosures.Length() == 0;
+  }
+
+  nsTArray<void*> mClosures;
+};
+
+NS_IMPL_ISUPPORTS1(ValueObserver, nsIObserver)
+
+NS_IMETHODIMP
+ValueObserver::Observe(nsISupports     *aSubject,
+                       const char      *aTopic,
+                       const PRUnichar *aData)
+{
+  NS_ASSERTION(!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
+               "invalid topic");
+  NS_ConvertUTF16toUTF8 data(aData);
+  for (PRUint32 i = 0; i < mClosures.Length(); i++) {
+    mCallback(data.get(), mClosures.ElementAt(i));
+  }
+
+  return NS_OK;
+}
+
+struct CacheData {
+  void* cacheLocation;
+  union {
+    PRBool defaultValueBool;
+    PRInt32 defaultValueInt;
+    PRUint32 defaultValueUint;
+  };
+};
+
+static nsTArray<nsAutoPtr<CacheData> >* gCacheData = nsnull;
+static nsRefPtrHashtable<ValueObserverHashKey,
+                         ValueObserver>* gObserverTable = nsnull;
 
 // static
 Preferences*
@@ -115,8 +217,15 @@ Preferences::InitStaticMembers()
   NS_ADDREF(sPreferences);
   if (NS_FAILED(sPreferences->Init()) || !sPreferences->mRootBranch) {
     NS_RELEASE(sPreferences);
+    return PR_FALSE;
   }
-  return sPreferences != nsnull;
+
+  gCacheData = new nsTArray<nsAutoPtr<CacheData> >();
+
+  gObserverTable = new nsRefPtrHashtable<ValueObserverHashKey, ValueObserver>();
+  gObserverTable->Init();
+
+  return PR_TRUE;
 }
 
 // static
@@ -125,6 +234,12 @@ Preferences::Shutdown()
 {
   sShutdown = PR_TRUE; // Don't create the singleton instance after here.
   NS_IF_RELEASE(sPreferences);
+
+  delete gCacheData;
+  gCacheData = nsnull;
+
+  delete gObserverTable;
+  gObserverTable = nsnull;
 }
 
 //-----------------------------------------------------------------------------
@@ -1020,12 +1135,30 @@ Preferences::GetInt(const char* aPref, PRInt32* aResult)
 }
 
 // static
+nsAdoptingCString
+Preferences::GetCString(const char* aPref)
+{
+  nsAdoptingCString result;
+  GetCString(aPref, &result);
+  return result;
+}
+
+// static
+nsAdoptingString
+Preferences::GetString(const char* aPref)
+{
+  nsAdoptingString result;
+  GetString(aPref, &result);
+  return result;
+}
+
+// static
 nsresult
-Preferences::GetChar(const char* aPref, nsCString* aResult)
+Preferences::GetCString(const char* aPref, nsACString* aResult)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  nsAdoptingCString result;
+  nsCAutoString result;
   nsresult rv =
     sPreferences->mRootBranch->GetCharPref(aPref, getter_Copies(result));
   if (NS_SUCCEEDED(rv)) {
@@ -1036,11 +1169,11 @@ Preferences::GetChar(const char* aPref, nsCString* aResult)
 
 // static
 nsresult
-Preferences::GetChar(const char* aPref, nsString* aResult)
+Preferences::GetString(const char* aPref, nsAString* aResult)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  nsAdoptingCString result;
+  nsCAutoString result;
   nsresult rv =
     sPreferences->mRootBranch->GetCharPref(aPref, getter_Copies(result));
   if (NS_SUCCEEDED(rv)) {
@@ -1050,8 +1183,39 @@ Preferences::GetChar(const char* aPref, nsString* aResult)
 }
 
 // static
+nsAdoptingCString
+Preferences::GetLocalizedCString(const char* aPref)
+{
+  nsAdoptingCString result;
+  GetLocalizedCString(aPref, &result);
+  return result;
+}
+
+// static
+nsAdoptingString
+Preferences::GetLocalizedString(const char* aPref)
+{
+  nsAdoptingString result;
+  GetLocalizedString(aPref, &result);
+  return result;
+}
+
+// static
 nsresult
-Preferences::GetLocalizedString(const char* aPref, nsString* aResult)
+Preferences::GetLocalizedCString(const char* aPref, nsACString* aResult)
+{
+  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  nsAutoString result;
+  nsresult rv = GetLocalizedString(aPref, &result);
+  if (NS_SUCCEEDED(rv)) {
+    CopyUTF16toUTF8(result, *aResult);
+  }
+  return rv;
+}
+
+// static
+nsresult
+Preferences::GetLocalizedString(const char* aPref, nsAString* aResult)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -1060,18 +1224,15 @@ Preferences::GetLocalizedString(const char* aPref, nsString* aResult)
                                              NS_GET_IID(nsIPrefLocalizedString),
                                              getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
-    if (prefLocalString) {
-      prefLocalString->GetData(getter_Copies(*aResult));
-    } else {
-      aResult->Truncate();
-    }
+    NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
+    prefLocalString->GetData(getter_Copies(*aResult));
   }
   return rv;
 }
 
 // static
 nsresult
-Preferences::SetChar(const char* aPref, const char* aValue)
+Preferences::SetCString(const char* aPref, const char* aValue)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
   return sPreferences->mRootBranch->SetCharPref(aPref, aValue);
@@ -1079,25 +1240,25 @@ Preferences::SetChar(const char* aPref, const char* aValue)
 
 // static
 nsresult
-Preferences::SetChar(const char* aPref, const nsCString &aValue)
+Preferences::SetCString(const char* aPref, const nsACString &aValue)
 {
-  return SetChar(aPref, nsPromiseFlatCString(aValue).get());
+  return SetCString(aPref, PromiseFlatCString(aValue).get());
 }
 
 // static
 nsresult
-Preferences::SetChar(const char* aPref, const PRUnichar* aValue)
+Preferences::SetString(const char* aPref, const PRUnichar* aValue)
 {
   NS_ConvertUTF16toUTF8 utf8(aValue);
-  return SetChar(aPref, utf8.get());
+  return SetCString(aPref, utf8.get());
 }
 
 // static
 nsresult
-Preferences::SetChar(const char* aPref, const nsString &aValue)
+Preferences::SetString(const char* aPref, const nsAString &aValue)
 {
   NS_ConvertUTF16toUTF8 utf8(aValue);
-  return SetChar(aPref, utf8.get());
+  return SetCString(aPref, utf8.get());
 }
 
 // static
@@ -1149,6 +1310,158 @@ Preferences::RemoveObserver(nsIObserver* aObserver,
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->RemoveObserver(aPref, aObserver);
+}
+
+// static
+nsresult
+Preferences::AddStrongObservers(nsIObserver* aObserver,
+                                const char** aPrefs)
+{
+  for (PRUint32 i = 0; aPrefs[i]; i++) {
+    nsresult rv = AddStrongObserver(aObserver, aPrefs[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+// static
+nsresult
+Preferences::AddWeakObservers(nsIObserver* aObserver,
+                              const char** aPrefs)
+{
+  for (PRUint32 i = 0; aPrefs[i]; i++) {
+    nsresult rv = AddWeakObserver(aObserver, aPrefs[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+// static
+nsresult
+Preferences::RemoveObservers(nsIObserver* aObserver,
+                             const char** aPrefs)
+{
+  for (PRUint32 i = 0; aPrefs[i]; i++) {
+    nsresult rv = RemoveObserver(aObserver, aPrefs[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+// static
+nsresult
+Preferences::RegisterCallback(PrefChangedFunc aCallback,
+                              const char* aPref,
+                              void* aClosure)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
+  ValueObserverHashKey hashKey(aPref, aCallback);
+  nsRefPtr<ValueObserver> observer;
+  gObserverTable->Get(&hashKey, getter_AddRefs(observer));
+  if (observer) {
+    observer->AppendClosure(aClosure);
+    return NS_OK;
+  }
+
+  observer = new ValueObserver(aPref, aCallback);
+  observer->AppendClosure(aClosure);
+  nsresult rv = AddStrongObserver(observer, aPref);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return gObserverTable->Put(observer, observer) ? NS_OK :
+                                                   NS_ERROR_OUT_OF_MEMORY;
+}
+
+// static
+nsresult
+Preferences::UnregisterCallback(PrefChangedFunc aCallback,
+                                const char* aPref,
+                                void* aClosure)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+
+  ValueObserverHashKey hashKey(aPref, aCallback);
+  nsRefPtr<ValueObserver> observer;
+  gObserverTable->Get(&hashKey, getter_AddRefs(observer));
+  if (!observer) {
+    return NS_OK;
+  }
+
+  observer->RemoveClosure(aClosure);
+  if (observer->HasNoClosures()) {
+    // Delete the callback since its list of closures is empty.
+    gObserverTable->Remove(observer);
+  }
+  return NS_OK;
+}
+
+static int BoolVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *((PRBool*)cache->cacheLocation) =
+    Preferences::GetBool(aPref, cache->defaultValueBool);
+  return 0;
+}
+
+// static
+nsresult
+Preferences::AddBoolVarCache(PRBool* aCache,
+                             const char* aPref,
+                             PRBool aDefault)
+{
+  NS_ASSERTION(aCache, "aCache must not be NULL");
+  *aCache = GetBool(aPref, aDefault);
+  CacheData* data = new CacheData();
+  data->cacheLocation = aCache;
+  data->defaultValueBool = aDefault;
+  gCacheData->AppendElement(data);
+  return RegisterCallback(BoolVarChanged, aPref, data);
+}
+
+static int IntVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *((PRInt32*)cache->cacheLocation) =
+    Preferences::GetInt(aPref, cache->defaultValueInt);
+  return 0;
+}
+
+// static
+nsresult
+Preferences::AddIntVarCache(PRInt32* aCache,
+                            const char* aPref,
+                            PRInt32 aDefault)
+{
+  NS_ASSERTION(aCache, "aCache must not be NULL");
+  *aCache = Preferences::GetInt(aPref, aDefault);
+  CacheData* data = new CacheData();
+  data->cacheLocation = aCache;
+  data->defaultValueInt = aDefault;
+  gCacheData->AppendElement(data);
+  return RegisterCallback(IntVarChanged, aPref, data);
+}
+
+static int UintVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *((PRUint32*)cache->cacheLocation) =
+    Preferences::GetUint(aPref, cache->defaultValueUint);
+  return 0;
+}
+
+// static
+nsresult
+Preferences::AddUintVarCache(PRUint32* aCache,
+                             const char* aPref,
+                             PRUint32 aDefault)
+{
+  NS_ASSERTION(aCache, "aCache must not be NULL");
+  *aCache = Preferences::GetUint(aPref, aDefault);
+  CacheData* data = new CacheData();
+  data->cacheLocation = aCache;
+  data->defaultValueUint = aDefault;
+  gCacheData->AppendElement(data);
+  return RegisterCallback(UintVarChanged, aPref, data);
 }
 
 } // namespace mozilla

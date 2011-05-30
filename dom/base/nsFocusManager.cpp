@@ -42,7 +42,6 @@
 #include "nsIEnumerator.h"
 #include "nsTPtrArray.h"
 #include "nsGkAtoms.h"
-#include "nsIPrefBranch2.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
@@ -79,18 +78,19 @@
 #include "nsIViewManager.h"
 #include "nsFrameSelection.h"
 #include "nsXULPopupManager.h"
-#include "nsImageMapUtils.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #endif
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //#define DEBUG_FOCUS 1
@@ -159,19 +159,20 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsFocusManager* nsFocusManager::sInstance = nsnull;
 PRBool nsFocusManager::sMouseFocusesFormControl = PR_FALSE;
 
+static const char* kObservedPrefs[] = {
+  "accessibility.browsewithcaret",
+  "accessibility.tabfocus_applies_to_xul",
+  "accessibility.mouse_focuses_formcontrol",
+  NULL
+};
+
 nsFocusManager::nsFocusManager()
 { }
 
 nsFocusManager::~nsFocusManager()
 {
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
+  Preferences::RemoveObservers(this, kObservedPrefs);
 
-  if (prefBranch) {
-    prefBranch->RemoveObserver("accessibility.browsewithcaret", this);
-    prefBranch->RemoveObserver("accessibility.tabfocus_applies_to_xul", this);
-    prefBranch->RemoveObserver("accessibility.mouse_focuses_formcontrol", this);
-  }
-  
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, "xpcom-shutdown");
@@ -188,18 +189,13 @@ nsFocusManager::Init()
   sInstance = fm;
 
   nsIContent::sTabFocusModelAppliesToXUL =
-    nsContentUtils::GetBoolPref("accessibility.tabfocus_applies_to_xul",
-                                nsIContent::sTabFocusModelAppliesToXUL);
+    Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
+                         nsIContent::sTabFocusModelAppliesToXUL);
 
   sMouseFocusesFormControl =
-    nsContentUtils::GetBoolPref("accessibility.mouse_focuses_formcontrol", PR_FALSE);
+    Preferences::GetBool("accessibility.mouse_focuses_formcontrol", PR_FALSE);
 
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-  if (prefBranch) {
-    prefBranch->AddObserver("accessibility.browsewithcaret", fm, PR_TRUE);
-    prefBranch->AddObserver("accessibility.tabfocus_applies_to_xul", fm, PR_TRUE);
-    prefBranch->AddObserver("accessibility.mouse_focuses_formcontrol", fm, PR_TRUE);
-  }
+  Preferences::AddWeakObservers(fm, kObservedPrefs);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -228,12 +224,13 @@ nsFocusManager::Observe(nsISupports *aSubject,
     }
     else if (data.EqualsLiteral("accessibility.tabfocus_applies_to_xul")) {
       nsIContent::sTabFocusModelAppliesToXUL =
-        nsContentUtils::GetBoolPref("accessibility.tabfocus_applies_to_xul",
-                                    nsIContent::sTabFocusModelAppliesToXUL);
+        Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
+                             nsIContent::sTabFocusModelAppliesToXUL);
     }
     else if (data.EqualsLiteral("accessibility.mouse_focuses_formcontrol")) {
       sMouseFocusesFormControl =
-        nsContentUtils::GetBoolPref("accessibility.mouse_focuses_formcontrol", PR_FALSE);
+        Preferences::GetBool("accessibility.mouse_focuses_formcontrol",
+                             PR_FALSE);
     }
   } else if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
     mActiveWindow = nsnull;
@@ -1955,7 +1952,7 @@ nsFocusManager::UpdateCaret(PRBool aMoveCaretToFocus,
     return;  // Never browse with caret in chrome
 
   PRPackedBool browseWithCaret =
-    nsContentUtils::GetBoolPref("accessibility.browsewithcaret");
+    Preferences::GetBool("accessibility.browsewithcaret");
 
   nsCOMPtr<nsIPresShell> presShell;
   focusedDocShell->GetPresShell(getter_AddRefs(presShell));
@@ -2803,10 +2800,9 @@ nsFocusManager::GetNextTabbableMapArea(PRBool aForward,
 
   nsCOMPtr<nsIDocument> doc = aImageContent->GetDocument();
   if (doc) {
-    nsCOMPtr<nsIDOMHTMLMapElement> imageMap = nsImageMapUtils::FindImageMap(doc, useMap);
-    if (!imageMap)
+    nsCOMPtr<nsIContent> mapContent = doc->FindImageMap(useMap);
+    if (!mapContent)
       return nsnull;
-    nsCOMPtr<nsIContent> mapContent = do_QueryInterface(imageMap);
     PRUint32 count = mapContent->GetChildCount();
     // First see if the the start content is in this map
 

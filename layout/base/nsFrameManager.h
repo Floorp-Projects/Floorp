@@ -63,6 +63,8 @@ class RestyleTracker;
 } // namespace css
 } // namespace mozilla
 
+struct TreeMatchContext;
+
 /**
  * Frame manager interface. The frame manager serves two purposes:
  * <li>provides a service for mapping from content to frame and from
@@ -225,7 +227,8 @@ private:
                           nsRestyleHint      aRestyleHint,
                           RestyleTracker&    aRestyleTracker,
                           DesiredA11yNotifications aDesiredA11yNotifications,
-                          nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement);
+                          nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
+                          TreeMatchContext &aTreeMatchContext);
 };
 
 #endif
