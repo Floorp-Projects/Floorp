@@ -6128,12 +6128,6 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 }
 
 NS_IMETHODIMP
-nsDocument::NormalizeDocument()
-{
-  return Normalize();
-}
-
-NS_IMETHODIMP
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   return nsINode::GetOwnerDocument(aOwnerDocument);

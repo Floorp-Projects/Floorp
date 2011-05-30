@@ -46,7 +46,7 @@
  * @see <http://www.whatwg.org/html/>
  */
 
-[scriptable, uuid(ea0fc5de-dfc5-4091-877e-2b48c7e37d8f)]
+[scriptable, uuid(6dd39b10-65ec-46f3-8c41-939300f6a7ce)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
   readonly attribute DOMString            URL;
