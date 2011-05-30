@@ -1,0 +1,69 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=609549
+-->
+<head>
+  <title>Test for Bug 609549</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="testBinding">
+      <!-- No linebreaks since this is html and whitespace is preserved. -->
+      <content><div anonid="box-A">x</div><div anonid="box-B"><children includes="span"/></div><div anonid="box-C">x</div><children/></content>
+    </binding>
+  </bindings>
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=609549">Mozilla Bug 609549</a>
+<div id="bound" style="-moz-binding: url(#testBinding);"><p id="p">lorem ipsum dolor sit amet</p><span id="sandwiched">sandwiched</span></div>
+
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 609549 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var domUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].
+                   getService(Components.interfaces.inIDOMUtils);
+  ok("getChildrenForNode" in domUtils, "domUtils has no getChildrenForNode");
+  var withoutAnons = domUtils.getChildrenForNode($("bound"), false);
+
+  is(withoutAnons.length, $("bound").childNodes.length,
+     "withoutAnons should be the same length as childNodes");
+  is(withoutAnons[0], $("p"), "didn't get paragraph - without anons");
+  is(withoutAnons[1], $("sandwiched"),
+     "didn't get sandwiched span - without anons");
+
+  var withAnons = domUtils.getChildrenForNode($("bound"), true);
+
+  is(withAnons.length, 4, "bad withAnons.length");
+  is(withAnons[0].getAttribute("anonid"), "box-A",
+     "didn't get anonymous box-A");
+  is(withAnons[1].getAttribute("anonid"), "box-B",
+     "didn't get anonymous box-B");
+  is(withAnons[2].getAttribute("anonid"), "box-C",
+     "didn't get anonymous box-C");
+  is(withAnons[3].id, "p", "didn't get paragraph - with anons");
+
+  var bKids = domUtils.getChildrenForNode(withAnons[1], true);
+  is(bKids.length, 1, "bKids.length is bad");
+  is(bKids[0], $("sandwiched"),
+     "didn't get sandwiched span inserted into box-B");
+
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+</pre>
+</body>
+</html>
