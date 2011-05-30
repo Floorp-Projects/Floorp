@@ -150,6 +150,38 @@ inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
 }
 
 NS_IMETHODIMP
+inDOMUtils::GetChildrenForNode(nsIDOMNode* aNode,
+                               PRBool aShowingAnonymousContent,
+                               nsIDOMNodeList** aChildren)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+  NS_PRECONDITION(aChildren, "Must have an out parameter");
+
+  nsCOMPtr<nsIDOMNodeList> kids;
+
+  if (aShowingAnonymousContent) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+    if (content) {
+      nsRefPtr<nsBindingManager> bindingManager =
+        inLayoutUtils::GetBindingManagerFor(aNode);
+      if (bindingManager) {
+        bindingManager->GetAnonymousNodesFor(content, getter_AddRefs(kids));
+        if (!kids) {
+          bindingManager->GetContentListFor(content, getter_AddRefs(kids));
+        }
+      }
+    }
+  }
+
+  if (!kids) {
+    aNode->GetChildNodes(getter_AddRefs(kids));
+  }
+
+  kids.forget(aChildren);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
                              const nsAString& aPseudo,
                              nsISupportsArray **_retval)
