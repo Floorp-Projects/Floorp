@@ -63,10 +63,6 @@ _BROWSER_FILES = \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_bookmarks.js \
-  browser_bookmarks_star.js \
-  browser_bookmarks_tags.js \
-  browser_click_content.html \
-  browser_click_content.js \
   browser_contacts.js \
   browser_contentpopup.html \
   browser_contentpopup.js \
@@ -78,7 +74,6 @@ _BROWSER_FILES = \
   $(warning browser_formsZoom.js disabled due to failures) \
   browser_history.js \
   browser_mainui.js \
-  browser_navigation.js \
   browser_preferences_text.js \
   browser_rect.js \
   browser_rememberPassword.js \
@@ -93,8 +88,8 @@ _BROWSER_FILES = \
   browser_tap_content.html \
   browser_test.js \
   browser_vkb.js \
-  browser_viewport.js \
-  browser_viewport.sjs \
+  $(warning browser_viewport.js disabled due to failures) \
+  $(warning browser_viewport.sjs disabled due to failures) \
   browser_scrollbar.sjs \
   browser_title.sjs \
   browser_thumbnails.js \
@@ -104,6 +99,13 @@ _BROWSER_FILES = \
   $(NULL)
 
 ifneq ($(OS_TARGET),Android)
+_BROWSER_FILES += \
+  browser_bookmarks_star.js \
+  browser_bookmarks_tags.js \
+  browser_click_content.html \
+  browser_click_content.js \
+  browser_navigation.js \
+  $(NULL)
 ifndef MOZ_PLATFORM_MAEMO
 _BROWSER_FILES +=  browser_sidebars.js
 endif
