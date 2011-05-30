@@ -1457,8 +1457,7 @@ nsImageFrame::GetImageMap(nsPresContext* aPresContext)
     nsAutoString usemap;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, usemap);
 
-    nsCOMPtr<nsIDOMHTMLMapElement> map =
-      do_QueryInterface(doc->FindImageMap(usemap));
+    nsCOMPtr<nsIContent> map = doc->FindImageMap(usemap);
     if (map) {
       mImageMap = new nsImageMap();
       NS_ADDREF(mImageMap);
