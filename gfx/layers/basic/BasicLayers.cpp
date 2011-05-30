@@ -92,7 +92,7 @@ class ShadowableLayer;
  */
 class BasicImplData {
 public:
-  BasicImplData() : mHidden(PR_FALSE)
+  BasicImplData() : mHidden(PR_FALSE), mOperator(gfxContext::OPERATOR_OVER)
   {
     MOZ_COUNT_CTOR(BasicImplData);
   }
@@ -136,13 +136,45 @@ public:
   virtual void ClearCachedResources() {}
 
   /**
-   * This variable is set by MarkLeafLayersHidden() before painting.
+   * This variable is set by MarkLayersHidden() before painting. It indicates
+   * that the layer should not be composited during this transaction.
    */
   void SetHidden(PRBool aCovered) { mHidden = aCovered; }
   PRBool IsHidden() const { return PR_FALSE; }
+  /**
+   * This variable is set by MarkLayersHidden() before painting. This is
+   * the operator to be used when compositing the layer in this transaction. It must
+   * be OVER or SOURCE.
+   */
+  void SetOperator(gfxContext::GraphicsOperator aOperator)
+  {
+    NS_ASSERTION(aOperator == gfxContext::OPERATOR_OVER ||
+                 aOperator == gfxContext::OPERATOR_SOURCE,
+                 "Bad composition operator");
+    mOperator = aOperator;
+  }
+  gfxContext::GraphicsOperator GetOperator() const { return mOperator; }
 
 protected:
   PRPackedBool mHidden;
+  gfxContext::GraphicsOperator mOperator;
+};
+
+class AutoSetOperator {
+public:
+  AutoSetOperator(gfxContext* aContext, gfxContext::GraphicsOperator aOperator) {
+    if (aOperator != gfxContext::OPERATOR_OVER) {
+      aContext->SetOperator(aOperator);
+      mContext = aContext;
+    }
+  }
+  ~AutoSetOperator() {
+    if (mContext) {
+      mContext->SetOperator(gfxContext::OPERATOR_OVER);
+    }
+  }
+private:
+  nsRefPtr<gfxContext> mContext;
 };
 
 static BasicImplData*
@@ -156,7 +188,7 @@ static void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aConta
 template<class Container>
 static void ContainerRemoveChild(Layer* aChild, Container* aContainer);
 
-class BasicContainerLayer : public ContainerLayer, BasicImplData {
+class BasicContainerLayer : public ContainerLayer, public BasicImplData {
   template<class Container>
   friend void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
   template<class Container>
@@ -358,7 +390,7 @@ private:
   BasicThebesLayer* mLayer;
 };
 
-class BasicThebesLayer : public ThebesLayer, BasicImplData {
+class BasicThebesLayer : public ThebesLayer, public BasicImplData {
 public:
   typedef BasicThebesLayerBuffer Buffer;
 
@@ -550,7 +582,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
     mValidRegion.SetEmpty();
     mBuffer.Clear();
 
-    nsIntRegion toDraw = IntersectWithClip(mVisibleRegion, aContext);
+    nsIntRegion toDraw = IntersectWithClip(GetEffectiveVisibleRegion(), aContext);
     if (!toDraw.IsEmpty() && !IsHidden()) {
       if (!aCallback) {
         BasicManager()->SetTransactionIncomplete();
@@ -560,16 +592,20 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       aContext->Save();
 
       PRBool needsClipToVisibleRegion = PR_FALSE;
-      if (opacity != 1.0) {
-        needsClipToVisibleRegion = PushGroupForLayer(aContext, this, toDraw);
+      PRBool needsGroup =
+          opacity != 1.0 || GetOperator() != gfxContext::OPERATOR_OVER;
+      if (needsGroup) {
+        needsClipToVisibleRegion = PushGroupForLayer(aContext, this, toDraw) ||
+                GetOperator() != gfxContext::OPERATOR_OVER;
       }
       SetAntialiasingFlags(this, aContext);
       aCallback(this, aContext, toDraw, nsIntRegion(), aCallbackData);
-      if (opacity != 1.0) {
+      if (needsGroup) {
         aContext->PopGroupToSource();
         if (needsClipToVisibleRegion) {
           gfxUtils::ClipToRegion(aContext, toDraw);
         }
+        AutoSetOperator setOperator(aContext, GetOperator());
         aContext->Paint(opacity);
       }
 
@@ -598,7 +634,8 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       // (this could be the whole visible area if our buffer switched
       // from RGB to RGBA, because we might need to repaint with
       // subpixel AA)
-      state.mRegionToInvalidate.And(state.mRegionToInvalidate, mVisibleRegion);
+      state.mRegionToInvalidate.And(state.mRegionToInvalidate,
+                                    GetEffectiveVisibleRegion());
       nsIntRegion extendedDrawRegion = state.mRegionToDraw;
       extendedDrawRegion.ExtendForScaling(paintXRes, paintYRes);
       mXResolution = paintXRes;
@@ -618,6 +655,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   }
 
   if (!IsHidden()) {
+    AutoSetOperator setOperator(aContext, GetOperator());
     mBuffer.DrawTo(this, aContext, opacity);
   }
 
@@ -655,13 +693,13 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
   // no need to clip. But we'll still clip if clipping is cheap ---
   // that might let us copy a smaller region of the buffer.
   if (!aLayer->GetValidRegion().Contains(BufferRect()) ||
-      IsClippingCheap(aTarget, aLayer->GetVisibleRegion())) {
+      IsClippingCheap(aTarget, aLayer->GetEffectiveVisibleRegion())) {
     // We don't want to draw invalid stuff, so we need to clip. Might as
     // well clip to the smallest area possible --- the visible region.
     // Bug 599189 if there is a non-integer-translation transform in aTarget,
-    // we might sample pixels outside GetVisibleRegion(), which is wrong
+    // we might sample pixels outside GetEffectiveVisibleRegion(), which is wrong
     // and may cause gray lines.
-    gfxUtils::ClipToRegionSnapped(aTarget, aLayer->GetVisibleRegion());
+    gfxUtils::ClipToRegionSnapped(aTarget, aLayer->GetEffectiveVisibleRegion());
   }
   DrawBufferWithRotation(aTarget, aOpacity,
                          aLayer->GetXResolution(), aLayer->GetYResolution());
@@ -694,7 +732,7 @@ BasicThebesLayerBuffer::SetBackingBufferAndUpdateFrom(
   srcBuffer.DrawBufferWithRotation(destCtx, 1.0, aXResolution, aYResolution);
 }
 
-class BasicImageLayer : public ImageLayer, BasicImplData {
+class BasicImageLayer : public ImageLayer, public BasicImplData {
 public:
   BasicImageLayer(BasicLayerManager* aLayerManager) :
     ImageLayer(aLayerManager, static_cast<BasicImplData*>(this)),
@@ -769,6 +807,7 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   // tiling, we don't want to draw into that area, so just draw within
   // the image bounds.
   const nsIntRect* tileSrcRect = GetTileSourceRect();
+  AutoSetOperator setOperator(aContext, GetOperator());
   PaintContext(pat,
                tileSrcRect ? GetVisibleRegion() : nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
                tileSrcRect,
@@ -830,7 +869,7 @@ BasicImageLayer::PaintContext(gfxPattern* aPattern,
   aPattern->SetExtend(extend);
 }
 
-class BasicColorLayer : public ColorLayer, BasicImplData {
+class BasicColorLayer : public ColorLayer, public BasicImplData {
 public:
   BasicColorLayer(BasicLayerManager* aLayerManager) :
     ColorLayer(aLayerManager, static_cast<BasicImplData*>(this))
@@ -853,6 +892,7 @@ public:
   {
     if (IsHidden())
       return;
+    AutoSetOperator setOperator(aContext, GetOperator());
     PaintColorTo(mColor, GetEffectiveOpacity(), aContext);
   }
 
@@ -875,7 +915,7 @@ BasicColorLayer::PaintColorTo(gfxRGBA aColor, float aOpacity,
 }
 
 class BasicCanvasLayer : public CanvasLayer,
-                         BasicImplData
+                         public BasicImplData
 {
 public:
   BasicCanvasLayer(BasicLayerManager* aLayerManager) :
@@ -1023,6 +1063,7 @@ BasicCanvasLayer::PaintWithOpacity(gfxContext* aContext,
     aContext->Scale(1.0, -1.0);
   }
 
+  AutoSetOperator setOperator(aContext, GetOperator());
   aContext->NewPath();
   // No need to snap here; our transform is already set up to snap our rect
   aContext->Rectangle(gfxRect(0, 0, mBounds.width, mBounds.height));
@@ -1035,7 +1076,7 @@ BasicCanvasLayer::PaintWithOpacity(gfxContext* aContext,
 }
 
 class BasicReadbackLayer : public ReadbackLayer,
-                           BasicImplData
+                           public BasicImplData
 {
 public:
   BasicReadbackLayer(BasicLayerManager* aLayerManager) :
@@ -1487,8 +1528,13 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
 {
   const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
   const gfx3DMatrix& effectiveTransform = aLayer->GetEffectiveTransform();
+  BasicContainerLayer* container = static_cast<BasicContainerLayer*>(aLayer);
   PRBool needsGroup = aLayer->GetFirstChild() &&
-      static_cast<BasicContainerLayer*>(aLayer)->UseIntermediateSurface();
+    container->UseIntermediateSurface();
+  NS_ASSERTION(needsGroup || !aLayer->GetFirstChild() ||
+               container->GetOperator() == gfxContext::OPERATOR_OVER,
+               "non-OVER operator should have forced UseIntermediateSurface");
+
   // If needsSaveRestore is false, we should still save and restore
   // the CTM
   PRBool needsSaveRestore = needsGroup || clipRect;
@@ -1568,6 +1614,7 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
     if (needsClipToVisibleRegion) {
       gfxUtils::ClipToRegion(mTarget, aLayer->GetEffectiveVisibleRegion());
     }
+    AutoSetOperator setOperator(mTarget, container->GetOperator());
     mTarget->Paint(aLayer->GetEffectiveOpacity());
   }
 
@@ -2339,7 +2386,7 @@ protected:
 };
 
 
-class BasicShadowThebesLayer : public ShadowThebesLayer, BasicImplData {
+class BasicShadowThebesLayer : public ShadowThebesLayer, public BasicImplData {
 public:
   BasicShadowThebesLayer(BasicShadowLayerManager* aLayerManager)
     : ShadowThebesLayer(aLayerManager, static_cast<BasicImplData*>(this))
@@ -2510,7 +2557,7 @@ BasicShadowThebesLayer::PaintThebes(gfxContext* aContext,
   mFrontBuffer.DrawTo(this, aContext, GetEffectiveOpacity());
 }
 
-class BasicShadowContainerLayer : public ShadowContainerLayer, BasicImplData {
+class BasicShadowContainerLayer : public ShadowContainerLayer, public BasicImplData {
   template<class Container>
   friend void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
   template<class Container>
@@ -2556,7 +2603,7 @@ public:
   }
 };
 
-class BasicShadowImageLayer : public ShadowImageLayer, BasicImplData {
+class BasicShadowImageLayer : public ShadowImageLayer, public BasicImplData {
 public:
   BasicShadowImageLayer(BasicShadowLayerManager* aLayerManager) :
     ShadowImageLayer(aLayerManager, static_cast<BasicImplData*>(this))
@@ -2629,6 +2676,7 @@ BasicShadowImageLayer::Paint(gfxContext* aContext)
   // tiling, we don't want to draw into that area, so just draw within
   // the image bounds.
   const nsIntRect* tileSrcRect = GetTileSourceRect();
+  AutoSetOperator setOperator(aContext, GetOperator());
   BasicImageLayer::PaintContext(pat,
                                 tileSrcRect ? GetEffectiveVisibleRegion() : nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
                                 tileSrcRect,
@@ -2636,7 +2684,7 @@ BasicShadowImageLayer::Paint(gfxContext* aContext)
 }
 
 class BasicShadowColorLayer : public ShadowColorLayer,
-                              BasicImplData
+                              public BasicImplData
 {
 public:
   BasicShadowColorLayer(BasicShadowLayerManager* aLayerManager) :
@@ -2651,12 +2699,13 @@ public:
 
   virtual void Paint(gfxContext* aContext)
   {
+    AutoSetOperator setOperator(aContext, GetOperator());
     BasicColorLayer::PaintColorTo(mColor, GetEffectiveOpacity(), aContext);
   }
 };
 
 class BasicShadowCanvasLayer : public ShadowCanvasLayer,
-                               BasicImplData
+                               public BasicImplData
 {
 public:
   BasicShadowCanvasLayer(BasicShadowLayerManager* aLayerManager) :
