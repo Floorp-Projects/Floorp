@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Johnny Stenback <jst@netscape.com> (original author)
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -8320,7 +8321,15 @@ nsStringListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
   nsCOMPtr<nsIDOMDOMStringList> list(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
 
-  return list->Item(aIndex, aResult);
+  nsresult rv = list->Item(aIndex, aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    list->GetLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -8333,7 +8342,15 @@ nsDOMTokenListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
   nsCOMPtr<nsIDOMDOMTokenList> list(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
 
-  return list->Item(aIndex, aResult);
+  nsresult rv = list->Item(aIndex, aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    list->GetLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -10382,14 +10399,16 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsresult rv = GetStringAt(GetNative(wrapper, obj), n, val);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX: Null strings?
-
   JSAutoRequest ar(cx);
 
-  nsStringBuffer* sharedBuffer = nsnull;
-  *vp = XPCStringConvert::ReadableToJSVal(cx, val, &sharedBuffer);
-  if (sharedBuffer) {
-    val.ForgetSharedBuffer();
+  if (DOMStringIsNull(val)) {
+    *vp = JSVAL_VOID;
+  } else {
+    nsStringBuffer* sharedBuffer = nsnull;
+    *vp = XPCStringConvert::ReadableToJSVal(cx, val, &sharedBuffer);
+    if (sharedBuffer) {
+      val.ForgetSharedBuffer();
+    }
   }
 
   return NS_SUCCESS_I_DID_SOMETHING;
@@ -10438,7 +10457,15 @@ nsHistorySH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMHistory> history(do_QueryInterface(aNative));
 
-  return history->Item(aIndex, aResult);
+  nsresult rv = history->Item(aIndex, aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRInt32 length = 0;
+    history->GetLength(&length);
+    NS_ASSERTION(aIndex >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -10454,7 +10481,15 @@ nsMediaListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMMediaList> media_list(do_QueryInterface(aNative));
 
-  return media_list->Item(PRUint32(aIndex), aResult);
+  nsresult rv = media_list->Item(PRUint32(aIndex), aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    media_list->GetLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -10517,7 +10552,15 @@ nsCSSStyleDeclSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> style_decl(do_QueryInterface(aNative));
 
-  return style_decl->Item(PRUint32(aIndex), aResult);
+  nsresult rv = style_decl->Item(PRUint32(aIndex), aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    style_decl->GetLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -11138,7 +11181,15 @@ nsOfflineResourceListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
   nsCOMPtr<nsIDOMOfflineResourceList> list(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
 
-  return list->MozItem(aIndex, aResult);
+  nsresult rv = list->MozItem(aIndex, aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    list->GetMozLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "MozItem should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 // nsFileListSH
