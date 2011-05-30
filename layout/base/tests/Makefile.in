@@ -158,6 +158,7 @@ _TEST_FILES =	\
 		test_bug582771.html \
 		test_bug603550.html \
 		test_bug629838.html \
+		test_bug646757.html \
 		$(NULL)
 
 # Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208
