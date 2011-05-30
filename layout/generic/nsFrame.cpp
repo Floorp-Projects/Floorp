@@ -73,12 +73,7 @@
 #include "nsIAccessible.h"
 #endif
 
-#include "nsIDOMText.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIDOMHTMLHRElement.h"
-#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNode.h"
 #include "nsIEditorDocShell.h"
 #include "nsEventStateManager.h"
 #include "nsISelection.h"
@@ -121,10 +116,8 @@
 #include "nsDisplayList.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsExpirationTracker.h"
-#ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGEffects.h"
-#endif
 
 #include "gfxContext.h"
 #include "CSSCalc.h"
@@ -453,9 +446,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
                "Frames should be removed before destruction.");
   NS_ASSERTION(aDestructRoot, "Must specify destruct root");
 
-#ifdef MOZ_SVG
   nsSVGEffects::InvalidateDirectRenderingObservers(this);
-#endif
 
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
@@ -1491,13 +1482,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                             absPosClip - aBuilder->ToReferenceFrame(this));
   }
 
-#ifdef MOZ_SVG
   PRBool usingSVGEffects = nsSVGIntegrationUtils::UsingEffectsForFrame(this);
   if (usingSVGEffects) {
     dirtyRect =
       nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
   }
-#endif
 
   // Mark the display list items for absolutely positioned children
   MarkAbsoluteFramesForDisplayList(aBuilder, dirtyRect);
@@ -1587,7 +1576,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     resultList.AppendToTop(item);
   }
  
-#ifdef MOZ_SVG
   /* If there are any SVG effects, wrap up the list in an effects list. */
   if (usingSVGEffects) {
     /* List now emptied, so add the new list to the top. */
@@ -1596,7 +1584,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     if (NS_FAILED(rv))
       return rv;
   } else
-#endif
 
   /* If there is any opacity, wrap it up in an opacity list.
    * If there's nothing in the list, don't add anything.
@@ -1730,10 +1717,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects.
   PRBool isComposited = disp->mOpacity != 1.0f || aChild->IsTransformed()
-#ifdef MOZ_SVG
-    || nsSVGIntegrationUtils::UsingEffectsForFrame(aChild)
-#endif
-    ;
+    || nsSVGIntegrationUtils::UsingEffectsForFrame(aChild);
+
   PRBool isPositioned = disp->IsPositioned();
   if (isComposited || isPositioned || disp->IsFloating() ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
@@ -4272,7 +4257,6 @@ void
 nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
                              nsIFrame* aForChild, PRUint32 aFlags)
 {
-#ifdef MOZ_SVG
   nsSVGEffects::InvalidateDirectRenderingObservers(this);
   if (nsSVGIntegrationUtils::UsingEffectsForFrame(this)) {
     nsRect r = nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(this,
@@ -4284,7 +4268,6 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
     InvalidateInternalAfterResize(r, 0, 0, aFlags);
     return;
   }
-#endif
   
   InvalidateInternalAfterResize(aDamageRect, aX, aY, aFlags);
 }
@@ -4506,7 +4489,6 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
   // only one heap-allocated rect per frame and it will be cleaned up when
   // the frame dies.
 
-#ifdef MOZ_SVG
   if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame)) {
     *aAnyOutlineOrEffects = PR_TRUE;
     if (aStoreRectProperties) {
@@ -4515,7 +4497,6 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
     }
     r = nsSVGIntegrationUtils::ComputeFrameEffectsRect(aFrame, r);
   }
-#endif
 
   return r;
 }

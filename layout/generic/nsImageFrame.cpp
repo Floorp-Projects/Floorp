@@ -74,7 +74,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLMapElement.h"
-#include "nsImageMapUtils.h"
 #include "nsIScriptSecurityManager.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -89,8 +88,6 @@
 #include "imgILoader.h"
 
 #include "nsCSSFrameConstructor.h"
-#include "nsIPrefBranch2.h"
-#include "nsIPrefService.h"
 #include "nsIDOMRange.h"
 
 #include "nsIContentPolicy.h"
@@ -1460,13 +1457,11 @@ nsImageFrame::GetImageMap(nsPresContext* aPresContext)
     nsAutoString usemap;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, usemap);
 
-    nsCOMPtr<nsIDOMHTMLMapElement> map = nsImageMapUtils::FindImageMap(doc,usemap);
+    nsCOMPtr<nsIContent> map = doc->FindImageMap(usemap);
     if (map) {
       mImageMap = new nsImageMap();
-      if (mImageMap) {
-        NS_ADDREF(mImageMap);
-        mImageMap->Init(aPresContext->PresShell(), this, map);
-      }
+      NS_ADDREF(mImageMap);
+      mImageMap->Init(aPresContext->PresShell(), this, map);
     }
   }
 
@@ -1882,19 +1877,16 @@ nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
 NS_IMPL_ISUPPORTS2(nsImageFrame::IconLoad, nsIObserver,
                    imgIDecoderObserver)
 
-static const char kIconLoadPrefs[][40] = {
+static const char* kIconLoadPrefs[] = {
   "browser.display.force_inline_alttext",
-  "browser.display.show_image_placeholders"
+  "browser.display.show_image_placeholders",
+  nsnull
 };
 
 nsImageFrame::IconLoad::IconLoad()
 {
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-  if (prefBranch) {
-    // register observers
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kIconLoadPrefs); ++i)
-      prefBranch->AddObserver(kIconLoadPrefs[i], this, PR_FALSE);
-  }
+  // register observers
+  Preferences::AddStrongObservers(this, kIconLoadPrefs);
   GetPrefs();
 }
 

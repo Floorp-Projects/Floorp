@@ -78,8 +78,6 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMXULControlElement.h"
 #include "nsIDOMXULTextboxElement.h"
-#include "nsImageMapUtils.h"
-#include "nsIHTMLDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIBaseWindow.h"
 #include "nsIView.h"
@@ -96,7 +94,6 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
-#include "nsIPrefBranch2.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
@@ -830,6 +827,31 @@ nsEventStateManager::UpdateUserActivityTimer(void)
   return NS_OK;
 }
 
+static const char* kObservedPrefs[] = {
+  "accessibility.accesskeycausesactivation",
+  "nglayout.events.dispatchLeftClickOnly",
+  "ui.key.generalAccessKey",
+  "ui.key.chromeAccess",
+  "ui.key.contentAccess",
+  "ui.click_hold_context_menus",
+#if 0
+  "mousewheel.withaltkey.action",
+  "mousewheel.withaltkey.numlines",
+  "mousewheel.withaltkey.sysnumlines",
+  "mousewheel.withcontrolkey.action",
+  "mousewheel.withcontrolkey.numlines",
+  "mousewheel.withcontrolkey.sysnumlines",
+  "mousewheel.withnokey.action",
+  "mousewheel.withnokey.numlines",
+  "mousewheel.withnokey.sysnumlines",
+  "mousewheel.withshiftkey.action",
+  "mousewheel.withshiftkey.numlines",
+  "mousewheel.withshiftkey.sysnumlines",
+#endif
+  "dom.popup_allowed_events",
+  nsnull
+};
+
 nsresult
 nsEventStateManager::Init()
 {
@@ -840,41 +862,16 @@ nsEventStateManager::Init()
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
 
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-
-  if (prefBranch) {
-    if (sESMInstanceCount == 1) {
-      sLeftClickOnly =
-        Preferences::GetBool("nglayout.events.dispatchLeftClickOnly",
-                             sLeftClickOnly);
-      sChromeAccessModifier =
-        GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeChrome);
-      sContentAccessModifier =
-        GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeContent);
-    }
-    prefBranch->AddObserver("accessibility.accesskeycausesactivation", this, PR_TRUE);
-    prefBranch->AddObserver("nglayout.events.dispatchLeftClickOnly", this, PR_TRUE);
-    prefBranch->AddObserver("ui.key.generalAccessKey", this, PR_TRUE);
-    prefBranch->AddObserver("ui.key.chromeAccess", this, PR_TRUE);
-    prefBranch->AddObserver("ui.key.contentAccess", this, PR_TRUE);
-    prefBranch->AddObserver("ui.click_hold_context_menus", this, PR_TRUE);
-#if 0
-    prefBranch->AddObserver("mousewheel.withaltkey.action", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withaltkey.numlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withaltkey.sysnumlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withcontrolkey.action", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withcontrolkey.numlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withcontrolkey.sysnumlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withnokey.action", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withnokey.numlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withnokey.sysnumlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withshiftkey.action", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withshiftkey.numlines", this, PR_TRUE);
-    prefBranch->AddObserver("mousewheel.withshiftkey.sysnumlines", this, PR_TRUE);
-#endif
-
-    prefBranch->AddObserver("dom.popup_allowed_events", this, PR_TRUE);
+  if (sESMInstanceCount == 1) {
+    sLeftClickOnly =
+      Preferences::GetBool("nglayout.events.dispatchLeftClickOnly",
+                           sLeftClickOnly);
+    sChromeAccessModifier =
+      GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeChrome);
+    sContentAccessModifier =
+      GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeContent);
   }
+  Preferences::AddWeakObservers(this, kObservedPrefs);
 
   mClickHoldContextMenu =
     Preferences::GetBool("ui.click_hold_context_menus", PR_FALSE);
@@ -925,33 +922,7 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-
-  if (prefBranch) {
-    prefBranch->RemoveObserver("accessibility.accesskeycausesactivation", this);
-    prefBranch->RemoveObserver("nglayout.events.dispatchLeftClickOnly", this);
-    prefBranch->RemoveObserver("ui.key.generalAccessKey", this);
-    prefBranch->RemoveObserver("ui.key.chromeAccess", this);
-    prefBranch->RemoveObserver("ui.key.contentAccess", this);
-    prefBranch->RemoveObserver("ui.click_hold_context_menus", this);
-#if 0
-    prefBranch->RemoveObserver("mousewheel.withshiftkey.action", this);
-    prefBranch->RemoveObserver("mousewheel.withshiftkey.numlines", this);
-    prefBranch->RemoveObserver("mousewheel.withshiftkey.sysnumlines", this);
-    prefBranch->RemoveObserver("mousewheel.withcontrolkey.action", this);
-    prefBranch->RemoveObserver("mousewheel.withcontrolkey.numlines", this);
-    prefBranch->RemoveObserver("mousewheel.withcontrolkey.sysnumlines", this);
-    prefBranch->RemoveObserver("mousewheel.withaltkey.action", this);
-    prefBranch->RemoveObserver("mousewheel.withaltkey.numlines", this);
-    prefBranch->RemoveObserver("mousewheel.withaltkey.sysnumlines", this);
-    prefBranch->RemoveObserver("mousewheel.withnokey.action", this);
-    prefBranch->RemoveObserver("mousewheel.withnokey.numlines", this);
-    prefBranch->RemoveObserver("mousewheel.withnokey.sysnumlines", this);
-#endif
-
-    prefBranch->RemoveObserver("dom.popup_allowed_events", this);
-  }
-
+  Preferences::RemoveObservers(this, kObservedPrefs);
   m_haveShutdown = PR_TRUE;
   return NS_OK;
 }

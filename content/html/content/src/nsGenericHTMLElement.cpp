@@ -48,7 +48,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMWindow.h"

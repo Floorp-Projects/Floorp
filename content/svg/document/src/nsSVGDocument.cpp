@@ -76,20 +76,6 @@ NS_IMPL_RELEASE_INHERITED(nsSVGDocument, nsXMLDocument)
 //----------------------------------------------------------------------
 // nsIDOMSVGDocument methods:
 
-/* readonly attribute DOMString title; */
-NS_IMETHODIMP
-nsSVGDocument::GetTitle(nsAString& aTitle)
-{
-  return nsXMLDocument::GetTitle(aTitle);
-}
-
-/* readonly attribute DOMString referrer; */
-NS_IMETHODIMP
-nsSVGDocument::GetReferrer(nsAString& aReferrer)
-{
-  return nsDocument::GetReferrer(aReferrer);
-}
-
 /* readonly attribute DOMString domain; */
 NS_IMETHODIMP
 nsSVGDocument::GetDomain(nsAString& aDomain)

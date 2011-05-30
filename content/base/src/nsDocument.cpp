@@ -1871,6 +1871,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDOMImplementation)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mImageMaps,
+                                                       nsIDOMNodeList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedEncoder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStateObjectCached)
@@ -1923,6 +1925,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDOMImplementation)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedEncoder)
 
@@ -4533,20 +4536,6 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsDocument::CreateEntityReference(const nsAString& aName,
-                                  nsIDOMEntityReference** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  if (IsHTML()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn)
 {
@@ -5152,13 +5141,11 @@ nsDocument::GetTitle(nsAString& aTitle)
       rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
       break;
 #endif
-#ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       if (rootElement->Tag() == nsGkAtoms::svg) {
         GetTitleFromElement(kNameSpaceID_SVG, tmp);
         break;
       } // else fall through
-#endif
     default:
       GetTitleFromElement(kNameSpaceID_XHTML, tmp);
       break;
@@ -5177,10 +5164,8 @@ nsDocument::SetTitle(const nsAString& aTitle)
     return NS_OK;
 
   switch (rootElement->GetNameSpaceID()) {
-#ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       return NS_OK; // SVG doesn't support setting a title
-#endif
 #ifdef MOZ_XUL
     case kNameSpaceID_XUL:
       return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
@@ -6140,12 +6125,6 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
                "Should still be in the document we just got adopted into");
 
   return CallQueryInterface(adoptedNode, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::NormalizeDocument()
-{
-  return Normalize();
 }
 
 NS_IMETHODIMP
@@ -8151,6 +8130,48 @@ nsDocument::GetStateObject(nsIVariant** aState)
   NS_IF_ADDREF(*aState = mStateObjectCached);
   
   return NS_OK;
+}
+
+Element*
+nsDocument::FindImageMap(const nsAString& aUseMapValue)
+{
+  if (aUseMapValue.IsEmpty()) {
+    return nsnull;
+  }
+
+  nsAString::const_iterator start, end;
+  aUseMapValue.BeginReading(start);
+  aUseMapValue.EndReading(end);
+
+  PRInt32 hash = aUseMapValue.FindChar('#');
+  if (hash < 0) {
+    return nsnull;
+  }
+  // aUsemap contains a '#', set start to point right after the '#'
+  start.advance(hash + 1);
+
+  if (start == end) {
+    return nsnull; // aUsemap == "#"
+  }
+
+  const nsAString& mapName = Substring(start, end);
+
+  if (!mImageMaps) {
+    mImageMaps = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::map, nsGkAtoms::map);
+  }
+
+  PRUint32 i, n = mImageMaps->Length(PR_TRUE);
+  for (i = 0; i < n; ++i) {
+    nsIContent* map = mImageMaps->GetNodeAt(i);
+    if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, mapName,
+                         eCaseMatters) ||
+        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, mapName,
+                         eIgnoreCase)) {
+      return map->AsElement();
+    }
+  }
+
+  return nsnull;
 }
 
 nsresult

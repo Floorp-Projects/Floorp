@@ -1720,8 +1720,8 @@ PresShell::PresShell()
   if (!registeredReporter) {
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutBidi));
-    nsContentUtils::AddBoolPrefVarCache("layout.reflow.synthMouseMove",
-                                        &sSynthMouseMove, PR_TRUE);
+    Preferences::AddBoolVarCache(&sSynthMouseMove,
+                                 "layout.reflow.synthMouseMove", PR_TRUE);
     registeredReporter = true;
   }
 

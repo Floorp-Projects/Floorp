@@ -73,22 +73,8 @@ var AppMenu = {
   showAsList: function showAsList() {
     // allow menu to hide to remove the more button before we show the menulist
     setTimeout((function() {
-      this.menu.menupopup.children = this.overflowMenu;
-      MenuListHelperUI.show(this.menu);
+      AppMenuOverflow.show(this.overflowMenu);
     }).bind(this), 0)
-  },
-
-  menu : {
-    id: "appmenu-menulist",
-    dispatchEvent: function(aEvent) {
-      let menuitem = AppMenu.overflowMenu[this.selectedIndex];
-      if (menuitem)
-        menuitem.click();
-    },
-    menupopup: {
-      hasAttribute: function(aAttr) { return false; }
-    },
-    selectedIndex: -1
   },
 
   createMoreButton: function() {
@@ -99,5 +85,47 @@ var AppMenu = {
     button.setAttribute("show", 6);
     button.setAttribute("oncommand", "AppMenu.showAsList();");
     return button;
+  }
+};
+
+
+var AppMenuOverflow = {
+  get container() {
+    delete this.container;
+    return this.container = document.getElementById("appmenu-overflow");
+  },
+  
+  get list() {
+    delete this.list;
+    return this.list = document.getElementById("appmenu-overflow-commands");
+  },
+  
+  show: function show(aList) {
+    let container = this.container;
+    let listbox = this.list;
+    while (listbox.firstChild)
+      listbox.removeChild(listbox.firstChild);
+
+    let children = aList;
+    for (let i = 0; i < children.length; i++) {
+      let child = children[i];
+      let item = document.createElement("richlistitem");
+      item.setAttribute("class", "appmenu-button");
+      item.onclick = function() { child.click(); }
+
+      let label = document.createElement("label");
+      label.setAttribute("value", child.label);
+      item.appendChild(label);
+
+      listbox.appendChild(item);
+    }
+
+    container.hidden = false;
+    BrowserUI.pushPopup(this, [this.container]);
+  },
+
+  hide: function hide() {
+    this.container.hidden = true;
+    BrowserUI.popPopup(this);
   }
 };

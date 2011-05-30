@@ -636,19 +636,18 @@ nsWindow::Create(nsIWidget *aParent,
   DispatchStandardEvent(NS_CREATE);
   SubclassWindow(TRUE);
 
+  // If the internal variable set by the config.trim_on_minimize pref has not
+  // been initialized, and if this is the hidden window (conveniently created
+  // before any visible windows, and after the profile has been initialized),
+  // do some initialization work.
   if (sTrimOnMinimize == 2 && mWindowType == eWindowType_invisible) {
-    /* The internal variable set by the config.trim_on_minimize pref
-       has not yet been initialized, and this is the hidden window
-       (conveniently created before any visible windows, and after
-       the profile has been initialized).
-       
-       Default config.trim_on_minimize to false, to fix bug 76831
-       for good.  If anyone complains about this new default, saying
-       that a Mozilla app hogs too much memory while minimized, they
-       will have that entire bug tattooed on their backside. */
-
+    // Our internal trim prevention logic is effective on 2K/XP at maintaining
+    // the working set when windows are minimized, but on Vista and up it has
+    // little to no effect. Since this feature has been the source of numerous
+    // bugs over the years, disable it (sTrimOnMinimize=1) on Vista and up.
     sTrimOnMinimize =
-      Preferences::GetBool("config.trim_on_minimize", PR_FALSE) ? 1 : 0;
+      Preferences::GetBool("config.trim_on_minimize",
+                           (GetWindowsVersion() >= VISTA_VERSION)) ? 1 : 0;
     sSwitchKeyboardLayout =
       Preferences::GetBool("intl.keyboard.per_window_layout", PR_FALSE);
     gDisableNativeTheme =
@@ -4309,7 +4308,6 @@ DisplaySystemMenu(HWND hWnd, nsSizeMode sizeMode, PRBool isRtl, PRInt32 x, PRInt
     mii.fState = MF_GRAYED;
     switch(sizeMode) {
       case nsSizeMode_Fullscreen:
-        SetMenuItemInfo(hMenu, SC_RESTORE, FALSE, &mii);
         // intentional fall through
       case nsSizeMode_Maximized:
         SetMenuItemInfo(hMenu, SC_SIZE, FALSE, &mii);
@@ -5227,6 +5225,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         DisplaySystemMenu(mWnd, mSizeMode, mIsRTL,
                           MOZ_SYSCONTEXT_X_POS,
                           MOZ_SYSCONTEXT_Y_POS);
+        result = PR_TRUE;
+      }
+      if (filteredWParam == SC_RESTORE &&
+          mSizeMode == nsSizeMode_Fullscreen) {
+        // Windows can handle restoring a normal window, but it doesn't
+        // understand our full screen mode.
+        MakeFullScreen(PR_FALSE);
         result = PR_TRUE;
       }
     }
