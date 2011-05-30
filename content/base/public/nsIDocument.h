@@ -479,8 +479,6 @@ public:
 
   void SetBFCacheEntry(nsISHEntry* aSHEntry) {
     mSHEntry = aSHEntry;
-    // Doing this just to keep binary compat for the gecko 2.0 release
-    mShellIsHidden = !!aSHEntry;
   }
 
   nsISHEntry* GetBFCacheEntry() const { return mSHEntry; }
@@ -1622,10 +1620,6 @@ protected:
   // documents created to satisfy a GetDocument() on a window when there's no
   // document in it.
   PRPackedBool mIsInitialDocumentInWindow;
-
-  // True if we're currently bfcached. This is only here for binary compat.
-  // Remove once the gecko 2.0 has branched and just use mSHEntry instead.
-  PRPackedBool mShellIsHidden;
 
   PRPackedBool mIsRegularHTML;
   PRPackedBool mIsXUL;
