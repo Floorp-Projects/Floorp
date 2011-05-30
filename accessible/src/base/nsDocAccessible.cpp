@@ -313,12 +313,7 @@ nsDocAccessible::NativeState()
   }
  
   nsIFrame* frame = GetFrame();
-  while (frame != nsnull && !frame->HasView()) {
-    frame = frame->GetParent();
-  }
- 
-  if (frame == nsnull ||
-      !CheckVisibilityInParentChain(mDocument, frame->GetViewExternal())) {
+  if (!frame || !nsCoreUtils::CheckVisibilityInParentChain(frame)) {
     state |= states::INVISIBLE | states::OFFSCREEN;
   }
 
