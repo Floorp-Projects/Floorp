@@ -8139,8 +8139,29 @@ nsDocument::GetStateObject(nsIVariant** aState)
 }
 
 Element*
-nsDocument::FindImageMap(const nsAString& aNormalizedMapName)
+nsDocument::FindImageMap(const nsAString& aUseMapValue)
 {
+  if (aUseMapValue.IsEmpty()) {
+    return nsnull;
+  }
+
+  nsAString::const_iterator start, end;
+  aUseMapValue.BeginReading(start);
+  aUseMapValue.EndReading(end);
+
+  PRInt32 hash = aUseMapValue.FindChar('#');
+  if (hash < 0) {
+    return nsnull;
+  }
+  // aUsemap contains a '#', set start to point right after the '#'
+  start.advance(hash + 1);
+
+  if (start == end) {
+    return nsnull; // aUsemap == "#"
+  }
+
+  const nsAString& mapName = Substring(start, end);
+
   if (!mImageMaps) {
     mImageMaps = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::map, nsGkAtoms::map);
   }
@@ -8148,9 +8169,9 @@ nsDocument::FindImageMap(const nsAString& aNormalizedMapName)
   PRUint32 i, n = mImageMaps->Length(PR_TRUE);
   for (i = 0; i < n; ++i) {
     nsIContent* map = mImageMaps->GetNodeAt(i);
-    if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aNormalizedMapName,
+    if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, mapName,
                          eCaseMatters) ||
-        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aNormalizedMapName,
+        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, mapName,
                          eIgnoreCase)) {
       return map->AsElement();
     }
