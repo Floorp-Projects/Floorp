@@ -63,6 +63,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsGUIEvent.h"
 #include "nsIView.h"
+#include "nsLayoutUtils.h"
 
 #include "nsContentCID.h"
 #include "nsComponentManagerUtils.h"
@@ -753,6 +754,30 @@ nsCoreUtils::IsColumnHidden(nsITreeColumn *aColumn)
                               nsAccessibilityAtoms::_true, eCaseMatters);
 }
 
+bool
+nsCoreUtils::CheckVisibilityInParentChain(nsIFrame* aFrame)
+{
+  nsIView* view = aFrame->GetClosestView();
+  if (view && !view->IsEffectivelyVisible())
+    return false;
+
+  nsIPresShell* presShell = aFrame->PresContext()->GetPresShell();
+  while (presShell) {
+    if (!presShell->IsActive()) {
+      return false;
+    }
+
+    nsIFrame* rootFrame = presShell->GetRootFrame();
+    presShell = nsnull;
+    if (rootFrame) {
+      nsIFrame* frame = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
+      if (frame) {
+        presShell = frame->PresContext()->GetPresShell();
+      }
+    }
+  }
+  return true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibleDOMStringList
