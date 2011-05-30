@@ -79,26 +79,7 @@ nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
 
   const nsAString& usemap = Substring(start, end);
 
-  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(aDocument));
-  if (htmlDoc) {
-    nsCOMPtr<nsIDOMHTMLMapElement> map =
-      do_QueryInterface(htmlDoc->GetImageMap(usemap));
-    return map.forget();
-  } else {
-    // For XHTML elements embedded in non-XHTML documents we get the
-    // map by id since XHTML requires that where a "name" attribute
-    // was used in HTML 4.01, the "id" attribute must be used in
-    // XHTML. The attribute "name" is officially deprecated.  This
-    // simplifies our life becase we can simply get the map with
-    // getElementById().
-    Element* element = aDocument->GetElementById(usemap);
-
-    if (element) {
-      nsIDOMHTMLMapElement* map;
-      CallQueryInterface(element, &map);
-      return map;
-    }
-  }
-  
-  return nsnull;
+  nsCOMPtr<nsIDOMHTMLMapElement> map =
+    do_QueryInterface(aDocument->FindImageMap(usemap));
+  return map.forget();
 }

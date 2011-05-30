@@ -48,15 +48,9 @@ class nsIEditor;
 class nsContentList;
 class nsWrapperCache;
 
-namespace mozilla {
-namespace dom {
-class Element;
-} // namespace dom
-} // namespace mozilla
-
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x8cc90664, 0xb0fe, 0x4cdb, \
- { 0xa2, 0xdd, 0x25, 0xcd, 0x8c, 0x2b, 0xfd, 0x08 } }
+{ 0x30001b0c, 0xdb25, 0x4318, \
+  { 0x85, 0xb8, 0x48, 0xb4, 0xea, 0x54, 0x8f, 0x23 } }
 
 
 /**
@@ -66,8 +60,6 @@ class nsIHTMLDocument : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLDOCUMENT_IID)
-
-  virtual mozilla::dom::Element* GetImageMap(const nsAString& aMapName) = 0;
 
   /**
    * Set compatibility mode for this document
