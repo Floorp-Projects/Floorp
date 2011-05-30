@@ -6203,21 +6203,6 @@ nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
-static nsIView* GetDisplayRootFor(nsIView* aView)
-{
-  nsIView *displayRoot = aView;
-  for (;;) {
-    nsIView *displayParent = displayRoot->GetParent();
-    if (!displayParent)
-      return displayRoot;
-
-    if (displayRoot->GetFloating() && !displayParent->GetFloating())
-      return displayRoot;
-    displayRoot = displayParent;
-  }
-  return nsnull;
-}
-
 static already_AddRefed<LayerManager>
 LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
                                 bool* aAllowRetaining)
@@ -6253,7 +6238,7 @@ LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
     if (VM) {
       nsIView* rootView = VM->GetRootView();
       if (rootView) {
-        nsIView* displayRoot = GetDisplayRootFor(rootView);
+        nsIView* displayRoot = nsIViewManager::GetDisplayRootFor(rootView);
         if (displayRoot) {
           nsIWidget* widget = displayRoot->GetNearestWidget(nsnull);
           if (widget) {
