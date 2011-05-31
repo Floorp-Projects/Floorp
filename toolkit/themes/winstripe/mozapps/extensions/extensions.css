@@ -1005,7 +1005,7 @@
 .download-progress[mode="undetermined"] .end-cap,
 .download-progress .progress .progress-bar {
   -moz-appearance: none;
-  background-image: -moz-linear-gradient(#71CA83, #54B06C 49%, #43A05D 51%, #60BB76);
+  background-image: -moz-linear-gradient(#92DDA0, #6FC483 49%, #5EB272 51%, #80CE91);
   margin-top: -1px;
   margin-bottom: -1px;
   border: 1px solid;

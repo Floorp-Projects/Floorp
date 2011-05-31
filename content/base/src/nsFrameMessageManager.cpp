@@ -359,13 +359,17 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
         JSAutoRequest ar(ctx);
 
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(ctx, object))
+          return NS_ERROR_FAILURE;
+
         // The parameter for the listener function.
         JSObject* param = JS_NewObject(ctx, NULL, NULL, NULL);
         NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
         jsval targetv;
         nsContentUtils::WrapNative(ctx,
-                                   JS_GetGlobalObject(ctx),
+                                   JS_GetGlobalForObject(ctx, object),
                                    aTarget, &targetv);
 
         // To keep compatibility with e10s message manager,
@@ -402,11 +406,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
         jsval thisValue = JSVAL_VOID;
 
-        JSAutoEnterCompartment ac;
-
-        if (!ac.enter(ctx, object))
-          return NS_ERROR_FAILURE;
-
         jsval funval = JSVAL_VOID;
         if (JS_ObjectIsFunction(ctx, object)) {
           // If the listener is a JS function:
@@ -422,7 +421,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
             defaultThisValue = aTarget;
           }
           nsContentUtils::WrapNative(ctx,
-                                     JS_GetGlobalObject(ctx),
+                                     JS_GetGlobalForObject(ctx, object),
                                      defaultThisValue, &thisValue);
         } else {
           // If the listener is a JS object which has receiveMessage function:
@@ -446,8 +445,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
 
           if (!tac.enter(ctx, thisObject) ||
-              !JS_WrapValue(ctx, argv.jsval_addr()) ||
-              !JS_WrapValue(ctx, &funval))
+              !JS_WrapValue(ctx, argv.jsval_addr()))
             return NS_ERROR_UNEXPECTED;
 
           JS_CallFunctionValue(ctx, thisObject,
