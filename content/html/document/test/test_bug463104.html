@@ -13,8 +13,8 @@
 var a = document.getElementById("a");
 isnot(a, document.elementFromPoint(5, 5), "a shouldn't be found");
 isnot(a, document.elementFromPoint(5.25, 5.25), "a shouldn't be found");
-isnot(a, document.elementFromPoint(5.5, 5.5), "a shouldn't be found");
-isnot(a, document.elementFromPoint(5.75, 5.75), "a shouldn't be found");
+is(a, document.elementFromPoint(5.5, 5.5), "a should be found");
+is(a, document.elementFromPoint(5.75, 5.75), "a should be found");
 is(a, document.elementFromPoint(6, 6), "a should be found");
 is(a, document.elementFromPoint(105, 105), "a should be found");
 is(a, document.elementFromPoint(105.25, 105.25), "a should be found");
