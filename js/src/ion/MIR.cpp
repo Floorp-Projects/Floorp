@@ -326,15 +326,22 @@ HasComplexNumberConversion(MIRType type)
 bool
 MBinaryInstruction::adjustForInputs()
 {
-    MIRType adjusted = specialization();
-    if (HasComplexNumberConversion(getInput(0)->type()) ||
-        HasComplexNumberConversion(getInput(1)->type())) {
-        adjusted = MIRType_Value;
-    }
-    if (adjusted == specialization())
+    if (specialization() == MIRType_Value)
         return false;
-    specialization_ = adjusted;
-    return true;
+
+    MIRType lhsActual = getInput(0)->type();
+    MIRType lhsUsedAs = getInput(0)->usedAsType();
+    MIRType rhsActual = getInput(1)->type();
+    MIRType rhsUsedAs = getInput(1)->usedAsType();
+
+    if (HasComplexNumberConversion(lhsActual) ||
+        HasComplexNumberConversion(lhsUsedAs) ||
+        HasComplexNumberConversion(rhsActual) ||
+        HasComplexNumberConversion(rhsUsedAs)) {
+        specialization_ = MIRType_Value;
+        return true;
+    }
+    return false;
 }
 
 MBitAnd *
