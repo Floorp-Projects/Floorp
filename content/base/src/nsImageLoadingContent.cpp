@@ -824,7 +824,7 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
       NS_ASSERTION(thisContent->IsInDoc(), "Something is confused");
       nsEventStates changedBits = oldState ^ ImageState();
       if (!changedBits.IsEmpty()) {
-        mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        nsAutoScriptBlocker scriptBlocker;
         doc->ContentStateChanged(thisContent, changedBits);
       }
     }

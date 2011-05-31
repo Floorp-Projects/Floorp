@@ -4413,7 +4413,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
   if (notifyContent1 && mPresContext) {
     EnsureDocument(mPresContext);
     if (mDocument) {
-      MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
 
       if (notifyAncestors) {
         nsCOMPtr<nsIContent> commonAncestor =

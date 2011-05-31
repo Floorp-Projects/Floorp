@@ -954,7 +954,6 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
 
       if (doc && !states.IsEmpty()) {
-        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStateChanged(this, states);
       }
     }
@@ -1027,7 +1026,7 @@ nsHTMLInputElement::SetIndeterminateInternal(PRBool aValue,
   // Notify the document so it can update :indeterminate pseudoclass rules
   nsIDocument* document = GetCurrentDoc();
   if (document) {
-    mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
+    nsAutoScriptBlocker scriptBlocker;
     document->ContentStateChanged(this, NS_EVENT_STATE_INDETERMINATE);
   }
 
@@ -1444,7 +1443,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
         HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
       nsIDocument* doc = GetCurrentDoc();
       if (doc) {
-        mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        nsAutoScriptBlocker scriptBlocker;
         doc->ContentStateChanged(this, NS_EVENT_STATE_MOZ_PLACEHOLDER);
       }
     }
@@ -1483,7 +1482,7 @@ nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
   if (valueChangedBefore != aValueChanged) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-      mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(this, NS_EVENT_STATE_MOZ_UI_VALID |
                                      NS_EVENT_STATE_MOZ_UI_INVALID);
     }
@@ -1532,7 +1531,7 @@ nsHTMLInputElement::SetCheckedChangedInternal(PRBool aCheckedChanged)
   if (checkedChangedBefore != aCheckedChanged) {
     nsIDocument* document = GetCurrentDoc();
     if (document) {
-      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       document->ContentStateChanged(this,
                                     NS_EVENT_STATE_MOZ_UI_VALID |
                                     NS_EVENT_STATE_MOZ_UI_INVALID);
@@ -1735,7 +1734,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   if (aNotify) {
     nsIDocument* document = GetCurrentDoc();
     if (document) {
-      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, aNotify);
+      nsAutoScriptBlocker scriptBlocker;
       document->ContentStateChanged(this, NS_EVENT_STATE_CHECKED);
     }
   }
@@ -2079,7 +2078,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(this, states);
     }
   }
@@ -3657,7 +3656,7 @@ nsHTMLInputElement::SetCustomValidity(const nsAString& aError)
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
-    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+    nsAutoScriptBlocker scriptBlocker;
     doc->ContentStateChanged(this, NS_EVENT_STATE_INVALID |
                                    NS_EVENT_STATE_VALID |
                                    NS_EVENT_STATE_MOZ_UI_INVALID |
@@ -3874,7 +3873,7 @@ nsHTMLInputElement::UpdateAllValidityStates(PRBool aNotify)
   if (validBefore != IsValid() && aNotify) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(this,
                                NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
                                NS_EVENT_STATE_MOZ_UI_VALID |
@@ -4177,7 +4176,7 @@ nsHTMLInputElement::OnValueChanged(PRBool aNotify)
       && !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(this, NS_EVENT_STATE_MOZ_PLACEHOLDER);
     }
   }

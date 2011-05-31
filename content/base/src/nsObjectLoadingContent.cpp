@@ -1662,7 +1662,7 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     nsEventStates changedBits = aOldState ^ newState;
 
     {
-      mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(thisContent, changedBits);
     }
     if (aSync) {

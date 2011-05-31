@@ -174,7 +174,7 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
   if (aNotify && !mIsInSetDefaultSelected) {
     nsIDocument* document = GetCurrentDoc();
     if (document) {
-      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, aNotify);
+      nsAutoScriptBlocker scriptBlocker;
       document->ContentStateChanged(this, NS_EVENT_STATE_CHECKED);
     }
   }
