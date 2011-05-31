@@ -185,6 +185,12 @@ NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 NS_IMPL_ADDREF_INHERITED(nsSimpleContentList, nsBaseContentList)
 NS_IMPL_RELEASE_INHERITED(nsSimpleContentList, nsBaseContentList)
 
+JSObject*
+nsSimpleContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope)
+{
+  return xpc::dom::NodeListBase::create(cx, scope, this);
+}
+
 // nsFormContentList
 
 nsFormContentList::nsFormContentList(nsIContent *aForm,
@@ -447,9 +453,6 @@ nsContentList::nsContentList(nsINode* aRootNode,
   // to get our kids right.
   nsIDocument* doc = mRootNode->GetCurrentDoc();
   mFlushesNeeded = doc && !doc->IsHTML();
-
-  // Mark ourselves as a proxy
-  SetIsProxy();
 }
 
 nsContentList::nsContentList(nsINode* aRootNode,
@@ -483,9 +486,6 @@ nsContentList::nsContentList(nsINode* aRootNode,
   // to get our kids right.
   nsIDocument* doc = mRootNode->GetCurrentDoc();
   mFlushesNeeded = doc && !doc->IsHTML();
-
-  // Mark ourselves as a proxy
-  SetIsProxy();
 }
 
 nsContentList::~nsContentList()
