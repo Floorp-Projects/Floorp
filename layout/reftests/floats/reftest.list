@@ -1,3 +1,4 @@
+== border-box-wrap-around-float.html border-box-wrap-around-float-ref.html
 == other-float-outside-rule-3-left.html other-float-outside-rule-3-left-ref.html
 == other-float-outside-rule-3-right.html other-float-outside-rule-3-right-ref.html
 fails == other-float-outside-rule-3-left-2.html other-float-outside-rule-3-left-2-ref.html # bug 616334

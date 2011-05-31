@@ -6976,97 +6976,25 @@ nsBlockFrame::WidthToClearPastFloats(nsBlockReflowState& aState,
                                aState.mContentArea.width);
 
   ReplacedElementWidthToClear result;
-  // A table outer frame is an exception in that it is a block child
-  // that is not a containing block for its children.
-  if (aFrame->GetType() == nsGkAtoms::tableOuterFrame) {
-    nsIFrame *innerTable = aFrame->GetFirstPrincipalChild();
-    nsIFrame *caption = aFrame->GetFirstChild(kCaptionList);
+  aState.ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace,
+                                              leftOffset, rightOffset);
+  nscoord availWidth = aState.mContentArea.width - leftOffset - rightOffset;
 
-    nsMargin tableMargin, captionMargin;
-    {
-      nsCSSOffsetState tableOS(innerTable, aState.mReflowState.rendContext,
-                               aState.mContentArea.width);
-      tableMargin = tableOS.mComputedMargin;
-    }
-
-    if (caption) {
-      nsCSSOffsetState captionOS(caption, aState.mReflowState.rendContext,
-                                 aState.mContentArea.width);
-      captionMargin = captionOS.mComputedMargin;
-    }
-
-    PRUint8 captionSide;
-    if (!caption ||
-        ((captionSide = caption->GetStyleTableBorder()->mCaptionSide)
-           == NS_STYLE_CAPTION_SIDE_TOP ||
-         captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM)) {
-      result.marginLeft = tableMargin.left;
-      result.marginRight = tableMargin.right;
-    } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
-               captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE) {
-      // FIXME:  This doesn't treat the caption and table independently,
-      // since we adjust by only the smaller margin, and the table outer
-      // frame doesn't know about it.
-      result.marginLeft  = NS_MIN(tableMargin.left,  captionMargin.left);
-      result.marginRight = NS_MIN(tableMargin.right, captionMargin.right);
-    } else {
-      NS_ASSERTION(captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
-                   captionSide == NS_STYLE_CAPTION_SIDE_RIGHT,
-                   "unexpected caption-side");
-      if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT) {
-        result.marginLeft = captionMargin.left;
-        result.marginRight = tableMargin.right;
-      } else {
-        result.marginLeft = tableMargin.left;
-        result.marginRight = captionMargin.right;
-      }
-    }
-
-    aState.ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace,
-                                                leftOffset, rightOffset,
-                                                &result);
-
-    // result.marginLeft has already been subtracted from leftOffset (etc.)
-    nscoord availWidth = aState.mContentArea.width - leftOffset - rightOffset;
-    // Force the outer frame to shrink-wrap (otherwise it just sizes to
-    // the available width unconditionally).
-    result.borderBoxWidth =
-      aFrame->ComputeSize(aState.mReflowState.rendContext,
-                          nsSize(aState.mContentArea.width,
-                                 NS_UNCONSTRAINEDSIZE),
-                          availWidth,
-                          nsSize(offsetState.mComputedMargin.LeftRight(),
-                                 offsetState.mComputedMargin.TopBottom()),
-                          nsSize(offsetState.mComputedBorderPadding.LeftRight() -
-                                   offsetState.mComputedPadding.LeftRight(),
-                                 offsetState.mComputedBorderPadding.TopBottom() -
-                                   offsetState.mComputedPadding.TopBottom()),
-                          nsSize(offsetState.mComputedPadding.LeftRight(),
-                                 offsetState.mComputedPadding.TopBottom()),
-                          PR_TRUE).width +
-      offsetState.mComputedBorderPadding.LeftRight() -
-      (result.marginLeft + result.marginRight);
-  } else {
-    aState.ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace,
-                                                leftOffset, rightOffset);
-    nscoord availWidth = aState.mContentArea.width - leftOffset - rightOffset;
-
-    // We actually don't want the min width here; see bug 427782; we only
-    // want to displace if the width won't compute to a value small enough
-    // to fit.
-    // All we really need here is the result of ComputeSize, and we
-    // could *almost* get that from an nsCSSOffsetState, except for the
-    // last argument.
-    nsSize availSpace(availWidth, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
-                                  aFrame, availSpace);
-    result.borderBoxWidth = reflowState.ComputedWidth() +
-                            reflowState.mComputedBorderPadding.LeftRight();
-    // Use the margins from offsetState rather than reflowState so that
-    // they aren't reduced by ignoring margins in overconstrained cases.
-    result.marginLeft  = offsetState.mComputedMargin.left;
-    result.marginRight = offsetState.mComputedMargin.right;
-  }
+  // We actually don't want the min width here; see bug 427782; we only
+  // want to displace if the width won't compute to a value small enough
+  // to fit.
+  // All we really need here is the result of ComputeSize, and we
+  // could *almost* get that from an nsCSSOffsetState, except for the
+  // last argument.
+  nsSize availSpace(availWidth, NS_UNCONSTRAINEDSIZE);
+  nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
+                                aFrame, availSpace);
+  result.borderBoxWidth = reflowState.ComputedWidth() +
+                          reflowState.mComputedBorderPadding.LeftRight();
+  // Use the margins from offsetState rather than reflowState so that
+  // they aren't reduced by ignoring margins in overconstrained cases.
+  result.marginLeft  = offsetState.mComputedMargin.left;
+  result.marginRight = offsetState.mComputedMargin.right;
   return result;
 }
  

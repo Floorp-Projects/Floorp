@@ -3,7 +3,8 @@
 <head>
 <title>Testcase for table + caption vertical margins (bug 478614)</title>
 <style type="text/css">
-caption {margin-top: 100px;margin-bottom:50px;caption-side:top-outside}
+body {margin-top: 0} /* Don't let collapsing of the body's top margin interfere with positioning */
+caption {margin-top: 150px;caption-side:top-outside}
 table { width:100px}
 </style>
 </head>
