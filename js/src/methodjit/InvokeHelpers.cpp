@@ -280,8 +280,14 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
     return newfp;
 }
 
+struct ResetStubRejoin {
+    VMFrame &f;
+    ResetStubRejoin(VMFrame &f) : f(f) {}
+    ~ResetStubRejoin() { f.stubRejoin = 0; }
+};
+
 void * JS_FASTCALL
-stubs::CompileFunction(VMFrame &f, uint32 nactual)
+stubs::CompileFunction(VMFrame &f, uint32 argc)
 {
     /*
      * Note: the stubRejoin kind for the frame was written before the call, and
@@ -289,73 +295,12 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
      * IC stub will not handle cases where we recompiled or threw).
      */
     JS_ASSERT_IF(f.cx->typeInferenceEnabled(), f.stubRejoin);
+    ResetStubRejoin reset(f);
 
-    /*
-     * We have a partially constructed frame. That's not really good enough to
-     * compile though because we could throw, so get a full, adjusted frame.
-     */
-    JSContext *cx = f.cx;
-    StackFrame *fp = f.fp();
+    bool isConstructing = f.fp()->isConstructing();
+    f.regs.popPartialFrame((Value *)f.fp());
 
-    /*
-     * Since we can only use members set by initCallFrameCallerHalf,
-     * we must carefully extract the callee from the nactual.
-     */
-    JSObject &callee = fp->formalArgsEnd()[-(int(nactual) + 2)].toObject();
-    JSFunction *fun = callee.getFunctionPrivate();
-    JSScript *script = fun->script();
-
-    /*
-     * FixupArity/RemovePartialFrame expect to be called after the early
-     * prologue.
-     */
-    fp->initCallFrameEarlyPrologue(fun, nactual);
-
-    if (nactual != fp->numFormalArgs()) {
-        fp = (StackFrame *)FixupArity(f, nactual);
-        if (!fp) {
-            f.stubRejoin = 0;
-            return NULL;
-        }
-    }
-
-    CallArgs args = CallArgsFromArgv(fp->numFormalArgs(), fp->formalArgs());
-    cx->typeMonitorCall(args, fp->isConstructing());
-
-    /* Finish frame initialization. */
-    fp->initCallFrameLatePrologue();
-
-    /* These would have been initialized by the prologue. */
-    f.regs.prepareToRun(fp, script);
-
-    if (fun->isHeavyweight() && !js::CreateFunCallObject(cx, fp)) {
-        f.stubRejoin = 0;
-        THROWV(NULL);
-    }
-
-    CompileStatus status = CanMethodJIT(cx, script, fp, CompileRequest_JIT);
-    if (status == Compile_Okay) {
-        void *entry = script->getJIT(fp->isConstructing())->invokeEntry;
-
-        /* Same constraint on fp as UncachedInlineCall. */
-        f.regs.popFrame((Value *) f.regs.fp());
-        f.stubRejoin = 0;
-        return entry;
-    }
-
-    /* Force computation of the previous PC, as Interpret will clear it. */
-    fp->prev()->pc(cx, fp);
-
-    /* Function did not compile... interpret it. */
-    JSBool ok = Interpret(cx, fp);
-    InlineReturn(f);
-
-    f.stubRejoin = 0;
-
-    if (!ok)
-        THROWV(NULL);
-
-    return NULL;
+    return isConstructing ? UncachedNew(f, argc) : UncachedCall(f, argc);
 }
 
 static inline bool
