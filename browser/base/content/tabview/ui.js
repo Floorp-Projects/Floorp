@@ -157,6 +157,9 @@ let UI = {
       // initialize the direction of the page
       this._initPageDirection();
 
+      // ___ thumbnail storage
+      ThumbnailStorage.init();
+
       // ___ storage
       Storage.init();
       let data = Storage.readUIData(gWindow);
@@ -278,7 +281,7 @@ let UI = {
       // initialized.
       let event = document.createEvent("Events");
       event.initEvent("tabviewframeinitialized", true, false);
-      dispatchEvent(event);      
+      dispatchEvent(event);
     } catch(e) {
       Utils.log(e);
     } finally {
@@ -286,6 +289,8 @@ let UI = {
     }
   },
 
+  // Function: uninit
+  // Should be called when window is unloaded.
   uninit: function UI_uninit() {
     // call our cleanup functions
     this._cleanupFunctions.forEach(function(func) {
@@ -297,6 +302,7 @@ let UI = {
     TabItems.uninit();
     GroupItems.uninit();
     Storage.uninit();
+    ThumbnailStorage.uninit();
 
     this._removeTabActionHandlers();
     this._currentTab = null;
@@ -680,22 +686,22 @@ let UI = {
     // don't reenter Panorama due to all of the session restore tab
     // manipulation (which otherwise we might). When transitioning away from
     // PB, we reenter Panorama if we had been there directly before PB.
-    function pbObserver(aSubject, aTopic, aData) {
-      if (aTopic == "private-browsing") {
+    function pbObserver(subject, topic, data) {
+      if (topic == "private-browsing") {
         // We could probably do this in private-browsing-change-granted, but
         // this seems like a nicer spot, right in the middle of the process.
-        if (aData == "enter") {
+        if (data == "enter") {
           // If we are in Tab View, exit. 
           self._privateBrowsing.wasInTabView = self.isTabViewVisible();
           if (self.isTabViewVisible())
             self.goToTab(gBrowser.selectedTab);
         }
-      } else if (aTopic == "private-browsing-change-granted") {
-        if (aData == "enter" || aData == "exit") {
-          self._privateBrowsing.transitionMode = aData;
+      } else if (topic == "private-browsing-change-granted") {
+        if (data == "enter" || data == "exit") {
+          self._privateBrowsing.transitionMode = data;
           self.storageBusy();
         }
-      } else if (aTopic == "private-browsing-transition-complete") {
+      } else if (topic == "private-browsing-transition-complete") {
         // We use .transitionMode here, as aData is empty.
         if (self._privateBrowsing.transitionMode == "exit" &&
             self._privateBrowsing.wasInTabView)

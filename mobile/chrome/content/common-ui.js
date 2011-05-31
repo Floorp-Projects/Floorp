@@ -728,6 +728,7 @@ var FormHelperUI = {
 
     this._updateContainerForSelect(lastElement, this._currentElement);
     this._zoom(Rect.fromRect(aElement.rect), Rect.fromRect(aElement.caretRect));
+    this._updateSuggestionsFor(this._currentElement);
 
     // Prevent the view to scroll automatically while typing
     this._currentBrowser.scrollSync = false;
@@ -1391,7 +1392,7 @@ var FullScreenVideo = {
         this._dispatchMouseEvent("Browser:MouseDown", aEvent.clientX, aEvent.clientY);
         break;
       case "TapSingle":
-        this._dispatchMouseEvent("Browser:MouseUp", aEvent.clientX, aEvent.clientY);
+        this._dispatchMouseEvent("Browser:MouseClick", aEvent.clientX, aEvent.clientY);
         break;
     }
   },
