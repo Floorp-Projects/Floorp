@@ -6038,17 +6038,17 @@ BEGIN_CASE(JSOP_SETLOCALPOP)
 }
 END_CASE(JSOP_SETLOCALPOP)
 
-BEGIN_CASE(JSOP_IFPRIMTOP)
+BEGIN_CASE(JSOP_IFCANTCALLTOP)
     /*
      * If the top of stack is of primitive type, jump to our target. Otherwise
      * advance to the next opcode.
      */
     JS_ASSERT(regs.sp > regs.fp()->base());
-    if (regs.sp[-1].isPrimitive()) {
+    if (!js_IsCallable(regs.sp[-1])) {
         len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
-END_CASE(JSOP_IFPRIMTOP)
+END_CASE(JSOP_IFCANTCALLTOP)
 
 BEGIN_CASE(JSOP_PRIMTOP)
     JS_ASSERT(regs.sp > regs.fp()->base());
