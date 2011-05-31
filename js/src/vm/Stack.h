@@ -1061,7 +1061,6 @@ class FrameRegs
     void popPartialFrame(Value *newsp) {
         sp = newsp;
         fp_ = fp_->prev();
-        inlined_ = NULL;
     }
 
     /* For InternalInterpret: */

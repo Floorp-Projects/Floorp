@@ -246,9 +246,9 @@ Recompiler::expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *in
     StackFrame *innerfp = expandInlineFrameChain(cx, fp, inner);
 
     /* Check if the VMFrame returns into the inlined frame. */
-    if (f->stubRejoin && (f->stubRejoin & 0x1) && f->regs.fp()->prev() == fp) {
+    if (f->stubRejoin && (f->stubRejoin & 0x1) && f->fp() == fp) {
         /* The VMFrame is calling CompileFunction. */
-        fp->prev()->setRejoin(StubRejoin((RejoinState) f->stubRejoin));
+        innerfp->setRejoin(StubRejoin((RejoinState) f->stubRejoin));
         *frameAddr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
     }
     if (*frameAddr == codeStart + inlined->codeOffset) {
@@ -417,8 +417,8 @@ Recompiler::recompile(bool resetUses)
                 patchNative(cx, script->jitNormal, fp, fp->pc(cx, NULL), NULL, rejoin);
         } else if (rejoin) {
             /* Recompilation triggered by CompileFunction. */
-            if (fp->prev()->script() == script) {
-                fp->prev()->setRejoin(StubRejoin(rejoin));
+            if (fp->script() == script) {
+                fp->setRejoin(StubRejoin(rejoin));
                 *addr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
             }
         } else if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
