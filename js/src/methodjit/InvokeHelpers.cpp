@@ -1321,7 +1321,10 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     InterpMode interpMode = JSINTERP_REJOIN;
 
     if ((cs->format & (JOF_INC | JOF_DEC)) &&
-        rejoin != REJOIN_FALLTHROUGH && rejoin != REJOIN_RESUME && rejoin != REJOIN_THIS_PROTOTYPE) {
+        rejoin != REJOIN_FALLTHROUGH &&
+        rejoin != REJOIN_RESUME &&
+        rejoin != REJOIN_THIS_PROTOTYPE &&
+        rejoin != REJOIN_CHECK_ARGUMENTS) {
         /* We may reenter the interpreter while finishing the INC/DEC operation. */
         nextDepth = analysis->getCode(nextpc).stackDepth;
         untrap.retrap();
