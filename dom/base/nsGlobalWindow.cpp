@@ -4587,12 +4587,32 @@ nsGlobalWindow::MakeScriptDialogTitle(nsAString &aOutTitle)
   }
 }
 
-// static
 PRBool
 nsGlobalWindow::CanMoveResizeWindows()
 {
-  if (!CanSetProperty("dom.disable_window_move_resize"))
-    return PR_FALSE;
+  // When called from chrome, we can avoid the following checks.
+  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+    // Don't allow scripts to move or resize windows that were not opened by a
+    // script.
+    if (!mHadOriginalOpener) {
+      return PR_FALSE;
+    }
+
+    if (!CanSetProperty("dom.disable_window_move_resize")) {
+      return PR_FALSE;
+    }
+
+    // Ignore the request if we have more than one tab in the window.
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    GetTreeOwner(getter_AddRefs(treeOwner));
+    if (treeOwner) {
+      PRUint32 itemCount;
+      if (NS_SUCCEEDED(treeOwner->GetTargetableShellCount(&itemCount)) &&
+          itemCount > 1) {
+        return PR_FALSE;
+      }
+    }
+  }
 
   if (gMouseDown && !gDragServiceDisabled) {
     nsCOMPtr<nsIDragService> ds =
