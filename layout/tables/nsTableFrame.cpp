@@ -1502,6 +1502,9 @@ nsTableFrame::IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext)
   IntrinsicWidthOffsetData result =
     nsHTMLContainerFrame::IntrinsicWidthOffsets(aRenderingContext);
 
+  result.hMargin = 0;
+  result.hPctMargin = 0;
+
   if (IsBorderCollapse()) {
     result.hPadding = 0;
     result.hPctPadding = 0;
@@ -2335,6 +2338,14 @@ nsTableFrame::GetUsedPadding() const
     return nsHTMLContainerFrame::GetUsedPadding();
 
   return nsMargin(0,0,0,0);
+}
+
+/* virtual */ nsMargin
+nsTableFrame::GetUsedMargin() const
+{
+  // The margin is inherited to the outer table frame via
+  // the ::-moz-table-outer rule in ua.css.
+  return nsMargin(0, 0, 0, 0);
 }
 
 // Destructor function for BCPropertyData properties

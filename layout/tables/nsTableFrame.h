@@ -193,6 +193,7 @@ public:
 
   virtual nsMargin GetUsedBorder() const;
   virtual nsMargin GetUsedPadding() const;
+  virtual nsMargin GetUsedMargin() const;
 
   // Get the offset from the border box to the area where the row groups fit
   nsMargin GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const;
