@@ -667,19 +667,24 @@ class CallCompiler : public BaseCompiler
 
         /* Try and compile. On success we get back the nmap pointer. */
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
+        DataLabelPtr inlined;
         if (ic.frameSize.isStatic()) {
             masm.move(Imm32(ic.frameSize.staticArgc()), Registers::ArgReg1);
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
-                                compilePtr, NULL, NULL, ic.frameSize.staticLocalSlots());
+                                compilePtr, f.regs.pc, &inlined, ic.frameSize.staticLocalSlots());
         } else {
             masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), Registers::ArgReg1);
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
-                                compilePtr, NULL, NULL, -1);
+                                compilePtr, f.regs.pc, &inlined, -1);
         }
 
         Jump notCompiled = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
                                               Registers::ReturnReg);
         masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.sp)), JSFrameReg);
+
+        /* Compute the value of ncode to use at this call site. */
+        uint8 *ncode = (uint8 *) f.jit()->code.m_code.executableAddress() + ic.call->codeOffset;
+        masm.storePtr(ImmPtr(ncode), Address(JSFrameReg, StackFrame::offsetOfNcode()));
 
         masm.jump(Registers::ReturnReg);
 
@@ -707,6 +712,11 @@ class CallCompiler : public BaseCompiler
 
         JaegerSpew(JSpew_PICs, "generated CALL stub %p (%d bytes)\n", cs.executableAddress(),
                    masm.size());
+
+        if (f.regs.inlined()) {
+            JSC::LinkBuffer code((uint8 *) cs.executableAddress(), masm.size());
+            code.patch(inlined, f.regs.inlined());
+        }
 
         Repatcher repatch(from);
         JSC::CodeLocationJump oolJump = ic.slowPathStart.jumpAtOffset(ic.oolJumpOffset);
