@@ -327,6 +327,9 @@ class MInstruction
         JS_ASSERT(inWorklist());
         inWorklist_ = false;
     }
+    MSnapshot *snapshot() const {
+        return snapshot_;
+    }
 
     // To assign a snapshot, the snapshot must be before this actual
     // instruction, and in addition, this instruction have been added to the
