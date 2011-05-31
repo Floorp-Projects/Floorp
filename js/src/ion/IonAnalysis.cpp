@@ -83,15 +83,25 @@ class TypeAnalyzer
   private:
     bool addToWorklist(MInstruction *ins);
     MInstruction *popFromWorklist();
+    bool canSpecializeAtDef(MInstruction *ins);
+
+    bool populate();
+    bool propagate();
+    bool insertConversions();
+
+    // Type propagation.
+    bool inspectOperands(MInstruction *ins);
+    bool propagateUsedTypes(MInstruction *ins);
+
+    // Type conversion.
+    bool specializePhi(MPhi *phi);
+    bool fixup(MInstruction *ins);
+    void rewriteUses(MInstruction *old, MInstruction *ins);
 
   public:
     TypeAnalyzer(MIRGraph &graph);
 
     bool analyze();
-    bool populate();
-    bool propagate();
-    bool inspectOperands(MInstruction *ins);
-    bool propagateUsedTypes(MInstruction *ins);
 };
 
 TypeAnalyzer::TypeAnalyzer(MIRGraph &graph)
@@ -115,39 +125,6 @@ TypeAnalyzer::popFromWorklist()
     MInstruction *ins = worklist.popCopy();
     ins->setNotInWorklist();
     return ins;
-}
-
-bool
-TypeAnalyzer::inspectOperands(MInstruction *ins)
-{
-    for (size_t i = 0; i < ins->numOperands(); i++) {
-        MIRType required = ins->requiredInputType(i);
-        if (required >= MIRType_Value)
-            continue;
-        ins->getInput(i)->useAsType(required);
-    }
-
-    return true;
-}
-
-bool
-TypeAnalyzer::propagateUsedTypes(MInstruction *ins)
-{
-    // Otherwise, propagate the phi's used types to each input.
-    MPhi *phi = ins->toPhi();
-    for (size_t i = 0; i < phi->numOperands(); i++) {
-        MInstruction *input = phi->getInput(i);
-        bool changed = input->addUsedTypes(phi->usedTypes());
-        if (changed && (input->isPhi() || ins->isCopy())) {
-            // If the set of types on the input changed, and the input will
-            // need to propagate its information again, then re-add it to the
-            // worklist.
-            if (!addToWorklist(input))
-                return false;
-        }
-    }
-
-    return true;
 }
 
 bool
@@ -177,6 +154,39 @@ TypeAnalyzer::populate()
         }
     }
     
+    return true;
+}
+
+bool
+TypeAnalyzer::inspectOperands(MInstruction *ins)
+{
+    for (size_t i = 0; i < ins->numOperands(); i++) {
+        MIRType required = ins->requiredInputType(i);
+        if (required >= MIRType_Value)
+            continue;
+        ins->getInput(i)->useAsType(required);
+    }
+
+    return true;
+}
+
+bool
+TypeAnalyzer::propagateUsedTypes(MInstruction *ins)
+{
+    // Propagate the phi's used types to each input.
+    MPhi *phi = ins->toPhi();
+    for (size_t i = 0; i < phi->numOperands(); i++) {
+        MInstruction *input = phi->getInput(i);
+        bool changed = input->addUsedTypes(phi->usedTypes());
+        if (changed && (input->isPhi() || ins->isCopy())) {
+            // If the set of types on the input changed, and the input will
+            // need to propagate its information again, then re-add it to the
+            // worklist.
+            if (!addToWorklist(input))
+                return false;
+        }
+    }
+
     return true;
 }
 
@@ -215,14 +225,106 @@ TypeAnalyzer::propagate()
 }
 
 bool
+TypeAnalyzer::canSpecializeAtDef(MInstruction *ins)
+{
+    // It's only possible to specialize at the def if there is a snapshot.
+    // If this gets to be a problem, we can create more snapshots.
+    return !!ins->snapshot();
+}
+
+// Rewrites all uses of an old definition to point at a new, narrower-typed
+// version. The purpose of this is to shorten the lifetime of the type tag on
+// platforms with nun/wideboxing.
+void
+TypeAnalyzer::rewriteUses(MInstruction *old, MInstruction *ins)
+{
+    JS_ASSERT(old->type() == MIRType_Value && ins->type() < MIRType_Value);
+
+    MUseIterator iter(old);
+    while (iter.more()) {
+        MInstruction *use = iter->ins();
+
+        MIRType required = use->requiredInputType(iter->index());
+        if ((required != MIRType_Any && required != ins->type()) ||
+            use == ins->snapshot())
+        {
+            // We try to replace uses that accept any representation (boxed or
+            // unboxed), but we must ignore the snapshot at the unbox
+            // instruction, otherwise it will have a use of itself.
+            iter.next();
+            continue;
+        }
+
+        use->replaceOperand(iter, ins);
+    }
+}
+
+bool
+TypeAnalyzer::specializePhi(MPhi *phi)
+{
+    // If the phi is used as more than one type, or always as a box, don't
+    // bother specializing it.
+    MIRType usedAs = phi->usedAsType();
+    if (usedAs == MIRType_Value)
+        return true;
+
+    // See if all its inputs can be specialized at their definition.
+    for (size_t i = 0; i < phi->numOperands(); i++) {
+        MInstruction *ins = phi->getInput(i);
+        if (ins->type() == usedAs)
+            continue;
+
+        // Give up if the type is not a value. A conversion near the def would
+        // break semantics if a guard failed after the phi.
+        if (ins->type() != MIRType_Value)
+            return true;
+
+        if (!canSpecializeAtDef(ins))
+            return true;
+    }
+
+    MBasicBlock *block = phi->block();
+    MUnbox *unbox = MUnbox::New(phi, usedAs);
+    unbox->assignSnapshot(block->entrySnapshot());
+    block->insertBefore(*block->begin(), unbox);
+    rewriteUses(phi, unbox);
+
+    return true;
+}
+
+bool
+TypeAnalyzer::fixup(MInstruction *ins)
+{
+    return true;
+}
+
+bool
+TypeAnalyzer::insertConversions()
+{
+    for (size_t i = 0; i < graph.numBlocks(); i++) {
+        MBasicBlock *block = graph.getBlock(i);
+        for (size_t i = 0; i < block->numPhis(); i++) {
+            if (!specializePhi(block->getPhi(i)))
+                return false;
+        }
+        for (MInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
+            if (!fixup(*iter))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool
 TypeAnalyzer::analyze()
 {
     if (!populate())
         return false;
-
     if (!propagate())
         return false;
-
+    if (!insertConversions())
+        return false;
     return true;
 }
 
