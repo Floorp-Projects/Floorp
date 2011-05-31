@@ -297,12 +297,30 @@ JSObject *
 NodeList<T>::create(JSContext *cx, XPCWrappedNativeScope *scope, T *aNodeList,
                     nsWrapperCache* aWrapperCache)
 {
+    nsINode *nativeParent = aNodeList->GetParentObject();
+    if (!nativeParent)
+        return NULL;
+
+    jsval v;
+    if (!WrapObject(cx, scope->GetGlobalJSObject(), nativeParent, nativeParent, &v))
+        return NULL;
+
+    JSObject *parent = JSVAL_TO_OBJECT(v);
+
+    JSAutoEnterCompartment ac;
+    if (js::GetObjectGlobal(parent) != scope->GetGlobalJSObject()) {
+        if (!ac.enter(cx, parent))
+            return NULL;
+
+        scope = XPCWrappedNativeScope::FindInJSObjectScope(cx, parent);
+    }
+
     JSObject *proto = getPrototype(cx, scope);
     if (!proto)
         return NULL;
     JSObject *obj = NewProxyObject(cx, &NodeList<T>::instance,
                                    PrivateValue(aNodeList),
-                                   proto, NULL);
+                                   proto, parent);
     if (!obj)
         return NULL;
 
