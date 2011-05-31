@@ -395,15 +395,16 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
             } else {
                 // Otherwise, create a new phi node.
                 phi = MPhi::New(i);
-                if (!addPhi(phi) || !phi->addInput(mine))
+                if (!addPhi(phi))
                     return false;
 
-#ifdef DEBUG
-                // Assert that each previous predecessor has the same value
-                // for this slot, so we only have to add one input.
-                for (size_t j = 0; j < predecessors_.length(); j++)
+                // Prime the phi for each predecessor, so input(x) comes from
+                // predecessor(x).
+                for (size_t j = 0; j < predecessors_.length(); j++) {
                     JS_ASSERT(predecessors_[j]->getSlot(i) == mine);
-#endif
+                    if (!phi->addInput(mine))
+                        return false;
+                }
 
                 setSlot(i, phi);
                 entrySnapshot()->replaceOperand(i, phi);
