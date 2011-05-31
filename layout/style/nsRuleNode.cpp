@@ -67,7 +67,6 @@
 #include "nsSize.h"
 #include "imgIRequest.h"
 #include "nsRuleData.h"
-#include "nsILanguageAtomService.h"
 #include "nsIStyleRule.h"
 #include "nsBidiUtils.h"
 #include "nsUnicharUtils.h"
@@ -1171,8 +1170,6 @@ nsRuleNode* nsRuleNode::CreateRootNode(nsPresContext* aPresContext)
   return new (aPresContext)
     nsRuleNode(aPresContext, nsnull, nsnull, 0xff, PR_FALSE);
 }
-
-nsILanguageAtomService* nsRuleNode::gLangService = nsnull;
 
 nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
                        nsIStyleRule* aRule, PRUint8 aLevel,
@@ -4528,17 +4525,11 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
   // this is not a real CSS property, it is a html attribute mapped to CSS struture
   const nsCSSValue* langValue = aRuleData->ValueForLang();
   if (eCSSUnit_Ident == langValue->GetUnit()) {
-    if (!gLangService) {
-      CallGetService(NS_LANGUAGEATOMSERVICE_CONTRACTID, &gLangService);
-    }
+    nsAutoString lang;
+    langValue->GetStringValue(lang);
 
-    if (gLangService) {
-      nsAutoString lang;
-      langValue->GetStringValue(lang);
-
-      nsContentUtils::ASCIIToLower(lang);
-      visibility->mLanguage = do_GetAtom(lang);
-    }
+    nsContentUtils::ASCIIToLower(lang);
+    visibility->mLanguage = do_GetAtom(lang);
   }
 
   COMPUTE_END_INHERITED(Visibility, visibility)

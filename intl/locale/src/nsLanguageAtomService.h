@@ -53,7 +53,7 @@ public:
 
   // nsILanguageAtomService
   virtual NS_HIDDEN_(nsIAtom*)
-    LookupLanguage(const nsAString &aLanguage, nsresult *aError);
+    LookupLanguage(const nsACString &aLanguage, nsresult *aError);
 
   virtual NS_HIDDEN_(already_AddRefed<nsIAtom>)
     LookupCharSet(const char *aCharSet, nsresult *aError);
