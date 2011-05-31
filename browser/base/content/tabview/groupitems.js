@@ -2032,7 +2032,7 @@ let GroupItems = {
     if (UI.shouldLoadFavIcon(xulTab.linkedBrowser))
       iconUrl = UI.getFavIconUrlForTab(xulTab);
     else
-      iconUrl = Utils.defaultFaviconURL;
+      iconUrl = gFavIconService.defaultFavicon.spec;
 
     return iconUrl;
   },
