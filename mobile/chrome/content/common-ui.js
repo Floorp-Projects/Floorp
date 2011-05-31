@@ -1392,7 +1392,7 @@ var FullScreenVideo = {
         this._dispatchMouseEvent("Browser:MouseDown", aEvent.clientX, aEvent.clientY);
         break;
       case "TapSingle":
-        this._dispatchMouseEvent("Browser:MouseUp", aEvent.clientX, aEvent.clientY);
+        this._dispatchMouseEvent("Browser:MouseClick", aEvent.clientX, aEvent.clientY);
         break;
     }
   },
