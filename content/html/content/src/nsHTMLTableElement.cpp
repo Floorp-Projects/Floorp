@@ -74,6 +74,10 @@ public:
   virtual nsIContent* GetNodeAt(PRUint32 aIndex);
   virtual nsISupports* GetNamedItem(const nsAString& aName,
                                     nsWrapperCache **aCache);
+  virtual nsINode* GetParentObject()
+  {
+    return mParent;
+  }
 
   NS_IMETHOD    ParentDestroyed();
 

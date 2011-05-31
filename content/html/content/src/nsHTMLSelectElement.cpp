@@ -2212,6 +2212,12 @@ nsHTMLOptionCollection::GetNamedItem(const nsAString& aName,
   return item;
 }
 
+nsINode*
+nsHTMLOptionCollection::GetParentObject()
+{
+    return mSelect;
+}
+
 NS_IMETHODIMP
 nsHTMLOptionCollection::NamedItem(const nsAString& aName,
                                   nsIDOMNode** aReturn)

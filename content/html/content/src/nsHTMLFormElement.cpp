@@ -136,6 +136,10 @@ public:
     *aCache = nsnull;
     return item;
   }
+  virtual nsINode* GetParentObject()
+  {
+    return mForm;
+  }
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
