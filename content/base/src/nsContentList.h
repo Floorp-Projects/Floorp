@@ -84,6 +84,11 @@ class Element;
 class nsBaseContentList : public nsINodeList
 {
 public:
+  nsBaseContentList()
+  {
+    // Mark ourselves as a proxy
+    SetIsProxy();
+  }
   virtual ~nsBaseContentList();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -122,8 +127,9 @@ public:
     mElements.Clear();
   }
 
-
   virtual PRInt32 IndexOf(nsIContent *aContent, bool aDoFlush);
+
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope) = 0;
 
 protected:
   nsCOMArray<nsIContent> mElements;
@@ -146,6 +152,7 @@ public:
   {
     return mRoot;
   }
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope);
 
 private:
   // This has to be a strong reference, the root might go away before the list.
