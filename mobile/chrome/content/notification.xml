@@ -13,13 +13,15 @@
 
   <binding id="stacked-notificationbox" extends="chrome://global/content/bindings/notification.xml#notificationbox">
     <content>
-      <xul:stack xbl:inherits="hidden=notificationshidden">
-        <xul:spacer/>
-        <children includes="notification"/>
-      </xul:stack>
-      <xul:stack flex="1">
-        <children/>
-        <html:div flex="1" class="input-overlay" anonid="input-overlay"/>
+      <xul:stack>
+        <xul:stack top="0">
+          <children/>
+          <html:div flex="1" class="input-overlay" anonid="input-overlay"/>
+        </xul:stack>
+        <xul:stack top="0" xbl:inherits="hidden=notificationshidden">
+          <xul:spacer/>
+          <children includes="notification"/>
+        </xul:stack>
       </xul:stack>
     </content>
     <implementation>
