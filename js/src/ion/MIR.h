@@ -367,6 +367,8 @@ class MInstruction
     inline MInstruction *getInput(size_t index) const {
         return getOperand(index)->ins();
     }
+
+    // Returns the input type this instruction expects.
     virtual MIRType requiredInputType(size_t index) const {
         return MIRType_None;
     }
@@ -692,7 +694,9 @@ class MBox : public MUnaryInstruction
 {
     MBox(MInstruction *ins)
       : MUnaryInstruction(ins)
-    { }
+    {
+        setResultType(MIRType_Value);
+    }
 
   public:
     INSTRUCTION_HEADER(Box);
@@ -724,6 +728,10 @@ class MUnbox : public MUnaryInstruction
     {
         return new MUnbox(ins, type);
     }
+
+    MIRType requiredInputType(size_t index) const {
+        return MIRType_Value;
+    }
 };
 
 class MBitAnd : public MBinaryInstruction
@@ -750,7 +758,9 @@ class MPhi : public MInstruction
 
     MPhi(uint32 slot)
       : slot_(slot)
-    { }
+    {
+        setResultType(MIRType_Value);
+    }
 
   protected:
     void setOperand(size_t index, MOperand *operand) {
@@ -801,6 +811,9 @@ class MSnapshot : public MInstruction
     static MSnapshot *New(MBasicBlock *block, jsbytecode *pc);
 
     void printOpcode(FILE *fp);
+    MIRType requiredInputType(size_t index) const {
+        return MIRType_Any;
+    }
 
     size_t numOperands() const {
         return stackDepth_;
@@ -839,6 +852,7 @@ void
 MInstruction::assignSnapshot(MSnapshot *snapshot)
 {
     JS_ASSERT(!snapshot_);
+    JS_ASSERT(snapshot);
     JS_ASSERT(snapshot->id() < id());
     JS_ASSERT(snapshot->block() == block());
     snapshot_ = snapshot;
