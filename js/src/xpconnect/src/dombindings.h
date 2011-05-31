@@ -92,6 +92,9 @@ class NodeList : public NodeListBase {
     static JSBool item(JSContext *cx, uintN argc, jsval *vp);
     static JSBool namedItem(JSContext *cx, uintN argc, jsval *vp);
 
+    static JSBool namedItem(JSContext *cx, JSObject *obj, jsval *name, jsval *vp);
+    static bool namedItem(JSContext *cx, JSObject *proxy, jsid id, js::Value *vp, bool *result);
+
     static bool cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto);
     static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
                                  jsid id, js::Value *vp, bool *hitp);
