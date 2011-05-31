@@ -4454,7 +4454,13 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
         JSObject *obj = *pbaseobj;
 
         if (op == JSOP_SETPROP && uses->u.which == 1) {
-            jsid id = GetAtomId(cx, script, pc, 0);
+            /*
+             * Don't use GetAtomId here, we need to watch for SETPROP on
+             * integer properties and bail out. We can't mark the aggregate
+             * JSID_VOID type property as being in a definite slot.
+             */
+            unsigned index = js_GetIndexFromBytecode(cx, script, pc, 0);
+            jsid id = ATOM_TO_JSID(script->getAtom(index));
             if (MakeTypeId(cx, id) != id)
                 return false;
             if (id == id_prototype(cx) || id == id___proto__(cx) || id == id_constructor(cx))
