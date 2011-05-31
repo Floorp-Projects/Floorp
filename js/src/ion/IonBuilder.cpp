@@ -75,14 +75,17 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
         return false;
     spew.spew("Build SSA");
 
+    if (!ReorderBlocks(graph))
+        return false;
+    spew.spew("Reorder Blocks");
+
     if (!ApplyTypeInformation(graph))
         return false;
     if (!Lower(graph))
         return false;
     spew.spew("Lower");
 
-    if (!RenumberInstructions(graph))
-        return false;
+    RenumberInstructions(graph);
     spew.spew("Renumber Instructions");
 
     return false;
