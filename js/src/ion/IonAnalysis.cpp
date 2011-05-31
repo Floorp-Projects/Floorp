@@ -251,10 +251,10 @@ TypeAnalyzer::canSpecializeAtDef(MInstruction *ins)
 {
     // It's only possible to specialize at the def if there is a snapshot.
     // If this gets to be a problem, we can create more snapshots.
-    return !!ins->snapshot();
+    return ins->snapshot() || ins->isPhi();
 }
 
-// Rewrites all uses of an old definition to point at a new, narrower-typed
+// Rewrites uses of an old definition to point at a new, narrower-typed
 // version. The purpose of this is to shorten the lifetime of the type tag on
 // platforms with nun/wideboxing.
 void
@@ -307,8 +307,8 @@ TypeAnalyzer::specializePhi(MPhi *phi)
 
     MBasicBlock *block = phi->block();
     MUnbox *unbox = MUnbox::New(phi, usedAs);
+    block->insertAfter(*block->begin(), unbox);
     unbox->assignSnapshot(block->entrySnapshot());
-    block->insertBefore(*block->begin(), unbox);
     rewriteUses(phi, unbox);
 
     return true;
@@ -317,6 +317,58 @@ TypeAnalyzer::specializePhi(MPhi *phi)
 bool
 TypeAnalyzer::fixup(MInstruction *ins)
 {
+    if (!ins->uses())
+        return true;
+
+    // Add unbox operations near the definition, if possible.
+    MIRType usedAs = ins->usedAsType();
+    if (usedAs != MIRType_Value && ins->type() == MIRType_Value && canSpecializeAtDef(ins)) {
+        MUnbox *unbox = MUnbox::New(ins, usedAs);
+        MBasicBlock *block = ins->block();
+        if (ins->isPhi()) {
+            block->insertAfter(*block->begin(), unbox);
+            unbox->assignSnapshot(block->entrySnapshot());
+        } else {
+            block->insertAfter(ins, unbox);
+            unbox->assignSnapshot(ins->snapshot());
+        }
+        rewriteUses(ins, unbox);
+    }
+
+    MUseIterator uses(ins);
+    while (uses.more()) {
+        MInstruction *use = uses->ins();
+        MIRType required = use->requiredInputType(uses->index());
+        MIRType actual = ins->type();
+
+        if (required == actual || required == MIRType_Any) {
+            // No conversion is needed.
+            uses.next();
+            continue;
+        }
+
+        if (required == MIRType_Value) {
+            // The input is a specific type, but it must be boxed.
+            MBox *box = MBox::New(ins);
+            if (use->isPhi()) {
+                MBasicBlock *pred = use->block()->getPredecessor(uses->index());
+                pred->insertBefore(pred->lastIns(), box);
+            } else {
+                use->block()->insertBefore(use, box);
+            }
+            use->replaceOperand(uses, box);
+        } else if (actual == MIRType_Value) {
+            // The input is a value, but it wants explicit unboxing.
+            MUnbox *unbox = MUnbox::New(ins, required);
+            use->block()->insertBefore(use, unbox);
+            unbox->assignSnapshot(use->snapshot());
+            use->replaceOperand(uses, unbox);
+        } else {
+            // Type mismatch. We'll figure out how to deal with this later.
+            JS_NOT_REACHED("NYI");
+        }
+    }
+
     return true;
 }
 
@@ -327,6 +379,8 @@ TypeAnalyzer::insertConversions()
         MBasicBlock *block = graph.getBlock(i);
         for (size_t i = 0; i < block->numPhis(); i++) {
             if (!specializePhi(block->getPhi(i)))
+                return false;
+            if (!fixup(block->getPhi(i)))
                 return false;
         }
         for (MInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
