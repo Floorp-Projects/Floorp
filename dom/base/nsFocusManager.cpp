@@ -888,7 +888,7 @@ static void
 NotifyFocusStateChange(nsIContent* aContent, nsPIDOMWindow* aWindow)
 {
   nsIDocument *doc = aContent->GetCurrentDoc();
-  MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+  nsAutoScriptBlocker scriptBlocker;
   nsEventStates eventState = NS_EVENT_STATE_FOCUS;
   if (aWindow->ShouldShowFocusRing()) {
     eventState |= NS_EVENT_STATE_FOCUSRING;

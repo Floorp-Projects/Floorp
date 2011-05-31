@@ -4203,6 +4203,8 @@ nsDocument::EndLoad()
 void
 nsDocument::ContentStateChanged(nsIContent* aContent, nsEventStates aStateMask)
 {
+  NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
+                  "Someone forgot a scriptblocker");
   NS_DOCUMENT_NOTIFY_OBSERVERS(ContentStateChanged,
                                (this, aContent, aStateMask));
 }
@@ -7582,7 +7584,7 @@ nsDocument::RefreshLinkHrefs()
   (void)mStyledLinks.EnumerateEntries(EnumerateStyledLinks, &linksToNotify);
 
   // Reset all of our styled links.
-  MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_STATE, PR_TRUE);
+  nsAutoScriptBlocker scriptBlocker;
   for (LinkArray::size_type i = 0; i < linksToNotify.Length(); i++) {
     linksToNotify[i]->ResetLinkState(true);
   }

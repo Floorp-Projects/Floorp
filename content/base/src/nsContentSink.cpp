@@ -1480,18 +1480,7 @@ nsContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   // creation, make sure we've flushed everything before we
   // continue.
 
-  // Note that UPDATE_CONTENT_STATE notifications never cause
-  // synchronous frame construction, so we never have to worry about
-  // them here.  The code that handles the async event these
-  // notifications post will flush us out if it needs to.
-
-  // Also, if this is not an UPDATE_CONTENT_STATE notification,
-  // increment mInNotification to make sure we don't flush again until
-  // the end of this update, even if nested updates or
-  // FlushPendingNotifications calls happen during it.
-  NS_ASSERTION(aUpdateType && (aUpdateType & UPDATE_ALL) == aUpdateType,
-               "Weird update type bitmask");
-  if (aUpdateType != UPDATE_CONTENT_STATE && !mInNotification++) {
+  if (!mInNotification++) {
     FlushTags();
   }
 }
@@ -1503,13 +1492,8 @@ nsContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   // something else in the script processing caused the
   // notification to occur. Update our notion of how much
   // has been flushed to include any new content if ending
-  // this update leaves us not inside a notification.  Note that we
-  // exclude UPDATE_CONTENT_STATE notifications here, since those
-  // never affect the frame model directly while inside the
-  // notification.
-  NS_ASSERTION(aUpdateType && (aUpdateType & UPDATE_ALL) == aUpdateType,
-               "Weird update type bitmask");
-  if (aUpdateType != UPDATE_CONTENT_STATE && !--mInNotification) {
+  // this update leaves us not inside a notification.
+  if (!--mInNotification) {
     UpdateChildCounts();
   }
 }

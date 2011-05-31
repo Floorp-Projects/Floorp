@@ -4683,7 +4683,6 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   if (aNotify) {
     stateMask ^= IntrinsicState();
     if (document && !stateMask.IsEmpty()) {
-      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
       document->ContentStateChanged(this, stateMask);
     }
     nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, aModType);
@@ -4928,7 +4927,6 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (aNotify) {
     stateMask ^= IntrinsicState();
     if (document && !stateMask.IsEmpty()) {
-      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
       document->ContentStateChanged(this, stateMask);
     }
     nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,

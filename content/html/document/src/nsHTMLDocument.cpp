@@ -2985,7 +2985,7 @@ nsHTMLDocument::EditingStateChanged()
   }
 
   if (updateState) {
-    mozAutoDocUpdate upd(this, UPDATE_CONTENT_STATE, PR_TRUE);
+    nsAutoScriptBlocker scriptBlocker;
     NotifyEditableStateChange(this, this, !designMode);
   }
 

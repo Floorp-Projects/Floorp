@@ -205,7 +205,7 @@ nsHTMLSelectElement::SetCustomValidity(const nsAString& aError)
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
-    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+    nsAutoScriptBlocker scriptBlocker;
     doc->ContentStateChanged(this, NS_EVENT_STATE_INVALID |
                                    NS_EVENT_STATE_VALID |
                                    NS_EVENT_STATE_MOZ_UI_INVALID |
@@ -358,7 +358,7 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
       if (aNotify) {
         nsIDocument* doc = GetCurrentDoc();
         if (doc) {
-          MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+          nsAutoScriptBlocker scriptBlocker;
           doc->ContentStateChanged(this, NS_EVENT_STATE_VALID |
                                          NS_EVENT_STATE_INVALID |
                                          NS_EVENT_STATE_MOZ_UI_INVALID |
@@ -891,7 +891,7 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
   if (aNotify) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(this, NS_EVENT_STATE_VALID |
                                      NS_EVENT_STATE_INVALID |
                                      NS_EVENT_STATE_MOZ_UI_INVALID |
@@ -1324,7 +1324,7 @@ nsHTMLSelectElement::SelectSomething(PRBool aNotify)
       if (aNotify) {
         nsIDocument* doc = GetCurrentDoc();
         if (doc) {
-          MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+          nsAutoScriptBlocker scriptBlocker;
           doc->ContentStateChanged(this, NS_EVENT_STATE_VALID |
                                          NS_EVENT_STATE_INVALID |
                                          NS_EVENT_STATE_MOZ_UI_INVALID |
@@ -1390,7 +1390,7 @@ nsHTMLSelectElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (aNotify && !states.IsEmpty()) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(this, states);
     }
   }
@@ -1566,7 +1566,7 @@ nsHTMLSelectElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(this, NS_EVENT_STATE_MOZ_UI_VALID |
                                      NS_EVENT_STATE_MOZ_UI_INVALID);
     }
@@ -2300,7 +2300,7 @@ nsHTMLSelectElement::SetSelectionChanged(PRBool aValue, PRBool aNotify)
   if (aNotify && mSelectionHasChanged != previousSelectionChangedValue) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(this, NS_EVENT_STATE_MOZ_UI_INVALID |
                                      NS_EVENT_STATE_MOZ_UI_VALID);
     }
