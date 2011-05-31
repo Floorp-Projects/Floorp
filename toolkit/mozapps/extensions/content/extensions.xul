@@ -373,9 +373,8 @@
             </hbox>
           </hbox>
           <hbox class="view-header global-info-container">
-            <hbox class="global-info-plugincheck" flex="1" align="center"
-                  tooltiptext="Update plugins">
-              <button class="button-link"
+            <hbox class="global-info" flex="1" align="center">
+              <button class="button-link global-info-plugincheck"
                       label="&info.plugincheck.label;"
                       tooltiptext="&info.plugincheck.tooltip;"
                       command="cmd_pluginCheck"/>
