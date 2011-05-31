@@ -93,7 +93,7 @@ _TEST_FILES =	bug500931_helper.html \
 		file_bug650273.html \
 		$(NULL)
 
-ifndef ANDROID
+ifneq ($(OS_TARGET),Android)
 ifndef MOZ_PLATFORM_MAEMO
 _TEST_FILES +=	test_bug657267.html \
 		bug657267.jar

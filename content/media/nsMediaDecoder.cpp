@@ -51,9 +51,7 @@
 #include "nsPresContext.h"
 #include "nsDOMError.h"
 #include "nsDisplayList.h"
-#ifdef MOZ_SVG
 #include "nsSVGEffects.h"
-#endif
 
 using namespace mozilla;
 
@@ -177,9 +175,7 @@ void nsMediaDecoder::Invalidate()
     }
   }
 
-#ifdef MOZ_SVG
   nsSVGEffects::InvalidateDirectRenderingObservers(mElement);
-#endif
 }
 
 static void ProgressCallback(nsITimer* aTimer, void* aClosure)

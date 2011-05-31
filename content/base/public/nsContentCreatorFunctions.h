@@ -125,11 +125,9 @@ void
 NS_TrustedNewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo);
 #endif
 
-#ifdef MOZ_SVG
 nsresult
 NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
                  mozilla::dom::FromParser aFromParser);
-#endif
 
 nsresult
 NS_NewGenConImageContent(nsIContent** aResult,

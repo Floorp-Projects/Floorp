@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const fi = Cc["@mozilla.org/browser/favicon-service;1"].
+           getService(Ci.nsIFaviconService);
+
 let newTab;
 
 function test() {
@@ -27,7 +30,7 @@ function onTabViewWindowLoaded() {
   is($icon.data("xulTab"), newTab, 
      "The app tab icon has the right tab reference")
   // check to see whether it's showing the default one or not.
-  is($icon.attr("src"), contentWindow.Utils.defaultFaviconURL, 
+  is($icon.attr("src"), fi.defaultFavicon.spec,
      "The icon is showing the default fav icon for blank tab");
 
   let errorHandler = function(event) {
@@ -37,7 +40,7 @@ function onTabViewWindowLoaded() {
     // fired, a delay is used here to avoid the test code run before the browser 
     // code.
     executeSoon(function() {
-      is($icon.attr("src"), contentWindow.Utils.defaultFaviconURL, 
+      is($icon.attr("src"), fi.defaultFavicon.spec,
          "The icon is showing the default fav icon");
 
       // clean up

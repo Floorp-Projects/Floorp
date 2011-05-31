@@ -44,7 +44,7 @@
 
 /* make clicking on links stand out a bit (bug 532206) */
 * > *:not(embed):focus, * > *:focus > font {
-  outline: 2px solid #8db8d8 !important;
+  outline: 2px solid @color_background_highlight@ !important;
   /*
     XXX How do I preserve mac focusring without blowing focus color on other platforms?
     outline-color: -moz-mac-focusring !important;
@@ -344,7 +344,7 @@ option:active,
 select:active,
 label:active,
 textarea:active {
-  background-color: rgba(141, 184, 216, 0.5) !important;
+  background-color: @color_background_highlight_overlay@ !important;
 }
 
 /* 

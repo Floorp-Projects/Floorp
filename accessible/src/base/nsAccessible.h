@@ -606,9 +606,6 @@ protected:
   //////////////////////////////////////////////////////////////////////////////
   // Helpers
 
-  // Check the visibility across both parent content and chrome
-  PRBool CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView);
-
   /**
    *  Get the container node for an atomic region, defined by aria-atomic="true"
    *  @return the container node

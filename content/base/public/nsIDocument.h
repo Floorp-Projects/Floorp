@@ -124,8 +124,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0x26ef6218, 0xcd5e, 0x4953,  \
- { 0xbb, 0x57, 0xb8, 0x50, 0x29, 0xa1, 0xae, 0x40 } }
+{ 0x2ec7872f, 0x97c3, 0x43de, \
+  { 0x81, 0x0a, 0x8f, 0x18, 0xa0, 0xa0, 0xdf, 0x30 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -479,8 +479,6 @@ public:
 
   void SetBFCacheEntry(nsISHEntry* aSHEntry) {
     mSHEntry = aSHEntry;
-    // Doing this just to keep binary compat for the gecko 2.0 release
-    mShellIsHidden = !!aSHEntry;
   }
 
   nsISHEntry* GetBFCacheEntry() const { return mSHEntry; }
@@ -1519,6 +1517,8 @@ public:
 
   virtual nsresult GetStateObject(nsIVariant** aResult) = 0;
 
+  virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
+
 protected:
   ~nsIDocument()
   {
@@ -1620,10 +1620,6 @@ protected:
   // documents created to satisfy a GetDocument() on a window when there's no
   // document in it.
   PRPackedBool mIsInitialDocumentInWindow;
-
-  // True if we're currently bfcached. This is only here for binary compat.
-  // Remove once the gecko 2.0 has branched and just use mSHEntry instead.
-  PRPackedBool mShellIsHidden;
 
   PRPackedBool mIsRegularHTML;
   PRPackedBool mIsXUL;
@@ -1796,10 +1792,8 @@ NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
 nsresult
 NS_NewXMLDocument(nsIDocument** aInstancePtrResult);
 
-#ifdef MOZ_SVG
 nsresult
 NS_NewSVGDocument(nsIDocument** aInstancePtrResult);
-#endif
 
 nsresult
 NS_NewImageDocument(nsIDocument** aInstancePtrResult);
