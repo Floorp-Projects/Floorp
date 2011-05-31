@@ -3891,6 +3891,11 @@ nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther, const PRInt32 aAPD) const
                  aOther->PresContext()->GetRootPresContext(),
                "trying to get the offset between frames in different document "
                "hierarchies?");
+  if (PresContext()->GetRootPresContext() !=
+        aOther->PresContext()->GetRootPresContext()) {
+    // crash right away, we are almost certainly going to crash anyway.
+    *(static_cast<PRInt32*>(nsnull)) = 3;
+  }
 
   const nsIFrame* root = nsnull;
   // offset will hold the final offset
