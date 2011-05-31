@@ -338,8 +338,6 @@ nsLayoutStatics::Shutdown()
 
   nsCSSScanner::ReleaseGlobals();
 
-  NS_IF_RELEASE(nsRuleNode::gLangService);
-
   nsTextFragment::Shutdown();
 
   nsAttrValue::Shutdown();
