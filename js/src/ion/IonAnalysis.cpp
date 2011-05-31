@@ -84,12 +84,14 @@ class TypeAnalyzer
     bool addToWorklist(MInstruction *ins);
     MInstruction *popFromWorklist();
     bool canSpecializeAtDef(MInstruction *ins);
+    bool reflow(MInstruction *ins);
 
     bool populate();
     bool propagate();
     bool insertConversions();
 
     // Type propagation.
+    bool inspectUses(MInstruction *ins);
     bool inspectOperands(MInstruction *ins);
     bool propagateUsedTypes(MInstruction *ins);
 
@@ -157,6 +159,7 @@ TypeAnalyzer::populate()
     return true;
 }
 
+// Annotate each operand with the type it should be for this instruction.
 bool
 TypeAnalyzer::inspectOperands(MInstruction *ins)
 {
@@ -165,6 +168,33 @@ TypeAnalyzer::inspectOperands(MInstruction *ins)
         if (required >= MIRType_Value)
             continue;
         ins->getInput(i)->useAsType(required);
+    }
+
+    return true;
+}
+
+// If this instruction will be narrowed by the final type analysis phase,
+// adjust any uses that will need to be despecialized.
+bool
+TypeAnalyzer::inspectUses(MInstruction *ins)
+{
+    if (!ins->uses() || ins->type() == MIRType_None)
+        return true;
+
+    MIRType usedAs = ins->usedAsType();
+    if (usedAs == MIRType_Value || ins->type() == usedAs)
+        return true;
+
+    // This instruction will narrow from Value to usedAs, so go through its
+    // uses and ask each to adjust its specialization based on the new
+    // information.
+    MUseIterator uses(ins);
+    while (uses.more()) {
+        if (uses->ins()->adjustForInputs()) {
+            if (!addToWorklist(uses->ins()))
+                return false;
+        }
+        uses.next();
     }
 
     return true;
@@ -197,25 +227,17 @@ TypeAnalyzer::propagate()
     while (!worklist.empty()) {
         MInstruction *ins = popFromWorklist();
 
-        // If this instruction needs to change its specialization, reflow to all
-        // its uses. Specializations only widen, ensuring that this algorithm will
-        // reach a fixpoint.
-        if (ins->adjustForInputs()) {
-            for (MUseIterator uses(ins); uses.more(); uses.next()) {
-                if (!addToWorklist(uses->ins()))
-                    return false;
-            }
-        }
-
         // Copies should have been removed earlier.
         JS_ASSERT(!ins->isCopy());
 
         if (ins->isPhi()) {
             if (!propagateUsedTypes(ins))
                 return false;
+            if (!inspectUses(ins))
+                return false;
         } else {
-            // We see all uses before their defs, so we do not reflow type
-            // information on a normal instruction.
+            if (!inspectUses(ins))
+                return false;
             if (!inspectOperands(ins))
                 return false;
         }
