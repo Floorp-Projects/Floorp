@@ -51,8 +51,6 @@ interface nsIDOMDocument;
 interface nsIDOMDocumentFragment;
 interface nsIDOMDocumentType;
 interface nsIDOMElement;
-interface nsIDOMEntity;
-interface nsIDOMEntityReference;
 interface nsIDOMNSElement;
 interface nsIDOMNamedNodeMap;
 interface nsIDOMNode;

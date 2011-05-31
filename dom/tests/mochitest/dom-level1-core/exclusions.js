@@ -83,8 +83,13 @@ var attributeModTests = ["hc_attrappendchild1", "hc_attrappendchild3", "hc_attra
 var modTests = ["hc_elementwrongdocumenterr", "hc_namednodemapwrongdocumenterr", "hc_nodeappendchildnewchilddiffdocument", "hc_nodeinsertbeforenewchilddiffdocument",
                 "hc_nodereplacechildnewchilddiffdocument", "hc_elementwrongdocumenterr", "hc_namednodemapwrongdocumenterr", "hc_nodeappendchildnewchilddiffdocument",
                 "hc_nodeinsertbeforenewchilddiffdocument", "hc_nodereplacechildnewchilddiffdocument", "elementwrongdocumenterr", "namednodemapwrongdocumenterr",
-		            "nodeappendchildnewchilddiffdocument", "nodeinsertbeforenewchilddiffdocument", "nodereplacechildnewchilddiffdocument"];
+                "nodeappendchildnewchilddiffdocument", "nodeinsertbeforenewchilddiffdocument", "nodereplacechildnewchilddiffdocument"];
+// These tests rely on an implementation of document.createEntityReference.
+var createEntityRef = ["documentinvalidcharacterexceptioncreateentref",
+                       "documentinvalidcharacterexceptioncreateentref1",
+                       "hc_attrgetvalue2", "hc_nodevalue03"];
+
 
 var todoTests = {};
-var exclusions = concat(dtdTests, indexErrTests, attributeModTests, modTests);
+var exclusions = concat(dtdTests, indexErrTests, attributeModTests, modTests, createEntityRef);
 for (var excludedTestName in exclusions) { todoTests[exclusions[excludedTestName]] = true; }

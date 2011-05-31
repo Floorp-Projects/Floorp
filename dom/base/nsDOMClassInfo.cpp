@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Johnny Stenback <jst@netscape.com> (original author)
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -271,7 +272,6 @@
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLFieldSetElement.h"
 #include "nsIDOMHTMLFontElement.h"
-#include "nsIDOMNSHTMLFormElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIDOMNSHTMLFrameElement.h"
@@ -1651,7 +1651,6 @@ jsid nsDOMClassInfo::sScrollX_id         = JSID_VOID;
 jsid nsDOMClassInfo::sScrollY_id         = JSID_VOID;
 jsid nsDOMClassInfo::sScrollMaxX_id      = JSID_VOID;
 jsid nsDOMClassInfo::sScrollMaxY_id      = JSID_VOID;
-jsid nsDOMClassInfo::sOpen_id            = JSID_VOID;
 jsid nsDOMClassInfo::sItem_id            = JSID_VOID;
 jsid nsDOMClassInfo::sNamedItem_id       = JSID_VOID;
 jsid nsDOMClassInfo::sEnumerate_id       = JSID_VOID;
@@ -1987,7 +1986,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sScrollY_id,         cx, "scrollY");
   SET_JSID_TO_STRING(sScrollMaxX_id,      cx, "scrollMaxX");
   SET_JSID_TO_STRING(sScrollMaxY_id,      cx, "scrollMaxY");
-  SET_JSID_TO_STRING(sOpen_id,            cx, "open");
   SET_JSID_TO_STRING(sItem_id,            cx, "item");
   SET_JSID_TO_STRING(sNamedItem_id,       cx, "namedItem");
   SET_JSID_TO_STRING(sEnumerate_id,       cx, "enumerateProperties");
@@ -2745,7 +2743,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLFormElement, nsIDOMHTMLFormElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFormElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLFormElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -5114,7 +5111,6 @@ nsDOMClassInfo::ShutDown()
   sScrollY_id         = JSID_VOID;
   sScrollMaxX_id      = JSID_VOID;
   sScrollMaxY_id      = JSID_VOID;
-  sOpen_id            = JSID_VOID;
   sItem_id            = JSID_VOID;
   sEnumerate_id       = JSID_VOID;
   sNavigator_id       = JSID_VOID;
@@ -8320,7 +8316,15 @@ nsStringListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
   nsCOMPtr<nsIDOMDOMStringList> list(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
 
-  return list->Item(aIndex, aResult);
+  nsresult rv = list->Item(aIndex, aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    list->GetLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -8333,7 +8337,15 @@ nsDOMTokenListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
   nsCOMPtr<nsIDOMDOMTokenList> list(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
 
-  return list->Item(aIndex, aResult);
+  nsresult rv = list->Item(aIndex, aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    list->GetLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -8900,86 +8912,6 @@ ResolveImpl(JSContext *cx, nsIXPConnectWrappedNative *wrapper, jsid id,
   return doc->ResolveName(depStr, nsnull, result, aCache);
 }
 
-// static
-JSBool
-nsHTMLDocumentSH::DocumentOpen(JSContext *cx, uintN argc, jsval *vp)
-{
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj)
-    return JS_FALSE;
-
-  jsval *argv = JS_ARGV(cx, vp);
-  if (argc > 2) {
-    JSObject *global = ::JS_GetGlobalForObject(cx, obj);
-
-    // DOM0 quirk that makes document.open() call window.open() if
-    // called with 3 or more arguments.
-
-    return ::JS_CallFunctionName(cx, global, "open", argc, JS_ARGV(cx, vp), vp);
-  }
-
-  nsCOMPtr<nsISupports> native = do_QueryWrapper(cx, obj);
-  if (!native) {
-    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_FAILURE);
-
-    return JS_FALSE;
-  }
-
-  nsCOMPtr<nsIDOMHTMLDocument> doc = do_QueryInterface(native);
-  NS_ENSURE_TRUE(doc, JS_FALSE);
-
-  nsCAutoString contentType("text/html");
-  if (argc > 0) {
-    JSString* jsstr = JS_ValueToString(cx, argv[0]);
-    if (!jsstr) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-      return JS_FALSE;
-    }
-    nsDependentJSString depStr;
-    if (!depStr.init(cx, jsstr)) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-      return JS_FALSE;
-    }
-    nsAutoString type;
-    type.Assign(depStr);
-    ToLowerCase(type);
-    nsCAutoString actualType, dummy;
-    NS_ParseContentType(NS_ConvertUTF16toUTF8(type), actualType, dummy);
-    if (!actualType.EqualsLiteral("text/html") &&
-        !type.EqualsLiteral("replace")) {
-      contentType = "text/plain";
-    }
-  }
-  
-  PRBool replace = PR_FALSE;
-  if (argc > 1) {
-    JSString* jsstr = JS_ValueToString(cx, argv[1]);
-    if (!jsstr) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-      return JS_FALSE;
-    }
-
-    const jschar *chars = ::JS_GetStringCharsZ(cx, jsstr);
-    if (!chars) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-      return JS_FALSE;
-    }
-
-    replace = NS_LITERAL_STRING("replace").Equals(chars);
-  }
-
-  nsCOMPtr<nsIDOMDocument> retval;
-  nsresult rv = doc->Open(contentType, replace, getter_AddRefs(retval));
-  if (NS_FAILED(rv)) {
-    nsDOMClassInfo::ThrowJSException(cx, rv);
-
-    return JS_FALSE;
-  }
-
-  *vp = OBJECT_TO_JSVAL(obj);
-  return NS_SUCCEEDED(rv);
-}
-
 
 static JSClass sHTMLDocumentAllClass = {
   "HTML document.all class",
@@ -9477,14 +9409,6 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         return ok ? NS_OK : NS_ERROR_FAILURE;
       }
-    }
-
-    if (id == sOpen_id) {
-      JSFunction *fnc =::JS_DefineFunctionById(cx, obj, id, DocumentOpen, 0,
-                                               JSPROP_ENUMERATE);
-      *objp = obj;
-
-      return fnc ? NS_OK : NS_ERROR_UNEXPECTED;
     }
 
     if (id == sAll_id && !sDisableDocumentAllSupport &&
@@ -10382,14 +10306,16 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsresult rv = GetStringAt(GetNative(wrapper, obj), n, val);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX: Null strings?
-
   JSAutoRequest ar(cx);
 
-  nsStringBuffer* sharedBuffer = nsnull;
-  *vp = XPCStringConvert::ReadableToJSVal(cx, val, &sharedBuffer);
-  if (sharedBuffer) {
-    val.ForgetSharedBuffer();
+  if (DOMStringIsNull(val)) {
+    *vp = JSVAL_VOID;
+  } else {
+    nsStringBuffer* sharedBuffer = nsnull;
+    *vp = XPCStringConvert::ReadableToJSVal(cx, val, &sharedBuffer);
+    if (sharedBuffer) {
+      val.ForgetSharedBuffer();
+    }
   }
 
   return NS_SUCCESS_I_DID_SOMETHING;
@@ -10438,7 +10364,15 @@ nsHistorySH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMHistory> history(do_QueryInterface(aNative));
 
-  return history->Item(aIndex, aResult);
+  nsresult rv = history->Item(aIndex, aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRInt32 length = 0;
+    history->GetLength(&length);
+    NS_ASSERTION(aIndex >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -10454,7 +10388,15 @@ nsMediaListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMMediaList> media_list(do_QueryInterface(aNative));
 
-  return media_list->Item(PRUint32(aIndex), aResult);
+  nsresult rv = media_list->Item(PRUint32(aIndex), aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    media_list->GetLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -10517,7 +10459,15 @@ nsCSSStyleDeclSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> style_decl(do_QueryInterface(aNative));
 
-  return style_decl->Item(PRUint32(aIndex), aResult);
+  nsresult rv = style_decl->Item(PRUint32(aIndex), aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    style_decl->GetLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 
@@ -11138,7 +11088,15 @@ nsOfflineResourceListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
   nsCOMPtr<nsIDOMOfflineResourceList> list(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
 
-  return list->MozItem(aIndex, aResult);
+  nsresult rv = list->MozItem(aIndex, aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    list->GetMozLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "MozItem should only return null for out-of-bounds access");
+  }
+#endif
+  return rv;
 }
 
 // nsFileListSH

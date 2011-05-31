@@ -507,7 +507,6 @@ nsContentUtils::InitializeEventTable() {
 
     { nsGkAtoms::onoverflow,                    NS_SCROLLPORT_OVERFLOW, EventNameType_XUL, NS_EVENT_NULL},
     { nsGkAtoms::onunderflow,                   NS_SCROLLPORT_UNDERFLOW, EventNameType_XUL, NS_EVENT_NULL},
-#ifdef MOZ_SVG
     { nsGkAtoms::onSVGLoad,                     NS_SVG_LOAD, EventNameType_None, NS_SVG_EVENT },
     { nsGkAtoms::onSVGUnload,                   NS_SVG_UNLOAD, EventNameType_None, NS_SVG_EVENT },
     { nsGkAtoms::onSVGAbort,                    NS_SVG_ABORT, EventNameType_None, NS_SVG_EVENT },
@@ -519,7 +518,6 @@ nsContentUtils::InitializeEventTable() {
 
     // This is a bit hackish, but SVG's event names are weird.
     { nsGkAtoms::onzoom,                        NS_SVG_ZOOM, EventNameType_SVGSVG, NS_EVENT_NULL },
-#endif // MOZ_SVG
 #ifdef MOZ_SMIL
     { nsGkAtoms::onbegin,                       NS_SMIL_BEGIN, EventNameType_SMIL, NS_EVENT_NULL },
     { nsGkAtoms::onbeginEvent,                  NS_SMIL_BEGIN, EventNameType_None, NS_SMIL_TIME_EVENT },
@@ -1338,42 +1336,10 @@ nsContentUtils::GetContextAndScope(nsIDocument *aOldDocument,
 }
 
 nsresult
-nsContentUtils::ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
+nsContentUtils::ReparentContentWrappersInScope(JSContext *cx,
+                                               nsIScriptGlobalObject *aOldScope,
                                                nsIScriptGlobalObject *aNewScope)
 {
-  JSContext *cx = nsnull;
-
-  // Try really hard to find a context to work on.
-  nsIScriptContext *context = aOldScope->GetContext();
-  if (context) {
-    cx = static_cast<JSContext *>(context->GetNativeContext());
-  }
-
-  if (!cx) {
-    context = aNewScope->GetContext();
-    if (context) {
-      cx = static_cast<JSContext *>(context->GetNativeContext());
-    }
-
-    if (!cx) {
-      sThreadJSContextStack->Peek(&cx);
-
-      if (!cx) {
-        sThreadJSContextStack->GetSafeJSContext(&cx);
-
-        if (!cx) {
-          // Wow, this is really bad!
-          NS_WARNING("No context reachable in ReparentContentWrappers()!");
-
-          return NS_ERROR_NOT_AVAILABLE;
-        }
-      }
-    }
-  }
-
-  // Now that we have a context, let's get the global objects from the two
-  // scopes and ask XPConnect to do the rest of the work.
-
   JSObject *oldScopeObj = aOldScope->GetGlobalJSObject();
   JSObject *newScopeObj = aNewScope->GetGlobalJSObject();
 
@@ -2713,9 +2679,7 @@ static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
   "chrome://global/locale/layout/HtmlForm.properties",
   "chrome://global/locale/printing.properties",
   "chrome://global/locale/dom/dom.properties",
-#ifdef MOZ_SVG
   "chrome://global/locale/svg/svg.properties",
-#endif
   "chrome://branding/locale/brand.properties",
   "chrome://global/locale/commonDialogs.properties"
 };
@@ -5975,21 +5939,6 @@ nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
-static nsIView* GetDisplayRootFor(nsIView* aView)
-{
-  nsIView *displayRoot = aView;
-  for (;;) {
-    nsIView *displayParent = displayRoot->GetParent();
-    if (!displayParent)
-      return displayRoot;
-
-    if (displayRoot->GetFloating() && !displayParent->GetFloating())
-      return displayRoot;
-    displayRoot = displayParent;
-  }
-  return nsnull;
-}
-
 static already_AddRefed<LayerManager>
 LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
                                 bool* aAllowRetaining)
@@ -6025,7 +5974,7 @@ LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
     if (VM) {
       nsIView* rootView = VM->GetRootView();
       if (rootView) {
-        nsIView* displayRoot = GetDisplayRootFor(rootView);
+        nsIView* displayRoot = nsIViewManager::GetDisplayRootFor(rootView);
         if (displayRoot) {
           nsIWidget* widget = displayRoot->GetNearestWidget(nsnull);
           if (widget) {

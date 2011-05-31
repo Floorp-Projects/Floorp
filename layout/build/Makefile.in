@@ -233,15 +233,10 @@ SHARED_LIBRARY_LIBS += \
 		$(NULL)
 endif
 
-ifdef MOZ_SVG
 SHARED_LIBRARY_LIBS += \
 		../svg/base/src/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/document/src/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/content/src/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
-SHARED_LIBRARY_LIBS += \
 		$(DEPTH)/content/smil/$(LIB_PREFIX)gkconsmil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
@@ -336,15 +331,12 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/js/src/xpconnect/src \
 		   -I$(topsrcdir)/js/src/xpconnect/loader \
 		   -I$(topsrcdir)/caps/include \
-                   -I$(topsrcdir)/netwerk/base/src \
+		   -I$(topsrcdir)/netwerk/base/src \
+		   -I$(topsrcdir)/content/svg/content/src \
 		   $(NULL)
 
 ifdef MOZ_MATHML
 LOCAL_INCLUDES	+= -I$(srcdir)/../mathml
-endif
-
-ifdef MOZ_SVG
-LOCAL_INCLUDES	+= -I$(topsrcdir)/content/svg/content/src
 endif
 
 DEFINES += -D_IMPL_NS_LAYOUT

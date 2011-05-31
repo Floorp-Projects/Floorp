@@ -290,7 +290,7 @@ private:
 class DocumentViewerImpl : public nsIDocumentViewer,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
-                           public nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH,
+                           public nsIMarkupDocumentViewer,
                            public nsIDocumentViewerPrint
 
 #ifdef NS_PRINTING
@@ -334,9 +334,6 @@ public:
 
   // nsIMarkupDocumentViewer
   NS_DECL_NSIMARKUPDOCUMENTVIEWER
-
-  // nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH
-  NS_DECL_NSIMARKUPDOCUMENTVIEWER_MOZILLA_2_0_BRANCH
 
 #ifdef NS_PRINTING
   // nsIWebBrowserPrint
@@ -601,7 +598,6 @@ NS_INTERFACE_MAP_BEGIN(DocumentViewerImpl)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewer)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentViewer)
     NS_INTERFACE_MAP_ENTRY(nsIMarkupDocumentViewer)
-    NS_INTERFACE_MAP_ENTRY(nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerFile)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerEdit)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentViewerPrint)
@@ -1203,7 +1199,9 @@ DocumentViewerImpl::PermitUnload(PRBool aCallerClosesWindow, PRBool *aPermitUnlo
         return NS_OK;
       }
 
-      PRBool dummy;
+      // Although the exact value is ignored, we must not pass invalid
+      // PRBool values through XPConnect.
+      PRBool dummy = PR_FALSE;
       PRInt32 buttonPressed = 0;
       PRUint32 buttonFlags = (nsIPrompt::BUTTON_POS_0_DEFAULT |
                              (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) |
@@ -2749,7 +2747,7 @@ SetChildTextZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
 static void
 SetChildMinFontSize(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> branch =
+  nsCOMPtr<nsIMarkupDocumentViewer> branch =
     do_QueryInterface(aChild);
   branch->SetMinFontSize(NS_PTR_TO_INT32(aClosure));
 }

@@ -553,7 +553,7 @@ nsIDOMHTMLDocument_Write_customMethodCallCode = """
       str.Append(next_arg);
     }
 
-    rv = self->%s(arg0);
+    rv = self->%s(arg0, cx);
 """
 
 nsIDOMStorage_Clear_customMethodCallCode = """
