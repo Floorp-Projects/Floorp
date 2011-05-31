@@ -2643,7 +2643,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // end up readding and becoming the default control again in
       // AfterSetAttr.
       if (doc && aNotify) {
-        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        nsAutoScriptBlocker scriptBlocker;
         doc->ContentStateChanged(this, NS_EVENT_STATE_DEFAULT);
       }
     }
@@ -2701,7 +2701,6 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // Note: no need to notify on CanBeDisabled(), since type attr
       // changes can't affect that.
       if (doc && aNotify) {
-        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStateChanged(this, NS_EVENT_STATE_DEFAULT);
       }
     }
@@ -3018,7 +3017,7 @@ nsGenericHTMLFormElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool 
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
-    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+    nsAutoScriptBlocker scriptBlocker;
     doc->ContentStateChanged(this, aStates);
   }
 }
@@ -3585,7 +3584,7 @@ nsGenericHTMLElement::ChangeEditableState(PRInt32 aChange)
 
   // MakeContentDescendantsEditable is going to call ContentStateChanged for
   // this element and all descendants if editable state has changed.
-  // We have to create a document update batch now so it's created once.
-  MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
+  // We might as well wrap it all in one script blocker.
+  nsAutoScriptBlocker scriptBlocker;
   MakeContentDescendantsEditable(this, document);
 }

@@ -7658,7 +7658,7 @@ nsGlobalWindow::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
   if (mHasFocus && mFocusedNode) { // send content state notifications
     nsIDocument *doc = mFocusedNode->GetCurrentDoc();
     if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsAutoScriptBlocker scriptBlocker;
       doc->ContentStateChanged(mFocusedNode, NS_EVENT_STATE_FOCUSRING);
     }
   }

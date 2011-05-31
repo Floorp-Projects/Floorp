@@ -101,7 +101,7 @@ Link::SetLinkState(nsLinkState aState)
   NS_ASSERTION(newLinkState == NS_EVENT_STATE_VISITED ||
                newLinkState == NS_EVENT_STATE_UNVISITED,
                "Unexpected state obtained from LinkState()!");
-  mozAutoDocUpdate update(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+  nsAutoScriptBlocker scriptBlocker;
   doc->ContentStateChanged(content, oldLinkState ^ newLinkState);
 }
 
@@ -490,7 +490,7 @@ Link::ResetLinkState(bool aNotify)
   // called so that we'll start a new history query as needed.
   if (aNotify && doc) {
     nsEventStates changedState = NS_EVENT_STATE_VISITED ^ NS_EVENT_STATE_UNVISITED;
-    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, aNotify);
+    nsAutoScriptBlocker scriptBlocker;
     doc->ContentStateChanged(content, changedState);
   }
 }

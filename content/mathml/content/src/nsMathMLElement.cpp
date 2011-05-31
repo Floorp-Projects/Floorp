@@ -467,6 +467,6 @@ nsMathMLElement::SetIncrementScriptLevel(PRBool aIncrementScriptLevel,
   if (!doc)
     return;
 
-  mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+  nsAutoScriptBlocker scriptBlocker;
   doc->ContentStateChanged(this, NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL);
 }
