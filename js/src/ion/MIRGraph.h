@@ -64,7 +64,12 @@ class MIRGraph
 
     bool addBlock(MBasicBlock *block);
 
-    void reset();
+    void clearBlockList() {
+        blocks_.clear();
+    }
+    void resetInstructionNumber() {
+        idGen_ = 0;
+    }
 
     size_t numBlocks() const {
         return blocks_.length();

@@ -54,6 +54,9 @@ bool
 ApplyTypeInformation(MIRGraph &graph);
 
 bool
+ReorderBlocks(MIRGraph &graph);
+
+void
 RenumberInstructions(MIRGraph &graph);
 
 } // namespace js

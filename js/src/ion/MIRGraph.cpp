@@ -54,13 +54,6 @@ MIRGraph::addBlock(MBasicBlock *block)
     return blocks_.append(block);
 }
 
-void
-MIRGraph::reset()
-{
-    blocks_.clear();
-    idGen_ = 0;
-}
-
 MBasicBlock *
 MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
 {
