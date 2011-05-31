@@ -97,10 +97,6 @@ Class NodeList<nsINodeList>::sProtoClass = {
 };
 
 template<>
-JSBool
-NodeList<nsINodeList>::namedItem(JSContext *cx, uintN argc, jsval *vp);
-
-template<>
 NodeList<nsINodeList>::Methods NodeList<nsINodeList>::sProtoMethods[] = {
     { nsDOMClassInfo::sItem_id, &item, 1 }
 };
@@ -219,6 +215,26 @@ NodeList<T>::item(JSContext *cx, uintN argc, jsval *vp)
     return WrapObject(cx, obj, result, result, vp);
 }
 
+
+template<>
+JSBool
+NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, JSObject *obj, jsval *name, jsval *vp)
+{
+    xpc_qsDOMString nameString(cx, *name, name,
+                               xpc_qsDOMString::eDefaultNullBehavior,
+                               xpc_qsDOMString::eDefaultUndefinedBehavior);
+    if (!nameString.IsValid())
+        return JS_FALSE;
+    nsIHTMLCollection *collection = getNodeList(obj);
+    nsWrapperCache *cache;
+    nsISupports *result = collection->GetNamedItem(nameString, &cache);
+    if (!result) {
+        *vp = JSVAL_NULL;
+        return JS_TRUE;
+    }
+    return WrapObject(cx, obj, result, cache, vp);
+}
+
 template<>
 JSBool
 NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp)
@@ -230,15 +246,7 @@ NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp)
     if (argc < 1)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
     jsval *argv = JS_ARGV(cx, vp);
-    xpc_qsDOMString name(cx, argv[0], &argv[0],
-                         xpc_qsDOMString::eDefaultNullBehavior,
-                         xpc_qsDOMString::eDefaultUndefinedBehavior);
-    if (!name.IsValid())
-        return JS_FALSE;
-    nsIHTMLCollection *htmlCollection = getNodeList(obj);
-    nsWrapperCache *cache;
-    nsISupports *result = htmlCollection->GetNamedItem(name, &cache);
-    return WrapObject(cx, obj, result, cache, vp);
+    return namedItem(cx, obj, &argv[0], vp);
 }
 
 template<class T>
@@ -575,6 +583,26 @@ NodeList<T>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, Property
     return true;
 }
 
+template<>
+inline bool
+NodeList<nsINodeList>::namedItem(JSContext *cx, JSObject *proxy, jsid id, Value *vp, bool *result)
+{
+    return false;
+}
+template<>
+inline bool
+NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, JSObject *proxy, jsid id, Value *vp, bool *result)
+{
+    if (!JSID_IS_STRING(id))
+        return false;
+
+    jsval v = STRING_TO_JSVAL(JSID_TO_STRING(id));
+    *result = namedItem(cx, proxy, &v, vp);
+
+    // We treat failure as having handled the get.
+    return !*result || !vp->isNull();
+}
+
 template<class T>
 bool
 NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
@@ -596,6 +624,10 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
         if (result)
             return WrapObject(cx, proxy, result, result, vp);
     }
+
+    bool ok;
+    if (namedItem(cx, proxy, id, vp, &ok))
+        return ok;
 
     JSObject *proto = js::GetObjectProto(proxy);
     bool hit;
