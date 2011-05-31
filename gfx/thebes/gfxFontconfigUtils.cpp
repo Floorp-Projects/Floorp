@@ -395,7 +395,7 @@ TryLangForGroup(const nsACString& aOSLang, nsIAtom *aLangGroup,
     }
 
     nsIAtom *atom =
-        gLangService->LookupLanguage(NS_ConvertUTF8toUTF16(*aFcLang));
+        gLangService->LookupLanguage(*aFcLang);
 
     return atom == aLangGroup;
 }

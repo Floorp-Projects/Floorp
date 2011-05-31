@@ -52,8 +52,8 @@
 #include "nsIAtom.h"
 
 #define NS_ILANGUAGEATOMSERVICE_IID \
-  {0xE8ABCA7C, 0x3909, 0x4DBC, \
-    { 0x9D, 0x03, 0xD3, 0xB5, 0xBE, 0xE4, 0xFD, 0x3F }}
+  {0xAF4C48CF, 0x8F76, 0x4477, \
+    { 0xA7, 0x0E, 0xAB, 0x09, 0x74, 0xE2, 0x41, 0xF0 }}
 
 #define NS_LANGUAGEATOMSERVICE_CONTRACTID \
   "@mozilla.org/intl/nslanguageatomservice;1"
@@ -63,7 +63,7 @@ class nsILanguageAtomService : public nsISupports
  public: 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILANGUAGEATOMSERVICE_IID)
 
-  virtual nsIAtom* LookupLanguage(const nsAString &aLanguage,
+  virtual nsIAtom* LookupLanguage(const nsACString &aLanguage,
                                   nsresult *aError = nsnull) = 0;
   virtual already_AddRefed<nsIAtom>
   LookupCharSet(const char *aCharSet, nsresult *aError = nsnull) = 0;

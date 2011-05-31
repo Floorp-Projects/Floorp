@@ -6937,9 +6937,9 @@ nsDocShell::RestoreFromHistory()
         mSavingOldViewer = CanSavePresentation(mLoadType, request, doc);
     }
 
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> oldMUDV(
+    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV(
         do_QueryInterface(mContentViewer));
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> newMUDV(
+    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV(
         do_QueryInterface(viewer));
     PRInt32 minFontSize = 0;
     float textZoom = 1.0f;
@@ -7589,10 +7589,10 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     float pageZoom;
     PRBool styleDisabled;
     // |newMUDV| also serves as a flag to set the data from the above vars
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> newMUDV;
+    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
 
     if (mContentViewer || parent) {
-        nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> oldMUDV;
+        nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
         if (mContentViewer) {
             // Get any interesting state from old content viewer
             // XXX: it would be far better to just reuse the document viewer ,
