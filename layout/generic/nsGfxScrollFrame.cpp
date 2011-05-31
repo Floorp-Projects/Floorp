@@ -1861,6 +1861,8 @@ static void
 AppendToTop(nsDisplayListBuilder* aBuilder, nsDisplayList* aDest,
             nsDisplayList* aSource, nsIFrame* aSourceFrame, PRBool aOwnLayer)
 {
+  if (aSource->IsEmpty())
+    return;
   if (aOwnLayer) {
     aDest->AppendNewToTop(
         new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource));
