@@ -197,23 +197,30 @@ nsHttpResponseHead::ParseStatusLine(const char *line)
         PRUintn(mVersion), PRUintn(mStatus), mStatusText.get()));
 }
 
-void
+nsresult
 nsHttpResponseHead::ParseHeaderLine(const char *line)
 {
     nsHttpAtom hdr = {0};
     char *val;
-
-    mHeaders.ParseHeaderLine(line, &hdr, &val);
+    nsresult rv;
+    
+    rv = mHeaders.ParseHeaderLine(line, &hdr, &val);
+    if (NS_FAILED(rv))
+        return rv;
+    
     // leading and trailing LWS has been removed from |val|
 
     // handle some special case headers...
     if (hdr == nsHttp::Content_Length) {
         PRInt64 len;
         // permit only a single value here.
-        if (nsHttp::ParseInt64(val, &len))
+        if (nsHttp::ParseInt64(val, &len)) {
             mContentLength = len;
-        else
+        }
+        else {
             LOG(("invalid content-length!\n"));
+            return NS_ERROR_CORRUPTED_CONTENT;
+        }
     }
     else if (hdr == nsHttp::Content_Type) {
         LOG(("ParseContentType [type=%s]\n", val));
@@ -225,6 +232,7 @@ nsHttpResponseHead::ParseHeaderLine(const char *line)
         ParseCacheControl(val);
     else if (hdr == nsHttp::Pragma)
         ParsePragma(val);
+    return NS_OK;
 }
 
 // From section 13.2.3 of RFC2616, we compute the current age of a cached
