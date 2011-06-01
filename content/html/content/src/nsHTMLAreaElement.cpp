@@ -113,7 +113,8 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Area)
 
 
 nsHTMLAreaElement::nsHTMLAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo),
+    Link(this)
 {
 }
 
