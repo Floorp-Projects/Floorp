@@ -355,6 +355,8 @@ public:
   }
 
   // nsIContent interface methods
+  virtual void UpdateEditableState(PRBool aNotify);
+
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);

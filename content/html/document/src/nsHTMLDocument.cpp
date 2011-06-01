@@ -2732,10 +2732,9 @@ NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument,
   PRUint32 i, n = aNode->GetChildCount();
   for (i = 0; i < n; ++i) {
     nsIContent *child = aNode->GetChildAt(i);
-    if (child->HasFlag(NODE_IS_EDITABLE) != aEditable) {
-      aDocument->ContentStateChanged(child,
-                                     NS_EVENT_STATE_MOZ_READONLY |
-                                     NS_EVENT_STATE_MOZ_READWRITE);
+    if (child->HasFlag(NODE_IS_EDITABLE) != aEditable &&
+        child->IsElement()) {
+      child->AsElement()->UpdateState(true);
     }
     NotifyEditableStateChange(child, aDocument, aEditable);
   }

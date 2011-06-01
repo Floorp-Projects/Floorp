@@ -63,7 +63,7 @@ function checkNotSufferingFromBeingMissing(element, doNotApply)
   if (element.type != 'radio' && element.type != 'checkbox') {
     is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
        doNotApply ? "rgb(0, 0, 0)" : "rgb(0, 255, 0)",
-       "The pseudo-class is not correctly applied");
+       "The pseudo-class is not correctly applied to " + element.localName);
   }
 }
 

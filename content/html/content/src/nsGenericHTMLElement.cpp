@@ -939,17 +939,16 @@ nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
 }
 
 void
-nsGenericHTMLElement::UpdateEditableState()
+nsGenericHTMLElement::UpdateEditableState(PRBool aNotify)
 {
   // XXX Should we do this only when in a document?
   ContentEditableTristate value = GetContentEditableValue();
   if (value != eInherit) {
-    SetEditableFlag(!!value);
-
+    DoSetEditableFlag(!!value, aNotify);
     return;
   }
 
-  nsStyledElement::UpdateEditableState();
+  nsStyledElement::UpdateEditableState(aNotify);
 }
 
 nsresult
@@ -1713,27 +1712,26 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
 }
 
 void
-nsGenericHTMLFormElement::UpdateEditableFormControlState()
+nsGenericHTMLFormElement::UpdateEditableFormControlState(PRBool aNotify)
 {
   // nsCSSFrameConstructor::MaybeConstructLazily is based on the logic of this
   // function, so should be kept in sync with that.
 
   ContentEditableTristate value = GetContentEditableValue();
   if (value != eInherit) {
-    SetEditableFlag(!!value);
-
+    DoSetEditableFlag(!!value, aNotify);
     return;
   }
 
   nsIContent *parent = GetParent();
 
   if (parent && parent->HasFlag(NODE_IS_EDITABLE)) {
-    SetEditableFlag(PR_TRUE);
+    DoSetEditableFlag(PR_TRUE, aNotify);
     return;
   }
 
   if (!IsTextControl(PR_FALSE)) {
-    SetEditableFlag(PR_FALSE);
+    DoSetEditableFlag(PR_FALSE, aNotify);
     return;
   }
 
@@ -1741,7 +1739,7 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState()
   PRBool roState;
   GetBoolAttr(nsGkAtoms::readonly, &roState);
 
-  SetEditableFlag(!roState);
+  DoSetEditableFlag(!roState, aNotify);
 }
 
 
@@ -2410,6 +2408,9 @@ nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo>
   , mForm(nsnull)
   , mFieldSet(nsnull)
 {
+  // We should add the NS_EVENT_STATE_ENABLED bit here as needed, but
+  // that depends on our type, which is not initialized yet.  So we
+  // have to do this in subclasses.
 }
 
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
@@ -2564,7 +2565,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   }
 
   // Set parent fieldset which should be used for the disabled state.
-  UpdateFieldSet();
+  UpdateFieldSet(PR_FALSE);
 
   return NS_OK;
 }
@@ -2589,6 +2590,11 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
         UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       }
     }
+
+    if (!mForm) {
+      // Our novalidate state might have changed
+      UpdateState(false);
+    }
   }
 
   // We have to remove the form id observer if there was one.
@@ -2601,7 +2607,7 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 
   // The element might not have a fieldset anymore.
-  UpdateFieldSet();
+  UpdateFieldSet(PR_FALSE);
 }
 
 nsresult
@@ -2622,8 +2628,6 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     if (mForm && aName == nsGkAtoms::type) {
-      nsIDocument* doc = GetCurrentDoc();
-
       GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
@@ -2642,10 +2646,8 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // control anymore.  Go ahead and notify on that change, though we might
       // end up readding and becoming the default control again in
       // AfterSetAttr.
-      if (doc && aNotify) {
-        nsAutoScriptBlocker scriptBlocker;
-        doc->ContentStateChanged(this, NS_EVENT_STATE_DEFAULT);
-      }
+      // FIXME: Bug 656197
+      UpdateState(aNotify);
     }
 
     if (aName == nsGkAtoms::form) {
@@ -2679,7 +2681,6 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     if (mForm && aName == nsGkAtoms::type) {
-      nsIDocument* doc = GetDocument();
       nsAutoString tmp;
 
       GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
@@ -2700,9 +2701,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // Go ahead and notify on that change.
       // Note: no need to notify on CanBeDisabled(), since type attr
       // changes can't affect that.
-      if (doc && aNotify) {
-        doc->ContentStateChanged(this, NS_EVENT_STATE_DEFAULT);
-      }
+      UpdateState(aNotify);
     }
 
     if (aName == nsGkAtoms::form) {
@@ -2913,19 +2912,13 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
   NS_PRECONDITION(!aBindToTree || !aFormIdElement,
                   "aFormIdElement shouldn't be set if aBindToTree is true!");
 
+  PRBool needStateUpdate = PR_FALSE;
   if (!aBindToTree) {
-    PRBool wasDefaultSubmit = mForm && mForm->IsDefaultSubmitElement(this);
+    needStateUpdate = mForm && mForm->IsDefaultSubmitElement(this);
     ClearForm(PR_TRUE);
-    if (wasDefaultSubmit) {
-      nsIDocument* doc = GetCurrentDoc();
-      if (doc) {
-        nsAutoScriptBlocker scriptBlocker;
-        doc->ContentStateChanged(this, NS_EVENT_STATE_DEFAULT);
-      }
-    }
   }
 
-  bool hadForm = mForm;
+  nsHTMLFormElement *oldForm = mForm;
 
   if (!mForm) {
     // If @form is set, we have to use that to find the form.
@@ -2972,7 +2965,7 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
     SetFlags(ADDED_TO_FORM);
 
     // Notify only if we just found this mForm.
-    mForm->AddElement(this, true, !hadForm);
+    mForm->AddElement(this, true, oldForm == nsnull);
 
     if (!nameVal.IsEmpty()) {
       mForm->AddElementToTable(this, nameVal);
@@ -2982,10 +2975,14 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
       mForm->AddElementToTable(this, idVal);
     }
   }
+
+  if (mForm != oldForm || needStateUpdate) {
+    UpdateState(true);
+  }
 }
 
 void
-nsGenericHTMLFormElement::UpdateFieldSet()
+nsGenericHTMLFormElement::UpdateFieldSet(PRBool aNotify)
 {
   nsIContent* parent = nsnull;
   nsIContent* prev = nsnull;
@@ -2997,11 +2994,19 @@ nsGenericHTMLFormElement::UpdateFieldSet()
         static_cast<nsHTMLFieldSetElement*>(parent);
 
       if (!prev || fieldset->GetFirstLegend() != prev) {
+        if (mFieldSet == fieldset) {
+          // We already have the right fieldset;
+          return;
+        }
+
         if (mFieldSet) {
           static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
         }
         mFieldSet = fieldset;
         fieldset->AddElement(this);
+
+        // The disabled state may have changed
+        FieldSetDisabledChanged(aNotify);
         return;
       }
     }
@@ -3010,24 +3015,16 @@ nsGenericHTMLFormElement::UpdateFieldSet()
   // No fieldset found.
   if (mFieldSet) {
     static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
+    mFieldSet = nsnull;
+    // The disabled state may have changed
+    FieldSetDisabledChanged(aNotify);
   }
-  mFieldSet = nsnull;
 }
 
 void
-nsGenericHTMLFormElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify)
+nsGenericHTMLFormElement::FieldSetDisabledChanged(PRBool aNotify)
 {
-  if (!aNotify) {
-    return;
-  }
-
-  aStates |= NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED;
-
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    nsAutoScriptBlocker scriptBlocker;
-    doc->ContentStateChanged(this, aStates);
-  }
+  UpdateState(aNotify);
 }
 
 //----------------------------------------------------------------------
@@ -3556,20 +3553,13 @@ MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
   // that.  For elements, we need to send a ContentStateChanged
   // notification.
   if (!aContent->IsElement()) {
-    aContent->UpdateEditableState();
+    aContent->UpdateEditableState(PR_FALSE);
     return;
   }
 
   Element *element = aContent->AsElement();
-  nsEventStates stateBefore = element->State();
 
-  element->UpdateEditableState();
-
-  if (aDocument && stateBefore != element->State()) {
-    aDocument->ContentStateChanged(element,
-                                   NS_EVENT_STATE_MOZ_READONLY |
-                                   NS_EVENT_STATE_MOZ_READWRITE);
-  }
+  element->UpdateEditableState(PR_TRUE);
 
   for (nsIContent *child = aContent->GetFirstChild();
        child;
