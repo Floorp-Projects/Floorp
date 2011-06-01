@@ -772,6 +772,17 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
     result = PR_TRUE;
     aCanStoreInRuleTree = PR_FALSE;
   }
+  else if (eCSSUnit_Enumerated == unit &&
+           aValue.GetIntValue() == NS_STYLE_COLOR_INHERIT_FROM_BODY) {
+    NS_ASSERTION(aPresContext->CompatibilityMode() == eCompatibility_NavQuirks,
+                 "Should only get this value in quirks mode");
+    // We just grab the color from the prescontext, and rely on the fact that
+    // if the body color ever changes all its descendants will get new style
+    // contexts (but NOT necessarily new rulenodes).
+    aResult = aPresContext->BodyTextColor();
+    result = PR_TRUE;
+    aCanStoreInRuleTree = PR_FALSE;
+  }
   return result;
 }
 
@@ -5340,6 +5351,9 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
         switch (value.GetIntValue()) {
           case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
             border->SetBorderToForeground(side);
+            break;
+          default:
+            NS_NOTREACHED("Unexpected enumerated color");
             break;
         }
       }

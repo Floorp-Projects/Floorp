@@ -618,6 +618,16 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
   }
 #endif
 
+  if (aElementForAnimation && aElementForAnimation->IsHTML(nsGkAtoms::body) &&
+      aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement &&
+      PresContext()->CompatibilityMode() == eCompatibility_NavQuirks) {
+    nsIDocument* doc = aElementForAnimation->GetCurrentDoc();
+    if (doc && doc->GetBodyElement() == aElementForAnimation) {
+      // Update the prescontext's body color
+      PresContext()->SetBodyTextColor(result->GetStyleColor()->mColor);
+    }
+  }
+
   return result.forget();
 }
 
