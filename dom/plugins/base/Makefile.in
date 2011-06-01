@@ -129,6 +129,7 @@ endif
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/xpcom/base/ \
+  $(MOZ_CAIRO_CFLAGS) \
   $(NULL)
 
 ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
@@ -158,7 +159,6 @@ OS_LIBS		+= $(call EXPAND_LIBNAME,version)
 endif
 
 CXXFLAGS         += $(TK_CFLAGS)
-CXXFLAGS         += $(MOZ_CAIRO_CFLAGS)
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
 ifdef MOZ_ENABLE_GTK2
