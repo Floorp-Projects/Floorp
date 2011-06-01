@@ -7217,7 +7217,7 @@ DirectoryInstallLocation.prototype = {
         linkedDirectory.initWithPath(line.value);
       }
       catch (e) {
-        linkedDirectory.setRelativeDescriptor(file.parent, line.value);
+        linkedDirectory.setRelativeDescriptor(aFile.parent, line.value);
       }
 
       if (!linkedDirectory.exists()) {
