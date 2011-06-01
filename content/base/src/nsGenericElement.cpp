@@ -786,7 +786,7 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 //----------------------------------------------------------------------
 
 nsEventStates
-nsIContent::IntrinsicState() const
+Element::IntrinsicState() const
 {
   return IsEditable() ? NS_EVENT_STATE_MOZ_READWRITE :
                         NS_EVENT_STATE_MOZ_READONLY;
