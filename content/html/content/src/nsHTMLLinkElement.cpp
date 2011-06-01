@@ -112,6 +112,7 @@ public:
   virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
   virtual nsLinkState GetLinkState() const;
+  virtual void RequestLinkStateUpdate();
   virtual already_AddRefed<nsIURI> GetHrefURI() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -376,6 +377,12 @@ nsLinkState
 nsHTMLLinkElement::GetLinkState() const
 {
   return Link::GetLinkState();
+}
+
+void
+nsHTMLLinkElement::RequestLinkStateUpdate()
+{
+  UpdateLinkState(Link::LinkState());
 }
 
 already_AddRefed<nsIURI>
