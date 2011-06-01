@@ -4211,18 +4211,6 @@ GetLabelTarget(nsIContent* aPossibleLabel)
   return label->GetLabeledElement();
 }
 
-static bool
-ShouldShowFocusRing(nsIContent* aContent)
-{
-  nsIDocument* doc = aContent->GetOwnerDoc();
-  if (doc) {
-    nsPIDOMWindow* window = doc->GetWindow();
-    return window && window->ShouldShowFocusRing();
-  }
-
-  return false;
-}
-
 nsEventStates
 nsEventStateManager::GetContentState(nsIContent *aContent)
 {
@@ -4231,15 +4219,6 @@ nsEventStateManager::GetContentState(nsIContent *aContent)
     state = aContent->AsElement()->State();
   }
 
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nsnull;
-  if (aContent == focusedContent) {
-    state |= NS_EVENT_STATE_FOCUS;
-
-    if (ShouldShowFocusRing(aContent)) {
-      state |= NS_EVENT_STATE_FOCUSRING;
-    }
-  }
   return state;
 }
 
