@@ -85,25 +85,18 @@ Link::SetLinkState(nsLinkState aState)
   NS_ASSERTION(mLinkState != aState,
                "Setting state to the currently set state!");
 
-  // Remember our old link state for when we notify.
-  nsEventStates oldLinkState = LinkState();
-
   // Set our current state as appropriate.
   mLinkState = aState;
 
   // Per IHistory interface documentation, we are no longer registered.
   mRegistered = false;
 
-  // Notify the document that our visited state has changed.
-  Element *element = mElement;
-  nsIDocument *doc = element->GetCurrentDoc();
-  NS_ASSERTION(doc, "Registered but we have no document?!");
-  nsEventStates newLinkState = LinkState();
-  NS_ASSERTION(newLinkState == NS_EVENT_STATE_VISITED ||
-               newLinkState == NS_EVENT_STATE_UNVISITED,
-               "Unexpected state obtained from LinkState()!");
-  nsAutoScriptBlocker scriptBlocker;
-  doc->ContentStateChanged(element, oldLinkState ^ newLinkState);
+  NS_ABORT_IF_FALSE(LinkState() == NS_EVENT_STATE_VISITED ||
+                    LinkState() == NS_EVENT_STATE_UNVISITED,
+                    "Unexpected state obtained from LinkState()!");
+
+  // Tell the element to update its visited state
+  mElement->UpdateState(true);
 }
 
 nsEventStates
@@ -484,15 +477,16 @@ Link::ResetLinkState(bool aNotify)
   // Get rid of our cached URI.
   mCachedURI = nsnull;
 
-  // If aNotify is true, notify both of the visited-related states.  We have
-  // to do that, because we might be racing with a response from history and
-  // hence need to make sure that we get restyled whether we were visited or
-  // not before.  In particular, we need to make sure that our LinkState() is
-  // called so that we'll start a new history query as needed.
-  if (aNotify && doc) {
-    nsEventStates changedState = NS_EVENT_STATE_VISITED ^ NS_EVENT_STATE_UNVISITED;
-    nsAutoScriptBlocker scriptBlocker;
-    doc->ContentStateChanged(element, changedState);
+  // We have to be very careful here: if aNotify is false we do NOT
+  // want to call UpdateState, because that will call into LinkState()
+  // and try to start off loads, etc.  But ResetLinkState is called
+  // with aNotify false when things are in inconsistent states, so
+  // we'll get confused in that situation.  Instead, just silently
+  // update the link state on mElement.
+  if (aNotify) {
+    mElement->UpdateState(aNotify);
+  } else {
+    mElement->UpdateLinkState(nsEventStates());
   }
 }
 

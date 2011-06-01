@@ -161,7 +161,7 @@ public:
   virtual PRBool RestoreState(nsPresState* aState);
   virtual PRBool AllowDrop();
 
-  virtual void FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify);
+  virtual void FieldSetDisabledChanged(PRBool aNotify);
 
   // nsIContent
   virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
@@ -239,9 +239,9 @@ public:
 
   NS_IMETHOD FireAsyncClickHandler();
 
-  virtual void UpdateEditableState()
+  virtual void UpdateEditableState(PRBool aNotify)
   {
-    return UpdateEditableFormControlState();
+    return UpdateEditableFormControlState(aNotify);
   }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLInputElement,

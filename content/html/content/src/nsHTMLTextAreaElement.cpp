@@ -134,7 +134,7 @@ public:
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
 
-  virtual void FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify);
+  virtual void FieldSetDisabledChanged(PRBool aNotify);
 
   virtual nsEventStates IntrinsicState() const;
 
@@ -204,9 +204,9 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  virtual void UpdateEditableState()
+  virtual void UpdateEditableState(PRBool aNotify)
   {
-    return UpdateEditableFormControlState();
+    return UpdateEditableFormControlState(aNotify);
   }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLTextAreaElement,
@@ -321,6 +321,15 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNode
     mState(new nsTextEditorState(this))
 {
   AddMutationObserver(this);
+
+  // Set up our default state.  By default we're enabled (since we're
+  // a control type that can be disabled but not actually disabled
+  // right now), optional, and valid.  We are NOT readwrite by default
+  // until someone calls UpdateEditableState on us, apparently!  Also
+  // by default we don't have to show validity UI and so forth.
+  AddStatesSilently(NS_EVENT_STATE_ENABLED |
+                    NS_EVENT_STATE_OPTIONAL |
+                    NS_EVENT_STATE_VALID);
 }
 
 
@@ -587,18 +596,7 @@ nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
   }
 
   if (mValueChanged != previousValue) {
-    nsEventStates states = NS_EVENT_STATE_MOZ_UI_VALID |
-                           NS_EVENT_STATE_MOZ_UI_INVALID;
-
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
-      states |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
-    }
-
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      nsAutoScriptBlocker scriptBlocker;
-      doc->ContentStateChanged(this, states);
-    }
+    UpdateState(true);
   }
 
   return NS_OK;
@@ -747,8 +745,6 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
   if (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
       aVisitor.mEvent->message == NS_BLUR_CONTENT) {
-    nsEventStates states;
-
     if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
       // If the invalid UI is shown, we should show it while focusing (and
       // update). Otherwise, we should not.
@@ -757,26 +753,12 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
       // UI while typing.
       mCanShowValidUI = ShouldShowValidityUI();
-
-      // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID nor
-      // NS_EVENT_STATE_MOZ_UI_VALID given that the states should not change.
     } else { // NS_BLUR_CONTENT
       mCanShowInvalidUI = PR_TRUE;
       mCanShowValidUI = PR_TRUE;
-      states |= NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     }
 
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
-      // TODO: checking if the value is empty could be a good idea but we do not
-      // have a simple way to do that, see bug 585100
-      states |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
-    }
-
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      nsAutoScriptBlocker scriptBlocker;
-      doc->ContentStateChanged(this, states);
-    }
+    UpdateState(true);
   }
 
   // Reset the flag for other content besides this text field
@@ -1116,6 +1098,9 @@ nsHTMLTextAreaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();
 
+  // And now make sure our state is up to date
+  UpdateState(false);
+
   return rv;
 }
 
@@ -1127,6 +1112,9 @@ nsHTMLTextAreaElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   // We might be no longer disabled because of parent chain changed.
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();
+
+  // And now make sure our state is up to date
+  UpdateState(false);
 }
 
 nsresult
@@ -1194,8 +1182,6 @@ nsresult
 nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                     const nsAString* aValue, PRBool aNotify)
 {
-  nsEventStates states;
-
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
         aName == nsGkAtoms::readonly) {
@@ -1205,28 +1191,14 @@ nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       if (aName == nsGkAtoms::readonly || aName == nsGkAtoms::disabled) {
         UpdateBarredFromConstraintValidation();
       }
-
-      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID |
-                NS_EVENT_STATE_MOZ_SUBMITINVALID;
     } else if (aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
-      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     }
 
-    if (aNotify) {
-      nsIDocument* doc = GetCurrentDoc();
-
-      if (aName == nsGkAtoms::readonly) {
-        UpdateEditableState();
-        states |= NS_EVENT_STATE_MOZ_READONLY | NS_EVENT_STATE_MOZ_READWRITE;
-      }
-
-      if (doc && !states.IsEmpty()) {
-        doc->ContentStateChanged(this, states);
-      }
+    if (aName == nsGkAtoms::readonly) {
+      UpdateEditableState(aNotify);
     }
+    UpdateState(aNotify);
   }
 
   return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName, aValue,
@@ -1269,14 +1241,7 @@ nsHTMLTextAreaElement::SetCustomValidity(const nsAString& aError)
 {
   nsIConstraintValidation::SetCustomValidity(aError);
 
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    nsAutoScriptBlocker scriptBlocker;
-    doc->ContentStateChanged(this, NS_EVENT_STATE_INVALID |
-                                   NS_EVENT_STATE_VALID |
-                                   NS_EVENT_STATE_MOZ_UI_INVALID |
-                                   NS_EVENT_STATE_MOZ_UI_VALID);
-  }
+  UpdateState(true);
 
   return NS_OK;
 }
@@ -1487,36 +1452,19 @@ nsHTMLTextAreaElement::OnValueChanged(PRBool aNotify)
   UpdateTooLongValidityState();
   UpdateValueMissingValidityState();
 
-  if (aNotify) {
-    nsEventStates states;
-    if (validBefore != IsValid()) {
-      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
-    }
-
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)
-        && !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
-      states |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
-    }
-
-    if (!states.IsEmpty()) {
-      nsIDocument* doc = GetCurrentDoc();
-      if (doc) {
-        nsAutoScriptBlocker scriptBlocker;
-        doc->ContentStateChanged(this, states);
-      }
-    }
+  if (validBefore != IsValid() ||
+      (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)
+       && !nsContentUtils::IsFocusedContent((nsIContent*)(this)))) {
+    UpdateState(aNotify);
   }
 }
 
 void
-nsHTMLTextAreaElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify)
+nsHTMLTextAreaElement::FieldSetDisabledChanged(PRBool aNotify)
 {
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();
 
-  aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-             NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
-  nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates, aNotify);
+  nsGenericHTMLFormElement::FieldSetDisabledChanged(aNotify);
 }
 

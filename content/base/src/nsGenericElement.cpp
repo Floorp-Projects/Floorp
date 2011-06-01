@@ -819,11 +819,57 @@ Element::UpdateLinkState(nsEventStates aState)
 }
 
 void
-nsIContent::UpdateEditableState()
+Element::UpdateState(bool aNotify)
 {
+  nsEventStates oldState = mState;
+  mState = IntrinsicState() | (oldState & ESM_MANAGED_STATES);
+  if (aNotify) {
+    nsEventStates changedStates = oldState ^ mState;
+    if (!changedStates.IsEmpty()) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        nsAutoScriptBlocker scriptBlocker;
+        doc->ContentStateChanged(this, changedStates);
+      }
+    }
+  }
+}
+
+void
+nsIContent::UpdateEditableState(PRBool aNotify)
+{
+  // Guaranteed to be non-element content
+  NS_ASSERTION(!IsElement(), "What happened here?");
   nsIContent *parent = GetParent();
 
   SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
+}
+
+void
+nsGenericElement::UpdateEditableState(PRBool aNotify)
+{
+  nsIContent *parent = GetParent();
+
+  PRBool oldEditable = IsEditable();
+  SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
+  PRBool newEditable = IsEditable();
+  if (oldEditable != newEditable) {
+    if (aNotify) {
+      UpdateState(aNotify);
+    } else {
+      // Avoid calling UpdateState in this very common case, because
+      // this gets called for pretty much every single element on
+      // insertion into the document and UpdateState can be slow for
+      // some kinds of elements even when not notifying.
+      if (oldEditable) {
+        RemoveStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
+        AddStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
+      } else {
+        RemoveStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
+        AddStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
+      }
+    }
+  }
 }
 
 nsIContent*
@@ -3034,7 +3080,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
-  UpdateEditableState();
+  UpdateEditableState(PR_FALSE);
 
   // Now recurse into our kids
   for (nsIContent* child = GetFirstChild(); child;
@@ -4668,13 +4714,6 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   nsIDocument* document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
-  // When notifying, make sure to keep track of states whose value
-  // depends solely on the value of an attribute.
-  nsEventStates stateMask;
-  if (aNotify) {
-    stateMask = IntrinsicState();
-  }
-
   nsMutationGuard::DidMutate();
 
   if (aNamespaceID == kNameSpaceID_None) {
@@ -4706,11 +4745,9 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     }
   }
 
+  UpdateState(aNotify);
+
   if (aNotify) {
-    stateMask ^= IntrinsicState();
-    if (document && !stateMask.IsEmpty()) {
-      document->ContentStateChanged(this, stateMask);
-    }
     nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, aModType);
   }
 
@@ -4904,13 +4941,6 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                      nsIDOMMutationEvent::REMOVAL);
   }
 
-  // When notifying, make sure to keep track of states whose value
-  // depends solely on the value of an attribute.
-  nsEventStates stateMask;
-  if (aNotify) {
-    stateMask = IntrinsicState();
-  }
-
   PRBool hasMutationListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
@@ -4950,11 +4980,9 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
   }
 
+  UpdateState(aNotify);
+
   if (aNotify) {
-    stateMask ^= IntrinsicState();
-    if (document && !stateMask.IsEmpty()) {
-      document->ContentStateChanged(this, stateMask);
-    }
     nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
                                   nsIDOMMutationEvent::REMOVAL);
   }
@@ -5085,7 +5113,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
 
   ListAttributes(out);
 
-  fprintf(out, " intrinsicstate=[%llx]", IntrinsicState().GetInternalValue());
+  fprintf(out, " state=[%llx]", State().GetInternalValue());
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
   fprintf(out, " refcount=%d<", mRefCnt.get());

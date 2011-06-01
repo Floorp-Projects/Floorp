@@ -256,9 +256,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      *
      * @param aSync If a synchronous frame construction is required. If false,
      *              the construction may either be sync or async.
+     * @param aNotify if false, only need to update the state of our element.
      */
     void NotifyStateChanged(ObjectType aOldType, nsEventStates aOldState,
-                            PRBool aSync);
+                            PRBool aSync, PRBool aNotify);
 
     /**
      * Fires the "Plugin not found" event. This function doesn't do any checks

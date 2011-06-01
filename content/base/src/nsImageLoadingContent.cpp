@@ -794,8 +794,6 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
     return;
   }
 
-  nsEventStates oldState = ImageState();
-
   mLoading = mBroken = mUserDisabled = mSuppressed = PR_FALSE;
   
   // If we were blocked by server-based content policy, we claim to be
@@ -818,17 +816,8 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
     }
   }
 
-  if (aNotify) {
-    nsIDocument* doc = thisContent->GetCurrentDoc();
-    if (doc) {
-      NS_ASSERTION(thisContent->IsInDoc(), "Something is confused");
-      nsEventStates changedBits = oldState ^ ImageState();
-      if (!changedBits.IsEmpty()) {
-        nsAutoScriptBlocker scriptBlocker;
-        doc->ContentStateChanged(thisContent, changedBits);
-      }
-    }
-  }
+  NS_ASSERTION(thisContent->IsElement(), "Not an element?");
+  thisContent->AsElement()->UpdateState(aNotify);
 }
 
 void
