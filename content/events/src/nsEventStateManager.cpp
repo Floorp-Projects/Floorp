@@ -4212,20 +4212,6 @@ GetLabelTarget(nsIContent* aPossibleLabel)
 }
 
 static bool
-IsAncestorOf(nsIContent* aPossibleAncestor, nsIContent* aPossibleDescendant)
-{
-  for (; aPossibleDescendant; aPossibleDescendant = aPossibleDescendant->GetParent()) {
-    if (aPossibleAncestor == aPossibleDescendant)
-      return true;
-
-    Element* labelTarget = GetLabelTarget(aPossibleDescendant);
-    if (labelTarget == aPossibleAncestor)
-      return true;
-  }
-  return false;
-}
-
-static bool
 ShouldShowFocusRing(nsIContent* aContent)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
@@ -4243,13 +4229,6 @@ nsEventStateManager::GetContentState(nsIContent *aContent)
   nsEventStates state;
   if (aContent->IsElement()) {
     state = aContent->AsElement()->State();
-  }
-
-  if (IsAncestorOf(aContent, mActiveContent)) {
-    state |= NS_EVENT_STATE_ACTIVE;
-  }
-  if (IsAncestorOf(aContent, mHoverContent)) {
-    state |= NS_EVENT_STATE_HOVER;
   }
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -4314,17 +4293,39 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
   return nsnull;
 }
 
-static void
-NotifyAncestors(nsIDocument* aDocument, nsIContent* aStartNode,
-                nsIContent* aStopBefore, nsEventStates aState)
+/* static */
+inline void
+nsEventStateManager::DoStateChange(Element* aElement, nsEventStates aState,
+                                   PRBool aAddState)
 {
-  while (aStartNode && aStartNode != aStopBefore) {
-    aDocument->ContentStateChanged(aStartNode, aState);
-    Element* labelTarget = GetLabelTarget(aStartNode);
-    if (labelTarget) {
-      aDocument->ContentStateChanged(labelTarget, aState);
+  if (aAddState) {
+    aElement->AddStates(aState);
+  } else {
+    aElement->RemoveStates(aState);
+  }
+}
+
+/* static */
+void
+nsEventStateManager::UpdateAncestorState(nsIContent* aStartNode,
+                                         nsIContent* aStopBefore,
+                                         nsEventStates aState,
+                                         PRBool aAddState)
+{
+  for (; aStartNode && aStartNode != aStopBefore;
+       aStartNode = aStartNode->GetParent()) {
+    // We might be starting with a non-element (e.g. a text node) and
+    // if someone is doing something weird might be ending with a
+    // non-element too (e.g. a document fragment)
+    if (!aStartNode->IsElement()) {
+      continue;
     }
-    aStartNode = aStartNode->GetParent();
+    Element* element = aStartNode->AsElement();
+    DoStateChange(element, aState, aAddState);
+    Element* labelTarget = GetLabelTarget(element);
+    if (labelTarget) {
+      DoStateChange(labelTarget, aState, aAddState);
+    }
   }
 }
 
@@ -4341,11 +4342,11 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
 
   nsCOMPtr<nsIContent> notifyContent1;
   nsCOMPtr<nsIContent> notifyContent2;
-  PRBool notifyAncestors;
+  PRBool updateAncestors;
 
   if (aState == NS_EVENT_STATE_HOVER || aState == NS_EVENT_STATE_ACTIVE) {
     // Hover and active are hierarchical
-    notifyAncestors = PR_TRUE;
+    updateAncestors = PR_TRUE;
 
     // check to see that this state is allowed by style. Check dragover too?
     // XXX Is this even what we want?
@@ -4390,7 +4391,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
       }
     }
   } else {
-    notifyAncestors = PR_FALSE;
+    updateAncestors = PR_FALSE;
     if (aState == NS_EVENT_STATE_DRAGOVER) {
       if (aContent != mDragOverContent) {
         notifyContent1 = aContent;
@@ -4406,11 +4407,18 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
     }
   }
 
+  // We need to keep track of which of notifyContent1 and notifyContent2 is
+  // getting the state set and which is getting it unset.  If both are
+  // non-null, then notifyContent1 is having the state set and notifyContent2
+  // is having it unset.  But if one of them is null, we need to keep track of
+  // the right thing for notifyContent1 explicitly.
+  PRBool content1StateSet = PR_TRUE;
   if (!notifyContent1) {
     // This is ok because FindCommonAncestor wouldn't find anything
     // anyway if notifyContent1 is null.
     notifyContent1 = notifyContent2;
     notifyContent2 = nsnull;
+    content1StateSet = PR_FALSE;
   }
 
   if (notifyContent1 && mPresContext) {
@@ -4418,13 +4426,19 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
     if (mDocument) {
       nsAutoScriptBlocker scriptBlocker;
 
-      if (notifyAncestors) {
+      if (updateAncestors) {
         nsCOMPtr<nsIContent> commonAncestor =
           FindCommonAncestor(notifyContent1, notifyContent2);
-        NotifyAncestors(mDocument, notifyContent1, commonAncestor, aState);
         if (notifyContent2) {
-          NotifyAncestors(mDocument, notifyContent2, commonAncestor, aState);
+          // It's very important to first notify the state removal and
+          // then the state addition, because due to labels it's
+          // possible that we're removing state from some element but
+          // then adding it again (say because mHoverContent changed
+          // from a control to its label).
+          UpdateAncestorState(notifyContent2, commonAncestor, aState, PR_FALSE);
         }
+        UpdateAncestorState(notifyContent1, commonAncestor, aState,
+                            content1StateSet);
       } else {
         mDocument->ContentStateChanged(notifyContent1, aState);
         if (notifyContent2) {
