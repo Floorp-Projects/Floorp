@@ -44,6 +44,8 @@
 #include "nsEventStates.h"
 
 class nsEventStateManager;
+class nsGlobalWindow;
+class nsFocusManager;
 
 // Element-specific flags
 enum {
@@ -107,8 +109,11 @@ public:
   }
 
 private:
-  // Need to allow the ESM to set our state
+  // Need to allow the ESM, nsGlobalWindow, and the focus manager to
+  // set our state
   friend class ::nsEventStateManager;
+  friend class ::nsGlobalWindow;
+  friend class ::nsFocusManager;
 
   void NotifyStateChange(nsEventStates aStates);
 
