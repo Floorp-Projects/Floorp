@@ -4211,17 +4211,6 @@ GetLabelTarget(nsIContent* aPossibleLabel)
   return label->GetLabeledElement();
 }
 
-nsEventStates
-nsEventStateManager::GetContentState(nsIContent *aContent)
-{
-  nsEventStates state;
-  if (aContent->IsElement()) {
-    state = aContent->AsElement()->State();
-  }
-
-  return state;
-}
-
 static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
 {
   // Find closest common ancestor
