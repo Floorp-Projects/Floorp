@@ -227,7 +227,7 @@ nsTableOuterFrame::GetChildList(nsIAtom* aListName) const
   if (!aListName) {
     return mFrames;
   }
-  return nsHTMLContainerFrame::GetChildList(aListName);
+  return nsFrameList::EmptyList();
 }
 
 nsIAtom*
@@ -236,7 +236,7 @@ nsTableOuterFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   if (aIndex == NS_TABLE_FRAME_CAPTION_LIST_INDEX) {
     return nsGkAtoms::captionList;
   }
-  return nsHTMLContainerFrame::GetAdditionalChildListName(aIndex);
+  return nsnull;
 }
 
 NS_IMETHODIMP 
