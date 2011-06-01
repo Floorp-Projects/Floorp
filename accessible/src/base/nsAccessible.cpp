@@ -696,16 +696,16 @@ nsAccessible::NativeState()
   PRUint64 state = 0;
   PRBool disabled = PR_FALSE;
   if (mContent->IsElement()) {
-    nsEventStates intrinsicState = mContent->AsElement()->IntrinsicState();
+    nsEventStates elementState = mContent->AsElement()->State();
 
-    if (intrinsicState.HasState(NS_EVENT_STATE_INVALID))
+    if (elementState.HasState(NS_EVENT_STATE_INVALID))
       state |= states::INVALID;
 
-    if (intrinsicState.HasState(NS_EVENT_STATE_REQUIRED))
+    if (elementState.HasState(NS_EVENT_STATE_REQUIRED))
       state |= states::REQUIRED;
 
     disabled = mContent->IsHTML() ? 
-      (intrinsicState.HasState(NS_EVENT_STATE_DISABLED)) :
+      (elementState.HasState(NS_EVENT_STATE_DISABLED)) :
       (mContent->AttrValueIs(kNameSpaceID_None,
                              nsAccessibilityAtoms::disabled,
                              nsAccessibilityAtoms::_true,

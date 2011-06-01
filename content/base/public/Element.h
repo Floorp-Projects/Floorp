@@ -93,20 +93,21 @@ public:
 #endif // MOZILLA_INTERNAL_API
 
   /**
-   * Method to get the _intrinsic_ content state of this element.  This is the
-   * state that is independent of the element's presentation.  To get the full
-   * content state, use State().  See nsEventStates.h for
-   * the possible bits that could be set here.
-   */
-  virtual nsEventStates IntrinsicState() const;
-
-  /**
    * Method to get the full state of this element.  See nsEventStates.h for
    * the possible bits that could be set here.
    */
   nsEventStates State() const {
     return IntrinsicState() | mState;
   }
+
+protected:
+  /**
+   * Method to get the _intrinsic_ content state of this element.  This is the
+   * state that is independent of the element's presentation.  To get the full
+   * content state, use State().  See nsEventStates.h for
+   * the possible bits that could be set here.
+   */
+  virtual nsEventStates IntrinsicState() const;
 
 private:
   // Need to allow the ESM, nsGlobalWindow, and the focus manager to

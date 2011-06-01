@@ -476,7 +476,7 @@ PRBool
 nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
                                         nsStyleContext* aStyleContext)
 {
-  nsEventStates state = aElement->IntrinsicState();
+  nsEventStates state = aElement->State();
   if (IMAGE_OK(state,
                HaveFixedSize(aStyleContext->GetStylePosition()))) {
     // Image is fine; do the image frame thing
@@ -1164,7 +1164,7 @@ static void PaintAltFeedback(nsIFrame* aFrame, nsRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt)
 {
   nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
-  nsEventStates state = f->GetContent()->AsElement()->IntrinsicState();
+  nsEventStates state = f->GetContent()->AsElement()->State();
   f->DisplayAltFeedback(*aCtx,
                         aDirtyRect,
                         IMAGE_OK(state, PR_TRUE)
@@ -1328,7 +1328,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               getter_AddRefs(currentRequest));
     }
 
-    nsEventStates contentState = mContent->AsElement()->IntrinsicState();
+    nsEventStates contentState = mContent->AsElement()->State();
     PRBool imageOK = IMAGE_OK(contentState, PR_TRUE);
 
     nsCOMPtr<imgIContainer> imgCon;
