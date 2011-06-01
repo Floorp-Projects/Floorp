@@ -14,6 +14,11 @@ div.progress-element {
   background-color: #e6e6e6;
 }
 
+div.progress-element.vertical {
+  height: 10em;
+  width: 1em;
+}
+
 div.progress-bar {
   -moz-appearance: progresschunk;
   height: 100%;
