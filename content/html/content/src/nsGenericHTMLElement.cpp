@@ -3553,11 +3553,11 @@ MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
   }
 
   Element *element = aContent->AsElement();
-  nsEventStates stateBefore = element->IntrinsicState();
+  nsEventStates stateBefore = element->State();
 
   element->UpdateEditableState();
 
-  if (aDocument && stateBefore != element->IntrinsicState()) {
+  if (aDocument && stateBefore != element->State()) {
     aDocument->ContentStateChanged(element,
                                    NS_EVENT_STATE_MOZ_READONLY |
                                    NS_EVENT_STATE_MOZ_READWRITE);

@@ -3626,9 +3626,9 @@ nsCSSFrameConstructor::FindObjectData(Element* aElement,
   // cases when the object is broken/suppressed/etc (e.g. a broken image), but
   // we want to treat those cases as TYPE_NULL
   PRUint32 type;
-  if (aElement->IntrinsicState().HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN |
-                                                       NS_EVENT_STATE_USERDISABLED |
-                                                       NS_EVENT_STATE_SUPPRESSED)) {
+  if (aElement->State().HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN |
+                                              NS_EVENT_STATE_USERDISABLED |
+                                              NS_EVENT_STATE_SUPPRESSED)) {
     type = nsIObjectLoadingContent::TYPE_NULL;
   } else {
     nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(aElement));
