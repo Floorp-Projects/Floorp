@@ -434,6 +434,14 @@ protected:
   mozilla::dom::TabParent *GetCrossProcessTarget();
   PRBool IsTargetCrossProcess(nsGUIEvent *aEvent);
 
+private:
+  static inline void DoStateChange(mozilla::dom::Element* aElement,
+                                   nsEventStates aState, PRBool aAddState);
+  static void UpdateAncestorState(nsIContent* aStartNode,
+                                  nsIContent* aStopBefore,
+                                  nsEventStates aState,
+                                  PRBool aAddState);
+
   PRInt32     mLockCursor;
 
   nsWeakFrame mCurrentTarget;
