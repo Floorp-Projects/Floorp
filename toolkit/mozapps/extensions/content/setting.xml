@@ -270,7 +270,7 @@
         </xul:label>
       </xul:vbox>
       <xul:hbox anonid="input-container" class="setting-input">
-        <xul:textbox type="number" anonid="input" xbl:inherits="disabled,emptytext,min,max,increment,hidespinbuttons,wraparound" oninput="inputChanged();" oncommand="inputChanged();"/>
+        <xul:textbox type="number" anonid="input" xbl:inherits="disabled,emptytext,min,max,increment,hidespinbuttons,wraparound" oninput="inputChanged();" onchange="inputChanged();"/>
       </xul:hbox>
     </content>
 
