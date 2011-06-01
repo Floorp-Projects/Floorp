@@ -50,7 +50,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
 #ifdef MOZ_ENABLE_GIO
 #include "nsGIOService.h"
 #include "nsGSettingsService.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGIOService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGIOService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGSettingsService, Init)
 #endif
 #ifdef MOZ_ENABLE_LIBNOTIFY
@@ -107,10 +107,20 @@ static const mozilla::Module::ContractIDEntry kGnomeContracts[] = {
   { NULL }
 };
 
+static nsresult
+InitGType ()
+{
+  g_type_init();
+  return NS_OK;
+}
+
 static const mozilla::Module kGnomeModule = {
   mozilla::Module::kVersion,
   kGnomeCIDs,
-  kGnomeContracts
+  kGnomeContracts,
+  NULL,
+  NULL,
+  InitGType
 };
 
 NSMODULE_DEFN(mozgnome) = &kGnomeModule;
