@@ -48,8 +48,8 @@
 }
 
 ::-moz-selection {
-  background-color: #8db8d8;
-  color: black;
+  background-color: @color_background_highlight@;
+  color: @color_text_highlight@;
 }
 
 menu,
@@ -82,7 +82,7 @@ textbox:not([type="number"]) {
 }
 
 textbox[isempty="true"] {
-  color: @color_text_gray@;
+  color: @color_text_placeholder@;
 }
 
 textbox.search-bar {
@@ -146,7 +146,7 @@ button {
   -moz-appearance: none;
   min-width: @touch_button_minwidth@ !important;
   min-height: @touch_button_small@ !important; /* button size */
-  color: #000;
+  color: @color_text_button@;
   margin: @margin_normal@;
   padding: @padding_xnormal@;
   background-image: url("chrome://browser/skin/images/button-bg.png");
@@ -155,7 +155,7 @@ button {
 }
 
 button[disabled="true"] {
-  color: #aaa !important;
+  color: @color_text_disabled@ !important;
   border: @border_width_tiny@ solid @color_button_border@ !important;
 }
 
@@ -207,7 +207,7 @@ spinbuttons {
   -moz-appearance: none !important;
   min-width: @touch_button_small@ !important; /* button size */
   min-height: @touch_button_small@ !important; /* button size */
-  color: #000;
+  color: @color_text_button@;
   margin: @margin_normal@;
   padding: @padding_xnormal@;
   background-image: url("chrome://browser/skin/images/button-bg.png");
@@ -261,7 +261,7 @@ toolbarbutton[open="true"] {
   background: none !important;
   border: none !important;
   -moz-border-image: none !important;
-  color: white;
+  color: @color_text_default@;
   -moz-box-align: center;
   font-size: @font_small@;
   -moz-box-align: center;
@@ -302,7 +302,7 @@ radio {
   -moz-appearance: none;
   min-width: @touch_button_small@ !important; /* button size */
   min-height: @touch_button_small@ !important; /* button size */
-  color: #000;
+  color: @color_text_button@;
   padding: @padding_xnormal@;
   margin: 0;
   background-image: url("chrome://browser/skin/images/button-bg.png");
@@ -395,7 +395,7 @@ richlistitem description.title {
 
 richlistitem label.normal,
 richlistitem description.normal {
-  color: gray;
+  color: @color_subtext_default@;
   font-size: @font_small@ !important;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -421,8 +421,11 @@ richlistitem[selected="true"] {
   background-color: @color_background_default@;
 }
 
-richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) {
-  background-color: #8db8d8;
+richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]),
+richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) label.normal,
+richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) description.normal {
+  background-color: @color_background_highlight@;
+  color: @color_text_highlight@;
 }
 
 richlistitem.section-header,
@@ -485,7 +488,7 @@ menulist {
   -moz-user-focus: ignore;
   min-width: @touch_button_minwidth@ !important;
   min-height: @touch_button_small@ !important; /* button size */
-  color: #000 !important;
+  color: @color_text_button@ !important;
   margin: @margin_normal@;
   padding: @padding_small@ @padding_xnormal@;
   background-image: url("chrome://browser/skin/images/button-bg.png");
@@ -494,7 +497,7 @@ menulist {
 }
 
 menulist[disabled="true"] {
-  color: #aaa !important;
+  color: @color_text_disabled@ !important;
   border: @border_width_tiny@ solid @color_button_border@ !important;
 }
 
@@ -532,7 +535,7 @@ progressmeter {
 }
 
 .progress-bar {
-  background-color: #8db8d8;
+  background-color: @color_background_highlight@;
 }
 
 /* panels / arrowboxes------------------------------------------------------ */
@@ -687,7 +690,7 @@ dialog {
 }
 
 .panel-row-button[disabled="true"] .toolbarbutton-text {
-  color: #aaa;
+  color: @color_text_disabled@;
 }
 
 .panel-row-button[checked="true"] {

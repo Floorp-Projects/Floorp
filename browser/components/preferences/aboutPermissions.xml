@@ -42,9 +42,9 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
   <binding id="site" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <content>
-      <xul:hbox class="site-container" align="center">
+      <xul:hbox class="site-container" align="center" flex="1">
         <xul:image xbl:inherits="src=favicon" class="site-favicon"/>
-        <xul:label xbl:inherits="value,selected" class="site-domain" crop="end"/>
+        <xul:label xbl:inherits="value,selected" class="site-domain" crop="end" flex="1"/>
       </xul:hbox>
     </content>
   </binding>

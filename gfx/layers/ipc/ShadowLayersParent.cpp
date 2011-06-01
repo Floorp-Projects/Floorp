@@ -148,7 +148,7 @@ bool
 ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                InfallibleTArray<EditReply>* reply)
 {
-  MOZ_LAYERS_LOG(("[ParentSide] recieved txn with %d edits", cset.Length()));
+  MOZ_LAYERS_LOG(("[ParentSide] received txn with %d edits", cset.Length()));
 
   if (mDestroyed || layer_manager()->IsDestroyed()) {
     return true;
