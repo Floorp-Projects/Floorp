@@ -369,6 +369,8 @@ PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 nsNavHistory::nsNavHistory()
 : mBatchLevel(0)
 , mBatchDBTransaction(nsnull)
+, mAsyncThreadStatements(mDBConn)
+, mStatements(mDBConn)
 , mDBPageSize(0)
 , mCurrentJournalMode(JOURNAL_DELETE)
 , mCachedNow(0)
@@ -901,16 +903,6 @@ nsNavHistory::InitAdditionalDBItems()
   nsresult rv = InitTriggers();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // These statements are used by frecency calculation.  Since frecency runs in
-  // the storage async thread, it needs to access them through a const history
-  // object, for thread-safety.  Due to const correctness it's not possible for
-  // the statements getter to lazily initialize them on first use, thus they
-  // are initialized here.
-  (void*)GetStatement(mDBPageInfoForFrecency);
-  (void*)GetStatement(mDBAsyncThreadPageInfoForFrecency);
-  (void*)GetStatement(mDBVisitsForFrecency);
-  (void*)GetStatement(mDBAsyncThreadVisitsForFrecency);
-
   return NS_OK;
 }
 
@@ -1282,34 +1274,6 @@ nsNavHistory::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "WHERE url = :page_url "
   ));
 
-  // NOTE: This is not limited to visits with "visit_type NOT IN (0,4,7,8)"
-  // because otherwise mDBVisitsForFrecency would return no visits
-  // for places with only embed (or undefined) visits.  That would
-  // cause an incorrect frecency, see CalculateFrecencyInternal().
-  // In such a case a place with only EMBED visits would result in a non-zero
-  // frecency.
-  // In case of a temporary or permanent redirect, calculate the frecency as if
-  // the original page was visited.
-  nsCAutoString visitsForFrecencySQL(NS_LITERAL_CSTRING(
-    "SELECT "
-      "ROUND((strftime('%s','now','localtime','utc') - v.visit_date/1000000)/86400), "
-      "COALESCE( "
-        "(SELECT r.visit_type FROM moz_historyvisits r WHERE v.visit_type IN ") +
-          nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
-                                      TRANSITION_REDIRECT_TEMPORARY) +
-          NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
-        "visit_type), "
-      "visit_date "
-    "FROM moz_historyvisits v "
-    "WHERE v.place_id = :page_id "
-    "ORDER BY visit_date DESC LIMIT ") +
-      nsPrintfCString("%d", mNumVisitsForFrecency)
-  );
-
-  RETURN_IF_STMT(mDBVisitsForFrecency, visitsForFrecencySQL);
-
-  RETURN_IF_STMT(mDBAsyncThreadVisitsForFrecency, visitsForFrecencySQL);
-
   RETURN_IF_STMT(mDBUpdateFrecency, NS_LITERAL_CSTRING(
       "UPDATE moz_places "
       "SET frecency = CALCULATE_FRECENCY(:page_id) "
@@ -1321,34 +1285,6 @@ nsNavHistory::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
       "SET hidden = 0 "
       "WHERE id = :page_id AND frecency <> 0"
   ));
-
-  RETURN_IF_STMT(mDBGetPlaceVisitStats, NS_LITERAL_CSTRING(
-    "SELECT typed, hidden, frecency "
-    "FROM moz_places "
-    "WHERE id = :page_id "
-  ));
-
-  // When calculating frecency, we need special information for the page.
-  nsCAutoString pageInfoForFrecencySQL(NS_LITERAL_CSTRING(
-    "SELECT typed, hidden, visit_count, "
-           "(SELECT count(*) FROM moz_historyvisits WHERE place_id = :page_id), "
-           "(SELECT id FROM moz_bookmarks "
-            "WHERE fk = :page_id "
-              "AND parent NOT IN ("
-                "SELECT a.item_id "
-                "FROM moz_items_annos a "
-                "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-                "WHERE n.name = :anno_name"
-              ") "
-            "LIMIT 1), "
-           "(url > 'place:' AND url < 'place;') "
-    "FROM moz_places "
-    "WHERE id = :page_id "
-  ));
-
-  RETURN_IF_STMT(mDBPageInfoForFrecency, pageInfoForFrecencySQL);
-
-  RETURN_IF_STMT(mDBAsyncThreadPageInfoForFrecency, pageInfoForFrecencySQL);
 
 #ifdef MOZ_XUL
   RETURN_IF_STMT(mDBFeedbackIncrease, NS_LITERAL_CSTRING(
@@ -2504,16 +2440,14 @@ nsNavHistory::FixInvalidFrecenciesForExcludedPlaces()
       "SET frecency = 0 WHERE id IN ("
         "SELECT h.id FROM moz_places h "
         "WHERE h.url >= 'place:' AND h.url < 'place;' "
-        "UNION "
+        "UNION ALL "
         // Unvisited child of a livemark
         "SELECT b.fk FROM moz_bookmarks b "
+        "JOIN moz_places h ON b.fk = h.id AND visit_count = 0 AND frecency < 0 "
         "JOIN moz_bookmarks bp ON bp.id = b.parent "
         "JOIN moz_items_annos a ON a.item_id = bp.id "
         "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id "
         "WHERE n.name = :anno_name "
-        "AND b.fk IN( "
-          "SELECT id FROM moz_places WHERE visit_count = 0 AND frecency < 0 "
-        ") "
       ")"),
     getter_AddRefs(dbUpdateStatement));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -7259,19 +7193,25 @@ nsNavHistory::FinalizeStatements() {
     mDBVisitToVisitResult,
     mDBBookmarkToUrlResult,
     mDBUrlToUrlResult,
-    mDBVisitsForFrecency,
     mDBUpdateFrecency,
     mDBUpdateHiddenOnFrecency,
-    mDBGetPlaceVisitStats,
-    mDBPageInfoForFrecency,
-    mDBAsyncThreadPageInfoForFrecency,
-    mDBAsyncThreadVisitsForFrecency,
   };
 
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
     nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // Finalize the statementCaches on the correct threads.
+  mStatements.FinalizeStatements();
+
+  nsRefPtr<FinalizeStatementCacheProxy<mozIStorageStatement> > event =
+    new FinalizeStatementCacheProxy<mozIStorageStatement>(
+        mAsyncThreadStatements, NS_ISUPPORTS_CAST(nsINavHistoryService*, this));
+  nsCOMPtr<nsIEventTarget> target = do_GetInterface(mDBConn);
+  NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
