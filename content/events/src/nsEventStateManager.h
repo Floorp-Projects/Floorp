@@ -120,13 +120,6 @@ public:
   already_AddRefed<nsIContent> GetEventTargetContent(nsEvent* aEvent);
 
   /**
-   * Returns the content state of aContent.
-   * @param aContent      The control whose state is requested.
-   * @return              The content state.
-   */
-  virtual nsEventStates GetContentState(nsIContent *aContent);
-
-  /**
    * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
    * @param aContent Content which has changed states
    * @param aState   Corresponding state flags such as NS_EVENT_STATE_FOCUS
