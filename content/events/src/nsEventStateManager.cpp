@@ -4240,12 +4240,6 @@ nsEventStateManager::GetContentState(nsIContent *aContent)
       state |= NS_EVENT_STATE_FOCUSRING;
     }
   }
-  if (aContent == mDragOverContent) {
-    state |= NS_EVENT_STATE_DRAGOVER;
-  }
-  if (aContent == mURLTargetContent) {
-    state |= NS_EVENT_STATE_URLTARGET;
-  }
   return state;
 }
 
@@ -4302,6 +4296,16 @@ nsEventStateManager::DoStateChange(Element* aElement, nsEventStates aState,
     aElement->AddStates(aState);
   } else {
     aElement->RemoveStates(aState);
+  }
+}
+
+/* static */
+inline void
+nsEventStateManager::DoStateChange(nsIContent* aContent, nsEventStates aState,
+                                   PRBool aStateAdded)
+{
+  if (aContent->IsElement()) {
+    DoStateChange(aContent->AsElement(), aState, aStateAdded);
   }
 }
 
@@ -4440,10 +4444,10 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
         UpdateAncestorState(notifyContent1, commonAncestor, aState,
                             content1StateSet);
       } else {
-        mDocument->ContentStateChanged(notifyContent1, aState);
         if (notifyContent2) {
-          mDocument->ContentStateChanged(notifyContent2, aState);
+          DoStateChange(notifyContent2, aState, PR_FALSE);
         }
+        DoStateChange(notifyContent1, aState, content1StateSet);
       }
     }
   }
