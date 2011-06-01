@@ -99,12 +99,6 @@ nsHTMLStyleSheet::HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
  
 NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::GenericTableRule, nsIStyleRule)
 
-/* virtual */ void
-nsHTMLStyleSheet::GenericTableRule::MapRuleInfoInto(nsRuleData* aRuleData)
-{
-  // Nothing to do.
-}
-
 #ifdef DEBUG
 /* virtual */ void
 nsHTMLStyleSheet::GenericTableRule::List(FILE* out, PRInt32 aIndent) const
@@ -121,6 +115,19 @@ nsHTMLStyleSheet::TableTHRule::MapRuleInfoInto(nsRuleData* aRuleData)
       textAlign->SetIntValue(NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT,
                              eCSSUnit_Enumerated);
     }
+  }
+}
+
+/* virtual */ void
+nsHTMLStyleSheet::TableQuirkColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
+    nsCSSValue* color = aRuleData->ValueForColor();
+    // We do not check UseDocumentColors() here, because we want to
+    // use the body color no matter what.
+    if (color->GetUnit() == eCSSUnit_Null)
+      color->SetIntValue(NS_STYLE_COLOR_INHERIT_FROM_BODY,
+                         eCSSUnit_Enumerated);
   }
 }
 
@@ -183,8 +190,7 @@ nsresult
 nsHTMLStyleSheet::Init()
 {
   mTableTHRule = new TableTHRule();
-  if (!mTableTHRule)
-    return NS_ERROR_OUT_OF_MEMORY;
+  mTableQuirkColorRule = new TableQuirkColorRule();
   return NS_OK;
 }
 
@@ -195,22 +201,6 @@ nsHTMLStyleSheet::~nsHTMLStyleSheet()
 }
 
 NS_IMPL_ISUPPORTS2(nsHTMLStyleSheet, nsIStyleSheet, nsIStyleRuleProcessor)
-
-static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
-{
-  nsIPresShell *shell = aPresContext->PresShell();
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(shell->GetDocument());
-  if (!htmlDoc)
-    return NS_ERROR_FAILURE;
-  nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
-  if (!bodyContent)
-    return NS_ERROR_FAILURE;
-  nsIFrame *bodyFrame = bodyContent->GetPrimaryFrame();
-  if (!bodyFrame)
-    return NS_ERROR_FAILURE;
-  *aColor = bodyFrame->GetStyleColor()->mColor;
-  return NS_OK;
-}
 
 /* virtual */ void
 nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
@@ -250,19 +240,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
     }
     else if (tag == nsGkAtoms::table) {
       if (aData->mTreeMatchContext.mCompatMode == eCompatibility_NavQuirks) {
-        nscolor bodyColor;
-        nsresult rv =
-          GetBodyColor(ruleWalker->CurrentNode()->GetPresContext(),
-                       &bodyColor);
-        if (NS_SUCCEEDED(rv) &&
-            (!mDocumentColorRule || bodyColor != mDocumentColorRule->mColor)) {
-          mDocumentColorRule = new HTMLColorRule();
-          if (mDocumentColorRule) {
-            mDocumentColorRule->mColor = bodyColor;
-          }
-        }
-        if (mDocumentColorRule)
-          ruleWalker->Forward(mDocumentColorRule);
+        ruleWalker->Forward(mTableQuirkColorRule);
       }
     }
   } // end html element
@@ -447,7 +425,6 @@ nsHTMLStyleSheet::Reset(nsIURI* aURL)
   mLinkRule          = nsnull;
   mVisitedRule       = nsnull;
   mActiveRule        = nsnull;
-  mDocumentColorRule = nsnull;
 
   if (mMappedAttrTable.ops) {
     PL_DHashTableFinish(&mMappedAttrTable);

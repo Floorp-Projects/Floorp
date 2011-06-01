@@ -239,6 +239,8 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   mFocusBackgroundColor = mBackgroundColor;
   mFocusRingWidth = 1;
 
+  mBodyTextColor = mDefaultColor;
+
   if (aType == eContext_Galley) {
     mMedium = nsGkAtoms::screen;
   } else {
@@ -713,6 +715,9 @@ nsPresContext::GetUserPreferences()
 
   mFocusRingStyle =
     Preferences::GetInt("browser.display.focus_ring_style", mFocusRingStyle);
+
+  mBodyTextColor = mDefaultColor;
+  
   // * use fonts?
   mUseDocumentFonts =
     Preferences::GetInt("browser.display.use_document_fonts") != 0;
