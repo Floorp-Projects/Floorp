@@ -1008,11 +1008,6 @@
 #define ENABLE_JIT 0
 #endif
 
-/* JIT is not implemented for 64 bit on MSVC */
-#if !defined(ENABLE_JIT) && WTF_COMPILER_MSVC && WTF_CPU_X86_64
-#define ENABLE_JIT 0
-#endif
-
 /* The JIT is enabled by default on all x86, x64-64, ARM & MIPS platforms. */
 #if !defined(ENABLE_JIT) \
     && (WTF_CPU_X86 || WTF_CPU_X86_64 || WTF_CPU_ARM || WTF_CPU_MIPS) \
