@@ -1514,6 +1514,7 @@ GCMarker::GCMarker(JSContext *cx)
   : color(0),
     unmarkedArenaStackTop(MarkingDelay::stackBottom()),
     objStack(cx->runtime->gcMarkStackObjs, sizeof(cx->runtime->gcMarkStackObjs)),
+    ropeStack(cx->runtime->gcMarkStackRopes, sizeof(cx->runtime->gcMarkStackRopes)),
     xmlStack(cx->runtime->gcMarkStackXMLs, sizeof(cx->runtime->gcMarkStackXMLs)),
     largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges))
 {

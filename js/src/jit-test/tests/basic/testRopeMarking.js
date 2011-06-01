@@ -1,10 +1,13 @@
-/* Bug 614653 - This test .2 seconds with the fix, 20 minutes without. */
 for (var i = 0; i < 10; ++i) {
     var arr = [];
     var s = "abcdefghijklmnop";
-    for (var j = 0; j < 50000; ++j) {
+    for (var j = 0; j < 5000; ++j) {
         s = "<" + s + ">";
         arr.push(s);
+    }
+    gc();
+    for (var j = 0; j < 5000; ++j) {
+        arr[j].search("a");
     }
     gc();
 }
