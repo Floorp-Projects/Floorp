@@ -53,12 +53,13 @@
 namespace mozilla {
 namespace dom {
 
-Link::Link()
+Link::Link(Element *aElement)
   : mLinkState(defaultState)
   , mRegistered(false)
-  , mContent(NULL)
+  , mElement(aElement)
   , mHistory(services::GetHistoryService())
 {
+  NS_ABORT_IF_FALSE(mElement, "Must have an element");
 }
 
 Link::~Link()
@@ -94,15 +95,15 @@ Link::SetLinkState(nsLinkState aState)
   mRegistered = false;
 
   // Notify the document that our visited state has changed.
-  nsIContent *content = Content();
-  nsIDocument *doc = content->GetCurrentDoc();
+  Element *element = mElement;
+  nsIDocument *doc = element->GetCurrentDoc();
   NS_ASSERTION(doc, "Registered but we have no document?!");
   nsEventStates newLinkState = LinkState();
   NS_ASSERTION(newLinkState == NS_EVENT_STATE_VISITED ||
                newLinkState == NS_EVENT_STATE_UNVISITED,
                "Unexpected state obtained from LinkState()!");
   nsAutoScriptBlocker scriptBlocker;
-  doc->ContentStateChanged(content, oldLinkState ^ newLinkState);
+  doc->ContentStateChanged(element, oldLinkState ^ newLinkState);
 }
 
 nsEventStates
@@ -113,8 +114,8 @@ Link::LinkState() const
   Link *self = const_cast<Link *>(this);
 
   // If we are not in the document, default to not visited.
-  nsIContent *content = self->Content();
-  if (!content->IsInDoc()) {
+  Element *element = self->mElement;
+  if (!element->IsInDoc()) {
     self->mLinkState = eLinkState_Unvisited;
   }
 
@@ -137,7 +138,7 @@ Link::LinkState() const
       self->mLinkState = eLinkState_Unvisited;
 
       // And make sure we are in the document's link map.
-      nsIDocument *doc = content->GetCurrentDoc();
+      nsIDocument *doc = element->GetCurrentDoc();
       if (doc) {
         doc->AddStyleRelevantLink(self);
       }
@@ -168,11 +169,11 @@ Link::GetURI() const
 
   // Otherwise obtain it.
   Link *self = const_cast<Link *>(this);
-  nsIContent *content = self->Content();
-  uri = content->GetHrefURI();
+  Element *element = self->mElement;
+  uri = element->GetHrefURI();
 
   // We want to cache the URI if the node is in the document.
-  if (uri && content->IsInDoc()) {
+  if (uri && element->IsInDoc()) {
     mCachedURI = uri;
   }
 
@@ -467,10 +468,10 @@ Link::ResetLinkState(bool aNotify)
     return;
   }
 
-  nsIContent *content = Content();
+  Element *element = mElement;
 
   // Tell the document to forget about this link if we were a link before.
-  nsIDocument *doc = content->GetCurrentDoc();
+  nsIDocument *doc = element->GetCurrentDoc();
   if (doc && mLinkState != eLinkState_NotLink) {
     doc->ForgetLink(this);
   }
@@ -491,7 +492,7 @@ Link::ResetLinkState(bool aNotify)
   if (aNotify && doc) {
     nsEventStates changedState = NS_EVENT_STATE_VISITED ^ NS_EVENT_STATE_UNVISITED;
     nsAutoScriptBlocker scriptBlocker;
-    doc->ContentStateChanged(content, changedState);
+    doc->ContentStateChanged(element, changedState);
   }
 }
 
@@ -532,20 +533,8 @@ Link::SetHrefAttribute(nsIURI *aURI)
 
   nsCAutoString href;
   (void)aURI->GetSpec(href);
-  (void)Content()->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
-                           NS_ConvertUTF8toUTF16(href), PR_TRUE);
-}
-
-nsIContent *
-Link::Content()
-{
-  if (NS_LIKELY(mContent)) {
-    return mContent;
-  }
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(this));
-  NS_ABORT_IF_FALSE(content, "This must be able to QI to nsIContent!");
-  return mContent = content;
+  (void)mElement->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
+                          NS_ConvertUTF8toUTF16(href), PR_TRUE);
 }
 
 } // namespace dom

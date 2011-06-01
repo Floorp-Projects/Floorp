@@ -128,7 +128,8 @@ public:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
 nsHTMLAnchorElement::nsHTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo),
+    Link(this)
 {
 }
 
