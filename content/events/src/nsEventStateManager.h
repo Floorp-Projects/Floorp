@@ -437,6 +437,8 @@ protected:
 private:
   static inline void DoStateChange(mozilla::dom::Element* aElement,
                                    nsEventStates aState, PRBool aAddState);
+  static inline void DoStateChange(nsIContent* aContent, nsEventStates aState,
+                                   PRBool aAddState);
   static void UpdateAncestorState(nsIContent* aStartNode,
                                   nsIContent* aStopBefore,
                                   nsEventStates aState,
