@@ -246,10 +246,8 @@ ContextCallback(JSContext *cx, uintN operation)
 
 xpc::CompartmentPrivate::~CompartmentPrivate()
 {
-    if (waiverWrapperMap)
-        delete waiverWrapperMap;
-    if (expandoMap)
-        delete expandoMap;
+    delete waiverWrapperMap;
+    delete expandoMap;
 }
 
 static JSBool
