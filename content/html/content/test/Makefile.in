@@ -240,6 +240,7 @@ _TEST_FILES = \
 		test_bug587469.html \
 		test_bug598643.html \
 		test_bug596350.html \
+		test_bug598833-1.html \
 		test_bug600155.html \
 		test_bug556007.html \
 		test_bug606817.html \
