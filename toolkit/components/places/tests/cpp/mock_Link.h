@@ -53,7 +53,7 @@ public:
 
   mock_Link(void (*aHandlerFunction)(nsLinkState),
             bool aRunNextTest = true)
-  : mozilla::dom::Link()
+  : mozilla::dom::Link(nsnull)
   , mHandler(aHandlerFunction)
   , mRunNextTest(aRunNextTest)
   {
@@ -89,10 +89,10 @@ NS_IMPL_ISUPPORTS1(
 namespace mozilla {
 namespace dom {
 
-Link::Link()
+Link::Link(Element* aElement)
 : mLinkState(mozilla::dom::Link::defaultState)
 , mRegistered(false)
-, mContent(NULL)
+, mElement(aElement)
 {
 }
 
