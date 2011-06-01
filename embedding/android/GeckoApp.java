@@ -161,10 +161,17 @@ abstract public class GeckoApp
                 }
 
                 // and then fire us up
-                String env = i.getStringExtra("env0");
-                GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
-                                       i.getStringExtra("args"),
-                                       i.getDataString());
+                try {
+                    String env = i.getStringExtra("env0");
+                    GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
+                                           i.getStringExtra("args"),
+                                           i.getDataString());
+                } catch (Exception e) {
+                    Log.e("GeckoApp", "top level exception", e);
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    GeckoAppShell.reportJavaCrash(sw.toString());
+                }
             }
         }.start();
         return true;
@@ -176,6 +183,19 @@ abstract public class GeckoApp
     {
         mAppContext = this;
         mMainHandler = new Handler();
+
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                try {
+                    Looper.loop();
+                } catch (Exception e) {
+                    Log.e("GeckoApp", "top level exception", e);
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    GeckoAppShell.reportJavaCrash(sw.toString());
+                }
+            }
+        });
 
         SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
         String localeCode = settings.getString(getPackageName() + ".locale", "");
