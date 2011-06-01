@@ -1212,6 +1212,12 @@ var AddonManager = {
   // Indicates that the Addon should update automatically.
   AUTOUPDATE_ENABLE: 2,
 
+  // Constants for how Addon options should be shown.
+  // Options will be opened in a new window
+  OPTIONS_TYPE_DIALOG: 1,
+  // Options will be displayed within the AM detail view
+  OPTIONS_TYPE_INLINE: 2,
+
   getInstallForURL: function AM_getInstallForURL(aUrl, aCallback, aMimetype,
                                                  aHash, aName, aIconURL,
                                                  aVersion, aLoadGroup) {

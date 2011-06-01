@@ -118,7 +118,7 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
-const DB_SCHEMA                       = 4;
+const DB_SCHEMA                       = 5;
 const REQ_VERSION                     = 2;
 
 #ifdef MOZ_COMPATABILITY_NIGHTLY
@@ -131,8 +131,8 @@ const PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE + "." +
 
 // Properties that exist in the install manifest
 const PROP_METADATA      = ["id", "version", "type", "internalName", "updateURL",
-                            "updateKey", "optionsURL", "aboutURL", "iconURL",
-                            "icon64URL"];
+                            "updateKey", "optionsURL", "optionsType", "aboutURL",
+                            "iconURL", "icon64URL"];
 const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
 const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
 const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
@@ -700,11 +700,17 @@ function loadManifestFromRDF(aUri, aStream) {
   // Only read the bootstrapped property for extensions
   if (addon.type == "extension") {
     addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
+    if (addon.optionsType &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_DIALOG &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE) {
+      throw new Error("Install manifest specifies unknown type: " + addon.optionsType);
+    }
   }
   else {
-    // Only extensions are allowed to provide an optionsURL or aboutURL. For
+    // Only extensions are allowed to provide an optionsURL, optionsType or aboutURL. For
     // all other types they are silently ignored
     addon.optionsURL = null;
+    addon.optionsType = null;
     addon.aboutURL = null;
 
     if (addon.type == "theme") {
@@ -3675,11 +3681,11 @@ var XPIProvider = {
 };
 
 const FIELDS_ADDON = "internal_id, id, location, version, type, internalName, " +
-                     "updateURL, updateKey, optionsURL, aboutURL, iconURL, " +
-                     "icon64URL, defaultLocale, visible, active, userDisabled, " +
-                     "appDisabled, pendingUninstall, descriptor, installDate, " +
-                     "updateDate, applyBackgroundUpdates, bootstrap, skinnable, " +
-                     "size, sourceURI, releaseNotesURI, softDisabled";
+                     "updateURL, updateKey, optionsURL, optionsType, aboutURL, " +
+                     "iconURL, icon64URL, defaultLocale, visible, active, " +
+                     "userDisabled, appDisabled, pendingUninstall, descriptor, " +
+                     "installDate, updateDate, applyBackgroundUpdates, bootstrap, " +
+                     "skinnable, size, sourceURI, releaseNotesURI, softDisabled";
 
 /**
  * A helper function to log an SQL error.
@@ -3819,8 +3825,8 @@ var XPIDatabase = {
 
     addAddonMetadata_addon: "INSERT INTO addon VALUES (NULL, :id, :location, " +
                             ":version, :type, :internalName, :updateURL, " +
-                            ":updateKey, :optionsURL, :aboutURL, :iconURL, " +
-                            ":icon64URL, :locale, :visible, :active, " +
+                            ":updateKey, :optionsURL, :optionsType, :aboutURL, " +
+                            ":iconURL, :icon64URL, :locale, :visible, :active, " +
                             ":userDisabled, :appDisabled, :pendingUninstall, " +
                             ":descriptor, :installDate, :updateDate, " +
                             ":applyBackgroundUpdates, :bootstrap, :skinnable, " +
@@ -4328,9 +4334,9 @@ var XPIDatabase = {
                                   "internal_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                                   "id TEXT, location TEXT, version TEXT, " +
                                   "type TEXT, internalName TEXT, updateURL TEXT, " +
-                                  "updateKey TEXT, optionsURL TEXT, aboutURL TEXT, " +
-                                  "iconURL TEXT, icon64URL TEXT, " +
-                                  "defaultLocale INTEGER, " +
+                                  "updateKey TEXT, optionsURL TEXT, " +
+                                  "optionsType TEXT, aboutURL TEXT, iconURL TEXT, " +
+                                  "icon64URL TEXT, defaultLocale INTEGER, " +
                                   "visible INTEGER, active INTEGER, " +
                                   "userDisabled INTEGER, appDisabled INTEGER, " +
                                   "pendingUninstall INTEGER, descriptor TEXT, " +
@@ -6806,11 +6812,9 @@ function AddonWrapper(aAddon) {
     });
   }, this);
 
-  ["optionsURL", "aboutURL"].forEach(function(aProp) {
-    this.__defineGetter__(aProp, function() {
-      return this.isActive ? aAddon[aProp] : null;
-    });
-  }, this);
+  this.__defineGetter__("aboutURL", function() {
+    return this.isActive ? aAddon["aboutURL"] : null;
+  });
 
   ["installDate", "updateDate"].forEach(function(aProp) {
     this.__defineGetter__(aProp, function() new Date(aAddon[aProp]));
@@ -6825,21 +6829,46 @@ function AddonWrapper(aAddon) {
     });
   }, this);
 
-  // Maps iconURL and icon64URL to the properties of the same name or icon.png
-  // and icon64.png in the add-on's files.
-  ["icon", "icon64"].forEach(function(aProp) {
+  // Maps iconURL, icon64URL and optionsURL to the properties of the same name
+  // or icon.png, icon64.png and options.xul in the add-on's files.
+  ["icon", "icon64", "options"].forEach(function(aProp) {
     this.__defineGetter__(aProp + "URL", function() {
       if (this.isActive && aAddon[aProp + "URL"])
         return aAddon[aProp + "URL"];
 
-      if (this.hasResource(aProp + ".png"))
-        return this.getResourceURI(aProp + ".png").spec;
+      switch (aProp) {
+        case "icon":
+        case "icon64":
+          if (this.hasResource(aProp + ".png"))
+            return this.getResourceURI(aProp + ".png").spec;
+          break;
+        case "options":
+          if (this.isActive && this.hasResource(aProp + ".xul"))
+            return this.getResourceURI(aProp + ".xul").spec;
+          break;
+      }
 
       if (aAddon._repositoryAddon)
         return aAddon._repositoryAddon[aProp + "URL"];
 
       return null;
     }, this);
+  }, this);
+
+  this.__defineGetter__("optionsType", function() {
+    if (!this.isActive)
+      return null;
+
+    if (aAddon.optionsType)
+      return aAddon.optionsType;
+
+    if (this.hasResource("options.xul"))
+      return AddonManager.OPTIONS_TYPE_INLINE;
+
+    if (this.optionsURL)
+      return AddonManager.OPTIONS_TYPE_DIALOG;
+
+    return null;
   }, this);
 
   PROP_LOCALE_SINGLE.forEach(function(aProp) {
