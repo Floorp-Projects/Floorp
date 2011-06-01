@@ -894,16 +894,23 @@
   margin-bottom: 2em;
 }
 
+#detail-grid > columns > column:first-child {
+  max-width: 25em;
+}
+
 .detail-row[first-row="true"],
-.detail-row-complex[first-row="true"] {
+.detail-row-complex[first-row="true"],
+setting[first-row="true"] {
   border-top: none;
 }
 
 .detail-row,
-.detail-row-complex {
+.detail-row-complex,
+setting {
   border-top: 2px solid;
   -moz-border-top-colors: rgba(28, 31, 37, 0.2) rgba(255, 255, 255, 0.2);
   -moz-box-align: center;
+  min-height: 30px;
 }
 
 .detail-row-value {
@@ -917,6 +924,25 @@
 #detail-view[active="false"]:not([pending]):not([notification]) {
   background-image: -moz-linear-gradient(rgba(135, 135, 135, 0.1),
                                          rgba(135, 135, 135, 0));
+}
+
+setting[first-row="true"] {
+  margin-top: 2em;
+}
+
+setting {
+  display: -moz-grid-line;
+}
+
+.preferences-description {
+  font-size: 90.9%;
+  color: graytext;
+  margin-top: -2px;
+  -moz-margin-start: 2em;
+}
+
+setting[type="string"] > .setting-input > textbox {
+  -moz-box-flex: 1;
 }
 
 
@@ -1082,7 +1108,9 @@
 
 /*** buttons ***/
 
-.addon-control {
+.addon-control,
+setting[type="control"] button,
+setting[type="control"] menulist {
   -moz-appearance: none;
   padding: 1px 4px;
   min-width: 60px;
@@ -1099,7 +1127,9 @@
   display: none;
 }
 
-.addon-control:active:hover {
+.addon-control:active:hover,
+setting[type="control"] button:hover,
+setting[type="control"] menulist:hover {
   box-shadow: inset 0 1px 3px rgba(0,0,0,.2), 0 1px rgba(255,255,255,0.25);
   background-image: -moz-linear-gradient(rgba(45,54,71,0.3), rgba(45,54,71,0.1));
   border-color: rgba(60,73,97,0.7);
