@@ -793,6 +793,16 @@ Element::IntrinsicState() const
 }
 
 void
+Element::NotifyStateChange(nsEventStates aStates)
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    nsAutoScriptBlocker scriptBlocker;
+    doc->ContentStateChanged(this, aStates);
+  }
+}
+
+void
 nsIContent::UpdateEditableState()
 {
   nsIContent *parent = GetParent();

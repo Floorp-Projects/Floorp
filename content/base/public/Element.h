@@ -41,6 +41,9 @@
 #define mozilla_dom_Element_h__
 
 #include "nsIContent.h"
+#include "nsEventStates.h"
+
+class nsEventStateManager;
 
 // Element-specific flags
 enum {
@@ -90,10 +93,42 @@ public:
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the
    * state that is independent of the element's presentation.  To get the full
-   * content state, use nsEventStateManager.  See nsEventStates.h for
+   * content state, use State().  See nsEventStates.h for
    * the possible bits that could be set here.
    */
   virtual nsEventStates IntrinsicState() const;
+
+  /**
+   * Method to get the full state of this element.  See nsEventStates.h for
+   * the possible bits that could be set here.
+   */
+  nsEventStates State() const {
+    return IntrinsicState() | mState;
+  }
+
+private:
+  // Need to allow the ESM to set our state
+  friend class ::nsEventStateManager;
+
+  void NotifyStateChange(nsEventStates aStates);
+
+  // Methods for the ESM to manage state bits.  These will handle
+  // setting up script blockers when they notify, so no need to do it
+  // in the callers unless desired.
+  void AddStates(nsEventStates aStates) {
+    NS_PRECONDITION(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
+                    "Should only be adding ESM-managed states here");
+    mState |= aStates;
+    NotifyStateChange(aStates);
+  }
+  void RemoveStates(nsEventStates aStates) {
+    NS_PRECONDITION(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
+                    "Should only be removing ESM-managed states here");
+    mState &= ~aStates;
+    NotifyStateChange(aStates);
+  }
+
+  nsEventStates mState;
 };
 
 } // namespace dom
