@@ -2913,11 +2913,19 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
   NS_PRECONDITION(!aBindToTree || !aFormIdElement,
                   "aFormIdElement shouldn't be set if aBindToTree is true!");
 
-  bool hadForm = mForm;
-
   if (!aBindToTree) {
+    PRBool wasDefaultSubmit = mForm && mForm->IsDefaultSubmitElement(this);
     ClearForm(PR_TRUE);
+    if (wasDefaultSubmit) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        nsAutoScriptBlocker scriptBlocker;
+        doc->ContentStateChanged(this, NS_EVENT_STATE_DEFAULT);
+      }
+    }
   }
+
+  bool hadForm = mForm;
 
   if (!mForm) {
     // If @form is set, we have to use that to find the form.
