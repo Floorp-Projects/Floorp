@@ -24,6 +24,7 @@
  *  Ryan Flint <rflint@mozilla.com>
  *  Rob Campbell <rcampbell@mozilla.com>
  *  Mihai Sucan <mihai.sucan@gmail.com>
+ *  Panos Astithas <past@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +43,8 @@
 let Cu = Components.utils;
 let Ci = Components.interfaces;
 let Cc = Components.classes;
+// The maximum allowed number of concurrent timers per page.
+const MAX_PAGE_TIMERS = 10000;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -56,6 +59,9 @@ ConsoleAPI.prototype = {
 
   // nsIDOMGlobalPropertyInitializer
   init: function CA_init(aWindow) {
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, "inner-window-destroyed", false);
+
     let outerID;
     let innerID;
     try {
@@ -103,6 +109,12 @@ ConsoleAPI.prototype = {
       groupEnd: function CA_groupEnd() {
         self.notifyObservers(outerID, innerID, "groupEnd", arguments);
       },
+      time: function CA_time() {
+        self.notifyObservers(outerID, innerID, "time", self.startTimer(innerID, arguments[0]));
+      },
+      timeEnd: function CA_timeEnd() {
+        self.notifyObservers(outerID, innerID, "timeEnd", self.stopTimer(innerID, arguments[0]));
+      },
       __exposedProps__: {
         log: "r",
         info: "r",
@@ -113,7 +125,9 @@ ConsoleAPI.prototype = {
         dir: "r",
         group: "r",
         groupCollapsed: "r",
-        groupEnd: "r"
+        groupEnd: "r",
+        time: "r",
+        timeEnd: "r"
       }
     };
 
@@ -135,6 +149,8 @@ ConsoleAPI.prototype = {
       group: genPropDesc('group'),
       groupCollapsed: genPropDesc('groupCollapsed'),
       groupEnd: genPropDesc('groupEnd'),
+      time: genPropDesc('time'),
+      timeEnd: genPropDesc('timeEnd'),
       __noSuchMethod__: { enumerable: true, configurable: true, writable: true,
                           value: function() {} },
       __mozillaConsole__: { value: true }
@@ -144,6 +160,18 @@ ConsoleAPI.prototype = {
     Cu.makeObjectPropsNormal(contentObj);
 
     return contentObj;
+  },
+
+  observe: function CA_observe(aSubject, aTopic, aData)
+  {
+    if (aTopic == "xpcom-shutdown") {
+      Services.obs.removeObserver(this, "xpcom-shutdown");
+      Services.obs.removeObserver(this, "inner-window-destroyed");
+    }
+    else if (aTopic == "inner-window-destroyed") {
+      let innerWindowID = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
+      delete this.timerRegistry[innerWindowID + ""];
+    }
   },
 
   /**
@@ -254,6 +282,76 @@ ConsoleAPI.prototype = {
    **/
   beginGroup: function CA_beginGroup() {
     return Array.prototype.join.call(arguments[0], " ");
+  },
+
+  /*
+   * A registry of started timers. It contains a map of pages (defined by their
+   * inner window IDs) to timer maps. Timer maps are key-value pairs of timer
+   * names to timer start times, for all timers defined in that page. Timer
+   * names are prepended with the inner window ID in order to avoid conflicts
+   * with Object.prototype functions.
+   */
+  timerRegistry: {},
+
+  /**
+   * Create a new timer by recording the current time under the specified name.
+   *
+   * @param number aWindowId
+   *        The inner ID of the window.
+   * @param string aName
+   *        The name of the timer.
+   * @return object
+   *        The name property holds the timer name and the started property
+   *        holds the time the timer was started. In case of error, it returns
+   *        an object with the single property "error" that contains the key
+   *        for retrieving the localized error message.
+   **/
+  startTimer: function CA_startTimer(aWindowId, aName) {
+    if (!aName) {
+        return;
+    }
+    let innerID = aWindowId + "";
+    if (!this.timerRegistry[innerID]) {
+        this.timerRegistry[innerID] = {};
+    }
+    let pageTimers = this.timerRegistry[innerID];
+    if (Object.keys(pageTimers).length > MAX_PAGE_TIMERS - 1) {
+        return { error: "maxTimersExceeded" };
+    }
+    let key = aWindowId + "-" + aName.toString();
+    if (!pageTimers[key]) {
+        pageTimers[key] = Date.now();
+    }
+    return { name: aName, started: pageTimers[key] };
+  },
+
+  /**
+   * Stop the timer with the specified name and retrieve the elapsed time.
+   *
+   * @param number aWindowId
+   *        The inner ID of the window.
+   * @param string aName
+   *        The name of the timer.
+   * @return object
+   *        The name property holds the timer name and the duration property
+   *        holds the number of milliseconds since the timer was started.
+   **/
+  stopTimer: function CA_stopTimer(aWindowId, aName) {
+    if (!aName) {
+        return;
+    }
+    let innerID = aWindowId + "";
+    let pageTimers = this.timerRegistry[innerID];
+    if (!pageTimers) {
+        return;
+    }
+    let key = aWindowId + "-" + aName.toString();
+    if (!pageTimers[key]) {
+        return;
+    }
+    let duration = Date.now() - pageTimers[key];
+    delete pageTimers[key];
+    return { name: aName, duration: duration };
   }
 };
 

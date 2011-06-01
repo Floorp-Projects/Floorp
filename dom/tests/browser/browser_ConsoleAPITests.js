@@ -124,7 +124,7 @@ function startGroupTest() {
   };
   let button = gWindow.document.getElementById("test-groups");
   ok(button, "found #test-groups button");
-  EventUtils.synthesizeMouse(button, 2, 2, {}, gWindow);
+  EventUtils.synthesizeMouseAtCenter(button, {}, gWindow);
 }
 
 function testConsoleGroup(aMessageObject) {
@@ -137,7 +137,7 @@ function testConsoleGroup(aMessageObject) {
      "expected level received");
 
   is(aMessageObject.functionName, "testGroups", "functionName matches");
-  ok(aMessageObject.lineNumber >= 32 && aMessageObject.lineNumber <= 34,
+  ok(aMessageObject.lineNumber >= 45 && aMessageObject.lineNumber <= 47,
      "lineNumber matches");
   if (aMessageObject.level == "groupCollapsed") {
     ok(aMessageObject.arguments == "a group", "groupCollapsed arguments matches");
@@ -150,9 +150,7 @@ function testConsoleGroup(aMessageObject) {
   }
 
   if (aMessageObject.level == "groupEnd") {
-    // Test finished
-    ConsoleObserver.destroy();
-    finish();
+    startTimeTest();
   }
 }
 
@@ -167,7 +165,7 @@ function startTraceTest() {
 
   let button = gWindow.document.getElementById("test-trace");
   ok(button, "found #test-trace button");
-  EventUtils.synthesizeMouse(button, 2, 2, {}, gWindow);
+  EventUtils.synthesizeMouseAtCenter(button, {}, gWindow);
 }
 
 function startLocationTest() {
@@ -188,7 +186,7 @@ function startLocationTest() {
 
   let button = gWindow.document.getElementById("test-location");
   ok(button, "found #test-location button");
-  EventUtils.synthesizeMouse(button, 2, 2, {}, gWindow);
+  EventUtils.synthesizeMouseAtCenter(button, {}, gWindow);
 }
 
 function expect(level) {
@@ -250,6 +248,114 @@ function consoleAPISanityTest() {
   ok(win.console.group, "console.group is here");
   ok(win.console.groupCollapsed, "console.groupCollapsed is here");
   ok(win.console.groupEnd, "console.groupEnd is here");
+  ok(win.console.time, "console.time is here");
+  ok(win.console.timeEnd, "console.timeEnd is here");
+}
+
+function startTimeTest() {
+  // Reset the observer function to cope with the fabricated test data.
+  ConsoleObserver.observe = function CO_observe(aSubject, aTopic, aData) {
+    try {
+      testConsoleTime(aSubject.wrappedJSObject);
+    } catch (ex) {
+      // XXX Exceptions in this function currently aren't reported, because of
+      // some XPConnect weirdness, so report them manually
+      ok(false, "Exception thrown in CO_observe: " + ex);
+    }
+  };
+  gLevel = "time";
+  gArgs = [
+    {filename: TEST_URI, lineNumber: 23, functionName: "startTimer"},
+  ];
+
+  let button = gWindow.document.getElementById("test-time");
+  ok(button, "found #test-time button");
+  EventUtils.synthesizeMouseAtCenter(button, {}, gWindow);
+}
+
+function testConsoleTime(aMessageObject) {
+  let messageWindow = getWindowByWindowId(aMessageObject.ID);
+  is(messageWindow, gWindow, "found correct window by window ID");
+
+  is(aMessageObject.level, gLevel, "expected level received");
+
+  is(aMessageObject.filename, gArgs[0].filename, "filename matches");
+  is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
+  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
+
+  startTimeEndTest();
+}
+
+function startTimeEndTest() {
+  // Reset the observer function to cope with the fabricated test data.
+  ConsoleObserver.observe = function CO_observe(aSubject, aTopic, aData) {
+    try {
+      testConsoleTimeEnd(aSubject.wrappedJSObject);
+    } catch (ex) {
+      // XXX Exceptions in this function currently aren't reported, because of
+      // some XPConnect weirdness, so report them manually
+      ok(false, "Exception thrown in CO_observe: " + ex);
+    }
+  };
+  gLevel = "timeEnd";
+  gArgs = [
+    {filename: TEST_URI, lineNumber: 27, functionName: "stopTimer", arguments: { name: "foo" }},
+  ];
+
+  let button = gWindow.document.getElementById("test-timeEnd");
+  ok(button, "found #test-timeEnd button");
+  EventUtils.synthesizeMouseAtCenter(button, {}, gWindow);
+}
+
+function testConsoleTimeEnd(aMessageObject) {
+  let messageWindow = getWindowByWindowId(aMessageObject.ID);
+  is(messageWindow, gWindow, "found correct window by window ID");
+
+  is(aMessageObject.level, gLevel, "expected level received");
+  ok(aMessageObject.arguments, "we have arguments");
+
+  is(aMessageObject.filename, gArgs[0].filename, "filename matches");
+  is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
+  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
+  is(aMessageObject.arguments.length, gArgs[0].arguments.length, "arguments.length matches");
+  is(aMessageObject.arguments.name, gArgs[0].arguments.name, "timer name matches");
+  ok(typeof aMessageObject.arguments.duration == "number", "timer duration is a number");
+  ok(aMessageObject.arguments.duration > 0, "timer duration is positive");
+
+  startEmptyTimerTest();
+}
+
+function startEmptyTimerTest() {
+  // Reset the observer function to cope with the fabricated test data.
+  ConsoleObserver.observe = function CO_observe(aSubject, aTopic, aData) {
+    try {
+      testEmptyTimer(aSubject.wrappedJSObject);
+    } catch (ex) {
+      // XXX Exceptions in this function currently aren't reported, because of
+      // some XPConnect weirdness, so report them manually
+      ok(false, "Exception thrown in CO_observe: " + ex);
+    }
+  };
+
+  let button = gWindow.document.getElementById("test-namelessTimer");
+  ok(button, "found #test-namelessTimer button");
+  EventUtils.synthesizeMouseAtCenter(button, {}, gWindow);
+}
+
+function testEmptyTimer(aMessageObject) {
+  let messageWindow = getWindowByWindowId(aMessageObject.ID);
+  is(messageWindow, gWindow, "found correct window by window ID");
+
+  ok(aMessageObject.level == "time" || aMessageObject.level == "timeEnd",
+     "expected level received");
+  ok(!aMessageObject.arguments, "we don't have arguments");
+
+  is(aMessageObject.functionName, "namelessTimer", "functionName matches");
+  ok(aMessageObject.lineNumber == 31 || aMessageObject.lineNumber == 32,
+     "lineNumber matches");
+  // Test finished
+  ConsoleObserver.destroy();
+  finish();
 }
 
 var ConsoleObserver = {
