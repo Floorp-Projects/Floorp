@@ -4242,7 +4242,7 @@ nsEventStateManager::GetContentState(nsIContent *aContent)
 {
   nsEventStates state;
   if (aContent->IsElement()) {
-    state = aContent->AsElement()->IntrinsicState();
+    state = aContent->AsElement()->State();
   }
 
   if (IsAncestorOf(aContent, mActiveContent)) {
