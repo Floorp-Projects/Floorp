@@ -7044,12 +7044,21 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
 
     PRBool hasMore = PR_FALSE;
 
+    // We want to bail out if we have any requests other than aNewRequest (or
+    // in the case when aNewRequest is a part of a multipart response the base
+    // channel the multipart response is coming in on).
+    nsCOMPtr<nsIChannel> baseChannel;
+    nsCOMPtr<nsIMultiPartChannel> part(do_QueryInterface(aNewRequest));
+    if (part) {
+      part->GetBaseChannel(getter_AddRefs(baseChannel));
+    }
+
     while (NS_SUCCEEDED(requests->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> elem;
       requests->GetNext(getter_AddRefs(elem));
 
       nsCOMPtr<nsIRequest> request = do_QueryInterface(elem);
-      if (request && request != aNewRequest) {
+      if (request && request != aNewRequest && request != baseChannel) {
 #ifdef DEBUG_PAGE_CACHE
         nsCAutoString requestName, docSpec;
         request->GetName(requestName);
