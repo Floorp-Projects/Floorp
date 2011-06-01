@@ -371,10 +371,6 @@ class JSString : public js::gc::Cell
 
     inline void finalize(JSContext *cx);
 
-    /* Called during GC for any string. */
-
-    void mark(JSTracer *trc);
-
     /* Offsets for direct field from jit code. */
 
     static size_t offsetOfLengthAndFlags() {
@@ -413,9 +409,10 @@ JS_STATIC_ASSERT(sizeof(JSRope) == sizeof(JSString));
 class JSLinearString : public JSString
 {
     friend class JSString;
-    void mark(JSTracer *trc);
 
   public:
+    void mark(JSTracer *trc);
+
     JS_ALWAYS_INLINE
     const jschar *chars() const {
         JS_ASSERT(isLinear());
