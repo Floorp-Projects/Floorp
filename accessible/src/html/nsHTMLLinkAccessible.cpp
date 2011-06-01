@@ -81,7 +81,7 @@ nsHTMLLinkAccessible::NativeState()
     states |= states::SELECTABLE;
   }
 
-  nsEventStates state = mContent->IntrinsicState();
+  nsEventStates state = mContent->AsElement()->IntrinsicState();
   if (state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED |
                                   NS_EVENT_STATE_UNVISITED)) {
     states |= states::LINKED;
@@ -187,7 +187,7 @@ nsHTMLLinkAccessible::IsLinked()
   if (IsDefunct())
     return PR_FALSE;
 
-  nsEventStates state = mContent->IntrinsicState();
+  nsEventStates state = mContent->AsElement()->IntrinsicState();
   return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED |
                                      NS_EVENT_STATE_UNVISITED);
 }

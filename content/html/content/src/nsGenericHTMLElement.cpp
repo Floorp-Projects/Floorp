@@ -3543,19 +3543,29 @@ nsGenericHTMLElement::IsEditableRoot() const
 static void
 MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
 {
-  nsEventStates stateBefore = aContent->IntrinsicState();
+  // If aContent is not an element, we just need to update its
+  // internal editable state and don't need to notify anyone about
+  // that.  For elements, we need to send a ContentStateChanged
+  // notification.
+  if (!aContent->IsElement()) {
+    aContent->UpdateEditableState();
+    return;
+  }
 
-  aContent->UpdateEditableState();
+  Element *element = aContent->AsElement();
+  nsEventStates stateBefore = element->IntrinsicState();
 
-  if (aDocument && stateBefore != aContent->IntrinsicState()) {
-    aDocument->ContentStateChanged(aContent,
+  element->UpdateEditableState();
+
+  if (aDocument && stateBefore != element->IntrinsicState()) {
+    aDocument->ContentStateChanged(element,
                                    NS_EVENT_STATE_MOZ_READONLY |
                                    NS_EVENT_STATE_MOZ_READWRITE);
   }
 
-  PRUint32 i, n = aContent->GetChildCount();
-  for (i = 0; i < n; ++i) {
-    nsIContent *child = aContent->GetChildAt(i);
+  for (nsIContent *child = aContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     if (!child->HasAttr(kNameSpaceID_None, nsGkAtoms::contenteditable)) {
       MakeContentDescendantsEditable(child, aDocument);
     }

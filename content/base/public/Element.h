@@ -86,6 +86,14 @@ public:
 #ifdef MOZILLA_INTERNAL_API
   Element(already_AddRefed<nsINodeInfo> aNodeInfo) : nsIContent(aNodeInfo) {}
 #endif // MOZILLA_INTERNAL_API
+
+  /**
+   * Method to get the _intrinsic_ content state of this element.  This is the
+   * state that is independent of the element's presentation.  To get the full
+   * content state, use nsEventStateManager.  See nsEventStates.h for
+   * the possible bits that could be set here.
+   */
+  virtual nsEventStates IntrinsicState() const;
 };
 
 } // namespace dom
