@@ -19,6 +19,19 @@
         console.log(omg, "o", "d");
       }
 
+      function startTimer(timer) {
+        console.time(timer);
+      }
+
+      function stopTimer(timer) {
+        console.timeEnd(timer);
+      }
+
+      function namelessTimer() {
+        console.time();
+        console.timeEnd();
+      }
+
       function test() {
         var str = "Test Message."
         console.foobar(str); // if this throws, we don't execute following funcs
@@ -41,5 +54,8 @@
     <button id="test-trace" onclick="foobar585956a('omg');">Test trace</button>
     <button id="test-location" onclick="foobar646025('omg');">Test location</button>
     <button id="test-groups" onclick="testGroups();">Test groups</button>
+    <button id="test-time" onclick="startTimer('foo');">Test time</button>
+    <button id="test-timeEnd" onclick="stopTimer('foo');">Test timeEnd</button>
+    <button id="test-namelessTimer" onclick="namelessTimer();">Test namelessTimer</button>
   </body>
 </html>
