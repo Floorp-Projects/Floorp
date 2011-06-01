@@ -1168,7 +1168,7 @@ nsCSSRuleProcessor::GetContentState(Element* aElement)
 PRBool
 nsCSSRuleProcessor::IsLink(Element* aElement)
 {
-  nsEventStates state = aElement->IntrinsicState();
+  nsEventStates state = aElement->State();
   return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED);
 }
 
