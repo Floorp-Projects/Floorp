@@ -803,6 +803,22 @@ Element::NotifyStateChange(nsEventStates aStates)
 }
 
 void
+Element::RequestLinkStateUpdate()
+{
+}
+
+void
+Element::UpdateLinkState(nsEventStates aState)
+{
+  NS_ABORT_IF_FALSE(!aState.HasAtLeastOneOfStates(~(NS_EVENT_STATE_VISITED |
+                                                    NS_EVENT_STATE_UNVISITED)),
+                    "Unexpected link state bits");
+  mState =
+    (mState & ~(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)) |
+    aState;
+}
+
+void
 nsIContent::UpdateEditableState()
 {
   nsIContent *parent = GetParent();

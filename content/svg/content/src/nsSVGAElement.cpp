@@ -160,6 +160,12 @@ nsSVGAElement::GetLinkState() const
   return Link::GetLinkState();
 }
 
+void
+nsSVGAElement::RequestLinkStateUpdate()
+{
+  UpdateLinkState(Link::LinkState());
+}
+
 already_AddRefed<nsIURI>
 nsSVGAElement::GetHrefURI() const
 {

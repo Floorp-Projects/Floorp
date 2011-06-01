@@ -100,6 +100,17 @@ public:
     return IntrinsicState() | mState;
   }
 
+  /**
+   * Request an update of the link state for this element.  This will
+   * make sure that if the element is a link at all then either
+   * NS_EVENT_STATE_VISITED or NS_EVENT_STATE_UNVISITED is set in
+   * mState, and a history lookup kicked off if needed to find out
+   * whether the link is really visited.  This method will NOT send any
+   * state change notifications.  If you want them to happen for this
+   * call, you need to handle them yourself.
+   */
+  virtual void RequestLinkStateUpdate();
+
 protected:
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the
@@ -108,6 +119,11 @@ protected:
    * the possible bits that could be set here.
    */
   virtual nsEventStates IntrinsicState() const;
+
+  /**
+   * Method to update mState with link state information.  This does not notify.
+   */
+  void UpdateLinkState(nsEventStates aState);
 
 private:
   // Need to allow the ESM, nsGlobalWindow, and the focus manager to
