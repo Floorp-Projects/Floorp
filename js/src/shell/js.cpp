@@ -4544,14 +4544,30 @@ Compile(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
+    static JSClass dummy_class = {
+        "jdummy",
+        JSCLASS_GLOBAL_FLAGS,
+        JS_PropertyStub,  JS_PropertyStub,
+        JS_PropertyStub,  JS_StrictPropertyStub,
+        JS_EnumerateStub, JS_ResolveStub,
+        JS_ConvertStub,   NULL,
+        JSCLASS_NO_OPTIONAL_MEMBERS
+    };
+
+    JSObject *fakeGlobal = JS_NewGlobalObject(cx, &dummy_class);
+    if (!fakeGlobal)
+        return JS_FALSE;
+
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
-    if (!JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
-                            JS_GetStringLength(scriptContents), "<string>", 0)) {
-        return false;
-    }
+
+    uintN oldopts = JS_GetOptions(cx);
+    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
+    bool ok = JS_CompileUCScript(cx, fakeGlobal, JS_GetStringCharsZ(cx, scriptContents),
+                                 JS_GetStringLength(scriptContents), "<string>", 0);
+    JS_SetOptions(cx, oldopts);
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return ok;
 }
 
 static JSBool
