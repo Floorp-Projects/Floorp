@@ -84,6 +84,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGImageElementBase)
 nsSVGImageElement::nsSVGImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGImageElementBase(aNodeInfo)
 {
+  // We start out broken
+  AddStatesSilently(NS_EVENT_STATE_BROKEN);
 }
 
 nsSVGImageElement::~nsSVGImageElement()
@@ -207,7 +209,10 @@ nsSVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
+    // FIXME: Bug 660963 it would be nice if we could just have
+    // ClearBrokenState update our state and do it fast...
     ClearBrokenState();
+    RemoveStatesSilently(NS_EVENT_STATE_BROKEN);
     nsContentUtils::AddScriptRunner(
       NS_NewRunnableMethod(this, &nsSVGImageElement::MaybeLoadSVGImage));
   }

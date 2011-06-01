@@ -914,8 +914,7 @@ nsXTFElementWrapper::SetIntrinsicState(nsEventStates::InternalType aNewState)
                    "Both READONLY and READWRITE are being set.  Yikes!!!");
 
   mIntrinsicState = newStates;
-  nsAutoScriptBlocker scriptBlocker;
-  doc->ContentStateChanged(this, bits);
+  UpdateState(true);
 
   return NS_OK;
 }

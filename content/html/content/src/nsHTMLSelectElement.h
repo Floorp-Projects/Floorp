@@ -289,7 +289,7 @@ public:
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
 
-  virtual void FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify);
+  virtual void FieldSetDisabledChanged(PRBool aNotify);
 
   nsEventStates IntrinsicState() const;
 

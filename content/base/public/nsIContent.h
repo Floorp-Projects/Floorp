@@ -76,8 +76,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xba1c9e22, 0x4b73, 0x42ae, \
- { 0xb6, 0x45, 0xa7, 0x83, 0xd0, 0x7e, 0xee, 0x2c } }
+{ 0x860ee35b, 0xe505, 0x438f, \
+ { 0xa7, 0x7b, 0x65, 0xb9, 0xf5, 0x0b, 0xe5, 0x29 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -856,9 +856,10 @@ public:
   /**
    * Should be called when the node can become editable or when it can stop
    * being editable (for example when its contentEditable attribute changes,
-   * when it is moved into an editable parent, ...).
+   * when it is moved into an editable parent, ...).  If aNotify is true and
+   * the node is an element, this will notify the state change.
    */
-  virtual void UpdateEditableState();
+  virtual void UpdateEditableState(PRBool aNotify);
 
   /**
    * Destroy this node and its children. Ideally this shouldn't be needed

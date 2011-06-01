@@ -85,11 +85,16 @@ enum {
 namespace mozilla {
 namespace dom {
 
+class Link;
+
 class Element : public nsIContent
 {
 public:
 #ifdef MOZILLA_INTERNAL_API
-  Element(already_AddRefed<nsINodeInfo> aNodeInfo) : nsIContent(aNodeInfo) {}
+  Element(already_AddRefed<nsINodeInfo> aNodeInfo) :
+    nsIContent(aNodeInfo),
+    mState(NS_EVENT_STATE_MOZ_READONLY)
+  {}
 #endif // MOZILLA_INTERNAL_API
 
   /**
@@ -97,7 +102,9 @@ public:
    * the possible bits that could be set here.
    */
   nsEventStates State() const {
-    return IntrinsicState() | mState;
+    // mState is maintained by having whoever might have changed it
+    // call UpdateState() or one of the other mState mutators.
+    return mState;
   }
 
   /**
@@ -110,6 +117,18 @@ public:
    * call, you need to handle them yourself.
    */
   virtual void RequestLinkStateUpdate();
+
+  /**
+   * Ask this element to update its state.  If aNotify is false, then
+   * state change notifications will not be dispatched; in that
+   * situation it is the caller's responsibility to dispatch them.
+   *
+   * In general, aNotify should only be false if we're guaranteed that
+   * the element can't have a frame no matter what its style is
+   * (e.g. if we're in the middle of adding it to the document or
+   * removing it from the document).
+   */
+  void UpdateState(bool aNotify);
 
 protected:
   /**
@@ -125,12 +144,35 @@ protected:
    */
   void UpdateLinkState(nsEventStates aState);
 
+  /**
+   * Method to add state bits.  This should be called from subclass
+   * constructors to set up our event state correctly at construction
+   * time and other places where we don't want to notify a state
+   * change.
+   */
+  void AddStatesSilently(nsEventStates aStates) {
+    mState |= aStates;
+  }
+
+  /**
+   * Method to remove state bits.  This should be called from subclass
+   * constructors to set up our event state correctly at construction
+   * time and other places where we don't want to notify a state
+   * change.
+   */
+  void RemoveStatesSilently(nsEventStates aStates) {
+    mState &= ~aStates;
+  }
+
 private:
   // Need to allow the ESM, nsGlobalWindow, and the focus manager to
   // set our state
   friend class ::nsEventStateManager;
   friend class ::nsGlobalWindow;
   friend class ::nsFocusManager;
+
+  // Also need to allow Link to call UpdateLinkState.
+  friend class Link;
 
   void NotifyStateChange(nsEventStates aStates);
 
@@ -140,13 +182,13 @@ private:
   void AddStates(nsEventStates aStates) {
     NS_PRECONDITION(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
                     "Should only be adding ESM-managed states here");
-    mState |= aStates;
+    AddStatesSilently(aStates);
     NotifyStateChange(aStates);
   }
   void RemoveStates(nsEventStates aStates) {
     NS_PRECONDITION(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
                     "Should only be removing ESM-managed states here");
-    mState &= ~aStates;
+    RemoveStatesSilently(aStates);
     NotifyStateChange(aStates);
   }
 
