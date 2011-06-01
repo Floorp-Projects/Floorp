@@ -75,7 +75,7 @@ JSObject::isPackedDenseArray()
 }
 
 inline void
-JSObject::setDenseArrayNotPacked(JSContext *cx)
+JSObject::markDenseArrayNotPacked(JSContext *cx)
 {
     JS_ASSERT(isDenseArray());
     if (flags & PACKED_ARRAY) {
@@ -84,33 +84,48 @@ JSObject::setDenseArrayNotPacked(JSContext *cx)
     }
 }
 
+inline void
+JSObject::backfillDenseArrayHoles(JSContext *cx)
+{
+    /* Ensure an array's elements are fully initialized. */
+    ensureDenseArrayInitializedLength(cx, getDenseArrayCapacity(), 0);
+}
+
+inline void
+JSObject::ensureDenseArrayInitializedLength(JSContext *cx, uint32 index, uint32 extra)
+{
+    /*
+     * Ensure that the array's contents have been initialized up to index, and
+     * mark the elements through 'index + extra' as initialized in preparation
+     * for a write.
+     */
+    JS_ASSERT(index + extra <= capacity);
+    if (initializedLength < index) {
+        markDenseArrayNotPacked(cx);
+        ClearValueRange(slots + initializedLength, index - initializedLength, true);
+    }
+    if (initializedLength < index + extra)
+        initializedLength = index + extra;
+}
+
 inline JSObject::EnsureDenseResult
 JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
 {
     JS_ASSERT(isDenseArray());
 
     uintN currentCapacity = numSlots();
-    uintN initLength = getDenseArrayInitializedLength();
 
     /*
      * Don't take excessive slow paths when inference is disabled, due to
      * uninitialized slots between initializedLength and capacity.
      */
-    JS_ASSERT_IF(!cx->typeInferenceEnabled(), currentCapacity == initLength);
+    JS_ASSERT_IF(!cx->typeInferenceEnabled(), currentCapacity == getDenseArrayInitializedLength());
 
     uintN requiredCapacity;
     if (extra == 1) {
         /* Optimize for the common case. */
-        if (index < initLength)
-            return ED_OK;
         if (index < currentCapacity) {
-            JS_ASSERT(cx->typeInferenceEnabled());
-            if (index > initLength) {
-                setDenseArrayNotPacked(cx);
-                ClearValueRange(getDenseArrayElements() + initLength,
-                                index - initLength, true);
-            }
-            setDenseArrayInitializedLength(index + 1);
+            ensureDenseArrayInitializedLength(cx, index, 1);
             return ED_OK;
         }
         requiredCapacity = index + 1;
@@ -124,16 +139,8 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
             /* Overflow. */
             return ED_SPARSE;
         }
-        if (requiredCapacity <= initLength)
-            return ED_OK;
         if (requiredCapacity <= currentCapacity) {
-            JS_ASSERT(cx->typeInferenceEnabled());
-            if (index > initLength) {
-                ClearValueRange(getDenseArrayElements() + initLength,
-                                index - initLength, true);
-                setDenseArrayNotPacked(cx);
-            }
-            setDenseArrayInitializedLength(requiredCapacity);
+            ensureDenseArrayInitializedLength(cx, index, extra);
             return ED_OK;
         }
     }
@@ -149,17 +156,7 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
     if (!growSlots(cx, requiredCapacity))
         return ED_FAILED;
 
-    if (cx->typeInferenceEnabled()) {
-        if (index > initLength) {
-            setDenseArrayNotPacked(cx);
-            ClearValueRange(getDenseArrayElements() + initLength,
-                            index - initLength, true);
-        }
-        setDenseArrayInitializedLength(requiredCapacity);
-    } else {
-        backfillDenseArrayHoles();
-    }
-
+    ensureDenseArrayInitializedLength(cx, index, extra);
     return ED_OK;
 }
 

@@ -145,6 +145,9 @@ JSCompartment::init(JSContext *cx)
     if (!regExpAllocator)
         return false;
 
+    if (!backEdgeTable.init())
+        return false;
+
 #ifdef JS_METHODJIT
     jaegerCompartment = rt->new_<mjit::JaegerCompartment>();
     if (!jaegerCompartment || !jaegerCompartment->Initialize())
@@ -642,4 +645,21 @@ JSCompartment::allocMathCache(JSContext *cx)
     if (!mathCache)
         js_ReportOutOfMemory(cx);
     return mathCache;
+}
+
+size_t
+JSCompartment::backEdgeCount(jsbytecode *pc) const
+{
+    if (BackEdgeMap::Ptr p = backEdgeTable.lookup(pc))
+        return p->value;
+
+    return 0;
+}
+
+size_t
+JSCompartment::incBackEdgeCount(jsbytecode *pc)
+{
+    if (BackEdgeMap::Ptr p = backEdgeTable.lookupWithDefault(pc, 0))
+        return ++p->value;
+    return 1;  /* oom not reported by backEdgeTable, so ignore. */
 }

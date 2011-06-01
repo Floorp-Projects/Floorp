@@ -1202,8 +1202,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             jitTraceICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
 #ifdef JS_TRACER
         uint32 hotloop = GetHotloop(cx);
+        uint32 prevCount = cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
         jitTraceICs[i].loopCounterStart = hotloop;
-        jitTraceICs[i].loopCounter = hotloop;
+        jitTraceICs[i].loopCounter = hotloop < prevCount ? 1 : hotloop - prevCount;
 #endif
         
         stubCode.patch(traceICs[i].addrLabel, &jitTraceICs[i]);

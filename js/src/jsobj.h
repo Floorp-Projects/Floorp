@@ -851,6 +851,8 @@ struct JSObject : js::gc::Cell {
     inline uint32 getDenseArrayInitializedLength();
     inline void setDenseArrayLength(uint32 length);
     inline void setDenseArrayInitializedLength(uint32 length);
+    inline void ensureDenseArrayInitializedLength(JSContext *cx, uintN index, uintN extra);
+    inline void backfillDenseArrayHoles(JSContext *cx);
     inline js::Value* getDenseArrayElements();
     inline const js::Value &getDenseArrayElement(uintN idx);
     inline js::Value* addressOfDenseArrayElement(uintN idx);
@@ -858,11 +860,10 @@ struct JSObject : js::gc::Cell {
     inline void setDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value &val);
     inline void shrinkDenseArrayElements(JSContext *cx, uintN cap);
     inline bool denseArrayHasInlineSlots() const;
-    inline void backfillDenseArrayHoles();
 
-    /* Packed information for this array. May be incorrect if !cx->typeInferenceEnabled(). */
+    /* Packed information for this array. */
     inline bool isPackedDenseArray();
-    inline void setDenseArrayNotPacked(JSContext *cx);
+    inline void markDenseArrayNotPacked(JSContext *cx);
 
     /*
      * ensureDenseArrayElements ensures that the dense array can hold at least

@@ -4356,8 +4356,9 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
 
     if (isDenseArray()) {
         /* Copy over anything from the inline buffer. */
-        memcpy(slots, fixedSlots(), oldcap * sizeof(Value));
-        ClearValueRange(slots + oldcap, newcap - oldcap, true);
+        memcpy(slots, fixedSlots(), getDenseArrayInitializedLength() * sizeof(Value));
+        if (!cx->typeInferenceEnabled())
+            backfillDenseArrayHoles(cx);
     } else {
         /* Clear out the new slots without copying. */
         ClearValueRange(slots, allocCount, false);
@@ -4413,8 +4414,11 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     slots = tmpslots;
     capacity = actualCapacity;
 
-    if (!isDenseArray()) {
-        /* Initialize the additional slots we added. This is not required for dense arrays. */
+    if (isDenseArray()) {
+        if (!cx->typeInferenceEnabled())
+            backfillDenseArrayHoles(cx);
+    } else {
+        /* Clear the new slots we added. */
         ClearValueRange(slots + oldAllocCount, allocCount - oldAllocCount, false);
     }
 
