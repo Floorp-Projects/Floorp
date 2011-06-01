@@ -1149,14 +1149,7 @@ static void GetLang(nsIContent* aContent, nsString& aLang)
 nsEventStates
 nsCSSRuleProcessor::GetContentState(Element* aElement)
 {
-  nsIPresShell* shell = aElement->GetOwnerDoc()->GetShell();
-  nsPresContext* presContext;
-  nsEventStates state;
-  if (shell && (presContext = shell->GetPresContext())) {
-    state = presContext->EventStateManager()->GetContentState(aElement);
-  } else {
-    state = aElement->IntrinsicState();
-  }
+  nsEventStates state = aElement->State();
 
   // If we are not supposed to mark visited links as such, be sure to
   // flip the bits appropriately.  We want to do this here, rather
