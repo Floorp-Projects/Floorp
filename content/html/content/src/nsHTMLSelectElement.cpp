@@ -1356,6 +1356,15 @@ nsHTMLSelectElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
+void
+nsHTMLSelectElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
+
+  // We might be no longer disabled because our parent chain changed.
+  UpdateBarredFromConstraintValidation();
+}
+
 nsresult
 nsHTMLSelectElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                    const nsAString* aValue, PRBool aNotify)
