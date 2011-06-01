@@ -76,8 +76,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x32b94ba0, 0x1ebc, 0x4dfc, \
- { 0xba, 0x8c, 0x5f, 0x24, 0x2b, 0xcb, 0xaf, 0xce } }
+{ 0xba1c9e22, 0x4b73, 0x42ae, \
+ { 0xb6, 0x45, 0xa7, 0x83, 0xd0, 0x7e, 0xee, 0x2c } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -785,14 +785,6 @@ public:
   {
     return PR_TRUE;
   }
-
-  /**
-   * Method to get the _intrinsic_ content state of this content node.  This is
-   * the state that is independent of the node's presentation.  To get the full
-   * content state, use nsEventStateManager.  Also see nsEventStateManager
-   * for the possible bits that could be set here.
-   */
-  virtual nsEventStates IntrinsicState() const;
 
   /**
    * Get the ID of this content node (the atom corresponding to the

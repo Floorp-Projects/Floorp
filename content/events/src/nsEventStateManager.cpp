@@ -4240,7 +4240,10 @@ ShouldShowFocusRing(nsIContent* aContent)
 nsEventStates
 nsEventStateManager::GetContentState(nsIContent *aContent)
 {
-  nsEventStates state = aContent->IntrinsicState();
+  nsEventStates state;
+  if (aContent->IsElement()) {
+    state = aContent->AsElement()->IntrinsicState();
+  }
 
   if (IsAncestorOf(aContent, mActiveContent)) {
     state |= NS_EVENT_STATE_ACTIVE;

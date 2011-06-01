@@ -694,20 +694,23 @@ PRUint64
 nsAccessible::NativeState()
 {
   PRUint64 state = 0;
-  nsEventStates intrinsicState = mContent->IntrinsicState();
+  PRBool disabled = PR_FALSE;
+  if (mContent->IsElement()) {
+    nsEventStates intrinsicState = mContent->AsElement()->IntrinsicState();
 
-  if (intrinsicState.HasState(NS_EVENT_STATE_INVALID))
-    state |= states::INVALID;
+    if (intrinsicState.HasState(NS_EVENT_STATE_INVALID))
+      state |= states::INVALID;
 
-  if (intrinsicState.HasState(NS_EVENT_STATE_REQUIRED))
-    state |= states::REQUIRED;
+    if (intrinsicState.HasState(NS_EVENT_STATE_REQUIRED))
+      state |= states::REQUIRED;
 
-  PRBool disabled = mContent->IsHTML() ? 
-    (intrinsicState.HasState(NS_EVENT_STATE_DISABLED)) :
-    (mContent->AttrValueIs(kNameSpaceID_None,
-                           nsAccessibilityAtoms::disabled,
-                           nsAccessibilityAtoms::_true,
-                           eCaseMatters));
+    disabled = mContent->IsHTML() ? 
+      (intrinsicState.HasState(NS_EVENT_STATE_DISABLED)) :
+      (mContent->AttrValueIs(kNameSpaceID_None,
+                             nsAccessibilityAtoms::disabled,
+                             nsAccessibilityAtoms::_true,
+                             eCaseMatters));
+  }
 
   // Set unavailable state based on disabled state, otherwise set focus states
   if (disabled) {
