@@ -52,7 +52,6 @@ chrome.jar:
   content/bindings/arrowbox.xml        (content/bindings/arrowbox.xml)
   content/browser.css                  (content/browser.css)
   content/cursor.css                   (content/cursor.css)
-  content/checkerboard.png             (content/checkerboard.png)
 % content branding %content/branding/
   content/sanitize.js                  (content/sanitize.js)
 * content/input.js                     (content/input.js)
