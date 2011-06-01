@@ -106,6 +106,9 @@ _TEST_FILES = \
 		test_framedhistoryframes.html \
 		test_windowedhistoryframes.html \
 		historyframes.html \
+		test_bug660404.html \
+		file_bug660404 \
+		file_bug660404^headers^ \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
