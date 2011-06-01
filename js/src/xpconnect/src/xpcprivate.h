@@ -1442,10 +1442,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
      (clazz) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||                 \
      (clazz) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass)
 
-// Comes from xpcwrappednativeops.cpp
-extern void
-xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper);
-
 /***************************************************************************/
 
 namespace XPCWrapper {
@@ -2579,6 +2575,8 @@ public:
 
     // If pobj2 is not null and *pobj2 is not null after the call then *pobj2
     // points to an object for which IS_SLIM_WRAPPER_OBJECT is true.
+    // cx is null when invoked from the marking phase of the GC. In this case
+    // fubobj must be null as well.
     static XPCWrappedNative*
     GetWrappedNativeOfJSObject(JSContext* cx, JSObject* obj,
                                JSObject* funobj = nsnull,
