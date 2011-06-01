@@ -122,12 +122,19 @@ const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
 /* Get the best kind to use when making an object with the given slot count. */
 static inline FinalizeKind
-GetGCObjectKind(size_t numSlots)
+GetGCObjectKind(size_t numSlots, bool isArray = false)
 {
     extern FinalizeKind slotsToThingKind[];
 
-    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT)
-        return FINALIZE_OBJECT16;
+    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT) {
+        /*
+         * If the object will definitely want more than the maximum number of
+         * fixed slots, use zero fixed slots for arrays and the maximum for
+         * other objects. Arrays do not use their fixed slots anymore when
+         * they have a slots array, while other objects will continue to do so.
+         */
+        return isArray ? FINALIZE_OBJECT0 : FINALIZE_OBJECT16;
+    }
     return slotsToThingKind[numSlots];
 }
 

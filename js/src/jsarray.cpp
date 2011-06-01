@@ -51,21 +51,35 @@
  *    getArrayLength(), setArrayLength().
  *  - The number of element slots (capacity), gettable with
  *    getDenseArrayCapacity().
- *  - The array's initialized length, accessible with getDenseArrayInitializedLength().
+ *  - The array's initialized length, accessible with
+ *    getDenseArrayInitializedLength().
  *
  * In dense mode, holes in the array are represented by
- * MagicValue(JS_ARRAY_HOLE) invalid values. Elements between the initialized
- * length and the length property are left uninitialized, but are conceptually holes.
- * Arrays with no holes below the initialized length are "packed" arrays.
+ * MagicValue(JS_ARRAY_HOLE) invalid values.
  *
  * NB: the capacity and length of a dense array are entirely unrelated!  The
  * length may be greater than, less than, or equal to the capacity. The first
  * case may occur when the user writes "new Array(100), in which case the
  * length is 100 while the capacity remains 0 (indices below length and above
  * capacity must be treated as holes). See array_length_setter for another
- * explanation of how the first case may occur. When type inference is enabled,
- * the initialized length is always less than or equal to both the length and
- * capacity. Otherwise, the initialized length always equals the capacity.
+ * explanation of how the first case may occur.
+ *
+ * The initialized length of a dense array specifies the number of elements
+ * that have been initialized. All elements above the initialized length are
+ * holes in the array, and the memory for all elements between the initialized
+ * length and capacity is left uninitialized. When type inference is disabled,
+ * the initialized length always equals the array's capacity. When inference is
+ * enabled, the initialized length is some value less than or equal to both the
+ * array's length and the array's capacity.
+ *
+ * With inference enabled, there is flexibility in exactly the value the
+ * initialized length must hold, e.g. if an array has length 5, capacity 10,
+ * completely empty, it is valid for the initialized length to be any value
+ * between zero and 5, as long as the in memory values below the initialized
+ * length have been initialized with a hole value. However, in such cases we
+ * want to keep the initialized length as small as possible: if the array is
+ * known to have no hole values below its initialized length, then it is a
+ * "packed" array and can be accessed much faster by JIT code.
  *
  * Arrays are converted to use js_SlowArrayClass when any of these conditions
  * are met:
@@ -520,7 +534,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index, bool strict)
         if (index <= jsuint(-1)) {
             jsuint idx = jsuint(index);
             if (idx < obj->getDenseArrayInitializedLength()) {
-                obj->setDenseArrayNotPacked(cx);
+                obj->markDenseArrayNotPacked(cx);
                 obj->setDenseArrayElement(idx, MagicValue(JS_ARRAY_HOLE));
                 if (!js_SuppressDeletedIndexProperties(cx, obj, idx, idx+1))
                     return -1;
@@ -645,7 +659,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
         if (oldinit > newlen) {
             obj->setDenseArrayInitializedLength(newlen);
             if (!cx->typeInferenceEnabled())
-                obj->backfillDenseArrayHoles();
+                obj->backfillDenseArrayHoles(cx);
         }
     } else if (oldlen - newlen < (1 << 24)) {
         do {
@@ -938,7 +952,7 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
     }
 
     if (js_IdIsIndex(id, &i) && i < obj->getDenseArrayInitializedLength()) {
-        obj->setDenseArrayNotPacked(cx);
+        obj->markDenseArrayNotPacked(cx);
         obj->setDenseArrayElement(i, MagicValue(JS_ARRAY_HOLE));
     }
 
@@ -956,8 +970,8 @@ array_trace(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(obj->isDenseArray());
 
-    uint32 capacity = obj->getDenseArrayInitializedLength();
-    MarkValueRange(trc, capacity, obj->getDenseArrayElements(), "element");
+    uint32 initLength = obj->getDenseArrayInitializedLength();
+    MarkValueRange(trc, initLength, obj->getDenseArrayElements(), "element");
 }
 
 static JSBool
@@ -1048,7 +1062,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     cx->markTypeObjectFlags(getType(),
                             js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
                             js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
-    setDenseArrayNotPacked(cx);
+    markDenseArrayNotPacked(cx);
 
     /*
      * Save old map now, before calling InitScopeForObject. We'll have to undo
@@ -1062,7 +1076,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     if (!InitScopeForObject(cx, this, &js_SlowArrayClass, getType(), kind))
         return false;
 
-    backfillDenseArrayHoles();
+    backfillDenseArrayHoles(cx);
 
     uint32 arrayCapacity = getDenseArrayCapacity();
     uint32 arrayInitialized = getDenseArrayInitializedLength();
@@ -1569,7 +1583,7 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const Value *vector
     if (cx->typeInferenceEnabled())
         obj->setDenseArrayInitializedLength(length);
     else
-        obj->backfillDenseArrayHoles();
+        obj->backfillDenseArrayHoles(cx);
 
     bool hole = false;
     for (jsuint i = 0; i < length; i++) {
@@ -1577,7 +1591,7 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const Value *vector
         hole |= vector[i].isMagic(JS_ARRAY_HOLE);
     }
     if (hole)
-        obj->setDenseArrayNotPacked(cx);
+        obj->markDenseArrayNotPacked(cx);
 
     return true;
 }
@@ -1645,13 +1659,7 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
         }
 
         /* Fill out the array's initialized length to its proper length. */
-        jsuint initlen = obj->getDenseArrayInitializedLength();
-        if (len > initlen) {
-            JS_ASSERT(cx->typeInferenceEnabled());
-            ClearValueRange(obj->getDenseArrayElements() + initlen, len - initlen, true);
-            obj->setDenseArrayNotPacked(cx);
-            obj->setDenseArrayInitializedLength(len);
-        }
+        obj->ensureDenseArrayInitializedLength(cx, len, 0);
 
         uint32 lo = 0, hi = len - 1;
         for (; lo < hi; lo++, hi--) {
@@ -2230,8 +2238,6 @@ ArrayCompPushImpl(JSContext *cx, JSObject *obj, const Value &v)
          */
         if (!obj->ensureSlots(cx, length + 1))
             return false;
-        if (!cx->typeInferenceEnabled())
-            obj->backfillDenseArrayHoles();
     }
 
     if (cx->typeInferenceEnabled())
@@ -2680,7 +2686,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         nobj->setType(aobj->getType());
         nobj->setArrayLength(cx, length);
         if (!aobj->isPackedDenseArray())
-            nobj->setDenseArrayNotPacked(cx);
+            nobj->markDenseArrayNotPacked(cx);
         vp->setObject(*nobj);
         if (argc == 0)
             return JS_TRUE;
@@ -2812,7 +2818,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         nobj->setType(type);
         if (!obj->isPackedDenseArray())
-            nobj->setDenseArrayNotPacked(cx);
+            nobj->markDenseArrayNotPacked(cx);
         vp->setObject(*nobj);
         return JS_TRUE;
     }
@@ -3500,13 +3506,13 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
 
     obj->setArrayLength(cx, length);
 
-    if (allocateCapacity) {
-        if (!obj->ensureSlots(cx, length))
-            return NULL;
+    if (!cx->typeInferenceEnabled()) {
+        obj->markDenseArrayNotPacked(cx);
+        obj->backfillDenseArrayHoles(cx);
     }
 
-    if (!cx->typeInferenceEnabled())
-        obj->backfillDenseArrayHoles();
+    if (allocateCapacity && !obj->ensureSlots(cx, length))
+        return NULL;
 
     return obj;
 }
@@ -3751,7 +3757,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
         return JS_FALSE;
 
     if (!obj->isPackedDenseArray())
-        (*clone)->setDenseArrayNotPacked(cx);
+        (*clone)->markDenseArrayNotPacked(cx);
 
     /* The length will be set to the initlen, above, but length might be larger. */
     (*clone)->setArrayLength(cx, length);

@@ -107,11 +107,22 @@ CanMethodJITAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode
     JITScriptStatus status = script->getJITStatus(fp->isConstructing());
     if (status == JITScript_Invalid)
         return Compile_Abort;
-    if (status == JITScript_None &&
-        !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
-        script->incUseCount() <= USES_BEFORE_COMPILE)
-    {
-        return Compile_Skipped;
+    if (status == JITScript_None && !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS)) {
+        /*
+         * Backedges are counted differently with type inference vs. with the
+         * tracer. For inference, we use the script's use count, so that we can
+         * easily reset the script's uses if we end up recompiling it. For the
+         * tracer, we use the compartment's backedge table so that when
+         * compiling trace ICs we will retain counts for each loop and respect
+         * the HOTLOOP value when deciding to start recording traces.
+         */
+        if (cx->typeInferenceEnabled()) {
+            if (script->incUseCount() <= USES_BEFORE_COMPILE)
+                return Compile_Skipped;
+        } else {
+            if (cx->compartment->incBackEdgeCount(pc) <= USES_BEFORE_COMPILE)
+                return Compile_Skipped;
+        }
     }
     if (status == JITScript_None)
         return TryCompile(cx, fp);
