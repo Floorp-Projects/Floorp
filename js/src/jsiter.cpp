@@ -84,7 +84,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::types;
 
 static void iterator_finalize(JSContext *cx, JSObject *obj);
 static void iterator_trace(JSTracer *trc, JSObject *obj);
