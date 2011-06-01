@@ -47,8 +47,6 @@ let Storage = {
   GROUPS_DATA_IDENTIFIER: "tabview-groups",
   TAB_DATA_IDENTIFIER: "tabview-tab",
   UI_DATA_IDENTIFIER: "tabview-ui",
-  CACHE_CLIENT_IDENTIFIER: "tabview-cache",
-  CACHE_PREFIX: "moz-panorama:",
 
   // ----------
   // Function: toString
@@ -64,28 +62,12 @@ let Storage = {
     this._sessionStore =
       Cc["@mozilla.org/browser/sessionstore;1"].
         getService(Ci.nsISessionStore);
-    
-    // Create stream-based cache session for tabview
-    let cacheService = 
-      Cc["@mozilla.org/network/cache-service;1"].
-        getService(Ci.nsICacheService);
-    this._cacheSession = cacheService.createSession(
-      this.CACHE_CLIENT_IDENTIFIER, Ci.nsICache.STORE_ON_DISK, true);
-    this.StringInputStream = Components.Constructor(
-      "@mozilla.org/io/string-input-stream;1", "nsIStringInputStream",
-      "setData");
-    this.StorageStream = Components.Constructor(
-      "@mozilla.org/storagestream;1", "nsIStorageStream", 
-      "init");
   },
 
   // ----------
   // Function: uninit
   uninit: function Storage_uninit () {
     this._sessionStore = null;
-    this._cacheSession = null;
-    this.StringInputStream = null;
-    this.StorageStream = null;
   },
 
   // ----------
@@ -115,137 +97,6 @@ let Storage = {
   },
 
   // ----------
-  // Function: _openCacheEntry
-  // Opens a cache entry for the given <url> and requests access <access>.
-  // Calls <successCallback>(entry) when the entry was successfully opened with
-  // requested access rights. Otherwise calls <errorCallback>().
-  _openCacheEntry: function Storage__openCacheEntry(url, access, successCallback, errorCallback) {
-    let onCacheEntryAvailable = function (entry, accessGranted, status) {
-      if (entry && access == accessGranted && Components.isSuccessCode(status)) {
-        successCallback(entry);
-      } else {
-        entry && entry.close();
-        errorCallback();
-      }
-    }
-
-    let key = this.CACHE_PREFIX + url;
-
-    // switch to synchronous mode if parent window is about to close
-    if (UI.isDOMWindowClosing) {
-      let entry = this._cacheSession.openCacheEntry(key, access, true);
-      let status = Components.results.NS_OK;
-      onCacheEntryAvailable(entry, entry.accessGranted, status);
-    } else {
-      let listener = new CacheListener(onCacheEntryAvailable);
-      this._cacheSession.asyncOpenCacheEntry(key, access, listener);
-    }
-  },
-
-  // ----------
-  // Function: saveThumbnail
-  // Saves the <imageData> to the cache using the given <url> as key.
-  // Calls <callback>(status) when finished (passing true or false indicating
-  // whether the operation succeeded).
-  saveThumbnail: function Storage_saveThumbnail(url, imageData, callback) {
-    Utils.assert(url, "url");
-    Utils.assert(imageData, "imageData");
-    Utils.assert(typeof callback == "function", "callback arg must be a function");
-
-    let self = this;
-    let StringInputStream = this.StringInputStream;
-
-    let onCacheEntryAvailable = function (entry) {
-      let outputStream = entry.openOutputStream(0);
-
-      let cleanup = function () {
-        outputStream.close();
-        entry.close();
-      }
-
-      // switch to synchronous mode if parent window is about to close
-      if (UI.isDOMWindowClosing) {
-        outputStream.write(imageData, imageData.length);
-        cleanup();
-        callback(true);
-        return;
-      }
-
-      // asynchronous mode
-      let inputStream = new StringInputStream(imageData, imageData.length);
-      gNetUtil.asyncCopy(inputStream, outputStream, function (result) {
-        cleanup();
-        inputStream.close();
-        callback(Components.isSuccessCode(result));
-      });
-    }
-
-    let onCacheEntryUnavailable = function () {
-      callback(false);
-    }
-
-    this._openCacheEntry(url, Ci.nsICache.ACCESS_WRITE,
-        onCacheEntryAvailable, onCacheEntryUnavailable);
-  },
-
-  // ----------
-  // Function: loadThumbnail
-  // Asynchrously loads image data from the cache using the given <url> as key.
-  // Calls <callback>(status, data) when finished, passing true or false
-  // (indicating whether the operation succeeded) and the retrieved image data.
-  loadThumbnail: function Storage_loadThumbnail(url, callback) {
-    Utils.assert(url, "url");
-    Utils.assert(typeof callback == "function", "callback arg must be a function");
-
-    let self = this;
-
-    let onCacheEntryAvailable = function (entry) {
-      let imageChunks = [];
-      let nativeInputStream = entry.openInputStream(0);
-
-      const CHUNK_SIZE = 0x10000; // 65k
-      const PR_UINT32_MAX = 0xFFFFFFFF;
-      let storageStream = new self.StorageStream(CHUNK_SIZE, PR_UINT32_MAX, null);
-      let storageOutStream = storageStream.getOutputStream(0);
-
-      let cleanup = function () {
-        nativeInputStream.close();
-        storageStream.close();
-        storageOutStream.close();
-        entry.close();
-      }
-
-      gNetUtil.asyncCopy(nativeInputStream, storageOutStream, function (result) {
-        // cancel if parent window has already been closed
-        if (typeof UI == "undefined") {
-          cleanup();
-          return;
-        }
-
-        let imageData = null;
-        let isSuccess = Components.isSuccessCode(result);
-
-        if (isSuccess) {
-          let storageInStream = storageStream.newInputStream(0);
-          imageData = gNetUtil.readInputStreamToString(storageInStream,
-            storageInStream.available());
-          storageInStream.close();
-        }
-
-        cleanup();
-        callback(isSuccess, imageData);
-      });
-    }
-
-    let onCacheEntryUnavailable = function () {
-      callback(false);
-    }
-
-    this._openCacheEntry(url, Ci.nsICache.ACCESS_READ,
-        onCacheEntryAvailable, onCacheEntryUnavailable);
-  },
-
-  // ----------
   // Function: saveTab
   // Saves the data for a single tab.
   saveTab: function Storage_saveTab(tab, data) {
@@ -255,16 +106,9 @@ let Storage = {
       let imageData = data.imageData;
       // Remove imageData from payload
       delete data.imageData;
-      if (imageData != null) {
-        this.saveThumbnail(data.url, imageData, function (status) {
-          if (status) {
-            // Notify subscribers
-            tab._tabViewTabItem._sendToSubscribers("savedCachedImageData");
-          } else {
-            Utils.log("Error while saving thumbnail: " + e);
-          }
-        });
-      }
+
+      if (imageData != null)
+        ThumbnailStorage.saveThumbnail(tab, imageData);
     }
 
     this._sessionStore.setTabValue(tab, this.TAB_DATA_IDENTIFIER,
@@ -292,18 +136,13 @@ let Storage = {
     }
 
     if (existingData) {
-      this.loadThumbnail(existingData.url, function (status, imageData) {
-        if (status) {
+      ThumbnailStorage.loadThumbnail(
+        tab, existingData.url,
+        function(status, imageData) { 
           callback(imageData);
-
-          // Notify subscribers
-          tab._tabViewTabItem._sendToSubscribers("loadedCachedImageData");
-        } else {
-          Utils.log("Error while loading thumbnail");
         }
-      });
+      );
     }
-
     return existingData;
   },
 
@@ -409,26 +248,3 @@ let Storage = {
   }
 };
 
-// ##########
-// Class: CacheListener
-// Generic CacheListener for feeding to asynchronous cache calls.
-// Calls <callback>(entry, access, status) when the requested cache entry
-// is available.
-function CacheListener(callback) {
-  Utils.assert(typeof callback == "function", "callback arg must be a function");
-  this.callback = callback;
-};
-
-CacheListener.prototype = {
-  // ----------
-  // Function: toString
-  // Prints [CacheListener] for debug use
-  toString: function CacheListener_toString() {
-    return "[CacheListener]";
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICacheListener]),
-  onCacheEntryAvailable: function (entry, access, status) {
-    this.callback(entry, access, status);
-  }
-};

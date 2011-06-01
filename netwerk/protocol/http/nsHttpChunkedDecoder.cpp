@@ -137,7 +137,8 @@ nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
                 LOG(("got trailer: %s\n", buf));
                 // allocate a header array for the trailers on demand
                 if (!mTrailers) {
-                    mTrailers = new nsHttpHeaderArray();
+                    mTrailers = new nsHttpHeaderArray
+                        (nsHttpHeaderArray::HTTP_RESPONSE_HEADERS);
                     if (!mTrailers)
                         return NS_ERROR_OUT_OF_MEMORY;
                 }
