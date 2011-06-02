@@ -1283,7 +1283,9 @@
         <xul:hbox align="center" flex="1">
           <xul:image class="panel-promo-icon"/>
           <xul:description anonid="promo-message" class="panel-promo-message" flex="1">
-            placeholder <xul:description anonid="promo-link" class="plain text-link inline-link"/>
+            placeholder <xul:description anonid="promo-link"
+                                         class="plain text-link inline-link"
+                                         onclick="document.getBindingParent(this).onLinkClick();"/>
           </xul:description>
         </xul:hbox>
         <xul:toolbarbutton class="panel-promo-closebutton"
@@ -1354,6 +1356,14 @@
         <body><![CDATA[
           this._viewsLeft = 0;
           this.hidden = true;
+        ]]></body>
+      </method>
+      <method name="onLinkClick">
+        <body><![CDATA[
+          // Open a new selected tab and close the current panel.
+          gBrowser.loadOneTab(this._promolink.getAttribute("href"),
+                              { inBackground: false });
+          this._panel.hidePopup();
         ]]></body>
       </method>
       <method name="handleEvent">
