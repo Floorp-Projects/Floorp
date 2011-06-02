@@ -161,19 +161,17 @@
     </implementation>
   </binding>
 
-  <binding id="setting-bool" extends="chrome://browser/content/bindings/setting.xml#setting-base">
+  <binding id="setting-bool" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
-      <xul:box flex="1" class="prefbox setting-bool">
-        <xul:vbox flex="1">
-          <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
-          <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
-            <children/>
-          </xul:label>
-        </xul:vbox>
-        <xul:hbox anonid="input-container" class="setting-input">
-          <xul:checkbox anonid="input" xbl:inherits="disabled,onlabel,offlabel" oncommand="inputChanged();"/>
-        </xul:hbox>
-      </xul:box>
+      <xul:vbox class="setting-label">
+        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+          <children/>
+        </xul:label>
+      </xul:vbox>
+      <xul:hbox anonid="input-container" class="setting-input">
+        <xul:checkbox anonid="input" xbl:inherits="disabled,onlabel,offlabel" oncommand="inputChanged();"/>
+      </xul:hbox>
     </content>
 
     <implementation>
@@ -200,19 +198,17 @@
     </implementation>
   </binding>
 
-  <binding id="setting-boolint" extends="chrome://browser/content/bindings/setting.xml#setting-base">
+  <binding id="setting-boolint" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
-      <xul:box flex="1" class="prefbox setting-boolint">
-        <xul:vbox flex="1">
-          <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
-          <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
-            <children/>
-          </xul:label>
-        </xul:vbox>
-        <xul:hbox anonid="input-container" class="setting-input">
-          <xul:checkbox anonid="input" xbl:inherits="disabled" oncommand="inputChanged();"/>
-        </xul:hbox>
-      </xul:box>
+      <xul:vbox class="setting-label">
+        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+          <children/>
+        </xul:label>
+      </xul:vbox>
+      <xul:hbox anonid="input-container" class="setting-input">
+        <xul:checkbox anonid="input" xbl:inherits="disabled" oncommand="inputChanged();"/>
+      </xul:hbox>
     </content>
 
     <implementation>
@@ -238,7 +234,7 @@
     </implementation>
   </binding>
 
-  <binding id="setting-localized-bool" extends="chrome://browser/content/bindings/setting.xml#setting-bool">
+  <binding id="setting-localized-bool" extends="chrome://mozapps/content/extensions/setting.xml#setting-bool">
     <implementation>
       <method name="valueFromPreference">
         <body>
@@ -265,19 +261,17 @@
     </implementation>
   </binding>
 
-  <binding id="setting-integer" extends="chrome://browser/content/bindings/setting.xml#setting-base">
+  <binding id="setting-integer" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
-      <xul:box flex="1" class="prefbox setting-integer">
-        <xul:vbox flex="1">
-          <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
-          <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
-            <children/>
-          </xul:label>
-        </xul:vbox>
-        <xul:hbox anonid="input-container" class="setting-input">
-          <xul:textbox type="number" anonid="input" xbl:inherits="disabled,emptytext,min,max,increment,hidespinbuttons,wraparound" oninput="inputChanged();" oncommand="inputChanged();"/>
-        </xul:hbox>
-      </xul:box>
+      <xul:vbox class="setting-label">
+        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+          <children/>
+        </xul:label>
+      </xul:vbox>
+      <xul:hbox anonid="input-container" class="setting-input">
+        <xul:textbox type="number" anonid="input" xbl:inherits="disabled,emptytext,min,max,increment,hidespinbuttons,wraparound" oninput="inputChanged();" oncommand="inputChanged();"/>
+      </xul:hbox>
     </content>
 
     <implementation>
@@ -303,35 +297,31 @@
     </implementation>
   </binding>
 
-  <binding id="setting-control" extends="chrome://browser/content/bindings/setting.xml#setting-base">
+  <binding id="setting-control" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
-      <xul:box flex="1" class="prefbox setting-control">
-        <xul:vbox flex="1">
-          <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
-          <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
-            <children/>
-          </xul:label>
-        </xul:vbox>
-        <xul:hbox anonid="input-container" class="setting-input">
-          <children includes="button|menulist"/>
-        </xul:hbox>
-      </xul:box>
+      <xul:vbox class="setting-label">
+        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+          <children/>
+        </xul:label>
+      </xul:vbox>
+      <xul:hbox anonid="input-container" class="setting-input">
+        <children includes="button|menulist"/>
+      </xul:hbox>
     </content>
   </binding>
 
-  <binding id="setting-string" extends="chrome://browser/content/bindings/setting.xml#setting-base">
+  <binding id="setting-string" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
-      <xul:box flex="1" class="prefbox setting-string">
-        <xul:vbox flex="1">
-          <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
-          <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
-            <children/>
-          </xul:label>
-        </xul:vbox>
-        <xul:hbox anonid="input-container" class="setting-input">
-          <xul:textbox xbl:inherits="disabled,emptytext,type=inputtype,min,max,increment,hidespinbuttons,decimalplaces,wraparound" anonid="input" oninput="inputChanged();"/>
-        </xul:hbox>
-      </xul:box>
+      <xul:vbox class="setting-label">
+        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+          <children/>
+        </xul:label>
+      </xul:vbox>
+      <xul:hbox anonid="input-container" class="setting-input">
+        <xul:textbox xbl:inherits="disabled,emptytext,type=inputtype,min,max,increment,hidespinbuttons,decimalplaces,wraparound" anonid="input" oninput="inputChanged();"/>
+      </xul:hbox>
     </content>
 
     <implementation>
