@@ -129,7 +129,7 @@
 }
 
 #find-helper-textbox:hover:active {
-  background: #8db8d8;
+  background: @color_background_highlight@;
 }
 
 /* Form Helper Autofill ---------------------------------------------------- */
@@ -191,7 +191,7 @@
 }
 
 #form-helper-suggestions .form-helper-suggestions-label:hover:active {
-  background-color: #8db8d8;
+  background-color: @color_background_highlight@;
 }
 
 /* Select popup ------------------------------------------------------------- */
@@ -263,4 +263,3 @@
 .option-command .in-optgroup {
   -moz-padding-start: -moz-calc(30px + @padding_large@);
 }
-
