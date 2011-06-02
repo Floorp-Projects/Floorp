@@ -51,9 +51,9 @@ const TELEMETRY_INTERVAL = 60;
 const TELEMETRY_DELAY = 60000;
 // about:memory values to turn into histograms
 const MEM_HISTOGRAMS = {
-  "heap-used/js/gc-heap": [1024, 1024 * 500, 10],
-  "mapped/heap/used": [1024, 2 * 1024 * 1024, 10],
-  "heap-used/layout/all": [1024, 50 * 1025, 10]
+  "explicit/js/gc-heap": [1024, 512 * 1024, 10],
+  "resident": [32 * 1024, 1024 * 1024, 10],
+  "explicit/layout/all": [1024, 64 * 1025, 10]
 };
 
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
