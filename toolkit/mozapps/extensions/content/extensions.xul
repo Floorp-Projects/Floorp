@@ -563,7 +563,7 @@
                        <column flex="1"/>
                        <column flex="2"/>
                     </columns>
-                    <rows>
+                    <rows id="detail-rows">
                       <row class="detail-row-complex" id="detail-updates-row">
                         <label class="detail-row-label" value="&detail.updateType;"/>
                         <hbox align="center">
