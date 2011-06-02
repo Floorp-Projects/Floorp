@@ -166,12 +166,8 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/html/content/src \
 		-I$(srcdir)/../../content/svg/content/src \
 		-I$(srcdir)/../svg/base/src \
+		-I$(srcdir)/../mathml \
 		$(NULL)
-
-ifdef MOZ_MATHML
-LOCAL_INCLUDES += \
-        -I$(srcdir)/../mathml
-endif
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
 

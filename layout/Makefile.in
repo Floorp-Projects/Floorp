@@ -54,16 +54,11 @@ PARALLEL_DIRS = \
 		xul/base/public \
 		xul/base/src \
 		ipc \
+		mathml \
 		$(NULL)
 
 ifdef NS_PRINTING
 PARALLEL_DIRS += printing
-endif
-
-ifdef MOZ_MATHML
-PARALLEL_DIRS += \
-  mathml \
-  $(NULL)
 endif
 
 PARALLEL_DIRS += inspector/public inspector/src

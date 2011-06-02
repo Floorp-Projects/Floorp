@@ -81,10 +81,8 @@ CSS_PSEUDO_ELEMENT(mozFocusOuter, ":-moz-focus-outer", 0)
 CSS_PSEUDO_ELEMENT(mozListBullet, ":-moz-list-bullet", 0)
 CSS_PSEUDO_ELEMENT(mozListNumber, ":-moz-list-number", 0)
 
-#ifdef MOZ_MATHML
 CSS_PSEUDO_ELEMENT(mozMathStretchy, ":-moz-math-stretchy", 0)
 CSS_PSEUDO_ELEMENT(mozMathAnonymous, ":-moz-math-anonymous", 0)
-#endif
 
 // HTML5 Forms pseudo elements
 CSS_PSEUDO_ELEMENT(mozProgressBar, ":-moz-progress-bar", 0)
