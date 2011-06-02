@@ -806,7 +806,8 @@ extern "C" {
  * If these assertions break, update the constants below.
  *    *** DANGER ***
  */
-JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x58);
+JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x68);
+JS_STATIC_ASSERT(offsetof(VMFrame, scratch) == 0x18);
 JS_STATIC_ASSERT(VMFrame::offsetOfFp == 0x38);
 JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
 JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
