@@ -109,8 +109,8 @@ js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
 {
     JSObject *argsobj;
 
-    cx->markTypeObjectFlags(fp->fun()->getType(),
-                            OBJECT_FLAG_CREATED_ARGUMENTS | OBJECT_FLAG_UNINLINEABLE);
+    MarkTypeObjectFlags(cx, fp->fun()->getType(),
+                        OBJECT_FLAG_CREATED_ARGUMENTS | OBJECT_FLAG_UNINLINEABLE);
 
     if (fp->hasOverriddenArgs()) {
         JS_ASSERT(fp->hasCallObj());
@@ -1022,7 +1022,7 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
     if (!emptyDeclEnvShape)
         return NULL;
-    envobj->init(cx, &js_DeclEnvClass, cx->getTypeEmpty(), &fp->scopeChain(), fp, false);
+    envobj->init(cx, &js_DeclEnvClass, GetTypeEmpty(cx), &fp->scopeChain(), fp, false);
     envobj->setMap(emptyDeclEnvShape);
 
     return envobj;
@@ -1612,7 +1612,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          * frames on the stack before we go looking for them.
          */
         if (fun->isInterpreted())
-            cx->markTypeObjectFlags(fun->getType(), OBJECT_FLAG_UNINLINEABLE);
+            MarkTypeObjectFlags(cx, fun->getType(), OBJECT_FLAG_UNINLINEABLE);
     }
 
     /* Find fun's top-most activation record. */
@@ -1630,7 +1630,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         fp->prev()->pc(cx, fp, &inlined);
         if (inlined) {
             JSFunction *fun = fp->prev()->jit()->inlineFrames()[inlined->inlineIndex].fun;
-            cx->markTypeObjectFlags(fun->getType(), OBJECT_FLAG_UNINLINEABLE);
+            MarkTypeObjectFlags(cx, fun->getType(), OBJECT_FLAG_UNINLINEABLE);
         }
     }
 #endif
@@ -2737,7 +2737,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     TypeObject *newType = proto->getNewType(cx);
     if (!newType)
         return NULL;
-    cx->markTypeObjectUnknownProperties(newType);
+    MarkTypeObjectUnknownProperties(cx, newType);
 
     JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL, NULL, NULL);
     if (!fun)
@@ -2908,7 +2908,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             if (!type || !clone->setTypeAndUniqueShape(cx, type))
                 return NULL;
             if (fun->getType()->unknownProperties())
-                cx->markTypeObjectUnknownProperties(type);
+                MarkTypeObjectUnknownProperties(cx, type);
             else
                 type->asFunction()->handler = fun->getType()->asFunction()->handler;
         }

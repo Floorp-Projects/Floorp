@@ -428,7 +428,7 @@ class TypeSet
     JSObject *getSingleton(JSContext *cx);
 
     /* Mark all current and future types in this set as pushed by script/pc. */
-    void pushAllTypes(JSContext *cx, JSScript *script, const jsbytecode *pc);
+    void pushAllTypes(JSContext *cx, JSScript *script, jsbytecode *pc);
 
     /*
      * Clone (possibly NULL) source onto target; if any new types are added to
@@ -705,6 +705,14 @@ struct TypeObject
     bool addProperty(JSContext *cx, jsid id, Property **pprop);
     bool addDefiniteProperties(JSContext *cx, JSObject *obj);
     void addPrototype(JSContext *cx, TypeObject *proto);
+    void addPropertyType(JSContext *cx, jsid id, jstype type);
+    void addPropertyType(JSContext *cx, jsid id, const Value &value);
+    void addPropertyType(JSContext *cx, const char *name, jstype type);
+    void addPropertyType(JSContext *cx, const char *name, const Value &value);
+    void addPropertyTypeSet(JSContext *cx, jsid id, ClonedTypeSet *set);
+    void markPropertyConfigured(JSContext *cx, jsid id);
+    void aliasProperties(JSContext *cx, jsid first, jsid second);
+    void markSlotReallocation(JSContext *cx);
     void setFlags(JSContext *cx, TypeObjectFlags flags);
     void markUnknown(JSContext *cx);
     void clearNewScript(JSContext *cx);
@@ -884,13 +892,6 @@ struct TypeCompartment
     /* Make an initializer object. */
     TypeObject *newInitializerTypeObject(JSContext *cx, JSScript *script,
                                          uint32 offset, bool isArray);
-
-    /*
-     * Add the specified type to the specified set, do any necessary reanalysis
-     * stemming from the change and recompile any affected scripts.
-     */
-    void dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jstype type);
-    void dynamicCall(JSContext *cx, JSObject *callee, const CallArgs &args, bool constructing);
 
     void nukeTypes(JSContext *cx);
     void processPendingRecompiles(JSContext *cx);

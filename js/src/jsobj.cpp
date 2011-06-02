@@ -81,7 +81,7 @@
 #include "json.h"
 #include "jswrapper.h"
 
-#include "jsinferinlines.h"
+#include "jsarrayinlines.h"
 #include "jsinterpinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -2602,7 +2602,7 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
     vp->setObject(*obj); /* Root and prepare for eventual return. */
 
     /* Don't track types or array-ness for objects created here. */
-    cx->markTypeObjectUnknownProperties(obj->getType());
+    MarkTypeObjectUnknownProperties(cx, obj->getType());
 
     /* 15.2.3.5 step 4. */
     if (argc > 1 && !vp[3].isUndefined()) {
@@ -2884,7 +2884,7 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
         obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
         if (!obj)
             return JS_FALSE;
-        TypeObject *type = cx->getTypeCallerInitObject(false);
+        TypeObject *type = GetTypeCallerInitObject(cx, false);
         if (!type || !obj->setTypeAndEmptyShape(cx, type))
             return JS_FALSE;
     }
@@ -3356,7 +3356,7 @@ js_NewBlockObject(JSContext *cx)
     EmptyShape *emptyBlockShape = EmptyShape::getEmptyBlockShape(cx);
     if (!emptyBlockShape)
         return NULL;
-    blockObj->init(cx, &js_BlockClass, cx->getTypeEmpty(), NULL, NULL, false);
+    blockObj->init(cx, &js_BlockClass, GetTypeEmpty(cx), NULL, NULL, false);
     blockObj->setMap(emptyBlockShape);
 
     return blockObj;
@@ -3370,7 +3370,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     size_t count = OBJ_BLOCK_COUNT(cx, proto);
     gc::FinalizeKind kind = gc::GetGCObjectKind(count + 1);
 
-    js::types::TypeObject *type = proto->getNewType(cx);
+    TypeObject *type = proto->getNewType(cx);
     if (!type)
         return false;
 
@@ -3918,7 +3918,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
     TypeObject *newType = proto->getNewType(cx);
     if (!newType)
         return NULL;
-    cx->markTypeObjectUnknownProperties(newType);
+    MarkTypeObjectUnknownProperties(cx, newType);
 
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
@@ -3958,7 +3958,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
                 return false;
             if (!obj->addProperty(cx, id, PropertyStub, StrictPropertyStub, slot, attrs, 0, 0))
                 return false;
-            cx->addTypePropertyId(obj->getType(), id, v);
+            AddTypePropertyId(cx, obj->getType(), id, v);
 
             named = true;
             return true;
@@ -4043,8 +4043,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 
     /* Mark types with a special equality hook as having unknown properties. */
     if (clasp->ext.equality) {
-        cx->markTypeObjectUnknownProperties(type);
-        cx->markTypeObjectUnknownProperties(proto->getType());
+        MarkTypeObjectUnknownProperties(cx, type);
+        MarkTypeObjectUnknownProperties(cx, proto->getType());
     }
 
     proto->syncSpecialEquality();
@@ -4423,7 +4423,7 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     }
 
     if (changed && isGlobal())
-        cx->markGlobalReallocation(this);
+        MarkGlobalReallocation(cx, this);
 
     return true;
 }
@@ -4468,7 +4468,7 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     }
 
     if (changed && isGlobal())
-        cx->markGlobalReallocation(this);
+        MarkGlobalReallocation(cx, this);
 }
 
 bool
@@ -4522,7 +4522,7 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
         oldproto = oldproto->getProto();
     }
 
-    TypeObject *type = proto ? proto->getNewType(cx) : cx->getTypeEmpty();
+    TypeObject *type = proto ? proto->getNewType(cx) : GetTypeEmpty(cx);
     if (!type)
         return false;
 
@@ -4533,8 +4533,8 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
      * new type of the object, which is OK since we treat objects in type sets with
      * unknown properties as interchangeable.
      */
-    cx->markTypeObjectUnknownProperties(obj->getType());
-    cx->markTypeObjectUnknownProperties(type);
+    MarkTypeObjectUnknownProperties(cx, obj->getType());
+    MarkTypeObjectUnknownProperties(cx, type);
 
     if (checkForCycles) {
         for (JSObject *obj2 = proto; obj2; obj2 = obj2->getProto()) {
@@ -4699,7 +4699,7 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
         return NULL;
 
     obj->syncSpecialEquality();
-    cx->markTypeObjectUnknownProperties(obj->getType());
+    MarkTypeObjectUnknownProperties(cx, obj->getType());
 
     Value rval;
     if (!InvokeConstructorWithGivenThis(cx, obj, cval, argc, argv, &rval))
@@ -5021,8 +5021,8 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
         JSProperty *prop;
 
         /* Type information for getter/setter properties is unknown. */
-        cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN);
-        cx->markTypePropertyConfigured(obj->getType(), id);
+        AddTypePropertyId(cx, obj->getType(), id, TYPE_UNKNOWN);
+        MarkTypePropertyConfigured(cx, obj->getType(), id);
 
         /*
          * If we are defining a getter whose setter was already defined, or
@@ -5081,9 +5081,9 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
          * Type information for normal native properties should reflect the
          * initial value of the property.
          */
-        cx->addTypePropertyId(obj->getType(), id, value);
+        AddTypePropertyId(cx, obj->getType(), id, value);
         if (attrs & JSPROP_READONLY)
-            cx->markTypePropertyConfigured(obj->getType(), id);
+            MarkTypePropertyConfigured(cx, obj->getType(), id);
     }
 
     /* Get obj's own scope if it has one, or create a new one for obj. */
@@ -5585,7 +5585,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
     }
 
     /* Record values produced by shapes without a default getter. */
-    cx->addTypePropertyId(obj->getType(), shape->propid, *vp);
+    AddTypePropertyId(cx, obj->getType(), shape->propid, *vp);
 
     return true;
 }
@@ -5602,7 +5602,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
-    cx->addTypePropertyId(obj->getType(), shape->propid, *vp);
+    AddTypePropertyId(cx, obj->getType(), shape->propid, *vp);
 
     uint32 slot;
     int32 sample;
@@ -5693,7 +5693,7 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
 
         /* Record non-undefined values produced by the class getter hook. */
         if (!vp->isUndefined())
-            cx->addTypePropertyId(obj->getType(), id, *vp);
+            AddTypePropertyId(cx, obj->getType(), id, *vp);
 
         /*
          * Give a strict warning if foo.bar is evaluated by a script for an

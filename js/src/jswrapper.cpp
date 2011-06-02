@@ -637,7 +637,7 @@ bool
 JSCrossCompartmentWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
 {
     if (!(flags & JSITER_OWNONLY))
-        cx->markTypeCallerUnexpected(types::TYPE_UNKNOWN);
+        types::MarkTypeCallerUnexpected(cx, types::TYPE_UNKNOWN);
 
     PIERCE(cx, wrapper, GET,
            NOTHING,

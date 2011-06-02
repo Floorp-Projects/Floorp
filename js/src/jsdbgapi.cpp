@@ -225,8 +225,10 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
         script->debugMode = !!debug;
 
         /* Mark arguments objects as escaping in all scripts if debug mode is on. */
-        if (script->usesArguments && debug)
-            cx->markTypeObjectFlags(script->fun->getType(), types::OBJECT_FLAG_CREATED_ARGUMENTS);
+        if (script->usesArguments && debug) {
+            types::MarkTypeObjectFlags(cx, script->fun->getType(),
+                                       types::OBJECT_FLAG_CREATED_ARGUMENTS);
+        }
     }
 #endif
 
@@ -776,7 +778,7 @@ JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     /* Capture possible effects of the calls to nativeSetSlot below. */
-    cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNKNOWN);
+    types::AddTypePropertyId(cx, obj->getType(), id, types::TYPE_UNKNOWN);
 
     assertSameCompartment(cx, obj);
     JSRuntime *rt = cx->runtime;
@@ -1101,7 +1103,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         return false;
     }
 
-    cx->markTypePropertyConfigured(obj->getType(), propid);
+    types::MarkTypePropertyConfigured(cx, obj->getType(), propid);
 
     JSObject *pobj;
     JSProperty *prop;

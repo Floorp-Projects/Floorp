@@ -394,7 +394,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
          * to capture the type effect on the intermediate value.
          */
         if (rval.isUndefined() && (js_CodeSpec[*f.pc()].format & (JOF_INC|JOF_DEC)))
-            cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNDEFINED);
+            AddTypePropertyId(cx, obj->getType(), id, TYPE_UNDEFINED);
     }
 
     f.script()->typeMonitor(cx, f.pc(), rval);
@@ -449,8 +449,8 @@ stubs::GetElem(VMFrame &f)
             f.script()->typeMonitor(cx, f.pc(), regs.sp[-2]);
             return;
         }
-        cx->markTypeObjectFlags(f.script()->fun->getType(),
-                                types::OBJECT_FLAG_CREATED_ARGUMENTS);
+        MarkTypeObjectFlags(cx, f.script()->fun->getType(),
+                            OBJECT_FLAG_CREATED_ARGUMENTS);
         JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
     }
 
@@ -1085,7 +1085,7 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
     JSAtom *atom;
     GET_ATOM_FROM_BYTECODE(f.script(), f.pc(), 0, atom);
 
-    cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), TYPE_DOUBLE);
+    AddTypePropertyId(cx, obj->getType(), ATOM_TO_JSID(atom), TYPE_DOUBLE);
 }
 
 void JS_FASTCALL
@@ -1357,7 +1357,7 @@ stubs::This(VMFrame &f)
      */
     if (f.regs.inlined()) {
         JSFunction *fun = f.jit()->inlineFrames()[f.regs.inlined()->inlineIndex].fun;
-        f.cx->markTypeObjectFlags(fun->getType(), OBJECT_FLAG_UNINLINEABLE);
+        MarkTypeObjectFlags(f.cx, fun->getType(), OBJECT_FLAG_UNINLINEABLE);
     }
 
     if (!ComputeThis(f.cx, f.fp()))
@@ -2844,17 +2844,15 @@ stubs::AssertArgumentTypes(VMFrame &f)
     JSFunction *fun = fp->fun();
     JSScript *script = fun->script();
 
-    types::jstype type = types::GetValueType(f.cx, fp->thisValue());
-    if (!types::TypeMatches(f.cx, script->thisTypes(), type)) {
-        types::TypeFailure(f.cx, "Missing type for #%u this: %s", script->id(),
-                           types::TypeString(type));
-    }
+    jstype type = GetValueType(f.cx, fp->thisValue());
+    if (!TypeMatches(f.cx, script->thisTypes(), type))
+        TypeFailure(f.cx, "Missing type for #%u this: %s", script->id(), TypeString(type));
 
     for (unsigned i = 0; i < fun->nargs; i++) {
-        type = types::GetValueType(f.cx, fp->formalArg(i));
-        if (!types::TypeMatches(f.cx, script->argTypes(i), type)) {
-            types::TypeFailure(f.cx, "Missing type for #%u arg %d: %s", script->id(), i,
-                               types::TypeString(type));
+        type = GetValueType(f.cx, fp->formalArg(i));
+        if (!TypeMatches(f.cx, script->argTypes(i), type)) {
+            TypeFailure(f.cx, "Missing type for #%u arg %d: %s", script->id(), i,
+                        TypeString(type));
         }
     }
 }

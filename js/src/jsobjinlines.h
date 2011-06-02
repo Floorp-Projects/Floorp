@@ -128,7 +128,7 @@ JSObject::unbrand(JSContext *cx)
 inline JSBool
 JSObject::setAttributes(JSContext *cx, jsid id, uintN *attrsp)
 {
-    cx->markTypePropertyConfigured(getType(), id);
+    js::types::MarkTypePropertyConfigured(cx, getType(), id);
     js::AttributesOp op = getOps()->setAttributes;
     return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
 }
@@ -140,7 +140,7 @@ JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
     if (op) {
         if (!op(cx, this, receiver, id, vp))
             return false;
-        cx->addTypePropertyId(getType(), id, *vp);
+        js::types::AddTypePropertyId(cx, getType(), id, *vp);
     } else {
         if (!js_GetProperty(cx, this, receiver, id, vp))
             return false;
@@ -158,8 +158,8 @@ JSObject::getProperty(JSContext *cx, jsid id, js::Value *vp)
 inline JSBool
 JSObject::deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
 {
-    cx->addTypePropertyId(getType(), id, js::types::TYPE_UNDEFINED);
-    cx->markTypePropertyConfigured(getType(), id);
+    js::types::AddTypePropertyId(cx, getType(), id, js::types::TYPE_UNDEFINED);
+    js::types::MarkTypePropertyConfigured(cx, getType(), id);
     js::DeleteIdOp op = getOps()->deleteProperty;
     return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
 }
@@ -197,7 +197,7 @@ JSObject::finalize(JSContext *cx)
 inline void
 JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
 {
-    init(cx, &js_CallClass, cx->getTypeEmpty(), parent, NULL, false);
+    init(cx, &js_CallClass, js::types::GetTypeEmpty(cx), parent, NULL, false);
     lastProp = bindings.lastShape();
 
     /*
@@ -455,11 +455,11 @@ JSObject::setArrayLength(JSContext *cx, uint32 length)
          * Mark the type of this object as possibly not a dense array, per the
          * requirements of OBJECT_FLAG_NON_DENSE_ARRAY.
          */
-        cx->markTypeObjectFlags(getType(),
-                                js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
-                                js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
+        js::types::MarkTypeObjectFlags(cx, getType(),
+                                       js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
+                                       js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
         jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-        cx->addTypePropertyId(getType(), lengthId, js::types::TYPE_DOUBLE);
+        js::types::AddTypePropertyId(cx, getType(), lengthId, js::types::TYPE_DOUBLE);
     }
 
     setPrivate((void*) length);
@@ -512,7 +512,7 @@ JSObject::setDenseArrayElement(uintN idx, const js::Value &val)
 inline void
 JSObject::setDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value &val)
 {
-    cx->addTypePropertyId(getType(), JSID_VOID, val);
+    js::types::AddTypePropertyId(cx, getType(), JSID_VOID, val);
     setDenseArrayElement(idx, val);
 }
 
@@ -808,7 +808,7 @@ JSObject::getNewType(JSContext *cx, JSScript *script)
 inline bool
 JSObject::clearType(JSContext *cx)
 {
-    js::types::TypeObject *newType = cx->getTypeEmpty();
+    js::types::TypeObject *newType = js::types::GetTypeEmpty(cx);
     if (!newType)
         return false;
     type = newType;
@@ -1007,7 +1007,7 @@ inline void
 JSObject::nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value)
 {
     nativeSetSlot(shape->slot, value);
-    cx->addTypePropertyId(getType(), shape->propid, value);
+    js::types::AddTypePropertyId(cx, getType(), shape->propid, value);
 }
 
 inline bool
@@ -1419,7 +1419,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
           return NULL;
     }
 
-    types::TypeObject *type = proto ? proto->getNewType(cx) : cx->getTypeEmpty();
+    types::TypeObject *type = proto ? proto->getNewType(cx) : js::types::GetTypeEmpty(cx);
     if (!type)
         return NULL;
 
@@ -1653,11 +1653,11 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
     JS_ASSERT(!global->nativeLookup(id));
 
-    /* Set these first in case addTypePropertyId looks for this class. */
+    /* Set these first in case AddTypePropertyId looks for this class. */
     global->setSlot(key, ObjectValue(*ctor));
     global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
 
-    cx->addTypePropertyId(global->getType(), id, ObjectValue(*ctor));
+    types::AddTypePropertyId(cx, global->getType(), id, ObjectValue(*ctor));
     if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0)) {
         global->setSlot(key, UndefinedValue());
         global->setSlot(key + JSProto_LIMIT, UndefinedValue());

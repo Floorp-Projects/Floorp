@@ -316,7 +316,7 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
         types::UseNewType(cx, f.script(), f.pc());
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    cx->typeMonitorCall(args, flags & StackFrame::CONSTRUCTING);
+    types::TypeMonitorCall(cx, args, flags & StackFrame::CONSTRUCTING);
 
     /* Get pointer to new frame/slots, prepare arguments. */
     StackFrame *newfp = cx->stack.getInlineFrameWithinLimit(cx, f.regs.sp, argc,
