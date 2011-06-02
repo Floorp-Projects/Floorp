@@ -1187,6 +1187,7 @@ ArenaList::getArenaWithFreeList(JSContext *cx, unsigned thingKind)
 #endif /* !JS_THREADSAFE */
 
     if (!chunk) {
+        GCREASON(CHUNK);
         TriggerGC(cx->runtime);
         return NULL;
     }
@@ -1349,6 +1350,7 @@ RunLastDitchGC(JSContext *cx)
 #endif
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keep(rt);
+    GCREASON(LASTDITCH);
     js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL);
 
 #ifdef JS_THREADSAFE
@@ -1879,6 +1881,7 @@ TriggerCompartmentGC(JSCompartment *comp)
 {
     JSRuntime *rt = comp->rt;
     JS_ASSERT(!rt->gcRunning);
+    GCREASON(COMPARTMENT);
 
     if (rt->gcZeal()) {
         TriggerGC(rt);
@@ -1919,18 +1922,22 @@ MaybeGC(JSContext *cx)
     JSRuntime *rt = cx->runtime;
 
     if (rt->gcZeal()) {
+        GCREASON(MAYBEGC);
         js_GC(cx, NULL, GC_NORMAL);
         return;
     }
 
     JSCompartment *comp = cx->compartment;
     if (rt->gcIsNeeded) {
+        GCREASON(MAYBEGC);
         js_GC(cx, (comp == rt->gcTriggerCompartment) ? comp : NULL, GC_NORMAL);
         return;
     }
 
-    if (comp->gcBytes > 8192 && comp->gcBytes >= 3 * (comp->gcTriggerBytes / 4))
+    if (comp->gcBytes > 8192 && comp->gcBytes >= 3 * (comp->gcTriggerBytes / 4)) {
+        GCREASON(MAYBEGC);
         js_GC(cx, (rt->gcMode == JSGC_MODE_COMPARTMENT) ? comp : NULL, GC_NORMAL);
+    }
 }
 
 } /* namespace js */
