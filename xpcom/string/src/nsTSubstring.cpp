@@ -454,7 +454,7 @@ nsTSubstring_CharT::Adopt( char_type* data, size_type length )
 void
 nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, char_type c )
   {
-    cutStart = PR_MIN(cutStart, Length());
+    cutStart = NS_MIN(cutStart, Length());
 
     if (ReplacePrep(cutStart, cutLength, 1))
       mData[cutStart] = c;
@@ -482,7 +482,7 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const cha
           }
       }
 
-    cutStart = PR_MIN(cutStart, Length());
+    cutStart = NS_MIN(cutStart, Length());
 
     if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       char_traits::copy(mData + cutStart, data, length);
@@ -505,7 +505,7 @@ nsTSubstring_CharT::ReplaceASCII( index_type cutStart, size_type cutLength, cons
       }
 #endif
 
-    cutStart = PR_MIN(cutStart, Length());
+    cutStart = NS_MIN(cutStart, Length());
 
     if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       char_traits::copyASCII(mData + cutStart, data, length);
@@ -523,7 +523,7 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const sub
 
     size_type length = tuple.Length();
 
-    cutStart = PR_MIN(cutStart, Length());
+    cutStart = NS_MIN(cutStart, Length());
 
     if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       tuple.WriteTo(mData + cutStart, length);

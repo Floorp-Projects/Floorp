@@ -76,7 +76,7 @@ nsHttpChunkedDecoder::HandleChunkedContent(char *buf,
 
     while (count) {
         if (mChunkRemaining) {
-            PRUint32 amt = PR_MIN(mChunkRemaining, count);
+            PRUint32 amt = NS_MIN(mChunkRemaining, count);
 
             count -= amt;
             mChunkRemaining -= amt;

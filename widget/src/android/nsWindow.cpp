@@ -1655,7 +1655,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             selEvent.mOffset = PRUint32(ae->Count() >= 0 ?
                                         ae->Offset() :
                                         ae->Offset() + ae->Count());
-            selEvent.mLength = PRUint32(PR_ABS(ae->Count()));
+            selEvent.mLength = PRUint32(NS_ABS(ae->Count()));
             selEvent.mReversed = ae->Count() >= 0 ? PR_FALSE : PR_TRUE;
 
             DispatchEvent(&selEvent);

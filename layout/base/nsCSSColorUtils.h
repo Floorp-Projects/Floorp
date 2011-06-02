@@ -47,7 +47,7 @@
 // See http://www.w3.org/TR/AERT#color-contrast
 #define NS_SUFFICIENT_LUMINOSITY_DIFFERENCE 125000
 #define NS_LUMINOSITY_DIFFERENCE(a, b) \
-          PR_ABS(NS_GetLuminosity(a) - NS_GetLuminosity(b))
+          NS_ABS(NS_GetLuminosity(a) - NS_GetLuminosity(b))
 
 // To determine colors based on the background brightness and border color
 void NS_GetSpecial3DColors(nscolor aResult[2],

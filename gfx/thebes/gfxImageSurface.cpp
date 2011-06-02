@@ -212,7 +212,7 @@ gfxImageSurface::CopyFrom(gfxImageSurface *other)
     if (other->mStride == mStride) {
         memcpy (mData, other->mData, mStride * mSize.height);
     } else {
-        int lineSize = PR_MIN(other->mStride, mStride);
+        int lineSize = NS_MIN(other->mStride, mStride);
         for (int i = 0; i < mSize.height; i++) {
             unsigned char *src = other->mData + other->mStride * i;
             unsigned char *dst = mData + mStride * i;

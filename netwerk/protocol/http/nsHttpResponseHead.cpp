@@ -269,7 +269,7 @@ nsHttpResponseHead::ComputeCurrentAge(PRUint32 now,
 
     // Compute corrected received age
     if (NS_SUCCEEDED(GetAgeValue(&ageValue)))
-        *result = PR_MAX(*result, ageValue);
+        *result = NS_MAX(*result, ageValue);
 
     NS_ASSERTION(now >= requestTime, "bogus request time");
 

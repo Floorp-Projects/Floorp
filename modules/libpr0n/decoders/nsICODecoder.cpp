@@ -433,7 +433,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     }
 
     while (mCurLine > 0 && aCount > 0) {
-      PRUint32 toCopy = PR_MIN(rowSize - mRowBytes, aCount);
+      PRUint32 toCopy = NS_MIN(rowSize - mRowBytes, aCount);
       if (toCopy) {
         memcpy(mRow + mRowBytes, aBuffer, toCopy);
         aCount -= toCopy;

@@ -818,14 +818,14 @@ nsMediaCache::FindReusableBlock(TimeStamp aNow,
 {
   mReentrantMonitor.AssertCurrentThreadIn();
 
-  PRUint32 length = PR_MIN(PRUint32(aMaxSearchBlockIndex), mIndex.Length());
+  PRUint32 length = NS_MIN(PRUint32(aMaxSearchBlockIndex), mIndex.Length());
 
   if (aForStream && aForStreamBlock > 0 &&
       PRUint32(aForStreamBlock) <= aForStream->mBlocks.Length()) {
     PRInt32 prevCacheBlock = aForStream->mBlocks[aForStreamBlock - 1];
     if (prevCacheBlock >= 0) {
       PRUint32 freeBlockScanEnd =
-        PR_MIN(length, prevCacheBlock + FREE_BLOCK_SCAN_LIMIT);
+        NS_MIN(length, prevCacheBlock + FREE_BLOCK_SCAN_LIMIT);
       for (PRUint32 i = prevCacheBlock; i < freeBlockScanEnd; ++i) {
         if (IsBlockFree(i))
           return i;
@@ -1046,7 +1046,7 @@ nsMediaCache::PredictNextUse(TimeStamp aNow, PRInt32 aBlock)
       PRInt64 millisecondsAhead =
         bytesAhead*1000/bo->mStream->mPlaybackBytesPerSecond;
       prediction = TimeDuration::FromMilliseconds(
-          PR_MIN(millisecondsAhead, PR_INT32_MAX));
+          NS_MIN<PRInt64>(millisecondsAhead, PR_INT32_MAX));
       break;
     }
     default:
@@ -1074,7 +1074,7 @@ nsMediaCache::PredictNextUseForIncomingData(nsMediaCacheStream* aStream)
     return TimeDuration(0);
   PRInt64 millisecondsAhead = bytesAhead*1000/aStream->mPlaybackBytesPerSecond;
   return TimeDuration::FromMilliseconds(
-      PR_MIN(millisecondsAhead, PR_INT32_MAX));
+      NS_MIN<PRInt64>(millisecondsAhead, PR_INT32_MAX));
 }
 
 enum StreamAction { NONE, SEEK, RESUME, SUSPEND };
@@ -1124,7 +1124,7 @@ nsMediaCache::Update()
         continue;
       }
       TimeDuration predictedUse = PredictNextUse(now, blockIndex);
-      latestPredictedUseForOverflow = PR_MAX(latestPredictedUseForOverflow, predictedUse);
+      latestPredictedUseForOverflow = NS_MAX(latestPredictedUseForOverflow, predictedUse);
     }
 
     // Now try to move overflowing blocks to the main part of the cache.
@@ -1649,7 +1649,7 @@ nsMediaCache::NoteSeek(nsMediaCacheStream* aStream, PRInt64 aOldOffset)
     // be converted.
     PRInt32 blockIndex = aOldOffset/BLOCK_SIZE;
     PRInt32 endIndex =
-      PR_MIN((aStream->mStreamOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
+      NS_MIN<PRInt64>((aStream->mStreamOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
              aStream->mBlocks.Length());
     TimeStamp now = TimeStamp::Now();
     while (blockIndex < endIndex) {
@@ -1669,7 +1669,7 @@ nsMediaCache::NoteSeek(nsMediaCacheStream* aStream, PRInt64 aOldOffset)
     PRInt32 blockIndex =
       (aStream->mStreamOffset + BLOCK_SIZE - 1)/BLOCK_SIZE;
     PRInt32 endIndex =
-      PR_MIN((aOldOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
+      NS_MIN<PRInt64>((aOldOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
              aStream->mBlocks.Length());
     while (blockIndex < endIndex) {
       PRInt32 cacheBlockIndex = aStream->mBlocks[endIndex - 1];
@@ -1713,7 +1713,7 @@ nsMediaCacheStream::NotifyDataStarted(PRInt64 aOffset)
   if (mStreamLength >= 0) {
     // If we started reading at a certain offset, then for sure
     // the stream is at least that long.
-    mStreamLength = PR_MAX(mStreamLength, mChannelOffset);
+    mStreamLength = NS_MAX(mStreamLength, mChannelOffset);
   }
 }
 
@@ -1768,7 +1768,7 @@ nsMediaCacheStream::NotifyDataReceived(PRInt64 aSize, const char* aData,
   while (size > 0) {
     PRUint32 blockIndex = mChannelOffset/BLOCK_SIZE;
     PRInt32 blockOffset = PRInt32(mChannelOffset - blockIndex*BLOCK_SIZE);
-    PRInt32 chunkSize = PRInt32(PR_MIN(BLOCK_SIZE - blockOffset, size));
+    PRInt32 chunkSize = NS_MIN<PRInt64>(BLOCK_SIZE - blockOffset, size);
 
     // This gets set to something non-null if we have a whole block
     // of data to write to the cache
@@ -1809,7 +1809,7 @@ nsMediaCacheStream::NotifyDataReceived(PRInt64 aSize, const char* aData,
   while (nsMediaCacheStream* stream = iter.Next()) {
     if (stream->mStreamLength >= 0) {
       // The stream is at least as long as what we've read
-      stream->mStreamLength = PR_MAX(stream->mStreamLength, mChannelOffset);
+      stream->mStreamLength = NS_MAX(stream->mStreamLength, mChannelOffset);
     }
     stream->UpdatePrincipal(aPrincipal);
     stream->mClient->CacheClientNotifyDataReceived();
@@ -1975,9 +1975,9 @@ nsMediaCacheStream::GetCachedDataEndInternal(PRInt64 aOffset)
   if (mStreamLength >= 0) {
     // The last block in the cache may only be partially valid, so limit
     // the cached range to the stream length
-    result = PR_MIN(result, mStreamLength);
+    result = NS_MIN(result, mStreamLength);
   }
-  return PR_MAX(result, aOffset);
+  return NS_MAX(result, aOffset);
 }
 
 PRInt64
@@ -2106,7 +2106,7 @@ nsMediaCacheStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
     PRUint32 streamBlock = PRUint32(mStreamOffset/BLOCK_SIZE);
     PRUint32 offsetInStreamBlock =
       PRUint32(mStreamOffset - streamBlock*BLOCK_SIZE);
-    PRInt32 size = PR_MIN(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
+    PRInt32 size = NS_MIN(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
 
     if (mStreamLength >= 0) {
       // Don't try to read beyond the end of the stream
@@ -2115,7 +2115,7 @@ nsMediaCacheStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
         // Get out of here and return NS_OK
         break;
       }
-      size = PR_MIN(size, PRInt32(bytesRemaining));
+      size = NS_MIN(size, PRInt32(bytesRemaining));
     }
 
     PRInt32 bytes;
@@ -2125,7 +2125,7 @@ nsMediaCacheStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
       // We can just use the data in mPartialBlockBuffer. In fact we should
       // use it rather than waiting for the block to fill and land in
       // the cache.
-      bytes = PR_MIN(size, mChannelOffset - mStreamOffset);
+      bytes = NS_MIN<PRInt64>(size, mChannelOffset - mStreamOffset);
       memcpy(aBuffer + count,
         reinterpret_cast<char*>(mPartialBlockBuffer) + offsetInStreamBlock, bytes);
       if (mCurrentMode == MODE_METADATA) {
@@ -2192,7 +2192,7 @@ nsMediaCacheStream::ReadFromCache(char* aBuffer,
     PRUint32 streamBlock = PRUint32(streamOffset/BLOCK_SIZE);
     PRUint32 offsetInStreamBlock =
       PRUint32(streamOffset - streamBlock*BLOCK_SIZE);
-    PRInt32 size = PR_MIN(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
+    PRInt32 size = NS_MIN<PRInt64>(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
 
     if (mStreamLength >= 0) {
       // Don't try to read beyond the end of the stream
@@ -2200,7 +2200,7 @@ nsMediaCacheStream::ReadFromCache(char* aBuffer,
       if (bytesRemaining <= 0) {
         return NS_ERROR_FAILURE;
       }
-      size = PR_MIN(size, PRInt32(bytesRemaining));
+      size = NS_MIN(size, PRInt32(bytesRemaining));
     }
 
     PRInt32 bytes;
@@ -2210,7 +2210,7 @@ nsMediaCacheStream::ReadFromCache(char* aBuffer,
       // We can just use the data in mPartialBlockBuffer. In fact we should
       // use it rather than waiting for the block to fill and land in
       // the cache.
-      bytes = PR_MIN(size, mChannelOffset - streamOffset);
+      bytes = NS_MIN<PRInt64>(size, mChannelOffset - streamOffset);
       memcpy(aBuffer + count,
         reinterpret_cast<char*>(mPartialBlockBuffer) + offsetInStreamBlock, bytes);
     } else {

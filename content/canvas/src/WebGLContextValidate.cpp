@@ -538,7 +538,7 @@ WebGLContext::InitAndValidateGL()
         error = gl->fGetError();
         switch (error) {
             case LOCAL_GL_NO_ERROR:
-                mGLMaxVaryingVectors = PR_MIN(maxVertexOutputComponents, minFragmentInputComponents) / 4;
+                mGLMaxVaryingVectors = NS_MIN(maxVertexOutputComponents, minFragmentInputComponents) / 4;
                 break;
             case LOCAL_GL_INVALID_ENUM:
                 mGLMaxVaryingVectors = 16; // = 64/4, 64 is the min value for maxVertexOutputComponents in OpenGL 3.2 spec

@@ -927,8 +927,8 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
     look->GetMetric(nsILookAndFeel::eMetric_DragThresholdX, xThreshold);
     look->GetMetric(nsILookAndFeel::eMetric_DragThresholdY, yThreshold);
 
-    if (PR_ABS(clientX - mOriginalX ) * 2 >= xThreshold ||
-        PR_ABS(clientY - mOriginalY ) * 2 >= yThreshold) {
+    if (NS_ABS(clientX - mOriginalX ) * 2 >= xThreshold ||
+        NS_ABS(clientY - mOriginalY ) * 2 >= yThreshold) {
       mGrabberClicked = PR_FALSE;
       StartMoving(nsnull);
     }
