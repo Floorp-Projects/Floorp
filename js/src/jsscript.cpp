@@ -1261,6 +1261,9 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (!script)
         return NULL;
 
+    cg->bindings.makeImmutable();
+    AutoShapeRooter shapeRoot(cx, cg->bindings.lastShape());
+
     /* Now that we have script, error control flow must go to label bad. */
     script->main += prologLength;
     memcpy(script->code, CG_PROLOG_BASE(cg), prologLength * sizeof(jsbytecode));
@@ -1335,7 +1338,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                script->nClosedVars * sizeof(uint32));
     }
 
-    cg->bindings.makeImmutable();
     script->bindings.transfer(cx, &cg->bindings);
 
     /*

@@ -640,6 +640,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
 
         if (last) {
+            GCREASON(LASTCONTEXT);
             js_GC(cx, NULL, GC_LAST_CONTEXT);
             DUMP_EVAL_CACHE_METER(cx);
             DUMP_FUNCTION_METER(cx);
@@ -649,10 +650,13 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             rt->state = JSRTS_DOWN;
             JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
         } else {
-            if (mode == JSDCM_FORCE_GC)
+            if (mode == JSDCM_FORCE_GC) {
+                GCREASON(DESTROYCONTEXT);
                 js_GC(cx, NULL, GC_NORMAL);
-            else if (mode == JSDCM_MAYBE_GC)
+            } else if (mode == JSDCM_MAYBE_GC) {
+                GCREASON(DESTROYCONTEXT);
                 JS_MaybeGC(cx);
+            }
             JS_LOCK_GC(rt);
             js_WaitForGC(rt);
         }
@@ -1574,6 +1578,7 @@ JSRuntime::onTooMuchMalloc()
      */
     js_WaitForGC(this);
 #endif
+    GCREASON(TOOMUCHMALLOC);
     TriggerGC(this);
 }
 
