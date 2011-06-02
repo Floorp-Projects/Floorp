@@ -451,8 +451,43 @@ struct JSRuntime {
     bool                gcRunning;
     bool                gcRegenShapes;
 
+    /*
+     * These options control the zealousness of the GC. The fundamental values
+     * are gcNextScheduled and gcDebugCompartmentGC. At every allocation,
+     * gcNextScheduled is decremented. When it reaches zero, we do either a
+     * full or a compartmental GC, based on gcDebugCompartmentGC.
+     *
+     * At this point, if gcZeal_ >= 2 then gcNextScheduled is reset to the
+     * value of gcZealFrequency. Otherwise, no additional GCs take place.
+     *
+     * You can control these values in several ways:
+     *   - Pass the -Z flag to the shell (see the usage info for details)
+     *   - Call gczeal() or schedulegc() from inside shell-executed JS code
+     *     (see the help for details)
+     *
+     * Additionally, if gzZeal_ == 1 then we perform GCs in select places
+     * (during MaybeGC and whenever a GC poke happens). This option is mainly
+     * useful to embedders.
+     */
 #ifdef JS_GC_ZEAL
-    jsrefcount          gcZeal;
+    int                 gcZeal_;
+    int                 gcZealFrequency;
+    int                 gcNextScheduled;
+    bool                gcDebugCompartmentGC;
+
+    int gcZeal() { return gcZeal_; }
+
+    bool needZealousGC() {
+        if (gcNextScheduled > 0 && --gcNextScheduled == 0) {
+            if (gcZeal() >= 2)
+                gcNextScheduled = gcZealFrequency;
+            return true;
+        }
+        return false;
+    }
+#else
+    int gcZeal() { return 0; }
+    bool needZealousGC() { return false; }
 #endif
 
     JSGCCallback        gcCallback;

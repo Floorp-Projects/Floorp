@@ -1767,6 +1767,9 @@ extern JS_PUBLIC_API(void)
 JS_GC(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
+JS_CompartmentGC(JSContext *cx, JSCompartment *comp);
+
+extern JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx);
 
 extern JS_PUBLIC_API(JSGCCallback)
@@ -3864,8 +3867,13 @@ JS_NewObjectForConstructor(JSContext *cx, const jsval *vp);
 #endif
 
 #ifdef JS_GC_ZEAL
+#define JS_DEFAULT_ZEAL_FREQ 100
+
 extern JS_PUBLIC_API(void)
-JS_SetGCZeal(JSContext *cx, uint8 zeal);
+JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment);
+
+extern JS_PUBLIC_API(void)
+JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment);
 #endif
 
 JS_END_EXTERN_C
