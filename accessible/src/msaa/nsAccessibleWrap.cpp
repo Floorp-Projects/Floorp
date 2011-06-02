@@ -58,6 +58,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
+#include "nsIPrefService.h"
 #include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"

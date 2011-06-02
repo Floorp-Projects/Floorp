@@ -50,16 +50,14 @@
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsGUIEvent.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
-
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
 
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -412,7 +410,10 @@ nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
       // No need to cache pref service, this happens rarely
       if (gMenuAccesskeyModifier == -1) {
         // Need to initialize cached global accesskey pref
-        gMenuAccesskeyModifier = Preferences::GetInt("ui.key.menuAccessKey", 0);
+        gMenuAccesskeyModifier = 0;
+        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+        if (prefBranch)
+          prefBranch->GetIntPref("ui.key.menuAccessKey", &gMenuAccesskeyModifier);
       }
 
       nsAutoString propertyKey;
