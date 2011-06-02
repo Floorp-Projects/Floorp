@@ -827,7 +827,8 @@ JaegerCompartment::Initialize()
     
     TrampolineCompiler tc(execAlloc_, &trampolines);
     if (!tc.compile()) {
-        delete execAlloc_;
+        js::Foreground::delete_(execAlloc_);
+        execAlloc_ = NULL;
         return false;
     }
 

@@ -168,6 +168,27 @@ GetGCKindSlots(FinalizeKind thingKind)
     }
 }
 
+static inline void
+GCPoke(JSContext *cx, Value oldval)
+{
+    /*
+     * Since we're forcing a GC from JS_GC anyway, don't bother wasting cycles
+     * loading oldval.  XXX remove implied force, fix jsinterp.c's "second arg
+     * ignored", etc.
+     */
+#if 1
+    cx->runtime->gcPoke = JS_TRUE;
+#else
+    cx->runtime->gcPoke = oldval.isGCThing();
+#endif
+
+#ifdef JS_GC_ZEAL
+    /* Schedule a GC to happen "soon" after a GC poke. */
+    if (cx->runtime->gcZeal())
+        cx->runtime->gcNextScheduled = 1;
+#endif
+}
+
 } /* namespace gc */
 } /* namespace js */
 
@@ -189,6 +210,11 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
                  (thingKind == js::gc::FINALIZE_SHORT_STRING));
 #endif
     JS_ASSERT(!cx->runtime->gcRunning);
+
+#ifdef JS_GC_ZEAL
+    if (cx->runtime->needZealousGC())
+        js::gc::RunDebugGC(cx);
+#endif
 
     METER(cx->compartment->arenas[thingKind].stats.alloc++);
     js::gc::Cell *cell = cx->compartment->freeLists.getNext(thingKind);

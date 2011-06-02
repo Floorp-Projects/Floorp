@@ -2413,7 +2413,8 @@ DumpNotify(JSTracer *trc, void *thing, uint32 kind)
     }
 
     edgeNameSize = strlen(edgeName) + 1;
-    node = (JSHeapDumpNode *) cx->malloc_(offsetof(JSHeapDumpNode, edgeName) + edgeNameSize);
+    size_t bytes = offsetof(JSHeapDumpNode, edgeName) + edgeNameSize;
+    node = (JSHeapDumpNode *) OffTheBooks::malloc_(bytes);
     if (!node) {
         dtrc->ok = JS_FALSE;
         return;
@@ -2565,7 +2566,7 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
         for (;;) {
             next = node->next;
             parent = node->parent;
-            cx->free_(node);
+            Foreground::free_(node);
             node = next;
             if (node)
                 break;
@@ -2592,14 +2593,24 @@ JS_IsGCMarkingTracer(JSTracer *trc)
 }
 
 JS_PUBLIC_API(void)
-JS_GC(JSContext *cx)
+JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 {
+    /* We cannot GC the atoms compartment alone; use a full GC instead. */
+    JS_ASSERT(comp != cx->runtime->atomsCompartment);
+
     LeaveTrace(cx);
 
     /* Don't nuke active arenas if executing or compiling. */
     if (cx->tempPool.current == &cx->tempPool.first)
         JS_FinishArenaPool(&cx->tempPool);
-    js_GC(cx, NULL, GC_NORMAL);
+
+    js_GC(cx, comp, GC_NORMAL);
+}
+
+JS_PUBLIC_API(void)
+JS_GC(JSContext *cx)
+{
+    JS_CompartmentGC(cx, NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -6235,9 +6246,19 @@ JS_ClearContextThread(JSContext *cx)
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
-JS_SetGCZeal(JSContext *cx, uint8 zeal)
+JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment)
 {
-    cx->runtime->gcZeal = zeal;
+    cx->runtime->gcZeal_ = zeal;
+    cx->runtime->gcZealFrequency = frequency;
+    cx->runtime->gcNextScheduled = frequency;
+    cx->runtime->gcDebugCompartmentGC = !!compartment;
+}
+
+JS_PUBLIC_API(void)
+JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment)
+{
+    cx->runtime->gcNextScheduled = count;
+    cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 #endif
 
