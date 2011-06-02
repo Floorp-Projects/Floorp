@@ -268,17 +268,27 @@ types::TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &val
 void
 types::TypeFailure(JSContext *cx, const char *fmt, ...)
 {
+    char msgbuf[1024]; /* Larger error messages will be truncated */
+    char errbuf[1024];
+
     va_list ap;
     va_start(ap, fmt);
-    fprintf(stderr, "[infer failure] ");
-    vfprintf(stderr, fmt, ap);
-    fprintf(stderr, "\n");
+    JS_vsnprintf(errbuf, sizeof(errbuf), fmt, ap);
     va_end(ap);
 
+    JS_snprintf(msgbuf, sizeof(msgbuf), "[infer failure] %s", errbuf);
+
+    /*
+     * If the INFERFLAGS environment variable is set to 'result' or 'full', 
+     * this dumps the current type state of all scripts and type objects 
+     * to stdout.
+     */
     cx->compartment->types.print(cx, cx->compartment);
 
-    fflush(stderr);
-    *((int*)NULL) = 0;  /* Type warnings */
+    /* Always active, even in release builds */
+    JS_Assert(msgbuf, __FILE__, __LINE__);
+    
+    *((int*)NULL) = 0;  /* Should never be reached */
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -3945,7 +3955,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       default:
-        TypeFailure(cx, "Unknown bytecode at #%u:%05u", script->id(), offset);
+        /* Display fine-grained debug information first */
+        fprintf(stderr, "Unknown bytecode %02x at #%u:%05u\n", op, script->id(), offset);
+        TypeFailure(cx, "Unknown bytecode %02x", op);
     }
 
     return true;
@@ -5098,8 +5110,10 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
         jstype type = GetValueType(cx, val);
 
         if (!TypeMatches(cx, types, type)) {
-            TypeFailure(cx, "Missing type at #%u:%05u pushed %u: %s",
-                                   id(), pc - code, i, TypeString(type));
+            /* Display fine-grained debug information first */
+            fprintf(stderr, "Missing type at #%u:%05u pushed %u: %s\n", 
+                    id(), pc - code, i, TypeString(type));
+            TypeFailure(cx, "Missing type pushed %u: %s", i, TypeString(type));
         }
 
         if (TypeIsObject(type)) {
@@ -5116,9 +5130,12 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
             JS_ASSERT_IF(packed, dense);
             if (dense) {
                 if (!obj->isDenseArray() || (packed && !obj->isPackedDenseArray())) {
-                    TypeFailure(cx, "Object not %s array at #%u:%05u popped %u: %s",
-                        packed ? "packed" : "dense",
-                        id(), pc - code, i, object->name());
+                    /* Display fine-grained debug information first */
+                    fprintf(stderr, "Object not %s array at #%u:%05u popped %u: %s\n",
+                            packed ? "packed" : "dense",
+                            id(), pc - code, i, object->name());
+                    TypeFailure(cx, "Object not %s array, popped %u: %s",
+                                packed ? "packed" : "dense", i, object->name());
                 }
             }
         }
