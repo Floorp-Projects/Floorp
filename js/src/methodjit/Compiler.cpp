@@ -171,8 +171,10 @@ mjit::Compiler::compile()
                      : (*jit)->invokeEntry;
     } else if (status != Compile_Retry) {
         *checkAddr = JS_UNJITTABLE_SCRIPT;
-        if (outerScript->fun)
-            cx->markTypeObjectFlags(outerScript->fun->getType(), types::OBJECT_FLAG_UNINLINEABLE);
+        if (outerScript->fun) {
+            types::MarkTypeObjectFlags(cx, outerScript->fun->getType(),
+                                       types::OBJECT_FLAG_UNINLINEABLE);
+        }
     }
 
     return status;
@@ -3909,7 +3911,8 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
             popActiveFrame();
             if (status == Compile_Abort) {
                 /* The callee is uncompileable, mark it as uninlineable and retry. */
-                cx->markTypeObjectFlags(script->fun->getType(), types::OBJECT_FLAG_UNINLINEABLE);
+                types::MarkTypeObjectFlags(cx, script->fun->getType(),
+                                           types::OBJECT_FLAG_UNINLINEABLE);
                 return Compile_Retry;
             }
             return status;

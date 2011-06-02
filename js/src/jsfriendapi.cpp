@@ -107,7 +107,7 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
     if (!type)
         return NULL;
     if (obj->hasSpecialEquality())
-        cx->markTypeObjectFlags(type, types::OBJECT_FLAG_SPECIAL_EQUALITY);
+        types::MarkTypeObjectFlags(cx, type, types::OBJECT_FLAG_SPECIAL_EQUALITY);
     if (!obj->setTypeAndUniqueShape(cx, type))
         return NULL;
     type->singleton = obj;

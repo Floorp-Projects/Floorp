@@ -549,7 +549,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
         if (!obj)
             return false;
 
-        obj->init(cx, &js_NoSuchMethodClass, cx->getTypeEmpty(), NULL, NULL, false);
+        obj->init(cx, &js_NoSuchMethodClass, GetTypeEmpty(cx), NULL, NULL, false);
         obj->setSharedNonNativeMap();
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
@@ -652,7 +652,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
             js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(option));
             return false;
         }
-        cx->markTypeCallerUnexpected(types::TYPE_UNKNOWN);
+        MarkTypeCallerUnexpected(cx, types::TYPE_UNKNOWN);
         return CallJSNative(cx, clasp->call, args.argc(), args.base());
     }
 
@@ -678,7 +678,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
         return true;
     }
 
-    cx->typeMonitorCall(args, option == INVOKE_CONSTRUCTOR);
+    TypeMonitorCall(cx, args, option == INVOKE_CONSTRUCTOR);
 
     /* Get pointer to new frame/slots, prepare arguments. */
     uint32 flags = ToFrameFlags(option);
@@ -1280,7 +1280,7 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
             return true;
         }
         if (clasp->construct) {
-            cx->markTypeCallerUnexpected(types::TYPE_UNKNOWN);
+            MarkTypeCallerUnexpected(cx, types::TYPE_UNKNOWN);
             args.thisv().setMagicWithObjectOrNullPayload(NULL);
             return CallJSNativeConstructor(cx, clasp->construct, args.argc(), args.base());
         }
@@ -3965,7 +3965,7 @@ do_incop:
      * type information, and typeMonitor will not be update the object itself.
      */
     if (regs.sp[-1].isUndefined())
-        cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNDEFINED);
+        AddTypePropertyId(cx, obj->getType(), id, types::TYPE_UNDEFINED);
 
     const JSCodeSpec *cs = &js_CodeSpec[op];
     JS_ASSERT(cs->ndefs == 1);
@@ -4471,8 +4471,8 @@ BEGIN_CASE(JSOP_GETELEM)
             len = JSOP_GETELEM_LENGTH;
             DO_NEXT_OP(len);
         }
-        cx->markTypeObjectFlags(script->fun->getType(),
-                                types::OBJECT_FLAG_CREATED_ARGUMENTS);
+        MarkTypeObjectFlags(cx, script->fun->getType(),
+                            types::OBJECT_FLAG_CREATED_ARGUMENTS);
         JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
     }
 
@@ -4707,7 +4707,7 @@ BEGIN_CASE(JSOP_FUNCALL)
             }
 
             /* This will construct the type sets for the callee, if necessary. */
-            cx->typeMonitorCall(CallArgsFromVp(argc, vp), flags & StackFrame::CONSTRUCTING);
+            TypeMonitorCall(cx, CallArgsFromVp(argc, vp), flags & StackFrame::CONSTRUCTING);
 
             bool newType = (flags & StackFrame::CONSTRUCTING) &&
                 cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);

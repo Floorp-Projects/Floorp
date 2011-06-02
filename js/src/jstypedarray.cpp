@@ -1535,9 +1535,9 @@ do {                                                                           \
                          NULL, NULL);                                          \
     if (!proto)                                                                \
         return NULL;                                                           \
-    cx->addTypePropertyId(proto->getType(), JSID_VOID, types::TYPE_INT32);     \
+    AddTypePropertyId(cx, proto->getType(), JSID_VOID, types::TYPE_INT32);     \
     if (_typedArray::ArrayElementTypeMayBeDouble())                            \
-        cx->addTypePropertyId(proto->getType(), JSID_VOID, types::TYPE_DOUBLE); \
+        AddTypePropertyId(cx, proto->getType(), JSID_VOID, types::TYPE_DOUBLE); \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
         !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \

@@ -1184,7 +1184,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
              * optimizations only take place if the property is not defined.
              */
             rval.setObject(*fun);
-            cx->addTypePropertyId(globalObj->getType(), id, rval);
+            types::AddTypePropertyId(cx, globalObj->getType(), id, rval);
         } else {
             rval.setUndefined();
         }

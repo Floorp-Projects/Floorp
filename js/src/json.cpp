@@ -133,7 +133,7 @@ js_json_stringify(JSContext *cx, uintN argc, Value *vp)
             return false;
         vp->setString(str);
     } else {
-        cx->markTypeCallerUnexpected(types::TYPE_UNDEFINED);
+        MarkTypeCallerUnexpected(cx, types::TYPE_UNDEFINED);
         vp->setUndefined();
     }
 
