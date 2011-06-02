@@ -1331,19 +1331,7 @@ PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx)
      * fp->script()->compartment() != fp->compartment().
      */
 
-    JSPrincipals *calleePrincipals = call.callee().principals(cx);
-
-#ifdef DEBUG
-    if (calleePrincipals) {
-        if (StackFrame *caller = js_GetScriptedCaller(cx, NULL)) {
-            if (JSPrincipals *callerPrincipals = caller->scopeChain().principals(cx)) {
-                JS_ASSERT(callerPrincipals->subsume(callerPrincipals, calleePrincipals));
-            }
-        }
-    }
-#endif
-
-    return calleePrincipals;
+    return call.callee().principals(cx);
 }
 
 }  /* namespace js */
