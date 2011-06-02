@@ -88,6 +88,34 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#detail-row");
 }
 
+settings {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
+}
+
+setting[type="bool"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-bool");
+}
+
+setting[type="bool"][localized="true"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-localized-bool");
+}
+
+setting[type="boolint"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-boolint");
+}
+
+setting[type="integer"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-integer");
+}
+
+setting[type="control"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-control");
+}
+
+setting[type="string"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
+}
+
 #addonitem-popup > menuitem[disabled="true"] {
   display: none;
 }
