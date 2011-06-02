@@ -46,6 +46,7 @@
 #include "IonLIR.h"
 #include "GreedyAllocator.h"
 #include "LICM.h"
+#include "ValueNumbering.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/Lowering-x86.h"
@@ -145,6 +146,11 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
     if (!ApplyTypeInformation(graph))
         return false;
     spew.spewPass("Apply types");
+
+    ValueNumberer gvn(graph);
+    if (!gvn.analyze())
+        return false;
+    spew.spewPass("GVN");
 
     LICM licm(graph);
     if (!licm.analyze())

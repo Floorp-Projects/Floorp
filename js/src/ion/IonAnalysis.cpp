@@ -559,7 +559,7 @@ ion::BuildDominatorTree(MIRGraph &graph)
         // an additional +1 because of this child block.
         parent->addNumDominated(child->numDominated() + 1);
     }
-
+    JS_ASSERT(graph.getBlock(0)->numDominated() == graph.numBlocks() - 1);
     return true;
 }
 
