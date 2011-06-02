@@ -379,14 +379,10 @@ static nscolor MakeBevelColor(mozilla::css::Side whichSide, PRUint8 style,
 static InlineBackgroundData* gInlineBGData = nsnull;
 
 // Initialize any static variables used by nsCSSRendering.
-nsresult nsCSSRendering::Init()
+void nsCSSRendering::Init()
 {
   NS_ASSERTION(!gInlineBGData, "Init called twice");
   gInlineBGData = new InlineBackgroundData();
-  if (!gInlineBGData)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return NS_OK;
 }
 
 // Clean up any global variables used by nsCSSRendering.

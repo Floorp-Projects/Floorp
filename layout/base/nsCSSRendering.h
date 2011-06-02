@@ -54,7 +54,7 @@ struct nsCSSRendering {
   /**
    * Initialize any static variables used by nsCSSRendering.
    */
-  static nsresult Init();
+  static void Init();
   
   /**
    * Clean up any static variables used by nsCSSRendering.
