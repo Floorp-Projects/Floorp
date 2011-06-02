@@ -1255,6 +1255,9 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     mainLength = CG_OFFSET(cg);
     prologLength = CG_PROLOG_OFFSET(cg);
 
+    if (!cg->bindings.ensureShape(cx))
+        return NULL;
+
     CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
     uint16 nClosedArgs = uint16(cg->closedArgs.length());
     JS_ASSERT(nClosedArgs == cg->closedArgs.length());
@@ -1268,6 +1271,9 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                        cg->typesetIndex, cg->version());
     if (!script)
         return NULL;
+
+    cg->bindings.makeImmutable();
+    AutoShapeRooter shapeRoot(cx, cg->bindings.lastShape());
 
     /* Now that we have script, error control flow must go to label bad. */
     script->main += prologLength;
@@ -1352,9 +1358,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                script->nClosedVars * sizeof(uint32));
     }
 
-    if (!cg->bindings.ensureShape(cx))
-        goto bad;
-    cg->bindings.makeImmutable();
     script->bindings.transfer(cx, &cg->bindings);
 
     /*
