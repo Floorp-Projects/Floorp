@@ -66,8 +66,38 @@ MInstruction::printName(FILE *fp)
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, "%u", id());
+
+    if (valueNumber() != 0)
+        fprintf(fp, "-vn%u", valueNumber());
 }
 
+HashNumber
+MInstruction::valueHash() const
+{
+    HashNumber out = op();
+    for (size_t i = 0; i < numOperands(); i++) {
+        uint32 valueNumber = getInput(i)->valueNumber();
+        out = valueNumber + (out << 6) + (out << 16) - out;
+    }
+    return out;
+}
+
+bool
+MInstruction::congruentTo(MInstruction * const &ins) const
+{
+    if (numOperands() != ins->numOperands())
+        return false;
+
+    if (op() != ins->op())
+        return false;
+
+    for (size_t i = 0; i < numOperands(); i++) {
+        if (getInput(i)->valueNumber() != ins->getInput(i)->valueNumber())
+            return false;
+    }
+
+    return true;
+}
 static const char *MirTypeNames[] =
 {
     "",
@@ -193,6 +223,22 @@ MConstant::MConstant(const js::Value &vp)
     setResultType(MIRTypeFromValue(vp));
 }
 
+
+HashNumber
+MConstant::valueHash() const
+{
+    // This disregards some state, since values are 64 bits. But for a hash,
+    // it's completely acceptable.
+    return (HashNumber)value_.asRawBits();
+}
+bool
+MConstant::congruentTo(MInstruction * const &ins) const
+{
+    if (!ins->isConstant())
+        return false;
+    return ins->toConstant()->value() == value();
+}
+
 void
 MConstant::printOpcode(FILE *fp)
 {
@@ -238,6 +284,21 @@ MParameter::printOpcode(FILE *fp)
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, " %d", index());
+}
+
+HashNumber
+MParameter::valueHash() const
+{
+    return index_; // Why not?
+}
+
+bool
+MParameter::congruentTo(MInstruction * const &ins) const
+{
+    if (!ins->isParameter())
+        return false;
+
+    return ins->toParameter()->index() == index_;
 }
 
 MCopy *
@@ -378,3 +439,14 @@ MSnapshot::printOpcode(FILE *fp)
     PrintOpcodeName(fp, op());
 }
 
+HashNumber
+MSnapshot::valueHash() const
+{
+    return id();
+}
+
+bool
+MSnapshot::congruentTo(MInstruction *const &ins) const
+{
+    return ins->id() == id();
+}

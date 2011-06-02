@@ -161,6 +161,8 @@ class MIRGraph
         return blocks_[i];
     }
     void allocInstructionId(MInstruction *ins) {
+        // This intentionally starts above 0. The id 0 is in places used to
+        // indicate a failure to perform an operation on an instruction.
         idGen_ += 2;
         ins->setId(idGen_);
     }
@@ -491,7 +493,7 @@ class MDefinitionIterator
     }
 
     bool more() {
-        return phiIndex_ < block_->numPhis() || iter_ != block_->end();
+        return phiIndex_ < block_->numPhis() || iter_ != block_->lastIns();
     }
 };
 
