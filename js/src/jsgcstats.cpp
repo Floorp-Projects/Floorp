@@ -147,61 +147,6 @@ static const char *const GC_ARENA_NAMES[] = {
 };
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(GC_ARENA_NAMES) == FINALIZE_LIMIT);
 
-template <typename T>
-static inline void
-GetSizeAndThings(size_t &thingSize, size_t &thingsPerArena)
-{
-    thingSize = sizeof(T);
-    thingsPerArena = Arena<T>::ThingsPerArena;
-}
-
-void GetSizeAndThingsPerArena(int thingKind, size_t &thingSize, size_t &thingsPerArena)
-{
-    switch (thingKind) {
-        case FINALIZE_OBJECT0:
-        case FINALIZE_OBJECT0_BACKGROUND:
-            GetSizeAndThings<JSObject>(thingSize, thingsPerArena);
-            break;
-        case FINALIZE_OBJECT2:
-        case FINALIZE_OBJECT2_BACKGROUND:
-            GetSizeAndThings<JSObject_Slots2>(thingSize, thingsPerArena);
-            break;
-        case FINALIZE_OBJECT4:
-        case FINALIZE_OBJECT4_BACKGROUND:
-            GetSizeAndThings<JSObject_Slots4>(thingSize, thingsPerArena);
-            break;
-        case FINALIZE_OBJECT8:
-        case FINALIZE_OBJECT8_BACKGROUND:
-            GetSizeAndThings<JSObject_Slots8>(thingSize, thingsPerArena);
-            break;
-        case FINALIZE_OBJECT12:
-        case FINALIZE_OBJECT12_BACKGROUND:
-            GetSizeAndThings<JSObject_Slots12>(thingSize, thingsPerArena);
-            break;
-        case FINALIZE_OBJECT16:
-        case FINALIZE_OBJECT16_BACKGROUND:
-            GetSizeAndThings<JSObject_Slots16>(thingSize, thingsPerArena);
-            break;
-        case FINALIZE_EXTERNAL_STRING:
-        case FINALIZE_STRING:
-            GetSizeAndThings<JSString>(thingSize, thingsPerArena);
-            break;
-        case FINALIZE_SHORT_STRING:
-            GetSizeAndThings<JSShortString>(thingSize, thingsPerArena);
-            break;
-        case FINALIZE_FUNCTION:
-            GetSizeAndThings<JSFunction>(thingSize, thingsPerArena);
-            break;
-#if JS_HAS_XML_SUPPORT
-        case FINALIZE_XML:
-            GetSizeAndThings<JSXML>(thingSize, thingsPerArena);
-            break;
-#endif
-        default:
-            JS_NOT_REACHED("wrong kind");
-    }
-}
-
 void
 DumpArenaStats(JSGCArenaStats *stp, FILE *fp)
 {
@@ -213,8 +158,8 @@ DumpArenaStats(JSGCArenaStats *stp, FILE *fp)
         JSGCArenaStats *st = &stp[i];
         if (st->maxarenas == 0)
             continue;
-        size_t thingSize = 0, thingsPerArena = 0;
-        GetSizeAndThingsPerArena(i, thingSize, thingsPerArena);
+        size_t thingSize = GCThingSizeMap[i];
+        size_t thingsPerArena = Arena::thingsPerArena(thingSize);
 
         fprintf(fp, "%s arenas (thing size %lu, %lu things per arena):\n",
                 GC_ARENA_NAMES[i], UL(thingSize), UL(thingsPerArena));
@@ -427,6 +372,10 @@ GCMarker::dumpConservativeRoots()
 
 #if defined(MOZ_GCTIMER) || defined(JSGC_TESTPILOT)
 
+volatile GCTimer::JSGCReason gcReason = GCTimer::NOREASON;
+const char *gcReasons[] = {"  API", "Maybe", "LastC", "DestC", "Compa", "LastD",
+                          "Malloc", "Alloc", "Chunk", "Shape", "  None"};
+
 jsrefcount newChunkCount = 0;
 jsrefcount destroyChunkCount = 0;
 
@@ -507,14 +456,15 @@ GCTimer::finish(bool lastGC)
                 gcFile = fopen("gcTimer.dat", "a");
 
                 fprintf(gcFile, "     AppTime,  Total,   Wait,   Mark,  Sweep, FinObj,"
-                                " FinStr, SwShapes, Destroy,    End, +Chu, -Chu\n");
+                                " FinStr, SwShapes, Destroy,    End, +Chu, -Chu, T, Reason\n");
             }
             JS_ASSERT(gcFile);
             /*               App   , Tot  , Wai  , Mar  , Swe  , FiO  , FiS  , SwS  , Des   , End */
             fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, %6.1f, ",
                     appTime, gcTime, waitTime, markTime, sweepTime, sweepObjTime, sweepStringTime,
                     sweepShapeTime, destroyTime, endTime);
-            fprintf(gcFile, "%4d, %4d\n", newChunkCount, destroyChunkCount);
+            fprintf(gcFile, "%4d, %4d,", newChunkCount, destroyChunkCount);
+            fprintf(gcFile, " %s, %s\n", isCompartmental ? "C" : "G", gcReasons[gcReason]);
             fflush(gcFile);
 
             if (lastGC) {
@@ -526,6 +476,7 @@ GCTimer::finish(bool lastGC)
     }
     newChunkCount = 0;
     destroyChunkCount = 0;
+    gcReason = NOREASON;
 }
 
 #undef TIMEDIFF
