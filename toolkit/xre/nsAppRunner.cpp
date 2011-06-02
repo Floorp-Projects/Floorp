@@ -2751,6 +2751,17 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 #endif
 
+#ifdef XP_WIN
+  // Vista API.  Mozilla is DPI Aware.
+  typedef BOOL (*SetProcessDPIAwareFunc)(VOID);
+
+  SetProcessDPIAwareFunc setDPIAware = (SetProcessDPIAwareFunc)
+    GetProcAddress(LoadLibraryW(L"user32.dll"), "SetProcessDPIAware");
+
+  if (setDPIAware)
+    setDPIAware();
+#endif
+
   SetupErrorHandling(argv[0]);
 
 #ifdef CAIRO_HAS_DWRITE_FONT
