@@ -54,12 +54,6 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-// Constants for makeSyncCallback, waitForSyncCallback
-const CB_READY = {};
-const CB_COMPLETE = {};
-const CB_FAIL = {};
-const REASON_ERROR = Ci.mozIStorageStatementCallback.REASON_ERROR;
-
 /*
  * Utility functions
  */
@@ -194,59 +188,23 @@ let Utils = {
     }
   },
 
-  // Prototype for mozIStorageCallback, used in queryAsync below.
-  // This allows us to define the handle* functions just once rather
-  // than on every queryAsync invocation.
-  _storageCallbackPrototype: {
-    results: null,
 
-    // These are set by queryAsync.
-    names: null,
-    syncCb: null,
+  /*
+   * Partition the input array into an array of arrays. Return a generator.
+   */
+  slices: function slices(arr, sliceSize) {
+    if (!sliceSize || sliceSize <= 0)
+      throw "Invalid slice size.";
 
-    handleResult: function handleResult(results) {
-      if (!this.names) {
-        return;
+    if (sliceSize > arr.length) {
+      yield arr;
+    } else {
+      let offset = 0;
+      while (arr.length > offset) {
+        yield arr.slice(offset, offset + sliceSize);
+        offset += sliceSize;
       }
-      if (!this.results) {
-        this.results = [];
-      }
-      let row;
-      while ((row = results.getNextRow()) != null) {
-        let item = {};
-        for each (name in this.names) {
-          item[name] = row.getResultByName(name);
-        }
-        this.results.push(item);
-      }
-    },
-    handleError: function handleError(error) {
-      this.syncCb.throw(error);
-    },
-    handleCompletion: function handleCompletion(reason) {
-
-      // If we got an error, handleError will also have been called, so don't
-      // call the callback! We never cancel statements, so we don't need to
-      // address that quandary.
-      if (reason == REASON_ERROR)
-        return;
-
-      // If we were called with column names but didn't find any results,
-      // the calling code probably still expects an array as a return value.
-      if (this.names && !this.results) {
-        this.results = [];
-      }
-      this.syncCb(this.results);
     }
-  },
-
-  queryAsync: function(query, names) {
-    // Synchronously asyncExecute fetching all results by name
-    let storageCallback = {names: names,
-                           syncCb: Utils.makeSyncCallback()};
-    storageCallback.__proto__ = Utils._storageCallbackPrototype;
-    query.executeAsync(storageCallback);
-    return Utils.waitForSyncCallback(storageCallback.syncCb);
   },
 
   byteArrayToString: function byteArrayToString(bytes) {
@@ -1163,16 +1121,23 @@ let Utils = {
   },
 
   /**
-   * Create an array like the first but without elements of the second
+   * Create an array like the first but without elements of the second. Reuse
+   * arrays if possible.
    */
   arraySub: function arraySub(minuend, subtrahend) {
+    if (!minuend.length || !subtrahend.length)
+      return minuend;
     return minuend.filter(function(i) subtrahend.indexOf(i) == -1);
   },
 
   /**
-   * Build the union of two arrays.
+   * Build the union of two arrays. Reuse arrays if possible.
    */
   arrayUnion: function arrayUnion(foo, bar) {
+    if (!foo.length)
+      return bar;
+    if (!bar.length)
+      return foo;
     return foo.concat(Utils.arraySub(bar, foo));
   },
 
@@ -1211,12 +1176,6 @@ let Utils = {
   },
   
   /**
-   * Helpers for making asynchronous calls within a synchronous API possible.
-   * 
-   * If you value your sanity, do not look closely at the following functions.
-   */
-
-  /**
    * Check if the app is ready (not quitting)
    */
   checkAppReady: function checkAppReady() {
@@ -1228,57 +1187,6 @@ let Utils = {
     });
     // In the common case, checkAppReady just returns true
     return (Utils.checkAppReady = function() true)();
-  },
-
-  /**
-   * Create a sync callback that remembers state like whether it's been called
-   */
-  makeSyncCallback: function makeSyncCallback() {
-    // The main callback remembers the value it's passed and that it got data
-    let onComplete = function onComplete(data) {
-      onComplete.state = CB_COMPLETE;
-      onComplete.value = data;
-    };
-
-    // Initialize private callback data to prepare to be called
-    onComplete.state = CB_READY;
-    onComplete.value = null;
-
-    // Allow an alternate callback to trigger an exception to be thrown
-    onComplete.throw = function onComplete_throw(data) {
-      onComplete.state = CB_FAIL;
-      onComplete.value = data;
-
-      // Cause the caller to get an exception and stop execution
-      throw data;
-    };
-
-    return onComplete;
-  },
-
-  /**
-   * Wait for a sync callback to finish
-   */
-  waitForSyncCallback: function waitForSyncCallback(callback) {
-    // Grab the current thread so we can make it give up priority
-    let thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
-
-    // Keep waiting until our callback is triggered unless the app is quitting
-    while (Utils.checkAppReady() && callback.state == CB_READY) {
-      thread.processNextEvent(true);
-    }
-
-    // Reset the state of the callback to prepare for another call
-    let state = callback.state;
-    callback.state = CB_READY;
-
-    // Throw the value the callback decided to fail with
-    if (state == CB_FAIL) {
-      throw callback.value;
-    }
-
-    // Return the value passed to the callback
-    return callback.value;
   }
 };
 
@@ -1304,10 +1212,19 @@ let _sessionCID = Services.appinfo.ID == SEAMONKEY_ID ?
 [["Form", "@mozilla.org/satchel/form-history;1", "nsIFormHistory2"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
  ["KeyFactory", "@mozilla.org/security/keyobjectfactory;1", "nsIKeyObjectFactory"],
- ["Private", "@mozilla.org/privatebrowsing;1", "nsIPrivateBrowsingService"],
  ["Session", _sessionCID, "nsISessionStore"]
 ].forEach(function([name, contract, iface]) {
   XPCOMUtils.defineLazyServiceGetter(Svc, name, contract, iface);
+});
+
+// nsIPrivateBrowsingService is not implemented in mobile Firefox.
+// Svc.Private should just return undefined in this case instead of throwing.
+XPCOMUtils.defineLazyGetter(Svc, "Private", function() {
+  try {
+    return Cc["@mozilla.org/privatebrowsing;1"].getService(Ci["nsIPrivateBrowsingService"]);
+  } catch (e) {
+    return undefined;
+  }
 });
 
 Svc.__defineGetter__("Crypto", function() {
