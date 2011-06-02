@@ -2591,14 +2591,24 @@ JS_IsGCMarkingTracer(JSTracer *trc)
 }
 
 JS_PUBLIC_API(void)
-JS_GC(JSContext *cx)
+JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 {
+    /* We cannot GC the atoms compartment alone; use a full GC instead. */
+    JS_ASSERT(comp != cx->runtime->atomsCompartment);
+
     LeaveTrace(cx);
 
     /* Don't nuke active arenas if executing or compiling. */
     if (cx->tempPool.current == &cx->tempPool.first)
         JS_FinishArenaPool(&cx->tempPool);
-    js_GC(cx, NULL, GC_NORMAL);
+
+    js_GC(cx, comp, GC_NORMAL);
+}
+
+JS_PUBLIC_API(void)
+JS_GC(JSContext *cx)
+{
+    JS_CompartmentGC(cx, NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -6122,9 +6132,19 @@ JS_ClearContextThread(JSContext *cx)
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
-JS_SetGCZeal(JSContext *cx, uint8 zeal)
+JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment)
 {
-    cx->runtime->gcZeal = zeal;
+    cx->runtime->gcZeal_ = zeal;
+    cx->runtime->gcZealFrequency = frequency;
+    cx->runtime->gcNextScheduled = frequency;
+    cx->runtime->gcDebugCompartmentGC = !!compartment;
+}
+
+JS_PUBLIC_API(void)
+JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment)
+{
+    cx->runtime->gcNextScheduled = count;
+    cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 #endif
 
