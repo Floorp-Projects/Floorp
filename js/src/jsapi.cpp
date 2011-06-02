@@ -6138,7 +6138,7 @@ JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment)
 {
     cx->runtime->gcZeal_ = zeal;
     cx->runtime->gcZealFrequency = frequency;
-    cx->runtime->gcNextScheduled = frequency;
+    cx->runtime->gcNextScheduled = zeal >= 2 ? frequency : 0;
     cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 
