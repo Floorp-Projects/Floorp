@@ -389,6 +389,9 @@ BrowserGlue.prototype = {
       this._showPlacesLockedNotificationBox();
     }
 
+    // Show telemetry notification, if needed.
+    this._showTelemetryNotification();
+
     // If there are plugins installed that are outdated, and the user hasn't
     // been warned about them yet, open the plugins update page.
     if (Services.prefs.getBoolPref(PREF_PLUGINS_NOTIFYUSER))
@@ -733,6 +736,66 @@ BrowserGlue.prototype = {
     }
     catch (e) {
     }
+  },
+
+  _showTelemetryNotification: function BG__showTelemetryNotification() {
+    const PREF_TELEMETRY_PROMPTED = "toolkit.telemetry.prompted";
+    const PREF_TELEMETRY_ENABLED  = "toolkit.telemetry.enabled";
+    const PREF_TELEMETRY_INFOURL  = "toolkit.telemetry.infoURL";
+    const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
+
+    try {
+      // If the user hasn't already been prompted, ask if they want to
+      // send telemetry data.
+      if (Services.prefs.getBoolPref(PREF_TELEMETRY_PROMPTED) ||
+          Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED))
+         return;
+    } catch(e) {}
+
+    // Stick the notification onto the selected tab of the active browser window.
+    var win = this.getMostRecentBrowserWindow();
+    var browser = win.gBrowser; // for closure in notification bar callback
+    var notifyBox = browser.getNotificationBox();
+
+    var browserBundle   = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    var brandBundle     = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+
+    var productName        = brandBundle.GetStringFromName("brandFullName");
+    var serverOwner        = Services.prefs.getCharPref(PREF_TELEMETRY_SERVER_OWNER);
+    var telemetryText      = browserBundle.formatStringFromName("telemetryText", [productName, serverOwner], 2);
+
+    var buttons = [
+                    {
+                      label:     browserBundle.GetStringFromName("telemetryButtonLabel"),
+                      accessKey: browserBundle.GetStringFromName("telemetryButtonAccessKey"),
+                      popup:     null,
+                      callback: function(aNotificationBar, aButton) {
+                        Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+                      }
+                    }
+                  ];
+
+    // Set pref to indicate we've shown the notification.
+    Services.prefs.setBoolPref(PREF_TELEMETRY_PROMPTED, true);
+
+    var notification = notifyBox.appendNotification(telemetryText, "telemetry", null, notifyBox.PRIORITY_INFO_LOW, buttons);
+    notification.persistence = 3; // arbitrary number, just so bar sticks around for a bit
+
+    let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    let link = notification.ownerDocument.createElementNS(XULNS, "label");
+    link.className = "text-link telemetry-text-link";
+    link.setAttribute("value", browserBundle.GetStringFromName("telemetryLinkLabel"));
+    link.addEventListener('click', function() {
+      // Open the learn more url in a new tab
+      browser.selectedTab = browser.addTab(Services.prefs.getCharPref(PREF_TELEMETRY_INFOURL));
+      // Remove the notification on which the user clicked
+      notification.parentNode.removeCurrentNotification(true);
+      // Add a new notification to that tab, with no "Learn more" link
+      var notifyBox = browser.getNotificationBox();
+      notifyBox.appendNotification(telemetryText, "telemetry", null, notifyBox.PRIORITY_INFO_LOW, buttons);
+    }, false);
+    let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
+    description.appendChild(link);
   },
 
   _showPluginUpdatePage: function BG__showPluginUpdatePage() {
