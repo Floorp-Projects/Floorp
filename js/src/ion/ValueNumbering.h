@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Andrew Drake <adrake@adrake.org>
+ *   Ryan Pearl <rpearl@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,80 +39,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdarg.h>
-#include "C1Spewer.h"
-#include "JSONSpewer.h"
+#ifndef jsion_value_numbering_h__
+#define jsion_value_numbering_h__
+
+#include "MIR.h"
 #include "MIRGraph.h"
 
 namespace js {
 namespace ion {
 
-// New channels may be added below.
-#define IONSPEW_CHANNEL_LIST(_)             \
-    /* Used to abort SSA construction */    \
-    _(Abort)                                \
-    /* Information during MIR building */   \
-    _(MIR)                                  \
-    /* Information during GVN */            \
-    _(GVN)                                  \
-    /* Information during LICM */           \
-    _(LICM)
-
-enum IonSpewChannel {
-#define IONSPEW_CHANNEL(name) IonSpew_##name,
-    IONSPEW_CHANNEL_LIST(IONSPEW_CHANNEL)
-#undef IONSPEW_CHANNEL
-    IonSpew_Terminator
-};
-
-#if defined(DEBUG) && !defined(JS_ION_SPEW)
-# define JS_ION_SPEW
-#endif
-
-#if defined(JS_ION_SPEW)
-void CheckLogging();
-extern FILE *IonSpewFile;
-void IonSpew(IonSpewChannel channel, const char *fmt, ...);
-void IonSpewHeader(IonSpewChannel channel);
-bool IonSpewEnabled(IonSpewChannel channel);
-void IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap);
-#else
-static inline void CheckLogging()
-{ }
-static FILE *const IonSpewFile = NULL;
-static inline void IonSpew(IonSpewChannel, const char *fmt, ...)
-{ }
-static inline void IonSpewHeader(IonSpewChannel channel)
-{ }
-static inline bool IonSpewEnabled(IonSpewChannel channel)
-{ return false; }
-static inline void IonSpewVA(IonSpewChannel, const char *fmt, va_list ap)
-{ } 
-#endif
-
-
-class IonSpewer
+class ValueNumberer
 {
   private:
-    MIRGraph *graph;
-    JSScript *function;
-    C1Spewer c1Spewer;
-    JSONSpewer jsonSpewer;
+    struct ValueHasher
+    {
+        typedef MInstruction * Lookup;
+        typedef MInstruction * Key;
+        static HashNumber hash(const Lookup &ins) {
+            return ins->valueHash();
+        }
+
+        static bool match(const Key &k, const Lookup &l) {
+            return k->congruentTo(l);
+        }
+    };
+
+    typedef HashMap<MInstruction *,
+                    uint32,
+                    ValueHasher,
+                    IonAllocPolicy> ValueMap;
+
+    struct DominatingValue
+    {
+        MInstruction *def;
+        uint32 validUntil;
+    };
+
+    typedef HashMap<uint32,
+                    DominatingValue,
+                    DefaultHasher<uint32>,
+                    IonAllocPolicy> InstructionMap;
+
+    MIRGraph &graph_;
+
+    uint32 lookupValue(ValueMap &values, MInstruction *ins);
+    MInstruction *findDominatingInstruction(InstructionMap &defs, MInstruction *ins, size_t index);
+    bool eliminateRedundancies();
+
+    bool computeValueNumbers();
 
   public:
-    IonSpewer(MIRGraph *graph, JSScript *function)
-      : graph(graph),
-        function(function),
-        c1Spewer(*graph, function)
-    { }
-
-    bool init();
-    void spewPass(const char *pass);
-    void finish();
-
+    ValueNumberer(MIRGraph &graph);
+    bool analyze();
 };
 
+} // namespace ion
+} // namespace js
 
+#endif // jsion_value_numbering_h__
 
-}
-}

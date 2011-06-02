@@ -102,6 +102,7 @@ ion::CheckLogging()
             "\n"
             "  aborts   Compilation abort messages\n"
             "  mir      MIR information\n"
+            "  gvn      Global Value Numbering\n"
             "  licm     Loop invariant code motion\n"
 
             "  all      Everything\n"
@@ -114,6 +115,8 @@ ion::CheckLogging()
         LoggingBits |= (1 << uint32(IonSpew_Abort));
     if (strstr(env, "mir"))
         LoggingBits |= (1 << uint32(IonSpew_MIR));
+    if (strstr(env, "gvn"))
+        LoggingBits |= (1 << uint32(IonSpew_GVN));
     if (strstr(env, "licm"))
         LoggingBits |= (1 << uint32(IonSpew_LICM));
     if (strstr(env, "all"))

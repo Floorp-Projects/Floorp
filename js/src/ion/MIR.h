@@ -198,6 +198,7 @@ class MInstruction
     MBasicBlock *block_;    // Containing basic block.
     MUse *uses_;            // Use chain.
     uint32 id_;             // Ordered id for register allocation.
+    uint32 valueNumber_;    // The instruction's value number (see GVN for details in use)
     MIRType resultType_;    // Actual result type.
     uint32 usedTypes_;      // Set of used types.
     uint32 flags_;          // Bit flags.
@@ -227,6 +228,7 @@ class MInstruction
       : block_(NULL),
         uses_(NULL),
         id_(0),
+        valueNumber_(0),
         resultType_(MIRType_None),
         usedTypes_(0),
         flags_(0)
@@ -236,12 +238,24 @@ class MInstruction
     void printName(FILE *fp);
     virtual void printOpcode(FILE *fp);
 
+    virtual HashNumber valueHash() const;
+    virtual bool congruentTo(MInstruction * const &ins) const;
+
     uint32 id() const {
         JS_ASSERT(block_);
         return id_;
     }
     void setId(uint32 id) {
         id_ = id;
+    }
+
+    uint32 valueNumber() const {
+        JS_ASSERT(block_);
+        return valueNumber_;
+    }
+
+    void setValueNumber(uint32 vn) {
+        valueNumber_ = vn;
     }
     bool inWorklist() const {
         return hasFlags(IN_WORKLIST);
@@ -486,6 +500,9 @@ class MConstant : public MAryInstruction<0>
         return POTENTIAL_WIN;
     }
     void printOpcode(FILE *fp);
+
+    HashNumber valueHash() const;
+    bool congruentTo(MInstruction * const &ins) const;
 };
 
 // A reference to a formal parameter.
@@ -511,6 +528,9 @@ class MParameter : public MAryInstruction<0>
         return index_;
     }
     void printOpcode(FILE *fp);
+
+    HashNumber valueHash() const;
+    bool congruentTo(MInstruction * const &ins) const;
 };
 
 class MControlInstruction : public MInstruction
@@ -846,6 +866,9 @@ class MSnapshot : public MInstruction
     uint32 stackDepth() const {
         return stackDepth_;
     }
+
+    HashNumber valueHash() const;
+    bool congruentTo(MInstruction * const &ins) const;
 };
 
 #undef INSTRUCTION_HEADER
