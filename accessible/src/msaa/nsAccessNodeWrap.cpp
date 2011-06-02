@@ -54,12 +54,10 @@
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsPIDOMWindow.h"
 #include "nsIServiceManager.h"
-
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
 
 /// the accessible library and cached methods
 HINSTANCE nsAccessNodeWrap::gmAccLib = nsnull;
@@ -713,16 +711,22 @@ void nsAccessNodeWrap::TurnOffNewTabSwitchingForJawsAndWE()
   // Check to see if the pref for disallowing CtrlTab is already set.
   // If so, bail out.
   // If not, set it.
-  if (Preferences::HasUserValue(CTRLTAB_DISALLOW_FOR_SCREEN_READERS_PREF)) {
-    // This pref has been set before. There is no default for it.
-    // Do nothing further, respect the setting that's there.
-    // That way, if noone touches it, it'll stay on after toggled once.
-    // If someone decided to turn it off, we respect that, too.
-    return;
+  nsCOMPtr<nsIPrefBranch> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs) {
+    PRBool hasDisallowNewCtrlTabPref = PR_FALSE;
+    nsresult rv = prefs->PrefHasUserValue(CTRLTAB_DISALLOW_FOR_SCREEN_READERS_PREF,
+             &hasDisallowNewCtrlTabPref);
+    if (NS_SUCCEEDED(rv) && hasDisallowNewCtrlTabPref) {
+      // This pref has been set before. There is no default for it.
+      // Do nothing further, respect the setting that's there.
+      // That way, if noone touches it, it'll stay on after toggled once.
+      // If someone decided to turn it off, we respect that, too.
+      return;
+    }
+    
+    // Value has never been set, set it.
+    prefs->SetBoolPref(CTRLTAB_DISALLOW_FOR_SCREEN_READERS_PREF, PR_TRUE);
   }
-  
-  // Value has never been set, set it.
-  Preferences::SetBool(CTRLTAB_DISALLOW_FOR_SCREEN_READERS_PREF, PR_TRUE);
 }
 
 void nsAccessNodeWrap::DoATSpecificProcessing()
