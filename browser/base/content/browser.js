@@ -2873,7 +2873,7 @@ var PrintPreviewListener = {
     this._printPreviewTab = null;
   },
   _toggleAffectedChrome: function () {
-    gNavToolbox.hidden = gInPrintPreviewMode;
+    gNavToolbox.collapsed = gInPrintPreviewMode;
 
     if (gInPrintPreviewMode)
       this._hideChrome();
