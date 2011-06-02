@@ -282,7 +282,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           // just like eUnit_Integer.
           PRInt32 startInt = aStartValue.GetIntValue();
           PRInt32 endInt = aEndValue.GetIntValue();
-          aDistance = PR_ABS(endInt - startInt);
+          aDistance = NS_ABS(endInt - startInt);
           return PR_TRUE;
         }
         default:
@@ -293,13 +293,13 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
         aStartValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
       PRInt32 endVal =
         aEndValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
-      aDistance = PR_ABS(startVal - endVal);
+      aDistance = NS_ABS(startVal - endVal);
       return PR_TRUE;
     }
     case eUnit_Integer: {
       PRInt32 startInt = aStartValue.GetIntValue();
       PRInt32 endInt = aEndValue.GetIntValue();
-      aDistance = PR_ABS(endInt - startInt);
+      aDistance = NS_ABS(endInt - startInt);
       return PR_TRUE;
     }
     case eUnit_Coord: {
@@ -1110,7 +1110,7 @@ DecomposeMatrix(const nsStyleTransformMatrix &aMatrix,
   XYshear /= scaleY;
 
  // A*D - B*C should now be 1 or -1
-  NS_ASSERTION(0.99 < PR_ABS(A*D - B*C) && PR_ABS(A*D - B*C) < 1.01,
+  NS_ASSERTION(0.99 < NS_ABS(A*D - B*C) && NS_ABS(A*D - B*C) < 1.01,
                "determinant should now be 1 or -1");
   if (A * D < B * C) {
     A = -A;

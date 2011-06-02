@@ -45,6 +45,7 @@
 
 #include "prtypes.h"
 #include "pldhash.h"
+#include "nsAlgorithm.h"
 
 #include "nsBinaryStream.h"
 #include "nsCOMPtr.h"
@@ -283,7 +284,7 @@ class nsFastLoadFileReader
     NS_IMETHOD ReadID(nsID *aResult);
 
     void SeekTo(PRInt64 aOffset) {
-        mFilePos = PR_MAX(0, PR_MIN(aOffset, mFileLen));
+        mFilePos = NS_MAX<PRInt64>(0, NS_MIN<PRInt64>(aOffset, mFileLen));
         NS_ASSERTION(aOffset == mFilePos, "Attempt to seek out of bounds");
     }
 

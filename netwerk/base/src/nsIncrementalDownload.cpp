@@ -696,7 +696,7 @@ nsIncrementalDownload::OnDataAvailable(nsIRequest *request,
 {
   while (count) {
     PRUint32 space = mChunkSize - mChunkLen;
-    PRUint32 n, len = PR_MIN(space, count);
+    PRUint32 n, len = NS_MIN(space, count);
 
     nsresult rv = input->Read(mChunk + mChunkLen, len, &n);
     if (NS_FAILED(rv))

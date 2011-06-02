@@ -315,7 +315,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
         char* buf = PR_smprintf("%d %s", i, kTestPattern);
         PRUint32 len = strlen(buf);
         len = len * rand() / RAND_MAX;
-        len = PR_MAX(1, len);
+        len = NS_MAX(1, len);
         rv = WriteAll(out, buf, len, &writeCount);
         if (NS_FAILED(rv)) return rv;
         NS_ASSERTION(writeCount == len, "didn't write enough");
@@ -424,7 +424,7 @@ TestChainedPipes()
         char* buf = PR_smprintf("%d %s", i, kTestPattern);
         PRUint32 len = strlen(buf);
         len = len * rand() / RAND_MAX;
-        len = PR_MAX(1, len);
+        len = NS_MAX(1, len);
         rv = WriteAll(out1, buf, len, &writeCount);
         if (NS_FAILED(rv)) return rv;
         NS_ASSERTION(writeCount == len, "didn't write enough");

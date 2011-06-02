@@ -888,7 +888,7 @@ IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, PRUint32 aHint)
   // or in sloppy markups without protective <mrow></mrow>
   PRBool isNormal =
     (aHint & NS_STRETCH_NORMAL)
-    && PRBool(float(PR_ABS(a - b))
+    && PRBool(float(NS_ABS(a - b))
               < (1.0f - NS_MATHML_DELIMITER_FACTOR) * float(b));
   // Nearer: True if 'a' is around max{ +/-10% of 'b' , 'b' - 5pt },
   // as documented in The TeXbook, Ch.17, p.152.
@@ -897,7 +897,7 @@ IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, PRUint32 aHint)
   if (aHint & (NS_STRETCH_NEARER | NS_STRETCH_LARGEOP)) {
     float c = NS_MAX(float(b) * NS_MATHML_DELIMITER_FACTOR,
                      float(b) - nsPresContext::CSSPointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
-    isNearer = PRBool(float(PR_ABS(b - a)) <= (float(b) - c));
+    isNearer = PRBool(float(NS_ABS(b - a)) <= (float(b) - c));
   }
   // Smaller: Mainly for transitory use, to compare two candidate
   // choices
@@ -924,7 +924,7 @@ IsSizeBetter(nscoord a, nscoord olda, nscoord b, PRUint32 aHint)
     return (a <= olda) ? (olda > b) : (a <= b);
 
   // XXXkt prob want log scale here i.e. 1.5 is closer to 1 than 0.5
-  return PR_ABS(a - b) < PR_ABS(olda - b);
+  return NS_ABS(a - b) < NS_ABS(olda - b);
 }
 
 // We want to place the glyphs even when they don't fit at their

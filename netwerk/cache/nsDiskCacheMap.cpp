@@ -1139,7 +1139,7 @@ nsDiskCacheMap::NotifyCapacityChange(PRUint32 capacity)
   // Heuristic 2. we don't want more than 32MB reserved to store the record
   //              map in memory.
   const PRInt32 RECORD_COUNT_LIMIT = 32 * 1024 * 1024 / sizeof(nsDiskCacheRecord);
-  PRInt32 maxRecordCount = PR_MIN(PRInt32(capacity), RECORD_COUNT_LIMIT);
+  PRInt32 maxRecordCount = NS_MIN(PRInt32(capacity), RECORD_COUNT_LIMIT);
   if (mMaxRecordCount < maxRecordCount) {
     // We can only grow
     mMaxRecordCount = maxRecordCount;

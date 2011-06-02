@@ -65,7 +65,7 @@ HexDump(PRUint32 *state, const char *buf, PRInt32 n, nsCString &result)
 
     p = (const unsigned char *) buf;
 
-    PRInt32 i, row_max = PR_MIN(HEXDUMP_MAX_ROWS, n);
+    PRInt32 i, row_max = NS_MIN(HEXDUMP_MAX_ROWS, n);
 
     // print hex codes:
     for (i = 0; i < row_max; ++i) {
@@ -405,7 +405,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
             PRUint32 hexDumpState = 0;
             char chunk[4096];
             while (dataSize) {
-                PRUint32 count = PR_MIN(dataSize, sizeof(chunk));
+                PRUint32 count = NS_MIN<PRUint32>(dataSize, sizeof(chunk));
                 if (NS_FAILED(stream->Read(chunk, count, &n)) || n == 0)
                     break;
                 dataSize -= n;

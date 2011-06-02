@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "pratom.h"
+#include "nsAlgorithm.h"
 #include "nsIComponentManager.h"
 #include "nsUCSupport.h"
 #include "nsUnicodeDecodeHelper.h"
@@ -106,7 +107,7 @@ nsBufferDecoderSupport::~nsBufferDecoderSupport()
 
 void nsBufferDecoderSupport::FillBuffer(const char ** aSrc, PRInt32 aSrcLength)
 {
-  PRInt32 bcr = PR_MIN(mBufferCapacity - mBufferLength, aSrcLength);
+  PRInt32 bcr = NS_MIN(mBufferCapacity - mBufferLength, aSrcLength);
   memcpy(mBuffer + mBufferLength, *aSrc, bcr);
   mBufferLength += bcr;
   (*aSrc) += bcr;

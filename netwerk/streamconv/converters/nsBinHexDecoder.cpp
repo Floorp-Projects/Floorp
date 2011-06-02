@@ -163,7 +163,7 @@ nsBinHexDecoder::OnDataAvailable(nsIRequest* request,
     PRUint32 numBytesRead = 0;
     while (aCount > 0) // while we still have bytes to copy...
     {
-      aStream->Read(mDataBuffer, PR_MIN(aCount, nsIOService::gDefaultSegmentSize - 1), &numBytesRead);
+      aStream->Read(mDataBuffer, NS_MIN(aCount, nsIOService::gDefaultSegmentSize - 1), &numBytesRead);
       if (aCount >= numBytesRead)
         aCount -= numBytesRead; // subtract off the number of bytes we just read
       else
