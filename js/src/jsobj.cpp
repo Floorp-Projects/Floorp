@@ -5847,7 +5847,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
 
     if (obj->containsSlot(shape->slot)) {
         const Value &v = obj->nativeGetSlot(shape->slot);
-        GC_POKE(cx, v);
+        GCPoke(cx, v);
 
         /*
          * Delete is rare enough that we can take the hit of checking for an
@@ -6527,7 +6527,7 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
     }
 
     obj->setSlot(slot, v);
-    GC_POKE(cx, JS_NULL);
+    GCPoke(cx, NullValue());
     return true;
 }
 

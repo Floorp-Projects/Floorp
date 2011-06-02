@@ -869,17 +869,6 @@ CheckAllocation(JSContext *cx);
 extern JS_FRIEND_API(uint32)
 js_GetGCThingTraceKind(void *thing);
 
-#if 1
-/*
- * Since we're forcing a GC from JS_GC anyway, don't bother wasting cycles
- * loading oldval.  XXX remove implied force, fix jsinterp.c's "second arg
- * ignored", etc.
- */
-#define GC_POKE(cx, oldval) ((cx)->runtime->gcPoke = JS_TRUE)
-#else
-#define GC_POKE(cx, oldval) ((cx)->runtime->gcPoke = JSVAL_IS_GCTHING(oldval))
-#endif
-
 extern JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes);
 
@@ -1316,6 +1305,10 @@ namespace gc {
 
 JSCompartment *
 NewCompartment(JSContext *cx, JSPrincipals *principals);
+
+/* Tries to run a GC no matter what (used for GC zeal). */
+void
+RunDebugGC(JSContext *cx);
 
 } /* namespace js */
 } /* namespace gc */

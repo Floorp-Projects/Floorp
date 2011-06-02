@@ -1230,7 +1230,7 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     else
         argp = &obj->callObjArg(i);
 
-    GC_POKE(cx, *argp);
+    GCPoke(cx, *argp);
     *argp = *vp;
     return true;
 }
@@ -1253,7 +1253,7 @@ SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 
     Value *up = &obj->getCallObjCallee()->getFlatClosureUpvar(i);
 
-    GC_POKE(cx, *up);
+    GCPoke(cx, *up);
     *up = *vp;
     return true;
 }
@@ -1310,7 +1310,7 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     else
         varp = &obj->callObjVar(i);
 
-    GC_POKE(cx, *varp);
+    GCPoke(cx, *varp);
     *varp = *vp;
     return true;
 }
