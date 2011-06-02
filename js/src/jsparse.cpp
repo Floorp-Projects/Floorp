@@ -1148,8 +1148,11 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     }
 #endif
 
-    if (!defineGlobals(cx, globalScope, script))
-        goto late_error;
+    {
+        AutoShapeRooter shapeRoot(cx, script->bindings.lastShape());
+        if (!defineGlobals(cx, globalScope, script))
+            goto late_error;
+    }
 
   out:
     JS_FinishArenaPool(&codePool);
