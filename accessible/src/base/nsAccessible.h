@@ -518,7 +518,7 @@ protected:
    * Return true if the children flag is set.
    */
   inline bool IsChildrenFlag(ChildrenFlags aFlag) const
-    { return (mFlags & kChildrenFlagsMask) == aFlag; }
+    { return static_cast<ChildrenFlags> (mFlags & kChildrenFlagsMask) == aFlag; }
 
   /**
    * Set children flag.
