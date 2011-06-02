@@ -423,7 +423,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     /* Fast paths and exceptional cases. */
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        cx->markTypeCallerOverflow();
+        MarkTypeCallerOverflow(cx);
         return true;
     }
 
@@ -444,7 +444,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
             vp[2].toDouble() > -1.0e21 &&
             vp[2].toDouble() < 1.0e21) {
             vp->setDouble(ParseIntDoubleHelper(vp[2].toDouble()));
-            cx->markTypeCallerOverflow();
+            MarkTypeCallerOverflow(cx);
             return true;
         }
     }
@@ -464,7 +464,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         if (radix != 0) {
             if (radix < 2 || radix > 36) {
                 vp->setDouble(js_NaN);
-                cx->markTypeCallerOverflow();
+                MarkTypeCallerOverflow(cx);
                 return true;
             }
             if (radix != 16)
@@ -485,7 +485,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     /* Step 15. */
     vp->setNumber(number);
     if (!vp->isInt32())
-        cx->markTypeCallerOverflow();
+        MarkTypeCallerOverflow(cx);
     return true;
 }
 

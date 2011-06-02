@@ -3059,9 +3059,9 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
     if (obj) {
         if (clasp->ext.equality)
-            cx->markTypeObjectFlags(obj->getType(), OBJECT_FLAG_SPECIAL_EQUALITY);
+            MarkTypeObjectFlags(cx, obj->getType(), OBJECT_FLAG_SPECIAL_EQUALITY);
         obj->syncSpecialEquality();
-        cx->markTypeObjectUnknownProperties(obj->getType());
+        MarkTypeObjectUnknownProperties(cx, obj->getType());
     }
 
     JS_ASSERT_IF(obj, obj->getParent());
@@ -3085,7 +3085,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (obj) {
         obj->syncSpecialEquality();
-        cx->markTypeObjectUnknownProperties(obj->getType());
+        MarkTypeObjectUnknownProperties(cx, obj->getType());
     }
     return obj;
 }
@@ -3549,7 +3549,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
         ok = JS_FALSE;
     } else {
         /* Alias the properties within the type information for the object. */
-        cx->aliasTypeProperties(obj->getType(), ATOM_TO_JSID(nameAtom), ATOM_TO_JSID(aliasAtom));
+        AliasTypeProperties(cx, obj->getType(), ATOM_TO_JSID(nameAtom), ATOM_TO_JSID(aliasAtom));
 
         shape = (Shape *)prop;
         ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(aliasAtom),

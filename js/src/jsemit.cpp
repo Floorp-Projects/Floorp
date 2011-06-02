@@ -4455,7 +4455,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         }
         JS_ASSERT(idx == pn_count);
 
-        cx->fixArrayType(obj);
+        types::FixArrayType(cx, obj);
         vp->setObject(*obj);
         return true;
       }
@@ -4495,7 +4495,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             }
         }
 
-        cx->fixObjectType(obj);
+        types::FixObjectType(cx, obj);
         vp->setObject(*obj);
         return true;
       }

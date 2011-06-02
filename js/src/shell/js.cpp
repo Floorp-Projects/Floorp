@@ -3280,7 +3280,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **obj
      * prototype chain, breaking assumptions type inference makes about the
      * possible properties on an object.
      */
-    cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNKNOWN);
+    types::AddTypePropertyId(cx, obj->getType(), id, types::TYPE_UNKNOWN);
 
     ComplexObject *cpx;
 

@@ -239,284 +239,202 @@ CanHaveReadBarrier(const jsbytecode *pc)
     }
 }
 
+/////////////////////////////////////////////////////////////////////
+// Interface functions
+/////////////////////////////////////////////////////////////////////
+
+/*
+ * These functions check whether inference is enabled before performing some
+ * action on the type state. To avoid checking cx->typeInferenceEnabled()
+ * everywhere, it is generally preferred to use one of these functions or
+ * a type function on JSScript to perform inference operations.
+ */
+
+/*
+ * Get the default 'new' object for a given standard class, per the currently
+ * active global.
+ */
+inline TypeObject *
+GetTypeNewObject(JSContext *cx, JSProtoKey key)
+{
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, NULL, key, &proto, NULL))
+        return NULL;
+    return proto->getNewType(cx);
+}
+
+/* Get a type object for the immediate allocation site within a native. */
+inline TypeObject *
+GetTypeCallerInitObject(JSContext *cx, bool isArray)
+{
+    if (cx->typeInferenceEnabled()) {
+        StackFrame *caller = js_GetScriptedCaller(cx, NULL);
+        if (caller && caller->script()->compartment == cx->compartment) {
+            JSScript *script;
+            jsbytecode *pc = caller->inlinepc(cx, &script);
+            return script->getTypeInitObject(cx, pc, isArray);
+        }
+    }
+    return GetTypeNewObject(cx, isArray ? JSProto_Array : JSProto_Object);
+}
+
+/* Mark the immediate scripted caller of a native as having produced an unexpected value. */
+inline void
+MarkTypeCallerUnexpected(JSContext *cx, jstype type)
+{
+    extern void MarkTypeCallerUnexpectedSlow(JSContext *cx, jstype type);
+
+    if (cx->typeInferenceEnabled())
+        MarkTypeCallerUnexpectedSlow(cx, type);
+}
+
+inline void
+MarkTypeCallerUnexpected(JSContext *cx, const Value &value)
+{
+    extern void MarkTypeCallerUnexpectedSlow(JSContext *cx, const Value &value);
+
+    if (cx->typeInferenceEnabled())
+        MarkTypeCallerUnexpectedSlow(cx, value);
+}
+
+inline void
+MarkTypeCallerOverflow(JSContext *cx)
+{
+    MarkTypeCallerUnexpected(cx, TYPE_DOUBLE);
+}
+
+/*
+ * Monitor a javascript call, either on entry to the interpreter or made
+ * from within the interpreter.
+ */
+inline void
+TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
+{
+    extern void TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
+                                    const CallArgs &args, bool constructing);
+
+    if (cx->typeInferenceEnabled()) {
+        JSObject *callee = &args.callee();
+        if (callee->isFunction() && callee->getFunctionPrivate()->isInterpreted())
+            TypeMonitorCallSlow(cx, callee, args, constructing);
+    }
+}
+
+/* Add a possible type for a property of obj. */
+inline void
+AddTypePropertyId(JSContext *cx, TypeObject *obj, jsid id, jstype type)
+{
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+        obj->addPropertyType(cx, id, type);
+}
+
+inline void
+AddTypePropertyId(JSContext *cx, TypeObject *obj, jsid id, const Value &value)
+{
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+        obj->addPropertyType(cx, id, value);
+}
+
+inline void
+AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, jstype type)
+{
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+        obj->addPropertyType(cx, name, type);
+}
+
+inline void
+AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, const Value &value)
+{
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+        obj->addPropertyType(cx, name, value);
+}
+
+/* Add an entire type set to a property of obj. */
+inline void
+AddTypePropertySet(JSContext *cx, TypeObject *obj, jsid id, ClonedTypeSet *set)
+{
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+        obj->addPropertyTypeSet(cx, id, set);
+}
+
+/* Get the default type object to use for objects with no prototype. */
+inline TypeObject *
+GetTypeEmpty(JSContext *cx)
+{
+    return &cx->compartment->types.typeEmpty;
+}
+
+/* Alias two properties in the type information for obj. */
+inline void
+AliasTypeProperties(JSContext *cx, TypeObject *obj, jsid first, jsid second)
+{
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+        obj->aliasProperties(cx, first, second);
+}
+
+/* Set one or more dynamic flags on a type object. */
+inline void
+MarkTypeObjectFlags(JSContext *cx, TypeObject *obj, TypeObjectFlags flags)
+{
+    if (cx->typeInferenceEnabled() && !obj->hasAllFlags(flags))
+        obj->setFlags(cx, flags);
+}
+
+/* Mark all properties of a type object as unknown. */
+inline void
+MarkTypeObjectUnknownProperties(JSContext *cx, TypeObject *obj)
+{
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+        obj->markUnknown(cx);
+}
+
+/*
+ * Mark any property which has been deleted or configured to be non-writable or
+ * have a getter/setter.
+ */
+inline void
+MarkTypePropertyConfigured(JSContext *cx, TypeObject *obj, jsid id)
+{
+    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+        obj->markPropertyConfigured(cx, id);
+}
+
+/* Mark a global object as having had its slots reallocated. */
+inline void
+MarkGlobalReallocation(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->isGlobal());
+    if (cx->typeInferenceEnabled() && !obj->getType()->unknownProperties())
+        obj->getType()->markSlotReallocation(cx);
+}
+
+/*
+ * For an array or object which has not yet escaped and been referenced elsewhere,
+ * pick a new type based on the object's current contents.
+ */
+
+inline void
+FixArrayType(JSContext *cx, JSObject *obj)
+{
+    if (cx->typeInferenceEnabled())
+        cx->compartment->types.fixArrayType(cx, obj);
+}
+
+inline void
+FixObjectType(JSContext *cx, JSObject *obj)
+{
+    if (cx->typeInferenceEnabled())
+        cx->compartment->types.fixObjectType(cx, obj);
+}
+
+/* Interface helpers for JSScript */
+extern void TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval);
+extern void TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, js::types::jstype type);
+
 } } /* namespace js::types */
 
 /////////////////////////////////////////////////////////////////////
-// JSContext
-/////////////////////////////////////////////////////////////////////
-
-inline bool
-JSContext::typeInferenceEnabled()
-{
-    return inferenceEnabled;
-}
-
-inline js::types::TypeObject *
-JSContext::getTypeNewObject(JSProtoKey key)
-{
-    JSObject *proto;
-    if (!js_GetClassPrototype(this, NULL, key, &proto, NULL))
-        return NULL;
-    return proto->getNewType(this);
-}
-
-inline js::types::TypeObject *
-JSContext::getTypeCallerInitObject(bool isArray)
-{
-    if (typeInferenceEnabled()) {
-        js::StackFrame *caller = js_GetScriptedCaller(this, NULL);
-        if (caller && caller->script()->compartment == compartment) {
-            JSScript *script;
-            jsbytecode *pc = caller->inlinepc(this, &script);
-            return script->getTypeInitObject(this, pc, isArray);
-        }
-    }
-    return getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
-}
-
-inline void
-JSContext::markTypeCallerUnexpected(js::types::jstype type)
-{
-    if (!typeInferenceEnabled())
-        return;
-
-    /*
-     * Check that we are actually at a scripted callsite. This function is
-     * called from JS natives which can be called anywhere a script can be
-     * called, such as on property getters or setters. This filtering is not
-     * perfect, but we only need to make sure the type result is added wherever
-     * the native's type handler was used, i.e. at scripted callsites directly
-     * calling the native.
-     */
-
-    js::StackFrame *caller = js_GetScriptedCaller(this, NULL);
-    if (!caller)
-        return;
-
-    /*
-     * Watch out if the caller is in a different compartment from this one.
-     * This must have gone through a cross-compartment wrapper.
-     */
-    if (caller->script()->compartment != compartment)
-        return;
-
-    JSScript *script;
-    jsbytecode *pc = caller->inlinepc(this, &script);
-
-    js::analyze::UntrapOpcode untrap(this, script, pc);
-
-    switch ((JSOp)*pc) {
-      case JSOP_CALL:
-      case JSOP_EVAL:
-      case JSOP_FUNCALL:
-      case JSOP_FUNAPPLY:
-      case JSOP_NEW:
-        break;
-      case JSOP_ITER:
-        /* This is also used for handling custom iterators. */
-        break;
-      default:
-        return;
-    }
-
-    compartment->types.dynamicPush(this, script, pc - script->code, type);
-}
-
-inline void
-JSContext::markTypeCallerUnexpected(const js::Value &value)
-{
-    if (typeInferenceEnabled())
-        markTypeCallerUnexpected(js::types::GetValueType(this, value));
-}
-
-inline void
-JSContext::markTypeCallerOverflow()
-{
-    markTypeCallerUnexpected(js::types::TYPE_DOUBLE);
-}
-
-inline void
-JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type)
-{
-    if (typeInferenceEnabled() && !obj->unknownProperties()) {
-        jsid id = JSID_VOID;
-        if (name) {
-            JSAtom *atom = js_Atomize(this, name, strlen(name));
-            if (!atom) {
-                js::types::AutoEnterTypeInference enter(this);
-                compartment->types.setPendingNukeTypes(this);
-                return;
-            }
-            id = ATOM_TO_JSID(atom);
-        }
-        addTypePropertyId(obj, id, type);
-    }
-}
-
-inline void
-JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value)
-{
-    if (typeInferenceEnabled() && !obj->unknownProperties())
-        addTypeProperty(obj, name, js::types::GetValueType(this, value));
-}
-
-inline void
-JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type)
-{
-    if (!typeInferenceEnabled() || obj->unknownProperties())
-        return;
-
-    /* Convert string index properties into the common index property. */
-    id = js::types::MakeTypeId(this, id);
-
-    js::types::AutoEnterTypeInference enter(this);
-
-    js::types::TypeSet *types = obj->getProperty(this, id, true);
-    if (!types || types->hasType(type))
-        return;
-
-    js::types::InferSpew(js::types::ISpewOps, "externalType: property %s %s: %s",
-                         obj->name(), js::types::TypeIdString(id),
-                         js::types::TypeString(type));
-    types->addType(this, type);
-}
-
-inline void
-JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value)
-{
-    if (typeInferenceEnabled() && !obj->unknownProperties())
-        addTypePropertyId(obj, id, js::types::GetValueType(this, value));
-}
-
-inline void
-JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::ClonedTypeSet *set)
-{
-    if (obj->unknownProperties())
-        return;
-    id = js::types::MakeTypeId(this, id);
-
-    js::types::AutoEnterTypeInference enter(this);
-
-    js::types::TypeSet *types = obj->getProperty(this, id, true);
-    if (!types)
-        return;
-
-    js::types::InferSpew(js::types::ISpewOps, "externalType: property %s %s",
-                         obj->name(), js::types::TypeIdString(id));
-    types->addTypeSet(this, set);
-}
-
-inline js::types::TypeObject *
-JSContext::getTypeEmpty()
-{
-    return &compartment->types.typeEmpty;
-}
-
-inline void
-JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second)
-{
-    if (!typeInferenceEnabled() || obj->unknownProperties())
-        return;
-
-    js::types::AutoEnterTypeInference enter(this);
-
-    first = js::types::MakeTypeId(this, first);
-    second = js::types::MakeTypeId(this, second);
-
-    js::types::TypeSet *firstTypes = obj->getProperty(this, first, true);
-    js::types::TypeSet *secondTypes = obj->getProperty(this, second, true);
-    if (!firstTypes || !secondTypes)
-        return;
-
-    firstTypes->addBaseSubset(this, obj, secondTypes);
-    secondTypes->addBaseSubset(this, obj, firstTypes);
-}
-
-inline void
-JSContext::markTypeObjectFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags)
-{
-    if (!typeInferenceEnabled() || obj->hasAllFlags(flags))
-        return;
-
-    js::types::AutoEnterTypeInference enter(this);
-    obj->setFlags(this, flags);
-}
-
-inline void
-JSContext::markTypePropertyConfigured(js::types::TypeObject *obj, jsid id)
-{
-    if (!typeInferenceEnabled() || obj->unknownProperties())
-        return;
-    id = js::types::MakeTypeId(this, id);
-
-    js::types::AutoEnterTypeInference enter(this);
-    js::types::TypeSet *types = obj->getProperty(this, id, true);
-    if (types)
-        types->setOwnProperty(this, true);
-}
-
-inline void
-JSContext::markGlobalReallocation(JSObject *obj)
-{
-    JS_ASSERT(obj->isGlobal());
-
-    if (!typeInferenceEnabled() || obj->getType()->unknownProperties())
-        return;
-
-    /*
-     * Constraints listening for reallocation will trigger recompilation if
-     * newObjectState is invoked with 'force' set to true.
-     */
-    js::types::AutoEnterTypeInference enter(this);
-    js::types::TypeSet *types = obj->getType()->getProperty(this, JSID_VOID, false);
-    if (types) {
-        js::types::TypeConstraint *constraint = types->constraintList;
-        while (constraint) {
-            constraint->newObjectState(this, obj->getType(), true);
-            constraint = constraint->next;
-        }
-    }
-}
-
-inline void
-JSContext::markTypeObjectUnknownProperties(js::types::TypeObject *obj)
-{
-    if (!typeInferenceEnabled() || obj->unknownProperties())
-        return;
-
-    js::types::AutoEnterTypeInference enter(this);
-    obj->markUnknown(this);
-}
-
-inline void
-JSContext::typeMonitorCall(const js::CallArgs &args, bool constructing)
-{
-    if (!typeInferenceEnabled())
-        return;
-
-    JSObject *callee = &args.callee();
-    if (!callee->isFunction() || !callee->getFunctionPrivate()->isInterpreted())
-        return;
-
-    compartment->types.dynamicCall(this, callee, args, constructing);
-}
-
-inline void
-JSContext::fixArrayType(JSObject *obj)
-{
-    if (typeInferenceEnabled())
-        compartment->types.fixArrayType(this, obj);
-}
-
-inline void
-JSContext::fixObjectType(JSObject *obj)
-{
-    if (typeInferenceEnabled())
-        compartment->types.fixObjectType(this, obj);
-}
-
-/////////////////////////////////////////////////////////////////////
-// JSScript
+// Script interface functions
 /////////////////////////////////////////////////////////////////////
 
 inline bool
@@ -617,7 +535,7 @@ inline js::types::TypeObject *
 JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 {
     if (!cx->typeInferenceEnabled() || !global)
-        return cx->getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
+        return js::types::GetTypeNewObject(cx, isArray ? JSProto_Array : JSProto_Object);
 
     uint32 offset = pc - code;
     js::types::TypeObject *prev = NULL, *obj = typeObjects;
@@ -643,47 +561,33 @@ JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 inline void
 JSScript::typeMonitor(JSContext *cx, jsbytecode *pc, const js::Value &rval)
 {
-    js::analyze::UntrapOpcode untrap(cx, this, pc);
-
-    if (cx->typeInferenceEnabled() && (js_CodeSpec[*pc].format & JOF_TYPESET)) {
-        /* Allow the non-TYPESET scenario to simplify stubs invonked by INC* ops. Yuck. */
-
-        js::types::jstype type = js::types::GetValueType(cx, rval);
-        js::types::TypeSet *types = bytecodeTypes(pc);
-        if (types->hasType(type))
-            return;
-
-        js::types::AutoEnterTypeInference enter(cx);
-
-        js::types::InferSpew(js::types::ISpewOps, "bytecodeType: #%u:%05u: %s",
-                             id(), pc - code, js::types::TypeString(type));
-        types->addType(cx, type);
-    }
+    if (cx->typeInferenceEnabled())
+        js::types::TypeMonitorResult(cx, this, pc, rval);
 }
 
 inline void
-JSScript::typeMonitorOverflow(JSContext *cx, const jsbytecode *pc)
+JSScript::typeMonitorOverflow(JSContext *cx, jsbytecode *pc)
 {
     if (cx->typeInferenceEnabled())
-        cx->compartment->types.dynamicPush(cx, this, pc - code, js::types::TYPE_DOUBLE);
+        js::types::TypeDynamicResult(cx, this, pc, js::types::TYPE_DOUBLE);
 }
 
 inline void
-JSScript::typeMonitorString(JSContext *cx, const jsbytecode *pc)
+JSScript::typeMonitorString(JSContext *cx, jsbytecode *pc)
 {
     if (cx->typeInferenceEnabled())
-        cx->compartment->types.dynamicPush(cx, this, pc - code, js::types::TYPE_STRING);
+        js::types::TypeDynamicResult(cx, this, pc, js::types::TYPE_STRING);
 }
 
 inline void
-JSScript::typeMonitorUnknown(JSContext *cx, const jsbytecode *pc)
+JSScript::typeMonitorUnknown(JSContext *cx, jsbytecode *pc)
 {
     if (cx->typeInferenceEnabled())
-        cx->compartment->types.dynamicPush(cx, this, pc - code, js::types::TYPE_UNKNOWN);
+        js::types::TypeDynamicResult(cx, this, pc, js::types::TYPE_UNKNOWN);
 }
 
 inline void
-JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
+JSScript::typeMonitorAssign(JSContext *cx, jsbytecode *pc,
                             JSObject *obj, jsid id, const js::Value &rval)
 {
     if (cx->typeInferenceEnabled()) {
@@ -696,7 +600,7 @@ JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
         uint32 i;
         if (js_IdIsIndex(id, &i))
             return;
-        cx->markTypeObjectUnknownProperties(obj->getType());
+        js::types::MarkTypeObjectUnknownProperties(cx, obj->getType());
     }
 }
 

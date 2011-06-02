@@ -254,8 +254,9 @@ Recompiler::expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *in
     StackFrame *innerfp = expandInlineFrameChain(cx, fp, inner);
 
     /* Check if the VMFrame returns into the inlined frame. */
-    if (f->stubRejoin && (f->stubRejoin & 0x1) && f->fp() == fp) {
+    if (f->stubRejoin && f->fp() == fp) {
         /* The VMFrame is calling CompileFunction. */
+        JS_ASSERT(f->stubRejoin != REJOIN_NATIVE && f->stubRejoin != REJOIN_NATIVE_LOWERED);
         innerfp->setRejoin(StubRejoin((RejoinState) f->stubRejoin));
         *frameAddr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
     }

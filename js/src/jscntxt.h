@@ -1276,6 +1276,8 @@ struct JSContext
 
     bool                 inferenceEnabled;
 
+    bool typeInferenceEnabled() { return inferenceEnabled; }
+
     /* Caller must be holding runtime->gcLock. */
     void updateJITEnabled();
 
@@ -1400,64 +1402,6 @@ struct JSContext
      * a boolean flag to minimize the amount of code in its inlined callers.
      */
     JS_FRIEND_API(void) checkMallocGCPressure(void *p);
-
-  public:
-
-    inline bool typeInferenceEnabled();
-
-    /*
-     * Get the default 'new' object for a given standard class, per the currently
-     * active global.
-     */
-    inline js::types::TypeObject *getTypeNewObject(JSProtoKey key);
-
-    /* Get a type object for the immediate allocation site in this context. */
-    inline js::types::TypeObject *
-    getTypeCallerInitObject(bool isArray);
-
-    /* Mark the immediate allocation site as having produced an unexpected value. */
-    inline void markTypeCallerUnexpected(js::types::jstype type);
-    inline void markTypeCallerUnexpected(const js::Value &value);
-    inline void markTypeCallerOverflow();
-
-    /*
-     * Monitor a javascript call, either on entry to the interpreter or made
-     * from within the interpreter.
-     */
-    inline void typeMonitorCall(const js::CallArgs &args, bool constructing);
-
-    /* Add a possible value for the named property of obj. */
-    inline void addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type);
-    inline void addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
-    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
-    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
-    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::ClonedTypeSet *types);
-
-    /* Get the type to use for objects with no prototype. */
-    inline js::types::TypeObject *getTypeEmpty();
-
-    /* Alias two properties in the type information for obj. */
-    inline void aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
-
-    /* Set one or more dynamic flags on a type object. */
-    inline void markTypeObjectFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags);
-
-    /* Mark all properties of a type object as unknown. */
-    inline void markTypeObjectUnknownProperties(js::types::TypeObject *obj);
-
-    /* Mark any property which has been deleted or reconfigured. */
-    inline void markTypePropertyConfigured(js::types::TypeObject *obj, jsid id);
-
-    /* Mark a global object as having had its slots reallocated. */
-    inline void markGlobalReallocation(JSObject *obj);
-
-    /*
-     * For an array or object which has not yet escaped and been referenced elsewhere,
-     * pick a new type based on the object's current contents.
-     */
-    inline void fixArrayType(JSObject *obj);
-    inline void fixObjectType(JSObject *obj);
-
 }; /* struct JSContext */
 
 namespace js {

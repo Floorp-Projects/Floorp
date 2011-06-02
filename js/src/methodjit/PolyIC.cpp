@@ -608,7 +608,7 @@ class SetPropCompiler : public PICStubCompiler
 
             if (pic.typeMonitored) {
                 RecompilationMonitor monitor(cx);
-                cx->addTypePropertyId(obj->getType(), shape->propid, pic.rhsTypes);
+                types::AddTypePropertySet(cx, obj->getType(), shape->propid, pic.rhsTypes);
                 if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
@@ -627,7 +627,7 @@ class SetPropCompiler : public PICStubCompiler
                 return disable("invalid slot");
             if (pic.typeMonitored) {
                 RecompilationMonitor monitor(cx);
-                cx->addTypePropertyId(obj->getType(), shape->propid, pic.rhsTypes);
+                types::AddTypePropertySet(cx, obj->getType(), shape->propid, pic.rhsTypes);
                 if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }

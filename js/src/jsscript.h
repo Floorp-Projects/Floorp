@@ -591,15 +591,15 @@ struct JSScript {
     getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray);
 
     /* Monitor a bytecode pushing an unexpected value. */
-    inline void typeMonitorOverflow(JSContext *cx, const jsbytecode *pc);
-    inline void typeMonitorString(JSContext *cx, const jsbytecode *pc);
-    inline void typeMonitorUnknown(JSContext *cx, const jsbytecode *pc);
+    inline void typeMonitorOverflow(JSContext *cx, jsbytecode *pc);
+    inline void typeMonitorString(JSContext *cx, jsbytecode *pc);
+    inline void typeMonitorUnknown(JSContext *cx, jsbytecode *pc);
 
     /* Monitor a JOF_TYPESET bytecode pushing any value into its pushed type set. */
     inline void typeMonitor(JSContext *cx, jsbytecode *pc, const js::Value &val);
 
     /* Monitor an assignment at a SETELEM on a non-integer identifier. */
-    inline void typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
+    inline void typeMonitorAssign(JSContext *cx, jsbytecode *pc,
                                   JSObject *obj, jsid id, const js::Value &val);
 
     /* Add a type for a variable in this script. */
