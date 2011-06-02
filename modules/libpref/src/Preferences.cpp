@@ -1286,6 +1286,20 @@ Preferences::ClearUser(const char* aPref)
 }
 
 // static
+PRBool
+Preferences::HasUserValue(const char* aPref)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  PRBool hasUserValue;
+  nsresult rv =
+    sPreferences->mRootBranch->PrefHasUserValue(aPref, &hasUserValue);
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
+  }
+  return hasUserValue;
+}
+
+// static
 nsresult
 Preferences::AddStrongObserver(nsIObserver* aObserver,
                                const char* aPref)
