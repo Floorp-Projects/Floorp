@@ -141,11 +141,9 @@ MInstruction::replaceOperand(MUse *prev, MUse *use, MInstruction *ins)
 void
 MInstruction::replaceOperand(MUseIterator &use, MInstruction *ins)
 {
-    JS_ASSERT(use->ins() == this);
-
-    MUse *old = use.unlink();
-    setOperand(old->index(), ins);
-    ins->addUse(old);
+    size_t index = use->index();
+    use.next();
+    replaceOperand(index, ins);
 }
 
 void
@@ -154,7 +152,7 @@ MInstruction::replaceOperand(size_t index, MInstruction *ins)
     MInstruction *old = getInput(index);
     for (MUseIterator uses(old); uses.more(); uses.next()) {
         if (uses->index() == index && uses->ins() == this) {
-            replaceOperand(uses, ins);
+            replaceOperand(uses.prev(), *uses, ins);
             return;
         }
     }
