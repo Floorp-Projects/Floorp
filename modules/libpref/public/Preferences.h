@@ -189,6 +189,11 @@ public:
   static nsresult ClearUser(const char* aPref);
 
   /**
+   * Whether the pref has a user value or not.
+   */
+  static PRBool HasUserValue(const char* aPref);
+
+  /**
    * Adds/Removes the observer for the root pref branch.
    * The observer is referenced strongly if AddStrongObserver is used.  On the
    * other hand, it is referenced weakly, if AddWeakObserver is used.

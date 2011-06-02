@@ -413,15 +413,15 @@ function run_test() {
 
   }, function (next) {
 
-    _("X-Weave-Timestamp header updates Resource.serverTime");
+    _("X-Weave-Timestamp header updates AsyncResource.serverTime");
     do_test_pending();
     // Before having received any response containing the
-    // X-Weave-Timestamp header, Resource.serverTime is null.
-    do_check_eq(Resource.serverTime, null);
+    // X-Weave-Timestamp header, AsyncResource.serverTime is null.
+    do_check_eq(AsyncResource.serverTime, null);
     let res8 = new AsyncResource("http://localhost:8080/timestamp");
     res8.get(ensureThrows(function (error, content) {
       do_check_eq(error, null);
-      do_check_eq(Resource.serverTime, TIMESTAMP);
+      do_check_eq(AsyncResource.serverTime, TIMESTAMP);
       do_test_finished();
       next();
     }));
@@ -682,6 +682,22 @@ function run_test() {
       do_check_eq(error.result, Cr.NS_ERROR_NET_TIMEOUT);
       next();
     }));
+
+  }, function (next) {
+
+    _("Testing URI construction.");
+    let args = [];
+    args.push("newer=" + 1234);
+    args.push("limit=" + 1234);
+    args.push("sort=" + 1234);
+
+    let query = "?" + args.join("&");
+
+    let uri1 = Utils.makeURL("http://foo/" + query);
+    let uri2 = Utils.makeURL("http://foo/");
+    uri2.query = query;
+    do_check_eq(uri1.query, uri2.query);
+    next();
 
   }, function (next) {
 

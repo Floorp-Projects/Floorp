@@ -68,6 +68,7 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/util.js");
 
 Cu.import("resource://services-sync/main.js");      // For access to Service.
@@ -932,7 +933,7 @@ BookmarksStore.prototype = {
   _getChildGUIDsForId: function _getChildGUIDsForId(itemid) {
     let stmt = this._childGUIDsStm;
     stmt.params.parent = itemid;
-    let rows = Utils.queryAsync(stmt, this._childGUIDsCols);
+    let rows = Async.querySpinningly(stmt, this._childGUIDsCols);
     return rows.map(function (row) {
       if (row.guid) {
         return row.guid;
@@ -1075,7 +1076,7 @@ BookmarksStore.prototype = {
     let stmt = this._setGUIDStm;
     stmt.params.guid = guid;
     stmt.params.item_id = id;
-    Utils.queryAsync(stmt);
+    Async.querySpinningly(stmt);
     return guid;
   },
 
@@ -1096,7 +1097,7 @@ BookmarksStore.prototype = {
     stmt.params.item_id = id;
 
     // Use the existing GUID if it exists
-    let result = Utils.queryAsync(stmt, this._guidForIdCols)[0];
+    let result = Async.querySpinningly(stmt, this._guidForIdCols)[0];
     if (result && result.guid)
       return result.guid;
 
@@ -1122,7 +1123,7 @@ BookmarksStore.prototype = {
     // guid might be a String object rather than a string.
     stmt.params.guid = guid.toString();
 
-    let results = Utils.queryAsync(stmt, this._idForGUIDCols);
+    let results = Async.querySpinningly(stmt, this._idForGUIDCols);
     this._log.trace("Number of rows matching GUID " + guid + ": "
                     + results.length);
     
@@ -1149,7 +1150,7 @@ BookmarksStore.prototype = {
     // Add in the bookmark's frecency if we have something
     if (record.bmkUri != null) {
       this._frecencyStm.params.url = record.bmkUri;
-      let result = Utils.queryAsync(this._frecencyStm, this._frecencyCols);
+      let result = Async.querySpinningly(this._frecencyStm, this._frecencyCols);
       if (result.length)
         index += result[0].frecency;
     }
