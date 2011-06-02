@@ -1486,7 +1486,7 @@ var ctx = canvas.getContext('2d');
 
 ctx.globalCompositeOperation = 'xor';
 ctx.globalCompositeOperation = 'clear';
-todo(ctx.globalCompositeOperation == 'xor', "ctx.globalCompositeOperation == 'xor'");
+ok(ctx.globalCompositeOperation == 'xor', "ctx.globalCompositeOperation == 'xor'");
 
 
 }
@@ -1619,7 +1619,7 @@ var ctx = canvas.getContext('2d');
 
 ctx.globalCompositeOperation = 'xor';
 ctx.globalCompositeOperation = 'over';
-todo(ctx.globalCompositeOperation == 'xor', "ctx.globalCompositeOperation == 'xor'");
+ok(ctx.globalCompositeOperation == 'xor', "ctx.globalCompositeOperation == 'xor'");
 
 
 }
