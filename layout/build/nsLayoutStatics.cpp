@@ -186,11 +186,7 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  rv = nsCSSRendering::Init();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsCSSRendering");
-    return rv;
-  }
+  nsCSSRendering::Init();
 
   rv = nsTextFrameTextRunCache::Init();
   if (NS_FAILED(rv)) {
