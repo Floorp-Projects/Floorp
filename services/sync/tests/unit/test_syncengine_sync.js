@@ -598,7 +598,7 @@ function test_processIncoming_store_toFetch() {
 
 
 function test_processIncoming_resume_toFetch() {
-  _("toFetch items left over from previous syncs are fetched on the next sync, along with new items.");
+  _("toFetch and previousFailed items left over from previous syncs are fetched on the next sync, along with new items.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
@@ -616,6 +616,13 @@ function test_processIncoming_resume_toFetch() {
   collection.wbos.rekolok = new ServerWBO(
       'rekolok', encryptPayload({id: 'rekolok',
                                  denomination: "Rekonstruktionslokomotive"}));
+  for (var i = 0; i < 3; i++) {
+    let id = 'failed' + i;
+    let payload = encryptPayload({id: id, denomination: "Record No. " + i});
+    let wbo = new ServerWBO(id, payload);
+    wbo.modified = LASTSYNC - 10;
+    collection.wbos[id] = wbo;
+  }
 
   collection.wbos.flying.modified = collection.wbos.scotsman.modified
     = LASTSYNC - 10;
@@ -625,6 +632,7 @@ function test_processIncoming_resume_toFetch() {
   let engine = makeSteamEngine();
   engine.lastSync = LASTSYNC;
   engine.toFetch = ["flying", "scotsman"];
+  engine.previousFailed = ["failed0", "failed1", "failed2"];
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
   meta_global.payload.engines = {steam: {version: engine.version,
@@ -648,7 +656,10 @@ function test_processIncoming_resume_toFetch() {
     do_check_eq(engine._store.items.flying, "LNER Class A3 4472");
     do_check_eq(engine._store.items.scotsman, "Flying Scotsman");
     do_check_eq(engine._store.items.rekolok, "Rekonstruktionslokomotive");
-
+    do_check_eq(engine._store.items.failed0, "Record No. 0");
+    do_check_eq(engine._store.items.failed1, "Record No. 1");
+    do_check_eq(engine._store.items.failed2, "Record No. 2");
+    do_check_eq(engine.previousFailed.length, 0);
   } finally {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
@@ -699,12 +710,13 @@ function test_processIncoming_applyIncomingBatchSize_smaller() {
     engine._syncStartup();
     engine._processIncoming();
 
-    // Records have been applied.
+    // Records have been applied and the expected failures have failed.
     do_check_eq([id for (id in engine._store.items)].length,
                 APPLY_BATCH_SIZE - 1 - 2);
-    do_check_eq(engine.toFetch.length, 2);
-    do_check_eq(engine.toFetch[0], "record-no-0");
-    do_check_eq(engine.toFetch[1], "record-no-8");
+    do_check_eq(engine.toFetch.length, 0);
+    do_check_eq(engine.previousFailed.length, 2);
+    do_check_eq(engine.previousFailed[0], "record-no-0");
+    do_check_eq(engine.previousFailed[1], "record-no-8");
 
   } finally {
     server.stop(do_test_finished);
@@ -762,6 +774,182 @@ function test_processIncoming_applyIncomingBatchSize_multiple() {
     do_check_eq([id for (id in engine._store.items)].length,
                 APPLY_BATCH_SIZE * 3);
 
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+  }
+}
+
+
+function test_processIncoming_failed_items_reported_once() {
+  _("Ensure that failed records are reported only once.");
+  let syncTesting = new SyncTestingInfrastructure();
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+  
+  const APPLY_BATCH_SIZE = 5;
+  const NUMBER_OF_RECORDS = 15;
+
+  // Engine that fails the first record.
+  let engine = makeSteamEngine();
+  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
+  engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
+  engine._store.applyIncomingBatch = function (records) {
+    engine._store._applyIncomingBatch(records.slice(1));
+    return [records[0].id];
+  };
+
+  // Create a batch of server side records.
+  let collection = new ServerCollection();
+  for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
+    let id = 'record-no-' + i;
+    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    collection.wbos[id] = new ServerWBO(id, payload);
+  }
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = sync_httpd_setup({
+      "/1.1/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+
+  try {
+    let called = 0;
+    let counts;
+
+    // Confirm initial environment.
+    do_check_eq(engine.lastSync, 0);
+    do_check_eq(engine.toFetch.length, 0);
+    do_check_eq(engine.previousFailed.length, 0);
+    do_check_eq([id for (id in engine._store.items)].length, 0);
+
+    Svc.Obs.add("weave:engine:sync:apply-failed", function(count) {
+      _("Called with " + JSON.stringify(counts));
+      counts = count;
+      called++;
+    });
+
+    // Do sync.
+    engine._syncStartup();
+    engine._processIncoming();
+    
+    // Confirm failures.
+    do_check_eq([id for (id in engine._store.items)].length, 12);
+    do_check_eq(engine.previousFailed.length, 3);
+    do_check_eq(engine.previousFailed[0], "record-no-0");
+    do_check_eq(engine.previousFailed[1], "record-no-5");
+    do_check_eq(engine.previousFailed[2], "record-no-10");
+
+    // There are newly failed records and they are reported.
+    do_check_eq(called, 1);
+    do_check_eq(counts.failed, 3);
+    do_check_eq(counts.applied, 15);
+    do_check_eq(counts.newFailed, 3);
+
+    // Sync again, 1 of the failed items are the same, the rest didn't fail.
+    engine._processIncoming();
+    
+    // Confirming removed failures.
+    do_check_eq([id for (id in engine._store.items)].length, 14);
+    do_check_eq(engine.previousFailed.length, 1);
+    do_check_eq(engine.previousFailed[0], "record-no-0");
+
+    // Failures weren't notified again because there were no newly failed items.
+    do_check_eq(called, 1);
+    do_check_eq(counts.failed, 3);
+    do_check_eq(counts.applied, 15);
+    do_check_eq(counts.newFailed, 3);
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+  }
+}
+
+
+function test_processIncoming_previousFailed() {
+  _("Ensure that failed records are retried.");
+  let syncTesting = new SyncTestingInfrastructure();
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+  Svc.Prefs.set("client.type", "mobile");
+  
+  const APPLY_BATCH_SIZE = 4;
+  const NUMBER_OF_RECORDS = 14;
+
+  // Engine that fails the first 2 records.
+  let engine = makeSteamEngine();
+  engine.mobileGUIDFetchBatchSize = engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;  
+  engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
+  engine._store.applyIncomingBatch = function (records) {
+    engine._store._applyIncomingBatch(records.slice(2));
+    return [records[0].id, records[1].id];
+  };
+
+  // Create a batch of server side records.
+  let collection = new ServerCollection();
+  for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
+    let id = 'record-no-' + i;
+    let payload = encryptPayload({id: id, denomination: "Record No. " + i});
+    collection.wbos[id] = new ServerWBO(id, payload);
+  }
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = sync_httpd_setup({
+      "/1.1/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+
+  try {
+    // Confirm initial environment.
+    do_check_eq(engine.lastSync, 0);
+    do_check_eq(engine.toFetch.length, 0);
+    do_check_eq(engine.previousFailed.length, 0);
+    do_check_eq([id for (id in engine._store.items)].length, 0);
+
+    // Initial failed items in previousFailed to be reset.
+    let previousFailed = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    engine.previousFailed = previousFailed;
+    do_check_eq(engine.previousFailed, previousFailed);
+
+    // Do sync.
+    engine._syncStartup();
+    engine._processIncoming();
+
+    // Expected result: 4 sync batches with 2 failures each => 8 failures
+    do_check_eq([id for (id in engine._store.items)].length, 6);
+    do_check_eq(engine.previousFailed.length, 8);
+    do_check_eq(engine.previousFailed[0], "record-no-0");
+    do_check_eq(engine.previousFailed[1], "record-no-1");
+    do_check_eq(engine.previousFailed[2], "record-no-4");
+    do_check_eq(engine.previousFailed[3], "record-no-5");
+    do_check_eq(engine.previousFailed[4], "record-no-8");
+    do_check_eq(engine.previousFailed[5], "record-no-9");
+    do_check_eq(engine.previousFailed[6], "record-no-12");
+    do_check_eq(engine.previousFailed[7], "record-no-13");
+
+    // Sync again with the same failed items (records 0, 1, 8, 9).
+    engine._processIncoming();
+
+    // A second sync with the same failed items should not add the same items again.
+    // Items that did not fail a second time should no longer be in previousFailed.
+    do_check_eq([id for (id in engine._store.items)].length, 10);
+    do_check_eq(engine.previousFailed.length, 4);
+    do_check_eq(engine.previousFailed[0], "record-no-0");
+    do_check_eq(engine.previousFailed[1], "record-no-1");
+    do_check_eq(engine.previousFailed[2], "record-no-8");
+    do_check_eq(engine.previousFailed[3], "record-no-9");
+
+    // Refetched items that didn't fail the second time are in engine._store.items.
+    do_check_eq(engine._store.items['record-no-4'], "Record No. 4");
+    do_check_eq(engine._store.items['record-no-5'], "Record No. 5");
+    do_check_eq(engine._store.items['record-no-12'], "Record No. 12");
+    do_check_eq(engine._store.items['record-no-13'], "Record No. 13");
   } finally {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
@@ -841,6 +1029,7 @@ function test_processIncoming_failed_records() {
     // Confirm initial environment
     do_check_eq(engine.lastSync, 0);
     do_check_eq(engine.toFetch.length, 0);
+    do_check_eq(engine.previousFailed.length, 0);
     do_check_eq([id for (id in engine._store.items)].length, 0);
 
     let observerSubject;
@@ -860,11 +1049,11 @@ function test_processIncoming_failed_records() {
                 NUMBER_OF_RECORDS - BOGUS_RECORDS.length);
 
     // Ensure that the bogus records will be fetched again on the next sync.
-    do_check_eq(engine.toFetch.length, BOGUS_RECORDS.length);
-    engine.toFetch.sort();
+    do_check_eq(engine.previousFailed.length, BOGUS_RECORDS.length);
+    engine.previousFailed.sort();
     BOGUS_RECORDS.sort();
-    for (let i = 0; i < engine.toFetch.length; i++) {
-      do_check_eq(engine.toFetch[i], BOGUS_RECORDS[i]);
+    for (let i = 0; i < engine.previousFailed.length; i++) {
+      do_check_eq(engine.previousFailed[i], BOGUS_RECORDS[i]);
     }
 
     // Ensure the observer was notified
@@ -952,6 +1141,7 @@ function test_processIncoming_decrypt_failed() {
 
     // Confirm initial state
     do_check_eq(engine.toFetch.length, 0);
+    do_check_eq(engine.previousFailed.length, 0);
 
     let observerSubject;
     let observerData;
@@ -965,11 +1155,11 @@ function test_processIncoming_decrypt_failed() {
     engine.lastSync = collection.wbos.nojson.modified - 1;
     engine.sync();
 
-    do_check_eq(engine.toFetch.length, 4);
-    do_check_eq(engine.toFetch[0], "nojson");
-    do_check_eq(engine.toFetch[1], "nojson2");
-    do_check_eq(engine.toFetch[2], "nodecrypt");
-    do_check_eq(engine.toFetch[3], "nodecrypt2");
+    do_check_eq(engine.previousFailed.length, 4);
+    do_check_eq(engine.previousFailed[0], "nojson");
+    do_check_eq(engine.previousFailed[1], "nojson2");
+    do_check_eq(engine.previousFailed[2], "nodecrypt");
+    do_check_eq(engine.previousFailed[3], "nodecrypt2");
 
     // Ensure the observer was notified
     do_check_eq(observerData, engine.name);
@@ -1457,6 +1647,8 @@ function run_test() {
   test_processIncoming_resume_toFetch();
   test_processIncoming_applyIncomingBatchSize_smaller();
   test_processIncoming_applyIncomingBatchSize_multiple();
+  test_processIncoming_failed_items_reported_once();
+  test_processIncoming_previousFailed();
   test_processIncoming_failed_records();
   test_processIncoming_decrypt_failed();
   test_uploadOutgoing_toEmptyServer();

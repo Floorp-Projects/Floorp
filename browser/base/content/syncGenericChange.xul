@@ -55,6 +55,7 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         id="change-dialog"
         windowtype="Weave:ChangeSomething"
+        persist="screenX screenY"
         onwizardnext="Change.onLoad()"
         onwizardfinish="return Change.onDialogAccept();">
 
