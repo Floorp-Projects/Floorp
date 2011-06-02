@@ -164,7 +164,12 @@ Recompiler::patchNative(JSContext *cx, JITScript *jit, StackFrame *fp,
 
     /* Patch the native fallthrough to go to the interpoline. */
     {
+#ifdef _WIN64
+        /* Win64 needs stack adjustment */
+        void *interpoline = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpolinePatched);
+#else
         void *interpoline = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
+#endif
         uint8 *start = (uint8 *)ic.nativeJump.executableAddress();
         JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
 #ifdef JS_CPU_X64
@@ -213,6 +218,9 @@ JITCodeReturnAddress(void *data)
     return data != NULL  /* frame is interpreted */
         && data != JS_FUNC_TO_DATA_PTR(void *, JaegerTrampolineReturn)
         && data != JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline)
+#ifdef _WIN64
+        && data != JS_FUNC_TO_DATA_PTR(void *, JaegerInterpolinePatched)
+#endif
         && data != JS_FUNC_TO_DATA_PTR(void *, JaegerInterpolineScripted);
 }
 
