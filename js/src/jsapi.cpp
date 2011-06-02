@@ -2602,12 +2602,14 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
     if (cx->tempPool.current == &cx->tempPool.first)
         JS_FinishArenaPool(&cx->tempPool);
 
+    GCREASON(PUBLIC_API);
     js_GC(cx, comp, GC_NORMAL);
 }
 
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
+    GCREASON(PUBLIC_API);
     JS_CompartmentGC(cx, NULL);
 }
 
