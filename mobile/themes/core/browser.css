@@ -1216,37 +1216,41 @@ pageaction:not([image]) > hbox >.pageaction-image {
   border-bottom: @border_width_tiny@ solid #cacdd5;
 }
 
-/* XXX should be a richlistitem */
-.prefbox {
+setting {
   padding: @padding_xsmall@;
   border-bottom: @border_width_tiny@ solid rgb(207,207,207);
   min-height: @touch_row@; /* row size */
   -moz-box-align: center;
+  -moz-box-orient: horizontal;
 }
 
-.setting-group > .prefbox {
+.setting-label {
+  -moz-box-flex: 1;
+}
+
+.setting-group > setting {
   border-bottom: none;
 }
 
-.setting-subgroup > .prefbox {
+.setting-subgroup > setting {
   border-bottom: none;
   -moz-margin-start: @margin_xxxnormal@;
 }
 
-.setting-subgroup + :not(.setting-subgroup) > .prefbox {
+.setting-subgroup + :not(.setting-subgroup) > setting {
   border-top: @border_width_tiny@ solid rgb(207,207,207);
 }
 
 /* Put setting textboxes on a separate row in portrait */
 @media (@orientation@: portrait) {
-  .setting-integer,
-  .setting-string {
+  setting[type="integer"],
+  setting[type="string"] {
     -moz-box-align: start;
     -moz-box-orient: vertical;
   }
 
-  .setting-integer > .setting-input > textbox,
-  .setting-string > .setting-input > textbox {
+  setting[type="integer"] > .setting-input > textbox,
+  setting[type="string"] > .setting-input > textbox {
     width: 499px; /* textboxes seem to need a width in order to flex */
     -moz-box-flex: 1;
   }
@@ -1256,17 +1260,17 @@ pageaction:not([image]) > hbox >.pageaction-image {
   -moz-margin-start: 28px;  /* sized based on the 32px addon image */
 }
 
-.options-box > setting:last-child > .prefbox {
+.options-box > setting:last-child {
   border-bottom: 0;
 }
 
 /* XXX should be a richlistitem description.title */
-.preftitle {
+.preferences-title {
   font-size: @font_normal@ !important;
 }
 
 /* XXX should be a richlistitem description.normal */
-.prefdesc {
+.preferences-description {
   font-size: @font_small@ !important;
   color: grey;
 }
