@@ -2846,14 +2846,12 @@ stubs::AssertArgumentTypes(VMFrame &f)
 
     jstype type = GetValueType(f.cx, fp->thisValue());
     if (!TypeMatches(f.cx, script->thisTypes(), type))
-        TypeFailure(f.cx, "Missing type for #%u this: %s", script->id(), TypeString(type));
+        TypeFailure(f.cx, "Missing type for this: %s", TypeString(type));
 
     for (unsigned i = 0; i < fun->nargs; i++) {
         type = GetValueType(f.cx, fp->formalArg(i));
-        if (!TypeMatches(f.cx, script->argTypes(i), type)) {
-            TypeFailure(f.cx, "Missing type for #%u arg %d: %s", script->id(), i,
-                        TypeString(type));
-        }
+        if (!TypeMatches(f.cx, script->argTypes(i), type))
+            TypeFailure(f.cx, "Missing type for arg %d: %s", i, TypeString(type));
     }
 }
 #endif
