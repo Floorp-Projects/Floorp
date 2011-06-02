@@ -678,12 +678,10 @@ private:
      frame.  If this is not set, the frame will be pushed as the
      absolute containing block as needed, based on its style */
 #define FCDATA_FORCE_NULL_ABSPOS_CONTAINER 0x10
-#ifdef MOZ_MATHML
   /* If FCDATA_WRAP_KIDS_IN_BLOCKS is set, the inline kids of the frame
      will be wrapped in blocks.  This is only usable for MathML at the
      moment. */
 #define FCDATA_WRAP_KIDS_IN_BLOCKS 0x20
-#endif /* MOZ_MATHML */
   /* If FCDATA_SUPPRESS_FRAME is set, no frame should be created for the
      content.  If this bit is set, nothing else in the struct needs to be
      set. */
@@ -1271,7 +1269,6 @@ private:
                                nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonContent);
 
 //MathML Mod - RBS
-#ifdef MOZ_MATHML
   /**
    * Takes the frames in aBlockItems and wraps them in a new anonymous block
    * frame whose content is aContent and whose parent will be aParentFrame.
@@ -1289,7 +1286,6 @@ private:
                                                      nsIAtom* aTag,
                                                      PRInt32 aNameSpaceID,
                                                      nsStyleContext* aStyleContext);
-#endif
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not XUL.

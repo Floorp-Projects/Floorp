@@ -1383,7 +1383,6 @@ GK_ATOM(to, "to")
 GK_ATOM(XML, "XML")
 #endif
 
-#ifdef MOZ_MATHML
 // internal MathML attributes: different from columnalign_, columnlines_,
 // fontstyle_, rowalign_ and rowlines_
 GK_ATOM(_moz_math_columnalign_, "_moz-math-columnalign")
@@ -1667,7 +1666,6 @@ GK_ATOM(veryverythinmathspace_, "veryverythinmathspace")
 GK_ATOM(voffset_, "voffset")
 GK_ATOM(xref_, "xref")
 GK_ATOM(math, "math") // the only one without an underscore
-#endif
 
 #ifndef DISABLE_XFORMS_HOOKS
 GK_ATOM(avg, "avg")

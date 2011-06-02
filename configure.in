@@ -4802,7 +4802,6 @@ MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_INSTALLER=1
 MOZ_JSDEBUGGER=1
-MOZ_MATHML=1
 MOZ_CSS_ANIMATIONS=1
 MOZ_MORK=
 MOZ_MORKREADER=1
@@ -6407,17 +6406,6 @@ for extension in $MOZ_EXTENSIONS; do
         AC_MSG_ERROR([Unrecognized extension provided to --enable-extensions: ${extension}.])
     fi
 done
-
-dnl ========================================================
-dnl MathML on by default
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(mathml,
-[  --disable-mathml        Disable MathML support],
-    MOZ_MATHML=,
-    MOZ_MATHML=1 )
-if test "$MOZ_MATHML"; then
-  AC_DEFINE(MOZ_MATHML)
-fi
 
 AC_DEFINE(MOZ_CSS_ANIMATIONS)
 
@@ -8749,7 +8737,6 @@ AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
 AC_SUBST(MOZ_PLATFORM_MAEMO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
-AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_CSS_ANIMATIONS)
 AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_XTF)
