@@ -281,7 +281,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     switch(aVar) {
 
     case NPNVSupportsWindowless:
-#if defined(OS_LINUX) || defined(OS_WIN)
+#if defined(OS_LINUX) || defined(MOZ_X11) || defined(OS_WIN)
         *((NPBool*)aValue) = true;
 #else
         *((NPBool*)aValue) = false;
@@ -300,7 +300,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return NPERR_NO_ERROR;
     }
 #endif
-#if defined(OS_LINUX)
+#if defined(MOZ_X11)
     case NPNVSupportsXEmbedBool:
         *((NPBool*)aValue) = true;
         return NPERR_NO_ERROR;
@@ -2351,7 +2351,16 @@ PluginInstanceChild::CreateOptSurface(void)
     }
 
     if (mSurfaceType == gfxASurface::SurfaceTypeXlib) {
-        XRenderPictFormat* xfmt = gfxXlibSurface::FindRenderFormat(dpy, format);
+        if (!mIsTransparent  || mBackground) {
+            Visual* defaultVisual = DefaultVisualOfScreen(screen);
+            mCurrentSurface =
+                gfxXlibSurface::Create(screen, defaultVisual,
+                                       gfxIntSize(mWindow.width,
+                                                  mWindow.height));
+            return mCurrentSurface != nsnull;
+        }
+
+        XRenderPictFormat* xfmt = XRenderFindStandardFormat(dpy, PictStandardARGB32);
         if (!xfmt) {
             NS_ERROR("Need X falback surface, but FindRenderFormat failed");
             return false;
@@ -2725,7 +2734,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
         // provided it is within the clipRect.), see bug 574583
         plPaintRect.SetRect(0, 0, aRect.XMost(), aRect.YMost());
     }
-    if (renderSurface->GetType() != gfxASurface::SurfaceTypeXlib) {
+    if (mHelperSurface) {
         // On X11 we can paint to non Xlib surface only with HelperSurface
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
         // Don't use mHelperSurface if surface is image and mMaemoImageRendering is TRUE
@@ -2934,7 +2943,8 @@ PluginInstanceChild::ShowPluginFrame()
         PLUGIN_LOG_DEBUG(("  (on background)"));
         // Source the background pixels ...
         {
-            nsRefPtr<gfxContext> ctx = new gfxContext(mCurrentSurface);
+            nsRefPtr<gfxContext> ctx =
+                new gfxContext(mHelperSurface ? mHelperSurface : mCurrentSurface);
             ctx->SetSource(mBackground);
             ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
             ctx->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height));
@@ -3331,13 +3341,7 @@ PluginInstanceChild::SwapSurfaces()
     if (mCurrentSurface && mBackSurface &&
         (mCurrentSurface->GetSize() != mBackSurface->GetSize() ||
          mCurrentSurface->GetContentType() != mBackSurface->GetContentType())) {
-        mCurrentSurface = nsnull;
-#ifdef XP_WIN
-        if (mCurrentSurfaceActor) {
-            PPluginSurfaceChild::Send__delete__(mCurrentSurfaceActor);
-            mCurrentSurfaceActor = NULL;
-        }
-#endif
+        ClearCurrentSurface();
     }
 }
 
