@@ -1247,7 +1247,7 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     JSScript *script = obj->getCallObjCalleeFunction()->script();
     script->typeSetArgument(cx, i, *vp);
 
-    GC_POKE(cx, *argp);
+    GCPoke(cx, *argp);
     *argp = *vp;
     return true;
 }
@@ -1270,7 +1270,7 @@ SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 
     Value *up = &obj->getCallObjCallee()->getFlatClosureUpvar(i);
 
-    GC_POKE(cx, *up);
+    GCPoke(cx, *up);
     *up = *vp;
     return true;
 }
@@ -1330,7 +1330,7 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     JSScript *script = obj->getCallObjCalleeFunction()->script();
     script->typeSetLocal(cx, i, *vp);
 
-    GC_POKE(cx, *varp);
+    GCPoke(cx, *varp);
     *varp = *vp;
     return true;
 }

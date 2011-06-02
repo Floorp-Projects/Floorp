@@ -118,14 +118,13 @@ JSCompartment::init(JSContext *cx)
     chunk = NULL;
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
         arenas[i].init();
-    for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
-        freeLists.finalizables[i] = NULL;
 
     activeAnalysis = activeInference = false;
     types.init(cx);
 
     JS_InitArenaPool(&pool, "analysis", 4096, 8, NULL);
 
+    freeLists.init();
     if (!crossCompartmentWrappers.init())
         return false;
 
