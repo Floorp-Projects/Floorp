@@ -635,7 +635,12 @@ usage(void)
     fprintf(gErrFile, "  -g <n>        Sleep for <n> seconds before starting (default: 0)\n");
 #endif
 #ifdef JS_GC_ZEAL
-    fprintf(gErrFile, "  -Z <n>        Toggle GC zeal: low if <n> is 0 (default), high if non-zero\n");
+    fprintf(gErrFile, "  -Z <n>[,<f>[,<c>]]  Set GC zeal to <n>.\n"
+                      "                Possible values for <n>:\n"
+                      "                  0:  no additional GCs\n"
+                      "                  1:  additional GCs at common danger points\n"
+                      "                  2:  GC every <f> allocations (<f> defaults to 100)\n"
+                      "                If <c> = 1, do compartment GCs. Otherwise full.\n");
 #endif
 #ifdef MOZ_TRACEVIS
     fprintf(gErrFile, "  -T  Start TraceVis\n");
@@ -699,6 +704,25 @@ extern JSClass global_class;
 namespace js {
     extern struct JSClass jitstats_class;
     void InitJITStatsClass(JSContext *cx, JSObject *glob);
+}
+#endif
+
+#ifdef JS_GC_ZEAL
+static void
+ParseZealArg(JSContext *cx, const char *arg)
+{
+    int zeal, freq = 1, compartment = 0;
+    const char *p = strchr(arg, ',');
+
+    zeal = atoi(arg);
+    if (p) {
+        freq = atoi(p + 1);
+        p = strchr(p + 1, ',');
+        if (p)
+            compartment = atoi(p + 1);
+    }
+
+    JS_SetGCZeal(cx, zeal, freq, !!compartment);
 }
 #endif
 
@@ -785,7 +809,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'Z':
             if (++i == argc)
                 return usage();
-            JS_SetGCZeal(cx, !!(atoi(argv[i])));
+            ParseZealArg(cx, argv[i]);
             break;
 #endif
 #ifdef DEBUG
@@ -1468,8 +1492,15 @@ AssertJit(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSCompartment *comp = NULL;
+    if (argc == 1) {
+        Value arg = Valueify(vp[2]);
+        if (arg.isObject())
+            comp = arg.toObject().unwrap()->compartment();
+    }
+
     size_t preBytes = cx->runtime->gcBytes;
-    JS_GC(cx);
+    JS_CompartmentGC(cx, comp);
 
     char buf[256];
     JS_snprintf(buf, sizeof(buf), "before %lu, after %lu, break %08lx\n",
@@ -1565,11 +1596,46 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GCZeal(JSContext *cx, uintN argc, jsval *vp)
 {
-    uint32 zeal;
+    uint32 zeal, frequency = JS_DEFAULT_ZEAL_FREQ;
+    JSBool compartment = JS_FALSE;
 
-    if (!JS_ValueToECMAUint32(cx, argc == 0 ? JSVAL_VOID : vp[2], &zeal))
+    if (argc > 3) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_TOO_MANY_ARGS, "gczeal");
         return JS_FALSE;
-    JS_SetGCZeal(cx, (uint8)zeal);
+    }
+    if (!JS_ValueToECMAUint32(cx, argc < 1 ? JSVAL_VOID : vp[2], &zeal))
+        return JS_FALSE;
+    if (argc >= 2)
+        if (!JS_ValueToECMAUint32(cx, vp[3], &frequency))
+            return JS_FALSE;
+    if (argc >= 3)
+        compartment = js_ValueToBoolean(Valueify(vp[3]));
+
+    JS_SetGCZeal(cx, (uint8)zeal, frequency, compartment);
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
+
+static JSBool
+ScheduleGC(JSContext *cx, uintN argc, jsval *vp)
+{
+    uint32 count;
+    bool compartment = false;
+
+    if (argc != 1 && argc != 2) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                             (argc < 1)
+                             ? JSSMSG_NOT_ENOUGH_ARGS
+                             : JSSMSG_TOO_MANY_ARGS,
+                             "schedulegc");
+        return JS_FALSE;
+    }
+    if (!JS_ValueToECMAUint32(cx, vp[2], &count))
+        return JS_FALSE;
+    if (argc == 2)
+        compartment = js_ValueToBoolean(Valueify(vp[3]));
+
+    JS_ScheduleGC(cx, count, compartment);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -4734,7 +4800,8 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("makeFinalizeObserver", MakeFinalizeObserver, 0,0),
     JS_FN("finalizeCount",  FinalizeCount, 0,0),
 #ifdef JS_GC_ZEAL
-    JS_FN("gczeal",         GCZeal,         1,0),
+    JS_FN("gczeal",         GCZeal,         2,0),
+    JS_FN("schedulegc",     ScheduleGC,     1,0),
 #endif
     JS_FN("setDebug",       SetDebug,       1,0),
     JS_FN("setDebuggerHandler", SetDebuggerHandler, 1,0),
@@ -4837,7 +4904,8 @@ static const char *const shell_help_messages[] = {
 "  Throw if the first two arguments are not the same (both +0 or both -0,\n"
 "  both NaN, or non-zero and ===)",
 "assertJit()              Throw if the calling function failed to JIT",
-"gc()                     Run the garbage collector",
+"gc([obj])                Run the garbage collector\n"
+"                         When obj is given, GC only the compartment it's in",
 #ifdef JS_GCMETER
 "gcstats()                Print garbage collector statistics",
 #endif
@@ -4856,7 +4924,10 @@ static const char *const shell_help_messages[] = {
 "  return the current value of the finalization counter that is incremented\n"
 "  each time an object returned by the makeFinalizeObserver is finalized",
 #ifdef JS_GC_ZEAL
-"gczeal(level)            How zealous the garbage collector should be",
+"gczeal(level, [freq], [compartmentGC?])\n"
+"                         How zealous the garbage collector should be",
+"schedulegc(num, [compartmentGC?])\n"
+"                         Schedule a GC to happen after num allocations",
 #endif
 "setDebug(debug)          Set debug mode",
 "setDebuggerHandler(f)    Set handler for debugger keyword to f",
@@ -6046,6 +6117,7 @@ main(int argc, char **argv, char **envp)
         return 1;
 
     JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ANONFUNFIX);
+    JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_COMPARTMENT);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
     result = Shell(cx, argc, argv, envp);

@@ -1325,10 +1325,6 @@ inline bool
 NeedLastDitchGC(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-#ifdef JS_GC_ZEAL
-    if (rt->gcZeal >= 1)
-        return true;
-#endif
     return rt->gcIsNeeded;
 }
 
@@ -1358,6 +1354,12 @@ RunLastDitchGC(JSContext *cx)
     return rt->gcBytes < rt->gcMaxBytes;
 }
 
+static inline bool
+IsGCAllowed(JSContext *cx)
+{
+    return !JS_ON_TRACE(cx) && !JS_THREAD_DATA(cx)->waiveGCQuota;
+}
+
 template <typename T>
 inline Cell *
 RefillTypedFreeList(JSContext *cx, unsigned thingKind)
@@ -1374,7 +1376,7 @@ RefillTypedFreeList(JSContext *cx, unsigned thingKind)
     JSCompartment *compartment = cx->compartment;
     JS_ASSERT(!compartment->freeLists.finalizables[thingKind]);
 
-    bool canGC = !JS_ON_TRACE(cx) && !JS_THREAD_DATA(cx)->waiveGCQuota;
+    bool canGC = IsGCAllowed(cx);
     bool runGC = canGC && JS_UNLIKELY(NeedLastDitchGC(cx));
     for (;;) {
         if (runGC) {
@@ -1918,12 +1920,10 @@ TriggerCompartmentGC(JSCompartment *comp)
     JSRuntime *rt = comp->rt;
     JS_ASSERT(!rt->gcRunning);
 
-#ifdef JS_GC_ZEAL
-    if (rt->gcZeal >= 1) {
+    if (rt->gcZeal()) {
         TriggerGC(rt);
         return;
     }
-#endif
 
     if (rt->gcMode != JSGC_MODE_COMPARTMENT || comp == rt->atomsCompartment) {
         /* We can't do a compartmental GC of the default compartment. */
@@ -1958,12 +1958,10 @@ MaybeGC(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
-#ifdef JS_GC_ZEAL
-    if (rt->gcZeal > 0) {
+    if (rt->gcZeal()) {
         js_GC(cx, NULL, GC_NORMAL);
         return;
     }
-#endif
 
     JSCompartment *comp = cx->compartment;
     if (rt->gcIsNeeded) {
@@ -2271,11 +2269,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * Same for the protoHazardShape proxy-shape standing in for all object
      * prototypes having readonly or setter properties.
      */
-    if (rt->shapeGen & SHAPE_OVERFLOW_BIT
-#ifdef JS_GC_ZEAL
-        || rt->gcZeal >= 1
-#endif
-        ) {
+    if (rt->shapeGen & SHAPE_OVERFLOW_BIT || (rt->gcZeal() && !rt->gcCurrentCompartment)) {
         rt->gcRegenShapes = true;
         rt->shapeGen = 0;
         rt->protoHazardShape = 0;
@@ -2941,6 +2935,26 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
     Foreground::delete_(compartment);
     JS_ReportOutOfMemory(cx);
     return NULL;
+}
+
+void
+RunDebugGC(JSContext *cx)
+{
+#ifdef JS_GC_ZEAL
+    if (IsGCAllowed(cx)) {
+        JSRuntime *rt = cx->runtime;
+
+        /*
+         * If rt->gcDebugCompartmentGC is true, only GC the current
+         * compartment. But don't GC the atoms compartment.
+         */
+        rt->gcTriggerCompartment = rt->gcDebugCompartmentGC ? cx->compartment : NULL;
+        if (rt->gcTriggerCompartment == rt->atomsCompartment)
+            rt->gcTriggerCompartment = NULL;
+
+        RunLastDitchGC(cx);
+    }
+#endif
 }
 
 } /* namespace gc */
