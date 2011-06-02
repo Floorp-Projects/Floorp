@@ -402,7 +402,7 @@ nsIdleService::CheckAwayState(bool aNoTimeReset)
       } else {
         // If it hasn't expired yet, then we should note the time when it should
         // expire.
-        nextWaitTime = PR_MIN(nextWaitTime, curListener.reqIdleTime);
+        nextWaitTime = NS_MIN(nextWaitTime, curListener.reqIdleTime);
       }
     }
 

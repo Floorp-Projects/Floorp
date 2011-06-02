@@ -38,6 +38,7 @@
 #ifndef GFX_RECT_H
 #define GFX_RECT_H
 
+#include "nsAlgorithm.h"
 #include "gfxTypes.h"
 #include "gfxPoint.h"
 #include "gfxCore.h"

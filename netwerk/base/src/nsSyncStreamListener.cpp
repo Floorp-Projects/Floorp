@@ -178,7 +178,7 @@ nsSyncStreamListener::Read(char     *buf,
     if (NS_FAILED(Available(&avail)))
         return mStatus;
 
-    avail = PR_MIN(avail, bufLen);
+    avail = NS_MIN(avail, bufLen);
     mStatus = mPipeIn->Read(buf, avail, result);
     return mStatus;
 }
@@ -198,7 +198,7 @@ nsSyncStreamListener::ReadSegments(nsWriteSegmentFun  writer,
     if (NS_FAILED(Available(&avail)))
         return mStatus;
 
-    avail = PR_MIN(avail, count);
+    avail = NS_MIN(avail, count);
     mStatus = mPipeIn->ReadSegments(writer, closure, avail, result);
     return mStatus;
 }

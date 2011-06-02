@@ -99,7 +99,7 @@ public:
         mItalic = (aFont->GetStyle() == DWRITE_FONT_STYLE_ITALIC ||
                    aFont->GetStyle() == DWRITE_FONT_STYLE_OBLIQUE);
         mStretch = FontStretchFromDWriteStretch(aFont->GetStretch());
-        PRUint16 weight = PR_ROUNDUP(aFont->GetWeight() - 50, 100);
+        PRUint16 weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
 
         weight = NS_MAX<PRUint16>(100, weight);
         weight = NS_MIN<PRUint16>(900, weight);

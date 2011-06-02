@@ -118,7 +118,7 @@ nsFileCopyEvent::DoCopy()
     if (NS_FAILED(rv))
       break;
 
-    PRInt32 num = PR_MIN((PRInt32) len, chunk);
+    PRInt32 num = NS_MIN((PRInt32) len, chunk);
 
     PRUint32 result;
     rv = mSource->ReadSegments(NS_CopySegmentToStream, mDest, num, &result);

@@ -38,6 +38,7 @@
 
 #include <string.h>
 #include "prtypes.h"
+#include "nsAlgorithm.h"
 #include "nscore.h"
 #include "nsDebug.h"
 #include "nsEnumeratorUtils.h"
@@ -566,7 +567,7 @@ nsFastLoadFileReader::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
     if (!mFileData)
         return NS_BASE_STREAM_CLOSED;
 
-    PRUint32 count = PR_MIN(mFileLen - mFilePos, aCount);
+    PRUint32 count = NS_MIN(mFileLen - mFilePos, aCount);
     memcpy(aBuffer, mFileData+mFilePos, count);
     *aBytesRead = count;
     mFilePos += count;
@@ -595,7 +596,7 @@ nsFastLoadFileReader::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
     if (!mFileData)
         return NS_BASE_STREAM_CLOSED;
 
-    PRUint32 count = PR_MIN(mFileLen - mFilePos, aCount);
+    PRUint32 count = NS_MIN(mFileLen - mFilePos, aCount);
 
     // Errors returned from the writer get ignored.
     aWriter(this, aClosure, (char*)(mFileData + mFilePos), 0,

@@ -1025,7 +1025,7 @@ HttpBaseChannel::SetRedirectionLimit(PRUint32 value)
 {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
-  mRedirectionLimit = PR_MIN(value, 0xff);
+  mRedirectionLimit = NS_MIN<PRUint32>(value, 0xff);
   return NS_OK;
 }
 

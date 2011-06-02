@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prtypes.h"
+#include "nsAlgorithm.h"
 #include "prmem.h"
 #include "nsString.h"
 #include "nsBidiUtils.h"
@@ -335,7 +336,7 @@ GetKernValueFmt0(const void* aSubtable,
         if (aIsOverride) {
             aValue = PRInt16(lo->value);
         } else if (aIsMinimum) {
-            aValue = PR_MAX(aValue, PRInt16(lo->value));
+            aValue = NS_MAX(aValue, PRInt32(lo->value));
         } else {
             aValue += PRInt16(lo->value);
         }
@@ -1047,7 +1048,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
             // find the maximum glyph index covered by the clump so far
             for (PRInt32 i = charStart; i < charEnd; ++i) {
                 if (charToGlyph[i] != NO_GLYPH) {
-                    glyphEnd = PR_MAX(glyphEnd, charToGlyph[i] + 1);
+                    glyphEnd = NS_MAX(glyphEnd, charToGlyph[i] + 1);
                     // update extent of glyph range
                 }
             }

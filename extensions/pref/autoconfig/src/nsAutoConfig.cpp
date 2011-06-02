@@ -137,7 +137,7 @@ nsAutoConfig::OnDataAvailable(nsIRequest *request,
     char buf[1024];
     
     while (aLength) {
-        size = PR_MIN(aLength, sizeof(buf));
+        size = NS_MIN<size_t>(aLength, sizeof(buf));
         rv = aIStream->Read(buf, size, &amt);
         if (NS_FAILED(rv))
             return rv;

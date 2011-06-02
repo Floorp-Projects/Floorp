@@ -1342,8 +1342,8 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
         nsCOMPtr<nsIBaseWindow> listBaseWindow(do_QueryInterface(supportsWindow));
         listBaseWindow->GetPosition(&listX, &listY);
 
-        if (PR_ABS(listX - aRequestedX) <= kSlop &&
-            PR_ABS(listY - aRequestedY) <= kSlop) {
+        if (NS_ABS(listX - aRequestedX) <= kSlop &&
+            NS_ABS(listY - aRequestedY) <= kSlop) {
           // collision! offset and start over
           if (bouncedX & 0x1)
             aRequestedX -= kOffset;
