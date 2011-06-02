@@ -59,6 +59,8 @@ import android.hardware.*;
 
 import android.util.*;
 import android.net.*;
+import android.database.*;
+import android.provider.*;
 
 abstract public class GeckoApp
     extends Activity
@@ -161,10 +163,17 @@ abstract public class GeckoApp
                 }
 
                 // and then fire us up
-                String env = i.getStringExtra("env0");
-                GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
-                                       i.getStringExtra("args"),
-                                       i.getDataString());
+                try {
+                    String env = i.getStringExtra("env0");
+                    GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
+                                           i.getStringExtra("args"),
+                                           i.getDataString());
+                } catch (Exception e) {
+                    Log.e("GeckoApp", "top level exception", e);
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    GeckoAppShell.reportJavaCrash(sw.toString());
+                }
             }
         }.start();
         return true;
@@ -176,6 +185,19 @@ abstract public class GeckoApp
     {
         mAppContext = this;
         mMainHandler = new Handler();
+
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                try {
+                    Looper.loop();
+                } catch (Exception e) {
+                    Log.e("GeckoApp", "top level exception", e);
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    GeckoAppShell.reportJavaCrash(sw.toString());
+                }
+            }
+        });
 
         SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
         String localeCode = settings.getString(getPackageName() + ".locale", "");
@@ -634,13 +656,33 @@ abstract public class GeckoApp
             try {
                 ContentResolver cr = getContentResolver();
                 Uri uri = data.getData();
-                String mimeType = cr.getType(uri);
-                String fileExt = "." +
-                    GeckoAppShell.getExtensionFromMimeType(mimeType);
-                File file =
-                    File.createTempFile("tmp_" +
-                                        (int)Math.floor(1000 * Math.random()),
-                                        fileExt, sGREDir);
+                Cursor cursor = GeckoApp.mAppContext.getContentResolver().query(
+                    uri, 
+                    new String[] { OpenableColumns.DISPLAY_NAME },
+                    null, 
+                    null, 
+                    null);
+                String name = null;
+                if (cursor != null) {
+                    try {
+                        if (cursor.moveToNext()) {
+                            name = cursor.getString(0);
+                        }
+                    } finally {
+                        cursor.close();
+                    }
+                }
+                String fileName = "tmp_";
+                String fileExt = null;
+                int period;
+                if (name == null || (period = name.lastIndexOf('.')) == -1) {
+                    String mimeType = cr.getType(uri);
+                    fileExt = "." + GeckoAppShell.getExtensionFromMimeType(mimeType);
+                } else {
+                    fileExt = name.substring(period);
+                    fileName = name.substring(0, period);
+                }
+                File file = File.createTempFile(fileName, fileExt, sGREDir);
 
                 FileOutputStream fos = new FileOutputStream(file);
                 InputStream is = cr.openInputStream(uri);
