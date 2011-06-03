@@ -88,6 +88,7 @@ MockTransferForContinuing.prototype = {
                                aMaxTotalProgress) { },
   onRefreshAttempted: function(aWebProgress, aRefreshURI, aMillis,
                                aSameURI) { },
+  onLocationChange2: function(aWebProgress, aRequest, aLocation, aFlags) { },
 
   //////////////////////////////////////////////////////////////////////////////
   //// nsITransfer
