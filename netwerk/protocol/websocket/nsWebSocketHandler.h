@@ -56,6 +56,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIStringStream.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsIRandomGenerator.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -196,6 +197,7 @@ private:
   nsCOMPtr<nsILoadGroup>                   mLoadGroup;
   nsCOMPtr<nsICancelable>                  mDNSRequest;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
+  nsCOMPtr<nsIRandomGenerator>             mRandomGenerator;
   
   nsCString                       mProtocol;
   nsCString                       mOrigin;
