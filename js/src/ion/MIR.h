@@ -57,6 +57,7 @@ namespace ion {
     _(Test)                                                                 \
     _(Phi)                                                                  \
     _(BitAnd)                                                               \
+    _(Add)                                                                  \
     _(Return)                                                               \
     _(Copy)                                                                 \
     _(Box)                                                                  \
@@ -747,6 +748,25 @@ class MBitAnd : public MBinaryInstruction
   public:
     INSTRUCTION_HEADER(BitAnd);
     static MBitAnd *New(MInstruction *left, MInstruction *right);
+
+    MIRType requiredInputType(size_t index) const {
+        return specialization();
+    }
+};
+
+class MAdd : public MBinaryInstruction
+{
+    MAdd(MInstruction *left, MInstruction *right)
+      : MBinaryInstruction(left, right)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Add);
+    static MAdd *New(MInstruction *left, MInstruction *right) {
+        return new MAdd(left, right);
+    }
 
     MIRType requiredInputType(size_t index) const {
         return specialization();
