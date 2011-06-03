@@ -88,5 +88,11 @@ OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
   return new Transport(aTd.mFd.fd, aMode, nsnull);
 }
 
+void
+CloseDescriptor(const TransportDescriptor& aTd)
+{
+  close(aTd.mFd.fd);
+}
+
 } // namespace ipc
 } // namespace mozilla

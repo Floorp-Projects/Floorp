@@ -62,6 +62,7 @@ bool CreateTransport(base::ProcessHandle aProcOne, base::ProcessHandle aProcTwo,
 Transport* OpenDescriptor(const TransportDescriptor& aTd,
                           Transport::Mode aMode);
 
+void CloseDescriptor(const TransportDescriptor& aTd);
 
 } // namespace ipc
 } // namespace mozilla
