@@ -81,8 +81,10 @@ SessionStore.prototype = {
     // Get file references
     this._sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
+    this._sessionCache = this._sessionFile.clone();
     this._sessionFile.append("sessionstore.js");
     this._sessionFileBackup.append("sessionstore.bak");
+    this._sessionCache.append("sessionstoreCache");
 
     this._loadState = STATE_STOPPED;
 
@@ -91,6 +93,7 @@ SessionStore.prototype = {
         this._shouldRestore = true;
         this._sessionFileBackup.remove(false);
       }
+
       if (this._sessionFile.exists()) {
         // Disable crash recovery if we have exceeded the timeout
         this._lastSessionTime = this._sessionFile.lastModifiedTime;
@@ -101,6 +104,9 @@ SessionStore.prototype = {
 
         this._sessionFile.copyTo(null, this._sessionFileBackup.leafName);
       }
+
+      if (!this._sessionCache.exists() || !this._sessionCache.isDirectory())
+        this._sessionCache.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
     } catch (ex) {
       Cu.reportError(ex); // file was write-locked?
     }
@@ -130,6 +136,37 @@ SessionStore.prototype = {
         this._sessionFileBackup.remove(false);
       } catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
     }
+
+    this._clearCache();
+  },
+
+  _clearCache: function ss_clearCache() {
+    // First, let's get a list of files we think should be active
+    let activeFiles = [];
+    this._forEachBrowserWindow(function(aWindow) {
+      let tabs = aWindow.Browser.tabs;
+      for (let i = 0; i < tabs.length; i++) {
+        let browser = tabs[i].browser;
+        if (browser.__SS_extdata && "thumbnail" in browser.__SS_extdata)
+          activeFiles.push(browser.__SS_extdata.thumbnail);
+      }
+    });
+
+    // Now, let's find the stale files in the cache folder
+    let staleFiles = [];
+    let cacheFiles = this._sessionCache.directoryEntries;
+    while (cacheFiles.hasMoreElements()) {
+      let file = cacheFiles.getNext().QueryInterface(Ci.nsILocalFile);
+      let fileURI = Services.io.newFileURI(file);
+      if (activeFiles.indexOf(fileURI) == -1)
+        staleFiles.push(file);
+    }
+
+    // Remove the stale files in a separate step to keep the enumerator from
+    // messing up if we remove the files as we collect them.
+    staleFiles.forEach(function(aFile) {
+      aFile.remove(false);
+    })
   },
 
   observe: function ss_observe(aSubject, aTopic, aData) {
@@ -289,8 +326,10 @@ SessionStore.prototype = {
       this._lastSaveTime = Date.now();
 
       // Nothing to restore, notify observers things are complete
-      if (!this._shouldRestore)
+      if (!this._shouldRestore) {
+        this._clearCache();
         Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
+      }
     }
 
     // Add tab change listeners to all already existing tabs
@@ -482,8 +521,8 @@ SessionStore.prototype = {
 
     let tabs = aWindow.Browser.tabs;
     for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].browser.__SS_data) {
-        let browser = tabs[i].browser;
+      let browser = tabs[i].browser;
+      if (browser.__SS_data) {
         let tabData = browser.__SS_data;
         if (browser.__SS_extdata)
           tabData.extData = browser.__SS_extdata;
@@ -616,6 +655,23 @@ SessionStore.prototype = {
 
   setTabValue: function ss_setTabValue(aTab, aKey, aStringValue) {
     let browser = aTab.linkedBrowser;
+
+    // Thumbnails are actually stored in the cache, so do the save and update the URI
+    if (aKey == "thumbnail") {
+      let file = this._sessionCache.clone();
+      file.append("thumbnail-" + browser.contentWindowId);
+      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+
+      let source = Services.io.newURI(aStringValue, "UTF8", null);
+      let target = Services.io.newFileURI(file)
+
+      let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
+      persist.persistFlags = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES | Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+      persist.saveURI(source, null, null, null, null, file);
+
+      aStringValue = target.spec;
+    }
+
     if (!browser.__SS_extdata)
       browser.__SS_extdata = {};
     browser.__SS_extdata[aKey] = aStringValue;
@@ -636,18 +692,17 @@ SessionStore.prototype = {
 
   restoreLastSession: function ss_restoreLastSession(aBringToFront) {
     // The previous session data has already been renamed to the backup file
-    let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    let session = dirService.get("ProfD", Ci.nsILocalFile);
-    session.append("sessionstore.bak");
-    if (!session.exists())
+    if (!this._sessionFileBackup.exists())
       return;
 
+    let self = this;
     function notifyObservers() {
+      self._clearCache();
       Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
     }
 
     try {
-      let channel = NetUtil.newChannel(session);
+      let channel = NetUtil.newChannel(this._sessionFileBackup);
       channel.contentType = "application/json";
       NetUtil.asyncFetch(channel, function(aStream, aResult) {
         if (!Components.isSuccessCode(aResult)) {
