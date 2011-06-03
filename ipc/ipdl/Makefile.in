@@ -97,6 +97,7 @@ $(foreach IPDLDIR,$(IPDLDIRS),$(eval $(ADD_IPDLDIR)))
 CPPSRCS =					\
   $(PROTOCOLS:%.ipdl=%Parent.cpp)		\
   $(PROTOCOLS:%.ipdl=%Child.cpp)		\
+  $(PROTOCOLS:%.ipdl=%.cpp)			\
   $(NULL)
 
 GARBAGE += $(CPPSRCS)
