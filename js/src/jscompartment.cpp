@@ -87,7 +87,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     emptyWithShape(NULL),
     initialRegExpShape(NULL),
     initialStringShape(NULL),
-    debugMode(rt->debugMode),
+    debugModeBits(rt->debugMode * DebugFromC),
     mathCache(NULL)
 {
     JS_INIT_CLIST(&scripts);
@@ -599,4 +599,67 @@ bool
 JSCompartment::isAboutToBeCollected(JSGCInvocationKind gckind)
 {
     return !hold && (arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT);
+}
+
+bool
+JSCompartment::haveScriptsOnStack(JSContext *cx)
+{
+    for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
+        JSScript *script = i.fp()->maybeScript();
+        if (script && script->compartment == this)
+            return true;
+    }
+    return false;
+}
+
+bool
+JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
+{
+    bool enabledBefore = debugMode();
+    bool enabledAfter = (debugModeBits & ~uintN(DebugFromC)) || b;
+
+    // Debug mode can be enabled only when no scripts from the target
+    // compartment are on the stack. It would even be incorrect to discard just
+    // the non-live scripts' JITScripts because they might share ICs with live
+    // scripts (bug 632343).
+    //
+    // We do allow disabling debug mode while scripts are on the stack.  In
+    // that case the debug-mode code for those scripts remains, so subsequently
+    // hooks may be called erroneously, even though debug mode is supposedly
+    // off, and we have to live with it.
+    //
+    bool onStack = false;
+    if (enabledBefore != enabledAfter) {
+        onStack = haveScriptsOnStack(cx);
+        if (b && onStack) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
+            return false;
+        }
+    }
+
+    debugModeBits = (debugModeBits & ~uintN(DebugFromC)) | (b * DebugFromC);
+    JS_ASSERT(debugMode() == enabledAfter);
+    if (enabledBefore != enabledAfter && !onStack)
+        updateForDebugMode(cx);
+    return true;
+}
+
+void
+JSCompartment::updateForDebugMode(JSContext *cx)
+{
+#ifdef JS_METHODJIT
+    bool mode = debugMode();
+
+    // Discard JIT code for any scripts that change debugMode. This assumes
+    // that 'comp' is in the same thread as 'cx'.
+    for (JSScript *script = (JSScript *) scripts.next;
+         &script->links != &scripts;
+         script = (JSScript *) script->links.next)
+    {
+        if (script->debugMode != mode) {
+            mjit::ReleaseScriptCode(cx, script);
+            script->debugMode = mode;
+        }
+    }
+#endif
 }

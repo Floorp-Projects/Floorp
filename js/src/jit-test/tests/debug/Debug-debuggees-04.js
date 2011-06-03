@@ -1,4 +1,3 @@
-// |jit-test| debug
 // hasDebuggee tests.
 
 var g1 = newGlobal('new-compartment'), g1w;

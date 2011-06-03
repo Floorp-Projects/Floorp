@@ -114,7 +114,7 @@ mjit::Compiler::Compiler(JSContext *cx, StackFrame *fp)
     jumpTables(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
     stubcc(cx, *thisFromCtor(), frame, script),
-    debugMode_(cx->compartment->debugMode),
+    debugMode_(cx->compartment->debugMode()),
 #if defined JS_TRACER
     addTraceHints(cx->traceJitEnabled),
 #endif

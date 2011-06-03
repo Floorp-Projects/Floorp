@@ -1,4 +1,3 @@
-// |jit-test| debug
 // addDebuggee(obj), where obj is not global, adds obj's global.
 // Adding a debuggee more than once is redundant.
 

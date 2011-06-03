@@ -1,6 +1,4 @@
-// |jit-test| debug
 // hooks.throw is not called for exceptions thrown and handled in the debugger.
-
 var g = newGlobal('new-compartment');
 var dbg = Debug(g);
 g.log = '';

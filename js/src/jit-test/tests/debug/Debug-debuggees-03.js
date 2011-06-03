@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Debug hooks fire based on debuggees.
 
 var g1 = newGlobal('new-compartment');

@@ -1,5 +1,4 @@
-// |jit-test| debug
-// The array returned by getDebuggees is just a snapshot, not live
+// The array returned by getDebuggees is just a snapshot, not live.
 var dbg = new Debug;
 var a1 = dbg.getDebuggees();
 var g = newGlobal('new-compartment');

@@ -1,4 +1,3 @@
-// |jit-test| debug
 // uncaughtExceptionHook resumption value other than undefined causes further
 // hooks to be skipped.
 

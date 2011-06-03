@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Disabling a Debug object causes events to stop being delivered to it
 // immediately, even if we're in the middle of dispatching.
 
