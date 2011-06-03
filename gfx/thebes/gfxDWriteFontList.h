@@ -68,16 +68,20 @@ public:
      * family object.
      */
     gfxDWriteFontFamily(const nsAString& aName, 
-                               IDWriteFontFamily *aFamily)
-      : gfxFontFamily(aName), mDWFamily(aFamily) {}
+                        IDWriteFontFamily *aFamily)
+      : gfxFontFamily(aName), mDWFamily(aFamily), mForceGDIClassic(false) {}
     virtual ~gfxDWriteFontFamily();
     
     virtual void FindStyleVariations();
 
-    virtual void LocalizedName(nsAString& aLocalizedName); 
+    virtual void LocalizedName(nsAString& aLocalizedName);
+
+    void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
+
 protected:
     /** This font family's directwrite fontfamily object */
     nsRefPtr<IDWriteFontFamily> mDWFamily;
+    bool mForceGDIClassic;
 };
 
 /**
@@ -94,7 +98,8 @@ public:
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFont *aFont) 
-      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull)
+      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull),
+        mForceGDIClassic(false)
     {
         mItalic = (aFont->GetStyle() == DWRITE_FONT_STYLE_ITALIC ||
                    aFont->GetStyle() == DWRITE_FONT_STYLE_OBLIQUE);
@@ -124,7 +129,8 @@ public:
                               PRUint16 aWeight,
                               PRInt16 aStretch,
                               PRBool aItalic)
-      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull)
+      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull),
+        mForceGDIClassic(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
@@ -148,7 +154,8 @@ public:
                               PRUint16 aWeight,
                               PRInt16 aStretch,
                               PRBool aItalic)
-      : gfxFontEntry(aFaceName), mFont(nsnull), mFontFile(aFontFile)
+      : gfxFontEntry(aFaceName), mFont(nsnull), mFontFile(aFontFile),
+        mForceGDIClassic(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
@@ -167,6 +174,9 @@ public:
     nsresult ReadCMAP();
 
     PRBool IsCJKFont();
+
+    void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
+    bool GetForceGDIClassic() { return mForceGDIClassic; }
 
 protected:
     friend class gfxDWriteFont;
@@ -189,7 +199,8 @@ protected:
     nsRefPtr<IDWriteFontFile> mFontFile;
     DWRITE_FONT_FACE_TYPE mFaceType;
 
-    PRBool mIsCJK;
+    PRInt8 mIsCJK;
+    bool mForceGDIClassic;
 };
 
 

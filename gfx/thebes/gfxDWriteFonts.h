@@ -102,6 +102,8 @@ protected:
 
     static void DestroyBlobFunc(void* userArg);
 
+    DWRITE_MEASURING_MODE GetMeasuringMode();
+
     nsRefPtr<IDWriteFontFace> mFontFace;
     cairo_font_face_t *mCairoFontFace;
     cairo_scaled_font_t *mCairoScaledFont;
