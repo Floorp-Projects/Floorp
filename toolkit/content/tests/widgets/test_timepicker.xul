@@ -43,6 +43,10 @@ function testtag_timepicker()
   tp.value = testtag_gettimestring(thour, tminute, tsecond);
   testtag_comparetime(tp, testid + "set value", thour, tminute, tsecond);
 
+  var numberOrder = /^(\D*)\s*(\d+)(\D*)(\d+)(\D*)(\d+)\s*(\D*)$/;
+  var fdt = new Date(2000,0,1,16,7,9).toLocaleFormat("%X");
+  is(tp.is24HourClock, Number(fdt.match(numberOrder)[2]) > 12, "is24HourClock");
+
   // check that setting the dateValue property works
   tp.dateValue = today;
   testtag_comparetime(tp, testid + "set dateValue", thour, tminute, tsecond);
