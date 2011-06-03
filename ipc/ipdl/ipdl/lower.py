@@ -1060,6 +1060,9 @@ class Protocol(ipdl.ast.Protocol):
     def otherProcessMethod(self):
         return ExprVar('OtherProcess')
 
+    def getChannelMethod(self):
+        return ExprVar('GetIPCChannel')
+
     def processingErrorVar(self):
         assert self.decl.type.isToplevel()
         return ExprVar('ProcessingError')
@@ -2266,6 +2269,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Typedef(Type(self.protocol.channelName()), 'Channel'),
             Typedef(Type(self.protocol.fqListenerName()), 'ChannelListener'),
             Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
+            Typedef(Type('mozilla::ipc::AsyncChannel'), 'AsyncChannel'),
             Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory'),
             Typedef(Type('mozilla::ipc::Trigger'), 'Trigger')
         ]
@@ -3194,6 +3198,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ret=Type('ProcessHandle'),
             const=1,
             virtual=1))
+        getchannel = MethodDefn(MethodDecl(
+            p.getChannelMethod().name,
+            ret=Type('AsyncChannel', ptr=1),
+            virtual=1))
 
         if p.decl.type.isToplevel():
             tmpvar = ExprVar('tmp')
@@ -3376,6 +3384,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     CaseLabel('SHMEM_DESTROYED_MESSAGE_TYPE'), abort)
             
             otherprocess.addstmt(StmtReturn(p.otherProcessVar()))
+            getchannel.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
         else:
             # delegate registration to manager
             register.addstmt(StmtReturn(ExprCall(
@@ -3409,6 +3418,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             otherprocess.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->',
                            p.otherProcessMethod().name))))
+            getchannel.addstmt(StmtReturn(p.channelVar()))
 
         # all protocols share the "same" RemoveManagee() implementation
         pvar = ExprVar('aProtocolId')
@@ -3461,6 +3471,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                  istracking,
                  destroyshmem,
                  otherprocess,
+                 getchannel,
                  Whitespace.NL ]
 
     def makeShmemIface(self):
