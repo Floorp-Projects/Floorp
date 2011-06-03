@@ -1,6 +1,4 @@
-// |jit-test| debug
 // var statements in strict evalWithBindings code behave like strict eval.
-
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 var hits = 0;

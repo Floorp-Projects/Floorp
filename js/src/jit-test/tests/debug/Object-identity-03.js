@@ -1,4 +1,3 @@
-// |jit-test| debug
 // The same object gets the same Debug.Object wrapper at different times, if the difference would be observable.
 
 var N = HOTLOOP + 4;

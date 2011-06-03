@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Test extracting frame.arguments element getters and calling them in
 // various awkward ways.
 

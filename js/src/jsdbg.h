@@ -83,7 +83,8 @@ class Debug {
     ObjectMap objects;
 
     bool addDebuggeeGlobal(JSContext *cx, GlobalObject *obj);
-    void removeDebuggeeGlobal(GlobalObject *global, GlobalObjectSet::Enum *compartmentEnum,
+    void removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
+                              GlobalObjectSet::Enum *compartmentEnum,
                               GlobalObjectSet::Enum *debugEnum);
 
     JSTrapStatus handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook);
@@ -134,7 +135,6 @@ class Debug {
     inline JSObject *toJSObject() const;
     static inline Debug *fromJSObject(JSObject *obj);
     static Debug *fromChildJSObject(JSObject *obj);
-    static void detachFromCompartment(JSCompartment *comp);
 
     /*********************************** Methods for interaction with the GC. */
 
@@ -153,9 +153,9 @@ class Debug {
     // returns true. If not, it returns false.
     //
     static bool mark(GCMarker *trc, JSCompartment *compartment, JSGCInvocationKind gckind);
-    static void sweepAll(JSRuntime *rt);
-    static void sweepCompartment(JSCompartment *compartment);
-    static void detachAllDebuggersFromGlobal(GlobalObject *global,
+    static void sweepAll(JSContext *cx);
+    static void sweepCompartment(JSContext *cx, JSCompartment *compartment);
+    static void detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global,
                                              GlobalObjectSet::Enum *compartmentEnum);
 
     static inline void leaveStackFrame(JSContext *cx);

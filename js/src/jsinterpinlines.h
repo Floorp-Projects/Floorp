@@ -353,7 +353,7 @@ ScriptPrologue(JSContext *cx, StackFrame *fp)
         fp->functionThis().setObject(*obj);
     }
 
-    if (cx->compartment->debugMode)
+    if (cx->compartment->debugMode())
         ScriptDebugPrologue(cx, fp);
     return true;
 }
@@ -361,7 +361,7 @@ ScriptPrologue(JSContext *cx, StackFrame *fp)
 inline bool
 ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
 {
-    if (cx->compartment->debugMode)
+    if (cx->compartment->debugMode())
         ok = ScriptDebugEpilogue(cx, fp, ok);
 
     /*
@@ -382,7 +382,7 @@ ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp)
 {
     if (!fp->isGeneratorFrame())
         return ScriptPrologue(cx, fp);
-    if (cx->compartment->debugMode)
+    if (cx->compartment->debugMode())
         ScriptDebugPrologue(cx, fp);
     return true;
 }
@@ -392,7 +392,7 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok)
 {
     if (!fp->isYielding())
         return ScriptEpilogue(cx, fp, ok);
-    if (cx->compartment->debugMode)
+    if (cx->compartment->debugMode())
         return ScriptDebugEpilogue(cx, fp, ok);
     return ok;
 }

@@ -202,7 +202,7 @@ Recompiler::recompile(StackFrame *fp, Vector<PatchableAddress> &patches,
                       Vector<CallSite> &sites)
 {
     /* If we get this far, the script is live, and we better be safe to re-jit. */
-    JS_ASSERT(cx->compartment->debugMode);
+    JS_ASSERT(cx->compartment->debugMode());
     JS_ASSERT(fp);
 
     Compiler c(cx, fp);

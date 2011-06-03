@@ -1,4 +1,3 @@
-// |jit-test| debug
 // frame.eval SyntaxErrors are reflected, not thrown
 
 var g = newGlobal('new-compartment');
