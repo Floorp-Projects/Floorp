@@ -69,7 +69,7 @@ nsXULColorPickerTileAccessible::GetValue(nsAString& aValue)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::color, aValue);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::color, aValue);
   return NS_OK;
 }
 
@@ -94,12 +94,12 @@ nsXULColorPickerTileAccessible::NativeState()
 
   // Focused?
   PRBool isFocused = mContent->HasAttr(kNameSpaceID_None,
-                                       nsAccessibilityAtoms::hover);
+                                       nsGkAtoms::hover);
   if (isFocused)
     states |= states::FOCUSED;
 
   PRBool isSelected = mContent->HasAttr(kNameSpaceID_None,
-                                        nsAccessibilityAtoms::selected);
+                                        nsGkAtoms::selected);
   if (isSelected)
     states |= states::SELECTED;
 

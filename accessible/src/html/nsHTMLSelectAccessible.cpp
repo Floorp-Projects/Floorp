@@ -89,7 +89,7 @@ nsHTMLSelectListAccessible::NativeState()
       state &= ~states::FOCUSED;
     }
   }
-  if (mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiple))
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple))
     state |= states::MULTISELECTABLE | states::EXTSELECTABLE;
 
   return state;
@@ -116,14 +116,14 @@ nsHTMLSelectListAccessible::IsSelect()
 bool
 nsHTMLSelectListAccessible::SelectAll()
 {
-  return mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiple) ?
+  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
            nsAccessibleWrap::SelectAll() : false;
 }
 
 bool
 nsHTMLSelectListAccessible::UnselectAll()
 {
-  return mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiple) ?
+  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
            nsAccessibleWrap::UnselectAll() : false;
 }
 
@@ -155,8 +155,8 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIContent *aParentContent)
     }
 
     nsCOMPtr<nsIAtom> tag = childContent->Tag();
-    if (tag == nsAccessibilityAtoms::option ||
-        tag == nsAccessibilityAtoms::optgroup) {
+    if (tag == nsGkAtoms::option ||
+        tag == nsGkAtoms::optgroup) {
 
       // Get an accessible for option or optgroup and cache it.
       nsRefPtr<nsAccessible> accessible =
@@ -166,7 +166,7 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIContent *aParentContent)
         AppendChild(accessible);
 
       // Deep down into optgroup element.
-      if (tag == nsAccessibilityAtoms::optgroup)
+      if (tag == nsGkAtoms::optgroup)
         CacheOptSiblings(childContent);
     }
   }
@@ -200,7 +200,7 @@ nsHTMLSelectOptionAccessible::GetNameInternal(nsAString& aName)
 {
   // CASE #1 -- great majority of the cases
   // find the label attribute - this is what the W3C says we should use
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::label, aName);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
   if (!aName.IsEmpty())
     return NS_OK;
 
@@ -323,7 +323,7 @@ nsHTMLSelectOptionAccessible::GetLevelInternal()
   nsIContent *parentContent = mContent->GetParent();
 
   PRInt32 level =
-    parentContent->NodeInfo()->Equals(nsAccessibilityAtoms::optgroup) ? 2 : 1;
+    parentContent->NodeInfo()->Equals(nsGkAtoms::optgroup) ? 2 : 1;
 
   if (level == 1 && Role() != nsIAccessibleRole::ROLE_HEADING)
     level = 0; // In a single level list, the level is irrelevant
@@ -517,7 +517,7 @@ void
 nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOptionNode)
 {
   if (!aPossibleOptionNode ||
-      aPossibleOptionNode->Tag() != nsAccessibilityAtoms::option ||
+      aPossibleOptionNode->Tag() != nsGkAtoms::option ||
       !aPossibleOptionNode->IsHTML()) {
     return;
   }
@@ -564,7 +564,7 @@ nsHTMLSelectOptionAccessible::GetSelectState(PRUint64* aState)
   *aState = 0;
 
   nsIContent *content = mContent;
-  while (content && content->Tag() != nsAccessibilityAtoms::select) {
+  while (content && content->Tag() != nsGkAtoms::select) {
     content = content->GetParent();
   }
 

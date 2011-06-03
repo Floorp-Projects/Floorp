@@ -70,12 +70,12 @@ const char* const kCopyValue = nsnull;
 static nsCSSTextAttrMapItem gCSSTextAttrsMap[] =
 {
   // CSS name            CSS value        Attribute name                                Attribute value
-  { "color",             kAnyValue,       &nsAccessibilityAtoms::color,                 kCopyValue },
-  { "font-family",       kAnyValue,       &nsAccessibilityAtoms::fontFamily,            kCopyValue },
-  { "font-style",        kAnyValue,       &nsAccessibilityAtoms::fontStyle,             kCopyValue },
-  { "text-decoration",   "line-through",  &nsAccessibilityAtoms::textLineThroughStyle,  "solid" },
-  { "text-decoration",   "underline",     &nsAccessibilityAtoms::textUnderlineStyle,    "solid" },
-  { "vertical-align",    kAnyValue,       &nsAccessibilityAtoms::textPosition,          kCopyValue }
+  { "color",             kAnyValue,       &nsGkAtoms::color,                 kCopyValue },
+  { "font-family",       kAnyValue,       &nsGkAtoms::font_family,            kCopyValue },
+  { "font-style",        kAnyValue,       &nsGkAtoms::font_style,             kCopyValue },
+  { "text-decoration",   "line-through",  &nsGkAtoms::textLineThroughStyle,  "solid" },
+  { "text-decoration",   "underline",     &nsGkAtoms::textUnderlineStyle,    "solid" },
+  { "vertical-align",    kAnyValue,       &nsGkAtoms::textPosition,          kCopyValue }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -325,7 +325,7 @@ nsCSSTextAttr::nsCSSTextAttr(PRUint32 aIndex, nsIContent *aRootContent,
 }
 
 nsIAtom*
-nsCSSTextAttr::GetName()
+nsCSSTextAttr::GetName() const
 {
   return *gCSSTextAttrsMap[mIndex].mAttrName;
 }
