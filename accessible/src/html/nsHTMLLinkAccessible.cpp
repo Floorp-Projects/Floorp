@@ -77,7 +77,7 @@ nsHTMLLinkAccessible::NativeState()
 
   states  &= ~states::READONLY;
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::name)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::name)) {
     // This is how we indicate it is a named anchor
     // In other words, this anchor can be selected as a location :)
     // There is no other better state to use to indicate this.

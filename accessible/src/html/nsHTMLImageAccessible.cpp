@@ -39,7 +39,6 @@
 #include "nsHTMLImageAccessible.h"
 
 #include "States.h"
-#include "nsAccessibilityAtoms.h"
 #include "nsAccUtils.h"
 
 #include "imgIContainer.h"
@@ -104,7 +103,7 @@ nsresult
 nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
 {
   PRBool hasAltAttrib =
-    mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt, aName);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
   if (!aName.IsEmpty())
     return NS_OK;
 
@@ -212,9 +211,9 @@ nsHTMLImageAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString src;
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::src, src);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
   if (!src.IsEmpty())
-    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::src, src);
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::src, src);
 
   return NS_OK;
 }
@@ -228,7 +227,7 @@ nsHTMLImageAccessible::HasLongDesc()
   if (IsDefunct())
     return PR_FALSE;
 
-  return mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::longDesc);
+  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::longdesc);
 }
 
 PRBool

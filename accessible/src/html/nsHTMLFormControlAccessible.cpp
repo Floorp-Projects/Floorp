@@ -40,7 +40,6 @@
 
 #include "Relation.h"
 #include "States.h"
-#include "nsAccessibilityAtoms.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
 
@@ -180,9 +179,9 @@ nsHTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
   mContent->NodeInfo()->GetName(tagName);
 
   nsAutoString type;
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::type, type);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
   nsAutoString name;
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::name, name);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
 
   nsCOMPtr<nsIDOMNodeList> inputs;
 
@@ -213,9 +212,9 @@ nsHTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
 
     nsCOMPtr<nsIContent> item(do_QueryInterface(itemNode));
     if (item &&
-        item->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+        item->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                           type, eCaseMatters) &&
-        item->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::name,
+        item->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                           name, eCaseMatters)) {
 
       count++;
@@ -269,8 +268,8 @@ nsHTMLButtonAccessible::NativeState()
 {
   PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
 
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                            nsAccessibilityAtoms::submit, eIgnoreCase))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::submit, eIgnoreCase))
     state |= states::DEFAULT;
 
   return state;
@@ -291,23 +290,22 @@ nsHTMLButtonAccessible::GetNameInternal(nsAString& aName)
 
   // No name from HTML or ARIA
   nsAutoString name;
-  if (!mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
+  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
                          name) &&
-      !mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
+      !mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt,
                          name)) {
     // Use the button's (default) label if nothing else works
     nsIFrame* frame = GetFrame();
     if (frame) {
       nsIFormControlFrame* fcFrame = do_QueryFrame(frame);
       if (fcFrame)
-        fcFrame->GetFormProperty(nsAccessibilityAtoms::defaultLabel, name);
+        fcFrame->GetFormProperty(nsGkAtoms::defaultLabel, name);
     }
   }
 
   if (name.IsEmpty() &&
-      !mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::src,
-                         name)) {
-    mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::data, name);
+      !mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, name)) {
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, name);
   }
 
   name.CompressWhitespace();
@@ -365,8 +363,8 @@ nsHTML4ButtonAccessible::NativeState()
 
   state |= states::FOCUSABLE;
 
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                            nsAccessibilityAtoms::submit, eIgnoreCase))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::submit, eIgnoreCase))
     state |= states::DEFAULT;
 
   return state;
@@ -388,8 +386,8 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsHTMLTextFieldAccessible, nsAccessible, nsHyperTex
 PRUint32
 nsHTMLTextFieldAccessible::NativeRole()
 {
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                            nsAccessibilityAtoms::password, eIgnoreCase)) {
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::password, eIgnoreCase)) {
     return nsIAccessibleRole::ROLE_PASSWORD_TEXT;
   }
   return nsIAccessibleRole::ROLE_ENTRY;
@@ -420,7 +418,7 @@ nsHTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
     return NS_OK;
 
   // text inputs and textareas might have useful placeholder text
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::placeholder, aName);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, aName);
 
   return NS_OK;
 }
@@ -461,8 +459,8 @@ nsHTMLTextFieldAccessible::NativeState()
   PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
 
   // can be focusable, focused, protected. readonly, unavailable, selected
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                            nsAccessibilityAtoms::password, eIgnoreCase)) {
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::password, eIgnoreCase)) {
     state |= states::PROTECTED;
   }
   else {
@@ -471,7 +469,7 @@ nsHTMLTextFieldAccessible::NativeState()
       state |= states::HASPOPUP;
   }
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::readonly)) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly)) {
     state |= states::READONLY;
   }
 
@@ -489,10 +487,10 @@ nsHTMLTextFieldAccessible::NativeState()
 
   nsCOMPtr<nsIContent> bindingContent = mContent->GetBindingParent();
   if (bindingContent &&
-      bindingContent->NodeInfo()->Equals(nsAccessibilityAtoms::textbox,
+      bindingContent->NodeInfo()->Equals(nsGkAtoms::textbox,
                                          kNameSpaceID_XUL)) {
-     if (bindingContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                                     nsAccessibilityAtoms::autocomplete,
+     if (bindingContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                     nsGkAtoms::autocomplete,
                                      eIgnoreCase)) {
        // If parent is XUL textbox and value of @type attribute is "autocomplete",
        // then this accessible supports autocompletion.
@@ -505,7 +503,7 @@ nsHTMLTextFieldAccessible::NativeState()
     // we're talking here is based on what the user types, where a popup of
     // possible choices comes up.
     nsAutoString autocomplete;
-    mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::autocomplete,
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete,
                       autocomplete);
 
     if (!autocomplete.LowerCaseEqualsLiteral("off")) {
@@ -514,7 +512,7 @@ nsHTMLTextFieldAccessible::NativeState()
       nsCOMPtr<nsIContent> formContent(do_QueryInterface(form));
       if (formContent) {
         formContent->GetAttr(kNameSpaceID_None,
-                             nsAccessibilityAtoms::autocomplete, autocomplete);
+                             nsGkAtoms::autocomplete, autocomplete);
       }
 
       if (!formContent || !autocomplete.LowerCaseEqualsLiteral("off"))
@@ -598,7 +596,7 @@ nsIContent* nsHTMLGroupboxAccessible::GetLegend()
   nsresult count = 0;
   nsIContent *legendContent = nsnull;
   while ((legendContent = mContent->GetChildAt(count++)) != nsnull) {
-    if (legendContent->NodeInfo()->Equals(nsAccessibilityAtoms::legend,
+    if (legendContent->NodeInfo()->Equals(nsGkAtoms::legend,
                                           mContent->GetNameSpaceID())) {
       // Either XHTML namespace or no namespace
       return legendContent;

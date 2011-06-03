@@ -43,7 +43,6 @@
 #include "nsIAccessibleTypes.h"
 
 #include "nsAccessibilityService.h"
-#include "nsAccessibilityAtoms.h"
 #include "nsARIAMap.h"
 #include "nsDocAccessible.h"
 #include "nsHyperTextAccessible.h"
@@ -88,17 +87,17 @@ nsAccUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
 
   if (aLevel) {
     value.AppendInt(aLevel);
-    SetAccAttr(aAttributes, nsAccessibilityAtoms::level, value);
+    SetAccAttr(aAttributes, nsGkAtoms::level, value);
   }
 
   if (aSetSize && aPosInSet) {
     value.Truncate();
     value.AppendInt(aPosInSet);
-    SetAccAttr(aAttributes, nsAccessibilityAtoms::posinset, value);
+    SetAccAttr(aAttributes, nsGkAtoms::posinset, value);
 
     value.Truncate();
     value.AppendInt(aSetSize);
-    SetAccAttr(aAttributes, nsAccessibilityAtoms::setsize, value);
+    SetAccAttr(aAttributes, nsGkAtoms::setsize, value);
   }
 }
 
@@ -127,7 +126,7 @@ nsAccUtils::GetARIAOrDefaultLevel(nsAccessible *aAccessible)
 {
   PRInt32 level = 0;
   nsCoreUtils::GetUIntAttr(aAccessible->GetContent(),
-                           nsAccessibilityAtoms::aria_level, &level);
+                           nsGkAtoms::aria_level, &level);
 
   if (level != 0)
     return level;
@@ -276,25 +275,25 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
 
     // container-relevant attribute
     if (relevant.IsEmpty() &&
-        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_relevant) &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_relevant, relevant))
-      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerRelevant, relevant);
+        nsAccUtils::HasDefinedARIAToken(ancestor, nsGkAtoms::aria_relevant) &&
+        ancestor->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_relevant, relevant))
+      SetAccAttr(aAttributes, nsGkAtoms::containerRelevant, relevant);
 
     // container-live, and container-live-role attributes
     if (live.IsEmpty()) {
       nsRoleMapEntry *role = GetRoleMapEntry(ancestor);
       if (nsAccUtils::HasDefinedARIAToken(ancestor,
-                                          nsAccessibilityAtoms::aria_live)) {
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live,
+                                          nsGkAtoms::aria_live)) {
+        ancestor->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_live,
                           live);
       } else if (role) {
         GetLiveAttrValue(role->liveAttRule, live);
       }
       if (!live.IsEmpty()) {
-        SetAccAttr(aAttributes, nsAccessibilityAtoms::containerLive, live);
+        SetAccAttr(aAttributes, nsGkAtoms::containerLive, live);
         if (role) {
           nsAccUtils::SetAccAttr(aAttributes,
-                                 nsAccessibilityAtoms::containerLiveRole,
+                                 nsGkAtoms::containerLiveRole,
                                  NS_ConvertASCIItoUTF16(role->roleString));
         }
       }
@@ -302,15 +301,15 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
 
     // container-atomic attribute
     if (atomic.IsEmpty() &&
-        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_atomic) &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic, atomic))
-      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerAtomic, atomic);
+        nsAccUtils::HasDefinedARIAToken(ancestor, nsGkAtoms::aria_atomic) &&
+        ancestor->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_atomic, atomic))
+      SetAccAttr(aAttributes, nsGkAtoms::containerAtomic, atomic);
 
     // container-busy attribute
     if (busy.IsEmpty() &&
-        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_busy) &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_busy, busy))
-      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerBusy, busy);
+        nsAccUtils::HasDefinedARIAToken(ancestor, nsGkAtoms::aria_busy) &&
+        ancestor->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_busy, busy))
+      SetAccAttr(aAttributes, nsGkAtoms::containerBusy, busy);
 
     if (ancestor == aTopContent)
       break;
@@ -328,9 +327,9 @@ nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
 
   if (!aContent->HasAttr(kNameSpaceID_None, aAtom) ||
       aContent->AttrValueIs(kNameSpaceID_None, aAtom,
-                            nsAccessibilityAtoms::_empty, eCaseMatters) ||
+                            nsGkAtoms::_empty, eCaseMatters) ||
       aContent->AttrValueIs(kNameSpaceID_None, aAtom,
-                            nsAccessibilityAtoms::_undefined, eCaseMatters)) {
+                            nsGkAtoms::_undefined, eCaseMatters)) {
         return PR_FALSE;
   }
   return PR_TRUE;
@@ -340,11 +339,11 @@ nsIAtom*
 nsAccUtils::GetARIAToken(dom::Element* aElement, nsIAtom* aAttr)
 {
   if (!nsAccUtils::HasDefinedARIAToken(aElement, aAttr))
-    return nsAccessibilityAtoms::_empty;
+    return nsGkAtoms::_empty;
 
   static nsIContent::AttrValuesArray tokens[] =
-    { &nsAccessibilityAtoms::_false, &nsAccessibilityAtoms::_true,
-      &nsAccessibilityAtoms::mixed, nsnull};
+    { &nsGkAtoms::_false, &nsGkAtoms::_true,
+      &nsGkAtoms::mixed, nsnull};
 
   PRInt32 idx = aElement->FindAttrValueIn(kNameSpaceID_None,
                                           aAttr, tokens, eCaseMatters);
@@ -405,8 +404,8 @@ PRBool
 nsAccUtils::IsARIASelected(nsAccessible *aAccessible)
 {
   return aAccessible->GetContent()->
-    AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::aria_selected,
-                nsAccessibilityAtoms::_true, eCaseMatters);
+    AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_selected,
+                nsGkAtoms::_true, eCaseMatters);
 }
 
 nsHyperTextAccessible*
@@ -545,7 +544,7 @@ nsAccUtils::GetRoleMapEntry(nsINode *aNode)
   nsIContent *content = nsCoreUtils::GetRoleContent(aNode);
   nsAutoString roleString;
   if (!content ||
-      !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString) ||
+      !content->GetAttr(kNameSpaceID_None, nsGkAtoms::role, roleString) ||
       roleString.IsEmpty()) {
     // We treat role="" as if the role attribute is absent (per aria spec:8.1.1)
     return nsnull;
