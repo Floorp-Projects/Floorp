@@ -190,7 +190,7 @@
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #include "nsIDOMXULControlElement.h"
-#include "nsIFrame.h"
+#include "nsMenuPopupFrame.h"
 #endif
 
 #include "xpcprivate.h"
@@ -10214,9 +10214,28 @@ nsGlobalChromeWindow::GetAttentionWithCycleCount(PRInt32 aCycleCount)
 }
 
 NS_IMETHODIMP
-nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent)
+nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElement* aPanel)
 {
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  nsCOMPtr<nsIWidget> widget;
+
+  // if a panel was supplied, use its widget instead.
+#ifdef MOZ_XUL
+  if (aPanel) {
+    nsCOMPtr<nsIContent> panel = do_QueryInterface(aPanel);
+    NS_ENSURE_TRUE(panel, NS_ERROR_FAILURE);
+
+    nsIFrame* frame = panel->GetPrimaryFrame();
+    NS_ENSURE_TRUE(frame && frame->GetType() == nsGkAtoms::menuPopupFrame, NS_OK);
+
+    (static_cast<nsMenuPopupFrame*>(frame))->GetWidget(getter_AddRefs(widget));
+  }
+  else {
+#endif
+    widget = GetMainWidget();
+#ifdef MOZ_XUL
+  }
+#endif
+
   if (!widget) {
     return NS_OK;
   }

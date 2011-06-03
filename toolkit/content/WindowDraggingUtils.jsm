@@ -40,10 +40,11 @@ function WindowDraggingElement(elem, window) {
   this._elem = elem;
   this._window = window;
 #ifdef XP_WIN
-  this._elem.addEventListener("MozMouseHittest", this, false);
-#else
-  this._elem.addEventListener("mousedown", this, false);
+  if (!this.isPanel())
+    this._elem.addEventListener("MozMouseHittest", this, false);
+  else
 #endif
+  this._elem.addEventListener("mousedown", this, false);
 }
 
 WindowDraggingElement.prototype = {
@@ -79,11 +80,20 @@ WindowDraggingElement.prototype = {
     }
     return true;
   },
+  isPanel : function() {
+    return this._elem instanceof Components.interfaces.nsIDOMXULElement &&
+           this._elem.localName == "panel";
+  },
   handleEvent: function(aEvent) {
+    let isPanel = this.isPanel();
 #ifdef XP_WIN
-    if (this.shouldDrag(aEvent))
-      aEvent.preventDefault();
-#else
+    if (!isPanel) {
+      if (this.shouldDrag(aEvent))
+        aEvent.preventDefault();
+      return;
+    }
+#endif
+
     switch (aEvent.type) {
       case "mousedown":
         if (!this.shouldDrag(aEvent))
@@ -92,18 +102,27 @@ WindowDraggingElement.prototype = {
 #ifdef MOZ_WIDGET_GTK2
         // On GTK, there is a toolkit-level function which handles
         // window dragging, which must be used.
-        this._window.beginWindowMove(aEvent);
+        this._window.beginWindowMove(aEvent, isPanel ? this._elem : null);
 #else
-        this._deltaX = aEvent.screenX - this._window.screenX;
-        this._deltaY = aEvent.screenY - this._window.screenY;
+        if (isPanel) {
+          let screenRect = this._elem.getOuterScreenRect();
+          this._deltaX = aEvent.screenX - screenRect.left;
+          this._deltaY = aEvent.screenY - screenRect.top;
+        }
+        else {
+          this._deltaX = aEvent.screenX - this._window.screenX;
+          this._deltaY = aEvent.screenY - this._window.screenY;
+        }
         this._draggingWindow = true;
         this._window.addEventListener("mousemove", this, false);
         this._window.addEventListener("mouseup", this, false);
 #endif
         break;
       case "mousemove":
-        if (this._draggingWindow)
-          this._window.moveTo(aEvent.screenX - this._deltaX, aEvent.screenY - this._deltaY);
+        if (this._draggingWindow) {
+          let toDrag = this.isPanel() ? this._elem : this._window;
+          toDrag.moveTo(aEvent.screenX - this._deltaX, aEvent.screenY - this._deltaY);
+        }
         break;
       case "mouseup":
         if (this._draggingWindow) {
@@ -113,6 +132,5 @@ WindowDraggingElement.prototype = {
         }
         break;
     }
-#endif
   }
 }
