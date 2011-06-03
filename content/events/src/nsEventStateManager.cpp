@@ -770,7 +770,7 @@ nsMouseWheelTransaction::LimitToOnePageScroll(PRInt32 aScrollLines,
   nsSize pageAmount = sf->GetPageScrollAmount();
   nscoord pageScroll = aIsHorizontal ? pageAmount.width : pageAmount.height;
 
-  if (PR_ABS(aScrollLines) * lineScroll < pageScroll)
+  if (NS_ABS(aScrollLines) * lineScroll < pageScroll)
     return aScrollLines;
 
   nscoord maxLines = (pageScroll / lineScroll);
@@ -1272,7 +1272,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           if (!gPixelScrollDeltaX || !pixelHeight)
             break;
 
-          if (PR_ABS(gPixelScrollDeltaX) >= pixelHeight) {
+          if (NS_ABS(gPixelScrollDeltaX) >= pixelHeight) {
             PRInt32 numLines = (PRInt32)ceil((float)gPixelScrollDeltaX/(float)pixelHeight);
 
             gPixelScrollDeltaX -= numLines*pixelHeight;
@@ -1287,7 +1287,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           if (!gPixelScrollDeltaY || !pixelHeight)
             break;
 
-          if (PR_ABS(gPixelScrollDeltaY) >= pixelHeight) {
+          if (NS_ABS(gPixelScrollDeltaY) >= pixelHeight) {
             PRInt32 numLines = (PRInt32)ceil((float)gPixelScrollDeltaY/(float)pixelHeight);
 
             gPixelScrollDeltaY -= numLines*pixelHeight;
@@ -1990,8 +1990,8 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
     // fire drag gesture if mouse has moved enough
     nsIntPoint pt = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
-    if (PR_ABS(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
-        PR_ABS(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
+    if (NS_ABS(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
+        NS_ABS(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
       if (mClickHoldContextMenu) {
         // stop the click-hold before we fire off the drag gesture, in case
         // it takes a long time

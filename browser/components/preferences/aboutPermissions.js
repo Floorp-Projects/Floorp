@@ -463,11 +463,13 @@ let AboutPermissions = {
     gSitesStmt.params.limit = this.PLACES_SITES_LIMIT;
     gSitesStmt.executeAsync({
       handleResult: function(aResults) {
+        AboutPermissions.startSitesListBatch();
         let row;
         while (row = aResults.getNextRow()) {
           let host = row.getResultByName("host");
           AboutPermissions.addHost(host);
         }
+        AboutPermissions.endSitesListBatch();
       },
       handleError: function(aError) {
         Cu.reportError("AboutPermissions: " + aError);
@@ -484,6 +486,8 @@ let AboutPermissions = {
    * them if they are not already stored in _sites.
    */
   enumerateServices: function() {
+    this.startSitesListBatch();
+
     let logins = Services.logins.getAllLogins();
     logins.forEach(function(aLogin) {
       try {
@@ -515,6 +519,8 @@ let AboutPermissions = {
         }
       }
     }
+
+    this.endSitesListBatch();
   },
 
   /**
@@ -548,7 +554,19 @@ let AboutPermissions = {
     });
     aSite.listitem = item;
 
-    this.sitesList.appendChild(item);    
+    (this._listFragment || this.sitesList).appendChild(item);
+  },
+
+  startSitesListBatch: function () {
+    if (!this._listFragment)
+      this._listFragment = document.createDocumentFragment();
+  },
+
+  endSitesListBatch: function () {
+    if (this._listFragment) {
+      this.sitesList.appendChild(this._listFragment);
+      this._listFragment = null;
+    }
   },
 
   /**

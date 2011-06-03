@@ -124,7 +124,13 @@ cairo_public cairo_font_face_t *
 cairo_dwrite_font_face_create_for_dwrite_fontface(void *dwrite_font, void *dwrite_font_face);
 
 void
-cairo_dwrite_scaled_font_allow_manual_show_glyphs(void *dwrite_scaled_font, cairo_bool_t allowed);
+cairo_dwrite_scaled_font_allow_manual_show_glyphs(cairo_scaled_font_t *dwrite_scaled_font, cairo_bool_t allowed);
+
+void
+cairo_dwrite_scaled_font_set_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font, cairo_bool_t force);
+
+cairo_bool_t
+cairo_dwrite_scaled_font_get_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font);
 
 void
 cairo_dwrite_set_cleartype_params(FLOAT gamma, FLOAT contrast, FLOAT level, int geometry, int mode);

@@ -627,7 +627,7 @@ IDBFactory::SetCurrentDatabase(IDBDatabase* aDatabase)
 PRUint32
 IDBFactory::GetIndexedDBQuota()
 {
-  return PRUint32(PR_MAX(gIndexedDBQuota, 0));
+  return PRUint32(NS_MAX(gIndexedDBQuota, 0));
 }
 
 // static
@@ -983,9 +983,9 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     nsAutoPtr<ObjectStoreInfo>& objectStoreInfo = mObjectStores[i];
     for (PRUint32 j = 0; j < objectStoreInfo->indexes.Length(); j++) {
       IndexInfo& indexInfo = objectStoreInfo->indexes[j];
-      mLastIndexId = PR_MAX(indexInfo.id, mLastIndexId);
+      mLastIndexId = NS_MAX(indexInfo.id, mLastIndexId);
     }
-    mLastObjectStoreId = PR_MAX(objectStoreInfo->id, mLastObjectStoreId);
+    mLastObjectStoreId = NS_MAX(objectStoreInfo->id, mLastObjectStoreId);
   }
 
   return NS_OK;

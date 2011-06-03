@@ -341,16 +341,13 @@ static PRInt32
 GetAccessModifierMask(nsIContent* aContent)
 {
   // use ui.key.generalAccessKey (unless it is -1)
-  PRInt32 accessKey = -1;
-  nsresult rv = Preferences::GetInt("ui.key.generalAccessKey", accessKey);
-  if (NS_SUCCEEDED(rv) && accessKey != -1) {
-    switch (accessKey) {
-      case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
-      case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
-      case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
-      case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
-      default:                             return 0;
-    }
+  switch (Preferences::GetInt("ui.key.generalAccessKey", -1)) {
+    case -1:                             break;
+    case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
+    case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
+    case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
+    case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
+    default:                             return 0;
   }
 
   // get the docShell to this DOMNode, return 0 on failure
@@ -365,6 +362,7 @@ GetAccessModifierMask(nsIContent* aContent)
     return 0;
 
   // determine the access modifier used in this context
+  nsresult rv = NS_ERROR_FAILURE;
   PRInt32 itemType, accessModifierMask = 0;
   treeItem->GetItemType(&itemType);
   switch (itemType) {

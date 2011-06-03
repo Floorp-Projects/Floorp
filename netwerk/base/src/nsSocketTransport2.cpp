@@ -1950,7 +1950,7 @@ nsSocketTransport::SetTimeout(PRUint32 type, PRUint32 value)
 {
     NS_ENSURE_ARG_MAX(type, nsISocketTransport::TIMEOUT_READ_WRITE);
     // truncate overly large timeout values.
-    mTimeouts[type] = (PRUint16) PR_MIN(value, PR_UINT16_MAX);
+    mTimeouts[type] = (PRUint16) NS_MIN(value, PR_UINT16_MAX);
     PostEvent(MSG_TIMEOUT_CHANGED);
     return NS_OK;
 }
@@ -2082,7 +2082,7 @@ DumpBytesToFile(const char *path, const char *header, const char *buf, PRInt32 n
     while (n) {
         p = (const unsigned char *) buf;
 
-        PRInt32 i, row_max = PR_MIN(16, n);
+        PRInt32 i, row_max = NS_MIN(16, n);
 
         for (i = 0; i < row_max; ++i)
             fprintf(fp, "%02x  ", *p++);

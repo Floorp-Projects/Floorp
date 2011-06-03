@@ -684,7 +684,7 @@ txMozillaXMLOutput::createTxWrapper()
             // The new documentElement should go after the document type.
             // This is needed for cases when there is no existing
             // documentElement in the document.
-            rootLocation = PR_MAX(rootLocation, j + 1);
+            rootLocation = NS_MAX(rootLocation, j + 1);
 #endif
             ++j;
         }
