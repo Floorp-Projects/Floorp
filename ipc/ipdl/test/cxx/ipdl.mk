@@ -1,5 +1,8 @@
 IPDLSRCS =					\
   PTestBlockChild.ipdl				\
+  PTestBridgeMain.ipdl				\
+  PTestBridgeSub.ipdl				\
+  PTestBridgeMainSub.ipdl			\
   PTestCrashCleanup.ipdl			\
   PTestDataStructures.ipdl			\
   PTestDataStructuresSub.ipdl			\
