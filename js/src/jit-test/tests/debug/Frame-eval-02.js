@@ -1,4 +1,3 @@
-// |jit-test| debug
 // frame.eval() throws if frame is not live
 
 load(libdir + "asserts.js");

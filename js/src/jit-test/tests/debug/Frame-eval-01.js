@@ -1,4 +1,3 @@
-// |jit-test| debug
 // simplest possible test of Debug.Frame.prototype.eval
 
 var g = newGlobal('new-compartment');

@@ -1,4 +1,3 @@
-// |jit-test| debug
 // frame.arguments is "live" (it reflects assignments to arguments).
 
 var g = newGlobal('new-compartment');

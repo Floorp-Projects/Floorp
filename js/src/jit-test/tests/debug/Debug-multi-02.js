@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Test adding hooks during dispatch. The behavior is deterministic and "nice",
 // but mainly what we are checking here is that we do not crash due to
 // modifying a data structure while we're iterating over it.

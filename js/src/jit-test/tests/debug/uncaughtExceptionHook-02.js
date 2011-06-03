@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Returning a bad resumption value causes an exception that is reported to the
 // uncaughtExceptionHook.
 

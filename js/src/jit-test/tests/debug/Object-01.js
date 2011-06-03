@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Debug.Object basics
 
 var g = newGlobal('new-compartment');
