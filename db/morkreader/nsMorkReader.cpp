@@ -315,7 +315,7 @@ nsMorkReader::ParseMap(const nsCSubstring &aLine, StringMap *aMap)
             }
             ++idx;
           }
-          PRUint32 tokenEnd = PR_MIN(idx, len);
+          PRUint32 tokenEnd = NS_MIN(idx, len);
           ++idx;
 
           nsCString value;
@@ -463,7 +463,7 @@ nsMorkReader::ParseTable(const nsCSubstring &aLine, const IndexMap &aColumnMap)
             ++idx;
           }
 
-          tokenEnd = PR_MIN(idx, len);
+          tokenEnd = NS_MIN(idx, len);
 
           nsCAutoString column;
           const nsCSubstring &colValue =
@@ -496,7 +496,7 @@ nsMorkReader::ParseTable(const nsCSubstring &aLine, const IndexMap &aColumnMap)
             }
             ++idx;
           }
-          tokenEnd = PR_MIN(idx, len);
+          tokenEnd = NS_MIN(idx, len);
           ++idx;
 
           const nsCSubstring &value =

@@ -133,7 +133,7 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       case iconStateReadPixels:
 
         // How many bytes are we reading?
-        bytesToRead = PR_MIN(aCount, mPixBytesTotal - mPixBytesRead);
+        bytesToRead = NS_MIN(aCount, mPixBytesTotal - mPixBytesRead);
 
         // Copy the bytes
         memcpy(mImageData + mPixBytesRead, aBuffer, bytesToRead);

@@ -1123,7 +1123,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
           // its source buffer
           if (len > 0) {
             PRUint32 sizeHint = (PRUint32) len;
-            sizeHint = PR_MIN(sizeHint, 20000000); /* Bound by something reasonable */
+            sizeHint = NS_MIN<PRUint32>(sizeHint, 20000000); /* Bound by something reasonable */
             RasterImage* rasterImage = static_cast<RasterImage*>(mImage.get());
             rasterImage->SetSourceSizeHint(sizeHint);
           }

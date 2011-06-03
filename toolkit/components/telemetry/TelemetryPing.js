@@ -43,6 +43,9 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+// When modifying the payload in incompatible ways, please bump this version number
+const PAYLOAD_VERSION = 1;
+
 const PREF_SERVER = "toolkit.telemetry.server";
 const PREF_ENABLED = "toolkit.telemetry.enabled";
 // Do not gather data more than once a minute
@@ -51,9 +54,9 @@ const TELEMETRY_INTERVAL = 60;
 const TELEMETRY_DELAY = 60000;
 // about:memory values to turn into histograms
 const MEM_HISTOGRAMS = {
-  "heap-used/js/gc-heap": [1024, 1024 * 500, 10],
-  "mapped/heap/used": [1024, 2 * 1024 * 1024, 10],
-  "heap-used/layout/all": [1024, 50 * 1025, 10]
+  "explicit/js/gc-heap": [1024, 512 * 1024, 10],
+  "resident": [32 * 1024, 1024 * 1024, 10],
+  "explicit/layout/all": [1024, 64 * 1025, 10]
 };
 
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
@@ -112,22 +115,64 @@ function generateUUID() {
 }
 
 /**
- * @return request metadata
+ * Gets metadata about the platform the application is running on. This
+ * should remain consistent across multiple telemetry pings.
+ * 
+ * @param  reason
+ *         The reason for the telemetry ping, this will be included in the
+ *         returned metadata,
+ * @return The metadata as a JS object
  */
 function getMetadata(reason) {
-  let si = Cc["@mozilla.org/toolkit/app-startup;1"].
-           getService(Ci.nsIAppStartup).getStartupInfo();
   let ai = Services.appinfo;
   let ret = {
-    uptime: (new Date() - si.process),
     reason: reason,
     OS: ai.OS,
-    XPCOMABI: ai.XPCOMABI,
-    ID: ai.ID,
-    version: ai.version,
-    name: ai.name,
+    appID: ai.ID,
+    appVersion: ai.version,
+    appName: ai.name,
     appBuildID: ai.appBuildID,
     platformBuildID: ai.platformBuildID,
+  };
+
+  // sysinfo fields is not always available, get what we can.
+  let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+  let fields = ["cpucount", "memsize", "arch", "version", "device", "manufacturer", "hardware"];
+  for each (let field in fields) {
+    let value;
+    try {
+      value = sysInfo.getProperty(field);
+    } catch (e) {
+      continue
+    }
+    if (field == "memsize") {
+      // Send RAM size in megabytes. Rounding because sysinfo doesn't
+      // always provide RAM in multiples of 1024.
+      value = Math.round(value / 1024 / 1024)
+    }
+    ret[field] = value
+  }
+  return ret;
+}
+
+/**
+ * Gets a series of simple measurements (counters). At the moment, this
+ * only returns startup data from nsIAppStartup.getStartupInfo().
+ * 
+ * @return simple measurements as a dictionary.
+ */
+function getSimpleMeasurements() {
+  let si = Cc["@mozilla.org/toolkit/app-startup;1"].
+           getService(Ci.nsIAppStartup).getStartupInfo();
+
+  var ret = {
+    // uptime in minutes
+    uptime: Math.round((new Date() - si.process) / 60000)
+  }
+  for each (let field in ["main", "firstPaint", "sessionRestored"]) {
+    if (!(field in si))
+      continue;
+    ret[field] = si[field] - si.process
   }
   return ret;
 }
@@ -180,7 +225,9 @@ TelemetryPing.prototype = {
     this.gatherMemory();
     let nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     let payload = {
+      ver: PAYLOAD_VERSION,
       info: getMetadata(reason),
+      simpleMeasurements: getSimpleMeasurements(),
       histograms: getHistograms()
     };
     let isTestPing = (reason == "test-ping");
