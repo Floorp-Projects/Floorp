@@ -552,7 +552,7 @@ PRBool txNodeSet::ensureGrowSize(PRInt32 aSize)
 
     // This isn't 100% safe. But until someone manages to make a 1gig nodeset
     // it should be ok.
-    PRInt32 newLength = PR_MAX(oldLength, kTxNodeSetMinSize);
+    PRInt32 newLength = NS_MAX(oldLength, kTxNodeSetMinSize);
 
     while (newLength < ensureSize) {
         newLength *= kTxNodeSetGrowFactor;

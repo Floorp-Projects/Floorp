@@ -1039,7 +1039,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
         PRInt32 treeRows;
         listBox->GetRowCount(&treeRows);
         if (treeRows > 0) {
-            newCurrentIndex = PR_MIN((treeRows - 1), newCurrentIndex);
+            newCurrentIndex = NS_MIN((treeRows - 1), newCurrentIndex);
             nsCOMPtr<nsIDOMElement> newCurrentItem;
             listBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
             nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);

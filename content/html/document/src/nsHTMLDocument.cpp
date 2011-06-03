@@ -2367,12 +2367,6 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
 //----------------------------
 
-/* virtual */ nsIContent*
-nsHTMLDocument::GetBodyContentExternal()
-{
-  return GetBodyElement();
-}
-
 // forms related stuff
 
 NS_IMETHODIMP

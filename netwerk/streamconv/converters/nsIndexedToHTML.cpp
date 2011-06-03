@@ -858,7 +858,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         descriptionAffix.Cut(0, descriptionAffix.Length() - 25);
         if (NS_IS_LOW_SURROGATE(descriptionAffix.First()))
             descriptionAffix.Cut(0, 1);
-        description.Truncate(PR_MIN(71, description.Length() - 28));
+        description.Truncate(NS_MIN<PRUint32>(71, description.Length() - 28));
         if (NS_IS_HIGH_SURROGATE(description.Last()))
             description.Truncate(description.Length() - 1);
 

@@ -1054,7 +1054,6 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 .action-button,
 .context-command,
 pageaction {
-  color: black; /* force */
   -moz-border-top-colors: white;
   -moz-border-right-colors: rgb(175,175,175);
   -moz-border-bottom-colors: rgb(175,175,175);
@@ -1085,6 +1084,7 @@ pageaction {
 
 .action-button[selected="true"],
 .context-command[selected="true"] {
+  color: black; /* force */
   background: transparent;
 }
 
@@ -1142,6 +1142,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 .context-command,
 .pageaction-title {
   font-size: @font_normal@ !important;
+  color: black; /* force */
 }
 
 .pageaction-desc {

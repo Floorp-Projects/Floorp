@@ -248,7 +248,7 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
       ++srcConsumed;
       // XXX this is needed to make sure we don't underrun our buffer;
       // bug 160784 again
-      srcConsumed = PR_MAX(srcConsumed, 0);
+      srcConsumed = NS_MAX<PRUint32>(srcConsumed, 0);
       mConverter->Reset();
     }
     NS_ASSERTION(srcConsumed <= mByteData->GetLength(),

@@ -744,13 +744,13 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
             return NS_OK;
         }
 
-        GLint   actual_x             = PR_MIN(framebufferWidth, PR_MAX(0, x));
-        GLint   actual_x_plus_width  = PR_MIN(framebufferWidth, PR_MAX(0, x + width));
+        GLint   actual_x             = NS_MIN(framebufferWidth, NS_MAX(0, x));
+        GLint   actual_x_plus_width  = NS_MIN(framebufferWidth, NS_MAX(0, x + width));
         GLsizei actual_width   = actual_x_plus_width  - actual_x;
         GLint   actual_xoffset = xoffset + actual_x - x;
 
-        GLint   actual_y             = PR_MIN(framebufferHeight, PR_MAX(0, y));
-        GLint   actual_y_plus_height = PR_MIN(framebufferHeight, PR_MAX(0, y + height));
+        GLint   actual_y             = NS_MIN(framebufferHeight, NS_MAX(0, y));
+        GLint   actual_y_plus_height = NS_MIN(framebufferHeight, NS_MAX(0, y + height));
         GLsizei actual_height  = actual_y_plus_height - actual_y;
         GLint   actual_yoffset = yoffset + actual_y - y;
 
@@ -2987,12 +2987,12 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
         }
 
         // compute the parameters of the subrect we're actually going to call glReadPixels on
-        GLint   subrect_x      = PR_MAX(x, 0);
-        GLint   subrect_end_x  = PR_MIN(x+width, boundWidth);
+        GLint   subrect_x      = NS_MAX(x, 0);
+        GLint   subrect_end_x  = NS_MIN(x+width, boundWidth);
         GLsizei subrect_width  = subrect_end_x - subrect_x;
 
-        GLint   subrect_y      = PR_MAX(y, 0);
-        GLint   subrect_end_y  = PR_MIN(y+height, boundHeight);
+        GLint   subrect_y      = NS_MAX(y, 0);
+        GLint   subrect_end_y  = NS_MIN(y+height, boundHeight);
         GLsizei subrect_height = subrect_end_y - subrect_y;
 
         if (subrect_width < 0 || subrect_height < 0 ||
