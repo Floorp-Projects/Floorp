@@ -20,6 +20,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
  public:
   // Mirror methods of Channel, see ipc_channel.h for description.
   ChannelImpl(const std::wstring& channel_id, Mode mode, Listener* listener);
+  ChannelImpl(const std::wstring& channel_id, HANDLE server_pipe,
+              Mode mode, Listener* listener);
   ~ChannelImpl() { 
     if (pipe_ != INVALID_HANDLE_VALUE) {
       Close();
@@ -28,6 +30,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   bool Connect();
   void Close();
 #ifdef CHROMIUM_MOZILLA_BUILD
+  HANDLE GetServerPipeHandle() const;
+
   Listener* set_listener(Listener* listener) {
     Listener* old = listener_;
     listener_ = listener;
@@ -38,8 +42,10 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
 #endif
   bool Send(Message* message);
  private:
+  void Init(Mode mode, Listener* listener);
   const std::wstring PipeName(const std::wstring& channel_id) const;
   bool CreatePipe(const std::wstring& channel_id, Mode mode);
+  bool EnqueueHelloMessage();
 
   bool ProcessConnection();
   bool ProcessIncomingMessages(MessageLoopForIO::IOContext* context,
