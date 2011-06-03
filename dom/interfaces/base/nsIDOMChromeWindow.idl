@@ -43,7 +43,7 @@ interface nsIDOMElement;
 interface nsIDOMEvent;
 interface nsIChromeFrameMessageManager;
 
-[scriptable, uuid(ec38cbaf-372f-4874-bc7a-dbf1f0b3d755)]
+[scriptable, uuid(7cfbc355-cbf9-4408-8e4c-a3c603ff1428)]
 interface nsIDOMChromeWindow : nsISupports
 {
   const unsigned short STATE_MAXIMIZED = 1;
@@ -84,8 +84,10 @@ interface nsIDOMChromeWindow : nsISupports
    * start dragging the window. This function will fail unless called
    * while the left mouse button is held down, callers must check this.
    *
+   * The optional panel argument should be set when moving a panel.
+   *
    * Returns NS_ERROR_NOT_IMPLEMENTED (and thus throws in JS) if the OS
    * doesn't support this.
    */
-  void beginWindowMove(in nsIDOMEvent mouseDownEvent);
+  void beginWindowMove(in nsIDOMEvent mouseDownEvent, [optional] in nsIDOMElement panel);
 };
