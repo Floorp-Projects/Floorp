@@ -1822,10 +1822,12 @@ pref("gfx.font_rendering.cleartype_params.rendering_mode", -1);
 // A comma-separated list of font family names. Fonts in these families will
 // be forced to use "GDI Classic" ClearType mode, ignoring the value
 // of gfx.font_rendering.cleartype_params.rendering_mode.
-pref("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families", "");
+// Currently we apply this setting to the sans-serif Microsoft "core Web fonts".
+pref("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
+     "Arial,Courier New,Tahoma,Trebuchet MS,Verdana");
 // The maximum size at which we will force GDI classic mode using
 // force_gdi_classic_for_families.
-pref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size", 0);
+pref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size", 15);
 
 pref("ui.key.menuAccessKeyFocuses", true);
 
