@@ -42,10 +42,9 @@
 
 #include "base/basictypes.h"
 #include "base/message_loop.h"
-#include "chrome/common/ipc_channel.h"
 
 #include "mozilla/Monitor.h"
-
+#include "mozilla/ipc/Transport.h"
 
 //-----------------------------------------------------------------------------
 
@@ -66,7 +65,7 @@ struct HasResultCodes
     };
 };
 
-class AsyncChannel : public IPC::Channel::Listener, protected HasResultCodes
+class AsyncChannel : public Transport::Listener, protected HasResultCodes
 {
 protected:
     typedef mozilla::Monitor Monitor;
@@ -81,8 +80,8 @@ protected:
     };
 
 public:
-    typedef IPC::Channel Transport;
     typedef IPC::Message Message;
+    typedef mozilla::ipc::Transport Transport;
 
     class /*NS_INTERFACE_CLASS*/ AsyncListener: protected HasResultCodes
     {
@@ -125,7 +124,7 @@ public:
     // These methods are called on the "IO" thread
     //
 
-    // Implement the IPC::Channel::Listener interface
+    // Implement the Transport::Listener interface
     NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
     NS_OVERRIDE virtual void OnChannelConnected(int32 peer_pid);
     NS_OVERRIDE virtual void OnChannelError();
@@ -192,7 +191,7 @@ protected:
     MessageLoop* mWorkerLoop;   // thread where work is done
     bool mChild;                // am I the child or parent?
     CancelableTask* mChannelErrorTask; // NotifyMaybeChannelError runnable
-    IPC::Channel::Listener* mExistingListener; // channel's previous listener
+    Transport::Listener* mExistingListener; // channel's previous listener
 };
 
 
