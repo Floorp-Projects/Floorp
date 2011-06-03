@@ -155,6 +155,7 @@ reserved = set((
         'manages',
         'namespace',
         'nullable',
+        'opens',
         'or',
         'parent',
         'protocol',
@@ -343,7 +344,7 @@ def p_ProtocolBody(p):
     p[0] = p[1]
 
 ##--------------------
-## spawns/bridges stmts
+## spawns/bridges/opens stmts
 
 def p_SpawnsStmtsOpt(p):
     """SpawnsStmtsOpt : SpawnsStmt SpawnsStmtsOpt
@@ -370,7 +371,7 @@ def p_AsOpt(p):
 
 def p_BridgesStmtsOpt(p):
     """BridgesStmtsOpt : BridgesStmt BridgesStmtsOpt
-                       | ManagersStmtOpt"""
+                       | OpensStmtsOpt"""
     if 2 == len(p):
         p[0] = p[1]
     else:
@@ -380,6 +381,20 @@ def p_BridgesStmtsOpt(p):
 def p_BridgesStmt(p):
     """BridgesStmt : BRIDGES ID ',' ID ';'"""
     p[0] = BridgesStmt(locFromTok(p, 1), p[2], p[4])
+
+def p_OpensStmtsOpt(p):
+    """OpensStmtsOpt : OpensStmt OpensStmtsOpt
+                     | ManagersStmtOpt"""
+    if 2 == len(p):
+        p[0] = p[1]
+    else:
+        p[2].opensStmts.insert(0, p[1])
+        p[0] = p[2]
+
+def p_OpensStmt(p):
+    """OpensStmt : PARENT OPENS ID ';'
+                 | CHILD OPENS ID ';'"""
+    p[0] = OpensStmt(locFromTok(p, 1), p[1], p[3])
 
 ##--------------------
 ## manager/manages stmts
