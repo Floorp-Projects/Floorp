@@ -1,4 +1,3 @@
-// |jit-test| debug
 // addDebuggee returns different Debug.Object wrappers for different Debug objects.
 
 var g = newGlobal('new-compartment');

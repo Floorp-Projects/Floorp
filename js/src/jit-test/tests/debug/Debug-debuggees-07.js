@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Handle proto-less objects passed to addDebuggee.
 
 var g = newGlobal('new-compartment');

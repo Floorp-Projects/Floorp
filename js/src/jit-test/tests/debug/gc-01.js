@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Debuggers with enabled hooks should not be GC'd even if they are otherwise
 // unreachable.
 

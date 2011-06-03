@@ -1,4 +1,3 @@
-// |jit-test| debug
 // After hooks.throw throws, if uncaughtExceptionHook returns undefined,
 // the original exception continues to propagate.
 

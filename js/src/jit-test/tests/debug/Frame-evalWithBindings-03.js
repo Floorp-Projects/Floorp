@@ -1,6 +1,4 @@
-// |jit-test| debug
 // arguments works in evalWithBindings (it does not interpose a function scope)
-
 var g = newGlobal('new-compartment');
 var dbg = new Debug;
 var global = dbg.addDebuggee(g);

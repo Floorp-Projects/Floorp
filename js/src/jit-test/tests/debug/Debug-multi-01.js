@@ -1,4 +1,3 @@
-// |jit-test| debug
 // When there are multiple debuggers, their hooks are called in order.
 
 var g = newGlobal('new-compartment');

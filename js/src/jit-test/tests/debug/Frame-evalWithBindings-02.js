@@ -1,6 +1,4 @@
-// |jit-test| debug
 // evalWithBindings to call a method of a debuggee object
-
 var g = newGlobal('new-compartment');
 var dbg = new Debug;
 var global = dbg.addDebuggee(g);

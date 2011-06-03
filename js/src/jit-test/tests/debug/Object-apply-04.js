@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Debug.Object.prototype.apply/call works with function proxies
 
 var g = newGlobal('new-compartment');

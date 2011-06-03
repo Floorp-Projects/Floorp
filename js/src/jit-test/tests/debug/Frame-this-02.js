@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Frame.prototype.this in strict direct eval frames
 
 var g = newGlobal('new-compartment');

@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Hooks and Debug.prototype.getYoungestFrame produce the same Frame object.
 
 var g = newGlobal('new-compartment');

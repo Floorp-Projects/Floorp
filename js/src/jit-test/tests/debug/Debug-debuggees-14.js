@@ -1,11 +1,7 @@
-// Reject non-debug-mode debuggees without asserting.
-
-load(libdir + "asserts.js");
-
-function f() {
-    var v = new Debug;
-    var g = newGlobal('new-compartment');
-    v.addDebuggee(g); // don't assert
-}
-
-assertThrowsInstanceOf(f, Error);
+// Adding a debuggee in a compartment that is already in debug mode works
+// even if a script from that compartment is on the stack.
+var g = newGlobal('new-compartment');
+var dbg1 = Debug(g);
+var dbg2 = Debug();
+g.parent = this;
+g.eval("parent.dbg2.addDebuggee(this);");

@@ -1,4 +1,3 @@
-// |jit-test| debug
 // test frame.eval in non-top frames
 
 var g = newGlobal('new-compartment');

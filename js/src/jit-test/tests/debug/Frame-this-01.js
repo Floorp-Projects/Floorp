@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Frame.prototype.this in strict-mode functions, with primitive values
 
 var g = newGlobal('new-compartment');

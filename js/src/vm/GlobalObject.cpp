@@ -253,10 +253,10 @@ GlobalObject::addDebug(JSContext *cx, Debug *dbg)
     for (Debug **p = vec->begin(); p != vec->end(); p++)
         JS_ASSERT(*p != dbg);
 #endif
-    if (vec->empty() && !compartment()->addDebuggee(this))
+    if (vec->empty() && !compartment()->addDebuggee(cx, this))
         return false;
     if (!vec->append(dbg)) {
-        compartment()->removeDebuggee(this);
+        compartment()->removeDebuggee(cx, this);
         return false;
     }
     return true;

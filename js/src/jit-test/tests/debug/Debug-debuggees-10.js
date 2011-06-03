@@ -1,6 +1,4 @@
-// |jit-test| debug
 // Allow diamonds in the graph of the compartment "debugs" relation.
-
 var program = newGlobal('new-compartment');
 var d1 = newGlobal('new-compartment');
 d1.top = this;
