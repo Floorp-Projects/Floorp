@@ -117,6 +117,10 @@ public:
     // Asynchronously send a message to the other side of the channel
     virtual bool Send(Message* msg);
 
+    // Asynchronously deliver a message back to this side of the
+    // channel
+    virtual bool Echo(Message* msg);
+
     // Send OnChannelConnected notification to listeners.
     void DispatchOnChannelConnected(int32 peer_pid);
 
@@ -177,6 +181,7 @@ protected:
     void OnChannelOpened();
     void OnCloseChannel();
     void PostErrorNotifyTask();
+    void OnEchoMessage(Message* msg);
 
     // Return true if |msg| is a special message targeted at the IO
     // thread, in which case it shouldn't be delivered to the worker.
