@@ -675,8 +675,10 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.type = addon.internalName ? "theme" : "extension";
   }
   else {
+    let type = addon.type;
+    addon.type = null;
     for (let name in TYPES) {
-      if (TYPES[name] == addon.type) {
+      if (TYPES[name] == type) {
         addon.type = name;
         break;
       }
