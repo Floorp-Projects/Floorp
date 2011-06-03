@@ -552,13 +552,14 @@ gfxDWriteFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
     {
         return nsnull;
     }
-    gfxFontEntry *fe = 
+    gfxDWriteFontEntry* dwriteLookup = static_cast<gfxDWriteFontEntry*>(lookup);
+    gfxDWriteFontEntry *fe =
         new gfxDWriteFontEntry(lookup->Name(),
-                               static_cast<gfxDWriteFontEntry*>(lookup)->mFont,
+                               dwriteLookup->mFont,
                                aProxyEntry->Weight(),
                                aProxyEntry->Stretch(),
                                aProxyEntry->IsItalic());
-
+    fe->SetForceGDIClassic(dwriteLookup->GetForceGDIClassic());
     return fe;
 }
 
