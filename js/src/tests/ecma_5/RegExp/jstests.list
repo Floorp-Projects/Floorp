@@ -5,5 +5,6 @@ script 15.10.7.5-01.js
 script empty-lookahead.js
 script exec.js
 script exec-lastIndex-ToInteger.js
+script regress-576828.js
 skip-if(!xulRuntime.shell&&(Android||xulRuntime.OS=="WINNT")) script regress-617935.js
 script instance-property-storage-introspection.js
