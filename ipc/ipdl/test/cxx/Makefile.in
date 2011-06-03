@@ -70,6 +70,7 @@ IPDLTESTS = \
   TestManyChildAllocs  \
   TestMultiMgrs  \
   TestNestedLoops \
+  TestOpens \
   TestRPCErrorCleanup \
   TestRPCRaces \
   TestRPCShutdownRace \
