@@ -1190,13 +1190,29 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
         chars[0] == '(' && chars[length - 1] == ')' &&
         (!caller || !caller->script()->strictModeCode))
     {
-        JSONParser parser(cx, chars + 1, length - 2, JSONParser::StrictJSON, JSONParser::NoError);
-        Value tmp;
-        if (!parser.parse(&tmp))
-            return false;
-        if (!tmp.isUndefined()) {
-            call.rval() = tmp;
-            return true;
+        /*
+         * Remarkably, JavaScript syntax is not a superset of JSON syntax:
+         * strings in JavaScript cannot contain the Unicode line and paragraph
+         * terminator characters U+2028 and U+2029, but strings in JSON can.
+         * Rather than force the JSON parser to handle this quirk when used by
+         * eval, we simply don't use the JSON parser when either character
+         * appears in the provided string.  See bug 657367.
+         */
+        for (const jschar *cp = &chars[1], *end = &chars[length - 2]; ; cp++) {
+            if (*cp == 0x2028 || *cp == 0x2029)
+                break;
+
+            if (cp == end) {
+                JSONParser parser(cx, chars + 1, length - 2,
+                                  JSONParser::StrictJSON, JSONParser::NoError);
+                Value tmp;
+                if (!parser.parse(&tmp))
+                    return false;
+                if (tmp.isUndefined())
+                    break;
+                call.rval() = tmp;
+                return true;
+            }
         }
     }
 
