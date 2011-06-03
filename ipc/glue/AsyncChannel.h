@@ -96,6 +96,8 @@ public:
         virtual void OnChannelConnected(int32 peer_pid) {};
     };
 
+    enum Side { Parent, Child, Unknown };
+
 public:
     //
     // These methods are called on the "worker" thread
@@ -108,7 +110,7 @@ public:
     //
     // Returns true iff the transport layer was successfully connected,
     // i.e., mChannelState == ChannelConnected.
-    bool Open(Transport* aTransport, MessageLoop* aIOLoop=0);
+    bool Open(Transport* aTransport, MessageLoop* aIOLoop=0, Side aSide=Unknown);
     
     // Close the underlying transport channel.
     void Close();

@@ -123,7 +123,7 @@ AsyncChannel::~AsyncChannel()
 }
 
 bool
-AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
+AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
 {
     NS_PRECONDITION(!mTransport, "Open() called > once");
     NS_PRECONDITION(aTransport, "need transport layer");
@@ -136,16 +136,22 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
     // FIXME figure out whether we're in parent or child, grab IO loop
     // appropriately
     bool needOpen = true;
-    if(!aIOLoop) {
+    if(aIOLoop) {
+        // We're a child or using the new arguments.  Either way, we
+        // need an open.
+        needOpen = true;
+        mChild = (aSide == Unknown) || (aSide == Child);
+    } else {
+        NS_PRECONDITION(aSide == Unknown, "expected default side arg");
+
         // parent
+        mChild = false;
         needOpen = false;
         aIOLoop = XRE_GetIOMessageLoop();
         // FIXME assuming that the parent waits for the OnConnected event.
         // FIXME see GeckoChildProcessHost.cpp.  bad assumption!
         mChannelState = ChannelConnected;
     }
-
-    mChild = needOpen;
 
     mIOLoop = aIOLoop;
     mWorkerLoop = MessageLoop::current();
