@@ -383,6 +383,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_BITAND:
         return jsop_binary(op);
 
+      case JSOP_ADD:
+      	return jsop_binary(op);
+
       case JSOP_DOUBLE:
         return pushConstant(script->getConst(readIndex(pc)));
 
@@ -1192,6 +1195,10 @@ IonBuilder::jsop_binary(JSOp op)
     switch (op) {
       case JSOP_BITAND:
         ins = MBitAnd::New(left, right);
+        break;
+        
+      case JSOP_ADD:
+        ins = MAdd::New(left, right);
         break;
 
       default:
