@@ -77,6 +77,11 @@ void nsCycleCollector_shutdown();
 struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
 {
     /**
+     * Should we force a JavaScript GC before a CC?
+     */
+    virtual bool NeedCollect() = 0;
+
+    /**
      * Runs the JavaScript GC.
      */
     virtual void Collect() = 0;
