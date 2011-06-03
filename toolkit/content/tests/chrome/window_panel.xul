@@ -51,6 +51,7 @@ function test_panels()
 {
   checkTreeCoords();
 
+  addEventListener("popupshowing", popupShowing, false);
   addEventListener("popupshown", popupShown, false);
   addEventListener("popuphidden", nextTest, false);
   nextTest();
@@ -67,6 +68,13 @@ function nextTest()
   currentTest = tests.shift();
   var panel = createPanel(currentTest.attrs);
   currentTest.test(panel);
+}
+
+function popupShowing(event)
+{
+  var rect = event.target.getOuterScreenRect();
+  ok(!rect.left && !rect.top && !rect.width && !rect.height,
+     currentTest.testname + " empty rectangle during popupshowing");
 }
 
 var waitSteps = 0;
@@ -121,6 +129,12 @@ var tests = [
     testname: "normal panel",
     attrs: { },
     test: function(panel) {
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 0, this.testname + " screen left before open");
+      is(screenRect.top, 0, this.testname + " screen top before open");
+      is(screenRect.width, 0, this.testname + " screen width before open");
+      is(screenRect.height, 0, this.testname + " screen height before open");
+
       panel.openPopupAtScreen(200, 210);
     },
     result: function(testname, panel) {
@@ -129,6 +143,12 @@ var tests = [
       is(panelrect.top, 210 - mozInnerScreenY, testname + "top");
       is(panelrect.width, 120, testname + "width");
       is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 200, testname + " screen left");
+      is(screenRect.top, 210, testname + " screen top");
+      is(screenRect.width, 120, testname + " screen width");
+      is(screenRect.height, 40, testname + " screen height");
     }
   },
   {
@@ -136,6 +156,12 @@ var tests = [
     testname: "autohide panel with titlebar",
     attrs: { titlebar: "normal" },
     test: function(panel) {
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 0, this.testname + " screen left before open");
+      is(screenRect.top, 0, this.testname + " screen top before open");
+      is(screenRect.width, 0, this.testname + " screen width before open");
+      is(screenRect.height, 0, this.testname + " screen height before open");
+
       panel.openPopupAtScreen(200, 210);
     },
     result: function(testname, panel) {
@@ -144,6 +170,12 @@ var tests = [
       is(panelrect.top, 210 - mozInnerScreenY, testname + "top");
       is(panelrect.width, 120, testname + "width");
       is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 200, testname + " screen left");
+      is(screenRect.top, 210, testname + " screen top");
+      is(screenRect.width, 120, testname + " screen width");
+      is(screenRect.height, 40, testname + " screen height");
     }
   },
   {
@@ -151,6 +183,13 @@ var tests = [
     attrs: { noautohide: true, titlebar: "normal" },
     test: function(panel) {
       waitSteps = 25;
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 0, this.testname + " screen left before open");
+      is(screenRect.top, 0, this.testname + " screen top before open");
+      is(screenRect.width, 0, this.testname + " screen width before open");
+      is(screenRect.height, 0, this.testname + " screen height before open");
+
       panel.openPopupAtScreen(200, 210);
     },
     result: function(testname, panel) {
@@ -160,6 +199,12 @@ var tests = [
       ok(panelrect.top <= 210 - mozInnerScreenY + 30, testname + "top less");
       is(panelrect.width, 120, testname + "width");
       is(panelrect.height, 40, testname + "height");
+
+      var screenRect = panel.getOuterScreenRect();
+      is(screenRect.left, 200, testname + " screen left");
+      is(screenRect.top, 210, testname + " screen top");
+      ok(screenRect.width >= 120 && screenRect.width <= 140, testname + " screen width");
+      ok(screenRect.height >= 40 && screenRect.height <= 80, testname + " screen height");
 
       var gotMouseEvent = false;
       function mouseMoved(event)
