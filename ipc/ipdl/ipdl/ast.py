@@ -77,6 +77,8 @@ class Visitor:
             spawns.accept(self)
         for bridges in p.bridgesStmts:
             bridges.accept(self)
+        for opens in p.opensStmts:
+            opens.accept(self)
         for mgr in p.managers:
             mgr.accept(self)
         for managed in p.managesStmts:
@@ -93,6 +95,9 @@ class Visitor:
         pass
 
     def visitBridgesStmt(self, bridges):
+        pass
+
+    def visitOpensStmt(self, opens):
         pass
 
     def visitManager(self, mgr):
@@ -269,6 +274,7 @@ class Protocol(NamespacedNode):
         self.sendSemantics = ASYNC
         self.spawnsStmts = [ ]
         self.bridgesStmts = [ ]
+        self.opensStmts = [ ]
         self.managers = [ ]
         self.managesStmts = [ ]
         self.messageDecls = [ ]
@@ -303,6 +309,12 @@ class BridgesStmt(Node):
         Node.__init__(self, loc)
         self.parentSide = parentSide
         self.childSide = childSide
+
+class OpensStmt(Node):
+    def __init__(self, loc, side, proto):
+        Node.__init__(self, loc)
+        self.side = side
+        self.proto = proto
 
 class Manager(Node):
     def __init__(self, loc, managerName):
