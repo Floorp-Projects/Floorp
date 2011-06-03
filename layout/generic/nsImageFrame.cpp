@@ -1892,6 +1892,20 @@ nsImageFrame::IconLoad::IconLoad()
   GetPrefs();
 }
 
+void
+nsImageFrame::IconLoad::Shutdown()
+{
+  Preferences::RemoveObservers(this, kIconLoadPrefs);
+  // in case the pref service releases us later
+  if (mLoadingImage) {
+    mLoadingImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
+    mLoadingImage = nsnull;
+  }
+  if (mBrokenImage) {
+    mBrokenImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
+    mBrokenImage = nsnull;
+  }
+}
 
 NS_IMETHODIMP
 nsImageFrame::IconLoad::Observe(nsISupports *aSubject, const char* aTopic,
