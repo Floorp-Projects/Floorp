@@ -1632,7 +1632,7 @@ nsWebSocketHandler::AsyncOnChannelRedirect(
     
     if (NS_FAILED(rv)) {
         LOG(("nsWebSocketHandler Redirect could not QI to HTTP\n"));
-        callback->OnRedirectVerifyCallback(NS_ERROR_FAILURE);
+        callback->OnRedirectVerifyCallback(rv);
         return NS_OK;
     }
 
@@ -1641,17 +1641,22 @@ nsWebSocketHandler::AsyncOnChannelRedirect(
     
     if (NS_FAILED(rv)) {
         LOG(("nsWebSocketHandler Redirect could not QI to HTTP Upgrade\n"));
-        callback->OnRedirectVerifyCallback(NS_ERROR_FAILURE);
+        callback->OnRedirectVerifyCallback(rv);
         return NS_OK;
     }
     
-    // The redirect is OK
+    // The redirect is likely OK
 
     newChannel->SetNotificationCallbacks(this);
     mURI = newuri;
     mHttpChannel = newHttpChannel;
     mChannel = newUpgradeChannel;
-    SetupRequest();
+    rv = SetupRequest();
+    if (NS_FAILED(rv)) {
+        LOG(("nsWebSocketHandler Redirect could not SetupRequest()\n"));
+        callback->OnRedirectVerifyCallback(rv);
+        return NS_OK;
+    }
     
     // We cannot just tell the callback OK right now due to the 1 connect at
     // a time policy. First we need to complete the old location and then
@@ -1666,7 +1671,7 @@ nsWebSocketHandler::AsyncOnChannelRedirect(
     rv = ApplyForAdmission();
     if (NS_FAILED(rv)) {
         LOG(("nsWebSocketHandler Redirect failed due to DNS failure\n"));
-        callback->OnRedirectVerifyCallback(NS_ERROR_FAILURE);
+        callback->OnRedirectVerifyCallback(rv);
         mRedirectCallback = nsnull;
     }
     
