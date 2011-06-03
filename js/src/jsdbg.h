@@ -214,7 +214,7 @@ class Debug {
 bool
 Debug::hasAnyLiveHooks() const
 {
-    return observesDebuggerStatement();
+    return enabled && (hasDebuggerHandler || hasThrowHandler);
 }
 
 bool
