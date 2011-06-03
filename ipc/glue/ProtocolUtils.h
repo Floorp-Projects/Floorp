@@ -154,6 +154,11 @@ Bridge(const PrivateIPDLInterface&,
        ProtocolId);
 
 bool
+Open(const PrivateIPDLInterface&,
+     AsyncChannel*, base::ProcessHandle, Transport::Mode,
+     ProtocolId);
+
+bool
 UnpackChannelOpened(const PrivateIPDLInterface&,
                     const IPC::Message&,
                     TransportDescriptor*, base::ProcessId*, ProtocolId*);
