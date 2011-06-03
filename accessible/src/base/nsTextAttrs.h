@@ -41,7 +41,6 @@
 
 class nsHyperTextAccessible;
 
-#include "nsAccessibilityAtoms.h"
 
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -136,7 +135,7 @@ public:
   /**
    * Return the name of text attribute.
    */
-  virtual nsIAtom* GetName() = 0;
+  virtual nsIAtom* GetName() const = 0;
 
   /**
    * Retrieve the value of text attribute in out param, return true if differs
@@ -247,7 +246,7 @@ public:
                  nsIContent *aContent);
 
   // nsITextAttr
-  virtual nsIAtom *GetName() { return nsAccessibilityAtoms::language; }
+  virtual nsIAtom *GetName() const { return nsGkAtoms::language; }
 
 protected:
 
@@ -272,7 +271,7 @@ public:
                 nsIContent *aContent);
 
   // nsITextAttr
-  virtual nsIAtom *GetName();
+  virtual nsIAtom *GetName() const;
 
 protected:
 
@@ -295,7 +294,7 @@ public:
   nsBGColorTextAttr(nsIFrame *aRootFrame, nsIFrame *aFrame);
 
   // nsITextAttr
-  virtual nsIAtom *GetName() { return nsAccessibilityAtoms::backgroundColor; }
+  virtual nsIAtom *GetName() const { return nsGkAtoms::backgroundColor; }
 
 protected:
   // nsTextAttr
@@ -318,7 +317,7 @@ public:
   nsFontSizeTextAttr(nsIFrame *aRootFrame, nsIFrame *aFrame);
 
   // nsITextAttr
-  virtual nsIAtom *GetName() { return nsAccessibilityAtoms::fontSize; }
+  virtual nsIAtom *GetName() const { return nsGkAtoms::font_size; }
 
 protected:
 
@@ -350,7 +349,7 @@ public:
   nsFontWeightTextAttr(nsIFrame *aRootFrame, nsIFrame *aFrame);
 
   // nsITextAttr
-  virtual nsIAtom *GetName() { return nsAccessibilityAtoms::fontWeight; }
+  virtual nsIAtom *GetName() const { return nsGkAtoms::fontWeight; }
 
 protected:
 

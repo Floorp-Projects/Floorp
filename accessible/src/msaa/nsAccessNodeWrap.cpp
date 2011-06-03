@@ -41,7 +41,6 @@
 #include "AccessibleApplication.h"
 #include "ISimpleDOMNode_i.c"
 
-#include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
 #include "nsCoreUtils.h"
