@@ -71,7 +71,6 @@ static void
 UnloadPrefsModule()
 {
   Preferences::Shutdown();
-  PREF_Cleanup();
 }
 
 static const mozilla::Module kPrefModule = {
