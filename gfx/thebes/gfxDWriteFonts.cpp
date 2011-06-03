@@ -151,8 +151,7 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
 
     if ((anAAOption == gfxFont::kAntialiasDefault &&
          UsingClearType() &&
-         (gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode() ==
-          DWRITE_MEASURING_MODE_NATURAL)) ||
+         GetMeasuringMode() == DWRITE_MEASURING_MODE_NATURAL) ||
         anAAOption == gfxFont::kAntialiasSubpixel)
     {
         mUseSubpixelPositions = PR_TRUE;
@@ -597,6 +596,11 @@ gfxDWriteFont::CairoScaledFont()
 
         cairo_dwrite_scaled_font_allow_manual_show_glyphs(mCairoScaledFont,
                                                           mAllowManualShowGlyphs);
+
+        gfxDWriteFontEntry *fe =
+            static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
+        cairo_dwrite_scaled_font_set_force_GDI_classic(mCairoScaledFont,
+                                                       fe->GetForceGDIClassic());
     }
 
     NS_ASSERTION(mAdjustedSize == 0.0 ||
@@ -685,6 +689,14 @@ gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
     return width;
 }
 
+DWRITE_MEASURING_MODE
+gfxDWriteFont::GetMeasuringMode()
+{
+    return static_cast<gfxDWriteFontEntry*>(mFontEntry.get())->GetForceGDIClassic()
+        ? DWRITE_MEASURING_MODE_GDI_CLASSIC
+        : gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode();
+}
+
 gfxFloat
 gfxDWriteFont::MeasureGlyphWidth(PRUint16 aGlyph)
 {
@@ -698,8 +710,7 @@ gfxDWriteFont::MeasureGlyphWidth(PRUint16 aGlyph)
     } else {
         hr = mFontFace->GetGdiCompatibleGlyphMetrics(
                   FLOAT(mAdjustedSize), 1.0f, nsnull,
-                  gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode() ==
-                      DWRITE_MEASURING_MODE_GDI_NATURAL,
+                  GetMeasuringMode() == DWRITE_MEASURING_MODE_GDI_NATURAL,
                   &aGlyph, 1, &metrics, FALSE);
         if (SUCCEEDED(hr)) {
             return NS_lround(metrics.advanceWidth * mFUnitsConvFactor);

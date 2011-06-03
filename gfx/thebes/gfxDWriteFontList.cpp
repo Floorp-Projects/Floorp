@@ -45,6 +45,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 #include "nsServiceManagerUtils.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #include "gfxGDIFontList.h"
 
@@ -156,6 +157,7 @@ gfxDWriteFontFamily::FindStyleVariations()
          */
         gfxDWriteFontEntry *fe = 
             new gfxDWriteFontEntry(fullID, font);
+        fe->SetForceGDIClassic(mForceGDIClassic);
         AddFontEntry(fe);
 
 #ifdef PR_LOGGING
@@ -947,6 +949,23 @@ gfxDWriteFontList::DelayedInitFontList()
 
             // remove Gills Sans
             mFontFamilies.Remove(nameGillSans);
+        }
+    }
+
+    nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsXPIDLCString classicFamilies;
+    nsresult rv = pref->GetCharPref(
+             "gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
+             getter_Copies(classicFamilies));
+    if (NS_SUCCEEDED(rv)) {
+        nsCCharSeparatedTokenizer tokenizer(classicFamilies, ',');
+        while (tokenizer.hasMoreTokens()) {
+            NS_ConvertUTF8toUTF16 name(tokenizer.nextToken());
+            BuildKeyNameFromFontName(name);
+            gfxFontFamily *family = mFontFamilies.GetWeak(name);
+            if (family) {
+                static_cast<gfxDWriteFontFamily*>(family)->SetForceGDIClassic(true);
+            }
         }
     }
 
