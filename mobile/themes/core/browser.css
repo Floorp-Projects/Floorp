@@ -1461,6 +1461,10 @@ pageaction:not([image]) > hbox >.pageaction-image {
   -moz-margin-start: @margin_xnormal@;
 }
 
+#sync-message {
+  padding-bottom: 2em;
+}
+
 /* content scrollbars */
 .scroller {
   opacity: 0;
