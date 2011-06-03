@@ -1,4 +1,3 @@
-// |jit-test| debug
 // getYoungestFrame basics.
 
 load(libdir + "asserts.js");

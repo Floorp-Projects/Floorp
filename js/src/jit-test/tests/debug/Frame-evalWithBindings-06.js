@@ -1,6 +1,4 @@
-// |jit-test| debug
 // In evalWithBindings code, assignment to any name not in the bindings works just as in eval.
-
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 dbg.hooks = {

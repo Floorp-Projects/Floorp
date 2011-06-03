@@ -533,7 +533,7 @@ struct JSRuntime {
     /*
      * Right now, we only support runtime-wide debugging.
      */
-    JSBool              debugMode;
+    bool                debugMode;
 
 #ifdef JS_TRACER
     /* True if any debug hooks not supported by the JIT are enabled. */

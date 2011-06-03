@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Q: But who shall debug the debuggers?  A: jimb
 
 var log = '';

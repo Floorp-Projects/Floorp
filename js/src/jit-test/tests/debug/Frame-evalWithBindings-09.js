@@ -1,6 +1,4 @@
-// |jit-test| debug
 // evalWithBindings code is debuggee code, so it can trip the debugger. It nests!
-
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 var f1;
