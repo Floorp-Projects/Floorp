@@ -156,9 +156,7 @@ StackSegment::computeNextFrame(StackFrame *fp) const
 
 StackSpace::StackSpace()
   : base_(NULL),
-#ifdef XP_WIN
     commitEnd_(NULL),
-#endif
     end_(NULL),
     seg_(NULL)
 {
@@ -188,14 +186,14 @@ StackSpace::init()
         DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE))
         return false;
     base_ = reinterpret_cast<Value *>(p);
-    end_ = base_ + CAPACITY_VALS;
+    end_ = commitEnd_ = base_ + CAPACITY_VALS;
 #else
     JS_ASSERT(CAPACITY_BYTES % getpagesize() == 0);
     p = mmap(NULL, CAPACITY_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (p == MAP_FAILED)
         return false;
     base_ = reinterpret_cast<Value *>(p);
-    end_ = base_ + CAPACITY_VALS;
+    end_ = commitEnd_ = base_ + CAPACITY_VALS;
 #endif
     return true;
 }
@@ -354,6 +352,12 @@ StackSpace::pushSegment(StackSegment &seg)
     JS_ASSERT(seg.empty());
     seg.setPreviousInMemory(seg_);
     seg_ = &seg;
+}
+
+size_t
+StackSpace::committedSize()
+{
+    return (commitEnd_ - base_) * sizeof(Value);
 }
 
 /*****************************************************************************/

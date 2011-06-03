@@ -1046,10 +1046,8 @@ struct StackOverride
 class StackSpace
 {
     Value         *base_;
-#ifdef XP_WIN
     mutable Value *commitEnd_;
-#endif
-    Value *end_;
+    Value         *end_;
     StackSegment  *seg_;
     StackOverride override_;
 
@@ -1124,6 +1122,9 @@ class StackSpace
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
     void mark(JSTracer *trc);
+
+    /* We only report the committed size;  uncommitted size is uninteresting. */
+    JS_FRIEND_API(size_t) committedSize();
 };
 
 /*****************************************************************************/
