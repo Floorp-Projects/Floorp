@@ -91,5 +91,11 @@ OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
   return new Transport(aTd.mPipeName, aTd.mServerPipe, aMode, nsnull);
 }
 
+void
+CloseDescriptor(const TransportDescriptor& aTd)
+{
+  CloseHandle(aTd.mServerPipe);
+}
+
 } // namespace ipc
 } // namespace mozilla

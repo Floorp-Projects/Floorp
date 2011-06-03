@@ -46,12 +46,21 @@
 
 #include "prenv.h"
 
+#include "IPCMessageStart.h"
 #include "mozilla/ipc/Shmem.h"
+#include "mozilla/ipc/Transport.h"
 
 // WARNING: this takes into account the private, special-message-type
 // enum in ipc_channel.h.  They need to be kept in sync.
 namespace {
+// XXX the max message ID is actually kuint32max now ... when this
+// changed, the assumptions of the special message IDs changed in that
+// they're not carving out messages from likely-unallocated space, but
+// rather carving out messages from the end of space allocated to
+// protocol 0.  Oops!  We can get away with this until protocol 0
+// starts approaching its 65,536th message.
 enum {
+    CHANNEL_OPENED_MESSAGE_TYPE = kuint16max - 6,
     SHMEM_DESTROYED_MESSAGE_TYPE = kuint16max - 5,
     UNBLOCK_CHILD_MESSAGE_TYPE = kuint16max - 4,
     BLOCK_CHILD_MESSAGE_TYPE   = kuint16max - 3,
@@ -134,6 +143,20 @@ LoggingEnabled()
 #endif
 }
 
+
+typedef IPCMessageStart ProtocolId;
+
+struct PrivateIPDLInterface {};
+
+bool
+Bridge(const PrivateIPDLInterface&,
+       AsyncChannel*, base::ProcessHandle, AsyncChannel*, base::ProcessHandle,
+       ProtocolId);
+
+bool
+UnpackChannelOpened(const PrivateIPDLInterface&,
+                    const IPC::Message&,
+                    TransportDescriptor*, base::ProcessId*, ProtocolId*);
 
 } // namespace ipc
 } // namespace mozilla

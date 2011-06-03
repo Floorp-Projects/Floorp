@@ -97,6 +97,7 @@ CPPSRCS += \
   GeckoChildProcessHost.cpp \
   MessagePump.cpp \
   ProcessChild.cpp \
+  ProtocolUtils.cpp \
   RPCChannel.cpp \
   ScopedXREEmbed.cpp \
   SharedMemory.cpp \
