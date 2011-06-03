@@ -213,8 +213,10 @@ class MUseIterator
         return !!use;
     }
     void next() {
-        prev_ = use;
-        use = use->next();
+        if (use) {
+            prev_ = use;
+            use = use->next();
+        }
     }
     MUse * operator ->() const {
         return use;
