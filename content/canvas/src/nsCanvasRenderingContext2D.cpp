@@ -3233,7 +3233,8 @@ nsCanvasRenderingContext2D::IsPointInPath(float x, float y, PRBool *retVal)
         return NS_OK;
     }
 
-    *retVal = mThebes->PointInFill(gfxPoint(x,y));
+    gfxPoint pt(x, y);
+    *retVal = mThebes->PointInFill(mThebes->DeviceToUser(pt));
     return NS_OK;
 }
 
