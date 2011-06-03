@@ -1246,7 +1246,7 @@ Preferences::GetLocalizedString(const char* aPref, nsAString* aResult)
 nsresult
 Preferences::SetCString(const char* aPref, const char* aValue)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->SetCharPref(aPref, aValue);
 }
 
@@ -1277,7 +1277,7 @@ Preferences::SetString(const char* aPref, const nsAString &aValue)
 nsresult
 Preferences::SetBool(const char* aPref, PRBool aValue)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->SetBoolPref(aPref, aValue);
 }
 
@@ -1285,7 +1285,7 @@ Preferences::SetBool(const char* aPref, PRBool aValue)
 nsresult
 Preferences::SetInt(const char* aPref, PRInt32 aValue)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->SetIntPref(aPref, aValue);
 }
 
@@ -1293,7 +1293,7 @@ Preferences::SetInt(const char* aPref, PRInt32 aValue)
 nsresult
 Preferences::ClearUser(const char* aPref)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->ClearUserPref(aPref);
 }
 
