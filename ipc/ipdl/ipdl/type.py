@@ -294,7 +294,6 @@ class ProtocolType(IPDLType):
         self.qname = qname
         self.sendSemantics = sendSemantics
         self.spawns = set()             # ProtocolType
-        self.bridges = set()            # [ Bridge ]
         self.managers = set()           # ProtocolType
         self.manages = [ ]
         self.stateless = stateless
@@ -313,9 +312,6 @@ class ProtocolType(IPDLType):
     def addSpawn(self, ptype):
         assert self.isToplevel() and  ptype.isToplevel()
         self.spawns.add(ptype)
-
-    def addBridge(self, parentPType, childPType):
-        self.bridges.add(Bridge(parentPType, childPType))
 
     def managedBy(self, mgr):
         self.managers = mgr
@@ -1300,8 +1296,6 @@ class CheckTypes(TcheckVisitor):
             self.error(bridges.loc,
                        "cannot bridge non-top-level-protocol(s) `%s' and `%s'",
                        parentType.name(), childType.name())
-        else:
-            self.ptype.addBridge(parentType, childType)
 
 
     def visitManagesStmt(self, mgs):
@@ -1442,6 +1436,8 @@ class Actor:
         self.ptype = ptype
         self.side = side
 
+    def asType(self):
+        return ActorType(self.ptype)
     def other(self):
         return Actor(self.ptype, _otherside(self.side))
 
@@ -1475,7 +1471,7 @@ class BridgeEdge:
 # all protocols
 class ProcessGraph:
     processes = set()                   # set(Process)
-    bridges = { }                       # ProtocolType -> BridgeEdge
+    bridges = { }                       # ProtocolType -> [ BridgeEdge ]
     actorToProcess = { }                # Actor -> Process
     visitedSpawns = set()               # set(ActorType)
     visitedBridges = set()              # set(ActorType)
@@ -1494,6 +1490,27 @@ class ProcessGraph:
         return cls.actorToProcess[actor]
 
     @classmethod
+    def bridgesOf(cls, bridgeP):
+        return cls.bridges.get(bridgeP, [])
+
+    @classmethod
+    def bridgeEndpointsOf(cls, ptype, side):
+        actor = Actor(ptype, side)
+        endpoints = []
+        for b in cls.iterbridges():
+            if b.parent == actor:
+                endpoints.append(Actor(b.bridgeProto, 'parent'))
+            elif b.child == actor:
+                endpoints.append(Actor(b.bridgeProto, 'child'))
+        return endpoints
+
+    @classmethod
+    def iterbridges(cls):
+        for edges in cls.bridges.itervalues():
+            for bridge in edges:
+                yield bridge
+
+    @classmethod
     def spawn(cls, spawner, remoteSpawn):
         localSpawn = remoteSpawn.other()
         spawnerProcess = ProcessGraph.getProcess(spawner)
@@ -1502,7 +1519,9 @@ class ProcessGraph:
 
     @classmethod
     def bridge(cls, parent, child, bridgeP):
-        cls.bridges[bridgeP] = BridgeEdge(bridgeP, parent, child)
+        if bridgeP not in cls.bridges:
+            cls.bridges[bridgeP] = [ ]
+        cls.bridges[bridgeP].append(BridgeEdge(bridgeP, parent, child))
 
 
 class BuildProcessGraph(TcheckVisitor):
@@ -1625,8 +1644,9 @@ class CheckProcessGraph(TcheckVisitor):
                 for edge in process.iteredges():
                     print '    ', edge
             print 'Bridges'
-            for bridge in ProcessGraph.bridges.itervalues():
-                print '  ', bridge
+            for bridgeList in ProcessGraph.bridges.itervalues():
+                for bridge in bridgeList:
+                    print '  ', bridge
 
 ##-----------------------------------------------------------------------------
 
