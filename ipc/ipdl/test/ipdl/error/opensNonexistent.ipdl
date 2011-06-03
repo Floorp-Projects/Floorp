@@ -1,0 +1,6 @@
+protocol opensNonexistent {
+    parent opens Unicorn;
+
+child: __delete__();
+state DEAD: send __delete__;
+};

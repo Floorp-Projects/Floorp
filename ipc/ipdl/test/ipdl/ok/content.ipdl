@@ -1,11 +1,13 @@
 include protocol compositor;
 include protocol jetpack;
+include protocol media;
 include protocol plugin;
 
 sync protocol content {
     parent spawns compositor as parent;
     parent spawns jetpack;
     child spawns plugin;
+    child opens media;
 
 child:
     __delete__();
