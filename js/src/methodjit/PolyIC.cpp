@@ -179,8 +179,7 @@ class PICStubCompiler : public BaseCompiler
     void spew(const char *event, const char *op) {
 #ifdef JS_METHODJIT_SPEW
         JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
-                   type, event, op, script->filename,
-                   js_FramePCToLineNumber(cx, f.fp()));
+                   type, event, op, script->filename, CurrentLine(cx));
 #endif
     }
 };
@@ -2055,8 +2054,7 @@ BaseIC::spew(JSContext *cx, const char *event, const char *message)
 {
 #ifdef JS_METHODJIT_SPEW
     JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
-               js_CodeName[op], event, message, cx->fp()->script()->filename,
-               js_FramePCToLineNumber(cx, cx->fp()));
+               js_CodeName[op], event, message, cx->fp()->script()->filename, CurrentLine(cx));
 #endif
 }
 
@@ -2240,7 +2238,7 @@ GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid i
     char *chars = DeflateString(cx, v.toString()->getChars(cx), v.toString()->length());
     JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom 0x%x (\"%s\") shape 0x%x (%s: %d)\n",
                js_CodeName[op], cs.executableAddress(), id, chars, holder->shape(),
-               cx->fp()->script()->filename, js_FramePCToLineNumber(cx, cx->fp()));
+               cx->fp()->script()->filename, CurrentLine(cx));
     cx->free_(chars);
 #endif
 

@@ -1647,10 +1647,9 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 uintN
-js_FramePCToLineNumber(JSContext *cx, StackFrame *fp)
+js_FramePCToLineNumber(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 {
-    return js_PCToLineNumber(cx, fp->script(),
-                             fp->hasImacropc() ? fp->imacropc() : fp->pc(cx));
+    return js_PCToLineNumber(cx, fp->script(), fp->hasImacropc() ? fp->imacropc() : pc);
 }
 
 uintN
@@ -1765,18 +1764,31 @@ js_GetScriptLineExtent(JSScript *script)
     return 1 + lineno - script->lineno;
 }
 
-const char *
-js::CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
+namespace js {
+
+uintN
+CurrentLine(JSContext *cx)
 {
-    StackFrame *fp = js_GetScriptedCaller(cx, NULL);
-    if (!fp) {
+    return js_FramePCToLineNumber(cx, cx->fp(), cx->regs().pc);
+}
+
+const char *
+CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
+{
+    FrameRegsIter iter(cx);
+    while (!iter.done() && !iter.fp()->isScriptFrame())
+        ++iter;
+
+    if (iter.done()) {
         *linenop = 0;
         return NULL;
     }
 
-    *linenop = js_FramePCToLineNumber(cx, fp);
-    return fp->script()->filename;
+    *linenop = js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
+    return iter.fp()->script()->filename;
 }
+
+}  /* namespace js */
 
 class DisablePrincipalsTranscoding {
     JSSecurityCallbacks *callbacks;
