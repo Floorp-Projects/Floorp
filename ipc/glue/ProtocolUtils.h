@@ -63,6 +63,7 @@ enum {
 namespace mozilla {
 namespace ipc {
 
+class AsyncChannel;
 
 // Used to pass references to protocol actors across the wire.
 // Actors created on the parent-side have a positive ID, and actors
@@ -117,8 +118,9 @@ public:
     virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) = 0;
     virtual bool DestroySharedMemory(Shmem&) = 0;
 
-    // XXX odd duck, acknowledged
+    // XXX odd ducks, acknowledged
     virtual ProcessHandle OtherProcess() const = 0;
+    virtual AsyncChannel* GetIPCChannel() = 0;
 };
 
 
