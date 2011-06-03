@@ -357,6 +357,11 @@ def _otherSide(side):
     if side == 'parent':  return 'child'
     assert 0
 
+def _sideToTransportMode(side):
+    if side == 'parent':  mode = 'SERVER'
+    elif side == 'child': mode = 'CLIENT'
+    return ExprVar('mozilla::ipc::Transport::MODE_'+ mode)
+
 def _ifLogging(stmts):
     iflogging = StmtIf(ExprCall(ExprVar('mozilla::ipc::LoggingEnabled')))
     iflogging.addifstmts(stmts)
@@ -1430,6 +1435,15 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             self.cppIncludeHeaders.append(_protocolHeaderName(ppt._p, pside))
             self.cppIncludeHeaders.append(_protocolHeaderName(cpt._p, cside))
 
+        opens = ProcessGraph.opensOf(p.decl.type)
+        for o in opens:
+            optype, oside = o.opener.ptype, o.opener.side
+            self.hdrfile.addthings([
+                Whitespace.NL,
+                _makeForwardDeclForActor(optype, oside)
+            ])
+            self.cppIncludeHeaders.append(_protocolHeaderName(optype._p, oside))
+
         self.hdrfile.addthing(Whitespace("""
 //-----------------------------------------------------------------------------
 // Code common to %sChild and %sParent
@@ -1446,6 +1460,13 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             bdecl, bdefn = _splitFuncDeclDefn(self.genBridgeFunc(bridge))
             ns.addstmts([ bdecl, Whitespace.NL ])
             self.funcDefns.append(bdefn)
+
+        # user-facing methods for opening a new channel across two
+        # existing endpoints
+        for o in opens:
+            odecl, odefn = _splitFuncDeclDefn(self.genOpenFunc(o))
+            ns.addstmts([ odecl, Whitespace.NL ])
+            self.funcDefns.append(odefn)
 
         # state information
         stateenum = TypeEnum('State')
@@ -1521,6 +1542,25 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                    _protocolId(p.decl.type)
                    ])))
         return bridgefunc
+
+
+    def genOpenFunc(self, o):
+        p = self.protocol
+        localside = o.opener.side
+        openertype = _cxxBareType(ActorType(o.opener.ptype), o.opener.side)
+        openervar = ExprVar('opener')
+        openfunc = MethodDefn(MethodDecl(
+            'Open',
+            params=[ Decl(openertype, openervar.name) ],
+            ret=Type.BOOL))
+        openfunc.addstmt(StmtReturn(ExprCall(
+            ExprVar('mozilla::ipc::Open'),
+            args=[ _backstagePass(),
+                   p.callGetChannel(openervar), p.callOtherProcess(openervar),
+                   _sideToTransportMode(localside),
+                   _protocolId(p.decl.type)
+                   ])))
+        return openfunc
 
 
     def genTransitionFunc(self):
@@ -2475,6 +2515,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             abstract=True)
 
         bridgeActorsCreated = ProcessGraph.bridgeEndpointsOf(ptype, self.side)
+        opensActorsCreated = ProcessGraph.opensEndpointsOf(ptype, self.side)
+        channelOpenedActors = bridgeActorsCreated + opensActorsCreated
 
         friends = _FindFriends().findFriends(ptype)
         if ptype.isManaged():
@@ -2497,7 +2539,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                            self.prettyside)),
                 Whitespace.NL ])
 
-        for actor in bridgeActorsCreated:
+        for actor in channelOpenedActors:
             self.hdrfile.addthings([
                 Whitespace.NL,
                 _makeForwardDeclForActor(actor.ptype, actor.side),
@@ -2563,9 +2605,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ret=Type.BOOL,
                 virtual=1, pure=1)))
 
-        for actor in bridgeActorsCreated:
-            # add the Alloc interface for actors created when this
-            # protocol is bridged to another
+        for actor in channelOpenedActors:
+            # add the Alloc interface for actors created when a
+            # new channel is opened
             actortype = _cxxBareType(actor.asType(), actor.side)
             self.cls.addstmt(StmtDecl(MethodDecl(
                 _allocMethod(actor.ptype).name,
@@ -2767,9 +2809,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         for md in p.messageDecls:
             self.visitMessageDecl(md)
 
-        # Handlers for the creation of "bridge" actors
-        if len(bridgeActorsCreated):
-            self.makeBridgeHandlers(bridgeActorsCreated)
+        # Handlers for the creation of actors when a new channel is
+        # opened
+        if len(channelOpenedActors):
+            self.makeChannelOpenedHandlers(channelOpenedActors)
 
         # add default cases
         default = StmtBlock()
@@ -3755,7 +3798,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return case
 
 
-    def makeBridgeHandlers(self, bridgeActors):
+    def makeChannelOpenedHandlers(self, actors):
         handlers = StmtBlock()
 
         # unpack the transport descriptor et al.
@@ -3779,9 +3822,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         def makeHandlerCase(actor):
             case = StmtBlock()
-            if actor.side is 'parent':  mode = 'SERVER'
-            elif actor.side is 'child': mode = 'CLIENT'
-            modevar = ExprVar('Transport::MODE_'+ mode)
+            modevar = _sideToTransportMode(actor.side)
             tvar = ExprVar('t')
             iffailopen = StmtIf(ExprNot(ExprAssn(
                 tvar,
@@ -3803,7 +3844,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             return CaseLabel(_protocolId(actor.ptype).name), case
 
         pswitch = StmtSwitch(pvar)
-        for actor in bridgeActors:
+        for actor in actors:
             label, case = makeHandlerCase(actor)
             pswitch.addcase(label, case)
 
