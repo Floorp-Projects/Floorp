@@ -531,9 +531,11 @@ var BrowserUI = {
       DownloadsView.init();
       ConsoleView.init();
 
-      // Pre-start the content process
-      Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-          .ensureContentProcess();
+      if (Services.prefs.getBoolPref("browser.tabs.remote")) {
+          // Pre-start the content process
+          Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+                                           .ensureContentProcess();
+      }
 
 #ifdef MOZ_SERVICES_SYNC
       // Init the sync system
