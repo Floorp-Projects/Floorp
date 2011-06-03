@@ -1823,6 +1823,9 @@ pref("gfx.font_rendering.cleartype_params.rendering_mode", -1);
 // be forced to use "GDI Classic" ClearType mode, ignoring the value
 // of gfx.font_rendering.cleartype_params.rendering_mode.
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families", "");
+// The maximum size at which we will force GDI classic mode using
+// force_gdi_classic_for_families.
+pref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size", 0);
 
 pref("ui.key.menuAccessKeyFocuses", true);
 

@@ -90,7 +90,7 @@ protected:
 
     PRBool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics);
 
-    void ComputeMetrics();
+    void ComputeMetrics(AntialiasOption anAAOption);
 
     PRBool HasBitmapStrikeForSize(PRUint32 aSize);
 
@@ -103,6 +103,7 @@ protected:
     static void DestroyBlobFunc(void* userArg);
 
     DWRITE_MEASURING_MODE GetMeasuringMode();
+    bool GetForceGDIClassic();
 
     nsRefPtr<IDWriteFontFace> mFontFace;
     cairo_font_face_t *mCairoFontFace;
