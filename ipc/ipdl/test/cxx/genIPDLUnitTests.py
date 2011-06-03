@@ -37,30 +37,50 @@
 
 import string, sys
 
+def usage():
+    print >>sys.stderr, """
+%s template_file -t unit_tests... -e extra_protocols...
+
+  TEMPLATE_FILE is used to generate to generate the unit-tester .cpp
+  UNIT_TESTS are the top-level protocols defining unit tests
+  EXTRA_PROTOCOLS are top-level protocols for subprocesses that can be
+                  spawned in tests but are not unit tests in and of
+                  themselves
+"""% (sys.argv[0])
+    sys.exit(1)
+
 def main(argv):
     template = argv[1]
-    unittests = argv[2:]
+
+    if argv[2] != '-t': usage()
+    i = 3
+    unittests = []
+    while argv[i] != '-e':
+        unittests.append(argv[i])
+        i += 1
+
+    extras = argv[(i+1):]
 
     includes = '\n'.join([
         '#include "%s.h"'% (t) for t in unittests ])
 
 
     enum_values = '\n'.join([
-        '    %s,'% (t) for t in unittests ])
+        '    %s,'% (t) for t in unittests+extras ])
     last_enum = unittests[-1]
 
 
     string_to_enums = '\n'.join([
         '''    else if (!strcmp(aString, "%s"))
-        return %s;'''% (t, t) for t in unittests ])
+        return %s;'''% (t, t) for t in unittests+extras ])
 
     enum_to_strings = '\n'.join([
         '''    case %s:
-        return "%s";'''%(t, t) for t in unittests ])
+        return "%s";'''%(t, t) for t in unittests+extras ])
 
     parent_delete_cases = '\n'.join([
 '''    case %s: {
-           delete reinterpret_cast<mozilla::_ipdltest::%sParent*>(gParentActor);
+           delete reinterpret_cast<%sParent*>(gParentActor);
            return;
        }
 '''% (t, t) for t in unittests ])
@@ -77,10 +97,10 @@ def main(argv):
 
     child_delete_cases = '\n'.join([
 '''    case %s: {
-           delete reinterpret_cast<mozilla::_ipdltest::%sChild*>(gChildActor);
+           delete reinterpret_cast<%sChild*>(gChildActor);
            return;
        }
-'''% (t, t) for t in unittests ])
+'''% (t, t) for t in unittests+extras ])
 
 
     child_init_cases = '\n'.join([
@@ -91,7 +111,7 @@ def main(argv):
         (*child)->Open(transport, parent, worker);
         return;
     }
-'''% (t, t, t, t) for t in unittests ])
+'''% (t, t, t, t) for t in unittests+extras ])
 
     templatefile = open(template, 'r')
     sys.stdout.write(
