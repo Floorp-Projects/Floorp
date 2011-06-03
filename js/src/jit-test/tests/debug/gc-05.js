@@ -1,4 +1,3 @@
-// |jit-test| debug
 // If a Debug survives its debuggee, its object cache must still be swept.
 
 var g2arr = []; // non-debuggee globals

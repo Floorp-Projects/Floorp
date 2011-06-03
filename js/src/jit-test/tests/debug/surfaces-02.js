@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Debug.prototype.hooks
 
 load(libdir + 'asserts.js');

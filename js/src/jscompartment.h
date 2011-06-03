@@ -462,8 +462,11 @@ struct JS_FRIEND_API(JSCompartment) {
     const js::Shape              *initialRegExpShape;
     const js::Shape              *initialStringShape;
 
-    bool                         debugMode;  // true iff debug mode on
-    JSCList                      scripts;    // scripts in this compartment
+  private:
+    enum { DebugFromC = 1, DebugFromJS = 2 };
+    uintN                        debugModeBits;  // see debugMode() below
+  public:
+    JSCList                      scripts;        // scripts in this compartment
 
     js::NativeIterCache          nativeIterCache;
 
@@ -528,13 +531,52 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
 
+    /*
+     * There are dueling APIs for debug mode. It can be enabled or disabled via
+     * JS_SetDebugModeForCompartment. It is automatically enabled and disabled
+     * by Debug objects. Therefore debugModeBits has the DebugFromC bit set if
+     * the C API wants debug mode and the DebugFromJS bit set if debuggees is
+     * nonempty.
+     */
+    bool debugMode() const { return !!debugModeBits; }
+
+    /*
+     * True if any scripts from this compartment are on the JS stack in the
+     * calling thread. cx is a context in the calling thread, and it is assumed
+     * that no other thread is using this compartment.
+     */
+    bool haveScriptsOnStack(JSContext *cx);
+
+    bool setDebugModeFromC(JSContext *cx, bool b);
+
+    /* This is called only when debugMode() has just toggled. */
+    void updateForDebugMode(JSContext *cx);
+
     js::GlobalObjectSet &getDebuggees() { return debuggees; }
-    bool addDebuggee(js::GlobalObject *global) {
-        JS_ASSERT(debugMode);
-        return !!debuggees.put(global);
+
+    bool addDebuggee(JSContext *cx, js::GlobalObject *global) {
+        bool wasEnabled = debugMode();
+        if (!wasEnabled && haveScriptsOnStack(cx)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
+            return false;
+        }
+        if (!debuggees.put(global)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        debugModeBits |= DebugFromJS;
+        if (!wasEnabled)
+            updateForDebugMode(cx);
+        return true;
     }
-    void removeDebuggee(js::GlobalObject *global) {
+
+    void removeDebuggee(JSContext *cx, js::GlobalObject *global) {
+        JS_ASSERT(debuggees.has(global));
         debuggees.remove(global);
+        if (debuggees.empty()) {
+            debugModeBits &= ~DebugFromJS;
+            updateForDebugMode(cx);
+        }
     }
 };
 

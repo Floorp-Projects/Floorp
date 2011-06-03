@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Uncaught exceptions in the debugger itself are delivered to the
 // uncaughtExceptionHook.
 

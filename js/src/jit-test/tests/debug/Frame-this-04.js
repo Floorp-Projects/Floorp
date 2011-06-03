@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Debug.Frame.prototype.this in functions, with object values
 
 function classOf(obj) {

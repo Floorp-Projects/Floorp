@@ -1,6 +1,4 @@
-// |jit-test| debug
 // Direct eval code under evalWithbindings sees both the bindings and the enclosing scope.
-
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 var hits = 0;

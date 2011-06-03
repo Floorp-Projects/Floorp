@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Destructuring arguments.
 
 var g = newGlobal('new-compartment');

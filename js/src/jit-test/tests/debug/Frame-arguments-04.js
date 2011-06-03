@@ -1,4 +1,3 @@
-// |jit-test| debug
 // frame.arguments works for all live frames
 
 var g = newGlobal('new-compartment');

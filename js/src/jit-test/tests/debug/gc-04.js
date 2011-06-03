@@ -1,4 +1,3 @@
-// |jit-test| debug
 // Storing a Debug.Object as a key in a WeakMap protects it from GC as long as
 // the referent is alive.
 

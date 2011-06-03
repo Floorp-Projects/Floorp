@@ -1,6 +1,4 @@
-// |jit-test| debug
 // Debug.Object.prototype.name
-
 var g = newGlobal('new-compartment');
 var dbg = Debug(g);
 var name, hits;

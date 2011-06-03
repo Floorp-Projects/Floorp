@@ -1,4 +1,3 @@
-// |jit-test| debug
 // frame.eval throws if frame is a generator frame that isn't currently on the stack
 
 load(libdir + "asserts.js");

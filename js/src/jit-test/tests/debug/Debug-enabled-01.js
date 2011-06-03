@@ -1,5 +1,3 @@
-// |jit-test| debug
-
 var desc = Object.getOwnPropertyDescriptor(Debug.prototype, "enabled");
 assertEq(typeof desc.get, 'function');
 assertEq(typeof desc.set, 'function');
