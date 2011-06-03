@@ -78,7 +78,7 @@ typedef struct _cairo_d2d_device cairo_d2d_device_t;
 
 struct _cairo_d2d_surface {
     _cairo_d2d_surface() : d2d_clip(NULL), clipping(false), isDrawing(false),
-	textRenderingInit(false)
+            textRenderingState(TEXT_RENDERING_UNINITIALIZED)
     {
 	_cairo_clip_init (&this->clip);
     }
@@ -128,7 +128,12 @@ struct _cairo_d2d_surface {
     /** Indicates if our render target is currently in drawing mode */
     bool isDrawing;
     /** Indicates if text rendering is initialized */
-    bool textRenderingInit;
+    enum TextRenderingState {
+        TEXT_RENDERING_UNINITIALIZED,
+        TEXT_RENDERING_NORMAL,
+        TEXT_RENDERING_GDI_CLASSIC
+    };
+    TextRenderingState textRenderingState;
 
     RefPtr<ID3D10RenderTargetView> buffer_rt_view;
     RefPtr<ID3D10ShaderResourceView> buffer_sr_view;
