@@ -5,6 +5,7 @@ namespace _ipdltest {
 
 
 protocol PTestOpens {
+    // This channel is opened and parked on a non-main thread
     child opens PTestOpensOpened;
 
 child:
