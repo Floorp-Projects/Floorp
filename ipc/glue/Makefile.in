@@ -68,7 +68,19 @@ EXPORTS_mozilla/ipc = \
   Shmem.h \
   SyncChannel.h \
   ScopedXREEmbed.h \
+  Transport.h \
   $(NULL)
+
+ifeq ($(OS_ARCH),WINNT) #{
+EXPORTS_mozilla/ipc += \
+  Transport_win.h \
+  $(NULL)
+else
+# POSIX
+EXPORTS_mozilla/ipc += \
+  Transport_posix.h \
+  $(NULL)
+endif #}
 
 ifeq ($(OS_TARGET),Android)
 # Android has its own,
@@ -93,15 +105,19 @@ CPPSRCS += \
   SyncChannel.cpp \
   $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(OS_ARCH),WINNT) #{
 CPPSRCS += \
   SharedMemory_windows.cpp \
+  Transport_win.cpp \
   WindowsMessageLoop.cpp \
   $(NULL)
 else
-# This generic code works on android.
-CPPSRCS += SharedMemory_posix.cpp
-endif
+# POSIX
+CPPSRCS += \
+  SharedMemory_posix.cpp \
+  Transport_posix.cpp \
+  $(NULL)
+endif #}
 
 ifeq ($(OS_TARGET),Android)
 CPPSRCS += SharedMemoryBasic_android.cpp
