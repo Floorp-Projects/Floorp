@@ -45,6 +45,7 @@
 #include "cairo-win32.h"
 
 #include "gfxPlatformFontList.h"
+#include "gfxPlatform.h"
 
 
 /**
@@ -238,6 +239,8 @@ public:
 
     virtual void GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray);
 
+    gfxFloat GetForceGDIClassicMaxFontSize() { return mForceGDIClassicMaxFontSize; }
+
 private:
     friend class gfxDWriteFontFamily;
 
@@ -261,6 +264,8 @@ private:
 
     PRBool mInitialized;
     virtual nsresult DelayedInitFontList();
+
+    gfxFloat mForceGDIClassicMaxFontSize;
 
     // whether to use GDI font table access routines
     PRBool mGDIFontTableAccess;

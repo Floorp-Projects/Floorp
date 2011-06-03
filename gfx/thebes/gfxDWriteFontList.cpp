@@ -499,7 +499,7 @@ gfxDWriteFontEntry::IsCJKFont()
 // gfxDWriteFontList
 
 gfxDWriteFontList::gfxDWriteFontList()
-    : mInitialized(PR_FALSE)
+    : mInitialized(PR_FALSE), mForceGDIClassicMaxFontSize(0.0)
 {
     mFontSubstitutes.Init();
 }
@@ -967,6 +967,12 @@ gfxDWriteFontList::DelayedInitFontList()
                 static_cast<gfxDWriteFontFamily*>(family)->SetForceGDIClassic(true);
             }
         }
+    }
+    PRInt32 forceGDIClassicMaxFontSize = 0;
+    rv = pref->GetIntPref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size",
+                          &forceGDIClassicMaxFontSize);
+    if (NS_SUCCEEDED(rv)) {
+        mForceGDIClassicMaxFontSize = forceGDIClassicMaxFontSize;
     }
 
     StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);

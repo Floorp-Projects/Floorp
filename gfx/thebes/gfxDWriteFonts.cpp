@@ -149,17 +149,7 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
         return;
     }
 
-    if ((anAAOption == gfxFont::kAntialiasDefault &&
-         UsingClearType() &&
-         GetMeasuringMode() == DWRITE_MEASURING_MODE_NATURAL) ||
-        anAAOption == gfxFont::kAntialiasSubpixel)
-    {
-        mUseSubpixelPositions = PR_TRUE;
-        // note that this may be reset to FALSE if we determine that a bitmap
-        // strike is going to be used
-    }
-
-    ComputeMetrics();
+    ComputeMetrics(anAAOption);
 
     if (FontCanSupportHarfBuzz()) {
         mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
@@ -215,7 +205,7 @@ gfxDWriteFont::GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics)
 }
 
 void
-gfxDWriteFont::ComputeMetrics()
+gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
 {
     DWRITE_FONT_METRICS fontMetrics;
     if (!(mFontEntry->Weight() == 900 &&
@@ -232,6 +222,17 @@ gfxDWriteFont::ComputeMetrics()
         mAdjustedSize = mStyle.GetAdjustedSize(aspect);
     } else {
         mAdjustedSize = mStyle.size;
+    }
+
+    // Note that GetMeasuringMode depends on mAdjustedSize
+    if ((anAAOption == gfxFont::kAntialiasDefault &&
+         UsingClearType() &&
+         GetMeasuringMode() == DWRITE_MEASURING_MODE_NATURAL) ||
+        anAAOption == gfxFont::kAntialiasSubpixel)
+    {
+        mUseSubpixelPositions = PR_TRUE;
+        // note that this may be reset to FALSE if we determine that a bitmap
+        // strike is going to be used
     }
 
     gfxDWriteFontEntry *fe =
@@ -600,7 +601,7 @@ gfxDWriteFont::CairoScaledFont()
         gfxDWriteFontEntry *fe =
             static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
         cairo_dwrite_scaled_font_set_force_GDI_classic(mCairoScaledFont,
-                                                       fe->GetForceGDIClassic());
+                                                       GetForceGDIClassic());
     }
 
     NS_ASSERTION(mAdjustedSize == 0.0 ||
@@ -689,10 +690,18 @@ gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
     return width;
 }
 
+bool
+gfxDWriteFont::GetForceGDIClassic()
+{
+    return static_cast<gfxDWriteFontEntry*>(mFontEntry.get())->GetForceGDIClassic() &&
+        GetAdjustedSize() <=
+            gfxDWriteFontList::PlatformFontList()->GetForceGDIClassicMaxFontSize();
+}
+
 DWRITE_MEASURING_MODE
 gfxDWriteFont::GetMeasuringMode()
 {
-    return static_cast<gfxDWriteFontEntry*>(mFontEntry.get())->GetForceGDIClassic()
+    return GetForceGDIClassic()
         ? DWRITE_MEASURING_MODE_GDI_CLASSIC
         : gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode();
 }
