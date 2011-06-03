@@ -1160,7 +1160,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
         staticLevel = caller->script()->staticLevel + 1;
 
 #ifdef DEBUG
-        jsbytecode *callerPC = caller->pc(cx);
+        jsbytecode *callerPC = caller->pcQuadratic(cx);
         JS_ASSERT_IF(caller->isFunctionFrame(), caller->fun()->isHeavyweight());
         JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
 #endif
@@ -1331,19 +1331,7 @@ PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx)
      * fp->script()->compartment() != fp->compartment().
      */
 
-    JSPrincipals *calleePrincipals = call.callee().principals(cx);
-
-#ifdef DEBUG
-    if (calleePrincipals) {
-        if (StackFrame *caller = js_GetScriptedCaller(cx, NULL)) {
-            if (JSPrincipals *callerPrincipals = caller->scopeChain().principals(cx)) {
-                JS_ASSERT(callerPrincipals->subsume(callerPrincipals, calleePrincipals));
-            }
-        }
-    }
-#endif
-
-    return calleePrincipals;
+    return call.callee().principals(cx);
 }
 
 }  /* namespace js */

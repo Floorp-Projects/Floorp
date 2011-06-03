@@ -1459,13 +1459,6 @@ class AutoCheckRequestDepth {
 # define CHECK_REQUEST_THREAD(cx)   ((void) 0)
 #endif
 
-static inline uintN
-FramePCOffset(JSContext *cx, js::StackFrame* fp)
-{
-    jsbytecode *pc = fp->hasImacropc() ? fp->imacropc() : fp->pc(cx);
-    return uintN(pc - fp->script()->code);
-}
-
 static inline JSAtom **
 FrameAtomBase(JSContext *cx, js::StackFrame *fp)
 {

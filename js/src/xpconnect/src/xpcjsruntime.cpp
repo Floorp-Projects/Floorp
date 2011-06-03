@@ -1286,6 +1286,25 @@ GetPerCompartmentSize(PRInt64 (*f)(JSCompartment *c))
     return n;
 }
 
+static PRInt64
+GetJSStack(void *data)
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    PRInt64 n = 0;
+    for (js::ThreadDataIter i(rt); !i.empty(); i.popFront())
+        n += i.threadData()->stackSpace.committedSize();
+    return n;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSStack,
+    "explicit/js/stack",
+    MR_MAPPED,
+    "Memory used for the JavaScript stack.  This is the committed portion "
+    "of the stack;  any uncommitted portion is not measured because it "
+    "hardly costs anything.",
+    GetJSStack,
+    NULL)
+
 #ifdef JS_METHODJIT
 
 static PRInt64
@@ -1458,6 +1477,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         mJSRuntime->setCustomGCChunkAllocator(&gXPCJSChunkAllocator);
 
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStack));
 #ifdef JS_METHODJIT
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitCode));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitData));

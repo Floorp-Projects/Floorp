@@ -1742,11 +1742,10 @@ ParseXMLSource(JSContext *cx, JSString *src)
     filename = NULL;
     lineno = 1;
     if (!i.done()) {
-        StackFrame *fp = i.fp();
         op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
-            filename = fp->script()->filename;
-            lineno = js_FramePCToLineNumber(cx, fp);
+            filename = i.fp()->script()->filename;
+            lineno = js_FramePCToLineNumber(cx, i.fp(), i.pc());
             for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
                     --lineno;
