@@ -42,8 +42,9 @@
 interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIDOMEvent;
+interface nsIDOMClientRect;
 
-[scriptable, uuid(548a9e3f-af78-42b0-a260-035ece15c19f)]
+[scriptable, uuid(6AD1B199-95D3-448B-98D7-896BCE3A1DCD)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
@@ -183,6 +184,12 @@ interface nsIPopupBoxObject : nsISupports
    * menu, the parent menu.
    */
   readonly attribute nsIDOMElement anchorNode;
+
+  /*
+   * Retrieve the screen rectangle of the popup, including the area occupied by
+   * any titlebar or borders present.
+   */
+  nsIDOMClientRect getOuterScreenRect();
 };
 
 %{C++

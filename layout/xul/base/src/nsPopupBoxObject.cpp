@@ -50,6 +50,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
+#include "nsClientRect.h"
 
 class nsPopupBoxObject : public nsBoxObject,
                          public nsIPopupBoxObject
@@ -286,6 +287,39 @@ nsPopupBoxObject::GetAnchorNode(nsIDOMElement** aAnchor)
   nsIContent* anchor = menuPopupFrame->GetAnchor();
   if (anchor)
     CallQueryInterface(anchor, aAnchor);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupBoxObject::GetOuterScreenRect(nsIDOMClientRect** aRect)
+{
+  nsClientRect* rect = new nsClientRect();
+  if (!rect)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aRect = rect);
+
+  nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
+  if (!menuPopupFrame)
+    return NS_OK;
+
+  // Return an empty rectangle if the popup is not open.
+  nsPopupState state = menuPopupFrame->PopupState();
+  if (state != ePopupOpen && state != ePopupOpenAndVisible)
+    return NS_OK;
+
+  nsIView* view = menuPopupFrame->GetView();
+  if (view) {
+    nsIWidget* widget = view->GetWidget();
+    if (widget) {
+      nsIntRect screenRect;
+      widget->GetScreenBounds(screenRect);
+
+      PRInt32 pp = menuPopupFrame->PresContext()->AppUnitsPerDevPixel();
+      rect->SetLayoutRect(screenRect.ToAppUnits(pp));
+    }
+  }
 
   return NS_OK;
 }

@@ -160,6 +160,14 @@
         ]]>
         </body>
       </method>
+
+      <method name="getOuterScreenRect">
+        <body>
+        <![CDATA[
+          return this.popupBoxObject.getOuterScreenRect();
+        ]]>
+        </body>
+      </method>
     </implementation>     
 
   </binding>
