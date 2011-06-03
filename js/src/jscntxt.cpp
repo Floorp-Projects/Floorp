@@ -767,10 +767,10 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
      * Walk stack until we find a frame that is associated with some script
      * rather than a native frame.
      */
-    for (StackFrame *fp = js_GetTopStackFrame(cx); fp; fp = fp->prev()) {
-        if (fp->pc(cx)) {
-            report->filename = fp->script()->filename;
-            report->lineno = js_FramePCToLineNumber(cx, fp);
+    for (FrameRegsIter iter(cx); !iter.done(); ++iter) {
+        if (iter.fp()->isScriptFrame()) {
+            report->filename = iter.fp()->script()->filename;
+            report->lineno = js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
             break;
         }
     }
