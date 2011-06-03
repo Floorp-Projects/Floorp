@@ -2437,6 +2437,14 @@ nsDownload::OnRefreshAttempted(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDownload::OnLocationChange2(nsIWebProgress *aWebProgress,
+                              nsIRequest *aRequest, nsIURI *aLocation,
+                              PRUint32 aFlags)
+{
+  return OnLocationChange(aWebProgress, aRequest, aLocation);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIWebProgressListener
 
