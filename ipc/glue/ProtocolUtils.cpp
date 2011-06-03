@@ -45,6 +45,7 @@
 #include "mozilla/ipc/Transport.h"
 
 using namespace base;
+using namespace IPC;
 
 namespace mozilla {
 namespace ipc {
@@ -112,8 +113,43 @@ Bridge(const PrivateIPDLInterface&,
 }
 
 bool
+Open(const PrivateIPDLInterface&,
+     AsyncChannel* aOpenerChannel, ProcessHandle aOtherProcess,
+     Transport::Mode aOpenerMode,
+     ProtocolId aProtocol)
+{
+  bool isParent = (Transport::MODE_SERVER == aOpenerMode);
+  ProcessHandle thisHandle = GetCurrentProcessHandle();
+  ProcessHandle parentHandle = isParent ? thisHandle : aOtherProcess;
+  ProcessHandle childHandle = !isParent ? thisHandle : aOtherProcess;
+  ProcessId parentId = GetProcId(parentHandle);
+  ProcessId childId = GetProcId(childHandle);
+  if (!parentId || !childId) {
+    return false;
+  }
+
+  TransportDescriptor parentSide, childSide;
+  if (!CreateTransport(parentHandle, childHandle,
+                       &parentSide, &childSide)) {
+    return false;
+  }
+
+  Message* parentMsg = new ChannelOpened(parentSide, childId, aProtocol);
+  Message* childMsg = new ChannelOpened(childSide, parentId, aProtocol);
+  nsAutoPtr<Message> messageForUs(isParent ? parentMsg : childMsg);
+  nsAutoPtr<Message> messageForOtherSide(!isParent ? parentMsg : childMsg);
+  if (!aOpenerChannel->Echo(messageForUs.forget()) ||
+      !aOpenerChannel->Send(messageForOtherSide.forget())) {
+    CloseDescriptor(parentSide);
+    CloseDescriptor(childSide);
+    return false;
+  }
+  return true;
+}
+
+bool
 UnpackChannelOpened(const PrivateIPDLInterface&,
-                    const IPC::Message& aMsg,
+                    const Message& aMsg,
                     TransportDescriptor* aTransport,
                     ProcessId* aOtherProcess,
                     ProtocolId* aProtocol)
