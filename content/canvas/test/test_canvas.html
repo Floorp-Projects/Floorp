@@ -13276,10 +13276,10 @@ var ctx = canvas.getContext('2d');
 ctx.translate(50, 0);
 ctx.rect(0, 0, 20, 20);
 ok(ctx.isPointInPath(-40, 10) === false, "ctx.isPointInPath(-40, 10) === false");
-todo(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
+ok(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
 ok(ctx.isPointInPath(49, 10) === false, "ctx.isPointInPath(49, 10) === false");
-todo(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
-todo(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
+ok(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
+ok(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
 ok(ctx.isPointInPath(71, 10) === false, "ctx.isPointInPath(71, 10) === false");
 
 
@@ -13301,10 +13301,10 @@ var ctx = canvas.getContext('2d');
 ctx.rect(50, 0, 20, 20);
 ctx.translate(50, 0);
 ok(ctx.isPointInPath(-40, 10) === false, "ctx.isPointInPath(-40, 10) === false");
-todo(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
+ok(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
 ok(ctx.isPointInPath(49, 10) === false, "ctx.isPointInPath(49, 10) === false");
-todo(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
-todo(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
+ok(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
+ok(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
 ok(ctx.isPointInPath(71, 10) === false, "ctx.isPointInPath(71, 10) === false");
 
 
@@ -13328,8 +13328,8 @@ ctx.rect(-70, 0, 20, 20);
 ok(ctx.isPointInPath(-40, 10) === false, "ctx.isPointInPath(-40, 10) === false");
 ok(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
 ok(ctx.isPointInPath(49, 10) === false, "ctx.isPointInPath(49, 10) === false");
-todo(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
-todo(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
+ok(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
+ok(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
 ok(ctx.isPointInPath(71, 10) === false, "ctx.isPointInPath(71, 10) === false");
 
 
