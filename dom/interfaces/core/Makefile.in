@@ -60,7 +60,6 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMNamedNodeMap.idl			\
 	nsIDOMNode.idl				\
 	nsIDOMNodeList.idl			\
-	nsIDOMNotation.idl			\
 	nsIDOMProcessingInstruction.idl		\
 	nsIDOMText.idl				\
 	$(NULL)
