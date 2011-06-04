@@ -7,9 +7,9 @@ script regress-178389.js
 script regress-222029-001.js
 script regress-222029-002.js
 script regress-292215.js
-silentfail script regress-338001.js
-silentfail script regress-338121-01.js
-silentfail script regress-338121-02.js
-silentfail script regress-338121-03.js
+#silentfail script regress-338001.js # disabled pending bug 657444
+#silentfail script regress-338121-01.js # disabled pending bug 657444
+#silentfail script regress-338121-02.js # disabled pending bug 657444
+#silentfail script regress-338121-03.js # disabled pending bug 657444
 script regress-344052.js
 script regress-364023.js
