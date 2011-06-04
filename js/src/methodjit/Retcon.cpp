@@ -256,9 +256,12 @@ Recompiler::expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *in
     /* Check if the VMFrame returns into the inlined frame. */
     if (f->stubRejoin && f->fp() == fp) {
         /* The VMFrame is calling CompileFunction. */
-        JS_ASSERT(f->stubRejoin != REJOIN_NATIVE && f->stubRejoin != REJOIN_NATIVE_LOWERED);
+        JS_ASSERT(f->stubRejoin != REJOIN_NATIVE &&
+                  f->stubRejoin != REJOIN_NATIVE_LOWERED &&
+                  f->stubRejoin != REJOIN_NATIVE_PATCHED);
         innerfp->setRejoin(StubRejoin((RejoinState) f->stubRejoin));
         *frameAddr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
+        f->stubRejoin = 0;
     }
     if (*frameAddr == codeStart + inlined->codeOffset) {
         /* The VMFrame returns directly into the expanded frame. */
@@ -418,18 +421,23 @@ Recompiler::recompile(bool resetUses)
         StackFrame *fp = f->fp();
         void **addr = f->returnAddressLocation();
         RejoinState rejoin = (RejoinState) f->stubRejoin;
-        if (rejoin == REJOIN_NATIVE || rejoin == REJOIN_NATIVE_LOWERED) {
-            // Native call.
+        if (rejoin == REJOIN_NATIVE ||
+            rejoin == REJOIN_NATIVE_LOWERED) {
+            /* Native call. */
             if (fp->script() == script && fp->isConstructing())
                 patchNative(cx, script->jitCtor, fp, fp->pc(cx, NULL), NULL, rejoin);
             else if (fp->script() == script)
                 patchNative(cx, script->jitNormal, fp, fp->pc(cx, NULL), NULL, rejoin);
+            f->stubRejoin = REJOIN_NATIVE_PATCHED;
+        } else if (rejoin == REJOIN_NATIVE_PATCHED) {
+            /* Already patched, don't do anything. */
         } else if (rejoin) {
             /* Recompilation triggered by CompileFunction. */
             if (fp->script() == script) {
                 fp->setRejoin(StubRejoin(rejoin));
                 *addr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
             }
+            f->stubRejoin = 0;
         } else if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
             patchCall(script->jitCtor, fp, addr);
         } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
