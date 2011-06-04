@@ -3009,7 +3009,7 @@ TypeObject::clearNewScript(JSContext *cx)
             }
 
             if (!finished)
-                obj->rollbackProperties(numProperties);
+                obj->rollbackProperties(cx, numProperties);
         }
     }
 
