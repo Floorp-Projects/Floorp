@@ -317,15 +317,12 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword) -1;
 #endif
-    cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble),
-                     &cx->scriptStackQuota);
-    JS_InitArenaPool(&cx->regExpPool, "regExp", TEMP_POOL_CHUNK_SIZE, sizeof(int),
-                     &cx->scriptStackQuota);
+    JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble));
+    JS_InitArenaPool(&cx->regExpPool, "regExp", TEMP_POOL_CHUNK_SIZE, sizeof(int));
 
     JS_ASSERT(cx->resolveFlags == 0);
 
@@ -828,13 +825,6 @@ js_ReportOutOfMemory(JSContext *cx)
         AutoAtomicIncrement incr(&cx->runtime->inOOMReport);
         onError(cx, msg, &report);
     }
-}
-
-void
-js_ReportOutOfScriptQuota(JSContext *maybecx)
-{
-    if (maybecx)
-        JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL, JSMSG_SCRIPT_STACK_QUOTA);
 }
 
 JS_FRIEND_API(void)

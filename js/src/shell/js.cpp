@@ -141,8 +141,6 @@ static PRUintn gStackBaseThreadIndex;
 static jsuword gStackBase;
 #endif
 
-static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
-
 /*
  * Limit the timeout to 30 minutes to prevent an overflow on platfoms
  * that represent the time internally in microseconds using 32-bit int.
@@ -390,7 +388,6 @@ static void
 SetContextOptions(JSContext *cx)
 {
     JS_SetNativeStackQuota(cx, gMaxStackSize);
-    JS_SetScriptStackQuota(cx, gScriptStackQuota);
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
 
@@ -3112,21 +3109,6 @@ StringsAreUTF8(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-StackQuota(JSContext *cx, uintN argc, jsval *vp)
-{
-    uint32 n;
-
-    if (argc == 0)
-        return JS_NewNumberValue(cx, (double) gScriptStackQuota, vp);
-    if (!JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[0], &n))
-        return JS_FALSE;
-    gScriptStackQuota = n;
-    JS_SetScriptStackQuota(cx, gScriptStackQuota);
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
 static const char* badUTF8 = "...\xC0...";
 static const char* bigUTF8 = "...\xFB\xBF\xBF\xBF\xBF...";
 static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
@@ -4851,7 +4833,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("untrap",         Untrap,         2,0),
     JS_FN("line2pc",        LineToPC,       0,0),
     JS_FN("pc2line",        PCToLine,       0,0),
-    JS_FN("stackQuota",     StackQuota,     0,0),
     JS_FN("stringsAreUTF8", StringsAreUTF8, 0,0),
     JS_FN("testUTF8",       TestUTF8,       1,0),
     JS_FN("throwError",     ThrowError,     0,0),
@@ -4980,7 +4961,6 @@ static const char *const shell_help_messages[] = {
 "untrap(fun[, pc])        Remove a trap",
 "line2pc([fun,] line)     Map line number to PC",
 "pc2line(fun[, pc])       Map PC to line number",
-"stackQuota([number])     Query/set script stack quota",
 "stringsAreUTF8()         Check if strings are UTF-8 encoded",
 "testUTF8(mode)           Perform UTF-8 tests (modes are 1 to 4)",
 "throwError()             Throw an error from JS_ReportError",
