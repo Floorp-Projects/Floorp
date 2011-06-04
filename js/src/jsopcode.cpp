@@ -2149,9 +2149,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 else if (op == JSOP_GETELEM2)
                     saveop = JSOP_GETELEM;
             }
-            // :FIXME: does later code depend on this assert? It can trip with JOF_TYPECHECK opcodes.
-            //LOCAL_ASSERT(js_CodeSpec[saveop].length == oplen ||
-            //             JOF_TYPE(format) == JOF_SLOTATOM);
 
             jp->dvgfence = NULL;
         }
