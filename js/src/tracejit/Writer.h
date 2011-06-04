@@ -111,7 +111,7 @@ enum LC_TMBits {
  * - ACCSET_OBJ_CLASP:     The 'clasp'    field of all JSObjects.
  * - ACCSET_OBJ_FLAGS:     The 'flags'    field of all JSObjects.
  * - ACCSET_OBJ_SHAPE:     The 'shape'    field of all JSObjects.
- * - ACCSET_OBJ_TYPE:      The 'type'     field of all JSObjects.
+ * - ACCSET_OBJ_TYPE:      The 'type'     field of all JSObjects, and the 'proto' field of TypeObjects.
  * - ACCSET_OBJ_PARENT:    The 'parent'   field of all JSObjects.
  * - ACCSET_OBJ_PRIVATE:   The 'private'  field of all JSObjects.
  * - ACCSET_OBJ_CAPACITY:  The 'capacity' or 'initializedLength' field of all JSObjects.
@@ -493,7 +493,7 @@ class Writer
     nj::LIns *ldpObjProto(nj::LIns *obj) const {
         nj::LIns *type = name(lir->insLoad(nj::LIR_ldp, obj, offsetof(JSObject, type), ACCSET_OBJ_TYPE),
                               "type");
-        return name(lir->insLoad(nj::LIR_ldp, type, offsetof(types::TypeObject, proto), 0),
+        return name(lir->insLoad(nj::LIR_ldp, type, offsetof(types::TypeObject, proto), ACCSET_OBJ_TYPE),
                     "proto");
     }
 

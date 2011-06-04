@@ -138,6 +138,35 @@ GetGCObjectKind(size_t numSlots, bool isArray = false)
     return slotsToThingKind[numSlots];
 }
 
+static inline bool
+IsBackgroundFinalizeKind(FinalizeKind kind)
+{
+    JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
+    return kind % 2 == 1;
+}
+
+static inline FinalizeKind
+GetBackgroundFinalizeKind(FinalizeKind kind)
+{
+    JS_ASSERT(!IsBackgroundFinalizeKind(kind));
+    return (FinalizeKind) (kind + 1);
+}
+
+static inline bool
+CanBumpFinalizeKind(FinalizeKind kind)
+{
+    JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
+    return (kind + 2) <= FINALIZE_OBJECT_LAST;
+}
+
+/* Get the next larger size for an object, keeping BACKGROUND consistent. */
+static inline FinalizeKind
+BumpFinalizeKind(FinalizeKind kind)
+{
+    JS_ASSERT(CanBumpFinalizeKind(kind));
+    return (FinalizeKind) (kind + 2);
+}
+
 /* Get the number of fixed slots and initial capacity associated with a kind. */
 static inline size_t
 GetGCKindSlots(FinalizeKind thingKind)

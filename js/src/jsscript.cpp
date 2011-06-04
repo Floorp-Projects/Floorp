@@ -1565,6 +1565,18 @@ js_DestroyCachedScript(JSContext *cx, JSScript *script)
 void
 js_TraceScript(JSTracer *trc, JSScript *script)
 {
+    JS_ASSERT_IF(trc->context->runtime->gcCurrentCompartment, IS_GC_MARKING_TRACER(trc));
+
+    /*
+     * During per-compartment GCs we may attempt to trace scripts that are out
+     * of the target compartment. Ignore such attempts, marking the children is
+     * wasted work and if we mark external type objects they will not get
+     * unmarked at the end of the GC cycle.
+     */
+    JSRuntime *rt = trc->context->runtime;
+    if (rt->gcCurrentCompartment && rt->gcCurrentCompartment != script->compartment)
+        return;
+
     JSAtomMap *map = &script->atomMap;
     MarkAtomRange(trc, map->length, map->vector, "atomMap");
 

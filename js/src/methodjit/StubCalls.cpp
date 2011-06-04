@@ -772,7 +772,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      * requests in server-side JS.
      */
     if (obj->getParent() != obj2) {
-        obj = CloneFunctionObject(cx, fun, obj2);
+        obj = CloneFunctionObject(cx, fun, obj2, true);
         if (!obj)
             THROW();
     }
@@ -1478,7 +1478,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
     JSObject *obj = FUN_OBJECT(fun);
 
     if (FUN_NULL_CLOSURE(fun)) {
-        obj = CloneFunctionObject(f.cx, fun, &f.fp()->scopeChain());
+        obj = CloneFunctionObject(f.cx, fun, &f.fp()->scopeChain(), true);
         if (!obj)
             THROWV(NULL);
     } else {
@@ -1488,7 +1488,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
             THROWV(NULL);
 
         if (obj->getParent() != parent) {
-            obj = CloneFunctionObject(f.cx, fun, parent);
+            obj = CloneFunctionObject(f.cx, fun, parent, true);
             if (!obj)
                 THROWV(NULL);
         }
@@ -1617,7 +1617,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
             THROWV(NULL);
     }
 
-    obj = CloneFunctionObject(f.cx, fun, parent);
+    obj = CloneFunctionObject(f.cx, fun, parent, true);
     if (!obj)
         THROWV(NULL);
 
