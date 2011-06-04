@@ -263,6 +263,13 @@ enum RejoinState {
     REJOIN_NATIVE,
     REJOIN_NATIVE_LOWERED,
 
+    /*
+     * Dummy rejoin stored in VMFrames to indicate they return into a native
+     * stub (and their FASTCALL return address should not be observed) but
+     * that they have already been patched and can be ignored.
+     */
+    REJOIN_NATIVE_PATCHED,
+
     /* Call returns a payload, which should be pushed before starting next bytecode. */
     REJOIN_PUSH_BOOLEAN,
     REJOIN_PUSH_OBJECT,
