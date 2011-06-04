@@ -56,6 +56,7 @@ NO_PKG_FILES = \
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DIRS += mac
 _APPNAME = $(PKG_BASENAME).pkg
+_BINPATH = /XUL.framework/Versions/Current
 PKG_SKIP_STRIP = 1
 MOZ_PKG_SPECIAL = pkg
 PKG_DMG_SOURCE = $(STAGEPATH)xulrunner-pkg
