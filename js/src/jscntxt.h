@@ -1081,9 +1081,6 @@ struct JSContext
     /* Limit pointer for checking native stack consumption during recursion. */
     jsuword             stackLimit;
 
-    /* Quota on the size of arenas used to compile and execute scripts. */
-    size_t              scriptStackQuota;
-
     /* Data shared by threads in an address space. */
     JSRuntime *const    runtime;
 
@@ -2330,12 +2327,6 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 
 extern void
 js_ReportOutOfMemory(JSContext *cx);
-
-/*
- * Report that cx->scriptStackQuota is exhausted.
- */
-void
-js_ReportOutOfScriptQuota(JSContext *maybecx);
 
 /* JS_CHECK_RECURSION is used outside JS, so JS_FRIEND_API. */
 JS_FRIEND_API(void)
