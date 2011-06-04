@@ -2519,7 +2519,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         AutoArenaAllocator aaa(&cx->tempPool);
         jschar *cp = aaa.alloc<jschar>(args_length + 1);
         if (!cp) {
-            js_ReportOutOfScriptQuota(cx);
+            js_ReportOutOfMemory(cx);
             return false;
         }
         jschar *collected_args = cp;
