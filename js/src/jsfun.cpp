@@ -1518,6 +1518,12 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                             if (IsFunctionObject(v, &clone) &&
                                 GET_FUNCTION_PRIVATE(cx, clone) == fun &&
                                 clone->hasMethodObj(*thisp)) {
+                                /*
+                                 * N.B. If the method barrier was on a function
+                                 * with singleton type, then while crossing the
+                                 * method barrier CloneFunctionObject will have
+                                 * ignored the attempt to clone the function.
+                                 */
                                 JS_ASSERT_IF(!clone->getType()->singleton, clone != &funobj);
                                 *vp = v;
                                 calleev().setObject(*clone);
@@ -1545,7 +1551,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
              * track of the method, so we associate it with the first barriered
              * object found starting from thisp on the prototype chain.
              */
-            JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent());
+            JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent(), true);
             if (!newfunobj)
                 return false;
             newfunobj->setMethodObj(*first_barriered_thisp);
@@ -2842,18 +2848,6 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     JSObject *clone;
     if (cx->compartment == fun->compartment()) {
         /*
-         * Don't clone functions with singleton types, we need to ensure that
-         * there is only one object with this type. We may need to reparent the
-         * function, however.
-         */
-        if (fun->getType()->singleton) {
-            JS_ASSERT(fun->getType()->singleton == fun);
-            JS_ASSERT(fun->getProto() == proto);
-            fun->setParent(parent);
-            return fun;
-        }
-
-        /*
          * The cloned function object does not need the extra JSFunction members
          * beyond JSObject as it points to fun via the private slot.
          */
@@ -2862,11 +2856,13 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             return NULL;
 
         /*
-         * In COMPILE_N_GO code the existing prototype will be correct, so we can
-         * reuse the type. In non-COMPILE_N_GO code the existing prototype is NULL;
-         * Just use the default 'new' object for Function.prototype.
+         * We can use the same type as the original function provided that (a)
+         * its prototype is correct, and (b) its type is not a singleton. The
+         * first case will hold in all compileAndGo code, and the second case
+         * will have been caught by CloneFunctionObject coming from function
+         * definitions or read barriers, so will not get here.
          */
-        if (fun->getProto() == proto)
+        if (fun->getProto() == proto && !fun->getType()->singleton)
             clone->setTypeAndShape(fun->getType(), fun->lastProperty());
 
         clone->setPrivate(fun);

@@ -99,19 +99,28 @@ static inline void
 PushMarkStack(GCMarker *gcmarker, JSString *thing);
 
 template<typename T>
-void
-Mark(JSTracer *trc, T *thing)
+static inline void
+CheckMarkedThing(JSTracer *trc, T *thing)
 {
     JS_ASSERT(thing);
     JS_ASSERT(JS_IS_VALID_TRACE_KIND(GetGCThingTraceKind(thing)));
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
+    JS_ASSERT_IF(trc->context->runtime->gcCurrentCompartment, IS_GC_MARKING_TRACER(trc));
 
     JS_ASSERT(!JSAtom::isStatic(thing));
     JS_ASSERT(thing->isAligned());
 
-    JSRuntime *rt = trc->context->runtime;
     JS_ASSERT(thing->arenaHeader()->compartment);
-    JS_ASSERT(thing->arenaHeader()->compartment->rt == rt);
+    JS_ASSERT(thing->arenaHeader()->compartment->rt == trc->context->runtime);
+}
+
+template<typename T>
+void
+Mark(JSTracer *trc, T *thing)
+{
+    CheckMarkedThing(trc, thing);
+
+    JSRuntime *rt = trc->context->runtime;
 
     /*
      * Don't mark things outside a compartment if we are in a per-compartment
@@ -128,6 +137,41 @@ Mark(JSTracer *trc, T *thing)
     trc->debugPrinter = NULL;
     trc->debugPrintArg = NULL;
 #endif
+}
+
+/*
+ * Alternative to Mark() which can be used when the thing is known to be in the
+ * correct compartment (if we are in a per-compartment GC) and which is inline.
+ */
+template<typename T>
+inline void
+InlineMark(JSTracer *trc, T *thing, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+
+    CheckMarkedThing(trc, thing);
+
+    if (IS_GC_MARKING_TRACER(trc))
+        PushMarkStack(static_cast<GCMarker *>(trc), thing);
+    else
+        trc->callback(trc, (void *)thing, GetGCThingTraceKind(thing));
+
+#ifdef DEBUG
+    trc->debugPrinter = NULL;
+    trc->debugPrintArg = NULL;
+#endif
+}
+
+inline void
+InlineMarkId(JSTracer *trc, jsid id, const char *name)
+{
+    if (JSID_IS_STRING(id)) {
+        JSString *str = JSID_TO_STRING(id);
+        if (!str->isStaticAtom())
+            InlineMark(trc, str, name);
+    } else if (JS_UNLIKELY(JSID_IS_OBJECT(id))) {
+        InlineMark(trc, JSID_TO_OBJECT(id), name);
+    }
 }
 
 void
@@ -624,15 +668,11 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
         uint32 nslots = obj->slotSpan();
         JS_ASSERT(obj->slotSpan() <= obj->numSlots());
         if (nslots > LARGE_OBJECT_CHUNK_SIZE) {
-            if (!gcmarker->largeStack.push(LargeMarkItem(obj))) {
-                for (uint32 i = nslots; i > 0; i--)
-                    ScanValue(gcmarker, obj->getSlot(i-1));
-            }
-        } else {
-            for (uint32 i = nslots; i > 0; i--) {
-                ScanValue(gcmarker, obj->getSlot(i-1));
-            }
+            if (gcmarker->largeStack.push(LargeMarkItem(obj)))
+                return;
         }
+
+        obj->scanSlots(gcmarker);
     }
 }
 
@@ -654,7 +694,7 @@ ScanLargeObject(GCMarker *gcmarker, LargeMarkItem &item)
         capacity = obj->slotSpan();
         stop = JS_MIN(start + LARGE_OBJECT_CHUNK_SIZE, capacity);
         for (uintN i=stop; i>start; i--)
-            ScanValue(gcmarker, obj->getSlot(i-1));
+            ScanValue(gcmarker, obj->nativeGetSlot(i-1));
     }
 
     if (stop == capacity)
@@ -692,8 +732,12 @@ MarkChildren(JSTracer *trc, JSObject *obj)
 
         MarkShape(trc, obj->lastProp, "shape");
 
-        if (obj->slotSpan() > 0)
-            obj->markSlots(trc);
+        JS_ASSERT(obj->slotSpan() <= obj->numSlots());
+        uint32 nslots = obj->slotSpan();
+        for (uint32 i = 0; i < nslots; i++) {
+            JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
+            MarkValueRaw(trc, obj->nativeGetSlot(i));
+        }
     }
 }
 
@@ -793,22 +837,62 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
     }
 }
 
-void
-JSObject::markSlots(JSTracer *trc)
+inline void
+JSObject::scanSlots(GCMarker *gcmarker)
 {
-    JS_ASSERT(isNative());
+    /*
+     * Scan the fixed slots and the dynamic slots separately, to avoid
+     * branching inside nativeGetSlot().
+     */
     JS_ASSERT(slotSpan() <= numSlots());
-    uint32 nfixed = numFixedSlots();
     uint32 nslots = slotSpan();
+    uint32 nfixed = numFixedSlots();
     uint32 i;
-    for (i = 0; i < nslots && i < nfixed; i++) {
-        const Value &v = fixedSlots()[i];
-        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, this, i);
-        MarkValueRaw(trc, v);
+    for (i = 0; i < nslots && i < nfixed; i++)
+        ScanValue(gcmarker, fixedSlots()[i]);
+    for (; i < nslots; i++)
+        ScanValue(gcmarker, slots[i - nfixed]);
+}
+
+void
+js::types::TypeObject::trace(JSTracer *trc)
+{
+    JS_ASSERT(!marked);
+
+    /*
+     * Only mark types if the Mark/Sweep GC is running; the bit won't be cleared
+     * by the cycle collector.
+     */
+    if (IS_GC_MARKING_TRACER(trc))
+        marked = true;
+
+#ifdef DEBUG
+    InlineMarkId(trc, name_, "type_name");
+#endif
+
+    unsigned count = getPropertyCount();
+    for (unsigned i = 0; i < count; i++) {
+        Property *prop = getProperty(i);
+        if (prop)
+            InlineMarkId(trc, prop->id, "type_prop");
     }
-    for (; i < nslots; i++) {
-        const Value &v = slots[i - nfixed];
-        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, this, i);
-        MarkValueRaw(trc, v);
+
+    if (emptyShapes) {
+        int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
+        for (int i = 0; i < count; i++) {
+            if (emptyShapes[i])
+                InlineMark(trc, emptyShapes[i], "empty_shape");
+        }
+    }
+
+    if (proto)
+        InlineMark(trc, proto, "type_proto");
+
+    if (singleton)
+        InlineMark(trc, singleton, "type_singleton");
+
+    if (newScript) {
+        js_TraceScript(trc, newScript->script);
+        InlineMark(trc, newScript->shape, "new_shape");
     }
 }

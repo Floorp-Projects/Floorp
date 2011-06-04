@@ -5427,7 +5427,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * requests in server-side JS.
      */
     if (obj->getParent() != obj2) {
-        obj = CloneFunctionObject(cx, fun, obj2);
+        obj = CloneFunctionObject(cx, fun, obj2, true);
         if (!obj)
             goto error;
     }
@@ -5546,7 +5546,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     JSObject *obj = FUN_OBJECT(fun);
 
     if (FUN_NULL_CLOSURE(fun)) {
-        obj = CloneFunctionObject(cx, fun, &regs.fp()->scopeChain());
+        obj = CloneFunctionObject(cx, fun, &regs.fp()->scopeChain(), true);
         if (!obj)
             goto error;
     } else {
@@ -5560,7 +5560,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
             if (TRACE_RECORDER(cx))
                 AbortRecording(cx, "DEFLOCALFUN for closure");
 #endif
-            obj = CloneFunctionObject(cx, fun, parent);
+            obj = CloneFunctionObject(cx, fun, parent, true);
             if (!obj)
                 goto error;
         }
@@ -5713,7 +5713,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                 goto error;
         }
 
-        obj = CloneFunctionObject(cx, fun, parent);
+        obj = CloneFunctionObject(cx, fun, parent, true);
         if (!obj)
             goto error;
     } while (0);

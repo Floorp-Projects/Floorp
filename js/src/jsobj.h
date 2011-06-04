@@ -63,6 +63,7 @@ namespace js {
 
 class JSProxyHandler;
 class AutoPropDescArrayRooter;
+struct GCMarker;
 
 namespace mjit { class Compiler; }
 
@@ -316,8 +317,10 @@ class ValidateWriter;
  * For objects other than dense arrays, if the object has N fixed slots then
  * those are always the first N slots of the object. The dynamic slots pointer
  * is used if those fixed slots overflow, and stores all remaining slots.
- * Unlike dense arrays, the fixed slots can always be accessed. Two objects
- * with the same shape have the same number of fixed slots.
+ * The dynamic slots pointer is NULL if there is no slots overflow, and never
+ * points to the object's fixed slots. Unlike dense arrays, the fixed slots
+ * can always be accessed. Two objects with the same shape are guaranteed to
+ * have the same number of fixed slots.
  *
  * If you change this struct, you'll probably need to change the AccSet values
  * in jsbuiltins.h.
@@ -397,7 +400,7 @@ struct JSObject : js::gc::Cell {
         /* If prototype, type of values using this as their prototype. */
         js::types::TypeObject *newType;
 
-        /* If dense array, initialized length of the array. */
+        /* If dense array, the initialized length (see jsarray.cpp). */
         jsuword initializedLength;
     };
 
@@ -428,7 +431,7 @@ struct JSObject : js::gc::Cell {
     }
 
     inline void trace(JSTracer *trc);
-    void markSlots(JSTracer *trc);
+    inline void scanSlots(js::GCMarker *gcmarker);
 
     uint32 shape() const {
         JS_ASSERT(objShape != INVALID_SHAPE);
@@ -630,6 +633,8 @@ struct JSObject : js::gc::Cell {
   private:
     inline js::Value* fixedSlots() const;
     inline bool hasSlotsArray() const;
+
+    inline size_t numDynamicSlots(size_t capacity) const;
 
   public:
     /* Minimum size for dynamically allocated slots. */
@@ -1119,7 +1124,7 @@ struct JSObject : js::gc::Cell {
 
     /* The map field is not initialized here and should be set separately. */
     void init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
-              JSObject *parent, void *priv, bool useHoles);
+              JSObject *parent, void *priv, bool denseArray);
 
     inline void finish(JSContext *cx);
     JS_ALWAYS_INLINE void finalize(JSContext *cx);
@@ -1180,7 +1185,14 @@ struct JSObject : js::gc::Cell {
 
     bool toDictionaryMode(JSContext *cx);
 
-    static bool TradeGuts(JSContext *cx, JSObject *a, JSObject *b);
+    struct TradeGutsReserved;
+    static bool ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
+                                    TradeGutsReserved &reserved);
+
+    static void TradeGuts(JSContext *cx, JSObject *a, JSObject *b,
+                          TradeGutsReserved &reserved);
+
+    void updateFixedSlots(uintN fixed);
 
   public:
     /* Add a property whose id is not yet in this scope. */

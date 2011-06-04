@@ -211,9 +211,6 @@ struct AutoEnterCompilation
     }
 };
 
-bool
-UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
-
 /* Whether type barriers can be placed at pc for a property read. */
 static inline bool
 CanHaveReadBarrier(const jsbytecode *pc)

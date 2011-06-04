@@ -265,7 +265,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(fun == funobj);
     JS_ASSERT(FUN_NULL_CLOSURE(fun));
 
-    funobj = CloneFunctionObject(cx, fun, funobj->getParent());
+    funobj = CloneFunctionObject(cx, fun, funobj->getParent(), true);
     if (!funobj)
         return NULL;
     funobj->setMethodObj(*this);
@@ -797,6 +797,17 @@ JSObject::getNewType(JSContext *cx, JSScript *script)
     if (isDenseArray() && !makeDenseArraySlow(cx))
         return NULL;
     if (newType) {
+        /*
+         * If set, the newType's newScript indicates the script used to create
+         * all objects in existence which have this type. If there are objects
+         * in existence which are not created by calling 'new' on newScript,
+         * we must clear the new script information from the type and will not
+         * be able to assume any definite properties for instances of the type.
+         * This case is rare, but can happen if, for example, two scripted
+         * functions have the same value for their 'prototype' property, or if
+         * Object.create is called with a prototype object that is also the
+         * 'prototype' property of some scripted function.
+         */
         if (newType->newScript && newType->newScript->script != script)
             newType->clearNewScript(cx);
     } else {
@@ -866,12 +877,12 @@ JSObject::setTypeAndShape(js::types::TypeObject *newType, const js::Shape *newSh
 
 inline void
 JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
-               JSObject *parent, void *priv, bool useHoles)
+               JSObject *parent, void *priv, bool denseArray)
 {
     clasp = aclasp;
     flags = capacity << FIXED_SLOTS_SHIFT;
 
-    JS_ASSERT(useHoles == (aclasp == &js_ArrayClass));
+    JS_ASSERT(denseArray == (aclasp == &js_ArrayClass));
 
 #ifdef DEBUG
     /*
@@ -891,11 +902,11 @@ JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
      * and unset the PACKED_ARRAY flag.
      */
     slots = NULL;
-    if (useHoles) {
+    if (denseArray) {
         slots = fixedSlots();
         flags |= PACKED_ARRAY;
     } else {
-        ClearValueRange(fixedSlots(), capacity, useHoles);
+        ClearValueRange(fixedSlots(), capacity, denseArray);
     }
 
     newType = NULL;
@@ -1236,11 +1247,13 @@ CanBeFinalizedInBackground(gc::FinalizeKind kind, Class *clasp)
      * a different thread, we change the finalize kind. For example,
      * FINALIZE_OBJECT0 calls the finalizer on the main thread,
      * FINALIZE_OBJECT0_BACKGROUND calls the finalizer on the gcHelperThread.
-     * kind % 2 prevents from recursivly incrementing the finalize kind because
-     * we can call NewObject with a background finalize kind.
+     * IsBackgroundFinalizeKind is called to prevent recursively incrementing
+     * the finalize kind; kind may already be a background finalize kind.
      */
-    if (kind % 2 == 0 && (!clasp->finalize || clasp->flags & JSCLASS_CONCURRENT_FINALIZER))
+    if (!gc::IsBackgroundFinalizeKind(kind) &&
+        (!clasp->finalize || clasp->flags & JSCLASS_CONCURRENT_FINALIZER)) {
         return true;
+    }
 #endif
     return false;
 }
@@ -1269,7 +1282,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
      */
 
     if (CanBeFinalizedInBackground(kind, clasp))
-        kind = (gc::FinalizeKind)(kind + 1);
+        kind = GetBackgroundFinalizeKind(kind);
 
     JSObject* obj = js_NewGCObject(cx, kind);
 
@@ -1278,8 +1291,8 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
          * Default parent to the parent of the prototype, which was set from
          * the parent of the prototype's constructor.
          */
-        bool useHoles = (clasp == &js_ArrayClass);
-        obj->init(cx, clasp, type, parent, NULL, useHoles);
+        bool denseArray = (clasp == &js_ArrayClass);
+        obj->init(cx, clasp, type, parent, NULL, denseArray);
 
         JS_ASSERT(type->canProvideEmptyShape(clasp));
         js::EmptyShape *empty = type->getEmptyShape(cx, clasp, kind);
@@ -1432,7 +1445,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
      */
 
     if (!isFunction && CanBeFinalizedInBackground(kind, clasp))
-        kind = (gc::FinalizeKind)(kind + 1);
+        kind = GetBackgroundFinalizeKind(kind);
 
     JSObject* obj = isFunction ? js_NewGCFunction(cx) : js_NewGCObject(cx, kind);
     if (!obj)
@@ -1587,7 +1600,7 @@ NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
         return NULL;
 
     if (CanBeFinalizedInBackground(kind, clasp))
-        kind = (gc::FinalizeKind)(kind + 1);
+        kind = GetBackgroundFinalizeKind(kind);
 
     JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)

@@ -723,6 +723,17 @@ struct TypeObject
     void trace(JSTracer *trc);
 };
 
+/* Whether to use a new type object when calling 'new' at script/pc. */
+bool
+UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
+
+/*
+ * Add any definite properties to type and compute its newScript according to
+ * the specified script which the type is the 'new' value for.
+ */
+void
+CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script);
+
 /*
  * Type information about an interpreted or native function. Note: it is possible for
  * a function JSObject to have a type which is not a TypeFunction. This happens when
