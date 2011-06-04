@@ -52,3 +52,28 @@ const kNeverButton = 1;
 
 const kChangeButton = 0;
 const kDontChangeButton = 1;
+
+function dumpNotifications() {
+  try {
+    // PopupNotifications
+    var container = getPopupNotifications(window.top);
+    ok(true, "is popup panel open? " + container.isPanelOpen);
+    var notes = container._currentNotifications;
+    ok(true, "Found " + notes.length + " popup notifications.");
+    for (var i = 0; i < notes.length; i++) {
+        ok(true, "#" + i + ": " + notes[i].id);
+    }
+
+    // Notification bars
+    var chromeWin = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIWebNavigation)
+                           .QueryInterface(Ci.nsIDocShell)
+                           .chromeEventHandler.ownerDocument.defaultView;
+    var nb = chromeWin.getNotificationBox(window.top);
+    var notes = nb.allNotifications;
+    ok(true, "Found " + notes.length + " notification bars.");
+    for (var i = 0; i < notes.length; i++) {
+        ok(true, "#" + i + ": " + notes[i].getAttribute("value"));
+    }
+  } catch(e) { todo(false, "WOAH! " + e); }
+}
