@@ -193,7 +193,7 @@ JS_PUBLIC_API(void *)
 JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
 {
     JSArena **ap, *a, *b;
-    jsuword boff, aoff, extra, hdrsz, gross, growth;
+    jsuword boff, aoff, extra, hdrsz, gross;
 
     /*
      * Use the oversized-single-allocation header to avoid searching for ap.
