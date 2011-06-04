@@ -35,92 +35,91 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = toolkit/components/passwordmgr/test
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = toolkit/components/passwordmgr/test
 
 include $(topsrcdir)/config/config.mk
 
 ifneq (mobile,$(MOZ_BUILD_APP))
 DIRS = \
-	browser \
-	$(NULL)
+    browser \
+    $(NULL)
 endif
 
 # Module name for xpcshell tests.
-MODULE		= test_passwordmgr
+MODULE = test_passwordmgr
+XPCSHELL_TESTS = unit
 
 # Mochitest tests
 MOCHI_TESTS = \
-		test_basic_form.html \
-		test_basic_form_html5.html \
-		test_basic_form_2.html \
-		test_basic_form_0pw.html \
-		test_basic_form_1pw.html \
-		test_basic_form_1pw_2.html \
-		test_basic_form_2pw_1.html \
-		test_basic_form_2pw_2.html \
-		test_basic_form_3pw_1.html \
-		test_basic_form_autocomplete.html \
-		test_basic_form_observer_autofillForms.html \
-		test_basic_form_observer_autocomplete.html \
-		test_basic_form_observer_foundLogins.html \
-		test_basic_form_pwonly.html \
-		test_bug_227640.html \
-		test_bug_242956.html \
-		test_bug_360493_1.html \
-		test_bug_360493_2.html \
-		test_bug_391514.html \
-		test_bug_427033.html \
-		test_bug_444968.html \
-		test_master_password.html \
-		test_master_password_cleanup.html \
-		test_prompt_async.html \
-		test_xhr.html \
-		test_xml_load.html \
-		test_zzz_finish.html \
-		$(NULL)
+    test_basic_form.html \
+    test_basic_form_html5.html \
+    test_basic_form_2.html \
+    test_basic_form_0pw.html \
+    test_basic_form_1pw.html \
+    test_basic_form_1pw_2.html \
+    test_basic_form_2pw_1.html \
+    test_basic_form_2pw_2.html \
+    test_basic_form_3pw_1.html \
+    test_basic_form_autocomplete.html \
+    test_basic_form_observer_autofillForms.html \
+    test_basic_form_observer_autocomplete.html \
+    test_basic_form_observer_foundLogins.html \
+    test_basic_form_pwonly.html \
+    test_bug_227640.html \
+    test_bug_242956.html \
+    test_bug_360493_1.html \
+    test_bug_360493_2.html \
+    test_bug_391514.html \
+    test_bug_427033.html \
+    test_bug_444968.html \
+    test_master_password.html \
+    test_master_password_cleanup.html \
+    test_prompt_async.html \
+    test_xhr.html \
+    test_xml_load.html \
+    test_zzz_finish.html \
+    $(NULL)
 
 MOCHI_CONTENT = \
-		pwmgr_common.js \
-		prompt_common.js \
-		notification_common.js \
-		authenticate.sjs \
-		formsubmit.sjs \
-		subtst_privbrowsing_1.html \
-		subtst_privbrowsing_2.html \
-		subtst_privbrowsing_3.html \
-		subtst_privbrowsing_4.html \
-		subtst_master_pass.html \
-		subtst_notifications_1.html \
-		subtst_notifications_2.html \
-		subtst_notifications_3.html \
-		subtst_notifications_4.html \
-		subtst_notifications_5.html \
-		subtst_notifications_6.html \
-		subtst_notifications_7.html \
-		subtst_notifications_8.html \
-		subtst_notifications_9.html \
-		subtst_notifications_10.html \
-		subtst_prompt_async.html \
-		$(NULL)
+    pwmgr_common.js \
+    prompt_common.js \
+    notification_common.js \
+    authenticate.sjs \
+    formsubmit.sjs \
+    subtst_privbrowsing_1.html \
+    subtst_privbrowsing_2.html \
+    subtst_privbrowsing_3.html \
+    subtst_privbrowsing_4.html \
+    subtst_master_pass.html \
+    subtst_notifications_1.html \
+    subtst_notifications_2.html \
+    subtst_notifications_3.html \
+    subtst_notifications_4.html \
+    subtst_notifications_5.html \
+    subtst_notifications_6.html \
+    subtst_notifications_7.html \
+    subtst_notifications_8.html \
+    subtst_notifications_9.html \
+    subtst_notifications_10.html \
+    subtst_prompt_async.html \
+    $(NULL)
 
 # Don't run these tests in suite
 ifndef MOZ_SUITE
 MOCHI_TESTS += \
-		test_privbrowsing.html \
-		test_prompt.html \
-		test_notifications.html \
-		$(NULL)
+    test_privbrowsing.html \
+    test_prompt.html \
+    test_notifications.html \
+    $(NULL)
 else
 $(warning test_prompt.html is disabled until doorhanger notfications work. Bug 598360)
 $(warning test_notifications.html is disabled until doorhanger notfications work. Bug 598360)
 $(warning test_privbrowsing.html is disabled due to doorhangers, Bug 598360, and no privatebrowsing support)
 endif
-
-XPCSHELL_TESTS  = unit
 
 # This test doesn't pass because we can't ensure a cross-platform
 # event that occurs between DOMContentLoaded and Pageload
