@@ -1824,7 +1824,7 @@ pref("gfx.font_rendering.cleartype_params.rendering_mode", -1);
 // of gfx.font_rendering.cleartype_params.rendering_mode.
 // Currently we apply this setting to the sans-serif Microsoft "core Web fonts".
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
-     "Arial,Courier New,Tahoma,Trebuchet MS,Verdana");
+     "Arial,Courier New,Segoe UI,Tahoma,Trebuchet MS,Verdana");
 // The maximum size at which we will force GDI classic mode using
 // force_gdi_classic_for_families.
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size", 15);
