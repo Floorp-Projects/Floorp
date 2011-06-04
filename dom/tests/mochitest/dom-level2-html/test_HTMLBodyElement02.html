@@ -95,9 +95,7 @@ function HTMLBodyElement02() {
       assertSize("Asize",1,nodeList);
 testNode = nodeList.item(0);
       vbackground = testNode.background;
-      // its not clear if this test is valid
-      //assertEquals("backgroundLink","./pix/back1.gif",vbackground);
-      todo_is(vbackground, "./pix/back1.gif", "backgroundLink");
+      assertEquals("backgroundLink","./pix/back1.gif",vbackground);
        
 }
 
