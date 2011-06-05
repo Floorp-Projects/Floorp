@@ -863,6 +863,9 @@ nsEventStateManager::Init()
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
 
   if (sESMInstanceCount == 1) {
+    sKeyCausesActivation =
+      Preferences::GetBool("accessibility.accesskeycausesactivation",
+                           sKeyCausesActivation);
     sLeftClickOnly =
       Preferences::GetBool("nglayout.events.dispatchLeftClickOnly",
                            sLeftClickOnly);

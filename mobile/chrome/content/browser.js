@@ -2731,7 +2731,8 @@ Tab.prototype = {
 
     try {
       let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      browser.loadURIWithFlags(aURI, flags, aParams.referrerURI, aParams.charset, aParams.postData);
+      let postData = aParams.postData ? aParams.postData.value : null;
+      browser.loadURIWithFlags(aURI, flags, aParams.referrerURI, aParams.charset, postData);
     } catch(e) {
       dump("Error: " + e + "\n");
     }
