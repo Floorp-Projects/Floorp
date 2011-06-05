@@ -56,7 +56,8 @@ DEFINES += \
   -DNS_NO_XPCOM \
   $(NULL)
 
-ifndef ANDROID
+# Android doesn't build the updater binary, so it skips the things that test it.
+ifneq ($(OS_TARGET),Android)
 DIRS = \
   chrome \
   $(NULL)
@@ -89,9 +90,11 @@ ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1
 DEFINES += -DUNICODE -D_UNICODE
 endif
+endif # Not Android
 
 include $(topsrcdir)/config/rules.mk
 
+ifneq ($(OS_TARGET),Android)
 # TestAUSReadStrings runs during check in the following directory with a Unicode
 # char in order to test bug 473417 on Windows.
 ifeq ($(OS_ARCH),WINNT)
@@ -107,14 +110,14 @@ check::
 	done
 	$(INSTALL) $(FINAL_TARGET)/TestAUSReadStrings$(BIN_SUFFIX) $(DEPTH)/_tests/updater/$(bug473417dir)/
 	@$(RUN_TEST_PROGRAM) $(DEPTH)/_tests/updater/$(bug473417dir)/TestAUSReadStrings$(BIN_SUFFIX)
-endif # ANDROID
+endif # Not Android
 
 libs:: unit/head_update.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $^ > $(TESTROOT)/unit/head_update.js
 
-ifndef ANDROID
+ifneq ($(OS_TARGET),Android)
 ifndef MOZ_PROFILE_GENERATE
 libs::
 	$(INSTALL) TestAUSHelper$(BIN_SUFFIX) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
 endif
-endif # ANDROID
+endif # Not Android
