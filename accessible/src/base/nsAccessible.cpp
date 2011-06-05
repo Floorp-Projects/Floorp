@@ -1849,20 +1849,21 @@ nsAccessible::NativeRole()
 
 // readonly attribute PRUint8 numActions
 NS_IMETHODIMP
-nsAccessible::GetNumActions(PRUint8 *aNumActions)
+nsAccessible::GetNumActions(PRUint8* aActionCount)
 {
-  NS_ENSURE_ARG_POINTER(aNumActions);
-  *aNumActions = 0;
-
+  NS_ENSURE_ARG_POINTER(aActionCount);
+  *aActionCount = 0;
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRUint32 actionRule = GetActionRule(State());
-  if (actionRule == eNoAction)
-    return NS_OK;
-
-  *aNumActions = 1;
+  *aActionCount = ActionCount();
   return NS_OK;
+}
+
+PRUint8
+nsAccessible::ActionCount()
+{
+  return GetActionRule(State()) == eNoAction ? 0 : 1;
 }
 
 /* DOMString getAccActionName (in PRUint8 index); */

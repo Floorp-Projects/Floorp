@@ -73,13 +73,8 @@ doActionCB(AtkAction *aAction, gint aActionIndex)
 gint
 getActionCountCB(AtkAction *aAction)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-    if (!accWrap)
-        return 0;
-
-    PRUint8 num = 0;
-    nsresult rv = accWrap->GetNumActions(&num);
-    return (NS_FAILED(rv)) ? 0 : static_cast<gint>(num);
+  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  return accWrap ? accWrap->ActionCount() : 0;
 }
 
 const gchar *
