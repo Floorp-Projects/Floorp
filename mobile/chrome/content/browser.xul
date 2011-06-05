@@ -534,7 +534,7 @@
         </hbox>
         <separator class="prompt-line"/>
         <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
-          <scrollbox class="prompt-message" orient="vertical" flex="1">
+          <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
             <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.jpake;</description>
             <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
             <separator/>

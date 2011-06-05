@@ -63,7 +63,6 @@ DOMCI_CLASS(Text)
 DOMCI_CLASS(Comment)
 DOMCI_CLASS(CDATASection)
 DOMCI_CLASS(ProcessingInstruction)
-DOMCI_CLASS(Notation)
 DOMCI_CLASS(NodeList)
 DOMCI_CLASS(NamedNodeMap)
 

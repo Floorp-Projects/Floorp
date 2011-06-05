@@ -1,0 +1,24 @@
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+protocol PTestBridgeSub {
+child:
+    Ping();
+
+parent:
+    BridgeEm();
+    __delete__();
+
+state START:
+    send Ping goto BRIDGEEM;
+state BRIDGEEM:
+    recv BridgeEm goto DEAD;
+state DEAD:
+    recv __delete__;
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

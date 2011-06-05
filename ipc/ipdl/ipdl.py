@@ -75,14 +75,19 @@ log(2, 'Generated C++ sources will be generated in "%s"', cppdir)
 
 allprotocols = []
 
+def normalizedFilename(f):
+    if f == '-':
+        return '<stdin>'
+    return f
+
+# First pass: parse and type-check all protocols
 for f in files:
     log(1, os.path.basename(f))
+    filename = normalizedFilename(f)
     if f == '-':
         fd = sys.stdin
-        filename = '<stdin>'
     else:
         fd = open(f)
-        filename = f
 
     specstring = fd.read()
     fd.close()
@@ -91,8 +96,6 @@ for f in files:
     if ast is None:
         print >>sys.stderr, 'Specification could not be parsed.'
         sys.exit(1)
-
-    allprotocols.append('%sMsgStart' % ast.protocol.name)
 
     log(2, 'checking types')
     if not ipdl.typecheck(ast):
@@ -103,7 +106,14 @@ for f in files:
         log(3, '  pretty printed code:')
         ipdl.genipdl(ast, codedir)
 
+# Second pass: generate code
+for f in files:
+    # Read from parser cache
+    filename = normalizedFilename(f)
+    ast = ipdl.parse(None, filename, includedirs=includedirs)
     ipdl.gencxx(filename, ast, headersdir, cppdir)
+    
+    allprotocols.append('%sMsgStart' % ast.protocol.name)
 
 allprotocols.sort()
 
