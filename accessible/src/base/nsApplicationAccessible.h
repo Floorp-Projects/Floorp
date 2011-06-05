@@ -103,7 +103,6 @@ public:
   NS_IMETHOD SetSelected(PRBool aIsSelected);
   NS_IMETHOD TakeSelection();
   NS_IMETHOD TakeFocus();
-  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString &aName);
   NS_IMETHOD GetActionDescription(PRUint8 aIndex, nsAString &aDescription);
   NS_IMETHOD DoAction(PRUint8 aIndex);
@@ -129,6 +128,7 @@ public:
   virtual void InvalidateChildren();
 
   // ActionAccessible
+  virtual PRUint8 ActionCount();
   virtual KeyBinding AccessKey() const;
 
 protected:
