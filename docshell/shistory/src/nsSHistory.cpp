@@ -716,13 +716,7 @@ nsSHistory::GetCanGoBack(PRBool * aCanGoBack)
   NS_ENSURE_ARG_POINTER(aCanGoBack);
   *aCanGoBack = PR_FALSE;
 
-  // If there is already a pending navigation, we cannot go back.
   PRInt32 index = -1;
-  NS_ENSURE_SUCCESS(GetRequestedIndex(&index), NS_ERROR_FAILURE);
-
-  if(index != -1)
-    return NS_OK;
-
   NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
   if(index > 0)
      *aCanGoBack = PR_TRUE;
@@ -736,14 +730,8 @@ nsSHistory::GetCanGoForward(PRBool * aCanGoForward)
   NS_ENSURE_ARG_POINTER(aCanGoForward);
   *aCanGoForward = PR_FALSE;
 
-  // If there is already a pending navigation, we cannot go forward.
   PRInt32 index = -1;
   PRInt32 count = -1;
-
-  NS_ENSURE_SUCCESS(GetRequestedIndex(&index), NS_ERROR_FAILURE);
-
-  if(index != -1)
-    return NS_OK;
 
   NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(GetCount(&count), NS_ERROR_FAILURE);
