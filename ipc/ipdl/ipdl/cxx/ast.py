@@ -110,6 +110,12 @@ class Visitor:
         meth.decl.accept(self)
         self.visitBlock(meth)
 
+    def visitFunctionDecl(self, fun):
+        self.visitMethodDecl(fun)
+
+    def visitFunctionDefn(self, fd):
+        self.visitMethodDefn(fd)
+
     def visitConstructorDecl(self, ctor):
         self.visitMethodDecl(ctor)
 
@@ -508,6 +514,20 @@ class MethodDefn(Block):
     def __init__(self, decl):
         Block.__init__(self)
         self.decl = decl
+
+class FunctionDecl(MethodDecl):
+    def __init__(self, name, params=[ ], ret=Type('void'),
+                 static=0, warn_unused=0,
+                 inline=0, force_inline=0,
+                 T=None):
+        MethodDecl.__init__(self, name, params=params, ret=ret,
+                            static=static, warn_unused=warn_unused,
+                            inline=inline, force_inline=force_inline,
+                            T=T)
+
+class FunctionDefn(MethodDefn):
+    def __init__(self, decl):
+        MethodDefn.__init__(self, decl)
 
 class ConstructorDecl(MethodDecl):
     def __init__(self, name, params=[ ], explicit=0, force_inline=0):

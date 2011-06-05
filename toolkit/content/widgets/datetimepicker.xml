@@ -246,12 +246,12 @@
            extends="chrome://global/content/bindings/datetimepicker.xml#datetimepicker-base">
 
     <implementation>
-      <field name="is24HourClock" readonly="true">false</field>
-      <field name="hourLeadingZero" readonly="true">false</field>
-      <field name="minuteLeadingZero" readonly="true">true</field>
-      <field name="secondLeadingZero" readonly="true">true</field>
-      <field name="amIndicator" readonly="true">"AM"</field>
-      <field name="pmIndicator" readonly="true">"PM"</field>
+      <field name="is24HourClock">false</field>
+      <field name="hourLeadingZero">false</field>
+      <field name="minuteLeadingZero">true</field>
+      <field name="secondLeadingZero">true</field>
+      <field name="amIndicator">"AM"</field>
+      <field name="pmIndicator">"PM"</field>
 
       <field name="hourField">null</field>
       <field name="minuteField">null</field>

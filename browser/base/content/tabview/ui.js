@@ -999,7 +999,7 @@ let UI = {
       "redo",
 #endif
 #ifdef XP_MACOSX
-      "preferencesCmdMac", "minimizeWindow",
+      "preferencesCmdMac", "minimizeWindow", "hideThisAppCmdMac",
 #endif
       "newNavigator", "newNavigatorTab", "undo", "cut", "copy", "paste", 
       "selectAll", "find"
@@ -1043,6 +1043,10 @@ let UI = {
         Keys.meta = true;
 
       function processBrowserKeys(evt) {
+        // let any keys with alt to pass through
+        if (evt.altKey)
+          return;
+
 #ifdef XP_MACOSX
         if (evt.metaKey) {
 #else
@@ -1077,6 +1081,7 @@ let UI = {
 #ifdef XP_MACOSX
               case self._browserKeys.preferencesCmdMac:
               case self._browserKeys.minimizeWindow:
+              case self._browserKeys.hideThisAppCmdMac:
 #endif
               case self._browserKeys.newNavigator:
               case self._browserKeys.newNavigatorTab:

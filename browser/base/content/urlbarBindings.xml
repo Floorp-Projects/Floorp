@@ -260,6 +260,7 @@
             return; // Do nothing for right clicks
 
           var url = this.value;
+          var mayInheritPrincipal = false;
           var postData = null;
 
           var action = this._parseActionUrl(url);
@@ -277,7 +278,7 @@
             }
           }
           else {
-            [url, postData] = this._canonizeURL(aTriggeringEvent);
+            [url, postData, mayInheritPrincipal] = this._canonizeURL(aTriggeringEvent);
             if (!url)
               return;
           }
@@ -293,10 +294,13 @@
           }
 
           function loadCurrent() {
+            let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
             // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
-            // inheriting the currently loaded document's principal.
-            let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-                        Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+            // inheriting the currently loaded document's principal, unless this
+            // URL is marked as safe to inherit (e.g. came from a bookmark
+            // keyword).
+            if (!mayInheritPrincipal)
+              flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
             gBrowser.loadURIWithFlags(url, flags, null, null, postData);
           }
 
@@ -339,7 +343,7 @@
         <body><![CDATA[
           var url = this.value;
           if (!url)
-            return ["", null];
+            return ["", null, false];
 
           // Only add the suffix when the URL bar value isn't already "URL-like",
           // and only if we get a keyboard event, to match user expectations.
@@ -402,9 +406,10 @@
           }
 
           var postData = {};
-          url = getShortcutOrURI(url, postData);
+          var mayInheritPrincipal = { value: false };
+          url = getShortcutOrURI(url, postData, mayInheritPrincipal);
 
-          return [url, postData.value];
+          return [url, postData.value, mayInheritPrincipal.value];
         ]]></body>
       </method>
 

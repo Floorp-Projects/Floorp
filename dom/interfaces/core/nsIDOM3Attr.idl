@@ -35,13 +35,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "domstubs.idl"
-#include "nsIDOM3TypeInfo.idl"
 
-[scriptable, uuid(274ef301-065c-450d-a75b-e7673d257293)]
+[scriptable, uuid(dc3ac0ee-9afb-4d1e-a49c-f5042e5bcf65)]
 interface nsIDOM3Attr : nsISupports
 {
-    // Introduced in DOM Level 3:
-    readonly attribute nsIDOM3TypeInfo        schemaTypeInfo;
     // Introduced in DOM Level 3:
     readonly attribute boolean                isId;
 };
