@@ -565,10 +565,10 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetActionName(PRUint8 aIndex, nsAString& 
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetNumActions(PRUint8 *_retval)
+PRUint8
+nsXULMenuitemAccessible::ActionCount()
 {
-  *_retval = 1;
-  return NS_OK;
+  return 1;
 }
 
 
@@ -612,11 +612,11 @@ NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetActionName(PRUint8 aIndex, nsAStr
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetNumActions(PRUint8 *_retval)
+PRUint8
+nsXULMenuSeparatorAccessible::ActionCount()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULMenupopupAccessible
