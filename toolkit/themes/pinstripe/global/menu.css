@@ -206,8 +206,8 @@ menulist[editable="true"] > menupopup > menuitem > .menu-iconic-left {
   background-position: bottom right;
 }
 
-:not(menulist) > menupopup > menuitem[checked="true"][_moz-menuactive="true"] > .menu-iconic-left,
-:not(menulist) > menupopup > menuitem[selected="true"][_moz-menuactive="true"] > .menu-iconic-left {
+:not(menulist) > menupopup > menuitem[checked="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left,
+:not(menulist) > menupopup > menuitem[selected="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left {
   background-image: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 20, 11, 10);
 }
 
