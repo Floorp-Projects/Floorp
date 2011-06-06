@@ -1790,7 +1790,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
         op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
             filename = i.fp()->script()->filename;
-            lineno = js_PCToLineNumber(cx, i.fp()->script(), i.pc());
+            lineno = PCToLineNumber(i.fp()->script(), i.pc());
             for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
                     --lineno;
