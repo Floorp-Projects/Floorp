@@ -39,6 +39,9 @@
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsSVGUtils.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////
 // implementation
@@ -121,10 +124,9 @@ nsSVGSwitchElement::InsertChildAt(nsIContent* aKid,
 }
 
 nsresult
-nsSVGSwitchElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent)
+nsSVGSwitchElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  NS_ASSERTION(aMutationEvent, "Someone tried to inhibit mutations on switch child removal.");
-  nsresult rv = nsSVGSwitchElementBase::RemoveChildAt(aIndex, aNotify, aMutationEvent);
+  nsresult rv = nsSVGSwitchElementBase::RemoveChildAt(aIndex, aNotify);
   if (NS_SUCCEEDED(rv)) {
     MaybeInvalidate();
   }
@@ -163,7 +165,7 @@ nsSVGSwitchElement::FindActiveChild() const
                                     nsGkAtoms::yes, eCaseMatters);
 
   const nsAdoptingString& acceptLangs =
-    nsContentUtils::GetLocalizedStringPref("intl.accept_languages");
+    Preferences::GetLocalizedString("intl.accept_languages");
 
   PRUint32 count = GetChildCount();
 

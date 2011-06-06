@@ -80,6 +80,9 @@ _TEST_FILES	= \
 		test_bug500328.html \
 		file_bug500328_1.html \
 		file_bug500328_2.html \
+		test_postMessage_structured_clone.html \
+		postMessage_structured_clone_helper.js \
+		postMessage_structured_clone_helper.html \
 		$(NULL)
 
 _CHROME_FILES	= \

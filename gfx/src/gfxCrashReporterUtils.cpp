@@ -34,7 +34,7 @@
 
 #include "gfxCrashReporterUtils.h"
 
-#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#if defined(MOZ_CRASHREPORTER)
 #define MOZ_GFXFEATUREREPORTER 1
 #endif
 

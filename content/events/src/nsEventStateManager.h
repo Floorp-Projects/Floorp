@@ -120,19 +120,6 @@ public:
   already_AddRefed<nsIContent> GetEventTargetContent(nsEvent* aEvent);
 
   /**
-   * Returns the content state of aContent.
-   * @param aContent      The control whose state is requested.
-   * @param aFollowLabels Whether to reflect a label's content state on its
-   *                      associated control. If aFollowLabels is true and
-   *                      aContent is a control which has a label that has the 
-   *                      hover or active content state set, GetContentState
-   *                      will pretend that those states are also set on aContent.
-   * @return              The content state.
-   */
-  virtual nsEventStates GetContentState(nsIContent *aContent,
-                                        PRBool aFollowLabels = PR_FALSE);
-
-  /**
    * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
    * @param aContent Content which has changed states
    * @param aState   Corresponding state flags such as NS_EVENT_STATE_FOCUS
@@ -439,6 +426,16 @@ protected:
   PRBool RemoteQueryContentEvent(nsEvent *aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();
   PRBool IsTargetCrossProcess(nsGUIEvent *aEvent);
+
+private:
+  static inline void DoStateChange(mozilla::dom::Element* aElement,
+                                   nsEventStates aState, PRBool aAddState);
+  static inline void DoStateChange(nsIContent* aContent, nsEventStates aState,
+                                   PRBool aAddState);
+  static void UpdateAncestorState(nsIContent* aStartNode,
+                                  nsIContent* aStopBefore,
+                                  nsEventStates aState,
+                                  PRBool aAddState);
 
   PRInt32     mLockCursor;
 

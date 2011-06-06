@@ -138,7 +138,7 @@ private:
     NS_DECL_ISUPPORTS
 
     // nsIStyleRule interface
-    virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+    virtual void MapRuleInfoInto(nsRuleData* aRuleData) = 0;
   #ifdef DEBUG
     virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   #endif
@@ -154,12 +154,20 @@ private:
     virtual void MapRuleInfoInto(nsRuleData* aRuleData);
   };
 
+  // Rule to handle quirk table colors
+  class TableQuirkColorRule : public GenericTableRule {
+  public:
+    TableQuirkColorRule() {}
+
+    virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+  };
+
   nsCOMPtr<nsIURI>        mURL;
   nsIDocument*            mDocument;
   nsRefPtr<HTMLColorRule> mLinkRule;
   nsRefPtr<HTMLColorRule> mVisitedRule;
   nsRefPtr<HTMLColorRule> mActiveRule;
-  nsRefPtr<HTMLColorRule> mDocumentColorRule;
+  nsRefPtr<TableQuirkColorRule> mTableQuirkColorRule;
   nsRefPtr<TableTHRule>   mTableTHRule;
 
   PLDHashTable            mMappedAttrTable;

@@ -186,8 +186,8 @@ nsNativeThemeGTK::GetTabMarginPixels(nsIFrame* aFrame)
     IsBottomTab(aFrame) ? aFrame->GetUsedMargin().top
     : aFrame->GetUsedMargin().bottom;
 
-  return PR_MIN(MOZ_GTK_TAB_MARGIN_MASK,
-                PR_MAX(0,
+  return NS_MIN<gint>(MOZ_GTK_TAB_MARGIN_MASK,
+                NS_MAX(0,
                        aFrame->PresContext()->AppUnitsToDevPixels(-margin)));
 }
 
@@ -1080,11 +1080,11 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
 
         if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL) {
           aResult->width = metrics.slider_width;
-          aResult->height = PR_MIN(NSAppUnitsToIntPixels(rect.height, p2a),
+          aResult->height = NS_MIN(NSAppUnitsToIntPixels(rect.height, p2a),
                                    metrics.min_slider_size);
         } else {
           aResult->height = metrics.slider_width;
-          aResult->width = PR_MIN(NSAppUnitsToIntPixels(rect.width, p2a),
+          aResult->width = NS_MIN(NSAppUnitsToIntPixels(rect.width, p2a),
                                   metrics.min_slider_size);
         }
 

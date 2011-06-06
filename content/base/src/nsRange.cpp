@@ -46,7 +46,6 @@
 #include "nsReadableUtils.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"

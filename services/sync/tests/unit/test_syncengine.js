@@ -5,10 +5,9 @@ function makeSteamEngine() {
   return new SyncEngine('Steam');
 }
 
-var syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
-
 function test_url_attributes() {
   _("SyncEngine url attributes");
+  let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "https://cluster/");
   let engine = makeSteamEngine();
   try {
@@ -22,6 +21,7 @@ function test_url_attributes() {
 
 function test_syncID() {
   _("SyncEngine.syncID corresponds to preference");
+  let syncTesting = new SyncTestingInfrastructure();
   let engine = makeSteamEngine();
   try {
     // Ensure pristine environment
@@ -36,12 +36,12 @@ function test_syncID() {
     do_check_eq(engine.syncID, "fake-guid-1");
   } finally {
     Svc.Prefs.resetBranch("");
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
 
 function test_lastSync() {
   _("SyncEngine.lastSync and SyncEngine.lastSyncLocal correspond to preferences");
+  let syncTesting = new SyncTestingInfrastructure();
   let engine = makeSteamEngine();
   try {
     // Ensure pristine environment
@@ -71,6 +71,7 @@ function test_lastSync() {
 
 function test_toFetch() {
   _("SyncEngine.toFetch corresponds to file on disk");
+  let syncTesting = new SyncTestingInfrastructure();
   const filename = "weave/toFetch/steam.json";
   let engine = makeSteamEngine();
   try {
@@ -98,8 +99,39 @@ function test_toFetch() {
   }
 }
 
+function test_previousFailed() {
+  _("SyncEngine.previousFailed corresponds to file on disk");
+  let syncTesting = new SyncTestingInfrastructure();
+  const filename = "weave/failed/steam.json";
+  let engine = makeSteamEngine();
+  try {
+    // Ensure pristine environment
+    do_check_eq(engine.previousFailed.length, 0);
+
+    // Write file to disk
+    let previousFailed = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    engine.previousFailed = previousFailed;
+    do_check_eq(engine.previousFailed, previousFailed);
+    // previousFailed is written asynchronously
+    engine._store._sleep(0);
+    let fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
+    do_check_eq(fakefile, JSON.stringify(previousFailed));
+
+    // Read file from disk
+    previousFailed = [Utils.makeGUID(), Utils.makeGUID()];
+    syncTesting.fakeFilesystem.fakeContents[filename] = JSON.stringify(previousFailed);
+    engine.loadPreviousFailed();
+    do_check_eq(engine.previousFailed.length, 2);
+    do_check_eq(engine.previousFailed[0], previousFailed[0]);
+    do_check_eq(engine.previousFailed[1], previousFailed[1]);
+  } finally {
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
 function test_resetClient() {
   _("SyncEngine.resetClient resets lastSync and toFetch");
+  let syncTesting = new SyncTestingInfrastructure();
   let engine = makeSteamEngine();
   try {
     // Ensure pristine environment
@@ -110,11 +142,13 @@ function test_resetClient() {
     engine.lastSync = 123.45;
     engine.lastSyncLocal = 67890;
     engine.toFetch = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    engine.previousFailed = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
 
     engine.resetClient();
     do_check_eq(engine.lastSync, 0);
     do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(engine.toFetch.length, 0);
+    do_check_eq(engine.previousFailed.length, 0);
   } finally {
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
     Svc.Prefs.resetBranch("");
@@ -123,6 +157,7 @@ function test_resetClient() {
 
 function test_wipeServer() {
   _("SyncEngine.wipeServer deletes server data and resets the client.");
+  let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   let engine = makeSteamEngine();
 
@@ -156,6 +191,7 @@ function run_test() {
   test_syncID();
   test_lastSync();
   test_toFetch();
+  test_previousFailed();
   test_resetClient();
   test_wipeServer();
 }

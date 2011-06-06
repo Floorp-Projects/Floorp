@@ -54,7 +54,6 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
 #include "nsICancelable.h"
-#include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
@@ -62,6 +61,9 @@
 #include "nsIObserverService.h"
 #include "mozilla/dom/Link.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::net;
 
@@ -94,12 +96,12 @@ nsHTMLDNSPrefetch::Initialize()
 
   sPrefetches->Activate();
 
-  nsContentUtils::AddBoolPrefVarCache("network.dns.disablePrefetchFromHTTPS", 
-                                      &sDisablePrefetchHTTPSPref);
+  Preferences::AddBoolVarCache(&sDisablePrefetchHTTPSPref,
+                               "network.dns.disablePrefetchFromHTTPS");
   
   // Default is false, so we need an explicit call to prime the cache.
   sDisablePrefetchHTTPSPref = 
-    nsContentUtils::GetBoolPref("network.dns.disablePrefetchFromHTTPS", PR_TRUE);
+    Preferences::GetBool("network.dns.disablePrefetchFromHTTPS", PR_TRUE);
   
   NS_IF_RELEASE(sDNSService);
   nsresult rv;

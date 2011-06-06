@@ -48,6 +48,7 @@ let TabView = {
   PREF_STARTUP_PAGE: "browser.startup.page",
   PREF_RESTORE_ENABLED_ONCE: "browser.panorama.session_restore_enabled_once",
   VISIBILITY_IDENTIFIER: "tabview-visibility",
+  GROUPS_IDENTIFIER: "tabview-groups",
 
   // ----------
   get windowTitle() {
@@ -95,14 +96,21 @@ let TabView = {
       // ___ visibility
       let sessionstore =
         Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-      let data = sessionstore.getWindowValue(window, this.VISIBILITY_IDENTIFIER);
 
+      let data = sessionstore.getWindowValue(window, this.VISIBILITY_IDENTIFIER);
       if (data && data == "true") {
         this.show();
       } else {
-        let self = this;
+        try {
+          data = sessionstore.getWindowValue(window, this.GROUPS_IDENTIFIER);
+          if (data) {
+            let parsedData = JSON.parse(data);
+            this.updateGroupNumberBroadcaster(parsedData.totalNumber || 0);
+          }
+        } catch (e) { }
 
-        // if a tab is changed from hidden to unhidden and the iframe is not 
+        let self = this;
+        // if a tab is changed from hidden to unhidden and the iframe is not
         // initialized, load the iframe and setup the tab.
         this._tabShowEventListener = function (event) {
           if (!self._window)
@@ -378,6 +386,14 @@ let TabView = {
     toolbar.currentSet = currentSet;
     toolbar.setAttribute("currentset", currentSet);
     document.persist(toolbar.id, "currentset");
+  },
+
+  // ----------
+  // Function: updateGroupNumberBroadcaster
+  // Updates the group number broadcaster.
+  updateGroupNumberBroadcaster: function TabView_updateGroupNumberBroadcaster(number) {
+    let groupsNumber = document.getElementById("tabviewGroupsNumber");
+    groupsNumber.setAttribute("groups", number);
   },
 
   // ----------

@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633913
 and
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633913">Mozilla Bug 633913</a>
 <p id="display"></p>
-<iframe name="submit_frame" onload="onFormSubmission();" style="visibility: hidden;"></iframe>
+<iframe name="submit_frame" style="visibility: hidden;"></iframe>
 <div id="content" style="visibility: hidden;">
   <form id='f' method='get' target='submit_frame' action='foo'>
     <progress id='p'></progress>
@@ -255,22 +255,22 @@ function checkNotResetableAndFormSubmission(aElement)
   aElement.value = 42.0;
   aElement.max = 100.0;
 
-  // This is going to call onFormSubmission().
+  document.getElementsByName('submit_frame')[0].addEventListener("load", function() {
+    document.getElementsByName('submit_frame')[0].removeEventListener("load", arguments.callee, false);
+
+    /**
+     * All elements values have been set just before the submission.
+     * The input element value should be in the submit url but the progress
+     * element value should not appear.
+     */
+    is(frames['submit_frame'].location.href,
+      'http://mochi.test:8888/tests/content/html/content/test/foo?a=tulip',
+       "The progress element value should not be submitted");
+
+    checkNotResetable();
+  }, false);
+
   form.submit();
-}
-
-function onFormSubmission()
-{
-  /**
-   * All elements values have been set just before the submission.
-   * The input element value should be in the submit url but the progress
-   * element value should not appear.
-   */
-  is(frames['submit_frame'].location.href,
-    'http://mochi.test:8888/tests/content/html/content/test/foo?a=tulip',
-     "The progress element value should not be submitted");
-
-  checkNotResetable();
 }
 
 function checkNotResetable()

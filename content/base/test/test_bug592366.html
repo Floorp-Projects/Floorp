@@ -13,36 +13,47 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=592366
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=592366">Mozilla Bug 592366</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<iframe onload='runTest();'></iframe>  
-<iframe onload='runTest();'></iframe>  
+<iframe></iframe>
+<iframe></iframe>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
+
 /** Test for Bug 592366 **/
-var iframesToLoad = 2;
-function runTest() {
-  --iframesToLoad;
-  if (iframesToLoad) {
+
+var gExecuted = false;
+
+function hitEventLoop(times, next)
+{
+  if (times == 0) {
+    next();
     return;
   }
 
-  ok(true, "Obligatory succeeding assertion.");
+  SimpleTest.executeSoon(function() {
+    hitEventLoop(times - 1, next);
+  });
+}
 
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
   var s = document.createElement("script");
-  s.src = "data:text/javascript,parent.ok(false, 'This script should not be executed.');"
-  
+  s.src = "data:text/javascript,parent.gExecuted=true;";
+
   var iframes = document.getElementsByTagName("iframe");
 
   iframes[0].contentDocument.body.appendChild(s);
   iframes[1].contentDocument.body.appendChild(s);
 
-  setTimeout(function() {
+  // It seems to work with 1 event loop hit locally but using 2 given that it
+  // was hsivonen advice.
+  hitEventLoop(2, function() {
+    ok(!gExecuted, "The scripts should not have been executed");
     SimpleTest.finish();
-  }, 500);
-}
+  });
+});
+
 </script>
 </pre>
 </body>
 </html>
-

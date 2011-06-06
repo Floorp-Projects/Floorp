@@ -68,10 +68,10 @@ nsLanguageAtomService::InitLangGroupTable()
 }
 
 nsIAtom*
-nsLanguageAtomService::LookupLanguage(const nsAString &aLanguage,
+nsLanguageAtomService::LookupLanguage(const nsACString &aLanguage,
                                       nsresult *aError)
 {
-  nsAutoString lowered(aLanguage);
+  nsCAutoString lowered(aLanguage);
   ToLowerCase(lowered);
 
   nsCOMPtr<nsIAtom> lang = do_GetAtom(lowered);

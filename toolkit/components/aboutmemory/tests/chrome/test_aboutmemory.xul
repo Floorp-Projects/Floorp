@@ -35,44 +35,53 @@
   const HEAP   = Ci.nsIMemoryReporter.MR_HEAP;
   const OTHER  = Ci.nsIMemoryReporter.MR_OTHER;
 
-  fakeReporters = [
-    { path: "heap-used",        kind: OTHER, memoryUsed:  500 * MB },
-    { path: "heap-unused",      kind: OTHER, memoryUsed:  100 * MB },
-    { path: "explicit/a",       kind: HEAP,  memoryUsed:  222 * MB },
-    { path: "explicit/b/a",     kind: HEAP,  memoryUsed:   85 * MB },
-    { path: "explicit/b/b",     kind: HEAP,  memoryUsed:   75 * MB },
-    { path: "explicit/b/c/a",   kind: HEAP,  memoryUsed:   70 * MB },
-    { path: "explicit/b/c/b",   kind: HEAP,  memoryUsed:    2 * MB }, // omitted
-    { path: "explicit/c",       kind: MAPPED,memoryUsed:  123 * MB },
-    { path: "explicit/d",       kind: MAPPED,memoryUsed:  499 * KB }, // omitted
-    { path: "explicit/e",       kind: MAPPED,memoryUsed:  100 * KB }, // omitted
-    { path: "explicit/f/g/h/i", kind: HEAP,  memoryUsed:   20 * MB },
-    { path: "explicit/g",       kind: HEAP,  memoryUsed:   14 * MB }, // internal
-    { path: "explicit/g",       kind: HEAP,  memoryUsed:    1 * MB }, // internal, dup: merge
-    { path: "explicit/g/a",     kind: HEAP,  memoryUsed:    6 * MB },
-    { path: "explicit/g/b",     kind: HEAP,  memoryUsed:    5 * MB },
-    { path: "other1",           kind: OTHER, memoryUsed:  111 * MB },
-    { path: "other2",           kind: OTHER, memoryUsed:  222 * MB },
+  function f(aProcess, aPath, aKind, aMemoryUsed) {
+    return {
+      process:     aProcess,
+      path:        aPath,
+      kind:        aKind,
+      description: "(description)",
+      memoryUsed:  aMemoryUsed 
+    };
+  }
 
-    { path: "2nd:heap-used",    kind: OTHER, memoryUsed: 1000 * MB },
-    { path: "2nd:heap-unused",  kind: OTHER, memoryUsed:  100 * MB },
-    { path: "2nd:explicit/a/b/c",kind: HEAP, memoryUsed:  498 * MB },
-    { path: "2nd:explicit/a/b/c",kind: HEAP, memoryUsed:    1 * MB }, // dup: merge
-    { path: "2nd:explicit/b",   kind: HEAP,  memoryUsed:  400 * MB },
-    { path: "2nd:other1",       kind: OTHER, memoryUsed:  777 * MB },
+  fakeReporters = [
+    f("", "heap-used",          OTHER,  500 * MB),
+    f("", "heap-unused",        OTHER,  100 * MB),
+    f("", "explicit/a",         HEAP,   222 * MB),
+    f("", "explicit/b/a",       HEAP,    85 * MB),
+    f("", "explicit/b/b",       HEAP,    75 * MB),
+    f("", "explicit/b/c/a",     HEAP,    70 * MB),
+    f("", "explicit/b/c/b",     HEAP,     2 * MB), // omitted
+    f("", "explicit/c",         MAPPED, 123 * MB),
+    f("", "explicit/d",         MAPPED, 499 * KB), // omitted
+    f("", "explicit/e",         MAPPED, 100 * KB), // omitted
+    f("", "explicit/f/g/h/i",   HEAP,    20 * MB),
+    f("", "explicit/g",         HEAP,    14 * MB), // internal
+    f("", "explicit/g",         HEAP,     1 * MB), // internal, dup: merge
+    f("", "explicit/g/a",       HEAP,     6 * MB),
+    f("", "explicit/g/b",       HEAP,     5 * MB),
+    f("", "other1",             OTHER,  111 * MB),
+    f("", "other2",             OTHER,  222 * MB),
+
+    f("2nd", "heap-used",       OTHER, 1000 * MB),
+    f("2nd", "heap-unused",     OTHER,  100 * MB),
+    f("2nd", "explicit/a/b/c",  HEAP,   498 * MB),
+    f("2nd", "explicit/a/b/c",  HEAP,     1 * MB), // dup: merge
+    f("2nd", "explicit/b",      HEAP,   400 * MB),
+    f("2nd", "other1",          OTHER,  777 * MB),
 
     // kUnknown should be handled gracefully for "heap-used", non-leaf
     // reporters, leaf-reporters, and "other" reporters.
-    { path: "3rd:heap-used",    kind: OTHER, memoryUsed: kUnknown },
-    { path: "3rd:explicit/a",   kind: HEAP,  memoryUsed: kUnknown },
-    { path: "3rd:explicit/a/b", kind: HEAP,  memoryUsed: 333 * MB },
-    { path: "3rd:explicit/a/c", kind: HEAP,  memoryUsed: 444 * MB },
-    { path: "3rd:explicit/a/d", kind: HEAP,  memoryUsed: kUnknown },
-    { path: "3rd:explicit/b",   kind: MAPPED,memoryUsed: kUnknown },
-    { path: "3rd:other1",       kind: OTHER, memoryUsed: kUnknown }
+    f("3rd", "heap-used",       OTHER, kUnknown),
+    f("3rd", "explicit/a",      HEAP,  kUnknown),
+    f("3rd", "explicit/a/b",    HEAP,  333 * MB),
+    f("3rd", "explicit/a/c",    HEAP,  444 * MB),
+    f("3rd", "explicit/a/d",    HEAP,  kUnknown),
+    f("3rd", "explicit/b",      MAPPED,kUnknown),
+    f("3rd", "other1",          OTHER, kUnknown)
   ];
   for (var i = 0; i < fakeReporters.length; i++) {
-    fakeReporters[i].description = "(description)";
     mgr.registerReporter(fakeReporters[i]);
   }
   ]]>

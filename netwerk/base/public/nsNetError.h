@@ -144,6 +144,14 @@
 #define NS_ERROR_INVALID_CONTENT_ENCODING \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 27)
 
+/**
+ * A transport level corruption was found in the source document. for example
+ * a document with a calculated checksum that does not match the Content-MD5
+ * http header.
+ */
+#define NS_ERROR_CORRUPTED_CONTENT \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 29)
+
 /******************************************************************************
  * Connectivity error codes:
  */

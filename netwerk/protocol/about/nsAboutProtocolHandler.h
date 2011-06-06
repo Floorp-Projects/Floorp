@@ -94,7 +94,7 @@ public:
     // Override StartClone(), the nsISerializable methods, and
     // GetClassIDNoAlloc; this last is needed to make our nsISerializable impl
     // work right.
-    virtual nsSimpleURI* StartClone();
+    virtual nsSimpleURI* StartClone(RefHandlingEnum aRefHandlingMode);
     NS_IMETHOD Read(nsIObjectInputStream* aStream);
     NS_IMETHOD Write(nsIObjectOutputStream* aStream);
     NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc);

@@ -50,7 +50,6 @@
 
 class nsStyleContext;
 struct PLDHashTable;
-class nsILanguageAtomService;
 struct nsRuleData;
 class nsIStyleRule;
 struct nsCSSValueList;
@@ -416,7 +415,6 @@ public:
   // (which comes from the presShell) to perform the allocation.
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   void Destroy() { DestroyInternal(nsnull); }
-  static nsILanguageAtomService* gLangService;
 
   // Implemented in nsStyleSet.h, since it needs to know about nsStyleSet.
   inline void AddRef();

@@ -53,6 +53,7 @@
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
+#include "nsExceptionHandler.h"
 #endif
 
 
@@ -69,6 +70,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_callObserver(JNIEnv *, jclass, jstring observerKey, jstring topic, jstring data);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstring jObserverKey);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *, jclass, jstring status);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *, jclass, jstring stack);
 }
 
 
@@ -151,4 +153,13 @@ Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *jenv, jcl
     nsAppShell::gAppShell->NotifyObservers(nsnull,
                                            NS_NETWORK_LINK_TOPIC,
                                            sStatus.get());
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *, jclass, jstring stack)
+{
+     nsJNIString javaStack(stack);
+     CrashReporter::AppendAppNotesToCrashReport(
+         NS_ConvertUTF16toUTF8(javaStack));
+    abort();
 }

@@ -398,10 +398,10 @@ gfxContext::UserToDevice(const gfxRect& rect) const
     ymax = ymin;
     for (int i = 0; i < 3; i++) {
         cairo_user_to_device(mCairo, &x[i], &y[i]);
-        xmin = PR_MIN(xmin, x[i]);
-        xmax = PR_MAX(xmax, x[i]);
-        ymin = PR_MIN(ymin, y[i]);
-        ymax = PR_MAX(ymax, y[i]);
+        xmin = NS_MIN(xmin, x[i]);
+        xmax = NS_MAX(xmax, x[i]);
+        ymin = NS_MIN(ymin, y[i]);
+        ymax = NS_MAX(ymax, y[i]);
     }
 
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);

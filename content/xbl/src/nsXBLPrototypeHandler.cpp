@@ -80,6 +80,9 @@
 #include "nsCRT.h"
 #include "nsXBLEventHandler.h"
 #include "nsEventDispatcher.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -206,8 +209,8 @@ nsXBLPrototypeHandler::InitAccessKeys()
 
   // Get the menu access key value from prefs, overriding the default:
   kMenuAccessKey =
-    nsContentUtils::GetIntPref("ui.key.menuAccessKey", kMenuAccessKey);
-  kAccelKey = nsContentUtils::GetIntPref("ui.key.accelKey", kAccelKey);
+    Preferences::GetInt("ui.key.menuAccessKey", kMenuAccessKey);
+  kAccelKey = Preferences::GetInt("ui.key.accelKey", kAccelKey);
 }
 
 nsresult

@@ -71,11 +71,9 @@ DOM_MSG_DEF(NS_ERROR_DOM_TYPE_MISMATCH_ERR, "The type of an object is incompatib
 
 /* SVG DOM error codes from http://www.w3.org/TR/SVG11/svgdom.html */
 
-#ifdef MOZ_SVG
 DOM_MSG_DEF(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR, "Unknown or invalid type")
 DOM_MSG_DEF(NS_ERROR_DOM_SVG_INVALID_VALUE_ERR, "One of the parameters has an invalid value")
 DOM_MSG_DEF(NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE, "The matrix could not be computed")
-#endif
 
 /* DOM error codes from http://www.w3.org/TR/DOM-Level-3-XPath/ */
 

@@ -1856,7 +1856,7 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     useCaretRect = PR_FALSE;
     if (mCursorPosition != NO_IME_CARET) {
       PRUint32 cursorPosition =
-        PR_MIN(PRUint32(mCursorPosition), mCompositionString.Length());
+        NS_MIN<PRUint32>(mCursorPosition, mCompositionString.Length());
       offset -= cursorPosition;
       NS_ASSERTION(offset >= 0, "offset is negative!");
     }
