@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Test eval-ing names in a topmost script frame
 
 load(libdir + "asserts.js");

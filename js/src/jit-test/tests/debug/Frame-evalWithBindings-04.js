@@ -1,4 +1,6 @@
+// |jit-test| debug
 // evalWithBindings works on non-top frames.
+
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 var f1;

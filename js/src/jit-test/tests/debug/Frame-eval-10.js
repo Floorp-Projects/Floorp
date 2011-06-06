@@ -1,3 +1,4 @@
+// |jit-test| debug
 // frame.eval returns null if the eval code fails with an uncatchable error.
 var g = newGlobal('new-compartment');
 var dbg = Debug(g);

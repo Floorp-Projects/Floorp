@@ -1,4 +1,6 @@
+// |jit-test| debug
 // Two references to the same object get the same Debug.Object wrapper.
+
 var g = newGlobal('new-compartment');
 var dbg = Debug(g);
 var hits = 0;

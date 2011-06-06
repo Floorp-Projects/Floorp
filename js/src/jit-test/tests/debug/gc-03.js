@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Storing a property on a Debug.Object protects it from GC as long as the
 // referent is alive.
 

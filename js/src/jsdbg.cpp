@@ -160,10 +160,16 @@ Debug::Debug(JSObject *dbg, JSObject *hooks)
 
 Debug::~Debug()
 {
-    JS_ASSERT(debuggees.empty());
+    JS_ASSERT(object->compartment()->rt->gcRunning);
+    if (!debuggees.empty()) {
+        // This happens only during per-compartment GC. See comment in
+        // Debug::sweepAll.
+        JS_ASSERT(object->compartment()->rt->gcCurrentCompartment == object->compartment());
+        for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront())
+            removeDebuggeeGlobal(e.front(), NULL, &e);
+    }
 
     // This always happens in the GC thread, so no locking is required.
-    JS_ASSERT(object->compartment()->rt->gcRunning);
     JS_REMOVE_LINK(&link);
 }
 
@@ -610,9 +616,8 @@ Debug::trace(JSTracer *trc, JSObject *obj)
 }
 
 void
-Debug::sweepAll(JSContext *cx)
+Debug::sweepAll(JSRuntime *rt)
 {
-    JSRuntime *rt = cx->runtime;
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
         Debug *dbg = (Debug *) ((unsigned char *) p - offsetof(Debug, link));
 
@@ -631,49 +636,47 @@ Debug::sweepAll(JSContext *cx)
             // they are in different compartments), so in that case we just wait for
             // Debug::finalize.
             for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-                dbg->removeDebuggeeGlobal(cx, e.front(), NULL, &e);
+                dbg->removeDebuggeeGlobal(e.front(), NULL, &e);
         }
 
     }
 
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
-        sweepCompartment(cx, *c);
+        sweepCompartment(*c);
 }
 
 void
-Debug::detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global, GlobalObjectSet::Enum *compartmentEnum)
+Debug::detachAllDebuggersFromGlobal(GlobalObject *global, GlobalObjectSet::Enum *compartmentEnum)
 {
     const GlobalObject::DebugVector *debuggers = global->getDebuggers();
     JS_ASSERT(!debuggers->empty());
     while (!debuggers->empty())
-        debuggers->back()->removeDebuggeeGlobal(cx, global, compartmentEnum, NULL);
+        debuggers->back()->removeDebuggeeGlobal(global, compartmentEnum, NULL);
 }
 
 void
-Debug::sweepCompartment(JSContext *cx, JSCompartment *compartment)
+Debug::sweepCompartment(JSCompartment *compartment)
 {
     // For each debuggee being GC'd, detach it from all its debuggers.
     GlobalObjectSet &debuggees = compartment->getDebuggees();
     for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
         GlobalObject *global = e.front();
         if (!global->isMarked())
-            detachAllDebuggersFromGlobal(cx, global, &e);
+            detachAllDebuggersFromGlobal(global, &e);
     }
+}
+
+void
+Debug::detachFromCompartment(JSCompartment *comp)
+{
+    for (GlobalObjectSet::Enum e(comp->getDebuggees()); !e.empty(); e.popFront())
+        detachAllDebuggersFromGlobal(e.front(), &e);
 }
 
 void
 Debug::finalize(JSContext *cx, JSObject *obj)
 {
     Debug *dbg = (Debug *) obj->getPrivate();
-    if (!dbg)
-        return;
-    if (!dbg->debuggees.empty()) {
-        // This happens only during per-compartment GC. See comment in
-        // Debug::sweepAll.
-        JS_ASSERT(cx->runtime->gcCurrentCompartment == dbg->object->compartment());
-        for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-            dbg->removeDebuggeeGlobal(cx, e.front(), NULL, &e);
-    }
     cx->delete_(dbg);
 }
 
@@ -819,7 +822,7 @@ Debug::removeDebuggee(JSContext *cx, uintN argc, Value *vp)
         return false;
     GlobalObject *global = referent->getGlobal();
     if (dbg->debuggees.has(global))
-        dbg->removeDebuggeeGlobal(cx, global, NULL, NULL);
+        dbg->removeDebuggeeGlobal(global, NULL, NULL);
     vp->setUndefined();
     return true;
 }
@@ -927,7 +930,10 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
 bool
 Debug::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
 {
-    JSCompartment *debuggeeCompartment = obj->compartment();
+    if (!obj->compartment()->debugMode) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DEBUG_MODE);
+        return false;
+    }
 
     // Check for cycles. If obj's compartment is reachable from this Debug
     // object's compartment by following debuggee-to-debugger links, then
@@ -936,9 +942,10 @@ Debug::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
     Vector<JSCompartment *> visited(cx);
     if (!visited.append(object->compartment()))
         return false;
+    JSCompartment *dest = obj->compartment();
     for (size_t i = 0; i < visited.length(); i++) {
         JSCompartment *c = visited[i];
-        if (c == debuggeeCompartment) {
+        if (c == dest) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_LOOP);
             return false;
         }
@@ -956,17 +963,12 @@ Debug::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
     }
 
     // Each debugger-debuggee relation must be stored in up to three places.
-    // JSCompartment::addDebuggee enables debug mode if needed.
     GlobalObject::DebugVector *v = obj->getOrCreateDebuggers(cx);
-    if (!v || !v->append(this)) {
-        js_ReportOutOfMemory(cx);
+    if (!v || !v->append(this))
         goto fail1;
-    }
-    if (!debuggees.put(obj)) {
-        js_ReportOutOfMemory(cx);
+    if (!debuggees.put(obj))
         goto fail2;
-    }
-    if (obj->getDebuggers()->length() == 1 && !debuggeeCompartment->addDebuggee(cx, obj))
+    if (obj->getDebuggers()->length() == 1 && !obj->compartment()->addDebuggee(obj))
         goto fail3;
     return true;
 
@@ -977,12 +979,12 @@ fail2:
     JS_ASSERT(v->back() == this);
     v->popBack();
 fail1:
+    js_ReportOutOfMemory(cx);
     return false;
 }
 
 void
-Debug::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
-                            GlobalObjectSet::Enum *compartmentEnum,
+Debug::removeDebuggeeGlobal(GlobalObject *global, GlobalObjectSet::Enum *compartmentEnum,
                             GlobalObjectSet::Enum *debugEnum)
 {
     // Each debuggee is in two HashSets: one for its compartment and one for
@@ -1024,7 +1026,7 @@ Debug::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
         if (compartmentEnum)
             compartmentEnum->removeFront();
         else
-            global->compartment()->removeDebuggee(cx, global);
+            global->compartment()->removeDebuggee(global);
     }
     if (debugEnum)
         debugEnum->removeFront();

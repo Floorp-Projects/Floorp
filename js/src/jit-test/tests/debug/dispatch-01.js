@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Test removing hooks during dispatch.
 
 var g = newGlobal('new-compartment');

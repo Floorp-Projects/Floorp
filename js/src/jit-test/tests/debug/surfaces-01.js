@@ -1,4 +1,4 @@
-// Check superficial characteristics of functions and properties (not functionality).
+// |jit-test| debug
 
 function checkFunction(obj, name, nargs) {
     var desc = Object.getOwnPropertyDescriptor(obj, name);

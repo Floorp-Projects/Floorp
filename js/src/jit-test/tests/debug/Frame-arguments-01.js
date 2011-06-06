@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Frame.prototype.arguments with primitive values
 
 var g = newGlobal('new-compartment');

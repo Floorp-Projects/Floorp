@@ -1,3 +1,4 @@
+// |jit-test| debug
 // var declarations in strict frame.eval do not modify the frame
 
 var g = newGlobal('new-compartment');

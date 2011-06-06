@@ -1,3 +1,4 @@
+// |jit-test| debug
 // dumb basics of uncaughtExceptionHook
 
 load(libdir + 'asserts.js');

@@ -1,4 +1,6 @@
+// |jit-test| debug
 // evalWithBindings ignores non-enumerable and non-own properties.
+
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 var hits = 0;
