@@ -204,6 +204,9 @@ void main()
 // Three textures, representing YCbCr planes of a video image
 @shader sYCbCrTextureLayerFS
 $LAYER_FRAGMENT$
+#ifdef GL_ES
+precision mediump float;
+#endif
 uniform sampler2D uYTexture;
 uniform sampler2D uCbTexture;
 uniform sampler2D uCrTexture;

@@ -31,6 +31,10 @@
     margin-top: -1px;
     -moz-margin-start: 1px;
   }
+
+  .panel-promo-message {
+    font-style: italic;
+  }
 }
 
 @media all and (-moz-windows-default-theme) {

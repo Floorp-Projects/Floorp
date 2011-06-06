@@ -53,12 +53,13 @@
 namespace mozilla {
 namespace dom {
 
-Link::Link()
+Link::Link(Element *aElement)
   : mLinkState(defaultState)
   , mRegistered(false)
-  , mContent(NULL)
+  , mElement(aElement)
   , mHistory(services::GetHistoryService())
 {
+  NS_ABORT_IF_FALSE(mElement, "Must have an element");
 }
 
 Link::~Link()
@@ -84,25 +85,18 @@ Link::SetLinkState(nsLinkState aState)
   NS_ASSERTION(mLinkState != aState,
                "Setting state to the currently set state!");
 
-  // Remember our old link state for when we notify.
-  nsEventStates oldLinkState = LinkState();
-
   // Set our current state as appropriate.
   mLinkState = aState;
 
   // Per IHistory interface documentation, we are no longer registered.
   mRegistered = false;
 
-  // Notify the document that our visited state has changed.
-  nsIContent *content = Content();
-  nsIDocument *doc = content->GetCurrentDoc();
-  NS_ASSERTION(doc, "Registered but we have no document?!");
-  nsEventStates newLinkState = LinkState();
-  NS_ASSERTION(newLinkState == NS_EVENT_STATE_VISITED ||
-               newLinkState == NS_EVENT_STATE_UNVISITED,
-               "Unexpected state obtained from LinkState()!");
-  mozAutoDocUpdate update(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-  doc->ContentStateChanged(content, oldLinkState ^ newLinkState);
+  NS_ABORT_IF_FALSE(LinkState() == NS_EVENT_STATE_VISITED ||
+                    LinkState() == NS_EVENT_STATE_UNVISITED,
+                    "Unexpected state obtained from LinkState()!");
+
+  // Tell the element to update its visited state
+  mElement->UpdateState(true);
 }
 
 nsEventStates
@@ -113,8 +107,8 @@ Link::LinkState() const
   Link *self = const_cast<Link *>(this);
 
   // If we are not in the document, default to not visited.
-  nsIContent *content = self->Content();
-  if (!content->IsInDoc()) {
+  Element *element = self->mElement;
+  if (!element->IsInDoc()) {
     self->mLinkState = eLinkState_Unvisited;
   }
 
@@ -137,7 +131,7 @@ Link::LinkState() const
       self->mLinkState = eLinkState_Unvisited;
 
       // And make sure we are in the document's link map.
-      nsIDocument *doc = content->GetCurrentDoc();
+      nsIDocument *doc = element->GetCurrentDoc();
       if (doc) {
         doc->AddStyleRelevantLink(self);
       }
@@ -168,11 +162,11 @@ Link::GetURI() const
 
   // Otherwise obtain it.
   Link *self = const_cast<Link *>(this);
-  nsIContent *content = self->Content();
-  uri = content->GetHrefURI();
+  Element *element = self->mElement;
+  uri = element->GetHrefURI();
 
   // We want to cache the URI if the node is in the document.
-  if (uri && content->IsInDoc()) {
+  if (uri && element->IsInDoc()) {
     mCachedURI = uri;
   }
 
@@ -467,10 +461,10 @@ Link::ResetLinkState(bool aNotify)
     return;
   }
 
-  nsIContent *content = Content();
+  Element *element = mElement;
 
   // Tell the document to forget about this link if we were a link before.
-  nsIDocument *doc = content->GetCurrentDoc();
+  nsIDocument *doc = element->GetCurrentDoc();
   if (doc && mLinkState != eLinkState_NotLink) {
     doc->ForgetLink(this);
   }
@@ -483,15 +477,16 @@ Link::ResetLinkState(bool aNotify)
   // Get rid of our cached URI.
   mCachedURI = nsnull;
 
-  // If aNotify is true, notify both of the visited-related states.  We have
-  // to do that, because we might be racing with a response from history and
-  // hence need to make sure that we get restyled whether we were visited or
-  // not before.  In particular, we need to make sure that our LinkState() is
-  // called so that we'll start a new history query as needed.
-  if (aNotify && doc) {
-    nsEventStates changedState = NS_EVENT_STATE_VISITED ^ NS_EVENT_STATE_UNVISITED;
-    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, aNotify);
-    doc->ContentStateChanged(content, changedState);
+  // We have to be very careful here: if aNotify is false we do NOT
+  // want to call UpdateState, because that will call into LinkState()
+  // and try to start off loads, etc.  But ResetLinkState is called
+  // with aNotify false when things are in inconsistent states, so
+  // we'll get confused in that situation.  Instead, just silently
+  // update the link state on mElement.
+  if (aNotify) {
+    mElement->UpdateState(aNotify);
+  } else {
+    mElement->UpdateLinkState(nsEventStates());
   }
 }
 
@@ -532,20 +527,8 @@ Link::SetHrefAttribute(nsIURI *aURI)
 
   nsCAutoString href;
   (void)aURI->GetSpec(href);
-  (void)Content()->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
-                           NS_ConvertUTF8toUTF16(href), PR_TRUE);
-}
-
-nsIContent *
-Link::Content()
-{
-  if (NS_LIKELY(mContent)) {
-    return mContent;
-  }
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(this));
-  NS_ABORT_IF_FALSE(content, "This must be able to QI to nsIContent!");
-  return mContent = content;
+  (void)mElement->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
+                          NS_ConvertUTF8toUTF16(href), PR_TRUE);
 }
 
 } // namespace dom

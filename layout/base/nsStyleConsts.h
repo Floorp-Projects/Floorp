@@ -233,9 +233,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_VOLUME_X_LOUD            5
 
 // See nsStyleColor
-#define NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR      1
+#define NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR 1
+#define NS_STYLE_COLOR_INHERIT_FROM_BODY  2  /* Can't come from CSS directly */
 #ifdef GFX_HAS_INVERT
-#define NS_STYLE_COLOR_INVERT             2
+#define NS_STYLE_COLOR_INVERT             3
 #endif
 
 // See nsStyleColor

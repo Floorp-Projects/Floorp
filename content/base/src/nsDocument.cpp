@@ -203,6 +203,9 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsXULAppAPI.h"
 #include "nsDOMTouchEvent.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 using namespace mozilla::dom;
 
 typedef nsTArray<Link*> LinkArray;
@@ -1685,9 +1688,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3DocumentEvent)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentStyle)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocumentStyle)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3EventTarget)
@@ -1871,6 +1871,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDOMImplementation)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mImageMaps,
+                                                       nsIDOMNodeList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedEncoder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStateObjectCached)
@@ -1923,6 +1925,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDOMImplementation)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedEncoder)
 
@@ -3447,9 +3450,8 @@ nsDocument::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 }
 
 nsresult
-nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent)
+nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  NS_ASSERTION(aMutationEvent, "Someone tried to inhibit mutations on document child removal.");
   nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
   if (!oldKid) {
     return NS_OK;
@@ -3461,7 +3463,7 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent
   }
 
   nsresult rv =
-    doRemoveChildAt(aIndex, aNotify, oldKid, mChildren, aMutationEvent);
+    doRemoveChildAt(aIndex, aNotify, oldKid, mChildren);
   mCachedRootElement = nsnull;
   return rv;
 }
@@ -3950,12 +3952,7 @@ nsDocument::BeginUpdate(nsUpdateType aUpdateType)
   }
   
   ++mUpdateNestLevel;
-  if (aUpdateType == UPDATE_CONTENT_MODEL) {
-    nsContentUtils::AddRemovableScriptBlocker();
-  }
-  else {
-    nsContentUtils::AddScriptBlocker();
-  }
+  nsContentUtils::AddScriptBlocker();
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
 }
 
@@ -3964,12 +3961,7 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
 
-  if (aUpdateType == UPDATE_CONTENT_MODEL) {
-    nsContentUtils::RemoveRemovableScriptBlocker();
-  }
-  else {
-    nsContentUtils::RemoveScriptBlocker();
-  }
+  nsContentUtils::RemoveScriptBlocker();
 
   --mUpdateNestLevel;
 
@@ -4130,14 +4122,13 @@ nsDocument::DispatchContentLoadedEvents()
   if (target_frame) {
     nsCOMPtr<nsIDocument> parent = mParentDocument;
     do {
-      nsCOMPtr<nsIDOMDocumentEvent> document_event =
-        do_QueryInterface(parent);
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(parent);
 
       nsCOMPtr<nsIDOMEvent> event;
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent;
-      if (document_event) {
-        document_event->CreateEvent(NS_LITERAL_STRING("Events"),
-                                    getter_AddRefs(event));
+      if (domDoc) {
+        domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
+                            getter_AddRefs(event));
 
         privateEvent = do_QueryInterface(event);
       }
@@ -4212,6 +4203,8 @@ nsDocument::EndLoad()
 void
 nsDocument::ContentStateChanged(nsIContent* aContent, nsEventStates aStateMask)
 {
+  NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
+                  "Someone forgot a scriptblocker");
   NS_DOCUMENT_NOTIFY_OBSERVERS(ContentStateChanged,
                                (this, aContent, aStateMask));
 }
@@ -4542,20 +4535,6 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::CreateEntityReference(const nsAString& aName,
-                                  nsIDOMEntityReference** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  if (IsHTML()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5164,13 +5143,11 @@ nsDocument::GetTitle(nsAString& aTitle)
       rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
       break;
 #endif
-#ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       if (rootElement->Tag() == nsGkAtoms::svg) {
         GetTitleFromElement(kNameSpaceID_SVG, tmp);
         break;
       } // else fall through
-#endif
     default:
       GetTitleFromElement(kNameSpaceID_XHTML, tmp);
       break;
@@ -5189,10 +5166,8 @@ nsDocument::SetTitle(const nsAString& aTitle)
     return NS_OK;
 
   switch (rootElement->GetNameSpaceID()) {
-#ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       return NS_OK; // SVG doesn't support setting a title
-#endif
 #ifdef MOZ_XUL
     case kNameSpaceID_XUL:
       return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
@@ -6155,12 +6130,6 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 }
 
 NS_IMETHODIMP
-nsDocument::NormalizeDocument()
-{
-  return Normalize();
-}
-
-NS_IMETHODIMP
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   return nsINode::GetOwnerDocument(aOwnerDocument);
@@ -6358,19 +6327,6 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
   // Create event even without presContext.
   return nsEventDispatcher::CreateEvent(presContext, nsnull,
                                         aEventType, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDOMEventGroup> group(do_CreateInstance(kDOMEventGroupCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aInstancePtrResult = group;
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
 }
 
 void
@@ -7088,12 +7044,21 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
 
     PRBool hasMore = PR_FALSE;
 
+    // We want to bail out if we have any requests other than aNewRequest (or
+    // in the case when aNewRequest is a part of a multipart response the base
+    // channel the multipart response is coming in on).
+    nsCOMPtr<nsIChannel> baseChannel;
+    nsCOMPtr<nsIMultiPartChannel> part(do_QueryInterface(aNewRequest));
+    if (part) {
+      part->GetBaseChannel(getter_AddRefs(baseChannel));
+    }
+
     while (NS_SUCCEEDED(requests->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> elem;
       requests->GetNext(getter_AddRefs(elem));
 
       nsCOMPtr<nsIRequest> request = do_QueryInterface(elem);
-      if (request && request != aNewRequest) {
+      if (request && request != aNewRequest && request != baseChannel) {
 #ifdef DEBUG_PAGE_CACHE
         nsCAutoString requestName, docSpec;
         request->GetName(requestName);
@@ -7628,7 +7593,7 @@ nsDocument::RefreshLinkHrefs()
   (void)mStyledLinks.EnumerateEntries(EnumerateStyledLinks, &linksToNotify);
 
   // Reset all of our styled links.
-  MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_STATE, PR_TRUE);
+  nsAutoScriptBlocker scriptBlocker;
   for (LinkArray::size_type i = 0; i < linksToNotify.Length(); i++) {
     linksToNotify[i]->ResetLinkState(true);
   }
@@ -8178,6 +8143,48 @@ nsDocument::GetStateObject(nsIVariant** aState)
   return NS_OK;
 }
 
+Element*
+nsDocument::FindImageMap(const nsAString& aUseMapValue)
+{
+  if (aUseMapValue.IsEmpty()) {
+    return nsnull;
+  }
+
+  nsAString::const_iterator start, end;
+  aUseMapValue.BeginReading(start);
+  aUseMapValue.EndReading(end);
+
+  PRInt32 hash = aUseMapValue.FindChar('#');
+  if (hash < 0) {
+    return nsnull;
+  }
+  // aUsemap contains a '#', set start to point right after the '#'
+  start.advance(hash + 1);
+
+  if (start == end) {
+    return nsnull; // aUsemap == "#"
+  }
+
+  const nsAString& mapName = Substring(start, end);
+
+  if (!mImageMaps) {
+    mImageMaps = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::map, nsGkAtoms::map);
+  }
+
+  PRUint32 i, n = mImageMaps->Length(PR_TRUE);
+  for (i = 0; i < n; ++i) {
+    nsIContent* map = mImageMaps->GetNodeAt(i);
+    if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, mapName,
+                         eCaseMatters) ||
+        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, mapName,
+                         eIgnoreCase)) {
+      return map->AsElement();
+    }
+  }
+
+  return nsnull;
+}
+
 nsresult
 nsDocument::AddImage(imgIRequest* aImage)
 {
@@ -8276,7 +8283,7 @@ nsresult
 nsDocument::SetImageLockingState(PRBool aLocked)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content &&
-      !nsContentUtils::GetBoolPref("content.image.allow_locking", PR_TRUE)) {
+      !Preferences::GetBool("content.image.allow_locking", PR_TRUE)) {
     return NS_OK;
   }
 

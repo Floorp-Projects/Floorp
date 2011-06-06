@@ -555,12 +555,6 @@ nsDOMAttribute::GetIsId(PRBool* aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::GetSchemaTypeInfo(nsIDOM3TypeInfo** aReturn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 PRBool
 nsDOMAttribute::IsNodeOfType(PRUint32 aFlags) const
 {
@@ -610,9 +604,8 @@ nsDOMAttribute::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 }
 
 nsresult
-nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent)
+nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  NS_ASSERTION(aMutationEvent, "Someone tried to inhibit mutations on attribute child removal.");
   if (aIndex != 0 || !mChild) {
     return NS_OK;
   }

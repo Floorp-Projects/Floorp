@@ -2808,12 +2808,6 @@ JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
 #endif
 }
 
-JS_PUBLIC_API(void)
-JS_SetScriptStackQuota(JSContext *cx, size_t quota)
-{
-    cx->scriptStackQuota = quota;
-}
-
 /************************************************************************/
 
 JS_PUBLIC_API(void)

@@ -60,6 +60,13 @@
         <parameter name="height"/>
         <body>
           <![CDATA[
+            let thumbnail = this.thumbnail;
+            if (browser.currentURI.spec == "about:blank") {
+              thumbnail.setAttribute("empty", "true");
+              return;
+            }
+            thumbnail.removeAttribute("empty");
+
             const tabWidth = 104;
             const tabHeight = 65;
 
@@ -77,9 +84,6 @@
               // the browser aspect ratio does not match the tabs aspect ratio
               width = height / ratio;
             }
-
-            let thumbnail = this.thumbnail;
-            thumbnail.removeAttribute("empty");
 
             // Recreate the canvas as it may be tainted and not useable for remote pages
             if (thumbnail.hasAttribute("restored")) {
@@ -172,23 +176,20 @@
               this._closedTab = null;
             }
 
-            if (aTab.ignoreUndo) {
+            let isEmpty = (aTab.thumbnail && aTab.thumbnail.hasAttribute("empty"));
+            if (aTab.ignoreUndo || isEmpty) {
               this.children.removeChild(aTab);
             } else if (!closedTab || closedTab != aTab) {
-              if (aTab.thumbnail && !aTab.thumbnail.hasAttribute("empty")) {
-                // duplicate the old thumbnail to the new one because moving the
-                // tab in the dom clear the canvas
-                let oldThumbnail = aTab.thumbnail.toDataURL("image/png");
-                this._tabsUndo.appendChild(aTab);
-                let thumbnailImg = new Image();
-                thumbnailImg.onload = function() {
-                  if (aTab.thumbnail)
-                    aTab.thumbnail.getContext("2d").drawImage(thumbnailImg, 0, 0);
-                };
-                thumbnailImg.src = oldThumbnail;
-              } else {
-                this._tabsUndo.appendChild(aTab);
-              }
+              // duplicate the old thumbnail to the new one because moving the
+              // tab in the dom clear the canvas
+              let oldThumbnail = aTab.thumbnail.toDataURL("image/png");
+              this._tabsUndo.appendChild(aTab);
+              let thumbnailImg = new Image();
+              thumbnailImg.onload = function() {
+                if (aTab.thumbnail)
+                  aTab.thumbnail.getContext("2d").drawImage(thumbnailImg, 0, 0);
+              };
+              thumbnailImg.src = oldThumbnail;
 
               aTab.setAttribute("reload", "true");
               this._closedTab = aTab;

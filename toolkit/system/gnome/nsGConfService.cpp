@@ -54,7 +54,6 @@ nsGConfService::~nsGConfService()
 nsresult
 nsGConfService::Init()
 {
-  g_type_init();
   mClient = gconf_client_get_default();
   return mClient ? NS_OK : NS_ERROR_FAILURE;
 }

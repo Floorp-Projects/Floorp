@@ -496,3 +496,7 @@ statuspanel[label=""] {
   width: 100%;
   -moz-box-align: end;
 }
+
+.panel-inner-arrowcontentfooter[footertype="promobox"] {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#promobox");
+}

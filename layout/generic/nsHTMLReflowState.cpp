@@ -54,8 +54,8 @@
 #include "nsTableCellFrame.h"
 #include "nsIServiceManager.h"
 #include "nsIPercentHeightObserver.h"
-#include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/Preferences.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #endif
@@ -1613,7 +1613,7 @@ static int
 PrefsChanged(const char *aPrefName, void *instance)
 {
   sBlinkIsAllowed =
-    nsContentUtils::GetBoolPref("browser.blink_allowed", sBlinkIsAllowed);
+    Preferences::GetBool("browser.blink_allowed", sBlinkIsAllowed);
 
   return 0; /* PREF_OK */
 }
@@ -1625,8 +1625,7 @@ static PRBool BlinkIsAllowed(void)
 {
   if (!sPrefIsLoaded) {
     // Set up a listener and check the initial value
-    nsContentUtils::RegisterPrefCallback("browser.blink_allowed", PrefsChanged,
-                                         nsnull);
+    Preferences::RegisterCallback(PrefsChanged, "browser.blink_allowed");
     PrefsChanged(nsnull, nsnull);
     sPrefIsLoaded = PR_TRUE;
   }
@@ -1638,9 +1637,10 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
   if (sNormalLineHeightControl == eUninitialized) {
     // browser.display.normal_lineheight_calc_control is not user
     // changeable, so no need to register callback for it.
-    sNormalLineHeightControl =
-      static_cast<eNormalLineHeightControl>
-                 (nsContentUtils::GetIntPref("browser.display.normal_lineheight_calc_control", eNoExternalLeading));
+    PRInt32 val =
+      Preferences::GetInt("browser.display.normal_lineheight_calc_control",
+                          eNoExternalLeading);
+    sNormalLineHeightControl = static_cast<eNormalLineHeightControl>(val);
   }
   return sNormalLineHeightControl;
 }

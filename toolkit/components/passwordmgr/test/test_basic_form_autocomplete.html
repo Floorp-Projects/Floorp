@@ -189,6 +189,26 @@ function sendFakeAutocompleteEvent(element) {
     element.dispatchEvent(acEvent);
 }
 
+function hitEventLoop(func, times) {
+  if (times > 0) {
+    setTimeout(hitEventLoop, 0, func, times - 1);
+  } else {
+    setTimeout(func, 0);
+  }
+}
+
+var gNextTestWillOpenPopup = true;
+var gLastTest = 704;
+
+function addPopupListener(eventName, func, capture) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  autocompletePopup.addEventListener(eventName, func, capture);
+}
+
+function removePopupListener(eventName, func, capture) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  autocompletePopup.removeEventListener(eventName, func, capture);
+}
 
 /*
  * Main section of test...
@@ -206,6 +226,31 @@ function runTest(testNum) {
   if (testNum != 14)
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "Starting test #" + testNum);
+
+  if (gNextTestWillOpenPopup) {
+    addPopupListener("popupshown", function() {
+      removePopupListener("popupshown", arguments.callee, false);
+
+      if (testNum != gLastTest) {
+        window.setTimeout(runTest, 0, testNum + 1);
+      }
+    }, false);
+  } else {
+    var unexpectedPopup = function() {
+      removePopupListener("popupshown", arguments.callee, false);
+
+      ok(false, "Test " + testNum + " should not show a popup");
+    };
+    addPopupListener("popupshown", unexpectedPopup, false);
+    if (testNum == gLastTest) {
+      removePopupListener("popupshown", unexpectedPopup, false);
+    } else {
+      hitEventLoop(function() {
+        removePopupListener("popupshown", unexpectedPopup, false);
+        runTest(testNum + 1);
+      }, 100);
+    }
+  }
 
   switch(testNum) {
     case 1:
@@ -358,6 +403,7 @@ function runTest(testNum) {
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 13:
@@ -367,6 +413,7 @@ function runTest(testNum) {
         doKey("return");
         checkACForm("zzzuser4", "zzzpass4");
         restoreForm();
+        gNextTestWillOpenPopup = false;
         break;
 
     case 14:
@@ -375,6 +422,7 @@ function runTest(testNum) {
         uname.value = "zzzuser4";
         sendFakeAutocompleteEvent(uname);
         checkACForm("zzzuser4", "");
+        gNextTestWillOpenPopup = true;
         break;
 
     case 15:
@@ -477,6 +525,7 @@ function runTest(testNum) {
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 56:
@@ -489,6 +538,7 @@ function runTest(testNum) {
         is(numLogins, 1, "Correct number of logins after deleting one");
         pwmgr.removeLogin(login0); // remove the login that's not shown in the list.
         testNum = 99;
+        gNextTestWillOpenPopup = true;
         break;
 
 
@@ -503,6 +553,7 @@ function runTest(testNum) {
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 101:
@@ -512,6 +563,7 @@ function runTest(testNum) {
         doKey("return"); // not "enter"!
         checkACForm("singleuser5", "singlepass5");
         restoreForm(); // clear field, so reloading test doesn't fail
+        gNextTestWillOpenPopup = true;
         break;
 
     case 102:
@@ -523,6 +575,7 @@ function runTest(testNum) {
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 103:
@@ -531,6 +584,7 @@ function runTest(testNum) {
         checkACForm("", ""); // value shouldn't update
         doKey("return"); // not "enter"!
         checkACForm("singleuser5", "singlepass5");
+        gNextTestWillOpenPopup = true;
         break;
 
     case 104:
@@ -542,6 +596,7 @@ function runTest(testNum) {
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 105:
@@ -550,6 +605,7 @@ function runTest(testNum) {
         checkACForm("", ""); // value shouldn't update
         doKey("return"); // not "enter"!
         checkACForm("singleuser5", "singlepass5");
+        gNextTestWillOpenPopup = true;
         break;
 
     case 106:
@@ -561,6 +617,7 @@ function runTest(testNum) {
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 107:
@@ -569,6 +626,7 @@ function runTest(testNum) {
         checkACForm("", ""); // value shouldn't update
         doKey("return"); // not "enter"!
         checkACForm("singleuser5", "singlepass5");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 108:
@@ -578,6 +636,7 @@ function runTest(testNum) {
         uname = $_(6, "uname");
         pword = $_(6, "pword");
         checkACForm("singleuser5", "singlepass5");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 109:
@@ -592,6 +651,7 @@ function runTest(testNum) {
 
         pwmgr.removeLogin(login5);
         testNum = 499;
+        gNextTestWillOpenPopup = true;
         break;
 
     case 500:
@@ -616,6 +676,7 @@ function runTest(testNum) {
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 501:
@@ -632,6 +693,7 @@ function runTest(testNum) {
 
         pwmgr.removeLogin(login6A);
         testNum = 599;
+        gNextTestWillOpenPopup = false;
         break;
 
     case 600:
@@ -640,17 +702,20 @@ function runTest(testNum) {
         pword = $_(8, "pword");
         checkACForm("form8user", "form8pass");
         restoreForm();
+        gNextTestWillOpenPopup = false;
         break;
 
     case 601:
         checkACForm("", "");
         // Focus the previous form to trigger a blur.
         $_(7, "uname").focus();
+        gNextTestWillOpenPopup = false;
         break;
 
     case 602:
         checkACForm("", "");
         restoreForm();
+        gNextTestWillOpenPopup = false;
         break;
 
     case 603:
@@ -658,6 +723,7 @@ function runTest(testNum) {
         pwmgr.removeLogin(login7);
 
         testNum = 699;
+        gNextTestWillOpenPopup = false;
         break;
 
     case 700:
@@ -665,6 +731,7 @@ function runTest(testNum) {
         uname = $_(9, "uname");
         pword = $_(9, "pword");
         sendString("form9userAB", uname);
+        gNextTestWillOpenPopup = true;
         break;
 
     case 701:
@@ -672,6 +739,7 @@ function runTest(testNum) {
         uname.focus();
         doKey("left");
         sendChar("A", uname);
+        gNextTestWillOpenPopup = false;
         break;
 
     case 702:
@@ -681,11 +749,13 @@ function runTest(testNum) {
         doKey("down");
         doKey("return");
         checkACForm("form9userAAB", "form9pass");
+        gNextTestWillOpenPopup = false;
         break;
 
     case 703:
         pwmgr.addLogin(login8C);
         sendChar("z", uname);
+        gNextTestWillOpenPopup = false;
         break;
 
     case 704:
@@ -700,8 +770,6 @@ function runTest(testNum) {
         SimpleTest.finish();
         return;
   }
-
-  setTimeout(runTest, 50, testNum + 1); // XXX 40ms was too slow, why?
 }
 
 

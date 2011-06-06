@@ -518,7 +518,7 @@ protected:
    * Return true if the children flag is set.
    */
   inline bool IsChildrenFlag(ChildrenFlags aFlag) const
-    { return (mFlags & kChildrenFlagsMask) == aFlag; }
+    { return static_cast<ChildrenFlags> (mFlags & kChildrenFlagsMask) == aFlag; }
 
   /**
    * Set children flag.
@@ -605,9 +605,6 @@ protected:
 
   //////////////////////////////////////////////////////////////////////////////
   // Helpers
-
-  // Check the visibility across both parent content and chrome
-  PRBool CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView);
 
   /**
    *  Get the container node for an atomic region, defined by aria-atomic="true"

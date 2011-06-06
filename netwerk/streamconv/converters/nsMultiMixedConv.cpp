@@ -606,7 +606,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         // have enough info to start a part, go ahead and buffer
         // enough to collect a boundary token.
         if (!mPartChannel || !(cursor[bufLen-1] == nsCRT::LF) )
-            bufAmt = PR_MIN(mTokenLen - 1, bufLen);
+            bufAmt = NS_MIN(mTokenLen - 1, bufLen);
     }
 
     if (bufAmt) {

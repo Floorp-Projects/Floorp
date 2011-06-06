@@ -1,0 +1,222 @@
+# HG changeset patch
+# Parent 593e84b864c5470aa43682d308212878b0b4e5d9
+diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
+--- a/gfx/angle/Makefile.in
++++ b/gfx/angle/Makefile.in
+@@ -72,17 +72,17 @@ CPPSRCS = \
+         parseConst.cpp \
+         ParseHelper.cpp \
+         PoolAlloc.cpp \
+         QualifierAlive.cpp \
+         RemoveTree.cpp \
+         ShaderLang.cpp \
+         SymbolTable.cpp \
+ 	VariableInfo.cpp \
+-	debug.cpp \
++	compilerdebug.cpp \
+ 	ossource_nspr.cpp \
+ 	util.cpp \
+ 	ValidateLimitations.cpp \
+ 	$(NULL)
+ 
+ # flex/yacc generated files
+ CPPSRCS += \
+ 	glslang_lex.cpp \
+diff --git a/gfx/angle/src/build_angle.gyp b/gfx/angle/src/build_angle.gyp
+--- a/gfx/angle/src/build_angle.gyp
++++ b/gfx/angle/src/build_angle.gyp
+@@ -17,18 +17,18 @@
+         '.',
+         '../include',
+       ],
+       'sources': [
+         'compiler/BaseTypes.h',
+         'compiler/Common.h',
+         'compiler/Compiler.cpp',
+         'compiler/ConstantUnion.h',
+-        'compiler/debug.cpp',
+-        'compiler/debug.h',
++        'compiler/compilerdebug.cpp',
++        'compiler/compilerdebug.h',
+         'compiler/glslang.h',
+         'compiler/glslang_lex.cpp',
+         'compiler/glslang_tab.cpp',
+         'compiler/glslang_tab.h',
+         'compiler/InfoSink.cpp',
+         'compiler/InfoSink.h',
+         'compiler/Initialize.cpp',
+         'compiler/Initialize.h',
+diff --git a/gfx/angle/src/compiler/OutputGLSL.cpp b/gfx/angle/src/compiler/OutputGLSL.cpp
+--- a/gfx/angle/src/compiler/OutputGLSL.cpp
++++ b/gfx/angle/src/compiler/OutputGLSL.cpp
+@@ -1,16 +1,16 @@
+ //
+ // Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
+ #include "compiler/OutputGLSL.h"
+-#include "compiler/debug.h"
++#include "compiler/compilerdebug.h"
+ 
+ namespace
+ {
+ TString getTypeName(const TType& type)
+ {
+     TInfoSinkBase out;
+     if (type.isMatrix())
+     {
+diff --git a/gfx/angle/src/compiler/OutputHLSL.cpp b/gfx/angle/src/compiler/OutputHLSL.cpp
+--- a/gfx/angle/src/compiler/OutputHLSL.cpp
++++ b/gfx/angle/src/compiler/OutputHLSL.cpp
+@@ -1,17 +1,17 @@
+ //
+ // Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
+ #include "compiler/OutputHLSL.h"
+ 
+-#include "compiler/debug.h"
++#include "compiler/compilerdebug.h"
+ #include "compiler/InfoSink.h"
+ #include "compiler/UnfoldSelect.h"
+ #include "compiler/SearchSymbol.h"
+ 
+ #include <stdio.h>
+ #include <algorithm>
+ 
+ namespace sh
+diff --git a/gfx/angle/src/compiler/Types.h b/gfx/angle/src/compiler/Types.h
+--- a/gfx/angle/src/compiler/Types.h
++++ b/gfx/angle/src/compiler/Types.h
+@@ -4,17 +4,17 @@
+ // found in the LICENSE file.
+ //
+ 
+ #ifndef _TYPES_INCLUDED
+ #define _TYPES_INCLUDED
+ 
+ #include "compiler/BaseTypes.h"
+ #include "compiler/Common.h"
+-#include "compiler/debug.h"
++#include "compiler/compilerdebug.h"
+ 
+ //
+ // Need to have association of line numbers to types in a list for building structs.
+ //
+ class TType;
+ struct TTypeLine {
+     TType* type;
+     int line;
+diff --git a/gfx/angle/src/compiler/compilerdebug.cpp b/gfx/angle/src/compiler/compilerdebug.cpp
+--- a/gfx/angle/src/compiler/compilerdebug.cpp
++++ b/gfx/angle/src/compiler/compilerdebug.cpp
+@@ -1,17 +1,17 @@
+ //
+ // Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
+-// debug.cpp: Debugging utilities.
++// compilerdebug.cpp: Debugging utilities.
+ 
+-#include "compiler/debug.h"
++#include "compiler/compilerdebug.h"
+ 
+ #include <stdarg.h>
+ #include <stdio.h>
+ 
+ #include "compiler/ParseHelper.h"
+ 
+ static const int kTraceBufferLen = 1024;
+ 
+diff --git a/gfx/angle/src/compiler/compilerdebug.h b/gfx/angle/src/compiler/compilerdebug.h
+--- a/gfx/angle/src/compiler/compilerdebug.h
++++ b/gfx/angle/src/compiler/compilerdebug.h
+@@ -1,15 +1,15 @@
+ //
+ // Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
+-// debug.h: Debugging utilities.
++// compilerdebug.h: Debugging utilities.
+ 
+ #ifndef COMPILER_DEBUG_H_
+ #define COMPILER_DEBUG_H_
+ 
+ #include <assert.h>
+ 
+ #ifdef _DEBUG
+ #define TRACE_ENABLED  // define to enable debug message tracing
+diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclude.h
+--- a/gfx/angle/src/compiler/osinclude.h
++++ b/gfx/angle/src/compiler/osinclude.h
+@@ -32,17 +32,17 @@
+ #include <windows.h>
+ #elif defined(ANGLE_OS_POSIX)
+ #include <pthread.h>
+ #include <semaphore.h>
+ #include <errno.h>
+ #endif  // ANGLE_USE_NSPR
+ 
+ 
+-#include "compiler/debug.h"
++#include "compiler/compilerdebug.h"
+ 
+ //
+ // Thread Local Storage Operations
+ //
+ #if defined(ANGLE_USE_NSPR)
+ typedef PRUintn OS_TLSIndex;
+ #define OS_INVALID_TLS_INDEX 0xFFFFFFFF
+ #elif defined(ANGLE_OS_WIN)
+diff --git a/gfx/angle/src/compiler/preprocessor/atom.c b/gfx/angle/src/compiler/preprocessor/atom.c
+--- a/gfx/angle/src/compiler/preprocessor/atom.c
++++ b/gfx/angle/src/compiler/preprocessor/atom.c
+@@ -45,17 +45,17 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
+ //
+ // atom.c
+ //
+ 
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+ 
+-#include "compiler/debug.h"
++#include "compiler/compilerdebug.h"
+ #include "compiler/preprocessor/slglobals.h"
+ 
+ #undef malloc
+ #undef realloc
+ #undef free
+ 
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////////////// String table: //////////////////////////////////////
+diff --git a/gfx/angle/src/compiler/preprocessor/tokens.c b/gfx/angle/src/compiler/preprocessor/tokens.c
+--- a/gfx/angle/src/compiler/preprocessor/tokens.c
++++ b/gfx/angle/src/compiler/preprocessor/tokens.c
+@@ -45,17 +45,17 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
+ // tokens.c
+ //
+ 
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <ctype.h>
+ 
+-#include "compiler/debug.h"
++#include "compiler/compilerdebug.h"
+ #include "compiler/preprocessor/slglobals.h"
+ #include "compiler/util.h"
+ 
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////// Preprocessor and Token Recorder and Playback: ////////////////////////
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ 
+ /*

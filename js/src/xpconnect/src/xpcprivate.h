@@ -519,6 +519,8 @@ public:
 
     JSBool IsShuttingDown() const {return mShuttingDown;}
 
+    void EnsureGCBeforeCC() { mNeedGCBeforeCC = JS_TRUE; }
+
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
@@ -553,6 +555,7 @@ public:
     virtual nsresult FinishTraverse();
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
+    virtual bool NeedCollect();
     virtual void Collect();
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
@@ -602,6 +605,7 @@ private:
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     PRUint16                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
+    JSBool                   mNeedGCBeforeCC;
 #ifdef DEBUG_CC
     PLDHashTable             mJSRoots;
 #endif
