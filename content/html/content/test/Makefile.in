@@ -240,6 +240,7 @@ _TEST_FILES = \
 		test_bug587469.html \
 		test_bug598643.html \
 		test_bug596350.html \
+		test_bug598833-1.html \
 		test_bug600155.html \
 		test_bug556007.html \
 		test_bug606817.html \
@@ -279,6 +280,8 @@ _TEST_FILES = \
 		test_bug658746.html \
 		test_bug659596.html \
 		test_bug659743.xml \
+		test_bug660663.html \
+		test_restore_from_parser_fragment.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

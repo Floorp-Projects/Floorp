@@ -53,7 +53,7 @@
 const dpun Double::NaN = DOUBLE_NaN;
 #ifdef IS_BIG_ENDIAN
 const dpun Double::POSITIVE_INFINITY = {{DOUBLE_HI32_EXPMASK, 0}};
-const txdpun Double::NEGATIVE_INFINITY = {{DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT, 0}};
+const dpun Double::NEGATIVE_INFINITY = {{DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT, 0}};
 #else
 const dpun Double::POSITIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK}};
 const dpun Double::NEGATIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT}};
@@ -261,7 +261,7 @@ void Double::toString(double aValue, nsAString& aDest)
         }
     }
     // mantissa
-    int firstlen = PR_MIN(intDigits, endp - buf);
+    int firstlen = NS_MIN<size_t>(intDigits, endp - buf);
     for (i = 0; i < firstlen; i++) {
         *dest = buf[i]; ++dest;
     }

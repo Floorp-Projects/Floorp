@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
-PARALLEL_DIRS		= base canvas events html smil svg xml xul xbl xslt
+PARALLEL_DIRS		= base canvas events html mathml smil svg xml xul xbl xslt
 
 ifdef MOZ_MEDIA
 PARALLEL_DIRS	+= media
@@ -51,10 +51,6 @@ endif
 
 ifdef MOZ_XTF
 PARALLEL_DIRS   += xtf
-endif
-
-ifdef MOZ_MATHML
-PARALLEL_DIRS   += mathml
 endif
 
 ifdef ENABLE_TESTS

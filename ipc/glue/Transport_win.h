@@ -1,10 +1,12 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at:
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -12,20 +14,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ *   The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,20 +38,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMNode.idl"
+#ifndef mozilla_ipc_Transport_win_h
+#define mozilla_ipc_Transport_win_h 1
 
-/**
- * The nsIDOMNotation interface represents a notation declared in the DTD.
- * A notation  either declares, by name, the format of an unparsed entity, 
- * or is used for formal declaration of processing instruction targets.
- *
- * For more information on this interface please see 
- * http://www.w3.org/TR/DOM-Level-2-Core/
- */
+#include <string>
 
-[scriptable, uuid(43658ade-a157-447a-8dcd-aa7fc824ef0a)]
-interface nsIDOMNotation : nsIDOMNode
+#include "IPC/IPCMessageUtils.h"
+
+
+namespace mozilla {
+namespace ipc {
+
+struct TransportDescriptor
 {
-  readonly attribute DOMString            publicId;
-  readonly attribute DOMString            systemId;
+  std::wstring mPipeName;
+  HANDLE mServerPipe;
 };
+
+} // namespace ipc
+} // namespace mozilla
+
+
+namespace IPC {
+
+template<>
+struct ParamTraits<mozilla::ipc::TransportDescriptor>
+{
+  typedef mozilla::ipc::TransportDescriptor paramType;
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mPipeName);
+    WriteParam(aMsg, aParam.mServerPipe);
+  }
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mPipeName) &&
+            ReadParam(aMsg, aIter, &aResult->mServerPipe));
+  }
+};
+
+} // namespace IPC
+
+
+#endif  // mozilla_ipc_Transport_win_h

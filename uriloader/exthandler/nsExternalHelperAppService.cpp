@@ -1934,7 +1934,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
     while (NS_SUCCEEDED(rv) && count > 0) // while we still have bytes to copy...
     {
       readError = PR_TRUE;
-      rv = inStr->Read(mDataBuffer, PR_MIN(count, mBufferSize - 1), &numBytesRead);
+      rv = inStr->Read(mDataBuffer, NS_MIN(count, mBufferSize - 1), &numBytesRead);
       if (NS_SUCCEEDED(rv))
       {
         if (count >= numBytesRead)

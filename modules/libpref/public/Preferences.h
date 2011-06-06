@@ -97,7 +97,11 @@ public:
    * Returns shared pref service instance
    * NOTE: not addreffed.
    */
-  static nsIPrefService* GetService() { return sPreferences; }
+  static nsIPrefService* GetService()
+  {
+    NS_ENSURE_TRUE(InitStaticMembers(), nsnull);
+    return sPreferences;
+  }
 
   /**
    * Returns shared pref branch instance.
@@ -105,7 +109,8 @@ public:
    */
   static nsIPrefBranch2* GetRootBranch()
   {
-    return sPreferences ? sPreferences->mRootBranch.get() : nsnull;
+    NS_ENSURE_TRUE(InitStaticMembers(), nsnull);
+    return sPreferences->mRootBranch.get();
   }
 
   /**
@@ -187,6 +192,11 @@ public:
    * Clears user set pref.
    */
   static nsresult ClearUser(const char* aPref);
+
+  /**
+   * Whether the pref has a user value or not.
+   */
+  static PRBool HasUserValue(const char* aPref);
 
   /**
    * Adds/Removes the observer for the root pref branch.

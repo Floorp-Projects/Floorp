@@ -52,7 +52,7 @@
 interface nsIDOMNode;
 
 
-[scriptable, uuid(00d3454c-e125-4cce-bfec-adfbf0975e05)]
+[scriptable, uuid(79286cd6-8293-4def-ba26-76422efc3d2a)]
 interface nsIMarkupDocumentViewer : nsISupports
 {
 
@@ -146,11 +146,7 @@ interface nsIMarkupDocumentViewer : nsISupports
    * Use this attribute to access all the Bidi options in one operation
    */
   attribute PRUint32 bidiOptions;
-};
 
-[scriptable, uuid(83b28afd-75a7-4d13-9265-625e36861f04)]
-interface nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH : nsIMarkupDocumentViewer
-{
 	/** The minimum font size  */
 	attribute long minFontSize;
 

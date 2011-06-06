@@ -470,7 +470,7 @@ nsHttpConnectionMgr::PruneDeadConnectionsCB(nsHashKey *key, void *data, void *cl
                 NS_RELEASE(conn);
                 self->mNumIdleConns--;
             } else {
-                timeToNextExpire = PR_MIN(timeToNextExpire, conn->TimeToLive());
+                timeToNextExpire = NS_MIN(timeToNextExpire, conn->TimeToLive());
             }
         }
     }

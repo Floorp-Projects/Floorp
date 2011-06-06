@@ -173,7 +173,7 @@ public:
    * should get an image frame.  Note that this method is only used by the
    * frame constructor; it's only here because it uses gIconLoad for now.
    */
-  static PRBool ShouldCreateImageFrameFor(nsIContent* aContent,
+  static PRBool ShouldCreateImageFrameFor(mozilla::dom::Element* aElement,
                                           nsStyleContext* aStyleContext);
   
   void DisplayAltFeedback(nsRenderingContext& aRenderingContext,
@@ -328,18 +328,7 @@ private:
   public:
     IconLoad();
 
-    void Shutdown()
-    {
-      // in case the pref service releases us later
-      if (mLoadingImage) {
-        mLoadingImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
-        mLoadingImage = nsnull;
-      }
-      if (mBrokenImage) {
-        mBrokenImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
-        mBrokenImage = nsnull;
-      }
-    }
+    void Shutdown();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER

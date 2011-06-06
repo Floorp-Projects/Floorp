@@ -1229,7 +1229,7 @@ nsXPInstallManager::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
                                     PRUint32 length)
 {
 #define XPI_ODA_BUFFER_SIZE 8*1024
-    PRUint32 amt = PR_MIN(XPI_ODA_BUFFER_SIZE, length);
+    PRUint32 amt = NS_MIN(XPI_ODA_BUFFER_SIZE, length);
     nsresult err;
     char buffer[XPI_ODA_BUFFER_SIZE];
     PRUint32 writeCount;
@@ -1256,7 +1256,7 @@ nsXPInstallManager::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
         }
         length -= amt;
 
-        amt = PR_MIN(XPI_ODA_BUFFER_SIZE, length);
+        amt = NS_MIN(XPI_ODA_BUFFER_SIZE, length);
 
     } while (length > 0);
 

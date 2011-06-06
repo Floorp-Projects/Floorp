@@ -177,15 +177,6 @@ nsToolkit::Startup(HMODULE hModule)
     VERIFY(::RegisterClassW(&wc) || 
            GetLastError() == ERROR_CLASS_ALREADY_EXISTS);
 
-    // Vista API.  Mozilla is DPI Aware.
-    typedef BOOL (*SetProcessDPIAwareFunc)(VOID);
-
-    SetProcessDPIAwareFunc setDPIAware = (SetProcessDPIAwareFunc)
-      GetProcAddress(LoadLibraryW(L"user32.dll"), "SetProcessDPIAware");
-
-    if (setDPIAware)
-      setDPIAware();
-
     nsUXThemeData::Initialize();
 }
 
