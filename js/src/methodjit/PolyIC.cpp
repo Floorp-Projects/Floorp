@@ -642,12 +642,12 @@ class SetPropCompiler : public PICStubCompiler
                 RecompilationMonitor monitor(cx);
                 JSScript *script = obj->getCallObjCalleeFunction()->script();
                 uint16 slot = uint16(shape->shortid);
-                if (!script->ensureTypeArray(cx))
+                if (!script->types.ensureTypeArray(cx))
                     return error();
                 if (shape->setterOp() == SetCallArg)
-                    script->typeSetArgument(cx, slot, pic.rhsTypes);
+                    script->types.setArgument(cx, slot, pic.rhsTypes);
                 else
-                    script->typeSetLocal(cx, slot, pic.rhsTypes);
+                    script->types.setLocal(cx, slot, pic.rhsTypes);
                 if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
@@ -929,7 +929,7 @@ class GetPropCompiler : public PICStubCompiler
         JS_ASSERT(pic.hasTypeCheck());
         JS_ASSERT(pic.kind == ic::PICInfo::CALL);
 
-        if (!f.fp()->script()->global)
+        if (!f.fp()->script()->hasGlobal())
             return disable("String.prototype without compile-and-go global");
 
         GetPropertyHelper<GetPropCompiler> getprop(cx, obj, atom, *this, f);
@@ -1626,20 +1626,17 @@ class ScopeNameCompiler : public PICStubCompiler
              * does not keep track of this information, so ensure that we ran type
              * inference on the parent script before doing propagation.
              */
-            analyze::ScriptAnalysis *analysis = newscript->analysis(cx);
-            if (analysis && !analysis->ranInference())
-                analysis->analyzeTypes(cx);
-            if (!analysis || analysis->OOM())
+            if (!newscript->ensureRanInference(cx))
                 return false;
 
             if (shape->getterOp() == GetCallArg)
-                types = newscript->argTypes(slot);
+                types = newscript->types.argTypes(slot);
             else if (shape->getterOp() == GetCallVar)
-                types = newscript->localTypes(slot);
+                types = newscript->types.localTypes(slot);
         } else {
             JS_ASSERT(!getprop.obj->getParent());
             if (getprop.obj->getType()->unknownProperties()) {
-                f.script()->typeMonitorUnknown(cx, f.pc());
+                f.script()->types.monitorUnknown(cx, f.pc());
                 return true;
             }
             types = getprop.obj->getType()->getProperty(cx, shape->propid, false);
@@ -1807,11 +1804,11 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                 THROW();
             JSString *str = f.regs.sp[-1].toString();
             f.regs.sp[-1].setInt32(str->length());
-            f.script()->typeMonitor(f.cx, f.pc(), f.regs.sp[-1]);
+            f.script()->types.monitor(f.cx, f.pc(), f.regs.sp[-1]);
             return;
         } else if (f.regs.sp[-1].isMagic(JS_LAZY_ARGUMENTS)) {
             f.regs.sp[-1].setInt32(f.regs.fp()->numActualArgs());
-            f.script()->typeMonitor(f.cx, f.pc(), f.regs.sp[-1]);
+            f.script()->types.monitor(f.cx, f.pc(), f.regs.sp[-1]);
             return;
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
@@ -1836,7 +1833,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                     JSString *str = obj->getPrimitiveThis().toString();
                     f.regs.sp[-1].setInt32(str->length());
                 }
-                f.script()->typeMonitor(f.cx, f.pc(), f.regs.sp[-1]);
+                f.script()->types.monitor(f.cx, f.pc(), f.regs.sp[-1]);
                 return;
             }
         }
@@ -1879,7 +1876,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
      * reads of the prototype.
      */
     if (usePropCache)
-        f.script()->typeMonitor(f.cx, f.pc(), v);
+        f.script()->types.monitor(f.cx, f.pc(), v);
 
     f.regs.sp[-1] = v;
 }
@@ -2045,7 +2042,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     }
 #endif
 
-    f.script()->typeMonitor(cx, f.pc(), regs.sp[-2]);
+    f.script()->types.monitor(cx, f.pc(), regs.sp[-2]);
 
     if (monitor.recompiled())
         return;
@@ -2099,7 +2096,7 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[-1] = rval;
 
-    f.script()->typeMonitor(f.cx, f.pc(), rval);
+    f.script()->types.monitor(f.cx, f.pc(), rval);
 }
 
 void JS_FASTCALL
@@ -2120,7 +2117,7 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
 
     if (status == Lookup_Cacheable && !cc.updateTypes())
         THROW();
-    f.script()->typeMonitor(f.cx, f.pc(), rval);
+    f.script()->types.monitor(f.cx, f.pc(), rval);
 }
 
 static void JS_FASTCALL
@@ -2149,7 +2146,7 @@ ic::CallName(VMFrame &f, ic::PICInfo *pic)
 
     if (status == Lookup_Cacheable && !cc.updateTypes())
         THROW();
-    f.script()->typeMonitor(f.cx, f.pc(), rval);
+    f.script()->types.monitor(f.cx, f.pc(), rval);
 }
 
 static void JS_FASTCALL
@@ -2607,8 +2604,8 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
             JS_ASSERT(!f.regs.sp[-2].isMagic());
             f.regs.sp[-1].setObject(*thisObj);
             if (!JSID_IS_INT(id))
-                f.script()->typeMonitorUnknown(cx, f.pc());
-            f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
+                f.script()->types.monitorUnknown(cx, f.pc());
+            f.script()->types.monitor(cx, f.pc(), f.regs.sp[-2]);
             return;
         }
     }
@@ -2629,8 +2626,8 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
         f.regs.sp[-1] = thisv;
     }
     if (!JSID_IS_INT(id))
-        f.script()->typeMonitorUnknown(cx, f.pc());
-    f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
+        f.script()->types.monitorUnknown(cx, f.pc());
+    f.script()->types.monitor(cx, f.pc(), f.regs.sp[-2]);
 }
 
 void JS_FASTCALL
@@ -2673,8 +2670,8 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
             // If the result can be cached, the value was already retrieved.
             JS_ASSERT(!f.regs.sp[-2].isMagic());
             if (!JSID_IS_INT(id))
-                f.script()->typeMonitorUnknown(cx, f.pc());
-            f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
+                f.script()->types.monitorUnknown(cx, f.pc());
+            f.script()->types.monitor(cx, f.pc(), f.regs.sp[-2]);
             return;
         }
     }
@@ -2682,8 +2679,8 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (!obj->getProperty(cx, id, &f.regs.sp[-2]))
         THROW();
     if (!JSID_IS_INT(id))
-        f.script()->typeMonitorUnknown(cx, f.pc());
-    f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
+        f.script()->types.monitorUnknown(cx, f.pc());
+    f.script()->types.monitor(cx, f.pc(), f.regs.sp[-2]);
 }
 
 #define APPLY_STRICTNESS(f, s)                          \

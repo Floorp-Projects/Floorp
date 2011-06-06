@@ -1152,7 +1152,7 @@ FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
         double d = ov.toNumber();
         double N = (cs->format & JOF_INC) ? 1 : -1;
         if (!nv.setNumber(d + N))
-            f.script()->typeMonitorOverflow(cx, f.pc());
+            f.script()->types.monitorOverflow(cx, f.pc());
     }
 
     *var = nv;
@@ -1195,7 +1195,7 @@ FinishObjIncOp(VMFrame &f, RejoinState rejoin, Value objv, Value ov, Value nv, V
         double d = ov.toNumber();
         double N = (cs->format & JOF_INC) ? 1 : -1;
         if (!nv.setNumber(d + N))
-            f.script()->typeMonitorOverflow(cx, f.pc());
+            f.script()->types.monitorOverflow(cx, f.pc());
     }
 
     uint32 setPropFlags = (cs->format & JOF_NAME)

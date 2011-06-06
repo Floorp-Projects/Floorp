@@ -514,34 +514,37 @@ struct JSScript {
 
   public:
 
+    /* Function this script is the body for, if there is one. */
+    JSFunction *fun;
+
+    /*
+     * Associates this script with a specific function, constructing a new type
+     * object for the function.
+     */
+    bool typeSetFunction(JSContext *cx, JSFunction *fun);
+
+    /* Global object for this script, if compileAndGo. */
+    js::GlobalObject *global_;
+    inline bool hasGlobal() const;
+    inline js::GlobalObject *global() const;
+
+    inline bool hasClearedGlobal() const;
+
 #ifdef DEBUG
-    /* Unique identifier within the compartment for this script. */
+    /*
+     * Unique identifier within the compartment for this script, used for
+     * printing analysis information.
+     */
     unsigned id_;
     unsigned id() { return id_; }
 #else
     unsigned id() { return 0; }
 #endif
 
-    /* Function this script is the body for, if there is one. */
-    JSFunction *fun;
-
-    /* Global object for this script, if compileAndGo. */
-    js::GlobalObject *global;
-
-    /* Lazily constructed types of variables and JOF_TYPESET ops in this script. */
-    js::types::TypeSet *typeArray;
-
-    /* Any type objects associated with this script, including initializer objects. */
-    js::types::TypeObject *typeObjects;
-
-    /* Persistent information about stack types in this script. */
-    js::types::TypeIntermediate *intermediateTypes;
-    void addIntermediateType(js::types::TypeIntermediate *type) {
-        type->next = intermediateTypes;
-        intermediateTypes = type;
-    }
-
-    /* Bytecode analysis and type inference results for this script. Destroyed on GC. */
+    /*
+     * Bytecode analysis and type inference results for this script. Destroyed
+     * on every GC.
+     */
   private:
     js::analyze::ScriptAnalysis *analysis_;
     void makeAnalysis(JSContext *cx);
@@ -555,71 +558,14 @@ struct JSScript {
         return analysis_;
     }
 
-    inline JSObject *getGlobal();
-    inline js::types::TypeObject *getGlobalType();
+    /* Ensure the script has current type inference results. */
+    inline bool ensureRanInference(JSContext *cx);
 
-    /* Make sure there the type array has been constructed. */
-    inline bool ensureTypeArray(JSContext *cx);
+    /* Persistent type information retained across GCs. */
+    js::types::TypeScript types;
 
-    inline js::types::TypeSet *bytecodeTypes(const jsbytecode *pc);
-    inline js::types::TypeSet *returnTypes();
-    inline js::types::TypeSet *thisTypes();
-    inline js::types::TypeSet *argTypes(unsigned i);
-    inline js::types::TypeSet *localTypes(unsigned i);
-    inline js::types::TypeSet *upvarTypes(unsigned i);
-
-    /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
-    inline js::types::TypeSet *slotTypes(unsigned slot);
-
-  private:
-    bool makeTypeArray(JSContext *cx);
-  public:
-
-#ifdef DEBUG
-    /* Check that correct types were inferred for the values pushed by this bytecode. */
-    void typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value *sp);
-#endif
-
-    /* Get the default 'new' object for a given standard class, per the script's global. */
-    inline js::types::TypeObject *getTypeNewObject(JSContext *cx, JSProtoKey key);
-
-    bool condenseTypes(JSContext *cx);
+    inline bool isAboutToBeFinalized(JSContext *cx);
     void sweepAnalysis(JSContext *cx);
-
-    /* Get a type object for an allocation site in this script. */
-    inline js::types::TypeObject *
-    getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray);
-
-    /* Monitor a bytecode pushing an unexpected value. */
-    inline void typeMonitorOverflow(JSContext *cx, jsbytecode *pc);
-    inline void typeMonitorString(JSContext *cx, jsbytecode *pc);
-    inline void typeMonitorUnknown(JSContext *cx, jsbytecode *pc);
-
-    /* Monitor a JOF_TYPESET bytecode pushing any value into its pushed type set. */
-    inline void typeMonitor(JSContext *cx, jsbytecode *pc, const js::Value &val);
-
-    /* Monitor an assignment at a SETELEM on a non-integer identifier. */
-    inline void typeMonitorAssign(JSContext *cx, jsbytecode *pc,
-                                  JSObject *obj, jsid id, const js::Value &val);
-
-    /* Add a type for a variable in this script. */
-    inline void typeSetThis(JSContext *cx, js::types::jstype type);
-    inline void typeSetThis(JSContext *cx, const js::Value &value);
-    inline void typeSetThis(JSContext *cx, js::types::ClonedTypeSet *types);
-    inline void typeSetNewCalled(JSContext *cx);
-    inline void typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type);
-    inline void typeSetLocal(JSContext *cx, unsigned local, const js::Value &value);
-    inline void typeSetLocal(JSContext *cx, unsigned local, js::types::ClonedTypeSet *types);
-    inline void typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type);
-    inline void typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
-    inline void typeSetArgument(JSContext *cx, unsigned arg, js::types::ClonedTypeSet *types);
-    inline void typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
-
-    /*
-     * Associates this script with a specific function, constructing a new type
-     * object for the function.
-     */
-    bool typeSetFunction(JSContext *cx, JSFunction *fun);
 
 #ifdef JS_METHODJIT
     // Fast-cached pointers to make calls faster. These are also used to

@@ -3241,7 +3241,7 @@ array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
 
-    if (!site->hasGlobal()) {
+    if (!site->script->hasGlobal()) {
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
         return;
     }
@@ -3283,7 +3283,7 @@ array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite,
 
       case MAP:
       case FILTER:
-        if (site->hasGlobal()) {
+        if (site->script->hasGlobal()) {
             /* Makes a new array whose element type will be filled in as the code runs. */
             TypeObject *object = site->getInitObject(cx, true);
             if (!object)
@@ -3434,7 +3434,7 @@ array_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     TypeCallsite *site = Valueify(jssite);
 
-    if (!site->hasGlobal()) {
+    if (!site->script->hasGlobal()) {
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
         return;
     }

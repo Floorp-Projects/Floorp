@@ -1368,13 +1368,13 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
 
     if (!f.fp()->isConstructing()) {
         Address address(JSFrameReg, StackFrame::offsetOfThis(fun));
-        if (!GenerateTypeCheck(f.cx, masm, address, script->thisTypes(), &mismatches))
+        if (!GenerateTypeCheck(f.cx, masm, address, script->types.thisTypes(), &mismatches))
             return;
     }
 
     for (unsigned i = 0; i < fun->nargs; i++) {
         Address address(JSFrameReg, StackFrame::offsetOfFormalArg(fun, i));
-        if (!GenerateTypeCheck(f.cx, masm, address, script->argTypes(i), &mismatches))
+        if (!GenerateTypeCheck(f.cx, masm, address, script->types.argTypes(i), &mismatches))
             return;
     }
 

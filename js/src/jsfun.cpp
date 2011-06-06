@@ -108,10 +108,6 @@ JSBool
 js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
 {
     JSObject *argsobj;
-
-    MarkTypeObjectFlags(cx, fp->fun()->getType(),
-                        OBJECT_FLAG_CREATED_ARGUMENTS | OBJECT_FLAG_UNINLINEABLE);
-
     if (fp->hasOverriddenArgs()) {
         JS_ASSERT(fp->hasCallObj());
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
@@ -255,6 +251,13 @@ js_GetArgsObject(JSContext *cx, StackFrame *fp)
      * or else fp must have a variable object.
      */
     JS_ASSERT_IF(fp->fun()->isHeavyweight(), fp->hasCallObj());
+
+    /*
+     * Mark all functions which have ever had arguments objects constructed,
+     * which will prevent lazy arguments optimizations in the method JIT.
+     */
+    MarkTypeObjectFlags(cx, fp->fun()->getType(),
+                        OBJECT_FLAG_CREATED_ARGUMENTS | OBJECT_FLAG_UNINLINEABLE);
 
     while (fp->isDirectEvalOrDebuggerFrame())
         fp = fp->prev();
@@ -599,7 +602,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
                 JSScript *script = fp->functionScript();
                 if (script->usesArguments) {
                     if (arg < fp->numFormalArgs())
-                        script->typeSetArgument(cx, arg, *vp);
+                        script->types.setArgument(cx, arg, *vp);
                     fp->canonicalActualArg(arg) = *vp;
                 }
                 return true;
@@ -1245,7 +1248,7 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
         argp = &obj->callObjArg(i);
 
     JSScript *script = obj->getCallObjCalleeFunction()->script();
-    script->typeSetArgument(cx, i, *vp);
+    script->types.setArgument(cx, i, *vp);
 
     GCPoke(cx, *argp);
     *argp = *vp;
@@ -1328,7 +1331,7 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
         varp = &obj->callObjVar(i);
 
     JSScript *script = obj->getCallObjCalleeFunction()->script();
-    script->typeSetLocal(cx, i, *vp);
+    script->types.setLocal(cx, i, *vp);
 
     GCPoke(cx, *varp);
     *varp = *vp;
@@ -2981,7 +2984,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
 
     for (uint32 i = 0, n = uva->length; i < n; i++) {
         upvars[i] = GetUpvar(cx, level, uva->vector[i]);
-        fun->script()->typeSetUpvar(cx, i, upvars[i]);
+        fun->script()->types.setUpvar(cx, i, upvars[i]);
     }
 
     return closure;

@@ -95,7 +95,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     outerScript(outerScript),
     isConstructing(isConstructing),
     ssa(cx, outerScript),
-    globalObj(outerScript->global),
+    globalObj(outerScript->hasGlobal() ? outerScript->global() : NULL),
     globalSlots(globalObj ? globalObj->getRawSlots() : NULL),
     frame(cx, *thisFromCtor(), masm, stubcc),
     a(NULL), outer(NULL), script(NULL), PC(NULL), loop(NULL),
@@ -183,31 +183,14 @@ mjit::Compiler::compile()
 CompileStatus
 mjit::Compiler::checkAnalysis(JSScript *script)
 {
+    if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
+        return Compile_Error;
+
     ScriptAnalysis *analysis = script->analysis(cx);
 
-    if (!analysis)
-        return Compile_Error;
-    if (!analysis->failed() && !analysis->ranBytecode())
-        analysis->analyzeBytecode(cx);
-
-    if (analysis->OOM())
-        return Compile_Error;
     if (analysis->failed()) {
         JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
         return Compile_Abort;
-    }
-
-    if (cx->typeInferenceEnabled()) {
-        if (!analysis->ranSSA())
-            analysis->analyzeSSA(cx);
-        if (!analysis->failed() && !analysis->ranLifetimes())
-            analysis->analyzeLifetimes(cx);
-        if (!analysis->failed() && !analysis->ranInference())
-            analysis->analyzeTypes(cx);
-        if (analysis->failed()) {
-            js_ReportOutOfMemory(cx);
-            return Compile_Error;
-        }
     }
 
     return Compile_Okay;
@@ -246,7 +229,8 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
     ScriptAnalysis *analysis = script->analysis(cx);
 
     /* Don't inline from functions which could have a non-global scope object. */
-    if (script->global != globalObj ||
+    if (!script->hasGlobal() ||
+        script->global() != globalObj ||
         (script->fun && script->fun->getParent() != globalObj) ||
         (script->fun && script->fun->isHeavyweight()) ||
         script->isActiveEval) {
@@ -365,7 +349,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
              * caller.
              */
             if (script->analysis(cx)->usesThisValue() &&
-                script->thisTypes()->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT) {
+                script->types.thisTypes()->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT) {
                 okay = false;
                 break;
             }
@@ -622,7 +606,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
 
     for (uint32 slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
         VarType &vt = a->varTypes[slot];
-        vt.types = script->slotTypes(slot);
+        vt.types = script->types.slotTypes(slot);
         vt.type = vt.types->getKnownTypeTag(cx);
     }
 
@@ -1852,7 +1836,7 @@ mjit::Compiler::generateMethod()
                 /* Watch for overflow in constant propagation. */
                 types::TypeSet *pushed = pushedTypeSet(0);
                 if (!v.isInt32() && pushed && !pushed->hasType(types::TYPE_DOUBLE)) {
-                    script->typeMonitorOverflow(cx, PC);
+                    script->types.monitorOverflow(cx, PC);
                     return Compile_Retry;
                 }
 
@@ -5374,7 +5358,7 @@ mjit::Compiler::jsop_this()
 
         if (!thisFe->isType(JSVAL_TYPE_OBJECT)) {
             JSValueType type = cx->typeInferenceEnabled()
-                ? script->thisTypes()->getKnownTypeTag(cx)
+                ? script->types.thisTypes()->getKnownTypeTag(cx)
                 : JSVAL_TYPE_UNKNOWN;
             if (type != JSVAL_TYPE_OBJECT) {
                 Jump notObj = frame.testObject(Assembler::NotEqual, thisFe);
@@ -6380,7 +6364,7 @@ mjit::Compiler::jsop_newinit()
     /* Don't bake in types for non-compileAndGo scripts. */
     types::TypeObject *type = NULL;
     if (globalObj) {
-        type = script->getTypeInitObject(cx, PC, isArray);
+        type = script->types.initObject(cx, PC, isArray);
         if (!type)
             return false;
     }
@@ -7363,7 +7347,7 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg, bool testUnd
     return state;
 #endif
 
-    types::TypeSet *types = script->bytecodeTypes(PC);
+    types::TypeSet *types = script->types.bytecodeTypes(PC);
     types->addFreeze(cx);
 
     /* Cannot have type barriers when the result of the operation is already unknown. */

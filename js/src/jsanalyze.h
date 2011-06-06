@@ -1023,7 +1023,7 @@ class ScriptAnalysis
           case SSAValue::VAR:
             JS_ASSERT(!slotEscapes(v.varSlot()));
             if (v.varInitial()) {
-                return script->slotTypes(v.varSlot());
+                return script->types.slotTypes(v.varSlot());
             } else {
                 /*
                  * Results of intermediate assignments have the same type as
