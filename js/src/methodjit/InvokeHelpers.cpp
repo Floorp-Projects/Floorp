@@ -213,8 +213,7 @@ RemovePartialFrame(JSContext *cx, StackFrame *fp)
 static inline bool
 CheckStackQuota(VMFrame &f)
 {
-    /* Include extra space for any inline frames. */
-    uint32 nvals = f.fp()->script()->nslots + VALUES_PER_STACK_FRAME + StackSpace::STACK_EXTRA;
+    uint32 nvals = VALUES_PER_STACK_FRAME + f.fp()->script()->nslots + StackSpace::STACK_JIT_EXTRA;
     if ((Value *)f.fp() + nvals >= f.stackLimit) {
         StackSpace &space = f.cx->stack.space();
         if (!space.bumpLimitWithinQuota(NULL, f.entryfp, f.regs.sp, nvals, &f.stackLimit)) {
@@ -267,6 +266,13 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
     StackFrame *newfp = cx->stack.getInlineFrameWithinLimit(cx, (Value*) oldfp, nactual,
                                                             fun, fun->script(), &flags,
                                                             f.entryfp, &f.stackLimit, ncode);
+
+    /*
+     * Note: this function is called without f.regs intact, but if the previous
+     * call failed it will use ncode to set f.regs to reflect the state at the
+     * call site. We can't use the value for ncode now as generating the
+     * exception may have caused us to discard the caller's code.
+     */
     if (!newfp)
         THROWV(NULL);
 

@@ -2454,6 +2454,11 @@ TriggerAllOperationCallbacks(JSRuntime *rt);
 
 } /* namespace js */
 
+/*
+ * Get the topmost scripted frame in a context. Note: if the topmost frame is
+ * in the middle of an inline call, that call will be expanded. To avoid this,
+ * use cx->stack.currentScript or cx->stack.currentScriptedScopeChain.
+ */
 extern js::StackFrame *
 js_GetScriptedCaller(JSContext *cx, js::StackFrame *fp);
 

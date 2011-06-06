@@ -7441,7 +7441,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     if (!IsFunctionQName(cx, qn, &funid))
         return JS_FALSE;
 
-    obj = &js_GetTopStackFrame(cx, FRAME_EXPAND_NONE)->scopeChain();
+    obj = cx->stack.currentScriptedScopeChain();
     do {
         /* Skip any With object that can wrap XML. */
         target = obj;

@@ -52,18 +52,21 @@ namespace js {
 
 struct PreserveRegsGuard
 {
-    JSContext *cx;
-    const FrameRegs &regs;
-    FrameRegs *prevContextRegs;
     PreserveRegsGuard(JSContext *cx, FrameRegs &regs)
-      : cx(cx), regs(regs), prevContextRegs(cx->maybeRegs()) {
-        cx->stack.repointRegs(&regs);
+      : prevContextRegs(cx->maybeRegs()), cx(cx), regs_(regs) {
+        cx->stack.repointRegs(&regs_);
     }
     ~PreserveRegsGuard() {
-        JS_ASSERT(cx->maybeRegs() == &regs);
-        *prevContextRegs = regs;
+        JS_ASSERT(cx->maybeRegs() == &regs_);
+        *prevContextRegs = regs_;
         cx->stack.repointRegs(prevContextRegs);
     }
+
+    FrameRegs *prevContextRegs;
+
+  private:
+    JSContext *cx;
+    FrameRegs &regs_;
 };
 
 static inline GlobalObject *

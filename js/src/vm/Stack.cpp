@@ -108,26 +108,6 @@ StackFrame::pc(JSContext *cx, StackFrame *next, JSInlinedSite **pinlined)
     return next->prevpc(pinlined);
 }
 
-jsbytecode *
-StackFrame::inlinepc(JSContext *cx, JSScript **pscript)
-{
-    JSInlinedSite *inlined;
-    jsbytecode *pc = this->pc(cx, NULL, &inlined);
-
-#ifdef JS_METHODJIT
-    if (inlined) {
-        JS_ASSERT(inlined->inlineIndex < jit()->nInlineFrames);
-        js::mjit::InlineFrame *frame = &jit()->inlineFrames()[inlined->inlineIndex];
-        *pscript = frame->fun->script();
-        return (*pscript)->code + inlined->pcOffset;
-    }
-#endif
-
-    JS_ASSERT(!inlined);
-    *pscript = script();
-    return pc;
-}
-
 /*****************************************************************************/
 
 JS_REQUIRES_STACK bool
