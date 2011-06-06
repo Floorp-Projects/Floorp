@@ -2193,8 +2193,10 @@ bool
 Parser::markFunArgs(JSFunctionBox *funbox)
 {
     JSFunctionBoxQueue queue;
-    if (!queue.init(functionCount))
+    if (!queue.init(functionCount)) {
+        js_ReportOutOfMemory(context);
         return false;
+    }
 
     FindFunArgs(funbox, -1, &queue);
     while ((funbox = queue.pull()) != NULL) {
