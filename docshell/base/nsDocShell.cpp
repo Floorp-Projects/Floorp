@@ -8291,7 +8291,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         nsresult splitRv1, splitRv2;
         splitRv1 = mCurrentURI ?
             nsContentUtils::SplitURIAtHash(mCurrentURI,
-                                           curBeforeHash, curHash) : NS_OK;
+                                           curBeforeHash, curHash) :
+            NS_ERROR_FAILURE;
         splitRv2 = nsContentUtils::SplitURIAtHash(aURI, newBeforeHash, newHash);
 
         PRBool sameExceptHashes = NS_SUCCEEDED(splitRv1) &&
