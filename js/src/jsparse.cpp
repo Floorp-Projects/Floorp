@@ -2837,7 +2837,10 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                  * allows us to handle both these cases in a natural way.
                  */
                 outer_ale = MakePlaceholder(dn, tc);
+                if (!outer_ale)
+                    return false;
             }
+
 
             JSDefinition *outer_dn = ALE_DEFN(outer_ale);
 
