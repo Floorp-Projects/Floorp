@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #  Robert Strong <robert.bugzilla@gmail.com>
+#  Philipp von Weitershausen <philipp@weitershausen.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -104,6 +105,22 @@ var FileUtils = {
   },
 
   /**
+   * Opens a file output stream for writing.
+   * @param   file
+   *          The file to write to.
+   * @param   modeFlags
+   *          (optional) File open flags. Can be undefined.
+   * @returns nsIFileOutputStream to write to.
+   * @note The stream is initialized with the DEFER_OPEN behavior flag.
+   *       See nsIFileOutputStream.
+   */
+  openFileOutputStream: function FileUtils_openFileOutputStream(file, modeFlags) {
+    var fos = Cc["@mozilla.org/network/file-output-stream;1"].
+              createInstance(Ci.nsIFileOutputStream);
+    return this._initFileOutputStream(fos, file, modeFlags);
+  },
+
+  /**
    * Opens a safe file output stream for writing.
    * @param   file
    *          The file to write to.
@@ -116,6 +133,10 @@ var FileUtils = {
   openSafeFileOutputStream: function FileUtils_openSafeFileOutputStream(file, modeFlags) {
     var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
               createInstance(Ci.nsIFileOutputStream);
+    return this._initFileOutputStream(fos, file, modeFlags);
+  },
+
+ _initFileOutputStream: function FileUtils__initFileOutputStream(fos, file, modeFlags) {
     if (modeFlags === undefined)
       modeFlags = this.MODE_WRONLY | this.MODE_CREATE | this.MODE_TRUNCATE;
     fos.init(file, modeFlags, this.PERMS_FILE, fos.DEFER_OPEN);
