@@ -119,7 +119,6 @@ enum Type {
 #endif
 #endif
 
-#ifdef MOZ_MATHML
   TYPE_MATHML_BAR,
   TYPE_MATHML_CHAR_BACKGROUND,
   TYPE_MATHML_CHAR_FOREGROUND,
@@ -130,7 +129,6 @@ enum Type {
 #ifdef NS_DEBUG
   TYPE_MATHML_BOUNDING_METRICS,
   TYPE_MATHML_CHAR_DEBUG,
-#endif
 #endif
 
 #ifdef NS_DEBUG

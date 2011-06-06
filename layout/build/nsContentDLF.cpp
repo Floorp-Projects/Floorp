@@ -105,9 +105,7 @@ static const char* const gHTMLTypes[] = {
 static const char* const gXMLTypes[] = {
   TEXT_XML,
   APPLICATION_XML,
-#ifdef MOZ_MATHML
   APPLICATION_MATHML_XML,
-#endif
   APPLICATION_RDF_XML,
   TEXT_RDF,
   0

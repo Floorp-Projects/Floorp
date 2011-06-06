@@ -383,7 +383,8 @@ void nsMenuItemX::ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChi
   mMenuParent->SetRebuild(PR_TRUE);
 }
 
-void nsMenuItemX::ObserveContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
+void nsMenuItemX::ObserveContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
+                                         nsIContent *aChild)
 {
   mMenuParent->SetRebuild(PR_TRUE);
 }

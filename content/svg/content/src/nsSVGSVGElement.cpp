@@ -393,18 +393,9 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
     return NS_OK;
 
   nsIFrame* frame = GetPrimaryFrame();
-#ifdef DEBUG
-  // XXX We sometimes hit this assertion when the svg:svg element is
-  // in a binding and svg children are inserted underneath it using
-  // <children/>. If the svg children then call suspendRedraw, the
-  // above function call fails although the svg:svg's frame has been
-  // build. Strange...
-  
-  NS_ASSERTION(frame, "suspending redraw w/o frame");
-#endif
   if (frame) {
     nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
-    NS_ASSERTION(svgframe, "wrong frame type");
+    // might fail this check if we've failed conditional processing
     if (svgframe) {
       svgframe->SuspendRedraw();
     }
@@ -418,7 +409,6 @@ NS_IMETHODIMP
 nsSVGSVGElement::UnsuspendRedraw(PRUint32 suspend_handle_id)
 {
   if (mRedrawSuspendCount == 0) {
-    NS_ASSERTION(1==0, "unbalanced suspend/unsuspend calls");
     return NS_ERROR_FAILURE;
   }
                  
@@ -437,12 +427,9 @@ nsSVGSVGElement::UnsuspendRedrawAll()
   mRedrawSuspendCount = 0;
 
   nsIFrame* frame = GetPrimaryFrame();
-#ifdef DEBUG
-  NS_ASSERTION(frame, "unsuspending redraw w/o frame");
-#endif
   if (frame) {
     nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
-    NS_ASSERTION(svgframe, "wrong frame type");
+    // might fail this check if we've failed conditional processing
     if (svgframe) {
       svgframe->UnsuspendRedraw();
     }
@@ -1131,17 +1118,13 @@ void
 nsSVGSVGElement::InvalidateTransformNotifyFrame()
 {
   nsIFrame* frame = GetPrimaryFrame();
-  nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
-  if (svgframe) {
-    svgframe->NotifyViewportChange();
+  if (frame) {
+    nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
+    // might fail this check if we've failed conditional processing
+    if (svgframe) {
+      svgframe->NotifyViewportChange();
+    }
   }
-#ifdef DEBUG
-  else if (frame) {
-    // Uh oh -- we have a primary frame, but it failed the do_QueryFrame to the
-    // expected type!
-    NS_WARNING("wrong frame type");
-  }
-#endif
 }
 
 PRBool

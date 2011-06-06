@@ -88,9 +88,7 @@ CParserContext::SetMimeType(const nsACString& aMimeType)
            mMimeType.EqualsLiteral(APPLICATION_XHTML_XML) ||
            mMimeType.EqualsLiteral(TEXT_XUL)              ||
            mMimeType.EqualsLiteral(IMAGE_SVG_XML)         ||
-#ifdef MOZ_MATHML
            mMimeType.EqualsLiteral(APPLICATION_MATHML_XML) ||
-#endif
            mMimeType.EqualsLiteral(APPLICATION_RDF_XML)   ||
            mMimeType.EqualsLiteral(TEXT_RDF))
     mDocType = eXML;

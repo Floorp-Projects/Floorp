@@ -924,11 +924,20 @@ var gViewController = {
 
     cmd_showItemPreferences: {
       isEnabled: function(aAddon) {
-        if (!aAddon)
+        if (!aAddon || !aAddon.isActive || !aAddon.optionsURL)
           return false;
-        return aAddon.isActive && !!aAddon.optionsURL;
+        if (gViewController.currentViewObj == gDetailView &&
+            aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
+          return false;
+        }
+        return true;
       },
       doCommand: function(aAddon) {
+        if (gViewController.currentViewObj == gListView &&
+            aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
+          gViewController.commands.cmd_showItemDetails.doCommand(aAddon);
+          return;
+        }
         var optionsURL = aAddon.optionsURL;
         var windows = Services.wm.getEnumerator(null);
         while (windows.hasMoreElements()) {
@@ -2654,7 +2663,8 @@ var gDetailView = {
       document.getElementById("detail-findUpdates-btn").hidden = false;
     }
 
-    document.getElementById("detail-prefs-btn").hidden = !aIsRemote && !aAddon.optionsURL;
+    document.getElementById("detail-prefs-btn").hidden = !aIsRemote &&
+      !gViewController.commands.cmd_showItemPreferences.isEnabled(aAddon);
     
     var gridRows = document.querySelectorAll("#detail-grid rows row");
     for (var i = 0, first = true; i < gridRows.length; ++i) {
@@ -2665,6 +2675,8 @@ var gDetailView = {
         gridRows[i].removeAttribute("first-row");
       }
     }
+
+    this.fillSettingsRows();
 
     this.updateState();
 
@@ -2797,6 +2809,71 @@ var gDetailView = {
     this.node.removeAttribute("loading-extended");
   },
 
+  emptySettingsRows: function () {
+    var lastRow = document.getElementById("detail-downloads");
+    var rows = lastRow.parentNode;
+    while (lastRow.nextSibling)
+      rows.removeChild(rows.lastChild);
+  },
+
+  fillSettingsRows: function () {
+    this.emptySettingsRows();
+    if (this._addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE)
+      return;
+
+    var rows = document.getElementById("detail-downloads").parentNode;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", this._addon.optionsURL, false);
+    xhr.send();
+
+    var xml = xhr.responseXML;
+    var settings = xml.querySelectorAll(":root > setting");
+
+    // This horrible piece of code fixes two problems. 1) The menulist binding doesn't apply
+    // correctly when it's moved from one document to another (bug 659163), which is solved 
+    // by manually cloning the menulist. 2) Labels and controls aligned to the top of a row 
+    // looks really bad, so the description is put on a new row to preserve alignment.
+    for (var i = 0; i < settings.length; i++) {
+      var setting = settings[i];
+      if (i == 0)
+        setting.setAttribute("first-row", true);
+
+      // remove menulist controls for replacement later
+      var control = setting.firstElementChild;
+      if (setting.getAttribute("type") == "control" && control && control.localName == "menulist") {
+        setting.removeChild(control);
+        var consoleMessage = Cc["@mozilla.org/scripterror;1"].
+                             createInstance(Ci.nsIScriptError);
+        consoleMessage.init("Menulist is not available in the addons-manager yet, due to bug 659163",
+                            this._addon.optionsURL, null, null, 0, Ci.nsIScriptError.warningFlag, null);
+        Services.console.logMessage(consoleMessage);
+        continue;
+      }
+
+      // remove setting description, for replacement later
+      var desc = setting.textContent.trim();
+      if (desc)
+        setting.textContent = "";
+      if (setting.hasAttribute("desc")) {
+        desc = setting.getAttribute("desc");
+        setting.removeAttribute("desc");
+      }
+
+      rows.appendChild(setting);
+
+      // add a new row containing the description
+      if (desc) {
+        var row = document.createElement("row");
+        var label = document.createElement("label");
+        label.className = "preferences-description";
+        label.textContent = desc;
+        row.appendChild(label);
+        rows.appendChild(row);
+      }
+    }
+  },
+
   getSelectedAddon: function() {
     return this._addon;
   },
@@ -2807,6 +2884,7 @@ var gDetailView = {
 
   onEnabled: function() {
     this.updateState();
+    this.fillSettingsRows();
   },
 
   onDisabling: function() {
@@ -2815,6 +2893,7 @@ var gDetailView = {
 
   onDisabled: function() {
     this.updateState();
+    this.emptySettingsRows();
   },
 
   onUninstalling: function() {

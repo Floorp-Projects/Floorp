@@ -76,8 +76,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x32b94ba0, 0x1ebc, 0x4dfc, \
- { 0xba, 0x8c, 0x5f, 0x24, 0x2b, 0xcb, 0xaf, 0xce } }
+{ 0x860ee35b, 0xe505, 0x438f, \
+ { 0xa7, 0x7b, 0x65, 0xb9, 0xf5, 0x0b, 0xe5, 0x29 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -787,14 +787,6 @@ public:
   }
 
   /**
-   * Method to get the _intrinsic_ content state of this content node.  This is
-   * the state that is independent of the node's presentation.  To get the full
-   * content state, use nsEventStateManager.  Also see nsEventStateManager
-   * for the possible bits that could be set here.
-   */
-  virtual nsEventStates IntrinsicState() const;
-
-  /**
    * Get the ID of this content node (the atom corresponding to the
    * value of the null-namespace attribute whose name is given by
    * GetIDAttributeName().  This may be null if there is no ID.
@@ -864,9 +856,10 @@ public:
   /**
    * Should be called when the node can become editable or when it can stop
    * being editable (for example when its contentEditable attribute changes,
-   * when it is moved into an editable parent, ...).
+   * when it is moved into an editable parent, ...).  If aNotify is true and
+   * the node is an element, this will notify the state change.
    */
-  virtual void UpdateEditableState();
+  virtual void UpdateEditableState(PRBool aNotify);
 
   /**
    * Destroy this node and its children. Ideally this shouldn't be needed

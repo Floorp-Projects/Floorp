@@ -1,5 +1,6 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines/history.js");
+Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/util.js");
 
 const TIMESTAMP1 = (Date.now() - 103406528) * 1000;
@@ -166,7 +167,7 @@ add_test(function test_invalid_records() {
     + "(url, title, rev_host, visit_count, last_visit_date) "
     + "VALUES ('invalid-uri', 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")";
   let stmt = PlacesUtils.history.DBConnection.createAsyncStatement(query);
-  let result = Utils.queryAsync(stmt);    
+  let result = Async.querySpinningly(stmt);
   do_check_eq([id for (id in store.getAllIDs())].length, 4);
 
   _("Make sure we report records with invalid URIs.");

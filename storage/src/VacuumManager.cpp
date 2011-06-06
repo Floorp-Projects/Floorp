@@ -40,6 +40,7 @@
 #include "VacuumManager.h"
 
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
 #include "nsIFile.h"
@@ -137,15 +138,13 @@ class Vacuumer : public BaseCallback
 public:
   NS_DECL_MOZISTORAGESTATEMENTCALLBACK
 
-  Vacuumer(mozIStorageVacuumParticipant *aParticipant,
-           nsIPrefBranch *aPrefBranch);
+  Vacuumer(mozIStorageVacuumParticipant *aParticipant);
 
   bool execute();
   nsresult notifyCompletion(bool aSucceeded);
 
 private:
   nsCOMPtr<mozIStorageVacuumParticipant> mParticipant;
-  nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCString mDBFilename;
   nsCOMPtr<mozIStorageConnection> mDBConn;
 };
@@ -188,10 +187,8 @@ NotifyCallback::HandleCompletion(PRUint16 aReason)
 ////////////////////////////////////////////////////////////////////////////////
 //// Vacuumer implementation.
 
-Vacuumer::Vacuumer(mozIStorageVacuumParticipant *aParticipant,
-                   nsIPrefBranch *aPrefBranch)
+Vacuumer::Vacuumer(mozIStorageVacuumParticipant *aParticipant)
   : mParticipant(aParticipant)
-  , mPrefBranch(aPrefBranch)
 {
 }
 
@@ -274,7 +271,9 @@ Vacuumer::execute()
   // Check interval from last vacuum.
   PRInt32 now = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
   PRInt32 lastVacuum;
-  rv = mPrefBranch->GetIntPref(mDBFilename.get(), &lastVacuum);
+  nsCAutoString prefName(PREF_VACUUM_BRANCH);
+  prefName += mDBFilename;
+  rv = Preferences::GetInt(prefName.get(), &lastVacuum);
   if (NS_SUCCEEDED(rv) && (now - lastVacuum) < VACUUM_INTERVAL_SECONDS &&
       !canOptimizePageSize) {
     // This database was vacuumed recently and has optimal page size, skip it. 
@@ -378,7 +377,9 @@ Vacuumer::HandleCompletion(PRUint16 aReason)
     // Update last vacuum time.
     PRInt32 now = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
     NS_ASSERTION(!mDBFilename.IsEmpty(), "Database filename cannot be empty");
-    (void)mPrefBranch->SetIntPref(mDBFilename.get(), now);
+    nsCAutoString prefName(PREF_VACUUM_BRANCH);
+    prefName += mDBFilename;
+    (void)Preferences::SetInt(prefName.get(), now);
   }
 
   notifyCompletion(aReason == REASON_FINISHED);
@@ -424,9 +425,6 @@ VacuumManager::getSingleton()
   gVacuumManager = new VacuumManager();
   if (gVacuumManager) {
     NS_ADDREF(gVacuumManager);
-    if (NS_FAILED(gVacuumManager->initialize())) {
-      NS_RELEASE(gVacuumManager);
-    }
   }
   return gVacuumManager;
 }
@@ -437,20 +435,6 @@ VacuumManager::VacuumManager()
   NS_ASSERTION(!gVacuumManager,
                "Attempting to create two instances of the service!");
   gVacuumManager = this;
-}
-
-nsresult
-VacuumManager::initialize()
-{
-  NS_PRECONDITION(NS_IsMainThread(), "Must be running on the main thread!");
-
-  // Used to store last vacuum times.
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  NS_ENSURE_STATE(prefs);
-  prefs->GetBranch(PREF_VACUUM_BRANCH, getter_AddRefs(mPrefBranch));
-  NS_ENSURE_STATE(mPrefBranch);
-
-  return NS_OK;
 }
 
 VacuumManager::~VacuumManager()
@@ -479,20 +463,20 @@ VacuumManager::Observe(nsISupports *aSubject,
       mParticipants.GetEntries();
     // If there are more entries than what a month can contain, we could end up
     // skipping some, since we run daily.  So we use a starting index.
-    PRInt32 startIndex = 0, index;
-    (void)mPrefBranch->GetIntPref(NS_LITERAL_CSTRING("index").get(), &startIndex);
+    static const char* kPrefName = PREF_VACUUM_BRANCH "index";
+    PRInt32 startIndex = Preferences::GetInt(kPrefName, 0);
     if (startIndex >= entries.Count()) {
       startIndex = 0;
     }
+    PRInt32 index;
     for (index = startIndex; index < entries.Count(); ++index) {
-      nsCOMPtr<Vacuumer> vacuum = new Vacuumer(entries[index], mPrefBranch);
-      NS_ENSURE_STATE(vacuum);
+      nsCOMPtr<Vacuumer> vacuum = new Vacuumer(entries[index]);
       // Only vacuum one database per day.
       if (vacuum->execute()) {
         break;
       }
     }
-    (void)mPrefBranch->SetIntPref(NS_LITERAL_CSTRING("index").get(), index);
+    (void)Preferences::SetInt(kPrefName, index);
   }
 
   return NS_OK;

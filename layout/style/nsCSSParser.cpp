@@ -5620,13 +5620,11 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return PR_FALSE;
   }
 
-#ifdef MOZ_MATHML
   // We only allow 'script-level' when unsafe rules are enabled, because
   // otherwise it could interfere with rulenode optimizations if used in
   // a non-MathML-enabled document.
   if (aPropID == eCSSProperty_script_level && !mUnsafeRulesEnabled)
     return PR_FALSE;
-#endif
 
   const PRInt32 *kwtable = nsCSSProps::kKeywordTableTable[aPropID];
   switch (nsCSSProps::ValueRestrictions(aPropID)) {

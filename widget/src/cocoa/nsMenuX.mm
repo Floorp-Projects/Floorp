@@ -850,8 +850,8 @@ void nsMenuX::ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild,
   mMenuGroupOwner->UnregisterForContentChanges(aChild);
 }
 
-void nsMenuX::ObserveContentInserted(nsIDocument *aDocument, nsIContent *aChild,
-                                     PRInt32 aIndexInContainer)
+void nsMenuX::ObserveContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
+                                     nsIContent *aChild)
 {
   if (gConstructingMenu)
     return;

@@ -1242,24 +1242,17 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
     }
 
     if (mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT) {
-      // try to get the anonymous content
       nsCOMPtr<nsIDOMNodeList> kids;
-      if (mShowAnonymous) {
-        nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-        if (content) {
-          nsRefPtr<nsBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(aNode);
-          if (bindingManager) {
-            bindingManager->GetAnonymousNodesFor(content, getter_AddRefs(kids));
-            if (!kids) {
-              bindingManager->GetContentListFor(content, getter_AddRefs(kids));
-            }
-          }
+      if (!mDOMUtils) {
+        mDOMUtils = do_GetService("@mozilla.org/inspector/dom-utils;1");
+        if (!mDOMUtils) {
+          return NS_ERROR_FAILURE;
         }
       }
 
-      if (!kids) {
-        aNode->GetChildNodes(getter_AddRefs(kids));
-      }
+      mDOMUtils->GetChildrenForNode(aNode, mShowAnonymous,
+                                    getter_AddRefs(kids));
+
       if (kids) {
         AppendKidsToArray(kids, aResult);
       }

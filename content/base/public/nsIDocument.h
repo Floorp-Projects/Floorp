@@ -756,7 +756,8 @@ public:
   virtual void SetReadyStateInternal(ReadyState rs) = 0;
   virtual ReadyState GetReadyStateEnum() = 0;
 
-  // notify that a content node changed state
+  // notify that a content node changed state.  This must happen under
+  // a scriptblocker but NOT within a begin/end update.
   virtual void ContentStateChanged(nsIContent* aContent,
                                    nsEventStates aStateMask) = 0;
 

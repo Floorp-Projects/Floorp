@@ -803,6 +803,7 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
   // of the currently focused element, reset the focus within that window.
   nsIContent* content = window->GetFocusedNode();
   if (content && nsContentUtils::ContentIsDescendantOf(content, aContent)) {
+    PRBool shouldShowFocusRing = window->ShouldShowFocusRing();
     window->SetFocusedNode(nsnull);
 
     nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
@@ -832,6 +833,8 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
         }
       }
     }
+
+    NotifyFocusStateChange(aContent, shouldShowFocusRing, PR_FALSE);
   }
 
   return NS_OK;
@@ -884,18 +887,6 @@ nsFocusManager::WindowShown(nsIDOMWindow* aWindow, PRBool aNeedsFocus)
   return NS_OK;
 }
 
-static void
-NotifyFocusStateChange(nsIContent* aContent, nsPIDOMWindow* aWindow)
-{
-  nsIDocument *doc = aContent->GetCurrentDoc();
-  MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-  nsEventStates eventState = NS_EVENT_STATE_FOCUS;
-  if (aWindow->ShouldShowFocusRing()) {
-    eventState |= NS_EVENT_STATE_FOCUSRING;
-  }
-  doc->ContentStateChanged(aContent, eventState);
-}
-
 NS_IMETHODIMP
 nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
 {
@@ -946,7 +937,9 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
   mFocusedContent = nsnull;
 
   if (oldFocusedContent && oldFocusedContent->IsInDoc()) {
-    NotifyFocusStateChange(oldFocusedContent, mFocusedWindow);
+    NotifyFocusStateChange(oldFocusedContent,
+                           mFocusedWindow->ShouldShowFocusRing(),
+                           PR_FALSE);
   }
 
   nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
@@ -1031,6 +1024,26 @@ nsFocusManager::FocusPlugin(nsIContent* aContent)
   NS_ENSURE_ARG(aContent);
   SetFocusInner(aContent, 0, PR_TRUE, PR_FALSE);
   return NS_OK;
+}
+
+/* static */
+void
+nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
+                                       PRBool aWindowShouldShowFocusRing,
+                                       PRBool aGettingFocus)
+{
+  if (!aContent->IsElement()) {
+    return;
+  }
+  nsEventStates eventState = NS_EVENT_STATE_FOCUS;
+  if (aWindowShouldShowFocusRing) {
+    eventState |= NS_EVENT_STATE_FOCUSRING;
+  }
+  if (aGettingFocus) {
+    aContent->AsElement()->AddStates(eventState);
+  } else {
+    aContent->AsElement()->RemoveStates(eventState);
+  }
 }
 
 // static
@@ -1501,6 +1514,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
   // now adjust the actual focus, by clearing the fields in the focus manager
   // and in the window.
   mFocusedContent = nsnull;
+  PRBool shouldShowFocusRing = window->ShouldShowFocusRing();
   if (aWindowToClear)
     aWindowToClear->SetFocusedNode(nsnull);
 
@@ -1513,7 +1527,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
     content && content->IsInDoc() && !IsNonFocusableRoot(content);
   if (content) {
     if (sendBlurEvent) {
-      NotifyFocusStateChange(content, window);
+      NotifyFocusStateChange(content, shouldShowFocusRing, PR_FALSE);
     }
 
     // if an object/plug-in is being blurred, move the system focus to the
@@ -1729,7 +1743,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
       if (aFocusChanged)
         ScrollIntoView(presShell, aContent, aFlags);
 
-      NotifyFocusStateChange(aContent, aWindow);
+      NotifyFocusStateChange(aContent, aWindow->ShouldShowFocusRing(), PR_TRUE);
 
       // if this is an object/plug-in, focus the plugin's widget.  Note that we might
       // no longer be in the same document, due to the events we fired above when
