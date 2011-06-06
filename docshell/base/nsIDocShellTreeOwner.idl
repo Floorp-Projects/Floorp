@@ -45,7 +45,7 @@
 
 interface nsIDocShellTreeItem;
 
-[scriptable, uuid(bc0eb30e-656e-491e-a7ae-7f460b660c8d)]
+[scriptable, uuid(932f9f93-8e21-4728-a527-cafc64b4d831)]
 interface nsIDocShellTreeOwner : nsISupports
 {
 	/*
@@ -116,4 +116,9 @@ interface nsIDocShellTreeOwner : nsISupports
 	void getPersistence(out boolean aPersistPosition,
                             out boolean aPersistSize,
                             out boolean aPersistSizeMode);
+
+	/*
+	Gets the number of targettable docshells.
+	*/
+	readonly attribute unsigned long targetableShellCount;
 };

@@ -135,9 +135,17 @@ EXPORTS_mozilla/plugins += \
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+DIRS += \
+    interpose \
+    $(NULL)
+
 CMMSRCS   += \
     PluginUtilsOSX.mm \
     PluginInterposeOSX.mm \
+    $(NULL)
+
+EXPORTS_mozilla/plugins += \
+    PluginInterposeOSX.h \
     $(NULL)
 endif
 

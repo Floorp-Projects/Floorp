@@ -44,12 +44,36 @@
  * the textual content (termed character data in XML) of an Element or Attr.
  *
  * For more information on this interface please see 
- * http://www.w3.org/TR/DOM-Level-2-Core/
+ * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(48642156-d686-46b7-8e96-35edd5b2afa8)]
+[scriptable, uuid(04a1ec2b-491f-4a80-8db4-694c37e31a6f)]
 interface nsIDOMText : nsIDOMCharacterData
 {
   nsIDOMText                      splitText(in unsigned long offset)
                                        raises(DOMException);
+
+  /**
+   * Indicates whether this text node contains element content whitespace.
+   * A text node is element content whitespace if it contains only XML
+   * white space characters and is a child of an element whose content
+   * model allows only child elements optionally separated by white space.
+   */
+  readonly attribute boolean isElementContentWhitespace;
+
+  /**
+   * The concatenation of all logically adjacent text nodes with this text
+   * node, where "logically adjacent" consists of all text nodes which can be
+   * reached by traversing the document tree in either direction without
+   * passing an element, comment, or processing-instruction boundary.  
+   */
+  readonly attribute DOMString wholeText;
+
+  /**
+   * If content is empty, removes all logically adjacent text nodes (including
+   * this node) from the DOM tree, returning null; otherwise, replaces the
+   * contents of this node with aContent and removes all other logically
+   * adjacent text nodes from the DOM tree, returning this node.
+   */
+  nsIDOMText replaceWholeText(in DOMString content) raises(DOMException);
 };

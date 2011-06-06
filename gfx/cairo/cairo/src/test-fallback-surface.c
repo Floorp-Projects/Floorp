@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -54,6 +54,7 @@
 #include "cairoint.h"
 
 #include "test-fallback-surface.h"
+#include "cairo-error-private.h"
 
 typedef struct _test_fallback_surface {
     cairo_surface_t base;
@@ -84,7 +85,9 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
-    _cairo_surface_init (&surface->base, &test_fallback_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &test_fallback_surface_backend,
+			 NULL, /* device */
 			 content);
 
     surface->backing = backing;

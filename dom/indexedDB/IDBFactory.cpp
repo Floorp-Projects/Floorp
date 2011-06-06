@@ -67,6 +67,9 @@
 #include "IndexedDatabaseManager.h"
 #include "LazyIdleThread.h"
 #include "nsIObserverService.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define PREF_INDEXEDDB_QUOTA "dom.indexedDB.warningQuota"
 
@@ -536,8 +539,8 @@ IDBFactory::Create(nsPIDOMWindow* aWindow)
       return nsnull;
     }
 
-    nsContentUtils::AddIntPrefVarCache(PREF_INDEXEDDB_QUOTA, &gIndexedDBQuota,
-                                       DEFAULT_QUOTA);
+    Preferences::AddIntVarCache(&gIndexedDBQuota, PREF_INDEXEDDB_QUOTA,
+                                DEFAULT_QUOTA);
   }
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();
@@ -624,7 +627,7 @@ IDBFactory::SetCurrentDatabase(IDBDatabase* aDatabase)
 PRUint32
 IDBFactory::GetIndexedDBQuota()
 {
-  return PRUint32(PR_MAX(gIndexedDBQuota, 0));
+  return PRUint32(NS_MAX(gIndexedDBQuota, 0));
 }
 
 // static
@@ -980,9 +983,9 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     nsAutoPtr<ObjectStoreInfo>& objectStoreInfo = mObjectStores[i];
     for (PRUint32 j = 0; j < objectStoreInfo->indexes.Length(); j++) {
       IndexInfo& indexInfo = objectStoreInfo->indexes[j];
-      mLastIndexId = PR_MAX(indexInfo.id, mLastIndexId);
+      mLastIndexId = NS_MAX(indexInfo.id, mLastIndexId);
     }
-    mLastObjectStoreId = PR_MAX(objectStoreInfo->id, mLastObjectStoreId);
+    mLastObjectStoreId = NS_MAX(objectStoreInfo->id, mLastObjectStoreId);
   }
 
   return NS_OK;

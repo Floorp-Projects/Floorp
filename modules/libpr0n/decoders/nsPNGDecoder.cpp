@@ -306,7 +306,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       return;
 
     // Read data into our header buffer
-    PRUint32 bytesToRead = PR_MIN(aCount, BYTES_NEEDED_FOR_DIMENSIONS -
+    PRUint32 bytesToRead = NS_MIN(aCount, BYTES_NEEDED_FOR_DIMENSIONS -
                                   mHeaderBytesRead);
     memcpy(mHeaderBuf + mHeaderBytesRead, aBuffer, bytesToRead);
     mHeaderBytesRead += bytesToRead;

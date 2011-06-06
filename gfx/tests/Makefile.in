@@ -54,49 +54,48 @@ _TEST_FILES = $(addprefix mochitest/, \
 	test_acceleration.html \
 )
 
-ifndef MOZ_ENABLE_LIBXUL
-ifndef BUILD_STATIC_LIBS
-
-CPP_UNIT_TESTS	= \
-		TestColorNames.cpp \
-		TestRect.cpp \
-		TestRegion.cpp \
-		$(NULL)
-
-# These are built but not run.  gfxColorManagementTest.cpp can't even
-# be built, because it has not been updated for qcms.
-CPP_DISABLED_UNIT_TESTS = \
-		gfxFontSelectionTest.cpp \
-		gfxSurfaceRefCountTest.cpp \
-		gfxTextRunPerfTest.cpp \
-		gfxWordCacheTest.cpp \
-		$(NULL)
-#		gfxColorManagementTest.cpp \
-
-
-# rules.mk will put the CPP_UNIT_TESTS into SIMPLE_PROGRAMS twice if we
-# define SIMPLE_PROGRAMS based on CPPSRCS directly.
-CPPSRCS		= $(CPP_DISABLED_UNIT_TESTS)
-SIMPLE_PROGRAMS	= $(CPP_DISABLED_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS		= gfxTestCocoaHelper.mm
-HELPER_OBJS	= gfxTestCocoaHelper.$(OBJ_SUFFIX)
-EXTRA_DEPS	+= gfxTestCocoaHelper.$(OBJ_SUFFIX)
-endif
-
-LIBS		= \
-		$(HELPER_OBJS) \
-		$(call EXPAND_LIBNAME_PATH,thebes,../thebes) \
-		$(call EXPAND_LIBNAME_PATH,gkgfx,../src) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(XPCOM_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(TK_LIBS) \
-		$(NULL)
-
-endif
-endif
+# CPP_UNIT_TESTS disabled for now because they dont work in libxul builds.
+#ifndef BUILD_STATIC_LIBS
+#
+#CPP_UNIT_TESTS	= \
+#		TestColorNames.cpp \
+#		TestRect.cpp \
+#		TestRegion.cpp \
+#		$(NULL)
+#
+## These are built but not run.  gfxColorManagementTest.cpp can't even
+## be built, because it has not been updated for qcms.
+#CPP_DISABLED_UNIT_TESTS = \
+#		gfxFontSelectionTest.cpp \
+#		gfxSurfaceRefCountTest.cpp \
+#		gfxTextRunPerfTest.cpp \
+#		gfxWordCacheTest.cpp \
+#		$(NULL)
+##		gfxColorManagementTest.cpp \
+#
+#
+## rules.mk will put the CPP_UNIT_TESTS into SIMPLE_PROGRAMS twice if we
+## define SIMPLE_PROGRAMS based on CPPSRCS directly.
+#CPPSRCS		= $(CPP_DISABLED_UNIT_TESTS)
+#SIMPLE_PROGRAMS	= $(CPP_DISABLED_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+#
+#ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+#CMMSRCS		= gfxTestCocoaHelper.mm
+#HELPER_OBJS	= gfxTestCocoaHelper.$(OBJ_SUFFIX)
+#EXTRA_DEPS	+= gfxTestCocoaHelper.$(OBJ_SUFFIX)
+#endif
+#
+#LIBS		= \
+#		$(HELPER_OBJS) \
+#		$(call EXPAND_LIBNAME_PATH,thebes,../thebes) \
+#		$(call EXPAND_LIBNAME_PATH,gkgfx,../src) \
+#		$(MOZ_UNICHARUTIL_LIBS) \
+#		$(XPCOM_LIBS) \
+#		$(MOZ_JS_LIBS) \
+#		$(TK_LIBS) \
+#		$(NULL)
+#
+#endif
 
 include $(topsrcdir)/config/rules.mk
 

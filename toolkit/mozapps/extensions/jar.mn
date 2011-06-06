@@ -2,7 +2,7 @@ toolkit.jar:
 % content mozapps %content/mozapps/
 * content/mozapps/extensions/extensions.xul                     (content/extensions.xul)
   content/mozapps/extensions/extensions.css                     (content/extensions.css)
-  content/mozapps/extensions/extensions.js                      (content/extensions.js)
+* content/mozapps/extensions/extensions.js                      (content/extensions.js)
 * content/mozapps/extensions/extensions.xml                     (content/extensions.xml)
   content/mozapps/extensions/updateinfo.xsl                     (content/updateinfo.xsl)
   content/mozapps/extensions/extensions-content.js              (content/extensions-content.js)
@@ -18,3 +18,4 @@ toolkit.jar:
 * content/mozapps/extensions/update.js                          (content/update.js)
 * content/mozapps/extensions/eula.xul                           (content/eula.xul)
 * content/mozapps/extensions/eula.js                            (content/eula.js)
+  content/mozapps/extensions/setting.xml                        (content/setting.xml)

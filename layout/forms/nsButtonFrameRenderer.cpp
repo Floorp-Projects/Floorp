@@ -86,9 +86,8 @@ nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 PRBool
 nsButtonFrameRenderer::isDisabled() 
 {
-  // NOTE: we might want to remove this method to prevent calling too often
-  // IntrinsicState().
-  return mFrame->GetContent()->IntrinsicState().HasState(NS_EVENT_STATE_DISABLED);
+  return mFrame->GetContent()->AsElement()->
+    State().HasState(NS_EVENT_STATE_DISABLED);
 }
 
 class nsDisplayButtonBoxShadowOuter : public nsDisplayItem {

@@ -48,20 +48,11 @@ MODULE		= layout
 DIRS +=		chrome \
 		$(NULL)
 
-# XXX Yuck.  We can't transfer everything from autoconf to HOST_CFLAGS,
-# but it would be nice to pick up anything affecting nsCSSPropList.h
-# automatically.
-ifdef MOZ_SVG
-HOST_CFLAGS	+= -DMOZ_SVG=1
-HOST_CXXFLAGS	+= -DMOZ_SVG=1
-endif
-
 HOST_CPPSRCS	= \
 		ListCSSProperties.cpp \
 		$(NULL)
 
 HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(HOST_CPPSRCS:.cpp=$(HOST_BIN_SUFFIX)))
-
 
 # ParseCSS.cpp used to be built as a test program, but it was not
 # being used for anything, and recent changes to the CSS loader have
@@ -70,13 +61,9 @@ HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(HOST_CPPSRCS:.cpp=$(HOST_BIN_SUFFIX)
 #
 # TestCSSPropertyLookup.cpp needs the internal XPCOM APIs and so cannot
 # be built with libxul enabled.
-
-ifndef BUILD_STATIC_LIBS
-ifndef MOZ_ENABLE_LIBXUL
-CPP_UNIT_TESTS = TestCSSPropertyLookup.cpp
-LIBS += ../nsCSSKeywords.$(OBJ_SUFFIX) ../nsCSSProps.$(OBJ_SUFFIX) $(XPCOM_LIBS)
-endif
-endif
+#
+#CPP_UNIT_TESTS = TestCSSPropertyLookup.cpp
+#LIBS += ../nsCSSKeywords.$(OBJ_SUFFIX) ../nsCSSProps.$(OBJ_SUFFIX) $(XPCOM_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

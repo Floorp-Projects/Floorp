@@ -188,6 +188,21 @@ protected:
     NS_OVERRIDE virtual bool
     RecvPluginHideWindow(const uint32_t& aWindowId);
 
+    NS_OVERRIDE virtual bool
+    RecvSetCursor(const NSCursorInfo& aCursorInfo);
+
+    NS_OVERRIDE virtual bool
+    RecvShowCursor(const bool& aShow);
+
+    NS_OVERRIDE virtual bool
+    RecvPushCursor(const NSCursorInfo& aCursorInfo);
+
+    NS_OVERRIDE virtual bool
+    RecvPopCursor();
+
+    NS_OVERRIDE virtual bool
+    RecvGetNativeCursorsSupported(bool* supported);
+
     static PluginInstanceParent* InstCast(NPP instance);
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 
@@ -266,10 +281,6 @@ private:
     virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags,
                                        uint64_t maxAge);
     virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result);
-
-#if defined(XP_MACOSX)
-    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing);
-#endif
 
 private:
     void WritePluginExtraDataForMinidump(const nsAString& id);

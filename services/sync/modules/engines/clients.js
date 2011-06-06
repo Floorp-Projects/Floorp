@@ -63,7 +63,9 @@ ClientsRec.prototype = {
 Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands"]);
 
 
-Utils.lazy(this, "Clients", ClientEngine);
+XPCOMUtils.defineLazyGetter(this, "Clients", function () {
+  return new ClientEngine();
+});
 
 function ClientEngine() {
   SyncEngine.call(this, "Clients");
@@ -151,12 +153,15 @@ ClientEngine.prototype = {
       return localName;
 
     // Generate a client name if we don't have a useful one yet
-    let user = Svc.Env.get("USER") || Svc.Env.get("USERNAME") ||
+    let env = Cc["@mozilla.org/process/environment;1"]
+                .getService(Ci.nsIEnvironment);
+    let user = env.get("USER") || env.get("USERNAME") ||
                Svc.Prefs.get("account") || Svc.Prefs.get("username");
     let brand = new StringBundle("chrome://branding/locale/brand.properties");
     let app = brand.get("brandShortName");
 
-    let system = Svc.SysInfo.get("device") ||
+    let system = Cc["@mozilla.org/system-info;1"]
+                   .getService(Ci.nsIPropertyBag2).get("device") ||
                  Cc["@mozilla.org/network/protocol;1?name=http"]
                    .getService(Ci.nsIHttpProtocolHandler).oscpu;
 

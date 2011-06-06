@@ -2010,7 +2010,6 @@ private:
   PRInt32 mAPD, mParentAPD;
 };
 
-#ifdef MOZ_SVG
 /**
  * A display item to paint a stacking context with effects
  * set by the stacking context root frame's style.
@@ -2044,11 +2043,16 @@ private:
   // relative to mEffectsFrame
   nsRect    mBounds;
 };
-#endif
 
-/* A display item that applies a transformation to all of its descendent
+/* A display item that applies a transformation to all of its descendant
  * elements.  This wrapper should only be used if there is a transform applied
  * to the root element.
+ *
+ * The reason that a "bounds" rect is involved in transform calculations is
+ * because CSS-transforms allow percentage values for the x and y components
+ * of <translation-value>s, where percentages are percentages of the element's
+ * content box.
+ *
  * INVARIANT: The wrapped frame is transformed.
  * INVARIANT: The wrapped frame is non-null.
  */ 

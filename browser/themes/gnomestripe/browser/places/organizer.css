@@ -64,36 +64,9 @@
   background-color: Window;
 }
 
-/* Place List, Place Content */
-.placesTree {
-  margin: 0px;
-}
-
-#placesList {
-  margin: 0px;
-  border: none;
-  padding: 0;
-}
-
-#placeContent {
-  border: 0px;
-}
-
-#infoPaneBox {
+/* Info box */
+#detailsDeck {
   padding: 5px;
-}
-
-.small, .small[disabled="true"] {
-  min-width: 0px;
-  padding: 0px 4px 0px 4px;
-  margin: 0px;  
-  border: 0px;
-}
-
-.small .button-text,
-.small .button-box {
-  padding: 0px;
-  border: 0px;
 }
 
 #infoBoxExpanderLabel {

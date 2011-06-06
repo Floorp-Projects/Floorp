@@ -50,13 +50,13 @@
  */
 
 //-- Initialize Double related constants
-const txdpun Double::NaN = TX_DOUBLE_NaN;
+const dpun Double::NaN = DOUBLE_NaN;
 #ifdef IS_BIG_ENDIAN
-const txdpun Double::POSITIVE_INFINITY = {{TX_DOUBLE_HI32_EXPMASK, 0}};
-const txdpun Double::NEGATIVE_INFINITY = {{TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT, 0}};
+const dpun Double::POSITIVE_INFINITY = {{DOUBLE_HI32_EXPMASK, 0}};
+const dpun Double::NEGATIVE_INFINITY = {{DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT, 0}};
 #else
-const txdpun Double::POSITIVE_INFINITY = {{0, TX_DOUBLE_HI32_EXPMASK}};
-const txdpun Double::NEGATIVE_INFINITY = {{0, TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT}};
+const dpun Double::POSITIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK}};
+const dpun Double::NEGATIVE_INFINITY = {{0, DOUBLE_HI32_EXPMASK | DOUBLE_HI32_SIGNBIT}};
 #endif
 
 /*
@@ -65,8 +65,8 @@ const txdpun Double::NEGATIVE_INFINITY = {{0, TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE
  */
 MBool Double::isInfinite(double aDbl)
 {
-    return ((TX_DOUBLE_HI32(aDbl) & ~TX_DOUBLE_HI32_SIGNBIT) == TX_DOUBLE_HI32_EXPMASK &&
-            !TX_DOUBLE_LO32(aDbl));
+    return ((DOUBLE_HI32(aDbl) & ~DOUBLE_HI32_SIGNBIT) == DOUBLE_HI32_EXPMASK &&
+            !DOUBLE_LO32(aDbl));
 }
 
 /*
@@ -74,7 +74,7 @@ MBool Double::isInfinite(double aDbl)
  */
 MBool Double::isNaN(double aDbl)
 {
-    return TX_DOUBLE_IS_NaN(aDbl);
+    return DOUBLE_IS_NaN(aDbl);
 }
 
 /*
@@ -82,7 +82,7 @@ MBool Double::isNaN(double aDbl)
  */
 MBool Double::isNeg(double aDbl)
 {
-    return (TX_DOUBLE_HI32(aDbl) & TX_DOUBLE_HI32_SIGNBIT) != 0;
+    return (DOUBLE_HI32(aDbl) & DOUBLE_HI32_SIGNBIT) != 0;
 }
 
 /*
@@ -261,7 +261,7 @@ void Double::toString(double aValue, nsAString& aDest)
         }
     }
     // mantissa
-    int firstlen = PR_MIN(intDigits, endp - buf);
+    int firstlen = NS_MIN<size_t>(intDigits, endp - buf);
     for (i = 0; i < firstlen; i++) {
         *dest = buf[i]; ++dest;
     }

@@ -62,20 +62,11 @@ OS_LDFLAGS += -Wl,-rpath='$$ORIGIN'
 NSDISTMODE = copy
 endif
 
-ifdef MOZ_ENABLE_LIBXUL
-APP_XPCOM_LIBS = $(XPCOM_GLUE_LDOPTS)
-else
-MOZILLA_INTERNAL_API = 1
-APP_XPCOM_LIBS = $(XPCOM_LIBS)
-endif
+LIBS += \
+  $(XPCOM_GLUE_LDOPTS) \
+  $(NSPR_LIBS) \
+  $(NULL)
 
-LIBS += $(APP_XPCOM_LIBS) \
-	$(NSPR_LIBS) \
-	$(NULL)
-
-ifdef BUILD_STATIC_LIBS
-LIBS += $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
-else
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 LIBS += $(DIST)/bin/XUL
 else
@@ -85,7 +76,6 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
-endif # BUILD_STATIC_LIBS
 
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're

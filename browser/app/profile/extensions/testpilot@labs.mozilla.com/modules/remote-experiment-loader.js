@@ -512,15 +512,15 @@ exports.RemoteExperimentLoader.prototype = {
         remoteExperiments[filename] = this._loader.require(filename);
         this._logger.info("Loaded " + filename + " OK.");
       } catch(e) {
-      /* Turn the load-time errors into strings and store them, so we can display
-       * them on a debug page or include them with a data upload!  (Don't store
-       * exception objects directly as that causes garbage collector problems-
-       * aka bug 646122) */
-      let errStr = e.name + " on line " + e.lineNumber + " of file " +
-        e.fileName + ": " + e.message;
+        /* Turn the load-time errors into strings and store them, so we can display
+         * them on a debug page or include them with a data upload!  (Don't store
+         * exception objects directly as that causes garbage collector problems-
+         * aka bug 646122) */
+        let errStr = e.name + " on line " + e.lineNumber + " of file " +
+          e.fileName + ": " + e.message;
         this._loadErrors.push(errStr);
         this._logger.warn("Error loading " + filename);
-        this._logger.warn(e);
+        this._logger.warn(errStr);
       }
     }
     return remoteExperiments;

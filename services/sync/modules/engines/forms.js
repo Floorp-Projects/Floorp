@@ -43,6 +43,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/log4moz.js");
@@ -72,14 +73,14 @@ let FormWrapper = {
         "((SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed DESC LIMIT 1) - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) * " +
         "timesUsed / (SELECT timesUsed FROM moz_formhistory ORDER BY timesUsed DESC LIMIT 1) DESC " +
       "LIMIT 500");
-    return Utils.queryAsync(query, ["name", "value"]);
+    return Async.querySpinningly(query, ["name", "value"]);
   },
 
   getEntry: function getEntry(guid) {
     let query = Svc.Form.DBConnection.createAsyncStatement(
       "SELECT fieldname name, value FROM moz_formhistory WHERE guid = :guid");
     query.params.guid = guid;
-    return Utils.queryAsync(query, ["name", "value"])[0];
+    return Async.querySpinningly(query, ["name", "value"])[0];
   },
 
   getGUID: function getGUID(name, value) {
@@ -91,7 +92,7 @@ let FormWrapper = {
     getQuery.params.value = value;
 
     // Give the guid if we found one
-    let item = Utils.queryAsync(getQuery, ["guid"])[0];
+    let item = Async.querySpinningly(getQuery, ["guid"])[0];
     
     if (!item) {
       // Shouldn't happen, but Bug 597400...
@@ -113,7 +114,7 @@ let FormWrapper = {
     setQuery.params.guid = guid;
     setQuery.params.name = name;
     setQuery.params.value = value;
-    Utils.queryAsync(setQuery);
+    Async.querySpinningly(setQuery);
 
     return guid;
   },
@@ -122,7 +123,7 @@ let FormWrapper = {
     let query = Svc.Form.DBConnection.createAsyncStatement(
       "SELECT guid FROM moz_formhistory WHERE guid = :guid LIMIT 1");
     query.params.guid = guid;
-    return Utils.queryAsync(query, ["guid"]).length == 1;
+    return Async.querySpinningly(query, ["guid"]).length == 1;
   },
 
   replaceGUID: function replaceGUID(oldGUID, newGUID) {
@@ -130,7 +131,7 @@ let FormWrapper = {
       "UPDATE moz_formhistory SET guid = :newGUID WHERE guid = :oldGUID");
     query.params.oldGUID = oldGUID;
     query.params.newGUID = newGUID;
-    Utils.queryAsync(query);
+    Async.querySpinningly(query);
   }
 
 };

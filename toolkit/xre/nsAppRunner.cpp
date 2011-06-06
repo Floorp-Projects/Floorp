@@ -1134,16 +1134,6 @@ ScopedXPCOMStartup::Initialize()
 
   nsresult rv;
 
-#ifndef MOZ_ENABLE_LIBXUL
-#ifndef _BUILD_STATIC_BIN
-  XRE_AddStaticComponent(&kXREModule);
-#else
-  for (const mozilla::Module *const *const *staticModules = kPStaticModules;
-       *staticModules; ++staticModules)
-      XRE_AddStaticComponent(**staticModules);
-#endif
-#endif
-
   rv = NS_InitXPCOM2(&mServiceManager, gDirServiceProvider->GetAppDir(),
                      gDirServiceProvider);
   if (NS_FAILED(rv)) {
@@ -1707,9 +1697,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
 #if defined(XP_MACOSX)
   CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
   PRUint32 restartMode = 0;
-#if defined(MOZ_ENABLE_LIBXUL)
   restartMode = gRestartMode;
-#endif
   LaunchChildMac(gRestartArgc, gRestartArgv, restartMode);
 #else
   nsCOMPtr<nsILocalFile> lf;
@@ -2761,6 +2749,17 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifndef MOZ_PLATFORM_MAEMO
   fire_glxtest_process();
 #endif
+#endif
+
+#ifdef XP_WIN
+  // Vista API.  Mozilla is DPI Aware.
+  typedef BOOL (*SetProcessDPIAwareFunc)(VOID);
+
+  SetProcessDPIAwareFunc setDPIAware = (SetProcessDPIAwareFunc)
+    GetProcAddress(LoadLibraryW(L"user32.dll"), "SetProcessDPIAware");
+
+  if (setDPIAware)
+    setDPIAware();
 #endif
 
   SetupErrorHandling(argv[0]);
