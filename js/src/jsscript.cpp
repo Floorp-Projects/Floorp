@@ -757,6 +757,15 @@ JSPCCounters::init(JSContext *cx, size_t numBytecodes)
     return true;
 }
 
+void
+JSPCCounters::destroy(JSContext *cx)
+{
+    if (counts) {
+        cx->free_(counts);
+        counts = NULL;
+    }
+}
+
 static void
 script_finalize(JSContext *cx, JSObject *obj)
 {
@@ -1498,6 +1507,8 @@ DestroyScript(JSContext *cx, JSScript *script)
     mjit::ReleaseScriptCode(cx, script);
 #endif
     JS_REMOVE_LINK(&script->links);
+
+    script->pcCounters.destroy(cx);
 
     cx->free_(script);
 }
