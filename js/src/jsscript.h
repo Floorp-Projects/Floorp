@@ -404,10 +404,11 @@ class JSPCCounters {
     }
 
     ~JSPCCounters() {
-        js::UnwantedForeground::free_(counts);
+        JS_ASSERT(!counts);
     }
 
     bool init(JSContext *cx, size_t numBytecodes);
+    void destroy(JSContext *cx);
 
     // Boolean conversion, for 'if (counters) ...'
     operator void*() const {
