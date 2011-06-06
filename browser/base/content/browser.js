@@ -261,10 +261,10 @@ function UpdateBackForwardCommands(aWebNavigation) {
 function SetClickAndHoldHandlers() {
   var timer;
 
-  function timerCallback(aButton) {
+  function openMenu(aButton) {
+    cancelHold(aButton);
     aButton.firstChild.hidden = false;
     aButton.open = true;
-    timer = null;
   }
 
   function mousedownHandler(aEvent) {
@@ -276,7 +276,29 @@ function SetClickAndHoldHandlers() {
     // Prevent the menupopup from opening immediately
     aEvent.currentTarget.firstChild.hidden = true;
 
-    timer = setTimeout(timerCallback, 500, aEvent.currentTarget);
+    aEvent.currentTarget.addEventListener("mouseout", mouseoutHandler, false);
+    aEvent.currentTarget.addEventListener("mouseup", mouseupHandler, false);
+    timer = setTimeout(openMenu, 500, aEvent.currentTarget);
+  }
+
+  function mouseoutHandler(aEvent) {
+    let buttonRect = aEvent.currentTarget.getBoundingClientRect();
+    if (aEvent.clientX >= buttonRect.left &&
+        aEvent.clientX <= buttonRect.right &&
+        aEvent.clientY >= buttonRect.bottom)
+      openMenu(aEvent.currentTarget);
+    else
+      cancelHold(aEvent.currentTarget);
+  }
+
+  function mouseupHandler(aEvent) {
+    cancelHold(aEvent.currentTarget);
+  }
+
+  function cancelHold(aButton) {
+    clearTimeout(timer);
+    aButton.removeEventListener("mouseout", mouseoutHandler, false);
+    aButton.removeEventListener("mouseup", mouseupHandler, false);
   }
 
   function clickHandler(aEvent) {
@@ -292,17 +314,8 @@ function SetClickAndHoldHandlers() {
     }
   }
 
-  function stopTimer(aEvent) {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
-  }
-
   function _addClickAndHoldListenersOnElement(aElm) {
     aElm.addEventListener("mousedown", mousedownHandler, true);
-    aElm.addEventListener("mouseup", stopTimer, false);
-    aElm.addEventListener("mouseout", stopTimer, false);
     aElm.addEventListener("click", clickHandler, true);
   }
 
@@ -2244,7 +2257,11 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup)
   }
 }
 
-function getShortcutOrURI(aURL, aPostDataRef) {
+function getShortcutOrURI(aURL, aPostDataRef, aMayInheritPrincipal) {
+  // Initialize outparam to false
+  if (aMayInheritPrincipal)
+    aMayInheritPrincipal.value = false;
+
   var shortcutURL = null;
   var keyword = aURL;
   var param = "";
@@ -2315,6 +2332,11 @@ function getShortcutOrURI(aURL, aPostDataRef) {
 
     return aURL;
   }
+
+  // This URL came from a bookmark, so it's safe to let it inherit the current
+  // document's principal.
+  if (aMayInheritPrincipal)
+    aMayInheritPrincipal.value = true;
 
   return shortcutURL;
 }
@@ -2860,7 +2882,7 @@ var PrintPreviewListener = {
     this._printPreviewTab = null;
   },
   _toggleAffectedChrome: function () {
-    gNavToolbox.hidden = gInPrintPreviewMode;
+    gNavToolbox.collapsed = gInPrintPreviewMode;
 
     if (gInPrintPreviewMode)
       this._hideChrome();
@@ -2951,11 +2973,7 @@ function FillInHTMLTooltip(tipElement)
   var titleText = null;
   var XLinkTitleText = null;
   var SVGTitleText = null;
-#ifdef MOZ_SVG
   var lookingForSVGTitle = true;
-#else
-  var lookingForSVGTitle = false;
-#endif // MOZ_SVG
   var direction = tipElement.ownerDocument.dir;
 
   // If the element is invalid per HTML5 Forms specifications and has no title,
@@ -2976,11 +2994,8 @@ function FillInHTMLTooltip(tipElement)
       titleText = tipElement.getAttribute("title");
       if ((tipElement instanceof HTMLAnchorElement && tipElement.href) ||
           (tipElement instanceof HTMLAreaElement && tipElement.href) ||
-          (tipElement instanceof HTMLLinkElement && tipElement.href)
-#ifdef MOZ_SVG
-          || (tipElement instanceof SVGAElement && tipElement.hasAttributeNS(XLinkNS, "href"))
-#endif // MOZ_SVG
-          ) {
+          (tipElement instanceof HTMLLinkElement && tipElement.href) ||
+          (tipElement instanceof SVGAElement && tipElement.hasAttributeNS(XLinkNS, "href"))) {
         XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
       }
       if (lookingForSVGTitle &&
@@ -3333,7 +3348,7 @@ const BrowserSearch = {
       var win = getTopWin();
       if (win) {
         // If there's an open browser window, it should handle this command
-        win.focus()
+        win.focus();
         win.BrowserSearch.webSearch();
       } else {
         // If there are no open browser windows, open a new one
@@ -3343,7 +3358,7 @@ const BrowserSearch = {
             Services.obs.removeObserver(observer, "browser-delayed-startup-finished");
           }
         }
-        win = window.openDialog("chrome://browser/content/", "_blank",
+        win = window.openDialog(getBrowserURL(), "_blank",
                                 "chrome,all,dialog=no", "about:blank");
         Services.obs.addObserver(observer, "browser-delayed-startup-finished", false); 
       }
@@ -7674,12 +7689,6 @@ var gIdentityHandler = {
           icon_label = this.getEffectiveHost();
       }
 
-      // We need a port number for all lookups.  If one hasn't been specified, use
-      // the https default
-      var lookupHost = this._lastLocation.host;
-      if (lookupHost.indexOf(':') < 0)
-        lookupHost += ":443";
-
       // Verifier is either the CA Org, for a normal cert, or a special string
       // for certs that are trusted because of a security exception.
       var tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
@@ -7689,7 +7698,12 @@ var gIdentityHandler = {
       // thing here in terms of converting _lastLocation.port from string to int, but
       // the overrideService doesn't like undefined ports, so make sure we have
       // something in the default case (bug 432241).
-      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
+      // .hostname can return an empty string in some exceptional cases -
+      // hasMatchingOverride does not handle that, so avoid calling it.
+      // Updating the tooltip value in those cases isn't critical.
+      // FIXME: Fixing bug 646690 would probably makes this check unnecessary
+      if (this._lastLocation.hostname &&
+          this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
                                                     (this._lastLocation.port || 443),
                                                     iData.cert, {}, {}))
         tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");

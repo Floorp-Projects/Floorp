@@ -467,6 +467,19 @@ protected:
                            nsIContent* aEndSelection,
                            nsIContent** aFocusedContent);
 
+private:
+  // Notify that the focus state of aContent has changed.  Note that
+  // we need to pass in whether the window should show a focus ring
+  // before the SetFocusedNode call on it happened when losing focus
+  // and after the SetFocusedNode call when gaining focus, which is
+  // why that information needs to be an explicit argument instead of
+  // just passing in the window and asking it whether it should show
+  // focus rings: in the losing focus case that information could be
+  // wrong..
+  static void NotifyFocusStateChange(nsIContent* aContent,
+                                     PRBool aWindowShouldShowFocusRing,
+                                     PRBool aGettingFocus);
+
   // the currently active and front-most top-most window
   nsCOMPtr<nsPIDOMWindow> mActiveWindow;
 

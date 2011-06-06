@@ -108,10 +108,8 @@ class nsHashKey;
 #endif
 
 #define NS_UI_EVENT                       28
-#ifdef MOZ_SVG
 #define NS_SVG_EVENT                      30
 #define NS_SVGZOOM_EVENT                  31
-#endif // MOZ_SVG
 #ifdef MOZ_SMIL
 #define NS_SMIL_TIME_EVENT                32
 #endif // MOZ_SMIL
@@ -360,7 +358,6 @@ class nsHashKey;
 #define NS_PAGE_SHOW               (NS_PAGETRANSITION_START + 1)
 #define NS_PAGE_HIDE               (NS_PAGETRANSITION_START + 2)
 
-#ifdef MOZ_SVG
 // SVG events
 #define NS_SVG_EVENT_START              2800
 #define NS_SVG_LOAD                     (NS_SVG_EVENT_START)
@@ -373,7 +370,6 @@ class nsHashKey;
 // SVG Zoom events
 #define NS_SVGZOOM_EVENT_START          2900
 #define NS_SVG_ZOOM                     (NS_SVGZOOM_EVENT_START)
-#endif // MOZ_SVG
 
 // XUL command events
 #define NS_XULCOMMAND_EVENT_START       3000
@@ -530,6 +526,14 @@ class nsHashKey;
 #define NS_PRINT_EVENT_START         4600
 #define NS_BEFOREPRINT               (NS_PRINT_EVENT_START)
 #define NS_AFTERPRINT                (NS_PRINT_EVENT_START + 1)
+
+#define NS_MESSAGE_EVENT_START       4700
+#define NS_MESSAGE                   (NS_MESSAGE_EVENT_START)
+
+// Open and close events
+#define NS_OPENCLOSE_EVENT_START     4800
+#define NS_OPEN                      (NS_OPENCLOSE_EVENT_START)
+#define NS_CLOSE                     (NS_OPENCLOSE_EVENT_START+1)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -1338,6 +1342,13 @@ public:
     PRInt32 mLineHeight;
     PRInt32 mPageWidth;
     PRInt32 mPageHeight;
+    // used by NS_QUERY_SCROLL_TARGET_INFO
+    // the mouse wheel scrolling amount may be overridden by prefs or
+    // overriding system scrolling speed mechanism.
+    // If mMouseScrollEvent is a line scroll event, the unit of this value is
+    // line.  If mMouseScrollEvent is a page scroll event, the unit of this
+    // value is page.
+    PRInt32 mComputedScrollAmount;
   } mReply;
 
   enum {

@@ -254,7 +254,7 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64& aOutStartTime)
     }
   }
 
-  PRInt64 startTime = PR_MIN(videoStartTime, audioStartTime);
+  PRInt64 startTime = NS_MIN(videoStartTime, audioStartTime);
   if (startTime != PR_INT64_MAX) {
     aOutStartTime = startTime;
   }

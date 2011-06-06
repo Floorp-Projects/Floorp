@@ -2032,7 +2032,7 @@ let GroupItems = {
     if (UI.shouldLoadFavIcon(xulTab.linkedBrowser))
       iconUrl = UI.getFavIconUrlForTab(xulTab);
     else
-      iconUrl = Utils.defaultFaviconURL;
+      iconUrl = gFavIconService.defaultFavicon.spec;
 
     return iconUrl;
   },
@@ -2107,7 +2107,9 @@ let GroupItems = {
 
     let activeGroupId = this._activeGroupItem ? this._activeGroupItem.id : null;
     Storage.saveGroupItemsData(
-      gWindow, { nextID: this.nextID, activeGroupId: activeGroupId });
+      gWindow,
+      { nextID: this.nextID, activeGroupId: activeGroupId,
+        totalNumber: this.groupItems.length });
   },
 
   // ----------

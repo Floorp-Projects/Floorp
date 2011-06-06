@@ -1122,17 +1122,18 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT(cg.version() == version);
 
     script = JSScript::NewScriptFromCG(cx, &cg);
-    if (script && funbox)
+    if (!script)
+        goto out;
+
+    if (funbox)
         script->savedCallerFun = true;
 
 #ifdef JS_SCOPE_DEPTH_METER
-    if (script) {
-        JSObject *obj = scopeChain;
-        uintN depth = 1;
-        while ((obj = obj->getParent()) != NULL)
-            ++depth;
-        JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
-    }
+    JSObject *obj = scopeChain;
+    uintN depth = 1;
+    while ((obj = obj->getParent()) != NULL)
+        ++depth;
+    JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
 #endif
 
     {
@@ -2190,8 +2191,10 @@ bool
 Parser::markFunArgs(JSFunctionBox *funbox)
 {
     JSFunctionBoxQueue queue;
-    if (!queue.init(functionCount))
+    if (!queue.init(functionCount)) {
+        js_ReportOutOfMemory(context);
         return false;
+    }
 
     FindFunArgs(funbox, -1, &queue);
     while ((funbox = queue.pull()) != NULL) {
@@ -2832,7 +2835,10 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                  * allows us to handle both these cases in a natural way.
                  */
                 outer_ale = MakePlaceholder(dn, tc);
+                if (!outer_ale)
+                    return false;
             }
+
 
             JSDefinition *outer_dn = ALE_DEFN(outer_ale);
 

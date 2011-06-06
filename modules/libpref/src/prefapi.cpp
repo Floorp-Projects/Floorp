@@ -475,7 +475,7 @@ nsresult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * len
                 *length = PL_strlen(stringVal) + 1;
             else
             {
-                PL_strncpy(return_buffer, stringVal, PR_MIN((size_t)*length - 1, PL_strlen(stringVal) + 1));
+                PL_strncpy(return_buffer, stringVal, NS_MIN<size_t>(*length - 1, PL_strlen(stringVal) + 1));
                 return_buffer[*length - 1] = '\0';
             }
             rv = NS_OK;

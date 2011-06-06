@@ -63,13 +63,13 @@
 #include "nsNodeUtils.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/Preferences.h"
 
 #include "nsGenericHTMLElement.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMHTMLScriptElement.h"
@@ -122,6 +122,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 #ifdef NS_DEBUG
@@ -1597,7 +1598,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   // Changed from 8192 to greatly improve page loading performance on
   // large pages.  See bugzilla bug 77540.
-  mMaxTextRun = nsContentUtils::GetIntPref("content.maxtextrun", 8191);
+  mMaxTextRun = Preferences::GetInt("content.maxtextrun", 8191);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,

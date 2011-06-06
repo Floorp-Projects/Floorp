@@ -348,7 +348,6 @@ nsFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
     textRun->Draw(aContext->ThebesContext(), pt, 0, aLength, &provider, nsnull);
 }
 
-#ifdef MOZ_MATHML
 nsBoundingMetrics
 nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
                                   nsRenderingContext *aContext)
@@ -371,4 +370,3 @@ nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
     m.width        = NSToCoordRound( theMetrics.mAdvanceWidth);
     return m;
 }
-#endif /* MOZ_MATHML */

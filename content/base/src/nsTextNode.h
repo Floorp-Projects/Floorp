@@ -41,7 +41,6 @@
 
 #include "nsGenericDOMDataNode.h"
 #include "nsIDOMText.h"
-#include "nsIDOM3Text.h"
 #include "nsContentUtils.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
@@ -53,7 +52,7 @@
 /**
  * Class used to implement DOM text nodes
  */
-class nsTextNode : public nsGenericTextNode,
+class nsTextNode : public nsGenericDOMDataNode,
                    public nsIDOMText
 {
 public:

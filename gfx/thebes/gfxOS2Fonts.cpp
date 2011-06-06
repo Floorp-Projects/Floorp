@@ -130,7 +130,7 @@ static void FillMetricsDefaults(gfxFont::Metrics *aMetrics)
 // line as close to the original position as possible.
 static void SnapLineToPixels(gfxFloat& aOffset, gfxFloat& aSize)
 {
-    gfxFloat snappedSize = PR_MAX(NS_floor(aSize + 0.5), 1.0);
+    gfxFloat snappedSize = NS_MAX(NS_floor(aSize + 0.5), 1.0);
     // Correct offset for change in size
     gfxFloat offset = aOffset - 0.5 * (aSize - snappedSize);
     // Snap offset
@@ -240,12 +240,12 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
     if (os2 && os2->version != 0xFFFF) { // should be there if not old Mac font
         // if we are here we can improve the avgCharWidth
-        mMetrics->aveCharWidth = PR_MAX(mMetrics->aveCharWidth,
+        mMetrics->aveCharWidth = NS_MAX(mMetrics->aveCharWidth,
                                         os2->xAvgCharWidth * xScale);
 
-        mMetrics->superscriptOffset = PR_MAX(os2->ySuperscriptYOffset * yScale, 1.0);
+        mMetrics->superscriptOffset = NS_MAX(os2->ySuperscriptYOffset * yScale, 1.0);
         // some fonts have the incorrect sign (from gfxPangoFonts)
-        mMetrics->subscriptOffset   = PR_MAX(fabs(os2->ySubscriptYOffset * yScale),
+        mMetrics->subscriptOffset   = NS_MAX(fabs(os2->ySubscriptYOffset * yScale),
                                              1.0);
         mMetrics->strikeoutOffset   = os2->yStrikeoutPosition * yScale;
         mMetrics->strikeoutSize     = os2->yStrikeoutSize * yScale;
@@ -267,11 +267,11 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     mMetrics->emDescent       = -face->descender * yScale;
     mMetrics->maxHeight       = face->height * yScale;
     // the max units determine frame heights, better be generous
-    mMetrics->maxAscent       = PR_MAX(face->bbox.yMax * yScale,
+    mMetrics->maxAscent       = NS_MAX(face->bbox.yMax * yScale,
                                        mMetrics->emAscent);
-    mMetrics->maxDescent      = PR_MAX(-face->bbox.yMin * yScale,
+    mMetrics->maxDescent      = NS_MAX(-face->bbox.yMin * yScale,
                                        mMetrics->emDescent);
-    mMetrics->maxAdvance      = PR_MAX(face->max_advance_width * xScale,
+    mMetrics->maxAdvance      = NS_MAX(face->max_advance_width * xScale,
                                        mMetrics->aveCharWidth);
 
     // leadings are not available directly (only for WinFNTs);

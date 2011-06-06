@@ -409,6 +409,7 @@
 #define WTF_OS_MAC_OS_X 1
 #endif
 
+
 /* WTF_OS_FREEBSD - FreeBSD */
 #if defined(__FreeBSD__) || defined(__DragonFly__)
 #define WTF_OS_FREEBSD 1
@@ -420,7 +421,7 @@
 #endif
 
 /* WTF_OS_LINUX - Linux */
-#ifdef __linux__
+#if defined(__linux__) && !defined(ANDROID)
 #define WTF_OS_LINUX 1
 #endif
 

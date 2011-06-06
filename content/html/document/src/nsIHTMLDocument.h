@@ -48,15 +48,9 @@ class nsIEditor;
 class nsContentList;
 class nsWrapperCache;
 
-namespace mozilla {
-namespace dom {
-class Element;
-} // namespace dom
-} // namespace mozilla
-
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x8cc90664, 0xb0fe, 0x4cdb, \
- { 0xa2, 0xdd, 0x25, 0xcd, 0x8c, 0x2b, 0xfd, 0x08 } }
+{ 0x51a360fa, 0xd659, 0x4d85, \
+  { 0xa5, 0xc5, 0x4a, 0xbb, 0x0d, 0x97, 0x0f, 0x7a } }
 
 
 /**
@@ -66,8 +60,6 @@ class nsIHTMLDocument : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLDOCUMENT_IID)
-
-  virtual mozilla::dom::Element* GetImageMap(const nsAString& aMapName) = 0;
 
   /**
    * Set compatibility mode for this document
@@ -171,12 +163,6 @@ public:
    * Disables getting and setting cookies
    */
   virtual void DisableCookieAccess() = 0;
-
-  /**
-   * Get the first <body> child of the root <html>, but don't do
-   * anything <frameset>-related (like nsIDOMHTMLDocument::GetBody).
-   */
-  virtual nsIContent* GetBodyContentExternal() = 0;
 
   /**
    * Called when this nsIHTMLDocument's editor is destroyed.

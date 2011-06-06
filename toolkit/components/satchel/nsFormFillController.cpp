@@ -63,7 +63,6 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsRect.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsILoginManager.h"
 #include "nsIDOMMouseEvent.h"
@@ -528,12 +527,10 @@ nsFormFillController::OnTextEntered(PRBool* aPrevent)
   // Fire off a DOMAutoComplete event
   nsCOMPtr<nsIDOMDocument> domDoc;
   mFocusedInput->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_STATE(doc);
+  NS_ENSURE_STATE(domDoc);
 
   nsCOMPtr<nsIDOMEvent> event;
-  doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
   NS_ENSURE_STATE(privateEvent);
 

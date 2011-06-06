@@ -285,7 +285,7 @@ nsPrintSettingsGTK::GetStartPageRange(PRInt32 *aStartPageRange)
     // the lowest start page.
     PRInt32 start(lstRanges[0].start);
     for (gint ii = 1; ii < ctRanges; ii++) {
-      start = PR_MIN(lstRanges[ii].start, start);
+      start = NS_MIN(lstRanges[ii].start, start);
     }
     *aStartPageRange = start + 1;
   }
@@ -320,7 +320,7 @@ nsPrintSettingsGTK::GetEndPageRange(PRInt32 *aEndPageRange)
   } else {
     PRInt32 end(lstRanges[0].end);
     for (gint ii = 1; ii < ctRanges; ii++) {
-      end = PR_MAX(lstRanges[ii].end, end);
+      end = NS_MAX(lstRanges[ii].end, end);
     }
     *aEndPageRange = end + 1;
   }

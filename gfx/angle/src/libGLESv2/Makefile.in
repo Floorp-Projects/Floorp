@@ -91,6 +91,8 @@ CPPSRCS = \
         ossource_win.cpp \
         util.cpp \
         ValidateLimitations.cpp \
+	ForLoopUnroll.cpp \
+	MapLongVariableNames.cpp \
 	$(NULL)
 
 # flex/yacc generated files
@@ -142,6 +144,9 @@ CPPSRCS	+= \
 	Shader.cpp \
 	Texture.cpp \
 	utilities.cpp \
+	HandleAllocator.cpp \
+	IndexDataManager.cpp \
+	VertexDataManager.cpp \
 	$(NULL)
 
 DEFFILE = $(srcdir)/libGLESv2.def
@@ -149,4 +154,6 @@ DEFFILE = $(srcdir)/libGLESv2.def
 
 include $(topsrcdir)/config/rules.mk
 
-EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/d3d9.lib" "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/d3dx9.lib"
+EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/d3d9.lib" \
+                   "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/d3dx9.lib" \
+		   "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/D3DCompiler.lib"

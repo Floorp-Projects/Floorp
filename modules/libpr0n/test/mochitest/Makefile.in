@@ -74,6 +74,8 @@ _TEST_FILES =   imgutils.js \
                 test_bug553982.html \
                 test_bug601470.html \
                 test_bug614392.html \
+                test_bug657191.html \
+                bug657191.sjs \
                 $(NULL)
 
 # Tests disabled due to intermittent orange
