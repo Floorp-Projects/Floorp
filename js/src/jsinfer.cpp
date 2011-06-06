@@ -1677,18 +1677,14 @@ FixLazyArguments(JSContext *cx, JSScript *script)
     if (!analysis || analysis->OOM())
         return;
 
-    for (AllFramesIter iter(cx); !iter.done(); ++iter) {
+    for (FrameRegsIter iter(cx, FRAME_EXPAND_NONE); !iter.done(); ++iter) {
         StackFrame *fp = iter.fp();
         if (fp->isScriptFrame() && fp->script() == script) {
-            JSInlinedSite *inline_;
-            jsbytecode *pc = fp->pc(cx, NULL, &inline_);
-            JS_ASSERT(!inline_);
-
             /*
              * Check locals and stack slots, assignment to individual arguments
              * is treated as an escape on the arguments.
              */
-            Value *sp = fp->base() + analysis->getCode(pc).stackDepth;
+            Value *sp = fp->base() + analysis->getCode(iter.pc()).stackDepth;
             for (Value *vp = fp->slots(); vp < sp; vp++) {
                 if (vp->isMagicCheck(JS_LAZY_ARGUMENTS)) {
                     if (!js_GetArgsValue(cx, fp, vp))
@@ -2930,10 +2926,6 @@ TypeObject::clearNewScript(JSContext *cx)
             prop->types.setOwnProperty(cx, true);
     }
 
-#ifdef JS_METHODJIT
-    mjit::ExpandInlineFrames(cx, true);
-#endif
-
     /*
      * If we cleared the new script while in the middle of initializing an
      * object, it will still have the new script's shape and reflect the no
@@ -2942,15 +2934,13 @@ TypeObject::clearNewScript(JSContext *cx)
      * script keeps track of where each property is initialized so we can walk
      * the stack and fix up any such objects.
      */
-    for (AllFramesIter iter(cx); !iter.done(); ++iter) {
+    for (FrameRegsIter iter(cx, FRAME_EXPAND_ALL); !iter.done(); ++iter) {
         StackFrame *fp = iter.fp();
         if (fp->isScriptFrame() && fp->isConstructing() &&
             fp->script() == newScript->script && fp->thisValue().isObject() &&
             fp->thisValue().toObject().type == this) {
             JSObject *obj = &fp->thisValue().toObject();
-            JSInlinedSite *inline_;
-            jsbytecode *pc = fp->pc(cx, NULL, &inline_);
-            JS_ASSERT(!inline_);
+            jsbytecode *pc = iter.pc();
 
             /* Whether all identified 'new' properties have been initialized. */
             bool finished = false;
@@ -2983,8 +2973,7 @@ TypeObject::clearNewScript(JSContext *cx)
                         if (seg.currentFrame() == fp)
                             break;
                         fp = seg.computeNextFrame(fp);
-                        pc = fp->pc(cx, NULL, &inline_);
-                        JS_ASSERT(!inline_);
+                        pc = fp->pcQuadratic(cx);
                     } else {
                         /* This call has already finished. */
                         depth = 1;

@@ -1084,9 +1084,6 @@ struct JSContext
     /* Limit pointer for checking native stack consumption during recursion. */
     jsuword             stackLimit;
 
-    /* Quota on the size of arenas used to compile and execute scripts. */
-    size_t              scriptStackQuota;
-
     /* Data shared by threads in an address space. */
     JSRuntime *const    runtime;
 
@@ -1467,13 +1464,6 @@ class AutoCheckRequestDepth {
 # define CHECK_REQUEST(cx)          ((void) 0)
 # define CHECK_REQUEST_THREAD(cx)   ((void) 0)
 #endif
-
-static inline uintN
-FramePCOffset(JSContext *cx, js::StackFrame* fp)
-{
-    jsbytecode *pc = fp->hasImacropc() ? fp->imacropc() : fp->pc(cx);
-    return uintN(pc - fp->script()->code);
-}
 
 static inline JSAtom **
 FrameAtomBase(JSContext *cx, js::StackFrame *fp)
@@ -2349,12 +2339,6 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 extern void
 js_ReportOutOfMemory(JSContext *cx);
 
-/*
- * Report that cx->scriptStackQuota is exhausted.
- */
-void
-js_ReportOutOfScriptQuota(JSContext *maybecx);
-
 /* JS_CHECK_RECURSION is used outside JS, so JS_FRIEND_API. */
 JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx);
@@ -2474,12 +2458,6 @@ class RegExpStatics;
 
 extern JS_FORCES_STACK JS_FRIEND_API(void)
 LeaveTrace(JSContext *cx);
-
-enum FrameExpandKind {
-    FRAME_EXPAND_NONE,
-    FRAME_EXPAND_TOP,
-    FRAME_EXPAND_ALL
-};
 
 #ifdef JS_METHODJIT
 namespace mjit {

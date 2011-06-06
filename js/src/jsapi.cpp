@@ -2604,12 +2604,14 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
     if (cx->tempPool.current == &cx->tempPool.first)
         JS_FinishArenaPool(&cx->tempPool);
 
+    GCREASON(PUBLIC_API);
     js_GC(cx, comp, GC_NORMAL);
 }
 
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
+    GCREASON(PUBLIC_API);
     JS_CompartmentGC(cx, NULL);
 }
 
@@ -2797,12 +2799,6 @@ JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
         cx->stackLimit = stackBase - (stackSize - 1);
     }
 #endif
-}
-
-JS_PUBLIC_API(void)
-JS_SetScriptStackQuota(JSContext *cx, size_t quota)
-{
-    cx->scriptStackQuota = quota;
 }
 
 /************************************************************************/
@@ -6250,7 +6246,7 @@ JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment)
 {
     cx->runtime->gcZeal_ = zeal;
     cx->runtime->gcZealFrequency = frequency;
-    cx->runtime->gcNextScheduled = frequency;
+    cx->runtime->gcNextScheduled = zeal >= 2 ? frequency : 0;
     cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 

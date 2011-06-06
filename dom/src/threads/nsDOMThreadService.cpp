@@ -673,8 +673,7 @@ DOMWorkerErrorReporter(JSContext* aCx,
   }
 
   // Don't call the error handler if we're out of stack space.
-  if (errorNumber != JSMSG_SCRIPT_STACK_QUOTA &&
-      errorNumber != JSMSG_OVER_RECURSED) {
+  if (errorNumber != JSMSG_OVER_RECURSED) {
     // Try the onerror handler for the worker's scope.
     nsRefPtr<nsDOMWorkerScope> scope = worker->GetInnerScope();
     NS_ASSERTION(scope, "Null scope!");
@@ -1071,7 +1070,6 @@ nsDOMThreadService::CreateJSContext()
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   JS_SetNativeStackQuota(cx, 256*1024);
-  JS_SetScriptStackQuota(cx, 100*1024*1024);
 
   JS_SetOptions(cx,
     JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_JIT |

@@ -182,7 +182,7 @@ Bindings::getLocalNameArray(JSContext *cx, JSArenaPool *pool)
     JS_ASSERT(SIZE_MAX / size_t(n) > sizeof *names);
     JS_ARENA_ALLOCATE_CAST(names, jsuword *, pool, size_t(n) * sizeof *names);
     if (!names) {
-        js_ReportOutOfScriptQuota(cx);
+        js_ReportOutOfMemory(cx);
         return NULL;
     }
 
@@ -390,7 +390,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         JS_ARENA_ALLOCATE_CAST(bitmap, uint32 *, &cx->tempPool,
                                bitmapLength * sizeof *bitmap);
         if (!bitmap) {
-            js_ReportOutOfScriptQuota(cx);
+            js_ReportOutOfMemory(cx);
             return false;
         }
 
@@ -1711,10 +1711,9 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 uintN
-js_FramePCToLineNumber(JSContext *cx, StackFrame *fp)
+js_FramePCToLineNumber(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 {
-    return js_PCToLineNumber(cx, fp->script(),
-                             fp->hasImacropc() ? fp->imacropc() : fp->pc(cx));
+    return js_PCToLineNumber(cx, fp->script(), fp->hasImacropc() ? fp->imacropc() : pc);
 }
 
 uintN
@@ -1829,18 +1828,31 @@ js_GetScriptLineExtent(JSScript *script)
     return 1 + lineno - script->lineno;
 }
 
-const char *
-js::CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
+namespace js {
+
+uintN
+CurrentLine(JSContext *cx)
 {
-    StackFrame *fp = js_GetScriptedCaller(cx, NULL);
-    if (!fp) {
+    return js_FramePCToLineNumber(cx, cx->fp(), cx->regs().pc);
+}
+
+const char *
+CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
+{
+    FrameRegsIter iter(cx, FRAME_EXPAND_TOP);
+    while (!iter.done() && !iter.fp()->isScriptFrame())
+        ++iter;
+
+    if (iter.done()) {
         *linenop = 0;
         return NULL;
     }
 
-    *linenop = js_FramePCToLineNumber(cx, fp);
-    return fp->script()->filename;
+    *linenop = js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
+    return iter.fp()->script()->filename;
 }
+
+}  /* namespace js */
 
 class DisablePrincipalsTranscoding {
     JSSecurityCallbacks *callbacks;

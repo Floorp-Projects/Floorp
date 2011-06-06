@@ -1123,46 +1123,12 @@ ic::NativeNew(VMFrame &f, CallICInfo *ic)
     return NULL;
 }
 
-static const unsigned MANY_ARGS = 1024;
-
-static bool
-BumpStackFull(VMFrame &f, uintN inc)
-{
-    /* If we are not passing many args, treat this as a normal call. */
-    if (inc < MANY_ARGS) {
-        if (f.regs.sp + inc < f.stackLimit)
-            return true;
-        StackSpace &space = f.cx->stack.space();
-        return space.bumpLimitWithinQuota(f.cx, f.entryfp, f.regs.sp, inc, &f.stackLimit);
-    }
-
-    /*
-     * The purpose of f.stackLimit is to catch over-recursion based on
-     * assumptions about the average frame size. 'apply' with a large number of
-     * arguments breaks these assumptions and can result in premature "out of
-     * script quota" errors. Normally, apply will go through js::Invoke, which
-     * effectively starts a fresh stackLimit. Here, we bump f.stackLimit,
-     * if necessary, to allow for this 'apply' call, and a reasonable number of
-     * subsequent calls, to succeed without hitting the stackLimit. In theory,
-     * this a recursive chain containing apply to circumvent the stackLimit.
-     * However, since each apply call must consume at least MANY_ARGS slots,
-     * this sequence will quickly reach the end of the stack and OOM.
-     */
-    StackSpace &space = f.cx->stack.space();
-    if (!space.bumpLimit(f.cx, f.entryfp, f.regs.sp, inc, &f.stackLimit)) {
-        js_ReportOutOfScriptQuota(f.cx);
-        return false;
-    }
-    return true;
-}
-
 static JS_ALWAYS_INLINE bool
 BumpStack(VMFrame &f, uintN inc)
 {
-    /* Fast path BumpStackFull. */
-    if (inc < MANY_ARGS && f.regs.sp + inc < f.stackLimit)
+    if (f.regs.sp + inc < f.stackLimit)
         return true;
-    return BumpStackFull(f, inc);
+    return f.cx->stack.space().tryBumpLimit(f.cx, f.regs.sp, inc, &f.stackLimit);
 }
 
 /*

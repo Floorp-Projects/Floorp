@@ -211,7 +211,26 @@ struct GCTimer
     }
 
     void finish(bool lastGC);
+
+    enum JSGCReason {
+        PUBLIC_API,
+        MAYBEGC,
+        LASTCONTEXT,
+        DESTROYCONTEXT,
+        COMPARTMENT,
+        LASTDITCH,
+        TOOMUCHMALLOC,
+        ALLOCTRIGGER,
+        CHUNK,
+        SHAPE,
+        NOREASON
+    };
 };
+
+/* We accept the possiblility of races for this variable. */
+extern volatile GCTimer::JSGCReason gcReason;
+
+#define GCREASON(x) ((gcReason == GCTimer::NOREASON) ? gcReason = GCTimer::x : gcReason = gcReason)
 
 # define GCTIMER_PARAM              , GCTimer &gcTimer
 # define GCTIMER_ARG                , gcTimer
@@ -223,6 +242,7 @@ struct GCTimer
 # define GCTIMER_BEGIN(rt, comp)    GCTimer gcTimer(rt, comp)
 # define GCTIMER_END(last)          (gcTimer.finish(last))
 #else
+# define GCREASON(x)                ((void) 0)
 # define GCTIMER_PARAM
 # define GCTIMER_ARG
 # define GCTIMESTAMP(x)             ((void) 0)

@@ -456,8 +456,22 @@ class StackFrame
      * If the frame is inside an inline call made within the pc, the pc will
      * be that of the outermost call and the state of any inlined frame(s) is
      * returned through pinlined.
+     *
+     * Beware, as the name implies, pcQuadratic can lead to quadratic behavior
+     * in loops such as:
+     *
+     *   for ( ...; fp; fp = fp->prev())
+     *     ... fp->pcQuadratic(cx);
+     *
+     * Using next can avoid this, but in most cases prefer FrameRegsIter;
+     * it is amortized O(1).
+     *
+     *   When I get to the bottom I go back to the top of the stack
+     *   Where I stop and I turn and I go right back
+     *   Till I get to the bottom and I see you again...
      */
-    jsbytecode *pc(JSContext *cx, StackFrame *next = NULL, JSInlinedSite **pinlined = NULL);
+    jsbytecode *pcQuadratic(JSContext *cx, StackFrame *next = NULL,
+                            JSInlinedSite **pinlined = NULL);
 
     jsbytecode *prevpc(JSInlinedSite **pinlined) {
         if (flags_ & HAS_PREVPC) {
@@ -1112,10 +1126,8 @@ struct StackOverride
 class StackSpace
 {
     Value         *base_;
-#ifdef XP_WIN
     mutable Value *commitEnd_;
-#endif
-    Value *end_;
+    Value         *end_;
     StackSegment  *seg_;
     StackOverride override_;
 
@@ -1172,64 +1184,37 @@ class StackSpace
 #endif
 
     /*
-     * If we let infinite recursion go until it hit the end of the contiguous
-     * stack, it would take a long time. As a heuristic, we kill scripts which
-     * go deeper than MAX_INLINE_CALLS. Note: this heuristic only applies to a
-     * single activation of the VM. If a script reenters, the call count gets
-     * reset. This is ok because we will quickly hit the C recursion limit.
-     */
-    static const size_t MAX_INLINE_CALLS = 3000;
-
-    /*
-     * SunSpider and v8bench have roughly an average of 9 slots per script. Our
-     * heuristic for a quick over-recursion check uses a generous slot count
-     * based on this estimate. We take this frame size and multiply it by the
-     * old recursion limit from the interpreter. Worst case, if an average size
-     * script (<=9 slots) over recurses, it'll effectively be the same as having
-     * increased the old inline call count to <= 5,000.
-     */
-    static const size_t STACK_QUOTA = MAX_INLINE_CALLS * (VALUES_PER_STACK_FRAME + 18);
-
-    /*
      * Extra space to reserve on the stack for method JIT frames, beyond the
      * frame's nslots. This may be used for inlined stack frames, slots storing
-     * loop invariant code, or to reserve space for pushed callee frames.
+     * loop invariant code, or to reserve space for pushed callee frames. Note
+     * that this space should be reserved when pushing interpreter frames as
+     * well, so that we don't need to check the stack when entering the method
+     * JIT at loop heads or safe points.
      */
     static const size_t STACK_JIT_EXTRA = (VALUES_PER_STACK_FRAME + 18) * 10;
 
     /*
-     * In the mjit, we'd like to collapse two "overflow" checks into one:
-     *  - the MAX_INLINE_CALLS check (see above comment)
-     *  - the stack OOM check (or, on Windows, the commit/OOM check) This
-     * function produces a 'limit' pointer that satisfies both these checks.
-     * (The STACK_QUOTA comment explains how this limit simulates checking
-     * MAX_INLINE_CALLS.) This limit is guaranteed to have at least enough space
-     * for cx->fp()->nslots() plus an extra stack frame (which is the min
-     * requirement for entering mjit code) or else an error is reported and NULL
-     * is returned. When the stack grows past the returned limit, the script may
-     * still be within quota, but more memory needs to be committed. This is
-     * handled by bumpLimitWithinQuota.
+     * Return a limit against which jit code can check for. This limit is not
+     * necessarily the end of the stack since we lazily commit stack memory on
+     * some platforms. Thus, when the stack limit is exceeded, the caller should
+     * use tryBumpLimit to attempt to increase the stack limit by committing
+     * more memory. If the stack is truly exhausted, tryBumpLimit will report an
+     * error and return NULL.
+     *
+     * An invariant of the methodjit is that there is always space to push a
+     * frame on top of the current frame's expression stack (which can be at
+     * most script->nslots deep). getStackLimit ensures that the returned limit
+     * does indeed have this required space and reports an error and returns
+     * NULL if this reserve space cannot be allocated.
      */
     inline Value *getStackLimit(JSContext *cx);
-
-    /*
-     * Try to bump the limit, staying within |base + STACK_QUOTA|, by
-     * committing more pages of the contiguous stack.
-     *  base: the frame on which execution started
-     *  from: the current top of the stack
-     *  nvals: requested space above 'from'
-     *  *limit: receives bumped new limit
-     */
-    bool bumpLimitWithinQuota(JSContext *maybecx, StackFrame *base, Value *from, uintN nvals, Value **limit) const;
-
-    /*
-     * Raise the given limit without considering quota.
-     * See comment in BumpStackFull.
-     */
-    bool bumpLimit(JSContext *cx, StackFrame *base, Value *from, uintN nvals, Value **limit) const;
+    bool tryBumpLimit(JSContext *maybecx, Value *from, uintN nvals, Value **limit);
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
     void mark(JSTracer *trc);
+
+    /* We only report the committed size;  uncommitted size is uninteresting. */
+    JS_FRIEND_API(size_t) committedSize();
 };
 
 /*****************************************************************************/
@@ -1351,7 +1336,7 @@ class ContextStack
 
     /*
      * For the five sets of stack operations below:
-     *  - The boolean-valued functions call js_ReportOutOfScriptQuota on OOM.
+     *  - The boolean-valued functions call js_ReportOverRecursed on OOM.
      *  - The "get*Frame" functions do not change any global state, they just
      *    check OOM and return pointers to an uninitialized frame with the
      *    requested missing arguments/slots. Only once the "push*Frame"
@@ -1406,7 +1391,7 @@ class ContextStack
     inline StackFrame *
     getInlineFrameWithinLimit(JSContext *cx, Value *sp, uintN nactual,
                               JSFunction *fun, JSScript *script, uint32 *flags,
-                              StackFrame *base, Value **limit, void *topncode) const;
+                              Value **limit, void *topncode) const;
     inline void pushInlineFrame(JSScript *script, StackFrame *fp, FrameRegs &regs);
     inline void popInlineFrame();
 
@@ -1492,6 +1477,13 @@ class GeneratorFrameGuard : public FrameGuard
 
 /*****************************************************************************/
 
+/* How much expansion of inlined frames to do when inspecting the stack. */
+enum FrameExpandKind {
+    FRAME_EXPAND_NONE,
+    FRAME_EXPAND_TOP,
+    FRAME_EXPAND_ALL
+};
+
 /*
  * While |cx->fp|'s pc/sp are available in |cx->regs|, to compute the saved
  * value of pc/sp for any other frame, it is necessary to know about that
@@ -1504,24 +1496,28 @@ class GeneratorFrameGuard : public FrameGuard
  */
 class FrameRegsIter
 {
-    JSContext    *cx_;
-    StackSegment *seg_;
-    StackFrame   *fp_;
-    Value        *sp_;
-    jsbytecode   *pc_;
+    JSContext     *cx_;
+    StackSegment  *seg_;
+    StackFrame    *fp_;
+    Value         *sp_;
+    jsbytecode    *pc_;
+    JSInlinedSite *inlined_;
 
     void initSlow();
     void incSlow(StackFrame *oldfp);
 
   public:
-    inline FrameRegsIter(JSContext *cx);
+    FrameRegsIter(JSContext *cx, FrameExpandKind expand);
 
     bool done() const { return fp_ == NULL; }
-    inline FrameRegsIter &operator++();
+    FrameRegsIter &operator++();
+    bool operator==(const FrameRegsIter &rhs) const;
+    bool operator!=(const FrameRegsIter &rhs) const { return !(*this == rhs); }
 
     StackFrame *fp() const { return fp_; }
     Value *sp() const { return sp_; }
     jsbytecode *pc() const { return pc_; }
+    JSInlinedSite *inlined() const { return inlined_; }
 };
 
 /*
