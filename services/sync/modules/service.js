@@ -591,7 +591,7 @@ WeaveSvc.prototype = {
         this._log.trace("Idle time hit, trying to sync");
         Svc.Idle.removeIdleObserver(this, this._idleTime);
         this._idleTime = 0;
-        Utils.delay(function() this.sync(false), 0, this);
+        Utils.delay(function() this.sync(), 0, this);
         break;
       case "nsPref:changed":
         if (this._ignorePrefObserver)
@@ -1045,7 +1045,7 @@ WeaveSvc.prototype = {
       CollectionKeys.clear();
 
       /* Login and sync. This also generates new keys. */
-      this.sync(true);
+      this.sync();
       return true;
     }))(),
 
