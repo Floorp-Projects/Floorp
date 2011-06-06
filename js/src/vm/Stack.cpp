@@ -133,6 +133,11 @@ StackSegment::contains(const StackFrame *fp) const
     if (fp > start)
         return false;
 
+    /*
+     * :XXX: Disabled. Including this check changes the asymptotic complexity
+     * of code which calls this function.
+     */
+#if 0
 #ifdef DEBUG
     bool found = false;
     StackFrame *stop = initialFrame_->prev();
@@ -143,6 +148,7 @@ StackSegment::contains(const StackFrame *fp) const
         }
     }
     JS_ASSERT(found);
+#endif
 #endif
 
     return true;

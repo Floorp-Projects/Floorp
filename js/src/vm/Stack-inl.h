@@ -367,7 +367,8 @@ StackFrame::resetInvokeCallFrame()
                            HAS_HOOK_DATA |
                            HAS_CALL_OBJ |
                            HAS_ARGS_OBJ |
-                           FINISHED_IN_INTERP)));
+                           FINISHED_IN_INTERP |
+                           DOWN_FRAMES_EXPANDED)));
 
     /*
      * Since the stack frame is usually popped after PutActivationObjects,
@@ -1088,14 +1089,14 @@ ContextStack::findFrameAtLevel(uintN targetLevel) const
 inline JSScript *
 ContextStack::currentScript(jsbytecode **ppc) const
 {
-    StackFrame *fp = regs_->fp();
+    StackFrame *fp = regs_ ? regs_->fp() : NULL;
+    while (fp && fp->isDummyFrame())
+        fp = fp->prev();
     if (!fp) {
         if (ppc)
             *ppc = NULL;
         return NULL;
     }
-    while (fp->isDummyFrame())
-        fp = fp->prev();
 
 #ifdef JS_METHODJIT
     mjit::CallSite *inlined = regs_->inlined();
