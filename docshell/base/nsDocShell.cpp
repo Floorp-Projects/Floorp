@@ -6937,9 +6937,9 @@ nsDocShell::RestoreFromHistory()
         mSavingOldViewer = CanSavePresentation(mLoadType, request, doc);
     }
 
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> oldMUDV(
+    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV(
         do_QueryInterface(mContentViewer));
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> newMUDV(
+    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV(
         do_QueryInterface(viewer));
     PRInt32 minFontSize = 0;
     float textZoom = 1.0f;
@@ -7589,10 +7589,10 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     float pageZoom;
     PRBool styleDisabled;
     // |newMUDV| also serves as a flag to set the data from the above vars
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> newMUDV;
+    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
 
     if (mContentViewer || parent) {
-        nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> oldMUDV;
+        nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
         if (mContentViewer) {
             // Get any interesting state from old content viewer
             // XXX: it would be far better to just reuse the document viewer ,
@@ -10676,7 +10676,9 @@ nsDocShell::ConfirmRepost(PRBool * aRepost)
   if (NS_FAILED(rv)) return rv;
 
   PRInt32 buttonPressed;
-  PRBool checkState;
+  // The actual value here is irrelevant, but we can't pass an invalid
+  // PRBool through XPConnect.
+  PRBool checkState = PR_FALSE;
   rv = prompter->
          ConfirmEx(nsnull, msgString.get(),
                    (nsIPrompt::BUTTON_POS_0 * nsIPrompt::BUTTON_TITLE_IS_STRING) +

@@ -54,6 +54,7 @@
         id="wizard"
         title="&addDevice.title.label;"
         windowtype="Sync:AddDevice"
+        persist="screenX screenY"
         onwizardnext="return gSyncAddDevice.onWizardAdvance();"
         onwizardback="return gSyncAddDevice.onWizardBack();"
         onwizardcancel="gSyncAddDevice.onWizardCancel();"

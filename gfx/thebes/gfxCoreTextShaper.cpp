@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prtypes.h"
+#include "nsAlgorithm.h"
 #include "prmem.h"
 #include "nsString.h"
 #include "nsBidiUtils.h"
@@ -378,7 +379,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxTextRun *aTextRun,
             // find the maximum glyph index covered by the clump so far
             for (PRInt32 i = charStart; i != charEnd; i += direction) {
                 if (charToGlyph[i] != NO_GLYPH) {
-                    glyphEnd = PR_MAX(glyphEnd, charToGlyph[i] + 1); // update extent of glyph range
+                    glyphEnd = NS_MAX(glyphEnd, charToGlyph[i] + 1); // update extent of glyph range
                 }
             }
 
@@ -453,8 +454,8 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxTextRun *aTextRun,
             continue;
         }
         // Ensure we won't try to go beyond the valid length of the textRun's text
-        baseCharIndex = PR_MAX(baseCharIndex, aRunStart);
-        endCharIndex = PR_MIN(endCharIndex, aRunStart + aRunLength);
+        baseCharIndex = NS_MAX(baseCharIndex, aRunStart);
+        endCharIndex = NS_MIN(endCharIndex, aRunStart + aRunLength);
 
         // Now we're ready to set the glyph info in the textRun; measure the glyph width
         // of the first (perhaps only) glyph, to see if it is "Simple"

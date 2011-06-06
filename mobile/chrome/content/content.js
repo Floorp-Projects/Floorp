@@ -636,8 +636,11 @@ let Content = {
       }
 
       if (isTouchClick) {
-        let rect = rects[0];
-        let point = (new Rect(rect.left, rect.top, rect.width, rect.height)).center();
+        let rect = new Rect(rects[0]);
+        if (rect.isEmpty())
+          return;
+
+        let point = rect.center();
         aX = point.x;
         aY = point.y;
       }
@@ -650,7 +653,7 @@ let Content = {
   },
 
   _setMinFontSize: function _setMinFontSize(aSize) {
-    let viewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH);
+    let viewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
     if (viewer)
       viewer.minFontSize = aSize;
   }

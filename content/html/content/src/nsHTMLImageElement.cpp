@@ -180,6 +180,8 @@ NS_NewHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 nsHTMLImageElement::nsHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  // We start out broken
+  AddStatesSilently(NS_EVENT_STATE_BROKEN);
 }
 
 nsHTMLImageElement::~nsHTMLImageElement()
@@ -506,7 +508,10 @@ nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
+    // FIXME: Bug 660963 it would be nice if we could just have
+    // ClearBrokenState update our state and do it fast...
     ClearBrokenState();
+    RemoveStatesSilently(NS_EVENT_STATE_BROKEN);
     // If loading is temporarily disabled, don't even launch MaybeLoadImage.
     // Otherwise MaybeLoadImage may run later when someone has reenabled
     // loading.

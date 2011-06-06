@@ -38,17 +38,26 @@
   * ***** END LICENSE BLOCK ***** */
 
 #include "npapi.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace plugins {
 namespace PluginUtilsOSX {
 
-// Need to call back into the browser's to process event.
+// Need to call back into the browser's message loop to process event.
 typedef void (*RemoteProcessEvents) (void*);
 
 NPError ShowCocoaContextMenu(void* aMenu, int aX, int aY, void* pluginModule, RemoteProcessEvents remoteEvent);
 
 void InvokeNativeEventLoop();
+
+// Need to call back and send a cocoa draw event to the plugin.
+typedef void (*DrawPluginFunc) (CGContextRef, void*, nsIntRect aUpdateRect);
+
+void* GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance);
+void ReleaseCGLayer(void* cgLayer);
+void Repaint(void* cgLayer, nsIntRect aRect);
+
 
 } // namespace PluginUtilsOSX
 } // namespace plugins

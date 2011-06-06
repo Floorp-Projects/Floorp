@@ -163,6 +163,9 @@ nsHTMLObjectElement::nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo
 
   // <object> is always barred from constraint validation.
   SetBarredFromConstraintValidation(PR_TRUE);
+
+  // By default we're in the loading state
+  AddStatesSilently(NS_EVENT_STATE_LOADING);
 }
 
 nsHTMLObjectElement::~nsHTMLObjectElement()

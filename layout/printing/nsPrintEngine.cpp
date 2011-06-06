@@ -502,7 +502,7 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
   if (aIsPrintPreview) {
     SetIsCreatingPrintPreview(PR_TRUE);
     SetIsPrintPreview(PR_TRUE);
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> viewer =
+    nsCOMPtr<nsIMarkupDocumentViewer> viewer =
       do_QueryInterface(mDocViewerPrint);
     if (viewer) {
       viewer->SetTextZoom(1.0f);

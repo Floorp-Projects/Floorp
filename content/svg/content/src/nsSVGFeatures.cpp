@@ -106,9 +106,7 @@ nsSVGFeatures::HaveExtension(const nsAString& aExtension)
 {
 #define SVG_SUPPORTED_EXTENSION(str) if (aExtension.EqualsLiteral(str)) return PR_TRUE;
   SVG_SUPPORTED_EXTENSION("http://www.w3.org/1999/xhtml")
-#ifdef MOZ_MATHML
   SVG_SUPPORTED_EXTENSION("http://www.w3.org/1998/Math/MathML")
-#endif
 #undef SVG_SUPPORTED_EXTENSION
 
   return PR_FALSE;

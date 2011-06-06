@@ -914,8 +914,7 @@ nsXTFElementWrapper::SetIntrinsicState(nsEventStates::InternalType aNewState)
                    "Both READONLY and READWRITE are being set.  Yikes!!!");
 
   mIntrinsicState = newStates;
-  mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-  doc->ContentStateChanged(this, bits);
+  UpdateState(true);
 
   return NS_OK;
 }

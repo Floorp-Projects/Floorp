@@ -885,8 +885,11 @@ var FormHelperUI = {
 
   doAutoComplete: function formHelperDoAutoComplete(aElement) {
     // Suggestions are only in <label>s. Ignore the rest.
-    if (aElement instanceof Ci.nsIDOMXULLabelElement)
-      this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:AutoComplete", { value: aElement.getAttribute("data") });
+    if (!(aElement instanceof Ci.nsIDOMXULLabelElement))
+      return;
+
+    this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:AutoComplete", { value: aElement.getAttribute("data") });
+    ContentPopupHelper.popup = null;
   },
 
   get _open() {
@@ -1392,7 +1395,7 @@ var FullScreenVideo = {
         this._dispatchMouseEvent("Browser:MouseDown", aEvent.clientX, aEvent.clientY);
         break;
       case "TapSingle":
-        this._dispatchMouseEvent("Browser:MouseUp", aEvent.clientX, aEvent.clientY);
+        this._dispatchMouseEvent("Browser:MouseClick", aEvent.clientX, aEvent.clientY);
         break;
     }
   },

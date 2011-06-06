@@ -1,9 +1,12 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at:
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -11,18 +14,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Code.
  *
  * The Initial Developer of the Original Code is
- * Alexander J. Vincent <ajvincent@gmail.com>.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ *   The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,22 +38,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#ifndef mozilla_ipc_Transport_h
+#define mozilla_ipc_Transport_h 1
 
-// Introduced in DOM Level 3:
-[scriptable, uuid(2a1088c7-499a-49a7-9d3b-1970d21532ab)]
-interface nsIDOM3TypeInfo : nsISupports
-{
-    readonly attribute DOMString       typeName;
-    readonly attribute DOMString       typeNamespace;
+#include "base/process_util.h"
+#include "chrome/common/ipc_channel.h"
 
-    // DerivationMethods
-    const unsigned long       DERIVATION_RESTRICTION         = 0x00000001;
-    const unsigned long       DERIVATION_EXTENSION           = 0x00000002;
-    const unsigned long       DERIVATION_UNION               = 0x00000004;
-    const unsigned long       DERIVATION_LIST                = 0x00000008;
+#ifdef OS_POSIX
+# include "mozilla/ipc/Transport_posix.h"
+#elif OS_WIN
+# include "mozilla/ipc/Transport_win.h"
+#endif
 
-    boolean            isDerivedFrom(in DOMString typeNamespaceArg, 
-                                     in DOMString typeNameArg, 
-                                     in unsigned long derivationMethod);
-};
+namespace mozilla {
+namespace ipc {
+
+
+typedef IPC::Channel Transport;
+
+bool CreateTransport(base::ProcessHandle aProcOne, base::ProcessHandle aProcTwo,
+                     TransportDescriptor* aOne, TransportDescriptor* aTwo);
+
+Transport* OpenDescriptor(const TransportDescriptor& aTd,
+                          Transport::Mode aMode);
+
+void CloseDescriptor(const TransportDescriptor& aTd);
+
+} // namespace ipc
+} // namespace mozilla
+
+#endif  // mozilla_ipc_Transport_h
