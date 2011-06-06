@@ -3039,7 +3039,7 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
         type->singleton = obj;
         if (type->newScript)
             obj->setMap((Shape *) type->newScript->shape);
-        calleeScript->typeSetThis(cx, (types::jstype) type);
+        calleeScript->types.setThis(cx, (types::jstype) type);
     }
 
     return obj;

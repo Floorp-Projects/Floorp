@@ -566,7 +566,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
         for (JSCList *cursor = scripts.next; ok && cursor != &scripts; cursor = cursor->next) {
             JSScript *script = reinterpret_cast<JSScript *>(cursor);
-            ok = script->condenseTypes(cx);
+            ok = script->types.condenseTypes(cx);
         }
 
         if (ok)

@@ -785,8 +785,83 @@ struct TypeCallsite
 
     /* Get the new object at this callsite. */
     inline TypeObject* getInitObject(JSContext *cx, bool isArray);
+};
 
-    inline bool hasGlobal();
+/* Persistent type information for a script, retained across GCs. */
+struct TypeScript
+{
+    inline JSScript *script();
+
+    /* Lazily constructed types of variables and JOF_TYPESET ops in this script. */
+    TypeSet *typeArray;
+    inline unsigned numTypeSets();
+
+    /* Any type objects associated with this script, including initializer objects. */
+    TypeObject *typeObjects;
+
+    /* Persistent information about stack types in this script. */
+    TypeIntermediate *intermediateList;
+    void addIntermediate(TypeIntermediate *type) {
+        type->next = intermediateList;
+        intermediateList = type;
+    }
+
+    /* Make sure there the type array has been constructed. */
+    inline bool ensureTypeArray(JSContext *cx);
+
+    inline TypeSet *bytecodeTypes(const jsbytecode *pc);
+    inline TypeSet *returnTypes();
+    inline TypeSet *thisTypes();
+    inline TypeSet *argTypes(unsigned i);
+    inline TypeSet *localTypes(unsigned i);
+    inline TypeSet *upvarTypes(unsigned i);
+
+    /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
+    inline TypeSet *slotTypes(unsigned slot);
+
+  private:
+    bool makeTypeArray(JSContext *cx);
+  public:
+
+#ifdef DEBUG
+    /* Check that correct types were inferred for the values pushed by this bytecode. */
+    void checkBytecode(JSContext *cx, jsbytecode *pc, const js::Value *sp);
+#endif
+
+    /* Get the default 'new' object for a given standard class, per the script's global. */
+    inline TypeObject *standardType(JSContext *cx, JSProtoKey key);
+
+    /* Get a type object for an allocation site in this script. */
+    inline TypeObject *initObject(JSContext *cx, const jsbytecode *pc, bool isArray);
+
+    /* Monitor a bytecode pushing an unexpected value. */
+    inline void monitorOverflow(JSContext *cx, jsbytecode *pc);
+    inline void monitorString(JSContext *cx, jsbytecode *pc);
+    inline void monitorUnknown(JSContext *cx, jsbytecode *pc);
+
+    /* Monitor a JOF_TYPESET bytecode pushing any value into its pushed type set. */
+    inline void monitor(JSContext *cx, jsbytecode *pc, const js::Value &val);
+
+    /* Monitor an assignment at a SETELEM on a non-integer identifier. */
+    inline void monitorAssign(JSContext *cx, jsbytecode *pc,
+                              JSObject *obj, jsid id, const js::Value &val);
+
+    /* Add a type for a variable in this script. */
+    inline void setThis(JSContext *cx, jstype type);
+    inline void setThis(JSContext *cx, const js::Value &value);
+    inline void setThis(JSContext *cx, ClonedTypeSet *types);
+    inline void setNewCalled(JSContext *cx);
+    inline void setLocal(JSContext *cx, unsigned local, jstype type);
+    inline void setLocal(JSContext *cx, unsigned local, const js::Value &value);
+    inline void setLocal(JSContext *cx, unsigned local, ClonedTypeSet *types);
+    inline void setArgument(JSContext *cx, unsigned arg, jstype type);
+    inline void setArgument(JSContext *cx, unsigned arg, const js::Value &value);
+    inline void setArgument(JSContext *cx, unsigned arg, ClonedTypeSet *types);
+    inline void setUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
+
+    bool condenseTypes(JSContext *cx);
+    void trace(JSTracer *trc);
+    void destroy(JSContext *cx);
 };
 
 struct ArrayTableKey;

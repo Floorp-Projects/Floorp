@@ -370,7 +370,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
             if (op2 == JSOP_TYPEOF) {
                 f.regs.sp++;
                 f.regs.sp[-1].setUndefined();
-                f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-1]);
+                f.script()->types.monitor(cx, f.pc(), f.regs.sp[-1]);
                 return obj;
             }
             ReportAtomNotDefined(cx, atom);
@@ -397,7 +397,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
             AddTypePropertyId(cx, obj->getType(), id, TYPE_UNDEFINED);
     }
 
-    f.script()->typeMonitor(cx, f.pc(), rval);
+    f.script()->types.monitor(cx, f.pc(), rval);
 
     *f.regs.sp++ = rval;
 
@@ -438,7 +438,7 @@ stubs::GetElem(VMFrame &f)
             if (!str)
                 THROW();
             f.regs.sp[-2].setString(str);
-            f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
+            f.script()->types.monitor(cx, f.pc(), f.regs.sp[-2]);
             return;
         }
     }
@@ -446,7 +446,7 @@ stubs::GetElem(VMFrame &f)
     if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
         if (rref.isInt32() && size_t(rref.toInt32()) < regs.fp()->numActualArgs()) {
             regs.sp[-2] = regs.fp()->canonicalActualArg(rref.toInt32());
-            f.script()->typeMonitor(cx, f.pc(), regs.sp[-2]);
+            f.script()->types.monitor(cx, f.pc(), regs.sp[-2]);
             return;
         }
         MarkTypeObjectFlags(cx, f.script()->fun->getType(),
@@ -505,11 +505,11 @@ stubs::GetElem(VMFrame &f)
     copyFrom = &rval;
 
     if (!JSID_IS_INT(id))
-        f.script()->typeMonitorUnknown(cx, f.pc());
+        f.script()->types.monitorUnknown(cx, f.pc());
 
   end_getelem:
     f.regs.sp[-2] = *copyFrom;
-    f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
+    f.script()->types.monitor(cx, f.pc(), f.regs.sp[-2]);
 }
 
 static inline bool
@@ -556,8 +556,8 @@ stubs::CallElem(VMFrame &f)
         regs.sp[-1] = thisv;
     }
     if (!JSID_IS_INT(id))
-        f.script()->typeMonitorUnknown(cx, f.pc());
-    f.script()->typeMonitor(cx, f.pc(), regs.sp[-2]);
+        f.script()->types.monitorUnknown(cx, f.pc());
+    f.script()->types.monitor(cx, f.pc(), regs.sp[-2]);
 }
 
 template<JSBool strict>
@@ -581,7 +581,7 @@ stubs::SetElem(VMFrame &f)
     if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
         THROW();
 
-    f.script()->typeMonitorAssign(cx, f.pc(), obj, id, rval);
+    f.script()->types.monitorAssign(cx, f.pc(), obj, id, rval);
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
@@ -727,7 +727,7 @@ stubs::Ursh(VMFrame &f)
     u >>= (j & 31);
 
 	if (!f.regs.sp[-2].setNumber(uint32(u)))
-        f.script()->typeMonitorOverflow(f.cx, f.pc());
+        f.script()->types.monitorOverflow(f.cx, f.pc());
 }
 
 template<JSBool strict>
@@ -1054,7 +1054,7 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
     JSContext *cx = f.cx;
 
     JS_ASSERT(v.isDouble());
-    f.script()->typeMonitorOverflow(cx, f.pc());
+    f.script()->types.monitorOverflow(cx, f.pc());
 
     /*
      * Monitoring the overflow is not enough for fused INC operations on NAME/PROP,
@@ -1113,7 +1113,7 @@ stubs::Add(VMFrame &f)
             THROW();
         regs.sp--;
         regs.sp[-1] = rval;
-        f.script()->typeMonitorUnknown(cx, f.pc());
+        f.script()->types.monitorUnknown(cx, f.pc());
     } else
 #endif
     {
@@ -1141,7 +1141,7 @@ stubs::Add(VMFrame &f)
                 regs.sp[-1].setString(rstr);
             }
             if (lIsObject || rIsObject)
-                f.script()->typeMonitorString(cx, f.pc());
+                f.script()->types.monitorString(cx, f.pc());
             goto string_concat;
 
         } else {
@@ -1193,7 +1193,7 @@ stubs::Mul(VMFrame &f)
     }
     double d = d1 * d2;
     if (!regs.sp[-2].setNumber(d))
-        f.script()->typeMonitorOverflow(cx, f.pc());
+        f.script()->types.monitorOverflow(cx, f.pc());
 }
 
 void JS_FASTCALL
@@ -1223,11 +1223,11 @@ stubs::Div(VMFrame &f)
         else
             vp = &rt->positiveInfinityValue;
         regs.sp[-2] = *vp;
-        f.script()->typeMonitorOverflow(cx, f.pc());
+        f.script()->types.monitorOverflow(cx, f.pc());
     } else {
         d1 /= d2;
         if (!regs.sp[-2].setNumber(d1))
-            f.script()->typeMonitorOverflow(cx, f.pc());
+            f.script()->types.monitorOverflow(cx, f.pc());
     }
 }
 
@@ -1256,7 +1256,7 @@ stubs::Mod(VMFrame &f)
             d1 = js_fmod(d1, d2);
             regs.sp[-2].setDouble(d1);
         }
-        f.script()->typeMonitorOverflow(cx, f.pc());
+        f.script()->types.monitorOverflow(cx, f.pc());
     }
 }
 
@@ -1373,7 +1373,7 @@ stubs::Neg(VMFrame &f)
         THROW();
     d = -d;
     if (!f.regs.sp[-1].setNumber(d))
-        f.script()->typeMonitorOverflow(f.cx, f.pc());
+        f.script()->types.monitorOverflow(f.cx, f.pc());
 }
 
 JSObject * JS_FASTCALL
@@ -1679,7 +1679,7 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
         }
 
         v.setNumber(d);
-        f.script()->typeMonitorOverflow(cx, f.pc());
+        f.script()->types.monitorOverflow(cx, f.pc());
 
         {
             JSAutoResolveFlags rf(cx, setPropFlags);
@@ -1804,7 +1804,7 @@ stubs::ElemInc(VMFrame &f)
     f.regs.sp[-3] = f.regs.sp[-1];
 
     if (!JSID_IS_INT(id))
-        f.script()->typeMonitorUnknown(f.cx, f.pc());
+        f.script()->types.monitorUnknown(f.cx, f.pc());
 }
 
 template void JS_FASTCALL stubs::ElemInc<true>(VMFrame &f);
@@ -1825,7 +1825,7 @@ stubs::ElemDec(VMFrame &f)
     f.regs.sp[-3] = f.regs.sp[-1];
 
     if (!JSID_IS_INT(id))
-        f.script()->typeMonitorUnknown(f.cx, f.pc());
+        f.script()->types.monitorUnknown(f.cx, f.pc());
 }
 
 template void JS_FASTCALL stubs::ElemDec<true>(VMFrame &f);
@@ -1846,7 +1846,7 @@ stubs::IncElem(VMFrame &f)
     f.regs.sp[-3] = f.regs.sp[-1];
 
     if (!JSID_IS_INT(id))
-        f.script()->typeMonitorUnknown(f.cx, f.pc());
+        f.script()->types.monitorUnknown(f.cx, f.pc());
 }
 
 template void JS_FASTCALL stubs::IncElem<true>(VMFrame &f);
@@ -1867,7 +1867,7 @@ stubs::DecElem(VMFrame &f)
     f.regs.sp[-3] = f.regs.sp[-1];
 
     if (!JSID_IS_INT(id))
-        f.script()->typeMonitorUnknown(f.cx, f.pc());
+        f.script()->types.monitorUnknown(f.cx, f.pc());
 }
 
 template void JS_FASTCALL stubs::DecElem<true>(VMFrame &f);
@@ -1980,7 +1980,7 @@ InlineGetProp(VMFrame &f)
     if (vp->isMagic(JS_LAZY_ARGUMENTS)) {
         JS_ASSERT(js_GetOpcode(cx, f.script(), f.pc()) == JSOP_LENGTH);
         regs.sp[-1] = Int32Value(regs.fp()->numActualArgs());
-        f.script()->typeMonitor(cx, f.pc(), regs.sp[-1]);
+        f.script()->types.monitor(cx, f.pc(), regs.sp[-1]);
         return true;
     }
 
@@ -2029,7 +2029,7 @@ InlineGetProp(VMFrame &f)
         }
     } while(0);
 
-    f.script()->typeMonitor(cx, f.pc(), rval);
+    f.script()->types.monitor(cx, f.pc(), rval);
 
     regs.sp[-1] = rval;
     return true;
@@ -2149,7 +2149,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
             THROW();
     }
 #endif
-    f.script()->typeMonitor(cx, f.pc(), rval);
+    f.script()->types.monitor(cx, f.pc(), rval);
 }
 
 void JS_FASTCALL
@@ -2601,7 +2601,7 @@ stubs::Pos(VMFrame &f)
     if (!ValueToNumber(f.cx, &f.regs.sp[-1]))
         THROW();
     if (!f.regs.sp[-1].isInt32())
-        f.script()->typeMonitorOverflow(f.cx, f.pc());
+        f.script()->types.monitorOverflow(f.cx, f.pc());
 }
 
 void JS_FASTCALL
@@ -2781,14 +2781,14 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
         f.script()->analysis(f.cx)->breakTypeBarriers(f.cx, f.pc() - f.script()->code, false);
     }
 
-    f.script()->typeMonitor(f.cx, f.pc(), result);
+    f.script()->types.monitor(f.cx, f.pc(), result);
 }
 
 void JS_FASTCALL
 stubs::NegZeroHelper(VMFrame &f)
 {
     f.regs.sp[-1].setDouble(-0.0);
-    f.script()->typeMonitorOverflow(f.cx, f.pc());
+    f.script()->types.monitorOverflow(f.cx, f.pc());
 }
 
 void JS_FASTCALL
@@ -2823,9 +2823,9 @@ stubs::CheckArgumentTypes(VMFrame &f)
         types::AutoEnterTypeInference enter(f.cx);
 
         if (!f.fp()->isConstructing())
-            script->typeSetThis(f.cx, fp->thisValue());
+            script->types.setThis(f.cx, fp->thisValue());
         for (unsigned i = 0; i < fun->nargs; i++)
-            script->typeSetArgument(f.cx, i, fp->formalArg(i));
+            script->types.setArgument(f.cx, i, fp->formalArg(i));
     }
 
     if (monitor.recompiled())
@@ -2845,12 +2845,12 @@ stubs::AssertArgumentTypes(VMFrame &f)
     JSScript *script = fun->script();
 
     jstype type = GetValueType(f.cx, fp->thisValue());
-    if (!TypeMatches(f.cx, script->thisTypes(), type))
+    if (!TypeMatches(f.cx, script->types.thisTypes(), type))
         TypeFailure(f.cx, "Missing type for this: %s", TypeString(type));
 
     for (unsigned i = 0; i < fun->nargs; i++) {
         type = GetValueType(f.cx, fp->formalArg(i));
-        if (!TypeMatches(f.cx, script->argTypes(i), type))
+        if (!TypeMatches(f.cx, script->types.argTypes(i), type))
             TypeFailure(f.cx, "Missing type for arg %d: %s", i, TypeString(type));
     }
 }
