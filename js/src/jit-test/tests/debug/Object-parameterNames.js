@@ -1,3 +1,4 @@
+// |jit-test| debug
 load(libdir + 'array-compare.js');
 
 var g = newGlobal('new-compartment');

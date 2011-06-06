@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Test Debug.Object.prototype.callable.
 
 var g = newGlobal('new-compartment');

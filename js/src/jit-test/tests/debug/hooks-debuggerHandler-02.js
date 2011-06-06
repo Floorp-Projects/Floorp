@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Activity in the debugger compartment should not trigger debug hooks.
 
 var g = newGlobal('new-compartment');

@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Frame.prototype.this in non-strict-mode functions, with primitive values
 
 function classOf(obj) {

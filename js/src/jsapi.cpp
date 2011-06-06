@@ -707,7 +707,7 @@ JSRuntime::init(uint32 maxbytes)
         return false;
 #endif
 
-    debugMode = false;
+    debugMode = JS_FALSE;
     return js_InitThreads(this);
 }
 

@@ -1,3 +1,4 @@
+// |jit-test| debug
 // The arguments can escape from a function via a debugging hook.
 
 var g = newGlobal('new-compartment');

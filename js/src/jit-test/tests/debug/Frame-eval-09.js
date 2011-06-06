@@ -1,3 +1,4 @@
+// |jit-test| debug
 // assigning to local variables in frame.eval code
 
 var g = newGlobal('new-compartment');

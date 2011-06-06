@@ -139,7 +139,7 @@ BEGIN_TEST(testDebugger_debugObjectVsDebugMode)
     EVAL("debuggee.eval('debugger; debugger; debugger;');\n"
          "hits;\n",
          &v);
-    CHECK_SAME(v, INT_TO_JSVAL(4));
+    CHECK_SAME(v, JSVAL_ONE);
     
     return true;
 }

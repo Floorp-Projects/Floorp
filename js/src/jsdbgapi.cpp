@@ -101,7 +101,7 @@ typedef struct JSTrap {
 JS_PUBLIC_API(JSBool)
 JS_GetDebugMode(JSContext *cx)
 {
-    return cx->compartment->debugMode();
+    return cx->compartment->debugMode;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -113,7 +113,7 @@ JS_SetDebugMode(JSContext *cx, JSBool debug)
 JS_PUBLIC_API(void)
 JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
 {
-    rt->debugMode = !!debug;
+    rt->debugMode = debug;
 }
 
 namespace js {
@@ -159,7 +159,60 @@ ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool okArg)
 JS_FRIEND_API(JSBool)
 JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 {
-    return comp->setDebugModeFromC(cx, !!debug);
+    if (comp->debugMode == !!debug)
+        return JS_TRUE;
+
+    if (debug) {
+        // This should only be called when no scripts are live. It would even
+        // be incorrect to discard just the non-live scripts' JITScripts
+        // because they might share ICs with live scripts (bug 632343).
+        for (AllFramesIter i(cx); !i.done(); ++i) {
+            JSScript *script = i.fp()->maybeScript();
+            if (script && script->compartment == comp) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
+                return false;
+            }
+        }
+    }
+
+    // All scripts compiled from this point on should be in the requested debugMode.
+    comp->debugMode = !!debug;
+
+    // Detach any debuggers attached to this compartment.
+    if (debug)
+        JS_ASSERT(comp->getDebuggees().empty());
+    else
+        Debug::detachFromCompartment(comp);
+
+    // Discard JIT code for any scripts that change debugMode. This function
+    // assumes that 'comp' is in the same thread as 'cx'.
+#ifdef JS_METHODJIT
+    JS::AutoEnterScriptCompartment ac;
+
+    for (JSScript *script = (JSScript *)comp->scripts.next;
+         &script->links != &comp->scripts;
+         script = (JSScript *)script->links.next)
+    {
+        if (!script->debugMode == !debug)
+            continue;
+
+        /*
+         * If compartment entry fails, debug mode is left partially on, leading
+         * to a small performance overhead but no loss of correctness. We set
+         * the debug flags to false so that the caller will not later attempt
+         * to use debugging features.
+         */
+        if (!ac.entered() && !ac.enter(cx, script)) {
+            comp->debugMode = JS_FALSE;
+            return JS_FALSE;
+        }
+
+        mjit::ReleaseScriptCode(cx, script);
+        script->debugMode = !!debug;
+    }
+#endif
+
+    return JS_TRUE;
 }
 
 JS_FRIEND_API(JSBool)
@@ -172,7 +225,7 @@ js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
         return JS_TRUE;
 #endif
 
-    JS_ASSERT_IF(singleStep, cx->compartment->debugMode());
+    JS_ASSERT_IF(singleStep, cx->compartment->debugMode);
 
 #ifdef JS_METHODJIT
     /* request the next recompile to inject single step interrupts */

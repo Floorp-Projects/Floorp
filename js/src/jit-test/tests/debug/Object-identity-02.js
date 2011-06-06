@@ -1,4 +1,6 @@
+// |jit-test| debug
 // Different objects get different Debug.Object wrappers.
+
 var g = newGlobal('new-compartment');
 var dbg = Debug(g);
 var hits = 0;

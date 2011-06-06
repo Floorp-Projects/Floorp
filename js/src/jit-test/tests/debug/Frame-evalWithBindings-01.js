@@ -1,3 +1,4 @@
+// |jit-test| debug
 // evalWithBindings basics
 
 var g = newGlobal('new-compartment');

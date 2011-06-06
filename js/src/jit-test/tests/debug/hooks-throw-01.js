@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Basic throw hook test.
 
 load(libdir + "asserts.js");

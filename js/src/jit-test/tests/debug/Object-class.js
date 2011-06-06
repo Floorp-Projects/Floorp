@@ -1,4 +1,5 @@
-// Basic tests for Debug.Object.prototype.class.
+// |jit-test| debug
+
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 var hits = 0;
@@ -13,5 +14,6 @@ dbg.hooks = {
         hits++;
     }
 };
+
 g.eval("(function () { debugger; })(Object.prototype, [], eval, new Date, Proxy.create({}));");
 assertEq(hits, 1);
