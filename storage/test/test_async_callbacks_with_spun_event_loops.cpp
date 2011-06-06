@@ -12,19 +12,6 @@
 //// Async Helpers
 
 /**
- * Invoke AsyncClose on the given connection, blocking the main thread until we
- * get the completion notification.
- */
-void
-blocking_async_close(mozIStorageConnection *db)
-{
-  nsRefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
-
-  db->AsyncClose(spinner);
-  spinner->SpinUntilCompleted();
-}
-
-/**
  * Spins the events loop for current thread until aCondition is true.
  */
 void

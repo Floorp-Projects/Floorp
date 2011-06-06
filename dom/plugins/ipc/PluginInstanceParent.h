@@ -282,9 +282,6 @@ public:
     nsresult AsyncSetWindow(NPWindow* window);
     nsresult GetImage(mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
     nsresult GetImageSize(nsIntSize* aSize);
-#ifdef XP_MACOSX
-    nsresult IsRemoteDrawingCoreAnimation(PRBool *aDrawing);
-#endif
     nsresult SetBackgroundUnknown();
     nsresult BeginUpdateBackground(const nsIntRect& aRect,
                                    gfxContext** aCtx);
@@ -349,16 +346,15 @@ private:
     HWND               mPluginHWND;
     WNDPROC            mPluginWndProc;
     bool               mNestedEventState;
-    bool               mInAnswerFocusChange;
 #endif // defined(XP_WIN)
 #if defined(OS_MACOSX)
 private:
-    Shmem              mShSurface; 
-    size_t             mShWidth;
-    size_t             mShHeight;
-    CGColorSpaceRef    mShColorSpace;
-    int16_t            mDrawingModel;
-    nsIOSurface       *mIOSurface;
+    Shmem                  mShSurface; 
+    size_t                 mShWidth;
+    size_t                 mShHeight;
+    CGColorSpaceRef        mShColorSpace;
+    int16_t                mDrawingModel;
+    nsAutoPtr<nsIOSurface> mIOSurface;
 #endif // definied(OS_MACOSX)
 
     // ObjectFrame layer wrapper

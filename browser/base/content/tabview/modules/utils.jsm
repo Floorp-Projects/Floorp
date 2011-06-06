@@ -490,8 +490,6 @@ Subscribable.prototype = {
 // Class: Utils
 // Singelton with common utility functions.
 let Utils = {
-  defaultFaviconURL: "chrome://mozapps/skin/places/defaultFavicon.png",
-
   // ----------
   // Function: toString
   // Prints [Utils] for debug use

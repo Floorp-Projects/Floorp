@@ -73,9 +73,7 @@ NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
 
 DECL_INTERNAL_DOM_EXCEPTION(DOMException)
 DECL_INTERNAL_DOM_EXCEPTION(RangeException)
-#ifdef MOZ_SVG
 DECL_INTERNAL_DOM_EXCEPTION(SVGException)
-#endif
 DECL_INTERNAL_DOM_EXCEPTION(XPathException)
 DECL_INTERNAL_DOM_EXCEPTION(FileException)
 DECL_INTERNAL_DOM_EXCEPTION(EventException)

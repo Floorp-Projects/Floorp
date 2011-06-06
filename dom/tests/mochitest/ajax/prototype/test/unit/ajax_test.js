@@ -32,69 +32,6 @@ new Test.Unit.Runner({
     this.assertEqual("Hello world!", h2.innerHTML);
   },
   
-  testAsynchronousRequest: function() {
-    this.assertEqual("", $("content").innerHTML);
-    
-    new Ajax.Request("../fixtures/hello.js", extendDefault({
-      asynchronous: true,
-      method: 'get',
-      evalJS: 'force'
-    }));
-    this.wait(1000, function() {
-      var h2 = $("content").firstChild;
-      this.assertEqual("Hello world!", h2.innerHTML);
-    });
-  },
-  
-  testUpdater: function() {
-    this.assertEqual("", $("content").innerHTML);
-    
-    new Ajax.Updater("content", "../fixtures/content.html", { method:'get', onComplete: function() {
-        this.assertEqual(sentence, $("content").innerHTML.strip().toLowerCase());
-        $('content').update('');
-        this.assertEqual("", $("content").innerHTML);
-        new Ajax.Updater({ success:"content", failure:"content2" },
-          "../fixtures/content.html",
-          { method:'get', parameters:{ pet:'monkey' }, onComplete: function() {
-            this.assertEqual(sentence, $("content").innerHTML.strip().toLowerCase());
-            this.assertEqual("", $("content2").innerHTML);
-            $('content').update('');
-            this.assertEqual("", $("content").innerHTML);
-            new Ajax.Updater("", "../fixtures/content.html",
-              { method:'get', parameters:"pet=monkey", onComplete: function() {
-                this.assertEqual("", $("content").innerHTML);
-                this.cancelWait();
-              }.bind(this)
-            });
-          }.bind(this)
-        });
-      }.bind(this)
-    });
-
-    this.wait(1000, function() {
-      this.flunk("The request was timeouted.");
-    }); 
-  },
-  
-  testUpdaterWithInsertion: function() {
-    $('content').update();
-    new Ajax.Updater("content", "../fixtures/content.html", { method:'get', insertion: Insertion.Top });
-    this.wait(1000, function() {
-      // bug 452706       this.assertEqual(sentence, $("content").innerHTML.strip().toLowerCase());
-      $('content').update();
-      new Ajax.Updater("content", "../fixtures/content.html", { method:'get', insertion: 'bottom' });      
-      this.wait(1000, function() {
-        this.assertEqual(sentence, $("content").innerHTML.strip().toLowerCase());
-        
-        $('content').update();
-        new Ajax.Updater("content", "../fixtures/content.html", { method:'get', insertion: 'after' });      
-        this.wait(1000, function() {
-          this.assertEqual('five dozen', $("content").next().innerHTML.strip().toLowerCase());
-        });
-      });
-    });
-  },
-  
   testUpdaterOptions: function() {
     var options = {
       method: 'get',
@@ -105,43 +42,6 @@ new Test.Unit.Runner({
     var request = new Ajax.Updater("content", "../fixtures/hello.js", options);
     request.options.onComplete = function() {};
     this.assertIdentical(Prototype.emptyFunction, options.onComplete);
-  },
-  
-  testResponders: function(){
-    // check for internal responder
-    this.assertEqual(1, Ajax.Responders.responders.length);
-    
-    var dummyResponder = {
-      onComplete: function(req) { /* dummy */ }
-    };
-    
-    Ajax.Responders.register(dummyResponder);
-    this.assertEqual(2, Ajax.Responders.responders.length);
-    
-    // don't add twice
-    Ajax.Responders.register(dummyResponder);
-    this.assertEqual(2, Ajax.Responders.responders.length);
-    
-    Ajax.Responders.unregister(dummyResponder);
-    this.assertEqual(1, Ajax.Responders.responders.length);
-    
-    var responder = {
-      onCreate:   function(req){ responderCounter++ },
-      onLoading:  function(req){ responderCounter++ },
-      onComplete: function(req){ responderCounter++ }
-    };
-    Ajax.Responders.register(responder);
-    
-    this.assertEqual(0, responderCounter);
-    this.assertEqual(0, Ajax.activeRequestCount);
-    new Ajax.Request("../fixtures/content.html", { method:'get', parameters:"pet=monkey" });
-    this.assertEqual(1, responderCounter);
-    this.assertEqual(1, Ajax.activeRequestCount);
-    
-    this.wait(1000,function() {
-      this.assertEqual(3, responderCounter);
-      this.assertEqual(0, Ajax.activeRequestCount);
-    });
   },
   
   testEvalResponseShouldBeCalledBeforeOnComplete: function() {

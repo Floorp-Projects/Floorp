@@ -282,7 +282,7 @@ PRBool nsVoidArray::GrowArrayBy(PRInt32 aGrowBy)
     // Also, limit the increase in size to about a VM page or two.
     if (GetArraySize() >= kMaxGrowArrayBy)
     {
-      newCapacity = GetArraySize() + PR_MAX(kMaxGrowArrayBy,aGrowBy);
+      newCapacity = GetArraySize() + NS_MAX(kMaxGrowArrayBy,aGrowBy);
       newSize = SIZEOF_IMPL(newCapacity);
     }
     else
@@ -951,7 +951,7 @@ CompareCString(const nsCString* aCString1, const nsCString* aCString2, void*)
   const char* s2;
   PRUint32 len1 = NS_CStringGetData(*aCString1, &s1);
   PRUint32 len2 = NS_CStringGetData(*aCString2, &s2);
-  int r = memcmp(s1, s2, PR_MIN(len1, len2));
+  int r = memcmp(s1, s2, NS_MIN(len1, len2));
   if (r)
     return r;
 

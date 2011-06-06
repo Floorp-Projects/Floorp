@@ -19,11 +19,10 @@
 
 #sites-box {
   padding: 10px;
+  width: 25em;
 }
 
 .site {
-  width: 250px;
-  overflow-x: hidden;
   padding: 4px;
   border-bottom: 1px solid ThreeDLightShadow;
 }
@@ -32,10 +31,11 @@
   height: 16px;
   width: 16px;
   -moz-margin-end: 4px;
+  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
 }
 
-.site-domain {
-  max-width: 200px; /* crop set in XBL will ellipsize the domain if it's too long */
+#all-sites-item > .site-container > .site-favicon {
+  list-style-image: none;
 }
 
 /* permissions box */

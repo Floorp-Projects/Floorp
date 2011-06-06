@@ -45,6 +45,7 @@
 #include "cairo-win32.h"
 
 #include "gfxPlatformFontList.h"
+#include "gfxPlatform.h"
 
 
 /**
@@ -68,16 +69,20 @@ public:
      * family object.
      */
     gfxDWriteFontFamily(const nsAString& aName, 
-                               IDWriteFontFamily *aFamily)
-      : gfxFontFamily(aName), mDWFamily(aFamily) {}
+                        IDWriteFontFamily *aFamily)
+      : gfxFontFamily(aName), mDWFamily(aFamily), mForceGDIClassic(false) {}
     virtual ~gfxDWriteFontFamily();
     
     virtual void FindStyleVariations();
 
-    virtual void LocalizedName(nsAString& aLocalizedName); 
+    virtual void LocalizedName(nsAString& aLocalizedName);
+
+    void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
+
 protected:
     /** This font family's directwrite fontfamily object */
     nsRefPtr<IDWriteFontFamily> mDWFamily;
+    bool mForceGDIClassic;
 };
 
 /**
@@ -94,12 +99,13 @@ public:
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFont *aFont) 
-      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull)
+      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull),
+        mForceGDIClassic(false)
     {
         mItalic = (aFont->GetStyle() == DWRITE_FONT_STYLE_ITALIC ||
                    aFont->GetStyle() == DWRITE_FONT_STYLE_OBLIQUE);
         mStretch = FontStretchFromDWriteStretch(aFont->GetStretch());
-        PRUint16 weight = PR_ROUNDUP(aFont->GetWeight() - 50, 100);
+        PRUint16 weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
 
         weight = NS_MAX<PRUint16>(100, weight);
         weight = NS_MIN<PRUint16>(900, weight);
@@ -124,7 +130,8 @@ public:
                               PRUint16 aWeight,
                               PRInt16 aStretch,
                               PRBool aItalic)
-      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull)
+      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull),
+        mForceGDIClassic(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
@@ -148,7 +155,8 @@ public:
                               PRUint16 aWeight,
                               PRInt16 aStretch,
                               PRBool aItalic)
-      : gfxFontEntry(aFaceName), mFont(nsnull), mFontFile(aFontFile)
+      : gfxFontEntry(aFaceName), mFont(nsnull), mFontFile(aFontFile),
+        mForceGDIClassic(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
@@ -167,6 +175,9 @@ public:
     nsresult ReadCMAP();
 
     PRBool IsCJKFont();
+
+    void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
+    bool GetForceGDIClassic() { return mForceGDIClassic; }
 
 protected:
     friend class gfxDWriteFont;
@@ -189,7 +200,8 @@ protected:
     nsRefPtr<IDWriteFontFile> mFontFile;
     DWRITE_FONT_FACE_TYPE mFaceType;
 
-    PRBool mIsCJK;
+    PRInt8 mIsCJK;
+    bool mForceGDIClassic;
 };
 
 
@@ -227,6 +239,8 @@ public:
 
     virtual void GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray);
 
+    gfxFloat GetForceGDIClassicMaxFontSize() { return mForceGDIClassicMaxFontSize; }
+
 private:
     friend class gfxDWriteFontFamily;
 
@@ -250,6 +264,8 @@ private:
 
     PRBool mInitialized;
     virtual nsresult DelayedInitFontList();
+
+    gfxFloat mForceGDIClassicMaxFontSize;
 
     // whether to use GDI font table access routines
     PRBool mGDIFontTableAccess;

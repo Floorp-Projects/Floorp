@@ -45,6 +45,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 #include "nsServiceManagerUtils.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #include "gfxGDIFontList.h"
 
@@ -156,6 +157,7 @@ gfxDWriteFontFamily::FindStyleVariations()
          */
         gfxDWriteFontEntry *fe = 
             new gfxDWriteFontEntry(fullID, font);
+        fe->SetForceGDIClassic(mForceGDIClassic);
         AddFontEntry(fe);
 
 #ifdef PR_LOGGING
@@ -497,7 +499,7 @@ gfxDWriteFontEntry::IsCJKFont()
 // gfxDWriteFontList
 
 gfxDWriteFontList::gfxDWriteFontList()
-    : mInitialized(PR_FALSE)
+    : mInitialized(PR_FALSE), mForceGDIClassicMaxFontSize(0.0)
 {
     mFontSubstitutes.Init();
 }
@@ -550,13 +552,14 @@ gfxDWriteFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
     {
         return nsnull;
     }
-    gfxFontEntry *fe = 
+    gfxDWriteFontEntry* dwriteLookup = static_cast<gfxDWriteFontEntry*>(lookup);
+    gfxDWriteFontEntry *fe =
         new gfxDWriteFontEntry(lookup->Name(),
-                               static_cast<gfxDWriteFontEntry*>(lookup)->mFont,
+                               dwriteLookup->mFont,
                                aProxyEntry->Weight(),
                                aProxyEntry->Stretch(),
                                aProxyEntry->IsItalic());
-
+    fe->SetForceGDIClassic(dwriteLookup->GetForceGDIClassic());
     return fe;
 }
 
@@ -948,6 +951,29 @@ gfxDWriteFontList::DelayedInitFontList()
             // remove Gills Sans
             mFontFamilies.Remove(nameGillSans);
         }
+    }
+
+    nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsXPIDLCString classicFamilies;
+    nsresult rv = pref->GetCharPref(
+             "gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
+             getter_Copies(classicFamilies));
+    if (NS_SUCCEEDED(rv)) {
+        nsCCharSeparatedTokenizer tokenizer(classicFamilies, ',');
+        while (tokenizer.hasMoreTokens()) {
+            NS_ConvertUTF8toUTF16 name(tokenizer.nextToken());
+            BuildKeyNameFromFontName(name);
+            gfxFontFamily *family = mFontFamilies.GetWeak(name);
+            if (family) {
+                static_cast<gfxDWriteFontFamily*>(family)->SetForceGDIClassic(true);
+            }
+        }
+    }
+    PRInt32 forceGDIClassicMaxFontSize = 0;
+    rv = pref->GetIntPref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size",
+                          &forceGDIClassicMaxFontSize);
+    if (NS_SUCCEEDED(rv)) {
+        mForceGDIClassicMaxFontSize = forceGDIClassicMaxFontSize;
     }
 
     StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);

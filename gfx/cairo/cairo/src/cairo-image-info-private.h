@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -53,11 +53,11 @@ _cairo_image_info_get_jpeg_info (cairo_image_info_t	*info,
 cairo_private cairo_int_status_t
 _cairo_image_info_get_jpx_info (cairo_image_info_t	*info,
 				const unsigned char	*data,
-				long			 length);
+				unsigned long		 length);
 
 cairo_private cairo_int_status_t
-_cairo_image_info_get_png_info (cairo_image_info_t     	*info,
+_cairo_image_info_get_png_info (cairo_image_info_t	*info,
 				const unsigned char     *data,
-				long                     length);
+				unsigned long            length);
 
 #endif /* CAIRO_IMAGE_INFO_PRIVATE_H */

@@ -348,11 +348,11 @@ SpreadHorizontal(unsigned char* aInput,
                     break;
             }
 
-            PRInt32 sMin = PR_MAX(x - aRadius, 0);
-            PRInt32 sMax = PR_MIN(x + aRadius, aWidth - 1);
+            PRInt32 sMin = NS_MAX(x - aRadius, 0);
+            PRInt32 sMax = NS_MIN(x + aRadius, aWidth - 1);
             PRInt32 v = 0;
             for (PRInt32 s = sMin; s <= sMax; ++s) {
-                v = PR_MAX(v, aInput[aStride * y + s]);
+                v = NS_MAX<PRInt32>(v, aInput[aStride * y + s]);
             }
             aOutput[aStride * y + x] = v;
         }
@@ -393,11 +393,11 @@ SpreadVertical(unsigned char* aInput,
                     break;
             }
 
-            PRInt32 sMin = PR_MAX(y - aRadius, 0);
-            PRInt32 sMax = PR_MIN(y + aRadius, aRows - 1);
+            PRInt32 sMin = NS_MAX(y - aRadius, 0);
+            PRInt32 sMax = NS_MIN(y + aRadius, aRows - 1);
             PRInt32 v = 0;
             for (PRInt32 s = sMin; s <= sMax; ++s) {
-                v = PR_MAX(v, aInput[aStride * s + x]);
+                v = NS_MAX<PRInt32>(v, aInput[aStride * s + x]);
             }
             aOutput[aStride * y + x] = v;
         }

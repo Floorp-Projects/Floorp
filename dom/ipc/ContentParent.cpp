@@ -690,13 +690,13 @@ ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& rep
 
     for (PRUint32 i = 0; i < report.Length(); i++) {
 
-        nsCString prefix = report[i].prefix();
-        nsCString path   = report[i].path();
-        PRInt32   kind   = report[i].kind();
-        nsCString desc   = report[i].desc();
+        nsCString process  = report[i].process();
+        nsCString path     = report[i].path();
+        PRInt32   kind     = report[i].kind();
+        nsCString desc     = report[i].desc();
         PRInt64 memoryUsed = report[i].memoryUsed();
         
-        nsRefPtr<nsMemoryReporter> r = new nsMemoryReporter(prefix,
+        nsRefPtr<nsMemoryReporter> r = new nsMemoryReporter(process,
                                                             path,
                                                             kind,
                                                             desc,
@@ -867,6 +867,7 @@ ContentParent::RecvSetURITitle(const IPC::URI& uri,
 bool
 ContentParent::RecvShowFilePicker(const PRInt16& mode,
                                   const PRInt16& selectedType,
+                                  const PRBool& addToRecentDocs,
                                   const nsString& title,
                                   const nsString& defaultFile,
                                   const nsString& defaultExtension,
@@ -892,7 +893,9 @@ ContentParent::RecvShowFilePicker(const PRInt16& mode,
     *result = filePicker->Init(window, title, mode);
     if (NS_FAILED(*result))
         return true;
-    
+
+    filePicker->SetAddToRecentDocs(addToRecentDocs);
+
     PRUint32 count = filters.Length();
     for (PRUint32 i = 0; i < count; ++i) {
         filePicker->AppendFilter(filterNames[i], filters[i]);

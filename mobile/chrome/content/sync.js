@@ -124,6 +124,7 @@ let WeaveGlue = {
       },
 
       onComplete: function onComplete(aCredentials) {
+        self.jpake = null;
         self.close();
         self.setupData = aCredentials;
         self.connect();
@@ -132,8 +133,10 @@ let WeaveGlue = {
       onAbort: function onAbort(aError) {
         self.jpake = null;
 
-        if (aError == "jpake.error.userabort" || container.hidden)
+        if (aError == "jpake.error.userabort" || container.hidden) {
+          Services.obs.notifyObservers(null, "browser:sync:setup:userabort", "");
           return;
+        }
 
         // Automatically go to manual setup if we couldn't acquire a channel.
         let brandShortName = Strings.brand.GetStringFromName("brandShortName");
@@ -434,7 +437,7 @@ let WeaveGlue = {
           connect.setAttribute("title", self._bundle.GetStringFromName("connecting.label"));
 
         if (aTopic == "weave:service:sync:start")
-          sync.setAttribute("title", self._bundle.GetStringFromName("lastSyncInProgress.label"));
+          sync.setAttribute("title", self._bundle.GetStringFromName("lastSyncInProgress2.label"));
       } else {
         connect.firstChild.disabled = false;
         sync.firstChild.disabled = false;
@@ -449,7 +452,7 @@ let WeaveGlue = {
     let lastSync = Weave.Svc.Prefs.get("lastSync");
     if (lastSync != null) {
       let syncDate = new Date(lastSync).toLocaleFormat("%a %R");
-      let dateStr = this._bundle.formatStringFromName("lastSync.label", [syncDate], 1);
+      let dateStr = this._bundle.formatStringFromName("lastSync2.label", [syncDate], 1);
       sync.setAttribute("title", dateStr);
     }
 

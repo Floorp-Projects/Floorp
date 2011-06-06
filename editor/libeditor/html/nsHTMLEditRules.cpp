@@ -2023,7 +2023,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(visNode), &so, address_of(visNode), &eo);
       NS_ENSURE_SUCCESS(res, res);
       nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(visNode));
-      res = mHTMLEditor->DeleteText(nodeAsText, NS_MIN(so, eo), PR_ABS(eo - so));
+      res = mHTMLEditor->DeleteText(nodeAsText, NS_MIN(so, eo), NS_ABS(eo - so));
       *aHandled = PR_TRUE;
       NS_ENSURE_SUCCESS(res, res);    
       res = InsertBRIfNeeded(aSelection);
@@ -5807,7 +5807,8 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    NS_ASSERTION(rangeCount == rangeItemArray.Length(), "How did that happen?");
+    NS_ASSERTION(static_cast<PRUint32>(rangeCount) == rangeItemArray.Length(),
+                 "How did that happen?");
 
     // first register ranges for special editor gravity
     for (i = 0; i < rangeCount; i++)

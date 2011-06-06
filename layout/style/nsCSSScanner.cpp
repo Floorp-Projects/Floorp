@@ -56,10 +56,13 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
-#include "nsContentUtils.h"
+#include "nsIDocument.h"
 #include "mozilla/Services.h"
 #include "mozilla/css/Loader.h"
 #include "nsCSSStyleSheet.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 static PRBool gReportErrors = PR_TRUE;
@@ -325,7 +328,7 @@ nsCSSScanner::SetLowLevelError(nsresult aErrorCode)
 static int
 CSSErrorsPrefChanged(const char *aPref, void *aClosure)
 {
-  gReportErrors = nsContentUtils::GetBoolPref(CSS_ERRORS_PREF, PR_TRUE);
+  gReportErrors = Preferences::GetBool(CSS_ERRORS_PREF, PR_TRUE);
   return NS_OK;
 }
 #endif
@@ -345,7 +348,7 @@ nsCSSScanner::InitGlobals()
   NS_ASSERTION(gConsoleService && gScriptErrorFactory,
                "unexpected null pointer without failure");
 
-  nsContentUtils::RegisterPrefCallback(CSS_ERRORS_PREF, CSSErrorsPrefChanged, nsnull);
+  Preferences::RegisterCallback(CSSErrorsPrefChanged, CSS_ERRORS_PREF);
   CSSErrorsPrefChanged(CSS_ERRORS_PREF, nsnull);
 #endif
   return PR_TRUE;
@@ -355,7 +358,7 @@ nsCSSScanner::InitGlobals()
 nsCSSScanner::ReleaseGlobals()
 {
 #ifdef CSS_REPORT_PARSE_ERRORS
-  nsContentUtils::UnregisterPrefCallback(CSS_ERRORS_PREF, CSSErrorsPrefChanged, nsnull);
+  Preferences::UnregisterCallback(CSSErrorsPrefChanged, CSS_ERRORS_PREF);
   NS_IF_RELEASE(gConsoleService);
   NS_IF_RELEASE(gScriptErrorFactory);
   NS_IF_RELEASE(gStringBundle);

@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=656379
+-->
+<head>
+  <title>Test for Bug 656379</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    button:hover { color: green; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=656379">Mozilla Bug 656379</a>
+<p id="display">
+  <label for="button1" id="label1">Label 1</label>
+  <button id="button1">Button 1</button>
+  <label><span id="label2">Label 2</span><button id="button2">Button 2</button></label>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+/** Test for Bug 656379 **/
+SimpleTest.waitForExplicitFinish();
+function tests() {
+  synthesizeMouseAtCenter($("label1"), { type: "mousemove" });
+  yield;
+  is($("button1").mozMatchesSelector(":hover"), true,
+     "Button 1 should be hovered");
+  is($("button2").mozMatchesSelector(":hover"), false,
+     "Button 2 should not be hovered");
+  synthesizeMouseAtCenter($("label2"), { type: "mousemove" });
+  yield;
+  is($("button1").mozMatchesSelector(":hover"), false,
+     "Button 1 should not be hovered");
+  is($("button2").mozMatchesSelector(":hover"), true,
+     "Button 2 should be hovered");
+  SimpleTest.finish();
+}
+
+function executeTests() {
+  var testYielder = tests();
+  function execNext() {
+    try {
+      testYielder.next();
+      SimpleTest.executeSoon(execNext);
+    } catch(e) {}
+  }
+  execNext();
+}
+
+SimpleTest.waitForFocus(executeTests);
+
+</script>
+</pre>
+</body>
+</html>
