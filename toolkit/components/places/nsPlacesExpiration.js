@@ -717,17 +717,14 @@ nsPlacesExpiration.prototype = {
     catch(e) {}
 
     if (this._urisLimit < 0) {
-      // PR_GetPhysicalMemorySize sometimes returns garbage (bug 660036).
-      // If the return value is greater than MEMSIZE_MAX_BYTES, assume it is
-      // garbage and use MEMSIZE_FALLBACK_BYTES instead.  Must stay in sync
-      // with the code in nsNavHistory.cpp.
-      const MEMSIZE_MAX_BYTES = 137438953472; // 128 G
+      // If physical memory size is not available, use MEMSIZE_FALLBACK_BYTES
+      // instead.  Must stay in sync with the code in nsNavHistory.cpp.
       const MEMSIZE_FALLBACK_BYTES = 268435456; // 256 M
 
       // The preference did not exist or has a negative value, so we calculate a
       // limit based on hardware.
       let memsize = this._sys.getProperty("memsize"); // Memory size in bytes.
-      if (memsize <= 0 || memsize > MEMSIZE_MAX_BYTES)
+      if (memsize <= 0)
         memsize = MEMSIZE_FALLBACK_BYTES;
 
       let cpucount = this._sys.getProperty("cpucount"); // CPU count.
