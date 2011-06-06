@@ -690,13 +690,8 @@ let AboutPermissions = {
    */
   updatePermission: function(aType) {
     let allowItem = document.getElementById(aType + "-" + PermissionDefaults.ALLOW);
-    if (!this._selectedSite &&
-        this._noGlobalAllow.indexOf(aType) != -1) {
-      allowItem.hidden = true;
-      return;
-    }
-
-    allowItem.hidden = false;
+    allowItem.hidden = !this._selectedSite &&
+                       this._noGlobalAllow.indexOf(aType) != -1;
 
     let permissionMenulist = document.getElementById(aType + "-menulist");
     let permissionValue;    
