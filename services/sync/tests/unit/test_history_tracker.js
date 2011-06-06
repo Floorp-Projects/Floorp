@@ -40,10 +40,10 @@ add_test(function test_empty() {
 add_test(function test_not_tracking(next) {
   _("Create history item. Won't show because we haven't started tracking yet");
   addVisit();
-  Utils.delay(function() {
+  Utils.nextTick(function() {
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
     run_next_test();
-  }, 0);
+  });
 });
 
 add_test(function test_start_tracking() {
@@ -85,20 +85,20 @@ add_test(function test_stop_tracking() {
   tracker.clearChangedIDs();
   Svc.Obs.notify("weave:engine:stop-tracking");
   addVisit();
-  Utils.delay(function() {
+  Utils.nextTick(function() {
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
     run_next_test();
-  }, 0);
+  });
 });
 
 add_test(function test_stop_tracking_twice() {
   _("Notifying twice won't do any harm.");
   Svc.Obs.notify("weave:engine:stop-tracking");
   addVisit();
-  Utils.delay(function() {
+  Utils.nextTick(function() {
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
     run_next_test();
-  }, 0);
+  });
 });
 
 add_test(function cleanup() {

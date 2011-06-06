@@ -136,5 +136,5 @@ add_test(function test_livemark_invalid() {
   do_check_eq(-1, store.idForGUID(lmParentRec.id, true));
   
   // Clear event loop.
-  Utils.delay(run_next_test, 0);
+  Utils.nextTick(run_next_test);
 });

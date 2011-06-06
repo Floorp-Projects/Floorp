@@ -447,11 +447,11 @@ HistoryTracker.prototype = {
       return;
     this._log.trace("onVisit: " + uri.spec);
     let self = this;
-    Utils.delay(function() {
+    Utils.nextTick(function() {
       if (self.addChangedID(self._GUIDForUri(uri, true))) {
         self._upScore();
       }
-    }, 0);
+    });
   },
   onDeleteVisits: function onDeleteVisits() {
   },

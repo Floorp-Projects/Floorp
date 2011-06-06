@@ -108,7 +108,7 @@ Tracker.prototype = {
   },
 
   saveChangedIDs: function T_saveChangedIDs() {
-    Utils.delay(function() {
+    Utils.namedTimer(function() {
       Utils.jsonSave("changes/" + this.file, this, this.changedIDs);
     }, 1000, this, "_lazySave");
   },
@@ -202,8 +202,7 @@ Store.prototype = {
 
   _sleep: function _sleep(delay) {
     let cb = Async.makeSyncCallback();
-    this._timer.initWithCallback({notify: cb}, delay,
-                                 Ci.nsITimer.TYPE_ONE_SHOT);
+    this._timer.initWithCallback(cb, delay, Ci.nsITimer.TYPE_ONE_SHOT);
     Async.waitForSyncCallback(cb);
   },
 
@@ -490,7 +489,7 @@ SyncEngine.prototype = {
       return;
     }
     this._toFetch = val;
-    Utils.delay(function () {
+    Utils.namedTimer(function () {
       Utils.jsonSave("toFetch/" + this.name, this, val);
     }, 0, this, "_toFetchDelay");
   },
@@ -512,7 +511,7 @@ SyncEngine.prototype = {
       return;
     }
     this._previousFailed = val;
-    Utils.delay(function () {
+    Utils.namedTimer(function () {
       Utils.jsonSave("failed/" + this.name, this, val);
     }, 0, this, "_previousFailedDelay");
   },
