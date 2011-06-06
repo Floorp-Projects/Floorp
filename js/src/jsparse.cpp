@@ -1133,17 +1133,18 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT(cg.version() == version);
 
     script = JSScript::NewScriptFromCG(cx, &cg);
-    if (script && funbox)
+    if (!script)
+        goto out;
+
+    if (funbox)
         script->savedCallerFun = true;
 
 #ifdef JS_SCOPE_DEPTH_METER
-    if (script) {
-        JSObject *obj = scopeChain;
-        uintN depth = 1;
-        while ((obj = obj->getParent()) != NULL)
-            ++depth;
-        JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
-    }
+    JSObject *obj = scopeChain;
+    uintN depth = 1;
+    while ((obj = obj->getParent()) != NULL)
+        ++depth;
+    JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
 #endif
 
     {
