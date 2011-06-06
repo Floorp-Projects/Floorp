@@ -372,6 +372,10 @@ GCMarker::dumpConservativeRoots()
 
 #if defined(MOZ_GCTIMER) || defined(JSGC_TESTPILOT)
 
+volatile GCTimer::JSGCReason gcReason = GCTimer::NOREASON;
+const char *gcReasons[] = {"  API", "Maybe", "LastC", "DestC", "Compa", "LastD",
+                          "Malloc", "Alloc", "Chunk", "Shape", "  None"};
+
 jsrefcount newChunkCount = 0;
 jsrefcount destroyChunkCount = 0;
 
@@ -452,14 +456,15 @@ GCTimer::finish(bool lastGC)
                 gcFile = fopen("gcTimer.dat", "a");
 
                 fprintf(gcFile, "     AppTime,  Total,   Wait,   Mark,  Sweep, FinObj,"
-                                " FinStr, SwShapes, Destroy,    End, +Chu, -Chu\n");
+                                " FinStr, SwShapes, Destroy,    End, +Chu, -Chu, T, Reason\n");
             }
             JS_ASSERT(gcFile);
             /*               App   , Tot  , Wai  , Mar  , Swe  , FiO  , FiS  , SwS  , Des   , End */
             fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, %6.1f, ",
                     appTime, gcTime, waitTime, markTime, sweepTime, sweepObjTime, sweepStringTime,
                     sweepShapeTime, destroyTime, endTime);
-            fprintf(gcFile, "%4d, %4d\n", newChunkCount, destroyChunkCount);
+            fprintf(gcFile, "%4d, %4d,", newChunkCount, destroyChunkCount);
+            fprintf(gcFile, " %s, %s\n", isCompartmental ? "C" : "G", gcReasons[gcReason]);
             fflush(gcFile);
 
             if (lastGC) {
@@ -471,6 +476,7 @@ GCTimer::finish(bool lastGC)
     }
     newChunkCount = 0;
     destroyChunkCount = 0;
+    gcReason = NOREASON;
 }
 
 #undef TIMEDIFF

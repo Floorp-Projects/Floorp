@@ -317,15 +317,12 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword) -1;
 #endif
-    cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble),
-                     &cx->scriptStackQuota);
-    JS_InitArenaPool(&cx->regExpPool, "regExp", TEMP_POOL_CHUNK_SIZE, sizeof(int),
-                     &cx->scriptStackQuota);
+    JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble));
+    JS_InitArenaPool(&cx->regExpPool, "regExp", TEMP_POOL_CHUNK_SIZE, sizeof(int));
 
     JS_ASSERT(cx->resolveFlags == 0);
 
@@ -654,6 +651,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
 
         if (last) {
+            GCREASON(LASTCONTEXT);
             js_GC(cx, NULL, GC_LAST_CONTEXT);
             DUMP_EVAL_CACHE_METER(cx);
             DUMP_FUNCTION_METER(cx);
@@ -663,10 +661,13 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             rt->state = JSRTS_DOWN;
             JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
         } else {
-            if (mode == JSDCM_FORCE_GC)
+            if (mode == JSDCM_FORCE_GC) {
+                GCREASON(DESTROYCONTEXT);
                 js_GC(cx, NULL, GC_NORMAL);
-            else if (mode == JSDCM_MAYBE_GC)
+            } else if (mode == JSDCM_MAYBE_GC) {
+                GCREASON(DESTROYCONTEXT);
                 JS_MaybeGC(cx);
+            }
             JS_LOCK_GC(rt);
             js_WaitForGC(rt);
         }
@@ -777,10 +778,10 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
      * Walk stack until we find a frame that is associated with some script
      * rather than a native frame.
      */
-    for (StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_TOP); fp; fp = fp->prev()) {
-        if (fp->pc(cx)) {
-            report->filename = fp->script()->filename;
-            report->lineno = js_FramePCToLineNumber(cx, fp);
+    for (FrameRegsIter iter(cx, FRAME_EXPAND_TOP); !iter.done(); ++iter) {
+        if (iter.fp()->isScriptFrame()) {
+            report->filename = iter.fp()->script()->filename;
+            report->lineno = js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
             break;
         }
     }
@@ -840,13 +841,6 @@ js_ReportOutOfMemory(JSContext *cx)
         AutoAtomicIncrement incr(&cx->runtime->inOOMReport);
         onError(cx, msg, &report);
     }
-}
-
-void
-js_ReportOutOfScriptQuota(JSContext *maybecx)
-{
-    if (maybecx)
-        JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL, JSMSG_SCRIPT_STACK_QUOTA);
 }
 
 JS_FRIEND_API(void)
@@ -1591,6 +1585,7 @@ JSRuntime::onTooMuchMalloc()
      */
     js_WaitForGC(this);
 #endif
+    GCREASON(TOOMUCHMALLOC);
     TriggerGC(this);
 }
 

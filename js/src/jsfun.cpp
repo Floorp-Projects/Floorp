@@ -1642,7 +1642,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          * to recover its callee object.
          */
         JSInlinedSite *inlined;
-        fp->prev()->pc(cx, fp, &inlined);
+        fp->prev()->pcQuadratic(cx, fp, &inlined);
         if (inlined) {
             JSFunction *fun = fp->prev()->jit()->inlineFrames()[inlined->inlineIndex].fun;
             MarkTypeObjectFlags(cx, fun->getType(), OBJECT_FLAG_UNINLINEABLE);
@@ -2597,7 +2597,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         AutoArenaAllocator aaa(&cx->tempPool);
         jschar *cp = aaa.alloc<jschar>(args_length + 1);
         if (!cp) {
-            js_ReportOutOfScriptQuota(cx);
+            js_ReportOutOfMemory(cx);
             return false;
         }
         jschar *collected_args = cp;
@@ -3150,7 +3150,7 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
      */
     ptrdiff_t spindex = 0;
 
-    FrameRegsIter i(cx);
+    FrameRegsIter i(cx, FRAME_EXPAND_TOP);
     while (!i.done() && !i.pc())
         ++i;
 

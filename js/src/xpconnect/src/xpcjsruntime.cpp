@@ -246,10 +246,8 @@ ContextCallback(JSContext *cx, uintN operation)
 
 xpc::CompartmentPrivate::~CompartmentPrivate()
 {
-    if (waiverWrapperMap)
-        delete waiverWrapperMap;
-    if (expandoMap)
-        delete expandoMap;
+    delete waiverWrapperMap;
+    delete expandoMap;
 }
 
 static JSBool
@@ -1287,6 +1285,25 @@ GetPerCompartmentSize(PRInt64 (*f)(JSCompartment *c))
     return n;
 }
 
+static PRInt64
+GetJSStack(void *data)
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    PRInt64 n = 0;
+    for (js::ThreadDataIter i(rt); !i.empty(); i.popFront())
+        n += i.threadData()->stackSpace.committedSize();
+    return n;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSStack,
+    "explicit/js/stack",
+    MR_MAPPED,
+    "Memory used for the JavaScript stack.  This is the committed portion "
+    "of the stack;  any uncommitted portion is not measured because it "
+    "hardly costs anything.",
+    GetJSStack,
+    NULL)
+
 #ifdef JS_METHODJIT
 
 static PRInt64
@@ -1459,6 +1476,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         mJSRuntime->setCustomGCChunkAllocator(&gXPCJSChunkAllocator);
 
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStack));
 #ifdef JS_METHODJIT
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitCode));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitData));
@@ -1560,10 +1578,6 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
         return JS_FALSE;
 
     JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
-    PRUint64 totalMemory = PR_GetPhysicalMemorySize();
-    size_t quota = PR_MIN(PR_UINT32_MAX, PR_MAX(25 * sizeof(size_t) * 1024 * 1024,
-                                                totalMemory / 4));
-    JS_SetScriptStackQuota(cx, quota);
 
     // we want to mark the global object ourselves since we use a different color
     JS_ToggleOptions(cx, JSOPTION_UNROOTED_GLOBAL);

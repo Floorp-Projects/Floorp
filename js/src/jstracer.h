@@ -794,7 +794,7 @@ public:
     inline uintN count(OpKind kind) { return allOps[kind]; }
 
     /* Called for every back edge being profiled. */
-    MonitorResult profileLoopEdge(JSContext* cx, uintN& inlineCallCount);
+    MonitorResult profileLoopEdge(JSContext* cx);
     
     /* Called for every instruction being profiled. */
     ProfileAction profileOperation(JSContext *cx, JSOp op);
@@ -1539,11 +1539,9 @@ class TraceRecorder
     JS_REQUIRES_STACK void determineGlobalTypes(JSValueType* typeMap);
     JS_REQUIRES_STACK VMSideExit* downSnapshot(FrameInfo* downFrame);
     JS_REQUIRES_STACK TreeFragment* findNestedCompatiblePeer(TreeFragment* f);
-    JS_REQUIRES_STACK AbortableRecordingStatus attemptTreeCall(TreeFragment* inner,
-                                                               uintN& inlineCallCount);
+    JS_REQUIRES_STACK AbortableRecordingStatus attemptTreeCall(TreeFragment* inner);
 
-    static JS_REQUIRES_STACK MonitorResult recordLoopEdge(JSContext* cx, TraceRecorder* r,
-                                                          uintN& inlineCallCount);
+    static JS_REQUIRES_STACK MonitorResult recordLoopEdge(JSContext* cx, TraceRecorder* r);
 
     /* Allocators associated with this recording session. */
     VMAllocator& tempAlloc() const { return *traceMonitor->tempAlloc; }
@@ -1597,9 +1595,8 @@ class TraceRecorder
     friend class SlotMap;
     friend class DefaultSlotMap;
     friend class DetermineTypesVisitor;
-    friend MonitorResult RecordLoopEdge(JSContext*, TraceMonitor*, uintN&);
-    friend TracePointAction RecordTracePoint(JSContext*, TraceMonitor*, uintN &inlineCallCount,
-                                             bool *blacklist);
+    friend MonitorResult RecordLoopEdge(JSContext*, TraceMonitor*);
+    friend TracePointAction RecordTracePoint(JSContext*, TraceMonitor*, bool *blacklist);
     friend AbortResult AbortRecording(JSContext*, const char*);
     friend class BoxArg;
     friend void TraceMonitor::sweep(JSContext *cx);
@@ -1686,14 +1683,14 @@ class TraceRecorder
 #define TRACE_2(x,a,b)          TRACE_ARGS(x, (a, b))
 
 extern JS_REQUIRES_STACK MonitorResult
-MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, InterpMode interpMode);
+MonitorLoopEdge(JSContext* cx, InterpMode interpMode);
 
 extern JS_REQUIRES_STACK TracePointAction
-RecordTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist);
+RecordTracePoint(JSContext*, bool* blacklist);
 
 extern JS_REQUIRES_STACK TracePointAction
-MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist,
-                  void** traceData, uintN *traceEpoch, uint32 *loopCounter, uint32 hits);
+MonitorTracePoint(JSContext*, bool* blacklist, void** traceData, uintN *traceEpoch,
+                  uint32 *loopCounter, uint32 hits);
 
 extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);

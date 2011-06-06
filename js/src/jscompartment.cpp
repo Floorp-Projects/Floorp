@@ -122,7 +122,7 @@ JSCompartment::init(JSContext *cx)
     activeAnalysis = activeInference = false;
     types.init(cx);
 
-    JS_InitArenaPool(&pool, "analysis", 4096, 8, NULL);
+    JS_InitArenaPool(&pool, "analysis", 4096, 8);
 
     freeLists.init();
     if (!crossCompartmentWrappers.init())

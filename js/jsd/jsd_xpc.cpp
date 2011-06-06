@@ -1019,10 +1019,8 @@ jsdScript::jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE),
 jsdScript::~jsdScript () 
 {
     DEBUG_DESTROY ("jsdScript", gScriptCount);
-    if (mFileName)
-        delete mFileName;
-    if (mFunctionName)
-        delete mFunctionName;
+    delete mFileName;
+    delete mFunctionName;
 
     if (mPPLineMap)
         PR_Free(mPPLineMap);

@@ -92,17 +92,23 @@ StackFrame::prevpcSlow(JSInlinedSite **pinlined)
 }
 
 jsbytecode *
-StackFrame::pc(JSContext *cx, StackFrame *next, JSInlinedSite **pinlined)
+StackFrame::pcQuadratic(JSContext *cx, StackFrame *next, JSInlinedSite **pinlined)
 {
     JS_ASSERT_IF(next, next->prev() == this);
 
     StackSegment &seg = cx->stack.space().containingSegment(this);
     FrameRegs &regs = seg.currentRegs();
+
+    /*
+     * This isn't just an optimization; seg->computeNextFrame(fp) is only
+     * defined if fp != seg->currentFrame.
+     */
     if (regs.fp() == this) {
         if (pinlined)
             *pinlined = regs.inlined();
         return regs.pc;
     }
+
     if (!next)
         next = seg.computeNextFrame(this);
     return next->prevpc(pinlined);
@@ -159,9 +165,7 @@ StackSegment::computeNextFrame(StackFrame *fp) const
 
 StackSpace::StackSpace()
   : base_(NULL),
-#ifdef XP_WIN
     commitEnd_(NULL),
-#endif
     end_(NULL),
     seg_(NULL)
 {
@@ -191,14 +195,14 @@ StackSpace::init()
         DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE))
         return false;
     base_ = reinterpret_cast<Value *>(p);
-    end_ = base_ + CAPACITY_VALS;
+    end_ = commitEnd_ = base_ + CAPACITY_VALS;
 #else
     JS_ASSERT(CAPACITY_BYTES % getpagesize() == 0);
     p = mmap(NULL, CAPACITY_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (p == MAP_FAILED)
         return false;
     base_ = reinterpret_cast<Value *>(p);
-    end_ = base_ + CAPACITY_VALS;
+    end_ = commitEnd_ = base_ + CAPACITY_VALS;
 #endif
     return true;
 }
@@ -304,7 +308,7 @@ JS_FRIEND_API(bool)
 StackSpace::bumpCommit(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 {
     if (end_ - from < nvals) {
-        js_ReportOutOfScriptQuota(maybecx);
+        js_ReportOverRecursed(maybecx);
         return false;
     }
 
@@ -322,7 +326,7 @@ StackSpace::bumpCommit(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
     int32 size = static_cast<int32>(newCommit - commitEnd_) * sizeof(Value);
 
     if (!VirtualAlloc(commitEnd_, size, MEM_COMMIT, PAGE_READWRITE)) {
-        js_ReportOutOfScriptQuota(maybecx);
+        js_ReportOverRecursed(maybecx);
         return false;
     }
 
@@ -332,44 +336,15 @@ StackSpace::bumpCommit(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 #endif
 
 bool
-StackSpace::bumpLimitWithinQuota(JSContext *maybecx, StackFrame *fp, Value *sp,
-                                 uintN nvals, Value **limit) const
+StackSpace::tryBumpLimit(JSContext *maybecx, Value *from, uintN nvals, Value **limit)
 {
-    JS_ASSERT(sp >= firstUnused());
-    JS_ASSERT(sp + nvals >= *limit);
-#ifdef XP_WIN
-    Value *quotaEnd = (Value *)fp + STACK_QUOTA;
-    if (sp + nvals < quotaEnd) {
-        if (!ensureSpace(NULL, sp, nvals))
-            goto fail;
-        *limit = Min(quotaEnd, commitEnd_);
-        return true;
-    }
-  fail:
-#endif
-    js_ReportOverRecursed(maybecx);
-    return false;
-}
-
-bool
-StackSpace::bumpLimit(JSContext *cx, StackFrame *fp, Value *sp,
-                      uintN nvals, Value **limit) const
-{
-    JS_ASSERT(*limit > base_);
-    JS_ASSERT(sp < *limit);
-
-    /*
-     * Ideally, we would only ensure space for 'nvals', not 'nvals + remain',
-     * since this is ~500K. However, this whole call should be a rare case: some
-     * script is passing a obscene number of args to 'apply' and we are just
-     * trying to keep the stack limit heuristic from breaking the script.
-     */
-    Value *quota = (Value *)fp + STACK_QUOTA;
-    uintN remain = quota - sp;
-    uintN inc = nvals + remain;
-    if (!ensureSpace(NULL, sp, inc))
+    if (!ensureSpace(maybecx, from, nvals))
         return false;
-    *limit = sp + inc;
+#ifdef XP_WIN
+    *limit = commitEnd_;
+#else
+    *limit = end_;
+#endif
     return true;
 }
 
@@ -386,6 +361,12 @@ StackSpace::pushSegment(StackSegment &seg)
     JS_ASSERT(seg.empty());
     seg.setPreviousInMemory(seg_);
     seg_ = &seg;
+}
+
+size_t
+StackSpace::committedSize()
+{
+    return (commitEnd_ - base_) * sizeof(Value);
 }
 
 /*****************************************************************************/
@@ -669,31 +650,53 @@ ContextStack::notifyIfNoCodeRunning()
 
 /*****************************************************************************/
 
-void
-FrameRegsIter::initSlow()
+FrameRegsIter::FrameRegsIter(JSContext *cx, FrameExpandKind expand)
+  : cx_(cx)
 {
+    LeaveTrace(cx);
+
+#ifdef JS_METHODJIT
+    if (expand != js::FRAME_EXPAND_NONE)
+        js::mjit::ExpandInlineFrames(cx, expand == js::FRAME_EXPAND_ALL);
+#endif
+
+    seg_ = cx->stack.currentSegment();
     if (!seg_) {
         fp_ = NULL;
         sp_ = NULL;
         pc_ = NULL;
+        inlined_ = NULL;
         return;
     }
-
-    JS_ASSERT(seg_->isSuspended());
-    fp_ = seg_->suspendedFrame();
-    sp_ = seg_->suspendedRegs().sp;
-    pc_ = seg_->suspendedRegs().pc;
+    if (!seg_->isActive()) {
+        JS_ASSERT(seg_->isSuspended());
+        fp_ = seg_->suspendedFrame();
+        sp_ = seg_->suspendedRegs().sp;
+        pc_ = seg_->suspendedRegs().pc;
+        inlined_ = seg_->suspendedRegs().inlined();
+        return;
+    }
+    fp_ = cx->fp();
+    sp_ = cx->regs().sp;
+    pc_ = cx->regs().pc;
+    inlined_ = cx->regs().inlined();
+    return;
 }
 
-/*
- * Using the invariant described in the js::StackSegment comment, we know that,
- * when a pair of prev-linked stack frames are in the same segment, the
- * first frame's address is the top of the prev-frame's stack, modulo missing
- * arguments.
- */
-void
-FrameRegsIter::incSlow(StackFrame *oldfp)
+FrameRegsIter &
+FrameRegsIter::operator++()
 {
+    StackFrame *oldfp = fp_;
+    fp_ = fp_->prev();
+    if (!fp_)
+        return *this;
+
+    if (oldfp != seg_->initialFrame()) {
+        pc_ = oldfp->prevpc(&inlined_);
+        sp_ = oldfp->formalArgsEnd();
+        return *this;
+    }
+
     JS_ASSERT(oldfp == seg_->initialFrame());
     JS_ASSERT(fp_ == oldfp->prev());
 
@@ -706,21 +709,28 @@ FrameRegsIter::incSlow(StackFrame *oldfp)
     seg_ = seg_->previousInContext();
     sp_ = seg_->suspendedRegs().sp;
     pc_ = seg_->suspendedRegs().pc;
+    inlined_ = seg_->suspendedRegs().inlined();
     StackFrame *f = seg_->suspendedFrame();
     while (f != fp_) {
         if (f == seg_->initialFrame()) {
             seg_ = seg_->previousInContext();
             sp_ = seg_->suspendedRegs().sp;
             pc_ = seg_->suspendedRegs().pc;
+            inlined_ = seg_->suspendedRegs().inlined();
             f = seg_->suspendedFrame();
         } else {
-            JSInlinedSite *inline_;
             sp_ = f->formalArgsEnd();
-            pc_ = f->prevpc(&inline_);
+            pc_ = f->prevpc(&inlined_);
             f = f->prev();
-            JS_ASSERT(!inline_);
         }
     }
+    return *this;
+}
+
+bool
+FrameRegsIter::operator==(const FrameRegsIter &rhs) const
+{
+    return done() == rhs.done() && (done() || fp_ == rhs.fp_);
 }
 
 /*****************************************************************************/
@@ -749,4 +759,3 @@ AllFramesIter::operator++()
     }
     return *this;
 }
-

@@ -90,6 +90,7 @@ js_GenerateShape(JSRuntime *rt)
 #ifdef JS_THREADSAFE
         AutoLockGC lockIf(rt);
 #endif
+        GCREASON(SHAPE);
         TriggerGC(rt);
     }
     return shape;
