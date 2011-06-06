@@ -44,10 +44,10 @@ var expect = 'No Crash';
 
 printBugNumber(BUGNUMBER);
 START(summary);
-printStatus ("Expect out of memory or script stack space quota is exhausted error");
+printStatus ("Expect out of memory error");
 
 expectExitCode(0);
-expectExitCode(3);
+expectExitCode(5);
 
 try
 {

@@ -1738,17 +1738,16 @@ ParseXMLSource(JSContext *cx, JSString *src)
 
     LeaveTrace(cx);
     xml = NULL;
-    FrameRegsIter i(cx);
+    FrameRegsIter i(cx, FRAME_EXPAND_TOP);
     for (; !i.done() && !i.pc(); ++i)
         JS_ASSERT(!i.fp()->isScriptFrame());
     filename = NULL;
     lineno = 1;
     if (!i.done()) {
-        StackFrame *fp = i.fp();
         op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
-            filename = fp->script()->filename;
-            lineno = js_FramePCToLineNumber(cx, fp);
+            filename = i.fp()->script()->filename;
+            lineno = js_FramePCToLineNumber(cx, i.fp(), i.pc());
             for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
                     --lineno;

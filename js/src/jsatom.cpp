@@ -459,9 +459,10 @@ enum OwnCharsBehavior
  * memory can be used as a new JSAtom's buffer without copying. When this flag
  * is set, the contract is that callers will free *pchars iff *pchars == NULL.
  */
+JS_ALWAYS_INLINE
 static JSAtom *
-Atomize(JSContext *cx, const jschar **pchars, size_t length,
-        InternBehavior ib, OwnCharsBehavior ocb = CopyChars)
+AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
+              InternBehavior ib, OwnCharsBehavior ocb = CopyChars)
 {
     const jschar *chars = *pchars;
 
@@ -510,6 +511,13 @@ Atomize(JSContext *cx, const jschar **pchars, size_t length,
     }
 
     return key->morphAtomizedStringIntoAtom();
+}
+
+static JSAtom *
+Atomize(JSContext *cx, const jschar **pchars, size_t length,
+        InternBehavior ib, OwnCharsBehavior ocb = CopyChars)
+{
+    return AtomizeInline(cx, pchars, length, ib, ocb);
 }
 
 JSAtom *
@@ -595,7 +603,7 @@ js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, InternBehavio
     if (!CheckStringLength(cx, length))
         return NULL;
 
-    return Atomize(cx, &chars, length, ib);
+    return AtomizeInline(cx, &chars, length, ib);
 }
 
 JSAtom *
@@ -667,7 +675,7 @@ js_alloc_temp_space(void *priv, size_t size)
 
     JS_ARENA_ALLOCATE(space, &parser->context->tempPool, size);
     if (!space)
-        js_ReportOutOfScriptQuota(parser->context);
+        js_ReportOutOfMemory(parser->context);
     return space;
 }
 
@@ -699,7 +707,7 @@ js_alloc_temp_entry(void *priv, const void *key)
 
     JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &parser->context->tempPool);
     if (!ale) {
-        js_ReportOutOfScriptQuota(parser->context);
+        js_ReportOutOfMemory(parser->context);
         return NULL;
     }
     return &ale->entry;
