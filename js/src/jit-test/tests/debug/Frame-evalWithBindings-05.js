@@ -1,3 +1,4 @@
+// |jit-test| debug
 // evalWithBindings code can assign to the bindings.
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);

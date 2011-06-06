@@ -4,15 +4,18 @@
 load(libdir + "asserts.js");
 
 var g = newGlobal('new-compartment');
-var f;
-Debug(g).hooks = {
-    debuggerHandler: function (frame) {
-        assertEq(frame.type, "call");
-        assertEq(frame.live, true);
-        f = frame;
-    }
-};
+g.debuggeeGlobal = this;
+g.eval("var f;");
+g.eval("(" + function () {
+        Debug(debuggeeGlobal).hooks = {
+            debuggerHandler: function (frame) {
+                assertEq(frame.type, "call");
+                assertEq(frame.live, true);
+                f = frame;
+            }
+        };
+    } + ")()");
 
-g.eval("(function () { debugger; })();");
-assertEq(f.live, false);
-assertThrowsInstanceOf(function () { f.type; }, Error);
+(function () { debugger; })();
+assertEq(g.f.live, false);
+assertThrowsInstanceOf(function () { g.f.type; }, g.Error);

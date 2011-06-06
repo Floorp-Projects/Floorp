@@ -1,4 +1,4 @@
-// Debug.Object.prototype.proto
+// |jit-test| debug
 var g = newGlobal('new-compartment');
 var dbgeval = function () {
         var dbg = new Debug(g);

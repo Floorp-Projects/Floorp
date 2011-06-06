@@ -1,3 +1,4 @@
+// |jit-test| debug
 // uncaughtExceptionHook returns a resumption value.
 
 load(libdir + "asserts.js");

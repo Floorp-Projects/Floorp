@@ -1,3 +1,4 @@
+// |jit-test| debug
 // If a hook is deleted after setHooks or overwritten with a primitive, it
 // simply isn't called.
 

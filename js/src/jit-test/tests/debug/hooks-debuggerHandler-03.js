@@ -1,3 +1,4 @@
+// |jit-test| debug
 // A debugger statement in a debuggerHandler should not reenter.
 
 var g = newGlobal('new-compartment');

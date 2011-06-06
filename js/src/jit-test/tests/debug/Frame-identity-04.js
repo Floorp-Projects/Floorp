@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Test that on-stack Debug.Frames are not GC'd even if they are only reachable
 // from the js::Debug::frames table.
 

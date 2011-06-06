@@ -1,3 +1,4 @@
+// |jit-test| debug
 // {has,add,remove}Debuggee throw a TypeError if the argument is invalid.
 
 load(libdir + "asserts.js");

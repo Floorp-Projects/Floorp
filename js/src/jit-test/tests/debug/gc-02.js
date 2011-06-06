@@ -1,3 +1,4 @@
+// |jit-test| debug
 // Dispatching an event to a debugger must keep enough of it gc-alive to avoid
 // crashing.
 
