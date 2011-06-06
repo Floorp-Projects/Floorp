@@ -726,9 +726,13 @@ FrameRegsIter::incSlow(StackFrame *oldfp)
 /*****************************************************************************/
 
 AllFramesIter::AllFramesIter(JSContext *cx)
-  : seg_(cx->stack.currentSegment()),
-    fp_(seg_ ? seg_->currentFrame() : NULL)
+  : seg_(cx->stack.currentSegment())
 {
+#ifdef JS_METHODJIT
+    mjit::ExpandInlineFrames(cx, true);
+#endif
+
+    fp_ = seg_ ? seg_->currentFrame() : NULL;
 }
 
 AllFramesIter&

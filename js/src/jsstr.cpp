@@ -3127,7 +3127,7 @@ static void type_StringSplit(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
 {
     TypeCallsite *site = Valueify(jssite);
 
-    if (!site->hasGlobal()) {
+    if (!site->script->hasGlobal()) {
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
         return;
     }

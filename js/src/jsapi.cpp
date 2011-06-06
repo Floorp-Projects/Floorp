@@ -4302,7 +4302,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         Value v;
         if (!obj->getProperty(cx, r.front().propid, &v))
             return NULL;
-        fun->script()->typeSetUpvar(cx, i, v);
+        fun->script()->types.setUpvar(cx, i, v);
         clone->getFlatClosureUpvars()[i] = v;
     }
 

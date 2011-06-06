@@ -2821,7 +2821,10 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
         op = JSOP_CALLPROP;
     } else if (op == JSOP_GETPROP && pn->pn_type == TOK_DOT) {
         if (pn2->pn_type == TOK_NAME) {
-            /* Try to optimize arguments.length into JSOP_ARGCNT */
+            /*
+             * Try to optimize arguments.length into JSOP_ARGCNT. If type
+             * inference is enabled this is optimized separately.
+             */
             if (!BindNameToSlot(cx, cg, pn2))
                 return JS_FALSE;
             if (!cx->typeInferenceEnabled() &&
@@ -2909,7 +2912,8 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 
         /*
          * Try to optimize arguments[0][j]... into JSOP_ARGSUB<0> followed by
-         * one or more index expression and JSOP_GETELEM op pairs.
+         * one or more index expression and JSOP_GETELEM op pairs. If type
+         * inference is enabled this is optimized separately.
          */
         if (left->pn_type == TOK_NAME && next->pn_type == TOK_NUMBER) {
             if (!BindNameToSlot(cx, cg, left))
@@ -2985,7 +2989,10 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             right = pn->pn_right;
         }
 
-        /* Try to optimize arguments[0] (e.g.) into JSOP_ARGSUB<0>. */
+        /*
+         * Try to optimize arguments[0] (e.g.) into JSOP_ARGSUB<0>. If type
+         * inference is enabled this is optimized separately.
+         */
         if (op == JSOP_GETELEM &&
             left->pn_type == TOK_NAME &&
             right->pn_type == TOK_NUMBER) {
