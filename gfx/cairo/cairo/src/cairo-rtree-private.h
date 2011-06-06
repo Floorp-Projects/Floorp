@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -62,7 +62,6 @@ typedef struct _cairo_rtree_node {
 typedef struct _cairo_rtree {
     cairo_rtree_node_t root;
     int min_size;
-    void (*evict) (void *node);
     cairo_list_t pinned;
     cairo_list_t available;
     cairo_list_t evictable;
@@ -98,8 +97,7 @@ _cairo_rtree_init (cairo_rtree_t	*rtree,
 	           int			 width,
 		   int			 height,
 		   int			 min_size,
-		   int			 node_size,
-		   void			 (*evict) (void *node));
+		   int			 node_size);
 
 cairo_private cairo_int_status_t
 _cairo_rtree_insert (cairo_rtree_t	     *rtree,
@@ -113,8 +111,16 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
 		           int			  height,
 		           cairo_rtree_node_t	**out);
 
-cairo_private void *
-_cairo_rtree_pin (cairo_rtree_t *rtree, cairo_rtree_node_t *node);
+static inline void *
+_cairo_rtree_pin (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
+{
+    if (! node->pinned) {
+	cairo_list_move (&node->link, &rtree->pinned);
+	node->pinned = 1;
+    }
+
+    return node;
+}
 
 cairo_private void
 _cairo_rtree_unpin (cairo_rtree_t *rtree);

@@ -2731,7 +2731,8 @@ Tab.prototype = {
 
     try {
       let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      browser.loadURIWithFlags(aURI, flags, aParams.referrerURI, aParams.charset, aParams.postData);
+      let postData = aParams.postData ? aParams.postData.value : null;
+      browser.loadURIWithFlags(aURI, flags, aParams.referrerURI, aParams.charset, postData);
     } catch(e) {
       dump("Error: " + e + "\n");
     }
@@ -3020,12 +3021,15 @@ var ViewableAreaObserver = {
     return (this._height || window.innerHeight);
   },
 
-  _isKeyboardOpened: false,
+  _isKeyboardOpened: true,
   get isKeyboardOpened() {
     return this._isKeyboardOpened;
   },
 
   set isKeyboardOpened(aValue) {
+    if (!this.hasVirtualKeyboard())
+      return this._isKeyboardOpened;
+
     let oldValue = this._isKeyboardOpened;
 
     if (oldValue != aValue) {
@@ -3036,6 +3040,17 @@ var ViewableAreaObserver = {
       window.dispatchEvent(event);
     }
   },
+
+  hasVirtualKeyboard: function va_hasVirtualKeyboard() {
+#ifndef ANDROID
+#ifndef MOZ_PLATFORM_MAEMO
+    return false;
+#endif
+#endif
+
+    return true;
+  },
+
 
   observe: function va_observe(aSubject, aTopic, aData) {
 #if MOZ_PLATFORM_MAEMO == 6

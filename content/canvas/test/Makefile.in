@@ -80,6 +80,7 @@ _TEST_FILES_0 = \
 	test_2d.composite.uncovered.image.source-in.html \
 	test_2d.composite.uncovered.image.source-out.html \
 	test_toDataURL_lowercase_ascii.html \
+	test_toDataURL_parameters.html \
 	test_mozGetAsFile.html \
 	test_canvas_strokeStyle_getter.html \
 	test_bug613794.html \

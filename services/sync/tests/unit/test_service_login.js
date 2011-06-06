@@ -23,12 +23,12 @@ function run_test() {
 
   try {
     _("The right bits are set when we're offline.");
-    Svc.IO.offline = true;
+    Services.io.offline = true;
     do_check_eq(Service._ignorableErrorCount, 0);
     do_check_false(!!Service.login());
     do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
     do_check_eq(Service._ignorableErrorCount, 0);
-    Svc.IO.offline = false;
+    Services.io.offline = false;
   } finally {
     Svc.Prefs.resetBranch("");
   }
@@ -176,7 +176,7 @@ function run_test() {
     
     _("We're ready to sync if locked.");
     Service.enabled = true;
-    Svc.IO.offline = false;
+    Services.io.offline = false;
     Service._checkSyncStatus();
     do_check_true(scheduleCalled);
     

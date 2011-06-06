@@ -294,7 +294,7 @@ class ProtocolType(IPDLType):
         self.qname = qname
         self.sendSemantics = sendSemantics
         self.spawns = set()             # ProtocolType
-        self.bridges = set()            # [ Bridge ]
+        self.opens = set()              # ProtocolType
         self.managers = set()           # ProtocolType
         self.manages = [ ]
         self.stateless = stateless
@@ -314,8 +314,9 @@ class ProtocolType(IPDLType):
         assert self.isToplevel() and  ptype.isToplevel()
         self.spawns.add(ptype)
 
-    def addBridge(self, parentPType, childPType):
-        self.bridges.add(Bridge(parentPType, childPType))
+    def addOpen(self, ptype):
+        assert self.isToplevel() and  ptype.isToplevel()
+        self.opens.add(ptype)
 
     def managedBy(self, mgr):
         self.managers = mgr
@@ -777,6 +778,9 @@ class GatherDecls(TcheckVisitor):
         for bridges in p.bridgesStmts:
             bridges.accept(self)
 
+        for opens in p.opensStmts:
+            opens.accept(self)
+
         seenmgrs = set()
         for mgr in p.managers:
             if mgr.name in seenmgrs:
@@ -926,6 +930,14 @@ class GatherDecls(TcheckVisitor):
             return decl
         bridges.parentSide = lookup(bridges.parentSide)
         bridges.childSide = lookup(bridges.childSide)
+
+    def visitOpensStmt(self, opens):
+        pname = opens.proto
+        opens.proto = self.symtab.lookup(pname)
+        if opens.proto is None:
+            self.error(opens.loc,
+                       "opened protocol `%s' has not been declared",
+                       pname)
 
 
     def visitManager(self, mgr):
@@ -1234,6 +1246,11 @@ class CheckTypes(TcheckVisitor):
                        "protocol `%s' is not top-level and so cannot declare |bridges|",
                        pname)
 
+        if len(p.opensStmts) and not ptype.isToplevel():
+            self.error(p.decl.loc,
+                       "protocol `%s' is not top-level and so cannot declare |opens|",
+                       pname)
+
         for mgrtype in ptype.managers:
             if mgrtype is not None and ptype.needsMoreJuiceThan(mgrtype):
                 self.error(
@@ -1300,8 +1317,23 @@ class CheckTypes(TcheckVisitor):
             self.error(bridges.loc,
                        "cannot bridge non-top-level-protocol(s) `%s' and `%s'",
                        parentType.name(), childType.name())
+
+
+    def visitOpensStmt(self, opens):
+        if not self.ptype.isToplevel():
+            self.error(opens.loc,
+                       "only top-level protocols can have |opens| statements; `%s' cannot",
+                       self.ptype.name())
+            return
+
+        openedType = opens.proto.type
+        if not (openedType.isIPDL() and openedType.isProtocol()
+                and openedType.isToplevel()):
+            self.error(opens.loc,
+                       "cannot open non-top-level-protocol `%s'",
+                       openedType.name())
         else:
-            self.ptype.addBridge(parentType, childType)
+            self.ptype.addOpen(openedType)
 
 
     def visitManagesStmt(self, mgs):
@@ -1442,6 +1474,8 @@ class Actor:
         self.ptype = ptype
         self.side = side
 
+    def asType(self):
+        return ActorType(self.ptype)
     def other(self):
         return Actor(self.ptype, _otherside(self.side))
 
@@ -1471,11 +1505,20 @@ class BridgeEdge:
             self.parent, self.bridgeProto.name(), self.child)
     def __str__(self):  return repr(self)
 
+class OpensEdge:
+    def __init__(self, opener, openedProto):
+        self.opener = opener            # Actor
+        self.openedProto = openedProto  # ProtocolType
+    def __repr__(self):
+        return '(%r)--opens-->(%s)'% (self.opener, self.openedProto.name())
+    def __str__(self):  return repr(self)
+
 # "singleton" class with state that persists across type checking of
 # all protocols
 class ProcessGraph:
     processes = set()                   # set(Process)
-    bridges = { }                       # ProtocolType -> BridgeEdge
+    bridges = { }                       # ProtocolType -> [ BridgeEdge ]
+    opens = { }                         # ProtocolType -> [ OpensEdge ]
     actorToProcess = { }                # Actor -> Process
     visitedSpawns = set()               # set(ActorType)
     visitedBridges = set()              # set(ActorType)
@@ -1494,6 +1537,48 @@ class ProcessGraph:
         return cls.actorToProcess[actor]
 
     @classmethod
+    def bridgesOf(cls, bridgeP):
+        return cls.bridges.get(bridgeP, [])
+
+    @classmethod
+    def bridgeEndpointsOf(cls, ptype, side):
+        actor = Actor(ptype, side)
+        endpoints = []
+        for b in cls.iterbridges():
+            if b.parent == actor:
+                endpoints.append(Actor(b.bridgeProto, 'parent'))
+            elif b.child == actor:
+                endpoints.append(Actor(b.bridgeProto, 'child'))
+        return endpoints
+
+    @classmethod
+    def iterbridges(cls):
+        for edges in cls.bridges.itervalues():
+            for bridge in edges:
+                yield bridge
+
+    @classmethod
+    def opensOf(cls, openedP):
+        return cls.opens.get(openedP, [])
+
+    @classmethod
+    def opensEndpointsOf(cls, ptype, side):
+        actor = Actor(ptype, side)
+        endpoints = []
+        for o in cls.iteropens():
+            if actor == o.opener:
+                endpoints.append(Actor(o.openedProto, o.opener.side))
+            elif actor == o.opener.other():
+                endpoints.append(Actor(o.openedProto, o.opener.other().side))
+        return endpoints
+
+    @classmethod
+    def iteropens(cls):
+        for edges in cls.opens.itervalues():
+            for opens in edges:
+                yield opens
+
+    @classmethod
     def spawn(cls, spawner, remoteSpawn):
         localSpawn = remoteSpawn.other()
         spawnerProcess = ProcessGraph.getProcess(spawner)
@@ -1502,7 +1587,26 @@ class ProcessGraph:
 
     @classmethod
     def bridge(cls, parent, child, bridgeP):
-        cls.bridges[bridgeP] = BridgeEdge(bridgeP, parent, child)
+        bridgeParent = Actor(bridgeP, 'parent')
+        parentProcess = ProcessGraph.getProcess(parent)
+        parentProcess.merge(ProcessGraph.getProcess(bridgeParent))
+        bridgeChild = Actor(bridgeP, 'child')
+        childProcess = ProcessGraph.getProcess(child)
+        childProcess.merge(ProcessGraph.getProcess(bridgeChild))
+        if bridgeP not in cls.bridges:
+            cls.bridges[bridgeP] = [ ]
+        cls.bridges[bridgeP].append(BridgeEdge(bridgeP, parent, child))
+
+    @classmethod
+    def open(cls, opener, opened, openedP):
+        remoteOpener, remoteOpened, = opener.other(), opened.other()
+        openerProcess = ProcessGraph.getProcess(opener)
+        openerProcess.merge(ProcessGraph.getProcess(opened))
+        remoteOpenerProcess = ProcessGraph.getProcess(remoteOpener)
+        remoteOpenerProcess.merge(ProcessGraph.getProcess(remoteOpened))
+        if openedP not in cls.opens:
+            cls.opens[openedP] = [ ]
+        cls.opens[openedP].append(OpensEdge(opener, openedP))
 
 
 class BuildProcessGraph(TcheckVisitor):
@@ -1610,6 +1714,22 @@ class BuildProcessGraph(TcheckVisitor):
 
         ProcessGraph.bridge(parentSideActor, childSideActor, bridgeProto)
 
+    def visitOpensStmt(self, opens):
+        openedP = opens.proto.type
+        opener = Actor(self.visiting, opens.side)
+        opened = Actor(openedP, opens.side)
+
+        # The picture here is:
+        #  [ opener       | opened ]   (process 1)
+        #      |               |
+        #      |               |
+        #  [ remoteOpener | remoteOpened ]  (process 2)
+        #
+        # An opens stmt tells us that the pairs |opener|/|opened|
+        # and |remoteOpener|/|remoteOpened| are each in the same
+        # process.
+        ProcessGraph.open(opener, opened, openedP)
+
 
 class CheckProcessGraph(TcheckVisitor):
     def __init__(self, errors):
@@ -1625,8 +1745,13 @@ class CheckProcessGraph(TcheckVisitor):
                 for edge in process.iteredges():
                     print '    ', edge
             print 'Bridges'
-            for bridge in ProcessGraph.bridges.itervalues():
-                print '  ', bridge
+            for bridgeList in ProcessGraph.bridges.itervalues():
+                for bridge in bridgeList:
+                    print '  ', bridge
+            print 'Opens'
+            for opensList in ProcessGraph.opens.itervalues():
+                for opens in opensList:
+                    print '  ', opens
 
 ##-----------------------------------------------------------------------------
 

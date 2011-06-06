@@ -52,7 +52,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMStorageObsolete.h"
 #include "nsIDOMStorage.h"
@@ -6938,9 +6937,9 @@ nsDocShell::RestoreFromHistory()
         mSavingOldViewer = CanSavePresentation(mLoadType, request, doc);
     }
 
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> oldMUDV(
+    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV(
         do_QueryInterface(mContentViewer));
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> newMUDV(
+    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV(
         do_QueryInterface(viewer));
     PRInt32 minFontSize = 0;
     float textZoom = 1.0f;
@@ -7590,10 +7589,10 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     float pageZoom;
     PRBool styleDisabled;
     // |newMUDV| also serves as a flag to set the data from the above vars
-    nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> newMUDV;
+    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
 
     if (mContentViewer || parent) {
-        nsCOMPtr<nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH> oldMUDV;
+        nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
         if (mContentViewer) {
             // Get any interesting state from old content viewer
             // XXX: it would be far better to just reuse the document viewer ,
@@ -7846,6 +7845,56 @@ nsDocShell::CheckLoadingPermissions()
 //*****************************************************************************
 // nsDocShell: Site Loading
 //*****************************************************************************   
+namespace
+{
+
+// Callback used by CopyFavicon to inform the favicon service that one URI
+// (mNewURI) has the same favicon URI (OnFaviconDataAvailable's aFaviconURI) as
+// another.
+class nsCopyFaviconCallback : public nsIFaviconDataCallback
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    nsCopyFaviconCallback(nsIURI *aNewURI)
+      : mNewURI(aNewURI)
+    {
+    }
+
+    NS_IMETHODIMP
+    OnFaviconDataAvailable(nsIURI *aFaviconURI, PRUint32 aDataLen,
+                           const PRUint8 *aData, const nsACString &aMimeType)
+    {
+        NS_ASSERTION(aDataLen == 0,
+                     "We weren't expecting the callback to deliver data.");
+        nsCOMPtr<mozIAsyncFavicons> favSvc =
+            do_GetService("@mozilla.org/browser/favicon-service;1");
+        NS_ENSURE_STATE(favSvc);
+
+        return favSvc->SetAndFetchFaviconForPage(mNewURI, aFaviconURI,
+                                                 PR_FALSE, nsnull);
+    }
+
+private:
+    nsCOMPtr<nsIURI> mNewURI;
+};
+
+NS_IMPL_ISUPPORTS1(nsCopyFaviconCallback, nsIFaviconDataCallback)
+
+// Tell the favicon service that aNewURI has the same favicon as aOldURI.
+void CopyFavicon(nsIURI *aOldURI, nsIURI *aNewURI)
+{
+    nsCOMPtr<mozIAsyncFavicons> favSvc =
+        do_GetService("@mozilla.org/browser/favicon-service;1");
+    if (favSvc) {
+        nsCOMPtr<nsIFaviconDataCallback> callback =
+            new nsCopyFaviconCallback(aNewURI);
+        favSvc->GetFaviconURLForPage(aOldURI, callback);
+    }
+}
+
+} // anonymous namespace
+
 class InternalLoadEvent : public nsRunnable
 {
 public:
@@ -8300,8 +8349,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             GetCurScrollPos(ScrollOrientation_X, &cx);
             GetCurScrollPos(ScrollOrientation_Y, &cy);
 
-            // We scroll the window precisely when we fire a hashchange event.
-            if (doHashchange) {
+            // We scroll whenever we're not doing a history load.  Note that
+            // sometimes we might scroll even if we don't fire a hashchange
+            // event!  See bug 653741.
+            if (!aSHEntry) {
                 // Take the '#' off the hashes before passing them to
                 // ScrollToAnchor.
                 nsDependentCSubstring curHashName(curHash, 1);
@@ -8447,6 +8498,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                   window->DispatchAsyncHashchange(oldURI, aURI);
                 }
             }
+
+            // Inform the favicon service that the favicon for oldURI also
+            // applies to aURI.
+            CopyFavicon(oldURI, aURI);
 
             return NS_OK;
         }
@@ -9437,43 +9492,6 @@ nsDocShell::SetReferrerURI(nsIURI * aURI)
 // nsDocShell: Session History
 //*****************************************************************************
 
-namespace
-{
-    // Callback used in nsDocShell::AddState.  When we change URIs with
-    // push/replaceState, we use this callback to ensure that Places associates
-    // a favicon with the new URI.
-    class nsAddStateFaviconCallback : public nsIFaviconDataCallback
-    {
-    public:
-        NS_DECL_ISUPPORTS
-
-        nsAddStateFaviconCallback(nsIURI *aNewURI)
-          : mNewURI(aNewURI)
-        {
-        }
-
-        NS_IMETHODIMP
-        OnFaviconDataAvailable(nsIURI *aFaviconURI, PRUint32 aDataLen,
-                               const PRUint8 *aData, const nsACString &aMimeType)
-        {
-            NS_ASSERTION(aDataLen == 0,
-                         "We weren't expecting the callback to deliver data.");
-            nsCOMPtr<mozIAsyncFavicons> favSvc =
-                do_GetService("@mozilla.org/browser/favicon-service;1");
-            NS_ENSURE_STATE(favSvc);
-
-            return favSvc->SetAndFetchFaviconForPage(mNewURI, aFaviconURI,
-                                                     PR_FALSE, nsnull);
-        }
-
-    private:
-        nsCOMPtr<nsIURI> mNewURI;
-    };
-
-    NS_IMPL_ISUPPORTS1(nsAddStateFaviconCallback, nsIFaviconDataCallback)
-
-} // anonymous namespace
-
 NS_IMETHODIMP
 nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
                      const nsAString& aURL, PRBool aReplace, JSContext* aCx)
@@ -9764,13 +9782,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
 
         // Inform the favicon service that our old favicon applies to this new
         // URI.
-        nsCOMPtr<mozIAsyncFavicons> favSvc =
-            do_GetService("@mozilla.org/browser/favicon-service;1");
-        if (favSvc) {
-            nsCOMPtr<nsIFaviconDataCallback> callback =
-                new nsAddStateFaviconCallback(newURI);
-            favSvc->GetFaviconURLForPage(oldURI, callback);
-        }
+        CopyFavicon(oldURI, newURI);
     }
     else {
         FireDummyOnLocationChange();
@@ -10177,7 +10189,6 @@ struct NS_STACK_CLASS CloneAndReplaceData
 nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
                                  PRInt32 aEntryIndex, void *aData)
 {
-    nsresult result = NS_OK;
     nsCOMPtr<nsISHEntry> dest;
 
     CloneAndReplaceData *data = static_cast<CloneAndReplaceData*>(aData);
@@ -10187,55 +10198,44 @@ nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
     nsCOMPtr<nsISHContainer> container =
       do_QueryInterface(data->destTreeParent);
     if (!aEntry) {
-      if (container) {
-        container->AddChild(nsnull, aEntryIndex);
-      }
-      return NS_OK;
+        if (container) {
+            container->AddChild(nsnull, aEntryIndex);
+        }
+        return NS_OK;
     }
     
     PRUint32 srcID;
     aEntry->GetID(&srcID);
 
+    nsresult rv = NS_OK;
     if (srcID == cloneID) {
         // Replace the entry
         dest = replaceEntry;
-        dest->SetIsSubFrame(PR_TRUE);
-
-        if (data->cloneChildren) {
-            // Walk the children
-            CloneAndReplaceData childData(cloneID, replaceEntry,
-                                          data->cloneChildren, dest);
-            result = WalkHistoryEntries(aEntry, aShell,
-                                        CloneAndReplaceChild, &childData);
-            if (NS_FAILED(result))
-                return result;
-        }
     } else {
         // Clone the SHEntry...
-        result = aEntry->Clone(getter_AddRefs(dest));
-        if (NS_FAILED(result))
-            return result;
+        rv = aEntry->Clone(getter_AddRefs(dest));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    dest->SetIsSubFrame(PR_TRUE);
 
-        // This entry is for a subframe navigation
-        dest->SetIsSubFrame(PR_TRUE);
-
+    if (srcID != cloneID || data->cloneChildren) {
         // Walk the children
         CloneAndReplaceData childData(cloneID, replaceEntry,
                                       data->cloneChildren, dest);
-        result = WalkHistoryEntries(aEntry, aShell,
-                                    CloneAndReplaceChild, &childData);
-        if (NS_FAILED(result))
-            return result;
+        rv = WalkHistoryEntries(aEntry, aShell,
+                                CloneAndReplaceChild, &childData);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-        if (aShell)
-            aShell->SwapHistoryEntries(aEntry, dest);
+    if (srcID != cloneID && aShell) {
+        aShell->SwapHistoryEntries(aEntry, dest);
     }
 
     if (container)
         container->AddChild(dest, aEntryIndex);
 
     data->resultEntry = dest;
-    return result;
+    return rv;
 }
 
 /* static */ nsresult

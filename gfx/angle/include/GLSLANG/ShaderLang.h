@@ -6,26 +6,6 @@
 #ifndef _COMPILER_INTERFACE_INCLUDED_
 #define _COMPILER_INTERFACE_INCLUDED_
 
-#ifdef MOZILLA_VERSION
-#include "nscore.h"
-
-#ifdef WIN32
-# if !defined(MOZ_ENABLE_LIBXUL) && !defined(MOZ_STATIC_BUILD)
-#  ifdef ANGLE_BUILD
-#   define ANGLE_API NS_EXPORT
-#  else
-#   define ANGLE_API NS_IMPORT
-#  endif
-# else
-#  define ANGLE_API  /*nothing*/
-# endif
-#else
-# define ANGLE_API NS_EXTERNAL_VIS
-#endif
-#else
-#define ANGLE_API /*nothing*/
-#endif
-
 //
 // This is the platform independent interface between an OGL driver
 // and the shading language compiler.
@@ -37,7 +17,7 @@ extern "C" {
 
 // Version number for shader translation API.
 // It is incremented everytime the API changes.
-#define SH_VERSION 103
+#define SH_VERSION 104
 
 //
 // The names of the following enums have been derived by replacing GL prefix
@@ -82,18 +62,20 @@ typedef enum {
   SH_ACTIVE_UNIFORMS             =  0x8B86,
   SH_ACTIVE_UNIFORM_MAX_LENGTH   =  0x8B87,
   SH_ACTIVE_ATTRIBUTES           =  0x8B89,
-  SH_ACTIVE_ATTRIBUTE_MAX_LENGTH =  0x8B8A
+  SH_ACTIVE_ATTRIBUTE_MAX_LENGTH =  0x8B8A,
+  SH_MAPPED_NAME_MAX_LENGTH      =  0x8B8B
 } ShShaderInfo;
 
 // Compile options.
 typedef enum {
-  SH_VALIDATE               = 0,
-  SH_VALIDATE_LOOP_INDEXING = 0x0001,
-  SH_INTERMEDIATE_TREE      = 0x0002,
-  SH_OBJECT_CODE            = 0x0004,
-  SH_ATTRIBUTES_UNIFORMS    = 0x0008,
-  SH_LINE_DIRECTIVES        = 0x0010,
-  SH_SOURCE_PATH            = 0x0200
+  SH_VALIDATE                = 0,
+  SH_VALIDATE_LOOP_INDEXING  = 0x0001,
+  SH_INTERMEDIATE_TREE       = 0x0002,
+  SH_OBJECT_CODE             = 0x0004,
+  SH_ATTRIBUTES_UNIFORMS     = 0x0008,
+  SH_LINE_DIRECTIVES         = 0x0010,
+  SH_SOURCE_PATH             = 0x0020,
+  SH_MAP_LONG_VARIABLE_NAMES = 0x0040
 } ShCompileOptions;
 
 //
@@ -101,12 +83,12 @@ typedef enum {
 // compiler operations.
 // If the function succeeds, the return value is nonzero, else zero.
 //
-ANGLE_API int ShInitialize();
+int ShInitialize();
 //
 // Driver should call this at shutdown.
 // If the function succeeds, the return value is nonzero, else zero.
 //
-ANGLE_API int ShFinalize();
+int ShFinalize();
 
 //
 // Implementation dependent built-in resources (constants and extensions).
@@ -132,7 +114,7 @@ typedef struct
 //
 // Initialize built-in resources with minimum expected values.
 //
-ANGLE_API void ShInitBuiltInResources(ShBuiltInResources* resources);
+void ShInitBuiltInResources(ShBuiltInResources* resources);
 
 //
 // ShHandle held by but opaque to the driver.  It is allocated,
@@ -152,9 +134,9 @@ typedef void* ShHandle;
 // spec: Specifies the language spec the compiler must conform to -
 //       SH_GLES2_SPEC or SH_WEBGL_SPEC.
 // resources: Specifies the built-in resources.
-ANGLE_API ShHandle ShConstructCompiler(ShShaderType type, ShShaderSpec spec,
+ShHandle ShConstructCompiler(ShShaderType type, ShShaderSpec spec,
                              const ShBuiltInResources* resources);
-ANGLE_API void ShDestruct(ShHandle handle);
+void ShDestruct(ShHandle handle);
 
 //
 // Compiles the given shader source.
@@ -181,7 +163,7 @@ ANGLE_API void ShDestruct(ShHandle handle);
 //                         Can be queried by calling ShGetActiveAttrib() and
 //                         ShGetActiveUniform().
 //
-ANGLE_API int ShCompile(
+int ShCompile(
     const ShHandle handle,
     const char* const shaderStrings[],
     const int numStrings,
@@ -205,9 +187,11 @@ ANGLE_API int ShCompile(
 // SH_ACTIVE_UNIFORM_MAX_LENGTH: the length of the longest active uniform
 //                               variable name including the null
 //                               termination character.
+// SH_MAPPED_NAME_MAX_LENGTH: the length of the mapped variable name including
+//                            the null termination character.
 // 
 // params: Requested parameter
-ANGLE_API void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params);
+void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params);
 
 // Returns nul-terminated information log for a compiled shader.
 // Parameters:
@@ -217,7 +201,7 @@ ANGLE_API void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params)
 //          to accomodate the information log. The size of the buffer required
 //          to store the returned information log can be obtained by calling
 //          ShGetInfo with SH_INFO_LOG_LENGTH.
-ANGLE_API void ShGetInfoLog(const ShHandle handle, char* infoLog);
+void ShGetInfoLog(const ShHandle handle, char* infoLog);
 
 // Returns null-terminated object code for a compiled shader.
 // Parameters:
@@ -227,7 +211,7 @@ ANGLE_API void ShGetInfoLog(const ShHandle handle, char* infoLog);
 //          accomodate the object code. The size of the buffer required to
 //          store the returned object code can be obtained by calling
 //          ShGetInfo with SH_OBJECT_CODE_LENGTH.
-ANGLE_API void ShGetObjectCode(const ShHandle handle, char* objCode);
+void ShGetObjectCode(const ShHandle handle, char* objCode);
 
 // Returns information about an active attribute variable.
 // Parameters:
@@ -243,12 +227,18 @@ ANGLE_API void ShGetObjectCode(const ShHandle handle, char* objCode);
 //       accomodate the attribute variable name. The size of the buffer
 //       required to store the attribute variable name can be obtained by
 //       calling ShGetInfo with SH_ACTIVE_ATTRIBUTE_MAX_LENGTH.
-ANGLE_API void ShGetActiveAttrib(const ShHandle handle,
+// mappedName: Returns a null terminated string containing the mapped name of
+//             the attribute variable, It is assumed that mappedName has enough
+//             memory (SH_MAPPED_NAME_MAX_LENGTH), or NULL if don't care
+//             about the mapped name. If the name is not mapped, then name and
+//             mappedName are the same.
+void ShGetActiveAttrib(const ShHandle handle,
                        int index,
                        int* length,
                        int* size,
                        ShDataType* type,
-                       char* name);
+                       char* name,
+                       char* mappedName);
 
 // Returns information about an active uniform variable.
 // Parameters:
@@ -264,12 +254,18 @@ ANGLE_API void ShGetActiveAttrib(const ShHandle handle,
 //       accomodate the uniform variable name. The size of the buffer required
 //       to store the uniform variable name can be obtained by calling
 //       ShGetInfo with SH_ACTIVE_UNIFORMS_MAX_LENGTH.
-ANGLE_API void ShGetActiveUniform(const ShHandle handle,
+// mappedName: Returns a null terminated string containing the mapped name of
+//             the uniform variable, It is assumed that mappedName has enough
+//             memory (SH_MAPPED_NAME_MAX_LENGTH), or NULL if don't care
+//             about the mapped name. If the name is not mapped, then name and
+//             mappedName are the same.
+void ShGetActiveUniform(const ShHandle handle,
                         int index,
                         int* length,
                         int* size,
                         ShDataType* type,
-                        char* name);
+                        char* name,
+                        char* mappedName);
 
 #ifdef __cplusplus
 }

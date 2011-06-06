@@ -310,7 +310,6 @@ public:
   static jsid sScrollY_id;
   static jsid sScrollMaxX_id;
   static jsid sScrollMaxY_id;
-  static jsid sOpen_id;
   static jsid sItem_id;
   static jsid sNamedItem_id;
   static jsid sEnumerate_id;
@@ -925,6 +924,8 @@ public:
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
 
+  bool JSIDToProp(const jsid& aId, nsAString& aResult);
+
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsDOMStringMapSH(aData);
@@ -977,7 +978,6 @@ protected:
   {
   }
 
-  static JSBool DocumentOpen(JSContext *cx, uintN argc, jsval *vp);
   static JSBool GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
                                        nsDocument *doc,
                                        nsContentList **nodeList);

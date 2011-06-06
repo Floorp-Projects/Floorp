@@ -680,19 +680,23 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
 
   nsresult rv = NS_OK;
 
-  PRUint32 desiredDecodeFlags = aFlags & DECODE_FLAGS_MASK;
-  if (desiredDecodeFlags != mFrameDecodeFlags) {
-    // if we can't discard, then we're screwed; we have no way
-    // to re-decode.  Similarly if we aren't allowed to do a sync
-    // decode.
-    if (!(aFlags & FLAG_SYNC_DECODE))
-      return NS_ERROR_NOT_AVAILABLE;
-    if (!CanForciblyDiscard() || mDecoder || mAnim)
-      return NS_ERROR_NOT_AVAILABLE;
-
-    ForceDiscard();
-
-    mFrameDecodeFlags = desiredDecodeFlags;
+  if (mDecoded) {
+    // If we have decoded data, and it is not a perfect match for what we are
+    // looking for, we must discard to be able to generate the proper data.
+    PRUint32 desiredDecodeFlags = aFlags & DECODE_FLAGS_MASK;
+    if (desiredDecodeFlags != mFrameDecodeFlags) {
+      // if we can't discard, then we're screwed; we have no way
+      // to re-decode.  Similarly if we aren't allowed to do a sync
+      // decode.
+      if (!(aFlags & FLAG_SYNC_DECODE))
+        return NS_ERROR_NOT_AVAILABLE;
+      if (!CanForciblyDiscard() || mDecoder || mAnim)
+        return NS_ERROR_NOT_AVAILABLE;
+  
+      ForceDiscard();
+  
+      mFrameDecodeFlags = desiredDecodeFlags;
+    }
   }
 
   // If the caller requested a synchronous decode, do it
@@ -1920,8 +1924,8 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
 
   if (aSrc->GetIsPaletted()) {
     // Larger than the destination frame, clip it
-    PRInt32 width = PR_MIN(aSrcRect.width, dstRect.width - aSrcRect.x);
-    PRInt32 height = PR_MIN(aSrcRect.height, dstRect.height - aSrcRect.y);
+    PRInt32 width = NS_MIN(aSrcRect.width, dstRect.width - aSrcRect.x);
+    PRInt32 height = NS_MIN(aSrcRect.height, dstRect.height - aSrcRect.y);
 
     // The clipped image must now fully fit within destination image frame
     NS_ASSERTION((aSrcRect.x >= 0) && (aSrcRect.y >= 0) &&
@@ -2573,7 +2577,7 @@ RasterImage::DecodeSomeData(PRUint32 aMaxBytes)
 
 
   // write the proper amount of data
-  PRUint32 bytesToDecode = PR_MIN(aMaxBytes,
+  PRUint32 bytesToDecode = NS_MIN(aMaxBytes,
                                   mSourceData.Length() - mBytesDecoded);
   nsresult rv = WriteToDecoder(mSourceData.Elements() + mBytesDecoded,
                                bytesToDecode);

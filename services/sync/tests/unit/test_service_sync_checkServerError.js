@@ -64,8 +64,8 @@ function generateAndUploadKeys() {
 
 add_test(function test_backoff500() {
   _("Test: HTTP 500 sets backoff status.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
 
   let engine = Engines.get("catapult");
   engine.enabled = true;
@@ -89,8 +89,8 @@ add_test(function test_backoff500() {
 
 add_test(function test_backoff503() {
   _("Test: HTTP 503 with Retry-After header leads to backoff notification and sets backoff status.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
 
   const BACKOFF = 42;
   let engine = Engines.get("catapult");
@@ -122,8 +122,8 @@ add_test(function test_backoff503() {
 
 add_test(function test_overQuota() {
   _("Test: HTTP 400 with body error code 14 means over quota.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
 
   let engine = Engines.get("catapult");
   engine.enabled = true;
@@ -171,7 +171,7 @@ add_test(function test_service_networkError() {
 add_test(function test_service_offline() {
   _("Test: Wanting to sync in offline mode leads to the right status code but does not increment the ignorable error count.");
   setUp();
-  Svc.IO.offline = true;
+  Services.io.offline = true;
   Service._ignorableErrorCount = 0;
 
   try {
@@ -186,14 +186,14 @@ add_test(function test_service_offline() {
     Status.resetSync();
     Service.startOver();
   }
-  Svc.IO.offline = false;
+  Services.io.offline = false;
   run_next_test();
 });
 
 add_test(function test_service_reset_ignorableErrorCount() {
   _("Test: Successful sync resets the ignorable error count.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
   Service._ignorableErrorCount = 10;
 
   // Disable the engine so that sync completes.
@@ -219,8 +219,8 @@ add_test(function test_service_reset_ignorableErrorCount() {
 
 add_test(function test_engine_networkError() {
   _("Test: Network related exceptions from engine.sync() lead to the right status code.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
   Service._ignorableErrorCount = 0;
 
   let engine = Engines.get("catapult");
@@ -245,11 +245,40 @@ add_test(function test_engine_networkError() {
   server.stop(run_next_test);
 });
 
+add_test(function test_resource_timeout() {
+  setUp();
+  let server = sync_httpd_setup();
+
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  // Resource throws this when it encounters a timeout.
+  engine.exception = Components.Exception("Aborting due to channel inactivity.",
+                                          Cr.NS_ERROR_NET_TIMEOUT);
+
+  try {
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+    do_check_true(generateAndUploadKeys());
+
+    Service.login();
+    Service.sync();
+
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+  } finally {
+    Status.resetSync();
+    Service.startOver();
+  }
+  server.stop(run_next_test);
+});
+
+
 // Slightly misplaced test as it doesn't actually test checkServerError,
 // but the observer for "weave:engine:sync:apply-failed".
+// This test should be the last one since it monkeypatches the engine object
+// and we should only have one engine object throughout the file (bug 629664).
 add_test(function test_engine_applyFailed() {
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
 
   let engine = Engines.get("catapult");
   engine.enabled = true;
@@ -273,6 +302,7 @@ add_test(function test_engine_applyFailed() {
   }
   server.stop(run_next_test);
 });
+
 
 function run_test() {
   if (DISABLE_TESTS_BUG_604565)

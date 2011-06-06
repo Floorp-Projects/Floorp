@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -334,9 +334,9 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 typedef struct _cairo_cff_subset {
     char *font_name;
     char *ps_name;
-    int *widths;
-    long x_min, y_min, x_max, y_max;
-    long ascent, descent;
+    double *widths;
+    double x_min, y_min, x_max, y_max;
+    double ascent, descent;
     char *data;
     unsigned long data_length;
 } cairo_cff_subset_t;
@@ -451,9 +451,9 @@ _cairo_truetype_subset_fini (cairo_truetype_subset_t *truetype_subset);
 
 typedef struct _cairo_type1_subset {
     char *base_font;
-    int *widths;
-    long x_min, y_min, x_max, y_max;
-    long ascent, descent;
+    double *widths;
+    double x_min, y_min, x_max, y_max;
+    double ascent, descent;
     char *data;
     unsigned long header_length;
     unsigned long data_length;

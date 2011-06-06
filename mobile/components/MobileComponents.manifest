@@ -39,7 +39,7 @@ category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
 component {1d542abc-c88b-4636-a4ef-075b49806317} BrowserStartup.js
 contract @mozilla.org/browser/browser-startup;1 {1d542abc-c88b-4636-a4ef-075b49806317}
 category app-startup BrowserStartup service,@mozilla.org/browser/browser-startup;1
-category agent-style-sheets browser-content-stylesheet chrome://browser/content/content.css
+category agent-style-sheets browser-content-stylesheet chrome://browser/skin/content.css
 category agent-style-sheets browser-cursor-stylesheet chrome://browser/content/cursor.css
 
 # ContentPermissionPrompt.js

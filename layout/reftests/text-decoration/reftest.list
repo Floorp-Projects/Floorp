@@ -88,3 +88,4 @@ fails == text-decoration-zorder-1-quirks.html text-decoration-zorder-1-ref.html 
 == table-quirk-2.html table-quirk-2-ref.html
 == text-decoration-propagation-1-quirks.html text-decoration-propagation-1-quirks-ref.html
 fails == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards-ref.html
+== 641444-1.html 641444-1-ref.html

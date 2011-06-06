@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -61,9 +61,10 @@ typedef char cairo_path_op_t;
 
 typedef struct _cairo_path_buf {
     cairo_list_t link;
-    unsigned int buf_size;
     unsigned int num_ops;
+    unsigned int size_ops;
     unsigned int num_points;
+    unsigned int size_points;
 
     cairo_path_op_t *op;
     cairo_point_t *points;
@@ -80,14 +81,16 @@ struct _cairo_path_fixed {
     cairo_point_t last_move_point;
     cairo_point_t current_point;
     unsigned int has_current_point	: 1;
+    unsigned int has_last_move_point	: 1;
     unsigned int has_curve_to		: 1;
     unsigned int is_rectilinear		: 1;
     unsigned int maybe_fill_region	: 1;
     unsigned int is_empty_fill		: 1;
 
+    cairo_box_t extents;
+
     cairo_path_buf_fixed_t  buf;
 };
-
 
 cairo_private void
 _cairo_path_fixed_translate (cairo_path_fixed_t *path,

@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -40,7 +40,65 @@
 #include "cairo-private.h"
 
 #include "cairo-arc-private.h"
+#include "cairo-error-private.h"
 #include "cairo-path-private.h"
+
+/**
+ * SECTION:cairo
+ * @Title: cairo_t
+ * @Short_Description: The cairo drawing context
+ * @See_Also: #cairo_surface_t
+ *
+ * #cairo_t is the main object used when drawing with cairo. To
+ * draw with cairo, you create a #cairo_t, set the target surface,
+ * and drawing options for the #cairo_t, create shapes with
+ * functions like cairo_move_to() and cairo_line_to(), and then
+ * draw shapes with cairo_stroke() or cairo_fill().
+ *
+ * #cairo_t<!-- -->'s can be pushed to a stack via cairo_save().
+ * They may then safely be changed, without loosing the current state.
+ * Use cairo_restore() to restore to the saved state.
+ */
+
+/**
+ * SECTION:cairo-text
+ * @Title: text
+ * @Short_Description: Rendering text and glyphs
+ * @See_Also: #cairo_font_face_t, #cairo_scaled_font_t, cairo_text_path(),
+ *            cairo_glyph_path()
+ *
+ * The functions with <emphasis>text</emphasis> in their name form cairo's
+ * <firstterm>toy</firstterm> text API.  The toy API takes UTF-8 encoded
+ * text and is limited in its functionality to rendering simple
+ * left-to-right text with no advanced features.  That means for example
+ * that most complex scripts like Hebrew, Arabic, and Indic scripts are
+ * out of question.  No kerning or correct positioning of diacritical marks
+ * either.  The font selection is pretty limited too and doesn't handle the
+ * case that the selected font does not cover the characters in the text.
+ * This set of functions are really that, a toy text API, for testing and
+ * demonstration purposes.  Any serious application should avoid them.
+ *
+ * The functions with <emphasis>glyphs</emphasis> in their name form cairo's
+ * <firstterm>low-level</firstterm> text API.  The low-level API relies on
+ * the user to convert text to a set of glyph indexes and positions.  This
+ * is a very hard problem and is best handled by external libraries, like
+ * the pangocairo that is part of the Pango text layout and rendering library.
+ * Pango is available from <ulink
+ * url="http://www.pango.org/">http://www.pango.org/</ulink>.
+ */
+
+/**
+ * SECTION:cairo-transforms
+ * @Title: Transformations
+ * @Short_Description: Manipulating the current transformation matrix
+ * @See_Also: #cairo_matrix_t
+ *
+ * The current transformation matrix, <firstterm>ctm</firstterm>, is a
+ * two-dimensional affine transformation that maps all coordinates and other
+ * drawing instruments from the <firstterm>user space</firstterm> into the
+ * surface's canonical coordinate system, also known as the <firstterm>device
+ * space</firstterm>.
+ */
 
 #define CAIRO_TOLERANCE_MINIMUM	_cairo_fixed_to_double(1)
 
@@ -59,14 +117,36 @@ static const cairo_t _cairo_nil = {
     { 0, 0 },			/* last_move_point */
     { 0, 0 },			/* current point */
     FALSE,			/* has_current_point */
+    FALSE,			/* has_last_move_point */
     FALSE,			/* has_curve_to */
     FALSE,			/* is_box */
     FALSE,			/* maybe_fill_region */
     TRUE,			/* is_empty_fill */
+    { {0, 0}, {0, 0}},		/* extents */
     {{{NULL,NULL}}}		/* link */
   }}
 };
 
+static const cairo_t _cairo_nil__null_pointer = {
+  CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
+  CAIRO_STATUS_NULL_POINTER,	/* status */
+  { 0, 0, 0, NULL },		/* user_data */
+  NULL,				/* gstate */
+  {{ 0 }, { 0 }},		/* gstate_tail */
+  NULL,				/* gstate_freelist */
+  {{				/* path */
+    { 0, 0 },			/* last_move_point */
+    { 0, 0 },			/* current point */
+    FALSE,			/* has_current_point */
+    FALSE,			/* has_last_move_point */
+    FALSE,			/* has_curve_to */
+    FALSE,			/* is_box */
+    FALSE,			/* maybe_fill_region */
+    TRUE,			/* is_empty_fill */
+    { {0, 0}, {0, 0}},		/* extents */
+    {{{NULL,NULL}}}		/* link */
+  }}
+};
 #include <assert.h>
 
 /**
@@ -119,25 +199,9 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
     _cairo_status_set_error (&cr->status, _cairo_error (status));
 }
 
-#if defined(_MSC_VER)
-#include <intrin.h>
-#pragma intrinsic(_BitScanForward)
-static __forceinline int
-ffs(int x)
-{
-    unsigned long i;
-
-    if (_BitScanForward(&i, x) != 0)
-	return i + 1;
-
-    return 0;
-}
-#endif
-
-
-#if CAIRO_NO_MUTEX
 /* We keep a small stash of contexts to reduce malloc pressure */
 #define CAIRO_STASH_SIZE 4
+#if CAIRO_NO_MUTEX
 static struct {
     cairo_t pool[CAIRO_STASH_SIZE];
     int occupied;
@@ -146,24 +210,19 @@ static struct {
 static cairo_t *
 _context_get (void)
 {
-    int avail, old, new;
+    int avail;
 
-    old = _context_stash.occupied;
-    avail = ffs (~old) - 1;
+    avail = ffs (~_context_stash.occupied) - 1;
     if (avail >= CAIRO_STASH_SIZE)
 	return malloc (sizeof (cairo_t));
 
-    new = old | (1 << avail);
-    _context_stash.occupied = new;
-
+    _context_stash.occupied |= 1 << avail;
     return &_context_stash.pool[avail];
 }
 
 static void
 _context_put (cairo_t *cr)
 {
-    int old, new, avail;
-
     if (cr < &_context_stash.pool[0] ||
 	cr >= &_context_stash.pool[CAIRO_STASH_SIZE])
     {
@@ -171,14 +230,9 @@ _context_put (cairo_t *cr)
 	return;
     }
 
-    avail = ~(1 << (cr - &_context_stash.pool[0]));
-    old = _context_stash.occupied;
-    new = old & avail;
-    _context_stash.occupied = new;
+    _context_stash.occupied &= ~(1 << (cr - &_context_stash.pool[0]));
 }
 #elif HAS_ATOMIC_OPS
-/* We keep a small stash of contexts to reduce malloc pressure */
-#define CAIRO_STASH_SIZE 4
 static struct {
     cairo_t pool[CAIRO_STASH_SIZE];
     cairo_atomic_int_t occupied;
@@ -196,7 +250,7 @@ _context_get (void)
 	    return malloc (sizeof (cairo_t));
 
 	new = old | (1 << avail);
-    } while (_cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new) != old);
+    } while (! _cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new));
 
     return &_context_stash.pool[avail];
 }
@@ -217,12 +271,67 @@ _context_put (cairo_t *cr)
     do {
 	old = _cairo_atomic_int_get (&_context_stash.occupied);
 	new = old & avail;
-    } while (_cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new) != old);
+    } while (! _cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new));
 }
 #else
 #define _context_get() malloc (sizeof (cairo_t))
 #define _context_put(cr) free (cr)
 #endif
+
+/* XXX This should disappear in favour of a common pool of error objects. */
+static cairo_t *_cairo_nil__objects[CAIRO_STATUS_LAST_STATUS + 1];
+
+static cairo_t *
+_cairo_create_in_error (cairo_status_t status)
+{
+    cairo_t *cr;
+
+    assert (status != CAIRO_STATUS_SUCCESS);
+
+    /* special case OOM in order to avoid another allocation */
+    switch ((int) status) {
+    case CAIRO_STATUS_NO_MEMORY:
+	return (cairo_t *) &_cairo_nil;
+    case CAIRO_STATUS_NULL_POINTER:
+	return (cairo_t *) &_cairo_nil__null_pointer;
+    }
+
+    CAIRO_MUTEX_LOCK (_cairo_error_mutex);
+    cr = _cairo_nil__objects[status];
+    if (cr == NULL) {
+	cr = malloc (sizeof (cairo_t));
+	if (unlikely (cr == NULL)) {
+	    CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_t *) &_cairo_nil;
+	}
+
+	*cr = _cairo_nil;
+	cr->status = status;
+	_cairo_nil__objects[status] = cr;
+    }
+    CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
+
+    return cr;
+}
+
+void
+_cairo_reset_static_data (void)
+{
+    int status;
+
+    CAIRO_MUTEX_LOCK (_cairo_error_mutex);
+    for (status = CAIRO_STATUS_SUCCESS;
+	 status <= CAIRO_STATUS_LAST_STATUS;
+	 status++)
+    {
+	if (_cairo_nil__objects[status] != NULL) {
+	    free (_cairo_nil__objects[status]);
+	    _cairo_nil__objects[status] = NULL;
+	}
+    }
+    CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
+}
 
 /**
  * cairo_create:
@@ -253,15 +362,14 @@ cairo_create (cairo_surface_t *target)
     cairo_t *cr;
     cairo_status_t status;
 
-    /* special case OOM in order to avoid another allocation */
-    if (target && target->status == CAIRO_STATUS_NO_MEMORY)
-	return (cairo_t *) &_cairo_nil;
+    if (unlikely (target == NULL))
+	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_NULL_POINTER));
+    if (unlikely (target->status))
+	return _cairo_create_in_error (target->status);
 
     cr = _context_get ();
-    if (unlikely (cr == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_t *) &_cairo_nil;
-    }
+    if (unlikely (cr == NULL))
+	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     CAIRO_REFERENCE_COUNT_INIT (&cr->ref_count, 1);
 
@@ -275,8 +383,10 @@ cairo_create (cairo_surface_t *target)
     cr->gstate_tail[1].next = NULL;
 
     status = _cairo_gstate_init (cr->gstate, target);
-    if (unlikely (status))
-	_cairo_set_error (cr, status);
+    if (unlikely (status)) {
+	_context_put (cr);
+	cr = _cairo_create_in_error (status);
+    }
 
     return cr;
 }
@@ -354,6 +464,9 @@ cairo_destroy (cairo_t *cr)
     _cairo_path_fixed_fini (cr->path);
 
     _cairo_user_data_array_fini (&cr->user_data);
+
+    /* mark the context as invalid to protect against misuse */
+    cr->status = CAIRO_STATUS_NULL_POINTER;
 
     _context_put (cr);
 }
@@ -556,53 +669,58 @@ cairo_push_group (cairo_t *cr)
 void
 cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
+    cairo_surface_t *group_surface;
+    cairo_clip_t *clip;
     cairo_status_t status;
-    cairo_rectangle_int_t extents;
-    const cairo_rectangle_int_t *clip_extents;
-    cairo_surface_t *parent_surface, *group_surface = NULL;
-    cairo_bool_t is_empty;
 
     if (unlikely (cr->status))
 	return;
 
-    parent_surface = _cairo_gstate_get_target (cr->gstate);
-
-    /* Get the extents that we'll use in creating our new group surface */
-    _cairo_surface_get_extents (parent_surface, &extents);
-
-    if (_cairo_gstate_get_clip (cr->gstate)->all_clipped) {
-	extents.width = 0;
-	extents.height = 0;
+    clip = _cairo_gstate_get_clip (cr->gstate);
+    if (clip->all_clipped) {
+	group_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+	status = group_surface->status;
+	if (unlikely (status))
+	    goto bail;
     } else {
+	cairo_surface_t *parent_surface;
+	const cairo_rectangle_int_t *clip_extents;
+	cairo_rectangle_int_t extents;
+        cairo_matrix_t matrix;
+	cairo_bool_t is_empty;
+
+	parent_surface = _cairo_gstate_get_target (cr->gstate);
+
+	/* Get the extents that we'll use in creating our new group surface */
+	is_empty = _cairo_surface_get_extents (parent_surface, &extents);
 	clip_extents = _cairo_clip_get_extents (_cairo_gstate_get_clip (cr->gstate));
 	if (clip_extents != NULL)
-	    _cairo_rectangle_intersect (&extents, clip_extents);
+	    is_empty = _cairo_rectangle_intersect (&extents, clip_extents);
+
+	group_surface = _cairo_surface_create_similar_solid (parent_surface,
+							     content,
+							     extents.width,
+							     extents.height,
+							     CAIRO_COLOR_TRANSPARENT,
+							     TRUE);
+	status = group_surface->status;
+	if (unlikely (status))
+	    goto bail;
+
+	/* Set device offsets on the new surface so that logically it appears at
+	 * the same location on the parent surface -- when we pop_group this,
+	 * the source pattern will get fixed up for the appropriate target surface
+	 * device offsets, so we want to set our own surface offsets from /that/,
+	 * and not from the device origin. */
+	cairo_surface_set_device_offset (group_surface,
+					 parent_surface->device_transform.x0 - extents.x,
+					 parent_surface->device_transform.y0 - extents.y);
+
+	/* If we have a current path, we need to adjust it to compensate for
+	 * the device offset just applied. */
+        cairo_matrix_init_translate (&matrix, -extents.x, -extents.y);
+	_cairo_path_fixed_transform (cr->path, &matrix);
     }
-
-    group_surface = _cairo_surface_create_similar_solid (parent_surface,
-							 content,
-							 extents.width,
-							 extents.height,
-							 CAIRO_COLOR_TRANSPARENT,
-							 TRUE);
-
-    status = group_surface->status;
-    if (unlikely (status))
-	goto bail;
-
-    /* Set device offsets on the new surface so that logically it appears at
-     * the same location on the parent surface -- when we pop_group this,
-     * the source pattern will get fixed up for the appropriate target surface
-     * device offsets, so we want to set our own surface offsets from /that/,
-     * and not from the device origin. */
-    cairo_surface_set_device_offset (group_surface,
-                                     parent_surface->device_transform.x0 - extents.x,
-                                     parent_surface->device_transform.y0 - extents.y);
-
-    /* If we have a current path, we need to adjust it to compensate for
-     * the device offset just applied. */
-    _cairo_path_fixed_transform (cr->path,
-				 &group_surface->device_transform);
 
     /* create a new gstate for the redirect */
     cairo_save (cr);
@@ -644,7 +762,7 @@ cairo_pop_group (cairo_t *cr)
 {
     cairo_surface_t *group_surface, *parent_target;
     cairo_pattern_t *group_pattern;
-    cairo_matrix_t group_matrix;
+    cairo_matrix_t group_matrix, device_transform_matrix;
     cairo_status_t status;
 
     if (unlikely (cr->status))
@@ -693,8 +811,10 @@ cairo_pop_group (cairo_t *cr)
 
     /* If we have a current path, we need to adjust it to compensate for
      * the device offset just removed. */
-    _cairo_path_fixed_transform (cr->path,
-				 &group_surface->device_transform_inverse);
+    cairo_matrix_multiply (&device_transform_matrix, 
+                           &_cairo_gstate_get_target (cr->gstate)->device_transform,
+			   &group_surface->device_transform_inverse);
+    _cairo_path_fixed_transform (cr->path, &device_transform_matrix);
 
 done:
     cairo_surface_destroy (group_surface);
@@ -880,7 +1000,7 @@ cairo_set_source_rgba (cairo_t *cr,
  * The @x and @y parameters give the user-space coordinate at which
  * the surface origin should appear. (The surface origin is its
  * upper-left corner before any transformation has been applied.) The
- * @x and @y patterns are negated and then set as translation values
+ * @x and @y parameters are negated and then set as translation values
  * in the pattern matrix.
  *
  * Other than the initial translation pattern matrix, as described
@@ -2147,12 +2267,13 @@ cairo_paint_with_alpha (cairo_t *cr,
 	return;
     }
 
-    if (CAIRO_ALPHA_IS_ZERO (alpha)) {
+    if (CAIRO_ALPHA_IS_ZERO (alpha) &&
+        _cairo_operator_bounded_by_mask (cr->gstate->op)) {
 	return;
     }
 
-    _cairo_color_init_rgba (&color, 1., 1., 1., alpha);
-    _cairo_pattern_init_solid (&pattern, &color, CAIRO_CONTENT_ALPHA);
+    _cairo_color_init_rgba (&color, 0., 0., 0., alpha);
+    _cairo_pattern_init_solid (&pattern, &color);
 
     status = _cairo_gstate_mask (cr->gstate, &pattern.base);
     if (unlikely (status))
@@ -3453,7 +3574,6 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 			cairo_text_cluster_flags_t  cluster_flags)
 {
     cairo_status_t status;
-
 
     if (unlikely (cr->status))
 	return;

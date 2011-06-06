@@ -39,7 +39,20 @@
 // Disables security checking our updates which haven't been signed
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 // Disables compatibility checking
-Services.prefs.setBoolPref("extensions.checkCompatibility.2", false);
+var channel = "default";
+try {
+  channel = Services.prefs.getCharPref("app.update.channel");
+}
+catch (e) { }
+
+if (channel != "aurora" &&
+    channel != "beta" &&
+    channel != "release") {
+  Services.prefs.setBoolPref("extensions.checkCompatibility.nightly", false);
+}
+else {
+  Services.prefs.setBoolPref("extensions.checkCompatibility.2", false);
+}
 
 var ADDONS = [
   "test_bug470377_1",

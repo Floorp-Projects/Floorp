@@ -45,7 +45,6 @@
 #include "mozIStorageStatementCallback.h"
 #include "mozIStorageVacuumParticipant.h"
 #include "nsCategoryCache.h"
-#include "nsIPrefService.h"
 
 namespace mozilla {
 namespace storage {
@@ -63,11 +62,6 @@ public:
    */
   static VacuumManager * getSingleton();
 
-  /**
-   * Initializes the VacuumManager object.  Must be called just once.
-   */
-  nsresult initialize();
-
 private:
   ~VacuumManager();
 
@@ -75,9 +69,6 @@ private:
 
   // Cache of components registered in "vacuum-participant" category.
   nsCategoryCache<mozIStorageVacuumParticipant> mParticipants;
-
-  // Pref branch for PREF_VACUUM_BRANCH.
-  nsCOMPtr<nsIPrefBranch> mPrefBranch;
 };
 
 } // namespace storage

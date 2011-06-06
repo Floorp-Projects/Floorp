@@ -1,5 +1,5 @@
 # HG changeset patch
-# Parent 3f4e2a35c49bb865018798a76b62c169d8e3537b
+# Parent 3e177ced3662763eae55f4b741258298609e99aa
 diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclude.h
 --- a/gfx/angle/src/compiler/osinclude.h
 +++ b/gfx/angle/src/compiler/osinclude.h

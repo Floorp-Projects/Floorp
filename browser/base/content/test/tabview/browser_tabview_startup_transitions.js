@@ -7,17 +7,18 @@ var prefsBranch = Cc["@mozilla.org/preferences-service;1"].
 
 function animateZoom() prefsBranch.getBoolPref("animate_zoom");
 
-function registerCleanupFunction() {
-  prefsBranch.setUserPref("animate_zoom", true);
-}
-
 function test() {
   waitForExplicitFinish();
   
   let charsetArg = "charset=" + window.content.document.characterSet;
   let win = window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
                               "about:blank", charsetArg, null, null, true);
-  
+
+  registerCleanupFunction(function() {
+    prefsBranch.setBoolPref("animate_zoom", true);
+    win.close();
+  });
+
   ok(animateZoom(), "By default, we animate on zoom.");
   prefsBranch.setBoolPref("animate_zoom", false);
   ok(!animateZoom(), "animate_zoom = false");
@@ -29,27 +30,24 @@ function test() {
     let tabViewWindow = null;
     let transitioned = 0;
 
-    let onShown = function() {
-      win.removeEventListener("tabviewshown", onShown, false);
-
-      ok(!transitioned, "There should be no transitions");
-      win.close();
-
-      finish();
-    };
-
     let initCallback = function() {
       tabViewWindow = win.TabView._window;
       function onTransitionEnd(event) {
         transitioned++;
-        tabViewWindow.Utils.log(transitioned);
+        info(transitioned);
       }
       tabViewWindow.document.addEventListener("transitionend", onTransitionEnd, false);
 
-      win.TabView.show();
+      showTabView(function() {
+        ok(!transitioned, "There should be no transitions");
+
+        tabViewWindow.document.removeEventListener(
+          "transitionend", onTransitionEnd, false);
+
+        finish();
+      }, win);
     };
 
-    win.addEventListener("tabviewshown", onShown, false);
     win.TabView._initFrame(initCallback);
   }
   win.addEventListener("load", onLoad, false);

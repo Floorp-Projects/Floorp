@@ -236,6 +236,12 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     return bs.getPluginBlocklistState(aTags[0]);
   });
 
+  this.__defineGetter__("blocklistURL", function() {
+    let bs = Cc["@mozilla.org/extensions/blocklist;1"].
+             getService(Ci.nsIBlocklistService);
+    return bs.getPluginBlocklistURL(aTags[0]);
+  });
+
   this.__defineGetter__("size", function() {
     function getDirectorySize(aFile) {
       let size = 0;

@@ -38,6 +38,7 @@
 #ifndef nsFileStreams_h__
 #define nsFileStreams_h__
 
+#include "nsAlgorithm.h"
 #include "nsIFileStreams.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -193,7 +194,7 @@ public:
 
 private:
     PRUint32 TruncateSize(PRUint32 aSize) {
-          return (PRUint32)PR_MIN(mLength - mPosition, (PRUint64)aSize);
+          return (PRUint32)NS_MIN<PRUint64>(mLength - mPosition, aSize);
     }
 
     PRUint64 mStart;

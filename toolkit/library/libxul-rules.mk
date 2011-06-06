@@ -57,10 +57,3 @@ DEFINES += \
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
 endif
-
-export:: dlldeps.cpp
-
-dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp
-	$(INSTALL) $^ .
-
-GARBAGE += dlldeps.cpp

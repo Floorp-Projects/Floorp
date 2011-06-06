@@ -154,7 +154,7 @@ function run_test() {
     "/quota-error": server_quota_error
   });
 
-  Utils.prefs.setIntPref("network.numRetries", 1); // speed up test
+  Svc.Prefs.set("network.numRetries", 1); // speed up test
 
   _("Resource object members");
   let res = new Resource("http://localhost:8080/open");
@@ -301,14 +301,13 @@ function run_test() {
   do_check_eq(content.status, 200);
   do_check_eq(JSON.stringify(content.obj), JSON.stringify(sample_data));
 
-  _("X-Weave-Timestamp header updates Resource.serverTime");
+  _("X-Weave-Timestamp header updates AsyncResource.serverTime");
   // Before having received any response containing the
-  // X-Weave-Timestamp header, Resource.serverTime is null.
-  do_check_eq(Resource.serverTime, null);
+  // X-Weave-Timestamp header, AsyncResource.serverTime is null.
+  do_check_eq(AsyncResource.serverTime, null);
   let res8 = new Resource("http://localhost:8080/timestamp");
   content = res8.get();
-  do_check_eq(Resource.serverTime, TIMESTAMP);
-
+  do_check_eq(AsyncResource.serverTime, TIMESTAMP);
 
   _("GET: no special request headers");
   let res9 = new Resource("http://localhost:8080/headers");
@@ -430,7 +429,7 @@ function run_test() {
   let res18 = new Resource("http://localhost:8080/json");
   let onProgress = function(rec) {
     // Provoke an XPC exception without a Javascript wrapper.
-    Svc.IO.newURI("::::::::", null, null);
+    Services.io.newURI("::::::::", null, null);
   };
   res18._onProgress = onProgress;
   let oldWarn = res18._log.warn;
@@ -484,6 +483,19 @@ function run_test() {
     error = ex;
   }
   do_check_eq(error.result, Cr.NS_ERROR_NET_TIMEOUT);
+
+  _("Testing URI construction.");
+  let args = [];
+  args.push("newer=" + 1234);
+  args.push("limit=" + 1234);
+  args.push("sort=" + 1234);
+
+  let query = "?" + args.join("&");
+
+  let uri1 = Utils.makeURL("http://foo/" + query);
+  let uri2 = Utils.makeURL("http://foo/");
+  uri2.query = query;
+  do_check_eq(uri1.query, uri2.query);
 
   server.stop(do_test_finished);
 }

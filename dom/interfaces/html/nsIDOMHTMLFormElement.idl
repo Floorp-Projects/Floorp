@@ -50,16 +50,16 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(e8624d8a-0e9c-49d4-848c-75afcfd6f048)]
+[scriptable, uuid(b7892cbf-a23b-460a-817a-798d490b12df)]
 interface nsIDOMHTMLFormElement : nsIDOMHTMLElement
 {
-           attribute DOMString            name;
-
            attribute DOMString            acceptCharset;
            attribute DOMString            action;
            attribute DOMString            autocomplete;
            attribute DOMString            enctype;
+           attribute DOMString            encoding;
            attribute DOMString            method;
+           attribute DOMString            name;
            attribute boolean              noValidate;
            attribute DOMString            target;
 
@@ -68,4 +68,5 @@ interface nsIDOMHTMLFormElement : nsIDOMHTMLElement
 
   void                      submit();
   void                      reset();
+  boolean                   checkValidity();
 };

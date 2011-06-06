@@ -51,13 +51,13 @@ CPPSRCS		= \
 		nsHTMLContentSink.cpp \
 		nsHTMLFragmentContentSink.cpp \
 		nsHTMLDocument.cpp \
-		nsImageDocument.cpp \
-		nsMediaDocument.cpp \
-		nsPluginDocument.cpp \
+		ImageDocument.cpp \
+		MediaDocument.cpp \
+		PluginDocument.cpp \
 		$(NULL)
 
 ifdef MOZ_MEDIA
-CPPSRCS += nsVideoDocument.cpp
+CPPSRCS += VideoDocument.cpp
 endif
 
 EXPORTS		= \
@@ -73,10 +73,10 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../events/src \
 		-I$(srcdir)/../../content/src \
-		-I$(srcdir)/../../../../layout/style \
-		-I$(srcdir)/../../../../dom/base \
-		-I$(srcdir)/../../../../xpcom/io \
-		-I$(srcdir)/../../../../caps/include \
+		-I$(topsrcdir)/layout/style \
+		-I$(topsrcdir)/dom/base \
+		-I$(topsrcdir)/xpcom/io \
+		-I$(topsrcdir)/caps/include \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

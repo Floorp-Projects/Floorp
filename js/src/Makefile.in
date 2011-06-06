@@ -107,6 +107,9 @@ MODULE_OPTIMIZE_FLAGS = -O2
 endif
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
 
 # JavaScript must be built shared, even for static builds, as it is used by
 # other modules which are always built shared. Failure to do so results in

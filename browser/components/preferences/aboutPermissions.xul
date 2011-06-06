@@ -52,6 +52,7 @@
       id="permissions-page" title="&permissionsManager.title;"
       onload="AboutPermissions.init();"
       onunload="AboutPermissions.cleanUp();"
+      disablefastfind="true"
       role="application">
 
   <script type="application/javascript"
@@ -163,7 +164,7 @@
               </menupopup>
             </menulist>
             <button id="cookies-clear-all-button"
-                    label="&cookie.clearAll;"
+                    label="&cookie.removeAll;"
                     oncommand="Services.cookies.removeAll();"/>
             <button id="cookies-manage-all-button"
                     label="&cookie.manage;"
@@ -172,7 +173,7 @@
           <hbox id="cookies-count" align="center">
             <label id="cookies-label"/>
             <button id="cookies-clear-button"
-                    label="&cookie.clear;"
+                    label="&cookie.remove;"
                     oncommand="AboutPermissions.clearCookies();"/>
             <button id="cookies-manage-button"
                     label="&cookie.manage;"

@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -802,7 +802,7 @@ _cairo_int_96by64_32x64_divrem (cairo_int128_t num, cairo_int64_t den)
     uqr = _cairo_uint_96by64_32x64_divrem (num, nonneg_den);
     if (_cairo_uint64_eq (uqr.rem, nonneg_den)) {
 	/* bail on overflow. */
-	qr.quo = _cairo_uint32s_to_uint64 (0x7FFFFFFF, -1U);;
+	qr.quo = _cairo_uint32s_to_uint64 (0x7FFFFFFF, -1U);
 	qr.rem = den;
 	return qr;
     }
