@@ -37,6 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <string.h>
+
+#include "mozilla/RangedPtr.h"
+
 #include "nsURLParsers.h"
 #include "nsURLHelper.h"
 #include "nsIURI.h"
@@ -45,13 +48,16 @@
 #include "nsCRT.h"
 #include "netCore.h"
 
+using namespace mozilla;
+
 //----------------------------------------------------------------------------
 
 static PRUint32
 CountConsecutiveSlashes(const char *str, PRInt32 len)
 {
+    RangedPtr<const char> p(str, len);
     PRUint32 count = 0;
-    while (len-- && *str++ == '/') ++count;
+    while (len-- && *p++ == '/') ++count;
     return count;
 }
 
