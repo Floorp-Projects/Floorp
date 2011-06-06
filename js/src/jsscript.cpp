@@ -179,7 +179,7 @@ Bindings::getLocalNameArray(JSContext *cx, JSArenaPool *pool)
     JS_ASSERT(SIZE_MAX / size_t(n) > sizeof *names);
     JS_ARENA_ALLOCATE_CAST(names, jsuword *, pool, size_t(n) * sizeof *names);
     if (!names) {
-        js_ReportOutOfScriptQuota(cx);
+        js_ReportOutOfMemory(cx);
         return NULL;
     }
 
@@ -391,7 +391,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         JS_ARENA_ALLOCATE_CAST(bitmap, uint32 *, &cx->tempPool,
                                bitmapLength * sizeof *bitmap);
         if (!bitmap) {
-            js_ReportOutOfScriptQuota(cx);
+            js_ReportOutOfMemory(cx);
             return false;
         }
 

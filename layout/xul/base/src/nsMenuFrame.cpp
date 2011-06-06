@@ -53,18 +53,13 @@
 #include "nsINameSpaceManager.h"
 #include "nsMenuPopupFrame.h"
 #include "nsMenuBarFrame.h"
-#include "nsIView.h"
 #include "nsIDocument.h"
-#include "nsIDOMNSDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMText.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
-#include "nsIViewManager.h"
 #include "nsBindingManager.h"
 #include "nsIServiceManager.h"
 #include "nsCSSFrameConstructor.h"
@@ -83,6 +78,9 @@
 #include "nsEventStateManager.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define NS_MENU_POPUP_LIST_INDEX 0
 
@@ -1118,7 +1116,7 @@ nsMenuFrame::BuildAcceleratorText(PRBool aNotify)
 #endif
 
     // Get the accelerator key value from prefs, overriding the default:
-    accelKey = nsContentUtils::GetIntPref("ui.key.accelKey", accelKey);
+    accelKey = Preferences::GetInt("ui.key.accelKey", accelKey);
   }
 
   nsAutoString modifiers;

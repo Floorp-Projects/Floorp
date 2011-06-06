@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -314,8 +315,7 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLBodyElement)
 NS_IMPL_ELEMENT_CLONE(nsHTMLBodyElement)
 
 
-NS_IMPL_URI_ATTR(nsHTMLBodyElement, Background, background)
-
+NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Background, background)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, VLink, vlink)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, ALink, alink)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Link, link)

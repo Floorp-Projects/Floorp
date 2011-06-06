@@ -7,16 +7,16 @@ function getBookmarks(folderId) {
 
   let pos = 0;
   while (true) {
-    let itemId = Svc.Bookmark.getIdForItemAt(folderId, pos);
+    let itemId = PlacesUtils.bookmarks.getIdForItemAt(folderId, pos);
     _("Got itemId", itemId, "under", folderId, "at", pos);
     if (itemId == -1)
       break;
 
-    switch (Svc.Bookmark.getItemType(itemId)) {
-      case Svc.Bookmark.TYPE_BOOKMARK:
-        bookmarks.push(Svc.Bookmark.getItemTitle(itemId));
+    switch (PlacesUtils.bookmarks.getItemType(itemId)) {
+      case PlacesUtils.bookmarks.TYPE_BOOKMARK:
+        bookmarks.push(PlacesUtils.bookmarks.getItemTitle(itemId));
         break;
-      case Svc.Bookmark.TYPE_FOLDER:
+      case PlacesUtils.bookmarks.TYPE_FOLDER:
         bookmarks.push(getBookmarks(itemId));
         break;
       default:
@@ -30,7 +30,7 @@ function getBookmarks(folderId) {
 }
 
 function check(expected) {
-  let bookmarks = getBookmarks(Svc.Bookmark.unfiledBookmarksFolder);
+  let bookmarks = getBookmarks(PlacesUtils.bookmarks.unfiledBookmarksFolder);
 
   _("Checking if the bookmark structure is", JSON.stringify(expected));
   _("Got bookmarks:", JSON.stringify(bookmarks));

@@ -21,7 +21,7 @@ function run_test() {
     let changedIDs = engine.getChangedIDs();
     let ids = [id for (id in changedIDs)];
     do_check_eq(ids.length, 1);
-    do_check_eq(ids[0], Utils.encodeBase64url(Svc.AppInfo.ID));
+    do_check_eq(ids[0], Utils.encodeBase64url(Services.appinfo.ID));
 
     Svc.Prefs.set("engine.prefs.modified", false);
     do_check_false(tracker.modified);

@@ -91,7 +91,7 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
 
     nsCOMPtr<nsIURI> innerURI;
     nsresult rv = NS_NewURI(getter_AddRefs(innerURI),
-                            Substring(aSpec, colon + 1), aCharset);
+                            Substring(aSpec, colon + 1), aCharset, aBaseURI);
     if (NS_FAILED(rv))
         return rv;
 

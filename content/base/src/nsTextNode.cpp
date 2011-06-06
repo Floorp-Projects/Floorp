@@ -40,7 +40,6 @@
  */
 
 #include "nsTextNode.h"
-#include "nsIDOM3Text.h"
 #include "nsContentUtils.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
@@ -142,7 +141,7 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
 }
 
 nsTextNode::nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericTextNode(aNodeInfo)
+  : nsGenericDOMDataNode(aNodeInfo)
 {
 }
 
@@ -159,7 +158,6 @@ DOMCI_NODE_DATA(Text, nsTextNode)
 NS_INTERFACE_TABLE_HEAD(nsTextNode)
   NS_NODE_INTERFACE_TABLE3(nsTextNode, nsIDOMNode, nsIDOMText,
                            nsIDOMCharacterData)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Text, new nsText3Tearoff(this))
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsTextNode)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Text)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
@@ -240,7 +238,6 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fprintf(out, "Text@%p", static_cast<const void*>(this));
-  fprintf(out, " intrinsicstate=[%llx]", IntrinsicState().GetInternalValue());
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
   fprintf(out, " refcount=%d<", mRefCnt.get());

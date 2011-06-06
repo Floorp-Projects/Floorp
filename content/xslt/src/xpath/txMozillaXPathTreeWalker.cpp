@@ -712,7 +712,7 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
     PRInt32 otherTotal = otherParents.Length() - 1;
     NS_ASSERTION(total != otherTotal, "Can't have same number of parents");
 
-    PRInt32 lastIndex = PR_MIN(total, otherTotal);
+    PRInt32 lastIndex = NS_MIN(total, otherTotal);
     PRInt32 i;
     parent = nsnull;
     for (i = 0; i <= lastIndex; ++i) {

@@ -19,7 +19,7 @@ script regress-345961.js
 script regress-348810.js
 script regress-350256-01.js
 script regress-350256-02.js
-script regress-350256-03.js
+silentfail script regress-350256-03.js
 script regress-360681-01.js
 script regress-360681-02.js
 script regress-364104.js

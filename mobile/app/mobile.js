@@ -146,6 +146,7 @@ pref("browser.sessionstore.max_tabs_undo", 5);
 pref("mozilla.widget.force-24bpp", true);
 pref("mozilla.widget.use-buffer-pixmap", true);
 pref("mozilla.widget.disable-native-theme", true);
+pref("layout.reflow.synthMouseMove", false);
 
 /* download manager (don't show the window or alert) */
 pref("browser.download.useDownloadDir", true);

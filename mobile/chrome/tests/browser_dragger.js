@@ -14,7 +14,7 @@ gTests.push({
 
   run: function() {
     gCurrentTest.tab = Browser.addTab(testURL_01, true);
-    onMessageOnce(gCurrentTest.tab.browser.messageManager, "MozScrolledAreaChanged", gCurrentTest.checkPan);
+    onMessageOnce(gCurrentTest.tab.browser.messageManager, "Browser:FirstPaint", gCurrentTest.checkPan);
   },
 
   checkPan: function() {

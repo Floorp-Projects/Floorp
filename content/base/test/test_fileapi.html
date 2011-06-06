@@ -259,7 +259,13 @@ r.onloadend = function (event) {
 r.onload = function() { ok(false, "load should not fire for aborted reads") };
 r.onerror = function() { ok(false, "error should not fire for aborted reads") };
 r.onprogress = function() { ok(false, "progress should not fire for aborted reads") };
-r.abort();
+var abortThrew = false;
+try {
+  r.abort();
+} catch(e) {
+  abortThrew = true;
+}
+is(abortThrew, true, "abort() must throw if not loading");
 is(abortHasRun, false, "abort() is a no-op unless loading");
 r.readAsText(asciiFile);
 r.abort();
@@ -277,7 +283,13 @@ r.onabort = function (event) {
   is(event.target.result, null, "file data should be null on aborted reads");
 }
 r.onload = function() { ok(false, "load should not fire for aborted reads") };
-r.abort();
+var abortThrew = false;
+try {
+  r.abort();
+} catch(e) {
+  abortThrew = true;
+}
+is(abortThrew, true, "abort() must throw if not loading");
 is(reuseAbortHasRun, false, "abort() is a no-op unless loading");
 r.readAsText(asciiFile);
 r.readAsText(asciiFile);

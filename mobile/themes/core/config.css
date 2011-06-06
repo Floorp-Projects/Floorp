@@ -44,7 +44,7 @@ richlistitem {
   -moz-box-align: center;
 }
 
-richlistitem .preftitle {
+richlistitem .preferences-title {
   pointer-events: none;
   min-width: 200px;
   -moz-box-flex: 1;
@@ -52,7 +52,7 @@ richlistitem .preftitle {
 }
 
 /* XXX look  + sync */
-richlistitem[default="false"] .preftitle {
+richlistitem[default="false"] .preferences-title {
   font-weight: bold;
 }
 
@@ -98,11 +98,11 @@ richlistitem .prefvalue {
   display: none;
 }
 
-#editor[default="false"] .preftitle {
+#editor[default="false"] .preferences-title {
   font-weight: bold;
 }
 
-#editor-setting .prefbox {
+#editor-setting setting {
   border-color: transparent !important;
 }
 

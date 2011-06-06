@@ -74,7 +74,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLMapElement.h"
-#include "nsImageMapUtils.h"
 #include "nsIScriptSecurityManager.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -89,8 +88,6 @@
 #include "imgILoader.h"
 
 #include "nsCSSFrameConstructor.h"
-#include "nsIPrefBranch2.h"
-#include "nsIPrefService.h"
 #include "nsIDOMRange.h"
 
 #include "nsIContentPolicy.h"
@@ -102,6 +99,10 @@
 
 #include "gfxRect.h"
 #include "ImageLayers.h"
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 // sizes (pixels) for image icon, padding and border frame
 #define ICON_SIZE        (16)
@@ -116,6 +117,7 @@
 #define ALIGN_UNSET PRUint8(-1)
 
 using namespace mozilla::layers;
+using namespace mozilla::dom;
 
 // static icon information
 nsImageFrame::IconLoad* nsImageFrame::gIconLoad = nsnull;
@@ -471,10 +473,10 @@ nsImageFrame::SourceRectToDest(const nsIntRect& aRect)
 
 /* static */
 PRBool
-nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
+nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
                                         nsStyleContext* aStyleContext)
 {
-  nsEventStates state = aContent->IntrinsicState();
+  nsEventStates state = aElement->State();
   if (IMAGE_OK(state,
                HaveFixedSize(aStyleContext->GetStylePosition()))) {
     // Image is fine; do the image frame thing
@@ -508,12 +510,12 @@ nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
     else {
       // We are in quirks mode, so we can just check the tag name; no need to
       // check the namespace.
-      nsIAtom *localName = aContent->NodeInfo()->NameAtom();
+      nsIAtom *localName = aElement->Tag();
 
       // Use a sized box if we have no alt text.  This means no alt attribute
       // and the node is not an object or an input (since those always have alt
       // text).
-      if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::alt) &&
+      if (!aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::alt) &&
           localName != nsGkAtoms::object &&
           localName != nsGkAtoms::input) {
         useSizedBox = PR_TRUE;
@@ -1162,9 +1164,10 @@ static void PaintAltFeedback(nsIFrame* aFrame, nsRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt)
 {
   nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
+  nsEventStates state = f->GetContent()->AsElement()->State();
   f->DisplayAltFeedback(*aCtx,
                         aDirtyRect,
-                        IMAGE_OK(f->GetContent()->IntrinsicState(), PR_TRUE)
+                        IMAGE_OK(state, PR_TRUE)
                            ? nsImageFrame::gIconLoad->mLoadingImage
                            : nsImageFrame::gIconLoad->mBrokenImage,
                         aPt);
@@ -1325,7 +1328,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               getter_AddRefs(currentRequest));
     }
 
-    nsEventStates contentState = mContent->IntrinsicState();
+    nsEventStates contentState = mContent->AsElement()->State();
     PRBool imageOK = IMAGE_OK(contentState, PR_TRUE);
 
     nsCOMPtr<imgIContainer> imgCon;
@@ -1456,13 +1459,11 @@ nsImageFrame::GetImageMap(nsPresContext* aPresContext)
     nsAutoString usemap;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, usemap);
 
-    nsCOMPtr<nsIDOMHTMLMapElement> map = nsImageMapUtils::FindImageMap(doc,usemap);
+    nsCOMPtr<nsIContent> map = doc->FindImageMap(usemap);
     if (map) {
       mImageMap = new nsImageMap();
-      if (mImageMap) {
-        NS_ADDREF(mImageMap);
-        mImageMap->Init(aPresContext->PresShell(), this, map);
-      }
+      NS_ADDREF(mImageMap);
+      mImageMap->Init(aPresContext->PresShell(), this, map);
     }
   }
 
@@ -1878,22 +1879,33 @@ nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
 NS_IMPL_ISUPPORTS2(nsImageFrame::IconLoad, nsIObserver,
                    imgIDecoderObserver)
 
-static const char kIconLoadPrefs[][40] = {
+static const char* kIconLoadPrefs[] = {
   "browser.display.force_inline_alttext",
-  "browser.display.show_image_placeholders"
+  "browser.display.show_image_placeholders",
+  nsnull
 };
 
 nsImageFrame::IconLoad::IconLoad()
 {
-  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-  if (prefBranch) {
-    // register observers
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kIconLoadPrefs); ++i)
-      prefBranch->AddObserver(kIconLoadPrefs[i], this, PR_FALSE);
-  }
+  // register observers
+  Preferences::AddStrongObservers(this, kIconLoadPrefs);
   GetPrefs();
 }
 
+void
+nsImageFrame::IconLoad::Shutdown()
+{
+  Preferences::RemoveObservers(this, kIconLoadPrefs);
+  // in case the pref service releases us later
+  if (mLoadingImage) {
+    mLoadingImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
+    mLoadingImage = nsnull;
+  }
+  if (mBrokenImage) {
+    mBrokenImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
+    mBrokenImage = nsnull;
+  }
+}
 
 NS_IMETHODIMP
 nsImageFrame::IconLoad::Observe(nsISupports *aSubject, const char* aTopic,
@@ -1916,11 +1928,10 @@ nsImageFrame::IconLoad::Observe(nsISupports *aSubject, const char* aTopic,
 void nsImageFrame::IconLoad::GetPrefs()
 {
   mPrefForceInlineAltText =
-    nsContentUtils::GetBoolPref("browser.display.force_inline_alttext");
+    Preferences::GetBool("browser.display.force_inline_alttext");
 
   mPrefShowPlaceholders =
-    nsContentUtils::GetBoolPref("browser.display.show_image_placeholders",
-                                PR_TRUE);
+    Preferences::GetBool("browser.display.show_image_placeholders", PR_TRUE);
 }
 
 

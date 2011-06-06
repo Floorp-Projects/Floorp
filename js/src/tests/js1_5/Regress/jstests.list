@@ -91,7 +91,7 @@ script regress-275378.js
 script regress-276103.js
 script regress-278873.js
 script regress-280769-1.js
-script regress-280769-2.js
+silentfail script regress-280769-2.js
 script regress-280769-3.js
 script regress-280769-4.js
 script regress-280769-5.js

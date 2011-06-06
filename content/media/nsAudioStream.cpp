@@ -52,13 +52,15 @@ using namespace mozilla::dom;
 #include "nsAudioStream.h"
 #include "nsAlgorithm.h"
 #include "VideoUtils.h"
-#include "nsContentUtils.h"
 #include "mozilla/Mutex.h"
 extern "C" {
 #include "sydneyaudio/sydney_audio.h"
 }
 #include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #if defined(XP_MACOSX)
 #define SA_PER_STREAM_VOLUME 1
@@ -321,8 +323,7 @@ static mozilla::Mutex* gVolumeScaleLock = nsnull;
 static double gVolumeScale = 1.0;
 
 static int VolumeScaleChanged(const char* aPref, void *aClosure) {
-  nsAdoptingString value =
-    nsContentUtils::GetStringPref("media.volume_scale");
+  nsAdoptingString value = Preferences::GetString("media.volume_scale");
   mozilla::MutexAutoLock lock(*gVolumeScaleLock);
   if (value.IsEmpty()) {
     gVolumeScale = 1.0;
@@ -345,16 +346,12 @@ void nsAudioStream::InitLibrary()
 #endif
   gVolumeScaleLock = new mozilla::Mutex("nsAudioStream::gVolumeScaleLock");
   VolumeScaleChanged(nsnull, nsnull);
-  nsContentUtils::RegisterPrefCallback("media.volume_scale",
-                                       VolumeScaleChanged,
-                                       nsnull);
+  Preferences::RegisterCallback(VolumeScaleChanged, "media.volume_scale");
 }
 
 void nsAudioStream::ShutdownLibrary()
 {
-  nsContentUtils::UnregisterPrefCallback("media.volume_scale",
-                                         VolumeScaleChanged,
-                                         nsnull);
+  Preferences::UnregisterCallback(VolumeScaleChanged, "media.volume_scale");
   delete gVolumeScaleLock;
   gVolumeScaleLock = nsnull;
 }
