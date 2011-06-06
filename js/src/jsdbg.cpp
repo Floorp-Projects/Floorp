@@ -858,15 +858,14 @@ JSBool
 Debug::getYoungestFrame(JSContext *cx, uintN argc, Value *vp)
 {
     THISOBJ(cx, vp, Debug, "getYoungestFrame", thisobj, dbg);
-
-    // cx->fp() would return the topmost frame in the current context.
-    // Since there may be multiple contexts, use AllFramesIter instead.
-    for (AllFramesIter i(cx); !i.done(); ++i) {
-        if (dbg->observesFrame(i.fp()))
-            return dbg->getScriptFrame(cx, i.fp(), vp);
+    StackFrame *fp = cx->fp();
+    while (fp && !dbg->observesFrame(fp))
+        fp = fp->prev();
+    if (!fp) {
+        vp->setNull();
+        return true;
     }
-    vp->setNull();
-    return true;
+    return dbg->getScriptFrame(cx, fp, vp);
 }
 
 JSBool
