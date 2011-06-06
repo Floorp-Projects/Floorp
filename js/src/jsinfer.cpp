@@ -2765,6 +2765,7 @@ void
 TypeObject::addPropertyTypeSet(JSContext *cx, jsid id, ClonedTypeSet *set)
 {
     AutoEnterTypeInference enter(cx);
+    id = MakeTypeId(cx, id);
 
     TypeSet *types = getProperty(cx, id, true);
     if (!types)
