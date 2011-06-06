@@ -934,16 +934,25 @@ let Utils = {
   },
 
   /**
+   * Execute a function on the next event loop tick.
+   */
+  nextTick: function nextTick(callback, thisObj) {
+    if (thisObj) {
+      callback = callback.bind(thisObj);
+    }
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback(callback, 0, timer.TYPE_ONE_SHOT);
+  },
+
+  /**
    * Return a timer that is scheduled to call the callback after waiting the
    * provided time or as soon as possible. The timer will be set as a property
    * of the provided object with the given timer name.
    */
-  delay: function delay(callback, wait, thisObj, name) {
-    // Default to running right away
-    wait = wait || 0;
-
-    // Use a dummy object if one wasn't provided
-    thisObj = thisObj || {};
+  namedTimer: function delay(callback, wait, thisObj, name) {
+    if (!thisObj || !name) {
+      throw "You must provide both an object and a property name for the timer!";
+    }
 
     // Delay an existing timer if it exists
     if (name in thisObj && thisObj[name] instanceof Ci.nsITimer) {

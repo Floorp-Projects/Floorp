@@ -343,10 +343,10 @@ FormTracker.prototype = {
       }
 
       // Get the GUID on a delay so that it can be added to the DB first...
-      Utils.delay(function() {
+      Utils.nextTick(function() {
         this._log.trace("Logging form element: " + [name, el.value]);
         this.trackEntry(name, el.value);
-      }, 0, this);
+      }, this);
     }
   }
 };
