@@ -52,6 +52,7 @@
       id="permissions-page" title="&permissionsManager.title;"
       onload="AboutPermissions.init();"
       onunload="AboutPermissions.cleanUp();"
+      disablefastfind="true"
       role="application">
 
   <script type="application/javascript"
