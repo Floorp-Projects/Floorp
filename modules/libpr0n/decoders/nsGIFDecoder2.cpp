@@ -627,7 +627,7 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
                (mGIFStruct.bytes_in_hold) ? mGIFStruct.hold : nsnull;
   if (p) {
     // Add what we have sofar to the block
-    PRUint32 l = PR_MIN(len, mGIFStruct.bytes_to_consume);
+    PRUint32 l = NS_MIN(len, mGIFStruct.bytes_to_consume);
     memcpy(p+mGIFStruct.bytes_in_hold, buf, l);
 
     if (l < mGIFStruct.bytes_to_consume) {

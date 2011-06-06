@@ -46,13 +46,16 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
-Utils.lazy(this, 'Auth', AuthMgr);
+XPCOMUtils.defineLazyGetter(this, "Auth", function () {
+  return new AuthMgr();
+});
 
 // XXX: the authenticator api will probably need to be changed to support
 // other methods (digest, oauth, etc)
@@ -134,13 +137,18 @@ AuthMgr.prototype = {
 function AsyncResource(uri) {
   this._log = Log4Moz.repository.getLogger(this._logName);
   this._log.level =
-    Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
+    Log4Moz.Level[Svc.Prefs.get("log.logger.network.resources")];
   this.uri = uri;
   this._headers = {};
   this._onComplete = Utils.bind2(this, this._onComplete);
 }
 AsyncResource.prototype = {
   _logName: "Net.Resource",
+
+  // ** {{{ AsyncResource.serverTime }}} **
+  //
+  // Caches the latest server timestamp (X-Weave-Timestamp header).
+  serverTime: null,
 
   // The string to use as the base User-Agent in Sync requests.
   // These strings will look something like
@@ -152,14 +160,14 @@ AsyncResource.prototype = {
   //   Firefox Aurora/5.0a1 FxSync/1.9.0.20110409.desktop
   //
   _userAgent:
-    Svc.AppInfo.name + "/" + Svc.AppInfo.version +     // Product.
-    " FxSync/" + WEAVE_VERSION + "." +                 // Sync.
-    Svc.AppInfo.appBuildID + ".",                      // Build.
+    Services.appinfo.name + "/" + Services.appinfo.version +  // Product.
+    " FxSync/" + WEAVE_VERSION + "." +                        // Sync.
+    Services.appinfo.appBuildID + ".",                        // Build.
 
   // Wait 5 minutes before killing a request.
   ABORT_TIMEOUT: 300000,
 
-  // ** {{{ Resource.authenticator }}} **
+  // ** {{{ AsyncResource.authenticator }}} **
   //
   // Getter and setter for the authenticator module
   // responsible for this particular resource. The authenticator
@@ -175,7 +183,7 @@ AsyncResource.prototype = {
     this._authenticator = value;
   },
 
-  // ** {{{ Resource.headers }}} **
+  // ** {{{ AsyncResource.headers }}} **
   //
   // Headers to be included when making a request for the resource.
   // Note: Header names should be all lower case, there's no explicit
@@ -190,7 +198,7 @@ AsyncResource.prototype = {
     this._headers[header.toLowerCase()] = value;
   },
 
-  // ** {{{ Resource.uri }}} **
+  // ** {{{ AsyncResource.uri }}} **
   //
   // URI representing this resource.
   get uri() {
@@ -203,7 +211,7 @@ AsyncResource.prototype = {
       this._uri = value;
   },
 
-  // ** {{{ Resource.spec }}} **
+  // ** {{{ AsyncResource.spec }}} **
   //
   // Get the string representation of the URI.
   get spec() {
@@ -212,7 +220,7 @@ AsyncResource.prototype = {
     return null;
   },
 
-  // ** {{{ Resource.data }}} **
+  // ** {{{ AsyncResource.data }}} **
   //
   // Get and set the data encapulated in the resource.
   _data: null,
@@ -221,15 +229,16 @@ AsyncResource.prototype = {
     this._data = value;
   },
 
-  // ** {{{ Resource._createRequest }}} **
+  // ** {{{ AsyncResource._createRequest }}} **
   //
   // This method returns a new IO Channel for requests to be made
   // through. It is never called directly, only {{{_doRequest}}} uses it
   // to obtain a request channel.
   //
   _createRequest: function Res__createRequest() {
-    let channel = Svc.IO.newChannel(this.spec, null, null).
-      QueryInterface(Ci.nsIRequest).QueryInterface(Ci.nsIHttpChannel);
+    let channel = Services.io.newChannel(this.spec, null, null)
+                          .QueryInterface(Ci.nsIRequest)
+                          .QueryInterface(Ci.nsIHttpChannel);
 
     // Always validate the cache:
     channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
@@ -378,7 +387,7 @@ AsyncResource.prototype = {
     // Make a lazy getter to convert the json response into an object.
     // Note that this can cause a parse error to be thrown far away from the
     // actual fetch, so be warned!
-    Utils.lazy2(ret, "obj", function() JSON.parse(ret));
+    XPCOMUtils.defineLazyGetter(ret, "obj", function() JSON.parse(ret));
 
     // Notify if we get a 401 to maybe try again with a new URI.
     // TODO: more retry logic.
@@ -438,18 +447,13 @@ Resource.prototype = {
 
   __proto__: AsyncResource.prototype,
 
-  // ** {{{ Resource.serverTime }}} **
-  //
-  // Caches the latest server timestamp (X-Weave-Timestamp header).
-  serverTime: null,
-
   // ** {{{ Resource._request }}} **
   //
   // Perform a particular HTTP request on the resource. This method
   // is never called directly, but is used by the high-level
   // {{{get}}}, {{{put}}}, {{{post}}} and {{delete}} methods.
   _request: function Res__request(action, data) {
-    let cb = Utils.makeSyncCallback();
+    let cb = Async.makeSyncCallback();
     function callback(error, ret) {
       if (error)
         cb.throw(error);
@@ -459,7 +463,7 @@ Resource.prototype = {
     // The channel listener might get a failure code
     try {
       this._doRequest(action, data, callback);
-      return Utils.waitForSyncCallback(cb);
+      return Async.waitForSyncCallback(cb);
     } catch(ex) {
       // Combine the channel stack with this request stack.  Need to create
       // a new error object for that.
@@ -527,7 +531,7 @@ ChannelListener.prototype = {
 
     // Save the latest server timestamp when possible.
     try {
-      Resource.serverTime = channel.getResponseHeader("X-Weave-Timestamp") - 0;
+      AsyncResource.serverTime = channel.getResponseHeader("X-Weave-Timestamp") - 0;
     }
     catch(ex) {}
 
@@ -542,8 +546,9 @@ ChannelListener.prototype = {
     this.abortTimer.clear();
 
     let success = Components.isSuccessCode(status);
+    let uri = channel && channel.URI && channel.URI.spec || "<unknown>";
     this._log.trace("Channel for " + channel.requestMethod + " " +
-                    channel.URI.spec + ": isSuccessCode(" + status + ")? " +
+                    uri + ": isSuccessCode(" + status + ")? " +
                     success);
 
     if (this._data == '')
@@ -560,7 +565,7 @@ ChannelListener.prototype = {
     }
 
     this._log.trace("Channel: flags = " + channel.loadFlags +
-                    ", URI = " + channel.URI.spec +
+                    ", URI = " + uri +
                     ", HTTP success? " + channel.requestSucceeded);
     this._onComplete(null, this._data);
   },
@@ -633,7 +638,7 @@ BadCertListener.prototype = {
     // Silently ignore?
     let log = Log4Moz.repository.getLogger("Service.CertListener");
     log.level =
-      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
+      Log4Moz.Level[Svc.Prefs.get("log.logger.network.resources")];
     log.debug("Invalid HTTPS certificate encountered, ignoring!");
 
     return true;

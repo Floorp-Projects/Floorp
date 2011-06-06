@@ -6272,7 +6272,7 @@ BCPaintBorderIterator::SetDamageArea(nsRect aDirtyRect)
   if (!haveIntersect)
     return PR_FALSE;
   mDamageArea = nsRect(startColIndex, startRowIndex,
-                       1 + PR_ABS(PRInt32(endColIndex - startColIndex)),
+                       1 + NS_ABS(PRInt32(endColIndex - startColIndex)),
                        1 + endRowIndex - startRowIndex);
 
   Reset();
@@ -6611,7 +6611,7 @@ BCVerticalSeg::Start(BCPaintBorderIterator& aIter,
                                aIter.mBCData->GetCorner(ownerSide, bevel) : 0;
 
   PRBool  topBevel        = (aVerSegWidth > 0) ? bevel : PR_FALSE;
-  BCPixelSize maxHorSegHeight = PR_MAX(aIter.mPrevHorSegHeight, aHorSegHeight);
+  BCPixelSize maxHorSegHeight = NS_MAX(aIter.mPrevHorSegHeight, aHorSegHeight);
   nscoord offset          = CalcVerCornerOffset(ownerSide, cornerSubWidth,
                                                 maxHorSegHeight, PR_TRUE,
                                                 topBevel);
@@ -6673,7 +6673,7 @@ BCVerticalSeg::GetBottomCorner(BCPaintBorderIterator& aIter,
      cornerSubWidth = aIter.mBCData->GetCorner(ownerSide, bevel);
    }
    mIsBottomBevel = (mWidth > 0) ? bevel : PR_FALSE;
-   mBottomHorSegHeight = PR_MAX(aIter.mPrevHorSegHeight, aHorSegHeight);
+   mBottomHorSegHeight = NS_MAX(aIter.mPrevHorSegHeight, aHorSegHeight);
    mBottomOffset = CalcVerCornerOffset(ownerSide, cornerSubWidth,
                                     mBottomHorSegHeight,
                                     PR_FALSE, mIsBottomBevel);
@@ -6815,7 +6815,7 @@ BCHorizontalSeg::Start(BCPaintBorderIterator& aIter,
 
   PRBool  leftBevel = (aHorSegHeight > 0) ? bevel : PR_FALSE;
   PRInt32 relColIndex = aIter.GetRelativeColIndex();
-  nscoord maxVerSegWidth = PR_MAX(aIter.mVerInfo[relColIndex].mWidth,
+  nscoord maxVerSegWidth = NS_MAX(aIter.mVerInfo[relColIndex].mWidth,
                                   aBottomVerSegWidth);
   nscoord offset = CalcHorCornerOffset(cornerOwnerSide, cornerSubWidth,
                                        maxVerSegWidth, PR_TRUE, leftBevel,
@@ -6855,7 +6855,7 @@ BCHorizontalSeg::GetRightCorner(BCPaintBorderIterator& aIter,
 
   mIsRightBevel = (mWidth > 0) ? bevel : 0;
   PRInt32 relColIndex = aIter.GetRelativeColIndex();
-  nscoord verWidth = PR_MAX(aIter.mVerInfo[relColIndex].mWidth, aLeftSegWidth);
+  nscoord verWidth = NS_MAX(aIter.mVerInfo[relColIndex].mWidth, aLeftSegWidth);
   mEndOffset = CalcHorCornerOffset(ownerSide, cornerSubWidth, verWidth,
                                    PR_FALSE, mIsRightBevel, aIter.mTableIsLTR);
   mLength += mEndOffset;

@@ -81,6 +81,8 @@ CPPSRCS = \
 	ossource_nspr.cpp \
 	util.cpp \
 	ValidateLimitations.cpp \
+	ForLoopUnroll.cpp \
+	MapLongVariableNames.cpp \
 	$(NULL)
 
 # flex/yacc generated files
@@ -120,10 +122,6 @@ CSRCS   = \
 	$(NULL)
 
 DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD
-
-ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
-endif
 
 # ANGLE only on Win32 for now, the solution isn't set up
 # for 64-bit yet. This is handled by MOZ_ANGLE which the configure script

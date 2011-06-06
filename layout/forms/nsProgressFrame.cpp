@@ -266,7 +266,12 @@ nsProgressFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 
   nsSize autoSize;
   autoSize.height = autoSize.width = fontMet->Font().size; // 1em
-  autoSize.width *= 10; // 10em
+
+  if (GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL) {
+    autoSize.height *= 10; // 10em
+  } else {
+    autoSize.width *= 10; // 10em
+  }
 
   return autoSize;
 }

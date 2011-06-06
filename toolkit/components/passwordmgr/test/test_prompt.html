@@ -145,7 +145,9 @@ var storageObserver = {
   },
 
   observe : function (subject, topic, data) {
+    ok(true, ".");
     ok(true, "observer for " + topic + " / " + data);
+    ok(true, "Time is " + (new Date()).toUTCString());
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     try {
       switch (data) {
@@ -199,7 +201,10 @@ observerService.addObserver(storageObserver, "passwordmgr-storage-changed", fals
  */
 function handleDialog(doc, testNum) {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ok(true, "."); // make it easier to see next line in logs.
   ok(true, "handleDialog running for test " + testNum);
+  ok(true, "Time is " + (new Date()).toUTCString());
+dumpNotifications();
 
   var clickOK = true;
   var body = doc.getElementById("info.body");
@@ -428,7 +433,10 @@ function handleDialog(doc, testNum) {
  */
 function handleLoad() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ok(true, "."); // make it easier to see next line in logs.
   ok(true, "handleLoad running for test " + testNum);
+  ok(true, "Time is " + (new Date()).toUTCString());
+dumpNotifications();
 
   if (testNum != 1002)
     ok(didDialog, "handleDialog was invoked");
@@ -979,6 +987,7 @@ authinfo.username = "";
 authinfo.password = "";
 authinfo.realm    = "http://example2.com";
 
+dumpNotifications();
 startCallbackTimer();
 isOk = prompter2.promptAuth(channel2, level, authinfo);
 
@@ -994,6 +1003,7 @@ authinfo.username = "";
 authinfo.password = "";
 authinfo.realm    = "http://example2.com";
 
+dumpNotifications();
 startCallbackTimer();
 isOk = prompter2.promptAuth(channel2, level, authinfo);
 
@@ -1009,6 +1019,7 @@ authinfo.username = "";
 authinfo.password = "";
 authinfo.realm    = "http://example2.com";
 
+dumpNotifications();
 startCallbackTimer();
 isOk = prompter2.promptAuth(channel2, level, authinfo);
 
@@ -1025,6 +1036,7 @@ proxyAuthinfo.password = "";
 proxyAuthinfo.realm    = "Proxy Realm";
 proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
 
+dumpNotifications();
 var time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
 startCallbackTimer();
 isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);

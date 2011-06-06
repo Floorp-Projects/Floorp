@@ -38,12 +38,68 @@
   * ***** END LICENSE BLOCK ***** */
 
 #import <AppKit/AppKit.h>
+#import <QuartzCore/QuartzCore.h>
 #include "PluginUtilsOSX.h"
 
 // Remove definitions for try/catch interfering with ObjCException macros.
 #include "nsObjCExceptions.h"
 
 using namespace mozilla::plugins::PluginUtilsOSX;
+
+@interface CGBridgeLayer : CALayer {
+  DrawPluginFunc mDrawFunc;
+  void* mPluginInstance;
+  nsIntRect mUpdateRect;
+}
+- (void) setDrawFunc: (DrawPluginFunc)aFunc pluginInstance:(void*) aPluginInstance;
+- (void) updateRect: (nsIntRect)aRect;
+
+@end
+
+@implementation CGBridgeLayer
+- (void) updateRect: (nsIntRect)aRect
+{
+   mUpdateRect.UnionRect(mUpdateRect, aRect);
+}
+
+- (void) setDrawFunc: (DrawPluginFunc)aFunc pluginInstance:(void*) aPluginInstance
+{
+  mDrawFunc = aFunc;
+  mPluginInstance = aPluginInstance;
+}
+
+- (void)drawInContext:(CGContextRef)aCGContext
+
+{
+  ::CGContextSaveGState(aCGContext); 
+  ::CGContextTranslateCTM(aCGContext, 0, self.bounds.size.height);
+  ::CGContextScaleCTM(aCGContext, (CGFloat) 1, (CGFloat) -1);
+
+  mDrawFunc(aCGContext, mPluginInstance, mUpdateRect);
+
+  ::CGContextRestoreGState(aCGContext); 
+
+  mUpdateRect.SetEmpty();
+}
+
+@end
+
+void* mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance) {
+  CGBridgeLayer *bridgeLayer = [[CGBridgeLayer alloc] init ];
+  [bridgeLayer setDrawFunc:aFunc pluginInstance:aPluginInstance];
+  return bridgeLayer;
+}
+
+void mozilla::plugins::PluginUtilsOSX::ReleaseCGLayer(void *cgLayer) {
+  CGBridgeLayer *bridgeLayer = (CGBridgeLayer*)cgLayer;
+  [bridgeLayer release];
+}
+
+void mozilla::plugins::PluginUtilsOSX::Repaint(void *caLayer, nsIntRect aRect) {
+  CGBridgeLayer *bridgeLayer = (CGBridgeLayer*)caLayer;
+  [bridgeLayer updateRect:aRect];
+  [bridgeLayer setNeedsDisplay];
+}
 
 @interface EventProcessor : NSObject {
   RemoteProcessEvents   aRemoteEvents;
@@ -71,6 +127,14 @@ using namespace mozilla::plugins::PluginUtilsOSX;
 NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int aX, int aY, void* pluginModule, RemoteProcessEvents remoteEvent) 
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Set the native cursor to the OS default (an arrow) before displaying the
+  // context menu.  Otherwise (if the plugin has changed the cursor) it may
+  // stay as the plugin has set it -- which means it may be invisible.  We
+  // need to do this because we display the context menu without making the
+  // plugin process the foreground process.  If we did, the cursor would
+  // change to an arrow cursor automatically -- as it does in Chrome.
+  [[NSCursor arrowCursor] set];
 
   // Create a timer to process browser events while waiting
   // on the menu. This prevents the browser from hanging

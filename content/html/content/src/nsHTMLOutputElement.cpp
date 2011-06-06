@@ -86,6 +86,10 @@ public:
 
   nsEventStates IntrinsicState() const;
 
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                               nsIContent* aBindingParent,
+                               PRBool aCompileEventHandlers);
+
   // This function is called when a callback function from nsIMutationObserver
   // has to be used to update the defaultValue attribute.
   void DescendantsChanged();
@@ -120,6 +124,9 @@ nsHTMLOutputElement::nsHTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo
   , mValueModeFlag(eModeDefault)
 {
   AddMutationObserver(this);
+
+  // We start out valid and ui-valid (since we have no form).
+  AddStatesSilently(NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID);
 }
 
 nsHTMLOutputElement::~nsHTMLOutputElement()
@@ -157,14 +164,7 @@ nsHTMLOutputElement::SetCustomValidity(const nsAString& aError)
 {
   nsIConstraintValidation::SetCustomValidity(aError);
 
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-    doc->ContentStateChanged(this, NS_EVENT_STATE_INVALID |
-                                   NS_EVENT_STATE_VALID |
-                                   NS_EVENT_STATE_MOZ_UI_INVALID |
-                                   NS_EVENT_STATE_MOZ_UI_VALID);
-  }
+  UpdateState(true);
 
   return NS_OK;
 }
@@ -220,6 +220,26 @@ nsHTMLOutputElement::IntrinsicState() const
   }
 
   return states;
+}
+
+nsresult
+nsHTMLOutputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
+                                                     aBindingParent,
+                                                     aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Unfortunately, we can actually end up having to change our state
+  // as a result of being bound to a tree even from the parser: we
+  // might end up a in a novalidate form, and unlike other form
+  // controls that on its own is enough to make change ui-valid state.
+  // So just go ahead and update our state now.
+  UpdateState(false);
+
+  return rv;
 }
 
 NS_IMETHODIMP

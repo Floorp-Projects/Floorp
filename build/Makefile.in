@@ -123,11 +123,11 @@ libs:: $(topsrcdir)/tools/rb/fix_macosx_stack.py
 
 # Basic unit tests for some stuff in the unify script
 check::
-# build ppc/i386 binaries, and unify them
-	rm -f unify-test-ppc unify-test-i386 unify-test-universal
-	$(HOST_CC) -arch ppc $(srcdir)/unify-test.c -o unify-test-ppc
+# build x64/i386 binaries, and unify them
+	rm -f unify-test-x64 unify-test-i386 unify-test-universal
+	$(HOST_CC) -arch x86_64 $(srcdir)/unify-test.c -o unify-test-x64
 	$(HOST_CC) -arch i386 $(srcdir)/unify-test.c -o unify-test-i386
-	@if ! $(srcdir)/macosx/universal/unify ./unify-test-ppc ./unify-test-i386 \
+	@if ! $(srcdir)/macosx/universal/unify ./unify-test-x64 ./unify-test-i386 \
           ./unify-test-universal; then \
           echo "TEST-UNEXPECTED-FAIL | build/ | unify failed to produce a universal binary!"; \
           false; \

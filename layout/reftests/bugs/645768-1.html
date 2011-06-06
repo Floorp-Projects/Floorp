@@ -1,0 +1,12 @@
+<!-- This test needs to be in quirks mode -->
+<body style="display: none; color: green">
+  <div style="color: red">
+    <table>
+      <tr><td>This should be green</td></tr>
+    </table>
+  </div>
+  <script>
+    document.body.offsetWidth;
+    document.body.style.display = "";
+  </script>
+</body>
