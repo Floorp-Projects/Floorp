@@ -183,11 +183,14 @@ mjit::Compiler::compile()
 CompileStatus
 mjit::Compiler::checkAnalysis(JSScript *script)
 {
+    ScriptAnalysis *analysis = script->analysis(cx);
+    if (analysis && !analysis->ranBytecode())
+        analysis->analyzeBytecode(cx);
+
     if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
         return Compile_Error;
-
-    ScriptAnalysis *analysis = script->analysis(cx);
-
+    if (!analysis || analysis->OOM())
+        return Compile_Error;
     if (analysis->failed()) {
         JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
         return Compile_Abort;
