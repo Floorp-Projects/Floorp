@@ -38,12 +38,68 @@
   * ***** END LICENSE BLOCK ***** */
 
 #import <AppKit/AppKit.h>
+#import <QuartzCore/QuartzCore.h>
 #include "PluginUtilsOSX.h"
 
 // Remove definitions for try/catch interfering with ObjCException macros.
 #include "nsObjCExceptions.h"
 
 using namespace mozilla::plugins::PluginUtilsOSX;
+
+@interface CGBridgeLayer : CALayer {
+  DrawPluginFunc mDrawFunc;
+  void* mPluginInstance;
+  nsIntRect mUpdateRect;
+}
+- (void) setDrawFunc: (DrawPluginFunc)aFunc pluginInstance:(void*) aPluginInstance;
+- (void) updateRect: (nsIntRect)aRect;
+
+@end
+
+@implementation CGBridgeLayer
+- (void) updateRect: (nsIntRect)aRect
+{
+   mUpdateRect.UnionRect(mUpdateRect, aRect);
+}
+
+- (void) setDrawFunc: (DrawPluginFunc)aFunc pluginInstance:(void*) aPluginInstance
+{
+  mDrawFunc = aFunc;
+  mPluginInstance = aPluginInstance;
+}
+
+- (void)drawInContext:(CGContextRef)aCGContext
+
+{
+  ::CGContextSaveGState(aCGContext); 
+  ::CGContextTranslateCTM(aCGContext, 0, self.bounds.size.height);
+  ::CGContextScaleCTM(aCGContext, (CGFloat) 1, (CGFloat) -1);
+
+  mDrawFunc(aCGContext, mPluginInstance, mUpdateRect);
+
+  ::CGContextRestoreGState(aCGContext); 
+
+  mUpdateRect.SetEmpty();
+}
+
+@end
+
+void* mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance) {
+  CGBridgeLayer *bridgeLayer = [[CGBridgeLayer alloc] init ];
+  [bridgeLayer setDrawFunc:aFunc pluginInstance:aPluginInstance];
+  return bridgeLayer;
+}
+
+void mozilla::plugins::PluginUtilsOSX::ReleaseCGLayer(void *cgLayer) {
+  CGBridgeLayer *bridgeLayer = (CGBridgeLayer*)cgLayer;
+  [bridgeLayer release];
+}
+
+void mozilla::plugins::PluginUtilsOSX::Repaint(void *caLayer, nsIntRect aRect) {
+  CGBridgeLayer *bridgeLayer = (CGBridgeLayer*)caLayer;
+  [bridgeLayer updateRect:aRect];
+  [bridgeLayer setNeedsDisplay];
+}
 
 @interface EventProcessor : NSObject {
   RemoteProcessEvents   aRemoteEvents;

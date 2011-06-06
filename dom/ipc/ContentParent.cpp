@@ -690,13 +690,13 @@ ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& rep
 
     for (PRUint32 i = 0; i < report.Length(); i++) {
 
-        nsCString prefix = report[i].prefix();
-        nsCString path   = report[i].path();
-        PRInt32   kind   = report[i].kind();
-        nsCString desc   = report[i].desc();
+        nsCString process  = report[i].process();
+        nsCString path     = report[i].path();
+        PRInt32   kind     = report[i].kind();
+        nsCString desc     = report[i].desc();
         PRInt64 memoryUsed = report[i].memoryUsed();
         
-        nsRefPtr<nsMemoryReporter> r = new nsMemoryReporter(prefix,
+        nsRefPtr<nsMemoryReporter> r = new nsMemoryReporter(process,
                                                             path,
                                                             kind,
                                                             desc,

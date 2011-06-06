@@ -52,10 +52,14 @@
     var browser1 = document.getElementById('browser1');
     var browser2 = document.getElementById('browser2');
 
+    var progressListener1, progressListener2;
+
     function setup() {
-      browser1.addProgressListener(new ProgressListener(), nsIWebProgress.NOTIFY_STATE_WINDOW);
+      progressListener1 = new ProgressListener();
+      browser1.addProgressListener(progressListener1, nsIWebProgress.NOTIFY_STATE_WINDOW);
       browser1.loadURI(kURI, null, null);
-      browser2.addProgressListener(new ProgressListener(), nsIWebProgress.NOTIFY_STATE_WINDOW);
+      progressListener2 = new ProgressListener();
+      browser2.addProgressListener(progressListener2, nsIWebProgress.NOTIFY_STATE_WINDOW);
       browser2.loadURI(kURI, null, null);
     }
 
