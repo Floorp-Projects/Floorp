@@ -421,7 +421,7 @@
 #endif
 
 /* WTF_OS_LINUX - Linux */
-#ifdef __linux__ && !defined(ANDROID)
+#if defined(__linux__) && !defined(ANDROID)
 #define WTF_OS_LINUX 1
 #endif
 
