@@ -951,7 +951,7 @@ nsWebSocketHandler::ApplyMask(PRUint32 mask, PRUint8 *data, PRUint64 len)
     // but the buffer might not be alligned. So we first deal with
     // 0 to 3 bytes of preamble individually
 
-    while (len && ((unsigned long) data & 3)) {
+    while (len && (reinterpret_cast<PRUptrdiff>(data) & 3)) {
         *data ^= mask >> 24;
         mask = PR_ROTATE_LEFT32(mask, 8);
         data++;

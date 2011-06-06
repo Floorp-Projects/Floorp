@@ -729,22 +729,6 @@ nsresult nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 #endif
 }
 
-nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawing)
-{
-#ifdef XP_MACOSX
-  if (!mPlugin)
-      return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = mPlugin->GetLibrary();
-  if (!library)
-      return NS_ERROR_FAILURE;
-  
-  return library->IsRemoteDrawingCoreAnimation(&mNPP, aDrawing);
-#else
-  return NS_ERROR_FAILURE;
-#endif
-}
-
 nsresult
 nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 {
