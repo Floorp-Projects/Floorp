@@ -39,6 +39,10 @@
 
 #include "nsIDOMWindow2.idl"
 
+%{ C++
+#include "jspubtd.h"
+%}
+
 interface nsIPrompt;
 interface nsIControllers;
 interface nsIDOMLocation;
@@ -46,7 +50,7 @@ interface nsIVariant;
 interface nsIAnimationFrameListener;
 interface nsIDOMMediaQueryList;
 
-[scriptable, uuid(4d95736f-8130-43cb-a276-5bc554eca80a)]
+[scriptable, uuid(3a7b0839-b9d6-42ff-8ba6-910aba60a966)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -214,8 +218,8 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    * 
    * See the WHATWG HTML5 specification, section 6.4, for more details.
    */
-  [binaryname(PostMessageMoz)] void postMessage(in DOMString message,
-                                                in DOMString targetOrigin);
+  [implicit_jscontext, binaryname(PostMessageMoz)]
+    void postMessage(in jsval message, in DOMString targetOrigin);
 
   /**
    * Returns the number of times this document for this window has

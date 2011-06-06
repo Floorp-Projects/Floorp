@@ -567,6 +567,11 @@
                             accesskey="&errorConsoleCmd.accesskey;"
                             key="key_errorConsole"
                             oncommand="toJavaScriptConsole();"/>
+                  <menuseparator id="devToolsEndSeparator"/>
+                  <menuitem id="getMoreDevtools"
+                            label="&getMoreDevtoolsCmd.label;"
+                            accesskey="&getMoreDevtoolsCmd.accesskey;"
+                            oncommand="openUILinkIn('https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/', 'tab');"/>
                 </menupopup>
               </menu>
               <menuitem id="menu_pageInfo"

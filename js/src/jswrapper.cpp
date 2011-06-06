@@ -363,6 +363,10 @@ ForceFrame::ForceFrame(JSContext *cx, JSObject *target)
 {
 }
 
+ForceFrame::~ForceFrame()
+{
+}
+
 bool
 ForceFrame::enter()
 {

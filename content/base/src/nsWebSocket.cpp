@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsWebSocket.h"
+
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
@@ -57,7 +58,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsThreadUtils.h"
-#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsIPromptFactory.h"
 #include "nsIWindowWatcher.h"
@@ -75,6 +75,7 @@
 #include "nsIWebSocketProtocol.h"
 #include "nsILoadGroup.h"
 #include "nsIRequest.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
@@ -819,6 +820,31 @@ nsWebSocket::CreateAndDispatchMessageEvent(const nsACString& aData)
     return NS_OK;
   }
 
+  // Let's play get the JSContext
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(mOwner);
+  NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
+
+  nsIScriptContext* scriptContext = sgo->GetContext();
+  NS_ENSURE_TRUE(scriptContext, NS_ERROR_FAILURE);
+
+  JSContext* cx = (JSContext*)scriptContext->GetNativeContext();
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  // Now we can turn our string into a jsval
+
+  jsval jsData;
+  {
+    NS_ConvertUTF8toUTF16 utf16Data(aData);
+    JSString* jsString;
+    JSAutoRequest ar(cx);
+    jsString = JS_NewUCStringCopyN(cx,
+                                   utf16Data.get(),
+                                   utf16Data.Length());
+    NS_ENSURE_TRUE(jsString, NS_ERROR_FAILURE);
+
+    jsData = STRING_TO_JSVAL(jsString);
+  }
+
   // create an event that uses the MessageEvent interface,
   // which does not bubble, is not cancelable, and has no default action
 
@@ -829,7 +855,7 @@ nsWebSocket::CreateAndDispatchMessageEvent(const nsACString& aData)
   nsCOMPtr<nsIDOMMessageEvent> messageEvent = do_QueryInterface(event);
   rv = messageEvent->InitMessageEvent(NS_LITERAL_STRING("message"),
                                       PR_FALSE, PR_FALSE,
-                                      NS_ConvertUTF8toUTF16(aData),
+                                      jsData,
                                       mUTF16Origin,
                                       EmptyString(), nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -877,7 +903,7 @@ nsWebSocket::CreateAndDispatchCloseEvent(PRBool aWasClean)
 PRBool
 nsWebSocket::PrefEnabled()
 {
-  return nsContentUtils::GetBoolPref("network.websocket.enabled", PR_TRUE);
+  return Preferences::GetBool("network.websocket.enabled", PR_TRUE);
 }
 
 void

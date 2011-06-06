@@ -201,10 +201,15 @@ def optimizejar(jar, outjar, inlog = None):
         readahead = struct.unpack("<I", jarblob.readAt(0, 4))[0]
         print("%s: startup data ends at byte %d" % (outjar, readahead));
 
+    total_stripped = 0;
     jarblob.offset = cdir_offset
     central_directory = []
-    for i  in range(0, dirend.cdir_entries):
+    for i in range(0, dirend.cdir_entries):
         entry = jarblob.read_struct(cdir_entry)
+        if entry.filename[-1:] == "/":
+            total_stripped += len(entry.pack())
+        else:
+            total_stripped += entry.extrafield_size
         central_directory.append(entry)
         
     reordered_count = 0
@@ -235,7 +240,7 @@ def optimizejar(jar, outjar, inlog = None):
         # This also lets us specify how many entries should be preread
         dirend.cdir_offset = 4
         # make room for central dir + end of dir + 4 extra bytes at front
-        out_offset = dirend.cdir_offset + dirend.cdir_size + size_of(cdir_end) 
+        out_offset = dirend.cdir_offset + dirend.cdir_size + size_of(cdir_end) - total_stripped
         outfd.seek(out_offset)
 
     cdir_data = ""
@@ -245,6 +250,19 @@ def optimizejar(jar, outjar, inlog = None):
         # read in the header twice..first for comparison, second time for convenience when writing out
         jarfile = jarblob.read_struct(local_file_header, entry.offset)
         assert_true(jarfile.filename == entry.filename, "Directory/Localheader mismatch")
+        # drop directory entries
+        if entry.filename[-1:] == "/":
+            total_stripped += len(jarfile.pack())
+            dirend.cdir_entries -= 1
+            continue
+        # drop extra field data
+        else:
+            total_stripped += jarfile.extra_field_size;
+        entry.extrafield = jarfile.extra_field = ""
+        entry.extrafield_size = jarfile.extra_field_size = 0
+        # January 1st, 2010
+        entry.lastmod_date = jarfile.lastmod_date = ((2010 - 1980) << 9) | (1 << 5) | 1
+        entry.lastmod_time = jarfile.lastmod_time = 0
         data = jarfile.pack()
         outfd.write(data)
         old_entry_offset = entry.offset
@@ -270,11 +288,11 @@ def optimizejar(jar, outjar, inlog = None):
     if inlog is None:
         dirend.cdir_offset = out_offset
 
+    dirend.cdir_size = len(cdir_data)
     dirend_data = dirend.pack()
     assert_true(size_of(cdir_end) == len(dirend_data), "Failed to serialize directory end correctly. Serialized size;%d, expected:%d"%(len(dirend_data), size_of(cdir_end)));
 
     outfd.seek(dirend.cdir_offset)
-    assert_true(len(cdir_data) == dirend.cdir_size, "Failed to serialize central directory correctly. Serialized size;%d, expected:%d expected-size:%d" % (len(cdir_data), dirend.cdir_size, dirend.cdir_size - len(cdir_data)));
     outfd.write(cdir_data)
     outfd.write(dirend_data)
 
@@ -286,6 +304,7 @@ def optimizejar(jar, outjar, inlog = None):
         outfd.seek(out_offset)
         outfd.write(dirend_data)
 
+    print "Stripped %d bytes" % total_stripped
     print "%s %d/%d in %s" % (("Ordered" if inlog is not None else "Deoptimized"),
                               reordered_count, len(central_directory), outjar)
     outfd.close()
@@ -296,20 +315,15 @@ if len(sys.argv) != 5:
     exit(1)
 
 def optimize(JAR_LOG_DIR, IN_JAR_DIR, OUT_JAR_DIR):
-    if not os.path.exists(JAR_LOG_DIR):
-        print("No jar logs found in %s. No jars to optimize." % JAR_LOG_DIR)
-        exit(0)
-
-    ls = os.listdir(JAR_LOG_DIR)
-    for logfile in ls:
-        if not logfile.endswith(".jar.log"):
+    ls = os.listdir(IN_JAR_DIR)
+    for jarfile in ls:
+        if not jarfile.endswith(".jar"):
             continue
-        injarfile = os.path.join(IN_JAR_DIR, logfile[:-4])
-        outjarfile = os.path.join(OUT_JAR_DIR, logfile[:-4]) 
-        if not os.path.exists(injarfile):
-            print "Warning: Skipping %s, %s doesn't exist" % (logfile, injarfile)
-            continue
-        logfile = os.path.join(JAR_LOG_DIR, logfile)
+        injarfile = os.path.join(IN_JAR_DIR, jarfile)
+        outjarfile = os.path.join(OUT_JAR_DIR, jarfile) 
+        logfile = os.path.join(JAR_LOG_DIR, jarfile + ".log")
+        if not os.path.isfile(logfile):
+            logfile = None
         optimizejar(injarfile, outjarfile, logfile)
 
 def deoptimize(JAR_LOG_DIR, IN_JAR_DIR, OUT_JAR_DIR):

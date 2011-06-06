@@ -418,10 +418,12 @@ function openAboutDialog() {
     return;
   }
 
-#ifdef XP_MACOSX
+#ifdef XP_WIN
+  var features = "chrome,centerscreen,dependent";
+#elifdef XP_MACOSX
   var features = "chrome,resizable=no,minimizable=no";
 #else
-  var features = "chrome,centerscreen,dependent";
+  var features = "chrome,centerscreen,dependent,dialog=no";
 #endif
   window.openDialog("chrome://browser/content/aboutDialog.xul", "", features);
 }

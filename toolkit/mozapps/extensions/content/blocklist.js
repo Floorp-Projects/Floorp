@@ -79,11 +79,14 @@ function init() {
   else
     document.getElementById("softBlockMessage").hidden = false;
 
-  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                            .getService(Components.interfaces.nsIURLFormatter);
-  var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
   var link = document.getElementById("moreInfo");
-  link.setAttribute("href", url);
+  if (list.length == 1 && list[0].url) {
+    link.setAttribute("href", list[0].url);
+  }
+  else {
+    var url = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
+    link.setAttribute("href", url);
+  }
 }
 
 function finish(shouldRestartNow) {

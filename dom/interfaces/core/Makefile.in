@@ -57,23 +57,17 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMDocumentFragment.idl		\
 	nsIDOMDocumentType.idl			\
 	nsIDOMElement.idl			\
-	nsIDOMEntity.idl			\
-	nsIDOMEntityReference.idl		\
 	nsIDOMNamedNodeMap.idl			\
 	nsIDOMNode.idl				\
 	nsIDOMNodeList.idl			\
-	nsIDOMNotation.idl			\
 	nsIDOMProcessingInstruction.idl		\
 	nsIDOMText.idl				\
 	$(NULL)
 XPIDLSRCS =                                     \
 	nsIDOM3Node.idl				\
-	nsIDOM3Text.idl				\
-	nsIDOM3TypeInfo.idl			\
 	nsIDOM3Attr.idl				\
 	nsIDOMDOMStringList.idl			\
 	nsIDOMNameList.idl			\
-	nsIDOMNSDocument.idl			\
 	nsIDOMXMLDocument.idl			\
 	nsIDOMUserDataHandler.idl		\
 	nsIDOMNSEditableElement.idl		\

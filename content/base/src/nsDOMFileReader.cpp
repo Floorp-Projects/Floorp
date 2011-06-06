@@ -77,6 +77,9 @@
 #include "nsLayoutStatics.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsFileDataProtocolHandler.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -271,7 +274,7 @@ NS_IMETHODIMP
 nsDOMFileReader::Abort()
 {
   if (mReadyState != nsIDOMFileReader::LOADING)
-    return NS_OK;
+    return NS_ERROR_DOM_FILE_ABORT_ERR;
 
   //Clear progress and file data
   mProgressEventWasDelayed = PR_FALSE;
@@ -684,12 +687,12 @@ nsDOMFileReader::GuessCharset(const char *aFileData,
                         "universal_charset_detector");
   if (!detector) {
     // No universal charset detector, try the default charset detector
-    const nsAdoptingString& detectorName =
-      nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
+    const nsAdoptingCString& detectorName =
+      Preferences::GetLocalizedCString("intl.charset.detector");
     if (!detectorName.IsEmpty()) {
       nsCAutoString detectorContractID;
       detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
-      AppendUTF16toUTF8(detectorName, detectorContractID);
+      detectorContractID += detectorName;
       detector = do_CreateInstance(detectorContractID.get());
     }
   }

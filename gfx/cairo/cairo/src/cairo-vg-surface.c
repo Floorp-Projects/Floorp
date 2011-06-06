@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -38,10 +38,11 @@
 
 #include "cairo-vg.h"
 
+#include "cairo-cache-private.h"
+#include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-clipper-private.h"
-#include "cairo-cache-private.h"
 
 #include <pixman.h>
 #include <VG/openvg.h>
@@ -409,7 +410,6 @@ _vg_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
 						      cairo_vg_surface_t,
 						      clipper);
     cairo_vg_surface_t *mask;
-    cairo_solid_pattern_t white;
     cairo_status_t status;
 
     if (path == NULL) {
@@ -428,9 +428,9 @@ _vg_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
     if (unlikely (mask->base.status))
 	return mask->base.status;
 
-    _cairo_pattern_init_solid (&white, CAIRO_COLOR_WHITE, CAIRO_CONTENT_ALPHA);
     status = _cairo_surface_fill (&mask->base,
-				  CAIRO_OPERATOR_SOURCE, &white.base,
+				  CAIRO_OPERATOR_SOURCE,
+				  &_cairo_pattern_white.base,
 				  path, fill_rule, tolerance, antialias,
 				  NULL);
     if (status) {
@@ -958,8 +958,7 @@ _vg_setup_surface_source (cairo_vg_context_t *context,
     cairo_status_t status;
 
     snapshot = _cairo_surface_has_snapshot (spat->surface,
-					    &cairo_vg_surface_backend,
-					    spat->surface->content);
+					    &cairo_vg_surface_backend);
     if (snapshot != NULL) {
 	clone = (cairo_vg_surface_t *) cairo_surface_reference (snapshot);
 	goto DONE;
@@ -983,12 +982,8 @@ _vg_setup_surface_source (cairo_vg_context_t *context,
 	return status;
     }
 
-    status = _cairo_surface_attach_snapshot (spat->surface, &clone->base,
-					     _vg_surface_remove_from_cache);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&clone->base);
-	return status;
-    }
+    _cairo_surface_attach_snapshot (spat->surface, &clone->base,
+				    _vg_surface_remove_from_cache);
 
 DONE:
     cairo_surface_destroy (&context->source->base);
@@ -1606,6 +1601,7 @@ _vg_surface_create_internal (cairo_vg_context_t *context,
 
     _cairo_surface_init (&surface->base,
 			 &cairo_vg_surface_backend,
+			 NULL, /* device */
 			 _vg_format_to_content (format));
 
     surface->width  = width;

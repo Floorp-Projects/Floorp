@@ -1,3 +1,5 @@
+dump("======================== Remote Head loaded ========================\n");
+
 // XXX Those constants are here because EventUtils.js need them
 const window = content.document.defaultView.wrappedJSObject;
 const Element = Components.interfaces.nsIDOMElement;

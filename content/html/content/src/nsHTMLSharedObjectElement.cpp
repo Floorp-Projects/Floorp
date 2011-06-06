@@ -45,10 +45,8 @@
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsThreadUtils.h"
-#ifdef MOZ_SVG
 #include "nsIDOMGetSVGDocument.h"
 #include "nsIDOMSVGDocument.h"
-#endif
 
 // XXX this is to get around conflicts with windows.h defines
 // introduced through jni.h
@@ -63,9 +61,7 @@ class nsHTMLSharedObjectElement : public nsGenericHTMLElement
                                 , public nsObjectLoadingContent
                                 , public nsIDOMHTMLAppletElement
                                 , public nsIDOMHTMLEmbedElement
-#ifdef MOZ_SVG
                                 , public nsIDOMGetSVGDocument
-#endif
 {
 public:
   nsHTMLSharedObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -96,10 +92,8 @@ public:
   NS_IMETHOD GetType(nsAString &aType);
   NS_IMETHOD SetType(const nsAString &aType);
 
-#ifdef MOZ_SVG
   // nsIDOMGetSVGDocument
   NS_DECL_NSIDOMGETSVGDOCUMENT
-#endif
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
@@ -186,6 +180,9 @@ nsHTMLSharedObjectElement::nsHTMLSharedObjectElement(already_AddRefed<nsINodeInf
 {
   RegisterFreezableElement();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
+
+  // By default we're in the loading state
+  AddStatesSilently(NS_EVENT_STATE_LOADING);
 }
 
 nsHTMLSharedObjectElement::~nsHTMLSharedObjectElement()
@@ -258,9 +255,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSharedObjectElement)
                                                          nsIDOMHTMLAppletElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLAppletElement, applet)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)
-#ifdef MOZ_SVG
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMGetSVGDocument, embed)
-#endif
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_GETTER(GetClassInfoInternal)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -368,7 +363,6 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Type, type)
 NS_IMPL_INT_ATTR(nsHTMLSharedObjectElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Width, width)
 
-#ifdef MOZ_SVG
 NS_IMETHODIMP
 nsHTMLSharedObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
 {
@@ -388,7 +382,6 @@ nsHTMLSharedObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
 
   return CallQueryInterface(sub_doc, aResult);
 }
-#endif
 
 PRBool
 nsHTMLSharedObjectElement::ParseAttribute(PRInt32 aNamespaceID,
@@ -489,11 +482,7 @@ nsHTMLSharedObjectElement::GetCapabilities() const
 {
   PRUint32 capabilities = eSupportPlugins | eOverrideServerType;
   if (mNodeInfo->Equals(nsGkAtoms::embed)) {
-    capabilities |=
-#ifdef MOZ_SVG
-                    eSupportSVG |
-#endif
-                    eSupportImages;
+    capabilities |= eSupportSVG | eSupportImages;
   }
 
   return capabilities;

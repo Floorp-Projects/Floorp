@@ -43,7 +43,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMNSElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMNode.h"

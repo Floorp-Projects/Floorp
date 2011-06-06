@@ -728,6 +728,7 @@ var FormHelperUI = {
 
     this._updateContainerForSelect(lastElement, this._currentElement);
     this._zoom(Rect.fromRect(aElement.rect), Rect.fromRect(aElement.caretRect));
+    this._updateSuggestionsFor(this._currentElement);
 
     // Prevent the view to scroll automatically while typing
     this._currentBrowser.scrollSync = false;
@@ -884,8 +885,11 @@ var FormHelperUI = {
 
   doAutoComplete: function formHelperDoAutoComplete(aElement) {
     // Suggestions are only in <label>s. Ignore the rest.
-    if (aElement instanceof Ci.nsIDOMXULLabelElement)
-      this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:AutoComplete", { value: aElement.getAttribute("data") });
+    if (!(aElement instanceof Ci.nsIDOMXULLabelElement))
+      return;
+
+    this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:AutoComplete", { value: aElement.getAttribute("data") });
+    ContentPopupHelper.popup = null;
   },
 
   get _open() {
@@ -918,7 +922,7 @@ var FormHelperUI = {
     this._container.dispatchEvent(evt);
   },
 
-  _updateSuggestionsFor: function _formHelperUpdateAutocompleteFor(aElement) {
+  _updateSuggestionsFor: function _formHelperUpdateSuggestionsFor(aElement) {
     let suggestions = this._getAutocompleteSuggestions(aElement);
     if (!suggestions.length) {
       ContentPopupHelper.popup = null;
@@ -1391,7 +1395,7 @@ var FullScreenVideo = {
         this._dispatchMouseEvent("Browser:MouseDown", aEvent.clientX, aEvent.clientY);
         break;
       case "TapSingle":
-        this._dispatchMouseEvent("Browser:MouseUp", aEvent.clientX, aEvent.clientY);
+        this._dispatchMouseEvent("Browser:MouseClick", aEvent.clientX, aEvent.clientY);
         break;
     }
   },

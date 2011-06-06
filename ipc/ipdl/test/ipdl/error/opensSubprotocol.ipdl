@@ -1,0 +1,13 @@
+include protocol subprotocolOpens;
+
+protocol opensSubprotocol {
+    child opens subprotocolOpens;
+
+    manages subprotocolOpens;
+
+child:
+    subprotocolOpens();
+    __delete__();
+
+state DEAD: send __delete__;
+};

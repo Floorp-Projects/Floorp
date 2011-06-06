@@ -5781,30 +5781,37 @@ RETURN:
 	return (ret);
 }
 
-/* In ELF systems the default visibility allows symbols to be preempted at
-   runtime. This in turn prevents the uses of memalign in this file from
-   being optimized. What we do in here is define two aliasing symbols
-   (they point to the same code): memalign and memalign_internal.
-   The internal version has hidden visibility and is used in every reference
-   from this file.
-   For more information on this technique, see section 2.2.7
-   (Avoid Using Exported Symbols) in
-   http://www.akkadia.org/drepper/dsohowto.pdf */
+/*
+ * In ELF systems the default visibility allows symbols to be preempted at
+ * runtime. This in turn prevents the uses of memalign in this file from being
+ * optimized. What we do in here is define two aliasing symbols (they point to
+ * the same code): memalign and memalign_internal. The internal version has
+ * hidden visibility and is used in every reference from this file.
+ *
+ * For more information on this technique, see section 2.2.7 (Avoid Using
+ * Exported Symbols) in http://www.akkadia.org/drepper/dsohowto.pdf.
+ */
+
+#if defined(__GNUC__) && !defined(MOZ_MEMORY_DARWIN)
+#define MOZ_MEMORY_ELF
+#endif
+
 #ifdef MOZ_MEMORY_SOLARIS
 #  ifdef __SUNPRO_C
 void *
 memalign(size_t alignment, size_t size);
 #pragma no_inline(memalign)
-#  elif (defined(__GNU_C__))
+#  elif (defined(__GNUC__))
 __attribute__((noinline))
 #  endif
 #else
-#if (defined(__GNUC__))
+#if (defined(MOZ_MEMORY_ELF))
 __attribute__((visibility ("hidden")))
 #endif
 #endif
 
-#if (defined(__GNUC__))
+
+#ifdef MOZ_MEMORY_ELF
 #define MEMALIGN memalign_internal
 #else
 #define MEMALIGN memalign
@@ -5850,7 +5857,7 @@ RETURN:
 	return (ret);
 }
 
-#if (defined(__GNUC__))
+#ifdef MOZ_MEMORY_ELF
 extern __typeof(memalign_internal)
         memalign __attribute__((alias ("memalign_internal"),
 				visibility ("default")));

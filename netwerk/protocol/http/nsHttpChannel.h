@@ -60,11 +60,11 @@
 #include "nsIProtocolProxyCallback.h"
 #include "nsICancelable.h"
 #include "nsIHttpAuthenticableChannel.h"
-#include "nsITraceableChannel.h"
 #include "nsIHttpChannelAuthProvider.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsICryptoHash.h"
 #include "nsITimedChannel.h"
+#include "nsDNSPrefetch.h"
 #include "TimingStruct.h"
 
 class nsAHttpConnection;
@@ -83,7 +83,6 @@ class nsHttpChannel : public HttpBaseChannel
                     , public nsITransportEventSink
                     , public nsIProtocolProxyCallback
                     , public nsIHttpAuthenticableChannel
-                    , public nsITraceableChannel
                     , public nsIApplicationCacheChannel
                     , public nsIAsyncVerifyRedirectCallback
                     , public nsITimedChannel
@@ -98,7 +97,6 @@ public:
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSIPROTOCOLPROXYCALLBACK
     NS_DECL_NSIPROXIEDCHANNEL
-    NS_DECL_NSITRACEABLECHANNEL
     NS_DECL_NSIAPPLICATIONCACHECONTAINER
     NS_DECL_NSIAPPLICATIONCACHECHANNEL
     NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
@@ -340,7 +338,6 @@ private:
     // True if we are loading a fallback cache entry from the
     // application cache.
     PRUint32                          mFallbackChannel          : 1;
-    PRUint32                          mTracingEnabled           : 1;
     // True if consumer added its own If-None-Match or If-Modified-Since
     // headers. In such a case we must not override them in the cache code
     // and also we want to pass possible 304 code response through.
@@ -363,6 +360,8 @@ private:
     // copied from the transaction before we null out mTransaction
     // so that the timing can still be queried from OnStopRequest
     TimingStruct                      mTransactionTimings;
+    // Needed for accurate DNS timing
+    nsRefPtr<nsDNSPrefetch>           mDNSPrefetch;
 
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);

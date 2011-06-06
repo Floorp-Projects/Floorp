@@ -59,9 +59,9 @@ class nsIAtom;
 class nsIWidget;
 
 // IID for the nsITheme interface
-// {887e8902-db6b-41b4-8481-a80f49c5a93a}
+// {b0f3efe9-0bd4-4f6b-8daa-0ec7f6006822}
  #define NS_ITHEME_IID     \
-{ 0x23db7c13, 0x873d, 0x4fb5, { 0xaf, 0x29, 0xc1, 0xe9, 0xed, 0x91, 0x23, 0xf9 } }
+{ 0xb0f3efe9, 0x0bd4, 0x4f6b, { 0x8d, 0xaa, 0x0e, 0xc7, 0xf6, 0x00, 0x68, 0x22 } }
 // {D930E29B-6909-44e5-AB4B-AF10D6923705}
 #define NS_THEMERENDERER_CID \
 { 0xd930e29b, 0x6909, 0x44e5, { 0xab, 0x4b, 0xaf, 0x10, 0xd6, 0x92, 0x37, 0x5 } }
@@ -100,13 +100,6 @@ public:
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) = 0;
-
-  /**
-   * XXX Unused. This is only here because the interface is frozen for 2.0.
-   */
-  virtual void RegisterWidgetGeometry(nsIWidget* aWindow,
-                                      PRUint8 aWidgetType,
-                                      const nsIntRect& aRect) {}
 
   /**
    * Get the computed CSS border for the widget, in pixels.

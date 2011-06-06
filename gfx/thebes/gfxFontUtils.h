@@ -43,6 +43,7 @@
 #include "gfxTypes.h"
 
 #include "prtypes.h"
+#include "nsAlgorithm.h"
 #include "prcpucfg.h"
 
 #include "nsDataHashtable.h"
@@ -122,7 +123,7 @@ public:
         // first block, check bits
         if ((block = mBlocks[startBlock])) {
             start = aStart;
-            end = PR_MIN(aEnd, ((startBlock+1) << BLOCK_INDEX_SHIFT) - 1);
+            end = NS_MIN(aEnd, ((startBlock+1) << BLOCK_INDEX_SHIFT) - 1);
             for (i = start; i <= end; i++) {
                 if ((block->mBits[(i>>3) & (BLOCK_SIZE - 1)]) & (1 << (i & 0x7)))
                     return PR_TRUE;
@@ -210,7 +211,7 @@ public:
             }
 
             const PRUint32 start = aStart > blockFirstBit ? aStart - blockFirstBit : 0;
-            const PRUint32 end = PR_MIN(aEnd - blockFirstBit, BLOCK_SIZE_BITS - 1);
+            const PRUint32 end = NS_MIN<PRUint32>(aEnd - blockFirstBit, BLOCK_SIZE_BITS - 1);
 
             for (PRUint32 bit = start; bit <= end; ++bit) {
                 block->mBits[bit>>3] |= 1 << (bit & 0x7);
@@ -254,7 +255,7 @@ public:
             }
 
             const PRUint32 start = aStart > blockFirstBit ? aStart - blockFirstBit : 0;
-            const PRUint32 end = PR_MIN(aEnd - blockFirstBit, BLOCK_SIZE_BITS - 1);
+            const PRUint32 end = NS_MIN<PRUint32>(aEnd - blockFirstBit, BLOCK_SIZE_BITS - 1);
 
             for (PRUint32 bit = start; bit <= end; ++bit) {
                 block->mBits[bit>>3] &= ~(1 << (bit & 0x7));

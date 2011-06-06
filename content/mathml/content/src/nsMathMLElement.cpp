@@ -463,10 +463,5 @@ nsMathMLElement::SetIncrementScriptLevel(PRBool aIncrementScriptLevel,
 
   NS_ASSERTION(aNotify, "We always notify!");
 
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc)
-    return;
-
-  mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-  doc->ContentStateChanged(this, NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL);
+  UpdateState(true);
 }

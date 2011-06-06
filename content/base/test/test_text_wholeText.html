@@ -25,7 +25,6 @@ SimpleTest.waitForExplicitFinish();
 
 var xmlDoc;
 
-function entity(n) { return xmlDoc.createEntityReference(n); }
 function text(t) { return document.createTextNode(t); }
 function element() { return document.createElement("div"); }
 function cdata(t)
@@ -207,20 +206,6 @@ function noParentTests()
      "orphaned cdatasection should have wholeText == data");
 }
 
-function entityTests()
-{
-  todo_isnot(entity("bar"), null,
-             "need implementation update if we ever support entity nodes!");
-
-  var root = xmlDoc.documentElement;
-  is(root.lastChild.firstChild.nodeType, Node.TEXT_NODE,
-     "uh-oh, did we start supporting entity references as nodes?");
-  is(root.lastChild.lastChild.nodeType, Node.ELEMENT_NODE,
-     "uh-oh, did we start supporting entity references as nodes?");
-
-  // If any of the above ever fails, add tests here!
-}
-
 function tests()
 {
   try
@@ -229,7 +214,6 @@ function tests()
     middleTests();
     lastTests();
     noParentTests();
-    entityTests();
   }
   catch (e)
   {

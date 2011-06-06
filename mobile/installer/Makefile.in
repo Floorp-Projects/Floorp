@@ -52,16 +52,7 @@ include $(topsrcdir)/config/rules.mk
 
 MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 
-ifdef MOZ_ENABLE_LIBXUL
 MOZ_PKG_MANIFEST_P = $(srcdir)/package-manifest.in
-else
-define message
-You need to build with --enable-libxul (the default, unless you specify
---disable-libxul or --enable-shared or --enable-debug) to package a build.
-endef
-default libs installer::
-	$(error $(message))
-endif
 
 MOZ_NONLOCALIZED_PKG_LIST = \
 	xpcom \
