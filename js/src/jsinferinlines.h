@@ -46,6 +46,8 @@
 #include "jsprf.h"
 #include "vm/GlobalObject.h"
 
+#include "vm/Stack-inl.h"
+
 #ifndef jsinferinlines_h___
 #define jsinferinlines_h___
 
@@ -265,12 +267,10 @@ inline TypeObject *
 GetTypeCallerInitObject(JSContext *cx, bool isArray)
 {
     if (cx->typeInferenceEnabled()) {
-        StackFrame *caller = js_GetScriptedCaller(cx, NULL);
-        if (caller && caller->script()->compartment == cx->compartment) {
-            JSScript *script;
-            jsbytecode *pc = caller->inlinepc(cx, &script);
+        jsbytecode *pc;
+        JSScript *script = cx->stack.currentScript(&pc);
+        if (script && script->compartment == cx->compartment)
             return script->getTypeInitObject(cx, pc, isArray);
-        }
     }
     return GetTypeNewObject(cx, isArray ? JSProto_Array : JSProto_Object);
 }

@@ -1615,7 +1615,9 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (slot == FUN_ARGUMENTS || slot == FUN_CALLER) {
         /*
          * Mark the function's script as uninlineable, to expand any of its
-         * frames on the stack before we go looking for them.
+         * frames on the stack before we go looking for them. This allows the
+         * below walk to only check each explicit frame rather than needing to
+         * check any calls that were inlined.
          */
         if (fun->isInterpreted())
             MarkTypeObjectFlags(cx, fun->getType(), OBJECT_FLAG_UNINLINEABLE);
@@ -1631,7 +1633,11 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
 #ifdef JS_METHODJIT
     if (slot == FUN_CALLER && fp && fp->prev()) {
-        /* Also make sure the caller is uninlineable. */
+        /*
+         * If the frame was called from within an inlined frame, mark the
+         * innermost function as uninlineable to expand its frame and allow us
+         * to recover its callee object.
+         */
         JSInlinedSite *inlined;
         fp->prev()->pc(cx, fp, &inlined);
         if (inlined) {

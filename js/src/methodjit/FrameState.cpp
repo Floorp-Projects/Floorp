@@ -90,7 +90,7 @@ FrameState::pushActiveFrame(JSScript *script, uint32 argc)
 {
     if (!a) {
         this->nentries = analyze::TotalSlots(script) + (script->nslots - script->nfixed) +
-            StackSpace::STACK_EXTRA - VALUES_PER_STACK_FRAME;
+            StackSpace::STACK_JIT_EXTRA - VALUES_PER_STACK_FRAME;
         size_t totalBytes = sizeof(FrameEntry) * nentries +       // entries[]
                             sizeof(FrameEntry *) * nentries +     // tracker.entries
                             sizeof(StackEntryExtra) * nentries;   // extraArray

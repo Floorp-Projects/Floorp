@@ -991,7 +991,7 @@ FrameState::frameOffset(const FrameEntry *fe, ActiveFrame *a) const
      * scripted call push another frame). There must be enough room in the
      * reserved stack space.
      */
-    JS_STATIC_ASSERT(StackSpace::STACK_EXTRA >= TEMPORARY_LIMIT);
+    JS_STATIC_ASSERT(StackSpace::STACK_JIT_EXTRA >= TEMPORARY_LIMIT);
     JS_ASSERT(fe >= a->callee_ && fe < a->sp);
 
     if (fe >= a->locals)
