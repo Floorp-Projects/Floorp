@@ -443,20 +443,19 @@ class StackFrame
      * All function and global frames have an associated JSScript which holds
      * the bytecode being executed for the frame. This script/bytecode does
      * not reflect any inlining that has been performed by the method JIT.
-     *
      * If other frames were inlined into this one, the script/pc reflect the
-     * point of the outermost call. Use inlinepc to get the script/pc for
-     * the innermost inlined frame. Inlined frame invariants:
+     * point of the outermost call. Inlined frame invariants:
      *
      * - Inlined frames have the same scope chain as the outer frame.
      * - Inlined frames have the same strictness as the outer frame.
      */
 
     /*
-     * Get the frame's current bytecode, assuming |this| is in |cx|.
-     * next is frame whose prev == this, NULL if not known or if this == cx->fp().
-     * If the frame is inside an inline call made within the pc, the state
-     * of any inlined frame(s) is returned through pinlined.
+     * Get the frame's current bytecode, assuming |this| is in |cx|. next is
+     * frame whose prev == this, NULL if not known or if this == cx->fp().
+     * If the frame is inside an inline call made within the pc, the pc will
+     * be that of the outermost call and the state of any inlined frame(s) is
+     * returned through pinlined.
      */
     jsbytecode *pc(JSContext *cx, StackFrame *next = NULL, JSInlinedSite **pinlined = NULL);
 
@@ -473,9 +472,6 @@ class StackFrame
         JS_ASSERT(flags_ & HAS_PREVPC);
         return prevInline_;
     }
-
-    /* Get the innermost pc/script in this frame, looking through any inlining. */
-    jsbytecode *inlinepc(JSContext *cx, JSScript **pscript);
 
     JSScript *script() const {
         JS_ASSERT(isScriptFrame());
@@ -1195,10 +1191,11 @@ class StackSpace
     static const size_t STACK_QUOTA = MAX_INLINE_CALLS * (VALUES_PER_STACK_FRAME + 18);
 
     /*
-     * Extra space to reserve on the stack before invoking the method JIT.
-     * This may be used for inlined stack frames.
+     * Extra space to reserve on the stack for method JIT frames, beyond the
+     * frame's nslots. This may be used for inlined stack frames, slots storing
+     * loop invariant code, or to reserve space for pushed callee frames.
      */
-    static const size_t STACK_EXTRA = (VALUES_PER_STACK_FRAME + 18) * 10;
+    static const size_t STACK_JIT_EXTRA = (VALUES_PER_STACK_FRAME + 18) * 10;
 
     /*
      * In the mjit, we'd like to collapse two "overflow" checks into one:
@@ -1415,6 +1412,12 @@ class ContextStack
 
     /* For jit use: */
     static size_t offsetOfRegs() { return offsetof(ContextStack, regs_); }
+
+    /* Get the topmost script and optional pc on the stack. */
+    inline JSScript *currentScript(jsbytecode **pc = NULL) const;
+
+    /* Get the scope chain for the topmost scripted call on the stack. */
+    inline JSObject *currentScriptedScopeChain() const;
 };
 
 /*****************************************************************************/

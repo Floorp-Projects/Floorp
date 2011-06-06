@@ -113,6 +113,10 @@ using namespace js::types;
 JSObject *
 js::GetScopeChain(JSContext *cx)
 {
+    /*
+     * Note: we don't need to expand inline frames here, because frames are
+     * only inlined when the caller and callee share the same scope chain.
+     */
     StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
     if (!fp) {
         /*

@@ -52,7 +52,6 @@ JS_REQUIRES_STACK PropertyCacheEntry *
 PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *pobj,
                     const Shape *shape, JSBool adding)
 {
-    jsbytecode *pc;
     jsuword kshape, vshape;
     JSOp op;
     const JSCodeSpec *cs;
@@ -127,8 +126,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
      * Optimize the cached vword based on our parameters and the current pc's
      * opcode format flags.
      */
-    JSScript *script;
-    pc = cx->fp()->inlinepc(cx, &script);
+    jsbytecode *pc;
+    JSScript *script = cx->stack.currentScript(&pc);
     op = js_GetOpcode(cx, script, pc);
     cs = &js_CodeSpec[op];
     kshape = 0;
@@ -152,6 +151,10 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
                 break;
             }
 
+            /*
+             * N.B. Objects are not branded if type inference is enabled, to
+             * allow property accesses without shape checks in JIT code.
+             */
             if (!pobj->generic() && shape->hasDefaultGetter() && pobj->containsSlot(shape->slot) &&
                 !cx->typeInferenceEnabled()) {
                 const Value &v = pobj->nativeGetSlot(shape->slot);
@@ -305,9 +308,7 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
     if (op == JSOP_INSTANCEOF)
         return cx->runtime->atomState.classPrototypeAtom;
 
-    JSScript *script;
-    cx->fp()->inlinepc(cx, &script);
-
+    JSScript *script = cx->stack.currentScript();
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
     JSAtom *atom;
     GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom);
@@ -322,9 +323,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     uint32 vcap;
 
     StackFrame *fp = cx->fp();
-
-    JSScript *script;
-    fp->inlinepc(cx, &script);
+    JSScript *script = cx->stack.currentScript();
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(uintN((fp->hasImacropc() ? fp->imacropc() : pc) - script->code)

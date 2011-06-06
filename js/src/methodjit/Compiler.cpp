@@ -286,7 +286,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
          * frame pushed when making a call from the deepest inlined frame, and
          * for the temporary slot used by type barriers.
          */
-        uint32 stackLimit = outerScript->nslots + StackSpace::STACK_EXTRA
+        uint32 stackLimit = outerScript->nslots + StackSpace::STACK_JIT_EXTRA
             - VALUES_PER_STACK_FRAME - FrameState::TEMPORARY_LIMIT - 1;
 
         /* Compute the depth of any frames inlined at this site. */
@@ -742,8 +742,7 @@ mjit::Compiler::generatePrologue()
          * any inline frames we end up generating, or a callee's stack frame
          * we write to before the callee checks the stack.
          */
-        JS_STATIC_ASSERT(StackSpace::STACK_EXTRA >= VALUES_PER_STACK_FRAME);
-        uint32 nvals = script->nslots + VALUES_PER_STACK_FRAME + StackSpace::STACK_EXTRA;
+        uint32 nvals = VALUES_PER_STACK_FRAME + script->nslots + StackSpace::STACK_JIT_EXTRA;
         masm.addPtr(Imm32(nvals * sizeof(Value)), JSFrameReg, Registers::ReturnReg);
         Jump stackCheck = masm.branchPtr(Assembler::AboveOrEqual, Registers::ReturnReg,
                                          FrameAddress(offsetof(VMFrame, stackLimit)));
