@@ -192,7 +192,7 @@ add_test(function test_countedCallback() {
 
     // If we call the counted callback again (once this output function is
     // done, that is), then the component callback is not invoked.
-    Utils.delay(function () {
+    Utils.nextTick(function () {
       _("Don't expect component callback.");
       c1("not", "running", "now");
       do_check_eq(2, counter);
@@ -200,7 +200,7 @@ add_test(function test_countedCallback() {
       do_check_eq(2, output);
       do_check_eq("b", context);
       run_next_test();
-    }, 1, this);
+    });
   });
 
   c1(1, "foo", "a");

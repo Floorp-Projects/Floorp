@@ -438,10 +438,10 @@ WeaveSvc.prototype = {
     // Send an event now that Weave service is ready.  We don't do this
     // synchronously so that observers can import this module before
     // registering an observer.
-    Utils.delay(function() {
+    Utils.nextTick(function() {
       Status.ready = true;
       Svc.Obs.notify("weave:service:ready");
-    }, 0);
+    });
   },
 
   _checkSetup: function WeaveSvc__checkSetup() {
@@ -591,7 +591,7 @@ WeaveSvc.prototype = {
         this._log.trace("Idle time hit, trying to sync");
         Svc.Idle.removeIdleObserver(this, this._idleTime);
         this._idleTime = 0;
-        Utils.delay(function() this.sync(), 0, this);
+        Utils.nextTick(this.sync, this);
         break;
       case "nsPref:changed":
         if (this._ignorePrefObserver)
@@ -604,7 +604,8 @@ WeaveSvc.prototype = {
 
   _handleScoreUpdate: function WeaveSvc__handleScoreUpdate() {
     const SCORE_UPDATE_DELAY = 3000;
-    Utils.delay(this._calculateScore, SCORE_UPDATE_DELAY, this, "_scoreTimer");
+    Utils.namedTimer(this._calculateScore, SCORE_UPDATE_DELAY, this,
+                     "_scoreTimer");
   },
 
   _calculateScore: function WeaveSvc_calculateScoreAndDoStuff() {
@@ -1098,7 +1099,7 @@ WeaveSvc.prototype = {
       return;
 
     if (this._checkSetup() == STATUS_OK && Svc.Prefs.get("autoconnect")) {
-      Utils.delay(this._autoConnect, delay * 1000, this, "_autoTimer");
+      Utils.namedTimer(this._autoConnect, delay * 1000, this, "_autoTimer");
     }
   },
 
@@ -1135,7 +1136,7 @@ WeaveSvc.prototype = {
     let interval = this._calculateBackoff(++attempts, 60 * 1000);
     this._log.debug("Autoconnect failed: " + (reason || Status.login) +
       "; retry in " + Math.ceil(interval / 1000) + " sec.");
-    Utils.delay(function() this._autoConnect(), interval, this, "_autoTimer");
+    Utils.namedTimer(this._autoConnect, interval, this, "_autoTimer");
   },
 
   persistLogin: function persistLogin() {
@@ -1575,7 +1576,7 @@ WeaveSvc.prototype = {
     }
 
     this._log.trace("Next sync in " + Math.ceil(interval / 1000) + " sec.");
-    Utils.delay(function() this.syncOnIdle(), interval, this, "_syncTimer");
+    Utils.namedTimer(this.syncOnIdle, interval, this, "_syncTimer");
 
     // Save the next sync time in-case sync is disabled (logout/offline/etc.)
     this.nextSync = Date.now() + interval;
@@ -1651,7 +1652,7 @@ WeaveSvc.prototype = {
 
     this._log.trace("Setting up heartbeat, next ping in " +
                     Math.ceil(interval / 1000) + " sec.");
-    Utils.delay(function() this._doHeartbeat(), interval, this, "_heartbeatTimer");
+    Utils.namedTimer(this._doHeartbeat, interval, this, "_heartbeatTimer");
   },
 
   /**
