@@ -8285,12 +8285,13 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         aLoadType == LOAD_LINK) {
 
         // Split mCurrentURI and aURI on the '#' character.  Make sure we read
-        // the return values of SplitURIAtHash; it might fail because
-        // mCurrentURI is null, for instance, and we don't want to allow a
-        // short-circuited navigation in that case.
+        // the return values of SplitURIAtHash; if it fails, we don't want to
+        // allow a short-circuited navigation.
         nsCAutoString curBeforeHash, curHash, newBeforeHash, newHash;
         nsresult splitRv1, splitRv2;
-        splitRv1 = nsContentUtils::SplitURIAtHash(mCurrentURI, curBeforeHash, curHash);
+        splitRv1 = mCurrentURI ?
+            nsContentUtils::SplitURIAtHash(mCurrentURI,
+                                           curBeforeHash, curHash) : NS_OK;
         splitRv2 = nsContentUtils::SplitURIAtHash(aURI, newBeforeHash, newHash);
 
         PRBool sameExceptHashes = NS_SUCCEEDED(splitRv1) &&
