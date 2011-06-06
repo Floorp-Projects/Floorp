@@ -327,8 +327,11 @@ ExpandInlineFrames(JSContext *cx, bool all)
                 fp = next;
                 next = NULL;
             } else {
+                if (fp->downFramesExpanded())
+                    break;
                 next = fp;
             }
+            fp->setDownFramesExpanded();
         }
     }
 }

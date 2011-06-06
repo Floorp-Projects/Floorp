@@ -265,7 +265,9 @@ class StackFrame
         HAS_ANNOTATION     =    0x20000,  /* frame has annotation_ set */
         HAS_RVAL           =    0x40000,  /* frame has rval_ set */
         HAS_SCOPECHAIN     =    0x80000,  /* frame has scopeChain_ set */
-        HAS_PREVPC         =   0x100000   /* frame has prevpc_ and prevInline_ set */
+        HAS_PREVPC         =   0x100000,  /* frame has prevpc_ and prevInline_ set */
+
+        DOWN_FRAMES_EXPANDED = 0x200000   /* inlining in down frames has been expanded */
     };
 
   private:
@@ -799,6 +801,16 @@ class StackFrame
 
     void setRejoin(JSRejoinState state) {
         rejoin_ = state;
+    }
+
+    /* Down frame expansion state */
+
+    void setDownFramesExpanded() {
+        flags_ |= DOWN_FRAMES_EXPANDED;
+    }
+
+    bool downFramesExpanded() {
+        return flags_ & DOWN_FRAMES_EXPANDED;
     }
 
     /* Debugger hook data */
