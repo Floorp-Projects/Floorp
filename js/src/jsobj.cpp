@@ -374,7 +374,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         len = JS_snprintf(buf, sizeof buf, "#%u%c",
                           sharpid >> SHARP_ID_SHIFT,
                           (sharpid & SHARP_BIT) ? '#' : '=');
-        *sp = js_InflateString(cx, buf, &len);
+        *sp = InflateString(cx, buf, &len);
         if (!*sp) {
             if (ida)
                 JS_DestroyIdArray(cx, ida);
@@ -1160,7 +1160,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
         staticLevel = caller->script()->staticLevel + 1;
 
 #ifdef DEBUG
-        jsbytecode *callerPC = caller->pc(cx);
+        jsbytecode *callerPC = caller->pcQuadratic(cx);
         JS_ASSERT_IF(caller->isFunctionFrame(), caller->fun()->isHeavyweight());
         JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
 #endif
@@ -1285,7 +1285,7 @@ DirectEval(JSContext *cx, const CallArgs &call)
     StackFrame *caller = cx->fp();
     JS_ASSERT(caller->isScriptFrame());
     JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), call.calleev()));
-    JS_ASSERT(*cx->regs().pc == JSOP_EVAL);
+    JS_ASSERT(js_GetOpcode(cx, cx->fp()->script(), cx->regs().pc) == JSOP_EVAL);
 
     AutoFunctionCallProbe callProbe(cx, call.callee().getFunctionPrivate(), caller->script());
 
@@ -1331,19 +1331,7 @@ PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx)
      * fp->script()->compartment() != fp->compartment().
      */
 
-    JSPrincipals *calleePrincipals = call.callee().principals(cx);
-
-#ifdef DEBUG
-    if (calleePrincipals) {
-        if (StackFrame *caller = js_GetScriptedCaller(cx, NULL)) {
-            if (JSPrincipals *callerPrincipals = caller->scopeChain().principals(cx)) {
-                JS_ASSERT(callerPrincipals->subsume(callerPrincipals, calleePrincipals));
-            }
-        }
-    }
-#endif
-
-    return calleePrincipals;
+    return call.callee().principals(cx);
 }
 
 }  /* namespace js */
@@ -5847,7 +5835,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
 
     if (obj->containsSlot(shape->slot)) {
         const Value &v = obj->nativeGetSlot(shape->slot);
-        GC_POKE(cx, v);
+        GCPoke(cx, v);
 
         /*
          * Delete is rare enough that we can take the hit of checking for an
@@ -6527,7 +6515,7 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
     }
 
     obj->setSlot(slot, v);
-    GC_POKE(cx, JS_NULL);
+    GCPoke(cx, NullValue());
     return true;
 }
 

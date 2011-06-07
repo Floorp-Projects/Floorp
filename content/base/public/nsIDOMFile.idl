@@ -63,7 +63,7 @@ interface nsIDOMBlob : nsISupports
                                       [optional] in DOMString contentType);
 };
 
-[scriptable, uuid(91c9ebd9-2a4a-4a38-9412-ef492a2799be)]
+[scriptable, uuid(b096ef67-7b77-47f8-8e70-5d8ee36416bf)]
 interface nsIDOMFile : nsIDOMBlob
 {
   readonly attribute DOMString name;
@@ -71,14 +71,6 @@ interface nsIDOMFile : nsIDOMBlob
 
   // This performs no security checks!
   [noscript] readonly attribute DOMString mozFullPathInternal;
-
-  // These are all deprecated and not in spec. Will be removed in a future
-  // release
-  readonly attribute DOMString fileName;
-  readonly attribute unsigned long long fileSize;
-  DOMString getAsText(in DOMString encoding); // raises(FileException) on retrieval
-  DOMString getAsDataURL();             // raises(FileException) on retrieval
-  DOMString getAsBinary();              // raises(FileException) on retrieval
 };
 
 [scriptable, uuid(c4a77171-039b-4f84-97f9-820fb51626af)]

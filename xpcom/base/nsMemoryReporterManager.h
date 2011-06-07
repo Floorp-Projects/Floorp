@@ -11,7 +11,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
-  nsMemoryReporter(nsCString& prefix,
+  nsMemoryReporter(nsCString& process,
                    nsCString& path, 
                    PRInt32 kind,
                    nsCString& desc,
@@ -20,6 +20,7 @@ public:
   ~nsMemoryReporter();
 
 protected:
+  nsCString mProcess;
   nsCString mPath;
   PRInt32   mKind;
   nsCString mDesc;

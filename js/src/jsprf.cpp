@@ -410,7 +410,7 @@ static int cvt_ws(SprintfState *ss, const jschar *ws, int width, int prec,
      */
     if (ws) {
         int slen = js_strlen(ws);
-        char *s = js_DeflateString(NULL, ws, slen);
+        char *s = DeflateString(NULL, ws, slen);
         if (!s)
             return -1; /* JSStuffFunc error indicator. */
         result = cvt_s(ss, s, width, prec, flags);

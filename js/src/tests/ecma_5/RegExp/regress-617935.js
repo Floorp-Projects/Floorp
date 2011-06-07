@@ -5,6 +5,9 @@
  * Author: Christian Holler <decoder@own-hero.net>
  */
 
+expectExitCode(0);
+expectExitCode(5);
+
 /* Length of 32 */
 var foo = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 

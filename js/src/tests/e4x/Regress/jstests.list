@@ -80,12 +80,12 @@ script regress-375406.js
 script regress-378492.js
 script regress-380833.js
 script regress-383255.js
-script regress-394941.js
+silentfail script regress-394941.js
 script regress-407323.js
 script regress-426520.js
 script regress-453915.js
-script regress-458679-01.js
-script regress-458679-02.js
+silentfail script regress-458679-01.js
+silentfail script regress-458679-02.js
 script regress-460180.js
 script regress-465063.js
 script regress-470619.js

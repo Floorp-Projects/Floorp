@@ -64,7 +64,6 @@ void ParseSize(PRInt64 aSize, PRInt64& aStart, PRInt64& aEnd);
 
 class nsDOMFile : public nsIDOMFile,
                   public nsIXHRSendable,
-                  public nsICharsetDetectionObserver,
                   public nsIJSNativeInitializer
 {
 public:
@@ -100,9 +99,6 @@ public:
 
   virtual ~nsDOMFile() {}
 
-  // from nsICharsetDetectionObserver
-  NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);
-
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner,
                         JSContext* aCx,
@@ -124,13 +120,6 @@ protected:
   nsString mContentType;
   
   bool mIsFullFile;
-
-  // Used during charset detection
-  nsCString mCharset;
-  nsresult GuessCharset(nsIInputStream *aStream,
-                        nsACString &aCharset);
-  nsresult ConvertStream(nsIInputStream *aStream, const char *aCharset,
-                         nsAString &aResult);
 };
 
 class nsDOMMemoryFile : public nsDOMFile

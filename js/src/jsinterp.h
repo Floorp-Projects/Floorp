@@ -257,7 +257,7 @@ enum InterpMode
  * pointed to by cx->fp until completion or error.
  */
 extern JS_REQUIRES_STACK JS_NEVER_INLINE bool
-Interpret(JSContext *cx, StackFrame *stopFp, uintN inlineCallCount = 0, InterpMode mode = JSINTERP_NORMAL);
+Interpret(JSContext *cx, StackFrame *stopFp, InterpMode mode = JSINTERP_NORMAL);
 
 extern JS_REQUIRES_STACK bool
 RunScript(JSContext *cx, JSScript *script, StackFrame *fp);

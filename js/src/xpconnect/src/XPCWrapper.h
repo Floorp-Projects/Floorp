@@ -96,7 +96,7 @@ JSObject *
 Unwrap(JSContext *cx, JSObject *wrapper);
 
 JSObject *
-UnsafeUnwrapSecurityWrapper(JSContext *cx, JSObject *obj);
+UnsafeUnwrapSecurityWrapper(JSObject *obj);
 
 } // namespace XPCWrapper
 

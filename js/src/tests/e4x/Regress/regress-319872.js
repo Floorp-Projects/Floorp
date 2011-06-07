@@ -40,14 +40,12 @@
 var BUGNUMBER = 319872;
 var summary = 'Do not Crash in jsxml.c';
 var actual = 'No Crash';
-var expect = /(No Crash|InternalError: script stack space quota is exhausted|InternalError: allocation size overflow)/;
+var expect = /(No Crash|InternalError: allocation size overflow)/;
 
 printBugNumber(BUGNUMBER);
 START(summary);
-printStatus ("Expect either no error, out of memory or catchable script stack " + 
-             "space quota is exhausted error");
+printStatus ("Expect either no error or out of memory");
 expectExitCode(0);
-expectExitCode(3);
 expectExitCode(5);
 
 try

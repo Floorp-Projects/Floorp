@@ -450,6 +450,10 @@ NS_IMETHODIMP
 nsAccessible::GetNextSibling(nsIAccessible **aNextSibling) 
 {
   NS_ENSURE_ARG_POINTER(aNextSibling);
+  *aNextSibling = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
   NS_IF_ADDREF(*aNextSibling = GetSiblingAtOffset(1, &rv));
@@ -461,6 +465,10 @@ NS_IMETHODIMP
 nsAccessible::GetPreviousSibling(nsIAccessible * *aPreviousSibling) 
 {
   NS_ENSURE_ARG_POINTER(aPreviousSibling);
+  *aPreviousSibling = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
   NS_IF_ADDREF(*aPreviousSibling = GetSiblingAtOffset(-1, &rv));
@@ -603,7 +611,7 @@ nsresult nsAccessible::GetFullKeyName(const nsAString& aModifierName, const nsAS
   if (!gKeyStringBundle ||
       NS_FAILED(gKeyStringBundle->GetStringFromName(PromiseFlatString(aModifierName).get(), 
                                                     getter_Copies(modifierName))) ||
-      NS_FAILED(gKeyStringBundle->GetStringFromName(PromiseFlatString(NS_LITERAL_STRING("MODIFIER_SEPARATOR")).get(), 
+      NS_FAILED(gKeyStringBundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(), 
                                                     getter_Copies(separator)))) {
     return NS_ERROR_FAILURE;
   }
@@ -3166,39 +3174,21 @@ nsAccessible::EnsureChildren()
 }
 
 nsAccessible*
-nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError)
+nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError) const
 {
-  if (IsDefunct()) {
-    if (aError)
-      *aError = NS_ERROR_FAILURE;
-
-    return nsnull;
-  }
-
-  nsAccessible *parent = GetParent();
-  if (!parent) {
+  if (!mParent || mIndexInParent == -1) {
     if (aError)
       *aError = NS_ERROR_UNEXPECTED;
 
     return nsnull;
   }
 
-  if (mIndexInParent == -1) {
-    if (aError)
-      *aError = NS_ERROR_UNEXPECTED;
-
+  if (aError && mIndexInParent + aOffset >= mParent->GetChildCount()) {
+    *aError = NS_OK; // fail peacefully
     return nsnull;
   }
 
-  if (aError) {
-    PRInt32 childCount = parent->GetChildCount();
-    if (mIndexInParent + aOffset >= childCount) {
-      *aError = NS_OK; // fail peacefully
-      return nsnull;
-    }
-  }
-
-  nsAccessible* child = parent->GetChildAt(mIndexInParent + aOffset);
+  nsAccessible* child = mParent->GetChildAt(mIndexInParent + aOffset);
   if (aError && !child)
     *aError = NS_ERROR_UNEXPECTED;
 
