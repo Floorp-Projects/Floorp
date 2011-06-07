@@ -48,12 +48,13 @@
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
+#include "methodjit/MethodJIT.h"
 #include "assembler/wtf/Platform.h"
+#include "yarr/BumpPointerAllocator.h"
 
+#include "yarr/Yarr.h"
 #if ENABLE_YARR_JIT
-#include "yarr/yarr/RegexJIT.h"
-#else
-#include "yarr/pcre/pcre.h"
+#include "yarr/YarrJIT.h"
 #endif
 
 namespace js {
@@ -95,10 +96,10 @@ regexp_statics_construct(JSContext *cx, GlobalObject *parent)
 class RegExp
 {
 #if ENABLE_YARR_JIT
-    JSC::Yarr::RegexCodeBlock   compiled;
-#else
-    JSRegExp                    *compiled;
+    /* native code is valid only if codeBlock.isFallBack() == false */
+    JSC::Yarr::YarrCodeBlock    codeBlock;
 #endif
+    JSC::Yarr::BytecodePattern  *byteCode;
     JSLinearString              *source;
     size_t                      refCount;
     unsigned                    parenCount; /* Must be |unsigned| to interface with YARR. */
@@ -111,7 +112,11 @@ class RegExp
 #endif
 
     RegExp(JSLinearString *source, uint32 flags, JSCompartment *compartment)
-      : compiled(), source(source), refCount(1), parenCount(0), flags(flags)
+      :
+#if ENABLE_YARR_JIT
+        codeBlock(),
+#endif
+        byteCode(NULL), source(source), refCount(1), parenCount(0), flags(flags)
 #ifdef DEBUG
         , compartment(compartment)
 #endif
@@ -120,17 +125,18 @@ class RegExp
     JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR;
 
     ~RegExp() {
-#if !ENABLE_YARR_JIT
-        if (compiled)
-            jsRegExpFree(compiled);
+#if ENABLE_YARR_JIT
+        codeBlock.release();
 #endif
+        // YYY
+        if (byteCode)
+            delete byteCode;
     }
 
     bool compileHelper(JSContext *cx, JSLinearString &pattern);
     bool compile(JSContext *cx);
     static const uint32 allFlags = JSREG_FOLD | JSREG_GLOB | JSREG_MULTILINE | JSREG_STICKY;
-    void handlePCREError(JSContext *cx, int error);
-    void handleYarrError(JSContext *cx, int error);
+    void reportYarrError(JSContext *cx, JSC::Yarr::ErrorCode error);
     static inline bool initArena(JSContext *cx);
     static inline void checkMatchPairs(JSString *input, int *buf, size_t matchItemCount);
     static JSObject *createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount);
@@ -318,9 +324,6 @@ inline bool
 RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *inputstr,
                         size_t *lastIndex, bool test, Value *rval)
 {
-#if !ENABLE_YARR_JIT
-    JS_ASSERT(compiled);
-#endif
     const size_t pairCount = parenCount + 1;
     const size_t bufCount = pairCount * 3; /* Should be x2, but PCRE has... needs. */
     const size_t matchItemCount = pairCount * 2;
@@ -360,25 +363,18 @@ RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *inputstr,
         inputOffset = *lastIndex;
     }
 
+    int result;
 #if ENABLE_YARR_JIT
-    int result = JSC::Yarr::executeRegex(cx, compiled, chars, *lastIndex - inputOffset, len, buf,
-                                         bufCount);
+    if (!codeBlock.isFallBack())
+        result = JSC::Yarr::execute(codeBlock, chars, *lastIndex - inputOffset, len, buf);
+    else
+        result = JSC::Yarr::interpret(byteCode, chars, *lastIndex - inputOffset, len, buf);
 #else
-    int result = jsRegExpExecute(cx, compiled, chars, len, *lastIndex - inputOffset, buf, 
-                                 bufCount);
+    result = JSC::Yarr::interpret(byteCode, chars, *lastIndex - inputOffset, len, buf);
 #endif
     if (result == -1) {
         *rval = NullValue();
         return true;
-    }
-
-    if (result < 0) {
-#if ENABLE_YARR_JIT
-        handleYarrError(cx, result);
-#else
-        handlePCREError(cx, result);
-#endif
-        return false;
     }
 
     /* 
@@ -460,53 +456,43 @@ RegExp::createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length,
     return obj;
 }
 
-#ifdef ANDROID
-static bool
-YarrJITIsBroken(JSContext *cx)
+/*
+ * This function should be deleted once we can. See bug 604774.
+ */
+static inline bool
+EnableYarrJIT(JSContext *cx)
 {
-#if defined(JS_TRACER) && defined(JS_METHODJIT)
-    /* FIXME/bug 604774: dead code walking.
-     *
-     * If both JITs are disabled, assume they were disabled because
-     * we're running on a blacklisted device.
-     */
-    return !cx->traceJitEnabled && !cx->methodJitEnabled;
+#if defined ANDROID && defined(JS_TRACER) && defined(JS_METHODJIT)
+    return cx->traceJitEnabled || cx->methodJitEnabled;
 #else
-    return false;
+    return true;
 #endif
 }
-#endif  /* ANDROID */
 
 inline bool
 RegExp::compileHelper(JSContext *cx, JSLinearString &pattern)
 {
-#if ENABLE_YARR_JIT
-    bool fellBack = false;
-    int error = 0;
-    jitCompileRegex(*cx->compartment->regExpAllocator, compiled, pattern, parenCount, error, fellBack, ignoreCase(), multiline()
-#ifdef ANDROID
-                    /* Temporary gross hack to work around buggy kernels. */
-                    , YarrJITIsBroken(cx)
+    JSC::Yarr::ErrorCode yarrError;
+    JSC::Yarr::YarrPattern yarrPattern(pattern, ignoreCase(), multiline(), &yarrError);
+    if (yarrError) {
+        reportYarrError(cx, yarrError);
+        return false;
+    }
+    parenCount = yarrPattern.m_numSubpatterns;
+
+#if ENABLE_YARR_JIT && defined(JS_METHODJIT)
+    if (EnableYarrJIT(cx) && !yarrPattern.m_containsBackreferences) {
+        JSC::Yarr::JSGlobalData globalData(cx->compartment->jaegerCompartment->execAlloc());
+        JSC::Yarr::jitCompile(yarrPattern, &globalData, codeBlock);
+        if (!codeBlock.isFallBack())
+            return true;
+    }
 #endif
-);
-    if (!error)
-        return true;
-    if (fellBack)
-        handlePCREError(cx, error);
-    else
-        handleYarrError(cx, error);
-    return false;
-#else
-    int error = 0;
-    compiled = jsRegExpCompile(pattern.chars(), pattern.length(),
-                               ignoreCase() ? JSRegExpIgnoreCase : JSRegExpDoNotIgnoreCase,
-                               multiline() ? JSRegExpMultiline : JSRegExpSingleLine,
-                               &parenCount, &error);
-    if (!error)
-        return true;
-    handlePCREError(cx, error);
-    return false;
-#endif
+
+    codeBlock.setFallBack(true);
+    byteCode = JSC::Yarr::byteCompile(yarrPattern, cx->compartment->regExpAllocator).get();
+
+    return true;
 }
 
 inline bool

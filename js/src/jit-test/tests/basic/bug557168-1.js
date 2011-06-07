@@ -3,7 +3,7 @@ try {
   Function("\
     (function f() {\
       ({x:{b}}=x);\
-      f()\
+      f.apply(null, new Array(100))\
     })()\
   ")()
 } catch (e) {

@@ -143,9 +143,6 @@ public:
     virtual nsresult GetImage(NPP instance, ImageContainer* aContainer, Image** aImage);
     virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
     NS_OVERRIDE virtual bool UseAsyncPainting() { return false; }
-#if defined(XP_MACOSX)
-    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing);
-#endif
     NS_OVERRIDE
     virtual nsresult SetBackgroundUnknown(NPP instance);
     NS_OVERRIDE

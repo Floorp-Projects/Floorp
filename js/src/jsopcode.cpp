@@ -626,7 +626,7 @@ SprintEnsureBuffer(Sprinter *sp, size_t len)
         JS_ARENA_GROW_CAST(base, char *, sp->pool, sp->size, nb);
     }
     if (!base) {
-        js_ReportOutOfScriptQuota(sp->context);
+        js_ReportOutOfMemory(sp->context);
         return JS_FALSE;
     }
     sp->base = base;
@@ -687,14 +687,13 @@ SprintString(Sprinter *sp, JSString *str)
     if (!chars)
         return -1;
 
-    size_t size = js_GetDeflatedStringLength(sp->context, chars, length);
+    size_t size = GetDeflatedStringLength(sp->context, chars, length);
     if (size == (size_t)-1 || !SprintEnsureBuffer(sp, size))
         return -1;
 
     ptrdiff_t offset = sp->offset;
     sp->offset += size;
-    js_DeflateStringToBuffer(sp->context, chars, length, sp->base + offset,
-                             &size);
+    DeflateStringToBuffer(sp->context, chars, length, sp->base + offset, &size);
     sp->base[sp->offset] = 0;
     return offset;
 }
@@ -850,7 +849,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     if (!jp)
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
-    JS_InitArenaPool(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
+    JS_InitArenaPool(&jp->pool, name, 256, 1);
     jp->indent = indent;
     jp->pretty = !!pretty;
     jp->grouped = !!grouped;
@@ -1299,6 +1298,8 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
                     JSOp junk;
 
                     todo = SprintDoubleValue(&ss->sprinter, key, &junk);
+                    if (todo < 0)
+                        return JS_FALSE;
                     str = NULL;
                 } else {
                     str = js_ValueToString(cx, Valueify(key));
@@ -1855,7 +1856,7 @@ InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
     opcodesz = depth * sizeof(jsbytecode);
     JS_ARENA_ALLOCATE(space, &cx->tempPool, offsetsz + opcodesz);
     if (!space) {
-        js_ReportOutOfScriptQuota(cx);
+        js_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
     ss->offsets = (ptrdiff_t *) space;
@@ -1923,7 +1924,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
  * Local macros
  */
 #define LOCAL_ASSERT(expr)    LOCAL_ASSERT_RV(expr, NULL)
-#define DECOMPILE_CODE(pc,nb) if (!Decompile(ss, pc, nb, JSOP_NOP)) return NULL
+#define DECOMPILE_CODE_CLEANUP(pc,nb,cleanup) if (!Decompile(ss, pc, nb, JSOP_NOP)) cleanup
+#define DECOMPILE_CODE(pc,nb) DECOMPILE_CODE_CLEANUP(pc,nb,return NULL)
 #define NEXT_OP(pc)           (((pc) + (len) == endpc) ? nextop : pc[len])
 #define TOP_STR()             GetStr(ss, ss->top - 1)
 #define POP_STR()             PopStr(ss, op)
@@ -2070,20 +2072,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
         token = CodeToken[op];
 
         if (pc + oplen == jp->dvgfence) {
-            StackFrame *fp;
-            uint32 format, mode, type;
-
             /*
              * Rewrite non-get ops to their "get" format if the error is in
              * the bytecode at pc, so we don't decompile more than the error
              * expression.
              */
-            fp = js_GetScriptedCaller(cx, NULL);
-            format = cs->format;
-            if (((fp && pc == fp->pc(cx)) ||
+            FrameRegsIter iter(cx);
+            while (!iter.done() && !iter.fp()->isScriptFrame())
+                ++iter;
+            uint32 format = cs->format;
+            if (((!iter.done() && pc == iter.pc()) ||
                  (pc == startpc && nuses != 0)) &&
                 format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_FOR|JOF_VARPROP)) {
-                mode = JOF_MODE(format);
+                uint32 mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*
                      * JOF_NAME does not imply JOF_ATOM, so we must check for
@@ -2091,7 +2092,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * JSOP_GETARG or JSOP_GETLOCAL appropriately, instead of
                      * to JSOP_NAME.
                      */
-                    type = JOF_TYPE(format);
+                    uint32 type = JOF_TYPE(format);
                     op = (type == JOF_QARG)
                          ? JSOP_GETARG
                          : (type == JOF_LOCAL)
@@ -3377,23 +3378,27 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     if (!xval)
                         return NULL;
                     len = js_GetSrcNoteOffset(sn, 0);
-                    DECOMPILE_CODE(pc + oplen, len - oplen);
+                    lval = NULL;
+                    DECOMPILE_CODE_CLEANUP(pc + oplen, len - oplen, goto src_cond_error);
                     lval = JS_strdup(cx, POP_STR());
-                    if (!lval) {
-                        cx->free_((void *)xval);
-                        return NULL;
-                    }
+                    if (!lval) goto src_cond_error;
                     pc += len;
                     LOCAL_ASSERT(*pc == JSOP_GOTO || *pc == JSOP_GOTOX);
                     oplen = js_CodeSpec[*pc].length;
                     len = GetJumpOffset(pc, pc);
-                    DECOMPILE_CODE(pc + oplen, len - oplen);
+                    DECOMPILE_CODE_CLEANUP(pc + oplen, len - oplen, goto src_cond_error);
                     rval = POP_STR();
                     todo = Sprint(&ss->sprinter, "%s ? %s : %s",
                                   xval, lval, rval);
                     cx->free_((void *)xval);
                     cx->free_((void *)lval);
                     break;
+
+                    src_cond_error:
+                        cx->free_((void *)xval);
+                        if (lval)
+                           cx->free_((void *)lval);
+                        return NULL;
 
                   default:
                     break;
@@ -5220,7 +5225,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     const jschar *chars = fallback->getChars(cx);
     if (!chars)
         return NULL;
-    return js_DeflateString(cx, chars, length);
+    return DeflateString(cx, chars, length);
 }
 
 static char *

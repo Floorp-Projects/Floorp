@@ -914,7 +914,6 @@ nsDOMWorkerScope::Trace(nsIXPConnectWrappedNative* /* aWrapper */,
                         JSTracer* aTracer,
                         JSObject* /*aObj */)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   nsDOMWorkerMessageHandler::Trace(aTracer);
   return NS_OK;
 }
@@ -1509,8 +1508,6 @@ nsDOMWorker::Trace(nsIXPConnectWrappedNative* /* aWrapper */,
                    JSTracer* aTracer,
                    JSObject* /*aObj */)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
   PRBool canceled = PR_FALSE;
   {
     MutexAutoLock lock(mLock);

@@ -429,7 +429,7 @@ StackFrame::initEvalFrame(JSContext *cx, JSScript *script, StackFrame *prev, uin
 
     scopeChain_ = &prev->scopeChain();
     prev_ = prev;
-    prevpc_ = prev->pc(cx);
+    prevpc_ = prev->pcQuadratic(cx);
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     setAnnotation(prev->annotation());
@@ -767,7 +767,7 @@ StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
     return true;
 #else
     if (end_ - from < nvals) {
-        js_ReportOutOfScriptQuota(maybecx);
+        js_ReportOverRecursed(maybecx);
         return false;
     }
     return true;
@@ -777,24 +777,22 @@ StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 inline Value *
 StackSpace::getStackLimit(JSContext *cx)
 {
+    Value *limit;
+#ifdef XP_WIN
+    limit = commitEnd_;
+#else
+    limit = end_;
+#endif
+
+    /* See getStackLimit comment in Stack.h. */
     FrameRegs &regs = cx->regs();
     uintN minSpace = regs.fp()->numSlots() + VALUES_PER_STACK_FRAME;
-    Value *sp = regs.sp;
-    Value *required = sp + minSpace;
-    Value *desired = sp + STACK_QUOTA;
-#ifdef XP_WIN
-    if (required <= commitEnd_)
-        return Min(commitEnd_, desired);
-    if (!bumpCommit(cx, sp, minSpace))
+    if (regs.sp + minSpace > limit) {
+        js_ReportOverRecursed(cx);
         return NULL;
-    JS_ASSERT(commitEnd_ >= required);
-    return commitEnd_;
-#else
-    if (required <= end_)
-        return Min(end_, desired);
-    js_ReportOutOfScriptQuota(cx);
-    return NULL;
-#endif
+    }
+
+    return limit;
 }
 
 /*****************************************************************************/
@@ -819,10 +817,9 @@ struct OOMCheck
 
 struct LimitCheck
 {
-    StackFrame *base;
     Value **limit;
 
-    LimitCheck(StackFrame *base, Value **limit) : base(base), limit(limit) {}
+    LimitCheck(Value **limit) : limit(limit) {}
 
     JS_ALWAYS_INLINE bool
     operator()(JSContext *cx, StackSpace &space, Value *from, uintN nvals)
@@ -836,7 +833,7 @@ struct LimitCheck
         JS_ASSERT(from < *limit);
         if (*limit - from >= ptrdiff_t(nvals))
             return true;
-        return space.bumpLimitWithinQuota(cx, base, from, nvals, limit);
+        return space.tryBumpLimit(cx, from, nvals, limit);
     }
 };
 
@@ -896,12 +893,12 @@ ContextStack::getInlineFrame(JSContext *cx, Value *sp, uintN nactual,
 JS_ALWAYS_INLINE StackFrame *
 ContextStack::getInlineFrameWithinLimit(JSContext *cx, Value *sp, uintN nactual,
                                         JSFunction *fun, JSScript *script, uint32 *flags,
-                                        StackFrame *fp, Value **limit) const
+                                        Value **limit) const
 {
     JS_ASSERT(isCurrentAndActive());
     JS_ASSERT(cx->regs().sp == sp);
 
-    return getCallFrame(cx, sp, nactual, fun, script, flags, detail::LimitCheck(fp, limit));
+    return getCallFrame(cx, sp, nactual, fun, script, flags, detail::LimitCheck(limit));
 }
 
 JS_ALWAYS_INLINE void
@@ -1057,39 +1054,6 @@ ContextStack::findFrameAtLevel(uintN targetLevel) const
 }
 
 /*****************************************************************************/
-
-inline
-FrameRegsIter::FrameRegsIter(JSContext *cx)
-  : cx_(cx)
-{
-    seg_ = cx->stack.currentSegment();
-    if (JS_UNLIKELY(!seg_ || !seg_->isActive())) {
-        initSlow();
-        return;
-    }
-    fp_ = cx->fp();
-    sp_ = cx->regs().sp;
-    pc_ = cx->regs().pc;
-    return;
-}
-
-inline FrameRegsIter &
-FrameRegsIter::operator++()
-{
-    StackFrame *oldfp = fp_;
-    fp_ = fp_->prev();
-    if (!fp_)
-        return *this;
-
-    if (JS_UNLIKELY(oldfp == seg_->initialFrame())) {
-        incSlow(oldfp);
-        return *this;
-    }
-
-    pc_ = oldfp->prevpc();
-    sp_ = oldfp->formalArgsEnd();
-    return *this;
-}
 
 namespace detail {
 

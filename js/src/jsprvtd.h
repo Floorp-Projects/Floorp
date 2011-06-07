@@ -242,7 +242,7 @@ typedef void
                         void      *callerdata);
 
 typedef void
-(* JSSourceHandler)(const char *filename, uintN lineno, jschar *str,
+(* JSSourceHandler)(const char *filename, uintN lineno, const jschar *str,
                     size_t length, void **listenerTSData, void *closure);
 
 /*

@@ -8,6 +8,8 @@
 #include "tests.h"
 #include "jsstr.h"
 
+using namespace js;
+
 class AutoInflatedString {
     JSContext * const cx;
     jschar *chars_;
@@ -21,7 +23,7 @@ class AutoInflatedString {
 
     template<size_t N> void operator=(const char (&str)[N]) {
         length_ = N - 1;
-        chars_ = js_InflateString(cx, str, &length_);
+        chars_ = InflateString(cx, str, &length_);
         if (!chars_)
             abort();
     }
