@@ -2007,6 +2007,7 @@ namespace nanojit
          * j       $ra
          * addiu   $sp,FRAMESIZE
          */
+        underrunProtect(2*4);   // j $ra; addiu $sp,FRAMESIZE
         ADDIU(SP, SP, FRAMESIZE);
         JR(RA);
         LW(FP, FP_OFFSET, SP);

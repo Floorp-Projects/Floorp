@@ -51,6 +51,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/log4moz.js");
 
@@ -89,23 +90,11 @@ function HistoryStore(name) {
   Svc.Obs.add("places-shutdown", function() {
     for each ([query, stmt] in Iterator(this._stmts))
       stmt.finalize();
-    this.__hsvc = null;
     this._stmts = [];
   }, this);
 }
 HistoryStore.prototype = {
   __proto__: Store.prototype,
-
-  __hsvc: null,
-  get _hsvc() {
-    if (!this.__hsvc)
-      this.__hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                    getService(Ci.nsINavHistoryService).
-                    QueryInterface(Ci.nsIGlobalHistory2).
-                    QueryInterface(Ci.nsIBrowserHistory).
-                    QueryInterface(Ci.nsPIPlacesDatabase);
-    return this.__hsvc;
-  },
 
   __asyncHistory: null,
   get _asyncHistory() {
@@ -122,8 +111,9 @@ HistoryStore.prototype = {
       return this._stmts[query];
 
     this._log.trace("Creating SQL statement: " + query);
-    return this._stmts[query] = this._hsvc.DBConnection
-                                    .createAsyncStatement(query);
+    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                        .DBConnection;
+    return this._stmts[query] = db.createAsyncStatement(query);
   },
 
   get _setGUIDStm() {
@@ -143,7 +133,7 @@ HistoryStore.prototype = {
     let stmt = this._setGUIDStm;
     stmt.params.guid = guid;
     stmt.params.page_url = uri;
-    Utils.queryAsync(stmt);
+    Async.querySpinningly(stmt);
     return guid;
   },
 
@@ -160,7 +150,7 @@ HistoryStore.prototype = {
     stm.params.page_url = uri.spec ? uri.spec : uri;
 
     // Use the existing GUID if it exists
-    let result = Utils.queryAsync(stm, this._guidCols)[0];
+    let result = Async.querySpinningly(stm, this._guidCols)[0];
     if (result && result.guid)
       return result.guid;
 
@@ -199,13 +189,13 @@ HistoryStore.prototype = {
   // See bug 320831 for why we use SQL here
   _getVisits: function HistStore__getVisits(uri) {
     this._visitStm.params.url = uri;
-    return Utils.queryAsync(this._visitStm, this._visitCols);
+    return Async.querySpinningly(this._visitStm, this._visitCols);
   },
 
   // See bug 468732 for why we use SQL here
   _findURLByGUID: function HistStore__findURLByGUID(guid) {
     this._urlStm.params.guid = guid;
-    return Utils.queryAsync(this._urlStm, this._urlCols)[0];
+    return Async.querySpinningly(this._urlStm, this._urlCols)[0];
   },
 
   changeItemID: function HStore_changeItemID(oldID, newID) {
@@ -218,7 +208,7 @@ HistoryStore.prototype = {
     this._allUrlStm.params.cutoff_date = (Date.now() - 2592000000) * 1000;
     this._allUrlStm.params.max_results = MAX_HISTORY_UPLOAD;
 
-    let urls = Utils.queryAsync(this._allUrlStm, this._allUrlCols);
+    let urls = Async.querySpinningly(this._allUrlStm, this._allUrlCols);
     let self = this;
     return urls.reduce(function(ids, item) {
       ids[self.GUIDForUri(item.url, true)] = item.url;
@@ -262,7 +252,7 @@ HistoryStore.prototype = {
       return failed;
     }
 
-    let cb = Utils.makeSyncCallback();
+    let cb = Async.makeSyncCallback();
     let onPlace = function onPlace(result, placeInfo) {
       if (!Components.isSuccessCode(result)) {
         failed.push(placeInfo.guid);
@@ -274,7 +264,7 @@ HistoryStore.prototype = {
     };
     Svc.Obs.add(TOPIC_UPDATEPLACES_COMPLETE, onComplete);
     this._asyncHistory.updatePlaces(records, onPlace);
-    Utils.waitForSyncCallback(cb);
+    Async.waitForSyncCallback(cb);
     return failed;
   },
 
@@ -299,7 +289,7 @@ HistoryStore.prototype = {
     }
     record.guid = record.id;
 
-    if (!this._hsvc.canAddURI(record.uri)) {
+    if (!PlacesUtils.history.canAddURI(record.uri)) {
       this._log.trace("Ignoring record " + record.id + " with URI "
                       + record.uri.spec + ": can't add this URI.");
       return false;
@@ -325,8 +315,8 @@ HistoryStore.prototype = {
                        + visit.date);
         throw "Visit has no date!";
       }
-      if (!visit.type || !(visit.type >= Svc.History.TRANSITION_LINK &&
-                           visit.type <= Svc.History.TRANSITION_FRAMED_LINK)) {
+      if (!visit.type || !(visit.type >= PlacesUtils.history.TRANSITION_LINK &&
+                           visit.type <= PlacesUtils.history.TRANSITION_FRAMED_LINK)) {
         this._log.warn("Encountered record with invalid visit type: "
                        + visit.type);
         throw "Invalid visit type!";
@@ -366,7 +356,7 @@ HistoryStore.prototype = {
     }
 
     let uri = Utils.makeURI(page.url);
-    Svc.History.removePage(uri);
+    PlacesUtils.history.removePage(uri);
     this._log.trace("Removed page: " + [record.id, page.url, page.title]);
   },
 
@@ -380,7 +370,7 @@ HistoryStore.prototype = {
     if (typeof(url) == "string")
       url = Utils.makeURI(url);
     // Don't call isVisited on a null URL to work around crasher bug 492442.
-    return url ? this._hsvc.isVisited(url) : false;
+    return url ? PlacesUtils.history.isVisited(url) : false;
   },
 
   createRecord: function createRecord(id, collection) {
@@ -399,7 +389,7 @@ HistoryStore.prototype = {
   },
 
   wipe: function HistStore_wipe() {
-    this._hsvc.removeAllPages();
+    PlacesUtils.history.removeAllPages();
   }
 };
 
@@ -416,13 +406,13 @@ HistoryTracker.prototype = {
     switch (topic) {
       case "weave:engine:start-tracking":
         if (!this._enabled) {
-          Svc.History.addObserver(this, true);
+          PlacesUtils.history.addObserver(this, true);
           this._enabled = true;
         }
         break;
       case "weave:engine:stop-tracking":
         if (this._enabled) {
-          Svc.History.removeObserver(this);
+          PlacesUtils.history.removeObserver(this);
           this._enabled = false;
         }
         break;

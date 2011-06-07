@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -37,15 +37,15 @@ void __stdcall glActiveTexture(GLenum texture)
 
     try
     {
-        if (texture < GL_TEXTURE0 || texture > GL_TEXTURE0 + gl::MAX_TEXTURE_IMAGE_UNITS - 1)
-        {
-            return error(GL_INVALID_ENUM);
-        }
-
         gl::Context *context = gl::getContext();
 
         if (context)
         {
+            if (texture < GL_TEXTURE0 || texture > GL_TEXTURE0 + context->getMaximumCombinedTextureImageUnits() - 1)
+            {
+                return error(GL_INVALID_ENUM);
+            }
+
             context->setActiveSampler(texture - GL_TEXTURE0);
         }
     }
@@ -1044,7 +1044,7 @@ void __stdcall glCopyTexImage2D(GLenum target, GLint level, GLenum internalforma
             }
 
             gl::Colorbuffer *source = framebuffer->getColorbuffer();
-            GLenum colorbufferFormat = source->getFormat();
+            GLenum colorbufferFormat = source->getInternalFormat();
 
             // [OpenGL ES 2.0.24] table 3.9
             switch (internalformat)
@@ -1178,7 +1178,7 @@ void __stdcall glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GL
             }
 
             gl::Colorbuffer *source = framebuffer->getColorbuffer();
-            GLenum colorbufferFormat = source->getFormat();
+            GLenum colorbufferFormat = source->getInternalFormat();
             gl::Texture *texture = NULL;
 
             if (target == GL_TEXTURE_2D)
@@ -1196,7 +1196,7 @@ void __stdcall glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GL
                 return error(GL_INVALID_OPERATION);
             }
 
-            GLenum textureFormat = texture->getFormat();
+            GLenum textureFormat = texture->getInternalFormat();
 
             // [OpenGL ES 2.0.24] table 3.9
             switch (textureFormat)
@@ -2954,85 +2954,23 @@ void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* 
 
             switch (pname)
             {
-              case GL_RENDERBUFFER_WIDTH:
-                *params = renderbuffer->getWidth();
-                break;
-              case GL_RENDERBUFFER_HEIGHT:
-                *params = renderbuffer->getHeight();
-                break;
-              case GL_RENDERBUFFER_INTERNAL_FORMAT:
-                *params = renderbuffer->getFormat();
-                break;
-              case GL_RENDERBUFFER_RED_SIZE:
-                if (renderbuffer->isColorbuffer())
-                {
-                    *params = static_cast<gl::Colorbuffer*>(renderbuffer->getStorage())->getRedSize();
-                }
-                else
-                {
-                    *params = 0;
-                }
-                break;
-              case GL_RENDERBUFFER_GREEN_SIZE:
-                if (renderbuffer->isColorbuffer())
-                {
-                    *params = static_cast<gl::Colorbuffer*>(renderbuffer->getStorage())->getGreenSize();
-                }
-                else
-                {
-                    *params = 0;
-                }
-                break;
-              case GL_RENDERBUFFER_BLUE_SIZE:
-                if (renderbuffer->isColorbuffer())
-                {
-                    *params = static_cast<gl::Colorbuffer*>(renderbuffer->getStorage())->getBlueSize();
-                }
-                else
-                {
-                    *params = 0;
-                }
-                break;
-              case GL_RENDERBUFFER_ALPHA_SIZE:
-                if (renderbuffer->isColorbuffer())
-                {
-                    *params = static_cast<gl::Colorbuffer*>(renderbuffer->getStorage())->getAlphaSize();
-                }
-                else
-                {
-                    *params = 0;
-                }
-                break;
-              case GL_RENDERBUFFER_DEPTH_SIZE:
-                if (renderbuffer->isDepthbuffer())
-                {
-                    *params = static_cast<gl::Depthbuffer*>(renderbuffer->getStorage())->getDepthSize();
-                }
-                else
-                {
-                    *params = 0;
-                }
-                break;
-              case GL_RENDERBUFFER_STENCIL_SIZE:
-                if (renderbuffer->isStencilbuffer())
-                {
-                    *params = static_cast<gl::Stencilbuffer*>(renderbuffer->getStorage())->getStencilSize();
-                }
-                else
-                {
-                    *params = 0;
-                }
-                break;
+              case GL_RENDERBUFFER_WIDTH:           *params = renderbuffer->getWidth();          break;
+              case GL_RENDERBUFFER_HEIGHT:          *params = renderbuffer->getHeight();         break;
+              case GL_RENDERBUFFER_INTERNAL_FORMAT: *params = renderbuffer->getInternalFormat(); break;
+              case GL_RENDERBUFFER_RED_SIZE:        *params = renderbuffer->getRedSize();        break;
+              case GL_RENDERBUFFER_GREEN_SIZE:      *params = renderbuffer->getGreenSize();      break;
+              case GL_RENDERBUFFER_BLUE_SIZE:       *params = renderbuffer->getBlueSize();       break;
+              case GL_RENDERBUFFER_ALPHA_SIZE:      *params = renderbuffer->getAlphaSize();      break;
+              case GL_RENDERBUFFER_DEPTH_SIZE:      *params = renderbuffer->getDepthSize();      break;
+              case GL_RENDERBUFFER_STENCIL_SIZE:    *params = renderbuffer->getStencilSize();    break;
               case GL_RENDERBUFFER_SAMPLES_ANGLE:
+                if (context->getMaxSupportedSamples() != 0)
                 {
-                    if (context->getMaxSupportedSamples() != 0)
-                    {
-                        *params = renderbuffer->getStorage()->getSamples();
-                    }
-                    else
-                    {
-                        return error(GL_INVALID_ENUM);
-                    }
+                    *params = renderbuffer->getSamples();
+                }
+                else
+                {
+                    return error(GL_INVALID_ENUM);
                 }
                 break;
               default:
@@ -4474,7 +4412,7 @@ void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
             return error(GL_INVALID_OPERATION);
         }
 
-        switch (internalformat)
+        switch (format)
         {
           case GL_ALPHA:
           case GL_LUMINANCE:
@@ -4569,8 +4507,8 @@ void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
                 return error(GL_INVALID_ENUM);
             }
 
-            if (internalformat == GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
-                internalformat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT)
+            if (format == GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
+                format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT)
             {
                 if (context->supportsCompressedTextures())
                 {
@@ -4606,7 +4544,7 @@ void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
                     return error(GL_INVALID_OPERATION);
                 }
 
-                texture->setImage(level, internalformat, width, height, format, type, context->getUnpackAlignment(), pixels);
+                texture->setImage(level, width, height, format, type, context->getUnpackAlignment(), pixels);
             }
             else
             {
@@ -4620,22 +4558,22 @@ void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
                 switch (target)
                 {
                   case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-                    texture->setImagePosX(level, internalformat, width, height, format, type, context->getUnpackAlignment(), pixels);
+                    texture->setImagePosX(level, width, height, format, type, context->getUnpackAlignment(), pixels);
                     break;
                   case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-                    texture->setImageNegX(level, internalformat, width, height, format, type, context->getUnpackAlignment(), pixels);
+                    texture->setImageNegX(level, width, height, format, type, context->getUnpackAlignment(), pixels);
                     break;
                   case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-                    texture->setImagePosY(level, internalformat, width, height, format, type, context->getUnpackAlignment(), pixels);
+                    texture->setImagePosY(level, width, height, format, type, context->getUnpackAlignment(), pixels);
                     break;
                   case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-                    texture->setImageNegY(level, internalformat, width, height, format, type, context->getUnpackAlignment(), pixels);
+                    texture->setImageNegY(level, width, height, format, type, context->getUnpackAlignment(), pixels);
                     break;
                   case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-                    texture->setImagePosZ(level, internalformat, width, height, format, type, context->getUnpackAlignment(), pixels);
+                    texture->setImagePosZ(level, width, height, format, type, context->getUnpackAlignment(), pixels);
                     break;
                   case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-                    texture->setImageNegZ(level, internalformat, width, height, format, type, context->getUnpackAlignment(), pixels);
+                    texture->setImageNegZ(level, width, height, format, type, context->getUnpackAlignment(), pixels);
                     break;
                   default: UNREACHABLE();
                 }
@@ -4797,7 +4735,7 @@ void __stdcall glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
                     return error(GL_INVALID_OPERATION);
                 }
 
-                if (format != texture->getFormat())
+                if (format != texture->getInternalFormat())
                 {
                     return error(GL_INVALID_OPERATION);
                 }
@@ -4809,16 +4747,6 @@ void __stdcall glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
                 gl::TextureCubeMap *texture = context->getTextureCubeMap();
 
                 if (!texture)
-                {
-                    return error(GL_INVALID_OPERATION);
-                }
-
-                if (texture->isCompressed())
-                {
-                    return error(GL_INVALID_OPERATION);
-                }
-
-                if (format != texture->getFormat())
                 {
                     return error(GL_INVALID_OPERATION);
                 }
@@ -5761,6 +5689,31 @@ __eglMustCastToProperFunctionPointerType __stdcall glGetProcAddress(const char *
     }
 
     return NULL;
+}
+
+void __stdcall glBindTexImage(egl::Surface *surface)
+{
+    EVENT("(egl::Surface* surface = 0x%0.8p)",
+          surface);
+
+    try
+    {
+        gl::Context *context = gl::getContext();
+
+        if (context)
+        {
+            gl::Texture2D *textureObject = context->getTexture2D();
+
+            if (textureObject)
+            {
+                textureObject->bindTexImage(surface);
+            }
+        }
+    }
+    catch(std::bad_alloc&)
+    {
+        return error(GL_OUT_OF_MEMORY);
+    }
 }
 
 }

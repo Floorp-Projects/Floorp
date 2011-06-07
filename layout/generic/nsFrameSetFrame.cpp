@@ -39,7 +39,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrameSetFrame.h"
-#include "nsContentUtils.h"
 #include "nsGenericHTMLElement.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
@@ -73,6 +72,9 @@
 #include "nsDisplayList.h"
 #include "nsNodeUtils.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -238,8 +240,8 @@ nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
   delete[] mChildFrameborder;
   delete[] mChildBorderColors;
 
-  nsContentUtils::UnregisterPrefCallback(kFrameResizePref,
-                                         FrameResizePrefCallback, this);
+  Preferences::UnregisterCallback(FrameResizePrefCallback,
+                                  kFrameResizePref, this);
 }
 
 NS_QUERYFRAME_HEAD(nsHTMLFramesetFrame)
@@ -263,8 +265,7 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
   }
 
   frame->mForceFrameResizability =
-    nsContentUtils::GetBoolPref(kFrameResizePref,
-                                frame->mForceFrameResizability);
+    Preferences::GetBool(kFrameResizePref, frame->mForceFrameResizability);
 
   frame->RecalculateBorderResize();
   if (doc) {
@@ -972,10 +973,9 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
 
   PRBool firstTime = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
   if (firstTime) {
-    nsContentUtils::RegisterPrefCallback(kFrameResizePref,
-                                         FrameResizePrefCallback, this);
-    mForceFrameResizability =
-      nsContentUtils::GetBoolPref(kFrameResizePref);
+    Preferences::RegisterCallback(FrameResizePrefCallback,
+                                  kFrameResizePref, this);
+    mForceFrameResizability = Preferences::GetBool(kFrameResizePref);
   }
   
   // subtract out the width of all of the potential borders. There are

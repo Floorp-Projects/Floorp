@@ -16,9 +16,7 @@
   locale/@AB_CD@/global/nsWebBrowserPersist.properties         (%chrome/nsWebBrowserPersist.properties)
   locale/@AB_CD@/global/xslt/xslt.properties                   (%chrome/xslt/xslt.properties)
   locale/@AB_CD@/global/dom/dom.properties                     (%chrome/dom/dom.properties)
-#ifdef MOZ_SVG
   locale/@AB_CD@/global/svg/svg.properties                     (%chrome/svg/svg.properties)
-#endif
   locale/@AB_CD@/global/layout/MediaDocument.properties        (%chrome/layout/MediaDocument.properties)
   locale/@AB_CD@/global/layout/xmlparser.properties            (%chrome/layout/xmlparser.properties)
   locale/@AB_CD@/global/layout/HtmlForm.properties             (%chrome/layout/HtmlForm.properties)

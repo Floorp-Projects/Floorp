@@ -67,7 +67,6 @@
 #include "nsSize.h"
 #include "imgIRequest.h"
 #include "nsRuleData.h"
-#include "nsILanguageAtomService.h"
 #include "nsIStyleRule.h"
 #include "nsBidiUtils.h"
 #include "nsUnicharUtils.h"
@@ -773,6 +772,17 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
     result = PR_TRUE;
     aCanStoreInRuleTree = PR_FALSE;
   }
+  else if (eCSSUnit_Enumerated == unit &&
+           aValue.GetIntValue() == NS_STYLE_COLOR_INHERIT_FROM_BODY) {
+    NS_ASSERTION(aPresContext->CompatibilityMode() == eCompatibility_NavQuirks,
+                 "Should only get this value in quirks mode");
+    // We just grab the color from the prescontext, and rely on the fact that
+    // if the body color ever changes all its descendants will get new style
+    // contexts (but NOT necessarily new rulenodes).
+    aResult = aPresContext->BodyTextColor();
+    result = PR_TRUE;
+    aCanStoreInRuleTree = PR_FALSE;
+  }
   return result;
 }
 
@@ -1172,8 +1182,6 @@ nsRuleNode* nsRuleNode::CreateRootNode(nsPresContext* aPresContext)
     nsRuleNode(aPresContext, nsnull, nsnull, 0xff, PR_FALSE);
 }
 
-nsILanguageAtomService* nsRuleNode::gLangService = nsnull;
-
 nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
                        nsIStyleRule* aRule, PRUint8 aLevel,
                        PRBool aIsImportant)
@@ -1365,9 +1373,7 @@ CheckFontCallback(const nsRuleData* aRuleData,
       (size.GetUnit() == eCSSUnit_Enumerated &&
        (size.GetIntValue() == NS_STYLE_FONT_SIZE_SMALLER ||
         size.GetIntValue() == NS_STYLE_FONT_SIZE_LARGER)) ||
-#ifdef MOZ_MATHML
       aRuleData->ValueForScriptLevel()->GetUnit() == eCSSUnit_Integer ||
-#endif
       (weight.GetUnit() == eCSSUnit_Enumerated &&
        (weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_BOLDER ||
         weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_LIGHTER))) {
@@ -1587,7 +1593,7 @@ static const CheckCallbackFn gCheckCallbacks[] = {
 
 };
 
-#if defined(MOZ_MATHML) && defined(DEBUG)
+#ifdef DEBUG
 static PRBool
 AreAllMathMLPropertiesUndefined(const nsRuleData* aRuleData)
 {
@@ -1623,12 +1629,10 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
          aSID, total, specified, inherited);
 #endif
 
-#ifdef MOZ_MATHML
   NS_ASSERTION(aSID != eStyleStruct_Font ||
                mPresContext->Document()->GetMathMLEnabled() ||
                AreAllMathMLPropertiesUndefined(aRuleData),
                "MathML style property was defined even though MathML is disabled");
-#endif
 
   /*
    * Return the most specific information we can: prefer None or Full
@@ -1639,7 +1643,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
   if (inherited == total)
     result = eRuleFullInherited;
   else if (specified == total
-#ifdef MOZ_MATHML
            // MathML defines 3 properties in Font that will never be set when
            // MathML is not in use. Therefore if all but three
            // properties have been set, and MathML is not enabled, we can treat
@@ -1648,7 +1651,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
            // (see nsMathMLElement::BindToTree).
            || (aSID == eStyleStruct_Font && specified + 3 == total &&
                !mPresContext->Document()->GetMathMLEnabled())
-#endif
           ) {
     if (inherited == 0)
       result = eRuleFullReset;
@@ -2374,7 +2376,6 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
                                                                               \
   return data_;
 
-#ifdef MOZ_MATHML
 // This function figures out how much scaling should be suppressed to
 // satisfy scriptminsize. This is our attempt to implement
 // http://www.w3.org/TR/MathML2/chapter3.html#id.3.3.4.2.2
@@ -2433,7 +2434,6 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
     return NS_MIN(scriptLevelSize, NS_MAX(*aUnconstrainedSize, minScriptSize));
   }
 }
-#endif
 
 struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
                             public css::NumbersAlreadyNormalizedOps
@@ -2584,7 +2584,6 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
   } else {
     NS_ASSERTION(eCSSUnit_Null == sizeValue->GetUnit(),
                  "What kind of font-size value is this?");
-#ifdef MOZ_MATHML
     // if aUsedStartStruct is true, then every single property in the
     // font struct is being set all at once. This means scriptlevel is not
     // going to have any influence on the font size; there is no need to
@@ -2596,7 +2595,6 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
       aCanStoreInRuleTree = PR_FALSE;
       *aSize = aScriptLevelAdjustedParentSize;
     }
-#endif
   }
 
   // We want to zoom the cascaded size so that em-based measurements,
@@ -2803,7 +2801,6 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
               defaultVariableFont->stretch,
               0, 0, 0, systemFont.stretch);
 
-#ifdef MOZ_MATHML
   // Compute scriptlevel, scriptminsize and scriptsizemultiplier now so
   // they're available for font-size computation.
 
@@ -2843,7 +2840,6 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   else if (eCSSUnit_Initial == scriptLevelValue->GetUnit()) {
     aFont->mScriptLevel = 0;
   }
-#endif
 
   // font-feature-settings
   const nsCSSValue* featureSettingsValue =
@@ -2877,18 +2873,15 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 
   // font-size: enum, length, percent, inherit
   nscoord scriptLevelAdjustedParentSize = aParentFont->mSize;
-#ifdef MOZ_MATHML
   nscoord scriptLevelAdjustedUnconstrainedParentSize;
   scriptLevelAdjustedParentSize =
     ComputeScriptLevelSize(aFont, aParentFont, aPresContext,
                            &scriptLevelAdjustedUnconstrainedParentSize);
   NS_ASSERTION(!aUsedStartStruct || aFont->mScriptUnconstrainedSize == aFont->mSize,
                "If we have a start struct, we should have reset everything coming in here");
-#endif
   SetFontSize(aPresContext, aRuleData, aFont, aParentFont, &aFont->mSize,
               systemFont, aParentFont->mSize, scriptLevelAdjustedParentSize,
               aUsedStartStruct, atRoot, aCanStoreInRuleTree);
-#ifdef MOZ_MATHML
   if (aParentFont->mSize == aParentFont->mScriptUnconstrainedSize &&
       scriptLevelAdjustedParentSize == scriptLevelAdjustedUnconstrainedParentSize) {
     // Fast path: we have not been affected by scriptminsize so we don't
@@ -2906,7 +2899,6 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
   NS_ASSERTION(aFont->mScriptUnconstrainedSize <= aFont->mSize,
                "scriptminsize should never be making things bigger");
-#endif
 
   // enforce the user' specified minimum font-size on the value that we expose
   // (but don't change font-size:0)
@@ -4528,17 +4520,11 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
   // this is not a real CSS property, it is a html attribute mapped to CSS struture
   const nsCSSValue* langValue = aRuleData->ValueForLang();
   if (eCSSUnit_Ident == langValue->GetUnit()) {
-    if (!gLangService) {
-      CallGetService(NS_LANGUAGEATOMSERVICE_CONTRACTID, &gLangService);
-    }
+    nsAutoString lang;
+    langValue->GetStringValue(lang);
 
-    if (gLangService) {
-      nsAutoString lang;
-      langValue->GetStringValue(lang);
-
-      nsContentUtils::ASCIIToLower(lang);
-      visibility->mLanguage = do_GetAtom(lang);
-    }
+    nsContentUtils::ASCIIToLower(lang);
+    visibility->mLanguage = do_GetAtom(lang);
   }
 
   COMPUTE_END_INHERITED(Visibility, visibility)
@@ -4652,12 +4638,14 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
       if (eCSSUnit_Percent == specified.GetUnit()) {
         (position.*(axis->result)).mLength = 0;
         (position.*(axis->result)).mPercent = specified.GetPercentValue();
+        (position.*(axis->result)).mHasPercent = PR_TRUE;
       }
       else if (specified.IsLengthUnit()) {
         (position.*(axis->result)).mLength =
           CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
                      aCanStoreInRuleTree);
         (position.*(axis->result)).mPercent = 0.0f;
+        (position.*(axis->result)).mHasPercent = PR_FALSE;
       }
       else if (specified.IsCalcUnit()) {
         LengthPercentPairCalcOps ops(aStyleContext,
@@ -4666,11 +4654,13 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
         nsRuleNode::ComputedCalc vals = ComputeCalc(specified, ops);
         (position.*(axis->result)).mLength = vals.mLength;
         (position.*(axis->result)).mPercent = vals.mPercent;
+        (position.*(axis->result)).mHasPercent = ops.mHasPercent;
       }
       else if (eCSSUnit_Enumerated == specified.GetUnit()) {
         (position.*(axis->result)).mLength = 0;
         (position.*(axis->result)).mPercent =
           GetFloatFromBoxPosition(specified.GetIntValue());
+        (position.*(axis->result)).mHasPercent = PR_TRUE;
       } else {
         NS_NOTREACHED("unexpected unit");
       }
@@ -4742,6 +4732,7 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
       else if (eCSSUnit_Percent == specified.GetUnit()) {
         (size.*(axis->result)).mLength = 0;
         (size.*(axis->result)).mPercent = specified.GetPercentValue();
+        (size.*(axis->result)).mHasPercent = PR_TRUE;
         size.*(axis->type) = nsStyleBackground::Size::eLengthPercentage;
       }
       else if (specified.IsLengthUnit()) {
@@ -4749,6 +4740,7 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
           CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
                      aCanStoreInRuleTree);
         (size.*(axis->result)).mPercent = 0.0f;
+        (size.*(axis->result)).mHasPercent = PR_FALSE;
         size.*(axis->type) = nsStyleBackground::Size::eLengthPercentage;
       } else {
         NS_ABORT_IF_FALSE(specified.IsCalcUnit(), "unexpected unit");
@@ -4758,6 +4750,7 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
         nsRuleNode::ComputedCalc vals = ComputeCalc(specified, ops);
         (size.*(axis->result)).mLength = vals.mLength;
         (size.*(axis->result)).mPercent = vals.mPercent;
+        (size.*(axis->result)).mHasPercent = ops.mHasPercent;
         size.*(axis->type) = nsStyleBackground::Size::eLengthPercentage;
       }
     }
@@ -5342,6 +5335,9 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
         switch (value.GetIntValue()) {
           case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
             border->SetBorderToForeground(side);
+            break;
+          default:
+            NS_NOTREACHED("Unexpected enumerated color");
             break;
         }
       }

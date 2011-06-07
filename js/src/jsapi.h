@@ -1507,7 +1507,6 @@ JS_AnchorPtr(void *p);
 #define JS_TYPED_ROOTING_API
 
 /* Obsolete rooting APIs. */
-#define JS_ClearNewbornRoots(cx) ((void) 0)
 #define JS_EnterLocalRootScope(cx) (JS_TRUE)
 #define JS_LeaveLocalRootScope(cx) ((void) 0)
 #define JS_LeaveLocalRootScopeWithResult(cx, rval) ((void) 0)
@@ -1770,6 +1769,9 @@ extern JS_PUBLIC_API(void)
 JS_GC(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
+JS_CompartmentGC(JSContext *cx, JSCompartment *comp);
+
+extern JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx);
 
 extern JS_PUBLIC_API(JSGCCallback)
@@ -1916,22 +1918,6 @@ JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr);
  */
 extern JS_PUBLIC_API(void)
 JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
-
-
-/*
- * Set the quota on the number of bytes that stack-like data structures can
- * use when the runtime compiles and executes scripts. These structures
- * consume heap space, so JS_SetThreadStackLimit does not bound their size.
- * The default quota is 128MB which is very generous.
- *
- * The function must be called before any script compilation or execution API
- * calls, i.e. either immediately after JS_NewContext or from JSCONTEXT_NEW
- * context callback.
- */
-extern JS_PUBLIC_API(void)
-JS_SetScriptStackQuota(JSContext *cx, size_t quota);
-
-#define JS_DEFAULT_SCRIPT_STACK_QUOTA   ((size_t) 0x8000000)
 
 /************************************************************************/
 
@@ -3867,8 +3853,13 @@ JS_NewObjectForConstructor(JSContext *cx, const jsval *vp);
 #endif
 
 #ifdef JS_GC_ZEAL
+#define JS_DEFAULT_ZEAL_FREQ 100
+
 extern JS_PUBLIC_API(void)
-JS_SetGCZeal(JSContext *cx, uint8 zeal);
+JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment);
+
+extern JS_PUBLIC_API(void)
+JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment);
 #endif
 
 JS_END_EXTERN_C

@@ -409,6 +409,7 @@
 #define WTF_OS_MAC_OS_X 1
 #endif
 
+
 /* WTF_OS_FREEBSD - FreeBSD */
 #if defined(__FreeBSD__) || defined(__DragonFly__)
 #define WTF_OS_FREEBSD 1
@@ -420,7 +421,7 @@
 #endif
 
 /* WTF_OS_LINUX - Linux */
-#ifdef __linux__
+#if defined(__linux__) && !defined(ANDROID)
 #define WTF_OS_LINUX 1
 #endif
 
@@ -1005,11 +1006,6 @@
 
 /* Disable the JIT on versions of GCC prior to 4.1 */
 #if !defined(ENABLE_JIT) && WTF_COMPILER_GCC && !GCC_VERSION_AT_LEAST(4, 1, 0)
-#define ENABLE_JIT 0
-#endif
-
-/* JIT is not implemented for 64 bit on MSVC */
-#if !defined(ENABLE_JIT) && WTF_COMPILER_MSVC && WTF_CPU_X86_64
 #define ENABLE_JIT 0
 #endif
 

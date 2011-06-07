@@ -68,6 +68,26 @@
 using namespace mozilla::dom;
 
 /**
+ * This macro is similar to NS_IMPL_STRING_ATTR except that the getter method
+ * falls back to GetText if the content attribute isn't set. GetText returns a
+ * whitespace compressed .textContent value.
+ */
+#define NS_IMPL_STRING_ATTR_WITH_TEXTCONTENT(_class, _method, _atom) \
+  NS_IMETHODIMP                                                      \
+  _class::Get##_method(nsAString& aValue)                            \
+  {                                                                  \
+    if (!GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue)) {     \
+      GetText(aValue);                                               \
+    }                                                                \
+    return NS_OK;                                                    \
+  }                                                                  \
+  NS_IMETHODIMP                                                      \
+  _class::Set##_method(const nsAString& aValue)                      \
+  {                                                                  \
+    return SetAttrHelper(nsGkAtoms::_atom, aValue);                  \
+  }
+
+/**
  * Implementation of &lt;option&gt;
  */
 
@@ -100,6 +120,8 @@ nsHTMLOptionElement::nsHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo
     mIsSelected(PR_FALSE),
     mIsInSetDefaultSelected(PR_FALSE)
 {
+  // We start off enabled
+  AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
 
 nsHTMLOptionElement::~nsHTMLOptionElement()
@@ -149,34 +171,11 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
   mSelectedChanged = PR_TRUE;
   mIsSelected = aValue;
 
-  // When mIsInSetDefaultSelected is true, the notification will be handled by
+  // When mIsInSetDefaultSelected is true, the state change will be handled by
   // SetAttr/UnsetAttr.
-  if (aNotify && !mIsInSetDefaultSelected) {
-    nsIDocument* document = GetCurrentDoc();
-    if (document) {
-      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, aNotify);
-      document->ContentStateChanged(this, NS_EVENT_STATE_CHECKED);
-    }
+  if (!mIsInSetDefaultSelected) {
+    UpdateState(aNotify);
   }
-}
-
-NS_IMETHODIMP
-nsHTMLOptionElement::SetValue(const nsAString& aValue)
-{
-  SetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue, PR_TRUE);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLOptionElement::GetValue(nsAString& aValue)
-{
-  // If the value attr is there, that is *exactly* what we use.  If it is
-  // not, we compress whitespace .text.
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue)) {
-    GetText(aValue);
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -216,8 +215,8 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
 }
 
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, selected)
-NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
-//NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
+NS_IMPL_STRING_ATTR_WITH_TEXTCONTENT(nsHTMLOptionElement, Label, label)
+NS_IMPL_STRING_ATTR_WITH_TEXTCONTENT(nsHTMLOptionElement, Value, value)
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
 
 NS_IMETHODIMP 

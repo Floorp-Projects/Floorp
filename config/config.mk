@@ -245,35 +245,12 @@ endif # WINNT && !GNU_CC
 
 #
 # Build using PIC by default
-# Do not use PIC if not building a shared lib (see exceptions below)
 #
-
-ifndef BUILD_STATIC_LIBS
 _ENABLE_PIC=1
-endif
-ifneq (,$(FORCE_SHARED_LIB)$(FORCE_USE_PIC))
-_ENABLE_PIC=1
-endif
-
-# If module is going to be merged into the nsStaticModule, 
-# make sure that the entry points are translated and 
-# the module is built static.
-
-ifdef IS_COMPONENT
-ifdef EXPORT_LIBRARY
-ifneq (,$(BUILD_STATIC_LIBS))
-ifdef MODULE_NAME
-DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT=1
-FORCE_STATIC_LIB=1
-endif
-endif
-endif
-endif
 
 # Determine if module being compiled is destined 
 # to be merged into libxul
 
-ifdef MOZ_ENABLE_LIBXUL
 ifdef LIBXUL_LIBRARY
 ifdef IS_COMPONENT
 ifdef MODULE_NAME
@@ -283,9 +260,7 @@ $(error Component makefile does not specify MODULE_NAME.)
 endif
 endif
 FORCE_STATIC_LIB=1
-_ENABLE_PIC=1
 SHORT_LIBNAME=
-endif
 endif
 
 # If we are building this component into an extension/xulapp, it cannot be
@@ -293,24 +268,10 @@ endif
 # build option.
 
 ifdef XPI_NAME
-_ENABLE_PIC=1
 ifdef IS_COMPONENT
 EXPORT_LIBRARY=
 FORCE_STATIC_LIB=
 FORCE_SHARED_LIB=1
-endif
-endif
-
-#
-# Disable PIC if necessary
-#
-
-ifndef _ENABLE_PIC
-DSO_CFLAGS=
-ifeq ($(OS_ARCH)_$(HAVE_GCC3_ABI),Darwin_1)
-DSO_PIC_CFLAGS=-mdynamic-no-pic
-else
-DSO_PIC_CFLAGS=
 endif
 endif
 
@@ -371,7 +332,6 @@ endif
 
 # Force XPCOM/widget/gfx methods to be _declspec(dllexport) when we're
 # building libxul libraries
-ifdef MOZ_ENABLE_LIBXUL
 ifdef LIBXUL_LIBRARY
 DEFINES += \
 		-D_IMPL_NS_COM \
@@ -386,20 +346,6 @@ DEFINES += \
 
 ifndef JS_SHARED_LIBRARY
 DEFINES += -DSTATIC_EXPORTABLE_JS_API
-endif
-endif
-endif
-
-# Force _all_ exported methods to be |_declspec(dllexport)| when we're
-# building them into the executable.
-
-ifeq (,$(filter-out WINNT OS2, $(OS_ARCH)))
-ifdef BUILD_STATIC_LIBS
-DEFINES += \
-        -D_IMPL_NS_GFX \
-        -D_IMPL_NS_MSG_BASE \
-        -D_IMPL_NS_WIDGET \
-        $(NULL)
 endif
 endif
 

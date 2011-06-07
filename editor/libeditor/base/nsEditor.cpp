@@ -531,7 +531,7 @@ nsEditor::GetPresShell()
   NS_PRECONDITION(mDocWeak, "bad state, null mDocWeak");
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
   NS_ENSURE_TRUE(doc, NULL);
-  nsRefPtr<nsIPresShell> ps = doc->GetShell();
+  nsCOMPtr<nsIPresShell> ps = doc->GetShell();
   return ps.forget();
 }
 

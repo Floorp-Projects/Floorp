@@ -53,8 +53,9 @@
  */
 
 interface nsIDOMFile;
+interface nsIVariant;
 
-[scriptable, uuid(2e98cd39-2269-493a-a3bb-abe85be2523c)]
+[scriptable, uuid(010d8e6f-86ba-47ad-a04f-1a4d75f1caf8)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute unsigned long width;
@@ -68,18 +69,10 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
   // Valid calls are:
   //  toDataURL();              -- defaults to image/png
   //  toDataURL(type);          -- uses given type
-  //  toDataURL(type, params);  -- only available to trusted callers
+  //  toDataURL(type, params);  -- uses given type, and any valid parameters
   [optional_argc] DOMString toDataURL([optional] in DOMString type,
-                                      [optional] in DOMString params);
+                                      [optional] in nsIVariant params);
 
-  // This version lets you specify different image types and pass parameters
-  // to the encoder. For example toDataURLAs("image/png", "transparency=none")
-  // gives you a PNG with the alpha channel discarded. See the encoder for
-  // the options string that it supports. Separate multiple options with
-  // semicolons.
-  [noscript] DOMString toDataURLAs(in DOMString mimeType, in DOMString encoderOptions);
-
- 
   // Valid calls are
   // mozGetAsFile(name);              -- defaults to image/png
   // mozGetAsFile(name, type);        -- uses given type

@@ -46,6 +46,7 @@
  * with the attendant performance loss and heap fragmentation.
  */
 
+#include "nsAlgorithm.h"
 #include "nsStorageStream.h"
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
@@ -204,7 +205,7 @@ nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritt
                 this, mWriteCursor, mSegmentEnd));
         }
 	
-        count = PR_MIN(availableInSegment, remaining);
+        count = NS_MIN(availableInSegment, remaining);
         memcpy(mWriteCursor, readCursor, count);
         remaining -= count;
         readCursor += count;
@@ -441,11 +442,11 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
                 goto out;
 
             mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(++mSegmentNum);
-            mSegmentEnd = mReadCursor + PR_MIN(mSegmentSize, available);
+            mSegmentEnd = mReadCursor + NS_MIN(mSegmentSize, available);
             availableInSegment = mSegmentEnd - mReadCursor;
         }
 	
-        count = PR_MIN(availableInSegment, remainingCapacity);
+        count = NS_MIN(availableInSegment, remainingCapacity);
         rv = writer(this, closure, mReadCursor, aCount - remainingCapacity,
                     count, &bytesConsumed);
         if (NS_FAILED(rv) || (bytesConsumed == 0))
@@ -537,7 +538,7 @@ nsStorageInputStream::Seek(PRUint32 aPosition)
     mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(mSegmentNum) +
         segmentOffset;
     PRUint32 available = length - aPosition;
-    mSegmentEnd = mReadCursor + PR_MIN(mSegmentSize - segmentOffset, available);
+    mSegmentEnd = mReadCursor + NS_MIN(mSegmentSize - segmentOffset, available);
     mLogicalCursor = aPosition;
     return NS_OK;
 }

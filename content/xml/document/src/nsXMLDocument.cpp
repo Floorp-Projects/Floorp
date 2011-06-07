@@ -140,11 +140,9 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
       isHTML = PR_TRUE;
       isXHTML = PR_TRUE;
     }
-#ifdef MOZ_SVG
     else if (publicId.EqualsLiteral("-//W3C//DTD SVG 1.1//EN")) {
       rv = NS_NewSVGDocument(getter_AddRefs(d));
     }
-#endif
     // XXX Add support for XUL documents.
     else {
       rv = NS_NewXMLDocument(getter_AddRefs(d));

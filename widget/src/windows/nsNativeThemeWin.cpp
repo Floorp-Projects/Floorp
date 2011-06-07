@@ -209,8 +209,8 @@ static SIZE GetGutterSize(HANDLE theme, HDC hdc)
     SIZE itemSize;
     nsUXThemeData::getThemePartSize(theme, hdc, MENU_POPUPITEM, MPI_NORMAL, NULL, TS_TRUE, &itemSize);
 
-    int width = PR_MAX(itemSize.cx, checkboxBGSize.cx + gutterSize.cx);
-    int height = PR_MAX(itemSize.cy, checkboxBGSize.cy);
+    int width = NS_MAX(itemSize.cx, checkboxBGSize.cx + gutterSize.cx);
+    int height = NS_MAX(itemSize.cy, checkboxBGSize.cy);
     SIZE ret;
     ret.cx = width;
     ret.cy = height;
@@ -2660,6 +2660,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIF
 nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
                                  PRInt32& aPart, PRInt32& aState, PRBool& aFocused)
 {  
+  aFocused = PR_FALSE;
   switch (aWidgetType) {
     case NS_THEME_BUTTON: {
       nsEventStates contentState;

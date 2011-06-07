@@ -172,33 +172,6 @@ private:
 //// Async Helpers
 
 /**
- * Execute an async statement, blocking the main thread until we get the
- * callback completion notification.
- */
-void
-blocking_async_execute(mozIStorageBaseStatement *stmt)
-{
-  nsRefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
-
-  nsCOMPtr<mozIStoragePendingStatement> pendy;
-  (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pendy));
-  spinner->SpinUntilCompleted();
-}
-
-/**
- * Invoke AsyncClose on the given connection, blocking the main thread until we
- * get the completion notification.
- */
-void
-blocking_async_close(mozIStorageConnection *db)
-{
-  nsRefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
-
-  db->AsyncClose(spinner);
-  spinner->SpinUntilCompleted();
-}
-
-/**
  * A horrible hack to figure out what the connection's async thread is.  By
  * creating a statement and async dispatching we can tell from the mutex who
  * is the async thread, PRThread style.  Then we map that to an nsIThread.
