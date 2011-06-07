@@ -115,8 +115,10 @@ __attribute__((visibility("default"))) int print_status() {
 }
 
 /* On ARM, this creates a .tbss section before .init_array, which
- * elfhack could then pick instead of .init_array */
-__thread int foo;
+ * elfhack could then pick instead of .init_array.
+ * Also, when .tbss is big enough, elfhack may wrongfully consider
+ * following sections as part of the PT_TLS segment. */
+__thread int foo[1024];
 
 __attribute__((constructor)) void end_test() {
     static int count = 0;
