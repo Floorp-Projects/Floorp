@@ -1371,7 +1371,12 @@ TokenStream::getTokenInternal()
     }
 
     /*
-     * Get the token class, based on the first char.
+     * Get the token kind, based on the first char.  The ordering of c1kind
+     * comparison is based on the frequency of tokens in real code.  Minified
+     * and non-minified code have different characteristics, mostly in that
+     * whitespace occurs much less in minified code.  Token kinds that fall in
+     * the 'Other' category typically account for less than 2% of all tokens,
+     * so their order doesn't matter much.
      */
     c1kind = FirstCharKind(firstCharKinds[c]);
 
@@ -1505,6 +1510,105 @@ TokenStream::getTokenInternal()
             tp->t_op = JSOP_NOP;
             tt = TOK_ASSIGN;
         }
+        goto out;
+    }
+
+    /*
+     * Look for a string.
+     */
+    if (c1kind == String) {
+        qc = c;
+        tokenbuf.clear();
+        while (true) {
+            /*
+             * We need to detect any of these chars:  " or ', \n (or its
+             * equivalents), \\, EOF.  We use maybeStrSpecial[] in a manner
+             * similar to maybeEOL[], see above.  Because we detect EOL
+             * sequences here and put them back immediately, we can use
+             * getCharIgnoreEOL().
+             */
+            c = getCharIgnoreEOL();
+            if (maybeStrSpecial[c & 0xff]) {
+                if (c == qc)
+                    break;
+                if (c == '\\') {
+                    switch (c = getChar()) {
+                      case 'b': c = '\b'; break;
+                      case 'f': c = '\f'; break;
+                      case 'n': c = '\n'; break;
+                      case 'r': c = '\r'; break;
+                      case 't': c = '\t'; break;
+                      case 'v': c = '\v'; break;
+
+                      default:
+                        if ('0' <= c && c < '8') {
+                            int32 val = JS7_UNDEC(c);
+
+                            c = peekChar();
+                            /* Strict mode code allows only \0, then a non-digit. */
+                            if (val != 0 || JS7_ISDEC(c)) {
+                                if (!ReportStrictModeError(cx, this, NULL, NULL,
+                                                           JSMSG_DEPRECATED_OCTAL)) {
+                                    goto error;
+                                }
+                                setOctalCharacterEscape();
+                            }
+                            if ('0' <= c && c < '8') {
+                                val = 8 * val + JS7_UNDEC(c);
+                                getChar();
+                                c = peekChar();
+                                if ('0' <= c && c < '8') {
+                                    int32 save = val;
+                                    val = 8 * val + JS7_UNDEC(c);
+                                    if (val <= 0377)
+                                        getChar();
+                                    else
+                                        val = save;
+                                }
+                            }
+
+                            c = (jschar)val;
+                        } else if (c == 'u') {
+                            jschar cp[4];
+                            if (peekChars(4, cp) &&
+                                JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) &&
+                                JS7_ISHEX(cp[2]) && JS7_ISHEX(cp[3])) {
+                                c = (((((JS7_UNHEX(cp[0]) << 4)
+                                        + JS7_UNHEX(cp[1])) << 4)
+                                      + JS7_UNHEX(cp[2])) << 4)
+                                    + JS7_UNHEX(cp[3]);
+                                skipChars(4);
+                            }
+                        } else if (c == 'x') {
+                            jschar cp[2];
+                            if (peekChars(2, cp) &&
+                                JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1])) {
+                                c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
+                                skipChars(2);
+                            }
+                        } else if (c == '\n') {
+                            /* ECMA follows C by removing escaped newlines. */
+                            continue;
+                        }
+                        break;
+                    }
+                } else if (TokenBuf::isRawEOLChar(c) || c == EOF) {
+                    ungetCharIgnoreEOL(c);
+                    ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
+                                             JSMSG_UNTERMINATED_STRING);
+                    goto error;
+                }
+            }
+            if (!tokenbuf.append(c))
+                goto error;
+        }
+        JSAtom *atom = atomize(cx, tokenbuf);
+        if (!atom)
+            goto error;
+        tp->pos.end.lineno = lineno;
+        tp->t_op = JSOP_STRING;
+        tp->t_atom = atom;
+        tt = TOK_STRING;
         goto out;
     }
 
@@ -1650,105 +1754,6 @@ TokenStream::getTokenInternal()
             goto error;
         tp->t_dval = dval;
         tt = TOK_NUMBER;
-        goto out;
-    }
-
-    /*
-     * Look for a string.
-     */
-    if (c1kind == String) {
-        qc = c;
-        tokenbuf.clear();
-        while (true) {
-            /*
-             * We need to detect any of these chars:  " or ', \n (or its
-             * equivalents), \\, EOF.  We use maybeStrSpecial[] in a manner
-             * similar to maybeEOL[], see above.  Because we detect EOL
-             * sequences here and put them back immediately, we can use
-             * getCharIgnoreEOL().
-             */
-            c = getCharIgnoreEOL();
-            if (maybeStrSpecial[c & 0xff]) {
-                if (c == qc)
-                    break;
-                if (c == '\\') {
-                    switch (c = getChar()) {
-                      case 'b': c = '\b'; break;
-                      case 'f': c = '\f'; break;
-                      case 'n': c = '\n'; break;
-                      case 'r': c = '\r'; break;
-                      case 't': c = '\t'; break;
-                      case 'v': c = '\v'; break;
-
-                      default:
-                        if ('0' <= c && c < '8') {
-                            int32 val = JS7_UNDEC(c);
-
-                            c = peekChar();
-                            /* Strict mode code allows only \0, then a non-digit. */
-                            if (val != 0 || JS7_ISDEC(c)) {
-                                if (!ReportStrictModeError(cx, this, NULL, NULL,
-                                                           JSMSG_DEPRECATED_OCTAL)) {
-                                    goto error;
-                                }
-                                setOctalCharacterEscape();
-                            }
-                            if ('0' <= c && c < '8') {
-                                val = 8 * val + JS7_UNDEC(c);
-                                getChar();
-                                c = peekChar();
-                                if ('0' <= c && c < '8') {
-                                    int32 save = val;
-                                    val = 8 * val + JS7_UNDEC(c);
-                                    if (val <= 0377)
-                                        getChar();
-                                    else
-                                        val = save;
-                                }
-                            }
-
-                            c = (jschar)val;
-                        } else if (c == 'u') {
-                            jschar cp[4];
-                            if (peekChars(4, cp) &&
-                                JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) &&
-                                JS7_ISHEX(cp[2]) && JS7_ISHEX(cp[3])) {
-                                c = (((((JS7_UNHEX(cp[0]) << 4)
-                                        + JS7_UNHEX(cp[1])) << 4)
-                                      + JS7_UNHEX(cp[2])) << 4)
-                                    + JS7_UNHEX(cp[3]);
-                                skipChars(4);
-                            }
-                        } else if (c == 'x') {
-                            jschar cp[2];
-                            if (peekChars(2, cp) &&
-                                JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1])) {
-                                c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
-                                skipChars(2);
-                            }
-                        } else if (c == '\n') {
-                            /* ECMA follows C by removing escaped newlines. */
-                            continue;
-                        }
-                        break;
-                    }
-                } else if (TokenBuf::isRawEOLChar(c) || c == EOF) {
-                    ungetCharIgnoreEOL(c);
-                    ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
-                                             JSMSG_UNTERMINATED_STRING);
-                    goto error;
-                }
-            }
-            if (!tokenbuf.append(c))
-                goto error;
-        }
-        JSAtom *atom = atomize(cx, tokenbuf);
-        if (!atom)
-            goto error;
-        tp->pos.end.lineno = lineno;
-        tp->t_op = JSOP_STRING;
-        tp->t_atom = atom;
-        tt = TOK_STRING;
         goto out;
     }
 
