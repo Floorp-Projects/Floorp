@@ -305,6 +305,14 @@ public:
   PRBool HasChildren() { return !!GetChildAt(0); }
 
   /**
+   * Return next/previous sibling of the accessible.
+   */
+  inline nsAccessible* NextSibling() const
+    {  return GetSiblingAtOffset(1); }
+  inline nsAccessible* PrevSibling() const
+    { return GetSiblingAtOffset(-1); }
+
+  /**
    * Return embedded accessible children count.
    */
   PRInt32 GetEmbeddedChildCount();
@@ -319,19 +327,6 @@ public:
    */
   PRInt32 GetIndexOfEmbeddedChild(nsAccessible* aChild);
 
-  /**
-   * Return cached accessible of parent-child relatives.
-   */
-  nsAccessible* GetCachedNextSibling() const
-  {
-    return mParent ?
-      mParent->mChildren.SafeElementAt(mIndexInParent + 1, nsnull).get() : nsnull;
-  }
-  nsAccessible* GetCachedPrevSibling() const
-  {
-    return mParent ?
-      mParent->mChildren.SafeElementAt(mIndexInParent - 1, nsnull).get() : nsnull;
-  }
   PRUint32 GetCachedChildCount() const { return mChildren.Length(); }
   nsAccessible* GetCachedChildAt(PRUint32 aIndex) const { return mChildren.ElementAt(aIndex); }
   inline bool AreChildrenCached() const
@@ -503,7 +498,7 @@ protected:
    * Return sibling accessible at the given offset.
    */
   virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                           nsresult *aError = nsnull);
+                                           nsresult *aError = nsnull) const;
 
   /**
    * Flags used to describe the state and type of children.
