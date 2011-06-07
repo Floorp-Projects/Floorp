@@ -1486,7 +1486,7 @@ var ctx = canvas.getContext('2d');
 
 ctx.globalCompositeOperation = 'xor';
 ctx.globalCompositeOperation = 'clear';
-todo(ctx.globalCompositeOperation == 'xor', "ctx.globalCompositeOperation == 'xor'");
+ok(ctx.globalCompositeOperation == 'xor', "ctx.globalCompositeOperation == 'xor'");
 
 
 }
@@ -1619,7 +1619,7 @@ var ctx = canvas.getContext('2d');
 
 ctx.globalCompositeOperation = 'xor';
 ctx.globalCompositeOperation = 'over';
-todo(ctx.globalCompositeOperation == 'xor', "ctx.globalCompositeOperation == 'xor'");
+ok(ctx.globalCompositeOperation == 'xor', "ctx.globalCompositeOperation == 'xor'");
 
 
 }
@@ -11880,7 +11880,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -12393,7 +12393,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -13276,10 +13276,10 @@ var ctx = canvas.getContext('2d');
 ctx.translate(50, 0);
 ctx.rect(0, 0, 20, 20);
 ok(ctx.isPointInPath(-40, 10) === false, "ctx.isPointInPath(-40, 10) === false");
-todo(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
+ok(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
 ok(ctx.isPointInPath(49, 10) === false, "ctx.isPointInPath(49, 10) === false");
-todo(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
-todo(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
+ok(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
+ok(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
 ok(ctx.isPointInPath(71, 10) === false, "ctx.isPointInPath(71, 10) === false");
 
 
@@ -13301,10 +13301,10 @@ var ctx = canvas.getContext('2d');
 ctx.rect(50, 0, 20, 20);
 ctx.translate(50, 0);
 ok(ctx.isPointInPath(-40, 10) === false, "ctx.isPointInPath(-40, 10) === false");
-todo(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
+ok(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
 ok(ctx.isPointInPath(49, 10) === false, "ctx.isPointInPath(49, 10) === false");
-todo(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
-todo(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
+ok(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
+ok(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
 ok(ctx.isPointInPath(71, 10) === false, "ctx.isPointInPath(71, 10) === false");
 
 
@@ -13328,8 +13328,8 @@ ctx.rect(-70, 0, 20, 20);
 ok(ctx.isPointInPath(-40, 10) === false, "ctx.isPointInPath(-40, 10) === false");
 ok(ctx.isPointInPath(10, 10) === false, "ctx.isPointInPath(10, 10) === false");
 ok(ctx.isPointInPath(49, 10) === false, "ctx.isPointInPath(49, 10) === false");
-todo(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
-todo(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
+ok(ctx.isPointInPath(51, 10) === true, "ctx.isPointInPath(51, 10) === true");
+ok(ctx.isPointInPath(69, 10) === true, "ctx.isPointInPath(69, 10) === true");
 ok(ctx.isPointInPath(71, 10) === false, "ctx.isPointInPath(71, 10) === false");
 
 
@@ -18995,7 +18995,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -19537,21 +19537,23 @@ var canvas = document.getElementById('c614');
 var ctx = canvas.getContext('2d');
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+var _threw = false;
 try {
   var data = canvas.toDataURL('image/png', 'quality=100');
-  ok(false, "Should have thrown an exception for invalid args to png encoder");
 }
 catch (e) {
-  is(e.result, Components.results.NS_ERROR_INVALID_ARG, "Exception was wrong for png encoder");
+  _threw = true;
 }
+ok(!_threw, "Should not throw an exception for invalid args to png encoder");
 
+_threw = false;
 try {
   var data = canvas.toDataURL('image/jpeg', 'foobar=true');
-  ok(false, "Should have thrown an exception for invalid args to jpeg encoder");
 }
 catch (e) {
-  is(e.result, Components.results.NS_ERROR_INVALID_ARG, "Exception was wrong for jpeg encoder");
+  _threw = true;
 }
+ok(!_threw, "Should not throw an exception for invalid args to jpeg encoder");
 
 }
 </script>
@@ -20761,7 +20763,7 @@ ok(/^data:image\/png[;,]/.test(data), "data =~ /^data:image\\/png[;,]/");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -20788,7 +20790,7 @@ ok(/^data:image\/png[;,]/.test(data), "data =~ /^data:image\\/png[;,]/");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -20816,7 +20818,7 @@ ok(/^data:image\/png[;,]/.test(data), "data =~ /^data:image\\/png[;,]/");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -21410,6 +21412,11 @@ function runTests() {
  // they are in these tests
  //test_2d_shadow_composite_3();
  //test_2d_shadow_composite_4();
+ // Shadows should not be drawn if the operator is not source-over (the spec doesn't
+ // say this yet, but it should be changed). These tests assume shadows will
+ // be drawn with operators other than source-over:
+ //test_2d_shadow_composite_1();
+ //test_2d_shadow_composite_2();
  try {
   test_2d_canvas_readonly();
  } catch (e) {
@@ -23794,16 +23801,6 @@ function runTests() {
   test_2d_shadow_clip_3();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_shadow_clip_3");
- }
- try {
-  test_2d_shadow_composite_1();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_1");
- }
- try {
-  test_2d_shadow_composite_2();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_2");
  }
  try {
   test_2d_shadow_gradient_alpha();

@@ -122,11 +122,10 @@ void nsMenuGroupOwnerX::CharacterDataChanged(nsIDocument* aDocument,
 void nsMenuGroupOwnerX::ContentAppended(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aFirstNewContent,
-                                        PRInt32 aNewIndexInContainer)
+                                        PRInt32 /* unused */)
 {
   for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
-    ContentInserted(aDocument, aContainer, cur, aNewIndexInContainer);
-    aNewIndexInContainer++;
+    ContentInserted(aDocument, aContainer, cur, 0);
   }
 }
 
@@ -191,7 +190,7 @@ void nsMenuGroupOwnerX::ContentRemoved(nsIDocument * aDocument,
 void nsMenuGroupOwnerX::ContentInserted(nsIDocument * aDocument,
                                         nsIContent * aContainer,
                                         nsIContent * aChild,
-                                        PRInt32 aIndexInContainer)
+                                        PRInt32 /* unused */)
 {
   if (!aContainer) {
     return;
@@ -200,7 +199,7 @@ void nsMenuGroupOwnerX::ContentInserted(nsIDocument * aDocument,
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
   if (obs)
-    obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
+    obs->ObserveContentInserted(aDocument, aContainer, aChild);
   else if (aContainer != mContent) {
     // We do a lookup on the parent container in case things were removed
     // under a "menupopup" item. That is basically a wrapper for the contents
@@ -209,7 +208,7 @@ void nsMenuGroupOwnerX::ContentInserted(nsIDocument * aDocument,
     if (parent) {
       obs = LookupContentChangeObserver(parent);
       if (obs)
-        obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
+        obs->ObserveContentInserted(aDocument, aContainer, aChild);
     }
   }
 }

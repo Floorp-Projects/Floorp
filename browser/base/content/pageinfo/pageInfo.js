@@ -626,7 +626,6 @@ function grabAll(elem)
   if (elem instanceof HTMLImageElement)
     addImage(elem.src, gStrings.mediaImg,
              (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false);
-#ifdef MOZ_SVG
   else if (elem instanceof SVGImageElement) {
     try {
       // Note: makeURLAbsolute will throw if either the baseURI is not a valid URI
@@ -635,7 +634,6 @@ function grabAll(elem)
       addImage(href, gStrings.mediaImg, "", elem, false);
     } catch (e) { }
   }
-#endif
 #ifdef MOZ_MEDIA
   else if (elem instanceof HTMLVideoElement) {
     addImage(elem.currentSrc, gStrings.mediaVideo, "", elem, false);
@@ -841,9 +839,7 @@ function makePreview(row)
 
   var imageText;
   if (!isBG &&
-#ifdef MOZ_SVG
       !(item instanceof SVGImageElement) &&
-#endif
       !(gDocument instanceof ImageDocument)) {
     imageText = item.title || item.alt;
 
@@ -941,9 +937,7 @@ function makePreview(row)
 
   if ((item instanceof HTMLLinkElement || item instanceof HTMLInputElement ||
        item instanceof HTMLImageElement ||
-#ifdef MOZ_SVG
        item instanceof SVGImageElement ||
-#endif
       (item instanceof HTMLObjectElement && /^image\//.test(mimeType)) || isBG) && isProtocolAllowed) {
     newImage.setAttribute("src", url);
     physWidth = newImage.width || 0;
@@ -963,12 +957,10 @@ function makePreview(row)
       newImage.height = newImage.naturalHeight;
     }
 
-#ifdef MOZ_SVG
     if (item instanceof SVGImageElement) {
       newImage.width = item.width.baseVal.value;
       newImage.height = item.height.baseVal.value;
     }
-#endif
 
     width = newImage.width;
     height = newImage.height;

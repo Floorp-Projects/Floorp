@@ -141,7 +141,7 @@ private:
     nsresult Restart();
     char    *LocateHttpStart(char *buf, PRUint32 len,
                              PRBool aAllowPartialMatch);
-    void     ParseLine(char *line);
+    nsresult ParseLine(char *line);
     nsresult ParseLineSegment(char *seg, PRUint32 len);
     nsresult ParseHead(char *, PRUint32 count, PRUint32 *countRead);
     nsresult HandleContentStart();

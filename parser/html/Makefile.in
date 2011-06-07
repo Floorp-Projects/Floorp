@@ -49,13 +49,8 @@ LIBXUL_LIBRARY	= 1
 EXPORTS		= \
 		nsHtml5Module.h \
 		nsAHtml5FragmentParser.h \
-		$(NULL)
-
-ifdef MOZ_SVG
-EXPORTS += \
 		nsHtml5SVGLoadDispatcher.h \
 		$(NULL)
-endif
 
 CPPSRCS		= \
 		nsHtml5Atoms.cpp \
@@ -83,13 +78,8 @@ CPPSRCS		= \
 		nsHtml5StreamParser.cpp \
 		nsHtml5Speculation.cpp \
 		nsHtml5SpeculativeLoad.cpp \
-		$(NULL)
-
-ifdef MOZ_SVG
-CPPSRCS += \
 		nsHtml5SVGLoadDispatcher.cpp \
 		$(NULL)
-endif
 
 FORCE_STATIC_LIB = 1
 

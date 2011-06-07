@@ -434,6 +434,14 @@ nsContentTreeOwner::GetPersistence(PRBool* aPersistPosition,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsContentTreeOwner::GetTargetableShellCount(PRUint32* aResult)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  *aResult = mXULWindow->mTargetableShells.Count();
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsContentTreeOwner::nsIWebBrowserChrome3
 //*****************************************************************************   

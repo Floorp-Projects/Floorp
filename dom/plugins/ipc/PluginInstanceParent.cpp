@@ -96,7 +96,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mPluginHWND(NULL)
     , mPluginWndProc(NULL)
     , mNestedEventState(false)
-    , mInAnswerFocusChange(false)
 #endif // defined(XP_WIN)
     , mQuirks(0)
 #if defined(XP_MACOSX)
@@ -104,7 +103,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mShHeight(0)
     , mShColorSpace(nsnull)
     , mDrawingModel(NPDrawingModelCoreGraphics)
-    , mIOSurface(nsnull)
 #endif
 {
     InitQuirksModes(aMimeType);
@@ -138,7 +136,6 @@ PluginInstanceParent::~PluginInstanceParent()
     }
     if (mShColorSpace)
         ::CGColorSpaceRelease(mShColorSpace);
-    delete mIOSurface;
     if (mDrawingModel == NPDrawingModelCoreAnimation) {
         mParent->RemoveFromRefreshTimer(this);
     }
@@ -518,6 +515,29 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         }
         surface = gfxSharedImageSurface::Open(newSurface.get_Shmem());
     }
+#ifdef XP_MACOSX
+    else if (newSurface.type() == SurfaceDescriptor::TIOSurfaceDescriptor) {
+        IOSurfaceDescriptor iodesc = newSurface.get_IOSurfaceDescriptor();
+    
+        nsIOSurface *newIOSurface = nsIOSurface::LookupSurface(iodesc.surfaceId());
+
+        if (!newIOSurface) {
+            NS_WARNING("Got bad IOSurfaceDescriptor in RecvShow");
+            return false;
+        }
+      
+        mIOSurface = newIOSurface;
+
+        RecvNPN_InvalidateRect(updatedRect);
+
+        *prevSurface = null_t();
+
+        PLUGIN_LOG_DEBUG(("   (RecvShow invalidated for surface %p)",
+                          mFrontSurface.get()));
+
+        return true;
+    }
+#endif
 #ifdef MOZ_X11
     else if (newSurface.type() == SurfaceDescriptor::TSurfaceDescriptorX11) {
         SurfaceDescriptorX11 xdesc = newSurface.get_SurfaceDescriptorX11();
@@ -604,8 +624,12 @@ PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
 
     Image::Format format = Image::CAIRO_SURFACE;
 #ifdef XP_MACOSX
-    if (mIOSurface)
+    if (mIOSurface) {
         format = Image::MAC_IO_SURFACE;
+        if (!aContainer->Manager()) {
+            return NS_ERROR_FAILURE;
+        }
+    }
 #endif
 
     nsRefPtr<Image> image;
@@ -655,16 +679,6 @@ PluginInstanceParent::GetImageSize(nsIntSize* aSize)
 
     return NS_ERROR_NOT_AVAILABLE;
 }
-
-#ifdef XP_MACOSX
-nsresult
-PluginInstanceParent::IsRemoteDrawingCoreAnimation(PRBool *aDrawing)
-{
-    *aDrawing = (NPDrawingModelCoreAnimation == (NPDrawingModel)mDrawingModel ||
-                 NPDrawingModelInvalidatingCoreAnimation == (NPDrawingModel)mDrawingModel);
-    return NS_OK;
-}
-#endif
 
 nsresult
 PluginInstanceParent::SetBackgroundUnknown()
@@ -866,7 +880,6 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     if (mShWidth != window.width || mShHeight != window.height) {
         if (mDrawingModel == NPDrawingModelCoreAnimation || 
             mDrawingModel == NPDrawingModelInvalidatingCoreAnimation) {
-            delete mIOSurface;
             mIOSurface = nsIOSurface::CreateIOSurface(window.width, window.height);
         } else if (mShWidth * mShHeight != window.width * window.height) {
             if (mShWidth != 0 && mShHeight != 0) {
@@ -1560,8 +1573,7 @@ PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
     switch (message) {
         case WM_SETFOCUS:
         // Let the child plugin window know it should take focus.
-        if (!self->mInAnswerFocusChange)
-          self->CallSetPluginFocus();
+        self->CallSetPluginFocus();
         break;
 
         case WM_CLOSE:
@@ -1741,8 +1753,6 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
     // focus. We forward the event down to widget so the dom/focus manager can
     // be updated.
 #if defined(OS_WIN)
-    AutoRestore<bool> ar(mInAnswerFocusChange);
-    mInAnswerFocusChange = true;
     ::SendMessage(mPluginHWND, gOOPPPluginFocusEvent, gotFocus ? 1 : 0, 0);
     return true;
 #else

@@ -11,6 +11,14 @@ function test() {
   // This test is async
   waitForExplicitFinish();
 
+  // Ensure the form helper is initialized
+  try {
+    FormHelperUI.enabled;
+  }
+  catch(e) {
+    FormHelperUI.init();
+  }
+
   // Need to wait until the page is loaded
   messageManager.addMessageListener("pageshow", function(aMessage) {
     if (newTab && newTab.browser.currentURI.spec != "about:blank") {
@@ -20,15 +28,9 @@ function test() {
     }
   });
 
-  let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup).getStartupInfo();
-  if (!("firstPaint" in startupInfo))
-    waitFor(function() { newTab = Browser.addTab(testURL, true); }, function() {
-      let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup).getStartupInfo();
-      return ("firstPaint" in startupInfo);
-    }, Date.now() + 3000);
-  else
-    newTab = Browser.addTab(testURL, true);
+  newTab = Browser.addTab(testURL, true);
 }
+
 
 //------------------------------------------------------------------------------
 // Iterating tests by shifting test out one by one as runNextTest is called.
@@ -55,12 +57,12 @@ function runNextTest() {
 }
 
 function waitForAutocomplete(aCallback) {
-  messageManager.addMessageListener("FormAssist:AutoComplete", function(aMessage) {
-    messageManager.removeMessageListener(aMessage.name, arguments.callee);
+  window.addEventListener("contentpopupshown", function(aEvent) {
+    window.removeEventListener(aEvent.type, arguments.callee, false);
     setTimeout(function() {
-      aCallback(aMessage.json.current.list);
+      aCallback(FormHelperUI._currentElement.list);
     }, 0);
-  });
+  }, false);
 };
 
 let data = [

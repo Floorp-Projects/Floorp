@@ -85,8 +85,11 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header,
         entry->value.Append(value);
     }
     // Replace the existing string with the new value
-    else
+    else if (CanOverwriteHeader(header))
         entry->value = value;
+    else if (!entry->value.Equals(value))
+        return NS_ERROR_CORRUPTED_CONTENT;
+
     return NS_OK;
 }
 
@@ -129,7 +132,7 @@ nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor)
     return NS_OK;
 }
 
-void
+nsresult
 nsHttpHeaderArray::ParseHeaderLine(const char *line,
                                    nsHttpAtom *hdr,
                                    char **val)
@@ -151,13 +154,13 @@ nsHttpHeaderArray::ParseHeaderLine(const char *line,
     char *p = (char *) strchr(line, ':');
     if (!p) {
         LOG(("malformed header [%s]: no colon\n", line));
-        return;
+        return NS_OK;
     }
 
     // make sure we have a valid token for the field-name
     if (!nsHttp::IsValidToken(line, p)) {
         LOG(("malformed header [%s]: field-name not a token\n", line));
-        return;
+        return NS_OK;
     }
     
     *p = 0; // null terminate field-name
@@ -165,7 +168,7 @@ nsHttpHeaderArray::ParseHeaderLine(const char *line,
     nsHttpAtom atom = nsHttp::ResolveAtom(line);
     if (!atom) {
         LOG(("failed to resolve atom [%s]\n", line));
-        return;
+        return NS_OK;
     }
 
     // skip over whitespace
@@ -183,7 +186,7 @@ nsHttpHeaderArray::ParseHeaderLine(const char *line,
     if (val) *val = p;
 
     // assign response header
-    SetHeader(atom, nsDependentCString(p, p2 - p), PR_TRUE);
+    return SetHeader(atom, nsDependentCString(p, p2 - p), PR_TRUE);
 }
 
 void
@@ -246,4 +249,12 @@ nsHttpHeaderArray::CanAppendToHeader(nsHttpAtom header)
            header != nsHttp::From                &&
            header != nsHttp::Location            &&
            header != nsHttp::Max_Forwards;
+}
+
+PRBool
+nsHttpHeaderArray::CanOverwriteHeader(nsHttpAtom header)
+{
+    if (mType != HTTP_RESPONSE_HEADERS)
+        return PR_TRUE;
+    return header != nsHttp::Content_Length;
 }

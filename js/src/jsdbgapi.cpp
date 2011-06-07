@@ -1417,7 +1417,7 @@ JS_GetFrameScript(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
 {
-    return Valueify(fp)->pc(cx);
+    return Valueify(fp)->pcQuadratic(cx);
 }
 
 JS_PUBLIC_API(JSStackFrame *)
@@ -1680,7 +1680,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
     if (!CheckDebugMode(cx))
         return JS_FALSE;
 
-    chars = js_InflateString(cx, bytes, &len);
+    chars = InflateString(cx, bytes, &len);
     if (!chars)
         return JS_FALSE;
     length = (uintN) len;
@@ -2214,7 +2214,7 @@ js_StartVtune(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        params.tb5Filename = js_DeflateString(cx, str->chars(), str->length());
+        params.tb5Filename = DeflateString(cx, str->chars(), str->length());
     }
 
     status = VTStartSampling(&params);
@@ -2453,9 +2453,9 @@ jstv_Filename(JSStackFrame *fp)
 inline uintN
 jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 {
-    while (fp && fp->pc(cx) == NULL)
+    while (fp && fp->pcQuadratic(cx) == NULL)
         fp = fp->prev();
-    return (fp && fp->pc(cx)) ? js_FramePCToLineNumber(cx, fp) : 0;
+    return (fp && fp->pcQuadratic(cx)) ? js_FramePCToLineNumber(cx, fp) : 0;
 }
 
 /* Collect states here and distribute to a matching buffer, if any */
@@ -2552,7 +2552,7 @@ ethogram_addScript(JSContext *cx, uintN argc, jsval *vp)
     }
     if (JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        filename = js_DeflateString(cx, str->chars(), str->length());
+        filename = DeflateString(cx, str->chars(), str->length());
         if (!filename)
             return false;
     }

@@ -44,7 +44,6 @@
 #include "nsCOMPtr.h"
 #include "nsIPrintOptions.h"
 #include "nsIPrintSettingsService.h"
-#include "nsIPrefBranch.h"
 #include "nsString.h"
 #include "nsFont.h"
 
@@ -83,13 +82,6 @@ protected:
                                 const char * aMarginPref);
   void WriteInchesIntFromTwipsPref(const char * aPrefId, PRInt32 aTwips);
 
-  nsresult ReadPrefString(const char * aPrefId, nsAString& aString);
-  /**
-   * method WritePrefString
-   *   Writes PRUnichar* to Prefs and deletes the contents of aString
-   */
-  nsresult WritePrefString(const char * aPrefId, const nsAString& aString);
-  nsresult WritePrefString(PRUnichar*& aStr, const char* aPrefId);
   nsresult ReadPrefDouble(const char * aPrefId, double& aVal);
   nsresult WritePrefDouble(const char * aPrefId, double aVal);
 
@@ -124,8 +116,6 @@ protected:
   nsCOMPtr<nsIPrintSettings> mGlobalPrintSettings;
 
   nsCString mPrefName;
-
-  nsCOMPtr<nsIPrefBranch> mPrefBranch;
 
 private:
   // These are not supported and are not implemented!

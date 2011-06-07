@@ -181,7 +181,7 @@ struct VectorImpl<T, N, AP, true>
  * N requirements:
  *  - any value, however, N is clamped to min/max values
  * AllocPolicy:
- *  - see "Allocation policies" in jstl.h (default ContextAllocPolicy)
+ *  - see "Allocation policies" in jsalloc.h (default js::ContextAllocPolicy)
  *
  * N.B: Vector is not reentrant: T member functions called during Vector member
  *      functions must not call back into the same object.

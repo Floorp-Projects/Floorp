@@ -45,10 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 
-ifndef MOZ_ENABLE_LIBXUL
-MOZILLA_INTERNAL_API = 1
-endif
-
 DIRS		= external component bug656331_component
 
 ifeq ($(OS_ARCH),WINNT)
@@ -100,30 +96,29 @@ CPP_UNIT_TESTS = \
                  TestCheckedInt.cpp \
                  $(NULL)
 
-ifndef MOZ_ENABLE_LIBXUL
-CPP_UNIT_TESTS += \
-                  TestArray.cpp \
-                  TestCRT.cpp \
-                  TestDeque.cpp \
-                  TestEncoding.cpp \
-                  TestExpirationTracker.cpp \
-                  TestPipes.cpp \
-                  TestPriorityQueue.cpp \
-                  TestProxies.cpp \
-                  TestStorageStream.cpp \
-                  TestStrings.cpp \
-                  TestSynchronization.cpp \
-                  TestTArray.cpp \
-                  TestThreadPool.cpp \
-                  TestThreads.cpp \
-                  TestTimeStamp.cpp \
-                  TestXPIDLString.cpp \
-                  TestUTF.cpp \
-                  TestAtoms.cpp \
-                  $(NULL)
-# FIXME: bug 577500 TestStaticAtoms fails when run in dist/bin
-# TestStaticAtoms.cpp
-endif
+# XXX Make this tests work in libxul builds.
+#CPP_UNIT_TESTS += \
+#                  TestArray.cpp \
+#                  TestCRT.cpp \
+#                  TestDeque.cpp \
+#                  TestEncoding.cpp \
+#                  TestExpirationTracker.cpp \
+#                  TestPipes.cpp \
+#                  TestPriorityQueue.cpp \
+#                  TestProxies.cpp \
+#                  TestStorageStream.cpp \
+#                  TestStrings.cpp \
+#                  TestSynchronization.cpp \
+#                  TestTArray.cpp \
+#                  TestThreadPool.cpp \
+#                  TestThreads.cpp \
+#                  TestTimeStamp.cpp \
+#                  TestXPIDLString.cpp \
+#                  TestUTF.cpp \
+#                  TestAtoms.cpp \
+#                  $(NULL)
+## FIXME: bug 577500 TestStaticAtoms fails when run in dist/bin
+## TestStaticAtoms.cpp
 
 ifdef MOZ_DEBUG
 # FIXME bug 523392: TestDeadlockDetector doesn't like Windows

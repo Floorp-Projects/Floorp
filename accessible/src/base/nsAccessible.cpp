@@ -75,6 +75,7 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 
+#include "nsLayoutUtils.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h"
@@ -88,8 +89,6 @@
 #include "nsReadableUtils.h"
 #include "prdtoa.h"
 #include "nsIAtom.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIURI.h"
 #include "nsArrayUtils.h"
 #include "nsIMutableArray.h"
@@ -105,6 +104,9 @@
 #endif
 
 #include "mozilla/unused.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,22 +340,14 @@ nsAccessible::Description(nsString& aDescription)
 static PRInt32
 GetAccessModifierMask(nsIContent* aContent)
 {
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (!prefBranch)
-    return 0;
-
   // use ui.key.generalAccessKey (unless it is -1)
-  PRInt32 accessKey;
-  nsresult rv = prefBranch->GetIntPref("ui.key.generalAccessKey", &accessKey);
-  if (NS_SUCCEEDED(rv) && accessKey != -1) {
-    switch (accessKey) {
-      case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
-      case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
-      case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
-      case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
-      default:                             return 0;
-    }
+  switch (Preferences::GetInt("ui.key.generalAccessKey", -1)) {
+    case -1:                             break;
+    case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
+    case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
+    case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
+    case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
+    default:                             return 0;
   }
 
   // get the docShell to this DOMNode, return 0 on failure
@@ -368,17 +362,17 @@ GetAccessModifierMask(nsIContent* aContent)
     return 0;
 
   // determine the access modifier used in this context
+  nsresult rv = NS_ERROR_FAILURE;
   PRInt32 itemType, accessModifierMask = 0;
   treeItem->GetItemType(&itemType);
   switch (itemType) {
+    case nsIDocShellTreeItem::typeChrome:
+      rv = Preferences::GetInt("ui.key.chromeAccess", &accessModifierMask);
+      break;
 
-  case nsIDocShellTreeItem::typeChrome:
-    rv = prefBranch->GetIntPref("ui.key.chromeAccess", &accessModifierMask);
-    break;
-
-  case nsIDocShellTreeItem::typeContent:
-    rv = prefBranch->GetIntPref("ui.key.contentAccess", &accessModifierMask);
-    break;
+    case nsIDocShellTreeItem::typeContent:
+      rv = Preferences::GetInt("ui.key.contentAccess", &accessModifierMask);
+      break;
   }
 
   return NS_SUCCEEDED(rv) ? accessModifierMask : 0;
@@ -682,15 +676,7 @@ nsAccessible::IsVisible(PRBool* aIsOffscreen)
   }
 
   // The frame intersects the viewport, but we need to check the parent view chain :(
-  nsIDocument* doc = mContent->GetOwnerDoc();
-  if (!doc)  {
-    return PR_FALSE;
-  }
-
-  nsIFrame* frameWithView =
-    frame->HasView() ? frame : frame->GetAncestorWithViewExternal();
-  nsIView* view = frameWithView->GetViewExternal();
-  PRBool isVisible = CheckVisibilityInParentChain(doc, view);
+  bool isVisible = nsCoreUtils::CheckVisibilityInParentChain(frame);
   if (isVisible && rectVisibility == nsRectVisibility_kVisible) {
     *aIsOffscreen = PR_FALSE;
   }
@@ -701,20 +687,23 @@ PRUint64
 nsAccessible::NativeState()
 {
   PRUint64 state = 0;
-  nsEventStates intrinsicState = mContent->IntrinsicState();
+  PRBool disabled = PR_FALSE;
+  if (mContent->IsElement()) {
+    nsEventStates elementState = mContent->AsElement()->State();
 
-  if (intrinsicState.HasState(NS_EVENT_STATE_INVALID))
-    state |= states::INVALID;
+    if (elementState.HasState(NS_EVENT_STATE_INVALID))
+      state |= states::INVALID;
 
-  if (intrinsicState.HasState(NS_EVENT_STATE_REQUIRED))
-    state |= states::REQUIRED;
+    if (elementState.HasState(NS_EVENT_STATE_REQUIRED))
+      state |= states::REQUIRED;
 
-  PRBool disabled = mContent->IsHTML() ? 
-    (intrinsicState.HasState(NS_EVENT_STATE_DISABLED)) :
-    (mContent->AttrValueIs(kNameSpaceID_None,
-                           nsAccessibilityAtoms::disabled,
-                           nsAccessibilityAtoms::_true,
-                           eCaseMatters));
+    disabled = mContent->IsHTML() ? 
+      (elementState.HasState(NS_EVENT_STATE_DISABLED)) :
+      (mContent->AttrValueIs(kNameSpaceID_None,
+                             nsAccessibilityAtoms::disabled,
+                             nsAccessibilityAtoms::_true,
+                             eCaseMatters));
+  }
 
   // Set unavailable state based on disabled state, otherwise set focus states
   if (disabled) {
@@ -1533,15 +1522,20 @@ nsAccessible::State()
     return states::DEFUNCT;
 
   PRUint64 state = NativeState();
-  // Apply ARIA states to be sure accessible states will be overriden.
+  // Apply ARIA states to be sure accessible states will be overridden.
   ApplyARIAState(&state);
 
-  if (mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_PAGETAB) {
+  if (mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_PAGETAB &&
+      !(state & states::SELECTED) &&
+      !mContent->AttrValueIs(kNameSpaceID_None,
+                             nsAccessibilityAtoms::aria_selected,
+                             nsAccessibilityAtoms::_false, eCaseMatters)) {
+    // Special case: for tabs, focused implies selected, unless explicitly
+    // false, i.e. aria-selected="false".
     if (state & states::FOCUSED) {
       state |= states::SELECTED;
     } else {
-      // Expose 'selected' state on ARIA tab if the focus is on internal element
-      // of related tabpanel.
+      // If focus is in a child of the tab panel surely the tab is selected!
       nsCOMPtr<nsIAccessible> tabPanel = nsRelUtils::
         GetRelatedAccessible(this, nsIAccessibleRelation::RELATION_LABEL_FOR);
 
@@ -3244,44 +3238,6 @@ nsAccessible::GetFirstAvailableAccessible(nsINode *aStartNode) const
   }
 
   return nsnull;
-}
-
-PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView)
-{
-  nsIDocument* document = aDocument;
-  nsIView* view = aView;
-  // both view chain and widget chain are broken between chrome and content
-  while (document != nsnull) {
-    while (view != nsnull) {
-      if (view->GetVisibility() == nsViewVisibility_kHide) {
-        return PR_FALSE;
-      }
-      view = view->GetParent();
-    }
-
-    nsIDocument* parentDoc = document->GetParentDocument();
-    if (parentDoc != nsnull) {
-      nsIContent* content = parentDoc->FindContentForSubDocument(document);
-      if (content != nsnull) {
-        nsIPresShell* shell = parentDoc->GetShell();
-        if (!shell) {
-          return PR_FALSE;
-        }
-        nsIFrame* frame = content->GetPrimaryFrame();
-        while (frame != nsnull && !frame->HasView()) {
-          frame = frame->GetParent();
-        }
-
-        if (frame != nsnull) {
-          view = frame->GetViewExternal();
-        }
-      }
-    }
-
-    document = parentDoc;
-  }
-
-  return PR_TRUE;
 }
 
 nsresult

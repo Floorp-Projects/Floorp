@@ -17,6 +17,11 @@
 
 #include "common/angleutils.h"
 
+namespace gl
+{
+class Texture2D;
+}
+
 namespace egl
 {
 class Display;
@@ -26,12 +31,13 @@ class Surface
 {
   public:
     Surface(Display *display, const egl::Config *config, HWND window);
-    Surface(Display *display, const egl::Config *config, EGLint width, EGLint height);
+    Surface(Display *display, const egl::Config *config, HANDLE shareHandle, EGLint width, EGLint height, EGLenum textureFormat, EGLenum textureTarget);
 
     ~Surface();
 
+    bool initialize();
     void release();
-    void resetSwapChain();
+    bool resetSwapChain();
 
     HWND getWindowHandle();
     bool swap();
@@ -41,11 +47,22 @@ class Surface
 
     virtual IDirect3DSurface9 *getRenderTarget();
     virtual IDirect3DSurface9 *getDepthStencil();
+    virtual IDirect3DTexture9 *getOffscreenTexture();
 
     HANDLE getShareHandle() { return mShareHandle; }
 
     void setSwapInterval(EGLint interval);
     bool checkForOutOfDateSwapChain();   // Returns true if swapchain changed due to resize or interval update
+
+    virtual EGLenum getTextureFormat() const;
+    virtual EGLenum getTextureTarget() const;
+    virtual D3DFORMAT getFormat() const;
+
+    virtual void setBoundTexture(gl::Texture2D *texture);
+    virtual gl::Texture2D *getBoundTexture() const;
+
+    void setPendingDestroy();
+    bool isPendingDestroy() const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Surface);
@@ -57,10 +74,11 @@ private:
     IDirect3DTexture9* mOffscreenTexture;
 
     HANDLE mShareHandle;
+    bool mIsPendingDestroy;
 
     void subclassWindow();
     void unsubclassWindow();
-    void resetSwapChain(int backbufferWidth, int backbufferHeight);
+    bool resetSwapChain(int backbufferWidth, int backbufferHeight);
     static DWORD convertInterval(EGLint interval);
 
     const HWND mWindow;            // Window that the surface is created for.
@@ -77,13 +95,14 @@ private:
     EGLint mPixelAspectRatio;      // Display aspect ratio
     EGLenum mRenderBuffer;         // Render buffer
     EGLenum mSwapBehavior;         // Buffer swap behavior
-//  EGLenum textureFormat;         // Format of texture: RGB, RGBA, or no texture
-//  EGLenum textureTarget;         // Type of texture: 2D or no texture
+    EGLenum mTextureFormat;        // Format of texture: RGB, RGBA, or no texture
+    EGLenum mTextureTarget;        // Type of texture: 2D or no texture
 //  EGLenum vgAlphaFormat;         // Alpha format for OpenVG
 //  EGLenum vgColorSpace;          // Color space for OpenVG
     EGLint mSwapInterval;
     DWORD mPresentInterval;
     bool mPresentIntervalDirty;
+    gl::Texture2D *mTexture;
 };
 }
 

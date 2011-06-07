@@ -46,9 +46,10 @@ function run()
     function test_document_rule(urltests, shouldapply)
     {
         var zIndex = ++zIndexCounter;
-        var rule = "@-moz-document " + urltests +
-                   " { #display { z-index: " + zIndex + " } }";
-        var sheeturi = "data:text/css," + encodeURI(rule);
+        var encodedRule = encodeURI("@-moz-document " + urltests + " { ") +
+                          "%23" + // encoded hash character for "#display"
+                          encodeURI("display { z-index: " + zIndex + " } }");
+        var sheeturi = "data:text/css," + encodedRule;
         set_user_sheet(sheeturi);
         if (shouldapply) {
             is(cs.zIndex, zIndex,

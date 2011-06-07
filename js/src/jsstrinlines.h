@@ -224,7 +224,7 @@ StringBuffer::appendInflated(const char *cstr, size_t cstrlen)
     size_t oldcstrlen = cstrlen;
     bool ok = 
 #endif
-    js_InflateStringToBuffer(context(), cstr, cstrlen, begin() + lengthBefore, &cstrlen);
+    InflateStringToBuffer(context(), cstr, cstrlen, begin() + lengthBefore, &cstrlen);
     JS_ASSERT(ok && oldcstrlen == cstrlen);
     return true;
 }

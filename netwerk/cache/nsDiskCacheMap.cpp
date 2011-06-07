@@ -580,8 +580,10 @@ nsDiskCacheMap::EvictRecords( nsDiskCacheRecordVisitor * visitor)
         tempRank[bucketIndex] = mHeader.mEvictionRank[bucketIndex];
 
     // Maximum number of iterations determined by number of records
-    // as a safety limiter for the loop
-    for (int n = 0; n < mHeader.mEntryCount; ++n) {
+    // as a safety limiter for the loop. Use a copy of mHeader.mEntryCount since
+    // the value could decrease if some entry is evicted.
+    PRInt32 entryCount = mHeader.mEntryCount;
+    for (int n = 0; n < entryCount; ++n) {
     
         // find bucket with highest eviction rank
         PRUint32    rank  = 0;
@@ -829,7 +831,6 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         if ((binding->mRecord.MetaFile() == 0) &&
             (fileIndex == 0)) {  // keeping the separate file
             // just decrement total
-            // XXX if bindRecord.MetaFileSize == USHRT_MAX, stat the file to see how big it is
             DecrementTotalSize(binding->mRecord.MetaFileSize());
             NS_ASSERTION(binding->mRecord.MetaFileGeneration() == binding->mGeneration,
                          "generations out of sync");
@@ -877,14 +878,15 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
     if (fileIndex == 0) {
         // Write entry data to separate file
         PRUint32 metaFileSizeK = ((size + 0x03FF) >> 10); // round up to nearest 1k
-        nsCOMPtr<nsILocalFile> localFile;
-        
-        // XXX handle metaFileSizeK > USHRT_MAX
+        if (metaFileSizeK > kMaxDataSizeK)
+            metaFileSizeK = kMaxDataSizeK;
+
         binding->mRecord.SetMetaFileGeneration(binding->mGeneration);
         binding->mRecord.SetMetaFileSize(metaFileSizeK);
         rv = UpdateRecord(&binding->mRecord);
         NS_ENSURE_SUCCESS(rv, rv);
 
+        nsCOMPtr<nsILocalFile> localFile;
         rv = GetLocalFileForDiskCacheRecord(&binding->mRecord,
                                             nsDiskCache::kMetaData,
                                             PR_TRUE,
@@ -904,7 +906,7 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         if ((bytesWritten != (PRInt32)size) || (err != PR_SUCCESS)) {
             return NS_ERROR_UNEXPECTED;
         }
-        // XXX handle metaFileSizeK == USHRT_MAX
+
         IncrementTotalSize(metaFileSizeK);
     }
 
@@ -1137,7 +1139,7 @@ nsDiskCacheMap::NotifyCapacityChange(PRUint32 capacity)
   // Heuristic 2. we don't want more than 32MB reserved to store the record
   //              map in memory.
   const PRInt32 RECORD_COUNT_LIMIT = 32 * 1024 * 1024 / sizeof(nsDiskCacheRecord);
-  PRInt32 maxRecordCount = PR_MIN(PRInt32(capacity), RECORD_COUNT_LIMIT);
+  PRInt32 maxRecordCount = NS_MIN(PRInt32(capacity), RECORD_COUNT_LIMIT);
   if (mMaxRecordCount < maxRecordCount) {
     // We can only grow
     mMaxRecordCount = maxRecordCount;

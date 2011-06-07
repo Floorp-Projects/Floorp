@@ -44,6 +44,17 @@ typedef HRESULT (WINAPI*DWriteCreateFactoryFunc)(
   __out  IUnknown **factory
 );
 
+/* cairo_scaled_font_t implementation */
+struct _cairo_dwrite_scaled_font {
+    cairo_scaled_font_t base;
+    cairo_matrix_t mat;
+    cairo_matrix_t mat_inverse;
+    cairo_antialias_t antialias_mode;
+    DWRITE_MEASURING_MODE measuring_mode;
+    cairo_bool_t manual_show_glyphs_allowed;
+    cairo_bool_t force_GDI_classic;
+};
+typedef struct _cairo_dwrite_scaled_font cairo_dwrite_scaled_font_t;
 
 class DWriteFactory
 {
@@ -92,15 +103,17 @@ public:
 	return family;
     }
 
-    static IDWriteRenderingParams *RenderingParams()
+    static IDWriteRenderingParams *RenderingParams(cairo_bool_t forceGDIClassic)
     {
-	if (!mRenderingParams) {
+	if (!mRenderingParams || !mForceGDIClassicRenderingParams) {
 	    CreateRenderingParams();
 	}
-	if (mRenderingParams) {
-	    mRenderingParams->AddRef();
+	IDWriteRenderingParams *params =
+	    forceGDIClassic ? mForceGDIClassicRenderingParams : mRenderingParams;
+	if (params) {
+	    params->AddRef();
 	}
-	return mRenderingParams;
+	return params;
     }
 
     static void SetRenderingParams(FLOAT aGamma,
@@ -119,6 +132,10 @@ public:
 	    mRenderingParams->Release();
 	    mRenderingParams = NULL;
 	}
+	if (mForceGDIClassicRenderingParams) {
+	    mForceGDIClassicRenderingParams->Release();
+	    mForceGDIClassicRenderingParams = NULL;
+	}
     }
 
 private:
@@ -127,6 +144,7 @@ private:
     static IDWriteFactory *mFactoryInstance;
     static IDWriteFontCollection *mSystemCollection;
     static IDWriteRenderingParams *mRenderingParams;
+    static IDWriteRenderingParams *mForceGDIClassicRenderingParams;
     static FLOAT mGamma;
     static FLOAT mEnhancedContrast;
     static FLOAT mClearTypeLevel;
@@ -141,17 +159,6 @@ struct _cairo_dwrite_font_face {
     IDWriteFontFace *dwriteface;
 };
 typedef struct _cairo_dwrite_font_face cairo_dwrite_font_face_t;
-
-/* cairo_scaled_font_t implementation */
-struct _cairo_dwrite_scaled_font {
-    cairo_scaled_font_t base;
-    cairo_matrix_t mat;
-    cairo_matrix_t mat_inverse;
-    cairo_antialias_t antialias_mode;
-    DWRITE_MEASURING_MODE measuring_mode;
-    cairo_bool_t manual_show_glyphs_allowed;
-};
-typedef struct _cairo_dwrite_scaled_font cairo_dwrite_scaled_font_t;
 
 DWRITE_MATRIX _cairo_dwrite_matrix_from_matrix(const cairo_matrix_t *matrix);
 

@@ -221,8 +221,7 @@ stubs::HitStackQuota(VMFrame &f)
     /* Include space to push another frame. */
     uintN nvals = f.fp()->script()->nslots + VALUES_PER_STACK_FRAME;
     JS_ASSERT(f.regs.sp == f.fp()->base());
-    StackSpace &space = f.cx->stack.space();
-    if (space.bumpLimitWithinQuota(NULL, f.entryfp, f.regs.sp, nvals, &f.stackLimit))
+    if (f.cx->stack.space().tryBumpLimit(NULL, f.regs.sp, nvals, &f.stackLimit))
         return;
 
     /* Remove the current partially-constructed frame before throwing. */
@@ -259,7 +258,7 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
     /* Reserve enough space for a callee frame. */
     StackFrame *newfp = cx->stack.getInlineFrameWithinLimit(cx, (Value*) oldfp, nactual,
                                                             fun, fun->script(), &flags,
-                                                            f.entryfp, &f.stackLimit);
+                                                            &f.stackLimit);
     if (!newfp) {
         /*
          * The PC is not coherent with the current frame, so fix it up for
@@ -344,7 +343,7 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     /* Get pointer to new frame/slots, prepare arguments. */
     StackFrame *newfp = cx->stack.getInlineFrameWithinLimit(cx, f.regs.sp, argc,
                                                             newfun, newscript, &flags,
-                                                            f.entryfp, &f.stackLimit);
+                                                            &f.stackLimit);
     if (JS_UNLIKELY(!newfp))
         return false;
 
@@ -702,7 +701,7 @@ PartialInterpret(VMFrame &f)
 #endif
 
     JSBool ok = JS_TRUE;
-    ok = Interpret(cx, fp, 0, JSINTERP_SAFEPOINT);
+    ok = Interpret(cx, fp, JSINTERP_SAFEPOINT);
 
     return ok;
 }
@@ -952,7 +951,6 @@ RunTracer(VMFrame &f)
     entryFrame->returnValue();
 
     bool blacklist;
-    uintN inlineCallCount = 0;
     void **traceData;
     uintN *traceEpoch;
     uint32 *loopCounter;
@@ -969,7 +967,7 @@ RunTracer(VMFrame &f)
     loopCounter = NULL;
     hits = 1;
 #endif
-    tpa = MonitorTracePoint(f.cx, inlineCallCount, &blacklist, traceData, traceEpoch,
+    tpa = MonitorTracePoint(f.cx, &blacklist, traceData, traceEpoch,
                             loopCounter, hits);
     JS_ASSERT(!TRACE_RECORDER(cx));
 

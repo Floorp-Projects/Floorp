@@ -41,7 +41,7 @@
 #include "elfxx.h"
 
 template <class endian, typename R, typename T>
-inline void Elf_Ehdr_Traits::swap(T &t, R &r)
+void Elf_Ehdr_Traits::swap(T &t, R &r)
 {
     memcpy(r.e_ident, t.e_ident, sizeof(r.e_ident));
     r.e_type = endian::swap(t.e_type);
@@ -60,7 +60,7 @@ inline void Elf_Ehdr_Traits::swap(T &t, R &r)
 }
 
 template <class endian, typename R, typename T>
-inline void Elf_Phdr_Traits::swap(T &t, R &r)
+void Elf_Phdr_Traits::swap(T &t, R &r)
 {
     r.p_type = endian::swap(t.p_type);
     r.p_offset = endian::swap(t.p_offset);
@@ -73,7 +73,7 @@ inline void Elf_Phdr_Traits::swap(T &t, R &r)
 }
 
 template <class endian, typename R, typename T>
-inline void Elf_Shdr_Traits::swap(T &t, R &r)
+void Elf_Shdr_Traits::swap(T &t, R &r)
 {
     r.sh_name = endian::swap(t.sh_name);
     r.sh_type = endian::swap(t.sh_type);
@@ -88,14 +88,14 @@ inline void Elf_Shdr_Traits::swap(T &t, R &r)
 }
 
 template <class endian, typename R, typename T>
-inline void Elf_Dyn_Traits::swap(T &t, R &r)
+void Elf_Dyn_Traits::swap(T &t, R &r)
 {
     r.d_tag = endian::swap(t.d_tag);
     r.d_un.d_val = endian::swap(t.d_un.d_val);
 }
 
 template <class endian, typename R, typename T>
-inline void Elf_Sym_Traits::swap(T &t, R &r)
+void Elf_Sym_Traits::swap(T &t, R &r)
 {
     r.st_name = endian::swap(t.st_name);
     r.st_value = endian::swap(t.st_value);
@@ -118,14 +118,14 @@ struct _Rel_info {
 };
 
 template <class endian, typename R, typename T>
-inline void Elf_Rel_Traits::swap(T &t, R &r)
+void Elf_Rel_Traits::swap(T &t, R &r)
 {
     r.r_offset = endian::swap(t.r_offset);
     _Rel_info<endian>::swap(t.r_info, r.r_info);
 }
 
 template <class endian, typename R, typename T>
-inline void Elf_Rela_Traits::swap(T &t, R &r)
+void Elf_Rela_Traits::swap(T &t, R &r)
 {
     r.r_offset = endian::swap(t.r_offset);
     _Rel_info<endian>::swap(t.r_info, r.r_info);

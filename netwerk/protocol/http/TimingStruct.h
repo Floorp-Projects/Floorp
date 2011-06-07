@@ -42,9 +42,6 @@
 #include "mozilla/TimeStamp.h"
 
 struct TimingStruct {
-  mozilla::TimeStamp channelCreation;
-  mozilla::TimeStamp asyncOpen;
-
   mozilla::TimeStamp domainLookupStart;
   mozilla::TimeStamp domainLookupEnd;
   mozilla::TimeStamp connectStart;

@@ -75,7 +75,8 @@ const PREFS_WHITELIST = [
   "places.",
   "print.",
   "privacy.",
-  "security."
+  "security.",
+  "webgl."
 ];
 
 // The blacklist, unlike the whitelist, is a list of regular expressions.

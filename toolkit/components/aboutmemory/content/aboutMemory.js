@@ -149,57 +149,50 @@ function update()
   // - Make a copy of it into a sub-table indexed by its process.  Each copy
   //   looks like this:
   //
-  //     interface Tmr {
-  //       _tpath: string;
+  //     interface Reporter {
+  //       _path:        string;
   //       _kind:        number;
   //       _description: string;
   //       _memoryUsed:  number;
   //     }
   //
-  // - The .path property is renamed ._tpath ("truncated path") in the copy
-  //   because the process name and ':' (if present) are removed.
-  // - Note that copying mr.memoryUsed (which calls a C++ function under the
-  //   IDL covers) to tmr._memoryUsed for every reporter now means that the
+  //   After this point we never use the original memory reporter again.
+  //
+  // - Note that copying rOrig.memoryUsed (which calls a C++ function under the
+  //   IDL covers) to r._memoryUsed for every reporter now means that the
   //   results as consistent as possible -- measurements are made all at
   //   once before most of the memory required to generate this page is
   //   allocated.
-  var tmrTable = {};
+  var reportersByProcess = {};
   var e = mgr.enumerateReporters();
   while (e.hasMoreElements()) {
-    var mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    var process;
-    var tmr = {};
-    var i = mr.path.indexOf(':');
-    if (i === -1) {
-      process = "Main";
-      tmr._tpath = mr.path;
-    } else {
-      process = mr.path.slice(0, i);
-      tmr._tpath = mr.path.slice(i + 1);
+    var rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    var process = rOrig.process === "" ? "Main" : rOrig.process;
+    var r = {
+      _path:        rOrig.path,
+      _kind:        rOrig.kind,
+      _description: rOrig.description,
+      _memoryUsed:  rOrig.memoryUsed
+    };
+    if (!reportersByProcess[process]) {
+      reportersByProcess[process] = {};
     }
-    tmr._kind        = mr.kind;
-    tmr._description = mr.description;
-    tmr._memoryUsed  = mr.memoryUsed;
-
-    if (!tmrTable[process]) {
-      tmrTable[process] = {};
-    }
-    var tmrs = tmrTable[process];
-    if (tmrs[tmr._tpath]) {
+    var reporters = reportersByProcess[process];
+    if (reporters[r._path]) {
       // Already an entry;  must be a duplicated reporter.  This can
       // happen legitimately.  Sum the sizes.
-      tmrs[tmr._tpath]._memoryUsed += tmr._memoryUsed;
+      reporters[r._path]._memoryUsed += r._memoryUsed;
     } else {
-      tmrs[tmr._tpath] = tmr;
+      reporters[r._path] = r;
     }
   }
 
   // Generate output for one process at a time.  Always start with the
   // Main process.
-  var text = genProcessText("Main", tmrTable["Main"]);
-  for (var process in tmrTable) {
+  var text = genProcessText("Main", reportersByProcess["Main"]);
+  for (var process in reportersByProcess) {
     if (process !== "Main") {
-      text += genProcessText(process, tmrTable[process]);
+      text += genProcessText(process, reportersByProcess[process]);
     }
   }
 
@@ -239,7 +232,7 @@ function update()
   content.appendChild(div);
 }
 
-function cmpTmrs(a, b)
+function cmp_memoryUsed(a, b)
 {
   return b._memoryUsed - a._memoryUsed
 };
@@ -249,11 +242,11 @@ function cmpTmrs(a, b)
  *
  * @param aProcess
  *        The name of the process
- * @param aTmrs
- *        Table of Tmrs for this process
+ * @param aReporters
+ *        Table of reporters for this process, indexed by _path
  * @return The generated text
  */
-function genProcessText(aProcess, aTmrs)
+function genProcessText(aProcess, aReporters)
 {
   /**
    * From a list of memory reporters, builds a tree that mirrors the tree
@@ -293,10 +286,10 @@ function genProcessText(aProcess, aTmrs)
       _kind: MR_OTHER,
       _kids: []
     };
-    for (var tpath in aTmrs) {
-      var tmr = aTmrs[tpath];
-      if (tmr._tpath.slice(0, treeName.length) === treeName) {
-        var names = tmr._tpath.split('/');
+    for (var path in aReporters) {
+      var r = aReporters[path];
+      if (r._path.slice(0, treeName.length) === treeName) {
+        var names = r._path.split('/');
         var u = t;
         for (var i = 0; i < names.length; i++) {
           var name = names[i];
@@ -313,7 +306,7 @@ function genProcessText(aProcess, aTmrs)
             u = v;
           }
         }
-        u._kind = tmr._kind;
+        u._kind = r._kind;
         u._hasReporter = true;
       }
     }
@@ -324,13 +317,13 @@ function genProcessText(aProcess, aTmrs)
     // Next, fill in '_description' and '_memoryUsed', and maybe '_hasProblem'
     // for each node.  This is done bottom-up because for most non-leaf nodes
     // '_memoryUsed' and '_description' are determined from the child nodes.
-    function fillInTree(aT, aPretpath)
+    function fillInTree(aT, aPrepath)
     {
-      var tpath = aPretpath ? aPretpath + '/' + aT._name : aT._name;
+      var path = aPrepath ? aPrepath + '/' + aT._name : aT._name;
       if (aT._kids.length === 0) {
         // Leaf node.  Must have a reporter.
-        aT._description = getDescription(aTmrs, tpath);
-        var memoryUsed = getBytes(aTmrs, tpath);
+        aT._description = getDescription(aReporters, path);
+        var memoryUsed = getBytes(aReporters, path);
         if (memoryUsed !== kUnknown) {
           aT._memoryUsed = memoryUsed;
         } else {
@@ -342,12 +335,12 @@ function genProcessText(aProcess, aTmrs)
         var childrenBytes = 0;
         for (var i = 0; i < aT._kids.length; i++) {
           // Allow for kUnknown, treat it like 0.
-          var b = fillInTree(aT._kids[i], tpath);
+          var b = fillInTree(aT._kids[i], path);
           childrenBytes += (b === kUnknown ? 0 : b);
         }
         if (aT._hasReporter === true) {
-          aT._description = getDescription(aTmrs, tpath);
-          var memoryUsed = getBytes(aTmrs, tpath);
+          aT._description = getDescription(aReporters, path);
+          var memoryUsed = getBytes(aReporters, path);
           if (memoryUsed !== kUnknown) {
             // Non-leaf node with its own reporter.  Use the reporter and add
             // an "other" child node.
@@ -397,7 +390,7 @@ function genProcessText(aProcess, aTmrs)
     // A special case:  compute the derived "heap-unclassified" value.  Don't
     // mark "heap-used" when we get its size because we want it to appear in
     // the "Other Measurements" list.
-    var heapUsedBytes = getBytes(aTmrs, "heap-used", true);
+    var heapUsedBytes = getBytes(aReporters, "heap-used", true);
     var unknownHeapUsedBytes = 0;
     var hasProblem = true;
     if (heapUsedBytes !== kUnknown) {
@@ -435,7 +428,7 @@ function genProcessText(aProcess, aTmrs)
      */
     function filterTree(aT)
     {
-      aT._kids.sort(cmpTmrs);
+      aT._kids.sort(cmp_memoryUsed);
 
       for (var i = 0; i < aT._kids.length; i++) {
         if (shouldOmit(aT._kids[i]._memoryUsed)) {
@@ -451,14 +444,14 @@ function genProcessText(aProcess, aTmrs)
           }
           aT._kids.splice(i0);
           var n = i - i0;
-          var tmrSub = {
+          var rSub = {
             _name: "(" + n + " omitted)",
             _kind: MR_OTHER,
             _description: "Omitted sub-trees: " + aggNames.join(", ") + ".",
             _memoryUsed: aggBytes,
             _kids: []
           };
-          aT._kids[i0] = tmrSub;
+          aT._kids[i0] = rSub;
           break;
         }
         filterTree(aT._kids[i]);
@@ -473,7 +466,7 @@ function genProcessText(aProcess, aTmrs)
   var text = "";
   text += "<h1>" + aProcess + " Process</h1>\n\n";
   text += genTreeText(buildTree());
-  text += genOtherText(aTmrs);
+  text += genOtherText(aReporters);
   text += "<hr></hr>";
   return text;
 }
@@ -552,42 +545,42 @@ function pad(aS, aN, aC)
  * Gets the byte count for a particular memory reporter and sets its _done
  * property.
  *
- * @param aTmrs
- *        Table of Tmrs for this process
- * @param aTpath
- *        The tpath of the memory reporter
+ * @param aReporters
+ *        Table of reporters for this process, indexed by _path
+ * @param aPath
+ *        The path of the memory reporter
  * @param aDoNotMark
  *        If set, the _done property is not set.
  * @return The byte count
  */
-function getBytes(aTmrs, aTpath, aDoNotMark)
+function getBytes(aReporters, aPath, aDoNotMark)
 {
-  var tmr = aTmrs[aTpath];
-  if (tmr) {
-    var bytes = tmr._memoryUsed;
+  var r = aReporters[aPath];
+  if (r) {
+    var bytes = r._memoryUsed;
     if (!aDoNotMark) {
-      tmr._done = true;
+      r._done = true;
     }
     return bytes;
   }
-  // Nb: this should never occur; all tpaths have been extracted from aTmrs and
-  // so the lookup will succeed.  Return an obviously wrong number that will
-  // likely be noticed.
+  // Nb: this should never occur; all paths have been extracted from
+  // the original list of reporters and so the lookup should succeed.  Return
+  // an obviously wrong number that will likely be noticed.
   return -2 * 1024 * 1024;
 }
 
 /**
  * Gets the description for a particular memory reporter.
  *
- * @param aTmrs
- *        Table of Tmrs for this process
- * @param aTpath
- *        The tpath of the memory reporter
+ * @param aReporters
+ *        Table of reporters for this process, indexed by _path
+ * @param aPath
+ *        The path of the memory reporter
  * @return The description
  */
-function getDescription(aTmrs, aTpath)
+function getDescription(aReporters, aPath)
 {
-  var r = aTmrs[aTpath];
+  var r = aReporters[aPath];
   return r ? r._description : "???";
 }
 
@@ -740,47 +733,47 @@ function genTreeText(aT)
 /**
  * Generates the text for the "Other Measurements" section.
  *
- * @param aTmrs
- *        Table of Tmrs for this process
+ * @param aReporters
+ *        Table of reporters for this process, indexed by _path
  * @return The generated text
  */
-function genOtherText(aTmrs)
+function genOtherText(aReporters)
 {
-  // Generate an array of tmr-like elements, stripping out all the tmrs that
-  // have already been handled.  Also find the width of the widest element, so
-  // we can format things nicely.
+  // Generate an array of Reporter-like elements, stripping out all the
+  // reporters that have already been handled.  Also find the width of the
+  // widest element, so we can format things nicely.
   var maxBytesLength = 0;
-  var tmrArray = [];
-  for (var tpath in aTmrs) {
-    var tmr = aTmrs[tpath];
-    if (!tmr._done) {
+  var rArray = [];
+  for (var path in aReporters) {
+    var r = aReporters[path];
+    if (!r._done) {
       var hasProblem = false;
-      if (tmr._memoryUsed === kUnknown) {
+      if (r._memoryUsed === kUnknown) {
         hasProblem = true;
       }
       var elem = {
-        _tpath:       tmr._tpath,
-        _kind:        tmr._kind,
-        _description: tmr._description,
-        _memoryUsed:  hasProblem ? 0 : tmr._memoryUsed,
+        _path:        r._path,
+        _kind:        r._kind,
+        _description: r._description,
+        _memoryUsed:  hasProblem ? 0 : r._memoryUsed,
         _hasProblem:  hasProblem
       };
-      tmrArray.push(elem);
+      rArray.push(elem);
       var thisBytesLength = formatBytes(elem._memoryUsed).length;
       if (thisBytesLength > maxBytesLength) {
         maxBytesLength = thisBytesLength;
       }
     }
   }
-  tmrArray.sort(cmpTmrs);
+  rArray.sort(cmp_memoryUsed);
 
   // Generate text for the not-yet-printed values.
   var text = "";
-  for (var i = 0; i < tmrArray.length; i++) {
-    var elem = tmrArray[i];
+  for (var i = 0; i < rArray.length; i++) {
+    var elem = rArray[i];
     text += genMrValueText(
               pad(formatBytes(elem._memoryUsed), maxBytesLength, ' ')) + " ";
-    text += genMrNameText(elem._kind, elem._description, elem._tpath,
+    text += genMrNameText(elem._kind, elem._description, elem._path,
                           elem._hasProblem);
   }
 
@@ -789,5 +782,13 @@ function genOtherText(aTmrs)
                "the requested memory measurements above."
   return "<h2 class='hasDesc' title='" + desc + "'>Other Measurements</h2>\n" +
          "<pre>" + text + "</pre>\n";
+}
+
+function debug(x)
+{
+  var content = $("content");
+  var div = document.createElement("div");
+  div.innerHTML = JSON.stringify(x);
+  content.appendChild(div);
 }
 
