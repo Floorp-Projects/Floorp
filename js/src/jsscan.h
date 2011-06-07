@@ -503,15 +503,15 @@ class TokenStream
             return ptr == base;
         }
 
-        int32 getRawChar() {
+        jschar getRawChar() {
             return *ptr++;      /* this will NULL-crash if poisoned */
         }
 
-        int32 peekRawChar() const {
+        jschar peekRawChar() const {
             return *ptr;        /* this will NULL-crash if poisoned */
         }
 
-        bool matchRawChar(int32 c) {
+        bool matchRawChar(jschar c) {
             if (*ptr == c) {    /* this will NULL-crash if poisoned */
                 ptr++;
                 return true;
@@ -519,7 +519,7 @@ class TokenStream
             return false;
         }
 
-        bool matchRawCharBackwards(int32 c) {
+        bool matchRawCharBackwards(jschar c) {
             JS_ASSERT(ptr);     /* make sure haven't been poisoned */
             if (*(ptr - 1) == c) {
                 ptr--;
@@ -604,6 +604,9 @@ class TokenStream
         while (--n >= 0)
             getChar();
     }
+
+    void updateLineInfoForEOL();
+    void updateFlagsForEOL();
 
     JSContext           * const cx;
     Token               tokens[ntokens];/* circular token buffer */
