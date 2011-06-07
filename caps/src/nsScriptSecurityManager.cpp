@@ -2799,7 +2799,9 @@ nsScriptSecurityManager::RequestCapability(nsIPrincipal* aPrincipal,
     {
         // Prompt user for permission to enable capability.
         JSContext* cx = GetCurrentJSContext();
-        PRBool remember;
+        // The actual value is irrelevant but we shouldn't be handing out
+        // malformed JSBools to XPConnect.
+        PRBool remember = PR_FALSE;
         if (CheckConfirmDialog(cx, aPrincipal, capability, &remember))
             *canEnable = nsIPrincipal::ENABLE_GRANTED;
         else

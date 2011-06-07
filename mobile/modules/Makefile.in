@@ -43,6 +43,7 @@ VPATH      = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXTRA_JS_MODULES = \
+  LocaleRepository.jsm \
   linuxTypes.jsm \
   video.jsm \
   $(NULL)
