@@ -5788,6 +5788,7 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
                 flags = JSREPORT_ERROR;
             } else {
                 if (!cx->hasStrictOption() ||
+                    cx->stack.currentScript()->warnedAboutUndefinedProp ||
                     (op != JSOP_GETPROP && op != JSOP_GETELEM) ||
                     js_CurrentPCIsInImacro(cx)) {
                     return JS_TRUE;
@@ -5811,6 +5812,7 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
                 }
 
                 flags = JSREPORT_WARNING | JSREPORT_STRICT;
+                cx->stack.currentScript()->warnedAboutUndefinedProp = true;
             }
 
             /* Ok, bad undefined property reference: whine about it. */

@@ -946,7 +946,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
                                                js_profiling_chrome_str :
                                                js_profiling_content_str);
   PRBool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
-  PRBool useTypeInference = !chromeWindow && nsContentUtils::GetBoolPref(js_typeinfer_str);
+  PRBool useTypeInference = !chromeWindow && Preferences::GetBool(js_typeinfer_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
     PRBool safeMode = PR_FALSE;
