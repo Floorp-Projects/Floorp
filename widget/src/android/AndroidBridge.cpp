@@ -45,8 +45,8 @@
 #include "AndroidBridge.h"
 #include "nsAppShell.h"
 #include "nsOSHelperAppService.h"
-#include "nsIPrefService.h"
 #include "nsWindow.h"
+#include "mozilla/Preferences.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -249,29 +249,26 @@ AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
     args[1].l = JNI()->NewString(typeHint.get(), typeHint.Length());
     args[2].l = JNI()->NewString(actionHint.get(), actionHint.Length());
     args[3].z = false;
-    nsCOMPtr<nsIPrefBranch> prefs = 
-        do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-        PRInt32 landscapeFS;
-        nsresult rv = prefs->GetIntPref(IME_FULLSCREEN_PREF, &landscapeFS);
-        if (NS_SUCCEEDED(rv)) {
-            if (landscapeFS == 1) {
-                args[3].z = true;
-            } else if (landscapeFS == -1){
-                rv = prefs->GetIntPref(IME_FULLSCREEN_THRESHOLD_PREF, 
-                                       &landscapeFS);
-                if (NS_SUCCEEDED(rv)) {
-                    // the threshold is hundreths of inches, so convert the 
-                    // threshold to pixels and multiply the height by 100
-                    if (nsWindow::GetAndroidScreenBounds().height  * 100 < 
-                        landscapeFS * Bridge()->GetDPI())
-                        args[3].z = true;
-                }
 
+    PRInt32 landscapeFS;
+    if (NS_SUCCEEDED(Preferences::GetInt(IME_FULLSCREEN_PREF, &landscapeFS))) {
+        if (landscapeFS == 1) {
+            args[3].z = true;
+        } else if (landscapeFS == -1){
+            if (NS_SUCCEEDED(
+                  Preferences::GetInt(IME_FULLSCREEN_THRESHOLD_PREF,
+                                      &landscapeFS))) {
+                // the threshold is hundreths of inches, so convert the 
+                // threshold to pixels and multiply the height by 100
+                if (nsWindow::GetAndroidScreenBounds().height  * 100 < 
+                    landscapeFS * Bridge()->GetDPI()) {
+                    args[3].z = true;
+                }
             }
+
         }
     }
-    
+
     JNI()->CallStaticVoidMethodA(sBridge->mGeckoAppShellClass,
                                  sBridge->jNotifyIMEEnabled, args);
 }
