@@ -1247,13 +1247,6 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
       case JSGENOP_NEXT:
       case JSGENOP_SEND:
         if (gen->state == JSGEN_OPEN) {
-            JSScript *script = gen->floatingFrame()->script();
-
-            jsbytecode *yieldpc = gen->regs.pc - JSOP_YIELD_LENGTH;
-            JS_ASSERT(JSOp(*yieldpc) == JSOP_YIELD || JSOp(*yieldpc) == JSOP_TRAP);
-
-            script->types.monitorUnknown(cx, yieldpc);
-
             /*
              * Store the argument to send as the result of the yield
              * expression.

@@ -294,6 +294,9 @@ Recompiler::expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *in
 void
 ExpandInlineFrames(JSContext *cx, bool all)
 {
+    if (!cx->compartment)
+        return;
+
     if (!all) {
         VMFrame *f = cx->compartment->jaegerCompartment->activeFrame();
         if (f && f->regs.inlined() && cx->fp() == f->fp())

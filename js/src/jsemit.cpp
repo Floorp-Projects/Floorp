@@ -1419,6 +1419,11 @@ EmitTraceOp(JSContext *cx, JSCodeGenerator *cg)
     return js_Emit3(cx, cg, JSOP_TRACE, UINT16_HI(index), UINT16_LO(index));
 }
 
+/*
+ * If op is JOF_TYPESET (see the type barriers comment in jsinfer.h), reserve
+ * a type set to store its result and append that info to the already-emitted
+ * opcode.
+ */
 static inline bool
 MaybeEmitTypeSet(JSContext *cx, JSCodeGenerator *cg, JSOp op)
 {

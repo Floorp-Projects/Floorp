@@ -1194,7 +1194,8 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
         cursor += totalClosed * sizeof(uint32);
     }
 
-    script->nTypeSets = nTypeSets;
+    JS_ASSERT(nTypeSets <= UINT16_MAX);
+    script->nTypeSets = uint16(nTypeSets);
 
     /*
      * NB: We allocate the vector of uint32 upvar cookies after all vectors of
