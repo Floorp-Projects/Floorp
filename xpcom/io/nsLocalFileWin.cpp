@@ -2307,6 +2307,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
             "ad",
             "ade",         // access project extension
             "adp",
+            "air",         // Adobe AIR installer
             "app",         // executable application
             "application", // from bug 348763
             "asp",
@@ -2324,6 +2325,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
             "inf",
             "ins",
             "isp",
+            "jar",         // java application bundle
             "js",
             "jse",
             "lnk",

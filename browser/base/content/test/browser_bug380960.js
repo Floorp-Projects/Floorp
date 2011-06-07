@@ -61,6 +61,7 @@ function nextAsyncText(tab) {
   var gotCloseEvent = false;
 
   tab.addEventListener("TabClose", function () {
+    tab.removeEventListener("TabClose", arguments.callee, false);
     info("got TabClose event");
     gotCloseEvent = true;
 
