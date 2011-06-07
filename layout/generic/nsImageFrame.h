@@ -327,6 +327,10 @@ private:
     // broken image and loading image icons
   public:
     IconLoad();
+    ~IconLoad()
+    {
+      Shutdown();
+    }
 
     void Shutdown();
 
@@ -359,6 +363,7 @@ private:
     nsCOMPtr<imgIRequest> mBrokenImage;
     PRPackedBool     mPrefForceInlineAltText;
     PRPackedBool     mPrefShowPlaceholders;
+    PRPackedBool     mHasShutdown;
   };
   
 public:
