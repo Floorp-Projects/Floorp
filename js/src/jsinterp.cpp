@@ -5238,7 +5238,7 @@ BEGIN_CASE(JSOP_GETLOCAL)
      */
      uint32 slot = GET_SLOTNO(regs.pc);
      JS_ASSERT(slot < script->nslots);
-    PUSH_COPY_SKIP_CHECK(regs.fp()->slots()[slot]);
+     PUSH_COPY_SKIP_CHECK(regs.fp()->slots()[slot]);
 
 #ifdef DEBUG
     if (regs.pc[JSOP_GETLOCAL_LENGTH] != JSOP_POP)

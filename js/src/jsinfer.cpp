@@ -1668,7 +1668,7 @@ void
 FixLazyArguments(JSContext *cx, JSScript *script)
 {
 #ifdef JS_METHODJIT
-    mjit::ExpandInlineFrames(cx, FRAME_EXPAND_ALL);
+    mjit::ExpandInlineFrames(cx, true);
 #endif
 
     ScriptAnalysis *analysis = script->analysis(cx);
