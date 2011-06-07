@@ -82,6 +82,8 @@ function zoomInAndOut(transitionsExpected, callback) {
       ok(transitioned >= 0, "There can be transitions");
     else
       ok(!transitioned, "There should have been no transitions");
+
+    contentWindow.document.removeEventListener("transitionend", onTransitionEnd, false);
     callback();
   };
   

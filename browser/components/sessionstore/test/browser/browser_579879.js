@@ -5,6 +5,8 @@ function test() {
   gBrowser.pinTab(tab1);
 
   tab1.linkedBrowser.addEventListener("load", function () {
+    tab1.linkedBrowser.removeEventListener("load", arguments.callee, true);
+
     var tab2 = gBrowser.addTab();
     gBrowser.pinTab(tab2);
 

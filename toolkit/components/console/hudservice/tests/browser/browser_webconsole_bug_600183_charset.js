@@ -38,18 +38,22 @@ function test()
 {
   addTab("data:text/html,Web Console - bug 600183 test");
 
-  browser.addEventListener("load", function(aEvent) {
-    browser.removeEventListener(aEvent.type, arguments.callee, true);
+  let initialLoad = true;
 
-    waitForFocus(function() {
-      openConsole();
+  browser.addEventListener("load", function () {
+    if (initialLoad) {
+      waitForFocus(function() {
+        openConsole();
 
-      HUDService.saveRequestAndResponseBodies = true;
-      HUDService.lastFinishedRequestCallback = requestDoneCallback;
+        HUDService.saveRequestAndResponseBodies = true;
+        HUDService.lastFinishedRequestCallback = requestDoneCallback;
 
-      browser.addEventListener("load", performTest, true);
-      content.location = TEST_URI;
-    }, content);
+        content.location = TEST_URI;
+      }, content);
+      initialLoad = false;
+    } else {
+      browser.removeEventListener("load", arguments.callee, true);
+      performTest();
+    }
   }, true);
 }
-
