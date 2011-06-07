@@ -62,11 +62,11 @@ private:
     unsigned long *bits_;
 
     static inline unsigned long bitForValue(unsigned int value) {
-        return 1l << (unsigned long)(value % (8 * sizeof(*bits_)));
+        return 1l << (unsigned long)(value % (8 * sizeof(unsigned long)));
     }
 
     static inline unsigned int wordForValue(unsigned int value) {
-        return value / (8 * sizeof(*bits_));
+        return value / (8 * sizeof(unsigned long));
     }
 
     inline unsigned int numWords() const {
