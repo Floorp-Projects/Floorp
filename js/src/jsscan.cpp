@@ -179,8 +179,11 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     linebase = base;
     prevLinebase = NULL;
 
-    listener = cx->debugHooks->sourceHandler;
-    listenerData = cx->debugHooks->sourceHandlerData;
+    JSSourceHandler listener = cx->debugHooks->sourceHandler;
+    void *listenerData = cx->debugHooks->sourceHandlerData;
+
+    if (listener)
+        listener(fn, ln, base, length, &listenerTSData, listenerData);
 
     /*
      * This table holds all the token kinds that satisfy these properties:
@@ -482,7 +485,7 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
         }
         memcpy(linechars, linebase, linelength * sizeof(jschar));
         linechars[linelength] = 0;
-        linebytes = js_DeflateString(cx, linechars, linelength);
+        linebytes = DeflateString(cx, linechars, linelength);
         if (!linebytes) {
             warning = false;
             goto out;
@@ -703,7 +706,7 @@ TokenStream::getXMLEntity()
   bad:
     /* No match: throw a TypeError per ECMA-357 10.3.2.1 step 8(a). */
     JS_ASSERT((tb.end() - bp) >= 1);
-    bytes = js_DeflateString(cx, bp + 1, (tb.end() - bp) - 1);
+    bytes = DeflateString(cx, bp + 1, (tb.end() - bp) - 1);
     if (bytes) {
         ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, msg, bytes);
         cx->free_(bytes);

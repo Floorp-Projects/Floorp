@@ -51,13 +51,6 @@
 
 JS_BEGIN_EXTERN_C
 
-/*
- * JS_Assert is present even in release builds, for the benefit of applications
- * that build DEBUG and link against a non-DEBUG SpiderMonkey library.
- */
-extern JS_PUBLIC_API(void)
-JS_Assert(const char *s, const char *file, JSIntn ln);
-
 #define JS_CRASH_UNLESS(__cond)                                                 \
     JS_BEGIN_MACRO                                                              \
         if (!(__cond)) {                                                        \

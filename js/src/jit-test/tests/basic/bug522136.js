@@ -1,10 +1,11 @@
 var Q = 0;
+var thrown = false;
 try {
-   (function f(i) { Q = i; if (i == 100000) return; f(i+1); })(1)
+   (function f(i) { Q = i; if (i == 200000) return; f(i+1); })(1)
 } catch (e) {
+    thrown = true;
 }
 
 // Exact behavior of recursion check depends on which JIT we use.
-var ok = (Q == 3000 || Q == 3001);
-assertEq(ok, true);
+assertEq(thrown && Q > 10000, true);
 

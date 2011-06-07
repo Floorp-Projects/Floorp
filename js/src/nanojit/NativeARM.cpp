@@ -1243,7 +1243,10 @@ Assembler::asm_restore(LIns* i, Register r)
                    do_peep_2_1(&merged, _nIns[0], _nIns[1])) {
                 _nIns[1] = merged;
                 _nIns++;
-                verbose_only( asm_output("merge next into LDMDB"); )
+                verbose_only(
+                    _nInsAfter++;
+                    asm_output("merge next into LDMDB");
+                )
             }
         }
     }
@@ -1279,7 +1282,10 @@ Assembler::asm_spill(Register rr, int d, bool quad)
                     do_peep_2_1(&merged, _nIns[0], _nIns[1])) {
                 _nIns[1] = merged;
                 _nIns++;
-                verbose_only( asm_output("merge next into STMDB"); )
+                verbose_only(
+                    _nInsAfter++;
+                    asm_output("merge next into STMDB");
+                )
             }
         }
     }

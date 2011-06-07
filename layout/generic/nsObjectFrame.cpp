@@ -1500,7 +1500,9 @@ nsObjectFrame::UpdateImageLayer(ImageContainer* aContainer, const gfxRect& aRect
   }
 
 #ifdef XP_MACOSX
-  mInstanceOwner->DoCocoaEventDrawRect(aRect, nsnull);
+  if (!mInstanceOwner->UseAsyncRendering()) {
+    mInstanceOwner->DoCocoaEventDrawRect(aRect, nsnull);
+  }
 #endif
 
   mInstanceOwner->SetCurrentImage(aContainer);
@@ -1516,9 +1518,9 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
 #ifdef XP_MACOSX
   if (aManager &&
       aManager->GetBackendType() == LayerManager::LAYERS_OPENGL &&
+      mInstanceOwner->UseAsyncRendering() &&
       mInstanceOwner->GetEventModel() == NPEventModelCocoa &&
-      mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics &&
-      mInstanceOwner->IsRemoteDrawingCoreAnimation())
+      mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics)
   {
     return LAYER_ACTIVE;
   }

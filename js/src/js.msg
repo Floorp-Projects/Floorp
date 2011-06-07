@@ -103,7 +103,7 @@ MSG_DEF(JSMSG_BAD_FORMAL,              20, 0, JSEXN_SYNTAXERR, "malformed formal
 MSG_DEF(JSMSG_CANT_DELETE,             21, 1, JSEXN_TYPEERR, "property {0} is non-configurable and can't be deleted")
 MSG_DEF(JSMSG_NOT_FUNCTION,            22, 1, JSEXN_TYPEERR, "{0} is not a function")
 MSG_DEF(JSMSG_NOT_CONSTRUCTOR,         23, 1, JSEXN_TYPEERR, "{0} is not a constructor")
-MSG_DEF(JSMSG_SCRIPT_STACK_QUOTA,      24, 0, JSEXN_INTERNALERR, "script stack space quota is exhausted")
+MSG_DEF(JSMSG_INVALID_DATE,            24, 0, JSEXN_RANGEERR, "invalid date")
 MSG_DEF(JSMSG_TOO_DEEP,                25, 1, JSEXN_INTERNALERR, "{0} nested too deeply")
 MSG_DEF(JSMSG_OVER_RECURSED,           26, 0, JSEXN_INTERNALERR, "too much recursion")
 MSG_DEF(JSMSG_IN_NOT_OBJECT,           27, 1, JSEXN_TYPEERR, "invalid 'in' operand {0}")
@@ -349,4 +349,4 @@ MSG_DEF(JSMSG_NON_NATIVE_SCOPE,       266, 0, JSEXN_TYPEERR, "non-native scope o
 MSG_DEF(JSMSG_STRICT_FUNCTION_STATEMENT, 267, 0, JSEXN_SYNTAXERR, "in strict mode code, functions may be declared only at top level or immediately within another function")
 MSG_DEF(JSMSG_INVALID_FOR_IN_INIT,    268, 0, JSEXN_SYNTAXERR, "for-in loop let declaration may not have an initializer")
 MSG_DEF(JSMSG_CLEARED_SCOPE,          269, 0, JSEXN_TYPEERR, "attempt to run compile-and-go script on a cleared scope")
-MSG_DEF(JSMSG_INVALID_DATE,           270, 0, JSEXN_RANGEERR, "invalid date")
+

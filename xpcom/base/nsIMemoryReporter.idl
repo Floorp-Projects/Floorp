@@ -44,9 +44,16 @@ interface nsISimpleEnumerator;
 interface nsIMemoryReporter : nsISupports
 {
   /*
-   * The path that this memory usage should be reported under.  Paths can
-   * begin with a process name plus a colon, eg "Content:", but this is not
-   * necessary for the main process.  After the process name, paths are
+   * The name of the process containing this reporter.  All reporters start
+   * with "", which is short-hand for the "main" process;  this is true even
+   * for reporters in child processes.  When reporters from child reporters
+   * are copied into the main process, the copies have their 'process' field
+   * set appropriately.
+   */
+  readonly attribute string process;
+
+  /*
+   * The path that this memory usage should be reported under.  Paths are
    * '/'-delimited, eg. "a/b/c".  There are two categories of paths.
    *
    * - Paths starting with "explicit" represent non-overlapping regions of 
@@ -132,10 +139,14 @@ interface nsIMemoryReporterManager : nsISupports
 
 %{C++
 
+/*
+ * Note that this defaults 'process' to "", which is usually what's desired.
+ */
 #define NS_MEMORY_REPORTER_IMPLEMENT(_classname,_path,_kind,_desc,_usageFunction,_dataptr) \
     class MemoryReporter_##_classname : public nsIMemoryReporter {      \
     public:                                                             \
       NS_DECL_ISUPPORTS                                                 \
+      NS_IMETHOD GetProcess(char **process) { *process = strdup(""); return NS_OK; } \
       NS_IMETHOD GetPath(char **memoryPath) { *memoryPath = strdup(_path); return NS_OK; } \
       NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; } \
       NS_IMETHOD GetDescription(char **desc) { *desc = strdup(_desc); return NS_OK; } \

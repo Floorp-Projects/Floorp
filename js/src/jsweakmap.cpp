@@ -203,7 +203,7 @@ WeakMap::set(JSContext *cx, uintN argc, Value *vp)
     if (!table) {
         table = cx->new_<WeakMap>(cx);
         if (!table->map.init()) {
-            delete table;
+            cx->delete_(table);
             goto out_of_memory;
         }
         obj->setPrivate(table);
@@ -224,7 +224,7 @@ WeakMap::mark(JSTracer *trc, JSObject *obj)
     if (table) {
         if (IS_GC_MARKING_TRACER(trc)) {
             if (table->map.empty()) {
-                delete table;
+                trc->context->delete_(table);
                 obj->setPrivate(NULL);
                 return;
             }
@@ -297,7 +297,7 @@ WeakMap::finalize(JSContext *cx, JSObject *obj)
 {
     WeakMap *table = fromJSObject(obj);
     if (table)
-        delete table;
+        cx->delete_(table);
 }
 
 JSBool

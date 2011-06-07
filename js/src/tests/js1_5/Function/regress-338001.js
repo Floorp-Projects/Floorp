@@ -39,7 +39,7 @@
 var BUGNUMBER = 338001;
 var summary = 'integer overflow in jsfun.c:Function';
 var actual = 'No Crash';
-var expect = /No Crash|InternalError: allocation size overflow|InternalError: script stack space quota is exhausted/;
+var expect = /No Crash|InternalError: allocation size overflow/;
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);

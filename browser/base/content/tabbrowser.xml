@@ -1334,9 +1334,9 @@
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
               try {
                 b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
-
+              } catch (ex) {
+                Cu.reportError(ex);
               }
-              catch (ex) { }
             }
 
             // We start our browsers out as inactive, and then maintain

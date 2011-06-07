@@ -519,6 +519,8 @@ public:
 
     JSBool IsShuttingDown() const {return mShuttingDown;}
 
+    void EnsureGCBeforeCC() { mNeedGCBeforeCC = JS_TRUE; }
+
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
@@ -553,6 +555,7 @@ public:
     virtual nsresult FinishTraverse();
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
+    virtual bool NeedCollect();
     virtual void Collect();
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
@@ -602,6 +605,7 @@ private:
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     PRUint16                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
+    JSBool                   mNeedGCBeforeCC;
 #ifdef DEBUG_CC
     PLDHashTable             mJSRoots;
 #endif
@@ -760,8 +764,6 @@ public:
 
     nsresult AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
     nsresult RemoveJSHolder(void* aHolder);
-
-    void ClearWeakRoots();
 
     static void SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
                                      nsCycleCollectionTraversalCallback &cb);
@@ -1443,10 +1445,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
      (clazz) == &XPC_WN_NoMods_NoCall_Proto_JSClass ||                        \
      (clazz) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||                 \
      (clazz) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass)
-
-// Comes from xpcwrappednativeops.cpp
-extern void
-xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper);
 
 /***************************************************************************/
 
@@ -2581,6 +2579,8 @@ public:
 
     // If pobj2 is not null and *pobj2 is not null after the call then *pobj2
     // points to an object for which IS_SLIM_WRAPPER_OBJECT is true.
+    // cx is null when invoked from the marking phase of the GC. In this case
+    // fubobj must be null as well.
     static XPCWrappedNative*
     GetWrappedNativeOfJSObject(JSContext* cx, JSObject* obj,
                                JSObject* funobj = nsnull,

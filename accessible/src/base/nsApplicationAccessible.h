@@ -136,7 +136,7 @@ protected:
   // nsAccessible
   virtual void CacheChildren();
   virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                           nsresult *aError = nsnull);
+                                           nsresult *aError = nsnull) const;
 
 private:
   nsCOMPtr<nsIXULAppInfo> mAppInfo;

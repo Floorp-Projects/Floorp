@@ -251,6 +251,28 @@ nsPluginInstanceOwner::EndUpdateBackground(gfxContext* aContext,
   }
 }
 
+PRBool
+nsPluginInstanceOwner::UseAsyncRendering()
+{
+#ifdef XP_MACOSX
+  nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
+#endif
+
+  PRBool useAsyncRendering;
+  return (mInstance &&
+          NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncRendering)) &&
+          useAsyncRendering &&
+#ifdef XP_MACOSX
+          mObjectFrame && mObjectFrame->GetImageContainer().get() &&
+          mObjectFrame->GetImageContainer().get()->GetBackendType() == 
+                  LayerManager::LAYERS_OPENGL
+#else
+          (!mPluginWindow ||
+           mPluginWindow->type == NPWindowTypeDrawable)
+#endif
+          );
+}
+
 nsIntSize
 nsPluginInstanceOwner::GetCurrentImageSize()
 {
@@ -1336,18 +1358,6 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
 
   mInstance->GetDrawingModel((PRInt32*)&drawingModel);
   return drawingModel;
-}
-
-PRBool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
-{
-  if (!mInstance)
-    return PR_FALSE;
-
-  PRBool coreAnimation;
-  if (!NS_SUCCEEDED(mInstance->IsRemoteDrawingCoreAnimation(&coreAnimation)))
-    return PR_FALSE;
-
-  return coreAnimation;
 }
 
 NPEventModel nsPluginInstanceOwner::GetEventModel()
@@ -3217,7 +3227,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
       mPluginWindow->clipRect.right   != oldClipRect.right  ||
       mPluginWindow->clipRect.bottom  != oldClipRect.bottom)
   {
-    mInstance->SetWindow(mPluginWindow);
+    CallSetWindow();
     mPluginPortChanged = PR_FALSE;
 #ifdef MAC_CARBON_PLUGINS
     // if the clipRect is of size 0, make the null timer fire less often
@@ -3231,7 +3241,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     }
 #endif
   } else if (mPluginPortChanged) {
-    mInstance->SetWindow(mPluginWindow);
+    CallSetWindow();
     mPluginPortChanged = PR_FALSE;
   }
 
@@ -3273,7 +3283,11 @@ nsPluginInstanceOwner::HidePluginWindow()
   mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
   mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left;
   mWidgetVisible = PR_FALSE;
-  mInstance->SetWindow(mPluginWindow);
+  if (mAsyncHidePluginWindow) {
+    mInstance->AsyncSetWindow(mPluginWindow);
+  } else {
+    mInstance->SetWindow(mPluginWindow);
+  }
 }
 
 #else // XP_MACOSX
@@ -3322,19 +3336,6 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
 }
 
 void
-nsPluginInstanceOwner::CallSetWindow()
-{
-  if (!mInstance)
-    return;
-
-  if (UseAsyncRendering()) {
-    mInstance->AsyncSetWindow(mPluginWindow);
-  } else {
-    mInstance->SetWindow(mPluginWindow);
-  }
-}
-
-void
 nsPluginInstanceOwner::UpdateWindowVisibility(PRBool aVisible)
 {
   mPluginWindowVisible = aVisible;
@@ -3342,6 +3343,21 @@ nsPluginInstanceOwner::UpdateWindowVisibility(PRBool aVisible)
 }
 
 #endif // XP_MACOSX
+
+void
+nsPluginInstanceOwner::CallSetWindow()
+{
+  if (!mInstance)
+    return;
+
+  if (UseAsyncRendering()) {
+    mAsyncHidePluginWindow = true;
+    mInstance->AsyncSetWindow(mPluginWindow);
+  } else {
+    mAsyncHidePluginWindow = false;
+    mInstance->SetWindow(mPluginWindow);
+  }
+}
 
 // Little helper function to resolve relative URL in
 // |value| for certain inputs of |name|
