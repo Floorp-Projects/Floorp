@@ -18,6 +18,7 @@ chrome.jar:
 * skin/notification.css                     (notification.css)
 * skin/platform.css                         (platform.css)
   skin/touchcontrols.css                    (touchcontrols.css)
+* skin/localePicker.css                     (localePicker.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 
@@ -138,6 +139,7 @@ chrome.jar:
 * skin/gingerbread/notification.css                     (notification.css)
 * skin/gingerbread/platform.css                         (gingerbread/platform.css)
   skin/gingerbread/touchcontrols.css                    (touchcontrols.css)
+* skin/gingerbread/localePicker.css                     (gingerbread/localePicker.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 
@@ -255,6 +257,7 @@ chrome.jar:
 * skin/honeycomb/notification.css                     (notification.css)
 * skin/honeycomb/platform.css                         (platform.css)
   skin/honeycomb/touchcontrols.css                    (touchcontrols.css)
+* skin/honeycomb/localePicker.css                     (localePicker.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 
