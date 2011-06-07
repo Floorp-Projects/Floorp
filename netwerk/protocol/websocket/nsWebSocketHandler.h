@@ -67,7 +67,6 @@ namespace mozilla { namespace net {
 class nsPostMessage;
 class nsWSAdmissionManager;
 class nsWSCompression;
-class WSCallOnInputStreamReady;
 
 class nsWebSocketHandler : public nsIWebSocketProtocol,
                            public nsIHttpUpgradeListener,
@@ -129,8 +128,7 @@ protected:
 private:
   friend class nsPostMessage;
   friend class nsWSAdmissionManager;
-  friend class WSCallOnInputStreamReady;
-  
+
   void SendMsgInternal(nsCString *aMsg, PRInt32 datalen);
   void PrimeNewOutgoingMessage();
   void GeneratePong(PRUint8 *payload, PRUint32 len);
@@ -156,15 +154,22 @@ private:
   {
   public:
       OutboundMessage (nsCString *str)
-          : mMsg(str), mIsControl(PR_FALSE), mBinaryLen(-1) {}
+          : mMsg(str), mIsControl(PR_FALSE), mBinaryLen(-1)
+      { MOZ_COUNT_CTOR(WebSocketOutboundMessage); }
 
       OutboundMessage (nsCString *str, PRInt32 dataLen)
-          : mMsg(str), mIsControl(PR_FALSE), mBinaryLen(dataLen) {}
+          : mMsg(str), mIsControl(PR_FALSE), mBinaryLen(dataLen)
+      { MOZ_COUNT_CTOR(WebSocketOutboundMessage); }
 
       OutboundMessage ()
-          : mMsg(nsnull), mIsControl(PR_TRUE), mBinaryLen(-1) {}
+          : mMsg(nsnull), mIsControl(PR_TRUE), mBinaryLen(-1)
+      { MOZ_COUNT_CTOR(WebSocketOutboundMessage); }
 
-      ~OutboundMessage() { delete mMsg; }
+      ~OutboundMessage()
+      { 
+          MOZ_COUNT_DTOR(WebSocketOutboundMessage);
+          delete mMsg;
+      }
       
       PRBool IsControl()  { return mIsControl; }
       const nsCString *Msg()  { return mMsg; }
