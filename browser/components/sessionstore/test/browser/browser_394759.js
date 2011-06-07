@@ -71,6 +71,8 @@ function test() {
   
     let newWin = openDialog(location, "", "chrome,all,dialog=no", testURL);
     newWin.addEventListener("load", function(aEvent) {
+      newWin.removeEventListener("load", arguments.callee, false);
+
       newWin.gBrowser.selectedBrowser.addEventListener("load", function(aEvent) {
         newWin.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
@@ -102,6 +104,8 @@ function test() {
             let restoredTabs = 0;
             let expectedTabs = data.tabs.length;
             newWin2.addEventListener("load", function(aEvent) {
+              newWin2.removeEventListener("load", arguments.callee, false);
+
               newWin2.gBrowser.tabContainer.addEventListener("SSTabRestored", function(aEvent) {
                 if (++restoredTabs < expectedTabs)
                   return;
@@ -160,6 +164,8 @@ function test() {
       let url = "http://window" + windowsToOpen.length + ".example.com";
       let win = openDialog(location, "", settings, url);
       win.addEventListener("load", function(aEvent) {
+        win.removeEventListener("load", arguments.callee, false);
+
         win.gBrowser.selectedBrowser.addEventListener("DOMContentLoaded", function(aEvent) {
           win.gBrowser.selectedBrowser.removeEventListener("DOMContentLoaded", arguments.callee, true);
           // the window _should_ have state with a tab of url, but it doesn't
@@ -174,7 +180,7 @@ function test() {
             });
           });
         }, true);
-      }, true);
+      }, false);
     }
 
     let windowsToOpen = [{isPopup: false},

@@ -1182,7 +1182,9 @@ nsHttpChannelAuthProvider::ConfirmAuth(const nsString &bundleKey,
     PRBool confirmed;
     if (doYesNoPrompt) {
         PRInt32 choice;
-        PRBool checkState;
+        // The actual value is irrelevant but we shouldn't be handing out
+        // malformed JSBools to XPConnect.
+        PRBool checkState = PR_FALSE;
         rv = prompt->ConfirmEx(nsnull, msg,
                                nsIPrompt::BUTTON_POS_1_DEFAULT +
                                nsIPrompt::STD_YES_NO_BUTTONS,
