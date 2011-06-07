@@ -9457,9 +9457,9 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
         }
     }
 
-    // If this was a history load, update the index in 
-    // SH. 
-    if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
+    // If this was a history load or a refresh,
+    // update the index in SH. 
+    if (rootSH && (mLoadType & (LOAD_CMD_HISTORY | LOAD_CMD_RELOAD))) {
         nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
         if (shInternal) {
             rootSH->GetIndex(&mPreviousTransIndex);
