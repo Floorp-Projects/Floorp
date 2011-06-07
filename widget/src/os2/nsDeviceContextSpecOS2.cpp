@@ -660,7 +660,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
      return NS_ERROR_OUT_OF_MEMORY;
 
   // don't return on failure, optional feature
-  BOOL prefFailed = (Preferences::GetRootBranch() != nsnull);
+  BOOL prefFailed = (Preferences::GetRootBranch() == nsnull);
 
   for (ULONG i = 0; i < mGlobalNumPrinters; i++) {
     nsXPIDLCString printer;
