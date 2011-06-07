@@ -433,15 +433,19 @@ class TokenStream
         cursor = (cursor - 1) & ntokensMask;
     }
 
-    TokenKind peekToken(uintN withFlags = 0) {
-        Flagger flagger(this, withFlags);
+    TokenKind peekToken() {
         if (lookahead != 0) {
             JS_ASSERT(lookahead == 1);
             return tokens[(cursor + lookahead) & ntokensMask].type;
         }
-        TokenKind tt = getToken();
+        TokenKind tt = getTokenInternal();
         ungetToken();
         return tt;
+    }
+
+    TokenKind peekToken(uintN withFlags) {
+        Flagger flagger(this, withFlags);
+        return peekToken();
     }
 
     TokenKind peekTokenSameLine(uintN withFlags = 0) {
@@ -470,13 +474,18 @@ class TokenStream
     /*
      * Get the next token from the stream if its kind is |tt|.
      */
-    bool matchToken(TokenKind tt, uintN withFlags = 0) {
-        Flagger flagger(this, withFlags);
+    bool matchToken(TokenKind tt) {
         if (getToken() == tt)
             return true;
         ungetToken();
         return false;
     }
+
+    bool matchToken(TokenKind tt, uintN withFlags) {
+        Flagger flagger(this, withFlags);
+        return matchToken(tt);
+    }
+
 
   private:
     /*
