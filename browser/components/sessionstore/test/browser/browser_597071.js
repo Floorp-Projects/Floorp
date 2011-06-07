@@ -73,6 +73,7 @@ function test() {
   let newWin = openDialog(location, "", "chrome,all,dialog=no", "http://example.com");
   newWin.addEventListener("load", function(aEvent) {
     newWin.removeEventListener("load", arguments.callee, false);
+
     newWin.gBrowser.addEventListener("load", function(aEvent) {
       newWin.gBrowser.removeEventListener("load", arguments.callee, true);
 
@@ -85,6 +86,8 @@ function test() {
 
       newWin.close();
       newWin.addEventListener("unload", function(aEvent) {
+        newWin.removeEventListener("unload", arguments.callee, false);
+
         is(ss.getClosedWindowCount(), closedWindowCount + 1,
            "increased closed window count");
         is(browserWindowsCount(), 1, "there should be 1 window open currently");
