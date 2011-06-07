@@ -151,6 +151,7 @@ class nsContentSink : public nsICSSLoaderObserver,
   virtual void UpdateChildCounts() = 0;
 
   PRBool IsTimeToNotify();
+  PRBool LinkContextIsOurDocument(const nsSubstring& aAnchor);
 
   static void InitializeStatics();
 
@@ -188,9 +189,10 @@ protected:
                              nsIContent* aContent = nsnull);
   nsresult ProcessLinkHeader(nsIContent* aElement,
                              const nsAString& aLinkData);
-  nsresult ProcessLink(nsIContent* aElement, const nsSubstring& aHref,
-                       const nsSubstring& aRel, const nsSubstring& aTitle,
-                       const nsSubstring& aType, const nsSubstring& aMedia);
+  nsresult ProcessLink(nsIContent* aElement, const nsSubstring& aAnchor,
+                       const nsSubstring& aHref, const nsSubstring& aRel,
+                       const nsSubstring& aTitle, const nsSubstring& aType,
+                       const nsSubstring& aMedia);
 
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
                                     const nsSubstring& aHref,
