@@ -913,10 +913,6 @@ setting {
   min-height: 30px;
 }
 
-.detail-row-value {
-  -moz-margin-start: 0;
-}
-
 #detail-controls {
   margin-bottom: 1em;
 }
@@ -962,7 +958,6 @@ setting[type="string"] > .setting-input > textbox {
 /*** rating ***/
 
 .meta-rating {
-  -moz-margin-start: 0;
   -moz-margin-end: 0;
   margin-top: 2px;
 }
