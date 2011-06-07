@@ -64,7 +64,7 @@ object-deletion-behaviour.html
 oes-standard-derivatives.html
 oes-texture-float.html
 oes-vertex-array-object.html
-origin-clean-conformance.html
+# origin-clean-conformance.html # is obsolete because of bug 656277
 point-size.html
 program-test.html
 read-pixels-pack-alignment.html

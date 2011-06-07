@@ -3481,13 +3481,50 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
         nsLayoutUtils::SurfaceFromElement(imageOrCanvas, flags);
     if (!res.mSurface)
         return NS_ERROR_FAILURE;
-
-    CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(), res.mPrincipal, res.mIsWriteOnly);
-
     if (res.mSurface->GetType() != gfxASurface::SurfaceTypeImage) {
         // SurfaceFromElement lied!
         return NS_ERROR_FAILURE;
     }
+
+    // Bug 656277 - Prevent loading WebGL textures from cross-domain images
+    //
+    // We disallow loading cross-domain images as WebGL textures. The reason for doing that
+    // is that timing attacks on WebGL shaders are able to retrieve approximations of the pixel values
+    // in WebGL textures, see bug 655987.
+    //
+    // To prevent a loophole where a Canvas2D would be used as a proxy to load cross-domain textures,
+    // we also disallow loading textures from write-only Canvas2D's.
+
+    // part 1: check that the DOM element is same-origin.
+    // if res.mPrincipal == null, no need for the origin check. See DoDrawImageSecurityCheck.
+    // this case happens in the mochitest for images served from mochi.test:8888
+    if (res.mPrincipal) {
+        PRBool subsumes;
+        nsresult rv = HTMLCanvasElement()->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
+        if (NS_FAILED(rv) || !subsumes) {
+            LogMessageIfVerbose("It is forbidden to load a WebGL texture from a cross-domain element. "
+                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
+            return NS_ERROR_DOM_SECURITY_ERR;
+        }
+    }
+
+    // part 2: if the DOM element is a canvas, check that it's not write-only. That would indicate a tainted canvas,
+    // i.e. a canvas that could contain cross-domain image data.
+    nsCOMPtr<nsIContent> maybeDOMCanvas = do_QueryInterface(imageOrCanvas);
+    if (maybeDOMCanvas && maybeDOMCanvas->IsHTML(nsGkAtoms::canvas)) {
+        nsHTMLCanvasElement *canvas = static_cast<nsHTMLCanvasElement*>(maybeDOMCanvas.get());
+        if (canvas->IsWriteOnly()) {
+            LogMessageIfVerbose("The canvas used as source for texImage2D here is tainted (write-only). It is forbidden "
+                                "to load a WebGL texture from a tainted canvas. A Canvas becomes tainted for example "
+                                "when a cross-domain image is drawn on it. "
+                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
+            return NS_ERROR_DOM_SECURITY_ERR;
+        }
+    }
+
+    // End of security checks, now we should be safe regarding cross-domain images
+    // Notice that there is never a need to mark the WebGL canvas as write-only, since we reject write-only/cross-domain
+    // texture sources in the first place.
 
     surf = static_cast<gfxImageSurface*>(res.mSurface.get());
 
