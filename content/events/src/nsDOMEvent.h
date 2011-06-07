@@ -136,7 +136,8 @@ public:
     eDOMEvents_copy,
     eDOMEvents_cut,
     eDOMEvents_paste,
-#ifdef MOZ_SVG
+    eDOMEvents_open,
+    eDOMEvents_message,
     eDOMEvents_SVGLoad,
     eDOMEvents_SVGUnload,
     eDOMEvents_SVGAbort,
@@ -144,7 +145,6 @@ public:
     eDOMEvents_SVGResize,
     eDOMEvents_SVGScroll,
     eDOMEvents_SVGZoom,
-#endif // MOZ_SVG
 #ifdef MOZ_SMIL
     eDOMEvents_beginEvent,
     eDOMEvents_endEvent,

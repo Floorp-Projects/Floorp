@@ -195,9 +195,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eSupportDocuments = PR_BIT(2), // Documents are supported
                                      // (nsIDocumentLoaderFactory)
                                      // This flag always includes SVG
-#ifdef MOZ_SVG
       eSupportSVG       = PR_BIT(3), // SVG is supported (image/svg+xml)
-#endif
       eSupportClassID   = PR_BIT(4), // The classid attribute is supported
       eOverrideServerType = PR_BIT(5) // The server-sent MIME type is ignored
                                       // (ignored if no type is specified)
@@ -258,9 +256,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      *
      * @param aSync If a synchronous frame construction is required. If false,
      *              the construction may either be sync or async.
+     * @param aNotify if false, only need to update the state of our element.
      */
     void NotifyStateChanged(ObjectType aOldType, nsEventStates aOldState,
-                            PRBool aSync);
+                            PRBool aSync, PRBool aNotify);
 
     /**
      * Fires the "Plugin not found" event. This function doesn't do any checks

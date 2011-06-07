@@ -34,10 +34,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIDOMHTMLHRElement.h"
-#include "nsIDOMNSHTMLHRElement.h"
-#include "nsIDOMEventTarget.h"
+
 #include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLHRElement.h"
+
+#include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -46,8 +47,7 @@
 #include "nsCSSProps.h"
 
 class nsHTMLHRElement : public nsGenericHTMLElement,
-                        public nsIDOMHTMLHRElement,
-                        public nsIDOMNSHTMLHRElement
+                        public nsIDOMHTMLHRElement
 {
 public:
   nsHTMLHRElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -67,9 +67,6 @@ public:
 
   // nsIDOMHTMLHRElement
   NS_DECL_NSIDOMHTMLHRELEMENT
-
-  // nsIDOMNSHTMLHRElement
-  NS_DECL_NSIDOMNSHTMLHRELEMENT
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -103,9 +100,8 @@ DOMCI_NODE_DATA(HTMLHRElement, nsHTMLHRElement)
 
 // QueryInterface implementation for nsHTMLHRElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLHRElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLHRElement,
-                                   nsIDOMHTMLHRElement,
-                                   nsIDOMNSHTMLHRElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLHRElement,
+                                   nsIDOMHTMLHRElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLHRElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLHRElement)

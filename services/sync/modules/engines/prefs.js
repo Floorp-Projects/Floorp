@@ -49,7 +49,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
-const PREFS_GUID = Utils.encodeBase64url(Svc.AppInfo.ID);
+const PREFS_GUID = Utils.encodeBase64url(Services.appinfo.ID);
 
 function PrefRec(collection, id) {
   CryptoWrapper.call(this, collection, id);

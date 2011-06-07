@@ -505,7 +505,7 @@ public:
                                 nsIContent* aBindingParent,
                                 PRBool aCompileEventHandlers);
     virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
-    virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent = PR_TRUE);
+    virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsAString& aResult) const;
     virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
@@ -651,6 +651,8 @@ protected:
     virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                   const nsAString* aValue, PRBool aNotify);
 
+    virtual void UpdateEditableState(PRBool aNotify);
+
     virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                   nsIAtom* aAttribute,
                                   const nsAString& aValue,
@@ -708,6 +710,15 @@ protected:
            PRBool aIsScriptable);
 
     friend class nsScriptEventHandlerOwnerTearoff;
+
+    bool IsReadWriteTextElement() const
+    {
+        const nsIAtom* tag = Tag();
+        return
+            GetNameSpaceID() == kNameSpaceID_XUL &&
+            (tag == nsGkAtoms::textbox || tag == nsGkAtoms::textarea) &&
+            !HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+    }
 };
 
 #endif // nsXULElement_h__

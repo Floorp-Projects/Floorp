@@ -242,9 +242,7 @@ private:
 #define NS_EVENT_STATE_LOADING       NS_DEFINE_EVENT_STATE_MACRO(22)
 // Content is of a type that gecko can't handle.
 #define NS_EVENT_STATE_TYPE_UNSUPPORTED NS_DEFINE_EVENT_STATE_MACRO(23)
-#ifdef MOZ_MATHML
 #define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(24)
-#endif
 // Handler for the content has been blocked.
 #define NS_EVENT_STATE_HANDLER_BLOCKED NS_DEFINE_EVENT_STATE_MACRO(25)
 // Handler for the content has been disabled.
@@ -267,6 +265,12 @@ private:
 /**
  * NOTE: do not go over 63 without updating nsEventStates::InternalType!
  */
+
+#define ESM_MANAGED_STATES (NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS |     \
+                            NS_EVENT_STATE_HOVER | NS_EVENT_STATE_DRAGOVER |   \
+                            NS_EVENT_STATE_URLTARGET | NS_EVENT_STATE_FOCUSRING)
+
+#define INTRINSIC_STATES (~ESM_MANAGED_STATES)
 
 #endif // nsEventStates_h__
 

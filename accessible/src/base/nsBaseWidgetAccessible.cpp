@@ -141,7 +141,7 @@ nsLinkableAccessible::GetNumActions(PRUint8 *aNumActions)
 {
   NS_ENSURE_ARG_POINTER(aNumActions);
 
-  *aNumActions = mActionAcc ? 1 : 0;
+  *aNumActions = (mIsOnclick || mIsLink) ? 1 : 0;
   return NS_OK;
 }
 
@@ -228,7 +228,6 @@ nsLinkableAccessible::BindToParent(nsAccessible* aParent,
   mIsOnclick = PR_FALSE;
 
   if (nsCoreUtils::HasClickListener(mContent)) {
-    mActionAcc = this;
     mIsOnclick = PR_TRUE;
     return;
   }

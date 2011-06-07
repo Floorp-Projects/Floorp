@@ -28,6 +28,9 @@
   <textbox id="n7" type="number" size="4" value="4.678" min="2" max="10.5" decimalplaces="2"/>
   <textbox id="n8" type="number" hidespinbuttons="true"/>
 </hbox>
+<hbox>
+  <textbox id="n9" type="number" size="4" oninput="updateInputEventCount();"/>
+</hbox>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
@@ -253,8 +256,36 @@ function doTests() {
   ok(nsbrect.left == 0 && nsbrect.top == 0 && nsbrect.right == 0, nsbrect.bottom == 0,
      "hidespinbuttons");
 
+  var n9 = $("n9");
+  is(n9.value, 0, "initial value");
+  n9.select();
+  synthesizeKey("4", {});
+  is(inputEventCount, 1, "input event count");
+  is(inputEventValue, "4", "input value");
+  is(n9.value, "4", "updated value");
+  synthesizeKey("2", {});
+  is(inputEventCount, 2, "input event count");
+  is(inputEventValue, "42", "input value");
+  is(n9.value, "42", "updated value");
+  synthesizeKey("VK_BACK_SPACE", {});
+  is(inputEventCount, 3, "input event count");
+  is(inputEventValue, "4", "input value");
+  is(n9.value, "4", "updated value");
+  synthesizeKey("A", {accelKey: true});
+  synthesizeKey("VK_DELETE", {});
+  is(inputEventCount, 4, "input event count");
+  is(inputEventValue, "0", "input value");
+  is(n9.value, "0", "updated value");
+
   SimpleTest.finish();
 }
+
+var inputEventCount = 0;
+var inputEventValue = null;
+function updateInputEventCount() {
+  inputEventValue = $("n9").value;
+  inputEventCount++;
+};
 
 function testVals(nb, name, valueNumber, valueFieldNumber) {
   if (valueFieldNumber === undefined)

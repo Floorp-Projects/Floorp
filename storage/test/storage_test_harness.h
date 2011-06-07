@@ -50,6 +50,7 @@
 #include "mozIStorageAsyncStatement.h"
 #include "mozIStorageStatement.h"
 #include "mozIStoragePendingStatement.h"
+#include "mozIStorageError.h"
 #include "nsThreadUtils.h"
 
 static int gTotalTests = 0;
@@ -176,6 +177,20 @@ AsyncStatementSpinner::HandleResult(mozIStorageResultSet *aResultSet)
 NS_IMETHODIMP
 AsyncStatementSpinner::HandleError(mozIStorageError *aError)
 {
+  PRInt32 result;
+  nsresult rv = aError->GetResult(&result);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString message;
+  rv = aError->GetMessage(message);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString warnMsg;
+  warnMsg.Append("An error occurred while executing an async statement: ");
+  warnMsg.AppendInt(result);
+  warnMsg.Append(" ");
+  warnMsg.Append(message);
+  NS_WARNING(warnMsg.get());
+
   return NS_OK;
 }
 
@@ -206,3 +221,33 @@ void AsyncStatementSpinner::SpinUntilCompleted()
 
 #define NS_DECL_ASYNCSTATEMENTSPINNER \
   NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet);
+
+////////////////////////////////////////////////////////////////////////////////
+//// Async Helpers
+
+/**
+ * Execute an async statement, blocking the main thread until we get the
+ * callback completion notification.
+ */
+void
+blocking_async_execute(mozIStorageBaseStatement *stmt)
+{
+  nsRefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
+
+  nsCOMPtr<mozIStoragePendingStatement> pendy;
+  (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pendy));
+  spinner->SpinUntilCompleted();
+}
+
+/**
+ * Invoke AsyncClose on the given connection, blocking the main thread until we
+ * get the completion notification.
+ */
+void
+blocking_async_close(mozIStorageConnection *db)
+{
+  nsRefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
+
+  db->AsyncClose(spinner);
+  spinner->SpinUntilCompleted();
+}

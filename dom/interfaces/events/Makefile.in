@@ -47,11 +47,9 @@ XPIDL_MODULE	= dom_events
 GRE_MODULE	= 1
 
 SDK_XPIDLSRCS =                                 \
-	nsIDOMDocumentEvent.idl			\
 	nsIDOMEvent.idl				\
 	nsIDOMEventTarget.idl			\
 	nsIDOMEventListener.idl			\
-	nsIDOM3DocumentEvent.idl		\
 	nsIDOM3EventTarget.idl			\
 	nsIDOMEventGroup.idl			\
 	nsIDOMMouseEvent.idl			\

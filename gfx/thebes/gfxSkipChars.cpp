@@ -240,7 +240,7 @@ gfxSkipCharsBuilder::FlushRun()
     // Fill in buffer entries starting at mBufferLength, as many as necessary
     PRUint32 charCount = mRunCharCount;
     for (;;) {
-        PRUint32 chars = PR_MIN(255, charCount);
+        PRUint32 chars = NS_MIN<PRUint32>(255, charCount);
         if (!mBuffer.AppendElement(chars)) {
             mInErrorState = PR_TRUE;
             return;

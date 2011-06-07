@@ -264,7 +264,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
     PCrashReporterChild* crashreporter = SendPCrashReporterConstructor();
     InfallibleTArray<Mapping> mappings;
     const struct mapping_info *info = getLibraryMapping();
-    while (info->name) {
+    while (info && info->name) {
         mappings.AppendElement(Mapping(nsDependentCString(info->name),
                                        nsDependentCString(info->file_id),
                                        info->base,

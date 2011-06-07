@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -37,8 +37,10 @@
 #include "cairoint.h"
 
 #include "cairo-analysis-surface-private.h"
+#include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-recording-surface-private.h"
+#include "cairo-surface-subsurface-private.h"
 #include "cairo-region-private.h"
 
 typedef struct {
@@ -99,10 +101,11 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
     cairo_bool_t old_has_ctm;
     cairo_matrix_t old_ctm, p2d;
     cairo_status_t status;
+    cairo_surface_t *source;
 
     assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
     surface_pattern = (const cairo_surface_pattern_t *) pattern;
-    assert (_cairo_surface_is_recording (surface_pattern->surface));
+    assert (surface_pattern->surface->type == CAIRO_SURFACE_TYPE_RECORDING);
 
     old_ctm = surface->ctm;
     old_has_ctm = surface->has_ctm;
@@ -114,8 +117,13 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
     cairo_matrix_multiply (&surface->ctm, &p2d, &surface->ctm);
     surface->has_ctm = ! _cairo_matrix_is_identity (&surface->ctm);
 
-    status = _cairo_recording_surface_replay_and_create_regions (surface_pattern->surface,
-							    &surface->base);
+    source = surface_pattern->surface;
+    if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
+	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
+	source = sub->target;
+    }
+
+    status = _cairo_recording_surface_replay_and_create_regions (source, &surface->base);
 
     surface->ctm = old_ctm;
     surface->has_ctm = old_has_ctm;
@@ -396,9 +404,9 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 				cairo_operator_t	 op,
 				const cairo_pattern_t	*source,
 				cairo_path_fixed_t	*path,
-				cairo_stroke_style_t	*style,
-				cairo_matrix_t		*ctm,
-				cairo_matrix_t		*ctm_inverse,
+				const cairo_stroke_style_t	*style,
+				const cairo_matrix_t		*ctm,
+				const cairo_matrix_t		*ctm_inverse,
 				double			 tolerance,
 				cairo_antialias_t	 antialias,
 				cairo_clip_t		*clip)
@@ -716,7 +724,9 @@ _cairo_analysis_surface_create (cairo_surface_t		*target)
 
     /* I believe the content type here is truly arbitrary. I'm quite
      * sure nothing will ever use this value. */
-    _cairo_surface_init (&surface->base, &cairo_analysis_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &cairo_analysis_surface_backend,
+			 NULL, /* device */
 			 CAIRO_CONTENT_COLOR_ALPHA);
 
     cairo_matrix_init_identity (&surface->ctm);
@@ -831,9 +841,9 @@ typedef cairo_int_status_t
 			         cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
 				 cairo_path_fixed_t	*path,
-				 cairo_stroke_style_t	*style,
-				 cairo_matrix_t		*ctm,
-				 cairo_matrix_t		*ctm_inverse,
+				 const cairo_stroke_style_t	*style,
+				 const cairo_matrix_t		*ctm,
+				 const cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
 				 cairo_clip_t		*clip);
@@ -906,7 +916,10 @@ _cairo_null_surface_create (cairo_content_t content)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
-    _cairo_surface_init (surface, &cairo_null_surface_backend, content);
+    _cairo_surface_init (surface,
+			 &cairo_null_surface_backend,
+			 NULL, /* device */
+			 content);
 
     return surface;
 }

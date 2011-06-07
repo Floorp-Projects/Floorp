@@ -37,6 +37,10 @@
  */
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
+// Workaround for Bug 658720 - URL formatter can leak during xpcshell tests
+const PREF_BLOCKLIST_ITEM_URL = "extensions.blocklist.itemURL";
+Services.prefs.setCharPref(PREF_BLOCKLIST_ITEM_URL, "http://localhost:4444/blocklist/%blockID%");
+
 do_load_httpd_js();
 
 var ADDONS = [{
@@ -173,6 +177,9 @@ var WindowWatcher = {
       gNotificationCheck(args);
     }
 
+    //run the code after the blocklist is closed
+    Services.obs.notifyObservers(null, "addon-blocklist-closed", null);
+
     // Call the next test after the blocklist has finished up
     do_timeout(0, gTestCheck);
   },
@@ -244,6 +251,12 @@ function check_addon_state(addon) {
 
 function check_plugin_state(plugin) {
   return plugin.disabled + "," + plugin.blocklisted;
+}
+
+function create_blocklistURL(blockID){
+  let url = Services.urlFormatter.formatURLPref(PREF_BLOCKLIST_ITEM_URL);
+  url = url.replace(/%blockID%/g, blockID);
+  return url;
 }
 
 // Performs the initial setup
@@ -458,6 +471,9 @@ function check_test_pt3() {
   restartManager();
   dump("Checking results pt 3\n");
 
+  let blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                  getService(Ci.nsIBlocklistService);
+
   AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
     // All should have gained the blocklist state, user disabled as previously
     do_check_eq(check_addon_state(addons[0]), "true,false,true");
@@ -472,6 +488,20 @@ function check_test_pt3() {
 
     // Should have gained the blocklist state but no longer be soft disabled
     do_check_eq(check_addon_state(addons[3]), "false,false,true");
+
+    // Check blockIDs are correct
+    do_check_eq(blocklist.getAddonBlocklistURL(addons[0].id,''),create_blocklistURL(addons[0].id));
+    do_check_eq(blocklist.getAddonBlocklistURL(addons[1].id,''),create_blocklistURL(addons[1].id));
+    do_check_eq(blocklist.getAddonBlocklistURL(addons[2].id,''),create_blocklistURL(addons[2].id));
+    do_check_eq(blocklist.getAddonBlocklistURL(addons[3].id,''),create_blocklistURL(addons[3].id));
+    do_check_eq(blocklist.getAddonBlocklistURL(addons[4].id,''),create_blocklistURL(addons[4].id));
+
+    // All plugins have the same blockID on the test
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[0]), create_blocklistURL('test_bug455906_plugin'));
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[1]), create_blocklistURL('test_bug455906_plugin'));
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[2]), create_blocklistURL('test_bug455906_plugin'));
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[3]), create_blocklistURL('test_bug455906_plugin'));
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[4]), create_blocklistURL('test_bug455906_plugin'));
 
     // Shouldn't be changed
     do_check_eq(check_addon_state(addons[5]), "false,false,true");

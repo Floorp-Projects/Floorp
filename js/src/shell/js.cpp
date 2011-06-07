@@ -141,8 +141,6 @@ static PRUintn gStackBaseThreadIndex;
 static jsuword gStackBase;
 #endif
 
-static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
-
 /*
  * Limit the timeout to 30 minutes to prevent an overflow on platfoms
  * that represent the time internally in microseconds using 32-bit int.
@@ -390,7 +388,6 @@ static void
 SetContextOptions(JSContext *cx)
 {
     JS_SetNativeStackQuota(cx, gMaxStackSize);
-    JS_SetScriptStackQuota(cx, gScriptStackQuota);
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
 
@@ -635,7 +632,12 @@ usage(void)
     fprintf(gErrFile, "  -g <n>        Sleep for <n> seconds before starting (default: 0)\n");
 #endif
 #ifdef JS_GC_ZEAL
-    fprintf(gErrFile, "  -Z <n>        Toggle GC zeal: low if <n> is 0 (default), high if non-zero\n");
+    fprintf(gErrFile, "  -Z <n>[,<f>[,<c>]]  Set GC zeal to <n>.\n"
+                      "                Possible values for <n>:\n"
+                      "                  0:  no additional GCs\n"
+                      "                  1:  additional GCs at common danger points\n"
+                      "                  2:  GC every <f> allocations (<f> defaults to 100)\n"
+                      "                If <c> = 1, do compartment GCs. Otherwise full.\n");
 #endif
 #ifdef MOZ_TRACEVIS
     fprintf(gErrFile, "  -T  Start TraceVis\n");
@@ -699,6 +701,25 @@ extern JSClass global_class;
 namespace js {
     extern struct JSClass jitstats_class;
     void InitJITStatsClass(JSContext *cx, JSObject *glob);
+}
+#endif
+
+#ifdef JS_GC_ZEAL
+static void
+ParseZealArg(JSContext *cx, const char *arg)
+{
+    int zeal, freq = 1, compartment = 0;
+    const char *p = strchr(arg, ',');
+
+    zeal = atoi(arg);
+    if (p) {
+        freq = atoi(p + 1);
+        p = strchr(p + 1, ',');
+        if (p)
+            compartment = atoi(p + 1);
+    }
+
+    JS_SetGCZeal(cx, zeal, freq, !!compartment);
 }
 #endif
 
@@ -785,7 +806,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'Z':
             if (++i == argc)
                 return usage();
-            JS_SetGCZeal(cx, !!(atoi(argv[i])));
+            ParseZealArg(cx, argv[i]);
             break;
 #endif
 #ifdef DEBUG
@@ -1468,8 +1489,15 @@ AssertJit(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSCompartment *comp = NULL;
+    if (argc == 1) {
+        Value arg = Valueify(vp[2]);
+        if (arg.isObject())
+            comp = arg.toObject().unwrap()->compartment();
+    }
+
     size_t preBytes = cx->runtime->gcBytes;
-    JS_GC(cx);
+    JS_CompartmentGC(cx, comp);
 
     char buf[256];
     JS_snprintf(buf, sizeof(buf), "before %lu, after %lu, break %08lx\n",
@@ -1561,15 +1589,74 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+InternalConst(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 1) {
+        JS_ReportError(cx, "the function takes exactly one argument");
+        return false;
+    }
+
+    JSString *str = JS_ValueToString(cx, vp[2]);
+    if (!str)
+        return false;
+    JSFlatString *flat = JS_FlattenString(cx, str);
+    if (!flat)
+        return false;
+
+    if (JS_FlatStringEqualsAscii(flat, "OBJECT_MARK_STACK_LENGTH")) {
+        vp[0] = UINT_TO_JSVAL(js::OBJECT_MARK_STACK_SIZE / sizeof(JSObject *));
+    } else {
+        JS_ReportError(cx, "unknown const name");
+        return false;
+    }
+    return true;
+}
+
 #ifdef JS_GC_ZEAL
 static JSBool
 GCZeal(JSContext *cx, uintN argc, jsval *vp)
 {
-    uint32 zeal;
+    uint32 zeal, frequency = JS_DEFAULT_ZEAL_FREQ;
+    JSBool compartment = JS_FALSE;
 
-    if (!JS_ValueToECMAUint32(cx, argc == 0 ? JSVAL_VOID : vp[2], &zeal))
+    if (argc > 3) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_TOO_MANY_ARGS, "gczeal");
         return JS_FALSE;
-    JS_SetGCZeal(cx, (uint8)zeal);
+    }
+    if (!JS_ValueToECMAUint32(cx, argc < 1 ? JSVAL_VOID : vp[2], &zeal))
+        return JS_FALSE;
+    if (argc >= 2)
+        if (!JS_ValueToECMAUint32(cx, vp[3], &frequency))
+            return JS_FALSE;
+    if (argc >= 3)
+        compartment = js_ValueToBoolean(Valueify(vp[3]));
+
+    JS_SetGCZeal(cx, (uint8)zeal, frequency, compartment);
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
+
+static JSBool
+ScheduleGC(JSContext *cx, uintN argc, jsval *vp)
+{
+    uint32 count;
+    bool compartment = false;
+
+    if (argc != 1 && argc != 2) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                             (argc < 1)
+                             ? JSSMSG_NOT_ENOUGH_ARGS
+                             : JSSMSG_TOO_MANY_ARGS,
+                             "schedulegc");
+        return JS_FALSE;
+    }
+    if (!JS_ValueToECMAUint32(cx, vp[2], &count))
+        return JS_FALSE;
+    if (argc == 2)
+        compartment = js_ValueToBoolean(Valueify(vp[3]));
+
+    JS_ScheduleGC(cx, count, compartment);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -3022,21 +3109,6 @@ StringsAreUTF8(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-StackQuota(JSContext *cx, uintN argc, jsval *vp)
-{
-    uint32 n;
-
-    if (argc == 0)
-        return JS_NewNumberValue(cx, (double) gScriptStackQuota, vp);
-    if (!JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[0], &n))
-        return JS_FALSE;
-    gScriptStackQuota = n;
-    JS_SetScriptStackQuota(cx, gScriptStackQuota);
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
 static const char* badUTF8 = "...\xC0...";
 static const char* bigUTF8 = "...\xFB\xBF\xBF\xBF\xBF...";
 static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
@@ -4454,14 +4526,30 @@ Compile(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
+    static JSClass dummy_class = {
+        "jdummy",
+        JSCLASS_GLOBAL_FLAGS,
+        JS_PropertyStub,  JS_PropertyStub,
+        JS_PropertyStub,  JS_StrictPropertyStub,
+        JS_EnumerateStub, JS_ResolveStub,
+        JS_ConvertStub,   NULL,
+        JSCLASS_NO_OPTIONAL_MEMBERS
+    };
+
+    JSObject *fakeGlobal = JS_NewGlobalObject(cx, &dummy_class);
+    if (!fakeGlobal)
+        return JS_FALSE;
+
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
-    if (!JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
-                            JS_GetStringLength(scriptContents), "<string>", 0)) {
-        return false;
-    }
+
+    uintN oldopts = JS_GetOptions(cx);
+    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
+    bool ok = JS_CompileUCScript(cx, fakeGlobal, JS_GetStringCharsZ(cx, scriptContents),
+                                 JS_GetStringLength(scriptContents), "<string>", 0);
+    JS_SetOptions(cx, oldopts);
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return ok;
 }
 
 static JSBool
@@ -4734,8 +4822,10 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("makeFinalizeObserver", MakeFinalizeObserver, 0,0),
     JS_FN("finalizeCount",  FinalizeCount, 0,0),
 #ifdef JS_GC_ZEAL
-    JS_FN("gczeal",         GCZeal,         1,0),
+    JS_FN("gczeal",         GCZeal,         2,0),
+    JS_FN("schedulegc",     ScheduleGC,     1,0),
 #endif
+    JS_FN("internalConst",  InternalConst,  1,0),
     JS_FN("setDebug",       SetDebug,       1,0),
     JS_FN("setDebuggerHandler", SetDebuggerHandler, 1,0),
     JS_FN("setThrowHook",   SetThrowHook,   1,0),
@@ -4743,7 +4833,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("untrap",         Untrap,         2,0),
     JS_FN("line2pc",        LineToPC,       0,0),
     JS_FN("pc2line",        PCToLine,       0,0),
-    JS_FN("stackQuota",     StackQuota,     0,0),
     JS_FN("stringsAreUTF8", StringsAreUTF8, 0,0),
     JS_FN("testUTF8",       TestUTF8,       1,0),
     JS_FN("throwError",     ThrowError,     0,0),
@@ -4837,7 +4926,8 @@ static const char *const shell_help_messages[] = {
 "  Throw if the first two arguments are not the same (both +0 or both -0,\n"
 "  both NaN, or non-zero and ===)",
 "assertJit()              Throw if the calling function failed to JIT",
-"gc()                     Run the garbage collector",
+"gc([obj])                Run the garbage collector\n"
+"                         When obj is given, GC only the compartment it's in",
 #ifdef JS_GCMETER
 "gcstats()                Print garbage collector statistics",
 #endif
@@ -4856,8 +4946,14 @@ static const char *const shell_help_messages[] = {
 "  return the current value of the finalization counter that is incremented\n"
 "  each time an object returned by the makeFinalizeObserver is finalized",
 #ifdef JS_GC_ZEAL
-"gczeal(level)            How zealous the garbage collector should be",
+"gczeal(level, [freq], [compartmentGC?])\n"
+"                         How zealous the garbage collector should be",
+"schedulegc(num, [compartmentGC?])\n"
+"                         Schedule a GC to happen after num allocations",
 #endif
+"internalConst(name)\n"
+"  Query an internal constant for the engine. See InternalConst source for the\n"
+"  list of constant names",
 "setDebug(debug)          Set debug mode",
 "setDebuggerHandler(f)    Set handler for debugger keyword to f",
 "setThrowHook(f)          Set throw hook to f",
@@ -4865,7 +4961,6 @@ static const char *const shell_help_messages[] = {
 "untrap(fun[, pc])        Remove a trap",
 "line2pc([fun,] line)     Map line number to PC",
 "pc2line(fun[, pc])       Map PC to line number",
-"stackQuota([number])     Query/set script stack quota",
 "stringsAreUTF8()         Check if strings are UTF-8 encoded",
 "testUTF8(mode)           Perform UTF-8 tests (modes are 1 to 4)",
 "throwError()             Throw an error from JS_ReportError",
@@ -6048,6 +6143,7 @@ main(int argc, char **argv, char **envp)
         return 1;
 
     JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ANONFUNFIX);
+    JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_COMPARTMENT);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
     result = Shell(cx, argc, argv, envp);

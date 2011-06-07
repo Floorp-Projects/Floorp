@@ -20,8 +20,9 @@ let tracker = engine._tracker;
 
 let _counter = 0;
 function addVisit() {
-  Svc.History.addVisit(Utils.makeURI("http://getfirefox.com/" + _counter),
-                       Date.now() * 1000, null, 1, false, 0);
+  PlacesUtils.history.addVisit(
+    Utils.makeURI("http://getfirefox.com/" + _counter),
+    Date.now() * 1000, null, 1, false, 0);
   _counter += 1;
 }
 
@@ -76,7 +77,7 @@ add_test(function test_track_delete() {
     do_check_eq([id for (id in tracker.changedIDs)].length, 3);
     run_next_test();
   });
-  Svc.History.removePage(uri);
+  PlacesUtils.history.removePage(uri);
 });
 
 add_test(function test_stop_tracking() {
@@ -102,6 +103,6 @@ add_test(function test_stop_tracking_twice() {
 
 add_test(function cleanup() {
    _("Clean up.");
-  Svc.History.removeAllPages();
+  PlacesUtils.history.removeAllPages();
   run_next_test();
 });

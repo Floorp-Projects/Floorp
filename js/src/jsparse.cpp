@@ -252,7 +252,7 @@ Parser::newObjectBox(JSObject *obj)
     JSObjectBox *objbox;
     JS_ARENA_ALLOCATE_TYPE(objbox, JSObjectBox, &context->tempPool);
     if (!objbox) {
-        js_ReportOutOfScriptQuota(context);
+        js_ReportOutOfMemory(context);
         return NULL;
     }
     objbox->traceLink = traceListHead;
@@ -278,7 +278,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     JSFunctionBox *funbox;
     JS_ARENA_ALLOCATE_TYPE(funbox, JSFunctionBox, &context->tempPool);
     if (!funbox) {
-        js_ReportOutOfScriptQuota(context);
+        js_ReportOutOfMemory(context);
         return NULL;
     }
     funbox->traceLink = traceListHead;
@@ -682,7 +682,7 @@ NewOrRecycledNode(JSTreeContext *tc)
 
         JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
         if (!pn)
-            js_ReportOutOfScriptQuota(cx);
+            js_ReportOutOfMemory(cx);
     } else {
         tc->parser->nodeList = pn->pn_next;
     }
@@ -926,10 +926,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!compiler.init(chars, length, filename, lineno, version))
         return NULL;
 
-    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode),
-                     &cx->scriptStackQuota);
-    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote),
-                     &cx->scriptStackQuota);
+    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
+    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
 
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
@@ -1135,21 +1133,25 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT(cg.version() == version);
 
     script = JSScript::NewScriptFromCG(cx, &cg);
-    if (script && funbox)
+    if (!script)
+        goto out;
+
+    if (funbox)
         script->savedCallerFun = true;
 
 #ifdef JS_SCOPE_DEPTH_METER
-    if (script) {
-        JSObject *obj = scopeChain;
-        uintN depth = 1;
-        while ((obj = obj->getParent()) != NULL)
-            ++depth;
-        JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
-    }
+    JSObject *obj = scopeChain;
+    uintN depth = 1;
+    while ((obj = obj->getParent()) != NULL)
+        ++depth;
+    JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
 #endif
 
-    if (!defineGlobals(cx, globalScope, script))
-        goto late_error;
+    {
+        AutoShapeRooter shapeRoot(cx, script->bindings.lastShape());
+        if (!defineGlobals(cx, globalScope, script))
+            goto late_error;
+    }
 
   out:
     JS_FinishArenaPool(&codePool);
@@ -1820,10 +1822,8 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     /* No early return from after here until the js_FinishArenaPool calls. */
     JSArenaPool codePool, notePool;
-    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode),
-                     &cx->scriptStackQuota);
-    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote),
-                     &cx->scriptStackQuota);
+    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
+    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
 
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
@@ -2193,8 +2193,10 @@ bool
 Parser::markFunArgs(JSFunctionBox *funbox)
 {
     JSFunctionBoxQueue queue;
-    if (!queue.init(functionCount))
+    if (!queue.init(functionCount)) {
+        js_ReportOutOfMemory(context);
         return false;
+    }
 
     FindFunArgs(funbox, -1, &queue);
     while ((funbox = queue.pull()) != NULL) {
@@ -2835,7 +2837,10 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                  * allows us to handle both these cases in a natural way.
                  */
                 outer_ale = MakePlaceholder(dn, tc);
+                if (!outer_ale)
+                    return false;
             }
+
 
             JSDefinition *outer_dn = ALE_DEFN(outer_ale);
 

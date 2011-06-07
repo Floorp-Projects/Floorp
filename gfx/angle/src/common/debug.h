@@ -63,7 +63,7 @@ namespace gl
 #if defined(ANGLE_DISABLE_TRACE) && defined(ANGLE_DISABLE_PERF)
 #define EVENT(message, ...) (void(0))
 #else
-#define EVENT(message, ...) gl::ScopedPerfEventHelper scopedPerfEventHelper ## __LINE__("%s\n" message, __FUNCTION__, __VA_ARGS__);
+#define EVENT(message, ...) gl::ScopedPerfEventHelper scopedPerfEventHelper ## __LINE__(__FUNCTION__ message "\n", __VA_ARGS__);
 #endif
 
 // A macro asserting a condition and outputting failures to the debug log

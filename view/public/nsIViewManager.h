@@ -378,6 +378,12 @@ public:
    * @param aTime Last user event time in microseconds
    */
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime)=0;
+
+  /**
+   * Find the nearest display root view for the view aView. This is the view for
+   * the nearest enclosing popup or the root view for the root document.
+   */
+  static nsIView* GetDisplayRootFor(nsIView* aView);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)

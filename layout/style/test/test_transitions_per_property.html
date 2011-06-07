@@ -1171,6 +1171,26 @@ function test_background_position_transition(prop) {
 
 function test_background_position_size_common(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "40% 0%", "");
+  is(cs.getPropertyValue(prop), "40% 0%",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "0% 0%", "");
+  is(cs.getPropertyValue(prop), "30% 0%",
+     "property " + prop + ": interpolation of percentages");
+  check_distance(prop, "40% 0%", "30% 0%", "0% 0%");
+
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0% 40%", "");
+  is(cs.getPropertyValue(prop), "0% 40%",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "0% 0%", "");
+  is(cs.getPropertyValue(prop), "0% 30%",
+     "property " + prop + ": interpolation of percentages");
+  check_distance(prop, "0% 40%", "0% 30%", "0% 0%");
+
+  div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "10px 40px", "");
   is(cs.getPropertyValue(prop), "10px 40px",
      "property " + prop + ": computed value before transition");

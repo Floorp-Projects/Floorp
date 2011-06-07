@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Emanuele Costa <emanuele.costa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,6 +45,7 @@
 #include "nsIMutable.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
+#include "nsSimpleURI.h"
 
 #define NS_JSPROTOCOLHANDLER_CID                     \
 { /* bfc310d2-38a0-11d3-8cd3-0060b0fc14a3 */         \
@@ -90,58 +92,40 @@ protected:
     nsCOMPtr<nsITextToSubURI>  mTextToSubURI;
 };
 
-// Use an extra base object to avoid having to manually retype all the
-// nsIURI methods.  I wish we could just inherit from nsSimpleURI instead.
-class nsJSURI_base : public nsIURI,
-                     public nsIMutable
+
+class nsJSURI : public nsSimpleURI
 {
 public:
-    nsJSURI_base(nsIURI* aSimpleURI) :
-        mSimpleURI(aSimpleURI)
+
+    nsJSURI() {}
+
+    nsJSURI(nsIURI* aBaseURI) : mBaseURI(aBaseURI) {}
+
+    nsIURI* GetBaseURI() const
     {
-        mMutable = do_QueryInterface(mSimpleURI);
-        NS_ASSERTION(aSimpleURI && mMutable, "This isn't going to work out");
-    }
-    virtual ~nsJSURI_base() {}
-
-    // For use only from deserialization
-    nsJSURI_base() {}
-    
-    NS_FORWARD_NSIURI(mSimpleURI->)
-    NS_FORWARD_NSIMUTABLE(mMutable->)
-
-protected:
-    nsCOMPtr<nsIURI> mSimpleURI;
-    nsCOMPtr<nsIMutable> mMutable;
-};
-
-class nsJSURI : public nsJSURI_base,
-                public nsISerializable,
-                public nsIClassInfo
-{
-public:
-    nsJSURI(nsIURI* aBaseURI, nsIURI* aSimpleURI) :
-        nsJSURI_base(aSimpleURI), mBaseURI(aBaseURI)
-    {}
-    virtual ~nsJSURI() {}
-
-    // For use only from deserialization
-    nsJSURI() : nsJSURI_base() {}
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISERIALIZABLE
-    NS_DECL_NSICLASSINFO
-
-    // Override Clone() and Equals()
-    NS_IMETHOD Clone(nsIURI** aClone);
-    NS_IMETHOD Equals(nsIURI* aOther, PRBool *aResult);
-
-    nsIURI* GetBaseURI() const {
         return mBaseURI;
     }
 
+    NS_DECL_ISUPPORTS_INHERITED
+
+    // nsIURI overrides
+    virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode);
+
+    // nsISerializable overrides
+    NS_IMETHOD Read(nsIObjectInputStream* aStream);
+    NS_IMETHOD Write(nsIObjectOutputStream* aStream);
+
+    // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
+    // nsISerializable impl works right.
+    NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc);
+    //NS_IMETHOD QueryInterface( const nsIID& aIID, void** aInstancePtr );
+
+protected:
+    virtual nsresult EqualsInternal(nsIURI* other,
+                                    RefHandlingEnum refHandlingMode,
+                                    PRBool* result);
 private:
     nsCOMPtr<nsIURI> mBaseURI;
 };
-    
+
 #endif /* nsJSProtocolHandler_h___ */

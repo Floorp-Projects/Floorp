@@ -32,12 +32,533 @@
 #include "nsCocoaUtils.h"
 #include "PluginModuleChild.h"
 #include "nsDebug.h"
+#include "PluginInterposeOSX.h"
 #include <set>
 #import <AppKit/AppKit.h>
 #import <objc/runtime.h>
+#import <Carbon/Carbon.h>
 
 using mozilla::plugins::PluginModuleChild;
 using mozilla::plugins::AssertPluginThread;
+
+namespace mac_plugin_interposing {
+
+int32_t NSCursorInfo::mNativeCursorsSupported = -1;
+
+// This constructor may be called from the browser process or the plugin
+// process.
+NSCursorInfo::NSCursorInfo()
+  : mType(TypeArrow)
+  , mHotSpot(nsPoint(0, 0))
+  , mCustomImageData(NULL)
+  , mCustomImageDataLength(0)
+{
+}
+
+NSCursorInfo::NSCursorInfo(NSCursor* aCursor)
+  : mType(TypeArrow)
+  , mHotSpot(nsPoint(0, 0))
+  , mCustomImageData(NULL)
+  , mCustomImageDataLength(0)
+{
+  // This constructor is only ever called from the plugin process, so the
+  // following is safe.
+  if (!GetNativeCursorsSupported()) {
+    return;
+  }
+
+  NSPoint hotSpotCocoa = [aCursor hotSpot];
+  mHotSpot = nsPoint(hotSpotCocoa.x, hotSpotCocoa.y);
+
+  Class nsCursorClass = [NSCursor class];
+  if ([aCursor isEqual:[NSCursor arrowCursor]]) {
+    mType = TypeArrow;
+  } else if ([aCursor isEqual:[NSCursor closedHandCursor]]) {
+    mType = TypeClosedHand;
+  } else if ([aCursor isEqual:[NSCursor crosshairCursor]]) {
+    mType = TypeCrosshair;
+  } else if ([aCursor isEqual:[NSCursor disappearingItemCursor]]) {
+    mType = TypeDisappearingItem;
+  } else if ([aCursor isEqual:[NSCursor IBeamCursor]]) {
+    mType = TypeIBeam;
+  } else if ([aCursor isEqual:[NSCursor openHandCursor]]) {
+    mType = TypeOpenHand;
+  } else if ([aCursor isEqual:[NSCursor pointingHandCursor]]) {
+    mType = TypePointingHand;
+  } else if ([aCursor isEqual:[NSCursor resizeDownCursor]]) {
+    mType = TypeResizeDown;
+  } else if ([aCursor isEqual:[NSCursor resizeLeftCursor]]) {
+    mType = TypeResizeLeft;
+  } else if ([aCursor isEqual:[NSCursor resizeLeftRightCursor]]) {
+    mType = TypeResizeLeftRight;
+  } else if ([aCursor isEqual:[NSCursor resizeRightCursor]]) {
+    mType = TypeResizeRight;
+  } else if ([aCursor isEqual:[NSCursor resizeUpCursor]]) {
+    mType = TypeResizeUp;
+  } else if ([aCursor isEqual:[NSCursor resizeUpDownCursor]]) {
+    mType = TypeResizeUpDown;
+  // The following cursor types are only supported on OS X 10.6 and up.
+  } else if ([nsCursorClass respondsToSelector:@selector(contextualMenuCursor)] &&
+             [aCursor isEqual:[nsCursorClass performSelector:@selector(contextualMenuCursor)]]) {
+    mType = TypeContextualMenu;
+  } else if ([nsCursorClass respondsToSelector:@selector(dragCopyCursor)] &&
+             [aCursor isEqual:[nsCursorClass performSelector:@selector(dragCopyCursor)]]) {
+    mType = TypeDragCopy;
+  } else if ([nsCursorClass respondsToSelector:@selector(dragLinkCursor)] &&
+             [aCursor isEqual:[nsCursorClass performSelector:@selector(dragLinkCursor)]]) {
+    mType = TypeDragLink;
+  } else if ([nsCursorClass respondsToSelector:@selector(operationNotAllowedCursor)] &&
+             [aCursor isEqual:[nsCursorClass performSelector:@selector(operationNotAllowedCursor)]]) {
+    mType = TypeNotAllowed;
+  } else {
+    NSImage* image = [aCursor image];
+    NSArray* reps = image ? [image representations] : nil;
+    NSUInteger repsCount = reps ? [reps count] : 0;
+    if (!repsCount) {
+      // If we have a custom cursor with no image representations, assume we
+      // need a transparent cursor.
+      mType = TypeTransparent;
+    } else {
+      CGImageRef cgImage = nil;
+      // XXX We don't know how to deal with a cursor that doesn't have a
+      //     bitmap image representation.  For now we fall back to an arrow
+      //     cursor.
+      for (NSUInteger i = 0; i < repsCount; ++i) {
+        id rep = [reps objectAtIndex:i];
+        if ([rep isKindOfClass:[NSBitmapImageRep class]]) {
+          cgImage = [(NSBitmapImageRep*)rep CGImage];
+          break;
+        }
+      }
+      if (cgImage) {
+        CFMutableDataRef data = ::CFDataCreateMutable(kCFAllocatorDefault, 0);
+        if (data) {
+          CGImageDestinationRef dest = ::CGImageDestinationCreateWithData(data,
+                                                                          kUTTypePNG,
+                                                                          1,
+                                                                          NULL);
+          if (dest) {
+            ::CGImageDestinationAddImage(dest, cgImage, NULL);
+            if (::CGImageDestinationFinalize(dest)) {
+              uint32_t dataLength = (uint32_t) ::CFDataGetLength(data);
+              mCustomImageData = (uint8_t*) moz_xmalloc(dataLength);
+              ::CFDataGetBytes(data, ::CFRangeMake(0, dataLength), mCustomImageData);
+              mCustomImageDataLength = dataLength;
+              mType = TypeCustom;
+            }
+            ::CFRelease(dest);
+          }
+          ::CFRelease(data);
+        }
+      }
+      if (!mCustomImageData) {
+        mType = TypeArrow;
+      }
+    }
+  }
+}
+
+NSCursorInfo::NSCursorInfo(const Cursor* aCursor)
+  : mType(TypeArrow)
+  , mHotSpot(nsPoint(0, 0))
+  , mCustomImageData(NULL)
+  , mCustomImageDataLength(0)
+{
+  // This constructor is only ever called from the plugin process, so the
+  // following is safe.
+  if (!GetNativeCursorsSupported()) {
+    return;
+  }
+
+  mHotSpot = nsPoint(aCursor->hotSpot.h, aCursor->hotSpot.v);
+
+  int width = 16, height = 16;
+  int bytesPerPixel = 4;
+  int rowBytes = width * bytesPerPixel;
+  int bitmapSize = height * rowBytes;
+
+  PRBool isTransparent = PR_TRUE;
+
+  uint8_t* bitmap = (uint8_t*) moz_xmalloc(bitmapSize);
+  // The way we create 'bitmap' is largely "borrowed" from Chrome's
+  // WebCursor::InitFromCursor().
+  for (int y = 0; y < height; ++y) {
+    unsigned short data = aCursor->data[y];
+    unsigned short mask = aCursor->mask[y];
+    // Change 'data' and 'mask' from big-endian to little-endian, but output
+    // big-endian data below.
+    data = ((data << 8) & 0xFF00) | ((data >> 8) & 0x00FF);
+    mask = ((mask << 8) & 0xFF00) | ((mask >> 8) & 0x00FF);
+    // It'd be nice to use a gray-scale bitmap.  But
+    // CGBitmapContextCreateImage() (used below) won't work with one that also
+    // has alpha values.
+    for (int x = 0; x < width; ++x) {
+      int offset = (y * rowBytes) + (x * bytesPerPixel);
+      // Color value
+      if (data & 0x8000) {
+        bitmap[offset]     = 0x0;
+        bitmap[offset + 1] = 0x0;
+        bitmap[offset + 2] = 0x0;
+      } else {
+        bitmap[offset]     = 0xFF;
+        bitmap[offset + 1] = 0xFF;
+        bitmap[offset + 2] = 0xFF;
+      }
+      // Mask value
+      if (mask & 0x8000) {
+        bitmap[offset + 3] = 0xFF;
+        isTransparent = PR_FALSE;
+      } else {
+        bitmap[offset + 3] = 0x0;
+      }
+      data <<= 1;
+      mask <<= 1;
+    }
+  }
+
+  if (isTransparent) {
+    // If aCursor is transparent, we don't need to serialize custom cursor
+    // data over IPC.
+    mType = TypeTransparent;
+  } else {
+    CGColorSpaceRef color = ::CGColorSpaceCreateDeviceRGB();
+    if (color) {
+      CGContextRef context =
+        ::CGBitmapContextCreate(bitmap,
+                                width,
+                                height,
+                                8,
+                                rowBytes,
+                                color,
+                                kCGImageAlphaPremultipliedLast |
+                                  kCGBitmapByteOrder32Big);
+      if (context) {
+        CGImageRef image = ::CGBitmapContextCreateImage(context);
+        if (image) {
+          ::CFMutableDataRef data = ::CFDataCreateMutable(kCFAllocatorDefault, 0);
+          if (data) {
+            CGImageDestinationRef dest =
+              ::CGImageDestinationCreateWithData(data,
+                                                 kUTTypePNG,
+                                                 1,
+                                                 NULL);
+            if (dest) {
+              ::CGImageDestinationAddImage(dest, image, NULL);
+              if (::CGImageDestinationFinalize(dest)) {
+                uint32_t dataLength = (uint32_t) ::CFDataGetLength(data);
+                mCustomImageData = (uint8_t*) moz_xmalloc(dataLength);
+                ::CFDataGetBytes(data,
+                                 ::CFRangeMake(0, dataLength),
+                                 mCustomImageData);
+                mCustomImageDataLength = dataLength;
+                mType = TypeCustom;
+              }
+              ::CFRelease(dest);
+            }
+            ::CFRelease(data);
+          }
+          ::CGImageRelease(image);
+        }
+        ::CGContextRelease(context);
+      }
+      ::CGColorSpaceRelease(color);
+    }
+  }
+
+  moz_free(bitmap);
+}
+
+NSCursorInfo::~NSCursorInfo()
+{
+  if (mCustomImageData) {
+    moz_free(mCustomImageData);
+  }
+}
+
+NSCursor* NSCursorInfo::GetNSCursor() const
+{
+  NSCursor* retval = nil;
+
+  Class nsCursorClass = [NSCursor class];
+  switch(mType) {
+    case TypeArrow:
+      retval = [NSCursor arrowCursor];
+      break;
+    case TypeClosedHand:
+      retval = [NSCursor closedHandCursor];
+      break;
+    case TypeCrosshair:
+      retval = [NSCursor crosshairCursor];
+      break;
+    case TypeDisappearingItem:
+      retval = [NSCursor disappearingItemCursor];
+      break;
+    case TypeIBeam:
+      retval = [NSCursor IBeamCursor];
+      break;
+    case TypeOpenHand:
+      retval = [NSCursor openHandCursor];
+      break;
+    case TypePointingHand:
+      retval = [NSCursor pointingHandCursor];
+      break;
+    case TypeResizeDown:
+      retval = [NSCursor resizeDownCursor];
+      break;
+    case TypeResizeLeft:
+      retval = [NSCursor resizeLeftCursor];
+      break;
+    case TypeResizeLeftRight:
+      retval = [NSCursor resizeLeftRightCursor];
+      break;
+    case TypeResizeRight:
+      retval = [NSCursor resizeRightCursor];
+      break;
+    case TypeResizeUp:
+      retval = [NSCursor resizeUpCursor];
+      break;
+    case TypeResizeUpDown:
+      retval = [NSCursor resizeUpDownCursor];
+      break;
+    // The following four cursor types are only supported on OS X 10.6 and up.
+    case TypeContextualMenu: {
+      if ([nsCursorClass respondsToSelector:@selector(contextualMenuCursor)]) {
+        retval = [nsCursorClass performSelector:@selector(contextualMenuCursor)];
+      }
+      break;
+    }
+    case TypeDragCopy: {
+      if ([nsCursorClass respondsToSelector:@selector(dragCopyCursor)]) {
+        retval = [nsCursorClass performSelector:@selector(dragCopyCursor)];
+      }
+      break;
+    }
+    case TypeDragLink: {
+      if ([nsCursorClass respondsToSelector:@selector(dragLinkCursor)]) {
+        retval = [nsCursorClass performSelector:@selector(dragLinkCursor)];
+      }
+      break;
+    }
+    case TypeNotAllowed: {
+      if ([nsCursorClass respondsToSelector:@selector(operationNotAllowedCursor)]) {
+        retval = [nsCursorClass performSelector:@selector(operationNotAllowedCursor)];
+      }
+      break;
+    }
+    case TypeTransparent:
+      retval = GetTransparentCursor();
+      break;
+    default:
+      break;
+  }
+
+  if (!retval && mCustomImageData && mCustomImageDataLength) {
+    CGDataProviderRef provider = ::CGDataProviderCreateWithData(NULL,
+                                                                (const void*)mCustomImageData,
+                                                                mCustomImageDataLength,
+                                                                NULL);
+    if (provider) {
+      CGImageRef cgImage = ::CGImageCreateWithPNGDataProvider(provider,
+                                                              NULL,
+                                                              false,
+                                                              kCGRenderingIntentDefault);
+      if (cgImage) {
+        NSBitmapImageRep* rep = [[NSBitmapImageRep alloc] initWithCGImage:cgImage];
+        if (rep) {
+          NSImage* image = [[NSImage alloc] init];
+          if (image) {
+            [image addRepresentation:rep];
+            retval = [[[NSCursor alloc] initWithImage:image 
+                                              hotSpot:NSMakePoint(mHotSpot.x, mHotSpot.y)]
+                      autorelease];
+            [image release];
+          }
+          [rep release];
+        }
+        ::CGImageRelease(cgImage);
+      }
+      ::CFRelease(provider);
+    }
+  }
+
+  // Fall back to an arrow cursor if need be.
+  if (!retval) {
+    retval = [NSCursor arrowCursor];
+  }
+
+  return retval;
+}
+
+// Get a transparent cursor with the appropriate hot spot.  We need one if
+// (for example) we have a custom cursor with no image data.
+NSCursor* NSCursorInfo::GetTransparentCursor() const
+{
+  NSCursor* retval = nil;
+
+  int width = 16, height = 16;
+  int bytesPerPixel = 2;
+  int rowBytes = width * bytesPerPixel;
+  int dataSize = height * rowBytes;
+
+  uint8_t* data = (uint8_t*) moz_xmalloc(dataSize);
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+      int offset = (y * rowBytes) + (x * bytesPerPixel);
+      data[offset] = 0x7E;  // Arbitrary gray-scale value
+      data[offset + 1] = 0; // Alpha value to make us transparent
+    }
+  }
+
+  NSBitmapImageRep* imageRep =
+    [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:nil
+                                             pixelsWide:width
+                                             pixelsHigh:height
+                                          bitsPerSample:8
+                                        samplesPerPixel:2
+                                               hasAlpha:YES
+                                               isPlanar:NO
+                                         colorSpaceName:NSCalibratedWhiteColorSpace
+                                            bytesPerRow:rowBytes
+                                           bitsPerPixel:16]
+     autorelease];
+  if (imageRep) {
+    uint8_t* repDataPtr = [imageRep bitmapData];
+    if (repDataPtr) {
+      memcpy(repDataPtr, data, dataSize);
+      NSImage *image =
+        [[[NSImage alloc] initWithSize:NSMakeSize(width, height)]
+         autorelease];
+      if (image) {
+        [image addRepresentation:imageRep];
+        retval =
+          [[[NSCursor alloc] initWithImage:image
+                                   hotSpot:NSMakePoint(mHotSpot.x, mHotSpot.y)]
+           autorelease];
+      }
+    }
+  }
+
+  moz_free(data);
+
+  // Fall back to an arrow cursor if (for some reason) the above code failed.
+  if (!retval) {
+    retval = [NSCursor arrowCursor];
+  }
+
+  return retval;
+}
+
+NSCursorInfo::Type NSCursorInfo::GetType() const
+{
+  return mType;
+}
+
+const char* NSCursorInfo::GetTypeName() const
+{
+  switch(mType) {
+    case TypeCustom:
+      return "TypeCustom";
+    case TypeArrow:
+      return "TypeArrow";
+    case TypeClosedHand:
+      return "TypeClosedHand";
+    case TypeContextualMenu:
+      return "TypeContextualMenu";
+    case TypeCrosshair:
+      return "TypeCrosshair";
+    case TypeDisappearingItem:
+      return "TypeDisappearingItem";
+    case TypeDragCopy:
+      return "TypeDragCopy";
+    case TypeDragLink:
+      return "TypeDragLink";
+    case TypeIBeam:
+      return "TypeIBeam";
+    case TypeNotAllowed:
+      return "TypeNotAllowed";
+    case TypeOpenHand:
+      return "TypeOpenHand";
+    case TypePointingHand:
+      return "TypePointingHand";
+    case TypeResizeDown:
+      return "TypeResizeDown";
+    case TypeResizeLeft:
+      return "TypeResizeLeft";
+    case TypeResizeLeftRight:
+      return "TypeResizeLeftRight";
+    case TypeResizeRight:
+      return "TypeResizeRight";
+    case TypeResizeUp:
+      return "TypeResizeUp";
+    case TypeResizeUpDown:
+      return "TypeResizeUpDown";
+    case TypeTransparent:
+      return "TypeTransparent";
+    default:
+      break;
+  }
+  return "TypeUnknown";
+}
+
+nsPoint NSCursorInfo::GetHotSpot() const
+{
+  return mHotSpot;
+}
+
+uint8_t* NSCursorInfo::GetCustomImageData() const
+{
+  return mCustomImageData;
+}
+
+uint32_t NSCursorInfo::GetCustomImageDataLength() const
+{
+  return mCustomImageDataLength;
+}
+
+void NSCursorInfo::SetType(Type aType)
+{
+  mType = aType;
+}
+
+void NSCursorInfo::SetHotSpot(nsPoint aHotSpot)
+{
+  mHotSpot = aHotSpot;
+}
+
+void NSCursorInfo::SetCustomImageData(uint8_t* aData, uint32_t aDataLength)
+{
+  if (mCustomImageData) {
+    moz_free(mCustomImageData);
+  }
+  if (aDataLength) {
+    mCustomImageData = (uint8_t*) moz_xmalloc(aDataLength);
+    memcpy(mCustomImageData, aData, aDataLength);
+  } else {
+    mCustomImageData = NULL;
+  }
+  mCustomImageDataLength = aDataLength;
+}
+
+// This should never be called from the browser process -- only from the
+// plugin process.
+PRBool NSCursorInfo::GetNativeCursorsSupported()
+{
+  if (mNativeCursorsSupported == -1) {
+    AssertPluginThread();
+    PluginModuleChild *pmc = PluginModuleChild::current();
+    if (pmc) {
+      bool result = pmc->GetNativeCursorsSupported();
+      if (result) {
+        mNativeCursorsSupported = 1;
+      } else {
+        mNativeCursorsSupported = 0;
+      }
+    }
+  }
+  return (mNativeCursorsSupported == 1);
+}
+
+} // namespace mac_plugin_interposing
 
 namespace mac_plugin_interposing {
 namespace parent {
@@ -114,6 +635,36 @@ void OnPluginHideWindow(uint32_t window_id, pid_t aPluginPid) {
   }
 }
 
+void OnSetCursor(const NSCursorInfo& cursorInfo)
+{
+  NSCursor* aCursor = cursorInfo.GetNSCursor();
+  if (aCursor) {
+    [aCursor set];
+  }
+}
+
+void OnShowCursor(bool show)
+{
+  if (show) {
+    [NSCursor unhide];
+  } else {
+    [NSCursor hide];
+  }
+}
+
+void OnPushCursor(const NSCursorInfo& cursorInfo)
+{
+  NSCursor* aCursor = cursorInfo.GetNSCursor();
+  if (aCursor) {
+    [aCursor push];
+  }
+}
+
+void OnPopCursor()
+{
+  [NSCursor pop];
+}
+
 } // parent
 } // namespace mac_plugin_interposing
 
@@ -153,6 +704,42 @@ void NotifyBrowserOfPluginHideWindow(uint32_t window_id, CGRect bounds) {
     pmc->PluginHideWindow(window_id);
 }
 
+void NotifyBrowserOfSetCursor(NSCursorInfo& aCursorInfo)
+{
+  AssertPluginThread();
+  PluginModuleChild *pmc = PluginModuleChild::current();
+  if (pmc) {
+    pmc->SetCursor(aCursorInfo);
+  }
+}
+
+void NotifyBrowserOfShowCursor(bool show)
+{
+  AssertPluginThread();
+  PluginModuleChild *pmc = PluginModuleChild::current();
+  if (pmc) {
+    pmc->ShowCursor(show);
+  }
+}
+
+void NotifyBrowserOfPushCursor(NSCursorInfo& aCursorInfo)
+{
+  AssertPluginThread();
+  PluginModuleChild *pmc = PluginModuleChild::current();
+  if (pmc) {
+    pmc->PushCursor(aCursorInfo);
+  }
+}
+
+void NotifyBrowserOfPopCursor()
+{
+  AssertPluginThread();
+  PluginModuleChild *pmc = PluginModuleChild::current();
+  if (pmc) {
+    pmc->PopCursor();
+  }
+}
+
 struct WindowInfo {
   uint32_t window_id;
   CGRect bounds;
@@ -188,10 +775,55 @@ static void OnPluginWindowShown(const WindowInfo& window_info, BOOL is_modal) {
     window_info.window_id, window_info.bounds, is_modal);
 }
 
+static BOOL OnSetCursor(NSCursorInfo &aInfo)
+{
+  if (NSCursorInfo::GetNativeCursorsSupported()) {
+    NotifyBrowserOfSetCursor(aInfo);
+    return YES;
+  }
+  return NO;
+}
+
+static BOOL OnHideCursor()
+{
+  if (NSCursorInfo::GetNativeCursorsSupported()) {
+    NotifyBrowserOfShowCursor(NO);
+    return YES;
+  }
+  return NO;
+}
+
+static BOOL OnUnhideCursor()
+{
+  if (NSCursorInfo::GetNativeCursorsSupported()) {
+    NotifyBrowserOfShowCursor(YES);
+    return YES;
+  }
+  return NO;
+}
+
+static BOOL OnPushCursor(NSCursorInfo &aInfo)
+{
+  if (NSCursorInfo::GetNativeCursorsSupported()) {
+    NotifyBrowserOfPushCursor(aInfo);
+    return YES;
+  }
+  return NO;
+}
+
+static BOOL OnPopCursor()
+{
+  if (NSCursorInfo::GetNativeCursorsSupported()) {
+    NotifyBrowserOfPopCursor();
+    return YES;
+  }
+  return NO;
+}
+
 } // child
 } // namespace mac_plugin_interposing
 
-using mac_plugin_interposing::child::WindowInfo;
+using namespace mac_plugin_interposing::child;
 
 @interface NSWindow (PluginInterposing)
 - (void)pluginInterpose_orderOut:(id)sender;
@@ -247,6 +879,130 @@ using mac_plugin_interposing::child::WindowInfo;
 
 @end
 
+// Hook commands to manipulate the current cursor, so that they can be passed
+// from the child process to the parent process.  These commands have no
+// effect unless they're performed in the parent process.
+@interface NSCursor (PluginInterposing)
+- (void)pluginInterpose_set;
+- (void)pluginInterpose_push;
+- (void)pluginInterpose_pop;
++ (NSCursor*)pluginInterpose_currentCursor;
++ (void)pluginInterpose_hide;
++ (void)pluginInterpose_unhide;
++ (void)pluginInterpose_pop;
+@end
+
+// Cache the results of [NSCursor set], [NSCursor push] and [NSCursor pop].
+// The last element is always the current cursor.
+static NSMutableArray* gCursorStack = nil;
+
+static BOOL initCursorStack()
+{
+  if (!gCursorStack) {
+    gCursorStack = [[NSMutableArray arrayWithCapacity:5] retain];
+  }
+  return (gCursorStack != NULL);
+}
+
+static NSCursor* currentCursorFromCache()
+{
+  if (!initCursorStack())
+    return nil;
+  return (NSCursor*) [gCursorStack lastObject];
+}
+
+static void setCursorInCache(NSCursor* aCursor)
+{
+  if (!initCursorStack() || !aCursor)
+    return;
+  NSUInteger count = [gCursorStack count];
+  if (count) {
+    [gCursorStack replaceObjectAtIndex:count - 1 withObject:aCursor];
+  } else {
+    [gCursorStack addObject:aCursor];
+  }
+}
+
+static void pushCursorInCache(NSCursor* aCursor)
+{
+  if (!initCursorStack() || !aCursor)
+    return;
+  [gCursorStack addObject:aCursor];
+}
+
+static void popCursorInCache()
+{
+  if (!initCursorStack())
+    return;
+  // Apple's doc on the +[NSCursor pop] method says:  "If the current cursor
+  // is the only cursor on the stack, this method does nothing."
+  if ([gCursorStack count] > 1) {
+    [gCursorStack removeLastObject];
+  }
+}
+
+@implementation NSCursor (PluginInterposing)
+
+- (void)pluginInterpose_set
+{
+  NSCursorInfo info(self);
+  OnSetCursor(info);
+  setCursorInCache(self);
+  [self pluginInterpose_set];
+}
+
+- (void)pluginInterpose_push
+{
+  NSCursorInfo info(self);
+  OnPushCursor(info);
+  pushCursorInCache(self);
+  [self pluginInterpose_push];
+}
+
+- (void)pluginInterpose_pop
+{
+  OnPopCursor();
+  popCursorInCache();
+  [self pluginInterpose_pop];
+}
+
+// The currentCursor method always returns nil when running in a background
+// process.  But this may confuse plugins (notably Flash, see bug 621117).  So
+// if we get a nil return from the "call to super", we return a cursor that's
+// been cached by previous calls to set or push.  According to Apple's docs,
+// currentCursor "only returns the cursor set by your application using
+// NSCursor methods".  So we don't need to worry about changes to the cursor
+// made by other methods like SetThemeCursor().
++ (NSCursor*)pluginInterpose_currentCursor
+{
+  NSCursor* retval = [self pluginInterpose_currentCursor];
+  if (!retval) {
+    retval = currentCursorFromCache();
+  }
+  return retval;
+}
+
++ (void)pluginInterpose_hide
+{
+  OnHideCursor();
+  [self pluginInterpose_hide];
+}
+
++ (void)pluginInterpose_unhide
+{
+  OnUnhideCursor();
+  [self pluginInterpose_unhide];
+}
+
++ (void)pluginInterpose_pop
+{
+  OnPopCursor();
+  popCursorInCache();
+  [self pluginInterpose_pop];
+}
+
+@end
+
 static void ExchangeMethods(Class target_class,
                             BOOL class_method,
                             SEL original,
@@ -286,8 +1042,118 @@ void SetUpCocoaInterposing() {
 
   ExchangeMethods([NSApplication class], NO, @selector(runModalForWindow:),
                   @selector(pluginInterpose_runModalForWindow:));
+
+  Class nscursor_class = [NSCursor class];
+  ExchangeMethods(nscursor_class, NO, @selector(set),
+                  @selector(pluginInterpose_set));
+  ExchangeMethods(nscursor_class, NO, @selector(push),
+                  @selector(pluginInterpose_push));
+  ExchangeMethods(nscursor_class, NO, @selector(pop),
+                  @selector(pluginInterpose_pop));
+  ExchangeMethods(nscursor_class, YES, @selector(currentCursor),
+                  @selector(pluginInterpose_currentCursor));
+  ExchangeMethods(nscursor_class, YES, @selector(hide),
+                  @selector(pluginInterpose_hide));
+  ExchangeMethods(nscursor_class, YES, @selector(unhide),
+                  @selector(pluginInterpose_unhide));
+  ExchangeMethods(nscursor_class, YES, @selector(pop),
+                  @selector(pluginInterpose_pop));
 }
 
 }  // namespace child
 }  // namespace mac_plugin_interposing
 
+// Called from plugin_child_interpose.mm, which hooks calls to
+// SetCursor() (the QuickDraw call) from the plugin child process.
+extern "C" NS_VISIBILITY_DEFAULT BOOL
+mac_plugin_interposing_child_OnSetCursor(const Cursor* cursor)
+{
+  NSCursorInfo info(cursor);
+  return OnSetCursor(info);
+}
+
+// Called from plugin_child_interpose.mm, which hooks calls to
+// SetThemeCursor() (the Appearance Manager call) from the plugin child
+// process.
+extern "C" NS_VISIBILITY_DEFAULT BOOL
+mac_plugin_interposing_child_OnSetThemeCursor(ThemeCursor cursor)
+{
+  NSCursorInfo info;
+  switch (cursor) {
+    case kThemeArrowCursor:
+      info.SetType(NSCursorInfo::TypeArrow);
+      break;
+    case kThemeCopyArrowCursor:
+      info.SetType(NSCursorInfo::TypeDragCopy);
+      break;
+    case kThemeAliasArrowCursor:
+      info.SetType(NSCursorInfo::TypeDragLink);
+      break;
+    case kThemeContextualMenuArrowCursor:
+      info.SetType(NSCursorInfo::TypeContextualMenu);
+      break;
+    case kThemeIBeamCursor:
+      info.SetType(NSCursorInfo::TypeIBeam);
+      break;
+    case kThemeCrossCursor:
+    case kThemePlusCursor:
+      info.SetType(NSCursorInfo::TypeCrosshair);
+      break;
+    case kThemeWatchCursor:
+    case kThemeSpinningCursor:
+      info.SetType(NSCursorInfo::TypeArrow);
+      break;
+    case kThemeClosedHandCursor:
+      info.SetType(NSCursorInfo::TypeClosedHand);
+      break;
+    case kThemeOpenHandCursor:
+      info.SetType(NSCursorInfo::TypeOpenHand);
+      break;
+    case kThemePointingHandCursor:
+    case kThemeCountingUpHandCursor:
+    case kThemeCountingDownHandCursor:
+    case kThemeCountingUpAndDownHandCursor:
+      info.SetType(NSCursorInfo::TypePointingHand);
+      break;
+    case kThemeResizeLeftCursor:
+      info.SetType(NSCursorInfo::TypeResizeLeft);
+      break;
+    case kThemeResizeRightCursor:
+      info.SetType(NSCursorInfo::TypeResizeRight);
+      break;
+    case kThemeResizeLeftRightCursor:
+      info.SetType(NSCursorInfo::TypeResizeLeftRight);
+      break;
+    case kThemeNotAllowedCursor:
+      info.SetType(NSCursorInfo::TypeNotAllowed);
+      break;
+    case kThemeResizeUpCursor:
+      info.SetType(NSCursorInfo::TypeResizeUp);
+      break;
+    case kThemeResizeDownCursor:
+      info.SetType(NSCursorInfo::TypeResizeDown);
+      break;
+    case kThemeResizeUpDownCursor:
+      info.SetType(NSCursorInfo::TypeResizeUpDown);
+      break;
+    case kThemePoofCursor:
+      info.SetType(NSCursorInfo::TypeDisappearingItem);
+      break;
+    default:
+      info.SetType(NSCursorInfo::TypeArrow);
+      break;
+  }
+  return OnSetCursor(info);
+}
+
+extern "C" NS_VISIBILITY_DEFAULT BOOL
+mac_plugin_interposing_child_OnHideCursor()
+{
+  return OnHideCursor();
+}
+
+extern "C" NS_VISIBILITY_DEFAULT BOOL
+mac_plugin_interposing_child_OnShowCursor()
+{
+  return OnUnhideCursor();
+}

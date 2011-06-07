@@ -98,6 +98,7 @@
 #define APPLICATION_XPINSTALL               "application/x-xpinstall"
 #define APPLICATION_XML                     "application/xml"
 #define APPLICATION_XHTML_XML               "application/xhtml+xml"
+#define APPLICATION_XSLT_XML                "application/xslt+xml"
 #define APPLICATION_MATHML_XML              "application/mathml+xml"
 #define APPLICATION_RDF_XML                 "application/rdf+xml"
 
@@ -154,6 +155,7 @@
 #define TEXT_ECMASCRIPT                     "text/ecmascript"
 #define TEXT_JAVASCRIPT                     "text/javascript"
 #define TEXT_XSL                            "text/xsl"
+#define TEXT_EVENT_STREAM                   "text/event-stream"
 
 #define VIDEO_MPEG                          "video/mpeg"
 #define VIDEO_RAW                           "video/x-raw-yuv"

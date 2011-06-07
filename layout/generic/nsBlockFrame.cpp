@@ -6105,7 +6105,8 @@ nsBlockFrame::AdjustForTextIndent(const nsLineBox* aLine,
                                   nscoord& start,
                                   nscoord& width)
 {
-  if (!GetPrevContinuation() && aLine == begin_lines().get()) {
+  if (!GetPrevContinuation() && aLine == begin_lines().get() &&
+      (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR)) {
     // Adjust for the text-indent.  See similar code in
     // nsLineLayout::BeginLineReflow.
     const nsStyleCoord &textIndent = GetStyleText()->mTextIndent;

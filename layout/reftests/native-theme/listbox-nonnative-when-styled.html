@@ -1,4 +1,5 @@
 <!DOCTYPE HTML>
+<body onload="dump('\nDEBUG-bug660226: ' + document.activeElement + '\n\n');">
 <!-- these should make the select non-native -->
 <select size="3" style="border-width: 0"></select>
 <select size="3" style="border-width: 1px"></select>
@@ -15,3 +16,4 @@
 <!-- these should let it stay native -->
 <select size="3" style="color: black"></select>
 <select size="3" style="font-weight: normal"></select>
+</body>
