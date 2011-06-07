@@ -103,10 +103,8 @@ Bindings::ensureShape(JSContext *cx)
 {
     if (!lastBinding) {
         lastBinding = EmptyShape::create(cx, &js_CallClass);
-        if (!lastBinding) {
-            js_ReportOutOfMemory(cx);
+        if (!lastBinding)
             return false;
-        }
     }
     return true;
 }

@@ -487,6 +487,50 @@ class TypeIntermediate
 };
 
 /*
+ * Type barriers overview.
+ *
+ * Type barriers are a technique for using dynamic type information to improve
+ * the inferred types within scripts. At certain opcodes --- those with the
+ * JOF_TYPESET format --- we will construct a type set storing the set of types
+ * which we have observed to be pushed at that opcode, and will only use those
+ * observed types when doing propagation downstream from the bytecode. For
+ * example, in the following script:
+ *
+ * function foo(x) {
+ *   return x.f + 10;
+ * }
+ *
+ * Suppose we know the type of 'x' and that the type of its 'f' property is
+ * either an int or float. To account for all possible behaviors statically,
+ * we would mark the result of the 'x.f' access as an int or float, as well
+ * as the result of the addition and the return value of foo (and everywhere
+ * the result of 'foo' is used). When dealing with polymorphic code, this is
+ * undesirable behavior --- the type imprecision surrounding the polymorphism
+ * will tend to leak to many places in the program.
+ *
+ * Instead, we will keep track of the types that have been dynamically observed
+ * to have been produced by the 'x.f', and only use those observed types
+ * downstream from the access. If the 'x.f' has only ever produced integers,
+ * we will treat its result as an integer and mark the result of foo as an
+ * integer.
+ *
+ * The set of observed types will be a subset of the set of possible types,
+ * and if the two sets are different, a type barriers will be added at the
+ * bytecode which checks the dynamic result every time the bytecode executes
+ * and makes sure it is in the set of observed types. If it is not, that
+ * observed set is updated, and the new type information is automatically
+ * propagated along the already-generated type constraints to the places
+ * where the result of the bytecode is used.
+ *
+ * Observing new types at a bytecode removes type barriers at the bytecode
+ * (this removal happens lazily, see ScriptAnalysis::pruneTypeBarriers), and if
+ * all type barriers at a bytecode are removed --- the set of observed types
+ * grows to match the set of possible types --- then the result of the bytecode
+ * no longer needs to be dynamically checked (unless the set of possible types
+ * grows, triggering the generation of new type barriers).
+ */
+
+/*
  * Barrier introduced at some bytecode. These are added when, during inference,
  * we block a type from being propagated as would normally be done for a subset
  * constraint. The propagation is technically possible, but we suspect it will
@@ -834,12 +878,21 @@ struct TypeScript
     /* Get a type object for an allocation site in this script. */
     inline TypeObject *initObject(JSContext *cx, const jsbytecode *pc, bool isArray);
 
-    /* Monitor a bytecode pushing an unexpected value. */
+    /*
+     * Monitor a bytecode pushing a value which is not accounted for by the
+     * inference type constraints, such as integer overflow.
+     */
     inline void monitorOverflow(JSContext *cx, jsbytecode *pc);
     inline void monitorString(JSContext *cx, jsbytecode *pc);
     inline void monitorUnknown(JSContext *cx, jsbytecode *pc);
 
-    /* Monitor a JOF_TYPESET bytecode pushing any value into its pushed type set. */
+    /*
+     * Monitor a bytecode pushing any value. This must be called for any opcode
+     * which is JOF_TYPESET, and where either the script has not been analyzed
+     * by type inference or where the pc has type barriers. For simplicity, we
+     * always monitor JOF_TYPESET opcodes in the interpreter and stub calls,
+     * and only look at barriers when generating JIT code for the script.
+     */
     inline void monitor(JSContext *cx, jsbytecode *pc, const js::Value &val);
 
     /* Monitor an assignment at a SETELEM on a non-integer identifier. */
