@@ -460,6 +460,9 @@ struct JSScript {
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */
+    bool            warnedAboutUndefinedProp:1; /* have warned about uses of
+                                                   undefined properties in this
+                                                   script */
     bool            hasSingletons:1;  /* script has singleton objects */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
