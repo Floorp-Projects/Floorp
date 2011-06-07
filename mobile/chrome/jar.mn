@@ -2,12 +2,6 @@
 
 chrome.jar:
 % content browser %content/
-  content/firstrun/firstrun.xhtml      (content/firstrun/firstrun.xhtml)
-  content/firstrun/mozilla.png         (content/firstrun/mozilla.png)
-  content/firstrun/features.png        (content/firstrun/features.png)
-  content/firstrun/twitter.png         (content/firstrun/twitter.png)
-  content/firstrun/facebook.png        (content/firstrun/facebook.png)
-  content/firstrun/nav-arrow.png       (content/firstrun/nav-arrow.png)
 
 * content/about.xhtml                  (content/about.xhtml)
   content/config.xul                   (content/config.xul)
