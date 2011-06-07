@@ -971,7 +971,7 @@ nsXULTreeItemAccessibleBase::NativeState()
 PRInt32
 nsXULTreeItemAccessibleBase::GetIndexInParent() const
 {
-  return mParent ? mParent->GetCachedChildCount() + mRow : -1;
+  return mParent ? mParent->ContentChildCount() + mRow : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

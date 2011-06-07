@@ -327,10 +327,24 @@ public:
    */
   PRInt32 GetIndexOfEmbeddedChild(nsAccessible* aChild);
 
-  PRUint32 GetCachedChildCount() const { return mChildren.Length(); }
-  nsAccessible* GetCachedChildAt(PRUint32 aIndex) const { return mChildren.ElementAt(aIndex); }
+  /**
+   * Return number of content children/content child at index. The content
+   * child is created from markup in contrast to it's never constructed by its
+   * parent accessible (like treeitem accessibles for XUL trees).
+   */
+  PRUint32 ContentChildCount() const { return mChildren.Length(); }
+  nsAccessible* ContentChildAt(PRUint32 aIndex) const
+    { return mChildren.ElementAt(aIndex); }
+
+  /**
+   * Return true if children were initialized.
+   */
   inline bool AreChildrenCached() const
     { return !IsChildrenFlag(eChildrenUninitialized); }
+
+  /**
+   * Return true if the accessible is attached to tree.
+   */
   bool IsBoundToParent() const { return !!mParent; }
 
   //////////////////////////////////////////////////////////////////////////////
