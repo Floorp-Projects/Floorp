@@ -611,7 +611,7 @@ nsresult nsAccessible::GetFullKeyName(const nsAString& aModifierName, const nsAS
   if (!gKeyStringBundle ||
       NS_FAILED(gKeyStringBundle->GetStringFromName(PromiseFlatString(aModifierName).get(), 
                                                     getter_Copies(modifierName))) ||
-      NS_FAILED(gKeyStringBundle->GetStringFromName(PromiseFlatString(NS_LITERAL_STRING("MODIFIER_SEPARATOR")).get(), 
+      NS_FAILED(gKeyStringBundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(), 
                                                     getter_Copies(separator)))) {
     return NS_ERROR_FAILURE;
   }
