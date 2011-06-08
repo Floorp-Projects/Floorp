@@ -200,7 +200,7 @@ function runServer()
   if (serverAlive.exists()) {
     serverAlive.append("server_alive.txt");
     foStream.init(serverAlive,
-                  0x02 | 0x08 | 0x20, 0664, 0); // write, create, truncate
+                  0x02 | 0x08 | 0x20, 436, 0); // write, create, truncate
     data = "It's alive!";
     foStream.write(data, data.length);
     foStream.close();
@@ -275,7 +275,7 @@ function processLocations(server)
   serverLocations.append("server-locations.txt");
 
   const PR_RDONLY = 0x01;
-  var fis = new FileInputStream(serverLocations, PR_RDONLY, 0444,
+  var fis = new FileInputStream(serverLocations, PR_RDONLY, 292 /* 0444 */,
                                 Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
   var lis = new ConverterInputStream(fis, "UTF-8", 1024, 0x0);
