@@ -2304,11 +2304,6 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       return inst->SetCached(bCached);
     }
 
-    case NPPVpluginWantsAllNetworkStreams: {
-      PRBool bWantsAllNetworkStreams = (result != nsnull);
-      return inst->SetWantsAllNetworkStreams(bWantsAllNetworkStreams);
-    }
-
     case NPPVpluginUsesDOMForCursorBool: {
       PRBool useDOMForCursor = (result != nsnull);
       return inst->SetUsesDOMForCursor(useDOMForCursor);
