@@ -84,6 +84,12 @@ using mozilla::ipc::GeckoChildProcessHost;
 static const int kMagicAndroidSystemPropFd = 5;
 #endif
 
+static bool
+ShouldHaveDirectoryService()
+{
+  return GeckoProcessType_Default == XRE_GetProcessType();
+}
+
 template<>
 struct RunnableMethodTraits<GeckoChildProcessHost>
 {
@@ -139,15 +145,20 @@ void GetPathToBinary(FilePath& exePath)
   exePath = exePath.DirName();
   exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
 #elif defined(OS_POSIX)
-  nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
-  nsCOMPtr<nsIFile> greDir;
-  nsresult rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
-  if (NS_SUCCEEDED(rv)) {
-    nsCString path;
-    greDir->GetNativePath(path);
-    exePath = FilePath(path.get());
+  if (ShouldHaveDirectoryService()) {
+    nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+    NS_ASSERTION(directoryService, "Expected XPCOM to be available");
+    if (directoryService) {
+      nsCOMPtr<nsIFile> greDir;
+      nsresult rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
+      if (NS_SUCCEEDED(rv)) {
+        nsCString path;
+        greDir->GetNativePath(path);
+        exePath = FilePath(path.get());
+      }
+    }
   }
-  else {
+  if (exePath.empty()) {
     exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
     exePath = exePath.DirName();
   }
@@ -421,41 +432,50 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
 #if defined(OS_LINUX) || defined(OS_MACOSX)
   base::environment_map newEnvVars;
-  nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
-  nsCOMPtr<nsIFile> greDir;
-  nsresult rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
-  if (NS_SUCCEEDED(rv)) {
-    nsCString path;
-    greDir->GetNativePath(path);
-#ifdef OS_LINUX
-#ifdef ANDROID
-    path += "/lib";
-#endif
-    newEnvVars["LD_LIBRARY_PATH"] = path.get();
-#elif OS_MACOSX
-    newEnvVars["DYLD_LIBRARY_PATH"] = path.get();
-    // XXX DYLD_INSERT_LIBRARIES should only be set when launching a plugin
-    //     process, and has no effect on other subprocesses (the hooks in
-    //     libplugin_child_interpose.dylib become noops).  But currently it
-    //     gets set when launching any kind of subprocess.
-    //
-    // Trigger "dyld interposing" for the dylib that contains
-    // plugin_child_interpose.mm.  This allows us to hook OS calls in the
-    // plugin process (ones that don't work correctly in a background
-    // process).  Don't break any other "dyld interposing" that has already
-    // been set up by whatever may have launched the browser.
-    const char* prevInterpose = PR_GetEnv("DYLD_INSERT_LIBRARIES");
-    nsCString interpose;
-    if (prevInterpose) {
-      interpose.Assign(prevInterpose);
-      interpose.AppendLiteral(":");
+  // XPCOM may not be initialized in some subprocesses.  We don't want
+  // to initialize XPCOM just for the directory service, especially
+  // since LD_LIBRARY_PATH is already set correctly in subprocesses
+  // (meaning that we don't need to set that up in the environment).
+  if (ShouldHaveDirectoryService()) {
+    nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+    NS_ASSERTION(directoryService, "Expected XPCOM to be available");
+    if (directoryService) {
+      nsCOMPtr<nsIFile> greDir;
+      nsresult rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
+      if (NS_SUCCEEDED(rv)) {
+        nsCString path;
+        greDir->GetNativePath(path);
+# ifdef OS_LINUX
+#  ifdef ANDROID
+        path += "/lib";
+#  endif  // ANDROID
+        newEnvVars["LD_LIBRARY_PATH"] = path.get();
+# elif OS_MACOSX
+        newEnvVars["DYLD_LIBRARY_PATH"] = path.get();
+        // XXX DYLD_INSERT_LIBRARIES should only be set when launching a plugin
+        //     process, and has no effect on other subprocesses (the hooks in
+        //     libplugin_child_interpose.dylib become noops).  But currently it
+        //     gets set when launching any kind of subprocess.
+        //
+        // Trigger "dyld interposing" for the dylib that contains
+        // plugin_child_interpose.mm.  This allows us to hook OS calls in the
+        // plugin process (ones that don't work correctly in a background
+        // process).  Don't break any other "dyld interposing" that has already
+        // been set up by whatever may have launched the browser.
+        const char* prevInterpose = PR_GetEnv("DYLD_INSERT_LIBRARIES");
+        nsCString interpose;
+        if (prevInterpose) {
+          interpose.Assign(prevInterpose);
+          interpose.AppendLiteral(":");
+        }
+        interpose.Append(path.get());
+        interpose.AppendLiteral("/libplugin_child_interpose.dylib");
+        newEnvVars["DYLD_INSERT_LIBRARIES"] = interpose.get();
+# endif  // OS_LINUX
+      }
     }
-    interpose.Append(path.get());
-    interpose.AppendLiteral("/libplugin_child_interpose.dylib");
-    newEnvVars["DYLD_INSERT_LIBRARIES"] = interpose.get();
-#endif
   }
-#endif
+#endif  // OS_LINUX || OS_MACOSX
 
   FilePath exePath;
   GetPathToBinary(exePath);
@@ -509,18 +529,20 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
   childArgv.insert(childArgv.end(), aExtraOpts.begin(), aExtraOpts.end());
 
-  // Make sure the child process can find the omnijar
-  // See XRE_InitCommandLine in nsAppRunner.cpp
-  nsCAutoString path;
-  nsCOMPtr<nsIFile> file = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
-  if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
-    childArgv.push_back("-greomni");
-    childArgv.push_back(path.get());
-  }
-  file = mozilla::Omnijar::GetPath(mozilla::Omnijar::APP);
-  if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
-    childArgv.push_back("-appomni");
-    childArgv.push_back(path.get());
+  if (Omnijar::IsInitialized()) {
+    // Make sure that child processes can find the omnijar
+    // See XRE_InitCommandLine in nsAppRunner.cpp
+    nsCAutoString path;
+    nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
+    if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
+      childArgv.push_back("-greomni");
+      childArgv.push_back(path.get());
+    }
+    file = Omnijar::GetPath(Omnijar::APP);
+    if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
+      childArgv.push_back("-appomni");
+      childArgv.push_back(path.get());
+    }
   }
 
   childArgv.push_back(pidstring);
@@ -624,18 +646,20 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
   cmdLine.AppendLooseValue(std::wstring(mGroupId.get()));
 
-  // Make sure the child process can find the omnijar
-  // See XRE_InitCommandLine in nsAppRunner.cpp
-  nsAutoString path;
-  nsCOMPtr<nsIFile> file = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
-  if (file && NS_SUCCEEDED(file->GetPath(path))) {
-    cmdLine.AppendLooseValue(UTF8ToWide("-greomni"));
-    cmdLine.AppendLooseValue(path.get());
-  }
-  file = mozilla::Omnijar::GetPath(mozilla::Omnijar::APP);
-  if (file && NS_SUCCEEDED(file->GetPath(path))) {
-    cmdLine.AppendLooseValue(UTF8ToWide("-appomni"));
-    cmdLine.AppendLooseValue(path.get());
+  if (Omnijar::IsInitialized()) {
+    // Make sure the child process can find the omnijar
+    // See XRE_InitCommandLine in nsAppRunner.cpp
+    nsAutoString path;
+    nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
+    if (file && NS_SUCCEEDED(file->GetPath(path))) {
+      cmdLine.AppendLooseValue(UTF8ToWide("-greomni"));
+      cmdLine.AppendLooseValue(path.get());
+    }
+    file = Omnijar::GetPath(Omnijar::APP);
+    if (file && NS_SUCCEEDED(file->GetPath(path))) {
+      cmdLine.AppendLooseValue(UTF8ToWide("-appomni"));
+      cmdLine.AppendLooseValue(path.get());
+    }
   }
 
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));

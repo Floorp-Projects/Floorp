@@ -496,6 +496,17 @@ JSD_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line);
 extern JSD_PUBLIC_API(uintN)
 JSD_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc);
 
+/*
+ * Get a list of lines and the corresponding earliest PC for each (see
+ * JSD_GetClosestPC). Lines with no PCs associated will not be returned. NULL
+ * may be passed for either lines or pcs to avoid filling anything in for that
+ * argument.
+ */
+extern JSD_PUBLIC_API(JSBool)
+JSD_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
+               uintN startLine, uintN maxLines,
+               uintN* count, uintN** lines, jsuword** pcs);
+
 /* these are only used in cases where scripts are created outside of JS*/
 
 /*

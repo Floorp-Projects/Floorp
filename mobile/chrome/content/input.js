@@ -42,6 +42,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/Geometry.jsm");
+
 // Maximum delay in ms between the two taps of a double-tap
 const kDoubleClickInterval = 400;
 

@@ -159,7 +159,7 @@ Library::Create(JSContext* cx, jsval path, JSCTypesCallbacks* callbacks)
     // Fallback: assume the platform native charset is UTF-8. This is true
     // for Mac OS X, Android, and probably Linux.
     size_t nbytes =
-      js_GetDeflatedUTF8StringLength(cx, pathStr->chars(), pathStr->length());
+      GetDeflatedUTF8StringLength(cx, pathStr->chars(), pathStr->length());
     if (nbytes == (size_t) -1)
       return NULL;
 
@@ -167,7 +167,7 @@ Library::Create(JSContext* cx, jsval path, JSCTypesCallbacks* callbacks)
     if (!pathBytes)
       return NULL;
 
-    ASSERT_OK(js_DeflateStringToUTF8Buffer(cx, pathStr->chars(),
+    ASSERT_OK(DeflateStringToUTF8Buffer(cx, pathStr->chars(),
                 pathStr->length(), pathBytes, &nbytes));
     pathBytes[nbytes] = 0;
   }

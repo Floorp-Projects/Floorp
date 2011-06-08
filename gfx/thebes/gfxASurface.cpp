@@ -543,31 +543,31 @@ gfxASurface::MovePixels(const nsIntRect& aSourceRect,
 /** Memory reporting **/
 
 static const char *sSurfaceNamesForSurfaceType[] = {
-    "explicit/gfx/surface/image",
-    "explicit/gfx/surface/pdf",
-    "explicit/gfx/surface/ps",
-    "explicit/gfx/surface/xlib",
-    "explicit/gfx/surface/xcb",
-    "explicit/gfx/surface/glitz",
-    "explicit/gfx/surface/quartz",
-    "explicit/gfx/surface/win32",
-    "explicit/gfx/surface/beos",
-    "explicit/gfx/surface/directfb",
-    "explicit/gfx/surface/svg",
-    "explicit/gfx/surface/os2",
-    "explicit/gfx/surface/win32printing",
-    "explicit/gfx/surface/quartzimage",
-    "explicit/gfx/surface/script",
-    "explicit/gfx/surface/qpainter",
-    "explicit/gfx/surface/recording",
-    "explicit/gfx/surface/vg",
-    "explicit/gfx/surface/gl",
-    "explicit/gfx/surface/drm",
-    "explicit/gfx/surface/tee",
-    "explicit/gfx/surface/xml",
-    "explicit/gfx/surface/skia",
-    "explicit/gfx/surface/subsurface",
-    "explicit/gfx/surface/d2d"
+    "gfx-surface-image",
+    "gfx-surface-pdf",
+    "gfx-surface-ps",
+    "gfx-surface-xlib",
+    "gfx-surface-xcb",
+    "gfx-surface-glitz",
+    "gfx-surface-quartz",
+    "gfx-surface-win32",
+    "gfx-surface-beos",
+    "gfx-surface-directfb",
+    "gfx-surface-svg",
+    "gfx-surface-os2",
+    "gfx-surface-win32printing",
+    "gfx-surface-quartzimage",
+    "gfx-surface-script",
+    "gfx-surface-qpainter",
+    "gfx-surface-recording",
+    "gfx-surface-vg",
+    "gfx-surface-gl",
+    "gfx-surface-drm",
+    "gfx-surface-tee",
+    "gfx-surface-xml",
+    "gfx-surface-skia",
+    "gfx-surface-subsurface",
+    "gfx-surface-d2d"
 };
 
 PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceNamesForSurfaceType) == gfxASurface::SurfaceTypeMax);
@@ -581,7 +581,7 @@ SurfaceMemoryReporterPathForType(gfxASurface::gfxSurfaceType aType)
 {
     if (aType < 0 ||
         aType >= gfxASurface::SurfaceTypeMax)
-        return "explicit/gfx/surface/unknown";
+        return "gfx-surface-unknown";
 
     return sSurfaceNamesForSurfaceType[aType];
 }
@@ -600,13 +600,18 @@ public:
 
     NS_DECL_ISUPPORTS
 
+    NS_IMETHOD GetProcess(char **process) {
+        *process = strdup("");
+        return NS_OK;
+    }
+
     NS_IMETHOD GetPath(char **memoryPath) {
         *memoryPath = strdup(SurfaceMemoryReporterPathForType(mType));
         return NS_OK;
     }
 
     NS_IMETHOD GetKind(PRInt32 *kind) {
-        *kind = MR_HEAP;
+        *kind = MR_OTHER;
         return NS_OK;
     }
 

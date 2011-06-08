@@ -22,7 +22,7 @@
 
 #include "ExecutableAllocator.h"
 
-#if ENABLE_ASSEMBLER && WTF_PLATFORM_SYMBIAN
+#if ENABLE_ASSEMBLER && WTF_OS_SYMBIAN
 
 #include <e32hal.h>
 #include <e32std.h>

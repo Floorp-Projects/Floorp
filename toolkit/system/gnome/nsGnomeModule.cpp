@@ -39,6 +39,8 @@
 #include "nsToolkitCompsCID.h"
 #include "mozilla/ModuleUtils.h"
 
+#include <glib-object.h>
+
 #ifdef MOZ_ENABLE_GCONF
 #include "nsGConfService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGConfService, Init)

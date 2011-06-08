@@ -364,6 +364,13 @@ MAKEFILES_libnestegg="
   media/libnestegg/src/Makefile
 "
 
+MAKEFILES_mathml="
+  content/mathml/Makefile
+  content/mathml/content/Makefile
+  content/mathml/content/src/Makefile
+  layout/mathml/Makefile
+"
+
 MAKEFILES_netwerk="
   netwerk/Makefile
   netwerk/base/Makefile
@@ -752,6 +759,7 @@ add_makefiles "
   $MAKEFILES_libjar
   $MAKEFILES_libreg
   $MAKEFILES_libpref
+  $MAKEFILES_mathml
   $MAKEFILES_plugin
   $MAKEFILES_netwerk
   $MAKEFILES_uriloader
@@ -1099,15 +1107,6 @@ fi
 if [ "$MOZ_MAPINFO" ]; then
   add_makefiles "
     tools/codesighs/Makefile
-  "
-fi
-
-if [ "$MOZ_MATHML" ]; then
-  add_makefiles "
-    content/mathml/Makefile
-    content/mathml/content/Makefile
-    content/mathml/content/src/Makefile
-    layout/mathml/Makefile
   "
 fi
 

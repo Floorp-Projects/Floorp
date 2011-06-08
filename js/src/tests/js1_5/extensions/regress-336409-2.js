@@ -39,7 +39,7 @@
 var BUGNUMBER = 336409;
 var summary = 'Integer overflow in js_obj_toSource';
 var actual = 'No Crash';
-var expect = /(No Crash|InternalError: script stack space quota is exhausted|InternalError: allocation size overflow)/;
+var expect = /(No Crash|InternalError: allocation size overflow)/;
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);

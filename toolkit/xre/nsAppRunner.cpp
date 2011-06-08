@@ -1809,7 +1809,9 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
     }
 
     PRInt32 button;
-    PRBool checkState;
+    // The actual value is irrelevant but we shouldn't be handing out
+    // malformed JSBools to XPConnect.
+    PRBool checkState = PR_FALSE;
     rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
                        killTitle, nsnull, nsnull, nsnull, &checkState, &button);
     NS_ENSURE_SUCCESS_LOG(rv, rv);
@@ -2749,6 +2751,17 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifndef MOZ_PLATFORM_MAEMO
   fire_glxtest_process();
 #endif
+#endif
+
+#ifdef XP_WIN
+  // Vista API.  Mozilla is DPI Aware.
+  typedef BOOL (*SetProcessDPIAwareFunc)(VOID);
+
+  SetProcessDPIAwareFunc setDPIAware = (SetProcessDPIAwareFunc)
+    GetProcAddress(LoadLibraryW(L"user32.dll"), "SetProcessDPIAware");
+
+  if (setDPIAware)
+    setDPIAware();
 #endif
 
   SetupErrorHandling(argv[0]);

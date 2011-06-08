@@ -1924,8 +1924,8 @@ RasterImage::DrawFrameTo(imgFrame *aSrc,
 
   if (aSrc->GetIsPaletted()) {
     // Larger than the destination frame, clip it
-    PRInt32 width = PR_MIN(aSrcRect.width, dstRect.width - aSrcRect.x);
-    PRInt32 height = PR_MIN(aSrcRect.height, dstRect.height - aSrcRect.y);
+    PRInt32 width = NS_MIN(aSrcRect.width, dstRect.width - aSrcRect.x);
+    PRInt32 height = NS_MIN(aSrcRect.height, dstRect.height - aSrcRect.y);
 
     // The clipped image must now fully fit within destination image frame
     NS_ASSERTION((aSrcRect.x >= 0) && (aSrcRect.y >= 0) &&
@@ -2577,7 +2577,7 @@ RasterImage::DecodeSomeData(PRUint32 aMaxBytes)
 
 
   // write the proper amount of data
-  PRUint32 bytesToDecode = PR_MIN(aMaxBytes,
+  PRUint32 bytesToDecode = NS_MIN(aMaxBytes,
                                   mSourceData.Length() - mBytesDecoded);
   nsresult rv = WriteToDecoder(mSourceData.Elements() + mBytesDecoded,
                                bytesToDecode);

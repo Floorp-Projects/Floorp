@@ -97,14 +97,14 @@ namespace JSC {
             m_assembler.addcc_r(dest, src, dest);
         }
 
-        void add32(Imm32 imm, Address address)
+        void add32(TrustedImm32 imm, Address address)
         {
             load32(address, SparcRegisters::g2);
             add32(imm, SparcRegisters::g2);
             store32(SparcRegisters::g2, address);
         }
 
-        void add32(Imm32 imm, RegisterID dest)
+        void add32(TrustedImm32 imm, RegisterID dest)
         {
             if (m_assembler.isimm13(imm.m_value))
                 m_assembler.addcc_imm(dest, imm.m_value, dest);
@@ -126,7 +126,7 @@ namespace JSC {
             m_assembler.andcc_r(dest, SparcRegisters::g2, dest);
         }
 
-        void add32(Imm32 imm, RegisterID src, RegisterID dest)
+        void add32(TrustedImm32 imm, RegisterID src, RegisterID dest)
         {
             if (m_assembler.isimm13(imm.m_value))
                 m_assembler.addcc_imm(src, imm.m_value, dest);
@@ -194,7 +194,7 @@ namespace JSC {
             m_assembler.orcc_r(dest, src, dest);
         }
 
-        void or32(Imm32 imm, RegisterID dest)
+        void or32(TrustedImm32 imm, RegisterID dest)
         {
             if (m_assembler.isimm13(imm.m_value))
                 m_assembler.orcc_imm(dest, imm.m_value, dest);
@@ -240,7 +240,7 @@ namespace JSC {
             m_assembler.subcc_r(dest, src, dest);
         }
 
-        void sub32(Imm32 imm, RegisterID dest)
+        void sub32(TrustedImm32 imm, RegisterID dest)
         {
             if (m_assembler.isimm13(imm.m_value))
                 m_assembler.subcc_imm(dest, imm.m_value, dest);
@@ -250,7 +250,7 @@ namespace JSC {
             }
         }
 
-        void sub32(Imm32 imm, Address address)
+        void sub32(TrustedImm32 imm, Address address)
         {
             load32(address, SparcRegisters::g2);
             sub32(imm, SparcRegisters::g2);
@@ -268,7 +268,7 @@ namespace JSC {
             m_assembler.xorcc_r(src, dest, dest);
         }
 
-        void xor32(Imm32 imm, RegisterID dest)
+        void xor32(TrustedImm32 imm, RegisterID dest)
         {
             if (m_assembler.isimm13(imm.m_value))
                 m_assembler.xorcc_imm(dest, imm.m_value, dest);
@@ -548,7 +548,7 @@ namespace JSC {
             m_assembler.stw_r(src, address.base, SparcRegisters::g2);
         }
 
-        void store32(Imm32 imm, BaseIndex address)
+        void store32(TrustedImm32 imm, BaseIndex address)
         {
             m_assembler.sll_imm(address.index, address.scale, SparcRegisters::g2);
             add32(Imm32(address.offset), SparcRegisters::g2);
@@ -556,7 +556,7 @@ namespace JSC {
             m_assembler.stw_r(SparcRegisters::g3, SparcRegisters::g2, address.base);
         }
 
-        void store32(Imm32 imm, ImplicitAddress address)
+        void store32(TrustedImm32 imm, ImplicitAddress address)
         {
             m_assembler.move_nocheck(imm.m_value, SparcRegisters::g2);
             store32(SparcRegisters::g2, address);
@@ -568,7 +568,7 @@ namespace JSC {
             m_assembler.stw_r(src, SparcRegisters::g0, SparcRegisters::g3);
         }
 
-        void store32(Imm32 imm, void* address)
+        void store32(TrustedImm32 imm, void* address)
         {
             move(imm, SparcRegisters::g2);
             store32(SparcRegisters::g2, address);
@@ -598,7 +598,7 @@ namespace JSC {
             push(SparcRegisters::g2);
         }
 
-        void move(Imm32 imm, RegisterID dest)
+        void move(TrustedImm32 imm, RegisterID dest)
         {
             if (m_assembler.isimm13(imm.m_value))
                 m_assembler.or_imm(SparcRegisters::g0, imm.m_value, dest);
@@ -611,7 +611,7 @@ namespace JSC {
             m_assembler.or_r(src, SparcRegisters::g0, dest);
         }
 
-        void move(ImmPtr imm, RegisterID dest)
+        void move(TrustedImmPtr imm, RegisterID dest)
         {
             move(Imm32(imm), dest);
         }
@@ -641,20 +641,20 @@ namespace JSC {
             return branch32(cond, SparcRegisters::g2, right);
         }
 
-        Jump branch32_force32(Condition cond, RegisterID left, Imm32 right)
+        Jump branch32_force32(Condition cond, RegisterID left, TrustedImm32 right)
         {
             m_assembler.move_nocheck(right.m_value, SparcRegisters::g3);
             m_assembler.subcc_r(left, SparcRegisters::g3, SparcRegisters::g0);
             return Jump(m_assembler.branch(SparcCondition(cond)));
         }
 
-        Jump branch32FixedLength(Condition cond, RegisterID left, Imm32 right)
+        Jump branch32FixedLength(Condition cond, RegisterID left, TrustedImm32 right)
         {
             m_assembler.move_nocheck(right.m_value, SparcRegisters::g2);
             return branch32(cond, left, SparcRegisters::g2);
         }
 
-        Jump branch32WithPatch(Condition cond, RegisterID left, Imm32 right, DataLabel32 &dataLabel)
+        Jump branch32WithPatch(Condition cond, RegisterID left, TrustedImm32 right, DataLabel32 &dataLabel)
         {
             // Always use move_nocheck, since the value is to be patched.
             dataLabel = DataLabel32(this);
@@ -669,7 +669,7 @@ namespace JSC {
             return Jump(m_assembler.branch(SparcCondition(cond)));
         }
 
-        Jump branch32(Condition cond, RegisterID left, Imm32 right)
+        Jump branch32(Condition cond, RegisterID left, TrustedImm32 right)
         {
             if (m_assembler.isimm13(right.m_value))
                 m_assembler.subcc_imm(left, right.m_value, SparcRegisters::g0);
@@ -692,20 +692,20 @@ namespace JSC {
             return branch32(cond, SparcRegisters::g2, right);
         }
 
-        Jump branch32(Condition cond, Address left, Imm32 right)
+        Jump branch32(Condition cond, Address left, TrustedImm32 right)
         {
             load32(left, SparcRegisters::g2);
             return branch32(cond, SparcRegisters::g2, right);
         }
 
-        Jump branch32(Condition cond, BaseIndex left, Imm32 right)
+        Jump branch32(Condition cond, BaseIndex left, TrustedImm32 right)
         {
 
             load32(left, SparcRegisters::g2);
             return branch32(cond, SparcRegisters::g2, right);
         }
 
-        Jump branch32WithUnalignedHalfWords(Condition cond, BaseIndex left, Imm32 right)
+        Jump branch32WithUnalignedHalfWords(Condition cond, BaseIndex left, TrustedImm32 right)
         {
             load32WithUnalignedHalfWords(left, SparcRegisters::g4);
             return branch32(cond, SparcRegisters::g4, right);
@@ -1052,7 +1052,7 @@ namespace JSC {
             store32(SparcRegisters::g2, address.m_ptr);
         }
 
-        void sub32(Imm32 imm, AbsoluteAddress address)
+        void sub32(TrustedImm32 imm, AbsoluteAddress address)
         {
             load32(address.m_ptr, SparcRegisters::g2);
             sub32(imm, SparcRegisters::g2);
@@ -1071,7 +1071,7 @@ namespace JSC {
             return branch32(cond, SparcRegisters::g2, right);
         }
 
-        Jump branch32(Condition cond, AbsoluteAddress left, Imm32 right)
+        Jump branch32(Condition cond, AbsoluteAddress left, TrustedImm32 right)
         {
             load32(left.m_ptr, SparcRegisters::g2);
             return branch32(cond, SparcRegisters::g2, right);
@@ -1099,7 +1099,7 @@ namespace JSC {
             return Call::fromTailJump(oldJump);
         }
 
-        DataLabelPtr moveWithPatch(ImmPtr initialValue, RegisterID dest)
+        DataLabelPtr moveWithPatch(TrustedImmPtr initialValue, RegisterID dest)
         {
             DataLabelPtr dataLabel(this);
             Imm32 imm = Imm32(initialValue);
@@ -1107,7 +1107,7 @@ namespace JSC {
             return dataLabel;
         }
 
-        DataLabel32 moveWithPatch(Imm32 initialValue, RegisterID dest)
+        DataLabel32 moveWithPatch(TrustedImm32 initialValue, RegisterID dest)
         {
             DataLabel32 dataLabel(this);
             m_assembler.move_nocheck(initialValue.m_value, dest);
@@ -1129,7 +1129,7 @@ namespace JSC {
             return jump;
         }
 
-        DataLabelPtr storePtrWithPatch(ImmPtr initialValue, ImplicitAddress address)
+        DataLabelPtr storePtrWithPatch(TrustedImmPtr initialValue, ImplicitAddress address)
         {
             DataLabelPtr dataLabel = moveWithPatch(initialValue, SparcRegisters::g2);
             store32(SparcRegisters::g2, address);

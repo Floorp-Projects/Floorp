@@ -1657,10 +1657,8 @@ nsXMLContentSink::IsMonolithicContainer(nsINodeInfo* aNodeInfo)
           (aNodeInfo->NameAtom() == nsGkAtoms::tr ||
            aNodeInfo->NameAtom() == nsGkAtoms::select ||
            aNodeInfo->NameAtom() == nsGkAtoms::object ||
-           aNodeInfo->NameAtom() == nsGkAtoms::applet))
-#ifdef MOZ_MATHML
-       || (aNodeInfo->NamespaceID() == kNameSpaceID_MathML &&
+           aNodeInfo->NameAtom() == nsGkAtoms::applet)) ||
+          (aNodeInfo->NamespaceID() == kNameSpaceID_MathML &&
           (aNodeInfo->NameAtom() == nsGkAtoms::math))
-#endif
           );
 }

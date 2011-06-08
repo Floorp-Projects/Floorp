@@ -42,7 +42,7 @@ namespace mozilla {
 namespace dom {
 
 struct MemoryReport {
-  nsCString prefix;
+  nsCString process;
   nsCString path;
   PRInt32 kind;
   nsCString desc;

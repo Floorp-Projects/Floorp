@@ -75,6 +75,8 @@ Tests.testReadPixels = function(gl) {
           new Uint8Array(1*4));});
 }
 
+/* this part is obsolete because of bug 656277
+ *
 Tests.testReadPixelsSOPIMG = function(gl) {
     var img = document.getElementById("i");
     while (!img.complete) {}
@@ -105,6 +107,7 @@ Tests.testReadPixelsSOPCanvas = function(gl) {
           new Uint8Array(4));});
     gl.deleteTexture(tex);
 }
+*/
 
 Tests.endUnit = function(gl) {
 }

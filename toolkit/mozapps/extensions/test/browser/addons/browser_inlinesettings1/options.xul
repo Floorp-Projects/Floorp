@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <setting pref="extensions.inlinesettings1.bool" type="bool" title="Bool"/>
+  <setting pref="extensions.inlinesettings1.boolint" type="boolint" on="1" off="2" title="BoolInt"/>
+  <setting pref="extensions.inlinesettings1.integer" type="integer" title="Integer"/>
+  <setting pref="extensions.inlinesettings1.string" type="string" title="String"/>
+  <setting type="control" title="Menulist">
+    <menulist sizetopopup="always">
+      <menupopup>
+        <menuitem label="Test 1" value="1" />
+        <menuitem label="Test 2" value="2" />
+        <menuitem label="Test 3" value="3" />
+      </menupopup>
+    </menulist>
+  </setting>
+</vbox>

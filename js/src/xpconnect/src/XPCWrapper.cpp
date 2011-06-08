@@ -135,7 +135,7 @@ Unwrap(JSContext *cx, JSObject *wrapper)
 }
 
 JSObject *
-UnsafeUnwrapSecurityWrapper(JSContext *cx, JSObject *obj)
+UnsafeUnwrapSecurityWrapper(JSObject *obj)
 {
   if (obj->isProxy()) {
     return obj->unwrap();

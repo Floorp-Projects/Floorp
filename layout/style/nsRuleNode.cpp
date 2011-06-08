@@ -1373,9 +1373,7 @@ CheckFontCallback(const nsRuleData* aRuleData,
       (size.GetUnit() == eCSSUnit_Enumerated &&
        (size.GetIntValue() == NS_STYLE_FONT_SIZE_SMALLER ||
         size.GetIntValue() == NS_STYLE_FONT_SIZE_LARGER)) ||
-#ifdef MOZ_MATHML
       aRuleData->ValueForScriptLevel()->GetUnit() == eCSSUnit_Integer ||
-#endif
       (weight.GetUnit() == eCSSUnit_Enumerated &&
        (weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_BOLDER ||
         weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_LIGHTER))) {
@@ -1595,7 +1593,7 @@ static const CheckCallbackFn gCheckCallbacks[] = {
 
 };
 
-#if defined(MOZ_MATHML) && defined(DEBUG)
+#ifdef DEBUG
 static PRBool
 AreAllMathMLPropertiesUndefined(const nsRuleData* aRuleData)
 {
@@ -1631,12 +1629,10 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
          aSID, total, specified, inherited);
 #endif
 
-#ifdef MOZ_MATHML
   NS_ASSERTION(aSID != eStyleStruct_Font ||
                mPresContext->Document()->GetMathMLEnabled() ||
                AreAllMathMLPropertiesUndefined(aRuleData),
                "MathML style property was defined even though MathML is disabled");
-#endif
 
   /*
    * Return the most specific information we can: prefer None or Full
@@ -1647,7 +1643,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
   if (inherited == total)
     result = eRuleFullInherited;
   else if (specified == total
-#ifdef MOZ_MATHML
            // MathML defines 3 properties in Font that will never be set when
            // MathML is not in use. Therefore if all but three
            // properties have been set, and MathML is not enabled, we can treat
@@ -1656,7 +1651,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
            // (see nsMathMLElement::BindToTree).
            || (aSID == eStyleStruct_Font && specified + 3 == total &&
                !mPresContext->Document()->GetMathMLEnabled())
-#endif
           ) {
     if (inherited == 0)
       result = eRuleFullReset;
@@ -2382,7 +2376,6 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
                                                                               \
   return data_;
 
-#ifdef MOZ_MATHML
 // This function figures out how much scaling should be suppressed to
 // satisfy scriptminsize. This is our attempt to implement
 // http://www.w3.org/TR/MathML2/chapter3.html#id.3.3.4.2.2
@@ -2441,7 +2434,6 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
     return NS_MIN(scriptLevelSize, NS_MAX(*aUnconstrainedSize, minScriptSize));
   }
 }
-#endif
 
 struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
                             public css::NumbersAlreadyNormalizedOps
@@ -2592,7 +2584,6 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
   } else {
     NS_ASSERTION(eCSSUnit_Null == sizeValue->GetUnit(),
                  "What kind of font-size value is this?");
-#ifdef MOZ_MATHML
     // if aUsedStartStruct is true, then every single property in the
     // font struct is being set all at once. This means scriptlevel is not
     // going to have any influence on the font size; there is no need to
@@ -2604,7 +2595,6 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
       aCanStoreInRuleTree = PR_FALSE;
       *aSize = aScriptLevelAdjustedParentSize;
     }
-#endif
   }
 
   // We want to zoom the cascaded size so that em-based measurements,
@@ -2811,7 +2801,6 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
               defaultVariableFont->stretch,
               0, 0, 0, systemFont.stretch);
 
-#ifdef MOZ_MATHML
   // Compute scriptlevel, scriptminsize and scriptsizemultiplier now so
   // they're available for font-size computation.
 
@@ -2851,7 +2840,6 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   else if (eCSSUnit_Initial == scriptLevelValue->GetUnit()) {
     aFont->mScriptLevel = 0;
   }
-#endif
 
   // font-feature-settings
   const nsCSSValue* featureSettingsValue =
@@ -2885,18 +2873,15 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 
   // font-size: enum, length, percent, inherit
   nscoord scriptLevelAdjustedParentSize = aParentFont->mSize;
-#ifdef MOZ_MATHML
   nscoord scriptLevelAdjustedUnconstrainedParentSize;
   scriptLevelAdjustedParentSize =
     ComputeScriptLevelSize(aFont, aParentFont, aPresContext,
                            &scriptLevelAdjustedUnconstrainedParentSize);
   NS_ASSERTION(!aUsedStartStruct || aFont->mScriptUnconstrainedSize == aFont->mSize,
                "If we have a start struct, we should have reset everything coming in here");
-#endif
   SetFontSize(aPresContext, aRuleData, aFont, aParentFont, &aFont->mSize,
               systemFont, aParentFont->mSize, scriptLevelAdjustedParentSize,
               aUsedStartStruct, atRoot, aCanStoreInRuleTree);
-#ifdef MOZ_MATHML
   if (aParentFont->mSize == aParentFont->mScriptUnconstrainedSize &&
       scriptLevelAdjustedParentSize == scriptLevelAdjustedUnconstrainedParentSize) {
     // Fast path: we have not been affected by scriptminsize so we don't
@@ -2914,7 +2899,6 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
   NS_ASSERTION(aFont->mScriptUnconstrainedSize <= aFont->mSize,
                "scriptminsize should never be making things bigger");
-#endif
 
   // enforce the user' specified minimum font-size on the value that we expose
   // (but don't change font-size:0)

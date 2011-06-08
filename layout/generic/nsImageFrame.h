@@ -328,18 +328,7 @@ private:
   public:
     IconLoad();
 
-    void Shutdown()
-    {
-      // in case the pref service releases us later
-      if (mLoadingImage) {
-        mLoadingImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
-        mLoadingImage = nsnull;
-      }
-      if (mBrokenImage) {
-        mBrokenImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
-        mBrokenImage = nsnull;
-      }
-    }
+    void Shutdown();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER

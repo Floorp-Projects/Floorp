@@ -66,6 +66,7 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 				       DWRITE_MATRIX *transform,
 				       DWRITE_GLYPH_RUN *run,
 				       COLORREF color,
+				       cairo_dwrite_scaled_font_t *scaled_font,
 				       const RECT &area);
 
 class D2DFactory
@@ -119,6 +120,7 @@ private:
 IDWriteFactory *DWriteFactory::mFactoryInstance = NULL;
 IDWriteFontCollection *DWriteFactory::mSystemCollection = NULL;
 IDWriteRenderingParams *DWriteFactory::mRenderingParams = NULL;
+IDWriteRenderingParams *DWriteFactory::mForceGDIClassicRenderingParams = NULL;
 FLOAT DWriteFactory::mGamma = -1.0;
 FLOAT DWriteFactory::mEnhancedContrast = -1.0;
 FLOAT DWriteFactory::mClearTypeLevel = -1.0;
@@ -494,6 +496,7 @@ _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
     }
 
     dwriteFont->manual_show_glyphs_allowed = TRUE;
+    dwriteFont->force_GDI_classic = FALSE;
 
     return _cairo_scaled_font_set_metrics (*font, &extents);
 }
@@ -991,7 +994,8 @@ _cairo_dwrite_scaled_font_init_glyph_surface(cairo_dwrite_scaled_font_t *scaled_
 
     DWRITE_MATRIX matrix = _cairo_dwrite_matrix_from_matrix(&scaled_font->mat);
 
-    status = _dwrite_draw_glyphs_to_gdi_surface_gdi (surface, &matrix, &run, RGB(0,0,0), area);
+    status = _dwrite_draw_glyphs_to_gdi_surface_gdi (surface, &matrix, &run,
+            RGB(0,0,0), scaled_font, area);
     if (status)
 	goto FAIL;
 
@@ -1069,10 +1073,24 @@ cairo_dwrite_font_face_create_for_dwrite_fontface(void* dwrite_font, void* dwrit
 }
 
 void
-cairo_dwrite_scaled_font_allow_manual_show_glyphs(void* dwrite_scaled_font, cairo_bool_t allowed)
+cairo_dwrite_scaled_font_allow_manual_show_glyphs(cairo_scaled_font_t *dwrite_scaled_font, cairo_bool_t allowed)
 {
-    cairo_dwrite_scaled_font_t *font = static_cast<cairo_dwrite_scaled_font_t*>(dwrite_scaled_font);
+    cairo_dwrite_scaled_font_t *font = reinterpret_cast<cairo_dwrite_scaled_font_t*>(dwrite_scaled_font);
     font->manual_show_glyphs_allowed = allowed;
+}
+
+void
+cairo_dwrite_scaled_font_set_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font, cairo_bool_t force)
+{
+    cairo_dwrite_scaled_font_t *font = reinterpret_cast<cairo_dwrite_scaled_font_t*>(dwrite_scaled_font);
+    font->force_GDI_classic = force;
+}
+
+cairo_bool_t
+cairo_dwrite_scaled_font_get_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font)
+{
+    cairo_dwrite_scaled_font_t *font = reinterpret_cast<cairo_dwrite_scaled_font_t*>(dwrite_scaled_font);
+    return font->force_GDI_classic;
 }
 
 void
@@ -1087,13 +1105,15 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 				       DWRITE_MATRIX *transform,
 				       DWRITE_GLYPH_RUN *run,
 				       COLORREF color,
+				       cairo_dwrite_scaled_font_t *scaled_font,
 				       const RECT &area)
 {
     IDWriteGdiInterop *gdiInterop;
     DWriteFactory::Instance()->GetGdiInterop(&gdiInterop);
     IDWriteBitmapRenderTarget *rt;
 
-    IDWriteRenderingParams *params = DWriteFactory::RenderingParams();
+    IDWriteRenderingParams *params =
+        DWriteFactory::RenderingParams(scaled_font->force_GDI_classic);
 
     gdiInterop->CreateBitmapRenderTarget(surface->dc, 
 					 area.right - area.left, 
@@ -1140,6 +1160,8 @@ _dwrite_draw_glyphs_to_gdi_surface_d2d(cairo_win32_surface_t *surface,
     HRESULT rv;
 
     ID2D1DCRenderTarget *rt = D2DFactory::RenderTarget();
+
+    // XXX don't we need to set RenderingParams on this RenderTarget?
 
     rv = rt->BindDC(surface->dc, &area);
 
@@ -1369,6 +1391,7 @@ _cairo_dwrite_show_glyphs_on_surface(void			*surface,
 							mat,
 							&run,
 							color,
+							dwritesf,
 							fontArea);
 #ifdef CAIRO_TRY_D2D_TO_GDI
     }
@@ -1413,15 +1436,22 @@ DWriteFactory::CreateRenderingParams()
 
     // For parameters that have not been explicitly set via the SetRenderingParams API,
     // we copy values from default params (or our overridden value for contrast)
-    Instance()->CreateCustomRenderingParams(
-	mGamma >= 1.0 && mGamma <= 2.2 ? mGamma : defaultParams->GetGamma(),
-	contrast,
-	mClearTypeLevel >= 0.0 && mClearTypeLevel <= 1.0 ? mClearTypeLevel : defaultParams->GetClearTypeLevel(),
-	mPixelGeometry >= DWRITE_PIXEL_GEOMETRY_FLAT && mPixelGeometry <= DWRITE_PIXEL_GEOMETRY_BGR ?
-	    (DWRITE_PIXEL_GEOMETRY)mPixelGeometry : defaultParams->GetPixelGeometry(),
-	mRenderingMode >= DWRITE_RENDERING_MODE_DEFAULT && mRenderingMode <= DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC ?
-	    (DWRITE_RENDERING_MODE)mRenderingMode : defaultParams->GetRenderingMode(), 
+    FLOAT gamma =
+        mGamma >= 1.0 && mGamma <= 2.2 ? mGamma : defaultParams->GetGamma();
+    FLOAT clearTypeLevel =
+        mClearTypeLevel >= 0.0 && mClearTypeLevel <= 1.0 ? mClearTypeLevel : defaultParams->GetClearTypeLevel();
+    DWRITE_PIXEL_GEOMETRY pixelGeometry =
+        mPixelGeometry >= DWRITE_PIXEL_GEOMETRY_FLAT && mPixelGeometry <= DWRITE_PIXEL_GEOMETRY_BGR ?
+            (DWRITE_PIXEL_GEOMETRY)mPixelGeometry : defaultParams->GetPixelGeometry();
+    DWRITE_RENDERING_MODE renderingMode =
+        mRenderingMode >= DWRITE_RENDERING_MODE_DEFAULT && mRenderingMode <= DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC ?
+            (DWRITE_RENDERING_MODE)mRenderingMode : defaultParams->GetRenderingMode();
+    Instance()->CreateCustomRenderingParams(gamma, contrast, clearTypeLevel,
+	pixelGeometry, renderingMode,
 	&mRenderingParams);
+    Instance()->CreateCustomRenderingParams(gamma, contrast, clearTypeLevel,
+        pixelGeometry, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+        &mForceGDIClassicRenderingParams);
 }
 
 // Helper for _cairo_win32_printing_surface_show_glyphs to create a win32 equivalent

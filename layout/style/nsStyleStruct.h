@@ -138,14 +138,12 @@ struct nsStyleFont {
   PRUint8 mGenericID;   // [inherited] generic CSS font family, if any;
                         // value is a kGenericFont_* constant, see nsFont.h.
 
-#ifdef MOZ_MATHML
   // MathML scriptlevel support
   PRInt8  mScriptLevel;          // [inherited]
   // The value mSize would have had if scriptminsize had never been applied
   nscoord mScriptUnconstrainedSize;
   nscoord mScriptMinSize;        // [inherited] length
   float   mScriptSizeMultiplier; // [inherited]
-#endif
 };
 
 struct nsStyleGradientStop {

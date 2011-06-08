@@ -200,8 +200,8 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
         }
 
         PRInt32 end = mBuffer.RFind(TOKEN_DELIMITERS, mBuffer.Length());
-        mBuffer.Left(pushBuffer, PR_MAX(cursor, end));
-        mBuffer.Cut(0, PR_MAX(cursor, end));
+        mBuffer.Left(pushBuffer, NS_MAX(cursor, end));
+        mBuffer.Cut(0, NS_MAX(cursor, end));
         cursor = 0;
 
         if (!pushBuffer.IsEmpty()) {
