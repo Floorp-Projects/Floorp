@@ -70,6 +70,7 @@
 #include "jsstr.h"
 #include "jstracer.h"
 #include "jsvector.h"
+#include "jslibmath.h"
 
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
