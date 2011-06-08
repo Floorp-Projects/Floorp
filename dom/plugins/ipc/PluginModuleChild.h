@@ -91,6 +91,10 @@ typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_PLUGINUNIXINIT) (const NPNetscapeFun
 typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 
 namespace mozilla {
+namespace dom {
+class PCrashReporterChild;
+}
+
 namespace plugins {
 
 #ifdef MOZ_WIDGET_QT
@@ -103,6 +107,7 @@ class PluginInstanceChild;
 
 class PluginModuleChild : public PPluginModuleChild
 {
+    typedef mozilla::dom::PCrashReporterChild PCrashReporterChild;
 protected:
     NS_OVERRIDE
     virtual mozilla::ipc::RPCChannel::RacyRPCPolicy
@@ -113,7 +118,7 @@ protected:
 
     // Implement the PPluginModuleChild interface
     virtual bool AnswerNP_GetEntryPoints(NPError* rv);
-    virtual bool AnswerNP_Initialize(NativeThreadId* tid, NPError* rv);
+    virtual bool AnswerNP_Initialize(NPError* rv);
 
     virtual PPluginIdentifierChild*
     AllocPPluginIdentifier(const nsCString& aString,
@@ -167,6 +172,12 @@ protected:
     RecvSetAudioSessionData(const nsID& aId,
                             const nsString& aDisplayName,
                             const nsString& aIconPath);
+
+    virtual PCrashReporterChild*
+    AllocPCrashReporter(const mozilla::dom::NativeThreadId& id,
+                        const PRUint32& processType);
+    virtual bool
+    DeallocPCrashReporter(PCrashReporterChild* actor);
 
     virtual void
     ActorDestroy(ActorDestroyReason why);

@@ -39,14 +39,16 @@
 
 include protocol PPluginIdentifier;
 include protocol PPluginInstance;
+include protocol PCrashReporter;
 
 include "npapi.h";
 include "mozilla/plugins/PluginMessageUtils.h";
+include "mozilla/dom/TabMessageUtils.h";
 
 using NPError;
 using NPNVariable;
 using base::FileDescriptor;
-using mozilla::plugins::NativeThreadId;
+using mozilla::dom::NativeThreadId;
 using mac_plugin_interposing::NSCursorInfo;
 using nsID;
 
@@ -57,6 +59,7 @@ rpc protocol PPluginModule
 {
   manages PPluginInstance;
   manages PPluginIdentifier;
+  manages PCrashReporter;
 
 both:
   /**
@@ -85,7 +88,7 @@ child:
 
   // Return the plugin's thread ID, if it can be found.
   rpc NP_Initialize()
-    returns (NativeThreadId tid, NPError rv);
+    returns (NPError rv);
 
   rpc PPluginInstance(nsCString aMimeType,
                       uint16_t aMode,
@@ -138,14 +141,14 @@ parent:
   // native events, then "livelock" and some other glitches can occur.
   rpc ProcessSomeEvents();
 
-  sync AppendNotesToCrashReport(nsCString aNotes);
-
   // OS X Specific calls to manage the plugin's window
   // when interposing system calls.
   async PluginShowWindow(uint32_t aWindowId, bool aModal,
                          int32_t aX, int32_t aY,
                          size_t aWidth, size_t aHeight);
   async PluginHideWindow(uint32_t aWindowId);
+
+  async PCrashReporter(NativeThreadId tid, PRUint32 processType);
 
   // OS X Specific calls to allow the plugin to manage the cursor.
   async SetCursor(NSCursorInfo cursorInfo);
