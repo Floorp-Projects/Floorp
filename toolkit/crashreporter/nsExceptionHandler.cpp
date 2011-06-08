@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/CrashReporterChild.h"
+#include "nsXULAppAPI.h"
+
 #include "nsExceptionHandler.h"
 
 #if defined(XP_WIN32)
@@ -112,6 +115,8 @@ using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
+using mozilla::dom::CrashReporterChild;
+using mozilla::dom::PCrashReporterChild;
 
 namespace CrashReporter {
 
@@ -801,7 +806,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
 bool GetEnabled()
 {
-  return gExceptionHandler != nsnull && !gExceptionHandler->IsOutOfProcess();
+  return gExceptionHandler != nsnull;
 }
 
 bool GetMinidumpPath(nsAString& aPath)
@@ -1095,11 +1100,9 @@ static PLDHashOperator EnumerateEntries(const nsACString& key,
   return PL_DHASH_NEXT;
 }
 
-nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
+static nsresult
+EscapeAnnotation(const nsACString& key, nsCString& data)
 {
-  if (!GetEnabled())
-    return NS_ERROR_NOT_INITIALIZED;
-
   if (DoFindInReadable(key, NS_LITERAL_CSTRING("=")) ||
       DoFindInReadable(key, NS_LITERAL_CSTRING("\n")))
     return NS_ERROR_INVALID_ARG;
@@ -1107,16 +1110,35 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
   if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
     return NS_ERROR_INVALID_ARG;
 
-  nsCString escapedData(data);
-
   // escape backslashes
-  ReplaceChar(escapedData, NS_LITERAL_CSTRING("\\"),
+  ReplaceChar(data, NS_LITERAL_CSTRING("\\"),
               NS_LITERAL_CSTRING("\\\\"));
   // escape newlines
-  ReplaceChar(escapedData, NS_LITERAL_CSTRING("\n"),
+  ReplaceChar(data, NS_LITERAL_CSTRING("\n"),
               NS_LITERAL_CSTRING("\\n"));
+  return NS_OK;
+}
 
-  nsresult rv = crashReporterAPIData_Hash->Put(key, escapedData);
+nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
+{
+  if (!GetEnabled())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCString escapedData(data);
+  nsresult rv = EscapeAnnotation(key, escapedData);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
+    if (!reporter)
+      return NS_ERROR_NOT_INITIALIZED;
+    if (!reporter->SendAnnotateCrashReport(nsCString(key), escapedData))
+      return NS_ERROR_FAILURE;
+    return NS_OK;
+  }
+
+  crashReporterAPIData_Hash->Put(key, escapedData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // now rebuild the file contents
@@ -1134,6 +1156,24 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
 
   if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
     return NS_ERROR_INVALID_ARG;
+
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
+    if (!reporter)
+      return NS_ERROR_NOT_INITIALIZED;
+
+    // Since we don't go through AnnotateCrashReport in the parent process,
+    // we must ensure that the data is escaped and valid before the parent
+    // sees it.
+    nsCString escapedData(data);
+    nsresult rv = EscapeAnnotation(NS_LITERAL_CSTRING("Notes"), escapedData);
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (!reporter->SendAppendAppNotes(escapedData))
+      return NS_ERROR_FAILURE;
+    return NS_OK;
+  }
 
   notesField->Append(data);
   return AnnotateCrashReport(NS_LITERAL_CSTRING("Notes"), *notesField);
