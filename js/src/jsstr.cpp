@@ -87,7 +87,6 @@
 using namespace js;
 using namespace js::gc;
 
-#ifdef DEBUG
 bool
 JSString::isShort() const
 {
@@ -101,7 +100,12 @@ JSString::isFixed() const
 {
     return isFlat() && !isExtensible();
 }
-#endif
+
+bool
+JSString::isInline() const
+{
+    return isFixed() && (d.u1.chars == d.inlineStorage || isShort());
+}
 
 bool
 JSString::isExternal() const
@@ -117,6 +121,43 @@ JSLinearString::mark(JSTracer *)
     JSLinearString *str = this;
     while (!str->isStaticAtom() && str->markIfUnmarked() && str->isDependent())
         str = str->asDependent().base();
+}
+
+size_t
+JSString::charsHeapSize()
+{
+    /* JSRope: do nothing, we'll count all children chars when we hit the leaf strings. */
+    if (isRope())
+        return 0;
+
+    JS_ASSERT(isLinear());
+
+    /* JSDependentString: do nothing, we'll count the chars when we hit the base string. */
+    if (isDependent())
+        return 0;
+
+    JS_ASSERT(isFlat());
+    
+    /* JSExtensibleString: count the full capacity, not just the used space. */
+    if (isExtensible())
+        return asExtensible().capacity() * sizeof(jschar);
+
+    JS_ASSERT(isFixed());
+
+    /* JSExternalString: don't count, the chars could be stored anywhere. */
+    if (isExternal())
+        return 0;
+    
+    /* JSInlineString, JSShortString, JSInlineAtom, JSShortAtom: the chars are inline. */
+    if (isInline())
+        return 0;
+
+    /* JSStaticAtom: the chars are static and so not part of the heap. */
+    if (isStaticAtom())
+        return 0;
+
+    /* JSAtom, JSFixedString: count the chars. */
+    return length() * sizeof(jschar);
 }
 
 static JS_ALWAYS_INLINE size_t
