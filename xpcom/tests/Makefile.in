@@ -69,9 +69,12 @@ CPPSRCS = \
   TestQuickReturn.cpp \
   TestArguments.cpp \
   TestUnicodeArguments.cpp \
-  TestBase64.cpp \
   $(STDCPPFLAGS) \
   $(NULL)
+
+ifeq ($(OS_TARGET),WINNT)
+CPPSRCS += TestBase64.cpp
+endif
 
 ifdef WRAP_STL_INCLUDES
 CPPSRCS += TestSTLWrappers.cpp
