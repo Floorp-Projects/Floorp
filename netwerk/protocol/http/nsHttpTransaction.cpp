@@ -734,7 +734,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
     // mLineBuf can contain partial match from previous search
     if (!mLineBuf.IsEmpty()) {
         NS_ASSERTION(mLineBuf.Length() < HTTPHeaderLen, "ouch");
-        PRInt32 checkChars = PR_MIN(len, HTTPHeaderLen - mLineBuf.Length());
+        PRInt32 checkChars = NS_MIN(len, HTTPHeaderLen - mLineBuf.Length());
         if (PL_strncasecmp(buf, HTTPHeader + mLineBuf.Length(),
                            checkChars) == 0) {
             mLineBuf.Append(buf, checkChars);
@@ -753,7 +753,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
 
     PRBool firstByte = PR_TRUE;
     while (len > 0) {
-        if (PL_strncasecmp(buf, HTTPHeader, PR_MIN(len, HTTPHeaderLen)) == 0) {
+        if (PL_strncasecmp(buf, HTTPHeader, NS_MIN<PRUint32>(len, HTTPHeaderLen)) == 0) {
             if (len < HTTPHeaderLen) {
                 // partial HTTPHeader sequence found
                 // save partial match to mLineBuf
@@ -887,7 +887,7 @@ nsHttpTransaction::ParseHead(char *buf,
         if (!mConnection || !mConnection->LastTransactionExpectedNoContent()) {
             // tolerate only minor junk before the status line
             mHttpResponseMatched = PR_TRUE;
-            char *p = LocateHttpStart(buf, PR_MIN(count, 11), PR_TRUE);
+            char *p = LocateHttpStart(buf, NS_MIN<PRUint32>(count, 11), PR_TRUE);
             if (!p) {
                 // Treat any 0.9 style response of a put as a failure.
                 if (mRequestHead->Method() == nsHttp::Put)
@@ -1111,7 +1111,7 @@ nsHttpTransaction::HandleContent(char *buf,
         mContentRead += *contentRead;
         /* when uncommenting, take care of 64-bit integers w/ PR_MAX...
         if (mProgressSink)
-            mProgressSink->OnProgress(nsnull, nsnull, mContentRead, PR_MAX(0, mContentLength));
+            mProgressSink->OnProgress(nsnull, nsnull, mContentRead, NS_MAX(0, mContentLength));
         */
     }
 

@@ -4109,10 +4109,16 @@ _cairo_d2d_show_glyphs (void			*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
-    if (!d2dsurf->textRenderingInit) {
-	RefPtr<IDWriteRenderingParams> params = DWriteFactory::RenderingParams();
+    cairo_bool_t forceGDIClassic =
+        scaled_font->backend->type == CAIRO_FONT_TYPE_DWRITE &&
+        reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font)->force_GDI_classic;
+    cairo_d2d_surface_t::TextRenderingState textRenderingState =
+        (forceGDIClassic ? cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC : cairo_d2d_surface_t::TEXT_RENDERING_NORMAL);
+    if (d2dsurf->textRenderingState != textRenderingState) {
+	RefPtr<IDWriteRenderingParams> params =
+	    DWriteFactory::RenderingParams(forceGDIClassic);
 	d2dsurf->rt->SetTextRenderingParams(params);
-	d2dsurf->textRenderingInit = true;
+	d2dsurf->textRenderingState = textRenderingState;
     }
     cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
     if (scaled_font->backend->type == CAIRO_FONT_TYPE_DWRITE) {

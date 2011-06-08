@@ -193,12 +193,12 @@ static nsRefPtrHashtable<ValueObserverHashKey,
 Preferences*
 Preferences::GetInstance()
 {
-  NS_ENSURE_TRUE(!sShutdown, nsnull);
-
   if (sPreferences) {
     NS_ADDREF(sPreferences);
     return sPreferences;
   }
+
+  NS_ENSURE_TRUE(!sShutdown, nsnull);
 
   InitStaticMembers();
   NS_IF_ADDREF(sPreferences);
@@ -232,14 +232,16 @@ Preferences::InitStaticMembers()
 void
 Preferences::Shutdown()
 {
-  sShutdown = PR_TRUE; // Don't create the singleton instance after here.
-  NS_IF_RELEASE(sPreferences);
+  if (!sShutdown ) {
+    sShutdown = PR_TRUE; // Don't create the singleton instance after here.
 
-  delete gCacheData;
-  gCacheData = nsnull;
-
-  delete gObserverTable;
-  gObserverTable = nsnull;
+    // Don't set NULL to sPreferences here.  The instance may be grabbed by
+    // other modules.  The utility methods of Preferences should be available
+    // until the singleton instance actually released.
+    if (sPreferences) {
+      sPreferences->Release();
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -254,6 +256,16 @@ Preferences::Preferences()
 
 Preferences::~Preferences()
 {
+  NS_ASSERTION(sPreferences == this, "Isn't this the singleton instance?");
+
+  delete gObserverTable;
+  gObserverTable = nsnull;
+
+  delete gCacheData;
+  gCacheData = nsnull;
+
+  sPreferences = nsnull;
+
   PREF_Cleanup();
 }
 
@@ -1234,7 +1246,7 @@ Preferences::GetLocalizedString(const char* aPref, nsAString* aResult)
 nsresult
 Preferences::SetCString(const char* aPref, const char* aValue)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->SetCharPref(aPref, aValue);
 }
 
@@ -1265,7 +1277,7 @@ Preferences::SetString(const char* aPref, const nsAString &aValue)
 nsresult
 Preferences::SetBool(const char* aPref, PRBool aValue)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->SetBoolPref(aPref, aValue);
 }
 
@@ -1273,7 +1285,7 @@ Preferences::SetBool(const char* aPref, PRBool aValue)
 nsresult
 Preferences::SetInt(const char* aPref, PRInt32 aValue)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->SetIntPref(aPref, aValue);
 }
 
@@ -1281,7 +1293,7 @@ Preferences::SetInt(const char* aPref, PRInt32 aValue)
 nsresult
 Preferences::ClearUser(const char* aPref)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->ClearUserPref(aPref);
 }
 
@@ -1322,7 +1334,10 @@ nsresult
 Preferences::RemoveObserver(nsIObserver* aObserver,
                             const char* aPref)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  if (!sPreferences && sShutdown) {
+    return NS_OK; // Observers have been released automatically.
+  }
+  NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->RemoveObserver(aPref, aObserver);
 }
 
@@ -1355,6 +1370,11 @@ nsresult
 Preferences::RemoveObservers(nsIObserver* aObserver,
                              const char** aPrefs)
 {
+  if (!sPreferences && sShutdown) {
+    return NS_OK; // Observers have been released automatically.
+  }
+  NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
+
   for (PRUint32 i = 0; aPrefs[i]; i++) {
     nsresult rv = RemoveObserver(aObserver, aPrefs[i]);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1392,7 +1412,10 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
                                 const char* aPref,
                                 void* aClosure)
 {
-  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  if (!sPreferences && sShutdown) {
+    return NS_OK; // Observers have been released automatically.
+  }
+  NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
 
   ValueObserverHashKey hashKey(aPref, aCallback);
   nsRefPtr<ValueObserver> observer;

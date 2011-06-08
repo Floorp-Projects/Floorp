@@ -46,8 +46,13 @@ namespace nanojit
     BitSet::BitSet(Allocator& allocator, int nbits)
         : allocator(allocator)
         , cap((nbits+63)>>6)
-        , bits((int64_t*)allocator.alloc(cap * sizeof(int64_t)))
     {
+        resetAndAlloc();
+    }
+
+    void BitSet::resetAndAlloc()
+    {
+        bits = (int64_t*)allocator.alloc(cap * sizeof(int64_t));
         reset();
     }
 

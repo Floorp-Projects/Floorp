@@ -27,6 +27,8 @@ function testXFOFrameInChrome() {
   var frame = newBrowser.contentDocument.createElement("iframe");
   frame.src = "http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny";
   frame.addEventListener("load", function() {
+    frame.removeEventListener("load", arguments.callee, true);
+
     // Test that the frame loaded
     var test = this.contentDocument.getElementById("test");
     is(test.tagName, "H1", "wrong element type");
@@ -48,6 +50,8 @@ function testXFOFrameInContent() {
   var frame = newBrowser.contentDocument.createElement("iframe");
   frame.src = "http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny";
   frame.addEventListener("load", function() {
+    frame.removeEventListener("load", arguments.callee, true);
+
     // Test that the frame DID NOT load
     var test = this.contentDocument.getElementById("test");
     is(test, undefined, "should be about:blank");

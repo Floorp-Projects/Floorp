@@ -6809,10 +6809,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   gfxFont::BoundingBoxType boundingBoxType = IsFloatingFirstLetterChild() ?
                                                gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS :
                                                gfxFont::LOOSE_INK_EXTENTS;
-#ifdef MOZ_MATHML
   NS_ASSERTION(!(NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags),
                "We shouldn't be passed NS_REFLOW_CALC_BOUNDING_METRICS anymore");
-#endif
 
   PRInt32 limitLength = length;
   PRInt32 forceBreak = aLineLayout.GetForcedBreakPosition(mContent);

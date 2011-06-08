@@ -1244,17 +1244,10 @@ nsXULTreeGridCellAccessible::CellInvalidated()
 
 nsAccessible*
 nsXULTreeGridCellAccessible::GetSiblingAtOffset(PRInt32 aOffset,
-                                                nsresult* aError)
+                                                nsresult* aError) const
 {
-  if (IsDefunct()) {
-    if (aError)
-      *aError = NS_ERROR_FAILURE;
-
-    return nsnull;
-  }
-
   if (aError)
-    *aError = NS_OK; // fail peacefully
+    *aError =  NS_OK; // fail peacefully
 
   nsCOMPtr<nsITreeColumn> columnAtOffset(mColumn), column;
   if (aOffset < 0) {
@@ -1272,8 +1265,7 @@ nsXULTreeGridCellAccessible::GetSiblingAtOffset(PRInt32 aOffset,
   if (!columnAtOffset)
     return nsnull;
 
-  nsRefPtr<nsXULTreeItemAccessibleBase> rowAcc = do_QueryObject(mParent);
-
+  nsRefPtr<nsXULTreeItemAccessibleBase> rowAcc = do_QueryObject(GetParent());
   return rowAcc->GetCellAccessible(columnAtOffset);
 }
 

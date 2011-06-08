@@ -139,9 +139,7 @@
 
 #undef NOISY_FIRST_LETTER
 
-#ifdef MOZ_MATHML
 #include "nsMathMLParts.h"
-#endif
 #include "nsSVGFeatures.h"
 #include "nsSVGEffects.h"
 #include "nsSVGUtils.h"
@@ -1903,11 +1901,9 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
 
   // Create the outer table frame which holds the caption and inner table frame
   nsIFrame* newFrame;
-#ifdef MOZ_MATHML
   if (kNameSpaceID_MathML == nameSpaceID)
     newFrame = NS_NewMathMLmtableOuterFrame(mPresShell, outerStyleContext);
   else
-#endif
     newFrame = NS_NewTableOuterFrame(mPresShell, outerStyleContext);
 
   nsIFrame* geometricParent =
@@ -1919,11 +1915,9 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
 
   // Create the inner table frame
   nsIFrame* innerFrame;
-#ifdef MOZ_MATHML
   if (kNameSpaceID_MathML == nameSpaceID)
     innerFrame = NS_NewMathMLmtableFrame(mPresShell, styleContext);
   else
-#endif
     innerFrame = NS_NewTableFrame(mPresShell, styleContext);
  
   InitAndRestoreFrame(aState, content, newFrame, nsnull, innerFrame);
@@ -1984,11 +1978,9 @@ nsCSSFrameConstructor::ConstructTableRow(nsFrameConstructorState& aState,
   const PRUint32 nameSpaceID = aItem.mNameSpaceID;
 
   nsIFrame* newFrame;
-#ifdef MOZ_MATHML
   if (kNameSpaceID_MathML == nameSpaceID)
     newFrame = NS_NewMathMLmtrFrame(mPresShell, styleContext);
   else
-#endif
     newFrame = NS_NewTableRowFrame(mPresShell, styleContext);
 
   if (NS_UNLIKELY(!newFrame)) {
@@ -2072,7 +2064,6 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
 
   PRBool borderCollapse = IsBorderCollapse(aParentFrame);
   nsIFrame* newFrame;
-#ifdef MOZ_MATHML
   // <mtable> is border separate in mathml.css and the MathML code doesn't implement
   // border collapse. For those users who style <mtable> with border collapse,
   // give them the default non-MathML table frames that understand border collapse.
@@ -2083,7 +2074,6 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
   if (kNameSpaceID_MathML == nameSpaceID && !borderCollapse)
     newFrame = NS_NewMathMLmtdFrame(mPresShell, styleContext);
   else
-#endif
     // Warning: If you change this and add a wrapper frame around table cell
     // frames, make sure Bug 368554 doesn't regress!
     // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.    
@@ -2104,14 +2094,10 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
   // Create a block frame that will format the cell's content
   PRBool isBlock;
   nsIFrame* cellInnerFrame;
-#ifdef MOZ_MATHML
   if (kNameSpaceID_MathML == nameSpaceID) {
     cellInnerFrame = NS_NewMathMLmtdInnerFrame(mPresShell, innerPseudoStyle);
     isBlock = PR_FALSE;
-  }
-  else
-#endif
-  {
+  } else {
     cellInnerFrame = NS_NewBlockFormattingContext(mPresShell, innerPseudoStyle);
     isBlock = PR_TRUE;
   }
@@ -3674,9 +3660,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   NS_ASSERTION(!(bits & _bit1) || !(bits & _bit2),     \
                "Only one of these bits should be set")
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_FORCE_NULL_ABSPOS_CONTAINER);
-#ifdef MOZ_MATHML
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_WRAP_KIDS_IN_BLOCKS);
-#endif
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_MAY_NEED_SCROLLFRAME);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_IS_POPUP);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_SKIP_ABSPOS_PUSH);
@@ -3810,7 +3794,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     }
 #endif
 
-#ifdef MOZ_MATHML
     if (NS_SUCCEEDED(rv) && (bits & FCDATA_WRAP_KIDS_IN_BLOCKS)) {
       nsFrameItems newItems;
       nsFrameItems currentBlock;
@@ -3839,7 +3822,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 
       childItems = newItems;
     }
-#endif
 
     // Set the frame's initial child list
     // Note that MathML depends on this being called even if
@@ -4587,7 +4569,6 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
 }
 
 // MathML Mod - RBS
-#ifdef MOZ_MATHML
 nsresult
 nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
                                              nsIContent* aContent,
@@ -4702,7 +4683,6 @@ nsCSSFrameConstructor::FindMathMLData(Element* aElement,
   return FindDataByTag(aTag, aElement, aStyleContext, sMathMLData,
                        NS_ARRAY_LENGTH(sMathMLData));
 }
-#endif // MOZ_MATHML
 
 // Only outer <svg> elements can be floated or positioned.  All other SVG
 // should be in-flow.
@@ -5182,11 +5162,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     if (!data) {
       data = FindXULTagData(element, aTag, aNameSpaceID, styleContext);
     }
-#ifdef MOZ_MATHML
     if (!data) {
       data = FindMathMLData(element, aTag, aNameSpaceID, styleContext);
     }
-#endif
     if (!data) {
       data = FindSVGData(element, aTag, aNameSpaceID, aParentFrame,
                          styleContext);
@@ -6546,14 +6524,12 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     return NS_OK;
   }
   
-#ifdef MOZ_MATHML
   if (parentFrame->IsFrameOfType(nsIFrame::eMathML)) {
     LAYOUT_PHASE_TEMP_EXIT();
     nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), PR_FALSE);
     LAYOUT_PHASE_TEMP_REENTER();
     return rv;
   }
-#endif
 
   // If the frame we are manipulating is a ``special'' frame (that is, one
   // that's been created as a result of a block-in-inline situation) then we
@@ -7013,14 +6989,12 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     return NS_OK;
   }
 
-#ifdef MOZ_MATHML
   if (parentFrame->IsFrameOfType(nsIFrame::eMathML)) {
     LAYOUT_PHASE_TEMP_EXIT();
     nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), PR_FALSE);
     LAYOUT_PHASE_TEMP_REENTER();
     return rv;
   }
-#endif
 
   nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                 GetAbsoluteContainingBlock(parentFrame),
@@ -7438,7 +7412,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       return rv;
     }
 
-#ifdef MOZ_MATHML
     // If we're a child of MathML, then we should reframe the MathML content.
     // If we're non-MathML, then we would be wrapped in a block so we need to
     // check our grandparent in that case.
@@ -7451,7 +7424,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       LAYOUT_PHASE_TEMP_REENTER();
       return rv;
     }
-#endif
 
     // Undo XUL wrapping if it's no longer needed.
     // (If we're in the XUL block-wrapping situation, parentFrame is the

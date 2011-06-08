@@ -45,6 +45,8 @@
 :root {
   font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-size: @font_normal@ !important;
+  background-color: @color_background_default@; /* force */
+  color: @color_text_default@; /* force */
 }
 
 ::-moz-selection {
@@ -94,6 +96,11 @@ textbox.search-bar {
 
 textbox[disabled="true"] {
   background-color: lightgray;
+}
+
+.link {
+  color: @color_text_as_link@;
+  text-decoration: underline;
 }
 
 /* sidebars spacer --------------------------------------------------------- */
@@ -744,4 +751,10 @@ dialog {
     -moz-box-pack: center;
     padding: @padding_xlarge@ 0px;
   }
+}
+
+/* because the buttons can wrap, we need to use the margin to create inter-button
+  spacing and a bottom margin for the notification */
+notification > button {
+  margin-bottom: @margin_normal@;
 }

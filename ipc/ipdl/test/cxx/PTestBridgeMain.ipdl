@@ -1,0 +1,24 @@
+include protocol PTestBridgeSub;
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+protocol PTestBridgeMain {
+    child spawns PTestBridgeSub;
+
+child:
+    Start();
+
+parent:
+    __delete__();
+
+state START:
+    send Start goto DEAD;
+state DEAD:
+    recv __delete__;
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

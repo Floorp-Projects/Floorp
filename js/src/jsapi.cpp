@@ -2411,7 +2411,8 @@ DumpNotify(JSTracer *trc, void *thing, uint32 kind)
     }
 
     edgeNameSize = strlen(edgeName) + 1;
-    node = (JSHeapDumpNode *) cx->malloc_(offsetof(JSHeapDumpNode, edgeName) + edgeNameSize);
+    size_t bytes = offsetof(JSHeapDumpNode, edgeName) + edgeNameSize;
+    node = (JSHeapDumpNode *) OffTheBooks::malloc_(bytes);
     if (!node) {
         dtrc->ok = JS_FALSE;
         return;
@@ -2563,7 +2564,7 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
         for (;;) {
             next = node->next;
             parent = node->parent;
-            cx->free_(node);
+            Foreground::free_(node);
             node = next;
             if (node)
                 break;
@@ -2590,14 +2591,26 @@ JS_IsGCMarkingTracer(JSTracer *trc)
 }
 
 JS_PUBLIC_API(void)
-JS_GC(JSContext *cx)
+JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 {
+    /* We cannot GC the atoms compartment alone; use a full GC instead. */
+    JS_ASSERT(comp != cx->runtime->atomsCompartment);
+
     LeaveTrace(cx);
 
     /* Don't nuke active arenas if executing or compiling. */
     if (cx->tempPool.current == &cx->tempPool.first)
         JS_FinishArenaPool(&cx->tempPool);
-    js_GC(cx, NULL, GC_NORMAL);
+
+    GCREASON(PUBLIC_API);
+    js_GC(cx, comp, GC_NORMAL);
+}
+
+JS_PUBLIC_API(void)
+JS_GC(JSContext *cx)
+{
+    GCREASON(PUBLIC_API);
+    JS_CompartmentGC(cx, NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -2784,12 +2797,6 @@ JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
         cx->stackLimit = stackBase - (stackSize - 1);
     }
 #endif
-}
-
-JS_PUBLIC_API(void)
-JS_SetScriptStackQuota(JSContext *cx, size_t quota)
-{
-    cx->scriptStackQuota = quota;
 }
 
 /************************************************************************/
@@ -4519,7 +4526,7 @@ JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
 
-    jschar *chars = js_InflateString(cx, bytes, &length);
+    jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
     JSObject *scriptObj =
@@ -4547,9 +4554,9 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *obj, c
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     if (bytes_are_utf8)
-        chars = js_InflateString(cx, bytes, &length, JS_TRUE);
+        chars = InflateString(cx, bytes, &length, CESU8Encoding);
     else
-        chars = js_InflateString(cx, bytes, &length);
+        chars = InflateString(cx, bytes, &length);
     if (!chars)
         return JS_TRUE;
 
@@ -4845,7 +4852,7 @@ JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                 const char *filename, uintN lineno)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    jschar *chars = js_InflateString(cx, bytes, &length);
+    jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
     JSFunction *fun = JS_CompileUCFunctionForPrincipals(cx, obj, principals, name,
@@ -5009,7 +5016,7 @@ JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *princ
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     size_t length = nbytes;
-    jschar *chars = js_InflateString(cx, bytes, &length);
+    jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return JS_FALSE;
     JSBool ok = JS_EvaluateUCScriptForPrincipals(cx, obj, principals, chars, length,
@@ -5234,7 +5241,7 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
     if (!s)
         return cx->runtime->emptyString;
     n = strlen(s);
-    js = js_InflateString(cx, s, &n);
+    js = InflateString(cx, s, &n);
     if (!js)
         return NULL;
     str = js_NewString(cx, js, n);
@@ -5454,7 +5461,7 @@ JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst, 
 {
     size_t n;
     if (!dst) {
-        n = js_GetDeflatedStringLength(cx, src, srclen);
+        n = GetDeflatedStringLength(cx, src, srclen);
         if (n == (size_t)-1) {
             *dstlenp = 0;
             return JS_FALSE;
@@ -5463,20 +5470,20 @@ JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst, 
         return JS_TRUE;
     }
 
-    return js_DeflateStringToBuffer(cx, src, srclen, dst, dstlenp);
+    return DeflateStringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_t *dstlenp)
 {
-    return js_InflateStringToBuffer(cx, src, srclen, dst, dstlenp);
+    return InflateStringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DecodeUTF8(JSContext *cx, const char *src, size_t srclen, jschar *dst,
               size_t *dstlenp)
 {
-    return js_InflateUTF8StringToBuffer(cx, src, srclen, dst, dstlenp);
+    return InflateUTF8StringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 
 JS_PUBLIC_API(char *)
@@ -5485,7 +5492,7 @@ JS_EncodeString(JSContext *cx, JSString *str)
     const jschar *chars = str->getChars(cx);
     if (!chars)
         return NULL;
-    return js_DeflateString(cx, chars, str->length());
+    return DeflateString(cx, chars, str->length());
 }
 
 JS_PUBLIC_API(size_t)
@@ -5494,14 +5501,14 @@ JS_GetStringEncodingLength(JSContext *cx, JSString *str)
     const jschar *chars = str->getChars(cx);
     if (!chars)
         return size_t(-1);
-    return js_GetDeflatedStringLength(cx, chars, str->length());
+    return GetDeflatedStringLength(cx, chars, str->length());
 }
 
 JS_PUBLIC_API(size_t)
 JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length)
 {
     /*
-     * FIXME bug 612141 - fix js_DeflateStringToBuffer interface so the result
+     * FIXME bug 612141 - fix DeflateStringToBuffer interface so the result
      * would allow to distinguish between insufficient buffer and encoding
      * error.
      */
@@ -5509,12 +5516,12 @@ JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length)
     const jschar *chars = str->getChars(NULL);
     if (!chars)
         return size_t(-1);
-    if (js_DeflateStringToBuffer(NULL, chars, str->length(), buffer, &writtenLength)) {
+    if (DeflateStringToBuffer(NULL, chars, str->length(), buffer, &writtenLength)) {
         JS_ASSERT(writtenLength <= length);
         return writtenLength;
     }
     JS_ASSERT(writtenLength <= length);
-    size_t necessaryLength = js_GetDeflatedStringLength(NULL, chars, str->length());
+    size_t necessaryLength = GetDeflatedStringLength(NULL, chars, str->length());
     if (necessaryLength == size_t(-1))
         return size_t(-1);
     if (writtenLength != length) {
@@ -5796,7 +5803,7 @@ JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    jschar *chars = js_InflateString(cx, bytes, &length);
+    jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
     RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
@@ -5853,7 +5860,7 @@ JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    jschar *chars = js_InflateString(cx, bytes, &length);
+    jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
     JSObject *obj = RegExp::createObjectNoStatics(cx, chars, length, flags);
@@ -6074,12 +6081,11 @@ JS_SetContextThread(JSContext *cx)
         return reinterpret_cast<jsword>(cx->thread()->id);
     }
 
-    if (!js_InitContextThread(cx)) {
+    if (!js_InitContextThreadAndLockGC(cx)) {
         js_ReportOutOfMemory(cx);
         return -1;
     }
 
-    /* Here the GC lock is still held after js_InitContextThread took it. */
     JS_UNLOCK_GC(cx->runtime);
 #endif
     return 0;
@@ -6122,9 +6128,19 @@ JS_ClearContextThread(JSContext *cx)
 
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
-JS_SetGCZeal(JSContext *cx, uint8 zeal)
+JS_SetGCZeal(JSContext *cx, uint8 zeal, uint32 frequency, JSBool compartment)
 {
-    cx->runtime->gcZeal = zeal;
+    cx->runtime->gcZeal_ = zeal;
+    cx->runtime->gcZealFrequency = frequency;
+    cx->runtime->gcNextScheduled = zeal >= 2 ? frequency : 0;
+    cx->runtime->gcDebugCompartmentGC = !!compartment;
+}
+
+JS_PUBLIC_API(void)
+JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment)
+{
+    cx->runtime->gcNextScheduled = count;
+    cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 #endif
 

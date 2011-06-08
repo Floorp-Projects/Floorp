@@ -42,6 +42,7 @@ function test() {
 
   testWindow = OpenBrowserWindow();
   testWindow.addEventListener("load", function() {
+    testWindow.removeEventListener("load", arguments.callee, false);
     ok(true, "Load listener called");
 
     executeSoon(function() {

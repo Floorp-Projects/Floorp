@@ -297,8 +297,8 @@ var BrowserUI = {
     if (this._activePanel)
       this._activePanel.close();
 
-    // The readOnly state of the field enabled/disabled the VKB
-    let isReadOnly = !(aPanel == AllPagesList && Util.isPortrait() && (willShowPanel || !this._edit.readOnly));
+    // If the keyboard will cover the full screen, we do not want to show it right away.
+    let isReadOnly = (aPanel != AllPagesList || this._isKeyboardFullscreen() || (!willShowPanel && this._edit.readOnly));
     this._edit.readOnly = isReadOnly;
     if (isReadOnly)
       this._edit.blur();
@@ -353,6 +353,24 @@ var BrowserUI = {
       return;
     this._popup = null;
     this._dispatchPopupChanged(false);
+  },
+
+  // Will the on-screen keyboard cover the whole screen when opened?
+  _isKeyboardFullscreen: function _isKeyboardFullscreen() {
+#ifdef ANDROID
+    if (!Util.isPortrait()) {
+      switch (Services.prefs.getIntPref("widget.ime.android.landscape_fullscreen")) {
+        case 1:
+          return true;
+        case -1: {
+          let threshold = Services.prefs.getIntPref("widget.ime.android.fullscreen_threshold");
+          let dpi = Util.getWindowUtils(window).displayDPI;
+          return (window.innerHeight * 100 < threshold * dpi);
+        }
+      }
+    }
+#endif
+    return false;
   },
 
   _dispatchPopupChanged: function _dispatchPopupChanged(aVisible) {
@@ -513,9 +531,11 @@ var BrowserUI = {
       DownloadsView.init();
       ConsoleView.init();
 
-      // Pre-start the content process
-      Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-          .ensureContentProcess();
+      if (Services.prefs.getBoolPref("browser.tabs.remote")) {
+          // Pre-start the content process
+          Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+                                           .ensureContentProcess();
+      }
 
 #ifdef MOZ_SERVICES_SYNC
       // Init the sync system

@@ -341,16 +341,13 @@ static PRInt32
 GetAccessModifierMask(nsIContent* aContent)
 {
   // use ui.key.generalAccessKey (unless it is -1)
-  PRInt32 accessKey = -1;
-  nsresult rv = Preferences::GetInt("ui.key.generalAccessKey", accessKey);
-  if (NS_SUCCEEDED(rv) && accessKey != -1) {
-    switch (accessKey) {
-      case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
-      case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
-      case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
-      case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
-      default:                             return 0;
-    }
+  switch (Preferences::GetInt("ui.key.generalAccessKey", -1)) {
+    case -1:                             break;
+    case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
+    case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
+    case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
+    case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
+    default:                             return 0;
   }
 
   // get the docShell to this DOMNode, return 0 on failure
@@ -365,6 +362,7 @@ GetAccessModifierMask(nsIContent* aContent)
     return 0;
 
   // determine the access modifier used in this context
+  nsresult rv = NS_ERROR_FAILURE;
   PRInt32 itemType, accessModifierMask = 0;
   treeItem->GetItemType(&itemType);
   switch (itemType) {
@@ -452,6 +450,10 @@ NS_IMETHODIMP
 nsAccessible::GetNextSibling(nsIAccessible **aNextSibling) 
 {
   NS_ENSURE_ARG_POINTER(aNextSibling);
+  *aNextSibling = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
   NS_IF_ADDREF(*aNextSibling = GetSiblingAtOffset(1, &rv));
@@ -463,6 +465,10 @@ NS_IMETHODIMP
 nsAccessible::GetPreviousSibling(nsIAccessible * *aPreviousSibling) 
 {
   NS_ENSURE_ARG_POINTER(aPreviousSibling);
+  *aPreviousSibling = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
   NS_IF_ADDREF(*aPreviousSibling = GetSiblingAtOffset(-1, &rv));
@@ -605,7 +611,7 @@ nsresult nsAccessible::GetFullKeyName(const nsAString& aModifierName, const nsAS
   if (!gKeyStringBundle ||
       NS_FAILED(gKeyStringBundle->GetStringFromName(PromiseFlatString(aModifierName).get(), 
                                                     getter_Copies(modifierName))) ||
-      NS_FAILED(gKeyStringBundle->GetStringFromName(PromiseFlatString(NS_LITERAL_STRING("MODIFIER_SEPARATOR")).get(), 
+      NS_FAILED(gKeyStringBundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(), 
                                                     getter_Copies(separator)))) {
     return NS_ERROR_FAILURE;
   }
@@ -3168,39 +3174,21 @@ nsAccessible::EnsureChildren()
 }
 
 nsAccessible*
-nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError)
+nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError) const
 {
-  if (IsDefunct()) {
-    if (aError)
-      *aError = NS_ERROR_FAILURE;
-
-    return nsnull;
-  }
-
-  nsAccessible *parent = GetParent();
-  if (!parent) {
+  if (!mParent || mIndexInParent == -1) {
     if (aError)
       *aError = NS_ERROR_UNEXPECTED;
 
     return nsnull;
   }
 
-  if (mIndexInParent == -1) {
-    if (aError)
-      *aError = NS_ERROR_UNEXPECTED;
-
+  if (aError && mIndexInParent + aOffset >= mParent->GetChildCount()) {
+    *aError = NS_OK; // fail peacefully
     return nsnull;
   }
 
-  if (aError) {
-    PRInt32 childCount = parent->GetChildCount();
-    if (mIndexInParent + aOffset >= childCount) {
-      *aError = NS_OK; // fail peacefully
-      return nsnull;
-    }
-  }
-
-  nsAccessible* child = parent->GetChildAt(mIndexInParent + aOffset);
+  nsAccessible* child = mParent->GetChildAt(mIndexInParent + aOffset);
   if (aError && !child)
     *aError = NS_ERROR_UNEXPECTED;
 

@@ -4735,8 +4735,8 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
     memset(newBits, 255, newSize);
 
     // Now copy the intersection of the old and new areas into the new mask
-    PRInt32 copyWidth = PR_MIN(aNewWidth, mTransparencyBitmapWidth);
-    PRInt32 copyHeight = PR_MIN(aNewHeight, mTransparencyBitmapHeight);
+    PRInt32 copyWidth = NS_MIN(aNewWidth, mTransparencyBitmapWidth);
+    PRInt32 copyHeight = NS_MIN(aNewHeight, mTransparencyBitmapHeight);
     PRInt32 oldRowBytes = (mTransparencyBitmapWidth+7)/8;
     PRInt32 newRowBytes = (aNewWidth+7)/8;
     PRInt32 copyBytes = (copyWidth+7)/8;
@@ -6539,8 +6539,8 @@ nsWindow::GetThebesSurface()
     gint width, height;
     gdk_drawable_get_size(d, &width, &height);
     // Owen Taylor says this is the right thing to do!
-    width = PR_MIN(32767, width);
-    height = PR_MIN(32767, height);
+    width = NS_MIN(32767, width);
+    height = NS_MIN(32767, height);
     gfxIntSize size(width, height);
     Visual* visual = GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(d));
 

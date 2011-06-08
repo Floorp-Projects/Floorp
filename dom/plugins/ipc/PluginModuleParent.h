@@ -282,10 +282,6 @@ private:
                                        uint64_t maxAge);
     virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result);
 
-#if defined(XP_MACOSX)
-    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing);
-#endif
-
 private:
     void WritePluginExtraDataForMinidump(const nsAString& id);
     void WriteExtraDataForHang();

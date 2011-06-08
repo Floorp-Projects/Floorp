@@ -3017,7 +3017,7 @@ SandboxImport(JSContext *cx, uintN argc, jsval *vp)
         // NB: funobj must only be used to get the JSFunction out.
         JSObject *funobj = JSVAL_TO_OBJECT(argv[0]);
         if (funobj->isProxy()) {
-            funobj = XPCWrapper::UnsafeUnwrapSecurityWrapper(cx, funobj);
+            funobj = XPCWrapper::UnsafeUnwrapSecurityWrapper(funobj);
         }
 
         JSAutoEnterCompartment ac;
@@ -3560,7 +3560,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     }
 #endif
 
-    sandbox = XPCWrapper::UnsafeUnwrapSecurityWrapper(cx, sandbox);
+    sandbox = XPCWrapper::UnsafeUnwrapSecurityWrapper(sandbox);
     if (!sandbox || sandbox->getJSClass() != &SandboxClass) {
         return NS_ERROR_INVALID_ARG;
     }

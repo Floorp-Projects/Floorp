@@ -35,17 +35,46 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id, Mode mode,
                               Listener* listener)
     : ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)),
-      pipe_(INVALID_HANDLE_VALUE),
-      listener_(listener),
-      waiting_connect_(mode == MODE_SERVER),
-      processing_incoming_(false),
       ALLOW_THIS_IN_INITIALIZER_LIST(factory_(this)) {
+  Init(mode, listener);
+
   if (!CreatePipe(channel_id, mode)) {
     // The pipe may have been closed already.
     LOG(WARNING) << "Unable to create pipe named \"" << channel_id <<
                     "\" in " << (mode == 0 ? "server" : "client") << " mode.";
   }
 }
+
+#if defined(CHROMIUM_MOZILLA_BUILD)
+Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id,
+                                  HANDLE server_pipe,
+                                  Mode mode, Listener* listener)
+    : ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
+      ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)),
+      ALLOW_THIS_IN_INITIALIZER_LIST(factory_(this)) {
+  Init(mode, listener);
+
+  if (mode == MODE_SERVER) {
+    // Use the existing handle that was dup'd to us
+    pipe_ = server_pipe;
+    EnqueueHelloMessage();
+  } else {
+    // Take the normal init path to connect to the server pipe
+    CreatePipe(channel_id, mode);
+  }
+}
+
+void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
+  pipe_ = INVALID_HANDLE_VALUE;
+  listener_ = listener;
+  waiting_connect_ = (mode == MODE_SERVER);
+  processing_incoming_ = false;
+}
+
+HANDLE Channel::ChannelImpl::GetServerPipeHandle() const {
+  return pipe_;
+}
+#endif
 
 void Channel::ChannelImpl::Close() {
   if (thread_check_.get()) {
@@ -164,6 +193,10 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
   }
 
   // Create the Hello message to be sent when Connect is called
+  return EnqueueHelloMessage();
+}
+
+bool Channel::ChannelImpl::EnqueueHelloMessage() {
   scoped_ptr<Message> m(new Message(MSG_ROUTING_NONE,
                                     HELLO_MESSAGE_TYPE,
                                     IPC::Message::PRIORITY_NORMAL));
@@ -426,6 +459,13 @@ Channel::Channel(const std::wstring& channel_id, Mode mode,
     : channel_impl_(new ChannelImpl(channel_id, mode, listener)) {
 }
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+Channel::Channel(const std::wstring& channel_id, void* server_pipe,
+                 Mode mode, Listener* listener)
+   : channel_impl_(new ChannelImpl(channel_id, server_pipe, mode, listener)) {
+}
+#endif
+
 Channel::~Channel() {
   delete channel_impl_;
 }
@@ -439,6 +479,10 @@ void Channel::Close() {
 }
 
 #ifdef CHROMIUM_MOZILLA_BUILD
+void* Channel::GetServerPipeHandle() const {
+  return channel_impl_->GetServerPipeHandle();
+}
+
 Channel::Listener* Channel::set_listener(Listener* listener) {
   return channel_impl_->set_listener(listener);
 }
