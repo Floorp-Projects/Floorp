@@ -102,6 +102,10 @@ public:
 
     void SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report);
 
+    GeckoChildProcessHost* Process() {
+        return mSubprocess;
+    }
+
 protected:
     void OnChannelConnected(int32 pid);
     virtual void ActorDestroy(ActorDestroyReason why);
@@ -122,7 +126,8 @@ private:
     virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
-    virtual PCrashReporterParent* AllocPCrashReporter();
+    virtual PCrashReporterParent* AllocPCrashReporter(const NativeThreadId& tid,
+                                                      const PRUint32& processType);
     virtual bool DeallocPCrashReporter(PCrashReporterParent* crashreporter);
 
     virtual PMemoryReportRequestParent* AllocPMemoryReportRequest();
@@ -228,7 +233,8 @@ private:
 
     bool mIsAlive;
     nsCOMPtr<nsIPrefServiceInternal> mPrefService;
-    time_t mProcessStartTime;
+
+    friend class CrashReporterParent;
 };
 
 } // namespace dom

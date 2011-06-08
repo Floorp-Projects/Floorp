@@ -47,6 +47,7 @@ include protocol PMemoryReportRequest;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
+include "mozilla/dom/TabMessageUtils.h";
 
 include "nsGeoPositionIPCSerialiser.h";
 include "PPrefTuple.h";
@@ -60,6 +61,7 @@ using OverrideMapping;
 using IPC::URI;
 using IPC::Permission;
 using mozilla::null_t;
+using mozilla::dom::NativeThreadId;
 using gfxIntSize;
 
 namespace mozilla {
@@ -131,7 +133,7 @@ child:
 
 parent:
     PNecko();
-    PCrashReporter();
+    PCrashReporter(NativeThreadId tid, PRUint32 processType);
     
     PStorage(StorageConstructData data);
 
