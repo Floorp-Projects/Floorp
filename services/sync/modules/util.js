@@ -935,13 +935,17 @@ let Utils = {
 
   /**
    * Execute a function on the next event loop tick.
+   * 
+   * @param callback
+   *        Function to invoke.
+   * @param thisObj [optional]
+   *        Object to bind the callback to.
    */
   nextTick: function nextTick(callback, thisObj) {
     if (thisObj) {
       callback = callback.bind(thisObj);
     }
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback(callback, 0, timer.TYPE_ONE_SHOT);
+    Services.tm.currentThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   /**
