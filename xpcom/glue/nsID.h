@@ -52,12 +52,11 @@
 
 struct nsID {
   /**
-   * @name Identifier values.  Align these to start at an 8-byte (64-bit)
-   * boundary so we can use 64-bit loads in nsID::Equals.
+   * @name Identifier values
    */
 
   //@{
-  NS_DEFINE_ALIGNED(PRUint32, m0, 8);
+  PRUint32 m0;
   PRUint16 m1;
   PRUint16 m2;
   PRUint8 m3[8];
@@ -105,9 +104,6 @@ struct nsID {
 
   //@}
 };
-
-// Ensure that we didn't accidentally change the size of nsID.
-PR_STATIC_ASSERT(sizeof(nsID) == 16);
 
 /*
  * Class IDs
