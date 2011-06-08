@@ -463,7 +463,7 @@ class StackFrame
      * in loops such as:
      *
      *   for ( ...; fp; fp = fp->prev())
-     *     ... fp->pcQuadratic(cx);
+     *     ... fp->pcQuadratic(cx->stack);
      *
      * Using next can avoid this, but in most cases prefer FrameRegsIter;
      * it is amortized O(1).
@@ -472,7 +472,7 @@ class StackFrame
      *   Where I stop and I turn and I go right back
      *   Till I get to the bottom and I see you again...
      */
-    jsbytecode *pcQuadratic(JSContext *cx, StackFrame *next = NULL,
+    jsbytecode *pcQuadratic(const ContextStack &stack, StackFrame *next = NULL,
                             JSInlinedSite **pinlined = NULL);
 
     jsbytecode *prevpc(JSInlinedSite **pinlined) {

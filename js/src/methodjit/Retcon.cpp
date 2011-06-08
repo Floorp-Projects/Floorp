@@ -324,7 +324,7 @@ ExpandInlineFrames(JSContext *cx, bool all)
         StackFrame *next = NULL;
         for (StackFrame *fp = f->fp(); fp != end; fp = fp->prev()) {
             mjit::CallSite *inlined;
-            fp->pcQuadratic(cx, next, &inlined);
+            fp->pcQuadratic(cx->stack, next, &inlined);
             if (next && inlined) {
                 mjit::Recompiler::expandInlineFrames(cx, fp, inlined, next, f);
                 fp = next;
@@ -431,7 +431,7 @@ Recompiler::recompile(bool resetUses)
             rejoin == REJOIN_NATIVE_LOWERED) {
             /* Native call. */
             if (fp->script() == script) {
-                patchNative(cx, fp->jit(), fp, fp->pcQuadratic(cx, NULL), NULL, rejoin);
+                patchNative(cx, fp->jit(), fp, fp->pcQuadratic(cx->stack, NULL), NULL, rejoin);
                 f->stubRejoin = REJOIN_NATIVE_PATCHED;
             }
         } else if (rejoin == REJOIN_NATIVE_PATCHED) {
