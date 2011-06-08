@@ -12,12 +12,12 @@ chrome.jar:
 * skin/browser.css                          (browser.css)
 * skin/content.css                          (content.css)
   skin/config.css                           (config.css)
-  skin/firstRun.css                         (firstRun.css)
 * skin/forms.css                            (forms.css)
   skin/header.css                           (header.css)
 * skin/notification.css                     (notification.css)
 * skin/platform.css                         (platform.css)
   skin/touchcontrols.css                    (touchcontrols.css)
+* skin/localePicker.css                     (localePicker.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 
@@ -132,12 +132,12 @@ chrome.jar:
 * skin/gingerbread/browser.css                          (gingerbread/browser.css)
 * skin/gingerbread/content.css                          (gingerbread/content.css)
   skin/gingerbread/config.css                           (config.css)
-  skin/gingerbread/firstRun.css                         (firstRun.css)
 * skin/gingerbread/forms.css                            (gingerbread/forms.css)
   skin/gingerbread/header.css                           (header.css)
 * skin/gingerbread/notification.css                     (notification.css)
 * skin/gingerbread/platform.css                         (gingerbread/platform.css)
   skin/gingerbread/touchcontrols.css                    (touchcontrols.css)
+* skin/gingerbread/localePicker.css                     (gingerbread/localePicker.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 
@@ -249,12 +249,12 @@ chrome.jar:
 * skin/honeycomb/browser.css                          (browser.css)
 * skin/honeycomb/content.css                          (content.css)
   skin/honeycomb/config.css                           (config.css)
-  skin/honeycomb/firstRun.css                         (firstRun.css)
 * skin/honeycomb/forms.css                            (forms.css)
   skin/honeycomb/header.css                           (header.css)
 * skin/honeycomb/notification.css                     (notification.css)
 * skin/honeycomb/platform.css                         (platform.css)
   skin/honeycomb/touchcontrols.css                    (touchcontrols.css)
+* skin/honeycomb/localePicker.css                     (localePicker.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 
