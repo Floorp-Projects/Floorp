@@ -51,6 +51,9 @@ ifdef ENABLE_TESTS
 # We can't have index.html in this directory because it would prevent
 # running the tests here.
 DIRS		+= bug649134
+
+# For form-related test suite.
+DIRS		+= forms
 endif
 
 include $(topsrcdir)/config/rules.mk
