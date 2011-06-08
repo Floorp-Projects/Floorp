@@ -25,6 +25,7 @@
  *   Marco Bonardo <mak77@bonardo.net>
  *   Asaf Romano <mano@mozilla.com>
  *   Drew Willcoxon <adw@mozilla.com>
+ *   Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -808,7 +809,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(0a5ce210-c803-11de-8a39-0800200c9a66)]
+[scriptable, uuid(06602bb6-0774-4576-8855-ea930bb85bbe)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -837,14 +838,20 @@ interface nsINavHistoryObserver : nsISupports
    * @param aSessionID      The ID of one connected sequence of visits.
    * @param aReferringID    The ID of the visit the user came from. 0 if empty.
    * @param aTransitionType One of nsINavHistory.TRANSITION_*
+   * @param aGUID           The unique ID associated with the page.
    * @param aAdded          Incremented by query nodes when the visited uri
    *                        belongs to them. If no such query exists, the 
    *                        history result creates a new query node dynamically.
    *                        It is used in places views only and can be ignored.
    */
-  void onVisit(in nsIURI aURI, in long long aVisitID, in PRTime aTime,
-               in long long aSessionID, in long long aReferringID,
-               in unsigned long aTransitionType, out unsigned long aAdded);
+  void onVisit(in nsIURI aURI,
+               in long long aVisitID,
+               in PRTime aTime,
+               in long long aSessionID,
+               in long long aReferringID,
+               in unsigned long aTransitionType,
+               in ACString aGUID,
+               out unsigned long aAdded);
 
   /**
    * Called whenever either the "real" title or the custom title of the page
@@ -859,8 +866,13 @@ interface nsINavHistoryObserver : nsISupports
    * to see whether an empty string is "null" or not (it will always be an
    * empty string in either case).
    *
+   * @param aURI
+   *        The URI of the page.
+   * @param aPageTitle
+   *        The new title of the page.
    */
-  void onTitleChanged(in nsIURI aURI, in AString aPageTitle);
+  void onTitleChanged(in nsIURI aURI,
+                      in AString aPageTitle);
 
   /**
    * This page and all of its visits are about to be deleted.  Note: the page
@@ -868,8 +880,11 @@ interface nsINavHistoryObserver : nsISupports
    *
    * @param aURI
    *        The URI being deleted.
+   * @param aGUID
+   *        The unique ID associated with the page.
    */
-  void onBeforeDeleteURI(in nsIURI aURI);
+  void onBeforeDeleteURI(in nsIURI aURI,
+                         in ACString aGUID);
 
   /**
    * This page and all of its visits are being deleted. Note: the page may not
@@ -880,8 +895,14 @@ interface nsINavHistoryObserver : nsISupports
    * delete. If there is some error in the middle (for example, out of memory)
    * then you'll get a notification and it won't get deleted. There's no easy
    * way around this.
+   *
+   * @param aURI
+   *        The URI that was deleted.
+   * @param aGUID
+   *        The unique ID associated with the page.
    */
-  void onDeleteURI(in nsIURI aURI);
+  void onDeleteURI(in nsIURI aURI,
+                   in ACString aGUID);
 
   /**
    * Notification that all of history is being deleted.
@@ -891,9 +912,18 @@ interface nsINavHistoryObserver : nsISupports
   /**
    * A page has had some attribute on it changed. Note that for TYPED and
    * HIDDEN, the page may not necessarily have been added yet.
+   *
+   * @param aURI
+   *         The URI of the page on which an attribute changed.
+   * @param aWhat
+   *         The attribute whose value changed.
+   * @param aValue
+   *         The attribute's new value. 
    */
   const unsigned long ATTRIBUTE_FAVICON = 3; // favicon updated, aString = favicon annotation URI
-  void onPageChanged(in nsIURI aURI, in unsigned long aWhat, in AString aValue);
+  void onPageChanged(in nsIURI aURI,
+                     in unsigned long aWhat,
+                     in AString aValue);
 
   /**
    * Called when some visits of an history entry are expired.
@@ -903,13 +933,17 @@ interface nsINavHistoryObserver : nsISupports
    * @param aVisitTime
    *        The largest visit time in microseconds that has been expired.  We
    *        guarantee that we don't have any visit older than this date.
+   * @param aGUID
+   *        The unique ID associated with the page.
    *
    * @note: when all visits for a page are expired and also the full page entry
    *        is expired, you will only get an onDeleteURI notification.  If a
    *        page entry is removed, then you can be sure that we don't have
    *        anymore visits for it.
    */
-  void onDeleteVisits(in nsIURI aURI, in PRTime aVisitTime);
+  void onDeleteVisits(in nsIURI aURI,
+                      in PRTime aVisitTime,
+                      in ACString aGUID);
 };
 
 
