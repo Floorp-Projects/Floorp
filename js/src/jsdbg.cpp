@@ -861,14 +861,15 @@ JSBool
 Debug::getYoungestFrame(JSContext *cx, uintN argc, Value *vp)
 {
     THISOBJ(cx, vp, Debug, "getYoungestFrame", thisobj, dbg);
-    StackFrame *fp = cx->fp();
-    while (fp && !dbg->observesFrame(fp))
-        fp = fp->prev();
-    if (!fp) {
-        vp->setNull();
-        return true;
+
+    // cx->fp() would return the topmost frame in the current context.
+    // Since there may be multiple contexts, use AllFramesIter instead.
+    for (AllFramesIter i(cx); !i.done(); ++i) {
+        if (dbg->observesFrame(i.fp()))
+            return dbg->getScriptFrame(cx, i.fp(), vp);
     }
-    return dbg->getScriptFrame(cx, fp, vp);
+    vp->setNull();
+    return true;
 }
 
 JSBool
@@ -1092,12 +1093,24 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
     return thisobj;
 }
 
+#if DEBUG
+static bool
+StackContains(JSContext *cx, StackFrame *fp)
+{
+    for (AllFramesIter i(cx); !i.done(); ++i) {
+        if (fp == i.fp())
+            return true;
+    }
+    return false;
+}
+#endif
+
 #define THIS_FRAME(cx, vp, fnname, thisobj, fp)                              \
     JSObject *thisobj = CheckThisFrame(cx, vp, fnname, true);                \
     if (!thisobj)                                                            \
         return false;                                                        \
     StackFrame *fp = (StackFrame *) thisobj->getPrivate();                   \
-    JS_ASSERT((cx)->stack.contains(fp))
+    JS_ASSERT(StackContains(cx, fp))
 
 static JSBool
 DebugFrame_getType(JSContext *cx, uintN argc, Value *vp)
