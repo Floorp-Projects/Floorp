@@ -142,13 +142,6 @@ typedef base::SharedMemoryHandle WindowsSharedMemoryHandle;
 typedef mozilla::null_t WindowsSharedMemoryHandle;
 #endif
 
-#ifdef MOZ_CRASHREPORTER
-typedef CrashReporter::ThreadId NativeThreadId;
-#else
-// unused in this case
-typedef int32 NativeThreadId;
-#endif
-
 // XXX maybe not the best place for these. better one?
 
 #define VARSTR(v_)  case v_: return #v_
