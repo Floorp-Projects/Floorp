@@ -368,9 +368,12 @@ nsChromeRegistryChrome::Observe(nsISupports *aSubject, const char *aTopic,
 
     if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) ||
         pref.EqualsLiteral(SELECTED_LOCALE_PREF)) {
-        rv = UpdateSelectedLocale();
-        if (NS_SUCCEEDED(rv) && mProfileLoaded)
-          FlushAllCaches();
+      if (!mProfileLoaded) {
+        rv = SelectLocaleFromPref(prefs);
+        if (NS_FAILED(rv))
+          return rv;
+      }
+      FlushAllCaches();
     }
     else if (pref.EqualsLiteral(SELECTED_SKIN_PREF)) {
       nsXPIDLCString provider;
@@ -423,12 +426,11 @@ nsChromeRegistryChrome::CheckForNewChrome()
   return NS_OK;
 }
 
-nsresult nsChromeRegistryChrome::UpdateSelectedLocale()
+void nsChromeRegistryChrome::UpdateSelectedLocale()
 {
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs) {
-    rv = SelectLocaleFromPref(prefs);
+    nsresult rv = SelectLocaleFromPref(prefs);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();
@@ -437,8 +439,6 @@ nsresult nsChromeRegistryChrome::UpdateSelectedLocale()
                               "selected-locale-has-changed", nsnull);
     }
   }
-
-  return rv;
 }
 
 static void

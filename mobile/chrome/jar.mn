@@ -2,6 +2,12 @@
 
 chrome.jar:
 % content browser %content/
+  content/firstrun/firstrun.xhtml      (content/firstrun/firstrun.xhtml)
+  content/firstrun/mozilla.png         (content/firstrun/mozilla.png)
+  content/firstrun/features.png        (content/firstrun/features.png)
+  content/firstrun/twitter.png         (content/firstrun/twitter.png)
+  content/firstrun/facebook.png        (content/firstrun/facebook.png)
+  content/firstrun/nav-arrow.png       (content/firstrun/nav-arrow.png)
 
 * content/about.xhtml                  (content/about.xhtml)
   content/config.xul                   (content/config.xul)
@@ -9,8 +15,6 @@ chrome.jar:
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
   content/aboutCertError.css           (content/aboutCertError.css)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)
-  content/localePicker.xul             (content/localePicker.xul)
-  content/localePicker.js              (content/localePicker.js)
 * content/aboutRights.xhtml            (content/aboutRights.xhtml)
   content/blockedSite.xhtml            (content/blockedSite.xhtml)
   content/languages.properties         (content/languages.properties)

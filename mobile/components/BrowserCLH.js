@@ -194,17 +194,14 @@ BrowserCLH.prototype = {
         // Default to the saved homepage
         let defaultURL = getHomePage();
 
+        // Override the default if we have a new profile
+        if (needHomepageOverride() == "new profile")
+            defaultURL = "about:firstrun";
+
         // Override the default if we have a URL passed on command line
         if (uris.length > 0) {
           defaultURL = uris[0].spec;
           uris = uris.slice(1);
-        }
-
-        // Show the locale selector if we have a new profile
-        if (needHomepageOverride() == "new profile" && Services.prefs.getBoolPref("browser.firstrun.show.localepicker")) {
-          win = openWindow(null, "chrome://browser/content/localePicker.xul", "_blank", "chrome,dialog=no,all", defaultURL);
-          aCmdLine.preventDefault = true;
-          return;
         }
 
         win = openWindow(null, "chrome://browser/content/browser.xul", "_blank", "chrome,dialog=no,all", defaultURL);

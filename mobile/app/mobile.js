@@ -215,9 +215,6 @@ pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LO
 pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/mobile/");
 pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/search/guid:%IDS%?src=mobile&appOS=%OS%&appVersion=%VERSION%&tMain=%TIME_MAIN%&tFirstPaint=%TIME_FIRST_PAINT%&tSessionRestored=%TIME_SESSION_RESTORED%");
 
-/* preference for the locale picker */
-pref("extensions.getLocales.get.url", "");
-
 /* blocklist preferences */
 pref("extensions.blocklist.enabled", true);
 pref("extensions.blocklist.interval", 86400);
@@ -646,9 +643,6 @@ pref("urlclassifier.updatecachemax", 4194304);
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 #endif
 
-// True if this is the first time we are showing about:firstrun
-pref("browser.firstrun.show.uidiscovery", true);
-pref("browser.firstrun.show.localepicker", true);
-
+// prevent focus to show/hide the virtual keyboard if the action is not
 // initiated by a user
 pref("content.ime.strict_policy", true);

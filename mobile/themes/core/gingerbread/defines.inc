@@ -16,7 +16,6 @@
 %define color_text_button #000
 %define color_text_disabled #808080
 %define color_text_placeholder #808080
-%define color_text_as_link #febc2b
 
 %define color_background_highlight #febc2b
 %define color_background_highlight_overlay rgba(254, 188, 43, 0.8)
