@@ -2236,7 +2236,7 @@ GetMIMEType(nsNPAPIPluginInstance *aPluginInstance)
   }
   return "";
 }
-#endif XP_WIN
+#endif // XP_WIN
 
 static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)

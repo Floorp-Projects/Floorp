@@ -41,9 +41,10 @@
 #ifndef jsonparser_h___
 #define jsonparser_h___
 
+#include "mozilla/RangedPtr.h"
+
 #include "jscntxt.h"
 #include "jsstr.h"
-#include "jstl.h"
 #include "jsvalue.h"
 
 /*
@@ -59,8 +60,8 @@ class JSONParser
     /* Data members */
 
     JSContext * const cx;
-    js::RangeCheckedPointer<const jschar> current;
-    const js::RangeCheckedPointer<const jschar> end;
+    mozilla::RangedPtr<const jschar> current;
+    const mozilla::RangedPtr<const jschar> end;
 
     js::Value v;
 
@@ -89,7 +90,7 @@ class JSONParser
                ParsingMode parsingMode = StrictJSON,
                ErrorHandling errorHandling = RaiseError)
       : cx(cx),
-        current(data, data, length),
+        current(data, length),
         end(data + length, data, length),
         parsingMode(parsingMode),
         errorHandling(errorHandling)

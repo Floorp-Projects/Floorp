@@ -40,12 +40,15 @@
 var BUGNUMBER = 280769;
 var summary = 'Do not overflow 64K boundary in treeDepth';
 var actual = 'No Crash';
-var expect = /No Crash|InternalError: allocation size overflow|InternalError: script stack space quota is exhausted/;
+var expect = /No Crash|InternalError: allocation size overflow/;
 var status;
 var result;
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
+
+expectExitCode(0);
+expectExitCode(5);
 
 status = summary + ' ' + inSection(1) + ' (new RegExp("0|...|99999") ';
 

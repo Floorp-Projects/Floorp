@@ -3945,6 +3945,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             // Channel refused to load from an unrecognized content type.
             error.AssignLiteral("unsafeContentType");
             break;
+        case NS_ERROR_CORRUPTED_CONTENT:
+            // Broken Content Detected. e.g. Content-MD5 check failure.
+            error.AssignLiteral("corruptedContentError");
+            break;
         }
     }
 
@@ -6124,6 +6128,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     //
     if (url && NS_FAILED(aStatus)) {
         if (aStatus == NS_ERROR_FILE_NOT_FOUND ||
+            aStatus == NS_ERROR_CORRUPTED_CONTENT ||
             aStatus == NS_ERROR_INVALID_CONTENT_ENCODING) {
             DisplayLoadError(aStatus, url, nsnull, aChannel);
             return NS_OK;
@@ -8285,12 +8290,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         aLoadType == LOAD_LINK) {
 
         // Split mCurrentURI and aURI on the '#' character.  Make sure we read
-        // the return values of SplitURIAtHash; it might fail because
-        // mCurrentURI is null, for instance, and we don't want to allow a
-        // short-circuited navigation in that case.
+        // the return values of SplitURIAtHash; if it fails, we don't want to
+        // allow a short-circuited navigation.
         nsCAutoString curBeforeHash, curHash, newBeforeHash, newHash;
         nsresult splitRv1, splitRv2;
-        splitRv1 = nsContentUtils::SplitURIAtHash(mCurrentURI, curBeforeHash, curHash);
+        splitRv1 = mCurrentURI ?
+            nsContentUtils::SplitURIAtHash(mCurrentURI,
+                                           curBeforeHash, curHash) :
+            NS_ERROR_FAILURE;
         splitRv2 = nsContentUtils::SplitURIAtHash(aURI, newBeforeHash, newHash);
 
         PRBool sameExceptHashes = NS_SUCCEEDED(splitRv1) &&

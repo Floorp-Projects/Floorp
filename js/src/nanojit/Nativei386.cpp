@@ -813,6 +813,21 @@ namespace nanojit
         asm_output("test ah, %d", i);
     }
 
+    // The FPU stack depth is the number of pushes in excess of the number of pops.
+    // Since we generate backwards, we track the FPU stack depth as a negative number.
+    // We use the top of the x87 stack as the single allocatable FP register, FST0.
+    // Thus, between LIR instructions, the depth of the FPU stack must be either 0 or -1,
+    // depending on whether FST0 is in use.  Within the expansion of a single LIR
+    // instruction, however, deeper levels of the stack may be used as unmanaged
+    // temporaries.  Hence, we allow for all eight levels in the assertions below.
+    void Assembler::fpu_push() {
+        debug_only( ++_fpuStkDepth; NanoAssert(_fpuStkDepth <= 0); )
+    }
+
+    void Assembler::fpu_pop() {
+        debug_only( --_fpuStkDepth; NanoAssert(_fpuStkDepth >= -7); )
+    }
+
     inline void Assembler::FNSTSW_AX() { count_fpu(); FPUc(0xdfe0);    asm_output("fnstsw_ax"); }
     inline void Assembler::FCHS()      { count_fpu(); FPUc(0xd9e0);    asm_output("fchs"); }
     inline void Assembler::FLD1()      { count_fpu(); FPUc(0xd9e8);    asm_output("fld1"); fpu_push(); }
@@ -2860,6 +2875,9 @@ namespace nanojit
 
     void Assembler::asm_ret(LIns* ins)
     {
+        // Unreachable, so assume correct stack depth.
+        debug_only( _fpuStkDepth = 0; )
+
         genEpilogue();
 
         // Restore rESP from rEBP, undoing SUBi(SP,amt) in the prologue
