@@ -544,7 +544,7 @@ IonBuilder::processIfEnd(CFGState &state)
         // could have already ended the block.
         current->end(MGoto::New(state.branch.ifFalse));
 
-        if (!current->addPredecessor(state.branch.ifFalse))
+        if (!state.branch.ifFalse->addPredecessor(current))
             return ControlStatus_Error;
     }
 
