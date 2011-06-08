@@ -345,7 +345,7 @@ def write_interface(iface, fd):
     if iface.attributes.scriptable:
         fd.write("NS_SCRIPTABLE ")
     if iface.attributes.deprecated:
-        fd.write("NS_DEPRECATED ")
+        fd.write("MOZ_DEPRECATED ")
     fd.write(iface.name)
     if iface.base:
         fd.write(" : public %s" % iface.base)

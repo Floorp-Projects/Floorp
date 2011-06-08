@@ -755,3 +755,9 @@ dialog {
     padding: @padding_xlarge@ 0px;
   }
 }
+
+/* because the buttons can wrap, we need to use the margin to create inter-button
+  spacing and a bottom margin for the notification */
+notification > button {
+  margin-bottom: @margin_normal@;
+}
