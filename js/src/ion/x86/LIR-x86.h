@@ -39,27 +39,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
-
-// This file declares various analysis passes that operate on MIR.
-
-#include "IonAllocPolicy.h"
+#ifndef jsion_lir_x86_h__
+#define jsion_lir_x86_h__
 
 namespace js {
 namespace ion {
 
-class MIRGenerator;
-class MIRGraph;
-
-bool
-ApplyTypeInformation(MIRGraph &graph);
-
-bool
-ReorderBlocks(MIRGraph &graph);
-
-} // namespace js
 } // namespace ion
+} // namespace js
 
-#endif // jsion_ion_analysis_h__
+#endif // jsion_lir_x86_h__
 

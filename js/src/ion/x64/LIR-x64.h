@@ -39,27 +39,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
+#ifndef jsion_lir_x64_h__
+#define jsion_lir_x64_h__
 
-// This file declares various analysis passes that operate on MIR.
-
-#include "IonAllocPolicy.h"
+#include "ion/TypeOracle.h"
 
 namespace js {
 namespace ion {
 
-class MIRGenerator;
-class MIRGraph;
+// Given a typed input, returns an untyped box.
+class LBox : public LInstructionHelper<1, 1, 0>
+{
+    MIRType type_;
 
-bool
-ApplyTypeInformation(MIRGraph &graph);
+  public:
+    LIR_HEADER(Box);
 
-bool
-ReorderBlocks(MIRGraph &graph);
+    LBox(MIRType type, const LAllocation &payload)
+      : type_(type)
+    {
+        setOperand(0, payload);
+    }
+};
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
-#endif // jsion_ion_analysis_h__
+#endif // jsion_lir_x64_h__
 

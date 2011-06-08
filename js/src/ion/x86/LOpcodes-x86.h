@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=79:
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=0 ft=c:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -39,27 +39,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
+#ifndef jsion_lir_opcodes_x86_h__
+#define jsion_lir_opcodes_x86_h__
 
-// This file declares various analysis passes that operate on MIR.
+#define LIR_CPU_OPCODE_LIST(_)
 
-#include "IonAllocPolicy.h"
-
-namespace js {
-namespace ion {
-
-class MIRGenerator;
-class MIRGraph;
-
-bool
-ApplyTypeInformation(MIRGraph &graph);
-
-bool
-ReorderBlocks(MIRGraph &graph);
-
-} // namespace js
-} // namespace ion
-
-#endif // jsion_ion_analysis_h__
+#endif // jsion_lir_opcodes_x86_h__
 

@@ -38,21 +38,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "IonBuilder.h"
 #include "MIR.h"
 #include "MIRGraph.h"
 
 using namespace js;
 using namespace js::ion;
-
-MIRGenerator::MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fun, MIRGraph &graph)
-  : script(script),
-    pc(NULL),
-    temp_(temp),
-    fun_(fun),
-    graph_(graph)
-{
-    nslots_ = script->nslots + (fun ? fun->nargs + 2 : 0);
-}
 
 static void
 PrintOpcodeName(FILE *fp, MInstruction::Opcode op)

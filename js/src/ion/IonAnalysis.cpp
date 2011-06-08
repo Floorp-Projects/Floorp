@@ -466,15 +466,3 @@ ion::ReorderBlocks(MIRGraph &graph)
     return true;
 }
 
-void
-ion::RenumberInstructions(MIRGraph &graph)
-{
-    graph.resetInstructionNumber();
-
-    for (size_t i = 0; i < graph.numBlocks(); i++) {
-        MBasicBlock *block = graph.getBlock(i);
-        for (MInstructionIterator i = block->begin(); i != block->end(); i++)
-            graph.allocInstructionId(*i);
-    }
-}
-

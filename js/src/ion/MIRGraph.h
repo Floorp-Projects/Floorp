@@ -42,15 +42,94 @@
 #ifndef jsion_mirgraph_h__
 #define jsion_mirgraph_h__
 
-#include "MIR.h"
+// This file declares the data structures used to build a control-flow graph
+// containing MIR.
+
+#include "IonAllocPolicy.h"
 
 namespace js {
 namespace ion {
 
-typedef HashMap<uint32,
-                MInstruction *,
-                DefaultHasher<uint32>,
-                IonAllocPolicy> InstructionMap;
+class MBasicBlock;
+class MIRGraph;
+
+class MIRGenerator
+{
+  public:
+    MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fun, MIRGraph &graph);
+
+    TempAllocator &temp() {
+        return temp_;
+    }
+    JSFunction *fun() const {
+        return fun_;
+    }
+    uint32 nslots() const {
+        return nslots_;
+    }
+    uint32 nargs() const {
+        return fun()->nargs;
+    }
+    uint32 nlocals() const {
+        return script->nfixed;
+    }
+    uint32 calleeSlot() const {
+        JS_ASSERT(fun());
+        return 0;
+    }
+    uint32 thisSlot() const {
+        JS_ASSERT(fun());
+        return 1;
+    }
+    uint32 firstArgSlot() const {
+        JS_ASSERT(fun());
+        return 2;
+    }
+    uint32 argSlot(uint32 i) const {
+        return firstArgSlot() + i;
+    }
+    uint32 firstLocalSlot() const {
+        return (fun() ? fun()->nargs + 2 : 0);
+    }
+    uint32 localSlot(uint32 i) const {
+        return firstLocalSlot() + i;
+    }
+    uint32 firstStackSlot() const {
+        return firstLocalSlot() + nlocals();
+    }
+    uint32 stackSlot(uint32 i) const {
+        return firstStackSlot() + i;
+    }
+    MIRGraph &graph() {
+        return graph_;
+    }
+    bool ensureBallast() {
+        return temp().ensureBallast();
+    }
+
+    template <typename T>
+    T * allocate(size_t count = 1)
+    {
+        return reinterpret_cast<T *>(temp().allocate(sizeof(T) * count));
+    }
+
+    // Set an error state and optional message. This is used to propagate
+    // errors in tricky places, and the error status can be checked before
+    // validating or generating code.
+    bool error(const char *message = NULL);
+
+  public:
+    JSScript *script;
+
+  protected:
+    jsbytecode *pc;
+    TempAllocator &temp_;
+    JSFunction *fun_;
+    uint32 nslots_;
+    MIRGraph &graph_;
+    bool error_;
+    const char *message_;
+};
 
 class MIRGraph
 {
@@ -87,6 +166,8 @@ class MIRGraph
 };
 
 typedef InlineList<MInstruction>::iterator MInstructionIterator;
+
+class LBlock;
 
 class MBasicBlock : public TempObject
 {
@@ -269,6 +350,14 @@ class MBasicBlock : public TempObject
         return entrySnapshot()->getInput(i);
     }
 
+    LBlock *getLir() const {
+        return lir_;
+    }
+    void assignLir(LBlock *lir) {
+        JS_ASSERT(!lir_);
+        lir_ = lir;
+    }
+
   private:
     MIRGenerator *gen_;
     InlineList<MInstruction> instructions_;
@@ -279,6 +368,7 @@ class MBasicBlock : public TempObject
     MControlInstruction *lastIns_;
     jsbytecode *pc_;
     uint32 id_;
+    LBlock *lir_;
 
     // If not NULL, the successor block of the loop for which this block is the
     // header.
