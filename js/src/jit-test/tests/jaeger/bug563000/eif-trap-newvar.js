@@ -3,8 +3,8 @@ setDebug(true);
 
 function nop(){}
 function caller(obj) {
-  assertJit();
+  eval();
   return x;
 }
-trap(caller, 9, "var x = 'success'; nop()");
+trap(caller, 13, "var x = 'success'; nop()");
 assertEq(caller(this), "success");
