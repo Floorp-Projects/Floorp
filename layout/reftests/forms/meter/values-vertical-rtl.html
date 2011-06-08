@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <style>
+    meter {
+      -moz-orient: vertical;
+    }
+  </style>
+  <body dir='rtl'>
+    <meter value="1.0"></meter>
+    <meter value="0.0"></meter>
+    <meter value="0.1"></meter>
+    <meter value="0.5"></meter>
+    <meter value="-1"></meter>
+    <meter value="50"></meter>
+		<!-- focus on max -->
+    <meter value="42" max="100"></meter>
+    <meter value="42" max="1"></meter>
+    <meter value="42" max="-1"></meter>
+    <meter value="0.1" max="1"></meter>
+		<!-- focus on min -->
+		<meter value="50" min="20" max="100"></meter>
+    <meter value="50" min="1" ></meter>
+    <meter value="0.1" min="2" ></meter>
+    <meter value="0.1" min="0.1"></meter>
+		<meter value="0.1" min="-1"></meter>
+		<!-- focus on low -->
+		<meter value="50" low="20" max="100"></meter>
+		<meter value="20" low="50" max="100"></meter>	
+    <meter value="0.1" low="-1"></meter>
+    <meter value="0.1" low="0"></meter>
+		<!-- focus on high -->
+		<meter value="20" high="50" max="100"></meter>
+    <meter value="50" min="20" high="1" max="100"></meter>	
+		<meter value="0.1" low="0.3" high="0.2"></meter>	
+    <meter value="0.1" high="-1"></meter>
+    <meter value="0.1" high="2"></meter>
+		<!-- focus on optimum -->
+		<meter value="50" max="100" optimum="20"></meter>
+		<meter value="20" max="100" low="40" high="50" optimum="20"></meter>
+		<meter value="90" max="100" low="40" high="50" optimum="20"></meter>
+		<meter value="10" max="100" low="20" high="40" optimum="50"></meter>
+    <meter value="0.1" optimum="50"></meter>
+    <meter value="0.1" optimum="-1"></meter>
+		<meter value="0.1" optimum="1"></meter>
+  </body>
+</html>
