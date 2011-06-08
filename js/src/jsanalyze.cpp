@@ -292,7 +292,7 @@ Script::analyze(JSContext *cx, JSScript *script)
     JS_ASSERT(!code && !locals);
     this->script = script;
 
-    JS_InitArenaPool(&pool, "script_analyze", 256, 8, NULL);
+    JS_InitArenaPool(&pool, "script_analyze", 256, 8);
 
     unsigned length = script->length;
     unsigned nfixed = localCount();

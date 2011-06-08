@@ -295,7 +295,6 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
   JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
-  JS_SetScriptStackQuota(cx, 25 * sizeof(size_t) * 1024 * 1024);
 
   JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_ANONFUNFIX | JSOPTION_PRIVATE_IS_NSISUPPORTS);
   JS_SetVersion(cx, JSVERSION_LATEST);
