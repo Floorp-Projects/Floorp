@@ -164,7 +164,7 @@ class JS_FRIEND_API(ForceFrame)
     JSContext * const context;
     JSObject * const target;
   private:
-    DummyFrameGuard frame;
+    DummyFrameGuard *frame;
 
   public:
     ForceFrame(JSContext *cx, JSObject *target);
