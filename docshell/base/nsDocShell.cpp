@@ -3945,6 +3945,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             // Channel refused to load from an unrecognized content type.
             error.AssignLiteral("unsafeContentType");
             break;
+        case NS_ERROR_CORRUPTED_CONTENT:
+            // Broken Content Detected. e.g. Content-MD5 check failure.
+            error.AssignLiteral("corruptedContentError");
+            break;
         }
     }
 
@@ -6124,6 +6128,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     //
     if (url && NS_FAILED(aStatus)) {
         if (aStatus == NS_ERROR_FILE_NOT_FOUND ||
+            aStatus == NS_ERROR_CORRUPTED_CONTENT ||
             aStatus == NS_ERROR_INVALID_CONTENT_ENCODING) {
             DisplayLoadError(aStatus, url, nsnull, aChannel);
             return NS_OK;
