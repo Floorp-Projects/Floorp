@@ -74,8 +74,6 @@ struct nsID {
    */
 
   inline PRBool Equals(const nsID& other) const {
-    PR_STATIC_ASSERT(sizeof(nsID) == 64);
-
     // First cast to void* in order to silence the alignment warnings.
     return
       ((PRUint64*)(void*) &m0)[0] == ((PRUint64*)(void*) &other.m0)[0] &&
@@ -107,6 +105,9 @@ struct nsID {
 
   //@}
 };
+
+// Ensure that we didn't accidentally change the size of nsID.
+PR_STATIC_ASSERT(sizeof(nsID) == 16);
 
 /*
  * Class IDs
