@@ -126,6 +126,7 @@ enum LC_TMBits {
  * - ACCSET_TYPEMAP:       All typemaps form a single region.
  * - ACCSET_FCSLOTS:       All fcslots arrays form a single region.
  * - ACCSET_ARGS_DATA:     All Arguments data arrays form a single region.
+ * - ACCSET_SEG:           All StackSegment structs.
  */
 static const nanojit::AccSet ACCSET_STATE         = (1 <<  0);
 static const nanojit::AccSet ACCSET_STACK         = (1 <<  1);
@@ -158,8 +159,9 @@ static const nanojit::AccSet ACCSET_STRING_MCHARS = (1 << 24);
 static const nanojit::AccSet ACCSET_TYPEMAP       = (1 << 25);
 static const nanojit::AccSet ACCSET_FCSLOTS       = (1 << 26);
 static const nanojit::AccSet ACCSET_ARGS_DATA     = (1 << 27);
+static const nanojit::AccSet ACCSET_SEG           = (1 << 28);
 
-static const uint8_t TM_NUM_USED_ACCS = 28; // number of access regions used by TraceMonkey
+static const uint8_t TM_NUM_USED_ACCS = 29; // number of access regions used by TraceMonkey
 
 /*
  * An Address describes everything about a loaded/stored memory location.  One
@@ -427,8 +429,11 @@ class Writer
         name(w.ldpContextFieldHelper(cx_ins, offsetof(JSContext, fieldname), LOAD_CONST), \
              #fieldname)
     nj::LIns *ldpContextRegs(nj::LIns *cx) const {
-        int32 offset = offsetof(JSContext, stack) + ContextStack::offsetOfRegs();
-        return name(ldpContextFieldHelper(cx, offset, nj::LOAD_NORMAL),"regs");
+        int32 segOff = offsetof(JSContext, stack) + ContextStack::offsetOfSeg();
+        nj::LIns *seg = ldpContextFieldHelper(cx, segOff, nj::LOAD_CONST);
+        int32 regsOff = StackSegment::offsetOfRegs();
+        return name(lir->insLoad(nj::LIR_ldp, seg, regsOff, ACCSET_SEG, nj::LOAD_CONST), "cx->regs()");
+
     }
 
     nj::LIns *stContextField(nj::LIns *value, nj::LIns *cx, int32 offset) const {

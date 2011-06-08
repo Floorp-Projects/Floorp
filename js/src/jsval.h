@@ -831,8 +831,8 @@ extern "C++"
 #else /* defined(JS_USE_JSVAL_JSID_STRUCT_TYPES) */
 
 /* Use different primitive types so overloading works. */
-typedef JSVAL_ALIGNMENT uint64 jsval;
-typedef ptrdiff_t              jsid;
+typedef JSVAL_ALIGNMENT JSUint64 jsval;
+typedef ptrdiff_t                jsid;
 
 /* Internal helper macros */
 #define JSVAL_BITS(v)    (v)
