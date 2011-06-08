@@ -1440,7 +1440,7 @@ JS_GetFrameScript(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
 {
-    return Valueify(fp)->pcQuadratic(cx);
+    return Valueify(fp)->pcQuadratic(cx->stack);
 }
 
 JS_PUBLIC_API(JSStackFrame *)
@@ -2495,9 +2495,9 @@ jstv_Filename(JSStackFrame *fp)
 inline uintN
 jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 {
-    while (fp && fp->pcQuadratic(cx) == NULL)
+    while (fp && fp->pcQuadratic(cx->stack) == NULL)
         fp = fp->prev();
-    return (fp && fp->pcQuadratic(cx)) ? js_FramePCToLineNumber(cx, fp) : 0;
+    return (fp && fp->pcQuadratic(cx->stack)) ? js_FramePCToLineNumber(cx, fp) : 0;
 }
 
 /* Collect states here and distribute to a matching buffer, if any */

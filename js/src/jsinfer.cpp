@@ -2973,7 +2973,7 @@ TypeObject::clearNewScript(JSContext *cx)
                         if (seg.currentFrame() == fp)
                             break;
                         fp = seg.computeNextFrame(fp);
-                        pc = fp->pcQuadratic(cx);
+                        pc = fp->pcQuadratic(cx->stack);
                     } else {
                         /* This call has already finished. */
                         depth = 1;
@@ -4722,7 +4722,7 @@ MarkTypeCallerUnexpectedSlow(JSContext *cx, jstype type)
 
     jsbytecode *pc;
     JSScript *script = cx->stack.currentScript(&pc);
-    if (!script)
+    if (!script || !pc)
         return;
 
     /*

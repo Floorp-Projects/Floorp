@@ -452,7 +452,7 @@ StackFrame::initEvalFrame(JSContext *cx, JSScript *script, StackFrame *prev, uin
 
     scopeChain_ = &prev->scopeChain();
     prev_ = prev;
-    prevpc_ = prev->pcQuadratic(cx, NULL, &prevInline_);
+    prevpc_ = prev->pcQuadratic(cx->stack, NULL, &prevInline_);
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     setAnnotation(prev->annotation());
@@ -1110,7 +1110,7 @@ ContextStack::currentScript(jsbytecode **ppc) const
 #endif
 
     if (ppc)
-        *ppc = regs_->pc;
+        *ppc = fp->pcQuadratic(*this);
     return fp->script();
 }
 
