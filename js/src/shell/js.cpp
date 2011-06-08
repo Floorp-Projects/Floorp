@@ -720,7 +720,7 @@ ParseZealArg(JSContext *cx, const char *arg)
             compartment = atoi(p + 1);
     }
 
-    JS_SetGCZeal(cx, zeal, freq, !!compartment);
+    JS_SetGCZeal(cx, (uint8)zeal, freq, !!compartment);
 }
 #endif
 
