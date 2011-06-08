@@ -5980,6 +5980,25 @@ JSObject::callMethod(JSContext *cx, jsid id, uintN argc, Value *argv, Value *vp)
            ExternalInvoke(cx, ObjectValue(*this), fval, argc, argv, vp);
 }
 
+static bool
+CloneFunctionForSetMethod(JSContext *cx, Value *vp)
+{
+    JSObject *funobj = &vp->toObject();
+    JSFunction *fun = funobj->getFunctionPrivate();
+
+    /*
+     * If fun is already different from the original JSFunction, it does not
+     * need to be cloned again.
+     */
+    if (fun == funobj) {
+        funobj = CloneFunctionObject(cx, fun, fun->parent, true);
+        if (!funobj)
+            return false;
+        vp->setObject(*funobj);
+    }
+    return true;
+}
+
 JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                      Value *vp, JSBool strict)
@@ -6075,6 +6094,12 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
              * We found id in a prototype object: prepare to share or shadow.
              */
             if (!shape->shadowable()) {
+                if (defineHow & DNP_SET_METHOD) {
+                    JS_ASSERT(!shape->isMethod());
+                    if (!CloneFunctionForSetMethod(cx, vp))
+                        return false;
+                }
+
                 if (defineHow & DNP_CACHE_RESULT)
                     JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, pobj, shape);
 
@@ -6136,15 +6161,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                 shape = obj->methodShapeChange(cx, *shape);
                 if (!shape)
                     return false;
-
-                JSObject *funobj = &vp->toObject();
-                JSFunction *fun = funobj->getFunctionPrivate();
-                if (fun == funobj) {
-                    funobj = CloneFunctionObject(cx, fun, fun->parent, true);
-                    if (!funobj)
-                        return JS_FALSE;
-                    vp->setObject(*funobj);
-                }
+                if (!CloneFunctionForSetMethod(cx, vp))
+                    return false;
             }
             return identical || js_NativeSet(cx, obj, shape, false, strict, vp);
         }
