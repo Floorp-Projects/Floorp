@@ -1,0 +1,12 @@
+<!ENTITY firstrun.title                "Welcome to &brandShortName;">
+<!ENTITY firstrun.heading2             "Welcome to &brandShortName;">
+<!ENTITY firstrun.sync2.title          "Sync Up">
+<!ENTITY firstrun.sync2.description    "Login with your Sync account info and share your history, passwords, bookmarks &amp; tabs between your desktop and mobile">
+<!ENTITY firstrun.addons2.title        "Customize">
+<!ENTITY firstrun.addons2.description  "Discover and install add-ons to add new functionality to your &brandShortName;">
+<!ENTITY firstrun.home2.title          "Browse">
+<!ENTITY firstrun.home2.description    "Skip all this and go to your personalized Start page to start browsing the web">
+<!ENTITY firstrun.features             "See More Features">
+<!ENTITY firstrun.faq                  "FAQ">
+<!ENTITY firstrun.privacy              "Privacy Policy">
+<!ENTITY firstrun.follow               "Follow us on:">

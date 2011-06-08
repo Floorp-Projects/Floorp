@@ -1430,6 +1430,10 @@ setting {
   min-width: 5.5em;
 }
 
+.syncsetup-link {
+  text-decoration: underline;
+}
+
 .syncsetup-label {
   color: @color_text_default@;
 }
