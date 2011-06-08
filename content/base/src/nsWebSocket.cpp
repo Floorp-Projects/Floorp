@@ -314,6 +314,7 @@ nsWebSocketEstablishedConnection::PrintErrorOnConsole(const char *aBundleURI,
                                                       PRUint32 aFormatStringsLen)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  NS_ABORT_IF_FALSE(mOwner, "No owner");
 
   nsresult rv;
 
@@ -365,6 +366,8 @@ nsresult
 nsWebSocketEstablishedConnection::Close()
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  if (!mOwner)
+    return NS_OK;
 
   // Disconnect() can release this object, so we keep a
   // reference until the end of the method
@@ -458,6 +461,8 @@ nsresult
 nsWebSocketEstablishedConnection::UpdateMustKeepAlive()
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  NS_ABORT_IF_FALSE(mOwner, "No owner");
+
   mOwner->UpdateMustKeepAlive();
   return NS_OK;
 }
@@ -571,6 +576,9 @@ nsWebSocketEstablishedConnection::GetInterface(const nsIID &aIID,
                                                void **aResult)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
 
   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
       aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
