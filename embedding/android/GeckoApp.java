@@ -581,7 +581,7 @@ abstract public class GeckoApp
         Log.i("GeckoAppJava", "Update is available!");
 
         // Launch APK
-        File updateFileToRun = new File(updateDir + getPackageName() + "-update.apk");
+        File updateFileToRun = new File(updateDir, getPackageName() + "-update.apk");
         try {
             if (updateFile.renameTo(updateFileToRun)) {
                 String amCmd = "/system/bin/am start -a android.intent.action.VIEW " +
