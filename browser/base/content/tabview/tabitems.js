@@ -379,7 +379,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
     } else {
       // create tab by double click is handled in UI_init().
-      if (!TabItems.creatingNewOrphanTab)
+      if (!UI.creatingNewOrphanTab)
         GroupItems.newTab(self, {immediately: true});
     }
 
@@ -563,7 +563,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         });
         group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
       }
-      group.newTab();
+      group.newTab(null, { closedLastTab: true });
     }
     // when "TabClose" event is fired, the browser tab is about to close and our 
     // item "close" is fired before the browser tab actually get closed. 
@@ -665,6 +665,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
       if (self.parent && self.parent.expanded)
         self.parent.collapse();
+
+      self._sendToSubscribers("zoomedIn");
     }
 
     let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
@@ -803,7 +805,6 @@ let TabItems = {
   _lastUpdateTime: Date.now(),
   _eventListeners: [],
   _pauseUpdateForTest: false,
-  creatingNewOrphanTab: false,
   tempCanvas: null,
   _reconnectingPaused: false,
   tabItemPadding: {},
