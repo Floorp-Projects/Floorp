@@ -43,6 +43,7 @@
 #include "ion/IonLowering.h"
 #include "ion/IonLowering-inl.h"
 #include "Lowering-x86.h"
+#include "Lowering-x86-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -60,8 +61,60 @@ LIRGeneratorX86::visitConstant(MConstant *ins)
 bool
 LIRGeneratorX86::visitBox(MBox *box)
 {
-    // We always emit a box directly at its uses.
-    return true;
+    if (!box->inWorklist())
+        return emitAtUses(box);
+
+    // If something really, really wants a box - and it's not snooping for
+    // constants, then we go ahead and create two defs. Creating two defs
+    // manually is almost never needed so this is a special case. The first is
+    // a constant index containing the type, and the second is the payload.
+    MInstruction *inner = box->getInput(0);
+
+    uint32 type_vreg = nextVirtualRegister();
+    uint32 data_vreg = nextVirtualRegister();
+    if (data_vreg >= MAX_VIRTUAL_REGISTERS)
+        return false;
+
+    box->setId(type_vreg);
+
+    LDefinition out_type(LDefinition::TYPE, LDefinition::PRESET);
+    out_type.setVirtualRegister(type_vreg);
+    out_type.setOutput(LConstantIndex(inner->type()));
+
+    LDefinition out_payload;
+    if (inner->isConstant()) {
+        out_payload = LDefinition(LDefinition::PAYLOAD, LDefinition::PRESET);
+        out_payload.setVirtualRegister(data_vreg);
+        out_payload.setOutput(LAllocation(inner->toConstant()->vp()));
+    } else {
+        out_payload = LDefinition(data_vreg, LDefinition::PAYLOAD);
+    }
+
+    return add(new LBox(useOrConstant(inner), out_type, out_payload));
+}
+
+bool
+LIRGeneratorX86::visitUnbox(MUnbox *unbox)
+{
+    // An unbox on x86 reads in a type tag (either in memory or a register) and
+    // a payload. Unlike most instructions conusming a box, we ask for the type
+    // second, so that the result can re-use the first input.
+    MInstruction *inner = unbox->getInput(0);
+
+    if (unbox->type() == MIRType_Double) {
+        LBoxToDouble *lir = new LBoxToDouble;
+        startUsing(inner);
+        lir->setOperand(0, usePayloadInRegister(inner));
+        lir->setOperand(1, useType(inner));
+        lir->setTemp(0, temp(LDefinition::DOUBLE));
+        stopUsing(inner);
+        return define(lir, unbox, LDefinition::DEFAULT);
+    }
+
+    LUnbox *lir = new LUnbox(unbox->type());
+    lir->setOperand(0, usePayloadInRegister(inner));
+    lir->setOperand(1, useType(inner));
+    return define(lir, unbox, LDefinition::CAN_REUSE_INPUT);
 }
 
 bool

@@ -42,7 +42,10 @@
 #ifndef jsion_lir_opcodes_x86_h__
 #define jsion_lir_opcodes_x86_h__
 
-#define LIR_CPU_OPCODE_LIST(_)
+#define LIR_CPU_OPCODE_LIST(_)  \
+    _(Unbox)                    \
+    _(BoxToDouble)              \
+    _(Box)
 
 #endif // jsion_lir_opcodes_x86_h__
 

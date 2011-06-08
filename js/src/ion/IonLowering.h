@@ -100,8 +100,24 @@ class LIRGenerator : public MInstructionVisitor
     }
 
   protected:
+    // A backend can decide that an instruction should be emitted at its uses,
+    // rather than at its definition. To communicate this, set the
+    // instruction's virtual register set to 0. When using the instruction,
+    // its virtual register is temporarily reassigned. To know to clear it
+    // after constructing the use information, the worklist bit is temporarily
+    // unset.
+    //
+    // The backend can use the worklist bit to determine whether or not a
+    // definition should be created.
     bool emitAtUses(MInstruction *mir);
 
+    // The lowest-level calls to use, those that do not wrap another call to
+    // use(), must prefix grabbing virtual register IDs by these calls.
+    inline void startUsing(MInstruction *mir);
+    inline void stopUsing(MInstruction *mir);
+
+    // These all create a use of a virtual register, with an optional
+    // allocation policy.
     LUse use(MInstruction *mir, LUse policy);
     inline LUse use(MInstruction *mir);
     inline LUse useRegister(MInstruction *mir);
@@ -110,12 +126,16 @@ class LIRGenerator : public MInstructionVisitor
     inline LAllocation useOrConstant(MInstruction *mir);
     inline LAllocation useRegisterOrConstant(MInstruction *mir);
 
+    // These create temporary register requests.
+    inline LDefinition temp(LDefinition::Type type);
+
     template <size_t X, size_t Y>
     inline bool define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir,
                         const LDefinition &def);
 
     template <size_t X, size_t Y>
-    inline bool define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir);
+    inline bool define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir,
+                       LDefinition::Policy policy = LDefinition::DEFAULT);
 
     template <size_t X, size_t Y>
     bool defineBox(LInstructionHelper<BOX_PIECES, X, Y> *lir, MInstruction *mir,

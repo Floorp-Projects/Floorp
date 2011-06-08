@@ -197,7 +197,6 @@ class LUse : public LAllocation
     enum Policy {
         ANY,                // Register or stack slot.
         REGISTER,           // Must have a register.
-        TEMPORARY,          // Temporary register, killed at the end.
         FIXED               // A specific register is required.
     };
 
@@ -214,6 +213,10 @@ class LUse : public LAllocation
     }
 
   public:
+    LUse(uint32 vreg, Policy policy, uint32 flags = 0) {
+        set(policy, 0, flags);
+        setVirtualRegister(vreg);
+    }
     LUse(Policy policy, uint32 flags = 0) {
         set(policy, 0, flags);
     }
@@ -348,11 +351,22 @@ class LDefinition
     // unless the policy specifies that an input can be re-used and that input
     // is a stack slot.
     enum Policy {
-        DEFAULT,                    // Register policy.
-        CAN_REUSE_FIRST_INPUT,      // The first input can be re-used as the output.
-        MUST_REUSE_FIRST_INPUT,     // The first input MUST be re-used as the output.
-        PRESET                      // The policy is fixed, predetermined by the
-                                    // allocation field.
+        // A random register of an appropriate class will be assigned.
+        DEFAULT,
+
+        // The policy is predetermined by the LAllocation attached to this
+        // definition. The allocation may be:
+        //   * A register, which may not appear as any fixed temporary.
+        //   * A stack slot or argument.
+        //   * A constant.
+        //
+        // Register allocation will not modify a preset allocation.
+        PRESET,
+
+        // With these policies, one definition may re-use the first input
+        // allocation.
+        CAN_REUSE_INPUT,
+        MUST_REUSE_INPUT
     };
 
     enum Type {
@@ -443,7 +457,7 @@ class LInstruction : public TempObject,
     // Returns information about temporary registers needed. Each temporary
     // register is an LUse with a TEMPORARY policy, or a fixed register.
     virtual size_t numTemps() const = 0;
-    virtual LAllocation *getTemp(size_t index) = 0;
+    virtual LDefinition *getTemp(size_t index) = 0;
 
   public:
     // Opcode testing and casts.
@@ -461,7 +475,7 @@ class LInstructionHelper : public LInstruction
 {
     FixedArityList<LDefinition, Defs> defs_;
     FixedArityList<LAllocation, Operands> operands_;
-    FixedArityList<LAllocation, Temps> temps_;
+    FixedArityList<LDefinition, Temps> temps_;
 
   public:
     size_t numDefs() const {
@@ -479,7 +493,7 @@ class LInstructionHelper : public LInstruction
     size_t numTemps() const {
         return Temps;
     }
-    LAllocation *getTemp(size_t index) {
+    LDefinition *getTemp(size_t index) {
         return &temps_[index];
     }
 
@@ -489,6 +503,16 @@ class LInstructionHelper : public LInstruction
     void setOperand(size_t index, const LAllocation &a) {
         operands_[index] = a;
     }
+    void setTemp(size_t index, const LDefinition &a) {
+        temps_[index] = a;
+    }
+};
+
+// A guard record captures the live state at an instruction, which the register
+// allocator can fill in for deoptimization.
+class LRecord
+{
+  public:
 };
 
 LUse *LAllocation::toUse() {
