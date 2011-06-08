@@ -885,13 +885,6 @@ jsdtoa.o: jsdtoa.cpp Makefile.in
 	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 endif
 
-# for compiler bug (http://support.microsoft.com/kb/982107) for MSVC x64
-ifeq (,$(filter-out 1400 1500,$(_MSC_VER)))
-ifeq ($(OS_TEST),x86_64)
-ASFILES += jswin64.asm
-endif
-endif
-
 export:: jsautocfg.h
 
 ifeq (,$(CROSS_COMPILE)$(GNU_CC)$(filter-out WINNT,$(OS_ARCH)))
