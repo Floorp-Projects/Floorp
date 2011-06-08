@@ -288,12 +288,18 @@ FakeInputStream::CheckTest(nsACString& aResult)
   return !strcmp(aResult.BeginReading(), mTest->mResult) ? true : false;
 }
 
+#ifdef XP_WIN
+#define NS_tstrcmp wcscmp
+#else
+#define NS_tstrcmp strcmp
+#endif
+
 bool
 FakeInputStream::CheckTest(nsAString& aResult)
 {
-  return !wcscmp(aResult.BeginReading(),
-                 NS_ConvertASCIItoUTF16(mTest->mResult).BeginReading())
-                 ? true : false;
+  return !NS_tstrcmp(aResult.BeginReading(),
+                     NS_ConvertASCIItoUTF16(mTest->mResult).BeginReading())
+                     ? true : false;
 }
 
 int main(int argc, char** argv)
