@@ -39,13 +39,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "MIRGraph.h"
 #include "Ion.h"
+#include "MIR.h"
+#include "MIRGraph.h"
+#include "IonBuilder.h"
 #include "jsemit.h"
 #include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::ion;
+
+MIRGenerator::MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fun, MIRGraph &graph)
+  : script(script),
+    pc(NULL),
+    temp_(temp),
+    fun_(fun),
+    graph_(graph),
+    error_(false),
+    message_(NULL)
+{
+    nslots_ = script->nslots + (fun ? fun->nargs + 2 : 0);
+}
+
+bool
+MIRGenerator::error(const char *message)
+{
+    error_ = true;
+    message_ = message;
+    return false;
+}
 
 bool
 MIRGraph::addBlock(MBasicBlock *block)
@@ -79,6 +101,7 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     stackPosition_(gen->firstStackSlot()),
     lastIns_(NULL),
     pc_(pc),
+    lir_(NULL),
     loopSuccessor_(NULL),
     mark_(false)
 {

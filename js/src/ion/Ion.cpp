@@ -40,6 +40,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Ion.h"
+#include "IonAnalysis.h"
+#include "IonBuilder.h"
+#include "IonSpew.h"
+#include "IonLIR.h"
+
+#if defined(JS_CPU_X86)
+# include "x86/Lowering-x86.h"
+#elif defined(JS_CPU_X64)
+# include "x64/Lowering-x64.h"
+#elif defined(JS_CPU_ARM)
+# include "arm/Lowering-arm.h"
+#endif
 
 using namespace js;
 using namespace js::ion;
@@ -56,7 +68,7 @@ IonContext::IonContext(JSContext *cx, TempAllocator *temp)
     temp(temp)
 {
     SetIonContext(this);
-};
+}
 
 IonContext::~IonContext()
 {
@@ -99,4 +111,37 @@ bool ion::SetIonContext(IonContext *ctx)
     return true;
 }
 #endif
+
+bool
+ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
+{
+    TempAllocator temp(&cx->tempPool);
+    IonContext ictx(cx, &temp);
+
+    JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
+
+    MIRGraph graph;
+
+    DummyOracle oracle;
+    C1Spewer spew(graph, script);
+    IonBuilder builder(cx, script, fun, temp, graph, &oracle);
+    spew.enable("/tmp/ion.cfg");
+
+    if (!builder.build())
+        return false;
+    spew.spew("Build SSA");
+
+    if (!ReorderBlocks(graph))
+        return false;
+    spew.spew("Reorder Blocks");
+
+    if (!ApplyTypeInformation(graph))
+        return false;
+
+    LIRBuilder lirgen(&builder, graph);
+    if (!lirgen.generate())
+        return false;
+
+    return false;
+}
 

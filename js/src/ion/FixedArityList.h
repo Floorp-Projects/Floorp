@@ -39,27 +39,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
-
-// This file declares various analysis passes that operate on MIR.
-
-#include "IonAllocPolicy.h"
+#ifndef jsion_ion_fixed_arity_list_h__
+#define jsion_ion_fixed_arity_list_h__
 
 namespace js {
 namespace ion {
 
-class MIRGenerator;
-class MIRGraph;
+template <typename T, size_t Arity>
+class FixedArityList
+{
+    T list_[Arity];
 
-bool
-ApplyTypeInformation(MIRGraph &graph);
+  public:
+    T &operator [](size_t index) {
+        JS_ASSERT(index < Arity);
+        return list_[index];
+    }
+    const T &operator [](size_t index) const {
+        JS_ASSERT(index < Arity);
+        return list_[index];
+    }
+};
 
-bool
-ReorderBlocks(MIRGraph &graph);
+template <typename T>
+class FixedArityList<T, 0>
+{
+  public:
+    T &operator [](size_t index) {
+        JS_NOT_REACHED("no items");
+        static T *operand = NULL;
+        return *operand;
+    }
+    const T &operator [](size_t index) const {
+        JS_NOT_REACHED("no items");
+        static T *operand = NULL;
+        return *operand;
+    }
+};
 
-} // namespace js
+
 } // namespace ion
+} // namespace js
 
-#endif // jsion_ion_analysis_h__
+#endif // jsion_ion_fixed_arity_list_h__
 
