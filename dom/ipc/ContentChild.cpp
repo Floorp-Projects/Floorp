@@ -269,7 +269,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
     SendPCrashReporterConstructor(CrashReporter::CurrentThreadId(),
                                   XRE_GetProcessType());
 #if defined(ANDROID)
-    PCrashReporterChild* crashreporter = ManagedPCrashReporter()[0];
+    PCrashReporterChild* crashreporter = ManagedPCrashReporterChild()[0];
 
     InfallibleTArray<Mapping> mappings;
     const struct mapping_info *info = getLibraryMapping();
