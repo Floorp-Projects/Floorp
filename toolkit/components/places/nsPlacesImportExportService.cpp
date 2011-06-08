@@ -297,8 +297,8 @@ nsEscapeHTML(const char* string)
         default:
           *ptr++ = *string;
       }
-      *ptr = '\0';
     }
+    *ptr = '\0';
   }
   return escaped;
 }
@@ -750,8 +750,8 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
   // processed.
   PRInt32 attrCount = node.GetAttributeCount();
   frame.mLastContainerType = BookmarkImportFrame::Container_Normal;
-  if (!mFolderSpecified) {
-    for (PRInt32 i = 0; i < attrCount; i ++) {
+  for (PRInt32 i = 0; i < attrCount; ++i) {
+    if (!mFolderSpecified) {
       if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_TOOLBARFOLDER_LOWER)) {
         if (mIsImportDefaults)
           frame.mLastContainerType = BookmarkImportFrame::Container_Toolbar;
@@ -772,14 +772,15 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
           frame.mLastContainerType = BookmarkImportFrame::Container_Places;
         break;
       }
-      else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_DATE_ADDED_LOWER)) {
-        frame.mPreviousDateAdded =
-          ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
-      }
-      else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_LAST_MODIFIED_LOWER)) {
-        frame.mPreviousLastModifiedDate =
-          ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
-      }
+    }
+
+    if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_DATE_ADDED_LOWER)) {
+      frame.mPreviousDateAdded =
+        ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
+    }
+    else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_LAST_MODIFIED_LOWER)) {
+      frame.mPreviousLastModifiedDate =
+        ConvertImportedDateToInternalDate(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
     }
   }
   CurFrame().mPreviousText.Truncate();
