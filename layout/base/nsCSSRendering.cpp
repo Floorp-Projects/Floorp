@@ -67,7 +67,6 @@
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
 #include "nsIServiceManager.h"
-#include "nsIHTMLDocument.h"
 #include "nsLayoutUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsBlockFrame.h"
@@ -84,6 +83,8 @@
 #include "gfxDrawable.h"
 
 #include "nsCSSRenderingBorders.h"
+
+using namespace mozilla;
 
 /**
  * This is a small wrapper class to encapsulate image drawing that can draw an
@@ -378,14 +379,10 @@ static nscolor MakeBevelColor(mozilla::css::Side whichSide, PRUint8 style,
 static InlineBackgroundData* gInlineBGData = nsnull;
 
 // Initialize any static variables used by nsCSSRendering.
-nsresult nsCSSRendering::Init()
+void nsCSSRendering::Init()
 {
   NS_ASSERTION(!gInlineBGData, "Init called twice");
   gInlineBGData = new InlineBackgroundData();
-  if (!gInlineBGData)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return NS_OK;
 }
 
 // Clean up any global variables used by nsCSSRendering.
@@ -937,36 +934,43 @@ nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame)
   const nsStyleBackground* result = aForFrame->GetStyleBackground();
 
   // Check if we need to do propagation from BODY rather than HTML.
-  if (result->IsTransparent()) {
-    nsIContent* content = aForFrame->GetContent();
-    // The root element content can't be null. We wouldn't know what
-    // frame to create for aFrame.
-    // Use |GetOwnerDoc| so it works during destruction.
-    if (content) {
-      nsIDocument* document = content->GetOwnerDoc();
-      nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
-      if (htmlDoc) {
-        nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
-        // We need to null check the body node (bug 118829) since
-        // there are cases, thanks to the fix for bug 5569, where we
-        // will reflow a document with no body.  In particular, if a
-        // SCRIPT element in the head blocks the parser and then has a
-        // SCRIPT that does "document.location.href = 'foo'", then
-        // nsParser::Terminate will call |DidBuildModel| methods
-        // through to the content sink, which will call |StartLayout|
-        // and thus |InitialReflow| on the pres shell.  See bug 119351
-        // for the ugly details.
-        if (bodyContent) {
-          nsIFrame *bodyFrame = bodyContent->GetPrimaryFrame();
-          if (bodyFrame) {
-            return nsLayoutUtils::GetStyleFrame(bodyFrame);
-          }
-        }
-      }
-    }
+  if (!result->IsTransparent()) {
+    return aForFrame;
   }
 
-  return aForFrame;
+  nsIContent* content = aForFrame->GetContent();
+  // The root element content can't be null. We wouldn't know what
+  // frame to create for aFrame.
+  // Use |GetOwnerDoc| so it works during destruction.
+  if (!content) {
+    return aForFrame;
+  }
+
+  nsIDocument* document = content->GetOwnerDoc();
+  if (!document) {
+    return aForFrame;
+  }
+
+  dom::Element* bodyContent = document->GetBodyElement();
+  // We need to null check the body node (bug 118829) since
+  // there are cases, thanks to the fix for bug 5569, where we
+  // will reflow a document with no body.  In particular, if a
+  // SCRIPT element in the head blocks the parser and then has a
+  // SCRIPT that does "document.location.href = 'foo'", then
+  // nsParser::Terminate will call |DidBuildModel| methods
+  // through to the content sink, which will call |StartLayout|
+  // and thus |InitialReflow| on the pres shell.  See bug 119351
+  // for the ugly details.
+  if (!bodyContent) {
+    return aForFrame;
+  }
+
+  nsIFrame *bodyFrame = bodyContent->GetPrimaryFrame();
+  if (!bodyFrame) {
+    return aForFrame;
+  }
+
+  return nsLayoutUtils::GetStyleFrame(bodyFrame);
 }
 
 /**
@@ -1027,11 +1031,10 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
 
   // We should only look at the <html> background if we're in an HTML document
   nsIDocument* document = content->GetOwnerDoc();
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
-  if (!htmlDoc)
+  if (!document)
     return PR_TRUE;
 
-  nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
+  dom::Element* bodyContent = document->GetBodyElement();
   if (bodyContent != content)
     return PR_TRUE; // this wasn't the background that was propagated
 
@@ -1822,10 +1825,10 @@ ComputeRadialGradientLine(nsPresContext* aPresContext,
 
   // Compute gradient shape: the x and y radii of an ellipse.
   double radiusX, radiusY;
-  double leftDistance = PR_ABS(aLineStart->x);
-  double rightDistance = PR_ABS(aBoxSize.width - aLineStart->x);
-  double topDistance = PR_ABS(aLineStart->y);
-  double bottomDistance = PR_ABS(aBoxSize.height - aLineStart->y);
+  double leftDistance = NS_ABS(aLineStart->x);
+  double rightDistance = NS_ABS(aBoxSize.width - aLineStart->x);
+  double topDistance = NS_ABS(aLineStart->y);
+  double bottomDistance = NS_ABS(aBoxSize.height - aLineStart->y);
   switch (aGradient->mSize) {
   case NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE:
     radiusX = NS_MIN(leftDistance, rightDistance);

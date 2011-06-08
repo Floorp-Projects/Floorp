@@ -49,8 +49,8 @@ class nsContentList;
 class nsWrapperCache;
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x30001b0c, 0xdb25, 0x4318, \
-  { 0x85, 0xb8, 0x48, 0xb4, 0xea, 0x54, 0x8f, 0x23 } }
+{ 0x51a360fa, 0xd659, 0x4d85, \
+  { 0xa5, 0xc5, 0x4a, 0xbb, 0x0d, 0x97, 0x0f, 0x7a } }
 
 
 /**
@@ -163,12 +163,6 @@ public:
    * Disables getting and setting cookies
    */
   virtual void DisableCookieAccess() = 0;
-
-  /**
-   * Get the first <body> child of the root <html>, but don't do
-   * anything <frameset>-related (like nsIDOMHTMLDocument::GetBody).
-   */
-  virtual nsIContent* GetBodyContentExternal() = 0;
 
   /**
    * Called when this nsIHTMLDocument's editor is destroyed.

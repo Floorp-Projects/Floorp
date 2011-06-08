@@ -89,7 +89,7 @@ nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
   // capacity.  (Note that mCapacity is only 31 bits wide, so
   // multiplication promotes its type. We use |2u| instead of |2|
   // to make sure it's promoted to unsigned.)
-  capacity = PR_MAX(capacity, mHdr->mCapacity * 2u);
+  capacity = NS_MAX<size_type>(capacity, mHdr->mCapacity * 2U);
 
   Header *header;
   if (UsesAutoArrayBuffer()) {

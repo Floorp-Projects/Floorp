@@ -636,8 +636,11 @@ let Content = {
       }
 
       if (isTouchClick) {
-        let rect = rects[0];
-        let point = (new Rect(rect.left, rect.top, rect.width, rect.height)).center();
+        let rect = new Rect(rects[0]);
+        if (rect.isEmpty())
+          return;
+
+        let point = rect.center();
         aX = point.x;
         aY = point.y;
       }
@@ -1153,6 +1156,20 @@ var ConsoleAPIObserver = {
       let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
       consoleMsg.init(joinedArguments, null, null, 0, 0, flag, "content javascript");
       Services.console.logMessage(consoleMsg);
+    } else if (aMessage.level == "trace") {
+      let bundle = Services.strings.createBundle("chrome://global/locale/headsUpDisplay.properties");
+      let args = aMessage.arguments;
+      let filename = this.abbreviateSourceURL(args[0].filename);
+      let functionName = args[0].functionName || bundle.GetStringFromName("stacktrace.anonymousFunction");
+      let lineNumber = args[0].lineNumber;
+
+      let body = bundle.formatStringFromName("stacktrace.outputMessage", [filename, functionName, lineNumber], 3);
+      body += "\n";
+      args.forEach(function(aFrame) {
+        body += aFrame.filename + " :: " + aFrame.functionName + " :: " + aFrame.lineNumber + "\n";
+      });
+
+      Services.console.logStringMessage(body);
     } else {
       Services.console.logStringMessage(joinedArguments);
     }
@@ -1194,6 +1211,24 @@ var ConsoleAPIObserver = {
     }
 
     return output;
+  },
+
+  abbreviateSourceURL: function abbreviateSourceURL(aSourceURL) {
+    // Remove any query parameters.
+    let hookIndex = aSourceURL.indexOf("?");
+    if (hookIndex > -1)
+      aSourceURL = aSourceURL.substring(0, hookIndex);
+
+    // Remove a trailing "/".
+    if (aSourceURL[aSourceURL.length - 1] == "/")
+      aSourceURL = aSourceURL.substring(0, aSourceURL.length - 1);
+
+    // Remove all but the last path component.
+    let slashIndex = aSourceURL.lastIndexOf("/");
+    if (slashIndex > -1)
+      aSourceURL = aSourceURL.substring(slashIndex + 1);
+
+    return aSourceURL;
   }
 };
 

@@ -121,25 +121,21 @@ nsStyleFont::nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext)
 {
   MOZ_COUNT_CTOR(nsStyleFont);
   mSize = mFont.size = nsStyleFont::ZoomText(aPresContext, mFont.size);
-#ifdef MOZ_MATHML
   mScriptUnconstrainedSize = mSize;
   mScriptMinSize = aPresContext->CSSTwipsToAppUnits(
       NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT));
   mScriptLevel = 0;
   mScriptSizeMultiplier = NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER;
-#endif
 }
 
 nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
   : mFont(aSrc.mFont)
   , mSize(aSrc.mSize)
   , mGenericID(aSrc.mGenericID)
-#ifdef MOZ_MATHML
   , mScriptLevel(aSrc.mScriptLevel)
   , mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize)
   , mScriptMinSize(aSrc.mScriptMinSize)
   , mScriptSizeMultiplier(aSrc.mScriptSizeMultiplier)
-#endif
 {
   MOZ_COUNT_CTOR(nsStyleFont);
 }
@@ -150,13 +146,11 @@ nsStyleFont::nsStyleFont(nsPresContext* aPresContext)
 {
   MOZ_COUNT_CTOR(nsStyleFont);
   mSize = mFont.size = nsStyleFont::ZoomText(aPresContext, mFont.size);
-#ifdef MOZ_MATHML
   mScriptUnconstrainedSize = mSize;
   mScriptMinSize = aPresContext->CSSTwipsToAppUnits(
       NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT));
   mScriptLevel = 0;
   mScriptSizeMultiplier = NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER;
-#endif
 }
 
 void* 

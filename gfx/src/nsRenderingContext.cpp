@@ -540,7 +540,6 @@ nsRenderingContext::GetWidth(const PRUnichar *aString, PRUint32 aLength)
     return width;
 }
 
-#ifdef MOZ_MATHML
 nsBoundingMetrics
 nsRenderingContext::GetBoundingMetrics(const PRUnichar* aString,
                                        PRUint32 aLength)
@@ -565,7 +564,6 @@ nsRenderingContext::GetBoundingMetrics(const PRUnichar* aString,
     }
     return totalMetrics;
 }
-#endif
 
 void
 nsRenderingContext::DrawString(const char *aString, PRUint32 aLength,

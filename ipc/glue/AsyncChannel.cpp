@@ -123,7 +123,7 @@ AsyncChannel::~AsyncChannel()
 }
 
 bool
-AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
+AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
 {
     NS_PRECONDITION(!mTransport, "Open() called > once");
     NS_PRECONDITION(aTransport, "need transport layer");
@@ -136,16 +136,22 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
     // FIXME figure out whether we're in parent or child, grab IO loop
     // appropriately
     bool needOpen = true;
-    if(!aIOLoop) {
+    if(aIOLoop) {
+        // We're a child or using the new arguments.  Either way, we
+        // need an open.
+        needOpen = true;
+        mChild = (aSide == Unknown) || (aSide == Child);
+    } else {
+        NS_PRECONDITION(aSide == Unknown, "expected default side arg");
+
         // parent
+        mChild = false;
         needOpen = false;
         aIOLoop = XRE_GetIOMessageLoop();
         // FIXME assuming that the parent waits for the OnConnected event.
         // FIXME see GeckoChildProcessHost.cpp.  bad assumption!
         mChannelState = ChannelConnected;
     }
-
-    mChild = needOpen;
 
     mIOLoop = aIOLoop;
     mWorkerLoop = MessageLoop::current();
@@ -236,6 +242,33 @@ AsyncChannel::Send(Message* msg)
         }
 
         SendThroughTransport(msg);
+    }
+
+    return true;
+}
+
+bool
+AsyncChannel::Echo(Message* msg)
+{
+    AssertWorkerThread();
+    mMonitor.AssertNotCurrentThreadOwns();
+    NS_ABORT_IF_FALSE(MSG_ROUTING_NONE != msg->routing_id(), "need a route");
+
+    {
+        MonitorAutoLock lock(mMonitor);
+
+        if (!Connected()) {
+            ReportConnectionError("AsyncChannel");
+            return false;
+        }
+
+        // NB: Go through this OnMessageReceived indirection so that
+        // echoing this message does the right thing for SyncChannel
+        // and RPCChannel too
+        mIOLoop->PostTask(
+            FROM_HERE,
+            NewRunnableMethod(this, &AsyncChannel::OnEchoMessage, msg));
+        // OnEchoMessage takes ownership of |msg|
     }
 
     return true;
@@ -462,6 +495,14 @@ AsyncChannel::OnMessageReceived(const Message& msg)
         mWorkerLoop->PostTask(
             FROM_HERE,
             NewRunnableMethod(this, &AsyncChannel::OnDispatchMessage, msg));
+}
+
+void
+AsyncChannel::OnEchoMessage(Message* msg)
+{
+    AssertIOThread();
+    OnMessageReceived(*msg);
+    delete msg;
 }
 
 void

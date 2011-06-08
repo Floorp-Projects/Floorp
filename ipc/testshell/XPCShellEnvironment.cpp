@@ -295,7 +295,11 @@ Dump(JSContext *cx,
     str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!str)
         return JS_FALSE;
-    JS_FileEscapedString(stdout, str, 0);
+    JSAutoByteString bytes(cx, str);
+    if (!bytes)
+      return JS_FALSE;
+
+    fputs(bytes.ptr(), stdout);
     fflush(stdout);
     return JS_TRUE;
 }
@@ -437,7 +441,7 @@ GCZeal(JSContext *cx,
   if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
     return JS_FALSE;
 
-  JS_SetGCZeal(cx, PRUint8(zeal));
+  JS_SetGCZeal(cx, PRUint8(zeal), JS_DEFAULT_ZEAL_FREQ, JS_FALSE);
   return JS_TRUE;
 }
 #endif

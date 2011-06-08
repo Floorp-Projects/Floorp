@@ -116,8 +116,8 @@ public:
   nsresult SetTitle(const nsAString& aTitle);
   nsresult GetLang(nsAString& aLang);
   nsresult SetLang(const nsAString& aLang);
-  nsresult GetDir(nsAString& aDir);
-  nsresult SetDir(const nsAString& aDir);
+  NS_IMETHOD GetDir(nsAString& aDir);
+  NS_IMETHOD SetDir(const nsAString& aDir);
   nsresult GetClassName(nsAString& aClassName);
   nsresult SetClassName(const nsAString& aClassName);
 

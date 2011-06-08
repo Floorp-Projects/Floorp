@@ -637,7 +637,7 @@ class CopyToUpperCase
       PRUint32
       write( const char* aSource, PRUint32 aSourceLength )
         {
-          PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
+          PRUint32 len = NS_MIN(PRUint32(mIter.size_forward()), aSourceLength);
           char* cp = mIter.get();
           const char* end = aSource + len;
           while (aSource != end) {
@@ -718,7 +718,7 @@ class CopyToLowerCase
       PRUint32
       write( const char* aSource, PRUint32 aSourceLength )
         {
-          PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
+          PRUint32 len = NS_MIN(PRUint32(mIter.size_forward()), aSourceLength);
           char* cp = mIter.get();
           const char* end = aSource + len;
           while (aSource != end) {
