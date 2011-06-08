@@ -39,27 +39,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
 
-// This file declares various analysis passes that operate on MIR.
-
-#include "IonAllocPolicy.h"
+#ifndef jsion_mir_opcodes_h__
+#define jsion_mir_opcodes_h__
 
 namespace js {
 namespace ion {
 
-class MIRGenerator;
-class MIRGraph;
+#define MIR_OPCODE_LIST(_)                                                  \
+    _(Constant)                                                             \
+    _(Parameter)                                                            \
+    _(Goto)                                                                 \
+    _(Test)                                                                 \
+    _(Phi)                                                                  \
+    _(BitAnd)                                                               \
+    _(Add)                                                                  \
+    _(Return)                                                               \
+    _(Copy)                                                                 \
+    _(Box)                                                                  \
+    _(Unbox)                                                                \
+    _(Snapshot)
 
-bool
-ApplyTypeInformation(MIRGraph &graph);
 
-bool
-ReorderBlocks(MIRGraph &graph);
+// Forward declarations of MIR types.
+#define FORWARD_DECLARE(op) class M##op;
+ MIR_OPCODE_LIST(FORWARD_DECLARE)
+#undef FORWARD_DECLARE
 
-} // namespace js
+class MInstructionVisitor
+{
+  public:
+#define VISIT_INS(op) virtual bool visit##op(M##op *) { JS_NOT_REACHED("implement " #op); return false; }
+    MIR_OPCODE_LIST(VISIT_INS)
+#undef VISIT_INS
+};
+
 } // namespace ion
+} // namespace js
 
-#endif // jsion_ion_analysis_h__
+#endif // jsion_mir_opcodes_h__
 

@@ -42,27 +42,19 @@
 #ifndef jsion_mir_h__
 #define jsion_mir_h__
 
+// This file declares everything needed to build actual MIR instructions: the
+// actual opcodes and instructions themselves, the instruction interface, and
+// use chains.
+
 #include "jscntxt.h"
 #include "TypeOracle.h"
 #include "IonAllocPolicy.h"
 #include "InlineList.h"
+#include "MOpcodes.h"
+#include "FixedArityList.h"
 
 namespace js {
 namespace ion {
-
-#define MIR_OPCODE_LIST(_)                                                  \
-    _(Constant)                                                             \
-    _(Parameter)                                                            \
-    _(Goto)                                                                 \
-    _(Test)                                                                 \
-    _(Phi)                                                                  \
-    _(BitAnd)                                                               \
-    _(Add)                                                                  \
-    _(Return)                                                               \
-    _(Copy)                                                                 \
-    _(Box)                                                                  \
-    _(Unbox)                                                                \
-    _(Snapshot)
 
 static const inline
 MIRType MIRTypeFromValue(const js::Value &vp)
@@ -88,84 +80,10 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     }
 }
 
-// Forward declarations of MIR types.
-#define FORWARD_DECLARE(op) class M##op;
- MIR_OPCODE_LIST(FORWARD_DECLARE)
-#undef FORWARD_DECLARE
-
 class MInstruction;
 class MBasicBlock;
 class MUse;
 class MIRGraph;
-class MSnapshot;
-
-class MIRGenerator
-{
-  public:
-    MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fun, MIRGraph &graph);
-
-    TempAllocator &temp() {
-        return temp_;
-    }
-    JSFunction *fun() const {
-        return fun_;
-    }
-    uint32 nslots() const {
-        return nslots_;
-    }
-    uint32 nargs() const {
-        return fun()->nargs;
-    }
-    uint32 nlocals() const {
-        return script->nfixed;
-    }
-    uint32 calleeSlot() const {
-        JS_ASSERT(fun());
-        return 0;
-    }
-    uint32 thisSlot() const {
-        JS_ASSERT(fun());
-        return 1;
-    }
-    uint32 firstArgSlot() const {
-        JS_ASSERT(fun());
-        return 2;
-    }
-    uint32 argSlot(uint32 i) const {
-        return firstArgSlot() + i;
-    }
-    uint32 firstLocalSlot() const {
-        return (fun() ? fun()->nargs + 2 : 0);
-    }
-    uint32 localSlot(uint32 i) const {
-        return firstLocalSlot() + i;
-    }
-    uint32 firstStackSlot() const {
-        return firstLocalSlot() + nlocals();
-    }
-    uint32 stackSlot(uint32 i) const {
-        return firstStackSlot() + i;
-    }
-    MIRGraph &graph() {
-        return graph_;
-    }
-
-    template <typename T>
-    T * allocate(size_t count = 1)
-    {
-        return reinterpret_cast<T *>(temp().allocate(sizeof(T) * count));
-    }
-
-  public:
-    JSScript *script;
-
-  protected:
-    jsbytecode *pc;
-    TempAllocator &temp_;
-    JSFunction *fun_;
-    uint32 nslots_;
-    MIRGraph &graph_;
-};
 
 // Represents a use of a definition.
 class MUse : public TempObject
@@ -257,14 +175,6 @@ class MOperand : public TempObject
     MInstruction *ins() const {
         return ins_;
     }
-};
-
-class MInstructionVisitor
-{
-  public:
-#define VISIT_INS(op) virtual bool visit(M##op *) { JS_NOT_REACHED("implement " #op); return false; }
-    MIR_OPCODE_LIST(VISIT_INS)
-#undef VISIT_INS
 };
 
 // An MInstruction is an SSA name and definition. It has an opcode, a list of
@@ -459,46 +369,14 @@ class MInstruction
         return MInstruction::Op_##opcode;                                   \
     }                                                                       \
     bool accept(MInstructionVisitor *visitor) {                             \
-        return visitor->visit(this);                                        \
+        return visitor->visit##opcode(this);                                \
     }
-
-template <typename T, size_t Arity>
-class MFixedArityList
-{
-    T list_[Arity];
-
-  public:
-    T &operator [](size_t index) {
-        JS_ASSERT(index < Arity);
-        return list_[index];
-    }
-    const T &operator [](size_t index) const {
-        JS_ASSERT(index < Arity);
-        return list_[index];
-    }
-};
-
-template <typename T>
-class MFixedArityList<T, 0>
-{
-  public:
-    T &operator [](size_t index) {
-        JS_NOT_REACHED("no items");
-        static T *operand = NULL;
-        return *operand;
-    }
-    const T &operator [](size_t index) const {
-        JS_NOT_REACHED("no items");
-        static T *operand = NULL;
-        return *operand;
-    }
-};
 
 template <size_t Arity>
 class MAryInstruction : public MInstruction
 {
   protected:
-    MFixedArityList<MOperand *, Arity> operands_;
+    FixedArityList<MOperand *, Arity> operands_;
 
     void setOperand(size_t index, MOperand *operand) {
         operands_[index] = operand;
@@ -525,6 +403,9 @@ class MConstant : public MAryInstruction<0>
 
     const js::Value &value() const {
         return value_;
+    }
+    const js::Value *vp() const {
+        return &value_;
     }
     void printOpcode(FILE *fp);
 };
@@ -580,7 +461,7 @@ class MControlInstruction : public MInstruction
 template <size_t Arity>
 class MAryControlInstruction : public MControlInstruction
 {
-    MFixedArityList<MOperand *, Arity> operands_;
+    FixedArityList<MOperand *, Arity> operands_;
 
   protected:
     void setOperand(size_t index, MOperand *operand) {

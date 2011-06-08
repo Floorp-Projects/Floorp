@@ -39,27 +39,92 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
+#ifndef jsion_lir_common_h__
+#define jsion_lir_common_h__
 
-// This file declares various analysis passes that operate on MIR.
-
-#include "IonAllocPolicy.h"
+// This file declares LIR instructions that are common to every platform.
 
 namespace js {
 namespace ion {
 
-class MIRGenerator;
-class MIRGraph;
+// Constant 32-bit integer.
+class LInteger : public LInstructionHelper<1, 0, 0>
+{
+    int32 i32_;
 
-bool
-ApplyTypeInformation(MIRGraph &graph);
+  public:
+    LIR_HEADER(Integer);
 
-bool
-ReorderBlocks(MIRGraph &graph);
+    LInteger(int32 i32) : i32_(i32)
+    { }
+};
 
-} // namespace js
+// Constant 64-bit pointer.
+class LPointer : public LInstructionHelper<1, 0, 0>
+{
+    void *ptr_;
+
+  public:
+    LIR_HEADER(Pointer);
+
+    LPointer(void *ptr) : ptr_(ptr)
+    { }
+};
+
+// Constant double.
+class LDouble : public LInstructionHelper<1, 0, 0>
+{
+    double d_;
+
+  public:
+    LIR_HEADER(Double);
+
+    LDouble(double d) : d_(d)
+    { }
+};
+
+// Formal argument for a function, returning a box. Formal arguments are
+// initially read from the stack.
+class LParameter : public LInstructionHelper<BOX_PIECES, 0, 0>
+{
+  public:
+    LIR_HEADER(Parameter);
+};
+
+class LGoto : public LInstructionHelper<0, 0, 0>
+{
+};
+
+class LTest : public LInstruction
+{
+};
+
+// Binary bitwise operation, taking two 32-bit integers as inputs and returning
+// a 32-bit integer result as an output.
+class LBitOp : public LInstructionHelper<1, 2, 0>
+{
+    JSOp op_;
+
+  public:
+    LBitOp(JSOp op, const LAllocation &left, const LAllocation &right)
+      : op_(op)
+    {
+        setOperand(0, left);
+        setOperand(1, right);
+    }
+};
+
+// Returns from the function being compiled (not used in inlined frames). The
+// input must be a box.
+class LReturn : public LInstructionHelper<0, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(Return);
+};
+
+
 } // namespace ion
+} // namespace js
 
-#endif // jsion_ion_analysis_h__
+#endif // jsion_lir_common_h__
 

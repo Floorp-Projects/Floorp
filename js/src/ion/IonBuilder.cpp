@@ -45,7 +45,6 @@
 #include "Ion.h"
 #include "IonSpew.h"
 #include "IonAnalysis.h"
-#include "IonLowering.h"
 #include "jsemit.h"
 #include "jsscriptinlines.h"
 
@@ -55,41 +54,6 @@
 
 using namespace js;
 using namespace js::ion;
-
-bool
-ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
-{
-    TempAllocator temp(&cx->tempPool);
-    IonContext ictx(cx, &temp);
-
-    JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
-
-    MIRGraph graph;
-
-    DummyOracle oracle;
-    C1Spewer spew(graph, script);
-    IonBuilder analyzer(cx, script, fun, temp, graph, &oracle);
-    spew.enable("/tmp/ion.cfg");
-
-    if (!analyzer.analyze())
-        return false;
-    spew.spew("Build SSA");
-
-    if (!ReorderBlocks(graph))
-        return false;
-    spew.spew("Reorder Blocks");
-
-    if (!ApplyTypeInformation(graph))
-        return false;
-    if (!Lower(graph))
-        return false;
-    spew.spew("Lower");
-
-    RenumberInstructions(graph);
-    spew.spew("Renumber Instructions");
-
-    return false;
-}
 
 IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
                        MIRGraph &graph, TypeOracle *oracle)
@@ -186,7 +150,7 @@ IonBuilder::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBlock *e
 }
 
 bool
-IonBuilder::analyze()
+IonBuilder::build()
 {
     current = newBlock(pc);
     if (!current)

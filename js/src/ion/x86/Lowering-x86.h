@@ -39,27 +39,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
+#ifndef jsion_ion_lowering_x86_h__
+#define jsion_ion_lowering_x86_h__
 
-// This file declares various analysis passes that operate on MIR.
-
-#include "IonAllocPolicy.h"
+#include "ion/IonLowering.h"
 
 namespace js {
 namespace ion {
 
-class MIRGenerator;
-class MIRGraph;
+class LIRGeneratorX86 : public LIRGenerator
+{
+  public:
+    LIRGeneratorX86(MIRGenerator *gen, MIRGraph &graph)
+      : LIRGenerator(gen, graph)
+    { }
 
-bool
-ApplyTypeInformation(MIRGraph &graph);
+  public:
+    bool visitConstant(MConstant *ins);
+    bool visitBox(MBox *box);
+    bool visitReturn(MReturn *ret);
+};
 
-bool
-ReorderBlocks(MIRGraph &graph);
+typedef LIRGeneratorX86 LIRBuilder;
 
 } // namespace js
 } // namespace ion
 
-#endif // jsion_ion_analysis_h__
+#endif // jsion_ion_lowering_x86_h__
 

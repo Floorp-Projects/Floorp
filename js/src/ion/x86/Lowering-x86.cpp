@@ -39,27 +39,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
+#include "ion/MIR.h"
+#include "ion/IonLowering.h"
+#include "ion/IonLowering-inl.h"
+#include "Lowering-x86.h"
 
-// This file declares various analysis passes that operate on MIR.
-
-#include "IonAllocPolicy.h"
-
-namespace js {
-namespace ion {
-
-class MIRGenerator;
-class MIRGraph;
+using namespace js;
+using namespace js::ion;
 
 bool
-ApplyTypeInformation(MIRGraph &graph);
+LIRGeneratorX86::visitConstant(MConstant *ins)
+{
+    // On x86, moving a double is non-trivial so only do it once.
+    if (!ins->inWorklist() && !ins->value().isDouble())
+        return emitAtUses(ins);
+
+    return LIRGenerator::visitConstant(ins);
+}
 
 bool
-ReorderBlocks(MIRGraph &graph);
+LIRGeneratorX86::visitBox(MBox *box)
+{
+    // We always emit a box directly at its uses.
+    return true;
+}
 
-} // namespace js
-} // namespace ion
+bool
+LIRGeneratorX86::visitReturn(MReturn *ret)
+{
+    MInstruction *opd = ret->getInput(0);
+    JS_ASSERT(opd->type() == MIRType_Value);
 
-#endif // jsion_ion_analysis_h__
+    LReturn *ins = new LReturn;
+    ins->setOperand(0, useFixed(opd, JSReturnReg_Type));
+    ins->setOperand(1, useFixed(opd, JSReturnReg_Data));
+    return add(ins);
+}
 

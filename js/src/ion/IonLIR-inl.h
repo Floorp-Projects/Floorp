@@ -39,27 +39,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_analysis_h__
-#define jsion_ion_analysis_h__
+#ifndef jsion_lir_inl_h__
+#define jsion_lir_inl_h__
 
-// This file declares various analysis passes that operate on MIR.
+#define LIROP(name)                                                         \
+    L##name *LInstruction::to##name()                                       \
+    {                                                                       \
+        JS_ASSERT(is##name());                                              \
+        return static_cast<L##name *>(this);                                \
+    }
+# include "LOpcodes.tbl"
+#undef LIROP
 
-#include "IonAllocPolicy.h"
-
-namespace js {
-namespace ion {
-
-class MIRGenerator;
-class MIRGraph;
-
-bool
-ApplyTypeInformation(MIRGraph &graph);
-
-bool
-ReorderBlocks(MIRGraph &graph);
-
-} // namespace js
 } // namespace ion
+} // namespace js
 
-#endif // jsion_ion_analysis_h__
+#endif // jsion_lir_inl_h__
 
