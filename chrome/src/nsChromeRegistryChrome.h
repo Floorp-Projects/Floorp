@@ -83,7 +83,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
                                          PRUint32 number, void *arg);
 
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
-  NS_OVERRIDE nsresult UpdateSelectedLocale();
+  NS_OVERRIDE void UpdateSelectedLocale();
   NS_OVERRIDE nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
                                              const nsCString& aProvider,
                                              const nsCString& aPath);
