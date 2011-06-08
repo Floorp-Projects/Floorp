@@ -260,8 +260,9 @@ ContentChild::Init(MessageLoop* aIOLoop,
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
+    CrashReporterChild::CreateCrashReporter(this);
 #if defined(ANDROID) && defined(MOZ_CRASHREPORTER)
-    PCrashReporterChild* crashreporter = SendPCrashReporterConstructor();
+    PCrashReporterChild* crashreporter = ManagedPCrashReporterChild()[0];
     InfallibleTArray<Mapping> mappings;
     const struct mapping_info *info = getLibraryMapping();
     while (info && info->name) {
@@ -363,9 +364,14 @@ ContentChild::DeallocPBrowser(PBrowserChild* iframe)
 }
 
 PCrashReporterChild*
-ContentChild::AllocPCrashReporter()
+ContentChild::AllocPCrashReporter(const NativeThreadId& tid,
+                                  const PRUint32& processType)
 {
+#ifdef MOZ_CRASHREPORTER
     return new CrashReporterChild();
+#else
+    return nsnull;
+#endif
 }
 
 bool
