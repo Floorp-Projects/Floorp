@@ -44,7 +44,7 @@ relativesrcdir  = toolkit/crashreporter/test
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = crashreporter_test
-XPCSHELL_TESTS = unit
+XPCSHELL_TESTS = unit unit_ipc
 
 LIBRARY_NAME = testcrasher
 NO_DIST_INSTALL = 1
@@ -95,4 +95,5 @@ endif
 
 libs:: $(SHARED_LIBRARY) $(EXTRA_JS_MODULES)
 	$(INSTALL) $^ $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/
+	$(INSTALL) $^ $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit_ipc/
 
