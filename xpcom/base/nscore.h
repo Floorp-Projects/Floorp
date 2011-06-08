@@ -163,34 +163,6 @@
 #define NS_CONSTRUCTOR_FASTCALL
 #endif
 
-/**
- * NS_DEFINE_ALIGNED lets you define a variable aligned to a given number of
- * bytes.
- *
- * For instance,
- *
- *   NS_DEFINE_ALIGNED(PRUint32, foo, 16);
- *
- * defines a variable |foo| of type PRUint32 which lives on a 16-byte (128-bit)
- * boundary.
- *
- * This currently only works on GCC and MSVC.  On other compilers, we simply
- * don't align.
- */
-#if defined(__GNUC__)
-#define NS_DEFINE_ALIGNED(type, name, alignment) \
-type name __attribute__((aligned (alignment)))
-
-#elif defined(_MSC_VER) && (_MSC_VER >= 1300)
-#define NS_DEFINE_ALIGNED(type, name, alignment) \
-__declspec(align(alignment)) type name
-
-#else
-#define NS_DEFINE_ALIGNED(type, name, alignment) \
-type name
-
-#endif
-
 /*
  * NS_DEFCALL undoes the effect of a global regparm/stdcall setting
  * so that xptcall works correctly.
