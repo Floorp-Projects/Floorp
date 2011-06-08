@@ -2047,7 +2047,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
     JSBool ok;
 
     if (JOF_OPMODE(*regs.pc) == JOF_NAME) {
-        ok = js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &pobj, &prop);
+        ok = js_FindProperty(cx, ATOM_TO_JSID(atom), false, &obj, &pobj, &prop);
     } else {
         obj = start;
         ok = js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop);
@@ -3166,7 +3166,7 @@ BEGIN_CASE(JSOP_FORGNAME)
     jsid id = ATOM_TO_JSID(atom);
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+    if (!js_FindProperty(cx, id, op == JSOP_FORGNAME, &obj, &obj2, &prop))
         goto error;
 
     {
@@ -3806,7 +3806,7 @@ BEGIN_CASE(JSOP_DELNAME)
     jsid id = ATOM_TO_JSID(atom);
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+    if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
         goto error;
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -3916,7 +3916,9 @@ BEGIN_CASE(JSOP_GNAMEINC)
 BEGIN_CASE(JSOP_GNAMEDEC)
 {
     obj = &regs.fp()->scopeChain();
-    if (js_CodeSpec[op].format & JOF_GNAME)
+
+    bool global = (js_CodeSpec[op].format & JOF_GNAME);
+    if (global)
         obj = obj->getGlobal();
 
     JSObject *obj2;
@@ -3943,7 +3945,7 @@ BEGIN_CASE(JSOP_GNAMEDEC)
 
     id = ATOM_TO_JSID(atom);
     JSProperty *prop;
-    if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
+    if (!js_FindPropertyHelper(cx, id, true, global, &obj, &obj2, &prop))
         goto error;
     if (!prop) {
         atomNotDefined = atom;
@@ -4813,6 +4815,10 @@ BEGIN_CASE(JSOP_CALLNAME)
 {
     JSObject *obj = &regs.fp()->scopeChain();
 
+    bool global = js_CodeSpec[op].format & JOF_GNAME;
+    if (global)
+        obj = obj->getGlobal();
+
     const Shape *shape;
     Value rval;
 
@@ -4843,10 +4849,9 @@ BEGIN_CASE(JSOP_CALLNAME)
         DO_NEXT_OP(len);
     }
 
-    jsid id;
-    id = ATOM_TO_JSID(atom);
+    jsid id = ATOM_TO_JSID(atom);
     JSProperty *prop;
-    if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
+    if (!js_FindPropertyHelper(cx, id, true, global, &obj, &obj2, &prop))
         goto error;
     if (!prop) {
         /* Kludge to allow (typeof foo == "undefined") tests. */
@@ -5285,7 +5290,7 @@ BEGIN_CASE(JSOP_CALLUPVAR_DBG)
         atom = JS_LOCAL_NAME_TO_ATOM(names[index]);
         id = ATOM_TO_JSID(atom);
 
-        if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+        if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
             goto error;
     }
 

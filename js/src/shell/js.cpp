@@ -2709,7 +2709,7 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
             if (!JS_ValueToId(cx, STRING_TO_JSVAL(str), &id))
                 return JS_FALSE;
             JSObject *obj;
-            if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+            if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
                 return JS_FALSE;
             if (prop) {
                 if (!obj->getProperty(cx, id, &value))

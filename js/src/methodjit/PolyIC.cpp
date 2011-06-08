@@ -707,7 +707,8 @@ struct GetPropertyHelper {
   public:
     LookupStatus bind() {
         RecompilationMonitor monitor(cx);
-        if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &holder, &prop))
+        bool global = (js_CodeSpec[*f.pc()].format & JOF_GNAME);
+        if (!js_FindProperty(cx, ATOM_TO_JSID(atom), global, &obj, &holder, &prop))
             return ic.error(cx);
         if (monitor.recompiled())
             return Lookup_Uncacheable;

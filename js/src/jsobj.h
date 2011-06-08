@@ -1722,16 +1722,16 @@ IsCacheableNonGlobalScope(JSObject *obj)
  * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
  */
 extern js::PropertyCacheEntry *
-js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
+js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
                       JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 /*
- * Return the index along the scope chain in which id was found, or the last
- * index if not found, or -1 on error.
+ * Search for id either on the current scope chain or on the scope chain's
+ * global object, per the global parameter.
  */
 extern JS_FRIEND_API(JSBool)
-js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
-                JSProperty **propp);
+js_FindProperty(JSContext *cx, jsid id, bool global,
+                JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 extern JS_REQUIRES_STACK JSObject *
 js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id);
