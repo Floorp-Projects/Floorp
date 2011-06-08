@@ -745,7 +745,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      * current scope chain even for the case of function expression statements
      * and functions defined by eval inside let or with blocks.
      */
-    JSObject *parent = &cx->stack.currentVarObj();
+    JSObject *parent = &fp->varObj();
 
     /* ES5 10.5 (NB: with subsequent errata). */
     jsid id = ATOM_TO_JSID(fun->atom);
@@ -2561,7 +2561,7 @@ stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
 
-    JSObject *obj = &cx->stack.currentVarObj();
+    JSObject *obj = &fp->varObj();
     JS_ASSERT(!obj->getOps()->defineProperty);
     uintN attrs = JSPROP_ENUMERATE;
     if (!fp->isEvalFrame())
@@ -2606,7 +2606,7 @@ stubs::SetConst(VMFrame &f, JSAtom *atom)
 {
     JSContext *cx = f.cx;
 
-    JSObject *obj = &cx->stack.currentVarObj();
+    JSObject *obj = &f.fp()->varObj();
     const Value &ref = f.regs.sp[-1];
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ref,
                              PropertyStub, StrictPropertyStub,
