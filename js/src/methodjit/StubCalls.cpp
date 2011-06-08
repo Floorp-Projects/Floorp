@@ -362,7 +362,8 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
     } else {
         id = ATOM_TO_JSID(atom);
         JSProperty *prop;
-        if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
+        bool global = (js_CodeSpec[*f.pc()].format & JOF_GNAME);
+        if (!js_FindPropertyHelper(cx, id, true, global, &obj, &obj2, &prop))
             return NULL;
         if (!prop) {
             /* Kludge to allow (typeof foo == "undefined") tests. */
@@ -1720,7 +1721,8 @@ NameIncDec(VMFrame &f, JSObject *obj, JSAtom *origAtom)
     }
 
     jsid id = ATOM_TO_JSID(atom);
-    if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
+    bool global = (js_CodeSpec[*f.pc()].format & JOF_GNAME);
+    if (!js_FindPropertyHelper(cx, id, true, global, &obj, &obj2, &prop))
         return false;
     if (!prop) {
         ReportAtomNotDefined(cx, atom);
@@ -2620,7 +2622,7 @@ stubs::DelName(VMFrame &f, JSAtom *atom)
     jsid id = ATOM_TO_JSID(atom);
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!js_FindProperty(f.cx, id, &obj, &obj2, &prop))
+    if (!js_FindProperty(f.cx, id, false, &obj, &obj2, &prop))
         THROW();
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */

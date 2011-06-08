@@ -5445,7 +5445,7 @@ LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 } /* namespace js */
 
 PropertyCacheEntry *
-js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
+js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
                       JSObject **objp, JSObject **pobjp, JSProperty **propp)
 {
     JSObject *scopeChain, *obj, *parent, *pobj;
@@ -5455,6 +5455,19 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
 
     JS_ASSERT_IF(cacheResult, !JS_ON_TRACE(cx));
     scopeChain = cx->stack.currentScriptedScopeChain();
+
+    if (global) {
+        /*
+         * Skip along the scope chain to the enclosing global object. This is
+         * used for GNAME opcodes where the bytecode emitter has determined a
+         * name access must be on the global. It also insulates us from bugs
+         * in the emitter: type inference will assume that GNAME opcodes are
+         * accessing the global object, and the inferred behavior should match
+         * the actual behavior even if the id could be found on the scope chain
+         * before the global object.
+         */
+        scopeChain = scopeChain->getGlobal();
+    }
 
     /* Scan entries on the scope chain that we can cache across. */
     entry = JS_NO_PROP_CACHE_FILL;
@@ -5543,10 +5556,10 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
  * Otherwise, its type and meaning depends on the host object's implementation.
  */
 JS_FRIEND_API(JSBool)
-js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
-                JSProperty **propp)
+js_FindProperty(JSContext *cx, jsid id, bool global,
+                JSObject **objp, JSObject **pobjp, JSProperty **propp)
 {
-    return !!js_FindPropertyHelper(cx, id, false, objp, pobjp, propp);
+    return !!js_FindPropertyHelper(cx, id, false, global, objp, pobjp, propp);
 }
 
 JSObject *

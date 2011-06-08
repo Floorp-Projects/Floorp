@@ -8075,11 +8075,13 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameR
 
     TraceMonitor &localtm = *traceMonitor;
 
-    JSAtom* atom = atoms[GET_INDEX(cx->regs().pc)];
+    jsbytecode *pc = cx->regs().pc;
+    JSAtom* atom = atoms[GET_INDEX(pc)];
+    bool global = (js_CodeSpec[*pc].format & JOF_GNAME);
     JSObject* obj2;
     JSProperty* prop;
     JSObject *obj = chainHead;
-    if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop))
+    if (!js_FindProperty(cx, ATOM_TO_JSID(atom), global, &obj, &obj2, &prop))
         RETURN_ERROR_A("error in js_FindProperty");
 
     /* js_FindProperty can reenter the interpreter and kill |this|. */
@@ -9508,7 +9510,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             JS_ASSERT(aobj == obj);
 
             TraceMonitor &localtm = *traceMonitor;
-            entry = js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop);
+            bool global = (js_CodeSpec[*pc].format & JOF_GNAME);
+            entry = js_FindPropertyHelper(cx, id, true, global, &obj, &obj2, &prop);
             if (!entry)
                 RETURN_ERROR_A("error in js_FindPropertyHelper");
 

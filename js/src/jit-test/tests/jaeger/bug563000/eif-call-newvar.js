@@ -6,7 +6,7 @@ function callee() {
   evalInFrame(1, "var x = 'success'");
 }
 function caller() {
-  assertJit();
+  eval();
   callee();
   return x;
 }
