@@ -65,6 +65,11 @@ function do_crash(setup, callback, canReturnZero)
     do_check_neq(process.exitValue, 0);
   }
 
+  handleMinidump(callback);
+}
+
+function handleMinidump(callback)
+{
   // find minidump
   let minidump = null;
   let en = do_get_cwd().directoryEntries;
@@ -99,6 +104,44 @@ function do_crash(setup, callback, canReturnZero)
     minidump.remove(false);
   if (extrafile.exists())
     extrafile.remove(false);
+}
+
+function do_content_crash(setup, callback)
+{
+  do_load_child_test_harness();
+  do_test_pending();
+
+  // Setting the minidump path won't work in the child, so we need to do
+  // that here.
+  let crashReporter =
+      Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
+      .getService(Components.interfaces.nsICrashReporter);
+  crashReporter.minidumpPath = do_get_cwd();
+
+  let headfile = do_get_file("../unit/crasher_subprocess_head.js");
+  let tailfile = do_get_file("../unit/crasher_subprocess_tail.js");
+  if (setup) {
+    if (typeof(setup) == "function")
+      // funky, but convenient
+      setup = "("+setup.toSource()+")();";
+  }
+
+  let handleCrash = function() {
+    try {            
+      handleMinidump(callback);
+    } catch (x) {
+      do_report_unexpected_exception(x);
+    }
+    do_test_finished();
+  };
+  
+  sendCommand("load(\"" + headfile.path.replace(/\\/g, "/") + "\");", function()
+    sendCommand(setup, function()
+      sendCommand("load(\"" + tailfile.path.replace(/\\/g, "/") + "\");",
+        function() do_execute_soon(handleCrash)
+      )
+    )
+  );
 }
 
 // Utility functions for parsing .extra files
