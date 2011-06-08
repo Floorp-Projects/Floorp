@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -107,7 +107,7 @@ Mark(JSTracer *trc, T *thing)
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
 
     JS_ASSERT(!JSAtom::isStatic(thing));
-    JS_ASSERT(thing->asFreeCell()->isAligned());
+    JS_ASSERT(thing->isAligned());
 
     JSRuntime *rt = trc->context->runtime;
     JS_ASSERT(thing->arenaHeader()->compartment);
@@ -528,13 +528,47 @@ restart:
 }
 
 static inline void
+ScanRope(GCMarker *gcmarker, JSRope *rope)
+{
+    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                 rope->compartment() == gcmarker->context->runtime->gcCurrentCompartment
+                 || rope->compartment() == gcmarker->context->runtime->atomsCompartment);
+    JS_ASSERT(rope->isMarked());
+
+    JSString *leftChild = NULL;
+    do {
+        JSString *rightChild = rope->rightChild();
+
+        if (rightChild->isRope()) {
+            if (rightChild->markIfUnmarked())
+                gcmarker->pushRope(&rightChild->asRope());
+        } else {
+            rightChild->asLinear().mark(gcmarker);
+        }
+        leftChild = rope->leftChild();
+
+        if (leftChild->isLinear()) {
+            leftChild->asLinear().mark(gcmarker);
+            return;
+        }
+        rope = &leftChild->asRope();
+    } while (leftChild->markIfUnmarked());
+}
+
+static inline void
 PushMarkStack(GCMarker *gcmarker, JSString *str)
 {
     JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
                  str->compartment() == gcmarker->context->runtime->gcCurrentCompartment
                  || str->compartment() == gcmarker->context->runtime->atomsCompartment);
 
-    str->mark(gcmarker);
+    if (str->isLinear()) {
+        str->asLinear().mark(gcmarker);
+    } else {
+        JS_ASSERT(str->isRope());
+        if (str->markIfUnmarked())
+            ScanRope(gcmarker, &str->asRope());
+    }
 }
 
 static const uintN LARGE_OBJECT_CHUNK_SIZE = 2048;
@@ -721,6 +755,9 @@ void
 GCMarker::drainMarkStack()
 {
     while (!isMarkStackEmpty()) {
+        while (!ropeStack.isEmpty())
+            ScanRope(this, ropeStack.pop());
+
         while (!objStack.isEmpty())
             ScanObject(this, objStack.pop());
 

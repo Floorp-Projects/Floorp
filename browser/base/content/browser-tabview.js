@@ -105,7 +105,7 @@ let TabView = {
           data = sessionstore.getWindowValue(window, this.GROUPS_IDENTIFIER);
           if (data) {
             let parsedData = JSON.parse(data);
-            this.updateGroupNumberBroadcaster(parsedData.totalNumber || 0);
+            this.updateGroupNumberBroadcaster(parsedData.totalNumber || 1);
           }
         } catch (e) { }
 

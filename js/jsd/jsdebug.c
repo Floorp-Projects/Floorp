@@ -356,6 +356,16 @@ JSD_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc)
     return jsd_GetClosestLine(jsdc, jsdscript, pc);
 }
 
+JSD_PUBLIC_API(JSBool)
+JSD_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
+               uintN startLine, uintN maxLines,
+               uintN* count, uintN** lines, jsuword** pcs)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    JSD_ASSERT_VALID_SCRIPT(jsdscript);
+    return jsd_GetLinePCs(jsdc, jsdscript, startLine, maxLines, count, lines, pcs);
+}
+
 JSD_PUBLIC_API(void)
 JSD_ScriptCreated(JSDContext* jsdc,
                   JSContext   *cx,
