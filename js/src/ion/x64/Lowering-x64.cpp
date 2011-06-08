@@ -69,6 +69,38 @@ LIRGeneratorX64::visitBox(MBox *box)
 }
 
 bool
+LIRGeneratorX64::visitUnbox(MUnbox *unbox)
+{
+    MInstruction *box = unbox->getInput(0);
+
+    switch (box->type()) {
+      // Integers, booleans, and strings both need two outputs: the payload
+      // and the type, the type of which is temporary and thrown away.
+      case MIRType_Boolean:
+        return define(new LUnboxBoolean(useRegister(box), temp(LDefinition::INTEGER)), unbox);
+      case MIRType_Int32:
+        return define(new LUnboxInteger(useRegister(box), temp(LDefinition::INTEGER)), unbox);
+      case MIRType_String:
+        return define(new LUnboxString(useRegister(box), temp(LDefinition::INTEGER)), unbox);
+      case MIRType_Object:
+      {
+        // Objects don't need a temporary.
+        LDefinition out(LDefinition::POINTER, LDefinition::CAN_REUSE_INPUT);
+        return define(new LUnboxObject(useRegister(box)), unbox, out);
+      }
+      case MIRType_Double:
+      {
+        // Doubles don't need a temporary.
+        return define(new LUnboxDouble(useRegister(box)), unbox);
+      }
+      default:
+        JS_NOT_REACHED("cannot unbox a value with no payload");
+    }
+
+    return false;
+}
+
+bool
 LIRGeneratorX64::visitReturn(MReturn *ret)
 {
     MInstruction *opd = ret->getInput(0);

@@ -81,23 +81,13 @@ LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, X, Y> *lir, MInstruction 
 LUse
 LIRGenerator::use(MInstruction *mir, LUse policy)
 {
-    JS_ASSERT(mir->inWorklist());
-
-    bool emitAtUse = false;
-    if (!mir->id()) {
-        // Instruction is generated on-demand, near its uses.
-        if (!mir->accept(this))
-            gen->error();
-        JS_ASSERT(mir->id());
-        emitAtUse = true;
-    }
-
+    // It is illegal to call use() on an instruction with two defs.
+#if BOX_PIECES > 1
+    JS_ASSERT(mir->type() == MIRType_Value);
+#endif
+    startUsing(mir);
     policy.setVirtualRegister(mir->id());
-
-    // Kill the virtual register so a new one is generated next use.
-    if (emitAtUse)
-        mir->setId(0);
-
+    stopUsing(mir);
     return policy;
 }
 
@@ -203,16 +193,17 @@ LIRGenerator::visitBox(MBox *ins)
 }
 
 bool
-LIRGenerator::visitReturn(MReturn *ins)
+LIRGenerator::visitUnbox(MUnbox *ins)
 {
     JS_NOT_REACHED("Must be implemented by arch");
     return false;
 }
 
 bool
-LIRGenerator::visitUnbox(MUnbox *ins)
+LIRGenerator::visitReturn(MReturn *ins)
 {
-    return true;
+    JS_NOT_REACHED("Must be implemented by arch");
+    return false;
 }
 
 bool

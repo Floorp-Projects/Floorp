@@ -56,6 +56,7 @@ class LIRGeneratorX64 : public LIRGenerator
 
   public:
     bool visitBox(MBox *box);
+    bool visitUnbox(MUnbox *unbox);
     bool visitConstant(MConstant *ins);
     bool visitReturn(MReturn *ret);
 };
