@@ -92,11 +92,11 @@ StackFrame::prevpcSlow(JSInlinedSite **pinlined)
 }
 
 jsbytecode *
-StackFrame::pcQuadratic(JSContext *cx, StackFrame *next, JSInlinedSite **pinlined)
+StackFrame::pcQuadratic(const ContextStack &stack, StackFrame *next, JSInlinedSite **pinlined)
 {
     JS_ASSERT_IF(next, next->prev() == this);
 
-    StackSegment &seg = cx->stack.space().containingSegment(this);
+    StackSegment &seg = stack.space().containingSegment(this);
     FrameRegs &regs = seg.currentRegs();
 
     /*

@@ -155,7 +155,7 @@ js::GetBlockChain(JSContext *cx, StackFrame *fp)
         return NULL;
 
     /* Assume that imacros don't affect blockChain */
-    jsbytecode *target = fp->hasImacropc() ? fp->imacropc() : fp->pcQuadratic(cx);
+    jsbytecode *target = fp->hasImacropc() ? fp->imacropc() : fp->pcQuadratic(cx->stack);
 
     JSScript *script = fp->script();
     jsbytecode *start = script->code;
@@ -201,7 +201,7 @@ JSObject *
 js::GetBlockChainFast(JSContext *cx, StackFrame *fp, JSOp op, size_t oplen)
 {
     /* Assume that we're in a script frame. */
-    jsbytecode *pc = fp->pcQuadratic(cx);
+    jsbytecode *pc = fp->pcQuadratic(cx->stack);
     JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == op);
 
     pc += oplen;
@@ -2574,7 +2574,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         JS_ASSERT_IF(!fp->isGeneratorFrame(), regs.pc == script->code);
         bool newType = fp->isConstructing() && cx->typeInferenceEnabled() &&
             fp->prev() && fp->prev()->isScriptFrame() &&
-            UseNewType(cx, fp->prev()->script(), fp->prev()->pcQuadratic(cx, fp));
+            UseNewType(cx, fp->prev()->script(), fp->prev()->pcQuadratic(cx->stack, fp));
         if (!ScriptPrologueOrGeneratorResume(cx, fp, newType))
             goto error;
     }
