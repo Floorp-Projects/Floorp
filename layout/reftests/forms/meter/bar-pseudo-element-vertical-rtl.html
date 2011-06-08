@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <style>
+    meter {
+      margin: 10px;
+      -moz-orient: vertical;
+    }
+    body > meter:nth-child(1)::-moz-meter-bar { margin: 4px; padding: 0px; }
+    body > meter:nth-child(2)::-moz-meter-bar { margin: 0px; padding: 4px; }
+    body > meter:nth-child(3)::-moz-meter-bar { margin: 4px; padding: 4px; }
+    body > meter:nth-child(4)::-moz-meter-bar { margin: 10px 0px 0px 0px; padding: 0px; }
+    body > meter:nth-child(5)::-moz-meter-bar { margin: 0px 10px 0px 0px; padding: 0px; }
+    body > meter:nth-child(6)::-moz-meter-bar { margin: 0px 0px 10px 0px; padding: 0px; }
+    body > meter:nth-child(7)::-moz-meter-bar { margin: 0px 0px 0px 10px; padding: 0px; }
+    body > meter:nth-child(8)::-moz-meter-bar { margin: 0px; padding: 10px 0px 0px 0px; }
+    body > meter:nth-child(9)::-moz-meter-bar { margin: 0px; padding: 0px 10px 0px 0px; }
+    body > meter:nth-child(10)::-moz-meter-bar { margin: 0px; padding: 0px 0px 10px 0px; }
+    body > meter:nth-child(11)::-moz-meter-bar { margin: 0px; padding: 0px 0px 0px 10px; }
+    body > meter:nth-child(12)::-moz-meter-bar { height: 1000px; }
+    body > meter:nth-child(13)::-moz-meter-bar { height: 10px; }
+    body > meter:nth-child(14)::-moz-meter-bar { height: 10%; }
+    body > meter:nth-child(15)::-moz-meter-bar { height: 200%; }
+    body > meter:nth-child(16)::-moz-meter-bar { margin: 64px; padding: 64px; }
+  </style>
+  <body dir='rtl'>
+    <!-- Those will be used to change padding/margin on ::-moz-meter-bar -->
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <!-- Those will be used to change width. -->
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+    <meter value='1'></meter>
+  </body>
+</html>
