@@ -54,9 +54,16 @@ class LIRGeneratorX86 : public LIRGenerator
       : LIRGenerator(gen, graph)
     { }
 
+  protected:
+    // Uses components of a nunbox. Must be in a use request (startUsing,
+    // stopUsing).
+    LUse useType(MInstruction *mir);
+    LUse usePayloadInRegister(MInstruction *mir);
+
   public:
-    bool visitConstant(MConstant *ins);
     bool visitBox(MBox *box);
+    bool visitUnbox(MUnbox *unbox);
+    bool visitConstant(MConstant *ins);
     bool visitReturn(MReturn *ret);
 };
 

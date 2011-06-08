@@ -43,6 +43,7 @@
 #define jsion_ion_lowering_inl_h__
 
 #include "MIR.h"
+#include "MIRGraph.h"
 
 namespace js {
 namespace ion {
@@ -64,7 +65,7 @@ LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir, const 
 }
 
 template <size_t X, size_t Y> bool
-LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir)
+LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir, LDefinition::Policy policy)
 {
     LDefinition::Type type;
     switch (mir->type()) {
@@ -89,7 +90,30 @@ LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir)
         return false;
     }
 
-    return define(lir, mir, LDefinition(type));
+    return define(lir, mir, LDefinition(type, policy));
+}
+
+void
+LIRGenerator::startUsing(MInstruction *mir)
+{
+    JS_ASSERT(mir->inWorklist());
+    if (!mir->id()) {
+        // Instruction is generated on-demand, near its uses.
+        if (mir->accept(this))
+            JS_ASSERT(mir->id());
+        else
+            gen->error();
+        mir->setNotInWorklist();
+    }
+}
+
+void
+LIRGenerator::stopUsing(MInstruction *mir)
+{
+    if (!mir->inWorklist()) {
+        mir->setInWorklist();
+        mir->setId(0);
+    }
 }
 
 LUse
@@ -130,6 +154,17 @@ LUse
 LIRGenerator::useFixed(MInstruction *mir, FloatRegister reg)
 {
     return use(mir, LUse(reg));
+}
+
+LDefinition
+LIRGenerator::temp(LDefinition::Type type)
+{
+    uint32 vreg = nextVirtualRegister();
+    if (vreg >= MAX_VIRTUAL_REGISTERS) {
+        gen->error("max virtual registers");
+        return LDefinition();
+    }
+    return LDefinition(vreg, type);
 }
 
 } // namespace js

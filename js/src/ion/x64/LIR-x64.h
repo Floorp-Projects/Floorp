@@ -62,6 +62,69 @@ class LBox : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Given an untyped input, guards on whether it's an integer and returns an
+// integer payload.
+class LUnboxBoolean : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(UnboxBoolean);
+
+    LUnboxBoolean(const LAllocation &input, const LDefinition &temp) {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+};
+
+// Given an untyped input, guards on whether it's an integer and returns an
+// integer payload.
+class LUnboxInteger : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(UnboxInteger);
+
+    LUnboxInteger(const LAllocation &input, const LDefinition &temp) {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+};
+
+// Given an untyped input, guards on whether it's a double and returns a double
+// payload.
+class LUnboxDouble : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(UnboxDouble);
+
+    LUnboxDouble(const LAllocation &input) {
+        setOperand(0, input);
+    }
+};
+
+// Given an untyped input, guards on whether it's an object and returns the
+// pointer.
+class LUnboxObject : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(UnboxObject);
+
+    LUnboxObject(const LAllocation &input) {
+        setOperand(0, input);
+    }
+};
+
+// Given an untyped input, guards on whether it's a string and returns the
+// pointer.
+class LUnboxString : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(UnboxString);
+
+    LUnboxString(const LAllocation &input, const LDefinition &temp) {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+};
+
 } // namespace ion
 } // namespace js
 
