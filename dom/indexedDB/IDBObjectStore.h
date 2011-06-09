@@ -116,6 +116,16 @@ public:
   static void
   ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer);
 
+  static bool
+  DeserializeValue(JSContext* aCx,
+                   JSAutoStructuredCloneBuffer& aBuffer,
+                   jsval* aValue);
+
+  static bool
+  SerializeValue(JSContext* aCx,
+                 JSAutoStructuredCloneBuffer& aBuffer,
+                 jsval aValue);
+
   const nsString& Name() const
   {
     return mName;
