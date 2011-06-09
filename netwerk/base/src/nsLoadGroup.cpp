@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "base/basictypes.h"
 #include "nsLoadGroup.h"
 #include "nsISupportsArray.h"
 #include "nsEnumeratorUtils.h"
@@ -50,6 +51,8 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "base/histogram.h"
+#include "base/logging.h"
 
 #if defined(PR_LOGGING)
 //
@@ -66,7 +69,14 @@
 static PRLogModuleInfo* gLoadGroupLog = nsnull;
 #endif
 
+#ifdef LOG
+#undef LOG
+#endif
 #define LOG(args) PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, args)
+
+#define HISTOGRAM_TIME_DELTA(start, end) \
+    base::TimeDelta::FromMilliseconds( \
+        (PRUint32)((end - start).ToMilliseconds()))
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -140,6 +150,9 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
     , mStatus(NS_OK)
     , mPriority(PRIORITY_NORMAL)
     , mIsCanceling(PR_FALSE)
+    , mDefaultLoadIsTimed(false)
+    , mTimedRequests(0)
+    , mCachedRequests(0)
 {
     NS_INIT_AGGREGATED(outer);
 
@@ -340,6 +353,8 @@ nsLoadGroup::Cancel(nsresult status)
         NS_RELEASE(request);
     }
 
+    TelemetryReport();
+
 #if defined(DEBUG)
     NS_ASSERTION(mRequests.entryCount == 0, "Request list is not empty.");
     NS_ASSERTION(mForegroundCount == 0, "Foreground URLs are active.");
@@ -507,6 +522,14 @@ nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
         // in particular, nsIChannel::LOAD_DOCUMENT_URI...
         //
         mLoadFlags &= 0xFFFF;
+
+        nsCOMPtr<nsITimedChannel> timedChannel =
+            do_QueryInterface(aRequest);
+        mDefaultLoadIsTimed = timedChannel != nsnull;
+        if (mDefaultLoadIsTimed) {
+            timedChannel->GetChannelCreation(&mDefaultRequestCreationTime);
+            timedChannel->SetTimingEnabled(PR_TRUE);
+        }
     }
     // Else, do not change the group's load flags (see bug 95981)
     return NS_OK;
@@ -576,6 +599,10 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
 
     if (mPriority != 0)
         RescheduleRequest(request, mPriority);
+
+    nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(request);
+    if (timedChannel)
+        timedChannel->SetTimingEnabled(PR_TRUE);
 
     if (!(flags & nsIRequest::LOAD_BACKGROUND)) {
         // Update the count of foreground URIs..
@@ -658,6 +685,41 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
     }
 
     PL_DHashTableRawRemove(&mRequests, entry);
+
+    // Collect telemetry stats only when default request is a timed channel.
+    // Don't include failed requests in the timing statistics.
+    if (mDefaultLoadIsTimed && NS_SUCCEEDED(aStatus)) {
+        nsCOMPtr<nsITimedChannel> timedChannel =
+            do_QueryInterface(request);
+        if (timedChannel) {
+            // Figure out if this request was served from the cache
+            ++mTimedRequests;
+            mozilla::TimeStamp timeStamp;
+            rv = timedChannel->GetCacheReadStart(&timeStamp);
+            if (NS_SUCCEEDED(rv) && !timeStamp.IsNull())
+                ++mCachedRequests;
+
+            rv = timedChannel->GetAsyncOpen(&timeStamp);
+            if (NS_SUCCEEDED(rv) && !timeStamp.IsNull()) {
+                UMA_HISTOGRAM_MEDIUM_TIMES(
+                    "HTTP subitem: Page start -> subitem open() (ms)",
+                    HISTOGRAM_TIME_DELTA(mDefaultRequestCreationTime, timeStamp));
+            }
+
+            rv = timedChannel->GetResponseStart(&timeStamp);
+            if (NS_SUCCEEDED(rv) && !timeStamp.IsNull()) {
+                UMA_HISTOGRAM_MEDIUM_TIMES(
+                    "HTTP subitem: Page start -> first byte received for subitem reply (ms)",
+                    HISTOGRAM_TIME_DELTA(mDefaultRequestCreationTime, timeStamp));
+            }
+
+            TelemetryReportChannel(timedChannel, false);
+        }
+    }
+
+    if (mRequests.entryCount == 0) {
+        TelemetryReport();
+    }
 
     // Undo any group priority delta...
     if (mPriority != 0)
@@ -801,6 +863,170 @@ nsLoadGroup::AdjustPriority(PRInt32 aDelta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void 
+nsLoadGroup::TelemetryReport()
+{
+    if (mDefaultLoadIsTimed) {
+        UMA_HISTOGRAM_COUNTS("HTTP: Requests per page (count)",
+            mTimedRequests);
+        if (mTimedRequests) {
+            UMA_HISTOGRAM_ENUMERATION(
+                "HTTP: Requests serviced from cache (%)",
+                mCachedRequests * 100 / mTimedRequests,
+                101);
+        }
+
+        nsCOMPtr<nsITimedChannel> timedChannel =
+            do_QueryInterface(mDefaultLoadRequest);
+        if (timedChannel)
+            TelemetryReportChannel(timedChannel, true);
+    }
+
+    mTimedRequests = 0;
+    mCachedRequests = 0;
+    mDefaultLoadIsTimed = false;
+}
+
+void
+nsLoadGroup::TelemetryReportChannel(nsITimedChannel *aTimedChannel,
+                                    bool aDefaultRequest)
+{
+    nsresult rv;
+    PRBool timingEnabled;
+    rv = aTimedChannel->GetTimingEnabled(&timingEnabled);
+    if (NS_FAILED(rv) || !timingEnabled)
+        return;
+
+    mozilla::TimeStamp channelCreation;
+    rv = aTimedChannel->GetChannelCreation(&channelCreation);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp asyncOpen;
+    rv = aTimedChannel->GetAsyncOpen(&asyncOpen);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp cacheReadStart;
+    rv = aTimedChannel->GetCacheReadStart(&cacheReadStart);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp cacheReadEnd;
+    rv = aTimedChannel->GetCacheReadEnd(&cacheReadEnd);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp domainLookupStart;
+    rv = aTimedChannel->GetDomainLookupStart(&domainLookupStart);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp domainLookupEnd;
+    rv = aTimedChannel->GetDomainLookupEnd(&domainLookupEnd);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp connectStart;
+    rv = aTimedChannel->GetConnectStart(&connectStart);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp connectEnd;
+    rv = aTimedChannel->GetConnectEnd(&connectEnd);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp requestStart;
+    rv = aTimedChannel->GetRequestStart(&requestStart);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp responseStart;
+    rv = aTimedChannel->GetResponseStart(&responseStart);
+    if (NS_FAILED(rv))
+        return;
+
+    mozilla::TimeStamp responseEnd;
+    rv = aTimedChannel->GetResponseEnd(&responseEnd);
+    if (NS_FAILED(rv))
+        return;
+
+#define _UMA_HTTP_REQUEST_HISTOGRAMS_(prefix)                                  \
+    if (!domainLookupStart.IsNull()) {                                         \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "open() -> DNS request issued (ms)",                        \
+            HISTOGRAM_TIME_DELTA(asyncOpen, domainLookupStart));               \
+                                                                               \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "DNS lookup time (ms)",                                     \
+            HISTOGRAM_TIME_DELTA(domainLookupStart, domainLookupEnd));         \
+    }                                                                          \
+                                                                               \
+    if (!connectStart.IsNull()) {                                              \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "TCP connection setup (ms)",                                \
+            HISTOGRAM_TIME_DELTA(connectStart, connectEnd));                   \
+    }                                                                          \
+                                                                               \
+                                                                               \
+    if (!requestStart.IsNull()) {                                              \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "Open -> first byte of request sent (ms)",                  \
+            HISTOGRAM_TIME_DELTA(asyncOpen, requestStart));                    \
+                                                                               \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "First byte of request sent -> "                            \
+            "last byte of response received (ms)",                             \
+            HISTOGRAM_TIME_DELTA(requestStart, responseEnd));                  \
+                                                                               \
+        if (cacheReadStart.IsNull()) {                                         \
+            UMA_HISTOGRAM_TIMES(                                               \
+                prefix "Open -> first byte of reply received (ms)",            \
+                HISTOGRAM_TIME_DELTA(asyncOpen, responseStart));               \
+        }                                                                      \
+    }                                                                          \
+                                                                               \
+    if (!cacheReadStart.IsNull()) {                                            \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "Open -> cache read start (ms)",                            \
+            HISTOGRAM_TIME_DELTA(asyncOpen, cacheReadStart));                  \
+                                                                               \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "Cache read time (ms)",                                     \
+            HISTOGRAM_TIME_DELTA(cacheReadStart, cacheReadEnd));               \
+                                                                               \
+        if (!requestStart.IsNull()) {                                          \
+            UMA_HISTOGRAM_TIMES(                                               \
+                prefix "Positive cache validation time (ms)",                  \
+                HISTOGRAM_TIME_DELTA(requestStart, responseEnd));              \
+        }                                                                      \
+    }                                                                          \
+    if (!cacheReadEnd.IsNull()) {                                              \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "Overall load time - all (ms)",                             \
+            HISTOGRAM_TIME_DELTA(asyncOpen, cacheReadEnd));                    \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "Overall load time - cache hits (ms)",                      \
+            HISTOGRAM_TIME_DELTA(asyncOpen, cacheReadEnd));                    \
+    }                                                                          \
+    else if (!responseEnd.IsNull()) {                                          \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "Overall load time - all (ms)",                             \
+            HISTOGRAM_TIME_DELTA(asyncOpen, responseEnd));                     \
+        UMA_HISTOGRAM_TIMES(                                                   \
+            prefix "Overall load time: network (ms)",                          \
+            HISTOGRAM_TIME_DELTA(asyncOpen, responseEnd));                     \
+    }
+
+    if (aDefaultRequest) {
+        _UMA_HTTP_REQUEST_HISTOGRAMS_("HTTP page: ")
+    } else {
+        _UMA_HTTP_REQUEST_HISTOGRAMS_("HTTP subitem: ")
+    }
+#undef _UMA_HTTP_REQUEST_HISTOGRAMS_
+}
 
 nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags)
 {
