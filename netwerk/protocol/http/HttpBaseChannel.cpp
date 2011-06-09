@@ -87,6 +87,10 @@ HttpBaseChannel::HttpBaseChannel()
 
   // grab a reference to the handler to ensure that it doesn't go away.
   NS_ADDREF(gHttpHandler);
+
+  // Subfields of unions cannot be targeted in an initializer list
+  mSelfAddr.raw.family = PR_AF_UNSPEC;
+  mPeerAddr.raw.family = PR_AF_UNSPEC;
 }
 
 HttpBaseChannel::~HttpBaseChannel()
