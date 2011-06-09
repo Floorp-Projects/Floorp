@@ -162,7 +162,7 @@ let Util = {
   },
 
   isTablet: function isTablet() {
-    let dpi = Util.getWindowUtils(window).displayDPI;
+    let dpi = this.displayDPI;
     if (dpi <= 96)
       return (window.innerWidth > 1024);
 
@@ -188,6 +188,12 @@ let Util = {
       return ViewableAreaObserver.isKeyboardOpened;
 
     return (sendSyncMessage("Content:IsKeyboardOpened", {}))[0];
+  },
+
+  // because this uses the global window, will only work in the parent process
+  get displayDPI() function() {
+    delete this.displayDPI;
+    return this.displayDPI = this.getWindowUtils(window).displayDPI;
   }
 };
 
