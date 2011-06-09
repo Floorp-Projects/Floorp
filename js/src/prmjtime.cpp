@@ -296,18 +296,9 @@ static PRCallOnceType calibrationOnce = { 0 };
 JSInt64
 PRMJ_Now(void)
 {
-    JSInt64 s, us, ms2us, s2us;
     struct timeb b;
-
     ftime(&b);
-    ms2us = (JSInt64) PRMJ_USEC_PER_MSEC;
-    s2us = (JSInt64) PRMJ_USEC_PER_SEC;
-    s = (JSInt64) b.time;
-    us = (JSInt64) b.millitm;
-    us *= ms2us;
-    s *= s2us;
-    s += us;
-    return s;
+    return (JSInt64(b.time) * PRMJ_USEC_PER_SEC) + (JSInt64(b.millitm) * PRMJ_USEC_PER_MSEC);
 }
 
 #elif defined(XP_UNIX)
@@ -315,19 +306,14 @@ JSInt64
 PRMJ_Now(void)
 {
     struct timeval tv;
-    JSInt64 s, us, s2us;
 
 #ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
     gettimeofday(&tv);
 #else
     gettimeofday(&tv, 0);
 #endif /* _SVID_GETTOD */
-    s2us = (JSInt64) PRMJ_USEC_PER_SEC;
-    s = (JSInt64) tv.tv_sec;
-    us = (JSInt64) tv.tv_usec;
-    s *= s2us;
-    s += us;
-    return s;
+
+    return JSInt64(tv.tv_sec) * PRMJ_USEC_PER_SEC + JSInt64(tv.tv_usec);
 }
 
 #else
