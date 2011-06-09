@@ -162,7 +162,7 @@ PRMJ_LocalGMTDifference()
 
 #ifdef HAVE_SYSTEMTIMETOFILETIME
 
-static const JSInt64 win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000);
+static const JSInt64 win2un = 0x19DB1DED53E8000;
 
 #define FILETIME2INT64(ft) (((JSInt64)ft.dwHighDateTime) << 32LL | (JSInt64)ft.dwLowDateTime)
 
@@ -300,13 +300,13 @@ PRMJ_Now(void)
     struct timeb b;
 
     ftime(&b);
-    JSLL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
-    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    JSLL_UI2L(s, b.time);
-    JSLL_UI2L(us, b.millitm);
-    JSLL_MUL(us, us, ms2us);
-    JSLL_MUL(s, s, s2us);
-    JSLL_ADD(s, s, us);
+    ms2us = (JSInt64) PRMJ_USEC_PER_MSEC;
+    s2us = (JSInt64) PRMJ_USEC_PER_SEC;
+    s = (JSInt64) b.time;
+    us = (JSInt64) b.millitm;
+    us *= ms2us;
+    s *= s2us;
+    s += us;
     return s;
 }
 
@@ -322,11 +322,11 @@ PRMJ_Now(void)
 #else
     gettimeofday(&tv, 0);
 #endif /* _SVID_GETTOD */
-    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    JSLL_UI2L(s, tv.tv_sec);
-    JSLL_UI2L(us, tv.tv_usec);
-    JSLL_MUL(s, s, s2us);
-    JSLL_ADD(s, s, us);
+    s2us = (JSInt64) PRMJ_USEC_PER_SEC;
+    s = (JSInt64) tv.tv_sec;
+    us = (JSInt64) tv.tv_usec;
+    s *= s2us;
+    s += us;
     return s;
 }
 
