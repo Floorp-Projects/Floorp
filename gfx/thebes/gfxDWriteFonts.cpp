@@ -694,7 +694,8 @@ bool
 gfxDWriteFont::GetForceGDIClassic()
 {
     return static_cast<gfxDWriteFontEntry*>(mFontEntry.get())->GetForceGDIClassic() &&
-        GetAdjustedSize() <=
+         cairo_dwrite_get_cleartype_rendering_mode() < 0 &&
+         GetAdjustedSize() <=
             gfxDWriteFontList::PlatformFontList()->GetForceGDIClassicMaxFontSize();
 }
 

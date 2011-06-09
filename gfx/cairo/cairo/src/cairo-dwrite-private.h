@@ -110,9 +110,14 @@ public:
         {
 	    CreateRenderingParams();
 	}
-	IDWriteRenderingParams *params =
-            mode == cairo_d2d_surface_t::TEXT_RENDERING_NORMAL ? mCustomClearTypeRenderingParams :
-                (mode == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC ? mForceGDIClassicRenderingParams : mDefaultRenderingParams);
+	IDWriteRenderingParams *params;
+        if (mode == cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE) {
+            params = mDefaultRenderingParams;
+        } else if (mode == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC && mRenderingMode < 0) {
+            params = mForceGDIClassicRenderingParams;
+        } else {
+            params = mCustomClearTypeRenderingParams;
+        }
 	if (params) {
 	    params->AddRef();
 	}
@@ -143,6 +148,10 @@ public:
 	    mDefaultRenderingParams->Release();
 	    mDefaultRenderingParams = NULL;
 	}
+    }
+
+    static int GetClearTypeRenderingMode() {
+        return mRenderingMode;
     }
 
 private:
