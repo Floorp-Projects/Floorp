@@ -665,6 +665,25 @@ nsXULTreeGridRowAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_ROW;
 }
 
+NS_IMETHODIMP
+nsXULTreeGridRowAccessible::GetName(nsAString& aName)
+{
+  aName.Truncate();
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsITreeColumns> columns;
+  mTree->GetColumns(getter_AddRefs(columns));
+  if (columns) {
+    nsCOMPtr<nsITreeColumn> primaryColumn;
+    columns->GetPrimaryColumn(getter_AddRefs(primaryColumn));
+    if (primaryColumn)
+      GetCellName(primaryColumn, aName);
+  }
+  return NS_OK;
+}
+
 nsAccessible*
 nsXULTreeGridRowAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
                                             EWhichChildAtPoint aWhichChild)
