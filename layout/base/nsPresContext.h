@@ -1049,7 +1049,6 @@ protected:
 
   NS_HIDDEN_(void) UpdateCharSet(const nsAFlatCString& aCharSet);
 
-  void InvalidateThebesLayers();
   void AppUnitsPerDevPixelChanged();
 
   PRBool MayHavePaintEventListener();
