@@ -315,6 +315,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
 {
   mLogicalFrames.Clear();
   mContentToFrameIndex.Clear();
+  mLinePerFrame.Clear();
   mBuffer.SetLength(0);
   
   nsPresContext *presContext = aBlockFrame->PresContext();
@@ -323,14 +324,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
 
   mParaLevel = (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
                 NSBIDI_RTL : NSBIDI_LTR;
-
-  mLineIter = new nsBlockInFlowLineIterator(aBlockFrame,
-                                            aBlockFrame->begin_lines(),
-                                            PR_FALSE);
-  if (mLineIter->GetLine() == aBlockFrame->end_lines()) {
-    // Advance to first valid line (might be in a next-continuation)
-    mLineIter->Next();
-  }
 
   mIsVisual = presContext->IsVisualMode();
   if (mIsVisual) {
@@ -357,7 +350,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
       }
     }
   }
-  mPrevFrame = nsnull;
 
   // handle bidi-override being set on the block itself before calling
   // InitLogicalArray.
@@ -372,6 +364,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
     }
     if (ch != 0) {
       mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+      mLinePerFrame.AppendElement((nsLineBox*)nsnull);
       mBuffer.Append(ch);
     }
   }
@@ -379,11 +372,14 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   for (nsBlockFrame* block = aBlockFrame; block;
        block = static_cast<nsBlockFrame*>(block->GetNextContinuation())) {
     block->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
-    InitLogicalArray(block->GetFirstChild(nsnull));
+    nsBlockInFlowLineIterator lineIter(block, block->begin_lines(), PR_FALSE);
+    mPrevFrame = nsnull;
+    InitLogicalArray(&lineIter, block->GetFirstChild(nsnull));
   }
 
   if (ch != 0) {
     mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+    mLinePerFrame.AppendElement((nsLineBox*)nsnull);
     mBuffer.Append(kPDF);
   }
 
@@ -429,7 +425,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame)
   PRInt32     contentTextLength;
 
   FramePropertyTable *propTable = presContext->PropertyTable();
-  PRBool lineNeedsUpdate = PR_FALSE;
+  nsLineBox* currentLine = nsnull;
   
 #ifdef DEBUG
 #ifdef NOISY_BIDI
@@ -449,7 +445,6 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame)
         break;
       }
       frame = mLogicalFrames[frameIndex];
-      lineNeedsUpdate = PR_TRUE;
       if (frame == NS_BIDI_CONTROL_FRAME ||
           nsGkAtoms::textFrame != frame->GetType()) {
         /*
@@ -460,6 +455,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame)
         fragmentLength = 1;
       }
       else {
+        currentLine = mLinePerFrame[frameIndex];
         content = frame->GetContent();
         if (!content) {
           mSuccess = NS_OK;
@@ -517,11 +513,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame)
            * The text in this frame continues beyond the end of this directional run.
            * Create a non-fluid continuation frame for the next directional run.
            */
-          if (lineNeedsUpdate) {
-            AdvanceLineIteratorToFrame(frame, mLineIter, mPrevFrame);
-            lineNeedsUpdate = PR_FALSE;
-          }
-          mLineIter->GetLine()->MarkDirty();
+          currentLine->MarkDirty();
           nsIFrame* nextBidi;
           PRInt32 runEnd = contentOffset + runLength;
           EnsureBidiContinuation(frame, &nextBidi, frameIndex,
@@ -571,11 +563,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame)
             }
           }
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
-          if (lineNeedsUpdate) {
-            AdvanceLineIteratorToFrame(frame, mLineIter, mPrevFrame);
-            lineNeedsUpdate = PR_FALSE;
-          }
-          mLineIter->GetLine()->MarkDirty();
+          currentLine->MarkDirty();
         }
       } // isTextFrame
       else {
@@ -642,7 +630,8 @@ PRBool IsBidiLeaf(nsIFrame* aFrame) {
 }
 
 void
-nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
+nsBidiPresUtils::InitLogicalArray(nsBlockInFlowLineIterator* aLineIter,
+                                  nsIFrame*    aCurrentFrame)
 {
   if (!aCurrentFrame)
     return;
@@ -691,6 +680,7 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
       // first frame of an element specifying embedding or override
       if (ch != 0 && !frame->GetPrevContinuation()) {
         mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+        mLinePerFrame.AppendElement((nsLineBox*)nsnull);
         mBuffer.Append(ch);
       }
     }
@@ -706,6 +696,9 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
         mContentToFrameIndex.Put(content, mLogicalFrames.Length());
       }
       mLogicalFrames.AppendElement(frame);
+
+      AdvanceLineIteratorToFrame(frame, aLineIter, mPrevFrame);
+      mLinePerFrame.AppendElement(aLineIter->GetLine().get());
 
       // Append the content of the frame to the paragraph buffer
       nsIAtom* frameType = frame->GetType();
@@ -726,7 +719,7 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
     }
     else {
       nsIFrame* kid = frame->GetFirstChild(nsnull);
-      InitLogicalArray(kid);
+      InitLogicalArray(aLineIter, kid);
     }
 
     // If the element is attributed by dir, indicate direction pop (add PDF frame)
@@ -734,6 +727,7 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*    aCurrentFrame)
       // Add a dummy frame pointer representing a bidi control code after the
       // last frame of an element specifying embedding or override
       mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+      mLinePerFrame.AppendElement((nsLineBox*)nsnull);
       mBuffer.Append(kPDF);
     }
   } // for
