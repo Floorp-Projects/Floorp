@@ -834,6 +834,43 @@ IDBObjectStore::ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer)
   }
 }
 
+// static
+bool
+IDBObjectStore::DeserializeValue(JSContext* aCx,
+                                 JSAutoStructuredCloneBuffer& aBuffer,
+                                 jsval* aValue)
+{
+  /*
+   *  This function can be called on multiple threads!  Be careful!
+   */
+  NS_ASSERTION(aCx, "A JSContext is required!");
+
+  if (!aBuffer.data()) {
+    *aValue = JSVAL_VOID;
+    return true;
+  }
+
+  JSAutoRequest ar(aCx);
+
+  return aBuffer.read(aValue, aCx, nsnull);
+}
+
+// static
+bool
+IDBObjectStore::SerializeValue(JSContext* aCx,
+                               JSAutoStructuredCloneBuffer& aBuffer,
+                               jsval aValue)
+{
+  /*
+   *  This function can be called on multiple threads!  Be careful!
+   */
+  NS_ASSERTION(aCx, "A JSContext is required!");
+
+  JSAutoRequest ar(aCx);
+
+  return aBuffer.write(aCx, aValue, nsnull);
+}
+
 IDBObjectStore::IDBObjectStore()
 : mId(LL_MININT),
   mAutoIncrement(PR_FALSE)
@@ -895,7 +932,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   rv = GetIndexUpdateInfo(info, aCx, aValue, aUpdateInfoArray);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (!aCloneBuffer.write(aCx, aValue)) {
+  if (!IDBObjectStore::SerializeValue(aCx, aCloneBuffer, aValue)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
@@ -1750,14 +1787,14 @@ AddHelper::ModifyValueForNewKey()
 
   const nsString& keyPath = mObjectStore->KeyPath();
 
-  JSContext* cx;
+  JSContext* cx = nsnull;
   nsresult rv = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSAutoRequest ar(cx);
 
   jsval clone;
-  if (!mCloneBuffer.read(&clone, cx)) {
+  if (!IDBObjectStore::DeserializeValue(cx, mCloneBuffer, &clone)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
@@ -1785,7 +1822,7 @@ AddHelper::ModifyValueForNewKey()
                            nsnull, JSPROP_ENUMERATE);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  if (!mCloneBuffer.write(cx, OBJECT_TO_JSVAL(obj))) {
+  if (!IDBObjectStore::SerializeValue(cx, mCloneBuffer, OBJECT_TO_JSVAL(obj))) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
@@ -1840,11 +1877,11 @@ nsresult
 GetHelper::GetSuccessResult(JSContext* aCx,
                             jsval* aVal)
 {
-  nsresult rv = ConvertCloneBufferToJSVal(aCx, mCloneBuffer, aVal);
+  bool result = IDBObjectStore::DeserializeValue(aCx, mCloneBuffer, aVal);
 
   mCloneBuffer.clear(aCx);
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   return NS_OK;
 }
 

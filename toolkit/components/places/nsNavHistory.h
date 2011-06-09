@@ -595,12 +595,14 @@ public:
                      PRTime aTime,
                      PRInt64 aSessionID,
                      PRInt64 referringVisitID,
-                     PRInt32 aTransitionType);
+                     PRInt32 aTransitionType,
+                     const nsACString& aGUID);
 
   /**
    * Fires onTitleChanged event to nsINavHistoryService observers
    */
-  void NotifyTitleChange(nsIURI* aURI, const nsString& title);
+  void NotifyTitleChange(nsIURI* aURI,
+                         const nsString& title);
 
   bool isBatching() {
     return mBatchLevel > 0;
@@ -732,7 +734,7 @@ protected:
   nsresult InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
                               PRBool aHidden, PRBool aTyped,
                               PRInt32 aVisitCount, PRBool aCalculateFrecency,
-                              PRInt64* aPageID);
+                              PRInt64* aPageID, nsACString& guid);
   nsresult InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
                             PRInt64 aSessionID, PRTime aTime,
                             PRInt32 aTransitionType, PRInt64* aVisitID);
