@@ -367,7 +367,8 @@ private:
    * consistent directionality. At this point the frames are still in logical
    * order
    */
-  void InitLogicalArray(nsIFrame* aCurrentFrame);
+  void InitLogicalArray(nsBlockInFlowLineIterator* aLineIter,
+                        nsIFrame* aCurrentFrame);
 
   /**
    * Initialize the logically-ordered array of frames
@@ -509,6 +510,7 @@ private:
 
   nsAutoString    mBuffer;
   nsTArray<nsIFrame*> mLogicalFrames;
+  nsTArray<nsLineBox*> mLinePerFrame;
   nsTArray<nsIFrame*> mVisualFrames;
   nsDataHashtable<nsISupportsHashKey, PRInt32> mContentToFrameIndex;
   PRInt32         mArraySize;
@@ -520,7 +522,6 @@ private:
   nsIFrame*       mPrevFrame;
   nsIContent*     mPrevContent;
 
-  nsAutoPtr<nsBlockInFlowLineIterator> mLineIter;
   nsBidi*         mBidiEngine;
 };
 
