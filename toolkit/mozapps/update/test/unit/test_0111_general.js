@@ -271,11 +271,6 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  if (IS_ANDROID) {
-    logTestInfo("this test is not applicable to Android... returning early");
-    return;
-  }
-
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
