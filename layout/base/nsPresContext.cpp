@@ -772,8 +772,10 @@ nsPresContext::GetUserPreferences()
 }
 
 void
-nsPresContext::AppUnitsPerDevPixelChanged()
+nsPresContext::InvalidateThebesLayers()
 {
+  if (!mShell)
+    return;
   nsIFrame* rootFrame = mShell->FrameManager()->GetRootFrame();
   if (rootFrame) {
     // FrameLayerBuilder caches invalidation-related values that depend on the
@@ -781,6 +783,12 @@ nsPresContext::AppUnitsPerDevPixelChanged()
     // is completely flushed.
     FrameLayerBuilder::InvalidateThebesLayersInSubtree(rootFrame);
   }
+}
+
+void
+nsPresContext::AppUnitsPerDevPixelChanged()
+{
+  InvalidateThebesLayers();
 
   mDeviceContext->FlushFontCache();
 
@@ -868,6 +876,7 @@ nsPresContext::UpdateAfterPreferencesChanged()
     mShell->SetPreferenceStyleRules(PR_TRUE);
   }
 
+  InvalidateThebesLayers();
   mDeviceContext->FlushFontCache();
 
   nsChangeHint hint = nsChangeHint(0);
