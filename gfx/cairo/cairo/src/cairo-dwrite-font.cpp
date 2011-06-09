@@ -119,8 +119,7 @@ private:
 
 IDWriteFactory *DWriteFactory::mFactoryInstance = NULL;
 IDWriteFontCollection *DWriteFactory::mSystemCollection = NULL;
-IDWriteRenderingParams *DWriteFactory::mDefaultRenderingParams = NULL;
-IDWriteRenderingParams *DWriteFactory::mCustomClearTypeRenderingParams = NULL;
+IDWriteRenderingParams *DWriteFactory::mRenderingParams = NULL;
 IDWriteRenderingParams *DWriteFactory::mForceGDIClassicRenderingParams = NULL;
 FLOAT DWriteFactory::mGamma = -1.0;
 FLOAT DWriteFactory::mEnhancedContrast = -1.0;
@@ -469,7 +468,7 @@ _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
     // this means that if cleartype settings are changed but the scaled_fonts
     // are re-used, they might not adhere to the new system setting until re-
     // creation.
-    switch (cairo_win32_get_system_text_quality()) {
+    switch (_cairo_win32_get_system_text_quality()) {
 	case CLEARTYPE_QUALITY:
 	    default_quality = CAIRO_ANTIALIAS_SUBPIXEL;
 	    break;
@@ -497,9 +496,7 @@ _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
     }
 
     dwriteFont->manual_show_glyphs_allowed = TRUE;
-    dwriteFont->rendering_mode =
-        default_quality == CAIRO_ANTIALIAS_SUBPIXEL ?
-            cairo_d2d_surface_t::TEXT_RENDERING_NORMAL : cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE;
+    dwriteFont->force_GDI_classic = FALSE;
 
     return _cairo_scaled_font_set_metrics (*font, &extents);
 }
@@ -1086,18 +1083,14 @@ void
 cairo_dwrite_scaled_font_set_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font, cairo_bool_t force)
 {
     cairo_dwrite_scaled_font_t *font = reinterpret_cast<cairo_dwrite_scaled_font_t*>(dwrite_scaled_font);
-    if (force && font->rendering_mode == cairo_d2d_surface_t::TEXT_RENDERING_NORMAL) {
-        font->rendering_mode = cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC;
-    } else if (!force && font->rendering_mode == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC) {
-        font->rendering_mode = cairo_d2d_surface_t::TEXT_RENDERING_NORMAL;
-    }
+    font->force_GDI_classic = force;
 }
 
 cairo_bool_t
 cairo_dwrite_scaled_font_get_force_GDI_classic(cairo_scaled_font_t *dwrite_scaled_font)
 {
     cairo_dwrite_scaled_font_t *font = reinterpret_cast<cairo_dwrite_scaled_font_t*>(dwrite_scaled_font);
-    return font->rendering_mode == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC;
+    return font->force_GDI_classic;
 }
 
 void
@@ -1105,12 +1098,6 @@ cairo_dwrite_set_cleartype_params(FLOAT gamma, FLOAT contrast, FLOAT level,
 				  int geometry, int mode)
 {
     DWriteFactory::SetRenderingParams(gamma, contrast, level, geometry, mode);
-}
-
-int
-cairo_dwrite_get_cleartype_rendering_mode()
-{
-    return DWriteFactory::GetClearTypeRenderingMode();
 }
 
 cairo_int_status_t
@@ -1126,7 +1113,7 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
     IDWriteBitmapRenderTarget *rt;
 
     IDWriteRenderingParams *params =
-        DWriteFactory::RenderingParams(scaled_font->rendering_mode);
+        DWriteFactory::RenderingParams(scaled_font->force_GDI_classic);
 
     gdiInterop->CreateBitmapRenderTarget(surface->dc, 
 					 area.right - area.left, 
@@ -1427,7 +1414,8 @@ DWriteFactory::CreateRenderingParams()
 	return;
     }
 
-    Instance()->CreateRenderingParams(&mDefaultRenderingParams);
+    RefPtr<IDWriteRenderingParams> defaultParams;
+    Instance()->CreateRenderingParams(&defaultParams);
 
     // For EnhancedContrast, we override the default if the user has not set it
     // in the registry (by using the ClearType Tuner).
@@ -1439,7 +1427,7 @@ DWriteFactory::CreateRenderingParams()
 	if (RegOpenKeyExA(ENHANCED_CONTRAST_REGISTRY_KEY,
 			  0, KEY_READ, &hKey) == ERROR_SUCCESS)
 	{
-	    contrast = mDefaultRenderingParams->GetEnhancedContrast();
+	    contrast = defaultParams->GetEnhancedContrast();
 	    RegCloseKey(hKey);
 	} else {
 	    contrast = 1.0;
@@ -1449,20 +1437,18 @@ DWriteFactory::CreateRenderingParams()
     // For parameters that have not been explicitly set via the SetRenderingParams API,
     // we copy values from default params (or our overridden value for contrast)
     FLOAT gamma =
-        mGamma >= 1.0 && mGamma <= 2.2 ?
-            mGamma : mDefaultRenderingParams->GetGamma();
+        mGamma >= 1.0 && mGamma <= 2.2 ? mGamma : defaultParams->GetGamma();
     FLOAT clearTypeLevel =
-        mClearTypeLevel >= 0.0 && mClearTypeLevel <= 1.0 ?
-            mClearTypeLevel : mDefaultRenderingParams->GetClearTypeLevel();
+        mClearTypeLevel >= 0.0 && mClearTypeLevel <= 1.0 ? mClearTypeLevel : defaultParams->GetClearTypeLevel();
     DWRITE_PIXEL_GEOMETRY pixelGeometry =
         mPixelGeometry >= DWRITE_PIXEL_GEOMETRY_FLAT && mPixelGeometry <= DWRITE_PIXEL_GEOMETRY_BGR ?
-            (DWRITE_PIXEL_GEOMETRY)mPixelGeometry : mDefaultRenderingParams->GetPixelGeometry();
+            (DWRITE_PIXEL_GEOMETRY)mPixelGeometry : defaultParams->GetPixelGeometry();
     DWRITE_RENDERING_MODE renderingMode =
         mRenderingMode >= DWRITE_RENDERING_MODE_DEFAULT && mRenderingMode <= DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC ?
-            (DWRITE_RENDERING_MODE)mRenderingMode : mDefaultRenderingParams->GetRenderingMode();
+            (DWRITE_RENDERING_MODE)mRenderingMode : defaultParams->GetRenderingMode();
     Instance()->CreateCustomRenderingParams(gamma, contrast, clearTypeLevel,
 	pixelGeometry, renderingMode,
-	&mCustomClearTypeRenderingParams);
+	&mRenderingParams);
     Instance()->CreateCustomRenderingParams(gamma, contrast, clearTypeLevel,
         pixelGeometry, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
         &mForceGDIClassicRenderingParams);
