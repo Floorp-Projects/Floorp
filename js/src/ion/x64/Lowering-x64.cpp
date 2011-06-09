@@ -73,7 +73,7 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
 {
     MInstruction *box = unbox->getInput(0);
 
-    switch (box->type()) {
+    switch (unbox->type()) {
       // Integers, booleans, and strings both need two outputs: the payload
       // and the type, the type of which is temporary and thrown away.
       case MIRType_Boolean:

@@ -60,7 +60,7 @@ LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir, const 
     lir->setDef(0, def);
     lir->getDef(0)->setVirtualRegister(vreg);
     mir->setId(vreg);
-    mir->setInWorklist();
+    mir->setInWorklistUnchecked();
     return add(lir);
 }
 
