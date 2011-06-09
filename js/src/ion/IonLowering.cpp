@@ -83,12 +83,23 @@ LIRGenerator::use(MInstruction *mir, LUse policy)
 {
     // It is illegal to call use() on an instruction with two defs.
 #if BOX_PIECES > 1
-    JS_ASSERT(mir->type() == MIRType_Value);
+    JS_ASSERT(mir->type() != MIRType_Value);
 #endif
     startUsing(mir);
     policy.setVirtualRegister(mir->id());
     stopUsing(mir);
     return policy;
+}
+
+bool
+LIRGenerator::assignSnapshot(LInstruction *ins)
+{
+    LSnapshot *snapshot = LSnapshot::New(gen, last_snapshot_);
+    if (!snapshot)
+        return false;
+    fillSnapshot(snapshot);
+    ins->assignSnapshot(snapshot);
+    return true;
 }
 
 bool
@@ -209,7 +220,7 @@ LIRGenerator::visitReturn(MReturn *ins)
 bool
 LIRGenerator::visitSnapshot(MSnapshot *snapshot)
 {
-    // Snapshots do not generate code.
+    last_snapshot_ = snapshot;
     return true;
 }
 
@@ -219,6 +230,8 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     current = LBlock::New(block);
     if (!current)
         return false;
+
+    last_snapshot_ = block->entrySnapshot();
 
     for (size_t i = 0; i < block->numPhis(); i++) {
         if (!gen->ensureBallast())
