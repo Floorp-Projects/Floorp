@@ -5235,7 +5235,7 @@ nsDocument::DoNotifyPossibleTitleChange()
     if (container) {
       nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
       if (docShellWin) {
-        docShellWin->SetTitle(PromiseFlatString(title).get());
+        docShellWin->SetTitle(title.get());
       }
     }
   }
