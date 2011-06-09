@@ -120,12 +120,6 @@ AboutEmpty.prototype = {
   classID: Components.ID("{433d2d75-5923-49b0-854d-f37267b03dc7}")
 }
 
-function AboutFirstrun() {}
-AboutFirstrun.prototype = {
-  __proto__: AboutGeneric.prototype,
-  classID: Components.ID("{077ea23e-0f22-4168-a744-8e444b560197}")
-}
-
 function AboutFennec() {}
 AboutFennec.prototype = {
   __proto__: AboutGeneric.prototype,
@@ -162,6 +156,6 @@ AboutBlocked.prototype = {
   classID: Components.ID("{88fd40b6-c5c2-4120-9238-f2cb9ff98928}")
 }
 
-const components = [AboutEmpty, AboutFirstrun, AboutFennec, AboutRights,
+const components = [AboutEmpty, AboutFennec, AboutRights,
                     AboutCertError, AboutFirefox, AboutHome, AboutBlocked];
 const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
