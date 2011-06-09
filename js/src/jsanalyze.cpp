@@ -223,6 +223,35 @@ ScriptAnalysis::setLocal(uint32 local, uint32 offset)
     definedLocals[local] = offset;
 }
 
+void
+ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
+{
+    /*
+     * Check to see if an accessed name aliases a local or argument in the
+     * current script, and mark that local/arg as escaping. We don't need to
+     * worry about marking locals/arguments in scripts this is nested in, as
+     * the escaping name will be caught by the parser and the nested local/arg
+     * will be marked as closed.
+     */
+
+    JSAtom *atom;
+    if (JSOp(*pc) == JSOP_DEFFUN) {
+        JSFunction *fun = script->getFunction(js_GetIndexFromBytecode(cx, script, pc, 0));
+        atom = fun->atom;
+    } else {
+        JS_ASSERT(JOF_TYPE(js_CodeSpec[*pc].format) == JOF_ATOM);
+        atom = script->getAtom(js_GetIndexFromBytecode(cx, script, pc, 0));
+    }
+
+    uintN index;
+    BindingKind kind = script->bindings.lookup(cx, atom, &index);
+
+    if (kind == ARGUMENT)
+        escapedSlots[ArgSlot(index)] = true;
+    else if (kind == VARIABLE)
+        escapedSlots[LocalSlot(script, index)] = true;
+}
+
 // return whether op bytecodes do not fallthrough (they may do a jump).
 static inline bool
 BytecodeNoFallThrough(JSOp op)
@@ -464,6 +493,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_NAMEINC:
           case JSOP_NAMEDEC:
           case JSOP_FORNAME:
+            checkAliasedName(cx, pc);
             usesScope = true;
             isInlineable = false;
             break;
@@ -472,6 +502,9 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_DEFVAR:
           case JSOP_DEFCONST:
           case JSOP_SETCONST:
+            checkAliasedName(cx, pc);
+            /* FALLTHROUGH */
+
           case JSOP_ENTERWITH:
             isInlineable = canTrackVars = false;
             break;
