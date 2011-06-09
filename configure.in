@@ -5067,6 +5067,7 @@ cairo-qt)
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
     USE_FC_FREETYPE=1
+    XT_LIBS=
 
     TK_CFLAGS='$(MOZ_QT_CFLAGS)'
     TK_LIBS='$(MOZ_QT_LIBS)'
