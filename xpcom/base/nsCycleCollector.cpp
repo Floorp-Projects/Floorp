@@ -654,6 +654,11 @@ public:
             return mNext == mLast;
         }
 
+        PRBool AtBlockEnd() const
+        {
+            return mNext == mBlockEnd;
+        }
+
         PtrInfo* GetNext()
         {
             NS_ASSERTION(!IsDone(), "calling GetNext when done");
@@ -1452,6 +1457,7 @@ public:
     }
 #endif
     void Traverse(PtrInfo* aPtrInfo);
+    void SetLastChild();
 
     // nsCycleCollectionTraversalCallback methods.
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
@@ -1542,14 +1548,17 @@ GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
     }
 #endif
 
-    // this is redundant except at the start of a NodePool block
     mCurrPi->SetFirstChild(mEdgeBuilder.Mark());
 
     nsresult rv = aPtrInfo->mParticipant->Traverse(aPtrInfo->mPointer, *this);
     if (NS_FAILED(rv)) {
         Fault("script pointer traversal failed", aPtrInfo);
     }
+}
 
+void
+GCGraphBuilder::SetLastChild()
+{
     mCurrPi->SetLastChild(mEdgeBuilder.Mark());
 }
 
@@ -1795,7 +1804,11 @@ nsCycleCollector::MarkRoots(GCGraphBuilder &builder)
     while (!queue.IsDone()) {
         PtrInfo *pi = queue.GetNext();
         builder.Traverse(pi);
+        if (queue.AtBlockEnd())
+            builder.SetLastChild();
     }
+    if (mGraph.mRootCount > 0)
+        builder.SetLastChild();
 }
 
 
