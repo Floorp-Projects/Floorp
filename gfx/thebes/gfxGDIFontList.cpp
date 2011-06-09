@@ -435,7 +435,7 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
     mLogFont.lfWeight         = mWeight;
 
     int len = NS_MIN<int>(aName.Length(), LF_FACESIZE - 1);
-    memcpy(&mLogFont.lfFaceName, nsPromiseFlatString(aName).get(), len * 2);
+    memcpy(&mLogFont.lfFaceName, aName.get(), len * 2);
     mLogFont.lfFaceName[len] = '\0';
 }
 

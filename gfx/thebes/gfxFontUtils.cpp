@@ -875,10 +875,9 @@ void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& a
     
     // append each font name to the list
     nsAutoString fontname;
-    nsPromiseFlatString fonts(fontlistValue);
     const PRUnichar *p, *p_end;
-    fonts.BeginReading(p);
-    fonts.EndReading(p_end);
+    fontlistValue.BeginReading(p);
+    fontlistValue.EndReading(p_end);
 
      while (p < p_end) {
         const PRUnichar *nameStart = p;
