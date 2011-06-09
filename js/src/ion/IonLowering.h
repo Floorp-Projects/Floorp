@@ -57,28 +57,7 @@ class MIRGenerator;
 class MIRGraph;
 class MInstruction;
 
-class LBlock : public TempObject
-{
-    MBasicBlock *block_;
-    InlineList<LInstruction> instructions_;
-
-    LBlock(MBasicBlock *block)
-      : block_(block)
-    { }
-
-  public:
-    static LBlock *New(MBasicBlock *from) {
-        return new LBlock(from);
-    }
-
-    void add(LInstruction *ins) {
-        instructions_.insert(ins);
-    }
-
-    MBasicBlock *mir() const {
-        return block_;
-    }
-};
+static const uint32 VREG_INCREMENT = 1;
 
 class LIRGenerator : public MInstructionVisitor
 {
@@ -96,7 +75,8 @@ class LIRGenerator : public MInstructionVisitor
 
     bool generate();
     uint32 nextVirtualRegister() {
-        return ++vregGen_;
+        vregGen_ += VREG_INCREMENT;
+        return vregGen_;
     }
 
   protected:
@@ -129,20 +109,28 @@ class LIRGenerator : public MInstructionVisitor
     // These create temporary register requests.
     inline LDefinition temp(LDefinition::Type type);
 
-    template <size_t X, size_t Y>
-    inline bool define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir,
+    template <size_t Ops, size_t Temps>
+    inline bool define(LInstructionHelper<1, Ops, Temps> *lir, MInstruction *mir,
                         const LDefinition &def);
 
-    template <size_t X, size_t Y>
-    inline bool define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir,
+    template <size_t Ops, size_t Temps>
+    inline bool define(LInstructionHelper<1, Ops, Temps> *lir, MInstruction *mir,
                        LDefinition::Policy policy = LDefinition::DEFAULT);
 
-    template <size_t X, size_t Y>
-    bool defineBox(LInstructionHelper<BOX_PIECES, X, Y> *lir, MInstruction *mir,
+    template <size_t Ops, size_t Temps>
+    bool defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstruction *mir,
                    LDefinition::Policy policy = LDefinition::DEFAULT);
 
-    bool add(LInstruction *ins) {
+    template <typename T>
+    bool add(T *ins) {
         current->add(ins);
+        if (ins->numDefs()) {
+            ins->setId(ins->getDef(0)->virtualRegister());
+        } else {
+            ins->setId(nextVirtualRegister());
+            if (ins->id() >= MAX_VIRTUAL_REGISTERS)
+                return false;
+        }
         return true;
     }
 

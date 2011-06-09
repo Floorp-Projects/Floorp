@@ -486,6 +486,10 @@ class MGoto : public MAryControlInstruction<0>
   public:
     INSTRUCTION_HEADER(Goto);
     static MGoto *New(MBasicBlock *target);
+
+    MBasicBlock *target() {
+        return successors[0];
+    }
 };
 
 class MTest : public MAryControlInstruction<1>
