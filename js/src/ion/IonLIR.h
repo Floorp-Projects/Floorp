@@ -61,6 +61,7 @@ class LFloatReg;
 class LStackSlot;
 class LArgument;
 class LConstantIndex;
+class MBasicBlock;
 
 static const uint32 MAX_VIRTUAL_REGISTERS = (1 << 21) - 1;
 
@@ -105,11 +106,6 @@ class LAllocation
     bool isTagged() const {
         return !!(bits_ & TAG_MASK);
     }
-    Kind kind() const {
-        if (isTagged())
-            return CONSTANT_VALUE;
-        return (Kind)((bits_ >> KIND_SHIFT) & KIND_MASK);
-    }
 
     int32 data() const {
         return int32(bits_) >> DATA_SHIFT;
@@ -142,11 +138,20 @@ class LAllocation
         bits_ |= TAG_MASK;
     }
 
+    Kind kind() const {
+        if (isTagged())
+            return CONSTANT_VALUE;
+        return (Kind)((bits_ >> KIND_SHIFT) & KIND_MASK);
+    }
+
     bool isUse() const {
         return kind() == USE;
     }
-    bool isConstant() const {
-        return kind() == CONSTANT_VALUE || kind() == CONSTANT_INDEX;
+    bool isConstantValue() const {
+        return kind() == CONSTANT_VALUE;
+    }
+    bool isConstantIndex() const {
+        return kind() == CONSTANT_INDEX;
     }
     bool isValue() const {
         return kind() == CONSTANT_VALUE;
@@ -164,14 +169,15 @@ class LAllocation
         return kind() == ARGUMENT;
     }
     inline LUse *toUse();
-    inline LGeneralReg *toGeneralReg();
-    inline LFloatReg *toFloatReg();
-    inline LStackSlot *toStackSlot();
-    inline LArgument *toArgument();
-    inline LConstantIndex *toConstantIndex();
+    inline const LUse *toUse() const;
+    inline const LGeneralReg *toGeneralReg() const;
+    inline const LFloatReg *toFloatReg() const;
+    inline const LStackSlot *toStackSlot() const;
+    inline const LArgument *toArgument() const;
+    inline const LConstantIndex *toConstantIndex() const;
 
     const Value *toConstant() const {
-        JS_ASSERT(isConstant());
+        JS_ASSERT(isConstantValue());
         return reinterpret_cast<const Value *>(bits_ & ~TAG_MASK);
     }
 };
@@ -242,7 +248,7 @@ class LUse : public LAllocation
     bool killedAtStart() const {
         return !!(flags() & KILLED_AT_START);
     }
-    uint32 vreg() const {
+    uint32 virtualRegister() const {
         uint32 index = (data() >> VREG_SHIFT) & VREG_MASK;
         return index;
     }
@@ -408,11 +414,11 @@ class LDefinition
     Type type() const {
         return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK);
     }
-    uint32 vreg() const {
+    uint32 virtualRegister() const {
         return (bits_ >> VREG_SHIFT) & VREG_MASK;
     }
-    const LAllocation &output() const {
-        return output_;
+    const LAllocation *output() const {
+        return &output_;
     }
 
     void setVirtualRegister(uint32 index) {
@@ -433,6 +439,12 @@ class LDefinition
 class LInstruction : public TempObject,
                      public InlineListNode<LInstruction>
 {
+    uint32 id_;
+
+  protected:
+    LInstruction() : id_(0)
+    { }
+
   public:
     enum Opcode {
 #   define LIROP(name) LOp_##name,
@@ -459,6 +471,21 @@ class LInstruction : public TempObject,
     virtual size_t numTemps() const = 0;
     virtual LDefinition *getTemp(size_t index) = 0;
 
+    uint32 id() const {
+        return id_;
+    }
+    void setId(uint32 id) {
+        JS_ASSERT(!id_);
+        JS_ASSERT(id);
+        id_ = id;
+    }
+
+    virtual void print(FILE *fp);
+    virtual void printName(FILE *fp);
+    virtual void printOperands(FILE *fp);
+    virtual void printInfo(FILE *fp) {
+    }
+
   public:
     // Opcode testing and casts.
 #   define LIROP(name)                                                      \
@@ -468,6 +495,35 @@ class LInstruction : public TempObject,
     inline L##name *to##name();
     LIR_OPCODE_LIST(LIROP)
 #   undef LIROP
+};
+
+typedef InlineList<LInstruction>::iterator LInstructionIterator;
+
+class LBlock : public TempObject
+{
+    MBasicBlock *block_;
+    InlineList<LInstruction> instructions_;
+
+    LBlock(MBasicBlock *block)
+      : block_(block)
+    { }
+
+  public:
+    static LBlock *New(MBasicBlock *from) {
+        return new LBlock(from);
+    }
+    void add(LInstruction *ins) {
+        instructions_.insert(ins);
+    }
+    MBasicBlock *mir() const {
+        return block_;
+    }
+    LInstructionIterator begin() {
+        return instructions_.begin();
+    }
+    LInstructionIterator end() {
+        return instructions_.end();
+    }
 };
 
 template <size_t Defs, size_t Operands, size_t Temps>
@@ -506,6 +562,10 @@ class LInstructionHelper : public LInstruction
     void setTemp(size_t index, const LDefinition &a) {
         temps_[index] = a;
     }
+
+    virtual void printInfo(FILE *fp) {
+        printOperands(fp);
+    }
 };
 
 // A guard record captures the live state at an instruction, which the register
@@ -514,31 +574,6 @@ class LRecord
 {
   public:
 };
-
-LUse *LAllocation::toUse() {
-    JS_ASSERT(isUse());
-    return static_cast<LUse *>(this);
-}
-LGeneralReg *LAllocation::toGeneralReg() {
-    JS_ASSERT(isGeneralReg());
-    return static_cast<LGeneralReg *>(this);
-}
-LFloatReg *LAllocation::toFloatReg() {
-    JS_ASSERT(isFloatReg());
-    return static_cast<LFloatReg *>(this);
-}
-LStackSlot *LAllocation::toStackSlot() {
-    JS_ASSERT(isStackSlot());
-    return static_cast<LStackSlot *>(this);
-}
-LArgument *LAllocation::toArgument() {
-    JS_ASSERT(isArgument());
-    return static_cast<LArgument *>(this);
-}
-LConstantIndex *LAllocation::toConstantIndex() {
-    JS_ASSERT(isConstant() && !isValue());
-    return static_cast<LConstantIndex *>(this);
-}
 
 } // namespace ion
 } // namespace js

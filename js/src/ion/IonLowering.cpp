@@ -56,8 +56,8 @@ LIRGenerator::emitAtUses(MInstruction *mir)
     return true;
 }
 
-template <size_t X, size_t Y> bool
-LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, X, Y> *lir, MInstruction *mir,
+template <size_t Ops, size_t Temps> bool
+LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstruction *mir,
                         LDefinition::Policy policy)
 {
     uint32 vreg = nextVirtualRegister();
@@ -151,7 +151,7 @@ LIRGenerator::visitParameter(MParameter *param)
 bool
 LIRGenerator::visitGoto(MGoto *ins)
 {
-    return true;
+    return add(new LGoto(ins->target()));
 }
 
 bool
@@ -225,12 +225,16 @@ LIRGenerator::visitBlock(MBasicBlock *block)
             return false;
         if (!block->getPhi(i)->accept(this))
             return false;
+        if (gen->errored())
+            return false;
     }
 
     for (MInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
         if (!gen->ensureBallast())
             return false;
         if (!iter->accept(this))
+            return false;
+        if (gen->errored())
             return false;
     }
 

@@ -65,6 +65,10 @@ struct Register {
     RegisterCodes::Code code() const {
         return code_;
     }
+
+    const char *name() const {
+        return RegisterCodes::GetName(code());
+    }
 };
 
 struct FloatRegister {
@@ -78,6 +82,10 @@ struct FloatRegister {
 
     FloatRegisterCodes::Code code() const {
         return code_;
+    }
+
+    const char *name() const {
+        return FloatRegisterCodes::GetName(code());
     }
 };
 
