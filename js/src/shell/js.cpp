@@ -4905,8 +4905,8 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN_TYPE("sleep",          Sleep_fn,       1,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("scatter",        Scatter,        1,0, JS_TypeHandlerDynamic),
 #endif
-    JS_FN_TYPE("snarf",          Snarf,          0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("read",           Snarf,          0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("snarf",          Snarf,          0,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("read",           Snarf,          0,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("compile",        Compile,        1,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("parse",          Parse,          1,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("timeout",        Timeout,        1,0, JS_TypeHandlerDynamic),
