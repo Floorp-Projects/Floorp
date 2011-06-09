@@ -285,7 +285,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
           rv = childKey->ReadStringValue(NS_LITERAL_STRING("JavaHome"), path);
           if (NS_SUCCEEDED(rv)) {
             verBlock curVer;
-            TranslateVersionStr(childName.get(), &curVer);
+            TranslateVersionStr(PromiseFlatString(childName).get(), &curVer);
             if (CompareVersion(curVer, minVer) >= 0) {
               if (browserJavaVersion == childName) {
                 newestPath = path;
@@ -351,7 +351,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
       nsAutoString path;
       rv = regKey->ReadStringValue(NS_LITERAL_STRING(""), path);
       if (NS_SUCCEEDED(rv)) {
-        GetFileVersion(path.get(), &qtVer);
+        GetFileVersion(PromiseFlatString(path).get(), &qtVer);
       }
       regKey->Close();
     }
@@ -389,7 +389,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
       nsAutoString path;
       rv = regKey->ReadStringValue(NS_LITERAL_STRING(""), path);
       if (NS_SUCCEEDED(rv)) {
-        GetFileVersion(path.get(), &wmpVer);
+        GetFileVersion(PromiseFlatString(path).get(), &wmpVer);
       }
       regKey->Close();
     }
@@ -445,7 +445,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
       rv = regKey->GetChildName(index, childName);
       if (NS_SUCCEEDED(rv)) {
         verBlock curVer;
-        TranslateVersionStr(childName.get(), &curVer);
+        TranslateVersionStr(PromiseFlatString(childName).get(), &curVer);
 
         childName += NS_LITERAL_STRING("\\InstallPath");
 
