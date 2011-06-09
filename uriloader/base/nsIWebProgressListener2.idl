@@ -40,7 +40,7 @@
 /**
  * An extended version of nsIWebProgressListener.
  */
-[scriptable, uuid(dde39de0-e4e0-11da-8ad9-0800200c9a66)]
+[scriptable, uuid(9fad5966-62ea-11e0-966c-001320257da5)]
 interface nsIWebProgressListener2 : nsIWebProgressListener {
   /**
    * Notification that the progress has changed for one of the requests
@@ -99,4 +99,42 @@ interface nsIWebProgressListener2 : nsIWebProgressListener {
                              in nsIURI aRefreshURI,
                              in long aMillis,
                              in boolean aSameURI);
+
+   /**
+    * Flags for onLocationChange2
+    *
+    * LOCATION_CHANGE_NORMAL
+    *   Nothing special.
+    *
+    * LOCATION_CHANGE_SAME_DOCUMENT
+    *   This flag is on when |aWebProgress| did not load a new document. 
+    *   For example,
+    *     1. The user clicks that anchor in a document which is linking to 
+    *        [1.a.] the document itself.
+    *        [1.b.] a location only <#hash> portion changed.
+    *     2. The user inputs [1.b.]'s URI in the location bar.
+    *     3. Session history navigation.
+    *        [3.a.] history.pushState(...), history.replaceState(...) or
+    *               history.popState(...) is called and |aWebProgress| wants to
+    *               update the UI.
+    *        [3.b.] Back/Forward/Go to URI of [1.a.], [1.b.] or [3.a.].
+    *        [3.c.] After session history is cleared.
+    */
+
+  const unsigned long LOCATION_CHANGE_NORMAL          = 0x00000001;
+  const unsigned long LOCATION_CHANGE_SAME_DOCUMENT   = 0x00000002;
+
+  /**
+   * This function is identical to nsIWebProgressListener::onLocationChange,
+   * except for aFlags argument.
+   *
+   * @param aFlags
+   *        This is a value which explains the situation or the reason why
+   *        the location has changed.
+   */
+
+  void onLocationChange2(in nsIWebProgress aWebProgress,
+                         in nsIRequest aRequest,
+                         in nsIURI aLocation,
+                         in unsigned long aFlags);
 };

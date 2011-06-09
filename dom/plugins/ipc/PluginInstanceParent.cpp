@@ -920,6 +920,22 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
 {
     switch (aVariable) {
 
+    case NPPVpluginWantsAllNetworkStreams: {
+        bool wantsAllStreams;
+        NPError rv;
+
+        if (!CallNPP_GetValue_NPPVpluginWantsAllNetworkStreams(&wantsAllStreams, &rv)) {
+            return NPERR_GENERIC_ERROR;
+        }
+
+        if (NPERR_NO_ERROR != rv) {
+            return rv;
+        }
+
+        (*(NPBool*)_retval) = wantsAllStreams;
+        return NPERR_NO_ERROR;
+    }
+
 #ifdef MOZ_X11
     case NPPVpluginNeedsXEmbed: {
         bool needsXEmbed;
