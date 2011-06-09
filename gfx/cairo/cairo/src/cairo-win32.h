@@ -137,6 +137,9 @@ cairo_dwrite_scaled_font_get_force_GDI_classic(cairo_scaled_font_t *dwrite_scale
 void
 cairo_dwrite_set_cleartype_params(FLOAT gamma, FLOAT contrast, FLOAT level, int geometry, int mode);
 
+int
+cairo_dwrite_get_cleartype_rendering_mode();
+
 #endif /* CAIRO_HAS_DWRITE_FONT */
 
 #if CAIRO_HAS_D2D_SURFACE

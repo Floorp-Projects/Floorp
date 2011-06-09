@@ -1808,8 +1808,9 @@ pref("gfx.font_rendering.cleartype_params.pixel_structure", -1);
 pref("gfx.font_rendering.cleartype_params.rendering_mode", -1);
 
 // A comma-separated list of font family names. Fonts in these families will
-// be forced to use "GDI Classic" ClearType mode, ignoring the value
-// of gfx.font_rendering.cleartype_params.rendering_mode.
+// be forced to use "GDI Classic" ClearType mode, provided the value
+// of gfx.font_rendering.cleartype_params.rendering_mode is -1
+// (i.e. a specific rendering_mode has not been explicitly set).
 // Currently we apply this setting to the sans-serif Microsoft "core Web fonts".
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
      "Arial,Courier New,Segoe UI,Tahoma,Trebuchet MS,Verdana");
