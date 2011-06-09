@@ -236,6 +236,9 @@ class MInstruction
         JS_ASSERT(!inWorklist());
         inWorklist_ = true;
     }
+    void setInWorklistUnchecked() {
+        inWorklist_ = true;
+    }
     void setNotInWorklist() {
         JS_ASSERT(inWorklist());
         inWorklist_ = false;

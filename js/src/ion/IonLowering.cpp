@@ -74,7 +74,7 @@ LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstru
 #endif
 
     mir->setId(vreg);
-    mir->setInWorklist();
+    mir->setInWorklistUnchecked();
     return add(lir);
 }
 
