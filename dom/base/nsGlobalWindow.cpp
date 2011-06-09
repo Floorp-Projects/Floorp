@@ -8873,11 +8873,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
     interval = maxTimeoutMs;
   }
 
-  nsTimeout *timeout = new nsTimeout();
-
-  // Increment the timeout's reference count to represent this function's hold
-  // on the timeout.
-  timeout->AddRef();
+  nsRefPtr<nsTimeout> timeout = new nsTimeout();
 
   if (aIsInterval) {
     timeout->mInterval = interval;
@@ -8903,8 +8899,6 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   rv = nsContentUtils::GetSecurityManager()->
     GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
   if (NS_FAILED(rv)) {
-    timeout->Release();
-
     return NS_ERROR_FAILURE;
   }
 
@@ -8917,8 +8911,6 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   // of course).
   rv = ourPrincipal->Subsumes(subjectPrincipal, &subsumes);
   if (NS_FAILED(rv)) {
-    timeout->Release();
-
     return NS_ERROR_FAILURE;
   }
 
@@ -8939,8 +8931,6 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
     timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_FAILED(rv)) {
-      timeout->Release();
-
       return rv;
     }
 
@@ -8948,8 +8938,6 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
                                                realInterval,
                                                nsITimer::TYPE_ONE_SHOT);
     if (NS_FAILED(rv)) {
-      timeout->Release();
-
       return rv;
     }
 
@@ -8995,10 +8983,6 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
   timeout->mPublicId = ++mTimeoutPublicIdCounter;
   *aReturn = timeout->mPublicId;
-
-  // Our hold on the timeout is expiring. Note that this should not actually
-  // free the timeout (since the list should have taken ownership as well).
-  timeout->Release();
 
   return NS_OK;
 
@@ -9573,16 +9557,9 @@ nsGlobalWindow::InsertTimeoutIntoList(nsTimeout *aTimeout)
 void
 nsGlobalWindow::TimerCallback(nsITimer *aTimer, void *aClosure)
 {
-  nsTimeout *timeout = (nsTimeout *)aClosure;
-
-  // Hold on to the timeout to ensure it doesn't go away while it's
-  // being handled (aka kungFuDeathGrip).
-  timeout->AddRef();
+  nsRefPtr<nsTimeout> timeout = (nsTimeout *)aClosure;
 
   timeout->mWindow->RunTimeout(timeout);
-
-  // Drop our reference to the timeout now that we're done with it.
-  timeout->Release();
 }
 
 //*****************************************************************************
