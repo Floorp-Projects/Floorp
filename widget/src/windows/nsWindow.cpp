@@ -4458,6 +4458,35 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
   return PR_TRUE;
 }
 
+static void ForceFontUpdate()
+{
+  // update device context font cache
+  // Dirty but easiest way:
+  // Changing nsIPrefBranch entry which triggers callbacks
+  // and flows into calling mDeviceContext->FlushFontCache()
+  // to update the font cache in all the instance of Browsers
+  static const char kPrefName[] = "font.internaluseonly.changed";
+  PRBool fontInternalChange =
+    Preferences::GetBool(kPrefName, PR_FALSE);
+  Preferences::SetBool(kPrefName, !fontInternalChange);
+}
+
+static PRBool ClearTypeSettingChanged()
+{
+  static int currentQuality = -1;
+  BYTE quality = cairo_win32_get_system_text_quality();
+
+  if (currentQuality == quality)
+    return PR_FALSE;
+
+  if (currentQuality < 0) {
+    currentQuality = quality;
+    return PR_FALSE;
+  }
+  currentQuality = quality;
+  return PR_TRUE;
+}
+
 // The main windows message processing method.
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                                 LRESULT *aRetValue)
@@ -4620,15 +4649,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         fontEnum->UpdateFontList(&didChange);
         //didChange is TRUE only if new font langGroup is added to the list.
         if (didChange)  {
-          // update device context font cache
-          // Dirty but easiest way:
-          // Changing nsIPrefBranch entry which triggers callbacks
-          // and flows into calling mDeviceContext->FlushFontCache()
-          // to update the font cache in all the instance of Browsers
-          const char* kPrefName = "font.internaluseonly.changed";
-          PRBool fontInternalChange =
-            Preferences::GetBool(kPrefName, PR_FALSE);
-          Preferences::SetBool(kPrefName, !fontInternalChange);
+          ForceFontUpdate();
         }
       } //if (NS_SUCCEEDED(rv))
     }
@@ -4811,6 +4832,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_PAINT:
+      if (ClearTypeSettingChanged()) {
+        ForceFontUpdate();
+        gfxFontCache *fc = gfxFontCache::GetCache();
+        if (fc) {
+          fc->Flush();
+        }
+      }
       *aRetValue = (int) OnPaint(NULL, 0);
       result = PR_TRUE;
       break;
