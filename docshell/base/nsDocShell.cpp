@@ -46,9 +46,6 @@
 #define FORCE_PR_LOG 1
 #endif
 
-#include "base/histogram.h"
-#include "base/logging.h"
-
 #include "nsIBrowserDOMWindow.h"
 #include "nsIComponentManager.h"
 #include "nsIContent.h"
@@ -111,7 +108,6 @@
 #include "nsIViewManager.h"
 #include "nsIScriptChannel.h"
 #include "nsIOfflineCacheUpdate.h"
-#include "nsITimedChannel.h"
 #include "nsCPrefetchService.h"
 #include "nsJSON.h"
 #include "IHistory.h"
@@ -6050,20 +6046,6 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     nsresult rv = aChannel->GetURI(getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
   
-    nsCOMPtr<nsITimedChannel> timingChannel =
-        do_QueryInterface(aChannel);
-    if (timingChannel) {
-        mozilla::TimeStamp channelCreationTime;
-        rv = timingChannel->GetChannelCreation(&channelCreationTime);
-        if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull()) {
-            PRUint32 interval = (PRUint32)
-                (mozilla::TimeStamp::Now() - channelCreationTime)
-                .ToMilliseconds();
-            UMA_HISTOGRAM_TIMES("HTTP: Total page load time (ms)", 
-                                base::TimeDelta::FromMilliseconds(interval));
-        }
-    }
-
     // clean up reload state for meta charset
     if (eCharsetReloadRequested == mCharsetReloadState)
         mCharsetReloadState = eCharsetReloadStopOrigional;
