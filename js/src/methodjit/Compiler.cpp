@@ -2459,9 +2459,6 @@ mjit::Compiler::generateMethod()
             uint32 index = fullAtomIndex(PC);
             JSFunction *innerFun = script->getFunction(index);
 
-            if (script->fun && script->bindings.hasBinding(cx, innerFun->atom))
-                frame.syncAndForgetEverything();
-
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(innerFun), Registers::ArgReg1);
             INLINE_STUBCALL(STRICT_VARIANT(stubs::DefFun), REJOIN_FALLTHROUGH);
@@ -2484,9 +2481,6 @@ mjit::Compiler::generateMethod()
           {
             uint32 index = fullAtomIndex(PC);
             JSAtom *atom = script->getAtom(index);
-
-            if (script->fun && script->bindings.hasBinding(cx, atom))
-                frame.syncAndForgetEverything();
 
             prepareStubCall(Uses(1));
             masm.move(ImmPtr(atom), Registers::ArgReg1);
