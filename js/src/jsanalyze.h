@@ -1111,6 +1111,13 @@ class ScriptAnalysis
         return localDefined(local, pc - script->code);
     }
 
+    /*
+     * Escaping slots include all slots that can be accessed in ways other than
+     * through the corresponding LOCAL/ARG opcode. This includes all closed
+     * slots in the script, all slots in scripts which use eval or are in debug
+     * mode, and slots which are aliased by NAME or similar opcodes in the
+     * containing script (which does not imply the variable is closed).
+     */
     bool slotEscapes(uint32 slot) {
         JS_ASSERT(script->compartment->activeAnalysis);
         if (slot >= numSlots)
@@ -1150,6 +1157,7 @@ class ScriptAnalysis
                         unsigned *currentOffset, unsigned *forwardJump,
                         unsigned stackDepth, uint32 *defineArray, unsigned defineCount);
     inline void setLocal(uint32 local, uint32 offset);
+    void checkAliasedName(JSContext *cx, jsbytecode *pc);
 
     /* Lifetime helpers */
     inline void addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
