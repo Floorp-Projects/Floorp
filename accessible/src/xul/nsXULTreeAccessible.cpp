@@ -1043,6 +1043,22 @@ nsXULTreeItemAccessibleBase::IsExpandable()
   return PR_FALSE;
 }
 
+void
+nsXULTreeItemAccessibleBase::GetCellName(nsITreeColumn* aColumn,
+                                         nsAString& aName)
+{
+  mTreeView->GetCellText(mRow, aColumn, aName);
+
+  // If there is still no name try the cell value:
+  // This is for graphical cells. We need tree/table view implementors to
+  // implement FooView::GetCellValue to return a meaningful string for cases
+  // where there is something shown in the cell (non-text) such as a star icon;
+  // in which case GetCellValue for that cell would return "starred" or
+  // "flagged" for example.
+  if (aName.IsEmpty())
+    mTreeView->GetCellValue(mRow, aColumn, aName);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessible
@@ -1068,16 +1084,7 @@ nsXULTreeItemAccessible::GetName(nsAString& aName)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  mTreeView->GetCellText(mRow, mColumn, aName);
-
-  // If there is still no name try the cell value:
-  // This is for graphical cells. We need tree/table view implementors to implement
-  // FooView::GetCellValue to return a meaningful string for cases where there is
-  // something shown in the cell (non-text) such as a star icon; in which case
-  // GetCellValue for that cell would return "starred" or "flagged" for example.
-  if (aName.IsEmpty())
-    mTreeView->GetCellValue(mRow, mColumn, aName);
-
+  GetCellName(mColumn, aName);
   return NS_OK;
 }
 

@@ -231,8 +231,10 @@ private:
 
   // Decodes a packet of Theora data, and inserts its frame into the
   // video queue. May return NS_ERROR_OUT_OF_MEMORY. Caller must have obtained
-  // the reader's monitor.
-  nsresult DecodeTheora(ogg_packet* aPacket);
+  // the reader's monitor. aTimeThreshold is the current playback position
+  // in media time in microseconds. Frames with an end time before this will
+  // not be enqueued.
+  nsresult DecodeTheora(ogg_packet* aPacket, PRInt64 aTimeThreshold);
 
   // Read a page of data from the Ogg file. Returns the offset of the start
   // of the page, or -1 if the page read failed.

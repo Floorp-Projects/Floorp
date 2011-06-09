@@ -56,6 +56,7 @@ endif
 endif
 
 CPPSRCS		= \
+		Base64.cpp \
 		nsAppFileLocationProvider.cpp \
 		nsBinaryStream.cpp \
 		nsDirectoryService.cpp \
@@ -68,6 +69,7 @@ CPPSRCS		= \
 		nsPipe3.cpp \
 		nsStreamUtils.cpp \
 		nsScriptableInputStream.cpp \
+		nsScriptableBase64Encoder.cpp \
 		nsSegmentedBuffer.cpp \
 		nsStorageStream.cpp \
 		nsStringStream.cpp \
@@ -127,6 +129,11 @@ EXPORTS		+= nsLocalFileUnix.h
 endif # windows
 endif # os2
 
+EXPORTS_NAMESPACES = mozilla
+EXPORTS_mozilla = \
+    Base64.h \
+    $(NULL)
+
 XPIDLSRCS	= \
 		nsIBinaryInputStream.idl \
 		nsIBinaryOutputStream.idl  \
@@ -154,6 +161,7 @@ XPIDLSRCS	= \
 		nsIConverterOutputStream.idl \
 		nsIIOUtil.idl \
 		nsISafeOutputStream.idl \
+		nsIScriptableBase64Encoder.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

@@ -62,13 +62,8 @@ CPPSRCS		= \
 		mozInlineSpellWordUtil.cpp      \
 		$(NULL)
 
-ifeq (camino,$(MOZ_BUILD_APP))
-SHARED_LIBRARY_LIBS += ../osxspell/src/$(LIB_PREFIX)osxspell_s.$(LIB_SUFFIX)
-LOCAL_INCLUDES += -I$(srcdir)/../osxspell/src
-else
 SHARED_LIBRARY_LIBS += ../hunspell/src/$(LIB_PREFIX)hunspell_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../hunspell/src
-endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
