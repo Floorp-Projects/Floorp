@@ -42,14 +42,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= spellchecker
-DIRS		= idl locales
-
-ifeq (camino,$(MOZ_BUILD_APP))
-DIRS		+= osxspell
-else
-DIRS		+= hunspell
-endif
-
-DIRS += src
+DIRS		= idl locales hunspell src
 
 include $(topsrcdir)/config/rules.mk

@@ -559,6 +559,51 @@ static const PRUnichar kEqualsCh = PRUnichar('=');
 static const PRUnichar kLessThanCh = PRUnichar('<');
 static const PRUnichar kGreaterThanCh = PRUnichar('>');
 
+
+// check whether the Link header field applies to the context resource
+// see <http://tools.ietf.org/html/rfc5988#section-5.2>
+
+PRBool
+nsContentSink::LinkContextIsOurDocument(const nsSubstring& aAnchor)
+{
+  if (aAnchor.IsEmpty()) {
+    // anchor parameter not present or empty -> same document reference
+    return PR_TRUE;
+  }
+
+  nsIURI* docUri = mDocument->GetDocumentURI();
+
+  // the document URI might contain a fragment identifier ("#...')
+  // we want to ignore that because it's invisible to the server
+  // and just affects the local interpretation in the recipient
+  nsCOMPtr<nsIURI> contextUri;
+  nsresult rv = docUri->CloneIgnoringRef(getter_AddRefs(contextUri));
+  
+  if (NS_FAILED(rv)) {
+    // copying failed
+    return PR_FALSE;
+  }
+  
+  // resolve anchor against context    
+  nsCOMPtr<nsIURI> resolvedUri;
+  rv = NS_NewURI(getter_AddRefs(resolvedUri), aAnchor,
+      nsnull, contextUri);
+  
+  if (NS_FAILED(rv)) {
+    // resolving failed
+    return PR_FALSE;
+  }
+
+  PRBool same;
+  rv = contextUri->Equals(resolvedUri, &same); 
+  if (NS_FAILED(rv)) {
+    // comparison failed
+    return PR_FALSE;
+  }
+
+  return same;
+}
+
 nsresult
 nsContentSink::ProcessLinkHeader(nsIContent* aElement,
                                  const nsAString& aLinkData)
@@ -571,6 +616,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
   nsAutoString title;
   nsAutoString type;
   nsAutoString media;
+  nsAutoString anchor;
 
   // copy to work buffer
   nsAutoString stringList(aLinkData);
@@ -699,6 +745,11 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
               // HTML4.0 spec is inconsistent, make it case INSENSITIVE
               ToLowerCase(media);
             }
+          } else if (attr.LowerCaseEqualsLiteral("anchor")) {
+            if (anchor.IsEmpty()) {
+              anchor = value;
+              anchor.StripWhitespace();
+            }
           }
         }
       }
@@ -709,7 +760,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
 
       href.Trim(" \t\n\r\f"); // trim HTML5 whitespace
       if (!href.IsEmpty() && !rel.IsEmpty()) {
-        rv = ProcessLink(aElement, href, rel, title, type, media);
+        rv = ProcessLink(aElement, anchor, href, rel, title, type, media);
       }
 
       href.Truncate();
@@ -717,14 +768,15 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
       title.Truncate();
       type.Truncate();
       media.Truncate();
+      anchor.Truncate();
     }
 
     start = ++end;
   }
-
+                
   href.Trim(" \t\n\r\f"); // trim HTML5 whitespace
   if (!href.IsEmpty() && !rel.IsEmpty()) {
-    rv = ProcessLink(aElement, href, rel, title, type, media);
+    rv = ProcessLink(aElement, anchor, href, rel, title, type, media);
   }
 
   return rv;
@@ -733,14 +785,22 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
 
 nsresult
 nsContentSink::ProcessLink(nsIContent* aElement,
-                           const nsSubstring& aHref, const nsSubstring& aRel,
-                           const nsSubstring& aTitle, const nsSubstring& aType,
-                           const nsSubstring& aMedia)
+                           const nsSubstring& aAnchor, const nsSubstring& aHref,
+                           const nsSubstring& aRel, const nsSubstring& aTitle,
+                           const nsSubstring& aType, const nsSubstring& aMedia)
 {
   // XXX seems overkill to generate this string array
   nsTArray<nsString> linkTypes;
   nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
 
+  // The link relation may apply to a different resource, specified
+  // in the anchor parameter. For the link relations supported so far,
+  // we simply abort if the link applies to a resource different to the
+  // one we've loaded
+  if (!LinkContextIsOurDocument(aAnchor)) {
+    return NS_OK;
+  }
+  
   PRBool hasPrefetch = linkTypes.Contains(NS_LITERAL_STRING("prefetch"));
   // prefetch href if relation is "next" or "prefetch"
   if (hasPrefetch || linkTypes.Contains(NS_LITERAL_STRING("next"))) {

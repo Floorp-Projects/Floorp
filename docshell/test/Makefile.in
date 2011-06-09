@@ -109,6 +109,8 @@ _TEST_FILES = \
 		test_bug660404.html \
 		file_bug660404 \
 		file_bug660404^headers^ \
+		test_bug662170.html \
+		file_bug662170.html \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
