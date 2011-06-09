@@ -83,6 +83,10 @@ ConsoleAPI.prototype = {
       trace: function CA_trace() {
         self.notifyObservers(id, "trace", self.getStackTrace());
       },
+      // Displays an interactive listing of all the properties of an object.
+      dir: function CA_dir() {
+        self.notifyObservers(id, "dir", arguments);
+      },
       __exposedProps__: {
         log: "r",
         info: "r",
@@ -90,6 +94,7 @@ ConsoleAPI.prototype = {
         error: "r",
         debug: "r",
         trace: "r",
+        dir: "r"
       }
     };
 
@@ -107,6 +112,7 @@ ConsoleAPI.prototype = {
       error: genPropDesc('error'),
       debug: genPropDesc('debug'),
       trace: genPropDesc('trace'),
+      dir: genPropDesc('dir'),
       __noSuchMethod__: { enumerable: true, configurable: true, writable: true,
                           value: function() {} },
       __mozillaConsole__: { value: true }
