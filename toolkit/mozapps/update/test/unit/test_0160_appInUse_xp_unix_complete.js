@@ -235,12 +235,6 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  if (!IS_UNIX || IS_ANDROID) {
-    logTestInfo("this test is only applicable to XP_UNIX platforms except " +
-                "for Android... returning early");
-    return;
-  }
-
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 

@@ -192,11 +192,6 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  if (!IS_WIN) {
-    logTestInfo("this test is only applicable to Windows... returning early");
-    return;
-  }
-
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
