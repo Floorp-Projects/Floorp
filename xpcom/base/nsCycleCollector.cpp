@@ -469,9 +469,10 @@ struct PtrInfo
     PRUint32 mColor : 2;
     PRUint32 mInternalRefs : 30;
     PRUint32 mRefCount;
-    EdgePool::Iterator mFirstChild; // first
-    EdgePool::Iterator mLastChild; // one after last
+private:
+    EdgePool::Iterator mFirstChild;
 
+public:
 #ifdef DEBUG_CC
     size_t mBytes;
     char *mName;
@@ -498,8 +499,7 @@ struct PtrInfo
           mColor(grey),
           mInternalRefs(0),
           mRefCount(0),
-          mFirstChild(),
-          mLastChild()
+          mFirstChild()
 #ifdef DEBUG_CC
         , mBytes(0),
           mName(nsnull),
@@ -523,6 +523,28 @@ struct PtrInfo
     PtrInfo() {
         NS_NOTREACHED("should never be called");
     }
+
+    EdgePool::Iterator FirstChild()
+    {
+        return mFirstChild;
+    }
+
+    // this PtrInfo must be part of a NodePool
+    EdgePool::Iterator LastChild()
+    {
+        return (this + 1)->mFirstChild;
+    }
+
+    void SetFirstChild(EdgePool::Iterator aFirstChild)
+    {
+        mFirstChild = aFirstChild;
+    }
+
+    // this PtrInfo must be part of a NodePool
+    void SetLastChild(EdgePool::Iterator aLastChild)
+    {
+        (this + 1)->mFirstChild = aLastChild;
+    }
 };
 
 /**
@@ -542,7 +564,7 @@ private:
         ~Block() { NS_NOTREACHED("should never be called"); }
 
         Block* mNext;
-        PtrInfo mEntries[BlockSize];
+        PtrInfo mEntries[BlockSize + 1]; // +1 to store last child of last node
     };
 
 public:
@@ -1169,7 +1191,8 @@ Fault(const char *msg, PtrInfo *pi)
         NodePool::Enumerator queue(sCollector->mGraph.mNodes);
         while (!queue.IsDone()) {
             PtrInfo *ppi = queue.GetNext();
-            for (EdgePool::Iterator e = ppi->mFirstChild, e_end = ppi->mLastChild;
+            for (EdgePool::Iterator e = ppi->FirstChild(),
+                                e_end = ppi->LastChild();
                  e != e_end; ++e) {
                 if (*e == pi) {
                     printf("    %p %s\n", ppi->mPointer, ppi->mName);
@@ -1264,8 +1287,8 @@ GraphWalker<Visitor>::DoWalk(nsDeque &aQueue)
 
         if (mVisitor.ShouldVisitNode(pi)) {
             mVisitor.VisitNode(pi);
-            for (EdgePool::Iterator child = pi->mFirstChild,
-                                child_end = pi->mLastChild;
+            for (EdgePool::Iterator child = pi->FirstChild(),
+                                child_end = pi->LastChild();
                  child != child_end; ++child) {
                 aQueue.Push(*child);
             }
@@ -1519,14 +1542,15 @@ GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
     }
 #endif
 
-    mCurrPi->mFirstChild = mEdgeBuilder.Mark();
-    
+    // this is redundant except at the start of a NodePool block
+    mCurrPi->SetFirstChild(mEdgeBuilder.Mark());
+
     nsresult rv = aPtrInfo->mParticipant->Traverse(aPtrInfo->mPointer, *this);
     if (NS_FAILED(rv)) {
         Fault("script pointer traversal failed", aPtrInfo);
     }
 
-    mCurrPi->mLastChild = mEdgeBuilder.Mark();
+    mCurrPi->SetLastChild(mEdgeBuilder.Mark());
 }
 
 NS_IMETHODIMP_(void)
@@ -3027,8 +3051,8 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                         PtrInfo *pi = (PtrInfo*)stack.Peek();
                         if (pi->mSCCIndex == INDEX_UNREACHED) {
                             pi->mSCCIndex = INDEX_TRAVERSING;
-                            for (EdgePool::Iterator child = pi->mFirstChild,
-                                                child_end = pi->mLastChild;
+                            for (EdgePool::Iterator child = pi->FirstChild(),
+                                                child_end = pi->LastChild();
                                  child != child_end; ++child) {
                                 stack.Push(*child);
                             }
@@ -3071,8 +3095,8 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                         PtrInfo *pi = queue.GetNext();
                         if (pi->mColor != white)
                             continue;
-                        for (EdgePool::Iterator child = pi->mFirstChild,
-                                            child_end = pi->mLastChild;
+                        for (EdgePool::Iterator child = pi->FirstChild(),
+                                            child_end = pi->LastChild();
                              child != child_end; ++child) {
                             if ((*child)->mSCCIndex != pi->mSCCIndex) {
                                 GraphWalker<SetNonRootGreyVisitor>(SetNonRootGreyVisitor()).Walk(*child);
@@ -3134,7 +3158,7 @@ nsCycleCollector::CreateReversedEdges()
     NodePool::Enumerator countQueue(mGraph.mNodes);
     while (!countQueue.IsDone()) {
         PtrInfo *pi = countQueue.GetNext();
-        for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
+        for (EdgePool::Iterator e = pi->FirstChild(), e_end = pi->LastChild();
              e != e_end; ++e, ++edgeCount) {
         }
     }
@@ -3152,7 +3176,7 @@ nsCycleCollector::CreateReversedEdges()
     while (!buildQueue.IsDone()) {
         PtrInfo *pi = buildQueue.GetNext();
         PRInt32 i = 0;
-        for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
+        for (EdgePool::Iterator e = pi->FirstChild(), e_end = pi->LastChild();
              e != e_end; ++e) {
             current->mTarget = pi;
             current->mEdgeName = &pi->mEdgeNames[i];
