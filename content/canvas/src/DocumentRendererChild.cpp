@@ -90,7 +90,8 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
 
     nscolor bgColor;
     nsCSSParser parser;
-    nsresult rv = parser.ParseColorString(bgcolor, nsnull, 0, &bgColor);
+    nsresult rv = parser.ParseColorString(PromiseFlatString(bgcolor),
+                                          nsnull, 0, &bgColor);
     if (NS_FAILED(rv))
         return false;
 

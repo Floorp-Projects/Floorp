@@ -383,7 +383,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, b
   //   or mChildCounter touched by any other thread, so this is safe.
   static char* restoreOrigLogName = 0;
   if (!restoreOrigLogName)
-    restoreOrigLogName = strdup(setChildLogName.get());
+    restoreOrigLogName = strdup(PromiseFlatCString(setChildLogName).get());
 
   // Append child-specific postfix to name
   setChildLogName.AppendLiteral(".child-");
@@ -391,7 +391,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, b
 
   // Passing temporary to PR_SetEnv is ok here because env gets copied
   // by exec, etc., to permanent storage in child when process launched.
-  PR_SetEnv(setChildLogName.get());
+  PR_SetEnv(PromiseFlatCString(setChildLogName).get());
   bool retval = PerformAsyncLaunchInternal(aExtraOpts, arch);
 
   // Revert to original value
