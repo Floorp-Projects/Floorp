@@ -80,6 +80,8 @@ cairo_win32_surface_set_can_convert_to_dib (cairo_surface_t *surface, cairo_bool
 cairo_public cairo_status_t
 cairo_win32_surface_get_can_convert_to_dib (cairo_surface_t *surface, cairo_bool_t *can_convert);
 
+BYTE cairo_win32_get_system_text_quality (void);
+
 #if CAIRO_HAS_WIN32_FONT
 
 /*
