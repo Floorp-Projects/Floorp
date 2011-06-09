@@ -637,9 +637,26 @@ nsXULTreeItemAccessibleBase::
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessibleBase: nsISupports implementation
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeItemAccessibleBase,
-                             nsAccessible,
-                             nsXULTreeItemAccessibleBase)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTreeItemAccessibleBase)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULTreeItemAccessibleBase,
+                                                  nsAccessible)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTree)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTreeView)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeItemAccessibleBase,
+                                                nsAccessible)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTree)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTreeView)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULTreeItemAccessibleBase)
+  NS_INTERFACE_TABLE_INHERITED1(nsXULTreeItemAccessibleBase,
+                                nsXULTreeItemAccessibleBase)
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsAccessible)
+NS_IMPL_ADDREF_INHERITED(nsXULTreeItemAccessibleBase, nsAccessible)
+NS_IMPL_RELEASE_INHERITED(nsXULTreeItemAccessibleBase, nsAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessibleBase: nsIAccessible implementation
@@ -1043,6 +1060,22 @@ nsXULTreeItemAccessibleBase::IsExpandable()
   return PR_FALSE;
 }
 
+void
+nsXULTreeItemAccessibleBase::GetCellName(nsITreeColumn* aColumn,
+                                         nsAString& aName)
+{
+  mTreeView->GetCellText(mRow, aColumn, aName);
+
+  // If there is still no name try the cell value:
+  // This is for graphical cells. We need tree/table view implementors to
+  // implement FooView::GetCellValue to return a meaningful string for cases
+  // where there is something shown in the cell (non-text) such as a star icon;
+  // in which case GetCellValue for that cell would return "starred" or
+  // "flagged" for example.
+  if (aName.IsEmpty())
+    mTreeView->GetCellValue(mRow, aColumn, aName);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessible
@@ -1058,6 +1091,26 @@ nsXULTreeItemAccessible::
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsXULTreeItemAccessible: nsISupports implementation
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTreeItemAccessible)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULTreeItemAccessible,
+                                                  nsXULTreeItemAccessibleBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mColumn)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeItemAccessible,
+                                                nsXULTreeItemAccessibleBase)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mColumn)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXULTreeItemAccessible)
+NS_INTERFACE_MAP_END_INHERITING(nsXULTreeItemAccessibleBase)
+NS_IMPL_ADDREF_INHERITED(nsXULTreeItemAccessible, nsXULTreeItemAccessibleBase)
+NS_IMPL_RELEASE_INHERITED(nsXULTreeItemAccessible, nsXULTreeItemAccessibleBase)
+
+////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessible: nsIAccessible implementation
 
 NS_IMETHODIMP
@@ -1068,16 +1121,7 @@ nsXULTreeItemAccessible::GetName(nsAString& aName)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  mTreeView->GetCellText(mRow, mColumn, aName);
-
-  // If there is still no name try the cell value:
-  // This is for graphical cells. We need tree/table view implementors to implement
-  // FooView::GetCellValue to return a meaningful string for cases where there is
-  // something shown in the cell (non-text) such as a star icon; in which case
-  // GetCellValue for that cell would return "starred" or "flagged" for example.
-  if (aName.IsEmpty())
-    mTreeView->GetCellValue(mRow, mColumn, aName);
-
+  GetCellName(mColumn, aName);
   return NS_OK;
 }
 
