@@ -59,10 +59,20 @@ IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAll
                        MIRGraph &graph, TypeOracle *oracle)
   : MIRGenerator(temp, script, fun, graph),
     cx(cx),
-    oracle(oracle)
+    oracle(oracle),
+    sideEffectsOccurred_(false)
 {
     pc = script->code;
     atoms = script->atomMap.vector;
+}
+
+static bool SnapshotBefore[256];
+
+void
+IonBuilder::SetupOpcodeFlags()
+{
+    SnapshotBefore[JSOP_BITAND] = true;
+    SnapshotBefore[JSOP_ADD] = true;
 }
 
 static inline int32
@@ -260,10 +270,22 @@ IonBuilder::traverseBytecode()
                 return true;
         }
 
-        // Nothing in inspectOpcode() is allowed to advance the pc.
+        // Nothing beyond is allowed to advance the pc. Relying on this, we
+        // take an early snapshot if beneficial.
+
         JSOp op = JSOp(*pc);
+        if (SnapshotBefore[op] && !snapshotBefore())
+            return false;
+
         if (!inspectOpcode(op))
             return false;
+
+        if (sideEffectsOccurred_) {
+            JS_ASSERT(JSOp(*pc) == op);
+            sideEffectsOccurred_ = false;
+            if (!snapshotAfter())
+                return false;
+        }
 
         pc += js_CodeSpec[op].length;
     }
@@ -1148,9 +1170,6 @@ IonBuilder::pushConstant(const Value &v)
 bool
 IonBuilder::jsop_binary(JSOp op)
 {
-    // Take snapshot before killing inputs.
-    MSnapshot *snapshot = takeSnapshot();
-
     // Pop inputs.
     MInstruction *right = current->pop();
     MInstruction *left = current->pop();
@@ -1172,7 +1191,6 @@ IonBuilder::jsop_binary(JSOp op)
 
     current->add(ins);
     ins->infer(oracle->binaryOp(script, pc));
-    ins->assignSnapshot(snapshot);
 
     current->push(ins);
     return true;
@@ -1196,13 +1214,61 @@ IonBuilder::newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
     return block;
 }
 
-MSnapshot *
-IonBuilder::takeSnapshot()
+// A snapshot is a mapping of stack slots to MInstructions. It is used to
+// capture the environment such that if a guard fails, and IonMonkey needs
+// to exit back to the interpreter, the interpreter state can be
+// reconstructed.
+//
+// The snapshot model differs from TraceMonkey in that we do not need to
+// take snapshots for every guard. Instead, we take snapshots at two
+// critical points:
+//   * (1) At the beginning of every basic block.
+//   * (2) After every non-idempotent operation.
+//
+// As long as these two properties are maintained, instructions can
+// be moved, hoisted, or, eliminated without problems, and ops without side
+// effects do not need to worry about capturing snapshots at precisely the
+// right point in time.
+//
+// Effectful instructions, of course, need to take a snapshot after completion,
+// where the interpreter will not attempt to repeat the operation. For this,
+// snapshotAfter() must be used.
+//
+// However, non-effectful instructions might want snapshots too. For example,
+// ADD sometimes needs an overflow guard, but using a pre-existing snapshot
+// could hold more variables live than needed, which would generate extra
+// spills. Therefore, instructions can request a new snapshot that will resume
+// at the current opcode, called snapshotBefore(). It is important to call this
+// before mutating the stack, as the snapshot must be resumeable at the start
+// of the opcode.
+//
+// To help reduce errors, before-snapshots are allocated automatically by the
+// main bytecode loop, via annotations on opcodes. After-snapshots are also
+// taken automatically, but instructions are responsible for annotating when
+// side effects occur.
+//
+// During LIR construction, if an instruction can bail back to the interpreter,
+// we create an LBailout, which uses the last known snapshot to request
+// register/stack assignments for every live value.
+bool
+IonBuilder::snapshot(jsbytecode *pc)
 {
     MSnapshot *snapshot = MSnapshot::New(current, pc);
     if (!snapshot)
-        return NULL;
+        return false;
     current->add(snapshot);
-    return snapshot;
+    return true;
+}
+
+bool
+IonBuilder::snapshotAfter()
+{
+    return snapshot(GetNextPc(pc));
+}
+
+bool
+IonBuilder::snapshotBefore()
+{
+    return snapshot(pc);
 }
 

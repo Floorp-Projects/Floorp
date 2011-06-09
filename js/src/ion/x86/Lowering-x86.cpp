@@ -114,7 +114,9 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     LUnbox *lir = new LUnbox(unbox->type());
     lir->setOperand(0, usePayloadInRegister(inner));
     lir->setOperand(1, useType(inner));
-    return define(lir, unbox, LDefinition::CAN_REUSE_INPUT);
+    if (!define(lir, unbox, LDefinition::CAN_REUSE_INPUT))
+        return false;
+    return assignSnapshot(lir);
 }
 
 bool
@@ -128,5 +130,32 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
     ins->setOperand(1, LUse(JSReturnReg_Data));
     fillBoxUses(ins, 0, opd);
     return add(ins);
+}
+
+void
+LIRGeneratorX86::fillSnapshot(LSnapshot *snapshot)
+{
+    MSnapshot *mir = snapshot->mir();
+    for (size_t i = 0; i < mir->numOperands(); i++) {
+        MInstruction *ins = mir->getInput(i);
+        LAllocation *type = snapshot->getEntry(i * 2);
+        LAllocation *payload = snapshot->getEntry(i * 2 + 1);
+
+        // The register allocation will fill these fields in with actual
+        // register/stack assignments. During code generation, we can restore
+        // interpreter state with the given information. Note that for
+        // constants, including known types, we record a dummy placeholder,
+        // since we can recover the same information, much cleaner, from MIR.
+        if (ins->isConstant()) {
+            *type = LConstantIndex(0);
+            *payload = LConstantIndex(0);
+        } else if (ins->type() != MIRType_Value) {
+            *type = LConstantIndex(0);
+            *payload = use(ins, LUse::ANY);
+        } else {
+            *type = useType(ins);
+            *payload = usePayload(ins, LUse::ANY);
+        }
+    }
 }
 

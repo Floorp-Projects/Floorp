@@ -85,6 +85,7 @@ bool ion::InitializeIon()
         IonTLSInitialized = true;
     }
 #endif
+    IonBuilder::SetupOpcodeFlags();
     return true;
 }
 

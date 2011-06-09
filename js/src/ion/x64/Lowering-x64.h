@@ -54,6 +54,9 @@ class LIRGeneratorX64 : public LIRGenerator
       : LIRGenerator(gen, graph)
     { }
 
+  protected:
+    void fillSnapshot(LSnapshot *snapshot);
+
   public:
     bool visitBox(MBox *box);
     bool visitUnbox(MUnbox *unbox);

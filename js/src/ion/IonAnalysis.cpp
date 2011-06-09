@@ -246,14 +246,6 @@ TypeAnalyzer::propagate()
     return true;
 }
 
-bool
-TypeAnalyzer::canSpecializeAtDef(MInstruction *ins)
-{
-    // It's only possible to specialize at the def if there is a snapshot.
-    // If this gets to be a problem, we can create more snapshots.
-    return ins->snapshot() || ins->isPhi();
-}
-
 // Rewrites uses of an old definition to point at a new, narrower-typed
 // version. The purpose of this is to shorten the lifetime of the type tag on
 // platforms with nun/wideboxing.
@@ -266,13 +258,12 @@ TypeAnalyzer::rewriteUses(MInstruction *old, MInstruction *ins)
     while (iter.more()) {
         MInstruction *use = iter->ins();
 
+        // We try to replace uses that accept any representation (boxed or
+        // unboxed). Note, this will also rewrite entries in snapshots, which
+        // is okay, because the unbox operation itself is resumable.
         MIRType required = use->requiredInputType(iter->index());
-        if ((required != MIRType_Any && required != ins->type()) ||
-            use == ins->snapshot())
+        if (required != MIRType_Any && required != ins->type())
         {
-            // We try to replace uses that accept any representation (boxed or
-            // unboxed), but we must ignore the snapshot at the unbox
-            // instruction, otherwise it will have a use of itself.
             iter.next();
             continue;
         }
@@ -300,15 +291,11 @@ TypeAnalyzer::specializePhi(MPhi *phi)
         // break semantics if a guard failed after the phi.
         if (ins->type() != MIRType_Value)
             return true;
-
-        if (!canSpecializeAtDef(ins))
-            return true;
     }
 
     MBasicBlock *block = phi->block();
     MUnbox *unbox = MUnbox::New(phi, usedAs);
     block->insertAfter(*block->begin(), unbox);
-    unbox->assignSnapshot(block->entrySnapshot());
     rewriteUses(phi, unbox);
 
     return true;
@@ -322,16 +309,13 @@ TypeAnalyzer::fixup(MInstruction *ins)
 
     // Add unbox operations near the definition, if possible.
     MIRType usedAs = ins->usedAsType();
-    if (usedAs != MIRType_Value && ins->type() == MIRType_Value && canSpecializeAtDef(ins)) {
+    if (usedAs != MIRType_Value && ins->type() == MIRType_Value) {
         MUnbox *unbox = MUnbox::New(ins, usedAs);
         MBasicBlock *block = ins->block();
-        if (ins->isPhi()) {
+        if (ins->isPhi())
             block->insertAfter(*block->begin(), unbox);
-            unbox->assignSnapshot(block->entrySnapshot());
-        } else {
+        else
             block->insertAfter(ins, unbox);
-            unbox->assignSnapshot(ins->snapshot());
-        }
         rewriteUses(ins, unbox);
     }
 
@@ -361,7 +345,6 @@ TypeAnalyzer::fixup(MInstruction *ins)
             // The input is a value, but it wants explicit unboxing.
             MUnbox *unbox = MUnbox::New(ins, required);
             use->block()->insertBefore(use, unbox);
-            unbox->assignSnapshot(use->snapshot());
             use->replaceOperand(uses, unbox);
         } else {
             // Type mismatch. We'll figure out how to deal with this later.
