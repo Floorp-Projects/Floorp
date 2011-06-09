@@ -1730,7 +1730,7 @@ GLContext::UseBlitProgram()
             fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
             log.SetLength(len);
 
-            printf_stderr("Shader %d compilation failed:\n%s\n", log.get());
+            printf_stderr("Shader %d compilation failed:\n%s\n", nsPromiseFlatCString(log).get());
             return;
         }
 
@@ -1754,7 +1754,7 @@ GLContext::UseBlitProgram()
         fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
         log.SetLength(len);
 
-        printf_stderr("Program linking failed:\n%s\n", log.get());
+        printf_stderr("Program linking failed:\n%s\n", nsPromiseFlatCString(log).get());
         return;
     }
 

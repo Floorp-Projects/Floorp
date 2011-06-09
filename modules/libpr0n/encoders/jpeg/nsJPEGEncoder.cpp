@@ -119,7 +119,7 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
       nsCString value = NS_ConvertUTF16toUTF8(Substring(aOutputOptions,
                                                         qualityPrefix.Length()));
       int newquality = -1;
-      if (PR_sscanf(value.get(), "%d", &newquality) == 1) {
+      if (PR_sscanf(PromiseFlatCString(value).get(), "%d", &newquality) == 1) {
         if (newquality >= 0 && newquality <= 100) {
           quality = newquality;
         } else {
