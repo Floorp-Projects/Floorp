@@ -196,9 +196,7 @@ INSTALLED_HEADERS = \
 		$(CURDIR)/jsautokw.h \
 		js.msg \
 		jsalloc.h \
-		jsanalyze.h \
 		jsapi.h \
-		jsarray.h \
 		jsarena.h \
 		jsatom.h \
 		jsbit.h \
@@ -210,12 +208,10 @@ INSTALLED_HEADERS = \
 		jsdate.h \
 		jsdbgapi.h \
 		jsdhash.h \
-		jsdtoa.h \
 		jsemit.h \
 		jsfun.h \
 		jsfriendapi.h \
 		jsgc.h \
-		jsgcmark.h \
 		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \
@@ -226,36 +222,28 @@ INSTALLED_HEADERS = \
 		jsiter.h \
 		jslock.h \
 		jslong.h \
-		jsmath.h \
 		jsobj.h \
-		jsobjinlines.h \
 		json.h \
-		jsonparser.h \
 		jsopcode.tbl \
 		jsopcode.h \
-		jsopcodeinlines.h \
 		jsotypes.h \
 		jsparse.h \
 		jsproxy.h \
 		jsprf.h \
 		jsprobes.h \
 		jspropertycache.h \
-		jspropertycacheinlines.h \
 		jspropertytree.h \
 		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \
 		jsreflect.h \
-		jsregexp.h \
 		jsscan.h \
 		jsscope.h \
 		jsscript.h \
-		jsscriptinlines.h \
 		jsstaticcheck.h \
 		jsstdint.h \
 		jsstr.h \
 		jstracer.h \
-		jshotloop.h \
 		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \
@@ -263,10 +251,8 @@ INSTALLED_HEADERS = \
 		jstl.h \
 		jshashtable.h \
 		jsversion.h \
-		jsweakmap.h \
 		jswrapper.h \
 		jsxdrapi.h \
-		jsxml.h \
 		jsval.h \
 		jsvalue.h \
 		prmjtime.h \
