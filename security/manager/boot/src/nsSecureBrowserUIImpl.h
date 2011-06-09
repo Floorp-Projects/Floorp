@@ -53,7 +53,7 @@
 #include "nsIStringBundle.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIDocShell.h"
-#include "nsIWebProgressListener.h"
+#include "nsIWebProgressListener2.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
@@ -72,7 +72,7 @@ class nsIChannel;
 
 
 class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
-                              public nsIWebProgressListener,
+                              public nsIWebProgressListener2,
                               public nsIFormSubmitObserver,
                               public nsIObserver,
                               public nsSupportsWeakReference,
@@ -85,6 +85,7 @@ public:
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIWEBPROGRESSLISTENER2
   NS_DECL_NSISECUREBROWSERUI
   
   // nsIObserver

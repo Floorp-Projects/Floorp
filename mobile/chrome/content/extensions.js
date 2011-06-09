@@ -306,7 +306,7 @@ var ExtensionsView = {
     listitem.setAttribute("appDisabled", aAddon.appDisabled);
     listitem.setAttribute("appManaged", appManaged);
     listitem.setAttribute("description", aAddon.description);
-    listitem.setAttribute("optionsURL", aAddon.optionsURL);
+    listitem.setAttribute("optionsURL", aAddon.optionsURL || "");
     listitem.setAttribute("opType", opType);
     listitem.setAttribute("updateable", updateable);
     listitem.setAttribute("isReadonly", !uninstallable);
