@@ -39,11 +39,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "MIR.h"
+#include "MIRGraph.h"
 #include "IonLIR.h"
 #include "IonLIR-inl.h"
 
 using namespace js;
 using namespace js::ion;
+
+LSnapshot::LSnapshot(MSnapshot *mir)
+  : numSlots_(mir->numOperands() * BOX_PIECES),
+    slots_(NULL),
+    mir_(mir)
+{ }
+
+bool
+LSnapshot::init(MIRGenerator *gen)
+{
+    slots_ = gen->allocate<LAllocation>(numSlots_);
+    return !!slots_;
+}
+
+LSnapshot *
+LSnapshot::New(MIRGenerator *gen, MSnapshot *mir)
+{
+    LSnapshot *snapshot = new LSnapshot(mir);
+    if (!snapshot->init(gen))
+        return NULL;
+    return snapshot;
+}
 
 void
 LInstruction::printName(FILE *fp)

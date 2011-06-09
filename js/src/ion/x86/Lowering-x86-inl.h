@@ -58,12 +58,18 @@ LIRGeneratorX86::useType(MInstruction *mir)
 }
 
 LUse
-LIRGeneratorX86::usePayloadInRegister(MInstruction *mir)
+LIRGeneratorX86::usePayload(MInstruction *mir, LUse::Policy policy)
 {
     JS_ASSERT(mir->id());
     JS_ASSERT(mir->type() == MIRType_Value);
 
-    return LUse(mir->id() + VREG_INCREMENT, LUse::REGISTER);
+    return LUse(mir->id() + VREG_INCREMENT, policy);
+}
+
+LUse
+LIRGeneratorX86::usePayloadInRegister(MInstruction *mir)
+{
+    return usePayload(mir, LUse::REGISTER);
 }
 
 void

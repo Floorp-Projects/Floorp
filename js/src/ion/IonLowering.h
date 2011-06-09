@@ -65,12 +65,14 @@ class LIRGenerator : public MInstructionVisitor
     MIRGraph &graph;
     LBlock *current;
     uint32 vregGen_;
+    MSnapshot *last_snapshot_;
 
   public:
     LIRGenerator(MIRGenerator *gen, MIRGraph &graph)
       : gen(gen),
         graph(graph),
-        vregGen_(0)
+        vregGen_(0),
+        last_snapshot_(NULL)
     { }
 
     bool generate();
@@ -133,6 +135,10 @@ class LIRGenerator : public MInstructionVisitor
         }
         return true;
     }
+
+    // Assign a snapshot to an instruction that may need to deoptimize.
+    bool assignSnapshot(LInstruction *ins);
+    virtual void fillSnapshot(LSnapshot *snapshot) = 0;
 
   public:
     bool visitBlock(MBasicBlock *block);

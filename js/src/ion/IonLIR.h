@@ -62,6 +62,8 @@ class LStackSlot;
 class LArgument;
 class LConstantIndex;
 class MBasicBlock;
+class MIRGenerator;
+class MSnapshot;
 
 static const uint32 MAX_VIRTUAL_REGISTERS = (1 << 21) - 1;
 
@@ -436,13 +438,18 @@ class LDefinition
     LIR_OPCODE_LIST(LIROP)
 #undef LIROP
 
+class LSnapshot;
+
 class LInstruction : public TempObject,
                      public InlineListNode<LInstruction>
 {
     uint32 id_;
+    LSnapshot *snapshot_;
 
   protected:
-    LInstruction() : id_(0)
+    LInstruction()
+      : id_(0),
+        snapshot_(NULL)
     { }
 
   public:
@@ -478,6 +485,13 @@ class LInstruction : public TempObject,
         JS_ASSERT(!id_);
         JS_ASSERT(id);
         id_ = id;
+    }
+    LSnapshot *snapshot() const {
+        return snapshot_;
+    }
+    void assignSnapshot(LSnapshot *snapshot) {
+        JS_ASSERT(!snapshot_);
+        snapshot_ = snapshot;
     }
 
     virtual void print(FILE *fp);
@@ -568,11 +582,30 @@ class LInstructionHelper : public LInstruction
     }
 };
 
-// A guard record captures the live state at an instruction, which the register
+// A bailout captures the live state at an instruction, which the register
 // allocator can fill in for deoptimization.
-class LRecord
+class LSnapshot : public TempObject
 {
+    uint32 numSlots_;
+    LAllocation *slots_;
+    MSnapshot *mir_;
+
+    LSnapshot(MSnapshot *mir);
+    bool init(MIRGenerator *gen);
+
   public:
+    static LSnapshot *New(MIRGenerator *gen, MSnapshot *snapshot);
+
+    size_t numEntries() const {
+        return numSlots_;
+    }
+    LAllocation *getEntry(size_t i) {
+        JS_ASSERT(i < numSlots_);
+        return &slots_[i];
+    }
+    MSnapshot *mir() const {
+        return mir_;
+    }
 };
 
 } // namespace ion

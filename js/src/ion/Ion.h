@@ -62,11 +62,9 @@ public:
 bool InitializeIon();
 
 IonContext *GetIonContext();
-
 bool SetIonContext(IonContext *ctx);
 
-bool
-Go(JSContext *cx, JSScript *script, js::StackFrame *fp);
+bool Go(JSContext *cx, JSScript *script, js::StackFrame *fp);
 
 }
 }

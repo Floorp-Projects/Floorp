@@ -76,22 +76,28 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
     switch (unbox->type()) {
       // Integers, booleans, and strings both need two outputs: the payload
       // and the type, the type of which is temporary and thrown away.
-      case MIRType_Boolean:
-        return define(new LUnboxBoolean(useRegister(box), temp(LDefinition::INTEGER)), unbox);
-      case MIRType_Int32:
-        return define(new LUnboxInteger(useRegister(box), temp(LDefinition::INTEGER)), unbox);
-      case MIRType_String:
-        return define(new LUnboxString(useRegister(box), temp(LDefinition::INTEGER)), unbox);
-      case MIRType_Object:
-      {
+      case MIRType_Boolean: {
+        LUnboxBoolean *ins = new LUnboxBoolean(useRegister(box), temp(LDefinition::INTEGER));
+        return define(ins, unbox) && assignSnapshot(ins);
+      }
+      case MIRType_Int32: {
+        LUnboxInteger *ins = new LUnboxInteger(useRegister(box), temp(LDefinition::INTEGER));
+        return define(ins, unbox) && assignSnapshot(ins);
+      }
+      case MIRType_String: {
+        LUnboxString *ins = new LUnboxString(useRegister(box), temp(LDefinition::INTEGER));
+        return define(ins, unbox) && assignSnapshot(ins);
+      }
+      case MIRType_Object: {
         // Objects don't need a temporary.
         LDefinition out(LDefinition::POINTER, LDefinition::CAN_REUSE_INPUT);
-        return define(new LUnboxObject(useRegister(box)), unbox, out);
+        LUnboxObject *ins = new LUnboxObject(useRegister(box));
+        return define(ins, unbox, out) && assignSnapshot(ins);
       }
-      case MIRType_Double:
-      {
+      case MIRType_Double: {
         // Doubles don't need a temporary.
-        return define(new LUnboxDouble(useRegister(box)), unbox);
+        LUnboxDouble *ins = new LUnboxDouble(useRegister(box));
+        return define(ins, unbox) && assignSnapshot(ins);
       }
       default:
         JS_NOT_REACHED("cannot unbox a value with no payload");
@@ -109,5 +115,18 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
     LReturn *ins = new LReturn;
     ins->setOperand(0, useFixed(opd, JSReturnReg));
     return add(ins);
+}
+
+void
+LIRGeneratorX64::fillSnapshot(LSnapshot *snapshot)
+{
+    MSnapshot *mir = snapshot->mir();
+    for (size_t i = 0; i < mir->numOperands(); i++) {
+        MInstruction *ins = mir->getInput(i);
+        LAllocation *a = snapshot->getEntry(i);
+
+        JS_ASSERT(ins->inWorklist() && ins->id());
+        *a = useOrConstant(ins);
+    }
 }
 
