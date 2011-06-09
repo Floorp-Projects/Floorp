@@ -103,7 +103,7 @@ ConvertCloneBuffersToArrayInternal(
       JSAutoStructuredCloneBuffer& buffer = aBuffers[index];
 
       jsval val;
-      if (!buffer.read(&val, aCx)) {
+      if (!IDBObjectStore::DeserializeValue(aCx, buffer, &val)) {
         NS_WARNING("Failed to decode!");
         return NS_ERROR_DOM_DATA_CLONE_ERR;
       }
@@ -487,35 +487,6 @@ AsyncConnectionHelper::WrapNative(JSContext* aCx,
   nsresult rv =
     nsContentUtils::WrapNative(aCx, global, aNative, aResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  return NS_OK;
-}
-
-// static
-nsresult
-AsyncConnectionHelper::ConvertCloneBufferToJSVal(
-                                           JSContext* aCx,
-                                           JSAutoStructuredCloneBuffer& aBuffer,
-                                           jsval* aResult)
-{
-  NS_ASSERTION(aCx, "Null context!");
-  NS_ASSERTION(aResult, "Null pointer!");
-
-  JSAutoRequest ar(aCx);
-
-  if (aBuffer.data()) {
-    JSBool ok = aBuffer.read(aResult, aCx);
-
-    aBuffer.clear(aCx);
-
-    if (!ok) {
-      NS_ERROR("Failed to decode!");
-      return NS_ERROR_DOM_DATA_CLONE_ERR;
-    }
-  }
-  else {
-    *aResult = JSVAL_VOID;
-  }
 
   return NS_OK;
 }
