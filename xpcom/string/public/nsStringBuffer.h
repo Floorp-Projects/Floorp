@@ -106,7 +106,7 @@ class nsStringBuffer
        */
       static nsStringBuffer* FromData(void* data)
         {
-          return (nsStringBuffer*) ( ((char*) data) - sizeof(nsStringBuffer) );
+          return reinterpret_cast<nsStringBuffer*> (data) - 1;
         }
 
       /**
@@ -114,7 +114,7 @@ class nsStringBuffer
        */
       void* Data() const
         {
-          return (void*) ( ((char*) this) + sizeof(nsStringBuffer) );
+          return const_cast<char*> (reinterpret_cast<const char*> (this + 1));
         }
 
       /**
