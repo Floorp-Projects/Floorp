@@ -177,8 +177,10 @@ public:
                               nsAccessible *aParent, nsITreeBoxObject *aTree,
                               nsITreeView *aTreeView, PRInt32 aRow);
 
-  // nsISupports
+  // nsISupports and cycle collection
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeItemAccessibleBase,
+                                           nsAccessibleWrap)
 
   // nsIAccessible
   NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
@@ -267,6 +269,11 @@ public:
   nsXULTreeItemAccessible(nsIContent *aContent, nsIWeakReference *aShell,
                           nsAccessible *aParent, nsITreeBoxObject *aTree,
                           nsITreeView *aTreeView, PRInt32 aRow);
+
+  // nsISupports and cycle collection
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeItemAccessible,
+                                           nsXULTreeItemAccessibleBase)
 
   NS_IMETHOD GetName(nsAString& aName);
 
