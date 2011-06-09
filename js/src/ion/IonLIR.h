@@ -350,7 +350,7 @@ class LDefinition
     static const uint32 POLICY_SHIFT = TYPE_SHIFT + TYPE_BITS;
     static const uint32 POLICY_MASK = (1 << POLICY_BITS) - 1;
 
-    static const uint32 VREG_BITS = (sizeof(bits_) * 8) - (POLICY_BITS + TYPE_BITS);
+    static const uint32 VREG_BITS = (sizeof(uint32) * 8) - (POLICY_BITS + TYPE_BITS);
     static const uint32 VREG_SHIFT = POLICY_SHIFT + POLICY_BITS;
     static const uint32 VREG_MASK = (1 << VREG_BITS) - 1;
 
