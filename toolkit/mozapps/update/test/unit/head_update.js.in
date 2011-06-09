@@ -486,10 +486,27 @@ function waitForHelperFinished() {
     do_timeout(TEST_HELPER_TIMEOUT, waitForHelperFinished);
     return;
   }
-  output.remove(false);
-  let input = getApplyDirFile("a/b/input", true);
-  if (input.exists()) {
-    input.remove(false);
+  // Give the lock file process time to unlock the file before deleting the
+  // input and output files.
+  do_timeout(TEST_HELPER_TIMEOUT, waitForHelperFinishFileUnlock);
+}
+
+function waitForHelperFinishFileUnlock() {
+  try {
+    let output = getApplyDirFile("a/b/output", true);
+    if (output.exists()) {
+      output.remove(false);
+    }
+    let input = getApplyDirFile("a/b/input", true);
+    if (input.exists()) {
+      input.remove(false);
+    }
+  }
+  catch (e) {
+    // Give the lock file process time to unlock the file before deleting the
+    // input and output files.
+    do_timeout(TEST_HELPER_TIMEOUT, waitForHelperFinishFileUnlock);
+    return;
   }
   do_timeout(TEST_HELPER_TIMEOUT, checkUpdate);
 }

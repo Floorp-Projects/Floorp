@@ -1056,7 +1056,6 @@ case "$target" in
     if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
         dnl Use the specified value
         export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
-        AC_DEFINE_UNQUOTED(__ENVIRONMENT_MAC_OS_X_VERION_MIN_REQUIRED__,$_MACOSX_DEPLOYMENT_TARGET)
     else
         dnl No value specified on the command line or in the environment,
         dnl use architecture minimum.
@@ -5067,6 +5066,7 @@ cairo-qt)
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
     USE_FC_FREETYPE=1
+    XT_LIBS=
 
     TK_CFLAGS='$(MOZ_QT_CFLAGS)'
     TK_LIBS='$(MOZ_QT_LIBS)'
