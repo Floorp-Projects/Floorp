@@ -64,8 +64,11 @@ function part1(win) {
 
     ok(!contentWindow.UI.getActiveOrphanTab(), "There is no active orphan tab.");
     ok(win.TabView.isVisible(), "Tab View is visible.");
-  
-    whenTabViewIsHidden(part4, win);
+
+    win.gBrowser.tabContainer.addEventListener("TabSelect", function() {
+      win.gBrowser.tabContainer.removeEventListener("TabSelect", arguments.callee, false);
+      executeSoon(part4);
+    }, false);
     win.document.getElementById("cmd_newNavigatorTab").doCommand();
   }
 
