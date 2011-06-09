@@ -62,6 +62,7 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
+#include "jsdtoa.h"
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"

@@ -51,19 +51,16 @@
 #include "jslong.h"
 #include "jsatom.h"
 #include "jsdhash.h"
-#include "jsdtoa.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcchunk.h"
 #include "jshashtable.h"
 #include "jsinterp.h"
-#include "jsmath.h"
 #include "jsobj.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"
 #include "jsstaticcheck.h"
 #include "jsutil.h"
-#include "jsarray.h"
 #include "jsvector.h"
 #include "prmjtime.h"
 
@@ -87,6 +84,10 @@ template<typename K, typename V, typename H> class HashMap;
 template<typename T> class Seq;
 
 }  /* namespace nanojit */
+
+JS_BEGIN_EXTERN_C
+struct DtoaState;
+JS_END_EXTERN_C
 
 namespace js {
 
@@ -209,7 +210,7 @@ struct ThreadData {
     /* Property cache for faster call/get/set invocation. */
     PropertyCache       propertyCache;
 
-    /* State used by dtoa.c. */
+    /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
 
     /* Base address of the native stack for the current thread. */
