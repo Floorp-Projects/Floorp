@@ -41,6 +41,8 @@ var gExtractedPath = null;    //used to cache file path for extracting files fro
  *
  *            forward: if true, the browser will execute goForward()
  *
+ *             reload: if true, the browser will execute reload()
+ *
  *  eventsToListenFor: an array containing one or more of the following event  
  *                     types to listen for:  "pageshow", "pagehide", "onload",
  *                     "onunload".  If this property is undefined, only a 

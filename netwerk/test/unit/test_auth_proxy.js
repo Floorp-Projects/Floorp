@@ -117,7 +117,7 @@ AuthPrompt2.prototype = {
     try {
       var me = this;
       var allOverAndDead = false;
-      runLater(function() {
+      do_execute_soon(function() {
         try {
           if (allOverAndDead)
             throw "already canceled";
@@ -155,12 +155,6 @@ Cancelable.prototype = {
     } catch (e) { do_throw(e); }
   }
 };
-
-function runLater(func)
-{
-  var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback(func, 0, Ci.nsITimer.TYPE_ONE_SHOT);
-}
 
 function Requestor(proxyFlags, hostFlags) {
   this.proxyFlags = proxyFlags;

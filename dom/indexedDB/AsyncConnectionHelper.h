@@ -166,14 +166,6 @@ protected:
                       jsval* aResult);
 
   /**
-   * Helper to decode a clone buffer to a jsval.
-   */
-  static nsresult ConvertCloneBufferToJSVal(
-                                           JSContext* aCx,
-                                           JSAutoStructuredCloneBuffer& aBuffer,
-                                           jsval* aResult);
-
-  /**
    * Helper to make a JS array object out of an array of clone buffers.
    */
   static nsresult ConvertCloneBuffersToArray(
