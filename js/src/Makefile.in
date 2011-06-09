@@ -221,7 +221,6 @@ INSTALLED_HEADERS = \
 		jsinttypes.h \
 		jsiter.h \
 		jslock.h \
-		jslong.h \
 		jsobj.h \
 		json.h \
 		jsopcode.tbl \

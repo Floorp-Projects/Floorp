@@ -48,7 +48,6 @@
 #include "jsprvtd.h"
 #include "jsarena.h"
 #include "jsclist.h"
-#include "jslong.h"
 #include "jsatom.h"
 #include "jsdhash.h"
 #include "jsfun.h"
