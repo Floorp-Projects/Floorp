@@ -117,6 +117,9 @@ class MIRGenerator
     // errors in tricky places, and the error status can be checked before
     // validating or generating code.
     bool error(const char *message = NULL);
+    bool errored() const {
+        return error_;
+    }
 
   public:
     JSScript *script;
@@ -350,7 +353,7 @@ class MBasicBlock : public TempObject
         return entrySnapshot()->getInput(i);
     }
 
-    LBlock *getLir() const {
+    LBlock *lir() const {
         return lir_;
     }
     void assignLir(LBlock *lir) {

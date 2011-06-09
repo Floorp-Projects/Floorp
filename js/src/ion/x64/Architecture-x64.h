@@ -68,6 +68,14 @@ class RegisterCodes {
         R15
     };
 
+    static const char *GetName(Code code) {
+        static const char *Names[] = { "rax", "rcx", "rdx", "rbx",
+                                       "rsp", "rbp", "rsi", "rdi",
+                                       "r8",  "r9", "r10", "r11",
+                                       "r12", "r13", "r14", "r15" };
+        return Names[code];
+    }
+
     static const uint32 Total = 16;
     static const uint32 Allocatable = 13;
 
@@ -128,6 +136,14 @@ class FloatRegisterCodes {
         XMM14,
         XMM15
     };
+
+    static const char *GetName(Code code) {
+        static const char *Names[] = { "xmm0", "xmm1", "xmm2", "xmm3",
+                                       "xmm4", "xmm5", "xmm6", "xmm7",
+                                       "xmm8", "xmm9", "xmm10", "xmm11",
+                                       "xmm12", "xmm13", "xmm14", "xmm15" };
+        return Names[code];
+    }
 
     static const uint32 Total = 16;
     static const uint32 Allocatable = 16;

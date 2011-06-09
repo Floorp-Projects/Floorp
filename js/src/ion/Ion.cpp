@@ -137,10 +137,12 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 
     if (!ApplyTypeInformation(graph))
         return false;
+    spew.spew("Apply types");
 
     LIRBuilder lirgen(&builder, graph);
     if (!lirgen.generate())
         return false;
+    spew.spew("Generate LIR");
 
     return false;
 }

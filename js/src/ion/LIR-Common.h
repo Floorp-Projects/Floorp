@@ -91,8 +91,17 @@ class LParameter : public LInstructionHelper<BOX_PIECES, 0, 0>
     LIR_HEADER(Parameter);
 };
 
+// Jumps to the start of a basic block.
 class LGoto : public LInstructionHelper<0, 0, 0>
 {
+    MBasicBlock *block_;
+
+  public:
+    LIR_HEADER(Goto);
+
+    LGoto(MBasicBlock *block)
+      : block_(block)
+    { }
 };
 
 class LTest : public LInstruction

@@ -43,6 +43,7 @@
 #include "Ion.h"
 #include "IonSpew.h"
 #include "MIRGraph.h"
+#include "IonLIR.h"
 #include "jsscriptinlines.h"
 
 using namespace js;
@@ -97,10 +98,19 @@ static void
 DumpInstruction(FILE *fp, MInstruction *ins)
 {
     fprintf(fp, "      ");
-    fprintf(fp, "0 %ld ", ins->useCount());
+    fprintf(fp, "0 %d ", (int)ins->useCount());
     ins->printName(fp);
     fprintf(fp, " ");
     ins->printOpcode(fp);
+    fprintf(fp, " <|@\n");
+}
+
+static void
+DumpLIR(FILE *fp, LInstruction *ins)
+{
+    fprintf(fp, "      ");
+    fprintf(fp, "%d ", ins->id());
+    ins->print(fp);
     fprintf(fp, " <|@\n");
 }
 
@@ -130,10 +140,17 @@ C1Spewer::spew(FILE *fp, MBasicBlock *block)
     fprintf(fp, "    xhandlers\n");
     fprintf(fp, "    flags\n");
 
+    if (block->lir() && block->lir()->begin() != block->lir()->end()) {
+        LInstruction *first = *block->lir()->begin();
+        LInstruction *last = *(block->lir()->end().prev());
+        fprintf(fp, "    first_lir_id %d\n", first->id());
+        fprintf(fp, "    last_lir_id %d\n", last->id());
+    }
+
     fprintf(fp, "    begin_states\n");
 
     fprintf(fp, "      begin_locals\n");
-    fprintf(fp, "        size %ld\n", block->numEntrySlots());
+    fprintf(fp, "        size %d\n", (int)block->numEntrySlots());
     fprintf(fp, "        method \"None\"\n");
     for (uint32 i = 0; i < block->numEntrySlots(); i++) {
         MInstruction *ins = block->getEntrySlot(i);
@@ -152,6 +169,13 @@ C1Spewer::spew(FILE *fp, MBasicBlock *block)
     for (MInstructionIterator i = block->begin(); i != block->end(); i++)
         DumpInstruction(fp, *i);
     fprintf(fp, "    end_HIR\n");
+
+    if (block->lir()) {
+        fprintf(fp, "    begin_LIR\n");
+        for (LInstructionIterator i = block->lir()->begin(); i != block->lir()->end(); i++)
+            DumpLIR(fp, *i);
+        fprintf(fp, "    end_LIR\n");
+    }
 
     fprintf(fp, "  end_block\n");
 }

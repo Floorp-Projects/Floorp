@@ -101,6 +101,10 @@ class InlineList
         bool operator == (const iterator &where) const {
             return iter == where.iter;
         }
+        iterator prev() {
+            iterator p(iter->prev);
+            return p;
+        }
     };
 
     class const_iterator

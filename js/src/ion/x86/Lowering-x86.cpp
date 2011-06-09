@@ -124,8 +124,9 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
     JS_ASSERT(opd->type() == MIRType_Value);
 
     LReturn *ins = new LReturn;
-    ins->setOperand(0, useFixed(opd, JSReturnReg_Type));
-    ins->setOperand(1, useFixed(opd, JSReturnReg_Data));
+    ins->setOperand(0, LUse(JSReturnReg_Type));
+    ins->setOperand(1, LUse(JSReturnReg_Data));
+    fillBoxUses(ins, 0, opd);
     return add(ins);
 }
 
