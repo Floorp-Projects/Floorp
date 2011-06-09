@@ -1107,6 +1107,12 @@ cairo_dwrite_set_cleartype_params(FLOAT gamma, FLOAT contrast, FLOAT level,
     DWriteFactory::SetRenderingParams(gamma, contrast, level, geometry, mode);
 }
 
+int
+cairo_dwrite_get_cleartype_rendering_mode()
+{
+    return DWriteFactory::GetClearTypeRenderingMode();
+}
+
 cairo_int_status_t
 _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 				       DWRITE_MATRIX *transform,
