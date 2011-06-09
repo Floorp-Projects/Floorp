@@ -126,16 +126,27 @@ function uri(aSpec) NetUtil.newURI(aSpec);
  *
  * @return The database connection or null if unable to get one.
  */
+let gDBConn;
 function DBConn() {
   let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                               .DBConnection;
   if (db.connectionReady)
     return db;
 
-  // If the database has been closed, then we need to open a new connection.
-  let file = Services.dirsvc.get('ProfD', Ci.nsIFile);
-  file.append("places.sqlite");
-  return Services.storage.openDatabase(file);
+  // If the Places database connection has been closed, create a new connection.
+  if (!gDBConn) {
+    let file = Services.dirsvc.get('ProfD', Ci.nsIFile);
+    file.append("places.sqlite");
+    gDBConn = Services.storage.openDatabase(file);
+
+    // Be sure to cleanly close this connection.
+    Services.obs.addObserver(function (aSubject, aTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, aTopic);
+      gDBConn.asyncClose();
+    }, "profile-before-change", false);
+  }
+
+  return gDBConn.connectionReady ? gDBConn : null;
 };
 
 
