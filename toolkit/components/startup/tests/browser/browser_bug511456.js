@@ -35,9 +35,6 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const PROMPT_URL = "chrome://global/content/commonDialog.xul";
 const TEST_URL = "http://example.com/browser/toolkit/components/startup/tests/browser/beforeunload.html";
 
