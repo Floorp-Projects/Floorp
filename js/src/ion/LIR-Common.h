@@ -104,8 +104,55 @@ class LGoto : public LInstructionHelper<0, 0, 0>
     { }
 };
 
-class LTest : public LInstruction
+// Takes in either an integer or boolean input and tests it for truthiness.
+class LTestIAndBranch : public LInstructionHelper<0, 1, 0>
 {
+    MBasicBlock *ifTrue;
+    MBasicBlock *ifFalse;
+
+  public:
+    LIR_HEADER(TestIAndBranch);
+
+    LTestIAndBranch(const LAllocation &in, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : ifTrue(ifTrue),
+        ifFalse(ifFalse)
+    {
+        setOperand(0, in);
+    }
+};
+
+// Takes in either an integer or boolean input and tests it for truthiness.
+class LTestDAndBranch : public LInstructionHelper<0, 1, 1>
+{
+    MBasicBlock *ifTrue;
+    MBasicBlock *ifFalse;
+
+  public:
+    LIR_HEADER(TestDAndBranch);
+
+    LTestDAndBranch(const LAllocation &in, const LDefinition &temp,
+                    MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : ifTrue(ifTrue),
+        ifFalse(ifFalse)
+    {
+        setOperand(0, in);
+        setTemp(0, temp);
+    }
+};
+
+// Takes in a boxed value and tests it for truthiness.
+class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 0>
+{
+    MBasicBlock *ifTrue;
+    MBasicBlock *ifFalse;
+
+  public:
+    LIR_HEADER(TestVAndBranch);
+
+    LTestVAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : ifTrue(ifTrue),
+        ifFalse(ifFalse)
+    { }
 };
 
 // Binary bitwise operation, taking two 32-bit integers as inputs and returning

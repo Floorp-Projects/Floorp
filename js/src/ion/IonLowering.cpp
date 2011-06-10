@@ -86,6 +86,7 @@ LIRGenerator::visitConstant(MConstant *ins)
     const Value &v = ins->value();
     switch (ins->type()) {
       case MIRType_Boolean:
+        return define(new LInteger(v.toBoolean()), ins);
       case MIRType_Int32:
         return define(new LInteger(v.toInt32()), ins);
       case MIRType_Double:
@@ -144,10 +145,28 @@ LIRGenerator::visitGoto(MGoto *ins)
 }
 
 bool
-LIRGenerator::visitTest(MTest *ins)
+LIRGenerator::visitTest(MTest *test)
 {
-    //JS_NOT_REACHED("NYI");
-    return true;
+    MInstruction *opd = test->getInput(0);
+    MBasicBlock *ifTrue = test->ifTrue();
+    MBasicBlock *ifFalse = test->ifFalse();
+
+    if (opd->type() == MIRType_Value) {
+        LTestVAndBranch *lir = new LTestVAndBranch(ifTrue, ifFalse);
+        if (!fillBoxUses(lir, 0, opd))
+            return false;
+        return add(lir);
+    }
+
+    // These must be explicitly sniffed out since they are constants and have
+    // no payload.
+    if (opd->type() == MIRType_Undefined || opd->type() == MIRType_Null)
+        return add(new LGoto(ifFalse));
+
+    if (opd->type() == MIRType_Double)
+        return add(new LTestDAndBranch(useRegister(opd), temp(LDefinition::DOUBLE), ifTrue, ifFalse));
+
+    return add(new LTestIAndBranch(useRegister(opd), ifTrue, ifFalse));
 }
 
 static void

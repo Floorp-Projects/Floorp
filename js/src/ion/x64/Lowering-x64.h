@@ -57,6 +57,7 @@ class LIRGeneratorX64 : public LIRGenerator
   protected:
     void fillSnapshot(LSnapshot *snapshot);
     bool preparePhi(MPhi *phi);
+    bool fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir);
 
   public:
     bool visitBox(MBox *box);
