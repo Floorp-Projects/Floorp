@@ -287,12 +287,13 @@ toolbarbutton[open="true"] {
   list-style-image: url("chrome://browser/skin/images/check-selected-hdpi.png");
 }
 
+.button-checkbox > .button-box,
 .button-checkbox:hover:active > .button-box,
 .button-checkbox[checked="true"] > .button-box {
   padding-top: @padding_tiny@;
   padding-bottom: @padding_xsmall@;
-  -moz-padding-start: @margin_small@;
-  -moz-padding-end: @margin_small@;
+  -moz-padding-start: @padding_small@;
+  -moz-padding-end: @padding_small@;
 }
 
 /* radio buttons ----------------------------------------------------------- */
