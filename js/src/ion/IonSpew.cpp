@@ -130,9 +130,8 @@ C1Spewer::spew(FILE *fp, MBasicBlock *block)
     fprintf(fp, "\n");
 
     fprintf(fp, "    successors");
-    MControlInstruction *last = block->lastIns();
-    for (uint32 i = 0; i < last->numSuccessors(); i++) {
-        MBasicBlock *successor = last->getSuccessor(i);
+    for (uint32 i = 0; i < block->numSuccessors(); i++) {
+        MBasicBlock *successor = block->getSuccessor(i);
         fprintf(fp, " \"B%d\"", successor->id());
     }
     fprintf(fp, "\n");
