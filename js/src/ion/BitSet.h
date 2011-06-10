@@ -100,6 +100,13 @@ public:
     // O(max): Intersect this set with the given set.
     void intersect(const BitSet *other);
 
+    // O(max): Intersect this set with the given set; return whether the
+    // intersection caused the set to change.
+    bool fixedPointIntersect(const BitSet *other);
+
+    // O(max): Does inplace complement of the set.
+    void complement();
+
 };
 
 }

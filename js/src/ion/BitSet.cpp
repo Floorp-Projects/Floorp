@@ -45,7 +45,8 @@
 using namespace js;
 using namespace js::ion;
 
-BitSet *BitSet::New(unsigned int max)
+BitSet *
+BitSet::New(unsigned int max)
 {
     BitSet *result = new BitSet(max);
     if (!result || !result->init())
@@ -53,7 +54,8 @@ BitSet *BitSet::New(unsigned int max)
     return result;
 }
 
-bool BitSet::init()
+bool
+BitSet::init()
 {
     size_t sizeRequired = numWords() * sizeof(*bits_);
 
@@ -67,7 +69,8 @@ bool BitSet::init()
     return true;
 }
 
-bool BitSet::contains(unsigned int value) const
+bool
+BitSet::contains(unsigned int value) const
 {
     JS_ASSERT(bits_);
     JS_ASSERT(value <= max_);
@@ -75,7 +78,8 @@ bool BitSet::contains(unsigned int value) const
     return bits_[wordForValue(value)] & bitForValue(value);
 }
 
-void BitSet::insert(unsigned int value)
+void
+BitSet::insert(unsigned int value)
 {
     JS_ASSERT(bits_);
     JS_ASSERT(value <= max_);
@@ -83,7 +87,8 @@ void BitSet::insert(unsigned int value)
     bits_[wordForValue(value)] |= bitForValue(value);
 }
 
-void BitSet::insertAll(const BitSet *other)
+void
+BitSet::insertAll(const BitSet *other)
 {
     JS_ASSERT(bits_);
     JS_ASSERT(other->max_ == max_);
@@ -93,7 +98,8 @@ void BitSet::insertAll(const BitSet *other)
         bits_[i] |= other->bits_[i];
 }
 
-void BitSet::remove(unsigned int value)
+void
+BitSet::remove(unsigned int value)
 {
     JS_ASSERT(bits_);
     JS_ASSERT(value <= max_);
@@ -101,7 +107,8 @@ void BitSet::remove(unsigned int value)
     bits_[wordForValue(value)] &= ~bitForValue(value);
 }
 
-void BitSet::removeAll(const BitSet *other)
+void
+BitSet::removeAll(const BitSet *other)
 {
     JS_ASSERT(bits_);
     JS_ASSERT(other->max_ == max_);
@@ -111,7 +118,8 @@ void BitSet::removeAll(const BitSet *other)
         bits_[i] &= ~other->bits_[i];
 }
 
-void BitSet::intersect(const BitSet *other)
+void
+BitSet::intersect(const BitSet *other)
 {
     JS_ASSERT(bits_);
     JS_ASSERT(other->max_ == max_);
@@ -119,4 +127,32 @@ void BitSet::intersect(const BitSet *other)
 
     for (unsigned int i = 0; i < numWords(); i++)
         bits_[i] &= other->bits_[i];
+}
+
+// returns true if the intersection caused the contents of the set to change.
+bool
+BitSet::fixedPointIntersect(const BitSet *other)
+{
+    JS_ASSERT(bits_);
+    JS_ASSERT(other->max_ == max_);
+    JS_ASSERT(other->bits_);
+
+    bool changed = false;
+
+    for (unsigned int i = 0; i < numWords(); i++) {
+        unsigned long old = bits_[i];
+        bits_[i] &= other->bits_[i];
+
+        if (!changed && old != bits_[i])
+            changed = true;
+    }
+    return changed;
+}
+
+void
+BitSet::complement()
+{
+    JS_ASSERT(bits_);
+    for (unsigned int i = 0; i < numWords(); i++)
+        bits_[i] = ~bits_[i];
 }
