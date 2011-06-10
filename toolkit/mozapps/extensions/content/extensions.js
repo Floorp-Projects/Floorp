@@ -939,6 +939,10 @@ var gViewController = {
           return;
         }
         var optionsURL = aAddon.optionsURL;
+        if (aAddon.optionsType == AddonManager.OPTIONS_TYPE_TAB &&
+            openOptionsInTab(optionsURL)) {
+          return;
+        }
         var windows = Services.wm.getEnumerator(null);
         while (windows.hasMoreElements()) {
           var win = windows.getNext();
@@ -1198,6 +1202,18 @@ var gViewController = {
   onEvent: function() {}
 };
 
+function openOptionsInTab(optionsURL) {
+  var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShellTreeItem)
+                         .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow); 
+  if ("switchToTabHavingURI" in mainWindow) {
+    mainWindow.switchToTabHavingURI(optionsURL, true);
+    return true;
+  }
+  return false;
+}
 
 function formatDate(aDate) {
   return Cc["@mozilla.org/intl/scriptabledateformat;1"]
