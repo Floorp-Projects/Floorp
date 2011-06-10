@@ -53,7 +53,8 @@
     _(Phi)                          \
     _(TestIAndBranch)               \
     _(TestDAndBranch)               \
-    _(TestVAndBranch)
+    _(TestVAndBranch)               \
+    _(AddI)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

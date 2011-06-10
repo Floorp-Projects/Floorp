@@ -180,6 +180,13 @@ class LReturn : public LInstructionHelper<0, BOX_PIECES, 0>
     LIR_HEADER(Return);
 };
 
+// Adds two integers, returning an integer value.
+class LAddI : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(AddI);
+};
+
 class MPhi;
 
 // Phi is a pseudo-instruction that emits no code, and is an annotation for the

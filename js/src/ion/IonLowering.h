@@ -132,6 +132,9 @@ class LIRGenerator : public MInstructionVisitor
     inline bool defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstruction *mir,
                           LDefinition::Policy policy = LDefinition::DEFAULT);
 
+    typedef LInstructionHelper<1, 2, 0> LMathI;
+    virtual bool lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs) = 0;
+
     template <typename T>
     bool annotate(T *ins) {
         if (ins->numDefs()) {
