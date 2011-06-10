@@ -169,6 +169,8 @@ static void glxtest()
   };
   int numReturned;
   GLXFBConfig *fbConfigs = glXChooseFBConfig(dpy, DefaultScreen(dpy), attribs, &numReturned );
+  if (!fbConfigs)
+    fatal_error("No FBConfigs found");
   XVisualInfo *vInfo = glXGetVisualFromFBConfig(dpy, fbConfigs[0]);
 
   ///// Get a Pixmap and a GLXPixmap /////
