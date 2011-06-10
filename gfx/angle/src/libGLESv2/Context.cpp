@@ -243,6 +243,7 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
 
         mSupportsShaderModel3 = mDeviceCaps.PixelShaderVersion == D3DPS_VERSION(3, 0);
         mSupportsVertexTexture = display->getVertexTextureSupport();
+        mSupportsNonPower2Texture = display->getNonPower2TextureSupport();
 
         mMaxTextureDimension = std::min(std::min((int)mDeviceCaps.MaxTextureWidth, (int)mDeviceCaps.MaxTextureHeight),
                                         (int)gl::IMPLEMENTATION_MAX_TEXTURE_SIZE);
@@ -1868,6 +1869,7 @@ void Context::applyState(GLenum drawMode)
         }
 
         mStencilStateDirty = false;
+        mFrontFaceDirty = false;
     }
 
     if (mMaskStateDirty)
@@ -1902,48 +1904,41 @@ void Context::applyState(GLenum drawMode)
 
     if (mSampleStateDirty)
     {
-        if (framebufferObject->isMultisample())
+        if (mState.sampleAlphaToCoverage)
         {
-            if (mState.sampleAlphaToCoverage)
-            {
-                FIXME("Sample alpha to coverage is unimplemented.");
-            }
+            FIXME("Sample alpha to coverage is unimplemented.");
+        }
 
-            device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, TRUE);
-            if (mState.sampleCoverage)
+        device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, TRUE);
+        if (mState.sampleCoverage)
+        {
+            unsigned int mask = 0;
+            if (mState.sampleCoverageValue != 0)
             {
-                unsigned int mask = 0;
-                if (mState.sampleCoverageValue != 0)
+                float threshold = 0.5f;
+
+                for (int i = 0; i < framebufferObject->getSamples(); ++i)
                 {
-                    float threshold = 0.5f;
+                    mask <<= 1;
 
-                    for (int i = 0; i < framebufferObject->getSamples(); ++i)
+                    if ((i + 1) * mState.sampleCoverageValue >= threshold)
                     {
-                        mask <<= 1;
-
-                        if ((i + 1) * mState.sampleCoverageValue >= threshold)
-                        {
-                            threshold += 1.0f;
-                            mask |= 1;
-                        }
+                        threshold += 1.0f;
+                        mask |= 1;
                     }
                 }
-                
-                if (mState.sampleCoverageInvert)
-                {
-                    mask = ~mask;
-                }
-
-                device->SetRenderState(D3DRS_MULTISAMPLEMASK, mask);
             }
-            else
+            
+            if (mState.sampleCoverageInvert)
             {
-                device->SetRenderState(D3DRS_MULTISAMPLEMASK, 0xFFFFFFFF);
+                mask = ~mask;
             }
+
+            device->SetRenderState(D3DRS_MULTISAMPLEMASK, mask);
         }
         else
         {
-            device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, FALSE);
+            device->SetRenderState(D3DRS_MULTISAMPLEMASK, 0xFFFFFFFF);
         }
 
         mSampleStateDirty = false;
@@ -1955,8 +1950,6 @@ void Context::applyState(GLenum drawMode)
 
         mDitherStateDirty = false;
     }
-
-    mFrontFaceDirty = false;
 }
 
 GLenum Context::applyVertexBuffer(GLint first, GLsizei count)
@@ -3098,6 +3091,11 @@ bool Context::supports32bitIndices() const
     return mSupports32bitIndices;
 }
 
+bool Context::supportsNonPower2Texture() const
+{
+    return mSupportsNonPower2Texture;
+}
+
 void Context::detachBuffer(GLuint buffer)
 {
     // [OpenGL ES 2.0.24] section 2.9 page 22:
@@ -3333,6 +3331,11 @@ void Context::initExtensionString()
     if (supports32bitIndices())
     {
         mExtensionString += "GL_OES_element_index_uint ";
+    }
+
+    if (supportsNonPower2Texture())
+    {
+        mExtensionString += "GL_OES_texture_npot ";
     }
 
     std::string::size_type end = mExtensionString.find_last_not_of(' ');
