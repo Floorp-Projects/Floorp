@@ -917,16 +917,6 @@ obj_valueOf(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-/*
- * Check if CSP allows new Function() or eval() to run in the current
- * principals.
- */
-JSBool
-js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeobj)
-{
-    return scopeobj->getGlobal()->isEvalAllowed(cx);
-}
-
 /* We should be able to assert this for *any* fp->scopeChain(). */
 static void
 AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
@@ -1129,11 +1119,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
     JS_ASSERT((evalType == INDIRECT_EVAL) == (caller == NULL));
     AssertInnerizedScopeChain(cx, scopeobj);
 
-    /*
-     * CSP check: Is eval() allowed at all?
-     * Report errors via CSP is done in the script security mgr.
-     */
-    if (!js_CheckContentSecurityPolicy(cx, &scopeobj)) {
+    if (!scopeobj.getGlobal()->isRuntimeCodeGenEnabled(cx)) {
         JS_ReportError(cx, "call to eval() blocked by CSP");
         return false;
     }

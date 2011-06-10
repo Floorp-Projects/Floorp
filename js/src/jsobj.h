@@ -1839,10 +1839,6 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, js::Value *vp);
 extern bool
 js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const js::Value &v);
 
-/* For CSP -- checks if eval() and friends are allowed to run. */
-extern JSBool
-js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeObj);
-
 extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
 
