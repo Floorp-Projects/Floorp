@@ -152,3 +152,11 @@ LIRGeneratorX64::fillSnapshot(LSnapshot *snapshot)
     }
 }
 
+bool
+LIRGeneratorX64::lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs)
+{
+    ins->setOperand(0, useRegister(lhs));
+    ins->setOperand(1, useOrConstant(rhs));
+    return defineReuseInput(ins, mir);
+}
+

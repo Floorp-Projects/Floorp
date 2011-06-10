@@ -70,6 +70,8 @@ class LIRGeneratorX86 : public LIRGenerator
     void fillSnapshot(LSnapshot *snapshot);
     bool preparePhi(MPhi *phi);
 
+    bool lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs);
+
   public:
     bool visitBox(MBox *box);
     bool visitUnbox(MUnbox *unbox);
