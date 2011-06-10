@@ -199,11 +199,24 @@ class MInstruction
     uint32 id_;             // Ordered id for register allocation.
     MIRType resultType_;    // Actual result type.
     uint32 usedTypes_;      // Set of used types.
-    bool inWorklist_;       // Flag for worklist algorithms.
+    uint32 flags_;          // Bit flags.
 
   private:
+    static const uint32 IN_WORKLIST = (1 << 0);
+    static const uint32 REWRITES_DEF = (1 << 1);
+
     void setBlock(MBasicBlock *block) {
         block_ = block;
+    }
+
+    bool hasFlags(uint32 flags) const {
+        return (flags_ & flags) == flags;
+    }
+    void removeFlags(uint32 flags) {
+        flags_ &= ~flags;
+    }
+    void setFlags(uint32 flags) {
+        flags_ |= flags;
     }
 
   public:
@@ -213,7 +226,7 @@ class MInstruction
         id_(0),
         resultType_(MIRType_None),
         usedTypes_(0),
-        inWorklist_(0)
+        flags_(0)
     { }
 
     virtual Opcode op() const = 0;
@@ -228,18 +241,18 @@ class MInstruction
         id_ = id;
     }
     bool inWorklist() const {
-        return inWorklist_;
+        return hasFlags(IN_WORKLIST);
     }
     void setInWorklist() {
         JS_ASSERT(!inWorklist());
-        inWorklist_ = true;
+        setFlags(IN_WORKLIST);
     }
     void setInWorklistUnchecked() {
-        inWorklist_ = true;
+        setFlags(IN_WORKLIST);
     }
     void setNotInWorklist() {
         JS_ASSERT(inWorklist());
-        inWorklist_ = false;
+        removeFlags(IN_WORKLIST);
     }
 
     MBasicBlock *block() const {
@@ -283,6 +296,28 @@ class MInstruction
     // downgraded.
     virtual bool adjustForInputs() {
         return false;
+    }
+
+    // Certain instructions can rewrite definitions in dominated snapshots. For
+    // example:
+    //   0: getprop
+    //   1: snapshot (slot0 = 0)
+    //   2: unbox(0, int32)
+    //   3: snapshot (slot0 = 0)
+    //
+    // In this case, we would like to overwrite the second, but not first,
+    // snapshot's slot0 mapping with the unboxed value. It is difficult to make
+    // this work in the same pass as inserting instructions, so we annotate it
+    // for a second pass.
+    bool rewritesDef() const {
+        return hasFlags(REWRITES_DEF);
+    }
+    void setRewritesDef() {
+        setFlags(REWRITES_DEF);
+    }
+    virtual MInstruction *rewrittenDef() const {
+        JS_NOT_REACHED("Opcodes which can rewrite defs must implement this.");
+        return NULL;
     }
 
     // Replaces an operand, taking care to update use chains. No memory is
@@ -611,6 +646,10 @@ class MUnbox : public MUnaryInstruction
 
     MIRType requiredInputType(size_t index) const {
         return MIRType_Value;
+    }
+
+    MInstruction *rewrittenDef() const {
+        return getInput(0);
     }
 };
 

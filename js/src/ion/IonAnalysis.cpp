@@ -259,11 +259,14 @@ TypeAnalyzer::rewriteUses(MInstruction *old, MInstruction *ins)
         MInstruction *use = iter->ins();
 
         // We try to replace uses that accept any representation (boxed or
-        // unboxed). Note, this will also rewrite entries in snapshots, which
-        // is okay, because the unbox operation itself is resumable.
+        // unboxed). Note, we dp not rewrite snapshots yet because at this
+        // point it is difficult to tell whether a snapshot occurs before or
+        // after the newly inserted unbox instruction. This is deferred until
+        // lowering.
         MIRType required = use->requiredInputType(iter->index());
-        if (required != MIRType_Any && required != ins->type())
-        {
+        if ((required != MIRType_Any && required != ins->type()) || use->isSnapshot()) {
+            if (use->isSnapshot())
+                ins->rewritesDef();
             iter.next();
             continue;
         }

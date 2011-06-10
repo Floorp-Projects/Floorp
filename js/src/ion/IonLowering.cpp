@@ -221,7 +221,22 @@ bool
 LIRGenerator::visitSnapshot(MSnapshot *snapshot)
 {
     last_snapshot_ = snapshot;
+    snapshot->setInWorklist();
     return true;
+}
+
+void
+LIRGenerator::rewriteDefsInSnapshots(MInstruction *ins, MInstruction *old)
+{
+    MUseIterator iter(old);
+    while (iter.more()) {
+        MInstruction *use = iter->ins();
+        if (!ins->isSnapshot() || ins->inWorklist()) {
+            iter.next();
+            continue;
+        }
+        use->replaceOperand(iter, ins);
+    }
 }
 
 bool
@@ -245,6 +260,8 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     for (MInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
         if (!gen->ensureBallast())
             return false;
+        if (iter->rewritesDef())
+            rewriteDefsInSnapshots(*iter, iter->rewrittenDef());
         if (!iter->accept(this))
             return false;
         if (gen->errored())
