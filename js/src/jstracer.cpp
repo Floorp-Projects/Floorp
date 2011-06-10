@@ -98,6 +98,8 @@
 #include "methodjit/MethodJIT.h"
 #endif
 
+#include "tracejit/Writer-inl.h"
+
 #include "jsautooplen.h"        // generated headers last
 #include "imacros.c.out"
 
@@ -15657,20 +15659,6 @@ TraceRecorder::record_JSOP_ARGSUB()
     }
     RETURN_STOP_A("can't trace JSOP_ARGSUB hard case");
 }
-
-namespace tjit {
-
-nj::LIns *
-Writer::getArgsLength(nj::LIns *args) const
-{
-    uint32 slot = js::ArgumentsObject::INITIAL_LENGTH_SLOT;
-    nj::LIns *vaddr_ins = ldpObjSlots(args);
-    return name(lir->insLoad(nj::LIR_ldi, vaddr_ins, slot * sizeof(Value) + sPayloadOffset,
-                             ACCSET_SLOTS),
-                "argsLength");
-}
-
-} // namespace tjit
 
 JS_REQUIRES_STACK LIns*
 TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)

@@ -72,6 +72,7 @@
 #include "jsvector.h"
 
 #include "jsinterpinlines.h"
+#include "jsnuminlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
