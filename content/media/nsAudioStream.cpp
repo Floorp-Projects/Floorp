@@ -93,7 +93,7 @@ class nsAudioStreamLocal : public nsAudioStream
   nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
   PRUint32 Available();
   void SetVolume(double aVolume);
-  nsresult Drain();
+  void Drain();
   void Pause();
   void Resume();
   PRInt64 GetPosition();
@@ -137,7 +137,7 @@ class nsAudioStreamRemote : public nsAudioStream
   nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
   PRUint32 Available();
   void SetVolume(double aVolume);
-  nsresult Drain();
+  void Drain();
   void Pause();
   void Resume();
   PRInt64 GetPosition();
@@ -560,12 +560,12 @@ void nsAudioStreamLocal::SetVolume(double aVolume)
 #endif
 }
 
-nsresult nsAudioStreamLocal::Drain()
+void nsAudioStreamLocal::Drain()
 {
   NS_ASSERTION(!mPaused, "Don't drain audio when paused, it won't finish!");
 
   if (mInError)
-    return NS_ERROR_FAILURE;
+    return;
 
   // Write any remaining unwritten sound data in the overflow buffer
   if (!mBufferOverflow.IsEmpty()) {
@@ -574,16 +574,14 @@ nsresult nsAudioStreamLocal::Drain()
                         mBufferOverflow.Length() * sizeof(short)) != SA_SUCCESS)
       PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_write error"));
       mInError = PR_TRUE;
-      return NS_ERROR_FAILURE;
+      return;
   }
 
   int r = sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle));
   if (r != SA_SUCCESS && r != SA_ERROR_INVALID) {
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_drain error"));
     mInError = PR_TRUE;
-    return NS_ERROR_FAILURE;
   }
-  return NS_OK;
 }
 
 void nsAudioStreamLocal::Pause()
@@ -741,16 +739,16 @@ nsAudioStreamRemote::SetVolume(double aVolume)
   NS_DispatchToMainThread(event);
 }
 
-nsresult
+void
 nsAudioStreamRemote::Drain()
 {
   if (!mAudioChild)
-    return NS_ERROR_FAILURE;
+    return;
   nsCOMPtr<nsIRunnable> event = new AudioDrainEvent(mAudioChild);
   NS_DispatchToMainThread(event);
-  return mAudioChild->WaitForDrain();
+  mAudioChild->WaitForDrain();
 }
-
+ 
 void
 nsAudioStreamRemote::Pause()
 {
