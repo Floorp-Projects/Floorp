@@ -110,6 +110,10 @@ class LIRGenerator : public MInstructionVisitor
     inline LAllocation useOrConstant(MInstruction *mir);
     inline LAllocation useRegisterOrConstant(MInstruction *mir);
 
+    // Adds a box operand to an instruction, where |n| is the operand number to
+    // start from.
+    virtual bool fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir) = 0;
+
     // These create temporary register requests.
     inline LDefinition temp(LDefinition::Type type);
 
