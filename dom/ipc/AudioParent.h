@@ -80,13 +80,11 @@ class AudioParent : public PAudioParent, public nsITimerCallback
     SendMinWriteSampleDone(PRInt32 minSamples);
 
     virtual bool
-    SendDrainDone(nsresult status);
+    SendDrainDone();
 
     AudioParent(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
     virtual ~AudioParent();
     virtual void ActorDestroy(ActorDestroyReason);
-
-    void EnteringErrorState();
 
     nsRefPtr<nsAudioStream> mStream;
     nsCOMPtr<nsITimer> mTimer;
