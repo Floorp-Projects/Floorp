@@ -40,6 +40,7 @@ let TabView = {
   _deck: null,
   _iframe: null,
   _window: null,
+  _initialized: false,
   _browserKeyHandlerInitialized: false,
   _isFrameLoading: false,
   _initFrameCallbacks: [],
@@ -89,6 +90,9 @@ let TabView = {
 
   // ----------
   init: function TabView_init() {
+    if (this._initialized)
+      return;
+
     if (this.firstUseExperienced) {
       if ((gBrowser.tabs.length - gBrowser.visibleTabs.length) > 0)
         this._setBrowserKeyHandlers();
@@ -124,6 +128,8 @@ let TabView = {
     }
 
     Services.prefs.addObserver(this.PREF_BRANCH, this, false);
+
+    this._initialized = true;
   },
 
   // ----------
@@ -138,12 +144,17 @@ let TabView = {
   // ----------
   // Uninitializes TabView.
   uninit: function TabView_uninit() {
+    if (!this._initialized)
+      return;
+
     Services.prefs.removeObserver(this.PREF_BRANCH, this);
 
     if (this._tabShowEventListener) {
       gBrowser.tabContainer.removeEventListener(
         "TabShow", this._tabShowEventListener, true);
     }
+
+    this._initialized = false;
   },
 
   // ----------
