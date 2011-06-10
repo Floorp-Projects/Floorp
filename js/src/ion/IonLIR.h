@@ -51,6 +51,7 @@
 #include "IonAssembler.h"
 #include "FixedArityList.h"
 #include "LOpcodes.h"
+#include "TypeOracle.h"
 
 namespace js {
 namespace ion {
@@ -339,8 +340,12 @@ class LDefinition
     uint32 bits_;
 
     // Before register allocation, this optionally contains a fixed policy.
-    // Current, preset fixed policies are limited to stack assignments.
-    // Register allocation assigns this field to a physical policy.
+    // Register allocation assigns this field to a physical policy if none is
+    // preset.
+    //
+    // Right now, pre-allocated outputs are limited to the following:
+    //   * Physical argument stack slots.
+    //   * Physical registers.
     LAllocation output_;
 
     static const uint32 TYPE_BITS = 3;
@@ -431,6 +436,26 @@ class LDefinition
     void setOutput(const LAllocation &a) {
         output_ = a;
     }
+
+    static inline Type TypeFrom(MIRType type) {
+        switch (type) {
+          case MIRType_Boolean:
+          case MIRType_Int32:
+            return LDefinition::INTEGER;
+          case MIRType_String:
+          case MIRType_Object:
+            return LDefinition::OBJECT;
+          case MIRType_Double:
+            return LDefinition::DOUBLE;
+#if defined(JS_PUNBOX64)
+          case MIRType_Value:
+            return LDefinition::BOX;
+#endif
+          default:
+            JS_NOT_REACHED("unexpected type");
+            return LDefinition::BOX;
+        }
+    }
 };
 
 // Forward declarations of LIR types.
@@ -467,16 +492,19 @@ class LInstruction : public TempObject,
     // unallocated, it is an LDefinition, defining a virtual register.
     virtual size_t numDefs() const = 0;
     virtual LDefinition *getDef(size_t index) = 0;
+    virtual void setDef(size_t index, const LDefinition &def) = 0;
 
     // Returns information about operands. Each unallocated operand is an LUse
     // with a non-TEMPORARY policy.
     virtual size_t numOperands() const = 0;
     virtual LAllocation *getOperand(size_t index) = 0;
+    virtual void setOperand(size_t index, const LAllocation &a) = 0;
 
     // Returns information about temporary registers needed. Each temporary
     // register is an LUse with a TEMPORARY policy, or a fixed register.
     virtual size_t numTemps() const = 0;
     virtual LDefinition *getTemp(size_t index) = 0;
+    virtual void setTemp(size_t index, const LDefinition &a) = 0;
 
     uint32 id() const {
         return id_;
@@ -513,9 +541,11 @@ class LInstruction : public TempObject,
 
 typedef InlineList<LInstruction>::iterator LInstructionIterator;
 
+class LPhi;
 class LBlock : public TempObject
 {
     MBasicBlock *block_;
+    Vector<LPhi *, 4, IonAllocPolicy> phis_;
     InlineList<LInstruction> instructions_;
 
     LBlock(MBasicBlock *block)
@@ -528,6 +558,15 @@ class LBlock : public TempObject
     }
     void add(LInstruction *ins) {
         instructions_.insert(ins);
+    }
+    bool addPhi(LPhi *phi) {
+        return phis_.append(phi);
+    }
+    size_t numPhis() const {
+        return phis_.length();
+    }
+    LPhi *getPhi(size_t index) const {
+        return phis_[index];
     }
     MBasicBlock *mir() const {
         return block_;

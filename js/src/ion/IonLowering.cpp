@@ -51,31 +51,9 @@ using namespace ion;
 bool
 LIRGenerator::emitAtUses(MInstruction *mir)
 {
-    mir->setInWorklist();
+    mir->setEmitAtUses();
     mir->setId(0);
     return true;
-}
-
-template <size_t Ops, size_t Temps> bool
-LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstruction *mir,
-                        LDefinition::Policy policy)
-{
-    uint32 vreg = nextVirtualRegister();
-    if (vreg >= MAX_VIRTUAL_REGISTERS)
-        return false;
-
-#if defined(JS_NUNBOX32)
-    lir->setDef(0, LDefinition(vreg, LDefinition::TYPE, policy));
-    lir->setDef(1, LDefinition(vreg + 1, LDefinition::PAYLOAD, policy));
-    if (nextVirtualRegister() >= MAX_VIRTUAL_REGISTERS)
-        return false;
-#elif defined(JS_PUNBOX64)
-    lir->setDef(0, LDefinition(vreg, LDefinition::BOX, policy));
-#endif
-
-    mir->setId(vreg);
-    mir->setInWorklistUnchecked();
-    return add(lir);
 }
 
 LUse
@@ -85,9 +63,9 @@ LIRGenerator::use(MInstruction *mir, LUse policy)
 #if BOX_PIECES > 1
     JS_ASSERT(mir->type() != MIRType_Value);
 #endif
-    startUsing(mir);
+    if (!ensureDefined(mir))
+        return policy;
     policy.setVirtualRegister(mir->id());
-    stopUsing(mir);
     return policy;
 }
 
@@ -168,12 +146,7 @@ LIRGenerator::visitGoto(MGoto *ins)
 bool
 LIRGenerator::visitTest(MTest *ins)
 {
-    return true;
-}
-
-bool
-LIRGenerator::visitPhi(MPhi *ins)
-{
+    //JS_NOT_REACHED("NYI");
     return true;
 }
 
@@ -215,6 +188,7 @@ LIRGenerator::visitBitAnd(MBitAnd *ins)
 bool
 LIRGenerator::visitAdd(MAdd *ins)
 {
+    //JS_NOT_REACHED("NYI");
     return true;
 }
 
@@ -230,6 +204,30 @@ LIRGenerator::visitCopy(MCopy *ins)
 {
     JS_NOT_REACHED("unexpected copy");
     return false;
+}
+
+bool
+LIRGenerator::lowerPhi(MPhi *ins)
+{
+    // The virtual register of the phi was determined in the first pass.
+    JS_ASSERT(ins->id());
+
+    LPhi *phi = LPhi::New(gen, ins);
+    if (!phi)
+        return false;
+    for (size_t i = 0; i < ins->numOperands(); i++) {
+        MInstruction *opd = ins->getInput(i);
+        phi->setOperand(i, LUse(opd->id(), LUse::ANY));
+    }
+    phi->setDef(0, LDefinition(ins->id(), LDefinition::TypeFrom(ins->type())));
+    return addPhi(phi);
+}
+
+bool
+LIRGenerator::visitPhi(MPhi *ins)
+{
+    JS_NOT_REACHED("Not used.");
+    return true;
 }
 
 bool
@@ -256,8 +254,9 @@ LIRGenerator::visitReturn(MReturn *ins)
 bool
 LIRGenerator::visitSnapshot(MSnapshot *snapshot)
 {
+    JS_ASSERT(!snapshot->inWorklist());
     last_snapshot_ = snapshot;
-    snapshot->setInWorklist();
+    last_snapshot_->setInWorklist();
     return true;
 }
 
@@ -287,10 +286,11 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     for (size_t i = 0; i < block->numPhis(); i++) {
         if (!gen->ensureBallast())
             return false;
-        if (!block->getPhi(i)->accept(this))
+        if (!preparePhi(block->getPhi(i)))
             return false;
-        if (gen->errored())
-            return false;
+#ifdef DEBUG
+        block->getPhi(i)->setInWorklist();
+#endif
     }
 
     for (MInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
@@ -302,6 +302,24 @@ LIRGenerator::visitBlock(MBasicBlock *block)
             return false;
         if (gen->errored())
             return false;
+#ifdef DEBUG
+        iter->setInWorklistUnchecked();
+#endif
+    }
+
+    // For each successor, make sure we've assigned a virtual register to any
+    // phi inputs that emit at uses.
+    if (block->successorWithPhis()) {
+        MBasicBlock *successor = block->successorWithPhis();
+        uint32 position = block->positionInPhiSuccessor();
+        for (size_t i = 0; i < successor->numPhis(); i++) {
+            MPhi *phi = successor->getPhi(i);
+            MInstruction *opd = phi->getInput(position);
+            if (opd->emitAtUses() && !opd->id()) {
+                if (!ensureDefined(opd))
+                    return false;
+            }
+        }
     }
 
     block->assignLir(current);
@@ -315,6 +333,17 @@ LIRGenerator::generate()
         if (!visitBlock(graph.getBlock(i)))
             return false;
     }
+
+    // Emit phis now that all their inputs have definitions.
+    for (size_t i = 0; i < graph.numBlocks(); i++) {
+        MBasicBlock *block = graph.getBlock(i);
+        current = block->lir();
+        for (size_t j = 0; j < block->numPhis(); j++) {
+            if (!block->getPhi(j)->accept(this))
+                return false;
+        }
+    }
+
     return true;
 }
 

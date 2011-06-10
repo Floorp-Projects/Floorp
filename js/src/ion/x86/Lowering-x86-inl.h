@@ -72,13 +72,14 @@ LIRGeneratorX86::usePayloadInRegister(MInstruction *mir)
     return usePayload(mir, LUse::REGISTER);
 }
 
-void
+bool
 LIRGeneratorX86::fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir)
 {
-    startUsing(mir);
+    if (!ensureDefined(mir))
+        return false;
     lir->getOperand(n)->toUse()->setVirtualRegister(mir->id());
     lir->getOperand(n + 1)->toUse()->setVirtualRegister(mir->id() + VREG_INCREMENT);
-    stopUsing(mir);
+    return true;
 }
 
 } // namespace js

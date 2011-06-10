@@ -52,11 +52,8 @@ class LBox : public LInstructionHelper<2, 1, 0>
   public:
     LIR_HEADER(Box);
 
-    LBox(const LAllocation &in_payload, const LDefinition &out_type, const LDefinition &out_payload)
-    {
+    LBox(const LAllocation &in_payload) {
         setOperand(0, in_payload);
-        setDef(0, out_type);
-        setDef(1, out_payload);
     }
 };
 

@@ -133,6 +133,67 @@ class LReturn : public LInstructionHelper<0, BOX_PIECES, 0>
     LIR_HEADER(Return);
 };
 
+class MPhi;
+
+// Phi is a pseudo-instruction that emits no code, and is an annotation for the
+// register allocator. Like its equivalent in MIR, phis are collected at the
+// top of blocks and are meant to be executed in parallel, choosing the input
+// corresponding to the predecessor taken in the control flow graph.
+class LPhi : public LInstruction
+{
+    uint32 numInputs_;
+    LAllocation *inputs_;
+    LDefinition def_;
+
+    bool init(MIRGenerator *gen);
+
+    LPhi(uint32 numInputs)
+      : numInputs_(numInputs)
+    { }
+
+  public:
+    LIR_HEADER(Phi);
+
+    static LPhi *New(MIRGenerator *gen, MPhi *phi);
+
+    size_t numDefs() const {
+        return 1;
+    }
+    LDefinition *getDef(size_t index) {
+        JS_ASSERT(index == 0);
+        return &def_;
+    }
+    void setDef(size_t index, const LDefinition &def) {
+        JS_ASSERT(index == 0);
+        def_ = def;
+    }
+    size_t numOperands() const {
+        return numInputs_;
+    }
+    LAllocation *getOperand(size_t index) {
+        JS_ASSERT(index < numOperands());
+        return &inputs_[index];
+    }
+    void setOperand(size_t index, const LAllocation &a) {
+        JS_ASSERT(index < numOperands());
+        inputs_[index] = a;
+    }
+    size_t numTemps() const {
+        return 0;
+    }
+    LDefinition *getTemp(size_t index) {
+        JS_NOT_REACHED("no temps");
+        return NULL;
+    }
+    void setTemp(size_t index, const LDefinition &temp) {
+        JS_NOT_REACHED("no temps");
+    }
+
+    virtual void printInfo(FILE *fp) {
+        printOperands(fp);
+    }
+};
+
 
 } // namespace ion
 } // namespace js
