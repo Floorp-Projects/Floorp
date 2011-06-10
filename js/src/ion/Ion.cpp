@@ -136,6 +136,10 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
         return false;
     spew.spew("Reorder Blocks");
 
+    if (!BuildPhiReverseMapping(graph))
+        return false;
+    // No spew, graph not changed.
+
     if (!ApplyTypeInformation(graph))
         return false;
     spew.spew("Apply types");

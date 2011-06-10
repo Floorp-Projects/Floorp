@@ -369,6 +369,19 @@ class MBasicBlock : public TempObject
         lir_ = lir;
     }
 
+    MBasicBlock *successorWithPhis() const {
+        return successorWithPhis_;
+    }
+    uint32 positionInPhiSuccessor() const {
+        return positionInPhiSuccessor_;
+    }
+    void setSuccessorWithPhis(MBasicBlock *successor, uint32 id) {
+        successorWithPhis_ = successor;
+        positionInPhiSuccessor_ = id;
+    }
+    size_t numSuccessors() const;
+    MBasicBlock *getSuccessor(size_t index) const;
+
   private:
     MIRGenerator *gen_;
     InlineList<MInstruction> instructions_;
@@ -381,6 +394,8 @@ class MBasicBlock : public TempObject
     uint32 id_;
     LBlock *lir_;
     MStart *start_;
+    MBasicBlock *successorWithPhis_;
+    uint32 positionInPhiSuccessor_;
 
     // If not NULL, the successor block of the loop for which this block is the
     // header.

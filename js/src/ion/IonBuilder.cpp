@@ -638,11 +638,17 @@ IonBuilder::finalizeLoop(CFGState &state, MInstruction *last)
     }
 
     // Now that phis are computed in the successor block, see if we need to
-    // link the successor and break blocks together.
+    // link the successor and break blocks together. Note that we have the
+    // successor block jump to the break block. This is to preserve the
+    // invariant that every block with phis is the only block with phis in each
+    // of its predecessors' successors. If the break block jumped to the loop
+    // exit block, this would be broken, because the exit would have phis and
+    // its predecessor could be a branch also connecting to the loop header.
     if (successor && breaks && (successor != breaks)) {
-        breaks->end(MGoto::New(successor));
-        if (!successor->addPredecessor(breaks))
+        successor->end(MGoto::New(breaks));
+        if (!breaks->addPredecessor(successor))
             return false;
+        successor = breaks;
     }
 
     state.loop.successor = successor;
@@ -876,6 +882,8 @@ IonBuilder::maybeLoop(JSOp op, jssrcnote *sn)
             // do { } while (cond)
             if (SN_TYPE(sn) == SRC_WHILE)
                 return doWhileLoop(op, sn);
+            // Build a mapping such that given a basic block, whose successor
+            // has a phi 
 
             // for (; ; update?)
             if (SN_TYPE(sn) == SRC_FOR)

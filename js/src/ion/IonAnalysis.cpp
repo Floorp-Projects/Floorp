@@ -451,3 +451,53 @@ ion::ReorderBlocks(MIRGraph &graph)
     return true;
 }
 
+bool
+ion::BuildPhiReverseMapping(MIRGraph &graph)
+{
+    // Build a mapping such that given a basic block, whose successor has one or
+    // more phis, we can find our specific input to that phi. To make this fast
+    // mapping work we rely on a specific property of our structured control
+    // flow graph: For a block with phis, its predecessors each have only one
+    // successor with phis. Consider each case:
+    //   * Blocks with less than two predecessors cannot have phis.
+    //   * Breaks. A break always has exactly one successor, and the break
+    //             catch block has exactly one predecessor for each break, as
+    //             well as a final predecessor for the actual loop exit.
+    //   * Continues. A continue always has exactly one successor, and the
+    //             continue catch block has exactly one predecessor for each
+    //             continue, as well as a final predecessor for the actual
+    //             loop continuation. The continue itself has exactly one
+    //             successor.
+    //   * An if. Each branch as exactly one predecessor.
+    //   * A switch. Each branch has exactly one predecessor.
+    //   * Loop tail. A new block is always created for the exit, and if a
+    //             break statement is present, the exit block will forward
+    //             directly to the break block.
+    for (size_t i = 0; i < graph.numBlocks(); i++) {
+        MBasicBlock *block = graph.getBlock(i);
+        if (block->numPredecessors() < 2) {
+            JS_ASSERT(block->numPhis() == 0);
+            continue;
+        }
+
+        // Assert on the above.
+        for (size_t j = 0; j < block->numPredecessors(); j++) {
+            MBasicBlock *pred = block->getPredecessor(j);
+
+#ifdef DEBUG
+            size_t numSuccessorsWithPhis = 0;
+            for (size_t k = 0; k < pred->numSuccessors(); k++) {
+                MBasicBlock *successor = pred->getSuccessor(k);
+                if (successor->numPhis() > 0)
+                    numSuccessorsWithPhis++;
+            }
+            JS_ASSERT(numSuccessorsWithPhis == 1);
+#endif
+
+            pred->setSuccessorWithPhis(block, j);
+        }
+    }
+
+    return true;
+}
+
