@@ -391,6 +391,9 @@ class Stream(StreamBase):
                     self._request.ws_close_reason = message[2:].decode(
                         'utf-8', 'replace')
 
+                self._logger.debug('Initiated flush read')
+                self.flushread()
+
                 if self._request.server_terminated:
                     self._logger.debug(
                         'Received ack for server-initiated closing '

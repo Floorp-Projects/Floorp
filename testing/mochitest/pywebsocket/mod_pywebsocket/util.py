@@ -388,5 +388,15 @@ class DeflateConnection(object):
     def write(self, bytes):
         self._connection.write(self._deflater.compress_and_flush(bytes))
 
+    def flushread(self):
+        self._connection.setblocking(0)
+        while True:
+            try:
+              data = self._connection.read(1)
+              self._logger.debug('flushing unused byte %r', data)
+              if len(data) < 1:
+                break
+            except:
+              break
 
 # vi:sts=4 sw=4 et

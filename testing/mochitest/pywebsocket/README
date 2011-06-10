@@ -5,6 +5,9 @@ supporting ietf-07
 includes the following minor patch:: (first bit supports symlinked wsh
 files, the second allows python 2.5 to work)
 
+also includes patch for 663096 to drain input buffers before closing
+in order to avoid RST
+
 diff --git a/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py b/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py
 --- a/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py
 +++ b/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py
