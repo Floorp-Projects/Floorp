@@ -19,7 +19,7 @@ const URL_PATH = "chrome/toolkit/mozapps/update/test/chrome/";
 const URL_UPDATE = URL_HOST + URL_PATH + "update.sjs";
 const SERVICE_URL = URL_HOST + URL_PATH + FILE_SIMPLE_MAR;
 
-const SLOW_MAR_DOWNLOAD_INTERVAL = 1000;
+const SLOW_MAR_DOWNLOAD_INTERVAL = 100;
 
 function handleRequest(aRequest, aResponse) {
   var params = { };
