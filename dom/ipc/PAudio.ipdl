@@ -66,8 +66,7 @@ parent:
   SampleOffsetUpdate(PRInt64 offset, PRInt64 time);
   MinWriteSampleDone(PRInt32 sampleCount);
   DrainDone(nsresult status);
- 
-  EnteringErrorState();
+
 };
 
 } // namespace dom
