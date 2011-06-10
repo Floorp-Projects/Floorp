@@ -333,7 +333,7 @@ function runKeyEventTests()
     testKey({layout:"Greek", keyCode:0, command:1, chars:"a", unmodifiedChars:"\u03b1"},
             "a", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Shift-cmd gives us the shifted character
-    testKey({layout:"Greek", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"\u391"},
+    testKey({layout:"Greek", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"\u0391"},
             "A", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Ctrl-cmd gives us the unshifted character
     testKey({layout:"Greek", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
