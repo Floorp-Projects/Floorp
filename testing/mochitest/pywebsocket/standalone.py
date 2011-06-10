@@ -140,6 +140,8 @@ class _StandaloneConnection(object):
         """Get memorized lines."""
         return self._request_handler.rfile.get_memorized_lines()
 
+    def setblocking(self, blocking): 
+        self._request_handler.rfile._file._sock.setblocking(0)
 
 class _StandaloneRequest(object):
     """Mimic mod_python request."""
