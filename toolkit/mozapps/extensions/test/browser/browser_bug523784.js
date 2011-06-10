@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const URI_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 Components.utils.import("resource://gre/modules/Services.jsm");

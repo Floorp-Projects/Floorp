@@ -936,18 +936,6 @@ EGLBoolean __stdcall eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface 
 
         glMakeCurrent(context, display, static_cast<egl::Surface*>(draw));
 
-        // If the previous surfaces are still current, this might just flag
-        // them as pending destruction again, deferring destruction to a future
-        // eglMakeCurrent or eglTerminate call.
-        if (previousDraw && previousDraw->isPendingDestroy())
-        {
-            eglDestroySurface(dpy, previousDraw);
-        }
-        if (previousRead && previousRead != previousDraw && previousRead->isPendingDestroy())
-        {
-            eglDestroySurface(dpy, previousRead);
-        }
-
         return success(EGL_TRUE);
     }
     catch(std::bad_alloc&)

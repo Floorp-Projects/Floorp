@@ -265,15 +265,18 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPostMessage, nsIRunnable)
 class nsWSAdmissionManager
 {
 public:
-    nsWSAdmissionManager() {}
+    nsWSAdmissionManager()
+    {
+        MOZ_COUNT_CTOR(nsWSAdmissionManager);
+    }
 
     class nsOpenConn
     {
     public:
         nsOpenConn(nsCString &addr, nsWebSocketHandler *handler)
             : mAddress(addr), mHandler(handler)
-        {}
-        ~nsOpenConn() {}
+        { MOZ_COUNT_CTOR(nsOpenConn); }
+        ~nsOpenConn() {MOZ_COUNT_DTOR(nsOpenConn); }
         
         nsCString mAddress;
         nsRefPtr<nsWebSocketHandler> mHandler;
@@ -281,6 +284,7 @@ public:
     
     ~nsWSAdmissionManager()
     {
+        MOZ_COUNT_DTOR(nsWSAdmissionManager);
         for (PRUint32 i = 0; i < mData.Length(); i++)
             delete mData[i];
     }
@@ -351,6 +355,8 @@ public:
         mContext(aContext),
         mListener(aListener)
     {
+        MOZ_COUNT_CTOR(nsWSCompression);
+
         mZlib.zalloc = allocator;
         mZlib.zfree = destructor;
         mZlib.opaque = Z_NULL;
@@ -372,6 +378,8 @@ public:
 
     ~nsWSCompression()
     {
+        MOZ_COUNT_DTOR(nsWSCompression);
+
         if (mActive)
             deflateEnd(&mZlib);
     }

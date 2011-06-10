@@ -571,7 +571,7 @@ GCZeal(JSContext *cx, uintN argc, jsval *vp)
     if (!JS_ValueToECMAUint32(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID, &zeal))
         return JS_FALSE;
 
-    JS_SetGCZeal(cx, (PRUint8)zeal);
+    JS_SetGCZeal(cx, (PRUint8)zeal, JS_DEFAULT_ZEAL_FREQ, JS_FALSE);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }

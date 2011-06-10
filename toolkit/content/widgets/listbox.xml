@@ -919,6 +919,17 @@
         event.preventDefault();
       ]]>
       </handler>
+
+      <handler event="MozMousePixelScroll" phase="capturing">
+      <![CDATA[
+        if (event.axis == event.HORIZONTAL_AXIS)
+          return;
+
+        // shouldn't be scrolled by pixel scrolling events before a line/page
+        // scrolling event.
+        event.preventDefault();
+      ]]>
+      </handler>
     </handlers>
   </binding>
   

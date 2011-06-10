@@ -15,6 +15,8 @@
 #include "libGLESv2/Shader.h"
 #include "libGLESv2/utilities.h"
 
+#include <string>
+
 #if !defined(ANGLE_COMPILE_OPTIMIZATION_LEVEL)
 #define ANGLE_COMPILE_OPTIMIZATION_LEVEL D3DCOMPILE_OPTIMIZATION_LEVEL3
 #endif
@@ -997,7 +999,7 @@ ID3D10Blob *Program::compileToBinary(const char *hlsl, const char *profile, ID3D
     {
         const char *message = (const char*)errorMessage->GetBufferPointer();
 
-        appendToInfoLog("%s\n", message);
+        appendToInfoLogSanitized(message);
         TRACE("\n%s", hlsl);
         TRACE("\n%s", message);
 
@@ -2442,6 +2444,35 @@ bool Program::applyUniform4iv(GLint location, GLsizei count, const GLint *v)
     delete [] vector;
 
     return true;
+}
+
+
+// append a santized message to the program info log.
+// The D3D compiler includes the current working directory
+// in some of the warning or error messages, so lets remove
+// any occurrances of those that we find in the log.
+void Program::appendToInfoLogSanitized(const char *message)
+{
+    std::string msg(message);
+    CHAR path[MAX_PATH] = "";
+    size_t len;
+
+    len = GetCurrentDirectoryA(MAX_PATH, path);
+    if (len > 0 && len < MAX_PATH)
+    {
+        size_t found;
+        do {
+            found = msg.find(path);
+            if (found != std::string::npos)
+            {
+                // the +1 here is intentional so that we remove
+                // the trailing '\' that occurs after the path
+                msg.erase(found, len+1);
+            }
+        } while (found != std::string::npos);
+    }
+
+    appendToInfoLog("%s\n", msg.c_str());
 }
 
 void Program::appendToInfoLog(const char *format, ...)

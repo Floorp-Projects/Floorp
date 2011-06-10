@@ -116,7 +116,7 @@ protected:
 
   // Update the selected locale used by the chrome registry, and fire a
   // notification about this change
-  virtual void UpdateSelectedLocale() = 0;
+  virtual nsresult UpdateSelectedLocale() = 0;
 
   static void LogMessage(const char* aMsg, ...);
   static void LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,

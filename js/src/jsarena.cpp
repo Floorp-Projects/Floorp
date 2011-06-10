@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -65,7 +65,7 @@ static JSArenaStats *arena_stats_list;
 
 JS_PUBLIC_API(void)
 JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size,
-                 size_t align, size_t *quotap)
+                 size_t align)
 {
     if (align == 0)
         align = JS_ARENA_DEFAULT_ALIGN;
@@ -75,7 +75,6 @@ JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size,
         JS_ARENA_ALIGN(pool, &pool->first + 1);
     pool->current = &pool->first;
     pool->arenasize = size;
-    pool->quotap = quotap;
 #ifdef JS_ARENAMETER
     memset(&pool->stats, 0, sizeof pool->stats);
     pool->stats.name = strdup(name);
@@ -160,18 +159,9 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
             gross = hdrsz + JS_MAX(nb, pool->arenasize);
             if (gross < nb)
                 return NULL;
-            if (pool->quotap) {
-                if (gross > *pool->quotap)
-                    return NULL;
-                b = (JSArena *) OffTheBooks::malloc_(gross);
-                if (!b)
-                    return NULL;
-                *pool->quotap -= gross;
-            } else {
-                b = (JSArena *) OffTheBooks::malloc_(gross);
-                if (!b)
-                    return NULL;
-            }
+            b = (JSArena *) OffTheBooks::malloc_(gross);
+            if (!b)
+                return NULL;
 
             b->next = NULL;
             b->limit = (jsuword)b + gross;
@@ -203,7 +193,7 @@ JS_PUBLIC_API(void *)
 JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
 {
     JSArena **ap, *a, *b;
-    jsuword boff, aoff, extra, hdrsz, gross, growth;
+    jsuword boff, aoff, extra, hdrsz, gross;
 
     /*
      * Use the oversized-single-allocation header to avoid searching for ap.
@@ -226,19 +216,9 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
     hdrsz = sizeof *a + extra + pool->mask;     /* header and alignment slop */
     gross = hdrsz + aoff;
     JS_ASSERT(gross > aoff);
-    if (pool->quotap) {
-        growth = gross - (a->limit - (jsuword) a);
-        if (growth > *pool->quotap)
-            return NULL;
-        a = (JSArena *) OffTheBooks::realloc_(a, gross);
-        if (!a)
-            return NULL;
-        *pool->quotap -= growth;
-    } else {
-        a = (JSArena *) OffTheBooks::realloc_(a, gross);
-        if (!a)
-            return NULL;
-    }
+    a = (JSArena *) OffTheBooks::realloc_(a, gross);
+    if (!a)
+        return NULL;
 #ifdef JS_ARENAMETER
     pool->stats.nreallocs++;
 #endif
@@ -314,8 +294,6 @@ FreeArenaList(JSArenaPool *pool, JSArena *head)
 
     do {
         *ap = a->next;
-        if (pool->quotap)
-            *pool->quotap += a->limit - (jsuword) a;
         JS_CLEAR_ARENA(a);
         JS_COUNT_ARENA(pool,--);
         UnwantedForeground::free_(a);

@@ -1078,7 +1078,6 @@ case "$target" in
     if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
         dnl Use the specified value
         export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
-        AC_DEFINE_UNQUOTED(__ENVIRONMENT_MAC_OS_X_VERION_MIN_REQUIRED__,$_MACOSX_DEPLOYMENT_TARGET)
     else
         dnl No value specified on the command line or in the environment,
         dnl use architecture minimum.

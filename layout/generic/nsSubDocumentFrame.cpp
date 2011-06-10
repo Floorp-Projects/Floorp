@@ -718,6 +718,11 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
       return NS_OK;
     }
 
+    if (mFrameLoader->GetRemoteBrowser()) {
+      // TODO: Implement ContentShellAdded for remote browsers (bug 658304)
+      return NS_OK;
+    }
+
     // Note: This logic duplicates a lot of logic in
     // nsFrameLoader::EnsureDocShell.  We should fix that.
 

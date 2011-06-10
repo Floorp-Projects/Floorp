@@ -65,11 +65,7 @@ pref("browser.cache.disk.smart_size.first_run", true);
 // Does the user want smart-sizing?
 pref("browser.cache.disk.smart_size.enabled", true);
 // Size explicitly set by the user. Used when smart_size.enabled == false
-#ifndef WINCE
 pref("browser.cache.disk.capacity",         256000);
-#else
-pref("browser.cache.disk.capacity",         20000);
-#endif
 pref("browser.cache.memory.enable",         true);
 //pref("browser.cache.memory.capacity",     -1);
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
@@ -78,7 +74,7 @@ pref("browser.cache.disk_cache_ssl",        true);
 pref("browser.cache.check_doc_frequency",   3);
 
 pref("browser.cache.offline.enable",           true);
-#ifndef WINCE
+
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         512000);
 
@@ -89,12 +85,6 @@ pref("offline-apps.quota.max",        204800);
 // the user should be warned if offline app disk usage exceeds this amount
 // (in kilobytes)
 pref("offline-apps.quota.warn",        51200);
-#else
-// Limited disk space on WinCE, tighten limits.
-pref("browser.cache.offline.capacity", 15000);
-pref("offline-apps.quota.max",          7000);
-pref("offline-apps.quota.warn",         4000);
-#endif
 
 // Whether or not indexedDB is enabled.
 pref("dom.indexedDB.enabled", true);
@@ -208,10 +198,8 @@ pref("gfx.font_rendering.harfbuzz.scripts", 3);
 #endif
 
 #ifdef XP_WIN
-#ifndef WINCE
 pref("gfx.font_rendering.directwrite.enabled", false);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
-#endif
 #endif
 
 pref("accessibility.browsewithcaret", false);
@@ -623,7 +611,6 @@ pref("javascript.options.methodjit_always", false);
 // Comment 32 and Bug 613551.
 pref("javascript.options.mem.high_water_mark", 128);
 pref("javascript.options.mem.max", -1);
-pref("javascript.options.mem.gc_frequency",   300);
 pref("javascript.options.mem.gc_per_compartment", true);
 pref("javascript.options.mem.log", false);
 
@@ -1820,8 +1807,9 @@ pref("gfx.font_rendering.cleartype_params.pixel_structure", -1);
 pref("gfx.font_rendering.cleartype_params.rendering_mode", -1);
 
 // A comma-separated list of font family names. Fonts in these families will
-// be forced to use "GDI Classic" ClearType mode, ignoring the value
-// of gfx.font_rendering.cleartype_params.rendering_mode.
+// be forced to use "GDI Classic" ClearType mode, provided the value
+// of gfx.font_rendering.cleartype_params.rendering_mode is -1
+// (i.e. a specific rendering_mode has not been explicitly set).
 // Currently we apply this setting to the sans-serif Microsoft "core Web fonts".
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
      "Arial,Courier New,Segoe UI,Tahoma,Trebuchet MS,Verdana");
@@ -1884,13 +1872,8 @@ pref("intl.enable_tsf_support", false);
 pref("intl.tsf.on_layout_change_interval", 100);
 #endif
 
-#ifdef WINCE
-// bug 506798 - can't type in bookmarks panel on WinCE
-pref("ui.panel.default_level_parent", true);
-#else
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
 pref("ui.panel.default_level_parent", false);
-#endif
 
 pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
 
@@ -3196,15 +3179,8 @@ pref("webgl.verbose", false);
 pref("webgl.prefer-native-gl", false);
 
 #ifdef XP_WIN
-#ifndef WINCE
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive
 pref("network.tcp.sendbuffer", 131072);
-#endif
-#endif
-
-#ifdef WINCE
-pref("mozilla.widget.disable-native-theme", true);
-pref("gfx.color_management.mode", 0);
 #endif
 
 // Whether to disable acceleration for all widgets.
@@ -3214,7 +3190,6 @@ pref("layers.acceleration.disabled", false);
 pref("layers.acceleration.force-enabled", false);
 
 #ifdef XP_WIN
-#ifndef WINCE
 // Whether to disable the automatic detection and use of direct2d.
 pref("gfx.direct2d.disabled", false);
 // Whether to attempt to enable Direct2D regardless of automatic detection or
@@ -3223,7 +3198,6 @@ pref("gfx.direct2d.force-enabled", false);
 
 pref("layers.prefer-opengl", false);
 pref("layers.prefer-d3d9", false);
-#endif
 #endif
 
 // Enable/Disable the geolocation API for content

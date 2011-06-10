@@ -1,0 +1,19 @@
+<html>
+<head>
+  <script type="text/javascript">
+window.onload = function() {
+    var ctx = document.getElementById("c1").getContext("2d");
+    ctx.mozFillRule = "evenodd";
+    ctx.rect(50, 50, 200, 200);
+    ctx.rect(100, 100, 100, 100);
+    ctx.clip();
+
+    ctx.beginPath();
+    ctx.fillRect(0, 0, 300, 300);
+}
+  </script>
+</head>
+<body>
+  <div><canvas id="c1" width="300" height="300"></canvas></div>
+</body>
+</html>

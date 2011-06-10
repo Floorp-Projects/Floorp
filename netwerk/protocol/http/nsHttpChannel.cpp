@@ -138,9 +138,6 @@ nsHttpChannel::nsHttpChannel()
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
     mChannelCreationTime = PR_Now();
     mChannelCreationTimestamp = mozilla::TimeStamp::Now();
-    // Subfields of unions cannot be targeted in an initializer list
-    mSelfAddr.raw.family = PR_AF_UNSPEC;
-    mPeerAddr.raw.family = PR_AF_UNSPEC;
 }
 
 nsHttpChannel::~nsHttpChannel()
