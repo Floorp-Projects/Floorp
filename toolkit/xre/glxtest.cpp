@@ -172,6 +172,8 @@ static void glxtest()
   if (!fbConfigs)
     fatal_error("No FBConfigs found");
   XVisualInfo *vInfo = glXGetVisualFromFBConfig(dpy, fbConfigs[0]);
+  if (!vInfo)
+    fatal_error("No visual found for first FBConfig");
 
   ///// Get a Pixmap and a GLXPixmap /////
   Pixmap pixmap = XCreatePixmap(dpy, RootWindow(dpy, vInfo->screen), 4, 4, 32);
