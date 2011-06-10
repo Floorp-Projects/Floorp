@@ -55,10 +55,10 @@ class AudioChild : public PAudioChild
     AudioChild();
     virtual ~AudioChild();
     virtual bool RecvSampleOffsetUpdate(const PRInt64&, const PRInt64&);
-    virtual bool RecvDrainDone();
+    virtual bool RecvDrainDone(const nsresult& status);
     virtual PRInt32 WaitForMinWriteSample();
     virtual bool RecvMinWriteSampleDone(const PRInt32& sampleCount);
-    virtual void WaitForDrain();
+    virtual nsresult WaitForDrain();
     virtual void ActorDestroy(ActorDestroyReason);
 
     PRInt64 GetLastKnownSampleOffset();
