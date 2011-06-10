@@ -189,6 +189,7 @@ PYUNITS := \
   unit-JarMaker.py \
   unit-buildlist.py \
   unit-expandlibs.py \
+  unit-writemozinfo.py \
   $(NULL)
 
 check:: check-python-modules check-jar-mn
