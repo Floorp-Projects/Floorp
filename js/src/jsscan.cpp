@@ -1350,12 +1350,12 @@ TokenStream::getTokenInternal()
      * early allows subsequent checking to be faster.
      */
     if (JS_UNLIKELY(c >= 128)) {
-        if (JS_ISSPACE_OR_BOM(c))
-            goto retry;
+        if (JS_ISSPACE_OR_BOM(c)) {
+            if (c == LINE_SEPARATOR || c == PARA_SEPARATOR) {
+                updateLineInfoForEOL();
+                updateFlagsForEOL();
+            }
 
-        if (c == LINE_SEPARATOR || c == PARA_SEPARATOR) {
-            updateLineInfoForEOL();
-            updateFlagsForEOL();
             goto retry;
         }
 
