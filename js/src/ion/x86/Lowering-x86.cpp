@@ -52,7 +52,7 @@ bool
 LIRGeneratorX86::visitConstant(MConstant *ins)
 {
     // On x86, moving a double is non-trivial so only do it once.
-    if (!ins->inWorklist() && !ins->value().isDouble())
+    if (!ins->emitAtUses() && !ins->value().isDouble())
         return emitAtUses(ins);
 
     return LIRGenerator::visitConstant(ins);
@@ -61,36 +61,11 @@ LIRGeneratorX86::visitConstant(MConstant *ins)
 bool
 LIRGeneratorX86::visitBox(MBox *box)
 {
-    if (!box->inWorklist())
+    if (!box->emitAtUses())
         return emitAtUses(box);
 
-    // If something really, really wants a box - and it's not snooping for
-    // constants, then we go ahead and create two defs. Creating two defs
-    // manually is almost never needed so this is a special case. The first is
-    // a constant index containing the type, and the second is the payload.
     MInstruction *inner = box->getInput(0);
-
-    uint32 type_vreg = nextVirtualRegister();
-    uint32 data_vreg = nextVirtualRegister();
-    if (data_vreg >= MAX_VIRTUAL_REGISTERS)
-        return false;
-
-    box->setId(type_vreg);
-
-    LDefinition out_type(LDefinition::TYPE, LDefinition::PRESET);
-    out_type.setVirtualRegister(type_vreg);
-    out_type.setOutput(LConstantIndex(inner->type()));
-
-    LDefinition out_payload;
-    if (inner->isConstant()) {
-        out_payload = LDefinition(LDefinition::PAYLOAD, LDefinition::PRESET);
-        out_payload.setVirtualRegister(data_vreg);
-        out_payload.setOutput(LAllocation(inner->toConstant()->vp()));
-    } else {
-        out_payload = LDefinition(data_vreg, LDefinition::PAYLOAD);
-    }
-
-    return add(new LBox(useOrConstant(inner), out_type, out_payload));
+    return defineBox(new LBox(useOrConstant(inner)), box);
 }
 
 bool
@@ -103,11 +78,11 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
 
     if (unbox->type() == MIRType_Double) {
         LBoxToDouble *lir = new LBoxToDouble;
-        startUsing(inner);
+        if (!ensureDefined(inner))
+            return false;
         lir->setOperand(0, usePayloadInRegister(inner));
         lir->setOperand(1, useType(inner));
         lir->setTemp(0, temp(LDefinition::DOUBLE));
-        stopUsing(inner);
         return define(lir, unbox, LDefinition::DEFAULT);
     }
 
@@ -128,8 +103,59 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
     LReturn *ins = new LReturn;
     ins->setOperand(0, LUse(JSReturnReg_Type));
     ins->setOperand(1, LUse(JSReturnReg_Data));
-    fillBoxUses(ins, 0, opd);
-    return add(ins);
+    return fillBoxUses(ins, 0, opd) && add(ins);
+}
+
+bool
+LIRGeneratorX86::preparePhi(MPhi *phi)
+{
+    uint32 first_vreg = nextVirtualRegister();
+    if (first_vreg >= MAX_VIRTUAL_REGISTERS)
+        return false;
+
+    phi->setId(first_vreg);
+
+    if (phi->type() == MIRType_Value) {
+        uint32 payload_vreg = nextVirtualRegister();
+        if (payload_vreg >= MAX_VIRTUAL_REGISTERS)
+            return false;
+        JS_ASSERT(first_vreg + VREG_INCREMENT == payload_vreg);
+    }
+
+    return true;
+}
+
+bool
+LIRGeneratorX86::visitPhi(MPhi *ins)
+{
+    JS_ASSERT(ins->inWorklist() && ins->id());
+
+    // Typed phis can be handled much simpler.
+    if (ins->type() != MIRType_Value)
+        return lowerPhi(ins);
+
+    // Otherwise, we create two phis: one for the set of types and one for the
+    // set of payloads. They form two separate instructions but their
+    // definitions are paired such that they act as one. That is, the type phi
+    // has vreg V and the data phi has vreg V++.
+    LPhi *type = LPhi::New(gen, ins);
+    LPhi *payload = LPhi::New(gen, ins);
+    if (!type || !payload)
+        return false;
+
+    for (size_t i = 0; i < ins->numOperands(); i++) {
+        MInstruction *opd = ins->getInput(i);
+        JS_ASSERT(opd->type() == MIRType_Value);
+        JS_ASSERT(opd->id());
+        JS_ASSERT(opd->inWorklist());
+
+        type->setOperand(i, LUse(opd->id(), LUse::ANY));
+        payload->setOperand(i, LUse(opd->id() + VREG_INCREMENT, LUse::ANY));
+    }
+
+    type->setDef(0, LDefinition(ins->id(), LDefinition::TYPE));
+    payload->setDef(0, LDefinition(ins->id() + VREG_INCREMENT, LDefinition::PAYLOAD));
+    return addPhi(type) && addPhi(payload);
 }
 
 void

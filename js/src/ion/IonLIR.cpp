@@ -69,6 +69,22 @@ LSnapshot::New(MIRGenerator *gen, MSnapshot *mir)
     return snapshot;
 }
 
+bool
+LPhi::init(MIRGenerator *gen)
+{
+    inputs_ = gen->allocate<LAllocation>(numInputs_);
+    return !!inputs_;
+}
+
+LPhi *
+LPhi::New(MIRGenerator *gen, MPhi *ins)
+{
+    LPhi *phi = new LPhi(ins->numOperands());
+    if (!phi->init(gen))
+        return NULL;
+    return phi;
+}
+
 void
 LInstruction::printName(FILE *fp)
 {

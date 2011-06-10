@@ -202,8 +202,9 @@ class MInstruction
     uint32 flags_;          // Bit flags.
 
   private:
-    static const uint32 IN_WORKLIST = (1 << 0);
-    static const uint32 REWRITES_DEF = (1 << 1);
+    static const uint32 IN_WORKLIST =  0x01;
+    static const uint32 REWRITES_DEF = 0x02;
+    static const uint32 EMIT_AT_USES = 0x04;
 
     void setBlock(MBasicBlock *block) {
         block_ = block;
@@ -318,6 +319,12 @@ class MInstruction
     virtual MInstruction *rewrittenDef() const {
         JS_NOT_REACHED("Opcodes which can rewrite defs must implement this.");
         return NULL;
+    }
+    bool emitAtUses() const {
+        return hasFlags(EMIT_AT_USES);
+    }
+    void setEmitAtUses() {
+        setFlags(EMIT_AT_USES);
     }
 
     // Replaces an operand, taking care to update use chains. No memory is

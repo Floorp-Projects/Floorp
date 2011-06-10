@@ -102,10 +102,10 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     lastIns_(NULL),
     pc_(pc),
     lir_(NULL),
-    loopSuccessor_(NULL),
-    mark_(false),
     successorWithPhis_(NULL),
-    positionInPhiSuccessor_(0)
+    positionInPhiSuccessor_(0),
+    loopSuccessor_(NULL),
+    mark_(false)
 {
 }
 

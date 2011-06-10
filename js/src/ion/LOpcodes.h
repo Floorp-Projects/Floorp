@@ -50,7 +50,8 @@
     _(Goto)                         \
     _(Test)                         \
     _(BitOp)                        \
-    _(Return)
+    _(Return)                       \
+    _(Phi)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"
