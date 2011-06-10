@@ -226,6 +226,8 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mKeyURI = aKeyURI;
   mRequest = aRequest;
   mChannel = aChannel;
+  mTimedChannel = do_QueryInterface(mChannel);
+
   mChannel->GetNotificationCallbacks(getter_AddRefs(mPrevChannelSink));
 
   NS_ASSERTION(mPrevChannelSink != this,
@@ -956,6 +958,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     statusTracker.SendStopRequest(srIter.GetNext(), lastPart, status);
   }
 
+  mTimedChannel = nsnull;
   return NS_OK;
 }
 
@@ -1125,7 +1128,16 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
             PRUint32 sizeHint = (PRUint32) len;
             sizeHint = NS_MIN<PRUint32>(sizeHint, 20000000); /* Bound by something reasonable */
             RasterImage* rasterImage = static_cast<RasterImage*>(mImage.get());
-            rasterImage->SetSourceSizeHint(sizeHint);
+            rv = rasterImage->SetSourceSizeHint(sizeHint);
+            if (NS_FAILED(rv)) {
+              // Flush memory, try to get some back, and try again
+              rv = nsMemory::HeapMinimize(PR_TRUE);
+              rv |= rasterImage->SetSourceSizeHint(sizeHint);
+              // If we've still failed at this point, things are going downhill
+              if (NS_FAILED(rv)) {
+                NS_WARNING("About to hit OOM in imagelib!");
+              }
+            }
           }
         }
       }
@@ -1146,12 +1158,13 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
   if (imageType == imgIContainer::TYPE_RASTER) {
     // WriteToRasterImage always consumes everything it gets
+    // if it doesn't run out of memory
     PRUint32 bytesRead;
     rv = inStr->ReadSegments(RasterImage::WriteToRasterImage,
                              static_cast<void*>(mImage),
                              count, &bytesRead);
-    NS_ABORT_IF_FALSE(bytesRead == count,
-                      "WriteToRasterImage should consume everything!");
+    NS_ABORT_IF_FALSE(bytesRead == count || mImage->HasError(),
+  "WriteToRasterImage should consume everything or the image must be in error!");
   } else { // imageType == imgIContainer::TYPE_VECTOR
     nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);
     rv = imageAsStream->OnDataAvailable(aRequest, ctxt, inStr,
@@ -1267,6 +1280,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   }
 
   mChannel = mNewRedirectChannel;
+  mTimedChannel = do_QueryInterface(mChannel);
   mNewRedirectChannel = nsnull;
 
   // Don't make any cache changes if we're going to point to the same thing. We

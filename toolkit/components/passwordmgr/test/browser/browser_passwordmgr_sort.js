@@ -36,9 +36,6 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 function test() {
     waitForExplicitFinish();
 

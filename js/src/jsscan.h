@@ -615,8 +615,6 @@ class TokenStream
     const jschar        *prevLinebase;  /* start of previous line;  NULL if on the first line */
     TokenBuf            userbuf;        /* user input buffer */
     const char          *filename;      /* input filename or null */
-    JSSourceHandler     listener;       /* callback for source; eg debugger */
-    void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */
     CharBuffer          tokenbuf;       /* current token string buffer */
     int8                oneCharTokens[128];  /* table of one-char tokens */

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <title>CSS Writing Modes Module Level 3</title>
+    <script type="text/javascript">
+function boom() { 
+  document.getElementById("example").style.fontSize = "larger";
+}
+    </script>
+  </head>
+  <body onload=boom()>
+    <div id="example">
+      <p>א</p>
+      <pre><code>
+&lt;HEBREW&gt;
+  &lt;PAR&gt;HEBREW1 HEBREW2 english3 HEBREW4 HEBREW5&lt;/PAR&gt;
+  &lt;PAR&gt;HEBREW6 &lt;EMPH&gt;HEBREW7&lt;/EMPH&gt; HEBREW8&lt;/PAR&gt;
+&lt;/HEBREW&gt;
+&lt;ENGLISH&gt;
+  &lt;PAR&gt;english9 english10 english11 HEBREW12 HEBREW13&lt;/PAR&gt;
+  &lt;PAR&gt;english14 english15 english16&lt;/PAR&gt;
+  &lt;PAR&gt;english17 &lt;HE-QUO&gt;HEBREW18 english19 HEBREW20&lt;/HE-QUO&gt;&lt;/PAR&gt;
+&lt;/ENGLISH&gt;
+      </code></pre>
+    </div>
+  </body>
+</html>

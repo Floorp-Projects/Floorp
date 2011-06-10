@@ -62,11 +62,6 @@ DEFINES += -DOS_ARCH=$(OS_ARCH) \
            -DMOZ_WIDGET_TOOLKIT=$(MOZ_WIDGET_TOOLKIT) \
            $(NULL)
 
-# this comes from a system header; we should probably be using XP_WINCE or something
-ifdef WINCE
-DEFINES += -DWINCE=1
-endif
-
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(MOZ_COMPONENT_LIBS) \

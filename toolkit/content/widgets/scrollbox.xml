@@ -625,13 +625,32 @@
           if (!document)
             aTimer.cancel();
 
-          if (this.smoothScroll)
-            this.scrollByPixels(25 * this._scrollIndex);
-          else
-            this.scrollByIndex(this._scrollIndex);
+          this.scrollByIndex(this._scrollIndex);
         ]]>
         </body>
       </method>
+
+      <field name="_arrowScrollAnim"><![CDATA[({
+        scrollbox: this,
+        start: function arrowSmoothScroll_start() {
+          this.lastFrameTime = window.mozAnimationStartTime;
+          window.addEventListener("MozBeforePaint", this, false);
+          window.mozRequestAnimationFrame();
+        },
+        stop: function arrowSmoothScroll_stop() {
+          window.removeEventListener("MozBeforePaint", this, false);
+        },
+        handleEvent: function arrowSmoothScroll_handleEvent(event) {
+          const scrollIndex = this.scrollbox._scrollIndex;
+          const timePassed = event.timeStamp - this.lastFrameTime;
+          this.lastFrameTime = event.timeStamp;
+          
+          const scrollDelta = 0.5 * timePassed * scrollIndex;
+          this.scrollbox.scrollPosition += scrollDelta;
+
+          window.mozRequestAnimationFrame();
+        }
+      })]]></field>
 
       <method name="_startScroll">
         <parameter name="index"/>
@@ -639,7 +658,12 @@
           if (this._isRTLScrollbox)
             index *= -1;
           this._scrollIndex = index;
-          var scrollDelay = this.smoothScroll ? 60 : this._scrollDelay;
+          this._mousedown = true;
+          if (this.smoothScroll) {
+            this._arrowScrollAnim.start();
+            return;
+          }
+
           if (!this._scrollTimer)
             this._scrollTimer =
               Components.classes["@mozilla.org/timer;1"]
@@ -647,10 +671,9 @@
           else
             this._scrollTimer.cancel();
 
-          this._scrollTimer.initWithCallback(this, scrollDelay,
+          this._scrollTimer.initWithCallback(this, this._scrollDelay,
                                              this._scrollTimer.TYPE_REPEATING_SLACK);
           this.notify(this._scrollTimer);
-          this._mousedown = true;
         ]]>
         </body>
       </method>
@@ -665,6 +688,7 @@
 
           this.scrollByIndex(this._scrollIndex);
           this._scrollIndex = 0;
+          this._arrowScrollAnim.stop();
         ]]></body>
       </method>
 

@@ -459,9 +459,10 @@ enum OwnCharsBehavior
  * memory can be used as a new JSAtom's buffer without copying. When this flag
  * is set, the contract is that callers will free *pchars iff *pchars == NULL.
  */
+JS_ALWAYS_INLINE
 static JSAtom *
-Atomize(JSContext *cx, const jschar **pchars, size_t length,
-        InternBehavior ib, OwnCharsBehavior ocb = CopyChars)
+AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
+              InternBehavior ib, OwnCharsBehavior ocb = CopyChars)
 {
     const jschar *chars = *pchars;
 
@@ -512,6 +513,13 @@ Atomize(JSContext *cx, const jschar **pchars, size_t length,
     return key->morphAtomizedStringIntoAtom();
 }
 
+static JSAtom *
+Atomize(JSContext *cx, const jschar **pchars, size_t length,
+        InternBehavior ib, OwnCharsBehavior ocb = CopyChars)
+{
+    return AtomizeInline(cx, pchars, length, ib, ocb);
+}
+
 JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
 {
@@ -546,7 +554,7 @@ js_AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
 }
 
 JSAtom *
-js_Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib, bool useCESU8)
+js_Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib, FlationCoding fc)
 {
     CHECK_REQUEST(cx);
 
@@ -554,7 +562,7 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib, b
         return NULL;
 
     /*
-     * Avoiding the malloc in js_InflateString on shorter strings saves us
+     * Avoiding the malloc in InflateString on shorter strings saves us
      * over 20,000 malloc calls on mozilla browser startup. This compares to
      * only 131 calls where the string is longer than a 31 char (net) buffer.
      * The vast majority of atomized strings are already in the hashtable. So
@@ -567,15 +575,15 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib, b
     const jschar *chars;
     OwnCharsBehavior ocb = CopyChars;
     if (length < ATOMIZE_BUF_MAX) {
-        if (useCESU8)
-            js_InflateUTF8StringToBuffer(cx, bytes, length, inflated, &inflatedLength, true);
+        if (fc == CESU8Encoding)
+            InflateUTF8StringToBuffer(cx, bytes, length, inflated, &inflatedLength, fc);
         else
-            js_InflateStringToBuffer(cx, bytes, length, inflated, &inflatedLength);
+            InflateStringToBuffer(cx, bytes, length, inflated, &inflatedLength);
         inflated[inflatedLength] = 0;
         chars = inflated;
     } else {
         inflatedLength = length;
-        chars = js_InflateString(cx, bytes, &inflatedLength, useCESU8);
+        chars = InflateString(cx, bytes, &inflatedLength, fc);
         if (!chars)
             return NULL;
         ocb = TakeCharOwnership;
@@ -595,7 +603,7 @@ js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, InternBehavio
     if (!CheckStringLength(cx, length))
         return NULL;
 
-    return Atomize(cx, &chars, length, ib);
+    return AtomizeInline(cx, &chars, length, ib);
 }
 
 JSAtom *
@@ -667,7 +675,7 @@ js_alloc_temp_space(void *priv, size_t size)
 
     JS_ARENA_ALLOCATE(space, &parser->context->tempPool, size);
     if (!space)
-        js_ReportOutOfScriptQuota(parser->context);
+        js_ReportOutOfMemory(parser->context);
     return space;
 }
 
@@ -699,7 +707,7 @@ js_alloc_temp_entry(void *priv, const void *key)
 
     JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &parser->context->tempPool);
     if (!ale) {
-        js_ReportOutOfScriptQuota(parser->context);
+        js_ReportOutOfMemory(parser->context);
         return NULL;
     }
     return &ale->entry;
