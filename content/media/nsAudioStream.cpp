@@ -89,10 +89,10 @@ class nsAudioStreamLocal : public nsAudioStream
   nsAudioStreamLocal();
 
   nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
-  void Shutdown();
+  nsresult Shutdown();
   nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
   PRUint32 Available();
-  void SetVolume(double aVolume);
+  nsresult SetVolume(double aVolume);
   nsresult Drain();
   void Pause();
   void Resume();
@@ -133,10 +133,10 @@ class nsAudioStreamRemote : public nsAudioStream
   ~nsAudioStreamRemote();
 
   nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
-  void Shutdown();
+  nsresult Shutdown();
   nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
   PRUint32 Available();
-  void SetVolume(double aVolume);
+  nsresult SetVolume(double aVolume);
   nsresult Drain();
   void Pause();
   void Resume();
@@ -410,7 +410,8 @@ nsAudioStreamLocal::~nsAudioStreamLocal()
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsAudioStreamLocal)
 
-nsresult nsAudioStreamLocal::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
+nsresult 
+nsAudioStreamLocal::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
 {
   mRate = aRate;
   mChannels = aNumChannels;
@@ -440,14 +441,21 @@ nsresult nsAudioStreamLocal::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFor
   return NS_OK;
 }
 
-void nsAudioStreamLocal::Shutdown()
+nsresult
+nsAudioStreamLocal::Shutdown()
 {
   if (!mAudioHandle)
-    return;
+    return NS_ERROR_FAILURE;
 
-  sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
+  if (sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle)));
+  {
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_destroy error"));
+    mInError = true;
+    return NS_ERROR_FAILURE;
+  }
   mAudioHandle = nsnull;
   mInError = PR_TRUE;
+  return NS_OK;
 }
 
 nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
@@ -547,17 +555,20 @@ PRUint32 nsAudioStreamLocal::Available()
   return s / sizeof(short);
 }
 
-void nsAudioStreamLocal::SetVolume(double aVolume)
+nsresult
+nsAudioStreamLocal::SetVolume(double aVolume)
 {
   NS_ASSERTION(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 #if defined(SA_PER_STREAM_VOLUME)
   if (sa_stream_set_volume_abs(static_cast<sa_stream_t*>(mAudioHandle), aVolume) != SA_SUCCESS) {
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_set_volume_abs error"));
     mInError = PR_TRUE;
+    return NS_ERROR_FAILURE;
   }
 #else
   mVolume = aVolume;
 #endif
+  return NS_OK;
 }
 
 nsresult nsAudioStreamLocal::Drain()
@@ -692,14 +703,15 @@ nsAudioStreamRemote::Init(PRInt32 aNumChannels,
   return NS_OK;
 }
 
-void
+nsresult
 nsAudioStreamRemote::Shutdown()
 {
   if (!mAudioChild)
-    return;
+    return NS_ERROR_FAILURE;
   nsCOMPtr<nsIRunnable> event = new AudioShutdownEvent(mAudioChild);
   NS_DispatchToMainThread(event);
   mAudioChild = nsnull;
+  return NS_OK;
 }
 
 nsresult
@@ -707,7 +719,7 @@ nsAudioStreamRemote::Write(const void* aBuf,
                            PRUint32 aCount,
                            PRBool aBlocking)
 {
-  if (!mAudioChild)
+  if (!mAudioChild || mAudioChild->IsInError())
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(mAudioChild,
                                                     aBuf,
@@ -735,10 +747,11 @@ PRInt32 nsAudioStreamRemote::GetMinWriteSamples()
 void
 nsAudioStreamRemote::SetVolume(double aVolume)
 {
-  if (!mAudioChild)
-    return;
+  if (!mAudioChild || mAudioChild->IsInError())
+    return NS_ERROR_FAILURE;
   nsCOMPtr<nsIRunnable> event = new AudioSetVolumeEvent(mAudioChild, aVolume);
   NS_DispatchToMainThread(event);
+  return NS_OK;
 }
 
 nsresult
@@ -754,9 +767,9 @@ nsAudioStreamRemote::Drain()
 void
 nsAudioStreamRemote::Pause()
 {
-  mPaused = PR_TRUE;
-  if (!mAudioChild)
+  if (!mAudioChild || mAudioChild->IsInError())
     return;
+  mPaused = PR_TRUE;
   nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mAudioChild, PR_TRUE);
   NS_DispatchToMainThread(event);
 }
@@ -764,9 +777,9 @@ nsAudioStreamRemote::Pause()
 void
 nsAudioStreamRemote::Resume()
 {
-  mPaused = PR_FALSE;
-  if (!mAudioChild)
+  if (!mAudioChild || mAudioChild->IsInError())
     return;
+  mPaused = PR_FALSE;
   nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mAudioChild, PR_FALSE);
   NS_DispatchToMainThread(event);
 }
