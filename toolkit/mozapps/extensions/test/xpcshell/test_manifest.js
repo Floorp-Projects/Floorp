@@ -270,6 +270,19 @@ function run_test() {
     name: "Test Addon 20"
   }, profileDir);
 
+  writeInstallRDFForExtension({
+    id: "addon21@tests.mozilla.org",
+    version: "1.0",
+    optionsType: "3",
+    optionsURL: "chrome://test/content/options.xul",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 21"
+  }, profileDir);
+
   do_test_pending();
   startupManager();
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -291,9 +304,11 @@ function run_test() {
                                "addon17@tests.mozilla.org",
                                "addon18@tests.mozilla.org",
                                "addon19@tests.mozilla.org",
-                               "addon20@tests.mozilla.org"],
+                               "addon20@tests.mozilla.org",
+                               "addon21@tests.mozilla.org"],
                                function([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
-                                         a11, a12, a13, a14, a15, a16, a17, a18, a19, a20]) {
+                                         a11, a12, a13, a14, a15, a16, a17, a18, a19, a20,
+                                         a21]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -447,6 +462,14 @@ function run_test() {
     do_check_true(a20.isCompatible);
     do_check_eq(a20.optionsURL, "chrome://test/content/options.xul");
     do_check_eq(a20.optionsType, AddonManager.OPTIONS_TYPE_DIALOG);
+
+    do_check_neq(a21, null);
+    do_check_true(a21.isActive);
+    do_check_false(a21.userDisabled);
+    do_check_false(a21.appDisabled);
+    do_check_true(a21.isCompatible);
+    do_check_eq(a21.optionsURL, "chrome://test/content/options.xul");
+    do_check_eq(a21.optionsType, AddonManager.OPTIONS_TYPE_TAB);
 
     do_test_finished();
   });
