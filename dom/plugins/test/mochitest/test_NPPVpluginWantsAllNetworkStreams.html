@@ -1,0 +1,71 @@
+<html>
+<head>
+  <title>Test NPPVpluginWantsAllNetworkStreams</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body onload="runNextTest()">
+  <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var p = document.getElementById("plugin1");
+
+    var missingDoc = "not-found.html";
+
+    var expectedWriteURL = "";
+    var expectedNotifyStatus = -1;
+
+    var writeHappened = false;
+    var expectedWrite = false;
+
+    function writeCallback(url) {
+      writeHappened = true;
+    }
+
+    function notifyCallback(status, data) {
+      is(writeHappened, expectedWrite, "Test for expected write.");
+      is(status, expectedNotifyStatus, "Test for expected stream notification status.");
+      runNextTest();
+    }
+
+    function test1() {
+      // In this test we do not expect a stream for the missing document.
+      p.setPluginWantsAllStreams(false);
+
+      expectedWriteURL = missingDoc;
+      expectedNotifyStatus = 1;
+
+      writeHappened = false;
+      expectedWrite = false;
+
+      p.streamTest(missingDoc, false, null, writeCallback, notifyCallback, null, false);
+    }
+
+    function test2() {
+      // In this test we expect a stream for the missing document.
+      p.setPluginWantsAllStreams(true);
+
+      expectedWriteURL = missingDoc;
+      expectedNotifyStatus = 0;
+
+      writeHappened = false;
+      expectedWrite = true;
+
+      p.streamTest(missingDoc, false, null, writeCallback, notifyCallback, null, false);
+    }
+
+    var tests = [test1, test2];
+    var currentTest = -1;
+    function runNextTest() {
+      currentTest++;
+      if (currentTest < tests.length) {
+        tests[currentTest]();
+      } else {
+        SimpleTest.finish();
+      }
+    }
+  </script>
+</body>
+</html>

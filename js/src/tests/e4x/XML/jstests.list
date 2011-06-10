@@ -48,7 +48,7 @@ script 13.4.4.7.js
 script 13.4.4.8.js
 script 13.4.4.9.js
 script regress-291930.js
-script regress-324422-1.js
+silentfail script regress-324422-1.js
 skip script regress-324422-2.js # slow
 skip script regress-324688.js # bug 528404 - disable due to random timeouts
 script regress-336921.js

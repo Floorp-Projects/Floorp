@@ -89,7 +89,7 @@ _BROWSER_FILES = \
   browser_test.js \
   browser_vkb.js \
   $(warning browser_viewport.js disabled due to failures) \
-  $(warning browser_viewport.sjs disabled due to failures) \
+  browser_viewport.sjs \
   browser_scrollbar.sjs \
   browser_title.sjs \
   browser_thumbnails.js \

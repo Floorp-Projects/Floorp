@@ -318,7 +318,14 @@ let ContentScroll =  {
           break;
 
         // Map ID to element
-        let element = rootCwu.findElementWithViewId(json.id);
+        let element = null;
+        try {
+          element = rootCwu.findElementWithViewId(json.id);
+        } catch(e) {
+          // This could give NS_ERROR_NOT_AVAILABLE. In that case, the
+          // presshell is not available because the page is reloading.
+        }
+
         if (!element)
           break;
 

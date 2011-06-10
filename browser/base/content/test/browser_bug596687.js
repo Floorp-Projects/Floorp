@@ -5,16 +5,22 @@ function test() {
   var gotTabAttrModified = false;
   var gotTabClose = false;
 
-  tab.addEventListener("TabClose", function () {
+  function onTabClose() {
     gotTabClose = true;
+    tab.addEventListener("TabAttrModified", onTabAttrModified, false);
+  }
 
-    tab.addEventListener("TabAttrModified", function () {
-      gotTabAttrModified = true;
-    }, false);
-  }, false);
+  function onTabAttrModified() {
+    gotTabAttrModified = true;
+  }
+
+  tab.addEventListener("TabClose", onTabClose, false);
 
   gBrowser.removeTab(tab);
 
   ok(gotTabClose, "should have got the TabClose event");
   ok(!gotTabAttrModified, "shouldn't have got the TabAttrModified event after TabClose");
+
+  tab.removeEventListener("TabClose", onTabClose, false);
+  tab.removeEventListener("TabAttrModified", onTabAttrModified, false);
 }
