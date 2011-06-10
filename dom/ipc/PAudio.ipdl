@@ -65,7 +65,7 @@ parent:
 
   SampleOffsetUpdate(PRInt64 offset, PRInt64 time);
   MinWriteSampleDone(PRInt32 sampleCount);
-  DrainDone();
+  DrainDone(nsresult status);
 
 };
 
