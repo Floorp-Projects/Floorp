@@ -282,7 +282,7 @@ TypeAnalyzer::specializePhi(MPhi *phi)
     // bother specializing it.
     MIRType usedAs = phi->usedAsType();
     if (usedAs == MIRType_Value)
-        return true;
+        return false;
 
     // See if all its inputs can be specialized at their definition.
     for (size_t i = 0; i < phi->numOperands(); i++) {
@@ -293,13 +293,8 @@ TypeAnalyzer::specializePhi(MPhi *phi)
         // Give up if the type is not a value. A conversion near the def would
         // break semantics if a guard failed after the phi.
         if (ins->type() != MIRType_Value)
-            return true;
+            return false;
     }
-
-    MBasicBlock *block = phi->block();
-    MUnbox *unbox = MUnbox::New(phi, usedAs);
-    block->insertAfter(*block->begin(), unbox);
-    rewriteUses(phi, unbox);
 
     return true;
 }
@@ -367,8 +362,9 @@ TypeAnalyzer::insertConversions()
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i);
         for (size_t i = 0; i < block->numPhis(); i++) {
+            // Only fixup phis where specialization might make sense.
             if (!specializePhi(block->getPhi(i)))
-                return false;
+                continue;
             if (!fixup(block->getPhi(i)))
                 return false;
         }
