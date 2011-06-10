@@ -86,6 +86,8 @@ class AudioParent : public PAudioParent, public nsITimerCallback
     virtual ~AudioParent();
     virtual void ActorDestroy(ActorDestroyReason);
 
+    void EnteringErrorState();
+
     nsRefPtr<nsAudioStream> mStream;
     nsCOMPtr<nsITimer> mTimer;
 
