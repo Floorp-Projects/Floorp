@@ -79,7 +79,7 @@ public:
   virtual nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat) = 0;
 
   // Closes the stream. All future use of the stream is an error.
-  virtual nsresult Shutdown() = 0;
+  virtual void Shutdown() = 0;
 
   // Write sound data to the audio hardware.  aBuf is an array of samples in
   // the format specified by mFormat of length aCount.  aCount should be
@@ -95,7 +95,7 @@ public:
 
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).
-  virtual nsresult SetVolume(double aVolume) = 0;
+  virtual void SetVolume(double aVolume) = 0;
 
   // Block until buffered audio data has been consumed.
   virtual nsresult Drain() = 0;
