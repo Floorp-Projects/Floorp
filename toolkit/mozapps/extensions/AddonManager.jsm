@@ -1217,6 +1217,8 @@ var AddonManager = {
   OPTIONS_TYPE_DIALOG: 1,
   // Options will be displayed within the AM detail view
   OPTIONS_TYPE_INLINE: 2,
+  // Options will be displayed in a new tab, if possible
+  OPTIONS_TYPE_TAB: 3,
 
   getInstallForURL: function AM_getInstallForURL(aUrl, aCallback, aMimetype,
                                                  aHash, aName, aIconURL,
