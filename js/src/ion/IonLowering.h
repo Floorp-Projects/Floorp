@@ -136,6 +136,11 @@ class LIRGenerator : public MInstructionVisitor
         return true;
     }
 
+    // If an instruction was added during a MIR pass that supercedes an
+    // existing def, rewrite snapshots occuring after the new def such that
+    // they keep the new def live, rather than the old.
+    void rewriteDefsInSnapshots(MInstruction *ins, MInstruction *old);
+
     // Assign a snapshot to an instruction that may need to deoptimize.
     bool assignSnapshot(LInstruction *ins);
     virtual void fillSnapshot(LSnapshot *snapshot) = 0;
