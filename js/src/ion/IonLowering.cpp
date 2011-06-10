@@ -207,8 +207,16 @@ LIRGenerator::visitBitAnd(MBitAnd *ins)
 bool
 LIRGenerator::visitAdd(MAdd *ins)
 {
-    //JS_NOT_REACHED("NYI");
-    return true;
+    MInstruction *lhs = ins->getInput(0);
+    MInstruction *rhs = ins->getInput(1);
+
+    if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
+        ReorderCommutative(&lhs, &rhs);
+        return lowerForALU(new LAddI, ins, lhs, rhs);
+    }
+
+    JS_NOT_REACHED("NYI");
+    return false;
 }
 
 bool

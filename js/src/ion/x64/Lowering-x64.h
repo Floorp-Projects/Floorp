@@ -59,6 +59,8 @@ class LIRGeneratorX64 : public LIRGenerator
     bool preparePhi(MPhi *phi);
     bool fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir);
 
+    bool lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs);
+
   public:
     bool visitBox(MBox *box);
     bool visitUnbox(MUnbox *unbox);
