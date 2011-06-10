@@ -120,3 +120,7 @@ category app-startup SafeBrowsing service,@mozilla.org/safebrowsing/application;
 component {88b3eb21-d072-4e3b-886d-f89d8c49fe59} UpdatePrompt.js
 contract @mozilla.org/updates/update-prompt;1 {88b3eb21-d072-4e3b-886d-f89d8c49fe59}
 #endif
+
+# webapps
+component {cb1107c1-1e15-4f11-99c8-27b9ec221a2a} WebappsSupport.js
+contract @mozilla.org/webapps/support;1 {cb1107c1-1e15-4f11-99c8-27b9ec221a2a}
