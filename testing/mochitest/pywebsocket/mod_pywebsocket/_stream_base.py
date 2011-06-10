@@ -129,6 +129,12 @@ class StreamBase(object):
             length -= len(new_bytes)
         return ''.join(bytes)
 
+    def flushread(self):
+        try:
+          self._request.connection.flushread()
+        except:
+          pass
+
     def _read_until(self, delim_char):
         """Reads bytes until we encounter delim_char. The result will not
         contain delim_char.
