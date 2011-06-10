@@ -56,16 +56,12 @@ _BROWSER_FILES = \
   remote_vkb.js \
   browser_addons.js \
   browser_appmenu.js \
-  browser_autocomplete.html \
-  browser_autocomplete.js \
   browser_autocompletesearch.js\
   browser_awesomescreen.js \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_bookmarks.js \
   browser_contacts.js \
-  browser_contentpopup.html \
-  browser_contentpopup.js \
   browser_dragger.js \
   browser_find.js \
   browser_forms.html \
@@ -100,10 +96,14 @@ _BROWSER_FILES = \
 
 ifneq ($(OS_TARGET),Android)
 _BROWSER_FILES += \
+  browser_autocomplete.html \
+  browser_autocomplete.js \
   browser_bookmarks_star.js \
   browser_bookmarks_tags.js \
   browser_click_content.html \
   browser_click_content.js \
+  browser_contentpopup.html \
+  browser_contentpopup.js \
   browser_navigation.js \
   $(NULL)
 ifndef MOZ_PLATFORM_MAEMO
