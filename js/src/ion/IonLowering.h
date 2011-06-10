@@ -120,6 +120,9 @@ class LIRGenerator : public MInstructionVisitor
                        LDefinition::Policy policy = LDefinition::DEFAULT);
 
     template <size_t Ops, size_t Temps>
+    inline bool defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MInstruction *mir);
+
+    template <size_t Ops, size_t Temps>
     bool defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstruction *mir,
                    LDefinition::Policy policy = LDefinition::DEFAULT);
 
@@ -144,6 +147,9 @@ class LIRGenerator : public MInstructionVisitor
     // Assign a snapshot to an instruction that may need to deoptimize.
     bool assignSnapshot(LInstruction *ins);
     virtual void fillSnapshot(LSnapshot *snapshot) = 0;
+
+  public:
+    bool doBitOp(JSOp op, MInstruction *ins);
 
   public:
     bool visitBlock(MBasicBlock *block);

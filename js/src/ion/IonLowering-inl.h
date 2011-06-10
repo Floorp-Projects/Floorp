@@ -93,6 +93,12 @@ LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir, LDefin
     return define(lir, mir, LDefinition(type, policy));
 }
 
+template <size_t Ops, size_t Temps> bool
+LIRGenerator::defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MInstruction *mir)
+{
+    return define(lir, mir, LDefinition::MUST_REUSE_INPUT);
+}
+
 void
 LIRGenerator::startUsing(MInstruction *mir)
 {

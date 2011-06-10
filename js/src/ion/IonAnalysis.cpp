@@ -315,10 +315,13 @@ TypeAnalyzer::fixup(MInstruction *ins)
     if (usedAs != MIRType_Value && ins->type() == MIRType_Value) {
         MUnbox *unbox = MUnbox::New(ins, usedAs);
         MBasicBlock *block = ins->block();
-        if (ins->isPhi())
+        if (ins->isPhi()) {
             block->insertAfter(*block->begin(), unbox);
-        else
+        } else if (block->start() && ins->id() < block->start()->id()) {
+            block->insertAfter(block->start(), unbox);
+        } else {
             block->insertAfter(ins, unbox);
+        }
         rewriteUses(ins, unbox);
     }
 

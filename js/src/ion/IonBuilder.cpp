@@ -190,6 +190,12 @@ IonBuilder::build()
         current->initSlot(localSlot(i), undef);
     }
 
+    // Set as the start block. This is needed because the available snapshot
+    // before MStart is technically invalid, since the snapshot has uses maybe
+    // not yet defined. So MStart is the highest we can hoist any fallible
+    // operations.
+    current->makeStart(new MStart);
+
     if (!traverseBytecode())
         return false;
 

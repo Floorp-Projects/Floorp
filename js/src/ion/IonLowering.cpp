@@ -177,15 +177,51 @@ LIRGenerator::visitPhi(MPhi *ins)
     return true;
 }
 
+static void
+ReorderCommutative(MInstruction **lhsp, MInstruction **rhsp)
+{
+    MInstruction *lhs = *lhsp;
+    MInstruction *rhs = *rhsp;
+
+    // Put the constant in the left-hand side, if there is one.
+    if (lhs->isConstant()) {
+        *rhsp = lhs;
+        *lhsp = rhs;
+    }
+}
+
+bool
+LIRGenerator::doBitOp(JSOp op, MInstruction *ins)
+{
+    MInstruction *lhs = ins->getInput(0);
+    MInstruction *rhs = ins->getInput(1);
+
+    if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
+        ReorderCommutative(&lhs, &rhs);
+        LBitOp *bitop = new LBitOp(op, useRegister(lhs), useOrConstant(rhs));
+        return defineReuseInput(bitop, ins);
+    }
+
+    JS_NOT_REACHED("NYI");
+    return false;
+}
+
 bool
 LIRGenerator::visitBitAnd(MBitAnd *ins)
 {
-    return true;
+    return doBitOp(JSOP_AND, ins);
 }
 
 bool
 LIRGenerator::visitAdd(MAdd *ins)
 {
+    return true;
+}
+
+bool
+LIRGenerator::visitStart(MStart *start)
+{
+    // This is a no-op.
     return true;
 }
 
