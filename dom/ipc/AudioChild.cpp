@@ -87,13 +87,6 @@ AudioChild::RecvDrainDone(const nsresult& status)
   return true;
 }
 
-bool
-AudioChild::RecvEnteringErrorState()
-{
-  mInError = PR_TRUE;
-  return true;
-}
-
 PRInt32
 AudioChild::WaitForMinWriteSample()
 {
