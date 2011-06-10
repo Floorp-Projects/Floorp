@@ -154,19 +154,21 @@ class AudioMinWriteSampleEvent : public nsRunnable
 class AudioDrainDoneEvent : public nsRunnable
 {
  public:
-  AudioDrainDoneEvent(AudioParent* owner)
+  AudioDrainDoneEvent(AudioParent* owner, nsresult status)
   {
     mOwner = owner;
+    mStatus = status;
   }
 
   NS_IMETHOD Run()
   {
-    mOwner->SendDrainDone();
+    mOwner->SendDrainDone(mStatus);
     return NS_OK;
   }
 
  private:
     nsRefPtr<AudioParent> mOwner;
+    nsresult mStatus;
 };
 
 class AudioDrainEvent : public nsRunnable
@@ -180,8 +182,8 @@ class AudioDrainEvent : public nsRunnable
 
   NS_IMETHOD Run()
   {
-    mOwner->Drain();
-    nsCOMPtr<nsIRunnable> event = new AudioDrainDoneEvent(mParent);
+    nsresult rv = mOwner->Drain();
+    nsCOMPtr<nsIRunnable> event = new AudioDrainDoneEvent(mParent, rv);
     NS_DispatchToMainThread(event);
     return NS_OK;
   }
@@ -290,10 +292,10 @@ AudioParent::SendMinWriteSampleDone(PRInt32 minSamples)
 }
 
 bool
-AudioParent::SendDrainDone()
+AudioParent::SendDrainDone(nsresult status)
 {
   if (mIPCOpen)
-    return PAudioParent::SendDrainDone();
+    return PAudioParent::SendDrainDone(status);
   return true;
 }
 
