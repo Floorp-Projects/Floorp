@@ -103,7 +103,9 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     pc_(pc),
     lir_(NULL),
     loopSuccessor_(NULL),
-    mark_(false)
+    mark_(false),
+    successorWithPhis_(NULL),
+    positionInPhiSuccessor_(0)
 {
 }
 
@@ -543,5 +545,17 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
     loopSuccessor_ = successor;
 
     return predecessors_.append(pred);
+}
+
+size_t
+MBasicBlock::numSuccessors() const
+{
+    return lastIns()->numSuccessors();
+}
+
+MBasicBlock *
+MBasicBlock::getSuccessor(size_t index) const
+{
+    return lastIns()->getSuccessor(index);
 }
 
