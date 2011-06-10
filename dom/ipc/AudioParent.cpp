@@ -48,9 +48,8 @@ namespace dom {
 class AudioWriteEvent : public nsRunnable
 {
  public:
-  AudioWriteEvent(AudioParent* parent, nsAudioStream* owner, nsCString data, PRUint32 count)
+  AudioWriteEvent(nsAudioStream* owner, nsCString data, PRUint32 count)
   {
-    mParent = parent;
     mOwner = owner;
     mData  = data;
     mCount = count;
@@ -58,14 +57,12 @@ class AudioWriteEvent : public nsRunnable
 
   NS_IMETHOD Run()
   {
-    if (mOwner->Write(mData.get(), mCount, true) != NS_OK) 
-      mParent->EnteringErrorState();
+    mOwner->Write(mData.get(), mCount, true);
     return NS_OK;
   }
 
  private:
     nsRefPtr<nsAudioStream> mOwner;
-    nsRefPtr<AudioParent> mParent;
     nsCString mData;
     PRUint32  mCount;
 };
@@ -157,21 +154,19 @@ class AudioMinWriteSampleEvent : public nsRunnable
 class AudioDrainDoneEvent : public nsRunnable
 {
  public:
-  AudioDrainDoneEvent(AudioParent* owner, nsresult status)
+  AudioDrainDoneEvent(AudioParent* owner)
   {
     mOwner = owner;
-    mStatus = status;
   }
 
   NS_IMETHOD Run()
   {
-    mOwner->SendDrainDone(mStatus);
+    mOwner->SendDrainDone();
     return NS_OK;
   }
 
  private:
     nsRefPtr<AudioParent> mOwner;
-    nsresult mStatus;
 };
 
 class AudioDrainEvent : public nsRunnable
@@ -185,8 +180,8 @@ class AudioDrainEvent : public nsRunnable
 
   NS_IMETHOD Run()
   {
-    nsresult rv = mOwner->Drain();
-    nsCOMPtr<nsIRunnable> event = new AudioDrainDoneEvent(mParent, rv);
+    mOwner->Drain();
+    nsCOMPtr<nsIRunnable> event = new AudioDrainDoneEvent(mParent);
     NS_DispatchToMainThread(event);
     return NS_OK;
   }
@@ -219,7 +214,7 @@ AudioParent::RecvWrite(
 {
   if (!mStream)
     return false;
-  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(this, mStream, data, count);
+  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(mStream, data, count);
   nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
   return true;
@@ -286,13 +281,6 @@ AudioParent::RecvShutdown()
   return true;
 }
 
-void
-AudioParent::EnteringErrorState()
-{
-  if (mIPCOpen)
-    PAudioParent::SendEnteringErrorState();
-}
-
 bool
 AudioParent::SendMinWriteSampleDone(PRInt32 minSamples)
 {
@@ -302,10 +290,10 @@ AudioParent::SendMinWriteSampleDone(PRInt32 minSamples)
 }
 
 bool
-AudioParent::SendDrainDone(nsresult status)
+AudioParent::SendDrainDone()
 {
   if (mIPCOpen)
-    return PAudioParent::SendDrainDone(status);
+    return PAudioParent::SendDrainDone();
   return true;
 }
 
@@ -319,7 +307,6 @@ AudioParent::AudioParent(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat)
                               (nsAudioStream::SampleFormat) aFormat))) {
       NS_WARNING("AudioStream initialization failed.");
       mStream = nsnull;
-      EnteringErrorState();
       return;
   }
 
