@@ -76,13 +76,10 @@ AudioChild::RecvSampleOffsetUpdate(const PRInt64& offset,
 }
 
 bool
-AudioChild::RecvDrainDone(const nsresult& status)
+AudioChild::RecvDrainDone()
 {
   ReentrantMonitorAutoEnter mon(mAudioReentrantMonitor);
-
-  if (status == NS_OK)
-    mDrained = PR_TRUE;
-
+  mDrained = PR_TRUE;
   mAudioReentrantMonitor.NotifyAll();
   return true;
 }
@@ -106,17 +103,13 @@ AudioChild::RecvMinWriteSampleDone(const PRInt32& minSamples)
   return true;
 }
 
-nsresult
+void
 AudioChild::WaitForDrain()
 {
   ReentrantMonitorAutoEnter mon(mAudioReentrantMonitor);
   while (!mDrained && mIPCOpen) {
     mAudioReentrantMonitor.Wait();
   }
-  if (mDrained)
-    return NS_OK;
-
-  return NS_ERROR_FAILURE;
 }
 
 PRInt64

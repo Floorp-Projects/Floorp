@@ -98,7 +98,7 @@ public:
   virtual void SetVolume(double aVolume) = 0;
 
   // Block until buffered audio data has been consumed.
-  virtual nsresult Drain() = 0;
+  virtual void Drain() = 0;
 
   // Pause audio playback
   virtual void Pause() = 0;
