@@ -200,7 +200,6 @@ INSTALLED_HEADERS = \
 		jsarena.h \
 		jsatom.h \
 		jsbit.h \
-		jsbool.h \
 		jsclist.h \
 		jsclone.h \
 		jscntxt.h \
