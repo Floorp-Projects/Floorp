@@ -268,23 +268,6 @@ bool Framebuffer::hasStencil()
     return false;
 }
 
-bool Framebuffer::isMultisample()
-{
-    // If the framebuffer is not complete, attachment samples may be mismatched, and it
-    // cannot be used as a multisample framebuffer. If it is complete, it is required to
-    // have a color attachment, and all its attachments must have the same number of samples,
-    // so the number of samples for the colorbuffer will indicate whether the framebuffer is
-    // multisampled.
-    if (completeness() == GL_FRAMEBUFFER_COMPLETE && getColorbuffer()->getSamples() > 0)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
 GLenum Framebuffer::completeness()
 {
     int width = 0;
