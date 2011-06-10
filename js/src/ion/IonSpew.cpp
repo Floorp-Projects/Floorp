@@ -171,6 +171,8 @@ C1Spewer::spew(FILE *fp, MBasicBlock *block)
 
     if (block->lir()) {
         fprintf(fp, "    begin_LIR\n");
+        for (size_t i = 0; i < block->lir()->numPhis(); i++)
+            DumpLIR(fp, block->lir()->getPhi(i));
         for (LInstructionIterator i = block->lir()->begin(); i != block->lir()->end(); i++)
             DumpLIR(fp, *i);
         fprintf(fp, "    end_LIR\n");

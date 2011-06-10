@@ -49,7 +49,7 @@ using namespace js::ion;
 bool
 LIRGeneratorX64::visitConstant(MConstant *ins)
 {
-    if (!ins->inWorklist())
+    if (!ins->emitAtUses())
         return emitAtUses(ins);
 
     return LIRGenerator::visitConstant(ins);
@@ -61,7 +61,7 @@ LIRGeneratorX64::visitBox(MBox *box)
     MInstruction *opd = box->getInput(0);
 
     // If the operand is a constant, emit near its uses.
-    if (opd->isConstant() && !box->inWorklist())
+    if (opd->isConstant() && !box->emitAtUses())
         return emitAtUses(box);
 
     LBox *ins = new LBox(opd->type(), useRegisterOrConstant(opd));
@@ -117,6 +117,23 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
     return add(ins);
 }
 
+bool
+LIRGeneratorX64::preparePhi(MPhi *phi)
+{
+    uint32 vreg = nextVirtualRegister();
+    if (vreg >= MAX_VIRTUAL_REGISTERS)
+        return false;
+
+    phi->setId(vreg);
+    return true;
+}
+
+bool
+LIRGeneratorX64::visitPhi(MPhi *phi)
+{
+    return lowerPhi(phi);
+}
+
 void
 LIRGeneratorX64::fillSnapshot(LSnapshot *snapshot)
 {
@@ -124,8 +141,6 @@ LIRGeneratorX64::fillSnapshot(LSnapshot *snapshot)
     for (size_t i = 0; i < mir->numOperands(); i++) {
         MInstruction *ins = mir->getInput(i);
         LAllocation *a = snapshot->getEntry(i);
-
-        JS_ASSERT(ins->inWorklist() && ins->id());
         *a = useOrConstant(ins);
     }
 }

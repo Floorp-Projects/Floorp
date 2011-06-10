@@ -61,7 +61,10 @@ static const uint32 VREG_INCREMENT = 1;
 
 class LIRGenerator : public MInstructionVisitor
 {
+  protected:
     MIRGenerator *gen;
+
+  private:
     MIRGraph &graph;
     LBlock *current;
     uint32 vregGen_;
@@ -95,8 +98,7 @@ class LIRGenerator : public MInstructionVisitor
 
     // The lowest-level calls to use, those that do not wrap another call to
     // use(), must prefix grabbing virtual register IDs by these calls.
-    inline void startUsing(MInstruction *mir);
-    inline void stopUsing(MInstruction *mir);
+    inline bool ensureDefined(MInstruction *mir);
 
     // These all create a use of a virtual register, with an optional
     // allocation policy.
@@ -123,12 +125,11 @@ class LIRGenerator : public MInstructionVisitor
     inline bool defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MInstruction *mir);
 
     template <size_t Ops, size_t Temps>
-    bool defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstruction *mir,
-                   LDefinition::Policy policy = LDefinition::DEFAULT);
+    inline bool defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstruction *mir,
+                          LDefinition::Policy policy = LDefinition::DEFAULT);
 
     template <typename T>
-    bool add(T *ins) {
-        current->add(ins);
+    bool annotate(T *ins) {
         if (ins->numDefs()) {
             ins->setId(ins->getDef(0)->virtualRegister());
         } else {
@@ -137,6 +138,17 @@ class LIRGenerator : public MInstructionVisitor
                 return false;
         }
         return true;
+    }
+
+    template <typename T>
+    bool add(T *ins) {
+        JS_ASSERT(!ins->isPhi());
+        current->add(ins);
+        return annotate(ins);
+    }
+
+    bool addPhi(LPhi *phi) {
+        return current->addPhi(phi) && annotate(phi);
     }
 
     // If an instruction was added during a MIR pass that supercedes an
@@ -148,8 +160,12 @@ class LIRGenerator : public MInstructionVisitor
     bool assignSnapshot(LInstruction *ins);
     virtual void fillSnapshot(LSnapshot *snapshot) = 0;
 
+    // Prepares a phi's virtual register(s), not yet creating the instructions.
+    virtual bool preparePhi(MPhi *phi) = 0;
+
   public:
     bool doBitOp(JSOp op, MInstruction *ins);
+    bool lowerPhi(MPhi *phi);
 
   public:
     bool visitBlock(MBasicBlock *block);

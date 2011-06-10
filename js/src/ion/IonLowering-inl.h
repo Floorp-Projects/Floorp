@@ -60,36 +60,13 @@ LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir, const 
     lir->setDef(0, def);
     lir->getDef(0)->setVirtualRegister(vreg);
     mir->setId(vreg);
-    mir->setInWorklistUnchecked();
     return add(lir);
 }
 
 template <size_t X, size_t Y> bool
 LIRGenerator::define(LInstructionHelper<1, X, Y> *lir, MInstruction *mir, LDefinition::Policy policy)
 {
-    LDefinition::Type type;
-    switch (mir->type()) {
-      case MIRType_Boolean:
-      case MIRType_Int32:
-        type = LDefinition::INTEGER;
-        break;
-      case MIRType_String:
-      case MIRType_Object:
-        type = LDefinition::OBJECT;
-        break;
-      case MIRType_Double:
-        type = LDefinition::DOUBLE;
-        break;
-#if defined(JS_PUNBOX64)
-      case MIRType_Value:
-        type = LDefinition::BOX;
-        break;
-#endif
-      default:
-        JS_NOT_REACHED("unexpected type");
-        return false;
-    }
-
+    LDefinition::Type type = LDefinition::TypeFrom(mir->type());
     return define(lir, mir, LDefinition(type, policy));
 }
 
@@ -99,27 +76,36 @@ LIRGenerator::defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MInstruct
     return define(lir, mir, LDefinition::MUST_REUSE_INPUT);
 }
 
-void
-LIRGenerator::startUsing(MInstruction *mir)
+template <size_t Ops, size_t Temps> bool
+LIRGenerator::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MInstruction *mir,
+                        LDefinition::Policy policy)
 {
-    JS_ASSERT(mir->inWorklist());
-    if (!mir->id()) {
-        // Instruction is generated on-demand, near its uses.
-        if (mir->accept(this))
-            JS_ASSERT(mir->id());
-        else
-            gen->error();
-        mir->setNotInWorklist();
-    }
+    uint32 vreg = nextVirtualRegister();
+    if (vreg >= MAX_VIRTUAL_REGISTERS)
+        return false;
+
+#if defined(JS_NUNBOX32)
+    lir->setDef(0, LDefinition(vreg, LDefinition::TYPE, policy));
+    lir->setDef(1, LDefinition(vreg + 1, LDefinition::PAYLOAD, policy));
+    if (nextVirtualRegister() >= MAX_VIRTUAL_REGISTERS)
+        return false;
+#elif defined(JS_PUNBOX64)
+    lir->setDef(0, LDefinition(vreg, LDefinition::BOX, policy));
+#endif
+
+    mir->setId(vreg);
+    return add(lir);
 }
 
-void
-LIRGenerator::stopUsing(MInstruction *mir)
+bool
+LIRGenerator::ensureDefined(MInstruction *mir)
 {
-    if (!mir->inWorklist()) {
-        mir->setInWorklist();
-        mir->setId(0);
+    if (mir->emitAtUses()) {
+        if (!mir->accept(this))
+            return gen->error();
+        JS_ASSERT(mir->id());
     }
+    return true;
 }
 
 LUse

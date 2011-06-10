@@ -56,12 +56,14 @@ class LIRGeneratorX64 : public LIRGenerator
 
   protected:
     void fillSnapshot(LSnapshot *snapshot);
+    bool preparePhi(MPhi *phi);
 
   public:
     bool visitBox(MBox *box);
     bool visitUnbox(MUnbox *unbox);
     bool visitConstant(MConstant *ins);
     bool visitReturn(MReturn *ret);
+    bool visitPhi(MPhi *phi);
 };
 
 typedef LIRGeneratorX64 LIRBuilder;
