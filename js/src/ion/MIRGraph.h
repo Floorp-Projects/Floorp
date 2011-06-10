@@ -52,6 +52,7 @@ namespace ion {
 
 class MBasicBlock;
 class MIRGraph;
+class MStart;
 
 class MIRGenerator
 {
@@ -336,6 +337,13 @@ class MBasicBlock : public TempObject
     void unmark() {
         mark_ = false;
     }
+    void makeStart(MStart *start) {
+        add(start);
+        start_ = start;
+    }
+    MStart *start() const {
+        return start_;
+    }
 
     // This function retrieves the internal instruction associated with a
     // slot, and should not be used for normal stack operations. It is an
@@ -372,6 +380,7 @@ class MBasicBlock : public TempObject
     jsbytecode *pc_;
     uint32 id_;
     LBlock *lir_;
+    MStart *start_;
 
     // If not NULL, the successor block of the loop for which this block is the
     // header.

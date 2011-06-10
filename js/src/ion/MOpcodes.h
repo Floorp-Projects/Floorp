@@ -58,7 +58,8 @@ namespace ion {
     _(Copy)                                                                 \
     _(Box)                                                                  \
     _(Unbox)                                                                \
-    _(Snapshot)
+    _(Snapshot)                                                             \
+    _(Start)
 
 
 // Forward declarations of MIR types.
