@@ -558,6 +558,13 @@ class MTest : public MAryControlInstruction<1>
     MIRType requiredInputType(size_t index) const {
         return MIRType_Any;
     }
+
+    MBasicBlock *ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock *ifFalse() const {
+        return getSuccessor(1);
+    }
 };
 
 // Returns from this function to the previous caller.

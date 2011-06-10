@@ -48,10 +48,12 @@
     _(Double)                       \
     _(Parameter)                    \
     _(Goto)                         \
-    _(Test)                         \
     _(BitOp)                        \
     _(Return)                       \
-    _(Phi)
+    _(Phi)                          \
+    _(TestIAndBranch)               \
+    _(TestDAndBranch)               \
+    _(TestVAndBranch)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

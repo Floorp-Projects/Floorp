@@ -47,6 +47,13 @@ using namespace js;
 using namespace js::ion;
 
 bool
+LIRGeneratorX64::fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir)
+{
+    lir->setOperand(n, useRegister(mir));
+    return true;
+}
+
+bool
 LIRGeneratorX64::visitConstant(MConstant *ins)
 {
     if (!ins->emitAtUses())
