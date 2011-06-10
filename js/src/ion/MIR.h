@@ -418,6 +418,17 @@ class MAryInstruction : public MInstruction
     }
 };
 
+// Marks the start of where fallible instructions can go.
+class MStart : public MAryInstruction<0>
+{
+  public:
+    INSTRUCTION_HEADER(Start);
+    static MStart *New() {
+        return new MStart;
+    }
+};
+
+// A constant js::Value.
 class MConstant : public MAryInstruction<0>
 {
     js::Value value_;
@@ -437,6 +448,7 @@ class MConstant : public MAryInstruction<0>
     void printOpcode(FILE *fp);
 };
 
+// A reference to a formal parameter.
 class MParameter : public MAryInstruction<0>
 {
     int32 index_;
@@ -504,6 +516,7 @@ class MAryControlInstruction : public MControlInstruction
     }
 };
 
+// Jump to the start of another basic block.
 class MGoto : public MAryControlInstruction<0>
 {
     MGoto(MBasicBlock *target) { 
@@ -519,6 +532,8 @@ class MGoto : public MAryControlInstruction<0>
     }
 };
 
+// Tests if the input instruction evaluates to true or false, and jumps to the
+// start of a corresponding basic block.
 class MTest : public MAryControlInstruction<1>
 {
     MTest(MInstruction *ins, MBasicBlock *if_true, MBasicBlock *if_false)
@@ -538,6 +553,7 @@ class MTest : public MAryControlInstruction<1>
     }
 };
 
+// Returns from this function to the previous caller.
 class MReturn : public MAryControlInstruction<1>
 {
     MReturn(MInstruction *ins)
@@ -588,6 +604,8 @@ class MBinaryInstruction : public MAryInstruction<2>
     bool adjustForInputs();
 };
 
+// Wraps an SSA name in a new SSA name. This is used for correctness while
+// constructing SSA, and is removed immediately after the initial SSA is built.
 class MCopy : public MUnaryInstruction
 {
     MCopy(MInstruction *ins)
@@ -605,6 +623,7 @@ class MCopy : public MUnaryInstruction
     }
 };
 
+// Takes a typed value and returns an untyped value.
 class MBox : public MUnaryInstruction
 {
     MBox(MInstruction *ins)
@@ -628,6 +647,9 @@ class MBox : public MUnaryInstruction
     }
 };
 
+// Takes a typed value and checks if it is a certain type. If so, the payload
+// is unpacked and returned as that type. Otherwise, it is considered a
+// deoptimization.
 class MUnbox : public MUnaryInstruction
 {
     MUnbox(MInstruction *ins, MIRType type)
@@ -725,7 +747,8 @@ class MPhi : public MInstruction
 };
 
 // A snapshot contains the information needed to reconstruct the interpreter
-// state from a position in the JIT.
+// state from a position in the JIT. See the big comment near snapshot() in
+// IonBuilder.cpp.
 class MSnapshot : public MInstruction
 {
     friend class MBasicBlock;

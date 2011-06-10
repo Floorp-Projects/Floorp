@@ -115,6 +115,8 @@ class LBitOp : public LInstructionHelper<1, 2, 0>
     JSOp op_;
 
   public:
+    LIR_HEADER(BitOp);
+
     LBitOp(JSOp op, const LAllocation &left, const LAllocation &right)
       : op_(op)
     {
