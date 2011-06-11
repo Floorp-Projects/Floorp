@@ -220,6 +220,7 @@ void JS_FASTCALL Unbrand(VMFrame &f);
  * produce undefined or -0.
  */
 void JS_FASTCALL TypeBarrierHelper(VMFrame &f, uint32 which);
+void JS_FASTCALL TypeBarrierReturn(VMFrame &f, Value *vp);
 void JS_FASTCALL NegZeroHelper(VMFrame &f);
 
 void JS_FASTCALL CallPropSwap(VMFrame &f);

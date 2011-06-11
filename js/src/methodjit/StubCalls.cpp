@@ -2786,6 +2786,16 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
     f.script()->types.monitor(f.cx, f.pc(), result);
 }
 
+/*
+ * Variant of TypeBarrierHelper for checking types after making a native call.
+ * The stack is already correct, and no fixup should be performed.
+ */
+void JS_FASTCALL
+stubs::TypeBarrierReturn(VMFrame &f, Value *vp)
+{
+    f.script()->types.monitor(f.cx, f.pc(), vp[0]);
+}
+
 void JS_FASTCALL
 stubs::NegZeroHelper(VMFrame &f)
 {

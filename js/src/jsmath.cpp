@@ -126,14 +126,12 @@ js_math_abs(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        types::MarkTypeCallerOverflow(cx);
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fabs(x);
-    if (!vp->setNumber(z) && !vp[2].isDouble())
-        types::MarkTypeCallerOverflow(cx);
+    vp->setNumber(z);
     return JS_TRUE;
 }
 
@@ -271,14 +269,12 @@ js_math_ceil(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        types::MarkTypeCallerOverflow(cx);
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_math_ceil_impl(x);
-    if (!vp->setNumber(z))
-        types::MarkTypeCallerOverflow(cx);
+    vp->setNumber(z);
     return JS_TRUE;
 }
 
@@ -347,14 +343,12 @@ js_math_floor(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        types::MarkTypeCallerOverflow(cx);
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_math_floor_impl(x);
-    if (!vp->setNumber(z))
-        types::MarkTypeCallerOverflow(cx);
+    vp->setNumber(z);
     return JS_TRUE;
 }
 
@@ -392,18 +386,14 @@ js_math_max(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NegativeInfinity);
-        types::MarkTypeCallerOverflow(cx);
         return JS_TRUE;
     }
     argv = vp + 2;
-    bool expectDouble = false;
     for (i = 0; i < argc; i++) {
-        expectDouble |= argv[i].isDouble();
         if (!ValueToNumber(cx, argv[i], &x))
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
             vp->setDouble(js_NaN);
-            types::MarkTypeCallerOverflow(cx);
             return JS_TRUE;
         }
         if (x == 0 && x == z) {
@@ -413,8 +403,7 @@ js_math_max(JSContext *cx, uintN argc, Value *vp)
             z = (x > z) ? x : z;
         }
     }
-    if (!vp->setNumber(z) && !expectDouble)
-        types::MarkTypeCallerOverflow(cx);
+    vp->setNumber(z);
     return JS_TRUE;
 }
 
@@ -427,18 +416,14 @@ js_math_min(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_PositiveInfinity);
-        types::MarkTypeCallerOverflow(cx);
         return JS_TRUE;
     }
     argv = vp + 2;
-    bool expectDouble = false;
     for (i = 0; i < argc; i++) {
-        expectDouble |= argv[i].isDouble();
         if (!ValueToNumber(cx, argv[i], &x))
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
             vp->setDouble(js_NaN);
-            types::MarkTypeCallerOverflow(cx);
             return JS_TRUE;
         }
         if (x == 0 && x == z) {
@@ -448,8 +433,7 @@ js_math_min(JSContext *cx, uintN argc, Value *vp)
             z = (x < z) ? x : z;
         }
     }
-    if (!vp->setNumber(z) && !expectDouble)
-        types::MarkTypeCallerOverflow(cx);
+    vp->setNumber(z);
     return JS_TRUE;
 }
 
@@ -488,10 +472,8 @@ js_math_pow(JSContext *cx, uintN argc, Value *vp)
 
     if (argc <= 1) {
         vp->setDouble(js_NaN);
-        types::MarkTypeCallerOverflow(cx);
         return JS_TRUE;
     }
-    bool expectDouble = vp[2].isDouble() || vp[3].isDouble();
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     if (!ValueToNumber(cx, vp[3], &y))
@@ -503,14 +485,10 @@ js_math_pow(JSContext *cx, uintN argc, Value *vp)
     if (JSDOUBLE_IS_FINITE(x) && x != 0.0) {
         if (y == 0.5) {
             vp->setNumber(sqrt(x));
-            if (!expectDouble)
-                types::MarkTypeCallerOverflow(cx);
             return JS_TRUE;
         }
         if (y == -0.5) {
             vp->setNumber(1.0/sqrt(x));
-            if (!expectDouble)
-                types::MarkTypeCallerOverflow(cx);
             return JS_TRUE;
         }
     }
@@ -520,8 +498,6 @@ js_math_pow(JSContext *cx, uintN argc, Value *vp)
      */
     if (!JSDOUBLE_IS_FINITE(y) && (x == 1.0 || x == -1.0)) {
         vp->setDouble(js_NaN);
-        if (!expectDouble)
-            types::MarkTypeCallerOverflow(cx);
         return JS_TRUE;
     }
     /* pow(x, +-0) is always 1, even for x = NaN. */
@@ -535,8 +511,7 @@ js_math_pow(JSContext *cx, uintN argc, Value *vp)
     else
         z = pow(x, y);
 
-    if (!vp->setNumber(z) && !expectDouble)
-        types::MarkTypeCallerOverflow(cx);
+    vp->setNumber(z);
     return JS_TRUE;
 }
 
@@ -621,14 +596,12 @@ js_math_round(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        types::MarkTypeCallerOverflow(cx);
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_copysign(floor(x + 0.5), x);
-    if (!vp->setNumber(z))
-        types::MarkTypeCallerOverflow(cx);
+    vp->setNumber(z);
     return JS_TRUE;
 }
 
@@ -859,40 +832,28 @@ JS_DEFINE_TRCINFO_1(js_math_ceil,
 
 #endif /* JS_TRACER */
 
-static void math_TypeArith(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    types::TypeCallsite *site = Valueify(jssite);
-
-    if (site->isNew)
-        site->returnTypes->addType(cx, types::TYPE_UNKNOWN);
-
-    /* The zero-argument case will be handled as an overflow in the actual natives. */
-    for (size_t ind = 0; ind < site->argumentCount; ind++)
-        site->argumentTypes[ind]->addArith(cx, site->script, site->returnTypes);
-}
-
 static JSFunctionSpec math_static_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE(js_toSource_str,  math_toSource,        0, 0, JS_TypeHandlerString),
+    JS_FN(js_toSource_str,  math_toSource,        0, 0),
 #endif
-    JS_TN("abs",            math_abs,             1, 0, &js_math_abs_trcinfo, math_TypeArith),
-    JS_TN("acos",           math_acos,            1, 0, &math_acos_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("asin",           math_asin,            1, 0, &math_asin_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("atan",           math_atan,            1, 0, &math_atan_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("atan2",          math_atan2,           2, 0, &math_atan2_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("ceil",           js_math_ceil,         1, 0, &js_math_ceil_trcinfo, JS_TypeHandlerInt),
-    JS_TN("cos",            math_cos,             1, 0, &math_cos_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("exp",            math_exp,             1, 0, &math_exp_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("floor",          js_math_floor,        1, 0, &js_math_floor_trcinfo, JS_TypeHandlerInt),
-    JS_TN("log",            math_log,             1, 0, &math_log_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("max",            js_math_max,          2, 0, &js_math_max_trcinfo, math_TypeArith),
-    JS_TN("min",            js_math_min,          2, 0, &js_math_min_trcinfo, math_TypeArith),
-    JS_TN("pow",            js_math_pow,          2, 0, &js_math_pow_trcinfo, math_TypeArith),
-    JS_TN("random",         math_random,          0, 0, &math_random_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("round",          js_math_round,        1, 0, &js_math_round_trcinfo, JS_TypeHandlerInt),
-    JS_TN("sin",            math_sin,             1, 0, &math_sin_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("sqrt",           js_math_sqrt,         1, 0, &js_math_sqrt_trcinfo, JS_TypeHandlerFloat),
-    JS_TN("tan",            math_tan,             1, 0, &math_tan_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("abs",            js_math_abs,          1, 0, &js_math_abs_trcinfo),
+    JS_TN("acos",           math_acos,            1, 0, &math_acos_trcinfo),
+    JS_TN("asin",           math_asin,            1, 0, &math_asin_trcinfo),
+    JS_TN("atan",           math_atan,            1, 0, &math_atan_trcinfo),
+    JS_TN("atan2",          math_atan2,           2, 0, &math_atan2_trcinfo),
+    JS_TN("ceil",           js_math_ceil,         1, 0, &js_math_ceil_trcinfo),
+    JS_TN("cos",            math_cos,             1, 0, &math_cos_trcinfo),
+    JS_TN("exp",            math_exp,             1, 0, &math_exp_trcinfo),
+    JS_TN("floor",          js_math_floor,        1, 0, &js_math_floor_trcinfo),
+    JS_TN("log",            math_log,             1, 0, &math_log_trcinfo),
+    JS_TN("max",            js_math_max,          2, 0, &js_math_max_trcinfo),
+    JS_TN("min",            js_math_min,          2, 0, &js_math_min_trcinfo),
+    JS_TN("pow",            js_math_pow,          2, 0, &js_math_pow_trcinfo),
+    JS_TN("random",         math_random,          0, 0, &math_random_trcinfo),
+    JS_TN("round",          js_math_round,        1, 0, &js_math_round_trcinfo),
+    JS_TN("sin",            math_sin,             1, 0, &math_sin_trcinfo),
+    JS_TN("sqrt",           js_math_sqrt,         1, 0, &js_math_sqrt_trcinfo),
+    JS_TN("tan",            math_tan,             1, 0, &math_tan_trcinfo),
     JS_FS_END
 };
 

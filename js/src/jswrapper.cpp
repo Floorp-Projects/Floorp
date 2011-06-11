@@ -642,7 +642,7 @@ JSCrossCompartmentWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags
 {
     /* Notify type inference of custom iterators, see GetCustomIterator. */
     if (!(flags & JSITER_OWNONLY))
-        types::MarkTypeCallerUnexpected(cx, types::TYPE_UNKNOWN);
+        types::MarkIteratorUnknown(cx);
 
     PIERCE(cx, wrapper, GET,
            NOTHING,

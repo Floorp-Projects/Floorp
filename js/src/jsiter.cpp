@@ -382,7 +382,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
      * that loop are unknown, whether there is a custom __iterator__ or not.
      */
     if (!(flags & JSITER_OWNONLY))
-        types::MarkTypeCallerUnexpected(cx, types::TYPE_UNKNOWN);
+        types::MarkIteratorUnknown(cx);
 
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);
@@ -750,7 +750,7 @@ iterator_next(JSContext *cx, uintN argc, Value *vp)
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
 
 static JSFunctionSpec iterator_methods[] = {
-    JS_FN_TYPE(js_next_str,      iterator_next,  0,JSPROP_ROPERM, JS_TypeHandlerDynamic),
+    JS_FN(js_next_str,      iterator_next,  0,JSPROP_ROPERM),
     JS_FS_END
 };
 
@@ -1453,10 +1453,10 @@ generator_close(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSFunctionSpec generator_methods[] = {
-    JS_FN_TYPE(js_next_str,      generator_next,     0,JSPROP_ROPERM, JS_TypeHandlerDynamic),
-    JS_FN_TYPE(js_send_str,      generator_send,     1,JSPROP_ROPERM, JS_TypeHandlerDynamic),
-    JS_FN_TYPE(js_throw_str,     generator_throw,    1,JSPROP_ROPERM, JS_TypeHandlerDynamic),
-    JS_FN_TYPE(js_close_str,     generator_close,    0,JSPROP_ROPERM, JS_TypeHandlerVoid),
+    JS_FN(js_next_str,      generator_next,     0,JSPROP_ROPERM),
+    JS_FN(js_send_str,      generator_send,     1,JSPROP_ROPERM),
+    JS_FN(js_throw_str,     generator_throw,    1,JSPROP_ROPERM),
+    JS_FN(js_close_str,     generator_close,    0,JSPROP_ROPERM),
     JS_FS_END
 };
 
@@ -1473,14 +1473,14 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (stop)
         return stop;
 
-    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2, JS_TypeHandlerDynamic,
+    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2,
                          NULL, iterator_methods, NULL, NULL);
     if (!proto)
         return NULL;
 
 #if JS_HAS_GENERATORS
     /* Initialize the generator internals if configured. */
-    if (!js_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0, NULL,
+    if (!js_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0,
                       NULL, generator_methods, NULL, NULL)) {
         return NULL;
     }
@@ -1488,7 +1488,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
 
     MarkStandardClassInitializedNoProto(obj, &js_StopIterationClass);
 
-    proto = js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0, NULL,
+    proto = js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
                          NULL, NULL, NULL, NULL);
     if (proto)
         types::AddTypeProperty(cx, obj->getType(), js_StopIteration_str, ObjectValue(*proto));

@@ -7118,14 +7118,14 @@ js_GetXMLObject(JSContext *cx, JSXML *xml)
 JSObject *
 js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 {
-    return js_InitClass(cx, obj, NULL, &js_NamespaceClass, Namespace, 2, JS_TypeHandlerDynamic,
+    return js_InitClass(cx, obj, NULL, &js_NamespaceClass, Namespace, 2,
                         namespace_props, namespace_methods, NULL, NULL);
 }
 
 JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2, JS_TypeHandlerDynamic,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2,
                                    qname_props, qname_methods, NULL, NULL);
     if (!proto)
         return NULL;
@@ -7151,7 +7151,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     jsval cval, vp[3];
 
     /* Define the XML class constructor and prototype. */
-    proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1, JS_TypeHandlerDynamic,
+    proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1,
                          NULL, xml_methods,
                          xml_static_props, xml_static_methods);
     if (!proto)

@@ -609,15 +609,15 @@ const char js_decodeURIComponent_str[] = "decodeURIComponent";
 const char js_encodeURIComponent_str[] = "encodeURIComponent";
 
 static JSFunctionSpec string_functions[] = {
-    JS_FN_TYPE(js_escape_str,             str_escape,                1,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_unescape_str,           str_unescape,              1,0, JS_TypeHandlerString),
+    JS_FN(js_escape_str,             str_escape,                1,0),
+    JS_FN(js_unescape_str,           str_unescape,              1,0),
 #if JS_HAS_UNEVAL
-    JS_FN_TYPE(js_uneval_str,             str_uneval,                1,0, JS_TypeHandlerString),
+    JS_FN(js_uneval_str,             str_uneval,                1,0),
 #endif
-    JS_FN_TYPE(js_decodeURI_str,          str_decodeURI,             1,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_encodeURI_str,          str_encodeURI,             1,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_decodeURIComponent_str, str_decodeURI_Component,   1,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_encodeURIComponent_str, str_encodeURI_Component,   1,0, JS_TypeHandlerString),
+    JS_FN(js_decodeURI_str,          str_decodeURI,             1,0),
+    JS_FN(js_encodeURI_str,          str_encodeURI,             1,0),
+    JS_FN(js_decodeURIComponent_str, str_decodeURI_Component,   1,0),
+    JS_FN(js_encodeURIComponent_str, str_encodeURI_Component,   1,0),
 
     JS_FS_END
 };
@@ -1059,7 +1059,6 @@ js_str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
 
 out_of_range:
     vp->setDouble(js_NaN);
-    MarkTypeCallerOverflow(cx);
     return true;
 }
 
@@ -3123,76 +3122,57 @@ JS_DEFINE_TRCINFO_1(str_concat,
     (3, (extern, STRING_RETRY, js_ConcatStrings, CONTEXT, THIS_STRING, STRING,
          1, nanojit::ACCSET_NONE)))
 
-static void type_StringSplit(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (!site->script->hasGlobal()) {
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        return;
-    }
-
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-
-    TypeObject *type = site->getInitObject(cx, true);
-    if (!type)
-        return;
-
-    site->returnTypes->addType(cx, (jstype) type);
-}
-
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE("quote",             str_quote,             0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE(js_toSource_str,     str_toSource,          0,0, JS_TypeHandlerString),
+    JS_FN("quote",             str_quote,             0,JSFUN_GENERIC_NATIVE),
+    JS_FN(js_toSource_str,     str_toSource,          0,0),
 #endif
 
     /* Java-like methods. */
-    JS_FN_TYPE(js_toString_str,     js_str_toString,       0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_valueOf_str,      js_str_toString,       0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("substring",         str_substring,         2,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("toLowerCase",       str_toLowerCase,       0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("toUpperCase",       str_toUpperCase,       0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("charAt",            js_str_charAt,         1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("charCodeAt",        js_str_charCodeAt,     1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerInt),
-    JS_FN_TYPE("indexOf",           str_indexOf,           1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerInt),
-    JS_FN_TYPE("lastIndexOf",       str_lastIndexOf,       1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerInt),
-    JS_FN_TYPE("trim",              str_trim,              0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("trimLeft",          str_trimLeft,          0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("trimRight",         str_trimRight,         0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("toLocaleLowerCase", str_toLocaleLowerCase, 0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("toLocaleUpperCase", str_toLocaleUpperCase, 0,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerInt),
+    JS_FN(js_toString_str,     js_str_toString,       0,0),
+    JS_FN(js_valueOf_str,      js_str_toString,       0,0),
+    JS_FN("substring",         str_substring,         2,JSFUN_GENERIC_NATIVE),
+    JS_FN("toLowerCase",       str_toLowerCase,       0,JSFUN_GENERIC_NATIVE),
+    JS_FN("toUpperCase",       str_toUpperCase,       0,JSFUN_GENERIC_NATIVE),
+    JS_FN("charAt",            js_str_charAt,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("charCodeAt",        js_str_charCodeAt,     1,JSFUN_GENERIC_NATIVE),
+    JS_FN("indexOf",           str_indexOf,           1,JSFUN_GENERIC_NATIVE),
+    JS_FN("lastIndexOf",       str_lastIndexOf,       1,JSFUN_GENERIC_NATIVE),
+    JS_FN("trim",              str_trim,              0,JSFUN_GENERIC_NATIVE),
+    JS_FN("trimLeft",          str_trimLeft,          0,JSFUN_GENERIC_NATIVE),
+    JS_FN("trimRight",         str_trimRight,         0,JSFUN_GENERIC_NATIVE),
+    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,JSFUN_GENERIC_NATIVE),
+    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,JSFUN_GENERIC_NATIVE),
+    JS_FN("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE),
 
     /* Perl-ish methods (search is actually Python-esque). */
-    JS_FN_TYPE("match",             str_match,             1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("search",            str_search,            1,JSFUN_GENERIC_NATIVE, JS_TypeHandlerInt),
-    JS_FN_TYPE("replace",           str_replace,           2,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
-    JS_FN_TYPE("split",             str_split,             2,JSFUN_GENERIC_NATIVE, type_StringSplit),
+    JS_FN("match",             str_match,             1,JSFUN_GENERIC_NATIVE),
+    JS_FN("search",            str_search,            1,JSFUN_GENERIC_NATIVE),
+    JS_FN("replace",           str_replace,           2,JSFUN_GENERIC_NATIVE),
+    JS_FN("split",             str_split,             2,JSFUN_GENERIC_NATIVE),
 #if JS_HAS_PERL_SUBSTR
-    JS_FN_TYPE("substr",            str_substr,            2,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
+    JS_FN("substr",            str_substr,            2,JSFUN_GENERIC_NATIVE),
 #endif
 
     /* Python-esque sequence methods. */
-    JS_TN("concat",                 str_concat,            1,JSFUN_GENERIC_NATIVE, &str_concat_trcinfo, JS_TypeHandlerString),
-    JS_FN_TYPE("slice",             str_slice,             2,JSFUN_GENERIC_NATIVE, JS_TypeHandlerString),
+    JS_TN("concat",            str_concat,            1,JSFUN_GENERIC_NATIVE, &str_concat_trcinfo),
+    JS_FN("slice",             str_slice,             2,JSFUN_GENERIC_NATIVE),
 
     /* HTML string methods. */
 #if JS_HAS_STR_HTML_HELPERS
-    JS_FN_TYPE("bold",              str_bold,              0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("italics",           str_italics,           0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("fixed",             str_fixed,             0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("fontsize",          str_fontsize,          1,0, JS_TypeHandlerString),
-    JS_FN_TYPE("fontcolor",         str_fontcolor,         1,0, JS_TypeHandlerString),
-    JS_FN_TYPE("link",              str_link,              1,0, JS_TypeHandlerString),
-    JS_FN_TYPE("anchor",            str_anchor,            1,0, JS_TypeHandlerString),
-    JS_FN_TYPE("strike",            str_strike,            0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("small",             str_small,             0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("big",               str_big,               0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("blink",             str_blink,             0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("sup",               str_sup,               0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("sub",               str_sub,               0,0, JS_TypeHandlerString),
+    JS_FN("bold",              str_bold,              0,0),
+    JS_FN("italics",           str_italics,           0,0),
+    JS_FN("fixed",             str_fixed,             0,0),
+    JS_FN("fontsize",          str_fontsize,          1,0),
+    JS_FN("fontcolor",         str_fontcolor,         1,0),
+    JS_FN("link",              str_link,              1,0),
+    JS_FN("anchor",            str_anchor,            1,0),
+    JS_FN("strike",            str_strike,            0,0),
+    JS_FN("small",             str_small,             0,0),
+    JS_FN("big",               str_big,               0,0),
+    JS_FN("blink",             str_blink,             0,0),
+    JS_FN("sup",               str_sup,               0,0),
+    JS_FN("sub",               str_sub,               0,0),
 #endif
 
     JS_FS_END
@@ -3469,17 +3449,9 @@ JS_DEFINE_TRCINFO_1(str_fromCharCode,
     (2, (static, STRING_RETRY, String_fromCharCode, CONTEXT, INT32, 1, nanojit::ACCSET_NONE)))
 
 static JSFunctionSpec string_static_methods[] = {
-    JS_TN("fromCharCode", str_fromCharCode, 1, 0, &str_fromCharCode_trcinfo, JS_TypeHandlerString),
+    JS_TN("fromCharCode", str_fromCharCode, 1, 0, &str_fromCharCode_trcinfo),
     JS_FS_END
 };
-
-static void type_NewString(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    if (Valueify(jssite)->isNew)
-        JS_TypeHandlerNew(cx, jsfun, jssite);
-    else
-        JS_TypeHandlerString(cx, jsfun, jssite);
-}
 
 const Shape *
 StringObject::assignInitialShape(JSContext *cx)
@@ -3518,8 +3490,7 @@ js_InitStringClass(JSContext *cx, JSObject *global)
 
     /* Now create the String function. */
     JSAtom *atom = CLASS_ATOM(cx, String);
-    JSFunction *ctor = js_NewFunction(cx, NULL, js_String, 1, JSFUN_CONSTRUCTOR, global, atom,
-                                      type_NewString, js_String_str);
+    JSFunction *ctor = js_NewFunction(cx, NULL, js_String, 1, JSFUN_CONSTRUCTOR, global, atom);
     if (!ctor)
         return NULL;
 

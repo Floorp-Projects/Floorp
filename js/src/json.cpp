@@ -133,7 +133,6 @@ js_json_stringify(JSContext *cx, uintN argc, Value *vp)
             return false;
         vp->setString(str);
     } else {
-        MarkTypeCallerUnexpected(cx, types::TYPE_UNDEFINED);
         vp->setUndefined();
     }
 
@@ -920,10 +919,10 @@ json_toSource(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec json_static_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE(js_toSource_str,  json_toSource,      0, 0, JS_TypeHandlerString),
+    JS_FN(js_toSource_str,  json_toSource,      0, 0),
 #endif
-    JS_FN_TYPE("parse",          js_json_parse,      2, 0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("stringify",      js_json_stringify,  3, 0, JS_TypeHandlerString),
+    JS_FN("parse",          js_json_parse,      2, 0),
+    JS_FN("stringify",      js_json_stringify,  3, 0),
     JS_FS_END
 };
 

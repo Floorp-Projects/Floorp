@@ -124,10 +124,10 @@ bool_valueOf(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec boolean_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE(js_toSource_str,  bool_toSource,  0, 0, JS_TypeHandlerString),
+    JS_FN(js_toSource_str,  bool_toSource,  0, 0),
 #endif
-    JS_FN_TYPE(js_toString_str,  bool_toString,  0, 0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_valueOf_str,   bool_valueOf,   0, 0, JS_TypeHandlerBool),
+    JS_FN(js_toString_str,  bool_toString,  0, 0),
+    JS_FN(js_valueOf_str,   bool_valueOf,   0, 0),
     JS_FS_END
 };
 
@@ -149,18 +149,10 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static void type_NewBoolean(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    if (Valueify(jssite)->isNew)
-        JS_TypeHandlerNew(cx, jsfun, jssite);
-    else
-        JS_TypeHandlerBool(cx, jsfun, jssite);
-}
-
 JSObject *
 js_InitBooleanClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_BooleanClass, Boolean, 1, type_NewBoolean,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_BooleanClass, Boolean, 1,
                                    NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;

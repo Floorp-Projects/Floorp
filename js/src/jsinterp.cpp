@@ -656,7 +656,6 @@ Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
             js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(option));
             return false;
         }
-        MarkTypeCallerUnexpected(cx, types::TYPE_UNKNOWN);
         return CallJSNative(cx, clasp->call, args.argc(), args.base());
     }
 
@@ -1284,7 +1283,6 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
             return true;
         }
         if (clasp->construct) {
-            MarkTypeCallerUnexpected(cx, types::TYPE_UNKNOWN);
             args.thisv().setMagicWithObjectOrNullPayload(NULL);
             return CallJSNativeConstructor(cx, clasp->construct, args.argc(), args.base());
         }
@@ -2915,6 +2913,7 @@ BEGIN_CASE(JSOP_STOP)
             JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
                       == JSOP_CALL_LENGTH);
             TRACE_0(LeaveFrame);
+            script->types.monitor(cx, regs.pc, regs.sp[-1]);
             len = JSOP_CALL_LENGTH;
             DO_NEXT_OP(len);
         }
@@ -4663,7 +4662,8 @@ BEGIN_CASE(JSOP_NEW)
     CHECK_INTERRUPT_HANDLER();
     TRACE_0(NativeCallComplete);
 
-  end_new:;
+  end_new:
+    script->types.monitor(cx, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_NEW)
 
@@ -4679,6 +4679,7 @@ BEGIN_CASE(JSOP_EVAL)
         goto error;
 
     regs.sp = vp + 1;
+    script->types.monitor(cx, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_EVAL)
 
@@ -4787,7 +4788,8 @@ BEGIN_CASE(JSOP_FUNCALL)
     JS_RUNTIME_METER(rt, nonInlineCalls);
     TRACE_0(NativeCallComplete);
 
-  end_call:;
+  end_call:
+    script->types.monitor(cx, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_CALL)
 

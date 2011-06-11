@@ -188,16 +188,19 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
 
     if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
         THROW();
+
+    f.script()->types.monitor(f.cx, f.pc(), vp[0]);
 }
 
 void JS_FASTCALL
 stubs::SlowNew(VMFrame &f, uint32 argc)
 {
-    JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 
-    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
+    if (!InvokeConstructor(f.cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
         THROW();
+
+    f.script()->types.monitor(f.cx, f.pc(), vp[0]);
 }
 
 /*
@@ -388,6 +391,8 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     bool ok = !!Interpret(cx, cx->fp());
     InlineReturn(f);
 
+    f.script()->types.monitor(cx, f.pc(), vp[0]);
+
     *pret = NULL;
     return ok;
 }
@@ -414,6 +419,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
     } else {
         if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
             THROW();
+        f.script()->types.monitor(cx, f.pc(), vp[0]);
     }
 }
 
@@ -440,7 +446,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
     if (!DirectEval(f.cx, CallArgsFromVp(argc, vp)))
         THROW();
 
-    f.regs.sp = vp + 1;
+    f.script()->types.monitor(f.cx, f.pc(), vp[0]);
 }
 
 void
@@ -464,6 +470,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         if (ucr->fun->isNative()) {
             if (!CallJSNative(cx, ucr->fun->u.n.native, argc, vp))
                 THROW();
+            f.script()->types.monitor(cx, f.pc(), vp[0]);
             return;
         }
     }
@@ -471,6 +478,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
     if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
         THROW();
 
+    f.script()->types.monitor(cx, f.pc(), vp[0]);
     return;
 }
 
@@ -1378,6 +1386,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
              */
             nextsp[-1] = nextsp[0];
         }
+        script->types.monitor(cx, pc, nextsp[-1]);
         f.regs.pc = nextpc;
         break;
       }

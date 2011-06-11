@@ -2014,7 +2014,7 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
         tc = tc->parent;
     parent = tc->inFunction() ? NULL : tc->scopeChain();
 
-    fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda, parent, atom, NULL, NULL);
+    fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda, parent, atom);
     if (fun && !tc->compileAndGo()) {
         FUN_OBJECT(fun)->clearParent();
         if (!FUN_OBJECT(fun)->clearType(context))
