@@ -168,3 +168,6 @@ _dollar=$$
 MOZ_SOURCE_REPO = $(shell cd $(MOZILLA_DIR) && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
 
 MOZ_SOURCESTAMP_FILE = $(DIST)/$(PKG_PATH)/$(PKG_BASENAME).txt
+
+# JavaScript Shell
+PKG_JSSHELL = $(DIST)/jsshell-$(MOZ_PKG_PLATFORM).zip
