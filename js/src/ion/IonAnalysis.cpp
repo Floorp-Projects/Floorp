@@ -491,7 +491,7 @@ ion::BuildPhiReverseMapping(MIRGraph &graph)
                 if (successor->numPhis() > 0)
                     numSuccessorsWithPhis++;
             }
-            JS_ASSERT(numSuccessorsWithPhis == 1);
+            JS_ASSERT(numSuccessorsWithPhis <= 1);
 #endif
 
             pred->setSuccessorWithPhis(block, j);
