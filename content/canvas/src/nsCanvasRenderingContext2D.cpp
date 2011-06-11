@@ -1182,6 +1182,7 @@ nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASur
     mThebes->SetMiterLimit(10.0);
     mThebes->SetLineCap(gfxContext::LINE_CAP_BUTT);
     mThebes->SetLineJoin(gfxContext::LINE_JOIN_MITER);
+    mThebes->SetFillRule(gfxContext::FILL_RULE_WINDING);
 
     mThebes->NewPath();
 
@@ -1598,6 +1599,37 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetFillStyle_multi(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType)
 {
     return GetStyleAsStringOrInterface(aStr, aInterface, aType, STYLE_FILL);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetMozFillRule(const nsAString& aString)
+{
+    gfxContext::FillRule rule;
+
+    if (aString.EqualsLiteral("evenodd"))
+        rule = gfxContext::FILL_RULE_EVEN_ODD;
+    else if (aString.EqualsLiteral("nonzero"))
+        rule = gfxContext::FILL_RULE_WINDING;
+    else
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+        return NS_OK;
+
+    mThebes->SetFillRule(rule);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetMozFillRule(nsAString& aString)
+{
+    switch (mThebes->CurrentFillRule()) {
+    case gfxContext::FILL_RULE_WINDING:
+        aString.AssignLiteral("nonzero"); break;
+    case gfxContext::FILL_RULE_EVEN_ODD:
+        aString.AssignLiteral("evenodd"); break;
+    default:
+        return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
 }
 
 //

@@ -637,9 +637,26 @@ nsXULTreeItemAccessibleBase::
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessibleBase: nsISupports implementation
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeItemAccessibleBase,
-                             nsAccessible,
-                             nsXULTreeItemAccessibleBase)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTreeItemAccessibleBase)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULTreeItemAccessibleBase,
+                                                  nsAccessible)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTree)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTreeView)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeItemAccessibleBase,
+                                                nsAccessible)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTree)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTreeView)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULTreeItemAccessibleBase)
+  NS_INTERFACE_TABLE_INHERITED1(nsXULTreeItemAccessibleBase,
+                                nsXULTreeItemAccessibleBase)
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsAccessible)
+NS_IMPL_ADDREF_INHERITED(nsXULTreeItemAccessibleBase, nsAccessible)
+NS_IMPL_RELEASE_INHERITED(nsXULTreeItemAccessibleBase, nsAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessibleBase: nsIAccessible implementation
@@ -1072,6 +1089,26 @@ nsXULTreeItemAccessible::
 {
   mColumn = nsCoreUtils::GetFirstSensibleColumn(mTree);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTreeItemAccessible: nsISupports implementation
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTreeItemAccessible)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULTreeItemAccessible,
+                                                  nsXULTreeItemAccessibleBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mColumn)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeItemAccessible,
+                                                nsXULTreeItemAccessibleBase)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mColumn)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXULTreeItemAccessible)
+NS_INTERFACE_MAP_END_INHERITING(nsXULTreeItemAccessibleBase)
+NS_IMPL_ADDREF_INHERITED(nsXULTreeItemAccessible, nsXULTreeItemAccessibleBase)
+NS_IMPL_RELEASE_INHERITED(nsXULTreeItemAccessible, nsXULTreeItemAccessibleBase)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessible: nsIAccessible implementation

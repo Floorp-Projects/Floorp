@@ -1011,7 +1011,7 @@ protected:
   {
     return static_cast<BasicLayerManager*>(mManager);
   }
-  void UpdateSurface();
+  void UpdateSurface(gfxASurface* aDestSurface = nsnull);
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
@@ -1045,18 +1045,33 @@ BasicCanvasLayer::Initialize(const Data& aData)
 }
 
 void
-BasicCanvasLayer::UpdateSurface()
+BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
 {
+  if (!mGLContext && aDestSurface) {
+    nsRefPtr<gfxContext> tmpCtx = new gfxContext(aDestSurface);
+    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    BasicCanvasLayer::PaintWithOpacity(tmpCtx, 1.0f);
+    return;
+  }
+
   if (!mDirty)
     return;
   mDirty = PR_FALSE;
 
   if (mGLContext) {
-    nsRefPtr<gfxImageSurface> isurf =
-      new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                          (GetContentFlags() & CONTENT_OPAQUE)
-                            ? gfxASurface::ImageFormatRGB24
-                            : gfxASurface::ImageFormatARGB32);
+    if (aDestSurface && aDestSurface->GetType() != gfxASurface::SurfaceTypeImage) {
+      NS_ASSERTION(aDestSurface->GetType() == gfxASurface::SurfaceTypeImage,
+                   "Destination surface must be ImageSurface type");
+      return;
+    }
+
+    nsRefPtr<gfxImageSurface> isurf = aDestSurface ?
+        static_cast<gfxImageSurface*>(aDestSurface) :
+        new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
+                            (GetContentFlags() & CONTENT_OPAQUE)
+                              ? gfxASurface::ImageFormatRGB24
+                              : gfxASurface::ImageFormatARGB32);
+
     if (!isurf || isurf->CairoStatus() != 0) {
       return;
     }
@@ -1095,7 +1110,9 @@ BasicCanvasLayer::UpdateSurface()
       gfxUtils::PremultiplyImageSurface(isurf);
 
     // stick our surface into mSurface, so that the Paint() path is the same
-    mSurface = isurf;
+    if (!aDestSurface) {
+      mSurface = isurf;
+    }
   }
 }
 
@@ -2366,31 +2383,23 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
 
   BasicManager()->CreatedCanvasBuffer(BasicManager()->Hold(this),
                                       aData.mSize,
-                                      tmpFrontBuffer);
+                                      tmpFrontBuffer,
+                                      mNeedsYFlip ? true : false);
 }
 
 void
 BasicShadowableCanvasLayer::Paint(gfxContext* aContext)
 {
-  BasicCanvasLayer::Paint(aContext);
-  if (!HasShadow())
+  if (!HasShadow()) {
+    BasicCanvasLayer::Paint(aContext);
     return;
+  }
 
-  // It'd be nice to draw directly into the shmem back buffer.
-  // Doing so is complex -- for 2D canvases, we'd need to copy
-  // changed areas, much like we do for Thebes layers, as well as
-  // do all sorts of magic to swap out the surface underneath the
-  // canvas' thebes/cairo context.
   nsRefPtr<gfxASurface> backSurface =
     BasicManager()->OpenDescriptor(mBackBuffer);
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(backSurface);
-  tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
-  // call BasicCanvasLayer::Paint to draw to our tmp context, because
-  // it'll handle things like flipping correctly.  We always want
-  // to do this with 1.0 opacity though, because opacity is a layer
-  // property that's handled by the shadow tree.
-  BasicCanvasLayer::PaintWithOpacity(tmpCtx, 1.0f);
+  UpdateSurface(backSurface);
+  FireDidTransactionCallback();
 
   BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
                                 mBackBuffer);
@@ -2777,7 +2786,7 @@ public:
   }
 
   virtual void Initialize(const Data& aData);
-  virtual void Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize);
+  virtual void Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize, bool needYFlip);
 
   void Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack);
 
@@ -2797,6 +2806,7 @@ private:
   }
 
   SurfaceDescriptor mFrontSurface;
+  PRPackedBool mNeedsYFlip;
 };
 
 
@@ -2807,8 +2817,9 @@ BasicShadowCanvasLayer::Initialize(const Data& aData)
 }
 
 void
-BasicShadowCanvasLayer::Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize)
+BasicShadowCanvasLayer::Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize, bool needYFlip)
 {
+  mNeedsYFlip = needYFlip;
   mFrontSurface = aNewFront;
   mBounds.SetRect(0, 0, aSize.width, aSize.height);
 }
@@ -2838,11 +2849,24 @@ BasicShadowCanvasLayer::Paint(gfxContext* aContext)
   pat->SetExtend(gfxPattern::EXTEND_PAD);
 
   gfxRect r(0, 0, mBounds.width, mBounds.height);
+
+  gfxMatrix m;
+  if (mNeedsYFlip) {
+    m = aContext->CurrentMatrix();
+    aContext->Translate(gfxPoint(0.0, mBounds.height));
+    aContext->Scale(1.0, -1.0);
+  }
+
+  AutoSetOperator setOperator(aContext, GetOperator());
   aContext->NewPath();
   // No need to snap here; our transform has already taken care of it
   aContext->Rectangle(r);
   aContext->SetPattern(pat);
   aContext->FillWithOpacity(GetEffectiveOpacity());
+
+  if (mNeedsYFlip) {
+    aContext->SetMatrix(m);
+  }
 }
 
 // Create a shadow layer (PLayerChild) for aLayer, if we're forwarding
