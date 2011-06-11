@@ -95,8 +95,7 @@ JSSHELL_BINS += \
   $(DIST)/bin/$(LIB_PREFIX)plc4$(DLL_SUFFIX) \
   $(NULL)
 endif
-JSSHELL_PKG   = $(DIST)/jsshell.zip
-MAKE_JSSHELL  = $(ZIP) -9j $(JSSHELL_PKG) $(JSSHELL_BINS)
+MAKE_JSSHELL  = $(ZIP) -9j $(PKG_JSSHELL) $(JSSHELL_BINS)
 
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 _ABS_DIST = $(call core_abspath,$(DIST))
@@ -686,7 +685,7 @@ ifdef MOZ_PKG_REMOVALS
 endif # MOZ_PKG_REMOVALS
 # Package JavaScript Shell
 	@echo "Packaging JavaScript Shell..."
-	$(RM) $(JSSHELL_PKG)
+	$(RM) $(PKG_JSSHELL)
 	$(MAKE_JSSHELL)
 
 make-package: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
@@ -798,7 +797,7 @@ UPLOAD_FILES= \
   $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip) \
   $(call QUOTED_WILDCARD,$(DIST)/$(SDK)) \
   $(call QUOTED_WILDCARD,$(MOZ_SOURCESTAMP_FILE)) \
-  $(call QUOTED_WILDCARD,$(JSSHELL_PKG)) \
+  $(call QUOTED_WILDCARD,$(PKG_JSSHELL)) \
   $(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 checksum:
