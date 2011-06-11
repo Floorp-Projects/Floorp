@@ -19,8 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
-/** Test for Bug 338583 **/
+/** Tests for Bug 338583 **/
 
 // we test:
 //   1) the EventSource behaviour
@@ -32,6 +31,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 //   7) delayed server responses
 
 // --
+
+  function runAllTests() {
+    // these tests run asynchronously
+    doTest1();    // this will take 8000 ms
+    doTest2();    // this will take 5000 ms
+    doTest3();    // this will take 1500 ms
+    doTest3_b();  // this will take 1500 ms
+    doTest3_c();  // this will take 1500 ms
+    doTest3_d();  // this will take 1500 ms
+    doTest3_e();  // this will take 1500 ms
+    doTest3_f();  // this will take 1500 ms
+    doTest3_g();  // this will take 1500 ms
+    doTest3_h();  // this will take 1500 ms
+    doTest4();    // this will take 3000 ms
+    doTest4_b();  // this will take 3000 ms
+    doTest5();    // this will take 3000 ms
+    doTest5_b();  // this will take 3000 ms
+    doTest6();    // this will take 2500 ms
+    doTest7();    // this will take 8000 ms
+  }
 
   function fn_onmessage(e) {
     if (e.currentTarget == e.target && e.target.hits != null)
@@ -53,9 +72,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   var gEventSourceObj1 = null;
   var gEventSourceObj2 = null;
-  var gEventSourceObj3 = null;
-  var gEventSourceObj4 = null;
-  var gEventSourceObj5 = null;
+  var gEventSourceObj3_a = null, gEventSourceObj3_b = null,
+      gEventSourceObj3_c = null, gEventSourceObj3_d = null,
+      gEventSourceObj3_e = null, gEventSourceObj3_f = null,
+      gEventSourceObj3_g = null, gEventSourceObj3_h = null;
+  var gEventSourceObj4_a = null, gEventSourceObj4_b = null;
+  var gEventSourceObj5_a = null, gEventSourceObj5_b = null;
   var gEventSourceObj6 = null;
   var gEventSourceObj7 = null;
   var stress_factor;  // used in the setTimeouts in order to help
@@ -92,13 +114,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
     gEventSourceObj1.hits['fn_other_event_name'] = 0;
     gEventSourceObj1.addEventListener('other_event_name', fn_other_event_name, true);
 
-    // the eventsources.res always use a retry of 0.5 second, so for four hits a timeout of 3 seconds is enough
+    // the eventsources.res always use a retry of 0.5 second, so for four hits a timeout of 6 seconds is enough
     setTimeout(function(){
       bhits = hasBeenHitFor1And2(gEventSourceObj1, 4);
       ok(bhits, "Test 1.b failed.");
 
       doTest1_c();
-    }, parseInt(3000*stress_factor));
+    }, parseInt(6000*stress_factor));
   }
 
   function doTest1_c() {
@@ -117,8 +139,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
       bhits = hasBeenHitFor1And2(gEventSourceObj1, 1);
       ok(!bhits, "Test 1.d failed.");
       gEventSourceObj1.close();
-
-      doTest2();
     }, parseInt(2000*stress_factor));
   }
 
@@ -138,13 +158,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
     setTimeout(function(){  // just to clean...
       gEventSourceObj2.close();
     }, parseInt(5000*stress_factor));
-
-    doTest3();
   }
 
 // in order to test (3)
 //   a) XSite domain error test
-//   b) protocol file:/// test
+//   b) protocol file:// test
 //   c) protocol javascript: test
 //   d) wrong Content-Type test
 //   e) bad http response code test
@@ -153,32 +171,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 //   h) DNS error
 
   function doTest3() {
-    gEventSourceObj3 = new EventSource("http://example.org/tests/content/base/test/eventsource.resource");
+    gEventSourceObj3_a = new EventSource("http://example.org/tests/content/base/test/eventsource.resource");
 
-    gEventSourceObj3.onmessage = fn_onmessage;
-    gEventSourceObj3.hits = [];
-    gEventSourceObj3.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_a.onmessage = fn_onmessage;
+    gEventSourceObj3_a.hits = [];
+    gEventSourceObj3_a.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.a failed");
-      gEventSourceObj3.close();
-
-      doTest3_b();
+      ok(gEventSourceObj3_a.hits['fn_onmessage'] == 0, "Test 3.a failed");
+      gEventSourceObj3_a.close();
     }, parseInt(1500*stress_factor));
   }
 
   function doTest3_b() {
-    gEventSourceObj3 = new EventSource("file:///home/wellington/src/content/base/test/eventsource.resource");
+    var xhr = new XMLHttpRequest;
+    xhr.open("GET", "/dynamic/getMyDirectory.sjs", false);
+    xhr.send();
+    var basePath = xhr.responseText;
 
-    gEventSourceObj3.onmessage = fn_onmessage;
-    gEventSourceObj3.hits = [];
-    gEventSourceObj3.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_b = new EventSource("file://" + basePath + "eventsource.resource");
+
+    gEventSourceObj3_b.onmessage = fn_onmessage;
+    gEventSourceObj3_b.hits = [];
+    gEventSourceObj3_b.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.b failed");
-      gEventSourceObj3.close();
-
-      doTest3_c();
+      ok(gEventSourceObj3_b.hits['fn_onmessage'] == 0, "Test 3.b failed");
+      gEventSourceObj3_b.close();
     }, parseInt(1500*stress_factor));
   }
 
@@ -189,62 +208,54 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   }
 
   function doTest3_c() {
-    gEventSourceObj3 = new EventSource("javascript: return jsEvtSource()");
+    gEventSourceObj3_c = new EventSource("javascript: return jsEvtSource()");
 
-    gEventSourceObj3.onmessage = fn_onmessage;
-    gEventSourceObj3.hits = [];
-    gEventSourceObj3.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_c.onmessage = fn_onmessage;
+    gEventSourceObj3_c.hits = [];
+    gEventSourceObj3_c.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.c failed");
-      gEventSourceObj3.close();
-
-      doTest3_d();
+      ok(gEventSourceObj3_c.hits['fn_onmessage'] == 0, "Test 3.c failed");
+      gEventSourceObj3_c.close();
     }, parseInt(1500*stress_factor));
   }
 
   function doTest3_d() {
-    gEventSourceObj3 = new EventSource("badContentType.eventsource");
+    gEventSourceObj3_d = new EventSource("badContentType.eventsource");
 
-    gEventSourceObj3.onmessage = fn_onmessage;
-    gEventSourceObj3.hits = [];
-    gEventSourceObj3.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_d.onmessage = fn_onmessage;
+    gEventSourceObj3_d.hits = [];
+    gEventSourceObj3_d.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.d failed");
-      gEventSourceObj3.close();
-
-      doTest3_e();
+      ok(gEventSourceObj3_d.hits['fn_onmessage'] == 0, "Test 3.d failed");
+      gEventSourceObj3_d.close();
     }, parseInt(1500*stress_factor));
   }
 
   function doTest3_e() {
-    gEventSourceObj3 = new EventSource("badHTTPResponseCode.eventsource");
+    gEventSourceObj3_e = new EventSource("badHTTPResponseCode.eventsource");
 
-    gEventSourceObj3.onmessage = fn_onmessage;
-    gEventSourceObj3.hits = [];
-    gEventSourceObj3.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_e.onmessage = fn_onmessage;
+    gEventSourceObj3_e.hits = [];
+    gEventSourceObj3_e.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.e failed");
-      gEventSourceObj3.close();
-
-      doTest3_f();
+      ok(gEventSourceObj3_e.hits['fn_onmessage'] == 0, "Test 3.e failed");
+      gEventSourceObj3_e.close();
     }, parseInt(1500*stress_factor));
   }
 
   function doTest3_f() {
-    gEventSourceObj3 = new EventSource("badMessageEvent.eventsource");
+    gEventSourceObj3_f = new EventSource("badMessageEvent.eventsource");
 
-    gEventSourceObj3.onmessage = fn_onmessage;
-    gEventSourceObj3.hits = [];
-    gEventSourceObj3.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_f.onmessage = fn_onmessage;
+    gEventSourceObj3_f.hits = [];
+    gEventSourceObj3_f.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.f failed");
-      gEventSourceObj3.close();
-
-      doTest3_g();
+      ok(gEventSourceObj3_f.hits['fn_onmessage'] == 0, "Test 3.f failed");
+      gEventSourceObj3_f.close();
     }, parseInt(1500*stress_factor));
   }
 
@@ -253,31 +264,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   }
 
   function doTest3_g() {
-    gEventSourceObj3 = new EventSource("badEventFieldName.eventsource");
+    gEventSourceObj3_g = new EventSource("badEventFieldName.eventsource");
 
     fnInvalidNCName.hits = 0;
-    gEventSourceObj3.addEventListener('message event', fnInvalidNCName, true);
+    gEventSourceObj3_g.addEventListener('message event', fnInvalidNCName, true);
 
     setTimeout(function() {
       ok(fnInvalidNCName.hits != 0, "Test 3.g failed");
-      gEventSourceObj3.close();
-
-      doTest3_h();
+      gEventSourceObj3_g.close();
     }, parseInt(1500*stress_factor));
   }
 
   function doTest3_h() {
-    gEventSourceObj3 = new EventSource("http://hdfskjghsbg.jtiyoejowe.dafsgbhjab.com");
+    gEventSourceObj3_h = new EventSource("http://hdfskjghsbg.jtiyoejowe.dafsgbhjab.com");
 
-    gEventSourceObj3.onmessage = fn_onmessage;
-    gEventSourceObj3.hits = [];
-    gEventSourceObj3.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_h.onmessage = fn_onmessage;
+    gEventSourceObj3_h.hits = [];
+    gEventSourceObj3_h.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3.hits['fn_onmessage'] == 0, "Test 3.h failed");
-      gEventSourceObj3.close();
-
-      doTest4();
+      ok(gEventSourceObj3_h.hits['fn_onmessage'] == 0, "Test 3.h failed");
+      gEventSourceObj3_h.close();
     }, parseInt(1500*stress_factor));
   }
 
@@ -288,44 +295,40 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function fn_onmessage4_a(e)
   {
-    if (e.data > gEventSourceObj4.lastData)
-      gEventSourceObj4.lastData = e.data;
+    if (e.data > gEventSourceObj4_a.lastData)
+      gEventSourceObj4_a.lastData = e.data;
     if (e.data == 2)
-      gEventSourceObj4.close();
+      gEventSourceObj4_a.close();
   }
 
   function fn_onmessage4_b(e)
   {
-    if (e.data > gEventSourceObj4.lastData)
-      gEventSourceObj4.lastData = e.data;
+    if (e.data > gEventSourceObj4_b.lastData)
+      gEventSourceObj4_b.lastData = e.data;
     if (e.data == 2)
-      gEventSourceObj4.removeEventListener('message', fn_onmessage4_b, true);
+      gEventSourceObj4_b.removeEventListener('message', fn_onmessage4_b, true);
   }
 
   function doTest4() {
-    gEventSourceObj4 = new EventSource("forRemoval.resource");
-    gEventSourceObj4.lastData = 0;
-    gEventSourceObj4.onmessage = fn_onmessage4_a;
+    gEventSourceObj4_a = new EventSource("forRemoval.resource");
+    gEventSourceObj4_a.lastData = 0;
+    gEventSourceObj4_a.onmessage = fn_onmessage4_a;
 
     setTimeout(function() {
-      ok(gEventSourceObj4.lastData == 2, "Test 4.a failed");
-      gEventSourceObj4.close();
-
-      doTest4_b();
+      ok(gEventSourceObj4_a.lastData == 2, "Test 4.a failed");
+      gEventSourceObj4_a.close();
     }, parseInt(3000*stress_factor));
   }
 
   function doTest4_b()
   {
-    gEventSourceObj4 = new EventSource("forRemoval.resource");
-    gEventSourceObj4.lastData = 0;
-    gEventSourceObj4.addEventListener('message', fn_onmessage4_b, true);
+    gEventSourceObj4_b = new EventSource("forRemoval.resource");
+    gEventSourceObj4_b.lastData = 0;
+    gEventSourceObj4_b.addEventListener('message', fn_onmessage4_b, true);
 
     setTimeout(function() {
-      ok(gEventSourceObj4.lastData == 2, "Test 4.b failed");
-      gEventSourceObj4.close();
-
-      doTest5();
+      ok(gEventSourceObj4_b.lastData == 2, "Test 4.b failed");
+      gEventSourceObj4_b.close();
     }, parseInt(3000*stress_factor));
   }
 
@@ -335,33 +338,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function doTest5()
   {
-    gEventSourceObj5 = new EventSource("http://example.org/tests/content/base/test/accesscontrol.resource");
+    gEventSourceObj5_a = new EventSource("http://example.org/tests/content/base/test/accesscontrol.resource");
 
-    gEventSourceObj5.onmessage = fn_onmessage;
-    gEventSourceObj5.hits = [];
-    gEventSourceObj5.hits['fn_onmessage'] = 0;
+    gEventSourceObj5_a.onmessage = fn_onmessage;
+    gEventSourceObj5_a.hits = [];
+    gEventSourceObj5_a.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj5.hits['fn_onmessage'] == 0, "Test 5.a failed");
-      gEventSourceObj5.close();
-
-      doTest5_b();
+      ok(gEventSourceObj5_a.hits['fn_onmessage'] == 0, "Test 5.a failed");
+      gEventSourceObj5_a.close();
     }, parseInt(3000*stress_factor));
   }
 
   function doTest5_b()
   {
-    gEventSourceObj5 = new EventSource("http://example.org/tests/content/base/test/invalid_accesscontrol.resource");
+    gEventSourceObj5_b = new EventSource("http://example.org/tests/content/base/test/invalid_accesscontrol.resource");
 
-    gEventSourceObj5.onmessage = fn_onmessage;
-    gEventSourceObj5.hits = [];
-    gEventSourceObj5.hits['fn_onmessage'] = 0;
+    gEventSourceObj5_b.onmessage = fn_onmessage;
+    gEventSourceObj5_b.hits = [];
+    gEventSourceObj5_b.hits['fn_onmessage'] = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj5.hits['fn_onmessage'] == 0, "Test 5.b failed");
-      gEventSourceObj5.close();
-
-      doTest6();
+      ok(gEventSourceObj5_b.hits['fn_onmessage'] == 0, "Test 5.b failed");
+      gEventSourceObj5_b.close();
     }, parseInt(3000*stress_factor));
   }
 
@@ -388,8 +387,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     setTimeout(function() {
       gEventSourceObj6.close();
-
-      doTest7();
     }, parseInt(2500*stress_factor));
   }
 
@@ -412,7 +409,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
       SpecialPowers.setBoolPref("dom.server-events.enabled", oldPrefVal);
       document.getElementById('waitSpan').innerHTML = '';
       SimpleTest.finish();
-    }, parseInt(50000*stress_factor));
+    }, parseInt(8000*stress_factor));
   }
 
   function doTest()
@@ -435,7 +432,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
         stress_factor = ((new Date()).getTime()-begin_time)*1/589;
         stress_factor *= 1.10; // also, a margin of 10%
 
-        doTest1();
+        runAllTests();
       }
     }
     f.i = 0;
