@@ -3,8 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 gBrowser.selectedTab = gBrowser.addTab();
 
 function finishAndCleanUp()

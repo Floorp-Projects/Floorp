@@ -333,6 +333,11 @@ members = [
     'nsIDOMHTMLTextAreaElement.value',
     'nsIDOMHTMLTextAreaElement.type',
     'nsIDOMHTMLTextAreaElement.select',
+    'nsIDOMHTMLTextAreaElement.setSelectionRange',
+    'nsIDOMHTMLTextAreaElement.selectionStart',
+    'nsIDOMHTMLTextAreaElement.selectionEnd',
+    'nsIDOMHTMLTextAreaElement.textLength',
+    'nsIDOMHTMLTextAreaElement.wrap',
     'nsIDOMHTMLTitleElement.text',
     'nsIDOMHTMLCanvasElement.width',
     'nsIDOMHTMLCanvasElement.height',
@@ -350,11 +355,6 @@ members = [
     'nsIDOMNSHTMLFrameElement.contentWindow',
     'nsIDOMNSHTMLOptionCollection.selectedIndex',
     'nsIDOMNSHTMLOptionCollection.add',
-    'nsIDOMNSHTMLTextAreaElement.setSelectionRange',
-    'nsIDOMNSHTMLTextAreaElement.selectionStart',
-    'nsIDOMNSHTMLTextAreaElement.selectionEnd',
-    'nsIDOMNSHTMLTextAreaElement.textLength',
-    'nsIDOMNSHTMLTextAreaElement.wrap',
 
     # dom/interfaces/json - None.
     # All 4 methods of nsIJSON call GetCurrentNativeCallContext.
