@@ -1275,8 +1275,8 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     JS_ASSERT(&cx->regs() == &f.regs);
 
 #ifdef JS_METHODJIT_SPEW
-    JaegerSpew(JSpew_Recompile, "interpreter rejoin (file \"%s\") (line \"%d\") (op %s)\n",
-               script->filename, script->lineno, OpcodeNames[op]);
+    JaegerSpew(JSpew_Recompile, "interpreter rejoin (file \"%s\") (line \"%d\") (op %s) (opline \"%d\")\n",
+               script->filename, script->lineno, OpcodeNames[op], js_PCToLineNumber(cx, script, pc));
 #endif
 
     uint32 nextDepth = uint32(-1);

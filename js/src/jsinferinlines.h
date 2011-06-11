@@ -1017,11 +1017,13 @@ TypeSet::addType(JSContext *cx, jstype type)
             return;
         *pentry = object;
 
-        object->contribution += objectCount;
-        if (object->contribution >= TypeObject::CONTRIBUTION_LIMIT) {
-            InferSpew(ISpewOps, "limitUnknown: T%p", this);
-            type = TYPE_UNKNOWN;
-            markUnknown(cx);
+        if (objectCount > 1) {
+            object->contribution += (objectCount - 1) * (objectCount - 1);
+            if (object->contribution >= TypeObject::CONTRIBUTION_LIMIT) {
+                InferSpew(ISpewOps, "limitUnknown: T%p", this);
+                type = TYPE_UNKNOWN;
+                markUnknown(cx);
+            }
         }
     }
 

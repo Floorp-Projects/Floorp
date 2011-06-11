@@ -2158,8 +2158,8 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset,
     if (returnOnly ? code.monitoredTypesReturn : code.monitoredTypes)
         return;
 
-    InferSpew(ISpewOps, "addMonitorNeeded:%s #%u:%05u", script->id(), offset,
-              returnOnly ? " returnOnly" : "");
+    InferSpew(ISpewOps, "addMonitorNeeded:%s #%u:%05u",
+              returnOnly ? " returnOnly" : "", script->id(), offset);
 
     /*
      * When monitoring side effects for incops, mark the result of the opcode
@@ -2209,10 +2209,18 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
             ObjectStateChange(cx, script->fun->getType(), false, true);
     }
 
+    /* Ignore duplicate barriers. */
+    TypeBarrier *barrier = code.typeBarriers;
+    while (barrier) {
+        if (barrier->target == target && barrier->type == type)
+            return;
+        barrier = barrier->next;
+    }
+
     InferSpew(ISpewOps, "typeBarrier: #%u:%05u: T%p %s",
               script->id(), pc - script->code, target, TypeString(type));
 
-    TypeBarrier *barrier = ArenaNew<TypeBarrier>(cx->compartment->pool);
+    barrier = ArenaNew<TypeBarrier>(cx->compartment->pool);
     barrier->target = target;
     barrier->type = type;
 
@@ -3348,6 +3356,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
          * bytecode types, we don't model these opcodes with inference.
          */
         TypeSet *seen = script->types.bytecodeTypes(pc);
+        addTypeBarrier(cx, pc, seen, TYPE_UNKNOWN);
         seen->addSubset(cx, script, &pushed[0]);
         if (op == JSOP_CALLNAME) {
             pushed[1].addType(cx, TYPE_UNKNOWN);
@@ -3383,6 +3392,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_GETXPROP: {
         TypeSet *seen = script->types.bytecodeTypes(pc);
+        addTypeBarrier(cx, pc, seen, TYPE_UNKNOWN);
         seen->addSubset(cx, script, &pushed[0]);
         break;
       }
@@ -5366,6 +5376,7 @@ SweepTypeObjectList(JSContext *cx, TypeObject *&objects)
         TypeObject *object = *pobject;
         if (object->marked) {
             object->marked = false;
+            object->contribution = 0;
             pobject = &object->next;
         } else {
             if (object->emptyShapes)

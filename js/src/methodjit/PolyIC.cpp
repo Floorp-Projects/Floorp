@@ -1603,50 +1603,6 @@ class ScopeNameCompiler : public PICStubCompiler
             return ComputeImplicitThis(cx, normalized, *vp, thisvp);
         return true;
     }
-
-    bool updateTypes()
-    {
-        if (!cx->typeInferenceEnabled())
-            return true;
-
-        types::AutoEnterTypeInference enter(cx);
-        const Shape *shape = getprop.shape;
-
-        /* Get the type set to use. We can stop early if we know the IC has been disabled. */
-        types::TypeSet *types = NULL;
-
-        if (getprop.obj->getClass() == &js_CallClass) {
-            JS_ASSERT(shape->getterOp() == GetCallArg || shape->getterOp() == GetCallVar);
-            JSScript *newscript = getprop.obj->getCallObjCalleeFunction()->script();
-            uint16 slot = uint16(getprop.shape->shortid);
-
-            /*
-             * To determine the possible types that could be accessed by this NAME,
-             * we need to know the possible types of the arg/local. The interpreter
-             * does not keep track of this information, so ensure that we ran type
-             * inference on the parent script before doing propagation.
-             */
-            if (!newscript->ensureRanInference(cx))
-                return false;
-
-            if (shape->getterOp() == GetCallArg)
-                types = newscript->types.argTypes(slot);
-            else if (shape->getterOp() == GetCallVar)
-                types = newscript->types.localTypes(slot);
-        } else {
-            JS_ASSERT(!getprop.obj->getParent());
-            if (getprop.obj->getType()->unknownProperties()) {
-                f.script()->types.monitorUnknown(cx, f.pc());
-                return true;
-            }
-            types = getprop.obj->getType()->getProperty(cx, shape->propid, false);
-            if (!types)
-                return false;
-        }
-
-        types->pushAllTypes(cx, f.script(), f.pc());
-        return true;
-    }
 };
 
 class BindNameCompiler : public PICStubCompiler
@@ -2088,8 +2044,6 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
     LookupStatus status = cc.updateForXName();
     if (status == Lookup_Error)
         THROW();
-    if (status == Lookup_Cacheable && !cc.updateTypes())
-        THROW();
 
     Value rval;
     if (!cc.retrieve(&rval, NULL))
@@ -2115,8 +2069,6 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[0] = rval;
 
-    if (status == Lookup_Cacheable && !cc.updateTypes())
-        THROW();
     f.script()->types.monitor(f.cx, f.pc(), rval);
 }
 
@@ -2144,8 +2096,6 @@ ic::CallName(VMFrame &f, ic::PICInfo *pic)
     f.regs.sp[0] = rval;
     f.regs.sp[1] = thisval;
 
-    if (status == Lookup_Cacheable && !cc.updateTypes())
-        THROW();
     f.script()->types.monitor(f.cx, f.pc(), rval);
 }
 

@@ -52,9 +52,11 @@ enum CompileRequest
 
 /*
  * Number of times a script must be called or have back edges taken before we
- * run it in the methodjit.
+ * run it in the methodjit. We wait longer if type inference is enabled, to
+ * allow more gathering of type information and less recompilation.
  */
-static const size_t USES_BEFORE_COMPILE = 16;
+static const size_t USES_BEFORE_COMPILE       = 16;
+static const size_t INFER_USES_BEFORE_COMPILE = 40;
 
 static inline CompileStatus
 CanMethodJIT(JSContext *cx, JSScript *script, StackFrame *fp, CompileRequest request)
@@ -67,7 +69,9 @@ CanMethodJIT(JSContext *cx, JSScript *script, StackFrame *fp, CompileRequest req
     if (request == CompileRequest_Interpreter &&
         status == JITScript_None &&
         !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
-        script->incUseCount() <= USES_BEFORE_COMPILE)
+        (cx->typeInferenceEnabled()
+         ? script->incUseCount() <= INFER_USES_BEFORE_COMPILE
+         : script->incUseCount() <= USES_BEFORE_COMPILE))
     {
         return Compile_Skipped;
     }
@@ -117,7 +121,7 @@ CanMethodJITAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode
          * the HOTLOOP value when deciding to start recording traces.
          */
         if (cx->typeInferenceEnabled()) {
-            if (script->incUseCount() <= USES_BEFORE_COMPILE)
+            if (script->incUseCount() <= INFER_USES_BEFORE_COMPILE)
                 return Compile_Skipped;
         } else {
             if (cx->compartment->incBackEdgeCount(pc) <= USES_BEFORE_COMPILE)
