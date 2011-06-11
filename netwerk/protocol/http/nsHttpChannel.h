@@ -273,6 +273,20 @@ private:
      */
     nsresult Hash(const char *buf, nsACString &hash);
 
+    void InvalidateCacheEntryForLocation(const char *location);
+    void AssembleCacheKey(const char *spec, PRUint32 postID, nsACString &key);
+    nsresult CreateNewURI(const char *loc, nsIURI **newURI);
+    void DoInvalidateCacheEntry(nsACString &key);
+
+    // Ref RFC2616 13.10: "invalidation... MUST only be performed if
+    // the host part is the same as in the Request-URI"
+    inline PRBool HostPartIsTheSame(nsIURI *uri) {
+        nsCAutoString tmpHost1, tmpHost2;
+        return (NS_SUCCEEDED(mURI->GetAsciiHost(tmpHost1)) &&
+                NS_SUCCEEDED(uri->GetAsciiHost(tmpHost2)) &&
+                (tmpHost1 == tmpHost2));
+    }
+
 private:
     nsCOMPtr<nsISupports>             mSecurityInfo;
     nsCOMPtr<nsICancelable>           mProxyRequest;
