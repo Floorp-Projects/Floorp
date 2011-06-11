@@ -68,6 +68,13 @@ public:
   nsHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLCanvasElement();
 
+  static nsHTMLCanvasElement* FromContent(nsIContent* aPossibleCanvas)
+  {
+    if (!aPossibleCanvas || !aPossibleCanvas->IsHTML(nsGkAtoms::canvas)) {
+      return nsnull;
+    }
+    return static_cast<nsHTMLCanvasElement*>(aPossibleCanvas);
+  }
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
