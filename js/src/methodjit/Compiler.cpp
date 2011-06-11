@@ -5131,6 +5131,8 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, bool isCall)
     pic.hasTypeCheck = false;
     pic.fastPathStart = masm.label();
 
+    RejoinState rejoin = isCall ? REJOIN_FALLTHROUGH : REJOIN_GETTER;
+
     /* There is no inline implementation, so we always jump to the slow path or to a stub. */
     pic.shapeGuard = masm.label();
     Jump inlineJump = masm.jump();
@@ -5139,8 +5141,7 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, bool isCall)
         pic.slowPathStart = stubcc.linkExit(inlineJump, Uses(0));
         stubcc.leave();
         passICAddress(&pic);
-        pic.slowPathCall = OOL_STUBCALL(isCall ? ic::CallName : ic::Name,
-                                        isCall ? REJOIN_FALLTHROUGH : REJOIN_GETTER);
+        pic.slowPathCall = OOL_STUBCALL(isCall ? ic::CallName : ic::Name, rejoin);
         CHECK_OOL_SPACE();
     }
     pic.fastPathRejoin = masm.label();
@@ -5170,7 +5171,7 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, bool isCall)
 
     pics.append(pic);
 
-    finishBarrier(barrier, REJOIN_GETTER, 0);
+    finishBarrier(barrier, rejoin, isCall ? 1 : 0);
 }
 
 bool

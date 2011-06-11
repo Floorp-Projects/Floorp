@@ -661,7 +661,7 @@ struct TypeObject
      * is linear, not worst-case cubic as it would otherwise be.
      */
     uint32 contribution;
-    static const uint32 CONTRIBUTION_LIMIT = 20000;
+    static const uint32 CONTRIBUTION_LIMIT = 2000;
 
     /*
      * Properties of this object. This may contain JSID_VOID, representing the
