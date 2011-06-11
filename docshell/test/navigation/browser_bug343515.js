@@ -2,8 +2,6 @@
 
 // Globals
 var testPath = "http://mochi.test:8888/browser/docshell/test/navigation/";
-var Ci = Components.interfaces;
-var Cc = Components.classes;
 var ctx = {};
 
 // Helper function to check if a window is active
@@ -214,9 +212,8 @@ function step7() {
 function allDone() {
 
   // Close the tabs we made
-  gBrowser.removeCurrentTab();
-  gBrowser.tabContainer.advanceSelectedTab(1, true);
-  gBrowser.removeCurrentTab();
+  gBrowser.removeTab(ctx.tab1);
+  gBrowser.removeTab(ctx.tab2);
 
   // Tell the framework we're done
   finish();
