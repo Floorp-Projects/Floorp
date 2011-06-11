@@ -3,7 +3,7 @@ setDebug(true);
 x = "notset";
 function child() {
   /* JSOP_STOP in parent. */
-  trap(parent, 19, "success()");
+  trap(parent, 21, "success()");
 }
 function parent() {
   child();

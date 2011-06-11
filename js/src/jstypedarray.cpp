@@ -1470,8 +1470,8 @@ JSPropertySpec TypedArray::jsprops[] = {
 
 #define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                  \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
-    JS_FN_TYPE("subarray", _typedArray::fun_subarray, 2, 0, JS_TypeHandlerThis), \
-    JS_FN_TYPE("set",   _typedArray::fun_set,   2, 0, JS_TypeHandlerVoid),     \
+    JS_FN("subarray", _typedArray::fun_subarray, 2, 0),                            \
+    JS_FN("set", _typedArray::fun_set, 2, 0),                                  \
     JS_FS_END                                                                  \
 }
 
@@ -1529,7 +1529,6 @@ do {                                                                           \
     proto = js_InitClass(cx, obj, NULL,                                        \
                          &TypedArray::slowClasses[TypedArray::_type],          \
                          _typedArray::class_constructor, 3,                    \
-                         JS_TypeHandlerNew,                                    \
                          _typedArray::jsprops,                                 \
                          _typedArray::jsfuncs,                                 \
                          NULL, NULL);                                          \
@@ -1601,7 +1600,7 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     proto = js_InitClass(cx, obj, NULL, &ArrayBuffer::jsclass,
-                         ArrayBuffer::class_constructor, 1, JS_TypeHandlerNew,
+                         ArrayBuffer::class_constructor, 1,
                          ArrayBuffer::jsprops, NULL, NULL, NULL);
     if (!proto)
         return NULL;

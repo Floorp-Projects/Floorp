@@ -967,8 +967,7 @@ WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, StrictPropertyOp setter)
     }
 
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             setter ? CastAsObject(setter)->getParent() : NULL, atom,
-                             JS_TypeHandlerDynamic, "SetWrapper");
+                             setter ? CastAsObject(setter)->getParent() : NULL, atom);
     if (!wrapper)
         return NULL;
     return CastAsStrictPropertyOp(FUN_OBJECT(wrapper));

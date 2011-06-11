@@ -423,7 +423,6 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     /* Fast paths and exceptional cases. */
     if (argc == 0) {
         vp->setDouble(js_NaN);
-        MarkTypeCallerOverflow(cx);
         return true;
     }
 
@@ -443,8 +442,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         if (vp[2].isDouble() &&
             vp[2].toDouble() > -1.0e21 &&
             vp[2].toDouble() < 1.0e21) {
-            if (!vp->setNumber(ParseIntDoubleHelper(vp[2].toDouble())))
-                MarkTypeCallerOverflow(cx);
+            vp->setNumber(ParseIntDoubleHelper(vp[2].toDouble()));
             return true;
         }
     }
@@ -464,7 +462,6 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         if (radix != 0) {
             if (radix < 2 || radix > 36) {
                 vp->setDouble(js_NaN);
-                MarkTypeCallerOverflow(cx);
                 return true;
             }
             if (radix != 16)
@@ -483,8 +480,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* Step 15. */
-    if (!vp->setNumber(number))
-        MarkTypeCallerOverflow(cx);
+    vp->setNumber(number);
     return true;
 }
 
@@ -547,10 +543,10 @@ JS_DEFINE_TRCINFO_1(num_parseFloat,
 #endif /* JS_TRACER */
 
 static JSFunctionSpec number_functions[] = {
-    JS_FN_TYPE(js_isNaN_str,         num_isNaN,           1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE(js_isFinite_str,      num_isFinite,        1,0, JS_TypeHandlerBool),
-    JS_TN(js_parseFloat_str,    num_parseFloat,      1,0, &num_parseFloat_trcinfo, JS_TypeHandlerFloat),
-    JS_TN(js_parseInt_str,      num_parseInt,        2,0, &num_parseInt_trcinfo, JS_TypeHandlerInt),
+    JS_FN(js_isNaN_str,         num_isNaN,           1,0),
+    JS_FN(js_isFinite_str,      num_isFinite,        1,0),
+    JS_TN(js_parseFloat_str,    num_parseFloat,      1,0, &num_parseFloat_trcinfo),
+    JS_TN(js_parseInt_str,      num_parseInt,        2,0, &num_parseInt_trcinfo),
     JS_FS_END
 };
 
@@ -963,14 +959,14 @@ JS_DEFINE_TRCINFO_2(num_toString,
 
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE(js_toSource_str,       num_toSource,       0, 0, JS_TypeHandlerString),
+    JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
-    JS_TN(js_toString_str,            num_toString,       1, 0, &num_toString_trcinfo, JS_TypeHandlerString),
-    JS_FN_TYPE(js_toLocaleString_str, num_toLocaleString, 0, 0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_valueOf_str,        js_num_valueOf,     0, 0, JS_TypeHandlerFloat),
-    JS_FN_TYPE("toFixed",             num_toFixed,        1, 0, JS_TypeHandlerString),
-    JS_FN_TYPE("toExponential",       num_toExponential,  1, 0, JS_TypeHandlerString),
-    JS_FN_TYPE("toPrecision",         num_toPrecision,    1, 0, JS_TypeHandlerString),
+    JS_TN(js_toString_str,       num_toString,          1, 0, &num_toString_trcinfo),
+    JS_FN(js_toLocaleString_str, num_toLocaleString,    0, 0),
+    JS_FN(js_valueOf_str,        js_num_valueOf,        0, 0),
+    JS_FN("toFixed",             num_toFixed,           1, 0),
+    JS_FN("toExponential",       num_toExponential,     1, 0),
+    JS_FN("toPrecision",         num_toPrecision,       1, 0),
     JS_FS_END
 };
 
@@ -1085,14 +1081,6 @@ js_FinishRuntimeNumberState(JSContext *cx)
     rt->thousandsSeparator = rt->decimalSeparator = rt->numGrouping = NULL;
 }
 
-static void type_NewNumber(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    if (Valueify(jssite)->isNew)
-        JS_TypeHandlerNew(cx, jsfun, jssite);
-    else
-        JS_TypeHandlerFloat(cx, jsfun, jssite);
-}
-
 JSObject *
 js_InitNumberClass(JSContext *cx, JSObject *obj)
 {
@@ -1102,7 +1090,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    proto = js_InitClass(cx, obj, NULL, &js_NumberClass, Number, 1, type_NewNumber,
+    proto = js_InitClass(cx, obj, NULL, &js_NumberClass, Number, 1,
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;

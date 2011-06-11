@@ -3295,7 +3295,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 }
 
 static JSFunctionSpec static_methods[] = {
-    JS_FN_TYPE("parse", reflect_parse, 1, 0, JS_TypeHandlerDynamic),
+    JS_FN("parse", reflect_parse, 1, 0),
     JS_FS_END
 };
 

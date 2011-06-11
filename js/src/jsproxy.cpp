@@ -1289,11 +1289,11 @@ proxy_fix(JSContext *cx, uintN argc, Value *vp)
 #endif
 
 static JSFunctionSpec static_methods[] = {
-    JS_FN_TYPE("create",         proxy_create,          2, 0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("createFunction", proxy_createFunction,  3, 0, JS_TypeHandlerDynamic),
+    JS_FN("create",         proxy_create,          2, 0),
+    JS_FN("createFunction", proxy_createFunction,  3, 0),
 #ifdef DEBUG
-    JS_FN_TYPE("isTrapping",     proxy_isTrapping,      1, 0, JS_TypeHandlerBool),
-    JS_FN_TYPE("fix",            proxy_fix,             1, 0, JS_TypeHandlerBool),
+    JS_FN("isTrapping",     proxy_isTrapping,      1, 0),
+    JS_FN("fix",            proxy_fix,             1, 0),
 #endif
     JS_FS_END
 };

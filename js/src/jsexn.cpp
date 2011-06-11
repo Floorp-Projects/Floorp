@@ -982,9 +982,9 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec exception_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE(js_toSource_str,   exn_toSource,           0,0, JS_TypeHandlerString),
+    JS_FN(js_toSource_str,   exn_toSource,           0,0),
 #endif
-    JS_FN_TYPE(js_toString_str,   exn_toString,           0,0, JS_TypeHandlerString),
+    JS_FN(js_toString_str,   exn_toString,           0,0),
     JS_FS_END
 };
 
@@ -1036,7 +1036,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         JSObject *proto =
             DefineConstructorAndPrototype(cx, obj, protoKey, atom,
                                           (i == JSEXN_ERR) ? obj_proto : error_proto,
-                                          &js_ErrorClass, Exception, 1, JS_TypeHandlerNew,
+                                          &js_ErrorClass, Exception, 1,
                                           NULL, (i == JSEXN_ERR) ? exception_methods : NULL,
                                           NULL, NULL);
         if (!proto)

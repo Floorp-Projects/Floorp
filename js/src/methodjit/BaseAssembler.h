@@ -880,6 +880,76 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         return Registers::maskReg(address.base) |
                Registers::maskReg(address.index);
     }
+
+    /*
+     * Generate code testing whether an in memory value at address has a type
+     * in the specified set. Updates mismatches with any failure jumps. Assumes
+     * no data registers are live.
+     */
+    bool generateTypeCheck(JSContext *cx, Address address,
+                           types::TypeSet *types, Vector<Jump> *mismatches)
+    {
+        if (types->unknown())
+            return true;
+
+        Vector<Jump> matches(cx);
+
+        if (types->hasType(types::TYPE_DOUBLE)) {
+            /* Type sets containing double also contain int. */
+            if (!matches.append(testNumber(Assembler::Equal, address)))
+                return false;
+        } else if (types->hasType(types::TYPE_INT32)) {
+            if (!matches.append(testInt32(Assembler::Equal, address)))
+                return false;
+        }
+
+        if (types->hasType(types::TYPE_UNDEFINED)) {
+            if (!matches.append(testUndefined(Assembler::Equal, address)))
+                return false;
+        }
+
+        if (types->hasType(types::TYPE_BOOLEAN)) {
+            if (!matches.append(testBoolean(Assembler::Equal, address)))
+                return false;
+        }
+
+        if (types->hasType(types::TYPE_STRING)) {
+            if (!matches.append(testString(Assembler::Equal, address)))
+                return false;
+        }
+
+        if (types->hasType(types::TYPE_NULL)) {
+            if (!matches.append(testNull(Assembler::Equal, address)))
+                return false;
+        }
+
+        unsigned count = types->getObjectCount();
+        if (count != 0) {
+            if (!mismatches->append(testObject(Assembler::NotEqual, address)))
+                return false;
+            Registers tempRegs(Registers::AvailRegs);
+            RegisterID reg = tempRegs.takeAnyReg().reg();
+
+            loadPayload(address, reg);
+            loadPtr(Address(reg, offsetof(JSObject, type)), reg);
+
+            for (unsigned i = 0; i < count; i++) {
+                types::TypeObject *object = types->getObject(i);
+                if (object) {
+                    if (!matches.append(branchPtr(Assembler::Equal, reg, ImmPtr(object))))
+                        return false;
+                }
+            }
+        }
+
+        if (!mismatches->append(jump()))
+            return false;
+
+        for (unsigned i = 0; i < matches.length(); i++)
+            matches[i].linkTo(label(), this);
+
+        return true;
+    }
 };
 
 /* Return f<true> if the script is strict mode code, f<false> otherwise. */

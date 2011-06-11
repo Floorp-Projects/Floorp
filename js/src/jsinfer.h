@@ -58,7 +58,6 @@ namespace types {
 class TypeSet;
 struct TypeCallsite;
 struct TypeObject;
-struct TypeFunction;
 struct TypeCompartment;
 struct ClonedTypeSet;
 
@@ -367,7 +366,7 @@ class TypeSet
     void addSetProperty(JSContext *cx, JSScript *script, jsbytecode *pc,
                         TypeSet *target, jsid id);
     void addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, jsid id);
-    void addNewObject(JSContext *cx, JSScript *script, TypeFunction *fun, TypeSet *target);
+    void addNewObject(JSContext *cx, JSScript *script, TypeObject *fun, TypeSet *target);
     void addCall(JSContext *cx, TypeCallsite *site);
     void addArith(JSContext *cx, JSScript *script,
                   TypeSet *target, TypeSet *other = NULL);
@@ -385,7 +384,7 @@ class TypeSet
      * Make an intermediate type set with the specified debugging name,
      * not embedded in another structure.
      */
-    static inline TypeSet* make(JSContext *cx, const char *name);
+    static TypeSet *make(JSContext *cx, const char *name);
 
     /*
      * Methods for JIT compilation. If a script is currently being compiled
@@ -623,8 +622,11 @@ struct TypeObject
     /* Vector of TypeObjectFlags for the objects this type represents. */
     TypeObjectFlags flags;
 
-    /* Whether this is a function object, and may be cast into TypeFunction. */
+    /* Whether this is a function. */
     bool isFunction;
+
+    /* Whether this is a function for a native. */
+    bool isFunctionNative;
 
     /* Mark bit for GC. */
     bool marked;
@@ -701,17 +703,13 @@ struct TypeObject
     /* If at most one JSObject can have this as its type, that object. */
     JSObject *singleton;
 
+    /* If this is an interpreted function, the corresponding script. */
+    JSScript *functionScript;
+
     TypeObject() {}
 
     /* Make an object with the specified name. */
-    inline TypeObject(jsid id, JSObject *proto);
-
-    /* Coerce this object to a function. */
-    TypeFunction* asFunction()
-    {
-        JS_ASSERT(isFunction);
-        return (TypeFunction *) this;
-    }
+    inline TypeObject(jsid id, JSObject *proto, bool isFunction);
 
     bool unknownProperties() { return flags == OBJECT_FLAG_UNKNOWN_MASK; }
     bool hasAnyFlags(TypeObjectFlags flags) { return (this->flags & flags) != 0; }
@@ -777,29 +775,6 @@ UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
  */
 void
 CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script);
-
-/*
- * Type information about an interpreted or native function. Note: it is possible for
- * a function JSObject to have a type which is not a TypeFunction. This happens when
- * we are not able to statically model the type of a function due to non-compileAndGo code.
- */
-struct TypeFunction : public TypeObject
-{
-    /* If this function is native, the handler to use at calls to it. */
-    JSTypeHandler handler;
-
-    /* If this function is interpreted, the corresponding script. */
-    JSScript *script;
-
-    /*
-     * Whether this is a generic native handler, and treats its first parameter
-     * the way it normally would its 'this' variable, e.g. Array.reverse(arr)
-     * instead of arr.reverse().
-     */
-    bool isGeneric;
-
-    inline TypeFunction(jsid id, JSObject *proto);
-};
 
 /*
  * Type information about a callsite. this is separated from the bytecode
@@ -1042,7 +1017,8 @@ struct TypeCompartment
     void addPendingRecompile(JSContext *cx, JSScript *script);
 
     /* Monitor future effects on a bytecode. */
-    void monitorBytecode(JSContext *cx, JSScript *script, uint32 offset);
+    void monitorBytecode(JSContext *cx, JSScript *script, uint32 offset,
+                         bool returnOnly = false);
 
     void sweep(JSContext *cx);
 };
@@ -1080,14 +1056,5 @@ void TypeFailure(JSContext *cx, const char *fmt, ...);
 
 } /* namespace types */
 } /* namespace js */
-
-static JS_ALWAYS_INLINE js::types::TypeObject *
-Valueify(JSTypeObject *jstype) { return (js::types::TypeObject*) jstype; }
-
-static JS_ALWAYS_INLINE js::types::TypeFunction *
-Valueify(JSTypeFunction *jstype) { return (js::types::TypeFunction*) jstype; }
-
-static JS_ALWAYS_INLINE js::types::TypeCallsite *
-Valueify(JSTypeCallsite *jssite) { return (js::types::TypeCallsite*) jssite; }
 
 #endif // jsinfer_h___

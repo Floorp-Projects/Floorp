@@ -789,12 +789,6 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
         if (argc >= 1 && argv[0].isObject() && argv[0].toObject().isRegExp() &&
             (argc == 1 || argv[1].isUndefined())) {
             *vp = argv[0];
-            /*
-             * Note: the type handler for RegExp only accounts for a new
-             * regexps for any associated compileAndGo RegExp global, not new
-             * regexps with different prototypes or RegExp.prototype itself.
-             */
-            MarkTypeCallerUnexpected(cx, *vp);
             return true;
         }
     }
@@ -808,13 +802,12 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE(js_toSource_str,  regexp_toString,    0,0, JS_TypeHandlerString),
+    JS_FN(js_toSource_str,  regexp_toString,    0,0),
 #endif
-    JS_FN_TYPE(js_toString_str,  regexp_toString,    0,0, JS_TypeHandlerString),
-    JS_FN_TYPE("compile",        regexp_compile,     2,0, JS_TypeHandlerThis),
-    /* Note: .exec handler should subsume .test for RegExp.exec -> RegExp.test JIT optimizations */
-    JS_FN_TYPE("exec",           js_regexp_exec,     1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("test",           js_regexp_test,     1,0, JS_TypeHandlerBool),
+    JS_FN(js_toString_str,  regexp_toString,    0,0),
+    JS_FN("compile",        regexp_compile,     2,0),
+    JS_FN("exec",           js_regexp_exec,     1,0),
+    JS_FN("test",           js_regexp_test,     1,0),
     JS_FS_END
 };
 
@@ -868,8 +861,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
     /* Create the RegExp constructor. */
     JSAtom *regExpAtom = CLASS_ATOM(cx, RegExp);
     JSFunction *ctor =
-        js_NewFunction(cx, NULL, regexp_construct, 2, JSFUN_CONSTRUCTOR, global, regExpAtom,
-                       JS_TypeHandlerNew, "RegExp");
+        js_NewFunction(cx, NULL, regexp_construct, 2, JSFUN_CONSTRUCTOR, global, regExpAtom);
     if (!ctor)
         return NULL;
 
