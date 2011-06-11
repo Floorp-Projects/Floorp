@@ -485,7 +485,7 @@ class Compiler : public BaseCompiler
     bool knownJump(jsbytecode *pc);
     Label labelOf(jsbytecode *target, uint32 inlineIndex);
     void addCallSite(const InternalCallSite &callSite);
-    void addReturnSite(bool ool);
+    void addReturnSite();
     void inlineStubCall(void *stub, RejoinState rejoin);
 
     bool debugMode() { return debugMode_; }
@@ -563,7 +563,7 @@ class Compiler : public BaseCompiler
     BarrierState pushAddressMaybeBarrier(Address address, JSValueType type, bool reuseBase,
                                          bool testUndefined = false);
     BarrierState testBarrier(RegisterID typeReg, RegisterID dataReg,
-                             bool testUndefined = false);
+                             bool testUndefined = false, bool testReturn = false);
     void finishBarrier(const BarrierState &barrier, RejoinState rejoin, uint32 which);
 
     /* Non-emitting helpers. */

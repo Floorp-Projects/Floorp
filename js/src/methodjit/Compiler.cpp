@@ -255,7 +255,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
             continue;
 
         /* Not inlining at monitored call sites or those with type barriers. */
-        if (code->monitoredTypes || analysis->typeBarriers(pc) != NULL)
+        if (code->monitoredTypes || code->monitoredTypesReturn || analysis->typeBarriers(pc) != NULL)
             continue;
 
         uint32 argc = GET_ARGC(pc);
@@ -3208,11 +3208,10 @@ mjit::Compiler::recompileCheckHelper()
 }
 
 void
-mjit::Compiler::addReturnSite(bool ool)
+mjit::Compiler::addReturnSite()
 {
-    Assembler &masm = ool ? stubcc.masm : this->masm;
     InternalCallSite site(masm.distanceOf(masm.label()), a->inlineIndex, PC,
-                          REJOIN_SCRIPTED, ool);
+                          REJOIN_SCRIPTED, false);
     addCallSite(site);
     masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfPrev()), JSFrameReg);
 }
@@ -3240,7 +3239,7 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
 
     masm.jump(r0);
     callPatch.joinPoint = masm.label();
-    addReturnSite(false /* ool */);
+    addReturnSite();
 
     frame.popn(argc + 2);
 
@@ -3248,9 +3247,15 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     frame.takeReg(JSReturnReg_Data);
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data, knownPushedType(0));
 
+    BarrierState barrier = testBarrier(JSReturnReg_Type, JSReturnReg_Data,
+                                       /* testUndefined = */ false,
+                                       /* testReturn = */ true);
+
     stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
     stubcc.rejoin(Changes(1));
     callPatches.append(callPatch);
+
+    finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
 }
 
 static bool
@@ -3640,7 +3645,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
     callIC.hotJump = masm.jump();
     callIC.joinPoint = callPatch.joinPoint = masm.label();
     callIC.callIndex = callSites.length();
-    addReturnSite(false /* ool */);
+    addReturnSite();
     if (lowerFunCallOrApply)
         uncachedCallPatch.joinPoint = callIC.joinPoint;
 
@@ -3656,6 +3661,10 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
     frame.takeReg(JSReturnReg_Type);
     frame.takeReg(JSReturnReg_Data);
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data, type);
+
+    BarrierState barrier = testBarrier(JSReturnReg_Type, JSReturnReg_Data,
+                                       /* testUndefined = */ false,
+                                       /* testReturn = */ true);
 
     /*
      * Now that the frame state is set, generate the rejoin path. Note that, if
@@ -3680,6 +3689,8 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
     callPatches.append(callPatch);
     if (lowerFunCallOrApply)
         callPatches.append(uncachedCallPatch);
+
+    finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
 
     applyTricks = NoApplyTricks;
     return true;
@@ -7147,7 +7158,7 @@ mjit::Compiler::hasTypeBarriers(jsbytecode *pc)
 
 #if 0
     /* Stress test. */
-    return types::CanHaveReadBarrier(pc);
+    return js_CodeSpec[*pc].format & JOF_TYPESET;
 #endif
 
     return analysis->typeBarriers(pc) != NULL;
@@ -7326,13 +7337,30 @@ mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterI
 }
 
 mjit::Compiler::BarrierState
-mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg, bool testUndefined)
+mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
+                            bool testUndefined, bool testReturn)
 {
     BarrierState state;
     state.typeReg = typeReg;
     state.dataReg = dataReg;
 
-    if (!hasTypeBarriers(PC)) {
+    if (!cx->typeInferenceEnabled() || !(js_CodeSpec[*PC].format & JOF_TYPESET))
+        return state;
+
+    types::TypeSet *types = script->types.bytecodeTypes(PC);
+    if (types->unknown()) {
+        /*
+         * If the result of this opcode is already unknown, there is no way for
+         * a type barrier to fail.
+         */
+        return state;
+    }
+
+    if (testReturn) {
+        JS_ASSERT(!testUndefined);
+        if (!analysis->getCode(PC).monitoredTypesReturn)
+            return state;
+    } else if (!hasTypeBarriers(PC)) {
         if (testUndefined)
             state.jump.setJump(masm.testUndefined(Assembler::Equal, typeReg));
         return state;
@@ -7344,7 +7372,6 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg, bool testUnd
     return state;
 #endif
 
-    types::TypeSet *types = script->types.bytecodeTypes(PC);
     types->addFreeze(cx);
 
     /* Cannot have type barriers when the result of the operation is already unknown. */

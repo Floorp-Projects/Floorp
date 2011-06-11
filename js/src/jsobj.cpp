@@ -2815,41 +2815,41 @@ const char js_propertyIsEnumerable_str[] = "propertyIsEnumerable";
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE(js_toSource_str,             obj_toSource,                0,0, JS_TypeHandlerString),
+    JS_FN(js_toSource_str,             obj_toSource,                0,0),
 #endif
-    JS_FN_TYPE(js_toString_str,             obj_toString,                0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_toLocaleString_str,       obj_toLocaleString,          0,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE(js_valueOf_str,              obj_valueOf,                 0,0, JS_TypeHandlerDynamic),
+    JS_FN(js_toString_str,             obj_toString,                0,0),
+    JS_FN(js_toLocaleString_str,       obj_toLocaleString,          0,0),
+    JS_FN(js_valueOf_str,              obj_valueOf,                 0,0),
 #if JS_HAS_OBJ_WATCHPOINT
-    JS_FN_TYPE(js_watch_str,                obj_watch,                   2,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE(js_unwatch_str,              obj_unwatch,                 1,0, JS_TypeHandlerVoid),
+    JS_FN(js_watch_str,                obj_watch,                   2,0),
+    JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
 #endif
-    JS_FN_TYPE(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0, JS_TypeHandlerBool),
+    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0),
+    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
+    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0),
 #if OLD_GETTER_SETTER_METHODS
-    JS_FN_TYPE(js_defineGetter_str,         js_obj_defineGetter,         2,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE(js_defineSetter_str,         js_obj_defineSetter,         2,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE(js_lookupGetter_str,         obj_lookupGetter,            1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE(js_lookupSetter_str,         obj_lookupSetter,            1,0, JS_TypeHandlerDynamic),
+    JS_FN(js_defineGetter_str,         js_obj_defineGetter,         2,0),
+    JS_FN(js_defineSetter_str,         js_obj_defineSetter,         2,0),
+    JS_FN(js_lookupGetter_str,         obj_lookupGetter,            1,0),
+    JS_FN(js_lookupSetter_str,         obj_lookupSetter,            1,0),
 #endif
     JS_FS_END
 };
 
 static JSFunctionSpec object_static_methods[] = {
-    JS_FN_TYPE("getPrototypeOf",            obj_getPrototypeOf,          1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("keys",                      obj_keys,                    1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("defineProperty",            obj_defineProperty,          3,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("defineProperties",          obj_defineProperties,        2,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("create",                    obj_create,                  2,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("isExtensible",              obj_isExtensible,            1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE("preventExtensions",         obj_preventExtensions,       1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("freeze",                    obj_freeze,                  1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("isFrozen",                  obj_isFrozen,                1,0, JS_TypeHandlerBool),
-    JS_FN_TYPE("seal",                      obj_seal,                    1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("isSealed",                  obj_isSealed,                1,0, JS_TypeHandlerBool),
+    JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
+    JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0),
+    JS_FN("keys",                      obj_keys,                    1,0),
+    JS_FN("defineProperty",            obj_defineProperty,          3,0),
+    JS_FN("defineProperties",          obj_defineProperties,        2,0),
+    JS_FN("create",                    obj_create,                  2,0),
+    JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0),
+    JS_FN("isExtensible",              obj_isExtensible,            1,0),
+    JS_FN("preventExtensions",         obj_preventExtensions,       1,0),
+    JS_FN("freeze",                    obj_freeze,                  1,0),
+    JS_FN("isFrozen",                  obj_isFrozen,                1,0),
+    JS_FN("seal",                      obj_seal,                    1,0),
+    JS_FN("isSealed",                  obj_isSealed,                1,0),
     JS_FS_END
 };
 
@@ -3962,26 +3962,10 @@ Class js_BlockClass = {
     ConvertStub
 };
 
-static void object_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (site->argumentCount == 0) {
-        TypeObject *object = site->getInitObject(cx, false);
-        if (!object)
-            return;
-        site->returnTypes->addType(cx, (jstype) object);
-    } else {
-        /* The value is converted to an object, don't keep track of the return type. */
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    }
-}
-
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto = js_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
-                                   object_TypeNew,
                                    object_props, object_methods, NULL, object_static_methods);
     if (!proto)
         return NULL;
@@ -3995,8 +3979,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
 
-    JSObject *evalobj = js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS,
-                                          JS_TypeHandlerDynamic, js_eval_str);
+    JSObject *evalobj = js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;
     if (obj->isGlobal())
@@ -4069,7 +4052,6 @@ JSObject *
 DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
                               JSObject *protoProto, Class *clasp,
                               Native constructor, uintN nargs,
-                              JSTypeHandler ctorHandler,
                               JSPropertySpec *ps, JSFunctionSpec *fs,
                               JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
@@ -4144,11 +4126,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 
         ctor = proto;
     } else {
-        if (!ctorHandler)
-            ctorHandler = JS_TypeHandlerDynamic;
-
-        JSFunction *fun = js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom,
-                                         ctorHandler, clasp->name);
+        JSFunction *fun = js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom);
         if (!fun)
             goto bad;
 
@@ -4305,7 +4283,6 @@ MarkStandardClassInitializedNoProto(JSObject* obj, js::Class *clasp)
 JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *protoProto,
              Class *clasp, Native constructor, uintN nargs,
-             JSTypeHandler ctorHandler,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
@@ -4333,7 +4310,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *protoProto,
     }
 
     return DefineConstructorAndPrototype(cx, obj, key, atom, protoProto, clasp, constructor, nargs,
-                                         ctorHandler, ps, fs, static_ps, static_fs);
+                                         ps, fs, static_ps, static_fs);
 }
 
 void
@@ -4391,9 +4368,7 @@ JSObject::numDynamicSlots(size_t capacity) const
 bool
 JSObject::allocSlots(JSContext *cx, size_t newcap)
 {
-    uint32 oldcap = numSlots();
-
-    JS_ASSERT(newcap >= oldcap && !hasSlotsArray());
+    JS_ASSERT(newcap >= numSlots() && !hasSlotsArray());
 
     /*
      * If we are allocating slots for an object whose type is always created

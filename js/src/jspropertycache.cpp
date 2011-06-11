@@ -322,11 +322,10 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     JSObject *obj, *pobj, *tmp;
     uint32 vcap;
 
-    StackFrame *fp = cx->fp();
     JSScript *script = cx->stack.currentScript();
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
-    JS_ASSERT(uintN((fp->hasImacropc() ? fp->imacropc() : pc) - script->code)
+    JS_ASSERT(uintN((cx->fp()->hasImacropc() ? cx->fp()->imacropc() : pc) - script->code)
               < script->length);
 
     JSOp op = js_GetOpcode(cx, script, pc);

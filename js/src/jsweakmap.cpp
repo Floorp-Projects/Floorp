@@ -337,10 +337,10 @@ Class WeakMap::jsclass = {
 }
 
 JSFunctionSpec WeakMap::methods[] = {
-    JS_FN_TYPE("has",    WeakMap::has, 1, 0,     JS_TypeHandlerBool),
-    JS_FN_TYPE("get",    WeakMap::get, 2, 0,     JS_TypeHandlerDynamic),
-    JS_FN_TYPE("delete", WeakMap::delete_, 1, 0, JS_TypeHandlerBool),
-    JS_FN_TYPE("set",    WeakMap::set, 2, 0,     JS_TypeHandlerVoid),
+    JS_FN("has",    WeakMap::has, 1, 0),
+    JS_FN("get",    WeakMap::get, 2, 0),
+    JS_FN("delete", WeakMap::delete_, 1, 0),
+    JS_FN("set",    WeakMap::set, 2, 0),
     JS_FS_END
 };
 
@@ -348,7 +348,7 @@ JSObject *
 js_InitWeakMapClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto = js_InitClass(cx, obj, NULL, &WeakMap::jsclass, WeakMap::construct, 0,
-                                   JS_TypeHandlerNew, NULL, WeakMap::methods, NULL, NULL);
+                                   NULL, WeakMap::methods, NULL, NULL);
     if (!proto)
         return NULL;
 

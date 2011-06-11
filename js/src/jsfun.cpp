@@ -1944,7 +1944,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         firstword = (fun->u.i.skipmin << 2) | (fun->u.i.wrapper << 1) | !!fun->atom;
         flagsword = (fun->nargs << 16) | fun->flags;
     } else {
-        fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL, NULL, NULL);
+        fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return false;
         FUN_OBJECT(fun)->clearParent();
@@ -2458,18 +2458,10 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
     /* Step 4-6, 10-11. */
     JSAtom *name = target->isFunction() ? target->getFunctionPrivate()->atom : NULL;
 
-    char *printName = NULL;
-#ifdef DEBUG
-    static int boundCount = 0;
-    printName = (char *) alloca(20);
-    JS_snprintf(printName, 20, "BoundFunction:%d", ++boundCount);
-#endif
-
     /* NB: Bound functions abuse |parent| to store their target. */
     JSObject *funobj =
         js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
-                       JSFUN_CONSTRUCTOR, target, name,
-                       JS_TypeHandlerDynamic, printName);
+                       JSFUN_CONSTRUCTOR, target, name);
     if (!funobj)
         return false;
 
@@ -2488,14 +2480,14 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE(js_toSource_str,   fun_toSource,   0,0, JS_TypeHandlerString),
+    JS_FN(js_toSource_str,   fun_toSource,   0,0),
 #endif
-    JS_FN_TYPE(js_toString_str,   fun_toString,   0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_apply_str,      js_fun_apply,   2,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE(js_call_str,       js_fun_call,    1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("bind",            fun_bind,       1,0, JS_TypeHandlerDynamic),
+    JS_FN(js_toString_str,   fun_toString,   0,0),
+    JS_FN(js_apply_str,      js_fun_apply,   2,0),
+    JS_FN(js_call_str,       js_fun_call,    1,0),
+    JS_FN("bind",            fun_bind,       1,0),
 #if JS_HAS_GENERATORS
-    JS_FN_TYPE("isGenerator",     fun_isGenerator,0,0, JS_TypeHandlerBool),
+    JS_FN("isGenerator",     fun_isGenerator,0,0),
 #endif
     JS_FS_END
 };
@@ -2537,7 +2529,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
      * and so would a call to f from another top-level's script or function.
      */
     JSFunction *fun = js_NewFunction(cx, obj.get(), NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                     global, cx->runtime->atomState.anonymousAtom, NULL, NULL);
+                                     global, cx->runtime->atomState.anonymousAtom);
     if (!fun)
         return false;
 
@@ -2741,7 +2733,7 @@ JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto = js_InitClass(cx, obj, NULL, &js_FunctionClass, Function, 1,
-                                   JS_TypeHandlerDynamic, NULL, function_methods, NULL, NULL);
+                                   NULL, function_methods, NULL, NULL);
     if (!proto)
         return NULL;
 
@@ -2754,7 +2746,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
         return NULL;
     MarkTypeObjectUnknownProperties(cx, newType);
 
-    JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL, NULL, NULL);
+    JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
         return NULL;
     fun->flags |= JSFUN_PROTOTYPE;
@@ -2769,7 +2761,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->owner = NULL;
 #endif
     fun->u.i.script = script;
-    fun->getType()->asFunction()->script = script;
+    fun->getType()->functionScript = script;
     script->fun = fun;
     js_CallNewScriptHook(cx, script, fun);
 
@@ -2777,7 +2769,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
         /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
         JSFunction *throwTypeError =
             js_NewFunction(cx, NULL, reinterpret_cast<Native>(ThrowTypeError), 0,
-                           0, obj, NULL, JS_TypeHandlerVoid, "ThrowTypeError");
+                           0, obj, NULL);
         if (!throwTypeError)
             return NULL;
 
@@ -2789,8 +2781,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 
 JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
-               uintN flags, JSObject *parent, JSAtom *atom,
-               JSTypeHandler handler, const char *fullName)
+               uintN flags, JSObject *parent, JSAtom *atom)
 {
     JSFunction *fun;
 
@@ -2801,14 +2792,22 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         funobj = NewFunction(cx, parent);
         if (!funobj)
             return NULL;
-        if (handler) {
-            TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, fullName, "",
+        if (native) {
+            const char *name = NULL;
+#ifdef DEBUG
+            JSAutoByteString bytes;
+            if (atom)
+                name = js_AtomToPrintableString(cx, atom, &bytes);
+            else
+                name = "Unnamed";
+#endif
+            TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, name, "",
                                                                     true, false,
                                                                     funobj->getProto());
             if (!type || !funobj->setTypeAndUniqueShape(cx, type))
                 return NULL;
-            type->asFunction()->handler = handler;
-            type->asFunction()->singleton = funobj;
+            type->isFunctionNative = true;
+            type->singleton = funobj;
         }
     }
     JS_ASSERT(!funobj->getPrivate());
@@ -2915,7 +2914,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             if (fun->getType()->unknownProperties())
                 MarkTypeObjectUnknownProperties(cx, type);
             else
-                type->asFunction()->handler = fun->getType()->asFunction()->handler;
+                type->isFunctionNative = true;
         }
     }
     return clone;
@@ -3002,19 +3001,11 @@ js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun)
 
 JSFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
-                  uintN nargs, uintN attrs,
-                  JSTypeHandler handler, const char *fullName)
+                  uintN nargs, uintN attrs)
 {
     PropertyOp gop;
     StrictPropertyOp sop;
     JSFunction *fun;
-
-    if (!handler) {
-        handler = JS_TypeHandlerDynamic;
-        if (!fullName)
-            fullName = "Unknown";
-    }
-    JS_ASSERT(fullName);
 
     if (attrs & JSFUN_STUB_GSOPS) {
         /*
@@ -3076,8 +3067,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     fun = js_NewFunction(cx, NULL, native, nargs,
                          attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO),
                          obj,
-                         JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL,
-                         handler, fullName);
+                         JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
     if (!fun)
         return NULL;
 

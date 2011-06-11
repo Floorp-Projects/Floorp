@@ -75,5 +75,5 @@ try { f10() } catch (e) {}
 
 // bug 659337
 f11 = Function("for (x = 0; x < 6; x++) { gc() }");
-trap(f11, 23, '');
+trap(f11, 25, '');
 f11()

@@ -809,7 +809,7 @@ class CallCompiler : public BaseCompiler
         JITScript *jit = f.jit();
 
         /* Snapshot the frameDepth before SplatApplyArgs modifies it. */
-        uintN initialFrameDepth = f.regs.sp - f.regs.fp()->slots();
+        uintN initialFrameDepth = f.regs.sp - f.fp()->slots();
 
         /*
          * SplatApplyArgs has not been called, so we call it here before
@@ -817,7 +817,7 @@ class CallCompiler : public BaseCompiler
          */
         Value *vp;
         if (ic.frameSize.isStatic()) {
-            JS_ASSERT(f.regs.sp - f.regs.fp()->slots() == (int)ic.frameSize.staticLocalSlots());
+            JS_ASSERT(f.regs.sp - f.fp()->slots() == (int)ic.frameSize.staticLocalSlots());
             vp = f.regs.sp - (2 + ic.frameSize.staticArgc());
         } else {
             JS_ASSERT(!f.regs.inlined());
@@ -842,6 +842,8 @@ class CallCompiler : public BaseCompiler
 
         if (!CallJSNative(cx, fun->u.n.native, ic.frameSize.getArgc(f), vp))
             THROWV(true);
+
+        f.script()->types.monitor(f.cx, f.pc(), vp[0]);
 
         /* Don't touch the IC if the call triggered a recompilation. */
         if (monitor.recompiled())
@@ -919,30 +921,24 @@ class CallCompiler : public BaseCompiler
 #endif
         masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxReg);
 
-        /* Compute vp. */
+        /*
+         * Compute vp. This will always be at the same offset from fp for a
+         * given callsite, regardless of any dynamically computed argc,
+         * so get that offset from the active call.
+         */
 #ifdef JS_CPU_X86
         RegisterID vpReg = t0;
 #else
         RegisterID vpReg = Registers::ArgReg2;
 #endif
+        uint32 vpOffset = (uint32) ((char *) vp - (char *) f.fp());
+        masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
+
+        /* Compute argc. */
         MaybeRegisterID argcReg;
-        if (ic.frameSize.isStatic()) {
-            uint32 vpOffset = sizeof(StackFrame) + (vp - f.regs.fp()->slots()) * sizeof(Value);
-            masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
-        } else {
+        if (!ic.frameSize.isStatic()) {
             argcReg = tempRegs.takeAnyReg().reg();
             masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), argcReg.reg());
-            masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.sp)), vpReg);
-
-            /* vpOff = (argc + 2) * sizeof(Value) */
-            RegisterID vpOff = tempRegs.takeAnyReg().reg();
-            masm.move(argcReg.reg(), vpOff);
-            masm.add32(Imm32(2), vpOff);  /* callee, this */
-            JS_STATIC_ASSERT(sizeof(Value) == 8);
-            masm.lshift32(Imm32(3), vpOff);
-            masm.subPtr(vpOff, vpReg);
-
-            tempRegs.putReg(vpOff);
         }
 
         /* Mark vp[1] as magic for |new|. */
@@ -974,15 +970,39 @@ class CallCompiler : public BaseCompiler
 
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, native), false);
 
-        if (cx->typeInferenceEnabled())
-            masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
-
         /* Reload fp, which may have been clobbered by restoreStackBase(). */
         masm.loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);
 
         Jump hasException = masm.branchTest32(Assembler::Zero, Registers::ReturnReg,
                                               Registers::ReturnReg);
 
+        Vector<Jump> mismatches(f.cx);
+        if (cx->typeInferenceEnabled()) {
+            /*
+             * Test the result of this native against the known result type
+             * set for the call. We don't assume knowledge about the types that
+             * natives can return, except when generating specialized paths in
+             * FastBuiltins. We don't need to record dependencies on the result
+             * type set, as the compiler will already have done so when making
+             * the call IC.
+             */
+            Address address(JSFrameReg, vpOffset);
+            types::TypeSet *types = f.script()->types.bytecodeTypes(f.pc());
+            if (!masm.generateTypeCheck(f.cx, address, types, &mismatches))
+                THROWV(true);
+
+            /*
+             * Can no longer trigger recompilation in this stub, clear the stub
+             * rejoin on the VMFrame.
+             */
+            masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
+        }
+
+        /*
+         * The final jump is a indirect on x64, so that we'll always be able
+         * to repatch it to the interpoline later.
+         */
+        Label finished = masm.label();
 #ifdef JS_CPU_X64
         void *slowJoin = ic.slowPathStart.labelAtOffset(ic.slowJoinOffset).executableAddress();
         DataLabelPtr done = masm.moveWithPatch(ImmPtr(slowJoin), Registers::ValueReg);
@@ -991,8 +1011,21 @@ class CallCompiler : public BaseCompiler
         Jump done = masm.jump();
 #endif
 
+        /* Generate a call for type check failures on the native result. */
+        if (!mismatches.empty()) {
+            for (unsigned i = 0; i < mismatches.length(); i++)
+                mismatches[i].linkTo(masm.label(), &masm);
+            masm.addPtr(Imm32(vpOffset), JSFrameReg, Registers::ArgReg1);
+            masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::TypeBarrierReturn),
+                                f.regs.pc, NULL, initialFrameDepth);
+            masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
+            masm.jump().linkTo(finished, &masm);
+        }
+
         /* Move JaegerThrowpoline into register for very far jump on x64. */
         hasException.linkTo(masm.label(), &masm);
+        if (cx->typeInferenceEnabled())
+            masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
         masm.throwInJIT();
 
         LinkerHelper linker(masm);
@@ -1250,72 +1283,6 @@ ic::SplatApplyArgs(VMFrame &f)
     return true;
 }
 
-static bool
-GenerateTypeCheck(JSContext *cx, Assembler &masm, Address address,
-                  types::TypeSet *types, Vector<Jump> *mismatches)
-{
-    if (types->unknown())
-        return true;
-
-    Vector<Jump> matches(cx);
-
-    if (types->hasType(types::TYPE_DOUBLE)) {
-        /* Type sets containing double also contain int. */
-        if (!matches.append(masm.testNumber(Assembler::Equal, address)))
-            return false;
-    } else if (types->hasType(types::TYPE_INT32)) {
-        if (!matches.append(masm.testInt32(Assembler::Equal, address)))
-            return false;
-    }
-
-    if (types->hasType(types::TYPE_UNDEFINED)) {
-        if (!matches.append(masm.testUndefined(Assembler::Equal, address)))
-            return false;
-    }
-
-    if (types->hasType(types::TYPE_BOOLEAN)) {
-        if (!matches.append(masm.testBoolean(Assembler::Equal, address)))
-            return false;
-    }
-
-    if (types->hasType(types::TYPE_STRING)) {
-        if (!matches.append(masm.testString(Assembler::Equal, address)))
-            return false;
-    }
-
-    if (types->hasType(types::TYPE_NULL)) {
-        if (!matches.append(masm.testNull(Assembler::Equal, address)))
-            return false;
-    }
-
-    unsigned count = types->getObjectCount();
-    if (count != 0) {
-        if (!mismatches->append(masm.testObject(Assembler::NotEqual, address)))
-            return false;
-        Registers tempRegs(Registers::AvailRegs);
-        RegisterID reg = tempRegs.takeAnyReg().reg();
-
-        masm.loadPayload(address, reg);
-        masm.loadPtr(Address(reg, offsetof(JSObject, type)), reg);
-
-        for (unsigned i = 0; i < count; i++) {
-            types::TypeObject *object = types->getObject(i);
-            if (object) {
-                if (!matches.append(masm.branchPtr(Assembler::Equal, reg, ImmPtr(object))))
-                    return false;
-            }
-        }
-    }
-
-    if (!mismatches->append(masm.jump()))
-        return false;
-
-    for (unsigned i = 0; i < matches.length(); i++)
-        matches[i].linkTo(masm.label(), &masm);
-
-    return true;
-}
-
 void
 ic::GenerateArgumentCheckStub(VMFrame &f)
 {
@@ -1334,13 +1301,13 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
 
     if (!f.fp()->isConstructing()) {
         Address address(JSFrameReg, StackFrame::offsetOfThis(fun));
-        if (!GenerateTypeCheck(f.cx, masm, address, script->types.thisTypes(), &mismatches))
+        if (!masm.generateTypeCheck(f.cx, address, script->types.thisTypes(), &mismatches))
             return;
     }
 
     for (unsigned i = 0; i < fun->nargs; i++) {
         Address address(JSFrameReg, StackFrame::offsetOfFormalArg(fun, i));
-        if (!GenerateTypeCheck(f.cx, masm, address, script->types.argTypes(i), &mismatches))
+        if (!masm.generateTypeCheck(f.cx, address, script->types.argTypes(i), &mismatches))
             return;
     }
 

@@ -2871,7 +2871,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     assertSameCompartment(cx, obj, parent_proto);
     return js_InitClass(cx, obj, parent_proto, Valueify(clasp),
                         Valueify(constructor), nargs,
-                        NULL, ps, fs, static_ps, static_fs);
+                        ps, fs, static_ps, static_fs);
 }
 
 #ifdef JS_THREADSAFE
@@ -4211,7 +4211,7 @@ JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
         if (!atom)
             return NULL;
     }
-    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, atom, NULL, name);
+    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, atom);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4224,7 +4224,7 @@ JS_NewFunctionById(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSO
     assertSameCompartment(cx, parent);
 
     return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent,
-                          JSID_TO_ATOM(id), NULL, NULL);
+                          JSID_TO_ATOM(id));
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4303,90 +4303,6 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     }
 
     return clone;
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerDynamic(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-    site->returnTypes->addType(cx, TYPE_UNKNOWN);
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerVoid(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->returnTypes->addType(cx, TYPE_UNDEFINED);
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerNull(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->returnTypes->addType(cx, TYPE_NULL);
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerBool(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->returnTypes->addType(cx, TYPE_BOOLEAN);
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerInt(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->returnTypes->addType(cx, TYPE_INT32);
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerFloat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->returnTypes->addType(cx, TYPE_DOUBLE);
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerString(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->returnTypes->addType(cx, TYPE_STRING);
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeFunction *fun = Valueify(jsfun);
-    TypeCallsite *site = Valueify(jssite);
-
-    TypeSet *prototypeTypes =
-        fun->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), true);
-    if (!prototypeTypes)
-        return;
-    prototypeTypes->addNewObject(cx, site->script, fun, site->returnTypes);
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerThis(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->thisTypes->addSubset(cx, site->script, site->returnTypes);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4490,13 +4406,9 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             fun = js_DefineFunction(cx, ctor, ATOM_TO_JSID(atom),
                                     js_generic_native_method_dispatcher,
                                     fs->nargs + 1,
-                                    flags & ~JSFUN_TRCINFO,
-                                    fs->handler, fs->name);
+                                    flags & ~JSFUN_TRCINFO);
             if (!fun)
                 return JS_FALSE;
-
-            if (cx->typeInferenceEnabled())
-                fun->getType()->asFunction()->isGeneric = true;
 
             /*
              * As jsapi.h notes, fs must point to storage that lives as long
@@ -4507,8 +4419,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
                 return JS_FALSE;
         }
 
-        fun = js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(fs->call), fs->nargs, flags,
-                                fs->handler, fs->name);
+        fun = js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(fs->call), fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
     }
@@ -4525,7 +4436,7 @@ JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs, NULL, name);
+    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4539,7 +4450,7 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs, NULL, "UCFunction");
+    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs);
 }
 
 extern JS_PUBLIC_API(JSFunction *)
@@ -4549,7 +4460,7 @@ JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    return js_DefineFunction(cx, obj, id, Valueify(call), nargs, attrs, NULL, NULL);
+    return js_DefineFunction(cx, obj, id, Valueify(call), nargs, attrs);
 }
 
 inline static void
@@ -4869,7 +4780,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
         }
     }
 
-    fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom, NULL, NULL);
+    fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom);
     if (!fun)
         goto out2;
 

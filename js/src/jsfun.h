@@ -239,12 +239,12 @@ struct JSFunction : public JSObject_Slots2
  */
 #ifdef JS_TRACER
 /* MSVC demands the intermediate (void *) cast here. */
-# define JS_TN(name,fastcall,nargs,flags,trcinfo,handler)                     \
-    JS_FN_TYPE(name, JS_DATA_TO_FUNC_PTR(Native, trcinfo), nargs,             \
-               (flags) | JSFUN_STUB_GSOPS | JSFUN_TRCINFO, handler)
+# define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
+    JS_FN(name, JS_DATA_TO_FUNC_PTR(Native, trcinfo), nargs,                  \
+          (flags) | JSFUN_STUB_GSOPS | JSFUN_TRCINFO)
 #else
-# define JS_TN(name,fastcall,nargs,flags,trcinfo,handler)                     \
-    JS_FN_TYPE(name, fastcall, nargs, flags, handler)
+# define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
+    JS_FN(name, fastcall, nargs, flags)
 #endif
 
 extern JS_PUBLIC_DATA(js::Class) js_CallClass;
@@ -396,8 +396,7 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
 
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
-               uintN flags, JSObject *parent, JSAtom *atom,
-               JSTypeHandler handler, const char *fullName);
+               uintN flags, JSObject *parent, JSAtom *atom);
 
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
@@ -449,7 +448,7 @@ js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun);
 
 extern JSFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, js::Native native,
-                  uintN nargs, uintN flags, JSTypeHandler handler, const char *fullName);
+                  uintN nargs, uintN flags);
 
 /*
  * Flags for js_ValueToFunction and js_ReportIsNotFunction.  We depend on the

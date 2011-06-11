@@ -2178,11 +2178,6 @@ array_push_slowly(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *
     /* Per ECMA-262, return the new array length. */
     jsdouble newlength = length + jsdouble(argc);
     rval->setNumber(newlength);
-
-    /* watch for length overflowing to a double. */
-    if (!rval->isInt32())
-        MarkTypeCallerOverflow(cx);
-
     return js_SetLengthProperty(cx, obj, newlength);
 }
 
@@ -2294,15 +2289,12 @@ array_pop_slowly(JSContext *cx, JSObject* obj, Value *vp)
         return JS_FALSE;
     if (index == 0) {
         vp->setUndefined();
-        MarkTypeCallerUnexpected(cx, TYPE_UNDEFINED);
     } else {
         index--;
 
         /* Get the to-be-deleted property's value into vp. */
         if (!GetElement(cx, obj, index, &hole, vp))
             return JS_FALSE;
-        if (hole)
-            MarkTypeCallerUnexpected(cx, TYPE_UNDEFINED);
         if (!hole && DeleteArrayElement(cx, obj, index, true) < 0)
             return JS_FALSE;
     }
@@ -2318,14 +2310,11 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
     index = obj->getArrayLength();
     if (index == 0) {
         vp->setUndefined();
-        MarkTypeCallerUnexpected(cx, TYPE_UNDEFINED);
         return JS_TRUE;
     }
     index--;
     if (!GetElement(cx, obj, index, &hole, vp))
         return JS_FALSE;
-    if (hole)
-        MarkTypeCallerUnexpected(cx, TYPE_UNDEFINED);
     if (!hole && DeleteArrayElement(cx, obj, index, true) < 0)
         return JS_FALSE;
 
@@ -2359,7 +2348,6 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
 
     if (length == 0) {
         vp->setUndefined();
-        MarkTypeCallerUnexpected(cx, TYPE_UNDEFINED);
     } else {
         length--;
 
@@ -2367,10 +2355,8 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
             length < obj->getDenseArrayCapacity() &&
             0 < obj->getDenseArrayInitializedLength()) {
             *vp = obj->getDenseArrayElement(0);
-            if (vp->isMagic(JS_ARRAY_HOLE)) {
+            if (vp->isMagic(JS_ARRAY_HOLE))
                 vp->setUndefined();
-                MarkTypeCallerUnexpected(cx, TYPE_UNDEFINED);
-            }
             Value *elems = obj->getDenseArrayElements();
             memmove(elems, elems + 1, length * sizeof(jsval));
             if (cx->typeInferenceEnabled())
@@ -2387,9 +2373,6 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
         JSBool hole;
         if (!GetElement(cx, obj, 0, &hole, vp))
             return JS_FALSE;
-
-        if (hole)
-            MarkTypeCallerUnexpected(cx, TYPE_UNDEFINED);
 
         /* Slide down the array above the first element. */
         AutoValueRooter tvr(cx);
@@ -2473,11 +2456,6 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
 
     /* Follow Perl by returning the new array length. */
     vp->setNumber(newlen);
-
-    /* watch for length overflowing to a double. */
-    if (!vp->isInt32())
-        MarkTypeCallerOverflow(cx);
-
     return JS_TRUE;
 }
 
@@ -2491,19 +2469,17 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     jsuint length, begin, end, count, delta, last;
     JSBool hole;
 
-    /* Get the type of the result object. */
+    /*
+     * Get the type of the result object: the original type when splicing an
+     * array, a generic array type otherwise.
+     */
     TypeObject *type;
     if (obj->isArray()) {
         type = obj->getType();
     } else {
-        /*
-         * Make a new type object for the return value.  This is an unexpected
-         * result of the call so mark it at the callsite.
-         */
         type = GetTypeNewObject(cx, JSProto_Array);
         if (!type)
             return false;
-        MarkTypeCallerUnexpected(cx, (jstype) type);
     }
 
     /* Create a new array value to return. */
@@ -2681,8 +2657,6 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         if (nobj->getProto() == aobj->getProto())
             nobj->setType(aobj->getType());
-        else
-            MarkTypeCallerUnexpected(cx, TYPE_UNKNOWN);
         nobj->setType(aobj->getType());
         nobj->setArrayLength(cx, length);
         if (!aobj->isPackedDenseArray())
@@ -2696,7 +2670,6 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         nobj = NewDenseEmptyArray(cx);
         if (!nobj)
             return JS_FALSE;
-        MarkTypeCallerUnexpected(cx, TYPE_UNKNOWN);
         vp->setObject(*nobj);
         length = 0;
     }
@@ -2796,19 +2769,14 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
     if (begin > end)
         begin = end;
 
-    /* Get the type object for the returned array. */
+    /* Get the type object for the returned array, as for array_splice. */
     TypeObject *type;
     if (obj->isArray()) {
         type = obj->getType();
     } else {
-        /*
-         * Make a new type object for the return value.  This is an unexpected
-         * result of the call so mark it at the callsite.
-         */
         type = GetTypeNewObject(cx, JSProto_Array);
         if (!type)
             return false;
-        MarkTypeCallerUnexpected(cx, (jstype) type);
     }
 
     if (obj->isDenseArray() && end <= obj->getDenseArrayInitializedLength() &&
@@ -2906,8 +2874,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
             if (!StrictlyEqual(cx, *vp, tosearch, &equal))
                 return JS_FALSE;
             if (equal) {
-                if (!vp->setNumber(i))
-                    MarkTypeCallerOverflow(cx);
+                vp->setNumber(i);
                 return JS_TRUE;
             }
         }
@@ -3176,162 +3143,6 @@ array_every(JSContext *cx, uintN argc, Value *vp)
 }
 #endif
 
-/*
- * These handlers deal with objects of type other than arrays, except for updates
- * of the 'length' property. Sets of length on non-arrays and overflowing length
- * on arrays are both handled by write barriers within the natives.
- */
-
-static void
-array_TypeSort(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->thisTypes->addSubset(cx, site->script, site->returnTypes);
-}
-
-static void
-array_TypeInsert(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    /* The return type is an integer (array length). */
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->returnTypes->addType(cx, TYPE_INT32);
-
-    for (size_t ind = 0; ind < site->argumentCount; ind++) {
-        site->thisTypes->addSetProperty(cx, site->script, site->pc,
-                                        site->argumentTypes[ind], JSID_VOID);
-    }
-}
-
-static void
-array_TypeRemove(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->thisTypes->addGetProperty(cx, site->script, site->pc, site->returnTypes, JSID_VOID);
-}
-
-static void
-array_TypeSplice(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    /* Treat the returned array the same as the 'this' array. */
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->thisTypes->addSubset(cx, site->script, site->returnTypes);
-
-    /* All arguments beyond the first two are new array elements. */
-    for (size_t ind = 2; ind < site->argumentCount; ind++) {
-        site->thisTypes->addSetProperty(cx, site->script, site->pc,
-                                        site->argumentTypes[ind], JSID_VOID);
-    }
-}
-
-static void
-array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (!site->script->hasGlobal()) {
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        return;
-    }
-
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->thisTypes->addSubset(cx, site->script, site->returnTypes);
-}
-
-static void
-array_TypeSlice(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-    site->thisTypes->addFilterPrimitives(cx, site->script, site->returnTypes, false);
-}
-
-/* Handler for all higher order array builtins. */
-static void
-array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite,
-                ArrayExtraMode mode)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (site->isNew)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-
-    switch (mode) {
-
-      case FOREACH:
-        site->returnTypes->addType(cx, TYPE_UNDEFINED);
-        break;
-
-      case REDUCE:
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        break;
-
-      case MAP:
-      case FILTER:
-        if (site->script->hasGlobal()) {
-            /* Makes a new array whose element type will be filled in as the code runs. */
-            TypeObject *object = site->getInitObject(cx, true);
-            if (!object)
-                return;
-            site->returnTypes->addType(cx, (jstype) object);
-        } else {
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        }
-        break;
-
-      case SOME:
-        site->returnTypes->addType(cx, TYPE_BOOLEAN);
-        break;
-
-      default:
-        JS_NOT_REACHED("Unexpected ArrayExtraMode");
-    }
-}
-
-static void
-array_TypeExtraForEach(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    array_TypeExtra(cx, jsfun, jssite, FOREACH);
-}
-
-static void
-array_TypeExtraMap(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    array_TypeExtra(cx, jsfun, jssite, MAP);
-}
-
-static void
-array_TypeExtraReduce(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    array_TypeExtra(cx, jsfun, jssite, REDUCE);
-}
-
-static void
-array_TypeExtraFilter(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    array_TypeExtra(cx, jsfun, jssite, FILTER);
-}
-
-static void
-array_TypeExtraSome(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    array_TypeExtra(cx, jsfun, jssite, SOME);
-}
-
 static JSBool
 array_isArray(JSContext *cx, uintN argc, Value *vp)
 {
@@ -3347,42 +3158,42 @@ array_isArray(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN_TYPE(js_toSource_str,      array_toSource,     0,0, JS_TypeHandlerString),
+    JS_FN(js_toSource_str,      array_toSource,     0,0),
 #endif
-    JS_FN_TYPE(js_toString_str,      array_toString,     0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_toLocaleString_str,array_toLocaleString,0,0, JS_TypeHandlerString),
+    JS_FN(js_toString_str,      array_toString,     0,0),
+    JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
 
     /* Perl-ish methods. */
-    JS_FN_TYPE("join",               array_join,         1,GENERIC, JS_TypeHandlerString),
-    JS_FN_TYPE("reverse",            array_reverse,      0,GENERIC, JS_TypeHandlerThis),
-    JS_FN_TYPE("sort",               array_sort,         1,GENERIC, array_TypeSort),
-    JS_FN_TYPE("push",               array_push,         1,GENERIC, array_TypeInsert),
-    JS_FN_TYPE("pop",                array_pop,          0,GENERIC, array_TypeRemove),
-    JS_FN_TYPE("shift",              array_shift,        0,GENERIC, array_TypeRemove),
-    JS_FN_TYPE("unshift",            array_unshift,      1,GENERIC, array_TypeInsert),
-    JS_FN_TYPE("splice",             array_splice,       2,GENERIC, array_TypeSplice),
+    JS_FN("join",               array_join,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("reverse",            array_reverse,      0,JSFUN_GENERIC_NATIVE),
+    JS_FN("sort",               array_sort,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("push",               array_push,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("pop",                array_pop,          0,JSFUN_GENERIC_NATIVE),
+    JS_FN("shift",              array_shift,        0,JSFUN_GENERIC_NATIVE),
+    JS_FN("unshift",            array_unshift,      1,JSFUN_GENERIC_NATIVE),
+    JS_FN("splice",             array_splice,       2,JSFUN_GENERIC_NATIVE),
 
     /* Pythonic sequence methods. */
-    JS_FN_TYPE("concat",             array_concat,       1,GENERIC, array_TypeConcat),
-    JS_FN_TYPE("slice",              array_slice,        2,GENERIC, array_TypeSlice),
+    JS_FN("concat",             array_concat,       1,JSFUN_GENERIC_NATIVE),
+    JS_FN("slice",              array_slice,        2,JSFUN_GENERIC_NATIVE),
 
 #if JS_HAS_ARRAY_EXTRAS
-    JS_FN_TYPE("indexOf",            array_indexOf,      1,GENERIC, JS_TypeHandlerInt),
-    JS_FN_TYPE("lastIndexOf",        array_lastIndexOf,  1,GENERIC, JS_TypeHandlerInt),
-    JS_FN_TYPE("forEach",            array_forEach,      1,GENERIC, array_TypeExtraForEach),
-    JS_FN_TYPE("map",                array_map,          1,GENERIC, array_TypeExtraMap),
-    JS_FN_TYPE("reduce",             array_reduce,       1,GENERIC, array_TypeExtraReduce),
-    JS_FN_TYPE("reduceRight",        array_reduceRight,  1,GENERIC, array_TypeExtraReduce),
-    JS_FN_TYPE("filter",             array_filter,       1,GENERIC, array_TypeExtraFilter),
-    JS_FN_TYPE("some",               array_some,         1,GENERIC, array_TypeExtraSome),
-    JS_FN_TYPE("every",              array_every,        1,GENERIC, array_TypeExtraSome),
+    JS_FN("indexOf",            array_indexOf,      1,JSFUN_GENERIC_NATIVE),
+    JS_FN("lastIndexOf",        array_lastIndexOf,  1,JSFUN_GENERIC_NATIVE),
+    JS_FN("forEach",            array_forEach,      1,JSFUN_GENERIC_NATIVE),
+    JS_FN("map",                array_map,          1,JSFUN_GENERIC_NATIVE),
+    JS_FN("reduce",             array_reduce,       1,JSFUN_GENERIC_NATIVE),
+    JS_FN("reduceRight",        array_reduceRight,  1,JSFUN_GENERIC_NATIVE),
+    JS_FN("filter",             array_filter,       1,JSFUN_GENERIC_NATIVE),
+    JS_FN("some",               array_some,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("every",              array_every,        1,JSFUN_GENERIC_NATIVE),
 #endif
 
     JS_FS_END
 };
 
 static JSFunctionSpec array_static_methods[] = {
-    JS_FN_TYPE("isArray",            array_isArray,      1,0, JS_TypeHandlerBool),
+    JS_FN("isArray",            array_isArray,      1,0),
     JS_FS_END
 };
 
@@ -3424,47 +3235,10 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
-/*
- * Specialized handler for Array() that propagates arguments into indexes of
- * the resulting array.
- */
-static void
-array_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    TypeCallsite *site = Valueify(jssite);
-
-    if (!site->script->hasGlobal()) {
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        return;
-    }
-
-    TypeObject *object = site->getInitObject(cx, true);
-    if (!object)
-        return;
-    site->returnTypes->addType(cx, (jstype) object);
-
-    if (object->unknownProperties())
-        return;
-
-    TypeSet *indexTypes = object->getProperty(cx, JSID_VOID, true);
-    if (!indexTypes)
-        return;
-
-    /*
-     * Ignore the case where the call is passed a single argument. This is
-     * expected to be the array length, but if it isn't we will catch it in the
-     * Array native itself.
-     */
-    if (site->argumentCount > 1) {
-        for (size_t ind = 0; ind < site->argumentCount; ind++)
-            site->argumentTypes[ind]->addSubset(cx, site->script, indexTypes);
-    }
-}
-
 JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1, array_TypeNew,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
                                    NULL, array_methods, NULL, array_static_methods);
     if (!proto)
         return NULL;

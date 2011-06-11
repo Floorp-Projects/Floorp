@@ -213,31 +213,6 @@ struct AutoEnterCompilation
     }
 };
 
-/* Whether type barriers can be placed at pc for a property read. */
-static inline bool
-CanHaveReadBarrier(const jsbytecode *pc)
-{
-    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
-
-    switch (JSOp(*pc)) {
-      case JSOP_LENGTH:
-      case JSOP_GETPROP:
-      case JSOP_CALLPROP:
-      case JSOP_GETXPROP:
-      case JSOP_GETELEM:
-      case JSOP_CALLELEM:
-      case JSOP_NAME:
-      case JSOP_CALLNAME:
-      case JSOP_GETGNAME:
-      case JSOP_CALLGNAME:
-      case JSOP_GETGLOBAL:
-      case JSOP_CALLGLOBAL:
-        return true;
-      default:
-        return false;
-    }
-}
-
 /////////////////////////////////////////////////////////////////////
 // Interface functions
 /////////////////////////////////////////////////////////////////////
@@ -275,29 +250,17 @@ GetTypeCallerInitObject(JSContext *cx, bool isArray)
     return GetTypeNewObject(cx, isArray ? JSProto_Array : JSProto_Object);
 }
 
-/* Mark the immediate scripted caller of a native as having produced an unexpected value. */
+/*
+ * When using a custom iterator within the initialization of a 'for in' loop,
+ * mark the iterator values as unknown.
+ */
 inline void
-MarkTypeCallerUnexpected(JSContext *cx, jstype type)
+MarkIteratorUnknown(JSContext *cx)
 {
-    extern void MarkTypeCallerUnexpectedSlow(JSContext *cx, jstype type);
+    extern void MarkIteratorUnknownSlow(JSContext *cx);
 
     if (cx->typeInferenceEnabled())
-        MarkTypeCallerUnexpectedSlow(cx, type);
-}
-
-inline void
-MarkTypeCallerUnexpected(JSContext *cx, const Value &value)
-{
-    extern void MarkTypeCallerUnexpectedSlow(JSContext *cx, const Value &value);
-
-    if (cx->typeInferenceEnabled())
-        MarkTypeCallerUnexpectedSlow(cx, value);
-}
-
-inline void
-MarkTypeCallerOverflow(JSContext *cx)
-{
-    MarkTypeCallerUnexpected(cx, TYPE_DOUBLE);
+        MarkIteratorUnknownSlow(cx);
 }
 
 /*
@@ -1123,23 +1086,6 @@ TypeSet::getSingleObject()
     return NULL;
 }
 
-inline TypeSet *
-TypeSet::make(JSContext *cx, const char *name)
-{
-    JS_ASSERT(cx->compartment->activeInference);
-
-    TypeSet *res = ArenaNew<TypeSet>(cx->compartment->pool);
-    if (!res) {
-        cx->compartment->types.setPendingNukeTypes(cx);
-        return NULL;
-    }
-
-    InferSpew(ISpewOps, "typeSet: T%p intermediate %s", res, name);
-    res->setIntermediate();
-
-    return res;
-}
-
 /////////////////////////////////////////////////////////////////////
 // TypeCallsite
 /////////////////////////////////////////////////////////////////////
@@ -1219,25 +1165,20 @@ TypeObject::name()
 #endif
 }
 
-inline TypeObject::TypeObject(jsid name, JSObject *proto)
+inline TypeObject::TypeObject(jsid name, JSObject *proto, bool isFunction)
     : proto(proto), emptyShapes(NULL),
-      flags(0), isFunction(false), marked(false), newScriptCleared(false),
+      flags(0), isFunction(isFunction), isFunctionNative(false),
+      marked(false), newScriptCleared(false),
       newScript(NULL), initializerObject(false), initializerArray(false), initializerOffset(0),
       contribution(0), propertySet(NULL), propertyCount(0),
       instanceList(NULL), instanceNext(NULL), next(NULL),
-      singleton(NULL)
+      singleton(NULL), functionScript(NULL)
 {
 #ifdef DEBUG
     this->name_ = name;
 #endif
 
     InferSpew(ISpewOps, "newObject: %s", this->name());
-}
-
-inline TypeFunction::TypeFunction(jsid name, JSObject *proto)
-    : TypeObject(name, proto), handler(NULL), script(NULL), isGeneric(false)
-{
-    isFunction = true;
 }
 
 inline void

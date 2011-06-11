@@ -137,6 +137,9 @@ class Bytecode
      */
     bool monitoredTypes : 1;
 
+    /* Call whose result should be monitored. */
+    bool monitoredTypesReturn : 1;
+
     /* Stack depth before this opcode. */
     uint32 stackDepth;
 
