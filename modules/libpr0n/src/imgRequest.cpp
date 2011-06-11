@@ -226,6 +226,8 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mKeyURI = aKeyURI;
   mRequest = aRequest;
   mChannel = aChannel;
+  mTimedChannel = do_QueryInterface(mChannel);
+
   mChannel->GetNotificationCallbacks(getter_AddRefs(mPrevChannelSink));
 
   NS_ASSERTION(mPrevChannelSink != this,
@@ -956,6 +958,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     statusTracker.SendStopRequest(srIter.GetNext(), lastPart, status);
   }
 
+  mTimedChannel = nsnull;
   return NS_OK;
 }
 
@@ -1277,6 +1280,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   }
 
   mChannel = mNewRedirectChannel;
+  mTimedChannel = do_QueryInterface(mChannel);
   mNewRedirectChannel = nsnull;
 
   // Don't make any cache changes if we're going to point to the same thing. We

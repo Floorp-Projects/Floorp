@@ -385,7 +385,6 @@ pref("content.sink.pending_event_mode", 0);
 pref("content.sink.perf_deflect_count", 1000000);
 pref("content.sink.perf_parse_time", 50000000);
 
-pref("javascript.options.mem.gc_frequency", 300);
 pref("javascript.options.mem.high_water_mark", 32);
 
 pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
@@ -648,7 +647,7 @@ pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.goog
 
 // True if this is the first time we are showing about:firstrun
 pref("browser.firstrun.show.uidiscovery", true);
-pref("browser.firstrun.show.localepicker", false);
+pref("browser.firstrun.show.localepicker", true);
 
 // initiated by a user
 pref("content.ime.strict_policy", true);

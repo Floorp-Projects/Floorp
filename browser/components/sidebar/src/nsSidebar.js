@@ -46,8 +46,8 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const DEBUG = false; /* set to false to suppress debug messages */
 
+const SIDEBAR_CONTRACTID        = "@mozilla.org/sidebar;1";
 const SIDEBAR_CID               = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
-const nsISupports               = Components.interfaces.nsISupports;
 const nsISidebar                = Components.interfaces.nsISidebar;
 const nsISidebarExternal        = Components.interfaces.nsISidebarExternal;
 const nsIClassInfo              = Components.interfaces.nsIClassInfo;
@@ -214,32 +214,13 @@ function (aSearchURL)
   return 0;
 }
 
-// property of nsIClassInfo
-nsSidebar.prototype.flags = nsIClassInfo.DOM_OBJECT;
+nsSidebar.prototype.classInfo = XPCOMUtils.generateCI({classID: SIDEBAR_CID,
+                                                       contractID: SIDEBAR_CONTRACTID,
+                                                       classDescription: "Sidebar",
+                                                       interfaces: [nsISidebar, nsISidebarExternal],
+                                                       flags: nsIClassInfo.DOM_OBJECT});
 
-// property of nsIClassInfo
-nsSidebar.prototype.classDescription = "Sidebar";
-
-// method of nsIClassInfo
-nsSidebar.prototype.getInterfaces = function(count) {
-    var interfaceList = [nsISidebar, nsISidebarExternal, nsIClassInfo];
-    count.value = interfaceList.length;
-    return interfaceList;
-}
-
-// method of nsIClassInfo
-nsSidebar.prototype.getHelperForLanguage = function(count) {return null;}
-
-nsSidebar.prototype.QueryInterface =
-function (iid) {
-    if (iid.equals(nsISidebar) ||
-        iid.equals(nsISidebarExternal) ||
-        iid.equals(nsIClassInfo) ||
-        iid.equals(nsISupports))
-        return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-};
+nsSidebar.prototype.QueryInterface = XPCOMUtils.generateQI([nsISidebar, nsISidebarExternal]);
 
 var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSidebar]);
 
