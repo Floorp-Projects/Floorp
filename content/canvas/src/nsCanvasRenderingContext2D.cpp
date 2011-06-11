@@ -2028,6 +2028,9 @@ nsCanvasRenderingContext2D::FillRect(float x, float y, float w, float h)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::StrokeRect(float x, float y, float w, float h)
 {
+    if (w == 0.f && h == 0.f) {
+        return NS_OK;
+    }
     return DrawRect(gfxRect(x, y, w, h), STYLE_STROKE);
 }
 
