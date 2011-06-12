@@ -191,7 +191,7 @@ static nsRefPtrHashtable<ValueObserverHashKey,
 
 // static
 Preferences*
-Preferences::GetInstance()
+Preferences::GetInstanceForService()
 {
   if (sPreferences) {
     NS_ADDREF(sPreferences);
@@ -200,16 +200,26 @@ Preferences::GetInstance()
 
   NS_ENSURE_TRUE(!sShutdown, nsnull);
 
-  InitStaticMembers();
+  InitStaticMembers(PR_TRUE);
   NS_IF_ADDREF(sPreferences);
   return sPreferences;
 }
 
 // static
 PRBool
-Preferences::InitStaticMembers()
+Preferences::InitStaticMembers(PRBool aForService)
 {
   if (sShutdown || sPreferences) {
+    return sPreferences != nsnull;
+  }
+
+  // If InitStaticMembers() isn't called for getting nsIPrefService,
+  // some global components needed by Preferences::Init() may not have been
+  // initialized yet.  Therefore, we must create the singleton instance via
+  // service manager.
+  if (!aForService) {
+    nsCOMPtr<nsIPrefService> prefService =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
     return sPreferences != nsnull;
   }
 

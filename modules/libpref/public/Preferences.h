@@ -86,7 +86,7 @@ public:
   /**
    * Returns the singleton instance which is addreffed.
    */
-  static Preferences* GetInstance();
+  static Preferences* GetInstanceForService();
 
   /**
    * Finallizes global members.
@@ -265,7 +265,7 @@ private:
   /**
    * Init static members.  TRUE if it succeeded.  Otherwise, FALSE.
    */
-  static PRBool InitStaticMembers();
+  static PRBool InitStaticMembers(PRBool aForService = PR_FALSE);
 };
 
 } // namespace mozilla
