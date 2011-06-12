@@ -78,7 +78,7 @@
 #endif
 #include "nsBidiUtils.h"
 #include "nsFrameManager.h"
-#include "nsIPrefService.h"
+#include "mozilla/Preferences.h"
 #include "nsILookAndFeel.h"
 #include "mozilla/dom/Element.h"
 #include "FrameLayerBuilder.h"
@@ -1409,15 +1409,7 @@ nsGfxScrollFrameInner::AsyncScroll::InitTimingFunction(nsSMILKeySpline& aTimingF
 static PRBool
 IsSmoothScrollingEnabled()
 {
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    PRBool enabled;
-    nsresult rv = prefs->GetBoolPref(SMOOTH_SCROLL_PREF_NAME, &enabled);
-    if (NS_SUCCEEDED(rv)) {
-      return enabled;
-    }
-  }
-  return PR_FALSE;
+  return Preferences::GetBool(SMOOTH_SCROLL_PREF_NAME, PR_FALSE);
 }
 
 class ScrollFrameActivityTracker : public nsExpirationTracker<nsGfxScrollFrameInner,4> {
