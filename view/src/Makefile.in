@@ -49,9 +49,6 @@ MODULE_NAME	= nsViewModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-
-EXTRA_DSO_LIBS = gkgfx
-
 CPPSRCS		= \
 		nsView.cpp \
 		nsViewManager.cpp \

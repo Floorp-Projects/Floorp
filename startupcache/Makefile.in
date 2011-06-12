@@ -71,12 +71,4 @@ EXPORTS_mozilla/scache = StartupCache.h \
 XPIDLSRCS = nsIStartupCache.idl \
   $(NULL)
 
-EXTRA_DSO_LDOPTS += \
-  $(LIBS_DIR) \
-  $(ZLIB_LIBS) \
-  $(MOZ_COMPONENT_LIBS) \
-  $(NULL)
-
-
-
 include $(topsrcdir)/config/rules.mk
