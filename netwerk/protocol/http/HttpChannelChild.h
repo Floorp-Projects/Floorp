@@ -76,7 +76,6 @@ class HttpChannelChild : public PHttpChannelChild
                        , public nsIAssociatedContentSecurity
                        , public nsIChildChannel
                        , public nsIHttpChannelChild
-                       , public ChannelEventQueue<HttpChannelChild>
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -173,6 +172,7 @@ private:
 
   bool mIPCOpen;
   bool mKeptAlive;
+  ChannelEventQueue mEventQ;
 
   void OnStartRequest(const nsHttpResponseHead& responseHead,
                       const PRBool& useResponseHead,
