@@ -68,6 +68,7 @@ namespace net {
 
 class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
+                       , public HttpAsyncAborter<HttpChannelChild>
                        , public nsICacheInfoChannel
                        , public nsIProxiedChannel
                        , public nsIApplicationCacheChannel
@@ -143,7 +144,7 @@ protected:
   bool RecvOnStopRequest(const nsresult& statusCode);
   bool RecvOnProgress(const PRUint64& progress, const PRUint64& progressMax);
   bool RecvOnStatus(const nsresult& status);
-  bool RecvCancelEarly(const nsresult& status);
+  bool RecvFailedAsyncOpen(const nsresult& status);
   bool RecvRedirect1Begin(const PRUint32& newChannel,
                           const URI& newURI,
                           const PRUint32& redirectFlags,
@@ -154,6 +155,7 @@ protected:
   bool RecvDeleteSelf();
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nsnull);
+  virtual void DoNotifyListenerCleanup();
 
 private:
   RequestHeaderTuples mRequestHeaders;
@@ -168,8 +170,6 @@ private:
 
   // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
   bool mSendResumeAt;
-  // Current suspension depth for this channel object
-  PRUint32 mSuspendCount;
 
   bool mIPCOpen;
   bool mKeptAlive;
@@ -193,7 +193,8 @@ private:
   void OnStopRequest(const nsresult& statusCode);
   void OnProgress(const PRUint64& progress, const PRUint64& progressMax);
   void OnStatus(const nsresult& status);
-  void OnCancel(const nsresult& status);
+  void FailedAsyncOpen(const nsresult& status);
+  void HandleAsyncAbort();
   void Redirect1Begin(const PRUint32& newChannelId,
                       const URI& newUri,
                       const PRUint32& redirectFlags,
@@ -201,15 +202,19 @@ private:
   void Redirect3Complete();
   void DeleteSelf();
 
+  // Called asynchronously from Resume: continues any pending calls into client.
+  void CompleteResume();
+
   friend class StartRequestEvent;
   friend class StopRequestEvent;
   friend class TransportAndDataEvent;
   friend class ProgressEvent;
   friend class StatusEvent;
-  friend class CancelEvent;
+  friend class FailedAsyncOpenEvent;
   friend class Redirect1Event;
   friend class Redirect3Event;
   friend class DeleteSelfEvent;
+  friend class HttpAsyncAborter<HttpChannelChild>;
 };
 
 //-----------------------------------------------------------------------------
