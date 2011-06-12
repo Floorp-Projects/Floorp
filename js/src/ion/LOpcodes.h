@@ -43,6 +43,7 @@
 #define jsion_lir_opcodes_common_h__
 
 #define LIR_COMMON_OPCODE_LIST(_)   \
+    _(Move)                         \
     _(Integer)                      \
     _(Pointer)                      \
     _(Double)                       \
