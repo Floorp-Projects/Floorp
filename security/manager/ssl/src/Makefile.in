@@ -121,12 +121,5 @@ DEFINES += -DNSS_ENABLE_ECC
 # so that Mozilla's nss.h is used, not glibc's
 LOCAL_INCLUDES += $(NSS_CFLAGS)
 
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NSS_LIBS) \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

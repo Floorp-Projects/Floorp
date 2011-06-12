@@ -117,7 +117,6 @@ endif
 
 ifdef MOZ_URL_CLASSIFIER
 SHARED_LIBRARY_LIBS += ../url-classifier/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX)
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
 endif
 
 ifdef MOZ_FEEDS
@@ -126,24 +125,6 @@ endif
 
 ifeq (Android,$(OS_TARGET))
 SHARED_LIBRARY_LIBS += ../webapps/$(LIB_PREFIX)webapps_s.$(LIB_SUFFIX)
-endif
-
-EXTRA_DSO_LIBS = gkgfx
-
-EXTRA_DSO_LDOPTS += \
-  $(LIBS_DIR) \
-  $(EXTRA_DSO_LIBS) \
-  $(MOZ_UNICHARUTIL_LIBS) \
-  $(MOZ_COMPONENT_LIBS) \
-  $(MOZ_JS_LIBS) \
-  $(NULL)
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32)
 endif
 
 include $(topsrcdir)/config/rules.mk

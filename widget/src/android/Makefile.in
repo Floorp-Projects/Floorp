@@ -81,17 +81,6 @@ NOT_THERE_YET_CPPSRCS = \
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
-EXTRA_DSO_LDOPTS = \
-	$(MOZ_COMPONENT_LIBS) \
-	-lgkgfx \
-	-lthebes \
-	$(MOZ_JS_LIBS) \
-	$(QCMS_LIBS) \
-	$(NULL)
-
-
-EXTRA_DSO_LDOPTS += -L$(DIST)/lib
-
 EXPORTS = AndroidBridge.h AndroidJavaWrappers.h
 
 include $(topsrcdir)/config/rules.mk
