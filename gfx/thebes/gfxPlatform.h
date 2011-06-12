@@ -65,7 +65,6 @@ class gfxPlatformFontList;
 class gfxTextRun;
 class nsIURI;
 class nsIAtom;
-class nsIPrefBranch;
 
 // pref lang id's for font prefs
 // !!! needs to match the list of pref font.default.xx entries listed in all.js !!!
@@ -350,7 +349,7 @@ public:
      */
     static qcms_transform* GetCMSRGBATransform();
 
-    virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
+    virtual void FontsPrefsChanged(const char *aPref);
 
     /**
      * Returns a 1x1 surface that can be used to create graphics contexts
@@ -370,8 +369,6 @@ protected:
     gfxPlatform();
     virtual ~gfxPlatform();
 
-    static PRBool GetBoolPref(const char *aPref, PRBool aDefault);
-
     void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
                                                
@@ -386,7 +383,8 @@ private:
 
     nsRefPtr<gfxASurface> mScreenReferenceSurface;
     nsTArray<PRUint32> mCJKPrefLangs;
-    nsCOMPtr<nsIObserver> overrideObserver;
+    nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
+    nsCOMPtr<nsIObserver> mFontPrefsObserver;
 };
 
 #endif /* GFX_PLATFORM_H */
