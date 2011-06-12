@@ -67,10 +67,5 @@ INCLUDES	+= \
 		-I$(DIST)/public/nss \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
