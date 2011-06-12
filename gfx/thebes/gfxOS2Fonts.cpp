@@ -47,10 +47,11 @@
 #include "nsTArray.h"
 #include "gfxAtoms.h"
 
-#include "nsIServiceManager.h"
 #include "nsIPlatformCharset.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 /**********************************************************************
  * class gfxOS2Font
@@ -68,18 +69,14 @@ gfxOS2Font::gfxOS2Font(gfxOS2FontEntry *aFontEntry, const gfxFontStyle *aFontSty
            NS_LossyConvertUTF16toASCII(aFontEntry->Name()).get());
 #endif
     // try to get the preferences for hinting, antialias, and embolden options
-    nsCOMPtr<nsIPrefBranch> prefbranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefbranch) {
-        int value;
-        nsresult rv = prefbranch->GetIntPref("gfx.os2.font.hinting", &value);
-        if (NS_SUCCEEDED(rv) && value >= FC_HINT_NONE && value <= FC_HINT_FULL)
-            mHinting = value;
-
-        PRBool enabled;
-        rv = prefbranch->GetBoolPref("gfx.os2.font.antialiasing", &enabled);
-        if (NS_SUCCEEDED(rv))
-            mAntialias = enabled;
+    PRInt32 value;
+    nsresult rv = Preferences::GetInt("gfx.os2.font.hinting", &value);
+    if (NS_SUCCEEDED(rv) && value >= FC_HINT_NONE && value <= FC_HINT_FULL) {
+        mHinting = value;
     }
+
+    mAntialias = Preferences::GetBool("gfx.os2.font.antialiasing", mAntialias);
+
 #ifdef DEBUG_thebes_2
     printf("  font display options: hinting=%d, antialiasing=%s\n",
            mHinting, mAntialias ? "on" : "off");

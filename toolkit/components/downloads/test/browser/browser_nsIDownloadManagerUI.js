@@ -34,9 +34,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  * 
  * ***** END LICENSE BLOCK ***** */
-
-let Cc = Components.classes;
-let Ci = Components.interfaces;
 let Cr = Components.results;
 
 function test_visibility_open()
