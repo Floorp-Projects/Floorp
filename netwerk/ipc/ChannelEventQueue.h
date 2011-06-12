@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=8 et :
+ * vim: set sw=2 ts=8 et tw=80 :
  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Josh Matthews <josh@joshmatthews.net> (initial developer)
+ *   Jason Duell <jduell.mcbugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,11 @@
 #ifndef mozilla_net_ChannelEventQueue_h
 #define mozilla_net_ChannelEventQueue_h
 
+#include <nsTArray.h>
+#include <nsAutoPtr.h>
+
+class nsIChannel;
+
 namespace mozilla {
 namespace net {
 
@@ -56,125 +62,137 @@ class ChannelEvent
 // queue if still dispatching previous one(s) to listeners/observers.
 // Otherwise synchronous XMLHttpRequests and/or other code that spins the
 // event loop (ex: IPDL rpc) could cause listener->OnDataAvailable (for
-// instance) to be called before mListener->OnStartRequest has completed.
+// instance) to be dispatched and called before mListener->OnStartRequest has
+// completed.
 
-template<class T> class AutoEventEnqueuerBase;
+class AutoEventEnqueuerBase;
 
-template<class T>
 class ChannelEventQueue
 {
  public:
-  ChannelEventQueue(T* self) : mQueuePhase(PHASE_UNQUEUED)
-                             , mSelf(self) {}
+  ChannelEventQueue(nsIChannel *owner)
+    : mForced(false)
+    , mSuspended(false)
+    , mFlushing(false)
+    , mOwner(owner) {}
+
   ~ChannelEventQueue() {}
-  
- protected:
-  void BeginEventQueueing();
-  void EndEventQueueing();
-  void EnqueueEvent(ChannelEvent* callback);
-  bool ShouldEnqueue();
-  void FlushEventQueue();
 
-  nsTArray<nsAutoPtr<ChannelEvent> > mEventQueue;
-  enum {
-    PHASE_UNQUEUED,
-    PHASE_QUEUEING,
-    PHASE_FINISHED_QUEUEING,
-    PHASE_FLUSHING
-  } mQueuePhase;
+  // Checks to determine if an IPDL-generated channel event can be processed
+  // immediately, or needs to be queued using Enqueue().
+  inline bool ShouldEnqueue();
 
-  typedef AutoEventEnqueuerBase<T> AutoEventEnqueuer;
+  // Puts IPDL-generated channel event into queue, to be run later
+  // automatically when EndForcedQueueing and/or Resume is called.
+  inline void Enqueue(ChannelEvent* callback);
+
+  // After StartForcedQueueing is called, ShouldEnqueue() will return true and
+  // no events will be run/flushed until EndForcedQueueing is called.
+  // - Note: queueing may still be required after EndForcedQueueing() (if the
+  //   queue is suspended, etc):  always call ShouldEnqueue() to determine
+  //   whether queueing is needed.
+  inline void StartForcedQueueing();
+  inline void EndForcedQueueing();
+
+  // Suspend/resume event queue.  ShouldEnqueue() will return true and no events
+  // will be run/flushed until resume is called.  These should be called when
+  // the channel owning the event queue is suspended/resumed.
+  // - Note: these suspend/resume functions are NOT meant to be called
+  //   recursively: call them only at initial suspend, and actual resume).
+  // - Note: Resume flushes the queue and invokes any pending callbacks
+  //   immediately--caller must arrange any needed asynchronicity vis a vis
+  //   the channel's own Resume() method.
+  inline void Suspend();
+  inline void Resume();
 
  private:
-  T* mSelf;
+  inline void MaybeFlushQueue();
+  void FlushQueue();
 
-  friend class AutoEventEnqueuerBase<T>;
+  nsTArray<nsAutoPtr<ChannelEvent> > mEventQueue;
+
+  bool mForced;
+  bool mSuspended;
+  bool mFlushing;
+
+  // Keep ptr to avoid refcount cycle: only grab ref during flushing.
+  nsIChannel *mOwner;
+
+  friend class AutoEventEnqueuer;
 };
 
-template<class T> inline void
-ChannelEventQueue<T>::BeginEventQueueing()
+inline bool
+ChannelEventQueue::ShouldEnqueue()
 {
-  if (mQueuePhase != PHASE_UNQUEUED)
-    return;
-  // Store incoming IPDL messages for later.
-  mQueuePhase = PHASE_QUEUEING;
+  bool answer =  mForced || mSuspended || mFlushing;
+
+  NS_ABORT_IF_FALSE(answer == true || mEventQueue.IsEmpty(),
+                    "Should always enqueue if ChannelEventQueue not empty");
+
+  return answer;
 }
 
-template<class T> inline void
-ChannelEventQueue<T>::EndEventQueueing()
-{
-  if (mQueuePhase != PHASE_QUEUEING)
-    return;
-
-  mQueuePhase = PHASE_FINISHED_QUEUEING;
-}
-
-template<class T> inline bool
-ChannelEventQueue<T>::ShouldEnqueue()
-{
-  return mQueuePhase != PHASE_UNQUEUED || mSelf->IsSuspended();
-}
-
-template<class T> inline void
-ChannelEventQueue<T>::EnqueueEvent(ChannelEvent* callback)
+inline void
+ChannelEventQueue::Enqueue(ChannelEvent* callback)
 {
   mEventQueue.AppendElement(callback);
 }
 
-template<class T> void
-ChannelEventQueue<T>::FlushEventQueue()
+inline void
+ChannelEventQueue::StartForcedQueueing()
 {
-  NS_ABORT_IF_FALSE(mQueuePhase != PHASE_UNQUEUED,
-                    "Queue flushing should not occur if PHASE_UNQUEUED");
-  
-  // Queue already being flushed
-  if (mQueuePhase != PHASE_FINISHED_QUEUEING || mSelf->IsSuspended())
-    return;
-  
-  nsRefPtr<T> kungFuDeathGrip(mSelf);
-  if (mEventQueue.Length() > 0) {
-    // It is possible for new callbacks to be enqueued as we are
-    // flushing the queue, so the queue must not be cleared until
-    // all callbacks have run.
-    mQueuePhase = PHASE_FLUSHING;
-    
-    PRUint32 i;
-    for (i = 0; i < mEventQueue.Length(); i++) {
-      mEventQueue[i]->Run();
-      if (mSelf->IsSuspended())
-        break;
-    }
-
-    // We will always want to remove at least one finished callback.
-    if (i < mEventQueue.Length())
-      i++;
-
-    mEventQueue.RemoveElementsAt(0, i);
-  }
-
-  if (mSelf->IsSuspended())
-    mQueuePhase = PHASE_QUEUEING;
-  else
-    mQueuePhase = PHASE_UNQUEUED;
+  mForced = true;
 }
 
-// Ensures any incoming IPDL msgs are queued during its lifetime, and flushes
-// the queue when it goes out of scope.
-template<class T>
-class AutoEventEnqueuerBase
+inline void
+ChannelEventQueue::EndForcedQueueing()
+{
+  mForced = false;
+  MaybeFlushQueue();
+}
+
+inline void
+ChannelEventQueue::Suspend()
+{
+  NS_ABORT_IF_FALSE(!mSuspended,
+                    "ChannelEventQueue::Suspend called recursively");
+
+  mSuspended = true;
+}
+
+inline void
+ChannelEventQueue::Resume()
+{
+  NS_ABORT_IF_FALSE(mSuspended,
+                    "ChannelEventQueue::Resume called when not suspended!");
+
+  mSuspended = false;
+  MaybeFlushQueue();
+}
+
+inline void
+ChannelEventQueue::MaybeFlushQueue()
+{
+  // Don't flush if forced queuing on, we're already being flushed, or
+  // suspended, or there's nothing to flush
+  if (!mForced && !mFlushing && !mSuspended && !mEventQueue.IsEmpty())
+    FlushQueue();
+}
+
+// Ensures that ShouldEnqueue() will be true during its lifetime (letting
+// caller know incoming IPDL msgs should be queued). Flushes the queue when it
+// goes out of scope.
+class AutoEventEnqueuer
 {
  public:
-  AutoEventEnqueuerBase(ChannelEventQueue<T>* queue) : mEventQueue(queue) 
-  {
-    mEventQueue->BeginEventQueueing();
+  AutoEventEnqueuer(ChannelEventQueue &queue) : mEventQueue(queue) {
+    mEventQueue.StartForcedQueueing();
   }
-  ~AutoEventEnqueuerBase() 
-  { 
-    mEventQueue->EndEventQueueing();
-    mEventQueue->FlushEventQueue(); 
+  ~AutoEventEnqueuer() {
+    mEventQueue.EndForcedQueueing();
   }
  private:
-  ChannelEventQueue<T> *mEventQueue;
+  ChannelEventQueue &mEventQueue;
 };
 
 }
