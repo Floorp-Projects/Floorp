@@ -1254,6 +1254,14 @@ Preferences::GetLocalizedString(const char* aPref, nsAString* aResult)
 
 // static
 nsresult
+Preferences::GetComplex(const char* aPref, const nsIID &aType, void** aResult)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return sPreferences->mRootBranch->GetComplexValue(aPref, aType, aResult);
+}
+
+// static
+nsresult
 Preferences::SetCString(const char* aPref, const char* aValue)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -1297,6 +1305,15 @@ Preferences::SetInt(const char* aPref, PRInt32 aValue)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->SetIntPref(aPref, aValue);
+}
+
+// static
+nsresult
+Preferences::SetComplex(const char* aPref, const nsIID &aType,
+                        nsISupports* aValue)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return sPreferences->mRootBranch->SetComplexValue(aPref, aType, aValue);
 }
 
 // static
