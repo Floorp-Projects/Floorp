@@ -197,7 +197,7 @@ function populateGraphicsSection() {
           suggestedDriverVersion = gfxInfo.getFeatureSuggestedDriverVersion(feature);
         } catch(e) {}
         if (suggestedDriverVersion)
-          errorMessage = bundle.formatStringFromName("tryNewerDriver2", [suggestedDriverVersion], 1);
+          errorMessage = bundle.formatStringFromName("tryNewerDriver", [suggestedDriverVersion], 1);
         else
           errorMessage = bundle.GetStringFromName("blockedDriver");
         break;
@@ -342,17 +342,6 @@ function populateGraphicsSection() {
       createElement("td", msg),
     ])
   ]);
-
-  let urlFormatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                       .getService(Ci.nsIURLFormatter);
-  let supportUrl = urlFormatter.formatURLPref("app.support.updateGraphicsDriverURL");
-  if (supportUrl != "about:blank") {
-    let links = graphics_tbody.querySelectorAll(".supportLink-graphicsDriver");
-    for (let i = 0; i < links.length; i++) {
-      links[i].href = supportUrl;
-      links[i].target = "_blank";
-    }
-  }
 }
 
 function getPrefValue(aName) {
@@ -417,9 +406,9 @@ function createParentElement(tagName, childElems) {
   return elem;
 }
 
-function createElement(tagName, content, opt_class) {
+function createElement(tagName, textContent, opt_class) {
   let elem = document.createElement(tagName);
-  elem.innerHTML = content;
+  elem.textContent = textContent;
   elem.className = opt_class || "";
   return elem;
 }

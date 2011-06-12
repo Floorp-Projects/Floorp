@@ -47,7 +47,7 @@ interface nsIVariant;
 interface nsIDOMDOMStringList;
 
 %{C++
-#include "jsapi.h"
+#include "jspubtd.h"
 %}
 
 /**

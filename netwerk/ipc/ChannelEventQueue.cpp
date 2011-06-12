@@ -1,11 +1,12 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-// vim:cindent:tabstop=4:expandtab:shiftwidth=4:
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set sw=2 ts=8 et tw=80 :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at:
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -13,14 +14,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is layout debugging code.
+ * The Original Code is Mozilla Code.
  *
- * The Initial Developer of the Original Code is L. David Baron.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is
+ *   The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   L. David Baron <dbaron@dbaron.org> (original author)
+ *   Josh Matthews <josh@joshmatthews.net> (initial developer)
+ *   Jason Duell <jduell.mcbugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,35 +39,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsILayoutDebuggingTools.h"
-#include "nsIDocShell.h"
-#include "nsCOMPtr.h"
+#include "nsIChannel.h"
+#include "mozilla/net/ChannelEventQueue.h"
 
-class nsLayoutDebuggingTools : public nsILayoutDebuggingTools {
+namespace mozilla {
+namespace net {
 
-public:
-    nsLayoutDebuggingTools();
-    virtual ~nsLayoutDebuggingTools();
+void
+ChannelEventQueue::FlushQueue()
+{
+  // Events flushed could include destruction of channel (and our own
+  // destructor) unless we make sure its refcount doesn't drop to 0 while this
+  // method is running.
+  nsCOMPtr<nsIChannel> kungFuDeathGrip(mOwner);
 
-    NS_DECL_ISUPPORTS
+  // Prevent flushed events from flushing the queue recursively
+  mFlushing = true;
 
-    NS_DECL_NSILAYOUTDEBUGGINGTOOLS
+  PRUint32 i;
+  for (i = 0; i < mEventQueue.Length(); i++) {
+    mEventQueue[i]->Run();
+    if (mSuspended)
+      break;
+  }
 
-protected:
-    void ForceRefresh();
-    nsresult GetBoolPref(const char * aPrefName, PRBool *aValue);
-    nsresult SetBoolPrefAndRefresh(const char * aPrefName, PRBool aNewValue);
+  // We will always want to remove at least one finished callback.
+  if (i < mEventQueue.Length())
+    i++;
 
-    nsCOMPtr<nsIDocShell> mDocShell;
+  // It is possible for new callbacks to be enqueued as we are
+  // flushing the queue, so the queue must not be cleared until
+  // all callbacks have run.
+  mEventQueue.RemoveElementsAt(0, i);
 
-    PRBool mEditorMode;
-    PRBool mVisualDebugging;
-    PRBool mVisualEventDebugging;
-    PRBool mPaintFlashing;
-    PRBool mPaintDumping;
-    PRBool mInvalidateDumping;
-    PRBool mEventDumping;
-    PRBool mMotionEventDumping;
-    PRBool mCrossingEventDumping;
-    PRBool mReflowCounts;
-};
+  mFlushing = false;
+}
+
+
+}
+}

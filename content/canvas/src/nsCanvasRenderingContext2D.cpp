@@ -2028,6 +2028,9 @@ nsCanvasRenderingContext2D::FillRect(float x, float y, float w, float h)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::StrokeRect(float x, float y, float w, float h)
 {
+    if (w == 0.f && h == 0.f) {
+        return NS_OK;
+    }
     return DrawRect(gfxRect(x, y, w, h), STYLE_STROKE);
 }
 
@@ -3291,8 +3294,14 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
     }
 
-    double sx,sy,sw,sh;
-    double dx,dy,dw,dh;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(imgElt);
+    nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(content);
+    if (canvas) {
+        nsIntSize size = canvas->GetSize();
+        if (size.width == 0 || size.height == 0) {
+            return NS_ERROR_DOM_INVALID_STATE_ERR;
+        }
+    }
 
     gfxMatrix matrix;
     nsRefPtr<gfxPattern> pattern;
@@ -3334,6 +3343,8 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         }
     }
 
+    double sx,sy,sw,sh;
+    double dx,dy,dw,dh;
     if (optional_argc == 0) {
         dx = a1;
         dy = a2;

@@ -1124,7 +1124,7 @@ setting[type="control"] menulist {
 
 .addon-control:active:hover,
 setting[type="control"] button:active:hover,
-setting[type="control"] menulist:hover {
+setting[type="control"] menulist:active:hover {
   box-shadow: inset 0 1px 3px rgba(0,0,0,.2), 0 1px rgba(255,255,255,0.25);
   background-image: -moz-linear-gradient(rgba(45,54,71,0.3), rgba(45,54,71,0.1));
   border-color: rgba(60,73,97,0.7);
