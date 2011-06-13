@@ -266,7 +266,7 @@ endif
 endif
 
 # Platform-specific icon channel stuff - supported mostly-everywhere
-ifneq (,$(filter windows os2 mac cocoa gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows os2 mac cocoa gtk2 qt android,$(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
