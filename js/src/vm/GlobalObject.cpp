@@ -202,6 +202,22 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
     return !v.isFalse();
 }
 
+JSFunction *
+GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name,
+                                uintN length)
+{
+    JSFunction *fun = js_NewFunction(cx, NULL, ctor, length, JSFUN_CONSTRUCTOR, this, name);
+    if (!fun)
+        return NULL;
+
+    /*
+     * Remember the class this function is a constructor for so that we know to
+     * create an object of this class when we call the constructor.
+     */
+    FUN_CLASP(fun) = clasp;
+    return fun;
+}
+
 JSObject *
 GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
 {

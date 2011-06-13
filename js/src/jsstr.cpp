@@ -3177,13 +3177,10 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Now create the String function. */
-    JSAtom *atom = CLASS_ATOM(cx, String);
-    JSFunction *ctor = js_NewFunction(cx, NULL, js_String, 1, JSFUN_CONSTRUCTOR, global, atom);
+    JSFunction *ctor = global->createConstructor(cx, js_String, &js_StringClass,
+                                                 CLASS_ATOM(cx, String), 1);
     if (!ctor)
         return NULL;
-
-    /* String creates string objects. */
-    FUN_CLASP(ctor) = &js_StringClass;
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return NULL;
@@ -3199,7 +3196,6 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     proto->brand(cx);
     ctor->brand(cx);
 
-    /* Install the fully-constructed String and String.prototype. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
         return NULL;
 
