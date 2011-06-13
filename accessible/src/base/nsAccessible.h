@@ -297,7 +297,7 @@ public:
   /**
    * Return index in parent accessible.
    */
-  virtual PRInt32 GetIndexInParent() const;
+  virtual PRInt32 IndexInParent() const;
 
   /**
    * Return true if accessible has children;

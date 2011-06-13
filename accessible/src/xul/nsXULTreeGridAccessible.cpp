@@ -1230,7 +1230,7 @@ nsXULTreeGridCellAccessible::NativeState()
 }
 
 PRInt32
-nsXULTreeGridCellAccessible::GetIndexInParent() const
+nsXULTreeGridCellAccessible::IndexInParent() const
 {
   return GetColumnIndex();
 }

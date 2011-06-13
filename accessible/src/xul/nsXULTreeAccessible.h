@@ -209,7 +209,7 @@ public:
 
   // nsAccessible
   virtual PRUint64 NativeState();
-  virtual PRInt32 GetIndexInParent() const;
+  virtual PRInt32 IndexInParent() const;
 
   // nsXULTreeItemAccessibleBase
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULTREEITEMBASEACCESSIBLE_IMPL_CID)

@@ -261,13 +261,13 @@ nsHTMLAreaAccessible::StartOffset()
   // We return index in parent because image map contains area links only which
   // are embedded objects.
   // XXX: image map should be a hypertext accessible.
-  return GetIndexInParent();
+  return IndexInParent();
 }
 
 PRUint32
 nsHTMLAreaAccessible::EndOffset()
 {
-  return GetIndexInParent() + 1;
+  return IndexInParent() + 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -986,7 +986,7 @@ nsXULTreeItemAccessibleBase::NativeState()
 }
 
 PRInt32
-nsXULTreeItemAccessibleBase::GetIndexInParent() const
+nsXULTreeItemAccessibleBase::IndexInParent() const
 {
   return mParent ? mParent->ContentChildCount() + mRow : -1;
 }
@@ -1030,7 +1030,7 @@ nsXULTreeItemAccessibleBase::GetSiblingAtOffset(PRInt32 aOffset,
   if (aError)
     *aError = NS_OK; // fail peacefully
 
-  return mParent->GetChildAt(GetIndexInParent() + aOffset);
+  return mParent->GetChildAt(IndexInParent() + aOffset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
