@@ -685,8 +685,8 @@ nsXULTreeGridRowAccessible::GetName(nsAString& aName)
 }
 
 nsAccessible*
-nsXULTreeGridRowAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                            EWhichChildAtPoint aWhichChild)
+nsXULTreeGridRowAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                         EWhichChildAtPoint aWhichChild)
 {
   nsIFrame *frame = GetFrame();
   if (!frame)

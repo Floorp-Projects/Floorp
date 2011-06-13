@@ -74,8 +74,8 @@ nsOuterDocAccessible::NativeState()
 }
 
 nsAccessible*
-nsOuterDocAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                      EWhichChildAtPoint aWhichChild)
+nsOuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                   EWhichChildAtPoint aWhichChild)
 {
   PRInt32 docX = 0, docY = 0, docWidth = 0, docHeight = 0;
   nsresult rv = GetBounds(&docX, &docY, &docWidth, &docHeight);
@@ -90,7 +90,7 @@ nsOuterDocAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   NS_ENSURE_TRUE(child, nsnull);
 
   if (aWhichChild == eDeepestChild)
-    return child->GetChildAtPoint(aX, aY, eDeepestChild);
+    return child->ChildAtPoint(aX, aY, eDeepestChild);
   return child;
 }
 

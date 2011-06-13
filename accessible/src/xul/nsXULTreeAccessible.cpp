@@ -228,8 +228,8 @@ nsXULTreeAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 // nsXULTreeAccessible: nsAccessible implementation (DON'T put methods here)
 
 nsAccessible*
-nsXULTreeAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                     EWhichChildAtPoint aWhichChild)
+nsXULTreeAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                  EWhichChildAtPoint aWhichChild)
 {
   nsIFrame *frame = GetFrame();
   if (!frame)
@@ -255,7 +255,7 @@ nsXULTreeAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   // If we failed to find tree cell for the given point then it might be
   // tree columns.
   if (row == -1 || !column)
-    return nsAccessibleWrap::GetChildAtPoint(aX, aY, aWhichChild);
+    return nsAccessibleWrap::ChildAtPoint(aX, aY, aWhichChild);
 
   nsAccessible *child = GetTreeItemAccessible(row);
   if (aWhichChild == eDeepestChild && child) {

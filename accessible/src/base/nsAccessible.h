@@ -197,7 +197,7 @@ public:
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
   /**
-   * Used by GetChildAtPoint() method to get direct or deepest child at point.
+   * Used by ChildAtPoint() method to get direct or deepest child at point.
    */
   enum EWhichChildAtPoint {
     eDirectChild,
@@ -212,8 +212,8 @@ public:
    * @param  aWhichChild  [in] flag points if deepest or direct child
    *                        should be returned
    */
-  virtual nsAccessible* GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                        EWhichChildAtPoint aWhichChild);
+  virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                     EWhichChildAtPoint aWhichChild);
 
   /**
    * Return calculated group level based on accessible hierarchy.
