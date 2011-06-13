@@ -60,7 +60,6 @@ const KEYS_WBO = "keys";
 const LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
@@ -451,7 +450,16 @@ WeaveSvc.prototype = {
   },
 
   _migratePrefs: function _migratePrefs() {
-    // No need to re-migrate
+    // Migrate old debugLog prefs.
+    let logLevel = Svc.Prefs.get("services.sync.log.appender.debugLog");
+    if (logLevel) {
+      Svc.Prefs.set("services.sync.log.appender.file.level", logLevel);
+    }
+    if (Svc.Prefs.get("log.appender.debugLog.enabled")) {
+      Svc.Prefs.set("services.sync.log.appender.file.logOnSuccess");
+    }
+
+    // Migrate old extensions.weave.* prefs if we haven't already tried.
     if (Svc.Prefs.get("migrated", false))
       return;
 
@@ -489,26 +497,28 @@ WeaveSvc.prototype = {
     dapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.dump")];
     root.addAppender(dapp);
 
-    let enabled = Svc.Prefs.get("log.appender.debugLog.enabled", false);
-    if (enabled) {
-      let verbose = FileUtils.getFile(
-        "ProfD", ["weave", "logs", "verbose-log.txt"], true);
-
-      if (Svc.Prefs.get("log.appender.debugLog.rotate", true)) {
-        let maxSize = Svc.Prefs.get("log.appender.debugLog.maxSize");
-        this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter,
-                                                          maxSize);
-      } else {
-        this._debugApp = new Log4Moz.FileAppender(verbose, formatter);
-      }
-      this._debugApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.debugLog")];
-      root.addAppender(this._debugApp);
-    }
+    let fapp = this._logAppender = new Log4Moz.StorageStreamAppender(formatter);
+    fapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.file.level")];
+    root.addAppender(fapp);
   },
 
-  clearLogs: function WeaveSvc_clearLogs() {
-    if (this._debugApp)
-      this._debugApp.clear();
+  _resetFileLog: function resetFileLog(flushToFile) {
+    let inStream = this._logAppender.getInputStream();
+    this._logAppender.reset();
+    if (flushToFile && inStream) {
+      try {
+        let filename = Date.now() + ".log";
+        let file = FileUtils.getFile("ProfD", ["weave", "logs", filename]);
+        let outStream = FileUtils.openFileOutputStream(file);
+        NetUtil.asyncCopy(inStream, outStream, function () {
+          Svc.Obs.notify("weave:service:reset-file-log");
+        });
+      } catch (ex) {
+        Svc.Obs.notify("weave:service:reset-file-log");
+      }
+    } else {
+      Svc.Obs.notify("weave:service:reset-file-log");
+    }
   },
 
   /**
@@ -548,6 +558,8 @@ WeaveSvc.prototype = {
         if (Status.login == LOGIN_FAILED_NETWORK_ERROR &&
             !Services.io.offline) {
           this._ignorableErrorCount += 1;
+        } else {
+          this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"));
         }
         break;
       case "weave:service:sync:error":
@@ -561,9 +573,13 @@ WeaveSvc.prototype = {
           case CREDENTIALS_CHANGED:
             this.logout();
             break;
+          default:
+            this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"));
+            break;
         }
         break;
       case "weave:service:sync:finish":
+        this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"));
         this._scheduleNextSync();
         this._syncErrors = 0;
         this._ignorableErrorCount = 0;
