@@ -588,7 +588,7 @@ nsAccessible::GetIndexInParent(PRInt32 *aIndexInParent)
 {
   NS_ENSURE_ARG_POINTER(aIndexInParent);
 
-  *aIndexInParent = GetIndexInParent();
+  *aIndexInParent = IndexInParent();
   return *aIndexInParent != -1 ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -2844,11 +2844,11 @@ nsAccessible::GetChildCount()
 PRInt32
 nsAccessible::GetIndexOf(nsAccessible* aChild)
 {
-  return (aChild->mParent != this) ? -1 : aChild->GetIndexInParent();
+  return (aChild->mParent != this) ? -1 : aChild->IndexInParent();
 }
 
 PRInt32
-nsAccessible::GetIndexInParent() const
+nsAccessible::IndexInParent() const
 {
   return mIndexInParent;
 }

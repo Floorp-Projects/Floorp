@@ -1382,19 +1382,18 @@ STDMETHODIMP
 nsAccessibleWrap::get_indexInParent(long *aIndexInParent)
 {
 __try {
+  if (!aIndexInParent)
+    return E_INVALIDARG;
+
   *aIndexInParent = -1;
+  if (IsDefunct())
+    return E_FAIL;
 
-  PRInt32 index = -1;
-  nsresult rv = GetIndexInParent(&index);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  if (index == -1)
+  *aIndexInParent = IndexInParent();
+  if (*aIndexInParent == -1)
     return S_FALSE;
 
-  *aIndexInParent = index;
   return S_OK;
-
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
