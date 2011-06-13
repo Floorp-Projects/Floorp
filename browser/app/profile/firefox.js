@@ -864,9 +864,6 @@ pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 // base URL for web-based support pages
 pref("app.support.baseURL", "http://support.mozilla.com/1/firefox/%VERSION%/%OS%/%LOCALE%/");
 
-// URL for web-based support page on how to upgrade a graphics driver
-pref("app.support.updateGraphicsDriverURL", "http://support.mozilla.com/%LOCALE%/kb/how-do-i-upgrade-my-graphics-drivers");
-
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
 
