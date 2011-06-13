@@ -91,12 +91,13 @@ function test() {
 function Disabled() {
   document.popupNode = gBrowser.selectedTab;
   TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
-  let command = document.getElementById("Browser:BookmarkAllTabs");
-  return command.hasAttribute("disabled") && command.getAttribute("disabled") === "true";
+  TabContextMenu.contextTab = null;
+  return document.getElementById("Browser:BookmarkAllTabs").getAttribute("disabled") == "true";
 }
 
 function Hidden() {
   document.popupNode = gBrowser.selectedTab;
   TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
+  TabContextMenu.contextTab = null;
   return document.getElementById("context_bookmarkAllTabs").hidden;
 }

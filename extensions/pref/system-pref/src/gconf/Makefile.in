@@ -54,12 +54,6 @@ CPPSRCS =   \
 
 SHARED_LIBRARY_LIBS = ../libsystem-pref_s.a
 
-EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_GTK2_LIBS) \
-		$(NULL)
-
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME	= nsSystemPrefModule
