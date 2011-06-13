@@ -849,15 +849,10 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
     proto->brand(cx);
 
-    /* Create the RegExp constructor. */
-    JSAtom *regExpAtom = CLASS_ATOM(cx, RegExp);
-    JSFunction *ctor =
-        js_NewFunction(cx, NULL, regexp_construct, 2, JSFUN_CONSTRUCTOR, global, regExpAtom);
+    JSFunction *ctor = global->createConstructor(cx, regexp_construct, &js_RegExpClass,
+                                                 CLASS_ATOM(cx, RegExp), 2);
     if (!ctor)
         return NULL;
-
-    /* RegExp creates regular expressions. */
-    FUN_CLASP(ctor) = &js_RegExpClass;
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return NULL;
@@ -873,7 +868,6 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    /* Install the fully-constructed RegExp and RegExp.prototype in global. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))
         return NULL;
 
