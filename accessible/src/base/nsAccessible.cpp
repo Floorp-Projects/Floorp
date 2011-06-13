@@ -772,10 +772,10 @@ nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
   return NS_OK;
 }
 
-// nsAccessible::GetChildAtPoint()
+// nsAccessible::ChildAtPoint()
 nsAccessible*
-nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                              EWhichChildAtPoint aWhichChild)
+nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                           EWhichChildAtPoint aWhichChild)
 {
   // If we can't find the point in a child, we will return the fallback answer:
   // we return |this| if the point is within it, otherwise nsnull.
@@ -839,7 +839,7 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
           (child->State() & states::INVISIBLE) == 0) {
 
         if (aWhichChild == eDeepestChild)
-          return child->GetChildAtPoint(aX, aY, eDeepestChild);
+          return child->ChildAtPoint(aX, aY, eDeepestChild);
 
         return child;
       }
@@ -881,7 +881,7 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aAccessible = GetChildAtPoint(aX, aY, eDirectChild));
+  NS_IF_ADDREF(*aAccessible = ChildAtPoint(aX, aY, eDirectChild));
   return NS_OK;
 }
 
@@ -896,7 +896,7 @@ nsAccessible::GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aAccessible = GetChildAtPoint(aX, aY, eDeepestChild));
+  NS_IF_ADDREF(*aAccessible = ChildAtPoint(aX, aY, eDeepestChild));
   return NS_OK;
 }
 
