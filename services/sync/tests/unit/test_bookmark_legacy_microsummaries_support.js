@@ -45,7 +45,7 @@ function run_test() {
   store.wipe();
 
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Engine.Bookmarks").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
 
   _("Create a microsummarized bookmark.");
   let id = newMicrosummary(TEST_URL, TEST_TITLE);

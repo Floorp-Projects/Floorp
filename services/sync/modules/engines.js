@@ -72,7 +72,7 @@ function Tracker(name) {
   name = name || "Unnamed";
   this.name = this.file = name.toLowerCase();
 
-  this._log = Log4Moz.repository.getLogger("Tracker." + name);
+  this._log = Log4Moz.repository.getLogger("Sync.Tracker." + name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log4Moz.Level[level];
 
@@ -190,7 +190,7 @@ function Store(name) {
   name = name || "Unnamed";
   this.name = name.toLowerCase();
 
-  this._log = Log4Moz.repository.getLogger("Store." + name);
+  this._log = Log4Moz.repository.getLogger("Sync.Store." + name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log4Moz.Level[level];
 
@@ -273,7 +273,7 @@ XPCOMUtils.defineLazyGetter(this, "Engines", function() {
 
 function EngineManagerSvc() {
   this._engines = {};
-  this._log = Log4Moz.repository.getLogger("Service.Engines");
+  this._log = Log4Moz.repository.getLogger("Sync.EngineManager");
   this._log.level = Log4Moz.Level[Svc.Prefs.get(
     "log.logger.service.engines", "Debug")];
 }
@@ -350,7 +350,7 @@ function Engine(name) {
   this.name = name.toLowerCase();
 
   this._notify = Utils.notify("weave:engine:");
-  this._log = Log4Moz.repository.getLogger("Engine." + this.Name);
+  this._log = Log4Moz.repository.getLogger("Sync.Engine." + this.Name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log4Moz.Level[level];
 

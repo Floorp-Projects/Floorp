@@ -55,7 +55,7 @@ function FormRec(collection, id) {
 }
 FormRec.prototype = {
   __proto__: CryptoWrapper.prototype,
-  _logName: "Record.Form",
+  _logName: "Sync.Record.Form",
   ttl: FORMS_TTL
 };
 
@@ -63,7 +63,7 @@ Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
 
 
 let FormWrapper = {
-  _log: Log4Moz.repository.getLogger('Engine.Forms'),
+  _log: Log4Moz.repository.getLogger("Sync.Engine.Forms"),
     
   getAllEntries: function getAllEntries() {
     // Sort by (lastUsed - minLast) / (maxLast - minLast) * timesUsed / maxTimes

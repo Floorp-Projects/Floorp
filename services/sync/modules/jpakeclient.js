@@ -124,7 +124,7 @@ const JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
 function JPAKEClient(observer) {
   this.observer = observer;
 
-  this._log = Log4Moz.repository.getLogger("Service.JPAKEClient");
+  this._log = Log4Moz.repository.getLogger("Sync.JPAKEClient");
   this._log.level = Log4Moz.Level[Svc.Prefs.get(
     "log.logger.service.jpakeclient", "Debug")];
 
