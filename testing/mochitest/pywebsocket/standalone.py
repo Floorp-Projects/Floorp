@@ -140,6 +140,8 @@ class _StandaloneConnection(object):
         """Get memorized lines."""
         return self._request_handler.rfile.get_memorized_lines()
 
+    def setblocking(self, blocking): 
+        self._request_handler.rfile._file._sock.setblocking(0)
 
 class _StandaloneRequest(object):
     """Mimic mod_python request."""
@@ -177,11 +179,14 @@ class _StandaloneRequest(object):
 class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """HTTPServer specialized for WebSocket."""
 
-    SocketServer.ThreadingMixIn.daemon_threads = True
-    SocketServer.TCPServer.allow_reuse_address = True
+    daemon_threads = True
+    allow_reuse_address = True
 
     def __init__(self, server_address, RequestHandlerClass):
-        """Override SocketServer.BaseServer.__init__."""
+        """Override SocketServer.TCPServer.__init__ to set SSL enabled socket
+        object to self.socket before server_bind and server_activate, if
+        necessary.
+        """
 
         SocketServer.BaseServer.__init__(
                 self, server_address, RequestHandlerClass)
@@ -259,7 +264,8 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
                     # In this case, handshake has been successful, so just log
                     # the exception and return False.
                     logging.info('mod_pywebsocket: %s' % e)
-                    logging.info('mod_pywebsocket: %s' % util.get_stack_trace())
+                    logging.info(
+                        'mod_pywebsocket: %s' % util.get_stack_trace())
                 return False
             except handshake.HandshakeError, e:
                 # Handshake for ws(s) failed. Assume http(s).
@@ -431,8 +437,10 @@ def _main():
             if 'CYGWIN_PATH' in os.environ:
                 cygwin_path = os.environ['CYGWIN_PATH']
             util.wrap_popen3_for_win(cygwin_path)
+
             def __check_script(scriptpath):
                 return util.get_script_interp(scriptpath, cygwin_path)
+
             CGIHTTPServer.executable = __check_script
 
     if options.use_tls:

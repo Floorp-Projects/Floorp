@@ -1,15 +1,9 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 const RELATIVE_DIR = "modules/libpr0n/test/browser/";
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 const TESTROOT2 = "http://example.org/browser/" + RELATIVE_DIR;
 
 var chrome_root = getRootDirectory(gTestPath);
 const CHROMEROOT = chrome_root;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function getImageLoading(doc, id) {
   var htmlImg = doc.getElementById(id);

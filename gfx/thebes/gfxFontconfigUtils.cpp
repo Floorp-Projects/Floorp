@@ -44,14 +44,15 @@
 #include <locale.h>
 #include <fontconfig/fontconfig.h>
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsILanguageAtomService.h"
 #include "nsTArray.h"
+#include "mozilla/Preferences.h"
 
 #include "nsIAtom.h"
 #include "nsCRT.h"
+
+using namespace mozilla;
 
 /* static */ gfxFontconfigUtils* gfxFontconfigUtils::sUtils = nsnull;
 static nsILanguageAtomService* gLangService = nsnull;
@@ -587,17 +588,8 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
     // fontconfig converts the non existing font to sans-serif.
     // This is not good if the web page specifies font-family
     // that has Windows font name in the first.
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!prefs)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefs->GetBranch(0, getter_AddRefs(prefBranch));
-    if (!prefBranch)
-        return NS_ERROR_FAILURE;
-
-    nsXPIDLCString list;
-    prefBranch->GetCharPref("font.alias-list", getter_Copies(list));
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
+    nsAdoptingCString list = Preferences::GetCString("font.alias-list");
 
     if (!list.IsEmpty()) {
         const char kComma = ',';
