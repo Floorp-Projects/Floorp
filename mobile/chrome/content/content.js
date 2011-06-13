@@ -68,7 +68,10 @@ const ElementTouchHelper = {
 
   /* Retrieve the closest element to a point by looking at borders position */
   getClosest: function getClosest(aWindowUtils, aX, aY) {
-    let dpiRatio = aWindowUtils.displayDPI / kReferenceDpi;
+    if (!this.dpiRatio)
+      this.dpiRatio = aWindowUtils.displayDPI / kReferenceDpi;
+
+    let dpiRatio = this.dpiRatio;
 
     let target = aWindowUtils.elementFromPoint(aX, aY,
                                                true,   /* ignore root scroll frame*/
