@@ -98,7 +98,7 @@ refAccessibleAtPointHelper(nsAccessibleWrap* aAccWrap, gint aX, gint aY,
   if (!aAccWrap || aAccWrap->IsDefunct() || nsAccUtils::MustPrune(aAccWrap))
     return nsnull;
 
-  // nsAccessible::GetChildAtPoint(x,y) is in screen pixels.
+  // nsAccessible::ChildAtPoint(x,y) is in screen pixels.
   if (aCoordType == ATK_XY_WINDOW) {
     nsIntPoint winCoords =
       nsCoreUtils::GetScreenCoordsForWindow(aAccWrap->GetNode());
@@ -106,8 +106,8 @@ refAccessibleAtPointHelper(nsAccessibleWrap* aAccWrap, gint aX, gint aY,
     aY += winCoords.y;
   }
 
-  nsAccessible* accAtPoint = aAccWrap->GetChildAtPoint(aX, aY,
-                                                       nsAccessible::eDirectChild);
+  nsAccessible* accAtPoint = aAccWrap->ChildAtPoint(aX, aY,
+                                                    nsAccessible::eDirectChild);
   if (!accAtPoint)
     return nsnull;
 

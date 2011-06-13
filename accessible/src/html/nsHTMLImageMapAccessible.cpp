@@ -243,8 +243,8 @@ nsHTMLAreaAccessible::NativeState()
 }
 
 nsAccessible*
-nsHTMLAreaAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                      EWhichChildAtPoint aWhichChild)
+nsHTMLAreaAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                   EWhichChildAtPoint aWhichChild)
 {
   // Don't walk into area accessibles.
   return this;
