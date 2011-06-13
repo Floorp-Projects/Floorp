@@ -1350,6 +1350,12 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 #error "Unknown boxing format"
 #endif
         nextsp[-1].setRawBits(rvalBits);
+
+        /*
+         * When making a scripted call at monitored sites, it is the caller's
+         * responsibility to update the pushed type set.
+         */
+        script->types.monitor(cx, pc, nextsp[-1]);
         f.regs.pc = nextpc;
         break;
       }
@@ -1374,19 +1380,19 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
       case REJOIN_NATIVE_LOWERED: {
         /*
          * We don't rejoin until after the native stub finishes execution, in
-         * which case it will have already loaded the return value into the
-         * return register pair, as for a scripted call. We need to release the
-         * reference on the compartment's orphaned native pools first, though.
+         * which case the return value will be in memory. For lowered natives,
+         * the return value will be in the 'this' value's slot.
          */
-        RemoveOrphanedNative(cx, fp);
-        if (rejoin == REJOIN_NATIVE_LOWERED) {
-            /*
-             * Lowered natives return like other native calls, but store their
-             * return values in the 'this' value's slot.
-             */
+        if (rejoin == REJOIN_NATIVE_LOWERED)
             nextsp[-1] = nextsp[0];
-        }
-        script->types.monitor(cx, pc, nextsp[-1]);
+
+        /* Release this reference on the orphaned native stub. */
+        RemoveOrphanedNative(cx, fp);
+
+        /*
+         * Note: there is no need to monitor the result of the native, the
+         * native stub will always do a type check before finishing.
+         */
         f.regs.pc = nextpc;
         break;
       }
