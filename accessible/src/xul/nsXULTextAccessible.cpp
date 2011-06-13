@@ -241,7 +241,7 @@ nsXULLinkAccessible::StartOffset()
   // accessible.
   if (nsAccessible::IsHyperLink())
     return nsAccessible::StartOffset();
-  return GetIndexInParent();
+  return IndexInParent();
 }
 
 PRUint32
@@ -249,7 +249,7 @@ nsXULLinkAccessible::EndOffset()
 {
   if (nsAccessible::IsHyperLink())
     return nsAccessible::EndOffset();
-  return GetIndexInParent() + 1;
+  return IndexInParent() + 1;
 }
 
 already_AddRefed<nsIURI>
