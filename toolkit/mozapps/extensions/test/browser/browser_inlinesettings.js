@@ -8,7 +8,7 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
 
-const SETTINGS_ROWS = 5;
+const SETTINGS_ROWS = 6;
 
 var observer = {
   lastData: null,
@@ -180,10 +180,22 @@ add_test(function() {
       is(gManagerWindow._testValue, "3", "Menulist oncommand handler should've updated the test value");
       delete gManagerWindow._testValue;
 
-      var button = gManagerWindow.document.getElementById("detail-prefs-btn");
-      is_element_hidden(button, "Preferences button should not be visible");
+      Services.prefs.setCharPref("extensions.inlinesettings1.color", "#FF0000");
+      setTimeout(function () {
+        input = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "input");
+        is(input.color, "#FF0000", "Color picker should have initial value");
+        input.focus();
+        EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
+        EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
+        EventUtils.synthesizeKey("VK_RETURN", {}, gManagerWindow);
+        is(input.color, "#FF9900", "Color picker should have updated value");
+        is(Services.prefs.getCharPref("extensions.inlinesettings1.color"), "#FF9900", "Color pref should have been updated");
 
-      gCategoryUtilities.openType("extension", run_next_test);
+        var button = gManagerWindow.document.getElementById("detail-prefs-btn");
+        is_element_hidden(button, "Preferences button should not be visible");
+
+        gCategoryUtilities.openType("extension", run_next_test);
+      }, 0);
     }, 1200); // Timeout value from toolkit/content/tests/widgets/test_menulist_keynav.xul
   });
 });

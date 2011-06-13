@@ -348,4 +348,41 @@
       <property name="value" onget="return this.input.value;" onset="return this.input.value=val;"/>
     </implementation>
   </binding>
+
+  <binding id="setting-color" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
+    <content>
+      <xul:vbox class="setting-label">
+        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+          <children/>
+        </xul:label>
+      </xul:vbox>
+      <xul:hbox anonid="input-container" class="setting-input">
+        <xul:colorpicker type="button" anonid="input" xbl:inherits="disabled" onchange="inputChanged();"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <method name="valueFromPreference">
+        <body>
+        <![CDATA[
+          // We must wait for the colorpicker's binding to be applied before setting the value
+          if (!this.input.color)
+            this.input.initialize();
+          this.value = Services.prefs.getCharPref(this.pref);
+        ]]>
+        </body>
+      </method>
+
+      <method name="valueToPreference">
+        <body>
+        <![CDATA[
+          Services.prefs.setCharPref(this.pref, this.value);
+        ]]>
+        </body>
+      </method>
+
+      <property name="value" onget="return this.input.color;" onset="return this.input.color = val;"/>
+    </implementation>
+  </binding>
 </bindings>

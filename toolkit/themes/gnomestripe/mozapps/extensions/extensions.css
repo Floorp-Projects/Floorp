@@ -768,6 +768,10 @@ menulist { /* Fixes some styling inconsistencies */
   margin: 1px 5px 2px 5px;
 }
 
+colorpicker[type="button"] { /* Fixes some styling inconsistencies */
+  height: 29px;
+  margin: 1px 5px 2px 5px;
+}
 
 /*** creator ***/
 

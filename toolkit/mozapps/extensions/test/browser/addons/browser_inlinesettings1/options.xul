@@ -13,4 +13,5 @@
       </menupopup>
     </menulist>
   </setting>
+  <setting pref="extensions.inlinesettings1.color" type="color" title="Color"/>
 </vbox>
