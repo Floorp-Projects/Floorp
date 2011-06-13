@@ -88,18 +88,18 @@ let Log4Moz = {
     Log4Moz.repository = value;
   },
 
-  get LogMessage() { return LogMessage; },
-  get Logger() { return Logger; },
-  get LoggerRepository() { return LoggerRepository; },
+  LogMessage: LogMessage,
+  Logger: Logger,
+  LoggerRepository: LoggerRepository,
 
-  get Formatter() { return Formatter; },
-  get BasicFormatter() { return BasicFormatter; },
+  Formatter: Formatter,
+  BasicFormatter: BasicFormatter,
 
-  get Appender() { return Appender; },
-  get DumpAppender() { return DumpAppender; },
-  get ConsoleAppender() { return ConsoleAppender; },
-  get FileAppender() { return FileAppender; },
-  get RotatingFileAppender() { return RotatingFileAppender; },
+  Appender: Appender,
+  DumpAppender: DumpAppender,
+  ConsoleAppender: ConsoleAppender,
+  FileAppender: FileAppender,
+  RotatingFileAppender: RotatingFileAppender,
 
   // Logging helper:
   // let logger = Log4Moz.repository.getLogger("foo");
