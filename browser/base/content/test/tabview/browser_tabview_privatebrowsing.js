@@ -50,33 +50,35 @@ function onTabViewLoadedAndShown() {
   }
   
   // Create a second tab
-  gBrowser.addTab("about:robots");
+  gBrowser.loadOneTab("about:robots", { inBackground: false });
   is(gBrowser.tabs.length, 2, "we now have 2 tabs");
   registerCleanupFunction(function() {
     gBrowser.removeTab(gBrowser.tabs[1]);
   });
 
   afterAllTabsLoaded(function() {
-    // Get normal tab urls
-    for (let a = 0; a < gBrowser.tabs.length; a++)
-      normalURLs.push(gBrowser.tabs[a].linkedBrowser.currentURI.spec);
+    showTabView(function() {
+      // Get normal tab urls
+      for (let a = 0; a < gBrowser.tabs.length; a++)
+        normalURLs.push(gBrowser.tabs[a].linkedBrowser.currentURI.spec);
 
-    // verify that we're all set up for our test
-    verifyNormal();
+      // verify that we're all set up for our test
+      verifyNormal();
 
-    // go into private browsing and make sure Tab View becomes hidden
-    togglePBAndThen(function() {
-      ok(!TabView.isVisible(), "Tab View is no longer visible");
-      verifyPB();
-      
-      // exit private browsing and make sure Tab View is shown again
+      // go into private browsing and make sure Tab View becomes hidden
       togglePBAndThen(function() {
-        ok(TabView.isVisible(), "Tab View is visible again");
-        verifyNormal();
+        ok(!TabView.isVisible(), "Tab View is no longer visible");
+        verifyPB();
 
-        hideTabView(onTabViewHidden);
+        // exit private browsing and make sure Tab View is shown again
+        togglePBAndThen(function() {
+          ok(TabView.isVisible(), "Tab View is visible again");
+          verifyNormal();
+
+          hideTabView(onTabViewHidden);
+        });
       });
-    });
+    }); 
   });
 }
 
