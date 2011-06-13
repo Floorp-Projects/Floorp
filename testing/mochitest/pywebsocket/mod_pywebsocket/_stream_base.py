@@ -97,9 +97,7 @@ class StreamBase(object):
 
         bytes = self._request.connection.read(length)
         if not bytes:
-            raise ConnectionTerminatedException(
-                'Receiving %d byte failed. Peer (%r) closed connection' %
-                (length, (self._request.connection.remote_addr,)))
+            raise ConnectionTerminatedException('connection terminated: read failed')
         return bytes
 
     def _write(self, bytes):
@@ -130,6 +128,12 @@ class StreamBase(object):
             bytes.append(new_bytes)
             length -= len(new_bytes)
         return ''.join(bytes)
+
+    def flushread(self):
+        try:
+          self._request.connection.flushread()
+        except:
+          pass
 
     def _read_until(self, delim_char):
         """Reads bytes until we encounter delim_char. The result will not

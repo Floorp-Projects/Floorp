@@ -57,7 +57,6 @@ EXTRA_JS_MODULES = \
 	content/openLocationLastURL.jsm \
 	content/NetworkPrioritizer.jsm \
 	content/domplate.jsm \
-	content/stylePanel.jsm \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
