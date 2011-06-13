@@ -1212,13 +1212,9 @@ nsHTMLTableAccessible::RemoveRowsOrColumnsFromSelection(PRInt32 aIndex,
     const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
   PRBool doUnselectRow = (aTarget == nsISelectionPrivate::TABLESELECTION_ROW);
-
-  nsresult rv = NS_OK;
   PRInt32 count = 0;
-  if (doUnselectRow)
-    rv = GetColumnCount(&count);
-  else
-    rv = GetRowCount(&count);
+  nsresult rv = doUnselectRow ? GetColumnCount(&count) : GetRowCount(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 startRowIdx = doUnselectRow ? aIndex : 0;
   PRInt32 endRowIdx = doUnselectRow ? aIndex : count - 1;
