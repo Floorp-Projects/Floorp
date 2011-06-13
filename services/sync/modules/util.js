@@ -848,7 +848,7 @@ let Utils = {
     try {
       return Services.io.newURI(URIString, null, null);
     } catch (e) {
-      let log = Log4Moz.repository.getLogger("Service.Util");
+      let log = Log4Moz.repository.getLogger("Sync.Utils");
       log.debug("Could not create URI: " + Utils.exceptionStr(e));
       return null;
     }
