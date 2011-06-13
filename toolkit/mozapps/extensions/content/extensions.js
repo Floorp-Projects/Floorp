@@ -2821,6 +2821,22 @@ var gDetailView = {
     if (this._addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE)
       return;
 
+    // This function removes and returns the text content of aNode without
+    // removing any child elements. Removing the text nodes ensures any XBL
+    // bindings apply properly.
+    function stripTextNodes(aNode) {
+      var text = '';
+      for (var i = 0; i < aNode.childNodes.length; i++) {
+        if (aNode.childNodes[i].nodeType != document.ELEMENT_NODE) {
+          text += aNode.childNodes[i].textContent;
+          aNode.removeChild(aNode.childNodes[i--]);
+        } else {
+          text += stripTextNodes(aNode.childNodes[i]);
+        }
+      }
+      return text;
+    }
+
     var rows = document.getElementById("detail-downloads").parentNode;
 
     var xhr = new XMLHttpRequest();
@@ -2830,39 +2846,21 @@ var gDetailView = {
     var xml = xhr.responseXML;
     var settings = xml.querySelectorAll(":root > setting");
 
-    // This horrible piece of code fixes two problems. 1) The menulist binding doesn't apply
-    // correctly when it's moved from one document to another (bug 659163), which is solved 
-    // by manually cloning the menulist. 2) Labels and controls aligned to the top of a row 
-    // looks really bad, so the description is put on a new row to preserve alignment.
     for (var i = 0; i < settings.length; i++) {
       var setting = settings[i];
       if (i == 0)
         setting.setAttribute("first-row", true);
 
-      // remove menulist controls for replacement later
-      var control = setting.firstElementChild;
-      if (setting.getAttribute("type") == "control" && control && control.localName == "menulist") {
-        setting.removeChild(control);
-        var consoleMessage = Cc["@mozilla.org/scripterror;1"].
-                             createInstance(Ci.nsIScriptError);
-        consoleMessage.init("Menulist is not available in the addons-manager yet, due to bug 659163",
-                            this._addon.optionsURL, null, null, 0, Ci.nsIScriptError.warningFlag, null);
-        Services.console.logMessage(consoleMessage);
-        continue;
-      }
-
-      // remove setting description, for replacement later
-      var desc = setting.textContent.trim();
-      if (desc)
-        setting.textContent = "";
+      // Remove setting description, for replacement later
+      var desc = stripTextNodes(setting).trim();
       if (setting.hasAttribute("desc")) {
-        desc = setting.getAttribute("desc");
+        desc = setting.getAttribute("desc").trim();
         setting.removeAttribute("desc");
       }
 
       rows.appendChild(setting);
 
-      // add a new row containing the description
+      // Add a new row containing the description
       if (desc) {
         var row = document.createElement("row");
         var label = document.createElement("label");
@@ -2872,6 +2870,8 @@ var gDetailView = {
         rows.appendChild(row);
       }
     }
+
+    Services.obs.notifyObservers(document, "addon-options-displayed", this._addon.id);
   },
 
   getSelectedAddon: function() {

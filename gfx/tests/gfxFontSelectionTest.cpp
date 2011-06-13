@@ -40,9 +40,7 @@
 #include "nsString.h"
 #include "nsDependentString.h"
 
-#include "nsServiceManagerUtils.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
+#include "mozilla/Preferences.h"
 
 #include "gfxContext.h"
 #include "gfxFont.h"
@@ -58,6 +56,8 @@
 #ifdef MOZ_WIDGET_GTK2
 #include "gtk/gtk.h"
 #endif
+
+using namespace mozilla;
 
 enum {
     S_UTF8 = 0,
@@ -358,21 +358,7 @@ main (int argc, char **argv) {
     if (0) {
         nsresult rv;
 
-        nsCOMPtr<nsIPrefService> prefsvc = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (!prefsvc) {
-            printf ("Pref svc get failed!\n");
-        }
-
-        nsCOMPtr<nsIPrefBranch> branch;
-        rv = prefsvc->GetBranch(nsnull, getter_AddRefs(branch));
-        if (NS_FAILED(rv))
-            printf ("Failed 0x%08x\n", rv);
-
-        nsXPIDLCString str;
-        rv = branch->GetCharPref("font.name.sans-serif.x-western", getter_Copies(str));
-        if (NS_FAILED(rv))
-            printf ("Failed[2] 0x%08x\n", rv);
-
+        nsAdoptingCString str = Preferences::GetCString("font.name.sans-serif.x-western");
         printf ("sans-serif.x-western: %s\n", nsPromiseFlatCString(str).get());
     }
 
