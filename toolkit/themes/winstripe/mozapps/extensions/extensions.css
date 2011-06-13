@@ -1152,7 +1152,8 @@ menulist { /* Fixes some styling inconsistencies */
 
 .addon-control,
 setting[type="control"] button,
-setting[type="control"] menulist {
+setting[type="control"] menulist,
+setting[type="color"] colorpicker[type="button"] {
   -moz-appearance: none;
   color: black;
   padding: 0 5px;
@@ -1166,9 +1167,16 @@ setting[type="control"] menulist {
               0 0 2px 1px rgba(255, 255, 255, 0.25) inset;
 }
 
+setting[type="color"] colorpicker[type="button"] {
+  margin: 1px 5px 2px 5px;
+  padding: 3px;
+  height: 25px;
+}
+
 .addon-control:active:hover,
 setting[type="control"] button:active:hover,
-setting[type="control"] menulist:active:hover {
+setting[type="control"] menulist:active:hover,
+setting[type="color"] colorpicker[type="button"]:active:hover {
   background-color: rgba(61, 76, 92, 0.2);
   border-color: rgba(39, 53, 68, 0.5);
   box-shadow: 0 0 3px 1px rgba(39, 53, 68, 0.2) inset;

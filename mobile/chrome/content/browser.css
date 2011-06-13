@@ -50,6 +50,10 @@ setting[type="string"] {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
 }
 
+setting[type="color"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-color");
+}
+
 #browsers > notificationbox {
   -moz-binding: url("chrome://browser/content/notification.xml#stacked-notificationbox");
   overflow: -moz-hidden-unscrollable;
