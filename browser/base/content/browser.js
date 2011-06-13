@@ -4366,10 +4366,6 @@ var XULBrowserWindow = {
     }
   },
 
-  onLocationChange2: function (aWebProgress, aRequest, aLocationURI, aFlags) {
-    onLocationChange(aWebProgress, aRequest, aLocationURI);
-  },
-
   onLocationChange: function (aWebProgress, aRequest, aLocationURI) {
     var location = aLocationURI ? aLocationURI.spec : "";
     this._hostChanged = true;
