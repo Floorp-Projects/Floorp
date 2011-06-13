@@ -389,23 +389,19 @@ NON_OMNIJAR_FILES += \
 PACK_OMNIJAR	= \
   rm -f omni.jar components/binary.manifest && \
   grep -h '^binary-component' components/*.manifest > binary.manifest ; \
-  for m in components/*.manifest; do \
-    sed -e 's/^binary-component/\#binary-component/' $$m > tmp.manifest && \
-    mv tmp.manifest $$m; \
-  done; \
-  $(ZIP) -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
+  sed -e 's/^binary-component/\#binary-component/' components/components.manifest > components.manifest && \
+  mv components.manifest components && \
+  zip -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
   $(GENERATE_CACHE) && \
   $(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR_AB_CD) ./ ./ && \
   mv binary.manifest components && \
   printf "manifest components/binary.manifest\n" > chrome.manifest
 UNPACK_OMNIJAR	= \
   $(OPTIMIZE_JARS_CMD) --deoptimize $(JARLOG_DIR_AB_CD) ./ ./ && \
-  $(UNZIP) -o omni.jar && \
+  unzip -o omni.jar && \
   rm -f components/binary.manifest && \
-  for m in components/*.manifest; do \
-    sed -e 's/^\#binary-component/binary-component/' $$m > tmp.manifest && \
-    mv tmp.manifest $$m; \
-  done
+  sed -e 's/^\#binary-component/binary-component/' components/components.manifest > components.manifest && \
+  mv components.manifest components
 
 MAKE_PACKAGE	= (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR)) && \
 	              (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(CREATE_PRECOMPLETE_CMD)) && $(INNER_MAKE_PACKAGE)
