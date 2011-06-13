@@ -3163,24 +3163,13 @@ StringObject::assignInitialShape(JSContext *cx)
 }
 
 JSObject *
-js_InitStringClass(JSContext *cx, JSObject *global)
+js_InitStringClass(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(global->isGlobal());
-    JS_ASSERT(global->isNative());
+    JS_ASSERT(obj->isNative());
 
-    /*
-     * Define escape/unescape, the URI encode/decode functions, and maybe
-     * uneval on the global object.
-     */
-    if (!JS_DefineFunctions(cx, global, string_functions))
-        return NULL;
+    GlobalObject *global = obj->asGlobal();
 
-    /* Create and initialize String.prototype. */
-    JSObject *objectProto;
-    if (!js_GetClassPrototype(cx, global, JSProto_Object, &objectProto))
-        return NULL;
-
-    JSObject *proto = NewObject<WithProto::Class>(cx, &js_StringClass, objectProto, global);
+    JSObject *proto = global->createBlankPrototype(cx, &js_StringClass);
     if (!proto || !proto->asString()->init(cx, cx->runtime->emptyString))
         return NULL;
 
@@ -3214,19 +3203,15 @@ js_InitStringClass(JSContext *cx, JSObject *global)
     proto->brand(cx);
     ctor->brand(cx);
 
-    /*
-     * Make sure proto's emptyShape is available to be shared by String
-     * objects. JSObject::emptyShape is a one-slot cache. If we omit this, some
-     * other class could snap it up. (The risk is particularly great for
-     * Object.prototype.)
-     *
-     * All callers of JSObject::initSharingEmptyShape depend on this.
-     */
-    if (!proto->getEmptyShape(cx, &js_StringClass, FINALIZE_OBJECT0))
-        return NULL;
-
     /* Install the fully-constructed String and String.prototype. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
+        return NULL;
+
+    /*
+     * Define escape/unescape, the URI encode/decode functions, and maybe
+     * uneval on the global object.
+     */
+    if (!JS_DefineFunctions(cx, global, string_functions))
         return NULL;
 
     return proto;

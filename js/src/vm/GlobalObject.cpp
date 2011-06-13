@@ -202,4 +202,28 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
     return !v.isFalse();
 }
 
+JSObject *
+GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
+{
+    JS_ASSERT(clasp != &js_ObjectClass);
+    JS_ASSERT(clasp != &js_FunctionClass);
+
+    JSObject *objectProto;
+    if (!js_GetClassPrototype(cx, this, JSProto_Object, &objectProto))
+        return NULL;
+
+    JSObject *proto = NewNonFunction<WithProto::Given>(cx, clasp, objectProto, this);
+    if (!proto)
+        return NULL;
+
+    /*
+     * Supply the created prototype object with an empty shape for the benefit
+     * of callers of JSObject::initSharingEmptyShape.
+     */
+    if (!proto->getEmptyShape(cx, clasp, gc::FINALIZE_OBJECT0))
+        return NULL;
+
+    return proto;
+}
+
 } // namespace js
