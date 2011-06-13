@@ -313,19 +313,19 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
     nsCOMPtr<nsIMutableArray> headerCells =
       do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 desiredRole = -1;
+    if (aRowOrColumnHeaderCell == nsAccUtils::eRowHeaderCells)
+      desiredRole = nsIAccessibleRole::ROLE_ROWHEADER;
+    else if (aRowOrColumnHeaderCell == nsAccUtils::eColumnHeaderCells)
+      desiredRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
 
     do {
       nsAccessible* headerCell =
         GetAccService()->GetAccessibleInWeakShell(headerCellElm, mWeakShell);
 
-      if (headerCell &&
-          (aRowOrColumnHeaderCell == nsAccUtils::eRowHeaderCells &&
-              headerCell->Role() == nsIAccessibleRole::ROLE_ROWHEADER ||
-              aRowOrColumnHeaderCell == nsAccUtils::eColumnHeaderCells &&
-              headerCell->Role() == nsIAccessibleRole::ROLE_COLUMNHEADER)) {
+      if (headerCell && headerCell->Role() == desiredRole)
         headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),
                                    PR_FALSE);
-      }
     } while ((headerCellElm = iter.NextElem()));
 
     NS_ADDREF(*aHeaderCells = headerCells);
