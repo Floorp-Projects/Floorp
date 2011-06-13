@@ -481,14 +481,14 @@ WeaveSvc.prototype = {
   },
 
   _initLogs: function WeaveSvc__initLogs() {
-    this._log = Log4Moz.repository.getLogger("Service.Main");
+    this._log = Log4Moz.repository.getLogger("Sync.Service");
     this._log.level =
       Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
 
-    let formatter = new Log4Moz.BasicFormatter();
-    let root = Log4Moz.repository.rootLogger;
+    let root = Log4Moz.repository.getLogger("Sync");
     root.level = Log4Moz.Level[Svc.Prefs.get("log.rootLogger")];
 
+    let formatter = new Log4Moz.BasicFormatter();
     let capp = new Log4Moz.ConsoleAppender(formatter);
     capp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.console")];
     root.addAppender(capp);

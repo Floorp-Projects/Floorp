@@ -67,8 +67,8 @@ function makeLivemark(p, mintGUID) {
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Engine.Bookmarks").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Store.Bookmarks").level  = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Store.Bookmarks").level  = Log4Moz.Level.Trace;
 
   run_next_test();
 }
