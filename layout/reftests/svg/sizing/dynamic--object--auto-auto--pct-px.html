@@ -10,10 +10,11 @@
     <title>Test: width:auto; height:auto; width="49%" height="70px"</title>
 
     <!--
-    This testcase checks that the <object> element uses the intrinsic width and
-    height of the embedded SVG. Since the intrinsic width is 49% and the
-    intrinsic height is 70px, you should see a blue rectangle 49% wide by 70px
-    high when viewing this file. You should not see any red.
+    This testcase checks that the <object> element uses the intrinsic
+    height of the embedded SVG, but ignores the percentage width. Since
+    the intrinsic height is 70px, you should see a blue rectangle 300px
+    (the magic default) wide by 70px high when viewing this file. You
+    should not see any red.
     -->
 
     <style type="text/css">
