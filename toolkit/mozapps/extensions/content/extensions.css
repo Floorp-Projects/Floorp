@@ -116,6 +116,10 @@ setting[type="string"] {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
 }
 
+setting[type="color"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-color");
+}
+
 #addonitem-popup > menuitem[disabled="true"] {
   display: none;
 }

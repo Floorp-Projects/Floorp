@@ -1105,7 +1105,8 @@ setting[type="string"] > .setting-input > textbox {
 
 .addon-control,
 setting[type="control"] button,
-setting[type="control"] menulist {
+setting[type="control"] menulist,
+setting[type="color"] colorpicker[type="button"] {
   -moz-appearance: none;
   padding: 1px 4px;
   min-width: 60px;
@@ -1122,9 +1123,16 @@ setting[type="control"] menulist {
   display: none;
 }
 
+setting[type="color"] colorpicker[type="button"] {
+  margin: 1px 5px 2px 5px;
+  padding: 3px;
+  height: 25px;
+}
+
 .addon-control:active:hover,
 setting[type="control"] button:active:hover,
-setting[type="control"] menulist:active:hover {
+setting[type="control"] menulist:active:hover,
+setting[type="color"] colorpicker[type="button"]:active:hover {
   box-shadow: inset 0 1px 3px rgba(0,0,0,.2), 0 1px rgba(255,255,255,0.25);
   background-image: -moz-linear-gradient(rgba(45,54,71,0.3), rgba(45,54,71,0.1));
   border-color: rgba(60,73,97,0.7);
