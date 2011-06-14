@@ -339,7 +339,9 @@ nsSVGUseElement::CreateAnonymousContent()
       return nsnull;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::svg, nsnull, kNameSpaceID_SVG);
+    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::svg, nsnull,
+                                            kNameSpaceID_SVG,
+                                            nsIDOMNode::ELEMENT_NODE);
     if (!nodeInfo)
       return nsnull;
 

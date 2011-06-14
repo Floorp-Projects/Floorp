@@ -78,7 +78,6 @@
 #include "nsUnicharUtils.h"
 
 #include "nsFrameSelection.h"
-#include "nsIDOM3Node.h"
 #include "nsContentUtils.h"
 #include "nsTArray.h"
 #include "nsIHTMLDocument.h"
