@@ -4100,6 +4100,13 @@ BEGIN_CASE(JSOP_LENGTH)
                     DO_NEXT_OP(len);
                 }
             }
+
+            if (js_IsTypedArray(obj)) {
+                TypedArray *tarray = TypedArray::fromJSObject(obj);
+                regs.sp[-1].setNumber(tarray->length);
+                len = JSOP_LENGTH_LENGTH;
+                DO_NEXT_OP(len);
+            }
         }
 
         i = -2;
