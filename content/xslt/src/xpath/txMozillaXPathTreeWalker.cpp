@@ -514,11 +514,7 @@ txXPathNodeUtils::getNodeType(const txXPathNode& aNode)
     }
 
     if (aNode.isContent()) {
-        PRUint16 type;
-        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mNode);
-        node->GetNodeType(&type);
-
-        return type;
+        return aNode.mNode->NodeType();
     }
 
     return txXPathNodeType::ATTRIBUTE_NODE;
