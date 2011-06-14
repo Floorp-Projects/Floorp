@@ -53,7 +53,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
+  NS_FORWARD_NSIDOMNODE(nsGenericDOMDataNode::)
 
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
@@ -64,8 +64,13 @@ public:
   // nsIDOMCDATASection
   // Empty interface
 
-  // nsIContent
+  // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRUint16 NodeType();
+  virtual void NodeName(nsAString& aNodeName);
+
+  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
+                                              PRBool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 #ifdef DEBUG
@@ -126,30 +131,16 @@ nsXMLCDATASection::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
 }
 
-NS_IMETHODIMP
-nsXMLCDATASection::GetNodeName(nsAString& aNodeName)
+PRUint16
+nsXMLCDATASection::NodeType()
+{
+  return (PRUint16)nsIDOMNode::CDATA_SECTION_NODE;
+}
+
+void
+nsXMLCDATASection::NodeName(nsAString& aNodeName)
 {
   aNodeName.AssignLiteral("#cdata-section");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLCDATASection::GetNodeValue(nsAString& aNodeValue)
-{
-  return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsXMLCDATASection::SetNodeValue(const nsAString& aNodeValue)
-{
-  return nsGenericDOMDataNode::SetNodeValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
-{
-  *aNodeType = (PRUint16)nsIDOMNode::CDATA_SECTION_NODE;
-  return NS_OK;
 }
 
 nsGenericDOMDataNode*

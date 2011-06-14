@@ -64,7 +64,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNode.h"
-#include "nsIDOM3Node.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
