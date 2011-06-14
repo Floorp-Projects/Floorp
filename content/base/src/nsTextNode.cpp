@@ -170,18 +170,6 @@ nsTextNode::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
 }
 
-PRUint16
-nsTextNode::NodeType()
-{
-  return (PRUint16)nsIDOMNode::TEXT_NODE;
-}
-
-void
-nsTextNode::NodeName(nsAString& aNodeName)
-{
-  aNodeName.AssignLiteral("#text");
-}
-
 nsGenericDOMDataNode*
 nsTextNode::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
