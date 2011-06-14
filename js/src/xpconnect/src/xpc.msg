@@ -162,6 +162,14 @@ XPC_MSG_DEF(NS_ERROR_OBJECT_IS_IMMUTABLE            , "Can not modify immutable 
 XPC_MSG_DEF(NS_ERROR_LOSS_OF_SIGNIFICANT_DATA       , "Data conversion failed because significant data would be lost")
 XPC_MSG_DEF(NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA   , "Data conversion succeeded but data was rounded to fit")
 
+#ifdef XPC_IDISPATCH_SUPPORT
+XPC_MSG_DEF(NS_ERROR_XPC_COM_UNKNOWN                , "Unknown COM error occurred")
+XPC_MSG_DEF(NS_ERROR_XPC_COM_ERROR                  , "COM Error")
+XPC_MSG_DEF(NS_ERROR_XPC_COM_INVALID_CLASS_ID       , "Invalid class ID")
+XPC_MSG_DEF(NS_ERROR_XPC_COM_CREATE_FAILED          , "Unable to create an instance of the desired COM class")
+XPC_MSG_DEF(NS_ERROR_XPC_IDISPATCH_NOT_ENABLED      , "IDispatch support is not enabled")
+#endif
+
 /* network related codes (from nsNetError.h) */
 
 XPC_MSG_DEF(NS_BINDING_FAILED                       , "The async request failed for some unknown reason")

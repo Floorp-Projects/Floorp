@@ -216,6 +216,9 @@ XPCCallContext::SetName(jsid name)
 
     mName = name;
 
+#ifdef XPC_IDISPATCH_SUPPORT
+    mIDispatchMember = nsnull;
+#endif
     if(mTearOff)
     {
         mSet = nsnull;
@@ -271,6 +274,9 @@ XPCCallContext::SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
 
     if(mState < HAVE_NAME)
         mState = HAVE_NAME;
+#ifdef XPC_IDISPATCH_SUPPORT
+    mIDispatchMember = nsnull;
+#endif
 }
 
 void
@@ -285,6 +291,9 @@ XPCCallContext::SetArgsAndResultPtr(uintN argc,
         mSet = nsnull;
         mInterface = nsnull;
         mMember = nsnull;
+#ifdef XPC_IDISPATCH_SUPPORT
+        mIDispatchMember = nsnull;
+#endif
         mStaticMemberIsLocal = JS_FALSE;
     }
 
@@ -543,6 +552,33 @@ XPCCallContext::SetReturnValueWasSet(PRBool aReturnValueWasSet)
     mReturnValueWasSet = aReturnValueWasSet;
     return NS_OK;
 }
+
+#ifdef XPC_IDISPATCH_SUPPORT
+
+void
+XPCCallContext::SetIDispatchInfo(XPCNativeInterface* iface, 
+                                 void * member)
+{
+    CHECK_STATE(HAVE_CONTEXT);
+
+    // We are going straight to the method info and need not do a lookup
+    // by id.
+
+    // don't be tricked if method is called with wrong 'this'
+    if(mTearOff && mTearOff->GetInterface() != iface)
+        mTearOff = nsnull;
+
+    mSet = nsnull;
+    mInterface = iface;
+    mMember = nsnull;
+    mIDispatchMember = member;
+    mName = reinterpret_cast<XPCDispInterface::Member*>(member)->GetName();
+
+    if(mState < HAVE_NAME)
+        mState = HAVE_NAME;
+}
+
+#endif
 
 NS_IMETHODIMP
 XPCCallContext::GetPreviousCallContext(nsAXPCNativeCallContext **aResult)

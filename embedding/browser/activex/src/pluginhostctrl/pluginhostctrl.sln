@@ -1,0 +1,27 @@
+Microsoft Visual Studio Solution File, Format Version 7.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pluginhostctrl", "pluginhostctrl.vcproj", "{2E8F0B45-A837-4C6C-A072-E89771A90B3A}"
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		ConfigName.0 = Debug
+		ConfigName.1 = Release
+		ConfigName.2 = Release MinDependency
+		ConfigName.3 = Release MinSize
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{2E8F0B45-A837-4C6C-A072-E89771A90B3A}.Debug.ActiveCfg = Debug|Win32
+		{2E8F0B45-A837-4C6C-A072-E89771A90B3A}.Debug.Build.0 = Debug|Win32
+		{2E8F0B45-A837-4C6C-A072-E89771A90B3A}.Release.ActiveCfg = Release MinDependency|Win32
+		{2E8F0B45-A837-4C6C-A072-E89771A90B3A}.Release.Build.0 = Release MinDependency|Win32
+		{2E8F0B45-A837-4C6C-A072-E89771A90B3A}.Release MinDependency.ActiveCfg = Release MinDependency|Win32
+		{2E8F0B45-A837-4C6C-A072-E89771A90B3A}.Release MinDependency.Build.0 = Release MinDependency|Win32
+		{2E8F0B45-A837-4C6C-A072-E89771A90B3A}.Release MinSize.ActiveCfg = Release MinSize|Win32
+		{2E8F0B45-A837-4C6C-A072-E89771A90B3A}.Release MinSize.Build.0 = Release MinSize|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
