@@ -725,18 +725,16 @@ LivemarkLoadListener.prototype = {
       }
 
       let feed = aResult.doc.QueryInterface(Ci.nsIFeed);
-      if (feed.link) {
-        let oldSiteURI = this._livemark.siteURI;
-        if (!oldSiteURI || !feed.link.equals(oldSiteURI)) {
-          this._livemark.siteURI = feed.link;
-        }
+      let siteURI = this._livemark.siteURI;
+      if (feed.link && (!siteURI || !feed.link.equals(siteURI))) {
+        this._livemark.siteURI = siteURI = feed.link;
       }
 
       // Insert feed items.
       let livemarkChildren = [];
       for (let i = 0; i < feed.items.length; ++i) {
         let entry = feed.items.queryElementAt(i, Ci.nsIFeedEntry);
-        let href = entry.link;
+        let href = entry.link || siteURI;
         if (!href) {
           continue;
         }
