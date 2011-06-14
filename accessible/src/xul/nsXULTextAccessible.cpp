@@ -253,7 +253,7 @@ nsXULLinkAccessible::EndOffset()
 }
 
 already_AddRefed<nsIURI>
-nsXULLinkAccessible::GetAnchorURI(PRUint32 aAnchorIndex)
+nsXULLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
   if (aAnchorIndex != 0)
     return nsnull;

@@ -2581,7 +2581,7 @@ nsAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
   if (aIndex < 0 || aIndex >= static_cast<PRInt32>(AnchorCount()))
     return NS_ERROR_INVALID_ARG;
 
-  *aURI = GetAnchorURI(aIndex).get();
+  *aURI = AnchorURIAt(aIndex).get();
   return NS_OK;
 }
 
@@ -2598,7 +2598,7 @@ nsAccessible::GetAnchor(PRInt32 aIndex, nsIAccessible** aAccessible)
   if (aIndex < 0 || aIndex >= static_cast<PRInt32>(AnchorCount()))
     return NS_ERROR_INVALID_ARG;
 
-  NS_IF_ADDREF(*aAccessible = GetAnchor(aIndex));
+  NS_IF_ADDREF(*aAccessible = AnchorAt(aIndex));
   return NS_OK;
 }
 
@@ -2928,16 +2928,16 @@ nsAccessible::AnchorCount()
 }
 
 nsAccessible*
-nsAccessible::GetAnchor(PRUint32 aAnchorIndex)
+nsAccessible::AnchorAt(PRUint32 aAnchorIndex)
 {
   NS_PRECONDITION(IsHyperLink(), "GetAnchor is called on not hyper link!");
   return aAnchorIndex == 0 ? this : nsnull;
 }
 
 already_AddRefed<nsIURI>
-nsAccessible::GetAnchorURI(PRUint32 aAnchorIndex)
+nsAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
-  NS_PRECONDITION(IsHyperLink(), "GetAnchorURI is called on not hyper link!");
+  NS_PRECONDITION(IsHyperLink(), "AnchorURIAt is called on not hyper link!");
 
   if (aAnchorIndex != 0)
     return nsnull;

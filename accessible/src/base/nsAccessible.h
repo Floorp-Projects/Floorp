@@ -451,12 +451,12 @@ public:
   /**
    * Returns an anchor accessible at the given index.
    */
-  virtual nsAccessible* GetAnchor(PRUint32 aAnchorIndex);
+  virtual nsAccessible* AnchorAt(PRUint32 aAnchorIndex);
 
   /**
    * Returns an anchor URI at the given index.
    */
-  virtual already_AddRefed<nsIURI> GetAnchorURI(PRUint32 aAnchorIndex);
+  virtual already_AddRefed<nsIURI> AnchorURIAt(PRUint32 aAnchorIndex);
 
   //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible
