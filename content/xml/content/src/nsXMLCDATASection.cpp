@@ -89,7 +89,8 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
 
   nsCOMPtr<nsINodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::cdataTagName,
-                                     nsnull, kNameSpaceID_None);
+                                     nsnull, kNameSpaceID_None,
+                                     nsIDOMNode::CDATA_SECTION_NODE);
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   nsXMLCDATASection *instance = new nsXMLCDATASection(ni.forget());
@@ -105,6 +106,8 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
 nsXMLCDATASection::nsXMLCDATASection(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericDOMDataNode(aNodeInfo)
 {
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
+                    "Bad NodeType in aNodeInfo");
 }
 
 nsXMLCDATASection::~nsXMLCDATASection()

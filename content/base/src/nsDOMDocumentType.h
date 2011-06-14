@@ -70,7 +70,6 @@ class nsDOMDocumentType : public nsDOMDocumentTypeForward
 {
 public:
   nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
-                    nsIAtom *aName,
                     const nsAString& aPublicId,
                     const nsAString& aSystemId,
                     const nsAString& aInternalSubset);
@@ -113,7 +112,6 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  nsCOMPtr<nsIAtom> mName;
   nsString mPublicId;
   nsString mSystemId;
   nsString mInternalSubset;

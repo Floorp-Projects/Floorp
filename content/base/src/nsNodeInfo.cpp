@@ -69,6 +69,7 @@ nsFixedSizeAllocator* nsNodeInfo::sNodeInfoPool = nsnull;
 // static
 nsNodeInfo*
 nsNodeInfo::Create(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
+                   PRUint16 aNodeType, nsIAtom *aExtraName,
                    nsNodeInfoManager *aOwnerManager)
 {
   if (!sNodeInfoPool) {
@@ -88,7 +89,8 @@ nsNodeInfo::Create(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
   // Create a new one
   void* place = sNodeInfoPool->Alloc(sizeof(nsNodeInfo));
   return place ?
-    new (place) nsNodeInfo(aName, aPrefix, aNamespaceID, aOwnerManager) :
+    new (place) nsNodeInfo(aName, aPrefix, aNamespaceID, aNodeType, aExtraName,
+                           aOwnerManager) :
     nsnull;
 }
 
@@ -99,34 +101,33 @@ nsNodeInfo::~nsNodeInfo()
 
   NS_RELEASE(mInner.mName);
   NS_IF_RELEASE(mInner.mPrefix);
+  NS_IF_RELEASE(mInner.mExtraName);
 }
 
 
 nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
+                       PRUint16 aNodeType, nsIAtom* aExtraName,
                        nsNodeInfoManager *aOwnerManager)
 {
-  NS_ABORT_IF_FALSE(aName, "Must have a name");
-  NS_ABORT_IF_FALSE(aOwnerManager, "Must have an owner manager");
+  CHECK_VALID_NODEINFO(aNodeType, aName, aNamespaceID, aExtraName);
+  NS_ABORT_IF_FALSE(aOwnerManager, "Invalid aOwnerManager");
 
-  mInner.mName = aName;
-  NS_ADDREF(mInner.mName);
-
-  mInner.mPrefix = aPrefix;
-  NS_IF_ADDREF(mInner.mPrefix);
-
+  // Initialize mInner
+  NS_ADDREF(mInner.mName = aName);
+  NS_IF_ADDREF(mInner.mPrefix = aPrefix);
   mInner.mNamespaceID = aNamespaceID;
-
-  mOwnerManager = aOwnerManager;
-  NS_ADDREF(mOwnerManager);
+  mInner.mNodeType = aNodeType;
+  NS_ADDREF(mOwnerManager = aOwnerManager);
+  NS_IF_ADDREF(mInner.mExtraName = aExtraName);
 
   // Now compute our cached members.
 
   // Qualified name.  If we have no prefix, use ToString on
   // mInner.mName so that we get to share its buffer.
   if (aPrefix) {
-    aPrefix->ToString(mQualifiedName);
-    mQualifiedName.Append(PRUnichar(':'));
-    mQualifiedName.Append(nsDependentAtomString(mInner.mName));
+    mQualifiedName = nsDependentAtomString(mInner.mPrefix) +
+                     NS_LITERAL_STRING(":") +
+                     nsDependentAtomString(mInner.mName);
   } else {
     mInner.mName->ToString(mQualifiedName);
   }
@@ -137,6 +138,30 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
     nsContentUtils::ASCIIToUpper(mQualifiedName, mQualifiedNameCorrectedCase);
   } else {
     mQualifiedNameCorrectedCase = mQualifiedName;
+  }
+
+  switch (aNodeType) {
+    case nsIDOMNode::ELEMENT_NODE:
+    case nsIDOMNode::ATTRIBUTE_NODE:
+      mNodeName = mQualifiedNameCorrectedCase;
+      mInner.mName->ToString(mLocalName);
+      break;
+    case nsIDOMNode::TEXT_NODE:
+    case nsIDOMNode::CDATA_SECTION_NODE:
+    case nsIDOMNode::COMMENT_NODE:
+    case nsIDOMNode::DOCUMENT_NODE:
+    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+      mInner.mName->ToString(mNodeName);
+      SetDOMStringToNull(mLocalName);
+      break;
+    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+    case nsIDOMNode::DOCUMENT_TYPE_NODE:
+      mInner.mExtraName->ToString(mNodeName);
+      SetDOMStringToNull(mLocalName);
+      break;
+    default:
+      NS_ABORT_IF_FALSE(aNodeType == PR_UINT16_MAX,
+                        "Unknown node type");
   }
 }
 
