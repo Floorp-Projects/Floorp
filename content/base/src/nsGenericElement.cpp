@@ -2764,69 +2764,56 @@ nsGenericElement::Normalize()
   for (index = 0; (index < count) && (NS_OK == result); index++) {
     nsIContent *child = GetChildAt(index);
 
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(child);
-    if (node) {
-      PRUint16 nodeType;
-      node->GetNodeType(&nodeType);
+    switch (child->NodeType()) {
+      case nsIDOMNode::TEXT_NODE:
 
-      switch (nodeType) {
-        case nsIDOMNode::TEXT_NODE:
+        // ensure that if the text node is empty, it is removed
+        if (0 == child->TextLength()) {
+          if (hasRemoveListeners) {
+            nsContentUtils::MaybeFireNodeRemoved(child, this, doc);
+          }
+          result = RemoveChildAt(index, PR_TRUE);
+          if (NS_FAILED(result)) {
+            return result;
+          }
 
-          // ensure that if the text node is empty, it is removed
-          if (0 == child->TextLength()) {
+          count--;
+          index--;
+          break;
+        }
+
+        if (index+1 < count) {
+          // Get the sibling. If it's also a text node, then
+          // remove it from the tree and join the two text
+          // nodes.
+          nsCOMPtr<nsIContent> sibling = GetChildAt(index + 1);
+
+          if (sibling->NodeType() == nsIDOMNode::TEXT_NODE) {
             if (hasRemoveListeners) {
-              nsContentUtils::MaybeFireNodeRemoved(child, this, doc);
+              nsContentUtils::MaybeFireNodeRemoved(sibling, this, doc);
             }
-            result = RemoveChildAt(index, PR_TRUE);
+            result = RemoveChildAt(index+1, PR_TRUE);
             if (NS_FAILED(result)) {
               return result;
             }
 
+            result = JoinTextNodes(child, sibling);
+            if (NS_FAILED(result)) {
+              return result;
+            }
             count--;
             index--;
-            break;
           }
- 
-          if (index+1 < count) {
-            // Get the sibling. If it's also a text node, then
-            // remove it from the tree and join the two text
-            // nodes.
-            nsCOMPtr<nsIContent> sibling = GetChildAt(index + 1);
+        }
+        break;
 
-            nsCOMPtr<nsIDOMNode> siblingNode = do_QueryInterface(sibling);
+      case nsIDOMNode::ELEMENT_NODE:
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(child);
 
-            if (siblingNode) {
-              PRUint16 siblingNodeType;
-              siblingNode->GetNodeType(&siblingNodeType);
-
-              if (siblingNodeType == nsIDOMNode::TEXT_NODE) {
-                if (hasRemoveListeners) {
-                  nsContentUtils::MaybeFireNodeRemoved(sibling, this, doc);
-                }
-                result = RemoveChildAt(index+1, PR_TRUE);
-                if (NS_FAILED(result)) {
-                  return result;
-                }
-
-                result = JoinTextNodes(child, sibling);
-                if (NS_FAILED(result)) {
-                  return result;
-                }
-                count--;
-                index--;
-              }
-            }
-          }
-          break;
-
-        case nsIDOMNode::ELEMENT_NODE:
-          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(child);
-
-          if (element) {
-            result = element->Normalize();
-          }
-          break;
-      }
+        if (element) {
+          result = element->Normalize();
+        }
+        break;
     }
   }
 
@@ -3607,18 +3594,11 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
   if (!HasSameOwnerDoc(aKid)) {
-    nsCOMPtr<nsIDOMNode> kid = do_QueryInterface(aKid, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRUint16 nodeType = 0;
-    rv = kid->GetNodeType(&nodeType);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // DocumentType nodes are the only nodes that can have a null
     // ownerDocument according to the DOM spec, and we need to allow
     // inserting them w/o calling AdoptNode().
-
-    if (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE || aKid->GetOwnerDoc()) {
+    if (aKid->NodeType() != nsIDOMNode::DOCUMENT_TYPE_NODE ||
+        aKid->GetOwnerDoc()) {
       rv = AdoptNodeIntoOwnerDoc(this, aKid);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -3832,9 +3812,8 @@ nsGenericElement::SaveSubtreeState()
 // inserting it's the content before which we're inserting.  In the
 // latter case it may be null.
 static
-PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
-                        nsINode* aParent, PRBool aIsReplace,
-                        nsIContent* aRefContent)
+PRBool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
+                        PRBool aIsReplace, nsIContent* aRefContent)
 {
   NS_PRECONDITION(aNewChild, "Must have new child");
   NS_PRECONDITION(!aIsReplace || aRefContent,
@@ -3844,21 +3823,13 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
                   aParent->IsElement(),
                   "Nodes that are not documents, document fragments or "
                   "elements can't be parents!");
-#ifdef DEBUG
-  PRUint16 debugNodeType = 0;
-  nsCOMPtr<nsIDOMNode> debugNode(do_QueryInterface(aNewChild));
-  nsresult debugRv = debugNode->GetNodeType(&debugNodeType);
-
-  NS_PRECONDITION(NS_SUCCEEDED(debugRv) && debugNodeType == aNewNodeType,
-                  "Bogus node type passed");
-#endif
 
   if (aParent && nsContentUtils::ContentIsDescendantOf(aParent, aNewChild)) {
     return PR_FALSE;
   }
 
   // The allowed child nodes differ for documents and elements
-  switch (aNewNodeType) {
+  switch (aNewChild->NodeType()) {
   case nsIDOMNode::COMMENT_NODE :
   case nsIDOMNode::PROCESSING_INSTRUCTION_NODE :
     // OK in both cases
@@ -3974,10 +3945,7 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
         }
         // If we can put this content at the the right place, we might be ok;
         // if not, we bail out.
-        nsCOMPtr<nsIDOMNode> childNode(do_QueryInterface(childContent));
-        PRUint16 type;
-        childNode->GetNodeType(&type);
-        if (!IsAllowedAsChild(childContent, type, aParent, aIsReplace,
+        if (!IsAllowedAsChild(childContent, aParent, aIsReplace,
                               aRefContent)) {
           return PR_FALSE;
         }
@@ -4097,7 +4065,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
   }
 
   // Make sure that the inserted node is allowed as a child of its new parent.
-  if (!IsAllowedAsChild(newContent, nodeType, this, aReplace, refContent)) {
+  if (!IsAllowedAsChild(newContent, this, aReplace, refContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
