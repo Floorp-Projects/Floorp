@@ -43,6 +43,18 @@ ifdef MOZ_EXTENSIONS
 tier_app_dirs += extensions
 endif
 
+# axcontrol
+ifndef LIBXUL_SDK
+ifeq ($(OS_ARCH),WINNT)
+ifndef MOZ_NO_ACTIVEX_SUPPORT
+tier_app_dirs += \
+		embedding/browser/activex/src/control \
+		embedding/browser/activex/src/control_kicker \
+		$(NULL)
+endif # MOZ_NO_ACTIVEX_SUPPORT
+endif # WINNT
+endif # LIBXUL_SDK
+
 # winembed, mfcembed
 ifeq ($(OS_ARCH),WINNT)
 ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))

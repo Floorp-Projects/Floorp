@@ -406,6 +406,14 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                                          nsnull, propFlags);
         }
 
+#ifdef XPC_IDISPATCH_SUPPORT
+        // Check to see if there's an IDispatch tearoff     
+        if(wrapperToReflectInterfaceNames &&
+            XPCIDispatchExtension::DefineProperty(ccx, obj, 
+                id, wrapperToReflectInterfaceNames, propFlags, resolved))
+            return JS_TRUE;
+#endif
+        
         if(resolved)
             *resolved = JS_FALSE;
         return JS_TRUE;
@@ -626,6 +634,13 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
     for(PRUint16 i = 0; i < interface_count; i++)
     {
         XPCNativeInterface* iface = interfaceArray[i];
+#ifdef XPC_IDISPATCH_SUPPORT
+        if(iface->GetIID()->Equals(NSID_IDISPATCH))
+        {
+            XPCIDispatchExtension::Enumerate(ccx, obj, wrapper);
+            continue;
+        }
+#endif
         PRUint16 member_count = iface->GetMemberCount();
         for(PRUint16 k = 0; k < member_count; k++)
         {

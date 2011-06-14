@@ -661,6 +661,13 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_OK;
     }
 
+#ifdef XPC_IDISPATCH_SUPPORT
+    // If IDispatch is enabled and we're QI'ing to IDispatch
+    if(nsXPConnect::IsIDispatchEnabled() && aIID.Equals(NSID_IDISPATCH))
+    {
+        return XPCIDispatchExtension::IDispatchQIWrappedJS(self, aInstancePtr);
+    }
+#endif
     if(aIID.Equals(NS_GET_IID(nsIPropertyBag)))
     {
         // We only want to expose one implementation from our aggregate.

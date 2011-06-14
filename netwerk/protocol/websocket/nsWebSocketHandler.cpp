@@ -865,11 +865,9 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
                     mCloseTimer->Cancel();
                     mCloseTimer = nsnull;
                 }
-                if (mListener) {
-                    nsCOMPtr<nsIRunnable> event =
-                            new CallOnServerClose(mListener, mContext);
-                    NS_DispatchToMainThread(event);
-                }
+                nsCOMPtr<nsIRunnable> event =
+                    new CallOnServerClose(mListener, mContext);
+                NS_DispatchToMainThread(event);
 
                 if (mClientClosed)
                     ReleaseSession();
@@ -1316,11 +1314,9 @@ nsWebSocketHandler::StopSession(nsresult reason)
 
     if (!mCalledOnStop) {
         mCalledOnStop = 1;
-        if (mListener) {
-            nsCOMPtr<nsIRunnable> event =
-                    new CallOnStop(mListener, mContext, reason);
-            NS_DispatchToMainThread(event);
-        }
+        nsCOMPtr<nsIRunnable> event =
+            new CallOnStop(mListener, mContext, reason);
+        NS_DispatchToMainThread(event);
     }
 
     return;

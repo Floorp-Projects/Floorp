@@ -58,6 +58,10 @@ CPPSRCS		= \
 		nsSecurityManagerFactory.cpp \
 		$(NULL)
 
+ifdef XPC_IDISPATCH_SUPPORT
+DEFINES += -DXPC_IDISPATCH_SUPPORT
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/../include \
