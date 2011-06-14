@@ -502,7 +502,7 @@ nsXFormsItemCheckgroupAccessible::NativeState()
 {
   PRUint64 state = nsXFormsSelectableItemAccessible::NativeState();
 
-  if (IsItemSelected())
+  if (IsSelected())
     state |= states::CHECKED;
 
   return state;
@@ -514,7 +514,7 @@ nsXFormsItemCheckgroupAccessible::GetActionName(PRUint8 aIndex, nsAString& aName
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
 
-  if (IsItemSelected())
+  if (IsSelected())
     aName.AssignLiteral("uncheck");
   else
     aName.AssignLiteral("check");
@@ -544,7 +544,7 @@ nsXFormsItemRadiogroupAccessible::NativeState()
 {
   PRUint64 state = nsXFormsSelectableItemAccessible::NativeState();
 
-  if (IsItemSelected())
+  if (IsSelected())
     state |= states::CHECKED;
 
   return state;
@@ -627,7 +627,7 @@ nsXFormsItemComboboxAccessible::NativeState()
     return state;
 
   state |= states::SELECTABLE;
-  if (IsItemSelected())
+  if (IsSelected())
     state |= states::SELECTED;
 
   return state;
