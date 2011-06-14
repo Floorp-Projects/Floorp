@@ -132,18 +132,17 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
     mInner.mName->ToString(mQualifiedName);
   }
 
-  // Qualified name in corrected case
-  if (aNamespaceID == kNameSpaceID_XHTML && GetDocument() &&
-      GetDocument()->IsHTML()) {
-    nsContentUtils::ASCIIToUpper(mQualifiedName, mQualifiedNameCorrectedCase);
-  } else {
-    mQualifiedNameCorrectedCase = mQualifiedName;
-  }
-
   switch (aNodeType) {
     case nsIDOMNode::ELEMENT_NODE:
     case nsIDOMNode::ATTRIBUTE_NODE:
-      mNodeName = mQualifiedNameCorrectedCase;
+      // Correct the case for HTML
+      if (aNodeType == nsIDOMNode::ELEMENT_NODE &&
+          aNamespaceID == kNameSpaceID_XHTML && GetDocument() &&
+          GetDocument()->IsHTML()) {
+        nsContentUtils::ASCIIToUpper(mQualifiedName, mNodeName);
+      } else {
+        mNodeName = mQualifiedName;
+      }
       mInner.mName->ToString(mLocalName);
       break;
     case nsIDOMNode::TEXT_NODE:
