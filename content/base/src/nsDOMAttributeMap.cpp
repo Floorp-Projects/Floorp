@@ -341,8 +341,7 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
         }
 
         rv = mContent->NodeInfo()->NodeInfoManager()->
-          GetNodeInfo(name, nsnull, kNameSpaceID_None,
-                      nsIDOMNode::ATTRIBUTE_NODE, getter_AddRefs(ni));
+          GetNodeInfo(name, nsnull, kNameSpaceID_None, getter_AddRefs(ni));
         NS_ENSURE_SUCCESS(rv, rv);
         // value is already empty
       }
@@ -408,8 +407,7 @@ nsDOMAttributeMap::GetItemAt(PRUint32 aIndex, nsresult *aResult)
     // have the wrong owner document.
     nsCOMPtr<nsINodeInfo> ni;
     ni = mContent->NodeInfo()->NodeInfoManager()->
-      GetNodeInfo(name->LocalName(), name->GetPrefix(), name->NamespaceID(),
-                  nsIDOMNode::ATTRIBUTE_NODE);
+      GetNodeInfo(name->LocalName(), name->GetPrefix(), name->NamespaceID());
     if (ni) {
       node = GetAttribute(ni, PR_TRUE);
     }
@@ -486,8 +484,7 @@ nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
         nameAtom->Equals(aLocalName)) {
       nsCOMPtr<nsINodeInfo> ni;
       ni = mContent->NodeInfo()->NodeInfoManager()->
-        GetNodeInfo(nameAtom, name->GetPrefix(), nameSpaceID,
-                    nsIDOMNode::ATTRIBUTE_NODE);
+        GetNodeInfo(nameAtom, name->GetPrefix(), nameSpaceID);
       NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
       if (aRemove) {

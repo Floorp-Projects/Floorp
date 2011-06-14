@@ -53,7 +53,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericDOMDataNode::)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
 
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
@@ -64,11 +64,8 @@ public:
   // nsIDOMCDATASection
   // Empty interface
 
-  // nsINode
+  // nsIContent
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-
-  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              PRBool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 #ifdef DEBUG
@@ -87,8 +84,7 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
 
   nsCOMPtr<nsINodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::cdataTagName,
-                                     nsnull, kNameSpaceID_None,
-                                     nsIDOMNode::CDATA_SECTION_NODE);
+                                     nsnull, kNameSpaceID_None);
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   nsXMLCDATASection *instance = new nsXMLCDATASection(ni.forget());
@@ -104,8 +100,6 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
 nsXMLCDATASection::nsXMLCDATASection(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericDOMDataNode(aNodeInfo)
 {
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
-                    "Bad NodeType in aNodeInfo");
 }
 
 nsXMLCDATASection::~nsXMLCDATASection()
@@ -130,6 +124,32 @@ PRBool
 nsXMLCDATASection::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
+}
+
+NS_IMETHODIMP
+nsXMLCDATASection::GetNodeName(nsAString& aNodeName)
+{
+  aNodeName.AssignLiteral("#cdata-section");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLCDATASection::GetNodeValue(nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
+nsXMLCDATASection::SetNodeValue(const nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::SetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
+nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
+{
+  *aNodeType = (PRUint16)nsIDOMNode::CDATA_SECTION_NODE;
+  return NS_OK;
 }
 
 nsGenericDOMDataNode*

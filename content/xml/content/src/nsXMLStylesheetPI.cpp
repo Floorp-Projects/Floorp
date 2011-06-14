@@ -105,7 +105,8 @@ NS_IMPL_RELEASE_INHERITED(nsXMLStylesheetPI, nsXMLProcessingInstruction)
 
 nsXMLStylesheetPI::nsXMLStylesheetPI(already_AddRefed<nsINodeInfo> aNodeInfo,
                                      const nsAString& aData)
-  : nsXMLProcessingInstruction(aNodeInfo, aData)
+  : nsXMLProcessingInstruction(aNodeInfo, NS_LITERAL_STRING("xml-stylesheet"),
+                               aData)
 {
 }
 
@@ -265,9 +266,7 @@ NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
   
   nsCOMPtr<nsINodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
-                                     nsnull, kNameSpaceID_None,
-                                     nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
-                                     nsGkAtoms::xml_stylesheet);
+                                     nsnull, kNameSpaceID_None);
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   nsXMLStylesheetPI *instance = new nsXMLStylesheetPI(ni.forget(), aData);

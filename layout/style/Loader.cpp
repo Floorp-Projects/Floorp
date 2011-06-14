@@ -74,6 +74,7 @@
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
 #include "nsIAtom.h"
+#include "nsIDOM3Node.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSLoaderObserver.h"

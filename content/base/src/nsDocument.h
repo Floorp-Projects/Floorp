@@ -61,6 +61,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIContent.h"
 #include "nsIEventListenerManager.h"
+#include "nsIDOM3Node.h"
 #include "nsIDOMNodeSelector.h"
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
@@ -718,8 +719,6 @@ public:
 
   // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual PRUint16 NodeType();
-  virtual void NodeName(nsAString& aNodeName);
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
@@ -747,6 +746,8 @@ public:
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  virtual PRBool IsEqualNode(nsINode* aOther);
+  virtual void GetTextContent(nsAString &aTextContent);
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,

@@ -96,6 +96,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
+#include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsRange.h"
@@ -4402,9 +4403,18 @@ nsresult PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationStrin
             if (!anchorText.IsEmpty()) {
               // Resolve the full URI using baseURI property
 
-              nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-              NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
-              nsCOMPtr<nsIURI> baseURI = node->GetBaseURI();
+              nsAutoString base;
+              nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(aNode,&rv));
+              NS_ENSURE_SUCCESS(rv, rv);
+              node->GetBaseURI(base);
+
+              nsCOMPtr<nsIIOService>
+                ios(do_GetService("@mozilla.org/network/io-service;1", &rv));
+              NS_ENSURE_SUCCESS(rv, rv);
+
+              nsCOMPtr<nsIURI> baseURI;
+              rv = ios->NewURI(NS_ConvertUTF16toUTF8(base),nsnull,nsnull,getter_AddRefs(baseURI));
+              NS_ENSURE_SUCCESS(rv, rv);
 
               nsCAutoString spec;
               rv = baseURI->Resolve(NS_ConvertUTF16toUTF8(anchorText),spec);

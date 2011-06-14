@@ -50,6 +50,7 @@ const nsIDOMSerializer     = I.nsIDOMSerializer;
 const nsIDOMDocument       = I.nsIDOMDocument;
 const nsIDOMElement        = I.nsIDOMElement;
 const nsIDOMNode           = I.nsIDOMNode;
+const nsIDOM3Node          = I.nsIDOM3Node;
 const nsIDOMCharacterData  = I.nsIDOMCharacterData;
 const nsIDOMAttr           = I.nsIDOMAttr;
 const nsIDOMNodeList       = I.nsIDOMNodeList;

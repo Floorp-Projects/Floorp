@@ -143,8 +143,6 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
 nsTextNode::nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericDOMDataNode(aNodeInfo)
 {
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::TEXT_NODE,
-                    "Bad NodeType in aNodeInfo");
 }
 
 nsTextNode::~nsTextNode()
@@ -163,6 +161,32 @@ NS_INTERFACE_TABLE_HEAD(nsTextNode)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsTextNode)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Text)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
+
+NS_IMETHODIMP
+nsTextNode::GetNodeName(nsAString& aNodeName)
+{
+  aNodeName.AssignLiteral("#text");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextNode::GetNodeValue(nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
+nsTextNode::SetNodeValue(const nsAString& aNodeValue)
+{
+  return nsGenericDOMDataNode::SetNodeValue(aNodeValue);
+}
+
+NS_IMETHODIMP
+nsTextNode::GetNodeType(PRUint16* aNodeType)
+{
+  *aNodeType = (PRUint16)nsIDOMNode::TEXT_NODE;
+  return NS_OK;
+}
 
 PRBool
 nsTextNode::IsNodeOfType(PRUint32 aFlags) const

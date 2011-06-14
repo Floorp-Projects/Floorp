@@ -3985,14 +3985,31 @@ void
 nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
 {
   nsString tmpStr, str;
+  nsresult result;
 
   aContent->Tag()->ToString(tmpStr);
   printf("%s", NS_LossyConvertUTF16toASCII(tmpStr).get());
 
-  if (nsIDOMNode::TEXT_NODE == aContent->NodeType())
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContent);
+
+  if (node)
   {
-    aContent->AppendTextTo(str);
-    printf(":  \"%s\"", NS_LossyConvertUTF16toASCII(str).get());
+    PRUint16 type;
+
+    result = node->GetNodeType(&type);
+
+    if (NS_FAILED(result))
+      return;
+
+    if (nsIDOMNode::TEXT_NODE == type)
+    {
+      result = node->GetNodeValue(str);
+
+      if (NS_FAILED(result))
+        return;
+
+      printf(":  \"%s\"", NS_LossyConvertUTF16toASCII(str).get());
+    }
   }
 
   printf("\n");

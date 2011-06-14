@@ -50,6 +50,7 @@ class nsXMLProcessingInstruction : public nsGenericDOMDataNode,
 {
 public:
   nsXMLProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
+                             const nsAString& aTarget,
                              const nsAString& aData);
   virtual ~nsXMLProcessingInstruction();
 
@@ -57,16 +58,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericDOMDataNode::)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
 
   // nsIDOMProcessingInstruction
   NS_DECL_NSIDOMPROCESSINGINSTRUCTION
 
-  // nsINode
+  // nsIContent
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-
-  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              PRBool aCloneText) const;
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
@@ -86,6 +84,8 @@ protected:
    *                     aAttribute. Empty if the attribute isn't present.
    */
   PRBool GetAttrValue(nsIAtom *aName, nsAString& aValue);
+
+  nsString mTarget;
 };
 
 #endif //nsIXMLProcessingInstruction_h___

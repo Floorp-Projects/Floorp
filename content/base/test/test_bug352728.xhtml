@@ -77,7 +77,7 @@ function testComment(aText, aShouldSucceed)
     checkTypes(comment, "comment", types);
 
     var interfaces = [ "nsIDOMComment", "nsIDOMCharacterData", "nsIDOMNode",
-                       "nsIDOMEventTarget" ];
+                       "nsIDOM3Node", "nsIDOMEventTarget" ];
     checkInterfaces(comment, "comment", interfaces);
 
     testCharacterData(comment, aText);
@@ -105,7 +105,7 @@ function testCDATASection(aText, aShouldSucceed)
     checkTypes(cdataSection, "CDATA section", types);
 
     var interfaces = [ "nsIDOMCDATASection", "nsIDOMCharacterData",
-                       "nsIDOMNode", "nsIDOMEventTarget" ];
+                       "nsIDOMNode", "nsIDOM3Node", "nsIDOMEventTarget" ];
     checkInterfaces(cdataSection, "CDATA section", interfaces);
 
     testCharacterData(cdataSection, aText);
@@ -136,7 +136,7 @@ function testPI(aTarget, aData, aShouldSucceed, aReason)
     checkTypes(pi, "processing instruction", types);
 
     var interfaces = [ "nsIDOMProcessingInstruction", "nsIDOMNode",
-                       "nsIDOMEventTarget" ];
+                       "nsIDOM3Node", "nsIDOMEventTarget" ];
     checkInterfaces(pi, "processing instruction", interfaces);
 
     is(pi.target, aTarget, "Check target");

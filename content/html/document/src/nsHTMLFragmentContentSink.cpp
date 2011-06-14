@@ -367,8 +367,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       nsCOMPtr<nsIAtom> name = do_GetAtom(lower);
       nodeInfo = mNodeInfoManager->GetNodeInfo(name, 
                                                nsnull, 
-                                               kNameSpaceID_XHTML,
-                                               nsIDOMNode::ELEMENT_NODE);
+                                               kNameSpaceID_XHTML);
       NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
     }
     else if (mNodeInfoCache[nodeType]) {
@@ -384,8 +383,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 
       nodeInfo = mNodeInfoManager->GetNodeInfo(name, 
                                                nsnull, 
-                                               kNameSpaceID_XHTML,
-                                               nsIDOMNode::ELEMENT_NODE);
+                                               kNameSpaceID_XHTML);
       NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
       NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
@@ -463,8 +461,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           nsContentUtils::ASCIIToLower(aNode.GetText(), lower);
           nsCOMPtr<nsIAtom> name = do_GetAtom(lower);
           nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull,
-                                                   kNameSpaceID_XHTML,
-                                                   nsIDOMNode::ELEMENT_NODE);
+                                                   kNameSpaceID_XHTML);
           NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
         }
         else if (mNodeInfoCache[nodeType]) {
@@ -475,8 +472,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           NS_ASSERTION(name, "This should not happen!");
 
           nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull,
-                                                   kNameSpaceID_XHTML,
-                                                   nsIDOMNode::ELEMENT_NODE);
+                                                   kNameSpaceID_XHTML);
           NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
           NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
         }
@@ -948,7 +944,13 @@ nsHTMLParanoidFragmentSink::NameFromNode(const nsIParserNode& aNode,
   
   *aResult = nsnull;
   if (type == eHTMLTag_userdefined) {
-    *aResult = NS_NewAtom(aNode.GetText());
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    rv =
+      mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
+                                    kNameSpaceID_XHTML,
+                                    getter_AddRefs(nodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_IF_ADDREF(*aResult = nodeInfo->NameAtom());
   } else {
     rv = NameFromType(type, aResult);
   }
