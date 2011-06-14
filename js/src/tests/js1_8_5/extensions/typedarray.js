@@ -345,6 +345,22 @@ function test()
     check(function() (new Int32Array([NaN])[0]) == 0);
     check(function() { var q = new Float32Array([NaN])[0]; return q != q; });
 
+    // check that setting and reading arbitrary properties works
+    // this is not something that will be done in real world
+    // situations, but it should work when done just like in
+    // regular objects
+    buf = new ArrayBuffer(128);
+    a = new Uint32Array(buf, 0, 4);
+    check(function() a[0] ==  0 && a[1] == 0 && a[2] == 0 && a[3] == 0);
+    buf.a = 42;
+    buf.b = "abcdefgh";
+    buf.c = {a:'literal'};
+    check(function() a[0] ==  0 && a[1] == 0 && a[2] == 0 && a[3] == 0);
+
+    check(function() buf.a == 42);
+    delete buf.a;
+    check(function() !buf.a);
+
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");
