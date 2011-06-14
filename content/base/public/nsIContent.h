@@ -928,11 +928,8 @@ public:
   nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
                               nsAString& aNamespaceURI) const;
 
-  nsIAtom* LookupPrefix(const nsAString& aNamespaceURI);
-
   PRBool IsEqual(nsIContent *aOther);
-
-  virtual PRBool IsEqualNode(nsINode* aOther);
+  NS_IMETHOD IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn);
 
   /**
    * If this content has independent selection, e.g., if this is input field

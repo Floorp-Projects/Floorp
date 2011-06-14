@@ -89,6 +89,16 @@ public:
   virtual ~nsGenericDOMDataNode();
 
   // Implementation for nsIDOMNode
+  nsresult GetNodeName(nsAString& aNodeName)
+  {
+    NodeName(aNodeName);
+    return NS_OK;
+  }
+  nsresult GetNodeType(PRUint16* aNodeType)
+  {
+    *aNodeType = NodeType();
+    return NS_OK;
+  }
   nsresult GetNodeValue(nsAString& aNodeValue);
   nsresult SetNodeValue(const nsAString& aNodeValue);
   nsresult GetAttributes(nsIDOMNamedNodeMap** aAttributes)
@@ -134,6 +144,10 @@ public:
   nsresult IsSupported(const nsAString& aFeature,
                        const nsAString& aVersion,
                        PRBool* aReturn);
+  nsresult CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+  {
+    return nsNodeUtils::CloneNodeImpl(this, aDeep, PR_TRUE, aReturn);
+  }
 
   // Implementation for nsIDOMCharacterData
   nsresult GetData(nsAString& aData) const;
@@ -170,15 +184,13 @@ public:
   {
     return nsContentUtils::GetContextForEventHandlers(this, aRv);
   }
-  virtual void GetTextContent(nsAString &aTextContent)
+  NS_IMETHOD GetTextContent(nsAString &aTextContent)
   {
-#ifdef DEBUG
-    nsresult rv =
-#endif
-    GetNodeValue(aTextContent);
+    nsresult rv = GetNodeValue(aTextContent);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetNodeValue() failed?");
+    return rv;
   }
-  virtual nsresult SetTextContent(const nsAString& aTextContent)
+  NS_IMETHOD SetTextContent(const nsAString& aTextContent)
   {
     // Batch possible DOMSubtreeModified events.
     mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
@@ -366,90 +378,5 @@ private:
 
   already_AddRefed<nsIAtom> GetCurrentValueAtom();
 };
-
-//----------------------------------------------------------------------
-
-/**
- * Mostly implement the nsIDOMNode API by forwarding the methods to
- * nsGenericDOMDataNode
- *
- * Note that classes using this macro will need to implement:
- *       NS_IMETHOD GetNodeType(PRUint16* aNodeType);
- *       nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,
- *                                           PRBool aCloneText) const;
- */
-#define NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA                           \
-  NS_IMETHOD GetNodeName(nsAString& aNodeName);                             \
-  NS_IMETHOD GetLocalName(nsAString& aLocalName) {                          \
-    return nsGenericDOMDataNode::GetLocalName(aLocalName);                  \
-  }                                                                         \
-  NS_IMETHOD GetNodeValue(nsAString& aNodeValue);                           \
-  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue);                     \
-  NS_IMETHOD GetNodeType(PRUint16* aNodeType);                              \
-  NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) {                      \
-    return nsGenericDOMDataNode::GetParentNode(aParentNode);                \
-  }                                                                         \
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes) {                  \
-    return nsGenericDOMDataNode::GetChildNodes(aChildNodes);                \
-  }                                                                         \
-  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes) {                        \
-    return nsGenericDOMDataNode::HasChildNodes(aHasChildNodes);             \
-  }                                                                         \
-  NS_IMETHOD HasAttributes(PRBool* aHasAttributes) {                        \
-    return nsGenericDOMDataNode::HasAttributes(aHasAttributes);             \
-  }                                                                         \
-  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild) {                      \
-    return nsGenericDOMDataNode::GetFirstChild(aFirstChild);                \
-  }                                                                         \
-  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild) {                        \
-    return nsGenericDOMDataNode::GetLastChild(aLastChild);                  \
-  }                                                                         \
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling) {            \
-    return nsGenericDOMDataNode::GetPreviousSibling(aPreviousSibling);      \
-  }                                                                         \
-  NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling) {                    \
-    return nsGenericDOMDataNode::GetNextSibling(aNextSibling);              \
-  }                                                                         \
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes) {              \
-    return nsGenericDOMDataNode::GetAttributes(aAttributes);                \
-  }                                                                         \
-  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,     \
-                             nsIDOMNode** aReturn) {                        \
-    return nsGenericDOMDataNode::InsertBefore(aNewChild, aRefChild,         \
-                                              aReturn);                     \
-  }                                                                         \
-  NS_IMETHOD AppendChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {     \
-    return nsGenericDOMDataNode::AppendChild(aOldChild, aReturn);           \
-  }                                                                         \
-  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,     \
-                             nsIDOMNode** aReturn) {                        \
-    return nsGenericDOMDataNode::ReplaceChild(aNewChild, aOldChild,         \
-                                              aReturn);                     \
-  }                                                                         \
-  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {     \
-    return nsGenericDOMDataNode::RemoveChild(aOldChild, aReturn);           \
-  }                                                                         \
-  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {            \
-    return nsGenericDOMDataNode::GetOwnerDocument(aOwnerDocument);          \
-  }                                                                         \
-  NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI) {                    \
-    return nsGenericDOMDataNode::GetNamespaceURI(aNamespaceURI);            \
-  }                                                                         \
-  NS_IMETHOD GetPrefix(nsAString& aPrefix) {                                \
-    return nsGenericDOMDataNode::GetPrefix(aPrefix);                        \
-  }                                                                         \
-  NS_IMETHOD Normalize() {                                                  \
-    return NS_OK;                                                           \
-  }                                                                         \
-  NS_IMETHOD IsSupported(const nsAString& aFeature,                         \
-                      const nsAString& aVersion,                            \
-                      PRBool* aReturn) {                                    \
-    return nsGenericDOMDataNode::IsSupported(aFeature, aVersion, aReturn);  \
-  }                                                                         \
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn) {                \
-    return nsNodeUtils::CloneNodeImpl(this, aDeep, PR_TRUE, aReturn);       \
-  }                                                                         \
-  virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,       \
-                                              PRBool aCloneText) const;
 
 #endif /* nsGenericDOMDataNode_h___ */

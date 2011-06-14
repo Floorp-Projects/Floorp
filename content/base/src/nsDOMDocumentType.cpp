@@ -46,7 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsDOMString.h"
-#include "nsIDOM3Node.h"
 #include "nsNodeInfoManager.h"
 #include "nsIDocument.h"
 #include "nsIXPConnect.h"
@@ -96,7 +95,7 @@ nsDOMDocumentType::nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
                                      const nsAString& aPublicId,
                                      const nsAString& aSystemId,
                                      const nsAString& aInternalSubset) :
-  nsGenericDOMDataNode(aNodeInfo),
+  nsDOMDocumentTypeForward(aNodeInfo),
   mName(aName),
   mPublicId(aPublicId),
   mSystemId(aSystemId),
@@ -129,6 +128,18 @@ nsDOMDocumentType::IsNodeOfType(PRUint32 aFlags) const
   // data nodes (they have a null .nodeValue and don't implement
   // nsIDOMCharacterData)
   return !(aFlags & ~eCONTENT);
+}
+
+void
+nsDOMDocumentType::NodeName(nsAString& aNodeName)
+{
+  mName->ToString(aNodeName);
+}
+
+PRUint16
+nsDOMDocumentType::NodeType()
+{
+  return (PRUint16)nsIDOMNode::DOCUMENT_TYPE_NODE;
 }
 
 const nsTextFragment*
@@ -164,35 +175,6 @@ NS_IMETHODIMP
 nsDOMDocumentType::GetInternalSubset(nsAString& aInternalSubset)
 {
   aInternalSubset = mInternalSubset;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDocumentType::GetNodeName(nsAString& aNodeName)
-{
-  mName->ToString(aNodeName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDocumentType::GetNodeValue(nsAString& aNodeValue)
-{
-  SetDOMStringToNull(aNodeValue);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDocumentType::SetNodeValue(const nsAString& aNodeValue)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDocumentType::GetNodeType(PRUint16* aNodeType)
-{
-  *aNodeType = nsIDOMNode::DOCUMENT_TYPE_NODE;
-
   return NS_OK;
 }
 

@@ -48,7 +48,6 @@
 #include "nsReadableUtils.h"
 #include "nsMutationEvent.h"
 #include "nsINameSpaceManager.h"
-#include "nsIDOM3Node.h"
 #include "nsIURI.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
@@ -129,7 +128,6 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
   // nsNodeSH::PreCreate() depends on the identity pointer being the

@@ -56,7 +56,7 @@
 #include "nsStubMutationObserver.h"
 
 // Attribute helper class used to wrap up an attribute with a dom
-// object that implements nsIDOMAttr, nsIDOM3Attr, nsIDOMNode, nsIDOM3Node
+// object that implements nsIDOMAttr, nsIDOM3Attr, nsIDOMNode
 class nsDOMAttribute : public nsIAttribute,
                        public nsIDOMAttr,
                        public nsIDOM3Attr,
@@ -87,6 +87,8 @@ public:
 
   // nsINode interface
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRUint16 NodeType();
+  virtual void NodeName(nsAString& aNodeName);
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
@@ -112,9 +114,6 @@ public:
   }
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
-  virtual PRBool IsEqualNode(nsINode *aOtherNode);
-  virtual void GetTextContent(nsAString &aTextContent);
-  virtual nsresult SetTextContent(const nsAString& aTextContent);
 
   static void Initialize();
   static void Shutdown();
