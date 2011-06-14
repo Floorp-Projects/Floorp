@@ -1604,7 +1604,7 @@ static JSStdName standard_class_atoms[] = {
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
-    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
+    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::slowClass},
     {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &WeakMap::jsclass},
     {NULL,                              0, NULL, NULL}
 };
@@ -1657,7 +1657,7 @@ static JSStdName standard_class_names[] = {
 #endif
 
     /* Typed Arrays */
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::fastClass},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array),    TYPED_ARRAY_CLASP(TYPE_INT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array),   TYPED_ARRAY_CLASP(TYPE_UINT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array),   TYPED_ARRAY_CLASP(TYPE_INT16)},

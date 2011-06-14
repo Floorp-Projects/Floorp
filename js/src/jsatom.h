@@ -457,6 +457,8 @@ struct JSAtomState
 
     JSAtom              *WeakMapAtom;
 
+    JSAtom              *byteLengthAtom;
+
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
     struct {
         JSAtom          *XMLListAtom;
