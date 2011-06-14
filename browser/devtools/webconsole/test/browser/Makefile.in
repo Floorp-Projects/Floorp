@@ -145,6 +145,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_653531_highlighter_console_helper.js \
 	browser_webconsole_bug_659907_console_dir.js \
 	browser_webconsole_bug_678816.js \
+	browser_webconsole_bug_664131_console_group.js \
 	head.js \
 	$(NULL)
 
