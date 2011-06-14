@@ -4755,7 +4755,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Application)
 
 ENABLE_TESTS=1
-MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
@@ -4765,7 +4764,6 @@ MOZ_CSS_ANIMATIONS=1
 MOZ_MORK=
 MOZ_MORKREADER=1
 MOZ_AUTH_EXTENSION=1
-MOZ_NO_ACTIVEX_SUPPORT=1
 MOZ_NO_FAST_LOAD=
 MOZ_OGG=1
 MOZ_RAW=
@@ -6497,40 +6495,6 @@ MOZ_ARG_ENABLE_BOOL(update-packaging,
     MOZ_UPDATE_PACKAGING=1,
     MOZ_UPDATE_PACKAGING= )
 AC_SUBST(MOZ_UPDATE_PACKAGING)
-
-dnl ========================================================
-dnl ActiveX
-dnl ========================================================
-
-MOZ_ARG_DISABLE_BOOL(activex,
-[  --disable-activex       Disable building of ActiveX control (win32 only)],
-    MOZ_NO_ACTIVEX_SUPPORT=1,
-    MOZ_NO_ACTIVEX_SUPPORT= )
-AC_SUBST(MOZ_NO_ACTIVEX_SUPPORT)
-
-MOZ_ARG_ENABLE_BOOL(activex-scripting,
-[  --enable-activex-scripting
-                          Enable building of ActiveX scripting support (win32)],
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=1,
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=)
-AC_SUBST(MOZ_ACTIVEX_SCRIPTING_SUPPORT)
-
-if test -n "$MOZ_NO_ACTIVEX_SUPPORT" -a -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT";
-then
-    AC_MSG_ERROR([Cannot enable ActiveX scripting support when ActiveX support is disabled.])
-fi
-
-if test "$COMPILE_ENVIRONMENT" = "1"; then
-if test -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT" -o -z "$MOZ_NO_ACTIVEX_SUPPORT"; then
-case "$target" in
-*-mingw*)
-    if test "$ac_cv_header_atlbase_h" = "no"; then
-        AC_MSG_ERROR([System header atlbase.h is not available. See http://developer.mozilla.org/en/docs/atlbase.h for details on fixing this problem.])
-    fi
-    ;;
-esac
-fi
-fi
 
 dnl ========================================================
 dnl leaky
