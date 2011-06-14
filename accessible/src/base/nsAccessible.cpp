@@ -2626,7 +2626,7 @@ nsAccessible::GetSelected(PRBool *aSelected)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  *aSelected = IsSelected();
+  *aSelected = IsLinkSelected();
   return NS_OK;
 
 }
@@ -2930,13 +2930,6 @@ nsAccessible::IsValid()
   // Perhaps we can get information about invalid links from the cache
   // In the mean time authors can use role="link" aria-invalid="true"
   // to force it for links they internally know to be invalid
-}
-
-bool
-nsAccessible::IsSelected()
-{
-  NS_PRECONDITION(IsHyperLink(), "IsSelected is called on not hyper link!");
-  return (gLastFocusedNode == GetNode());
 }
 
 PRUint32
