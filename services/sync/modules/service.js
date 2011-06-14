@@ -451,12 +451,14 @@ WeaveSvc.prototype = {
 
   _migratePrefs: function _migratePrefs() {
     // Migrate old debugLog prefs.
-    let logLevel = Svc.Prefs.get("services.sync.log.appender.debugLog");
+    let logLevel = Svc.Prefs.get("log.appender.debugLog");
     if (logLevel) {
-      Svc.Prefs.set("services.sync.log.appender.file.level", logLevel);
+      Svc.Prefs.set("log.appender.file.level", logLevel);
+      Svc.Prefs.reset("log.appender.debugLog");
     }
     if (Svc.Prefs.get("log.appender.debugLog.enabled")) {
-      Svc.Prefs.set("services.sync.log.appender.file.logOnSuccess");
+      Svc.Prefs.set("log.appender.file.logOnSuccess", true);
+      Svc.Prefs.reset("log.appender.debugLog.enabled");
     }
 
     // Migrate old extensions.weave.* prefs if we haven't already tried.
