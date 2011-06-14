@@ -72,7 +72,8 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
   : nsIAttribute(aAttrMap, aNodeInfo, aNsAware), mValue(aValue), mChild(nsnull)
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
-
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ATTRIBUTE_NODE,
+                    "Wrong nodeType");
 
   // We don't add a reference to our content. It will tell us
   // to drop our reference when it goes away.
@@ -192,7 +193,8 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
   nsCOMPtr<nsINodeInfo> newNodeInfo;
   newNodeInfo = aDocument->NodeInfoManager()->
     GetNodeInfo(mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
-                mNodeInfo->NamespaceID());
+                mNodeInfo->NamespaceID(),
+                nsIDOMNode::ATTRIBUTE_NODE);
   NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
   NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
   mNodeInfo.swap(newNodeInfo);

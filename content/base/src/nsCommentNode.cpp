@@ -106,6 +106,8 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult,
 nsCommentNode::nsCommentNode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericDOMDataNode(aNodeInfo)
 {
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE,
+                    "Bad NodeType in aNodeInfo");
 }
 
 nsCommentNode::~nsCommentNode()
