@@ -514,28 +514,7 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode *other,
 NS_IMETHODIMP
 nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther, PRBool* aResult)
 {
-  *aResult = PR_FALSE;
-
-  nsCOMPtr<nsIAttribute> otherAttr = do_QueryInterface(aOther);
-  if (!otherAttr)
-    return NS_OK;
-
-  nsDOMAttribute *other = static_cast<nsDOMAttribute*>(otherAttr.get());
-
-  // Prefix, namespace URI, local name, node name check.
-  if (!mNodeInfo->Equals(other->NodeInfo())) {
-    return NS_OK;
-  }
-
-  // Value check
-  // Checks not needed:  Child nodes, attributes.
-  nsAutoString ourValue, otherValue;
-  GetValue(ourValue);
-  other->GetValue(otherValue);
-
-  *aResult = ourValue.Equals(otherValue);
-  
-  return NS_OK;
+  return nsINode::IsEqualNode(aOther, aResult);
 }
 
 NS_IMETHODIMP
