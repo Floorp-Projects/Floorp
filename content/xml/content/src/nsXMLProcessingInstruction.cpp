@@ -50,7 +50,10 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
 {
   NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
 
-  if (aTarget.EqualsLiteral("xml-stylesheet")) {
+  nsCOMPtr<nsIAtom> target = do_GetAtom(aTarget);
+  NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
+
+  if (target == nsGkAtoms::xml_stylesheet) {
     return NS_NewXMLStylesheetProcessingInstruction(aInstancePtrResult,
                                                     aNodeInfoManager, aData);
   }
@@ -59,11 +62,13 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
 
   nsCOMPtr<nsINodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
-                                     nsnull, kNameSpaceID_None);
+                                     nsnull, kNameSpaceID_None,
+                                     nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
+                                     target);
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   nsXMLProcessingInstruction *instance =
-    new nsXMLProcessingInstruction(ni.forget(), aTarget, aData);
+    new nsXMLProcessingInstruction(ni.forget(), aData);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -74,11 +79,13 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
 }
 
 nsXMLProcessingInstruction::nsXMLProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                                       const nsAString& aTarget,
                                                        const nsAString& aData)
-  : nsGenericDOMDataNode(aNodeInfo),
-    mTarget(aTarget)
+  : nsGenericDOMDataNode(aNodeInfo)
 {
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() ==
+                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
+                    "Bad NodeType in aNodeInfo");
+
   SetTextInternal(0, mText.GetLength(),
                   aData.BeginReading(), aData.Length(),
                   PR_FALSE);  // Don't notify (bug 420429).
@@ -110,7 +117,7 @@ NS_IMPL_RELEASE_INHERITED(nsXMLProcessingInstruction, nsGenericDOMDataNode)
 NS_IMETHODIMP
 nsXMLProcessingInstruction::GetTarget(nsAString& aTarget)
 {
-  aTarget.Assign(mTarget);
+  NodeInfo()->GetExtraName()->ToString(aTarget);
 
   return NS_OK;
 }
@@ -151,7 +158,7 @@ nsXMLProcessingInstruction::NodeType()
 void
 nsXMLProcessingInstruction::NodeName(nsAString& aNodeName)
 {
-  aNodeName.Assign(mTarget);
+  NodeInfo()->GetExtraName()->ToString(aNodeName);
 }
 
 nsGenericDOMDataNode*
@@ -161,7 +168,7 @@ nsXMLProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-  return new nsXMLProcessingInstruction(ni.forget(), mTarget, data);
+  return new nsXMLProcessingInstruction(ni.forget(), data);
 }
 
 #ifdef DEBUG
@@ -175,7 +182,7 @@ nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString tmp;
   ToCString(tmp, 0, mText.GetLength());
-  tmp.Insert(mTarget.get(), 0);
+  tmp.Insert(nsDependentAtomString(NodeInfo()->GetExtraName()).get(), 0);
   fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
 
   fputs(">\n", out);

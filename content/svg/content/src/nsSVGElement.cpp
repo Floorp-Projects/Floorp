@@ -1364,7 +1364,8 @@ nsSVGElement::AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
   else {
     nsCOMPtr<nsINodeInfo> ni;
     ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, nsnull,
-                                                   aNamespaceID);
+                                                   aNamespaceID,
+                                                   nsIDOMNode::ATTRIBUTE_NODE);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mMappedAttributes.SetAndTakeAttr(ni, attrVal);
