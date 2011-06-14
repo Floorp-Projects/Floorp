@@ -405,6 +405,48 @@ class MBasicBlock : public TempObject
     bool mark_;
 };
 
+class MDefinitionIterator
+{
+  private:
+    MBasicBlock *block_;
+    size_t phiIndex_;
+    MInstructionIterator iter_;
+
+
+    MInstruction *getIns() {
+        if (phiIndex_ < block_->numPhis()) 
+            return block_->getPhi(phiIndex_);
+
+        return *iter_;
+    }
+
+  public:
+    MDefinitionIterator(MBasicBlock *block)
+      : block_(block), 
+        phiIndex_(0), 
+        iter_(block->begin())
+    { }
+
+    void next() {
+        if (phiIndex_ < block_->numPhis())
+            phiIndex_++;
+        else
+            iter_++;
+    }
+
+    MInstruction *operator *() {
+        return getIns();
+    }
+
+    MInstruction *operator ->() {
+        return getIns();
+    }
+
+    bool more() {
+        return phiIndex_ < block_->numPhis() || iter_ != block_->end();
+    }
+};
+
 } // namespace ion
 } // namespace js
 
