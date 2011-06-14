@@ -816,7 +816,7 @@ customMethodCalls = {
     'nsIDOMNode_IsEqualNode': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    PRUint16 result = self->IsEqualTo(arg0);',
+        'code': '    PRBool result = self->IsEqualTo(arg0);',
         'canFail': False
         },
     'nsIDOMNode_GetUserData': {
