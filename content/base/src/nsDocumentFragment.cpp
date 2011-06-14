@@ -50,7 +50,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsDOMError.h"
-#include "nsIDOM3Node.h"
 #include "nsGkAtoms.h"
 #include "nsDOMString.h"
 #include "nsIDOMUserDataHandler.h"
@@ -59,71 +58,19 @@ class nsDocumentFragment : public nsGenericElement,
                            public nsIDOMDocumentFragment
 {
 public:
-  nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsDocumentFragment();
-
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  // interface nsIDOMNode
+  NS_FORWARD_NSIDOMNODE(nsGenericElement::)
+
   // interface nsIDOMDocumentFragment
-  NS_IMETHOD    GetNodeName(nsAString& aNodeName)
-  { return nsGenericElement::GetNodeName(aNodeName); }
-  NS_IMETHOD    GetNodeValue(nsAString& aNodeValue)
-  { return nsGenericElement::GetNodeValue(aNodeValue); }
-  NS_IMETHOD    SetNodeValue(const nsAString& aNodeValue)
-  { return nsGenericElement::SetNodeValue(aNodeValue); }
-  NS_IMETHOD    GetNodeType(PRUint16* aNodeType);
-  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode)
-  { return nsGenericElement::GetParentNode(aParentNode); }
-  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes)
-  { return nsGenericElement::GetChildNodes(aChildNodes); }
-  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild)
-  { return nsGenericElement::GetFirstChild(aFirstChild); }
-  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild)
-  { return nsGenericElement::GetLastChild(aLastChild); }
-  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-  { return nsGenericElement::GetPreviousSibling(aPreviousSibling); }
-  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling)
-  { return nsGenericElement::GetNextSibling(aNextSibling); }
-  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-    {
-      *aAttributes = nsnull;
-      return NS_OK;
-    }
-  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-  { return nsGenericElement::GetOwnerDocument(aOwnerDocument); }
-  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, 
-                             nsIDOMNode** aReturn)
-  { return nsGenericElement::InsertBefore(aNewChild, aRefChild, aReturn); }
-  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, 
-                             nsIDOMNode** aReturn)
-  { return nsGenericElement::ReplaceChild(aNewChild, aOldChild, aReturn); }
-  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-  { return nsGenericElement::RemoveChild(aOldChild, aReturn); }
-  NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-  { return nsGenericElement::AppendChild(aNewChild, aReturn); }
-  NS_IMETHOD    HasChildNodes(PRBool* aReturn)
-  { return nsGenericElement::HasChildNodes(aReturn); }
-  NS_IMETHOD    HasAttributes(PRBool* aReturn)
-  { return nsGenericElement::HasAttributes(aReturn); }
-  NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-  { return nsGenericElement::CloneNode(aDeep, aReturn); }
-  NS_IMETHOD    GetPrefix(nsAString& aPrefix)
-  { return nsGenericElement::GetPrefix(aPrefix); }
-  NS_IMETHOD    SetPrefix(const nsAString& aPrefix);
-  NS_IMETHOD    GetNamespaceURI(nsAString& aNamespaceURI)
-  { return nsGenericElement::GetNamespaceURI(aNamespaceURI); }
-  NS_IMETHOD    GetLocalName(nsAString& aLocalName)
+  // NS_DECL_NSIDOCUMENTFRAGMENT  Empty
+
+  nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~nsDocumentFragment()
   {
-    SetDOMStringToNull(aLocalName);
-    return NS_OK;
   }
-  NS_IMETHOD    Normalize()
-  { return nsGenericElement::Normalize(); }
-  NS_IMETHOD    IsSupported(const nsAString& aFeature,
-                            const nsAString& aVersion,
-                            PRBool* aReturn)
-  { return nsGenericElement::IsSupported(aFeature, aVersion, aReturn); }
 
   // nsIContent
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -171,7 +118,8 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
-                                           nsnull, kNameSpaceID_None);
+                                           nsnull, kNameSpaceID_None,
+                                           nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   nsDocumentFragment *it = new nsDocumentFragment(nodeInfo.forget());
@@ -188,10 +136,6 @@ nsDocumentFragment::nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericElement(aNodeInfo)
 {
   ClearIsElement();
-}
-
-nsDocumentFragment::~nsDocumentFragment()
-{
 }
 
 PRBool
@@ -224,18 +168,5 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
 
 NS_IMPL_ADDREF_INHERITED(nsDocumentFragment, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsDocumentFragment, nsGenericElement)
-
-NS_IMETHODIMP    
-nsDocumentFragment::GetNodeType(PRUint16* aNodeType)
-{
-  *aNodeType = (PRUint16)nsIDOMNode::DOCUMENT_FRAGMENT_NODE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentFragment::SetPrefix(const nsAString& aPrefix)
-{
-  return NS_ERROR_DOM_NAMESPACE_ERR;
-}
 
 NS_IMPL_ELEMENT_CLONE(nsDocumentFragment)

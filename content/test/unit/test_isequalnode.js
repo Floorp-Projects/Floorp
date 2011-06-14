@@ -404,7 +404,6 @@ function test_isEqualNode_null()
 // UTILITY FUNCTIONS
 
 function n(node)  { return node ? node.QueryInterface(nsIDOMNode) : null; }
-function n3(node) { return node ? node.QueryInterface(nsIDOM3Node) : null; }
 function el(node) { return node ? node.QueryInterface(nsIDOMElement) : null; }
 function at(node) { return node ? node.QueryInterface(nsIDOMAttr) : null; }
 
@@ -434,9 +433,6 @@ function equality_check_kids(parentId, areEqual)
 
 function check_eq_nodes(n1, n2)
 {
-  n1 = n3(n1);
-  n2 = n3(n2);
-
   if (n1 && !n1.isEqualNode(n2))
     do_throw(n1 + " should be equal to " + n2);
   if (n2 && !n2.isEqualNode(n1))
@@ -447,9 +443,6 @@ function check_eq_nodes(n1, n2)
 
 function check_neq_nodes(n1, n2)
 {
-  n1 = n3(n1);
-  n2 = n3(n2);
-
   if (n1 && n1.isEqualNode(n2))
     do_throw(n1 + " should not be equal to " + n2);
   if (n2 && n2.isEqualNode(n1))
