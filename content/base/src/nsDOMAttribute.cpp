@@ -603,18 +603,6 @@ nsDOMAttribute::IsNodeOfType(PRUint32 aFlags) const
     return !(aFlags & ~eATTRIBUTE);
 }
 
-PRUint16
-nsDOMAttribute::NodeType()
-{
-    return (PRUint16)nsIDOMNode::ATTRIBUTE_NODE;
-}
-
-void
-nsDOMAttribute::NodeName(nsAString& aNodeName)
-{
-  GetName(aNodeName);
-}
-
 PRUint32
 nsDOMAttribute::GetChildCount() const
 {

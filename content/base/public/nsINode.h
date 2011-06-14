@@ -436,8 +436,22 @@ public:
     return IsInDoc() ? GetOwnerDoc() : nsnull;
   }
 
-  virtual PRUint16 NodeType() = 0;
-  virtual void NodeName(nsAString& aNodeName) = 0;
+  /**
+   * The values returned by this function are the ones defined for
+   * nsIDOMNode.nodeType
+   */
+  PRUint16 NodeType() const
+  {
+    return mNodeInfo->NodeType();
+  }
+  const nsString& NodeName() const
+  {
+    return mNodeInfo->NodeName();
+  }
+  const nsString& LocalName() const
+  {
+    return mNodeInfo->LocalName();
+  }
 
   nsINode*
   InsertBefore(nsINode *aNewChild, nsINode *aRefChild, nsresult *aReturn)

@@ -117,7 +117,7 @@ NS_IMPL_RELEASE_INHERITED(nsXMLProcessingInstruction, nsGenericDOMDataNode)
 NS_IMETHODIMP
 nsXMLProcessingInstruction::GetTarget(nsAString& aTarget)
 {
-  NodeInfo()->GetExtraName()->ToString(aTarget);
+  aTarget = NodeName();
 
   return NS_OK;
 }
@@ -147,18 +147,6 @@ PRBool
 nsXMLProcessingInstruction::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | ePROCESSING_INSTRUCTION | eDATA_NODE));
-}
-
-PRUint16
-nsXMLProcessingInstruction::NodeType()
-{
-  return (PRUint16)nsIDOMNode::PROCESSING_INSTRUCTION_NODE;
-}
-
-void
-nsXMLProcessingInstruction::NodeName(nsAString& aNodeName)
-{
-  NodeInfo()->GetExtraName()->ToString(aNodeName);
 }
 
 nsGenericDOMDataNode*
