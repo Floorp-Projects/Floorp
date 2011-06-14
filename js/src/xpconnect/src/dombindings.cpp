@@ -196,6 +196,21 @@ NodeList<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return true;
 }
 
+template<>
+nsISupports*
+NodeList<nsINodeList>::getNamedItem(nsINodeList *list, const nsAString& aName,
+                                    nsWrapperCache **aCache)
+{
+    return NULL;
+}
+template<>
+nsISupports*
+NodeList<nsIHTMLCollection>::getNamedItem(nsIHTMLCollection *list, const nsAString& aName,
+                                          nsWrapperCache **aCache)
+{
+    return list->GetNamedItem(aName, aCache);
+}
+
 template<class T>
 JSBool
 NodeList<T>::item(JSContext *cx, uintN argc, jsval *vp)
@@ -227,7 +242,7 @@ NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, JSObject *obj, jsval *name
         return JS_FALSE;
     nsIHTMLCollection *collection = getNodeList(obj);
     nsWrapperCache *cache;
-    nsISupports *result = collection->GetNamedItem(nameString, &cache);
+    nsISupports *result = getNamedItem(collection, nameString, &cache);
     if (!result) {
         *vp = JSVAL_NULL;
         return JS_TRUE;
@@ -373,6 +388,19 @@ NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, b
             return true;
         }
     }
+
+    bool ok;
+    Value v;
+    if (namedItem(cx, proxy, id, &v, &ok)) {
+        desc->obj = proxy;
+        desc->value = v;
+        desc->attrs = JSPROP_READONLY | JSPROP_ENUMERATE;
+        desc->getter = NULL;
+        desc->setter = NULL;
+        desc->shortid = 0;
+        return ok;
+    }
+
     desc->obj = NULL;
     return true;
 }
@@ -456,6 +484,7 @@ NodeList<T>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &p
         if (!props.append(INT_TO_JSID(i)))
             return false;
     }
+    // FIXME: Add named items?
     return true;
 }
 
@@ -515,6 +544,19 @@ NodeList<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
             return true;
         }
     }
+
+    if (JSID_IS_STRING(id)) {
+        jsval v = STRING_TO_JSVAL(JSID_TO_STRING(id));
+        xpc_qsDOMString nameString(cx, v, &v,
+                                   xpc_qsDOMString::eDefaultNullBehavior,
+                                   xpc_qsDOMString::eDefaultUndefinedBehavior);
+        nsWrapperCache *cache;
+        if (getNamedItem(getNodeList(proxy), nameString, &cache)) {
+            *bp = true;
+            return true;
+        }
+    }
+
     *bp = false;
     return true;
 }
