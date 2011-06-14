@@ -801,6 +801,184 @@ nsINode::CompareDocPosition(nsINode* aOtherNode)
      nsIDOMNode::DOCUMENT_POSITION_CONTAINED_BY);    
 }
 
+PRBool
+nsINode::IsEqualTo(nsINode* aOther)
+{
+  if (!aOther) {
+    return PR_FALSE;
+  }
+
+  nsAutoString string1, string2;
+
+  nsINode* node1 = this;
+  nsINode* node2 = aOther;
+  do {
+    PRUint16 nodeType = node1->NodeType();
+    if (nodeType != node2->NodeType()) {
+      return PR_FALSE;
+    }
+    
+    if (!node1->mNodeInfo->Equals(node2->mNodeInfo)) {
+      return PR_FALSE;
+    }
+
+    switch(nodeType) {
+      case nsIDOMNode::ELEMENT_NODE:
+      {
+        // Both are elements (we checked that their nodeinfos are equal). Do the
+        // check on attributes.
+        Element* element1 = node1->AsElement();
+        Element* element2 = node2->AsElement();
+        PRUint32 attrCount = element1->GetAttrCount();
+        if (attrCount != element2->GetAttrCount()) {
+          return PR_FALSE;
+        }
+
+        // Iterate over attributes.
+        for (PRUint32 i = 0; i < attrCount; ++i) {
+          const nsAttrName* attrName = element1->GetAttrNameAt(i);
+#ifdef DEBUG
+          PRBool hasAttr =
+#endif
+          element1->GetAttr(attrName->NamespaceID(), attrName->LocalName(),
+                            string1);
+          NS_ASSERTION(hasAttr, "Why don't we have an attr?");
+    
+          if (!element2->AttrValueIs(attrName->NamespaceID(),
+                                     attrName->LocalName(),
+                                     string1,
+                                     eCaseMatters)) {
+            return PR_FALSE;
+          }
+        }
+        break;
+      }
+      case nsIDOMNode::TEXT_NODE:
+      case nsIDOMNode::COMMENT_NODE:
+      case nsIDOMNode::CDATA_SECTION_NODE:
+      case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+      {
+        string1.Truncate();
+        static_cast<nsIContent*>(node1)->AppendTextTo(string1);
+        string2.Truncate();
+        static_cast<nsIContent*>(node2)->AppendTextTo(string2);
+
+        if (!string1.Equals(string2)) {
+          return PR_FALSE;
+        }
+
+        if (nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
+          nsCOMPtr<nsIDOMNode> domNode1 = do_QueryInterface(node1);
+          nsCOMPtr<nsIDOMNode> domNode2 = do_QueryInterface(node2);
+          domNode1->GetNodeName(string1);
+          domNode2->GetNodeName(string2);
+          if (!string1.Equals(string2)) {
+            return PR_FALSE;
+          }
+        }
+
+        break;
+      }
+      case nsIDOMNode::DOCUMENT_NODE:
+      case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+        break;
+      case nsIDOMNode::ATTRIBUTE_NODE:
+      {
+        NS_ASSERTION(node1 == this && node2 == aOther,
+                     "Did we come upon an attribute node while walking a "
+                     "subtree?");
+        nsCOMPtr<nsIDOMNode> domNode1 = do_QueryInterface(node1);
+        nsCOMPtr<nsIDOMNode> domNode2 = do_QueryInterface(node2);
+        domNode1->GetNodeValue(string1);
+        domNode2->GetNodeValue(string2);
+        
+        // Returning here as to not bother walking subtree. And there is no
+        // risk that we're half way through walking some other subtree since
+        // attribute nodes doesn't appear in subtrees.
+        return string1.Equals(string2);
+      }
+      case nsIDOMNode::DOCUMENT_TYPE_NODE:
+      {
+        nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(this);
+        nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(aOther);
+    
+        NS_ASSERTION(docType1 && docType2, "Why don't we have a document type node?");
+
+        // Node name
+        docType1->GetNodeName(string1);
+        docType2->GetNodeName(string2);
+        if (!string1.Equals(string2)) {
+          return PR_FALSE;
+        }
+    
+        // Public ID
+        docType1->GetPublicId(string1);
+        docType2->GetPublicId(string2);
+        if (!string1.Equals(string2)) {
+          return PR_FALSE;
+        }
+    
+        // System ID
+        docType1->GetSystemId(string1);
+        docType2->GetSystemId(string2);
+        if (!string1.Equals(string2)) {
+          return PR_FALSE;
+        }
+    
+        // Internal subset
+        docType1->GetInternalSubset(string1);
+        docType2->GetInternalSubset(string2);
+        if (!string1.Equals(string2)) {
+          return PR_FALSE;
+        }
+
+        break;
+      }
+      default:
+        NS_ABORT_IF_FALSE(PR_FALSE, "Unknown node type");
+    }
+
+    nsINode* nextNode = node1->GetFirstChild();
+    if (nextNode) {
+      node1 = nextNode;
+      node2 = node2->GetFirstChild();
+    }
+    else {
+      if (node2->GetFirstChild()) {
+        // node2 has a firstChild, but node1 doesn't
+        return PR_FALSE;
+      }
+
+      // Find next sibling, possibly walking parent chain.
+      while (1) {
+        if (node1 == this) {
+          NS_ASSERTION(node2 == aOther, "Should have reached the start node "
+                                        "for both trees at the same time");
+          return PR_TRUE;
+        }
+
+        nextNode = node1->GetNextSibling();
+        if (nextNode) {
+          node1 = nextNode;
+          node2 = node2->GetNextSibling();
+          break;
+        }
+
+        if (node2->GetNextSibling()) {
+          // node2 has a nextSibling, but node1 doesn't
+          return PR_FALSE;
+        }
+        
+        node1 = node1->GetNodeParent();
+        node2 = node2->GetNodeParent();
+        NS_ASSERTION(node1 && node2, "no parent while walking subtree");
+      }
+    }
+  } while(node2);
+
+  return PR_FALSE;
+}
+
 nsresult
 nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                             nsAString& aNamespaceURI)
@@ -1175,112 +1353,6 @@ NS_INTERFACE_MAP_END_AGGREGATED(mNode)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNode3Tearoff)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNode3Tearoff)
-
-PRBool
-nsIContent::IsEqual(nsIContent* aOther)
-{
-  // We use nsIContent instead of nsINode for the attributes of elements.
-
-  NS_PRECONDITION(aOther, "Who called IsEqual?");
-
-  nsAutoString string1, string2;
-
-  // Prefix, namespace URI, local name, node name check.
-  if (!NodeInfo()->Equals(aOther->NodeInfo())) {
-    return PR_FALSE;
-  }
-
-  if (Tag() == nsGkAtoms::documentTypeNodeName) {
-    nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(this);
-    nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(aOther);
-
-    NS_ASSERTION(docType1 && docType2, "Why don't we have a document type node?");
-
-    // Public ID
-    docType1->GetPublicId(string1);
-    docType2->GetPublicId(string2);
-
-    if (!string1.Equals(string2)) {
-      return PR_FALSE;
-    }
-
-    // System ID
-    docType1->GetSystemId(string1);
-    docType2->GetSystemId(string2);
-
-    if (!string1.Equals(string2)) {
-      return PR_FALSE;
-    }
-
-    // Internal subset
-    docType1->GetInternalSubset(string1);
-    docType2->GetInternalSubset(string2);
-
-    if (!string1.Equals(string2)) {
-      return PR_FALSE;
-    }
-  }
-
-  if (IsElement()) {
-    // Both are elements (we checked that their nodeinfos are equal). Do the
-    // check on attributes.
-    Element* element2 = aOther->AsElement();
-    PRUint32 attrCount = GetAttrCount();
-    if (attrCount != element2->GetAttrCount()) {
-      return PR_FALSE;
-    }
-
-    // Iterate over attributes.
-    for (PRUint32 i = 0; i < attrCount; ++i) {
-      const nsAttrName* attrName1 = GetAttrNameAt(i);
-#ifdef DEBUG
-      PRBool hasAttr =
-#endif
-      GetAttr(attrName1->NamespaceID(), attrName1->LocalName(), string1);
-      NS_ASSERTION(hasAttr, "Why don't we have an attr?");
-
-      if (!element2->AttrValueIs(attrName1->NamespaceID(),
-                                 attrName1->LocalName(),
-                                 string1,
-                                 eCaseMatters)) {
-        return PR_FALSE;
-      }
-    }
-  } else {
-    // Node value check.
-    nsCOMPtr<nsIDOMNode> domNode1 = do_QueryInterface(this);
-    nsCOMPtr<nsIDOMNode> domNode2 = do_QueryInterface(aOther);
-    NS_ASSERTION(domNode1 && domNode2, "How'd we get nsIContent without nsIDOMNode?");
-    domNode1->GetNodeValue(string1);
-    domNode2->GetNodeValue(string2);
-    if (!string1.Equals(string2)) {
-      return PR_FALSE;
-    }
-  }
-
-  // Child nodes count.
-  PRUint32 childCount = GetChildCount();
-  if (childCount != aOther->GetChildCount()) {
-    return PR_FALSE;
-  }
-
-  // Iterate over child nodes.
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    if (!GetChildAt(i)->IsEqual(aOther->GetChildAt(i))) {
-      return PR_FALSE;
-    }
-  }
-  return PR_TRUE;
-}
-
-NS_IMETHODIMP
-nsIContent::IsEqualNode(nsIDOMNode* aOther, PRBool* aResult)
-{
-  nsCOMPtr<nsIContent> other = do_QueryInterface(aOther);
-  *aResult = other && IsEqual(other);
-  
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
@@ -4163,6 +4235,14 @@ nsINode::CompareDocumentPosition(nsIDOMNode* aOther, PRUint16* aReturn)
     return NS_ERROR_NULL_POINTER;
   }
   *aReturn = CompareDocPosition(other);
+  return NS_OK;
+}
+
+nsresult
+nsINode::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
+{
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+  *aReturn = IsEqualTo(other);
   return NS_OK;
 }
 

@@ -928,9 +928,6 @@ public:
   nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
                               nsAString& aNamespaceURI) const;
 
-  PRBool IsEqual(nsIContent *aOther);
-  NS_IMETHOD IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn);
-
   /**
    * If this content has independent selection, e.g., if this is input field
    * or textarea, this return TRUE.  Otherwise, false.
