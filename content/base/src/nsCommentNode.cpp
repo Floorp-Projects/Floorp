@@ -65,8 +65,6 @@ public:
 
   // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual PRUint16 NodeType();
-  virtual void NodeName(nsAString& aNodeName);
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               PRBool aCloneText) const;
@@ -132,18 +130,6 @@ PRBool
 nsCommentNode::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eCOMMENT | eDATA_NODE));
-}
-
-PRUint16
-nsCommentNode::NodeType()
-{
-  return (PRUint16)nsIDOMNode::COMMENT_NODE;
-}
-
-void
-nsCommentNode::NodeName(nsAString& aNodeName)
-{
-  aNodeName.AssignLiteral("#comment");
 }
 
 nsGenericDOMDataNode*

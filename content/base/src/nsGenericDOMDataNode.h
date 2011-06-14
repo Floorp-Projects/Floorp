@@ -91,7 +91,7 @@ public:
   // Implementation for nsIDOMNode
   nsresult GetNodeName(nsAString& aNodeName)
   {
-    NodeName(aNodeName);
+    aNodeName = NodeName();
     return NS_OK;
   }
   nsresult GetNodeType(PRUint16* aNodeType)
@@ -138,7 +138,11 @@ public:
     return InsertBefore(aNewChild, nsnull, aReturn);
   }
   nsresult GetNamespaceURI(nsAString& aNamespaceURI);
-  nsresult GetLocalName(nsAString& aLocalName);
+  nsresult GetLocalName(nsAString& aLocalName)
+  {
+    aLocalName = LocalName();
+    return NS_OK;
+  }
   nsresult GetPrefix(nsAString& aPrefix);
   nsresult Normalize();
   nsresult IsSupported(const nsAString& aFeature,

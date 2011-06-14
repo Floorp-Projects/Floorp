@@ -66,8 +66,6 @@ public:
 
   // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual PRUint16 NodeType();
-  virtual void NodeName(nsAString& aNodeName);
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               PRBool aCloneText) const;
@@ -132,18 +130,6 @@ PRBool
 nsXMLCDATASection::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
-}
-
-PRUint16
-nsXMLCDATASection::NodeType()
-{
-  return (PRUint16)nsIDOMNode::CDATA_SECTION_NODE;
-}
-
-void
-nsXMLCDATASection::NodeName(nsAString& aNodeName)
-{
-  aNodeName.AssignLiteral("#cdata-section");
 }
 
 nsGenericDOMDataNode*

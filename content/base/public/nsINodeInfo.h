@@ -129,6 +129,20 @@ public:
     return mQualifiedNameCorrectedCase;
   }
 
+  /*
+   * Returns the node's nodeName as defined in DOM Core
+   */
+  const nsString& NodeName() const {
+    return mNodeName;
+  }
+
+  /*
+   * Returns the node's localName as defined in DOM Core
+   */
+  const nsString& LocalName() const {
+    return mLocalName;
+  }
+
 #ifdef MOZILLA_INTERNAL_API
   /*
    * Get the prefix from this node as a string.
