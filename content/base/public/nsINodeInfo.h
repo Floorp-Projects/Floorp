@@ -121,15 +121,6 @@ public:
   }
 
   /*
-   * As above, but return the qualified name in corrected case as
-   * needed.  For example, for HTML elements in HTML documents, this
-   * will return an ASCII-uppercased version of the qualified name.
-   */
-  const nsString& QualifiedNameCorrectedCase() const {
-    return mQualifiedNameCorrectedCase;
-  }
-
-  /*
    * Returns the node's nodeName as defined in DOM Core
    */
   const nsString& NodeName() const {
@@ -380,10 +371,6 @@ protected:
 
   // Qualified name
   nsString mQualifiedName;
-
-  // Qualified name in "corrected case"; this will depend on our
-  // document and on mNamespaceID.
-  nsString mQualifiedNameCorrectedCase;
 
   // nodeName for the node.
   nsString mNodeName;

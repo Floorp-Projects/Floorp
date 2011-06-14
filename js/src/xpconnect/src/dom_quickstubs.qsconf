@@ -866,6 +866,11 @@ customMethodCalls = {
     'nsIDOMElement_': {
         'thisType': 'nsGenericElement'
         },
+    'nsIDOMElement_GetTagName': {
+        'thisType': 'nsINode',
+        'code': 'nsString result = self->NodeName();',
+        'canFail': False
+        },
     'nsIDOMDocument_CreateElement': {
         'thisType': 'nsDocument',
         'code': '    nsCOMPtr<nsIContent> result;\n'
