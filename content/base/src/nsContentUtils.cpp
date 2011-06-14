@@ -5538,17 +5538,17 @@ CloneSimpleValues(JSContext* cx,
 
   // ArrayBuffer objects.
   if (js_IsArrayBuffer(obj)) {
-    js::ArrayBuffer* src = js::ArrayBuffer::fromJSObject(obj);
+    JSObject* src = js::ArrayBuffer::getArrayBuffer(src);
     if (!src) {
       return NS_ERROR_FAILURE;
     }
 
-    JSObject* newBuffer = js_CreateArrayBuffer(cx, src->byteLength);
+    JSObject* newBuffer = js_CreateArrayBuffer(cx, js::ArrayBuffer::getByteLength(src));
     if (!newBuffer) {
       return NS_ERROR_FAILURE;
     }
-    memcpy(js::ArrayBuffer::fromJSObject(newBuffer)->data, src->data,
-           src->byteLength);
+    memcpy(js::ArrayBuffer::getDataOffset(newBuffer), js::ArrayBuffer::getDataOffset(src),
+           js::ArrayBuffer::getByteLength(src));
     return SetPropertyOnValueOrObject(cx, OBJECT_TO_JSVAL(newBuffer), rval,
                                       robj, rid);
   }
