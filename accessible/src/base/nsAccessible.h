@@ -426,7 +426,12 @@ public:
   /**
    * Return true if the link currently has the focus.
    */
-  virtual bool IsSelected();
+  inline bool IsLinkSelected()
+  {
+    NS_PRECONDITION(IsHyperlink(),
+                    "IsLinkSelected() called on something that is not a hyper link!");
+    return gLastFocusedNode == GetNode();
+  }
 
   /**
    * Return the number of anchors within the link.
