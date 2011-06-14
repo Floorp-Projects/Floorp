@@ -3090,60 +3090,6 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     return rv;
 }
 
-#ifdef XPC_IDISPATCH_SUPPORT
-nsresult
-nsScriptSecurityManager::CheckComponentPermissions(JSContext *cx,
-                                                   const nsCID &aCID)
-{
-    nsresult rv;
-    nsIPrincipal* subjectPrincipal = GetSubjectPrincipal(cx, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Reformat the CID string so it's suitable for prefs
-    nsXPIDLCString cidTemp;
-    cidTemp.Adopt(aCID.ToString());
-    nsCAutoString cid(NS_LITERAL_CSTRING("CID") +
-                      Substring(cidTemp, 1, cidTemp.Length() - 2));
-    ToUpperCase(cid);
-
-#ifdef DEBUG_CAPS_CheckComponentPermissions
-    printf("### CheckComponentPermissions(ClassID.%s) ",cid.get());
-#endif
-
-    // Look up the policy for this class.
-    // while this isn't a property we'll treat it as such, using ACCESS_CALL_METHOD
-    JSAutoRequest ar(cx);
-    jsid cidId = INTERNED_STRING_TO_JSID(::JS_InternString(cx, cid.get()));
-
-    ClassInfoData nameData(nsnull, "ClassID");
-    SecurityLevel securityLevel;
-    rv = LookupPolicy(subjectPrincipal, nameData, cidId,
-                      nsIXPCSecurityManager::ACCESS_CALL_METHOD, 
-                      nsnull, &securityLevel);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // If there's no policy stored, use the "security.classID.allowByDefault" pref 
-    if (securityLevel.level == SCRIPT_SECURITY_UNDEFINED_ACCESS)
-        securityLevel.level = mXPCDefaultGrantAll ? SCRIPT_SECURITY_ALL_ACCESS :
-                                                    SCRIPT_SECURITY_NO_ACCESS;
-
-    if (securityLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
-    {
-#ifdef DEBUG_CAPS_CheckComponentPermissions
-        printf(" GRANTED.\n");
-#endif
-        return NS_OK;
-    }
-
-#ifdef DEBUG_CAPS_CheckComponentPermissions
-    printf(" DENIED.\n");
-#endif
-    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-}
-#endif
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
                                            const nsCID &aCID)
@@ -3156,12 +3102,6 @@ nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
 
     nsresult rv = CheckXPCPermissions(nsnull, nsnull, nsnull, nsnull, nsnull);
     if (NS_FAILED(rv))
-#ifdef XPC_IDISPATCH_SUPPORT
-    {
-        rv = CheckComponentPermissions(cx, aCID);
-    }
-    if (NS_FAILED(rv))
-#endif
     {
         //-- Access denied, report an error
         nsCAutoString errorMsg("Permission denied to create instance of class. CID=");
@@ -3382,9 +3322,6 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mIsJavaScriptEnabled(PR_FALSE),
       mIsWritingPrefs(PR_FALSE),
       mPolicyPrefsChanged(PR_TRUE)
-#ifdef XPC_IDISPATCH_SUPPORT
-      , mXPCDefaultGrantAll(PR_FALSE)
-#endif
 {
     NS_ASSERTION(sizeof(PRWord) == sizeof(void*),
                  "PRWord and void* have different lengths on this platform. "
@@ -3982,10 +3919,6 @@ const char nsScriptSecurityManager::sJSEnabledPrefName[] =
     "javascript.enabled";
 const char nsScriptSecurityManager::sFileOriginPolicyPrefName[] =
     "security.fileuri.strict_origin_policy";
-#ifdef XPC_IDISPATCH_SUPPORT
-const char nsScriptSecurityManager::sXPCDefaultGrantAllName[] =
-    "security.classID.allowByDefault";
-#endif
 
 inline void
 nsScriptSecurityManager::ScriptSecurityPrefChanged()
@@ -3994,11 +3927,6 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged()
     mIsJavaScriptEnabled = PR_TRUE;
 
     sStrictFileOriginPolicy = PR_TRUE;
-
-#ifdef XPC_IDISPATCH_SUPPORT
-    // Granting XPC Priveleges defaults to disabled in failure cases.
-    mXPCDefaultGrantAll = PR_FALSE;
-#endif
 
     nsresult rv;
     if (!mPrefBranch) {
@@ -4015,12 +3943,6 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged()
     rv = mPrefBranch->GetBoolPref(sFileOriginPolicyPrefName, &temp);
     if (NS_SUCCEEDED(rv))
         sStrictFileOriginPolicy = NS_SUCCEEDED(rv) && temp;
-
-#ifdef XPC_IDISPATCH_SUPPORT
-    rv = mPrefBranch->GetBoolPref(sXPCDefaultGrantAllName, &temp);
-    if (NS_SUCCEEDED(rv))
-        mXPCDefaultGrantAll = temp;
-#endif
 }
 
 nsresult
@@ -4039,9 +3961,6 @@ nsScriptSecurityManager::InitPrefs()
     // set observer callbacks in case the value of the prefs change
     prefBranchInternal->AddObserver(sJSEnabledPrefName, this, PR_FALSE);
     prefBranchInternal->AddObserver(sFileOriginPolicyPrefName, this, PR_FALSE);
-#ifdef XPC_IDISPATCH_SUPPORT
-    prefBranchInternal->AddObserver(sXPCDefaultGrantAllName, this, PR_FALSE);
-#endif
     PRUint32 prefCount;
     char** prefNames;
 
