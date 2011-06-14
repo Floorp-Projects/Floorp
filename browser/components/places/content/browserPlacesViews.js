@@ -402,9 +402,9 @@ PlacesViewBase.prototype = {
     let as = PlacesUtils.annotations;
 
     let lmStatus = null;
-    if (as.itemHasAnnotation(itemId, "livemark/loadfailed"))
+    if (as.itemHasAnnotation(itemId, PlacesUtils.LMANNO_LOADFAILED))
       lmStatus = "bookmarksLivemarkFailed";
-    else if (as.itemHasAnnotation(itemId, "livemark/loading"))
+    else if (as.itemHasAnnotation(itemId, PlacesUtils.LMANNO_LOADING))
       lmStatus = "bookmarksLivemarkLoading";
 
     let lmStatusElt = aPopup._lmStatusMenuItem;
