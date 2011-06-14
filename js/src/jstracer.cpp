@@ -8901,7 +8901,7 @@ TraceRecorder::incHelper(const Value &v, LIns*& v_ins, Value &v_after,
         jsdouble num;
         AutoValueRooter tvr(cx);
         *tvr.addr() = v;
-        JS_ALWAYS_TRUE(ValueToNumber(cx, tvr.value(), &num));
+        JS_ALWAYS_TRUE(ToNumber(cx, tvr.value(), &num));
         v_ins_after = tryToDemote(LIR_addd, num, incr, v_ins, w.immd(incr));
         v_after.setDouble(num + incr);
     }
@@ -9308,9 +9308,9 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
     {
         AutoValueRooter tvr(cx);
         *tvr.addr() = l;
-        ValueToNumber(cx, tvr.value(), &lnum);
+        JS_ALWAYS_TRUE(ToNumber(cx, tvr.value(), &lnum));
         *tvr.addr() = r;
-        ValueToNumber(cx, tvr.value(), &rnum);
+        JS_ALWAYS_TRUE(ToNumber(cx, tvr.value(), &rnum));
     }
     cond = EvalCmp(op, lnum, rnum);
     fp = true;
