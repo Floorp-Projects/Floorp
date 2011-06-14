@@ -50,7 +50,6 @@ class nsXMLProcessingInstruction : public nsGenericDOMDataNode,
 {
 public:
   nsXMLProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
-                             const nsAString& aTarget,
                              const nsAString& aData);
   virtual ~nsXMLProcessingInstruction();
 
@@ -89,8 +88,6 @@ protected:
    *                     aAttribute. Empty if the attribute isn't present.
    */
   PRBool GetAttrValue(nsIAtom *aName, nsAString& aValue);
-
-  nsString mTarget;
 };
 
 #endif //nsIXMLProcessingInstruction_h___

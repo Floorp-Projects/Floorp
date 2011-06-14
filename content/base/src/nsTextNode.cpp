@@ -143,6 +143,8 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
 nsTextNode::nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericDOMDataNode(aNodeInfo)
 {
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::TEXT_NODE,
+                    "Bad NodeType in aNodeInfo");
 }
 
 nsTextNode::~nsTextNode()
