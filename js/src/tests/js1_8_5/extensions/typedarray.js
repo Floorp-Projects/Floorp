@@ -361,6 +361,19 @@ function test()
     delete buf.a;
     check(function() !buf.a);
 
+    // check edge cases for small arrays
+    // 16 reserved slots
+    a = new Uint8Array(120);
+    check(function() a.byteLength == 120);
+    check(function() a.length == 120);
+    for (var i = 0; i < a.length; i++)
+        check(function() a[i] == 0)
+
+    a = new Uint8Array(121);
+    check(function() a.byteLength == 121);
+    check(function() a.length == 121);
+    for (var i = 0; i < a.length; i++)
+        check(function() a[i] == 0)
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");
