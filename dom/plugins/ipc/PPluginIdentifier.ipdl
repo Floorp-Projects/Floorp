@@ -48,6 +48,13 @@ async protocol PPluginIdentifier
 {
   manager PPluginModule;
 
+parent:
+  /**
+   * If this is a temporary identifier, inform the parent that the plugin
+   * has made the identifier permanent by calling NPN_GetStringIdentifier.
+   */
+  async Retain();
+
 child:
   async __delete__();
 };
