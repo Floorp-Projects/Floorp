@@ -63,7 +63,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
+  NS_FORWARD_NSIDOMNODE(nsGenericDOMDataNode::)
 
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
@@ -71,8 +71,13 @@ public:
   // nsIDOMText
   NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
 
-  // nsIContent
+  // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRUint16 NodeType();
+  virtual void NodeName(nsAString& aNodeName);
+
+  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
+                                              PRBool aCloneText) const;
 
   nsresult BindToAttribute(nsIAttribute* aAttr);
   nsresult UnbindFromAttribute();

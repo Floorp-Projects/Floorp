@@ -162,36 +162,22 @@ NS_INTERFACE_TABLE_HEAD(nsTextNode)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Text)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 
-NS_IMETHODIMP
-nsTextNode::GetNodeName(nsAString& aNodeName)
-{
-  aNodeName.AssignLiteral("#text");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextNode::GetNodeValue(nsAString& aNodeValue)
-{
-  return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsTextNode::SetNodeValue(const nsAString& aNodeValue)
-{
-  return nsGenericDOMDataNode::SetNodeValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsTextNode::GetNodeType(PRUint16* aNodeType)
-{
-  *aNodeType = (PRUint16)nsIDOMNode::TEXT_NODE;
-  return NS_OK;
-}
-
 PRBool
 nsTextNode::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
+}
+
+PRUint16
+nsTextNode::NodeType()
+{
+  return (PRUint16)nsIDOMNode::TEXT_NODE;
+}
+
+void
+nsTextNode::NodeName(nsAString& aNodeName)
+{
+  aNodeName.AssignLiteral("#text");
 }
 
 nsGenericDOMDataNode*

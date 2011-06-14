@@ -58,13 +58,18 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
+  NS_FORWARD_NSIDOMNODE(nsGenericDOMDataNode::)
 
   // nsIDOMProcessingInstruction
   NS_DECL_NSIDOMPROCESSINGINSTRUCTION
 
-  // nsIContent
+  // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRUint16 NodeType();
+  virtual void NodeName(nsAString& aNodeName);
+
+  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
+                                              PRBool aCloneText) const;
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;

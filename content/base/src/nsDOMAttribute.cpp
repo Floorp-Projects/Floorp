@@ -140,7 +140,6 @@ NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
                                  nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Attr)
@@ -499,17 +498,33 @@ nsDOMAttribute::GetBaseURI() const
   return parent ? parent->GetBaseURI() : nsnull;
 }
 
-PRBool
-nsDOMAttribute::IsEqualNode(nsINode* aOther)
+NS_IMETHODIMP
+nsDOMAttribute::GetDOMBaseURI(nsAString &aURI)
 {
-  if (!aOther || !aOther->IsNodeOfType(eATTRIBUTE))
-    return PR_FALSE;
+  return nsINode::GetDOMBaseURI(aURI);
+}
 
-  nsDOMAttribute *other = static_cast<nsDOMAttribute*>(aOther);
+NS_IMETHODIMP
+nsDOMAttribute::CompareDocumentPosition(nsIDOMNode *other,
+                                        PRUint16 *aResult)
+{
+  return nsINode::CompareDocumentPosition(other, aResult);
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther, PRBool* aResult)
+{
+  *aResult = PR_FALSE;
+
+  nsCOMPtr<nsIAttribute> otherAttr = do_QueryInterface(aOther);
+  if (!otherAttr)
+    return NS_OK;
+
+  nsDOMAttribute *other = static_cast<nsDOMAttribute*>(otherAttr.get());
 
   // Prefix, namespace URI, local name, node name check.
   if (!mNodeInfo->Equals(other->NodeInfo())) {
-    return PR_FALSE;
+    return NS_OK;
   }
 
   // Value check
@@ -518,21 +533,67 @@ nsDOMAttribute::IsEqualNode(nsINode* aOther)
   GetValue(ourValue);
   other->GetValue(otherValue);
 
-  return ourValue.Equals(otherValue);
+  *aResult = ourValue.Equals(otherValue);
+  
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsDOMAttribute::GetTextContent(nsAString &aTextContent)
 {
-  GetNodeValue(aTextContent);
+  return GetNodeValue(aTextContent);
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
 {
   return SetNodeValue(aTextContent);
 }
 
+NS_IMETHODIMP
+nsDOMAttribute::IsSameNode(nsIDOMNode *other, PRBool *aResult)
+{
+  *aResult = other == this;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::LookupPrefix(const nsAString & namespaceURI,
+                             nsAString & aResult)
+{
+  SetDOMStringToNull(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::IsDefaultNamespace(const nsAString & namespaceURI,
+                                   PRBool *aResult)
+{
+  *aResult = namespaceURI.IsEmpty();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::LookupNamespaceURI(const nsAString & prefix,
+                              nsAString & aResult)
+{
+  SetDOMStringToNull(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::SetUserData(const nsAString & key,
+                            nsIVariant *data, nsIDOMUserDataHandler *handler,
+                            nsIVariant **aResult)
+{
+  return nsINode::SetUserData(key, data, handler, aResult);
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::GetUserData(const nsAString & key, nsIVariant **aResult)
+{
+  return nsINode::GetUserData(key, aResult);
+}
 
 NS_IMETHODIMP
 nsDOMAttribute::GetIsId(PRBool* aReturn)
@@ -559,6 +620,18 @@ PRBool
 nsDOMAttribute::IsNodeOfType(PRUint32 aFlags) const
 {
     return !(aFlags & ~eATTRIBUTE);
+}
+
+PRUint16
+nsDOMAttribute::NodeType()
+{
+    return (PRUint16)nsIDOMNode::ATTRIBUTE_NODE;
+}
+
+void
+nsDOMAttribute::NodeName(nsAString& aNodeName)
+{
+  GetName(aNodeName);
 }
 
 PRUint32

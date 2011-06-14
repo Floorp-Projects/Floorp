@@ -55,7 +55,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
+  NS_FORWARD_NSIDOMNODE(nsGenericDOMDataNode::)
 
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
@@ -63,8 +63,13 @@ public:
   // nsIDOMComment
   // Empty interface
 
-  // nsIContent
+  // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRUint16 NodeType();
+  virtual void NodeName(nsAString& aNodeName);
+
+  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
+                                              PRBool aCloneText) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 #ifdef DEBUG
@@ -127,30 +132,16 @@ nsCommentNode::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~(eCONTENT | eCOMMENT | eDATA_NODE));
 }
 
-NS_IMETHODIMP
-nsCommentNode::GetNodeName(nsAString& aNodeName)
+PRUint16
+nsCommentNode::NodeType()
+{
+  return (PRUint16)nsIDOMNode::COMMENT_NODE;
+}
+
+void
+nsCommentNode::NodeName(nsAString& aNodeName)
 {
   aNodeName.AssignLiteral("#comment");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommentNode::GetNodeValue(nsAString& aNodeValue)
-{
-  return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsCommentNode::SetNodeValue(const nsAString& aNodeValue)
-{
-  return nsGenericDOMDataNode::SetNodeValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsCommentNode::GetNodeType(PRUint16* aNodeType)
-{
-  *aNodeType = (PRUint16)nsIDOMNode::COMMENT_NODE;
-  return NS_OK;
 }
 
 nsGenericDOMDataNode*
