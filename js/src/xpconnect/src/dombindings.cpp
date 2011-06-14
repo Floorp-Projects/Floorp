@@ -83,8 +83,11 @@ NodeList<T>::NodeList()
 template<class T>
 NodeList<T> NodeList<T>::instance;
 
+JSBool
+interface_hasInstance(JSContext *cx, JSObject *obj, const js::Value *vp, JSBool *bp);
+
 template<>
-Class NodeList<nsINodeList>::sProtoClass = {
+Class NodeList<nsINodeList>::sInterfaceClass = {
     "NodeList",
     0,
     JS_PropertyStub,        /* addProperty */
@@ -93,7 +96,14 @@ Class NodeList<nsINodeList>::sProtoClass = {
     JS_StrictPropertyStub,  /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub
+    JS_ConvertStub,
+    NULL,                   /* finalize */
+    NULL,                   /* reserved0 */
+    NULL,                   /* checkAccess */
+    NULL,                   /* call */
+    NULL,                   /* construct */
+    NULL,                   /* xdrObject */
+    interface_hasInstance
 };
 
 template<>
@@ -102,7 +112,7 @@ NodeList<nsINodeList>::Methods NodeList<nsINodeList>::sProtoMethods[] = {
 };
 
 template<>
-Class NodeList<nsIHTMLCollection>::sProtoClass = {
+Class NodeList<nsIHTMLCollection>::sInterfaceClass = {
     "HTMLCollection",
     0,
     JS_PropertyStub,        /* addProperty */
@@ -111,7 +121,14 @@ Class NodeList<nsIHTMLCollection>::sProtoClass = {
     JS_StrictPropertyStub,  /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub
+    JS_ConvertStub,
+    NULL,                   /* finalize */
+    NULL,                   /* reserved0 */
+    NULL,                   /* checkAccess */
+    NULL,                   /* call */
+    NULL,                   /* construct */
+    NULL,                   /* xdrObject */
+    interface_hasInstance
 };
 
 template<>
@@ -123,6 +140,24 @@ NodeList<nsIHTMLCollection>::Methods NodeList<nsIHTMLCollection>::sProtoMethods[
     { nsDOMClassInfo::sItem_id, &item, 1 },
     { nsDOMClassInfo::sNamedItem_id, &namedItem, 1 }
 };
+
+void
+Register(nsDOMClassInfoData *aData)
+{
+#define REGISTER_PROTO(_dom_class, T) \
+    aData[eDOMClassInfo_##_dom_class##_id].mDefineDOMInterface = NodeList<T>::getPrototype
+
+    REGISTER_PROTO(NodeList, nsINodeList);
+    REGISTER_PROTO(HTMLCollection, nsIHTMLCollection);
+
+#undef REGISTER_PROTO
+}
+
+bool
+DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine)
+{
+    return !!aDefine(cx, XPCWrappedNativeScope::FindInJSObjectScope(cx, obj));
+}
 
 template<class T>
 T*
@@ -264,47 +299,109 @@ NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp)
     return namedItem(cx, obj, &argv[0], vp);
 }
 
+JSBool
+interface_hasInstance(JSContext *cx, JSObject *obj, const js::Value *vp, JSBool *bp)
+{
+    if (vp->isObject()) {
+        jsval prototype;
+        if (!JS_GetPropertyById(cx, obj, nsDOMClassInfo::sPrototype_id, &prototype) ||
+            JSVAL_IS_PRIMITIVE(prototype)) {
+            JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+                                         JSMSG_THROW_TYPE_ERROR);
+            return JS_FALSE;
+        }
+
+        JSObject *other = &vp->toObject();
+        if (instanceIsProxy(other)) {
+            ProxyHandler *handler = static_cast<ProxyHandler*>(js::GetProxyHandler(other));
+            if (handler->isInstanceOf(JSVAL_TO_OBJECT(prototype))) {
+                *bp = JS_TRUE;
+            }
+            else {
+                JSObject *protoObj = JSVAL_TO_OBJECT(prototype);
+                JSObject *proto = other;
+                while ((proto = JS_GetPrototype(cx, proto))) {
+                    if (proto == protoObj) {
+                        *bp = JS_TRUE;
+                        return JS_TRUE;
+                    }
+                }
+                *bp = JS_FALSE;
+            }
+
+            return JS_TRUE;
+        }
+    }
+
+    *bp = JS_FALSE;
+    return JS_TRUE;
+}
+
 template<class T>
 JSObject *
 NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
 {
-    nsDataHashtable<nsIDHashKey, JSObject*> &cache =
+    nsDataHashtable<nsDepCharHashKey, JSObject*> &cache =
         scope->GetCachedDOMPrototypes();
 
-    JSObject *proto;
+    JSObject *interfacePrototype;
     if (cache.IsInitialized()) {
-        if (cache.Get(NS_GET_TEMPLATE_IID(T), &proto))
-            return proto;
+        if (cache.Get(sInterfaceClass.name, &interfacePrototype))
+            return interfacePrototype;
     }
     else if (!cache.Init()) {
         return NULL;
     }
 
-    proto = JS_NewObject(cx, Jsvalify(&sProtoClass), NULL, NULL);
-    if (!proto)
+    JSObject *global = scope->GetGlobalJSObject();
+
+    // We need to pass the object prototype to JS_NewObject. If we pass NULL then the JS engine
+    // will look up a prototype on the global by using the class' name and we'll recurse into
+    // getPrototype.
+    JSObject* proto;
+    if (!js_GetClassPrototype(cx, global, JSProto_Object, &proto))
         return NULL;
 
-    if (!JS_DefinePropertyById(cx, proto, nsDOMClassInfo::sLength_id, JSVAL_VOID,
-                               length_getter, NULL,
+    interfacePrototype = JS_NewObject(cx, NULL, proto, global);
+    if (!interfacePrototype)
+        return NULL;
+
+    if (!JS_DefinePropertyById(cx, interfacePrototype, nsDOMClassInfo::sLength_id,
+                               JSVAL_VOID, length_getter, NULL,
                                JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_SHARED))
         return NULL;
 
     for (size_t n = 0; n < NS_ARRAY_LENGTH(sProtoMethods); ++n) {
         jsid id = sProtoMethods[n].id;
         JSFunction *fun = JS_NewFunctionById(cx, sProtoMethods[n].native, sProtoMethods[n].nargs,
-                                             0, js::GetObjectParent(proto), id);
+                                             0, js::GetObjectParent(interfacePrototype), id);
         if (!fun)
             return NULL;
         JSObject *funobj = JS_GetFunctionObject(fun);
-        if (!JS_DefinePropertyById(cx, proto, id, OBJECT_TO_JSVAL(funobj),
+        if (!JS_DefinePropertyById(cx, interfacePrototype, id, OBJECT_TO_JSVAL(funobj),
                                    NULL, NULL, JSPROP_ENUMERATE))
             return NULL;
     }
 
-    if (!cache.Put(NS_GET_TEMPLATE_IID(T), proto))
+    JSObject *interface = JS_NewObject(cx, Jsvalify(&sInterfaceClass), NULL, global);
+    if (!interface ||
+        !JS_DefinePropertyById(cx, interface, nsDOMClassInfo::sPrototype_id,
+                               OBJECT_TO_JSVAL(interfacePrototype), nsnull, nsnull,
+                               JSPROP_PERMANENT | JSPROP_READONLY))
         return NULL;
 
-    return proto;
+    if (!JS_DefinePropertyById(cx, interfacePrototype, nsDOMClassInfo::sConstructor_id,
+                               OBJECT_TO_JSVAL(interface), nsnull, nsnull, 0))
+        return NULL;
+
+    if (!JS_DefineProperty(cx, global, sInterfaceClass.name, OBJECT_TO_JSVAL(interface), NULL,
+                           NULL, 0))
+        return NULL;
+
+    if (!cache.Put(sInterfaceClass.name, interfacePrototype))
+        return NULL;
+
+    return interfacePrototype;
 }
 
 template<class T>
@@ -740,7 +837,7 @@ template<class T>
 bool
 NodeList<T>::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
 {
-    *bp = vp->isObject() && js::GetObjectClass(&vp->toObject()) == &sProtoClass;
+    *bp = vp->isObject() && js::GetObjectClass(&vp->toObject()) == &sInterfaceClass;
     return true;
 }
 

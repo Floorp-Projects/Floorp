@@ -603,6 +603,7 @@ DOMCI_DATA(DOMConstructor, void)
     0,                                                                        \
     PR_FALSE,                                                                 \
     PR_FALSE,                                                                 \
+    NULL,                                                                     \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
@@ -619,6 +620,7 @@ DOMCI_DATA(DOMConstructor, void)
     0,                                                                        \
     PR_TRUE,                                                                  \
     PR_FALSE,                                                                 \
+    NULL,                                                                     \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
@@ -1571,6 +1573,7 @@ jsid nsDOMClassInfo::sParent_id          = JSID_VOID;
 jsid nsDOMClassInfo::sScrollbars_id      = JSID_VOID;
 jsid nsDOMClassInfo::sLocation_id        = JSID_VOID;
 jsid nsDOMClassInfo::sConstructor_id     = JSID_VOID;
+jsid nsDOMClassInfo::sPrototype_id       = JSID_VOID;
 jsid nsDOMClassInfo::s_content_id        = JSID_VOID;
 jsid nsDOMClassInfo::sContent_id         = JSID_VOID;
 jsid nsDOMClassInfo::sMenubar_id         = JSID_VOID;
@@ -1834,6 +1837,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sScrollbars_id,      cx, "scrollbars");
   SET_JSID_TO_STRING(sLocation_id,        cx, "location");
   SET_JSID_TO_STRING(sConstructor_id,     cx, "constructor");
+  SET_JSID_TO_STRING(sPrototype_id,       cx, "prototype");
   SET_JSID_TO_STRING(s_content_id,        cx, "_content");
   SET_JSID_TO_STRING(sContent_id,         cx, "content");
   SET_JSID_TO_STRING(sMenubar_id,         cx, "menubar");
@@ -4181,6 +4185,8 @@ nsDOMClassInfo::Init()
   sDisableGlobalScopePollutionSupport =
     Preferences::GetBool("browser.dom.global_scope_pollution.disabled");
 
+  xpc::dom::Register(sClassInfoData);
+
   sIsInitialized = PR_TRUE;
 
   return NS_OK;
@@ -4814,6 +4820,7 @@ nsDOMClassInfo::ShutDown()
   sScrollbars_id      = JSID_VOID;
   sLocation_id        = JSID_VOID;
   sConstructor_id     = JSID_VOID;
+  sPrototype_id       = JSID_VOID;
   s_content_id        = JSID_VOID;
   sContent_id         = JSID_VOID;
   sMenubar_id         = JSID_VOID;
@@ -6159,6 +6166,17 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // For now don't expose server events unless user has explicitly enabled them
     if (name_struct->mDOMClassInfoID == eDOMClassInfo_EventSource_id) {
       if (!nsEventSource::PrefEnabled()) {
+        return NS_OK;
+      }
+    }
+
+    // Lookup new DOM bindings.
+    if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+      xpc::dom::DefineInterface define =
+        sClassInfoData[name_struct->mDOMClassInfoID].mDefineDOMInterface;
+      if (define && xpc::dom::DefineConstructor(cx, obj, define)) {
+        *did_resolve = true;
+
         return NS_OK;
       }
     }
