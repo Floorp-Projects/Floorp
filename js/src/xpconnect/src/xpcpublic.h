@@ -54,6 +54,7 @@
 #include "nsTArray.h"
 
 class nsIPrincipal;
+struct nsDOMClassInfoData;
 
 static const uint32 XPC_GC_COLOR_BLACK = 0;
 static const uint32 XPC_GC_COLOR_GRAY = 1;
@@ -283,6 +284,14 @@ enum {
     JSPROXYSLOT_PROTOSHAPE = 0,
     JSPROXYSLOT_EXPANDO = 1
 };
+
+typedef JSObject*
+(*DefineInterface)(JSContext *cx, XPCWrappedNativeScope *scope);
+
+void
+Register(nsDOMClassInfoData *aData);
+extern bool
+DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine);
 
 }
 }

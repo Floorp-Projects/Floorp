@@ -50,9 +50,19 @@ class nsIHTMLCollection;
 namespace xpc {
 namespace dom {
 
-class NodeListBase : public js::ProxyHandler {
+class ProxyHandler : public js::ProxyHandler {
+protected:
+    ProxyHandler() : js::ProxyHandler(ProxyFamily())
+    {
+    }
+
 public:
-    NodeListBase() : js::ProxyHandler(ProxyFamily()) {}
+    virtual bool isInstanceOf(JSObject *prototype) = 0;
+};
+
+class NodeListBase : public ProxyHandler {
+public:
+    NodeListBase() : ProxyHandler() {}
 
     static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
                             nsINodeList *aNodeList);
@@ -66,9 +76,11 @@ public:
  */
 template<class T>
 class NodeList : public NodeListBase {
+    friend void Register(nsDOMClassInfoData *aData);
+
     static NodeList instance;
 
-    static js::Class sProtoClass;
+    static js::Class sInterfaceClass;
 
     struct Methods {
         jsid &id;
@@ -135,6 +147,10 @@ class NodeList : public NodeListBase {
 
     static bool objIsNodeList(JSObject *obj) {
         return js::IsProxy(obj) && js::GetProxyHandler(obj) == &instance;
+    }
+    virtual bool isInstanceOf(JSObject *prototype)
+    {
+        return js::GetObjectClass(prototype) == &sInterfaceClass;
     }
 };
 

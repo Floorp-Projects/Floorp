@@ -921,7 +921,7 @@ XPCWrappedNativeScope::RemoveWrappedNativeProtos()
 }
 
 static PLDHashOperator
-TraceDOMPrototype(const nsID& aKey, JSObject* aData, void* aClosure)
+TraceDOMPrototype(const char* aKey, JSObject* aData, void* aClosure)
 {
     JSTracer *trc = static_cast<JSTracer*>(aClosure);
     JS_CALL_OBJECT_TRACER(trc, aData, "DOM prototype");
