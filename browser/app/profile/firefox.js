@@ -1033,6 +1033,12 @@ pref("devtools.hud.loglimit.cssparser", 200);
 pref("devtools.hud.loglimit.exception", 200);
 pref("devtools.hud.loglimit.console", 200);
 
+// The developer tools editor configuration:
+// - tabsize: how many spaces to use when a Tab character is displayed.
+// - expandtab: expand Tab characters to spaces.
+pref("devtools.editor.tabsize", 4);
+pref("devtools.editor.expandtab", true);
+
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
