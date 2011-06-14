@@ -50,6 +50,7 @@ function run_test()
   test_isEqualNode_normalization();
   test_isEqualNode_whitespace();
   test_isEqualNode_namespaces();
+  test_isEqualNode_wholeDoc();
 
   // XXX should Node.isEqualNode(null) throw or return false?
   //test_isEqualNode_null();
@@ -400,6 +401,21 @@ function test_isEqualNode_null()
   }
 }
 
+function test_isEqualNode_wholeDoc()
+{
+  doc = ParseFile("isequalnode_data.xml");
+  var doc2 = ParseFile("isequalnode_data.xml");
+  var tw1 =
+    doc.createTreeWalker(doc, Components.interfaces.nsIDOMNodeFilter.SHOW_ALL,
+                         null, false);
+  var tw2 =
+    doc2.createTreeWalker(doc2, Components.interfaces.nsIDOMNodeFilter.SHOW_ALL,
+                          null, false);
+  do {
+    check_eq_nodes(tw1.currentNode, tw2.currentNode);
+    tw1.nextNode();
+  } while(tw2.nextNode());
+}
 
 // UTILITY FUNCTIONS
 
