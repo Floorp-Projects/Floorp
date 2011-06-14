@@ -2410,7 +2410,7 @@ nsGenericElement::HasChildNodes(PRBool* aReturn)
 NS_IMETHODIMP
 nsGenericElement::GetTagName(nsAString& aTagName)
 {
-  aTagName = mNodeInfo->QualifiedNameCorrectedCase();
+  aTagName = NodeName();
   return NS_OK;
 }
 
