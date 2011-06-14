@@ -215,7 +215,7 @@ getUriCB(AtkHyperlink *aLink, gint aLinkIndex)
     nsAccessible* hyperlink = get_accessible_hyperlink(aLink);
     NS_ENSURE_TRUE(hyperlink, nsnull);
 
-    nsCOMPtr<nsIURI> uri = hyperlink->GetAnchorURI(aLinkIndex);
+    nsCOMPtr<nsIURI> uri = hyperlink->AnchorURIAt(aLinkIndex);
     if (!uri)
         return nsnull;
 
@@ -232,7 +232,7 @@ getObjectCB(AtkHyperlink *aLink, gint aLinkIndex)
     nsAccessible* hyperlink = get_accessible_hyperlink(aLink);
     NS_ENSURE_TRUE(hyperlink, nsnull);
 
-    nsAccessible* anchor = hyperlink->GetAnchor(aLinkIndex);
+    nsAccessible* anchor = hyperlink->AnchorAt(aLinkIndex);
     NS_ENSURE_TRUE(anchor, nsnull);
 
     AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(anchor);
