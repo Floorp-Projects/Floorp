@@ -137,14 +137,6 @@ class nsWrapperCache;
 #define NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN            GENERATE_XPC_FAILURE(52)
 #define NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL    GENERATE_XPC_FAILURE(53)
 
-#ifdef XPC_IDISPATCH_SUPPORT
-// IDispatch support related errors
-#define NS_ERROR_XPC_COM_UNKNOWN                       GENERATE_XPC_FAILURE(54)
-#define NS_ERROR_XPC_COM_ERROR                         GENERATE_XPC_FAILURE(55)
-#define NS_ERROR_XPC_COM_INVALID_CLASS_ID              GENERATE_XPC_FAILURE(56)
-#define NS_ERROR_XPC_COM_CREATE_FAILED                 GENERATE_XPC_FAILURE(57)
-#define NS_ERROR_XPC_IDISPATCH_NOT_ENABLED             GENERATE_XPC_FAILURE(58)
-#endif
 // any new errors here should have an associated entry added in xpc.msg
 /***************************************************************************/
 %}
