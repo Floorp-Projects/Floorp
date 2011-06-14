@@ -2088,6 +2088,7 @@ nsresult
 nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                      const nsAString& aQualifiedName,
                                      nsNodeInfoManager* aNodeInfoManager,
+                                     PRUint16 aNodeType,
                                      nsINodeInfo** aNodeInfo)
 {
   nsIParserService* parserService = GetParserService();
@@ -2107,11 +2108,11 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> prefix = do_GetAtom(Substring(qName.get(), colon));
 
     rv = aNodeInfoManager->GetNodeInfo(Substring(colon + 1, end), prefix,
-                                       nsID, aNodeInfo);
+                                       nsID, aNodeType, aNodeInfo);
   }
   else {
     rv = aNodeInfoManager->GetNodeInfo(aQualifiedName, nsnull, nsID,
-                                       aNodeInfo);
+                                       aNodeType, aNodeInfo);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

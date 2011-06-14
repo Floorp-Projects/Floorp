@@ -2437,7 +2437,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
     presContext->Document()->NodeInfoManager();
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbar, nsnull,
-                                          kNameSpaceID_XUL);
+                                          kNameSpaceID_XUL,
+                                          nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   if (canHaveHorizontal) {
@@ -2465,7 +2466,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
   if (isResizable) {
     nsCOMPtr<nsINodeInfo> nodeInfo;
     nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::resizer, nsnull,
-                                            kNameSpaceID_XUL);
+                                            kNameSpaceID_XUL,
+                                            nsIDOMNode::ELEMENT_NODE);
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
     NS_TrustedNewXULElement(getter_AddRefs(mResizerContent), nodeInfo.forget());
@@ -2510,7 +2512,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
 
   if (canHaveHorizontal && canHaveVertical) {
     nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollcorner, nsnull,
-                                            kNameSpaceID_XUL);
+                                            kNameSpaceID_XUL,
+                                            nsIDOMNode::ELEMENT_NODE);
     NS_TrustedNewXULElement(getter_AddRefs(mScrollCornerContent), nodeInfo.forget());
     if (!aElements.AppendElement(mScrollCornerContent))
       return NS_ERROR_OUT_OF_MEMORY;

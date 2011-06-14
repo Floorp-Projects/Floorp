@@ -2223,6 +2223,13 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
 nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : Element(aNodeInfo)
 {
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE ||
+                    (mNodeInfo->NodeType() ==
+                       nsIDOMNode::DOCUMENT_FRAGMENT_NODE &&
+                     mNodeInfo->Equals(nsGkAtoms::documentFragmentNodeName,
+                                       kNameSpaceID_None)),
+                    "Bad NodeType in aNodeInfo");
+
   // Set the default scriptID to JS - but skip SetScriptTypeID as it
   // does extra work we know isn't necessary here...
   SetFlags((nsIProgrammingLanguage::JAVASCRIPT << NODE_SCRIPT_TYPE_OFFSET));
@@ -2579,6 +2586,7 @@ nsGenericElement::SetAttributeNS(const nsAString& aNamespaceURI,
   nsresult rv =
     nsContentUtils::GetNodeInfoFromQName(aNamespaceURI, aQualifiedName,
                                          mNodeInfo->NodeInfoManager(),
+                                         nsIDOMNode::ATTRIBUTE_NODE,
                                          getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3455,8 +3463,9 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
 
   nsINodeInfo* nodeInfo;
   if (name->IsAtom()) {
-    nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(name->Atom(), nsnull,
-                                                         kNameSpaceID_None).get();
+    nodeInfo = mNodeInfo->NodeInfoManager()->
+      GetNodeInfo(name->Atom(), nsnull, kNameSpaceID_None,
+                  nsIDOMNode::ATTRIBUTE_NODE).get();
   }
   else {
     NS_ADDREF(nodeInfo = name->NodeInfo());
@@ -4695,7 +4704,8 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   else {
     nsCOMPtr<nsINodeInfo> ni;
     ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix,
-                                                   aNamespaceID);
+                                                   aNamespaceID,
+                                                   nsIDOMNode::ATTRIBUTE_NODE);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mAttrsAndChildren.SetAndTakeAttr(ni, aParsedValue);
