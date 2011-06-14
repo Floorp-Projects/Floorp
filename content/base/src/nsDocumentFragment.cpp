@@ -54,27 +54,15 @@
 #include "nsDOMString.h"
 #include "nsIDOMUserDataHandler.h"
 
-class nsDocumentFragmentForward : public nsGenericElement,
-                                  public nsIDOMDocumentFragment
-{
-public:
-  nsDocumentFragmentForward(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsGenericElement(aNodeInfo)
-  {
-  }
-
-  // interface nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericElement::)
-};
-
-class nsDocumentFragment : public nsDocumentFragmentForward
+class nsDocumentFragment : public nsGenericElement,
+                           public nsIDOMDocumentFragment
 {
 public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
   // interface nsIDOMNode
-  // Forwarded by baseclass
+  NS_FORWARD_NSIDOMNODE(nsGenericElement::)
 
   // interface nsIDOMDocumentFragment
   // NS_DECL_NSIDOCUMENTFRAGMENT  Empty
@@ -82,17 +70,6 @@ public:
   nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsDocumentFragment()
   {
-  }
-
-  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-    {
-      *aAttributes = nsnull;
-      return NS_OK;
-    }
-  NS_IMETHOD    GetLocalName(nsAString& aLocalName)
-  {
-    SetDOMStringToNull(aLocalName);
-    return NS_OK;
   }
 
   // nsIContent
@@ -123,7 +100,6 @@ public:
   }
 
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual PRUint16 NodeType();
 
   virtual nsXPCClassInfo* GetClassInfo();
 
@@ -157,7 +133,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
 }
 
 nsDocumentFragment::nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsDocumentFragmentForward(aNodeInfo)
+  : nsGenericElement(aNodeInfo)
 {
   ClearIsElement();
 }
@@ -166,12 +142,6 @@ PRBool
 nsDocumentFragment::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eDOCUMENT_FRAGMENT));
-}
-
-PRUint16
-nsDocumentFragment::NodeType()
-{
-  return (PRUint16)nsIDOMNode::DOCUMENT_FRAGMENT_NODE;
 }
 
 nsIAtom*

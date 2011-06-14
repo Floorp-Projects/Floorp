@@ -132,18 +132,6 @@ nsDOMDocumentType::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~eCONTENT);
 }
 
-void
-nsDOMDocumentType::NodeName(nsAString& aNodeName)
-{
-  mNodeInfo->GetExtraName()->ToString(aNodeName);
-}
-
-PRUint16
-nsDOMDocumentType::NodeType()
-{
-  return (PRUint16)nsIDOMNode::DOCUMENT_TYPE_NODE;
-}
-
 const nsTextFragment*
 nsDOMDocumentType::GetText()
 {
@@ -153,7 +141,7 @@ nsDOMDocumentType::GetText()
 NS_IMETHODIMP    
 nsDOMDocumentType::GetName(nsAString& aName)
 {
-  mNodeInfo->GetExtraName()->ToString(aName);
+  aName = NodeName();
   return NS_OK;
 }
 

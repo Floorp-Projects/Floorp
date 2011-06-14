@@ -98,8 +98,6 @@ public:
 
   // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual PRUint16 NodeType();
-  virtual void NodeName(nsAString& aNodeName);
 
   // nsIContent overrides
   virtual const nsTextFragment* GetText();
