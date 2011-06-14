@@ -621,8 +621,12 @@ customMethodCalls = {
         },
     'nsIDOMNode_GetNodeName': {
         'thisType': 'nsINode',
-        'code': 'nsString result;\n'
-                'self->NodeName(result);',
+        'code': 'nsString result = self->NodeName();',
+        'canFail': False
+        },
+    'nsIDOMNode_GetLocalName': {
+        'thisType': 'nsINode',
+        'code': 'nsString result = self->LocalName();',
         'canFail': False
         },
     'nsIDOMNodeList_Item': {

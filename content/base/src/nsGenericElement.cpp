@@ -2245,14 +2245,14 @@ nsGenericElement::~nsGenericElement()
 NS_IMETHODIMP
 nsGenericElement::GetNodeName(nsAString& aNodeName)
 {
-  aNodeName = mNodeInfo->QualifiedNameCorrectedCase();
+  aNodeName = NodeName();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGenericElement::GetLocalName(nsAString& aLocalName)
 {
-  mNodeInfo->GetName(aLocalName);
+  aLocalName = LocalName();
   return NS_OK;
 }
 
@@ -2379,6 +2379,11 @@ nsGenericElement::HasAttributes(PRBool* aReturn)
 NS_IMETHODIMP
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
+  if (!IsElement()) {
+    *aAttributes = nsnull;
+    return NS_OK;
+  }
+
   nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mAttributeMap) {
@@ -3521,18 +3526,6 @@ PRBool
 nsGenericElement::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~eCONTENT);
-}
-
-PRUint16
-nsGenericElement::NodeType()
-{
-  return (PRUint16)nsIDOMNode::ELEMENT_NODE;
-}
-
-void
-nsGenericElement::NodeName(nsAString& aNodeName)
-{
-  aNodeName = mNodeInfo->QualifiedNameCorrectedCase();
 }
 
 //----------------------------------------------------------------------

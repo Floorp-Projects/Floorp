@@ -179,14 +179,6 @@ nsGenericDOMDataNode::GetPrefix(nsAString& aPrefix)
 }
 
 nsresult
-nsGenericDOMDataNode::GetLocalName(nsAString& aLocalName)
-{
-  SetDOMStringToNull(aLocalName);
-
-  return NS_OK;
-}
-
-nsresult
 nsGenericDOMDataNode::Normalize()
 {
   return NS_OK;
