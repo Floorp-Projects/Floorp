@@ -117,7 +117,7 @@ namespace parent {
 
 JS_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(jsid));
 
-static inline jsid
+inline jsid
 NPIdentifierToJSId(NPIdentifier id)
 {
     jsid tmp;
@@ -125,52 +125,59 @@ NPIdentifierToJSId(NPIdentifier id)
     return tmp;
 }
 
-static inline NPIdentifier
+inline NPIdentifier
 JSIdToNPIdentifier(jsid id)
 {
     return (NPIdentifier)JSID_BITS(id);
 }
 
-static inline bool
+inline bool
 NPIdentifierIsString(NPIdentifier id)
 {
     return JSID_IS_STRING(NPIdentifierToJSId(id));
 }
 
-static inline JSString *
+inline JSString *
 NPIdentifierToString(NPIdentifier id)
 {
     return JSID_TO_STRING(NPIdentifierToJSId(id));
 }
 
-static inline NPIdentifier
+inline NPIdentifier
 StringToNPIdentifier(JSContext *cx, JSString *str)
 {
     return JSIdToNPIdentifier(INTERNED_STRING_TO_JSID(cx, str));
 }
 
-static inline bool
+inline bool
 NPIdentifierIsInt(NPIdentifier id)
 {
     return JSID_IS_INT(NPIdentifierToJSId(id));
 }
 
-static inline jsint
+inline jsint
 NPIdentifierToInt(NPIdentifier id)
 {
     return JSID_TO_INT(NPIdentifierToJSId(id));
 }
 
-static inline NPIdentifier
+inline NPIdentifier
 IntToNPIdentifier(jsint i)
 {
     return JSIdToNPIdentifier(INT_TO_JSID(i));
 }
 
-static inline bool
-NPIdentifierIsVoid(NPIdentifier id)
+JSContext* GetJSContext(NPP npp);
+
+inline bool
+NPStringIdentifierIsPermanent(NPP npp, NPIdentifier id)
 {
-    return JSID_IS_VOID(NPIdentifierToJSId(id));
+  JSContext* cx = GetJSContext(npp);
+  if (!cx) // OOM?
+    return false;
+
+  JSAutoRequest ar(cx);
+  return JS_StringHasBeenInterned(cx, NPIdentifierToString(id));
 }
 
 #define NPIdentifier_VOID (JSIdToNPIdentifier(JSID_VOID))

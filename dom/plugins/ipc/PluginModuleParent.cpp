@@ -73,6 +73,7 @@ using mozilla::ipc::SyncChannel;
 
 using namespace mozilla;
 using namespace mozilla::plugins;
+using namespace mozilla::plugins::parent;
 
 static const char kTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
 static const char kLaunchTimeoutPref[] = "dom.ipc.plugins.processLaunchTimeoutSecs";
@@ -341,8 +342,14 @@ PluginModuleParent::NotifyPluginCrashed()
 
 PPluginIdentifierParent*
 PluginModuleParent::AllocPPluginIdentifier(const nsCString& aString,
-                                           const int32_t& aInt)
+                                           const int32_t& aInt,
+                                           const bool& aTemporary)
 {
+    if (aTemporary) {
+        NS_ERROR("Plugins don't create temporary identifiers.");
+        return NULL; // should abort the plugin
+    }
+
     NPIdentifier npident = aString.IsVoid() ?
         mozilla::plugins::parent::_getintidentifier(aInt) :
         mozilla::plugins::parent::_getstringidentifier(aString.get());
@@ -352,7 +359,7 @@ PluginModuleParent::AllocPPluginIdentifier(const nsCString& aString,
         return nsnull;
     }
 
-    PluginIdentifierParent* ident = new PluginIdentifierParent(npident);
+    PluginIdentifierParent* ident = new PluginIdentifierParent(npident, false);
     mIdentifiers.Put(npident, ident);
     return ident;
 }
@@ -599,29 +606,39 @@ PluginModuleParent::AnswerNPN_UserAgent(nsCString* userAgent)
     return true;
 }
 
-PPluginIdentifierParent*
-PluginModuleParent::GetIdentifierForNPIdentifier(NPIdentifier aIdentifier)
+PluginIdentifierParent*
+PluginModuleParent::GetIdentifierForNPIdentifier(NPP npp, NPIdentifier aIdentifier)
 {
     PluginIdentifierParent* ident;
-    if (!mIdentifiers.Get(aIdentifier, &ident)) {
-        nsCString string;
-        int32_t intval = -1;
-        if (mozilla::plugins::parent::_identifierisstring(aIdentifier)) {
-            NPUTF8* chars =
-                mozilla::plugins::parent::_utf8fromidentifier(aIdentifier);
-            if (!chars) {
-                return nsnull;
-            }
-            string.Adopt(chars);
+    if (mIdentifiers.Get(aIdentifier, &ident)) {
+        if (ident->IsTemporary()) {
+            ident->AddTemporaryRef();
         }
-        else {
-            intval = mozilla::plugins::parent::_intfromidentifier(aIdentifier);
-            string.SetIsVoid(PR_TRUE);
-        }
-        ident = new PluginIdentifierParent(aIdentifier);
-        if (!SendPPluginIdentifierConstructor(ident, string, intval))
-            return nsnull;
+        return ident;
+    }
 
+    nsCString string;
+    int32_t intval = -1;
+    bool temporary = false;
+    if (mozilla::plugins::parent::_identifierisstring(aIdentifier)) {
+        NPUTF8* chars =
+            mozilla::plugins::parent::_utf8fromidentifier(aIdentifier);
+        if (!chars) {
+            return nsnull;
+        }
+        string.Adopt(chars);
+        temporary = !NPStringIdentifierIsPermanent(npp, aIdentifier);
+    }
+    else {
+        intval = mozilla::plugins::parent::_intfromidentifier(aIdentifier);
+        string.SetIsVoid(PR_TRUE);
+    }
+
+    ident = new PluginIdentifierParent(aIdentifier, temporary);
+    if (!SendPPluginIdentifierConstructor(ident, string, intval, temporary))
+        return nsnull;
+
+    if (!temporary) {
         mIdentifiers.Put(aIdentifier, ident);
     }
     return ident;
