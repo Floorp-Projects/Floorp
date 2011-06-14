@@ -123,7 +123,7 @@ function run_test() {
     { // check clearHistory removes all data
       clearHistory();
       do_check_eq(gDownloadLastDir.file, null);
-      do_check_eq(Services.contentPrefs.hasPref(uri1, "lastDownloadDirectory"), false);
+      do_check_eq(Services.contentPrefs.hasPref(uri1, "browser.download.lastDir"), false);
       do_check_eq(gDownloadLastDir.getFile(uri1), null);
       do_check_eq(gDownloadLastDir.getFile(uri2), null);
       do_check_eq(gDownloadLastDir.getFile(uri3), null);
