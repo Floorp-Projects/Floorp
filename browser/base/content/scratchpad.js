@@ -64,6 +64,9 @@ const SCRATCHPAD_L10N = "chrome://browser/locale/scratchpad.properties";
 const SCRATCHPAD_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 
+const PREF_TABSIZE = "devtools.editor.tabsize";
+const PREF_EXPANDTAB = "devtools.editor.expandtab";
+
 /**
  * The scratchpad object handles the Scratchpad window functionality.
  */
@@ -628,7 +631,53 @@ var Scratchpad = {
       errorConsoleCommand.removeAttribute("disabled");
       chromeContextCommand.removeAttribute("disabled");
     }
+
+    let tabsize = Services.prefs.getIntPref(PREF_TABSIZE);
+    if (tabsize < 1) {
+      // tabsize is invalid, clear back to the default value.
+      Services.prefs.clearUserPref(PREF_TABSIZE);
+      tabsize = Services.prefs.getIntPref(PREF_TABSIZE);
+    }
+
+    let expandtab = Services.prefs.getBoolPref(PREF_EXPANDTAB);
+    this._tabCharacter = expandtab ? (new Array(tabsize + 1)).join(" ") : "\t";
+    this.textbox.style.MozTabSize = tabsize;
+
     this.insertIntro();
+
+    // Make the Tab key work.
+    this.textbox.addEventListener("keypress", this.onKeypress.bind(this), false);
+
+    this.textbox.focus();
+  },
+
+  /**
+   * The textbox keypress event handler which allows users to indent code using
+   * the Tab key.
+   *
+   * @param nsIDOMEvent aEvent
+   */
+  onKeypress: function SP_onKeypress(aEvent)
+  {
+    if (aEvent.keyCode == aEvent.DOM_VK_TAB) {
+      this.insertTextAtCaret(this._tabCharacter);
+      aEvent.preventDefault();
+    }
+  },
+
+  /**
+   * Insert text at the current caret location.
+   *
+   * @param string aText
+   */
+  insertTextAtCaret: function SP_insertTextAtCaret(aText)
+  {
+    let firstPiece = this.textbox.value.substring(0, this.textbox.selectionStart);
+    let lastPiece = this.textbox.value.substring(this.textbox.selectionEnd);
+    this.textbox.value = firstPiece + aText + lastPiece;
+
+    let newCaretPosition = firstPiece.length + aText.length;
+    this.selectRange(newCaretPosition, newCaretPosition);
   },
 };
 
