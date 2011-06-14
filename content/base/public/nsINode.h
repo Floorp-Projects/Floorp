@@ -436,22 +436,7 @@ public:
     return IsInDoc() ? GetOwnerDoc() : nsnull;
   }
 
-  /**
-   * The values returned by this function are the ones defined for
-   * nsIDOMNode.nodeType
-   */
-  PRUint16 NodeType() const
-  {
-    return mNodeInfo->NodeType();
-  }
-  const nsString& NodeName() const
-  {
-    return mNodeInfo->NodeName();
-  }
-  const nsString& LocalName() const
-  {
-    return mNodeInfo->LocalName();
-  }
+  NS_IMETHOD GetNodeType(PRUint16* aNodeType) = 0;
 
   nsINode*
   InsertBefore(nsINode *aNewChild, nsINode *aRefChild, nsresult *aReturn)
@@ -984,16 +969,13 @@ public:
    */
   virtual already_AddRefed<nsIURI> GetBaseURI() const = 0;
 
-  nsresult GetDOMBaseURI(nsAString &aURI) const;
+  void GetBaseURI(nsAString &aURI) const;
 
-  // Note! This function must never fail. It only return an nsresult so that
-  // we can use it to implement nsIDOMNode
-  NS_IMETHOD GetTextContent(nsAString &aTextContent)
+  virtual void GetTextContent(nsAString &aTextContent)
   {
     SetDOMStringToNull(aTextContent);
-    return NS_OK;
   }
-  NS_IMETHOD SetTextContent(const nsAString& aTextContent)
+  virtual nsresult SetTextContent(const nsAString& aTextContent)
   {
     return NS_OK;
   }
@@ -1033,13 +1015,9 @@ public:
     return static_cast<nsIVariant*>(GetProperty(DOM_USER_DATA, key));
   }
 
-  nsresult GetUserData(const nsAString& aKey, nsIVariant** aResult)
-  {
-    NS_IF_ADDREF(*aResult = GetUserData(aKey));
-  
-    return NS_OK;
-  }
-
+  nsresult GetFeature(const nsAString& aFeature,
+                      const nsAString& aVersion,
+                      nsISupports** aReturn);
 
   /**
    * Compares the document position of a node to this node.
@@ -1051,33 +1029,34 @@ public:
    *          DOCUMENT_POSITION_PRECEDING will be set.
    *
    * @see nsIDOMNode
+   * @see nsIDOM3Node
    */
-  PRUint16 CompareDocPosition(nsINode* aOtherNode);
-  nsresult CompareDocPosition(nsINode* aOtherNode, PRUint16* aReturn)
+  PRUint16 CompareDocumentPosition(nsINode* aOtherNode);
+  nsresult CompareDocumentPosition(nsINode* aOtherNode, PRUint16* aResult)
   {
     NS_ENSURE_ARG(aOtherNode);
-    *aReturn = CompareDocPosition(aOtherNode);
+
+    *aResult = CompareDocumentPosition(aOtherNode);
+
     return NS_OK;
   }
-  nsresult CompareDocumentPosition(nsIDOMNode* aOther,
-                                   PRUint16* aReturn);
 
-  nsresult IsSameNode(nsIDOMNode* aOther,
-                      PRBool* aReturn);
+  PRBool IsSameNode(nsINode *aOtherNode)
+  {
+    return aOtherNode == this;
+  }
 
-  nsresult LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix);
-  nsresult IsDefaultNamespace(const nsAString& aNamespaceURI, PRBool* aResult)
+  virtual PRBool IsEqualNode(nsINode *aOtherNode) = 0;
+
+  void LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix);
+  PRBool IsDefaultNamespace(const nsAString& aNamespaceURI)
   {
     nsAutoString defaultNamespace;
     LookupNamespaceURI(EmptyString(), defaultNamespace);
-    *aResult = aNamespaceURI.Equals(defaultNamespace);
-    return NS_OK;
+    return aNamespaceURI.Equals(defaultNamespace);
   }
-  nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                              nsAString& aNamespaceURI);
-
-  nsresult IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn);
-  PRBool IsEqualTo(nsINode* aOther);
+  void LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                          nsAString& aNamespaceURI);
 
   nsIContent* GetNextSibling() const { return mNextSibling; }
   nsIContent* GetPreviousSibling() const { return mPreviousSibling; }

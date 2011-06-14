@@ -48,6 +48,7 @@
 #include "nsReadableUtils.h"
 #include "nsMutationEvent.h"
 #include "nsINameSpaceManager.h"
+#include "nsIDOM3Node.h"
 #include "nsIURI.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
@@ -72,13 +73,6 @@ namespace css = mozilla::css;
 nsGenericDOMDataNode::nsGenericDOMDataNode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsIContent(aNodeInfo)
 {
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::TEXT_NODE ||
-                    mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE ||
-                    mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE ||
-                    mNodeInfo->NodeType() ==
-                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-                    mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE,
-                    "Bad NodeType in aNodeInfo");
 }
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
@@ -135,6 +129,7 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
   // nsNodeSH::PreCreate() depends on the identity pointer being the
@@ -174,6 +169,14 @@ nsresult
 nsGenericDOMDataNode::GetPrefix(nsAString& aPrefix)
 {
   SetDOMStringToNull(aPrefix);
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::GetLocalName(nsAString& aLocalName)
+{
+  SetDOMStringToNull(aLocalName);
 
   return NS_OK;
 }

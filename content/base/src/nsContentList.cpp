@@ -45,6 +45,7 @@
 #include "nsContentList.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
+#include "nsIDOM3Node.h"
 #include "nsIDocument.h"
 #include "nsGenericElement.h"
 

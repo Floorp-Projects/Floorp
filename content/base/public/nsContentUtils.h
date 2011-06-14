@@ -69,6 +69,7 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsContentList.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIXPCScriptable.h"
+#include "nsIDOM3Node.h"
 #include "nsDataHashtable.h"
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
@@ -302,10 +303,10 @@ public:
   static PRBool PositionIsBefore(nsINode* aNode1,
                                  nsINode* aNode2)
   {
-    return (aNode2->CompareDocPosition(aNode1) &
-      (nsIDOMNode::DOCUMENT_POSITION_PRECEDING |
-       nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED)) ==
-      nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
+    return (aNode2->CompareDocumentPosition(aNode1) &
+      (nsIDOM3Node::DOCUMENT_POSITION_PRECEDING |
+       nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED)) ==
+      nsIDOM3Node::DOCUMENT_POSITION_PRECEDING;
   }
 
   /**
@@ -341,6 +342,7 @@ public:
    * @return  The reversed document position flags.
    *
    * @see nsIDOMNode
+   * @see nsIDOM3Node
    */
   static PRUint16 ReverseDocumentPosition(PRUint16 aDocumentPosition);
 
@@ -546,7 +548,6 @@ public:
   static nsresult GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                        const nsAString& aQualifiedName,
                                        nsNodeInfoManager* aNodeInfoManager,
-                                       PRUint16 aNodeType,
                                        nsINodeInfo** aNodeInfo);
 
   static void SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
@@ -690,9 +691,7 @@ public:
     nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
 
     *aResult = niMgr->GetNodeInfo(aName, aNodeInfo->GetPrefixAtom(),
-                                  aNodeInfo->NamespaceID(),
-                                  aNodeInfo->NodeType(),
-                                  aNodeInfo->GetExtraName()).get();
+                                  aNodeInfo->NamespaceID()).get();
     return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
 

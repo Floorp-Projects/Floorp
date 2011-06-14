@@ -83,6 +83,7 @@
 #include "nsISHEntry.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIFormControl.h"
+#include "nsIDOM3Node.h"
 
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -3353,7 +3354,8 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
             nsAutoString valueStr;
             nodeAsTextArea->GetValue(valueStr);
             
-            (*aNodeOut)->SetTextContent(valueStr);
+            nsCOMPtr<nsIDOM3Node> out = do_QueryInterface(*aNodeOut);
+            out->SetTextContent(valueStr);
         }
         return rv;
     }

@@ -43,6 +43,7 @@
 #include "nsAccessNode.h"
 
 #include "nsIDocument.h"
+#include "nsIDOM3Node.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"

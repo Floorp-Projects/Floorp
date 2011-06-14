@@ -536,9 +536,7 @@ nsXTFElementWrapper::GetExistingAttrNameFromQName(const nsAString& aStr) const
   if (!nodeInfo) {
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aStr);
     if (HandledByInner(nameAtom)) 
-      nodeInfo = mNodeInfo->NodeInfoManager()->
-        GetNodeInfo(nameAtom, nsnull, kNameSpaceID_None,
-                    nsIDOMNode::ATTRIBUTE_NODE).get();
+      nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(nameAtom, nsnull, kNameSpaceID_None).get();
   }
   
   return nodeInfo;

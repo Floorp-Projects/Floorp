@@ -107,7 +107,10 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
         }
     }
 
-    PRUint16 nodeType = context->NodeType();
+    nsresult rv;
+    PRUint16 nodeType;
+    rv = aContextNode->GetNodeType(&nodeType);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (nodeType == nsIDOMNode::TEXT_NODE ||
         nodeType == nsIDOMNode::CDATA_SECTION_NODE) {
@@ -144,7 +147,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
     EvalContextImpl eContext(*contextNode, aContextPosition, aContextSize,
                              mRecycler);
     nsRefPtr<txAExprResult> exprResult;
-    nsresult rv = mExpression->evaluate(&eContext, getter_AddRefs(exprResult));
+    rv = mExpression->evaluate(&eContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint16 resultType = aType;

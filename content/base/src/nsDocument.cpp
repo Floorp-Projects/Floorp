@@ -1702,6 +1702,7 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNodeSelector,
@@ -1997,8 +1998,6 @@ nsDocument::Init()
 
   mNodeInfo = mNodeInfoManager->GetDocumentNodeInfo();
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_NODE,
-                    "Bad NodeType in aNodeInfo");
 
   NS_ASSERTION(GetOwnerDoc() == this, "Our nodeinfo is busted!");
 
@@ -3384,18 +3383,6 @@ nsDocument::IsNodeOfType(PRUint32 aFlags) const
     return !(aFlags & ~eDOCUMENT);
 }
 
-PRUint16
-nsDocument::NodeType()
-{
-    return (PRUint16)nsIDOMNode::DOCUMENT_NODE;
-}
-
-void
-nsDocument::NodeName(nsAString& aNodeName)
-{
-  aNodeName.AssignLiteral("#document");
-}
-
 Element*
 nsDocument::GetRootElementInternal() const
 {
@@ -4386,7 +4373,6 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   nsresult rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                                      aQualifiedName,
                                                      mNodeInfoManager,
-                                                     nsIDOMNode::ELEMENT_NODE,
                                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4519,7 +4505,6 @@ nsDocument::CreateAttribute(const nsAString& aName,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
-                                     nsIDOMNode::ATTRIBUTE_NODE,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4541,7 +4526,6 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
   nsresult rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                                      aQualifiedName,
                                                      mNodeInfoManager,
-                                                     nsIDOMNode::ATTRIBUTE_NODE,
                                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5204,8 +5188,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
     {
       nsCOMPtr<nsINodeInfo> titleInfo;
       titleInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nsnull,
-                                                kNameSpaceID_XHTML,
-                                                nsIDOMNode::ELEMENT_NODE);
+                                                kNameSpaceID_XHTML);
       if (!titleInfo)
         return NS_OK;
       title = NS_NewHTMLTitleElement(titleInfo.forget());
@@ -5782,81 +5765,35 @@ nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
                                                aFeature, aVersion, aReturn);
 }
 
-NS_IMETHODIMP
-nsDocument::GetDOMBaseURI(nsAString &aURI)
-{
-  return nsIDocument::GetDOMBaseURI(aURI);
-}
-
-NS_IMETHODIMP
+void
 nsDocument::GetTextContent(nsAString &aTextContent)
 {
   SetDOMStringToNull(aTextContent);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aResult)
+PRBool
+nsDocument::IsEqualNode(nsINode* aOther)
 {
-  return nsINode::IsEqualNode(aOther, aResult);
-}
+  if (!aOther || !aOther->IsNodeOfType(eDOCUMENT))
+    return PR_FALSE;
 
-NS_IMETHODIMP
-nsDocument::CompareDocumentPosition(nsIDOMNode *other,
-                                   PRUint16 *aResult)
-{
-  return nsINode::CompareDocumentPosition(other, aResult);
-}
+  // Child nodes check.
+  PRUint32 childCount = GetChildCount();
+  if (childCount != aOther->GetChildCount()) {
+    return PR_FALSE;
+  }
 
-NS_IMETHODIMP
-nsDocument::SetTextContent(const nsAString & aTextContent)
-{
-  return nsINode::SetTextContent(aTextContent);
-}
+  for (PRUint32 i = 0; i < childCount; i++) {
+    if (!GetChildAt(i)->IsEqual(aOther->GetChildAt(i))) {
+      return PR_FALSE;
+    }
+  }
 
-NS_IMETHODIMP
-nsDocument::IsSameNode(nsIDOMNode *other, PRBool *aResult)
-{
-  *aResult = other == this;
-  return NS_OK;
-}
+  /* Checks not needed:  Prefix, namespace URI, local name, node name,
+     node value, attributes.
+   */
 
-NS_IMETHODIMP
-nsDocument::LookupPrefix(const nsAString & namespaceURI, nsAString & aResult)
-{
-  SetDOMStringToNull(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::IsDefaultNamespace(const nsAString & namespaceURI,
-                              PRBool *aResult)
-{
-  *aResult = namespaceURI.IsEmpty();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::LookupNamespaceURI(const nsAString & prefix,
-                              nsAString & aResult)
-{
-  SetDOMStringToNull(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetUserData(const nsAString & key,
-                       nsIVariant *data, nsIDOMUserDataHandler *handler,
-                       nsIVariant **aResult)
-{
-  return nsINode::SetUserData(key, data, handler, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::GetUserData(const nsAString & key,
-                        nsIVariant **aResult)
-{
-  return nsINode::GetUserData(key, aResult);
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -6935,7 +6872,6 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, PRInt32 aNamesp
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
-                                nsIDOMNode::ELEMENT_NODE,
                                 getter_AddRefs(nodeInfo));
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 

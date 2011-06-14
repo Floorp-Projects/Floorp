@@ -502,9 +502,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
 
     newNodeInfo = nodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
                                                nodeInfo->GetPrefixAtom(),
-                                               nodeInfo->NamespaceID(),
-                                               nodeInfo->NodeType(),
-                                               nodeInfo->GetExtraName());
+                                               nodeInfo->NamespaceID());
     NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
     nodeInfo = newNodeInfo;

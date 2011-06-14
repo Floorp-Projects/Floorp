@@ -53,7 +53,7 @@ function testComment(aText, aShouldSucceed)
     checkTypes(comment, "comment", types);
 
     var interfaces = [ "nsIDOMComment", "nsIDOMCharacterData", "nsIDOMNode",
-                       "nsIDOMEventTarget" ];
+                       "nsIDOM3Node", "nsIDOMEventTarget" ];
     checkInterfaces(comment, "comment", interfaces);
 
     testCharacterData(comment, aText);
