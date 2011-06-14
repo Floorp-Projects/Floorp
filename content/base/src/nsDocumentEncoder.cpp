@@ -377,7 +377,9 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
     return NS_OK;
   }
 
-  switch (node->NodeType()) {
+  PRUint16 type;
+  node->GetNodeType(&type);
+  switch (type) {
     case nsIDOMNode::TEXT_NODE:
     {
       mSerializer->AppendText(static_cast<nsIContent*>(node),

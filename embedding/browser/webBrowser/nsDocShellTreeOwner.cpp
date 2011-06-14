@@ -1168,7 +1168,8 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
                   childNodes->Item(i, getter_AddRefs(childNode));
                   nsCOMPtr<nsIDOMSVGTitleElement> titleElement(do_QueryInterface(childNode));
                   if (titleElement) {
-                    titleElement->GetTextContent(outText);
+                    nsCOMPtr<nsIDOM3Node> titleContent(do_QueryInterface(titleElement));
+                    titleContent->GetTextContent(outText);
                     if ( outText.Length() )
                       found = PR_TRUE;
                     break;

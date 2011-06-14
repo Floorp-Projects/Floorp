@@ -46,6 +46,7 @@
 
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
+#include "nsIDOM3Node.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
@@ -616,27 +617,29 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_innerHTML(BSTR __RPC_FAR *p)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::put_innerText(BSTR v)
 {
-    if (!mDOMNode)
+    nsCOMPtr<nsIDOM3Node> node = do_QueryInterface(mDOMNode);
+    if (!node)
     {
         return E_UNEXPECTED;
     }
 
     USES_CONVERSION;
     nsAutoString innerText(OLE2W(v));
-    mDOMNode->SetTextContent(innerText);
+    node->SetTextContent(innerText);
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_innerText(BSTR __RPC_FAR *p)
 {
-    if (!mDOMNode)
+    nsCOMPtr<nsIDOM3Node> node = do_QueryInterface(mDOMNode);
+    if (!node)
     {
         return E_UNEXPECTED;
     }
 
     nsAutoString innerText;
-    mDOMNode->GetTextContent(innerText);
+    node->GetTextContent(innerText);
 
     USES_CONVERSION;
     *p = SysAllocString(W2COLE(innerText.get()));

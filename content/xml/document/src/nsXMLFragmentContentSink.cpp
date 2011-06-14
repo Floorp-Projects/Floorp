@@ -641,6 +641,7 @@ nsXHTMLParanoidFragmentSink::AddAttributes(const PRUnichar** aAtts,
   nsTArray<const PRUnichar *> allowedAttrs;
   PRInt32 nameSpaceID;
   nsCOMPtr<nsIAtom> prefix, localName;
+  nsCOMPtr<nsINodeInfo> nodeInfo;
 
   if (!mNullPrincipal) {
       mNullPrincipal = do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID, &rv);
@@ -650,8 +651,10 @@ nsXHTMLParanoidFragmentSink::AddAttributes(const PRUnichar** aAtts,
   while (*aAtts) {
     nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
                                    getter_AddRefs(localName), &nameSpaceID);
+    nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
     // check the attributes we allow that contain URIs
-    if (IsAttrURI(localName)) {
+    if (IsAttrURI(nodeInfo->NameAtom())) {
       if (!aAtts[1])
         rv = NS_ERROR_FAILURE;
       if (!baseURI)
@@ -693,16 +696,21 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
   if (nameSpaceID != kNameSpaceID_XHTML)
     return NS_OK;
   
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+  
   // bounce it if it's not on the whitelist or we're inside
   // <script> or <style>
+  nsCOMPtr<nsIAtom> name = nodeInfo->NameAtom();
   if (mSkipLevel != 0 ||
-      localName == nsGkAtoms::script ||
-      localName == nsGkAtoms::style) {
+      name == nsGkAtoms::script ||
+      name == nsGkAtoms::style) {
     ++mSkipLevel; // track this so we don't spew script text
     return NS_OK;
   }  
   
-  if (!sAllowedTags || !sAllowedTags->GetEntry(localName))
+  if (!sAllowedTags || !sAllowedTags->GetEntry(name))
     return NS_OK;
   
   // It's an allowed element, so let's scrub the attributes
@@ -710,10 +718,14 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
   for (PRUint32 i = 0; i < aAttsCount; i += 2) {
     nsContentUtils::SplitExpatName(aAtts[i], getter_AddRefs(prefix),
                                    getter_AddRefs(localName), &nameSpaceID);
+    nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+    
+    name = nodeInfo->NameAtom();
     // Add if it's xmlns, xml: or on the HTML whitelist
     if (nameSpaceID == kNameSpaceID_XMLNS ||
         nameSpaceID == kNameSpaceID_XML ||
-        (sAllowedAttributes && sAllowedAttributes->GetEntry(localName))) {
+        (sAllowedAttributes && sAllowedAttributes->GetEntry(name))) {
       allowedAttrs.AppendElement(aAtts[i]);
       allowedAttrs.AppendElement(aAtts[i + 1]);
     }
@@ -740,12 +752,17 @@ nsXHTMLParanoidFragmentSink::HandleEndElement(const PRUnichar *aName)
     return NS_OK;
   }
   
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+  
+  nsCOMPtr<nsIAtom> name = nodeInfo->NameAtom();
   if (mSkipLevel != 0) {
     --mSkipLevel;
     return NS_OK;
   }
 
-  if (!sAllowedTags || !sAllowedTags->GetEntry(localName)) {
+  if (!sAllowedTags || !sAllowedTags->GetEntry(name)) {
     return NS_OK;
   }
 

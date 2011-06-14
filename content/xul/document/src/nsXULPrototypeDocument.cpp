@@ -317,11 +317,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
         rv |= aStream->ReadString(localName);
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
-        // Using PR_UINT16_MAX here as we don't know which nodeinfos will be
-        // used for attributes and which for elements. And that doesn't really
-        // matter.
         rv |= mNodeInfoManager->GetNodeInfo(localName, prefix, namespaceURI,
-                                            PR_UINT16_MAX,
                                             getter_AddRefs(nodeInfo));
         if (!nodeInfos.AppendObject(nodeInfo))
             rv |= NS_ERROR_OUT_OF_MEMORY;
@@ -373,8 +369,7 @@ GetNodeInfos(nsXULPrototypeElement* aPrototype,
         nsAttrName* name = &aPrototype->mAttributes[i].mName;
         if (name->IsAtom()) {
             ni = aPrototype->mNodeInfo->NodeInfoManager()->
-                GetNodeInfo(name->Atom(), nsnull, kNameSpaceID_None,
-                            nsIDOMNode::ATTRIBUTE_NODE);
+                GetNodeInfo(name->Atom(), nsnull, kNameSpaceID_None);
             NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
         }
         else {

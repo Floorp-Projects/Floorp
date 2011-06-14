@@ -237,8 +237,7 @@ MediaDocument::CreateSyntheticDocument()
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,
-                                           kNameSpaceID_XHTML,
-                                           nsIDOMNode::ELEMENT_NODE);
+                                           kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<nsGenericHTMLElement> root = NS_NewHTMLHtmlElement(nodeInfo.forget());
@@ -251,8 +250,7 @@ MediaDocument::CreateSyntheticDocument()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head, nsnull,
-                                           kNameSpaceID_XHTML,
-                                           nsIDOMNode::ELEMENT_NODE);
+                                           kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   // Create a <head> so our title has somewhere to live
@@ -264,8 +262,7 @@ MediaDocument::CreateSyntheticDocument()
   root->AppendChildTo(head, PR_FALSE);
 
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::body, nsnull,
-                                           kNameSpaceID_XHTML,
-                                           nsIDOMNode::ELEMENT_NODE);
+                                           kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<nsGenericHTMLElement> body = NS_NewHTMLBodyElement(nodeInfo.forget());

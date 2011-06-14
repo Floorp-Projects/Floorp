@@ -53,23 +53,12 @@
 // data. This is done simply for convenience and should be changed if
 // this restricts what should be done for character data.
 
-class nsDOMDocumentTypeForward : public nsGenericDOMDataNode,
-                                 public nsIDOMDocumentType
-{
-public:
-  nsDOMDocumentTypeForward(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsGenericDOMDataNode(aNodeInfo)
-  {
-  }
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericDOMDataNode::)
-};
-
-class nsDOMDocumentType : public nsDOMDocumentTypeForward
+class nsDOMDocumentType : public nsGenericDOMDataNode,
+                          public nsIDOMDocumentType
 {
 public:
   nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
+                    nsIAtom *aName,
                     const nsAString& aPublicId,
                     const nsAString& aSystemId,
                     const nsAString& aInternalSubset);
@@ -80,36 +69,21 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  // Forwarded by base class
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
 
   // nsIDOMDocumentType
   NS_DECL_NSIDOMDOCUMENTTYPE
 
-  NS_IMETHODIMP GetNodeValue(nsAString& aNodeValue)
-  {
-    SetDOMStringToNull(aNodeValue);
-  
-    return NS_OK;
-  }
-  NS_IMETHODIMP SetNodeValue(const nsAString& aNodeValue)
-  {
-    return NS_OK;
-  }
-
-  // nsINode
-  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-
   // nsIContent overrides
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual const nsTextFragment* GetText();
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
                               PRBool aCompileEventHandlers);
 
-  virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              PRBool aCloneText) const;
-
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
+  nsCOMPtr<nsIAtom> mName;
   nsString mPublicId;
   nsString mSystemId;
   nsString mInternalSubset;

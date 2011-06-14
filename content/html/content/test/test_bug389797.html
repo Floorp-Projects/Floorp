@@ -32,7 +32,8 @@ function HTML_TAG(aTagName, aImplClass) {
   allTags.push(aTagName);
   classInfos[aTagName] = aImplClass;
   interfaces[aTagName] =
-    [ "nsIDOMNSElement",
+    [ "nsIDOM3Node",
+      "nsIDOMNSElement",
       "nsIDOMEventTarget",
       "nsIDOMNSEventTarget",
       "nsIDOMNSHTMLElement",

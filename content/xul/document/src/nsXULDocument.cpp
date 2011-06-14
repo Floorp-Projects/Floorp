@@ -3704,8 +3704,7 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
         nsCOMPtr<nsINodeInfo> newNodeInfo;
         newNodeInfo = mNodeInfoManager->GetNodeInfo(aPrototype->mNodeInfo->NameAtom(),
                                                     aPrototype->mNodeInfo->GetPrefixAtom(),
-                                                    aPrototype->mNodeInfo->NamespaceID(),
-                                                    nsIDOMNode::ELEMENT_NODE);
+                                                    aPrototype->mNodeInfo->NamespaceID());
         if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
         nsCOMPtr<nsIContent> content;
         PRInt32 ns = newNodeInfo->NamespaceID();
