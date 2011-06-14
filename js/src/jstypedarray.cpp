@@ -67,6 +67,9 @@
 using namespace js;
 using namespace js::gc;
 
+/* slots can only be upto 255 */
+static const uint8 ARRAYBUFFER_RESERVED_SLOTS = 16;
+
 static bool
 ValueIsLength(JSContext *cx, const Value &v, jsuint *len)
 {
@@ -137,11 +140,14 @@ ArrayBuffer::class_constructor(JSContext *cx, uintN argc, Value *vp)
 static inline JSBool
 AllocateSlots(JSContext *cx, JSObject *obj, uint32 size)
 {
-    uint32 bytes = size;
-    bytes += sizeof(uint64);
-    obj->slots = (js::Value *)cx->calloc_(bytes);
-    if (!obj->slots)
-        return false;
+    uint32 bytes = size + sizeof(js::Value);
+    if (size > sizeof(js::Value) * ARRAYBUFFER_RESERVED_SLOTS - sizeof(js::Value) ) {
+        obj->slots = (js::Value *)cx->calloc_(bytes);
+        if (!obj->slots)
+            return false;
+    } else {
+        memset(obj->slots, 0, bytes);
+    }
     *((uint32*)obj->slots) = size;
     return true;
 }
@@ -1544,7 +1550,9 @@ TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, uint32 index, Value 
 
 Class ArrayBuffer::slowClass = {
     "ArrayBuffer",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(ARRAYBUFFER_RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -1559,6 +1567,7 @@ Class ArrayBuffer::fastClass = {
     "ArrayBuffer",
     JSCLASS_HAS_PRIVATE |
     Class::NON_NATIVE |
+    JSCLASS_HAS_RESERVED_SLOTS(ARRAYBUFFER_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
