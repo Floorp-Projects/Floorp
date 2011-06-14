@@ -1062,7 +1062,8 @@ public:
   nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
                               nsAString& aNamespaceURI);
 
-  NS_IMETHOD IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn) = 0;
+  nsresult IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn);
+  PRBool IsEqualTo(nsINode* aOther);
 
   nsIContent* GetNextSibling() const { return mNextSibling; }
   nsIContent* GetPreviousSibling() const { return mPreviousSibling; }
