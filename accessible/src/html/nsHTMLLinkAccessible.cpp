@@ -173,7 +173,7 @@ nsHTMLLinkAccessible::IsHyperLink()
 }
 
 already_AddRefed<nsIURI>
-nsHTMLLinkAccessible::GetAnchorURI(PRUint32 aAnchorIndex)
+nsHTMLLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
   return aAnchorIndex == 0 ? mContent->GetHrefURI() : nsnull;
 }

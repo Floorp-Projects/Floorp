@@ -82,7 +82,7 @@ __try {
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
 
-  nsAccessible* anchor = thisObj->GetAnchor(aIndex);
+  nsAccessible* anchor = thisObj->AnchorAt(aIndex);
   if (!anchor)
     return S_FALSE;
 
@@ -117,7 +117,7 @@ __try {
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
 
-  nsCOMPtr<nsIURI> uri = thisObj->GetAnchorURI(aIndex);
+  nsCOMPtr<nsIURI> uri = thisObj->AnchorURIAt(aIndex);
   if (!uri)
     return S_FALSE;
 

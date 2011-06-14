@@ -200,14 +200,14 @@ nsLinkableAccessible::Shutdown()
 // nsLinkableAccessible: HyperLinkAccessible
 
 already_AddRefed<nsIURI>
-nsLinkableAccessible::GetAnchorURI(PRUint32 aAnchorIndex)
+nsLinkableAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
   if (mIsLink) {
     NS_ASSERTION(mActionAcc->IsHyperLink(),
                  "nsIAccessibleHyperLink isn't implemented.");
 
     if (mActionAcc->IsHyperLink())
-      return mActionAcc->GetAnchorURI(aAnchorIndex);
+      return mActionAcc->AnchorURIAt(aAnchorIndex);
   }
 
   return nsnull;
