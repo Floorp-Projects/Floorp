@@ -425,8 +425,6 @@ public:
   virtual void AppendTextTo(nsAString& aResult);
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual PRUint16 NodeType();
-  virtual void NodeName(nsAString& aNodeName);
   virtual PRBool IsLink(nsIURI** aURI) const;
 
   virtual PRUint32 GetScriptTypeID() const;

@@ -64,8 +64,6 @@ public:
 
   // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual PRUint16 NodeType();
-  virtual void NodeName(nsAString& aNodeName);
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               PRBool aCloneText) const;
