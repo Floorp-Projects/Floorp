@@ -1,0 +1,11 @@
+HKCR
+{
+	NoRemove AppID
+	{
+		{5B209214-F756-11D2-A27F-000000000000} = s 'Cbrowse'
+		'Cbrowse.EXE'
+		{
+			val AppID = s {5B209214-F756-11D2-A27F-000000000000}
+		}
+	}
+}

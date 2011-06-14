@@ -1,0 +1,9 @@
+; pluginhostctrl.def : Declares the module parameters.
+
+LIBRARY      "pluginhostctrl.DLL"
+
+EXPORTS
+	DllCanUnloadNow PRIVATE
+	DllGetClassObject PRIVATE
+	DllRegisterServer PRIVATE
+	DllUnregisterServer	PRIVATE
