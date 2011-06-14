@@ -1731,7 +1731,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     mFocusedContent = aContent;
 
     nsIContent* focusedNode = aWindow->GetFocusedNode();
-    PRBool isRefocus = focusedNode && focusedNode->IsEqual(aContent);
+    PRBool isRefocus = focusedNode && focusedNode->IsEqualTo(aContent);
 
     aWindow->SetFocusedNode(aContent, focusMethod);
 
