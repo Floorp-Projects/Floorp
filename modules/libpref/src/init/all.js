@@ -3151,9 +3151,9 @@ pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
 // compressed data.
 pref("image.mem.discardable", true);
 
-// Prevents images from automatically being decoded on load, instead allowing
-// them to be decoded on demand when they are drawn.
-pref("image.mem.decodeondraw", false);
+// Prevents images from automatically being decoded when loaded in background
+// tabs, instead allowing them to be decoded on demand when they are drawn.
+pref("image.mem.decodeondraw", true);
 
 // Minimum timeout for image discarding (in milliseconds). The actual time in
 // which an image must inactive for it to be discarded will vary between this
