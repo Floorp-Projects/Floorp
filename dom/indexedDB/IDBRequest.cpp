@@ -55,6 +55,7 @@
 #include "AsyncConnectionHelper.h"
 #include "IDBEvents.h"
 #include "IDBTransaction.h"
+#include "nsContentUtils.h"
 
 USING_INDEXEDDB_NAMESPACE
 
