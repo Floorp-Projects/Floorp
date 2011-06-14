@@ -135,33 +135,11 @@ members = [
     'nsIDOMElement.getAttributeNS',
     'nsIDOMNamedNodeMap.item',
     'nsIDOMNamedNodeMap.length',
-    'nsIDOMNode.appendChild',
-    'nsIDOMNode.nextSibling',
-    'nsIDOMNode.cloneNode',
-    'nsIDOMNode.firstChild',
-    'nsIDOMNode.prefix',
-    'nsIDOMNode.nodeValue',
-    'nsIDOMNode.childNodes',
-    'nsIDOMNode.normalize',
-    'nsIDOMNode.nodeName',
-    'nsIDOMNode.namespaceURI',
-    'nsIDOMNode.hasChildNodes',
-    'nsIDOMNode.previousSibling',
-    'nsIDOMNode.nodeType',
-    'nsIDOMNode.insertBefore',
-    'nsIDOMNode.replaceChild',
-    'nsIDOMNode.localName',
-    'nsIDOMNode.lastChild',
-    'nsIDOMNode.ownerDocument',
-    'nsIDOMNode.parentNode',
-    'nsIDOMNode.removeChild',
-    'nsIDOMNode.hasAttributes',
-    'nsIDOMNode.attributes',
+    'nsIDOMNode.*',
     'nsIDOMNodeList.*',
     'nsIDOMNodeSelector.querySelector',
     'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
-    'nsIDOM3Node.*',
     'nsIDOMDOMImplementation.*',
     'nsIDOMDOMStringList.*',
     'nsIDOMDOMTokenList.*',
@@ -638,6 +616,13 @@ customMethodCalls = {
         },
     'nsIDOMNode_GetNodeType': {
         'thisType': 'nsINode',
+        'code': 'PRUint16 result = self->NodeType();',
+        'canFail': False
+        },
+    'nsIDOMNode_GetNodeName': {
+        'thisType': 'nsINode',
+        'code': 'nsString result;\n'
+                'self->NodeName(result);',
         'canFail': False
         },
     'nsIDOMNodeList_Item': {
@@ -791,49 +776,45 @@ customMethodCalls = {
                 '    rv = nsGenericElement::doQuerySelectorAll(self, '
                 'arg0, getter_AddRefs(result));'
         },
-    'nsIDOM3Node_': {
-        'thisType': 'nsINode'
-        },
-    'nsIDOM3Node_GetBaseURI': {
+    'nsIDOMNode_GetBaseURI': {
         'thisType': 'nsINode',
         'canFail': False
         },
-    'nsIDOM3Node_CompareDocumentPosition': {
+    'nsIDOMNode_CompareDocumentPosition': {
         'thisType': 'nsINode',
-        'arg0Type': 'nsINode'
+        'arg0Type': 'nsINode',
+        'code': '    PRUint16 result;\n'
+                '    rv = self->CompareDocPosition(arg0, &result);',
+        'canFail': True
         },
-    'nsIDOM3Node_GetTextContent': {
+    'nsIDOMNode_GetTextContent': {
         'thisType': 'nsINode',
         'canFail': False
         },
     'nsIDOM3Node_IsSameNode': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    PRBool result = self->IsSameNode(arg0);',
+        'code': '    PRBool result = self == arg0;',
         'canFail': False
         },
-    'nsIDOM3Node_LookupPrefix': {
+    'nsIDOMNode_LookupPrefix': {
         'thisType': 'nsINode',
         'canFail': False
         },
-    'nsIDOM3Node_IsDefaultNamespace': {
-        'thisType': 'nsINode',
-        'code': '    PRBool result = self->IsDefaultNamespace(arg0);',
-        'canFail': False
-        },
-    'nsIDOM3Node_LookupNamespaceURI': {
+    'nsIDOMNode_IsDefaultNamespace': {
         'thisType': 'nsINode',
         'canFail': False
         },
-    'nsIDOM3Node_IsEqualNode': {
+    'nsIDOMNode_LookupNamespaceURI': {
         'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'code': '    PRBool result = self->IsEqualNode(arg0);',
         'canFail': False
         },
-    'nsIDOM3Node_GetUserData': {
+    'nsIDOMNode_IsEqualNode': {
         'thisType': 'nsINode',
-        'code': '    nsIVariant *result = self->GetUserData(arg0);',
+        'canFail': False
+        },
+    'nsIDOMNode_GetUserData': {
+        'thisType': 'nsINode',
         'canFail': False
         },
     'nsIDOMNSHTMLElement_': {

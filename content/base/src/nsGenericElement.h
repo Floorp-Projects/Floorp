@@ -51,7 +51,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
-#include "nsIDOM3Node.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNSElement.h"
 #include "nsILinkHandler.h"
@@ -81,7 +80,6 @@ class nsIDOMCSSStyleDeclaration;
 class nsIURI;
 class nsINodeInfo;
 class nsIControllers;
-class nsIDOMNSFeatureFactory;
 class nsIEventListenerManager;
 class nsIScrollableFrame;
 class nsContentList;
@@ -131,14 +129,14 @@ private:
 /**
  * A tearoff class for nsGenericElement to implement additional interfaces
  */
-class nsNode3Tearoff : public nsIDOM3Node, public nsIDOMXPathNSResolver
+class nsNode3Tearoff : public nsIDOMXPathNSResolver
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  NS_DECL_NSIDOM3NODE
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsNode3Tearoff)
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNode3Tearoff, nsIDOM3Node)
+  NS_DECL_NSIDOMXPATHNSRESOLVER
 
   nsNode3Tearoff(nsINode *aNode) : mNode(aNode)
   {
@@ -345,11 +343,12 @@ public:
   {
     return nsContentUtils::GetContextForEventHandlers(this, aRv);
   }
-  virtual void GetTextContent(nsAString &aTextContent)
+  NS_IMETHOD GetTextContent(nsAString &aTextContent)
   {
     nsContentUtils::GetNodeTextContent(this, PR_TRUE, aTextContent);
+    return NS_OK;
   }
-  virtual nsresult SetTextContent(const nsAString& aTextContent)
+  NS_IMETHOD SetTextContent(const nsAString& aTextContent)
   {
     return nsContentUtils::SetNodeTextContent(this, aTextContent, PR_FALSE);
   }
@@ -426,6 +425,8 @@ public:
   virtual void AppendTextTo(nsAString& aResult);
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual PRUint16 NodeType();
+  virtual void NodeName(nsAString& aNodeName);
   virtual PRBool IsLink(nsIURI** aURI) const;
 
   virtual PRUint32 GetScriptTypeID() const;
