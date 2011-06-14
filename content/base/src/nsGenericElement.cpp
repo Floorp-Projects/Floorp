@@ -112,7 +112,6 @@
 
 #include "nsNodeInfoManager.h"
 #include "nsICategoryManager.h"
-#include "nsIDOMNSFeatureFactory.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsGenericHTMLElement.h"
@@ -574,8 +573,8 @@ nsINode::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   return rv;
 }
 
-void
-nsINode::GetBaseURI(nsAString &aURI) const
+nsresult
+nsINode::GetDOMBaseURI(nsAString &aURI) const
 {
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
@@ -585,19 +584,49 @@ nsINode::GetBaseURI(nsAString &aURI) const
   }
 
   CopyUTF8toUTF16(spec, aURI);
+
+  return NS_OK;
 }
 
-void
+nsresult
 nsINode::LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix)
 {
   Element *element = GetNameSpaceElement();
-  nsIAtom *prefix = element ? element->LookupPrefix(aNamespaceURI) : nsnull;
-  if (prefix) {
-    prefix->ToString(aPrefix);
+  if (element) {
+    // XXX Waiting for DOM spec to list error codes.
+  
+    // Trace up the content parent chain looking for the namespace
+    // declaration that defines the aNamespaceURI namespace. Once found,
+    // return the prefix (i.e. the attribute localName).
+    for (nsIContent* content = element; content;
+         content = content->GetParent()) {
+      PRUint32 attrCount = content->GetAttrCount();
+  
+      for (PRUint32 i = 0; i < attrCount; ++i) {
+        const nsAttrName* name = content->GetAttrNameAt(i);
+  
+        if (name->NamespaceEquals(kNameSpaceID_XMLNS) &&
+            content->AttrValueIs(kNameSpaceID_XMLNS, name->LocalName(),
+                                 aNamespaceURI, eCaseMatters)) {
+          // If the localName is "xmlns", the prefix we output should be
+          // null.
+          nsIAtom *localName = name->LocalName();
+  
+          if (localName != nsGkAtoms::xmlns) {
+            localName->ToString(aPrefix);
+          }
+          else {
+            SetDOMStringToNull(aPrefix);
+          }
+          return NS_OK;
+        }
+      }
+    }
   }
-  else {
-    SetDOMStringToNull(aPrefix);
-  }
+
+  SetDOMStringToNull(aPrefix);
+
+  return NS_OK;
 }
 
 static nsresult
@@ -660,7 +689,7 @@ nsINode::SetUserData(const nsAString &aKey, nsIVariant *aData,
 }
 
 PRUint16
-nsINode::CompareDocumentPosition(nsINode* aOtherNode)
+nsINode::CompareDocPosition(nsINode* aOtherNode)
 {
   NS_PRECONDITION(aOtherNode, "don't pass null");
 
@@ -697,16 +726,16 @@ nsINode::CompareDocumentPosition(nsINode* aOtherNode)
         if (attrName->Equals(attr1->NodeInfo())) {
           NS_ASSERTION(!attrName->Equals(attr2->NodeInfo()),
                        "Different attrs at same position");
-          return nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
-            nsIDOM3Node::DOCUMENT_POSITION_PRECEDING;
+          return nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
+            nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
         }
         if (attrName->Equals(attr2->NodeInfo())) {
-          return nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
-            nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING;
+          return nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
+            nsIDOMNode::DOCUMENT_POSITION_FOLLOWING;
         }
       }
       NS_NOTREACHED("neither attribute in the element");
-      return nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED;
+      return nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED;
     }
 
     if (elem) {
@@ -737,12 +766,12 @@ nsINode::CompareDocumentPosition(nsINode* aOtherNode)
   nsINode* top2 = parents2.ElementAt(--pos2);
   if (top1 != top2) {
     return top1 < top2 ?
-      (nsIDOM3Node::DOCUMENT_POSITION_PRECEDING |
-       nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
-       nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC) :
-      (nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING |
-       nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
-       nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+      (nsIDOMNode::DOCUMENT_POSITION_PRECEDING |
+       nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
+       nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC) :
+      (nsIDOMNode::DOCUMENT_POSITION_FOLLOWING |
+       nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
+       nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
   }
 
   // Find where the parent chain differs and check indices in the parent.
@@ -756,8 +785,8 @@ nsINode::CompareDocumentPosition(nsINode* aOtherNode)
       // IndexOf will return -1 for the attribute making the attribute be
       // considered before any child.
       return parent->IndexOf(child1) < parent->IndexOf(child2) ?
-        static_cast<PRUint16>(nsIDOM3Node::DOCUMENT_POSITION_PRECEDING) :
-        static_cast<PRUint16>(nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
+        static_cast<PRUint16>(nsIDOMNode::DOCUMENT_POSITION_PRECEDING) :
+        static_cast<PRUint16>(nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
     }
     parent = child1;
   }
@@ -766,13 +795,13 @@ nsINode::CompareDocumentPosition(nsINode* aOtherNode)
   // between the chains. That must mean that one node is an ancestor of the
   // other. The one with the shortest chain must be the ancestor.
   return pos1 < pos2 ?
-    (nsIDOM3Node::DOCUMENT_POSITION_PRECEDING |
-     nsIDOM3Node::DOCUMENT_POSITION_CONTAINS) :
-    (nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING |
-     nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY);    
+    (nsIDOMNode::DOCUMENT_POSITION_PRECEDING |
+     nsIDOMNode::DOCUMENT_POSITION_CONTAINS) :
+    (nsIDOMNode::DOCUMENT_POSITION_FOLLOWING |
+     nsIDOMNode::DOCUMENT_POSITION_CONTAINED_BY);    
 }
 
-void
+nsresult
 nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                             nsAString& aNamespaceURI)
 {
@@ -781,6 +810,8 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                                         aNamespaceURI))) {
     SetDOMStringToNull(aNamespaceURI);
   }
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -1139,53 +1170,11 @@ nsChildContentList::IndexOf(nsIContent* aContent)
 NS_IMPL_CYCLE_COLLECTION_1(nsNode3Tearoff, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNode3Tearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathNSResolver)
 NS_INTERFACE_MAP_END_AGGREGATED(mNode)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNode3Tearoff)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNode3Tearoff)
-
-NS_IMETHODIMP
-nsNode3Tearoff::GetBaseURI(nsAString& aURI)
-{
-  mNode->GetBaseURI(aURI);
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNode3Tearoff::GetTextContent(nsAString &aTextContent)
-{
-  mNode->GetTextContent(aTextContent);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNode3Tearoff::SetTextContent(const nsAString &aTextContent)
-{
-  return mNode->SetTextContent(aTextContent);
-}
-
-NS_IMETHODIMP
-nsNode3Tearoff::CompareDocumentPosition(nsIDOMNode* aOther,
-                                        PRUint16* aReturn)
-{
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-
-  return mNode->CompareDocumentPosition(other, aReturn);
-}
-
-NS_IMETHODIMP
-nsNode3Tearoff::IsSameNode(nsIDOMNode* aOther,
-                           PRBool* aReturn)
-{
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  *aReturn = mNode->IsSameNode(other);
-
-  return NS_OK;
-}
 
 PRBool
 nsIContent::IsEqual(nsIContent* aOther)
@@ -1284,87 +1273,12 @@ nsIContent::IsEqual(nsIContent* aOther)
   return PR_TRUE;
 }
 
-PRBool
-nsIContent::IsEqualNode(nsINode* aOther)
-{
-  if (!aOther || !aOther->IsNodeOfType(eCONTENT))
-    return PR_FALSE;
-
-  return IsEqual(static_cast<nsIContent*>(aOther));
-}
-
 NS_IMETHODIMP
-nsNode3Tearoff::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
+nsIContent::IsEqualNode(nsIDOMNode* aOther, PRBool* aResult)
 {
-  // Since we implement nsINode, aOther must as well.
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-
-  *aReturn = other && mNode->IsEqualNode(other);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNode3Tearoff::GetFeature(const nsAString& aFeature,
-                           const nsAString& aVersion,
-                           nsISupports** aReturn)
-{
-  return mNode->GetFeature(aFeature, aVersion, aReturn);
-}
-
-NS_IMETHODIMP
-nsNode3Tearoff::SetUserData(const nsAString& aKey,
-                            nsIVariant* aData,
-                            nsIDOMUserDataHandler* aHandler,
-                            nsIVariant** aResult)
-{
-  return mNode->SetUserData(aKey, aData, aHandler, aResult);
-}
-
-NS_IMETHODIMP
-nsNode3Tearoff::GetUserData(const nsAString& aKey,
-                            nsIVariant** aResult)
-{
-  NS_IF_ADDREF(*aResult = mNode->GetUserData(aKey));
-
-  return NS_OK;
-}
-
-nsIAtom*
-nsIContent::LookupPrefix(const nsAString& aNamespaceURI)
-{
-  // XXX Waiting for DOM spec to list error codes.
-
-  // Trace up the content parent chain looking for the namespace
-  // declaration that defines the aNamespaceURI namespace. Once found,
-  // return the prefix (i.e. the attribute localName).
-  for (nsIContent* content = this; content;
-       content = content->GetParent()) {
-    PRUint32 attrCount = content->GetAttrCount();
-
-    for (PRUint32 i = 0; i < attrCount; ++i) {
-      const nsAttrName* name = content->GetAttrNameAt(i);
-
-      if (name->NamespaceEquals(kNameSpaceID_XMLNS) &&
-          content->AttrValueIs(kNameSpaceID_XMLNS, name->LocalName(),
-                               aNamespaceURI, eCaseMatters)) {
-        // If the localName is "xmlns", the prefix we output should be
-        // null.
-        nsIAtom *localName = name->LocalName();
-
-        return localName == nsGkAtoms::xmlns ? nsnull : localName;
-      }
-    }
-  }
-
-  return nsnull;
-}
-
-NS_IMETHODIMP
-nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
-                             nsAString& aPrefix)
-{
-  mNode->LookupPrefix(aNamespaceURI, aPrefix);
+  nsCOMPtr<nsIContent> other = do_QueryInterface(aOther);
+  *aResult = other && IsEqual(other);
+  
   return NS_OK;
 }
 
@@ -1372,16 +1286,7 @@ NS_IMETHODIMP
 nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {
-  mNode->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNode3Tearoff::IsDefaultNamespace(const nsAString& aNamespaceURI,
-                                   PRBool* aReturn)
-{
-  *aReturn = mNode->IsDefaultNamespace(aNamespaceURI);
-  return NS_OK;
+  return mNode->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
 }
 
 nsIContent*
@@ -2291,7 +2196,7 @@ nsGenericElement::SetNodeValue(const nsAString& aNodeValue)
 NS_IMETHODIMP
 nsGenericElement::GetNodeType(PRUint16* aNodeType)
 {
-  *aNodeType = (PRUint16)nsIDOMNode::ELEMENT_NODE;
+  *aNodeType = NodeType();
   return NS_OK;
 }
 
@@ -2306,26 +2211,6 @@ nsGenericElement::GetPrefix(nsAString& aPrefix)
 {
   mNodeInfo->GetPrefix(aPrefix);
   return NS_OK;
-}
-
-static already_AddRefed<nsIDOMNSFeatureFactory>
-GetDOMFeatureFactory(const nsAString& aFeature, const nsAString& aVersion)
-{
-  nsIDOMNSFeatureFactory *factory = nsnull;
-  nsCOMPtr<nsICategoryManager> categoryManager =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-  if (categoryManager) {
-    nsCAutoString featureCategory(NS_DOMNS_FEATURE_PREFIX);
-    AppendUTF16toUTF8(aFeature, featureCategory);
-    nsXPIDLCString contractID;
-    nsresult rv = categoryManager->GetCategoryEntry(featureCategory.get(),
-                                                    NS_ConvertUTF16toUTF8(aVersion).get(),
-                                                    getter_Copies(contractID));
-    if (NS_SUCCEEDED(rv)) {
-      CallGetService(contractID.get(), &factory);  // addrefs
-    }
-  }
-  return factory;
 }
 
 nsresult
@@ -2390,29 +2275,6 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
     }
   }
 #endif /* MOZ_SMIL */
-  else {
-    nsCOMPtr<nsIDOMNSFeatureFactory> factory =
-      GetDOMFeatureFactory(aFeature, aVersion);
-
-    if (factory) {
-      factory->HasFeature(aObject, aFeature, aVersion, aReturn);
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
-nsINode::GetFeature(const nsAString& aFeature,
-                    const nsAString& aVersion,
-                    nsISupports** aReturn)
-{
-  *aReturn = nsnull;
-  nsCOMPtr<nsIDOMNSFeatureFactory> factory =
-    GetDOMFeatureFactory(aFeature, aVersion);
-
-  if (factory) {
-    factory->GetFeature(this, aFeature, aVersion, aReturn);
-  }
 
   return NS_OK;
 }
@@ -2438,14 +2300,10 @@ nsGenericElement::HasAttributes(PRBool* aReturn)
 NS_IMETHODIMP
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
   nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mAttributeMap) {
     slots->mAttributeMap = new nsDOMAttributeMap(this);
-    if (!slots->mAttributeMap) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     if (!slots->mAttributeMap->Init()) {
       slots->mAttributeMap = nsnull;
       return NS_ERROR_FAILURE;
@@ -3584,6 +3442,18 @@ nsGenericElement::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~eCONTENT);
 }
 
+PRUint16
+nsGenericElement::NodeType()
+{
+  return (PRUint16)nsIDOMNode::ELEMENT_NODE;
+}
+
+void
+nsGenericElement::NodeName(nsAString& aNodeName)
+{
+  aNodeName = mNodeInfo->QualifiedNameCorrectedCase();
+}
+
 //----------------------------------------------------------------------
 
 PRUint32
@@ -4087,9 +3957,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  PRUint16 nodeType = 0;
-  nsresult res = aNewChild->GetNodeType(&nodeType);
-  NS_ENSURE_SUCCESS(res, res);
+  PRUint16 nodeType = aNewChild->NodeType();
 
   // Before we do anything else, fire all DOMNodeRemoved mutation events
   // We do this up front as to avoid having to deal with script running
@@ -4158,6 +4026,8 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
   if (!IsAllowedAsChild(newContent, nodeType, this, aReplace, refContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
+
+  nsresult res;
 
   // If we're replacing
   if (aReplace) {
@@ -4282,7 +4152,26 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  return res;
+  return NS_OK;
+}
+
+nsresult
+nsINode::CompareDocumentPosition(nsIDOMNode* aOther, PRUint16* aReturn)
+{
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+  if (!other) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aReturn = CompareDocPosition(other);
+  return NS_OK;
+}
+
+nsresult
+nsINode::IsSameNode(nsIDOMNode* aOther, PRBool* aReturn)
+{
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+  *aReturn = other == this;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -4463,7 +4352,6 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSElement, new nsNSElementTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
                                  nsDOMEventRTTearoff::Create(this))

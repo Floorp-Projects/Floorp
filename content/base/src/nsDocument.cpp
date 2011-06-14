@@ -1702,7 +1702,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNodeSelector,
@@ -3381,6 +3380,18 @@ PRBool
 nsDocument::IsNodeOfType(PRUint32 aFlags) const
 {
     return !(aFlags & ~eDOCUMENT);
+}
+
+PRUint16
+nsDocument::NodeType()
+{
+    return (PRUint16)nsIDOMNode::DOCUMENT_NODE;
+}
+
+void
+nsDocument::NodeName(nsAString& aNodeName)
+{
+  aNodeName.AssignLiteral("#document");
 }
 
 Element*
@@ -5765,35 +5776,104 @@ nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
                                                aFeature, aVersion, aReturn);
 }
 
-void
+NS_IMETHODIMP
+nsDocument::GetDOMBaseURI(nsAString &aURI)
+{
+  return nsIDocument::GetDOMBaseURI(aURI);
+}
+
+NS_IMETHODIMP
 nsDocument::GetTextContent(nsAString &aTextContent)
 {
   SetDOMStringToNull(aTextContent);
+  return NS_OK;
 }
 
-PRBool
-nsDocument::IsEqualNode(nsINode* aOther)
+NS_IMETHODIMP
+nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aResult)
 {
-  if (!aOther || !aOther->IsNodeOfType(eDOCUMENT))
-    return PR_FALSE;
+  *aResult = PR_FALSE;
+  nsCOMPtr<nsIDocument> other = do_QueryInterface(aOther);
+  if (!other) {
+    return NS_OK;
+  }
 
   // Child nodes check.
   PRUint32 childCount = GetChildCount();
-  if (childCount != aOther->GetChildCount()) {
-    return PR_FALSE;
+  if (childCount != other->GetChildCount()) {
+    return NS_OK;
   }
 
   for (PRUint32 i = 0; i < childCount; i++) {
-    if (!GetChildAt(i)->IsEqual(aOther->GetChildAt(i))) {
-      return PR_FALSE;
+    if (!GetChildAt(i)->IsEqual(other->GetChildAt(i))) {
+      return NS_OK;
     }
   }
 
-  /* Checks not needed:  Prefix, namespace URI, local name, node name,
-     node value, attributes.
-   */
+  // Checks not needed:  Prefix, namespace URI, local name, node name,
+  // node value, attributes.
 
-  return PR_TRUE;
+  *aResult = PR_TRUE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::CompareDocumentPosition(nsIDOMNode *other,
+                                   PRUint16 *aResult)
+{
+  return nsINode::CompareDocumentPosition(other, aResult);
+}
+
+NS_IMETHODIMP
+nsDocument::SetTextContent(const nsAString & aTextContent)
+{
+  return nsINode::SetTextContent(aTextContent);
+}
+
+NS_IMETHODIMP
+nsDocument::IsSameNode(nsIDOMNode *other, PRBool *aResult)
+{
+  *aResult = other == this;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::LookupPrefix(const nsAString & namespaceURI, nsAString & aResult)
+{
+  SetDOMStringToNull(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::IsDefaultNamespace(const nsAString & namespaceURI,
+                              PRBool *aResult)
+{
+  *aResult = namespaceURI.IsEmpty();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::LookupNamespaceURI(const nsAString & prefix,
+                              nsAString & aResult)
+{
+  SetDOMStringToNull(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetUserData(const nsAString & key,
+                       nsIVariant *data, nsIDOMUserDataHandler *handler,
+                       nsIVariant **aResult)
+{
+  return nsINode::SetUserData(key, data, handler, aResult);
+}
+
+NS_IMETHODIMP
+nsDocument::GetUserData(const nsAString & key,
+                        nsIVariant **aResult)
+{
+  return nsINode::GetUserData(key, aResult);
 }
 
 NS_IMETHODIMP
