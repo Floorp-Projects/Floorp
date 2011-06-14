@@ -507,7 +507,7 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, Valueify(v));
-    return ValueToNumber(cx, tvr.value(), dp);
+    return ToNumber(cx, tvr.value(), dp);
 }
 
 JS_PUBLIC_API(JSBool)

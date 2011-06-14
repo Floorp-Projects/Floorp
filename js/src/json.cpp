@@ -344,7 +344,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
         Class *clasp = obj->getClass();
         if (clasp == &js_NumberClass) {
             double d;
-            if (!ValueToNumber(cx, *vp, &d))
+            if (!ToNumber(cx, *vp, &d))
                 return false;
             vp->setNumber(d);
         } else if (clasp == &js_StringClass) {
@@ -688,7 +688,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
         JSObject &spaceObj = space.toObject();
         if (spaceObj.isNumber()) {
             jsdouble d;
-            if (!ValueToNumber(cx, space, &d))
+            if (!ToNumber(cx, space, &d))
                 return false;
             space = NumberValue(d);
         } else if (spaceObj.isString()) {
