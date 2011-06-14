@@ -39,7 +39,6 @@
 #include "txXPathTreeWalker.h"
 #include "nsIAtom.h"
 #include "nsIAttribute.h"
-#include "nsIDOM3Node.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -627,13 +626,7 @@ txXPathNodeUtils::getXSLTId(const txXPathNode& aNode,
 void
 txXPathNodeUtils::getBaseURI(const txXPathNode& aNode, nsAString& aURI)
 {
-    nsCOMPtr<nsIDOM3Node> node = do_QueryInterface(aNode.mNode);
-    if (node) {
-        node->GetBaseURI(aURI);
-    }
-    else {
-        aURI.Truncate();
-    }
+    aNode.mNode->GetDOMBaseURI(aURI);
 }
 
 /* static */
