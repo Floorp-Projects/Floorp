@@ -8,6 +8,16 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
 
+const SETTINGS_ROWS = 5;
+
+var observer = {
+  lastData: null,
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "addon-options-displayed")
+      this.lastData = aData;
+  }
+};
+
 function installAddon(aCallback) {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_inlinesettings1.xpi",
                                 function(aInstall) {
@@ -43,12 +53,16 @@ function test() {
       gManagerWindow = aWindow;
       gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
+      Services.obs.addObserver(observer, "addon-options-displayed", false);
+
       run_next_test();
     });
   });
 }
 
 function end_test() {
+  Services.obs.removeObserver(observer, "addon-options-displayed");
+
   close_manager(gManagerWindow, function() {
     AddonManager.getAddonByID("inlinesettings1@tests.mozilla.org", function(aAddon) {
       aAddon.uninstall();
@@ -102,9 +116,11 @@ add_test(function() {
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
+    is(observer.lastData, "inlinesettings1@tests.mozilla.org", "Observer notification should have fired");
+
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
-    is(settings.length, 4, "Grid should have settings children");
+    is(settings.length, SETTINGS_ROWS, "Grid should have settings children");
 
     // Force bindings to apply
     settings[0].clientTop;
@@ -151,10 +167,24 @@ add_test(function() {
     is(input.value, "bar", "Text box should have updated value");
     is(Services.prefs.getCharPref("extensions.inlinesettings1.string"), "bar", "String pref should have been updated");
 
-    var button = gManagerWindow.document.getElementById("detail-prefs-btn");
-    is_element_hidden(button, "Preferences button should not be visible");
+    var input = settings[4].firstElementChild;
+    is(input.value, "1", "Menulist should have initial value");
+    input.focus();
+    EventUtils.synthesizeKey("b", {}, gManagerWindow);
+    is(input.value, "2", "Menulist should have updated value");
+    is(gManagerWindow._testValue, "2", "Menulist oncommand handler should've updated the test value");
 
-    gCategoryUtilities.openType("extension", run_next_test);
+    setTimeout(function () {
+      EventUtils.synthesizeKey("c", {}, gManagerWindow);
+      is(input.value, "3", "Menulist should have updated value");
+      is(gManagerWindow._testValue, "3", "Menulist oncommand handler should've updated the test value");
+      delete gManagerWindow._testValue;
+
+      var button = gManagerWindow.document.getElementById("detail-prefs-btn");
+      is_element_hidden(button, "Preferences button should not be visible");
+
+      gCategoryUtilities.openType("extension", run_next_test);
+    }, 1200); // Timeout value from toolkit/content/tests/widgets/test_menulist_keynav.xul
   });
 });
 
@@ -167,9 +197,11 @@ add_test(function() {
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
+    is(observer.lastData, "inlinesettings2@tests.mozilla.org", "Observer notification should have fired");
+
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
-    is(settings.length, 2, "Grid should have settings children");
+    is(settings.length, 3, "Grid should have settings children");
 
     // Force bindings to apply
     settings[0].clientTop;
@@ -192,6 +224,17 @@ add_test(function() {
     is(node.nodeName, "row", "Setting should be followed by a row node");
     is(node.textContent, "Description Text Node", "Description should be in this row");
 
+    node = settings[2];
+    is(node.nodeName, "setting", "Should be a setting node");
+    description = gManagerWindow.document.getAnonymousElementByAttribute(node, "class", "preferences-description");
+    is(description.textContent.trim(), "", "Description node should be empty");
+    var button = node.firstElementChild;
+    isnot(button, null, "There should be a button");
+
+    node = node.nextSibling;
+    is(node.nodeName, "row", "Setting should be followed by a row node");
+    is(node.textContent.trim(), "This is a test, all this text should be visible", "Description should be in this row");
+    
     var button = gManagerWindow.document.getElementById("detail-prefs-btn");
     is_element_hidden(button, "Preferences button should not be visible");
 
@@ -208,6 +251,8 @@ add_test(function() {
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
+    is(observer.lastData, "inlinesettings2@tests.mozilla.org", "Observer notification should not have fired");
+
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
     is(settings.length, 0, "Grid should not have settings children");
@@ -230,7 +275,7 @@ add_test(function() {
   wait_for_view_load(gManagerWindow, function() {
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
-    is(settings.length, 4, "Grid should have settings children");
+    is(settings.length, SETTINGS_ROWS, "Grid should have settings children");
 
     // disable
     var button = gManagerWindow.document.getElementById("detail-disable-btn");
@@ -259,7 +304,7 @@ add_test(function() {
         EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
         settings = grid.querySelectorAll("rows > setting");
-        is(settings.length, 4, "Grid should have settings children");
+        is(settings.length, SETTINGS_ROWS, "Grid should have settings children");
 
         gCategoryUtilities.openType("extension", run_next_test);
       });

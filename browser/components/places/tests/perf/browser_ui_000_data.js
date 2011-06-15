@@ -52,16 +52,6 @@ waitForExplicitFinish();
 const TEST_IDENTIFIER = "ui-perf-test";
 const TEST_SUITE = "places";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
-var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-         getService(Ci.nsIWindowMediator);
-var win = wm.getMostRecentWindow("navigator:browser");
-
-var ios = Cc["@mozilla.org/network/io-service;1"].
-          getService(Ci.nsIIOService);
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
 var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
@@ -112,7 +102,7 @@ ptests.push({
           visit_date_microsec -= 86400 * 1000 * 1000; // remove a day
           var spec = "http://example.com/" + visit_date_microsec;
           for (var j = 0; j < visits_per_day; j++) {
-            var uri = ios.newURI(spec + j, null, null);
+            var uri = Services.io.newURI(spec + j, null, null);
             add_visit(uri, visit_date_microsec);
           }
         }
@@ -132,7 +122,7 @@ ptests.push({
           visit_date_microsec -= 86400 * 1000 * 1000; // remove a day
           var spec = "http://example.com/" + visit_date_microsec;
           for (var j = 0; j < visits_per_day; j++) {
-            var uri = ios.newURI(spec + j, null, null);
+            var uri = Services.io.newURI(spec + j, null, null);
             if (bookmark_counter < bookmarks_per_day) {
               add_bookmark(uri);
               bookmark_counter++;

@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const ss = Cc["@mozilla.org/browser/sessionstore;1"].
+var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
 
 const stateBackup = ss.getBrowserState();
@@ -292,11 +292,13 @@ function test_setBrowserState() {
 
   // waitForBrowserState does it's own observing for windows, but doesn't attach
   // the listeners we want here, so do it ourselves.
+  let newWindow;
   function windowObserver(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
-      let newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
       newWindow.addEventListener("load", function() {
         newWindow.removeEventListener("load", arguments.callee, false);
+
         Services.ww.unregisterNotification(windowObserver);
 
         windowEvents[getOuterWindowID(newWindow)] = { busyEventCount: 0, readyEventCount: 0 };
@@ -332,6 +334,8 @@ function test_setBrowserState() {
        "[test_setBrowserState] checked 2 windows");
     window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
     window.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
+    newWindow.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
+    newWindow.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
     runNextTest();
   });
 }
@@ -357,6 +361,7 @@ function test_undoCloseWindow() {
 
     reopenedWindow.addEventListener("load", function() {
       reopenedWindow.removeEventListener("load", arguments.callee, false);
+
       reopenedWindow.gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, false);
     }, false);
   });

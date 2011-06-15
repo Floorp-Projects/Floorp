@@ -305,6 +305,14 @@ public:
   PRBool HasChildren() { return !!GetChildAt(0); }
 
   /**
+   * Return next/previous sibling of the accessible.
+   */
+  inline nsAccessible* NextSibling() const
+    {  return GetSiblingAtOffset(1); }
+  inline nsAccessible* PrevSibling() const
+    { return GetSiblingAtOffset(-1); }
+
+  /**
    * Return embedded accessible children count.
    */
   PRInt32 GetEmbeddedChildCount();
@@ -320,22 +328,23 @@ public:
   PRInt32 GetIndexOfEmbeddedChild(nsAccessible* aChild);
 
   /**
-   * Return cached accessible of parent-child relatives.
+   * Return number of content children/content child at index. The content
+   * child is created from markup in contrast to it's never constructed by its
+   * parent accessible (like treeitem accessibles for XUL trees).
    */
-  nsAccessible* GetCachedNextSibling() const
-  {
-    return mParent ?
-      mParent->mChildren.SafeElementAt(mIndexInParent + 1, nsnull).get() : nsnull;
-  }
-  nsAccessible* GetCachedPrevSibling() const
-  {
-    return mParent ?
-      mParent->mChildren.SafeElementAt(mIndexInParent - 1, nsnull).get() : nsnull;
-  }
-  PRUint32 GetCachedChildCount() const { return mChildren.Length(); }
-  nsAccessible* GetCachedChildAt(PRUint32 aIndex) const { return mChildren.ElementAt(aIndex); }
+  PRUint32 ContentChildCount() const { return mChildren.Length(); }
+  nsAccessible* ContentChildAt(PRUint32 aIndex) const
+    { return mChildren.ElementAt(aIndex); }
+
+  /**
+   * Return true if children were initialized.
+   */
   inline bool AreChildrenCached() const
     { return !IsChildrenFlag(eChildrenUninitialized); }
+
+  /**
+   * Return true if the accessible is attached to tree.
+   */
   bool IsBoundToParent() const { return !!mParent; }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -503,7 +512,7 @@ protected:
    * Return sibling accessible at the given offset.
    */
   virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                           nsresult *aError = nsnull);
+                                           nsresult *aError = nsnull) const;
 
   /**
    * Flags used to describe the state and type of children.

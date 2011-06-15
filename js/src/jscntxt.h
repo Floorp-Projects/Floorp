@@ -117,6 +117,8 @@ namespace mjit {
 class JaegerCompartment;
 }
 
+class WeakMapBase;
+
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
  * given pc in a script. We use the script->code pointer to tag the cache,
@@ -423,7 +425,7 @@ struct JSRuntime {
     int64               gcJitReleaseTime;
     JSGCMode            gcMode;
     volatile bool       gcIsNeeded;
-    JSObject           *gcWeakMapList;
+    js::WeakMapBase     *gcWeakMapList;
 
     /* Pre-allocated space for the GC mark stacks. Pointer type ensures alignment. */
     void                *gcMarkStackObjs[js::OBJECT_MARK_STACK_SIZE / sizeof(void *)];
@@ -1097,7 +1099,7 @@ struct JSContext
     js::ContextStack    stack;
 
     /* ContextStack convenience functions */
-    bool running() const              { return stack.running(); }
+    bool hasfp() const                { return stack.hasfp(); }
     js::StackFrame* fp() const        { return stack.fp(); }
     js::StackFrame* maybefp() const   { return stack.maybefp(); }
     js::FrameRegs& regs() const       { return stack.regs(); }
@@ -1150,7 +1152,7 @@ struct JSContext
      * This typically occurs via the JSAPI right after a context is constructed.
      */
     bool canSetDefaultVersion() const {
-        return !stack.running() && !hasVersionOverride;
+        return !stack.hasfp() && !hasVersionOverride;
     }
 
     /* Force a version for future script compilation. */
@@ -1192,10 +1194,11 @@ struct JSContext
      * default version.
      */
     void maybeMigrateVersionOverride() {
-        if (JS_LIKELY(!isVersionOverridden() && stack.empty()))
-            return;
-        defaultVersion = versionOverride;
-        clearVersionOverride();
+        JS_ASSERT(stack.empty());
+        if (JS_UNLIKELY(isVersionOverridden())) {
+            defaultVersion = versionOverride;
+            clearVersionOverride();
+        }
     }
 
     /*
@@ -1210,7 +1213,7 @@ struct JSContext
         if (hasVersionOverride)
             return versionOverride;
 
-        if (stack.running()) {
+        if (stack.hasfp()) {
             /* There may be a scripted function somewhere on the stack! */
             js::StackFrame *f = fp();
             while (f && !f->isScriptFrame())
@@ -1434,6 +1437,28 @@ struct JSContext
 }; /* struct JSContext */
 
 namespace js {
+
+/*
+ * Allocation policy that uses JSRuntime::malloc_ and friends, so that
+ * memory pressure is properly accounted for. This is suitable for
+ * long-lived objects owned by the JSRuntime.
+ *
+ * Since it doesn't hold a JSContext (those may not live long enough), it
+ * can't report out-of-memory conditions itself; the caller must check for
+ * OOM and take the appropriate action.
+ */
+class RuntimeAllocPolicy
+{
+    JSRuntime *const runtime;
+
+  public:
+    RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
+    RuntimeAllocPolicy(JSContext *cx) : runtime(cx->runtime) {}
+    void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
+    void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
+    void free_(void *p) { runtime->free_(p); }
+    void reportAllocOverflow() const {}
+};
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread() ? (cx)->thread()->id : 0)

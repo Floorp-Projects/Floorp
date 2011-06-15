@@ -179,28 +179,38 @@ class JSString : public js::gc::Cell
 
     /*
      * The low LENGTH_SHIFT bits of lengthAndFlags are used to encode the type
-     * of the string.  The remaining bits store the string length (which must be
+     * of the string. The remaining bits store the string length (which must be
      * less or equal than MAX_LENGTH).
      * 
      * Instead of using a dense index to represent the most-derived type, string
      * types are encoded to allow single-op tests for hot queries (isRope,
-     * isDependent, isFlat, isAtom, isStaticAtom):
+     * isDependent, isFlat, isAtom, isStaticAtom) which, in view of subtyping,
+     * would require slower (isX() || isY() || isZ()).
      *
-     *   JSRope                xxx1
-     *   JSLinearString        xxx0
-     *   JSDependentString     xx1x
-     *   JSFlatString          xx00
-     *   JSExtensibleString    1100
-     *   JSFixedString         xy00 where xy != 11
-     *   JSInlineString        0100 and chars == inlineStorage
-     *   JSShortString         0100 and in FINALIZE_SHORT_STRING arena
-     *   JSExternalString      0100 and in FINALIZE_EXTERNAL_STRING arena
-     *   JSAtom                x000
-     *   JSStaticAtom          0000
+     * The string type encoding can be summarized as follows. The "instance
+     * encoding" entry for a type specifies the flag bits used to create a
+     * string instance of that type. Abstract types have no instances and thus
+     * have no such entry. The "subtype predicate" entry for a type specifies
+     * the predicate used to query whether a JSString instance is subtype
+     * (reflexively) of that type.
      *
-     * NB: this scheme takes advantage of the fact that there are no string
-     * instances whose most-derived type is JSString, JSLinearString, or
-     * JSFlatString.
+     *   string       instance   subtype
+     *   type         encoding   predicate
+     *
+     *   String       -          true
+     *   Rope         0001       xxx1
+     *   Linear       -          xxx0
+     *   Dependent    0010       xx1x
+     *   Flat         -          xx00
+     *   Extensible   1100       1100
+     *   Fixed        0100       isFlat && !isExtensible
+     *   Inline       0100       isFixed && (u1.chars == inlineStorage || isShort)
+     *   Short        0100       xxxx && header in FINALIZE_SHORT_STRING arena
+     *   External     0100       xxxx && header in FINALIZE_EXTERNAL_STRING arena
+     *   Atom         1000       x000
+     *   InlineAtom   1000       1000 && is Inline
+     *   ShortAtom    1000       1000 && is Short
+     *   StaticAtom   0000       0000
      */
 
     static const size_t ROPE_BIT          = JS_BIT(0);
@@ -330,10 +340,10 @@ class JSString : public js::gc::Cell
         return *(JSExtensibleString *)this;
     }
 
-#ifdef DEBUG
+    /* For hot code, prefer other type queries. */
     bool isShort() const;
     bool isFixed() const;
-#endif
+    bool isInline() const;
 
     JS_ALWAYS_INLINE
     JSFixedString &asFixed() {
@@ -370,6 +380,10 @@ class JSString : public js::gc::Cell
     /* Only called by the GC for strings with the FINALIZE_STRING kind. */
 
     inline void finalize(JSContext *cx);
+
+    /* Gets the number of bytes that the chars take on the heap. */
+
+    JS_FRIEND_API(size_t) charsHeapSize();
 
     /* Offsets for direct field from jit code. */
 

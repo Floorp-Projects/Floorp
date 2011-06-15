@@ -2181,7 +2181,8 @@ var XPIProvider = {
    *         When performing recovery after startup this will be an array of
    *         persistent descriptors of add-ons that are known to be active,
    *         otherwise it will be null
-   * @return true if a change requiring a restart was detected
+   * @return a boolean indicating if a change requiring flushing the caches was
+   *         detected
    */
   processFileChanges: function XPI_processFileChanges(aState, aManifests,
                                                       aUpdateCompatibility,
@@ -2205,7 +2206,7 @@ var XPIProvider = {
      *         ran
      * @param  aAddonState
      *         The new state of the add-on
-     * @return true if restarting the application is required to complete
+     * @return a boolean indicating if flushing caches is required to complete
      *         changing this add-on
      */
     function updateMetadata(aInstallLocation, aOldAddon, aAddonState) {
@@ -2277,6 +2278,37 @@ var XPIProvider = {
     }
 
     /**
+     * Updates an add-on's descriptor for when the add-on has moved in the
+     * filesystem but hasn't changed in any other way.
+     *
+     * @param  aInstallLocation
+     *         The install location containing the add-on
+     * @param  aOldAddon
+     *         The AddonInternal as it appeared the last time the application
+     *         ran
+     * @param  aAddonState
+     *         The new state of the add-on
+     * @return a boolean indicating if flushing caches is required to complete
+     *         changing this add-on
+     */
+    function updateDescriptor(aInstallLocation, aOldAddon, aAddonState) {
+      LOG("Add-on " + aOldAddon.id + " moved to " + aAddonState.descriptor);
+
+      aOldAddon._descriptor = aAddonState.descriptor;
+      aOldAddon.visible = !(aOldAddon.id in visibleAddons);
+
+      // Update the database
+      XPIDatabase.setAddonDescriptor(aOldAddon, aAddonState.descriptor);
+      if (aOldAddon.visible) {
+        visibleAddons[aOldAddon.id] = aOldAddon;
+
+        return true;
+      }
+
+      return false;
+    }
+
+    /**
      * Called when no change has been detected for an add-on's metadata. The
      * add-on may have become visible due to other add-ons being removed or
      * the add-on may need to be updated when the application version has
@@ -2289,8 +2321,8 @@ var XPIProvider = {
      *         ran
      * @param  aAddonState
      *         The new state of the add-on
-     * @return a boolean indicating if restarting the application is required
-     *         to complete changing this add-on
+     * @return a boolean indicating if flushing caches is required to complete
+     *         changing this add-on
      */
     function updateVisibilityAndCompatibility(aInstallLocation, aOldAddon,
                                               aAddonState) {
@@ -2399,8 +2431,8 @@ var XPIProvider = {
      * @param  aOldAddon
      *         The AddonInternal as it appeared the last time the application
      *         ran
-     * @return a boolean indicating if restarting the application is required
-     *         to complete changing this add-on
+     * @return a boolean indicating if flushing caches is required to complete
+     *         changing this add-on
      */
     function removeMetadata(aInstallLocation, aOldAddon) {
       // This add-on has disappeared
@@ -2433,8 +2465,8 @@ var XPIProvider = {
      * @param  aMigrateData
      *         If during startup the database had to be upgraded this will
      *         contain data that used to be held about this add-on
-     * @return a boolean indicating if restarting the application is required
-     *         to complete changing this add-on
+     * @return a boolean indicating if flushing caches is required to complete
+     *         changing this add-on
      */
     function addMetadata(aInstallLocation, aId, aAddonState, aMigrateData) {
       LOG("New add-on " + aId + " installed in " + aInstallLocation.name);
@@ -2606,15 +2638,17 @@ var XPIProvider = {
               XPIProvider.inactiveAddonIDs.push(aOldAddon.id);
 
             // The add-on has changed if the modification time has changed, or
-            // the directory it is installed in has changed or we have an
-            // updated manifest for it. Also reload the metadata for add-ons
-            // in the application directory when the application version has
-            // changed
+            // we have an updated manifest for it. Also reload the metadata for
+            // add-ons in the application directory when the application version
+            // has changed
             if (aOldAddon.id in aManifests[installLocation.name] ||
                 aOldAddon.updateDate != addonState.mtime ||
-                aOldAddon._descriptor != addonState.descriptor ||
                 (aUpdateCompatibility && installLocation.name == KEY_APP_GLOBAL)) {
               changed = updateMetadata(installLocation, aOldAddon, addonState) ||
+                        changed;
+            }
+            else if (aOldAddon._descriptor != addonState.descriptor) {
+              changed = updateDescriptor(installLocation, aOldAddon, addonState) ||
                         changed;
             }
             else {
@@ -3882,6 +3916,8 @@ var XPIDatabase = {
                         "pendingUninstall=:pendingUninstall, " +
                         "applyBackgroundUpdates=:applyBackgroundUpdates WHERE " +
                         "internal_id=:internal_id",
+    setAddonDescriptor: "UPDATE addon SET descriptor=:descriptor WHERE " +
+                        "internal_id=:internal_id",
     updateTargetApplications: "UPDATE targetApplication SET " +
                               "minVersion=:minVersion, maxVersion=:maxVersion " +
                               "WHERE addon_internal_id=:internal_id AND id=:id",
@@ -5129,7 +5165,23 @@ var XPIDatabase = {
   },
 
   /**
-   * Synchronously pdates an add-on's active flag in the database.
+   * Synchronously sets the file descriptor for an add-on.
+   *
+   * @param  aAddon
+   *         The DBAddonInternal being updated
+   * @param  aProperties
+   *         A dictionary of properties to set
+   */
+  setAddonDescriptor: function XPIDB_setAddonDescriptor(aAddon, aDescriptor) {
+    let stmt = this.getStatement("setAddonDescriptor");
+    stmt.params.internal_id = aAddon._internal_id;
+    stmt.params.descriptor = aDescriptor;
+
+    executeStatement(stmt);
+  },
+
+  /**
+   * Synchronously updates an add-on's active flag in the database.
    *
    * @param  aAddon
    *         The DBAddonInternal to update

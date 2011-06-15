@@ -57,8 +57,17 @@
 
 using namespace mozilla::imagelib;
 
-NS_IMPL_ISUPPORTS4(imgRequestProxy, imgIRequest, nsIRequest,
-                   nsISupportsPriority, nsISecurityInfoProvider)
+NS_IMPL_ADDREF(imgRequestProxy)
+NS_IMPL_RELEASE(imgRequestProxy)
+
+NS_INTERFACE_MAP_BEGIN(imgRequestProxy)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, imgIRequest)
+  NS_INTERFACE_MAP_ENTRY(imgIRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIRequest)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
+  NS_INTERFACE_MAP_ENTRY(nsISecurityInfoProvider)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITimedChannel, TimedChannel() != nsnull)
+NS_INTERFACE_MAP_END
 
 imgRequestProxy::imgRequestProxy() :
   mOwner(nsnull),

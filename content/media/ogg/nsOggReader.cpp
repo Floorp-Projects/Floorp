@@ -427,7 +427,7 @@ PRBool nsOggReader::DecodeAudioData()
   return PR_TRUE;
 }
 
-nsresult nsOggReader::DecodeTheora(ogg_packet* aPacket)
+nsresult nsOggReader::DecodeTheora(ogg_packet* aPacket, PRInt64 aTimeThreshold)
 {
   NS_ASSERTION(aPacket->granulepos >= TheoraVersion(&mTheoraState->mInfo,3,2,1),
     "Packets must have valid granulepos and packetno");
@@ -447,6 +447,12 @@ nsresult nsOggReader::DecodeTheora(ogg_packet* aPacket)
   }
 
   PRInt64 endTime = mTheoraState->Time(aPacket->granulepos);
+  if (endTime < aTimeThreshold) {
+    // The end time of this frame is already before the current playback
+    // position. It will never be displayed, don't bother enqueing it.
+    return NS_OK;
+  }
+
   if (ret == TH_DUPFRAME) {
     VideoData* v = VideoData::CreateDuplicate(mPageOffset,
                                               time,
@@ -523,7 +529,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
      (th_packet_iskeyframe(packet) && frameEndTime >= aTimeThreshold))
   {
     aKeyframeSkip = PR_FALSE;
-    nsresult res = DecodeTheora(packet);
+    nsresult res = DecodeTheora(packet, aTimeThreshold);
     decoded++;
     if (NS_FAILED(res)) {
       return PR_FALSE;

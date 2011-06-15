@@ -44,7 +44,7 @@ relativesrcdir  = content/xul/document/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES	= \
+_CHROME_FILES	= \
 		test_bug311681.xul \
 		test_bug199692.xul \
 		test_bug391002.xul \
@@ -54,20 +54,14 @@ _TEST_FILES	= \
 		test_bug445177.xul \
 		test_bug449457.xul \
 		test_bug468176.xul \
-		$(NULL)
-
-_CHROME_FILES = \
 		test_bug583948.xul \
 		window_bug583948.xul \
 		test_bug497875.xul \
-		     bug497875-iframe.xul \
+		bug497875-iframe.xul \
 		test_bug335375.xul \
 		overlay1_bug335375.xul \
 		overlay2_bug335375.xul \
 		$(NULL)
-
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 libs:: $(_CHROME_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

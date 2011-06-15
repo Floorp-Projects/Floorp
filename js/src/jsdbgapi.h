@@ -584,6 +584,12 @@ extern JS_PUBLIC_API(JSFunctionCallback)
 JS_GetFunctionCallback(JSContext *cx);
 #endif /* MOZ_TRACE_JSCALLS */
 
+extern JS_PUBLIC_API(void)
+JS_DumpProfile(JSContext *cx, JSScript *script);
+
+extern JS_PUBLIC_API(void)
+JS_DumpAllProfiles(JSContext *cx);
+
 JS_END_EXTERN_C
 
 #endif /* jsdbgapi_h___ */

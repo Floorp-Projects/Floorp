@@ -47,15 +47,6 @@ waitForExplicitFinish();
 const TEST_IDENTIFIER = "ui-perf-test";
 const TEST_SUITE = "places";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
-var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-         getService(Ci.nsIWindowMediator);
-var win = wm.getMostRecentWindow("navigator:browser");
-var ios = Cc["@mozilla.org/network/io-service;1"].
-          getService(Ci.nsIIOService);
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
 var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].

@@ -44,12 +44,13 @@ relativesrcdir  = content/xul/content/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug330705-2.xul \
-		test_bug233643.xul \
+_TEST_FILES = 	\
 		test_bug486990.xul \
 		$(NULL)
-	
+
 _CHROME_FILES = \
+		test_bug330705-2.xul \
+		test_bug233643.xul \
  		test_bug398289.html \
  		398289-resource.xul \
  		$(NULL)

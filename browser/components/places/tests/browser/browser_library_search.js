@@ -114,9 +114,9 @@ var testCases = [
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
-const histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
 var libraryWin;
 

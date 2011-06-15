@@ -928,8 +928,6 @@ js_FinishGC(JSRuntime *rt)
     rt->compartments.clear();
     rt->atomsCompartment = NULL;
 
-    rt->gcWeakMapList = NULL;
-
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         ReleaseGCChunk(rt, r.front());
     rt->gcChunkSet.clear();
@@ -1514,7 +1512,7 @@ namespace js {
  *
  * To implement such delayed marking of the children with minimal overhead for
  * the normal case of sufficient native stack, the code adds a field per
- * arena. The field marlingdelay->link links all arenas with delayed things
+ * arena. The field markingDelay->link links all arenas with delayed things
  * into a stack list with the pointer to stack top in
  * GCMarker::unmarkedArenaStackTop. delayMarkingChildren adds
  * arenas to the stack as necessary while markDelayedChildren pops the arenas
@@ -2285,7 +2283,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      */
     while (true) {
         if (!js_TraceWatchPoints(&gcmarker) &&
-            !WeakMap::markIteratively(&gcmarker) &&
+            !WeakMapBase::markAllIteratively(&gcmarker) &&
             !Debug::mark(&gcmarker, comp, gckind))
         {
             break;
@@ -2323,7 +2321,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     GCTIMESTAMP(startSweep);
 
     /* Finalize unreachable (key,value) pairs in all weak maps. */
-    WeakMap::sweep(cx);
+    WeakMapBase::sweepAll(&gcmarker);
 
     js_SweepAtomState(cx);
 
@@ -2663,6 +2661,7 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_P
     rt->gcRegenShapes = false;
     rt->setGCLastBytes(rt->gcBytes);
     rt->gcCurrentCompartment = NULL;
+    rt->gcWeakMapList = NULL;
 
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
         (*c)->setGCLastBytes((*c)->gcBytes);

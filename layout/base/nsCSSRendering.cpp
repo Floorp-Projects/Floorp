@@ -923,7 +923,6 @@ nsCSSRendering::IsCanvasFrame(nsIFrame* aFrame)
   nsIAtom* frameType = aFrame->GetType();
   return frameType == nsGkAtoms::canvasFrame ||
          frameType == nsGkAtoms::rootFrame ||
-         frameType == nsGkAtoms::pageFrame ||
          frameType == nsGkAtoms::pageContentFrame ||
          frameType == nsGkAtoms::viewportFrame;
 }

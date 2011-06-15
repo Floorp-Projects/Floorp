@@ -90,7 +90,7 @@ nsApplicationAccessible *nsAccessNode::gApplicationAccessible = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible. nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_0(nsAccessNode)
+NS_IMPL_CYCLE_COLLECTION_1(nsAccessNode, mContent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAccessNode)
   NS_INTERFACE_MAP_ENTRY(nsIAccessNode)

@@ -54,7 +54,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsContentUtils.h"
-#include "nsIPrefService.h"
+#include "mozilla/Preferences.h"
 
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -74,6 +74,8 @@
 #include "nsChannelPolicy.h"
 
 #include "nsStyleSet.h"
+
+using namespace mozilla;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gFontDownloaderLog = PR_NewLogModule("fontdownloader");
@@ -104,11 +106,8 @@ nsFontFaceLoader::~nsFontFaceLoader()
 void
 nsFontFaceLoader::StartedLoading(nsIStreamLoader *aStreamLoader)
 {
-  PRInt32 loadTimeout = 3000;
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    prefs->GetIntPref("gfx.downloadable_fonts.fallback_delay", &loadTimeout);
-  }
+  PRInt32 loadTimeout =
+    Preferences::GetInt("gfx.downloadable_fonts.fallback_delay", 3000);
   if (loadTimeout > 0) {
     mLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mLoadTimer) {

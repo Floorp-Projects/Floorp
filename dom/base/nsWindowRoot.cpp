@@ -56,7 +56,7 @@
 #include "nsGlobalWindow.h"
 #include "nsFocusManager.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIControllers.h"
 
 #include "nsCycleCollectionParticipant.h"
@@ -286,7 +286,7 @@ nsWindowRoot::GetControllers(nsIControllers** aResult)
       return xulElement->GetControllers(aResult);
 #endif
 
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea =
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> htmlTextArea =
       do_QueryInterface(focusedContent);
     if (htmlTextArea)
       return htmlTextArea->GetControllers(aResult);
