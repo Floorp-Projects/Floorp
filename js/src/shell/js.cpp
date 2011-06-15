@@ -4850,6 +4850,23 @@ ParseLegacyJSON(JSContext *cx, uintN argc, jsval *vp)
     return js::ParseJSONWithReviver(cx, chars, length, js::NullValue(), js::Valueify(vp), LEGACY);
 }
 
+static JSBool
+EnableStackWalkingAssertion(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc == 0 || !JSVAL_IS_BOOLEAN(JS_ARGV(cx, vp)[0])) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
+                             "enableStackWalkingAssertion");
+        return false;
+    }
+
+#ifdef DEBUG
+    cx->stackIterAssertionEnabled = JSVAL_TO_BOOLEAN(JS_ARGV(cx, vp)[0]);
+#endif
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
+}
+
 static JSFunctionSpec shell_functions[] = {
     JS_FN("version",        Version,        0,0),
     JS_FN("revertVersion",  RevertVersion,  0,0),
@@ -4953,6 +4970,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("stringstats",    StringStats,    0,0),
     JS_FN("newGlobal",      NewGlobal,      1,0),
     JS_FN("parseLegacyJSON",ParseLegacyJSON,1,0),
+    JS_FN("enableStackWalkingAssertion",EnableStackWalkingAssertion,1,0),
     JS_FS_END
 };
 
@@ -5098,6 +5116,11 @@ static const char *const shell_help_messages[] = {
 "                         new compartment if kind === 'new-compartment'",
 "parseLegacyJSON(str)     Parse str as legacy JSON, returning the result if the\n"
 "                         parse succeeded and throwing a SyntaxError if not.",
+"enableStackWalkingAssertion(enabled)\n"
+"  Enables or disables a particularly expensive assertion in stack-walking\n"
+"  code.  If your test isn't ridiculously thorough, such that performing this\n"
+"  assertion increases test duration by an order of magnitude, you shouldn't\n"
+"  use this.",
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
