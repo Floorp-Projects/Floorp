@@ -96,7 +96,7 @@ SSLExceptions.prototype = {
   
     var req = new XMLHttpRequest();
     try {
-      if (aURI) {
+      if(aURI) {
         req.open("GET", aURI.prePath, false);
         req.channel.notificationCallbacks = this;
         req.send(null);
