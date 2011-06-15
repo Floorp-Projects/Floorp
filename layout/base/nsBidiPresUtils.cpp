@@ -780,8 +780,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
 
               PRInt32 start, end;
               frame->GetOffsets(start, end);
-              PRInt32 endLine = text.FindCharInSet(NS_LITERAL_STRING("\n\r"),
-                                                   start);
+              PRInt32 endLine = text.FindChar('\n', start);
               if (endLine == -1) {
                 /*
                  * If there is no newline in the text content, just save the
