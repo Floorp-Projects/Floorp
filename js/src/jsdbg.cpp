@@ -150,7 +150,7 @@ enum {
 
 Debug::Debug(JSObject *dbg, JSObject *hooks)
   : object(dbg), hooksObject(hooks), uncaughtExceptionHook(NULL), enabled(true),
-    hasDebuggerHandler(false), hasThrowHandler(false)
+    hasDebuggerHandler(false), hasThrowHandler(false), objects(dbg->compartment()->rt)
 {
     // This always happens within a request on some cx.
     JSRuntime *rt = dbg->compartment()->rt;
@@ -259,7 +259,7 @@ Debug::wrapDebuggeeValue(JSContext *cx, Value *vp)
             return false;
         }
 
-        ObjectMap::AddPtr p = objects.lookupForAdd(ccwobj);
+        ObjectWeakMap::AddPtr p = objects.lookupForAdd(ccwobj);
         if (p) {
             vp->setObject(*p->value);
         } else {
@@ -560,36 +560,6 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
                             markedAny = true;
                         }
                     }
-
-                    // Handling Debug.Objects:
-                    //
-                    // If obj (the Debug object) hasn't been marked
-                    // yet, it may not be live, so don't mark anything.
-                    //
-                    // If comp is the debuggee's compartment, do nothing. No
-                    // referent objects will be collected, since we have a
-                    // wrapper of each one.
-                    //
-                    // If comp is the debugger's compartment, mark all
-                    // Debug.Objects, since the referents might be alive and
-                    // therefore the table entries must remain.
-                    //
-                    // If comp is null, then for each key (referent-wrapper)
-                    // that is marked, mark the corresponding value.
-                    //
-                    if (obj->isMarked() && (!comp || obj->compartment() == comp)) {
-                        for (ObjectMap::Range r = dbg->objects.all(); !r.empty(); r.popFront()) {
-                            // The unwrap() call below has the following effect: we
-                            // mark the Debug.Object if the *referent* is alive,
-                            // even if the CCW of the referent seems unreachable.
-                            if (!r.front().value->isMarked() &&
-                                (comp || r.front().key->unwrap()->isMarked())) {
-                                MarkObject(trc, *r.front().value,
-                                           "Debug.Object with live referent");
-                                markedAny = true;
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -598,21 +568,29 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
 }
 
 void
-Debug::trace(JSTracer *trc, JSObject *obj)
+Debug::traceObject(JSTracer *trc, JSObject *obj)
 {
-    if (Debug *dbg = (Debug *) obj->getPrivate()) {
-        MarkObject(trc, *dbg->hooksObject, "hooks");
-        if (dbg->uncaughtExceptionHook)
-            MarkObject(trc, *dbg->uncaughtExceptionHook, "hooks");
+    if (Debug *dbg = Debug::fromJSObject(obj))
+        dbg->trace(trc);
+}
 
-        // Mark Debug.Frame objects that are reachable from JS if we look them up
-        // again (because the corresponding StackFrame is still on the stack).
-        for (FrameMap::Enum e(dbg->frames); !e.empty(); e.popFront()) {
-            JSObject *frameobj = e.front().value;
-            JS_ASSERT(frameobj->getPrivate());
-            MarkObject(trc, *frameobj, "live Debug.Frame");
-        }
+void
+Debug::trace(JSTracer *trc)
+{
+    MarkObject(trc, *hooksObject, "hooks");
+    if (uncaughtExceptionHook)
+        MarkObject(trc, *uncaughtExceptionHook, "hooks");
+
+    // Mark Debug.Frame objects that are reachable from JS if we look them up
+    // again (because the corresponding StackFrame is still on the stack).
+    for (FrameMap::Enum e(frames); !e.empty(); e.popFront()) {
+        JSObject *frameobj = e.front().value;
+        JS_ASSERT(frameobj->getPrivate());
+        MarkObject(trc, *frameobj, "live Debug.Frame");
     }
+
+    // Trace the referent -> Debug.Object weak map.
+    objects.trace(trc);
 }
 
 void
@@ -621,14 +599,7 @@ Debug::sweepAll(JSRuntime *rt)
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
         Debug *dbg = (Debug *) ((unsigned char *) p - offsetof(Debug, link));
 
-        if (dbg->object->isMarked()) {
-            // Sweep ObjectMap entries for referents being collected.
-            for (ObjectMap::Enum e(dbg->objects); !e.empty(); e.popFront()) {
-                JS_ASSERT(e.front().key->isMarked() == e.front().value->isMarked());
-                if (!e.front().value->isMarked())
-                    e.removeFront();
-            }
-        } else {
+        if (!dbg->object->isMarked()) {
             // If this Debug is being GC'd, detach it from its debuggees. In the case of
             // runtime-wide GC, the debuggee might be GC'd too. Since detaching requires
             // access to both objects, this must be done before finalize time. However, in
@@ -690,7 +661,7 @@ Class Debug::jsclass = {
     NULL,                 /* construct   */
     NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
-    Debug::trace
+    Debug::traceObject
 };
 
 JSBool
