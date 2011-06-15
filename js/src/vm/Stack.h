@@ -1272,6 +1272,7 @@ class StackSegment
     FrameRegs *pushRegs(FrameRegs &regs);
     void popRegs(FrameRegs *regs);
     void pushCall(CallArgsList &callList);
+    void pointAtCall(CallArgsList &callList);
     void popCall();
 
     /* For jit access: */
