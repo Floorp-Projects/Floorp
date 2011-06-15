@@ -69,6 +69,10 @@ cairo_debug_reset_static_data (void)
     _cairo_ft_font_reset_static_data ();
 #endif
 
+#if CAIRO_HAS_WIN32_FONT
+    _cairo_win32_font_reset_static_data ();
+#endif
+
     _cairo_intern_string_reset_static_data ();
 
     _cairo_scaled_font_reset_static_data ();
