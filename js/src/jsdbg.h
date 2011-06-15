@@ -82,19 +82,27 @@ class Debug {
       public:
         explicit ObjectMapMarkPolicy(JSTracer *tracer) : Base(tracer) { }
 
-        // The unwrap() call has the following effect: we mark the Debug.Object if the
-        // *referent* is alive, even if the CCW of the referent seems unreachable. Since
-        // the value always refers to the CCW, marking the value marks the CCW, so we
-        // needn't worry that the CCW will go dead.
-        bool keyMarked(JSObject *k) { return k->unwrap()->isMarked(); }
+        // The unwrap() call here means that we use the *referent's* mark, not that of the
+        // CCW itself, to decide whether the table entry is live. This seems weird: if the
+        // CCW is not marked, and the referent is, won't we end up keeping the table entry
+        // but GC'ing its key? But it's okay: the Debug.Object always refers to the CCW,
+        // so marking the value marks the CCW.
+        bool keyMarked(JSObject *k) { 
+            JS_ASSERT(k->isCrossCompartmentWrapper());
+            return k->unwrap()->isMarked(); 
+        }
         void markKey(JSObject *k, const char *description) {
             js::gc::MarkObject(tracer, *k->unwrap(), description);
         }
     };
 
-    // Keys are referents, values are Debug.Object objects. The combination of
-    // the a key being live and this Debug being live keeps the corresponding
-    // Debug.Object alive.
+    // The map from debuggee objects to their Debug.Object instances. However, to avoid
+    // holding cross-compartment references directly, the keys in this map are the
+    // referents' CCWs, not the referents themselves. Thus, to find the Debug.Object for a
+    // debuggee object, you must first find its CCW, and then look that up here.
+    //
+    // Using CCWs for keys when it's really their referents' liveness that determines the
+    // table entry's liveness is delicate; see comments on ObjectMapMarkPolicy.
     typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, ObjectMapMarkPolicy>
         ObjectWeakMap;
     ObjectWeakMap objects;
