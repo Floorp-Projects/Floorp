@@ -32,7 +32,7 @@
     beq         skip_firstpass_filter
 
 ;first-pass filter
-    ldr         r12, _filter8_coeff_
+    adr         r12, filter8_coeff
     sub         r0, r0, r1, lsl #1
 
     add         r2, r12, r2, lsl #4         ;calculate filter location
@@ -121,7 +121,7 @@ secondpass_filter
     cmp         r3, #0
     beq         skip_secondpass_filter
 
-    ldr         r12, _filter8_coeff_
+    adr         r12, filter8_coeff
     add         lr, r12, r3, lsl #4         ;calculate filter location
 
     mov         r2, #0x00080000
@@ -247,8 +247,6 @@ skip_secondpass_hloop
 ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
 ;One word each is reserved. Label filter_coeff can be used to access the data.
 ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
-_filter8_coeff_
-    DCD     filter8_coeff
 filter8_coeff
     DCD     0x00000000,     0x00000080,     0x00000000,     0x00000000
     DCD     0xfffa0000,     0x000c007b,     0x0000ffff,     0x00000000
