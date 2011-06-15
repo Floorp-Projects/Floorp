@@ -226,4 +226,14 @@ GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
     return proto;
 }
 
+bool
+LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
+{
+    return ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                                ObjectValue(*proto), PropertyStub, StrictPropertyStub,
+                                JSPROP_PERMANENT | JSPROP_READONLY) &&
+           proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
+                                 ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0);
+}
+
 } // namespace js
