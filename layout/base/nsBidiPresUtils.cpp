@@ -805,7 +805,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                * If the frame ends before the new line, save the text and move
                * into the next continuation
                */
-              while (end < endLine && nextSibling) {
+              while (end < endLine && nextSibling) { 
                 mBuffer.Append(Substring(text, start, end - start));
 
                 AdvanceAndAppendFrame(&frame, aLineIter, &nextSibling);
