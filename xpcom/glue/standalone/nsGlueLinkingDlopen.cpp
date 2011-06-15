@@ -38,7 +38,9 @@
 
 #include "nsGlueLinking.h"
 #include "nsXPCOMGlue.h"
+#include "nscore.h"
 
+#include <errno.h>
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,6 +52,69 @@
 #else
 #define LEADING_UNDERSCORE
 #endif
+
+#ifdef NS_TRACE_MALLOC
+extern "C" {
+NS_EXPORT_(__ptr_t) __libc_malloc(size_t);
+NS_EXPORT_(__ptr_t) __libc_calloc(size_t, size_t);
+NS_EXPORT_(__ptr_t) __libc_realloc(__ptr_t, size_t);
+NS_EXPORT_(void)    __libc_free(__ptr_t);
+NS_EXPORT_(__ptr_t) __libc_memalign(size_t, size_t);
+NS_EXPORT_(__ptr_t) __libc_valloc(size_t);
+}
+
+static __ptr_t (*_malloc)(size_t) = __libc_malloc;
+static __ptr_t (*_calloc)(size_t, size_t) = __libc_calloc;
+static __ptr_t (*_realloc)(__ptr_t, size_t) = __libc_realloc;
+static void (*_free)(__ptr_t) = __libc_free;
+static __ptr_t (*_memalign)(size_t, size_t) = __libc_memalign;
+static __ptr_t (*_valloc)(size_t) = __libc_valloc;
+
+NS_EXPORT_(__ptr_t) malloc(size_t size)
+{
+    return _malloc(size);
+}
+
+NS_EXPORT_(__ptr_t) calloc(size_t nmemb, size_t size)
+{
+    return _calloc(nmemb, size);
+}
+
+NS_EXPORT_(__ptr_t) realloc(__ptr_t ptr, size_t size)
+{
+    return _realloc(ptr, size);
+}
+
+NS_EXPORT_(void) free(__ptr_t ptr)
+{
+    _free(ptr);
+}
+
+NS_EXPORT_(void) cfree(__ptr_t ptr)
+{
+    _free(ptr);
+}
+
+NS_EXPORT_(__ptr_t) memalign(size_t boundary, size_t size)
+{
+    return _memalign(boundary, size);
+}
+
+NS_EXPORT_(int)
+posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+    __ptr_t ptr = _memalign(alignment, size);
+    if (!ptr)
+        return ENOMEM;
+    *memptr = ptr;
+    return 0;
+}
+
+NS_EXPORT_(__ptr_t) valloc(size_t size)
+{
+    return _valloc(size);
+}
+#endif /* NS_TRACE_MALLOC */
 
 struct DependentLib
 {
@@ -97,6 +162,15 @@ XPCOMGlueLoad(const char *xpcomFile, GetFrozenFunctionsFunc *func)
             snprintf(lastSlash, MAXPATHLEN - strlen(xpcomDir), "/" XUL_DLL);
 
             sXULLibHandle = dlopen(xpcomDir, RTLD_GLOBAL | RTLD_LAZY);
+
+#ifdef NS_TRACE_MALLOC
+            _malloc = (__ptr_t(*)(size_t)) dlsym(sXULLibHandle, "malloc");
+            _calloc = (__ptr_t(*)(size_t, size_t)) dlsym(sXULLibHandle, "calloc");
+            _realloc = (__ptr_t(*)(__ptr_t, size_t)) dlsym(sXULLibHandle, "realloc");
+            _free = (void(*)(__ptr_t)) dlsym(sXULLibHandle, "free");
+            _memalign = (__ptr_t(*)(size_t, size_t)) dlsym(sXULLibHandle, "memalign");
+            _valloc = (__ptr_t(*)(size_t)) dlsym(sXULLibHandle, "valloc");
+#endif
         }
     }
 
@@ -139,6 +213,14 @@ XPCOMGlueUnload()
     }
 
     if (sXULLibHandle) {
+#ifdef NS_TRACE_MALLOC
+        _malloc = __libc_malloc;
+        _calloc = __libc_calloc;
+        _realloc = __libc_realloc;
+        _free = __libc_free;
+        _memalign = __libc_memalign;
+        _valloc = __libc_valloc;
+#endif
         dlclose(sXULLibHandle);
         sXULLibHandle = nsnull;
     }
