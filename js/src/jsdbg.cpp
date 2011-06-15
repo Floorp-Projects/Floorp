@@ -1444,6 +1444,15 @@ DebugObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
     THIS_DEBUGOBJECT_CCW(cx, vp, fnname, obj);                               \
     obj = JSWrapper::wrappedObject(obj)
 
+#define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, fnname, dbg, obj)             \
+    JSObject *obj = DebugObject_checkThis(cx, vp, fnname);                    \
+    if (!obj)                                                                 \
+        return false;                                                         \
+    Debug *dbg = Debug::fromChildJSObject(obj);                               \
+    obj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).toObject();           \
+    JS_ASSERT(obj->isCrossCompartmentWrapper());                              \
+    obj = JSWrapper::wrappedObject(obj)
+
 static JSBool
 DebugObject_construct(JSContext *cx, uintN argc, Value *vp)
 {
@@ -1454,9 +1463,9 @@ DebugObject_construct(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebugObject_getProto(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get proto", refobj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get proto", dbg, refobj);
     vp->setObjectOrNull(refobj->getProto());
-    return Debug::fromChildJSObject(&vp[1].toObject())->wrapDebuggeeValue(cx, vp);
+    return dbg->wrapDebuggeeValue(cx, vp);
 }
 
 static JSBool
@@ -1482,7 +1491,7 @@ DebugObject_getCallable(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebugObject_getName(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get name", obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get name", dbg, obj);
     if (!obj->isFunction()) {
         vp->setUndefined();
         return true;
@@ -1495,7 +1504,7 @@ DebugObject_getName(JSContext *cx, uintN argc, Value *vp)
     }
         
     vp->setString(name);
-    return Debug::fromChildJSObject(&vp[1].toObject())->wrapDebuggeeValue(cx, vp);
+    return dbg->wrapDebuggeeValue(cx, vp);
 }
 
 static JSBool
@@ -1543,8 +1552,7 @@ enum ApplyOrCallMode { ApplyMode, CallMode };
 static JSBool
 ApplyOrCall(JSContext *cx, uintN argc, Value *vp, ApplyOrCallMode mode)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, vp, "apply", obj);
-    Debug *dbg = Debug::fromChildJSObject(&vp[1].toObject());
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "apply", dbg, obj);
 
     // Any JS exceptions thrown must be in the debugger compartment, so do
     // sanity checks and fallible conversions before entering the debuggee.
