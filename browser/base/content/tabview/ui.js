@@ -1321,7 +1321,8 @@ let UI = {
             insideTabs.push(tab);
         }
 
-        var groupItem = new GroupItem(insideTabs,{bounds:bounds});
+        let opts = {bounds: bounds, focusTitle: true};
+        let groupItem = new GroupItem(insideTabs, opts);
         self.setActive(groupItem);
         phantom.remove();
         dragOutInfo = null;

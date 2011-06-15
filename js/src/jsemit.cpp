@@ -2182,8 +2182,16 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
         break;
       default:
-        if (pn->isConst())
+        if (pn->isConst()) {
+            if (cg->needStrictChecks()) {
+                JSAutoByteString name;
+                if (!js_AtomToPrintableString(cx, atom, &name) ||
+                    !ReportStrictModeError(cx, CG_TS(cg), cg, pn, JSMSG_READ_ONLY, name.ptr())) {
+                    return JS_FALSE;
+                }
+            }
             pn->pn_op = op = JSOP_NAME;
+        }
     }
 
     if (dn->isGlobal()) {
