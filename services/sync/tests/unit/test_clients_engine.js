@@ -37,7 +37,7 @@ add_test(function test_bad_hmac() {
     "/1.1/foo/info/collections": collectionsHelper.handler,
     "/1.1/foo/storage/meta/global": upd("meta", global.handler()),
     "/1.1/foo/storage/crypto/keys": upd("crypto", keysWBO.handler()),
-    "/1.1/foo/storage/clients": trackDeletedHandler("crypto", clientsColl.handler())
+    "/1.1/foo/storage/clients": trackDeletedHandler("clients", clientsColl.handler())
   };
 
   let server = httpd_setup(handlers);
