@@ -1151,7 +1151,7 @@ menulist { /* Fixes some styling inconsistencies */
 /*** buttons ***/
 
 .addon-control,
-setting[type="control"] button,
+setting:not([type="integer"]) button,
 setting[type="control"] menulist,
 setting[type="color"] colorpicker[type="button"] {
   -moz-appearance: none;
@@ -1174,7 +1174,7 @@ setting[type="color"] colorpicker[type="button"] {
 }
 
 .addon-control:active:hover,
-setting[type="control"] button:active:hover,
+setting:not([type="integer"]) button:active:hover,
 setting[type="control"] menulist:active:hover,
 setting[type="color"] colorpicker[type="button"]:active:hover {
   background-color: rgba(61, 76, 92, 0.2);
@@ -1183,7 +1183,7 @@ setting[type="color"] colorpicker[type="button"]:active:hover {
 }
 
 .addon-control > .button-box,
-setting[type="control"] button > .button-box {
+setting:not([type="integer"]) button > .button-box {
   padding: 1px;
 }
 

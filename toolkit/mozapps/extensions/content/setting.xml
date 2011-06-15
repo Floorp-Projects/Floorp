@@ -37,6 +37,11 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!DOCTYPE page [
+<!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
+%extensionsDTD;
+]>
+
 <bindings xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
@@ -383,6 +388,87 @@
       </method>
 
       <property name="value" onget="return this.input.color;" onset="return this.input.color = val;"/>
+    </implementation>
+  </binding>
+
+  <binding id="setting-path" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
+    <content>
+      <xul:vbox class="setting-label">
+        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+          <children/>
+        </xul:label>
+      </xul:vbox>
+      <xul:hbox anonid="input-container" align="center" class="setting-input">
+        <xul:button type="button" anonid="button" label="&settings.path.button.label;" xbl:inherits="disabled" oncommand="showPicker();" />
+        <xul:label anonid="input" flex="1" crop="start" xbl:inherits="disabled" />
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <method name="showPicker">
+        <body>
+        <![CDATA[
+          var filePicker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+          filePicker.init(window, this.getAttribute("title"),
+                          this.type == "file" ? Ci.nsIFilePicker.modeOpen : Ci.nsIFilePicker.modeGetFolder);
+          if (this.value) {
+            try {
+              let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+              file.initWithPath(this.value);
+              filePicker.displayDirectory = this.type == "file" ? file.parent : file;
+              if (this.type == "file") {
+                filePicker.defaultString = file.leafName;
+              }
+            } catch (e) {}
+          }
+          if (filePicker.show() != Ci.nsIFilePicker.returnCancel) {
+            this.value = filePicker.file.path;
+            this.inputChanged();
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="valueFromPreference">
+        <body>
+        <![CDATA[
+          this.value = Services.prefs.getCharPref(this.pref);
+        ]]>
+        </body>
+      </method>
+
+      <method name="valueToPreference">
+        <body>
+        <![CDATA[
+          Services.prefs.setCharPref(this.pref, this.value);
+        ]]>
+        </body>
+      </method>
+
+      <field name="_value"></field>
+
+      <property name="value">
+        <getter>
+        <![CDATA[
+          return this._value;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          this._value = val;
+          let label = "";
+          if (val) {
+            try {
+              let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+              file.initWithPath(val);
+              label = this.hasAttribute("fullpath") ? file.path : file.leafName;
+            } catch (e) {}
+          }
+          return this.input.value = label;
+       ]]>
+        </setter>
+      </property>
     </implementation>
   </binding>
 </bindings>
