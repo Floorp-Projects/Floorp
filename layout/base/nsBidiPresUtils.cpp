@@ -651,6 +651,33 @@ PRBool IsBidiLeaf(nsIFrame* aFrame) {
 }
 
 void
+nsBidiPresUtils::AdvanceAndAppendFrame(nsIFrame** aFrame,
+                                       nsBlockInFlowLineIterator* aLineIter,
+                                       nsIFrame** aNextSibling)
+{
+  nsIFrame* frame = *aFrame;
+  nsIFrame* nextSibling = *aNextSibling;
+
+  frame = frame->GetNextContinuation();
+  if (frame) {
+    mLogicalFrames.AppendElement(frame);
+    AdvanceLineIteratorToFrame(frame, aLineIter, mPrevFrame);
+    mLinePerFrame.AppendElement(aLineIter->GetLine().get());
+
+    /*
+     * If we have already overshot the saved next-sibling while
+     * scanning the frame's continuations, advance it.
+     */
+    if (frame == nextSibling) {
+      nextSibling = frame->GetNextSibling();
+    }
+  }
+
+  *aFrame = frame;
+  *aNextSibling = nextSibling;
+}
+
+void
 nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                                 nsBlockInFlowLineIterator* aLineIter,
                                 nsIFrame*                  aCurrentFrame)
@@ -757,10 +784,14 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                                                    start);
               if (endLine == -1) {
                 /*
-                 * If there is no newline in the frame, just save the text and
-                 * do bidi resolution later
+                 * If there is no newline in the text content, just save the
+                 * text from this frame and its continuations, and do bidi
+                 * resolution later
                  */
                 mBuffer.Append(Substring(text, start));
+                while (frame && nextSibling) {
+                  AdvanceAndAppendFrame(&frame, aLineIter, &nextSibling);
+                }
                 break;
               }
 
@@ -777,22 +808,11 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                */
               while (end < endLine && nextSibling) {
                 mBuffer.Append(Substring(text, start, end - start));
-                frame = frame->GetNextContinuation();
+
+                AdvanceAndAppendFrame(&frame, aLineIter, &nextSibling);
                 NS_ASSERTION(frame, "Premature end of continuation chain");
                 frame->GetOffsets(start, end);
-                mLogicalFrames.AppendElement(frame);
-                AdvanceLineIteratorToFrame(frame, aLineIter, mPrevFrame);
-                mLinePerFrame.AppendElement(aLineIter->GetLine().get());
-
-                /*
-                 * If we have already overshot the saved next-sibling while
-                 * scanning the frame's continuations, advance it.
-                 */
-                if (frame == nextSibling) {
-                  nextSibling = frame->GetNextSibling();
-                }
               }
-
               mBuffer.Append(Substring(text, start, endLine - start));
 
               PRBool createdContinuation = PR_FALSE;
