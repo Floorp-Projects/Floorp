@@ -372,6 +372,23 @@ SanitizeOpenTypeData(const PRUint8* aData, PRUint32 aLength,
     }
 }
 
+static void
+StoreUserFontData(gfxFontEntry* aFontEntry, gfxProxyFontEntry* aProxy)
+{
+    if (!aFontEntry->mUserFontData) {
+        aFontEntry->mUserFontData = new gfxUserFontData;
+    }
+    gfxUserFontData* userFontData = aFontEntry->mUserFontData;
+    userFontData->mSrcIndex = aProxy->mSrcIndex;
+    const gfxFontFaceSrc& src = aProxy->mSrcList[aProxy->mSrcIndex];
+    if (src.mIsLocal) {
+        userFontData->mLocalName = src.mLocalName;
+    } else {
+        userFontData->mURI = src.mURI;
+    }
+    userFontData->mFormat = src.mFormatFlags;
+}
+
 // This is called when a font download finishes.
 // Ownership of aFontData passes in here, and the font set must
 // ensure that it is eventually deleted via NS_Free().
@@ -447,7 +464,7 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
             // newly-created font entry
             fe->mFeatureSettings.AppendElements(aProxy->mFeatureSettings);
             fe->mLanguageOverride = aProxy->mLanguageOverride;
-
+            StoreUserFontData(fe, aProxy);
 #ifdef PR_LOGGING
             // must do this before ReplaceFontEntry() because that will
             // clear the proxy's mFamily pointer!
@@ -539,6 +556,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                      PRUint32(mGeneration)));
                 fe->mFeatureSettings.AppendElements(aProxyEntry->mFeatureSettings);
                 fe->mLanguageOverride = aProxyEntry->mLanguageOverride;
+                StoreUserFontData(fe, aProxyEntry);
                 ReplaceFontEntry(aProxyEntry, fe);
                 return STATUS_LOADED;
             } else {
