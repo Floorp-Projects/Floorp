@@ -2874,6 +2874,10 @@ var gDetailView = {
         setting.removeAttribute("desc");
       }
 
+      var type = setting.getAttribute("type");
+      if (type == "file" || type == "directory")
+        setting.setAttribute("fullpath", "true");
+
       rows.appendChild(setting);
 
       // Add a new row containing the description
