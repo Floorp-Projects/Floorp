@@ -608,7 +608,7 @@ iQClass.prototype = {
     });
 
     this.css({
-      '-moz-transition-property': 'all', // TODO: just animate the properties we're changing
+      '-moz-transition-property': Object.keys(css).join(", "),
       '-moz-transition-duration': (duration / 1000) + 's',
       '-moz-transition-timing-function': easing
     });
