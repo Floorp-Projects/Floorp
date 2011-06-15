@@ -105,7 +105,7 @@ WeakMap::has(JSContext *cx, uintN argc, Value *vp)
         return false;
     WeakMap *weakmap = fromJSObject(obj);
     if (weakmap) {
-        js::HashMap<JSObject *, Value>::Ptr ptr = weakmap->map.lookup(key);
+        ObjectValueMap::Ptr ptr = weakmap->map.lookup(key);
         if (ptr) {
             *vp = BooleanValue(true);
             return true;
@@ -136,7 +136,7 @@ WeakMap::get(JSContext *cx, uintN argc, Value *vp)
         return false;
     WeakMap *weakmap = fromJSObject(obj);
     if (weakmap) {
-        js::HashMap<JSObject *, Value>::Ptr ptr = weakmap->map.lookup(key);
+        ObjectValueMap::Ptr ptr = weakmap->map.lookup(key);
         if (ptr) {
             *vp = ptr->value;
             return true;
@@ -167,7 +167,7 @@ WeakMap::delete_(JSContext *cx, uintN argc, Value *vp)
         return false;
     WeakMap *weakmap = fromJSObject(obj);
     if (weakmap) {
-        js::HashMap<JSObject *, Value>::Ptr ptr = weakmap->map.lookup(key);
+        ObjectValueMap::Ptr ptr = weakmap->map.lookup(key);
         if (ptr) {
             weakmap->map.remove(ptr);
             *vp = BooleanValue(true);
@@ -232,7 +232,7 @@ WeakMap::mark(JSTracer *trc, JSObject *obj)
             table->next = rt->gcWeakMapList;
             rt->gcWeakMapList = obj;
         } else {
-            for (js::HashMap<JSObject *, Value>::Range r = table->map.all(); !r.empty(); r.popFront()) {
+            for (ObjectValueMap::Range r = table->map.all(); !r.empty(); r.popFront()) {
                 JSObject *key = r.front().key;
                 Value &value = r.front().value;
                 js::gc::MarkObject(trc, *key, "key");
@@ -256,7 +256,7 @@ WeakMap::markIteratively(JSTracer *trc)
     JSObject *obj = rt->gcWeakMapList;
     while (obj) {
         WeakMap *table = fromJSObject(obj);
-        for (js::HashMap<JSObject *, Value>::Range r = table->map.all(); !r.empty(); r.popFront()) {
+        for (ObjectValueMap::Range r = table->map.all(); !r.empty(); r.popFront()) {
             JSObject *key = r.front().key;
             Value &value = r.front().value;
             if (value.isMarkable() && !IsAboutToBeFinalized(cx, key)) {
@@ -282,7 +282,7 @@ WeakMap::sweep(JSContext *cx)
     JSObject *obj = rt->gcWeakMapList;
     while (obj) {
         WeakMap *table = fromJSObject(obj);
-        for (js::HashMap<JSObject *, Value>::Enum e(table->map); !e.empty(); e.popFront()) {
+        for (ObjectValueMap::Enum e(table->map); !e.empty(); e.popFront()) {
             if (IsAboutToBeFinalized(cx, e.front().key))
                 e.removeFront();
         }
