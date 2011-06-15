@@ -1021,7 +1021,7 @@ var FormSubmitObserver = {
     addMessageListener("Browser:TabClose", this);
   },
 
-  receiveMessage: function findHandlerReceiveMessage(aMessage) {
+  receiveMessage: function receiveMessage(aMessage) {
     let json = aMessage.json;
     switch (aMessage.name) {
       case "Browser:TabOpen":
