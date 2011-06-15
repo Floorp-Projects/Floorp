@@ -40,9 +40,11 @@
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsCSSRules.h"
 
-nsFontFace::nsFontFace(gfxFontEntry* aFontEntry,
+nsFontFace::nsFontFace(gfxFontEntry*      aFontEntry,
+                       PRUint8            aMatchType,
                        nsCSSFontFaceRule* aRule)
   : mFontEntry(aFontEntry),
+    mMatchType(aMatchType),
     mRule(aRule)
 {
 }
@@ -63,21 +65,27 @@ NS_IMPL_ISUPPORTS1(nsFontFace, nsIDOMFontFace)
 NS_IMETHODIMP
 nsFontFace::GetFromFontGroup(PRBool * aFromFontGroup)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aFromFontGroup =
+    (mMatchType & gfxTextRange::kFontGroup) != 0;
+  return NS_OK;
 }
 
 /* readonly attribute boolean fromLanguagePrefs; */
 NS_IMETHODIMP
 nsFontFace::GetFromLanguagePrefs(PRBool * aFromLanguagePrefs)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aFromLanguagePrefs =
+    (mMatchType & gfxTextRange::kPrefsFallback) != 0;
+  return NS_OK;
 }
 
 /* readonly attribute boolean fromSystemFallback; */
 NS_IMETHODIMP
 nsFontFace::GetFromSystemFallback(PRBool * aFromSystemFallback)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aFromSystemFallback =
+    (mMatchType & gfxTextRange::kSystemFallback) != 0;
+  return NS_OK;
 }
 
 /* readonly attribute DOMString name; */
