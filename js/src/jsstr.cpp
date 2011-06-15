@@ -3185,16 +3185,11 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return NULL;
 
-    /* Add properties and methods to the prototype and the constructor. */
-    if (!JS_DefineFunctions(cx, proto, string_methods) ||
-        !JS_DefineFunctions(cx, ctor, string_static_methods))
+    if (!DefinePropertiesAndBrand(cx, proto, NULL, string_methods) ||
+        !DefinePropertiesAndBrand(cx, ctor, NULL, string_static_methods))
     {
         return NULL;
     }
-
-    /* Pre-brand String and String.prototype for trace-jitted code. */
-    proto->brand(cx);
-    ctor->brand(cx);
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
         return NULL;
