@@ -346,7 +346,7 @@ function start() {
     }
   }
 
-  if (matchingLocale != chrome.getSelectedLocale("browser"))
+  if (matchingLocale && matchingLocale != chrome.getSelectedLocale("browser"))
     LocaleUI.language = matchingLocale;
   else {
     LocaleUI._language = chrome.getSelectedLocale("browser");
