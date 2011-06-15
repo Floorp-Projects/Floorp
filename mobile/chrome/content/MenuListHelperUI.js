@@ -59,8 +59,8 @@ var MenuListHelperUI = {
     }
 
     window.addEventListener("resize", this, true);
-    this.sizeToContent();
     container.hidden = false;
+    this.sizeToContent();
     BrowserUI.pushPopup(this, [this._popup]);
   },
 
@@ -86,8 +86,7 @@ var MenuListHelperUI = {
   },
 
   sizeToContent: function sizeToContent() {
-    let style = document.defaultView.getComputedStyle(this._container, null);
-    this._popup.width = window.innerWidth - (parseInt(style.paddingLeft) + parseInt(style.paddingRight));
+    this._popup.width = window.innerWidth * 0.8;
   },
 
   handleEvent: function handleEvent(aEvent) {
