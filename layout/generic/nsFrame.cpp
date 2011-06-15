@@ -4849,12 +4849,42 @@ nsRect
 nsIFrame::GetVisualOverflowRectRelativeToSelf() const
 {
   if (IsTransformed()) {
-    nsRect* preTransformBBox = static_cast<nsRect*>
-      (Properties().Get(PreTransformBBoxProperty()));
-    if (preTransformBBox)
-      return *preTransformBBox;
+    nsOverflowAreas* preTransformOverflows = static_cast<nsOverflowAreas*>
+      (Properties().Get(PreTransformOverflowAreasProperty()));
+    if (preTransformOverflows)
+      return preTransformOverflows->VisualOverflow();
   }
   return GetVisualOverflowRect();
+}
+
+/* virtual */ bool
+nsFrame::UpdateOverflow()
+{
+  nsRect rect(nsPoint(0, 0), GetSize());
+  nsOverflowAreas overflowAreas(rect, rect);
+
+  bool isBox = IsBoxFrame() || IsBoxWrapped();
+  if (!isBox || (!IsCollapsed() && !DoesClipChildren())) {
+    nsLayoutUtils::UnionChildOverflow(this, overflowAreas);
+  }
+
+  if (FinishAndStoreOverflow(overflowAreas, GetSize())) {
+    nsIView* view = GetView();
+    if (view) {
+      PRUint32 flags = 0;
+      GetLayoutFlags(flags);
+
+      if ((flags & NS_FRAME_NO_SIZE_VIEW) == 0) {
+        // Make sure the frame's view is properly sized.
+        nsIViewManager* vm = view->GetViewManager();
+        vm->ResizeView(view, overflowAreas.VisualOverflow(), true);
+      }
+    }
+
+    return true;
+  }
+
+  return false;
 }
 
 void
@@ -6584,6 +6614,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
                "If one overflow is clip, the other should be too");
   if (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP ||
+      disp->IsTableClip() ||
       nsFrame::ApplyPaginatedOverflowClipping(this)) {
     // The contents are actually clipped to the padding area 
     aOverflowAreas.SetAllTo(bounds);
@@ -6648,8 +6679,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   /* If we're transformed, transform the overflow rect by the current transformation. */
   bool hasTransform = IsTransformed();
   if (hasTransform) {
-    Properties().Set(nsIFrame::PreTransformBBoxProperty(),
-                     new nsRect(aOverflowAreas.VisualOverflow()));
+    Properties().Set(nsIFrame::PreTransformOverflowAreasProperty(),
+                     new nsOverflowAreas(aOverflowAreas));
     /* Since our size might not actually have been computed yet, we need to make sure that we use the
      * correct dimensions by overriding the stored bounding rectangle with the value the caller has
      * ensured us we'll use.
@@ -6663,6 +6694,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     if (Preserves3DChildren()) {
       ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
     }
+  } else {
+    Properties().Delete(nsIFrame::PreTransformOverflowAreasProperty());
   }
 
   bool visualOverflowChanged =
@@ -6823,15 +6856,8 @@ void
 nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
                                nsIFrame* aChildFrame)
 {
-  const nsStyleDisplay* disp = GetStyleDisplay();
-  // check here also for hidden as table frames (table, tr and td) currently 
-  // don't wrap their content into a scrollable frame if overflow is specified
-  // FIXME: Why do we check this here rather than in
-  // FinishAndStoreOverflow (where we check NS_STYLE_OVERFLOW_CLIP)?
-  if (!disp->IsTableClip()) {
-    aOverflowAreas.UnionWith(aChildFrame->GetOverflowAreas() +
-                             aChildFrame->GetPosition());
-  }
+  aOverflowAreas.UnionWith(aChildFrame->GetOverflowAreas() +
+                           aChildFrame->GetPosition());
 }
 
 /**
@@ -7254,7 +7280,7 @@ nsFrame::GetPrefSize(nsBoxLayoutState& aState)
     return metrics->mPrefSize;
   }
 
-  if (IsCollapsed(aState))
+  if (IsCollapsed())
     return size;
 
   // get our size in CSS.
@@ -7290,7 +7316,7 @@ nsFrame::GetMinSize(nsBoxLayoutState& aState)
     return size;
   }
 
-  if (IsCollapsed(aState))
+  if (IsCollapsed())
     return size;
 
   // get our size in CSS.
@@ -7325,7 +7351,7 @@ nsFrame::GetMaxSize(nsBoxLayoutState& aState)
     return size;
   }
 
-  if (IsCollapsed(aState))
+  if (IsCollapsed())
     return size;
 
   size = nsBox::GetMaxSize(aState);
@@ -7353,7 +7379,7 @@ nsFrame::GetBoxAscent(nsBoxLayoutState& aState)
   if (!DoesNeedRecalc(metrics->mAscent))
     return metrics->mAscent;
 
-  if (IsCollapsed(aState)) {
+  if (IsCollapsed()) {
     metrics->mAscent = 0;
   } else {
     // Refresh our caches with new sizes.
@@ -7379,7 +7405,7 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
     rv = BoxReflow(aState, presContext, desiredSize, rendContext,
                    ourRect.x, ourRect.y, ourRect.width, ourRect.height);
 
-    if (IsCollapsed(aState)) {
+    if (IsCollapsed()) {
       SetSize(nsSize(0, 0));
     } else {
 
@@ -7640,7 +7666,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
                                         aDesiredSize, aX, aY, layoutFlags | NS_FRAME_NO_MOVE_FRAME);
 
     // Save the ascent.  (bug 103925)
-    if (IsCollapsed(aState)) {
+    if (IsCollapsed()) {
       metrics->mAscent = 0;
     } else {
       if (aDesiredSize.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {

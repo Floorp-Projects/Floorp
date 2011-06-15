@@ -171,6 +171,8 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
+  virtual bool UpdateOverflow();
+
   // Notification when an attribute is changed. The MathML module uses the
   // following paradigm:
   //

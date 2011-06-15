@@ -1476,6 +1476,13 @@ public:
   static bool Are3DTransformsEnabled();
 
   /**
+   * Unions the overflow areas of all non-popup children of aFrame with
+   * aOverflowAreas.
+   */
+  static void UnionChildOverflow(nsIFrame* aFrame,
+                                 nsOverflowAreas& aOverflowAreas);
+
+  /**
    * Return whether this is a frame whose width is used when computing
    * the font size inflation of its descendants.
    */

@@ -384,9 +384,10 @@ protected:
                                 nsHTMLReflowMetrics&     aMetrics,
                                 nscoord*                 aBottomEdgeOfChildren);
 
-  void ComputeOverflowAreas(const nsHTMLReflowState& aReflowState,
-                            nsHTMLReflowMetrics&     aMetrics,
-                            nscoord                  aBottomEdgeOfChildren);
+  void ComputeOverflowAreas(const nsRect&         aBounds,
+                            const nsStyleDisplay* aDisplay,
+                            nscoord               aBottomEdgeOfChildren,
+                            nsOverflowAreas&      aOverflowAreas);
 
   /** add the frames in aFrameList to this block after aPrevSibling
     * this block thinks in terms of lines, but the frame construction code
@@ -434,6 +435,8 @@ public:
   void ReparentFloats(nsIFrame* aFirstFrame,
                       nsBlockFrame* aOldParent, bool aFromOverflow,
                       bool aReparentSiblings);
+
+  virtual bool UpdateOverflow();
 
   /** Load all of aFrame's floats into the float manager iff aFrame is not a
    *  block formatting context. Handles all necessary float manager translations;
