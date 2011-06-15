@@ -48,7 +48,8 @@
 
 namespace js {
 
-typedef js::HashMap<JSObject *, Value> ObjectValueMap;
+typedef js::HashMap<JSObject *, Value, DefaultHasher<JSObject *>, RuntimeAllocPolicy>
+    ObjectValueMap;
 
 class WeakMap {
     ObjectValueMap map;
