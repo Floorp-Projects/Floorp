@@ -2224,10 +2224,12 @@ ia64*-hpux*)
         esac
         # If we're building with --enable-profiling, we need a frame pointer.
         if test -z "$MOZ_PROFILING"; then
-            MOZ_OPTIMIZE_FLAGS="-O3 -fomit-frame-pointer"
+            MOZ_FRAMEPTR_FLAGS="-fomit-frame-pointer"
         else
-            MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
+            MOZ_FRAMEPTR_FLAGS="-fno-omit-frame-pointer"
         fi
+        MOZ_PGO_OPTIMIZE_FLAGS="-O3 $MOZ_FRAMEPTR_FLAGS"
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK $MOZ_FRAMEPTR_FLAGS"
         MOZ_DEBUG_FLAGS="-g"
     fi
 
@@ -7275,6 +7277,7 @@ AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
+AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
 dnl = Enable generation of debug symbols

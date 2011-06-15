@@ -118,14 +118,14 @@ textbox[disabled="true"] {
 }
 
 .context-block {
-  padding: @margin_context_popup@;
+  padding: @touch_normal@;
 }
 
 .dialog-dark,
 .panel-arrowcontent {
   background-color: @color_background_inverse@;
   box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@, black 0 -@border_radius_tiny@ @border_radius_tiny@;
-  padding: 0;
+  padding: @padding_normal@ 0; /* core spacing */
 }
 
 @media (max-width: 499px) {
@@ -613,12 +613,12 @@ dialog {
 
 .panel-arrow[side="top"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
-  margin-bottom: -@margin_snormal@;
+  margin-bottom: -@margin_normal@;
 }
 
 .panel-arrow[side="bottom"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
-  margin-top: -@margin_snormal@;
+  margin-top: -@margin_normal@;
 }
 
 .panel-arrow[side="left"] {
