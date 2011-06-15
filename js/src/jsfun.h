@@ -398,6 +398,11 @@ GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
     return js_anonymous_str;
 }
 
+extern JSFunctionSpec function_methods[];
+
+extern JSBool
+Function(JSContext *cx, uintN argc, Value *vp);
+
 extern bool
 IsBuiltinFunctionConstructor(JSFunction *fun);
 
@@ -424,12 +429,6 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom);
-
-extern JSObject *
-js_InitFunctionClass(JSContext *cx, JSObject *obj);
-
-extern JSObject *
-js_InitArgumentsClass(JSContext *cx, JSObject *obj);
 
 extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);

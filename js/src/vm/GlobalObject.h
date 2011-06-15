@@ -49,6 +49,9 @@ extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
+js_InitFunctionClass(JSContext *cx, JSObject *obj);
+
+extern JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj);
 
 namespace js {
