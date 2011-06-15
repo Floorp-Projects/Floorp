@@ -1842,7 +1842,7 @@ TypeCompartment::init(JSContext *cx)
 TypeObject *
 TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
                                const char *name, const char *postfix,
-                               bool isFunction, bool isArray, JSObject *proto)
+                               JSProtoKey key, JSObject *proto)
 {
 #ifdef DEBUG
     if (*postfix) {
@@ -1867,7 +1867,7 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
     jsid id = JSID_VOID;
 #endif
 
-    TypeObject *object = cx->new_<TypeObject>(id, proto, isFunction);
+    TypeObject *object = cx->new_<TypeObject>(id, proto, key == JSProto_Function);
     if (!object)
         return NULL;
 
@@ -1877,8 +1877,8 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
 
     if (!cx->typeInferenceEnabled())
         object->flags = OBJECT_FLAG_UNKNOWN_MASK;
-    else if (!isArray)
-        object->flags = OBJECT_FLAG_NON_DENSE_ARRAY | OBJECT_FLAG_NON_PACKED_ARRAY;
+    else
+        object->setFlagsFromKey(cx, key);
 
     if (proto) {
         /* Thread onto the prototype's list of instance type objects. */
@@ -1894,27 +1894,23 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
 
 TypeObject *
 TypeCompartment::newInitializerTypeObject(JSContext *cx, JSScript *script,
-                                          uint32 offset, bool isArray)
+                                          uint32 offset, JSProtoKey key)
 {
     char *name = NULL;
 #ifdef DEBUG
     name = (char *) alloca(40);
-    JS_snprintf(name, 40, "#%lu:%lu:%s", script->id(), offset, isArray ? "Array" : "Object");
+    JS_snprintf(name, 40, "#%lu:%lu", script->id(), offset);
 #endif
 
     JSObject *proto;
-    JSProtoKey key = isArray ? JSProto_Array : JSProto_Object;
     if (!js_GetClassPrototype(cx, script->global(), key, &proto, NULL))
         return NULL;
 
-    TypeObject *res = newTypeObject(cx, script, name, "", false, isArray, proto);
+    TypeObject *res = newTypeObject(cx, script, name, "", key, proto);
     if (!res)
         return NULL;
 
-    if (isArray)
-        res->initializerArray = true;
-    else
-        res->initializerObject = true;
+    res->initializerKey = key;
     res->initializerOffset = offset;
 
     jsbytecode *pc = script->code + offset;
@@ -2358,7 +2354,7 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
         JS_snprintf(name, 20, "TableArray:%u", ++count);
 #endif
 
-        TypeObject *objType = newTypeObject(cx, NULL, name, "", false, true, obj->getProto());
+        TypeObject *objType = newTypeObject(cx, NULL, name, "", JSProto_Array, obj->getProto());
         if (!objType) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2492,7 +2488,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         JS_snprintf(name, 20, "TableObject:%u", ++count);
 #endif
 
-        TypeObject *objType = newTypeObject(cx, NULL, name, "", false, false, obj->getProto());
+        TypeObject *objType = newTypeObject(cx, NULL, name, "", JSProto_Object, obj->getProto());
         if (!objType) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2990,6 +2986,8 @@ TypeObject::print(JSContext *cx)
             printf(" packed");
         if (!hasAnyFlags(OBJECT_FLAG_NON_DENSE_ARRAY))
             printf(" dense");
+        if (!hasAnyFlags(OBJECT_FLAG_NON_TYPED_ARRAY))
+            printf(" typed");
         if (hasAnyFlags(OBJECT_FLAG_UNINLINEABLE))
             printf(" uninlineable");
         if (hasAnyFlags(OBJECT_FLAG_SPECIAL_EQUALITY))
@@ -3058,7 +3056,7 @@ GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
     JS_ASSERT(op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT || op == JSOP_NEWINIT);
 
     bool isArray = (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && pc[1] == JSProto_Array));
-    return script->types.initObject(cx, pc, isArray);
+    return script->types.initObject(cx, pc, isArray ? JSProto_Array : JSProto_Object);
 }
 
 inline void
@@ -5063,7 +5061,7 @@ JSScript::typeSetFunction(JSContext *cx, JSFunction *fun)
 #endif
 
     TypeObject *type = cx->compartment->types.newTypeObject(cx, this, name, "",
-                                                            true, false, fun->getProto());
+                                                            JSProto_Function, fun->getProto());
     if (!type)
         return false;
 
@@ -5142,7 +5140,7 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript)
     JS_ASSERT(!newType);
 
     TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, getType()->name(), "new",
-                                                            false, false, this);
+                                                            JSProto_Object, this);
     if (!type)
         return;
 

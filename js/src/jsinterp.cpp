@@ -5889,7 +5889,7 @@ BEGIN_CASE(JSOP_NEWINIT)
     if (!obj)
         goto error;
 
-    TypeObject *type = script->types.initObject(cx, regs.pc, i == JSProto_Array);
+    TypeObject *type = script->types.initObject(cx, regs.pc, (JSProtoKey) i);
     if (!type)
         goto error;
     if (i == JSProto_Array) {
@@ -5911,7 +5911,7 @@ BEGIN_CASE(JSOP_NEWARRAY)
     if (!obj)
         goto error;
 
-    TypeObject *type = script->types.initObject(cx, regs.pc, true);
+    TypeObject *type = script->types.initObject(cx, regs.pc, JSProto_Array);
     if (!type)
         goto error;
     obj->setType(type);
@@ -5926,7 +5926,7 @@ BEGIN_CASE(JSOP_NEWOBJECT)
     JSObject *baseobj;
     LOAD_OBJECT(0, baseobj);
 
-    TypeObject *type = script->types.initObject(cx, regs.pc, false);
+    TypeObject *type = script->types.initObject(cx, regs.pc, JSProto_Object);
     if (!type)
         goto error;
 

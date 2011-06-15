@@ -6373,7 +6373,7 @@ mjit::Compiler::jsop_newinit()
     /* Don't bake in types for non-compileAndGo scripts. */
     types::TypeObject *type = NULL;
     if (globalObj) {
-        type = script->types.initObject(cx, PC, isArray);
+        type = script->types.initObject(cx, PC, isArray ? JSProto_Array : JSProto_Object);
         if (!type)
             return false;
     }
