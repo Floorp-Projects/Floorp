@@ -439,6 +439,8 @@ stubs::Eval(VMFrame &f, uint32 argc)
     if (!IsBuiltinEvalForScope(&f.fp()->scopeChain(), *vp)) {
         if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
             THROW();
+
+        f.script()->types.monitor(f.cx, f.pc(), vp[0]);
         return;
     }
 
