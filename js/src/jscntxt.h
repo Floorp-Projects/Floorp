@@ -1420,6 +1420,14 @@ struct JSContext
         this->exception.setUndefined();
     }
 
+#ifdef DEBUG
+    /*
+     * Controls whether a quadratic-complexity assertion is performed during
+     * stack iteration, defaults to true.
+     */
+    bool stackIterAssertionEnabled;
+#endif
+
   private:
     /*
      * The allocation code calls the function to indicate either OOM failure
