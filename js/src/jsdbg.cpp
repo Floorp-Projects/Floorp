@@ -528,16 +528,17 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
     // repeatedly until it returns false.
     bool markedAny = false;
 
-    // Search for Debug objects in the given compartment. We do this by
-    // searching all the compartments being debugged.
+    // If |comp| is non-null, we're collecting that compartment only; if |comp| is null,
+    // we're collecting all compartments.
+    //
+    // Search the debuggers list of every global in every compartment for Debug objects in
+    // the compartment(s) being collected.
     JSRuntime *rt = trc->context->runtime;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
         JSCompartment *dc = *c;
 
-        // If comp is non-null, this is a per-compartment GC and we
-        // search every dc, except for comp (since no compartment can
-        // debug itself). If comp is null, this is a global GC and we
-        // search every dc that is live.
+        // If this is a single-compartment GC, no compartment can debug itself, so skip
+        // |comp|. If it's a global GC, then search every live compartment.
         if (comp ? dc != comp : !dc->isAboutToBeCollected(gckind)) {
             const GlobalObjectSet &debuggees = dc->getDebuggees();
             for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
@@ -546,6 +547,7 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
                 // Every debuggee has at least one debugger, so in this case
                 // getDebuggers can't return NULL.
                 const GlobalObject::DebugVector *debuggers = global->getDebuggers();
+                JS_ASSERT(debuggers);
                 for (Debug **p = debuggers->begin(); p != debuggers->end(); p++) {
                     Debug *dbg = *p;
                     JSObject *obj = dbg->toJSObject();
@@ -583,8 +585,8 @@ Debug::trace(JSTracer *trc)
 
     // Mark Debug.Frame objects that are reachable from JS if we look them up
     // again (because the corresponding StackFrame is still on the stack).
-    for (FrameMap::Enum e(frames); !e.empty(); e.popFront()) {
-        JSObject *frameobj = e.front().value;
+    for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
+        JSObject *frameobj = r.front().value;
         JS_ASSERT(frameobj->getPrivate());
         MarkObject(trc, *frameobj, "live Debug.Frame");
     }
