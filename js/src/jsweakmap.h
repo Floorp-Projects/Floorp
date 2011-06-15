@@ -210,8 +210,7 @@ class DefaultMarkPolicy<JSObject *, Value> {
     bool valueMarked(const Value &v) {
         if (v.isMarkable())
             return !IsAboutToBeFinalized(tracer->context, v.toGCThing());
-        else
-            return true;
+        return true;
     }
     void markKey(JSObject *k, const char *description) {
         js::gc::MarkObject(tracer, *k, description);
