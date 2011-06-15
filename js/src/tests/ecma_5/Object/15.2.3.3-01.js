@@ -141,6 +141,26 @@ expectDescriptor(pd, expected);
 
 /******************************************************************************/
 
+var o2;
+
+o = Object.create(Object.prototype, { x: {get: function () { return 12; } } });
+
+pd = Object.getOwnPropertyDescriptor(o, "x");
+expected =
+  {
+    set: undefined,
+    enumerable: false,
+    configurable: false
+  };
+adjustDescriptorField(o, pd, expected, "get");
+
+expectDescriptor(pd, expected);
+
+o2 = Object.create(o);
+assertEq(Object.getOwnPropertyDescriptor(o2, "x"), undefined);
+
+/******************************************************************************/
+
 o = {};
 o.b = 12;
 
