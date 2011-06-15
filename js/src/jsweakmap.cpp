@@ -210,7 +210,9 @@ WeakMap::set(JSContext *cx, uintN argc, Value *vp)
     }
 
     *vp = UndefinedValue();
-    return table->map.put(key, value) != NULL;
+    if (!table->map.put(key, value))
+        goto out_of_memory;
+    return true;
 
   out_of_memory:
     JS_ReportOutOfMemory(cx);
