@@ -1,0 +1,683 @@
+diff --git a/media/libvpx/vp8/common/arm/armv6/sixtappredict8x4_v6.asm b/media/libvpx/vp8/common/arm/armv6/sixtappredict8x4_v6.asm
+--- a/media/libvpx/vp8/common/arm/armv6/sixtappredict8x4_v6.asm
++++ b/media/libvpx/vp8/common/arm/armv6/sixtappredict8x4_v6.asm
+@@ -27,17 +27,17 @@
+     stmdb       sp!, {r4 - r11, lr}
+     str         r3, [sp, #-184]!            ;reserve space on stack for temporary storage, store yoffset
+ 
+     cmp         r2, #0                      ;skip first_pass filter if xoffset=0
+     add         lr, sp, #4                  ;point to temporary buffer
+     beq         skip_firstpass_filter
+ 
+ ;first-pass filter
+-    ldr         r12, _filter8_coeff_
++    adr         r12, filter8_coeff
+     sub         r0, r0, r1, lsl #1
+ 
+     add         r2, r12, r2, lsl #4         ;calculate filter location
+     add         r0, r0, #3                  ;adjust src only for loading convinience
+ 
+     ldr         r3, [r2]                    ; load up packed filter coefficients
+     ldr         r4, [r2, #4]
+     ldr         r5, [r2, #8]
+@@ -116,17 +116,17 @@
+ secondpass_filter
+     ldr         r3, [sp], #4                ; load back yoffset
+     ldr         r0, [sp, #216]              ; load dst address from stack 180+36
+     ldr         r1, [sp, #220]              ; load dst stride from stack 180+40
+ 
+     cmp         r3, #0
+     beq         skip_secondpass_filter
+ 
+-    ldr         r12, _filter8_coeff_
++    adr         r12, filter8_coeff
+     add         lr, r12, r3, lsl #4         ;calculate filter location
+ 
+     mov         r2, #0x00080000
+ 
+     ldr         r3, [lr]                    ; load up packed filter coefficients
+     ldr         r4, [lr, #4]
+     ldr         r5, [lr, #8]
+ 
+@@ -242,18 +242,16 @@ skip_secondpass_hloop
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    subpelfilters8_dat, DATA, READWRITE         ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_filter8_coeff_
+-    DCD     filter8_coeff
+ filter8_coeff
+     DCD     0x00000000,     0x00000080,     0x00000000,     0x00000000
+     DCD     0xfffa0000,     0x000c007b,     0x0000ffff,     0x00000000
+     DCD     0xfff50002,     0x0024006c,     0x0001fff8,     0x00000000
+     DCD     0xfff70000,     0x0032005d,     0x0000fffa,     0x00000000
+     DCD     0xfff00003,     0x004d004d,     0x0003fff0,     0x00000000
+     DCD     0xfffa0000,     0x005d0032,     0x0000fff7,     0x00000000
+     DCD     0xfff80001,     0x006c0024,     0x0002fff5,     0x00000000
+diff --git a/media/libvpx/vp8/common/arm/neon/bilinearpredict16x16_neon.asm b/media/libvpx/vp8/common/arm/neon/bilinearpredict16x16_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/bilinearpredict16x16_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/bilinearpredict16x16_neon.asm
+@@ -20,17 +20,17 @@
+ ; r2    int  xoffset,
+ ; r3    int  yoffset,
+ ; r4    unsigned char *dst_ptr,
+ ; stack(r5) int  dst_pitch
+ 
+ |vp8_bilinear_predict16x16_neon| PROC
+     push            {r4-r5, lr}
+ 
+-    ldr             r12, _bifilter16_coeff_
++    adr             r12, bifilter16_coeff
+     ldr             r4, [sp, #12]           ;load parameters from stack
+     ldr             r5, [sp, #16]           ;load parameters from stack
+ 
+     cmp             r2, #0                  ;skip first_pass filter if xoffset=0
+     beq             secondpass_bfilter16x16_only
+ 
+     add             r2, r12, r2, lsl #3     ;calculate filter location
+ 
+@@ -349,14 +349,12 @@ filt_blk2d_spo16x16_loop_neon
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    bifilters16_dat, DATA, READWRITE            ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_bifilter16_coeff_
+-    DCD     bifilter16_coeff
+ bifilter16_coeff
+     DCD     128, 0, 112, 16, 96, 32, 80, 48, 64, 64, 48, 80, 32, 96, 16, 112
+ 
+     END
+diff --git a/media/libvpx/vp8/common/arm/neon/bilinearpredict4x4_neon.asm b/media/libvpx/vp8/common/arm/neon/bilinearpredict4x4_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/bilinearpredict4x4_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/bilinearpredict4x4_neon.asm
+@@ -20,17 +20,17 @@
+ ; r2    int  xoffset,
+ ; r3    int  yoffset,
+ ; r4    unsigned char *dst_ptr,
+ ; stack(lr) int  dst_pitch
+ 
+ |vp8_bilinear_predict4x4_neon| PROC
+     push            {r4, lr}
+ 
+-    ldr             r12, _bifilter4_coeff_
++    adr             r12, bifilter4_coeff
+     ldr             r4, [sp, #8]            ;load parameters from stack
+     ldr             lr, [sp, #12]           ;load parameters from stack
+ 
+     cmp             r2, #0                  ;skip first_pass filter if xoffset=0
+     beq             skip_firstpass_filter
+ 
+ ;First pass: output_height lines x output_width columns (5x4)
+     vld1.u8         {d2}, [r0], r1          ;load src data
+@@ -122,14 +122,12 @@ skip_secondpass_filter
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    bilinearfilters4_dat, DATA, READWRITE           ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_bifilter4_coeff_
+-    DCD     bifilter4_coeff
+ bifilter4_coeff
+     DCD     128, 0, 112, 16, 96, 32, 80, 48, 64, 64, 48, 80, 32, 96, 16, 112
+ 
+     END
+diff --git a/media/libvpx/vp8/common/arm/neon/bilinearpredict8x4_neon.asm b/media/libvpx/vp8/common/arm/neon/bilinearpredict8x4_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/bilinearpredict8x4_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/bilinearpredict8x4_neon.asm
+@@ -20,17 +20,17 @@
+ ; r2    int  xoffset,
+ ; r3    int  yoffset,
+ ; r4    unsigned char *dst_ptr,
+ ; stack(lr) int  dst_pitch
+ 
+ |vp8_bilinear_predict8x4_neon| PROC
+     push            {r4, lr}
+ 
+-    ldr             r12, _bifilter8x4_coeff_
++    adr             r12, bifilter8x4_coeff
+     ldr             r4, [sp, #8]            ;load parameters from stack
+     ldr             lr, [sp, #12]           ;load parameters from stack
+ 
+     cmp             r2, #0                  ;skip first_pass filter if xoffset=0
+     beq             skip_firstpass_filter
+ 
+ ;First pass: output_height lines x output_width columns (5x8)
+     add             r2, r12, r2, lsl #3     ;calculate filter location
+@@ -127,14 +127,12 @@ skip_secondpass_filter
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    bifilters8x4_dat, DATA, READWRITE           ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_bifilter8x4_coeff_
+-    DCD     bifilter8x4_coeff
+ bifilter8x4_coeff
+     DCD     128, 0, 112, 16, 96, 32, 80, 48, 64, 64, 48, 80, 32, 96, 16, 112
+ 
+     END
+diff --git a/media/libvpx/vp8/common/arm/neon/bilinearpredict8x8_neon.asm b/media/libvpx/vp8/common/arm/neon/bilinearpredict8x8_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/bilinearpredict8x8_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/bilinearpredict8x8_neon.asm
+@@ -20,17 +20,17 @@
+ ; r2    int  xoffset,
+ ; r3    int  yoffset,
+ ; r4    unsigned char *dst_ptr,
+ ; stack(lr) int  dst_pitch
+ 
+ |vp8_bilinear_predict8x8_neon| PROC
+     push            {r4, lr}
+ 
+-    ldr             r12, _bifilter8_coeff_
++    adr             r12, bifilter8_coeff
+     ldr             r4, [sp, #8]            ;load parameters from stack
+     ldr             lr, [sp, #12]           ;load parameters from stack
+ 
+     cmp             r2, #0                  ;skip first_pass filter if xoffset=0
+     beq             skip_firstpass_filter
+ 
+ ;First pass: output_height lines x output_width columns (9x8)
+     add             r2, r12, r2, lsl #3     ;calculate filter location
+@@ -175,14 +175,12 @@ skip_secondpass_filter
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    bifilters8_dat, DATA, READWRITE         ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_bifilter8_coeff_
+-    DCD     bifilter8_coeff
+ bifilter8_coeff
+     DCD     128, 0, 112, 16, 96, 32, 80, 48, 64, 64, 48, 80, 32, 96, 16, 112
+ 
+     END
+diff --git a/media/libvpx/vp8/common/arm/neon/loopfilter_neon.asm b/media/libvpx/vp8/common/arm/neon/loopfilter_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/loopfilter_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/loopfilter_neon.asm
+@@ -303,17 +303,17 @@
+ ; q4    p2
+ ; q5    p1
+ ; q6    p0
+ ; q7    q0
+ ; q8    q1
+ ; q9    q2
+ ; q10   q3
+ |vp8_loop_filter_neon| PROC
+-    ldr         r12, _lf_coeff_
++    adr         r12, lf_coeff
+ 
+     ; vp8_filter_mask
+     vabd.u8     q11, q3, q4                 ; abs(p3 - p2)
+     vabd.u8     q12, q4, q5                 ; abs(p2 - p1)
+     vabd.u8     q13, q5, q6                 ; abs(p1 - p0)
+     vabd.u8     q14, q8, q7                 ; abs(q1 - q0)
+     vabd.u8     q3, q9, q8                  ; abs(q2 - q1)
+     vabd.u8     q4, q10, q9                 ; abs(q3 - q2)
+@@ -393,17 +393,15 @@
+     veor        q6, q11, q0                 ; *op0 = u^0x80
+     veor        q7, q10, q0                 ; *oq0 = u^0x80
+     veor        q8, q12, q0                 ; *oq1 = u^0x80
+ 
+     bx          lr
+     ENDP        ; |vp8_loop_filter_horizontal_edge_y_neon|
+ 
+     AREA    loopfilter_dat, DATA, READONLY
+-_lf_coeff_
+-    DCD     lf_coeff
+ lf_coeff
+     DCD     0x80808080, 0x80808080, 0x80808080, 0x80808080
+     DCD     0x03030303, 0x03030303, 0x03030303, 0x03030303
+     DCD     0x04040404, 0x04040404, 0x04040404, 0x04040404
+     DCD     0x01010101, 0x01010101, 0x01010101, 0x01010101
+ 
+     END
+diff --git a/media/libvpx/vp8/common/arm/neon/loopfiltersimplehorizontaledge_neon.asm b/media/libvpx/vp8/common/arm/neon/loopfiltersimplehorizontaledge_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/loopfiltersimplehorizontaledge_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/loopfiltersimplehorizontaledge_neon.asm
+@@ -23,17 +23,17 @@
+ ; r2    const signed char *flimit,
+ ; r3    const signed char *limit,
+ ; stack(r4) const signed char *thresh,
+ ; //stack(r5)   int count --unused
+ 
+ |vp8_loop_filter_simple_horizontal_edge_neon| PROC
+     sub         r0, r0, r1, lsl #1          ; move src pointer down by 2 lines
+ 
+-    ldr         r12, _lfhy_coeff_
++    adr         r12, lfhy_coeff
+     vld1.u8     {q5}, [r0], r1              ; p1
+     vld1.s8     {d2[], d3[]}, [r2]          ; flimit
+     vld1.s8     {d26[], d27[]}, [r3]        ; limit -> q13
+     vld1.u8     {q6}, [r0], r1              ; p0
+     vld1.u8     {q0}, [r12]!                ; 0x80
+     vld1.u8     {q7}, [r0], r1              ; q0
+     vld1.u8     {q10}, [r12]!               ; 0x03
+     vld1.u8     {q8}, [r0]                  ; q1
+@@ -103,16 +103,14 @@
+     bx          lr
+     ENDP        ; |vp8_loop_filter_simple_horizontal_edge_neon|
+ 
+ ;-----------------
+     AREA    hloopfiltery_dat, DATA, READWRITE           ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 16 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_lfhy_coeff_
+-    DCD     lfhy_coeff
+ lfhy_coeff
+     DCD     0x80808080, 0x80808080, 0x80808080, 0x80808080
+     DCD     0x03030303, 0x03030303, 0x03030303, 0x03030303
+     DCD     0x04040404, 0x04040404, 0x04040404, 0x04040404
+ 
+     END
+diff --git a/media/libvpx/vp8/common/arm/neon/loopfiltersimpleverticaledge_neon.asm b/media/libvpx/vp8/common/arm/neon/loopfiltersimpleverticaledge_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/loopfiltersimpleverticaledge_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/loopfiltersimpleverticaledge_neon.asm
+@@ -27,17 +27,17 @@
+ 
+ |vp8_loop_filter_simple_vertical_edge_neon| PROC
+     sub         r0, r0, #2                  ; move src pointer down by 2 columns
+ 
+     vld4.8      {d6[0], d7[0], d8[0], d9[0]}, [r0], r1
+     vld1.s8     {d2[], d3[]}, [r2]          ; flimit
+     vld1.s8     {d26[], d27[]}, [r3]        ; limit -> q13
+     vld4.8      {d6[1], d7[1], d8[1], d9[1]}, [r0], r1
+-    ldr         r12, _vlfy_coeff_
++    adr         r12, vlfy_coeff
+     vld4.8      {d6[2], d7[2], d8[2], d9[2]}, [r0], r1
+     vld4.8      {d6[3], d7[3], d8[3], d9[3]}, [r0], r1
+     vld4.8      {d6[4], d7[4], d8[4], d9[4]}, [r0], r1
+     vld4.8      {d6[5], d7[5], d8[5], d9[5]}, [r0], r1
+     vld4.8      {d6[6], d7[6], d8[6], d9[6]}, [r0], r1
+     vld4.8      {d6[7], d7[7], d8[7], d9[7]}, [r0], r1
+ 
+     vld4.8      {d10[0], d11[0], d12[0], d13[0]}, [r0], r1
+@@ -144,16 +144,14 @@
+     bx          lr
+     ENDP        ; |vp8_loop_filter_simple_vertical_edge_neon|
+ 
+ ;-----------------
+     AREA    vloopfiltery_dat, DATA, READWRITE           ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 16 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_vlfy_coeff_
+-    DCD     vlfy_coeff
+ vlfy_coeff
+     DCD     0x80808080, 0x80808080, 0x80808080, 0x80808080
+     DCD     0x03030303, 0x03030303, 0x03030303, 0x03030303
+     DCD     0x04040404, 0x04040404, 0x04040404, 0x04040404
+ 
+     END
+diff --git a/media/libvpx/vp8/common/arm/neon/mbloopfilter_neon.asm b/media/libvpx/vp8/common/arm/neon/mbloopfilter_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/mbloopfilter_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/mbloopfilter_neon.asm
+@@ -367,17 +367,17 @@
+ ; q5    p1
+ ; q6    p0
+ ; q7    q0
+ ; q8    q1
+ ; q9    q2
+ ; q10   q3
+ 
+ |vp8_mbloop_filter_neon| PROC
+-    ldr         r12, _mblf_coeff_
++    adr         r12, mblf_coeff
+ 
+     ; vp8_filter_mask
+     vabd.u8     q11, q3, q4                 ; abs(p3 - p2)
+     vabd.u8     q12, q4, q5                 ; abs(p2 - p1)
+     vabd.u8     q13, q5, q6                 ; abs(p1 - p0)
+     vabd.u8     q14, q8, q7                 ; abs(q1 - q0)
+     vabd.u8     q3, q9, q8                  ; abs(q2 - q1)
+     vabd.u8     q0, q10, q9                 ; abs(q3 - q2)
+@@ -501,18 +501,16 @@
+     veor        q5, q12, q0                 ; *op2 = s^0x80
+     veor        q7, q15, q0                 ; *oq0 = s^0x80
+     veor        q6, q14, q0                 ; *op0 = s^0x80
+ 
+     bx          lr
+     ENDP        ; |vp8_mbloop_filter_neon|
+ 
+     AREA    mbloopfilter_dat, DATA, READONLY
+-_mblf_coeff_
+-    DCD     mblf_coeff
+ mblf_coeff
+     DCD     0x80808080, 0x80808080, 0x80808080, 0x80808080
+     DCD     0x03030303, 0x03030303, 0x03030303, 0x03030303
+     DCD     0x04040404, 0x04040404, 0x04040404, 0x04040404
+     DCD     0x003f003f, 0x003f003f, 0x003f003f, 0x003f003f
+     DCD     0x09090909, 0x09090909, 0x12121212, 0x12121212
+     DCD     0x1b1b1b1b, 0x1b1b1b1b
+ 
+diff --git a/media/libvpx/vp8/common/arm/neon/shortidct4x4llm_neon.asm b/media/libvpx/vp8/common/arm/neon/shortidct4x4llm_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/shortidct4x4llm_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/shortidct4x4llm_neon.asm
+@@ -26,17 +26,17 @@
+ ;static const int sinpi8sqrt2      =35468;
+ ;static const int rounding = 0;
+ ;Optimization note: The resulted data from dequantization are signed 13-bit data that is
+ ;in the range of [-4096, 4095]. This allows to use "vqdmulh"(neon) instruction since
+ ;it won't go out of range (13+16+1=30bits<32bits). This instruction gives the high half
+ ;result of the multiplication that is needed in IDCT.
+ 
+ |vp8_short_idct4x4llm_neon| PROC
+-    ldr             r12, _idct_coeff_
++    adr             r12, idct_coeff
+     vld1.16         {q1, q2}, [r0]
+     vld1.16         {d0}, [r12]
+ 
+     vswp            d3, d4                  ;q2(vp[4] vp[12])
+ 
+     vqdmulh.s16     q3, q2, d0[2]
+     vqdmulh.s16     q4, q2, d0[0]
+ 
+@@ -112,16 +112,14 @@
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    idct4x4_dat, DATA, READWRITE            ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_idct_coeff_
+-    DCD     idct_coeff
+ idct_coeff
+     DCD     0x4e7b4e7b, 0x8a8c8a8c
+ 
+ ;20091, 20091, 35468, 35468
+ 
+     END
+diff --git a/media/libvpx/vp8/common/arm/neon/sixtappredict16x16_neon.asm b/media/libvpx/vp8/common/arm/neon/sixtappredict16x16_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/sixtappredict16x16_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/sixtappredict16x16_neon.asm
+@@ -28,17 +28,17 @@
+ ; that the result can be a large positive number (> 2^15-1), which could be confused as a
+ ; negtive number. To avoid that error, apply filter coeffs in the order of 0, 1, 4 ,5 ,2,
+ ; which ensures that the result stays in s16 range. Finally, saturated add the result by
+ ; applying 3rd filter coeff. Same applys to other filter functions.
+ 
+ |vp8_sixtap_predict16x16_neon| PROC
+     push            {r4-r5, lr}
+ 
+-    ldr             r12, _filter16_coeff_
++    adrl            r12, filter16_coeff
+     ldr             r4, [sp, #12]           ;load parameters from stack
+     ldr             r5, [sp, #16]           ;load parameters from stack
+ 
+     cmp             r2, #0                  ;skip first_pass filter if xoffset=0
+     beq             secondpass_filter16x16_only
+ 
+     add             r2, r12, r2, lsl #5     ;calculate filter location
+ 
+@@ -475,18 +475,16 @@ secondpass_only_inner_loop_neon
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    subpelfilters16_dat, DATA, READWRITE            ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_filter16_coeff_
+-    DCD     filter16_coeff
+ filter16_coeff
+     DCD     0,  0,  128,    0,   0,  0,   0,  0
+     DCD     0, -6,  123,   12,  -1,  0,   0,  0
+     DCD     2, -11, 108,   36,  -8,  1,   0,  0
+     DCD     0, -9,   93,   50,  -6,  0,   0,  0
+     DCD     3, -16,  77,   77, -16,  3,   0,  0
+     DCD     0, -6,   50,   93,  -9,  0,   0,  0
+     DCD     1, -8,   36,  108, -11,  2,   0,  0
+diff --git a/media/libvpx/vp8/common/arm/neon/sixtappredict4x4_neon.asm b/media/libvpx/vp8/common/arm/neon/sixtappredict4x4_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/sixtappredict4x4_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/sixtappredict4x4_neon.asm
+@@ -20,17 +20,17 @@
+ ; r2    int  xoffset,
+ ; r3    int  yoffset,
+ ; stack(r4) unsigned char *dst_ptr,
+ ; stack(lr) int  dst_pitch
+ 
+ |vp8_sixtap_predict_neon| PROC
+     push            {r4, lr}
+ 
+-    ldr             r12, _filter4_coeff_
++    adrl            r12, filter4_coeff
+     ldr             r4, [sp, #8]            ;load parameters from stack
+     ldr             lr, [sp, #12]           ;load parameters from stack
+ 
+     cmp             r2, #0                  ;skip first_pass filter if xoffset=0
+     beq             secondpass_filter4x4_only
+ 
+     add             r2, r12, r2, lsl #5     ;calculate filter location
+ 
+@@ -406,18 +406,16 @@ secondpass_filter4x4_only
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    subpelfilters4_dat, DATA, READWRITE         ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_filter4_coeff_
+-    DCD     filter4_coeff
+ filter4_coeff
+     DCD     0,  0,  128,    0,   0,  0,   0,  0
+     DCD     0, -6,  123,   12,  -1,  0,   0,  0
+     DCD     2, -11, 108,   36,  -8,  1,   0,  0
+     DCD     0, -9,   93,   50,  -6,  0,   0,  0
+     DCD     3, -16,  77,   77, -16,  3,   0,  0
+     DCD     0, -6,   50,   93,  -9,  0,   0,  0
+     DCD     1, -8,   36,  108, -11,  2,   0,  0
+diff --git a/media/libvpx/vp8/common/arm/neon/sixtappredict8x4_neon.asm b/media/libvpx/vp8/common/arm/neon/sixtappredict8x4_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/sixtappredict8x4_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/sixtappredict8x4_neon.asm
+@@ -20,17 +20,17 @@
+ ; r2    int  xoffset,
+ ; r3    int  yoffset,
+ ; r4    unsigned char *dst_ptr,
+ ; stack(r5) int  dst_pitch
+ 
+ |vp8_sixtap_predict8x4_neon| PROC
+     push            {r4-r5, lr}
+ 
+-    ldr             r12, _filter8_coeff_
++    adrl            r12, filter8_coeff
+     ldr             r4, [sp, #12]           ;load parameters from stack
+     ldr             r5, [sp, #16]           ;load parameters from stack
+ 
+     cmp             r2, #0                  ;skip first_pass filter if xoffset=0
+     beq             secondpass_filter8x4_only
+ 
+     add             r2, r12, r2, lsl #5     ;calculate filter location
+ 
+@@ -457,18 +457,16 @@ secondpass_filter8x4_only
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    subpelfilters8_dat, DATA, READWRITE         ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_filter8_coeff_
+-    DCD     filter8_coeff
+ filter8_coeff
+     DCD     0,  0,  128,    0,   0,  0,   0,  0
+     DCD     0, -6,  123,   12,  -1,  0,   0,  0
+     DCD     2, -11, 108,   36,  -8,  1,   0,  0
+     DCD     0, -9,   93,   50,  -6,  0,   0,  0
+     DCD     3, -16,  77,   77, -16,  3,   0,  0
+     DCD     0, -6,   50,   93,  -9,  0,   0,  0
+     DCD     1, -8,   36,  108, -11,  2,   0,  0
+diff --git a/media/libvpx/vp8/common/arm/neon/sixtappredict8x8_neon.asm b/media/libvpx/vp8/common/arm/neon/sixtappredict8x8_neon.asm
+--- a/media/libvpx/vp8/common/arm/neon/sixtappredict8x8_neon.asm
++++ b/media/libvpx/vp8/common/arm/neon/sixtappredict8x8_neon.asm
+@@ -20,17 +20,17 @@
+ ; r2    int  xoffset,
+ ; r3    int  yoffset,
+ ; stack(r4) unsigned char *dst_ptr,
+ ; stack(r5) int  dst_pitch
+ 
+ |vp8_sixtap_predict8x8_neon| PROC
+     push            {r4-r5, lr}
+ 
+-    ldr             r12, _filter8_coeff_
++    adrl            r12, filter8_coeff
+ 
+     ldr             r4, [sp, #12]           ;load parameters from stack
+     ldr             r5, [sp, #16]           ;load parameters from stack
+ 
+     cmp             r2, #0                  ;skip first_pass filter if xoffset=0
+     beq             secondpass_filter8x8_only
+ 
+     add             r2, r12, r2, lsl #5     ;calculate filter location
+@@ -508,18 +508,16 @@ filt_blk2d_spo8x8_loop_neon
+ 
+     ENDP
+ 
+ ;-----------------
+     AREA    subpelfilters8_dat, DATA, READWRITE         ;read/write by default
+ ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
+ ;One word each is reserved. Label filter_coeff can be used to access the data.
+ ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
+-_filter8_coeff_
+-    DCD     filter8_coeff
+ filter8_coeff
+     DCD     0,  0,  128,    0,   0,  0,   0,  0
+     DCD     0, -6,  123,   12,  -1,  0,   0,  0
+     DCD     2, -11, 108,   36,  -8,  1,   0,  0
+     DCD     0, -9,   93,   50,  -6,  0,   0,  0
+     DCD     3, -16,  77,   77, -16,  3,   0,  0
+     DCD     0, -6,   50,   93,  -9,  0,   0,  0
+     DCD     1, -8,   36,  108, -11,  2,   0,  0
+diff --git a/media/libvpx/vp8/decoder/arm/neon/dequant_idct_neon.asm b/media/libvpx/vp8/decoder/arm/neon/dequant_idct_neon.asm
+--- a/media/libvpx/vp8/decoder/arm/neon/dequant_idct_neon.asm
++++ b/media/libvpx/vp8/decoder/arm/neon/dequant_idct_neon.asm
+@@ -30,17 +30,17 @@
+     ldr             r1, [sp]                ; pitch
+     vld1.32         {d14[0]}, [r2], r1
+     vld1.32         {d14[1]}, [r2], r1
+     vld1.32         {d15[0]}, [r2], r1
+     vld1.32         {d15[1]}, [r2]
+ 
+     ldr             r1, [sp, #4]            ; stride
+ 
+-    ldr             r12, _CONSTANTS_
++    adr             r12, _CONSTANTS_
+ 
+     vmul.i16        q1, q3, q5              ;input for short_idct4x4llm_neon
+     vmul.i16        q2, q4, q6
+ 
+ ;|short_idct4x4llm_neon| PROC
+     vld1.16         {d0}, [r12]
+     vswp            d3, d4                  ;q2(vp[4] vp[12])
+ 
+@@ -118,13 +118,13 @@
+     vst1.32         {d1[0]}, [r3], r1
+     vst1.32         {d1[1]}, [r3]
+ 
+     bx             lr
+ 
+     ENDP           ; |vp8_dequant_idct_add_neon|
+ 
+ ; Constant Pool
+-_CONSTANTS_       DCD cospi8sqrt2minus1
++_CONSTANTS_       EQU cospi8sqrt2minus1
+ cospi8sqrt2minus1 DCD 0x4e7b4e7b
+ sinpi8sqrt2       DCD 0x8a8c8a8c
+ 
+     END
+diff --git a/media/libvpx/vp8/decoder/arm/neon/idct_dequant_dc_full_2x_neon.asm b/media/libvpx/vp8/decoder/arm/neon/idct_dequant_dc_full_2x_neon.asm
+--- a/media/libvpx/vp8/decoder/arm/neon/idct_dequant_dc_full_2x_neon.asm
++++ b/media/libvpx/vp8/decoder/arm/neon/idct_dequant_dc_full_2x_neon.asm
+@@ -36,17 +36,17 @@
+     vld1.32         {d29[0]}, [r2], r1
+     vld1.32         {d29[1]}, [r12], r1
+     vld1.32         {d30[0]}, [r2], r1
+     vld1.32         {d30[1]}, [r12], r1
+     vld1.32         {d31[0]}, [r2]
+     ldr             r1, [sp, #4]
+     vld1.32         {d31[1]}, [r12]
+ 
+-    ldr             r2, _CONSTANTS_
++    adr             r2, _CONSTANTS_
+ 
+     ldrh            r12, [r1], #2           ; lo *dc
+     ldrh            r1, [r1]                ; hi *dc
+ 
+     ; dequant: q[i] = q[i] * dq[i]
+     vmul.i16        q2, q2, q0
+     vmul.i16        q3, q3, q1
+     vmul.i16        q4, q4, q0
+@@ -193,14 +193,14 @@
+     vst1.32         {d3[0]}, [r3]
+     vst1.32         {d3[1]}, [r2]
+ 
+     bx             lr
+ 
+     ENDP           ; |idct_dequant_dc_full_2x_neon|
+ 
+ ; Constant Pool
+-_CONSTANTS_       DCD cospi8sqrt2minus1
++_CONSTANTS_       EQU cospi8sqrt2minus1
+ cospi8sqrt2minus1 DCD 0x4e7b
+ ; because the lowest bit in 0x8a8c is 0, we can pre-shift this
+ sinpi8sqrt2       DCD 0x4546
+ 
+     END
+diff --git a/media/libvpx/vp8/decoder/arm/neon/idct_dequant_full_2x_neon.asm b/media/libvpx/vp8/decoder/arm/neon/idct_dequant_full_2x_neon.asm
+--- a/media/libvpx/vp8/decoder/arm/neon/idct_dequant_full_2x_neon.asm
++++ b/media/libvpx/vp8/decoder/arm/neon/idct_dequant_full_2x_neon.asm
+@@ -35,17 +35,17 @@
+     vld1.32         {d28[1]}, [r12], r1     ; r pre
+     vld1.32         {d29[0]}, [r2], r1
+     vld1.32         {d29[1]}, [r12], r1
+     vld1.32         {d30[0]}, [r2], r1
+     vld1.32         {d30[1]}, [r12], r1
+     vld1.32         {d31[0]}, [r2]
+     vld1.32         {d31[1]}, [r12]
+ 
+-    ldr             r2, _CONSTANTS_
++    adr             r2, _CONSTANTS_
+ 
+     ; dequant: q[i] = q[i] * dq[i]
+     vmul.i16        q2, q2, q0
+     vmul.i16        q3, q3, q1
+     vmul.i16        q4, q4, q0
+     vmul.i16        q5, q5, q1
+ 
+     vld1.16         {d0}, [r2]
+@@ -185,14 +185,14 @@
+     vst1.32         {d3[0]}, [r3]
+     vst1.32         {d3[1]}, [r2]
+ 
+     bx             lr
+ 
+     ENDP           ; |idct_dequant_full_2x_neon|
+ 
+ ; Constant Pool
+-_CONSTANTS_       DCD cospi8sqrt2minus1
++_CONSTANTS_       EQU cospi8sqrt2minus1
+ cospi8sqrt2minus1 DCD 0x4e7b
+ ; because the lowest bit in 0x8a8c is 0, we can pre-shift this
+ sinpi8sqrt2       DCD 0x4546
+ 
+     END

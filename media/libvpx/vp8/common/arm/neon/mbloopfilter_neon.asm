@@ -372,7 +372,7 @@
 ; q10   q3
 
 |vp8_mbloop_filter_neon| PROC
-    ldr         r12, _mblf_coeff_
+    adr         r12, mblf_coeff
 
     ; vp8_filter_mask
     vabd.u8     q11, q3, q4                 ; abs(p3 - p2)
@@ -506,8 +506,6 @@
     ENDP        ; |vp8_mbloop_filter_neon|
 
     AREA    mbloopfilter_dat, DATA, READONLY
-_mblf_coeff_
-    DCD     mblf_coeff
 mblf_coeff
     DCD     0x80808080, 0x80808080, 0x80808080, 0x80808080
     DCD     0x03030303, 0x03030303, 0x03030303, 0x03030303
