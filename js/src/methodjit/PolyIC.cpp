@@ -2507,9 +2507,18 @@ GetElementIC::update(VMFrame &f, JSContext *cx, JSObject *obj, const Value &v, j
     if (v.isString())
         return attachGetProp(f, cx, obj, v, id, vp);
 
-#if 0 // :FIXME: bug 643842
-//#if defined JS_POLYIC_TYPED_ARRAY
-    if (js_IsTypedArray(obj))
+#if defined JS_POLYIC_TYPED_ARRAY
+    /*
+     * Typed array ICs can make stub calls, and need to know which registers
+     * are in use and need to be restored after the call. If type inference is
+     * enabled then we don't necessarily know the full set of such registers
+     * when generating the IC (loop-carried registers may be allocated later),
+     * and additionally the push/pop instructions used to save/restore in the
+     * IC are not compatible with carrying entries in floating point registers.
+     * Since we can use type information to generate inline paths for typed
+     * arrays, just don't generate these ICs with inference enabled.
+     */
+    if (!cx->typeInferenceEnabled() && js_IsTypedArray(obj))
         return attachTypedArray(cx, obj, v, id, vp);
 #endif
 
@@ -2869,9 +2878,9 @@ SetElementIC::update(JSContext *cx, const Value &objval, const Value &idval)
     if (obj->isDenseArray())
         return attachHoleStub(cx, obj, key);
 
-#if 0 // :FIXME: bug 643842
-//#if defined JS_POLYIC_TYPED_ARRAY
-    if (js_IsTypedArray(obj))
+#if defined JS_POLYIC_TYPED_ARRAY
+    /* Not attaching typed array stubs with linear scan allocator, see GetElementIC. */
+    if (!cx->typeInferenceEnabled() && js_IsTypedArray(obj))
         return attachTypedArray(cx, obj, key);
 #endif
 
