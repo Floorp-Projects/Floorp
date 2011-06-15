@@ -1803,7 +1803,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
     TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
                                                                  obj->getType()->name(),
                                                                  "prototype",
-                                                                 false, false, objProto);
+                                                                 JSProto_Object, objProto);
     if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
         return NULL;
 
@@ -2802,7 +2802,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
                 name = "Unnamed";
 #endif
             TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, name, "",
-                                                                    true, false,
+                                                                    JSProto_Function,
                                                                     funobj->getProto());
             if (!type || !funobj->setTypeAndUniqueShape(cx, type))
                 return NULL;
@@ -2907,7 +2907,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             js_CallNewScriptHook(cx, cfun->script(), cfun);
         } else {
             TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, "ClonedFunction", "",
-                                                                    true, false,
+                                                                    JSProto_Function,
                                                                     clone->getProto());
             if (!type || !clone->setTypeAndUniqueShape(cx, type))
                 return NULL;

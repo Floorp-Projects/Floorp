@@ -2872,7 +2872,7 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
         obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
         if (!obj)
             return JS_FALSE;
-        TypeObject *type = GetTypeCallerInitObject(cx, false);
+        TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Object);
         if (!type || !obj->setTypeAndEmptyShape(cx, type))
             return JS_FALSE;
     }
@@ -3011,7 +3011,7 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
 
         types::AutoEnterTypeInference enter(cx);
         types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, name, "",
-                                                                       false, false,
+                                                                       JSProto_Object,
                                                                        obj->getProto());
 
         /*
@@ -4080,10 +4080,15 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     if (!proto)
         return NULL;
 
+    /*
+     * Specialize the key for inference, which only wants to see function,
+     * object, array and typed array keys.
+     */
+    JSProtoKey typeKey = (clasp == &js_FunctionClass) ? JSProto_Function : JSProto_Object;
+
     TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
                                                                  clasp->name, "prototype",
-                                                                 clasp == &js_FunctionClass, false,
-                                                                 proto->getProto());
+                                                                 typeKey, proto->getProto());
     if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
         return NULL;
     protoType->singleton = proto;

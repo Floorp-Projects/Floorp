@@ -273,17 +273,20 @@ enum {
     /* Whether any objects this represents are not packed arrays. */
     OBJECT_FLAG_NON_PACKED_ARRAY = 1 << 1,
 
+    /* Whether any objects this represents are not typed arrays. */
+    OBJECT_FLAG_NON_TYPED_ARRAY = 1 << 2,
+
     /* Whether any represented script has had arguments objects created. */
-    OBJECT_FLAG_CREATED_ARGUMENTS = 1 << 2,
+    OBJECT_FLAG_CREATED_ARGUMENTS = 1 << 3,
 
     /* Whether any represented script is considered uninlineable. */
-    OBJECT_FLAG_UNINLINEABLE = 1 << 3,
+    OBJECT_FLAG_UNINLINEABLE = 1 << 4,
 
     /* Whether any objects have an equality hook. */
-    OBJECT_FLAG_SPECIAL_EQUALITY = 1 << 4,
+    OBJECT_FLAG_SPECIAL_EQUALITY = 1 << 5,
 
     /* Whether any objects have been iterated over. */
-    OBJECT_FLAG_ITERATED = 1 << 5
+    OBJECT_FLAG_ITERATED = 1 << 6
 };
 typedef uint32 TypeObjectFlags;
 
@@ -642,11 +645,10 @@ struct TypeObject
     TypeNewScript *newScript;
 
     /*
-     * Whether this is an Object or Array keyed to an offset in the script containing
-     * this in its objects list.
+     * Whether this is an object (plain Object, Array, or typed array) keyed to
+     * an offset in the script containing this in its objects list.
      */
-    bool initializerObject;
-    bool initializerArray;
+    JSProtoKey initializerKey;
     uint32 initializerOffset;
 
     /*
@@ -742,6 +744,9 @@ struct TypeObject
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
 
+    /* Set flags on this object which are implied by the specified key. */
+    inline void setFlagsFromKey(JSContext *cx, JSProtoKey key);
+
     /* Helpers */
 
     bool addProperty(JSContext *cx, jsid id, Property **pprop);
@@ -801,9 +806,6 @@ struct TypeCallsite
 
     inline TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
                         bool isNew, unsigned argumentCount);
-
-    /* Get the new object at this callsite. */
-    inline TypeObject* getInitObject(JSContext *cx, bool isArray);
 };
 
 /* Persistent type information for a script, retained across GCs. */
@@ -851,7 +853,7 @@ struct TypeScript
     inline TypeObject *standardType(JSContext *cx, JSProtoKey key);
 
     /* Get a type object for an allocation site in this script. */
-    inline TypeObject *initObject(JSContext *cx, const jsbytecode *pc, bool isArray);
+    inline TypeObject *initObject(JSContext *cx, const jsbytecode *pc, JSProtoKey key);
 
     /*
      * Monitor a bytecode pushing a value which is not accounted for by the
@@ -998,14 +1000,19 @@ struct TypeCompartment
     /* Prints results of this compartment if spew is enabled, checks for warnings. */
     void print(JSContext *cx, JSCompartment *compartment);
 
-    /* Make a function or non-function object associated with an optional script. */
+    /*
+     * Make a function or non-function object associated with an optional
+     * script. The 'key' parameter here may be an array, typed array, function
+     * or JSProto_Object to indicate a type whose class is unknown (not just
+     * js_ObjectClass).
+     */
     TypeObject *newTypeObject(JSContext *cx, JSScript *script,
                               const char *base, const char *postfix,
-                              bool isFunction, bool isArray, JSObject *proto);
+                              JSProtoKey key, JSObject *proto);
 
     /* Make an initializer object. */
     TypeObject *newInitializerTypeObject(JSContext *cx, JSScript *script,
-                                         uint32 offset, bool isArray);
+                                         uint32 offset, JSProtoKey key);
 
     void nukeTypes(JSContext *cx);
     void processPendingRecompiles(JSContext *cx);
