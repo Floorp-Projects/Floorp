@@ -1082,15 +1082,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   border-top: @border_width_tiny@ solid rgb(205,205,205);
   padding: 0;
   -moz-user-focus: ignore;
-}
-
-.action-buttons,
-#pageactions-container {
   display: inline-block;
-}
-
-#context-commands {
-  display: -moz-box;
 }
 
 .action-button,

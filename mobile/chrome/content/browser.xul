@@ -597,7 +597,7 @@
       </vbox>
     </vbox>
 
-    <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
+    <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true">
       <vbox id="context-popup" class="dialog-dark">
         <hbox id="context-header">
           <label id="context-hint" crop="center" flex="1"/>
