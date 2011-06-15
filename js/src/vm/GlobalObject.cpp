@@ -252,4 +252,13 @@ LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
                                  ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0);
 }
 
+bool
+DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFunctionSpec *fs)
+{
+    if ((ps && !JS_DefineProperties(cx, obj, ps)) || (fs && !JS_DefineFunctions(cx, obj, fs)))
+        return false;
+    obj->brand(cx);
+    return true;
+}
+
 } // namespace js
