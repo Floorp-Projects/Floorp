@@ -506,6 +506,8 @@ public:
                               const nsRect& aOrigVisualOverflow,
                               bool aIsFirstReflow);
 
+  virtual bool UpdateOverflow();
+
 protected:
 
   /** protected constructor. 

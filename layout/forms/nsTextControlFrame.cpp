@@ -654,7 +654,7 @@ nsTextControlFrame::GetBoxAscent(nsBoxLayoutState& aState)
 }
 
 bool
-nsTextControlFrame::IsCollapsed(nsBoxLayoutState& aBoxLayoutState)
+nsTextControlFrame::IsCollapsed()
 {
   // We're never collapsed in the box sense.
   return false;

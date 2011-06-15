@@ -346,6 +346,8 @@ public:
   void DestroyAbsoluteFrames(nsIFrame* aDestructRoot);
   virtual bool CanContinueTextRun() const;
 
+  virtual bool UpdateOverflow();
+
   // Selection Methods
   // XXX Doc me... (in nsIFrame.h puhleeze)
   // XXX If these are selection specific, then the name should imply selection

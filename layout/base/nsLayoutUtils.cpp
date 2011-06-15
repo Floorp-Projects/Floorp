@@ -163,6 +163,27 @@ nsLayoutUtils::Are3DTransformsEnabled()
   return s3DTransformsEnabled;
 }
 
+void
+nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
+                                  nsOverflowAreas& aOverflowAreas)
+{
+  // Iterate over all children except pop-ups
+  for (nsIFrame::ChildListIterator childLists(aFrame);
+       !childLists.IsDone(); childLists.Next()) {
+    if (childLists.CurrentID() == nsIFrame::kPopupList ||
+        childLists.CurrentID() == nsIFrame::kSelectPopupList)
+      continue;
+
+    nsFrameList children = childLists.CurrentList();
+    for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
+      nsIFrame* child = e.get();
+      nsOverflowAreas childOverflow =
+        child->GetOverflowAreas() + child->GetPosition();
+      aOverflowAreas.UnionWith(childOverflow);
+    }
+  }
+}
+
 static void DestroyViewID(void* aObject, nsIAtom* aPropertyName,
                           void* aPropertyValue, void* aData)
 {

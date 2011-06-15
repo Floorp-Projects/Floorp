@@ -1848,6 +1848,24 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
   return rv;
 }
 
+bool
+nsTableFrame::UpdateOverflow()
+{
+  nsRect bounds(nsPoint(0, 0), GetSize());
+
+  // As above in Reflow, make sure the table overflow area includes the table
+  // rect, and check for collapsed borders leaking out.
+  if (!GetStyleDisplay()->IsTableClip()) {
+    nsMargin bcMargin = GetExcludedOuterBCBorder();
+    bounds.Inflate(bcMargin);
+  }
+
+  nsOverflowAreas overflowAreas(bounds, bounds);
+  nsLayoutUtils::UnionChildOverflow(this, overflowAreas);
+
+  return FinishAndStoreOverflow(overflowAreas, GetSize());
+}
+
 nsresult
 nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,

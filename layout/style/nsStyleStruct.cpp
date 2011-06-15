@@ -2238,15 +2238,17 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   else if (HasTransform()) {
     /* Otherwise, if we've kept the property lying around and we already had a
      * transform, we need to see whether or not we've changed the transform.
-     * If so, we need to do a reflow and a repaint. The reflow is to recompute
-     * the overflow rect (which probably changed if the transform changed)
-     * and to redraw within the bounds of that new overflow rect.
+     * If so, we need to recompute its overflow rect (which probably changed
+     * if the transform changed) and to redraw within the bounds of that new
+     * overflow rect.
      */
     if (!mSpecifiedTransform != !aOther.mSpecifiedTransform ||
-        (mSpecifiedTransform && *mSpecifiedTransform != *aOther.mSpecifiedTransform))
-      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
+        (mSpecifiedTransform &&
+         *mSpecifiedTransform != *aOther.mSpecifiedTransform)) {
+      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_UpdateOverflow,
                                          nsChangeHint_UpdateTransformLayer));
-    
+    }
+
     for (PRUint8 index = 0; index < 3; ++index)
       if (mTransformOrigin[index] != aOther.mTransformOrigin[index]) {
         NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
@@ -2295,8 +2297,10 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 nsChangeHint nsStyleDisplay::MaxDifference()
 {
   // All the parts of FRAMECHANGE are present above in CalcDifference.
-  return nsChangeHint(NS_STYLE_HINT_FRAMECHANGE | nsChangeHint_UpdateOpacityLayer |
-                      nsChangeHint_UpdateTransformLayer);
+  return nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
+                      nsChangeHint_UpdateOpacityLayer |
+                      nsChangeHint_UpdateTransformLayer |
+                      nsChangeHint_UpdateOverflow);
 }
 #endif
 
