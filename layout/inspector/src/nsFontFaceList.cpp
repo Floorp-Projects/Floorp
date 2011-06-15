@@ -34,8 +34,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define _IMPL_NS_LAYOUT
+
 #include "nsFontFaceList.h"
 #include "nsFontFace.h"
+#include "nsFontFaceLoader.h"
+#include "nsIFrame.h"
 #include "gfxFont.h"
 
 nsFontFaceList::nsFontFaceList()
@@ -101,13 +105,21 @@ nsFontFaceList::GetLength(PRUint32 *aLength)
 
 nsresult
 nsFontFaceList::AddFontsFromTextRun(gfxTextRun* aTextRun,
-                                    PRUint32 aOffset, PRUint32 aLength)
+                                    PRUint32 aOffset, PRUint32 aLength,
+                                    nsIFrame* aFrame)
 {
   gfxTextRun::GlyphRunIterator iter(aTextRun, aOffset, aLength);
   while (iter.NextRun()) {
     gfxFontEntry *fe = iter.GetGlyphRun()->mFont->GetFontEntry();
     if (!mFontFaces.GetWeak(fe)) {
-      nsCOMPtr<nsFontFace> ff = new nsFontFace(fe);
+      // check whether this font entry is associated with an @font-face rule
+      nsRefPtr<nsCSSFontFaceRule> rule;
+      nsUserFontSet* fontSet =
+        static_cast<nsUserFontSet*>(aFrame->PresContext()->GetUserFontSet());
+      if (fontSet) {
+        rule = fontSet->FindRuleForEntry(fe);
+      }
+      nsCOMPtr<nsFontFace> ff = new nsFontFace(fe, rule);
       if (!mFontFaces.Put(fe, ff)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
