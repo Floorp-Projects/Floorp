@@ -120,7 +120,7 @@ textbox[disabled="true"] {
 }
 
 .context-block {
-  padding: @margin_context_popup@;
+  padding: @touch_normal@;
 }
 
 .dialog-dark,
