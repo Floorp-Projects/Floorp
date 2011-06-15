@@ -107,7 +107,8 @@ NS_NewHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     NS_ENSURE_TRUE(doc, nsnull);
 
     nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nsnull,
-                                                   kNameSpaceID_XHTML);
+                                                   kNameSpaceID_XHTML,
+                                                   nsIDOMNode::ELEMENT_NODE);
     NS_ENSURE_TRUE(nodeInfo, nsnull);
   }
 

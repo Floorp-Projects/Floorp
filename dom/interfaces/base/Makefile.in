@@ -79,7 +79,6 @@ XPIDLSRCS =					\
 	nsIDOMJSWindow.idl			\
 	nsIDOMModalContentWindow.idl		\
 	nsIDOMChromeWindow.idl			\
-	nsIDOMNSFeatureFactory.idl		\
         nsIDOMClientRect.idl			\
         nsIDOMClientRectList.idl		\
 	nsIFocusManager.idl			\

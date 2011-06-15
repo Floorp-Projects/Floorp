@@ -116,9 +116,6 @@ nsUnkownContentTypeDialogProgressListener.prototype = {
 
   onRefreshAttempted: function( aWebProgress, aURI, aDelay, aSameURI ) {
     return true;
-  },
-
-  onLocationChange2: function( aWebProgress, aRequest, aLocation, aFlags ) {
   }
 };
 
