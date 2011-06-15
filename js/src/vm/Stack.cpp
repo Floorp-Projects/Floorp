@@ -288,6 +288,12 @@ StackSegment::pushCall(CallArgsList &callList)
 }
 
 void
+StackSegment::pointAtCall(CallArgsList &callList)
+{
+    calls_ = &callList;
+}
+
+void
 StackSegment::popCall()
 {
     calls_ = calls_->prev_;
@@ -647,7 +653,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
 
     /* pushRegs() below links the prev-frame; manually link the prev-call. */
     if (evalInFrame && evalInFrameCalls)
-        seg_->pushCall(*evalInFrameCalls);
+        seg_->pointAtCall(*evalInFrameCalls);
 
     efg->prevRegs_ = seg_->pushRegs(efg->regs_);
     JS_ASSERT(space().firstUnused() == efg->regs_.sp);

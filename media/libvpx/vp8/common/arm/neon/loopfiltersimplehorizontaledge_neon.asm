@@ -28,7 +28,7 @@
 |vp8_loop_filter_simple_horizontal_edge_neon| PROC
     sub         r0, r0, r1, lsl #1          ; move src pointer down by 2 lines
 
-    ldr         r12, _lfhy_coeff_
+    adr         r12, lfhy_coeff
     vld1.u8     {q5}, [r0], r1              ; p1
     vld1.s8     {d2[], d3[]}, [r2]          ; flimit
     vld1.s8     {d26[], d27[]}, [r3]        ; limit -> q13
@@ -108,8 +108,6 @@
 ;Data section with name data_area is specified. DCD reserves space in memory for 16 data.
 ;One word each is reserved. Label filter_coeff can be used to access the data.
 ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
-_lfhy_coeff_
-    DCD     lfhy_coeff
 lfhy_coeff
     DCD     0x80808080, 0x80808080, 0x80808080, 0x80808080
     DCD     0x03030303, 0x03030303, 0x03030303, 0x03030303

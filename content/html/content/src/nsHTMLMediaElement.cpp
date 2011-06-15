@@ -631,18 +631,9 @@ static PRBool HasSourceChildren(nsIContent *aElement)
   return PR_FALSE;
 }
 
-// Returns true if aElement has a src attribute, or a <source> child.
-static PRBool HasPotentialResource(nsIContent *aElement)
-{
-  nsAutoString src;
-  if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src))
-    return PR_TRUE;
-  return HasSourceChildren(aElement);
-}
-
 void nsHTMLMediaElement::SelectResource()
 {
-  if (!HasPotentialResource(this)) {
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::src) && !HasSourceChildren(this)) {
     // The media element has neither a src attribute nor any source
     // element children, abort the load.
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;

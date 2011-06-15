@@ -56,7 +56,7 @@ function ClientsRec(collection, id) {
 }
 ClientsRec.prototype = {
   __proto__: CryptoWrapper.prototype,
-  _logName: "Record.Clients",
+  _logName: "Sync.Record.Clients",
   ttl: CLIENTS_TTL
 };
 

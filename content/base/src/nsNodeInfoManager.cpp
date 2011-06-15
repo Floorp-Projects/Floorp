@@ -194,12 +194,22 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
   return NS_OK;
 }
 
+// static
+PRIntn
+nsNodeInfoManager::DropNodeInfoDocument(PLHashEntry *he, PRIntn hashIndex, void *arg)
+{
+  static_cast<nsINodeInfo*>(he->value)->mDocument = nsnull;
+  return HT_ENUMERATE_NEXT;
+}
+
 void
 nsNodeInfoManager::DropDocumentReference()
 {
   if (mBindingManager) {
     mBindingManager->DropDocumentReference();
   }
+
+  PL_HashTableEnumerateEntries(mNodeInfoHash, DropNodeInfoDocument, nsnull);
 
   mDocument = nsnull;
 }
