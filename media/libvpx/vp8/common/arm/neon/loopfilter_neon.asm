@@ -308,7 +308,7 @@
 ; q9    q2
 ; q10   q3
 |vp8_loop_filter_neon| PROC
-    ldr         r12, _lf_coeff_
+    adr         r12, lf_coeff
 
     ; vp8_filter_mask
     vabd.u8     q11, q3, q4                 ; abs(p3 - p2)
@@ -398,8 +398,6 @@
     ENDP        ; |vp8_loop_filter_horizontal_edge_y_neon|
 
     AREA    loopfilter_dat, DATA, READONLY
-_lf_coeff_
-    DCD     lf_coeff
 lf_coeff
     DCD     0x80808080, 0x80808080, 0x80808080, 0x80808080
     DCD     0x03030303, 0x03030303, 0x03030303, 0x03030303
