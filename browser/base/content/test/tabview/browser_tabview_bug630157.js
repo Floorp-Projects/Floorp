@@ -35,7 +35,6 @@ function test() {
     let tabItem = gBrowser.tabs[0]._tabViewTabItem;
     cw.GroupItems.updateActiveGroupItemAndTabBar(tabItem);
 
-    gBrowser.removeTab(gBrowser.tabs[1]);
     assertNumberOfGroups(1);
     assertNumberOfTabs(1);
 
@@ -69,9 +68,10 @@ function test() {
     // simulate double click with left mouse button
     let container = groupItem.container;
     simulateDoubleClick(container);
-    assertNumberOfTabs(2);
+    assertNumberOfTabs(1);
 
-    whenTabViewIsHidden(finishTest);
+    groupItem.close();
+    hideTabView(finishTest);
   }
 
   waitForExplicitFinish();
