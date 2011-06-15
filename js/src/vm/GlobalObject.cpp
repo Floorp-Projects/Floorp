@@ -41,6 +41,7 @@
 #include "GlobalObject.h"
 
 #include "jscntxt.h"
+#include "jsemit.h"
 #include "jsexn.h"
 #include "jsmath.h"
 #include "json.h"
@@ -68,6 +69,58 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
         return NULL;
     if (obj->isGlobal())
         obj->asGlobal()->setOriginalEval(evalobj);
+
+    return proto;
+}
+
+static JSBool
+ThrowTypeError(JSContext *cx, uintN argc, Value *vp)
+{
+    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+                                 JSMSG_THROW_TYPE_ERROR);
+    return false;
+}
+
+JSObject *
+js_InitFunctionClass(JSContext *cx, JSObject *obj)
+{
+    JSObject *proto = js_InitClass(cx, obj, NULL, &FunctionClass, Function, 1,
+                                   NULL, function_methods, NULL, NULL);
+    if (!proto)
+        return NULL;
+
+    /*
+     * The default 'new' object for Function.prototype has unknown properties.
+     * This will be used for generic scripted functions, e.g. from
+     * non-compileAndGo code.
+     */
+    proto->getNewType(cx, NULL, /* markUnknown = */ true);
+
+    JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
+    if (!fun)
+        return NULL;
+    fun->flags |= JSFUN_PROTOTYPE;
+
+    JSScript *script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, JSVERSION_DEFAULT);
+    if (!script)
+        return NULL;
+    script->noScriptRval = true;
+    script->code[0] = JSOP_STOP;
+    script->code[1] = SRC_NULL;
+    fun->u.i.script = script;
+    fun->getType(cx)->interpretedFunction = fun;
+    script->hasFunction = true;
+    script->setOwnerObject(fun);
+    js_CallNewScriptHook(cx, script, fun);
+
+    if (obj->isGlobal()) {
+        /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
+        JSFunction *throwTypeError = js_NewFunction(cx, NULL, ThrowTypeError, 0, 0, obj, NULL);
+        if (!throwTypeError)
+            return NULL;
+
+        obj->asGlobal()->setThrowTypeError(throwTypeError);
+    }
 
     return proto;
 }
