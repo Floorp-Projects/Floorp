@@ -200,6 +200,7 @@ private:
     PRPackedBool                    mKeepAliveMask;
     PRPackedBool                    mSupportsPipelining;
     PRPackedBool                    mIsReused;
+    PRPackedBool                    mIsActivated;
     PRPackedBool                    mCompletedProxyConnect;
     PRPackedBool                    mLastTransactionExpectedNoContent;
     PRPackedBool                    mIdleMonitoring;
