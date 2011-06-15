@@ -391,7 +391,8 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     bool ok = !!Interpret(cx, cx->fp());
     InlineReturn(f);
 
-    f.script()->types.monitor(cx, f.pc(), vp[0]);
+    if (ok)
+        f.script()->types.monitor(cx, f.pc(), vp[0]);
 
     *pret = NULL;
     return ok;
