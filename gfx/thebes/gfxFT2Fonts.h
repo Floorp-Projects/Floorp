@@ -112,8 +112,6 @@ public:
     cairo_font_face_t *CairoFontFace();
     nsresult ReadCMAP();
 
-    nsresult GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer);
-
     FT_Face mFTFace;
     cairo_font_face_t *mFontFace;
 
