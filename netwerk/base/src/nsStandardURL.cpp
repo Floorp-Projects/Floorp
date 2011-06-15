@@ -325,12 +325,7 @@ nsStandardURL::~nsStandardURL()
 }
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-struct DumpLeakedURLs {
-    DumpLeakedURLs() {}
-    ~DumpLeakedURLs();
-};
-
-DumpLeakedURLs::~DumpLeakedURLs()
+static void DumpLeakedURLs()
 {
     if (!PR_CLIST_IS_EMPTY(&gAllURLs)) {
         printf("Leaked URLs:\n");
@@ -368,12 +363,8 @@ nsStandardURL::ShutdownGlobalObjects()
     NS_IF_RELEASE(gCharsetMgr);
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    if (gInitialized) {
-        // This instanciates a dummy class, and will trigger the class
-        // destructor when libxul is unloaded. This is equivalent to atexit(),
-        // but gracefully handles dlclose().
-        static DumpLeakedURLs d;
-    }
+    if (gInitialized)
+        atexit(DumpLeakedURLs);
 #endif
 }
 
