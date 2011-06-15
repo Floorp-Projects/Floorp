@@ -563,7 +563,12 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
 
     nsCOMPtr<nsIDOMFileList> fileList;
     dataTransfer->GetFiles(getter_AddRefs(fileList));
+
+    PRBool oldState = mFrame->mTextFrame->GetFireChangeEventState();
+    mFrame->mTextFrame->SetFireChangeEventState(PR_TRUE);
     inputElement->SetFiles(fileList, true);
+    mFrame->mTextFrame->SetFireChangeEventState(oldState);
+    mFrame->mTextFrame->CheckFireOnChange();
   }
 
   return NS_OK;

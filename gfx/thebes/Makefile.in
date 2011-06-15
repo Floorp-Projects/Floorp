@@ -204,19 +204,6 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 
 
-EXTRA_DSO_LDOPTS += \
-	$(MOZ_CAIRO_LIBS) \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(XPCOM_LIBS) \
-	$(NSPR_LIBS) \
-	$(ZLIB_LIBS) \
-	$(QCMS_LIBS) \
-	$(MOZ_HARFBUZZ_LIBS) \
-	$(MOZ_OTS_LIBS) \
-	$(NULL)
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS	+= 	gfxWindowsPlatform.cpp \
 		gfxWindowsSurface.cpp \
@@ -231,9 +218,6 @@ CPPSRCS	+= gfxFT2Fonts.cpp \
 	   gfxFT2FontList.cpp \
 	   $(NULL)
 
-EXTRA_DSO_LDOPTS += $(FT2_LIBS)
-
-OS_LIBS += $(call EXPAND_LIBNAME,ddraw)
 else
 ifdef MOZ_ENABLE_DWRITE_FONT
 CPPSRCS	+= gfxDWriteFonts.cpp \
@@ -249,15 +233,9 @@ CPPSRCS	+= gfxGDIFont.cpp \
 	   gfxGDIShaper.cpp \
 	   gfxUniscribeShaper.cpp \
 	   $(NULL)
-_OS_LIBS = usp10 msimg32 ole32 version advapi32 shlwapi shell32
 endif
 
 CPPSRCS +=	gfxPDFSurface.cpp
-
-ifdef GNU_CXX
-_OS_LIBS	+= uuid
-endif
-OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
 ifdef MOZ_ENABLE_D3D9_LAYER
 DEFINES +=	-DMOZ_ENABLE_D3D9_LAYER
@@ -318,7 +296,6 @@ ifdef MOZ_DFB
 CSRCS = cairo-gdk-utils.c
 endif
 
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS)
 endif
 
 ifdef MOZ_DFB
@@ -338,7 +315,6 @@ CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 CPPSRCS +=	gfxPDFSurface.cpp
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -359,13 +335,9 @@ CMMSRCS = \
 	nsCoreAnimationSupport.mm \
 	$(NULL)
 
-# Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit -framework QuartzCore
 endif
 
 CSRCS += woff.c
-
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
 GL_PROVIDER = Null
 

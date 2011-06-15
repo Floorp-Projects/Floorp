@@ -123,11 +123,6 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/dom/base \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NULL)
-
 SHARED_LIBRARY_LIBS = \
   ../loader/$(LIB_PREFIX)jsloader_s.$(LIB_SUFFIX) \
   ../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \

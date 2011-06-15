@@ -514,6 +514,24 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 }
 
 bool
+PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(
+    bool* wantsAllStreams, NPError* rv)
+{
+    AssertPluginThread();
+
+    PRBool value = 0;
+    if (!mPluginIface->getvalue) {
+        *rv = NPERR_GENERIC_ERROR;
+    }
+    else {
+        *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginWantsAllNetworkStreams,
+                                     &value);
+    }
+    *wantsAllStreams = value;
+    return true;
+}
+
+bool
 PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
     bool* needs, NPError* rv)
 {

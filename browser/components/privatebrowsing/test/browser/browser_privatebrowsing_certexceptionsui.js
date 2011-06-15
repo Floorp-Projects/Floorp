@@ -63,6 +63,7 @@ function test() {
       prefetchCert: true,
     };
     function testCheckbox() {
+      win.removeEventListener("load", testCheckbox, false);
       Services.obs.addObserver(function (aSubject, aTopic, aData) {
         Services.obs.removeObserver(arguments.callee, "cert-exception-ui-ready", false);
         ok(win.gCert, "The certificate information should be available now");
@@ -88,6 +89,7 @@ function test() {
       prefetchCert: true,
     };
     function testCheckbox() {
+      win.removeEventListener("load", testCheckbox, false);
       Services.obs.addObserver(function (aSubject, aTopic, aData) {
         Services.obs.removeObserver(arguments.callee, "cert-exception-ui-ready", false);
         ok(win.gCert, "The certificate information should be available now");

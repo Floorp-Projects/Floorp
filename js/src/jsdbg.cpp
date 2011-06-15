@@ -864,7 +864,7 @@ Debug::getYoungestFrame(JSContext *cx, uintN argc, Value *vp)
 
     // cx->fp() would return the topmost frame in the current context.
     // Since there may be multiple contexts, use AllFramesIter instead.
-    for (AllFramesIter i(cx); !i.done(); ++i) {
+    for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         if (dbg->observesFrame(i.fp()))
             return dbg->getScriptFrame(cx, i.fp(), vp);
     }
@@ -1097,7 +1097,7 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
 static bool
 StackContains(JSContext *cx, StackFrame *fp)
 {
-    for (AllFramesIter i(cx); !i.done(); ++i) {
+    for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         if (fp == i.fp())
             return true;
     }
@@ -1305,7 +1305,7 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
     if (!script)
         return false;
 
-    bool ok = Execute(cx, *scobj, script, fp, StackFrame::DEBUGGER | StackFrame::EVAL, rval);
+    bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
     js_DestroyScript(cx, script);
     return ok;
 }

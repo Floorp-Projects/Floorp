@@ -1078,8 +1078,9 @@ txTransformNotifier::SetOutputDocument(nsIDocument* aDocument)
 void
 txTransformNotifier::SignalTransformEnd(nsresult aResult)
 {
-    if (mInTransform || (NS_SUCCEEDED(aResult) &&
-        mScriptElements.Count() > 0 || mPendingStylesheetCount > 0)) {
+    if (mInTransform ||
+        (NS_SUCCEEDED(aResult) &&
+         (mScriptElements.Count() > 0 || mPendingStylesheetCount > 0))) {
         return;
     }
 

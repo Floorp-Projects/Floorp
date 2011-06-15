@@ -610,6 +610,34 @@ function do_check_valid_places_guid(aGuid,
 }
 
 /**
+ * Retrieves the guid for a given uri.
+ *
+ * @param aURI
+ *        The uri to check.
+ * @param [optional] aStack
+ *        The stack frame used to report the error.
+ * @return the associated the guid.
+ */
+function do_get_guid_for_uri(aURI,
+                             aStack)
+{
+  if (!aStack) {
+    aStack = Components.stack.caller;
+  }
+  let stmt = DBConn().createStatement(
+    "SELECT guid "
+  + "FROM moz_places "
+  + "WHERE url = :url "
+  );
+  stmt.params.url = aURI.spec;
+  do_check_true(stmt.executeStep(), aStack);
+  let guid = stmt.row.guid;
+  stmt.finalize();
+  do_check_valid_places_guid(guid, aStack);
+  return guid;
+}
+
+/**
  * Tests that a guid was set in moz_places for a given uri.
  *
  * @param aURI
@@ -621,19 +649,11 @@ function do_check_guid_for_uri(aURI,
                                aGUID)
 {
   let caller = Components.stack.caller;
-  let stmt = DBConn().createStatement(
-    "SELECT guid "
-  + "FROM moz_places "
-  + "WHERE url = :url "
-  );
-  stmt.params.url = aURI.spec;
-  do_check_true(stmt.executeStep(), caller);
-  do_check_valid_places_guid(stmt.row.guid, caller);
+  let guid = do_get_guid_for_uri(aURI, caller);
   if (aGUID) {
     do_check_valid_places_guid(aGUID, caller);
-    do_check_eq(stmt.row.guid, aGUID, caller);
+    do_check_eq(guid, aGUID, caller);
   }
-  stmt.finalize();
 }
 
 /**

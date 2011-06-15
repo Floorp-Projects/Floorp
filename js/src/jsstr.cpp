@@ -87,7 +87,6 @@
 using namespace js;
 using namespace js::gc;
 
-#ifdef DEBUG
 bool
 JSString::isShort() const
 {
@@ -101,7 +100,12 @@ JSString::isFixed() const
 {
     return isFlat() && !isExtensible();
 }
-#endif
+
+bool
+JSString::isInline() const
+{
+    return isFixed() && (d.u1.chars == d.inlineStorage || isShort());
+}
 
 bool
 JSString::isExternal() const
@@ -117,6 +121,43 @@ JSLinearString::mark(JSTracer *)
     JSLinearString *str = this;
     while (!str->isStaticAtom() && str->markIfUnmarked() && str->isDependent())
         str = str->asDependent().base();
+}
+
+size_t
+JSString::charsHeapSize()
+{
+    /* JSRope: do nothing, we'll count all children chars when we hit the leaf strings. */
+    if (isRope())
+        return 0;
+
+    JS_ASSERT(isLinear());
+
+    /* JSDependentString: do nothing, we'll count the chars when we hit the base string. */
+    if (isDependent())
+        return 0;
+
+    JS_ASSERT(isFlat());
+    
+    /* JSExtensibleString: count the full capacity, not just the used space. */
+    if (isExtensible())
+        return asExtensible().capacity() * sizeof(jschar);
+
+    JS_ASSERT(isFixed());
+
+    /* JSExternalString: don't count, the chars could be stored anywhere. */
+    if (isExternal())
+        return 0;
+    
+    /* JSInlineString, JSShortString, JSInlineAtom, JSShortAtom: the chars are inline. */
+    if (isInline())
+        return 0;
+
+    /* JSStaticAtom: the chars are static and so not part of the heap. */
+    if (isStaticAtom())
+        return 0;
+
+    /* JSAtom, JSFixedString: count the chars. */
+    return length() * sizeof(jschar);
 }
 
 static JS_ALWAYS_INLINE size_t
@@ -349,7 +390,7 @@ ArgToRootedString(JSContext *cx, uintN argc, Value *vp, uintN arg)
         return cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     vp += 2 + arg;
 
-    if (vp->isObject() && !DefaultValue(cx, &vp->toObject(), JSTYPE_STRING, vp))
+    if (!ToPrimitive(cx, JSTYPE_STRING, vp))
         return NULL;
 
     JSLinearString *str;
@@ -1741,8 +1782,8 @@ enum MatchControlFlags {
 
 /* Factor out looping and matching logic. */
 static bool
-DoMatch(JSContext *cx, RegExpStatics *res, Value *vp, JSString *str, const RegExpPair &rep,
-        DoMatchCallback callback, void *data, MatchControlFlags flags)
+DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpPair &rep,
+        DoMatchCallback callback, void *data, MatchControlFlags flags, Value *rval)
 {
     RegExp &re = rep.re();
     if (re.global()) {
@@ -1751,9 +1792,9 @@ DoMatch(JSContext *cx, RegExpStatics *res, Value *vp, JSString *str, const RegEx
         if (rep.reobj())
             rep.reobj()->zeroRegExpLastIndex();
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
-            if (!re.execute(cx, res, str, &i, testGlobal, vp))
+            if (!re.execute(cx, res, str, &i, testGlobal, rval))
                 return false;
-            if (!Matched(testGlobal, *vp))
+            if (!Matched(testGlobal, *rval))
                 break;
             if (!callback(cx, res, count, data))
                 return false;
@@ -1765,9 +1806,9 @@ DoMatch(JSContext *cx, RegExpStatics *res, Value *vp, JSString *str, const RegEx
         bool testSingle = !!(flags & TEST_SINGLE_BIT),
              callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
         size_t i = 0;
-        if (!re.execute(cx, res, str, &i, testSingle, vp))
+        if (!re.execute(cx, res, str, &i, testSingle, rval))
             return false;
-        if (callbackOnSingle && Matched(testSingle, *vp) && !callback(cx, res, 0, data))
+        if (callbackOnSingle && Matched(testSingle, *rval) && !callback(cx, res, 0, data))
             return false;
     }
     return true;
@@ -1842,12 +1883,14 @@ str_match(JSContext *cx, uintN argc, Value *vp)
     AutoObjectRooter array(cx);
     MatchArgType arg = array.addr();
     RegExpStatics *res = cx->regExpStatics();
-    if (!DoMatch(cx, res, vp, str, *rep, MatchCallback, arg, MATCH_ARGS))
+    Value rval;
+    if (!DoMatch(cx, res, str, *rep, MatchCallback, arg, MATCH_ARGS, &rval))
         return false;
 
-    /* When not global, DoMatch will leave |RegExp.exec()| in *vp. */
     if (rep->re().global())
         vp->setObjectOrNull(array.object());
+    else
+        *vp = rval;
     return true;
 }
 
@@ -2323,7 +2366,8 @@ str_replace_regexp(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata)
     rdata.calledBack = false;
 
     RegExpStatics *res = cx->regExpStatics();
-    if (!DoMatch(cx, res, vp, rdata.str, *rep, ReplaceRegExpCallback, &rdata, REPLACE_ARGS))
+    Value tmp;
+    if (!DoMatch(cx, res, rdata.str, *rep, ReplaceRegExpCallback, &rdata, REPLACE_ARGS, &tmp))
         return false;
 
     if (!rdata.calledBack) {
@@ -2849,23 +2893,18 @@ str_concat(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    /* Set vp (aka rval) early to handle the argc == 0 case. */
-    vp->setString(str);
-
-    Value *argv;
-    uintN i;
-    for (i = 0, argv = vp + 2; i < argc; i++) {
+    Value *argv = JS_ARGV(cx, vp);
+    for (uintN i = 0; i < argc; i++) {
         JSString *str2 = js_ValueToString(cx, argv[i]);
         if (!str2)
             return false;
-        argv[i].setString(str2);
 
         str = js_ConcatStrings(cx, str, str2);
         if (!str)
             return false;
-        vp->setString(str);
     }
 
+    JS_SET_RVAL(cx, vp, StringValue(str));
     return true;
 }
 
@@ -3766,7 +3805,7 @@ JSString *
 js_ValueToString(JSContext *cx, const Value &arg)
 {
     Value v = arg;
-    if (v.isObject() && !DefaultValue(cx, &v.toObject(), JSTYPE_STRING, &v))
+    if (!ToPrimitive(cx, JSTYPE_STRING, &v))
         return NULL;
 
     JSString *str;
@@ -3791,7 +3830,7 @@ bool
 js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
 {
     Value v = arg;
-    if (v.isObject() && !DefaultValue(cx, &v.toObject(), JSTYPE_STRING, &v))
+    if (!ToPrimitive(cx, JSTYPE_STRING, &v))
         return false;
 
     if (v.isString())

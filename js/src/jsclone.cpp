@@ -457,9 +457,9 @@ JSStructuredCloneWriter::writeTypedArray(JSObject *obj)
 bool
 JSStructuredCloneWriter::writeArrayBuffer(JSObject *obj)
 {
-    ArrayBuffer *abuf = ArrayBuffer::fromJSObject(obj);
-    return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, abuf->byteLength) &&
-           out.writeBytes(abuf->data, abuf->byteLength);
+    obj = ArrayBuffer::getArrayBuffer(obj);
+    return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, ArrayBuffer::getByteLength(obj)) &&
+           out.writeBytes(ArrayBuffer::getDataOffset(obj), ArrayBuffer::getByteLength(obj));
 }
 
 bool
@@ -526,7 +526,7 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
             return startObject(obj);
         } else if (js_IsTypedArray(obj)) {
             return writeTypedArray(obj);
-        } else if (js_IsArrayBuffer(obj) && ArrayBuffer::fromJSObject(obj)) {
+        } else if (js_IsArrayBuffer(obj)) {
             return writeArrayBuffer(obj);
         } else if (obj->isBoolean()) {
             return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->getPrimitiveThis().toBoolean());
@@ -679,9 +679,8 @@ JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes, Value *vp)
     if (!obj)
         return false;
     vp->setObject(*obj);
-    ArrayBuffer *abuf = ArrayBuffer::fromJSObject(obj);
-    JS_ASSERT(abuf->byteLength == nbytes);
-    return in.readArray((uint8_t *) abuf->data, nbytes);
+    JS_ASSERT(ArrayBuffer::getByteLength(obj) == nbytes);
+    return in.readArray(ArrayBuffer::getDataOffset(obj), nbytes);
 }
 
 bool

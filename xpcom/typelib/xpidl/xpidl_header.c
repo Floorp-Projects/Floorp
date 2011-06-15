@@ -245,7 +245,7 @@ interface(TreeState *state)
             "class %s%s%s%s",
             (keepvtable ? "" : "NS_NO_VTABLE "),
             (scriptable ? "NS_SCRIPTABLE " : ""),
-            (deprecated ? "NS_DEPRECATED " : ""),
+            (deprecated ? "MOZ_DEPRECATED " : ""),
             className);
     
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
@@ -792,7 +792,7 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
 
     if (mode == AS_DECL) {
         if (IDL_tree_property_get(ident, "deprecated"))
-            fputs("NS_DEPRECATED ", outfile);
+            fputs("MOZ_DEPRECATED ", outfile);
         if (is_method_scriptable(attr_tree, ident))
             fputs("NS_SCRIPTABLE ", outfile);
 
@@ -1046,7 +1046,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
 
     if (mode == AS_DECL) {
         if (IDL_tree_property_get(op->ident, "deprecated"))
-            fputs("NS_DEPRECATED ", outfile);
+            fputs("MOZ_DEPRECATED ", outfile);
         if (is_method_scriptable(method_tree, op->ident))
             fputs("NS_SCRIPTABLE ", outfile);
 

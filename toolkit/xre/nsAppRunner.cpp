@@ -1809,7 +1809,9 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
     }
 
     PRInt32 button;
-    PRBool checkState;
+    // The actual value is irrelevant but we shouldn't be handing out
+    // malformed JSBools to XPConnect.
+    PRBool checkState = PR_FALSE;
     rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
                        killTitle, nsnull, nsnull, nsnull, &checkState, &button);
     NS_ENSURE_SUCCESS_LOG(rv, rv);
@@ -2717,7 +2719,7 @@ PRTime gXRE_mainTimestamp = 0;
 
 #ifdef MOZ_X11
 #ifndef MOZ_PLATFORM_MAEMO
-void fire_glxtest_process();
+bool fire_glxtest_process();
 #endif
 #endif
 
@@ -2747,7 +2749,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // That's the whole reason for doing this in a separate process.
 #ifdef MOZ_X11
 #ifndef MOZ_PLATFORM_MAEMO
-  fire_glxtest_process();
+  if (fire_glxtest_process())
+    return 0;
 #endif
 #endif
 

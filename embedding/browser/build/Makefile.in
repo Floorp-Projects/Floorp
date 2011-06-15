@@ -52,8 +52,6 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
 
-EXTRA_DSO_LIBS	= gkgfx thebes
-
 CPPSRCS		= \
 		nsWebBrowserModule.cpp		\
 		$(NULL)
@@ -61,17 +59,6 @@ CPPSRCS		= \
 SHARED_LIBRARY_LIBS= \
 		../webBrowser/$(LIB_PREFIX)nsWebBrowser_s.$(LIB_SUFFIX) \
 		$(NULL)
-
-EXTRA_DSO_LDOPTS= \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -199,8 +199,43 @@ static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif /* PR_LOGGING */
 
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
+
 #define MAC_CARBON_PLUGINS
-#endif
+
+// The header files QuickdrawAPI.h and QDOffscreen.h are missing on OS X 10.7
+// and up (though the QuickDraw APIs defined in them are still present) -- so
+// we need to supply the relevant parts of their contents here.  It's likely
+// that Apple will eventually remove the APIs themselves (probably in OS X
+// 10.8), so we need to make them weak imports, and test for their presence
+// before using them.
+extern "C" {
+  #if !defined(__QUICKDRAWAPI__)
+  extern void SetRect(
+    Rect * r,
+    short  left,
+    short  top,
+    short  right,
+    short  bottom)
+    __attribute__((weak_import));
+  #endif /* __QUICKDRAWAPI__ */
+
+  #if !defined(__QDOFFSCREEN__)
+  extern QDErr NewGWorldFromPtr(
+    GWorldPtr *   offscreenGWorld,
+    UInt32        PixelFormat,
+    const Rect *  boundsRect,
+    CTabHandle    cTable,                /* can be NULL */
+    GDHandle      aGDevice,              /* can be NULL */
+    GWorldFlags   flags,
+    Ptr           newBuffer,
+    SInt32        rowBytes)
+    __attribute__((weak_import));
+  extern void DisposeGWorld(GWorldPtr offscreenGWorld)
+    __attribute__((weak_import));
+  #endif /* __QDOFFSCREEN__ */
+}
+
+#endif /* #if defined(XP_MACOSX) && !defined(NP_NO_CARBON) */
 
 using namespace mozilla;
 using namespace mozilla::plugins;
@@ -1272,6 +1307,13 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   
 // platform specific printing code
 #ifdef MAC_CARBON_PLUGINS
+  // Don't use this code if any of the QuickDraw APIs it currently requires
+  // are missing (as they probably will be on OS X 10.8 and up).
+  if (!::SetRect || !::NewGWorldFromPtr || !::DisposeGWorld) {
+    NS_WARNING("Cannot print plugin -- required QuickDraw APIs are missing!");
+    return;
+  }
+
   nsSize contentSize = GetContentRectRelativeToSelf().Size();
   window.x = 0;
   window.y = 0;
@@ -2236,7 +2278,7 @@ GetMIMEType(nsNPAPIPluginInstance *aPluginInstance)
   }
   return "";
 }
-#endif XP_WIN
+#endif // XP_WIN
 
 static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)

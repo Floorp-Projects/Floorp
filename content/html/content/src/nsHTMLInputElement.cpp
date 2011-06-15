@@ -3052,19 +3052,13 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
       {
-        PRBool checked = GetChecked();
-        PRBool defaultChecked = PR_FALSE;
-        GetDefaultChecked(&defaultChecked);
-        // Only save if checked != defaultChecked (bug 62713)
-        // (always save if it's a radio button so that the checked
-        // state of all radio buttons is restored)
-        if (mType == NS_FORM_INPUT_RADIO || checked != defaultChecked) {
+        if (GetCheckedChanged()) {
           inputState = new nsHTMLInputElementState();
           if (!inputState) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
 
-          inputState->SetChecked(checked);
+          inputState->SetChecked(GetChecked());
         }
         break;
       }

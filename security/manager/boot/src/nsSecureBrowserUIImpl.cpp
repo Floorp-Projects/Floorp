@@ -192,9 +192,10 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsSecureBrowserUIImpl,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsSecureBrowserUIImpl,
                               nsISecureBrowserUI,
                               nsIWebProgressListener,
+                              nsIWebProgressListener2,
                               nsIFormSubmitObserver,
                               nsIObserver,
                               nsISupportsWeakReference,
@@ -1517,6 +1518,39 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIRequest* aRequest,
                                         nsIURI* aLocation)
 {
+  NS_NOTREACHED("onLocationChange2(...) should be called instead.");
+  return NS_OK;
+}
+
+//  nsIWebProgressListener2
+NS_IMETHODIMP 
+nsSecureBrowserUIImpl::OnProgressChange64(nsIWebProgress* aWebProgress,
+                                          nsIRequest* aRequest,
+                                          PRInt64 aCurSelfProgress,
+                                          PRInt64 aMaxSelfProgress,
+                                          PRInt64 aCurTotalProgress,
+                                          PRInt64 aMaxTotalProgress)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::OnRefreshAttempted(nsIWebProgress* aWebProgress,
+                                          nsIURI* aRefreshURI, PRInt32 aMillis,
+                                          PRBool aSameURI, PRBool* aResult)
+{
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::OnLocationChange2(nsIWebProgress* aWebProgress,
+                                         nsIRequest* aRequest,
+                                         nsIURI* aLocation,
+                                         PRUint32 aFlags)
+{
 #ifdef DEBUG
   nsAutoAtomic atomic(mOnStateLocationChangeReentranceDetection);
   NS_ASSERTION(mOnStateLocationChangeReentranceDetection == 1,
@@ -1555,9 +1589,10 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     NS_ASSERTION(window, "Window has gone away?!");
   }
 
-  // If the location change does not have a corresponding request, then we
-  // assume that it does not impact the security state.
-  if (!aRequest)
+  // When |aRequest| is null, basically we don't trust that document. But if
+  // docshell insists that the document has not changed at all, we will reuse
+  // the previous security state, no matter what |aRequest| may be.
+  if (aFlags & LOCATION_CHANGE_SAME_DOCUMENT)
     return NS_OK;
 
   // The location bar has changed, so we must update the security state.  The

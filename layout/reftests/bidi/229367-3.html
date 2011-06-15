@@ -1,0 +1,30 @@
+<DOCTYPE html>
+<!-- This tests that embeddings and overrides are preserved after <br> -->
+<html>
+ <head>
+  <meta charset=UTF-8>
+  <title>Bug 229367</title>
+ </head>
+ <body>
+  <div>במה מדליקין,<br>
+ובמה אין מדליקין?<br>
+<span style="unicode-bidi: embed; direction: rtl">אין מדליקין לא בלכש, <br>
+ולא בחוסן, <br>
+ולא בכלך, <br>
+ולא בפתילת האידן, <br>
+<span style="unicode-bidi: bidi-override; direction: ltr">ולא בפתילת המדבר, <br>
+ולא בירוקה שעל פני המים.  <br>
+לא בזפת, <br>
+<span style="unicode-bidi: bidi-override; direction: rtl">ולא בשעווה, <br>
+ולא בשמן קיק, <br>
+ולא בשמן שריפה, <br>
+ולא באליה, <br></span>
+ולא בחלב.  <br>
+נחום המדי אומר, <br></span>
+מדליקין בחלב מבושל; <br>
+וחכמים אומרים, <br></span>
+אחד מבושל ואחד שאינו מבושל,<br>
+אין מדליקין בו.
+  </div> 
+ </body> 
+</html>

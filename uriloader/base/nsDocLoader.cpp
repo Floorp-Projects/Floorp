@@ -1352,7 +1352,8 @@ void nsDocLoader::FireOnStateChange(nsIWebProgress *aProgress,
 void
 nsDocLoader::FireOnLocationChange(nsIWebProgress* aWebProgress,
                                   nsIRequest* aRequest,
-                                  nsIURI *aUri)
+                                  nsIURI *aUri,
+                                  PRUint32 aFlags)
 {
   /*                                                                           
    * First notify any listeners of the new state info...
@@ -1379,14 +1380,21 @@ nsDocLoader::FireOnLocationChange(nsIWebProgress* aWebProgress,
       continue;
     }
 
-    listener->OnLocationChange(aWebProgress, aRequest, aUri);
+    nsCOMPtr<nsIWebProgressListener2>
+      listener2(do_QueryReferent(info->mWeakListener));
+
+    if (listener2) {
+      listener2->OnLocationChange2(aWebProgress, aRequest, aUri, aFlags);
+    } else {
+      listener->OnLocationChange(aWebProgress, aRequest, aUri);
+    }
   }
 
   mListenerInfoList.Compact();
 
   // Pass the notification up to the parent...
   if (mParent) {
-    mParent->FireOnLocationChange(aWebProgress, aRequest, aUri);
+    mParent->FireOnLocationChange(aWebProgress, aRequest, aUri, aFlags);
   }
 }
 

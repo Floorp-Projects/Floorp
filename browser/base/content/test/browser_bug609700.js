@@ -8,6 +8,7 @@ function test() {
       ok(true, "duplicateTabIn opened a new window");
 
       aSubject.addEventListener("load", function () {
+        aSubject.removeEventListener("load", arguments.callee, false);
         executeSoon(function () {
           aSubject.close();
           finish();

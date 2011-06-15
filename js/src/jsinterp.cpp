@@ -608,7 +608,7 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
  * when done.  Then push the return value.
  */
 JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
+Invoke(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 {
     /* N.B. Must be kept in sync with InvokeSessionGuard::start/invoke */
 
@@ -616,7 +616,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
     JS_ASSERT(args.argc() <= JS_ARGS_LENGTH_MAX);
 
     if (args.calleev().isPrimitive()) {
-        js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(option));
+        js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(construct));
         return false;
     }
 
@@ -629,24 +629,24 @@ Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
         if (JS_UNLIKELY(clasp == &js_NoSuchMethodClass))
             return NoSuchMethod(cx, args.argc(), args.base());
 #endif
-        JS_ASSERT_IF(option == INVOKE_CONSTRUCTOR, !clasp->construct);
+        JS_ASSERT_IF(construct, !clasp->construct);
         if (!clasp->call) {
-            js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(option));
+            js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(construct));
             return false;
         }
-        return CallJSNative(cx, clasp->call, args.argc(), args.base());
+        return CallJSNative(cx, clasp->call, args);
     }
 
     /* Invoke native functions. */
     JSFunction *fun = callee.getFunctionPrivate();
-    JS_ASSERT_IF(option == INVOKE_CONSTRUCTOR, !fun->isConstructor());
+    JS_ASSERT_IF(construct, !fun->isConstructor());
     if (fun->isNative())
-        return CallJSNative(cx, fun->u.n.native, args.argc(), args.base());
+        return CallJSNative(cx, fun->u.n.native, args);
 
     /* Handle the empty-script special case. */
     JSScript *script = fun->script();
     if (JS_UNLIKELY(script->isEmpty())) {
-        if (option == INVOKE_CONSTRUCTOR) {
+        if (construct) {
             JSObject *obj = js_CreateThisForFunction(cx, &callee);
             if (!obj)
                 return false;
@@ -658,20 +658,12 @@ Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
     }
 
     /* Get pointer to new frame/slots, prepare arguments. */
-    uint32 flags = ToFrameFlags(option);
-    InvokeFrameGuard frame;
-    StackFrame *fp = cx->stack.getInvokeFrame(cx, args, fun, script, &flags, &frame);
-    if (!fp)
+    InvokeFrameGuard ifg;
+    if (!cx->stack.pushInvokeFrame(cx, args, construct, &ifg))
         return false;
 
-    /* Initialize frame, locals. */
-    fp->initCallFrame(cx, callee, fun, args.argc(), flags);
-    SetValueRangeToUndefined(fp->slots(), script->nfixed);
-
-    /* Officially push fp. frame's destructor pops. */
-    cx->stack.pushInvokeFrame(args, &frame);
-
     /* Now that the new frame is rooted, maybe create a call object. */
+    StackFrame *fp = ifg.fp();
     if (fun->isHeavyweight() && !CreateFunCallObject(cx, fp))
         return false;
 
@@ -683,7 +675,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
     }
 
     args.rval() = fp->returnValue();
-    JS_ASSERT_IF(ok && option == INVOKE_CONSTRUCTOR, !args.rval().isPrimitive());
+    JS_ASSERT_IF(ok && construct, !args.rval().isPrimitive());
     return ok;
 }
 
@@ -727,13 +719,10 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
             break;
 
         /* Push the stack frame once for the session. */
-        uint32 flags = 0;
-        if (!stack.getInvokeFrame(cx, args_, fun, script_, &flags, &frame_))
+        if (!stack.pushInvokeFrame(cx, args_, NO_CONSTRUCT, &ifg_))
             return false;
-        StackFrame *fp = frame_.fp();
-        fp->initCallFrame(cx, calleev.toObject(), fun, argc, flags);
-        stack.pushInvokeFrame(args_, &frame_);
 
+        StackFrame *fp = ifg_.fp();
 #ifdef JS_METHODJIT
         /* Hoist dynamic checks from RunScript. */
         mjit::CompileStatus status = mjit::CanMethodJIT(cx, script_, fp, mjit::CompileRequest_JIT);
@@ -768,8 +757,8 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
      * cache it here and restore it before every Invoke call. The 'this' value
      * does not get overwritten, so we can fill it here once.
      */
-    if (frame_.pushed())
-        frame_.pop();
+    if (ifg_.pushed())
+        ifg_.pop();
     formals_ = actuals_ = args_.argv();
     nformals_ = (unsigned)-1;
     return true;
@@ -857,7 +846,7 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
     Value *sharps = &fp->slots()[script->nfixed - SHARP_NSLOTS];
     if (!fp->isGlobalFrame() && prev->script()->hasSharps) {
         JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
-        int base = (prev->isFunctionFrame() && !prev->isDirectEvalOrDebuggerFrame())
+        int base = prev->isNonEvalFunctionFrame()
                    ? prev->fun()->script()->bindings.sharpSlotBase(cx)
                    : prev->numFixed() - SHARP_NSLOTS;
         if (base < 0)
@@ -873,12 +862,10 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
 #endif
 
 bool
-Execute(JSContext *cx, JSObject &chain, JSScript *script, StackFrame *prev, uintN flags,
-        Value *result)
+Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
+        ExecuteType type, StackFrame *evalInFrame, Value *result)
 {
-    JS_ASSERT_IF(prev, !prev->isDummyFrame());
-    JS_ASSERT_IF(prev, prev->compartment() == cx->compartment);
-    JS_ASSERT(script->compartment == cx->compartment);
+    JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
 
     if (script->isEmpty()) {
         if (result)
@@ -889,82 +876,60 @@ Execute(JSContext *cx, JSObject &chain, JSScript *script, StackFrame *prev, uint
     LeaveTrace(cx);
     AutoScriptRooter root(cx, script);
 
-    /*
-     * Get a pointer to new frame/slots. This memory is not "claimed", so the
-     * code before pushExecuteFrame must not reenter the interpreter or assume
-     * the frame is rooted.
-     */
-    ExecuteFrameGuard frame;
-    if (!cx->stack.getExecuteFrame(cx, script, &frame))
+    ExecuteFrameGuard efg;
+    if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    /* Initialize fixed slots (GVAR ops expect NULL). */
-    SetValueRangeToNull(frame.fp()->slots(), script->nfixed);
-
-    /* Initialize frame and locals. */
-    JSObject *initialVarObj;
-    if (prev) {
-        frame.fp()->initEvalFrame(cx, script, prev, &chain, flags);
-
-        /* NB: prev may not be in cx->currentSegment. */
-        initialVarObj = (prev == cx->maybefp())
-                        ? &cx->stack.currentVarObj()
-                        : &cx->stack.space().varObjForFrame(prev);
-    } else {
-        /* The scope chain could be anything, so innerize just in case. */
-        JSObject *innerizedChain = &chain;
-        OBJ_TO_INNER_OBJECT(cx, innerizedChain);
-        if (!innerizedChain)
-            return false;
-
-        /* If we were handed a non-native object, complain bitterly. */
-        if (!innerizedChain->isNative()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_NON_NATIVE_SCOPE);
-            return false;
-        }
-
-        frame.fp()->initGlobalFrame(script, *innerizedChain, cx->maybefp(), flags);
-
-        /* If scope chain is an inner window, outerize for 'this'. */
-        JSObject *thisp = chain.thisObject(cx);
-        if (!thisp)
-            return false;
-        frame.fp()->globalThis().setObject(*thisp);
-
-        initialVarObj = cx->hasRunOption(JSOPTION_VAROBJFIX)
-                        ? chain.getGlobal()
-                        : &chain;
-    }
-    JS_ASSERT(!initialVarObj->getOps()->defineProperty);
-
-    if (frame.fp()->isStrictEvalFrame()) {
-        /* Give strict mode eval its own fresh lexical environment. */
-        initialVarObj = CreateEvalCallObject(cx, frame.fp());
-        if (!initialVarObj)
-            return false;
-        JS_ASSERT(initialVarObj == &frame.fp()->scopeChain());
-    }
-
-    /* Officially push the frame. ~FrameGuard pops. */
-    cx->stack.pushExecuteFrame(initialVarObj, &frame);
+    /* Give strict mode eval its own fresh lexical environment. */
+    StackFrame *fp = efg.fp();
+    if (fp->isStrictEvalFrame() && !CreateEvalCallObject(cx, fp))
+        return false;
 
 #if JS_HAS_SHARP_VARS
-    if (script->hasSharps && !InitSharpSlots(cx, frame.fp()))
+    if (script->hasSharps && !InitSharpSlots(cx, fp))
         return false;
 #endif
 
     Probes::startExecution(cx, script);
 
-    /* Run script until JSOP_STOP or error. */
     AutoPreserveEnumerators preserve(cx);
-    JSBool ok = RunScript(cx, script, frame.fp());
+    JSBool ok = RunScript(cx, script, fp);
     if (result)
-        *result = frame.fp()->returnValue();
+        *result = fp->returnValue();
 
     Probes::stopExecution(cx, script);
 
     return !!ok;
+}
+
+bool
+ExternalExecute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
+{
+    /* The scope chain could be anything, so innerize just in case. */
+    JSObject *scopeChain = &scopeChainArg;
+    OBJ_TO_INNER_OBJECT(cx, scopeChain);
+    if (!scopeChain)
+        return false;
+
+    /* If we were handed a non-native object, complain bitterly. */
+    if (!scopeChain->isNative()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NON_NATIVE_SCOPE);
+        return false;
+    }
+    JS_ASSERT(!scopeChain->getOps()->defineProperty);
+
+    /* The VAROBJFIX option makes varObj == globalObj in global code. */
+    if (!cx->hasRunOption(JSOPTION_VAROBJFIX))
+        scopeChain->makeVarObj();
+
+    /* Use the scope chain as 'this', modulo outerization. */
+    JSObject *thisObj = scopeChain->thisObject(cx);
+    if (!thisObj)
+        return false;
+    Value thisv = ObjectValue(*thisObj);
+
+    return Execute(cx, script, *scopeChain, thisv, EXECUTE_GLOBAL,
+                   NULL /* evalInFrame */, rval);
 }
 
 bool
@@ -1102,10 +1067,9 @@ LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result
     Value lvalue = lval;
     Value rvalue = rval;
 
-    if (lvalue.isObject() && !DefaultValue(cx, &lvalue.toObject(), JSTYPE_VOID, &lvalue))
+    if (!ToPrimitive(cx, &lvalue))
         return false;
-
-    if (rvalue.isObject() && !DefaultValue(cx, &rvalue.toObject(), JSTYPE_VOID, &rvalue))
+    if (!ToPrimitive(cx, &rvalue))
         return false;
 
     if (lvalue.isString() && rvalue.isString()) {
@@ -1225,13 +1189,13 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
 
             if (fun->isConstructor()) {
                 args.thisv().setMagicWithObjectOrNullPayload(NULL);
-                return CallJSNativeConstructor(cx, fun->u.n.native, args.argc(), args.base());
+                return CallJSNativeConstructor(cx, fun->u.n.native, args);
             }
 
             if (!fun->isInterpretedConstructor())
                 goto error;
 
-            if (!Invoke(cx, args, INVOKE_CONSTRUCTOR))
+            if (!Invoke(cx, args, CONSTRUCT))
                 return false;
 
             JS_ASSERT(args.rval().isObject());
@@ -1240,7 +1204,7 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
         }
         if (clasp->construct) {
             args.thisv().setMagicWithObjectOrNullPayload(NULL);
-            return CallJSNativeConstructor(cx, clasp->construct, args.argc(), args.base());
+            return CallJSNativeConstructor(cx, clasp->construct, args);
         }
     }
 
@@ -1270,13 +1234,13 @@ InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fv
     bool ok;
     if (clasp == &js_FunctionClass && (fun = callee.getFunctionPrivate())->isConstructor()) {
         args.thisv().setMagicWithObjectOrNullPayload(thisobj);
-        ok = CallJSNativeConstructor(cx, fun->u.n.native, args.argc(), args.base());
+        ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
     } else if (clasp->construct) {
         args.thisv().setMagicWithObjectOrNullPayload(thisobj);
-        ok = CallJSNativeConstructor(cx, clasp->construct, args.argc(), args.base());
+        ok = CallJSNativeConstructor(cx, clasp->construct, args);
     } else {
         args.thisv().setObjectOrNull(thisobj);
-        ok = Invoke(cx, args, INVOKE_CONSTRUCTOR);
+        ok = Invoke(cx, args, CONSTRUCT);
     }
 
     *rval = args.rval();
@@ -1431,9 +1395,9 @@ js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
     const uintN targetLevel = closureLevel - cookie.level();
     JS_ASSERT(targetLevel < UpvarCookie::UPVAR_LEVEL_LIMIT);
 
-    StackFrame *fp = cx->stack.findFrameAtLevel(targetLevel);
+    StackFrame *fp = FindUpvarFrame(cx, targetLevel);
     uintN slot = cookie.slot();
-    Value *vp;
+    const Value *vp;
 
     if (!fp->isFunctionFrame() || fp->isEvalFrame()) {
         vp = fp->slots() + fp->numFixed();
@@ -1449,6 +1413,19 @@ js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
     }
 
     return vp[slot];
+}
+
+extern StackFrame *
+js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
+{
+    StackFrame *fp = cx->fp();
+    while (true) {
+        JS_ASSERT(fp && fp->isScriptFrame());
+        if (fp->script()->staticLevel == targetLevel)
+            break;
+        fp = fp->prev();
+    }
+    return fp;
 }
 
 #ifdef DEBUG
@@ -1900,15 +1877,6 @@ namespace reprmeter {
         VALUE_TO_OBJECT(cx, vp_, obj);                                        \
     JS_END_MACRO
 
-#define DEFAULT_VALUE(cx, n, hint, v)                                         \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(v.isObject());                                              \
-        JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!DefaultValue(cx, &v.toObject(), hint, &regs.sp[n]))              \
-            goto error;                                                       \
-        v = regs.sp[n];                                                       \
-    JS_END_MACRO
-
 /* Test whether v is an int in the range [-2^31 + 1, 2^31 - 2] */
 static JS_ALWAYS_INLINE bool
 CanIncDecWithoutOverflow(int32_t i)
@@ -2137,7 +2105,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
-# ifdef DEBUG
+#ifdef DEBUG
     /*
      * We call this macro from BEGIN_CASE in threaded interpreters,
      * and before entering the switch in non-threaded interpreters.
@@ -2152,14 +2120,19 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      * expect from looking at the code.  (We do omit POPs after SETs;
      * unfortunate, but not worth fixing.)
      */
-#  define LOG_OPCODE(OP)    JS_BEGIN_MACRO                                    \
+# define LOG_OPCODE(OP)    JS_BEGIN_MACRO                                     \
                                 if (JS_UNLIKELY(cx->logfp != NULL) &&         \
                                     (OP) == *regs.pc)                         \
                                     js_LogOpcode(cx);                         \
                             JS_END_MACRO
-# else
-#  define LOG_OPCODE(OP)    ((void) 0)
-# endif
+#else
+# define LOG_OPCODE(OP)    ((void) 0)
+#endif
+
+#define COUNT_OP()         JS_BEGIN_MACRO                                     \
+                               if (pcCounts && !regs.fp()->hasImacropc())     \
+                                   ++pcCounts[regs.pc - script->code];        \
+                           JS_END_MACRO
 
     /*
      * Macros for threaded interpreter loop
@@ -2194,6 +2167,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_RECORDER();                             \
+                                COUNT_OP();                                   \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -2453,6 +2427,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
     JSScript *script = regs.fp()->script();
+    int *pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
@@ -2477,7 +2452,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
-        JS_ASSERT(interpGuard.prevContextRegs == &cx->generatorFor(regs.fp())->regs);
         JS_ASSERT((size_t) (regs.pc - script->code) <= script->length);
         JS_ASSERT((size_t) (regs.sp - regs.fp()->base()) <= StackDepth(script));
 
@@ -2834,10 +2808,11 @@ BEGIN_CASE(JSOP_STOP)
 #ifdef JS_METHODJIT
   jit_return:
 #endif
-        cx->stack.popInlineFrame();
+        cx->stack.popInlineFrame(regs);
 
         /* Sync interpreter locals. */
         script = regs.fp()->script();
+        pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
         argv = regs.fp()->maybeFormalArgs();
         atoms = FrameAtomBase(cx, regs.fp());
 
@@ -3248,7 +3223,7 @@ BEGIN_CASE(JSOP_SETCONST)
 {
     JSAtom *atom;
     LOAD_ATOM(0, atom);
-    JSObject &obj = cx->stack.currentVarObj();
+    JSObject &obj = regs.fp()->varObj();
     const Value &ref = regs.sp[-1];
     if (!obj.defineProperty(cx, ATOM_TO_JSID(atom), ref,
                             PropertyStub, StrictPropertyStub,
@@ -3431,17 +3406,17 @@ END_CASE(JSOP_CASEX)
 
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
-        Value rval = regs.sp[-1];                                             \
-        Value lval = regs.sp[-2];                                             \
+        Value &rval = regs.sp[-1];                                            \
+        Value &lval = regs.sp[-2];                                            \
         bool cond;                                                            \
         /* Optimize for two int-tagged operands (typical loop control). */    \
         if (lval.isInt32() && rval.isInt32()) {                               \
             cond = lval.toInt32() OP rval.toInt32();                          \
         } else {                                                              \
-            if (lval.isObject())                                              \
-                DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                   \
-            if (rval.isObject())                                              \
-                DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                   \
+            if (!ToPrimitive(cx, JSTYPE_NUMBER, &lval))                       \
+                goto error;                                                   \
+            if (!ToPrimitive(cx, JSTYPE_NUMBER, &rval))                       \
+                goto error;                                                   \
             if (lval.isString() && rval.isString()) {                         \
                 JSString *l = lval.toString(), *r = rval.toString();          \
                 int32 result;                                                 \
@@ -3458,8 +3433,8 @@ END_CASE(JSOP_CASEX)
             }                                                                 \
         }                                                                     \
         TRY_BRANCH_AFTER_COND(cond, 2);                                       \
+        regs.sp[-2].setBoolean(cond);                                         \
         regs.sp--;                                                            \
-        regs.sp[-1].setBoolean(cond);                                         \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_LT)
@@ -3520,31 +3495,31 @@ END_CASE(JSOP_URSH)
 
 BEGIN_CASE(JSOP_ADD)
 {
-    Value rval = regs.sp[-1];
-    Value lval = regs.sp[-2];
+    Value &rval = regs.sp[-1];
+    Value &lval = regs.sp[-2];
 
     if (lval.isInt32() && rval.isInt32()) {
         int32_t l = lval.toInt32(), r = rval.toInt32();
         int32_t sum = l + r;
-        regs.sp--;
         if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000)))
-            regs.sp[-1].setDouble(double(l) + double(r));
+            regs.sp[-2].setDouble(double(l) + double(r));
         else
-            regs.sp[-1].setInt32(sum);
+            regs.sp[-2].setInt32(sum);
+        regs.sp--;
     } else
 #if JS_HAS_XML_SUPPORT
     if (IsXML(lval) && IsXML(rval)) {
         if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), &rval))
             goto error;
+        regs.sp[-2] = rval;
         regs.sp--;
-        regs.sp[-1] = rval;
     } else
 #endif
     {
-        if (lval.isObject())
-            DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);
-        if (rval.isObject())
-            DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);
+        if (!ToPrimitive(cx, &lval))
+            goto error;
+        if (!ToPrimitive(cx, &rval))
+            goto error;
         bool lIsString, rIsString;
         if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
             JSString *lstr, *rstr;
@@ -3567,15 +3542,15 @@ BEGIN_CASE(JSOP_ADD)
             JSString *str = js_ConcatStrings(cx, lstr, rstr);
             if (!str)
                 goto error;
+            regs.sp[-2].setString(str);
             regs.sp--;
-            regs.sp[-1].setString(str);
         } else {
             double l, r;
             if (!ValueToNumber(cx, lval, &l) || !ValueToNumber(cx, rval, &r))
                 goto error;
             l += r;
+            regs.sp[-2].setNumber(l);
             regs.sp--;
-            regs.sp[-1].setNumber(l);
         }
     }
 }
@@ -4113,6 +4088,13 @@ BEGIN_CASE(JSOP_LENGTH)
                     DO_NEXT_OP(len);
                 }
             }
+
+            if (js_IsTypedArray(obj)) {
+                TypedArray *tarray = TypedArray::fromJSObject(obj);
+                regs.sp[-1].setNumber(tarray->length);
+                len = JSOP_LENGTH_LENGTH;
+                DO_NEXT_OP(len);
+            }
         }
 
         i = -2;
@@ -4525,40 +4507,34 @@ END_CASE(JSOP_ENUMELEM)
 { // begin block around calling opcodes
     JSFunction *newfun;
     JSObject *callee;
-    uint32 flags;
-    uintN argc;
-    Value *vp;
+    MaybeConstruct construct;
+    CallArgs args;
 
 BEGIN_CASE(JSOP_NEW)
 {
-    /* Get immediate argc and find the constructor function. */
-    argc = GET_ARGC(regs.pc);
-    vp = regs.sp - (2 + argc);
-    JS_ASSERT(vp >= regs.fp()->base());
-    /*
-     * Assign lval, callee, and newfun exactly as the code at inline_call: expects to
-     * find them, to avoid nesting a js_Interpret call via js_InvokeConstructor.
-     */
-    if (IsFunctionObject(vp[0], &callee)) {
+    args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+    JS_ASSERT(args.base() >= regs.fp()->base());
+
+    if (IsFunctionObject(args.calleev(), &callee)) {
         newfun = callee->getFunctionPrivate();
         if (newfun->isInterpretedConstructor()) {
             if (newfun->script()->isEmpty()) {
-                JSObject *obj2 = js_CreateThisForFunction(cx, callee);
-                if (!obj2)
+                JSObject *rval = js_CreateThisForFunction(cx, callee);
+                if (!rval)
                     goto error;
-                vp[0].setObject(*obj2);
-                regs.sp = vp + 1;
+                args.rval().setObject(*rval);
+                regs.sp = args.spAfterCall();
                 goto end_new;
             }
 
-            flags = StackFrame::CONSTRUCTING;
+            construct = CONSTRUCT;
             goto inline_call;
         }
     }
 
-    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
+    if (!InvokeConstructor(cx, args))
         goto error;
-    regs.sp = vp + 1;
+    regs.sp = args.spAfterCall();
     CHECK_INTERRUPT_HANDLER();
     TRACE_0(NativeCallComplete);
 
@@ -4568,16 +4544,15 @@ END_CASE(JSOP_NEW)
 
 BEGIN_CASE(JSOP_EVAL)
 {
-    argc = GET_ARGC(regs.pc);
-    vp = regs.sp - (argc + 2);
+    args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
 
-    if (!IsBuiltinEvalForScope(&regs.fp()->scopeChain(), *vp))
+    if (!IsBuiltinEvalForScope(&regs.fp()->scopeChain(), args.calleev()))
         goto call_using_invoke;
 
-    if (!DirectEval(cx, CallArgsFromVp(argc, vp)))
+    if (!DirectEval(cx, args))
         goto error;
 
-    regs.sp = vp + 1;
+    regs.sp = args.spAfterCall();
 }
 END_CASE(JSOP_EVAL)
 
@@ -4585,41 +4560,33 @@ BEGIN_CASE(JSOP_CALL)
 BEGIN_CASE(JSOP_FUNAPPLY)
 BEGIN_CASE(JSOP_FUNCALL)
 {
-    argc = GET_ARGC(regs.pc);
-    vp = regs.sp - (argc + 2);
 
-    if (IsFunctionObject(*vp, &callee)) {
+    args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+
+    if (IsFunctionObject(args.calleev(), &callee)) {
         newfun = callee->getFunctionPrivate();
 
-        /* Clear frame flags since this is not a constructor call. */
-        flags = 0;
+        /* Clear frame flag since this is not a constructor call. */
+        construct = NO_CONSTRUCT;
         if (newfun->isInterpreted())
       inline_call:
         {
             JSScript *newscript = newfun->script();
             if (JS_UNLIKELY(newscript->isEmpty())) {
-                vp->setUndefined();
-                regs.sp = vp + 1;
+                args.rval().setUndefined();
+                regs.sp = args.spAfterCall();
                 goto end_call;
             }
 
-            /* Get pointer to new frame/slots, prepare arguments. */
-            ContextStack &stack = cx->stack;
-            StackFrame *newfp = stack.getInlineFrame(cx, regs.sp, argc, newfun,
-                                                     newscript, &flags);
-            if (JS_UNLIKELY(!newfp))
+            /* Push frame on the stack. */
+            if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, newfun,
+                                           newscript, construct, OOMCheck())) {
                 goto error;
-
-            /* Initialize frame, locals. */
-            newfp->initCallFrame(cx, *callee, newfun, argc, flags);
-            SetValueRangeToUndefined(newfp->slots(), newscript->nfixed);
-
-            /* Officially push the frame. */
-            stack.pushInlineFrame(newscript, newfp, regs);
+            }
 
             /* Refresh interpreter locals. */
-            JS_ASSERT(newfp == regs.fp());
             script = newscript;
+            pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
             argv = regs.fp()->formalArgsEnd() - newfun->nargs;
             atoms = script->atomMap.vector;
 
@@ -4660,9 +4627,9 @@ BEGIN_CASE(JSOP_FUNCALL)
         }
 
         Probes::enterJSFun(cx, newfun, script);
-        JSBool ok = CallJSNative(cx, newfun->u.n.native, argc, vp);
+        JSBool ok = CallJSNative(cx, newfun->u.n.native, args);
         Probes::exitJSFun(cx, newfun, script);
-        regs.sp = vp + 1;
+        regs.sp = args.spAfterCall();
         if (!ok)
             goto error;
         TRACE_0(NativeCallComplete);
@@ -4671,8 +4638,8 @@ BEGIN_CASE(JSOP_FUNCALL)
 
   call_using_invoke:
     bool ok;
-    ok = Invoke(cx, InvokeArgsAlreadyOnTheStack(argc, vp));
-    regs.sp = vp + 1;
+    ok = Invoke(cx, args);
+    regs.sp = args.spAfterCall();
     CHECK_INTERRUPT_HANDLER();
     if (!ok)
         goto error;
@@ -5200,7 +5167,7 @@ BEGIN_CASE(JSOP_DEFVAR)
     uint32 index = GET_INDEX(regs.pc);
     JSAtom *atom = atoms[index];
 
-    JSObject *obj = &cx->stack.currentVarObj();
+    JSObject *obj = &regs.fp()->varObj();
     JS_ASSERT(!obj->getOps()->defineProperty);
     uintN attrs = JSPROP_ENUMERATE;
     if (!regs.fp()->isEvalFrame())
@@ -5297,7 +5264,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * current scope chain even for the case of function expression statements
      * and functions defined by eval inside let or with blocks.
      */
-    JSObject *parent = &cx->stack.currentVarObj();
+    JSObject *parent = &regs.fp()->varObj();
 
     /* ES5 10.5 (NB: with subsequent errata). */
     jsid id = ATOM_TO_JSID(fun->atom);
@@ -5368,7 +5335,7 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
                   ? JSPROP_ENUMERATE
                   : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
-    JSObject &parent = cx->stack.currentVarObj();
+    JSObject &parent = regs.fp()->varObj();
 
     jsid id = ATOM_TO_JSID(fun->atom);
     if (!CheckRedeclaration(cx, &parent, id, attrs))
@@ -6066,17 +6033,17 @@ BEGIN_CASE(JSOP_SETLOCALPOP)
 }
 END_CASE(JSOP_SETLOCALPOP)
 
-BEGIN_CASE(JSOP_IFPRIMTOP)
+BEGIN_CASE(JSOP_IFCANTCALLTOP)
     /*
      * If the top of stack is of primitive type, jump to our target. Otherwise
      * advance to the next opcode.
      */
     JS_ASSERT(regs.sp > regs.fp()->base());
-    if (regs.sp[-1].isPrimitive()) {
+    if (!js_IsCallable(regs.sp[-1])) {
         len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
-END_CASE(JSOP_IFPRIMTOP)
+END_CASE(JSOP_IFCANTCALLTOP)
 
 BEGIN_CASE(JSOP_PRIMTOP)
     JS_ASSERT(regs.sp > regs.fp()->base());

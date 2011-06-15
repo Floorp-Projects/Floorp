@@ -867,9 +867,9 @@ nsresult nsXMLHttpRequest::CreateResponseArrayBuffer(JSContext *aCx)
   }
 
   if (dataLen > 0) {
-    js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(mResultArrayBuffer);
+    JSObject *abuf = js::ArrayBuffer::getArrayBuffer(mResultArrayBuffer);
     NS_ASSERTION(abuf, "What happened?");
-    memcpy(abuf->data, mResponseBody.BeginReading(), dataLen);
+    memcpy(js::ArrayBuffer::getDataOffset(abuf), mResponseBody.BeginReading(), dataLen);
   }
 
   return NS_OK;
