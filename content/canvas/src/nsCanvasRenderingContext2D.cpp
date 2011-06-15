@@ -1182,6 +1182,7 @@ nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASur
     mThebes->SetMiterLimit(10.0);
     mThebes->SetLineCap(gfxContext::LINE_CAP_BUTT);
     mThebes->SetLineJoin(gfxContext::LINE_JOIN_MITER);
+    mThebes->SetFillRule(gfxContext::FILL_RULE_WINDING);
 
     mThebes->NewPath();
 
@@ -1600,6 +1601,37 @@ nsCanvasRenderingContext2D::GetFillStyle_multi(nsAString& aStr, nsISupports **aI
     return GetStyleAsStringOrInterface(aStr, aInterface, aType, STYLE_FILL);
 }
 
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetMozFillRule(const nsAString& aString)
+{
+    gfxContext::FillRule rule;
+
+    if (aString.EqualsLiteral("evenodd"))
+        rule = gfxContext::FILL_RULE_EVEN_ODD;
+    else if (aString.EqualsLiteral("nonzero"))
+        rule = gfxContext::FILL_RULE_WINDING;
+    else
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+        return NS_OK;
+
+    mThebes->SetFillRule(rule);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetMozFillRule(nsAString& aString)
+{
+    switch (mThebes->CurrentFillRule()) {
+    case gfxContext::FILL_RULE_WINDING:
+        aString.AssignLiteral("nonzero"); break;
+    case gfxContext::FILL_RULE_EVEN_ODD:
+        aString.AssignLiteral("evenodd"); break;
+    default:
+        return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+
 //
 // gradients and patterns
 //
@@ -1996,6 +2028,9 @@ nsCanvasRenderingContext2D::FillRect(float x, float y, float w, float h)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::StrokeRect(float x, float y, float w, float h)
 {
+    if (w == 0.f && h == 0.f) {
+        return NS_OK;
+    }
     return DrawRect(gfxRect(x, y, w, h), STYLE_STROKE);
 }
 
@@ -3259,8 +3294,14 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
     }
 
-    double sx,sy,sw,sh;
-    double dx,dy,dw,dh;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(imgElt);
+    nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(content);
+    if (canvas) {
+        nsIntSize size = canvas->GetSize();
+        if (size.width == 0 || size.height == 0) {
+            return NS_ERROR_DOM_INVALID_STATE_ERR;
+        }
+    }
 
     gfxMatrix matrix;
     nsRefPtr<gfxPattern> pattern;
@@ -3302,6 +3343,8 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         }
     }
 
+    double sx,sy,sw,sh;
+    double dx,dy,dw,dh;
     if (optional_argc == 0) {
         dx = a1;
         dy = a2;
@@ -3394,8 +3437,6 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         gfxContextMatrixAutoSaveRestore autoMatrixSR(mThebes);
 
         mThebes->Translate(gfxPoint(dx, dy));
-        mThebes->SetPattern(pattern);
-        DirtyAllStyles();
 
         gfxRect clip(0, 0, dw, dh);
 
@@ -3407,6 +3448,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
 
             if (ctx) {
                 CopyContext(ctx, mThebes);
+                ctx->SetPattern(pattern);
                 ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
                 ctx->Clip(clip);
                 ctx->Paint();
@@ -3414,6 +3456,9 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
                 ShadowFinalize(blur);
             }
         }
+
+        mThebes->SetPattern(pattern);
+        DirtyAllStyles();
 
         PRBool doUseIntermediateSurface = NeedToUseIntermediateSurface();
         if (doUseIntermediateSurface) {

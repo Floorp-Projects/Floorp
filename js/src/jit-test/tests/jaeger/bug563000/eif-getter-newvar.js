@@ -2,9 +2,10 @@
 setDebug(true);
 
 this.__defineGetter__("someProperty", function () { evalInFrame(1, "var x = 'success'"); });
-function caller(obj) {
+function caller(code, obj) {
   assertJit();
+  eval(code); // Make the compiler give up on binding analysis.
   obj.someProperty;
   return x;
 }
-assertEq(caller(this), "success");
+assertEq(caller("var y = 'ignominy'", this), "success");

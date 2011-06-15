@@ -1053,6 +1053,25 @@ _cairo_d2d_set_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_t *clip)
 	return CAIRO_STATUS_SUCCESS;
 }
 
+static void _cairo_d2d_add_dependent_surface(cairo_d2d_surface_t *surf, cairo_d2d_surface_t *user)
+{
+    _cairo_d2d_surface_entry *entry = new _cairo_d2d_surface_entry;
+    entry->surface = user;
+    cairo_surface_reference(&user->base);
+    cairo_list_add(&entry->link, &surf->dependent_surfaces);
+};
+
+static void _cairo_d2d_flush_dependent_surfaces(cairo_d2d_surface_t *surf)
+{
+    _cairo_d2d_surface_entry *entry, *next;
+    cairo_list_foreach_entry_safe(entry, next, _cairo_d2d_surface_entry, &surf->dependent_surfaces, link) {
+	_cairo_d2d_flush(entry->surface);
+	cairo_surface_destroy(&entry->surface->base);
+	delete entry;
+    }
+    cairo_list_init(&surf->dependent_surfaces);
+}
+
 /**
  * Enter the state where the surface is ready for drawing. This will guarantee
  * the surface is in the correct state, and the correct clipping area is pushed.
@@ -1062,6 +1081,7 @@ _cairo_d2d_set_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_t *clip)
 static void _begin_draw_state(cairo_d2d_surface_t* surface)
 {
     if (!surface->isDrawing) {
+	_cairo_d2d_flush_dependent_surfaces(surface);
 	surface->rt->BeginDraw();
 	surface->isDrawing = true;
     }
@@ -1778,6 +1798,9 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    _cairo_d2d_update_surface_bitmap(srcSurf);
 	    _cairo_d2d_flush(srcSurf);
 
+	    // Mark a dependency on the source surface.
+	    _cairo_d2d_add_dependent_surface(srcSurf, d2dsurf);
+
 	    if (pattern->extend == CAIRO_EXTEND_NONE) {
 		ID2D1Bitmap *srcSurfBitmap = srcSurf->surfaceBitmap;
 		d2dsurf->rt->CreateBitmap(
@@ -2327,6 +2350,18 @@ _cairo_d2d_surface_init(cairo_d2d_surface_t *newSurf, cairo_d2d_device_t *d2d_de
     cairo_addref_device(&d2d_device->base);
     d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
 }
+    
+_cairo_d2d_surface::~_cairo_d2d_surface()
+{
+    _cairo_d2d_surface_entry *entry, *next;
+    cairo_list_foreach_entry_safe(entry, next, _cairo_d2d_surface_entry, &dependent_surfaces, link) {
+	// We do not need to flush, the contents of our texture has not changed,
+	// our users have their own reference and can just use it later.
+	cairo_surface_destroy(&entry->surface->base);
+	delete entry;
+    }
+
+}
 
 // Implementation
 static cairo_surface_t*
@@ -2793,6 +2828,8 @@ _cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
 	needsTransform = true;
     }
 
+    _cairo_d2d_add_dependent_surface(src, dst);
+
     D2D1_BITMAP_INTERPOLATION_MODE interpMode =
       D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
 
@@ -2986,6 +3023,8 @@ _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip)
 static cairo_int_status_t
 _cairo_d2d_blend_temp_surface(cairo_d2d_surface_t *surf, cairo_operator_t op, ID2D1RenderTarget *rt, cairo_clip_t *clip, const cairo_rectangle_int_t *bounds = NULL)
 {
+    _cairo_d2d_flush_dependent_surfaces(surf);
+
     int numPaths = 0;
     if (clip) {
 	cairo_clip_path_t *path = clip->path;
@@ -3590,6 +3629,10 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 	}
     }
 
+    if (!dst->isDrawing) {
+	_cairo_d2d_flush_dependent_surfaces(dst);
+    }
+
     _cairo_d2d_set_clip(dst, NULL);
     dst->rt->Flush();
 
@@ -4105,26 +4148,23 @@ _cairo_d2d_show_glyphs (void			*surface,
 			cairo_clip_t            *clip,
 			int			*remaining_glyphs)
 {
-    if (((cairo_surface_t*)surface)->type != CAIRO_SURFACE_TYPE_D2D) {
+    if (((cairo_surface_t*)surface)->type != CAIRO_SURFACE_TYPE_D2D ||
+        scaled_font->backend->type != CAIRO_FONT_TYPE_DWRITE)
+    {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
+
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
-    cairo_bool_t forceGDIClassic =
-        scaled_font->backend->type == CAIRO_FONT_TYPE_DWRITE &&
-        reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font)->force_GDI_classic;
     cairo_d2d_surface_t::TextRenderingState textRenderingState =
-        (forceGDIClassic ? cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC : cairo_d2d_surface_t::TEXT_RENDERING_NORMAL);
+        reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font)->rendering_mode;
     if (d2dsurf->textRenderingState != textRenderingState) {
 	RefPtr<IDWriteRenderingParams> params =
-	    DWriteFactory::RenderingParams(forceGDIClassic);
+	    DWriteFactory::RenderingParams(textRenderingState);
 	d2dsurf->rt->SetTextRenderingParams(params);
 	d2dsurf->textRenderingState = textRenderingState;
     }
-    cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (scaled_font->backend->type == CAIRO_FONT_TYPE_DWRITE) {
-	status = (cairo_int_status_t)
-	    _cairo_dwrite_show_glyphs_on_d2d_surface(surface, op, source, glyphs, num_glyphs, scaled_font, clip);
-    }
+    cairo_int_status_t status = (cairo_int_status_t)
+        _cairo_dwrite_show_glyphs_on_d2d_surface(surface, op, source, glyphs, num_glyphs, scaled_font, clip);
 
     return status;
 }

@@ -166,7 +166,7 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
         // This should only be called when no scripts are live. It would even
         // be incorrect to discard just the non-live scripts' JITScripts
         // because they might share ICs with live scripts (bug 632343).
-        for (AllFramesIter i(cx); !i.done(); ++i) {
+        for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
             JSScript *script = i.fp()->maybeScript();
             if (script && script->compartment == comp) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
@@ -1479,7 +1479,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    JS_ASSERT(cx->stack.contains(fp));
+    JS_ASSERT(cx->stack.containsSlow(fp));
 
     js::AutoCompartment ac(cx, &fp->scopeChain());
     if (!ac.enter())
@@ -1494,7 +1494,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    JS_ASSERT(cx->stack.contains(fp));
+    JS_ASSERT(cx->stack.containsSlow(fp));
 
     if (!fp->isFunctionFrame())
         return NULL;
@@ -1556,7 +1556,7 @@ JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 {
-    return Valueify(fp)->maybeCallee();
+    return Valueify(fp)->maybeCalleev().toObjectOrNull();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2736,3 +2736,33 @@ JS_GetFunctionCallback(JSContext *cx)
 
 #endif /* MOZ_TRACE_JSCALLS */
 
+JS_PUBLIC_API(void)
+JS_DumpProfile(JSContext *cx, JSScript *script)
+{
+    JS_ASSERT(!cx->runtime->gcRunning);
+
+#if defined(DEBUG)
+    if (script->pcCounters) {
+        // Display hit counts for every JS code line
+        AutoArenaAllocator mark(&cx->tempPool);
+        Sprinter sprinter;
+        INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+
+        fprintf(stdout, "--- PC COUNTS %s:%d ---\n", script->filename, script->lineno);
+        js_Disassemble(cx, script, true, &sprinter);
+        fprintf(stdout, "%s\n", sprinter.base);
+        fprintf(stdout, "--- END PC COUNTS %s:%d ---\n", script->filename, script->lineno);
+    }
+#endif
+}
+
+JS_PUBLIC_API(void)
+JS_DumpAllProfiles(JSContext *cx)
+{
+    for (JSScript *script = (JSScript *) JS_LIST_HEAD(&cx->compartment->scripts);
+         script != (JSScript *) &cx->compartment->scripts;
+         script = (JSScript *) JS_NEXT_LINK((JSCList *)script))
+    {
+        JS_DumpProfile(cx, script);
+    }
+}

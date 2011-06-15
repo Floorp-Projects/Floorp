@@ -88,6 +88,7 @@ class JS_FRIEND_API(JSWrapper) : public js::JSProxyHandler {
     virtual JSType typeOf(JSContext *cx, JSObject *proxy);
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper);
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
+    virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, js::Value *vp);
 
     virtual void trace(JSTracer *trc, JSObject *wrapper);
 
@@ -150,6 +151,7 @@ class JS_FRIEND_API(JSCrossCompartmentWrapper) : public JSWrapper {
     virtual bool hasInstance(JSContext *cx, JSObject *wrapper, const js::Value *vp, bool *bp);
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper);
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
+    virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, js::Value *vp);
 
     static JSCrossCompartmentWrapper singleton;
 };
@@ -164,7 +166,7 @@ class JS_FRIEND_API(ForceFrame)
     JSContext * const context;
     JSObject * const target;
   private:
-    DummyFrameGuard frame;
+    DummyFrameGuard *frame;
 
   public:
     ForceFrame(JSContext *cx, JSObject *target);

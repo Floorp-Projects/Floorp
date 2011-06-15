@@ -653,6 +653,11 @@ PlacesViewBase.prototype = {
       this._result = null;
     }
 
+    if (this._controller) {
+      this._viewElt.controllers.removeController(this._controller);
+      this._controller = null;
+    }
+
     delete this._viewElt._placesView;
   },
 

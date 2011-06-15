@@ -68,7 +68,6 @@ class FTPChannelChild : public PFTPChannelChild
                       , public nsIResumableChannel
                       , public nsIProxiedChannel
                       , public nsIChildChannel
-                      , public ChannelEventQueue<FTPChannelChild>
 {
 public:
   typedef ::nsIStreamListener nsIStreamListener;
@@ -137,6 +136,7 @@ private:
   nsCOMPtr<nsIInputStream> mUploadStream;
 
   bool mIPCOpen;
+  ChannelEventQueue mEventQ;
   bool mCanceled;
   PRUint32 mSuspendCount;
   PRPackedBool mIsPending;

@@ -109,6 +109,11 @@ _TEST_FILES =	\
 		test_bug454235.xul \
 		bug454235-subframe.xul \
 		test_bug456980.xul \
+		test_bug662200.xul \
+		bug662200_window.xul \
+		662200a.html \
+		662200b.html \
+		662200c.html \
 		$(NULL)
 
 _DOCSHELL_SUBHARNESS = \

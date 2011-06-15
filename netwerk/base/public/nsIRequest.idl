@@ -135,6 +135,11 @@ interface nsIRequest : nsISupports
      */
     attribute nsLoadFlags loadFlags;
 
+    /**
+     * Mask defining the bits reserved for nsIRequest LoadFlags
+     */
+    const unsigned long LOAD_REQUESTMASK = 0xFFFF;
+
     /**************************************************************************
      * Listed below are the various load flags which may be or'd together.
      */

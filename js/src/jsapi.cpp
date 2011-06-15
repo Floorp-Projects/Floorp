@@ -1526,7 +1526,7 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     cx->globalObject = obj;
-    if (!cx->running())
+    if (!cx->hasfp())
         cx->resetCompartment();
 }
 
@@ -1605,8 +1605,8 @@ static JSStdName standard_class_atoms[] = {
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
-    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
-    {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &WeakMap::jsclass},
+    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::slowClass},
+    {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &js::WeakMapClass},
     {NULL,                              0, NULL, NULL}
 };
 
@@ -1658,7 +1658,7 @@ static JSStdName standard_class_names[] = {
 #endif
 
     /* Typed Arrays */
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::fastClass},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array),    TYPED_ARRAY_CLASP(TYPE_INT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array),   TYPED_ARRAY_CLASP(TYPE_UINT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array),   TYPED_ARRAY_CLASP(TYPE_INT16)},
@@ -2853,7 +2853,8 @@ JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     JS_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
-    return js_TryValueOf(cx, obj, type, Valueify(vp));
+    JS_ASSERT(obj);
+    return DefaultValue(cx, obj, type, Valueify(vp));
 }
 
 JS_PUBLIC_API(void)
@@ -4239,7 +4240,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
-        if (cx->running())
+        if (cx->hasfp())
             parent = GetScopeChain(cx, cx->fp());
         if (!parent)
             parent = cx->globalObject;
@@ -4957,7 +4958,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, scriptObj);
 
-    JSBool ok = Execute(cx, *obj, scriptObj->getScript(), NULL, 0, Valueify(rval));
+    JSBool ok = ExternalExecute(cx, scriptObj->getScript(), *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4990,7 +4991,8 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
         return false;
     }
     JS_ASSERT(script->getVersion() == compileVersion);
-    bool ok = Execute(cx, *obj, script, NULL, 0, Valueify(rval));
+
+    bool ok = ExternalExecute(cx, script, *obj, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     js_DestroyScript(cx, script);
     return ok;
@@ -5212,7 +5214,7 @@ JS_IsRunning(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
 #ifdef JS_TRACER
-    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->running());
+    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->hasfp());
 #endif
     StackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
@@ -5220,26 +5222,20 @@ JS_IsRunning(JSContext *cx)
     return fp != NULL;
 }
 
-JS_PUBLIC_API(JSStackFrame *)
+JS_PUBLIC_API(JSBool)
 JS_SaveFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    StackFrame *fp = js_GetTopStackFrame(cx);
-    if (!fp)
-        return NULL;
-    cx->stack.saveActiveSegment();
-    return Jsvalify(fp);
+    LeaveTrace(cx);
+    return cx->stack.saveFrameChain();
 }
 
 JS_PUBLIC_API(void)
-JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
+JS_RestoreFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT_NOT_ON_TRACE(cx);
-    JS_ASSERT(!cx->running());
-    if (!fp)
-        return;
-    cx->stack.restoreSegment();
+    cx->stack.restoreFrameChain();
 }
 
 /************************************************************************/

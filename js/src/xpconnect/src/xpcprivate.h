@@ -3559,14 +3559,13 @@ private:
 struct XPCJSContextInfo {
     XPCJSContextInfo(JSContext* aCx) :
         cx(aCx),
-        frame(nsnull),
+        savedFrameChain(false),
         suspendDepth(0)
     {}
     JSContext* cx;
 
-    // Frame to be restored when this JSContext becomes the topmost
-    // one.
-    JSStackFrame* frame;
+    // Whether the frame chain was saved
+    bool savedFrameChain;
 
     // Greater than 0 if a request was suspended.
     jsrefcount suspendDepth;

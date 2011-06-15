@@ -60,9 +60,7 @@ _TEST_FILES = \
 		     bug322588-popup.html \
 		test_bug328885.html \
 		test_bug336682_1.html \
-		test_bug336682_2.xul \
 		test_bug336682.js \
-		test_bug350471.xul \
 		test_bug367781.html \
 		test_bug368835.html \
 		test_bug379120.html \
@@ -92,7 +90,6 @@ _TEST_FILES = \
 		test_bug547996-2.xhtml \
 		test_bug556493.html \
 		test_bug574663.html \
-		test_bug586961.xul \
 		test_clickevent_on_input.html \
 		test_bug593959.html \
 		test_bug591815.html \
@@ -124,6 +121,10 @@ _TEST_FILES += \
 endif
 
 _CHROME_FILES = \
+		test_bug336682_2.xul \
+		test_bug336682.js \
+		test_bug350471.xul \
+		test_bug586961.xul \
 		test_bug415498.xul \
 		bug415498-doc1.html \
 		bug415498-doc2.html \

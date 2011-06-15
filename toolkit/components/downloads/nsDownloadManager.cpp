@@ -1851,7 +1851,8 @@ nsDownloadManager::OnEndUpdateBatch()
 NS_IMETHODIMP
 nsDownloadManager::OnVisit(nsIURI *aURI, PRInt64 aVisitID, PRTime aTime,
                            PRInt64 aSessionID, PRInt64 aReferringID,
-                           PRUint32 aTransitionType, PRUint32 *aAdded)
+                           PRUint32 aTransitionType, const nsACString& aGUID,
+                           PRUint32 *aAdded)
 {
   return NS_OK;
 }
@@ -1863,13 +1864,13 @@ nsDownloadManager::OnTitleChanged(nsIURI *aURI, const nsAString &aPageTitle)
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OnBeforeDeleteURI(nsIURI *aURI)
+nsDownloadManager::OnBeforeDeleteURI(nsIURI *aURI, const nsACString& aGUID)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OnDeleteURI(nsIURI *aURI)
+nsDownloadManager::OnDeleteURI(nsIURI *aURI, const nsACString& aGUID)
 {
   return RemoveDownloadsForURI(aURI);
 }
@@ -1888,7 +1889,8 @@ nsDownloadManager::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OnDeleteVisits(nsIURI *aURI, PRTime aVisitTime)
+nsDownloadManager::OnDeleteVisits(nsIURI *aURI, PRTime aVisitTime,
+                                  const nsACString& aGUID)
 {
   // Don't bother removing downloads until the page is removed.
   return NS_OK;
@@ -2435,6 +2437,14 @@ nsDownload::OnRefreshAttempted(nsIWebProgress *aWebProgress,
 {
   *allowRefresh = PR_TRUE;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::OnLocationChange2(nsIWebProgress *aWebProgress,
+                              nsIRequest *aRequest, nsIURI *aLocation,
+                              PRUint32 aFlags)
+{
+  return OnLocationChange(aWebProgress, aRequest, aLocation);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

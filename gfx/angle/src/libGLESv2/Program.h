@@ -161,6 +161,7 @@ class Program
 
     void getConstantHandles(Uniform *targetUniform, D3DXHANDLE *constantPS, D3DXHANDLE *constantVS);
 
+    void appendToInfoLogSanitized(const char *message);
     void appendToInfoLog(const char *info, ...);
     void resetInfoLog();
 

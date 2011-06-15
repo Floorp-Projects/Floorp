@@ -61,19 +61,6 @@ CPPSRCS		= \
 		nsChromeRegistryContent.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-                $(MOZ_UNICHARUTIL_LIBS) \
-                $(MOZ_COMPONENT_LIBS) \
-                $(NULL)
-
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-endif
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

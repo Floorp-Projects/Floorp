@@ -148,7 +148,7 @@ function tab_on_undo() {
   let undoBox = document.getElementById("tabs")._tabsUndo;
   is(undoBox.firstChild, null, "It should be no tab in the undo box");
 
-  Browser.loadURI("about:firstrun");
+  Browser.loadURI("about:home");
   is(undoBox.firstChild, null, "It should be no tab in the undo box when opening a new local page");
 
   // loadURI will open a new tab so ensure new_tab_05 point to the newly opened tab

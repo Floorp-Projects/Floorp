@@ -223,7 +223,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowCanvasLayer* canvas = static_cast<ShadowCanvasLayer*>(
         AsShadowLayer(ocb)->AsLayer());
 
-      canvas->Init(ocb.initialFront(), ocb.size());
+      canvas->Init(ocb.initialFront(), ocb.size(), ocb.needYFlip());
 
       break;
     }

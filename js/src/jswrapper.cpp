@@ -322,6 +322,15 @@ JSWrapper::fun_toString(JSContext *cx, JSObject *wrapper, uintN indent)
     return str;
 }
 
+bool
+JSWrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp)
+{
+    *vp = ObjectValue(*wrappedObject(wrapper));
+    if (hint == JSTYPE_VOID)
+        return ToPrimitive(cx, vp);
+    return ToPrimitive(cx, hint, vp);
+}
+
 void
 JSWrapper::trace(JSTracer *trc, JSObject *wrapper)
 {
@@ -372,17 +381,22 @@ TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, J
 
 ForceFrame::ForceFrame(JSContext *cx, JSObject *target)
     : context(cx),
-      target(target)
+      target(target),
+      frame(NULL)
 {
 }
 
 ForceFrame::~ForceFrame()
 {
+    context->delete_(frame);
 }
 
 bool
 ForceFrame::enter()
 {
+    frame = context->new_<DummyFrameGuard>();
+    if (!frame)
+       return false;
     LeaveTrace(context);
 
     JS_ASSERT(context->compartment == target->compartment());
@@ -390,7 +404,7 @@ ForceFrame::enter()
     JSObject *scopeChain = target->getGlobal();
     JS_ASSERT(scopeChain->isNative());
 
-    return context->stack.pushDummyFrame(context, *scopeChain, &frame);
+    return context->stack.pushDummyFrame(context, *scopeChain, frame);
 }
 
 AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
@@ -733,6 +747,20 @@ JSCrossCompartmentWrapper::fun_toString(JSContext *cx, JSObject *wrapper, uintN 
     if (!call.origin->wrap(cx, &str))
         return NULL;
     return str;
+}
+
+bool
+JSCrossCompartmentWrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp)
+{
+    AutoCompartment call(cx, wrappedObject(wrapper));
+    if (!call.enter())
+        return false;
+
+    if (!JSWrapper::defaultValue(cx, wrapper, hint, vp))
+        return false;
+
+    call.leave();
+    return call.origin->wrap(cx, vp);
 }
 
 JSCrossCompartmentWrapper JSCrossCompartmentWrapper::singleton(0u);

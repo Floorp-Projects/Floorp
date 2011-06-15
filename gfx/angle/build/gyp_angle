@@ -22,6 +22,10 @@ if __name__ == '__main__':
   print 'Updating projects from gyp files...'
   sys.stdout.flush()
 
+  # Set the depth to get the top-level Makefile generated into the
+  # correct directory. This only has an effect on Linux.
+  args.append('--depth');
+  args.append('./trunk');
   # Add common.gypi to the include path.
   args.append('-I' + os.path.join(script_dir, 'common.gypi'))
   # Add all.gyp as the main gyp file to be generated.

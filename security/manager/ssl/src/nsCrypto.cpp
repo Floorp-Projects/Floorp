@@ -2937,7 +2937,9 @@ confirm_user(const PRUnichar *message)
   if (prompter) {
     nsPSMUITracker tracker;
     if (!tracker.isUIForbidden()) {
-      PRBool checkState;
+      // The actual value is irrelevant but we shouldn't be handing out
+      // malformed JSBools to XPConnect.
+      PRBool checkState = PR_FALSE;
       prompter->ConfirmEx(0, message,
                           (nsIPrompt::BUTTON_DELAY_ENABLE) +
                           (nsIPrompt::BUTTON_POS_1_DEFAULT) +

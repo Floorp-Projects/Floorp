@@ -97,11 +97,16 @@ function performTestComparisons(evt)
   is(h1, InspectorUI.selection, "selection matches node");
   ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
   is(InspectorUI.highlighter.highlitNode, h1, "highlighter matches selection");
-  executeSoon(finishUp);
+
+  Services.obs.addObserver(finishUp, "inspector-closed", false);
+  InspectorUI.closeInspectorUI();
 }
 
 function finishUp() {
-  InspectorUI.closeInspectorUI();
+  Services.obs.removeObserver(finishUp, "inspector-closed", false);
+
+  ok(!InspectorUI.highlighter.isHighlighting, "panel is not highlighting");
+  doc = h1 = null;
   gBrowser.removeCurrentTab();
   finish();
 }

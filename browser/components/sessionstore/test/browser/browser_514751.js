@@ -66,6 +66,8 @@ function test() {
 
   var theWin = openDialog(location, "", "chrome,all,dialog=no");
   theWin.addEventListener("load", function () {
+    theWin.removeEventListener("load", arguments.callee, false);
+
     executeSoon(function () {
       var gotError = false;
       try {
