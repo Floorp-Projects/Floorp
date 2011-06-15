@@ -94,53 +94,14 @@ function goQuitApplication()
     return;
   }
 
-  const privs = 'UniversalXPConnect';
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  try
-  {
-    netscape.security.PrivilegeManager.enablePrivilege(privs);
-  }
-  catch(ex)
-  {
-    throw('goQuitApplication: privilege failure ' + ex);
-  }
-
-  if (!canQuitApplication())
-  {
+  if (!canQuitApplication()) {
     return false;
   }
   
-  const kAppStartup = '@mozilla.org/toolkit/app-startup;1';
-  const kAppShell   = '@mozilla.org/appshell/appShellService;1';
-  var   appService;
-  var   forceQuit;
-
-  if (kAppStartup in Components.classes)
-  {
-    appService = Components.classes[kAppStartup].
-      getService(Components.interfaces.nsIAppStartup);
-    forceQuit  = Components.interfaces.nsIAppStartup.eForceQuit;
-  }
-  else if (kAppShell in Components.classes)
-  {
-    appService = Components.classes[kAppShell].
-      getService(Components.interfaces.nsIAppShellService);
-    forceQuit = Components.interfaces.nsIAppShellService.eForceQuit;
-  }
-  else
-  {
-    throw 'goQuitApplication: no AppStartup/appShell';
-  }
-
-  try
-  {
-    appService.quit(forceQuit);
-  }
-  catch(ex)
-  {
-    throw('goQuitApplication: ' + ex);
-  }
-
+  var appService = Components.classes['@mozilla.org/toolkit/app-startup;1']
+                             .getService(Components.interfaces.nsIAppStartup);
+  appService.quit(Components.interfaces.nsIAppStartup.eForceQuit);
   return true;
 }
-
