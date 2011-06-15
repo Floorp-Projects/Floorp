@@ -775,7 +775,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                * If the frame ends before the new line, save the text and move
                * into the next continuation
                */
-              while (end < endLine) {
+              while (end < endLine && nextSibling) {
                 mBuffer.Append(Substring(text, start, end - start));
                 frame = frame->GetNextContinuation();
                 NS_ASSERTION(frame, "Premature end of continuation chain");
