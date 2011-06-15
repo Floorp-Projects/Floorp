@@ -1808,6 +1808,14 @@ MarkContext(JSTracer *trc, JSContext *acx)
     MarkValue(trc, acx->iterValue, "iterValue");
 }
 
+void
+MarkWeakReferences(GCMarker *trc)
+{
+    trc->drainMarkStack();
+    while (js_TraceWatchPoints(trc) || WeakMapBase::markAllIteratively(trc))
+        trc->drainMarkStack();
+}
+
 JS_REQUIRES_STACK void
 MarkRuntime(JSTracer *trc)
 {
@@ -1837,9 +1845,14 @@ MarkRuntime(JSTracer *trc)
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
 
+    if (IS_GC_MARKING_TRACER(trc)) {
+        GCMarker *gcmarker = static_cast<GCMarker *>(trc);
+        MarkWeakReferences(gcmarker);
+    }
+
     /*
-     * We mark extra roots at the last thing so it can use use additional
-     * colors to implement cycle collection.
+     * We mark extra roots at the end so additional colors can be used
+     * to implement cycle collection.
      */
     if (rt->gcExtraRootsTraceOp)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
@@ -2278,15 +2291,6 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     MarkRuntime(&gcmarker);
 
     gcmarker.drainMarkStack();
-
-    /*
-     * Mark weak roots.
-     */
-    while (true) {
-        if (!js_TraceWatchPoints(&gcmarker) && !WeakMapBase::markAllIteratively(&gcmarker))
-            break;
-        gcmarker.drainMarkStack();
-    }
 
     rt->gcMarkingTracer = NULL;
 
