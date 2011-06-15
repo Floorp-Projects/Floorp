@@ -1035,7 +1035,7 @@ PRInt64 nsBuiltinDecoderStateMachine::GetUndecodedData() const
     NS_ENSURE_SUCCESS(res, 0);
 
     if (start <= currentTime && end >= currentTime) {
-      return static_cast<PRInt64>((end - currentTime) * 1000);
+      return static_cast<PRInt64>((end - currentTime) * USECS_PER_S);
     }
   }
   return 0;
