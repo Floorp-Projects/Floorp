@@ -253,7 +253,7 @@ protected:
       }
 
         fprintf (stderr, "=== Source:\n%s\n", aShaderSource);
-        fprintf (stderr, "=== Log:\n%s\n", nsPromiseFlatCString(log).get());
+        fprintf (stderr, "=== Log:\n%s\n", log.get());
         fprintf (stderr, "============\n");
 
       if (!success) {
@@ -307,7 +307,7 @@ protected:
       } else {
         fprintf (stderr, "=== PROGRAM LINKING WARNINGS ===\n");
       }
-      fprintf (stderr, "=== Log:\n%s\n", nsPromiseFlatCString(log).get());
+      fprintf (stderr, "=== Log:\n%s\n", log.get());
       fprintf (stderr, "============\n");
     }
 

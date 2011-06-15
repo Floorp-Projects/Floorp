@@ -25,7 +25,7 @@
 |vp8_sixtap_predict8x4_neon| PROC
     push            {r4-r5, lr}
 
-    ldr             r12, _filter8_coeff_
+    adrl            r12, filter8_coeff
     ldr             r4, [sp, #12]           ;load parameters from stack
     ldr             r5, [sp, #16]           ;load parameters from stack
 
@@ -462,8 +462,6 @@ secondpass_filter8x4_only
 ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
 ;One word each is reserved. Label filter_coeff can be used to access the data.
 ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
-_filter8_coeff_
-    DCD     filter8_coeff
 filter8_coeff
     DCD     0,  0,  128,    0,   0,  0,   0,  0
     DCD     0, -6,  123,   12,  -1,  0,   0,  0
