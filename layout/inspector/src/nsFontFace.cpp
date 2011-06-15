@@ -40,6 +40,7 @@
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsCSSRules.h"
 #include "gfxUserFontSet.h"
+#include "zlib.h"
 
 nsFontFace::nsFontFace(gfxFontEntry*      aFontEntry,
                        PRUint8            aMatchType,
@@ -198,5 +199,24 @@ nsFontFace::GetFormat(nsAString & aFormat)
 NS_IMETHODIMP
 nsFontFace::GetMetadata(nsAString & aMetadata)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aMetadata.Truncate();
+  if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
+    NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
+    const gfxUserFontData* userFontData = mFontEntry->mUserFontData;
+    if (userFontData->mMetadata.Length() && userFontData->mMetaOrigLen) {
+      nsCAutoString str;
+      str.SetLength(userFontData->mMetaOrigLen);
+      if (str.Length() == userFontData->mMetaOrigLen) {
+        uLongf destLen = userFontData->mMetaOrigLen;
+        if (uncompress((Bytef *)(str.BeginWriting()), &destLen,
+                       (const Bytef *)(userFontData->mMetadata.Elements()),
+                       userFontData->mMetadata.Length()) == Z_OK &&
+            destLen == userFontData->mMetaOrigLen)
+        {
+          AppendUTF8toUTF16(str, aMetadata);
+        }
+      }
+    }
+  }
+  return NS_OK;
 }
