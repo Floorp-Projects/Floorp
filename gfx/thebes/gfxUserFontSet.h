@@ -87,6 +87,7 @@ public:
     nsTArray<PRUint8> mMetadata;  // woff metadata block (compressed), if any
     nsCOMPtr<nsIURI>  mURI;       // URI of the source, if it was url()
     nsString          mLocalName; // font name used for the source, if local()
+    nsString          mRealName;  // original fullname from the font resource
     PRUint32          mSrcIndex;  // index in the rule's source list
     PRUint32          mFormat;    // format hint for the source used, if any
     PRUint32          mMetaOrigLen; // length needed to decompress metadata

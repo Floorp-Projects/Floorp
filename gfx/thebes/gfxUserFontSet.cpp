@@ -374,6 +374,7 @@ SanitizeOpenTypeData(const PRUint8* aData, PRUint32 aLength,
 
 static void
 StoreUserFontData(gfxFontEntry* aFontEntry, gfxProxyFontEntry* aProxy,
+                  const nsAString& aOriginalName,
                   nsTArray<PRUint8>* aMetadata, PRUint32 aMetaOrigLen)
 {
     if (!aFontEntry->mUserFontData) {
@@ -388,6 +389,7 @@ StoreUserFontData(gfxFontEntry* aFontEntry, gfxProxyFontEntry* aProxy,
         userFontData->mURI = src.mURI;
     }
     userFontData->mFormat = src.mFormatFlags;
+    userFontData->mRealName = aOriginalName;
     if (aMetadata) {
         userFontData->mMetadata.SwapElements(*aMetadata);
         userFontData->mMetaOrigLen = aMetaOrigLen;
@@ -468,6 +470,11 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
         // Unwrap/decompress/sanitize or otherwise munge the downloaded data
         // to make a usable sfnt structure.
 
+        // Because platform font activation code may replace the name table
+        // in the font with a synthetic one, we save the original name so that
+        // it can be reported via the nsIDOMFontFace API.
+        nsAutoString originalFullName;
+
         if (gfxPlatform::GetPlatform()->SanitizeDownloadedFonts()) {
            // Call the OTS sanitizer; this will also decode WOFF to sfnt
             // if necessary. The original data in aFontData is left unchanged.
@@ -484,6 +491,12 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
             }
 #endif
             if (saneData) {
+                // The sanitizer ensures that we have a valid sfnt and a usable
+                // name table, so this should never fail unless we're out of
+                // memory, and GetFullNameFromSFNT is not directly exposed to
+                // arbitrary/malicious data from the web.
+                gfxFontUtils::GetFullNameFromSFNT(saneData, saneLen,
+                                                  originalFullName);
                 // Here ownership of saneData is passed to the platform,
                 // which will delete it when no longer required
                 fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
@@ -501,6 +514,10 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
 
             if (aFontData) {
                 if (gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength)) {
+                    // ValidateSFNTHeaders has checked that we have a valid
+                    // sfnt structure and a usable 'name' table
+                    gfxFontUtils::GetFullNameFromSFNT(aFontData, aLength,
+                                                      originalFullName);
                     // Here ownership of aFontData is passed to the platform,
                     // which will delete it when no longer required
                     fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
@@ -525,7 +542,8 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
             // newly-created font entry
             fe->mFeatureSettings.AppendElements(aProxy->mFeatureSettings);
             fe->mLanguageOverride = aProxy->mLanguageOverride;
-            StoreUserFontData(fe, aProxy, &metadata, metaOrigLen);
+            StoreUserFontData(fe, aProxy, originalFullName,
+                              &metadata, metaOrigLen);
 #ifdef PR_LOGGING
             // must do this before ReplaceFontEntry() because that will
             // clear the proxy's mFamily pointer!
@@ -617,7 +635,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                      PRUint32(mGeneration)));
                 fe->mFeatureSettings.AppendElements(aProxyEntry->mFeatureSettings);
                 fe->mLanguageOverride = aProxyEntry->mLanguageOverride;
-                StoreUserFontData(fe, aProxyEntry, nsnull, 0);
+                StoreUserFontData(fe, aProxyEntry, nsString(), nsnull, 0);
                 ReplaceFontEntry(aProxyEntry, fe);
                 return STATUS_LOADED;
             } else {
