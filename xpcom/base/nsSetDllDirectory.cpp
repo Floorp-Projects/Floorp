@@ -36,21 +36,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsSetDllDirectory_h
-#define nsSetDllDirectory_h
-
 #ifndef XP_WIN
 #error This file only makes sense on Windows.
 #endif
 
-#include <nscore.h>
+#include <windows.h>
+#include <stdlib.h>
+#include "nsSetDllDirectory.h"
+
+void
+SanitizeEnvironmentVariables()
+{
+  DWORD bufferSize = GetEnvironmentVariableW(L"PATH", NULL, 0);
+  if (bufferSize) {
+    wchar_t* originalPath = new wchar_t[bufferSize];
+    if (bufferSize - 1 == GetEnvironmentVariableW(L"PATH", originalPath, bufferSize)) {
+      bufferSize = ExpandEnvironmentStringsW(originalPath, NULL, 0);
+      if (bufferSize) {
+        wchar_t* newPath = new wchar_t[bufferSize];
+        if (ExpandEnvironmentStringsW(originalPath,
+                                      newPath,
+                                      bufferSize)) {
+          SetEnvironmentVariableW(L"PATH", newPath);
+        }
+        delete[] newPath;
+      }
+    }
+    delete[] originalPath;
+  }
+}
 
 namespace mozilla {
 
-// Sets the directory from which DLLs can be loaded if the SetDllDirectory OS
-// API is available.
-XPCOM_API(void) NS_SetDllDirectory(const WCHAR *aDllDirectory);
+XPCOM_API(void)
+NS_SetDllDirectory(const WCHAR *aDllDirectory)
+{
+  typedef BOOL
+  (WINAPI *pfnSetDllDirectory) (LPCWSTR);
+  static pfnSetDllDirectory setDllDirectory = nsnull;
+  if (!setDllDirectory) {
+    setDllDirectory = reinterpret_cast<pfnSetDllDirectory>
+      (GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetDllDirectoryW"));
+
+    // If it's the first time we're running this function, sanitize the
+    // environment variables too.
+    SanitizeEnvironmentVariables();
+  }
+  if (setDllDirectory) {
+    setDllDirectory(aDllDirectory);
+  }
+}
 
 }
 
-#endif
