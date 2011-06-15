@@ -175,6 +175,21 @@ nsString gfxFontEntry::FamilyName() const
     }
 }
 
+nsString
+gfxFontEntry::RealFaceName()
+{
+    FallibleTArray<PRUint8> nameTable;
+    nsresult rv = GetFontTable(TRUETYPE_TAG('n','a','m','e'), nameTable);
+    if (NS_SUCCEEDED(rv)) {
+        nsAutoString name;
+        rv = gfxFontUtils::GetFullNameFromTable(nameTable, name);
+        if (NS_SUCCEEDED(rv)) {
+            return name;
+        }
+    }
+    return Name();
+}
+
 already_AddRefed<gfxFont>
 gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold)
 {

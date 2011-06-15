@@ -94,7 +94,12 @@ nsFontFace::GetFromSystemFallback(PRBool * aFromSystemFallback)
 NS_IMETHODIMP
 nsFontFace::GetName(nsAString & aName)
 {
-  aName = mFontEntry->Name();
+  if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
+    NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
+    aName = mFontEntry->mUserFontData->mRealName;
+  } else {
+    aName = mFontEntry->RealFaceName();
+  }
   return NS_OK;
 }
 
