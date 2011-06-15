@@ -1461,6 +1461,9 @@ JSContext::JSContext(JSRuntime *rt)
     compartment(NULL),
     stack(thisDuringConstruction()),
     busyArrays()
+#ifdef DEBUG
+    , stackIterAssertionEnabled(true)
+#endif
 {}
 
 JSContext::~JSContext()

@@ -938,8 +938,12 @@ StackIter::settleOnNewState()
             if (op == JSOP_CALL || op == JSOP_FUNCALL) {
                 uintN argc = GET_ARGC(pc_);
                 DebugOnly<uintN> spoff = sp_ - fp_->base();
-                JS_ASSERT_IF(!fp_->hasImacropc(),
-                             spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
+#ifdef DEBUG
+                if (cx_->stackIterAssertionEnabled) {
+                    JS_ASSERT_IF(!fp_->hasImacropc(),
+                                 spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
+                }
+#endif
                 Value *vp = sp_ - (2 + argc);
 
                 if (IsNativeFunction(*vp)) {
