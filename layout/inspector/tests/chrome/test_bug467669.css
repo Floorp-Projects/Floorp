@@ -1,8 +1,0 @@
-@font-face {
-  font-family: font-face-test-family;
-  src: url(bad/font/name.ttf), url(GentiumPlus-R.woff) format("woff");
-}
-
-.gentium {
-  font-family: font-face-test-family;
-}
