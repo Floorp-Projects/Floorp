@@ -841,13 +841,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
     if (!proto->initRegExp(cx, re.get()))
         return NULL;
 
-    /*
-     * Now add the standard methods to RegExp.prototype, and pre-brand for
-     * better shape-guarding code.
-     */
-    if (!JS_DefineFunctions(cx, proto, regexp_methods))
+    if (!DefinePropertiesAndBrand(cx, proto, NULL, regexp_methods))
         return NULL;
-    proto->brand(cx);
 
     JSFunction *ctor = global->createConstructor(cx, regexp_construct, &js_RegExpClass,
                                                  CLASS_ATOM(cx, RegExp), 2);
