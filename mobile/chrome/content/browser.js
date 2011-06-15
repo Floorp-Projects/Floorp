@@ -2734,13 +2734,18 @@ Tab.prototype = {
     if ("delayLoad" in aParams && aParams.delayLoad)
       return;
 
-    try {
-      let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      let postData = aParams.postData ? aParams.postData.value : null;
-      browser.loadURIWithFlags(aURI, flags, aParams.referrerURI, aParams.charset, postData);
-    } catch(e) {
-      dump("Error: " + e + "\n");
-    }
+    // Give the browser binding a chance to attach completely before trying to
+    // load. Trying to load an invalid about: page from a remote browser causes
+    // a crash when trying to display the warning dialog.
+    setTimeout(function() {
+      try {
+        let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+        let postData = aParams.postData ? aParams.postData.value : null;
+        browser.loadURIWithFlags(aURI, flags, aParams.referrerURI, aParams.charset, postData);
+      } catch(e) {
+        dump("Error: " + e + "\n");
+      }
+    }, 0);
   },
 
   destroy: function destroy() {

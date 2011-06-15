@@ -69,6 +69,6 @@ function test() {
       finish();
     }
     newWin.addEventListener("tabviewshown", onTabViewShow, false);
-    newWin.TabView.toggle();
+    waitForFocus(function() { newWin.TabView.toggle(); });
   }, false);
 }
