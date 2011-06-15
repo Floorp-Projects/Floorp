@@ -14,4 +14,6 @@
     </menulist>
   </setting>
   <setting pref="extensions.inlinesettings1.color" type="color" title="Color"/>
+  <setting pref="extensions.inlinesettings1.file" type="file" title="File"/>
+  <setting pref="extensions.inlinesettings1.directory" type="directory" title="Directory"/>
 </vbox>

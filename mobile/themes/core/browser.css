@@ -1252,7 +1252,9 @@ setting {
 /* Put setting textboxes on a separate row in portrait */
 @media (@orientation@: portrait) {
   setting[type="integer"],
-  setting[type="string"] {
+  setting[type="string"],
+  setting[type="file"],
+  setting[type="directory"] {
     -moz-box-align: start;
     -moz-box-orient: vertical;
   }
