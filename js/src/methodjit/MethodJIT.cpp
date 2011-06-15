@@ -890,8 +890,10 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     cx->stack.repointRegs(&oldRegs);
     JS_ASSERT(fp == cx->fp());
 
-    /* The trampoline wrote the return value but did not set the HAS_RVAL flag. */
-    fp->markReturnValue();
+    if (ok) {
+        /* The trampoline wrote the return value but did not set the HAS_RVAL flag. */
+        fp->markReturnValue();
+    }
 
     /* See comment in mjit::Compiler::emitReturn. */
     fp->markActivationObjectsAsPut();
