@@ -76,6 +76,8 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
@@ -3183,15 +3185,8 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     /* String creates string objects. */
     FUN_CLASP(ctor) = &js_StringClass;
 
-    /* Define String.prototype and String.prototype.constructor. */
-    if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                              ObjectValue(*proto), PropertyStub, StrictPropertyStub,
-                              JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                               ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0))
-    {
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return NULL;
-    }
 
     /* Add properties and methods to the prototype and the constructor. */
     if (!JS_DefineFunctions(cx, proto, string_methods) ||

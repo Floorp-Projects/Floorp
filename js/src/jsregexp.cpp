@@ -57,6 +57,8 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 
@@ -857,14 +859,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
     /* RegExp creates regular expressions. */
     FUN_CLASP(ctor) = &js_RegExpClass;
 
-    /* Define RegExp.prototype and RegExp.prototype.constructor. */
-    if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                              ObjectValue(*proto), PropertyStub, StrictPropertyStub,
-                              JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                               ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0)) {
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return NULL;
-    }
 
     /* Add static properties to the RegExp constructor. */
     if (!JS_DefineProperties(cx, ctor, regexp_static_props) ||
@@ -883,4 +879,3 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
 
     return proto;
 }
-

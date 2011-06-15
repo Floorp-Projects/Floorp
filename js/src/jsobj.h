@@ -1762,10 +1762,6 @@ extern JS_FRIEND_API(JSBool)
 js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
                      JSObject **protop, js::Class *clasp = NULL);
 
-extern JSBool
-js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
-                     uintN attrs);
-
 /*
  * Wrap boolean, number or string as Boolean, Number or String object.
  * *vp must not be an object, null or undefined.
