@@ -145,7 +145,7 @@ function NotificationButton(label, accessKey, callback) {
     try {
       callback.apply(this, arguments);
     } catch (e) {
-      let logger = Log4Moz.repository.getLogger("Notifications");
+      let logger = Log4Moz.repository.getLogger("Sync.Notifications");
       logger.error("An exception occurred: " + Utils.exceptionStr(e));
       logger.info(Utils.stackTrace(e));
       throw e;

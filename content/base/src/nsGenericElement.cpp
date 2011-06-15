@@ -817,8 +817,11 @@ nsINode::IsEqualTo(nsINode* aOther)
     if (nodeType != node2->NodeType()) {
       return PR_FALSE;
     }
-    
-    if (!node1->mNodeInfo->Equals(node2->mNodeInfo)) {
+
+    nsINodeInfo* nodeInfo1 = node1->mNodeInfo;
+    nsINodeInfo* nodeInfo2 = node2->mNodeInfo;
+    if (!nodeInfo1->Equals(nodeInfo2) ||
+        nodeInfo1->GetExtraName() != nodeInfo2->GetExtraName()) {
       return PR_FALSE;
     }
 
@@ -867,16 +870,6 @@ nsINode::IsEqualTo(nsINode* aOther)
           return PR_FALSE;
         }
 
-        if (nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
-          nsCOMPtr<nsIDOMNode> domNode1 = do_QueryInterface(node1);
-          nsCOMPtr<nsIDOMNode> domNode2 = do_QueryInterface(node2);
-          domNode1->GetNodeName(string1);
-          domNode2->GetNodeName(string2);
-          if (!string1.Equals(string2)) {
-            return PR_FALSE;
-          }
-        }
-
         break;
       }
       case nsIDOMNode::DOCUMENT_NODE:
@@ -899,18 +892,11 @@ nsINode::IsEqualTo(nsINode* aOther)
       }
       case nsIDOMNode::DOCUMENT_TYPE_NODE:
       {
-        nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(this);
-        nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(aOther);
+        nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(node1);
+        nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(node2);
     
         NS_ASSERTION(docType1 && docType2, "Why don't we have a document type node?");
 
-        // Node name
-        docType1->GetNodeName(string1);
-        docType2->GetNodeName(string2);
-        if (!string1.Equals(string2)) {
-          return PR_FALSE;
-        }
-    
         // Public ID
         docType1->GetPublicId(string1);
         docType2->GetPublicId(string2);

@@ -31,7 +31,7 @@
 ;result of the multiplication that is needed in IDCT.
 
 |vp8_short_idct4x4llm_neon| PROC
-    ldr             r12, _idct_coeff_
+    adr             r12, idct_coeff
     vld1.16         {q1, q2}, [r0]
     vld1.16         {d0}, [r12]
 
@@ -117,8 +117,6 @@
 ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
 ;One word each is reserved. Label filter_coeff can be used to access the data.
 ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
-_idct_coeff_
-    DCD     idct_coeff
 idct_coeff
     DCD     0x4e7b4e7b, 0x8a8c8a8c
 

@@ -157,8 +157,7 @@ add_test(function test_success_receiveNoPIN() {
     displayPIN: function displayPIN(pin) {
       _("Received PIN " + pin + ". Entering it in the other computer...");
       this.cid = pin.slice(JPAKE_LENGTH_SECRET);
-      Utils.delay(function() { snd.sendWithPIN(pin, DATA); }, 0,
-                  this, "_timer");
+      Utils.nextTick(function() { snd.sendWithPIN(pin, DATA); });
     },
     onAbort: function onAbort(error) {
       do_throw("Shouldn't have aborted! " + error);
@@ -223,8 +222,7 @@ add_test(function test_wrongPIN() {
       let new_pin = secret + this.cid;
       _("Received PIN " + pin + ", but I'm entering " + new_pin);
 
-      Utils.delay(function() { snd.sendWithPIN(new_pin, DATA); }, 0,
-                  this, "_timer");
+      Utils.nextTick(function() { snd.sendWithPIN(new_pin, DATA); });
     },
     onAbort: function onAbort(error) {
       do_check_eq(error, JPAKE_ERROR_NODATA);
@@ -258,8 +256,7 @@ add_test(function test_abort_receiver() {
     },
     displayPIN: function displayPIN(pin) {
       this.cid = pin.slice(JPAKE_LENGTH_SECRET);
-      Utils.delay(function() { rec.abort(); },
-                  0, this, "_timer");
+      Utils.nextTick(function() { rec.abort(); });
     }
   });
   rec.receiveNoPIN();
@@ -298,10 +295,9 @@ add_test(function test_abort_sender() {
     displayPIN: function displayPIN(pin) {
       _("Received PIN " + pin + ". Entering it in the other computer...");
       this.cid = pin.slice(JPAKE_LENGTH_SECRET);
-      Utils.delay(function() { snd.sendWithPIN(pin, DATA); }, 0,
-                  this, "_timer");
-      Utils.delay(function() { snd.abort(); },
-                  POLLINTERVAL, this, "_abortTimer");
+      Utils.nextTick(function() { snd.sendWithPIN(pin, DATA); });
+      Utils.namedTimer(function() { snd.abort(); },
+                       POLLINTERVAL, this, "_abortTimer");
     }
   });
   rec.receiveNoPIN();

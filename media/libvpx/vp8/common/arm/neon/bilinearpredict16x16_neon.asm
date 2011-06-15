@@ -25,7 +25,7 @@
 |vp8_bilinear_predict16x16_neon| PROC
     push            {r4-r5, lr}
 
-    ldr             r12, _bifilter16_coeff_
+    adr             r12, bifilter16_coeff
     ldr             r4, [sp, #12]           ;load parameters from stack
     ldr             r5, [sp, #16]           ;load parameters from stack
 
@@ -354,8 +354,6 @@ filt_blk2d_spo16x16_loop_neon
 ;Data section with name data_area is specified. DCD reserves space in memory for 48 data.
 ;One word each is reserved. Label filter_coeff can be used to access the data.
 ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
-_bifilter16_coeff_
-    DCD     bifilter16_coeff
 bifilter16_coeff
     DCD     128, 0, 112, 16, 96, 32, 80, 48, 64, 64, 48, 80, 32, 96, 16, 112
 
