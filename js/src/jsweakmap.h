@@ -45,6 +45,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsobj.h"
+#include "jsgcmark.h"
 
 namespace js {
 
@@ -158,7 +159,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     typedef typename Base::Enum Enum;
 
   public:
-    WeakMap(JSContext *cx) : Base(cx) { }
+    explicit WeakMap(JSRuntime *rt) : Base(rt) { }
+    explicit WeakMap(JSContext *cx) : Base(cx) { }
 
   private:
     void nonMarkingTrace(JSTracer *tracer) {
@@ -199,7 +201,6 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     }
 };
 
-// Marking policy for maps from JSObject pointers to js::Values.
 template <>
 class DefaultMarkPolicy<JSObject *, Value> {
   private:
@@ -218,6 +219,22 @@ class DefaultMarkPolicy<JSObject *, Value> {
     void markValue(const Value &v, const char *description) {
         js::gc::MarkValue(tracer, v, description);
     }
+};
+
+template <>
+class DefaultMarkPolicy<JSObject *, JSObject *> {
+  public:
+    DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
+    bool keyMarked(JSObject *k)   { return !IsAboutToBeFinalized(tracer->context, k); }
+    bool valueMarked(JSObject *v) { return !IsAboutToBeFinalized(tracer->context, v); }
+    void markKey(JSObject *k, const char *description) {
+        js::gc::MarkObject(tracer, *k, description);
+    }
+    void markValue(JSObject *v, const char *description) {
+        js::gc::MarkObject(tracer, *v, description);
+    }
+  protected:
+    JSTracer *tracer;
 };
 
 // The class of JavaScript WeakMap objects.

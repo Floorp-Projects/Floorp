@@ -46,6 +46,7 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jshashtable.h"
+#include "jsweakmap.h"
 #include "jswrapper.h"
 #include "jsvalue.h"
 #include "vm/GlobalObject.h"
@@ -75,12 +76,28 @@ class Debug {
         FrameMap;
     FrameMap frames;
 
+    // Mark policy for ObjectMap.
+    class ObjectMapMarkPolicy: public DefaultMarkPolicy<JSObject *, JSObject *> {
+        typedef DefaultMarkPolicy<JSObject *, JSObject *> Base;
+      public:
+        explicit ObjectMapMarkPolicy(JSTracer *tracer) : Base(tracer) { }
+
+        // The unwrap() call has the following effect: we mark the Debug.Object if the
+        // *referent* is alive, even if the CCW of the referent seems unreachable. Since
+        // the value always refers to the CCW, marking the value marks the CCW, so we
+        // needn't worry that the CCW will go dead.
+        bool keyMarked(JSObject *k) { return k->unwrap()->isMarked(); }
+        void markKey(JSObject *k, const char *description) {
+            js::gc::MarkObject(tracer, *k->unwrap(), description);
+        }
+    };
+
     // Keys are referents, values are Debug.Object objects. The combination of
     // the a key being live and this Debug being live keeps the corresponding
     // Debug.Object alive.
-    typedef HashMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, SystemAllocPolicy>
-        ObjectMap;
-    ObjectMap objects;
+    typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, ObjectMapMarkPolicy>
+        ObjectWeakMap;
+    ObjectWeakMap objects;
 
     bool addDebuggeeGlobal(JSContext *cx, GlobalObject *obj);
     void removeDebuggeeGlobal(GlobalObject *global, GlobalObjectSet::Enum *compartmentEnum,
@@ -91,7 +108,8 @@ class Debug {
                                       bool callHook = true);
     JSObject *unwrapDebuggeeArgument(JSContext *cx, Value *vp);
 
-    static void trace(JSTracer *trc, JSObject *obj);
+    static void traceObject(JSTracer *trc, JSObject *obj);
+    void trace(JSTracer *trc);
     static void finalize(JSContext *cx, JSObject *obj);
 
     static Class jsclass;
