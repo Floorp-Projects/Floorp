@@ -2725,7 +2725,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    TypeObject *type = GetTypeCallerInitObject(cx, true);
+    TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Array);
     if (!type)
         return false;
     AddTypePropertyId(cx, type, JSID_VOID, types::TYPE_STRING);
@@ -3480,7 +3480,7 @@ js_InitStringClass(JSContext *cx, JSObject *global)
 
     types::TypeObject *protoType = cx->compartment->types.newTypeObject(cx, NULL,
                                                                         "String", "prototype",
-                                                                        false, false,
+                                                                        JSProto_Object,
                                                                         proto->getProto());
     if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
         return NULL;

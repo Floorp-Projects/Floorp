@@ -875,7 +875,7 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     types::TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, js_Math_str, "",
-                                                                   false, false,
+                                                                   JSProto_Object,
                                                                    Math->getProto());
     if (!type || !Math->setTypeAndUniqueShape(cx, type))
         return NULL;

@@ -2983,7 +2983,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
         newarr = NewDenseAllocatedArray(cx, newlen);
         if (!newarr)
             return JS_FALSE;
-        newtype = GetTypeCallerInitObject(cx, true);
+        newtype = GetTypeCallerInitObject(cx, JSProto_Array);
         if (!newtype)
             return JS_FALSE;
         newarr->setType(newtype);
@@ -3202,7 +3202,7 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj;
 
-    TypeObject *type = GetTypeCallerInitObject(cx, true);
+    TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Array);
     if (!type)
         return JS_FALSE;
 

@@ -239,15 +239,15 @@ GetTypeNewObject(JSContext *cx, JSProtoKey key)
 
 /* Get a type object for the immediate allocation site within a native. */
 inline TypeObject *
-GetTypeCallerInitObject(JSContext *cx, bool isArray)
+GetTypeCallerInitObject(JSContext *cx, JSProtoKey key)
 {
     if (cx->typeInferenceEnabled()) {
         jsbytecode *pc;
         JSScript *script = cx->stack.currentScript(&pc);
         if (script && script->compartment == cx->compartment)
-            return script->types.initObject(cx, pc, isArray);
+            return script->types.initObject(cx, pc, key);
     }
-    return GetTypeNewObject(cx, isArray ? JSProto_Array : JSProto_Object);
+    return GetTypeNewObject(cx, key);
 }
 
 /*
@@ -497,30 +497,28 @@ TypeScript::standardType(JSContext *cx, JSProtoKey key)
 }
 
 inline TypeObject *
-TypeScript::initObject(JSContext *cx, const jsbytecode *pc, bool isArray)
+TypeScript::initObject(JSContext *cx, const jsbytecode *pc, JSProtoKey key)
 {
     if (!cx->typeInferenceEnabled() || !script()->hasGlobal())
-        return GetTypeNewObject(cx, isArray ? JSProto_Array : JSProto_Object);
+        return GetTypeNewObject(cx, key);
 
     uint32 offset = pc - script()->code;
     TypeObject *prev = NULL, *obj = typeObjects;
     while (obj) {
-        if (isArray ? obj->initializerArray : obj->initializerObject) {
-            if (obj->initializerOffset == offset) {
-                /* Move this to the head of the objects list, maintain LRU order. */
-                if (prev) {
-                    prev->next = obj->next;
-                    obj->next = typeObjects;
-                    typeObjects = obj;
-                }
-                return obj;
+        if (obj->initializerKey == key && obj->initializerOffset == offset) {
+            /* Move this to the head of the objects list, maintain LRU order. */
+            if (prev) {
+                prev->next = obj->next;
+                obj->next = typeObjects;
+                typeObjects = obj;
             }
+            return obj;
         }
         prev = obj;
         obj = obj->next;
     }
 
-    return cx->compartment->types.newInitializerTypeObject(cx, script(), offset, isArray);
+    return cx->compartment->types.newInitializerTypeObject(cx, script(), offset, key);
 }
 
 inline void
@@ -1102,18 +1100,35 @@ TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
     argumentTypes = ArenaArray<TypeSet*>(cx->compartment->pool, argumentCount);
 }
 
-inline TypeObject *
-TypeCallsite::getInitObject(JSContext *cx, bool isArray)
-{
-    TypeObject *type = script->types.initObject(cx, pc, isArray);
-    if (!type)
-        cx->compartment->types.setPendingNukeTypes(cx);
-    return type;
-}
-
 /////////////////////////////////////////////////////////////////////
 // TypeObject
 /////////////////////////////////////////////////////////////////////
+
+inline const char *
+TypeObject::name()
+{
+#ifdef DEBUG
+    return TypeIdString(name_);
+#else
+    return NULL;
+#endif
+}
+
+inline TypeObject::TypeObject(jsid name, JSObject *proto, bool isFunction)
+    : proto(proto), emptyShapes(NULL),
+      flags(0), isFunction(isFunction), isFunctionNative(false),
+      marked(false), newScriptCleared(false),
+      newScript(NULL), initializerKey(JSProto_Null), initializerOffset(0),
+      contribution(0), propertySet(NULL), propertyCount(0),
+      instanceList(NULL), instanceNext(NULL), next(NULL),
+      singleton(NULL), functionScript(NULL)
+{
+#ifdef DEBUG
+    this->name_ = name;
+#endif
+
+    InferSpew(ISpewOps, "newObject: %s", this->name());
+}
 
 inline TypeSet *
 TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
@@ -1153,34 +1168,44 @@ TypeObject::getProperty(unsigned i)
     return propertySet[i];
 }
 
-/////////////////////////////////////////////////////////////////////
-// TypeObject
-/////////////////////////////////////////////////////////////////////
-
-inline const char *
-TypeObject::name()
+inline void
+TypeObject::setFlagsFromKey(JSContext *cx, JSProtoKey key)
 {
-#ifdef DEBUG
-    return TypeIdString(name_);
-#else
-    return NULL;
-#endif
-}
+    TypeObjectFlags flags = 0;
 
-inline TypeObject::TypeObject(jsid name, JSObject *proto, bool isFunction)
-    : proto(proto), emptyShapes(NULL),
-      flags(0), isFunction(isFunction), isFunctionNative(false),
-      marked(false), newScriptCleared(false),
-      newScript(NULL), initializerObject(false), initializerArray(false), initializerOffset(0),
-      contribution(0), propertySet(NULL), propertyCount(0),
-      instanceList(NULL), instanceNext(NULL), next(NULL),
-      singleton(NULL), functionScript(NULL)
-{
-#ifdef DEBUG
-    this->name_ = name;
-#endif
+    switch (key) {
+      case JSProto_Function:
+        JS_ASSERT(isFunction);
+        /* FALLTHROUGH */
 
-    InferSpew(ISpewOps, "newObject: %s", this->name());
+      case JSProto_Object:
+        flags = OBJECT_FLAG_NON_DENSE_ARRAY
+              | OBJECT_FLAG_NON_PACKED_ARRAY
+              | OBJECT_FLAG_NON_TYPED_ARRAY;
+        break;
+
+      case JSProto_Array:
+        flags = OBJECT_FLAG_NON_TYPED_ARRAY;
+        break;
+
+      default:
+        /* :XXX: abstract */
+        JS_ASSERT(key == JSProto_Int8Array ||
+                  key == JSProto_Uint8Array ||
+                  key == JSProto_Int16Array ||
+                  key == JSProto_Uint16Array ||
+                  key == JSProto_Int32Array ||
+                  key == JSProto_Uint32Array ||
+                  key == JSProto_Float32Array ||
+                  key == JSProto_Float64Array ||
+                  key == JSProto_Uint8ClampedArray);
+        flags = OBJECT_FLAG_NON_DENSE_ARRAY
+              | OBJECT_FLAG_NON_PACKED_ARRAY;
+        break;
+    }
+
+    if (!hasAllFlags(flags))
+        setFlags(cx, flags);
 }
 
 inline void
