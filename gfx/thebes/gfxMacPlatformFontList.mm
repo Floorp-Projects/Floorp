@@ -866,7 +866,6 @@ gfxMacPlatformFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                aProxyEntry->mItalic ?
                                    FONT_STYLE_ITALIC : FONT_STYLE_NORMAL,
                                nsnull);
-        newFontEntry->mIsUserFont = newFontEntry->mIsLocalUserFont = PR_TRUE;
     } else {
         newFontEntry =
             new MacOSFontEntry(aFontName, fontRef,

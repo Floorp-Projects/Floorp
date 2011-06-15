@@ -86,8 +86,6 @@ public:
   virtual void ReplaceFontEntry(gfxProxyFontEntry *aProxy,
                                 gfxFontEntry *aFontEntry);
 
-  nsCSSFontFaceRule *FindRuleForEntry(gfxFontEntry *aFontEntry);
-
 protected:
   // The font-set keeps track of the collection of rules, and their
   // corresponding font entries (whether proxies or real entries),

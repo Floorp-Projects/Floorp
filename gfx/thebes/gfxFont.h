@@ -221,13 +221,8 @@ public:
 
     virtual ~gfxFontEntry();
 
-    // unique name for the face, *not* the family; not necessarily the
-    // "real" or user-friendly name, may be an internal identifier
+    // unique name for the face, *not* the family
     const nsString& Name() const { return mName; }
-
-    // the "real" name of the face, if available from the font resource
-    // (may be expensive); returns Name() if nothing better is available
-    virtual nsString RealFaceName();
 
     gfxFontFamily* Family() const { return mFamily; }
 
@@ -278,7 +273,7 @@ public:
         mFamily = aFamily;
     }
 
-    virtual nsString FamilyName() const;
+    const nsString& FamilyName() const;
 
     already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle,
                                              PRBool aNeedsBold);
@@ -610,23 +605,10 @@ protected:
 };
 
 struct gfxTextRange {
-    enum {
-        // flags for recording the kind of font-matching that was used
-        kFontGroup      = 0x0001,
-        kPrefsFallback  = 0x0002,
-        kSystemFallback = 0x0004
-    };
-    gfxTextRange(PRUint32 aStart, PRUint32 aEnd,
-                 gfxFont* aFont, PRUint8 aMatchType)
-        : start(aStart),
-          end(aEnd),
-          font(aFont),
-          matchType(aMatchType)
-    { }
+    gfxTextRange(PRUint32 aStart,  PRUint32 aEnd) : start(aStart), end(aEnd) { }
     PRUint32 Length() const { return end - start; }
-    PRUint32 start, end;
     nsRefPtr<gfxFont> font;
-    PRUint8 matchType;
+    PRUint32 start, end;
 };
 
 
@@ -1889,7 +1871,6 @@ public:
     struct GlyphRun {
         nsRefPtr<gfxFont> mFont;   // never null
         PRUint32          mCharacterOffset; // into original UTF16 string
-        PRUint8           mMatchType;
     };
 
     class THEBES_API GlyphRunIterator {
@@ -1945,8 +1926,7 @@ public:
      * are added before any further operations are performed with this
      * TextRun.
      */
-    nsresult AddGlyphRun(gfxFont *aFont, PRUint8 aMatchType,
-                         PRUint32 aStartCharIndex, PRBool aForceNewRun);
+    nsresult AddGlyphRun(gfxFont *aFont, PRUint32 aStartCharIndex, PRBool aForceNewRun = PR_FALSE);
     void ResetGlyphRuns() { mGlyphRuns.Clear(); }
     void SortGlyphRuns();
     void SanitizeGlyphRuns();
@@ -2245,7 +2225,7 @@ private:
 
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
     // for smaller size especially in the super-common one-glyphrun case
-    nsAutoTArray<GlyphRun,1>        mGlyphRuns;
+    nsAutoTArray<GlyphRun,1>                       mGlyphRuns;
     // When TEXT_IS_8BIT is set, we use mSingle, otherwise we use mDouble.
     // When TEXT_IS_PERSISTENT is set, we don't own the text, otherwise we
     // own the text. When we own the text, it's allocated fused with the
@@ -2372,8 +2352,7 @@ public:
 
     virtual already_AddRefed<gfxFont>
         FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRInt32 aRunScript,
-                        gfxFont *aPrevMatchedFont,
-                        PRUint8 *aMatchType);
+                        gfxFont *aPrevMatchedFont);
 
     // search through pref fonts for a character, return nsnull if no matching pref font
     virtual already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
