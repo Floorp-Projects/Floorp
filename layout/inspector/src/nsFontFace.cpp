@@ -34,10 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsFontFace.h"
+#define _IMPL_NS_LAYOUT
 
-nsFontFace::nsFontFace(gfxFontEntry* aFontEntry)
-  : mFontEntry(aFontEntry)
+#include "nsFontFace.h"
+#include "nsIDOMCSSFontFaceRule.h"
+#include "nsCSSRules.h"
+
+nsFontFace::nsFontFace(gfxFontEntry* aFontEntry,
+                       nsCSSFontFaceRule* aRule)
+  : mFontEntry(aFontEntry),
+    mRule(aRule)
 {
 }
 
@@ -94,7 +100,8 @@ nsFontFace::GetCSSFamilyName(nsAString & aCSSFamilyName)
 NS_IMETHODIMP
 nsFontFace::GetRule(nsIDOMCSSFontFaceRule **aRule)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_IF_ADDREF(*aRule = mRule.get());
+  return NS_OK;
 }
 
 /* readonly attribute long srcIndex; */

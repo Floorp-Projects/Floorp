@@ -686,3 +686,14 @@ nsUserFontSet::ReplaceFontEntry(gfxProxyFontEntry *aProxy,
   static_cast<gfxMixedFontFamily*>(aProxy->Family())->
     ReplaceFontEntry(aProxy, aFontEntry);
 }
+
+nsCSSFontFaceRule*
+nsUserFontSet::FindRuleForEntry(gfxFontEntry *aFontEntry)
+{
+  for (PRUint32 i = 0; i < mRules.Length(); ++i) {
+    if (mRules[i].mFontEntry == aFontEntry) {
+      return mRules[i].mContainer.mRule;
+    }
+  }
+  return nsnull;
+}
