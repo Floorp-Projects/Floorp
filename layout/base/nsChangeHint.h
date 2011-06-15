@@ -91,7 +91,11 @@ enum nsChangeHint {
 
   // change requires frame change (e.g., display:).
   // This subsumes all the above.
-  nsChangeHint_ReconstructFrame = 0x400
+  nsChangeHint_ReconstructFrame = 0x400,
+
+  // The frame's effect on its ancestors' overflow areas has changed,
+  // either through a change in its transform or a change in its position.
+  nsChangeHint_UpdateOverflow = 0x800
 };
 
 // Redefine these operators to return nothing. This will catch any use

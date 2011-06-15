@@ -95,7 +95,7 @@ public:
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
-  virtual bool IsCollapsed(nsBoxLayoutState& aBoxLayoutState);
+  virtual bool IsCollapsed();
 
   DECL_DO_GLOBAL_REFLOW_COUNT_DSP(nsTextControlFrame, nsStackFrame)
 

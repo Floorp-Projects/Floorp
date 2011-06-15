@@ -8019,6 +8019,30 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         ApplyRenderingChangeToTree(presContext, frame, hint);
         didInvalidate = true;
       }
+      if (hint & nsChangeHint_UpdateOverflow) {
+        nsOverflowAreas overflowAreas;
+        nsOverflowAreas* pre = static_cast<nsOverflowAreas*>
+          (frame->Properties().Get(frame->PreTransformOverflowAreasProperty()));
+        if (pre) {
+          // FinishAndStoreOverflow will change the overflow areas passed in,
+          // so make a copy.
+          overflowAreas = *pre;
+        } else {
+          // There is no transform yet on this frame, so we can just use its
+          // current overflow areas.
+          overflowAreas = frame->GetOverflowAreas();
+        }
+
+        frame->FinishAndStoreOverflow(overflowAreas, frame->GetSize());
+
+        // Ancestors' oveflow areas may be affected.
+        for (nsIFrame* ancestor = frame->GetParent(); ancestor;
+             ancestor = ancestor->GetParent()) {
+          if (!ancestor->UpdateOverflow()) {
+            break;
+          }
+        }
+      }
       if (hint & nsChangeHint_UpdateCursor) {
         mPresShell->SynthesizeMouseMove(false);
       }
