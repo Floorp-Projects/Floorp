@@ -2034,6 +2034,18 @@ MarkContext(JSTracer *trc, JSContext *acx)
     MarkRoot(trc, acx->iterValue, "iterValue");
 }
 
+void
+MarkWeakReferences(GCMarker *gcmarker)
+{
+    JS_ASSERT(gcmarker->isMarkStackEmpty());
+    while (WatchpointMap::markAllIteratively(gcmarker) ||
+           WeakMapBase::markAllIteratively(gcmarker) ||
+           Debugger::markAllIteratively(gcmarker)) {
+        gcmarker->drainMarkStack();
+    }
+    JS_ASSERT(gcmarker->isMarkStackEmpty());
+}
+
 JS_REQUIRES_STACK void
 MarkRuntime(JSTracer *trc)
 {
@@ -2514,22 +2526,17 @@ EndMarkPhase(JSContext *cx, GCMarker *gcmarker, JSGCInvocationKind gckind)
 {
     JSRuntime *rt = cx->runtime;
 
-    gcmarker->setMarkColor(GRAY);
-    if (JSTraceDataOp op = rt->gcGrayRootsTraceOp)
-        (*op)(gcmarker, rt->gcGrayRootsData);
-    gcmarker->drainMarkStack();
-    gcmarker->setMarkColor(BLACK);
+    JS_ASSERT(gcmarker->isMarkStackEmpty());
+    MarkWeakReferences(gcmarker);
 
-    /*
-     * Mark weak roots.
-     */
-    while (WatchpointMap::markAllIteratively(gcmarker) ||
-           WeakMapBase::markAllIteratively(gcmarker) ||
-           Debugger::markAllIteratively(gcmarker))
-    {
+    if (JSTraceDataOp op = rt->gcGrayRootsTraceOp) {
+        gcmarker->setMarkColorGray();
+        (*op)(gcmarker, rt->gcGrayRootsData);
         gcmarker->drainMarkStack();
+        MarkWeakReferences(gcmarker);
     }
 
+    JS_ASSERT(gcmarker->isMarkStackEmpty());
     rt->gcIncrementalTracer = NULL;
 
     rt->gcStats.endPhase(gcstats::PHASE_MARK);
