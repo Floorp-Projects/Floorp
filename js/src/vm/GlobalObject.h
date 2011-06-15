@@ -162,6 +162,14 @@ class GlobalObject : public ::JSObject {
     bool initStandardClasses(JSContext *cx);
 };
 
+/*
+ * Define ctor.prototype = proto as non-enumerable, non-configurable, and
+ * non-writable; define proto.constructor = ctor as non-enumerable but
+ * configurable and writable.
+ */
+extern bool
+LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
+
 } // namespace js
 
 js::GlobalObject *

@@ -1447,15 +1447,20 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
         return NULL;
 
     /*
-     * ECMA (15.3.5.2) says that a user-defined function's .prototype property
-     * is non-configurable, non-enumerable, and (initially) writable. Hence
-     * JSPROP_PERMANENT below. By contrast, the built-in constructors, such as
-     * Object (15.2.3.1) and Function (15.3.3.1), have non-writable
-     * .prototype properties. Those are eagerly defined, with attributes
-     * JSPROP_PERMANENT | JSPROP_READONLY, in js_InitClass.
+     * Per ES5 15.3.5.2 a user-defined function's .prototype property is
+     * initially non-configurable, non-enumerable, and writable.  Per ES5 13.2
+     * the prototype's .constructor property is configurable, non-enumerable,
+     * and writable.
      */
-    if (!js_SetClassPrototype(cx, obj, proto, JSPROP_PERMANENT))
-        return NULL;
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                             ObjectValue(*proto), PropertyStub, StrictPropertyStub,
+                             JSPROP_PERMANENT) ||
+        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
+                               ObjectValue(*obj), PropertyStub, StrictPropertyStub, 0))
+    {
+       return NULL;
+    }
+
     return proto;
 }
 
@@ -1471,12 +1476,11 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     if (JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
         /*
          * Native or "built-in" functions do not have a .prototype property per
-         * ECMA-262 (all editions). Built-in constructor functions, e.g. Object
-         * and Function to name two conspicuous examples, do have a .prototype
-         * property, but it is created eagerly by js_InitClass (jsobj.cpp).
+         * ECMA-262, or (Object.prototype, Function.prototype, etc.) have that
+         * property created eagerly.
          *
          * ES5 15.3.4: the non-native function object named Function.prototype
-         * must not have a .prototype property.
+         * does not have a .prototype property.
          *
          * ES5 15.3.4.5: bound functions don't have a prototype property. The
          * isNative() test covers this case because bound functions are native
