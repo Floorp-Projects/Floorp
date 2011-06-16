@@ -10148,7 +10148,7 @@ TraceRecorder::guardNativeConversion(Value& v)
     LIns* obj_ins = get(&v);
 
     ConvertOp convert = obj->getClass()->convert;
-    if (convert != Valueify(JS_ConvertStub) && convert != js_TryValueOf)
+    if (convert != ConvertStub)
         RETURN_STOP("operand has convert hook");
 
     VMSideExit* exit = snapshot(BRANCH_EXIT);
@@ -11415,13 +11415,16 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                  */
                 if (!CallResultEscapes(cx->regs().pc)) {
                     JSObject* proto;
-                    jsid id = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
-                    /* Get RegExp.prototype.test() and check it hasn't been changed. */
+                    /* Get RegExp.prototype.test and check it hasn't been changed. */
                     if (js_GetClassPrototype(cx, NULL, JSProto_RegExp, &proto)) {
-                        if (JSObject *tmp = HasNativeMethod(proto, id, js_regexp_test)) {
-                            vp[0] = ObjectValue(*tmp);
-                            funobj = tmp;
-                            fun = tmp->getFunctionPrivate();
+                        Value pval;
+                        jsid id = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
+                        if (HasDataProperty(proto, id, &pval) &&
+                            IsNativeFunction(pval, js_regexp_test))
+                        {
+                            vp[0] = pval;
+                            funobj = &pval.toObject();
+                            fun = funobj->getFunctionPrivate();
                             native = js_regexp_test;
                         }
                     }
@@ -15595,13 +15598,18 @@ TraceRecorder::record_JSOP_SETLOCALPOP()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_IFPRIMTOP()
+TraceRecorder::record_JSOP_IFCANTCALLTOP()
 {
+    Value &top = stackval(-1);
+
     // Traces are type-specialized, including null vs. object, so we need do
-    // nothing here. The upstream unbox_value called after valueOf or toString
-    // from an imacro (e.g.) will fork the trace for us, allowing us to just
-    // follow along mindlessly :-).
-    return ARECORD_CONTINUE;
+    // nothing if the trace type will be consistently callable or not callable.
+    if (top.isPrimitive() || top.toObject().isFunction())
+        return ARECORD_CONTINUE;
+
+    // Callable objects that aren't also functions would require a guard, but
+    // they're rare, so err on the side of simplicity.
+    return ARECORD_STOP;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus

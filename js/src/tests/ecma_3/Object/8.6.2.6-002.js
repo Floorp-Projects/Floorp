@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 470364;
+var BUGNUMBER = 476624;
 var summary = '[[DefaultValue]] should not call valueOf, toString with an argument';
 var actual = '';
 var expect = '';

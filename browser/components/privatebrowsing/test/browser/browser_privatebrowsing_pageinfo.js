@@ -52,6 +52,7 @@ function test() {
 
       let pageInfo1 = BrowserPageInfo();
       pageInfo1.addEventListener("load", function () {
+        pageInfo1.removeEventListener("load", arguments.callee, false);
 
         let tab2 = gBrowser.addTab();
         gBrowser.selectedTab = tab2;
@@ -61,8 +62,10 @@ function test() {
 
           let pageInfo2 = BrowserPageInfo();
           pageInfo2.addEventListener("load", function () {
+            pageInfo2.removeEventListener("load", arguments.callee, false);
 
             pageInfo1.addEventListener("unload", function () {
+              pageInfo1.removeEventListener("unload", arguments.callee, false);
               pageInfo1 = null;
               ok(true, "Page info 1 being closed as expected");
               if (!pageInfo2)
@@ -70,6 +73,7 @@ function test() {
             }, false);
 
             pageInfo2.addEventListener("unload", function () {
+              pageInfo2.removeEventListener("unload", arguments.callee, false);
               pageInfo2 = null;
               ok(true, "Page info 2 being closed as expected");
               if (!pageInfo1)

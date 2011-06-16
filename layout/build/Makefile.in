@@ -58,8 +58,6 @@ MODULE_NAME	= nsLayoutModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-EXTRA_DSO_LIBS	+= thebes ycbcr
-
 
 CPPSRCS		= \
 		nsLayoutModule.cpp \
@@ -241,47 +239,6 @@ endif
 
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/js/src/xpconnect/src/$(LIB_PREFIX)xpconnect_s.$(LIB_SUFFIX)
-
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NULL)
-
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-
-ifdef MOZ_ENABLE_GTK2
-EXTRA_DSO_LDOPTS += -lXrender
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-OS_LIBS += -framework OpenGL
-endif
-
-# Add explicit X11 dependency when building against X11 toolkits
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
-endif
-
-ifdef MOZ_SYDNEYAUDIO
-ifneq (,$(filter GNU GNU_% NetBSD OpenBSD,$(OS_ARCH)))
-EXTRA_DSO_LDOPTS += -lossaudio
-endif
-
-ifeq ($(OS_ARCH),Linux)
-EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
-endif
-ifeq ($(OS_ARCH),Darwin)
-OS_LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon -framework IOKit
-endif
-endif
-
-ifdef MOZ_NATIVE_LIBVPX
-EXTRA_DSO_LDOPTS += $(MOZ_LIBVPX_LIBS)
-endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

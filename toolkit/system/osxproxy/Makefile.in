@@ -52,16 +52,6 @@ MODULE_NAME     = nsOSXProxyModule
 GRE_MODULE      = 1
 LIBXUL_LIBRARY  = 1
 
-
-FRAMEWORKS += \
-	-framework SystemConfiguration \
-	-framework Cocoa \
-	$(NULL)
-
-OS_LIBS += $(FRAMEWORKS)
-
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
-
 CMMSRCS = \
         nsOSXSystemProxySettings.mm \
         $(NULL)

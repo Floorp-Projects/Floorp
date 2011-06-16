@@ -83,12 +83,12 @@ class GlobalObject : public ::JSObject {
     static const uintN STANDARD_CLASS_SLOTS  = JSProto_LIMIT * 3;
 
     /* One-off properties stored after slots for built-ins. */
-    static const uintN THROWTYPEERROR        = STANDARD_CLASS_SLOTS;
-    static const uintN REGEXP_STATICS        = THROWTYPEERROR + 1;
-    static const uintN FUNCTION_NS           = REGEXP_STATICS + 1;
-    static const uintN EVAL_ALLOWED          = FUNCTION_NS + 1;
-    static const uintN EVAL                  = EVAL_ALLOWED + 1;
-    static const uintN FLAGS                 = EVAL + 1;
+    static const uintN THROWTYPEERROR          = STANDARD_CLASS_SLOTS;
+    static const uintN REGEXP_STATICS          = THROWTYPEERROR + 1;
+    static const uintN FUNCTION_NS             = REGEXP_STATICS + 1;
+    static const uintN RUNTIME_CODEGEN_ENABLED = FUNCTION_NS + 1;
+    static const uintN EVAL                    = RUNTIME_CODEGEN_ENABLED + 1;
+    static const uintN FLAGS                   = EVAL + 1;
 
     /* Total reserved-slot count for global objects. */
     static const uintN RESERVED_SLOTS = FLAGS + 1;
@@ -133,7 +133,7 @@ class GlobalObject : public ::JSObject {
         return getSlot(FLAGS).toInt32() & FLAGS_CLEARED;
     }
 
-    bool isEvalAllowed(JSContext *cx);
+    bool isRuntimeCodeGenEnabled(JSContext *cx);
 
     const Value &getOriginalEval() const {
         return getSlot(EVAL);

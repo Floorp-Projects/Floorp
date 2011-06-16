@@ -267,6 +267,10 @@ class NormalArgumentsObject;
 class StrictArgumentsObject;
 class StringObject;
 
+/* ES5 8.12.8. */
+extern JSBool
+DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
+
 }
 
 struct JSFunction;
@@ -1178,6 +1182,11 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_Enumerate)(cx, this, iterop, statep, idp);
     }
 
+    bool defaultValue(JSContext *cx, JSType hint, js::Value *vp) {
+        js::ConvertOp op = getClass()->convert;
+        return (op == js::ConvertStub ? js::DefaultValue : op)(cx, this, hint, vp);
+    }
+
     JSType typeOf(JSContext *cx) {
         js::TypeOfOp op = getOps()->typeOf;
         return (op ? op : js_TypeOf)(cx, this);
@@ -1729,14 +1738,11 @@ js_SetNativeAttributes(JSContext *cx, JSObject *obj, js::Shape *shape,
 namespace js {
 
 /*
- * If obj has a data property methodid which is a function object for the given
- * native, return that function object. Otherwise, return NULL.
+ * If obj has an already-resolved data property for methodid, return true and
+ * store the property value in *vp.
  */
-extern JSObject *
-HasNativeMethod(JSObject *obj, jsid methodid, Native native);
-
 extern bool
-DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
+HasDataProperty(JSObject *obj, jsid methodid, js::Value *vp);
 
 extern JSBool
 CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
@@ -1780,17 +1786,36 @@ namespace js {
  * If *vp might already be an object, use ToObject.
  */
 extern JSObject *
-ToObjectSlow(JSContext *cx, js::Value *vp);
+ToObjectSlow(JSContext *cx, Value *vp);
 
 JS_ALWAYS_INLINE JSObject *
-ToObject(JSContext *cx, js::Value *vp)
+ToObject(JSContext *cx, Value *vp)
 {
     if (vp->isObject())
         return &vp->toObject();
     return ToObjectSlow(cx, vp);
 }
 
+/* ES5 9.1 ToPrimitive(input). */
+static JS_ALWAYS_INLINE bool
+ToPrimitive(JSContext *cx, Value *vp)
+{
+    if (vp->isPrimitive())
+        return true;
+    return vp->toObject().defaultValue(cx, JSTYPE_VOID, vp);
 }
+
+/* ES5 9.1 ToPrimitive(input, PreferredType). */
+static JS_ALWAYS_INLINE bool
+ToPrimitive(JSContext *cx, JSType preferredType, Value *vp)
+{
+    JS_ASSERT(preferredType != JSTYPE_VOID); /* Use the other ToPrimitive! */
+    if (vp->isPrimitive())
+        return true;
+    return vp->toObject().defaultValue(cx, preferredType, vp);
+}
+
+} /* namespace js */
 
 /*
  * v and vp may alias. On successful return, vp->isObject(). If vp is not
@@ -1798,9 +1823,6 @@ ToObject(JSContext *cx, js::Value *vp)
  */
 extern JSObject *
 js_ValueToNonNullObject(JSContext *cx, const js::Value &v);
-
-extern JSBool
-js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, js::Value *rval);
 
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);
@@ -1816,10 +1838,6 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, js::Value *vp);
 
 extern bool
 js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const js::Value &v);
-
-/* For CSP -- checks if eval() and friends are allowed to run. */
-extern JSBool
-js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeObj);
 
 extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);

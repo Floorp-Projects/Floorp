@@ -68,8 +68,8 @@ struct TypedArray;
 #undef NO_ERROR
 %}
 
-[ptr] native WebGLArrayBufferPtr (js::ArrayBuffer);
 [ptr] native WebGLArrayPtr (js::TypedArray);
+[ptr] native WebGLJSObjectPtr (JSObject);
 
 //
 // OpenGL object wrappers
@@ -140,7 +140,7 @@ interface nsIWebGLExtension : nsISupports
 {
 };
 
-[scriptable, uuid(44119fc2-b5f0-4acc-b836-5d28cc43e8fb)]
+[scriptable, uuid(ef15ae85-4670-4dc4-848d-51ca81e8397a)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -587,12 +587,12 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   // Modified: void glBufferData(WebGLenum target, long size, const void* data, WebGLenum usage);
   void bufferData([optional] in long dummy);
   [noscript] void bufferData_size(in WebGLenum target, in WebGLsizei size, in WebGLenum usage);
-  [noscript] void bufferData_buf(in WebGLenum target, in WebGLArrayBufferPtr data, in WebGLenum usage);
+  [noscript] void bufferData_buf(in WebGLenum target, in WebGLJSObjectPtr data, in WebGLenum usage);
   [noscript] void bufferData_array(in WebGLenum target, in WebGLArrayPtr data, in WebGLenum usage);
   [noscript] void bufferData_null();
 
   void bufferSubData([optional] in long dummy);
-  [noscript] void bufferSubData_buf(in WebGLenum target, in long offset, in WebGLArrayBufferPtr data);
+  [noscript] void bufferSubData_buf(in WebGLenum target, in long offset, in WebGLJSObjectPtr data);
   [noscript] void bufferSubData_array(in WebGLenum target, in long offset, in WebGLArrayPtr data);
   [noscript] void bufferSubData_null();
 
@@ -716,7 +716,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   [noscript] void readPixels_array(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
                                    in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
   [noscript] void readPixels_buf(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
-                                 in WebGLenum format, in WebGLenum type, in WebGLArrayBufferPtr pixels);
+                                 in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
 
   //void glReleaseShaderCompiler();
 
@@ -737,7 +737,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void texImage2D([optional] in long dummy);
   [noscript] void texImage2D_buf(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                  in WebGLsizei width, in WebGLsizei height,
-                                 in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayBufferPtr pixels);
+                                 in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   [noscript] void texImage2D_array(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                    in WebGLsizei width, in WebGLsizei height,
                                    in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
@@ -752,7 +752,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void texSubImage2D([optional] in long dummy);
   [noscript] void texSubImage2D_buf(in WebGLenum target, in WebGLint level,
                                     in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
-                                    in WebGLenum format, in WebGLenum type, in WebGLArrayBufferPtr pixels);
+                                    in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
   [noscript] void texSubImage2D_array(in WebGLenum target, in WebGLint level,
                                       in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
                                       in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);

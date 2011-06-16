@@ -3,3 +3,4 @@ script 11.1.5-01.js
 script named-accessor-function.js
 script nested-delete-name-in-evalcode.js
 script object-literal-accessor-arguments.js
+script string-literal-escape-sequences.js

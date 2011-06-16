@@ -49,7 +49,7 @@
 #include "nsTextControlFrame.h"
 #include "nsIControllers.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsITransactionManager.h"
 #include "nsIControllerContext.h"
 #include "nsAttrValue.h"
@@ -782,7 +782,7 @@ DoCommandCallback(const char *aCommand, void *aData)
   if (input) {
     input->GetControllers(getter_AddRefs(controllers));
   } else {
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textArea =
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea =
       do_QueryInterface(content);
 
     if (textArea) {
@@ -1249,7 +1249,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     if (inputElement) {
       rv = inputElement->GetControllers(getter_AddRefs(controllers));
     } else {
-      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement =
+      nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement =
         do_QueryInterface(mTextCtrlElement);
 
       if (!textAreaElement)
@@ -1460,7 +1460,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
       inputElement->GetControllers(getter_AddRefs(controllers));
     else
     {
-      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement =
+      nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement =
         do_QueryInterface(mTextCtrlElement);
       if (textAreaElement) {
         textAreaElement->GetControllers(getter_AddRefs(controllers));

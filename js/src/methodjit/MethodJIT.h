@@ -286,8 +286,8 @@ class CompilerAllocPolicy : public ContextAllocPolicy
     CompilerAllocPolicy(JSContext *cx, Compiler &compiler);
 
     void *malloc_(size_t bytes) { return checkAlloc(ContextAllocPolicy::malloc_(bytes)); }
-    void *realloc_(void *p, size_t bytes) {
-        return checkAlloc(ContextAllocPolicy::realloc_(p, bytes));
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
+        return checkAlloc(ContextAllocPolicy::realloc_(p, oldBytes, bytes));
     }
 };
 

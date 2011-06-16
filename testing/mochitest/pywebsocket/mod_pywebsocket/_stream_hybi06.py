@@ -54,6 +54,8 @@ _NOOP_MASKER = util.NoopMasker()
 
 # Helper functions made public to be used for writing unittests for WebSocket
 # clients.
+
+
 def create_length_header(length, mask):
     """Creates a length header.
 
@@ -169,7 +171,11 @@ def create_close_frame(body, mask=False):
 
 
 class StreamOptions(object):
+    """Holds option values to configure Stream objects."""
+
     def __init__(self):
+        """Constructs StreamOptions."""
+
         self.deflate = False
         self.mask_send = False
         self.unmask_receive = True
@@ -235,6 +241,9 @@ class Stream(StreamBase):
                 'Mask bit on the received frame did\'nt match masking '
                 'configuration for received frames')
 
+        # The spec doesn't disallow putting a value in 0x0-0xFFFF into the
+        # 8-octet extended payload length field (or 0x0-0xFD in 2-octet field).
+        # So, we don't check the range of extended_payload_length.
         if payload_length == 127:
             extended_payload_length = self.receive_bytes(8)
             payload_length = struct.unpack(
@@ -294,7 +303,8 @@ class Stream(StreamBase):
 
         if self._request.client_terminated:
             raise BadOperationException(
-                'Requested receive_message after receiving a closing handshake')
+                'Requested receive_message after receiving a closing '
+                'handshake')
 
         while True:
             # mp_conn.read will block if no bytes are available.
@@ -381,6 +391,9 @@ class Stream(StreamBase):
                     self._request.ws_close_reason = message[2:].decode(
                         'utf-8', 'replace')
 
+                self._logger.debug('Initiated flush read')
+                self.flushread()
+
                 if self._request.server_terminated:
                     self._logger.debug(
                         'Received ack for server-initiated closing '
@@ -415,8 +428,8 @@ class Stream(StreamBase):
                             # inflight_pings contains pings ignored by the
                             # other peer. Just forget them.
                             self._logger.debug(
-                                'Ping %r is acked (%d pings were ignored)' %
-                                (expected_body, len(inflight_pings)))
+                                'Ping %r is acked (%d pings were ignored)',
+                                expected_body, len(inflight_pings))
                             break
                         else:
                             inflight_pings.append(expected_body)
@@ -471,9 +484,9 @@ class Stream(StreamBase):
         if (code == common.STATUS_GOING_AWAY or
             code == common.STATUS_PROTOCOL_ERROR):
             # It doesn't make sense to wait for a close frame if the reason is
-            # protocol error or that the server is going away. For some of other
-            # reasons, it might not make sense to wait for a close frame, but
-            # it's not clear, yet.
+            # protocol error or that the server is going away. For some of
+            # other reasons, it might not make sense to wait for a close frame,
+            # but it's not clear, yet.
             return
 
         # TODO(ukai): 2. wait until the /client terminated/ flag has been set,

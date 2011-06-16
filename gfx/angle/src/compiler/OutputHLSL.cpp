@@ -1880,6 +1880,7 @@ void OutputHLSL::outputLineDirective(int line)
 {
     if ((mContext.compileOptions & SH_LINE_DIRECTIVES) && (line > 0))
     {
+        mBody << "\n";
         mBody << "#line " << line;
 
         if (mContext.sourcePath)
