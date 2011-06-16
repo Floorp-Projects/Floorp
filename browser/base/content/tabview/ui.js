@@ -139,14 +139,6 @@ let UI = {
   // Used to prevent keypress being handled after quitting search mode.
   ignoreKeypressForSearch: false,
 
-  // Variable: creatingNewOrphanTab
-  // Used to keep track of whether we are creating a new oprhan tab or not.
-  creatingNewOrphanTab: false,
-
-  // Variable: _lastOpenedTab
-  // Used to keep track of the last opened tab.
-  _lastOpenedTab: null,
-
   // ----------
   // Function: toString
   // Prints [UI] for debug use
@@ -204,21 +196,20 @@ let UI = {
                 (self._lastClickPositions.y - self.DBLCLICK_OFFSET) <= e.clientY &&
                 (self._lastClickPositions.y + self.DBLCLICK_OFFSET) >= e.clientY) {
               self.setActive(null);
-              self.creatingNewOrphanTab = true;
+              TabItems.creatingNewOrphanTab = true;
+
+              let newTab =
+                gBrowser.loadOneTab("about:blank", { inBackground: true });
 
               let box =
                 new Rect(e.clientX - Math.floor(TabItems.tabWidth/2),
                          e.clientY - Math.floor(TabItems.tabHeight/2),
                          TabItems.tabWidth, TabItems.tabHeight);
-              let newTab =
-                gBrowser.loadOneTab("about:blank", { inBackground: false });
-
               newTab._tabViewTabItem.setBounds(box, true);
               newTab._tabViewTabItem.pushAway(true);
               self.setActive(newTab._tabViewTabItem);
 
-              self.creatingNewOrphanTab = false;
-              // the bounds of tab item is set and we can zoom in now.
+              TabItems.creatingNewOrphanTab = false;
               newTab._tabViewTabItem.zoomIn(true);
 
               self._lastClick = 0;
@@ -736,8 +727,6 @@ let UI = {
       // if it's an app tab, add it to all the group items
       if (tab.pinned)
         GroupItems.addAppTab(tab);
-      else if (self.isTabViewVisible())
-        self._lastOpenedTab = tab;
     };
     
     // TabClose
@@ -872,40 +861,30 @@ let UI = {
   // Function: onTabSelect
   // Called when the user switches from one tab to another outside of the TabView UI.
   onTabSelect: function UI_onTabSelect(tab) {
+    let currentTab = this._currentTab;
     this._currentTab = tab;
 
-    if (this.isTabViewVisible()) {
-      if (!this.restoredClosedTab && this._lastOpenedTab == tab && 
-        tab._tabViewTabItem) {
-        if (!this.creatingNewOrphanTab)
-          tab._tabViewTabItem.zoomIn(true);
-        this._lastOpenedTab = null;
-        return;
+    // if the last visible tab has just been closed, don't show the chrome UI.
+    if (this.isTabViewVisible() &&
+        (this._closedLastVisibleTab || this._closedSelectedTabInTabView ||
+         this.restoredClosedTab)) {
+      if (this.restoredClosedTab) {
+        // when the tab view UI is being displayed, update the thumb for the 
+        // restored closed tab after the page load
+        tab.linkedBrowser.addEventListener("load", function (event) {
+          tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+          TabItems._update(tab);
+        }, true);
       }
-      if (this._closedLastVisibleTab ||
-          (this._closedSelectedTabInTabView && !this.closedLastTabInTabView) ||
-          this.restoredClosedTab) {
-        if (this.restoredClosedTab) {
-          // when the tab view UI is being displayed, update the thumb for the 
-          // restored closed tab after the page load
-          tab.linkedBrowser.addEventListener("load", function (event) {
-            tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-            TabItems._update(tab);
-          }, true);
-        }
-        this._closedLastVisibleTab = false;
-        this._closedSelectedTabInTabView = false;
-        this.closedLastTabInTabView = false;
-        this.restoredClosedTab = false;
-        return;
-      }
+      this._closedLastVisibleTab = false;
+      this._closedSelectedTabInTabView = false;
+      this.restoredClosedTab = false;
+      return;
     }
     // reset these vars, just in case.
     this._closedLastVisibleTab = false;
     this._closedSelectedTabInTabView = false;
-    this.closedLastTabInTabView = false;
     this.restoredClosedTab = false;
-    this._lastOpenedTab = null;
 
     // if TabView is visible but we didn't just close the last tab or
     // selected tab, show chrome.
@@ -917,7 +896,12 @@ let UI = {
     if (this._currentTab != tab)
       return;
 
+    let oldItem = null;
     let newItem = null;
+
+    if (currentTab && currentTab._tabViewTabItem)
+      oldItem = currentTab._tabViewTabItem;
+
     // update the tab bar for the new tab's group
     if (tab && tab._tabViewTabItem) {
       if (!TabItems.reconnectingPaused()) {
@@ -1515,14 +1499,14 @@ let UI = {
         return (!groupItem.hidden && groupItem.getChildren().length > 0);
       });
       // no pinned tabs, no visible groups and no orphaned tabs: open a new
-      // group, a blank tab and return
+      // group. open a blank tab and return
       if (!unhiddenGroups.length && !GroupItems.getOrphanedTabs().length) {
         let emptyGroups = GroupItems.groupItems.filter(function (groupItem) {
           return (!groupItem.hidden && !groupItem.getChildren().length);
         });
         let group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
         if (!gBrowser._numPinnedTabs) {
-          group.newTab(null, { closedLastTab: true });
+          group.newTab();
           return;
         }
       }
