@@ -97,6 +97,7 @@
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
+static const char kJSCachePrefix[] = "jsloader";
 
 /* Some platforms don't have an implementation of PR_MemMap(). */
 #ifndef XP_OS2
@@ -798,130 +799,6 @@ class JSPrincipalsHolder
     JSPrincipals *mPrincipals;
 };
 
-static const char baseName[2][5] = { "gre/", "app/" };
-
-static inline PRBool
-canonicalizeBase(nsCAutoString &spec, nsACString &out, mozilla::Omnijar::Type aType)
-{
-    nsCAutoString base;
-    nsresult rv = mozilla::Omnijar::GetURIString(aType, base);
-
-    if (NS_FAILED(rv) || !base.Length())
-        return PR_FALSE;
-
-    if (base.Compare(spec.get(), PR_FALSE, base.Length()))
-        return PR_FALSE;
-
-    out.Append("/resource/");
-    out.Append(baseName[aType]);
-    out.Append(Substring(spec, base.Length()));
-    return PR_TRUE;
-}
-/**
- * PathifyURI transforms mozilla .js uris into useful zip paths
- * to make it makes it easier to manipulate startup cache entries
- * using standard zip tools.
- * Transformations applied:
- *  * jsloader/ prefix is used to group mozJSComponentLoader cache entries in
- *    a top-level zip directory.
- *  * resource:// URIs are resolved to their corresponding file/jar URI to
- *    canonicalize resources URIs other than gre and app.
- *  * Paths under GRE or APP directory have their base path replaced with
- *    resource/gre or resource/app to avoid depending on install location.
- *  * jar:file:///path/to/file.jar!/sub/path urls are replaced with
- *    /path/to/file.jar/sub/path
- *  * .bin suffix is added to the end of the path to indicate that jsloader/ entries
- *     are binary representations of JS source.
- * For example:
- *  resource://gre/modules/XPCOMUtils.jsm or
- *  file://$GRE_DIR/modules/XPCOMUtils.jsm or
- *  jar:file://$GRE_DIR/omni.jar!/modules/XPCOMUtils.jsm become
- *     jsloader/resource/gre/modules/XPCOMUtils.jsm.bin
- *  file://$PROFILE_DIR/extensions/{uuid}/components/component.js becomes
- *     jsloader/$PROFILE_DIR/extensions/%7Buuid%7D/components/component.js.bin
- *  jar:file://$PROFILE_DIR/extensions/some.xpi!/components/component.js becomes
- *     jsloader/$PROFILE_DIR/extensions/some.xpi/components/component.js.bin
- */
-static nsresult
-PathifyURI(nsIURI *in, nsACString &out)
-{ 
-    PRBool equals;
-    nsresult rv;
-    nsCOMPtr<nsIURI> uri = in;
-    nsCAutoString spec;
-
-    out = "jsloader";
-
-    // Resolve resource:// URIs. At the end of this if/else block, we
-    // have both spec and uri variables identifying the same URI.
-    if (NS_SUCCEEDED(in->SchemeIs("resource", &equals)) && equals) {
-        nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCOMPtr<nsIProtocolHandler> ph;
-        rv = ioService->GetProtocolHandler("resource", getter_AddRefs(ph));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCOMPtr<nsIResProtocolHandler> irph(do_QueryInterface(ph, &rv));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = irph->ResolveURI(in, spec);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = ioService->NewURI(spec, nsnull, nsnull, getter_AddRefs(uri));
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-        rv = in->GetSpec(spec);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    if (!canonicalizeBase(spec, out, mozilla::Omnijar::GRE) &&
-        !canonicalizeBase(spec, out, mozilla::Omnijar::APP)) {
-        if (NS_SUCCEEDED(uri->SchemeIs("file", &equals)) && equals) {
-            nsCOMPtr<nsIFileURL> baseFileURL;
-            baseFileURL = do_QueryInterface(uri, &rv);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsCAutoString path;
-            rv = baseFileURL->GetPath(path);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            out.Append(path);
-        } else if (NS_SUCCEEDED(uri->SchemeIs("jar", &equals)) && equals) {
-            nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri, &rv);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsCOMPtr<nsIURI> jarFileURI;
-            rv = jarURI->GetJARFile(getter_AddRefs(jarFileURI));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsCOMPtr<nsIFileURL> jarFileURL;
-            jarFileURL = do_QueryInterface(jarFileURI, &rv);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsCAutoString path;
-            rv = jarFileURL->GetPath(path);
-            NS_ENSURE_SUCCESS(rv, rv);
-            out.Append(path);
-
-            rv = jarURI->GetJAREntry(path);
-            NS_ENSURE_SUCCESS(rv, rv);
-            out.Append("/");
-            out.Append(path);
-        } else { // Very unlikely
-            nsCAutoString spec;
-            rv = uri->GetSpec(spec);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            out.Append("/");
-            out.Append(spec);
-        }
-    }
-
-    out.Append(".bin");
-    return NS_OK;
-}
-
 /* static */
 nsresult
 mozJSComponentLoader::ReadScript(StartupCache* cache, nsIURI *uri,
@@ -929,8 +806,8 @@ mozJSComponentLoader::ReadScript(StartupCache* cache, nsIURI *uri,
 {
     nsresult rv;
     
-    nsCAutoString spec;
-    rv = PathifyURI(uri, spec);
+    nsCAutoString spec(kJSCachePrefix);
+    rv = NS_PathifyURI(uri, spec);
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsAutoArrayPtr<char> buf;   
@@ -956,8 +833,8 @@ mozJSComponentLoader::WriteScript(StartupCache* cache, JSObject *scriptObj,
 {
     nsresult rv;
 
-    nsCAutoString spec;
-    rv = PathifyURI(uri, spec);
+    nsCAutoString spec(kJSCachePrefix);
+    rv = NS_PathifyURI(uri, spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     LOG(("Writing %s to startupcache\n", spec.get()));
