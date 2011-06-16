@@ -2557,6 +2557,8 @@ class AutoVectorRooter : protected AutoGCRooter
         return true;
     }
 
+    void clear() { vector.clear(); }
+
     bool reserve(size_t newLength) {
         return vector.reserve(newLength);
     }
