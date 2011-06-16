@@ -78,22 +78,18 @@ var messages = [
   {
     type: "object",
     value: cyclicalObject,
-    exception: true
   },
   {
     type: "object",
     value: [null, 2, false, cyclicalObject],
-    exception: true
   },
   {
     type: "object",
     value: cyclicalArray,
-    exception: true
   },
   {
     type: "object",
     value: {foo: 1, bar: cyclicalArray},
-    exception: true
   },
   {
     type: "object",
@@ -103,7 +99,6 @@ var messages = [
   {
     type: "object",
     value: crazyCyclicalObject,
-    exception: true
   },
   {
     type: "object",
