@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, builtinclass, uuid(1c773b30-d1cf-11d2-bd95-00805f8ae3f4)]
+[scriptable, uuid(1c773b30-d1cf-11d2-bd95-00805f8ae3f4)]
 interface nsIDOMEventTarget : nsISupports
 {
   /**
