@@ -254,6 +254,26 @@ body[dir=rtl] #searchSubmit:active {
               0 1px 0 rgba(255,255,255,.5);
 }
 
+#defaultSnippet1,
+#defaultSnippet2 {
+  display: table-row;
+  text-align: start;
+}
+
+#defaultSnippet1::before,
+#defaultSnippet2::before {
+  display: table-cell;
+  vertical-align: middle;
+  -moz-padding-end: 1em;
+}
+
+#defaultSnippet1::before {
+  content: url("chrome://browser/content/aboutHome-snippet1.png");
+}
+#defaultSnippet2::before {
+  content: url("chrome://browser/content/aboutHome-snippet2.png");
+}
+
 #sessionRestoreContainer {
   padding-top: 1.5%;
   text-align: center;
