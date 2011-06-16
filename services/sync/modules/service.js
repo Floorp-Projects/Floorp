@@ -1897,7 +1897,7 @@ WeaveSvc.prototype = {
     }
     else {
       this.syncInterval = hasMobile ? MULTI_MOBILE_SYNC : MULTI_DESKTOP_SYNC;
-      this.syncThreshold = hasMobile ? MULTI_MOBILE_THRESHOLD : MULTI_DESKTOP_THRESHOLD;
+      this.syncThreshold = MULTI_DEVICE_THRESHOLD;
     }
   },
 
