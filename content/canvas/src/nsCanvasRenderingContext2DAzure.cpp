@@ -178,20 +178,20 @@ static PRBool FloatValidate (double f1, double f2, double f3, double f4, double 
 static nsIMemoryReporter *gCanvasAzureMemoryReporter = nsnull;
 static PRInt64 gCanvasAzureMemoryUsed = 0;
 
-static PRInt64 GetCanvasAzureMemoryUsed(void *) {
+static PRInt64 GetCanvasAzureMemoryUsed() {
   return gCanvasAzureMemoryUsed;
 }
 
-// This is MR_OTHER because it's not always clear where in memory the pixels of
-// a canvas are stored.  Furthermore, this memory will be tracked by the
+// This is KIND_OTHER because it's not always clear where in memory the pixels
+// of a canvas are stored.  Furthermore, this memory will be tracked by the
 // underlying surface implementations.  See bug 655638 for details.
 NS_MEMORY_REPORTER_IMPLEMENT(CanvasAzureMemory,
   "canvas-2d-pixel-bytes",
-  MR_OTHER,
-  "Memory used by 2D canvases. Each canvas requires (width * height * 4) "
-  "bytes.",
+  KIND_OTHER,
+  UNITS_BYTES,
   GetCanvasAzureMemoryUsed,
-  nsnull)
+  "Memory used by 2D canvases. Each canvas requires (width * height * 4) "
+  "bytes.")
 
 /**
  ** nsCanvasGradientAzure
