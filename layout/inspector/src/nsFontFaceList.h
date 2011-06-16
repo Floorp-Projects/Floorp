@@ -45,6 +45,7 @@
 #include "gfxFont.h"
 
 class gfxTextRun;
+class nsIFrame;
 
 class nsFontFaceList : public nsIDOMFontFaceList
 {
@@ -56,7 +57,8 @@ public:
   virtual ~nsFontFaceList();
 
   nsresult AddFontsFromTextRun(gfxTextRun* aTextRun,
-                               PRUint32 aOffset, PRUint32 aLength);
+                               PRUint32 aOffset, PRUint32 aLength,
+                               nsIFrame* aFrame);
 
 protected:
   nsInterfaceHashtable<nsPtrHashKey<gfxFontEntry>,nsIDOMFontFace> mFontFaces;
