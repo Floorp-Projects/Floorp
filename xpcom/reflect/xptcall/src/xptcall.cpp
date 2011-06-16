@@ -76,7 +76,7 @@ NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
     NS_ENSURE_TRUE(iim, NS_ERROR_NOT_INITIALIZED);
 
     xptiInterfaceEntry *iie = iim->GetInterfaceEntryForIID(&aIID);
-    if (!iie || !iie->EnsureResolved() || iie->GetBuiltinClassFlag())
+    if (!iie || !iie->EnsureResolved())
         return NS_ERROR_FAILURE;
 
     nsXPTCStubBase* newbase = new nsXPTCStubBase(aOuter, iie);

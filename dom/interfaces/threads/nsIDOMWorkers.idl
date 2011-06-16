@@ -128,13 +128,13 @@ interface nsIWorkerScope : nsIWorkerGlobalScope
   attribute nsIDOMEventListener onclose;
 };
 
-[scriptable, builtinclass, uuid(b90b7561-b5e2-4545-84b0-280dbaaa94ea)]
+[scriptable, uuid(b90b7561-b5e2-4545-84b0-280dbaaa94ea)]
 interface nsIAbstractWorker : nsIDOMEventTarget
 {
   attribute nsIDOMEventListener onerror;
 };
 
-[scriptable, builtinclass, uuid(daf945c3-8d29-4724-8939-dd383f7d27a7)]
+[scriptable, uuid(daf945c3-8d29-4724-8939-dd383f7d27a7)]
 interface nsIWorker : nsIAbstractWorker
 {
   void postMessage(/* in JSObject aMessage */);
