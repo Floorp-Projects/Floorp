@@ -361,15 +361,15 @@ TypeAnalyzer::insertConversions()
 {
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i);
-        MDefinitionIterator itr(block);
-        while (itr.more()) {
-            MInstruction *ins = *itr;
-            if (ins->isPhi() && !specializePhi(ins->toPhi()))
+        MDefinitionIterator iter(block);
+        while (iter.more()) {
+            MInstruction *ins = *iter;
+            if (ins->isPhi() && !specializePhi(ins->toPhi())) {
+                iter.next();
                 continue;
-
+            }
             fixup(ins);
-
-            itr.next();
+            iter.next();
         }
     }
 
