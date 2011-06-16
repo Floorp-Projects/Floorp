@@ -458,16 +458,17 @@ struct JSScript {
   private:
     uint16          version;    /* JS version under which script was compiled */
 
-    size_t          callCount_; /* Number of times the script has been called. */
-
   public:
     uint16          nfixed;     /* number of slots besides stack operands in
                                    slot array */
+  private:
+    size_t          callCount_; /* Number of times the script has been called. */
 
     /*
      * Offsets to various array structures from the end of this script, or
      * JSScript::INVALID_OFFSET if the array has length 0.
      */
+  public:
     uint8           objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
                                        objects */
@@ -575,6 +576,9 @@ struct JSScript {
         return JITScript_Valid;
     }
 #endif
+
+    JS_FRIEND_API(size_t) totalSize();  /* Size of the JSScript and all sections */
+    uint32 numNotes();                  /* Number of srcnote slots in the srcnotes section */
 
     /* Script notes are allocated right after the code. */
     jssrcnote *notes() { return (jssrcnote *)(code + length); }
