@@ -2519,6 +2519,13 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     }
 
+    if (JSObject *proto = v.toObjectOrNull()) {
+        if (proto->isXML()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XML_PROTO_FORBIDDEN);
+            return false;
+        }
+    }
+
     /*
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
@@ -4092,6 +4099,11 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
     if (obj->isNative()) {
         if (!obj->ensureClassReservedSlots(cx))
             return false;
+    }
+
+    if (proto && proto->isXML()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XML_PROTO_FORBIDDEN);
+        return false;
     }
 
     /*
