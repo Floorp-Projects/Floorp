@@ -302,6 +302,23 @@ LIRGenerator::rewriteDefsInSnapshots(MInstruction *ins, MInstruction *old)
 }
 
 bool
+LIRGenerator::visitInstruction(MInstruction *ins)
+{
+    if (!gen->ensureBallast())
+        return false;
+    if (ins->rewritesDef())
+        rewriteDefsInSnapshots(ins, ins->rewrittenDef());
+    if (!ins->accept(this))
+        return false;
+    if (gen->errored())
+        return false;
+#ifdef DEBUG
+    ins->setInWorklistUnchecked();
+#endif
+    return true;
+}
+
+bool
 LIRGenerator::visitBlock(MBasicBlock *block)
 {
     current = LBlock::New(block);
@@ -320,18 +337,9 @@ LIRGenerator::visitBlock(MBasicBlock *block)
 #endif
     }
 
-    for (MInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
-        if (!gen->ensureBallast())
+    for (MInstructionIterator iter = block->begin(); *iter != block->lastIns(); iter++) {
+        if (!visitInstruction(*iter))
             return false;
-        if (iter->rewritesDef())
-            rewriteDefsInSnapshots(*iter, iter->rewrittenDef());
-        if (!iter->accept(this))
-            return false;
-        if (gen->errored())
-            return false;
-#ifdef DEBUG
-        iter->setInWorklistUnchecked();
-#endif
     }
 
     // For each successor, make sure we've assigned a virtual register to any
@@ -348,6 +356,10 @@ LIRGenerator::visitBlock(MBasicBlock *block)
             }
         }
     }
+
+    // Now emit the last instruction, which is some form of branch.
+    if (!visitInstruction(block->lastIns()))
+        return false;
 
     block->assignLir(current);
     return true;
