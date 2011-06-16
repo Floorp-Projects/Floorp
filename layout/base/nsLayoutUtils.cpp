@@ -98,6 +98,8 @@
 #include "gfxDrawable.h"
 #include "gfxUtils.h"
 #include "nsDataHashtable.h"
+#include "nsTextFrame.h"
+#include "nsFontFaceList.h"
 
 #include "nsSVGUtils.h"
 #include "nsSVGIntegrationUtils.h"
@@ -4054,6 +4056,76 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
   } while (childList);
 }
 #endif
+
+/* static */
+nsresult
+nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
+                                     nsFontFaceList* aFontFaceList)
+{
+  NS_PRECONDITION(aFrame, "NULL frame pointer");
+
+  if (aFrame->GetType() == nsGkAtoms::textFrame) {
+    return GetFontFacesForText(aFrame, 0, PR_INT32_MAX, PR_FALSE,
+                               aFontFaceList);
+  }
+
+  while (aFrame) {
+    nsIAtom* childLists[] = { nsnull, nsGkAtoms::popupList };
+    for (int i = 0; i < NS_ARRAY_LENGTH(childLists); ++i) {
+      nsFrameList children(aFrame->GetChildList(childLists[i]));
+      for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
+        nsIFrame* child = e.get();
+        if (child->GetPrevContinuation()) {
+          continue;
+        }
+        child = nsPlaceholderFrame::GetRealFrameFor(child);
+        nsresult rv = GetFontFacesForFrames(child, aFontFaceList);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+    aFrame = GetNextContinuationOrSpecialSibling(aFrame);
+  }
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
+                                   PRInt32 aStartOffset, PRInt32 aEndOffset,
+                                   PRBool aFollowContinuations,
+                                   nsFontFaceList* aFontFaceList)
+{
+  NS_PRECONDITION(aFrame, "NULL frame pointer");
+
+  if (aFrame->GetType() != nsGkAtoms::textFrame) {
+    return NS_OK;
+  }
+
+  nsTextFrame* curr = static_cast<nsTextFrame*>(aFrame);
+  do {
+    PRInt32 offset = curr->GetContentOffset();
+    PRInt32 fstart = NS_MAX(offset, aStartOffset);
+    PRInt32 fend = NS_MIN(curr->GetContentEnd(), aEndOffset);
+    if (fstart >= fend) {
+      continue;
+    }
+
+    // overlapping with the offset we want
+    curr->EnsureTextRun();
+    gfxTextRun* textRun = curr->GetTextRun();
+    NS_ENSURE_TRUE(textRun, NS_ERROR_OUT_OF_MEMORY);
+
+    gfxSkipCharsIterator iter(textRun->GetSkipChars());
+    PRUint32 skipStart = iter.ConvertOriginalToSkipped(fstart - offset);
+    PRUint32 skipEnd = iter.ConvertOriginalToSkipped(fend - offset);
+    aFontFaceList->AddFontsFromTextRun(textRun,
+                                       skipStart, skipEnd - skipStart);
+  } while (aFollowContinuations &&
+           (curr = static_cast<nsTextFrame*>(curr->GetNextContinuation())));
+
+  return NS_OK;
+}
 
 /* static */
 void
