@@ -267,16 +267,17 @@ function dump_table(aName)
 
 /**
  * Checks if an address is found in the database.
- * @param aUrl
- *        Address to look for.
+ * @param aURI
+ *        nsIURI or address to look for.
  * @return place id of the page or 0 if not found
  */
-function page_in_database(aUrl)
+function page_in_database(aURI)
 {
+  let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
   let stmt = DBConn().createStatement(
     "SELECT id FROM moz_places WHERE url = :url"
   );
-  stmt.params.url = aUrl;
+  stmt.params.url = url;
   try {
     if (!stmt.executeStep())
       return 0;
@@ -287,6 +288,30 @@ function page_in_database(aUrl)
   }
 }
 
+/**
+ * Checks how many visits exist for a specified page.
+ * @param aURI
+ *        nsIURI or address to look for.
+ * @return number of visits found.
+ */
+function visits_in_database(aURI)
+{
+  let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
+  let stmt = DBConn().createStatement(
+    "SELECT count(*) FROM moz_historyvisits v "
+  + "JOIN moz_places h ON h.id = v.place_id "
+  + "WHERE url = :url"
+  );
+  stmt.params.url = url;
+  try {
+    if (!stmt.executeStep())
+      return 0;
+    return stmt.getInt64(0);
+  }
+  finally {
+    stmt.finalize();
+  }
+}
 
 /**
  * Removes all bookmarks and checks for correct cleanup
