@@ -1048,7 +1048,15 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   border-top: @border_width_tiny@ solid rgb(205,205,205);
   padding: 0;
   -moz-user-focus: ignore;
+}
+
+.action-buttons,
+#pageactions-container {
   display: inline-block;
+}
+
+#context-commands {
+  display: -moz-box;
 }
 
 .action-button,
@@ -1154,8 +1162,13 @@ pageaction:not([image]) > hbox >.pageaction-image {
   display: none;
 }
 
+#context-header {
+  background-color: @color_background_default@;
+}
+
 #share-title,
 #context-hint {
+  color: @color_text_default@;
   font-size: @font_small@;
   padding: @padding_small@;
 }
