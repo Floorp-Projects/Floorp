@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jsobj.h"
 #include "jstypedarray.h"
 #include "nsAutoPtr.h"
 #include "nsDOMClassInfo.h"
@@ -334,7 +335,7 @@ nsDOMBlobBuilder::AppendBlob(nsIDOMBlob* aBlob)
 nsresult
 nsDOMBlobBuilder::AppendArrayBuffer(JSObject* aBuffer)
 {
-  return AppendVoidPtr(JS_GetArrayBufferData(aBuffer), JS_GetArrayBufferByteLength(aBuffer));
+  return AppendVoidPtr(js::ArrayBuffer::getDataOffset(aBuffer), js::ArrayBuffer::getByteLength(aBuffer));
 }
 
 /* nsIDOMBlob getBlob ([optional] in DOMString contentType); */
