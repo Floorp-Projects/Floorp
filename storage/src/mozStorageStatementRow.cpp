@@ -45,7 +45,6 @@
 #include "mozStorageStatement.h"
 
 #include "jsapi.h"
-#include "jsdate.h"
 
 namespace mozilla {
 namespace storage {

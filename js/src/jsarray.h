@@ -271,26 +271,6 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id,
 JSBool
 js_Array(JSContext *cx, uintN argc, js::Value *vp);
 
-/*
- * Makes a fast clone of a dense array as long as the array only contains
- * primitive values.
- *
- * If the return value is JS_FALSE then clone will not be set.
- *
- * If the return value is JS_TRUE then clone will either be set to the address
- * of a new JSObject or to NULL if the array was not dense or contained values
- * that were not primitives.
- */
-JS_FRIEND_API(JSBool)
-js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone);
-
-/*
- * Returns JS_TRUE if the given object is a dense array that contains only
- * primitive values.
- */
-JS_FRIEND_API(JSBool)
-js_IsDensePrimitiveArray(JSObject *obj);
-
 extern JSBool JS_FASTCALL
 js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i);
 

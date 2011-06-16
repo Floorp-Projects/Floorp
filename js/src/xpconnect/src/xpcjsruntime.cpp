@@ -373,8 +373,10 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
         gcmarker->setMarkColor(XPC_GC_COLOR_GRAY);
     }
     self->TraceXPConnectRoots(trc);
-    if (gcmarker)
+    if (gcmarker) {
+        js::MarkWeakReferences(gcmarker);
         gcmarker->setMarkColor(XPC_GC_COLOR_BLACK);
+    }
 }
 
 static void
@@ -1303,6 +1305,119 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSStack,
     GetJSStack,
     NULL)
 
+static PRInt64
+GetCompartmentScriptsSize(JSCompartment *c)
+{
+    PRInt64 n = 0;
+    for (JSScript *script = (JSScript *)c->scripts.next;
+         &script->links != &c->scripts;
+         script = (JSScript *)script->links.next)
+    {
+        n += script->totalSize(); 
+    }
+    return n;
+}
+
+static PRInt64
+GetJSScripts(void *data)
+{
+    return GetPerCompartmentSize(GetCompartmentScriptsSize);
+}
+
+struct PRInt64Data {
+    PRInt64Data() : n(0) { }
+    PRInt64 n;
+};
+
+void
+GetJSObjectSlotsCallback(JSContext *cx, void *v, size_t traceKind, void *thing)
+{
+    JS_ASSERT(traceKind == JSTRACE_OBJECT);
+    JSObject *obj = (JSObject *)thing;
+    if (obj->hasSlotsArray()) {
+        PRInt64Data *data = (PRInt64Data *) v;
+        data->n += obj->numSlots() * sizeof(js::Value);
+    }
+}
+
+static PRInt64
+GetJSObjectSlots(void *dummy)
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    JSContext *cx = JS_NewContext(rt, 0);
+    if (!cx) {
+        NS_ERROR("couldn't create context for memory tracing");
+        return (PRInt64) -1;
+    }
+
+    PRInt64Data data;
+    js::IterateCells(cx, NULL, js::TraceKindMask(JSTRACE_OBJECT), &data,
+                     *GetJSObjectSlotsCallback);
+
+    JS_DestroyContextNoGC(cx);
+
+    return data.n;
+}
+
+void
+GetJSStringCharsCallback(JSContext *cx, void *v, size_t traceKind, void *thing)
+{
+    JS_ASSERT(traceKind == JSTRACE_STRING);
+    JSString *str = (JSString *)thing;
+    PRInt64Data *data = (PRInt64Data *) v;
+    data->n += str->charsHeapSize();
+}
+ 
+static PRInt64
+GetJSStringChars(void *dummy)
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    JSContext *cx = JS_NewContext(rt, 0);
+    if (!cx) {
+        NS_ERROR("couldn't create context for memory tracing");
+        return (PRInt64) -1;
+    }
+
+    PRInt64Data data;
+    js::IterateCells(cx, NULL, js::TraceKindMask(JSTRACE_STRING), &data,
+                     *GetJSStringCharsCallback);
+
+    JS_DestroyContextNoGC(cx);
+
+    return data.n;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSScripts,
+    "explicit/js/scripts",
+    MR_HEAP,
+    "Memory allocated for JSScripts.  A JSScript is created for each "
+    "user-defined function in a script.  One is also created for "
+    "the top-level code in a script.  Each JSScript includes byte-code and "
+    "various other things.",
+    GetJSScripts,
+    NULL)
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSObjectSlots,
+    "explicit/js/object-slots",
+    MR_HEAP,
+    "Memory allocated for non-fixed object slot arrays, which are used "
+    "to represent object properties.  Some objects also contain a fixed "
+    "number of slots which are stored on the JavaScript heap;  those slots "
+    "are not counted here.",
+    GetJSObjectSlots,
+    NULL)
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSStringChars,
+    "explicit/js/string-chars",
+    MR_HEAP,
+    "Memory allocated to hold string characters.  Not all of this allocated "
+    "memory is necessarily used to hold characters.  Each string also "
+    "includes a header which is stored on the JavaScript heap;  that header "
+    "is not counted here.",
+    GetJSStringChars,
+    NULL)
+
+
 #ifdef JS_METHODJIT
 
 static PRInt64
@@ -1476,6 +1591,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStack));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSScripts));
+        // XXX: these two are disabled due to crashes.  See bug 664647.
+        //NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSObjectSlots));
+        //NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStringChars));
 #ifdef JS_METHODJIT
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitCode));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitData));

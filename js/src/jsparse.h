@@ -1197,7 +1197,7 @@ private:
     JSParseNode *functionDef(JSAtom *name, FunctionType type, uintN lambda);
 
     JSParseNode *condition();
-    JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid,
+    JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
                                    js::TokenKind type = js::TOK_SEMI, JSOp op = JSOP_NOP);
     JSParseNode *generatorExpr(JSParseNode *kid);
     JSBool argumentList(JSParseNode *listNode);

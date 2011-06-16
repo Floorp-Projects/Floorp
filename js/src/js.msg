@@ -350,3 +350,4 @@ MSG_DEF(JSMSG_STRICT_FUNCTION_STATEMENT, 267, 0, JSEXN_SYNTAXERR, "in strict mod
 MSG_DEF(JSMSG_INVALID_FOR_IN_INIT,    268, 0, JSEXN_SYNTAXERR, "for-in loop let declaration may not have an initializer")
 MSG_DEF(JSMSG_CLEARED_SCOPE,          269, 0, JSEXN_TYPEERR, "attempt to run compile-and-go script on a cleared scope")
 MSG_DEF(JSMSG_MALFORMED_ESCAPE,       270, 1, JSEXN_SYNTAXERR, "malformed {0} character escape sequence")
+MSG_DEF(JSMSG_BAD_GENEXP_BODY,        271, 1, JSEXN_SYNTAXERR, "illegal use of {0} in generator expression")

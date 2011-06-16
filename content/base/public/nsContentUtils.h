@@ -1595,17 +1595,6 @@ public:
   static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
 
   /**
-   * Creates a structured clone of the given jsval according to the algorithm
-   * at:
-   *     http://www.whatwg.org/specs/web-apps/current-work/multipage/
-   *                                   urls.html#safe-passing-of-structured-data
-   *
-   * If the function returns a success code then rval is set to point at the
-   * cloned jsval. rval is not set if the function returns a failure code.
-   */
-  static nsresult CreateStructuredClone(JSContext* cx, jsval val, jsval* rval);
-
-  /**
    * Strip all \n, \r and nulls from the given string
    * @param aString the string to remove newlines from [in/out]
    */
