@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Inspector Tree Selection Tests.
+ * The Original Code is Inspector Highlighter Tests.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Rob Campbell <rcampbell@mozilla.com>
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,6 +47,8 @@ function createDocument()
   let h1 = doc.createElement("h1");
   let p1 = doc.createElement("p");
   let p2 = doc.createElement("p");
+  let div2 = doc.createElement("div");
+  let p3 = doc.createElement("p");
   doc.title = "Inspector Tree Selection Test";
   h1.textContent = "Inspector Tree Selection Test";
   p1.textContent = "This is some example text";
@@ -56,39 +59,56 @@ function createDocument()
     "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
     "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
     "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+  p3.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
+    "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
+    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
+    "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
+    "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
+    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
+    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
   div.appendChild(h1);
   div.appendChild(p1);
   div.appendChild(p2);
-  // doc.body.addEventListener("DOMSubtreeModified", , false);
+  div2.appendChild(p3);
   doc.body.appendChild(div);
-  setupSelectionTests();
+  doc.body.appendChild(div2);
+  setupHighlighterTests();
 }
 
-function setupSelectionTests()
+function setupHighlighterTests()
 {
   h1 = doc.querySelectorAll("h1")[0];
   ok(h1, "we have the header node");
-  Services.obs.addObserver(runSelectionTests, "inspector-opened", false);
-  InspectorUI.openInspectorUI();
+  Services.obs.addObserver(runSelectionTests,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
+  InspectorUI.toggleInspectorUI();
 }
 
 function runSelectionTests()
 {
-  Services.obs.removeObserver(runSelectionTests, "inspector-opened", false);
-  InspectorUI.stopInspecting();
-  document.addEventListener("popupshown", performTestComparisons, false);
-  InspectorUI.inspectNode(h1);
+  Services.obs.removeObserver(runSelectionTests,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
+
+  executeSoon(function() {
+    Services.obs.addObserver(performTestComparisons,
+      INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
+  });
 }
 
 function performTestComparisons(evt)
 {
-  if (evt.target.id != "highlighter-panel")
-    return true;
-  document.removeEventListener("popupshown", performTestComparisons, false);
-  is(h1, InspectorUI.selection, "selection matches node");
-  ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
-  is(h1, InspectorUI.highlighter.highlitNode, "highlighter highlighting correct node");
-  finishUp();
+  Services.obs.removeObserver(performTestComparisons,
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+
+  InspectorUI.stopInspecting();
+  ok(InspectorUI.highlighter.isHighlighting, "highlighter is highlighting");
+  is(InspectorUI.highlighter.highlitNode, h1, "highlighter matches selection")
+  is(InspectorUI.selection, h1, "selection matches node");
+  is(InspectorUI.selection, InspectorUI.highlighter.highlitNode, "selection matches highlighter");
+
+  doc = h1 = null;
+  executeSoon(finishUp);
 }
 
 function finishUp() {
@@ -106,7 +126,7 @@ function test()
     doc = content.document;
     waitForFocus(createDocument, content);
   }, true);
-  
+
   content.location = "data:text/html,basic tests for inspector";
 }
 

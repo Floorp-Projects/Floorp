@@ -1005,9 +1005,11 @@ pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
 
-// Disable the error console and inspector
+// Disable the error console
 pref("devtools.errorconsole.enabled", false);
-pref("devtools.inspector.enabled", false);
+
+// Enable the Inspector
+pref("devtools.inspector.enabled", true);
 
 // Enable the Scratchpad tool.
 pref("devtools.scratchpad.enabled", true);
