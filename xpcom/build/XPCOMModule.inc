@@ -10,6 +10,7 @@
     COMPONENT(BINARYOUTPUTSTREAM, nsBinaryOutputStreamConstructor)
     COMPONENT(STORAGESTREAM, nsStorageStreamConstructor)
     COMPONENT(VERSIONCOMPARATOR, nsVersionComparatorImplConstructor)
+    COMPONENT(SCRIPTABLEBASE64ENCODER, nsScriptableBase64EncoderConstructor)
     COMPONENT(PIPE, nsPipeConstructor)
 
     COMPONENT(PROPERTIES, nsPropertiesConstructor)

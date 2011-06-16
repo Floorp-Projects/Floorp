@@ -8381,7 +8381,7 @@ CSSParserImpl::ParseAnimation()
     // Must check 'animation-name' after 'animation-timing-function',
     // 'animation-direction', 'animation-fill-mode',
     // 'animation-iteration-count', and 'animation-play-state' since
-    // 'animation-property' accepts any keyword.
+    // 'animation-name' accepts any keyword.
     eCSSProperty_animation_name
   };
   static const PRUint32 numProps = NS_ARRAY_LENGTH(kAnimationProperties);

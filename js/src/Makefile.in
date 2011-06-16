@@ -187,6 +187,9 @@ CPPSRCS		= \
 		Stack.cpp \
 		$(NULL)
 
+# Changes to internal header files, used externally, massively slow down
+# browser builds.  Don't add new files here unless you know what you're
+# doing!
 INSTALLED_HEADERS = \
 		js-config.h \
 		jsautocfg.h \
@@ -224,7 +227,6 @@ INSTALLED_HEADERS = \
 		jslock.h \
 		jslong.h \
 		jsmath.h \
-		jsnum.h \
 		jsobj.h \
 		jsobjinlines.h \
 		json.h \

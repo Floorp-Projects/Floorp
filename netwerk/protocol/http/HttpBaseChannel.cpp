@@ -81,12 +81,17 @@ HttpBaseChannel::HttpBaseChannel()
   , mChannelIsForDownload(PR_FALSE)
   , mTracingEnabled(PR_TRUE)
   , mTimingEnabled(PR_FALSE)
+  , mSuspendCount(0)
   , mRedirectedCachekeys(nsnull)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
 
   // grab a reference to the handler to ensure that it doesn't go away.
   NS_ADDREF(gHttpHandler);
+
+  // Subfields of unions cannot be targeted in an initializer list
+  mSelfAddr.raw.family = PR_AF_UNSPEC;
+  mPeerAddr.raw.family = PR_AF_UNSPEC;
 }
 
 HttpBaseChannel::~HttpBaseChannel()
@@ -1379,6 +1384,28 @@ HttpBaseChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel helpers
 //-----------------------------------------------------------------------------
+
+void
+HttpBaseChannel::DoNotifyListener()
+{
+  // Make sure mIsPending is set to PR_FALSE. At this moment we are done from
+  // the point of view of our consumer and we have to report our self
+  // as not-pending.
+  if (mListener) {
+    mListener->OnStartRequest(this, mListenerContext);
+    mIsPending = PR_FALSE;
+    mListener->OnStopRequest(this, mListenerContext, mStatus);
+    mListener = 0;
+    mListenerContext = 0;
+  } else {
+    mIsPending = PR_FALSE;
+  }
+  // We have to make sure to drop the reference to the callbacks too
+  mCallbacks = nsnull;
+  mProgressSink = nsnull;
+
+  DoNotifyListenerCleanup();
+}
 
 void
 HttpBaseChannel::AddCookiesToRequest()

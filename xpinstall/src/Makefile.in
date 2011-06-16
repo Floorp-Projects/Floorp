@@ -71,11 +71,4 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public
 
-EXTRA_DSO_LDOPTS = \
-		$(MOZ_JS_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(ZLIB_LIBS) \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

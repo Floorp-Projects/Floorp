@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const ss = Cc["@mozilla.org/browser/sessionstore;1"].
+var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
 
 const stateBackup = ss.getBrowserState();

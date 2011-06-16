@@ -257,26 +257,6 @@ js_ArrayInfo(JSContext *cx, uintN argc, jsval *vp);
 extern JSBool
 js_ArrayCompPush(JSContext *cx, JSObject *obj, const js::Value &vp);
 
-/*
- * Fast dense-array-to-buffer conversion for use by canvas.
- *
- * If the array is a dense array, fill [offset..offset+count] values into
- * destination, assuming that types are consistent.  Return JS_TRUE if
- * successful, otherwise JS_FALSE -- note that the destination buffer may be
- * modified even if JS_FALSE is returned (e.g. due to finding an inappropriate
- * type later on in the array).  If JS_FALSE is returned, no error conditions
- * or exceptions are set on the context.
- *
- * This method succeeds if each element of the array is an integer or a double.
- * Values outside the 0-255 range are clamped to that range.  Double values are
- * converted to integers in this range by clamping and then rounding to
- * nearest, ties to even.
- */
-
-JS_FRIEND_API(JSBool)
-js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
-                                JSUint8 *dest);
-
 JSBool
 js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);
 

@@ -506,7 +506,7 @@ nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
         // Mask off any bits that are not part of the nsIRequest flags.
         // in particular, nsIChannel::LOAD_DOCUMENT_URI...
         //
-        mLoadFlags &= 0xFFFF;
+        mLoadFlags &= nsIRequest::LOAD_REQUESTMASK;
     }
     // Else, do not change the group's load flags (see bug 95981)
     return NS_OK;

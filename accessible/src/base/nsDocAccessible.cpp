@@ -138,19 +138,21 @@ nsDocAccessible::~nsDocAccessible()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocAccessible)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNotificationController,
                                                   NotificationController)
 
   PRUint32 i, length = tmp->mChildDocuments.Length();
   for (i = 0; i < length; ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildDocuments[i]");
-    cb.NoteXPCOMChild(static_cast<nsIAccessible*>(tmp->mChildDocuments[i].get()));
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mChildDocuments[i],
+                                                         nsIAccessible)
   }
 
   CycleCollectorTraverseCache(tmp->mAccessibleCache, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mNotificationController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mChildDocuments)
   tmp->mDependentIDsHash.Clear();
@@ -1919,9 +1921,12 @@ nsDocAccessible::CacheChildrenInSubtree(nsAccessible* aRoot)
 {
   aRoot->EnsureChildren();
 
-  PRUint32 count = aRoot->GetChildCount();
-  for (PRUint32 idx = 0; idx < count; idx++)  {
-    nsAccessible* child = aRoot->GetChildAt(idx);
+  // Make sure we create accessible tree defined in DOM only, i.e. if accessible
+  // provides specific tree (like XUL trees) then tree creation is handled by
+  // this accessible.
+  PRUint32 count = aRoot->ContentChildCount();
+  for (PRUint32 idx = 0; idx < count; idx++) {
+    nsAccessible* child = aRoot->ContentChildAt(idx);
     NS_ASSERTION(child, "Illicit tree change while tree is created!");
     // Don't cross document boundaries.
     if (child && child->IsContent())
@@ -1935,9 +1940,9 @@ nsDocAccessible::UncacheChildrenInSubtree(nsAccessible* aRoot)
   if (aRoot->IsElement())
     RemoveDependentIDsFor(aRoot);
 
-  PRUint32 count = aRoot->GetCachedChildCount();
+  PRUint32 count = aRoot->ContentChildCount();
   for (PRUint32 idx = 0; idx < count; idx++)
-    UncacheChildrenInSubtree(aRoot->GetCachedChildAt(idx));
+    UncacheChildrenInSubtree(aRoot->ContentChildAt(idx));
 
   if (aRoot->IsPrimaryForNode() &&
       mNodeToAccessibleMap.Get(aRoot->GetNode()) == aRoot)
@@ -1951,9 +1956,9 @@ nsDocAccessible::ShutdownChildrenInSubtree(nsAccessible* aAccessible)
   // child gets shutdown then it removes itself from children array of its
   //parent. Use jdx index to process the cases if child is not attached to the
   // parent and as result doesn't remove itself from its children.
-  PRUint32 count = aAccessible->GetCachedChildCount();
+  PRUint32 count = aAccessible->ContentChildCount();
   for (PRUint32 idx = 0, jdx = 0; idx < count; idx++) {
-    nsAccessible* child = aAccessible->GetCachedChildAt(jdx);
+    nsAccessible* child = aAccessible->ContentChildAt(jdx);
     if (!child->IsBoundToParent()) {
       NS_ERROR("Parent refers to a child, child doesn't refer to parent!");
       jdx++;

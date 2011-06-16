@@ -1,0 +1,43 @@
+<html>
+<head>
+  <script type="text/javascript">
+function assert(cond, msg) { if (!cond) { throw msg; } }
+window.onload = function() {
+    try {
+        var ctx = document.getElementById("c1").getContext("2d");
+
+        assert("nonzero" == ctx.mozFillRule,
+               "Default fillRule is 'nonzero'");
+
+        ctx.mozFillRule = "evenodd";
+        assert("evenodd" == ctx.mozFillRule,
+               "fillRule understands 'evenodd'");
+        ctx.mozFillRule = "nonzero";
+
+        ctx.mozFillRule = "garbageLSKJDF 29879234";
+        assert("nonzero" == ctx.mozFillRule,
+               "Garbage fillRule string has no effect");
+
+        ctx.mozFillRule = "evenodd";
+        ctx.mozFillRule = "garbageLSKJDF 29879234";
+        assert("evenodd" == ctx.mozFillRule,
+               "Garbage fillRule string has no effect");
+        ctx.mozFillRule = "nonzero";
+
+        ctx.save();
+        ctx.mozFillRule = "evenodd";
+        ctx.restore();
+        assert("nonzero" == ctx.mozFillRule,
+               "fillRule was saved then restored");
+    } catch (e) {
+        document.body.innerHTML = "FAIL: "+ e.toString();
+        return;
+    }
+    document.body.innerHTML = "Pass";
+}
+  </script>
+</head>
+<body>
+  <div><canvas id="c1" width="300" height="300"></canvas></div>
+</body>
+</html>

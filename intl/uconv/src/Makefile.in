@@ -86,19 +86,6 @@ nsUTF8ToUnicodeSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 endif
 endif
 
-EXTRA_DSO_LDOPTS = \
-		../util/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_NECKO_UTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
-LOCAL_INCLUDES	= -I$(srcdir)/../util
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-endif
-
 LOCAL_INCLUDES	= -I$(srcdir)/../util \
 		  -I$(srcdir)/../ucvlatin \
 		  -I$(srcdir)/../ucvibm \

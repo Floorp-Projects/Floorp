@@ -28,5 +28,6 @@ notification .outset {
 }
 
 notification .buttons {
-  padding: @padding_normal@;
+  display: block; /* allow the buttons to wrap */
+  padding: @padding_normal@ @padding_normal@ 0 @padding_normal@;
 }

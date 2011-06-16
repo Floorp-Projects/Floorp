@@ -43,7 +43,6 @@
 #endif
 #include "prlog.h"
 
-#include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsReadableUtils.h"
 #include "nsExpirationTracker.h"
@@ -66,6 +65,7 @@
 #include "nsUnicodeRange.h"
 #include "nsCompressedCharMap.h"
 #include "nsStyleConsts.h"
+#include "mozilla/Preferences.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
@@ -2178,8 +2178,6 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     }
     groupAtom->ToUTF8String(groupString);
 
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
     nsPromiseFlatString families(aFamilies);
     const PRUnichar *p, *p_end;
     families.BeginReading(p);
@@ -2187,7 +2185,6 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     nsAutoString family;
     nsCAutoString lcFamily;
     nsAutoString genericFamily;
-    nsXPIDLCString value;
 
     while (p < p_end) {
         while (nsCRT::IsAsciiSpace(*p) || *p == kComma)
@@ -2239,12 +2236,10 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                 prefName.AppendLiteral(".");
                 prefName.Append(groupString);
 
-                // prefs file always uses (must use) UTF-8 so that we can use
-                // |GetCharPref| and treat the result as a UTF-8 string.
-                nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
-                if (NS_SUCCEEDED(rv)) {
+                nsAdoptingString value = Preferences::GetString(prefName.get());
+                if (value) {
                     CopyASCIItoUTF16(lcFamily, genericFamily);
-                    CopyUTF8toUTF16(value, family);
+                    family = value;
                 }
             } else {
                 generic = PR_FALSE;
@@ -2293,10 +2288,9 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             prefName.Append(lcFamily);
             prefName.AppendLiteral(".");
             prefName.Append(groupString);
-            nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
-            if (NS_SUCCEEDED(rv)) {
-                ForEachFontInternal(NS_ConvertUTF8toUTF16(value),
-                                    groupAtom, PR_FALSE, aResolveFontName,
+            nsAdoptingString value = Preferences::GetString(prefName.get());
+            if (value) {
+                ForEachFontInternal(value, groupAtom, PR_FALSE, aResolveFontName,
                                     fc, closure);
             }
         }
