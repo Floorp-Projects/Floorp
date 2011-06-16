@@ -58,6 +58,9 @@ NS_NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 NS_EXPORT nsresult
 NS_NewBufferFromStorageStream(nsIStorageStream *storageStream, 
                               char** buffer, PRUint32* len);
+
+NS_EXPORT nsresult
+NS_PathifyURI(nsIURI *in, nsACString &out);
 }
 }
 #endif //nsStartupCacheUtils_h_
