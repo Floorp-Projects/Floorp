@@ -301,6 +301,11 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint32          flags;          /* statement state flags, see above */
     uint32          bodyid;         /* block number of program/function body */
     uint32          blockidGen;     /* preincremented block number generator */
+    uint32          parenDepth;     /* paren-nesting depth */
+    uint32          yieldCount;     /* number of |yield| tokens encountered at
+                                       non-zero depth in current paren tree */
+    uint32          argumentsCount; /* number of |arguments| references encountered
+                                       at non-zero depth in current paren tree */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
     JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
     JSObjectBox     *blockChainBox; /* compile time block scope chain (NB: one
@@ -310,6 +315,12 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                        (block with its own lexical scope)  */
     JSAtomList      decls;          /* function, const, and var declarations */
     js::Parser      *parser;        /* ptr to common parsing and lexing data */
+    JSParseNode     *yieldNode;     /* parse node for a yield expression that might
+                                       be an error if we turn out to be inside a
+                                       generator expression */
+    JSParseNode     *argumentsNode; /* parse node for an arguments variable that
+                                       might be an error if we turn out to be
+                                       inside a generator expression */
 
   private:
     union {
@@ -358,9 +369,11 @@ struct JSTreeContext {              /* tree context for semantic checks */
     void trace(JSTracer *trc);
 
     JSTreeContext(js::Parser *prs)
-      : flags(0), bodyid(0), blockidGen(0), topStmt(NULL), topScopeStmt(NULL),
-        blockChainBox(NULL), blockNode(NULL), parser(prs), scopeChain_(NULL),
-        parent(prs->tc), staticLevel(0), funbox(NULL), functionList(NULL),
+      : flags(0), bodyid(0), blockidGen(0), parenDepth(0), yieldCount(0), argumentsCount(0),
+        topStmt(NULL), topScopeStmt(NULL),
+        blockChainBox(NULL), blockNode(NULL), parser(prs),
+        yieldNode(NULL), argumentsNode(NULL),
+        scopeChain_(NULL), parent(prs->tc), staticLevel(0), funbox(NULL), functionList(NULL),
         innermostWith(NULL), bindings(prs->context, prs->emptyCallShape),
         sharpSlotBase(-1)
     {
@@ -458,11 +471,18 @@ struct JSTreeContext {              /* tree context for semantic checks */
         return flags & TCF_FUN_MUTATES_PARAMETER;
     }
 
-    void noteArgumentsUse() {
+    void noteArgumentsUse(JSParseNode *pn) {
         JS_ASSERT(inFunction());
+        countArgumentsUse(pn);
         flags |= TCF_FUN_USES_ARGUMENTS;
         if (funbox)
             funbox->node->pn_dflags |= PND_FUNARG;
+    }
+
+    void countArgumentsUse(JSParseNode *pn) {
+        JS_ASSERT(pn->pn_atom == parser->context->runtime->atomState.argumentsAtom);
+        argumentsCount++;
+        argumentsNode = pn;
     }
 
     bool needsEagerArguments() const {
