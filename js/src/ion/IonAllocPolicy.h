@@ -59,8 +59,12 @@ class IonAllocPolicy
         JS_ARENA_ALLOCATE(p, &cx->tempPool, bytes);
         return p;
     }
-    void *realloc_(void *p, size_t bytes) {
-        return malloc_(bytes);
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
+        void *n = malloc_(bytes);
+        if (!n)
+            return n;
+        memcpy(n, p, Min(oldBytes, bytes));
+        return n;
     }
     void free_(void *p) {
     }
