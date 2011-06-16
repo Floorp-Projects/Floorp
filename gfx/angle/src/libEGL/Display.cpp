@@ -18,8 +18,16 @@
 
 #include "libEGL/main.h"
 
-#define REF_RAST 0        // Can also be enabled by defining FORCE_REF_RAST in the project's predefined macros
-#define ENABLE_D3D9EX 1   // Enables use of the IDirect3D9Ex interface, when available
+// Can also be enabled by defining FORCE_REF_RAST in the project's predefined macros
+#define REF_RAST 0
+
+// The "Debug This Pixel..." feature in PIX often fails when using the
+// D3D9Ex interfaces.  In order to get debug pixel to work on a Vista/Win 7
+// machine, define "ANGLE_ENABLE_D3D9EX=0" in your project file.
+#if !defined(ANGLE_ENABLE_D3D9EX)
+// Enables use of the IDirect3D9Ex interface, when available
+#define ANGLE_ENABLE_D3D9EX 1
+#endif // !defined(ANGLE_ENABLE_D3D9EX)
 
 namespace egl
 {
@@ -70,7 +78,7 @@ bool Display::initialize()
     // Use Direct3D9Ex if available. Among other things, this version is less
     // inclined to report a lost context, for example when the user switches
     // desktop. Direct3D9Ex is available in Windows Vista and later if suitable drivers are available.
-    if (ENABLE_D3D9EX && Direct3DCreate9ExPtr && SUCCEEDED(Direct3DCreate9ExPtr(D3D_SDK_VERSION, &mD3d9Ex)))
+    if (ANGLE_ENABLE_D3D9EX && Direct3DCreate9ExPtr && SUCCEEDED(Direct3DCreate9ExPtr(D3D_SDK_VERSION, &mD3d9Ex)))
     {
         ASSERT(mD3d9Ex);
         mD3d9Ex->QueryInterface(IID_IDirect3D9, reinterpret_cast<void**>(&mD3d9));
@@ -535,7 +543,7 @@ EGLSurface Display::createOffscreenSurface(EGLConfig config, HANDLE shareHandle,
         return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
     }
 
-    if (textureFormat != EGL_NO_TEXTURE && !getNonPow2TextureSupport() && (!gl::isPow2(width) || !gl::isPow2(height)))
+    if (textureFormat != EGL_NO_TEXTURE && !getNonPower2TextureSupport() && (!gl::isPow2(width) || !gl::isPow2(height)))
     {
         return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
     }
@@ -581,6 +589,12 @@ EGLContext Display::createContext(EGLConfig configHandle, const gl::Context *sha
     }
     else if (isDeviceLost())   // Lost device
     {
+        // Release surface resources to make the Reset() succeed
+        for (SurfaceSet::iterator surface = mSurfaceSet.begin(); surface != mSurfaceSet.end(); surface++)
+        {
+            (*surface)->release();
+        }
+
         if (!resetDevice())
         {
             return NULL;
@@ -603,29 +617,14 @@ EGLContext Display::createContext(EGLConfig configHandle, const gl::Context *sha
 
 void Display::destroySurface(egl::Surface *surface)
 {
-    if (surface == egl::getCurrentDrawSurface() || surface == egl::getCurrentReadSurface())
-    {
-        surface->setPendingDestroy();
-    }
-    else
-    {
-        delete surface;
-        mSurfaceSet.erase(surface);
-    }
+    delete surface;
+    mSurfaceSet.erase(surface);
 }
 
 void Display::destroyContext(gl::Context *context)
 {
     glDestroyContext(context);
     mContextSet.erase(context);
-
-    if (mContextSet.empty() && mDevice && isDeviceLost())   // Last context of a lost device
-    {
-        for (SurfaceSet::iterator surface = mSurfaceSet.begin(); surface != mSurfaceSet.end(); surface++)
-        {
-            (*surface)->release();
-        }	
-    }
 }
 
 bool Display::isInitialized() const
@@ -645,7 +644,7 @@ bool Display::isValidContext(gl::Context *context)
 
 bool Display::isValidSurface(egl::Surface *surface)
 {
-    return mSurfaceSet.find(surface) != mSurfaceSet.end() && !surface->isPendingDestroy();
+    return mSurfaceSet.find(surface) != mSurfaceSet.end();
 }
 
 bool Display::hasExistingWindowSurface(HWND window)
@@ -792,11 +791,6 @@ bool Display::getLuminanceAlphaTextureSupport()
     return SUCCEEDED(mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, 0, D3DRTYPE_TEXTURE, D3DFMT_A8L8));
 }
 
-bool Display::getNonPow2TextureSupport()
-{
-    return !(mDeviceCaps.TextureCaps & (D3DPTEXTURECAPS_POW2 | D3DPTEXTURECAPS_NONPOW2CONDITIONAL));
-}
-
 D3DPOOL Display::getBufferPool(DWORD usage) const
 {
     if (mD3d9Ex != NULL)
@@ -884,6 +878,13 @@ bool Display::getVertexTextureSupport() const
     HRESULT result = mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, D3DUSAGE_QUERY_VERTEXTEXTURE, D3DRTYPE_TEXTURE, D3DFMT_R16F);
 
     return SUCCEEDED(result);
+}
+
+bool Display::getNonPower2TextureSupport() const
+{
+    return !(mDeviceCaps.TextureCaps & D3DPTEXTURECAPS_POW2) &&
+           !(mDeviceCaps.TextureCaps & D3DPTEXTURECAPS_CUBEMAP_POW2) &&
+           !(mDeviceCaps.TextureCaps & D3DPTEXTURECAPS_NONPOW2CONDITIONAL);
 }
 
 }

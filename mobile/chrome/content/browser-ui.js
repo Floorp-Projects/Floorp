@@ -364,7 +364,7 @@ var BrowserUI = {
           return true;
         case -1: {
           let threshold = Services.prefs.getIntPref("widget.ime.android.fullscreen_threshold");
-          let dpi = Util.getWindowUtils(window).displayDPI;
+          let dpi = Util.displayDPI;
           return (window.innerHeight * 100 < threshold * dpi);
         }
       }

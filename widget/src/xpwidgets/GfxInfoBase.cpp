@@ -50,7 +50,6 @@
 #include "nsIObserverService.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
 #include "nsTArray.h"
 #include "mozilla/Preferences.h"
@@ -217,12 +216,8 @@ RemovePrefForDriverVersion()
 static bool
 BlacklistNodeToTextValue(nsIDOMNode *aBlacklistNode, nsAString& aValue)
 {
-  nsCOMPtr<nsIDOM3Node> dom3 = do_QueryInterface(aBlacklistNode);
-  if (!dom3)
-    return false;
-
   nsAutoString value;
-  if (NS_FAILED(dom3->GetTextContent(value)))
+  if (NS_FAILED(aBlacklistNode->GetTextContent(value)))
     return false;
 
   value.Trim(" \t\r\n");

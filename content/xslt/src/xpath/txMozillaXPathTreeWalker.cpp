@@ -39,7 +39,6 @@
 #include "txXPathTreeWalker.h"
 #include "nsIAtom.h"
 #include "nsIAttribute.h"
-#include "nsIDOM3Node.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -468,16 +467,11 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
     }
 
     if (aNode.isContent()) {
-        if (aNode.mNode->IsElement()) {
-            aName = aNode.Content()->NodeInfo()->QualifiedNameCorrectedCase();
-            return;
-        }
-
-        if (aNode.mNode->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
-            // PIs don't have a nodeinfo but do have a name
-            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mNode);
-            node->GetNodeName(aName);
-
+        // Elements and PIs have a name
+        if (aNode.mNode->IsElement() ||
+            aNode.mNode->NodeType() ==
+            nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
+            aName = aNode.Content()->NodeName();
             return;
         }
 
@@ -487,11 +481,6 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
     }
 
     aNode.Content()->GetAttrNameAt(aNode.mIndex)->GetQualifiedName(aName);
-
-    // Check for html
-    if (aNode.Content()->IsHTML()) {
-        ToUpperCase(aName);
-    }
 }
 
 /* static */
@@ -525,11 +514,7 @@ txXPathNodeUtils::getNodeType(const txXPathNode& aNode)
     }
 
     if (aNode.isContent()) {
-        PRUint16 type;
-        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mNode);
-        node->GetNodeType(&type);
-
-        return type;
+        return aNode.mNode->NodeType();
     }
 
     return txXPathNodeType::ATTRIBUTE_NODE;
@@ -627,13 +612,7 @@ txXPathNodeUtils::getXSLTId(const txXPathNode& aNode,
 void
 txXPathNodeUtils::getBaseURI(const txXPathNode& aNode, nsAString& aURI)
 {
-    nsCOMPtr<nsIDOM3Node> node = do_QueryInterface(aNode.mNode);
-    if (node) {
-        node->GetBaseURI(aURI);
-    }
-    else {
-        aURI.Truncate();
-    }
+    aNode.mNode->GetDOMBaseURI(aURI);
 }
 
 /* static */

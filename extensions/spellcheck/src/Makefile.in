@@ -65,13 +65,6 @@ CPPSRCS		= \
 SHARED_LIBRARY_LIBS += ../hunspell/src/$(LIB_PREFIX)hunspell_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../hunspell/src
 
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_HUNSPELL_LIBS) \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \

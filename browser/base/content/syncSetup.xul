@@ -229,7 +229,8 @@
   </wizardpage>
 
   <wizardpage label="&setup.captchaPage2.title.label;"
-              onextra1="gSyncSetup.onSyncOptions()">
+              onextra1="gSyncSetup.onSyncOptions()"
+              onpageshow="gSyncSetup.onPageShow();">
     <vbox flex="1" align="center">
       <browser height="150"
                width="450"

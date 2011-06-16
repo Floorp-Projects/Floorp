@@ -18,11 +18,11 @@
       // <embed> elements.
 
       // * FIRST TWO ROWS: <img> has width=auto height=auto
-      //  - Each <img> renders w/ height = 20% * body_height = .2*600 = 120px
-      //  - Synthesized viewBox has height = 20% * viewport_height = .2*120 = 24
+      //  - Each <img> renders w/ height = 150px (default)
+      //  - Synthesized viewBox has height = 20% * viewport_height = .2*150 = 30
       //  - <img> & viewBox both get width=20px, from <svg> width attr
-      svgParams.viewBox = [0, 0, 20, 24],
-      appendSVGSubArrayWithParams(svgParams, "embed", "20px", "120px");
+      svgParams.viewBox = [0, 0, 20, 30],
+      appendSVGSubArrayWithParams(svgParams, "embed", "20px", "150px");
 
       // * SECOND TWO ROWS: <img> has width=auto, height=20px
       //  - <img> now renders w/ height = 20px (imposed by <img> height attr)
@@ -34,8 +34,8 @@
       // * THIRD TWO ROWS: <img> has width=30px height=auto
       // Calculations are as with "FIRST TWO ROWS", except <img> now imposes
       // width="30px".
-      svgParams.viewBox = [0, 0, 20, 24],
-      appendSVGSubArrayWithParams(svgParams, "embed", "30px", "120px");
+      svgParams.viewBox = [0, 0, 20, 30],
+      appendSVGSubArrayWithParams(svgParams, "embed", "30px", "150px");
 
       // * FOURTH TWO ROWS: <img> has width=30px height=20px
       // Calculations are as with "SECOND TWO ROWS", except <img> now imposes

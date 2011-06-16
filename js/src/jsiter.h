@@ -214,7 +214,6 @@ js_NewGenerator(JSContext *cx);
 inline js::StackFrame *
 js_FloatingFrameIfGenerator(JSContext *cx, js::StackFrame *fp)
 {
-    JS_ASSERT(cx->stack.contains(fp));
     if (JS_UNLIKELY(fp->isGeneratorFrame()))
         return cx->generatorFor(fp)->floatingFrame();
     return fp;

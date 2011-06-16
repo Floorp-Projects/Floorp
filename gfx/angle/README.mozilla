@@ -7,18 +7,20 @@ Current revision: r653
 In this order:
   angle-nspr-misc.patch - don't bother with ANGLE_OS detection with NSPR
   angle-renaming.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
-  angle-makefiles.patch - Mozilla Makefiles for ANGLE
+  angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
+
+In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
 
 == How to update this ANGLE copy ==
 
 1. Unapply patches
 2. Apply diff with new ANGLE version
-3. Reapply patches. Check for newly created/deleted files.
-4. For each file creation/deletetion recorded in step 3, update our makefiles (angle-makefiles.patch) accordingly
+3. Reapply patches.
+4. Check for changes in src/build_angle.gyp, update our Makefile.in files accordingly. Note that a single file may be recorded in more than one Makefile.
 
 == Visual Studio Solution Files ==
 
-Ignore these. We don't use them anymore. We use custom Makefiles (see angle-makefiles.patch)
+Ignore these. We don't use them anymore. We use custom Makefiles.
 
 == Generated parser code==
 

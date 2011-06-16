@@ -76,11 +76,3 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DZLIB_DLL=1
 endif
-
-EXTRA_DSO_LDOPTS += \
-		$(LIBS_DIR) \
-		$(ZLIB_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
-

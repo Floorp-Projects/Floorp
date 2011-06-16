@@ -63,11 +63,8 @@ CPPSRCS		= \
 
 EXPORTS         = nsTraceMalloc.h
 
-EXTRA_DSO_LDOPTS = $(NSPR_LIBS) $(XPCOM_LIBS)
-
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS		+= nsDebugHelpWin32.cpp nsWinTraceMalloc.cpp
-OS_LIBS		+= shell32.lib ole32.lib uuid.lib imagehlp.lib
 endif
 
 DEFINES		+= -DMOZ_NO_MOZALLOC

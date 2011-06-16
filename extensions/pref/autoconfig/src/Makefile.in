@@ -65,13 +65,6 @@ DEFINES          += -DMOZ_LDAP_XPCOM
 CPPSRCS          += nsLDAPSyncQuery.cpp
 endif
 
-
-EXTRA_DSO_LDOPTS = \
-                   $(LIBS_DIR) \
-                   $(MOZ_JS_LIBS) \
-                   $(MOZ_COMPONENT_LIBS) \
-                   $(NULL)
-
 AUTOCFG_JS_EXPORTS = \
 		$(srcdir)/prefcalls.js \
 		$(NULL)

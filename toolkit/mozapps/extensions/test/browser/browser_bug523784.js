@@ -3,8 +3,6 @@
 
 const URI_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-
 // This tests that the blocklist dialog still affects soft-blocked add-ons
 // if the user clicks the "Restart Later" button. It also ensures that the
 // "Cancel" button is correctly renamed (to "Restart Later").

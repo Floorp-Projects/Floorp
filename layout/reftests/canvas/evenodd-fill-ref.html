@@ -1,0 +1,17 @@
+<html>
+<head>
+  <script type="text/javascript">
+window.onload = function() {
+    var ctx = document.getElementById("c1").getContext("2d");
+    ctx.rect(50, 50, 200, 50);
+    ctx.rect(50, 50, 50, 200);
+    ctx.rect(250, 250, -200, -50);
+    ctx.rect(250, 250, -50, -200);
+    ctx.fill();
+}
+  </script>
+</head>
+<body>
+  <div><canvas id="c1" width="300" height="300"></canvas></div>
+</body>
+</html>

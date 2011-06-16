@@ -18,6 +18,8 @@
 #include "libEGL/main.h"
 #include "libEGL/Display.h"
 
+#include <dwmapi.h>
+
 namespace egl
 {
 Surface::Surface(Display *display, const Config *config, HWND window) 
@@ -37,8 +39,6 @@ Surface::Surface(Display *display, const Config *config, HWND window)
     mSwapBehavior = EGL_BUFFER_PRESERVED;
     mSwapInterval = -1;
     setSwapInterval(1);
-
-    mIsPendingDestroy = false;
 
     subclassWindow();
 }
@@ -60,8 +60,6 @@ Surface::Surface(Display *display, const Config *config, HANDLE shareHandle, EGL
     mSwapBehavior = EGL_BUFFER_PRESERVED;
     mSwapInterval = -1;
     setSwapInterval(1);
-
-    mIsPendingDestroy = false;
 }
 
 Surface::~Surface()
@@ -73,7 +71,29 @@ Surface::~Surface()
 bool Surface::initialize()
 {
     ASSERT(!mSwapChain && !mOffscreenTexture && !mDepthStencil);
-    return resetSwapChain();
+
+    if (!resetSwapChain())
+      return false;
+
+    // Modify present parameters for this window, if we are composited,
+    // to minimize the amount of queuing done by DWM between our calls to
+    // present and the actual screen.
+    if (mWindow && (LOWORD(GetVersion()) >= 0x60)) {
+      BOOL isComposited;
+      HRESULT result = DwmIsCompositionEnabled(&isComposited);
+      if (SUCCEEDED(result) && isComposited) {
+        DWM_PRESENT_PARAMETERS presentParams;
+        memset(&presentParams, 0, sizeof(presentParams));
+        presentParams.cbSize = sizeof(DWM_PRESENT_PARAMETERS);
+        presentParams.cBuffer = 2;
+
+        result = DwmSetPresentParameters(mWindow, &presentParams);
+        if (FAILED(result))
+          ERR("Unable to set present parameters: %081X", result);
+      }
+    }
+
+    return true;
 }
 
 void Surface::release()
@@ -145,7 +165,24 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
     D3DPRESENT_PARAMETERS presentParameters = {0};
     HRESULT result;
 
+    bool useFlipEx = (LOWORD(GetVersion()) >= 0x61) && mDisplay->isD3d9ExDevice();
+
+    // FlipEx causes unseemly stretching when resizing windows AND when one
+    // draws outside of the WM_PAINT callback. While this is seldom a problem in
+    // single process applications, it is particuarly noticeable in multiprocess
+    // applications. Therefore, if the creator process of our window is not in
+    // the current process, disable use of FlipEx.
+    DWORD windowPID;
+    GetWindowThreadProcessId(mWindow, &windowPID);
+    if(windowPID != GetCurrentProcessId())
+    useFlipEx = false;
+
     presentParameters.AutoDepthStencilFormat = mConfig->mDepthStencilFormat;
+    // We set BackBufferCount = 1 even when we use D3DSWAPEFFECT_FLIPEX.
+    // We do this because DirectX docs are a bit vague whether to set this to 1
+    // or 2. The runtime seems to accept 1, so we speculate that either it is
+    // forcing it to 2 without telling us, or better, doing something smart
+    // behind the scenes knowing that we don't need more.
     presentParameters.BackBufferCount = 1;
     presentParameters.BackBufferFormat = mConfig->mRenderTargetFormat;
     presentParameters.EnableAutoDepthStencil = FALSE;
@@ -154,7 +191,11 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
     presentParameters.MultiSampleQuality = 0;                  // FIXME: Unimplemented
     presentParameters.MultiSampleType = D3DMULTISAMPLE_NONE;   // FIXME: Unimplemented
     presentParameters.PresentationInterval = mPresentInterval;
-    presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
+    // Use flipEx on Win7 or greater.
+    if(useFlipEx)
+      presentParameters.SwapEffect = D3DSWAPEFFECT_FLIPEX;
+    else
+      presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
     presentParameters.Windowed = TRUE;
     presentParameters.BackBufferWidth = backbufferWidth;
     presentParameters.BackBufferHeight = backbufferHeight;
@@ -220,11 +261,14 @@ HWND Surface::getWindowHandle()
 #define kSurfaceProperty _TEXT("Egl::SurfaceOwner")
 #define kParentWndProc _TEXT("Egl::SurfaceParentWndProc")
 
-static LRESULT CALLBACK SurfaceWindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
-  if (message == WM_SIZE) {
+static LRESULT CALLBACK SurfaceWindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+{
+  if (message == WM_SIZE)
+  {
       Surface* surf = reinterpret_cast<Surface*>(GetProp(hwnd, kSurfaceProperty));
-      if(surf) {
-        surf->checkForOutOfDateSwapChain();
+      if(surf)
+      {
+          surf->checkForOutOfDateSwapChain();
       }
   }
   WNDPROC prevWndFunc = reinterpret_cast<WNDPROC >(GetProp(hwnd, kParentWndProc));
@@ -233,42 +277,55 @@ static LRESULT CALLBACK SurfaceWindowProc(HWND hwnd, UINT message, WPARAM wparam
 
 void Surface::subclassWindow()
 {
-  if (!mWindow)
-    return;
+    if (!mWindow)
+    {
+        return;
+    }
 
-  SetLastError(0);
-  LONG oldWndProc = SetWindowLong(mWindow, GWL_WNDPROC, reinterpret_cast<LONG>(SurfaceWindowProc));
-  if(oldWndProc == 0 && GetLastError() != ERROR_SUCCESS) {
-    mWindowSubclassed = false;
-    return;
-  }
+    DWORD processId;
+    DWORD threadId = GetWindowThreadProcessId(mWindow, &processId);
+    if (processId != GetCurrentProcessId() || threadId != GetCurrentThreadId())
+    {
+        return;
+    }
 
-  SetProp(mWindow, kSurfaceProperty, reinterpret_cast<HANDLE>(this));
-  SetProp(mWindow, kParentWndProc, reinterpret_cast<HANDLE>(oldWndProc));
-  mWindowSubclassed = true;
+    SetLastError(0);
+    LONG oldWndProc = SetWindowLong(mWindow, GWL_WNDPROC, reinterpret_cast<LONG>(SurfaceWindowProc));
+    if(oldWndProc == 0 && GetLastError() != ERROR_SUCCESS)
+    {
+        mWindowSubclassed = false;
+        return;
+    }
+
+    SetProp(mWindow, kSurfaceProperty, reinterpret_cast<HANDLE>(this));
+    SetProp(mWindow, kParentWndProc, reinterpret_cast<HANDLE>(oldWndProc));
+    mWindowSubclassed = true;
 }
 
 void Surface::unsubclassWindow()
 {
-  if(!mWindowSubclassed)
-    return;
+    if(!mWindowSubclassed)
+    {
+        return;
+    }
 
-  // un-subclass
-  LONG parentWndFunc = reinterpret_cast<LONG>(GetProp(mWindow, kParentWndProc));
+    // un-subclass
+    LONG parentWndFunc = reinterpret_cast<LONG>(GetProp(mWindow, kParentWndProc));
 
-  // Check the windowproc is still SurfaceWindowProc.
-  // If this assert fails, then it is likely the application has subclassed the
-  // hwnd as well and did not unsubclass before destroying its EGL context. The
-  // application should be modified to either subclass before initializing the
-  // EGL context, or to unsubclass before destroying the EGL context.
-  if(parentWndFunc) {
-    LONG prevWndFunc = SetWindowLong(mWindow, GWL_WNDPROC, parentWndFunc);
-    ASSERT(prevWndFunc == reinterpret_cast<LONG>(SurfaceWindowProc));
-  }
+    // Check the windowproc is still SurfaceWindowProc.
+    // If this assert fails, then it is likely the application has subclassed the
+    // hwnd as well and did not unsubclass before destroying its EGL context. The
+    // application should be modified to either subclass before initializing the
+    // EGL context, or to unsubclass before destroying the EGL context.
+    if(parentWndFunc)
+    {
+        LONG prevWndFunc = SetWindowLong(mWindow, GWL_WNDPROC, parentWndFunc);
+        ASSERT(prevWndFunc == reinterpret_cast<LONG>(SurfaceWindowProc));
+    }
 
-  RemoveProp(mWindow, kSurfaceProperty);
-  RemoveProp(mWindow, kParentWndProc);
-  mWindowSubclassed = false;
+    RemoveProp(mWindow, kSurfaceProperty);
+    RemoveProp(mWindow, kParentWndProc);
+    mWindowSubclassed = false;
 }
 
 bool Surface::checkForOutOfDateSwapChain()
@@ -313,7 +370,6 @@ DWORD Surface::convertInterval(EGLint interval)
     return D3DPRESENT_INTERVAL_DEFAULT;
 }
 
-
 bool Surface::swap()
 {
     if (mSwapChain)
@@ -327,7 +383,7 @@ bool Surface::swap()
             return error(EGL_BAD_ALLOC, false);
         }
 
-        if (result == D3DERR_DEVICELOST)
+        if (result == D3DERR_DEVICELOST || result == D3DERR_DEVICEHUNG || result == D3DERR_DEVICEREMOVED)
         {
             return error(EGL_CONTEXT_LOST, false);
         }
@@ -419,13 +475,4 @@ D3DFORMAT Surface::getFormat() const
 {
     return mConfig->mRenderTargetFormat;
 }
-
-void Surface::setPendingDestroy() {
-    mIsPendingDestroy = true;
-}
-
-bool Surface::isPendingDestroy() const {
-    return mIsPendingDestroy;
-}
-
 }

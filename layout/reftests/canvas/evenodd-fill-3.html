@@ -1,0 +1,27 @@
+<html>
+<head>
+  <script type="text/javascript">
+window.onload = function() {
+    var ctx = document.getElementById("c1").getContext("2d");
+    ctx.mozFillRule = "evenodd";
+
+    ctx.moveTo(50, 50);
+    ctx.lineTo(250, 50);
+    ctx.lineTo(250, 250);
+    ctx.lineTo(50, 250);
+    ctx.lineTo(50, 50);
+
+    ctx.moveTo(100, 100);
+    ctx.lineTo(100, 200);
+    ctx.lineTo(200, 200);
+    ctx.lineTo(200, 100);
+    ctx.lineTo(100, 100);
+
+    ctx.fill();
+}
+  </script>
+</head>
+<body>
+  <div><canvas id="c1" width="300" height="300"></canvas></div>
+</body>
+</html>

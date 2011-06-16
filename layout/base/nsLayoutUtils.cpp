@@ -2586,26 +2586,26 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   PRBool hasIntrinsicWidth, hasIntrinsicHeight;
   nscoord intrinsicWidth, intrinsicHeight;
 
-  if (aIntrinsicSize.width.GetUnit() == eStyleUnit_Coord ||
-      aIntrinsicSize.width.GetUnit() == eStyleUnit_Percent) {
+  if (aIntrinsicSize.width.GetUnit() == eStyleUnit_Coord) {
     hasIntrinsicWidth = PR_TRUE;
-    intrinsicWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
-                           aFrame, aCBSize.width, 0, boxSizingAdjust.width +
-                           boxSizingToMarginEdgeWidth, aIntrinsicSize.width);
+    intrinsicWidth = aIntrinsicSize.width.GetCoordValue();
+    if (intrinsicWidth < 0)
+      intrinsicWidth = 0;
   } else {
+    NS_ASSERTION(aIntrinsicSize.width.GetUnit() == eStyleUnit_None,
+                 "unexpected unit");
     hasIntrinsicWidth = PR_FALSE;
     intrinsicWidth = 0;
   }
 
-  if (aIntrinsicSize.height.GetUnit() == eStyleUnit_Coord ||
-      (aIntrinsicSize.height.GetUnit() == eStyleUnit_Percent &&
-       aCBSize.height != NS_AUTOHEIGHT)) {
+  if (aIntrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
     hasIntrinsicHeight = PR_TRUE;
-    intrinsicHeight = nsLayoutUtils::
-      ComputeHeightDependentValue(aCBSize.height, aIntrinsicSize.height);
+    intrinsicHeight = aIntrinsicSize.height.GetCoordValue();
     if (intrinsicHeight < 0)
       intrinsicHeight = 0;
   } else {
+    NS_ASSERTION(aIntrinsicSize.height.GetUnit() == eStyleUnit_None,
+                 "unexpected unit");
     hasIntrinsicHeight = PR_FALSE;
     intrinsicHeight = 0;
   }

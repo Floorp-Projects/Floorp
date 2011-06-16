@@ -53,6 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("logAssertive", {"live" : "assertive"}, true);
       testAttrs("marquee", {"live" : "off"}, true);
       testAttrs("status", {"live" : "polite"}, true);
+      testAttrs("tablist", {"live" : "polite"}, true);
       testAttrs("timer", {"live" : "off"}, true);
 
       // container-live object attribute
@@ -62,6 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("logAssertiveChild", {"container-live" : "assertive"}, true);
       testAttrs("marqueeChild", {"container-live" : "off"}, true);
       testAttrs("statusChild", {"container-live" : "polite"}, true);
+      testAttrs("tablistChild", {"container-live" : "polite"}, true);
       testAttrs("timerChild", {"container-live" : "off"}, true);
 
       // container-live-role object attribute
@@ -75,6 +77,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("logAssertiveChild", {"container-live-role" : "log"}, true);
       testAttrs("marqueeChild", {"container-live-role" : "marquee"}, true);
       testAttrs("statusChild", {"container-live-role" : "status"}, true);
+      testAttrs("tablistChild", {"container-live-role" : "tablist"}, true);
       testAttrs("timerChild", {"container-live-role" : "timer"}, true);
 
       // absent aria-label and aria-labelledby object attribute
@@ -120,7 +123,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
      title="make HTML <output> accessible">
     Mozilla Bug 558036
   </a>
-
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=663136"
+     title="Add test coverage for tablist as implicit live region">
+    Mozilla Bug 663136
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -154,6 +161,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="logAssertive" role="log" aria-live="assertive">excuse <div id="logAssertiveChild">me</div></div>
   <div id="marquee" role="marquee">excuse <div id="marqueeChild">me</div></div>
   <div id="status" role="status">excuse <div id="statusChild">me</div></div>
+  <div id="tablist" role="tablist">tablist <div id="tablistChild">tab</div></div>
   <div id="timer" role="timer">excuse <div id="timerChild">me</div></div>
 
   <!-- aria-label[ledby] should not be an object attribute -->

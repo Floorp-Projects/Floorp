@@ -36,8 +36,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIControllers.h"
@@ -90,7 +90,6 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsIDOMHTMLTextAreaElement,
-                              public nsIDOMNSHTMLTextAreaElement,
                               public nsITextControlElement,
                               public nsIDOMNSEditableElement,
                               public nsStubMutationObserver,
@@ -116,9 +115,6 @@ public:
 
   // nsIDOMHTMLTextAreaElement
   NS_DECL_NSIDOMHTMLTEXTAREAELEMENT
-
-  // nsIDOMNSHTMLTextAreaElement
-  NS_DECL_NSIDOMNSHTMLTEXTAREAELEMENT
 
   // nsIDOMNSEditableElement
   NS_IMETHOD GetEditor(nsIEditor** aEditor)
@@ -352,9 +348,8 @@ DOMCI_NODE_DATA(HTMLTextAreaElement, nsHTMLTextAreaElement)
 
 // QueryInterface implementation for nsHTMLTextAreaElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTextAreaElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE6(nsHTMLTextAreaElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLTextAreaElement,
                                    nsIDOMHTMLTextAreaElement,
-                                   nsIDOMNSHTMLTextAreaElement,
                                    nsITextControlElement,
                                    nsIDOMNSEditableElement,
                                    nsIMutationObserver,

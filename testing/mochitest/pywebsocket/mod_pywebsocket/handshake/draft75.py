@@ -112,8 +112,12 @@ class Handshaker(object):
         self._set_location()
         self._set_subprotocol()
         self._set_protocol_version()
+
         self._dispatcher.do_extra_handshake(self._request)
+
         self._send_handshake()
+
+        self._logger.debug('Sent opening handshake response')
 
     def _set_resource(self):
         self._request.ws_resource = self._request.uri

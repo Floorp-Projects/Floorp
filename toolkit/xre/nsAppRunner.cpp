@@ -2719,7 +2719,7 @@ PRTime gXRE_mainTimestamp = 0;
 
 #ifdef MOZ_X11
 #ifndef MOZ_PLATFORM_MAEMO
-void fire_glxtest_process();
+bool fire_glxtest_process();
 #endif
 #endif
 
@@ -2749,7 +2749,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // That's the whole reason for doing this in a separate process.
 #ifdef MOZ_X11
 #ifndef MOZ_PLATFORM_MAEMO
-  fire_glxtest_process();
+  if (fire_glxtest_process())
+    return 0;
 #endif
 #endif
 

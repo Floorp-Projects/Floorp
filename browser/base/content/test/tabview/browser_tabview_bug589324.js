@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-
 const DUMMY_PAGE_URL = "http://mochi.test:8888/browser/browser/base/content/test/tabview/dummy_page.html";
 const DUMMY_PAGE_URL_2 = "http://mochi.test:8888/";
 
@@ -54,10 +52,7 @@ function test() {
 
   testTabSwitchAfterRestore(function () {
     Services.prefs.setBoolPref("browser.sessionstore.restore_hidden_tabs", true);
-
-    testTabSwitchAfterRestore(function () {
-      waitForFocus(finish);
-    });
+    testTabSwitchAfterRestore(finish);
   });
 }
 
@@ -91,31 +86,4 @@ function testTabSwitchAfterRestore(callback) {
     // switch to another tab
     win.switchToTabHavingURI(DUMMY_PAGE_URL);
   });
-}
-
-function newWindowWithState(state, callback) {
-  let opts = "chrome,all,dialog=no,height=800,width=800";
-  let win = window.openDialog(getBrowserURL(), "_blank", opts);
-
-  whenWindowLoaded(win, function () {
-    ss.setWindowState(win, JSON.stringify(state), true);
-  });
-
-  whenWindowStateReady(win, function () {
-    afterAllTabsLoaded(function () callback(win), win);
-  });
-}
-
-function whenWindowLoaded(win, callback) {
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
-    executeSoon(callback);
-  }, false);
-}
-
-function whenWindowStateReady(win, callback) {
-  win.addEventListener("SSWindowStateReady", function onReady() {
-    win.removeEventListener("SSWindowStateReady", onReady, false);
-    executeSoon(callback);
-  }, false);
 }

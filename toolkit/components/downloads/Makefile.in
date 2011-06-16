@@ -82,5 +82,3 @@ DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

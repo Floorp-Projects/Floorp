@@ -1168,7 +1168,7 @@ setting[type="control"] menulist {
 
 .addon-control:active:hover,
 setting[type="control"] button:active:hover,
-setting[type="control"] menulist:hover {
+setting[type="control"] menulist:active:hover {
   background-color: rgba(61, 76, 92, 0.2);
   border-color: rgba(39, 53, 68, 0.5);
   box-shadow: 0 0 3px 1px rgba(39, 53, 68, 0.2) inset;

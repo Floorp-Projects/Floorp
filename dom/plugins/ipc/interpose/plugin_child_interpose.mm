@@ -64,6 +64,18 @@
 #include <dlfcn.h>
 #import <Carbon/Carbon.h>
 
+// The header file QuickdrawAPI.h is missing on OS X 10.7 and up (though the
+// QuickDraw APIs defined in it are still present) -- so we need to supply the
+// relevant parts of its contents here.  It's likely that Apple will eventually
+// remove the APIs themselves (probably in OS X 10.8), so we need to make them
+// weak imports, and test for their presence before using them.
+#if !defined(__QUICKDRAWAPI__)
+
+typedef struct Cursor;
+extern "C" void SetCursor(const Cursor * crsr) __attribute__((weak_import));
+
+#endif /* __QUICKDRAWAPI__ */
+
 BOOL (*OnSetThemeCursorPtr) (ThemeCursor) = NULL;
 BOOL (*OnSetCursorPtr) (const Cursor*) = NULL;
 BOOL (*OnHideCursorPtr) () = NULL;
@@ -106,10 +118,12 @@ static OSStatus MacPluginChildSetThemeCursor(ThemeCursor cursor)
 
 static void MacPluginChildSetCursor(const Cursor* cursor)
 {
-  if (loadXULPtrs()) {
-    OnSetCursorPtr(cursor);
+  if (::SetCursor) {
+    if (loadXULPtrs()) {
+      OnSetCursorPtr(cursor);
+    }
+    ::SetCursor(cursor);
   }
-  ::SetCursor(cursor);
 }
 
 static CGError MacPluginChildCGDisplayHideCursor(CGDirectDisplayID display)
@@ -142,9 +156,13 @@ struct interpose_substitution {
 __attribute__((used)) static const interpose_substitution substitutions[]
     __attribute__((section("__DATA, __interpose"))) = {
   INTERPOSE_FUNCTION(SetThemeCursor),
-  INTERPOSE_FUNCTION(SetCursor),
   INTERPOSE_FUNCTION(CGDisplayHideCursor),
   INTERPOSE_FUNCTION(CGDisplayShowCursor),
+  // SetCursor() and other QuickDraw APIs will probably be removed in OS X
+  // 10.8.  But this will make 'SetCursor' NULL, which will just stop the OS
+  // from interposing it (tested using an INTERPOSE_FUNCTION_BROKEN macro
+  // that just sets the second address of each tuple to NULL).
+  INTERPOSE_FUNCTION(SetCursor),
 };
 
 #endif  // !__LP64__

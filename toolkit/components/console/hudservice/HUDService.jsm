@@ -5655,6 +5655,13 @@ ConsoleUtils = {
 
     // Make the location clickable.
     locationNode.addEventListener("click", function() {
+      if (aSourceURL == "Scratchpad") {
+        let win = Services.wm.getMostRecentWindow("devtools:scratchpad");
+        if (win) {
+          win.focus();
+        }
+        return;
+      }
       let viewSourceUtils = aDocument.defaultView.gViewSourceUtils;
       viewSourceUtils.viewSource(aSourceURL, null, aDocument, aSourceLine);
     }, true);

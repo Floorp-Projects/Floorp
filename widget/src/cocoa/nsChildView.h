@@ -66,6 +66,52 @@
 #import <Cocoa/Cocoa.h>
 #import <AppKit/NSOpenGL.h>
 
+// The header files QuickdrawAPI.h and QDOffscreen.h are missing on OS X 10.7
+// and up (though the QuickDraw APIs defined in them are still present) -- so
+// we need to supply the relevant parts of their contents here.  It's likely
+// that Apple will eventually remove the APIs themselves (probably in OS X
+// 10.8), so we need to make them weak imports, and test for their presence
+// before using them.
+#ifdef __cplusplus
+extern "C" {
+#endif
+  #if !defined(__QUICKDRAWAPI__)
+
+  extern void SetPort(GrafPtr port)
+    __attribute__((weak_import));
+  extern void SetOrigin(short h, short v)
+    __attribute__((weak_import));
+  extern RgnHandle NewRgn(void)
+    __attribute__((weak_import));
+  extern void DisposeRgn(RgnHandle rgn)
+    __attribute__((weak_import));
+  extern void RectRgn(RgnHandle rgn, const Rect * r)
+    __attribute__((weak_import));
+  extern GDHandle GetMainDevice(void)
+    __attribute__((weak_import));
+  extern Boolean IsPortOffscreen(CGrafPtr port)
+    __attribute__((weak_import));
+  extern void SetPortVisibleRegion(CGrafPtr port, RgnHandle visRgn)
+    __attribute__((weak_import));
+  extern void SetPortClipRegion(CGrafPtr port, RgnHandle clipRgn)
+    __attribute__((weak_import));
+  extern CGrafPtr GetQDGlobalsThePort(void)
+    __attribute__((weak_import));
+
+  #endif /* __QUICKDRAWAPI__ */
+
+  #if !defined(__QDOFFSCREEN__)
+
+  extern void GetGWorld(CGrafPtr *  port, GDHandle *  gdh)
+    __attribute__((weak_import));
+  extern void SetGWorld(CGrafPtr port, GDHandle gdh)
+    __attribute__((weak_import));
+
+  #endif /* __QDOFFSCREEN__ */
+#ifdef __cplusplus
+}
+#endif
+
 class gfxASurface;
 class nsChildView;
 class nsCocoaWindow;

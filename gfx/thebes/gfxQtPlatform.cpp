@@ -76,8 +76,9 @@
 #include FT_FREETYPE_H
 #endif
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define DEFAULT_RENDER_MODE RENDER_DIRECT
 
@@ -123,15 +124,9 @@ gfxQtPlatform::gfxQtPlatform()
 #endif
 
     nsresult rv;
-    PRInt32 ival;
     // 0 - default gfxQPainterSurface
     // 1 - gfxImageSurface
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (prefs) {
-      rv = prefs->GetIntPref("mozilla.widget-qt.render-mode", &ival);
-      if (NS_FAILED(rv))
-          ival = DEFAULT_RENDER_MODE;
-    }
+    PRInt32 ival = Preferences::GetInt("mozilla.widget-qt.render-mode", DEFAULT_RENDER_MODE);
 
     const char *envTypeOverride = getenv("MOZ_QT_RENDER_TYPE");
     if (envTypeOverride)

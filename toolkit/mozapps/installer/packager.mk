@@ -85,6 +85,7 @@ SDK           = $(SDK_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 _ABS_DIST = $(call core_abspath,$(DIST))
 JARLOG_DIR = $(call core_abspath,$(DEPTH)/jarlog/)
+JARLOG_DIR_AB_CD = $(JARLOG_DIR)/$(AB_CD)
 
 CREATE_FINAL_TAR = $(TAR) -c --owner=0 --group=0 --numeric-owner \
   --mode="go-w" -f
@@ -118,13 +119,17 @@ ifeq ($(MOZ_PKG_FORMAT),SFX7Z)
 PKG_SUFFIX	= .exe
 INNER_MAKE_PACKAGE	= rm -f app.7z && \
   mv $(MOZ_PKG_DIR) core && \
+  (if [ -f ../optional_file_list.txt ]; then mkdir optional; xargs -I {} -a ../optional_file_list.txt mv -t optional/ core/{}; fi;) && \
   $(CYGWIN_WRAPPER) 7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 \
     -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3 && \
   mv core $(MOZ_PKG_DIR) && \
+  (if [ -d optional ]; then mv optional/* $(MOZ_PKG_DIR); rm -rf optional; fi;) && \
   cat $(SFX_HEADER) app.7z > $(PACKAGE) && \
   chmod 0755 $(PACKAGE)
 INNER_UNMAKE_PACKAGE	= $(CYGWIN_WRAPPER) 7z x $(UNPACKAGE) core && \
-  mv core $(MOZ_PKG_DIR)
+  rm -f ../optional_file_list.txt && \
+  mv core $(MOZ_PKG_DIR) && \
+  (if [ -d optional ]; then ls -1 optional > ../optional_file_list.txt; cp -rp optional/* $(MOZ_PKG_DIR); rm -rf optional; fi;)
 endif
 
 #Create an RPM file
@@ -392,11 +397,11 @@ PACK_OMNIJAR	= \
   mv components.manifest components && \
   zip -r9m omni.jar $(OMNIJAR_FILES) -x $(NON_OMNIJAR_FILES) && \
   $(GENERATE_CACHE) && \
-  $(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR) ./ ./ && \
+  $(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR_AB_CD) ./ ./ && \
   mv binary.manifest components && \
   printf "manifest components/binary.manifest\n" > chrome.manifest
 UNPACK_OMNIJAR	= \
-  $(OPTIMIZE_JARS_CMD) --deoptimize $(JARLOG_DIR) ./ ./ && \
+  $(OPTIMIZE_JARS_CMD) --deoptimize $(JARLOG_DIR_AB_CD) ./ ./ && \
   unzip -o omni.jar && \
   rm -f components/binary.manifest && \
   sed -e 's/^\#binary-component/binary-component/' components/components.manifest > components.manifest && \
@@ -619,7 +624,7 @@ else
 endif # DMG
 endif # MOZ_PKG_MANIFEST
 endif # UNIVERSAL_BINARY
-	$(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR) $(DIST)/bin/chrome $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/chrome
+	$(OPTIMIZE_JARS_CMD) --optimize $(JARLOG_DIR_AB_CD) $(DIST)/bin/chrome $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/chrome
 ifndef PKG_SKIP_STRIP
   ifeq ($(OS_ARCH),OS2)
 		@echo "Stripping package directory..."

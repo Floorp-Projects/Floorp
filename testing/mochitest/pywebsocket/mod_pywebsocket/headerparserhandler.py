@@ -78,10 +78,36 @@ class ApacheLogHandler(logging.Handler):
         apache_level = apache.APLOG_DEBUG
         if record.levelno in ApacheLogHandler._LEVELS:
             apache_level = ApacheLogHandler._LEVELS[record.levelno]
-        self.log_error(record.getMessage(), apache_level)
+
+        # "server" parameter must be passed to have "level" parameter work.
+        # If only "level" parameter is passed, nothing shows up on Apache's
+        # log. However, at this point, we cannot get the server object of the
+        # virtual host which will process WebSocket requests. The only server
+        # object we can get here is apache.main_server. But Wherever (server
+        # configuration context or virtual host context) we put
+        # PythonHeaderParserHandler directive, apache.main_server just points
+        # the main server instance (not any of virtual server instance). Then,
+        # Apache follows LogLevel directive in the server configuration context
+        # to filter logs. So, we need to specify LogLevel in the server
+        # configuration context. Even if we specify "LogLevel debug" in the
+        # virtual host context which actually handles WebSocket connections,
+        # DEBUG level logs never show up unless "LogLevel debug" is specified
+        # in the server configuration context.
+        #
+        # TODO(tyoshino): Provide logging methods on request object. When
+        # request is mp_request object (when used together with Apache), the
+        # methods call request.log_error indirectly. When request is
+        # _StandaloneRequest, the methods call Python's logging facility which
+        # we create in standalone.py.
+        self.log_error(record.getMessage(), apache_level, apache.main_server)
 
 
-logging.getLogger('mod_pywebsocket').addHandler(ApacheLogHandler())
+_LOGGER = logging.getLogger('mod_pywebsocket')
+# Logs are filtered by Apache based on LogLevel directive in Apache
+# configuration file. We must just pass logs for all levels to
+# ApacheLogHandler.
+_LOGGER.setLevel(logging.DEBUG)
+_LOGGER.addHandler(ApacheLogHandler())
 
 
 def _create_dispatcher():

@@ -34,6 +34,46 @@ processors.
 
 
 from mod_pywebsocket import common
+from mod_pywebsocket import http_header_util
+
+
+class Extension(object):
+    """Holds information about an extension which is exchanged on extension
+    negotiation in opening handshake.
+    """
+
+    def __init__(self, name):
+        self._name = name
+        # TODO(tyoshino): Change the data structure to more efficient one such
+        # as dict when the spec changes to say like
+        # - Parameter names must be unique
+        # - The order of parameters is not significant
+        self._parameters = []
+
+    def name(self):
+        return self._name
+
+    def add_parameter(self, name, value):
+        self._parameters.append((name, value))
+
+    def get_parameter(self, name):
+        for param_name, param_value in self._parameters:
+            if param_name == name:
+                return param_value
+
+    def get_parameter_names(self):
+        return [name for name, unused_value in self._parameters]
+
+    def get_formatted_string(self):
+        formatted_params = [self._name]
+        for param_name, param_value in self._parameters:
+            if param_value is None:
+                formatted_params.append(param_name)
+            else:
+                quoted_value = http_header_util.quote_if_necessary(param_value)
+                formatted_params.append('%s=%s' % (param_name, quoted_value))
+
+        return '; '.join(formatted_params)
 
 
 class HandshakeError(Exception):
@@ -79,6 +119,10 @@ def parse_host_header(request):
         raise HandshakeError('Invalid port number format: %r' % e)
 
 
+def format_header(name, value):
+    return '%s: %s\r\n' % (name, value)
+
+
 def build_location(request):
     """Build WebSocket location for request."""
     location_parts = []
@@ -100,15 +144,20 @@ def build_location(request):
     return ''.join(location_parts)
 
 
-def get_mandatory_header(request, key, expected_value=None):
+def get_mandatory_header(request, key):
     value = request.headers_in.get(key)
     if value is None:
         raise HandshakeError('Header %s is not defined' % key)
-    if expected_value is not None and expected_value != value:
-        raise HandshakeError(
-            'Illegal value for header %s: %s (expected: %s)' %
-            (key, value, expected_value))
     return value
+
+
+def validate_mandatory_header(request, key, expected_value):
+    value = get_mandatory_header(request, key)
+
+    if value.lower() != expected_value.lower():
+        raise HandshakeError(
+            'Expected %r for header %s but found %r (case-insensitive)' %
+            (expected_value, key, value))
 
 
 def check_header_lines(request, mandatory_headers):
@@ -120,7 +169,99 @@ def check_header_lines(request, mandatory_headers):
     # values, are as follows.
     #  |Upgrade| and |Connection|
     for key, expected_value in mandatory_headers:
-        get_mandatory_header(request, key, expected_value)
+        validate_mandatory_header(request, key, expected_value)
+
+
+def _parse_extension_param(state, definition):
+    param_name = http_header_util.consume_token(state)
+
+    if param_name is None:
+        raise HandshakeError('No valid parameter name found')
+
+    http_header_util.consume_lwses(state)
+
+    if not http_header_util.consume_string(state, '='):
+        definition.add_parameter(param_name, None)
+        return
+
+    http_header_util.consume_lwses(state)
+
+    param_value = http_header_util.consume_token_or_quoted_string(state)
+    if param_value is None:
+        raise HandshakeError(
+            'No valid parameter value found on the right-hand side of '
+            'parameter %r' % param_name)
+
+    definition.add_parameter(param_name, param_value)
+
+
+def _parse_extension(state):
+    extension_token = http_header_util.consume_token(state)
+    if extension_token is None:
+        return None
+
+    extension = Extension(extension_token)
+
+    while True:
+        http_header_util.consume_lwses(state)
+
+        if not http_header_util.consume_string(state, ';'):
+            break
+
+        http_header_util.consume_lwses(state)
+
+        try:
+            _parse_extension_param(state, extension)
+        except HandshakeError, e:
+            raise HandshakeError(
+                'Failed to parse Sec-WebSocket-Extensions header: '
+                'Failed to parse parameter for %r (%r)' %
+                (extension_token, e))
+
+    return extension
+
+
+def parse_extensions(data):
+    """Parses Sec-WebSocket-Extensions header value returns a list of
+    common.Extension objects.
+
+    Leading LWSes must be trimmed.
+    """
+
+    state = http_header_util.ParsingState(data)
+
+    extension_list = []
+    while True:
+        extension = _parse_extension(state)
+        if extension is not None:
+            extension_list.append(extension)
+
+        http_header_util.consume_lwses(state)
+
+        if http_header_util.peek(state) is None:
+            break
+
+        if not http_header_util.consume_string(state, ','):
+            raise HandshakeError(
+                'Failed to parse Sec-WebSocket-Extensions header: '
+                'Expected a comma but found %r' %
+                http_header_util.peek(state))
+
+        http_header_util.consume_lwses(state)
+
+    if len(extension_list) == 0:
+        raise HandshakeError(
+            'Sec-WebSocket-Extensions header contains no valid extension')
+
+    return extension_list
+
+
+def format_extensions(extension_list):
+    formatted_extension_list = []
+    for extension in extension_list:
+        formatted_extension_list.append(extension.get_formatted_string())
+
+    return ', '.join(formatted_extension_list)
 
 
 # vi:sts=4 sw=4 et
