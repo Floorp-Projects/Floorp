@@ -320,7 +320,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     uint16 nClosedArgs = 0, nClosedVars = 0;
     JSPrincipals *principals;
     uint32 encodeable;
-    jssrcnote *sn;
     JSSecurityCallbacks *callbacks;
     uint32 scriptBits = 0;
 
@@ -471,12 +470,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         nslots = (uint32)((script->staticLevel << 16) | script->nslots);
         natoms = (uint32)script->atomMap.length;
 
-        /* Count the srcnotes, keeping notes pointing at the first one. */
         notes = script->notes();
-        for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
-            continue;
-        nsrcnotes = sn - notes;
-        nsrcnotes++;            /* room for the terminator */
+        nsrcnotes = script->numNotes();
 
         if (JSScript::isValidOffset(script->objectsOffset))
             nobjects = script->objects()->length;
@@ -1420,6 +1415,29 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 bad:
     js_DestroyScript(cx, script);
     return NULL;
+}
+
+size_t
+JSScript::totalSize()
+{
+    return code +
+           length * sizeof(jsbytecode) +
+           numNotes() * sizeof(jssrcnote) -
+           (uint8 *) this;
+}
+
+/*
+ * Nb: srcnotes are variable-length.  This function computes the number of
+ * srcnote *slots*, which may be greater than the number of srcnotes.
+ */
+uint32
+JSScript::numNotes()
+{
+    jssrcnote *sn;
+    jssrcnote *notes_ = notes();
+    for (sn = notes_; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
+        continue;
+    return sn - notes_ + 1;    /* +1 for the terminator */
 }
 
 JS_FRIEND_API(void)
