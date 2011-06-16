@@ -1082,6 +1082,9 @@ let TabItems = {
       tab._tabViewTabItem.removeTrenches();
       Items.unsquish(null, tab._tabViewTabItem);
 
+      tab._tabViewTabItem.tab = null;
+      tab._tabViewTabItem.tabCanvas.tab = null;
+      tab._tabViewTabItem.tabCanvas = null;
       tab._tabViewTabItem = null;
       Storage.saveTab(tab, null);
 
