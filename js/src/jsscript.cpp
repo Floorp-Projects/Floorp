@@ -850,49 +850,39 @@ static JSHashAllocOps sftbl_alloc_ops = {
     js_alloc_sftbl_entry,   js_free_sftbl_entry
 };
 
-static void
-FinishRuntimeScriptState(JSRuntime *rt)
-{
-    if (rt->scriptFilenameTable) {
-        JS_HashTableDestroy(rt->scriptFilenameTable);
-        rt->scriptFilenameTable = NULL;
-    }
-#ifdef JS_THREADSAFE
-    if (rt->scriptFilenameTableLock) {
-        JS_DESTROY_LOCK(rt->scriptFilenameTableLock);
-        rt->scriptFilenameTableLock = NULL;
-    }
-#endif
-}
+namespace js {
 
-JSBool
-js_InitRuntimeScriptState(JSRuntime *rt)
+bool
+InitRuntimeScriptState(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
     JS_ASSERT(!rt->scriptFilenameTableLock);
     rt->scriptFilenameTableLock = JS_NEW_LOCK();
     if (!rt->scriptFilenameTableLock)
-        return JS_FALSE;
+        return false;
 #endif
     JS_ASSERT(!rt->scriptFilenameTable);
     rt->scriptFilenameTable =
         JS_NewHashTable(16, JS_HashString, js_compare_strings, NULL,
                         &sftbl_alloc_ops, NULL);
-    if (!rt->scriptFilenameTable) {
-        FinishRuntimeScriptState(rt);       /* free lock if threadsafe */
-        return JS_FALSE;
-    }
-    return JS_TRUE;
+    if (!rt->scriptFilenameTable)
+        return false;
+
+    return true;
 }
 
 void
-js_FreeRuntimeScriptState(JSRuntime *rt)
+FreeRuntimeScriptState(JSRuntime *rt)
 {
-    if (!rt->scriptFilenameTable)
-        return;
-
-    FinishRuntimeScriptState(rt);
+    if (rt->scriptFilenameTable)
+        JS_HashTableDestroy(rt->scriptFilenameTable);
+#ifdef JS_THREADSAFE
+    if (rt->scriptFilenameTableLock)
+        JS_DESTROY_LOCK(rt->scriptFilenameTableLock);
+#endif
 }
+
+} /* namespace js */
 
 static const char *
 SaveScriptFilename(JSContext *cx, const char *filename)
@@ -1073,7 +1063,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
 
     size = sizeof(JSScript) +
            sizeof(JSAtom *) * natoms;
-    
+
     if (nobjects != 0)
         size += sizeof(JSObjectArray) + nobjects * sizeof(JSObject *);
     if (nupvars != 0)

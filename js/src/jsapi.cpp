@@ -707,7 +707,15 @@ JSRuntime::init(uint32 maxbytes)
 #endif
 
     debugMode = JS_FALSE;
-    return js_InitThreads(this);
+
+    if (!js_InitThreads(this))
+        return false;
+    if (!InitRuntimeNumberState(this))
+        return false;
+    if (!InitRuntimeScriptState(this))
+        return false;
+
+    return true;
 }
 
 JSRuntime::~JSRuntime()
@@ -733,8 +741,9 @@ JSRuntime::~JSRuntime()
     FinishJIT();
 #endif
 
+    FreeRuntimeScriptState(this);
+    FinishRuntimeNumberState(this);
     js_FinishThreads(this);
-    js_FreeRuntimeScriptState(this);
     js_FinishAtomState(this);
 
     js_FinishGC(this);

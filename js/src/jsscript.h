@@ -330,7 +330,7 @@ class Bindings {
      *
      * (In fact, some JSScripts we do use against multiple global objects (see
      * bug 618497), and using the fixed shapes isn't sound there.)
-     * 
+     *
      * In deciding whether a call or block has any extensible parents, we
      * actually only need to consider enclosing calls; blocks are never
      * extensible, and the other sorts of objects that appear in the scope
@@ -703,12 +703,10 @@ extern JS_FRIEND_DATA(js::Class) js_ScriptClass;
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
 
-/*
- * On first new context in rt, initialize script runtime state, specifically
- * the script filename table and its lock.
- */
-extern JSBool
-js_InitRuntimeScriptState(JSRuntime *rt);
+namespace js {
+
+extern bool
+InitRuntimeScriptState(JSRuntime *rt);
 
 /*
  * On JS_DestroyRuntime(rt), forcibly free script filename prefixes and any
@@ -717,7 +715,9 @@ js_InitRuntimeScriptState(JSRuntime *rt);
  * This allows script filename prefixes to outlive any context in rt.
  */
 extern void
-js_FreeRuntimeScriptState(JSRuntime *rt);
+FreeRuntimeScriptState(JSRuntime *rt);
+
+} /* namespace js */
 
 extern void
 js_MarkScriptFilename(const char *filename);
