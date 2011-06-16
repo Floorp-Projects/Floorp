@@ -335,9 +335,14 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
     gfxMatrix matrix;
     DebugOnly<bool> is2D = container->GetEffectiveTransform().Is2D(&matrix);
     // See DefaultComputeEffectiveTransforms below
-    NS_ASSERTION(is2D && !matrix.HasNonIntegerTranslation(),
-                 "Non-integer-translation transform with clipped child should have forced intermediate surface");
-    scissor.MoveBy(nsIntPoint(PRInt32(matrix.x0), PRInt32(matrix.y0)));
+    NS_ASSERTION(is2D && matrix.PreservesAxisAlignedRectangles(),
+                 "Non preserves axis aligned transform with clipped child should have forced intermediate surface");
+    gfxRect r(scissor.x, scissor.y, scissor.width, scissor.height);
+    gfxRect trScissor = matrix.TransformBounds(r);
+    trScissor.Round();
+    if (!gfxUtils::GfxRectToIntRect(trScissor, &scissor)) {
+      return nsIntRect(currentClip.TopLeft(), nsIntSize(0, 0));
+    }
 
     // Find the nearest ancestor with an intermediate surface
     do {
@@ -408,7 +413,11 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
     useIntermediateSurface = PR_FALSE;
     gfxMatrix contTransform;
     if (!mEffectiveTransform.Is2D(&contTransform) ||
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+        !contTransform.PreservesAxisAlignedRectangles()) {
+#else
         contTransform.HasNonIntegerTranslation()) {
+#endif
       for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
         const nsIntRect *clipRect = child->GetEffectiveClipRect();
         /* We can't (easily) forward our transform to children with a non-empty clip
