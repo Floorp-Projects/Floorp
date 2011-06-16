@@ -162,7 +162,7 @@ PRMJ_LocalGMTDifference()
 
 #ifdef HAVE_SYSTEMTIMETOFILETIME
 
-static const JSInt64 win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000);
+static const JSInt64 win2un = 0x19DB1DED53E8000;
 
 #define FILETIME2INT64(ft) (((JSInt64)ft.dwHighDateTime) << 32LL | (JSInt64)ft.dwLowDateTime)
 
@@ -296,18 +296,9 @@ static PRCallOnceType calibrationOnce = { 0 };
 JSInt64
 PRMJ_Now(void)
 {
-    JSInt64 s, us, ms2us, s2us;
     struct timeb b;
-
     ftime(&b);
-    JSLL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
-    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    JSLL_UI2L(s, b.time);
-    JSLL_UI2L(us, b.millitm);
-    JSLL_MUL(us, us, ms2us);
-    JSLL_MUL(s, s, s2us);
-    JSLL_ADD(s, s, us);
-    return s;
+    return (JSInt64(b.time) * PRMJ_USEC_PER_SEC) + (JSInt64(b.millitm) * PRMJ_USEC_PER_MSEC);
 }
 
 #elif defined(XP_UNIX)
@@ -315,19 +306,14 @@ JSInt64
 PRMJ_Now(void)
 {
     struct timeval tv;
-    JSInt64 s, us, s2us;
 
 #ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
     gettimeofday(&tv);
 #else
     gettimeofday(&tv, 0);
 #endif /* _SVID_GETTOD */
-    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    JSLL_UI2L(s, tv.tv_sec);
-    JSLL_UI2L(us, tv.tv_usec);
-    JSLL_MUL(s, s, s2us);
-    JSLL_ADD(s, s, us);
-    return s;
+
+    return JSInt64(tv.tv_sec) * PRMJ_USEC_PER_SEC + JSInt64(tv.tv_usec);
 }
 
 #else

@@ -62,6 +62,7 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
+#include "jsdtoa.h"
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -1461,6 +1462,9 @@ JSContext::JSContext(JSRuntime *rt)
     compartment(NULL),
     stack(thisDuringConstruction()),
     busyArrays()
+#ifdef DEBUG
+    , stackIterAssertionEnabled(true)
+#endif
 {}
 
 JSContext::~JSContext()

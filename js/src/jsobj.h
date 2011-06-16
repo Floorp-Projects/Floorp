@@ -1043,8 +1043,8 @@ struct JSObject : js::gc::Cell {
     JS_ALWAYS_INLINE void finalize(JSContext *cx);
 
     /*
-     * Like init, but also initializes map. The catch: proto must be the result
-     * of a call to js_InitClass(...clasp, ...).
+     * Like init, but also initializes map.  proto must have an empty shape
+     * created for it via proto->getEmptyShape.
      */
     inline bool initSharingEmptyShape(JSContext *cx,
                                       js::Class *clasp,

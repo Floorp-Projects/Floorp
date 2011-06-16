@@ -21,8 +21,12 @@
   // Remove all the real reporters;  save them to restore at the end.
   var e = mgr.enumerateReporters(); 
   var realReporters = [];
+  var dummy = 0;
   while (e.hasMoreElements()) {
     var mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    // Get the memoryUsed field, even though we don't use it, just to test
+    // that the reporter doesn't crash or anything.
+    dummy += mr.memoryUsed;
     mgr.unregisterReporter(mr);
     realReporters.push(mr);
   }

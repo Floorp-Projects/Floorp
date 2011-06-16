@@ -1,6 +1,7 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99 ft=cpp:
  *
- ***** BEGIN LICENSE BLOCK *****
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +14,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is SpiderMonkey code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998-1999
- * the Initial Developer. All Rights Reserved.
+ * the Mozilla Foundation.
  *
  * Contributor(s):
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,18 +36,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jscompat_h___
-#define jscompat_h___
-/*
- * Compatibility glue for various NSPR versions.  We must always define int8,
- * int16, jsword, and so on to minimize differences with js/ref, no matter what
- * the NSPR typedef names may be.
- */
-#include "jstypes.h"
+#ifndef tracejit_Writer_inl_h___
+#define tracejit_Writer_inl_h___
 
-typedef JSIntn intN;
-typedef JSUintn uintN;
-typedef JSUword jsuword;
-typedef JSWord jsword;
-typedef float float32;
-#endif /* jscompat_h___ */
+#include "Writer.h"
+
+namespace js {
+namespace tjit {
+
+namespace nj = nanojit;
+
+nj::LIns *
+Writer::getArgsLength(nj::LIns *args) const
+{
+    uint32 slot = ArgumentsObject::INITIAL_LENGTH_SLOT;
+    nj::LIns *vaddr_ins = ldpObjSlots(args);
+    return name(lir->insLoad(nj::LIR_ldi, vaddr_ins, slot * sizeof(Value) + sPayloadOffset,
+                             ACCSET_SLOTS),
+                "argsLength");
+}
+
+inline nj::LIns *
+Writer::ldpIterCursor(nj::LIns *iter) const
+{
+    return name(lir->insLoad(nj::LIR_ldp, iter, offsetof(NativeIterator, props_cursor),
+                             ACCSET_ITER),
+                "cursor");
+}
+
+inline nj::LIns *
+Writer::ldpIterEnd(nj::LIns *iter) const
+{
+    return name(lir->insLoad(nj::LIR_ldp, iter, offsetof(NativeIterator, props_end), ACCSET_ITER),
+                "end");
+}
+
+inline nj::LIns *
+Writer::stpIterCursor(nj::LIns *cursor, nj::LIns *iter) const
+{
+    return lir->insStore(nj::LIR_stp, cursor, iter, offsetof(NativeIterator, props_cursor),
+                         ACCSET_ITER);
+}
+
+} /* namespace tjit */
+} /* namespace js */
+
+#endif /* tracejit_Writer_inl_h___ */

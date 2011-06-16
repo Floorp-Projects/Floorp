@@ -22,15 +22,15 @@ assertEq(testLenientAndStrict('(1 for ({x:eval} in []))',
                               parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict('(1 for (arguments in []))',
-                              parsesSuccessfully,
+                              parseRaisesException(SyntaxError),
                               parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict('(1 for ([arguments] in []))',
-                              parsesSuccessfully,
+                              parseRaisesException(SyntaxError),
                               parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict('(1 for ({x:arguments} in []))',
-                              parsesSuccessfully,
+                              parseRaisesException(SyntaxError),
                               parseRaisesException(SyntaxError)),
          true);
 
