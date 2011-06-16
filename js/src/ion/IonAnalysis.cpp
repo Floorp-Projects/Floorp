@@ -449,6 +449,90 @@ ion::ReorderBlocks(MIRGraph &graph)
     return true;
 }
 
+// A Simple, Fast Dominance Algorithm by Cooper et al.
+static MBasicBlock *
+IntersectDominators(MBasicBlock *block1, MBasicBlock *block2)
+{
+    MBasicBlock *finger1 = block1;
+    MBasicBlock *finger2 = block2;
+
+    while (finger1->id() != finger2->id()) {
+        // In the original paper, the comparisons are on the postorder index.
+        // In this implementation, the id of the block is in reverse postorder,
+        // so we reverse the comparison.
+        while (finger1->id() > finger2->id())
+            finger1 = finger1->immediateDominator();
+
+        while (finger2->id() > finger1->id())
+            finger2 = finger2->immediateDominator();
+    }
+    return finger1;
+}
+
+static void
+ComputeImmediateDominators(MIRGraph &graph)
+{
+
+    if (graph.numBlocks() == 0)
+        return;
+
+    MBasicBlock *startBlock = graph.getBlock(0);
+    startBlock->setImmediateDominator(startBlock);
+
+    bool changed = true;
+
+    while (changed) {
+        changed = false;
+        // We start at 1, not 0, intentionally excluding the start node.
+        for (size_t i = 1; i < graph.numBlocks(); i++) {
+            MBasicBlock *block = graph.getBlock(i);
+
+            if (block->numPredecessors() == 0)
+                continue;
+
+            MBasicBlock *newIdom = block->getPredecessor(0);
+
+            for (size_t i = 1; i < block->numPredecessors(); i++) {
+                MBasicBlock *pred = graph.getBlock(i);
+                if (pred->immediateDominator() != NULL)
+                    newIdom = IntersectDominators(pred, newIdom);
+            }
+
+            if (block->immediateDominator() != newIdom) {
+                block->setImmediateDominator(newIdom);
+                changed = true;
+            }
+        }
+    }
+}
+
+bool
+ion::BuildDominatorTree(MIRGraph &graph)
+{
+    if (graph.numBlocks() == 0)
+        return true;
+
+    ComputeImmediateDominators(graph);
+
+    // Since traversing through the graph in post-order means that every use
+    // of a definition is visited before the def itself. Since a def must
+    // dominate all its uses, this means that by the time we reach a particular
+    // block, we have processed all of its dominated children, so
+    // block->numDominated() is accurate.
+    for (size_t i = graph.numBlocks() - 1; i > 0; i--) { //Exclude start block.
+        MBasicBlock *child = graph.getBlock(i);
+        MBasicBlock *parent = child->immediateDominator();
+
+        if (!parent->addImmediatelyDominatedBlock(child))
+            return false;
+
+        // an additional +1 because of this child block.
+        parent->addNumDominated(child->numDominated() + 1);
+    }
+
+    return true;
+}
+
 bool
 ion::BuildPhiReverseMapping(MIRGraph &graph)
 {

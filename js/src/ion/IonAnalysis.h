@@ -61,6 +61,9 @@ ReorderBlocks(MIRGraph &graph);
 bool
 BuildPhiReverseMapping(MIRGraph &graph);
 
+bool
+BuildDominatorTree(MIRGraph &graph);
+
 } // namespace js
 } // namespace ion
 

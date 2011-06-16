@@ -344,6 +344,32 @@ class MBasicBlock : public TempObject
         return start_;
     }
 
+    MBasicBlock *immediateDominator() const {
+        return immediateDominator_;
+    }
+
+    void setImmediateDominator(MBasicBlock *dom) {
+        immediateDominator_ = dom;
+    }
+
+    size_t numImmediatelyDominatedBlocks() const {
+        return immediatelyDominated_.length();
+    }
+
+    MBasicBlock *getImmediatelyDominatedBlock(size_t i) const {
+        return immediatelyDominated_[i];
+    }
+
+    size_t numDominated() const {
+        return numDominated_;
+    }
+
+    void addNumDominated(size_t n) {
+        numDominated_ += n;
+    }
+
+    bool addImmediatelyDominatedBlock(MBasicBlock *child);
+
     // This function retrieves the internal instruction associated with a
     // slot, and should not be used for normal stack operations. It is an
     // internal helper that is also used to enhance spew.
@@ -402,6 +428,10 @@ class MBasicBlock : public TempObject
 
     // Utility mark for traversal algorithms.
     bool mark_;
+
+    Vector<MBasicBlock *, 1, IonAllocPolicy> immediatelyDominated_;
+    MBasicBlock *immediateDominator_;
+    size_t numDominated_;
 };
 
 class MDefinitionIterator

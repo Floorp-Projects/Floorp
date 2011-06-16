@@ -108,7 +108,9 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     successorWithPhis_(NULL),
     positionInPhiSuccessor_(0),
     loopSuccessor_(NULL),
-    mark_(false)
+    mark_(false),
+    immediateDominator_(NULL),
+    numDominated_(0)
 {
 }
 
@@ -444,6 +446,12 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
     }
 
     return predecessors_.append(pred);
+}
+
+bool
+MBasicBlock::addImmediatelyDominatedBlock(MBasicBlock *child)
+{
+    return immediatelyDominated_.append(child);
 }
 
 void
