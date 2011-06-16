@@ -952,22 +952,22 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
 // resolve percentage lengths. (It can only be used to resolve
 // 'em'/'ex'-valued units).
 inline float
-ComputeSynthesizedViewBoxDimension(nsSVGLength2& aLength,
+ComputeSynthesizedViewBoxDimension(const nsSVGLength2& aLength,
                                    float aViewportLength,
-                                   nsSVGSVGElement* aSelf)
+                                   const nsSVGSVGElement* aSelf)
 {
   if (aLength.IsPercentage()) {
     return aViewportLength * aLength.GetAnimValInSpecifiedUnits() / 100.0f;
   }
 
-  return aLength.GetAnimValue(aSelf);
+  return aLength.GetAnimValue(const_cast<nsSVGSVGElement*>(aSelf));
 }
 
 //----------------------------------------------------------------------
 // public helpers:
 
 gfxMatrix
-nsSVGSVGElement::GetViewBoxTransform()
+nsSVGSVGElement::GetViewBoxTransform() const
 {
   // Do we have an override preserveAspectRatio value?
   const SVGPreserveAspectRatio* overridePARPtr =
@@ -1178,11 +1178,11 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
 // nsSVGElement methods
 
 /* virtual */ gfxMatrix
-nsSVGSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
+nsSVGSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
 {
   if (IsInner()) {
     float x, y;
-    GetAnimatedLengthValues(&x, &y, nsnull);
+    const_cast<nsSVGSVGElement*>(this)->GetAnimatedLengthValues(&x, &y, nsnull);
     return GetViewBoxTransform() * gfxMatrix().Translate(gfxPoint(x, y)) * aMatrix;
   }
 
@@ -1272,7 +1272,7 @@ nsSVGSVGElement::GetPreserveAspectRatio()
 }
 
 PRBool
-nsSVGSVGElement::ShouldSynthesizeViewBox()
+nsSVGSVGElement::ShouldSynthesizeViewBox() const
 {
   NS_ABORT_IF_FALSE(!HasValidViewbox(),
                     "Should only be called if we lack a viewBox");
@@ -1361,7 +1361,7 @@ nsSVGSVGElement::ClearImageOverridePreserveAspectRatio()
 }
 
 const SVGPreserveAspectRatio*
-nsSVGSVGElement::GetImageOverridePreserveAspectRatio()
+nsSVGSVGElement::GetImageOverridePreserveAspectRatio() const
 {
   void* valPtr = GetProperty(nsGkAtoms::overridePreserveAspectRatio);
 #ifdef DEBUG
