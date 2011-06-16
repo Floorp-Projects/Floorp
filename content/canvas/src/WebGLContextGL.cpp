@@ -53,6 +53,7 @@
 
 #include "CanvasUtils.h"
 
+#include "jsobj.h"
 #include "jstypedarray.h"
 
 #if defined(USE_ANGLE)
@@ -438,12 +439,12 @@ WebGLContext::BufferData_buf(WebGLenum target, JSObject *wb, WebGLenum usage)
 
     MakeContextCurrent();
 
-    boundBuffer->SetByteLength(JS_GetArrayBufferByteLength(wb));
-    if (!boundBuffer->CopyDataIfElementArray(JS_GetArrayBufferData(wb)))
+    boundBuffer->SetByteLength(js::ArrayBuffer::getByteLength(wb));
+    if (!boundBuffer->CopyDataIfElementArray(js::ArrayBuffer::getDataOffset(wb)))
         return ErrorOutOfMemory("bufferData: out of memory");
     boundBuffer->InvalidateCachedMaxElements();
 
-    gl->fBufferData(target, JS_GetArrayBufferByteLength(wb), JS_GetArrayBufferData(wb), usage);
+    gl->fBufferData(target, js::ArrayBuffer::getByteLength(wb), js::ArrayBuffer::getDataOffset(wb), usage);
 
     return NS_OK;
 }
@@ -510,20 +511,20 @@ WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, JSObject *
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
-    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + JS_GetArrayBufferByteLength(wb);
+    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + js::ArrayBuffer::getByteLength(wb);
     if (!checked_neededByteLength.valid())
         return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
 
     if (checked_neededByteLength.value() > boundBuffer->ByteLength())
         return ErrorInvalidOperation("BufferSubData: not enough data - operation requires %d bytes, but buffer only has %d bytes",
-                                     byteOffset, JS_GetArrayBufferByteLength(wb), boundBuffer->ByteLength());
+                                     byteOffset, js::ArrayBuffer::getByteLength(wb), boundBuffer->ByteLength());
 
     MakeContextCurrent();
 
-    boundBuffer->CopySubDataIfElementArray(byteOffset, JS_GetArrayBufferByteLength(wb), JS_GetArrayBufferData(wb));
+    boundBuffer->CopySubDataIfElementArray(byteOffset, js::ArrayBuffer::getByteLength(wb), js::ArrayBuffer::getDataOffset(wb));
     boundBuffer->InvalidateCachedMaxElements();
 
-    gl->fBufferSubData(target, byteOffset, JS_GetArrayBufferByteLength(wb), JS_GetArrayBufferData(wb));
+    gl->fBufferSubData(target, byteOffset, js::ArrayBuffer::getByteLength(wb), js::ArrayBuffer::getDataOffset(wb));
 
     return NS_OK;
 }
@@ -3087,8 +3088,8 @@ WebGLContext::ReadPixels_buf(WebGLint x, WebGLint y, WebGLsizei width, WebGLsize
                              WebGLenum format, WebGLenum type, JSObject *pixels)
 {
     return ReadPixels_base(x, y, width, height, format, type,
-                           pixels ? JS_GetArrayBufferData(pixels) : 0,
-                           pixels ? JS_GetArrayBufferByteLength(pixels) : 0);
+                           pixels ? js::ArrayBuffer::getDataOffset(pixels) : 0,
+                           pixels ? js::ArrayBuffer::getByteLength(pixels) : 0);
 }
 
 NS_IMETHODIMP
@@ -4286,8 +4287,8 @@ WebGLContext::TexImage2D_buf(WebGLenum target, WebGLint level, WebGLenum interna
                              JSObject *pixels)
 {
     return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
-                           pixels ? JS_GetArrayBufferData(pixels) : 0,
-                           pixels ? JS_GetArrayBufferByteLength(pixels) : 0,
+                           pixels ? js::ArrayBuffer::getDataOffset(pixels) : 0,
+                           pixels ? js::ArrayBuffer::getByteLength(pixels) : 0,
                            -1,
                            WebGLTexelFormat::Auto, PR_FALSE);
 }
@@ -4465,7 +4466,7 @@ WebGLContext::TexSubImage2D_buf(WebGLenum target, WebGLint level,
 
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               width, height, 0, format, type,
-                              JS_GetArrayBufferData(pixels), JS_GetArrayBufferByteLength(pixels),
+                              js::ArrayBuffer::getDataOffset(pixels), js::ArrayBuffer::getByteLength(pixels),
                               -1,
                               WebGLTexelFormat::Auto, PR_FALSE);
 }
