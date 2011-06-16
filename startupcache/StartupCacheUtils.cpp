@@ -5,6 +5,7 @@
 #include "nsNetUtil.h"
 #include "nsIJARURI.h"
 #include "nsIResProtocolHandler.h"
+#include "nsIChromeRegistry.h"
 #include "nsAutoPtr.h"
 #include "StartupCacheUtils.h"
 #include "mozilla/scache/StartupCache.h"
@@ -121,19 +122,19 @@ canonicalizeBase(nsCAutoString &spec,
  *    resource/gre or resource/app to avoid depending on install location.
  *  * jar:file:///path/to/file.jar!/sub/path urls are replaced with
  *    /path/to/file.jar/sub/path
- *  * .bin suffix is added to the end of the path to indicate that jsloader/ entries
- *     are binary representations of JS source.
- *  The result is appended to the string passed in, and it is recommended
- *  to add some sort of prefix before calling to group types of entries
- * For example, in the js loader:
+ *
+ *  The result is appended to the string passed in. Adding a prefix before
+ *  calling is recommended to avoid colliding with other cache users.
+ *
+ * For example, in the js loader (string is prefixed with jsloader by caller):
  *  resource://gre/modules/XPCOMUtils.jsm or
  *  file://$GRE_DIR/modules/XPCOMUtils.jsm or
- *  jar:file://$GRE_DIR/omni.jar!/modules/XPCOMUtils.jsm become
- *     jsloader/resource/gre/modules/XPCOMUtils.jsm.bin
+ *  jar:file://$GRE_DIR/omni.jar!/modules/XPCOMUtils.jsm becomes
+ *     jsloader/resource/gre/modules/XPCOMUtils.jsm
  *  file://$PROFILE_DIR/extensions/{uuid}/components/component.js becomes
- *     jsloader/$PROFILE_DIR/extensions/%7Buuid%7D/components/component.js.bin
+ *     jsloader/$PROFILE_DIR/extensions/%7Buuid%7D/components/component.js
  *  jar:file://$PROFILE_DIR/extensions/some.xpi!/components/component.js becomes
- *     jsloader/$PROFILE_DIR/extensions/some.xpi/components/component.js.bin
+ *     jsloader/$PROFILE_DIR/extensions/some.xpi/components/component.js
  */
 NS_EXPORT nsresult
 NS_PathifyURI(nsIURI *in, nsACString &out)
@@ -162,7 +163,17 @@ NS_PathifyURI(nsIURI *in, nsACString &out)
         rv = ioService->NewURI(spec, nsnull, nsnull, getter_AddRefs(uri));
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
-        rv = in->GetSpec(spec);
+        if (NS_SUCCEEDED(in->SchemeIs("chrome", &equals)) && equals) {
+            nsCOMPtr<nsIChromeRegistry> chromeReg =
+                mozilla::services::GetChromeRegistryService();
+            if (!chromeReg)
+                return NS_ERROR_UNEXPECTED;
+
+            rv = chromeReg->ConvertChromeURL(in, getter_AddRefs(uri));
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        rv = uri->GetSpec(spec);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -186,15 +197,10 @@ NS_PathifyURI(nsIURI *in, nsACString &out)
             rv = jarURI->GetJARFile(getter_AddRefs(jarFileURI));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsCOMPtr<nsIFileURL> jarFileURL;
-            jarFileURL = do_QueryInterface(jarFileURI, &rv);
+            rv = NS_PathifyURI(jarFileURI, out);
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsCAutoString path;
-            rv = jarFileURL->GetPath(path);
-            NS_ENSURE_SUCCESS(rv, rv);
-            out.Append(path);
-
             rv = jarURI->GetJAREntry(path);
             NS_ENSURE_SUCCESS(rv, rv);
             out.Append("/");
@@ -208,8 +214,6 @@ NS_PathifyURI(nsIURI *in, nsACString &out)
             out.Append(spec);
         }
     }
-
-    out.Append(".bin");
     return NS_OK;
 }
 
