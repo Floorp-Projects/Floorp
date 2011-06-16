@@ -2140,7 +2140,8 @@ public:
                                 const nsPoint &aOrigin);
 
   /**
-   * Returns the bounds of a frame as defined for transforms.  If
+   * Returns the bounds of a frame as defined for resolving percentage
+   * <translation-value>s in CSS transforms.  If
    * UNIFIED_CONTINUATIONS is not defined, this is simply the frame's bounding
    * rectangle, translated to the origin.  Otherwise, returns the smallest
    * rectangle containing a frame and all of its continuations.  For example,
