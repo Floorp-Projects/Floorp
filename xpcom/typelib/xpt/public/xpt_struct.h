@@ -264,12 +264,14 @@ struct XPTInterfaceDescriptor {
 
 #define XPT_ID_SCRIPTABLE           0x80
 #define XPT_ID_FUNCTION             0x40
-#define XPT_ID_FLAGMASK             0xc0
+#define XPT_ID_BUILTINCLASS         0x20
+#define XPT_ID_FLAGMASK             0xe0
 #define XPT_ID_TAGMASK              (~XPT_ID_FLAGMASK)
 #define XPT_ID_TAG(id)              ((id).flags & XPT_ID_TAGMASK)
 
 #define XPT_ID_IS_SCRIPTABLE(flags) (!!(flags & XPT_ID_SCRIPTABLE))
 #define XPT_ID_IS_FUNCTION(flags) (!!(flags & XPT_ID_FUNCTION))
+#define XPT_ID_IS_BUILTINCLASS(flags) (!!(flags & XPT_ID_BUILTINCLASS))
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
