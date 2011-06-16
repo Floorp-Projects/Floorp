@@ -175,6 +175,7 @@ class LIRGenerator : public MInstructionVisitor
     bool lowerPhi(MPhi *phi);
 
   public:
+    bool visitInstruction(MInstruction *ins);
     bool visitBlock(MBasicBlock *block);
 
 #define VISITMIR(op) bool visit##op(M##op *ins);
