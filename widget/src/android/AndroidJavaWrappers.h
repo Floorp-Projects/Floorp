@@ -167,8 +167,10 @@ public:
     };
 
     int BeginDrawing();
+    jobject GetSoftwareDrawBitmap();
     jobject GetSoftwareDrawBuffer();
     void EndDrawing();
+    void Draw2D(jobject bitmap, int width, int height);
     void Draw2D(jobject buffer, int stride);
 
     // must have a JNI local frame when calling this,
@@ -179,7 +181,9 @@ protected:
     static jclass jGeckoSurfaceViewClass;
     static jmethodID jBeginDrawingMethod;
     static jmethodID jEndDrawingMethod;
-    static jmethodID jDraw2DMethod;
+    static jmethodID jDraw2DBitmapMethod;
+    static jmethodID jDraw2DBufferMethod;
+    static jmethodID jGetSoftwareDrawBitmapMethod;
     static jmethodID jGetSoftwareDrawBufferMethod;
     static jmethodID jGetHolderMethod;
 };
