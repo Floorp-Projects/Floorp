@@ -48,14 +48,14 @@ struct JSObject;
 
 [ptr] native JSObjectPtr(JSObject);
 
-[scriptable, uuid(89da3673-e699-4f26-9ed7-11a528011434)]
+[scriptable, uuid(3f945a8e-58ca-47ba-a789-82d022e837fd)]
 interface xpcIJSModuleLoader : nsISupports
 {
   /**
    * To be called from JavaScript only.
    *
    * Synchronously loads and evaluates the js file located at
-   * 'registryLocation' with a new, fully privileged global object.
+   * aResourceURI with a new, fully privileged global object.
    *
    * If 'targetObj' is specified and equal to null, returns the
    * module's global object. Otherwise (if 'targetObj' is not
@@ -85,11 +85,19 @@ interface xpcIJSModuleLoader : nsISupports
                              /* , [optional] in JSObject targetObj */);
 
   /**
-   * Imports the JS module at 'registryLocation' to the JS object
+   * Imports the JS module at aResourceURI to the JS object
    * 'targetObj' (if != null) as described for importModule() and
    * returns the module's global object.
    */
   [noscript] JSObjectPtr importInto(in AUTF8String aResourceURI,
                                     in JSObjectPtr targetObj,
                                     in nsAXPCNativeCallContextPtr cc);
+
+  /**
+   * Unloads the JS module at aResourceURI. Existing references to the module
+   * will continue to work but any subsequent import of the module will
+   * reload it and give new reference. If the JS module hasn't yet been imported
+   * then this method will do nothing.
+   */
+  void unload(in AUTF8String aResourceURI);
 };
