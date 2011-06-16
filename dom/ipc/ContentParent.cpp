@@ -101,7 +101,6 @@
 #ifdef ANDROID
 #include "gfxAndroidPlatform.h"
 #include "AndroidBridge.h"
-#include "nsSystemInfo.h"
 #endif
 
 #include "nsIClipboard.h"
@@ -220,17 +219,8 @@ ContentParent::OnChannelConnected(int32 pid)
             nice = atoi(relativeNicenessStr);
         }
 
-        /* make the GUI thread have higher priority on single-cpu devices */
-        nsCOMPtr<nsIPropertyBag2> infoService = do_GetService(NS_SYSTEMINFO_CONTRACTID);
-        if (infoService) {
-            PRInt32 cpus;
-            nsresult rv = infoService->GetPropertyAsInt32(NS_LITERAL_STRING("cpucount"), &cpus);
-            if (NS_FAILED(rv)) {
-                cpus = 1;
-            }
-            if (nice != 0 && cpus == 1) {
-                setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
-            }
+        if (nice != 0) {
+           setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
         }
 #endif
     }
