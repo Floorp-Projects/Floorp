@@ -549,7 +549,6 @@ class Interface(object):
 class InterfaceAttributes(object):
     uuid = None
     scriptable = False
-    builtinclass = False
     function = False
     deprecated = False
     noscript = False
@@ -566,16 +565,12 @@ class InterfaceAttributes(object):
     def setnoscript(self):
         self.noscript = True
 
-    def setbuiltinclass(self):
-        self.builtinclass = True
-
     def setdeprecated(self):
         self.deprecated = True
 
     actions = {
         'uuid':       (True, setuuid),
         'scriptable': (False, setscriptable),
-        'builtinclass': (False, setbuiltinclass),
         'function':   (False, setfunction),
         'noscript':   (False, setnoscript),
         'deprecated': (False, setdeprecated),
@@ -610,8 +605,6 @@ class InterfaceAttributes(object):
             l.append("\tuuid: %s\n" % self.uuid)
         if self.scriptable:
             l.append("\tscriptable\n")
-        if self.builtinclass:
-            l.append("\tbuiltinclass\n")
         if self.function:
             l.append("\tfunction\n")
         return "".join(l)
