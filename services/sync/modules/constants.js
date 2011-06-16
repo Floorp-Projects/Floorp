@@ -120,6 +120,9 @@ SCORE_INCREMENT_MEDIUM:                10,
 // Instant sync score increment
 SCORE_INCREMENT_XLARGE:                300 + 1, //MULTI_DEVICE_THRESHOLD + 1
 
+// Delay before incrementing global score
+SCORE_UPDATE_DELAY:                    100,
+
 // File IO Flags
 MODE_RDONLY:                           0x01,
 MODE_WRONLY:                           0x02,
