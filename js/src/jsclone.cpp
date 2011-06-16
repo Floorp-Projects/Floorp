@@ -84,6 +84,7 @@ enum StructuredDataType {
     SCTAG_BOOLEAN_OBJECT,
     SCTAG_STRING_OBJECT,
     SCTAG_NUMBER_OBJECT,
+    SCTAG_BACK_REFERENCE_OBJECT,
     SCTAG_TYPED_ARRAY_MIN = 0xFFFF0100,
     SCTAG_TYPED_ARRAY_MAX = SCTAG_TYPED_ARRAY_MIN + TypedArray::TYPE_MAX - 1,
     SCTAG_END_OF_BUILTIN_TYPES
@@ -390,7 +391,6 @@ JSStructuredCloneWriter::checkStack()
     else
         JS_ASSERT(total <= ids.length());
 
-    JS_ASSERT(memory.count() == objs.length());
     size_t j = objs.length();
     for (size_t i = 0; i < limit; i++)
         JS_ASSERT(memory.has(&objs[--j].toObject()));
@@ -467,18 +467,18 @@ JSStructuredCloneWriter::startObject(JSObject *obj)
 {
     JS_ASSERT(obj->isArray() || obj->isObject());
 
-    /* Fail if obj is already on the stack. */
-    MemorySet::AddPtr p = memory.lookupForAdd(obj);
-    if (p) {
-        JSContext *cx = context();
-        if (callbacks && callbacks->reportError)
-            callbacks->reportError(cx, JS_SCERR_RECURSION);
-        else
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SC_RECURSION);
+    /* Handle cycles in the object graph. */
+    CloneMemory::AddPtr p = memory.lookupForAdd(obj);
+    if (p)
+        return out.writePair(SCTAG_BACK_REFERENCE_OBJECT, p->value);
+    if (!memory.add(p, obj, memory.count()))
+        return false;
+
+    if (memory.count() == UINT32_MAX) {
+        JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
+                             JSMSG_NEED_DIET, "object graph to serialize");
         return false;
     }
-    if (!memory.add(p, obj))
-        return false;
 
     /*
      * Get enumerable property ids and put them in reverse order so that they
@@ -574,17 +574,21 @@ JSStructuredCloneWriter::write(const Value &v)
 
                 if (prop) {
                     Value val;
-                    if (!writeId(id) || !obj->getProperty(context(), id, &val) || !startWrite(val))
+                    if (!writeId(id) ||
+                        !obj->getProperty(context(), id, &val) ||
+                        !startWrite(val))
                         return false;
                 }
             }
         } else {
             out.writePair(SCTAG_NULL, 0);
-            memory.remove(obj);
             objs.popBack();
             counts.popBack();
         }
     }
+
+    memory.clear();
+
     return true;
 }
 
@@ -771,9 +775,20 @@ JSStructuredCloneReader::startRead(Value *vp)
         JSObject *obj = (tag == SCTAG_ARRAY_OBJECT)
                         ? NewDenseEmptyArray(context())
                         : NewBuiltinClassInstance(context(), &js_ObjectClass);
-        if (!obj || !objs.append(ObjectValue(*obj)))
+        if (!obj || !objs.append(ObjectValue(*obj)) ||
+            !allObjs.append(ObjectValue(*obj)))
             return false;
         vp->setObject(*obj);
+        break;
+      }
+
+      case SCTAG_BACK_REFERENCE_OBJECT: {
+        if (data >= allObjs.length()) {
+            JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
+                                 JSMSG_SC_BAD_SERIALIZED_DATA,
+                                 "invalid input");
+        }
+        *vp = allObjs[data];
         break;
       }
 
@@ -856,5 +871,8 @@ JSStructuredCloneReader::read(Value *vp)
                 return false;
         }
     }
+
+    allObjs.clear();
+
     return true;
 }
