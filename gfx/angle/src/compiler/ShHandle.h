@@ -90,6 +90,9 @@ private:
     TInfoSink infoSink;  // Output sink.
     TVariableInfoList attribs;  // Active attributes in the compiled shader.
     TVariableInfoList uniforms;  // Active uniforms in the compiled shader.
+
+    // Pair of long varying varibale name <originalName, mappedName>.
+    TMap<TString, TString> varyingLongNameMap;
 };
 
 //

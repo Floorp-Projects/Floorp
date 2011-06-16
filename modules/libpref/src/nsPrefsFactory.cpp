@@ -43,7 +43,8 @@
 
 using namespace mozilla;
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Preferences, Preferences::GetInstance)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Preferences,
+                                         Preferences::GetInstanceForService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefLocalizedString, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRelativeFilePref)
 

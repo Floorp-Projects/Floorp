@@ -40,6 +40,9 @@
 
 #include "domstubs.idl"
 
+interface nsIVariant;
+interface nsIDOMUserDataHandler;
+
 /**
  * The nsIDOMNode interface is the primary datatype for the entire 
  * Document Object Model.
@@ -49,7 +52,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(817dc774-2ad2-4111-9042-1787df86c015)]
+[scriptable, uuid(29a95243-c73e-454c-a996-272f6727b03c)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
@@ -105,4 +108,42 @@ interface nsIDOMNode : nsISupports
   readonly attribute DOMString        localName;
   // Introduced in DOM Level 2:
   boolean            hasAttributes();
+
+  // Introduced in DOM Level 3:
+  // This uses a binaryname to avoid warnings due to name collision with
+  // nsINode::GetBaseURI
+  [binaryname(DOMBaseURI)] readonly attribute DOMString baseURI;
+
+  // DocumentPosition
+  const unsigned short      DOCUMENT_POSITION_DISCONNECTED = 0x01;
+  const unsigned short      DOCUMENT_POSITION_PRECEDING    = 0x02;
+  const unsigned short      DOCUMENT_POSITION_FOLLOWING    = 0x04;
+  const unsigned short      DOCUMENT_POSITION_CONTAINS     = 0x08;
+  const unsigned short      DOCUMENT_POSITION_CONTAINED_BY = 0x10;
+  const unsigned short      DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
+
+  // Introduced in DOM Level 3:
+  unsigned short     compareDocumentPosition(in nsIDOMNode other)
+                                        raises(DOMException);
+  // Introduced in DOM Level 3:
+           attribute DOMString       textContent;
+                                        // raises(DOMException) on setting
+                                        // raises(DOMException) on retrieval
+
+  // Introduced in DOM Level 3:
+  boolean            isSameNode(in nsIDOMNode other);
+  // Introduced in DOM Level 3:
+  DOMString          lookupPrefix(in DOMString namespaceURI);
+  // Introduced in DOM Level 3:
+  boolean            isDefaultNamespace(in DOMString namespaceURI);
+  // Introduced in DOM Level 3:
+  DOMString          lookupNamespaceURI(in DOMString prefix);
+  // Introduced in DOM Level 3:
+  boolean            isEqualNode(in nsIDOMNode arg);
+  // Introduced in DOM Level 3:
+  nsIVariant         setUserData(in DOMString key, 
+                                 in nsIVariant data, 
+                                 in nsIDOMUserDataHandler handler);
+  // Introduced in DOM Level 3:
+  nsIVariant         getUserData(in DOMString key);
 };

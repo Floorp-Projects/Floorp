@@ -39,6 +39,9 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+interface nsIControllers;
+interface nsIDOMValidityState;
+
 /**
  * The nsIDOMHTMLTextAreaElement interface is the interface to a
  * [X]HTML textarea element.
@@ -53,16 +56,45 @@
 [scriptable, uuid(905edd3e-c0b3-4d54-8a2c-0eaab6ccb3cf)]
 interface nsIDOMHTMLTextAreaElement : nsIDOMHTMLElement
 {
-  // Modified in DOM Level 2:
-           attribute DOMString             defaultValue;
-  readonly attribute nsIDOMHTMLFormElement form;
+           attribute boolean               autofocus;
            attribute unsigned long         cols;
            attribute boolean               disabled;
+  readonly attribute nsIDOMHTMLFormElement form;
+           attribute long                  maxLength;
            attribute DOMString             name;
+           attribute DOMString             placeholder;
            attribute boolean               readOnly;
+           attribute boolean               required;
            attribute unsigned long         rows;
-           attribute long                  tabIndex;
+  /**
+   * Reflects the wrap content attribute. Possible values are "soft", "hard" and
+   * "off". "soft" is the default.
+   */
+  [Null(Stringify)]
+           attribute DOMString             wrap;
+
   readonly attribute DOMString             type;
+           attribute DOMString             defaultValue;
            attribute DOMString             value;
-  void                      select();
+  readonly attribute long                  textLength;
+
+  // The following lines are part of the constraint validation API, see:
+  // http://www.whatwg.org/specs/web-apps/current-work/#the-constraint-validation-api
+  readonly attribute boolean               willValidate;
+  readonly attribute nsIDOMValidityState   validity;
+  readonly attribute DOMString             validationMessage;
+  boolean checkValidity();
+  void setCustomValidity(in DOMString error);
+
+  void select();
+           attribute long                  selectionStart;
+           attribute long                  selectionEnd;
+  void setSelectionRange(in long selectionStart, in long selectionEnd);
+
+  // Defined on HTMLElement in the specification.
+           attribute long                  tabIndex;
+
+
+  // Mozilla extensions
+  readonly attribute nsIControllers   controllers;
 };

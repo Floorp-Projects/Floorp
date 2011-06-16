@@ -414,12 +414,11 @@ index 3a8b8a6..21827aa 100644
  } cairo_font_type_t;
  
  cairo_public cairo_font_type_t
-@@ -2009,7 +2010,8 @@ typedef enum _cairo_surface_type {
+@@ -2009,7 +2010,7 @@ typedef enum _cairo_surface_type {
      CAIRO_SURFACE_TYPE_TEE,
      CAIRO_SURFACE_TYPE_XML,
      CAIRO_SURFACE_TYPE_SKIA,
 -    CAIRO_SURFACE_TYPE_DDRAW
-+    CAIRO_SURFACE_TYPE_DDRAW,
 +    CAIRO_SURFACE_TYPE_D2D
  } cairo_surface_type_t;
  

@@ -259,6 +259,10 @@ _TEST_FILES = \
 		test_tmpl_invalidqp.xul \
 		test_tmpl_errors.xul \
 		test_tmpl_regenerate.xul \
+		test_bug441785.xul \
+		bug441785-1.rdf \
+		bug441785-2.rdf \
+		test_sortservice.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

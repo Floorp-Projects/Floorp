@@ -68,7 +68,10 @@ const ElementTouchHelper = {
 
   /* Retrieve the closest element to a point by looking at borders position */
   getClosest: function getClosest(aWindowUtils, aX, aY) {
-    let dpiRatio = aWindowUtils.displayDPI / kReferenceDpi;
+    if (!this.dpiRatio)
+      this.dpiRatio = aWindowUtils.displayDPI / kReferenceDpi;
+
+    let dpiRatio = this.dpiRatio;
 
     let target = aWindowUtils.elementFromPoint(aX, aY,
                                                true,   /* ignore root scroll frame*/
@@ -351,11 +354,6 @@ let Content = {
             sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: action });
           } else if (ot == errorDoc.getElementById("getMeOutOfHereButton")) {
             sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: "leave" });
-          }
-        } else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
-          if (ot == errorDoc.getElementById("errorTryAgain")) {
-            // Make sure we're online before attempting to load
-            Util.forceOnline();
           }
         } else if (/^about:blocked/.test(errorDoc.documentURI)) {
           // The event came from a button on a malware/phishing block page

@@ -72,6 +72,7 @@ var gSyncSetup = {
                                          Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference]),
 
+  haveCaptcha: true,
   captchaBrowser: null,
   wizard: null,
   _disabledSites: [],
@@ -143,6 +144,7 @@ var gSyncSetup = {
       return false;
     this._settingUpNew = true;
     this.wizard.pageIndex = NEW_ACCOUNT_START_PAGE;
+    this.loadCaptcha();
   },
 
   useExistingAccount: function () {
@@ -271,8 +273,9 @@ var gSyncSetup = {
           if (this._usingMainServers)
             return true;
 
-          if (this._validateServer(document.getElementById("existingServer"), false))
+          if (this._validateServer(document.getElementById("existingServer"))) {
             return true;
+          }
         }
         return false;
     }
@@ -364,6 +367,11 @@ var gSyncSetup = {
         if (!el.value)
           this.onPassphraseGenerate();
         this.checkFields();
+        break;
+      case NEW_ACCOUNT_CAPTCHA_PAGE:
+        if (!this.haveCaptcha) {
+          gSyncSetup.wizard.advance();
+        }
         break;
       case NEW_ACCOUNT_START_PAGE:
         this.wizard.getButton("extra1").hidden = false;
@@ -478,12 +486,6 @@ var gSyncSetup = {
         image.setAttribute("status", "error");
         label.value = Weave.Utils.getErrorString(error);
         return false;
-      case NEW_ACCOUNT_PP_PAGE:
-        // Time to load the captcha.
-        // First check for NoScript and whitelist the right sites.
-        this._handleNoScript(true);
-        this.captchaBrowser.loadURI(Weave.Service.miscAPI + "captcha_html");
-        break;
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         Weave.Service.account = Weave.Utils.normalizeAccount(
           document.getElementById("existingAccountName").value);
@@ -552,9 +554,6 @@ var gSyncSetup = {
       else
         gSyncUtils.openAddedClientFirstrun();
     }
-
-    if (!Weave.Service.isLoggedIn)
-      Weave.Service.login();
 
     Weave.Service.syncOnIdle(1);
   },
@@ -715,6 +714,9 @@ var gSyncSetup = {
     }
     control.removeAttribute("editable");
     Weave.Svc.Prefs.reset("serverURL");
+    if (this._settingUpNew) {
+      this.loadCaptcha();
+    }
     this.checkAccount();
     this.status.server = true;
     document.getElementById("serverFeedbackRow").hidden = true;
@@ -737,7 +739,7 @@ var gSyncSetup = {
     let feedback = document.getElementById("serverFeedbackRow");
     let str = "";
     if (el.value) {
-      valid = this._validateServer(el, true);
+      valid = this._validateServer(el);
       let str = valid ? "" : "serverInvalid.label";
       this._setFeedbackMessage(feedback, valid, str);
     }
@@ -752,9 +754,7 @@ var gSyncSetup = {
     this.checkFields();
   },
 
-  // xxxmpc - checkRemote is a hack, we can't verify a minimal server is live
-  // without auth, so we won't validate in the existing-server case.
-  _validateServer: function (element, checkRemote) {
+  _validateServer: function (element) {
     let valid = false;
     let val = element.value;
     if (!val)
@@ -765,7 +765,7 @@ var gSyncSetup = {
     if (!uri)
       uri = Weave.Utils.makeURI("https://" + val);
 
-    if (uri && checkRemote) {
+    if (uri && this._settingUpNew) {
       function isValid(uri) {
         Weave.Service.serverURL = uri.spec;
         let check = Weave.Service.checkAccount("a");
@@ -782,6 +782,10 @@ var gSyncSetup = {
       }
       if (!valid)
         valid = isValid(uri);
+
+      if (valid) {
+        this.loadCaptcha();
+      }
     }
     else if (uri) {
       valid = true;
@@ -949,6 +953,12 @@ var gSyncSetup = {
     this._setFeedback(element, success, str);
   },
 
+  loadCaptcha: function loadCaptcha() {
+    // First check for NoScript and whitelist the right sites.
+    this._handleNoScript(true);
+    this.captchaBrowser.loadURI(Weave.Service.miscAPI + "captcha_html");
+  },
+
   onStateChange: function(webProgress, request, stateFlags, status) {
     // We're only looking for the end of the frame load
     if ((stateFlags & Ci.nsIWebProgressListener.STATE_STOP) == 0)
@@ -959,8 +969,18 @@ var gSyncSetup = {
       return;
 
     // If we didn't find the captcha, assume it's not needed and move on
-    if (request.QueryInterface(Ci.nsIHttpChannel).responseStatus == 404)
-      this.onWizardAdvance();
+    if (request.QueryInterface(Ci.nsIHttpChannel).responseStatus == 404) {
+      this.haveCaptcha = false;
+      // Hide the browser just in case we end up displaying the captcha page
+      // due to a sign up error.
+      this.captchaBrowser.hidden = true;
+      if (this.wizard.pageIndex == NEW_ACCOUNT_CAPTCHA_PAGE) {
+        this.onWizardAdvance();
+      }
+    } else {
+      this.haveCaptcha = true;
+      this.captchaBrowser.hidden = false;
+    }
   },
   onProgressChange: function() {},
   onStatusChange: function() {},

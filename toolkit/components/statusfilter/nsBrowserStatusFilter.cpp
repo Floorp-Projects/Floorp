@@ -309,15 +309,6 @@ nsBrowserStatusFilter::OnRefreshAttempted(nsIWebProgress *aWebProgress,
                                         allowRefresh);
 }
 
-NS_IMETHODIMP
-nsBrowserStatusFilter::OnLocationChange2(nsIWebProgress *aWebProgress,
-                                         nsIRequest *aRequest,
-                                         nsIURI *aLocation,
-                                         PRUint32 aFlags)
-{
-    return OnLocationChange(aWebProgress, aRequest, aLocation);
-}
-
 //-----------------------------------------------------------------------------
 // nsBrowserStatusFilter <private>
 //-----------------------------------------------------------------------------

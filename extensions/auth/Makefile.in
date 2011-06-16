@@ -58,15 +58,9 @@ LIBXUL_LIBRARY = 1
 CPPSRCS		= \
 		nsAuthFactory.cpp \
 		nsHttpNegotiateAuth.cpp \
-		$(NULL)
-
-EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
-CPPSRCS		+= \
 		nsAuthGSSAPI.cpp \
-		nsAuthSASL.cpp
+		nsAuthSASL.cpp \
+		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES	+= -DUSE_SSPI

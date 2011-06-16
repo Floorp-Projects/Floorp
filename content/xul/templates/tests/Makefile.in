@@ -45,14 +45,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = chrome
 
-_TEST_FILES = \
-		test_bug441785.xul \
-		bug441785-1.rdf \
-		bug441785-2.rdf \
-		test_sortservice.xul \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

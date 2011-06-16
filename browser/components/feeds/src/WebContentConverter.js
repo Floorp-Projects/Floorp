@@ -911,23 +911,14 @@ WebContentConverterRegistrar.prototype = {
     return this.QueryInterface(iid);
   },
 
-  /**
-   * See nsIClassInfo
-   */
-  getInterfaces: function WCCR_getInterfaces(countRef) {
-    var interfaces = 
-        [Ci.nsIWebContentConverterService, Ci.nsIWebContentHandlerRegistrar,
-         Ci.nsIObserver, Ci.nsIClassInfo, Ci.nsIFactory, Ci.nsISupports];
-    countRef.value = interfaces.length;
-    return interfaces;
-  },
-  getHelperForLanguage: function WCCR_getHelperForLanguage(language) {
-    return null;
-  },
   classID: WCCR_CLASSID,
-  implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
-  flags: Ci.nsIClassInfo.DOM_OBJECT,
-  
+  classInfo: XPCOMUtils.generateCI({classID: WCCR_CLASSID,
+                                    contractID: WCCR_CONTRACTID,
+                                    interfaces: [Ci.nsIWebContentConverterService,
+                                                 Ci.nsIWebContentHandlerRegistrar,
+                                                 Ci.nsIObserver, Ci.nsIFactory],
+                                    flags: Ci.nsIClassInfo.DOM_OBJECT}),
+
   /**
    * See nsISupports
    */
@@ -935,9 +926,7 @@ WebContentConverterRegistrar.prototype = {
      [Ci.nsIWebContentConverterService, 
       Ci.nsIWebContentHandlerRegistrar,
       Ci.nsIObserver,
-      Ci.nsIClassInfo,
-      Ci.nsIFactory,
-      Ci.nsISupports]),
+      Ci.nsIFactory]),
 
   _xpcom_categories: [{
     category: "app-startup",

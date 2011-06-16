@@ -130,6 +130,8 @@ const char *js_CodeName[] = {
 
 /************************************************************************/
 
+#define COUNTS_LEN 16
+
 static ptrdiff_t
 GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 {
@@ -275,20 +277,23 @@ public:
  * If counts != NULL, include a counter of the number of times each op was executed.
  */
 JS_FRIEND_API(JSBool)
-js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc, int* counts, Sprinter *sp)
+js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc, Sprinter *sp)
 {
     jsbytecode *next, *end;
     uintN len;
 
-    if (counts)
-        SprintCString(sp, "count    x ");
-    SprintCString(sp, "off   ");
+    SprintCString(sp, "loc   ");
+    if (script->pcCounters)
+        Sprint(sp, "counts%*s x ", COUNTS_LEN - strlen("counts"), "");
     if (lines)
         SprintCString(sp, "line");
     SprintCString(sp, "  op\n");
-    if (counts)
-        SprintCString(sp, "--------   ");
     SprintCString(sp, "----- ");
+    if (script->pcCounters) {
+        for (int i = 0; i < COUNTS_LEN; ++i)
+            SprintCString(sp, "-");
+        SprintCString(sp, "   ");
+    }
     if (lines)
         SprintCString(sp, "----");
     SprintCString(sp, "  --\n");
@@ -306,7 +311,7 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc
         }
         len = js_Disassemble1(cx, script, next,
                               next - script->code,
-                              lines, sp, counts);
+                              lines, sp);
         if (!len)
             return JS_FALSE;
         next += len;
@@ -315,18 +320,18 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc
 }
 
 JS_FRIEND_API(JSBool)
-js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, Sprinter *sp, int* counts)
+js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, Sprinter *sp)
 {
-    return js_DisassembleAtPC(cx, script, lines, NULL, counts, sp);
+    return js_DisassembleAtPC(cx, script, lines, NULL, sp);
 }
 
 JS_FRIEND_API(JSBool)
-js_DumpPC(JSContext *cx, int* counts = NULL)
+js_DumpPC(JSContext *cx)
 {
     void *mark = JS_ARENA_MARK(&cx->tempPool);
     Sprinter sprinter;
     INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
-    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs().pc, counts, &sprinter);
+    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs().pc, &sprinter);
     fprintf(stdout, "%s", sprinter.base);
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
@@ -399,7 +404,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 
 JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
-                uintN loc, JSBool lines, Sprinter *sp, int* counts)
+                uintN loc, JSBool lines, Sprinter *sp)
 {
     JSOp op;
     const JSCodeSpec *cs;
@@ -410,6 +415,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     JSObject *obj;
     jsval v;
     jsint i;
+    JSPCCounters& counts(script->pcCounters);
 
     AutoScriptUntrapper untrapper(cx, script, &pc);
 
@@ -425,8 +431,15 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     cs = &js_CodeSpec[op];
     len = (ptrdiff_t) cs->length;
     Sprint(sp, "%05u:", loc);
-    if (counts)
-        Sprint(sp, "% 8d x ", counts[loc]);
+    if (counts) {
+        ptrdiff_t start = Sprint(sp, "%d", counts.get(0, loc));
+        for (size_t i = 1; i < counts.numRunmodes(); ++i)
+            Sprint(sp, "/%d", counts.get(i, loc));
+        int l = Sprint(sp, "") - start;
+        if (l < COUNTS_LEN)
+            Sprint(sp, "%*s", COUNTS_LEN - l, "");
+        Sprint(sp, " x ");
+    }
     if (lines)
         Sprint(sp, "%4u", JS_PCToLineNumber(cx, script, pc));
     Sprint(sp, "  %s", js_CodeName[op]);
@@ -438,7 +451,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_JUMP:
       case JOF_JUMPX:
         off = GetJumpOffset(pc, pc);
-        Sprint(sp, " %u (%d)", loc + intN(off), intN(off));
+        Sprint(sp, " %u (%+d)", loc + (intN) off, (intN) off);
         break;
 
       case JOF_ATOM:
@@ -5122,7 +5135,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
 
     LeaveTrace(cx);
     
-    if (!cx->running() || !cx->fp()->isScriptFrame())
+    if (!cx->hasfp() || !cx->fp()->isScriptFrame())
         goto do_fallback;
 
     fp = cx->fp();

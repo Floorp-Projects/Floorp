@@ -46,24 +46,12 @@ waitForExplicitFinish();
 const TEST_IDENTIFIER = "ui-perf-test";
 const TEST_SUITE = "places";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
-var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-         getService(Ci.nsIWindowMediator);
-var win = wm.getMostRecentWindow("navigator:browser");
-
-var ios = Cc["@mozilla.org/network/io-service;1"].
-          getService(Ci.nsIIOService);
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
 var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
-var prefs = Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefBranch);
 
-var maxResults = prefs.getIntPref("browser.urlbar.maxRichResults");
+var maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 var onSearchComplete = gURLBar.onSearchComplete;
 
 function add_visit(aURI, aDate) {

@@ -45,7 +45,7 @@ interface nsIIDBRequest;
 interface nsIVariant;
 
 %{C++
-#include "jsapi.h"
+#include "jspubtd.h"
 %}
 
 /**

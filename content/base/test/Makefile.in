@@ -89,7 +89,6 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug338679.html \
 		test_bug339494.html \
 		test_bug339494.xhtml \
-		test_bug339494.xul \
 		test_bug340571.html \
 		test_bug343596.html \
 		test_bug345339.html \
@@ -101,7 +100,6 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug357450.js \
 		test_bug357450.html \
 		test_bug357450.xhtml \
-		test_bug357450.xul \
 		test_bug357450_svg.xhtml \
 		test_bug357509.html \
 		test_bug358660.html \
@@ -412,7 +410,6 @@ _TEST_FILES2 = \
 		file_bug548193.sjs \
 		test_html_colors_quirks.html \
 		test_html_colors_standards.html \
-		test_bug571390.xul \
 		test_bug300992.html \
 		test_websocket_hello.html \
 		file_websocket_hello_wsh.py \
@@ -504,6 +501,10 @@ _TEST_FILES2 = \
 		delayedServerEvents.sjs \
 		$(NULL)
 
+_CHROME_FILES =	\
+		test_bug357450.js \
+		$(NULL)
+
 # This test fails on the Mac for some reason
 ifneq (,$(filter gtk2 windows,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES2 += 	test_copyimage.html \
@@ -530,3 +531,7 @@ libs:: $(_TEST_FILES2)
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+

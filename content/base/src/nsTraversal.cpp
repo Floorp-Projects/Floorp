@@ -80,43 +80,14 @@ nsresult nsTraversal::TestNode(nsINode* aNode, PRInt16* _filtered)
 
     *_filtered = nsIDOMNodeFilter::FILTER_SKIP;
 
-    PRUint16 nodeType = 0;
-    // Check the most common cases
-    if (aNode->IsElement()) {
-        nodeType = nsIDOMNode::ELEMENT_NODE;
-    }
-    else if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
-        nsIAtom* tag = static_cast<nsIContent*>(aNode)->Tag();
-        if (tag == nsGkAtoms::textTagName) {
-            nodeType = nsIDOMNode::TEXT_NODE;
-        }
-        else if (tag == nsGkAtoms::cdataTagName) {
-            nodeType = nsIDOMNode::CDATA_SECTION_NODE;
-        }
-        else if (tag == nsGkAtoms::commentTagName) {
-            nodeType = nsIDOMNode::COMMENT_NODE;
-        }
-        else if (tag == nsGkAtoms::processingInstructionTagName) {
-            nodeType = nsIDOMNode::PROCESSING_INSTRUCTION_NODE;
-        }
-    }
-
-    nsCOMPtr<nsIDOMNode> domNode;
-    if (!nodeType) {
-        domNode = do_QueryInterface(aNode);
-        rv = domNode->GetNodeType(&nodeType);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+    PRUint16 nodeType = aNode->NodeType();
 
     if (nodeType <= 12 && !((1 << (nodeType-1)) & mWhatToShow)) {
         return NS_OK;
     }
 
     if (mFilter) {
-        if (!domNode) {
-            domNode = do_QueryInterface(aNode);
-        }
-
+        nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);
         mInAcceptNode = PR_TRUE;
         rv = mFilter->AcceptNode(domNode, _filtered);
         mInAcceptNode = PR_FALSE;

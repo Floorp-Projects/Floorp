@@ -1239,9 +1239,10 @@ nsHttpTransaction::DeleteSelfOnConsumerThread()
     LOG(("nsHttpTransaction::DeleteSelfOnConsumerThread [this=%x]\n", this));
     
     PRBool val;
-    if (NS_SUCCEEDED(mConsumerTarget->IsOnCurrentThread(&val)) && val)
+    if (!mConsumerTarget ||
+        (NS_SUCCEEDED(mConsumerTarget->IsOnCurrentThread(&val)) && val)) {
         delete this;
-    else {
+    } else {
         LOG(("proxying delete to consumer thread...\n"));
         nsCOMPtr<nsIRunnable> event = new nsDeleteHttpTransaction(this);
         if (NS_FAILED(mConsumerTarget->Dispatch(event, NS_DISPATCH_NORMAL)))

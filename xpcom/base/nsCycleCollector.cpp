@@ -469,9 +469,10 @@ struct PtrInfo
     PRUint32 mColor : 2;
     PRUint32 mInternalRefs : 30;
     PRUint32 mRefCount;
-    EdgePool::Iterator mFirstChild; // first
-    EdgePool::Iterator mLastChild; // one after last
+private:
+    EdgePool::Iterator mFirstChild;
 
+public:
 #ifdef DEBUG_CC
     size_t mBytes;
     char *mName;
@@ -498,8 +499,7 @@ struct PtrInfo
           mColor(grey),
           mInternalRefs(0),
           mRefCount(0),
-          mFirstChild(),
-          mLastChild()
+          mFirstChild()
 #ifdef DEBUG_CC
         , mBytes(0),
           mName(nsnull),
@@ -523,6 +523,28 @@ struct PtrInfo
     PtrInfo() {
         NS_NOTREACHED("should never be called");
     }
+
+    EdgePool::Iterator FirstChild()
+    {
+        return mFirstChild;
+    }
+
+    // this PtrInfo must be part of a NodePool
+    EdgePool::Iterator LastChild()
+    {
+        return (this + 1)->mFirstChild;
+    }
+
+    void SetFirstChild(EdgePool::Iterator aFirstChild)
+    {
+        mFirstChild = aFirstChild;
+    }
+
+    // this PtrInfo must be part of a NodePool
+    void SetLastChild(EdgePool::Iterator aLastChild)
+    {
+        (this + 1)->mFirstChild = aLastChild;
+    }
 };
 
 /**
@@ -542,7 +564,7 @@ private:
         ~Block() { NS_NOTREACHED("should never be called"); }
 
         Block* mNext;
-        PtrInfo mEntries[BlockSize];
+        PtrInfo mEntries[BlockSize + 1]; // +1 to store last child of last node
     };
 
 public:
@@ -630,6 +652,11 @@ public:
         PRBool IsDone() const
         {
             return mNext == mLast;
+        }
+
+        PRBool AtBlockEnd() const
+        {
+            return mNext == mBlockEnd;
         }
 
         PtrInfo* GetNext()
@@ -1020,12 +1047,12 @@ struct nsCycleCollector
                      nsICycleCollectorListener *aListener);
 
     // Prepare for and cleanup after one or more collection(s).
-    PRBool PrepareForCollection(nsTPtrArray<PtrInfo> *aWhiteNodes);
+    PRBool PrepareForCollection(nsTPtrArray<PtrInfo> *aWhiteNodes,
+                                PRBool aForceGC);
     void CleanupAfterCollection();
 
     // Start and finish an individual collection.
-    PRBool BeginCollection(PRBool aForceGC,
-                           nsICycleCollectorListener *aListener);
+    PRBool BeginCollection(nsICycleCollectorListener *aListener);
     PRBool FinishCollection();
 
     PRUint32 SuspectedCount();
@@ -1169,7 +1196,8 @@ Fault(const char *msg, PtrInfo *pi)
         NodePool::Enumerator queue(sCollector->mGraph.mNodes);
         while (!queue.IsDone()) {
             PtrInfo *ppi = queue.GetNext();
-            for (EdgePool::Iterator e = ppi->mFirstChild, e_end = ppi->mLastChild;
+            for (EdgePool::Iterator e = ppi->FirstChild(),
+                                e_end = ppi->LastChild();
                  e != e_end; ++e) {
                 if (*e == pi) {
                     printf("    %p %s\n", ppi->mPointer, ppi->mName);
@@ -1264,8 +1292,8 @@ GraphWalker<Visitor>::DoWalk(nsDeque &aQueue)
 
         if (mVisitor.ShouldVisitNode(pi)) {
             mVisitor.VisitNode(pi);
-            for (EdgePool::Iterator child = pi->mFirstChild,
-                                child_end = pi->mLastChild;
+            for (EdgePool::Iterator child = pi->FirstChild(),
+                                child_end = pi->LastChild();
                  child != child_end; ++child) {
                 aQueue.Push(*child);
             }
@@ -1429,6 +1457,7 @@ public:
     }
 #endif
     void Traverse(PtrInfo* aPtrInfo);
+    void SetLastChild();
 
     // nsCycleCollectionTraversalCallback methods.
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
@@ -1519,14 +1548,18 @@ GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
     }
 #endif
 
-    mCurrPi->mFirstChild = mEdgeBuilder.Mark();
-    
+    mCurrPi->SetFirstChild(mEdgeBuilder.Mark());
+
     nsresult rv = aPtrInfo->mParticipant->Traverse(aPtrInfo->mPointer, *this);
     if (NS_FAILED(rv)) {
         Fault("script pointer traversal failed", aPtrInfo);
     }
+}
 
-    mCurrPi->mLastChild = mEdgeBuilder.Mark();
+void
+GCGraphBuilder::SetLastChild()
+{
+    mCurrPi->SetLastChild(mEdgeBuilder.Mark());
 }
 
 NS_IMETHODIMP_(void)
@@ -1771,7 +1804,11 @@ nsCycleCollector::MarkRoots(GCGraphBuilder &builder)
     while (!queue.IsDone()) {
         PtrInfo *pi = queue.GetNext();
         builder.Traverse(pi);
+        if (queue.AtBlockEnd())
+            builder.SetLastChild();
     }
+    if (mGraph.mRootCount > 0)
+        builder.SetLastChild();
 }
 
 
@@ -2462,8 +2499,12 @@ nsCycleCollector::Freed(void *n)
 #endif
 
 PRBool
-nsCycleCollector::PrepareForCollection(nsTPtrArray<PtrInfo> *aWhiteNodes)
+nsCycleCollector::PrepareForCollection(nsTPtrArray<PtrInfo> *aWhiteNodes,
+                                       PRBool aForceGC)
 {
+    NS_ASSERTION(NS_IsMainThread(),
+                 "PrepareForCollection must be called on the main thread.");
+
 #if defined(DEBUG_CC) && !defined(__MINGW32__)
     if (!mParams.mDoNothing && mParams.mHookMalloc)
         InitMemHook();
@@ -2491,6 +2532,29 @@ nsCycleCollector::PrepareForCollection(nsTPtrArray<PtrInfo> *aWhiteNodes)
     mCollectedObjects = 0;
 
     mWhiteNodes = aWhiteNodes;
+
+    // The cycle collector uses the mark bitmap to discover what JS objects
+    // were reachable only from XPConnect roots that might participate in
+    // cycles. We ask the JS runtime whether we need to force a GC before
+    // this CC. It returns true on startup (before the mark bits have been set),
+    // and also when UnmarkGray has run out of stack.
+    if (mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]) {
+        nsCycleCollectionJSRuntime* rt =
+            static_cast<nsCycleCollectionJSRuntime*>
+                (mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]);
+        if (rt->NeedCollect() || aForceGC) {
+#ifdef COLLECT_TIME_DEBUG
+            PRTime start = PR_Now();
+#endif
+            // rt->Collect() must be called from the main thread,
+            // because it invokes XPCJSRuntime::GCCallback(cx, JSGC_BEGIN)
+            // which returns false if not in the main thread.
+            rt->Collect();
+#ifdef COLLECT_TIME_DEBUG
+            printf("cc: GC() took %lldms\n", (PR_Now() - start) / PR_USEC_PER_MSEC);
+#endif
+        }
+    }
 
     return PR_TRUE;
 }
@@ -2526,13 +2590,13 @@ nsCycleCollector::Collect(PRUint32 aTryCollections,
 {
     nsAutoTPtrArray<PtrInfo, 4000> whiteNodes;
 
-    if (!PrepareForCollection(&whiteNodes))
+    if (!PrepareForCollection(&whiteNodes, PR_TRUE))
         return 0;
 
     PRUint32 totalCollections = 0;
     while (aTryCollections > totalCollections) {
         // Synchronous cycle collection. Always force a JS GC as well.
-        if (!(BeginCollection(PR_TRUE, aListener) && FinishCollection()))
+        if (!(BeginCollection(aListener) && FinishCollection()))
             break;
 
         ++totalCollections;
@@ -2544,31 +2608,10 @@ nsCycleCollector::Collect(PRUint32 aTryCollections,
 }
 
 PRBool
-nsCycleCollector::BeginCollection(PRBool aForceGC,
-                                  nsICycleCollectorListener *aListener)
+nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
 {
     if (mParams.mDoNothing)
         return PR_FALSE;
-
-    // The cycle collector uses the mark bitmap to discover what JS objects
-    // were reachable only from XPConnect roots that might participate in
-    // cycles. We ask the JS runtime whether we need to force a GC before
-    // this CC. It returns true on startup (before the mark bits have been set),
-    // and also when UnmarkGray has run out of stack.
-    if (mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]) {
-        nsCycleCollectionJSRuntime* rt =
-            static_cast<nsCycleCollectionJSRuntime*>
-                (mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]);
-        if (rt->NeedCollect() || aForceGC) {
-#ifdef COLLECT_TIME_DEBUG
-            PRTime start = PR_Now();
-#endif
-            rt->Collect();
-#ifdef COLLECT_TIME_DEBUG
-            printf("cc: GC() took %lldms\n", (PR_Now() - start) / PR_USEC_PER_MSEC);
-#endif
-        }
-    }
 
     if (aListener && NS_FAILED(aListener->Begin())) {
         aListener = nsnull;
@@ -3027,8 +3070,8 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                         PtrInfo *pi = (PtrInfo*)stack.Peek();
                         if (pi->mSCCIndex == INDEX_UNREACHED) {
                             pi->mSCCIndex = INDEX_TRAVERSING;
-                            for (EdgePool::Iterator child = pi->mFirstChild,
-                                                child_end = pi->mLastChild;
+                            for (EdgePool::Iterator child = pi->FirstChild(),
+                                                child_end = pi->LastChild();
                                  child != child_end; ++child) {
                                 stack.Push(*child);
                             }
@@ -3071,8 +3114,8 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                         PtrInfo *pi = queue.GetNext();
                         if (pi->mColor != white)
                             continue;
-                        for (EdgePool::Iterator child = pi->mFirstChild,
-                                            child_end = pi->mLastChild;
+                        for (EdgePool::Iterator child = pi->FirstChild(),
+                                            child_end = pi->LastChild();
                              child != child_end; ++child) {
                             if ((*child)->mSCCIndex != pi->mSCCIndex) {
                                 GraphWalker<SetNonRootGreyVisitor>(SetNonRootGreyVisitor()).Walk(*child);
@@ -3134,7 +3177,7 @@ nsCycleCollector::CreateReversedEdges()
     NodePool::Enumerator countQueue(mGraph.mNodes);
     while (!countQueue.IsDone()) {
         PtrInfo *pi = countQueue.GetNext();
-        for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
+        for (EdgePool::Iterator e = pi->FirstChild(), e_end = pi->LastChild();
              e != e_end; ++e, ++edgeCount) {
         }
     }
@@ -3152,7 +3195,7 @@ nsCycleCollector::CreateReversedEdges()
     while (!buildQueue.IsDone()) {
         PtrInfo *pi = buildQueue.GetNext();
         PRInt32 i = 0;
-        for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
+        for (EdgePool::Iterator e = pi->FirstChild(), e_end = pi->LastChild();
              e != e_end; ++e) {
             current->mTarget = pi;
             current->mEdgeName = &pi->mEdgeNames[i];
@@ -3321,7 +3364,7 @@ public:
                 return NS_OK;
             }
 
-            mCollected = mCollector->BeginCollection(PR_FALSE, mListener);
+            mCollected = mCollector->BeginCollection(mListener);
 
             mReply.Notify();
         }
@@ -3352,7 +3395,7 @@ public:
             return 0;
 
         nsAutoTPtrArray<PtrInfo, 4000> whiteNodes;
-        if (!mCollector->PrepareForCollection(&whiteNodes))
+        if (!mCollector->PrepareForCollection(&whiteNodes, PR_FALSE))
             return 0;
 
         NS_ASSERTION(!mListener, "Should have cleared this already!");

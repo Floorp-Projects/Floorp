@@ -11,8 +11,6 @@ const PAGE_URL = BASE_URL + "/framedPage.html";
 const LEFT_URL = BASE_URL + "/frameLeft.html";
 const RIGHT_URL = BASE_URL + "/frameRight.html";
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 let gTabLoaded = false;
 let gLeftFrameVisited = false;
 

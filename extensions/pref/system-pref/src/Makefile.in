@@ -55,11 +55,6 @@ ifdef MOZ_ENABLE_GTK2
 DIRS		= gconf
 endif
 
-EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
 CPPSRCS =   \
   nsSystemPref.cpp	   \
   $(NULL)

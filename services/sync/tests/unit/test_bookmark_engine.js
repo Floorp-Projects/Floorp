@@ -387,7 +387,7 @@ add_test(function test_mismatched_types() {
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Engine.Bookmarks").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
 
   generateNewKeys();
 

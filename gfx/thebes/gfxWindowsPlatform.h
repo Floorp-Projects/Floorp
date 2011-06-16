@@ -150,15 +150,6 @@ public:
         /* Use 32bpp image surfaces, and do 32->24 conversion before calling StretchDIBits */
         RENDER_IMAGE_STRETCH24,
 
-        /* Use DirectDraw on Windows CE */
-        RENDER_DDRAW,
-
-        /* Use 24bpp image surfaces, with final DirectDraw 16bpp blt on Windows CE */
-        RENDER_IMAGE_DDRAW16,
-
-        /* Use DirectDraw with OpenGL on Windows CE */
-        RENDER_DDRAW_GL,
-
         /* Use Direct2D rendering */
         RENDER_DIRECT2D,
 
@@ -252,9 +243,9 @@ public:
     // returns ClearType tuning information for each display
     static void GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams);
 
-    virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
+    virtual void FontsPrefsChanged(const char *aPref);
 
-    void SetupClearTypeParams(nsIPrefBranch *aPrefBranch);
+    void SetupClearTypeParams();
 
 #ifdef CAIRO_HAS_DWRITE_FONT
     IDWriteFactory *GetDWriteFactory() { return mDWriteFactory; }

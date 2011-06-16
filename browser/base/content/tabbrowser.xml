@@ -3203,19 +3203,24 @@
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
-#ifdef MOZ_WIDGET_GTK2
-        // Disable this on GTK2 when the menubar is draggable, since (a)
-        // the menubar and tabbbar have unified appearance and should
-        // thus not have different behavior (though this condition alone
-        // applies to more cases) and (b) it interacts badly with the
-        // drag handling that we use for dragging either one.
-        if (this.parentNode._dragBindingAlive)
+#ifndef XP_MACOSX
+        // When the tabbar has an unified appearance with the titlebar
+        // and menubar, a double-click in it should have the same behavior
+        // as double-clicking the titlebar
+        if (TabsInTitlebar.enabled ||
+            (TabsOnTop.enabled && this.parentNode._dragBindingAlive))
           return;
 #endif
+
+        if (event.button != 0 ||
+            event.originalTarget.localName != "box")
+          return;
+
         // See hack note in the tabbrowser-close-tab-button binding
-        if (!this._blockDblClick && event.button == 0 &&
-            event.originalTarget.localName == "box")
+        if (!this._blockDblClick)
           BrowserOpenTab();
+
+        event.preventDefault();
       ]]></handler>
 
       <handler event="click"><![CDATA[

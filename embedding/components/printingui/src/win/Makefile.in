@@ -55,11 +55,6 @@ CPPSRCS		= \
       nsPrintDialogUtil.cpp \
       $(NULL)
 
-OS_LIBS	+= \
-	comdlg32.lib \
-	winspool.lib \
-	$(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1

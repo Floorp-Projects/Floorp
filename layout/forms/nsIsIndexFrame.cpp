@@ -195,7 +195,8 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Create an hr
   nsCOMPtr<nsINodeInfo> hrInfo;
-  hrInfo = nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_XHTML);
+  hrInfo = nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_XHTML,
+                              nsIDOMNode::ELEMENT_NODE);
 
   NS_NewHTMLElement(getter_AddRefs(mPreHr), hrInfo.forget(),
                     dom::NOT_FROM_PARSER);
@@ -214,7 +215,8 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Create text input field
   nsCOMPtr<nsINodeInfo> inputInfo;
-  inputInfo = nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_XHTML);
+  inputInfo = nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_XHTML,
+                                 nsIDOMNode::ELEMENT_NODE);
 
   NS_NewHTMLElement(getter_AddRefs(mInputContent), inputInfo.forget(),
                     dom::NOT_FROM_PARSER);
@@ -232,7 +234,8 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mInputContent->AddEventListenerByIID(mListener, NS_GET_IID(nsIDOMKeyListener));
 
   // Create an hr
-  hrInfo = nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_XHTML);
+  hrInfo = nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_XHTML,
+                              nsIDOMNode::ELEMENT_NODE);
   NS_NewHTMLElement(getter_AddRefs(mPostHr), hrInfo.forget(),
                     dom::NOT_FROM_PARSER);
   if (!mPostHr || !aElements.AppendElement(mPostHr))

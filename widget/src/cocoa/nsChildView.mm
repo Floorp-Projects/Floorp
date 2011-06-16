@@ -1229,44 +1229,54 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // visible region to be the entire port every time. It is necessary to set up our
   // window's port even for CoreGraphics plugins, because they may still use Carbon
   // internally (see bug #420527 for details).
-  CGrafPtr port = ::GetWindowPort(WindowRef([window windowRef]));
-  if (isQDPlugin) {
-    port = mPluginQDPort.port;
-  }
-
-  RgnHandle pluginRegion = ::NewRgn();
-  if (pluginRegion) {
-    PRBool portChanged = (port != CGrafPtr(GetQDGlobalsThePort()));
-    CGrafPtr oldPort;
-    GDHandle oldDevice;
-
-    if (portChanged) {
-      ::GetGWorld(&oldPort, &oldDevice);
-      ::SetGWorld(port, ::IsPortOffscreen(port) ? nsnull : ::GetMainDevice());
+  //
+  // Don't use this code if any of the QuickDraw APIs it currently requires are
+  // missing (as they probably will be on OS X 10.8 and up).
+  if (::NewRgn && ::GetQDGlobalsThePort && ::GetGWorld && ::SetGWorld &&
+      ::IsPortOffscreen && ::GetMainDevice && ::SetOrigin && ::RectRgn &&
+      ::SetPortVisibleRegion && ::SetPortClipRegion && ::DisposeRgn) {
+    CGrafPtr port = ::GetWindowPort(WindowRef([window windowRef]));
+    if (isQDPlugin) {
+      port = mPluginQDPort.port;
     }
 
-    ::SetOrigin(0, 0);
-    
-    nsIntRect clipRect; // this is in native window coordinates
-    nsIntPoint origin;
-    PRBool visible;
-    GetPluginClipRect(clipRect, origin, visible);
-    
-    // XXX if we're not visible, set an empty clip region?
-    Rect pluginRect;
-    ConvertGeckoRectToMacRect(clipRect, pluginRect);
-    
-    ::RectRgn(pluginRegion, &pluginRect);
-    ::SetPortVisibleRegion(port, pluginRegion);
-    ::SetPortClipRegion(port, pluginRegion);
-    
-    // now set up the origin for the plugin
-    ::SetOrigin(origin.x, origin.y);
-    
-    ::DisposeRgn(pluginRegion);
+    RgnHandle pluginRegion = ::NewRgn();
+    if (pluginRegion) {
+      PRBool portChanged = (port != CGrafPtr(::GetQDGlobalsThePort()));
+      CGrafPtr oldPort;
+      GDHandle oldDevice;
 
-    if (portChanged)
-      ::SetGWorld(oldPort, oldDevice);
+      if (portChanged) {
+        ::GetGWorld(&oldPort, &oldDevice);
+        ::SetGWorld(port, ::IsPortOffscreen(port) ? nsnull : ::GetMainDevice());
+      }
+
+      ::SetOrigin(0, 0);
+
+      nsIntRect clipRect; // this is in native window coordinates
+      nsIntPoint origin;
+      PRBool visible;
+      GetPluginClipRect(clipRect, origin, visible);
+
+      // XXX if we're not visible, set an empty clip region?
+      Rect pluginRect;
+      ConvertGeckoRectToMacRect(clipRect, pluginRect);
+
+      ::RectRgn(pluginRegion, &pluginRect);
+      ::SetPortVisibleRegion(port, pluginRegion);
+      ::SetPortClipRegion(port, pluginRegion);
+
+      // now set up the origin for the plugin
+      ::SetOrigin(origin.x, origin.y);
+
+      ::DisposeRgn(pluginRegion);
+
+      if (portChanged) {
+        ::SetGWorld(oldPort, oldDevice);
+      }
+    }
+  } else {
+    NS_WARNING("Cannot set plugin's visible region -- required QuickDraw APIs are missing!");
   }
 #endif
 
@@ -2332,7 +2342,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #ifndef NP_NO_QUICKDRAW
   // This sets the current port to _savePort.
   // todo: Only do if a Quickdraw plugin is present in the hierarchy!
-  ::SetPort(NULL);
+  // Check if ::SetPort() is available -- it probably won't be on
+  // OS X 10.8 and up.
+  if (::SetPort) {
+    ::SetPort(NULL);
+  }
 #endif
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -2642,7 +2656,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Set the current GrafPort to a "safe" port before calling [NSQuickDrawView lockFocus],
   // so that the NSQuickDrawView stashes a pointer to this known-good port internally.
   // It will set the port back to this port on destruction.
-  ::SetPort(NULL);  // todo: only do if a Quickdraw plugin is present in the hierarchy!
+  // Check if ::SetPort() is available -- it probably won't be on OS X 10.8 and up.
+  if (::SetPort) {
+    ::SetPort(NULL);  // todo: only do if a Quickdraw plugin is present in the hierarchy!
+  }
 #endif
 
   [super lockFocus];

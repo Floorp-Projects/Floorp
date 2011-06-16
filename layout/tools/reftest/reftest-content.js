@@ -254,7 +254,7 @@ function setupDisplayport(contentRootElement) {
     var dpx = attrOrDefault("reftest-displayport-x", 0);
     var dpy = attrOrDefault("reftest-displayport-y", 0);
     if (dpw !== 0 || dph !== 0) {
-        LogInfo("Setting displayport to <x=0, y=0, w="+ dpw +", h="+ dph +">");
+        LogInfo("Setting displayport to <x="+ dpx +", y="+ dpy +", w="+ dpw +", h="+ dph +">");
         windowUtils().setDisplayPortForElement(dpx, dpy, dpw, dph, content.document.documentElement);
     }
 

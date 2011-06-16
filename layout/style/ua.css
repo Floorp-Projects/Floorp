@@ -185,9 +185,21 @@
   height: 100%;
 }
 
-*|*::-moz-page, *|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
+*|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
+  /* Collection of pages in print/print preview. Visual styles may only appear
+   * in print preview. */
   display: block !important;
-  background: transparent;
+  background: -moz-linear-gradient(top, #606060, #8a8a8a) fixed;
+  height: 100%;
+}
+
+*|*::-moz-page {
+  /* Individual page in print/print preview. Visual styles may only appear
+   * in print preview. */
+  display: block !important;
+  background: white;
+  box-shadow: 5px 5px 8px #202020;
+  margin: 0.125in 0.25in;
 }
 
 *|*::-moz-pagecontent {

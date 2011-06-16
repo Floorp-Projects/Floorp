@@ -4,9 +4,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=381167
 -->
 <head>
   <title>Test for Bug 381167</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=381167">Mozilla Bug 381167</a>
@@ -28,7 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=381167
 SimpleTest.waitForExplicitFinish();
 
 function closeit() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var evt = document.createEvent('KeyEvents');
                                  evt.initKeyEvent('keypress', true, true,
                                  window,

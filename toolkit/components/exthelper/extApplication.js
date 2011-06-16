@@ -556,19 +556,9 @@ extApplication.prototype = {
     this._registered = {"unload": true};
   },
 
-  // for nsIClassInfo
-  flags : Ci.nsIClassInfo.SINGLETON,
-  implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
-
-  getInterfaces : function app_gi(aCount) {
-    var interfaces = [Ci.extIApplication, Ci.nsIObserver, Ci.nsIClassInfo];
-    aCount.value = interfaces.length;
-    return interfaces;
-  },
-
-  getHelperForLanguage : function app_ghfl(aCount) {
-    return null;
-  },
+  classInfo: XPCOMUtils.generateCI({interfaces: [Ci.extIApplication,
+                                                 Ci.nsIObserver],
+                                    flags: Ci.nsIClassInfo.SINGLETON}),
 
   // extIApplication
   get id() {

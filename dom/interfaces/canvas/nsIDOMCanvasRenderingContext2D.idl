@@ -62,7 +62,7 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(408be1b9-4d75-4873-b50b-9b651626e41d)]
+[scriptable, uuid(bf5e52a3-6ec1-4a6e-8364-9f9222ec8edb)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -105,6 +105,9 @@ enum CanvasMultiGetterType {
   [noscript] void getStrokeStyle_multi(out DOMString str, out nsISupports iface, out long type);
   [noscript] void setFillStyle_multi(in DOMString str, in nsISupports iface);
   [noscript] void getFillStyle_multi(out DOMString str, out nsISupports iface, out long type);
+
+  //attribute DOMString fillRule;
+  attribute DOMString mozFillRule; /* "evenodd", "nonzero" (default) */
 
   nsIDOMCanvasGradient createLinearGradient (in float x0, in float y0, in float x1, in float y1);
   nsIDOMCanvasGradient createRadialGradient(in float x0, in float y0, in float r0, in float x1, in float y1, in float r1);
