@@ -369,7 +369,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         jsval targetv;
         nsContentUtils::WrapNative(ctx,
                                    JS_GetGlobalForObject(ctx, object),
-                                   aTarget, &targetv);
+                                   aTarget, &targetv, nsnull, PR_TRUE);
 
         // To keep compatibility with e10s message manager,
         // define empty objects array.
@@ -381,6 +381,10 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
             return NS_ERROR_OUT_OF_MEMORY;
           }
         }
+
+        jsval objectsv;
+        if (!JS_WrapValue(ctx, &objectsv))
+            return NS_ERROR_UNEXPECTED;
 
         jsval json = JSVAL_NULL;
         if (!aJSON.IsEmpty()) {
@@ -400,8 +404,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JS_DefineProperty(ctx, param, "sync",
                           BOOLEAN_TO_JSVAL(aSync), NULL, NULL, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "json", json, NULL, NULL, JSPROP_ENUMERATE);
-        JS_DefineProperty(ctx, param, "objects", OBJECT_TO_JSVAL(aObjectsArray),
-                          NULL, NULL, JSPROP_ENUMERATE);
+        JS_DefineProperty(ctx, param, "objects", objectsv, NULL, NULL, JSPROP_ENUMERATE);
 
         jsval thisValue = JSVAL_VOID;
 
@@ -421,7 +424,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           }
           nsContentUtils::WrapNative(ctx,
                                      JS_GetGlobalForObject(ctx, object),
-                                     defaultThisValue, &thisValue);
+                                     defaultThisValue, &thisValue, nsnull, PR_TRUE);
         } else {
           // If the listener is a JS object which has receiveMessage function:
           NS_ENSURE_STATE(JS_GetProperty(ctx, object, "receiveMessage",
