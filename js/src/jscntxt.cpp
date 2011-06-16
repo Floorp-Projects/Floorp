@@ -301,7 +301,7 @@ JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
     JSContext *cx;
-    JSBool ok, first;
+    JSBool first;
     JSContextCallback cxCallback;
 
     /*
@@ -383,17 +383,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #ifdef JS_THREADSAFE
         JS_BeginRequest(cx);
 #endif
-        ok = js_InitCommonAtoms(cx);
-
-        /*
-         * scriptFilenameTable may be left over from a previous episode of
-         * non-zero contexts alive in rt, so don't re-init the table if it's
-         * not necessary.
-         */
-        if (ok && !rt->scriptFilenameTable)
-            ok = js_InitRuntimeScriptState(rt);
-        if (ok)
-            ok = js_InitRuntimeNumberState(cx);
+        JSBool ok = js_InitCommonAtoms(cx);
 
 #ifdef JS_THREADSAFE
         JS_EndRequest(cx);
@@ -615,8 +605,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
                 JS_BeginRequest(cx);
 #endif
 
-            js_FinishRuntimeNumberState(cx);
-
             /* Unpin all common atoms before final GC. */
             js_FinishCommonAtoms(cx);
 
@@ -682,7 +670,7 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
     JSContext *cx = *iterp;
 
     Maybe<AutoLockGC> lockIf;
-    if (unlocked) 
+    if (unlocked)
         lockIf.construct(rt);
     cx = js_ContextFromLinkField(cx ? cx->link.next : rt->contextList.next);
     if (&cx->link == &rt->contextList)
