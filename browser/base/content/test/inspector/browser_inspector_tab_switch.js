@@ -45,17 +45,19 @@ let tab1window;
 
 function inspectorTabOpen1()
 {
-  ok(InspectorUI, "InspectorUI variable exists");
+  ok(window.InspectorUI, "InspectorUI variable exists");
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
   ok(InspectorStore.isEmpty(), "InspectorStore is empty");
 
-  Services.obs.addObserver(inspectorUIOpen1, "inspector-opened", false);
+  Services.obs.addObserver(inspectorUIOpen1,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.openInspectorUI();
 }
 
 function inspectorUIOpen1()
 {
-  Services.obs.removeObserver(inspectorUIOpen1, "inspector-opened", false);
+  Services.obs.removeObserver(inspectorUIOpen1,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   // Make sure the inspector is open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
@@ -90,14 +92,16 @@ function inspectorTabOpen2()
 
   // Activate the inspector again.
   executeSoon(function() {
-  Services.obs.addObserver(inspectorUIOpen2, "inspector-opened", false);
+    Services.obs.addObserver(inspectorUIOpen2,
+      INSPECTOR_NOTIFICATIONS.OPENED, false);
     InspectorUI.openInspectorUI();
   });
 }
 
 function inspectorUIOpen2()
 {
-  Services.obs.removeObserver(inspectorUIOpen2, "inspector-opened", false);
+  Services.obs.removeObserver(inspectorUIOpen2,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   // Make sure the inspector is open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
@@ -110,14 +114,16 @@ function inspectorUIOpen2()
 
   // Switch back to tab 1.
   executeSoon(function() {
-    Services.obs.addObserver(inspectorFocusTab1, "inspector-opened", false);
+    Services.obs.addObserver(inspectorFocusTab1,
+      INSPECTOR_NOTIFICATIONS.OPENED, false);
     gBrowser.selectedTab = tab1;
   });
 }
 
 function inspectorFocusTab1()
 {
-  Services.obs.removeObserver(inspectorFocusTab1, "inspector-opened", false);
+  Services.obs.removeObserver(inspectorFocusTab1,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   // Make sure the inspector is still open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
@@ -126,13 +132,15 @@ function inspectorFocusTab1()
   is(InspectorUI.selection, div, "selection matches the div element");
 
   // Switch back to tab 2.
-  Services.obs.addObserver(inspectorFocusTab2, "inspector-opened", false);
+  Services.obs.addObserver(inspectorFocusTab2,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   gBrowser.selectedTab = tab2;
 }
 
 function inspectorFocusTab2()
 {
-  Services.obs.removeObserver(inspectorFocusTab2, "inspector-opened", false);
+  Services.obs.removeObserver(inspectorFocusTab2,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   // Make sure the inspector is still open.
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
