@@ -1038,6 +1038,10 @@ enum SpewChannel {
 
 #ifdef DEBUG
 
+inline const char * InferSpewColorReset() { return "\x1b[0m"; }
+const char * InferSpewColor(TypeConstraint *constraint);
+const char * InferSpewColor(TypeSet *types);
+
 void InferSpew(SpewChannel which, const char *fmt, ...);
 const char * TypeString(jstype type);
 
@@ -1053,6 +1057,9 @@ bool TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &value
 
 #else
 
+inline const char * InferSpewColorReset() { return NULL; }
+inline const char * InferSpewColor(TypeConstraint *constraint) { return NULL; }
+inline const char * InferSpewColor(TypeSet *types) { return NULL; }
 inline void InferSpew(SpewChannel which, const char *fmt, ...) {}
 inline const char * TypeString(jstype type) { return NULL; }
 

@@ -157,7 +157,40 @@ static bool InferSpewActive(SpewChannel channel)
     return active[channel];
 }
 
+static bool InferSpewColorable()
+{
+    /* Only spew colors on xterm-color to not screw up emacs. */
+    const char *env = getenv("TERM");
+    if (!env)
+        return false;
+    return strcmp(env, "xterm-color") == 0;
+}
+
 #ifdef DEBUG
+
+const char *
+types::InferSpewColor(TypeConstraint *constraint)
+{
+    /* Type constraints are printed out using background colors. */
+    static const char *colors[] = { "\x1b[31m", "\x1b[32m", "\x1b[33m",
+                                    "\x1b[34m", "\x1b[35m", "\x1b[36m",
+                                    "\x1b[37m" };
+    if (!InferSpewColorable())
+        return "";
+    return colors[DefaultHasher<TypeConstraint *>::hash(constraint) % 7];
+}
+
+const char *
+types::InferSpewColor(TypeSet *types)
+{
+    /* Type sets are printed out using bold colors. */
+    static const char *colors[] = { "\x1b[1;31m", "\x1b[1;32m", "\x1b[1;33m",
+                                    "\x1b[1;34m", "\x1b[1;35m", "\x1b[1;36m",
+                                    "\x1b[1;37m" };
+    if (!InferSpewColorable())
+        return "";
+    return colors[DefaultHasher<TypeSet *>::hash(types) % 7];
+}
 
 const char *
 types::TypeString(jstype type)
@@ -306,7 +339,9 @@ TypeSet::make(JSContext *cx, const char *name)
         return NULL;
     }
 
-    InferSpew(ISpewOps, "typeSet: T%p intermediate %s", res, name);
+    InferSpew(ISpewOps, "typeSet: %sT%p%s intermediate %s",
+              InferSpewColor(res), res, InferSpewColorReset(),
+              name);
     res->setIntermediate();
 
     return res;
@@ -347,8 +382,10 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
     JS_ASSERT_IF(!constraint->condensed(), cx->compartment->activeInference);
     JS_ASSERT_IF(intermediate(), !constraint->persistentObject() && !constraint->condensed());
 
-    InferSpew(ISpewOps, "addConstraint: T%p C%p %s",
-              this, constraint, constraint->kind());
+    InferSpew(ISpewOps, "addConstraint: %sT%p%s %sC%p%s %s",
+              InferSpewColor(this), this, InferSpewColorReset(),
+              InferSpewColor(constraint), constraint, InferSpewColorReset(),
+              constraint->kind());
 
     JS_ASSERT(constraint->next == NULL);
     constraint->next = constraintList;
@@ -2213,8 +2250,10 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
         barrier = barrier->next;
     }
 
-    InferSpew(ISpewOps, "typeBarrier: #%u:%05u: T%p %s",
-              script->id(), pc - script->code, target, TypeString(type));
+    InferSpew(ISpewOps, "typeBarrier: #%u:%05u: %sT%p%s %s",
+              script->id(), pc - script->code,
+              InferSpewColor(target), target, InferSpewColorReset(),
+              TypeString(type));
 
     barrier = ArenaNew<TypeBarrier>(cx->compartment->pool);
     barrier->target = target;
@@ -2643,8 +2682,9 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
 
     *pprop = base;
 
-    InferSpew(ISpewOps, "typeSet: T%p property %s %s",
-              &base->types, name(), TypeIdString(id));
+    InferSpew(ISpewOps, "typeSet: %sT%p%s property %s %s",
+              InferSpewColor(&base->types), &base->types, InferSpewColorReset(),
+              name(), TypeIdString(id));
 
     if (!JSID_IS_EMPTY(id)) {
         /* Check all transitive instances for this property. */
@@ -3129,7 +3169,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
                 return false;
             TypeSet &types = newv->value.phiNode()->types;
             types.setIntermediate();
-            InferSpew(ISpewOps, "typeSet: T%p phi #%u:%05u:%u", &types,
+            InferSpew(ISpewOps, "typeSet: %sT%p%s phi #%u:%05u:%u",
+                      InferSpewColor(&types), &types, InferSpewColorReset(),
                       script->id(), offset, newv->slot);
             newv++;
         }
@@ -3137,7 +3178,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
     for (unsigned i = 0; i < defCount; i++) {
         pushed[i].setIntermediate();
-        InferSpew(ISpewOps, "typeSet: T%p pushed%u #%u:%05u", &pushed[i], i, script->id(), offset);
+        InferSpew(ISpewOps, "typeSet: %sT%p%s pushed%u #%u:%05u",
+                  InferSpewColor(&pushed[i]), &pushed[i], InferSpewColorReset(),
+                  i, script->id(), offset);
     }
 
     /* Add type constraints for the various opcodes. */
@@ -5031,16 +5074,28 @@ TypeScript::makeTypeArray(JSContext *cx)
 #ifdef DEBUG
     unsigned id = script()->id();
     for (unsigned i = 0; i < script()->nTypeSets; i++)
-        InferSpew(ISpewOps, "typeSet: T%p bytecode%u #%u", &typeArray[i], i, id);
-    InferSpew(ISpewOps, "typeSet: T%p return #%u", returnTypes(), id);
-    InferSpew(ISpewOps, "typeSet: T%p this #%u", thisTypes(), id);
+        InferSpew(ISpewOps, "typeSet: %sT%p%s bytecode%u #%u",
+                  InferSpewColor(&typeArray[i]), &typeArray[i], InferSpewColorReset(),
+                  i, id);
+    InferSpew(ISpewOps, "typeSet: %sT%p%s return #%u",
+              InferSpewColor(returnTypes()), returnTypes(), InferSpewColorReset(),
+              id);
+    InferSpew(ISpewOps, "typeSet: %sT%p%s this #%u",
+              InferSpewColor(thisTypes()), thisTypes(), InferSpewColorReset(),
+              id);
     unsigned nargs = script()->fun ? script()->fun->nargs : 0;
     for (unsigned i = 0; i < nargs; i++)
-        InferSpew(ISpewOps, "typeSet: T%p arg%u #%u", argTypes(i), i, id);
+        InferSpew(ISpewOps, "typeSet: %sT%p%s arg%u #%u",
+                  InferSpewColor(argTypes(i)), argTypes(i), InferSpewColorReset(),
+                  i, id);
     for (unsigned i = 0; i < script()->nfixed; i++)
-        InferSpew(ISpewOps, "typeSet: T%p local%u #%u", localTypes(i), i, id);
+        InferSpew(ISpewOps, "typeSet: %sT%p%s local%u #%u",
+                  InferSpewColor(localTypes(i)), localTypes(i), InferSpewColorReset(),
+                  i, id);
     for (unsigned i = 0; i < script()->bindings.countUpvars(); i++)
-        InferSpew(ISpewOps, "typeSet: T%p upvar%u #%u", upvarTypes(i), i, id);
+        InferSpew(ISpewOps, "typeSet: %sT%p%s upvar%u #%u",
+                  InferSpewColor(upvarTypes(i)), upvarTypes(i), InferSpewColorReset(),
+                  i, id);
 #endif
 
     return true;
