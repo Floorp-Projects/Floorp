@@ -938,7 +938,8 @@ StackIter::settleOnNewState()
             if (op == JSOP_CALL || op == JSOP_FUNCALL) {
                 uintN argc = GET_ARGC(pc_);
                 DebugOnly<uintN> spoff = sp_ - fp_->base();
-                JS_ASSERT(spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
+                JS_ASSERT_IF(!fp_->hasImacropc(),
+                             spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
                 Value *vp = sp_ - (2 + argc);
 
                 if (IsNativeFunction(*vp)) {
@@ -947,6 +948,7 @@ StackIter::settleOnNewState()
                     return;
                 }
             } else if (op == JSOP_FUNAPPLY) {
+                JS_ASSERT(!fp_->hasImacropc());
                 uintN argc = GET_ARGC(pc_);
                 uintN spoff = js_ReconstructStackDepth(cx_, fp_->script(), pc_);
                 Value *sp = fp_->base() + spoff;
