@@ -67,7 +67,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGForeignObjectElementBase::)
 
   // nsSVGElement specializations:
-  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix);
+  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
 
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
