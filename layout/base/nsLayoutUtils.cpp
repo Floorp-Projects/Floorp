@@ -4120,7 +4120,8 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
     PRUint32 skipStart = iter.ConvertOriginalToSkipped(fstart - offset);
     PRUint32 skipEnd = iter.ConvertOriginalToSkipped(fend - offset);
     aFontFaceList->AddFontsFromTextRun(textRun,
-                                       skipStart, skipEnd - skipStart);
+                                       skipStart, skipEnd - skipStart,
+                                       curr);
   } while (aFollowContinuations &&
            (curr = static_cast<nsTextFrame*>(curr->GetNextContinuation())));
 
