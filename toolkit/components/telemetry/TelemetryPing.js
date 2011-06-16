@@ -202,7 +202,7 @@ TelemetryPing.prototype = {
     let memReporters = {};
     while (e.hasMoreElements()) {
       let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-      //  memReporters[mr.path] = mr.memoryUsed;
+      //  memReporters[mr.path] = mr.amount;
       let id = MEM_HISTOGRAMS[mr.path];
       if (!id) {
         continue;
@@ -214,7 +214,7 @@ TelemetryPing.prototype = {
         h = Telemetry.getHistogramById(id);
         this._histograms[name] = h;
       }
-      let v = Math.floor(mr.memoryUsed / 1024);
+      let v = Math.floor(mr.amount / 1024);
       h.add(v);
     }
     return memReporters;
