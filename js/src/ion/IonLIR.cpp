@@ -53,6 +53,21 @@ LIRGraph::LIRGraph()
 {
 }
 
+uint32
+LBlock::firstId()
+{
+    if (phis_.length())
+        return phis_[0]->id();
+    return instructions_.begin()->id();
+}
+uint32
+LBlock::lastId()
+{
+    if (instructions_.rbegin()->numDefs())
+        return instructions_.rbegin()->getDef(instructions_.rbegin()->numDefs() - 1)->virtualRegister();
+    return instructions_.rbegin()->id();
+}
+
 LSnapshot::LSnapshot(MSnapshot *mir)
   : numSlots_(mir->numOperands() * BOX_PIECES),
     slots_(NULL),
@@ -151,9 +166,9 @@ PrintDefinition(FILE *fp, const LDefinition &def)
 }
 
 static void
-PrintUse(FILE *fp, LUse *use)
+PrintUse(FILE *fp, const LUse *use)
 {
-    fprintf(fp, "(v%d:", use->virtualRegister());
+    fprintf(fp, "v%d:", use->virtualRegister());
     if (use->policy() == LUse::ANY) {
         fprintf(fp, "*");
     } else if (use->policy() == LUse::REGISTER) {
@@ -166,31 +181,30 @@ PrintUse(FILE *fp, LUse *use)
     }
     if (use->killedAtStart())
         fprintf(fp, "!");
-    fprintf(fp, ")");
 }
 
-static void
-PrintOperand(FILE *fp, LAllocation *a)
+void
+LAllocation::PrintAllocation(FILE *fp, const LAllocation *a)
 {
     switch (a->kind()) {
       case LAllocation::CONSTANT_VALUE:
       case LAllocation::CONSTANT_INDEX:
-        fprintf(fp, "(c)");
+        fprintf(fp, "c");
         break;
       case LAllocation::GPR:
-        fprintf(fp, "(%s)", a->toGeneralReg()->reg().name());
+        fprintf(fp, "=%s", a->toGeneralReg()->reg().name());
         break;
       case LAllocation::FPU:
-        fprintf(fp, "(%s)", a->toFloatReg()->reg().name());
+        fprintf(fp, "=%s", a->toFloatReg()->reg().name());
         break;
       case LAllocation::STACK_SLOT:
-        fprintf(fp, "(stack:i%d)", a->toStackSlot()->slot());
+        fprintf(fp, "stack:i%d", a->toStackSlot()->slot());
         break;
       case LAllocation::DOUBLE_SLOT:
-        fprintf(fp, "(stack:d%d)", a->toStackSlot()->slot());
+        fprintf(fp, "stack:d%d", a->toStackSlot()->slot());
         break;
       case LAllocation::ARGUMENT:
-        fprintf(fp, "(arg:%d)", a->toArgument()->index());
+        fprintf(fp, "arg:%d", a->toArgument()->index());
         break;
       case LAllocation::USE:
         PrintUse(fp, a->toUse());
@@ -205,8 +219,9 @@ void
 LInstruction::printOperands(FILE *fp)
 {
     for (size_t i = 0; i < numOperands(); i++) {
-        fprintf(fp, " ");
-        PrintOperand(fp, getOperand(i));
+        fprintf(fp, " (");
+        LAllocation::PrintAllocation(fp, getOperand(i));
+        fprintf(fp, ")");
         if (i != numOperands() - 1)
             fprintf(fp, ",");
     }
@@ -244,12 +259,11 @@ LMove::printOperands(FILE *fp)
     for (size_t i = 0; i < numEntries(); i++) {
         Entry *e = getEntry(i);
         fprintf(fp, "[");
-        PrintOperand(fp, &e->from);
+        LAllocation::PrintAllocation(fp, e->from);
         fprintf(fp, " -> ");
-        PrintOperand(fp, &e->to);
+        LAllocation::PrintAllocation(fp, e->to);
         fprintf(fp, "]");
         if (i != numEntries() - 1)
             fprintf(fp, ", ");
     }
 }
-

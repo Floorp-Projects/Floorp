@@ -46,6 +46,7 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "IonLIR.h"
+#include "LinearScan.h"
 
 namespace js {
 namespace ion {
@@ -76,6 +77,7 @@ class JSONSpewer
     void beginPass(const char * pass);
     void spewMIR(MIRGraph *mir);
     void spewLIR(MIRGraph *mir);
+    void spewIntervals(RegisterAllocator *regalloc);
     void endPass();
     void endFunction();
     void finish();

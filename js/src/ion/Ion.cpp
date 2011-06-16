@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Andrew Drake <drakedevel@gmail.com>
+ *   Andrew Drake <adrake@adrake.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,6 +47,7 @@
 #include "GreedyAllocator.h"
 #include "LICM.h"
 #include "ValueNumbering.h"
+#include "LinearScan.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/Lowering-x86.h"
@@ -163,10 +164,18 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         return false;
     spew.spewPass("Generate LIR");
 
+    // FIXME (668350): Add an environment variable toggle for this.
+#ifndef ION_LSRA
     GreedyAllocator greedy(&builder, lir);
     if (!greedy.allocate())
         return false;
     spew.spewPass("Allocate registers");
+#else
+    RegisterAllocator regalloc(&lirgen, lir);
+    if (!regalloc.go())
+        return false;
+    spew.spewPass("Allocate Registers", &regalloc);
+#endif
 
     spew.finish();
 

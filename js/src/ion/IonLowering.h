@@ -77,6 +77,9 @@ class LIRGenerator : public MInstructionVisitor
     { }
 
     bool generate();
+    MIRGenerator *mir() {
+        return gen;
+    }
 
   protected:
     // A backend can decide that an instruction should be emitted at its uses,

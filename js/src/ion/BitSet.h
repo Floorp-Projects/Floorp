@@ -52,7 +52,7 @@ namespace ion {
 // N.B. All set operations must be performed on sets with the same maximum.
 class BitSet : private TempObject
 {
-private:
+  private:
     BitSet(unsigned int max) :
         max_(max),
         bits_(NULL) {};
@@ -75,7 +75,9 @@ private:
 
     bool init();
 
-public:
+  public:
+    class Iterator;
+
     static BitSet *New(unsigned int max);
 
     unsigned int getMax() const {
@@ -107,6 +109,46 @@ public:
     // O(max): Does inplace complement of the set.
     void complement();
 
+    // Iterator to the beginning of this set.
+    Iterator begin();
+
+    // Iterator to the end of this set.
+    Iterator end();
+
+};
+
+class BitSet::Iterator
+{
+  private:
+    BitSet &set_;
+    unsigned index_;
+
+  public:
+    Iterator(BitSet &set, unsigned int index) :
+      set_(set),
+      index_(index)
+    {
+        if (index_ <= set_.max_ && !set_.contains(index_))
+            (*this)++;
+    }
+
+    bool operator!=(const Iterator &other) const {
+        return index_ != other.index_;
+    }
+
+    // FIXME (668305): Use bit scan.
+    Iterator& operator++(int dummy) {
+        JS_ASSERT(index_ <= set_.max_);
+        do {
+            index_++;
+        } while (index_ <= set_.max_ && !set_.contains(index_));
+        return *this;
+    }
+
+    unsigned int operator *() {
+        JS_ASSERT(index_ <= set_.max_);
+        return index_;
+    }
 };
 
 }

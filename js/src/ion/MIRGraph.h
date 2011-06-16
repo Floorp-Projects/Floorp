@@ -172,6 +172,7 @@ class MIRGraph
 };
 
 typedef InlineList<MInstruction>::iterator MInstructionIterator;
+typedef InlineList<MInstruction>::const_iterator MInstructionConstIterator;
 
 class LBlock;
 
@@ -323,6 +324,12 @@ class MBasicBlock : public TempObject
     }
     MPhi *getPhi(size_t i) const {
         return phis_[i];
+    }
+    MInstructionConstIterator begin() const {
+        return instructions_.begin();
+    }
+    MInstructionConstIterator end() const {
+        return instructions_.end();
     }
     MInstructionIterator begin() {
         return instructions_.begin();

@@ -57,9 +57,9 @@ class LIRGeneratorX86 : public LIRGenerator
   protected:
     // Uses components of a nunbox. Must be in a use request (startUsing,
     // stopUsing).
-    LUse useType(MInstruction *mir);
+    LUse useType(MInstruction *mir, LUse::Policy policy);
     LUse useTypeOrConstant(MInstruction *mir);
-    LUse usePayload(MInstruction *mir, LUse::Policy);
+    LUse usePayload(MInstruction *mir, LUse::Policy policy);
     LUse usePayloadInRegister(MInstruction *mir);
 
     // Adds a box input to an instruction, setting operand |n| to the type and
