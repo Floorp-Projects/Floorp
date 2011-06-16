@@ -1775,27 +1775,30 @@ PluginModuleChild::AnswerNP_Initialize(NativeThreadId* tid, NPError* _retval)
 
 PPluginIdentifierChild*
 PluginModuleChild::AllocPPluginIdentifier(const nsCString& aString,
-                                          const int32_t& aInt,
-                                          const bool& aTemporary)
+                                          const int32_t& aInt)
 {
-    // We cannot call SetPermanent within this function because Manager() isn't
-    // set up yet.
-    if (aString.IsVoid()) {
-        return new PluginIdentifierChildInt(aInt);
-    }
-    return new PluginIdentifierChildString(aString);
-}
+    // There's a possibility that we already have an actor that wraps the same
+    // string or int because we do all this identifier construction
+    // asynchronously. Check to see if we've already wrapped here, and then set
+    // canonical actor of the new one to the actor already in our hash.
+    PluginIdentifierChild* newActor;
+    PluginIdentifierChild* existingActor;
 
-bool
-PluginModuleChild::RecvPPluginIdentifierConstructor(PPluginIdentifierChild* actor,
-                                                    const nsCString& aString,
-                                                    const int32_t& aInt,
-                                                    const bool& aTemporary)
-{
-    if (!aTemporary) {
-        static_cast<PluginIdentifierChild*>(actor)->MakePermanent();
+    if (aString.IsVoid()) {
+        newActor = new PluginIdentifierChildInt(aInt);
+        if (mIntIdentifiers.Get(aInt, &existingActor))
+            newActor->SetCanonicalIdentifier(existingActor);
+        else
+            mIntIdentifiers.Put(aInt, newActor);
     }
-    return true;
+    else {
+        newActor = new PluginIdentifierChildString(aString);
+        if (mStringIdentifiers.Get(aString, &existingActor))
+            newActor->SetCanonicalIdentifier(existingActor);
+        else
+            mStringIdentifiers.Put(aString, newActor);
+    }
+    return newActor;
 }
 
 bool
@@ -2098,14 +2101,15 @@ PluginModuleChild::NPN_GetStringIdentifier(const NPUTF8* aName)
     PluginModuleChild* self = PluginModuleChild::current();
     nsDependentCString name(aName);
 
-    PluginIdentifierChildString* ident = self->mStringIdentifiers.Get(name);
-    if (!ident) {
+    PluginIdentifierChild* ident;
+    if (!self->mStringIdentifiers.Get(name, &ident)) {
         nsCString nameCopy(name);
 
         ident = new PluginIdentifierChildString(nameCopy);
-        self->SendPPluginIdentifierConstructor(ident, nameCopy, -1, false);
+        self->SendPPluginIdentifierConstructor(ident, nameCopy, -1);
+        self->mStringIdentifiers.Put(nameCopy, ident);
     }
-    ident->MakePermanent();
+
     return ident;
 }
 
@@ -2129,14 +2133,14 @@ PluginModuleChild::NPN_GetStringIdentifiers(const NPUTF8** aNames,
             continue;
         }
         nsDependentCString name(aNames[index]);
-        PluginIdentifierChildString* ident = self->mStringIdentifiers.Get(name);
-        if (!ident) {
+        PluginIdentifierChild* ident;
+        if (!self->mStringIdentifiers.Get(name, &ident)) {
             nsCString nameCopy(name);
 
             ident = new PluginIdentifierChildString(nameCopy);
-            self->SendPPluginIdentifierConstructor(ident, nameCopy, -1, false);
+            self->SendPPluginIdentifierConstructor(ident, nameCopy, -1);
+            self->mStringIdentifiers.Put(nameCopy, ident);
         }
-        ident->MakePermanent();
         aIdentifiers[index] = ident;
     }
 }
@@ -2159,15 +2163,15 @@ PluginModuleChild::NPN_GetIntIdentifier(int32_t aIntId)
 
     PluginModuleChild* self = PluginModuleChild::current();
 
-    PluginIdentifierChildInt* ident = self->mIntIdentifiers.Get(aIntId);
-    if (!ident) {
+    PluginIdentifierChild* ident;
+    if (!self->mIntIdentifiers.Get(aIntId, &ident)) {
         nsCString voidString;
         voidString.SetIsVoid(PR_TRUE);
 
         ident = new PluginIdentifierChildInt(aIntId);
-        self->SendPPluginIdentifierConstructor(ident, voidString, aIntId, false);
+        self->SendPPluginIdentifierConstructor(ident, voidString, aIntId);
+        self->mIntIdentifiers.Put(aIntId, ident);
     }
-    ident->MakePermanent();
     return ident;
 }
 

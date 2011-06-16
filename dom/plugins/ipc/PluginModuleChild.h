@@ -117,14 +117,7 @@ protected:
 
     virtual PPluginIdentifierChild*
     AllocPPluginIdentifier(const nsCString& aString,
-                           const int32_t& aInt,
-                           const bool& aTemporary);
-
-    virtual bool
-    RecvPPluginIdentifierConstructor(PPluginIdentifierChild* actor,
-                                     const nsCString& aString,
-                                     const int32_t& aInt,
-                                     const bool& aTemporary);
+                           const int32_t& aInt);
 
     virtual bool
     DeallocPPluginIdentifier(PPluginIdentifierChild* aActor);
@@ -397,11 +390,8 @@ private:
      */
     nsTHashtable<NPObjectData> mObjectMap;
 
-    friend class PluginIdentifierChild;
-    friend class PluginIdentifierChildString;
-    friend class PluginIdentifierChildInt;
-    nsDataHashtable<nsCStringHashKey, PluginIdentifierChildString*> mStringIdentifiers;
-    nsDataHashtable<nsUint32HashKey, PluginIdentifierChildInt*> mIntIdentifiers;
+    nsDataHashtable<nsCStringHashKey, PluginIdentifierChild*> mStringIdentifiers;
+    nsDataHashtable<nsUint32HashKey, PluginIdentifierChild*> mIntIdentifiers;
 
 public: // called by PluginInstanceChild
     /**
