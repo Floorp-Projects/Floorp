@@ -1613,8 +1613,12 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_IFEQ)
           BEGIN_CASE(JSOP_IFNE)
-            if (!jsop_ifneq(op, PC + GET_JUMP_OFFSET(PC)))
+          {
+            jsbytecode *target = PC + GET_JUMP_OFFSET(PC);
+            fixDoubleTypes(target);
+            if (!jsop_ifneq(op, target))
                 return Compile_Error;
+          }
           END_CASE(JSOP_IFNE)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
