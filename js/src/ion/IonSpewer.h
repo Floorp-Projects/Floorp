@@ -43,6 +43,7 @@
 #include "C1Spewer.h"
 #include "JSONSpewer.h"
 #include "MIRGraph.h"
+#include "LinearScan.h"
 
 namespace js {
 namespace ion {
@@ -56,7 +57,9 @@ namespace ion {
     /* Information during GVN */            \
     _(GVN)                                  \
     /* Information during LICM */           \
-    _(LICM)
+    _(LICM)                                 \
+    /* Information during LSRA */           \
+    _(LSRA)
 
 enum IonSpewChannel {
 #define IONSPEW_CHANNEL(name) IonSpew_##name,
@@ -108,6 +111,7 @@ class IonSpewer
 
     bool init();
     void spewPass(const char *pass);
+    void spewPass(const char *pass, RegisterAllocator *ra);
     void finish();
 
 };

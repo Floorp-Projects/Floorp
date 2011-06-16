@@ -71,6 +71,10 @@ struct Register {
     const char *name() const {
         return RegisterCodes::GetName(code());
     }
+
+    bool operator ==(const Register &other) const {
+        return code_ == other.code_;
+    }
 };
 
 struct FloatRegister {
@@ -90,6 +94,10 @@ struct FloatRegister {
     }
     const char *name() const {
         return FloatRegisterCodes::GetName(code());
+    }
+
+    bool operator ==(const FloatRegister &other) const {
+        return code_ == other.code_;
     }
 };
 
@@ -121,12 +129,12 @@ struct AnyRegister {
         JS_ASSERT(isFloat());
         return FloatRegister::FromCode(fpu_);
     }
-    bool operator ==(const AnyRegister &other) {
+    bool operator ==(const AnyRegister &other) const {
         return isFloat()
                ? (other.isFloat() && fpu_ == other.fpu_)
                : (!other.isFloat() && gpr_ == other.gpr_);
     }
-    bool operator !=(const AnyRegister &other) {
+    bool operator !=(const AnyRegister &other) const {
         return isFloat()
                ? (!other.isFloat() || fpu_ != other.fpu_)
                : (other.isFloat() || gpr_ != other.gpr_);

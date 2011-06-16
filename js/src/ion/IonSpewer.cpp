@@ -68,10 +68,22 @@ IonSpewer::init()
 void
 IonSpewer::spewPass(const char *pass)
 {
-    c1Spewer.spew(pass);
+    c1Spewer.spewCFG(pass);
     jsonSpewer.beginPass(pass);
     jsonSpewer.spewMIR(graph);
     jsonSpewer.spewLIR(graph);
+    jsonSpewer.endPass();
+}
+
+void
+IonSpewer::spewPass(const char *pass, RegisterAllocator *ra)
+{
+    c1Spewer.spewCFG(pass);
+    c1Spewer.spewIntervals(pass, ra);
+    jsonSpewer.beginPass(pass);
+    jsonSpewer.spewMIR(graph);
+    jsonSpewer.spewLIR(graph);
+    jsonSpewer.spewIntervals(ra);
     jsonSpewer.endPass();
 }
 
@@ -104,6 +116,7 @@ ion::CheckLogging()
             "  mir      MIR information\n"
             "  gvn      Global Value Numbering\n"
             "  licm     Loop invariant code motion\n"
+            "  lsra     Linear scan register allocation\n"
 
             "  all      Everything\n"
             "\n"
@@ -119,6 +132,8 @@ ion::CheckLogging()
         LoggingBits |= (1 << uint32(IonSpew_GVN));
     if (strstr(env, "licm"))
         LoggingBits |= (1 << uint32(IonSpew_LICM));
+    if (strstr(env, "lsra"))
+        LoggingBits |= (1 << uint32(IonSpew_LSRA));
     if (strstr(env, "all"))
         LoggingBits = uint32(-1);
 

@@ -156,3 +156,15 @@ BitSet::complement()
     for (unsigned int i = 0; i < numWords(); i++)
         bits_[i] = ~bits_[i];
 }
+
+BitSet::Iterator
+BitSet::begin()
+{
+    return Iterator(*this, 0);
+}
+
+BitSet::Iterator
+BitSet::end()
+{
+    return Iterator(*this, max_ + 1);
+}

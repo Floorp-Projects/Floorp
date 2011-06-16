@@ -95,14 +95,14 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
         LBoxToDouble *lir = new LBoxToDouble;
         if (!ensureDefined(inner))
             return false;
-        lir->setOperand(0, useType(inner));
+        lir->setOperand(0, useType(inner, LUse::ANY));
         lir->setOperand(1, usePayloadInRegister(inner));
         lir->setTemp(0, temp(LDefinition::DOUBLE));
         return define(lir, unbox, LDefinition::DEFAULT);
     }
 
     LUnbox *lir = new LUnbox(unbox->type());
-    lir->setOperand(0, useType(inner));
+    lir->setOperand(0, useType(inner, LUse::ANY));
     lir->setOperand(1, usePayloadInRegister(inner));
 
     // Re-use the inner payload's def, for better register allocation.
@@ -196,10 +196,10 @@ LIRGeneratorX86::fillSnapshot(LSnapshot *snapshot)
             *payload = LConstantIndex(0);
         } else if (ins->type() != MIRType_Value) {
             *type = LConstantIndex(0);
-            *payload = use(ins, LUse::ANY);
+            *payload = use(ins, LUse::KEEPALIVE);
         } else {
-            *type = useType(ins);
-            *payload = usePayload(ins, LUse::ANY);
+            *type = useType(ins, LUse::KEEPALIVE);
+            *payload = usePayload(ins, LUse::KEEPALIVE);
         }
     }
 }

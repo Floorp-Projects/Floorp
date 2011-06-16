@@ -46,6 +46,7 @@
 #include "MIRGraph.h"
 #include "IonLIR.h"
 #include "jsscriptinlines.h"
+#include "LinearScan.h"
 
 using namespace js;
 using namespace js::ion;
@@ -77,29 +78,43 @@ C1Spewer::enable(const char *path)
 }
 
 void
-C1Spewer::spew(const char *pass)
+C1Spewer::spewCFG(const char *pass)
 {
-    if (spewout_)
-        spew(spewout_, pass);
+    if (!spewout_)
+        return;
+
+    fprintf(spewout_, "begin_cfg\n");
+    fprintf(spewout_, "  name \"%s\"\n", pass);
+
+    for (size_t i = 0; i < graph.numBlocks(); i++)
+        spewCFG(spewout_, graph.getBlock(i));
+
+    fprintf(spewout_, "end_cfg\n");
+    fflush(spewout_);
 }
 
 void
-C1Spewer::spew(FILE *fp, const char *pass)
+C1Spewer::spewIntervals(const char *pass, RegisterAllocator *regalloc)
 {
-    fprintf(fp, "begin_cfg\n");
-    fprintf(fp, "  name \"%s\"\n", pass);
+    if (!spewout_)
+        return;
 
+    fprintf(spewout_, "begin_intervals\n");
+    fprintf(spewout_, " name \"%s\"\n", pass);
+
+    size_t nextId = 0x4000;
     for (size_t i = 0; i < graph.numBlocks(); i++)
-        spew(fp, graph.getBlock(i));
+        spewIntervals(spewout_, graph.getBlock(i), regalloc, nextId);
 
-    fprintf(fp, "end_cfg\n");
+    fprintf(spewout_, "end_intervals\n");
+    fflush(spewout_);
 }
 
 static void
 DumpInstruction(FILE *fp, MInstruction *ins)
 {
     fprintf(fp, "      ");
-    fprintf(fp, "0 %d ", (int)ins->useCount());
+    fprintf(fp, "%u %lu ", ins->id(), ins->useCount());
     ins->printName(fp);
     fprintf(fp, " ");
     ins->printOpcode(fp);
@@ -116,7 +131,32 @@ DumpLIR(FILE *fp, LInstruction *ins)
 }
 
 void
-C1Spewer::spew(FILE *fp, MBasicBlock *block)
+C1Spewer::spewIntervals(FILE *fp, MBasicBlock *block, RegisterAllocator *regalloc, size_t &nextId)
+{
+    LBlock *lir = block->lir();
+
+    for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++) {
+        for (size_t k = 0; k < ins->numDefs(); k++) {
+            VirtualRegister *vreg = &regalloc->vregs[ins->getDef(k)->virtualRegister()];
+
+            for (size_t i = 0; i < vreg->numIntervals(); i++) {
+                LiveInterval *live = vreg->getInterval(i);
+                if (live->numRanges()) {
+                    fprintf(fp, "%d object \"", (i == 0) ? vreg->reg() : nextId++);
+                    LAllocation::PrintAllocation(fp, live->getAllocation());
+                    fprintf(fp, "\" %d -1", vreg->reg());
+                    for (size_t j = 0; j < live->numRanges(); j++)
+                        fprintf(fp, " [%d, %d[", live->getRange(j)->from.pos(), live->getRange(j)->to.pos());
+                    for (size_t j = 0; j < vreg->numUses(); j++)
+                        fprintf(fp, " %d M", vreg->getUse(j)->ins->id() * 2);
+                    fprintf(fp, " \"\"\n");
+                }
+            }
+        }
+    }
+}
+void
+C1Spewer::spewCFG(FILE *fp, MBasicBlock *block)
 {
     fprintf(fp, "  begin_block\n");
     fprintf(fp, "    name \"B%d\"\n", block->id());
@@ -141,10 +181,8 @@ C1Spewer::spew(FILE *fp, MBasicBlock *block)
     fprintf(fp, "    flags\n");
 
     if (block->lir() && block->lir()->begin() != block->lir()->end()) {
-        LInstruction *first = *block->lir()->begin();
-        LInstruction *last = *(block->lir()->end().prev());
-        fprintf(fp, "    first_lir_id %d\n", first->id());
-        fprintf(fp, "    last_lir_id %d\n", last->id());
+        fprintf(fp, "    first_lir_id %d\n", block->lir()->firstId());
+        fprintf(fp, "    last_lir_id %d\n", block->lir()->lastId());
     }
 
     fprintf(fp, "    begin_states\n");

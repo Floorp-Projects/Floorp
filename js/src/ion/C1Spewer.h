@@ -44,6 +44,7 @@
 
 #include "jscntxt.h"
 #include "MIR.h"
+#include "LinearScan.h"
 
 namespace js {
 namespace ion {
@@ -58,11 +59,12 @@ class C1Spewer
     C1Spewer(MIRGraph &graph, JSScript *script);
     ~C1Spewer();
     void enable(const char *path);
-    void spew(const char *pass);
+    void spewCFG(const char *pass);
+    void spewIntervals(const char *pass, RegisterAllocator *regalloc);
 
   private:
-    void spew(FILE *fp, const char *pass);
-    void spew(FILE *fp, MBasicBlock *block);
+    void spewCFG(FILE *fp, MBasicBlock *block);
+    void spewIntervals(FILE *fp, MBasicBlock *block, RegisterAllocator *regalloc, size_t &nextId);
 };
 
 } // namespace ion

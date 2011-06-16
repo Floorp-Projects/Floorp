@@ -61,7 +61,7 @@ class GreedyAllocator
         bool move(const From &from, const To &to) {
             if (!moves)
                 moves = new LMove;
-            return moves->add(LAllocation(from), LAllocation(to));
+            return moves->add(LAllocation::New(from), LAllocation::New(to));
         }
     };
 
@@ -203,21 +203,21 @@ class GreedyAllocator
     bool restore(const LAllocation &from, const AnyRegister &to) {
         if (!restores)
             restores = new LMove;
-        return restores->add(from, LAllocation(to));
+        return restores->add(LAllocation::New(from), LAllocation::New(to));
     }
 
     template <typename LA, typename LB>
     bool spill(const LA &from, const LB &to) {
         if (!spills)
             spills = new LMove;
-        return spills->add(LAllocation(from), LAllocation(to));
+        return spills->add(LAllocation::New(from), LAllocation::New(to));
     }
 
     template <typename LA, typename LB>
     bool align(const LA &from, const LB &to) {
         if (!aligns)
             aligns = new LMove;
-        return aligns->add(LAllocation(from), LAllocation(to));
+        return aligns->add(LAllocation::New(from), LAllocation::New(to));
     }
 
     void reset() {
