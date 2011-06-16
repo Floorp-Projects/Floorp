@@ -129,6 +129,10 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         return false;
     spew.spewPass("Reorder Blocks");
 
+    if (!BuildDominatorTree(graph))
+        return false;
+    spew.spew("Dominator tree");
+
     if (!BuildPhiReverseMapping(graph))
         return false;
     // No spew, graph not changed.
