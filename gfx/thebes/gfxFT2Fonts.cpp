@@ -260,31 +260,42 @@ FontEntry::ReadCMAP()
     // attempt this once, if errors occur leave a blank cmap
     mCmapInitialized = PR_TRUE;
 
+    AutoFallibleTArray<PRUint8,16384> buffer;
+    nsresult rv = GetFontTable(TTAG_cmap, buffer);
+    
+    if (NS_SUCCEEDED(rv)) {
+        PRPackedBool unicodeFont;
+        PRPackedBool symbolFont;
+        rv = gfxFontUtils::ReadCMAP(buffer.Elements(), buffer.Length(),
+                                    mCharacterMap, mUVSOffset,
+                                    unicodeFont, symbolFont);
+    }
+
+    mHasCmapTable = NS_SUCCEEDED(rv);
+    return rv;
+}
+
+nsresult
+FontEntry::GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer)
+{
     // Ensure existence of mFTFace
     CairoFontFace();
     NS_ENSURE_TRUE(mFTFace, NS_ERROR_FAILURE);
 
     FT_Error status;
     FT_ULong len = 0;
-    status = FT_Load_Sfnt_Table(mFTFace, TTAG_cmap, 0, nsnull, &len);
+    status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nsnull, &len);
     NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(len != 0, NS_ERROR_FAILURE);
 
-    AutoFallibleTArray<PRUint8,16384> buffer;
-    if (!buffer.AppendElements(len)) {
-        return NS_ERROR_FAILURE;
+    if (!aBuffer.SetLength(len)) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
-    PRUint8 *buf = buffer.Elements();
-
-    status = FT_Load_Sfnt_Table(mFTFace, TTAG_cmap, 0, buf, &len);
+    PRUint8 *buf = aBuffer.Elements();
+    status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, buf, &len);
     NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
 
-    PRPackedBool unicodeFont;
-    PRPackedBool symbolFont;
-    nsresult rv = gfxFontUtils::ReadCMAP(buf, len, mCharacterMap, mUVSOffset,
-                                         unicodeFont, symbolFont);
-    mHasCmapTable = NS_SUCCEEDED(rv);
-    return rv;
+    return NS_OK;
 }
 
 FontEntry *

@@ -221,8 +221,13 @@ public:
 
     virtual ~gfxFontEntry();
 
-    // unique name for the face, *not* the family
+    // unique name for the face, *not* the family; not necessarily the
+    // "real" or user-friendly name, may be an internal identifier
     const nsString& Name() const { return mName; }
+
+    // the "real" name of the face, if available from the font resource
+    // (may be expensive); returns Name() if nothing better is available
+    virtual nsString RealFaceName();
 
     gfxFontFamily* Family() const { return mFamily; }
 
