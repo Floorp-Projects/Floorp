@@ -102,7 +102,9 @@ jmethodID AndroidAddress::jGetThoroughfareMethod;
 jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
 jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jEndDrawingMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jDraw2DMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jDraw2DBitmapMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jDraw2DBufferMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBitmapMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBufferMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = 0;
 
@@ -170,9 +172,11 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
     jGeckoSurfaceViewClass = getClassGlobalRef("org/mozilla/gecko/GeckoSurfaceView");
 
     jBeginDrawingMethod = getMethod("beginDrawing", "()I");
+    jGetSoftwareDrawBitmapMethod = getMethod("getSoftwareDrawBitmap", "()Landroid/graphics/Bitmap;");
     jGetSoftwareDrawBufferMethod = getMethod("getSoftwareDrawBuffer", "()Ljava/nio/ByteBuffer;");
     jEndDrawingMethod = getMethod("endDrawing", "()V");
-    jDraw2DMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
+    jDraw2DBitmapMethod = getMethod("draw2D", "(Landroid/graphics/Bitmap;II)V");
+    jDraw2DBufferMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
     jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
 }
 
@@ -464,9 +468,21 @@ AndroidGeckoSurfaceView::EndDrawing()
 }
 
 void
+AndroidGeckoSurfaceView::Draw2D(jobject bitmap, int width, int height)
+{
+    JNI()->CallVoidMethod(wrapped_obj, jDraw2DBitmapMethod, bitmap, width, height);
+}
+
+void
 AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
 {
-    JNI()->CallVoidMethod(wrapped_obj, jDraw2DMethod, buffer, stride);
+    JNI()->CallVoidMethod(wrapped_obj, jDraw2DBufferMethod, buffer, stride);
+}
+
+jobject
+AndroidGeckoSurfaceView::GetSoftwareDrawBitmap()
+{
+    return JNI()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBitmapMethod);
 }
 
 jobject
