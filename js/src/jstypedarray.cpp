@@ -63,6 +63,7 @@
 #include "jstypedarray.h"
 
 #include "jsobjinlines.h"
+#include "jstypedarrayinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -1792,6 +1793,19 @@ js_IsArrayBuffer(JSObject *obj)
 {
     JS_ASSERT(obj);
     return obj->getClass() == &ArrayBuffer::fastClass;
+}
+
+JSUint32
+JS_GetArrayBufferByteLength(JSObject *obj)
+{
+    return *((JSUint32*) obj->slots);
+}
+
+uint8 *
+JS_GetArrayBufferData(JSObject *obj)
+{
+    uint64 *base = ((uint64*)obj->slots) + 1;
+    return (uint8*) base;
 }
 
 JS_FRIEND_API(JSBool)
