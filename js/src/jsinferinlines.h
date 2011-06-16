@@ -728,7 +728,9 @@ TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *
     JS_ASSERT(type);
     JS_ASSERT(!cx->runtime->gcRunning);
 
-    InferSpew(ISpewOps, "pending: C%p %s", constraint, TypeString(type));
+    InferSpew(ISpewOps, "pending: %sC%p%s %s",
+              InferSpewColor(constraint), constraint, InferSpewColorReset(),
+              TypeString(type));
 
     if (pendingCount == pendingCapacity)
         growPendingArray(cx);
@@ -754,8 +756,9 @@ TypeCompartment::resolvePending(JSContext *cx)
     /* Handle all pending type registrations. */
     while (pendingCount) {
         const PendingWork &pending = pendingArray[--pendingCount];
-        InferSpew(ISpewOps, "resolve: C%p %s",
-                  pending.constraint, TypeString(pending.type));
+        InferSpew(ISpewOps, "resolve: %sC%p%s %s",
+                  InferSpewColor(pending.constraint), pending.constraint,
+                  InferSpewColorReset(), TypeString(pending.type));
         pending.constraint->newType(cx, pending.source, pending.type);
     }
 
@@ -1018,14 +1021,17 @@ TypeSet::addType(JSContext *cx, jstype type)
         if (objectCount > 1) {
             object->contribution += (objectCount - 1) * (objectCount - 1);
             if (object->contribution >= TypeObject::CONTRIBUTION_LIMIT) {
-                InferSpew(ISpewOps, "limitUnknown: T%p", this);
+                InferSpew(ISpewOps, "limitUnknown: %sT%p%s",
+                          InferSpewColor(this), this, InferSpewColorReset());
                 type = TYPE_UNKNOWN;
                 markUnknown(cx);
             }
         }
     }
 
-    InferSpew(ISpewOps, "addType: T%p %s", this, TypeString(type));
+    InferSpew(ISpewOps, "addType: %sT%p%s %s",
+              InferSpewColor(this), this, InferSpewColorReset(),
+              TypeString(type));
 
     /* Propagate the type to all constraints. */
     TypeConstraint *constraint = constraintList;
