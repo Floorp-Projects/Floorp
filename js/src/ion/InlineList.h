@@ -183,6 +183,9 @@ class InlineList
     const_iterator begin() const {
         return const_iterator(head.next);
     }
+    const_iterator rbegin() const {
+        return const_iterator(head.prev);
+    }
     const_iterator end() const {
         return const_iterator(&head);
     }
@@ -192,8 +195,13 @@ class InlineList
         iterator iter(where);
         iter++;
 
-        node->prev->next = node->next;
-        node->next->prev = node->prev;
+        remove(node);
+
+        // Once the element 'where' points at has been removed, it is no longer
+        // safe to do any operations that would touch 'iter', as the element
+        // may be added to another list, etc. This NULL ensures that any
+        // improper uses of this function will fail quickly and loudly.
+        where.iter = NULL;
 
         return iter;
     }
@@ -217,6 +225,12 @@ class InlineList
         t->next = &head;
         head.prev->next = t;
         head.prev = t;
+    }
+
+    void remove(Node *t) {
+        t->prev->next = t->next;
+        t->next->prev = t->prev;
+        t->next = t->prev = NULL;
     }
 };
 

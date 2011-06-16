@@ -286,6 +286,65 @@ JSONSpewer::spewLIR(MIRGraph *mir)
 }
 
 void
+JSONSpewer::spewIntervals(RegisterAllocator *regalloc)
+{
+    if (!fp_)
+        return;
+
+    beginObjectProperty("intervals");
+    beginListProperty("blocks");
+
+    for (size_t bno = 0; bno < regalloc->graph.numBlocks(); bno++) {
+        beginObject();
+        integerProperty("number", bno);
+        beginListProperty("vregs");
+
+        LBlock *lir = regalloc->graph.getBlock(bno);
+        for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++) {
+            for (size_t k = 0; k < ins->numDefs(); k++) {
+                VirtualRegister *vreg = &regalloc->vregs[ins->getDef(k)->virtualRegister()];
+
+                beginObject();
+                integerProperty("vreg", vreg->reg());
+                beginListProperty("intervals");
+
+                for (size_t i = 0; i < vreg->numIntervals(); i++) {
+                    LiveInterval *live = vreg->getInterval(i);
+
+                    if (live->numRanges()) {
+                        beginObject();
+                        property("allocation");
+                        fprintf(fp_, "\"");
+                        LAllocation::PrintAllocation(fp_, live->getAllocation());
+                        fprintf(fp_, "\"");
+                        beginListProperty("ranges");
+
+                        for (size_t j = 0; j < live->numRanges(); j++) {
+                            beginObject();
+                            integerProperty("start", live->getRange(j)->from.pos());
+                            integerProperty("end", live->getRange(j)->to.pos());
+                            endObject();
+                        }
+
+                        endList();
+                        endObject();
+                    }
+                }
+
+                endList();
+                endObject();
+            }
+        }
+
+        endList();
+        endObject();
+    }
+
+    endList();
+    endObject();
+}
+
+void
 JSONSpewer::endPass()
 {
     endObject();

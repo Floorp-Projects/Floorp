@@ -375,6 +375,7 @@ CPPSRCS +=	MIR.cpp \
 		IonSpewer.cpp \
 		LICM.cpp \
 		ValueNumbering.cpp \
+		LinearScan.cpp \
 		$(NULL)
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

@@ -108,6 +108,10 @@ struct TempObject
     inline void *operator new(size_t nbytes) {
         return GetIonContext()->temp->allocate(nbytes);
     }
+public:
+    inline void *operator new(size_t nbytes, void *pos) {
+        return pos;
+    }
 };
 
 } // namespace ion

@@ -64,12 +64,12 @@ VirtualRegisterOfPayload(MInstruction *mir)
 }
 
 LUse
-LIRGeneratorX86::useType(MInstruction *mir)
+LIRGeneratorX86::useType(MInstruction *mir, LUse::Policy policy)
 {
     JS_ASSERT(mir->id());
     JS_ASSERT(mir->type() == MIRType_Value);
 
-    return LUse(mir->id() + VREG_TYPE_OFFSET, LUse::ANY);
+    return LUse(mir->id() + VREG_TYPE_OFFSET, policy);
 }
 
 LUse

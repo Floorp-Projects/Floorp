@@ -81,7 +81,7 @@ static const uint32 VREG_DATA_OFFSET = 1;
 
 // Represents storage for an operand. For constants, the pointer is tagged
 // with a single bit, and the untagged pointer is a pointer to a Value.
-class LAllocation
+class LAllocation : public TempObject
 {
     uintptr_t bits_;
 
@@ -136,6 +136,14 @@ class LAllocation
   public:
     LAllocation() : bits_(0)
     { }
+
+    static LAllocation *New() {
+        return new LAllocation();
+    }
+    template <typename T>
+    static LAllocation *New(const T &other) {
+        return new LAllocation(other);
+    }
 
     // The value pointer must be rooted in MIR and have its low bit cleared.
     explicit LAllocation(const Value *vp) {
@@ -197,6 +205,8 @@ class LAllocation
         JS_ASSERT(isConstantValue());
         return reinterpret_cast<const Value *>(bits_ & ~TAG_MASK);
     }
+
+    static void PrintAllocation(FILE *fp, const LAllocation *a);
 };
 
 class LUse : public LAllocation
@@ -220,7 +230,11 @@ class LUse : public LAllocation
     enum Policy {
         ANY,                // Register or stack slot.
         REGISTER,           // Must have a register.
-        FIXED               // A specific register is required.
+        FIXED,              // A specific register is required.
+        // Keep the used virtual register alive, and use whatever allocation is
+        // available. This is similar to ANY but hints to the register allocator
+        // that it is never useful to optimize this site.
+        KEEPALIVE
     };
 
     // The register is killed at the start, meaning it can be re-used as either
@@ -444,6 +458,9 @@ class LDefinition
     uint32 virtualRegister() const {
         return (bits_ >> VREG_SHIFT) & VREG_MASK;
     }
+    LAllocation *output() {
+        return &output_;
+    }
     const LAllocation *output() const {
         return &output_;
     }
@@ -500,6 +517,7 @@ class LInstruction : public TempObject,
     { }
 
   public:
+    class InputIterator;
     enum Opcode {
 #   define LIROP(name) LOp_##name,
         LIR_OPCODE_LIST(LIROP)
@@ -599,6 +617,12 @@ class LBlock : public TempObject
     LInstructionIterator end() {
         return instructions_.end();
     }
+    LInstructionReverseIterator rbegin() {
+        return instructions_.rbegin();
+    }
+    LInstructionReverseIterator rend() {
+        return instructions_.rend();
+    }
     InlineList<LInstruction> &instructions() {
         return instructions_;
     }
@@ -608,6 +632,8 @@ class LBlock : public TempObject
     void insertBefore(LInstruction *at, LInstruction *ins) {
         instructions_.insertBefore(at, ins);
     }
+    uint32 firstId();
+    uint32 lastId();
 };
 
 template <size_t Defs, size_t Operands, size_t Temps>
@@ -675,6 +701,50 @@ class LSnapshot : public TempObject
     }
     MSnapshot *mir() const {
         return mir_;
+    }
+};
+
+class LInstruction::InputIterator
+{
+private:
+    LInstruction &ins_;
+    size_t idx_;
+    bool snapshot_;
+
+public:
+    InputIterator(LInstruction &ins) :
+      ins_(ins),
+      idx_(0),
+      snapshot_(false)
+    { }
+
+    bool more() const {
+        if (snapshot_)
+            return idx_ < ins_.snapshot()->numEntries();
+        if (idx_ < ins_.numOperands())
+            return true;
+        if (ins_.snapshot() && ins_.snapshot()->numEntries())
+            return true;
+        return false;
+    }
+
+    void next() {
+        JS_ASSERT(more());
+        idx_++;
+        if (!snapshot_ && idx_ == ins_.numOperands() && ins_.snapshot()) {
+            idx_ = 0;
+            snapshot_ = true;
+        }
+    }
+
+    LAllocation *operator *() const {
+        if (snapshot_)
+            return ins_.snapshot()->getEntry(idx_);
+        return ins_.getOperand(idx_);
+    }
+
+    LAllocation *operator ->() const {
+        return **this;
     }
 };
 

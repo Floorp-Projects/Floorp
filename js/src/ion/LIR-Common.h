@@ -54,12 +54,13 @@ class LMove : public LInstructionHelper<0, 0, 0>
 
   public:
     struct Entry {
-        LAllocation from;
-        LAllocation to;
+        LAllocation *from;
+        LAllocation *to;
 
-        Entry() { }
-        Entry(const LAllocation &from, const LAllocation &to)
-          : from(from), to(to)
+        Entry () { }
+        Entry(LAllocation *from, LAllocation *to)
+          : from(from),
+            to(to)
         { }
     };
 
@@ -69,7 +70,7 @@ class LMove : public LInstructionHelper<0, 0, 0>
   public:
     LIR_HEADER(Move);
 
-    bool add(const LAllocation &from, const LAllocation &to) {
+    bool add(LAllocation *from, LAllocation *to) {
         return entries_.append(Entry(from, to));
     }
     bool add(const Entry &ent) {
