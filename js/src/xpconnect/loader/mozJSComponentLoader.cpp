@@ -1480,6 +1480,76 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 }
 
 NS_IMETHODIMP
+mozJSComponentLoader::Unload(const nsACString & aLocation)
+{
+    nsresult rv;
+
+    if (!mInitialized) {
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get the URI.
+    nsCOMPtr<nsIURI> resURI;
+    rv = ioService->NewURI(aLocation, nsnull, nsnull, getter_AddRefs(resURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // figure out the resolved URI
+    nsCOMPtr<nsIChannel> scriptChannel;
+    rv = ioService->NewChannelFromURI(resURI, getter_AddRefs(scriptChannel));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
+
+    nsCOMPtr<nsIURI> resolvedURI;
+    rv = scriptChannel->GetURI(getter_AddRefs(resolvedURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // get the JAR if there is one
+    nsCOMPtr<nsIJARURI> jarURI;
+    jarURI = do_QueryInterface(resolvedURI, &rv);
+    nsCOMPtr<nsIFileURL> baseFileURL;
+    nsCAutoString jarEntry;
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIURI> baseURI;
+        rv = jarURI->GetJARFile(getter_AddRefs(baseURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        baseFileURL = do_QueryInterface(baseURI, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        jarURI->GetJAREntry(jarEntry);
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+        baseFileURL = do_QueryInterface(resolvedURI, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    nsCOMPtr<nsIFile> sourceFile;
+    rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILocalFile> sourceLocalFile;
+    sourceLocalFile = do_QueryInterface(sourceFile, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString key;
+    if (jarEntry.IsEmpty()) {
+        rv = FileKey(sourceLocalFile, key);
+    } else {
+        rv = JarKey(sourceLocalFile, jarEntry, key);
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ModuleEntry* mod;
+    if (mImports.Get(key, &mod)) {
+        mImports.Remove(key);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 mozJSComponentLoader::Observe(nsISupports *subject, const char *topic,
                               const PRUnichar *data)
 {
