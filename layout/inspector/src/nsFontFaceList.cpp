@@ -111,7 +111,14 @@ nsFontFaceList::AddFontsFromTextRun(gfxTextRun* aTextRun,
   gfxTextRun::GlyphRunIterator iter(aTextRun, aOffset, aLength);
   while (iter.NextRun()) {
     gfxFontEntry *fe = iter.GetGlyphRun()->mFont->GetFontEntry();
-    if (!mFontFaces.GetWeak(fe)) {
+    // if we have already listed this face, just make sure the match type is
+    // recorded
+    nsFontFace* existingFace =
+      static_cast<nsFontFace*>(mFontFaces.GetWeak(fe));
+    if (existingFace) {
+      existingFace->AddMatchType(iter.GetGlyphRun()->mMatchType);
+    } else {
+      // A new font entry we haven't seen before;
       // check whether this font entry is associated with an @font-face rule
       nsRefPtr<nsCSSFontFaceRule> rule;
       nsUserFontSet* fontSet =
@@ -119,7 +126,8 @@ nsFontFaceList::AddFontsFromTextRun(gfxTextRun* aTextRun,
       if (fontSet) {
         rule = fontSet->FindRuleForEntry(fe);
       }
-      nsCOMPtr<nsFontFace> ff = new nsFontFace(fe, rule);
+      nsCOMPtr<nsFontFace> ff =
+        new nsFontFace(fe, iter.GetGlyphRun()->mMatchType, rule);
       if (!mFontFaces.Put(fe, ff)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }

@@ -190,6 +190,10 @@ public:
             (cairo_font_face_get_user_data(aFace, &sFontEntryKey));
     }
 
+    // override the default impl in gfxFontEntry because we don't organize
+    // gfxFcFontEntries in families; just read the name from fontconfig
+    virtual nsString FamilyName() const;
+
 protected:
     gfxFcFontEntry(const nsAString& aName)
         : gfxFontEntry(aName),
@@ -207,6 +211,23 @@ protected:
 };
 
 cairo_user_data_key_t gfxFcFontEntry::sFontEntryKey;
+
+nsString
+gfxFcFontEntry::FamilyName() const
+{
+    if (mIsUserFont) {
+        // for user fonts, we want the name of the family
+        // as specified in the user font set
+        return gfxFontEntry::FamilyName();
+    }
+    FcChar8 *familyname;
+    if (!mPatterns.IsEmpty() &&
+        FcPatternGetString(mPatterns[0],
+                           FC_FAMILY, 0, &familyname) == FcResultMatch) {
+        return NS_ConvertUTF8toUTF16((const char*)familyname);
+    }
+    return gfxFontEntry::FamilyName();
+}
 
 PRBool
 gfxFcFontEntry::ShouldUseHarfBuzz(PRInt32 aRunScript) {
@@ -1951,7 +1972,8 @@ gfxPangoFontGroup::GetFontSet(PangoLanguage *aLang)
 already_AddRefed<gfxFont>
 gfxPangoFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
                                    PRInt32 aRunScript,
-                                   gfxFont *aPrevMatchedFont)
+                                   gfxFont *aPrevMatchedFont,
+                                   PRUint8 *aMatchType)
 {
     if (aPrevMatchedFont) {
         PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(aCh);
@@ -2015,6 +2037,7 @@ gfxPangoFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
     if (!mStyle.systemFont && mPangoLanguage) {
         basePattern = fontSet->GetFontPatternAt(0);
         if (HasChar(basePattern, aCh)) {
+            *aMatchType = gfxTextRange::kFontGroup;
             return nsRefPtr<gfxFont>(GetBaseFont()).forget();
         }
 
@@ -2041,6 +2064,7 @@ gfxPangoFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
         }
 
         if (HasChar(pattern, aCh)) {
+            *aMatchType = gfxTextRange::kFontGroup;
             return nsRefPtr<gfxFont>(fontSet->GetFontAt(i)).forget();
         }
     }

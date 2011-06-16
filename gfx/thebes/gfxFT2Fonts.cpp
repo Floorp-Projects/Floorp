@@ -707,7 +707,6 @@ gfxFT2Font::AddRange(gfxTextRun *aTextRun, const PRUnichar *str, PRUint32 offset
 
     FT_UInt spaceGlyph = GetSpaceGlyph();
 
-    aTextRun->AddGlyphRun(this, offset);
     for (PRUint32 i = 0; i < len; i++) {
         PRUint32 ch = str[offset + i];
 
