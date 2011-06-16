@@ -158,7 +158,8 @@ struct VectorImpl<T, N, AP, true>
     static inline bool growTo(Vector<T,N,AP> &v, size_t newcap) {
         JS_ASSERT(!v.usingInlineStorage());
         size_t bytes = sizeof(T) * newcap;
-        T *newbuf = reinterpret_cast<T *>(v.realloc_(v.mBegin, bytes));
+        size_t oldBytes = sizeof(T) * v.mLength;
+        T *newbuf = reinterpret_cast<T *>(v.realloc_(v.mBegin, oldBytes, bytes));
         if (!newbuf)
             return false;
         v.mBegin = newbuf;

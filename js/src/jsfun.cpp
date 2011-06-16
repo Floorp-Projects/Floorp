@@ -2436,7 +2436,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
 
     /* Block this call if security callbacks forbid it. */
     GlobalObject *global = call.callee().getGlobal();
-    if (!global->isEvalAllowed(cx)) {
+    if (!global->isRuntimeCodeGenEnabled(cx)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
         return false;
     }

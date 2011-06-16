@@ -1558,10 +1558,9 @@ public:
 
   /*
    * For replaced elements only. Gets the intrinsic dimensions of this element.
-   * The dimensions may only be one of the following three types:
+   * The dimensions may only be one of the following two types:
    *
    *   eStyleUnit_Coord   - a length in app units
-   *   eStyleUnit_Percent - a percentage of the available space
    *   eStyleUnit_None    - the element has no intrinsic size in this dimension
    */
   struct IntrinsicSize {

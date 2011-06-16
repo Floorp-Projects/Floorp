@@ -66,9 +66,3 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-ifdef MOZ_XUL
-ifeq (,$(filter android qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
-endif
-endif

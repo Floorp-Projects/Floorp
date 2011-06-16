@@ -54,7 +54,7 @@ from automationutils import getDebuggerInfo, addCommonOptions
 
 PORT = 8888
 PROFILE_DIRECTORY = os.path.abspath(os.path.join(SCRIPT_DIR, "./pgoprofile"))
-MOZ_JAR_LOG_DIR = os.path.abspath(os.path.join(os.getenv("OBJDIR"), "jarlog"))
+MOZ_JAR_LOG_DIR = os.path.abspath(os.getenv("JARLOG_DIR"))
 os.chdir(SCRIPT_DIR)
 
 class EasyServer(SocketServer.TCPServer):

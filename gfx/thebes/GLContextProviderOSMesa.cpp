@@ -43,7 +43,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIConsoleService.h"
-#include "nsIPrefService.h"
+#include "mozilla/Preferences.h"
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
@@ -106,22 +106,8 @@ OSMesaLibrary::EnsureInitialized()
     if (mInitialized)
         return PR_TRUE;
 
-    nsresult rv;
-
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefService->GetBranch("webgl.", getter_AddRefs(prefBranch));
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-    nsCString osmesalib;
-
-    rv = prefBranch->GetCharPref("osmesalib", getter_Copies(osmesalib));
-
-    if (NS_FAILED(rv) ||
-        osmesalib.Length() == 0)
-    {
+    nsAdoptingCString osmesalib = Preferences::GetCString("webgl.osmesalib");
+    if (osmesalib.IsEmpty()) {
         return PR_FALSE;
     }
 

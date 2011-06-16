@@ -201,7 +201,9 @@ const char *const js_common_atom_names[] = {
     "keys",                     /* keysAtom                     */
     "iterate",                  /* iterateAtom                  */
 
-    "WeakMap"                   /* WeakMapAtom                  */
+    "WeakMap",                  /* WeakMapAtom                  */
+
+    "byteLength"                /* byteLengthAtom               */
 };
 
 void

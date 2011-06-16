@@ -365,7 +365,7 @@ function readConfig() {
   configFile.append("testConfig.js");
 
   if (!configFile.exists())
-    return;
+    return {};
 
   var fileInStream = Components.classes["@mozilla.org/network/file-input-stream;1"].
                      createInstance(Components.interfaces.nsIFileInputStream);
