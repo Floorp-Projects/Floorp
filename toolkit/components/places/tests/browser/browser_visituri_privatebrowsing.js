@@ -3,9 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-
 const INITIAL_URL = "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
 const FINAL_URL = "http://example.com/tests/toolkit/components/places/tests/browser/final.html";
 

@@ -49,5 +49,7 @@ function test() {
 function popup(tab) {
   document.popupNode = tab;
   TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
+  is(TabContextMenu.contextTab, tab, "TabContextMenu context is the expected tab");
+  TabContextMenu.contextTab = null;
 }
 

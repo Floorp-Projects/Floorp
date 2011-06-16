@@ -41,13 +41,11 @@
 #include "nsIDOMParser.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
-#include "nsIDOMLoadListener.h"
 #include "nsWeakReference.h"
 #include "nsIJSNativeInitializer.h"
 
 class nsDOMParser : public nsIDOMParser,
                     public nsIDOMParserJS,
-                    public nsIDOMLoadListener,
                     public nsIJSNativeInitializer,
                     public nsSupportsWeakReference
 {
@@ -62,16 +60,6 @@ public:
 
   // nsIDOMParserJS
   NS_DECL_NSIDOMPARSERJS
-
-  // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
-  // nsIDOMLoadListener
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-  NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,

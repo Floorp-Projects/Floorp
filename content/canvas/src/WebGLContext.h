@@ -448,7 +448,6 @@ protected:
         return mEnabledExtensions[ext] != nsnull;
     }
 
-    PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRInt32* maxAllowedCount, const char *info);
     PRBool ValidateCapabilityEnum(WebGLenum cap, const char *info);

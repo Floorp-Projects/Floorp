@@ -93,7 +93,7 @@ let gSyncQuota = {
     if (engines.length) {
       // The 'Weave' object will disappear once the window closes.
       let Service = Weave.Service;
-      Weave.Utils.delay(function() Service.sync(), 0);
+      Weave.Utils.nextTick(function() { Service.sync(); });
     }
     return true;
   },

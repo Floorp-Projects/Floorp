@@ -64,6 +64,7 @@
 //   bounds - a <Rect>; otherwise based on the locations of the provided elements
 //   container - a DOM element to use as the container for this groupItem; otherwise will create
 //   title - the title for the groupItem; otherwise blank
+//   focusTitle - focus the title's input field after creation
 //   dontPush - true if this groupItem shouldn't push away or snap on creation; default is false
 //   immediately - true if we want all placement immediately, not with animation
 function GroupItem(listOfEls, options) {
@@ -84,10 +85,6 @@ function GroupItem(listOfEls, options) {
 
   this.keepProportional = false;
   this._frozenItemSizeData = {};
-
-  // Double click tracker
-  this._lastClick = 0;
-  this._lastClickPositions = null;
 
   // Variable: _activeTab
   // The <TabItem> for the groupItem's active tab.
@@ -218,11 +215,12 @@ function GroupItem(listOfEls, options) {
       if (!same)
         return;
 
-      if (!self.isDragging) {
-        self.$titleShield.hide();
-        (self.$title)[0].focus();
-      }
+      if (!self.isDragging)
+        self.focusTitle();
     });
+
+  if (options.focusTitle)
+    this.focusTitle();
 
   // ___ Stack Expander
   this.$expander = iQ("<div/>")
@@ -402,6 +400,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var css = {width: w};
     this.$title.css(css);
     this.$titleShield.css(css);
+  },
+
+  // ----------
+  // Function: focusTitle
+  // Hide the title's shield and focus the underlying input field.
+  focusTitle: function GroupItem_focusTitle() {
+    this.$titleShield.hide();
+    this.$title[0].focus();
   },
 
   // ----------
@@ -1014,8 +1020,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         if (typeof item.setResizable == 'function')
           item.setResizable(false, options.immediately);
 
-        // if it is visually active, set it as the active tab.
-        if (iQ(item.container).hasClass("focus"))
+        if (item == UI.getActiveTab() || !this._activeTab)
           this.setActiveTab(item);
 
         // if it matches the selected tab or no active tab and the browser
@@ -1641,28 +1646,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Helper routine for the constructor; adds various event handlers to the container.
   _addHandlers: function GroupItem__addHandlers(container) {
     let self = this;
-
-    // Create new tab and zoom in on it after a double click
-    container.mousedown(function(e) {
-      if (!Utils.isLeftClick(e) || self.$titlebar[0] == e.target || 
-          self.$titlebar.contains(e.target)) {
-        self._lastClick = 0;
-        self._lastClickPositions = null;
-        return;
-      }
-      if (Date.now() - self._lastClick <= UI.DBLCLICK_INTERVAL &&
-          (self._lastClickPositions.x - UI.DBLCLICK_OFFSET) <= e.clientX &&
-          (self._lastClickPositions.x + UI.DBLCLICK_OFFSET) >= e.clientX &&
-          (self._lastClickPositions.y - UI.DBLCLICK_OFFSET) <= e.clientY &&
-          (self._lastClickPositions.y + UI.DBLCLICK_OFFSET) >= e.clientY) {
-        self.newTab();
-        self._lastClick = 0;
-        self._lastClickPositions = null;
-      } else {
-        self._lastClick = Date.now();
-        self._lastClickPositions = new Point(e.clientX, e.clientY);
-      }
-    });
 
     var dropIndex = false;
     var dropSpaceTimer = null;

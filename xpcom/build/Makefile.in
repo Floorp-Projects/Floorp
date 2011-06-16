@@ -128,9 +128,6 @@ EXPORTS_mozilla = \
 # Force use of PIC
 FORCE_USE_PIC	= 1 
 
-# UNIX98 iconv support
-OS_LIBS += $(LIBICONV)
-
 GARBAGE         += $(XPCOM_GLUE_SRC_LCSRCS) $(XPCOM_GLUE_SRC_LCPPSRCS) $(XPCOM_GLUENS_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
@@ -143,39 +140,13 @@ DEFINES		+= \
 		-DEXPORT_XPT_API \
 		-DEXPORT_XPTC_API
 
-EXTRA_DSO_LDOPTS +=				\
-	$(MOZALLOC_LIB)				\
-	$(NSPR_LIBS)				\
-	$(NULL)
-
 ifdef TARGET_XPCOM_ABI
 DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CXXFLAGS	+= $(TK_CFLAGS)
-EXTRA_DSO_LDOPTS += \
-  $(TK_LIBS) \
-  $(NULL)
 endif
-
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
-ifdef MOZ_PLATFORM_MAEMO
-EXTRA_DSO_LDOPTS += $(MOZ_PLATFORM_MAEMO_LIBS)
-endif
-endif
-
-ifdef HAVE_CLOCK_MONOTONIC
-EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version)
-ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
-OS_LIBS += $(call EXPAND_LIBNAME,imagehlp)
-endif
-endif # WINNT
 
 export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS)
 	$(INSTALL) $^ .

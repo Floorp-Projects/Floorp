@@ -1112,7 +1112,7 @@ var Browser = {
     if (prefValue > 0)
       return prefValue / 100;
 
-    let dpi = this.windowUtils.displayDPI;
+    let dpi = Util.displayDPI;
     if (dpi < 200) // Includes desktop displays, and LDPI and MDPI Android devices
       return 1;
     else if (dpi < 300) // Includes Nokia N900, and HDPI Android devices
@@ -1809,7 +1809,7 @@ const ContentTouchHandler = {
   panningPrevented: false,
 
   updateCanCancel: function(aX, aY) {
-    let dpi = Browser.windowUtils.displayDPI;
+    let dpi = Util.displayDPI;
 
     const kSafetyX = Services.prefs.getIntPref("dom.w3c_touch_events.safetyX") / 240 * dpi;
     const kSafetyY = Services.prefs.getIntPref("dom.w3c_touch_events.safetyY") / 240 * dpi;

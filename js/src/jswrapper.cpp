@@ -359,17 +359,22 @@ TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, J
 
 ForceFrame::ForceFrame(JSContext *cx, JSObject *target)
     : context(cx),
-      target(target)
+      target(target),
+      frame(NULL)
 {
 }
 
 ForceFrame::~ForceFrame()
 {
+    context->delete_(frame);
 }
 
 bool
 ForceFrame::enter()
 {
+    frame = context->new_<DummyFrameGuard>();
+    if (!frame)
+       return false;
     LeaveTrace(context);
 
     JS_ASSERT(context->compartment == target->compartment());
@@ -377,7 +382,7 @@ ForceFrame::enter()
     JSObject *scopeChain = target->getGlobal();
     JS_ASSERT(scopeChain->isNative());
 
-    return context->stack.pushDummyFrame(context, *scopeChain, &frame);
+    return context->stack.pushDummyFrame(context, *scopeChain, frame);
 }
 
 AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)

@@ -41,7 +41,6 @@
 
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMNode.h"
-#include "nsIDOM3Node.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -61,7 +60,7 @@ public:
     NS_DECL_NSIDOMXPATHNSRESOLVER
 
 private:
-    nsCOMPtr<nsIDOM3Node> mNode;
+    nsCOMPtr<nsIDOMNode> mNode;
 };
 
 #endif

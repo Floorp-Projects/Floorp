@@ -191,7 +191,7 @@ static nsRefPtrHashtable<ValueObserverHashKey,
 
 // static
 Preferences*
-Preferences::GetInstance()
+Preferences::GetInstanceForService()
 {
   if (sPreferences) {
     NS_ADDREF(sPreferences);
@@ -200,16 +200,26 @@ Preferences::GetInstance()
 
   NS_ENSURE_TRUE(!sShutdown, nsnull);
 
-  InitStaticMembers();
+  InitStaticMembers(PR_TRUE);
   NS_IF_ADDREF(sPreferences);
   return sPreferences;
 }
 
 // static
 PRBool
-Preferences::InitStaticMembers()
+Preferences::InitStaticMembers(PRBool aForService)
 {
   if (sShutdown || sPreferences) {
+    return sPreferences != nsnull;
+  }
+
+  // If InitStaticMembers() isn't called for getting nsIPrefService,
+  // some global components needed by Preferences::Init() may not have been
+  // initialized yet.  Therefore, we must create the singleton instance via
+  // service manager.
+  if (!aForService) {
+    nsCOMPtr<nsIPrefService> prefService =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
     return sPreferences != nsnull;
   }
 
@@ -1244,6 +1254,14 @@ Preferences::GetLocalizedString(const char* aPref, nsAString* aResult)
 
 // static
 nsresult
+Preferences::GetComplex(const char* aPref, const nsIID &aType, void** aResult)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return sPreferences->mRootBranch->GetComplexValue(aPref, aType, aResult);
+}
+
+// static
+nsresult
 Preferences::SetCString(const char* aPref, const char* aValue)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -1287,6 +1305,15 @@ Preferences::SetInt(const char* aPref, PRInt32 aValue)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sPreferences->mRootBranch->SetIntPref(aPref, aValue);
+}
+
+// static
+nsresult
+Preferences::SetComplex(const char* aPref, const nsIID &aType,
+                        nsISupports* aValue)
+{
+  NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
+  return sPreferences->mRootBranch->SetComplexValue(aPref, aType, aValue);
 }
 
 // static

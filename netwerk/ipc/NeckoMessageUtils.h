@@ -344,6 +344,9 @@ struct ParamTraits<PRNetAddr>
       WriteParam(aMsg, aParam.ipv6.scope_id);
 #if defined(XP_UNIX) || defined(XP_OS2)
     } else if (aParam.raw.family == PR_AF_LOCAL) {
+      // Train's already off the rails:  let's get a stack trace at least...
+      NS_RUNTIMEABORT("Error: please post stack trace to "
+                      "https://bugzilla.mozilla.org/show_bug.cgi?id=661158");
       aMsg->WriteBytes(aParam.local.path, sizeof(aParam.local.path));
 #endif
     }

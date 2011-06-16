@@ -41,13 +41,10 @@
 
 #include "nsWeakReference.h"
 #include "nsCRT.h"
-#include "nsServiceManagerUtils.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
-#include "nsIPrefService.h"
 #include "nsIObserver.h"
 
 #include "nsBidiUtils.h"
+#include "mozilla/Preferences.h"
 
 #if defined(XP_UNIX)
 #include <stdint.h>
@@ -56,6 +53,8 @@
 #ifdef DEBUG
 #include <stdio.h>
 #endif
+
+using namespace mozilla;
 
 /**
  * Cache individual "words" (strings delimited by white-space or white-space-like
@@ -221,8 +220,6 @@ protected:
     nsTHashtable<CacheHashEntry> mCache;
 
     PRInt32 mBidiNumeral;
-    nsCOMPtr<nsIPrefBranch2> mPrefBranch;
-    nsCOMPtr<nsIPrefBranch2> mFontPrefBranch;
 
 #ifdef DEBUG
     static PLDHashOperator CacheDumpEntry(CacheHashEntry* aEntry, void* userArg);
@@ -235,6 +232,12 @@ static TextRunWordCache *gTextRunWordCache = nsnull;
 
 static PRLogModuleInfo *gWordCacheLog = PR_NewLogModule("wordCache");
 
+static const char* kObservedPrefs[] = {
+    "bidi.",
+    "font.",
+    nsnull
+};
+
 void
 TextRunWordCache::Init()
 {
@@ -242,33 +245,14 @@ TextRunWordCache::Init()
     mGeneration = 0;
 #endif
 
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!prefService)
-        return;
-
-    nsCOMPtr<nsIPrefBranch> branch;
-    prefService->GetBranch("bidi.", getter_AddRefs(branch));
-    mPrefBranch = do_QueryInterface(branch);
-    if (!mPrefBranch)
-        return;
-
-    mPrefBranch->AddObserver("", this, PR_TRUE);
-    mPrefBranch->GetIntPref("numeral", &mBidiNumeral);
-
-    nsCOMPtr<nsIPrefBranch> fontBranch;
-    prefService->GetBranch("font.", getter_AddRefs(fontBranch));
-    mFontPrefBranch = do_QueryInterface(fontBranch);
-    if (mFontPrefBranch)
-      mFontPrefBranch->AddObserver("", this, PR_TRUE);
+    Preferences::AddWeakObservers(this, kObservedPrefs);
+    mBidiNumeral = Preferences::GetInt("bidi.numeral", mBidiNumeral);
 }
 
 void
 TextRunWordCache::Uninit()
 {
-    if (mPrefBranch)
-        mPrefBranch->RemoveObserver("", this);
-    if (mFontPrefBranch)
-        mFontPrefBranch->RemoveObserver("", this);
+    Preferences::RemoveObservers(this, kObservedPrefs);
 }
 
 NS_IMETHODIMP
@@ -277,8 +261,8 @@ TextRunWordCache::Observe(nsISupports     *aSubject,
                           const PRUnichar *aData)
 {
     if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-        if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("numeral").get())) {
-          mPrefBranch->GetIntPref("numeral", &mBidiNumeral);
+        if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("bidi.numeral").get())) {
+          mBidiNumeral = Preferences::GetInt("bidi.numeral", mBidiNumeral);
         }
         mCache.Clear();
         PR_LOG(gWordCacheLog, PR_LOG_DEBUG, ("flushing the textrun cache"));

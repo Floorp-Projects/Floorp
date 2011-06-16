@@ -311,7 +311,6 @@ MAKEFILES_libreg="
   modules/libreg/Makefile
   modules/libreg/include/Makefile
   modules/libreg/src/Makefile
-  modules/libreg/standalone/Makefile
 "
 
 MAKEFILES_libpref="
@@ -1122,12 +1121,6 @@ if [ "$MOZ_XTF" ]; then
     content/xtf/Makefile
     content/xtf/public/Makefile
     content/xtf/src/Makefile
-  "
-fi
-
-if [ "$MOZ_STATIC_COMPONENTS" ]; then
-  add_makefiles "
-    modules/staticmod/Makefile
   "
 fi
 

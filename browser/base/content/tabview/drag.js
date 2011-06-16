@@ -85,19 +85,6 @@ function Drag(item, event, isFauxDrag) {
   this.safeWindowBounds = Items.getSafeWindowBounds();
 
   Trenches.activateOthersTrenches(this.el);
-
-  if (!isFauxDrag) {
-    // When a tab drag starts, make it the focused tab.
-    if (this.item.isAGroupItem) {
-      var tab = UI.getActiveTab();
-      if (!tab || tab.parent != this.item) {
-        if (this.item._children.length)
-          UI.setActive(this.item._children[0]);
-      }
-    } else if (this.item.isATabItem) {
-      UI.setActive(this.item);
-    }
-  }
 };
 
 Drag.prototype = {

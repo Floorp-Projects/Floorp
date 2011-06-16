@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Geoff Lankow <geoff@darktrojan.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,13 +58,15 @@ const nsILocalFile = Components.interfaces.nsILocalFile;
 
 var EXPORTED_SYMBOLS = [ "gDownloadLastDir" ];
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Dict.jsm");
+
 let pbSvc = null;
 if (PBSVC_CID in Components.classes) {
   pbSvc = Components.classes[PBSVC_CID]
                     .getService(Components.interfaces.nsIPrivateBrowsingService);
 }
-let prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
 
 let observer = {
   QueryInterface: function (aIID) {
@@ -78,13 +81,17 @@ let observer = {
       case "private-browsing":
         if (aData == "enter")
           gDownloadLastDirFile = readLastDirPref();
-        else if (aData == "exit")
+        else if (aData == "exit") {
           gDownloadLastDirFile = null;
+          gDownloadLastDirStore = new Dict();
+        }
         break;
       case "browser:purge-session-history":
         gDownloadLastDirFile = null;
-        if (prefSvc.prefHasUserValue(LAST_DIR_PREF))
-          prefSvc.clearUserPref(LAST_DIR_PREF);
+        if (Services.prefs.prefHasUserValue(LAST_DIR_PREF))
+          Services.prefs.clearUserPref(LAST_DIR_PREF);
+        gDownloadLastDirStore = new Dict();
+        Services.contentPrefs.removePrefsByName(LAST_DIR_PREF);
         break;
     }
   }
@@ -97,7 +104,7 @@ os.addObserver(observer, "browser:purge-session-history", true);
 
 function readLastDirPref() {
   try {
-    return prefSvc.getComplexValue(LAST_DIR_PREF, nsILocalFile);
+    return Services.prefs.getComplexValue(LAST_DIR_PREF, nsILocalFile);
   }
   catch (e) {
     return null;
@@ -105,8 +112,28 @@ function readLastDirPref() {
 }
 
 let gDownloadLastDirFile = readLastDirPref();
+let gDownloadLastDirStore = new Dict();
 let gDownloadLastDir = {
-  get file() {
+  // compat shims
+  get file() { return this.getFile(); },
+  set file(val) { this.setFile(null, val); },
+  getFile: function (aURI) {
+    if (aURI) {
+      let lastDir;
+      if (pbSvc && pbSvc.privateBrowsingEnabled) {
+        let group = Services.contentPrefs.grouper.group(aURI);
+        lastDir = gDownloadLastDirStore.get(group, null);
+      }
+      if (!lastDir) {
+        lastDir = Services.contentPrefs.getPref(aURI, LAST_DIR_PREF);
+      }
+      if (lastDir) {
+        var lastDirFile = Components.classes["@mozilla.org/file/local;1"]
+                                    .createInstance(Components.interfaces.nsILocalFile);
+        lastDirFile.initWithPath(lastDir);
+        return lastDirFile;
+      }
+    }
     if (gDownloadLastDirFile && !gDownloadLastDirFile.exists())
       gDownloadLastDirFile = null;
 
@@ -115,17 +142,25 @@ let gDownloadLastDir = {
     else
       return readLastDirPref();
   },
-  set file(val) {
+  setFile: function (aURI, aFile) {
+    if (aURI) {
+      if (pbSvc && pbSvc.privateBrowsingEnabled) {
+        let group = Services.contentPrefs.grouper.group(aURI);
+        gDownloadLastDirStore.set(group, aFile.path);
+      } else {
+        Services.contentPrefs.setPref(aURI, LAST_DIR_PREF, aFile.path);
+      }
+    }
     if (pbSvc && pbSvc.privateBrowsingEnabled) {
-      if (val instanceof Components.interfaces.nsIFile)
-        gDownloadLastDirFile = val.clone();
+      if (aFile instanceof Components.interfaces.nsIFile)
+        gDownloadLastDirFile = aFile.clone();
       else
         gDownloadLastDirFile = null;
     } else {
-      if (val instanceof Components.interfaces.nsIFile)
-        prefSvc.setComplexValue(LAST_DIR_PREF, nsILocalFile, val);
-      else if (prefSvc.prefHasUserValue(LAST_DIR_PREF))
-        prefSvc.clearUserPref(LAST_DIR_PREF);
+      if (aFile instanceof Components.interfaces.nsIFile)
+        Services.prefs.setComplexValue(LAST_DIR_PREF, nsILocalFile, aFile);
+      else if (Services.prefs.prefHasUserValue(LAST_DIR_PREF))
+        Services.prefs.clearUserPref(LAST_DIR_PREF);
     }
   }
 };

@@ -139,6 +139,9 @@ function test() {
                testDragToCreateOrphan, testReAddingAfterRemoval];
 
   let next = function () {
+    if (win)
+      win.close();
+
     let test = tests.shift();
 
     if (!test) {
@@ -146,15 +149,12 @@ function test() {
       return;
     }
 
-    if (win)
-      win.close();
-
     TabView.firstUseExperienced = false;
 
     let onLoad = function (newWin) {
       win = newWin;
       removeToolbarButton();
-    }
+    };
 
     let onShow = function () {
       cw = win.TabView.getContentWindow();
@@ -167,13 +167,12 @@ function test() {
         assertToolbarButtonNotExists();
         test();
       }, cw);
-    }
+    };
 
     newWindowWithTabView(onShow, onLoad);
   }
 
   waitForExplicitFinish();
-  registerCleanupFunction(function () win && win.close());
 
   next();
 }

@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "NetUtil", "PlacesUtils",
-                          "Utils", "Svc", "Str"];
+                          "FileUtils", "Utils", "Svc", "Str"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -848,7 +848,7 @@ let Utils = {
     try {
       return Services.io.newURI(URIString, null, null);
     } catch (e) {
-      let log = Log4Moz.repository.getLogger("Service.Util");
+      let log = Log4Moz.repository.getLogger("Sync.Utils");
       log.debug("Could not create URI: " + Utils.exceptionStr(e));
       return null;
     }
@@ -934,16 +934,29 @@ let Utils = {
   },
 
   /**
+   * Execute a function on the next event loop tick.
+   * 
+   * @param callback
+   *        Function to invoke.
+   * @param thisObj [optional]
+   *        Object to bind the callback to.
+   */
+  nextTick: function nextTick(callback, thisObj) {
+    if (thisObj) {
+      callback = callback.bind(thisObj);
+    }
+    Services.tm.currentThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
+  /**
    * Return a timer that is scheduled to call the callback after waiting the
    * provided time or as soon as possible. The timer will be set as a property
    * of the provided object with the given timer name.
    */
-  delay: function delay(callback, wait, thisObj, name) {
-    // Default to running right away
-    wait = wait || 0;
-
-    // Use a dummy object if one wasn't provided
-    thisObj = thisObj || {};
+  namedTimer: function delay(callback, wait, thisObj, name) {
+    if (!thisObj || !name) {
+      throw "You must provide both an object and a property name for the timer!";
+    }
 
     // Delay an existing timer if it exists
     if (name in thisObj && thisObj[name] instanceof Ci.nsITimer) {

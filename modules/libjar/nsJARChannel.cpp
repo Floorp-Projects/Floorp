@@ -52,6 +52,10 @@
 #include "nsIPrincipal.h"
 #include "nsIFileURL.h"
 
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 // the entry for a directory will either be empty (in the case of the
@@ -839,18 +843,9 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
         }
     }
 
-    if (NS_SUCCEEDED(status) && mIsUnsafe) {
-        PRBool allowUnpack = PR_FALSE;
-
-        nsCOMPtr<nsIPrefBranch> prefs =
-            do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (prefs) {
-            prefs->GetBoolPref("network.jar.open-unsafe-types", &allowUnpack);
-        }
-
-        if (!allowUnpack) {
-            status = NS_ERROR_UNSAFE_CONTENT_TYPE;
-        }
+    if (NS_SUCCEEDED(status) && mIsUnsafe &&
+        !Preferences::GetBool("network.jar.open-unsafe-types", PR_FALSE)) {
+        status = NS_ERROR_UNSAFE_CONTENT_TYPE;
     }
 
     if (NS_SUCCEEDED(status)) {

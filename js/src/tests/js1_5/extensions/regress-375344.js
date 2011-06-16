@@ -46,10 +46,10 @@ printStatus (summary);
 
 if (typeof HTMLElement != 'undefined')
 {
-  expect = /Exception... "Illegal operation on WrappedNative prototype object"/;
+  expect = /Exception/;
   try 
   {
-    print(HTMLElement.prototype.nodeName );
+    print(HTMLElement.prototype.nodeName);
   }
   catch(ex) 
   {

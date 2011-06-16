@@ -1,4 +1,4 @@
-// this will take strings_to_send.length*5000 ms = 50 sec
+// this will take strings_to_send.length*500 ms = 5 sec
 
 var timer = null;
 var strings_to_send = ["data\r\n\nda", "ta", ":", "de", "layed1\n\n",
@@ -38,5 +38,5 @@ function handleRequest(request, response)
   resp = response;
 
   timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-  timer.initWithCallback(sendNextString, 5000, Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+  timer.initWithCallback(sendNextString, 500, Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
 }

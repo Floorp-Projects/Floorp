@@ -42,7 +42,6 @@
 #include "nsVoidArray.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOM3Node.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSRuleList.h"
@@ -113,16 +112,14 @@ inCSSValueSearch::SearchSync()
 {
   InitSearch();
 
-  nsCOMPtr<nsIURI> baseURL;
-  nsCOMPtr<nsIDOM3Node> dom3Node = do_QueryInterface(mDocument);
-  if (dom3Node) {
-    nsAutoString uri;
-    dom3Node->GetBaseURI(uri);
-    NS_NewURI(getter_AddRefs(baseURL), uri);
-  }
-
   if (!mDocument) {
     return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> baseURI;
+  nsCOMPtr<nsIDocument> idoc = do_QueryInterface(mDocument);
+  if (idoc) {
+    baseURI = idoc->GetBaseURI();
   }
 
   nsCOMPtr<nsIDOMStyleSheetList> sheets;
@@ -136,7 +133,7 @@ inCSSValueSearch::SearchSync()
     sheets->Item(i, getter_AddRefs(sheet));
     nsCOMPtr<nsIDOMCSSStyleSheet> cssSheet = do_QueryInterface(sheet);
     if (cssSheet)
-      SearchStyleSheet(cssSheet, baseURL);
+      SearchStyleSheet(cssSheet, baseURI);
   }
 
   // XXX would be nice to search inline style as well.

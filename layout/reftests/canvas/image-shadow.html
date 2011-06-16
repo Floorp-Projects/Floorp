@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<body onload="doTest()">
+<canvas id="c" width="200" height="200" style="display:block"></canvas>
+<img id="img" src="image_green-16x16.png" style="display:none">
+<script>
+var c = document.getElementById("c");
+var img = document.getElementById("img");
+var ctx = c.getContext("2d");
+ctx.shadowColor = "black";
+ctx.shadowOffsetX = 0;
+ctx.shadowOffsetY = 10;
+function doTest() {
+  ctx.drawImage(img, 0, 0);
+}
+</script>
+</body>
+</html>

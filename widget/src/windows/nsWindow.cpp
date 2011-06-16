@@ -5072,6 +5072,17 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       }
       break;
 
+    case WM_NCLBUTTONDBLCLK:
+      DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0, lParamToClient(lParam),
+                         PR_FALSE, nsMouseEvent::eLeftButton,
+                         MOUSE_INPUT_SOURCE());
+      result = 
+        DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0, lParamToClient(lParam),
+                           PR_FALSE, nsMouseEvent::eLeftButton,
+                           MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
+      break;
+
     case WM_APPCOMMAND:
     {
       PRUint32 appCommand = GET_APPCOMMAND_LPARAM(lParam);

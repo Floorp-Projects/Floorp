@@ -64,8 +64,4 @@ SHARED_LIBRARY_LIBS = \
 		../base/$(LIB_PREFIX)universalchardet_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

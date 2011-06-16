@@ -94,6 +94,12 @@
  *
  * The correct way to create an nsIURI from a string is via
  * nsIIOService.newURI.
+ *
+ * NOTE: nsBinaryInputStream::ReadObject contains a hackaround to intercept the
+ * old (pre-gecko6) nsIURI IID and swap in the current IID instead, in order
+ * for sessionstore to work after an upgrade.  If this IID is revved further,
+ * we will need to add additional checks there for all intermediate IIDs, until
+ * nsPrincipal is fixed to serialize its URIs as nsISupports (bug 662693).
  */
 [scriptable, uuid(d6d04c36-0fa4-4db3-be05-4a18397103e2)]
 interface nsIURI : nsISupports

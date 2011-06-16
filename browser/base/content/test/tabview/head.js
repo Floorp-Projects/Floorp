@@ -290,6 +290,9 @@ function whenWindowStateReady(win, callback) {
 
 // ----------
 function newWindowWithState(state, callback) {
+  const ss = Cc["@mozilla.org/browser/sessionstore;1"]
+             .getService(Ci.nsISessionStore);
+
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 

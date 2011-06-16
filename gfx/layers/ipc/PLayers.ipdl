@@ -114,6 +114,7 @@ struct OpCreateCanvasBuffer {
   PLayer layer;
   nsIntSize size;
   SurfaceDescriptor initialFront;
+  bool needYFlip;
 };
 struct OpDestroyCanvasFrontBuffer { PLayer layer; };
 

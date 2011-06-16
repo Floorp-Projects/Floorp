@@ -48,8 +48,6 @@
 #include "nsIServiceManager.h"
 #include "nsIAtom.h"
 #include "nsQuickSort.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -65,6 +63,7 @@ static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 
 #include "nsISelectionController.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
@@ -151,9 +150,9 @@ NS_IMPL_ISUPPORTS1(nsLayoutDebuggingTools, nsILayoutDebuggingTools)
 NS_IMETHODIMP
 nsLayoutDebuggingTools::Init(nsIDOMWindow *aWin)
 {
-    mPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!mPrefs)
+    if (!Preferences::GetService()) {
         return NS_ERROR_UNEXPECTED;
+    }
 
     {
         nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWin);
@@ -163,13 +162,22 @@ nsLayoutDebuggingTools::Init(nsIDOMWindow *aWin)
     }
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_UNEXPECTED);
 
-    GetBoolPref("nglayout.debug.paint_flashing", &mPaintFlashing);
-    GetBoolPref("nglayout.debug.paint_dumping", &mPaintDumping);
-    GetBoolPref("nglayout.debug.invalidate_dumping", &mInvalidateDumping);
-    GetBoolPref("nglayout.debug.event_dumping", &mEventDumping);
-    GetBoolPref("nglayout.debug.motion_event_dumping", &mMotionEventDumping);
-    GetBoolPref("nglayout.debug.crossing_event_dumping", &mCrossingEventDumping);
-    GetBoolPref("layout.reflow.showframecounts", &mReflowCounts);
+    mPaintFlashing =
+        Preferences::GetBool("nglayout.debug.paint_flashing", mPaintFlashing);
+    mPaintDumping =
+        Preferences::GetBool("nglayout.debug.paint_dumping", mPaintDumping);
+    mInvalidateDumping =
+        Preferences::GetBool("nglayout.debug.invalidate_dumping", mInvalidateDumping);
+    mEventDumping =
+        Preferences::GetBool("nglayout.debug.event_dumping", mEventDumping);
+    mMotionEventDumping =
+        Preferences::GetBool("nglayout.debug.motion_event_dumping",
+                             mMotionEventDumping);
+    mCrossingEventDumping =
+        Preferences::GetBool("nglayout.debug.crossing_event_dumping",
+                             mCrossingEventDumping);
+    mReflowCounts =
+        Preferences::GetBool("layout.reflow.showframecounts", mReflowCounts);
 
     {
         nsCOMPtr<nsILayoutDebugger> ld = do_GetService(kLayoutDebuggerCID);
@@ -578,25 +586,14 @@ nsLayoutDebuggingTools::SetBoolPrefAndRefresh(const char * aPrefName,
                                               PRBool aNewVal)
 {
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
-    NS_ENSURE_TRUE(mPrefs && aPrefName, NS_OK);
 
-    mPrefs->SetBoolPref(aPrefName, aNewVal);
-    nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(mPrefs);
-    NS_ENSURE_STATE(prefService);
+    nsIPrefService* prefService = Preferences::GetService();
+    NS_ENSURE_TRUE(prefService && aPrefName, NS_OK);
+
+    Preferences::SetBool(aPrefName, aNewVal);
     prefService->SavePrefFile(nsnull);
 
     ForceRefresh();
-
-    return NS_OK;
-}
-
-nsresult
-nsLayoutDebuggingTools::GetBoolPref(const char * aPrefName,
-                                    PRBool *aValue)
-{
-    NS_ENSURE_TRUE(mPrefs && aPrefName, NS_OK);
-
-    mPrefs->GetBoolPref(aPrefName, aValue);
 
     return NS_OK;
 }

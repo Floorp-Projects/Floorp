@@ -11,7 +11,7 @@ function run_test() {
 
   _("Make sure the call is async and allows other events to process");
   let isAsync = false;
-  Utils.delay(function() isAsync = true, 0);
+  Utils.nextTick(function() { isAsync = true; });
   do_check_false(isAsync);
 
   _("Empty out the formhistory table");

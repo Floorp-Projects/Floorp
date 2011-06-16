@@ -87,7 +87,32 @@
       'target_defaults': {
         'msvs_cygwin_dirs': ['../third_party/cygwin'],
       },
-    }]
+    }],
+    ['OS!="win" and OS!="mac"', {
+      'target_defaults': {
+        'cflags': [
+          '-pthread',
+          '-fno-exceptions',
+        ],
+        'ldflags': [
+          '-pthread',
+        ],
+        'configurations': {
+          'Debug': {
+            'variables': {
+              'debug_optimize%': '0',
+            },
+            'defines': [
+              '_DEBUG',
+            ],
+            'cflags': [
+              '-O>(debug_optimize)',
+              '-g',
+            ],
+          }
+        },
+      },
+    }],
   ],
 }
 

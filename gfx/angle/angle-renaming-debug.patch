@@ -1,5 +1,5 @@
 # HG changeset patch
-# Parent 593e84b864c5470aa43682d308212878b0b4e5d9
+# Parent a0dd1332c0e6ebaf429f9a3732b8901f9e46cde0
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
 +++ b/gfx/angle/Makefile.in
@@ -17,11 +17,11 @@ diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
  	ossource_nspr.cpp \
  	util.cpp \
  	ValidateLimitations.cpp \
+ 	ForLoopUnroll.cpp \
+ 	MapLongVariableNames.cpp \
  	$(NULL)
  
  # flex/yacc generated files
- CPPSRCS += \
- 	glslang_lex.cpp \
 diff --git a/gfx/angle/src/build_angle.gyp b/gfx/angle/src/build_angle.gyp
 --- a/gfx/angle/src/build_angle.gyp
 +++ b/gfx/angle/src/build_angle.gyp
@@ -157,7 +157,7 @@ diff --git a/gfx/angle/src/compiler/compilerdebug.h b/gfx/angle/src/compiler/com
 diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclude.h
 --- a/gfx/angle/src/compiler/osinclude.h
 +++ b/gfx/angle/src/compiler/osinclude.h
-@@ -32,17 +32,17 @@
+@@ -30,17 +30,17 @@
  #include <windows.h>
  #elif defined(ANGLE_OS_POSIX)
  #include <pthread.h>

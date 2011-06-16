@@ -51,8 +51,6 @@ MODULE_NAME	= nsRDFModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-EXTRA_DSO_LIBS	= 
-
 CPPSRCS		= \
 		nsRDFModule.cpp \
 		$(NULL)
@@ -62,13 +60,6 @@ CPPSRCS		= \
 SHARED_LIBRARY_LIBS = \
 		../base/src/$(LIB_PREFIX)rdfbase_s.$(LIB_SUFFIX) \
 		../datasource/src/$(LIB_PREFIX)rdfdatasource_s.$(LIB_SUFFIX) \
-		$(NULL)
-
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 EXPORTS		= nsRDFCID.h

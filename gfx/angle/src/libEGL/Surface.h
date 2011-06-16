@@ -61,9 +61,6 @@ class Surface
     virtual void setBoundTexture(gl::Texture2D *texture);
     virtual gl::Texture2D *getBoundTexture() const;
 
-    void setPendingDestroy();
-    bool isPendingDestroy() const;
-
 private:
     DISALLOW_COPY_AND_ASSIGN(Surface);
 
@@ -74,7 +71,6 @@ private:
     IDirect3DTexture9* mOffscreenTexture;
 
     HANDLE mShareHandle;
-    bool mIsPendingDestroy;
 
     void subclassWindow();
     void unsubclassWindow();

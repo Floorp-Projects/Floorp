@@ -233,18 +233,18 @@ class Dispatcher(object):
                 request.ws_stream.close_connection()
         # Catch non-critical exceptions the handler didn't handle.
         except msgutil.BadOperationException, e:
-            self._logger.debug(str(e))
+            self._logger.debug('%s', e)
             request.ws_stream.close_connection(common.STATUS_GOING_AWAY)
         except msgutil.InvalidFrameException, e:
             # InvalidFrameException must be caught before
             # ConnectionTerminatedException that catches InvalidFrameException.
-            self._logger.debug(str(e))
+            self._logger.debug('%s', e)
             request.ws_stream.close_connection(common.STATUS_PROTOCOL_ERROR)
         except msgutil.UnsupportedFrameException, e:
-            self._logger.debug(str(e))
+            self._logger.debug('%s', e)
             request.ws_stream.close_connection(common.STATUS_UNSUPPORTED)
         except msgutil.ConnectionTerminatedException, e:
-            self._logger.debug(str(e))
+            self._logger.debug('%s', e)
         except Exception, e:
             util.prepend_message_to_exception(
                 '%s raised exception for %s: ' % (

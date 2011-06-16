@@ -1012,7 +1012,8 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   }
   
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
+                                           nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   result = CreateElement(aAtts, aAttsCount, nodeInfo, aLineNumber,

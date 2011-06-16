@@ -42,10 +42,9 @@
 #include "gfxDWriteFonts.h"
 #include "nsUnicharUtils.h"
 #include "nsILocaleService.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch2.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "mozilla/Preferences.h"
 
 #include "gfxGDIFontList.h"
 
@@ -696,15 +695,7 @@ gfxDWriteFontList::InitFontList()
         fc->AgeAllGenerations();
     }
 
-    nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    nsresult rv;
-
-    rv = pref->GetBoolPref(
-             "gfx.font_rendering.directwrite.use_gdi_table_loading", 
-             &mGDIFontTableAccess);
-    if (NS_FAILED(rv)) {
-        mGDIFontTableAccess = PR_FALSE;
-    }
+    mGDIFontTableAccess = Preferences::GetBool("gfx.font_rendering.directwrite.use_gdi_table_loading", PR_FALSE);
 
     gfxPlatformFontList::InitFontList();
 
@@ -953,12 +944,9 @@ gfxDWriteFontList::DelayedInitFontList()
         }
     }
 
-    nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    nsXPIDLCString classicFamilies;
-    nsresult rv = pref->GetCharPref(
-             "gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
-             getter_Copies(classicFamilies));
-    if (NS_SUCCEEDED(rv)) {
+    nsAdoptingCString classicFamilies =
+        Preferences::GetCString("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families");
+    if (classicFamilies) {
         nsCCharSeparatedTokenizer tokenizer(classicFamilies, ',');
         while (tokenizer.hasMoreTokens()) {
             NS_ConvertUTF8toUTF16 name(tokenizer.nextToken());
@@ -969,12 +957,9 @@ gfxDWriteFontList::DelayedInitFontList()
             }
         }
     }
-    PRInt32 forceGDIClassicMaxFontSize = 0;
-    rv = pref->GetIntPref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size",
-                          &forceGDIClassicMaxFontSize);
-    if (NS_SUCCEEDED(rv)) {
-        mForceGDIClassicMaxFontSize = forceGDIClassicMaxFontSize;
-    }
+    mForceGDIClassicMaxFontSize =
+        Preferences::GetInt("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size",
+                            mForceGDIClassicMaxFontSize);
 
     StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);
 

@@ -889,7 +889,7 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 
         isEmbedded = PR_TRUE;
         PRUint32 nameLen = NS_MIN<PRUint32>(uniqueName.Length(), LF_FACESIZE - 1);
-        nsPromiseFlatString fontName(Substring(uniqueName, 0, nameLen));
+        nsAutoString fontName(Substring(uniqueName, 0, nameLen));
         
         FontDataOverlay overlayNameData = {0, 0, 0};
 

@@ -41,7 +41,6 @@
 #include "nsIXMLHttpRequest.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
-#include "nsIDOMLoadListener.h"
 #include "nsIDOMDocument.h"
 #include "nsIURI.h"
 #include "nsIHttpChannel.h"
@@ -117,7 +116,6 @@ public:
 class nsXMLHttpRequest : public nsXHREventTarget,
                          public nsIXMLHttpRequest,
                          public nsIJSXMLHttpRequest,
-                         public nsIDOMLoadListener,
                          public nsIStreamListener,
                          public nsIChannelEventSink,
                          public nsIProgressEventSink,
@@ -140,16 +138,6 @@ public:
   NS_IMETHOD SetOnuploadprogress(nsIDOMEventListener* aOnuploadprogress);
 
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
-
-  // nsIDOMEventListener
-  NS_DECL_NSIDOMEVENTLISTENER
-
-  // nsIDOMLoadListener
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-  NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
   // nsIStreamListener
   NS_DECL_NSISTREAMLISTENER
@@ -229,7 +217,6 @@ protected:
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
   nsresult ChangeState(PRUint32 aState, PRBool aBroadcast = PR_TRUE);
-  nsresult RequestCompleted();
   nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
   nsIURI *GetBaseURI();
 
