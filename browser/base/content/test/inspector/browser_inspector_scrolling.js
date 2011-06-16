@@ -65,34 +65,42 @@ function createDocument()
 
 function toggleInspector()
 {
-  Services.obs.addObserver(inspectNode, "inspector-opened", false);
+  Services.obs.addObserver(inspectNode, INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.toggleInspectorUI();
 }
 
 function inspectNode()
 {
-  Services.obs.removeObserver(inspectNode, "inspector-opened", false);
-  document.addEventListener("popupshown", performScrollingTest, false);
+  Services.obs.removeObserver(inspectNode,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.addObserver(performScrollingTest,
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
-  InspectorUI.inspectNode(div)
+  executeSoon(function() {
+    InspectorUI.inspectNode(div);
+  });
 }
 
-function performScrollingTest(aEvent)
+function performScrollingTest()
 {
-  if (aEvent.target.id != "highlighter-panel") {
-    return true;
-  }
+  Services.obs.removeObserver(performScrollingTest,
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
-  document.removeEventListener("popupshown", performScrollingTest, false);
+  EventUtils.synthesizeMouseScroll(div, 10, 10,
+    {axis:"vertical", delta:50, type:"MozMousePixelScroll"},
+    iframe.contentWindow);
 
-  EventUtils.synthesizeMouseScroll(aEvent.target, 10, 10,
-    {axis:"vertical", delta:50, type:"MozMousePixelScroll"}, window);
+  gBrowser.selectedBrowser.addEventListener("scroll", function() {
+    gBrowser.selectedBrowser.removeEventListener("scroll", arguments.callee,
+      false);
 
-  is(iframe.contentDocument.body.scrollTop, 50, "inspected iframe scrolled");
+    is(iframe.contentDocument.body.scrollTop, 50, "inspected iframe scrolled");
 
-  InspectorUI.closeInspectorUI();
-  gBrowser.removeCurrentTab();
-  finish();
+    div = iframe = doc = null;
+    InspectorUI.closeInspectorUI();
+    gBrowser.removeCurrentTab();
+    finish();
+  }, false);
 }
 
 function test()
