@@ -13,13 +13,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Jonathan Kew <jfkthame@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,37 +34,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __inDOMUtils_h__
-#define __inDOMUtils_h__
+#ifndef __nsFontFace_h__
+#define __nsFontFace_h__
 
-#include "inIDOMUtils.h"
+#include "nsIDOMFontFace.h"
 
-#include "nsISupportsArray.h"
+#include "gfxFont.h"
 
-class nsRuleNode;
-class nsStyleContext;
-class nsIAtom;
-class nsIContent;
-
-class inDOMUtils : public inIDOMUtils
+class nsFontFace : public nsIDOMFontFace
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_INIDOMUTILS
+  NS_DECL_NSIDOMFONTFACE
 
-  inDOMUtils();
-  virtual ~inDOMUtils();
+  nsFontFace(gfxFontEntry* aFontEntry);
+  virtual ~nsFontFace();
 
-private:
-  // aStyleContext must be released by the caller once he's done with aRuleNode.
-  static nsresult GetRuleNodeForContent(nsIContent* aContent,
-                                        nsIAtom* aPseudo,
-                                        nsStyleContext** aStyleContext,
-                                        nsRuleNode** aRuleNode);
+  gfxFontEntry* GetFontEntry() const { return mFontEntry.get(); }
+
+protected:
+  nsRefPtr<gfxFontEntry> mFontEntry;
 };
 
-// {0a499822-a287-4089-ad3f-9ffcd4f40263}
-#define IN_DOMUTILS_CID \
-  {0x0a499822, 0xa287, 0x4089, {0xad, 0x3f, 0x9f, 0xfc, 0xd4, 0xf4, 0x02, 0x63}}
-
-#endif // __inDOMUtils_h__
+#endif // __nsFontFace_h__

@@ -122,3 +122,7 @@ interface nsIDOMRange;
 interface nsIDOMCRMFObject;
 interface nsIDOMCrypto;
 interface nsIDOMPkcs11;
+
+// Used font face (for inspector)
+interface nsIDOMFontFace;
+interface nsIDOMFontFaceList;
