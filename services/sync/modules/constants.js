@@ -111,8 +111,14 @@ PASSWORDS_STORE_BATCH_SIZE:            50, // same as MOBILE_BATCH_SIZE
 
 // score thresholds for early syncs
 SINGLE_USER_THRESHOLD:                 1000,
-MULTI_DESKTOP_THRESHOLD:               500,
-MULTI_MOBILE_THRESHOLD:                100,
+MULTI_DEVICE_THRESHOLD:                300,
+
+// Other score increment constants
+SCORE_INCREMENT_SMALL:                 1,
+SCORE_INCREMENT_MEDIUM:                10,
+
+// Instant sync score increment
+SCORE_INCREMENT_XLARGE:                300 + 1, //MULTI_DEVICE_THRESHOLD + 1
 
 // File IO Flags
 MODE_RDONLY:                           0x01,

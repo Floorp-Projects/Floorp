@@ -70,6 +70,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/constants.js");
 
 Cu.import("resource://services-sync/main.js");      // For access to Service.
 
@@ -1317,9 +1318,9 @@ BookmarksTracker.prototype = {
       this._upScore();
   },
 
-  /* Every add/remove/change is worth 10 points */
+  /* Every add/remove/change will trigger a sync for MULTI_DEVICE */
   _upScore: function BMT__upScore() {
-    this.score += 10;
+    this.score += SCORE_INCREMENT_XLARGE;
   },
 
   /**
