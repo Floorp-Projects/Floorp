@@ -109,8 +109,6 @@ CPPSRCS = \
   ChildAsyncCall.cpp \
   ChildTimer.cpp \
   PluginMessageUtils.cpp \
-  PluginIdentifierChild.cpp \
-  PluginIdentifierParent.cpp \
   PluginInstanceChild.cpp \
   PluginInstanceParent.cpp \
   PluginModuleChild.cpp \

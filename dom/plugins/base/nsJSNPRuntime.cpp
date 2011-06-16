@@ -334,11 +334,7 @@ struct AutoCXPusher
   }
 };
 
-namespace mozilla {
-namespace plugins {
-namespace parent {
-
-JSContext *
+static JSContext *
 GetJSContext(NPP npp)
 {
   NS_ENSURE_TRUE(npp, nsnull);
@@ -364,9 +360,6 @@ GetJSContext(NPP npp)
   return (JSContext *)scx->GetNativeContext();
 }
 
-}
-}
-}
 
 static NPP
 LookupNPP(NPObject *npobj);

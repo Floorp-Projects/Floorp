@@ -42,10 +42,6 @@
 
 using namespace mozilla::plugins;
 
-namespace {
-typedef PluginIdentifierChild::StackIdentifier StackIdentifier;
-}
-
 // static
 NPObject*
 PluginScriptableObjectChild::ScriptableAllocate(NPP aInstance,
@@ -664,7 +660,7 @@ PluginScriptableObjectChild::AnswerHasMethod(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier id(aId);
+  PluginIdentifierChild* id = static_cast<PluginIdentifierChild*>(aId);
   *aHasMethod = mObject->_class->hasMethod(mObject, id->ToNPIdentifier());
   return true;
 }
@@ -708,7 +704,7 @@ PluginScriptableObjectChild::AnswerInvoke(PPluginIdentifierChild* aId,
 
   NPVariant result;
   VOID_TO_NPVARIANT(result);
-  StackIdentifier id(aId);
+  PluginIdentifierChild* id = static_cast<PluginIdentifierChild*>(aId);
   bool success = mObject->_class->invoke(mObject, id->ToNPIdentifier(),
                                          convertedArgs.Elements(), argCount,
                                          &result);
@@ -829,7 +825,7 @@ PluginScriptableObjectChild::AnswerHasProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier id(aId);
+  PluginIdentifierChild* id = static_cast<PluginIdentifierChild*>(aId);
   *aHasProperty = mObject->_class->hasProperty(mObject, id->ToNPIdentifier());
   return true;
 }
@@ -859,8 +855,7 @@ PluginScriptableObjectChild::AnswerGetChildProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier stackID(aId);
-  NPIdentifier id = stackID->ToNPIdentifier();
+  NPIdentifier id = static_cast<PluginIdentifierChild*>(aId)->ToNPIdentifier();
 
   *aHasProperty = mObject->_class->hasProperty(mObject, id);
   *aHasMethod = mObject->_class->hasMethod(mObject, id);
@@ -906,8 +901,7 @@ PluginScriptableObjectChild::AnswerSetProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier stackID(aId);
-  NPIdentifier id = stackID->ToNPIdentifier();
+  NPIdentifier id = static_cast<PluginIdentifierChild*>(aId)->ToNPIdentifier();
 
   if (!mObject->_class->hasProperty(mObject, id)) {
     *aSuccess = false;
@@ -944,8 +938,7 @@ PluginScriptableObjectChild::AnswerRemoveProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier stackID(aId);
-  NPIdentifier id = stackID->ToNPIdentifier();
+  NPIdentifier id = static_cast<PluginIdentifierChild*>(aId)->ToNPIdentifier();
   *aSuccess = mObject->_class->hasProperty(mObject, id) ?
               mObject->_class->removeProperty(mObject, id) :
               true;

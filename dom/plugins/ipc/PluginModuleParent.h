@@ -90,8 +90,7 @@ protected:
 
     virtual PPluginIdentifierParent*
     AllocPPluginIdentifier(const nsCString& aString,
-                           const int32_t& aInt,
-                           const bool& aTemporary);
+                           const int32_t& aInt);
 
     virtual bool
     DeallocPPluginIdentifier(PPluginIdentifierParent* aActor);
@@ -137,14 +136,8 @@ public:
         return !IsOnCxxStack();
     }
 
-    /**
-     * Get an identifier actor for this NPIdentifier. If this is a temporary
-     * identifier, the temporary refcount is increased by one. This method
-     * is intended only for use by StackIdentifier and the scriptable
-     * Enumerate hook.
-     */
-    PluginIdentifierParent*
-    GetIdentifierForNPIdentifier(NPP npp, NPIdentifier aIdentifier);
+    PPluginIdentifierParent*
+    GetIdentifierForNPIdentifier(NPIdentifier aIdentifier);
 
     void ProcessRemoteNativeEventsInRPCCall();
 

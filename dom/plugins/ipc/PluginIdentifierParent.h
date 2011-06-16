@@ -48,8 +48,6 @@
 namespace mozilla {
 namespace plugins {
 
-class PluginInstanceParent;
-
 class PluginIdentifierParent : public PPluginIdentifierParent
 {
   friend class PluginModuleParent;
@@ -60,34 +58,9 @@ public:
     return mIdentifier;
   }
 
-  bool IsTemporary() {
-    return !!mTemporaryRefs;
-  }
-
-  /**
-   * Holds a perhaps-temporary identifier for the current stack frame.
-   */
-  class NS_STACK_CLASS StackIdentifier
-  {
-  public:
-    StackIdentifier(PluginInstanceParent* inst, NPIdentifier aIdentifier);
-    StackIdentifier(NPObject* aObject, NPIdentifier aIdentifier);
-    ~StackIdentifier();
-
-    operator PluginIdentifierParent*() {
-      return mIdentifier;
-    }
-
-  private:
-    DISALLOW_COPY_AND_ASSIGN(StackIdentifier);
-
-    PluginIdentifierParent* mIdentifier;
-  };
-
 protected:
-  PluginIdentifierParent(NPIdentifier aIdentifier, bool aTemporary)
+  PluginIdentifierParent(NPIdentifier aIdentifier)
     : mIdentifier(aIdentifier)
-    , mTemporaryRefs(aTemporary ? 1 : 0)
   {
     MOZ_COUNT_CTOR(PluginIdentifierParent);
   }
@@ -97,23 +70,8 @@ protected:
     MOZ_COUNT_DTOR(PluginIdentifierParent);
   }
 
-  virtual bool RecvRetain();
-
-  void AddTemporaryRef() {
-    mTemporaryRefs++;
-  }
-
-  /**
-   * @returns true if the last temporary reference was removed.
-   */
-  bool RemoveTemporaryRef() {
-    --mTemporaryRefs;
-    return !mTemporaryRefs;
-  }
-
 private:
   NPIdentifier mIdentifier;
-  unsigned int mTemporaryRefs;
 };
 
 } // namespace plugins
