@@ -39,6 +39,7 @@
 #include "nsFontFace.h"
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsCSSRules.h"
+#include "gfxUserFontSet.h"
 
 nsFontFace::nsFontFace(gfxFontEntry*      aFontEntry,
                        PRUint8            aMatchType,
@@ -116,28 +117,81 @@ nsFontFace::GetRule(nsIDOMCSSFontFaceRule **aRule)
 NS_IMETHODIMP
 nsFontFace::GetSrcIndex(PRInt32 * aSrcIndex)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mFontEntry->IsUserFont()) {
+    NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
+    *aSrcIndex = mFontEntry->mUserFontData->mSrcIndex;
+  } else {
+    *aSrcIndex = -1;
+  }
+  return NS_OK;
 }
 
 /* readonly attribute DOMString URI; */
 NS_IMETHODIMP
 nsFontFace::GetURI(nsAString & aURI)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aURI.Truncate();
+  if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
+    NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
+    if (mFontEntry->mUserFontData->mURI) {
+      nsCAutoString spec;
+      mFontEntry->mUserFontData->mURI->GetSpec(spec);
+      AppendUTF8toUTF16(spec, aURI);
+    }
+  }
+  return NS_OK;
 }
 
 /* readonly attribute DOMString localName; */
 NS_IMETHODIMP
 nsFontFace::GetLocalName(nsAString & aLocalName)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mFontEntry->IsLocalUserFont()) {
+    NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
+    aLocalName = mFontEntry->mUserFontData->mLocalName;
+  } else {
+    aLocalName.Truncate();
+  }
+  return NS_OK;
 }
 
 /* readonly attribute DOMString format; */
+static void
+AppendToFormat(nsAString & aResult, const char* aFormat)
+{
+  if (!aResult.IsEmpty()) {
+    aResult.AppendASCII(",");
+  }
+  aResult.AppendASCII(aFormat);
+}
+
 NS_IMETHODIMP
 nsFontFace::GetFormat(nsAString & aFormat)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aFormat.Truncate();
+  if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
+    NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
+    PRUint32 formatFlags = mFontEntry->mUserFontData->mFormat;
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_OPENTYPE) {
+      AppendToFormat(aFormat, "opentype");
+    }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE) {
+      AppendToFormat(aFormat, "truetype");
+    }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT) {
+      AppendToFormat(aFormat, "truetype-aat");
+    }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_EOT) {
+      AppendToFormat(aFormat, "embedded-opentype");
+    }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_SVG) {
+      AppendToFormat(aFormat, "svg");
+    }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF) {
+      AppendToFormat(aFormat, "woff");
+    }
+  }
+  return NS_OK;
 }
 
 /* readonly attribute DOMString metadata; */
