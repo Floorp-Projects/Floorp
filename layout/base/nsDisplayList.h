@@ -647,7 +647,9 @@ public:
   }
   /**
    * @return a region of the item that is opaque --- every pixel painted
-   * with an opaque color.
+   * with an opaque color. This is useful for determining when one piece
+   * of content completely obscures another so that we can do occlusion
+   * culling.
    */
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    PRBool* aForceTransparentSurface = nsnull)
