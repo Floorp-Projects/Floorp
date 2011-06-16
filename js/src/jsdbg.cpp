@@ -1291,7 +1291,7 @@ static JSBool
 DebugFrameEval(JSContext *cx, uintN argc, Value *vp, EvalBindingsMode mode)
 {
     REQUIRE_ARGC(mode == WithBindings ? "Debug.Frame.evalWithBindings" : "Debug.Frame.eval",
-                 mode == WithBindings ? 2 : 1);
+                 uintN(mode == WithBindings ? 2 : 1));
     THIS_FRAME(cx, vp, mode == WithBindings ? "evalWithBindings" : "eval", thisobj, fp);
     Debug *dbg = Debug::fromChildJSObject(&vp[1].toObject());
 
