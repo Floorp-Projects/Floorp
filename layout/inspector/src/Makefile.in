@@ -46,7 +46,10 @@ MODULE = inspector
 LIBRARY_NAME = inspector_s
 LIBXUL_LIBRARY = 1
 
-
+EXPORTS = \
+  nsFontFace.h \
+  nsFontFaceList.h \
+  $(NULL)
 
 CPPSRCS= \
   inDeepTreeWalker.cpp \
@@ -55,6 +58,8 @@ CPPSRCS= \
   inCSSValueSearch.cpp \
   inDOMUtils.cpp \
   inLayoutUtils.cpp \
+  nsFontFace.cpp \
+  nsFontFaceList.cpp \
 	$(NULL)
 
 ifdef MOZ_XUL
