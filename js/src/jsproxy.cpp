@@ -1332,7 +1332,7 @@ callable_Call(JSContext *cx, uintN argc, Value *vp)
     return ok;
 }
 
-static JSBool
+JSBool
 callable_Construct(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = js_CreateThis(cx, &JS_CALLEE(cx, vp).toObject());
