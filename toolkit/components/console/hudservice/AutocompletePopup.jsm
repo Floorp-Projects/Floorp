@@ -75,6 +75,7 @@ function AutocompletePopup(aDocument)
       stringBundle.GetStringFromName("Autocomplete.label"));
     this._panel.setAttribute("noautofocus", "true");
     this._panel.setAttribute("ignorekeys", "true");
+    this._panel.setAttribute("level", "top");
 
     let mainPopupSet = this._document.getElementById("mainPopupSet");
     if (mainPopupSet) {
