@@ -707,6 +707,9 @@
         label="&pageactions.saveas.pdf;"
         oncommand="PageActions.savePageAsPDF();"/>
 #endif
+      <toolbarbutton class="appmenu-quit-button appmenu-button"
+        label="&pageactions.quit;"
+        oncommand="Browser.quit();"/>
     </hbox>
   </stack>
 
