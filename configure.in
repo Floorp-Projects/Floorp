@@ -127,7 +127,7 @@ W32API_VERSION=3.8
 GNOMEVFS_VERSION=2.0
 GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
-GIO_VERSION=2.0
+GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.7.5
@@ -5456,6 +5456,8 @@ then
 
     if test "$MOZ_ENABLE_GIO" -a "$MOZ_ENABLE_GTK2"
     then
+        PKG_CHECK_MODULES(_GTKCHECK, gtk+-2.0 >= 2.14, , 
+                          [AC_MSG_ERROR([* * * Could not find gtk+-2.0 > 2.14. Required for build with gio.])])
         PKG_CHECK_MODULES(MOZ_GIO, gio-2.0 >= $GIO_VERSION,[
             MOZ_GIO_LIBS=`echo $MOZ_GIO_LIBS | sed 's/-llinc\>//'`
             MOZ_ENABLE_GIO=1
