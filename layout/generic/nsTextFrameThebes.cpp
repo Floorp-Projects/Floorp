@@ -3322,10 +3322,14 @@ nsTextPaintStyle::GetURLSecondaryColor(nscolor* aForeColor)
 {
   NS_ASSERTION(aForeColor, "aForeColor is null");
 
-  nsILookAndFeel* look = mPresContext->LookAndFeel();
-  nscolor foreColor;
-  look->GetColor(nsILookAndFeel::eColor_graytext, foreColor);
-  *aForeColor = foreColor;
+  nscolor textColor = GetTextColor();
+  textColor = NS_RGBA(NS_GET_R(textColor),
+                      NS_GET_G(textColor),
+                      NS_GET_B(textColor),
+                      (PRUint8)(255 * 0.5f));
+  // Don't use true alpha color for readability.
+  InitCommonColors();
+  *aForeColor = NS_ComposeColors(mFrameBackgroundColor, textColor);
 }
 
 void
