@@ -20,23 +20,6 @@ function test() {
     return groupItem;
   }
 
-  let hideGroupItem = function (groupItem, callback) {
-    groupItem.addSubscriber(groupItem, 'groupHidden', function () {
-      groupItem.removeSubscriber(groupItem, 'groupHidden');
-      callback();
-    });
-    groupItem.closeAll();
-  }
-
-  let closeGroupItem = function (groupItem, callback) {
-    afterAllTabsLoaded(function () {
-      hideGroupItem(groupItem, function () {
-        groupItem.closeHidden();
-        callback();
-      });
-    });
-  }
-
   let tests = [];
 
   let next = function () {
@@ -214,10 +197,13 @@ function test() {
     let tabItem = groupItem.getChild(0);
     groupItem.remove(tabItem);
 
-    hideTabView(function () {
+    closeGroupItem(groupItem, function () {
       assertNumberOfGroupItems(0);
-      createGroupItem().add(tabItem);
-      next();
+
+      hideTabView(function () {
+        createGroupItem().add(tabItem);
+        next();
+      });
     });
   }
 
@@ -229,14 +215,17 @@ function test() {
     let tabItem = groupItem.getChild(0);
     groupItem.remove(tabItem);
 
-    assertNumberOfGroupItems(0);
-    let newGroupItem = createGroupItem(1);
-    assertNumberOfGroupItems(1);
-
-    closeGroupItem(newGroupItem, function () {
+    closeGroupItem(groupItem, function () {
       assertNumberOfGroupItems(0);
-      createGroupItem().add(tabItem);
-      hideTabView(next);
+
+      let newGroupItem = createGroupItem(1);
+      assertNumberOfGroupItems(1);
+
+      closeGroupItem(newGroupItem, function () {
+        assertNumberOfGroupItems(0);
+        createGroupItem().add(tabItem);
+        hideTabView(next);
+      });
     });
   }
 
@@ -248,15 +237,18 @@ function test() {
     let tabItem = groupItem.getChild(0);
     groupItem.remove(tabItem);
 
-    assertNumberOfGroupItems(0);
-    let newGroupItem = createGroupItem(1);
-    assertNumberOfGroupItems(1);
+    closeGroupItem(groupItem, function () {
+      assertNumberOfGroupItems(0);
 
-    hideGroupItem(newGroupItem, function () {
-      hideTabView(function () {
-        assertNumberOfGroupItems(0);
-        createGroupItem().add(tabItem);
-        next();
+      let newGroupItem = createGroupItem(1);
+      assertNumberOfGroupItems(1);
+
+      hideGroupItem(newGroupItem, function () {
+        hideTabView(function () {
+          assertNumberOfGroupItems(0);
+          createGroupItem().add(tabItem);
+          next();
+        });
       });
     });
   }

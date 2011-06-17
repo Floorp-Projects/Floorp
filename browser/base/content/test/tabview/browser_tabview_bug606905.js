@@ -22,11 +22,13 @@ function test() {
          "Tab width is bigger than tab clip width");
       is(gBrowser.tabContainer.getAttribute("closebuttons"), "alltabs", "Show button on all tabs.")
 
+      let cw = TabView.getContentWindow();
+      let groupItems = cw.GroupItems.groupItems;
+      is(groupItems.length, 2, "there are two groupItems");
+
       // clean up and finish
-      newTabs.forEach(function(tab) {
-        gBrowser.removeTab(tab);
-      });
-      finish();
+      newTabs.forEach(function (tab) gBrowser.removeTab(tab));
+      closeGroupItem(groupItems[1], finish);
     });
   });
 }

@@ -25,20 +25,25 @@ function onTabViewWindowLoaded(win) {
   
     is(group.getChildren().length, 1, "The group has one child now.");
     let tab = group.getChild(0);
-  
-    function check() {
-      if (groupOrTab == 'group') {
-        group.removeSubscriber(group, "groupHidden", check);
-        group.closeHidden();
-      } else
-        tab.removeSubscriber(tab, "tabRemoved", check);
-  
+
+    function finalize() {
       is(contentWindow.GroupItems.getActiveGroupItem(), originalGroup,
         "The original group is active.");
       is(contentWindow.UI.getActiveTab(), originalTab._tabViewTabItem,
         "The original tab is active");
-  
+
       callback();
+    }
+
+    function check() {
+      if (groupOrTab == 'group') {
+        group.removeSubscriber(group, "groupHidden", check);
+        group.closeHidden();
+        finalize();
+      } else {
+        tab.removeSubscriber(tab, "tabRemoved", check);
+        closeGroupItem(group, finalize);
+      }
     }
   
     if (groupOrTab == 'group') {
