@@ -628,7 +628,7 @@ endif
 # don't give different results. We skip the contents of objdirs using |find|
 # (it can't be done with %-expansion, because the files we want to skip aren't
 # in the vpath).
-ALL_FILES=$(shell find $(srcdir) \( -name "*.cpp" -o -name "*.h" \) -not -path "*/dist/*" -not -path "*/config/*")
+ALL_FILES=$(shell find $(srcdir) \( -name "*.cpp" -o -name "*.h" \) ! -path "*/dist/*" ! -path "*/config/*")
 check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL_FILES))
 
 	# js_malloc and friends are only used by other memory managers, and should
