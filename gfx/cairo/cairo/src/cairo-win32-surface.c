@@ -1503,8 +1503,8 @@ _cairo_win32_surface_fill_rectangles_stretchdib (HDC                   dc,
     BITMAPINFO bi;
     int pixel = ((color->alpha_short >> 8) << 24) |
                 ((color->red_short >> 8) << 16) |
-                ((color->blue_short >> 8) << 8) |
-                (color->green_short >> 8);
+                ((color->green_short >> 8) << 8) |
+                (color->blue_short >> 8);
     int i;
 
     /* Experiments suggest that it's impossible to use FillRect to set the alpha value
