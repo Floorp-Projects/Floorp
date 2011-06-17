@@ -132,13 +132,13 @@ PluginScriptableObjectParent::ScriptableHasMethod(NPObject* aObject,
     return false;
   }
 
-  StackIdentifier identifier(aObject, aName);
-  if (!identifier) {
+  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
+  if (!actor) {
     return false;
   }
 
-  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
-  if (!actor) {
+  StackIdentifier identifier(aObject, aName);
+  if (!identifier) {
     return false;
   }
 
@@ -172,13 +172,13 @@ PluginScriptableObjectParent::ScriptableInvoke(NPObject* aObject,
     return false;
   }
 
-  StackIdentifier identifier(aObject, aName);
-  if (!identifier) {
+  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
+  if (!actor) {
     return false;
   }
 
-  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
-  if (!actor) {
+  StackIdentifier identifier(aObject, aName);
+  if (!identifier) {
     return false;
   }
 
@@ -274,13 +274,13 @@ PluginScriptableObjectParent::ScriptableHasProperty(NPObject* aObject,
     return false;
   }
 
-  StackIdentifier identifier(aObject, aName);
-  if (!identifier) {
+  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
+  if (!actor) {
     return false;
   }
 
-  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
-  if (!actor) {
+  StackIdentifier identifier(aObject, aName);
+  if (!identifier) {
     return false;
   }
 
@@ -323,13 +323,13 @@ PluginScriptableObjectParent::ScriptableSetProperty(NPObject* aObject,
     return false;
   }
 
-  StackIdentifier identifier(aObject, aName);
-  if (!identifier) {
+  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
+  if (!actor) {
     return false;
   }
 
-  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
-  if (!actor) {
+  StackIdentifier identifier(aObject, aName);
+  if (!identifier) {
     return false;
   }
 
@@ -366,13 +366,13 @@ PluginScriptableObjectParent::ScriptableRemoveProperty(NPObject* aObject,
     return false;
   }
 
-  StackIdentifier identifier(aObject, aName);
-  if (!identifier) {
+  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
+  if (!actor) {
     return false;
   }
 
-  ProtectedActor<PluginScriptableObjectParent> actor(object->parent);
-  if (!actor) {
+  StackIdentifier identifier(aObject, aName);
+  if (!identifier) {
     return false;
   }
 
