@@ -79,7 +79,9 @@ CheckStringLength(JSContext *cx, size_t length)
  */
 class StringBuffer
 {
-    typedef Vector<jschar, 32> CharBuffer;
+    /* cb's buffer is taken by the new string so use ContextAllocPolicy. */
+    typedef Vector<jschar, 32, ContextAllocPolicy> CharBuffer;
+
     CharBuffer cb;
 
     static inline bool checkLength(JSContext *cx, size_t length);
