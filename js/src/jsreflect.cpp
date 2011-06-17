@@ -1624,7 +1624,6 @@ class ASTSerializer
     bool expressions(JSParseNode *pn, NodeVector &elts);
     bool xmls(JSParseNode *pn, NodeVector &elts);
     bool leftAssociate(JSParseNode *pn, Value *dst);
-    bool binaryOperands(JSParseNode *pn, NodeVector &elts);
     bool functionArgs(JSParseNode *pn, JSParseNode *pnargs, JSParseNode *pndestruct,
                       JSParseNode *pnbody, NodeVector &args);
 
@@ -2108,6 +2107,7 @@ ASTSerializer::forInit(JSParseNode *pn, Value *dst)
 bool
 ASTSerializer::statement(JSParseNode *pn, Value *dst)
 {
+    JS_CHECK_RECURSION(cx, return false);
     switch (PN_TYPE(pn)) {
       case TOK_FUNCTION:
       case TOK_VAR:
@@ -2353,23 +2353,6 @@ ASTSerializer::leftAssociate(JSParseNode *pn, Value *dst)
 }
 
 bool
-ASTSerializer::binaryOperands(JSParseNode *pn, NodeVector &elts)
-{
-    if (pn->pn_arity == PN_BINARY) {
-        Value left, right;
-
-        return expression(pn->pn_left, &left) &&
-               elts.append(left) &&
-               expression(pn->pn_right, &right) &&
-               elts.append(right);
-    }
-
-    LOCAL_ASSERT(pn->pn_arity == PN_LIST);
-
-    return expressions(pn, elts);
-}
-
-bool
 ASTSerializer::comprehensionBlock(JSParseNode *pn, Value *dst)
 {
     LOCAL_ASSERT(pn->pn_arity == PN_BINARY);
@@ -2457,6 +2440,7 @@ ASTSerializer::generatorExpression(JSParseNode *pn, Value *dst)
 bool
 ASTSerializer::expression(JSParseNode *pn, Value *dst)
 {
+    JS_CHECK_RECURSION(cx, return false);
     switch (PN_TYPE(pn)) {
       case TOK_FUNCTION:
         return function(pn, AST_FUNC_EXPR, dst);
@@ -2753,6 +2737,7 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
 bool
 ASTSerializer::xml(JSParseNode *pn, Value *dst)
 {
+    JS_CHECK_RECURSION(cx, return false);
     switch (PN_TYPE(pn)) {
 #ifdef JS_HAS_XML_SUPPORT
       case TOK_LC:
@@ -2975,6 +2960,7 @@ ASTSerializer::objectPattern(JSParseNode *pn, VarDeclKind *pkind, Value *dst)
 bool
 ASTSerializer::pattern(JSParseNode *pn, VarDeclKind *pkind, Value *dst)
 {
+    JS_CHECK_RECURSION(cx, return false);
     switch (PN_TYPE(pn)) {
       case TOK_RC:
         return objectPattern(pn, pkind, dst);

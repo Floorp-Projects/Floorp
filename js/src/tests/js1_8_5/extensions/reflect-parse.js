@@ -785,6 +785,12 @@ assertStmt("let (x = 1, y = x) { }", letStmt([{ id: ident("x"), init: lit(1) },
 assertError("let (x = 1, x = 2) { }", TypeError);
 
 
+// Bug 632024: no crashing on stack overflow
+try {
+    Reflect.parse(Array(3000).join("x + y - ") + "z")
+} catch (e) { }
+
+
 // E4X
 
 assertExpr("x..tagName", binExpr("..", ident("x"), lit("tagName")));
