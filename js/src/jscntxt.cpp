@@ -318,6 +318,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword) -1;
 #endif
+    cx->iterValue.setMagic(JS_NO_ITER_VALUE);
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
