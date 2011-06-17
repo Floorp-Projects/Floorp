@@ -25,20 +25,6 @@ function test() {
     return cw.GroupItems.groupItems[index];
   }
 
-  let restoreTab = function (callback) {
-    let tab = undoCloseTab(0);
-
-    if (tab._tabViewTabItem._reconnected) {
-      callback();
-      return;
-    }
-
-    tab._tabViewTabItem.addSubscriber(tab, 'reconnected', function () {
-      tab._tabViewTabItem.removeSubscriber(tab, 'reconnected');
-      afterAllTabsLoaded(callback);
-    });
-  }
-
   let activateFirstGroupItem = function () {
     let activeTabItem = getGroupItem(0).getChild(0);
     cw.GroupItems.updateActiveGroupItemAndTabBar(activeTabItem);
@@ -91,9 +77,7 @@ function test() {
       assertNumberOfTabsInGroup(groupItem, 2);
 
       activateFirstGroupItem();
-      gBrowser.removeTab(gBrowser.tabs[1]);
-      gBrowser.removeTab(gBrowser.tabs[1]);
-      finishTest();
+      closeGroupItem(groupItem, finishTest);
     });
   }
 
