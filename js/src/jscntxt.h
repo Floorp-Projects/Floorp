@@ -2287,7 +2287,7 @@ static JS_INLINE JSContext *
 js_ContextFromLinkField(JSCList *link)
 {
     JS_ASSERT(link);
-    return (JSContext *) ((uint8 *) link - offsetof(JSContext, link));
+    return reinterpret_cast<JSContext *>(uintptr_t(link) - offsetof(JSContext, link));
 }
 
 /*
