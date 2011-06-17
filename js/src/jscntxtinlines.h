@@ -317,7 +317,10 @@ CallJSNativeConstructor(JSContext *cx, js::Native native, const CallArgs &args)
      * (new Object(Object)) returns the callee.
      */
     extern JSBool proxy_Construct(JSContext *, uintN, Value *);
-    JS_ASSERT_IF(native != proxy_Construct && native != js::CallOrConstructBoundFunction &&
+    extern JSBool callable_Construct(JSContext *, uintN, Value *);
+    JS_ASSERT_IF(native != proxy_Construct &&
+                 native != callable_Construct &&
+                 native != js::CallOrConstructBoundFunction &&
                  (!callee.isFunction() || callee.getFunctionPrivate()->u.n.clasp != &js_ObjectClass),
                  !args.rval().isPrimitive() && callee != args.rval().toObject());
 
