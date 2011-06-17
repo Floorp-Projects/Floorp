@@ -356,7 +356,7 @@ private:
         Block *block;
     };
     struct Block {
-        enum { BlockSize = 64 * 1024 };
+        enum { BlockSize = 16 * 1024 };
 
         PtrInfoOrBlock mPointers[BlockSize];
         Block() {
@@ -470,8 +470,8 @@ struct ReversedEdge {
 enum NodeColor { black, white, grey };
 
 // This structure should be kept as small as possible; we may expect
-// a million of them to be allocated and touched repeatedly during
-// each cycle collection.
+// hundreds of thousands of them to be allocated and touched
+// repeatedly during each cycle collection.
 
 struct PtrInfo
 {
@@ -565,7 +565,7 @@ public:
 class NodePool
 {
 private:
-    enum { BlockSize = 32 * 1024 }; // could be int template parameter
+    enum { BlockSize = 8 * 1024 }; // could be int template parameter
 
     struct Block {
         // We create and destroy Block using NS_Alloc/NS_Free rather
