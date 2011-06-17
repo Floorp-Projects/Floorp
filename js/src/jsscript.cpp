@@ -50,6 +50,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsversion.h"
+#include "jsdbg.h"
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
@@ -1443,6 +1444,7 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
     hook = cx->debugHooks->destroyScriptHook;
     if (hook)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
+    Debug::onDestroyScript(script);
     JS_ClearScriptTraps(cx, script);
 }
 
