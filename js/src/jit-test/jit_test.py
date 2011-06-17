@@ -98,6 +98,8 @@ class Test:
                         test.jitflags.append('-a')
                     elif name == 'debug':
                         test.jitflags.append('-d')
+                    elif name == 'mjit':
+                        test.jitflags.append('-m')
                     else:
                         print('warning: unrecognized |jit-test| attribute %s'%part)
 
