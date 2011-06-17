@@ -2076,7 +2076,7 @@ static inline bool
 IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass) {
-        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             *cond = (ni->props_cursor < ni->props_end);
             return true;
@@ -2092,7 +2092,7 @@ static inline bool
 IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass) {
-        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             jsid id = *ni->current();

@@ -942,6 +942,9 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
         return true;
     }
 
+    /* We're reentering below and can call anything. */
+    JS_CHECK_RECURSION(cx, return false);
+
     /* Fetch and cache the next value from the iterator. */
     if (!ni) {
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);
