@@ -651,7 +651,7 @@ public:
     JSParseNode *last() const {
         JS_ASSERT(pn_arity == PN_LIST);
         JS_ASSERT(pn_count != 0);
-        return (JSParseNode *)((char *)pn_tail - offsetof(JSParseNode, pn_next));
+        return (JSParseNode *)(uintptr_t(pn_tail) - offsetof(JSParseNode, pn_next));
     }
 
     void makeEmpty() {
