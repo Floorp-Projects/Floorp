@@ -82,10 +82,11 @@ function runTest()
     observer.expectedFeedURI = livemark.feedURI;
     observer.expectedChildren = livemark.urls.length;
 
-    livemark.id = PlacesUtils.livemarks.createLivemark(
+    livemark.id = PlacesUtils.livemarks.createLivemarkFolderOnly(
       PlacesUtils.toolbarFolderId, "foo", livemark.siteURI, livemark.feedURI,
       PlacesUtils.bookmarks.DEFAULT_INDEX
     );
+    PlacesUtils.livemarks.reloadLivemarkFolder(livemark.id);
 
     yield;
 
