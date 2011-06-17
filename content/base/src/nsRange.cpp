@@ -59,6 +59,7 @@
 #include "nsClientRect.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
+#include "nsFontFaceList.h"
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
@@ -2236,3 +2237,62 @@ nsRange::GetClientRects(nsIDOMClientRectList** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRange::GetUsedFontFaces(nsIDOMFontFaceList** aResult)
+{
+  *aResult = nsnull;
+
+  NS_ENSURE_TRUE(mStartParent, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDOMNode> startContainer = do_QueryInterface(mStartParent);
+  nsCOMPtr<nsIDOMNode> endContainer = do_QueryInterface(mEndParent);
+
+  // Flush out layout so our frames are up to date.
+  nsIDocument* doc = mStartParent->GetOwnerDoc();
+  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+  doc->FlushPendingNotifications(Flush_Frames);
+
+  // Recheck whether we're still in the document
+  NS_ENSURE_TRUE(mStartParent->IsInDoc(), NS_ERROR_UNEXPECTED);
+
+  nsRefPtr<nsFontFaceList> fontFaceList = new nsFontFaceList();
+
+  RangeSubtreeIterator iter;
+  nsresult rv = iter.Init(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (!iter.IsDone()) {
+    // only collect anything if the range is not collapsed
+    nsCOMPtr<nsIDOMNode> node(iter.GetCurrentNode());
+    iter.Next();
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+    if (!content) {
+      continue;
+    }
+    nsIFrame* frame = content->GetPrimaryFrame();
+    if (!frame) {
+      continue;
+    }
+
+    if (content->IsNodeOfType(nsINode::eTEXT)) {
+       if (node == startContainer) {
+         PRInt32 offset = startContainer == endContainer ? 
+           mEndOffset : content->GetText()->GetLength();
+         nsLayoutUtils::GetFontFacesForText(frame, mStartOffset, offset,
+                                            PR_TRUE, fontFaceList);
+         continue;
+       }
+       if (node == endContainer) {
+         nsLayoutUtils::GetFontFacesForText(frame, 0, mEndOffset,
+                                            PR_TRUE, fontFaceList);
+         continue;
+       }
+    }
+
+    nsLayoutUtils::GetFontFacesForFrames(frame, fontFaceList);
+  }
+
+  fontFaceList.forget(aResult);
+  return NS_OK;
+}
