@@ -95,7 +95,7 @@ function testGroupItemWithTabItem(contentWindow) {
       let endGame = function() {
         window.removeEventListener("tabviewhidden", endGame, false);
         ok(!TabView.isVisible(), "Tab View is hidden");
-        finish();
+        closeGroupItem(groupItem, finish);
       };
       window.addEventListener("tabviewhidden", endGame, false);
 

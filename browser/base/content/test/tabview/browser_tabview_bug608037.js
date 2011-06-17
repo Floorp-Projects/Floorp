@@ -14,11 +14,11 @@ function test() {
     // make sure the tab one is selected because undoCloseTab() would remove
     // the selected tab if it's a blank tab.
     gBrowser.selectedTab = tabOne;
-    showTabView(onTabViewWindowLoaded);
+    showTabView(onTabViewShown);
   });
 }
 
-function onTabViewWindowLoaded() {
+function onTabViewShown() {
   let contentWindow = TabView.getContentWindow();
   let groupItems = contentWindow.GroupItems.groupItems;
   is(groupItems.length, 1, "There is only one group");
@@ -28,8 +28,7 @@ function onTabViewWindowLoaded() {
   ok(TabView.isVisible(), "Tab View is still visible after removing a tab");
   is(groupItems[0].getChildren().length, 2, "The group has two tab items");
 
-  tabTwo = undoCloseTab(0);
-  whenTabIsReconnected(tabTwo, function() {
+  restoreTab(function (tabTwo) {
     ok(TabView.isVisible(), "Tab View is still visible after restoring a tab");
     is(groupItems[0].getChildren().length, 3, "The group still has three tab items");
 
@@ -39,20 +38,5 @@ function onTabViewWindowLoaded() {
       gBrowser.removeTab(tabTwo);
       finish();
     });
-  });
-}
-
-// ----------
-function whenTabIsReconnected(tab, callback) {
-  let tabItem = tab._tabViewTabItem;
-
-  if (tabItem._reconnected) {
-    callback();
-    return;
-  }
-
-  tabItem.addSubscriber(tabItem, "reconnected", function () {
-    tabItem.removeSubscriber(tabItem, "reconnected");
-    callback();
   });
 }
