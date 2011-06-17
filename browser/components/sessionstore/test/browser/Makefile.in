@@ -153,6 +153,7 @@ _BROWSER_TEST_FILES = \
 ifneq ($(OS_ARCH),Darwin)
 _BROWSER_TEST_FILES += \
 	browser_597071.js \
+	browser_625016.js \
 	$(NULL)
 endif
 
