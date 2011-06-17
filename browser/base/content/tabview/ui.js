@@ -763,8 +763,9 @@ let UI = {
           // 3) When a blank tab is active while restoring a closed tab the
           // blank tab gets removed. The active group is not closed as this is
           // where the restored tab goes. So do not show the TabView.
+          let tabItem = tab && tab._tabViewTabItem;
           let closingBlankTabAfterRestore =
-            (tab && tab._tabViewTabIsRemovedAfterRestore);
+            (tabItem && tabItem.isRemovedAfterRestore);
 
           if ((closingLastOfGroup || closingUnnamedGroup) &&
               !closingBlankTabAfterRestore) {

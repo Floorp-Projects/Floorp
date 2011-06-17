@@ -368,8 +368,8 @@ let TabView = {
     if (this._window) {
       this._window.UI.restoredClosedTab = true;
 
-      if (blankTabToRemove)
-        blankTabToRemove._tabViewTabIsRemovedAfterRestore = true;
+      if (blankTabToRemove && blankTabToRemove._tabViewTabItem)
+        blankTabToRemove._tabViewTabItem.isRemovedAfterRestore = true;
     }
   },
 
