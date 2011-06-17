@@ -1052,7 +1052,7 @@ ResolveRelativePath(JSContext *cx, const char *base, JSString *filename)
         return filename;
 
     // Otherwise return base[:dirLen + 1] + filename.
-    js::Vector<jschar, 0, js::ContextAllocPolicy> result(cx);
+    js::Vector<jschar, 0> result(cx);
     size_t nchars;
     if (!JS_DecodeBytes(cx, base, dirLen + 1, NULL, &nchars))
         return NULL;

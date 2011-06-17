@@ -645,13 +645,13 @@ struct JSCodeGenerator : public JSTreeContext
     JSAtomList      upvarList;      /* map of atoms to upvar indexes */
     JSUpvarArray    upvarMap;       /* indexed upvar pairs (JS_realloc'ed) */
 
-    typedef js::Vector<js::GlobalSlotArray::Entry, 16, js::ContextAllocPolicy> GlobalUseVector;
+    typedef js::Vector<js::GlobalSlotArray::Entry, 16> GlobalUseVector;
 
     GlobalUseVector globalUses;     /* per-script global uses */
     JSAtomList      globalMap;      /* per-script map of global name to globalUses vector */
 
     /* Vectors of pn_cookie slot values. */
-    typedef js::Vector<uint32, 8, js::ContextAllocPolicy> SlotVector;
+    typedef js::Vector<uint32, 8> SlotVector;
     SlotVector      closedArgs;
     SlotVector      closedVars;
 
