@@ -220,7 +220,7 @@ ContentParent::OnChannelConnected(int32 pid)
             nice = atoi(relativeNicenessStr);
         }
 
-       /* make the GUI thread have higher priority on single-cpu devices */
+        /* make the GUI thread have higher priority on single-cpu devices */
         nsCOMPtr<nsIPropertyBag2> infoService = do_GetService(NS_SYSTEMINFO_CONTRACTID);
         if (infoService) {
             PRInt32 cpus;
