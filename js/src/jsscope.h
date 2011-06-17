@@ -555,8 +555,6 @@ struct Shape : public js::gc::Cell
     bool get(JSContext* cx, JSObject *receiver, JSObject *obj, JSObject *pobj, js::Value* vp) const;
     bool set(JSContext* cx, JSObject *obj, bool strict, js::Value* vp) const;
 
-    inline bool isSharedPermanent() const;
-
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
 
     uint8 attributes() const { return attrs; }
@@ -759,12 +757,6 @@ Shape::search(JSRuntime *rt, js::Shape **startp, jsid id, bool adding)
 }
 
 #undef METER
-
-inline bool
-Shape::isSharedPermanent() const
-{
-    return (~attrs & (JSPROP_SHARED | JSPROP_PERMANENT)) == 0;
-}
 
 } // namespace js
 
