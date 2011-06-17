@@ -89,9 +89,9 @@ function test_onWipe() {
 function run_test() {
   initTestLogging("Trace");
 
-  Log4Moz.repository.getLogger("Engine.Passwords").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Store.Passwords").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Tracker.Passwords").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Engine.Passwords").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Store.Passwords").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Tracker.Passwords").level = Log4Moz.Level.Trace;
 
   test_tracking();
   test_onWipe();
