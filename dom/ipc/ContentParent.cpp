@@ -77,6 +77,7 @@
 #if defined(ANDROID) || defined(LINUX)
 #include <sys/time.h>
 #include <sys/resource.h>
+#include "nsSystemInfo.h"
 #endif
 
 #ifdef MOZ_PERMISSIONS
@@ -219,8 +220,17 @@ ContentParent::OnChannelConnected(int32 pid)
             nice = atoi(relativeNicenessStr);
         }
 
-        if (nice != 0) {
-           setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
+        /* make the GUI thread have higher priority on single-cpu devices */
+        nsCOMPtr<nsIPropertyBag2> infoService = do_GetService(NS_SYSTEMINFO_CONTRACTID);
+        if (infoService) {
+            PRInt32 cpus;
+            nsresult rv = infoService->GetPropertyAsInt32(NS_LITERAL_STRING("cpucount"), &cpus);
+            if (NS_FAILED(rv)) {
+                cpus = 1;
+            }
+            if (nice != 0 && cpus == 1) {
+                setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
+            }
         }
 #endif
     }
