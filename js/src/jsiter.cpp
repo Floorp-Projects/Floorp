@@ -155,7 +155,7 @@ struct IdHashPolicy {
     }
 };
 
-typedef HashSet<jsid, IdHashPolicy, ContextAllocPolicy> IdSet;
+typedef HashSet<jsid, IdHashPolicy> IdSet;
 
 static inline bool
 NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)

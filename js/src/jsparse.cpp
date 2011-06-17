@@ -1209,7 +1209,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         def.knownSlot = shape->slot;
     }
 
-    js::Vector<JSScript *, 16, ContextAllocPolicy> worklist(cx);
+    js::Vector<JSScript *, 16> worklist(cx);
     if (!worklist.append(script))
         return false;
 
