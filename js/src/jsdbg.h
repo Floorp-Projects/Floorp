@@ -54,7 +54,7 @@
 namespace js {
 
 class Debug {
-    friend JSBool ::JS_DefineDebugObject(JSContext *cx, JSObject *obj);
+    friend JSBool (::JS_DefineDebugObject)(JSContext *cx, JSObject *obj);
 
   private:
     JSCList link;                       // See JSRuntime::debuggerList.
