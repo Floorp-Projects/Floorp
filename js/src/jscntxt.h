@@ -1440,28 +1440,6 @@ struct JSContext
 
 namespace js {
 
-/*
- * Allocation policy that uses JSRuntime::malloc_ and friends, so that
- * memory pressure is properly accounted for. This is suitable for
- * long-lived objects owned by the JSRuntime.
- *
- * Since it doesn't hold a JSContext (those may not live long enough), it
- * can't report out-of-memory conditions itself; the caller must check for
- * OOM and take the appropriate action.
- */
-class RuntimeAllocPolicy
-{
-    JSRuntime *const runtime;
-
-  public:
-    RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
-    RuntimeAllocPolicy(JSContext *cx) : runtime(cx->runtime) {}
-    void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
-    void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
-    void free_(void *p) { runtime->free_(p); }
-    void reportAllocOverflow() const {}
-};
-
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread() ? (cx)->thread()->id : 0)
 #endif
@@ -2629,6 +2607,46 @@ class AutoShapeVector : public AutoVectorRooter<const Shape *>
 
 JSIdArray *
 NewIdArray(JSContext *cx, jsint length);
+
+/*
+ * Allocation policy that uses JSRuntime::malloc_ and friends, so that
+ * memory pressure is properly accounted for. This is suitable for
+ * long-lived objects owned by the JSRuntime.
+ *
+ * Since it doesn't hold a JSContext (those may not live long enough), it
+ * can't report out-of-memory conditions itself; the caller must check for
+ * OOM and take the appropriate action.
+ *
+ * FIXME bug 647103 - replace these *AllocPolicy names.
+ */
+class RuntimeAllocPolicy
+{
+    JSRuntime *const runtime;
+
+  public:
+    RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
+    RuntimeAllocPolicy(JSContext *cx) : runtime(cx->runtime) {}
+    void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
+    void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
+    void free_(void *p) { runtime->free_(p); }
+    void reportAllocOverflow() const {}
+};
+
+/*
+ * FIXME bug 647103 - replace these *AllocPolicy names.
+ */
+class ContextAllocPolicy
+{
+    JSContext *const cx;
+
+  public:
+    ContextAllocPolicy(JSContext *cx) : cx(cx) {}
+    JSContext *context() const { return cx; }
+    void *malloc_(size_t bytes) { return cx->malloc_(bytes); }
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) { return cx->realloc_(p, oldBytes, bytes); }
+    void free_(void *p) { cx->free_(p); }
+    void reportAllocOverflow() const { js_ReportAllocationOverflow(cx); }
+};
 
 } /* namespace js */
 
