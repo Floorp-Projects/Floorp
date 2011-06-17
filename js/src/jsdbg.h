@@ -76,17 +76,19 @@ class Debug {
         FrameMap;
     FrameMap frames;
 
-    // Mark policy for ObjectMap.
-    class ObjectMapMarkPolicy: public DefaultMarkPolicy<JSObject *, JSObject *> {
+    // Mark policy for weak maps where the keys are CCWs, but the liveness of the entry
+    // depends on the CCW's *referent's* markedness, not the CCW itself. This policy is
+    // only usable when marking an entry's value eventually marks the key. These
+    // properties hold for ObjectWeakMap and ScriptWeakMap.
+    class CCWReferentKeyMarkPolicy: public DefaultMarkPolicy<JSObject *, JSObject *> {
         typedef DefaultMarkPolicy<JSObject *, JSObject *> Base;
       public:
-        explicit ObjectMapMarkPolicy(JSTracer *tracer) : Base(tracer) { }
-
+        explicit CCWReferentKeyMarkPolicy(JSTracer *tracer) : Base(tracer) { }
         // The unwrap() call here means that we use the *referent's* mark, not that of the
         // CCW itself, to decide whether the table entry is live. This seems weird: if the
         // CCW is not marked, and the referent is, won't we end up keeping the table entry
-        // but GC'ing its key? But it's okay: the Debug.Object always refers to the CCW,
-        // so marking the value marks the CCW.
+        // but GC'ing its key? But it's okay: the value always refers to the CCW, so
+        // marking the value marks the CCW.
         bool keyMarked(JSObject *k) { 
             JS_ASSERT(k->isCrossCompartmentWrapper());
             return k->unwrap()->isMarked(); 
@@ -102,10 +104,30 @@ class Debug {
     // debuggee object, you must first find its CCW, and then look that up here.
     //
     // Using CCWs for keys when it's really their referents' liveness that determines the
-    // table entry's liveness is delicate; see comments on ObjectMapMarkPolicy.
-    typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, ObjectMapMarkPolicy>
+    // table entry's liveness is delicate; see comments on CCWReferentKeyMarkPolicy.
+    typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CCWReferentKeyMarkPolicy>
         ObjectWeakMap;
     ObjectWeakMap objects;
+
+    // An ephemeral map from JSObject CCWs to Debug.Script instances.
+    typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CCWReferentKeyMarkPolicy>
+        ScriptWeakMap;
+
+    // Map of Debug.Script instances for garbage-collected JSScripts. For function
+    // scripts, the key is the compiler-created, internal JSFunction; for scripts returned
+    // by JSAPI functions, the key is the "Script"-class JSObject.
+    ScriptWeakMap heldScripts;
+
+    // An ordinary (non-ephemeral) map from JSScripts to Debug.Script instances, for eval
+    // scripts that are explicitly freed.
+    typedef HashMap<JSScript *, JSObject *, DefaultHasher<JSScript *>, SystemAllocPolicy>
+        ScriptMap;
+
+    // Map from eval JSScripts to their Debug.Script objects. "Eval scripts" are scripts
+    // created for 'eval' and similar calls that are explicitly destroyed when the call
+    // returns. Debug.Script objects are not strong references to such JSScripts; the
+    // Debug.Script becomes "dead" when the eval call returns.
+    ScriptMap evalScripts;
 
     bool addDebuggeeGlobal(JSContext *cx, GlobalObject *obj);
     void removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
@@ -140,6 +162,7 @@ class Debug {
     inline bool hasAnyLiveHooks() const;
 
     static void slowPathLeaveStackFrame(JSContext *cx);
+    static void slowPathOnDestroyScript(JSScript *script);
 
     typedef bool (Debug::*DebugObservesMethod)() const;
     typedef JSTrapStatus (Debug::*DebugHandleMethod)(JSContext *, Value *) const;
@@ -152,6 +175,17 @@ class Debug {
 
     bool observesThrow() const;
     JSTrapStatus handleThrow(JSContext *cx, Value *vp);
+
+    // Allocate and initialize a Debug.Script instance whose referent is |script| and
+    // whose holder is |obj|. If |obj| is NULL, this creates a Debug.Script whose holder
+    // is null, for eval scripts.
+    JSObject *newDebugScript(JSContext *cx, JSScript *script, JSObject *obj);
+
+    // Helper function for wrapFunctionScript and wrapJSAPIscript.
+    JSObject *wrapHeldScript(JSContext *cx, JSScript *script, JSObject *obj);
+
+    // Remove script from our table of eval scripts.
+    void destroyEvalScript(JSScript *script);
 
   public:
     Debug(JSObject *dbg, JSObject *hooks);
@@ -187,6 +221,7 @@ class Debug {
     static inline void leaveStackFrame(JSContext *cx);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
     static inline JSTrapStatus onThrow(JSContext *cx, js::Value *vp);
+    static inline void onDestroyScript(JSScript *script);
 
     /**************************************** Functions for use by jsdbg.cpp. */
 
@@ -230,6 +265,22 @@ class Debug {
     // is false.)
     //
     bool newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
+
+    // Return the Debug.Script object for |fun|'s script, or create a new one if needed.
+    // The context |cx| must be in the debugger compartment; |fun| must be a
+    // cross-compartment wrapper referring to the JSFunction in a debuggee compartment.
+    JSObject *wrapFunctionScript(JSContext *cx, JSFunction *fun);
+
+    // Return the Debug.Script object for the Script object |obj|'s JSScript, or create a
+    // new one if needed. The context |cx| must be in the debugger compartment; |obj| must
+    // be a cross-compartment wrapper referring to a script object in a debuggee
+    // compartment.
+    JSObject *wrapJSAPIScript(JSContext *cx, JSObject *scriptObj);
+
+    // Return the Debug.Script object for the eval script |script|, or create a new one if
+    // needed. The context |cx| must be in the debugger compartment; |script| must be a
+    // script in a debuggee compartment.
+    JSObject *wrapEvalScript(JSContext *cx, JSScript *script);
 
   private:
     // Prohibit copying.
@@ -294,6 +345,13 @@ Debug::onThrow(JSContext *cx, js::Value *vp)
            : dispatchHook(cx, vp,
                           DebugObservesMethod(&Debug::observesThrow),
                           DebugHandleMethod(&Debug::handleThrow));
+}
+
+void
+Debug::onDestroyScript(JSScript *script)
+{
+    if (!script->compartment->getDebuggees().empty())
+        slowPathOnDestroyScript(script);
 }
 
 extern JSBool
