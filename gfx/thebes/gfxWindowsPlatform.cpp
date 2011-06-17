@@ -77,7 +77,9 @@
 #endif
 #endif
 
-using namespace mozilla;
+#include "gfxUserFontSet.h"
+
+#include <string>
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
@@ -86,7 +88,11 @@ using namespace mozilla;
 
 #include "nsIMemoryReporter.h"
 #include "nsMemory.h"
+#endif
 
+using namespace mozilla;
+
+#ifdef CAIRO_HAS_D2D_SURFACE
 class D2DCacheReporter :
     public nsIMemoryReporter
 {
@@ -167,14 +173,6 @@ public:
 
 NS_IMPL_ISUPPORTS1(D2DVRAMReporter, nsIMemoryReporter)
 #endif
-
-#ifdef WINCE
-#include <shlwapi.h>
-#endif
-
-#include "gfxUserFontSet.h"
-
-#include <string>
 
 #define GFX_USE_CLEARTYPE_ALWAYS "gfx.font_rendering.cleartype.always_use_for_content"
 #define GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE "gfx.font_rendering.cleartype.use_for_downloadable_fonts"
