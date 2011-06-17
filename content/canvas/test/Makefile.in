@@ -86,6 +86,7 @@ _TEST_FILES_0 = \
 	test_canvas_strokeStyle_getter.html \
 	test_bug613794.html \
 	test_drawImage_edge_cases.html \
+	test_shadow_operators.html \
 	$(NULL)
 
 ifneq (1_Linux,$(MOZ_SUITE)_$(OS_ARCH))
