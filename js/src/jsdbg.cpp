@@ -78,6 +78,14 @@ enum {
     JSSLOT_DEBUGOBJECT_COUNT
 };
 
+extern Class DebugScript_class;
+
+enum {
+    JSSLOT_DEBUGSCRIPT_OWNER,
+    JSSLOT_DEBUGSCRIPT_HOLDER, // cross-compartment wrapper
+    JSSLOT_DEBUGSCRIPT_COUNT
+};
+
 
 // === Utils
 
@@ -145,12 +153,14 @@ CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
 enum {
     JSSLOT_DEBUG_FRAME_PROTO,
     JSSLOT_DEBUG_OBJECT_PROTO,
+    JSSLOT_DEBUG_SCRIPT_PROTO,
     JSSLOT_DEBUG_COUNT
 };
 
 Debug::Debug(JSObject *dbg, JSObject *hooks)
   : object(dbg), hooksObject(hooks), uncaughtExceptionHook(NULL), enabled(true),
-    hasDebuggerHandler(false), hasThrowHandler(false), objects(dbg->compartment()->rt)
+    hasDebuggerHandler(false), hasThrowHandler(false),
+    objects(dbg->compartment()->rt), heldScripts(dbg->compartment()->rt)
 {
     // This always happens within a request on some cx.
     JSRuntime *rt = dbg->compartment()->rt;
@@ -170,18 +180,25 @@ Debug::~Debug()
 bool
 Debug::init(JSContext *cx)
 {
-    bool ok = frames.init() && objects.init() && debuggees.init();
+    bool ok = (frames.init() &&
+               objects.init() && 
+               debuggees.init() && 
+               heldScripts.init() &&
+               evalScripts.init());
     if (!ok)
         js_ReportOutOfMemory(cx);
     return ok;
 }
 
 JS_STATIC_ASSERT(uintN(JSSLOT_DEBUGFRAME_OWNER) == uintN(JSSLOT_DEBUGOBJECT_OWNER));
+JS_STATIC_ASSERT(uintN(JSSLOT_DEBUGFRAME_OWNER) == uintN(JSSLOT_DEBUGSCRIPT_OWNER));
 
 Debug *
 Debug::fromChildJSObject(JSObject *obj)
 {
-    JS_ASSERT(obj->clasp == &DebugFrame_class || obj->clasp == &DebugObject_class);
+    JS_ASSERT(obj->clasp == &DebugFrame_class ||
+              obj->clasp == &DebugObject_class ||
+              obj->clasp == &DebugScript_class);
     JSObject *dbgobj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER).toObject();
     return fromJSObject(dbgobj);
 }
@@ -587,6 +604,20 @@ Debug::trace(JSTracer *trc)
 
     // Trace the referent -> Debug.Object weak map.
     objects.trace(trc);
+
+    // Trace the weak map from JSFunctions and "Script" JSObjects to
+    // Debug.Script objects.
+    heldScripts.trace(trc);
+
+    // Trace the map for eval scripts, which are explicitly freed.
+    for (ScriptMap::Range r = evalScripts.all(); !r.empty(); r.popFront()) {
+        JSObject *scriptobj = r.front().value;
+
+        // evalScripts should only refer to Debug.Script objects for
+        // scripts that haven't been freed yet.
+        JS_ASSERT(scriptobj->getPrivate());
+        MarkObject(trc, *scriptobj, "live eval Debug.Script");
+    }
 }
 
 void
@@ -867,7 +898,7 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
     JS_ASSERT(proto->getClass() == &Debug::jsclass);
 
     // Make the new Debug object. Each one has a reference to
-    // Debug.{Frame,Object}.prototype in reserved slots.
+    // Debug.{Frame,Object,Script}.prototype in reserved slots.
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, &Debug::jsclass, proto, NULL);
     if (!obj || !obj->ensureClassReservedSlots(cx))
         return false;
@@ -1024,6 +1055,220 @@ JSFunctionSpec Debug::methods[] = {
 };
 
 
+// === Debug.Script
+
+// JSScripts' lifetimes fall into to two categories:
+//
+// - "Held scripts": JSScripts belonging to JSFunctions and JSScripts created using JSAPI
+//   have lifetimes determined by the garbage collector. A JSScript itself has no mark bit
+//   of its own. Instead, its holding object manages the JSScript as part of its own
+//   structure: the holder has a mark bit; when the holder is marked it calls
+//   js_TraceScript on its JSScript; and when the holder is freed it explicitly frees its
+//   JSScript.
+//
+//   Debug.Script instances for held scripts are strong references to the holder (and thus
+//   to the script). Debug::heldScripts weakly maps CCWs for holding objects to the
+//   Debug.Script objects for their JSScripts. We needn't act on a destroyScript event for
+//   a held script: if we get such an event we know its Debug.Script is dead anyway, and
+//   its entry in Debug::heldScripts will be cleaned up by the standard weak table code.
+//
+// - "Eval scripts": JSScripts generated temporarily for a call to 'eval' or a related
+//   function live until the call completes, at which point the script is destroyed.
+//
+//   A Debug.Script instance for an eval script has no influence on the JSScript's
+//   lifetime. Debug::evalScripts maps live JSScripts to to their Debug.Script objects.
+//   When a destroyScript event tells us that an eval script is dead, we remove its table
+//   entry, and clear its Debug.Script object's script pointer, thus marking it dead.
+//
+// A Debug.Script's private pointer points directly to the JSScript, or is NULL if the
+// Debug.Script is dead. The JSSLOT_DEBUGSCRIPT_HOLDER slot refers to a CCW for the
+// holding object, or is null for eval-like JSScripts. The private pointer is not traced;
+// the holding object reference is traced, if present.
+//
+// (We consider a script saved in and retrieved from the eval cache to have been
+// destroyed, and then --- mirabile dictu --- re-created at the same address. The
+// newScriptHook and destroyScriptHook hooks cooperate with this view.)
+
+Class DebugScript_class = {
+    "Script", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGSCRIPT_COUNT),
+    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
+    EnumerateStub, ResolveStub, ConvertStub
+};
+
+static inline JSScript *GetScriptReferent(JSObject *obj) {
+    JS_ASSERT(obj->getClass() == &DebugScript_class);
+    return (JSScript *) obj->getPrivate();
+}
+
+static inline void ClearScriptReferent(JSObject *obj) {
+    JS_ASSERT(obj->getClass() == &DebugScript_class);
+    obj->setPrivate(NULL);
+}
+
+static inline JSObject *GetScriptHolder(JSObject *obj) {
+    JS_ASSERT(obj->getClass() == &DebugScript_class);
+    return obj->getReservedSlot(JSSLOT_DEBUGSCRIPT_HOLDER).toObjectOrNull();
+}
+
+JSObject *
+Debug::newDebugScript(JSContext *cx, JSScript *script, JSObject *holder)
+{
+    JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject();
+    JS_ASSERT(proto);
+    JSObject *scriptobj = NewNonFunction<WithProto::Given>(cx, &DebugScript_class, proto, NULL);
+    if (!scriptobj || !scriptobj->ensureClassReservedSlots(cx))
+        return false;
+    scriptobj->setPrivate(script);
+    scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
+    scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_HOLDER, ObjectOrNullValue(holder));
+
+    return scriptobj;
+}
+
+JSObject *
+Debug::wrapHeldScript(JSContext *cx, JSScript *script, JSObject *obj)
+{
+    assertSameCompartment(cx, object);
+
+    // Our argument must be in a debuggee compartment; find its CCW, for use as the key in
+    // the table.
+    JS_ASSERT(cx->compartment != obj->compartment());
+    if (!cx->compartment->wrap(cx, &obj))
+        return NULL;
+
+    ScriptWeakMap::AddPtr p = heldScripts.lookupForAdd(obj);
+    if (!p) {
+        JSObject *scriptobj = newDebugScript(cx, script, obj);
+        // The allocation may have caused a GC, which can remove table entries.
+        if (!scriptobj || !heldScripts.relookupOrAdd(p, obj, scriptobj))
+            return NULL;
+    }
+
+    JS_ASSERT(GetScriptReferent(p->value) == script);
+    return p->value;
+}
+
+JSObject *
+Debug::wrapFunctionScript(JSContext *cx, JSFunction *fun)
+{
+    return wrapHeldScript(cx, fun->script(), fun);
+}
+
+JSObject *
+Debug::wrapJSAPIScript(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->isScript());
+    return wrapHeldScript(cx, obj->getScript(), obj);
+}
+
+JSObject *
+Debug::wrapEvalScript(JSContext *cx, JSScript *script)
+{
+    JS_ASSERT(cx->compartment != script->compartment);
+    ScriptMap::AddPtr p = evalScripts.lookupForAdd(script);
+    if (!p) {
+        JSObject *scriptobj = newDebugScript(cx, script, NULL);
+        // The allocation may have caused a GC, which can remove table entries.
+        if (!scriptobj || !evalScripts.relookupOrAdd(p, script, scriptobj))
+            return NULL;
+    }
+
+    JS_ASSERT(GetScriptReferent(p->value) == script);
+    return p->value;
+}
+
+void
+Debug::slowPathOnDestroyScript(JSScript *script)
+{
+    // Find all debuggers that might have Debug.Script referring to this script.
+    js::GlobalObjectSet *debuggees = &script->compartment->getDebuggees();
+    for (GlobalObjectSet::Range r = debuggees->all(); !r.empty(); r.popFront()) {
+        GlobalObject::DebugVector *debuggers = r.front()->getDebuggers();
+        for (Debug **p = debuggers->begin(); p != debuggers->end(); p++)
+            (*p)->destroyEvalScript(script);
+    }
+}
+
+void
+Debug::destroyEvalScript(JSScript *script)
+{
+    ScriptMap::Ptr p = evalScripts.lookup(script);
+    if (p) {
+        JS_ASSERT(GetScriptReferent(p->value) == script);
+        ClearScriptReferent(p->value);
+        evalScripts.remove(p);
+    }
+}
+
+static JSObject *
+DebugScript_checkThis(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
+{
+    if (!vp[1].isObject()) {
+        ReportObjectRequired(cx);
+        return NULL;
+    }
+    JSObject *thisobj = &vp[1].toObject();
+    if (thisobj->clasp != &DebugScript_class) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debug.Script", fnname, thisobj->getClass()->name);
+        return NULL;
+    }
+
+    // Check for Debug.Script.prototype, which is of class DebugScript_class
+    // but whose holding object is undefined.
+    if (thisobj->getReservedSlot(JSSLOT_DEBUGSCRIPT_HOLDER).isUndefined()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debug.Script", fnname, "prototype object");
+        return NULL;
+    }
+
+    if (checkLive && !GetScriptReferent(thisobj)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_LIVE,
+                             "Debug.Script", fnname, "script");
+        return NULL;
+    }
+    
+    return thisobj;
+}
+
+#define THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, vp, fnname, obj, script, checkLive)    \
+    JSObject *obj = DebugScript_checkThis(cx, vp, fnname, checkLive);               \
+    if (!obj)                                                                       \
+        return false;                                                               \
+    JSScript *script = GetScriptReferent(obj)
+
+#define THIS_DEBUGSCRIPT_SCRIPT(cx, vp, fnname, obj, script)                  \
+    THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, vp, fnname, obj, script, false)
+#define THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, fnname, obj, script)             \
+    THIS_DEBUGSCRIPT_SCRIPT_NEEDLIVE(cx, vp, fnname, obj, script, true)
+
+
+static JSBool
+DebugScript_getLive(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, vp, "get live", obj, script);
+    vp->setBoolean(!!script);
+    return true;
+}
+
+static JSBool
+DebugScript_construct(JSContext *cx, uintN argc, Value *vp)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Script");
+    return false;
+}
+
+static JSPropertySpec DebugScript_properties[] = {
+    JS_PSG("live", DebugScript_getLive, 0),
+    JS_PS_END
+};
+
+static JSFunctionSpec DebugScript_methods[] = {
+//    JS_FN("getOffsetLine", DebugScript_getOffsetLine, 0, 0),
+    JS_FS_END
+};
+
+
 // === Debug.Frame
 
 Class DebugFrame_class = {
@@ -1056,8 +1301,8 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
             return NULL;
         }
         if (checkLive) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_FRAME_NOT_LIVE,
-                                 "Debug.Frame", fnname);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_LIVE,
+                                 "Debug.Frame", fnname, "stack frame");
             return NULL;
         }
     }
@@ -1244,6 +1489,45 @@ DebugFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
+DebugFrame_getScript(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_FRAME(cx, vp, "get script", thisobj, fp);
+    Debug *debug = Debug::fromChildJSObject(thisobj);
+
+    JSObject *scriptObject = NULL;
+    if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
+        JSFunction *callee = fp->callee().getFunctionPrivate();
+        if (callee->isInterpreted()) {
+            scriptObject = debug->wrapFunctionScript(cx, callee);
+            if (!scriptObject)
+                return false;
+        }
+    } else if (fp->isScriptFrame()) {
+        JSScript *script = fp->script();
+        // Both calling a JSAPI script object (via JS_ExecuteScript, say) and
+        // calling 'eval' create non-function script frames. However, scripts
+        // for the former are held by script objects, and must go in
+        // heldScripts, whereas scripts for the latter are explicitly destroyed
+        // when the call returns, and must go in evalScripts. Distinguish the
+        // two cases by checking whether the script has a Script object
+        // allocated to it.
+        if (script->u.object) {
+            JS_ASSERT(!fp->isEvalFrame());
+            scriptObject = debug->wrapJSAPIScript(cx, script->u.object);
+            if (!scriptObject)
+                return false;
+        } else {
+            JS_ASSERT(fp->isEvalFrame());
+            scriptObject = debug->wrapEvalScript(cx, script);
+            if (!scriptObject)
+                return false;
+        }
+    }
+    vp->setObjectOrNull(scriptObject);
+    return true;
+}
+
+static JSBool
 DebugFrame_getLive(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = CheckThisFrame(cx, vp, "get live", false);
@@ -1380,14 +1664,15 @@ DebugFrame_construct(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSPropertySpec DebugFrame_properties[] = {
-    JS_PSG("type", DebugFrame_getType, 0),
-    JS_PSG("this", DebugFrame_getThis, 0),
-    JS_PSG("older", DebugFrame_getOlder, 0),
-    JS_PSG("live", DebugFrame_getLive, 0),
-    JS_PSG("callee", DebugFrame_getCallee, 0),
-    JS_PSG("generator", DebugFrame_getGenerator, 0),
-    JS_PSG("constructing", DebugFrame_getConstructing, 0),
     JS_PSG("arguments", DebugFrame_getArguments, 0),
+    JS_PSG("callee", DebugFrame_getCallee, 0),
+    JS_PSG("constructing", DebugFrame_getConstructing, 0),
+    JS_PSG("generator", DebugFrame_getGenerator, 0),
+    JS_PSG("live", DebugFrame_getLive, 0),
+    JS_PSG("older", DebugFrame_getOlder, 0),
+    JS_PSG("script", DebugFrame_getScript, 0),
+    JS_PSG("this", DebugFrame_getThis, 0),
+    JS_PSG("type", DebugFrame_getType, 0),
     JS_PS_END
 };
 
@@ -1403,7 +1688,7 @@ static JSFunctionSpec DebugFrame_methods[] = {
 Class DebugObject_class = {
     "Object", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGOBJECT_COUNT),
     PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
+    EnumerateStub, ResolveStub, ConvertStub
 };
 
 static JSObject *
@@ -1545,6 +1830,28 @@ DebugObject_getParameterNames(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+static JSBool
+DebugObject_getScript(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, "get script", dbg, obj);
+
+    vp->setUndefined();
+
+    if (!obj->isFunction())
+        return true;
+
+    JSFunction *fun = obj->getFunctionPrivate();
+    if (!fun->isInterpreted())
+        return true;
+
+    JSObject *scriptObject = dbg->wrapFunctionScript(cx, fun);
+    if (!scriptObject)
+        return false;
+
+    vp->setObject(*scriptObject);
+    return true;
+}
+
 enum ApplyOrCallMode { ApplyMode, CallMode };
 
 static JSBool
@@ -1627,6 +1934,7 @@ static JSPropertySpec DebugObject_properties[] = {
     JS_PSG("callable", DebugObject_getCallable, 0),
     JS_PSG("name", DebugObject_getName, 0),
     JS_PSG("parameterNames", DebugObject_getParameterNames, 0),
+    JS_PSG("script", DebugObject_getScript, 0),
     JS_PS_END
 };
 
@@ -1660,6 +1968,14 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
     if (!frameProto)
         return false;
 
+    JSObject *scriptCtor;
+    JSObject *scriptProto = js_InitClass(cx, debugCtor, objProto, &DebugScript_class,
+                                         DebugScript_construct, 0,
+                                         DebugScript_properties, DebugScript_methods, NULL, NULL,
+                                         &scriptCtor);
+    if (!scriptProto || !scriptProto->ensureClassReservedSlots(cx))
+        return false;
+
     JSObject *objectProto = js_InitClass(cx, debugCtor, objProto, &DebugObject_class,
                                          DebugObject_construct, 0,
                                          DebugObject_properties, DebugObject_methods, NULL, NULL);
@@ -1668,5 +1984,6 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
 
     debugProto->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO, ObjectValue(*frameProto));
     debugProto->setReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO, ObjectValue(*objectProto));
+    debugProto->setReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO, ObjectValue(*scriptProto));
     return true;
 }

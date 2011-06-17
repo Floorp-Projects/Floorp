@@ -353,7 +353,7 @@ MSG_DEF(JSMSG_MALFORMED_ESCAPE,       270, 1, JSEXN_SYNTAXERR, "malformed {0} ch
 MSG_DEF(JSMSG_CCW_REQUIRED,           271, 1, JSEXN_TYPEERR, "{0}: argument must be an object from a different compartment")
 MSG_DEF(JSMSG_DEBUG_BAD_RESUMPTION,   272, 0, JSEXN_TYPEERR, "debugger resumption value must be undefined, {throw: val}, {return: val}, or null")
 MSG_DEF(JSMSG_ASSIGN_FUNCTION_OR_NULL, 273, 1, JSEXN_TYPEERR, "value assigned to {0} must be a function or null")
-MSG_DEF(JSMSG_DEBUG_FRAME_NOT_LIVE,   274, 0, JSEXN_ERR, "stack frame is not live")
+MSG_DEF(JSMSG_DEBUG_NOT_LIVE,         274, 1, JSEXN_ERR, "{0} is not live")
 MSG_DEF(JSMSG_DEBUG_STREAMS_CROSSED,  275, 0, JSEXN_INTERNALERR, "the debuggee has a cross-compartment wrapper of an object in the debugger compartment; can't create a Debug.Object with that wrapper as its referent")
 MSG_DEF(JSMSG_DEBUG_OBJECT_WRONG_OWNER, 276, 0, JSEXN_TYPEERR, "Debug.Object belongs to a different Debug")
 MSG_DEF(JSMSG_DEBUG_OBJECT_PROTO,     277, 0, JSEXN_TYPEERR, "Debug.Object.prototype is not a valid Debug.Object")
