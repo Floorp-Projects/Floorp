@@ -1274,16 +1274,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       // we don't need to observe mouse movement when expanded because the
       // tray is closed when we leave it and collapse causes unfreezing
-      if (self.expanded)
-        return;
-
-      // unfreeze item size when cursor is moved out of group bounds
-      data.onMouseMove = function (e) {
-        let cursor = new Point(e.pageX, e.pageY);
-        if (!self.bounds.contains(cursor))
-          self._unfreezeItemSize();
+      if (!self.expanded) {
+        // unfreeze item size when cursor is moved out of group bounds
+        data.onMouseMove = function (e) {
+          let cursor = new Point(e.pageX, e.pageY);
+          if (!self.bounds.contains(cursor))
+            self._unfreezeItemSize();
+        }
+        iQ(window).mousemove(data.onMouseMove);
       }
-      iQ(window).mousemove(data.onMouseMove);
     }
 
     this.arrange({animate: true, count: data.lastItemCount});
