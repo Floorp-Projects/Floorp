@@ -219,6 +219,12 @@ TabParent::Activate()
     unused << SendActivate();
 }
 
+void
+TabParent::Deactivate()
+{
+  unused << SendDeactivate();
+}
+
 NS_IMETHODIMP
 TabParent::Init(nsIDOMWindow *window)
 {

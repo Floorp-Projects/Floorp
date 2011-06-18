@@ -241,6 +241,8 @@ child:
      */
     Activate();
 
+    Deactivate();
+
     /**
      * @see nsIDOMWindowUtils sendMouseEvent.
      */
