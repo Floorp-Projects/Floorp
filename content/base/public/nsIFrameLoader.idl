@@ -141,7 +141,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, uuid(13c512d6-fba0-402a-9244-fe7941c43965)]
+[scriptable, uuid(12905a29-4246-475a-81d4-fc389197df02)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -186,6 +186,12 @@ interface nsIFrameLoader : nsISupports
    * Throws an exception with non-remote frames.
    */
   void activateRemoteFrame();
+
+  /**
+   * Deactivate remote frame.
+   * Throws an exception with non-remote frames.
+   */
+  void deactivateRemoteFrame();
 
   /**
    * @see nsIDOMWindowUtils sendMouseEvent.

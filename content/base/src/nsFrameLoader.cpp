@@ -1772,6 +1772,15 @@ nsFrameLoader::ActivateRemoteFrame() {
 }
 
 NS_IMETHODIMP
+nsFrameLoader::DeactivateRemoteFrame() {
+  if (mRemoteBrowser) {
+    mRemoteBrowser->Deactivate();
+    return NS_OK;
+  }
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
 nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
                                           float aX,
                                           float aY,

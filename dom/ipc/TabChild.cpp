@@ -556,6 +556,13 @@ TabChild::RecvActivate()
   return true;
 }
 
+bool TabChild::RecvDeactivate()
+{
+  nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(mWebNav);
+  browser->Deactivate();
+  return true;
+}
+
 bool
 TabChild::RecvMouseEvent(const nsString& aType,
                          const float&    aX,
