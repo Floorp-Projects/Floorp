@@ -404,7 +404,10 @@ TRY_AGAIN_NO_SHARING:
         MarkDestroyed();
 
         // see bug 659842 comment 76
-        bool success = sGLXLibrary.xMakeCurrent(mDisplay, None, nsnull);
+#ifdef DEBUG
+        bool success =
+#endif
+        sGLXLibrary.xMakeCurrent(mDisplay, None, nsnull);
         NS_ABORT_IF_FALSE(success,
             "glXMakeCurrent failed to release GL context before we call glXDestroyContext!");
 

@@ -214,6 +214,7 @@ static void glxtest()
   ///// so we might be staying alive for longer than expected, so it's important to consume as little memory as
   ///// possible. Also we want to check that we're able to do that too without generating X errors.
   glXMakeCurrent(dpy, None, NULL); // must release the GL context before destroying it
+  glXDestroyContext(dpy, context);
   glXDestroyPixmap(dpy, glxpixmap);
   XFreePixmap(dpy, pixmap);
   XCloseDisplay(dpy);
