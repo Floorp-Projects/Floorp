@@ -647,7 +647,9 @@ public:
   }
   /**
    * @return a region of the item that is opaque --- every pixel painted
-   * with an opaque color.
+   * with an opaque color. This is useful for determining when one piece
+   * of content completely obscures another so that we can do occlusion
+   * culling.
    */
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    PRBool* aForceTransparentSurface = nsnull)
@@ -2138,7 +2140,8 @@ public:
                                 const nsPoint &aOrigin);
 
   /**
-   * Returns the bounds of a frame as defined for transforms.  If
+   * Returns the bounds of a frame as defined for resolving percentage
+   * <translation-value>s in CSS transforms.  If
    * UNIFIED_CONTINUATIONS is not defined, this is simply the frame's bounding
    * rectangle, translated to the origin.  Otherwise, returns the smallest
    * rectangle containing a frame and all of its continuations.  For example,

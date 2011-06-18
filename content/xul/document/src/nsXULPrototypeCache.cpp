@@ -50,8 +50,6 @@
 #include "nsIURI.h"
 
 #include "nsIChromeRegistry.h"
-#include "nsIFastLoadService.h"
-#include "nsIFastLoadFileControl.h"
 #include "nsIFile.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"

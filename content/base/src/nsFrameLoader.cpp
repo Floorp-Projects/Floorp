@@ -1904,9 +1904,10 @@ public:
     nsInProcessTabChildGlobal* tabChild =
       static_cast<nsInProcessTabChildGlobal*>(mFrameLoader->mChildMessageManager.get());
     if (tabChild && tabChild->GetInnerManager()) {
-      tabChild->GetInnerManager()->
-        ReceiveMessage(static_cast<nsPIDOMEventTarget*>(tabChild), mMessage,
-                       PR_FALSE, mJSON, nsnull, nsnull);
+      nsFrameScriptCx cx(static_cast<nsPIDOMEventTarget*>(tabChild), tabChild);
+      nsRefPtr<nsFrameMessageManager> mm = tabChild->GetInnerManager();
+      mm->ReceiveMessage(static_cast<nsPIDOMEventTarget*>(tabChild), mMessage,
+                         PR_FALSE, mJSON, nsnull, nsnull);
     }
     return NS_OK;
   }

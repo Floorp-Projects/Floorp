@@ -166,7 +166,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DEFINES += -DDISABLE_SOME_FLOATING_POINT
 CSRCS	+=	cairo-win32-surface.c
 
-ifndef WINCE
 ifdef MOZ_ENABLE_DWRITE_FONT
 CPPSRCS +=	cairo-dwrite-font.cpp
 endif
@@ -174,9 +173,6 @@ ifdef MOZ_ENABLE_D2D_SURFACE
 CPPSRCS +=	cairo-d2d-surface.cpp
 endif
 CSRCS	+=	cairo-win32-font.c
-else
-EXPORTS_cairo +=	cairo-ddraw.h
-endif
 
 ifdef NS_PRINTING
 CSRCS   += cairo-win32-printing-surface.c

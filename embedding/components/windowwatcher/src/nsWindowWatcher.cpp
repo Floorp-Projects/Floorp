@@ -527,9 +527,6 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   nameSpecified = PR_FALSE;
   if (aName) {
     CopyUTF8toUTF16(aName, name);
-#ifdef DEBUG
-    CheckWindowName(name);
-#endif
     nameSpecified = PR_TRUE;
   }
 
@@ -1405,31 +1402,6 @@ nsWindowWatcher::URIfromURL(const char *aURL,
   // build and return the absolute URI
   return NS_NewURI(aURI, aURL, baseURI);
 }
-
-#ifdef DEBUG
-/* Check for an illegal name e.g. frame3.1
-   This just prints a warning message an continues; we open the window anyway,
-   (see bug 32898). */
-void nsWindowWatcher::CheckWindowName(nsString& aName)
-{
-  nsReadingIterator<PRUnichar> scan;
-  nsReadingIterator<PRUnichar> endScan;
-
-  aName.EndReading(endScan);
-  for (aName.BeginReading(scan); scan != endScan; ++scan)
-    if (!nsCRT::IsAsciiAlpha(*scan) && !nsCRT::IsAsciiDigit(*scan) &&
-        *scan != '_') {
-
-      // Don't use js_ReportError as this will cause the application
-      // to shut down (JS_ASSERT calls abort())  See bug 32898
-      nsCAutoString warn;
-      warn.AssignLiteral("Illegal character in window name ");
-      AppendUTF16toUTF8(aName, warn);
-      NS_WARNING(warn.get());
-      break;
-    }
-}
-#endif // DEBUG
 
 #define NS_CALCULATE_CHROME_FLAG_FOR(feature, flag)               \
     prefBranch->GetBoolPref(feature, &forceEnable);               \
