@@ -1065,7 +1065,10 @@ struct Parser : private js::AutoGCRooter
     /* Root atoms and objects allocated for the parsed tree. */
     js::AutoKeepAtoms   keepAtoms;
 
-    Parser(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
+    /* Perform constant-folding; must be true when interfacing with the emitter. */
+    bool                foldConstants;
+
+    Parser(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL, bool fold = true);
     ~Parser();
 
     friend void js::AutoGCRooter::trace(JSTracer *trc);
