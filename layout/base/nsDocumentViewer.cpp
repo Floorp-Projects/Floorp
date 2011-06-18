@@ -1762,6 +1762,10 @@ DocumentViewerImpl::SetDocumentInternal(nsIDocument* aDocument,
   aDocument->SetContainer(container);
 
   if (mDocument != aDocument) {
+    if (mDocument->IsStaticDocument()) {
+      mDocument->SetScriptGlobalObject(nsnull);
+      mDocument->Destroy();
+    }
     // Replace the old document with the new one. Do this only when
     // the new document really is a new document.
     mDocument = aDocument;
