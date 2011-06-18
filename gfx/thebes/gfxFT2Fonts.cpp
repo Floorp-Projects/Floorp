@@ -42,9 +42,6 @@
 #include "gfxQtPlatform.h"
 #define gfxToolkitPlatform gfxQtPlatform
 #elif defined(XP_WIN)
-#ifdef WINCE
-#define SHGetSpecialFolderPathW SHGetSpecialFolderPath
-#endif
 #include "gfxWindowsPlatform.h"
 #define gfxToolkitPlatform gfxWindowsPlatform
 #include "gfxFT2FontList.h"

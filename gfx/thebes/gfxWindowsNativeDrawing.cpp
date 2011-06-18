@@ -168,12 +168,7 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
             GetWorldTransform(mDC, &mOldWorldTransform);
             SetWorldTransform(mDC, &mWorldTransform);
         }
-
-#ifdef WINCE
-        SetViewportOrgEx(mDC, 0, 0, &mOrigViewportOrigin);
-#else
         GetViewportOrgEx(mDC, &mOrigViewportOrigin);
-#endif
         SetViewportOrgEx(mDC,
                          mOrigViewportOrigin.x + (int)mDeviceOffset.x,
                          mOrigViewportOrigin.y + (int)mDeviceOffset.y,
