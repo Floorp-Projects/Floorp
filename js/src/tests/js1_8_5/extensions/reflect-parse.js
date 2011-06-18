@@ -329,6 +329,9 @@ assertExpr("({'x':1, 'y':2, 3:3})", objExpr([{ key: lit("x"), value: lit(1) },
                                              { key: lit("y"), value: lit(2) },
                                              { key: lit(3), value: lit(3) } ]));
 
+// Bug 571617: eliminate constant-folding
+assertExpr("2 + 3", binExpr("+", lit(2), lit(3)));
+
 // statements
 
 assertStmt("throw 42", throwStmt(lit(42)));
