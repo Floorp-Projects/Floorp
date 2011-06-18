@@ -85,13 +85,6 @@ CMMSRCS		+= \
 		$(NULL)
 endif
 
-ifndef MOZ_NO_FAST_LOAD
-CPPSRCS += \
-		nsFastLoadFile.cpp \
-		nsFastLoadService.cpp \
-		$(NULL)
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS		+= nsLocalFileOS2.cpp
 else
@@ -107,7 +100,6 @@ EXPORTS		= \
 		nsDirectoryService.h \
 		nsDirectoryServiceAtomList.h \
 		nsEscape.h \
-		nsFastLoadService.h \
 		nsLinebreakConverter.h \
 		nsLocalFile.h \
 		nsMultiplexInputStream.h \
@@ -138,8 +130,6 @@ XPIDLSRCS	= \
 		nsIBinaryInputStream.idl \
 		nsIBinaryOutputStream.idl  \
 		nsIDirectoryEnumerator.idl \
-		nsIFastLoadFileControl.idl \
-		nsIFastLoadService.idl \
 		nsIInputStreamTee.idl \
 		nsILocalFileWin.idl \
 		nsILineInputStream.idl \

@@ -527,8 +527,29 @@ nsPlacesExpiration.prototype = {
       }
     }
     else if (aTopic == TOPIC_DEBUG_START_EXPIRATION) {
-      this._debugLimit = aData || -1; // Don't limit if unspecified.
-      this._expireWithActionAndLimit(ACTION.DEBUG, LIMIT.DEBUG);
+      // The passed-in limit is the maximum number of visits to expire when
+      // history is over capacity.  Mind to correctly handle the NaN value.
+      let limit = parseInt(aData);
+      if (limit == -1) {
+        // Everything should be expired without any limit.  If history is over
+        // capacity then all existing visits will be expired.
+        // Should only be used in tests, since may cause dataloss.
+        this._expireWithActionAndLimit(ACTION.DEBUG, LIMIT.UNLIMITED);
+      }
+      else if (limit > 0) {
+        // The number of expired visits is limited by this amount.  It may be
+        // used for testing purposes, like checking that limited queries work.
+        this._debugLimit = limit;
+        this._expireWithActionAndLimit(ACTION.DEBUG, LIMIT.DEBUG);
+      }
+      else {
+        // Any other value is intended as a 0 limit, that means no visits
+        // will be expired.  Even if this doesn't touch visits, it will remove
+        // any orphan pages, icons, annotations and similar from the database,
+        // so it may be used for cleanup purposes.
+        this._debugLimit = -1;
+        this._expireWithActionAndLimit(ACTION.DEBUG, LIMIT.DEBUG);
+      }
     }
     else if (aTopic == TOPIC_IDLE_BEGIN) {
       // Stop the expiration timer.  We don't want to keep up expiring on idle
@@ -840,15 +861,20 @@ nsPlacesExpiration.prototype = {
         baseLimit = this._debugLimit;
         break;
     }
-    if (this.status == STATUS.DIRTY && aLimit != LIMIT.DEBUG)
+    if (this.status == STATUS.DIRTY && aAction != ACTION.DEBUG &&
+        baseLimit > 0) {
       baseLimit *= EXPIRE_AGGRESSIVITY_MULTIPLIER;
+    }
 
     // Bind the appropriate parameters.
     let params = stmt.params;
     switch (aQueryType) {
       case "QUERY_FIND_VISITS_TO_EXPIRE":
         params.max_uris = this._urisLimit;
-        params.limit_visits = baseLimit;
+        // Avoid expiring all visits in case of an unlimited debug expiration,
+        // just remove orphans instead.
+        params.limit_visits =
+          aLimit == LIMIT.DEBUG && baseLimit == -1 ? 0 : baseLimit;
         break;
       case "QUERY_FIND_URIS_TO_EXPIRE":
         // We could run in the middle of adding a new visit or bookmark to

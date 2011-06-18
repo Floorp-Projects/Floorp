@@ -49,6 +49,8 @@ _HTTP_FILES	= \
 		bad_links.atom \
 		rss_as_html.rss \
 		rss_as_html.rss^headers^ \
+		link-less-items.rss \
+		link-less-items-no-site-uri.rss \
 		$(NULL)
 
 _CHROME_FILES	= \
@@ -57,9 +59,9 @@ _CHROME_FILES	= \
 		test_342484.xul \
 		test_341972a.xul \
 		test_favicon_annotations.xul \
+		test_303567.xul \
+		test_381357.xul \
 		$(NULL)
-
-# test_381357.xul is disabled for now because of bug 561007. See also bug 624549. 
 
 libs:: $(_HTTP_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
