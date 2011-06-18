@@ -180,6 +180,7 @@ public:
     virtual bool RecvShow(const nsIntSize& size);
     virtual bool RecvMove(const nsIntSize& size);
     virtual bool RecvActivate();
+    virtual bool RecvDeactivate();
     virtual bool RecvMouseEvent(const nsString& aType,
                                 const float&    aX,
                                 const float&    aY,

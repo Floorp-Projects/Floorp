@@ -127,6 +127,7 @@ public:
     void Show(const nsIntSize& size);
     void Move(const nsIntSize& size);
     void Activate();
+    void Deactivate();
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         PRInt32 aButton, PRInt32 aClickCount,
                         PRInt32 aModifiers, PRBool aIgnoreRootScrollFrame);
