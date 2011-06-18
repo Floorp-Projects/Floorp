@@ -2824,6 +2824,10 @@ HUD_SERVICE.prototype =
     let windowUI = nBox.ownerDocument.getElementById("console_window_" + hudId);
     if (windowUI) {
       // The Web Console popup is already open, no need to continue.
+      if (aContentWindow == aContentWindow.top) {
+        let hud = this.hudReferences[hudId];
+        hud.reattachConsole(aContentWindow);
+      }
       return;
     }
 
@@ -3228,10 +3232,8 @@ HeadsUpDisplay.prototype = {
 
     let panel = this.chromeDocument.createElementNS(XUL_NS, "panel");
 
-    let label = this.getStr("webConsoleOwnWindowTitle");
-
     let config = { id: "console_window_" + this.hudId,
-                   label: label,
+                   label: this.getPanelTitle(),
                    titlebar: "normal",
                    noautohide: "true",
                    norestorefocus: "true",
@@ -3358,6 +3360,17 @@ HeadsUpDisplay.prototype = {
     this.consoleWindowUnregisterOnHide = true;
 
     return panel;
+  },
+
+  /**
+   * Retrieve the Web Console panel title.
+   *
+   * @return string
+   *         The Web Console panel title.
+   */
+  getPanelTitle: function HUD_getPanelTitle()
+  {
+    return this.getFormatStr("webConsoleWindowTitleAndURL", [this.uriSpec]);
   },
 
   positions: {
@@ -3510,6 +3523,10 @@ HeadsUpDisplay.prototype = {
     this.contentWindow = aContentWindow;
     this.contentDocument = this.contentWindow.document;
     this.uriSpec = this.contentWindow.location.href;
+
+    if (this.consolePanel) {
+      this.consolePanel.label = this.getPanelTitle();
+    }
 
     if (!this.jsterm) {
       this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
