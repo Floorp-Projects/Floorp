@@ -784,25 +784,9 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	if (!gdi_region)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-#ifndef WINCE
 	/* AND the new region into our DC */
 	if (ExtSelectClipRgn (surface->dc, gdi_region, RGN_AND) == ERROR)
 	    status = _cairo_win32_print_gdi_error ("_cairo_win32_surface_set_clip_region");
-#else
-	// The ExtSelectClipRgn function combines the specified
-	// region with the current clipping region using the
-	// specified mode.  Here we do similar using basic
-	// functions available on WINCE.
-	{
-	    HRGN currentClip, newClip;
-	    GetClipRgn(surface->dc, &currentClip);
-
-	    if (CombineRgn(newClip, currentClip, gdi_region, RGN_AND) != ERROR) {
-		SelectClipRgn(surface->dc, newClip);
-		DeleteObject(newClip);
-	    }
-	}
-#endif
 
 	DeleteObject (gdi_region);
     }
@@ -1637,7 +1621,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_clip_t		*clip,
 				  int			*remaining_glyphs)
 {
-#if defined(CAIRO_HAS_WIN32_FONT) && !defined(WINCE)
+#ifdef CAIRO_HAS_WIN32_FONT
     if (scaled_font->backend->type == CAIRO_FONT_TYPE_DWRITE) {
 #ifdef CAIRO_HAS_DWRITE_FONT
         return _cairo_dwrite_show_glyphs_on_surface(surface, op, source, glyphs, num_glyphs, scaled_font, clip);

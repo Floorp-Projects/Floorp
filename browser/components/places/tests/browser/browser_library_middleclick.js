@@ -246,28 +246,12 @@ function test() {
   // Temporary disable history, so we won't record pages navigation.
   gPrefService.setBoolPref(ENABLE_HISTORY_PREF, false);
 
-  // Window watcher for Library window.
-  var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
-  function windowObserver(aSubject, aTopic, aData) {
-    if (aTopic != "domwindowopened")
-      return;
-    ww.unregisterNotification(windowObserver);
-    gLibrary = aSubject.QueryInterface(Ci.nsIDOMWindow);
-    gLibrary.addEventListener("load", function onLoad(event) {
-      gLibrary.removeEventListener("load", onLoad, false);
-      // Kick off tests.
-      setTimeout(runNextTest, 0);
-    }, false);
-  }
-
   // Open Library window.
-  ww.registerNotification(windowObserver);
-  ww.openWindow(null,
-                "chrome://browser/content/places/places.xul",
-                "",
-                "chrome,toolbar=yes,dialog=no,resizable",
-                null); 
+  openLibrary(function (library) {
+    gLibrary = library;
+    // Kick off tests.
+    runNextTest();
+  });
 }
 
 function runNextTest() {
