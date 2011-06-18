@@ -60,7 +60,7 @@ interface nsISimpleEnumerator;
 #define NS_SHISTORY_CONTRACTID "@mozilla.org/browser/shistory;1"
 %}
 
-[scriptable, uuid(9883609F-CDD8-4d83-9B55-868FF08AD433)]
+[scriptable, uuid(ef2c9bcb-96b8-4095-933a-cb1c506f2c58)]
 interface nsISHistory: nsISupports
 {
   /**
@@ -177,10 +177,6 @@ interface nsISHistory: nsISupports
    * @see do_QueryInterface()
    */
    readonly attribute nsISimpleEnumerator SHistoryEnumerator;
-};
 
-[scriptable, uuid(ac8b3eb3-2051-4cce-8303-d6e7938501dd)]
-interface nsISHistory_2_0_BRANCH: nsISHistory
-{
-  void reloadCurrentEntry();
+   void reloadCurrentEntry();
 };

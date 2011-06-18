@@ -93,7 +93,6 @@ using mozilla::dom::ContentParent;
 #include "nsIContentHandler.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
-#include "nsIFastLoadService.h" // for PLATFORM_FASL_SUFFIX
 #include "mozilla/ModuleUtils.h"
 #include "nsIIOService2.h"
 #include "nsIObserverService.h"
@@ -2288,6 +2287,12 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
   aLocalProfileDir->Clone(getter_AddRefs(file));
   if (!file)
     return;
+
+#if defined(XP_UNIX) || defined(XP_BEOS)
+#define PLATFORM_FASL_SUFFIX ".mfasl"
+#elif defined(XP_WIN) || defined(XP_OS2)
+#define PLATFORM_FASL_SUFFIX ".mfl"
+#endif
 
   file->AppendNative(NS_LITERAL_CSTRING("XUL" PLATFORM_FASL_SUFFIX));
   file->Remove(PR_FALSE);

@@ -596,8 +596,9 @@ var PlacesUtils = {
       case this.TYPE_X_MOZ_URL: {
         function gatherDataUrl(bNode) {
           if (PlacesUtils.nodeIsLivemarkContainer(bNode)) {
-            let siteURI = PlacesUtils.livemarks.getSiteURI(bNode.itemId).spec;
-            return siteURI + NEWLINE + bNode.title;
+            let uri = PlacesUtils.livemarks.getSiteURI(bNode.itemId) ||
+                      PlacesUtils.livemarks.getFeedURI(bNode.itemId);
+            return uri.spec + NEWLINE + bNode.title;
           }
           if (PlacesUtils.nodeIsURI(bNode))
             return (aOverrideURI || bNode.uri) + NEWLINE + bNode.title;
@@ -625,8 +626,9 @@ var PlacesUtils = {
           // escape out potential HTML in the title
           let escapedTitle = bNode.title ? htmlEscape(bNode.title) : "";
           if (PlacesUtils.nodeIsLivemarkContainer(bNode)) {
-            let siteURI = PlacesUtils.livemarks.getSiteURI(bNode.itemId).spec;
-            return "<A HREF=\"" + siteURI + "\">" + escapedTitle + "</A>" + NEWLINE;
+            let uri = PlacesUtils.livemarks.getSiteURI(bNode.itemId) ||
+                      PlacesUtils.livemarks.getFeedURI(bNode.itemId);
+            return "<A HREF=\"" + uri.spec + "\">" + escapedTitle + "</A>" + NEWLINE;
           }
           if (PlacesUtils.nodeIsContainer(bNode)) {
             asContainer(bNode);
@@ -664,7 +666,8 @@ var PlacesUtils = {
     // Otherwise, we wrap as TYPE_UNICODE.
     function gatherDataText(bNode) {
       if (PlacesUtils.nodeIsLivemarkContainer(bNode))
-        return PlacesUtils.livemarks.getSiteURI(bNode.itemId).spec;
+        return PlacesUtils.livemarks.getSiteURI(bNode.itemId) ||
+               PlacesUtils.livemarks.getFeedURI(bNode.itemId);
       if (PlacesUtils.nodeIsContainer(bNode)) {
         asContainer(bNode);
         let wasOpen = bNode.containerOpen;
@@ -2590,11 +2593,11 @@ function PlacesRemoveLivemarkTransaction(aFolderId)
   this._container = PlacesUtils.bookmarks.getFolderIdForItem(this._id);
   let annos = PlacesUtils.getAnnotationsForItem(this._id);
   // Exclude livemark service annotations, those will be recreated automatically
-  let annosToExclude = ["livemark/feedURI",
-                        "livemark/siteURI",
-                        "livemark/expiration",
-                        "livemark/loadfailed",
-                        "livemark/loading"];
+  let annosToExclude = [PlacesUtils.LMANNO_FEEDURI,
+                        PlacesUtils.LMANNO_SITEURI,
+                        PlacesUtils.LMANNO_EXPIRATION,
+                        PlacesUtils.LMANNO_LOADFAILED,
+                        PlacesUtils.LMANNO_LOADING];
   this._annotations = annos.filter(function(aValue, aIndex, aArray) {
       return annosToExclude.indexOf(aValue.name) == -1;
     });
