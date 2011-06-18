@@ -74,8 +74,6 @@
 #include "nsIException.h"
 #include "nsIExceptionService.h"
 #include "nsIFactory.h"
-#include "nsIFastLoadFileControl.h"
-#include "nsIFastLoadService.h"
 #include "nsIFile.h"
 #include "nsIHashable.h"
 #include "nsIINIParser.h"

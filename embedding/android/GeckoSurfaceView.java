@@ -132,6 +132,40 @@ class GeckoSurfaceView
      * Called on main thread
      */
 
+    public void draw(SurfaceHolder holder, ByteBuffer buffer) {
+        if (buffer == null || buffer.capacity() != (mWidth * mHeight * 2))
+            return;
+
+        synchronized (mSoftwareBuffer) {
+            if (buffer != mSoftwareBuffer || mSoftwareBufferCopy == null)
+                return;
+
+            Canvas c = holder.lockCanvas();
+            if (c == null)
+                return;
+            mSoftwareBufferCopy.copyPixelsFromBuffer(buffer);
+            c.drawBitmap(mSoftwareBufferCopy, 0, 0, null);
+            holder.unlockCanvasAndPost(c);
+        }
+    }
+
+    public void draw(SurfaceHolder holder, Bitmap bitmap) {
+        if (bitmap == null ||
+            bitmap.getWidth() != mWidth || bitmap.getHeight() != mHeight)
+            return;
+
+        synchronized (mSoftwareBitmap) {
+            if (bitmap != mSoftwareBitmap)
+                return;
+
+            Canvas c = holder.lockCanvas();
+            if (c == null)
+                return;
+            c.drawBitmap(bitmap, 0, 0, null);
+            holder.unlockCanvasAndPost(c);
+        }
+    }
+
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         if (mShowingSplashScreen)
             drawSplashScreen(holder, width, height);
@@ -142,14 +176,15 @@ class GeckoSurfaceView
                 Log.w("GeckoAppJava", "surfaceChanged while mInDrawing is true!");
             }
 
-            if (width == 0 || height == 0)
+            if (width == 0 || height == 0) {
+                mSoftwareBitmap = null;
                 mSoftwareBuffer = null;
-            else if (mSoftwareBuffer == null ||
-                     mSoftwareBuffer.capacity() < (width * height * 2) ||
-                     mWidth != width || mHeight != height)
-                mSoftwareBuffer = ByteBuffer.allocateDirect(width * height * 2);
-            boolean doSyncDraw = mDrawMode == DRAW_2D &&
-                mSoftwareBuffer != null &&
+                mSoftwareBufferCopy = null;
+            }
+
+            boolean doSyncDraw =
+                mDrawMode == DRAW_2D &&
+                (mSoftwareBitmap != null || mSoftwareBuffer != null) &&
                 GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning);
             mSyncDraw = doSyncDraw;
 
@@ -167,7 +202,7 @@ class GeckoSurfaceView
                                           metrics.widthPixels, metrics.heightPixels);
             GeckoAppShell.sendEventToGecko(e);
 
-            if (mSoftwareBuffer != null)
+            if (mSoftwareBitmap != null || mSoftwareBuffer != null)
                 GeckoAppShell.scheduleRedraw();
 
             if (!doSyncDraw) {
@@ -182,18 +217,17 @@ class GeckoSurfaceView
             mSurfaceLock.unlock();
         }
 
-        ByteBuffer bb = null;
+        Object syncDrawObject = null;
         try {
-            bb = mSyncBuf.take();
+            Object syncObject = mSyncDraws.take();
         } catch (InterruptedException ie) {
-            Log.e("GeckoAppJava", "Threw exception while getting sync buf: ", ie);
+            Log.e("GeckoAppJava", "Threw exception while getting sync draw bitmap/buffer: ", ie);
         }
-        if (bb != null && bb.capacity() == (width * height * 2)) {
-            mSoftwareBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.RGB_565);
-            mSoftwareBitmap.copyPixelsFromBuffer(bb);
-            Canvas c = holder.lockCanvas();
-            c.drawBitmap(mSoftwareBitmap, 0, 0, null);
-            holder.unlockCanvasAndPost(c);
+        if (syncDrawObject != null) {
+            if (syncDrawObject instanceof Bitmap)
+                draw(holder, (Bitmap)syncDrawObject);
+            else
+                draw(holder, (ByteBuffer)syncDrawObject);
         }
     }
 
@@ -209,11 +243,37 @@ class GeckoSurfaceView
         Log.i("GeckoAppJava", "surface destroyed");
         mSurfaceValid = false;
         mSoftwareBuffer = null;
+        mSoftwareBufferCopy = null;
+        mSoftwareBitmap = null;
         GeckoEvent e = new GeckoEvent(GeckoEvent.SURFACE_DESTROYED);
         GeckoAppShell.sendEventToGecko(e);
     }
 
+    public Bitmap getSoftwareDrawBitmap() {
+        if (mSoftwareBitmap == null ||
+            mSoftwareBitmap.getHeight() != mHeight ||
+            mSoftwareBitmap.getWidth() != mWidth) {
+            mSoftwareBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.RGB_565);
+        }
+
+        mDrawMode = DRAW_2D;
+        return mSoftwareBitmap;
+    }
+
     public ByteBuffer getSoftwareDrawBuffer() {
+        // We store pixels in 565 format, so two bytes per pixel (explaining
+        // the * 2 in the following check/allocation)
+        if (mSoftwareBuffer == null ||
+            mSoftwareBuffer.capacity() != (mWidth * mHeight * 2)) {
+            mSoftwareBuffer = ByteBuffer.allocateDirect(mWidth * mHeight * 2);
+        }
+
+        if (mSoftwareBufferCopy == null ||
+            mSoftwareBufferCopy.getHeight() != mHeight ||
+            mSoftwareBufferCopy.getWidth() != mWidth) {
+            mSoftwareBufferCopy = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.RGB_565);
+        }
+
         mDrawMode = DRAW_2D;
         return mSoftwareBuffer;
     }
@@ -290,19 +350,19 @@ class GeckoSurfaceView
      * unless you're in SurfaceChanged, in which case the canvas was already
      * locked. Surface lock -> Canvas lock will lead to AB-BA deadlocks.
      */
-    public void draw2D(ByteBuffer buffer, int stride) {
-        // mSurfaceLock ensures that we get mSyncDraw/mSoftwareBuffer/etc.
+    public void draw2D(Bitmap bitmap, int width, int height) {
+        // mSurfaceLock ensures that we get mSyncDraw/mSoftwareBitmap/etc.
         // set correctly before determining whether we should do a sync draw
         mSurfaceLock.lock();
         try {
             if (mSyncDraw) {
-                if (buffer != mSoftwareBuffer || stride != (mWidth * 2))
+                if (bitmap != mSoftwareBitmap || width != mWidth || height != mHeight)
                     return;
                 mSyncDraw = false;
                 try {
-                    mSyncBuf.put(buffer);
+                    mSyncDraws.put(bitmap);
                 } catch (InterruptedException ie) {
-                    Log.e("GeckoAppJava", "Threw exception while getting sync buf: ", ie);
+                    Log.e("GeckoAppJava", "Threw exception while getting sync draws queue: ", ie);
                 }
                 return;
             }
@@ -310,29 +370,28 @@ class GeckoSurfaceView
             mSurfaceLock.unlock();
         }
 
-        if (buffer != mSoftwareBuffer || stride != (mWidth * 2))
-            return;
-        Canvas c = getHolder().lockCanvas();
-        if (c == null)
-            return;
-        if (buffer != mSoftwareBuffer || stride != (mWidth * 2)) {
-            /* We're screwed. Fill it with white and hope it isn't too noticable
-             * This could potentially happen if this function is called
-             * right before mSurfaceLock is locked in SurfaceChanged.
-             * However, I've never actually seen this code get hit.
-             */
-            c.drawARGB(255, 255, 255, 255);
-            getHolder().unlockCanvasAndPost(c);
-            return;
+        draw(getHolder(), bitmap);
+    }
+
+    public void draw2D(ByteBuffer buffer, int stride) {
+        mSurfaceLock.lock();
+        try {
+            if (mSyncDraw) {
+                if (buffer != mSoftwareBuffer || stride != (mWidth * 2))
+                    return;
+                mSyncDraw = false;
+                try {
+                    mSyncDraws.put(buffer);
+                } catch (InterruptedException ie) {
+                    Log.e("GeckoAppJava", "Threw exception while getting sync bitmaps queue: ", ie);
+                }
+                return;
+            }
+        } finally {
+            mSurfaceLock.unlock();
         }
-        if (mSoftwareBitmap == null ||
-            mSoftwareBitmap.getHeight() != mHeight ||
-            mSoftwareBitmap.getWidth() != mWidth) {
-            mSoftwareBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.RGB_565);
-        }
-        mSoftwareBitmap.copyPixelsFromBuffer(mSoftwareBuffer);
-        c.drawBitmap(mSoftwareBitmap, 0, 0, null);
-        getHolder().unlockCanvasAndPost(c);
+
+        draw(getHolder(), buffer);
     }
 
     @Override
@@ -631,12 +690,13 @@ class GeckoSurfaceView
     boolean mIMELandscapeFS;
 
     // Software rendering
-    ByteBuffer mSoftwareBuffer;
     Bitmap mSoftwareBitmap;
+    ByteBuffer mSoftwareBuffer;
+    Bitmap mSoftwareBufferCopy;
 
     Geocoder mGeocoder;
     Address  mLastGeoAddress;
 
-    final SynchronousQueue<ByteBuffer> mSyncBuf = new SynchronousQueue<ByteBuffer>();
+    final SynchronousQueue<Object> mSyncDraws = new SynchronousQueue<Object>();
 }
 

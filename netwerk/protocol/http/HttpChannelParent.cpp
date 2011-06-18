@@ -306,8 +306,7 @@ bool
 HttpChannelParent::RecvSetCacheTokenCachedCharset(const nsCString& charset)
 {
   if (mCacheDescriptor)
-    mCacheDescriptor->SetMetaDataElement("charset",
-                                         PromiseFlatCString(charset).get());
+    mCacheDescriptor->SetMetaDataElement("charset", charset.get());
   return true;
 }
 

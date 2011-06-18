@@ -201,7 +201,9 @@ class nsFrameScriptExecutor
 public:
   static void Shutdown();
 protected:
-  nsFrameScriptExecutor() : mCx(nsnull)
+  friend class nsFrameScriptCx;
+  nsFrameScriptExecutor() : mCx(nsnull), mCxStackRefCnt(0),
+                            mDelayedCxDestroy(PR_FALSE)
   { MOZ_COUNT_CTOR(nsFrameScriptExecutor); }
   ~nsFrameScriptExecutor()
   { MOZ_COUNT_DTOR(nsFrameScriptExecutor); }
@@ -213,9 +215,30 @@ protected:
                        nsCycleCollectionTraversalCallback &cb);
   nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobal;
   JSContext* mCx;
+  PRUint32 mCxStackRefCnt;
+  PRPackedBool mDelayedCxDestroy;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   static nsDataHashtable<nsStringHashKey, nsFrameScriptExecutorJSObjectHolder*>* sCachedScripts;
   static nsRefPtr<nsScriptCacheCleaner> sScriptCacheCleaner;
+};
+
+class nsFrameScriptCx
+{
+public:
+  nsFrameScriptCx(nsISupports* aOwner, nsFrameScriptExecutor* aExec)
+  : mOwner(aOwner), mExec(aExec)
+  {
+    ++(mExec->mCxStackRefCnt);
+  }
+  ~nsFrameScriptCx()
+  {
+    if (--(mExec->mCxStackRefCnt) == 0 &&
+        mExec->mDelayedCxDestroy) {
+      mExec->DestroyCx();
+    }
+  }
+  nsCOMPtr<nsISupports> mOwner;
+  nsFrameScriptExecutor* mExec;
 };
 
 class nsScriptCacheCleaner : public nsIObserver

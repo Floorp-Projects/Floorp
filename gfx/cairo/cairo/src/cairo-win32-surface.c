@@ -784,25 +784,9 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	if (!gdi_region)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-#ifndef WINCE
 	/* AND the new region into our DC */
 	if (ExtSelectClipRgn (surface->dc, gdi_region, RGN_AND) == ERROR)
 	    status = _cairo_win32_print_gdi_error ("_cairo_win32_surface_set_clip_region");
-#else
-	// The ExtSelectClipRgn function combines the specified
-	// region with the current clipping region using the
-	// specified mode.  Here we do similar using basic
-	// functions available on WINCE.
-	{
-	    HRGN currentClip, newClip;
-	    GetClipRgn(surface->dc, &currentClip);
-
-	    if (CombineRgn(newClip, currentClip, gdi_region, RGN_AND) != ERROR) {
-		SelectClipRgn(surface->dc, newClip);
-		DeleteObject(newClip);
-	    }
-	}
-#endif
 
 	DeleteObject (gdi_region);
     }
@@ -1494,6 +1478,49 @@ categorize_solid_dest_operator (cairo_operator_t op,
     return DO_UNSUPPORTED;
 }
 
+static cairo_status_t
+_cairo_win32_surface_fill_rectangles_stretchdib (HDC                   dc,
+                                                 const cairo_color_t   *color,
+                                                 cairo_rectangle_int_t *rect,
+                                                 int                   num_rects)
+{
+    BITMAPINFO bi;
+    int pixel = ((color->alpha_short >> 8) << 24) |
+                ((color->red_short >> 8) << 16) |
+                ((color->green_short >> 8) << 8) |
+                (color->blue_short >> 8);
+    int i;
+
+    /* Experiments suggest that it's impossible to use FillRect to set the alpha value
+       of a Win32 HDC for a transparent window. So instead we use StretchDIBits of a single
+       pixel, which does work. */
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = 1;
+    bi.bmiHeader.biHeight = 1;
+    bi.bmiHeader.biSizeImage = 0;
+    bi.bmiHeader.biXPelsPerMeter = PELS_72DPI;
+    bi.bmiHeader.biYPelsPerMeter = PELS_72DPI;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    bi.bmiHeader.biClrUsed = 0;
+    bi.bmiHeader.biClrImportant = 0;
+
+    for (i = 0; i < num_rects; i++) {
+        if (!StretchDIBits (dc,
+                            /* dst x,y,w,h */
+                            rect[i].x, rect[i].y, rect[i].width, rect[i].height,
+                            /* src x,y,w,h */
+                            0, 0, 1, 1,
+                            &pixel,
+                            &bi,
+                            DIB_RGB_COLORS,
+                            SRCCOPY))
+            return _cairo_win32_print_gdi_error ("_cairo_win32_surface_fill_rectangles_stretchdib(StretchDIBits)");
+    }
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 				      cairo_operator_t		op,
@@ -1507,16 +1534,19 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
     HBRUSH new_brush;
     int i;
 
-    /* XXXperf If it's not RGB24, we need to do a little more checking
-     * to figure out when we can use GDI.  We don't have that checking
-     * anywhere at the moment, so just bail and use the fallback
-     * paths. */
-    if (surface->format != CAIRO_FORMAT_RGB24)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
     status = _cairo_win32_surface_set_clip_region (surface, NULL);
     if (status)
-	return status;
+        return status;
+
+    if (surface->format == CAIRO_FORMAT_ARGB32 &&
+        (surface->flags & CAIRO_WIN32_SURFACE_CAN_STRETCHDIB) &&
+        (op == CAIRO_OPERATOR_SOURCE ||
+         (op == CAIRO_OPERATOR_OVER && color->alpha_short >= 0xff00))) {
+        return _cairo_win32_surface_fill_rectangles_stretchdib (surface->dc,
+                                                                color, rects, num_rects);
+    }
+    if (surface->format != CAIRO_FORMAT_RGB24)
+        return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* Optimize for no destination alpha (surface->pixman_image is non-NULL for all
      * surfaces with alpha.)
@@ -1591,7 +1621,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_clip_t		*clip,
 				  int			*remaining_glyphs)
 {
-#if defined(CAIRO_HAS_WIN32_FONT) && !defined(WINCE)
+#ifdef CAIRO_HAS_WIN32_FONT
     if (scaled_font->backend->type == CAIRO_FONT_TYPE_DWRITE) {
 #ifdef CAIRO_HAS_DWRITE_FONT
         return _cairo_dwrite_show_glyphs_on_surface(surface, op, source, glyphs, num_glyphs, scaled_font, clip);
