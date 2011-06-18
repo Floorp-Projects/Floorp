@@ -1682,6 +1682,10 @@
             // a consistent state (tab removed, tab positions updated, etc.).
             panel.removeChild(browser.parentNode);
 
+            // Release the browser in case something is erroneously holding a
+            // reference to the tab after its removal.
+            aTab.linkedBrowser = null;
+
             // As the browser is removed, the removal of a dependent document can
             // cause the whole window to close. So at this point, it's possible
             // that the binding is destructed.
