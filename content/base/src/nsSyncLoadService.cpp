@@ -332,50 +332,6 @@ nsSyncLoader::GetInterface(const nsIID & aIID,
     return QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_ISUPPORTS1(nsSyncLoadService,
-                   nsISyncLoadDOMService)
-
-static nsresult
-LoadFromChannel(nsIChannel* aChannel, nsIPrincipal *aLoaderPrincipal,
-                PRBool aChannelIsSync, PRBool aForceToXML,
-                nsIDOMDocument** aResult)
-{
-    nsRefPtr<nsSyncLoader> loader = new nsSyncLoader();
-    if (!loader) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return loader->LoadDocument(aChannel, aLoaderPrincipal, aChannelIsSync,
-                                aForceToXML, aResult);
-}
-
-NS_IMETHODIMP
-nsSyncLoadService::LoadDocument(nsIChannel* aChannel,
-                                nsIPrincipal* aLoaderPrincipal,
-                                nsIDOMDocument** aResult)
-{
-    return LoadFromChannel(aChannel, aLoaderPrincipal, PR_FALSE, PR_FALSE,
-                           aResult);
-}
-
-NS_IMETHODIMP
-nsSyncLoadService::LoadDocumentAsXML(nsIChannel* aChannel,
-                                     nsIPrincipal* aLoaderPrincipal,
-                                     nsIDOMDocument** aResult)
-{
-    return LoadFromChannel(aChannel, aLoaderPrincipal, PR_FALSE, PR_TRUE,
-                           aResult);
-}
-
-NS_IMETHODIMP
-nsSyncLoadService::LoadLocalDocument(nsIChannel* aChannel,
-                                     nsIPrincipal* aLoaderPrincipal,
-                                     nsIDOMDocument** aResult)
-{
-    return LoadFromChannel(aChannel, aLoaderPrincipal, PR_TRUE, PR_TRUE,
-                           aResult);
-}
-
 /* static */
 nsresult
 nsSyncLoadService::LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
@@ -397,8 +353,10 @@ nsSyncLoadService::LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
                     (NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)) &&
                      isResource);
 
-    return LoadFromChannel(channel, aLoaderPrincipal, isSync, aForceToXML,
-                           aResult);
+    nsRefPtr<nsSyncLoader> loader = new nsSyncLoader();
+    return loader->LoadDocument(channel, aLoaderPrincipal, isSync,
+                                aForceToXML, aResult);
+
 }
 
 /* static */
