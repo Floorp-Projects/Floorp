@@ -4,10 +4,15 @@ for (var i = 0; i < 20; ++i)
     str = str + str;
 str.indexOf('a');
 
-// copying this sucker should gc
-makeFinalizeObserver();
+var f;
+f = makeFinalizeObserver();
 assertEq(finalizeCount(), 0);
+
+// Create another observer to make sure that we overwrite all conservative
+// roots for the previous one and can observer the GC.
+f = makeFinalizeObserver();
+
 // if the assert fails, add more iterations
-for (var i = 0; i < 50; ++i)
+for (var i = 0; i < 80; ++i)
     str.replace(/(a)/, '$1');
 assertEq(finalizeCount(), 1);
