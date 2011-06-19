@@ -3231,7 +3231,7 @@ static JSFunctionSpec string_methods[] = {
  */
 #define R(c) {                                                                \
     BUILD_LENGTH_AND_FLAGS(1, JSString::STATIC_ATOM_FLAGS),                   \
-    { (jschar *)(((char *)(unitStaticTable + (c))) +                          \
+    { (jschar *)(uintptr_t(unitStaticTable + (c)) +                           \
       offsetof(JSString::Data, inlineStorage)) },                             \
     { {(c), 0x00} } }
 
@@ -3307,7 +3307,7 @@ const jschar JSAtom::fromSmallChar[] = { R6(0) };
  */
 #define R(c) {                                                                \
     BUILD_LENGTH_AND_FLAGS(2, JSString::STATIC_ATOM_FLAGS),                   \
-    { (jschar *)(((char *)(length2StaticTable + (c))) +                       \
+    { (jschar *)(uintptr_t(length2StaticTable + (c)) +                        \
       offsetof(JSString::Data, inlineStorage)) },                             \
     { {FROM_SMALL_CHAR((c) >> 6), FROM_SMALL_CHAR((c) & 0x3F), 0x00} } }
 
@@ -3344,7 +3344,7 @@ __attribute__ ((aligned (8)))
  */
 #define R(c) {                                                                \
     BUILD_LENGTH_AND_FLAGS(3, JSString::STATIC_ATOM_FLAGS),                   \
-    { (jschar *)(((char *)(hundredStaticTable + ((c) - 100))) +               \
+    { (jschar *)(uintptr_t(hundredStaticTable + ((c) - 100)) +                \
       offsetof(JSString::Data, inlineStorage)) },                             \
     { {((c) / 100) + '0', ((c) / 10 % 10) + '0', ((c) % 10) + '0', 0x00} } }
 
