@@ -261,7 +261,7 @@ struct ArenaHeader {
     }
 
     void setAsFullyUsed() {
-        firstFreeSpanStart = firstFreeSpanEnd = ArenaSize;
+        firstFreeSpanStart = firstFreeSpanEnd = uint16_t(ArenaSize);
     }
 
     FreeSpan getFirstFreeSpan() const {
@@ -543,8 +543,8 @@ ArenaHeader::init(JSCompartment *comp, unsigned kind, size_t thingSize)
     JS_ASSERT(!getMarkingDelay()->link);
     compartment = comp;
     thingKind = kind;
-    firstFreeSpanStart = Arena::thingsStartOffset(thingSize);
-    firstFreeSpanEnd = ArenaSize;
+    firstFreeSpanStart = uint16_t(Arena::thingsStartOffset(thingSize));
+    firstFreeSpanEnd = uint16_t(ArenaSize);
 }
 
 inline uintptr_t
