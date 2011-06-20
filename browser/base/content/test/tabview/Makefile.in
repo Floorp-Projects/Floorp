@@ -150,6 +150,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug656778.js \
                  browser_tabview_bug656913.js \
                  browser_tabview_bug662266.js \
+                 browser_tabview_bug665502.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
                  browser_tabview_expander.js \
