@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Christopher Seawood <cls@seawood.org>
+#   Joey Armstrong <joey@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,27 +38,61 @@
 #
 # ***** END LICENSE BLOCK *****
 
-use Getopt::Std;
+##----------------------------##
+##---] CORE/CPAN INCLUDES [---##
+##----------------------------##
+use strict;
+use warnings;
+use Getopt::Long;
 
-getopts('rs');
-$regexp = 1 if (defined($opt_r));
-$sort = 1 if (defined($opt_s));
+##-------------------##
+##---]  EXPORTS  [---##
+##-------------------##
+our $VERSION = qw(1.1);
 
-undef @out;
-if ($sort) {
-    @in = sort @ARGV;
-} else {
-    @in = @ARGV;
+##-------------------##
+##---]  GLOBALS  [---##
+##-------------------##
+my %argv;
+
+unless(GetOptions(\%argv,
+		  qw(debug|d:1
+		     regex|r:1
+		     sort|s:1)))
+{
+    print "Usage: $0\n";
+    print "  --sort   Sort list elements early\n";
+    print "  --regex  Exclude subdirs by pattern\n";
 }
-foreach $d (@in) { 
-    if ($regexp) {
-        $found = 0; 
-        foreach $dir (@out) {
-            $found++, last if ($d =~ m/^$dir\// || $d eq $dir);
+
+my $debug = $argv{debug} || 0;
+
+my %seen;
+my @out;
+my @in = ($argv{sort}) ? sort @ARGV : @ARGV;
+
+foreach my $d (@in)
+{
+    next if ($seen{$d}++);
+
+    print "   arg is $d\n" if ($debug);
+
+    if ($argv{regex})
+    {
+        my $found = 0;
+        foreach my $dir (@out)
+	{
+	    my $dirM = quotemeta($dir);
+            $found++, last if ($d eq $dir || $d =~ m!^${dirM}\/!);
         }
+	print "Adding $d\n" if ($debug && !$found);
         push @out, $d if (!$found);
     } else {
-        push @out, $d if (!grep(/^$d$/, @out));
+	print "Adding: $d\n" if ($debug);
+        push(@out, $d);
     }
 }
+
 print "@out\n"
+
+# EOF
