@@ -56,7 +56,7 @@ function PrefRec(collection, id) {
 }
 PrefRec.prototype = {
   __proto__: CryptoWrapper.prototype,
-  _logName: "Record.Pref",
+  _logName: "Sync.Record.Pref",
 };
 
 Utils.deferGetSet(PrefRec, "cleartext", ["value"]);

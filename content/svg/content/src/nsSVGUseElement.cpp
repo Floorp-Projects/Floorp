@@ -339,7 +339,9 @@ nsSVGUseElement::CreateAnonymousContent()
       return nsnull;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::svg, nsnull, kNameSpaceID_SVG);
+    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::svg, nsnull,
+                                            kNameSpaceID_SVG,
+                                            nsIDOMNode::ELEMENT_NODE);
     if (!nodeInfo)
       return nsnull;
 
@@ -478,14 +480,14 @@ nsSVGUseElement::UnlinkSource()
 // nsSVGElement methods
 
 /* virtual */ gfxMatrix
-nsSVGUseElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
+nsSVGUseElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
 {
   // 'transform' attribute:
   gfxMatrix matrix = nsSVGUseElementBase::PrependLocalTransformTo(aMatrix);
 
   // now translate by our 'x' and 'y':
   float x, y;
-  GetAnimatedLengthValues(&x, &y, nsnull);
+  const_cast<nsSVGUseElement*>(this)->GetAnimatedLengthValues(&x, &y, nsnull);
   return matrix.PreMultiply(gfxMatrix().Translate(gfxPoint(x, y)));
 }
 

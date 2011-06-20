@@ -551,7 +551,10 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
 
     case STATE_ACTIVE:
       {
-        ApplyEarlyEnd(sampleTime);
+        // Ending early will change the interval but we don't notify dependents
+        // of the change until we have closed off the current interval (since we
+        // don't want dependencies to un-end our early end).
+        PRBool didApplyEarlyEnd = ApplyEarlyEnd(sampleTime);
 
         if (mCurrentInterval->End()->Time() <= sampleTime) {
           nsSMILInterval newInterval;
@@ -567,15 +570,23 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
           }
           mCurrentRepeatIteration = 0;
           mOldIntervals.AppendElement(mCurrentInterval.forget());
-          // We must update mOldIntervals before calling SampleFillValue
           SampleFillValue();
           if (mElementState == STATE_WAITING) {
             mCurrentInterval = new nsSMILInterval(newInterval);
+          }
+          // We are now in a consistent state to dispatch notifications
+          if (didApplyEarlyEnd) {
+            NotifyChangedInterval(
+                mOldIntervals[mOldIntervals.Length() - 1], PR_FALSE, PR_TRUE);
+          }
+          if (mElementState == STATE_WAITING) {
             NotifyNewInterval();
           }
           FilterHistory();
           stateChanged = PR_TRUE;
         } else {
+          NS_ABORT_IF_FALSE(!didApplyEarlyEnd,
+              "We got an early end, but didn't end");
           nsSMILTime beginTime = mCurrentInterval->Begin()->Time().GetMillis();
           NS_ASSERTION(aContainerTime >= beginTime,
                        "Sample time should not precede current interval");
@@ -626,7 +637,7 @@ nsSMILTimedElement::HandleContainerTimeChange()
   // the nsSMILTimeValueSpec we'll check if anything has changed and if not, we
   // won't go any further.
   if (mElementState == STATE_WAITING || mElementState == STATE_ACTIVE) {
-    NotifyChangedInterval();
+    NotifyChangedInterval(mCurrentInterval, PR_FALSE, PR_FALSE);
   }
 }
 
@@ -1237,12 +1248,14 @@ nsSMILTimedElement::ClearIntervalProgress()
   mOldIntervals.Clear();
 }
 
-void
+PRBool
 nsSMILTimedElement::ApplyEarlyEnd(const nsSMILTimeValue& aSampleTime)
 {
   // This should only be called within DoSampleAt as a helper function
   NS_ABORT_IF_FALSE(mElementState == STATE_ACTIVE,
       "Unexpected state to try to apply an early end");
+
+  PRBool updated = PR_FALSE;
 
   // Only apply an early end if we're not already ending.
   if (mCurrentInterval->End()->Time() > aSampleTime) {
@@ -1258,9 +1271,10 @@ nsSMILTimedElement::ApplyEarlyEnd(const nsSMILTimeValue& aSampleTime)
       } else {
         mCurrentInterval->SetEnd(*earlyEnd);
       }
-      NotifyChangedInterval();
+      updated = PR_TRUE;
     }
   }
+  return updated;
 }
 
 namespace
@@ -1815,22 +1829,23 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
 
     } else {
 
-      PRBool changed = PR_FALSE;
+      PRBool beginChanged = PR_FALSE;
+      PRBool endChanged   = PR_FALSE;
 
       if (mElementState != STATE_ACTIVE &&
           !updatedInterval.Begin()->SameTimeAndBase(
             *mCurrentInterval->Begin())) {
         mCurrentInterval->SetBegin(*updatedInterval.Begin());
-        changed = PR_TRUE;
+        beginChanged = PR_TRUE;
       }
 
       if (!updatedInterval.End()->SameTimeAndBase(*mCurrentInterval->End())) {
         mCurrentInterval->SetEnd(*updatedInterval.End());
-        changed = PR_TRUE;
+        endChanged = PR_TRUE;
       }
 
-      if (changed || aForceChangeNotice) {
-        NotifyChangedInterval();
+      if (beginChanged || endChanged || aForceChangeNotice) {
+        NotifyChangedInterval(mCurrentInterval, beginChanged, endChanged);
       }
     }
 
@@ -1844,7 +1859,7 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
       if (!mCurrentInterval->End()->SameTimeAndBase(*mCurrentInterval->Begin()))
       {
         mCurrentInterval->SetEnd(*mCurrentInterval->Begin());
-        NotifyChangedInterval();
+        NotifyChangedInterval(mCurrentInterval, PR_FALSE, PR_TRUE);
       }
       // The transition to the postactive state will take place on the next
       // sample (along with firing end events, clearing intervals etc.)
@@ -2023,18 +2038,27 @@ nsSMILTimedElement::NotifyNewInterval()
 }
 
 void
-nsSMILTimedElement::NotifyChangedInterval()
+nsSMILTimedElement::NotifyChangedInterval(nsSMILInterval* aInterval,
+                                          PRBool aBeginObjectChanged,
+                                          PRBool aEndObjectChanged)
 {
-  NS_ABORT_IF_FALSE(mCurrentInterval,
-      "Attempting to notify dependents of a changed interval but the interval "
-      "is not set--perhaps we should be deleting the interval instead?");
+  NS_ABORT_IF_FALSE(aInterval, "Null interval for change notification");
 
   nsSMILTimeContainer* container = GetTimeContainer();
   if (container) {
     container->SyncPauseTime();
   }
 
-  mCurrentInterval->NotifyChanged(container);
+  // Copy the instance times list since notifying the instance times can result
+  // in a chain reaction whereby our own interval gets deleted along with its
+  // instance times.
+  InstanceTimeList times;
+  aInterval->GetDependentTimes(times);
+
+  for (PRUint32 i = 0; i < times.Length(); ++i) {
+    times[i]->HandleChangedInterval(container, aBeginObjectChanged,
+                                    aEndObjectChanged);
+  }
 }
 
 void

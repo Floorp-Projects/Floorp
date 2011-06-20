@@ -45,14 +45,19 @@ function createGroupItemWithBlankTabs(win, width, height, padding, numNewTabs, a
 
 // ----------
 function closeGroupItem(groupItem, callback) {
-  groupItem.addSubscriber(groupItem, "groupHidden", function() {
-    groupItem.removeSubscriber(groupItem, "groupHidden");
-    groupItem.addSubscriber(groupItem, "close", function() {
-      groupItem.removeSubscriber(groupItem, "close");
-      callback();
-    });
-    groupItem.closeHidden();
+  groupItem.addSubscriber(groupItem, "close", function () {
+    groupItem.removeSubscriber(groupItem, "close");
+    if ("function" == typeof callback)
+      executeSoon(callback);
   });
+
+  if (groupItem.getChildren().length) {
+    groupItem.addSubscriber(groupItem, "groupHidden", function () {
+      groupItem.removeSubscriber(groupItem, "groupHidden");
+      groupItem.closeHidden();
+    });
+  }
+
   groupItem.closeAll();
 }
 
@@ -290,6 +295,9 @@ function whenWindowStateReady(win, callback) {
 
 // ----------
 function newWindowWithState(state, callback) {
+  const ss = Cc["@mozilla.org/browser/sessionstore;1"]
+             .getService(Ci.nsISessionStore);
+
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
@@ -309,13 +317,17 @@ function restoreTab(callback, index, win) {
   let tab = win.undoCloseTab(index || 0);
   let tabItem = tab._tabViewTabItem;
 
+  let finalize = function () {
+    afterAllTabsLoaded(function () callback(tab), win);
+  };
+
   if (tabItem._reconnected) {
-    afterAllTabsLoaded(callback, win);
+    finalize();
     return;
   }
 
   tab._tabViewTabItem.addSubscriber(tab, "reconnected", function onReconnected() {
     tab._tabViewTabItem.removeSubscriber(tab, "reconnected");
-    afterAllTabsLoaded(callback, win);
+    finalize();
   });
 }

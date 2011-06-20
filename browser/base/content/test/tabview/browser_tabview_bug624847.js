@@ -41,20 +41,6 @@ function test() {
     return createTab('about:blank');
   }
 
-  let restoreTab = function (callback) {
-    let tab = undoCloseTab(0);
-
-    if (tab._tabViewTabItem._reconnected) {
-      afterAllTabsLoaded(callback);
-      return;
-    }
-
-    tab._tabViewTabItem.addSubscriber(tab, 'reconnected', function () {
-      tab._tabViewTabItem.removeSubscriber(tab, 'reconnected');
-      afterAllTabsLoaded(callback);
-    });
-  }
-
   let finishTest = function () {
     prefix = 'finish';
     assertValidPrerequisites();

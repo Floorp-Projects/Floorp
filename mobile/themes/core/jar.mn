@@ -3,6 +3,7 @@
 chrome.jar:
 % skin browser classic/1.0 %skin/ os!=Android
 % skin browser classic/1.0 %skin/ os=Android osversion<2.3
+% skin browser froyo/1.0 %skin/
 # NOTE: If you add a new file here, you'll need to add it to the gingerbread
 # and honeycomb sections at the bottom of this file
   skin/aboutCertError.css                   (aboutCertError.css)
@@ -122,9 +123,9 @@ chrome.jar:
   skin/images/unmute-hdpi.png               (images/unmute-hdpi.png)
   skin/images/scrubber-hdpi.png             (images/scrubber-hdpi.png)
 
-#ifdef ANDROID
 chrome.jar:
 % skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4
+% skin browser gingerbread/1.0 %skin/gingerbread/
   skin/gingerbread/aboutCertError.css                   (aboutCertError.css)
   skin/gingerbread/aboutPage.css                        (aboutPage.css)
   skin/gingerbread/about.css                            (about.css)
@@ -242,6 +243,7 @@ chrome.jar:
 
 chrome.jar:
 % skin browser classic/1.0 %skin/honeycomb/ os=Android osversion>=3.0
+% skin browser honeycomb/1.0 %skin/honeycomb/
   skin/honeycomb/aboutCertError.css                   (aboutCertError.css)
   skin/honeycomb/aboutPage.css                        (aboutPage.css)
   skin/honeycomb/about.css                            (about.css)
@@ -359,4 +361,3 @@ chrome.jar:
   skin/honeycomb/images/unmute-hdpi.png               (honeycomb/images/unmute-hdpi.png)
   skin/honeycomb/images/scrubber-hdpi.png             (honeycomb/images/scrubber-hdpi.png)
 
-#endif

@@ -22,61 +22,68 @@ function onTabViewLoadedAndShown() {
   ok(TabView.isVisible(), "Tab View is visible");
 
   // Establish initial state
-  contentWindow = document.getElementById("tab-view").contentWindow;  
+  contentWindow = document.getElementById("tab-view").contentWindow;
   verifyCleanState("start");
-  
+
   // register a clean up for private browsing just in case
   registerCleanupFunction(function() {
     pb.privateBrowsingEnabled = false;
   });
-  
+
   // create a group
   let box = new contentWindow.Rect(20, 20, 180, 180);
   let groupItem = new contentWindow.GroupItem([], {bounds: box, title: "test1"});
-  let id = groupItem.id; 
+  let id = groupItem.id;
   is(contentWindow.GroupItems.groupItems.length, 2, "we now have two groups");
   registerCleanupFunction(function() {
     contentWindow.GroupItems.groupItem(id).close();
   });
-  
+
   // make it the active group so new tabs will be added to it
   contentWindow.UI.setActive(groupItem);
-  
+
   // collect the group titles
   let count = contentWindow.GroupItems.groupItems.length;
   for (let a = 0; a < count; a++) {
     let gi = contentWindow.GroupItems.groupItems[a];
     groupTitles[a] = gi.getTitle();
   }
-  
+
   // Create a second tab
-  gBrowser.addTab("about:robots");
+  gBrowser.loadOneTab("about:robots", { inBackground: false });
   is(gBrowser.tabs.length, 2, "we now have 2 tabs");
   registerCleanupFunction(function() {
     gBrowser.removeTab(gBrowser.tabs[1]);
   });
 
   afterAllTabsLoaded(function() {
-    // Get normal tab urls
-    for (let a = 0; a < gBrowser.tabs.length; a++)
-      normalURLs.push(gBrowser.tabs[a].linkedBrowser.currentURI.spec);
+    showTabView(function() {
+      // Get normal tab urls
+      for (let a = 0; a < gBrowser.tabs.length; a++)
+        normalURLs.push(gBrowser.tabs[a].linkedBrowser.currentURI.spec);
 
-    // verify that we're all set up for our test
-    verifyNormal();
+      // verify that we're all set up for our test
+      verifyNormal();
 
-    // go into private browsing and make sure Tab View becomes hidden
-    togglePBAndThen(function() {
-      ok(!TabView.isVisible(), "Tab View is no longer visible");
-      verifyPB();
-      
-      // exit private browsing and make sure Tab View is shown again
+      // go into private browsing and make sure Tab View becomes hidden
       togglePBAndThen(function() {
-        ok(TabView.isVisible(), "Tab View is visible again");
-        verifyNormal();
+        whenTabViewIsHidden(function() {
+          ok(!TabView.isVisible(), "Tab View is no longer visible");
 
-        hideTabView(onTabViewHidden);
+          verifyPB();
+
+          // exit private browsing and make sure Tab View is shown again
+          togglePBAndThen(function() {
+            whenTabViewIsShown(function() {
+              ok(TabView.isVisible(), "Tab View is visible again");
+              verifyNormal();
+
+              hideTabView(onTabViewHidden);
+            });
+          });
+        });
       });
-    });
+    }); 
   });
 }
 

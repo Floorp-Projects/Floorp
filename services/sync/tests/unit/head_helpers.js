@@ -1,5 +1,6 @@
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/engines.js");
 var btoa;
 
 let provider = {
@@ -233,3 +234,91 @@ function do_check_throws(aFunc, aResult, aStack)
   }
   do_throw("Expected result " + aResult + ", none thrown.", aStack);
 }
+
+/*
+ * A fake engine implementation.
+ * This is used all over the place.
+ * 
+ * Complete with record, store, and tracker implementations.
+ */
+
+function RotaryRecord(collection, id) {
+  CryptoWrapper.call(this, collection, id);
+}
+RotaryRecord.prototype = {
+  __proto__: CryptoWrapper.prototype
+};
+Utils.deferGetSet(RotaryRecord, "cleartext", ["denomination"]);
+
+function RotaryStore() {
+  Store.call(this, "Rotary");
+  this.items = {};
+}
+RotaryStore.prototype = {
+  __proto__: Store.prototype,
+
+  create: function Store_create(record) {
+    this.items[record.id] = record.denomination;
+  },
+
+  remove: function Store_remove(record) {
+    delete this.items[record.id];
+  },
+
+  update: function Store_update(record) {
+    this.items[record.id] = record.denomination;
+  },
+
+  itemExists: function Store_itemExists(id) {
+    return (id in this.items);
+  },
+
+  createRecord: function(id, collection) {
+    let record = new RotaryRecord(collection, id);
+    record.denomination = this.items[id] || "Data for new record: " + id;
+    return record;
+  },
+
+  changeItemID: function(oldID, newID) {
+    this.items[newID] = this.items[oldID];
+    delete this.items[oldID];
+  },
+
+  getAllIDs: function() {
+    let ids = {};
+    for (let id in this.items) {
+      ids[id] = true;
+    }
+    return ids;
+  },
+
+  wipe: function() {
+    this.items = {};
+  }
+};
+
+function RotaryTracker() {
+  Tracker.call(this, "Rotary");
+}
+RotaryTracker.prototype = {
+  __proto__: Tracker.prototype
+};
+
+
+function RotaryEngine() {
+  SyncEngine.call(this, "Rotary");
+}
+RotaryEngine.prototype = {
+  __proto__: SyncEngine.prototype,
+  _storeObj: RotaryStore,
+  _trackerObj: RotaryTracker,
+  _recordObj: RotaryRecord,
+
+  _findDupe: function(item) {
+    for (let [id, value] in Iterator(this._store.items)) {
+      if (item.denomination == value) {
+        return id;
+      }
+    }
+  }
+};

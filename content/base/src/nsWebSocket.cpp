@@ -1065,7 +1065,7 @@ nsWebSocket::SetProtocol(const nsString& aProtocol)
   PRUint32 length = aProtocol.Length();
   PRUint32 i;
   for (i = 0; i < length; ++i) {
-    if (aProtocol[i] < static_cast<PRUnichar>(0x0020) ||
+    if (aProtocol[i] < static_cast<PRUnichar>(0x0021) ||
         aProtocol[i] > static_cast<PRUnichar>(0x007E)) {
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
