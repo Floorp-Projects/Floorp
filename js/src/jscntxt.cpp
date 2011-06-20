@@ -1713,4 +1713,15 @@ LeaveTrace(JSContext *cx)
 #endif
 }
 
+bool
+CanLeaveTrace(JSContext *cx)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+#ifdef JS_TRACER
+    return JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit != NULL;
+#else
+    return false;
+#endif
+}
+
 } /* namespace js */

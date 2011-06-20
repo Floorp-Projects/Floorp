@@ -53,6 +53,8 @@
 #include "jslock.h"
 #include "jsvalue.h"
 
+#include "vm/String.h"
+
 /* Engine-internal extensions of jsid */
 
 static JS_ALWAYS_INLINE jsid

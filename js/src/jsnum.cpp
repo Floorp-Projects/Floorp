@@ -76,6 +76,8 @@
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
+#include "vm/String-inl.h"
+
 using namespace js;
 
 #ifndef JS_HAVE_STDINT_H /* Native support is innocent until proven guilty. */
