@@ -54,6 +54,13 @@ IS_COMPONENT = 1
 
 LIBRARY_NAME = telemetry
 
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla = \
+  Telemetry.h \
+  TelemetryHistograms.h \
+  $(NULL)
+
 XPIDLSRCS = \
   nsITelemetry.idl \
   $(NULL)
