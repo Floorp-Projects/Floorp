@@ -962,6 +962,9 @@ Debug::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
 
     // Each debugger-debuggee relation must be stored in up to three places.
     // JSCompartment::addDebuggee enables debug mode if needed.
+    AutoCompartment ac(cx, obj);
+    if (!ac.enter())
+        return false;
     GlobalObject::DebugVector *v = obj->getOrCreateDebuggers(cx);
     if (!v || !v->append(this)) {
         js_ReportOutOfMemory(cx);
