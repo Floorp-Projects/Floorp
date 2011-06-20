@@ -1976,8 +1976,9 @@ var XPIProvider = {
 
           try {
             fis.init(jsonfile, -1, 0, 0);
-            aManifests[aLocation.name][id] = json.decodeFromStream(fis,
-                                                                   jsonfile.fileSize);
+            let addonObj = json.decodeFromStream(fis, jsonfile.fileSize);
+            aManifests[aLocation.name][id] = new AddonInternal();
+            aManifests[aLocation.name][id].fromJSON(addonObj);
             existingAddonID = aManifests[aLocation.name][id].existingAddonID || id;
           }
           catch (e) {
@@ -2540,6 +2541,7 @@ var XPIProvider = {
 
       // If there is migration data then apply it.
       if (aMigrateData) {
+        LOG("Migrating data from old database");
         // A theme's disabled state is determined by the selected theme
         // preference which is read in loadManifestFromRDF
         if (newAddon.type != "theme")
@@ -2553,6 +2555,7 @@ var XPIProvider = {
         // The version property isn't a perfect check for this but covers the
         // vast majority of cases.
         if (aMigrateData.version == newAddon.version) {
+          LOG("Migrating compatibility info");
           if ("targetApplications" in aMigrateData)
             newAddon.applyCompatibilityUpdate(aMigrateData, true);
         }
@@ -6771,6 +6774,18 @@ AddonInternal.prototype = {
     }
 
     return obj;
+  },
+
+  /**
+   * fromJSON should be called to set the properties of this AddonInternal to
+   * those from the passed in object. It is essentially the inverse of toJSON.
+   *
+   * @param  aObj
+   *         A JS object containing properties to be set on this AddonInternal
+   */
+  fromJSON: function(aObj) {
+    for (let prop in aObj)
+      this[prop] = aObj[prop];
   }
 };
 
