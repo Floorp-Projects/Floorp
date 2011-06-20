@@ -106,13 +106,10 @@ static const char* const sEventNames[] = {
   "MozTouchMove",
   "MozTouchUp",
   "MozScrolledAreaChanged",
-  "transitionend"
-#ifdef MOZ_CSS_ANIMATIONS
-  ,
+  "transitionend",
   "animationstart",
   "animationend",
   "animationiteration"
-#endif
 };
 
 static char *sPopupAllowedEvents;
@@ -820,7 +817,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       break;
     }
-#ifdef MOZ_CSS_ANIMATIONS
     case NS_ANIMATION_EVENT:
     {
       nsAnimationEvent* oldAnimationEvent =
@@ -831,7 +827,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       break;
     }
-#endif
     case NS_MOZTOUCH_EVENT:
     {
       newEvent = new nsMozTouchEvent(PR_FALSE, msg, nsnull,
@@ -1363,14 +1358,12 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_MozScrolledAreaChanged];
   case NS_TRANSITION_END:
     return sEventNames[eDOMEvents_transitionend];
-#ifdef MOZ_CSS_ANIMATIONS
   case NS_ANIMATION_START:
     return sEventNames[eDOMEvents_animationstart];
   case NS_ANIMATION_END:
     return sEventNames[eDOMEvents_animationend];
   case NS_ANIMATION_ITERATION:
     return sEventNames[eDOMEvents_animationiteration];
-#endif
   default:
     break;
   }
