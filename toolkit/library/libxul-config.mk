@@ -139,6 +139,7 @@ COMPONENT_LIBS += \
 	appcomps \
 	composer \
 	jetpack_s \
+	telemetry \
 	$(NULL)
 
 ifdef BUILD_CTYPES

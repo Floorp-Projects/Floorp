@@ -44,14 +44,38 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = telemetry
+XPIDL_MODULE = telemetry
+MODULE_NAME = telemetry
+GRE_MODULE = 1
+
+LIBXUL_LIBRARY = 1
+EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
+
+LIBRARY_NAME = telemetry
+
+XPIDLSRCS = \
+  nsITelemetry.idl \
+  $(NULL)
 
 EXTRA_COMPONENTS = \
   TelemetryPing.manifest \
   TelemetryPing.js \
   $(NULL)
 
+CPPSRCS = \
+  Telemetry.cpp \
+  $(NULL)
+
+EXTRA_DSO_LDOPTS += \
+  $(MOZ_COMPONENT_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NULL)
+
 ifdef ENABLE_TESTS
 DIRS += tests
 endif
 
+include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
