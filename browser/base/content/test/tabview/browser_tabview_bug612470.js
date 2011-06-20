@@ -35,10 +35,7 @@ function test() {
       is(win.gBrowser.visibleTabs.length, 1, "There is one tab displayed");
       is(cw.GroupItems.groupItems.length, 2, "There are two groups still");
 
-      showTabView(function () {
-        is(cw.GroupItems.groupItems.length, 1, "There is now only one group");
-        waitForFocus(finish);
-      }, win);
+      waitForFocus(finish);
     });
   };
 

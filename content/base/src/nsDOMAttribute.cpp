@@ -72,7 +72,8 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
   : nsIAttribute(aAttrMap, aNodeInfo, aNsAware), mValue(aValue), mChild(nsnull)
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
-
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ATTRIBUTE_NODE,
+                    "Wrong nodeType");
 
   // We don't add a reference to our content. It will tell us
   // to drop our reference when it goes away.
@@ -140,7 +141,6 @@ NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
                                  nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Attr)
@@ -193,7 +193,8 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
   nsCOMPtr<nsINodeInfo> newNodeInfo;
   newNodeInfo = aDocument->NodeInfoManager()->
     GetNodeInfo(mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
-                mNodeInfo->NamespaceID());
+                mNodeInfo->NamespaceID(),
+                nsIDOMNode::ATTRIBUTE_NODE);
   NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
   NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
   mNodeInfo.swap(newNodeInfo);
@@ -204,7 +205,7 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
 NS_IMETHODIMP
 nsDOMAttribute::GetName(nsAString& aName)
 {
-  aName = mNodeInfo->QualifiedName();
+  aName = NodeName();
   return NS_OK;
 }
 
@@ -499,40 +500,81 @@ nsDOMAttribute::GetBaseURI() const
   return parent ? parent->GetBaseURI() : nsnull;
 }
 
-PRBool
-nsDOMAttribute::IsEqualNode(nsINode* aOther)
+NS_IMETHODIMP
+nsDOMAttribute::GetDOMBaseURI(nsAString &aURI)
 {
-  if (!aOther || !aOther->IsNodeOfType(eATTRIBUTE))
-    return PR_FALSE;
-
-  nsDOMAttribute *other = static_cast<nsDOMAttribute*>(aOther);
-
-  // Prefix, namespace URI, local name, node name check.
-  if (!mNodeInfo->Equals(other->NodeInfo())) {
-    return PR_FALSE;
-  }
-
-  // Value check
-  // Checks not needed:  Child nodes, attributes.
-  nsAutoString ourValue, otherValue;
-  GetValue(ourValue);
-  other->GetValue(otherValue);
-
-  return ourValue.Equals(otherValue);
+  return nsINode::GetDOMBaseURI(aURI);
 }
 
-void
+NS_IMETHODIMP
+nsDOMAttribute::CompareDocumentPosition(nsIDOMNode *other,
+                                        PRUint16 *aResult)
+{
+  return nsINode::CompareDocumentPosition(other, aResult);
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther, PRBool* aResult)
+{
+  return nsINode::IsEqualNode(aOther, aResult);
+}
+
+NS_IMETHODIMP
 nsDOMAttribute::GetTextContent(nsAString &aTextContent)
 {
-  GetNodeValue(aTextContent);
+  return GetNodeValue(aTextContent);
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
 {
   return SetNodeValue(aTextContent);
 }
 
+NS_IMETHODIMP
+nsDOMAttribute::IsSameNode(nsIDOMNode *other, PRBool *aResult)
+{
+  *aResult = other == this;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::LookupPrefix(const nsAString & namespaceURI,
+                             nsAString & aResult)
+{
+  SetDOMStringToNull(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::IsDefaultNamespace(const nsAString & namespaceURI,
+                                   PRBool *aResult)
+{
+  *aResult = namespaceURI.IsEmpty();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::LookupNamespaceURI(const nsAString & prefix,
+                              nsAString & aResult)
+{
+  SetDOMStringToNull(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::SetUserData(const nsAString & key,
+                            nsIVariant *data, nsIDOMUserDataHandler *handler,
+                            nsIVariant **aResult)
+{
+  return nsINode::SetUserData(key, data, handler, aResult);
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::GetUserData(const nsAString & key, nsIVariant **aResult)
+{
+  return nsINode::GetUserData(key, aResult);
+}
 
 NS_IMETHODIMP
 nsDOMAttribute::GetIsId(PRBool* aReturn)

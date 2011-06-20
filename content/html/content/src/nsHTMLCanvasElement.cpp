@@ -231,7 +231,7 @@ nsHTMLCanvasElement::ExtractData(const nsAString& aType,
 
  try_again:
   if (mCurrentContext) {
-    rv = mCurrentContext->GetInputStream(nsPromiseFlatCString(encoderType).get(),
+    rv = mCurrentContext->GetInputStream(encoderType.get(),
                                          nsPromiseFlatString(aOptions).get(),
                                          getter_AddRefs(imgStream));
   } else {
@@ -239,7 +239,7 @@ nsHTMLCanvasElement::ExtractData(const nsAString& aType,
     nsCString enccid("@mozilla.org/image/encoder;2?type=");
     enccid += encoderType;
 
-    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(nsPromiseFlatCString(enccid).get(), &rv);
+    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get(), &rv);
     if (NS_SUCCEEDED(rv) && encoder) {
       rv = encoder->InitFromData(emptyCanvas->Data(),
                                  size.width * size.height * 4,
@@ -398,7 +398,7 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
 
   nsresult rv;
   nsCOMPtr<nsICanvasRenderingContextInternal> ctx =
-    do_CreateInstance(nsPromiseFlatCString(ctxString).get(), &rv);
+    do_CreateInstance(ctxString.get(), &rv);
   if (rv == NS_ERROR_OUT_OF_MEMORY) {
     *aContext = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
