@@ -1478,24 +1478,15 @@ nsBlockFrame::ComputeOverflowAreas(const nsHTMLReflowState& aReflowState,
       areas.UnionAllWith(mBullet->GetRect());
     }
 
-    // Factor in the bottom edge of the children. Child frames
-    // will be added to the overflow area as we iterate through the lines,
-    // but their margins won't, so we need to account for bottom margins
-    // here. If we're a scrolled block then we also need to account
-    // for the scrollframe's padding, which is logically below the
-    // bottom margins of the children.
-    nscoord bottomEdgeOfContents = aBottomEdgeOfChildren;
-    if (GetStyleContext()->GetPseudo() == nsCSSAnonBoxes::scrolledContent) {
-      // We're a scrolled frame; the scrollframe's padding should be added
-      // to the bottom edge of the children
-      bottomEdgeOfContents += aReflowState.mComputedPadding.bottom;
-    }
+    // Factor in the bottom edge of the children.  Child frames will be added
+    // to the overflow area as we iterate through the lines, but their margins
+    // won't, so we need to account for bottom margins here.
     // REVIEW: For now, we do this for both visual and scrollable area,
     // although when we make scrollable overflow area not be a subset of
     // visual, we can change this.
     NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
       nsRect& o = areas.Overflow(otype);
-      o.height = NS_MAX(o.YMost(), bottomEdgeOfContents) - o.y;
+      o.height = NS_MAX(o.YMost(), aBottomEdgeOfChildren) - o.y;
     }
   }
 #ifdef NOISY_COMBINED_AREA
