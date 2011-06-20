@@ -48,12 +48,5 @@ XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk
 
-# Preprocessor.py won't recognize DEBUG as defined if you just pass -DDEBUG.
-# See bug 664313. (Also, yay for consistency with DEBUG v. MOZ_DEBUG.)
-SYNCDEFINES=
-ifdef MOZ_DEBUG
-SYNCDEFINES += -DDEBUG=1
-endif
-
 libs:: unit/head_appinfo.js.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(SYNCDEFINES) $^ > $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/head_appinfo.js
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $^ > $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/head_appinfo.js
