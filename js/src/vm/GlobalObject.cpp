@@ -227,6 +227,7 @@ GlobalObject::getDebuggers()
 GlobalObject::DebugVector *
 GlobalObject::getOrCreateDebuggers(JSContext *cx)
 {
+    assertSameCompartment(cx, this);
     DebugVector *vec = getDebuggers();
     if (vec)
         return vec;
