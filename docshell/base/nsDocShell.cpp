@@ -3913,6 +3913,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         case NS_ERROR_DOCUMENT_NOT_CACHED:
             // Doc failed to load because we are offline and the cache does not
             // contain a copy of the document.
+        case NS_ERROR_OFFLINE:
+            // Doc failed to load because we are offline
             error.AssignLiteral("netOffline");
             break;
         case NS_ERROR_DOCUMENT_IS_PRINTMODE:
@@ -6278,6 +6280,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                  aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
                  aStatus == NS_ERROR_NET_INTERRUPT ||
                  aStatus == NS_ERROR_NET_RESET ||
+                 aStatus == NS_ERROR_OFFLINE ||
                  aStatus == NS_ERROR_MALWARE_URI ||
                  aStatus == NS_ERROR_PHISHING_URI ||
                  aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||

@@ -71,6 +71,5 @@ interface nsIDOMDeviceOrientationEvent : nsIDOMEvent
   readonly attribute double beta;
   readonly attribute double gamma;
   readonly attribute boolean absolute;
-  readonly attribute boolean compassCalibrated;
 };
 

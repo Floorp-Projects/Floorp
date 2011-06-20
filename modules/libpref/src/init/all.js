@@ -1812,7 +1812,7 @@ pref("gfx.font_rendering.cleartype_params.rendering_mode", -1);
 // (i.e. a specific rendering_mode has not been explicitly set).
 // Currently we apply this setting to the sans-serif Microsoft "core Web fonts".
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
-     "Arial,Courier New,Segoe UI,Tahoma,Trebuchet MS,Verdana");
+     "Arial,Consolas,Courier New,Microsoft Sans Serif,Segoe UI,Tahoma,Trebuchet MS,Verdana");
 // The maximum size at which we will force GDI classic mode using
 // force_gdi_classic_for_families.
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size", 15);
@@ -3204,7 +3204,7 @@ pref("layers.prefer-d3d9", false);
 pref("geo.enabled", true);
 
 // Enable/Disable the orientation API for content
-pref("accelerometer.enabled", true);
+pref("device.motion.enabled", true);
 
 // Enable/Disable HTML5 parser
 pref("html5.parser.enable", true);

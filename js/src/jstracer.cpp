@@ -13672,22 +13672,6 @@ TraceRecorder::createThis(JSObject& ctor, LIns* ctor_ins, LIns** thisobj_insp)
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc, bool constructing)
 {
-    /*
-     * The function's identity (JSFunction and therefore JSScript) is guarded,
-     * so we can optimize away the function call if the corresponding script is
-     * empty. No need to worry about crossing globals or relocating argv, even,
-     * in this case!
-     */
-    if (fun->script()->isEmpty()) {
-        LIns* rval_ins;
-        if (constructing)
-            CHECK_STATUS(createThis(fval.toObject(), get(&fval), &rval_ins));
-        else
-            rval_ins = w.immiUndefined();
-        stack(-2 - argc, rval_ins);
-        return RECORD_CONTINUE;
-    }
-
     if (fval.toObject().getGlobal() != globalObj)
         RETURN_STOP("JSOP_CALL or JSOP_NEW crosses global scopes");
 

@@ -128,8 +128,13 @@ nsSMILInstanceTime::HandleChangedInterval(
     PRBool aBeginObjectChanged,
     PRBool aEndObjectChanged)
 {
-  NS_ABORT_IF_FALSE(mBaseInterval,
-      "Got call to HandleChangedInterval on an independent instance time.");
+  // It's possible a sequence of notifications might cause our base interval to
+  // be updated and then deleted. Furthermore, the delete might happen whilst
+  // we're still in the queue to be notified of the change. In any case, if we
+  // don't have a base interval, just ignore the change.
+  if (!mBaseInterval)
+    return;
+
   NS_ABORT_IF_FALSE(mCreator, "Base interval is set but creator is not.");
 
   if (mVisited) {

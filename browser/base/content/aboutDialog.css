@@ -21,6 +21,9 @@
 #version {
   margin-top: 10px;
   -moz-margin-start: 0;
+  -moz-user-select: text;
+  -moz-user-focus: normal;
+  cursor: text;
 }
 
 #distribution,
