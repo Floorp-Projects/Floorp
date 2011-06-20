@@ -2270,6 +2270,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     if (comp) {
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
             (*c)->markCrossCompartmentWrappers(&gcmarker);
+        Debug::markCrossCompartmentDebugObjectReferents(&gcmarker);
     } else {
         js_MarkScriptFilenames(rt);
     }
