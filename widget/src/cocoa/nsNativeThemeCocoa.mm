@@ -1143,10 +1143,7 @@ static const CellRenderSettings progressSettings[2][2] = {
     // Determined settings.
     {
       {
-        // TODO: for the moment, DrawCellWithSnapping doesn't handle NSZeroSize
-        // values in this array so we have to use negative values until
-        // bug 665571 is fixed.
-        NSMakeSize(-5, -5), // mini
+        NSZeroSize, // mini
         NSMakeSize(10, 0), // small
         NSMakeSize(16, 0)  // regular
       },
@@ -1164,10 +1161,7 @@ static const CellRenderSettings progressSettings[2][2] = {
     // There is no horizontal margin in regular undetermined size.
     {
       {
-        // TODO: for the moment, DrawCellWithSnapping doesn't handle NSZeroSize
-        // values in this array so we have to use negative values until
-        // bug 665571 is fixed.
-        NSMakeSize(-5, -5), // mini
+        NSZeroSize, // mini
         NSMakeSize(10, 0), // small
         NSMakeSize(16, 0)  // regular
       },
