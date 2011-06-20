@@ -185,6 +185,7 @@ CPPSRCS		= \
 		sharkctl.cpp \
 		GlobalObject.cpp \
 		Stack.cpp \
+		String.cpp \
 		$(NULL)
 
 # Changes to internal header files, used externally, massively slow down
@@ -267,8 +268,9 @@ EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
 		ArgumentsObject.h \
-		GlobalObject.h			\
-		Stack.h			\
+		GlobalObject.h	 \
+		Stack.h \
+		String.h \
 		StringObject.h \
 		$(NULL)
 

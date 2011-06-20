@@ -94,10 +94,10 @@
 #include "jsscopeinlines.h"
 #include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
 #include "assembler/wtf/Platform.h"
 
 #include "vm/Stack-inl.h"
+#include "vm/String-inl.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
