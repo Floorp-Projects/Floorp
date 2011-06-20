@@ -64,6 +64,8 @@ XPIDLSRCS =					\
 	nsIDOMCSSImportRule.idl			\
 	nsIDOMCSSMediaRule.idl			\
 	nsIDOMCSSMozDocumentRule.idl		\
+	nsIDOMMozCSSKeyframeRule.idl		\
+	nsIDOMMozCSSKeyframesRule.idl		\
 	nsIDOMCSSPageRule.idl			\
 	nsIDOMCSSStyleRule.idl			\
 	nsIDOMCSSUnknownRule.idl		\
@@ -72,12 +74,5 @@ XPIDLSRCS =					\
 	nsIDOMRect.idl				\
 	nsIDOMNSRGBAColor.idl			\
 	$(NULL)
-
-ifdef MOZ_CSS_ANIMATIONS
-XPIDLSRCS +=					\
-	nsIDOMMozCSSKeyframeRule.idl		\
-	nsIDOMMozCSSKeyframesRule.idl		\
-	$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk

@@ -251,7 +251,6 @@ public:
                                PRUint32 aLineNumber, // for error reporting
                                nsCSSSelectorList **aSelectorList);
 
-#ifdef MOZ_CSS_ANIMATIONS
   already_AddRefed<nsCSSKeyframeRule>
   ParseKeyframeRule(const nsSubstring& aBuffer,
                     nsIURI*            aURL,
@@ -261,7 +260,6 @@ public:
                                    nsIURI* aURL, // for error reporting
                                    PRUint32 aLineNumber, // for error reporting
                                    nsTArray<float>& aSelectorList);
-#endif
 
 protected:
   class nsAutoParseCompoundProperty;
@@ -361,11 +359,9 @@ protected:
                                   nsCSSValue& aValue);
 
   PRBool ParsePageRule(RuleAppendFunc aAppendFunc, void* aProcessData);
-#ifdef MOZ_CSS_ANIMATIONS
   PRBool ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   already_AddRefed<nsCSSKeyframeRule> ParseKeyframeRule();
   PRBool ParseKeyframeSelectorList(nsTArray<float>& aSelectorList);
-#endif
 
   enum nsSelectorParsingStatus {
     // we have parsed a selector and we saw a token that cannot be
@@ -536,9 +532,7 @@ protected:
                                         nsCSSValue* aValues,
                                         size_t aNumProperties);
   PRBool ParseTransition();
-#ifdef MOZ_CSS_ANIMATIONS
   PRBool ParseAnimation();
-#endif
 
   PRBool ParsePaint(nsCSSProperty aPropID);
   PRBool ParseDasharray();
@@ -1285,7 +1279,6 @@ CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
 }
 
 
-#ifdef MOZ_CSS_ANIMATIONS
 already_AddRefed<nsCSSKeyframeRule>
 CSSParserImpl::ParseKeyframeRule(const nsSubstring&  aBuffer,
                                  nsIURI*             aURI,
@@ -1334,7 +1327,6 @@ CSSParserImpl::ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
 
   return success;
 }
-#endif
 
 //----------------------------------------------------------------------
 
@@ -1566,11 +1558,9 @@ CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
     parseFunc = &CSSParserImpl::ParsePageRule;
     newSection = eCSSSection_General;
 
-#ifdef MOZ_CSS_ANIMATIONS
   } else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-keyframes")) {
     parseFunc = &CSSParserImpl::ParseKeyframesRule;
     newSection = eCSSSection_General;
-#endif
 
   } else {
     if (!NonMozillaVendorIdentifier(mToken.mIdent)) {
@@ -2302,7 +2292,6 @@ CSSParserImpl::ParsePageRule(RuleAppendFunc aAppendFunc, void* aData)
   return PR_FALSE;
 }
 
-#ifdef MOZ_CSS_ANIMATIONS
 PRBool
 CSSParserImpl::ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aData)
 {
@@ -2397,7 +2386,6 @@ CSSParserImpl::ParseKeyframeSelectorList(nsTArray<float>& aSelectorList)
     }
   }
 }
-#endif
 
 void
 CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
@@ -5557,10 +5545,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseMozTransformOrigin();
   case eCSSProperty_transition:
     return ParseTransition();
-#ifdef MOZ_CSS_ANIMATIONS
   case eCSSProperty_animation:
     return ParseAnimation();
-#endif
   case eCSSProperty_transition_property:
     return ParseTransitionProperty();
   case eCSSProperty_fill:
@@ -8363,7 +8349,6 @@ CSSParserImpl::ParseTransition()
   return PR_TRUE;
 }
 
-#ifdef MOZ_CSS_ANIMATIONS
 PRBool
 CSSParserImpl::ParseAnimation()
 {
@@ -8414,7 +8399,6 @@ CSSParserImpl::ParseAnimation()
   }
   return PR_TRUE;
 }
-#endif
 
 PRBool
 CSSParserImpl::ParseShadowItem(nsCSSValue& aValue, PRBool aIsBoxShadow)
@@ -8806,7 +8790,6 @@ nsCSSParser::ParseSelectorString(const nsSubstring&  aSelectorString,
     ParseSelectorString(aSelectorString, aURI, aLineNumber, aSelectorList);
 }
 
-#ifdef MOZ_CSS_ANIMATIONS
 already_AddRefed<nsCSSKeyframeRule>
 nsCSSParser::ParseKeyframeRule(const nsSubstring& aBuffer,
                                nsIURI*            aURI,
@@ -8826,4 +8809,3 @@ nsCSSParser::ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
     ParseKeyframeSelectorString(aSelectorString, aURI, aLineNumber,
                                 aSelectorList);
 }
-#endif
