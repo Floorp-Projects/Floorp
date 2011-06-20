@@ -47,20 +47,14 @@
 #include "nsStringGlue.h"
 #include "nsITelemetry.h"
 #include "Telemetry.h" 
-#include <map>
-#include <string.h>
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
+#include "nsBaseHashtable.h"
 
 namespace {
 
 using namespace base;
 using namespace mozilla;
-using namespace std;
-
-struct ltstr {
-  bool operator()(const char* s1, const char* s2) const {
-    return strcmp(s1, s2) < 0;
-  }
-};
 
 class TelemetryImpl : public nsITelemetry
 {
@@ -68,11 +62,14 @@ class TelemetryImpl : public nsITelemetry
   NS_DECL_NSITELEMETRY
 
 public:
+  TelemetryImpl();
+  ~TelemetryImpl();
 
 private:
-  // This is used to cache JS string->Telemetry::ID conversions
-  typedef map<const char*, Telemetry::ID, ltstr> NameHistogramMap;
-  NameHistogramMap mHistogramMap;
+  // This is used for speedy JS string->Telemetry::ID conversions
+  typedef nsBaseHashtableET<nsCharPtrHashKey, Telemetry::ID> CharPtrEntryType;
+  typedef nsTHashtable<CharPtrEntryType> HistogramMapType;
+  HistogramMapType mHistogramMap;
 };
 
 // A initializer to initialize histogram collection
@@ -238,6 +235,14 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
           && JS_DefineFunction (cx, obj, "snapshot", JSHistogram_Snapshot, 1, 0)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+TelemetryImpl::TelemetryImpl() {
+  mHistogramMap.Init(Telemetry::HistogramCount);
+}
+
+TelemetryImpl::~TelemetryImpl() {
+  mHistogramMap.Clear();
+}
+
 NS_IMETHODIMP
 TelemetryImpl::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, PRUint32 bucketCount, PRUint32 histogramType, JSContext *cx, jsval *ret)
 {
@@ -275,20 +280,26 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
 NS_IMETHODIMP
 TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *ret)
 {
-  // Cache names for log(N) lookup
+  // Cache names
   // Note the histogram names are statically allocated
-  if (Telemetry::HistogramCount && !mHistogramMap.size()) {
+  if (!mHistogramMap.Count()) {
     for (PRUint32 i = 0; i < Telemetry::HistogramCount; i++) {
-      mHistogramMap[gHistograms[i].id] = (Telemetry::ID) i;
+      CharPtrEntryType *entry = mHistogramMap.PutEntry(gHistograms[i].id);
+      if (NS_UNLIKELY(!entry)) {
+        mHistogramMap.Clear();
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      entry->mData = (Telemetry::ID) i;
     }
   }
 
-  NameHistogramMap::iterator it = mHistogramMap.find(PromiseFlatCString(name).get());
-  if (it == mHistogramMap.end())
+  CharPtrEntryType *entry = mHistogramMap.GetEntry(PromiseFlatCString(name).get());
+  if (!entry)
     return NS_ERROR_FAILURE;
   
   Histogram *h;
-  nsresult rv = GetHistogramByEnumId(it->second, &h);
+
+  nsresult rv = GetHistogramByEnumId(entry->mData, &h);
   if (NS_FAILED(rv))
     return rv;
 
