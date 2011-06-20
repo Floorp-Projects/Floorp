@@ -122,8 +122,9 @@ class NodeList : public NodeListBase {
     static JSBool item(JSContext *cx, uintN argc, jsval *vp);
     static JSBool namedItem(JSContext *cx, uintN argc, jsval *vp);
 
-    static JSBool namedItem(JSContext *cx, JSObject *obj, jsval *name, jsval *vp);
-    static bool namedItem(JSContext *cx, JSObject *proxy, jsid id, js::Value *vp, bool *result);
+    static bool hasNamedItem(jsid id);
+    static bool namedItem(JSContext *cx, JSObject *obj, jsval *name, nsISupports **result,
+                          nsWrapperCache **cache, bool *hasResult);
 
     static nsISupports *getNamedItem(T *list, const nsAString& aName, nsWrapperCache **aCache);
 

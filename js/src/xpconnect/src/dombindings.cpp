@@ -324,22 +324,44 @@ NodeList<T>::item(JSContext *cx, uintN argc, jsval *vp)
 
 
 template<>
-JSBool
-NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, JSObject *obj, jsval *name, jsval *vp)
+bool
+NodeList<nsINodeList>::hasNamedItem(jsid id)
+{
+    return false;
+}
+
+template<>
+bool
+NodeList<nsINodeList>::namedItem(JSContext *cx, JSObject *obj, jsval *name,
+                                 nsISupports **result, nsWrapperCache **cache,
+                                 bool *hasResult)
+{
+    *hasResult = false;
+    return true;
+}
+
+template<>
+bool
+NodeList<nsIHTMLCollection>::hasNamedItem(jsid id)
+{
+    return JSID_IS_STRING(id);
+}
+
+template<>
+bool
+NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, JSObject *obj, jsval *name,
+                                       nsISupports **result, nsWrapperCache **cache,
+                                       bool *hasResult)
 {
     xpc_qsDOMString nameString(cx, *name, name,
                                xpc_qsDOMString::eDefaultNullBehavior,
                                xpc_qsDOMString::eDefaultUndefinedBehavior);
     if (!nameString.IsValid())
-        return JS_FALSE;
+        return false;
     nsIHTMLCollection *collection = getNodeList(obj);
-    nsWrapperCache *cache;
-    nsISupports *result = getNamedItem(collection, nameString, &cache);
-    if (!result) {
-        *vp = JSVAL_NULL;
-        return JS_TRUE;
-    }
-    return WrapObject(cx, obj, result, cache, vp);
+    *result = getNamedItem(collection, nameString, cache);
+    *hasResult = !!*result;
+    return true;
 }
 
 template<>
@@ -353,7 +375,16 @@ NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp)
     if (argc < 1)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
     jsval *argv = JS_ARGV(cx, vp);
-    return namedItem(cx, obj, &argv[0], vp);
+    bool hasResult;
+    nsISupports *result;
+    nsWrapperCache *cache;
+    if (!namedItem(cx, obj, &argv[0], &result, &cache, &hasResult))
+        return JS_FALSE;
+    if (!hasResult) {
+        *vp = JSVAL_NULL;
+        return JS_TRUE;
+    }
+    return WrapObject(cx, obj, result, cache, vp);
 }
 
 JSBool
@@ -518,6 +549,30 @@ NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, b
         return true;
     }
 
+    if (hasNamedItem(id)) {
+        jsval name = STRING_TO_JSVAL(JSID_TO_STRING(id));
+        bool hasResult;
+        nsISupports *result;
+        nsWrapperCache *cache;
+        if (!namedItem(cx, proxy, &name, &result, &cache, &hasResult))
+            return false;
+        if (hasResult) {
+            jsval v;
+            if (!WrapObject(cx, proxy, result, cache, &v))
+                return false;
+            desc->obj = proxy;
+            desc->value = v;
+            desc->attrs = JSPROP_READONLY | JSPROP_ENUMERATE;
+            desc->getter = NULL;
+            desc->setter = NULL;
+            desc->shortid = 0;
+        }
+        else {
+            desc->obj = NULL;
+        }
+        return true;
+    }
+
     bool isNumber;
     int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
     if (isNumber && index >= 0) {
@@ -535,18 +590,6 @@ NodeList<T>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, b
             desc->shortid = 0;
             return true;
         }
-    }
-
-    bool ok;
-    Value v;
-    if (namedItem(cx, proxy, id, &v, &ok)) {
-        desc->obj = proxy;
-        desc->value = v;
-        desc->attrs = JSPROP_READONLY | JSPROP_ENUMERATE;
-        desc->getter = NULL;
-        desc->setter = NULL;
-        desc->shortid = 0;
-        return ok;
     }
 
     desc->obj = NULL;
@@ -684,22 +727,17 @@ NodeList<T>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
             return ok;
     }
 
+    if (hasNamedItem(id)) {
+        jsval name = STRING_TO_JSVAL(JSID_TO_STRING(id));
+        nsISupports *result;
+        nsWrapperCache *cache;
+        return namedItem(cx, proxy, &name, &result, &cache, bp);
+    }
+
     bool isNumber;
     int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
     if (isNumber && index >= 0) {
         if (getNodeList(proxy)->GetNodeAt(PRUint32(index))) {
-            *bp = true;
-            return true;
-        }
-    }
-
-    if (JSID_IS_STRING(id)) {
-        jsval v = STRING_TO_JSVAL(JSID_TO_STRING(id));
-        xpc_qsDOMString nameString(cx, v, &v,
-                                   xpc_qsDOMString::eDefaultNullBehavior,
-                                   xpc_qsDOMString::eDefaultUndefinedBehavior);
-        nsWrapperCache *cache;
-        if (getNamedItem(getNodeList(proxy), nameString, &cache)) {
             *bp = true;
             return true;
         }
@@ -791,26 +829,6 @@ NodeList<T>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, Property
     return true;
 }
 
-template<>
-inline bool
-NodeList<nsINodeList>::namedItem(JSContext *cx, JSObject *proxy, jsid id, Value *vp, bool *result)
-{
-    return false;
-}
-template<>
-inline bool
-NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, JSObject *proxy, jsid id, Value *vp, bool *result)
-{
-    if (!JSID_IS_STRING(id))
-        return false;
-
-    jsval v = STRING_TO_JSVAL(JSID_TO_STRING(id));
-    *result = namedItem(cx, proxy, &v, vp);
-
-    // We treat failure as having handled the get.
-    return !*result || !vp->isNull();
-}
-
 template<class T>
 bool
 NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
@@ -824,6 +842,17 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
             return JS_GetPropertyById(cx, expando, id, vp);
     }
 
+    if (hasNamedItem(id)) {
+        jsval name = STRING_TO_JSVAL(JSID_TO_STRING(id));
+        bool hasResult;
+        nsISupports *result;
+        nsWrapperCache *cache;
+        if (!namedItem(cx, proxy, &name, &result, &cache, &hasResult))
+            return false;
+        if (hasResult)
+            return WrapObject(cx, proxy, result, cache, vp);
+    }
+
     bool isNumber;
     int32 index = nsDOMClassInfo::GetArrayIndexFromId(cx, id, &isNumber);
     if (isNumber && index >= 0) {
@@ -832,10 +861,6 @@ NodeList<T>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Va
         if (result)
             return WrapObject(cx, proxy, result, result, vp);
     }
-
-    bool ok;
-    if (namedItem(cx, proxy, id, vp, &ok))
-        return ok;
 
     JSObject *proto = js::GetObjectProto(proxy);
     bool hit;
