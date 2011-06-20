@@ -332,6 +332,7 @@
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsDOMCSSValueList.h"
 #include "nsIDOMDeviceOrientationEvent.h"
+#include "nsIDOMDeviceMotionEvent.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMRangeException.h"
@@ -750,7 +751,14 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(PopupBlockedEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  // Device Orientation
   NS_DEFINE_CLASSINFO_DATA(DeviceOrientationEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(DeviceMotionEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(DeviceAcceleration, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(DeviceRotationRate, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // Misc HTML classes
@@ -2561,6 +2569,21 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DeviceOrientationEvent, nsIDOMDeviceOrientationEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceOrientationEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DeviceMotionEvent, nsIDOMDeviceMotionEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceMotionEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DeviceAcceleration, nsIDOMDeviceAcceleration)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceAcceleration)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DeviceRotationRate, nsIDOMDeviceRotationRate)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceRotationRate)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 

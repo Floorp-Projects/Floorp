@@ -82,7 +82,7 @@ DEFINES += -DSHARED_LIBRARY=$(SHARED_LIBRARY) -DNOMINMAX
 
 ifneq (mobile,$(MOZ_BUILD_APP))
 _BROWSER_FILES = \
-  browser/aboutcrashes_utils.js \
+  browser/head.js \
   browser/crashreport.sjs \
   browser/browser_aboutCrashes.js \
   browser/browser_bug471404.js \

@@ -7104,6 +7104,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
           !AdjustContextMenuKeyEvent(me)) {
         return NS_OK;
       }
+      if (me->isShift)
+        aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH |
+                         NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS;
     }                                
 
     nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,

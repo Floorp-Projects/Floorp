@@ -1428,8 +1428,7 @@ nsFtpState::R_pasv() {
             if (NS_SUCCEEDED(rv)) {
                 if (oldPort == port) {
                     PRBool isAlive;
-                    if (NS_SUCCEEDED(strans->IsAlive(PR_FALSE, &isAlive)) &&
-                        isAlive)
+                    if (NS_SUCCEEDED(strans->IsAlive(&isAlive)) && isAlive)
                         newDataConn = PR_FALSE;
                 }
             }

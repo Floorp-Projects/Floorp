@@ -53,9 +53,6 @@ _TEST_FILES = \
   atob_worker.js \
   test_close.html \
   close_worker.js \
-  test_closeOnGC.html \
-  closeOnGC_worker.js \
-  closeOnGC_server.sjs \
   test_errorPropagation.html \
   errorPropagation_worker1.js \
   errorPropagation_worker2.js \
@@ -132,6 +129,14 @@ _CHROME_TEST_FILES = \
   chromeWorker_worker.js \
   chromeWorker_subworker.js \
   $(NULL)
+
+ifneq ($(OS_ARCH),WINNT)
+_TEST_FILES += \
+  test_closeOnGC.html \
+  closeOnGC_worker.js \
+  closeOnGC_server.sjs \
+  $(NULL)
+endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

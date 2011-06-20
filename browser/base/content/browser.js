@@ -5093,6 +5093,10 @@ var TabsInTitlebar = {
 #endif
   },
 
+  get enabled() {
+    return document.documentElement.getAttribute("tabsintitlebar") == "true";
+  },
+
 #ifdef CAN_DRAW_IN_TITLEBAR
   observe: function (subject, topic, data) {
     if (topic == "nsPref:changed")
@@ -5118,8 +5122,7 @@ var TabsInTitlebar = {
       break;
     }
 
-    let docElement = document.documentElement;
-    if (allowed == (docElement.getAttribute("tabsintitlebar") == "true"))
+    if (allowed == this.enabled)
       return;
 
     function $(id) document.getElementById(id);
@@ -5140,20 +5143,18 @@ var TabsInTitlebar = {
       titlebar.style.marginBottom = - Math.min(tabsToolbarRect.top - titlebarTop,
                                                tabsToolbarRect.height) + "px";
 
-      docElement.setAttribute("tabsintitlebar", "true");
+      document.documentElement.setAttribute("tabsintitlebar", "true");
 
       if (!this._draghandle) {
         let tmp = {};
         Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
         this._draghandle = new tmp.WindowDraggingElement(tabsToolbar, window);
         this._draghandle.mouseDownCheck = function () {
-          return !this._dragBindingAlive &&
-                 this.ownerDocument.documentElement
-                     .getAttribute("tabsintitlebar") == "true";
+          return !this._dragBindingAlive && TabsInTitlebar.enabled;
         };
       }
     } else {
-      docElement.removeAttribute("tabsintitlebar");
+      document.documentElement.removeAttribute("tabsintitlebar");
 
       titlebar.style.marginBottom = "";
     }

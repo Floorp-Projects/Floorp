@@ -791,7 +791,7 @@ void nsWebShellWindow::ConstrainToOpenerScreen(PRInt32* aX, PRInt32* aY)
                              getter_AddRefs(screen));
     if (screen) {
       screen->GetAvailRect(&left, &top, &width, &height);
-      if (*aX < left || *aY > left + width) {
+      if (*aX < left || *aX > left + width) {
         *aX = left;
       }
       if (*aY < top || *aY > top + height) {
