@@ -81,7 +81,7 @@ extern Class DebugScript_class;
 
 enum {
     JSSLOT_DEBUGSCRIPT_OWNER,
-    JSSLOT_DEBUGSCRIPT_HOLDER, // cross-compartment wrapper
+    JSSLOT_DEBUGSCRIPT_HOLDER,  // PrivateValue, cross-compartment pointer
     JSSLOT_DEBUGSCRIPT_COUNT
 };
 
@@ -531,8 +531,10 @@ Debug::markCrossCompartmentDebugObjectReferents(JSTracer *tracer)
         const GlobalObject::DebugVector *debuggers = r.front()->getDebuggers();
         for (Debug **p = debuggers->begin(); p != debuggers->end(); p++) {
             Debug *dbg = *p;
-            if (dbg->object->compartment() != comp)
+            if (dbg->object->compartment() != comp) {
                 dbg->objects.markKeysInCompartment(tracer);
+                dbg->heldScripts.markKeysInCompartment(tracer);
+            }
         }
     }
 }
@@ -1087,41 +1089,40 @@ JSFunctionSpec Debug::methods[] = {
 
 // JSScripts' lifetimes fall into to two categories:
 //
-// - "Held scripts": JSScripts belonging to JSFunctions and JSScripts created using JSAPI
-//   have lifetimes determined by the garbage collector. A JSScript itself has no mark bit
-//   of its own. Instead, its holding object manages the JSScript as part of its own
-//   structure: the holder has a mark bit; when the holder is marked it calls
-//   js_TraceScript on its JSScript; and when the holder is freed it explicitly frees its
-//   JSScript.
+// - "Held scripts": JSScripts belonging to JSFunctions and JSScripts created
+//   using JSAPI have lifetimes determined by the garbage collector. A JSScript
+//   itself has no mark bit of its own. Instead, its holding object manages the
+//   JSScript as part of its own structure: the holder has a mark bit; when the
+//   holder is marked it calls js_TraceScript on its JSScript; and when the
+//   holder is freed it explicitly frees its JSScript.
 //
-//   Debug.Script instances for held scripts are strong references to the holder (and thus
-//   to the script). Debug::heldScripts weakly maps CCWs for holding objects to the
-//   Debug.Script objects for their JSScripts. We needn't act on a destroyScript event for
-//   a held script: if we get such an event we know its Debug.Script is dead anyway, and
-//   its entry in Debug::heldScripts will be cleaned up by the standard weak table code.
+//   Debug.Script instances for held scripts are strong references to the
+//   holder (and thus to the script). Debug::heldScripts weakly maps debuggee
+//   holding objects to the Debug.Script objects for their JSScripts. We
+//   needn't act on a destroyScript event for a held script: if we get such an
+//   event we know its Debug.Script is dead anyway, and its entry in
+//   Debug::heldScripts will be cleaned up by the standard weak table code.
 //
-// - "Eval scripts": JSScripts generated temporarily for a call to 'eval' or a related
-//   function live until the call completes, at which point the script is destroyed.
+// - "Eval scripts": JSScripts generated temporarily for a call to 'eval' or a
+//   related function live until the call completes, at which point the script
+//   is destroyed.
 //
-//   A Debug.Script instance for an eval script has no influence on the JSScript's
-//   lifetime. Debug::evalScripts maps live JSScripts to to their Debug.Script objects.
-//   When a destroyScript event tells us that an eval script is dead, we remove its table
-//   entry, and clear its Debug.Script object's script pointer, thus marking it dead.
+//   A Debug.Script instance for an eval script has no influence on the
+//   JSScript's lifetime. Debug::evalScripts maps live JSScripts to to their
+//   Debug.Script objects.  When a destroyScript event tells us that an eval
+//   script is dead, we remove its table entry, and clear its Debug.Script
+//   object's script pointer, thus marking it dead.
 //
-// A Debug.Script's private pointer points directly to the JSScript, or is NULL if the
-// Debug.Script is dead. The JSSLOT_DEBUGSCRIPT_HOLDER slot refers to a CCW for the
-// holding object, or is null for eval-like JSScripts. The private pointer is not traced;
-// the holding object reference is traced, if present.
+// A Debug.Script's private pointer points directly to the JSScript, or is NULL
+// if the Debug.Script is dead. The JSSLOT_DEBUGSCRIPT_HOLDER slot refers to
+// the holding object, or is null for eval-like JSScripts. The private pointer
+// is not traced; the holding object reference, if present, is traced via
+// DebugScript_trace.
 //
-// (We consider a script saved in and retrieved from the eval cache to have been
-// destroyed, and then --- mirabile dictu --- re-created at the same address. The
-// newScriptHook and destroyScriptHook hooks cooperate with this view.)
-
-Class DebugScript_class = {
-    "Script", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGSCRIPT_COUNT),
-    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub
-};
+// (We consider a script saved in and retrieved from the eval cache to have
+// been destroyed, and then --- mirabile dictu --- re-created at the same
+// address. The newScriptHook and destroyScriptHook hooks cooperate with this
+// view.)
 
 static inline JSScript *GetScriptReferent(JSObject *obj) {
     JS_ASSERT(obj->getClass() == &DebugScript_class);
@@ -1133,10 +1134,30 @@ static inline void ClearScriptReferent(JSObject *obj) {
     obj->setPrivate(NULL);
 }
 
-static inline JSObject *GetScriptHolder(JSObject *obj) {
-    JS_ASSERT(obj->getClass() == &DebugScript_class);
-    return obj->getReservedSlot(JSSLOT_DEBUGSCRIPT_HOLDER).toObjectOrNull();
+static void
+DebugScript_trace(JSTracer *trc, JSObject *obj)
+{
+    if (!trc->context->runtime->gcCurrentCompartment) {
+        Value v = obj->getReservedSlot(JSSLOT_DEBUGSCRIPT_HOLDER);
+        if (!v.isUndefined()) {
+            if (JSObject *obj = (JSObject *) v.toPrivate())
+                MarkObject(trc, *obj, "Debug.Script referent holder");
+        }
+    }
 }
+
+Class DebugScript_class = {
+    "Script", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGSCRIPT_COUNT),
+    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
+    EnumerateStub, ResolveStub, ConvertStub, NULL,
+    NULL,                 /* reserved0   */
+    NULL,                 /* checkAccess */
+    NULL,                 /* call        */
+    NULL,                 /* construct   */
+    NULL,                 /* xdrObject   */
+    NULL,                 /* hasInstance */
+    DebugScript_trace
+};
 
 JSObject *
 Debug::newDebugScript(JSContext *cx, JSScript *script, JSObject *holder)
@@ -1148,7 +1169,7 @@ Debug::newDebugScript(JSContext *cx, JSScript *script, JSObject *holder)
         return false;
     scriptobj->setPrivate(script);
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
-    scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_HOLDER, ObjectOrNullValue(holder));
+    scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_HOLDER, PrivateValue(holder));
 
     return scriptobj;
 }
@@ -1157,12 +1178,6 @@ JSObject *
 Debug::wrapHeldScript(JSContext *cx, JSScript *script, JSObject *obj)
 {
     assertSameCompartment(cx, object);
-
-    // Our argument must be in a debuggee compartment; find its CCW, for use as the key in
-    // the table.
-    JS_ASSERT(cx->compartment != obj->compartment());
-    if (!cx->compartment->wrap(cx, &obj))
-        return NULL;
 
     ScriptWeakMap::AddPtr p = heldScripts.lookupForAdd(obj);
     if (!p) {
@@ -1716,8 +1731,10 @@ static JSFunctionSpec DebugFrame_methods[] = {
 static void
 DebugObject_trace(JSTracer *trc, JSObject *obj)
 {
-    if (JSObject *obj = (JSObject *) obj->getPrivate())
-        MarkObject(trc, *obj, "Debug.Object referent");
+    if (!trc->context->runtime->gcCurrentCompartment) {
+        if (JSObject *obj = (JSObject *) obj->getPrivate())
+            MarkObject(trc, *obj, "Debug.Object referent");
+    }
 }
 
 Class DebugObject_class = {
