@@ -196,9 +196,6 @@ static const char* const kDumpFileAfterText[] = {
  */
 CViewSourceHTML::CViewSourceHTML()
 {
-  mSyntaxHighlight = PR_FALSE;
-  mWrapLongLines = PR_FALSE;
-  mTabSize = -1;
   mSyntaxHighlight =
     Preferences::GetBool("view_source.syntax_highlight", PR_TRUE);
 

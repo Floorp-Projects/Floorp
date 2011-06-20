@@ -56,7 +56,6 @@ public:
   nsSMILInterval();
   nsSMILInterval(const nsSMILInterval& aOther);
   ~nsSMILInterval();
-  void NotifyChanged(const nsSMILTimeContainer* aContainer);
   void Unlink(PRBool aFiltered = PR_FALSE);
 
   const nsSMILInstanceTime* Begin() const
@@ -86,8 +85,11 @@ public:
   void FixBegin();
   void FixEnd();
 
+  typedef nsTArray<nsRefPtr<nsSMILInstanceTime> > InstanceTimeList;
+
   void AddDependentTime(nsSMILInstanceTime& aTime);
   void RemoveDependentTime(const nsSMILInstanceTime& aTime);
+  void GetDependentTimes(InstanceTimeList& aTimes);
 
   // Cue for assessing if this interval can be filtered
   PRBool IsDependencyChainLink() const;
@@ -95,8 +97,6 @@ public:
 private:
   nsRefPtr<nsSMILInstanceTime> mBegin;
   nsRefPtr<nsSMILInstanceTime> mEnd;
-
-  typedef nsTArray<nsRefPtr<nsSMILInstanceTime> > InstanceTimeList;
 
   // nsSMILInstanceTimes to notify when this interval is changed or deleted.
   InstanceTimeList mDependentTimes;
@@ -112,21 +112,6 @@ private:
   // OBJECT returned for that end point and its TIME value will not change.
   PRPackedBool mBeginFixed;
   PRPackedBool mEndFixed;
-
-  // When change notifications are passed around the timing model we try to
-  // filter out all changes where there is no observable difference to an
-  // instance time. Changes that may produce an observable difference are:
-  //
-  // * Changes to the time of an interval endpoint
-  // * Changes in the relative times of different time containers
-  // * Changes to the dependency chain (which may affect the animation sandwich)
-  //
-  // The nsSMILTimeValueSpec can detect the first two changes by recalculating
-  // the time but in order to help detect the third change we simply set a flag
-  // whenever the mBegin or mEnd pointers are changed. These flags are reset
-  // when the next change notification is sent.
-  PRPackedBool mBeginObjectChanged;
-  PRPackedBool mEndObjectChanged;
 };
 
 #endif // NS_SMILINTERVAL_H_

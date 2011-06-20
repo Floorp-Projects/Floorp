@@ -59,18 +59,19 @@ public class GeckoEvent {
     public static final int NATIVE_POKE = 0;
     public static final int KEY_EVENT = 1;
     public static final int MOTION_EVENT = 2;
-    public static final int SENSOR_EVENT = 3;
-    public static final int LOCATION_EVENT = 4;
-    public static final int IME_EVENT = 5;
-    public static final int DRAW = 6;
-    public static final int SIZE_CHANGED = 7;
-    public static final int ACTIVITY_STOPPING = 8;
-    public static final int ACTIVITY_PAUSING = 9;
-    public static final int ACTIVITY_SHUTDOWN = 10;
-    public static final int LOAD_URI = 11;
-    public static final int SURFACE_CREATED = 12;
-    public static final int SURFACE_DESTROYED = 13;
-    public static final int GECKO_EVENT_SYNC = 14;
+    public static final int ORIENTATION_EVENT = 3;
+    public static final int ACCELERATION_EVENT = 4;
+    public static final int LOCATION_EVENT = 5;
+    public static final int IME_EVENT = 6;
+    public static final int DRAW = 7;
+    public static final int SIZE_CHANGED = 8;
+    public static final int ACTIVITY_STOPPING = 9;
+    public static final int ACTIVITY_PAUSING = 10;
+    public static final int ACTIVITY_SHUTDOWN = 11;
+    public static final int LOAD_URI = 12;
+    public static final int SURFACE_CREATED = 13;
+    public static final int SURFACE_DESTROYED = 14;
+    public static final int GECKO_EVENT_SYNC = 15;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -96,6 +97,7 @@ public class GeckoEvent {
     public long mTime;
     public Point mP0, mP1;
     public Rect mRect;
+    public double mX, mY, mZ;
     public double mAlpha, mBeta, mGamma;
 
     public int mMetaState, mFlags;
@@ -140,18 +142,20 @@ public class GeckoEvent {
     }
 
     public GeckoEvent(SensorEvent s) {
-        mType = SENSOR_EVENT;
-        // We interpret the accelerometer readings as the direction of gravity.
-        // Note that we will be mistaken if there is any additional
-        // acceleration on the device. We can detect that to some degree
-        // by comparing the magnitude to SensorManager.GRAVITY_EARTH, but
-        // don't have any easy way to use that information...
-        float magnitude = FloatMath.sqrt(s.values[0] * s.values[0] +
-                                         s.values[1] * s.values[1] + 
-                                         s.values[2] * s.values[2]);
-        mAlpha = 0; // This should be null; we do not have enough info to calculate it
-        mBeta = Math.toDegrees(Math.asin(s.values[1] / magnitude));
-        mGamma = -Math.toDegrees(Math.asin(s.values[0] / magnitude));
+
+        if (s.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            mType = ACCELERATION_EVENT;
+            mX = s.values[0] / SensorManager.GRAVITY_EARTH;
+            mY = s.values[1] / SensorManager.GRAVITY_EARTH;
+            mZ = s.values[2] / SensorManager.GRAVITY_EARTH;
+        }
+        else {
+            mType = ORIENTATION_EVENT;
+            mAlpha = -s.values[0];
+            mBeta = -s.values[1];
+            mGamma = -s.values[2];
+            Log.i("GeckoEvent", "SensorEvent type = " + s.sensor.getType() + " " + s.sensor.getName() + " " + mAlpha + " " + mBeta + " " + mGamma );
+        }
     }
 
     public GeckoEvent(Location l, Address a) {

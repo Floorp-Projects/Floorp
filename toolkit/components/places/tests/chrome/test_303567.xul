@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Add Bad Livemarks"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+   src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+<script type="application/javascript">
+<![CDATA[
+
+ // Test that for feeds with items that have no link:
+ //   * the link-less items are present in the database.
+ //   * the feed's site URI is substituted for each item's link.
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+
+// Create livemarks.
+const LIVEMARKS = [
+  { feedURI: NetUtil.newURI("http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/link-less-items.rss"),
+    siteURI: NetUtil.newURI("http://mochi.test:8888/"),
+    urls: [
+      "http://feed-item-link.com/",
+      "http://feed-link.com/",
+      "http://feed-item-link.com/",
+    ],
+    message: "Ensure link-less livemark item picked up site uri.",
+  },
+  { feedURI: NetUtil.newURI("http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/link-less-items-no-site-uri.rss"),
+    siteURI: null,
+    urls: [
+      "http://feed-item-link.com/",
+      "http://feed-item-link.com/",
+    ],
+    message: "Ensure livemark item links did not inherit site uri."
+  },  
+];
+
+function runTest()
+{
+  SimpleTest.waitForExplicitFinish();
+
+  // Add bookmarks observer.
+  let observer = {
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsINavBookmarkObserver,
+    ]),
+
+    onBeginUpdateBatch: function () {},
+    onEndUpdateBatch: function () {},
+    onItemAdded: function (aItemId, aParentId, aIndex, aItemType) {
+      // Wait for the addition of all children in the expected livemark.
+      if (PlacesUtils.livemarks.isLivemark(aParentId) &&
+          this.expectedFeedURI &&
+          PlacesUtils.livemarks.getFeedURI(aParentId).equals(this.expectedFeedURI) &&
+          --this.expectedChildren == 0) {
+        setTimeout(function () step(), 0);
+      }
+    },
+    onBeforeItemRemoved: function () {},
+    onItemRemoved: function () {},
+    onItemChanged: function () {},
+    onItemVisited: function () {},
+    onItemMoved: function () {},
+  };
+  PlacesUtils.bookmarks.addObserver(observer, false);
+
+  for (let i = 0; i < LIVEMARKS.length; i++) {
+    let livemark = LIVEMARKS[i];
+    observer.expectedFeedURI = livemark.feedURI;
+    observer.expectedChildren = livemark.urls.length;
+
+    livemark.id = PlacesUtils.livemarks.createLivemarkFolderOnly(
+      PlacesUtils.toolbarFolderId, "foo", livemark.siteURI, livemark.feedURI,
+      PlacesUtils.bookmarks.DEFAULT_INDEX
+    );
+    PlacesUtils.livemarks.reloadLivemarkFolder(livemark.id);
+
+    yield;
+
+    // Validate livemark's contents.
+    let root = PlacesUtils.getFolderContents(livemark.id).root;
+    let cc = root.childCount;
+    is(cc, livemark.urls.length, "Eensure the livemark item was created.");
+    livemark.urls.forEach(function (aUrl, aIndex) {
+      let node = root.getChild(aIndex);
+      is(node.uri, aUrl, livemark.message);
+    });
+    root.containerOpen = false;
+
+    PlacesUtils.bookmarks.removeItem(livemark.id);
+  }
+
+  PlacesUtils.bookmarks.removeObserver(observer);
+  SimpleTest.finish();
+}
+
+let gTestRunner = runTest();
+function step()
+{
+  try {
+    gTestRunner.next();
+  } catch (ex) {}
+}
+// Kick-off test.
+step();
+
+]]>
+</script>
+</window>

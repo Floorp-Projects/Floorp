@@ -2026,7 +2026,7 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // metadata about this scroll box to the compositor process.
     nsDisplayScrollInfoLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
       aBuilder, mScrolledFrame, mOuter);
-    set.Content()->AppendNewToBottom(layerItem);
+    set.BorderBackground()->AppendNewToBottom(layerItem);
   }
 
   nsRect clip;

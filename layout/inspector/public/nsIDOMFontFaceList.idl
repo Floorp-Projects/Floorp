@@ -1,0 +1,10 @@
+#include "nsISupports.idl"
+
+interface nsIDOMFontFace;
+
+[scriptable, uuid(2538579c-9472-4fd9-8dc1-d44ce4c1b7ba)]
+interface nsIDOMFontFaceList : nsISupports
+{
+  nsIDOMFontFace                    item(in unsigned long index);
+  readonly attribute unsigned long  length;
+};

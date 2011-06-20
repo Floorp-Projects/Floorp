@@ -702,7 +702,8 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
     if (addon.optionsType &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_DIALOG &&
-        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE) {
+        addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE &&
+        addon.optionsType != AddonManager.OPTIONS_TYPE_TAB) {
       throw new Error("Install manifest specifies unknown type: " + addon.optionsType);
     }
   }
@@ -907,6 +908,33 @@ function loadManifestFromFile(aFile) {
 }
 
 /**
+ * Gets an nsIURI for a file within another file, either a directory or an XPI
+ * file. If aFile is a directory then this will return a file: URI, if it is an
+ * XPI file then it will return a jar: URI.
+ *
+ * @param  aFile
+ *         The file containing the resources, must be either a directory or an
+ *         XPI file
+ * @param  aPath
+ *         The path to find the resource at, "/" separated. If aPath is empty
+ *         then the uri to the root of the contained files will be returned
+ * @return an nsIURI pointing at the resource
+ */
+function getURIForResourceInFile(aFile, aPath) {
+  if (aFile.isDirectory()) {
+    let resource = aFile.clone();
+    if (aPath) {
+      aPath.split("/").forEach(function(aPart) {
+        resource.append(aPart);
+      });
+    }
+    return NetUtil.newURI(resource);
+  }
+
+  return buildJarURI(aFile, aPath);
+}
+
+/**
  * Creates a jar: URI for a file inside a ZIP file.
  *
  * @param  aJarfile
@@ -931,6 +959,12 @@ function flushJarCache(aJarFile) {
   Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
   Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIChromeFrameMessageManager)
     .sendAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
+}
+
+function flushStartupCache() {
+  // Init this, so it will get the notification.
+  Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
+  Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 }
 
 /**
@@ -1565,9 +1599,7 @@ var XPIProvider = {
     }
 
     if (flushCaches) {
-      // Init this, so it will get the notification.
-      let xulPrototypeCache = Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
-      Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+      flushStartupCache();
 
       // UI displayed early in startup (like the compatibility UI) may have
       // caused us to cache parts of the skin or locale in memory. These must
@@ -1989,6 +2021,7 @@ var XPIProvider = {
               this.callBootstrapMethod(existingAddonID, oldBootstrap.version,
                                        existingAddon, "uninstall", uninstallReason);
               this.unloadBootstrapScope(existingAddonID);
+              flushStartupCache();
             }
           }
           catch (e) {
@@ -2259,6 +2292,9 @@ var XPIProvider = {
 
         // If the new add-on is bootstrapped and active then call its install method
         if (newAddon.active && newAddon.bootstrap) {
+          // Startup cache must be flushed before calling the bootstrap script
+          flushStartupCache();
+
           let installReason = Services.vc.compare(aOldAddon.version, newAddon.version) < 0 ?
                               BOOTSTRAP_REASONS.ADDON_UPGRADE :
                               BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
@@ -2270,7 +2306,6 @@ var XPIProvider = {
           return false;
         }
 
-        // Otherwise the caches will need to be invalidated
         return true;
       }
 
@@ -2445,9 +2480,7 @@ var XPIProvider = {
         if (aOldAddon.type == "theme")
           XPIProvider.enableDefaultTheme();
 
-        // If this was not a bootstrapped add-on then we must force a restart.
-        if (!aOldAddon.bootstrap)
-          return true;
+        return true;
       }
 
       return false;
@@ -2586,10 +2619,16 @@ var XPIProvider = {
           let oldAddonFile = Cc["@mozilla.org/file/local;1"].
                              createInstance(Ci.nsILocalFile);
           oldAddonFile.persistentDescriptor = oldBootstrap.descriptor;
+
           XPIProvider.callBootstrapMethod(newAddon.id, oldBootstrap.version,
                                           oldAddonFile, "uninstall",
                                           installReason);
           XPIProvider.unloadBootstrapScope(newAddon.id);
+
+          // If the new add-on is bootstrapped then we must flush the caches
+          // before calling the new bootstrap script
+          if (newAddon.bootstrap)
+            flushStartupCache();
         }
 
         if (!newAddon.bootstrap)
@@ -3355,47 +3394,32 @@ var XPIProvider = {
                     createInstance(Ci.nsIPrincipal);
     this.bootstrapScopes[aId] = new Components.utils.Sandbox(principal);
 
-    let bootstrap = aFile.clone();
-    let name = aFile.leafName;
-    let spec;
-
-    if (!bootstrap.exists()) {
+    if (!aFile.exists()) {
       ERROR("Attempted to load bootstrap scope from missing directory " + bootstrap.path);
       return;
     }
 
-    if (bootstrap.isDirectory()) {
-      bootstrap.append("bootstrap.js");
-      let uri = Services.io.newFileURI(bootstrap);
-      spec = uri.spec;
-    } else {
-      spec = buildJarURI(bootstrap, "bootstrap.js").spec;
-    }
-    if (bootstrap.exists()) {
-      let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                   createInstance(Ci.mozIJSSubScriptLoader);
+    let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                 createInstance(Ci.mozIJSSubScriptLoader);
 
-      try {
-        // As we don't want our caller to control the JS version used for the
-        // bootstrap file, we run loadSubScript within the context of the
-        // sandbox with the latest JS version set explicitly.
-        this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ = spec;
-        Components.utils.evalInSandbox(
-          "Components.classes['@mozilla.org/moz/jssubscript-loader;1'] \
-                     .createInstance(Components.interfaces.mozIJSSubScriptLoader) \
-                     .loadSubScript(__SCRIPT_URI_SPEC__);", this.bootstrapScopes[aId], "ECMAv5");
-      }
-      catch (e) {
-        WARN("Error loading bootstrap.js for " + aId, e);
-      }
+    try {
+      // As we don't want our caller to control the JS version used for the
+      // bootstrap file, we run loadSubScript within the context of the
+      // sandbox with the latest JS version set explicitly.
+      this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ =
+          getURIForResourceInFile(aFile, "bootstrap.js").spec;
+      Components.utils.evalInSandbox(
+        "Components.classes['@mozilla.org/moz/jssubscript-loader;1'] \
+                   .createInstance(Components.interfaces.mozIJSSubScriptLoader) \
+                   .loadSubScript(__SCRIPT_URI_SPEC__);", this.bootstrapScopes[aId], "ECMAv5");
+    }
+    catch (e) {
+      WARN("Error loading bootstrap.js for " + aId, e);
+    }
 
-      // Copy the reason values from the global object into the bootstrap scope.
-      for (let name in BOOTSTRAP_REASONS)
-        this.bootstrapScopes[aId][name] = BOOTSTRAP_REASONS[name];
-    }
-    else {
-      WARN("Bootstrap missing for " + aId);
-    }
+    // Copy the reason values from the global object into the bootstrap scope.
+    for (let name in BOOTSTRAP_REASONS)
+      this.bootstrapScopes[aId][name] = BOOTSTRAP_REASONS[name];
   },
 
   /**
@@ -3443,7 +3467,8 @@ var XPIProvider = {
     let params = {
       id: aId,
       version: aVersion,
-      installPath: aFile.clone()
+      installPath: aFile.clone(),
+      resourceURI: getURIForResourceInFile(aFile, "")
     };
 
     LOG("Calling bootstrap method " + aMethod + " on " + aId + " version " +
@@ -3623,9 +3648,11 @@ var XPIProvider = {
           this.callBootstrapMethod(aAddon.id, aAddon.version, file, "shutdown",
                                    BOOTSTRAP_REASONS.ADDON_UNINSTALL);
         }
+
         this.callBootstrapMethod(aAddon.id, aAddon.version, file, "uninstall",
                                  BOOTSTRAP_REASONS.ADDON_UNINSTALL);
         this.unloadBootstrapScope(aAddon.id);
+        flushStartupCache();
       }
       aAddon._installLocation.uninstallAddon(aAddon.id);
       XPIDatabase.removeAddonMetadata(aAddon);
@@ -6216,10 +6243,12 @@ AddonInstall.prototype = {
                                               this.existingAddon.version,
                                               file, "shutdown", reason);
             }
+
             XPIProvider.callBootstrapMethod(this.existingAddon.id,
                                             this.existingAddon.version,
                                             file, "uninstall", reason);
             XPIProvider.unloadBootstrapScope(this.existingAddon.id);
+            flushStartupCache();
           }
 
           if (!isUpgrade && this.existingAddon.active) {
@@ -7210,21 +7239,22 @@ function AddonWrapper(aAddon) {
     return result;
   },
 
+  /**
+   * Returns a URI to the selected resource or to the add-on bundle if aPath
+   * is null. URIs to the bundle will always be file: URIs. URIs to resources
+   * will be file: URIs if the add-on is unpacked or jar: URIs if the add-on is
+   * still an XPI file.
+   *
+   * @param  aPath
+   *         The path in the add-on to get the URI for or null to get a URI to
+   *         the file or directory the add-on is installed as.
+   * @return an nsIURI
+   */
   this.getResourceURI = function(aPath) {
-    let bundle = aAddon._sourceBundle.clone();
-
-    if (bundle.isDirectory()) {
-      if (aPath) {
-        aPath.split("/").forEach(function(aPart) {
-          bundle.append(aPart);
-        });
-      }
-      return Services.io.newFileURI(bundle);
-    }
-
     if (!aPath)
-      return Services.io.newFileURI(bundle);
-    return buildJarURI(bundle, aPath);
+      return NetUtil.newURI(aAddon._sourceBundle);
+
+    return getURIForResourceInFile(aAddon._sourceBundle, aPath);
   }
 }
 
