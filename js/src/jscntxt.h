@@ -422,6 +422,8 @@ struct JSRuntime {
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcNumber;
     js::GCMarker        *gcMarkingTracer;
+    bool                gcChunkAllocationSinceLastGC;
+    int64               gcNextFullGCTime;
     int64               gcJitReleaseTime;
     JSGCMode            gcMode;
     volatile bool       gcIsNeeded;
@@ -793,7 +795,7 @@ struct JSRuntime {
 
     bool init(uint32 maxbytes);
 
-    void setGCLastBytes(size_t lastBytes);
+    void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(uint32 amount);
 
     /*

@@ -493,7 +493,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void finalizeShapeArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
 
-    void setGCLastBytes(size_t lastBytes);
+    void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(uint32 amount);
 
     js::DtoaCache dtoaCache;
