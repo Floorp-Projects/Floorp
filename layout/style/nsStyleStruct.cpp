@@ -1979,7 +1979,6 @@ void nsTransition::SetUnknownProperty(const nsAString& aUnknownProperty)
   mUnknownProperty = do_GetAtom(aUnknownProperty);
 }
 
-#ifdef MOZ_CSS_ANIMATIONS
 nsAnimation::nsAnimation(const nsAnimation& aCopy)
   : mTimingFunction(aCopy.mTimingFunction)
   , mDuration(aCopy.mDuration)
@@ -2004,7 +2003,6 @@ nsAnimation::SetInitialValues()
   mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
   mIterationCount = 1.0f;
 }
-#endif
 
 nsStyleDisplay::nsStyleDisplay()
 {
@@ -2037,7 +2035,6 @@ nsStyleDisplay::nsStyleDisplay()
   mTransitionDelayCount = 1;
   mTransitionPropertyCount = 1;
 
-#ifdef MOZ_CSS_ANIMATIONS
   mAnimations.AppendElement();
   NS_ABORT_IF_FALSE(mAnimations.Length() == 1,
                     "appending within auto buffer should never fail");
@@ -2050,7 +2047,6 @@ nsStyleDisplay::nsStyleDisplay()
   mAnimationFillModeCount = 1;
   mAnimationPlayStateCount = 1;
   mAnimationIterationCountCount = 1;
-#endif
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
@@ -2059,7 +2055,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mTransitionDurationCount(aSource.mTransitionDurationCount)
   , mTransitionDelayCount(aSource.mTransitionDelayCount)
   , mTransitionPropertyCount(aSource.mTransitionPropertyCount)
-#ifdef MOZ_CSS_ANIMATIONS
   , mAnimations(aSource.mAnimations)
   , mAnimationTimingFunctionCount(aSource.mAnimationTimingFunctionCount)
   , mAnimationDurationCount(aSource.mAnimationDurationCount)
@@ -2069,7 +2064,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mAnimationFillModeCount(aSource.mAnimationFillModeCount)
   , mAnimationPlayStateCount(aSource.mAnimationPlayStateCount)
   , mAnimationIterationCountCount(aSource.mAnimationIterationCountCount)
-#endif
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
   mAppearance = aSource.mAppearance;
