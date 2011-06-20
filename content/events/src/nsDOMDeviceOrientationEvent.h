@@ -1,5 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -14,12 +13,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * The Initial Developer of the Original Code is
+ * Doug Turner <dougt@dougt.org>
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Wu <mwu@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,39 +34,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/dom/ContentChild.h"
-#include "nsAccelerometerSystem.h"
+#ifndef nsDOMDeviceOrientationEvent_h__
+#define nsDOMDeviceOrientationEvent_h__
 
-#include "AndroidBridge.h"
-#include "nsXULAppAPI.h"
+#include "nsIDOMDeviceOrientationEvent.h"
+#include "nsDOMEvent.h"
 
-using namespace mozilla;
-
-extern nsAccelerometerSystem *gAccel;
-
-nsAccelerometerSystem::nsAccelerometerSystem()
+class nsDOMDeviceOrientationEvent : public nsDOMEvent,
+                                    public nsIDOMDeviceOrientationEvent
 {
-    gAccel = this;
-}
+public:
 
-nsAccelerometerSystem::~nsAccelerometerSystem()
-{
-}
+  nsDOMDeviceOrientationEvent(nsPresContext* aPresContext, nsEvent* aEvent)
+  : nsDOMEvent(aPresContext, aEvent),
+    mAlpha(0),
+    mBeta(0),
+    mGamma(0),
+    mAbsolute(PR_TRUE) {}
 
-void nsAccelerometerSystem::Startup()
-{
-    if (XRE_GetProcessType() == GeckoProcessType_Default)
-        AndroidBridge::Bridge()->EnableAccelerometer(true);
-    else
-        mozilla::dom::ContentChild::GetSingleton()->
-            SendAddAccelerometerListener();
-}
+  NS_DECL_ISUPPORTS_INHERITED
 
-void nsAccelerometerSystem::Shutdown()
-{
-    if (XRE_GetProcessType() == GeckoProcessType_Default)
-        AndroidBridge::Bridge()->EnableAccelerometer(false);
-    else
-        mozilla::dom::ContentChild::GetSingleton()->
-            SendRemoveAccelerometerListener();
-}
+  // Forward to nsDOMEvent
+  NS_FORWARD_TO_NSDOMEVENT
+
+  // nsIDOMDeviceOrientationEvent Interface
+  NS_DECL_NSIDOMDEVICEORIENTATIONEVENT
+
+protected:
+  double mAlpha, mBeta, mGamma;
+  PRBool mAbsolute;
+};
+
+#endif

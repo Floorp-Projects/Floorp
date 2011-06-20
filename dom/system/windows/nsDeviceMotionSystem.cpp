@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccelerometerSystem.h"
+#include "nsDeviceMotionSystem.h"
 #include "nsIServiceManager.h"
 #include "windows.h"
 
@@ -52,11 +52,11 @@ typedef struct {
   char temp; // raw value (could be deg celsius?)
   unsigned short x0; // Used for "auto-center"
   unsigned short y0; // Used for "auto-center"
-} ThinkPadAccelerometerData;
+} ThinkPadDeviceMotionData;
 
-typedef void (__stdcall *ShockproofGetAccelerometerData)(ThinkPadAccelerometerData*);
+typedef void (__stdcall *ShockproofGetDeviceMotionData)(ThinkPadDeviceMotionData*);
 
-ShockproofGetAccelerometerData gShockproofGetAccelerometerData = nsnull;
+ShockproofGetDeviceMotionData gShockproofGetDeviceMotionData = nsnull;
 
 class ThinkPadSensor : public Sensor
 {
@@ -85,9 +85,9 @@ ThinkPadSensor::Startup()
   if (!mLibrary)
     return PR_FALSE;
 
-  gShockproofGetAccelerometerData = (ShockproofGetAccelerometerData)
-    GetProcAddress(mLibrary, "ShockproofGetAccelerometerData");
-  if (!gShockproofGetAccelerometerData) {
+  gShockproofGetDeviceMotionData = (ShockproofGetDeviceMotionData)
+    GetProcAddress(mLibrary, "ShockproofGetDeviceMotionData");
+  if (!gShockproofGetDeviceMotionData) {
     FreeLibrary(mLibrary);
     mLibrary = nsnull;
     return PR_FALSE;
@@ -101,15 +101,15 @@ ThinkPadSensor::Shutdown()
   NS_ASSERTION(mLibrary, "Shutdown called when mLibrary is null?");
   FreeLibrary(mLibrary);
   mLibrary = nsnull;
-  gShockproofGetAccelerometerData = nsnull;
+  gShockproofGetDeviceMotionData = nsnull;
 }
 
 void
 ThinkPadSensor::GetValues(double *x, double *y, double *z)
 {
-  ThinkPadAccelerometerData accelData;
+  ThinkPadDeviceMotionData accelData;
 
-  gShockproofGetAccelerometerData(&accelData);
+  gShockproofGetDeviceMotionData(&accelData);
 
   // accelData.x and accelData.y is the acceleration measured from the accelerometer.
   // x and y is switched from what we use, and the accelerometer does not support z axis.
@@ -119,23 +119,23 @@ ThinkPadSensor::GetValues(double *x, double *y, double *z)
   *z = 1.0;
 }
 
-nsAccelerometerSystem::nsAccelerometerSystem(){}
-nsAccelerometerSystem::~nsAccelerometerSystem(){}
+nsDeviceMotionSystem::nsDeviceMotionSystem(){}
+nsDeviceMotionSystem::~nsDeviceMotionSystem(){}
 
 void
-nsAccelerometerSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
+nsDeviceMotionSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
 {
-  nsAccelerometerSystem *self = reinterpret_cast<nsAccelerometerSystem *>(aClosure);
+  nsDeviceMotionSystem *self = reinterpret_cast<nsDeviceMotionSystem *>(aClosure);
   if (!self || !self->mSensor) {
     NS_ERROR("no self or sensor");
     return;
   }
   double x, y, z;
   self->mSensor->GetValues(&x, &y, &z);
-  self->AccelerationChanged(x, y, z);
+  self->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ACCELERATION, x, y, z);
 }
 
-void nsAccelerometerSystem::Startup()
+void nsDeviceMotionSystem::Startup()
 {
   NS_ASSERTION(!mSensor, "mSensor should be null.  Startup called twice?");
 
@@ -156,7 +156,7 @@ void nsAccelerometerSystem::Startup()
                                        nsITimer::TYPE_REPEATING_SLACK);
 }
 
-void nsAccelerometerSystem::Shutdown()
+void nsDeviceMotionSystem::Shutdown()
 {
   if (mUpdateTimer) {
     mUpdateTimer->Cancel();

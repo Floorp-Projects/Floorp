@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccelerometerSystem.h"
+#include "nsDeviceMotionSystem.h"
 #include "nsIServiceManager.h"
 #include "stdlib.h"
 
@@ -45,11 +45,11 @@
 #define MODEL_NAME_LENGTH 64
 static char gModelName[MODEL_NAME_LENGTH];
 
-nsAccelerometerSystem::nsAccelerometerSystem()
+nsDeviceMotionSystem::nsDeviceMotionSystem()
 {
 }
 
-nsAccelerometerSystem::~nsAccelerometerSystem()
+nsDeviceMotionSystem::~nsDeviceMotionSystem()
 {
 }
 
@@ -72,9 +72,9 @@ typedef struct
 #define SMSDATA_USED_SIZE (sizeof(SmsData) - SMSDATA_PADDING_SIZE)
 
 void
-nsAccelerometerSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
+nsDeviceMotionSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
 {
-  nsAccelerometerSystem *self = reinterpret_cast<nsAccelerometerSystem *>(aClosure);
+  nsDeviceMotionSystem *self = reinterpret_cast<nsDeviceMotionSystem *>(aClosure);
   if (!self) {
     NS_ERROR("no self");
     return;
@@ -143,10 +143,10 @@ nsAccelerometerSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
   free(input);
   free(output);
 
-  self->AccelerationChanged( xf, yf, zf );
+  self->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ACCELERATION, xf, yf, zf );
 }
 
-void nsAccelerometerSystem::Startup()
+void nsDeviceMotionSystem::Startup()
 {
   // we can fail, and that just means the caller will not see any changes.
 
@@ -194,7 +194,7 @@ void nsAccelerometerSystem::Startup()
                                        nsITimer::TYPE_REPEATING_SLACK);
 }
 
-void nsAccelerometerSystem::Shutdown()
+void nsDeviceMotionSystem::Shutdown()
 {
   if (mSmsConnection)
     ::IOServiceClose(mSmsConnection);
