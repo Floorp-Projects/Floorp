@@ -51,6 +51,7 @@
 #include "nsAutoPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsXULAppApi.h"
 
 #include <objbase.h>
 
@@ -90,12 +91,29 @@ public:
 
   nsresult Start();
   nsresult Stop();
+  void StopInternal();
 
+  nsresult GetSessionData(nsID& aID,
+                          nsString& aSessionName,
+                          nsString& aIconPath);
+
+  nsresult SetSessionData(const nsID& aID,
+                          const nsString& aSessionName,
+                          const nsString& aIconPath);
+
+  enum SessionState {
+    UNINITIALIZED, // Has not been initialized yet
+    STARTED, // Started
+    CLONED, // SetSessionInfoCalled, Start not called
+    FAILED, // The autdio session failed to start
+    STOPPED // Stop called
+  };
 protected:
   nsRefPtr<IAudioSessionControl> mAudioSessionControl;
   nsString mDisplayName;
   nsString mIconPath;
   nsID mSessionGroupingParameter;
+  SessionState mState;
 
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
@@ -115,11 +133,31 @@ StopAudioSession()
   return AudioSession::GetSingleton()->Stop();
 }
 
+nsresult
+GetAudioSessionData(nsID& aID,
+                    nsString& aSessionName,
+                    nsString& aIconPath)
+{
+  return AudioSession::GetSingleton()->GetSessionData(aID,
+                                                      aSessionName,
+                                                      aIconPath);
+}
+
+nsresult
+RecvAudioSessionData(const nsID& aID,
+                     const nsString& aSessionName,
+                     const nsString& aIconPath)
+{
+  return AudioSession::GetSingleton()->SetSessionData(aID,
+                                                      aSessionName,
+                                                      aIconPath);
+}
+
 AudioSession* AudioSession::sService = NULL;
 
 AudioSession::AudioSession()
 {
-
+  mState = UNINITIALIZED;
 }
 
 AudioSession::~AudioSession()
@@ -164,6 +202,9 @@ AudioSession::QueryInterface(REFIID iid, void **ppv)
 nsresult
 AudioSession::Start()
 {
+  NS_ABORT_IF_FALSE(mState == UNINITIALIZED || mState == CLONED,
+                    "State invariants violated");
+
   const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
   const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
   const IID IID_IAudioSessionManager = __uuidof(IAudioSessionManager);
@@ -173,30 +214,44 @@ AudioSession::Start()
   if (FAILED(::CoInitialize(NULL)))
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIStringBundleService> bundleService = 
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-  NS_ENSURE_TRUE(bundleService, NS_ERROR_FAILURE);
+  if (mState == UNINITIALIZED) {
+    mState == FAILED;
 
-  nsCOMPtr<nsIStringBundle> bundle;
-  bundleService->CreateBundle("chrome://branding/locale/brand.properties",
-                              getter_AddRefs(bundle));
-  NS_ENSURE_TRUE(bundle, NS_ERROR_FAILURE);
+    // XXXkhuey implement this for content processes
+    if (XRE_GetProcessType() == GeckoProcessType_Content)
+      return NS_ERROR_FAILURE;
 
-  bundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
-                            getter_Copies(mDisplayName));
+    NS_ABORT_IF_FALSE(XRE_GetProcessType() == GeckoProcessType_Default,
+                      "Should only get here in a chrome process!");
 
-  PRUnichar *buffer;
-  mIconPath.GetMutableData(&buffer, MAX_PATH);
+    nsCOMPtr<nsIStringBundleService> bundleService = 
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    NS_ENSURE_TRUE(bundleService, NS_ERROR_FAILURE);
 
-  // XXXkhuey we should provide a way for a xulrunner app to specify an icon
-  // that's not in the product binary.
-  ::GetModuleFileNameW(NULL, buffer, MAX_PATH);
+    nsCOMPtr<nsIStringBundle> bundle;
+    bundleService->CreateBundle("chrome://branding/locale/brand.properties",
+                                getter_AddRefs(bundle));
+    NS_ENSURE_TRUE(bundle, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIUUIDGenerator> uuidgen =
-    do_GetService("@mozilla.org/uuid-generator;1");
-  NS_ASSERTION(uuidgen, "No UUID-Generator?!?");
+    bundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
+                              getter_Copies(mDisplayName));
 
-  uuidgen->GenerateUUIDInPlace(&mSessionGroupingParameter);
+    PRUnichar *buffer;
+    mIconPath.GetMutableData(&buffer, MAX_PATH);
+
+    // XXXkhuey we should provide a way for a xulrunner app to specify an icon
+    // that's not in the product binary.
+    ::GetModuleFileNameW(NULL, buffer, MAX_PATH);
+
+    nsCOMPtr<nsIUUIDGenerator> uuidgen =
+      do_GetService("@mozilla.org/uuid-generator;1");
+    NS_ASSERTION(uuidgen, "No UUID-Generator?!?");
+
+    uuidgen->GenerateUUIDInPlace(&mSessionGroupingParameter);
+  }
+
+  NS_ABORT_IF_FALSE(!mDisplayName.IsEmpty() || !mIconPath.IsEmpty(),
+                    "Should never happen ...");
 
   nsRefPtr<IMMDeviceEnumerator> enumerator;
   hr = ::CoCreateInstance(CLSID_MMDeviceEnumerator,
@@ -256,12 +311,16 @@ AudioSession::Start()
     return NS_ERROR_FAILURE;
   }
 
+  mState = STARTED;
+
   return NS_OK;
 }
 
 void
 AudioSession::StopInternal()
 {
+  static const nsID blankId = {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} };
+
   if (mAudioSessionControl) {
     mAudioSessionControl->SetGroupingParam((LPCGUID)&blankId, NULL);
     mAudioSessionControl->UnregisterAudioSessionNotification(this);
@@ -272,16 +331,69 @@ AudioSession::StopInternal()
 nsresult
 AudioSession::Stop()
 {
-  const nsID blankId = {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} };
+  NS_ABORT_IF_FALSE(mState == STARTED ||
+                    mState == UNINITIALIZED || // XXXremove this
+                    mState == FAILED,
+                    "State invariants violated");
+  mState = STOPPED;
+
   nsRefPtr<AudioSession> kungFuDeathGrip;
   kungFuDeathGrip.swap(sService);
 
-  StopInternal();
+  if (XRE_GetProcessType() != GeckoProcessType_Content)
+    StopInternal();
 
   // At this point kungFuDeathGrip should be the only reference to AudioSession
 
   ::CoUninitialize();
 
+  return NS_OK;
+}
+
+void CopynsID(nsID& lhs, const nsID& rhs)
+{
+  lhs.m0 = rhs.m0;
+  lhs.m1 = rhs.m1;
+  lhs.m2 = rhs.m2;
+  for (int i = 0; i < 8; i++ ) {
+    lhs.m3[i] = rhs.m3[i];
+  }
+}
+
+nsresult
+AudioSession::GetSessionData(nsID& aID,
+                             nsString& aSessionName,
+                             nsString& aIconPath)
+{
+  NS_ABORT_IF_FALSE(mState == FAILED ||
+                    mState == STARTED ||
+                    mState == CLONED,
+                    "State invariants violated");
+
+  CopynsID(aID, mSessionGroupingParameter);
+  aSessionName = mDisplayName;
+  aIconPath = mIconPath;
+
+  if (mState == FAILED)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+nsresult
+AudioSession::SetSessionData(const nsID& aID,
+                             const nsString& aSessionName,
+                             const nsString& aIconPath)
+{
+  NS_ABORT_IF_FALSE(mState == UNINITIALIZED,
+                    "State invariants violated");
+  NS_ABORT_IF_FALSE(XRE_GetProcessType() != GeckoProcessType_Default,
+                    "Should never get here in a chrome process!");
+  mState = CLONED;
+
+  CopynsID(mSessionGroupingParameter, aID);
+  mDisplayName = aSessionName;
+  mIconPath = aIconPath;
   return NS_OK;
 }
 
