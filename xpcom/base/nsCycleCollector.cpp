@@ -125,7 +125,6 @@
 #endif
 #endif
 
-#include "base/basictypes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectorUtils.h"
 #include "nsIProgrammingLanguage.h"
@@ -152,8 +151,6 @@
 #include "nsIXPConnect.h"
 #include "nsIJSRuntimeService.h"
 #include "xpcpublic.h"
-#include "base/histogram.h"
-#include "base/logging.h"
 #include <stdio.h>
 #include <string.h>
 #ifdef WIN32
@@ -167,6 +164,7 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 
@@ -2576,8 +2574,7 @@ nsCycleCollector::CleanupAfterCollection()
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: CleanupAfterCollection(), total time %ums\n", interval);
 #endif
-    UMA_HISTOGRAM_TIMES("nsCycleCollector::Collect (ms)",
-                        base::TimeDelta::FromMilliseconds(interval));
+    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR, interval);
 
 #ifdef DEBUG_CC
     ExplainLiveExpectedGarbage();

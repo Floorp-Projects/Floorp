@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define XPCOM_TRANSLATE_NSGM_ENTRY_POINT
 #include "base/histogram.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -47,27 +46,114 @@
 #include "jsapi.h" 
 #include "nsStringGlue.h"
 #include "nsITelemetry.h"
+#include "Telemetry.h" 
+#include <map>
+#include <string.h>
 
 namespace {
 
 using namespace base;
+using namespace mozilla;
+using namespace std;
 
-class Telemetry : public nsITelemetry
+struct ltstr {
+  bool operator()(const char* s1, const char* s2) const {
+    return strcmp(s1, s2) < 0;
+  }
+};
+
+class TelemetryImpl : public nsITelemetry
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSITELEMETRY
 
 public:
-  static Telemetry* GetSingleton();
+
+private:
+  // This is used to cache JS string->Telemetry::ID conversions
+  typedef map<const char*, Telemetry::ID, ltstr> NameHistogramMap;
+  NameHistogramMap mHistogramMap;
 };
 
 // A initializer to initialize histogram collection
 StatisticsRecorder gStatisticsRecorder;
 
+// Hardcoded probes
+struct TelemetryHistogram {
+  Histogram *histogram;
+  const char *id;
+  const char *name;
+  PRUint32 min;
+  PRUint32 max;
+  PRUint32 bucketCount;
+  PRUint32 histogramType;
+};
+
+const TelemetryHistogram gHistograms[] = {
+#define HISTOGRAM(id, name, min, max, bucket_count, histogram_type, b) \
+  { NULL, NS_STRINGIFY(id), name, min, max, bucket_count, nsITelemetry::HISTOGRAM_ ## histogram_type },
+
+#include "TelemetryHistograms.h"
+
+#undef HISTOGRAM
+};
+
+nsresult
+HistogramGet(const char *name, PRUint32 min, PRUint32 max, PRUint32 bucketCount,
+             PRUint32 histogramType, Histogram **result)
+{
+  if (histogramType != nsITelemetry::HISTOGRAM_BOOLEAN) {
+    // Sanity checks for histogram parameters.
+    if (min >= max)
+      return NS_ERROR_ILLEGAL_VALUE;
+
+    if (bucketCount <= 2)
+      return NS_ERROR_ILLEGAL_VALUE;
+
+    if (min < 1)
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  switch (histogramType) {
+  case nsITelemetry::HISTOGRAM_EXPONENTIAL:
+    *result = Histogram::FactoryGet(name, min, max, bucketCount, Histogram::kNoFlags);
+    break;
+  case nsITelemetry::HISTOGRAM_LINEAR:
+    *result = LinearHistogram::FactoryGet(name, min, max, bucketCount, Histogram::kNoFlags);
+    break;
+  case nsITelemetry::HISTOGRAM_BOOLEAN:
+    *result = BooleanHistogram::FactoryGet(name, Histogram::kNoFlags);
+    break;
+  default:
+    return NS_ERROR_INVALID_ARG;
+  }
+  return NS_OK;
+}
+
+// O(1) histogram lookup by numeric id
+nsresult
+GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
+{
+  static Histogram* knownHistograms[Telemetry::HistogramCount] = {0};
+  Histogram *h = knownHistograms[id];
+  if (h) {
+    *ret = h;
+    return NS_OK;
+  }
+
+  const TelemetryHistogram &p = gHistograms[id];
+  nsresult rv = HistogramGet(p.name, p.min, p.max, p.bucketCount, p.histogramType, &h);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  *ret = knownHistograms[id] = h;
+  return NS_OK;
+}
+
 bool
 FillRanges(JSContext *cx, JSObject *array, Histogram *h)
 {
-  for (size_t i = 0;i < h->bucket_count();i++) {
+  for (size_t i = 0; i < h->bucket_count(); i++) {
     if (!JS_DefineElement(cx, array, i, INT_TO_JSVAL(h->ranges(i)), NULL, NULL, JSPROP_ENUMERATE))
       return false;
   }
@@ -94,7 +180,7 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
         )) {
     return JS_FALSE;
   }
-  for (size_t i = 0;i < count;i++) {
+  for (size_t i = 0; i < count; i++) {
     if (!JS_DefineElement(cx, counts_array, i, INT_TO_JSVAL(ss.counts(i)), NULL, NULL, JSPROP_ENUMERATE)) {
       return JS_FALSE;
     }
@@ -113,7 +199,11 @@ JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
     return JS_FALSE;
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
-  h->Add(JSVAL_TO_INT(argv[0]));
+  PRUint32 value = JSVAL_TO_INT(argv[0]);
+  if (h->histogram_type() == Histogram::BOOLEAN_HISTOGRAM)
+    h->Add(!!value);
+  else
+    h->Add(value);
   return JS_TRUE;
 }
 
@@ -148,31 +238,19 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
           && JS_DefineFunction (cx, obj, "add", JSHistogram_Add, 1, 0)
           && JS_DefineFunction (cx, obj, "snapshot", JSHistogram_Snapshot, 1, 0)) ? NS_OK : NS_ERROR_FAILURE;
 }
-  
+
 NS_IMETHODIMP
-Telemetry::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, PRUint32 bucket_count, PRUint32 histogram_type, JSContext *cx, jsval *ret)
+TelemetryImpl::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, PRUint32 bucketCount, PRUint32 histogramType, JSContext *cx, jsval *ret)
 {
-  // Sanity checks on histogram parameters.
-  if (min < 1)
-    return NS_ERROR_ILLEGAL_VALUE;
-
-  if (min >= max)
-    return NS_ERROR_ILLEGAL_VALUE;
-
-  if (bucket_count <= 2)
-    return NS_ERROR_ILLEGAL_VALUE;
-
   Histogram *h;
-  if (histogram_type == nsITelemetry::HISTOGRAM_EXPONENTIAL) {
-    h = Histogram::FactoryGet(name.BeginReading(), min, max, bucket_count, Histogram::kNoFlags);
-  } else {
-    h = LinearHistogram::FactoryGet(name.BeginReading(), min, max, bucket_count, Histogram::kNoFlags);
-  }
+  nsresult rv = HistogramGet(PromiseFlatCString(name).get(), min, max, bucketCount, histogramType, &h);
+  if (NS_FAILED(rv))
+    return rv;
   return WrapAndReturnHistogram(h, cx, ret);
 }
 
 NS_IMETHODIMP
-Telemetry::GetHistogramSnapshots(JSContext *cx, jsval *ret)
+TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
 {
   JSObject *root_obj = JS_NewObject(cx, NULL, NULL, NULL);
   if (!root_obj)
@@ -194,51 +272,80 @@ Telemetry::GetHistogramSnapshots(JSContext *cx, jsval *ret)
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(Telemetry, nsITelemetry)
 
-Telemetry *gJarHandler = nsnull;
-
-void ShutdownTelemetry()
+NS_IMETHODIMP
+TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *ret)
 {
-  NS_IF_RELEASE(gJarHandler);
-}
-
-Telemetry* Telemetry::GetSingleton()
-{
-  if (!gJarHandler) {
-    gJarHandler = new Telemetry();
-    NS_ADDREF(gJarHandler);
+  // Cache names for log(N) lookup
+  // Note the histogram names are statically allocated
+  if (Telemetry::HistogramCount && !mHistogramMap.size()) {
+    for (PRUint32 i = 0; i < Telemetry::HistogramCount; i++) {
+      mHistogramMap[gHistograms[i].id] = (Telemetry::ID) i;
+    }
   }
-  NS_ADDREF(gJarHandler);
-  return gJarHandler;
+
+  NameHistogramMap::iterator it = mHistogramMap.find(PromiseFlatCString(name).get());
+  if (it == mHistogramMap.end())
+    return NS_ERROR_FAILURE;
+  
+  Histogram *h;
+  nsresult rv = GetHistogramByEnumId(it->second, &h);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return WrapAndReturnHistogram(h, cx, ret);
 }
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Telemetry, Telemetry::GetSingleton)
+NS_IMPL_THREADSAFE_ISUPPORTS1(TelemetryImpl, nsITelemetry)
+
+already_AddRefed<nsITelemetry>
+CreateTelemetryInstance()
+{
+  nsCOMPtr<nsITelemetry> telemetry = new TelemetryImpl();
+  return telemetry.forget();
+}
+
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, CreateTelemetryInstance)
 
 #define NS_TELEMETRY_CID \
   {0xaea477f2, 0xb3a2, 0x469c, {0xaa, 0x29, 0x0a, 0x82, 0xd1, 0x32, 0xb8, 0x29}}
 NS_DEFINE_NAMED_CID(NS_TELEMETRY_CID);
 
-const mozilla::Module::CIDEntry kTelemetryCIDs[] = {
-  { &kNS_TELEMETRY_CID, false, NULL, TelemetryConstructor },
+const Module::CIDEntry kTelemetryCIDs[] = {
+  { &kNS_TELEMETRY_CID, false, NULL, nsITelemetryConstructor },
   { NULL }
 };
 
-const mozilla::Module::ContractIDEntry kTelemetryContracts[] = {
+const Module::ContractIDEntry kTelemetryContracts[] = {
   { "@mozilla.org/base/telemetry;1", &kNS_TELEMETRY_CID },
   { NULL }
 };
 
-const mozilla::Module kTelemetryModule = {
-  mozilla::Module::kVersion,
+const Module kTelemetryModule = {
+  Module::kVersion,
   kTelemetryCIDs,
   kTelemetryContracts,
   NULL,
   NULL,
   NULL,
-  ShutdownTelemetry,
+  NULL,
 };
 
 } // anonymous namespace
+
+namespace mozilla {
+namespace Telemetry {
+
+void
+Accumulate(ID aHistogram, PRUint32 aSample)
+{
+  Histogram *h;
+  nsresult rv = GetHistogramByEnumId(aHistogram, &h);
+  if (NS_SUCCEEDED(rv))
+    h->Add(aSample);
+}
+
+} // namespace Telemetry
+} // namespace mozilla
 
 NSMODULE_DEFN(nsTelemetryModule) = &kTelemetryModule;
