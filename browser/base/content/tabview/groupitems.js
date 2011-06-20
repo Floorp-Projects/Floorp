@@ -300,7 +300,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         "tab must be null (if no children) or a TabItem");
 
     this._activeTab = tab;
-    this.arrange({immediately: true});
+
+    if (this.isStacked())
+      this.arrange({immediately: true});
   },
 
   // -----------
