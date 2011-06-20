@@ -245,6 +245,7 @@ load 467881-1.html
 load 468491-1.html
 load 468546-1.xhtml
 load 468555-1.xhtml
+load 468563-1.html
 load 468578-1.xhtml
 # These three didn't actually crash without the resizing that the
 # browser does when setting up print preview, but adding them anyway.
