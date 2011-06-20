@@ -130,7 +130,7 @@ public:
 
     void AcknowledgeEventSync();
 
-    void EnableAccelerometer(bool aEnable);
+    void EnableDeviceMotion(bool aEnable);
 
     void EnableLocation(bool aEnable);
 
@@ -283,7 +283,7 @@ protected:
     jmethodID jNotifyIMEEnabled;
     jmethodID jNotifyIMEChange;
     jmethodID jAcknowledgeEventSync;
-    jmethodID jEnableAccelerometer;
+    jmethodID jEnableDeviceMotion;
     jmethodID jEnableLocation;
     jmethodID jReturnIMEQueryResult;
     jmethodID jNotifyAppShellReady;

@@ -34,21 +34,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometerSystem_h
-#define nsAccelerometerSystem_h
+#ifndef nsDeviceMotionSystem_h
+#define nsDeviceMotionSystem_h
 
-#include "nsAccelerometer.h"
+#include "nsDeviceMotion.h"
 
-class nsAccelerometerSystem : public nsAccelerometer
+class nsDeviceMotionSystem : public nsDeviceMotion
 {
 public:
-  nsAccelerometerSystem();
-  virtual ~nsAccelerometerSystem();
+  nsDeviceMotionSystem();
+  virtual ~nsDeviceMotionSystem();
 
 private:
   virtual void Startup();
   virtual void Shutdown();
 };
 
-#endif /* nsAccelerometerSystem_h */
+#endif /* nsDeviceMotionSystem_h */
 

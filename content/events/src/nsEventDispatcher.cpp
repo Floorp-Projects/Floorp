@@ -837,6 +837,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("deviceorientationevent"))
     return NS_NewDOMDeviceOrientationEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("devicemotionevent"))
+    return NS_NewDOMDeviceMotionEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("uievent") ||
       aEventType.LowerCaseEqualsLiteral("uievents"))
     return NS_NewDOMUIEvent(aDOMEvent, aPresContext, nsnull);

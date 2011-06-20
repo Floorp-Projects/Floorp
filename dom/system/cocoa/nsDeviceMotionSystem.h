@@ -34,19 +34,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometerSystem_h
-#define nsAccelerometerSystem_h
+#ifndef nsDeviceMotionSystem_h
+#define nsDeviceMotionSystem_h
 
 #include <IOKit/IOKitLib.h>
 #include <mach/mach_port.h>
 
-#include "nsAccelerometer.h"
+#include "nsDeviceMotion.h"
 
-class nsAccelerometerSystem : public nsAccelerometer
+class nsDeviceMotionSystem : public nsDeviceMotion
 {
  public:
-  nsAccelerometerSystem();
-  ~nsAccelerometerSystem();
+  nsDeviceMotionSystem();
+  ~nsDeviceMotionSystem();
 
   void Startup();
   void Shutdown();

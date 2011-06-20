@@ -14,12 +14,11 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * Doug Turner <dougt@dougt.org>
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,36 +34,64 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometerSystem_h
-#define nsAccelerometerSystem_h
+#ifndef nsDeviceMotion_h
+#define nsDeviceMotion_h
 
-#include <unistd.h>
-#include "nsAccelerometer.h"
+#include "nsIDeviceMotion.h"
+#include "nsIDOMDeviceMotionEvent.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsITimer.h"
 
-enum nsAccelerometerSystemDriver
+#define NS_DEVICE_MOTION_CID \
+{ 0xecba5203, 0x77da, 0x465a, \
+{ 0x86, 0x5e, 0x78, 0xb7, 0xaf, 0x10, 0xd8, 0xf7 } }
+
+#define NS_DEVICE_MOTION_CONTRACTID "@mozilla.org/devicemotion;1"
+
+class nsIDOMWindow;
+
+class nsDeviceMotion : public nsIDeviceMotionUpdate
 {
-  eNoSensor,
-  eAppleSensor,
-  eIBMSensor,
-  eMaemoSensor,
-  eHPdv7Sensor
-};
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDEVICEMOTION
+  NS_DECL_NSIDEVICEMOTIONUPDATE
 
-class nsAccelerometerSystem : public nsAccelerometer
-{
- public:
-  nsAccelerometerSystem();
-  ~nsAccelerometerSystem();
+  nsDeviceMotion();
 
-  void Startup();
-  void Shutdown();
+  virtual ~nsDeviceMotion();
 
-  FILE* mPositionFile;
-  FILE* mCalibrateFile;
-  nsAccelerometerSystemDriver mType;
+private:
+  nsCOMArray<nsIDeviceMotionListener> mListeners;
+  nsCOMArray<nsIDOMWindow> mWindowListeners;
 
-  nsCOMPtr<nsITimer> mUpdateTimer;
-  static void UpdateHandler(nsITimer *aTimer, void *aClosure);
+  void StartDisconnectTimer();
+
+  PRBool mStarted;
+
+  nsCOMPtr<nsITimer> mTimeoutTimer;
+  static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
+
+ protected:
+
+  void FireDOMOrientationEvent(class nsIDOMDocument *domDoc, 
+                               class nsIDOMEventTarget *target,
+                               double alpha,
+                               double beta,
+                               double gamma);
+
+  void FireDOMMotionEvent(class nsIDOMDocument *domDoc, 
+                          class nsIDOMEventTarget *target,
+                          double x,
+                          double y,
+                          double z);
+
+  PRUint32 mUpdateInterval;
+  PRBool   mEnabled;
+
+  virtual void Startup()  = 0;
+  virtual void Shutdown() = 0;
 };
 
 #endif
