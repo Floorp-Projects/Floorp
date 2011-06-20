@@ -35,25 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#addons-page {
-  -moz-appearance: none;
-  padding: 18px;
-  background-color: Window;  
-  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 160px),
-                    -moz-linear-gradient(-moz-dialog, Window 160px);
-  color: WindowText;
-}
-
-#view-port-container {
-  /* Needed to allow the radius to clip the inner content, see bug 595656 */
-  /* Disabled because of bug 623615
-  overflow: hidden;
-  */
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  border: 1px solid ThreeDShadow;
-  border-radius: 5px;
-}
+@import url("chrome://global/skin/inContentUI.css");
 
 
 /*** global warnings ***/
