@@ -54,12 +54,11 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIPrivateTextEvent.h"
 #include "nsIEditorMailSupport.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsILookAndFeel.h"
 #include "nsFocusManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventGroup.h"
+#include "mozilla/Preferences.h"
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
@@ -76,6 +75,8 @@
 #include "nsIFocusManager.h"
 #include "nsIDOMWindow.h"
 #include "nsContentUtils.h"
+
+using namespace mozilla;
 
 class nsAutoEditorKeypressOperation {
 public:
@@ -136,53 +137,55 @@ nsEditorEventListener::InstallToEditor()
   nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elmP);
 
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  nsCOMPtr<nsIDOMEventListener> listenerBase;
+  CallQueryInterface(this, getter_AddRefs(listenerBase));
+
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("keypress"),
                                     NS_EVENT_FLAG_BUBBLE |
                                     NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
                                     sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
   // See bug 455215, we cannot use the standard dragstart event yet
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("draggesture"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("dragenter"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("dragover"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("dragexit"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("drop"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = elmP->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
+  rv = elmP->AddEventListenerByIID(listenerBase,
                                    NS_GET_IID(nsIDOMMouseListener),
                                    NS_EVENT_FLAG_CAPTURE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Focus event doesn't bubble so adding the listener to capturing phase.
   // Make sure this works after bug 235441 gets fixed.
-  rv = elmP->AddEventListenerByIID(static_cast<nsIDOMFocusListener*>(this),
+  rv = elmP->AddEventListenerByIID(listenerBase,
                                    NS_GET_IID(nsIDOMFocusListener),
                                    NS_EVENT_FLAG_CAPTURE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = piTarget->AddEventListenerByIID(static_cast<nsIDOMTextListener*>(this),
+  rv = piTarget->AddEventListenerByIID(listenerBase,
                                        NS_GET_IID(nsIDOMTextListener));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = piTarget->AddEventListenerByIID(
-    static_cast<nsIDOMCompositionListener*>(this),
-    NS_GET_IID(nsIDOMCompositionListener));
+  rv = piTarget->AddEventListenerByIID(listenerBase,
+                                       NS_GET_IID(nsIDOMCompositionListener));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -217,39 +220,41 @@ nsEditorEventListener::UninstallFromEditor()
     return;
   }
 
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  nsCOMPtr<nsIDOMEventListener> listenerBase;
+  CallQueryInterface(this, getter_AddRefs(listenerBase));
+
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("keypress"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("draggesture"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("dragenter"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("dragover"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("dragexit"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("drop"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
 
-  elmP->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
+  elmP->RemoveEventListenerByIID(listenerBase,
                                  NS_GET_IID(nsIDOMMouseListener),
                                  NS_EVENT_FLAG_CAPTURE);
 
-  elmP->RemoveEventListenerByIID(static_cast<nsIDOMFocusListener*>(this),
+  elmP->RemoveEventListenerByIID(listenerBase,
                                  NS_GET_IID(nsIDOMFocusListener),
                                  NS_EVENT_FLAG_CAPTURE);
 
-  piTarget->RemoveEventListenerByIID(static_cast<nsIDOMTextListener*>(this),
+  piTarget->RemoveEventListenerByIID(listenerBase,
                                      NS_GET_IID(nsIDOMTextListener));
 
-  piTarget->RemoveEventListenerByIID(
-    static_cast<nsIDOMCompositionListener*>(this),
-    NS_GET_IID(nsIDOMCompositionListener));
+  piTarget->RemoveEventListenerByIID(listenerBase,
+                                     NS_GET_IID(nsIDOMCompositionListener));
 }
 
 already_AddRefed<nsIPresShell>
@@ -400,56 +405,49 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   // middle-mouse click (paste);
   if (button == 1)
   {
-    nsCOMPtr<nsIPrefBranch> prefBranch =
-      do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv) && prefBranch)
+    if (Preferences::GetBool("middlemouse.paste", PR_FALSE))
     {
-      PRBool doMiddleMousePaste = PR_FALSE;;
-      rv = prefBranch->GetBoolPref("middlemouse.paste", &doMiddleMousePaste);
-      if (NS_SUCCEEDED(rv) && doMiddleMousePaste)
-      {
-        // Set the selection to the point under the mouse cursor:
-        nsCOMPtr<nsIDOMNode> parent;
-        if (NS_FAILED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
-          return NS_ERROR_NULL_POINTER;
-        PRInt32 offset = 0;
-        if (NS_FAILED(nsuiEvent->GetRangeOffset(&offset)))
-          return NS_ERROR_NULL_POINTER;
+      // Set the selection to the point under the mouse cursor:
+      nsCOMPtr<nsIDOMNode> parent;
+      if (NS_FAILED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
+        return NS_ERROR_NULL_POINTER;
+      PRInt32 offset = 0;
+      if (NS_FAILED(nsuiEvent->GetRangeOffset(&offset)))
+        return NS_ERROR_NULL_POINTER;
 
-        nsCOMPtr<nsISelection> selection;
-        if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection))))
-          (void)selection->Collapse(parent, offset);
+      nsCOMPtr<nsISelection> selection;
+      if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection))))
+        (void)selection->Collapse(parent, offset);
 
-        // If the ctrl key is pressed, we'll do paste as quotation.
-        // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
-        PRBool ctrlKey = PR_FALSE;
-        mouseEvent->GetCtrlKey(&ctrlKey);
+      // If the ctrl key is pressed, we'll do paste as quotation.
+      // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
+      PRBool ctrlKey = PR_FALSE;
+      mouseEvent->GetCtrlKey(&ctrlKey);
 
-        nsCOMPtr<nsIEditorMailSupport> mailEditor;
-        if (ctrlKey)
-          mailEditor = do_QueryInterface(static_cast<nsIEditor*>(mEditor));
+      nsCOMPtr<nsIEditorMailSupport> mailEditor;
+      if (ctrlKey)
+        mailEditor = do_QueryInterface(static_cast<nsIEditor*>(mEditor));
 
-        PRInt32 clipboard;
+      PRInt32 clipboard;
 
 #if defined(XP_OS2) || defined(XP_WIN32)
-        clipboard = nsIClipboard::kGlobalClipboard;
+      clipboard = nsIClipboard::kGlobalClipboard;
 #else
-        clipboard = nsIClipboard::kSelectionClipboard;
+      clipboard = nsIClipboard::kSelectionClipboard;
 #endif
 
-        if (mailEditor)
-          mailEditor->PasteAsQuotation(clipboard);
-        else
-          mEditor->Paste(clipboard);
+      if (mailEditor)
+        mailEditor->PasteAsQuotation(clipboard);
+      else
+        mEditor->Paste(clipboard);
 
-        // Prevent the event from propagating up to be possibly handled
-        // again by the containing window:
-        mouseEvent->StopPropagation();
-        mouseEvent->PreventDefault();
+      // Prevent the event from propagating up to be possibly handled
+      // again by the containing window:
+      mouseEvent->StopPropagation();
+      mouseEvent->PreventDefault();
 
-        // We processed the event, whether drop/paste succeeded or not
-        return NS_OK;
-      }
+      // We processed the event, whether drop/paste succeeded or not
+      return NS_OK;
     }
   }
   return NS_OK;

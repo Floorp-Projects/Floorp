@@ -285,6 +285,7 @@ EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
 		RangedPtr.h \
+		RefPtr.h	\
 		Types.h		\
 		Util.h          \
 		$(NULL)

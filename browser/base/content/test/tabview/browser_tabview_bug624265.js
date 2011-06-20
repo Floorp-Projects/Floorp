@@ -119,7 +119,8 @@ function test() {
 
       enterAndLeavePrivateBrowsing(function () {
         assertNumberOfVisibleTabs(2);
-        next();
+        gBrowser.selectedTab = gBrowser.tabs[0];
+        closeGroupItem(cw.GroupItems.groupItems[1], next);
       });
     });
   }

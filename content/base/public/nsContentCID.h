@@ -228,13 +228,6 @@
 
 #endif
 
-#define NS_SYNCLOADDOMSERVICE_CID                   \
- { /* 0e4e7d00-f71a-439f-9178-1a71ff11b55f */       \
-  0x0e4e7d00, 0xf71a, 0x439f,                       \
- {0x91, 0x78, 0x1a, 0x71, 0xff, 0x11, 0xb5, 0x5f} }
-#define NS_SYNCLOADDOMSERVICE_CONTRACTID            \
-"@mozilla.org/content/syncload-dom-service;1"
-
 #define NS_EVENTLISTENERSERVICE_CID                 \
  { /* baa34652-f1f1-4185-b224-244ee82a413a */       \
    0xbaa34652, 0xf1f1, 0x4185,                      \

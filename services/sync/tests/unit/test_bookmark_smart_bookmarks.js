@@ -239,7 +239,7 @@ add_test(function test_smart_bookmarks_duped() {
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Engine.Bookmarks").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
 
   generateNewKeys();
 

@@ -74,7 +74,7 @@ nsPrintData::nsPrintData(ePrintDataType aType) :
   mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(NULL), 
   mBrandName(nsnull)
 {
-
+  MOZ_COUNT_CTOR(nsPrintData);
   nsCOMPtr<nsIStringBundle> brandBundle;
   nsCOMPtr<nsIStringBundleService> svc =
     mozilla::services::GetStringBundleService();
@@ -93,6 +93,7 @@ nsPrintData::nsPrintData(ePrintDataType aType) :
 
 nsPrintData::~nsPrintData()
 {
+  MOZ_COUNT_DTOR(nsPrintData);
   // remove the event listeners
   if (mPPEventListeners) {
     mPPEventListeners->RemoveListeners();
