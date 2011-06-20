@@ -555,10 +555,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool addDebuggee(JSContext *cx, js::GlobalObject *global) {
         bool wasEnabled = debugMode();
-        if (!wasEnabled && haveScriptsOnStack(cx)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
-            return false;
-        }
         if (!debuggees.put(global)) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -570,11 +566,13 @@ struct JS_FRIEND_API(JSCompartment) {
     }
 
     void removeDebuggee(JSContext *cx, js::GlobalObject *global) {
+        bool wasEnabled = debugMode();
         JS_ASSERT(debuggees.has(global));
         debuggees.remove(global);
         if (debuggees.empty()) {
             debugModeBits &= ~DebugFromJS;
-            updateForDebugMode(cx);
+            if (wasEnabled && !debugMode())
+                updateForDebugMode(cx);
         }
     }
 };

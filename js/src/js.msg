@@ -358,4 +358,4 @@ MSG_DEF(JSMSG_DEBUG_STREAMS_CROSSED,  275, 0, JSEXN_INTERNALERR, "the debuggee h
 MSG_DEF(JSMSG_DEBUG_OBJECT_WRONG_OWNER, 276, 0, JSEXN_TYPEERR, "Debug.Object belongs to a different Debug")
 MSG_DEF(JSMSG_DEBUG_OBJECT_PROTO,     277, 0, JSEXN_TYPEERR, "Debug.Object.prototype is not a valid Debug.Object")
 MSG_DEF(JSMSG_DEBUG_LOOP,             278, 0, JSEXN_TYPEERR, "cannot debug an object in same compartment as debugger or a compartment that is already debugging the debugger")
-MSG_DEF(JSMSG_DEBUG_NOT_IDLE,         279, 0, JSEXN_ERR, "cannot start debugging: a debuggee script is on the stack")
+MSG_DEF(JSMSG_DEBUG_NOT_IDLE,         279, 1, JSEXN_ERR, "cannot {0} debugging: a debuggee script is on the stack")

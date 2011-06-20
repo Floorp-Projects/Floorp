@@ -647,6 +647,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
 void
 JSCompartment::updateForDebugMode(JSContext *cx)
 {
+    JS_ASSERT(!haveScriptsOnStack(cx));
 #ifdef JS_METHODJIT
     bool mode = debugMode();
 
