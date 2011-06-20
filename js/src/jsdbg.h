@@ -76,35 +76,13 @@ class Debug {
         FrameMap;
     FrameMap frames;
 
-    // Mark policy for weak maps where the keys are CCWs, but the liveness of the entry
-    // depends on the CCW's *referent's* markedness, not the CCW itself. This policy is
-    // only usable when marking an entry's value eventually marks the key. These
-    // properties hold for ObjectWeakMap and ScriptWeakMap.
-    class CCWReferentKeyMarkPolicy: public DefaultMarkPolicy<JSObject *, JSObject *> {
-        typedef DefaultMarkPolicy<JSObject *, JSObject *> Base;
-      public:
-        explicit CCWReferentKeyMarkPolicy(JSTracer *tracer) : Base(tracer) { }
-        // The unwrap() call here means that we use the *referent's* mark, not that of the
-        // CCW itself, to decide whether the table entry is live. This seems weird: if the
-        // CCW is not marked, and the referent is, won't we end up keeping the table entry
-        // but GC'ing its key? But it's okay: the value always refers to the CCW, so
-        // marking the value marks the CCW.
-        bool keyMarked(JSObject *k) { 
-            JS_ASSERT(k->isCrossCompartmentWrapper());
-            return k->unwrap()->isMarked(); 
-        }
-        void markKey(JSObject *k, const char *description) {
-            js::gc::MarkObject(tracer, *k->unwrap(), description);
-        }
-    };
-
     // The map from debuggee objects to their Debug.Object instances.
     typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CrossCompartmentMarkPolicy>
         ObjectWeakMap;
     ObjectWeakMap objects;
 
-    // An ephemeral map from JSObject CCWs to Debug.Script instances.
-    typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CCWReferentKeyMarkPolicy>
+    // An ephemeral map from script-holding objects to Debug.Script instances.
+    typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CrossCompartmentMarkPolicy>
         ScriptWeakMap;
 
     // Map of Debug.Script instances for garbage-collected JSScripts. For function
