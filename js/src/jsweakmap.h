@@ -82,7 +82,7 @@ namespace js {
 //   
 //     MarkPolicy(JSTracer *)
 //
-//   and the following static member functions:
+//   and the following member functions:
 //
 //     bool keyMarked(Key &k)
 //     bool valueMarked(Value &v)
@@ -144,8 +144,8 @@ class WeakMapBase {
     virtual void sweep(JSTracer *tracer) = 0;
 
   private:
-    // Link in a list of all the WeakMaps we have marked in this garbage collection,
-    // headed by JSRuntime::gcWeakMapList.
+    // Link in a list of WeakMaps to mark iteratively and sweep in this garbage
+    // collection, headed by JSRuntime::gcWeakMapList.
     WeakMapBase *next;
 };
 
@@ -199,6 +199,18 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
         }
 #endif
     }
+
+  public:
+    // For use with cross-compartment WeakMaps.
+    void markKeysInCompartment(JSTracer *tracer) {
+        JSCompartment *comp = tracer->context->runtime->gcCurrentCompartment;
+        JS_ASSERT(comp);
+        MarkPolicy t(tracer);
+        for (Range r = Base::all(); !r.empty(); r.popFront()) {
+            if (!t.keyMarked(r.front().key))
+                t.markKey(r.front().key, "cross-compartment WeakMap key");
+        }
+    }
 };
 
 template <>
@@ -235,6 +247,32 @@ class DefaultMarkPolicy<JSObject *, JSObject *> {
     }
   protected:
     JSTracer *tracer;
+};
+
+// A MarkPolicy for WeakMaps whose Keys and values may be objects in arbitrary
+// compartments within a runtime.
+class CrossCompartmentMarkPolicy {
+  public:
+    CrossCompartmentMarkPolicy(JSTracer *t)
+        : tracer(t), comp(t->context->runtime->gcCurrentCompartment) {}
+    bool keyMarked(JSObject *k) { return isMarked(k); }
+    bool valueMarked(JSObject *v) { return isMarked(v); }
+    void markKey(JSObject *k, const char *description) {
+        js::gc::MarkObject(tracer, *k, description);
+    }
+    void markValue(JSObject *v, const char *description) {
+        js::gc::MarkObject(tracer, *v, description);
+    }
+
+  private:
+    // During per-compartment GC, if a key or value object is outside the gc
+    // compartment, consider it marked.
+    bool isMarked(JSObject *obj) {
+        return (comp && obj->compartment() != comp) || !IsAboutToBeFinalized(tracer->context, obj);
+    }
+
+    JSTracer *tracer;
+    JSCompartment *comp;
 };
 
 // The class of JavaScript WeakMap objects.
