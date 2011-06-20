@@ -514,11 +514,12 @@ PickChunk(JSContext *cx)
 
     chunk->init(rt);
     cx->compartment->chunk = chunk;
+    rt->gcChunkAllocationSinceLastGC = true;
     return chunk;
 }
 
 static void
-ExpireGCChunks(JSRuntime *rt)
+ExpireGCChunks(JSRuntime *rt, JSGCInvocationKind gckind)
 {
     static const size_t MaxAge = 3;
 
@@ -530,7 +531,7 @@ ExpireGCChunks(JSRuntime *rt)
         Chunk *chunk = e.front();
         JS_ASSERT(chunk->info.runtime == rt);
         if (chunk->unused()) {
-            if (chunk->info.age++ > MaxAge) {
+            if (gckind == GC_SHRINK || chunk->info.age++ > MaxAge) {
                 e.removeFront();
                 ReleaseGCChunk(rt, chunk);
                 continue;
@@ -614,7 +615,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      * The assigned value prevents GC from running when GC memory is too low
      * (during JS engine start).
      */
-    rt->setGCLastBytes(8192);
+    rt->setGCLastBytes(8192, GC_NORMAL);
 
     rt->gcJitReleaseTime = PRMJ_Now() + JIT_SCRIPT_EIGHTH_LIFETIME;
 
@@ -1092,34 +1093,38 @@ js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
 }
 
 void
-JSRuntime::setGCLastBytes(size_t lastBytes)
+JSRuntime::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
 {
     gcLastBytes = lastBytes;
-    float trigger = float(Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER)) * GC_HEAP_GROWTH_FACTOR;
+
+    size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER);
+    float trigger = float(base) * GC_HEAP_GROWTH_FACTOR;
     gcTriggerBytes = size_t(Min(float(gcMaxBytes), trigger));
 }
 
 void
 JSRuntime::reduceGCTriggerBytes(uint32 amount) {
     JS_ASSERT(amount > 0);
-    JS_ASSERT((gcTriggerBytes - amount) > 0);
+    JS_ASSERT(gcTriggerBytes - amount >= 0);
     if (gcTriggerBytes - amount < GC_ARENA_ALLOCATION_TRIGGER * GC_HEAP_GROWTH_FACTOR)
         return;
     gcTriggerBytes -= amount;
 }
 
 void
-JSCompartment::setGCLastBytes(size_t lastBytes)
+JSCompartment::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
 {
     gcLastBytes = lastBytes;
-    float trigger = float(Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER)) * GC_HEAP_GROWTH_FACTOR;
+
+    size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER);
+    float trigger = float(base) * GC_HEAP_GROWTH_FACTOR;
     gcTriggerBytes = size_t(Min(float(rt->gcMaxBytes), trigger));
 }
 
 void
 JSCompartment::reduceGCTriggerBytes(uint32 amount) {
     JS_ASSERT(amount > 0);
-    JS_ASSERT((gcTriggerBytes - amount) > 0);
+    JS_ASSERT(gcTriggerBytes - amount >= 0);
     if (gcTriggerBytes - amount < GC_ARENA_ALLOCATION_TRIGGER * GC_HEAP_GROWTH_FACTOR)
         return;
     gcTriggerBytes -= amount;
@@ -1960,6 +1965,21 @@ MaybeGC(JSContext *cx)
     if (comp->gcBytes > 8192 && comp->gcBytes >= 3 * (comp->gcTriggerBytes / 4)) {
         GCREASON(MAYBEGC);
         js_GC(cx, (rt->gcMode == JSGC_MODE_COMPARTMENT) ? comp : NULL, GC_NORMAL);
+        return;
+    }
+
+    /*
+     * On 32 bit setting gcNextFullGCTime below is not atomic and a race condition
+     * could trigger an GC. We tolerate this.
+     */
+    int64 now = PRMJ_Now();
+    if (rt->gcNextFullGCTime && rt->gcNextFullGCTime <= now) {
+        if (rt->gcChunkAllocationSinceLastGC || rt->gcChunksWaitingToExpire) {
+            GCREASON(MAYBEGC);
+            js_GC(cx, NULL, GC_SHRINK);
+        } else {
+            rt->gcNextFullGCTime = now + GC_IDLE_FULL_SPAN;
+        }
     }
 }
 
@@ -2094,10 +2114,11 @@ GCHelperThread::threadLoop(JSRuntime *rt)
 }
 
 void
-GCHelperThread::startBackgroundSweep(JSRuntime *rt)
+GCHelperThread::startBackgroundSweep(JSRuntime *rt, JSGCInvocationKind gckind)
 {
     /* The caller takes the GC lock. */
     JS_ASSERT(!sweeping);
+    lastGCKind = gckind;
     sweeping = true;
     PR_NotifyCondVar(wakeup);
 }
@@ -2138,7 +2159,7 @@ GCHelperThread::doSweep()
     for (ArenaHeader **i = finalizeVector.begin(); i != finalizeVector.end(); ++i)
         ArenaList::backgroundFinalize(cx, *i);
     finalizeVector.resize(0);
-    ExpireGCChunks(cx->runtime);
+    ExpireGCChunks(cx->runtime, lastGCKind);
     cx = NULL;
 
     if (freeCursor) {
@@ -2405,7 +2426,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * use IsAboutToBeFinalized().
      * This is done on the GCHelperThread if JS_THREADSAFE is defined.
      */
-    ExpireGCChunks(rt);
+    ExpireGCChunks(rt, gckind);
 #endif
     GCTIMESTAMP(sweepDestroyEnd);
 
@@ -2661,7 +2682,7 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_P
     if (gckind != GC_LAST_CONTEXT && rt->state != JSRTS_LANDING) {
         JS_ASSERT(cx->gcBackgroundFree == &rt->gcHelperThread);
         cx->gcBackgroundFree = NULL;
-        rt->gcHelperThread.startBackgroundSweep(rt);
+        rt->gcHelperThread.startBackgroundSweep(rt, gckind);
     } else {
         JS_ASSERT(!cx->gcBackgroundFree);
     }
@@ -2669,12 +2690,12 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_P
 
     rt->gcMarkAndSweep = false;
     rt->gcRegenShapes = false;
-    rt->setGCLastBytes(rt->gcBytes);
+    rt->setGCLastBytes(rt->gcBytes, gckind);
     rt->gcCurrentCompartment = NULL;
     rt->gcWeakMapList = NULL;
 
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->setGCLastBytes((*c)->gcBytes);
+        (*c)->setGCLastBytes((*c)->gcBytes, gckind);
 }
 
 void
@@ -2731,6 +2752,10 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
          * stop creating garbage.
          */
     } while (gckind == GC_LAST_CONTEXT && rt->gcPoke);
+
+    rt->gcNextFullGCTime = PRMJ_Now() + GC_IDLE_FULL_SPAN;
+
+    rt->gcChunkAllocationSinceLastGC = false;
 #ifdef JS_GCMETER
     js_DumpGCStats(cx->runtime, stderr);
 #endif
@@ -2857,7 +2882,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
             JSPRINCIPALS_HOLD(cx, principals);
         }
 
-        compartment->setGCLastBytes(8192);
+        compartment->setGCLastBytes(8192, GC_NORMAL);
 
         /*
          * Before reporting the OOM condition, |lock| needs to be cleaned up,
