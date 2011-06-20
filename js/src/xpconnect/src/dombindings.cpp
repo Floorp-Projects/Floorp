@@ -50,14 +50,73 @@
 #include "jsiter.h"
 #include "nsWrapperCacheInlines.h"
 
-extern XPCNativeInterface* interfaces[];
-
 using namespace js;
 
 namespace xpc {
 namespace dom {
 
 int HandlerFamily;
+
+// Only set allowNativeWrapper to false if you really know you need it, if in
+// doubt use true. Setting it to false disables security wrappers.
+static bool
+XPCOMObjectToJsval(JSContext *cx, JSObject *scope, xpcObjectHelper &helper,
+                   bool allowNativeWrapper, jsval *rval)
+{
+    // XXX The OBJ_IS_NOT_GLOBAL here is not really right. In
+    // fact, this code is depending on the fact that the
+    // global object will not have been collected, and
+    // therefore this NativeInterface2JSObject will not end up
+    // creating a new XPCNativeScriptableShared.
+
+    XPCLazyCallContext lccx(JS_CALLER, cx, scope);
+
+    nsresult rv;
+    if (!XPCConvert::NativeInterface2JSObject(lccx, rval, NULL, helper, NULL, NULL,
+                                              allowNativeWrapper, OBJ_IS_NOT_GLOBAL, &rv)) {
+        // I can't tell if NativeInterface2JSObject throws JS exceptions
+        // or not.  This is a sloppy stab at the right semantics; the
+        // method really ought to be fixed to behave consistently.
+        if (!JS_IsExceptionPending(cx))
+            xpc_qsThrow(cx, NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED);
+        return false;
+    }
+
+#ifdef DEBUG
+    JSObject* jsobj = JSVAL_TO_OBJECT(*rval);
+    if (jsobj && !js::GetObjectParent(jsobj))
+        NS_ASSERTION(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
+                     "Why did we recreate this wrapper?");
+#endif
+
+    return true;
+}
+
+template<class T>
+static inline JSObject*
+WrapNativeParent(JSContext *cx, JSObject *scope, T *p)
+{
+    if (!p)
+        return NULL;
+
+    nsWrapperCache *cache = GetWrapperCache(p);
+    JSObject* obj;
+    if (cache && (obj = cache->GetWrapper())) {
+#ifdef DEBUG
+        qsObjectHelper helper(p, cache);
+        jsval debugVal;
+
+        bool ok = XPCOMObjectToJsval(cx, scope, helper, false, &debugVal);
+        NS_ASSERTION(ok && JSVAL_TO_OBJECT(debugVal) == obj,
+                     "Unexpected object in nsWrapperCache");
+#endif
+        return obj;
+    }
+
+    qsObjectHelper helper(p, cache);
+    jsval v;
+    return XPCOMObjectToJsval(cx, scope, helper, false, &v) ? JSVAL_TO_OBJECT(v) : NULL;
+}
 
 JSObject *
 NodeListBase::create(JSContext *cx, XPCWrappedNativeScope *scope,
@@ -212,10 +271,8 @@ WrapObject(JSContext *cx, JSObject *scope, nsISupports *result,
 {
     if (xpc_FastGetCachedWrapper(cache, scope, vp))
         return true;
-    XPCLazyCallContext lccx(JS_CALLER, cx, scope);
     qsObjectHelper helper(result, cache);
-    return xpc_qsXPCOMObjectToJsval(lccx, helper, &NS_GET_IID(nsIDOMNode),
-                                    &interfaces[k_nsIDOMNode], vp);
+    return XPCOMObjectToJsval(cx, scope, helper, true, vp);
 }
 
 template<class T>
@@ -409,15 +466,9 @@ JSObject *
 NodeList<T>::create(JSContext *cx, XPCWrappedNativeScope *scope, T *aNodeList,
                     nsWrapperCache* aWrapperCache)
 {
-    nsINode *nativeParent = aNodeList->GetParentObject();
-    if (!nativeParent)
+    JSObject *parent = WrapNativeParent(cx, scope->GetGlobalJSObject(), aNodeList->GetParentObject());
+    if (!parent)
         return NULL;
-
-    jsval v;
-    if (!WrapObject(cx, scope->GetGlobalJSObject(), nativeParent, nativeParent, &v))
-        return NULL;
-
-    JSObject *parent = JSVAL_TO_OBJECT(v);
 
     JSAutoEnterCompartment ac;
     if (js::GetObjectGlobal(parent) != scope->GetGlobalJSObject()) {
