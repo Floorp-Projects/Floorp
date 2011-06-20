@@ -137,53 +137,55 @@ nsEditorEventListener::InstallToEditor()
   nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elmP);
 
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  nsCOMPtr<nsIDOMEventListener> listenerBase;
+  CallQueryInterface(this, getter_AddRefs(listenerBase));
+
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("keypress"),
                                     NS_EVENT_FLAG_BUBBLE |
                                     NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
                                     sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
   // See bug 455215, we cannot use the standard dragstart event yet
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("draggesture"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("dragenter"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("dragover"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("dragexit"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("drop"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = elmP->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
+  rv = elmP->AddEventListenerByIID(listenerBase,
                                    NS_GET_IID(nsIDOMMouseListener),
                                    NS_EVENT_FLAG_CAPTURE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Focus event doesn't bubble so adding the listener to capturing phase.
   // Make sure this works after bug 235441 gets fixed.
-  rv = elmP->AddEventListenerByIID(static_cast<nsIDOMFocusListener*>(this),
+  rv = elmP->AddEventListenerByIID(listenerBase,
                                    NS_GET_IID(nsIDOMFocusListener),
                                    NS_EVENT_FLAG_CAPTURE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = piTarget->AddEventListenerByIID(static_cast<nsIDOMTextListener*>(this),
+  rv = piTarget->AddEventListenerByIID(listenerBase,
                                        NS_GET_IID(nsIDOMTextListener));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = piTarget->AddEventListenerByIID(
-    static_cast<nsIDOMCompositionListener*>(this),
-    NS_GET_IID(nsIDOMCompositionListener));
+  rv = piTarget->AddEventListenerByIID(listenerBase,
+                                       NS_GET_IID(nsIDOMCompositionListener));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -218,39 +220,41 @@ nsEditorEventListener::UninstallFromEditor()
     return;
   }
 
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  nsCOMPtr<nsIDOMEventListener> listenerBase;
+  CallQueryInterface(this, getter_AddRefs(listenerBase));
+
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("keypress"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("draggesture"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("dragenter"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("dragover"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("dragexit"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
-  elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
+  elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("drop"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
 
-  elmP->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
+  elmP->RemoveEventListenerByIID(listenerBase,
                                  NS_GET_IID(nsIDOMMouseListener),
                                  NS_EVENT_FLAG_CAPTURE);
 
-  elmP->RemoveEventListenerByIID(static_cast<nsIDOMFocusListener*>(this),
+  elmP->RemoveEventListenerByIID(listenerBase,
                                  NS_GET_IID(nsIDOMFocusListener),
                                  NS_EVENT_FLAG_CAPTURE);
 
-  piTarget->RemoveEventListenerByIID(static_cast<nsIDOMTextListener*>(this),
+  piTarget->RemoveEventListenerByIID(listenerBase,
                                      NS_GET_IID(nsIDOMTextListener));
 
-  piTarget->RemoveEventListenerByIID(
-    static_cast<nsIDOMCompositionListener*>(this),
-    NS_GET_IID(nsIDOMCompositionListener));
+  piTarget->RemoveEventListenerByIID(listenerBase,
+                                     NS_GET_IID(nsIDOMCompositionListener));
 }
 
 already_AddRefed<nsIPresShell>
