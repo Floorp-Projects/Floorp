@@ -72,8 +72,8 @@ function checkHistograms(request, response) {
     do_check_eq(payload.info[f], expected_info[f]);
   }
 
-  const TELEMETRY_PING = "Telemetry.ping (ms)";
-  const TELEMETRY_SUCCESS = "Telemetry.success (No, Yes)";
+  const TELEMETRY_PING = "TELEMETRY_PING";
+  const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
   do_check_true(TELEMETRY_PING in payload.histograms)
 
   // There should be one successful report from the previos telemetry ping

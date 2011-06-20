@@ -82,7 +82,6 @@ StatisticsRecorder gStatisticsRecorder;
 struct TelemetryHistogram {
   Histogram *histogram;
   const char *id;
-  const char *name;
   PRUint32 min;
   PRUint32 max;
   PRUint32 bucketCount;
@@ -90,8 +89,8 @@ struct TelemetryHistogram {
 };
 
 const TelemetryHistogram gHistograms[] = {
-#define HISTOGRAM(id, name, min, max, bucket_count, histogram_type, b) \
-  { NULL, NS_STRINGIFY(id), name, min, max, bucket_count, nsITelemetry::HISTOGRAM_ ## histogram_type },
+#define HISTOGRAM(id, min, max, bucket_count, histogram_type, b) \
+  { NULL, NS_STRINGIFY(id), min, max, bucket_count, nsITelemetry::HISTOGRAM_ ## histogram_type },
 
 #include "TelemetryHistograms.h"
 
@@ -142,7 +141,7 @@ GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
   }
 
   const TelemetryHistogram &p = gHistograms[id];
-  nsresult rv = HistogramGet(p.name, p.min, p.max, p.bucketCount, p.histogramType, &h);
+  nsresult rv = HistogramGet(p.id, p.min, p.max, p.bucketCount, p.histogramType, &h);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
