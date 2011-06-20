@@ -74,7 +74,6 @@ extern Class DebugObject_class;
 
 enum {
     JSSLOT_DEBUGOBJECT_OWNER,
-    JSSLOT_DEBUGOBJECT_CCW,  // cross-compartment wrapper
     JSSLOT_DEBUGOBJECT_COUNT
 };
 
@@ -252,42 +251,31 @@ Debug::wrapDebuggeeValue(JSContext *cx, Value *vp)
 {
     assertSameCompartment(cx, object);
 
-    // FIXME This is not quite what we want. Ideally we would get a transparent
-    // wrapper no matter what sort of object *vp is. Oh well!
-    if (!cx->compartment->wrap(cx, vp)) {
-        vp->setUndefined();
-        return false;
-    }
-
     if (vp->isObject()) {
-        JSObject *ccwobj = &vp->toObject();
-        vp->setUndefined();
+        JSObject *obj = &vp->toObject();
 
-        // Debug.Object can't reflect objects from the current compartment.
-        // FIXME Ideally this shouldn't be possible. See FIXME comment above.
-        if (!ccwobj->isCrossCompartmentWrapper()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_STREAMS_CROSSED);
-            return false;
-        }
-
-        ObjectWeakMap::AddPtr p = objects.lookupForAdd(ccwobj);
+        ObjectWeakMap::AddPtr p = objects.lookupForAdd(obj);
         if (p) {
             vp->setObject(*p->value);
         } else {
-            // Create a new Debug.Object for ccwobj.
+            // Create a new Debug.Object for obj.
             JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
             JSObject *dobj = NewNonFunction<WithProto::Given>(cx, &DebugObject_class, proto, NULL);
             if (!dobj || !dobj->ensureClassReservedSlots(cx))
                 return false;
+            dobj->setPrivate(obj);
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
-            dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_CCW, ObjectValue(*ccwobj));
-            if (!objects.relookupOrAdd(p, ccwobj, dobj)) {
+            if (!objects.relookupOrAdd(p, obj, dobj)) {
                 js_ReportOutOfMemory(cx);
                 return false;
             }
             vp->setObject(*dobj);
         }
+    } else if (!cx->compartment->wrap(cx, vp)) {
+        vp->setUndefined();
+        return false;
     }
+
     return true;
 }
 
@@ -312,7 +300,7 @@ Debug::unwrapDebuggeeValue(JSContext *cx, Value *vp)
             return false;
         }
 
-        *vp = dobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW);
+        vp->setObject(*(JSObject *) dobj->getPrivate());
     }
     return true;
 }
@@ -530,6 +518,24 @@ Debug::dispatchHook(JSContext *cx, js::Value *vp, DebugObservesMethod observesEv
 
 
 // === Debug JSObjects
+
+void
+Debug::markCrossCompartmentDebugObjectReferents(JSTracer *tracer)
+{
+    JSCompartment *comp = tracer->context->runtime->gcCurrentCompartment;
+
+    // Mark all objects in comp that are referents of Debug.Objects in other
+    // compartments.
+    const GlobalObjectSet &debuggees = comp->getDebuggees();
+    for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        const GlobalObject::DebugVector *debuggers = r.front()->getDebuggers();
+        for (Debug **p = debuggers->begin(); p != debuggers->end(); p++) {
+            Debug *dbg = *p;
+            if (dbg->object->compartment() != comp)
+                dbg->objects.markKeysInCompartment(tracer);
+        }
+    }
+}
 
 bool
 Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
@@ -782,14 +788,12 @@ Debug::unwrapDebuggeeArgument(JSContext *cx, Value *vp)
     JSObject *obj = NonNullObject(cx, v);
     if (obj) {
         if (obj->clasp == &DebugObject_class) {
-            // Get the cross-compartment wrapper (which we unwrap in the next if-block).
             if (!unwrapDebuggeeValue(cx, &v))
                 return NULL;
-            obj = &v.toObject();
+            return &v.toObject();
         }
-        if (obj->isCrossCompartmentWrapper()) {
-            obj = &obj->getProxyPrivate().toObject();
-        }
+        if (obj->isCrossCompartmentWrapper())
+            return &obj->getProxyPrivate().toObject();
     }
     return obj;
 }
@@ -1709,10 +1713,24 @@ static JSFunctionSpec DebugFrame_methods[] = {
 
 // === Debug.Object
 
+static void
+DebugObject_trace(JSTracer *trc, JSObject *obj)
+{
+    if (JSObject *obj = (JSObject *) obj->getPrivate())
+        MarkObject(trc, *obj, "Debug.Object referent");
+}
+
 Class DebugObject_class = {
     "Object", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGOBJECT_COUNT),
     PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub
+    EnumerateStub, ResolveStub, ConvertStub, NULL,
+    NULL,                 /* reserved0   */
+    NULL,                 /* checkAccess */
+    NULL,                 /* call        */
+    NULL,                 /* construct   */
+    NULL,                 /* xdrObject   */
+    NULL,                 /* hasInstance */
+    DebugObject_trace
 };
 
 static JSObject *
@@ -1731,8 +1749,8 @@ DebugObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
 
     // Forbid Debug.Object.prototype, which is of class DebugObject_class
     // but isn't a real working Debug.Object. The prototype object is
-    // distinguished by having an 'undefined' referent.
-    if (thisobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).isUndefined()) {
+    // distinguished by having no referent.
+    if (!thisobj->getPrivate()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Debug.Object", fnname, "prototype object");
         return NULL;
@@ -1740,25 +1758,20 @@ DebugObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
     return thisobj;
 }
 
-#define THIS_DEBUGOBJECT_CCW(cx, vp, fnname, obj)                            \
-    JSObject *obj = DebugObject_checkThis(cx, vp, fnname);                   \
-    if (!obj)                                                                \
-        return false;                                                        \
-    obj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).toObject();          \
-    JS_ASSERT(obj->isCrossCompartmentWrapper())
-
-#define THIS_DEBUGOBJECT_REFERENT(cx, vp, fnname, obj)                       \
-    THIS_DEBUGOBJECT_CCW(cx, vp, fnname, obj);                               \
-    obj = JSWrapper::wrappedObject(obj)
+#define THIS_DEBUGOBJECT_REFERENT(cx, vp, fnname, obj)                        \
+    JSObject *obj = DebugObject_checkThis(cx, vp, fnname);                    \
+    if (!obj)                                                                 \
+        return false;                                                         \
+    obj = (JSObject *) obj->getPrivate();                                     \
+    JS_ASSERT(obj)
 
 #define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, vp, fnname, dbg, obj)             \
     JSObject *obj = DebugObject_checkThis(cx, vp, fnname);                    \
     if (!obj)                                                                 \
         return false;                                                         \
     Debug *dbg = Debug::fromChildJSObject(obj);                               \
-    obj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).toObject();           \
-    JS_ASSERT(obj->isCrossCompartmentWrapper());                              \
-    obj = JSWrapper::wrappedObject(obj)
+    obj = (JSObject *) obj->getPrivate();                                     \
+    JS_ASSERT(obj)
 
 static JSBool
 DebugObject_construct(JSContext *cx, uintN argc, Value *vp)

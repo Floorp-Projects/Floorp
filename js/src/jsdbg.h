@@ -98,14 +98,8 @@ class Debug {
         }
     };
 
-    // The map from debuggee objects to their Debug.Object instances. However, to avoid
-    // holding cross-compartment references directly, the keys in this map are the
-    // referents' CCWs, not the referents themselves. Thus, to find the Debug.Object for a
-    // debuggee object, you must first find its CCW, and then look that up here.
-    //
-    // Using CCWs for keys when it's really their referents' liveness that determines the
-    // table entry's liveness is delicate; see comments on CCWReferentKeyMarkPolicy.
-    typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CCWReferentKeyMarkPolicy>
+    // The map from debuggee objects to their Debug.Object instances.
+    typedef WeakMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, CrossCompartmentMarkPolicy>
         ObjectWeakMap;
     ObjectWeakMap objects;
 
@@ -212,6 +206,7 @@ class Debug {
     // objects that are definitely live but not yet marked, it marks them and
     // returns true. If not, it returns false.
     //
+    static void markCrossCompartmentDebugObjectReferents(JSTracer *tracer);
     static bool mark(GCMarker *trc, JSCompartment *compartment, JSGCInvocationKind gckind);
     static void sweepAll(JSContext *cx);
     static void sweepCompartment(JSContext *cx, JSCompartment *compartment);
