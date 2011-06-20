@@ -43,7 +43,7 @@ namespace mozilla {
 namespace Telemetry {
 
 enum ID {
-#define HISTOGRAM(name, a, b, c, d, e, f) name,
+#define HISTOGRAM(name, a, b, c, d, e) name,
 
 #include "TelemetryHistograms.h"
 
