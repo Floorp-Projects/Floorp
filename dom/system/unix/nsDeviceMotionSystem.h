@@ -41,7 +41,7 @@
 #include <unistd.h>
 #include "nsDeviceMotion.h"
 
-enum nsDeviceMotionSystemDriver
+enum nsAccelerometerSystemDriver
 {
   eNoSensor,
   eAppleSensor,
@@ -61,7 +61,7 @@ class nsDeviceMotionSystem : public nsDeviceMotion
 
   FILE* mPositionFile;
   FILE* mCalibrateFile;
-  nsDeviceMotionSystemDriver mType;
+  nsAccelerometerSystemDriver mType;
 
   nsCOMPtr<nsITimer> mUpdateTimer;
   static void UpdateHandler(nsITimer *aTimer, void *aClosure);
