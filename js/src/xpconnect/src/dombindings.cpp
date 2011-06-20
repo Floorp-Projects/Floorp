@@ -829,8 +829,7 @@ template<class T>
 bool
 NodeList<T>::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
 {
-    JS_ReportError(cx, "FIXME");
-    return false;
+    return ProxyHandler::iterate(cx, proxy, flags, vp);
 }
 
 template<class T>
