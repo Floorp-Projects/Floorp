@@ -6598,6 +6598,13 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       nsRect& o = aOverflowAreas.Overflow(otype);
       o.UnionRectEdges(o, bounds);
     }
+
+    // Include margin in scrollable overflow.
+    // XXX In theory this should consider margin collapsing
+    nsRect marginBounds(bounds);
+    marginBounds.Inflate(GetUsedMargin());
+    nsRect &so = aOverflowAreas.ScrollableOverflow();
+    so.UnionRectEdges(so, marginBounds);
   }
 
   // Note that NS_STYLE_OVERFLOW_CLIP doesn't clip the frame background,
