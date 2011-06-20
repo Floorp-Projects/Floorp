@@ -1,5 +1,5 @@
 // |jit-test| debug
-// The heldScripts table keeps Debug.Script instances with live referents alive.
+// Debug.Script instances with live referents stay alive.
 
 var N = 4;
 var g = newGlobal('new-compartment');
