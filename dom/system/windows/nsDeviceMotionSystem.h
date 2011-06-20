@@ -34,56 +34,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometer_h
-#define nsAccelerometer_h
+#ifndef nsDeviceMotionSystem_h
+#define nsDeviceMotionSystem_h
 
-#include "nsIAccelerometer.h"
-#include "nsCOMArray.h"
-#include "nsCOMPtr.h"
-#include "nsITimer.h"
+#include "nsDeviceMotion.h"
+#include "nsAutoPtr.h"
 
-#define NS_ACCELEROMETER_CID \
-{ 0xecba5203, 0x77da, 0x465a, \
-{ 0x86, 0x5e, 0x78, 0xb7, 0xaf, 0x10, 0xd8, 0xf7 } }
-
-#define NS_ACCELEROMETER_CONTRACTID "@mozilla.org/accelerometer;1"
-
-class nsIDOMWindow;
-
-class nsAccelerometer : public nsIAccelerometerUpdate
+class Sensor
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIACCELEROMETER
-  NS_DECL_NSIACCELEROMETERUPDATE
+ public:
+  virtual PRBool Startup() = 0;
+  virtual void Shutdown()  = 0;
+  virtual void GetValues(double *x, double *y, double *z) = 0;
+};
 
-  nsAccelerometer();
+class nsDeviceMotionSystem : public nsDeviceMotion
+{
+ public:
+  nsDeviceMotionSystem();
+  ~nsDeviceMotionSystem();
 
-  virtual ~nsAccelerometer();
+  void Startup();
+  void Shutdown();
 
-  double mLastAlpha;
-  double mLastBeta;
-  double mLastGamma;
+  nsCOMPtr<nsITimer> mUpdateTimer;
+  static void UpdateHandler(nsITimer *aTimer, void *aClosure);
 
-private:
-  nsCOMArray<nsIAccelerationListener> mListeners;
-  nsCOMArray<nsIDOMWindow> mWindowListeners;
-
-  void StartDisconnectTimer();
-
-  PRBool mStarted;
-  PRBool mNewListener;
-
-  nsCOMPtr<nsITimer> mTimeoutTimer;
-  static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
-
- protected:
-
-  PRUint32 mUpdateInterval;
-  PRBool   mEnabled;
-
-  virtual void Startup()  = 0;
-  virtual void Shutdown() = 0;
+  nsAutoPtr<Sensor> mSensor;
 };
 
 #endif

@@ -14,11 +14,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Doug Turner <dougt@dougt.org>
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,33 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometerSystem_h
-#define nsAccelerometerSystem_h
+#ifndef nsDeviceMotionSystem_h
+#define nsDeviceMotionSystem_h
 
-#include "nsAccelerometer.h"
-#include "nsAutoPtr.h"
+#include <unistd.h>
+#include "nsDeviceMotion.h"
 
-class Sensor
+enum nsDeviceMotionSystemDriver
 {
- public:
-  virtual PRBool Startup() = 0;
-  virtual void Shutdown()  = 0;
-  virtual void GetValues(double *x, double *y, double *z) = 0;
+  eNoSensor,
+  eAppleSensor,
+  eIBMSensor,
+  eMaemoSensor,
+  eHPdv7Sensor
 };
 
-class nsAccelerometerSystem : public nsAccelerometer
+class nsDeviceMotionSystem : public nsDeviceMotion
 {
  public:
-  nsAccelerometerSystem();
-  ~nsAccelerometerSystem();
+  nsDeviceMotionSystem();
+  ~nsDeviceMotionSystem();
 
   void Startup();
   void Shutdown();
 
+  FILE* mPositionFile;
+  FILE* mCalibrateFile;
+  nsDeviceMotionSystemDriver mType;
+
   nsCOMPtr<nsITimer> mUpdateTimer;
   static void UpdateHandler(nsITimer *aTimer, void *aClosure);
-
-  nsAutoPtr<Sensor> mSensor;
 };
 
 #endif

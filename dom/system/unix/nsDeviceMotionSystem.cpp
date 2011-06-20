@@ -36,16 +36,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <unistd.h>
-#include "nsAccelerometerSystem.h"
+#include "nsDeviceMotionSystem.h"
 #include "nsIServiceManager.h"
 
 typedef struct {
   const char* mPosition;
   const char* mCalibrate;
-  nsAccelerometerSystemDriver mToken;
-} Accelerometer;
+  nsDeviceMotionSystemDriver mToken;
+} DeviceMotion;
 
-static const Accelerometer gAccelerometers[] = {
+static const DeviceMotion gDeviceMotions[] = {
   // MacBook
   {"/sys/devices/platform/applesmc.768/position",
    "/sys/devices/platform/applesmc.768/calibrate",
@@ -64,21 +64,21 @@ static const Accelerometer gAccelerometers[] = {
    eHPdv7Sensor},
 };
 
-nsAccelerometerSystem::nsAccelerometerSystem() :
+nsDeviceMotionSystem::nsDeviceMotionSystem() :
   mPositionFile(NULL),
   mCalibrateFile(NULL),
   mType(eNoSensor)
 {
 }
 
-nsAccelerometerSystem::~nsAccelerometerSystem()
+nsDeviceMotionSystem::~nsDeviceMotionSystem()
 {
 }
 
 void
-nsAccelerometerSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
+nsDeviceMotionSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
 {
-  nsAccelerometerSystem *self = reinterpret_cast<nsAccelerometerSystem *>(aClosure);
+  nsDeviceMotionSystem *self = reinterpret_cast<nsDeviceMotionSystem *>(aClosure);
   if (!self) {
     NS_ERROR("no self");
     return;
@@ -187,20 +187,20 @@ nsAccelerometerSystem::UpdateHandler(nsITimer *aTimer, void *aClosure)
       return;
   }
 
-  self->AccelerationChanged( xf, yf, zf );
+  self->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ACCELERATION, xf, yf, zf );
 }
 
-void nsAccelerometerSystem::Startup()
+void nsDeviceMotionSystem::Startup()
 {
-  // Accelerometers in Linux are used by reading a file (yay UNIX!), which is
+  // DeviceMotions in Linux are used by reading a file (yay UNIX!), which is
   // in a slightly different location depending on the driver.
-  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(gAccelerometers); i++) {
-    if (!(mPositionFile = fopen(gAccelerometers[i].mPosition, "r")))
+  for (unsigned int i = 0; i < NS_ARRAY_LENGTH(gDeviceMotions); i++) {
+    if (!(mPositionFile = fopen(gDeviceMotions[i].mPosition, "r")))
       continue;
 
-    mType = gAccelerometers[i].mToken;
-    if (gAccelerometers[i].mCalibrate) {
-      mCalibrateFile = fopen(gAccelerometers[i].mCalibrate, "r");
+    mType = gDeviceMotions[i].mToken;
+    if (gDeviceMotions[i].mCalibrate) {
+      mCalibrateFile = fopen(gDeviceMotions[i].mCalibrate, "r");
       if (!mCalibrateFile) {
         fclose(mPositionFile);
         mPositionFile = nsnull;
@@ -222,7 +222,7 @@ void nsAccelerometerSystem::Startup()
                                        nsITimer::TYPE_REPEATING_SLACK);
 }
 
-void nsAccelerometerSystem::Shutdown()
+void nsDeviceMotionSystem::Shutdown()
 {
   if (mPositionFile) {
     fclose(mPositionFile);

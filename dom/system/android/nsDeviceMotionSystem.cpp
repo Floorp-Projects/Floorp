@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,12 +14,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Doug Turner <dougt@dougt.org>
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Michael Wu <mwu@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,41 +35,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "mozilla/dom/ContentChild.h"
+#include "nsDeviceMotionSystem.h"
 
-interface nsIDOMWindow;
+#include "AndroidBridge.h"
+#include "nsXULAppAPI.h"
 
-[scriptable, uuid(0ec7ed95-dc9e-4d20-a5e2-8fc6a03bce67)]
-interface nsIAcceleration : nsISupports
+using namespace mozilla;
+
+extern nsDeviceMotionSystem *gDeviceMotionSystem;
+
+nsDeviceMotionSystem::nsDeviceMotionSystem()
 {
-  readonly attribute double alpha;
-  readonly attribute double beta;
-  readonly attribute double gamma;
-};
+    gDeviceMotionSystem = this;
+}
 
-[scriptable, uuid(3386BED8-7393-4704-8FFC-1EB2C35432FF)]
-interface nsIAccelerationListener : nsISupports
+nsDeviceMotionSystem::~nsDeviceMotionSystem()
 {
-  void onAccelerationChange(in nsIAcceleration aAcceleration);
-};
+}
 
-[scriptable, uuid(4B04E228-0B33-43FC-971F-AF60CEDB1C21)]
-interface nsIAccelerometer : nsISupports
+void nsDeviceMotionSystem::Startup()
 {
-  void addListener(in nsIAccelerationListener aListener);
-  void removeListener(in nsIAccelerationListener aListener);
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
+        AndroidBridge::Bridge()->EnableDeviceMotion(true);
+    else
+        mozilla::dom::ContentChild::GetSingleton()->
+            SendAddDeviceMotionListener();
+}
 
-  void addWindowListener(in nsIDOMWindow aWindow);
-  void removeWindowListener(in nsIDOMWindow aWindow);
-
-};
-
-/* for use by IPC system to notify non-chrome processes of 
- * accelerometer events
- */
-[uuid(22dd1d8a-51bf-406f-8b6d-d1919f8f1c7d)]
-interface nsIAccelerometerUpdate : nsIAccelerometer
+void nsDeviceMotionSystem::Shutdown()
 {
-  /* must be called on the main thread or else */
-  void accelerationChanged(in double alpha, in double beta, in double gamma);
-};
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
+        AndroidBridge::Bridge()->EnableDeviceMotion(false);
+    else
+        mozilla::dom::ContentChild::GetSingleton()->
+            SendRemoveDeviceMotionListener();
+}

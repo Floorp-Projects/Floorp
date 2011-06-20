@@ -97,7 +97,7 @@
 #include "nsCanvasFrame.h"
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
-#include "nsAccelerometer.h"
+#include "nsDeviceMotion.h"
 #include "nsIContent.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
@@ -830,7 +830,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     mShowFocusRingForContent(PR_FALSE),
     mFocusByKeyOccurred(PR_FALSE),
-    mHasAcceleration(PR_FALSE),
+    mHasDeviceMotion(PR_FALSE),
     mNotifiedIDDestroyed(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
@@ -1137,8 +1137,8 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
     inner->CleanUp(aIgnoreModalDialog);
   }
 
-  DisableAccelerationUpdates();
-  mHasAcceleration = PR_FALSE;
+  DisableDeviceMotionUpdates();
+  mHasDeviceMotion = PR_FALSE;
 
   if (mCleanMessageManager) {
     NS_ABORT_IF_FALSE(mIsChrome, "only chrome should have msg manager cleaned");
@@ -7537,13 +7537,12 @@ void nsGlobalWindow::UpdateTouchState()
   }
 }
 
-
 void
-nsGlobalWindow::EnableAccelerationUpdates()
+nsGlobalWindow::EnableDeviceMotionUpdates()
 {
-  if (mHasAcceleration) {
-    nsCOMPtr<nsIAccelerometer> ac =
-      do_GetService(NS_ACCELEROMETER_CONTRACTID);
+  if (mHasDeviceMotion) {
+    nsCOMPtr<nsIDeviceMotion> ac =
+      do_GetService(NS_DEVICE_MOTION_CONTRACTID);
     if (ac) {
       ac->AddWindowListener(this);
     }
@@ -7551,11 +7550,11 @@ nsGlobalWindow::EnableAccelerationUpdates()
 }
 
 void
-nsGlobalWindow::DisableAccelerationUpdates()
+nsGlobalWindow::DisableDeviceMotionUpdates()
 {
-  if (mHasAcceleration) {
-    nsCOMPtr<nsIAccelerometer> ac =
-      do_GetService(NS_ACCELEROMETER_CONTRACTID);
+  if (mHasDeviceMotion) {
+    nsCOMPtr<nsIDeviceMotion> ac =
+      do_GetService(NS_DEVICE_MOTION_CONTRACTID);
     if (ac) {
       ac->RemoveWindowListener(this);
     }
@@ -9858,7 +9857,7 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
   mTimeoutsSuspendDepth += aIncrease;
 
   if (!suspended) {
-    DisableAccelerationUpdates();
+    DisableDeviceMotionUpdates();
 
     nsDOMThreadService* dts = nsDOMThreadService::get();
     if (dts) {
@@ -9934,7 +9933,7 @@ nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
   nsresult rv;
 
   if (shouldResume) {
-    EnableAccelerationUpdates();
+    EnableDeviceMotionUpdates();
 
     nsDOMThreadService* dts = nsDOMThreadService::get();
     if (dts) {
@@ -10053,8 +10052,8 @@ nsGlobalWindow::SetScriptTypeID(PRUint32 aScriptType)
 void
 nsGlobalWindow::SetHasOrientationEventListener()
 {
-  mHasAcceleration = PR_TRUE;
-  EnableAccelerationUpdates();
+  mHasDeviceMotion = PR_TRUE;
+  EnableDeviceMotionUpdates();
 }
 
 NS_IMETHODIMP

@@ -11,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Device Motion System.
  *
  * The Initial Developer of the Original Code is
- * Doug Turner <dougt@dougt.org>
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Doug Turner <dougt@dougt.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,35 +35,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDOMOrientationEvent_h__
-#define nsDOMOrientationEvent_h__
+#ifndef nsDOMDeviceMotionEvent_h__
+#define nsDOMDeviceMotionEvent_h__
 
-#include "nsIDOMDeviceOrientationEvent.h"
+#include "nsIDOMDeviceMotionEvent.h"
 #include "nsDOMEvent.h"
 
-class nsDOMOrientationEvent : public nsDOMEvent,
-                              public nsIDOMDeviceOrientationEvent
+class nsDOMDeviceRotationRate : public nsIDOMDeviceRotationRate
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMDEVICEROTATIONRATE
+
+  nsDOMDeviceRotationRate(double aAlpha, double aBeta, double aGamma);
+
+private:
+  ~nsDOMDeviceRotationRate();
+
+protected:
+  double mAlpha, mBeta, mGamma;
+};
+
+class nsDOMDeviceAcceleration : public nsIDOMDeviceAcceleration
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMDEVICEACCELERATION
+
+  nsDOMDeviceAcceleration(double aX, double aY, double aZ);
+
+private:
+  ~nsDOMDeviceAcceleration();
+
+protected:
+  double mX, mY, mZ;
+};
+
+class nsDOMDeviceMotionEvent : public nsDOMEvent,
+                               public nsIDOMDeviceMotionEvent
 {
 public:
 
-  nsDOMOrientationEvent(nsPresContext* aPresContext, nsEvent* aEvent)
-  : nsDOMEvent(aPresContext, aEvent),
-    mAlpha(0),
-    mBeta(0),
-    mGamma(0),
-    mAbsolute(PR_TRUE) {}
+  nsDOMDeviceMotionEvent(nsPresContext* aPresContext, nsEvent* aEvent)
+  : nsDOMEvent(aPresContext, aEvent)
+  {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
   // Forward to nsDOMEvent
   NS_FORWARD_TO_NSDOMEVENT
 
-  // nsIDOMOrientationEvent Interface
-  NS_DECL_NSIDOMDEVICEORIENTATIONEVENT
+  // nsIDOMDeviceMotionEvent Interface
+  NS_DECL_NSIDOMDEVICEMOTIONEVENT
 
-protected:
-  double mAlpha, mBeta, mGamma;
-  PRBool mAbsolute;
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
+
+  nsCOMPtr<nsIDOMDeviceAcceleration> mAcceleration;
+  nsCOMPtr<nsIDOMDeviceAcceleration> mAccelerationIncludingGravity;
+  nsCOMPtr<nsIDOMDeviceRotationRate> mRotationRate;
+  double mInterval;
 };
 
 #endif

@@ -49,6 +49,9 @@ jfieldID AndroidGeckoEvent::jP1Field = 0;
 jfieldID AndroidGeckoEvent::jAlphaField = 0;
 jfieldID AndroidGeckoEvent::jBetaField = 0;
 jfieldID AndroidGeckoEvent::jGammaField = 0;
+jfieldID AndroidGeckoEvent::jXField = 0;
+jfieldID AndroidGeckoEvent::jYField = 0;
+jfieldID AndroidGeckoEvent::jZField = 0;
 jfieldID AndroidGeckoEvent::jRectField = 0;
 jfieldID AndroidGeckoEvent::jNativeWindowField = 0;
 
@@ -147,6 +150,9 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jAlphaField = getField("mAlpha", "D");
     jBetaField = getField("mBeta", "D");
     jGammaField = getField("mGamma", "D");
+    jXField = getField("mX", "D");
+    jYField = getField("mY", "D");
+    jZField = getField("mZ", "D");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
@@ -402,10 +408,16 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             ReadRectField(jenv);
             break;
 
-        case SENSOR_EVENT:
+        case ORIENTATION_EVENT:
             mAlpha = jenv->GetDoubleField(jobj, jAlphaField);
             mBeta = jenv->GetDoubleField(jobj, jBetaField);
             mGamma = jenv->GetDoubleField(jobj, jGammaField);
+            break;
+
+       case ACCELERATION_EVENT:
+            mX = jenv->GetDoubleField(jobj, jXField);
+            mY = jenv->GetDoubleField(jobj, jYField);
+            mZ = jenv->GetDoubleField(jobj, jZField);
             break;
 
         case LOCATION_EVENT: {

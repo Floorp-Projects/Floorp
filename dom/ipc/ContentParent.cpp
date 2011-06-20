@@ -93,7 +93,7 @@
 #include "mozilla/dom/StorageParent.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
-#include "nsAccelerometer.h"
+#include "nsDeviceMotion.h"
 
 #include "nsIMemoryReporter.h"
 #include "nsMemoryReporterManager.h"
@@ -271,7 +271,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     }
 
     RecvRemoveGeolocationListener();
-    RecvRemoveAccelerometerListener();
+    RecvRemoveDeviceMotionListener();
 
     nsCOMPtr<nsIThreadInternal>
         threadInt(do_QueryInterface(NS_GetCurrentThread()));
@@ -1072,22 +1072,22 @@ ContentParent::RecvRemoveGeolocationListener()
 }
 
 bool
-ContentParent::RecvAddAccelerometerListener()
+ContentParent::RecvAddDeviceMotionListener()
 {
-    nsCOMPtr<nsIAccelerometer> ac = 
-        do_GetService(NS_ACCELEROMETER_CONTRACTID);
-    if (ac)
-        ac->AddListener(this);
+    nsCOMPtr<nsIDeviceMotion> dm = 
+        do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (dm)
+        dm->AddListener(this);
     return true;
 }
 
 bool
-ContentParent::RecvRemoveAccelerometerListener()
+ContentParent::RecvRemoveDeviceMotionListener()
 {
-    nsCOMPtr<nsIAccelerometer> ac = 
-        do_GetService(NS_ACCELEROMETER_CONTRACTID);
-    if (ac)
-        ac->RemoveListener(this);
+    nsCOMPtr<nsIDeviceMotion> dm = 
+        do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (dm)
+        dm->RemoveListener(this);
     return true;
 }
 
@@ -1134,14 +1134,15 @@ ContentParent::RecvScriptError(const nsString& aMessage,
 }
 
 NS_IMETHODIMP
-ContentParent::OnAccelerationChange(nsIAcceleration *aAcceleration)
-{
-    double alpha, beta, gamma;
-    aAcceleration->GetAlpha(&alpha);
-    aAcceleration->GetBeta(&beta);
-    aAcceleration->GetGamma(&gamma);
+ContentParent::OnMotionChange(nsIDeviceMotionData *aDeviceData) {
+    PRUint32 type;
+    double x, y, z;
+    aDeviceData->GetType(&type);
+    aDeviceData->GetX(&x);
+    aDeviceData->GetY(&y);
+    aDeviceData->GetZ(&z);
 
-    unused << SendAccelerationChanged(alpha, beta, gamma);
+    unused << SendDeviceMotionChanged(type, x, y, z);
     return NS_OK;
 }
 

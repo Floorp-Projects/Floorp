@@ -3204,7 +3204,7 @@ pref("layers.prefer-d3d9", false);
 pref("geo.enabled", true);
 
 // Enable/Disable the orientation API for content
-pref("accelerometer.enabled", true);
+pref("device.motion.enabled", true);
 
 // Enable/Disable HTML5 parser
 pref("html5.parser.enable", true);
