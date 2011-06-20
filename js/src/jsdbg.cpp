@@ -822,8 +822,23 @@ Debug::removeDebuggee(JSContext *cx, uintN argc, Value *vp)
     if (!referent)
         return false;
     GlobalObject *global = referent->getGlobal();
-    if (dbg->debuggees.has(global))
+    if (dbg->debuggees.has(global)) {
+        // Refuse to remove a debuggee if it would disable debug mode in a
+        // compartment that has running scripts. The way this is written is a
+        // bit overprotective, yet it's still not enough since we do not check
+        // in removeDebuggeeGlobal's other callers. See bug 665694.
+        JSCompartment *debuggeeCompartment = global->compartment();
+        JS_ASSERT(debuggeeCompartment->debugMode());
+        if (global->getDebuggers()->length() == 1 &&
+            debuggeeCompartment->getDebuggees().count() == 1 &&
+            debuggeeCompartment->haveScriptsOnStack(cx))
+        {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE, "disable");
+            return false;
+        }
+
         dbg->removeDebuggeeGlobal(cx, global, NULL, NULL);
+    }
     vp->setUndefined();
     return true;
 }
@@ -958,6 +973,12 @@ Debug::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
                     return false;
             }
         }
+    }
+
+    // Refuse to enable debug mode for a compartment that has running scripts.
+    if (!debuggeeCompartment->debugMode() && debuggeeCompartment->haveScriptsOnStack(cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE, "enable");
+        return false;
     }
 
     // Each debugger-debuggee relation must be stored in up to three places.
