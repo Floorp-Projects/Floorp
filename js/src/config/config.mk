@@ -591,13 +591,6 @@ ifeq (2,$(MOZ_OPTIMIZE))
 PBBUILD_SETTINGS += GCC_MODEL_TUNING= OPTIMIZATION_CFLAGS="$(MOZ_OPTIMIZE_FLAGS)"
 endif # MOZ_OPTIMIZE=2
 endif # MOZ_OPTIMIZE
-ifeq (1,$(HAS_XCODE_2_1))
-# Xcode 2.1 puts its build products in a directory corresponding to the
-# selected build style/configuration.
-XCODE_PRODUCT_DIR = build/$(BUILDSTYLE)
-else
-XCODE_PRODUCT_DIR = build
-endif # HAS_XCODE_2_1=1
 endif # OS_ARCH=Darwin
 
 

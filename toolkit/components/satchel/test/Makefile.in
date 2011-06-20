@@ -51,6 +51,7 @@ XPCSHELL_TESTS = \
   $(NULL)
 
 MOCHI_TESTS = \
+		test_bug_511615.html \
 		test_form_autocomplete.html \
 		test_form_autocomplete_with_list.html \
 		test_form_submission.html \
@@ -64,12 +65,6 @@ MOCHI_CONTENT = \
 		subtst_form_submission_1.html \
 		subtst_privbrowsing.html \
 		$(NULL)
-
-ifneq ($(OS_TARGET),Linux)
-MOCHI_TESTS += \
-		test_bug_511615.html \
-		$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
