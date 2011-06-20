@@ -156,6 +156,11 @@ protected:
     virtual bool
     AnswerNPP_GetSitesWithData(InfallibleTArray<nsCString>* aResult);
 
+    virtual bool
+    RecvSetAudioSessionData(const nsID& aId,
+                            const nsString& aDisplayName,
+                            const nsString& aIconPath);
+
     virtual void
     ActorDestroy(ActorDestroyReason why);
 
