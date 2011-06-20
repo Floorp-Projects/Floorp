@@ -2454,6 +2454,9 @@ class RegExpStatics;
 extern JS_FORCES_STACK JS_FRIEND_API(void)
 LeaveTrace(JSContext *cx);
 
+extern bool
+CanLeaveTrace(JSContext *cx);
+
 } /* namespace js */
 
 /*
