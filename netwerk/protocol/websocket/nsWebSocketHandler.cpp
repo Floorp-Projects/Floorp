@@ -838,6 +838,17 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
             LOG(("WebSocketHandler:: text frame received\n"));
             if (mListener) {
                 nsCString utf8Data((const char *)payload, payloadLength);
+
+                // section 8.1 says to replace received non utf-8 sequences
+                // (which are non-conformant to send) with u+fffd,
+                // but secteam feels that silently rewriting messages is
+                // inappropriate - so we will fail the connection instead.
+                if (!IsUTF8(utf8Data)) {
+                    LOG(("WebSocketHandler:: text frame invalid utf-8\n"));
+                    AbortSession(NS_ERROR_ILLEGAL_VALUE);
+                    return NS_ERROR_ILLEGAL_VALUE;
+                }
+
                 nsCOMPtr<nsIRunnable> event =
                     new CallOnMessageAvailable(mListener, mContext,
                                                utf8Data, -1);
@@ -865,6 +876,17 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
                     PRUint16 msglen = payloadLength - 2;
                     if (msglen > 0) {
                         nsCString utf8Data((const char *)payload + 2, msglen);
+
+                        // section 8.1 says to replace received non utf-8 sequences
+                        // (which are non-conformant to send) with u+fffd,
+                        // but secteam feels that silently rewriting messages is
+                        // inappropriate - so we will fail the connection instead.
+                        if (!IsUTF8(utf8Data)) {
+                            LOG(("WebSocketHandler:: close frame invalid utf-8\n"));
+                            AbortSession(NS_ERROR_ILLEGAL_VALUE);
+                            return NS_ERROR_ILLEGAL_VALUE;
+                        }
+
                         LOG(("WebSocketHandler:: close msg  %s\n",
                              utf8Data.get()));
                     }
@@ -912,10 +934,10 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
         else if (opcode == kBinary) {
             LOG(("WebSocketHandler:: binary frame received\n"));
             if (mListener) {
-                nsCString utf8Data((const char *)payload, payloadLength);
+                nsCString binaryData((const char *)payload, payloadLength);
                 nsCOMPtr<nsIRunnable> event =
                     new CallOnMessageAvailable(mListener, mContext,
-                                               utf8Data, payloadLength);
+                                               binaryData, payloadLength);
                 NS_DispatchToMainThread(event);
             }
         }
