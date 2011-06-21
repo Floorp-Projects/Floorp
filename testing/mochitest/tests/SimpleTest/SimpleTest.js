@@ -129,6 +129,10 @@ SimpleTest._logResult = function(test, passString, failString) {
     }
 };
 
+SimpleTest._logInfo = function(name, message) {
+    this._logResult({result:true, name:name, diag:message}, "TEST-INFO");
+};
+
 /**
  * Copies of is and isnot with the call to ok replaced by a call to todo.
 **/
@@ -330,7 +334,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     childTargetWindow = childTargetWindow.value;
 
     function info(msg) {
-        SimpleTest._logResult({result: true, name: msg}, "TEST-INFO");
+        SimpleTest._logInfo("", msg);
     }
 
     function debugFocusLog(prefix) {
@@ -522,6 +526,8 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
  * working (or finish).
  */
 SimpleTest.executeSoon = function(aFunc) {
+    // Once SpecialPowers is available in chrome mochitests, we can replace the
+    // body of this function with a call to SpecialPowers.executeSoon().
     if ("Components" in window && "classes" in window.Components) {
         try {
             netscape.security.PrivilegeManager
@@ -553,6 +559,17 @@ SimpleTest.finish = function () {
         parentRunner.testFinished(SimpleTest._tests);
     } else {
         SimpleTest.showReport();
+    }
+};
+
+/**
+ * Indicates to the test framework that the current test expects one or
+ * more crashes (from plugins or IPC documents), and that the minidumps from
+ * those crashes should be removed.
+ */
+SimpleTest.expectChildProcessCrash = function () {
+    if (parentRunner) {
+        parentRunner.expectChildProcessCrash();
     }
 };
 

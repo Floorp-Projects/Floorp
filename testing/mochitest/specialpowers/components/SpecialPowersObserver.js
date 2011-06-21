@@ -64,7 +64,11 @@ SpecialPowersException.prototype.toString = function() {
 };
 
 /* XPCOM gunk */
-function SpecialPowersObserver() {}
+function SpecialPowersObserver() {
+  this._isFrameScriptLoaded = false;
+  this._messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
+                         getService(Ci.nsIChromeFrameMessageManager);
+}
 
 SpecialPowersObserver.prototype = {
   classDescription: "Special powers Observer for use in testing.",
@@ -72,24 +76,49 @@ SpecialPowersObserver.prototype = {
   contractID:       "@mozilla.org/special-powers-observer;1",
   QueryInterface:   XPCOMUtils.generateQI([Components.interfaces.nsIObserver]),
   _xpcom_categories: [{category: "profile-after-change", service: true }],
-  isFrameScriptLoaded: false,
 
   observe: function(aSubject, aTopic, aData)
   {
-    if (aTopic == "profile-after-change") {
-      this.init();
-    } else if (!this.isFrameScriptLoaded && 
-               aTopic == "chrome-document-global-created") {
-     
-      var messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                           getService(Ci.nsIChromeFrameMessageManager);
-      // Register for any messages our API needs us to handle
-      messageManager.addMessageListener("SPPrefService", this);
+    switch (aTopic) {
+      case "profile-after-change":
+        this.init();
+        break;
 
-      messageManager.loadFrameScript(CHILD_SCRIPT, true);
-      this.isFrameScriptLoaded = true;
-    } else if (aTopic == "xpcom-shutdown") {
-      this.uninit();
+      case "chrome-document-global-created":
+        if (!this._isFrameScriptLoaded) {
+          // Register for any messages our API needs us to handle
+          this._messageManager.addMessageListener("SPPrefService", this);
+          this._messageManager.addMessageListener("SPProcessCrashService", this);
+          this._messageManager.addMessageListener("SPPingService", this);
+
+          this._messageManager.loadFrameScript(CHILD_SCRIPT, true);
+          this._isFrameScriptLoaded = true;
+        }
+        break;
+
+      case "xpcom-shutdown":
+        this.uninit();
+        break;
+
+      case "plugin-crashed":
+      case "ipc:content-shutdown":
+        function addDumpIDToMessage(propertyName) {
+          var id = aSubject.getPropertyAsAString(propertyName);
+          if (id) {
+            message.dumpIDs.push(id);
+          }
+        }
+
+        var message = { type: "crash-observed", dumpIDs: [] };
+        aSubject = aSubject.QueryInterface(Ci.nsIPropertyBag2);
+        if (aTopic == "plugin-crashed") {
+          addDumpIDToMessage("pluginDumpID");
+          addDumpIDToMessage("browserDumpID");
+        } else { // ipc:content-shutdown
+          addDumpIDToMessage("dumpID");
+        }
+        this._messageManager.sendAsyncMessage("SPProcessCrashService", message);
+        break;
     }
   },
 
@@ -104,8 +133,76 @@ SpecialPowersObserver.prototype = {
   {
     var obs = Services.obs;
     obs.removeObserver(this, "chrome-document-global-created", false);
+    this.removeProcessCrashObservers();
   },
   
+  addProcessCrashObservers: function() {
+    if (this._processCrashObserversRegistered) {
+      return;
+    }
+
+    Services.obs.addObserver(this, "plugin-crashed", false);
+    Services.obs.addObserver(this, "ipc:content-shutdown", false);
+    this._processCrashObserversRegistered = true;
+  },
+
+  removeProcessCrashObservers: function() {
+    if (!this._processCrashObserversRegistered) {
+      return;
+    }
+
+    Services.obs.removeObserver(this, "plugin-crashed");
+    Services.obs.removeObserver(this, "ipc:content-shutdown");
+    this._processCrashObserversRegistered = false;
+  },
+
+  getCrashDumpDir: function() {
+    if (!this._crashDumpDir) {
+      var directoryService = Cc["@mozilla.org/file/directory_service;1"]
+                             .getService(Ci.nsIProperties);
+      this._crashDumpDir = directoryService.get("ProfD", Ci.nsIFile);
+      this._crashDumpDir.append("minidumps");
+    }
+    return this._crashDumpDir;
+  },
+
+  deleteCrashDumpFiles: function(aFilenames) {
+    var crashDumpDir = this.getCrashDumpDir();
+    if (!crashDumpDir.exists()) {
+      return false;
+    }
+
+    var success = aFilenames.length != 0;
+    aFilenames.forEach(function(crashFilename) {
+      var file = crashDumpDir.clone();
+      file.append(crashFilename);
+      if (file.exists()) {
+        file.remove(false);
+      } else {
+        success = false;
+      }
+    });
+    return success;
+  },
+
+  findCrashDumpFiles: function(aToIgnore) {
+    var crashDumpDir = this.getCrashDumpDir();
+    var entries = crashDumpDir.exists() && crashDumpDir.directoryEntries;
+    if (!entries) {
+      return [];
+    }
+
+    var crashDumpFiles = [];
+    while (entries.hasMoreElements()) {
+      var file = entries.getNext().QueryInterface(Ci.nsIFile);
+      var path = String(file.path);
+      if (path.match(/\.(dmp|extra)$/) && !aToIgnore[path]) {
+        crashDumpFiles.push(path);
+      }
+    }
+    return crashDumpFiles.concat();
+  },
+
   /**
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
@@ -159,6 +256,34 @@ SpecialPowersObserver.prototype = {
             }
         }
         break;
+
+      case "SPProcessCrashService":
+        switch (aMessage.json.op) {
+          case "register-observer":
+            this.addProcessCrashObservers();
+            break;
+          case "unregister-observer":
+            this.removeProcessCrashObservers();
+            break;
+          case "delete-crash-dump-files":
+            return this.deleteCrashDumpFiles(aMessage.json.filenames);
+          case "find-crash-dump-files":
+            return this.findCrashDumpFiles(aMessage.json.crashDumpFilesToIgnore);
+          default:
+            throw new SpecialPowersException("Invalid operation for SPProcessCrashService");
+        }
+        break;
+
+      case "SPPingService":
+        if (aMessage.json.op == "ping") {
+          aMessage.target
+                  .QueryInterface(Ci.nsIFrameLoaderOwner)
+                  .frameLoader
+                  .messageManager
+                  .sendAsyncMessage("SPPingService", { op: "pong" });
+        }
+        break;
+
       default:
         throw new SpecialPowersException("Unrecognized Special Powers API");
     }
