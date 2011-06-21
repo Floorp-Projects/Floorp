@@ -1195,7 +1195,8 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
   // with the system principal games?  But really, there should be a simpler
   // API here, dammit.
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  nsresult rv = sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   if (!subjectPrincipal) {
     // we're running as system, grant access to the node.
@@ -1217,7 +1218,8 @@ nsContentUtils::CanCallerAccess(nsPIDOMWindow* aWindow)
   // with the system principal games?  But really, there should be a simpler
   // API here, dammit.
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  nsresult rv = sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   if (!subjectPrincipal) {
     // we're running as system, grant access to the node.
