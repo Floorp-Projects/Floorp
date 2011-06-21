@@ -695,7 +695,6 @@ JSInt64
 DSTOffsetCache::getDSTOffsetMilliseconds(JSInt64 localTimeMilliseconds, JSContext *cx)
 {
     sanityCheck();
-    noteOffsetCalculation();
 
     JSInt64 localTimeSeconds = localTimeMilliseconds / MILLISECONDS_PER_SECOND;
 
@@ -714,13 +713,11 @@ DSTOffsetCache::getDSTOffsetMilliseconds(JSInt64 localTimeMilliseconds, JSContex
 
     if (rangeStartSeconds <= localTimeSeconds &&
         localTimeSeconds <= rangeEndSeconds) {
-        noteCacheHit();
         return offsetMilliseconds;
     }
 
     if (oldRangeStartSeconds <= localTimeSeconds &&
         localTimeSeconds <= oldRangeEndSeconds) {
-        noteCacheHit();
         return oldOffsetMilliseconds;
     }
 
@@ -733,24 +730,20 @@ DSTOffsetCache::getDSTOffsetMilliseconds(JSInt64 localTimeMilliseconds, JSContex
         if (newEndSeconds >= localTimeSeconds) {
             JSInt64 endOffsetMilliseconds = computeDSTOffsetMilliseconds(newEndSeconds);
             if (endOffsetMilliseconds == offsetMilliseconds) {
-                noteCacheMissIncrease();
                 rangeEndSeconds = newEndSeconds;
                 return offsetMilliseconds;
             }
 
             offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
             if (offsetMilliseconds == endOffsetMilliseconds) {
-                noteCacheMissIncreasingOffsetChangeUpper();
                 rangeStartSeconds = localTimeSeconds;
                 rangeEndSeconds = newEndSeconds;
             } else {
-                noteCacheMissIncreasingOffsetChangeExpand();
                 rangeEndSeconds = localTimeSeconds;
             }
             return offsetMilliseconds;
         }
 
-        noteCacheMissLargeIncrease();
         offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
         rangeStartSeconds = rangeEndSeconds = localTimeSeconds;
         return offsetMilliseconds;
@@ -760,24 +753,20 @@ DSTOffsetCache::getDSTOffsetMilliseconds(JSInt64 localTimeMilliseconds, JSContex
     if (newStartSeconds <= localTimeSeconds) {
         JSInt64 startOffsetMilliseconds = computeDSTOffsetMilliseconds(newStartSeconds);
         if (startOffsetMilliseconds == offsetMilliseconds) {
-            noteCacheMissDecrease();
             rangeStartSeconds = newStartSeconds;
             return offsetMilliseconds;
         }
 
         offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
         if (offsetMilliseconds == startOffsetMilliseconds) {
-            noteCacheMissDecreasingOffsetChangeLower();
             rangeStartSeconds = newStartSeconds;
             rangeEndSeconds = localTimeSeconds;
         } else {
-            noteCacheMissDecreasingOffsetChangeExpand();
             rangeStartSeconds = localTimeSeconds;
         }
         return offsetMilliseconds;
     }
 
-    noteCacheMissLargeDecrease();
     rangeStartSeconds = rangeEndSeconds = localTimeSeconds;
     offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
     return offsetMilliseconds;
@@ -793,46 +782,4 @@ DSTOffsetCache::sanityCheck()
                  rangeStartSeconds >= 0 && rangeEndSeconds >= 0);
     JS_ASSERT_IF(rangeStartSeconds != INT64_MIN,
                  rangeStartSeconds <= MAX_UNIX_TIMET && rangeEndSeconds <= MAX_UNIX_TIMET);
-
-#ifdef JS_METER_DST_OFFSET_CACHING
-    JS_ASSERT(totalCalculations ==
-              hit +
-              missIncreasing + missDecreasing +
-              missIncreasingOffsetChangeExpand + missIncreasingOffsetChangeUpper +
-              missDecreasingOffsetChangeExpand + missDecreasingOffsetChangeLower +
-              missLargeIncrease + missLargeDecrease);
-#endif
 }
-
-#ifdef JS_METER_DST_OFFSET_CACHING
-void
-DSTOffsetCache::dumpStats()
-{
-    if (!getenv("JS_METER_DST_OFFSET_CACHING"))
-        return;
-    FILE *fp = fopen("/tmp/dst-offset-cache.stats", "a");
-    if (!fp)
-        return;
-    typedef unsigned long UL;
-    fprintf(fp,
-            "hit:\n"
-            "  in range: %lu\n"
-            "misses:\n"
-            "  increase range end:                 %lu\n"
-            "  decrease range start:               %lu\n"
-            "  increase, offset change, expand:    %lu\n"
-            "  increase, offset change, new range: %lu\n"
-            "  decrease, offset change, expand:    %lu\n"
-            "  decrease, offset change, new range: %lu\n"
-            "  large increase:                     %lu\n"
-            "  large decrease:                     %lu\n"
-            "total: %lu\n\n",
-            UL(hit),
-            UL(missIncreasing), UL(missDecreasing),
-            UL(missIncreasingOffsetChangeExpand), UL(missIncreasingOffsetChangeUpper),
-            UL(missDecreasingOffsetChangeExpand), UL(missDecreasingOffsetChangeLower),
-            UL(missLargeIncrease), UL(missLargeDecrease),
-            UL(totalCalculations));
-    fclose(fp);
-}
-#endif
