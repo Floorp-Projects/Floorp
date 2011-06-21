@@ -65,6 +65,12 @@ public:
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
+  /**
+   * When our HTMLInputElement's value changes, it calls this method to tell
+   * us to sync up our anonymous text input field child.
+   */
+  void UpdateForValueChange(const nsAString& aValue);
+
   HTMLInputElement* GetAnonTextControl();
 
 private:
