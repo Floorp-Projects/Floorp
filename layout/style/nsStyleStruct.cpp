@@ -53,7 +53,7 @@
 #include "nsPresContext.h"
 #include "nsIWidget.h"
 #include "nsIStyleRule.h"
-#include "nsCRTGlue.h"
+#include "nsCRT.h"
 #include "nsCSSProps.h"
 
 #include "nsCOMPtr.h"
@@ -1444,7 +1444,7 @@ nsStyleImage::SetNull()
   else if (mType == eStyleImageType_Image)
     NS_RELEASE(mImage);
   else if (mType == eStyleImageType_Element)
-    NS_Free(mElementId);
+    nsCRT::free(mElementId);
 
   mType = eStyleImageType_Null;
   mCropRect = nsnull;
@@ -1527,7 +1527,7 @@ nsStyleImage::SetElementId(const PRUnichar* aElementId)
     SetNull();
 
   if (aElementId) {
-    mElementId = NS_strdup(aElementId);
+    mElementId = nsCRT::strdup(aElementId);
     mType = eStyleImageType_Element;
   }
 }
@@ -1685,7 +1685,7 @@ nsStyleImage::operator==(const nsStyleImage& aOther) const
     return *mGradient == *aOther.mGradient;
 
   if (mType == eStyleImageType_Element)
-    return NS_strcmp(mElementId, aOther.mElementId) == 0;
+    return nsCRT::strcmp(mElementId, aOther.mElementId) == 0;
 
   return PR_TRUE;
 }
@@ -2306,7 +2306,7 @@ PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther) const
   if (mType == eStyleContentType_Counter ||
       mType == eStyleContentType_Counters)
     return *mContent.mCounters == *aOther.mContent.mCounters;
-  return NS_strcmp(mContent.mString, aOther.mContent.mString) == 0;
+  return nsCRT::strcmp(mContent.mString, aOther.mContent.mString) == 0;
 }
 
 void
