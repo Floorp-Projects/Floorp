@@ -82,7 +82,8 @@ function getHistograms() {
       range: [r[1], r[r.length - 1]],
       bucket_count: r.length,
       histogram_type: hgram.histogram_type,
-      values: {}
+      values: {},
+      sum: hgram.sum
     };
     let first = true;
     let last = 0;
