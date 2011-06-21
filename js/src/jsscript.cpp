@@ -1508,7 +1508,8 @@ DestroyScript(JSContext *cx, JSScript *script)
     }
 
 #ifdef JS_TRACER
-    PurgeScriptFragments(&script->compartment->traceMonitor, script);
+    if (script->compartment->hasTraceMonitor())
+        PurgeScriptFragments(script->compartment->traceMonitor(), script);
 #endif
 
 #ifdef JS_METHODJIT

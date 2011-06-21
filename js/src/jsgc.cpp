@@ -1856,7 +1856,8 @@ MarkRuntime(JSTracer *trc)
 
 #ifdef JS_TRACER
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->traceMonitor.mark(trc);
+        if ((*c)->hasTraceMonitor())
+            (*c)->traceMonitor()->mark(trc);
 #endif
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
