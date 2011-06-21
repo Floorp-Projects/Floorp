@@ -412,13 +412,27 @@ struct JS_FRIEND_API(JSCompartment) {
     js::WrapperMap               crossCompartmentWrappers;
 
 #ifdef JS_METHODJIT
-    js::mjit::JaegerCompartment  *jaegerCompartment;
+  private:
+    /* This is created lazily because many compartments don't need it. */
+    js::mjit::JaegerCompartment  *jaegerCompartment_;
     /*
      * This function is here so that xpconnect/src/xpcjsruntime.cpp doesn't
      * need to see the declaration of JaegerCompartment, which would require
      * #including MethodJIT.h into xpconnect/src/xpcjsruntime.cpp, which is
      * difficult due to reasons explained in bug 483677.
      */
+  public:
+    bool hasJaegerCompartment() {
+        return !!jaegerCompartment_;
+    }
+
+    js::mjit::JaegerCompartment *jaegerCompartment() const {
+        JS_ASSERT(jaegerCompartment_);
+        return jaegerCompartment_;
+    }
+
+    bool ensureJaegerCompartmentExists(JSContext *cx);
+
     size_t getMjitCodeSize() const;
 #endif
     WTF::BumpPointerAllocator    *regExpAllocator;

@@ -77,7 +77,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     data(NULL),
     active(false),
 #ifdef JS_METHODJIT
-    jaegerCompartment(NULL),
+    jaegerCompartment_(NULL),
 #endif
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),
@@ -106,7 +106,7 @@ JSCompartment::~JSCompartment()
 #endif
 
 #ifdef JS_METHODJIT
-    Foreground::delete_(jaegerCompartment);
+    Foreground::delete_(jaegerCompartment_);
 #endif
 
 #ifdef JS_TRACER
@@ -145,20 +145,31 @@ JSCompartment::init()
     if (!backEdgeTable.init())
         return false;
 
-#ifdef JS_METHODJIT
-    jaegerCompartment = rt->new_<mjit::JaegerCompartment>();
-    if (!jaegerCompartment || !jaegerCompartment->Initialize())
-        return false;
-#endif
-        
     return true;
 }
 
 #ifdef JS_METHODJIT
+bool
+JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
+{
+    if (jaegerCompartment_)
+        return true;
+
+    mjit::JaegerCompartment *jc = cx->new_<mjit::JaegerCompartment>();
+    if (!jc)
+        return false;
+    if (!jc->Initialize()) {
+        cx->delete_(jc);
+        return false;
+    }
+    jaegerCompartment_ = jc;
+    return true;
+}
+
 size_t
 JSCompartment::getMjitCodeSize() const
 {
-    return jaegerCompartment->execAlloc()->getCodeSize();
+    return jaegerCompartment_ ? jaegerCompartment_->execAlloc()->getCodeSize() : 0;
 }
 #endif
 
