@@ -150,7 +150,7 @@ class Handshaker(object):
 
     def _check_version(self):
         unused_value = validate_mandatory_header(
-            self._request, common.SEC_WEBSOCKET_VERSION_HEADER, '8')
+            self._request, common.SEC_WEBSOCKET_VERSION_HEADER, '7')
 
     def _set_protocol(self):
         self._request.ws_protocol = None
