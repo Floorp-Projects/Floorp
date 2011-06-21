@@ -179,7 +179,7 @@ Item.prototype = {
       out: function() {
         let groupItem = drag.info.item.parent;
         if (groupItem)
-          groupItem.remove(drag.info.$el, {dontClose: true});
+          groupItem.remove(drag.info.$el);
         iQ(this.container).removeClass("acceptsDrop");
       },
       drop: function(event) {

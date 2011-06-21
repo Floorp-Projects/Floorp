@@ -79,7 +79,7 @@ class SystemAllocPolicy
  * FIXME bug 647103 - rewrite this in terms of temporary allocation functions,
  * not the system ones.
  */
-class ContextAllocPolicy
+class TempAllocPolicy
 {
     JSContext *const cx;
 
@@ -90,7 +90,7 @@ class ContextAllocPolicy
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes);
 
   public:
-    ContextAllocPolicy(JSContext *cx) : cx(cx) {}
+    TempAllocPolicy(JSContext *cx) : cx(cx) {}
 
     JSContext *context() const {
         return cx;

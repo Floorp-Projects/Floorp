@@ -52,7 +52,6 @@
 #include "nsIChannel.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
-#include "nsIFastLoadService.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsIFileChannel.h"
@@ -245,45 +244,11 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         result->SetOwner(owner);
     }
 
-#ifdef MOZ_XUL
-    // Track FastLoad file dependencies.
-    //
-    // This is harder than it ought to be!  While an nsResChannel "is-a"
-    // nsIFileChannel, an nsJARChannel is not.  Once you unravel the jar:
-    // URI, you may have a resource: URL -- but without a channel for it,
-    // you can't get the URI that it yields through substitution!
-    //
-    // XXXbe fix nsResChannel.cpp to move the substitution code into a new
-    //       nsResURL class?
-    nsCOMPtr<nsIFastLoadService> fastLoadServ(do_GetFastLoadService());
-    if (fastLoadServ) {
-        nsCOMPtr<nsIObjectOutputStream> objectOutput;
-        fastLoadServ->GetOutputStream(getter_AddRefs(objectOutput));
-        if (objectOutput) {
-            nsCOMPtr<nsIFile> file;
-
-            nsCOMPtr<nsIURI> uri;
-            result->GetURI(getter_AddRefs(uri));
-            uri = NS_GetInnermostURI(uri);
-
-            // Here we have a URL of the form resource:/chrome/A.jar
-            // or file:/some/path/to/A.jar.
-            nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
-            if (fileURL)
-                fileURL->GetFile(getter_AddRefs(file));
-
-            if (file) {
-                rv = fastLoadServ->AddDependency(file);
-                if (NS_FAILED(rv)) {
-                   nsCOMPtr<nsIXULPrototypeCache> cache
-                       (do_GetService(kXULPrototypeCacheCID));
-                   if (cache)
-                       cache->AbortFastLoads();
-                }
-            }
-        }
-    }
-#endif
+    // XXX Removed dependency-tracking code from here, because we're not
+    // tracking them anyways (with fastload we checked only in DEBUG
+    // and with startupcache not at all), but this is where we would start
+    // if we need to re-add.
+    // See bug 531886, bug 533038.
 
     *aResult = result;
     NS_ADDREF(*aResult);

@@ -593,19 +593,6 @@ NS_IMETHODIMP
 nsSocketTransportService::OnProcessNextEvent(nsIThreadInternal *thread,
                                              PRBool mayWait, PRUint32 depth)
 {
-    // DoPollIteration doesn't support being called recursively.  This case
-    // should only happen when someone (e.g., PSM) is issuing a synchronous
-    // proxy call from this thread to the main thread.
-    if (depth > 1)
-        return NS_OK;
-
-    // Favor processing existing sockets before other events.
-    DoPollIteration(PR_FALSE);
-
-    PRBool val;
-    while (mayWait && NS_SUCCEEDED(thread->HasPendingEvents(&val)) && !val)
-        DoPollIteration(PR_TRUE);
-
     return NS_OK;
 }
 
@@ -635,8 +622,24 @@ nsSocketTransportService::Run()
     threadInt->SetObserver(this);
 
     for (;;) {
-        // process all pending events
-        NS_ProcessPendingEvents(thread);
+        PRBool pendingEvents = PR_FALSE;
+        thread->HasPendingEvents(&pendingEvents);
+
+        do {
+            // If there are pending events for this thread then
+            // DoPollIteration() should service the network without blocking.
+            DoPollIteration(!pendingEvents);
+            
+            // If nothing was pending before the poll, it might be now
+            if (!pendingEvents)
+                thread->HasPendingEvents(&pendingEvents);
+
+            if (pendingEvents) {
+                NS_ProcessNextEvent(thread);
+                pendingEvents = PR_FALSE;
+                thread->HasPendingEvents(&pendingEvents);
+            }
+        } while (pendingEvents);
 
         // now that our event queue is empty, check to see if we should exit
         {
@@ -644,9 +647,6 @@ nsSocketTransportService::Run()
             if (mShuttingDown)
                 break;
         }
-
-        // wait for and process the next pending event
-        NS_ProcessNextEvent(thread);
     }
 
     SOCKET_LOG(("STS shutting down thread\n"));

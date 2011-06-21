@@ -86,12 +86,13 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIStreamConverterService.h"
 #include "nsICategoryManager.h"
 #include "nsXPCOMCID.h"
 #include "nsIDocument.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 static const int FORMAT_HTML = 2;
 static const int FORMAT_XUL = 3;
@@ -1337,22 +1338,12 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
 {
   nsresult rv;
 
-  // OK - are we going to be using the html listing or not?
-  nsCOMPtr<nsIPrefBranch> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
   PRBool viewSource = (PL_strstr(aContentType,"view-source") != 0);
   
 #ifdef MOZ_RDF
-  PRBool useXUL = PR_FALSE;
 
-  PRInt32 dirPref;
-  rv = prefSrv->GetIntPref("network.dir.format", &dirPref);
-  if (NS_SUCCEEDED(rv) && dirPref == FORMAT_XUL) {
-    useXUL = PR_TRUE;
-  }
-
-  if ((NS_FAILED(rv) || useXUL) && !viewSource) {
+  if (!viewSource &&
+      Preferences::GetInt("network.dir.format", FORMAT_XUL) == FORMAT_XUL) {
     // ... and setup the original channel's content type
     (void)aChannel->SetContentType(NS_LITERAL_CSTRING("application/vnd.mozilla.xul+xml"));
 

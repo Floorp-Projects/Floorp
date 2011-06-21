@@ -93,7 +93,7 @@
 #include "nsPermissionManager.h"
 #endif
 
-#include "nsAccelerometer.h"
+#include "nsDeviceMotion.h"
 
 #if defined(ANDROID)
 #include "APKOpen.h"
@@ -647,14 +647,16 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
 
   return true;
 }
+
 bool
-ContentChild::RecvAccelerationChanged(const double& x, const double& y,
+ContentChild::RecvDeviceMotionChanged(const long int& type,
+                                      const double& x, const double& y,
                                       const double& z)
 {
-    nsCOMPtr<nsIAccelerometerUpdate> acu = 
-        do_GetService(NS_ACCELEROMETER_CONTRACTID);
-    if (acu)
-        acu->AccelerationChanged(x, y, z);
+    nsCOMPtr<nsIDeviceMotionUpdate> dmu = 
+        do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (dmu)
+        dmu->DeviceMotionChanged(type, x, y, z);
     return true;
 }
 

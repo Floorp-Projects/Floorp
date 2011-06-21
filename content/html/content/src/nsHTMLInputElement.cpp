@@ -859,21 +859,6 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
       UpdateBarredFromConstraintValidation();
 
-      // If we are changing type from File/Text/Tel/Passwd to other input types
-      // we need save the mValue into value attribute
-      if (mInputData.mValue &&
-          mType != NS_FORM_INPUT_EMAIL &&
-          mType != NS_FORM_INPUT_TEXT &&
-          mType != NS_FORM_INPUT_SEARCH &&
-          mType != NS_FORM_INPUT_PASSWORD &&
-          mType != NS_FORM_INPUT_TEL &&
-          mType != NS_FORM_INPUT_URL &&
-          mType != NS_FORM_INPUT_FILE) {
-        SetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                NS_ConvertUTF8toUTF16(mInputData.mValue), PR_FALSE);
-        FreeData();
-      }
-
       if (mType != NS_FORM_INPUT_IMAGE) {
         // We're no longer an image input.  Cancel our image requests, if we have
         // any.  Note that doing this when we already weren't an image is ok --

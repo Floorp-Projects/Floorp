@@ -336,3 +336,21 @@ XPT_AssertFailed(const char *s, const char *file, PRUint32 lineno)
     abort();
 }        
 #endif
+
+XPT_PUBLIC_API(size_t)
+XPT_SizeOfArena(XPTArena *arena)
+{
+    size_t n = sizeof(XPTArena);
+
+    BLK_HDR* cur;
+    BLK_HDR* next;
+        
+    cur = arena->first;
+    while (cur) {
+        next = cur->next;
+        n += cur->size;
+        cur = next;
+    }
+
+    return n;
+}

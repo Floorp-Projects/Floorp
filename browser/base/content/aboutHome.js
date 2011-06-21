@@ -141,8 +141,8 @@ const SEARCH_ENGINES = {
 //   * add an entry here in the proper ordering (based on spans)
 // The <a/> part of the snippet will be linked to the corresponding url.
 const DEFAULT_SNIPPETS_URLS = [
-  "http://www.mozilla.com/firefox/4.0/features"
-, "https://addons.mozilla.org/firefox/?src=snippet"
+  "http://www.mozilla.com/firefox/features/?WT.mc_ID=default1"
+, "https://addons.mozilla.org/firefox/?src=snippet&WT.mc_ID=default2"
 ];
 
 const SNIPPETS_UPDATE_INTERVAL_MS = 86400000; // 1 Day.

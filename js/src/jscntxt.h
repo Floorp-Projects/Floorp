@@ -422,6 +422,8 @@ struct JSRuntime {
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcNumber;
     js::GCMarker        *gcMarkingTracer;
+    bool                gcChunkAllocationSinceLastGC;
+    int64               gcNextFullGCTime;
     int64               gcJitReleaseTime;
     JSGCMode            gcMode;
     volatile bool       gcIsNeeded;
@@ -659,12 +661,6 @@ struct JSRuntime {
 #endif
 
 #ifdef DEBUG
-    /* Function invocation metering. */
-    jsrefcount          inlineCalls;
-    jsrefcount          nativeCalls;
-    jsrefcount          nonInlineCalls;
-    jsrefcount          constructs;
-
     /*
      * NB: emptyShapes (in JSCompartment) is init'ed iff at least one
      * of these envars is set:
@@ -793,7 +789,7 @@ struct JSRuntime {
 
     bool init(uint32 maxbytes);
 
-    void setGCLastBytes(size_t lastBytes);
+    void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(uint32 amount);
 
     /*
@@ -1439,28 +1435,6 @@ struct JSContext
 }; /* struct JSContext */
 
 namespace js {
-
-/*
- * Allocation policy that uses JSRuntime::malloc_ and friends, so that
- * memory pressure is properly accounted for. This is suitable for
- * long-lived objects owned by the JSRuntime.
- *
- * Since it doesn't hold a JSContext (those may not live long enough), it
- * can't report out-of-memory conditions itself; the caller must check for
- * OOM and take the appropriate action.
- */
-class RuntimeAllocPolicy
-{
-    JSRuntime *const runtime;
-
-  public:
-    RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
-    RuntimeAllocPolicy(JSContext *cx) : runtime(cx->runtime) {}
-    void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
-    void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
-    void free_(void *p) { runtime->free_(p); }
-    void reportAllocOverflow() const {}
-};
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread() ? (cx)->thread()->id : 0)
@@ -2309,7 +2283,7 @@ static JS_INLINE JSContext *
 js_ContextFromLinkField(JSCList *link)
 {
     JS_ASSERT(link);
-    return (JSContext *) ((uint8 *) link - offsetof(JSContext, link));
+    return reinterpret_cast<JSContext *>(uintptr_t(link) - offsetof(JSContext, link));
 }
 
 /*
@@ -2476,6 +2450,9 @@ class RegExpStatics;
 extern JS_FORCES_STACK JS_FRIEND_API(void)
 LeaveTrace(JSContext *cx);
 
+extern bool
+CanLeaveTrace(JSContext *cx);
+
 } /* namespace js */
 
 /*
@@ -2557,6 +2534,8 @@ class AutoVectorRooter : protected AutoGCRooter
         return true;
     }
 
+    void clear() { vector.clear(); }
+
     bool reserve(size_t newLength) {
         return vector.reserve(newLength);
     }
@@ -2627,6 +2606,46 @@ class AutoShapeVector : public AutoVectorRooter<const Shape *>
 
 JSIdArray *
 NewIdArray(JSContext *cx, jsint length);
+
+/*
+ * Allocation policy that uses JSRuntime::malloc_ and friends, so that
+ * memory pressure is properly accounted for. This is suitable for
+ * long-lived objects owned by the JSRuntime.
+ *
+ * Since it doesn't hold a JSContext (those may not live long enough), it
+ * can't report out-of-memory conditions itself; the caller must check for
+ * OOM and take the appropriate action.
+ *
+ * FIXME bug 647103 - replace these *AllocPolicy names.
+ */
+class RuntimeAllocPolicy
+{
+    JSRuntime *const runtime;
+
+  public:
+    RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
+    RuntimeAllocPolicy(JSContext *cx) : runtime(cx->runtime) {}
+    void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
+    void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
+    void free_(void *p) { runtime->free_(p); }
+    void reportAllocOverflow() const {}
+};
+
+/*
+ * FIXME bug 647103 - replace these *AllocPolicy names.
+ */
+class ContextAllocPolicy
+{
+    JSContext *const cx;
+
+  public:
+    ContextAllocPolicy(JSContext *cx) : cx(cx) {}
+    JSContext *context() const { return cx; }
+    void *malloc_(size_t bytes) { return cx->malloc_(bytes); }
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) { return cx->realloc_(p, oldBytes, bytes); }
+    void free_(void *p) { cx->free_(p); }
+    void reportAllocOverflow() const { js_ReportAllocationOverflow(cx); }
+};
 
 } /* namespace js */
 

@@ -62,7 +62,7 @@ function WBORecord(collection, id) {
   this.id = id;                      // Optional.
 }
 WBORecord.prototype = {
-  _logName: "Record.WBO",
+  _logName: "Sync.Record.WBO",
 
   get sortindex() {
     if (this.data.sortindex)
@@ -133,7 +133,7 @@ function RecordManager() {
 }
 RecordManager.prototype = {
   _recordType: WBORecord,
-  _logName: "RecordMgr",
+  _logName: "Sync.RecordManager",
 
   import: function RecordMgr_import(url) {
     this._log.trace("Importing record: " + (url.spec ? url.spec : url));
@@ -192,7 +192,7 @@ function CryptoWrapper(collection, id) {
 }
 CryptoWrapper.prototype = {
   __proto__: WBORecord.prototype,
-  _logName: "Record.CryptoWrapper",
+  _logName: "Sync.Record.CryptoWrapper",
 
   ciphertextHMAC: function ciphertextHMAC(keyBundle) {
     let hasher = keyBundle.sha256HMACHasher;
@@ -298,7 +298,7 @@ function CollectionKeyManager() {
   this._collections = {};
   this._default = null;
 
-  this._log = Log4Moz.repository.getLogger("CollectionKeys");
+  this._log = Log4Moz.repository.getLogger("Sync.CollectionKeys");
 }
 
 // TODO: persist this locally as an Identity. Bug 610913.
@@ -596,7 +596,7 @@ KeyBundle.prototype = {
 };
 
 function BulkKeyBundle(realm, collectionName) {
-  let log = Log4Moz.repository.getLogger("BulkKeyBundle");
+  let log = Log4Moz.repository.getLogger("Sync.BulkKeyBundle");
   log.info("BulkKeyBundle being created for " + collectionName);
   KeyBundle.call(this, realm, collectionName);
 }
@@ -635,7 +635,7 @@ BulkKeyBundle.prototype = {
 };
 
 function SyncKeyBundle(realm, collectionName, syncKey) {
-  let log = Log4Moz.repository.getLogger("SyncKeyBundle");
+  let log = Log4Moz.repository.getLogger("Sync.SyncKeyBundle");
   log.info("SyncKeyBundle being created for " + collectionName);
   KeyBundle.call(this, realm, collectionName, syncKey);
   if (syncKey)
@@ -731,7 +731,7 @@ function Collection(uri, recordObj) {
 }
 Collection.prototype = {
   __proto__: Resource.prototype,
-  _logName: "Collection",
+  _logName: "Sync.Collection",
 
   _rebuildURL: function Coll__rebuildURL() {
     // XXX should consider what happens if it's not a URL...

@@ -117,9 +117,9 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     emitLevel(0),
     constMap(parser->context),
     constList(parser->context),
-    globalUses(ContextAllocPolicy(parser->context)),
-    closedArgs(ContextAllocPolicy(parser->context)),
-    closedVars(ContextAllocPolicy(parser->context)),
+    globalUses(parser->context),
+    closedArgs(parser->context),
+    closedVars(parser->context),
     traceIndex(0)
 {
     flags = TCF_COMPILING;

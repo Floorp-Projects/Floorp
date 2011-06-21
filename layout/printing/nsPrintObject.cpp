@@ -55,11 +55,13 @@ nsPrintObject::nsPrintObject() :
   mSharedPresShell(PR_FALSE), mInvisible(PR_FALSE), mDidCreateDocShell(PR_FALSE),
   mShrinkRatio(1.0), mZoomRatio(1.0)
 {
+  MOZ_COUNT_CTOR(nsPrintObject);
 }
 
 
 nsPrintObject::~nsPrintObject()
 {
+  MOZ_COUNT_DTOR(nsPrintObject);
   for (PRUint32 i=0;i<mKids.Length();i++) {
     nsPrintObject* po = mKids[i];
     delete po;

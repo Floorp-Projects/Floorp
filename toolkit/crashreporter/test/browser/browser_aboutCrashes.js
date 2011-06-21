@@ -1,10 +1,3 @@
-// load our utility script
-var scriptLoader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                             .getService(Components.interfaces.mozIJSSubScriptLoader);
-
-var rootDir = getRootDirectory(gTestPath);
-scriptLoader.loadSubScript(rootDir + "aboutcrashes_utils.js", this);
-
 function check_crash_list(tab, crashes) {
   let doc = gBrowser.getBrowserForTab(tab).contentDocument;
   let crashlinks = doc.getElementById("tbody").getElementsByTagName("a");

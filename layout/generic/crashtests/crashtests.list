@@ -336,7 +336,7 @@ asserts(1) load 571975-1.html # bug 574889
 load 574958.xhtml
 load 580504-1.xhtml
 load 585598-1.xhtml
-asserts(11) load 586806-1.html # Bug 439258
+asserts(0-11) load 586806-1.html # Bug 439258
 load 586806-2.html
 load 586806-3.html
 load 586973-1.html

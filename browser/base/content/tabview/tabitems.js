@@ -124,7 +124,8 @@ function TabItem(tab, options) {
       groupItem.add(drag.info.$el);
     } else {
       phantom.removeClass("phantom acceptsDrop");
-      new GroupItem([$target, drag.info.$el], {container:phantom, bounds:phantom.bounds()});
+      let opts = {container:phantom, bounds:phantom.bounds(), focusTitle: true};
+      new GroupItem([$target, drag.info.$el], opts);
     }
   };
 
@@ -379,7 +380,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
     } else {
       // create tab by double click is handled in UI_init().
-      if (!TabItems.creatingNewOrphanTab)
+      if (!UI.creatingNewOrphanTab)
         GroupItems.newTab(self, {immediately: true});
     }
 
@@ -563,7 +564,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         });
         group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
       }
-      group.newTab();
+      group.newTab(null, { closedLastTab: true });
     }
     // when "TabClose" event is fired, the browser tab is about to close and our 
     // item "close" is fired before the browser tab actually get closed. 
@@ -665,6 +666,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
       if (self.parent && self.parent.expanded)
         self.parent.collapse();
+
+      self._sendToSubscribers("zoomedIn");
     }
 
     let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
@@ -803,7 +806,6 @@ let TabItems = {
   _lastUpdateTime: Date.now(),
   _eventListeners: [],
   _pauseUpdateForTest: false,
-  creatingNewOrphanTab: false,
   tempCanvas: null,
   _reconnectingPaused: false,
   tabItemPadding: {},
@@ -1080,6 +1082,9 @@ let TabItems = {
       tab._tabViewTabItem.removeTrenches();
       Items.unsquish(null, tab._tabViewTabItem);
 
+      tab._tabViewTabItem.tab = null;
+      tab._tabViewTabItem.tabCanvas.tab = null;
+      tab._tabViewTabItem.tabCanvas = null;
       tab._tabViewTabItem = null;
       Storage.saveTab(tab, null);
 

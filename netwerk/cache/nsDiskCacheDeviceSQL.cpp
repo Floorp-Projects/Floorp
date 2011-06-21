@@ -1979,8 +1979,7 @@ nsOfflineCacheDevice::AddNamespace(const nsCString &clientID,
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("nsOfflineCacheDevice::AddNamespace [cid=%s, ns=%s, data=%s, type=%d]",
-       PromiseFlatCString(clientID).get(),
-       namespaceSpec.get(), data.get(), itemType));
+       clientID.get(), namespaceSpec.get(), data.get(), itemType));
 
   AutoResetStatement statement(mStatement_InsertNamespaceEntry);
 

@@ -350,7 +350,7 @@ JSObject::slotsAndStructSize(uint32 nslots) const
     int nfslots = isFun ? 0 : numFixedSlots();
 
     return sizeof(js::Value) * (ndslots + nfslots)
-           + isFun ? sizeof(JSFunction) : sizeof(JSObject);
+           + (isFun ? sizeof(JSFunction) : sizeof(JSObject));
 }
 
 inline uint32

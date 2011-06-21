@@ -49,6 +49,9 @@ jfieldID AndroidGeckoEvent::jP1Field = 0;
 jfieldID AndroidGeckoEvent::jAlphaField = 0;
 jfieldID AndroidGeckoEvent::jBetaField = 0;
 jfieldID AndroidGeckoEvent::jGammaField = 0;
+jfieldID AndroidGeckoEvent::jXField = 0;
+jfieldID AndroidGeckoEvent::jYField = 0;
+jfieldID AndroidGeckoEvent::jZField = 0;
 jfieldID AndroidGeckoEvent::jRectField = 0;
 jfieldID AndroidGeckoEvent::jNativeWindowField = 0;
 
@@ -102,7 +105,9 @@ jmethodID AndroidAddress::jGetThoroughfareMethod;
 jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
 jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jEndDrawingMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jDraw2DMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jDraw2DBitmapMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jDraw2DBufferMethod = 0;
+jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBitmapMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBufferMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = 0;
 
@@ -145,6 +150,9 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jAlphaField = getField("mAlpha", "D");
     jBetaField = getField("mBeta", "D");
     jGammaField = getField("mGamma", "D");
+    jXField = getField("mX", "D");
+    jYField = getField("mY", "D");
+    jZField = getField("mZ", "D");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
@@ -170,9 +178,11 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
     jGeckoSurfaceViewClass = getClassGlobalRef("org/mozilla/gecko/GeckoSurfaceView");
 
     jBeginDrawingMethod = getMethod("beginDrawing", "()I");
+    jGetSoftwareDrawBitmapMethod = getMethod("getSoftwareDrawBitmap", "()Landroid/graphics/Bitmap;");
     jGetSoftwareDrawBufferMethod = getMethod("getSoftwareDrawBuffer", "()Ljava/nio/ByteBuffer;");
     jEndDrawingMethod = getMethod("endDrawing", "()V");
-    jDraw2DMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
+    jDraw2DBitmapMethod = getMethod("draw2D", "(Landroid/graphics/Bitmap;II)V");
+    jDraw2DBufferMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
     jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
 }
 
@@ -398,10 +408,16 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             ReadRectField(jenv);
             break;
 
-        case SENSOR_EVENT:
+        case ORIENTATION_EVENT:
             mAlpha = jenv->GetDoubleField(jobj, jAlphaField);
             mBeta = jenv->GetDoubleField(jobj, jBetaField);
             mGamma = jenv->GetDoubleField(jobj, jGammaField);
+            break;
+
+       case ACCELERATION_EVENT:
+            mX = jenv->GetDoubleField(jobj, jXField);
+            mY = jenv->GetDoubleField(jobj, jYField);
+            mZ = jenv->GetDoubleField(jobj, jZField);
             break;
 
         case LOCATION_EVENT: {
@@ -464,9 +480,21 @@ AndroidGeckoSurfaceView::EndDrawing()
 }
 
 void
+AndroidGeckoSurfaceView::Draw2D(jobject bitmap, int width, int height)
+{
+    JNI()->CallVoidMethod(wrapped_obj, jDraw2DBitmapMethod, bitmap, width, height);
+}
+
+void
 AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
 {
-    JNI()->CallVoidMethod(wrapped_obj, jDraw2DMethod, buffer, stride);
+    JNI()->CallVoidMethod(wrapped_obj, jDraw2DBufferMethod, buffer, stride);
+}
+
+jobject
+AndroidGeckoSurfaceView::GetSoftwareDrawBitmap()
+{
+    return JNI()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBitmapMethod);
 }
 
 jobject

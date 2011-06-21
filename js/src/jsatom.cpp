@@ -64,6 +64,8 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/String-inl.h"
+
 using namespace js;
 using namespace js::gc;
 

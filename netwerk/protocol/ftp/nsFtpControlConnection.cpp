@@ -116,7 +116,7 @@ nsFtpControlConnection::IsAlive()
         return PR_FALSE;
 
     PRBool isAlive = PR_FALSE;
-    mSocket->IsAlive(PR_FALSE, &isAlive);
+    mSocket->IsAlive(&isAlive);
     return isAlive;
 }
 nsresult 

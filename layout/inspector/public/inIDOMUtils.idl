@@ -46,8 +46,10 @@ interface nsIDOMDocument;
 interface nsIDOMCSSStyleRule;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
+interface nsIDOMFontFaceList;
+interface nsIDOMRange;
 
-[scriptable, uuid(bb8f76f4-888e-11e0-9e35-5f8b6c85da46)]
+[scriptable, uuid(70205D9E-EFD7-4658-8E9E-690400B57FD0)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -70,4 +72,6 @@ interface inIDOMUtils : nsISupports
   // content state utilities
   unsigned long long getContentState(in nsIDOMElement aElement);
   void setContentState(in nsIDOMElement aElement, in unsigned long long aState);
+
+  nsIDOMFontFaceList getUsedFontFaces(in nsIDOMRange aRange);
 };

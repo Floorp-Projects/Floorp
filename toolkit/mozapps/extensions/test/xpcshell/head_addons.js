@@ -19,6 +19,8 @@ var gInternalManager = null;
 var gAppInfo = null;
 var gAddonsList;
 
+var TEST_UNPACKED = false;
+
 function createAppInfo(id, name, version, platformVersion) {
   gAppInfo = {
     // nsIXULAppInfo
@@ -161,7 +163,7 @@ function do_get_addon_root_uri(aProfileDir, aId) {
 }
 
 function do_get_expected_addon_name(aId) {
-  if (Services.prefs.getBoolPref("extensions.alwaysUnpack"))
+  if (TEST_UNPACKED)
     return aId;
   return aId + ".xpi";
 }
@@ -569,7 +571,7 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
 
   var dir = aDir.clone();
 
-  if (Services.prefs.getBoolPref("extensions.alwaysUnpack")) {
+  if (TEST_UNPACKED) {
     dir.append(id);
     writeInstallRDFToDir(aData, dir, aExtraFile);
     return dir;

@@ -48,6 +48,8 @@
 { 0x09dec26b, 0x1ab7, 0x4ff0, \
  { 0xa1, 0x67, 0x7f, 0x22, 0x9c, 0xaa, 0xc3, 0x04 } }
 
+class nsIDOMFontFaceList;
+
 class nsIRange : public nsIDOMRange {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRANGE_IID)
@@ -122,6 +124,9 @@ public:
   NS_IMETHOD SetStart(nsIDOMNode* aParent, PRInt32 aOffset) = 0;
   NS_IMETHOD SetEnd(nsIDOMNode* aParent, PRInt32 aOffset) = 0;
   NS_IMETHOD CloneRange(nsIDOMRange** aNewRange) = 0;
+
+  // To support the font inspector API
+  NS_IMETHOD GetUsedFontFaces(nsIDOMFontFaceList** aResult) = 0;
 
 protected:
   nsCOMPtr<nsINode> mRoot;

@@ -112,10 +112,15 @@ MOCHI_CONTENT = \
 ifndef MOZ_SUITE
 MOCHI_TESTS += \
     test_privbrowsing.html \
-    test_prompt.html \
     test_notifications.html \
     $(NULL)
-else
+ifneq ($(OS_TARGET),Linux)
+MOCHI_TESTS += \
+    test_prompt.html \
+    $(NULL)
+endif
+endif
+ifdef MOZ_SUITE
 $(warning test_prompt.html is disabled until doorhanger notfications work. Bug 598360)
 $(warning test_notifications.html is disabled until doorhanger notfications work. Bug 598360)
 $(warning test_privbrowsing.html is disabled due to doorhangers, Bug 598360, and no privatebrowsing support)

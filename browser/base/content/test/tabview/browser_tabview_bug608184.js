@@ -25,12 +25,11 @@ function test() {
     is(gBrowser.visibleTabs.length, 1, "The number of visible tabs is 1");
     is(gBrowser.visibleTabs[0], origTab, 
       "The original tab is the only visible tab");
-    isnot(newTab._tabViewTabItem.parent.id, newTabGroupItemId, 
+
+    let groupItem = newTab._tabViewTabItem.parent;
+    isnot(groupItem.id, newTabGroupItemId, 
       "The moved tab item has a new group id");
 
-    // clean up
-    gBrowser.removeTab(newTab);
-
-    finish();
+    closeGroupItem(groupItem, finish);
   });
 }

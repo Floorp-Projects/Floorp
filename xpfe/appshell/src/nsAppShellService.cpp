@@ -48,8 +48,6 @@
 #include "nsIObserver.h"
 #include "nsIXPConnect.h"
 #include "nsIJSContextStack.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
@@ -76,6 +74,10 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIChromeRegistry.h"
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 // Default URL for the hidden window, can be overridden by a pref on Mac
 #define DEFAULT_HIDDENWINDOW_URL "resource://gre-resources/hiddenWindow.html"
@@ -160,11 +162,8 @@ nsAppShellService::CreateHiddenWindow(nsIAppShell* aAppShell)
     
 #ifdef XP_MACOSX
   PRUint32    chromeMask = 0;
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-  nsXPIDLCString prefVal;
-  rv = prefBranch->GetCharPref("browser.hiddenWindowChromeURL", getter_Copies(prefVal));
+  nsAdoptingCString prefVal =
+      Preferences::GetCString("browser.hiddenWindowChromeURL");
   const char* hiddenWindowURL = prefVal.get() ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
   mApplicationProvidedHiddenWindow = prefVal.get() ? PR_TRUE : PR_FALSE;
 #else
