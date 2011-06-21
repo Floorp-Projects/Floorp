@@ -1129,7 +1129,9 @@ nsContentUtils::CheckSameOrigin(nsINode *aTrustedNode,
   NS_PRECONDITION(aTrustedNode, "There must be a trusted node");
 
   PRBool isSystem = PR_FALSE;
-  sSecurityManager->SubjectPrincipalIsSystem(&isSystem);
+  nsresult rv = sSecurityManager->SubjectPrincipalIsSystem(&isSystem);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (isSystem) {
     // we're running as system, grant access to the node.
 
