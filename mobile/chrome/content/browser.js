@@ -392,8 +392,12 @@ var Browser = {
   },
 
   quit: function quit() {
-    window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
-    window.close();
+    // NOTE: onclose seems to be called only when using OS chrome to close a window,
+    // so we need to handle the Browser.closing check ourselves.
+    if (this.closing()) {
+      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
+      window.close();
+    }
   },
 
   _waitingToClose: false,

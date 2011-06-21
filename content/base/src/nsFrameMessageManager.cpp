@@ -42,7 +42,6 @@
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
-#include "jsarray.h"
 #include "jsinterp.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
