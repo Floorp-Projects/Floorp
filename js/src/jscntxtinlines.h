@@ -391,7 +391,7 @@ LeaveTraceIfArgumentsObject(JSContext *cx, JSObject *obj)
 #ifdef JS_METHODJIT
 inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
 {
-    return compartment->jaegerCompartment;
+    return compartment->jaegerCompartment();
 }
 #endif
 
