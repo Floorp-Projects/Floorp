@@ -1383,7 +1383,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   window.window = &gWorld;
   npprint.print.embedPrint.platformPrint = gWorld;
   npprint.print.embedPrint.window = window;
-  nsresult rv = pi->Print(&npprint);
+  pi->Print(&npprint);
 
   ::CGContextTranslateCTM(cgContext, 0.0f, float(window.height));
   ::CGContextScaleCTM(cgContext, 1.0f, -1.0f);

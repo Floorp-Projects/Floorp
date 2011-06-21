@@ -215,8 +215,6 @@ getUriCB(AtkHyperlink *aLink, gint aLinkIndex)
     nsAccessible* hyperlink = get_accessible_hyperlink(aLink);
     NS_ENSURE_TRUE(hyperlink, nsnull);
 
-    MaiAtkHyperlink *maiAtkHyperlink = MAI_ATK_HYPERLINK(aLink);
-
     nsCOMPtr<nsIURI> uri = hyperlink->GetAnchorURI(aLinkIndex);
     if (!uri)
         return nsnull;
