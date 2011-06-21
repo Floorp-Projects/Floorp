@@ -8,3 +8,4 @@ script regress-380237-02.js
 script regress-380237-03.js
 skip script regress-380237-04.js # obsolete test, need to remove minor failures to reenable.
 script regress-384991.js
+script regress-634472.js

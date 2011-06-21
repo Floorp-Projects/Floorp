@@ -71,6 +71,6 @@ var likeString = {
         }
 }
 
-TEST(1, true, x == likeString);
+TEST(1, true, x != likeString);
 
 END();

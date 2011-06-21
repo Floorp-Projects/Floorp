@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<script>
+function boom()
+{
+  var fr = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+  fr.src = "data:text/html,X";
+  document.documentElement.appendChild(fr);
+  var docType = fr.contentDocument.implementation.createDocumentType(undefined, "", "");
+  document.removeChild(document.documentElement);
+  document.appendChild(docType);
+}
+
+window.addEventListener("load", boom, false);
+</script>
+
+</svg>
