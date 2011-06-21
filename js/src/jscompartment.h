@@ -521,6 +521,7 @@ struct JS_FRIEND_API(JSCompartment) {
         return mathCache ? mathCache : allocMathCache(cx);
     }
 
+#ifdef JS_TRACER
     bool hasTraceMonitor() {
         return !!traceMonitor_;
     }
@@ -531,6 +532,7 @@ struct JS_FRIEND_API(JSCompartment) {
         JS_ASSERT(traceMonitor_);
         return traceMonitor_;
     }
+#endif
 
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);

@@ -71,7 +71,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerBytes(0),
     gcLastBytes(0),
     hold(false),
+#ifdef JS_TRACER
     traceMonitor_(NULL),
+#endif
     data(NULL),
     active(false),
 #ifdef JS_METHODJIT
@@ -581,6 +583,7 @@ JSCompartment::allocMathCache(JSContext *cx)
     return mathCache;
 }
 
+#ifdef JS_TRACER
 TraceMonitor *
 JSCompartment::allocAndInitTraceMonitor(JSContext *cx)
 {
@@ -594,6 +597,7 @@ JSCompartment::allocAndInitTraceMonitor(JSContext *cx)
     }
     return traceMonitor_;
 }
+#endif
 
 size_t
 JSCompartment::backEdgeCount(jsbytecode *pc) const
