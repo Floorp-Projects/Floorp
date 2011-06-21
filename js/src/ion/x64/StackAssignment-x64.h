@@ -39,51 +39,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_lowering_x86_h__
-#define jsion_ion_lowering_x86_h__
-
-#include "ion/IonLowering.h"
+#ifndef jsion_cpu_x64_stack_assignment_h__
+#define jsion_cpu_x64_stack_assignment_h__
 
 namespace js {
 namespace ion {
 
-class LIRGeneratorX86 : public LIRGenerator
+class StackAssignmentX64
 {
+    js::Vector<uint32, 4, IonAllocPolicy> slots;
+    uint32 height_;
+
   public:
-    LIRGeneratorX86(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
-      : LIRGenerator(gen, graph, lirGraph)
+    StackAssignmentX64() : height_(0)
     { }
 
-  protected:
-    // Uses components of a nunbox. Must be in a use request (startUsing,
-    // stopUsing).
-    LUse useType(MInstruction *mir);
-    LUse useTypeOrConstant(MInstruction *mir);
-    LUse usePayload(MInstruction *mir, LUse::Policy);
-    LUse usePayloadInRegister(MInstruction *mir);
+    void freeSlot(uint32 index) {
+        slots.append(index);
+    }
 
-    // Adds a box input to an instruction, setting operand |n| to the type and
-    // |n+1| to the payload. Does not modify the operands, instead expecting a
-    // policy to already be set.
-    bool fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir);
+    void freeDoubleSlot(uint32 index) {
+        freeSlot(index);
+    }
 
-    void fillSnapshot(LSnapshot *snapshot);
-    bool preparePhi(MPhi *phi);
+    bool allocateDoubleSlot(uint32 *index) {
+        return allocateSlot(index);
+    }
 
-    bool lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs);
+    bool allocateSlot(uint32 *index) {
+        if (!slots.empty()) {
+            *index = slots.popCopy();
+            return true;
+        }
+        *index = height_++;
+        return height_ < MAX_STACK_SLOTS;
+    }
 
-  public:
-    bool visitBox(MBox *box);
-    bool visitUnbox(MUnbox *unbox);
-    bool visitConstant(MConstant *ins);
-    bool visitReturn(MReturn *ret);
-    bool visitPhi(MPhi *phi);
+    uint32 stackHeight() const {
+        return height_;
+    }
 };
 
-typedef LIRGeneratorX86 LIRBuilder;
+typedef StackAssignmentX64 StackAssignment;
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
-#endif // jsion_ion_lowering_x86_h__
+#endif // jsion_cpu_x64_stack_assignment_h__
 

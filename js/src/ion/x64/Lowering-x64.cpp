@@ -97,7 +97,7 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
       }
       case MIRType_Object: {
         // Objects don't need a temporary.
-        LDefinition out(LDefinition::POINTER, LDefinition::CAN_REUSE_INPUT);
+        LDefinition out(LDefinition::POINTER);
         LUnboxObject *ins = new LUnboxObject(useRegister(box));
         return define(ins, unbox, out) && assignSnapshot(ins);
       }
@@ -127,7 +127,7 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
 bool
 LIRGeneratorX64::preparePhi(MPhi *phi)
 {
-    uint32 vreg = nextVirtualRegister();
+    uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
         return false;
 

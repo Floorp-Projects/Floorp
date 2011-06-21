@@ -44,6 +44,7 @@
 #include "IonBuilder.h"
 #include "IonSpew.h"
 #include "IonLIR.h"
+#include "GreedyAllocator.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/Lowering-x86.h"
@@ -144,10 +145,16 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
         return false;
     spew.spew("Apply types");
 
-    LIRBuilder lirgen(&builder, graph);
+    LIRGraph lir;
+    LIRBuilder lirgen(&builder, graph, lir);
     if (!lirgen.generate())
         return false;
     spew.spew("Generate LIR");
+
+    GreedyAllocator greedy(&builder, lir);
+    if (!greedy.allocate())
+        return false;
+    spew.spew("Allocate registers");
 
     return false;
 }

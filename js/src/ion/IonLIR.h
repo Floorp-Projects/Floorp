@@ -140,6 +140,7 @@ class LAllocation
         JS_ASSERT(!isTagged());
         bits_ |= TAG_MASK;
     }
+    inline explicit LAllocation(const AnyRegister &reg);
 
     Kind kind() const {
         if (isTagged())
@@ -149,6 +150,9 @@ class LAllocation
 
     bool isUse() const {
         return kind() == USE;
+    }
+    bool isConstant() const {
+        return isConstantValue() || isConstantIndex();
     }
     bool isConstantValue() const {
         return kind() == CONSTANT_VALUE;
@@ -170,6 +174,12 @@ class LAllocation
     }
     bool isArgument() const {
         return kind() == ARGUMENT;
+    }
+    bool isRegister() const {
+        return isGeneralReg() || isFloatReg();
+    }
+    bool isMemory() const {
+        return isStackSlot() || isArgument();
     }
     inline LUse *toUse();
     inline const LUse *toUse() const;
@@ -261,6 +271,9 @@ class LUse : public LAllocation
     uint32 registerCode() const {
         JS_ASSERT(policy() == FIXED);
         return (data() >> REG_SHIFT) & REG_MASK;
+    }
+    bool isFixedRegister() const {
+        return policy() == FIXED;
     }
 };
 
@@ -371,14 +384,12 @@ class LDefinition
         // definition. The allocation may be:
         //   * A register, which may not appear as any fixed temporary.
         //   * A stack slot or argument.
-        //   * A constant.
         //
         // Register allocation will not modify a preset allocation.
         PRESET,
 
-        // With these policies, one definition may re-use the first input
-        // allocation.
-        CAN_REUSE_INPUT,
+        // One definition per instruction must re-use the first input
+        // allocation, which (for now) must be a register.
         MUST_REUSE_INPUT
     };
 
@@ -427,7 +438,9 @@ class LDefinition
     const LAllocation *output() const {
         return &output_;
     }
-
+    bool isPreset() const {
+        return policy() == PRESET;
+    }
     void setVirtualRegister(uint32 index) {
         JS_ASSERT(index < VREG_MASK);
         bits_ &= ~(VREG_MASK << VREG_SHIFT);
@@ -494,8 +507,7 @@ class LInstruction : public TempObject,
     virtual LDefinition *getDef(size_t index) = 0;
     virtual void setDef(size_t index, const LDefinition &def) = 0;
 
-    // Returns information about operands. Each unallocated operand is an LUse
-    // with a non-TEMPORARY policy.
+    // Returns information about operands.
     virtual size_t numOperands() const = 0;
     virtual LAllocation *getOperand(size_t index) = 0;
     virtual void setOperand(size_t index, const LAllocation &a) = 0;
@@ -540,6 +552,7 @@ class LInstruction : public TempObject,
 };
 
 typedef InlineList<LInstruction>::iterator LInstructionIterator;
+typedef InlineList<LInstruction>::reverse_iterator LInstructionReverseIterator;
 
 class LPhi;
 class LBlock : public TempObject
@@ -576,6 +589,15 @@ class LBlock : public TempObject
     }
     LInstructionIterator end() {
         return instructions_.end();
+    }
+    InlineList<LInstruction> &instructions() {
+        return instructions_;
+    }
+    void insertAfter(LInstruction *at, LInstruction *ins) {
+        instructions_.insertAfter(at, ins);
+    }
+    void insertBefore(LInstruction *at, LInstruction *ins) {
+        instructions_.insertBefore(at, ins);
     }
 };
 
@@ -647,6 +669,49 @@ class LSnapshot : public TempObject
     }
 };
 
+static const uint32 VREG_INCREMENT = 1;
+
+class LIRGraph
+{
+    Vector<LBlock *, 16, IonAllocPolicy> blocks_;
+    uint32 numVirtualRegisters_;
+    uint32 stackHeight_;
+
+  public:
+    LIRGraph();
+
+    size_t numBlocks() const {
+        return blocks_.length();
+    }
+    LBlock *getBlock(size_t i) const {
+        return blocks_[i];
+    }
+    bool addBlock(LBlock *block) {
+        return blocks_.append(block);
+    }
+    uint32 getVirtualRegister() {
+        numVirtualRegisters_ += VREG_INCREMENT;
+        return numVirtualRegisters_;
+    }
+    uint32 numVirtualRegisters() const {
+        // Virtual registers are 1-based, not 0-based, so add one as a
+        // convenience for 0-based arrays.
+        return numVirtualRegisters_ + 1;
+    } 
+    void setStackHeight(uint32 stackHeight) {
+        // Note that the stack height is counted in slots.
+        stackHeight_ = stackHeight;
+    }
+};
+
+LAllocation::LAllocation(const AnyRegister &reg)
+{
+    if (reg.isFloat())
+        *this = LFloatReg(reg.fpu());
+    else
+        *this = LGeneralReg(reg.gpr());
+}
+
 } // namespace ion
 } // namespace js
 
@@ -665,6 +730,8 @@ class LSnapshot : public TempObject
 #endif
 
 #undef LIR_HEADER
+
+#include "IonLIR-inl.h"
 
 #endif // jsion_lir_h__
 
