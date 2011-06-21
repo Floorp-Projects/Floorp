@@ -44,6 +44,7 @@
 #include "jsproxy.h"
 #include "xpcpublic.h"
 
+class nsINode;
 class nsINodeList;
 class nsIHTMLCollection;
 
