@@ -57,6 +57,15 @@ namespace dom {
 
 int HandlerFamily;
 
+
+JSBool
+Throw(JSContext *cx, nsresult rv)
+{
+    XPCThrower::Throw(rv, cx);
+    return JS_FALSE;
+}
+
+
 // Only set allowNativeWrapper to false if you really know you need it, if in
 // doubt use true. Setting it to false disables security wrappers.
 static bool
@@ -78,7 +87,7 @@ XPCOMObjectToJsval(JSContext *cx, JSObject *scope, xpcObjectHelper &helper,
         // or not.  This is a sloppy stab at the right semantics; the
         // method really ought to be fixed to behave consistently.
         if (!JS_IsExceptionPending(cx))
-            xpc_qsThrow(cx, NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED);
+            Throw(cx, NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED);
         return false;
     }
 
@@ -253,7 +262,7 @@ NodeList<T>::instanceIsNodeListObject(JSContext *cx, JSObject *obj, JSObject *ca
         else {
             obj = XPCWrapper::Unwrap(cx, obj);
             if (!obj)
-                return xpc_qsThrow(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+                return Throw(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
         }
     }
 
@@ -312,7 +321,7 @@ NodeList<T>::item(JSContext *cx, uintN argc, jsval *vp)
     if (!obj || !instanceIsNodeListObject(cx, obj, callee))
         return false;
     if (argc < 1)
-        return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+        return Throw(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
     jsval *argv = JS_ARGV(cx, vp);
     uint32 u;
     if (!JS_ValueToECMAUint32(cx, argv[0], &u))
@@ -373,7 +382,7 @@ NodeList<nsIHTMLCollection>::namedItem(JSContext *cx, uintN argc, jsval *vp)
     if (!obj || !instanceIsNodeListObject(cx, obj, callee))
         return false;
     if (argc < 1)
-        return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+        return Throw(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
     jsval *argv = JS_ARGV(cx, vp);
     bool hasResult;
     nsISupports *result;
