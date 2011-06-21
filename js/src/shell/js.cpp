@@ -603,7 +603,6 @@ usage(void)
                       "                Warning: this option is currently ignored.\n"
                       "  -o <option>   Enable a context option flag by name\n"
                       "                Possible values:\n"
-                      "                  anonfunfix:  JSOPTION_ANONFUNFIX\n"
                       "                  atline:      JSOPTION_ATLINE\n"
                       "                  tracejit:    JSOPTION_JIT\n"
                       "                  methodjit:   JSOPTION_METHODJIT\n"
@@ -654,7 +653,6 @@ static const struct {
     const char  *name;
     uint32      flag;
 } js_options[] = {
-    {"anonfunfix",      JSOPTION_ANONFUNFIX},
     {"atline",          JSOPTION_ATLINE},
     {"jitprofiling",    JSOPTION_PROFILING},
     {"tracejit",        JSOPTION_JIT},
@@ -6141,7 +6139,6 @@ main(int argc, char **argv, char **envp)
     if (!cx)
         return 1;
 
-    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ANONFUNFIX);
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_COMPARTMENT);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
