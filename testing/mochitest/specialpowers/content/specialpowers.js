@@ -204,7 +204,16 @@ SpecialPowers.prototype = {
 
   gc: function() {
     this.DOMWindowUtils.garbageCollect();
-  }
+  },
+
+  hasContentProcesses: function() {
+    try {
+      var rt = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+      return rt.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+    } catch (e) {
+      return true;
+    }
+  },
 };
 
 // Expose everything but internal APIs (starting with underscores) to
