@@ -1026,8 +1026,8 @@ public:
     mCleanMessageManager = PR_FALSE;
   }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGlobalChromeWindow,
-                                                     nsGlobalWindow)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalChromeWindow,
+                                           nsGlobalWindow)
 
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
   nsCOMPtr<nsIChromeFrameMessageManager> mMessageManager;

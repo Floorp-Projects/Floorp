@@ -1410,10 +1410,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOuterWindow)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOpenerScriptPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
+  if (tmp->mListenerManager) {
+    tmp->mListenerManager->Disconnect();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSessionStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocumentPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDoc)
 
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
@@ -10085,6 +10089,17 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBrowserDOMWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMessageManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGlobalChromeWindow,
+                                                nsGlobalWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mBrowserDOMWindow)
+  if (tmp->mMessageManager) {
+    static_cast<nsFrameMessageManager*>(
+      tmp->mMessageManager.get())->Disconnect();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mMessageManager)
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 DOMCI_DATA(ChromeWindow, nsGlobalChromeWindow)
 
