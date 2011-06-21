@@ -427,7 +427,6 @@ _TEST_FILES2 = \
 		file_bug622088.sjs \
 		test_bug564047.html \
 		test_bug567350.html \
-		test_bug574596.html \
 		test_bug578096.html \
 		test_bug585978.html \
 		test_bug592366.html \

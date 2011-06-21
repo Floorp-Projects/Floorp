@@ -69,15 +69,16 @@ TEST(4, expect, actual);
 
 expect = 'TypeError: String.prototype.toString called on incompatible XML';
 
-try
-{
-    delete XML.prototype.function::toString;
-    delete Object.prototype.toString;
-    actual = <a>TEXT</a>.toString();
-}
-catch(ex)
-{
+delete XML.prototype.function::toString;
+var xml = <a>TEXT</a>;
+var saveToString = Object.prototype.toString;
+delete Object.prototype.toString;
+try {
+    actual = xml.toString();
+} catch(ex) {
     actual = ex + '';
+} finally {
+    Object.prototype.toString = saveToString;
 }
 TEST(7, expect, actual);
 

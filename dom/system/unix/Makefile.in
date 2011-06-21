@@ -52,7 +52,7 @@ EXPORT_LIBRARY = 1
 include $(topsrcdir)/config/config.mk
 
 CPPSRCS     = \
-        nsAccelerometerSystem.cpp \
+        nsDeviceMotionSystem.cpp \
         $(NULL)
 
 ifdef MOZ_MAEMO_LIBLOCATION

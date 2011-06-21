@@ -35,7 +35,6 @@ toolkit.jar:
   skin/classic/mozapps/extensions/alerticon-error.png             (extensions/alerticon-error.png)
   skin/classic/mozapps/extensions/alerticon-info-positive.png     (extensions/alerticon-info-positive.png)
   skin/classic/mozapps/extensions/alerticon-info-negative.png     (extensions/alerticon-info-negative.png)
-  skin/classic/mozapps/extensions/background-texture.png          (extensions/background-texture.png)
   skin/classic/mozapps/extensions/search.png                      (extensions/search.png)
   skin/classic/mozapps/extensions/about.css                       (extensions/about.css)
 * skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)

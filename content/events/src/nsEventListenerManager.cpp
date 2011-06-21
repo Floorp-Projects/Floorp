@@ -500,7 +500,8 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                    kAllMutationBits :
                                    MutationBitForEventType(aType));
     }
-  } else if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
+  } else if (aTypeAtom == nsGkAtoms::ondeviceorientation ||
+             aTypeAtom == nsGkAtoms::ondevicemotion) {
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window)
       window->SetHasOrientationEventListener();

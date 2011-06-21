@@ -13,3 +13,12 @@ registerCleanupFunction(function(){
                                      cachedLeftPaneFolderIdGetter);
   }
 });
+
+
+function openLibrary(callback) {
+  var library = window.openDialog("chrome://browser/content/places/places.xul",
+                                  "", "chrome,toolbar=yes,dialog=no,resizable");
+  waitForFocus(function () {
+    callback(library);
+  }, library);
+}

@@ -88,6 +88,7 @@ _MAIN_TEST_FILES = \
   browser_openDialog.js \
   browser_types.js \
   browser_inlinesettings.js \
+  browser_tabsettings.js \
   $(NULL)
 
 _TEST_FILES = \

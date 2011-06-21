@@ -72,7 +72,7 @@ function Tracker(name) {
   name = name || "Unnamed";
   this.name = this.file = name.toLowerCase();
 
-  this._log = Log4Moz.repository.getLogger("Tracker." + name);
+  this._log = Log4Moz.repository.getLogger("Sync.Tracker." + name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log4Moz.Level[level];
 
@@ -108,7 +108,7 @@ Tracker.prototype = {
   },
 
   saveChangedIDs: function T_saveChangedIDs() {
-    Utils.delay(function() {
+    Utils.namedTimer(function() {
       Utils.jsonSave("changes/" + this.file, this, this.changedIDs);
     }, 1000, this, "_lazySave");
   },
@@ -190,7 +190,7 @@ function Store(name) {
   name = name || "Unnamed";
   this.name = name.toLowerCase();
 
-  this._log = Log4Moz.repository.getLogger("Store." + name);
+  this._log = Log4Moz.repository.getLogger("Sync.Store." + name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log4Moz.Level[level];
 
@@ -202,8 +202,7 @@ Store.prototype = {
 
   _sleep: function _sleep(delay) {
     let cb = Async.makeSyncCallback();
-    this._timer.initWithCallback({notify: cb}, delay,
-                                 Ci.nsITimer.TYPE_ONE_SHOT);
+    this._timer.initWithCallback(cb, delay, Ci.nsITimer.TYPE_ONE_SHOT);
     Async.waitForSyncCallback(cb);
   },
 
@@ -274,7 +273,7 @@ XPCOMUtils.defineLazyGetter(this, "Engines", function() {
 
 function EngineManagerSvc() {
   this._engines = {};
-  this._log = Log4Moz.repository.getLogger("Service.Engines");
+  this._log = Log4Moz.repository.getLogger("Sync.EngineManager");
   this._log.level = Log4Moz.Level[Svc.Prefs.get(
     "log.logger.service.engines", "Debug")];
 }
@@ -351,7 +350,7 @@ function Engine(name) {
   this.name = name.toLowerCase();
 
   this._notify = Utils.notify("weave:engine:");
-  this._log = Log4Moz.repository.getLogger("Engine." + this.Name);
+  this._log = Log4Moz.repository.getLogger("Sync.Engine." + this.Name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log4Moz.Level[level];
 
@@ -490,7 +489,7 @@ SyncEngine.prototype = {
       return;
     }
     this._toFetch = val;
-    Utils.delay(function () {
+    Utils.namedTimer(function () {
       Utils.jsonSave("toFetch/" + this.name, this, val);
     }, 0, this, "_toFetchDelay");
   },
@@ -512,7 +511,7 @@ SyncEngine.prototype = {
       return;
     }
     this._previousFailed = val;
-    Utils.delay(function () {
+    Utils.namedTimer(function () {
       Utils.jsonSave("failed/" + this.name, this, val);
     }, 0, this, "_previousFailedDelay");
   },

@@ -184,7 +184,7 @@ JSParseNode::clear()
     pn_parens = false;
 }
 
-Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp)
+Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldConstants)
   : js::AutoGCRooter(cx, PARSER),
     context(cx),
     aleFreeList(NULL),
@@ -197,7 +197,8 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp)
     traceListHead(NULL),
     tc(NULL),
     emptyCallShape(NULL),
-    keepAtoms(cx->runtime)
+    keepAtoms(cx->runtime),
+    foldConstants(foldConstants)
 {
     js::PodArrayZero(tempFreeList);
     setPrincipals(prin);
@@ -767,7 +768,8 @@ JSParseNode::newBinaryOrAppend(TokenKind tt, JSOp op, JSParseNode *left, JSParse
      */
     if (tt == TOK_PLUS &&
         left->pn_type == TOK_NUMBER &&
-        right->pn_type == TOK_NUMBER) {
+        right->pn_type == TOK_NUMBER &&
+        tc->parser->foldConstants) {
         left->pn_dval += right->pn_dval;
         left->pn_pos.end = right->pn_pos.end;
         RecycleTree(right, tc);
@@ -861,7 +863,7 @@ Parser::parse(JSObject *chain)
         if (!tokenStream.matchToken(TOK_EOF)) {
             reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
-        } else {
+        } else if (foldConstants) {
             if (!js_FoldConstants(context, pn, &globaltc))
                 pn = NULL;
         }
@@ -1209,7 +1211,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         def.knownSlot = shape->slot;
     }
 
-    js::Vector<JSScript *, 16, ContextAllocPolicy> worklist(cx);
+    js::Vector<JSScript *, 16> worklist(cx);
     if (!worklist.append(script))
         return false;
 
@@ -6662,7 +6664,7 @@ Parser::unaryExpr()
          * returns true. Here we fold constants before checking for a call
          * expression, in order to rule out delete of a generator expression.
          */
-        if (!js_FoldConstants(context, pn2, tc))
+        if (foldConstants && !js_FoldConstants(context, pn2, tc))
             return NULL;
         switch (pn2->pn_type) {
           case TOK_LP:

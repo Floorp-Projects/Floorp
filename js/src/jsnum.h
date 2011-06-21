@@ -149,12 +149,15 @@ extern jsdouble js_NaN;
 extern jsdouble js_PositiveInfinity;
 extern jsdouble js_NegativeInfinity;
 
-/* Initialize number constants and runtime state for the first context. */
-extern JSBool
-js_InitRuntimeNumberState(JSContext *cx);
+namespace js {
+
+extern bool
+InitRuntimeNumberState(JSRuntime *rt);
 
 extern void
-js_FinishRuntimeNumberState(JSContext *cx);
+FinishRuntimeNumberState(JSRuntime *rt);
+
+} /* namespace js */
 
 /* Initialize the Number class, returning its prototype object. */
 extern js::Class js_NumberClass;
@@ -471,7 +474,7 @@ js_DoubleToECMAInt32(jsdouble d)
     // bit-shifted left by the (decoded) exponent. Note that because the r1[20]
     // is the bit with value '1', r1 is effectively already shifted (left) by
     // 20 bits, and r0 is already shifted by 52 bits.
-    
+
     // Adjust the exponent to remove the encoding offset. If the decoded
     // exponent is negative, quickly bail out with '0' as such values round to
     // zero anyway. This also catches +/-0 and subnormals.

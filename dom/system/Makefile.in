@@ -62,8 +62,11 @@ DIRS = android
 endif
 
 CPPSRCS     = \
-  nsAccelerometer.cpp \
+  nsDeviceMotion.cpp \
   $(NULL)
+
+# We fire the nsDOMDeviceAcceleration
+LOCAL_INCLUDES += -I$(topsrcdir)/content/events/src
 
 # On Systems that have build in geolocation providers,
 # we really do not need these.
@@ -77,7 +80,7 @@ EXTRA_COMPONENTS = \
 endif
 
 EXPORTS     = \
-  nsAccelerometer.h \
+  nsDeviceMotion.h \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

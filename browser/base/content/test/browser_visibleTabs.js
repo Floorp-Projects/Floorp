@@ -130,4 +130,7 @@ function test() {
   is(gBrowser.tabs.length, 1, "sanity check that it matches");
   is(gBrowser.selectedTab, origTab, "got the orig tab");
   is(origTab.hidden, false, "and it's not hidden -- visible!");
+
+  if (tabViewWindow)
+    tabViewWindow.GroupItems.groupItems[0].close();
 }

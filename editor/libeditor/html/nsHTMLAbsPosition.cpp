@@ -58,13 +58,13 @@
 
 #include "nsIDOMEventTarget.h"
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsIServiceManager.h"
-
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMRGBColor.h"
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #define  BLACK_BG_RGB_TRIGGER 0xd0
 
@@ -502,15 +502,8 @@ void
 nsHTMLEditor::AddPositioningOffset(PRInt32 & aX, PRInt32 & aY)
 {
   // Get the positioning offset
-  nsresult res;
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &res);
-  PRInt32 positioningOffset = 0;
-  if (NS_SUCCEEDED(res) && prefBranch) {
-    res = prefBranch->GetIntPref("editor.positioning.offset", &positioningOffset);
-    if (NS_FAILED(res)) // paranoia
-      positioningOffset = 0;
-  }
+  PRInt32 positioningOffset =
+    Preferences::GetInt("editor.positioning.offset", 0);
 
   aX += positioningOffset;
   aY += positioningOffset;

@@ -44,7 +44,6 @@
 
 #include "CheckedInt.h"
 
-#include "jsobj.h"
 #include "jstypedarray.h"
 
 #if defined(USE_ANGLE)

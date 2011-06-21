@@ -121,8 +121,6 @@
 // Misc
 #include "TextEditorTest.h"
 #include "nsEditorUtils.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIContentFilter.h"
 #include "nsEventDispatcher.h"
 #include "plbase64.h"
@@ -131,6 +129,9 @@
 #include "nsIPrincipal.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 const PRUnichar nbsp = 160;
 
@@ -1125,31 +1126,24 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
       (*aTransferable)->AddDataFlavor(kHTMLMime);
       (*aTransferable)->AddDataFlavor(kFileMime);
 
-      nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-      PRInt32 clipboardPasteOrder = 1; // order of image-encoding preference
-
-      if (prefs)
+      switch (Preferences::GetInt("clipboard.paste_image_type", 1))
       {
-        prefs->GetIntPref("clipboard.paste_image_type", &clipboardPasteOrder);
-        switch (clipboardPasteOrder)
-        {
-          case 0:  // prefer JPEG over PNG over GIF encoding
-            (*aTransferable)->AddDataFlavor(kJPEGImageMime);
-            (*aTransferable)->AddDataFlavor(kPNGImageMime);
-            (*aTransferable)->AddDataFlavor(kGIFImageMime);
-            break;
-          case 1:  // prefer PNG over JPEG over GIF encoding (default)
-          default:
-            (*aTransferable)->AddDataFlavor(kPNGImageMime);
-            (*aTransferable)->AddDataFlavor(kJPEGImageMime);
-            (*aTransferable)->AddDataFlavor(kGIFImageMime);
-            break;
-          case 2:  // prefer GIF over JPEG over PNG encoding
-            (*aTransferable)->AddDataFlavor(kGIFImageMime);
-            (*aTransferable)->AddDataFlavor(kJPEGImageMime);
-            (*aTransferable)->AddDataFlavor(kPNGImageMime);
-            break;
-        }
+        case 0:  // prefer JPEG over PNG over GIF encoding
+          (*aTransferable)->AddDataFlavor(kJPEGImageMime);
+          (*aTransferable)->AddDataFlavor(kPNGImageMime);
+          (*aTransferable)->AddDataFlavor(kGIFImageMime);
+          break;
+        case 1:  // prefer PNG over JPEG over GIF encoding (default)
+        default:
+          (*aTransferable)->AddDataFlavor(kPNGImageMime);
+          (*aTransferable)->AddDataFlavor(kJPEGImageMime);
+          (*aTransferable)->AddDataFlavor(kGIFImageMime);
+          break;
+        case 2:  // prefer GIF over JPEG over PNG encoding
+          (*aTransferable)->AddDataFlavor(kGIFImageMime);
+          (*aTransferable)->AddDataFlavor(kJPEGImageMime);
+          (*aTransferable)->AddDataFlavor(kPNGImageMime);
+          break;
       }
     }
     (*aTransferable)->AddDataFlavor(kUnicodeMime);

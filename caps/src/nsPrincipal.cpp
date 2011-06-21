@@ -53,77 +53,18 @@
 #include "nsHashtable.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsIPrefBranch2.h"
-#include "nsIPrefService.h"
 #include "nsIClassInfoImpl.h"
 #include "nsDOMError.h"
 #include "nsIContentSecurityPolicy.h"
 
 #include "nsPrincipal.h"
 
-class nsCodeBasePrefObserver : nsIObserver
-{
-public:
-  nsCodeBasePrefObserver()
-  {
-    NS_ASSERTION(!sObserverInstalled, "Shouldn't recreate observer\n");
-  }
-  ~nsCodeBasePrefObserver()
-  {
-    sObserverInstalled = PR_FALSE;
-  }
+#include "mozilla/Preferences.h"
 
-  void Init()
-  {
-    nsCOMPtr<nsIPrefBranch2> prefBranch =
-      do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefBranch) {
-      if (NS_FAILED(prefBranch->GetBoolPref(PrefName(), &sPrefValue))) {
-        sPrefValue = PR_FALSE;
-      }
-      if (NS_SUCCEEDED(prefBranch->AddObserver(PrefName(), this, PR_FALSE))) {
-        sObserverInstalled = PR_TRUE;
-      }
-    }
-  }
+using namespace mozilla;
 
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Observe(nsISupports* aSubject,
-                     const char* aTopic,
-                     const PRUnichar* aData)
-  {
-    NS_ASSERTION(!strcmp(aTopic,  NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
-                 "Wrong topic!");
-    NS_ASSERTION(!strcmp(NS_ConvertUTF16toUTF8(aData).get(), PrefName()),
-                 "Wrong pref!");
-
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_QueryInterface(aSubject));
-    if (!prefBranch ||
-        NS_FAILED(prefBranch->GetBoolPref(PrefName(), &sPrefValue))) {
-      sPrefValue = PR_FALSE;
-    }
-    return NS_OK;
-  }
-
-  const char* PrefName()
-  {
-    static const char pref[] = "signed.applets.codebase_principal_support";
-    return pref;
-  }
-
-  static PRBool PrefValue() { return sPrefValue; }
-  static PRBool Installed() { return sObserverInstalled; }
-
-
-protected:
-  static PRBool sPrefValue;
-  static PRBool sObserverInstalled;
-};
-
-PRBool nsCodeBasePrefObserver::sPrefValue = PR_FALSE;
-PRBool nsCodeBasePrefObserver::sObserverInstalled = PR_FALSE;
-NS_IMPL_ISUPPORTS1(nsCodeBasePrefObserver, nsIObserver)
+static PRBool gCodeBasePrincipalSupport = PR_FALSE;
+static PRBool gIsObservingCodeBasePrincipalSupport = PR_FALSE;
 
 static PRBool URIIsImmutable(nsIURI* aURI)
 {
@@ -180,12 +121,14 @@ nsPrincipal::nsPrincipal()
     mCodebaseImmutable(PR_FALSE),
     mDomainImmutable(PR_FALSE)
 {
-  if (!nsCodeBasePrefObserver::Installed()) {
-    nsRefPtr<nsCodeBasePrefObserver> obs = new nsCodeBasePrefObserver();
-    if (obs)
-      obs->Init();
-    NS_WARN_IF_FALSE(nsCodeBasePrefObserver::Installed(),
-                     "Installing nsCodeBasePrefObserver failed!");
+  if (!gIsObservingCodeBasePrincipalSupport) {
+    nsresult rv =
+      Preferences::AddBoolVarCache(&gCodeBasePrincipalSupport,
+                                   "signed.applets.codebase_principal_support",
+                                   PR_FALSE);
+    gIsObservingCodeBasePrincipalSupport = NS_SUCCEEDED(rv);
+    NS_WARN_IF_FALSE(gIsObservingCodeBasePrincipalSupport,
+                     "Installing gCodeBasePrincipalSupport failed!");
   }
 }
 
@@ -538,7 +481,7 @@ nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
     // schemes are special and may be able to get extra capabilities
     // even with the pref disabled.
 
-    if (!nsCodeBasePrefObserver::PrefValue()) {
+    if (!gCodeBasePrincipalSupport) {
       PRBool mightEnable = PR_FALSE;
       nsresult rv = mCodebase->SchemeIs("file", &mightEnable);
       if (NS_FAILED(rv) || !mightEnable) {

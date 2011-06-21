@@ -987,27 +987,54 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     AndroidBridge::Bridge()->HideProgressDialogOnce();
 
     if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_BASIC) {
-        jobject bytebuf = sview.GetSoftwareDrawBuffer();
-        if (!bytebuf) {
-            ALOG("no buffer to draw into - skipping draw");
-            return;
+        if (AndroidBridge::Bridge()->HasNativeBitmapAccess()) {
+            jobject bitmap = sview.GetSoftwareDrawBitmap();
+            if (!bitmap) {
+                ALOG("no bitmap to draw into - skipping draw");
+                return;
+            }
+
+            if (!AndroidBridge::Bridge()->ValidateBitmap(bitmap, mBounds.width, mBounds.height))
+                return;
+
+            void *buf = AndroidBridge::Bridge()->LockBitmap(bitmap);
+            if (buf == nsnull) {
+                ALOG("### Software drawing, but failed to lock bitmap.");
+                return;
+            }
+
+            nsRefPtr<gfxImageSurface> targetSurface =
+                new gfxImageSurface((unsigned char *)buf,
+                                    gfxIntSize(mBounds.width, mBounds.height),
+                                    mBounds.width * 2,
+                                    gfxASurface::ImageFormatRGB16_565);
+            DrawTo(targetSurface);
+
+            AndroidBridge::Bridge()->UnlockBitmap(bitmap);
+            sview.Draw2D(bitmap, mBounds.width, mBounds.height);
+        } else {
+            jobject bytebuf = sview.GetSoftwareDrawBuffer();
+            if (!bytebuf) {
+                ALOG("no buffer to draw into - skipping draw");
+                return;
+            }
+
+            void *buf = AndroidBridge::JNI()->GetDirectBufferAddress(bytebuf);
+            int cap = AndroidBridge::JNI()->GetDirectBufferCapacity(bytebuf);
+            if (!buf || cap != (mBounds.width * mBounds.height * 2)) {
+                ALOG("### Software drawing, but unexpected buffer size %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
+                return;
+            }
+
+            nsRefPtr<gfxImageSurface> targetSurface =
+                new gfxImageSurface((unsigned char *)buf,
+                                    gfxIntSize(mBounds.width, mBounds.height),
+                                    mBounds.width * 2,
+                                    gfxASurface::ImageFormatRGB16_565);
+            DrawTo(targetSurface);
+
+            sview.Draw2D(bytebuf, mBounds.width * 2);
         }
-
-        void *buf = AndroidBridge::JNI()->GetDirectBufferAddress(bytebuf);
-        int cap = AndroidBridge::JNI()->GetDirectBufferCapacity(bytebuf);
-        if (!buf || cap != (mBounds.width * mBounds.height * 2)) {
-            ALOG("### Software drawing, but unexpected buffer size %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
-            return;
-        }
-
-        nsRefPtr<gfxImageSurface> targetSurface =
-            new gfxImageSurface((unsigned char *)buf,
-                                gfxIntSize(mBounds.width, mBounds.height),
-                                mBounds.width * 2,
-                                gfxASurface::ImageFormatRGB16_565);
-
-        DrawTo(targetSurface);
-        sview.Draw2D(bytebuf, mBounds.width * 2);
     } else {
         int drawType = sview.BeginDrawing();
 

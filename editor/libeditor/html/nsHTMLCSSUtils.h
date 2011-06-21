@@ -177,13 +177,13 @@ public:
     *
     * @param aColor         [OUT] the default color as it is defined in prefs
     */
-  nsresult    GetDefaultBackgroundColor(nsAString & aColor);
+  void        GetDefaultBackgroundColor(nsAString & aColor);
 
   /** Get the default length unit used for CSS Indent/Outdent
     *
     * @param aLengthUnit    [OUT] the default length unit as it is defined in prefs
     */
-  nsresult    GetDefaultLengthUnit(nsAString & aLengthUnit);
+  void        GetDefaultLengthUnit(nsAString & aLengthUnit);
 
   /** asnwers true if the element aElement carries an ID or a class
     *

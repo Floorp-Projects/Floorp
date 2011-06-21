@@ -355,10 +355,8 @@ let TabView = {
           if (!tabItem)
             return;
 
-          // Switch to the new tab, and close the old group if it's now empty.
-          let oldGroupItem = groupItems.getActiveGroupItem();
+          // Switch to the new tab
           window.gBrowser.selectedTab = tabItem.tab;
-          oldGroupItem.closeIfEmpty();
         });
       }
     }, true);
@@ -370,8 +368,8 @@ let TabView = {
     if (this._window) {
       this._window.UI.restoredClosedTab = true;
 
-      if (blankTabToRemove)
-        blankTabToRemove._tabViewTabIsRemovedAfterRestore = true;
+      if (blankTabToRemove && blankTabToRemove._tabViewTabItem)
+        blankTabToRemove._tabViewTabItem.isRemovedAfterRestore = true;
     }
   },
 

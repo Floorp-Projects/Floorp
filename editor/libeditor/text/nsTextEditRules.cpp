@@ -58,8 +58,6 @@
 #include "nsEditorUtils.h"
 #include "EditTxn.h"
 #include "nsEditProperty.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
@@ -69,6 +67,10 @@
 
 // for IBMBIDI
 #include "nsFrameSelection.h"
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
@@ -157,13 +159,8 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor)
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  PRBool deleteBidiImmediately = PR_FALSE;
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &res);
-  if (NS_SUCCEEDED(res))
-    prefBranch->GetBoolPref("bidi.edit.delete_immediately",
-                            &deleteBidiImmediately);
-  mDeleteBidiImmediately = deleteBidiImmediately;
+  mDeleteBidiImmediately =
+    Preferences::GetBool("bidi.edit.delete_immediately", PR_FALSE);
 
   return res;
 }

@@ -1329,6 +1329,10 @@ struct PRInt64Data {
     PRInt64 n;
 };
 
+// This function is miscompiled with MSVC 2005 when PGO is on.  See bug 664647.
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
 void
 GetJSObjectSlotsCallback(JSContext *cx, void *v, size_t traceKind, void *thing)
 {
@@ -1339,6 +1343,9 @@ GetJSObjectSlotsCallback(JSContext *cx, void *v, size_t traceKind, void *thing)
         data->n += obj->numSlots() * sizeof(js::Value);
     }
 }
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
 
 static PRInt64
 GetJSObjectSlots(void *dummy)
@@ -1359,6 +1366,10 @@ GetJSObjectSlots(void *dummy)
     return data.n;
 }
 
+// This function is miscompiled with MSVC 2005 when PGO is on.  See bug 664647.
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
 void
 GetJSStringCharsCallback(JSContext *cx, void *v, size_t traceKind, void *thing)
 {
@@ -1367,6 +1378,9 @@ GetJSStringCharsCallback(JSContext *cx, void *v, size_t traceKind, void *thing)
     PRInt64Data *data = (PRInt64Data *) v;
     data->n += str->charsHeapSize();
 }
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
  
 static PRInt64
 GetJSStringChars(void *dummy)
@@ -1460,10 +1474,9 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSMjitData,
 static PRInt64
 GetCompartmentTjitCode(JSCompartment *c)
 {
-    js::TraceMonitor &tm = c->traceMonitor;
-    if (tm.codeAlloc) {
+    if (c->hasTraceMonitor()) {
         size_t total, frag_size, free_size;
-        tm.getCodeAllocStats(total, frag_size, free_size);
+        c->traceMonitor()->getCodeAllocStats(total, frag_size, free_size);
         return total;
     }
     return 0;
@@ -1472,15 +1485,17 @@ GetCompartmentTjitCode(JSCompartment *c)
 static PRInt64
 GetCompartmentTjitDataAllocatorsMain(JSCompartment *c)
 {
-    js::TraceMonitor &tm = c->traceMonitor;
-    return tm.dataAlloc ? tm.getVMAllocatorsMainSize() : 0;
+    return c->hasTraceMonitor()
+         ? c->traceMonitor()->getVMAllocatorsMainSize()
+         : 0;
 }
 
 static PRInt64
 GetCompartmentTjitDataAllocatorsReserve(JSCompartment *c)
 {
-    js::TraceMonitor &tm = c->traceMonitor;
-    return tm.dataAlloc ? tm.getVMAllocatorsReserveSize() : 0;
+    return c->hasTraceMonitor()
+         ? c->traceMonitor()->getVMAllocatorsReserveSize()
+         : 0;
 }
 
 static PRInt64
@@ -1592,9 +1607,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStack));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSScripts));
-        // XXX: these two are disabled due to crashes.  See bug 664647.
-        //NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSObjectSlots));
-        //NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStringChars));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSObjectSlots));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStringChars));
 #ifdef JS_METHODJIT
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitCode));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitData));

@@ -273,7 +273,7 @@ public class GeckoInputConnection
 
             // 2. Make a guess about what the text actually is
             if (mComposing && extract.selectionEnd > extract.text.length())
-                extract.text = extract.text.subSequence(0, mCompositionStart) + mComposingText;
+                extract.text = extract.text.subSequence(0, Math.min(extract.text.length(), mCompositionStart)) + mComposingText;
 
             // 3. If all else fails, make sure our selection indexes make sense
             extract.selectionStart = Math.min(extract.selectionStart, extract.text.length());

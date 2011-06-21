@@ -102,7 +102,7 @@ public:
   void DestroyAnonymousContent();
 
   // nsSVGElement specializations:
-  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix);
+  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum);
   virtual void DidAnimateString(PRUint8 aAttrEnum);

@@ -1,0 +1,16 @@
+<html><head>
+<style>
+div {
+  outline: 1px solid black;
+}
+</style>
+
+</head><body>
+You should see no red, only green<br>
+  <div style="overflow: scroll; height: 200px; z-index: 2; position: relative; background-color: red;"></div>
+    <div class="displayport" reftest-displayport-h="500" style="overflow: scroll; position: relative; margin-top: -200px; height: 200px;">
+      <div style="z-index: 10; position: absolute; width: 100%; height: 500px; bottom: -300px;">
+        <div style="height: 200px; background-color: lime;"></div>
+      </div>
+   </div>
+</body></html>

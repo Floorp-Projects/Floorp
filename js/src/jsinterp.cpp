@@ -88,10 +88,10 @@
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
 #include "jsopcodeinlines.h"
 
 #include "vm/Stack-inl.h"
+#include "vm/String-inl.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -1212,7 +1212,6 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
                 return false;
 
             JS_ASSERT(args.rval().isObject());
-            JS_RUNTIME_METER(cx->runtime, constructs);
             return true;
         }
         if (clasp->construct) {
@@ -2077,7 +2076,7 @@ static inline bool
 IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass) {
-        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             *cond = (ni->props_cursor < ni->props_end);
             return true;
@@ -2093,7 +2092,7 @@ static inline bool
 IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass) {
-        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             jsid id = *ni->current();
@@ -4517,156 +4516,90 @@ BEGIN_CASE(JSOP_ENUMELEM)
 }
 END_CASE(JSOP_ENUMELEM)
 
-{ // begin block around calling opcodes
-    JSFunction *newfun;
-    JSObject *callee;
-    MaybeConstruct construct;
-    CallArgs args;
-
-BEGIN_CASE(JSOP_NEW)
-{
-    args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-    JS_ASSERT(args.base() >= regs.fp()->base());
-
-    if (IsFunctionObject(args.calleev(), &callee)) {
-        newfun = callee->getFunctionPrivate();
-        if (newfun->isInterpretedConstructor()) {
-            if (newfun->script()->isEmpty()) {
-                JSObject *rval = js_CreateThisForFunction(cx, callee);
-                if (!rval)
-                    goto error;
-                args.rval().setObject(*rval);
-                regs.sp = args.spAfterCall();
-                goto end_new;
-            }
-
-            construct = CONSTRUCT;
-            goto inline_call;
-        }
-    }
-
-    if (!InvokeConstructor(cx, args))
-        goto error;
-    regs.sp = args.spAfterCall();
-    CHECK_INTERRUPT_HANDLER();
-    TRACE_0(NativeCallComplete);
-
-  end_new:;
-}
-END_CASE(JSOP_NEW)
-
 BEGIN_CASE(JSOP_EVAL)
 {
-    args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-
-    if (!IsBuiltinEvalForScope(&regs.fp()->scopeChain(), args.calleev()))
-        goto call_using_invoke;
-
-    if (!DirectEval(cx, args))
-        goto error;
-
+    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+    if (IsBuiltinEvalForScope(&regs.fp()->scopeChain(), args.calleev())) {
+        if (!DirectEval(cx, args))
+            goto error;
+    } else {
+        if (!Invoke(cx, args))
+            goto error;
+    }
+    CHECK_INTERRUPT_HANDLER();
     regs.sp = args.spAfterCall();
 }
 END_CASE(JSOP_EVAL)
 
+BEGIN_CASE(JSOP_NEW)
 BEGIN_CASE(JSOP_CALL)
-BEGIN_CASE(JSOP_FUNAPPLY)
 BEGIN_CASE(JSOP_FUNCALL)
+BEGIN_CASE(JSOP_FUNAPPLY)
 {
+    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+    JS_ASSERT(args.base() >= regs.fp()->base());
 
-    args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+    MaybeConstruct construct = *regs.pc == JSOP_NEW ? CONSTRUCT : NO_CONSTRUCT;
 
-    if (IsFunctionObject(args.calleev(), &callee)) {
-        newfun = callee->getFunctionPrivate();
-
-        /* Clear frame flag since this is not a constructor call. */
-        construct = NO_CONSTRUCT;
-        if (newfun->isInterpreted())
-      inline_call:
-        {
-            JSScript *newscript = newfun->script();
-            if (JS_UNLIKELY(newscript->isEmpty())) {
-                args.rval().setUndefined();
-                regs.sp = args.spAfterCall();
-                goto end_call;
-            }
-
-            /* Push frame on the stack. */
-            if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, newfun,
-                                           newscript, construct, OOMCheck())) {
+    JSObject *callee;
+    JSFunction *fun;
+    if (!IsFunctionObject(args.calleev(), &callee, &fun) || !fun->isInterpretedConstructor()) {
+        if (construct) {
+            if (!InvokeConstructor(cx, args))
                 goto error;
-            }
-
-            /* Refresh interpreter locals. */
-            script = newscript;
-            pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
-            argv = regs.fp()->formalArgsEnd() - newfun->nargs;
-            atoms = script->atomMap.vector;
-
-            /* Now that the new frame is rooted, maybe create a call object. */
-            if (newfun->isHeavyweight() && !CreateFunCallObject(cx, regs.fp()))
+        } else {
+            if (!Invoke(cx, args))
                 goto error;
-
-            RESET_USE_METHODJIT();
-            JS_RUNTIME_METER(rt, inlineCalls);
-
-            TRACE_0(EnterFrame);
-
-            CHECK_INTERRUPT_HANDLER();
-
-            if (ion::Go(cx, script, regs.fp()))
-                return true;
-
-#ifdef JS_METHODJIT
-            /* Try to ensure methods are method JIT'd.  */
-            mjit::CompileRequest request = (interpMode == JSINTERP_NORMAL)
-                                           ? mjit::CompileRequest_Interpreter
-                                           : mjit::CompileRequest_JIT;
-            mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, regs.fp(), request);
-            if (status == mjit::Compile_Error)
-                goto error;
-            if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {
-                interpReturnOK = mjit::JaegerShot(cx);
-                CHECK_INTERRUPT_HANDLER();
-                goto jit_return;
-            }
-#endif
-
-            if (!ScriptPrologue(cx, regs.fp()))
-                goto error;
-
-            CHECK_INTERRUPT_HANDLER();
-
-            /* Load first op and dispatch it (safe since JSOP_STOP). */
-            op = (JSOp) *regs.pc;
-            DO_OP();
         }
-
-        Probes::enterJSFun(cx, newfun, script);
-        JSBool ok = CallJSNative(cx, newfun->u.n.native, args);
-        Probes::exitJSFun(cx, newfun, script);
         regs.sp = args.spAfterCall();
-        if (!ok)
-            goto error;
+        CHECK_INTERRUPT_HANDLER();
         TRACE_0(NativeCallComplete);
-        goto end_call;
+        len = JSOP_CALL_LENGTH;
+        DO_NEXT_OP(len);
     }
 
-  call_using_invoke:
-    bool ok;
-    ok = Invoke(cx, args);
-    regs.sp = args.spAfterCall();
-    CHECK_INTERRUPT_HANDLER();
-    if (!ok)
+    script = fun->script();
+    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, script, construct, OOMCheck()))
         goto error;
-    JS_RUNTIME_METER(rt, nonInlineCalls);
-    TRACE_0(NativeCallComplete);
 
-  end_call:;
+    /* Refresh local js::Interpret state. */
+    pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
+    argv = regs.fp()->formalArgsEnd() - fun->nargs;
+    atoms = script->atomMap.vector;
+
+    /* Only create call object after frame is rooted. */
+    if (fun->isHeavyweight() && !CreateFunCallObject(cx, regs.fp()))
+        goto error;
+
+    RESET_USE_METHODJIT();
+    TRACE_0(EnterFrame);
+
+#ifdef JS_METHODJIT
+    {
+        /* Try to ensure methods are method JIT'd.  */
+        mjit::CompileRequest request = (interpMode == JSINTERP_NORMAL)
+                                       ? mjit::CompileRequest_Interpreter
+                                       : mjit::CompileRequest_JIT;
+        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, regs.fp(), request);
+        if (status == mjit::Compile_Error)
+            goto error;
+        if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {
+            interpReturnOK = mjit::JaegerShot(cx);
+            CHECK_INTERRUPT_HANDLER();
+            goto jit_return;
+        }
+    }
+#endif
+
+    if (!ScriptPrologue(cx, regs.fp()))
+        goto error;
+
+    CHECK_INTERRUPT_HANDLER();
+
+    /* Load first op and dispatch it (safe since JSOP_STOP). */
+    op = (JSOp) *regs.pc;
+    DO_OP();
 }
-END_CASE(JSOP_CALL)
-
-} // end block around calling opcodes
 
 BEGIN_CASE(JSOP_SETCALL)
 {

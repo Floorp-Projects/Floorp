@@ -152,7 +152,7 @@
         <image class="pref-icon" type="cookie"/>
         <vbox>
           <label class="pref-title" value="&cookie.label;"/>
-          <hbox algin="center">
+          <hbox align="center">
             <menulist id="cookie-menulist"
                       class="pref-menulist"
                       type="cookie"

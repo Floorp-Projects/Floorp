@@ -45,6 +45,8 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
+#include "vm/String-inl.h"
+
 /*
  * There are two mostly separate mark paths. The first is a fast path used
  * internally in the GC. The second is a slow path used for root marking and

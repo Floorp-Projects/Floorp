@@ -58,19 +58,26 @@ _TEST_FILES = \
 		test_consoleAPI.html \
 		test_domWindowUtils.html \
 		test_domWindowUtils_scrollXY.html \
-		test_innerScreen.xul \
 		test_offsets.html \
 		test_offsets.js \
-		test_offsets.xul \
 		test_windowProperties.html \
 		test_clipboard_events.html \
-		test_focusrings.xul \
 		test_nodesFromRect.html \
 		test_frameElementWrapping.html \
 		file_frameElementWrapping.html \
 		test_framedhistoryframes.html \
 		test_windowedhistoryframes.html \
+		test_focusrings.xul \
+		$(NULL)
+
+_CHROME_FILES = \
+		test_innerScreen.xul \
+		test_offsets.xul \
+		test_offsets.js \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
