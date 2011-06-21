@@ -55,6 +55,7 @@
 
 #include "nsINameSpaceManager.h"
 
+#include "mozilla/Util.h" // for DebugOnly
 
 #ifdef DEBUG
 #include "nsBlockDebugFlags.h"
@@ -941,7 +942,7 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
 
   // Put the float on the pushed floats list, even though it
   // isn't actually a continuation.
-  nsresult rv = mBlock->StealFrame(mPresContext, aFloat);
+  DebugOnly<nsresult> rv = mBlock->StealFrame(mPresContext, aFloat);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
   AppendPushedFloat(aFloat);
 

@@ -125,7 +125,7 @@ nsContextMenu.prototype = {
         } catch (ex) {}
       }
       // Check if this could be a valid url, just missing the protocol.
-      else if (/^(?:\w+\.)+\D\S*$/.test(linkText)) {
+      else if (/^(?:[a-z\d-]+\.)+[a-z]+$/i.test(linkText)) {
         // Now let's see if this is an intentional link selection. Our guess is
         // based on whether the selection begins/ends with whitespace or is
         // preceded/followed by a non-word character.

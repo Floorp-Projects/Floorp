@@ -80,8 +80,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x176e69ce, 0x25d3, 0x4f2a, \
-  { 0x9d, 0x99, 0x81, 0xa3, 0x9a, 0xfd, 0xe2, 0xf0 } }
+{ 0x6c05ae9d, 0x4ad1, 0x4e92, \
+  { 0x9c, 0x95, 0xd3, 0x54, 0xea, 0x0f, 0xb9, 0x48 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -92,7 +92,7 @@ public:
 
   virtual void ActivateOrDeactivate(PRBool aActivate) = 0;
 
-  // this is called GetTopWindowRoot to avoid conflicts with nsIDOMWindow2::GetWindowRoot
+  // this is called GetTopWindowRoot to avoid conflicts with nsIDOMWindow::GetWindowRoot
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
 
   virtual void SetActive(PRBool aActive)

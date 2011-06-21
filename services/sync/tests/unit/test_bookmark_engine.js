@@ -32,17 +32,16 @@ add_test(function bad_record_allIDs() {
 
   _("Fetching all IDs.");
   let all = store.getAllIDs();
-  
+
   _("All IDs: " + JSON.stringify(all));
   do_check_true("menu" in all);
   do_check_true("toolbar" in all);
-  
+
   _("Clean up.");
   PlacesUtils.bookmarks.removeItem(badRecordID);
   run_next_test();
 });
-  
-  
+
 add_test(function test_ID_caching() {
   let syncTesting = new SyncTestingInfrastructure();
 
@@ -170,7 +169,7 @@ add_test(function test_restorePromptsReupload() {
   Service.clusterURL = "http://localhost:8080/";
 
   let collection = new ServerCollection({}, true);
-  
+
   let engine = new BookmarksEngine();
   let store = engine._store;
   let global = new ServerWBO('global',
@@ -262,7 +261,7 @@ add_test(function test_restorePromptsReupload() {
 
     _("Have the correct number of IDs locally, too.");
     do_check_eq(count, ["menu", "toolbar", folder1_id, bmk1_id].length);
-    
+
     _("Sync again. This'll wipe bookmarks from the server.");
     try {
       engine.sync();
@@ -384,6 +383,64 @@ add_test(function test_mismatched_types() {
     server.stop(run_next_test);
   }
 });
+
+add_test(function test_bookmark_guidMap_fail() {
+  _("Ensure that failures building the GUID map cause early death.");
+
+  let syncTesting = new SyncTestingInfrastructure();
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+  let collection = new ServerCollection();
+  let engine = new BookmarksEngine();
+  let store = engine._store;
+  let global = new ServerWBO('global',
+                             {engines: {bookmarks: {version: engine.version,
+                                                    syncID: engine.syncID}}});
+  let server = httpd_setup({
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
+  });
+
+  // Add one item to the server.
+  let itemID = PlacesUtils.bookmarks.createFolder(
+    PlacesUtils.bookmarks.toolbarFolder, "Folder 1", 0);
+  let itemGUID = store.GUIDForId(itemID);
+  let itemPayload = store.createRecord(itemGUID).cleartext;
+  let encPayload = encryptPayload(itemPayload);
+  collection.wbos[itemGUID] = new ServerWBO(itemGUID, encPayload);
+
+  engine.lastSync = 1;   // So we don't back up.
+
+  // Make building the GUID map fail.
+  store.getAllIDs = function () { throw "Nooo"; };
+
+  // Ensure that we throw when accessing _guidMap.
+  engine._syncStartup();
+  _("No error.");
+  do_check_false(engine._guidMapFailed);
+
+  _("We get an error if building _guidMap fails in use.");
+  let err;
+  try {
+    _(engine._guidMap);
+  } catch (ex) {
+    err = ex;
+  }
+  do_check_eq(err.code, Engine.prototype.eEngineAbortApplyIncoming);
+  do_check_eq(err.cause, "Nooo");
+
+  _("We get an error and abort during processIncoming.");
+  err = undefined;
+  try {
+    engine._processIncoming();
+  } catch (ex) {
+    err = ex;
+  }
+  do_check_eq(err, "Nooo");
+
+  server.stop(run_next_test);
+});
+
 
 function run_test() {
   initTestLogging("Trace");
