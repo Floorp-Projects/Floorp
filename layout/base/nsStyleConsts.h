@@ -247,7 +247,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -5
 #define NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT        -6
 
-#ifdef MOZ_CSS_ANIMATIONS
 // See nsStyleDisplay
 #define NS_STYLE_ANIMATION_DIRECTION_NORMAL       0
 #define NS_STYLE_ANIMATION_DIRECTION_ALTERNATE    1
@@ -264,7 +263,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // See nsStyleDisplay
 #define NS_STYLE_ANIMATION_PLAY_STATE_RUNNING     0
 #define NS_STYLE_ANIMATION_PLAY_STATE_PAUSED      1
-#endif
 
 // See nsStyleBackground
 #define NS_STYLE_BG_ATTACHMENT_SCROLL     0

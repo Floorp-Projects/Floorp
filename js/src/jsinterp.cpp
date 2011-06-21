@@ -87,10 +87,10 @@
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
 #include "jsopcodeinlines.h"
 
 #include "vm/Stack-inl.h"
+#include "vm/String-inl.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -1079,10 +1079,9 @@ LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result
     Value lvalue = lval;
     Value rvalue = rval;
 
-    if (lvalue.isObject() && !DefaultValue(cx, &lvalue.toObject(), JSTYPE_VOID, &lvalue))
+    if (!ToPrimitive(cx, &lvalue))
         return false;
-
-    if (rvalue.isObject() && !DefaultValue(cx, &rvalue.toObject(), JSTYPE_VOID, &rvalue))
+    if (!ToPrimitive(cx, &rvalue))
         return false;
 
     if (lvalue.isString() && rvalue.isString()) {
@@ -1889,15 +1888,6 @@ namespace reprmeter {
         VALUE_TO_OBJECT(cx, vp_, obj);                                        \
     JS_END_MACRO
 
-#define DEFAULT_VALUE(cx, n, hint, v)                                         \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(v.isObject());                                              \
-        JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!DefaultValue(cx, &v.toObject(), hint, &regs.sp[n]))              \
-            goto error;                                                       \
-        v = regs.sp[n];                                                       \
-    JS_END_MACRO
-
 /* Test whether v is an int in the range [-2^31 + 1, 2^31 - 2] */
 static JS_ALWAYS_INLINE bool
 CanIncDecWithoutOverflow(int32_t i)
@@ -2085,7 +2075,7 @@ static inline bool
 IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass) {
-        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             *cond = (ni->props_cursor < ni->props_end);
             return true;
@@ -2101,7 +2091,7 @@ static inline bool
 IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass) {
-        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             jsid id = *ni->current();
@@ -3427,17 +3417,17 @@ END_CASE(JSOP_CASEX)
 
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
-        Value rval = regs.sp[-1];                                             \
-        Value lval = regs.sp[-2];                                             \
+        Value &rval = regs.sp[-1];                                            \
+        Value &lval = regs.sp[-2];                                            \
         bool cond;                                                            \
         /* Optimize for two int-tagged operands (typical loop control). */    \
         if (lval.isInt32() && rval.isInt32()) {                               \
             cond = lval.toInt32() OP rval.toInt32();                          \
         } else {                                                              \
-            if (lval.isObject())                                              \
-                DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                   \
-            if (rval.isObject())                                              \
-                DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                   \
+            if (!ToPrimitive(cx, JSTYPE_NUMBER, &lval))                       \
+                goto error;                                                   \
+            if (!ToPrimitive(cx, JSTYPE_NUMBER, &rval))                       \
+                goto error;                                                   \
             if (lval.isString() && rval.isString()) {                         \
                 JSString *l = lval.toString(), *r = rval.toString();          \
                 int32 result;                                                 \
@@ -3454,8 +3444,8 @@ END_CASE(JSOP_CASEX)
             }                                                                 \
         }                                                                     \
         TRY_BRANCH_AFTER_COND(cond, 2);                                       \
+        regs.sp[-2].setBoolean(cond);                                         \
         regs.sp--;                                                            \
-        regs.sp[-1].setBoolean(cond);                                         \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_LT)
@@ -3516,31 +3506,31 @@ END_CASE(JSOP_URSH)
 
 BEGIN_CASE(JSOP_ADD)
 {
-    Value rval = regs.sp[-1];
-    Value lval = regs.sp[-2];
+    Value &rval = regs.sp[-1];
+    Value &lval = regs.sp[-2];
 
     if (lval.isInt32() && rval.isInt32()) {
         int32_t l = lval.toInt32(), r = rval.toInt32();
         int32_t sum = l + r;
-        regs.sp--;
         if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000)))
-            regs.sp[-1].setDouble(double(l) + double(r));
+            regs.sp[-2].setDouble(double(l) + double(r));
         else
-            regs.sp[-1].setInt32(sum);
+            regs.sp[-2].setInt32(sum);
+        regs.sp--;
     } else
 #if JS_HAS_XML_SUPPORT
     if (IsXML(lval) && IsXML(rval)) {
         if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), &rval))
             goto error;
+        regs.sp[-2] = rval;
         regs.sp--;
-        regs.sp[-1] = rval;
     } else
 #endif
     {
-        if (lval.isObject())
-            DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);
-        if (rval.isObject())
-            DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);
+        if (!ToPrimitive(cx, &lval))
+            goto error;
+        if (!ToPrimitive(cx, &rval))
+            goto error;
         bool lIsString, rIsString;
         if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
             JSString *lstr, *rstr;
@@ -3563,15 +3553,15 @@ BEGIN_CASE(JSOP_ADD)
             JSString *str = js_ConcatStrings(cx, lstr, rstr);
             if (!str)
                 goto error;
+            regs.sp[-2].setString(str);
             regs.sp--;
-            regs.sp[-1].setString(str);
         } else {
             double l, r;
             if (!ValueToNumber(cx, lval, &l) || !ValueToNumber(cx, rval, &r))
                 goto error;
             l += r;
+            regs.sp[-2].setNumber(l);
             regs.sp--;
-            regs.sp[-1].setNumber(l);
         }
     }
 }
@@ -4108,6 +4098,13 @@ BEGIN_CASE(JSOP_LENGTH)
                     len = JSOP_LENGTH_LENGTH;
                     DO_NEXT_OP(len);
                 }
+            }
+
+            if (js_IsTypedArray(obj)) {
+                TypedArray *tarray = TypedArray::fromJSObject(obj);
+                regs.sp[-1].setNumber(tarray->length);
+                len = JSOP_LENGTH_LENGTH;
+                DO_NEXT_OP(len);
             }
         }
 
@@ -5984,17 +5981,17 @@ BEGIN_CASE(JSOP_SETLOCALPOP)
 }
 END_CASE(JSOP_SETLOCALPOP)
 
-BEGIN_CASE(JSOP_IFPRIMTOP)
+BEGIN_CASE(JSOP_IFCANTCALLTOP)
     /*
      * If the top of stack is of primitive type, jump to our target. Otherwise
      * advance to the next opcode.
      */
     JS_ASSERT(regs.sp > regs.fp()->base());
-    if (regs.sp[-1].isPrimitive()) {
+    if (!js_IsCallable(regs.sp[-1])) {
         len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
-END_CASE(JSOP_IFPRIMTOP)
+END_CASE(JSOP_IFCANTCALLTOP)
 
 BEGIN_CASE(JSOP_PRIMTOP)
     JS_ASSERT(regs.sp > regs.fp()->base());

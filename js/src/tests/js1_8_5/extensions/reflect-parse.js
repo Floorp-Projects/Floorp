@@ -329,6 +329,9 @@ assertExpr("({'x':1, 'y':2, 3:3})", objExpr([{ key: lit("x"), value: lit(1) },
                                              { key: lit("y"), value: lit(2) },
                                              { key: lit(3), value: lit(3) } ]));
 
+// Bug 571617: eliminate constant-folding
+assertExpr("2 + 3", binExpr("+", lit(2), lit(3)));
+
 // statements
 
 assertStmt("throw 42", throwStmt(lit(42)));
@@ -399,6 +402,17 @@ assertStmt("try { } catch (e if foo) { } catch (e if bar) { } catch (e) { } fina
                      catchClause(ident("e"), ident("bar"), blockStmt([])),
                      catchClause(ident("e"), null, blockStmt([])) ],
                    blockStmt([])));
+
+// Bug 632028: yield outside of a function should throw
+(function() {
+    var threw = false;
+    try {
+        Reflect.parse("yield 0");
+    } catch (expected) {
+        threw = true;
+    }
+    assertEq(threw, true);
+})();
 
 // redeclarations (TOK_NAME nodes with lexdef)
 
@@ -772,6 +786,12 @@ assertStmt("let (x = 1, y = x) { }", letStmt([{ id: ident("x"), init: lit(1) },
                                               { id: ident("y"), init: ident("x") }],
                                              blockStmt([])));
 assertError("let (x = 1, x = 2) { }", TypeError);
+
+
+// Bug 632024: no crashing on stack overflow
+try {
+    Reflect.parse(Array(3000).join("x + y - ") + "z")
+} catch (e) { }
 
 
 // E4X

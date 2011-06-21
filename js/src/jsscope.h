@@ -53,7 +53,6 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jshashtable.h"
-#include "jsiter.h"
 #include "jsobj.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
@@ -556,8 +555,6 @@ struct Shape : public js::gc::Cell
     bool get(JSContext* cx, JSObject *receiver, JSObject *obj, JSObject *pobj, js::Value* vp) const;
     bool set(JSContext* cx, JSObject *obj, bool strict, js::Value* vp) const;
 
-    inline bool isSharedPermanent() const;
-
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
 
     uint8 attributes() const { return attrs; }
@@ -638,25 +635,11 @@ struct EmptyShape : public js::Shape
 
     static inline EmptyShape *getEmptyArgumentsShape(JSContext *cx);
 
-    static EmptyShape *getEmptyBlockShape(JSContext *cx) {
-        return ensure(cx, &js_BlockClass, &cx->compartment->emptyBlockShape);
-    }
-
-    static EmptyShape *getEmptyCallShape(JSContext *cx) {
-        return ensure(cx, &js_CallClass, &cx->compartment->emptyCallShape);
-    }
-
-    static EmptyShape *getEmptyDeclEnvShape(JSContext *cx) {
-        return ensure(cx, &js_DeclEnvClass, &cx->compartment->emptyDeclEnvShape);
-    }
-
-    static EmptyShape *getEmptyEnumeratorShape(JSContext *cx) {
-        return ensure(cx, &js_IteratorClass, &cx->compartment->emptyEnumeratorShape);
-    }
-
-    static EmptyShape *getEmptyWithShape(JSContext *cx) {
-        return ensure(cx, &js_WithClass, &cx->compartment->emptyWithShape);
-    }
+    static inline EmptyShape *getEmptyBlockShape(JSContext *cx);
+    static inline EmptyShape *getEmptyCallShape(JSContext *cx);
+    static inline EmptyShape *getEmptyDeclEnvShape(JSContext *cx);
+    static inline EmptyShape *getEmptyEnumeratorShape(JSContext *cx);
+    static inline EmptyShape *getEmptyWithShape(JSContext *cx);
 };
 
 } /* namespace js */
@@ -774,12 +757,6 @@ Shape::search(JSRuntime *rt, js::Shape **startp, jsid id, bool adding)
 }
 
 #undef METER
-
-inline bool
-Shape::isSharedPermanent() const
-{
-    return (~attrs & (JSPROP_SHARED | JSPROP_PERMANENT)) == 0;
-}
 
 } // namespace js
 
