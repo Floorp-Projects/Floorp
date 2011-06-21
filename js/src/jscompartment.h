@@ -299,17 +299,6 @@ class JaegerCompartment;
 #endif
 #define JS_EVAL_CACHE_SIZE          JS_BIT(JS_EVAL_CACHE_SHIFT)
 
-#ifdef DEBUG
-# define EVAL_CACHE_METER_LIST(_)   _(probe), _(hit), _(step), _(noscope)
-# define identity(x)                x
-
-struct JSEvalCacheMeter {
-    uint64 EVAL_CACHE_METER_LIST(identity);
-};
-
-# undef identity
-#endif
-
 namespace js {
 
 class NativeIterCache {
@@ -402,10 +391,6 @@ struct JS_FRIEND_API(JSCompartment) {
   public:
     /* Hashed lists of scripts created by eval to garbage-collect. */
     JSScript                     *scriptsToGC[JS_EVAL_CACHE_SIZE];
-
-#ifdef DEBUG
-    JSEvalCacheMeter             evalCacheMeter;
-#endif
 
     void                         *data;
     bool                         active;  // GC flag, whether there are active frames
@@ -555,12 +540,6 @@ struct JS_FRIEND_API(JSCompartment) {
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
 #define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)
 
-#ifdef DEBUG
-#define JS_COMPARTMENT_METER(x) x
-#else
-#define JS_COMPARTMENT_METER(x)
-#endif
-
 /*
  * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
  * thread, regardless of whether cx is the context in which that trace is
@@ -636,12 +615,6 @@ GetMathCache(JSContext *cx)
     return cx->compartment->getMathCache(cx);
 }
 }
-
-#ifdef DEBUG
-# define EVAL_CACHE_METER(x)    (cx->compartment->evalCacheMeter.x++)
-#else
-# define EVAL_CACHE_METER(x)    ((void) 0)
-#endif
 
 #ifdef _MSC_VER
 #pragma warning(pop)

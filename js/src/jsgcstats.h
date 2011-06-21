@@ -43,18 +43,6 @@
 # define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
 #endif
 
-/* Define JS_GCMETER here if wanted */
-#if defined JS_GCMETER
-const bool JS_WANT_GC_METER_PRINT = true;
-const bool JS_WANT_GC_PER_COMPARTMENT_PRINT = true;
-const bool JS_WANT_CONSERVATIVE_GC_PRINT = true;
-#elif defined DEBUG
-# define JS_GCMETER 1
-const bool JS_WANT_GC_METER_PRINT = false;
-const bool JS_WANT_GC_PER_COMPARTMENT_PRINT = false;
-const bool JS_WANT_CONSERVATIVE_GC_PRINT = false;
-#endif
-
 #ifdef JSGC_TESTPILOT
 JS_BEGIN_EXTERN_C
 
@@ -129,53 +117,6 @@ struct ConservativeGCStats
 
     void dump(FILE *fp);
 };
-
-#ifdef JS_GCMETER
-struct JSGCArenaStats
-{
-    uint32  alloc;          /* allocation attempts */
-    uint32  localalloc;     /* allocations from local lists */
-    uint32  nthings;        /* live GC things */
-    uint32  maxthings;      /* maximum of live GC cells */
-    double  totalthings;    /* live GC things the GC scanned so far */
-    uint32  narenas;        /* number of arena in list before the GC */
-    uint32  newarenas;      /* new arenas allocated before the last GC */
-    uint32  livearenas;     /* number of live arenas after the last GC */
-    uint32  maxarenas;      /* maximum of allocated arenas */
-    uint32  totalarenas;    /* total number of arenas with live things that
-                               GC scanned so far */
-};
-#endif
-
-#ifdef JS_GCMETER
-
-struct JSGCStats
-{
-    uint32  lock;       /* valid lock calls */
-    uint32  unlock;     /* valid unlock calls */
-    uint32  unmarked;   /* number of times marking of GC thing's children were
-                           delayed due to a low C stack */
-    uint32  lastditch;  /* number of times the last ditch GC run */
-    uint32  fail;       /* allocation failures */
-#ifdef DEBUG
-    uint32  maxunmarked;/* maximum number of things with children to mark
-                           later */
-#endif
-    uint32  afree;          /* thing arenas freed so far */
-    uint32  nallarenas;     /* number of all allocated arenas */
-    uint32  maxnallarenas;  /* maximum number of all allocated arenas */
-    uint32  nchunks;        /* number of allocated chunks */
-    uint32  maxnchunks;     /* maximum number of allocated chunks */
-
-    ConservativeGCStats conservative;
-};
-
-extern void
-UpdateCompartmentGCStats(JSCompartment *comp, unsigned thingKind);
-
-extern void
-UpdateAllCompartmentGCStats(JSCompartment *comp);
-#endif /* JS_GCMETER */
 
 } //gc
 

@@ -121,21 +121,6 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, void *rval)
 {
 }
 
-#ifdef XML_METERING
-static struct {
-    jsrefcount  qname;
-    jsrefcount  xmlnamespace;
-    jsrefcount  xml;
-    jsrefcount  xmlobj;
-} xml_stats;
-
-#define METER(x)        JS_ATOMIC_INCREMENT(&(x))
-#define UNMETER(x)      JS_ATOMIC_DECREMENT(&(x))
-#else
-#define METER(x)        /* nothing */
-#define UNMETER(x)      /* nothing */
-#endif
-
 /*
  * Random utilities and global functions.
  */
@@ -299,7 +284,6 @@ NewXMLNamespace(JSContext *cx, JSLinearString *prefix, JSLinearString *uri, JSBo
         obj->setNameURI(uri);
     if (declared)
         obj->setNamespaceDeclared(JSVAL_TRUE);
-    METER(xml_stats.xmlnamespace);
     return obj;
 }
 
@@ -513,7 +497,6 @@ NewXMLQName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
         return NULL;
     if (!InitXMLQName(cx, obj, uri, prefix, localName))
         return NULL;
-    METER(xml_stats.qname);
     return obj;
 }
 
@@ -531,7 +514,6 @@ NewXMLAttributeName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
     JS_ASSERT(obj->isQName());
     if (!InitXMLQName(cx, obj, uri, prefix, localName))
         return NULL;
-    METER(xml_stats.qname);
     return obj;
 }
 
@@ -651,7 +633,6 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
         return JS_FALSE;
 
     *rval = OBJECT_TO_JSVAL(obj);
-    METER(xml_stats.xmlnamespace);
 
     empty = cx->runtime->emptyString;
     obj->setNamePrefix(empty);
@@ -761,7 +742,6 @@ QNameHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
     }
     *rval = OBJECT_TO_JSVAL(obj);
-    METER(xml_stats.qname);
 
     if (isQName) {
         /* If namespace is not specified and name is a QName, clone it. */
@@ -7034,7 +7014,6 @@ js_NewXML(JSContext *cx, JSXMLClass xml_class)
     JS_APPEND_LINK(&xml->links, &xml_leaks);
     xml->serial = xml_serial++;
 #endif
-    METER(xml_stats.xml);
     return xml;
 }
 
@@ -7097,7 +7076,6 @@ NewXMLObject(JSContext *cx, JSXML *xml)
     if (!obj)
         return NULL;
     obj->setPrivate(xml);
-    METER(xml_stats.xmlobj);
     return obj;
 }
 
@@ -7151,7 +7129,6 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
     proto->setPrivate(xml);
     xml->object = proto;
-    METER(xml_stats.xmlobj);
 
     /*
      * Prepare to set default settings on the XML constructor we just made.
@@ -7381,7 +7358,6 @@ js_GetAnyName(JSContext *cx, jsid *idp)
         JSRuntime *rt = cx->runtime;
         if (!InitXMLQName(cx, obj, rt->emptyString, rt->emptyString, rt->atomState.starAtom))
             return false;
-        METER(xml_stats.qname);
 
         v.setObject(*obj);
         if (!js_SetReservedSlot(cx, global, JSProto_AnyName, v))

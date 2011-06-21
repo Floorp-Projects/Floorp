@@ -131,13 +131,6 @@ JSCompartment::init()
     if (!crossCompartmentWrappers.init())
         return false;
 
-#ifdef DEBUG
-    if (rt->meterEmptyShapes()) {
-        if (!emptyShapes.init())
-            return false;
-    }
-#endif
-
     regExpAllocator = rt->new_<WTF::BumpPointerAllocator>();
     if (!regExpAllocator)
         return false;

@@ -132,10 +132,6 @@ extern JS_PUBLIC_API(void) JS_Abort(void);
 # define JS_BASIC_STATS 1
 #endif
 
-#ifdef DEBUG_brendan
-# define JS_SCOPE_DEPTH_METER 1
-#endif
-
 #ifdef JS_BASIC_STATS
 
 #include <stdio.h>

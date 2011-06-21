@@ -133,18 +133,6 @@ struct GSNCache {
 
     jsbytecode      *code;
     Map             map;
-#ifdef JS_GSNMETER
-    struct Stats {
-        uint32          hits;
-        uint32          misses;
-        uint32          fills;
-        uint32          purges;
-
-        Stats() : hits(0), misses(0), fills(0), purges(0) { }
-    };
-
-    Stats           stats;
-#endif
 
     GSNCache() : code(NULL) { }
 
@@ -310,27 +298,6 @@ extern void
 js_ClearContextThread(JSContext *cx);
 
 #endif /* JS_THREADSAFE */
-
-#ifdef DEBUG
-# define FUNCTION_KIND_METER_LIST(_)                                          \
-                        _(allfun), _(heavy), _(nofreeupvar), _(onlyfreevar),  \
-                        _(flat), _(badfunarg),                                \
-                        _(joinedsetmethod), _(joinedinitmethod),              \
-                        _(joinedreplace), _(joinedsort), _(joinedmodulepat),  \
-                        _(mreadbarrier), _(mwritebarrier), _(mwslotbarrier),  \
-                        _(unjoined), _(indynamicscope)
-# define identity(x)    x
-
-struct JSFunctionMeter {
-    int32 FUNCTION_KIND_METER_LIST(identity);
-};
-
-# undef identity
-
-# define JS_FUNCTION_METER(cx,x) JS_RUNTIME_METER((cx)->runtime, functionMeter.x)
-#else
-# define JS_FUNCTION_METER(cx,x) ((void)0)
-#endif
 
 typedef enum JSDestroyContextMode {
     JSDCM_NO_GC,
@@ -647,90 +614,6 @@ struct JSRuntime {
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
 
-    /*
-     * Various metering fields are defined at the end of JSRuntime. In this
-     * way there is no need to recompile all the code that refers to other
-     * fields of JSRuntime after enabling the corresponding metering macro.
-     */
-#ifdef JS_DUMP_ENUM_CACHE_STATS
-    int32               nativeEnumProbes;
-    int32               nativeEnumMisses;
-# define ENUM_CACHE_METER(name)     JS_ATOMIC_INCREMENT(&cx->runtime->name)
-#else
-# define ENUM_CACHE_METER(name)     ((void) 0)
-#endif
-
-#ifdef DEBUG
-    /*
-     * NB: emptyShapes (in JSCompartment) is init'ed iff at least one
-     * of these envars is set:
-     *
-     *  JS_PROPTREE_STATFILE  statistics on the property tree forest
-     *  JS_PROPTREE_DUMPFILE  all paths in the property tree forest
-     */
-    const char          *propTreeStatFilename;
-    const char          *propTreeDumpFilename;
-
-    bool meterEmptyShapes() const { return propTreeStatFilename || propTreeDumpFilename; }
-
-    /* String instrumentation. */
-    jsrefcount          liveStrings;
-    jsrefcount          totalStrings;
-    jsrefcount          liveDependentStrings;
-    jsrefcount          totalDependentStrings;
-    jsrefcount          badUndependStrings;
-    double              lengthSum;
-    double              lengthSquaredSum;
-    double              strdepLengthSum;
-    double              strdepLengthSquaredSum;
-
-    /* Script instrumentation. */
-    jsrefcount          liveScripts;
-    jsrefcount          totalScripts;
-    jsrefcount          liveEmptyScripts;
-    jsrefcount          totalEmptyScripts;
-    jsrefcount          highWaterLiveScripts;
-#endif /* DEBUG */
-
-#ifdef JS_SCOPE_DEPTH_METER
-    /*
-     * Stats on runtime prototype chain lookups and scope chain depths, i.e.,
-     * counts of objects traversed on a chain until the wanted id is found.
-     */
-    JSBasicStats        protoLookupDepthStats;
-    JSBasicStats        scopeSearchDepthStats;
-
-    /*
-     * Stats on compile-time host environment and lexical scope chain lengths
-     * (maximum depths).
-     */
-    JSBasicStats        hostenvScopeDepthStats;
-    JSBasicStats        lexicalScopeDepthStats;
-#endif
-
-#ifdef JS_GCMETER
-    js::gc::JSGCStats           gcStats;
-    js::gc::JSGCArenaStats      globalArenaStats[js::gc::FINALIZE_LIMIT];
-#endif
-
-#ifdef DEBUG
-    /*
-     * If functionMeterFilename, set from an envariable in JSRuntime's ctor, is
-     * null, the remaining members in this ifdef'ed group are not initialized.
-     */
-    const char          *functionMeterFilename;
-    JSFunctionMeter     functionMeter;
-    char                lastScriptFilename[1024];
-
-    typedef js::HashMap<JSFunction *,
-                        int32,
-                        js::DefaultHasher<JSFunction *>,
-                        js::SystemAllocPolicy> FunctionCountMap;
-
-    FunctionCountMap    methodReadBarrierCountMap;
-    FunctionCountMap    unjoinedFunctionCountMap;
-#endif
-
     JSWrapObjectCallback wrapObjectCallback;
     JSPreWrapCallback    preWrapObjectCallback;
 
@@ -885,14 +768,6 @@ struct JSRuntime {
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
 #define JS_PROPERTY_CACHE(cx)   (JS_THREAD_DATA(cx)->propertyCache)
-
-#ifdef DEBUG
-# define JS_RUNTIME_METER(rt, which)    JS_ATOMIC_INCREMENT(&(rt)->which)
-# define JS_RUNTIME_UNMETER(rt, which)  JS_ATOMIC_DECREMENT(&(rt)->which)
-#else
-# define JS_RUNTIME_METER(rt, which)    /* nothing */
-# define JS_RUNTIME_UNMETER(rt, which)  /* nothing */
-#endif
 
 #define JS_KEEP_ATOMS(rt)   JS_ATOMIC_INCREMENT(&(rt)->gcKeepAtoms);
 #define JS_UNKEEP_ATOMS(rt) JS_ATOMIC_DECREMENT(&(rt)->gcKeepAtoms);
@@ -1119,10 +994,6 @@ struct JSContext
 
     /* Last message string and log file for debugging. */
     char                *lastMessage;
-#ifdef DEBUG
-    void                *logfp;
-    jsbytecode          *logPrevPc;
-#endif
 
     /* Per-context optional error reporter. */
     JSErrorReporter     errorReporter;

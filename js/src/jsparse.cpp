@@ -126,12 +126,6 @@ JS_STATIC_ASSERT(pn_offsetof(pn_u.name.atom) == pn_offsetof(pn_u.apair.atom));
     JS_END_MACRO
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
-#ifdef METER_PARSENODES
-static uint32 parsenodes = 0;
-static uint32 maxparsenodes = 0;
-static uint32 recyclednodes = 0;
-#endif
-
 void
 JSParseNode::become(JSParseNode *pn2)
 {
@@ -388,10 +382,6 @@ AddNodeToFreeList(JSParseNode *pn, js::Parser *parser)
 
     pn->pn_next = parser->nodeList;
     parser->nodeList = pn;
-
-#ifdef METER_PARSENODES
-    recyclednodes++;
-#endif
 }
 
 /* Add |node| to |tc|'s parser's free node list. */
@@ -689,11 +679,6 @@ NewOrRecycledNode(JSTreeContext *tc)
     }
 
     if (pn) {
-#ifdef METER_PARSENODES
-        parsenodes++;
-        if (parsenodes - recyclednodes > maxparsenodes)
-            maxparsenodes = parsenodes - recyclednodes;
-#endif
         pn->pn_used = pn->pn_defn = false;
         memset(&pn->pn_u, 0, sizeof pn->pn_u);
         pn->pn_next = NULL;
@@ -910,9 +895,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JSParseNode *pn;
     JSScript *script;
     bool inDirectivePrologue;
-#ifdef METER_PARSENODES
-    void *sbrk(ptrdiff_t), *before = sbrk(0);
-#endif
 
     JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_NEED_MUTABLE_SCRIPT |
                             TCF_COMPILE_FOR_EVAL)));
@@ -1107,30 +1089,12 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         }
     }
 
-#ifdef METER_PARSENODES
-    printf("Parser growth: %d (%u nodes, %u max, %u unrecycled)\n",
-           (char *)sbrk(0) - (char *)before,
-           parsenodes,
-           maxparsenodes,
-           parsenodes - recyclednodes);
-    before = sbrk(0);
-#endif
-
     /*
      * Nowadays the threaded interpreter needs a stop instruction, so we
      * do have to emit that here.
      */
     if (js_Emit1(cx, &cg, JSOP_STOP) < 0)
         goto out;
-
-#ifdef METER_PARSENODES
-    printf("Code-gen growth: %d (%u bytecodes, %u srcnotes)\n",
-           (char *)sbrk(0) - (char *)before, CG_OFFSET(&cg), cg.noteCount);
-#endif
-
-#ifdef JS_ARENAMETER
-    JS_DumpArenaStats(stdout);
-#endif
 
     JS_ASSERT(cg.version() == version);
 
@@ -1140,14 +1104,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     if (funbox)
         script->savedCallerFun = true;
-
-#ifdef JS_SCOPE_DEPTH_METER
-    JSObject *obj = scopeChain;
-    uintN depth = 1;
-    while ((obj = obj->getParent()) != NULL)
-        ++depth;
-    JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
-#endif
 
     {
         AutoShapeRooter shapeRoot(cx, script->bindings.lastShape());
@@ -2465,8 +2421,6 @@ DeoptimizeUsesWithin(JSDefinition *dn, const TokenPos &pos)
 void
 Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
 {
-#define FUN_METER(x) JS_FUNCTION_METER(context, x)
-
     for (;;) {
         JSParseNode *fn = funbox->node;
         JSParseNode *pn = fn->pn_body;
@@ -2512,12 +2466,10 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
 
         JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
 
-        FUN_METER(allfun);
         if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
-            FUN_METER(heavy);
+            /* nothing to do */
         } else if (funbox->inAnyDynamicScope()) {
             JS_ASSERT(!FUN_NULL_CLOSURE(fun));
-            FUN_METER(indynamicscope);
         } else if (pn->pn_type != TOK_UPVARS) {
             /*
              * No lexical dependencies => null closure, for best performance.
@@ -2535,7 +2487,6 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
              *
              * FIXME: bug 476950.
              */
-            FUN_METER(nofreeupvar);
             FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
         } else {
             JSAtomList upvars(pn->pn_names);
@@ -2564,10 +2515,8 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
                     }
                 }
 
-                if (!ale) {
-                    FUN_METER(onlyfreevar);
+                if (!ale)
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
-                }
             } else {
                 uintN nupvars = 0, nflattened = 0;
 
@@ -2604,14 +2553,12 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
                 }
 
                 if (nupvars == 0) {
-                    FUN_METER(onlyfreevar);
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
                 } else if (nflattened == nupvars) {
                     /*
                      * We made it all the way through the upvar loop, so it's
                      * safe to optimize to a flat closure.
                      */
-                    FUN_METER(flat);
                     FUN_SET_KIND(fun, JSFUN_FLAT_CLOSURE);
                     switch (PN_OP(fn)) {
                       case JSOP_DEFFUN:
@@ -2627,8 +2574,6 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
                         /* js_EmitTree's case TOK_FUNCTION: will select op. */
                         JS_ASSERT(PN_OP(fn) == JSOP_NOP);
                     }
-                } else {
-                    FUN_METER(badfunarg);
                 }
             }
         }
@@ -2663,8 +2608,6 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
         if (!funbox)
             break;
     }
-
-#undef FUN_METER
 }
 
 /*
@@ -5614,8 +5557,6 @@ Parser::letStatement()
             stmt->flags |= SIF_SCOPE;
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
-            JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
-                                    (tc->maxScopeDepth = tc->scopeDepth));
 
             obj->setParent(tc->blockChain());
             blockbox->parent = tc->blockChainBox;
