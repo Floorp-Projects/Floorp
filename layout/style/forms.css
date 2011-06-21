@@ -899,6 +899,8 @@ input[type=number]::-moz-number-wrapper {
 
 input[type=number]::-moz-number-text {
   -moz-appearance: none;
+  /* work around autofocus bug 939248 on initial load */
+  -moz-user-modify: read-write;
   flex: 1;
   padding: 0;
   border: 0;

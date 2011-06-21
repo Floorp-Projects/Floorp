@@ -19,6 +19,7 @@
 #include "nsIControllers.h"
 #include "nsIStringBundle.h"
 #include "nsFocusManager.h"
+#include "nsNumberControlFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
@@ -2961,8 +2962,40 @@ HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify)
 }
 
 void
+HTMLInputElement::Blur(ErrorResult& aError)
+{
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    // Blur our anonymous text control, if we have one. (DOM 'change' event
+    // firing and other things depend on this.)
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      HTMLInputElement* textControl = numberControlFrame->GetAnonTextControl();
+      if (textControl) {
+        textControl->Blur(aError);
+        return;
+      }
+    }
+  }
+  nsGenericHTMLElement::Blur(aError);
+}
+
+void
 HTMLInputElement::Focus(ErrorResult& aError)
 {
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    // Focus our anonymous text control, if we have one.
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      HTMLInputElement* textControl = numberControlFrame->GetAnonTextControl();
+      if (textControl) {
+        textControl->Focus(aError);
+        return;
+      }
+    }
+  }
+
   if (mType != NS_FORM_INPUT_FILE) {
     nsGenericHTMLElement::Focus(aError);
     return;

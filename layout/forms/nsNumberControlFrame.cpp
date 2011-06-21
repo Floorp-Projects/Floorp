@@ -5,7 +5,10 @@
 
 #include "nsNumberControlFrame.h"
 
+#include "HTMLInputElement.h"
+#include "nsIFocusManager.h"
 #include "nsIPresShell.h"
+#include "nsFocusManager.h"
 #include "nsFontMetrics.h"
 #include "nsFormControlFrame.h"
 #include "nsGkAtoms.h"
@@ -17,6 +20,7 @@
 #include "nsStyleSet.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsIFrame*
 NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -27,6 +31,7 @@ NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsNumberControlFrame)
 
 NS_QUERYFRAME_HEAD(nsNumberControlFrame)
+  NS_QUERYFRAME_ENTRY(nsNumberControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
@@ -218,6 +223,14 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                       NS_LITERAL_STRING("text"), PR_FALSE);
 
+  if (mContent->AsElement()->State().HasState(NS_EVENT_STATE_FOCUS)) {
+    // We don't want to focus the frame but the text field.
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mTextField);
+    NS_ASSERTION(element, "Really, this should be a nsIDOMElement!");
+    fm->SetFocus(element, 0);
+  }
+
   // Create the ::-moz-number-spin-box pseudo-element:
   rv = MakeAnonymousElement(getter_AddRefs(mSpinBox),
                             outerWrapperCI.mChildren,
@@ -249,6 +262,12 @@ nsIAtom*
 nsNumberControlFrame::GetType() const
 {
   return nsGkAtoms::numberControlFrame;
+}
+
+HTMLInputElement*
+nsNumberControlFrame::GetAnonTextControl()
+{
+  return mTextField ? HTMLInputElement::FromContent(mTextField) : nullptr;
 }
 
 void

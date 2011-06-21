@@ -14,3 +14,6 @@ skip-if(!Android&&!B2G) == number-same-as-text-unthemed.html number-same-as-text
 fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63,4) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
 == from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
 
+# focus
+fails-if(B2G) needs-focus == focus-handling.html focus-handling-ref.html # bug 940760
+
