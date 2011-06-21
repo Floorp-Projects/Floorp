@@ -57,8 +57,6 @@ class MIRGenerator;
 class MIRGraph;
 class MInstruction;
 
-static const uint32 VREG_INCREMENT = 1;
-
 class LIRGenerator : public MInstructionVisitor
 {
   protected:
@@ -66,23 +64,19 @@ class LIRGenerator : public MInstructionVisitor
 
   private:
     MIRGraph &graph;
+    LIRGraph &lirGraph_;
     LBlock *current;
-    uint32 vregGen_;
     MSnapshot *last_snapshot_;
 
   public:
-    LIRGenerator(MIRGenerator *gen, MIRGraph &graph)
+    LIRGenerator(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
       : gen(gen),
         graph(graph),
-        vregGen_(0),
+        lirGraph_(lirGraph),
         last_snapshot_(NULL)
     { }
 
     bool generate();
-    uint32 nextVirtualRegister() {
-        vregGen_ += VREG_INCREMENT;
-        return vregGen_;
-    }
 
   protected:
     // A backend can decide that an instruction should be emitted at its uses,
@@ -135,24 +129,12 @@ class LIRGenerator : public MInstructionVisitor
     typedef LInstructionHelper<1, 2, 0> LMathI;
     virtual bool lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs) = 0;
 
-    template <typename T>
-    bool annotate(T *ins) {
-        if (ins->numDefs()) {
-            ins->setId(ins->getDef(0)->virtualRegister());
-        } else {
-            ins->setId(nextVirtualRegister());
-            if (ins->id() >= MAX_VIRTUAL_REGISTERS)
-                return false;
-        }
-        return true;
+    uint32 getVirtualRegister() {
+        return lirGraph_.getVirtualRegister();
     }
 
-    template <typename T>
-    bool add(T *ins) {
-        JS_ASSERT(!ins->isPhi());
-        current->add(ins);
-        return annotate(ins);
-    }
+    template <typename T> bool annotate(T *ins);
+    template <typename T> bool add(T *ins);
 
     bool addPhi(LPhi *phi) {
         return current->addPhi(phi) && annotate(phi);

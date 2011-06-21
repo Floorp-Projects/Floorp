@@ -39,51 +39,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_ion_lowering_x86_h__
-#define jsion_ion_lowering_x86_h__
-
-#include "ion/IonLowering.h"
+#ifndef jsion_cpu_x86_stack_assignment_h__
+#define jsion_cpu_x86_stack_assignment_h__
 
 namespace js {
 namespace ion {
 
-class LIRGeneratorX86 : public LIRGenerator
+class StackAssignmentX86
 {
+    js::Vector<uint32, 4, IonAllocPolicy> normalSlots;
+    js::Vector<uint32, 4, IonAllocPolicy> doubleSlots;
+    uint32 height_;
+
   public:
-    LIRGeneratorX86(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
-      : LIRGenerator(gen, graph, lirGraph)
+    StackAssignmentX86() : height_(0)
     { }
 
-  protected:
-    // Uses components of a nunbox. Must be in a use request (startUsing,
-    // stopUsing).
-    LUse useType(MInstruction *mir);
-    LUse useTypeOrConstant(MInstruction *mir);
-    LUse usePayload(MInstruction *mir, LUse::Policy);
-    LUse usePayloadInRegister(MInstruction *mir);
+    void freeSlot(uint32 index) {
+        normalSlots.append(index);
+    }
+    void freeDoubleSlot(uint32 index) {
+        doubleSlots.append(index);
+    }
 
-    // Adds a box input to an instruction, setting operand |n| to the type and
-    // |n+1| to the payload. Does not modify the operands, instead expecting a
-    // policy to already be set.
-    bool fillBoxUses(LInstruction *lir, size_t n, MInstruction *mir);
+    bool allocateDoubleSlot(uint32 *index) {
+        if (!doubleSlots.empty()) {
+            *index = doubleSlots.popCopy();
+            return false;
+        }
+        if (ComputeByteAlignment(height_, DOUBLE_ALIGNMENT)) {
+            normalSlots.append(height_++);
+            JS_ASSERT(!ComputeByteAlignment(height_, DOUBLE_ALIGNMENT));
+        }
+        *index = height_;
+        height_ += 2;
+        return height_ < MAX_STACK_SLOTS;
+    }
 
-    void fillSnapshot(LSnapshot *snapshot);
-    bool preparePhi(MPhi *phi);
+    bool allocateSlot(uint32 *index) {
+        if (!normalSlots.empty()) {
+            *index = normalSlots.popCopy();
+            return true;
+        }
+        if (!doubleSlots.empty()) {
+            *index = doubleSlots.popCopy();
+            return normalSlots.append(*index + 1);
+        }
+        *index = height_++;
+        return height_ < MAX_STACK_SLOTS;
+    }
 
-    bool lowerForALU(LMathI *ins, MInstruction *mir, MInstruction *lhs, MInstruction *rhs);
-
-  public:
-    bool visitBox(MBox *box);
-    bool visitUnbox(MUnbox *unbox);
-    bool visitConstant(MConstant *ins);
-    bool visitReturn(MReturn *ret);
-    bool visitPhi(MPhi *phi);
+    uint32 stackHeight() const {
+        return height_;
+    }
 };
 
-typedef LIRGeneratorX86 LIRBuilder;
+typedef StackAssignmentX86 StackAssignment;
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
-#endif // jsion_ion_lowering_x86_h__
+#endif // jsion_cpu_x86_stack_assignment_h__
 

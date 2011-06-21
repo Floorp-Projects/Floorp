@@ -107,6 +107,36 @@ class InlineList
         }
     };
 
+    class reverse_iterator
+    {
+        friend class InlineList;
+        Node *iter;
+      public:
+        reverse_iterator(Node *iter) : iter(iter) { }
+
+        reverse_iterator & operator ++() {
+            iter = iter->prev;
+            return *iter;
+        }
+        reverse_iterator operator ++(int) {
+            reverse_iterator old(*this);
+            iter = iter->prev;
+            return old;
+        }
+        T * operator *() {
+            return static_cast<T *>(iter);
+        }
+        T * operator ->() {
+            return static_cast<T *>(iter);
+        }
+        bool operator != (const reverse_iterator &where) const {
+            return iter != where.iter;
+        }
+        bool operator == (const reverse_iterator &where) const {
+            return iter == where.iter;
+        }
+    };
+
     class const_iterator
     {
         friend class InlineList;
@@ -143,6 +173,12 @@ class InlineList
     }
     iterator end() {
         return iterator(&head);
+    }
+    reverse_iterator rbegin() {
+        return reverse_iterator(head.prev);
+    }
+    reverse_iterator rend() {
+        return reverse_iterator(&head);
     }
     const_iterator begin() const {
         return const_iterator(head.next);

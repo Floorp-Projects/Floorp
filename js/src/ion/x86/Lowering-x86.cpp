@@ -89,7 +89,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     LUnbox *lir = new LUnbox(unbox->type());
     lir->setOperand(0, usePayloadInRegister(inner));
     lir->setOperand(1, useType(inner));
-    if (!define(lir, unbox, LDefinition::CAN_REUSE_INPUT))
+    if (!defineReuseInput(lir, unbox))
         return false;
     return assignSnapshot(lir);
 }
@@ -109,14 +109,14 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
 bool
 LIRGeneratorX86::preparePhi(MPhi *phi)
 {
-    uint32 first_vreg = nextVirtualRegister();
+    uint32 first_vreg = getVirtualRegister();
     if (first_vreg >= MAX_VIRTUAL_REGISTERS)
         return false;
 
     phi->setId(first_vreg);
 
     if (phi->type() == MIRType_Value) {
-        uint32 payload_vreg = nextVirtualRegister();
+        uint32 payload_vreg = getVirtualRegister();
         if (payload_vreg >= MAX_VIRTUAL_REGISTERS)
             return false;
         JS_ASSERT(first_vreg + VREG_INCREMENT == payload_vreg);

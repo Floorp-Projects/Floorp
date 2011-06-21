@@ -47,6 +47,12 @@
 using namespace js;
 using namespace js::ion;
 
+LIRGraph::LIRGraph()
+  : numVirtualRegisters_(0),
+    stackHeight_(0)
+{
+}
+
 LSnapshot::LSnapshot(MSnapshot *mir)
   : numSlots_(mir->numOperands() * BOX_PIECES),
     slots_(NULL),
@@ -134,10 +140,8 @@ PrintDefinition(FILE *fp, const LDefinition &def)
             JS_NOT_REACHED("unexpected preset allocation type");
             break;
         }
-    } else if (def.policy() == LDefinition::CAN_REUSE_INPUT) {
-        fprintf(fp, " (r?)");
     } else if (def.policy() == LDefinition::MUST_REUSE_INPUT) {
-        fprintf(fp, " (rr)");
+        fprintf(fp, " (!)");
     }
     fprintf(fp, "]");
 }
@@ -161,39 +165,44 @@ PrintUse(FILE *fp, LUse *use)
     fprintf(fp, ")");
 }
 
+static void
+PrintOperand(FILE *fp, LAllocation *a)
+{
+    switch (a->kind()) {
+      case LAllocation::CONSTANT_VALUE:
+      case LAllocation::CONSTANT_INDEX:
+        fprintf(fp, "(c)");
+        break;
+      case LAllocation::GPR:
+        fprintf(fp, "(%s)", a->toGeneralReg()->reg().name());
+        break;
+      case LAllocation::FPU:
+        fprintf(fp, "(%s)", a->toFloatReg()->reg().name());
+        break;
+      case LAllocation::STACK_SLOT:
+        fprintf(fp, "(stack:i%d)", a->toStackSlot()->slot());
+        break;
+      case LAllocation::DOUBLE_SLOT:
+        fprintf(fp, "(stack:d%d)", a->toStackSlot()->slot());
+        break;
+      case LAllocation::ARGUMENT:
+        fprintf(fp, "(arg:%d)", a->toArgument()->index());
+        break;
+      case LAllocation::USE:
+        PrintUse(fp, a->toUse());
+        break;
+      default:
+        JS_NOT_REACHED("what?");
+        break;
+    }
+}
+
 void
 LInstruction::printOperands(FILE *fp)
 {
     for (size_t i = 0; i < numOperands(); i++) {
         fprintf(fp, " ");
-        LAllocation *a = getOperand(i);
-        switch (a->kind()) {
-          case LAllocation::CONSTANT_VALUE:
-          case LAllocation::CONSTANT_INDEX:
-            fprintf(fp, "(c)");
-            break;
-          case LAllocation::GPR:
-            fprintf(fp, "(=%s)", a->toGeneralReg()->reg().name());
-            break;
-          case LAllocation::FPU:
-            fprintf(fp, "(=%s)", a->toFloatReg()->reg().name());
-            break;
-          case LAllocation::STACK_SLOT:
-            fprintf(fp, "(stack:i%d)", a->toStackSlot()->slot());
-            break;
-          case LAllocation::DOUBLE_SLOT:
-            fprintf(fp, "(stack:d%d)", a->toStackSlot()->slot());
-            break;
-          case LAllocation::ARGUMENT:
-            fprintf(fp, "(arg:%d)", a->toArgument()->index());
-            break;
-          case LAllocation::USE:
-            PrintUse(fp, a->toUse());
-            break;
-          default:
-            JS_NOT_REACHED("what?");
-            break;
-        }
+        PrintOperand(fp, getOperand(i));
         if (i != numOperands() - 1)
             fprintf(fp, ",");
     }
@@ -213,5 +222,30 @@ LInstruction::print(FILE *fp)
     fprintf(fp, ")");
 
     printInfo(fp);
+
+    if (numTemps()) {
+        fprintf(fp, " t=(");
+        for (size_t i = 0; i < numTemps(); i++) {
+            PrintDefinition(fp, *getTemp(i));
+            if (i != numTemps() - 1)
+                fprintf(fp, ", ");
+        }
+        fprintf(fp, ")");
+    }
+}
+
+void
+LMove::printOperands(FILE *fp)
+{
+    for (size_t i = 0; i < numEntries(); i++) {
+        Entry *e = getEntry(i);
+        fprintf(fp, "[");
+        PrintOperand(fp, &e->from);
+        fprintf(fp, " -> ");
+        PrintOperand(fp, &e->to);
+        fprintf(fp, "]");
+        if (i != numEntries() - 1)
+            fprintf(fp, ", ");
+    }
 }
 

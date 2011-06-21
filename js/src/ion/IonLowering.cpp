@@ -361,6 +361,8 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     if (!visitInstruction(block->lastIns()))
         return false;
 
+    if (!lirGraph_.addBlock(current))
+        return false;
     block->assignLir(current);
     return true;
 }
