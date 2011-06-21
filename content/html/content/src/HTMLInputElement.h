@@ -108,6 +108,7 @@ public:
 
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
   using nsGenericHTMLElement::Focus;
+  virtual void Blur(ErrorResult& aError) MOZ_OVERRIDE;
   virtual void Focus(ErrorResult& aError) MOZ_OVERRIDE;
 
   // nsIDOMHTMLInputElement

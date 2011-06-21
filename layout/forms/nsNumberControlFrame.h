@@ -13,6 +13,12 @@
 
 class nsPresContext;
 
+namespace mozilla {
+namespace dom {
+class HTMLInputElement;
+}
+}
+
 /**
  * This frame type is used for <input type=number>.
  */
@@ -22,9 +28,12 @@ class nsNumberControlFrame MOZ_FINAL : public nsContainerFrame
   friend nsIFrame*
   NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+  typedef mozilla::dom::HTMLInputElement HTMLInputElement;
+
   nsNumberControlFrame(nsStyleContext* aContext);
 
 public:
+  NS_DECL_QUERYFRAME_TARGET(nsNumberControlFrame)
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -55,6 +64,8 @@ public:
     return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
+
+  HTMLInputElement* GetAnonTextControl();
 
 private:
 
