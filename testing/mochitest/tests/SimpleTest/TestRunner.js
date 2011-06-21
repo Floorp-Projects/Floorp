@@ -49,6 +49,8 @@ if (typeof SpecialPowers != 'undefined') {
     TestRunner.ipcMode = false;
 }
 
+TestRunner._expectingProcessCrash = false;
+
 /**
  * Make sure the tests don't hang indefinitely.
 **/
@@ -168,6 +170,10 @@ TestRunner._makeIframe = function (url, retry) {
 TestRunner.runTests = function (/*url...*/) {
     TestRunner.log("SimpleTest START");
 
+    if (typeof SpecialPowers != "undefined") {
+        SpecialPowers.registerProcessCrashObservers();
+    }
+
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
     TestRunner._checkForHangs();
@@ -226,18 +232,61 @@ TestRunner.runNextTest = function() {
     }
 };
 
+TestRunner.expectChildProcessCrash = function() {
+    if (typeof SpecialPowers == "undefined") {
+        throw "TestRunner.expectChildProcessCrash must only be called from plain mochitests.";
+    }
+
+    TestRunner._expectingProcessCrash = true;
+};
+
 /**
  * This stub is called by SimpleTest when a test is finished.
 **/
 TestRunner.testFinished = function(tests) {
-    var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
-    TestRunner.log("TEST-END | " +
-                   TestRunner._urls[TestRunner._currentTest] +
-                   " | finished in " + runtime + "ms");
+    function cleanUpCrashDumpFiles() {
+        if (!SpecialPowers.removeExpectedCrashDumpFiles(TestRunner._expectingProcessCrash)) {
+            TestRunner.error("TEST-UNEXPECTED-FAIL | " +
+                             TestRunner.currentTestURL +
+                             " | This test did not leave any crash dumps behind, but we were expecting some!");
+            tests.push({ result: false });
+        }
+        var unexpectedCrashDumpFiles =
+            SpecialPowers.findUnexpectedCrashDumpFiles();
+        TestRunner._expectingProcessCrash = false;
+        if (unexpectedCrashDumpFiles.length) {
+            TestRunner.error("TEST-UNEXPECTED-FAIL | " +
+                             TestRunner.currentTestURL +
+                             " | This test left crash dumps behind, but we " +
+                             "weren't expecting it to!");
+            tests.push({ result: false });
+            unexpectedCrashDumpFiles.sort().forEach(function(aFilename) {
+                TestRunner.log("TEST-INFO | Found unexpected crash dump file " +
+                               aFilename + ".");
+            });
+        }
+    }
 
-    TestRunner.updateUI(tests);
-    TestRunner._currentTest++;
-    TestRunner.runNextTest();
+    function runNextTest() {
+        var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
+        TestRunner.log("TEST-END | " +
+                       TestRunner._urls[TestRunner._currentTest] +
+                       " | finished in " + runtime + "ms");
+        TestRunner.log("TEST-INFO | Time is " + Math.floor(Date.now() / 1000));
+
+        TestRunner.updateUI(tests);
+        TestRunner._currentTest++;
+        TestRunner.runNextTest();
+    }
+
+    if (typeof SpecialPowers != 'undefined') {
+        SpecialPowers.executeAfterFlushingMessageQueue(function() {
+            cleanUpCrashDumpFiles();
+            runNextTest();
+        });
+    } else {
+        runNextTest();
+    }
 };
 
 /**
