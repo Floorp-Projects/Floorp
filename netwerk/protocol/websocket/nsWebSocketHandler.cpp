@@ -715,6 +715,15 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
             framingLength += 8;
             if (avail < framingLength)
                 break;
+
+            if (mFramePtr[2] & 0x80) {
+                // Section 4.2 says that the most significant bit MUST be
+                // 0. (i.e. this is really a 63 bit value)
+                LOG(("WebSocketHandler:: high bit of 64 bit length set"));
+                AbortSession(NS_ERROR_ILLEGAL_VALUE);
+                return NS_ERROR_ILLEGAL_VALUE;
+            }
+
             // copy this in case it is unaligned
             PRUint64 tempLen;
             memcpy(&tempLen, mFramePtr + 2, 8);
