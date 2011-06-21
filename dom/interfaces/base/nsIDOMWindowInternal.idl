@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMWindow2.idl"
+#include "nsIDOMWindow.idl"
 
 %{ C++
 #include "jspubtd.h"
@@ -49,9 +49,10 @@ interface nsIDOMLocation;
 interface nsIVariant;
 interface nsIAnimationFrameListener;
 interface nsIDOMMediaQueryList;
+interface nsIDOMBlob;
 
-[scriptable, uuid(3a7b0839-b9d6-42ff-8ba6-910aba60a966)]
-interface nsIDOMWindowInternal : nsIDOMWindow2
+[scriptable, uuid(9d96565f-2064-4d2f-b0e0-6f67a1fad89c)]
+interface nsIDOMWindowInternal : nsIDOMWindow
 {
   readonly attribute nsIDOMWindowInternal        window;
 

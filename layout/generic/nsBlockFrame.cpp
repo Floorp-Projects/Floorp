@@ -89,6 +89,7 @@
 #include "nsCSSRendering.h"
 #include "FrameLayerBuilder.h"
 #include "nsRenderingContext.h"
+#include "mozilla/Util.h" // for DebugOnly
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -3984,7 +3985,7 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
   if (nextInFlow) {
     nsContainerFrame *oldParent =
       static_cast<nsContainerFrame*>(nextInFlow->GetParent());
-    nsresult rv = oldParent->StealFrame(aState.mPresContext, nextInFlow);
+    DebugOnly<nsresult> rv = oldParent->StealFrame(aState.mPresContext, nextInFlow);
     NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame failed");
     if (oldParent != this) {
       ReparentFrame(nextInFlow, oldParent, this);

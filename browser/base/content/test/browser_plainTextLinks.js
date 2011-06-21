@@ -1,5 +1,10 @@
 let doc, range, selection;
 function setSelection(el1, el2, index1, index2) {
+  while (el1.nodeType != Node.TEXT_NODE)
+    el1 = el1.firstChild;
+  while (el2.nodeType != Node.TEXT_NODE)
+    el2 = el2.firstChild;
+
   selection.removeAllRanges();
   range.setStart(el1, index1);
   range.setEnd(el2, index2);
@@ -82,6 +87,14 @@ function runSelectionTests() {
   testExpected(false, "Link options should show for triple-click selections");
   selection.selectAllChildren(span4);
   testLinkExpected("http://www.example.com/", "Linkified text should open the correct link", span4.firstChild);
+
+  mainDiv.innerHTML = "(open-suse.ru)";
+  setSelection(mainDiv, mainDiv, 1, 13);
+  testExpected(false, "Link options should show for open-suse.ru");
+  testLinkExpected("http://open-suse.ru/", "Linkified text should open the correct link");
+  setSelection(mainDiv, mainDiv, 1, 14);
+  testExpected(true, "Link options should not show for 'open-suse.ru)'");
+
   gBrowser.removeCurrentTab();
   finish();
 }
@@ -98,5 +111,5 @@ function test() {
   }, true);
 
   content.location =
-    "data:text/html,Test For Non-Hyperlinked url selection";
+    "data:text/html;charset=UTF-8,Test For Non-Hyperlinked url selection";
 }
