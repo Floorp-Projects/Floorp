@@ -326,9 +326,6 @@ public:
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
 
-  // nsIDOMWindow2
-  NS_DECL_NSIDOMWINDOW2
-
   // nsIDOMWindowInternal
   NS_DECL_NSIDOMWINDOWINTERNAL
 
