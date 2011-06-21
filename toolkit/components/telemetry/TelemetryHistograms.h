@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*-  Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Mozilla Foundation <http://www.mozilla.org/>.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Taras Glek <tglek@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,43 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsLoadListenerProxy_h
-#define nsLoadListenerProxy_h
+/**
+ * This file lists Telemetry histograms collected by Firefox.
+ *  Format is HISTOGRAM(id, histogram name, minium, maximum, bucket count,
+ * histogram kind, human-readable description for about:telemetry)
+ */
 
-#include "nsIDOMLoadListener.h"
-#include "nsWeakReference.h"
-
-/////////////////////////////////////////////
-//
-// This class exists to prevent a circular reference between
-// the loaded document and the actual loader instance request. The
-// request owns the document. While the document is loading, 
-// the request is a load listener, held onto by the document.
-// The proxy class breaks the circularity by filling in as the
-// load listener and holding a weak reference to the request
-// object.
-//
-/////////////////////////////////////////////
-
-class nsLoadListenerProxy : public nsIDOMLoadListener {
-public:
-  nsLoadListenerProxy(nsWeakPtr aParent);
-  virtual ~nsLoadListenerProxy();
-
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
-  // nsIDOMLoadListener
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-  NS_IMETHOD Error(nsIDOMEvent* aEvent);
-
-protected:
-  nsWeakPtr  mParent;
-};
-
-#endif
+HISTOGRAM(CYCLE_COLLECTOR, 1, 10000, 50, EXPONENTIAL, "Time(ms) spent on cycle collection")
+HISTOGRAM(TELEMETRY_PING, 1, 3000, 10, EXPONENTIAL, "Time(ms) taken to submit telemetry info")
+HISTOGRAM(TELEMETRY_SUCCESS, 0, 1, 2, BOOLEAN,  "Success(No, Yes) rate of telemetry submissions")
+HISTOGRAM(MEMORY_JS_GC_HEAP, 1024, 512 * 1024, 10, EXPONENTIAL, "Memory(MB) used by the JavaScript GC")
+HISTOGRAM(MEMORY_RESIDENT, 32 * 1024, 1024 * 1024, 10, EXPONENTIAL, "Resident memory(MB) reported by OS")
+HISTOGRAM(MEMORY_LAYOUT_ALL, 1024, 64 * 1024, 10, EXPONENTIAL, "Memory(MB) reported used by layout")

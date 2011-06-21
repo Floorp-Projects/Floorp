@@ -562,6 +562,20 @@ ContentParent::RecvGetSystemColors(const PRUint32& colorsCount, InfallibleTArray
     return true;
 }
 
+bool
+ContentParent::RecvGetIconForExtension(const nsCString& aFileExt, const PRUint32& aIconSize, InfallibleTArray<PRUint8>* bits)
+{
+#ifdef ANDROID
+    if (!AndroidBridge::Bridge())
+        return false;
+
+    bits->AppendElements(aIconSize * aIconSize * 4);
+
+    AndroidBridge::Bridge()->GetIconForExtension(aFileExt, aIconSize, bits->Elements());
+#endif
+    return true;
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS3(ContentParent,
                               nsIObserver,
                               nsIThreadObserver,

@@ -89,16 +89,13 @@ CPPSRCS		= \
 		nsDOMEventTargetHelper.cpp \
 		nsDOMScrollAreaEvent.cpp \
 		nsDOMTransitionEvent.cpp \
+		nsDOMAnimationEvent.cpp \
 		nsDOMPopStateEvent.cpp \
 		nsDOMHashChangeEvent.cpp \
 		nsDOMCloseEvent.cpp \
 		nsDOMTouchEvent.cpp \
 		nsDOMCustomEvent.cpp \
 		$(NULL)
-
-ifdef MOZ_CSS_ANIMATIONS
-CPPSRCS		+= nsDOMAnimationEvent.cpp 
-endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

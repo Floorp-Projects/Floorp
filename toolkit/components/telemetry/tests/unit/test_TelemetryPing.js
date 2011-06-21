@@ -72,16 +72,16 @@ function checkHistograms(request, response) {
     do_check_eq(payload.info[f], expected_info[f]);
   }
 
-  const TELEMETRY_PING = "telemetry.ping (ms)";
-  const TELEMETRY_SUCCESS = "telemetry.success (No, Yes)";
+  const TELEMETRY_PING = "TELEMETRY_PING";
+  const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
   do_check_true(TELEMETRY_PING in payload.histograms)
 
   // There should be one successful report from the previos telemetry ping
   const expected_tc = {
     range: [1, 2],
     bucket_count: 3,
-    histogram_type: 1,
-    values: {1:0, 2:1}
+    histogram_type: 2,
+    values: {0:0, 1:1, 2:0}
   }
   let tc = payload.histograms[TELEMETRY_SUCCESS]
   do_check_eq(uneval(tc), 

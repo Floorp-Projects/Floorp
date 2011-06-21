@@ -102,7 +102,7 @@ nsIDOMWebGLRenderingContext_BufferData(JSContext *cx, uintN argc, jsval *vp)
 
     int32 target;
     js::TypedArray *wa = 0;
-    js::ArrayBuffer *wb = 0;
+    JSObject *wb = 0;
     int32 size;
     int32 usage;
 
@@ -118,7 +118,7 @@ nsIDOMWebGLRenderingContext_BufferData(JSContext *cx, uintN argc, jsval *vp)
 
             JSObject *arg2 = JSVAL_TO_OBJECT(argv[1]);
             if (js_IsArrayBuffer(arg2)) {
-                wb = js::ArrayBuffer::fromJSObject(arg2);
+                wb = js::ArrayBuffer::getArrayBuffer(arg2);
             } else if (js_IsTypedArray(arg2)) {
                 wa = js::TypedArray::fromJSObject(arg2);
             }
@@ -176,7 +176,7 @@ nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, uintN argc, jsval *vp)
     int32 target;
     int32 offset;
     js::TypedArray *wa = 0;
-    js::ArrayBuffer *wb = 0;
+    JSObject *wb = 0;
 
     if (!JS_ValueToECMAInt32(cx, argv[0], &target))
         return JS_FALSE;
@@ -193,7 +193,7 @@ nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, uintN argc, jsval *vp)
     if (!nullobject) {
         JSObject *arg3 = JSVAL_TO_OBJECT(argv[2]);
         if (js_IsArrayBuffer(arg3)) {
-            wb = js::ArrayBuffer::fromJSObject(arg3);
+            wb = js::ArrayBuffer::getArrayBuffer(arg3);
         } else if (js_IsTypedArray(arg3)) {
             wa = js::TypedArray::fromJSObject(arg3);
         } else {
@@ -261,7 +261,7 @@ nsIDOMWebGLRenderingContext_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
         JSObject *argv6 = JSVAL_TO_OBJECT(argv[6]);
         if (js_IsArrayBuffer(argv6)) {
             rv = self->ReadPixels_buf(argv0, argv1, argv2, argv3,
-                                      argv4, argv5, js::ArrayBuffer::fromJSObject(argv6));
+                                      argv4, argv5, js::ArrayBuffer::getArrayBuffer(argv6));
         } else if (js_IsTypedArray(argv6)) {
             rv = self->ReadPixels_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5,
@@ -381,7 +381,7 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
         } else if (js_IsArrayBuffer(argv8)) {
             rv = self->TexImage2D_buf(argv0, argv1, argv2, argv3,
                                       argv4, argv5, argv6, argv7,
-                                      js::ArrayBuffer::fromJSObject(argv8));
+                                      js::ArrayBuffer::getArrayBuffer(argv8));
         } else if (js_IsTypedArray(argv8)) {
             rv = self->TexImage2D_array(argv0, argv1, argv2, argv3,
                                         argv4, argv5, argv6, argv7,
@@ -493,7 +493,7 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
         if (js_IsArrayBuffer(argv8)) {
             rv = self->TexSubImage2D_buf(argv0, argv1, argv2, argv3,
                                          argv4, argv5, argv6, argv7,
-                                         js::ArrayBuffer::fromJSObject(argv8));
+                                         js::ArrayBuffer::getArrayBuffer(argv8));
         } else if (js_IsTypedArray(argv8)) {
             rv = self->TexSubImage2D_array(argv0, argv1, argv2, argv3,
                                            argv4, argv5, argv6, argv7,

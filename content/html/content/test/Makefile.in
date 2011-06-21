@@ -181,15 +181,12 @@ _TEST_FILES = \
 		test_bug458037.xhtml \
 		test_bug556645.html \
 		test_bug551670.html \
-		test_bug346485.html \
 		test_bug555567.html \
 		test_bug557620.html \
-		test_bug565538.html \
 		test_bug456229.html \
 		test_bug546995.html \
 		test_bug377624.html \
 		test_bug551846.html \
-		test_bug562932.html \
 		test_bug564001.html \
 		test_bug566046.html \
 		test_bug567938-1.html \
@@ -203,12 +200,7 @@ _TEST_FILES = \
 		test_bug345624-1.html \
 		test_bug345624-2.html \
 		test_bug561640.html \
-		test_bug345822.html \
-		test_bug555559.html \
-		test_bug344615.html \
-		test_bug345512.html \
 		test_bug566064.html \
-		test_bug566160.html \
 		test_bug582412-1.html \
 		test_bug582412-2.html \
 		test_bug558788-1.html \
@@ -223,12 +215,10 @@ _TEST_FILES = \
 		test_bug593689.html \
 		test_bug555840.html \
 		test_bug561636.html \
-		test_bug556013.html \
 		test_bug590363.html \
 		test_bug557628-1.html \
 		test_bug557628-2.html \
 		test_bug592802.html \
-		test_bug589696.html \
 		test_bug595429.html \
 		test_bug595447.html \
 		test_bug595449.html \

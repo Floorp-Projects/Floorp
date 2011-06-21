@@ -300,7 +300,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         "tab must be null (if no children) or a TabItem");
 
     this._activeTab = tab;
-    this.arrange({immediately: true});
+
+    if (this.isStacked())
+      this.arrange({immediately: true});
   },
 
   // -----------
@@ -767,7 +769,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         return (groupItem != self && !groupItem.getChildren().length);
       });
       let group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
-      group.newTab();
+      group.newTab(null, { closedLastTab: true });
     }
 
     this.destroy();
@@ -1739,14 +1741,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: newTab
   // Creates a new tab within this groupItem.
-  newTab: function GroupItem_newTab(url) {
-    UI.setActive(this, { dontSetActiveTabInGroup: true });
-    let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
+  // Parameters:
+  //  url - the new tab should open this url as well
+  //  options - the options object
+  //    closedLastTab - boolean indicates the last tab has just been closed
+  newTab: function GroupItem_newTab(url, options) {
+    if (options && options.closedLastTab)
+      UI.closedLastTabInTabView = true;
 
-    // TabItems will have handled the new tab and added the tabItem property.
-    // We don't have to check if it's an app tab (and therefore wouldn't have a
-    // TabItem), since we've just created it.
-    newTab._tabViewTabItem.zoomIn(!url);
+    UI.setActive(this, { dontSetActiveTabInGroup: true });
+    gBrowser.loadOneTab(url || "about:blank", { inBackground: false });
   },
 
   // ----------

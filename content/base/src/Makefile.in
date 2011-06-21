@@ -114,7 +114,6 @@ CPPSRCS		= \
 		nsHTMLContentSerializer.cpp \
 		nsImageLoadingContent.cpp \
 		nsLineBreaker.cpp \
-		nsLoadListenerProxy.cpp \
 		nsMappedAttributeElement.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \

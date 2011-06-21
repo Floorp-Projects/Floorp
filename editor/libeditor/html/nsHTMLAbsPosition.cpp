@@ -502,7 +502,6 @@ void
 nsHTMLEditor::AddPositioningOffset(PRInt32 & aX, PRInt32 & aY)
 {
   // Get the positioning offset
-  nsresult res;
   PRInt32 positioningOffset =
     Preferences::GetInt("editor.positioning.offset", 0);
 

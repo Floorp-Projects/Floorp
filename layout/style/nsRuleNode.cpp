@@ -3610,7 +3610,6 @@ static const TransitionPropInfo transitionPropInfo[4] = {
     &nsStyleDisplay::mTransitionTimingFunctionCount },
 };
 
-#ifdef MOZ_CSS_ANIMATIONS
 // Each property's index in this array must match its index in the
 // mutable array |animationPropData| below.
 static const TransitionPropInfo animationPropInfo[8] = {
@@ -3631,7 +3630,6 @@ static const TransitionPropInfo animationPropInfo[8] = {
   { eCSSProperty_animation_iteration_count,
     &nsStyleDisplay::mAnimationIterationCountCount },
 };
-#endif
 
 // Information about each transition or animation property that changes
 // during ComputeDisplayData.
@@ -3927,7 +3925,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
   }
 
-#ifdef MOZ_CSS_ANIMATIONS
   // Each property's index in this array must match its index in the
   // const array |animationPropInfo| above.
   TransitionPropData animationPropData[8];
@@ -4171,7 +4168,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       }
     }
   }
-#endif
 
   // opacity: factor, inherit, initial
   SetFactor(*aRuleData->ValueForOpacity(), display->mOpacity, canStoreInRuleTree,
