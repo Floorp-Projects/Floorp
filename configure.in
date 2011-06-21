@@ -4808,6 +4808,7 @@ NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciw
 USE_ARM_KUSER=
 BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
+MOZ_USE_NATIVE_POPUP_WINDOWS=
 
 
 case "${target}" in
@@ -6339,6 +6340,10 @@ for extension in $MOZ_EXTENSIONS; do
         AC_MSG_ERROR([Unrecognized extension provided to --enable-extensions: ${extension}.])
     fi
 done
+
+if test -n "$MOZ_USE_NATIVE_POPUP_WINDOWS"; then
+  AC_DEFINE(MOZ_USE_NATIVE_POPUP_WINDOWS)
+fi
 
 dnl ========================================================
 dnl SVG Display Lists
