@@ -120,8 +120,6 @@ public:
   const static PRUint16 kCloseProtocolError = 1002;
   const static PRUint16 kCloseUnsupported   = 1003;
   const static PRUint16 kCloseTooLarge      = 1004;
-  const static PRUint16 kCloseNoStatus      = 1005;
-  const static PRUint16 kCloseAbnormal      = 1006;
 
 protected:
   virtual ~nsWebSocketHandler();
@@ -140,7 +138,6 @@ private:
   nsresult HandleExtensions();
   nsresult SetupRequest();
   nsresult ApplyForAdmission();
-  PRUint16 ResultToCloseCode(nsresult resultCode);
   
   void StopSession(nsresult reason);
   void AbortSession(nsresult reason);
@@ -240,7 +237,6 @@ private:
   
   PRInt32                         mMaxMessageSize;
   nsresult                        mStopOnClose;
-  PRUint16                        mCloseCode;
 
   // These are for the read buffers
   PRUint8                        *mFramePtr;
