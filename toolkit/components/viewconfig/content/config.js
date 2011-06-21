@@ -232,7 +232,8 @@ var gPrefListener =
     if (/^capability\./.test(prefName)) // avoid displaying "private" preferences
       return;
 
-    var viewIndex = arrayIndex = gPrefArray.length;
+    var arrayIndex = gPrefArray.length;
+    var viewIndex = arrayIndex;
     var selectedIndex = view.selection.currentIndex;
     var pref;
     var updateView = false;

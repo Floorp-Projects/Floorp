@@ -108,16 +108,9 @@ struct JS_FRIEND_API(ArrayBuffer) {
     static JSObject *
     getArrayBuffer(JSObject *obj);
 
-    static inline unsigned int
-    getByteLength(JSObject *obj) {
-        return *((unsigned int*) obj->slots);
-    }
+    static inline unsigned int getByteLength(JSObject *obj);
 
-    static inline uint8 *
-    getDataOffset(JSObject *obj) {
-        uint64 *base = ((uint64*)obj->slots) + 1;
-        return (uint8*) base;
-    }
+    static inline uint8 * getDataOffset(JSObject *obj);
 };
 
 /*
@@ -258,5 +251,11 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
 
 extern int32 JS_FASTCALL
 js_TypedArray_uint8_clamp_double(const double x);
+
+JS_FRIEND_API(JSUint32)
+JS_GetArrayBufferByteLength(JSObject *obj);
+
+JS_FRIEND_API(uint8 *)
+JS_GetArrayBufferData(JSObject *obj);
 
 #endif /* jstypedarray_h */

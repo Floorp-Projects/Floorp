@@ -50,7 +50,6 @@
 #include "nsInterfaceHashtable.h"
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
-#include "nsIPrefService.h"
 #include "nsIChannelEventSink.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserver.h"
@@ -617,24 +616,20 @@ private:
     inline void
     ScriptSecurityPrefChanged();
 
-    static const char sJSEnabledPrefName[];
-    static const char sFileOriginPolicyPrefName[];
-
     nsObjectHashtable* mOriginToPolicyMap;
     DomainPolicy* mDefaultPolicy;
     nsObjectHashtable* mCapabilities;
 
-    nsCOMPtr<nsIPrefBranch> mPrefBranch;
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
     ContextPrincipal *mContextPrincipals;
     nsInterfaceHashtable<PrincipalKey, nsIPrincipal> mPrincipals;
+    PRPackedBool mPrefInitialized;
     PRPackedBool mIsJavaScriptEnabled;
     PRPackedBool mIsWritingPrefs;
     PRPackedBool mPolicyPrefsChanged;
 #ifdef XPC_IDISPATCH_SUPPORT    
     PRPackedBool mXPCDefaultGrantAll;
-    static const char sXPCDefaultGrantAllName[];
 #endif
 
     static PRBool sStrictFileOriginPolicy;

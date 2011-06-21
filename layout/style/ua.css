@@ -131,6 +131,7 @@
   clip-path: inherit;
   filter: inherit;
   mask: inherit;
+  opacity: inherit;
   -moz-box-ordinal-group: inherit !important;
 }
 

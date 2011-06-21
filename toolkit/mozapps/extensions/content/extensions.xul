@@ -228,7 +228,7 @@
                     tooltiptext="&view.recentUpdates.label;" disabled="true"/>
     </richlistbox>
 
-    <box id="view-port-container" flex="1">
+    <box id="view-port-container" class="main-content" flex="1">
 
       <!-- view port -->
       <deck id="view-port" flex="1" selectedIndex="0">

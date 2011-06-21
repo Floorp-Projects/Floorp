@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <android/log.h>
+#include <dlfcn.h>
 
 #include "nsXULAppAPI.h"
 #include <pthread.h>
@@ -104,6 +105,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     mJNIEnv = nsnull;
     mThread = nsnull;
+    mOpenedBitmapLibrary = false;
+    mHasNativeBitmapAccess = false;
 
     mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
 
@@ -112,7 +115,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jNotifyIMEChange = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEChange", "(Ljava/lang/String;III)V");
     jAcknowledgeEventSync = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "acknowledgeEventSync", "()V");
 
-    jEnableAccelerometer = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableAccelerometer", "(Z)V");
+    jEnableDeviceMotion = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableDeviceMotion", "(Z)V");
     jEnableLocation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocation", "(Z)V");
     jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
@@ -300,10 +303,10 @@ AndroidBridge::AcknowledgeEventSync()
 }
 
 void
-AndroidBridge::EnableAccelerometer(bool aEnable)
+AndroidBridge::EnableDeviceMotion(bool aEnable)
 {
-    ALOG_BRIDGE("AndroidBridge::EnableAccelerometer");
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableAccelerometer, aEnable);
+    ALOG_BRIDGE("AndroidBridge::EnableDeviceMotion");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableDeviceMotion, aEnable);
 }
 
 void
@@ -856,5 +859,86 @@ AndroidBridge::ScanMedia(const nsAString& aFile, const nsACString& aMimeType)
     jstring jstrMimeTypes = mJNIEnv->NewString(nsPromiseFlatString(mimeType2).get(), mimeType2.Length());
 
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jScanMedia, jstrFile, jstrMimeTypes);
+}
+
+bool
+AndroidBridge::HasNativeBitmapAccess()
+{
+    if (!mOpenedBitmapLibrary) {
+        // Try to dlopen libjnigraphics.so for direct bitmap access on
+        // Android 2.2+ (API level 8)
+        mOpenedBitmapLibrary = true;
+
+        void *handle = dlopen("/system/lib/libjnigraphics.so", RTLD_LAZY | RTLD_LOCAL);
+        if (handle == nsnull)
+            return false;
+
+        AndroidBitmap_getInfo = (int (*)(JNIEnv *, jobject, void *))dlsym(handle, "AndroidBitmap_getInfo");
+        if (AndroidBitmap_getInfo == nsnull)
+            return false;
+
+        AndroidBitmap_lockPixels = (int (*)(JNIEnv *, jobject, void **))dlsym(handle, "AndroidBitmap_lockPixels");
+        if (AndroidBitmap_lockPixels == nsnull)
+            return false;
+
+        AndroidBitmap_unlockPixels = (int (*)(JNIEnv *, jobject))dlsym(handle, "AndroidBitmap_unlockPixels");
+        if (AndroidBitmap_unlockPixels == nsnull)
+            return false;
+
+        ALOG_BRIDGE("Successfully opened libjnigraphics.so");
+        mHasNativeBitmapAccess = true;
+    }
+
+    return mHasNativeBitmapAccess;
+}
+
+bool
+AndroidBridge::ValidateBitmap(jobject bitmap, int width, int height)
+{
+    // This structure is defined in Android API level 8's <android/bitmap.h>
+    // Because we can't depend on this, we get the function pointers via dlsym
+    // and define this struct ourselves.
+    struct BitmapInfo {
+        uint32_t width;
+        uint32_t height;
+        uint32_t stride;
+        uint32_t format;
+        uint32_t flags;
+    };
+
+    int err;
+    struct BitmapInfo info = { 0, };
+
+    if ((err = AndroidBitmap_getInfo(JNI(), bitmap, &info)) != 0) {
+        ALOG_BRIDGE("AndroidBitmap_getInfo failed! (error %d)", err);
+        return false;
+    }
+
+    if (info.width != width || info.height != height)
+        return false;
+
+    return true;
+}
+
+void *
+AndroidBridge::LockBitmap(jobject bitmap)
+{
+    int err;
+    void *buf;
+
+    if ((err = AndroidBitmap_lockPixels(JNI(), bitmap, &buf)) != 0) {
+        ALOG_BRIDGE("AndroidBitmap_lockPixels failed! (error %d)", err);
+        buf = nsnull;
+    }
+
+    return buf;
+}
+
+void
+AndroidBridge::UnlockBitmap(jobject bitmap)
+{
+    int err;
+    if ((err = AndroidBitmap_unlockPixels(JNI(), bitmap)) != 0)
+        ALOG_BRIDGE("AndroidBitmap_unlockPixels failed! (error %d)", err);
 }
 

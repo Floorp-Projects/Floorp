@@ -31,7 +31,7 @@ script 15.5.5.2.js
 script 15.10.7.js
 script B.1.1.js
 script B.1.2.js
-script function-name-arity.js
+script function-name.js
 script primitive-this-no-writeback.js
 script regress-532254.js
 script regress-532041.js

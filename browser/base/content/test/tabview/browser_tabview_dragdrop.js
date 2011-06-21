@@ -85,7 +85,7 @@ function addTest(contentWindow, groupOneId, groupTwoId, originalTab) {
     };
     groupTwo.addSubscriber(groupTwo, "close", function() {
       groupTwo.removeSubscriber(groupTwo, "close");
-      finish();  
+      closeGroupItem(groupOne, finish);
     });
     window.addEventListener("tabviewhidden", onTabViewHidden, false);
     gBrowser.selectedTab = originalTab;

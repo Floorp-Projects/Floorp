@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=662678
+-->
+<head>
+  <title>Test for Bug 662678</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=662678">Mozilla Bug 662678</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 662678 **/
+
+window.addEventListener("devicemotion", function(event) {
+  is(event.acceleration.x, 1.5);
+  is(event.acceleration.y, 1.5);
+  is(event.acceleration.z, 1.5);
+
+  is(event.accelerationIncludingGravity.x, 1.5);
+  is(event.accelerationIncludingGravity.y, 1.5);
+  is(event.accelerationIncludingGravity.z, 1.5);
+
+  is(event.rotationRate.alpha, 1.5);
+  is(event.rotationRate.beta, 1.5);
+  is(event.rotationRate.gamma, 1.5);
+  SimpleTest.finish();
+}, true);
+
+var event = DeviceMotionEvent;
+ok(!!event, "Should have seen DeviceMotionEvent!");
+
+event = document.createEvent("DeviceMotionEvent");
+event.initDeviceMotionEvent('devicemotion', true, true, 
+                            {x:1.5,y:1.5,z:1.5},
+                            {x:1.5,y:1.5,z:1.5},
+                            {alpha:1.5,beta:1.5,gamma:1.5},
+                            0);
+window.dispatchEvent(event);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

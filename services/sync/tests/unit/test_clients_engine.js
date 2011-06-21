@@ -209,6 +209,6 @@ add_test(function test_sync() {
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Engine.Clients").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.Engine.Clients").level = Log4Moz.Level.Trace;
   run_next_test();
 }

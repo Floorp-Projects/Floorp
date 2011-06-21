@@ -41,8 +41,21 @@
 
 #include "xptiprivate.h"
 #include "nsString.h"
+#include "nsIMemoryReporter.h"
 
 using namespace mozilla;
+
+static PRInt64 GetXPTArenaSize(void*)
+{
+  return XPT_SizeOfArena(gXPTIStructArena);
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(xptiWorkingSet,
+                             "explicit/xpti-working-set",
+                             MR_HEAP,
+                             "Memory used by the XPCOM typelib system.",
+                             GetXPTArenaSize,
+                             nsnull)
 
 #define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 1)
 #define XPTI_HASHTABLE_SIZE             2048
@@ -57,6 +70,8 @@ xptiWorkingSet::xptiWorkingSet()
 
     gXPTIStructArena = XPT_NewArena(XPTI_STRUCT_ARENA_BLOCK_SIZE, sizeof(double),
                                     "xptiWorkingSet structs");
+
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(xptiWorkingSet));
 }        
 
 static PLDHashOperator
@@ -82,6 +97,6 @@ xptiWorkingSet::~xptiWorkingSet()
 #ifdef NS_FREE_PERMANENT_DATA
     XPT_DestroyArena(gXPTIStructArena);
 #endif
-}        
+}
 
 XPTArena* gXPTIStructArena;

@@ -62,7 +62,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix);
+  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
   virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix);
 
 protected:

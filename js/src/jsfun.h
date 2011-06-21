@@ -296,13 +296,19 @@ IsFunctionObject(const js::Value &v, JSObject **funobj)
 }
 
 static JS_ALWAYS_INLINE bool
+IsFunctionObject(const js::Value &v, JSObject **funobj, JSFunction **fun)
+{
+    bool b = IsFunctionObject(v, funobj);
+    if (b)
+        *fun = (*funobj)->getFunctionPrivate();
+    return b;
+}
+
+static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v, JSFunction **fun)
 {
     JSObject *funobj;
-    bool b = IsFunctionObject(v, &funobj);
-    if (b)
-        *fun = funobj->getFunctionPrivate();
-    return b;
+    return IsFunctionObject(v, &funobj, fun);
 }
 
 static JS_ALWAYS_INLINE bool

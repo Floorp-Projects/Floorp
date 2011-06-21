@@ -71,6 +71,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerBytes(0),
     gcLastBytes(0),
     hold(false),
+#ifdef JS_TRACER
+    traceMonitor_(NULL),
+#endif
     data(NULL),
     active(false),
 #ifdef JS_METHODJIT
@@ -106,6 +109,10 @@ JSCompartment::~JSCompartment()
     Foreground::delete_(jaegerCompartment);
 #endif
 
+#ifdef JS_TRACER
+    Foreground::delete_(traceMonitor_);
+#endif
+
     Foreground::delete_(mathCache);
 
 #ifdef DEBUG
@@ -129,11 +136,6 @@ JSCompartment::init()
         if (!emptyShapes.init())
             return false;
     }
-#endif
-
-#ifdef JS_TRACER
-    if (!traceMonitor.init(rt))
-        return false;
 #endif
 
     regExpAllocator = rt->new_<WTF::BumpPointerAllocator>();
@@ -489,7 +491,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         initialStringShape = NULL;
 
 #ifdef JS_TRACER
-    traceMonitor.sweep(cx);
+    if (hasTraceMonitor())
+        traceMonitor()->sweep(cx);
 #endif
 
 #if defined JS_METHODJIT && defined JS_MONOIC
@@ -545,7 +548,8 @@ JSCompartment::purge(JSContext *cx)
      * which will eventually abort any current recording.
      */
     if (cx->runtime->gcRegenShapes)
-        traceMonitor.needFlush = JS_TRUE;
+        if (hasTraceMonitor())
+            traceMonitor()->needFlush = JS_TRUE;
 #endif
 
 #ifdef JS_METHODJIT
@@ -578,6 +582,22 @@ JSCompartment::allocMathCache(JSContext *cx)
         js_ReportOutOfMemory(cx);
     return mathCache;
 }
+
+#ifdef JS_TRACER
+TraceMonitor *
+JSCompartment::allocAndInitTraceMonitor(JSContext *cx)
+{
+    JS_ASSERT(!traceMonitor_);
+    traceMonitor_ = cx->new_<TraceMonitor>();
+    if (!traceMonitor_)
+        return NULL;
+    if (!traceMonitor_->init(cx->runtime)) {
+        Foreground::delete_(traceMonitor_);
+        return NULL;
+    }
+    return traceMonitor_;
+}
+#endif
 
 size_t
 JSCompartment::backEdgeCount(jsbytecode *pc) const

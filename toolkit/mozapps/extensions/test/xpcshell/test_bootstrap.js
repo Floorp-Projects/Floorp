@@ -73,6 +73,46 @@ function getUninstallReason() {
   return Services.prefs.getIntPref("bootstraptest.uninstall_reason");
 }
 
+function manuallyInstall(aXPIFile, aInstallLocation, aID) {
+  if (TEST_UNPACKED) {
+    let dir = aInstallLocation.clone();
+    dir.append(aID);
+    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
+              createInstance(AM_Ci.nsIZipReader);
+    zip.open(aXPIFile);
+    let entries = zip.findEntries(null);
+    while (entries.hasMore()) {
+      let entry = entries.getNext();
+      let target = dir.clone();
+      entry.split("/").forEach(function(aPart) {
+        target.append(aPart);
+      });
+      zip.extract(entry, target);
+    }
+    zip.close();
+
+    return dir;
+  }
+  else {
+    let target = aInstallLocation.clone();
+    target.append(aID + ".xpi");
+    aXPIFile.copyTo(target.parent, target.leafName);
+    return target;
+  }
+}
+
+function manuallyUninstall(aInstallLocation, aID) {
+  let file = getFileForAddon(aInstallLocation, aID);
+
+  // In reality because the app is restarted a flush isn't necessary for XPIs
+  // removed outside the app, but for testing we must flush manually.
+  if (file.isFile())
+    Services.obs.notifyObservers(file, "flush-cache-entry", null);
+
+  file.remove(true);
+}
+
 function run_test() {
   do_test_pending();
 
@@ -369,18 +409,8 @@ function check_test_7() {
 function run_test_8() {
   shutdownManager();
 
-  let dir = profileDir.clone();
-  dir.append("bootstrap1@tests.mozilla.org");
-  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
-            createInstance(AM_Ci.nsIZipReader);
-  zip.open(do_get_addon("test_bootstrap1_1"));
-  dir.append("install.rdf");
-  zip.extract("install.rdf", dir);
-  dir = dir.parent;
-  dir.append("bootstrap.js");
-  zip.extract("bootstrap.js", dir);
-  zip.close();
+  manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir,
+                  "bootstrap1@tests.mozilla.org");
 
   startupManager(false);
 
@@ -403,9 +433,8 @@ function run_test_8() {
 function run_test_9() {
   shutdownManager();
 
-  let dir = profileDir.clone();
-  dir.append("bootstrap1@tests.mozilla.org");
-  dir.remove(true);
+  manuallyUninstall(profileDir, "bootstrap1@tests.mozilla.org");
+
   startupManager(false);
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
@@ -548,18 +577,8 @@ function check_test_11() {
 function run_test_12() {
   shutdownManager();
 
-  let dir = profileDir.clone();
-  dir.append("bootstrap1@tests.mozilla.org");
-  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
-            createInstance(AM_Ci.nsIZipReader);
-  zip.open(do_get_addon("test_bootstrap1_1"));
-  dir.append("install.rdf");
-  zip.extract("install.rdf", dir);
-  dir = dir.parent;
-  dir.append("bootstrap.js");
-  zip.extract("bootstrap.js", dir);
-  zip.close();
+  manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir,
+                  "bootstrap1@tests.mozilla.org");
 
   startupManager(true);
 
@@ -654,18 +673,8 @@ function check_test_13() {
 function run_test_14() {
   shutdownManager();
 
-  let dir = profileDir.clone();
-  dir.append("bootstrap1@tests.mozilla.org");
-  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
-            createInstance(AM_Ci.nsIZipReader);
-  zip.open(do_get_addon("test_bootstrap1_3"));
-  dir.append("install.rdf");
-  zip.extract("install.rdf", dir);
-  dir = dir.parent;
-  dir.append("bootstrap.js");
-  zip.extract("bootstrap.js", dir);
-  zip.close();
+  manuallyInstall(do_get_addon("test_bootstrap1_3"), profileDir,
+                  "bootstrap1@tests.mozilla.org");
 
   startupManager(false);
 
@@ -808,18 +817,8 @@ function run_test_16() {
 function run_test_17() {
   shutdownManager();
 
-  let dir = userExtDir.clone();
-  dir.append("bootstrap1@tests.mozilla.org");
-  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
-            createInstance(AM_Ci.nsIZipReader);
-  zip.open(do_get_addon("test_bootstrap1_1"));
-  dir.append("install.rdf");
-  zip.extract("install.rdf", dir);
-  dir = dir.parent;
-  dir.append("bootstrap.js");
-  zip.extract("bootstrap.js", dir);
-  zip.close();
+  manuallyInstall(do_get_addon("test_bootstrap1_1"), userExtDir,
+                  "bootstrap1@tests.mozilla.org");
 
   resetPrefs();
   startupManager();
@@ -902,18 +901,8 @@ function run_test_20() {
   resetPrefs();
   shutdownManager();
 
-  let dir = profileDir.clone();
-  dir.append("bootstrap1@tests.mozilla.org");
-  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
-            createInstance(AM_Ci.nsIZipReader);
-  zip.open(do_get_addon("test_bootstrap1_2"));
-  dir.append("install.rdf");
-  zip.extract("install.rdf", dir);
-  dir = dir.parent;
-  dir.append("bootstrap.js");
-  zip.extract("bootstrap.js", dir);
-  zip.close();
+  manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir,
+                  "bootstrap1@tests.mozilla.org");
 
   startupManager();
 
@@ -939,9 +928,7 @@ function run_test_21() {
   resetPrefs();
   shutdownManager();
 
-  let dir = profileDir.clone();
-  dir.append("bootstrap1@tests.mozilla.org");
-  dir.remove(true);
+  manuallyUninstall(profileDir, "bootstrap1@tests.mozilla.org");
 
   startupManager();
 
@@ -964,9 +951,7 @@ function run_test_21() {
 
     do_check_eq(getStartupReason(), APP_STARTUP);
 
-    dir = userExtDir.clone();
-    dir.append("bootstrap1@tests.mozilla.org");
-    dir.remove(true);
+    manuallyUninstall(userExtDir, "bootstrap1@tests.mozilla.org");
 
     restartManager();
 
@@ -978,21 +963,11 @@ function run_test_21() {
 function run_test_22() {
   shutdownManager();
 
-  let dir = profileDir.clone();
-  dir.append("bootstrap1@tests.mozilla.org");
-  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
-            createInstance(AM_Ci.nsIZipReader);
-  zip.open(do_get_addon("test_bootstrap1_1"));
-  dir.append("install.rdf");
-  zip.extract("install.rdf", dir);
-  dir = dir.parent;
-  dir.append("bootstrap.js");
-  zip.extract("bootstrap.js", dir);
-  zip.close();
+  let file = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir,
+                             "bootstrap1@tests.mozilla.org");
 
   // Make it look old so changes are detected
-  setExtensionModifiedTime(dir.parent, dir.parent.lastModifiedTime - 5000);
+  setExtensionModifiedTime(file, file.lastModifiedTime - 5000);
 
   startupManager();
 
@@ -1007,18 +982,9 @@ function run_test_22() {
     resetPrefs();
     shutdownManager();
 
-    dir = dir.parent;
-    dir.remove(true);
-    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-    let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
-              createInstance(AM_Ci.nsIZipReader);
-    zip.open(do_get_addon("test_bootstrap1_2"));
-    dir.append("install.rdf");
-    zip.extract("install.rdf", dir);
-    dir = dir.parent;
-    dir.append("bootstrap.js");
-    zip.extract("bootstrap.js", dir);
-    zip.close();
+    manuallyUninstall(profileDir, "bootstrap1@tests.mozilla.org");
+    manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir,
+                    "bootstrap1@tests.mozilla.org");
 
     startupManager();
 

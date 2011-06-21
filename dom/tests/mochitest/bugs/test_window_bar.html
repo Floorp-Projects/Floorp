@@ -34,19 +34,33 @@ var numWindows = 0;
 /* Called when our popup loads. */
 function testWindow(w)
 {
-  // w.location.search == '?true' if we expect the bars to be on, and
-  // '?false' otherwise.
 
-  var e = w.location.search == '?true';
-  
-  is(w.menubar.visible, e, "menubar");
-  is(w.toolbar.visible, e, "toolbar");
-  is(w.personalbar.visible, e, "personalbar");
-  is(w.scrollbars.visible, e, "scrollbars");
+  // If dom.disable_window_open_feature.X is true, then we can't disable
+  // feature X when we call window.open from content.  So to check that our popup
+  // has the right bars shown, we need to check that it obeys first the pref
+  // and then the arguments to window.open, if applicable.
 
-  // You can't turn these off even if you try, so check that they're true.
-  is(w.locationbar.visible, true, "locationbar");
-  is(w.statusbar.visible, true, "statusbar");
+  function checkFeature(feature, prefname) {
+    if (prefname === undefined)
+      prefname = feature;
+    
+    if (SpecialPowers.getBoolPref('dom.disable_window_open_feature.' + prefname)) {
+      is(w[feature].visible, true, feature + ' should always be true.');
+    }
+    else {
+      // w.location.search == '?true' if we expect the bars to be on, and
+      // '?false' otherwise.
+      var enabled = w.location.search == '?true';
+      is(w[feature].visible, enabled, feature + ' should follow window.open settings.');
+    }
+  }
+
+  checkFeature('menubar');
+  checkFeature('toolbar');
+  checkFeature('personalbar');
+  checkFeature('scrollbars');
+  checkFeature('statusbar', 'status');
+  checkFeature('locationbar', 'location');
 
   w.close();
 

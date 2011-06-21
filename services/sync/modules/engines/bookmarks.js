@@ -109,7 +109,7 @@ PlacesItem.prototype = {
   },
 
   __proto__: CryptoWrapper.prototype,
-  _logName: "Record.PlacesItem",
+  _logName: "Sync.Record.PlacesItem",
 };
 
 Utils.deferGetSet(PlacesItem, "cleartext", ["hasDupe", "parentid", "parentName",
@@ -120,7 +120,7 @@ function Bookmark(collection, id, type) {
 }
 Bookmark.prototype = {
   __proto__: PlacesItem.prototype,
-  _logName: "Record.Bookmark",
+  _logName: "Sync.Record.Bookmark",
 };
 
 Utils.deferGetSet(Bookmark, "cleartext", ["title", "bmkUri", "description",
@@ -131,7 +131,7 @@ function BookmarkQuery(collection, id) {
 }
 BookmarkQuery.prototype = {
   __proto__: Bookmark.prototype,
-  _logName: "Record.BookmarkQuery",
+  _logName: "Sync.Record.BookmarkQuery",
 };
 
 Utils.deferGetSet(BookmarkQuery, "cleartext", ["folderName",
@@ -142,7 +142,7 @@ function BookmarkFolder(collection, id, type) {
 }
 BookmarkFolder.prototype = {
   __proto__: PlacesItem.prototype,
-  _logName: "Record.Folder",
+  _logName: "Sync.Record.Folder",
 };
 
 Utils.deferGetSet(BookmarkFolder, "cleartext", ["description", "title",
@@ -153,7 +153,7 @@ function Livemark(collection, id) {
 }
 Livemark.prototype = {
   __proto__: BookmarkFolder.prototype,
-  _logName: "Record.Livemark",
+  _logName: "Sync.Record.Livemark",
 };
 
 Utils.deferGetSet(Livemark, "cleartext", ["siteUri", "feedUri"]);
@@ -163,7 +163,7 @@ function BookmarkSeparator(collection, id) {
 }
 BookmarkSeparator.prototype = {
   __proto__: PlacesItem.prototype,
-  _logName: "Record.Separator",
+  _logName: "Sync.Record.Separator",
 };
 
 Utils.deferGetSet(BookmarkSeparator, "cleartext", "pos");

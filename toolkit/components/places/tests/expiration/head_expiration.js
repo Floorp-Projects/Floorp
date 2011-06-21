@@ -72,6 +72,10 @@ function force_expiration_start() {
 
 /**
  * Forces an expiration run.
+ *
+ * @param [optional] aLimit
+ *        Limit for the expiration.  Pass -1 for unlimited.
+ *        Any other non-positive value will just expire orphans.
  */
 function force_expiration_step(aLimit) {
   const TOPIC_DEBUG_START_EXPIRATION = "places-debug-start-expiration";

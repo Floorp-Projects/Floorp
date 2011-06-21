@@ -32,7 +32,7 @@
     vld1.s8     {d2[], d3[]}, [r2]          ; flimit
     vld1.s8     {d26[], d27[]}, [r3]        ; limit -> q13
     vld4.8      {d6[1], d7[1], d8[1], d9[1]}, [r0], r1
-    ldr         r12, _vlfy_coeff_
+    adr         r12, vlfy_coeff
     vld4.8      {d6[2], d7[2], d8[2], d9[2]}, [r0], r1
     vld4.8      {d6[3], d7[3], d8[3], d9[3]}, [r0], r1
     vld4.8      {d6[4], d7[4], d8[4], d9[4]}, [r0], r1
@@ -149,8 +149,6 @@
 ;Data section with name data_area is specified. DCD reserves space in memory for 16 data.
 ;One word each is reserved. Label filter_coeff can be used to access the data.
 ;Data address: filter_coeff, filter_coeff+4, filter_coeff+8 ...
-_vlfy_coeff_
-    DCD     vlfy_coeff
 vlfy_coeff
     DCD     0x80808080, 0x80808080, 0x80808080, 0x80808080
     DCD     0x03030303, 0x03030303, 0x03030303, 0x03030303

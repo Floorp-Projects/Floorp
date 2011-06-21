@@ -76,6 +76,7 @@ FreeAllocStrings(int argc, char **argv)
 int wmain(int argc, WCHAR **argv)
 {
 #ifndef XRE_DONT_PROTECT_DLL_LOAD
+  mozilla::SanitizeEnvironmentVariables();
   mozilla::NS_SetDllDirectory(L"");
 #endif
 

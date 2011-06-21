@@ -659,8 +659,11 @@ HistoryMenu.prototype = {
   toggleTabsFromOtherComputers: function PHM_toggleTabsFromOtherComputers() {
     // This is a no-op if MOZ_SERVICES_SYNC isn't defined
 #ifdef MOZ_SERVICES_SYNC
-    // enable/disable the Tabs From Other Computers menu
-    let menuitem = document.getElementById("sync-tabs-menuitem");
+    // Enable/disable the Tabs From Other Computers menu. Some of the menus handled
+    // by HistoryMenu do not have this menuitem.
+    let menuitem = this._rootElt.getElementsByClassName("syncTabsMenuItem")[0];
+    if (!menuitem)
+      return;
 
     // If Sync isn't configured yet, then don't show the menuitem.
     if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED ||

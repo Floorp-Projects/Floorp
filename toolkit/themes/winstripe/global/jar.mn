@@ -27,6 +27,7 @@ toolkit.jar:
 *       skin/classic/global/global.css
         skin/classic/global/globalBindings.xml
         skin/classic/global/groupbox.css
+*       skin/classic/global/inContentUI.css
         skin/classic/global/linkTree.css
         skin/classic/global/listbox.css
 *       skin/classic/global/menu.css
@@ -145,6 +146,7 @@ toolkit.jar:
         skin/classic/global/icons/webconsole.png                 (icons/webconsole.png)
         skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
         skin/classic/global/icons/wrap.png                       (icons/wrap.png)
+        skin/classic/global/inContentUI/background-texture.png  (inContentUI/background-texture.png)
         skin/classic/global/media/videocontrols.css              (media/videocontrols.css)
         skin/classic/global/media/pauseButton.png                (media/pauseButton.png)
         skin/classic/global/media/playButton.png                 (media/playButton.png)
@@ -204,6 +206,7 @@ toolkit.jar:
 *       skin/classic/aero/global/global.css
         skin/classic/aero/global/globalBindings.xml
         skin/classic/aero/global/groupbox.css
+*       skin/classic/aero/global/inContentUI.css                        (inContentUI-aero.css)
         skin/classic/aero/global/linkTree.css
         skin/classic/aero/global/listbox.css
 *       skin/classic/aero/global/menu.css                                (menu-aero.css)
@@ -322,6 +325,7 @@ toolkit.jar:
         skin/classic/aero/global/icons/webconsole.png                    (icons/webconsole.png)
         skin/classic/aero/global/icons/windowControls.png                (icons/windowControls-aero.png)
         skin/classic/aero/global/icons/wrap.png                          (icons/wrap-aero.png)
+        skin/classic/aero/global/inContentUI/background-texture.png     (inContentUI/background-texture.png)
         skin/classic/aero/global/media/videocontrols.css                 (media/videocontrols.css)
         skin/classic/aero/global/media/pauseButton.png                   (media/pauseButton.png)
         skin/classic/aero/global/media/playButton.png                    (media/playButton.png)

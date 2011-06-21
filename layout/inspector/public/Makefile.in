@@ -54,6 +54,8 @@ XPIDLSRCS = inIDOMView.idl \
             inISearchObserver.idl \
             inICSSValueSearch.idl \
             inIDOMUtils.idl \
+            nsIDOMFontFace.idl \
+            nsIDOMFontFaceList.idl \
 	    $(NULL)
 
 include $(topsrcdir)/config/rules.mk

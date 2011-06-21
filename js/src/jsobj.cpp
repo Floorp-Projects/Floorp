@@ -1540,39 +1540,26 @@ js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JSObject *pobj;
     JSProperty *prop;
     if (!obj->lookupProperty(cx, id, &pobj, &prop))
-        return JS_FALSE;
+        return false;
 
     if (!prop) {
         vp->setBoolean(false);
-        return JS_TRUE;
+        return true;
     }
 
     /*
-     * XXX ECMA spec error compatible: return false unless hasOwnProperty.
-     * The ECMA spec really should be fixed so propertyIsEnumerable and the
-     * for..in loop agree on whether prototype properties are enumerable,
-     * obviously by fixing this method (not by breaking the for..in loop!).
-     *
-     * We check here for shared permanent prototype properties, which should
-     * be treated as if they are local to obj.  They are an implementation
-     * technique used to satisfy ECMA requirements; users should not be able
-     * to distinguish a shared permanent proto-property from a local one.
+     * ECMA spec botch: return false unless hasOwnProperty. Leaving "own" out
+     * of propertyIsEnumerable's name was a mistake.
      */
-    bool shared;
-    uintN attrs;
-    if (pobj->isNative()) {
-        Shape *shape = (Shape *) prop;
-        shared = shape->isSharedPermanent();
-        attrs = shape->attributes();
-    } else {
-        shared = false;
-        if (!pobj->getAttributes(cx, id, &attrs))
-            return false;
-    }
-    if (pobj != obj && !shared) {
+    if (pobj != obj) {
         vp->setBoolean(false);
         return true;
     }
+
+    uintN attrs;
+    if (!pobj->getAttributes(cx, id, &attrs))
+        return false;
+
     vp->setBoolean((attrs & JSPROP_ENUMERATE) != 0);
     return true;
 }
@@ -2059,23 +2046,6 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
 
     JS_ASSERT(!obj->getOps()->defineProperty);
 
-    /*
-     * If we find a shared permanent property in a different object obj2 from
-     * obj, then if the property is shared permanent (an old hack to optimize
-     * per-object properties into one prototype property), ignore that lookup
-     * result (null current).
-     *
-     * FIXME: bug 575997 (see also bug 607863).
-     */
-    if (current && obj2 != obj && obj2->isNative()) {
-        /* See same assertion with comment further below. */
-        JS_ASSERT(obj2->getClass() == obj->getClass());
-
-        Shape *shape = (Shape *) current;
-        if (shape->isSharedPermanent())
-            current = NULL;
-    }
-
     /* 8.12.9 steps 2-4. */
     if (!current) {
         if (!obj->isExtensible())
@@ -2108,15 +2078,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
     Value v = UndefinedValue();
 
-    /*
-     * In the special case of shared permanent properties, the "own" property
-     * can be found on a different object.  In that case the returned property
-     * might not be native, except: the shared permanent property optimization
-     * is not applied if the objects have different classes (bug 320854), as
-     * must be enforced by js_HasOwnProperty for the Shape cast below to be
-     * safe.
-     */
-    JS_ASSERT(obj->getClass() == obj2->getClass());
+    JS_ASSERT(obj == obj2);
 
     const Shape *shape = reinterpret_cast<Shape *>(current);
     do {
@@ -5788,25 +5750,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
         return false;
     if (!prop || proto != obj) {
         /*
-         * If the property was found in a native prototype, check whether it's
-         * shared and permanent.  Such a property stands for direct properties
-         * in all delegating objects, matching ECMA semantics without bloating
-         * each delegating object.
-         */
-        if (prop && proto->isNative()) {
-            shape = (Shape *)prop;
-            if (shape->isSharedPermanent()) {
-                if (strict)
-                    return obj->reportNotConfigurable(cx, id);
-                rval->setBoolean(false);
-                return true;
-            }
-        }
-
-        /*
-         * If no property, or the property comes unshared or impermanent from
-         * a prototype, call the class's delProperty hook, passing rval as the
-         * result parameter.
+         * If no property, or the property comes from a prototype, call the
+         * class's delProperty hook, passing rval as the result parameter.
          */
         return CallJSPropertyOp(cx, obj->getClass()->delProperty, obj, id, rval);
     }

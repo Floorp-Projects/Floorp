@@ -110,10 +110,9 @@ gfxDWriteShaper::InitTextRun(gfxContext *aContext,
             }
         }
 
-        gfxTextRange range(aRunStart + rangeOffset,
-                           aRunStart + rangeOffset + rangeLen);
+        PRUint32 rangeStart = aRunStart + rangeOffset;
         rangeOffset += rangeLen;
-        TextAnalysis analysis(aString + range.start, range.Length(),
+        TextAnalysis analysis(aString + rangeStart, rangeLen,
             NULL, 
             readingDirection);
         TextAnalysis::Run *runHead;
@@ -130,18 +129,18 @@ gfxDWriteShaper::InitTextRun(gfxContext *aContext,
 
         UINT32 maxGlyphs = 0;
 trymoreglyphs:
-        if ((PR_UINT32_MAX - 3 * range.Length() / 2 + 16) < maxGlyphs) {
+        if ((PR_UINT32_MAX - 3 * rangeLen / 2 + 16) < maxGlyphs) {
             // This isn't going to work, we're going to cross the UINT32 upper
             // limit. Next range it is.
             continue;
         }
-        maxGlyphs += 3 * range.Length() / 2 + 16;
+        maxGlyphs += 3 * rangeLen / 2 + 16;
 
         nsAutoTArray<UINT16, 400> clusters;
         nsAutoTArray<UINT16, 400> indices;
         nsAutoTArray<DWRITE_SHAPING_TEXT_PROPERTIES, 400> textProperties;
         nsAutoTArray<DWRITE_SHAPING_GLYPH_PROPERTIES, 400> glyphProperties;
-        if (!clusters.SetLength(range.Length()) ||
+        if (!clusters.SetLength(rangeLen) ||
             !indices.SetLength(maxGlyphs) || 
             !textProperties.SetLength(maxGlyphs) ||
             !glyphProperties.SetLength(maxGlyphs)) {
@@ -150,7 +149,7 @@ trymoreglyphs:
 
         UINT32 actualGlyphs;
 
-        hr = analyzer->GetGlyphs(aString + range.start, range.Length(),
+        hr = analyzer->GetGlyphs(aString + rangeStart, rangeLen,
             font->GetFontFace(), FALSE, 
             readingDirection == DWRITE_READING_DIRECTION_RIGHT_TO_LEFT,
             &runHead->mScript, NULL, NULL, NULL, NULL, 0,
@@ -177,10 +176,10 @@ trymoreglyphs:
 
         if (!static_cast<gfxDWriteFont*>(mFont)->mUseSubpixelPositions) {
             hr = analyzer->GetGdiCompatibleGlyphPlacements(
-                                              aString + range.start,
+                                              aString + rangeStart,
                                               clusters.Elements(),
                                               textProperties.Elements(),
-                                              range.Length(),
+                                              rangeLen,
                                               indices.Elements(),
                                               glyphProperties.Elements(),
                                               actualGlyphs,
@@ -199,10 +198,10 @@ trymoreglyphs:
                                               advances.Elements(),
                                               glyphOffsets.Elements());
         } else {
-            hr = analyzer->GetGlyphPlacements(aString + range.start,
+            hr = analyzer->GetGlyphPlacements(aString + rangeStart,
                                               clusters.Elements(),
                                               textProperties.Elements(),
-                                              range.Length(),
+                                              rangeLen,
                                               indices.Elements(),
                                               glyphProperties.Elements(),
                                               actualGlyphs,
@@ -226,9 +225,9 @@ trymoreglyphs:
 
         nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
 
-        for (unsigned int c = 0; c < range.Length(); c++) {
+        for (unsigned int c = 0; c < rangeLen; c++) {
             PRUint32 k = clusters[c];
-            PRUint32 absC = range.start + c;
+            PRUint32 absC = rangeStart + c;
 
             if (c > 0 && k == clusters[c - 1]) {
                 g.SetComplex(aTextRun->IsClusterStart(absC), PR_FALSE, 0);
@@ -241,7 +240,7 @@ trymoreglyphs:
             PRUint32 glyphCount = actualGlyphs - k;
             PRUint32 nextClusterOffset;
             for (nextClusterOffset = c + 1; 
-                nextClusterOffset < range.Length(); ++nextClusterOffset) {
+                nextClusterOffset < rangeLen; ++nextClusterOffset) {
                 if (clusters[nextClusterOffset] > k) {
                     glyphCount = clusters[nextClusterOffset] - k;
                     break;

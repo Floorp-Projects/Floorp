@@ -28,12 +28,15 @@ function test() {
     EventUtils.synthesizeMouseAtCenter(targetTab, {type: 'mousemove'}, cw);
     EventUtils.synthesizeMouseAtCenter(targetTab, {type: 'mouseup'}, cw);
 
+    is(cw.GroupItems.groupItems.length, 2, 'there are two groupItems');
+    is(sourceGroup.getChildren().length, 0, 'source group has no tabs');
     is(targetGroup.getChildren().length, 2, 'target group has two tabs');
-    is(cw.GroupItems.groupItems.length, 1, 'sourceGroup was closed');
-    isnot(cw.GroupItems.groupItems[0], sourceGroup, 'sourceGroup was closed');
 
     targetGroup.getChild(0).close();
-    hideTabView(finish);
+
+    closeGroupItem(sourceGroup, function () {
+      hideTabView(finish);
+    });
   }
 
   waitForExplicitFinish();

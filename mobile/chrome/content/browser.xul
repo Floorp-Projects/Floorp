@@ -597,7 +597,7 @@
       </vbox>
     </vbox>
 
-    <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true">
+    <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
       <vbox id="context-popup" class="dialog-dark">
         <hbox id="context-header">
           <label id="context-hint" crop="center" flex="1"/>
@@ -707,6 +707,9 @@
         label="&pageactions.saveas.pdf;"
         oncommand="PageActions.savePageAsPDF();"/>
 #endif
+      <toolbarbutton class="appmenu-quit-button appmenu-button"
+        label="&pageactions.quit;"
+        oncommand="Browser.quit();"/>
     </hbox>
   </stack>
 

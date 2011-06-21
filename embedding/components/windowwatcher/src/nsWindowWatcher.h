@@ -118,9 +118,6 @@ protected:
   static nsresult   URIfromURL(const char *aURL,
                                nsIDOMWindow *aParent,
                                nsIURI **aURI);
-#ifdef DEBUG
-  static void       CheckWindowName(nsString& aName);
-#endif
   
   static PRUint32   CalculateChromeFlags(const char *aFeatures,
                                          PRBool aFeaturesSpecified,

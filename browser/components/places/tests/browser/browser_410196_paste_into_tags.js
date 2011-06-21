@@ -24,12 +24,12 @@ let PlacesOrganizer;
 
 function test() {
   waitForExplicitFinish();
-  gLibrary = window.openDialog("chrome://browser/content/places/places.xul",
-                               "", "chrome,toolbar=yes,dialog=no,resizable");
-  waitForFocus(onLibraryReady, gLibrary);
+  openLibrary(onLibraryReady);
 }
 
-function onLibraryReady() {
+function onLibraryReady(library) {
+  gLibrary = library;
+
   ok(PlacesUtils, "PlacesUtils in scope");
   ok(PlacesUIUtils, "PlacesUIUtils in scope");
 

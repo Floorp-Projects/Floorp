@@ -94,10 +94,10 @@
 #include "jsscopeinlines.h"
 #include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
 #include "assembler/wtf/Platform.h"
 
 #include "vm/Stack-inl.h"
+#include "vm/String-inl.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -688,7 +688,7 @@ JSRuntime::init(uint32 maxbytes)
         return false;
     }
 
-    atomsCompartment->setGCLastBytes(8192);
+    atomsCompartment->setGCLastBytes(8192, GC_NORMAL);
 
     if (!js_InitAtomState(this))
         return false;
@@ -711,7 +711,15 @@ JSRuntime::init(uint32 maxbytes)
 #endif
 
     debugMode = JS_FALSE;
-    return js_InitThreads(this);
+
+    if (!js_InitThreads(this))
+        return false;
+    if (!InitRuntimeNumberState(this))
+        return false;
+    if (!InitRuntimeScriptState(this))
+        return false;
+
+    return true;
 }
 
 JSRuntime::~JSRuntime()
@@ -737,8 +745,9 @@ JSRuntime::~JSRuntime()
     FinishJIT();
 #endif
 
+    FreeRuntimeScriptState(this);
+    FinishRuntimeNumberState(this);
     js_FinishThreads(this);
-    js_FreeRuntimeScriptState(this);
     js_FinishAtomState(this);
 
     js_FinishGC(this);
@@ -2727,7 +2736,8 @@ JS_PUBLIC_API(void)
 JS_FlushCaches(JSContext *cx)
 {
 #ifdef JS_TRACER
-    FlushJITCache(cx, &cx->compartment->traceMonitor);
+    if (cx->compartment->hasTraceMonitor())
+        FlushJITCache(cx, cx->compartment->traceMonitor());
 #endif
 }
 
