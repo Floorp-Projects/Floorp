@@ -45,6 +45,7 @@ load 473914-1.html
 load 478321-1.xhtml
 load 512851-1.xhtml
 load 539613-1.xhtml
+load 588627-1.html
 skip load long-url-list-stack-overflow.html # skipped due to being slow (bug 477490)
 load 495269-1.html
 load 495269-2.html

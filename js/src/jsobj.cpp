@@ -917,16 +917,6 @@ obj_valueOf(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-/*
- * Check if CSP allows new Function() or eval() to run in the current
- * principals.
- */
-JSBool
-js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeobj)
-{
-    return scopeobj->getGlobal()->isEvalAllowed(cx);
-}
-
 /* We should be able to assert this for *any* fp->scopeChain(). */
 static void
 AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
@@ -1129,11 +1119,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
     JS_ASSERT((evalType == INDIRECT_EVAL) == (caller == NULL));
     AssertInnerizedScopeChain(cx, scopeobj);
 
-    /*
-     * CSP check: Is eval() allowed at all?
-     * Report errors via CSP is done in the script security mgr.
-     */
-    if (!js_CheckContentSecurityPolicy(cx, &scopeobj)) {
+    if (!scopeobj.getGlobal()->isRuntimeCodeGenEnabled(cx)) {
         JS_ReportError(cx, "call to eval() blocked by CSP");
         return false;
     }
@@ -1498,7 +1484,6 @@ js_HasOwnProperty(JSContext *cx, LookupPropOp lookup, JSObject *obj, jsid id,
     if (*objp == obj)
         return true;
 
-    Class *clasp = (*objp)->getClass();
     JSObject *outer = NULL;
     if (JSObjectOp op = (*objp)->getClass()->ext.outerObject) {
         outer = op(cx, *objp);
@@ -1506,30 +1491,8 @@ js_HasOwnProperty(JSContext *cx, LookupPropOp lookup, JSObject *obj, jsid id,
             return false;
     }
 
-    if (outer != *objp) {
-        if ((*objp)->isNative() && obj->getClass() == clasp) {
-            /*
-             * The combination of JSPROP_SHARED and JSPROP_PERMANENT in a
-             * delegated property makes that property appear to be direct in
-             * all delegating instances of the same native class.  This hack
-             * avoids bloating every function instance with its own 'length'
-             * (AKA 'arity') property.  But it must not extend across class
-             * boundaries, to avoid making hasOwnProperty lie (bug 320854).
-             *
-             * It's not really a hack, of course: a permanent property can't
-             * be deleted, and JSPROP_SHARED means "don't allocate a slot in
-             * any instance, prototype or delegating".  Without a slot, and
-             * without the ability to remove and recreate (with differences)
-             * the property, there is no way to tell whether it is directly
-             * owned, or indirectly delegated.
-             */
-            Shape *shape = reinterpret_cast<Shape *>(*propp);
-            if (shape->isSharedPermanent())
-                return true;
-        }
-
+    if (outer != *objp)
         *propp = NULL;
-    }
     return true;
 }
 
@@ -1577,39 +1540,26 @@ js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JSObject *pobj;
     JSProperty *prop;
     if (!obj->lookupProperty(cx, id, &pobj, &prop))
-        return JS_FALSE;
+        return false;
 
     if (!prop) {
         vp->setBoolean(false);
-        return JS_TRUE;
+        return true;
     }
 
     /*
-     * XXX ECMA spec error compatible: return false unless hasOwnProperty.
-     * The ECMA spec really should be fixed so propertyIsEnumerable and the
-     * for..in loop agree on whether prototype properties are enumerable,
-     * obviously by fixing this method (not by breaking the for..in loop!).
-     *
-     * We check here for shared permanent prototype properties, which should
-     * be treated as if they are local to obj.  They are an implementation
-     * technique used to satisfy ECMA requirements; users should not be able
-     * to distinguish a shared permanent proto-property from a local one.
+     * ECMA spec botch: return false unless hasOwnProperty. Leaving "own" out
+     * of propertyIsEnumerable's name was a mistake.
      */
-    bool shared;
-    uintN attrs;
-    if (pobj->isNative()) {
-        Shape *shape = (Shape *) prop;
-        shared = shape->isSharedPermanent();
-        attrs = shape->attributes();
-    } else {
-        shared = false;
-        if (!pobj->getAttributes(cx, id, &attrs))
-            return false;
-    }
-    if (pobj != obj && !shared) {
+    if (pobj != obj) {
         vp->setBoolean(false);
         return true;
     }
+
+    uintN attrs;
+    if (!pobj->getAttributes(cx, id, &attrs))
+        return false;
+
     vp->setBoolean((attrs & JSPROP_ENUMERATE) != 0);
     return true;
 }
@@ -2096,23 +2046,6 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
 
     JS_ASSERT(!obj->getOps()->defineProperty);
 
-    /*
-     * If we find a shared permanent property in a different object obj2 from
-     * obj, then if the property is shared permanent (an old hack to optimize
-     * per-object properties into one prototype property), ignore that lookup
-     * result (null current).
-     *
-     * FIXME: bug 575997 (see also bug 607863).
-     */
-    if (current && obj2 != obj && obj2->isNative()) {
-        /* See same assertion with comment further below. */
-        JS_ASSERT(obj2->getClass() == obj->getClass());
-
-        Shape *shape = (Shape *) current;
-        if (shape->isSharedPermanent())
-            current = NULL;
-    }
-
     /* 8.12.9 steps 2-4. */
     if (!current) {
         if (!obj->isExtensible())
@@ -2145,15 +2078,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
     Value v = UndefinedValue();
 
-    /*
-     * In the special case of shared permanent properties, the "own" property
-     * can be found on a different object.  In that case the returned property
-     * might not be native, except: the shared permanent property optimization
-     * is not applied if the objects have different classes (bug 320854), as
-     * must be enforced by js_HasOwnProperty for the Shape cast below to be
-     * safe.
-     */
-    JS_ASSERT(obj->getClass() == obj2->getClass());
+    JS_ASSERT(obj == obj2);
 
     const Shape *shape = reinterpret_cast<Shape *>(current);
     do {
@@ -5825,25 +5750,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
         return false;
     if (!prop || proto != obj) {
         /*
-         * If the property was found in a native prototype, check whether it's
-         * shared and permanent.  Such a property stands for direct properties
-         * in all delegating objects, matching ECMA semantics without bloating
-         * each delegating object.
-         */
-        if (prop && proto->isNative()) {
-            shape = (Shape *)prop;
-            if (shape->isSharedPermanent()) {
-                if (strict)
-                    return obj->reportNotConfigurable(cx, id);
-                rval->setBoolean(false);
-                return true;
-            }
-        }
-
-        /*
-         * If no property, or the property comes unshared or impermanent from
-         * a prototype, call the class's delProperty hook, passing rval as the
-         * result parameter.
+         * If no property, or the property comes from a prototype, call the
+         * class's delProperty hook, passing rval as the result parameter.
          */
         return CallJSPropertyOp(cx, obj->getClass()->delProperty, obj, id, rval);
     }
@@ -5905,30 +5813,49 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
 
 namespace js {
 
-JSObject *
-HasNativeMethod(JSObject *obj, jsid methodid, Native native)
+bool
+HasDataProperty(JSObject *obj, jsid methodid, Value *vp)
 {
-    const Shape *shape = obj->nativeLookup(methodid);
-    if (!shape || !shape->hasDefaultGetter() || !obj->containsSlot(shape->slot))
-        return NULL;
+    if (const Shape *shape = obj->nativeLookup(methodid)) {
+        if (shape->hasDefaultGetterOrIsMethod() && obj->containsSlot(shape->slot)) {
+            *vp = obj->nativeGetSlot(shape->slot);
+            return true;
+        }
+    }
 
-    const Value &fval = obj->nativeGetSlot(shape->slot);
-    JSObject *funobj;
-    if (!IsFunctionObject(fval, &funobj) || funobj->getFunctionPrivate()->maybeNative() != native)
-        return NULL;
-
-    return funobj;
+    return false;
 }
 
-bool
+/*
+ * Gets |obj[id]|.  If that value's not callable, returns true and stores a
+ * non-primitive value in *vp.  If it's callable, calls it with no arguments
+ * and |obj| as |this|, returning the result in *vp.
+ *
+ * This is a mini-abstraction for ES5 8.12.8 [[DefaultValue]], either steps 1-2
+ * or steps 3-4.
+ */
+static bool
+MaybeCallMethod(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+{
+    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, vp))
+        return false;
+    if (!js_IsCallable(*vp)) {
+        *vp = ObjectValue(*obj);
+        return true;
+    }
+    return ExternalInvoke(cx, ObjectValue(*obj), *vp, 0, NULL, vp);
+}
+
+JSBool
 DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
 {
-    JS_ASSERT(hint != JSTYPE_OBJECT && hint != JSTYPE_FUNCTION);
+    JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
+    JS_ASSERT(!obj->isXML());
 
-    Value v = ObjectValue(*obj);
+    Class *clasp = obj->getClass();
     if (hint == JSTYPE_STRING) {
         /* Optimize (new String(...)).toString(). */
-        if (obj->getClass() == &js_StringClass &&
+        if (clasp == &js_StringClass &&
             ClassMethodIsNative(cx, obj,
                                  &js_StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
@@ -5937,24 +5864,17 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             return true;
         }
 
-        Value fval;
-        jsid id = ATOM_TO_JSID(cx->runtime->atomState.toStringAtom);
-        if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
+        if (!MaybeCallMethod(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.toStringAtom), vp))
             return false;
-        if (js_IsCallable(fval)) {
-            if (!ExternalInvoke(cx, ObjectValue(*obj), fval, 0, NULL, &v))
-                return false;
-            if (v.isPrimitive()) {
-                *vp = v;
-                return true;
-            }
-        }
+        if (vp->isPrimitive())
+            return true;
 
-        if (!obj->getClass()->convert(cx, obj, hint, &v))
+        if (!MaybeCallMethod(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom), vp))
             return false;
+        if (vp->isPrimitive())
+            return true;
     } else {
         /* Optimize (new String(...)).valueOf(). */
-        Class *clasp = obj->getClass();
         if ((clasp == &js_StringClass &&
              ClassMethodIsNative(cx, obj, &js_StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom),
@@ -5967,44 +5887,30 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             return true;
         }
 
-        if (!obj->getClass()->convert(cx, obj, hint, &v))
+        if (!MaybeCallMethod(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom), vp))
             return false;
-        if (v.isObject()) {
-            JS_ASSERT(hint != TypeOfValue(cx, v));
-            Value fval;
-            jsid id = ATOM_TO_JSID(cx->runtime->atomState.toStringAtom);
-            if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
-                return false;
-            if (js_IsCallable(fval)) {
-                if (!ExternalInvoke(cx, ObjectValue(*obj), fval, 0, NULL, &v))
-                    return false;
-                if (v.isPrimitive()) {
-                    *vp = v;
-                    return true;
-                }
-            }
-        }
+        if (vp->isPrimitive())
+            return true;
+
+        if (!MaybeCallMethod(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.toStringAtom), vp))
+            return false;
+        if (vp->isPrimitive())
+            return true;
     }
-    if (v.isObject()) {
-        /* Avoid recursive death when decompiling in js_ReportValueError. */
-        JSString *str;
-        if (hint == JSTYPE_STRING) {
-            str = JS_InternString(cx, obj->getClass()->name);
-            if (!str)
-                return false;
-        } else {
-            str = NULL;
-        }
-        vp->setObject(*obj);
-        js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO,
-                             JSDVG_SEARCH_STACK, *vp, str,
-                             (hint == JSTYPE_VOID)
-                             ? "primitive type"
-                             : JS_TYPE_STR(hint));
-        return false;
+
+    /* Avoid recursive death when decompiling in js_ReportValueError. */
+    JSString *str;
+    if (hint == JSTYPE_STRING) {
+        str = JS_InternString(cx, clasp->name);
+        if (!str)
+            return false;
+    } else {
+        str = NULL;
     }
-    *vp = v;
-    return true;
+
+    js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, JSDVG_SEARCH_STACK, ObjectValue(*obj), str,
+                         (hint == JSTYPE_VOID) ? "primitive type" : JS_TYPE_STR(hint));
+    return false;
 }
 
 } /* namespace js */
@@ -6288,26 +6194,6 @@ js_ValueToNonNullObject(JSContext *cx, const Value &v)
     if (!obj)
         js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, v, NULL);
     return obj;
-}
-
-JSBool
-js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, Value *rval)
-{
-    Value fval;
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom);
-    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
-        return false;
-    if (js_IsCallable(fval)) {
-        Value v;
-        Value argv[] = { StringValue(cx->runtime->atomState.typeAtoms[type]) };
-        if (!ExternalInvoke(cx, ObjectValue(*obj), fval, JS_ARRAY_LENGTH(argv), argv, &v))
-            return false;
-        if (v.isPrimitive()) {
-            *rval = v;
-            return true;
-        }
-    }
-    return true;
 }
 
 #if JS_HAS_XDR
