@@ -1,3 +1,8 @@
+/*
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/licenses/publicdomain/
+ */
+
 // Some simple testing of new, eval and some string stuff.
 
 // constructor -- expression array initialization
@@ -14,6 +19,7 @@ function ExprArray(n,v)
 function perfect(n)
 {
     print("The perfect numbers up to " +  n + " are:");
+    var results = [];
 
     // We build sumOfDivisors[i] to hold a string expression for
     // the sum of the divisors of i, excluding i itself.
@@ -27,13 +33,15 @@ function perfect(n)
 	// already by evaluating.
 	if (eval(sumOfDivisors[divisor]) == divisor) {
 	    print("" + divisor + " = " + sumOfDivisors[divisor]);
+	    results.push(divisor);
 	}
     }
     print("That's all.");
+    return results;
 }
 
 
 print("\nA number is 'perfect' if it is equal to the sum of its")
 print("divisors (excluding itself).\n");
-perfect(500);
 
+reportCompare(perfect(500).join(), "6,28,496");
