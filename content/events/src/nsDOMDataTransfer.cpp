@@ -803,7 +803,9 @@ nsDOMDataTransfer::GetCurrentPrincipal()
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
 
   nsCOMPtr<nsIPrincipal> currentPrincipal;
-  ssm->GetSubjectPrincipal(getter_AddRefs(currentPrincipal));
+  nsresult rv = ssm->GetSubjectPrincipal(getter_AddRefs(currentPrincipal));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
   if (!currentPrincipal)
     ssm->GetSystemPrincipal(getter_AddRefs(currentPrincipal));
 
