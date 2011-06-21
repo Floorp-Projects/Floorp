@@ -223,6 +223,11 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                       NS_LITERAL_STRING("text"), PR_FALSE);
 
+  // Initialize the text field value:
+  nsAutoString value;
+  HTMLInputElement::FromContent(mContent)->GetValue(value);
+  mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::value, value, false);
+
   if (mContent->AsElement()->State().HasState(NS_EVENT_STATE_FOCUS)) {
     // We don't want to focus the frame but the text field.
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -276,4 +281,14 @@ nsNumberControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 {
   // Only one direct anonymous child:
   aElements.MaybeAppendElement(mOuterWrapper);
+}
+
+void
+nsNumberControlFrame::UpdateForValueChange(const nsAString& aValue)
+{
+  // We need to update the value of our anonymous text control here. Note that
+  // this must be its value, and not its 'value' attribute (the default value),
+  // since the default value is ignored once a user types into the text
+  // control.
+  HTMLInputElement::FromContent(mTextField)->SetValue(aValue);
 }
