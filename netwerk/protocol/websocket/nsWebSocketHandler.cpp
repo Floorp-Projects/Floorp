@@ -488,6 +488,7 @@ nsWebSocketHandler::nsWebSocketHandler() :
     mReleaseOnTransmit(0),
     mMaxMessageSize(16000000),
     mStopOnClose(NS_OK),
+    mCloseCode(kCloseAbnormal),
     mFragmentOpcode(0),
     mFragmentAccumulator(0),
     mBuffered(0),
@@ -868,11 +869,11 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
                 LOG(("WebSocketHandler:: close received\n"));
                 mServerClosed = 1;
                 
+                mCloseCode = kCloseNoStatus;
                 if (payloadLength >= 2) {
-                    PRUint16 code;
-                    memcpy(&code, payload, 2);
-                    code = PR_ntohs(code);
-                    LOG(("WebSocketHandler:: close recvd code %u\n", code));
+                    memcpy(&mCloseCode, payload, 2);
+                    mCloseCode = PR_ntohs(mCloseCode);
+                    LOG(("WebSocketHandler:: close recvd code %u\n", mCloseCode));
                     PRUint16 msglen = payloadLength - 2;
                     if (msglen > 0) {
                         nsCString utf8Data((const char *)payload + 2, msglen);
@@ -1067,6 +1068,21 @@ nsWebSocketHandler::SendMsgInternal(nsCString *aMsg,
     OnOutputStreamReady(mSocketOut);
 }
 
+PRUint16
+nsWebSocketHandler::ResultToCloseCode(nsresult resultCode)
+{
+    if (NS_SUCCEEDED(resultCode))
+        return kCloseNormal;
+    if (resultCode == NS_ERROR_FILE_TOO_BIG)
+        return kCloseTooLarge;
+    if (resultCode == NS_BASE_STREAM_CLOSED ||
+        resultCode == NS_ERROR_NET_TIMEOUT ||
+        resultCode == NS_ERROR_CONNECTION_REFUSED)
+        return kCloseAbnormal;
+    
+    return kCloseProtocolError;
+}
+
 void
 nsWebSocketHandler::PrimeNewOutgoingMessage()
 {
@@ -1113,12 +1129,7 @@ nsWebSocketHandler::PrimeNewOutgoingMessage()
         payload = mOutHeader + 6;
         
         // The close reason code sits in the first 2 bytes of payload
-        if (NS_SUCCEEDED(mStopOnClose))
-            *((PRUint16 *)payload) = PR_htons(kCloseNormal);
-        else if (mStopOnClose == NS_ERROR_FILE_TOO_BIG)
-            *((PRUint16 *)payload) = PR_htons(kCloseTooLarge);
-        else
-            *((PRUint16 *)payload) = PR_htons(kCloseProtocolError);
+        *((PRUint16 *)payload) = PR_htons(ResultToCloseCode(mStopOnClose));
 
         mHdrOutToSend = 8;
         if (mServerClosed) {
