@@ -54,6 +54,11 @@ class LMove : public LInstructionHelper<0, 0, 0>
     struct Entry {
         LAllocation from;
         LAllocation to;
+
+        Entry() { }
+        Entry(const LAllocation &from, const LAllocation &to)
+          : from(from), to(to)
+        { }
     };
 
   private:
@@ -62,21 +67,22 @@ class LMove : public LInstructionHelper<0, 0, 0>
   public:
     LIR_HEADER(Move);
 
+    bool add(const LAllocation &from, const LAllocation &to) {
+        return entries_.append(Entry(from, to));
+    }
+    bool add(const Entry &ent) {
+        return entries_.append(ent);
+    }
     size_t numEntries() {
         return entries_.length();
     }
-
-    bool addEntry(Entry ent) {
-        return entries_.append(ent);
-    }
-
     Entry *getEntry(size_t i) {
         return &entries_[i];
     }
-
     void setEntry(size_t i, Entry ent) {
         entries_[i] = ent;
     }
+    void printOperands(FILE *fp);
 };
 
 // Constant 32-bit integer.
@@ -279,7 +285,6 @@ class LPhi : public LInstruction
         printOperands(fp);
     }
 };
-
 
 } // namespace ion
 } // namespace js

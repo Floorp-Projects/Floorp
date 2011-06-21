@@ -46,6 +46,8 @@ namespace js {
 namespace ion {
 
 static const ptrdiff_t STACK_SLOT_SIZE       = 4;
+static const uint32 MAX_STACK_SLOTS          = 256;
+static const uint32 DOUBLE_ALIGNMENT         = 8;
 
 class RegisterCodes {
   public:
