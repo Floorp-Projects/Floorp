@@ -92,7 +92,8 @@ function checkHistograms(request, response) {
     range: [1, 2],
     bucket_count: 3,
     histogram_type: 2,
-    values: {0:1, 1:1, 2:0}
+    values: {0:1, 1:1, 2:0},
+    sum: 1
   }
   let tc = payload.histograms[TELEMETRY_SUCCESS]
   do_check_eq(uneval(tc), 
