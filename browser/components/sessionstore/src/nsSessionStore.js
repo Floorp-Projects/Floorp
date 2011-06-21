@@ -115,7 +115,8 @@ const CAPABILITIES = [
 
 // These keys are for internal use only - they shouldn't be part of the JSON
 // that gets saved to disk nor part of the strings returned by the API.
-const INTERNAL_KEYS = ["_tabStillLoading", "_hosts", "_formDataSaved"];
+const INTERNAL_KEYS = ["_tabStillLoading", "_hosts", "_formDataSaved",
+                       "_shouldRestore"];
 
 // These are tab events that we listen to.
 const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide",
@@ -195,7 +196,11 @@ SessionStoreService.prototype = {
   _browserSetState: false,
 
   // time in milliseconds (Date.now()) when the session was last written to file
-  _lastSaveTime: 0, 
+  _lastSaveTime: 0,
+
+  // time in milliseconds when the session was started (saved across sessions),
+  // defaults to now if no session was restored or timestamp doesn't exist
+  _sessionStartTime: Date.now(),
 
   // states for all currently opened windows
   _windows: {},
@@ -342,7 +347,12 @@ SessionStoreService.prototype = {
               this._initialState = { windows: [{ tabs: [{ entries: [pageData] }] }] };
             }
           }
-          
+
+          // Load the session start time from the previous state
+          this._sessionStartTime = this._initialState.session &&
+                                   this._initialState.session.startTime ||
+                                   this._sessionStartTime;
+
           // make sure that at least the first window doesn't have anything hidden
           delete this._initialState.windows[0].hidden;
           // Since nothing is hidden in the first window, it cannot be a popup
@@ -515,6 +525,8 @@ SessionStoreService.prototype = {
       // Delete the private browsing backed up state, if any
       if ("_stateBackup" in this)
         delete this._stateBackup;
+
+      this._clearRestoringWindows();
       break;
     case "browser:purge-domain-data":
       // does a session history entry contain a url for the given domain?
@@ -565,6 +577,8 @@ SessionStoreService.prototype = {
       }
       if (this._loadState == STATE_RUNNING)
         this.saveState(true);
+
+      this._clearRestoringWindows();
       break;
     case "nsPref:changed": // catch pref changes
       switch (aData) {
@@ -640,6 +654,8 @@ SessionStoreService.prototype = {
         delete this._stateBackup;
         break;
       }
+
+      this._clearRestoringWindows();
       break;
     case "private-browsing-change-granted":
       if (aData == "enter") {
@@ -652,6 +668,8 @@ SessionStoreService.prototype = {
       // Make sure _tabsToRestore is cleared. It will be repopulated when
       // entering/exiting private browsing (by calls to setBrowserState).
       this._resetRestoringState();
+
+      this._clearRestoringWindows();
       break;
     }
   },
@@ -702,6 +720,8 @@ SessionStoreService.prototype = {
         this.saveStateDelayed(win);
         break;
     }
+
+    this._clearRestoringWindows();
   },
 
   /**
@@ -901,7 +921,13 @@ SessionStoreService.prototype = {
                                                   tabbrowser.selectedTab);
         this._updateCookies([winData]);
       }
-      
+
+#ifndef XP_MACOSX
+      // Until we decide otherwise elsewhere, this window is part of a series
+      // of closing windows to quit.
+      winData._shouldRestore = true;
+#endif
+
       // save the window if it has multiple tabs or a single saveable tab
       if (winData.tabs.length > 1 ||
           (winData.tabs.length == 1 && this._shouldSaveTabState(winData.tabs[0]))) {
@@ -1492,9 +1518,13 @@ SessionStoreService.prototype = {
       this._closedWindows = this._closedWindows.concat(lastSessionState._closedWindows);
       this._capClosedWindows();
     }
-    // Set recent crashes
+
+    // Set data that persists between sessions
     this._recentCrashes = lastSessionState.session &&
                           lastSessionState.session.recentCrashes || 0;
+    this._sessionStartTime = lastSessionState.session &&
+                             lastSessionState.session.startTime ||
+                             this._sessionStartTime;
 
     this._lastSessionState = null;
   },
@@ -3372,6 +3402,22 @@ SessionStoreService.prototype = {
     if (!oState)
       return;
 
+#ifndef XP_MACOSX
+    // We want to restore closed windows that are marked with _shouldRestore.
+    // We're doing this here because we want to control this only when saving
+    // the file.
+    while (oState._closedWindows.length) {
+      let i = oState._closedWindows.length - 1;
+      if (oState._closedWindows[i]._shouldRestore) {
+        oState.windows.unshift(oState._closedWindows.pop());
+      }
+      else {
+        // We only need to go until we hit !needsRestore since we're going in reverse
+        break;
+      }
+    }
+#endif
+
     if (pinnedOnly) {
       // Save original resume_session_once preference for when quiting browser,
       // otherwise session will be restored next time browser starts and we
@@ -3387,7 +3433,8 @@ SessionStoreService.prototype = {
 
     oState.session = {
       state: this._loadState == STATE_RUNNING ? STATE_RUNNING_STR : STATE_STOPPED_STR,
-      lastUpdate: Date.now()
+      lastUpdate: Date.now(),
+      startTime: this._sessionStartTime
     };
     if (this._recentCrashes)
       oState.session.recentCrashes = this._recentCrashes;
@@ -3957,6 +4004,12 @@ SessionStoreService.prototype = {
       spliceTo = normalWindowIndex + 1;
 #endif
     this._closedWindows.splice(spliceTo);
+  },
+
+  _clearRestoringWindows: function sss__clearRestoringWindows() {
+    for (let i = 0; i < this._closedWindows.length; i++) {
+      delete this._closedWindows[i]._shouldRestore;
+    }
   },
 
   /**
