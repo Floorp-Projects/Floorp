@@ -99,8 +99,8 @@ static PRLogModuleInfo *webSocketLog = nsnull;
 // main transmit queue
 #define kFinMessage (reinterpret_cast<nsCString *>(0x01))
 
-// An implementation of draft-ietf-hybi-thewebsocketprotocol-08
-#define SEC_WEBSOCKET_VERSION "8"
+// An implementation of draft-ietf-hybi-thewebsocketprotocol-07
+#define SEC_WEBSOCKET_VERSION "7"
 
 /*
  * About SSL unsigned certificates
