@@ -53,7 +53,7 @@
 #include "nsPresContext.h"
 #include "nsIWidget.h"
 #include "nsIStyleRule.h"
-#include "nsCRT.h"
+#include "nsCRTGlue.h"
 #include "nsCSSProps.h"
 
 #include "nsCOMPtr.h"
@@ -107,6 +107,15 @@ static PRBool EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
   aImage1->GetURI(getter_AddRefs(uri1));
   aImage2->GetURI(getter_AddRefs(uri2));
   return EqualURIs(uri1, uri2);
+}
+
+// A nullsafe wrapper for strcmp. We depend on null-safety.
+static int safe_strcmp(const PRUnichar* a, const PRUnichar* b)
+{
+  if (!a || !b) {
+    return (int)(a - b);
+  }
+  return NS_strcmp(a, b);
 }
 
 static nsChangeHint CalcShadowDifference(nsCSSShadowArray* lhs,
@@ -1444,7 +1453,7 @@ nsStyleImage::SetNull()
   else if (mType == eStyleImageType_Image)
     NS_RELEASE(mImage);
   else if (mType == eStyleImageType_Element)
-    nsCRT::free(mElementId);
+    NS_Free(mElementId);
 
   mType = eStyleImageType_Null;
   mCropRect = nsnull;
@@ -1527,7 +1536,7 @@ nsStyleImage::SetElementId(const PRUnichar* aElementId)
     SetNull();
 
   if (aElementId) {
-    mElementId = nsCRT::strdup(aElementId);
+    mElementId = NS_strdup(aElementId);
     mType = eStyleImageType_Element;
   }
 }
@@ -1685,7 +1694,7 @@ nsStyleImage::operator==(const nsStyleImage& aOther) const
     return *mGradient == *aOther.mGradient;
 
   if (mType == eStyleImageType_Element)
-    return nsCRT::strcmp(mElementId, aOther.mElementId) == 0;
+    return NS_strcmp(mElementId, aOther.mElementId) == 0;
 
   return PR_TRUE;
 }
@@ -2306,7 +2315,7 @@ PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther) const
   if (mType == eStyleContentType_Counter ||
       mType == eStyleContentType_Counters)
     return *mContent.mCounters == *aOther.mContent.mCounters;
-  return nsCRT::strcmp(mContent.mString, aOther.mContent.mString) == 0;
+  return safe_strcmp(mContent.mString, aOther.mContent.mString) == 0;
 }
 
 void
