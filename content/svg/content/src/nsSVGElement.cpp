@@ -1445,6 +1445,20 @@ void nsSVGElement::LengthAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
+nsSVGElement::SetLength(nsIAtom* aName, const nsSVGLength2 &aLength)
+{
+  LengthAttributesInfo lengthInfo = GetLengthInfo();
+
+  for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
+    if (aName == *lengthInfo.mLengthInfo[i].mName) {
+      lengthInfo.mLengths[i] = aLength;
+      return;
+    }
+  }
+  NS_ABORT_IF_FALSE(false, "no length found to set");
+}
+
+void
 nsSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 {
   if (!aDoSetAttr)

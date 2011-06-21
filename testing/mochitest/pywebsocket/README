@@ -8,6 +8,9 @@ files, the second allows python 2.5 to work)
 also includes patch for 663096 to drain input buffers before closing
 in order to avoid RST
 
+also updates blindly version 7 to be version 8 until upstream makes
+real version 8 available
+
 diff --git a/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py b/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py
 --- a/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py
 +++ b/testing/mochitest/pywebsocket/mod_pywebsocket/dispatch.py
