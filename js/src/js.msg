@@ -352,3 +352,4 @@ MSG_DEF(JSMSG_CLEARED_SCOPE,          269, 0, JSEXN_TYPEERR, "attempt to run com
 MSG_DEF(JSMSG_MALFORMED_ESCAPE,       270, 1, JSEXN_SYNTAXERR, "malformed {0} character escape sequence")
 MSG_DEF(JSMSG_BAD_GENEXP_BODY,        271, 1, JSEXN_SYNTAXERR, "illegal use of {0} in generator expression")
 MSG_DEF(JSMSG_XML_PROTO_FORBIDDEN,    272, 0, JSEXN_TYPEERR, "can't set prototype of an object to an XML value")
+MSG_DEF(JSMSG_UNNAMED_FUNCTION_STMT,  273, 0, JSEXN_SYNTAXERR, "function statement requires a name")
