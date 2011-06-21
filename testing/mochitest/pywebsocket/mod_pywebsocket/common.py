@@ -29,7 +29,7 @@
 
 
 # Constants indicating WebSocket protocol version.
-VERSION_HYBI07 = 8
+VERSION_HYBI07 = 7
 VERSION_HYBI00 = 0
 VERSION_HIXIE75 = -1
 
