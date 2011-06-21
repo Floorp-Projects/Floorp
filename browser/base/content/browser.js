@@ -5919,10 +5919,6 @@ var BrowserOffline = {
     }
 
     ioService.offline = !ioService.offline;
-
-    // Save the current state for later use as the initial state
-    // (if there is no netLinkService)
-    gPrefService.setBoolPref("browser.offline", ioService.offline);
   },
 
   /////////////////////////////////////////////////////////////////////////////
