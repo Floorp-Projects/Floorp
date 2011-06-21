@@ -83,6 +83,7 @@ CPPSRCS		= \
 		XPCWrapper.cpp \
 		xpcquickstubs.cpp \
 		dom_quickstubs.cpp \
+		dombindings.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
