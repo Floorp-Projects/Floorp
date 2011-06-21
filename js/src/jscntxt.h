@@ -800,15 +800,9 @@ OptionsHasXML(uint32 options)
 }
 
 static inline bool
-OptionsHasAnonFunFix(uint32 options)
-{
-    return !!(options & JSOPTION_ANONFUNFIX);
-}
-
-static inline bool
 OptionsSameVersionFlags(uint32 self, uint32 other)
 {
-    static const uint32 mask = JSOPTION_XML | JSOPTION_ANONFUNFIX;
+    static const uint32 mask = JSOPTION_XML;
     return !((self & mask) ^ (other & mask));
 }
 
@@ -823,7 +817,6 @@ OptionsSameVersionFlags(uint32 self, uint32 other)
 namespace VersionFlags {
 static const uintN MASK         = 0x0FFF; /* see JSVersion in jspubtd.h */
 static const uintN HAS_XML      = 0x1000; /* flag induced by XML option */
-static const uintN ANONFUNFIX   = 0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
 static const uintN FULL_MASK    = 0x3FFF;
 }
 
@@ -846,12 +839,6 @@ VersionShouldParseXML(JSVersion version)
     return VersionHasXML(version) || VersionNumber(version) >= JSVERSION_1_6;
 }
 
-static inline bool
-VersionHasAnonFunFix(JSVersion version)
-{
-    return !!(version & VersionFlags::ANONFUNFIX);
-}
-
 static inline void
 VersionSetXML(JSVersion *version, bool enable)
 {
@@ -859,15 +846,6 @@ VersionSetXML(JSVersion *version, bool enable)
         *version = JSVersion(uint32(*version) | VersionFlags::HAS_XML);
     else
         *version = JSVersion(uint32(*version) & ~VersionFlags::HAS_XML);
-}
-
-static inline void
-VersionSetAnonFunFix(JSVersion *version, bool enable)
-{
-    if (enable)
-        *version = JSVersion(uint32(*version) | VersionFlags::ANONFUNFIX);
-    else
-        *version = JSVersion(uint32(*version) & ~VersionFlags::ANONFUNFIX);
 }
 
 static inline JSVersion
@@ -891,8 +869,7 @@ VersionHasFlags(JSVersion version)
 static inline uintN
 VersionFlagsToOptions(JSVersion version)
 {
-    uintN copts = (VersionHasXML(version) ? JSOPTION_XML : 0) |
-                  (VersionHasAnonFunFix(version) ? JSOPTION_ANONFUNFIX : 0);
+    uintN copts = VersionHasXML(version) ? JSOPTION_XML : 0;
     JS_ASSERT((copts & JSCOMPILEOPTION_MASK) == copts);
     return copts;
 }
@@ -901,7 +878,6 @@ static inline JSVersion
 OptionFlagsToVersion(uintN options, JSVersion version)
 {
     VersionSetXML(&version, OptionsHasXML(options));
-    VersionSetAnonFunFix(&version, OptionsHasAnonFunFix(options));
     return version;
 }
 

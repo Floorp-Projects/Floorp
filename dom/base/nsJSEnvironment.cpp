@@ -1022,7 +1022,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 
   ++sContextCount;
 
-  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS | JSOPTION_ANONFUNFIX;
+  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS;
 
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {

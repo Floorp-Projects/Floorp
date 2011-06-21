@@ -1050,6 +1050,8 @@ typedef struct BindData BindData;
 
 namespace js {
 
+enum FunctionSyntaxKind { Expression, Statement };
+
 struct Parser : private js::AutoGCRooter
 {
     JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
@@ -1094,7 +1096,6 @@ struct Parser : private js::AutoGCRooter
     JSVersion versionWithFlags() const { return tokenStream.versionWithFlags(); }
     JSVersion versionNumber() const { return tokenStream.versionNumber(); }
     bool hasXML() const { return tokenStream.hasXML(); }
-    bool hasAnonFunFix() const { return tokenStream.hasAnonFunFix(); }
 
     /*
      * Parse a top-level JS script.
@@ -1113,10 +1114,10 @@ struct Parser : private js::AutoGCRooter
     JSFunctionBox *newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc);
 
     /*
-     * Create a new function object given tree context (tc), optional name
-     * (atom may be null) and lambda flag (JSFUN_LAMBDA or 0).
+     * Create a new function object given tree context (tc) and a name (which
+     * is optional if this is a function expression).
      */
-    JSFunction *newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda);
+    JSFunction *newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind);
 
     /*
      * Analyze the tree of functions nested within a single compilation unit,
@@ -1203,7 +1204,7 @@ private:
     enum FunctionType { GETTER, SETTER, GENERAL };
     bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNode **list);
     JSParseNode *functionBody();
-    JSParseNode *functionDef(JSAtom *name, FunctionType type, uintN lambda);
+    JSParseNode *functionDef(JSAtom *name, FunctionType type, FunctionSyntaxKind kind);
 
     JSParseNode *condition();
     JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
