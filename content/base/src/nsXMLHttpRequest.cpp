@@ -480,7 +480,8 @@ nsXMLHttpRequest::Init()
   nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
   if (secMan) {
-    secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+    nsresult rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_STATE(subjectPrincipal);
   mPrincipal = subjectPrincipal;
