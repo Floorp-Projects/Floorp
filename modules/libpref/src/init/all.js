@@ -272,8 +272,7 @@ pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
 // Telemetry
 pref("toolkit.telemetry.enabled", false);
-// Telemetry test server to be used until the official one is public
-pref("toolkit.telemetry.server", "http://telemetry.allizom.org");
+pref("toolkit.telemetry.server", "https://data.mozilla.com");
 
 // view source
 pref("view_source.syntax_highlight", true);
