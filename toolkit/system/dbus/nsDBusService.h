@@ -67,10 +67,7 @@ public:
  * for NetworkManager state changes; we set nsIOService's offline status to
  * FALSE when NetworkManager reports NM_STATE_CONNECTED, and to TRUE otherwise.
  * We also solicit the current status from NetworkManager when this component
- * gets loaded. In addition to setting IOService, we also set the
- * "browser.offline" preference (because Firefox treats that preference as
- * authoritative). We have to wait until prefs have been loaded before setting
- * "browser.offline".
+ * gets loaded.
  * 
  * In the future we could extend this class to talk to other daemons.
  * 
