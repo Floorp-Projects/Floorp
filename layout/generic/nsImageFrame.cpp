@@ -101,6 +101,7 @@
 #include "ImageLayers.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Util.h" // for DebugOnly
 
 using namespace mozilla;
 
@@ -773,7 +774,7 @@ nsImageFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
-  nscoord result;
+  DebugOnly<nscoord> result;
   DISPLAY_MIN_WIDTH(this, result);
   nsPresContext *presContext = PresContext();
   EnsureIntrinsicSizeAndRatio(presContext);
@@ -786,7 +787,7 @@ nsImageFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
-  nscoord result;
+  DebugOnly<nscoord> result;
   DISPLAY_PREF_WIDTH(this, result);
   nsPresContext *presContext = PresContext();
   EnsureIntrinsicSizeAndRatio(presContext);

@@ -67,6 +67,9 @@ import android.net.Uri;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import android.graphics.drawable.*;
+import android.graphics.Bitmap;
+
 public class GeckoAppShell
 {
     // static members only
@@ -772,7 +775,34 @@ public class GeckoAppShell
         } else if (aMimeType.length() > 0) {
             intent.setDataAndType(Uri.parse(aUriSpec), aMimeType);
         } else {
-            intent.setData(Uri.parse(aUriSpec));
+            Uri uri = Uri.parse(aUriSpec);
+            if ("sms".equals(uri.getScheme())) {
+                // Have a apecial handling for the SMS, as the message body
+                // is not extracted from the URI automatically
+                final String query = uri.getEncodedQuery();
+                if (query != null && query.length() > 0) {
+                    final String[] fields = query.split("&");
+                    boolean foundBody = false;
+                    String resultQuery = "";
+                    for (int i = 0; i < fields.length; i++) {
+                        final String field = fields[i];
+                        if (field.length() > 5 && "body=".equals(field.substring(0, 5))) {
+                            final String body = Uri.decode(field.substring(5));
+                            intent.putExtra("sms_body", body);
+                            foundBody = true;
+                        }
+                        else {
+                            resultQuery = resultQuery.concat(resultQuery.length() > 0 ? "&" + field : field);
+                        }
+                    }
+                    if (foundBody) {
+                        // Put the query without the body field back into the URI
+                        final String prefix = aUriSpec.substring(0, aUriSpec.indexOf('?'));
+                        uri = Uri.parse(resultQuery.length() > 0 ? prefix + "?" + resultQuery : prefix);
+                    }
+                }
+            }
+            intent.setData(uri);
         }
         if (aPackageName.length() > 0 && aClassName.length() > 0)
             intent.setClassName(aPackageName, aClassName);
@@ -1150,5 +1180,58 @@ public class GeckoAppShell
     public static void scanMedia(String aFile, String aMimeType) {
         Context context = GeckoApp.surfaceView.getContext();
         GeckoMediaScannerClient client = new GeckoMediaScannerClient(context, aFile, aMimeType);
+    }
+
+    public static byte[] getIconForExtension(String aExt, int iconSize) {
+        try {
+            if (iconSize <= 0)
+                iconSize = 16;
+
+            if (aExt != null && aExt.length() > 1 && aExt.charAt(0) == '.')
+                aExt = aExt.substring(1);
+
+            PackageManager pm = GeckoApp.surfaceView.getContext().getPackageManager();
+            Drawable icon = getDrawableForExtension(pm, aExt);
+            if (icon == null) {
+                // Use a generic icon
+                icon = pm.getDefaultActivityIcon();
+            }
+
+            Bitmap bitmap = ((BitmapDrawable)icon).getBitmap();
+            if (bitmap.getWidth() != iconSize || bitmap.getHeight() != iconSize)
+                bitmap = Bitmap.createScaledBitmap(bitmap, iconSize, iconSize, true);
+
+            ByteBuffer buf = ByteBuffer.allocate(iconSize * iconSize * 4);
+            bitmap.copyPixelsToBuffer(buf);
+
+            return buf.array();
+        }
+        catch (Exception e) {
+            Log.i("GeckoAppShell", "getIconForExtension error: ",  e);
+            return null;
+        }
+    }
+
+    private static Drawable getDrawableForExtension(PackageManager pm, String aExt) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        MimeTypeMap mtm = MimeTypeMap.getSingleton();
+        String mimeType = mtm.getMimeTypeFromExtension(aExt);
+        if (mimeType != null && mimeType.length() > 0)
+            intent.setType(mimeType);
+        else
+            return null;
+
+        List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+        if (list.size() == 0)
+            return null;
+
+        ResolveInfo resolveInfo = list.get(0);
+
+        if (resolveInfo == null)
+            return null;
+
+        ActivityInfo activityInfo = resolveInfo.activityInfo;
+
+        return activityInfo.loadIcon(pm);
     }
 }

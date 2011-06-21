@@ -217,7 +217,7 @@ struct AlignedStorage2
     } u;
 
     const T *addr() const { return (const T *)u.bytes; }
-    T *addr() { return (T *)u.bytes; }
+    T *addr() { return (T *)(void *)u.bytes; }
 };
 
 /*

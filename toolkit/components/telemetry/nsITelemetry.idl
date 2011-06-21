@@ -38,16 +38,18 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(29464d3d-f838-4afb-a737-319fe0c6cc04)]
+[scriptable, uuid(db854295-478d-4de9-8211-d73ed7d81cd0)]
 interface nsITelemetry : nsISupports
 {
   /**
    * Histogram types:
    * HISTOGRAM_EXPONENTIAL - buckets increase exponentially
    * HISTOGRAM_LINEAR - buckets increase linearly
+   * HISTOGRAM_BOOLEAN - For storing 0/1 values
    */
   const unsigned long HISTOGRAM_EXPONENTIAL = 0;
   const unsigned long HISTOGRAM_LINEAR = 1;
+  const unsigned long HISTOGRAM_BOOLEAN = 2;
 
   /*
    * An object containing a snapshot from all of the currently registered histograms.
@@ -65,6 +67,7 @@ interface nsITelemetry : nsISupports
 
   /** 
    * Create and return a histogram where bucket sizes increase exponentially. Parameters:
+   *
    * @param name Unique histogram name
    * @param min - Minimal bucket size
    * @param max - Maximum bucket size
@@ -76,4 +79,12 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   jsval newHistogram(in ACString name, in PRUint32 min, in PRUint32 max, in PRUint32 bucket_count, in unsigned long histogram_type);
+
+  /**
+   * Same as newHistogram above, but for histograms registered in TelemetryHistograms.h.
+   *
+   * @param id - unique identifier from TelemetryHistograms.h
+   */
+  [implicit_jscontext]
+  jsval getHistogramById(in ACString id);
 };

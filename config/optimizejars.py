@@ -245,6 +245,9 @@ def optimizejar(jar, outjar, inlog = None):
 
     cdir_data = ""
     written_count = 0
+    crc_mapping = {}
+    dups_found = 0
+    dupe_bytes = 0
     # store number of bytes suggested for readahead
     for entry in central_directory:
         # read in the header twice..first for comparison, second time for convenience when writing out
@@ -274,6 +277,14 @@ def optimizejar(jar, outjar, inlog = None):
         assert_true(len(entry_data) != expected_len,
                     "%s entry size - expected:%d got:%d" % (entry.filename, len(entry_data), expected_len))
         written_count += 1
+
+        if entry.crc32 in crc_mapping:
+            dups_found += 1
+            dupe_bytes += entry.compressed_size + len(data) + len(entry_data)
+            print("%s\n\tis a duplicate of\n%s\n---"%(entry.filename, crc_mapping[entry.crc32]))
+        else:
+            crc_mapping[entry.crc32] = entry.filename;
+
         if inlog is not None:
             if written_count == reordered_count:
                 readahead = out_offset
@@ -287,6 +298,9 @@ def optimizejar(jar, outjar, inlog = None):
 
     if inlog is None:
         dirend.cdir_offset = out_offset
+
+    if dups_found > 0:
+        print("WARNING: Found %d duplicate files taking %d bytes"%(dups_found, dupe_bytes))
 
     dirend.cdir_size = len(cdir_data)
     dirend_data = dirend.pack()

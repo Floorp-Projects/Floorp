@@ -1,4 +1,5 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
+/* vim: set ts=40 sw=4 et tw=99: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla WebGL impl
  *
  * The Initial Developer of the Original Code is
- * Marco Pesenti Gritti <marco@gnome.org>
- * Portions created by the Initial Developer are Copyright (C) 2004
+ *   Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Nikhil Marathe <nsm.nikhil@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,29 +37,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMWindow.idl"
+#ifndef jstypedarrayinlines_h
+#define jstypedarrayinlines_h
 
-interface nsIDOMOfflineResourceList;
-interface nsIDOMBlob;
+#include "jsapi.h"
+#include "jsvalue.h"
+#include "jsobj.h"
 
-[scriptable, uuid(e2796e00-14de-4ce0-acfe-0374bc0e715d)]
-interface nsIDOMWindow2 : nsIDOMWindow
+namespace js {
+inline JSUint32
+ArrayBuffer::getByteLength(JSObject *obj)
 {
-  /**
-   * Get the window root for this window. This is useful for hooking
-   * up event listeners to this window and every other window nested
-   * in the window root.
-   */
-  [noscript] readonly attribute nsIDOMEventTarget windowRoot;
+    return *((JSUint32*) obj->slots);
+}
 
-  /**
-   * Get the application cache object for this window.
-   */
-  readonly attribute nsIDOMOfflineResourceList applicationCache;
-
-  /**
-   * Deprecated, but can't remove yet since we don't want to change interfaces.
-   */
-  [noscript] DOMString createBlobURL(in nsIDOMBlob blob);
-  [noscript] void revokeBlobURL(in DOMString URL);
-};
+inline uint8 *
+ArrayBuffer::getDataOffset(JSObject *obj) {
+    uint64 *base = ((uint64*)obj->slots) + 1;
+    return (uint8*) base;
+}
+}
+#endif /* jstypedarrayinlines_h */

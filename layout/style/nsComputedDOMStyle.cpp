@@ -4001,7 +4001,6 @@ nsComputedDOMStyle::DoGetTransitionTimingFunction()
   return valueList;
 }
 
-#ifdef MOZ_CSS_ANIMATIONS
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetAnimationName()
 {
@@ -4188,7 +4187,6 @@ nsComputedDOMStyle::DoGetAnimationPlayState()
 
   return valueList;
 }
-#endif
 
 #define COMPUTED_STYLE_MAP_ENTRY(_prop, _method)              \
   { eCSSProperty_##_prop, &nsComputedDOMStyle::DoGet##_method, PR_FALSE }
@@ -4333,7 +4331,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
      * Implementations of -moz- styles *
     \* ******************************* */
 
-#ifdef MOZ_CSS_ANIMATIONS
     COMPUTED_STYLE_MAP_ENTRY(animation_delay,               AnimationDelay),
     COMPUTED_STYLE_MAP_ENTRY(animation_direction,           AnimationDirection),
     COMPUTED_STYLE_MAP_ENTRY(animation_duration,            AnimationDuration),
@@ -4342,7 +4339,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(animation_name,                AnimationName),
     COMPUTED_STYLE_MAP_ENTRY(animation_play_state,          AnimationPlayState),
     COMPUTED_STYLE_MAP_ENTRY(animation_timing_function,     AnimationTimingFunction),
-#endif
     COMPUTED_STYLE_MAP_ENTRY(appearance,                    Appearance),
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_inline_policy, BackgroundInlinePolicy),
     COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),
