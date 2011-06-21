@@ -3414,6 +3414,8 @@ public:
     {
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+        mCollector->GCIfNeeded(PR_FALSE);
+
         MutexAutoLock autoLock(mLock);
 
         if (!mRunning)
@@ -3425,8 +3427,6 @@ public:
 
         NS_ASSERTION(!mListener, "Should have cleared this already!");
         mListener = aListener;
-
-        mCollector->GCIfNeeded(PR_FALSE);
 
         mRequest.Notify();
         mReply.Wait();
