@@ -1518,16 +1518,6 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
-#ifdef JS_GCMETER
-static JSBool
-GCStats(JSContext *cx, uintN argc, jsval *vp)
-{
-    js_DumpGCStats(cx->runtime, stdout);
-    *vp = JSVAL_VOID;
-    return true;
-}
-#endif
-
 static JSBool
 GCParameter(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -2608,58 +2598,6 @@ DisassWithSrc(JSContext *cx, uintN argc, jsval *vp)
 #undef LINE_BUF_LEN
 }
 
-static JSBool
-Tracing(JSContext *cx, uintN argc, jsval *vp)
-{
-    FILE *file;
-
-    if (argc == 0) {
-        *vp = BOOLEAN_TO_JSVAL(cx->logfp != 0);
-        return JS_TRUE;
-    }
-
-    jsval *argv = JS_ARGV(cx, vp);
-    switch (JS_TypeOfValue(cx, argv[0])) {
-      case JSTYPE_NUMBER:
-      case JSTYPE_BOOLEAN: {
-        JSBool bval;
-        JS_ValueToBoolean(cx, argv[0], &bval);
-        file = bval ? stderr : NULL;
-        break;
-      }
-      case JSTYPE_STRING: {
-        JSAutoByteString name(cx, JSVAL_TO_STRING(argv[0]));
-        if (!name)
-            return JS_FALSE;
-        file = fopen(name.ptr(), "w");
-        if (!file) {
-            JS_ReportError(cx, "tracing: couldn't open output file %s: %s",
-                           name.ptr(), strerror(errno));
-            return JS_FALSE;
-        }
-        break;
-      }
-      default:
-          goto bad_argument;
-    }
-    if (cx->logfp && cx->logfp != stderr)
-        fclose((FILE *)cx->logfp);
-    cx->logfp = file;
-    cx->logPrevPc = NULL;
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-
- bad_argument:
-    JSString *str = JS_ValueToString(cx, argv[0]);
-    if (!str)
-        return JS_FALSE;
-    JSAutoByteString bytes(cx, str);
-    if (!bytes)
-        return JS_FALSE;
-    JS_ReportError(cx, "tracing: illegal argument %s", bytes.ptr());
-    return JS_FALSE;
-}
-
 static void
 DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
 {
@@ -2689,11 +2627,7 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
         JSFlatString *flatStr = JS_FlattenString(cx, str);
         if (!flatStr)
             return JS_FALSE;
-        if (JS_FlatStringEqualsAscii(flatStr, "arena")) {
-#ifdef JS_ARENAMETER
-            JS_DumpArenaStats(stdout);
-#endif
-        } else if (JS_FlatStringEqualsAscii(flatStr, "atom")) {
+        if (JS_FlatStringEqualsAscii(flatStr, "atom")) {
             js_DumpAtoms(cx, gOutFile);
         } else if (JS_FlatStringEqualsAscii(flatStr, "global")) {
             DumpScope(cx, cx->globalObject, stdout);
@@ -4883,9 +4817,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("assertEq",       AssertEq,       2,0),
     JS_FN("assertJit",      AssertJit,      0,0),
     JS_FN("gc",             ::GC,           0,0),
-#ifdef JS_GCMETER
-    JS_FN("gcstats",        GCStats,        0,0),
-#endif
     JS_FN("gcparam",        GCParameter,    2,0),
     JS_FN("countHeap",      CountHeap,      0,0),
     JS_FN("makeFinalizeObserver", MakeFinalizeObserver, 0,0),
@@ -4913,7 +4844,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("dumpHeap",       DumpHeap,       0,0),
     JS_FN("dumpObject",     DumpObject,     1,0),
     JS_FN("notes",          Notes,          1,0),
-    JS_FN("tracing",        Tracing,        0,0),
     JS_FN("stats",          DumpStats,      1,0),
 #endif
     JS_FN("dumpStack",      DumpStack,      1,0),
@@ -4999,9 +4929,6 @@ static const char *const shell_help_messages[] = {
 "assertJit()              Throw if the calling function failed to JIT",
 "gc([obj])                Run the garbage collector\n"
 "                         When obj is given, GC only the compartment it's in",
-#ifdef JS_GCMETER
-"gcstats()                Print garbage collector statistics",
-#endif
 "gcparam(name, value)\n"
 "  Wrapper for JS_SetGCParameter. The name must be either 'maxBytes' or\n"
 "  'maxMallocBytes' and the value must be convertable to a positive uint32",
@@ -5047,8 +4974,6 @@ static const char *const shell_help_messages[] = {
 "  Interface to JS_DumpHeap with output sent to file",
 "dumpObject()             Dump an internal representation of an object",
 "notes([fun])             Show source notes for functions",
-"tracing([true|false|filename]) Turn bytecode execution tracing on/off.\n"
-"                         With filename, send to file.",
 "stats([string ...])      Dump 'arena', 'atom', 'global' stats",
 #endif
 "dumpStack()              Dump the stack as an array of callees (youngest first)",
