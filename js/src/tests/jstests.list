@@ -1,4 +1,3 @@
-script perfect.js
 include e4x/jstests.list
 include ecma/jstests.list
 include ecma_2/jstests.list
