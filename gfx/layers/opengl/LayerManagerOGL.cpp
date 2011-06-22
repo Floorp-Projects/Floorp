@@ -580,6 +580,7 @@ LayerManagerOGL::FPSState::DrawFPS(GLContext* context, CopyProgram* copyprog)
       }
     }
     context->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 64, 8, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf);
+    free(buf);
     initialized = true;
   }
 
