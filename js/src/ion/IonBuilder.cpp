@@ -166,6 +166,8 @@ IonBuilder::build()
     if (!current)
         return false;
 
+    IonSpew(IonSpew_MIR, "Analying script %s:%d", script->filename, script->lineno);
+
     // Initialize argument references if inside a function frame.
     if (fun()) {
         MParameter *param = MParameter::New(MParameter::CALLEE_SLOT);
@@ -428,12 +430,9 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       default:
-        fprintf(stdout, "%d\n", op);
-        JS_NOT_REACHED("what");
-        return false;
+        return abort("Unsupported opcode: %d (line %d)", op, js_PCToLineNumber(cx, script, pc));
     }
 }
-
 
 // Given that the current control flow structure has ended forcefully,
 // via a return, break, or continue (rather than joining), propagate the

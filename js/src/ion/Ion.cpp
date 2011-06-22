@@ -87,6 +87,7 @@ bool ion::InitializeIon()
     }
 #endif
     IonBuilder::SetupOpcodeFlags();
+    CheckLogging();
     return true;
 }
 
@@ -114,19 +115,10 @@ bool ion::SetIonContext(IonContext *ctx)
 }
 #endif
 
-bool
-ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
+static bool
+TestCompiler(IonBuilder &builder, MIRGraph &graph)
 {
-    TempAllocator temp(&cx->tempPool);
-    IonContext ictx(cx, &temp);
-
-    JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
-
-    MIRGraph graph;
-
-    DummyOracle oracle;
-    C1Spewer spew(graph, script);
-    IonBuilder builder(cx, script, fun, temp, graph, &oracle);
+    C1Spewer spew(graph, builder.script);
     spew.enable("/tmp/ion.cfg");
 
     if (!builder.build())
@@ -156,6 +148,33 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
         return false;
     spew.spew("Allocate registers");
 
+    return true;
+}
+
+static bool
+IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
+{
+    TempAllocator temp(&cx->tempPool);
+    IonContext ictx(cx, &temp);
+
+    MIRGraph graph;
+    DummyOracle oracle;
+
+    JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
+    IonBuilder builder(cx, script, fun, temp, graph, &oracle);
+    if (!TestCompiler(builder, graph))
+        return false;
+
+    return true;
+}
+
+bool
+ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
+{
+    if (!IonCompile(cx, script, fp))
+        return false;
+
+    // This will change when we can execute code.
     return false;
 }
 
