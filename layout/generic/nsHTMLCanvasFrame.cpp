@@ -133,7 +133,7 @@ nsHTMLCanvasFrame::Init(nsIContent* aContent,
   // We can fill in the canvas before the canvas frame is created, in
   // which case we never get around to marking the layer active. Therefore,
   // we mark it active here when we create the frame.
-  MarkLayersActive();
+  MarkLayersActive(nsChangeHint(0));
 
   return rv;
 }
