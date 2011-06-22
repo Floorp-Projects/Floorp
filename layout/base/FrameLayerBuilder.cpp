@@ -1666,14 +1666,16 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       transform.Is2D(&transform2d)) {
     //Scale factors are normalized to a power of 2 to reduce the number of resolution changes
     scale = transform2d.ScaleFactors(PR_TRUE);
-    // For frames that aren't marked active (i.e. opacity/transform not
-    // changed recently), let them take their exact resolution. Otherwise
-    // round up to nearest power-of-2 boundary so that we don't keep having to
-    // redraw the content as it scales up and down. Rounding up to nearest
+    // For frames with a changing transform that's not just a translation,
+    // round scale factors up to nearest power-of-2 boundary so that we don't
+    // keep having to redraw the content as it scales up and down. Rounding up to nearest
     // power-of-2 boundary ensures we never scale up, only down --- avoiding
     // jaggies. It also ensures we never scale down by more than a factor of 2,
     // avoiding bad downscaling quality.
-    if (aContainerFrame->AreLayersMarkedActive()) {
+    gfxMatrix frameTransform;
+    if (aContainerFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer) &&
+        aTransform &&
+        (!aTransform->Is2D(&frameTransform) || frameTransform.HasNonTranslationOrFlip())) {
       scale.width = gfxUtils::ClampToScaleFactor(scale.width);
       scale.height = gfxUtils::ClampToScaleFactor(scale.height);
     } else {
