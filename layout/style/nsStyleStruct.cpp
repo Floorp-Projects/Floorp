@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   David Hyatt (hyatt@netscape.com)
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Michael Ventnor <m.ventnor@gmail.com>
  *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
@@ -2606,7 +2606,7 @@ nsStyleTextReset::nsStyleTextReset(void)
 nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource) 
 { 
   MOZ_COUNT_CTOR(nsStyleTextReset);
-  memcpy((nsStyleTextReset*)this, &aSource, sizeof(nsStyleTextReset));
+  *this = aSource;
 }
 
 nsStyleTextReset::~nsStyleTextReset(void)
@@ -2649,6 +2649,9 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
       return NS_STYLE_HINT_VISUAL;
     }
 
+    if (mTextOverflow != aOther.mTextOverflow) {
+      return NS_STYLE_HINT_VISUAL;
+    }
     return NS_STYLE_HINT_NONE;
   }
   return NS_STYLE_HINT_REFLOW;
