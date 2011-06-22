@@ -948,8 +948,6 @@ public:
    * Can be used anytime
    */
   const nsIntRegion& GetValidRegion() const { return mValidRegion; }
-  float GetXResolution() const { return mXResolution; }
-  float GetYResolution() const { return mYResolution; }
 
   virtual ThebesLayer* AsThebesLayer() { return this; }
 
@@ -969,8 +967,6 @@ protected:
   ThebesLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData)
     , mValidRegion()
-    , mXResolution(1.0)
-    , mYResolution(1.0)
     , mUsedForReadback(false)
   {
     mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
@@ -979,21 +975,6 @@ protected:
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
   nsIntRegion mValidRegion;
-  // Resolution values tell this to paint its content scaled by
-  // <aXResolution, aYResolution>, into a backing buffer with
-  // dimensions scaled the same.  A non-1.0 resolution also tells this
-  // to set scaling factors that compensate for the re-paint
-  // resolution when rendering itself to render targets
-  //
-  // Resolution doesn't affect the visible region, valid region, or
-  // re-painted regions at all.  It only affects how scalable thebes
-  // content is rasterized to device pixels.
-  //
-  // Setting the resolution isn't part of the public ThebesLayer API
-  // because it's backend-specific, and it doesn't necessarily make
-  // sense for all backends to fully support it.
-  float mXResolution;
-  float mYResolution;
   /**
    * Set when this ThebesLayer is participating in readback, i.e. some
    * ReadbackLayer (may) be getting its background from this layer.
