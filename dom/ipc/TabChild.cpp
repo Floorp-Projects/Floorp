@@ -581,6 +581,31 @@ TabChild::RecvMouseEvent(const nsString& aType,
 }
 
 bool
+TabChild::RecvRealMouseEvent(const nsMouseEvent& event)
+{
+  nsMouseEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
+  return true;
+}
+
+bool
+TabChild::RecvMouseScrollEvent(const nsMouseScrollEvent& event)
+{
+  nsMouseScrollEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
+  return true;
+}
+
+
+bool
+TabChild::RecvRealKeyEvent(const nsKeyEvent& event)
+{
+  nsKeyEvent localEvent(event);
+  DispatchWidgetEvent(localEvent);
+  return true;
+}
+
+bool
 TabChild::RecvKeyEvent(const nsString& aType,
                        const PRInt32& aKeyCode,
                        const PRInt32& aCharCode,
