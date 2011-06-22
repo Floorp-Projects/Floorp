@@ -197,6 +197,7 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(PRInt32 aAppUnitsPerPixel,
 
   mOneUnitBorder = CheckFourFloatsEqual(mBorderWidths, 1.0);
   mNoBorderRadius = AllCornersZeroSize(mBorderRadii);
+  mAvoidStroke = PR_FALSE;
 }
 
 /* static */ void
@@ -560,7 +561,8 @@ nsCSSBorderRenderer::FillSolidBorder(const gfxRect& aOuterRect,
   // common border styles, such as inset and outset, that are
   // top-left/bottom-right split.
   if (aSides == SIDE_BITS_ALL &&
-      CheckFourFloatsEqual(aBorderSizes, aBorderSizes[0]))
+      CheckFourFloatsEqual(aBorderSizes, aBorderSizes[0]) &&
+      !mAvoidStroke)
   {
     gfxRect r(aOuterRect);
     r.Deflate(aBorderSizes[0] / 2.0);
@@ -635,7 +637,7 @@ nsCSSBorderRenderer::FillSolidBorder(const gfxRect& aOuterRect,
   for (PRUint32 i = 0; i < 4; i++) {
     if (aSides & (1 << i)) {
       mContext->NewPath();
-      mContext->Rectangle(r[i]);
+      mContext->Rectangle(r[i], PR_TRUE);
       mContext->Fill();
     }
   }
@@ -1391,7 +1393,13 @@ nsCSSBorderRenderer::DrawBorders()
   // for translation-only matrices now, but we could do it
   // if the matrix has just a scale as well.  We should not
   // do it if there's a rotation.
-  if (!mat.HasNonTranslation()) {
+  if (mat.HasNonTranslation()) {
+    if (!mat.HasNonAxisAlignedTransform()) {
+      // Scale + transform. Avoid stroke fast-paths so that we have a chance
+      // of snapping to pixel boundaries.
+      mAvoidStroke = PR_TRUE;
+    }
+  } else {
     mat.x0 = floor(mat.x0 + 0.5);
     mat.y0 = floor(mat.y0 + 0.5);
     mContext->SetMatrix(mat);
@@ -1415,7 +1423,8 @@ nsCSSBorderRenderer::DrawBorders()
       mCompositeColors[0] == NULL &&
       allBordersSameWidth &&
       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_SOLID &&
-      mNoBorderRadius)
+      mNoBorderRadius &&
+      !mAvoidStroke)
   {
     // Very simple case.
     SetupStrokeStyle(NS_SIDE_TOP);
@@ -1432,7 +1441,8 @@ nsCSSBorderRenderer::DrawBorders()
       allBordersSameWidth &&
       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_DOTTED &&
       mBorderWidths[0] < 3 &&
-      mNoBorderRadius)
+      mNoBorderRadius &&
+      !mAvoidStroke)
   {
     // Very simple case. We draw this rectangular dotted borner without
     // antialiasing. The dots should be pixel aligned.
@@ -1453,7 +1463,8 @@ nsCSSBorderRenderer::DrawBorders()
   if (allBordersSame &&
       allBordersSameWidth &&
       mCompositeColors[0] == NULL &&
-      mBorderStyles[0] == NS_STYLE_BORDER_STYLE_SOLID)
+      mBorderStyles[0] == NS_STYLE_BORDER_STYLE_SOLID &&
+      !mAvoidStroke)
   {
     NS_FOR_CSS_CORNERS(i) {
       if (mBorderRadii[i].width <= mBorderWidths[0]) {
@@ -1495,13 +1506,15 @@ nsCSSBorderRenderer::DrawBorders()
       allBordersSameWidth &&
       mCompositeColors[0] == NULL &&
       mBorderWidths[0] == 1 &&
-      mNoBorderRadius)
+      mNoBorderRadius &&
+      !mAvoidStroke)
   {
     DrawSingleWidthSolidBorder();
     return;
   }
 
-  if (allBordersSolid && !hasCompositeColors)
+  if (allBordersSolid && !hasCompositeColors &&
+      !mAvoidStroke)
   {
     DrawNoCompositeColorSolidBorder();
     return;
@@ -1509,7 +1522,8 @@ nsCSSBorderRenderer::DrawBorders()
 
   if (allBordersSolid &&
       allBordersSameWidth &&
-      mNoBorderRadius)
+      mNoBorderRadius &&
+      !mAvoidStroke)
   {
     // Easy enough to deal with.
     DrawRectangularCompositeColors();
