@@ -1257,7 +1257,8 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   // using a temporary BasicLayerManager.
   nsRefPtr<BasicLayerManager> tempManager = new BasicLayerManager();
   tempManager->BeginTransactionWithTarget(aContext);
-  nsRefPtr<Layer> layer = aItem->BuildLayer(aBuilder, tempManager);
+  nsRefPtr<Layer> layer =
+    aItem->BuildLayer(aBuilder, tempManager, FrameLayerBuilder::ContainerParameters());
   if (!layer) {
     tempManager->EndTransaction(nsnull, nsnull);
     return;
@@ -1346,7 +1347,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       aClip.RemoveRoundedCorners();
 
       // Just use its layer.
-      nsRefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager);
+      nsRefPtr<Layer> ownLayer =
+        item->BuildLayer(mBuilder, mManager, FrameLayerBuilder::ContainerParameters());
       if (!ownLayer) {
         InvalidateForLayerChange(item, ownLayer);
         continue;
@@ -1601,7 +1603,9 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                           LayerManager* aManager,
                                           nsIFrame* aContainerFrame,
                                           nsDisplayItem* aContainerItem,
-                                          const nsDisplayList& aChildren)
+                                          const nsDisplayList& aChildren,
+                                          const ContainerParameters& aParameters,
+                                          const gfx3DMatrix* aTransform)
 {
   FrameProperties props = aContainerFrame->Properties();
   PRUint32 containerDisplayItemKey =
@@ -1702,6 +1706,9 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   }
   containerLayer->SetContentFlags(flags);
 
+  if (aTransform) {
+    containerLayer->SetTransform(*aTransform);
+  }
   return containerLayer.forget();
 }
 

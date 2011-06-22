@@ -819,7 +819,8 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 already_AddRefed<Layer>
 nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
-                            LayerManager* aManager)
+                            LayerManager* aManager,
+                            const ContainerParameters& aContainerParameters)
 {
   PRInt32 appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
