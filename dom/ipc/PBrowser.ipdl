@@ -58,6 +58,9 @@ using nsQueryContentEvent;
 using nsRect;
 using nsSelectionEvent;
 using nsTextEvent;
+using nsMouseEvent;
+using nsMouseScrollEvent;
+using nsKeyEvent;
 using RemoteDOMEvent;
 
 namespace mozilla {
@@ -180,6 +183,8 @@ parent:
      */
     sync GetDPI() returns (float value);
 
+    SetCursor(PRUint32 value);
+
     PContentPermissionRequest(nsCString aType, URI uri);
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
@@ -253,6 +258,10 @@ child:
                PRInt32 aClickCount,
                PRInt32 aModifiers,
                bool aIgnoreRootScrollFrame);
+
+    RealMouseEvent(nsMouseEvent event);
+    RealKeyEvent(nsKeyEvent event);
+    MouseScrollEvent(nsMouseScrollEvent event);
 
     /**
      * @see nsIDOMWindowUtils sendKeyEvent.

@@ -327,6 +327,7 @@ nsFrameLoader::nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated)
   , mCurrentRemoteFrame(nsnull)
   , mRemoteBrowser(nsnull)
   , mRenderMode(RENDER_MODE_DEFAULT)
+  , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
 {
 }
 
@@ -1657,6 +1658,20 @@ nsFrameLoader::SetRenderMode(PRUint32 aRenderMode)
 
   mRenderMode = aRenderMode;
   InvalidateFrame(GetPrimaryFrameOfOwningContent());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetEventMode(PRUint32* aEventMode)
+{
+  *aEventMode = mEventMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::SetEventMode(PRUint32 aEventMode)
+{
+  mEventMode = aEventMode;
   return NS_OK;
 }
 
