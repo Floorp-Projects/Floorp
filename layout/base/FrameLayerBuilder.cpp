@@ -1712,7 +1712,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     }
     // If the scale factors are too small, just use 1.0. The content is being
     // scaled out of sight anyway.
-    if (abs(scale.width) < 1e-8 || abs(scale.height) < 1e-8) {
+    if (fabs(scale.width) < 1e-8 || fabs(scale.height) < 1e-8) {
       scale.width = scale.height = 1.0;
     }
   } else {
