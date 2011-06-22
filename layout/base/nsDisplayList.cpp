@@ -1714,7 +1714,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsDisplayItem::LayerState
 nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager) {
-  if (mFrame->AreLayersMarkedActive())
+  if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateOpacityLayer))
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
     nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
@@ -2398,7 +2398,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
 nsDisplayItem::LayerState
 nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
                                   LayerManager* aManager) {
-  if (mFrame->AreLayersMarkedActive())
+  if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer))
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
     nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
