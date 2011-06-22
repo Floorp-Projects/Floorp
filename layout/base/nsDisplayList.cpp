@@ -200,21 +200,26 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
 static void RecordFrameMetrics(nsIFrame* aForFrame,
                                nsIFrame* aScrollFrame,
                                ContainerLayer* aRoot,
-                               nsRect aVisibleRect,
-                               nsRect aViewport,
+                               const nsRect& aVisibleRect,
+                               const nsRect& aViewport,
                                nsRect* aDisplayPort,
-                               ViewID aScrollId) {
+                               ViewID aScrollId,
+                               const nsDisplayItem::ContainerParameters& aContainerParameters) {
   nsPresContext* presContext = aForFrame->PresContext();
+  PRInt32 auPerDevPixel = presContext->AppUnitsPerDevPixel();
 
-  nsIntRect visible = aVisibleRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
+  nsIntRect visible = aVisibleRect.ScaleToNearestPixels(
+    aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   aRoot->SetVisibleRegion(nsIntRegion(visible));
 
   FrameMetrics metrics;
 
-  PRInt32 auPerDevPixel = presContext->AppUnitsPerDevPixel();
-  metrics.mViewport = aViewport.ToNearestPixels(auPerDevPixel);
+  metrics.mViewport = aViewport.ScaleToNearestPixels(
+    aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+
   if (aDisplayPort) {
-    metrics.mDisplayPort = aDisplayPort->ToNearestPixels(auPerDevPixel);
+    metrics.mDisplayPort = aDisplayPort->ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
 
   nsIScrollableFrame* scrollableFrame = nsnull;
@@ -225,16 +230,15 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     nsSize contentSize =
       scrollableFrame->GetScrollRange().Size() +
       scrollableFrame->GetScrollPortRect().Size();
-    metrics.mContentSize = nsIntSize(NSAppUnitsToIntPixels(contentSize.width, auPerDevPixel),
-                                     NSAppUnitsToIntPixels(contentSize.height, auPerDevPixel));
-
-    metrics.mViewportScrollOffset =
-      scrollableFrame->GetScrollPosition().ToNearestPixels(auPerDevPixel);
+    metrics.mContentSize = contentSize.ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+    metrics.mViewportScrollOffset = scrollableFrame->GetScrollPosition().ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
   else {
     nsSize contentSize = aForFrame->GetSize();
-    metrics.mContentSize = nsIntSize(NSAppUnitsToIntPixels(contentSize.width, auPerDevPixel),
-                                     NSAppUnitsToIntPixels(contentSize.height, auPerDevPixel));
+    metrics.mContentSize = contentSize.ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
 
   metrics.mScrollId = aScrollId;
@@ -589,13 +593,21 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     aBuilder->LayerBuilder()->DidBeginRetainedLayerTransaction(layerManager);
   }
 
-  nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this);
-  if (!root)
-    return;
-
   nsPresContext* presContext = aForFrame->PresContext();
   nsIPresShell* presShell = presContext->GetPresShell();
+
+  nsDisplayItem::ContainerParameters containerParameters
+    (presShell->GetXResolution(), presShell->GetYResolution());
+  nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
+    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this,
+                           containerParameters, nsnull);
+  if (!root)
+    return;
+  // Root is being scaled up by the X/Y resolution. Scale it back down.
+  gfx3DMatrix rootTransform = root->GetTransform()*
+    gfx3DMatrix::Scale(1.0f/containerParameters.mXScale,
+                       1.0f/containerParameters.mYScale, 1.0f);
+  root->SetTransform(rootTransform);
 
   ViewID id = presContext->IsRootContentDocument() ? FrameMetrics::ROOT_SCROLL_ID
                                                    : FrameMetrics::NULL_SCROLL_ID;
@@ -611,17 +623,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
   RecordFrameMetrics(aForFrame, rootScrollFrame,
                      root, mVisibleRect, mVisibleRect,
-                     (usingDisplayport ? &displayport : nsnull), id);
-
-  // If the layer manager supports resolution scaling, set that up
-  if (LayerManager::LAYERS_BASIC == layerManager->GetBackendType()) {
-    BasicLayerManager* basicManager =
-      static_cast<BasicLayerManager*>(layerManager.get());
-    // This is free if both resolutions are 1.0, or neither resolution
-    // has changed since the last transaction
-    basicManager->SetResolution(presShell->GetXResolution(),
-                                presShell->GetYResolution());
-  }
+                     (usingDisplayport ? &displayport : nsnull), id,
+                     containerParameters);
 
   layerManager->SetRoot(root);
   aBuilder->LayerBuilder()->WillEndTransaction(layerManager);
@@ -1701,9 +1704,11 @@ nsRegion nsDisplayOpacity::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 // nsDisplayOpacity uses layers for rendering
 already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
-                             LayerManager* aManager) {
+                             LayerManager* aManager,
+                             const ContainerParameters& aContainerParameters) {
   nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
+                           aContainerParameters, nsnull);
   if (!layer)
     return nsnull;
 
@@ -1714,7 +1719,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsDisplayItem::LayerState
 nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager) {
-  if (mFrame->AreLayersMarkedActive())
+  if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateOpacityLayer))
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
     nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);
@@ -1768,9 +1773,11 @@ nsDisplayOwnLayer::~nsDisplayOwnLayer() {
 // nsDisplayOpacity uses layers for rendering
 already_AddRefed<Layer>
 nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
-                              LayerManager* aManager) {
+                              LayerManager* aManager,
+                              const ContainerParameters& aContainerParameters) {
   nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
+                           aContainerParameters, nsnull);
   return layer.forget();
 }
 
@@ -1833,9 +1840,11 @@ nsDisplayScrollLayer::~nsDisplayScrollLayer()
 
 already_AddRefed<Layer>
 nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
-                                 LayerManager* aManager) {
+                                 LayerManager* aManager,
+                                 const ContainerParameters& aContainerParameters) {
   nsRefPtr<ContainerLayer> layer = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
+                           aContainerParameters, nsnull);
 
   // Get the already set unique ID for scrolling this content remotely.
   // Or, if not set, generate a new ID.
@@ -1852,7 +1861,8 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     usingDisplayport = nsLayoutUtils::GetDisplayPort(content, &displayport);
   }
   RecordFrameMetrics(mScrolledFrame, mScrollFrame, layer, mVisibleRect, viewport,
-                     (usingDisplayport ? &displayport : nsnull), scrollId);
+                     (usingDisplayport ? &displayport : nsnull), scrollId,
+                     aContainerParameters);
 
   return layer.forget();
 }
@@ -2375,7 +2385,8 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
 }
 
 already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
-                                                       LayerManager *aManager)
+                                                       LayerManager *aManager,
+                                                       const ContainerParameters& aContainerParameters)
 {
   gfxMatrix newTransformMatrix =
     GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
@@ -2384,19 +2395,16 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   if (newTransformMatrix.IsSingular())
     return nsnull;
 
-  nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList());
-  if (!layer)
-    return nsnull;
- 
-  layer->SetTransform(gfx3DMatrix::From2D(newTransformMatrix));
-  return layer.forget();
+  gfx3DMatrix matrix = gfx3DMatrix::From2D(newTransformMatrix);
+  return aBuilder->LayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList(),
+                           aContainerParameters, &matrix);
 }
 
 nsDisplayItem::LayerState
 nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
                                   LayerManager* aManager) {
-  if (mFrame->AreLayersMarkedActive())
+  if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer))
     return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
     nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull);

@@ -81,20 +81,24 @@ struct NS_GFX nsRect :
   }
 #endif
 
-  // Extend the rect outwards such that the edges are on integer boundaries
-  // and the edges scaled by aXMult/aYMult are also on integer boundaries.
-  // aXMult/aYMult must be N or 1/N for integer N.
-  nsRect& ExtendForScaling(float aXMult, float aYMult);
-
   // Converts this rect from aFromAPP, an appunits per pixel ratio, to aToAPP.
   // In the RoundOut version we make the rect the smallest rect containing the
   // unrounded result. In the RoundIn version we make the rect the largest rect
   // contained in the unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
   inline nsRect ConvertAppUnitsRoundOut(PRInt32 aFromAPP, PRInt32 aToAPP) const;
   inline nsRect ConvertAppUnitsRoundIn(PRInt32 aFromAPP, PRInt32 aToAPP) const;
 
+  inline nsIntRect ScaleToNearestPixels(float aXScale, float aYScale,
+                                        nscoord aAppUnitsPerPixel) const;
   inline nsIntRect ToNearestPixels(nscoord aAppUnitsPerPixel) const;
+  // Note: this can turn an empty rectangle into a non-empty rectangle
+  inline nsIntRect ScaleToOutsidePixels(float aXScale, float aYScale,
+                                        nscoord aAppUnitsPerPixel) const;
+  // Note: this can turn an empty rectangle into a non-empty rectangle
   inline nsIntRect ToOutsidePixels(nscoord aAppUnitsPerPixel) const;
+  inline nsIntRect ScaleToInsidePixels(float aXScale, float aYScale,
+                                       nscoord aAppUnitsPerPixel) const;
   inline nsIntRect ToInsidePixels(nscoord aAppUnitsPerPixel) const;
 };
 
@@ -175,44 +179,65 @@ nsRect::ConvertAppUnitsRoundIn(PRInt32 aFromAPP, PRInt32 aToAPP) const
 
 // scale the rect but round to preserve centers
 inline nsIntRect
-nsRect::ToNearestPixels(nscoord aAppUnitsPerPixel) const
+nsRect::ScaleToNearestPixels(float aXScale, float aYScale,
+                             nscoord aAppUnitsPerPixel) const
 {
   nsIntRect rect;
-  rect.x = NSToIntRoundUp(NSAppUnitsToDoublePixels(x, aAppUnitsPerPixel));
-  rect.y = NSToIntRoundUp(NSAppUnitsToDoublePixels(y, aAppUnitsPerPixel));
+  rect.x = NSToIntRoundUp(NSAppUnitsToDoublePixels(x, aAppUnitsPerPixel) * aXScale);
+  rect.y = NSToIntRoundUp(NSAppUnitsToDoublePixels(y, aAppUnitsPerPixel) * aYScale);
   rect.width  = NSToIntRoundUp(NSAppUnitsToDoublePixels(XMost(),
-                               aAppUnitsPerPixel)) - rect.x;
+                               aAppUnitsPerPixel) * aXScale) - rect.x;
   rect.height = NSToIntRoundUp(NSAppUnitsToDoublePixels(YMost(),
-                               aAppUnitsPerPixel)) - rect.y;
+                               aAppUnitsPerPixel) * aYScale) - rect.y;
   return rect;
 }
 
 // scale the rect but round to smallest containing rect
 inline nsIntRect
-nsRect::ToOutsidePixels(nscoord aAppUnitsPerPixel) const
+nsRect::ScaleToOutsidePixels(float aXScale, float aYScale,
+                             nscoord aAppUnitsPerPixel) const
 {
   nsIntRect rect;
-  rect.x = NSToIntFloor(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)));
-  rect.y = NSToIntFloor(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)));
+  rect.x = NSToIntFloor(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)) * aXScale);
+  rect.y = NSToIntFloor(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)) * aYScale);
   rect.width  = NSToIntCeil(NSAppUnitsToFloatPixels(XMost(),
-                            float(aAppUnitsPerPixel))) - rect.x;
+                            float(aAppUnitsPerPixel)) * aXScale) - rect.x;
   rect.height = NSToIntCeil(NSAppUnitsToFloatPixels(YMost(),
-                            float(aAppUnitsPerPixel))) - rect.y;
+                            float(aAppUnitsPerPixel)) * aYScale) - rect.y;
   return rect;
 }
 
 // scale the rect but round to largest contained rect
 inline nsIntRect
-nsRect::ToInsidePixels(nscoord aAppUnitsPerPixel) const
+nsRect::ScaleToInsidePixels(float aXScale, float aYScale,
+                            nscoord aAppUnitsPerPixel) const
 {
   nsIntRect rect;
-  rect.x = NSToIntCeil(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)));
-  rect.y = NSToIntCeil(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)));
+  rect.x = NSToIntCeil(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)) * aXScale);
+  rect.y = NSToIntCeil(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)) * aYScale);
   rect.width  = NSToIntFloor(NSAppUnitsToFloatPixels(XMost(),
-                             float(aAppUnitsPerPixel))) - rect.x;
+                             float(aAppUnitsPerPixel)) * aXScale) - rect.x;
   rect.height = NSToIntFloor(NSAppUnitsToFloatPixels(YMost(),
-                             float(aAppUnitsPerPixel))) - rect.y;
+                             float(aAppUnitsPerPixel)) * aYScale) - rect.y;
   return rect;
+}
+
+inline nsIntRect
+nsRect::ToNearestPixels(nscoord aAppUnitsPerPixel) const
+{
+  return ScaleToNearestPixels(1.0f, 1.0f, aAppUnitsPerPixel);
+}
+
+inline nsIntRect
+nsRect::ToOutsidePixels(nscoord aAppUnitsPerPixel) const
+{
+  return ScaleToOutsidePixels(1.0f, 1.0f, aAppUnitsPerPixel);
+}
+
+inline nsIntRect
+nsRect::ToInsidePixels(nscoord aAppUnitsPerPixel) const
+{
+  return ScaleToInsidePixels(1.0f, 1.0f, aAppUnitsPerPixel);
 }
 
 // app units are integer multiples of pixels, so no rounding needed

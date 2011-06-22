@@ -1293,22 +1293,6 @@ void nsRegion::MoveBy (nsPoint aPt)
   }
 }
 
-nsRegion& nsRegion::ExtendForScaling (float aXMult, float aYMult)
-{
-  nsRegion region;
-  nsRegionRectIterator iter(*this);
-  for (;;) {
-    const nsRect* r = iter.Next();
-    if (!r)
-      break;
-    nsRect rect = *r;
-    rect.ExtendForScaling(aXMult, aYMult);
-    region.Or(region, rect);
-  }
-  *this = region;
-  return *this;
-}
-
 nsRegion& nsRegion::ScaleRoundOut (float aXScale, float aYScale)
 {
   nsRegion region;
@@ -1319,6 +1303,22 @@ nsRegion& nsRegion::ScaleRoundOut (float aXScale, float aYScale)
       break;
     nsRect rect = *r;
     rect.ScaleRoundOut(aXScale, aYScale);
+    region.Or(region, rect);
+  }
+  *this = region;
+  return *this;
+}
+
+nsRegion& nsRegion::ScaleInverseRoundOut (float aXScale, float aYScale)
+{
+  nsRegion region;
+  nsRegionRectIterator iter(*this);
+  for (;;) {
+    const nsRect* r = iter.Next();
+    if (!r)
+      break;
+    nsRect rect = *r;
+    rect.ScaleInverseRoundOut(aXScale, aYScale);
     region.Or(region, rect);
   }
   *this = region;
@@ -1387,6 +1387,20 @@ nsIntRegion nsRegion::ToOutsidePixels (nscoord aAppUnitsPerPixel) const
 nsIntRegion nsRegion::ToNearestPixels (nscoord aAppUnitsPerPixel) const
 {
   return ToPixels(aAppUnitsPerPixel, false);
+}
+
+nsIntRegion nsRegion::ScaleToOutsidePixels (float aScaleX, float aScaleY,
+                                            nscoord aAppUnitsPerPixel) const
+{
+  nsIntRegion result;
+  nsRegionRectIterator rgnIter(*this);
+  const nsRect* currentRect;
+  while ((currentRect = rgnIter.Next())) {
+    nsIntRect deviceRect =
+      currentRect->ScaleToOutsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+    result.Or(result, deviceRect);
+  }
+  return result;
 }
 
 // A cell's "value" is a pair consisting of
