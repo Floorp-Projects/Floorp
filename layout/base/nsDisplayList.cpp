@@ -2745,3 +2745,20 @@ PRBool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayIt
     other->mBounds + other->mEffectsFrame->GetOffsetTo(mEffectsFrame));
   return PR_TRUE;
 }
+
+nsDisplayForcePaintOnScroll::nsDisplayForcePaintOnScroll(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+  : nsDisplayItem(aBuilder, aFrame) {
+  MOZ_COUNT_CTOR(nsDisplayForcePaintOnScroll);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayForcePaintOnScroll::~nsDisplayForcePaintOnScroll() {
+  MOZ_COUNT_DTOR(nsDisplayForcePaintOnScroll);
+}
+#endif
+
+PRBool nsDisplayForcePaintOnScroll::IsVaryingRelativeToMovingFrame(
+         nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
+  return PR_TRUE;
+}

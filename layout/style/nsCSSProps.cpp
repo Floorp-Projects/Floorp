@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -1212,6 +1212,12 @@ const PRInt32 nsCSSProps::kTextDecorationStyleKTable[] = {
   eCSSKeyword_dashed, NS_STYLE_TEXT_DECORATION_STYLE_DASHED,
   eCSSKeyword_wavy, NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
   eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kTextOverflowKTable[] = {
+  eCSSKeyword_clip, NS_STYLE_TEXT_OVERFLOW_CLIP,
+  eCSSKeyword_ellipsis, NS_STYLE_TEXT_OVERFLOW_ELLIPSIS,
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const PRInt32 nsCSSProps::kTextTransformKTable[] = {

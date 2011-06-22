@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -659,6 +659,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE   4
 #define NS_STYLE_TEXT_DECORATION_STYLE_WAVY     5
 #define NS_STYLE_TEXT_DECORATION_STYLE_MAX      NS_STYLE_TEXT_DECORATION_STYLE_WAVY
+
+// See nsStyleTextOverflow
+#define NS_STYLE_TEXT_OVERFLOW_CLIP     0
+#define NS_STYLE_TEXT_OVERFLOW_ELLIPSIS 1
+#define NS_STYLE_TEXT_OVERFLOW_STRING   2
 
 // See nsStyleText
 #define NS_STYLE_TEXT_TRANSFORM_NONE            0
