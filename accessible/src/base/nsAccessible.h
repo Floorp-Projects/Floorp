@@ -40,6 +40,7 @@
 #define _nsAccessible_H_
 
 #include "nsAccessNodeWrap.h"
+#include "States.h"
 
 #include "nsIAccessible.h"
 #include "nsIAccessibleHyperLink.h"
@@ -421,7 +422,16 @@ public:
   /**
    * Return true if the link is valid (e. g. points to a valid URL).
    */
-  virtual bool IsValid();
+  inline bool IsLinkValid()
+  {
+    NS_PRECONDITION(IsHyperLink(), "IsLinkValid is called on not hyper link!");
+
+    // XXX In order to implement this we would need to follow every link
+    // Perhaps we can get information about invalid links from the cache
+    // In the mean time authors can use role="link" aria-invalid="true"
+    // to force it for links they internally know to be invalid
+    return (0 == (State() & states::INVALID));
+  }
 
   /**
    * Return true if the link currently has the focus.
