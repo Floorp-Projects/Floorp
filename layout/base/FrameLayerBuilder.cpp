@@ -393,7 +393,9 @@ class ThebesDisplayItemLayerUserData : public LayerUserData
 {
 public:
   ThebesDisplayItemLayerUserData() :
-    mForcedBackgroundColor(NS_RGBA(0,0,0,0)) {}
+    mForcedBackgroundColor(NS_RGBA(0,0,0,0)),
+    mXScale(1.f), mYScale(1.f),
+    mActiveScrolledRootPosition(0, 0) {}
 
   /**
    * A color that should be painted over the bounds of the layer's visible
@@ -404,6 +406,17 @@ public:
    * The resolution scale used.
    */
   float mXScale, mYScale;
+  /**
+   * We try to make 0,0 of the ThebesLayer be the top-left of the
+   * border-box of the "active scrolled root" frame (i.e. the nearest ancestor
+   * frame for the display items that is being actively scrolled). But
+   * we force the ThebesLayer transform to be an integer translation, and we may
+   * have a resolution scale, so we have to snap the ThebesLayer transform, so
+   * 0,0 may not be exactly the top-left of the active scrolled root. Here we
+   * store the coordinates in ThebesLayer space of the top-left of the
+   * active scrolled root.
+   */
+  gfxPoint mActiveScrolledRootPosition;
 };
 
 /**
@@ -854,16 +867,27 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
 
   // Set up transform so that 0,0 in the Thebes layer corresponds to the
   // (pixel-snapped) top-left of the aActiveScrolledRoot.
-  // XXX if the transform has changed, and the difference between the old and
-  // new offsets (not transforms!) is not an integer number of pixels after
-  // scaling, we need to invalidate the entire layer.
   nsPoint offset = mBuilder->ToReferenceFrame(aActiveScrolledRoot);
-  nsIntPoint pixOffset = offset.ScaleToNearestPixels(
-      mParameters.mXScale, mParameters.mYScale,
-      aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel());
+  nscoord appUnitsPerDevPixel = aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel();
+  gfxPoint scaledOffset(
+      NSAppUnitsToDoublePixels(offset.x, appUnitsPerDevPixel)*mParameters.mXScale,
+      NSAppUnitsToDoublePixels(offset.y, appUnitsPerDevPixel)*mParameters.mYScale);
+  nsIntPoint pixOffset(NSToIntRoundUp(scaledOffset.x), NSToIntRoundUp(scaledOffset.y));
   gfxMatrix matrix;
   matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
   layer->SetTransform(gfx3DMatrix::From2D(matrix));
+
+  // Calculate exact position of the top-left of the active scrolled root.
+  // This might not be 0,0 due to the snapping in ScaleToNearestPixels.
+  gfxPoint activeScrolledRootTopLeft = scaledOffset - matrix.GetTranslation();
+  // If it has changed, then we need to invalidate the entire layer since the
+  // pixels in the layer buffer have the content at a (subpixel) offset
+  // from what we need.
+  if (activeScrolledRootTopLeft != data->mActiveScrolledRootPosition) {
+    data->mActiveScrolledRootPosition = activeScrolledRootTopLeft;
+    nsIntRect invalidate = layer->GetValidRegion().GetBounds();
+    layer->InvalidateRegion(invalidate);
+  }
 
   return layer.forget();
 }
