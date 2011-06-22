@@ -93,6 +93,15 @@ enum LayerState {
  * corresponds to the (pixel-snapped) top-left of the aActiveScrolledRoot.
  * It sets up ContainerLayers so that 0,0 in the container layer
  * corresponds to the snapped top-left of the display list reference frame.
+ *
+ * When we construct a container layer, we know the transform that will be
+ * applied to the layer. If the transform scales the content, we can get
+ * better results when intermediate buffers are used by pushing some scale
+ * from the container's transform down to the children. For ThebesLayer
+ * children, the scaling can be achieved by changing the size of the layer
+ * and drawing into it with increased or decreased resolution. By convention,
+ * integer types (nsIntPoint/nsIntSize/nsIntRect/nsIntRegion) are all in layer
+ * coordinates, post-scaling, whereas appunit types are all pre-scaling.
  */
 class FrameLayerBuilder {
 public:
@@ -134,7 +143,9 @@ public:
 
   struct ContainerParameters {
     ContainerParameters() : mXScale(1), mYScale(1) {}
-    double mXScale, mYScale;
+    ContainerParameters(float aXScale, float aYScale) :
+      mXScale(aXScale), mYScale(aYScale) {}
+    float mXScale, mYScale;
   };
   /**
    * Build a container layer for a display item that contains a child
