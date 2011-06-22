@@ -295,7 +295,12 @@ struct BaseRect {
 
   // Scale 'this' by aScale, converting coordinates to integers so that the result is
   // the smallest integer-coordinate rectangle containing the unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
   void ScaleRoundOut(double aScale) { ScaleRoundOut(aScale, aScale); }
+  // Scale 'this' by aXScale and aYScale, converting coordinates to integers so
+  // that the result is the smallest integer-coordinate rectangle containing the
+  // unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
   void ScaleRoundOut(double aXScale, double aYScale)
   {
     T right = static_cast<T>(NS_ceil(double(XMost()) * aXScale));
@@ -305,7 +310,12 @@ struct BaseRect {
     width = right - x;
     height = bottom - y;
   }
+  // Scale 'this' by aScale, converting coordinates to integers so that the result is
+  // the largest integer-coordinate rectangle contained by the unrounded result.
   void ScaleRoundIn(double aScale) { ScaleRoundIn(aScale, aScale); }
+  // Scale 'this' by aXScale and aYScale, converting coordinates to integers so
+  // that the result is the largest integer-coordinate rectangle contained by the
+  // unrounded result.
   void ScaleRoundIn(double aXScale, double aYScale)
   {
     T right = static_cast<T>(NS_floor(double(XMost()) * aXScale));
@@ -315,7 +325,14 @@ struct BaseRect {
     width = NS_MAX<T>(0, right - x);
     height = NS_MAX<T>(0, bottom - y);
   }
+  // Scale 'this' by 1/aScale, converting coordinates to integers so that the result is
+  // the smallest integer-coordinate rectangle containing the unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
   void ScaleInverseRoundOut(double aScale) { ScaleInverseRoundOut(aScale, aScale); }
+  // Scale 'this' by 1/aXScale and 1/aYScale, converting coordinates to integers so
+  // that the result is the smallest integer-coordinate rectangle containing the
+  // unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
   void ScaleInverseRoundOut(double aXScale, double aYScale)
   {
     T right = static_cast<T>(ceil(double(XMost()) / aXScale));

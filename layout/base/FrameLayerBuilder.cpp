@@ -2025,12 +2025,14 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
 
   nsPresContext* presContext = containerLayerFrame->PresContext();
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-  nsRect r = (aRegionToInvalidate.GetBounds() + offset).
-    ToAppUnits(appUnitsPerDevPixel);
-  r.ScaleInverseRoundOut(userData->mXScale, userData->mYScale);
-  containerLayerFrame->InvalidateWithFlags(r,
-      nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
-      nsIFrame::INVALIDATE_EXCLUDE_CURRENT_PAINT);
+  if (!aRegionToInvalidate.IsEmpty()) {
+    nsRect r = (aRegionToInvalidate.GetBounds() + offset).
+      ToAppUnits(appUnitsPerDevPixel);
+    r.ScaleInverseRoundOut(userData->mXScale, userData->mYScale);
+    containerLayerFrame->InvalidateWithFlags(r,
+        nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
+        nsIFrame::INVALIDATE_EXCLUDE_CURRENT_PAINT);
+  }
 
   PRUint32 i;
   // Update visible regions. We need perform visibility analysis again
