@@ -73,9 +73,6 @@ pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
 
-/* use custom widget for html:select */
-pref("ui.use_native_popup_windows", true);
-
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
 
@@ -503,7 +500,6 @@ pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 pref("app.update.mode", 1);
 pref("app.update.silent", false);
 pref("app.update.url", "https://aus2.mozilla.org/update/4/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PLATFORM_VERSION%/update.xml");
-pref("app.update.nagTimer.restart", 86400);
 pref("app.update.promptWaitTime", 43200);
 pref("app.update.idletime", 60);
 pref("app.update.showInstalledUI", false);

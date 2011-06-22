@@ -82,7 +82,8 @@ function getHistograms() {
       range: [r[1], r[r.length - 1]],
       bucket_count: r.length,
       histogram_type: hgram.histogram_type,
-      values: {}
+      values: {},
+      sum: hgram.sum
     };
     let first = true;
     let last = 0;
@@ -97,6 +98,7 @@ function getHistograms() {
         first = false;
         retgram.values[r[i - 1]] = 0;
       }
+      first = false;
       last = i + 1;
       retgram.values[r[i]] = value;
     }
@@ -110,8 +112,9 @@ function getHistograms() {
 }
 
 function generateUUID() {
-  return Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
-         .generateUUID().toString();
+  let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+  // strip {}
+  return str.substring(1, str.length - 1);
 }
 
 /**
@@ -236,9 +239,6 @@ TelemetryPing.prototype = {
     if (!this._path)
       this._path = "/submit/telemetry/" + (isTestPing ? reason : generateUUID());
     
-    const TELEMETRY_PING = "telemetry.ping (ms)";
-    const TELEMETRY_SUCCESS = "telemetry.success (No, Yes)";
-
     let hping = Telemetry.getHistogramById("TELEMETRY_PING");
     let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
 
@@ -248,17 +248,24 @@ TelemetryPing.prototype = {
     request.mozBackgroundRequest = true;
     request.open("POST", url, true);
     request.overrideMimeType("text/plain");
+    request.setRequestHeader("Content-Type", "application/json");
 
     let startTime = new Date()
 
-    function finishRequest(success_metric) {
-      hsuccess.add(success_metric);
+    function finishRequest(channel) {
+      let success = false;
+      try {
+        success = channel.QueryInterface(Ci.nsIHttpChannel).requestSucceeded;
+      } catch(e) {
+      }
+      hsuccess.add(success ? 1 : 0);
       hping.add(new Date() - startTime);
       if (isTestPing)
         Services.obs.notifyObservers(null, "telemetry-test-xhr-complete", null);
     }
-    request.onerror = function(aEvent) finishRequest(0);
-    request.onload = function(aEvent) finishRequest(1);
+    request.onerror = function(aEvent) finishRequest(request.channel);
+    request.onload = function(aEvent) finishRequest(request.channel);
+
     request.send(nativeJSON.encode(payload));
   },
   

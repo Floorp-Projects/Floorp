@@ -1520,6 +1520,10 @@ nsComboboxControlFrame::RestoreState(nsPresState* aState)
 PRBool
 nsComboboxControlFrame::ToolkitHasNativePopup()
 {
-  return Preferences::GetBool("ui.use_native_popup_windows");
+#ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
+  return PR_TRUE;
+#else
+  return PR_FALSE;
+#endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 }
 

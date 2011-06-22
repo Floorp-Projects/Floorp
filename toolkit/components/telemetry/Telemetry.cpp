@@ -50,6 +50,7 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsBaseHashtable.h"
+#include "nsXULAppAPI.h"
 
 namespace {
 
@@ -359,3 +360,13 @@ Accumulate(ID aHistogram, PRUint32 aSample)
 } // namespace mozilla
 
 NSMODULE_DEFN(nsTelemetryModule) = &kTelemetryModule;
+
+/**
+ * The XRE_TelemetryAdd function is to be used by embedding applications
+ * that can't use mozilla::Telemetry::Accumulate() directly.
+ */
+void
+XRE_TelemetryAccumulate(int aID, PRUint32 aSample)
+{
+  mozilla::Telemetry::Accumulate((mozilla::Telemetry::ID) aID, aSample);
+}
