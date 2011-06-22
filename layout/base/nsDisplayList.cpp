@@ -200,21 +200,26 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
 static void RecordFrameMetrics(nsIFrame* aForFrame,
                                nsIFrame* aScrollFrame,
                                ContainerLayer* aRoot,
-                               nsRect aVisibleRect,
-                               nsRect aViewport,
+                               const nsRect& aVisibleRect,
+                               const nsRect& aViewport,
                                nsRect* aDisplayPort,
-                               ViewID aScrollId) {
+                               ViewID aScrollId,
+                               const nsDisplayItem::ContainerParameters& aContainerParameters) {
   nsPresContext* presContext = aForFrame->PresContext();
+  PRInt32 auPerDevPixel = presContext->AppUnitsPerDevPixel();
 
-  nsIntRect visible = aVisibleRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
+  nsIntRect visible = aVisibleRect.ScaleToNearestPixels(
+    aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   aRoot->SetVisibleRegion(nsIntRegion(visible));
 
   FrameMetrics metrics;
 
-  PRInt32 auPerDevPixel = presContext->AppUnitsPerDevPixel();
-  metrics.mViewport = aViewport.ToNearestPixels(auPerDevPixel);
+  metrics.mViewport = aViewport.ScaleToNearestPixels(
+    aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+
   if (aDisplayPort) {
-    metrics.mDisplayPort = aDisplayPort->ToNearestPixels(auPerDevPixel);
+    metrics.mDisplayPort = aDisplayPort->ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
 
   nsIScrollableFrame* scrollableFrame = nsnull;
@@ -225,16 +230,15 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     nsSize contentSize =
       scrollableFrame->GetScrollRange().Size() +
       scrollableFrame->GetScrollPortRect().Size();
-    metrics.mContentSize = nsIntSize(NSAppUnitsToIntPixels(contentSize.width, auPerDevPixel),
-                                     NSAppUnitsToIntPixels(contentSize.height, auPerDevPixel));
-
-    metrics.mViewportScrollOffset =
-      scrollableFrame->GetScrollPosition().ToNearestPixels(auPerDevPixel);
+    metrics.mContentSize = contentSize.ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+    metrics.mViewportScrollOffset = scrollableFrame->GetScrollPosition().ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
   else {
     nsSize contentSize = aForFrame->GetSize();
-    metrics.mContentSize = nsIntSize(NSAppUnitsToIntPixels(contentSize.width, auPerDevPixel),
-                                     NSAppUnitsToIntPixels(contentSize.height, auPerDevPixel));
+    metrics.mContentSize = contentSize.ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
   }
 
   metrics.mScrollId = aScrollId;
@@ -619,7 +623,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
   RecordFrameMetrics(aForFrame, rootScrollFrame,
                      root, mVisibleRect, mVisibleRect,
-                     (usingDisplayport ? &displayport : nsnull), id);
+                     (usingDisplayport ? &displayport : nsnull), id,
+                     containerParameters);
 
   layerManager->SetRoot(root);
   aBuilder->LayerBuilder()->WillEndTransaction(layerManager);
@@ -1856,7 +1861,8 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     usingDisplayport = nsLayoutUtils::GetDisplayPort(content, &displayport);
   }
   RecordFrameMetrics(mScrolledFrame, mScrollFrame, layer, mVisibleRect, viewport,
-                     (usingDisplayport ? &displayport : nsnull), scrollId);
+                     (usingDisplayport ? &displayport : nsnull), scrollId,
+                     aContainerParameters);
 
   return layer.forget();
 }
