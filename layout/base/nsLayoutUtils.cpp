@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -50,6 +50,7 @@
 #include "nsIAtom.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSColorUtils.h"
 #include "nsIView.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIScrollableFrame.h"
@@ -2788,6 +2789,49 @@ nsLayoutUtils::PrefWidthFromInline(nsIFrame* aFrame,
   aFrame->AddInlinePrefWidth(aRenderingContext, &data);
   data.ForceBreak(aRenderingContext);
   return data.prevLines;
+}
+
+static nscolor
+DarkenColor(nscolor aColor)
+{
+  PRUint16  hue, sat, value;
+  PRUint8 alpha;
+
+  // convert the RBG to HSV so we can get the lightness (which is the v)
+  NS_RGB2HSV(aColor, hue, sat, value, alpha);
+
+  // The goal here is to send white to black while letting colored
+  // stuff stay colored... So we adopt the following approach.
+  // Something with sat = 0 should end up with value = 0.  Something
+  // with a high sat can end up with a high value and it's ok.... At
+  // the same time, we don't want to make things lighter.  Do
+  // something simple, since it seems to work.
+  if (value > sat) {
+    value = sat;
+    // convert this color back into the RGB color space.
+    NS_HSV2RGB(aColor, hue, sat, value, alpha);
+  }
+  return aColor;
+}
+
+// Check whether we should darken text colors. We need to do this if
+// background images and colors are being suppressed, because that means
+// light text will not be visible against the (presumed light-colored) background.
+static PRBool
+ShouldDarkenColors(nsPresContext* aPresContext)
+{
+  return !aPresContext->GetBackgroundColorDraw() &&
+    !aPresContext->GetBackgroundImageDraw();
+}
+
+nscolor
+nsLayoutUtils::GetTextColor(nsIFrame* aFrame)
+{
+  nscolor color = aFrame->GetVisitedDependentColor(eCSSProperty_color);
+  if (ShouldDarkenColors(aFrame->PresContext())) {
+    color = DarkenColor(color);
+  }
+  return color;
 }
 
 void
