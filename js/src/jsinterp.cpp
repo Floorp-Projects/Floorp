@@ -4557,11 +4557,12 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         DO_NEXT_OP(len);
     }
 
-    script = fun->script();
-    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, script, construct, OOMCheck()))
+    JSScript *newScript = fun->script();
+    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, newScript, construct, OOMCheck()))
         goto error;
 
     /* Refresh local js::Interpret state. */
+    script = newScript;
     pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
     argv = regs.fp()->formalArgsEnd() - fun->nargs;
     atoms = script->atomMap.vector;
