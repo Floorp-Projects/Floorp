@@ -313,6 +313,7 @@ private:
   nsIDOMCSSValue* DoGetMozTextDecorationLine();
   nsIDOMCSSValue* DoGetMozTextDecorationStyle();
   nsIDOMCSSValue* DoGetTextIndent();
+  nsIDOMCSSValue* DoGetTextOverflow();
   nsIDOMCSSValue* DoGetTextTransform();
   nsIDOMCSSValue* DoGetTextShadow();
   nsIDOMCSSValue* DoGetLetterSpacing();
