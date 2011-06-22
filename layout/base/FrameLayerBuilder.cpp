@@ -844,6 +844,11 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
   }
   data->mXScale = mParameters.mXScale;
   data->mYScale = mParameters.mYScale;
+  // If we're in a transformed subtree, but no ancestor transform is actively
+  // changing, we'll use the residual translation when drawing into the
+  // ThebesLayer to ensure that snapping exactly matches the ideal transform.
+  layer->SetAllowResidualTranslation(
+      mParameters.mInTransformedSubtree && !mParameters.mInActiveTransformedSubtree);
 
   mBuilder->LayerBuilder()->SaveLastPaintOffset(layer);
 
@@ -1693,7 +1698,16 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   // Apply the inverse of our resolution-scale before the rest of our transform
   transform = gfx3DMatrix::Scale(1.0/scale.width, 1.0/scale.height, 1.0)*transform;
   aLayer->SetTransform(transform);
-  return FrameLayerBuilder::ContainerParameters(scale.width, scale.height);
+
+  FrameLayerBuilder::ContainerParameters
+    result(scale.width, scale.height, aIncomingScale);
+  if (aTransform) {
+    result.mInTransformedSubtree = true;
+    if (aContainerFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer)) {
+      result.mInActiveTransformedSubtree = true;
+    }
+  }
+  return result;
 }
 
 already_AddRefed<ContainerLayer>
@@ -1933,6 +1947,34 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
   return nsnull;
 }
 
+/*
+ * A note on residual transforms:
+ *
+ * In a transformed subtree we sometimes apply the ThebesLayer's
+ * "residual transform" when drawing content into the ThebesLayer.
+ * This is a translation by components in the range [-0.5,0.5) provided
+ * by the layer system; applying the residual transform followed by the
+ * transforms used by layer compositing ensures that the subpixel alignment
+ * of the content of the ThebesLayer exactly matches what it would be if
+ * we used cairo/Thebes to draw directly to the screen without going through
+ * retained layer buffers.
+ *
+ * The visible and valid regions of the ThebesLayer are computed without
+ * knowing the residual transform (because we don't know what the residual
+ * transform is going to be until we've built the layer tree!). So we have to
+ * consider whether content painted in the range [x, xmost) might be painted
+ * outside the visible region we computed for that content. The visible region
+ * would be [floor(x), ceil(xmost)). The content would be rendered at
+ * [x + r, xmost + r), where -0.5 <= r < 0.5. So some half-rendered pixels could
+ * indeed fall outside the computed visible region, which is not a big deal;
+ * similar issues already arise when we snap cliprects to nearest pixels.
+ * Note that if the rendering of the content is snapped to nearest pixels ---
+ * which it often is --- then the content is actually rendered at
+ * [snap(x + r), snap(xmost + r)). It turns out that floor(x) <= snap(x + r)
+ * and ceil(xmost) >= snap(xmost + r), so the rendering of snapped content
+ * always falls within the visible region we computed.
+ */
+
 /* static */ void
 FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
                                    gfxContext* aContext,
@@ -1976,7 +2018,10 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
   nsIntPoint offset = GetTranslationForThebesLayer(aLayer);
   aContext->Scale(userData->mXScale, userData->mYScale);
-  aContext->Translate(-gfxPoint(offset.x, offset.y));
+  // Apply the residual transform if it has been enabled, to ensure that
+  // snapping when we draw into aContext exactly matches the ideal transform.
+  // See above for why this is OK.
+  aContext->Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y));
 
   nsPresContext* presContext = containerLayerFrame->PresContext();
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
