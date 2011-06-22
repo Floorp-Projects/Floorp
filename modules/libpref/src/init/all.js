@@ -98,7 +98,6 @@ pref("browser.sessionhistory.max_total_viewers", -1);
 pref("browser.sessionhistory.optimize_eviction", true);
 
 pref("ui.use_native_colors", true);
-pref("ui.use_native_popup_windows", false);
 pref("ui.click_hold_context_menus", false);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
@@ -273,8 +272,7 @@ pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
 // Telemetry
 pref("toolkit.telemetry.enabled", false);
-// Telemetry test server to be used until the official one is public
-pref("toolkit.telemetry.server", "http://telemetry.allizom.org");
+pref("toolkit.telemetry.server", "https://data.mozilla.com");
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -3166,7 +3164,11 @@ pref("image.mem.decodeondraw", false);
 // Minimum timeout for image discarding (in milliseconds). The actual time in
 // which an image must inactive for it to be discarded will vary between this
 // value and twice this value.
-pref("image.mem.min_discard_timeout_ms", 120000);
+//
+// This used to be 120 seconds, but having it that high causes our working
+// set to grow very large. Switching it back to 10 seconds will hopefully
+// be better.
+pref("image.mem.min_discard_timeout_ms", 10000);
 
 // Chunk size for calls to the image decoders
 pref("image.mem.decode_bytes_at_a_time", 200000);

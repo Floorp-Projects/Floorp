@@ -1795,7 +1795,7 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
   }
 
   if (!theme)
-    return PR_FALSE;
+    return ClassicGetWidgetPadding(aContext, aFrame, aWidgetType, aResult);
 
   if (aWidgetType == NS_THEME_MENUPOPUP)
   {
@@ -2468,18 +2468,30 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
     case NS_THEME_MENUPOPUP:
       (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 3;
       break;
+    default:
+      (*aResult).top = (*aResult).bottom = (*aResult).left = (*aResult).right = 0;
+      break;
+  }
+  return NS_OK;
+}
+
+PRBool
+nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
+                                   nsIFrame* aFrame,
+                                   PRUint8 aWidgetType,
+                                   nsIntMargin* aResult)
+{
+  switch (aWidgetType) {
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
     case NS_THEME_RADIOMENUITEM: {
       PRInt32 part, state;
       PRBool focused;
-      nsresult rv;
 
-      rv = ClassicGetThemePartAndState(aFrame, aWidgetType, part, state, focused);
-      if (NS_FAILED(rv))
-        return rv;
+      if (NS_FAILED(ClassicGetThemePartAndState(aFrame, aWidgetType, part, state, focused)))
+        return PR_FALSE;
 
-      if (part == 1) { // top level menu
+      if (part == 1) { // top-level menu
         if (nsUXThemeData::sFlatMenus || !(state & DFCS_PUSHED)) {
           (*aResult).top = (*aResult).bottom = (*aResult).left = (*aResult).right = 2;
         }
@@ -2493,13 +2505,11 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
         (*aResult).top = 0;
         (*aResult).bottom = (*aResult).left = (*aResult).right = 2;
       }
-      break;
+      return PR_TRUE;
     }
     default:
-      (*aResult).top = (*aResult).bottom = (*aResult).left = (*aResult).right = 0;
-      break;
+      return PR_FALSE;
   }
-  return NS_OK;
 }
 
 nsresult
