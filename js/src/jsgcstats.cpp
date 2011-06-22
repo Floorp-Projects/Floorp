@@ -204,10 +204,23 @@ const char *gcReasons[] = {"  API", "Maybe", "LastC", "DestC", "Compa", "LastD",
 jsrefcount newChunkCount = 0;
 jsrefcount destroyChunkCount = 0;
 
+#ifdef MOZ_GCTIMER
+static const char *gcTimerStatPath = NULL;
+#endif
+
 GCTimer::GCTimer(JSRuntime *rt, JSCompartment *comp)
   : rt(rt), isCompartmental(comp),
     enabled(rt->gcData.isTimerEnabled())
 {
+#ifdef MOZ_GCTIMER
+    if (!gcTimerStatPath) {
+        gcTimerStatPath = getenv("MOZ_GCTIMER");
+        if (!gcTimerStatPath || !gcTimerStatPath[0])
+            gcTimerStatPath = "gcTimer.dat";
+    }
+    if (!strcmp(gcTimerStatPath, "none"))
+        enabled = false;
+#endif
     clearTimestamps();
     getFirstEnter();
     enter = PRMJ_Now();
@@ -269,34 +282,42 @@ GCTimer::finish(bool lastGC)
 #endif
 
 #if defined(MOZ_GCTIMER)
-        if (JS_WANT_GC_SUITE_PRINT) {
+        static FILE *gcFile;
+        static bool fullFormat;
+
+        if (!gcFile) {
+            if (!strcmp(gcTimerStatPath, "stdout")) {
+                gcFile = stdout;
+                fullFormat = false;
+            } else if (!strcmp(gcTimerStatPath, "stderr")) {
+                gcFile = stderr;
+                fullFormat = false;
+            } else {
+                gcFile = fopen(gcTimerStatPath, "a");
+                JS_ASSERT(gcFile);
+                fullFormat = true;
+                fprintf(gcFile, "     AppTime,  Total,   Wait,   Mark,  Sweep, FinObj,"
+                        " FinStr, SwShapes, Destroy,    End, +Chu, -Chu, T, Reason\n");
+            }
+        }
+
+        if (!fullFormat) {
             fprintf(stderr, "%f %f %f\n",
                     TIMEDIFF(enter, end),
                     TIMEDIFF(startMark, startSweep),
                     TIMEDIFF(startSweep, sweepDestroyEnd));
         } else {
-            static FILE *gcFile;
-
-            if (!gcFile) {
-                gcFile = fopen("gcTimer.dat", "a");
-
-                fprintf(gcFile, "     AppTime,  Total,   Wait,   Mark,  Sweep, FinObj,"
-                                " FinStr, SwShapes, Destroy,    End, +Chu, -Chu, T, Reason\n");
-            }
-            JS_ASSERT(gcFile);
             /*               App   , Tot  , Wai  , Mar  , Swe  , FiO  , FiS  , SwS  , Des   , End */
             fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, %6.1f, ",
                     appTime, gcTime, waitTime, markTime, sweepTime, sweepObjTime, sweepStringTime,
                     sweepShapeTime, destroyTime, endTime);
             fprintf(gcFile, "%4d, %4d,", newChunkCount, destroyChunkCount);
             fprintf(gcFile, " %s, %s\n", isCompartmental ? "C" : "G", gcReasons[gcReason]);
-            fflush(gcFile);
-
-            if (lastGC) {
-                fclose(gcFile);
-                gcFile = NULL;
-            }
         }
+        fflush(gcFile);
+        
+        if (lastGC && gcFile != stdout && gcFile != stderr)
+            fclose(gcFile);
 #endif
     }
     newChunkCount = 0;
