@@ -1293,22 +1293,6 @@ void nsRegion::MoveBy (nsPoint aPt)
   }
 }
 
-nsRegion& nsRegion::ExtendForScaling (float aXMult, float aYMult)
-{
-  nsRegion region;
-  nsRegionRectIterator iter(*this);
-  for (;;) {
-    const nsRect* r = iter.Next();
-    if (!r)
-      break;
-    nsRect rect = *r;
-    rect.ExtendForScaling(aXMult, aYMult);
-    region.Or(region, rect);
-  }
-  *this = region;
-  return *this;
-}
-
 nsRegion& nsRegion::ScaleRoundOut (float aXScale, float aYScale)
 {
   nsRegion region;
