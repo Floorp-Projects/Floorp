@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Ion.h"
+#include "IonSpew.h"
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "IonBuilder.h"
@@ -55,17 +56,19 @@ MIRGenerator::MIRGenerator(TempAllocator &temp, JSScript *script, JSFunction *fu
     temp_(temp),
     fun_(fun),
     graph_(graph),
-    error_(false),
-    message_(NULL)
+    error_(false)
 {
     nslots_ = script->nslots + (fun ? fun->nargs + 2 : 0);
 }
 
 bool
-MIRGenerator::error(const char *message)
+MIRGenerator::abort(const char *message, ...)
 {
+    va_list ap;
+    va_start(ap, message);
+    IonSpewVA(IonSpew_Abort, message, ap);
+    va_end(ap);
     error_ = true;
-    message_ = message;
     return false;
 }
 

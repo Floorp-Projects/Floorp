@@ -102,7 +102,7 @@ LIRGenerator::ensureDefined(MInstruction *mir)
 {
     if (mir->emitAtUses()) {
         if (!mir->accept(this))
-            return gen->error();
+            return false;
         JS_ASSERT(mir->id());
     }
     return true;
@@ -153,7 +153,7 @@ LIRGenerator::temp(LDefinition::Type type)
 {
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS) {
-        gen->error("max virtual registers");
+        gen->abort("max virtual registers");
         return LDefinition();
     }
     return LDefinition(vreg, type);
