@@ -538,6 +538,8 @@ LayerManagerOGL::RootLayer() const
   return static_cast<LayerOGL*>(mRoot->ImplData());
 }
 
+/* This function tries to stick to portable C89 as much as possible
+ * so that it can be easily copied into other applications */
 void
 LayerManagerOGL::FPSState::DrawFPS(GLContext* context, CopyProgram* copyprog)
 {
