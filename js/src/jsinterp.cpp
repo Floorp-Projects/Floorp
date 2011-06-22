@@ -4574,6 +4574,9 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     RESET_USE_METHODJIT();
     TRACE_0(EnterFrame);
 
+    if (ion::Go(cx, script, regs.fp()))
+        return true;
+
 #ifdef JS_METHODJIT
     {
         /* Try to ensure methods are method JIT'd.  */
