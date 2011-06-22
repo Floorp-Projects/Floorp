@@ -590,7 +590,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
 
   nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this);
+    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this,
+                           nsDisplayItem::ContainerParameters(), nsnull);
   if (!root)
     return;
 
@@ -1701,9 +1702,11 @@ nsRegion nsDisplayOpacity::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 // nsDisplayOpacity uses layers for rendering
 already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
-                             LayerManager* aManager) {
+                             LayerManager* aManager,
+                             const ContainerParameters& aContainerParameters) {
   nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
+                           aContainerParameters, nsnull);
   if (!layer)
     return nsnull;
 
@@ -1768,9 +1771,11 @@ nsDisplayOwnLayer::~nsDisplayOwnLayer() {
 // nsDisplayOpacity uses layers for rendering
 already_AddRefed<Layer>
 nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
-                              LayerManager* aManager) {
+                              LayerManager* aManager,
+                              const ContainerParameters& aContainerParameters) {
   nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
+                           aContainerParameters, nsnull);
   return layer.forget();
 }
 
@@ -1833,9 +1838,11 @@ nsDisplayScrollLayer::~nsDisplayScrollLayer()
 
 already_AddRefed<Layer>
 nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
-                                 LayerManager* aManager) {
+                                 LayerManager* aManager,
+                                 const ContainerParameters& aContainerParameters) {
   nsRefPtr<ContainerLayer> layer = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
+                           aContainerParameters, nsnull);
 
   // Get the already set unique ID for scrolling this content remotely.
   // Or, if not set, generate a new ID.
@@ -2375,7 +2382,8 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
 }
 
 already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
-                                                       LayerManager *aManager)
+                                                       LayerManager *aManager,
+                                                       const ContainerParameters& aContainerParameters)
 {
   gfxMatrix newTransformMatrix =
     GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
@@ -2384,13 +2392,10 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   if (newTransformMatrix.IsSingular())
     return nsnull;
 
-  nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList());
-  if (!layer)
-    return nsnull;
- 
-  layer->SetTransform(gfx3DMatrix::From2D(newTransformMatrix));
-  return layer.forget();
+  gfx3DMatrix matrix = gfx3DMatrix::From2D(newTransformMatrix);
+  return aBuilder->LayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList(),
+                           aContainerParameters, &matrix);
 }
 
 nsDisplayItem::LayerState

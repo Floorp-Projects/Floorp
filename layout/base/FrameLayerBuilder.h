@@ -132,6 +132,10 @@ public:
    */
   void DidEndTransaction(LayerManager* aManager);
 
+  struct ContainerParameters {
+    ContainerParameters() : mXScale(1), mYScale(1) {}
+    double mXScale, mYScale;
+  };
   /**
    * Build a container layer for a display item that contains a child
    * list, either reusing an existing one or creating a new one. It
@@ -146,13 +150,17 @@ public:
    * Returns a layer with clip rect cleared; it is the
    * caller's responsibility to add any clip rect. The visible region
    * is set based on what's in the layer.
+   * The container layer is transformed by aTransform (if non-null), and
+   * the result is transformed by the scale factors in aContainerParameters.
    */
   already_AddRefed<ContainerLayer>
   BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                          LayerManager* aManager,
                          nsIFrame* aContainerFrame,
                          nsDisplayItem* aContainerItem,
-                         const nsDisplayList& aChildren);
+                         const nsDisplayList& aChildren,
+                         const ContainerParameters& aContainerParameters,
+                         const gfx3DMatrix* aTransform);
 
   /**
    * Get a retained layer for a display item that needs to create its own
