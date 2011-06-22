@@ -305,6 +305,16 @@ struct BaseRect {
     width = right - x;
     height = bottom - y;
   }
+  void ScaleInverseRoundOut(double aScale) { ScaleInverseRoundOut(aScale, aScale); }
+  void ScaleInverseRoundOut(double aXScale, double aYScale)
+  {
+    T right = static_cast<T>(ceil(double(XMost()) / aXScale));
+    T bottom = static_cast<T>(ceil(double(YMost()) / aYScale));
+    x = static_cast<T>(floor(double(x) / aXScale));
+    y = static_cast<T>(floor(double(y) / aYScale));
+    width = right - x;
+    height = bottom - y;
+  }
 
 private:
   // Do not use the default operator== or operator!= !
