@@ -36,29 +36,34 @@
 
 #include "nsISupports.idl"
 
-/**
- * Interface to pass to the cycle collector to get information about the CC
- * graph while it's being built. The order of calls will be call to begin();
- * then for every node in the graph a call to noteObject() and calls to
+/** Interface to pass to the cycle collector to get information about
+ * the CC graph while it's being built. The order of calls will be a
+ * call to begin(); then for every node in the graph a call to either
+ * noteRefCountedObject() or noteGCedObject(), followed by calls to
  * noteEdge() for every edge starting at that node; then a call to
- * beginDescriptions(); then for every black node in the CC graph a call to
- * either describeRefcountedObject() or to describeGCedObject(); and then a
- * call to end(). If begin() returns an error none of the other functions will
- * be called.
+ * beginResults(); then a mixture of describeRoot() for ref counted
+ * nodes the CC has identified as roots and describeGarbage() for
+ * nodes the CC has identified as garbage.  Ref counted nodes that are
+ * not identified as either roots or garbage are neither, and have a
+ * known edges count equal to their ref count.  Finally, there will be
+ * a call to end().  If begin() returns an error none of the other
+ * functions will be called.
  */
-[scriptable, uuid(194b749a-4ceb-4dd1-928d-d30b5f14c23e)]
+[scriptable, uuid(3f3901bb-6a1c-4998-b32e-6f10a51db470)]
 interface nsICycleCollectorListener : nsISupports
 {
     void begin();
-    void noteObject(in unsigned long long aAddress,
-                    in string aObjectDescription);
-    void noteEdge(in unsigned long long aFromAddress,
-                  in unsigned long long aToAddress,
+    void noteRefCountedObject (in unsigned long long aAddress,
+			       in unsigned long aRefCount,
+			       in string aObjectDescription);
+    void noteGCedObject (in unsigned long long aAddress,
+			 in boolean aMarked,
+			 in string aObjectDescription);
+    void noteEdge(in unsigned long long aToAddress,
                   in string aEdgeName);
-    void beginDescriptions();
-    void describeRefcountedObject(in unsigned long long aAddress,
-                                  in unsigned long aKnownEdges,
-                                  in unsigned long aTotalEdges);
-    void describeGCedObject(in unsigned long long aAddress, in boolean aMarked);
+    void beginResults();
+    void describeRoot(in unsigned long long aAddress,
+		      in unsigned long aKnownEdges);
+    void describeGarbage(in unsigned long long aAddress);
     void end();
 };
