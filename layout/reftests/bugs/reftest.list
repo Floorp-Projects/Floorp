@@ -1622,6 +1622,7 @@ fails-if(Android) == 625409-1.html 625409-1-ref.html
 fails-if(Android) == 632423-1.html 632423-1-ref.html
 skip-if(Android) fails-if(winWidget) == 632781-verybig.html 632781-ref.html # large canvas elements are not drawn on Windows, see bug 633936
 == 632781-normalsize.html 632781-ref.html
+== 633344-1.html 633344-1-ref.html
 fails-if(Android) == 634232-1.html 634232-1-ref.html
 fails-if(Android) == 635302-1.html 635302-1-ref.html
 == 635373-1.html 635373-1-ref.html
