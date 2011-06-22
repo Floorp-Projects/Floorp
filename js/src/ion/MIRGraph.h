@@ -114,10 +114,10 @@ class MIRGenerator
         return reinterpret_cast<T *>(temp().allocate(sizeof(T) * count));
     }
 
-    // Set an error state and optional message. This is used to propagate
-    // errors in tricky places, and the error status can be checked before
-    // validating or generating code.
-    bool error(const char *message = NULL);
+    // Set an error state and prints a message. Returns false so errors can be
+    // propagated up.
+    bool abort(const char *message, ...);
+
     bool errored() const {
         return error_;
     }
@@ -132,7 +132,6 @@ class MIRGenerator
     uint32 nslots_;
     MIRGraph &graph_;
     bool error_;
-    const char *message_;
 };
 
 class MIRGraph
