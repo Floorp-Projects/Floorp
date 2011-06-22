@@ -899,6 +899,10 @@ pref("dom.ipc.plugins.enabled.x86_64", true);
 pref("dom.ipc.plugins.enabled", true);
 #endif
 
+#ifdef MOZ_E10S_COMPAT
+pref("browser.tabs.remote", true);
+#endif
+
 // This pref governs whether we attempt to work around problems caused by
 // plugins using OS calls to manipulate the cursor while running out-of-
 // process.  These workarounds all involve intercepting (hooking) certain
