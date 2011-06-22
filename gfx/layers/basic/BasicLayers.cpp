@@ -500,6 +500,17 @@ public:
       aType, gfxIntSize(aSize.width, aSize.height));
   }
 
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    if (!BasicManager()->IsRetained()) {
+      // Don't do any snapping of our transform, since we're just going to
+      // draw straight through without intermediate buffers.
+      mEffectiveTransform = GetLocalTransform()*aTransformToSurface;
+      return;
+    }
+    ThebesLayer::ComputeEffectiveTransforms(aTransformToSurface);
+  }
+
 protected:
   BasicLayerManager* BasicManager()
   {
