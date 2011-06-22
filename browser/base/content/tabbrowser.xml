@@ -1263,6 +1263,11 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
+            if (Services.prefs.getPrefType("browser.tabs.remote") == Services.prefs.PREF_BOOL &&
+                Services.prefs.getBoolPref("browser.tabs.remote")) {
+              b.setAttribute("remote", "true");
+            }
+
             if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
                 window.windowState == window.STATE_NORMAL) {
               b.setAttribute("showresizer", "true");
