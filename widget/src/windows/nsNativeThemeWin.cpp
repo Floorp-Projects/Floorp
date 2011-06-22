@@ -2507,6 +2507,10 @@ nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
       }
       return PR_TRUE;
     }
+    case NS_THEME_PROGRESSBAR:
+    case NS_THEME_PROGRESSBAR_VERTICAL:
+      (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 1;
+      return PR_TRUE;
     default:
       return PR_FALSE;
   }
