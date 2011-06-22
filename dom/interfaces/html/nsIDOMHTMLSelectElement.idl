@@ -53,7 +53,7 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(58cd01b8-c3f2-4e58-b39d-8a0ba941717e)]
+[scriptable, uuid(5aeb2480-cb21-4483-b9b3-0c914502eb81)]
 interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
 {
            attribute boolean                     autofocus;
@@ -70,7 +70,7 @@ interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
   nsIDOMNode                item(in unsigned long index);
   nsIDOMNode                namedItem(in DOMString name);
   void                      add(in nsIDOMHTMLElement element, 
-                                in nsIDOMHTMLElement before)
+                                [optional] in nsIDOMHTMLElement before)
                                                      raises(DOMException);   
   void                      remove(in long index);
 
