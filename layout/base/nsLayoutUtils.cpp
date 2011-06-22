@@ -1292,7 +1292,7 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 
 #ifdef DEBUG
   if (gDumpEventList) {
-    fprintf(stderr, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
+    fprintf(stdout, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
     nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
@@ -1601,7 +1601,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
 #ifdef DEBUG
   if (gDumpPaintList) {
-    fprintf(stderr, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
+    fprintf(stdout, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
             dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
     nsFrame::PrintDisplayList(&builder, list);
   }
@@ -1653,10 +1653,10 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
 #ifdef DEBUG
   if (gDumpPaintList) {
-    fprintf(stderr, "Painting --- after optimization:\n");
+    fprintf(stdout, "Painting --- after optimization:\n");
     nsFrame::PrintDisplayList(&builder, list);
 
-    fprintf(stderr, "Painting --- retained layer tree:\n");
+    fprintf(stdout, "Painting --- retained layer tree:\n");
     builder.LayerBuilder()->DumpRetainedLayerTree();
   }
 #endif
