@@ -4807,7 +4807,6 @@ NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
-XPC_IDISPATCH_SUPPORT=
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 
 
@@ -6481,14 +6480,6 @@ dnl ========================================================
 dnl ActiveX
 dnl ========================================================
 
-MOZ_ARG_DISABLE_BOOL(xpconnect-idispatch,
-[  --disable-xpconnect-idispatch
-                          Disable building of xpconnect support for IDispatch
-                          (win32 only)],
-    XPC_IDISPATCH_SUPPORT=,
-    XPC_IDISPATCH_SUPPORT=1)
-AC_SUBST(XPC_IDISPATCH_SUPPORT)
-
 MOZ_ARG_DISABLE_BOOL(activex,
 [  --disable-activex       Disable building of ActiveX control (win32 only)],
     MOZ_NO_ACTIVEX_SUPPORT=1,
@@ -6508,7 +6499,7 @@ then
 fi
 
 if test "$COMPILE_ENVIRONMENT" = "1"; then
-if test -n "$XPC_IDISPATCH_SUPPORT" -o -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT" -o -z "$MOZ_NO_ACTIVEX_SUPPORT"; then
+if test -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT" -o -z "$MOZ_NO_ACTIVEX_SUPPORT"; then
 case "$target" in
 *-mingw*)
     if test "$ac_cv_header_atlbase_h" = "no"; then
