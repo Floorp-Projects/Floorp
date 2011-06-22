@@ -528,6 +528,22 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                 return NS_ERROR_FAILURE;
         }
 
+        if (xpc::dom::instanceIsProxy(obj))
+        {
+            nsISupports *identity =
+                static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
+            nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(identity);
+
+            XPCCallContext ccx(JS_CALLER, cx);
+
+            AutoMarkingNativeSetPtr set(ccx);
+            set = XPCNativeSet::GetNewOrUsed(ccx, ci);
+            if(!set)
+                return NS_ERROR_FAILURE;
+            *bp = set->HasInterfaceWithAncestor(iid);
+            return NS_OK;
+     }
+
         XPCWrappedNative* other_wrapper =
            XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
 
