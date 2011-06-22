@@ -129,6 +129,7 @@ public:
     return mScrollId != NULL_SCROLL_ID;
   }
 
+  // These are all in layer coordinate space.
   nsIntRect mViewport;
   nsIntSize mContentSize;
   nsIntPoint mViewportScrollOffset;
