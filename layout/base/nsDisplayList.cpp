@@ -589,14 +589,21 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     aBuilder->LayerBuilder()->DidBeginRetainedLayerTransaction(layerManager);
   }
 
-  nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
-    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this,
-                           nsDisplayItem::ContainerParameters(), nsnull);
-  if (!root)
-    return;
-
   nsPresContext* presContext = aForFrame->PresContext();
   nsIPresShell* presShell = presContext->GetPresShell();
+
+  nsDisplayItem::ContainerParameters containerParameters
+    (presShell->GetXResolution(), presShell->GetYResolution());
+  nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
+    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this,
+                           containerParameters, nsnull);
+  if (!root)
+    return;
+  // Root is being scaled up by the X/Y resolution. Scale it back down.
+  gfx3DMatrix rootTransform = root->GetTransform()*
+    gfx3DMatrix::Scale(1.0f/containerParameters.mXScale,
+                       1.0f/containerParameters.mYScale, 1.0f);
+  root->SetTransform(rootTransform);
 
   ViewID id = presContext->IsRootContentDocument() ? FrameMetrics::ROOT_SCROLL_ID
                                                    : FrameMetrics::NULL_SCROLL_ID;
@@ -613,16 +620,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   RecordFrameMetrics(aForFrame, rootScrollFrame,
                      root, mVisibleRect, mVisibleRect,
                      (usingDisplayport ? &displayport : nsnull), id);
-
-  // If the layer manager supports resolution scaling, set that up
-  if (LayerManager::LAYERS_BASIC == layerManager->GetBackendType()) {
-    BasicLayerManager* basicManager =
-      static_cast<BasicLayerManager*>(layerManager.get());
-    // This is free if both resolutions are 1.0, or neither resolution
-    // has changed since the last transaction
-    basicManager->SetResolution(presShell->GetXResolution(),
-                                presShell->GetYResolution());
-  }
 
   layerManager->SetRoot(root);
   aBuilder->LayerBuilder()->WillEndTransaction(layerManager);
