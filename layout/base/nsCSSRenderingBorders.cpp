@@ -1381,12 +1381,6 @@ nsCSSBorderRenderer::DrawBorders()
     return;
   }
 
-  // round mOuterRect and mInnerRect; they're already an integer
-  // number of pixels apart and should stay that way after
-  // rounding.
-  mOuterRect.Round();
-  mInnerRect.Round();
-
   gfxMatrix mat = mContext->CurrentMatrix();
 
   // Clamp the CTM to be pixel-aligned; we do this only
@@ -1403,6 +1397,13 @@ nsCSSBorderRenderer::DrawBorders()
     mat.x0 = floor(mat.x0 + 0.5);
     mat.y0 = floor(mat.y0 + 0.5);
     mContext->SetMatrix(mat);
+
+    // round mOuterRect and mInnerRect; they're already an integer
+    // number of pixels apart and should stay that way after
+    // rounding. We don't do this if there's a scale in the current transform
+    // since this loses information that might be relevant when we're scaling.
+    mOuterRect.Round();
+    mInnerRect.Round();
   }
 
   PRBool allBordersSameWidth = AllBordersSameWidth();
