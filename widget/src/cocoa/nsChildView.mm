@@ -2955,9 +2955,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!gRollupWidget)
     return;
 
-  if (Preferences::GetBool("ui.use_native_popup_windows", PR_FALSE)) {
-    return;
-  }
+#ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
+  return;
+#endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 
   NSWindow *popupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
   if (!popupWindow || ![popupWindow isKindOfClass:[PopupWindow class]])

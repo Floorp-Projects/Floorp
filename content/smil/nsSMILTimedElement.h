@@ -472,6 +472,9 @@ protected:
    * @param aPrevInterval   The previous interval used. If supplied, the first
    *                        interval that begins after aPrevInterval will be
    *                        returned. May be nsnull.
+   * @param aReplacedInterval The interval that is being updated (if any). This
+   *                        used to ensure we don't return interval endpoints
+   *                        that are dependent on themselves. May be nsnull.
    * @param aFixedBeginTime The time to use for the start of the interval. This
    *                        is used when only the endpoint of the interval
    *                        should be updated such as when the animation is in
@@ -482,6 +485,7 @@ protected:
    * @return  PR_TRUE if a suitable interval was found, PR_FALSE otherwise.
    */
   PRBool            GetNextInterval(const nsSMILInterval* aPrevInterval,
+                                    const nsSMILInterval* aReplacedInterval,
                                     const nsSMILInstanceTime* aFixedBeginTime,
                                     nsSMILInterval& aResult) const;
   nsSMILInstanceTime* GetNextGreater(const InstanceTimeList& aList,
