@@ -189,7 +189,6 @@ public:
   nsIntRegion ScaleToOutsidePixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
   nsIntRegion ToOutsidePixels (nscoord aAppUnitsPerPixel) const;
   nsIntRegion ToNearestPixels (nscoord aAppUnitsPerPixel) const;
-  nsRegion& ExtendForScaling (float aXMult, float aYMult);
 
   /**
    * Gets the largest rectangle contained in the region.
@@ -447,12 +446,6 @@ public:
   nsIntRegion& ScaleRoundOut (float aXScale, float aYScale)
   {
     mImpl.ScaleRoundOut(aXScale, aYScale);
-    return *this;
-  }
-
-  nsIntRegion& ExtendForScaling (float aXMult, float aYMult)
-  {
-    mImpl.ExtendForScaling(aXMult, aYMult);
     return *this;
   }
 
