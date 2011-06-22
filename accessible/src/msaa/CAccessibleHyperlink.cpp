@@ -188,7 +188,7 @@ __try {
   if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
     return E_FAIL;
 
-  *aValid = thisObj->IsValid();
+  *aValid = thisObj->IsLinkValid();
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }

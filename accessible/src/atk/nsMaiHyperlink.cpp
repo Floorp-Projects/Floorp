@@ -264,7 +264,7 @@ isValidCB(AtkHyperlink *aLink)
     nsAccessible* hyperlink = get_accessible_hyperlink(aLink);
     NS_ENSURE_TRUE(hyperlink, FALSE);
 
-    return static_cast<gboolean>(hyperlink->IsValid());
+    return static_cast<gboolean>(hyperlink->IsLinkValid());
 }
 
 gint
