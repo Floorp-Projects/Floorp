@@ -1124,11 +1124,8 @@ nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
                : mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
   PRBool haveBetter = PR_FALSE;
 
-  // figure out the starting size : if this is a largeop, start at 2 else 1
-  PRInt32 size = 1; // size=0 is the char at its normal size
-  if (largeop && aGlyphTable->BigOf(mPresContext, mChar, 2).Exists()) {
-    size = 2;
-  }
+  // start at size = 1 (size = 0 is the char at its normal size)
+  PRInt32 size = 1;
 #ifdef NOISY_SEARCH
   printf("  searching in %s ...\n",
            NS_LossyConvertUTF16toASCII(aFamily).get());
