@@ -5131,7 +5131,7 @@ nsTextFrame::GetSnappedBaselineY(gfxContext* aContext, gfxFloat aY)
   gfxFloat appUnitsPerDevUnit = mTextRun->GetAppUnitsPerDevUnit();
   gfxFloat baseline = aY + mAscent;
   gfxRect putativeRect(0, baseline/appUnitsPerDevUnit, 1, 1);
-  if (!aContext->UserToDevicePixelSnapped(putativeRect))
+  if (!aContext->UserToDevicePixelSnapped(putativeRect, PR_TRUE))
     return baseline;
   return aContext->DeviceToUser(putativeRect.TopLeft()).y*appUnitsPerDevUnit;
 }
