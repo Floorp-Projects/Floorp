@@ -187,7 +187,7 @@ public:
    * @return the root of the display list's frame (sub)tree, whose origin
    * establishes the coordinate system for the display list
    */
-  nsIFrame* ReferenceFrame() { return mReferenceFrame; }
+  nsIFrame* ReferenceFrame() const { return mReferenceFrame; }
   /**
    * @return a point pt such that adding pt to a coordinate relative to aFrame
    * makes it relative to ReferenceFrame(), i.e., returns 
@@ -195,7 +195,7 @@ public:
    * the appunits of aFrame. It may be optimized to be faster than
    * aFrame->GetOffsetToCrossDoc(ReferenceFrame()) (but currently isn't).
    */
-  nsPoint ToReferenceFrame(const nsIFrame* aFrame) {
+  nsPoint ToReferenceFrame(const nsIFrame* aFrame) const {
     return aFrame->GetOffsetToCrossDoc(ReferenceFrame());
   }
   /**
@@ -636,7 +636,7 @@ public:
    * that wrap item lists, this could return nsnull because there is no single
    * underlying frame; for leaf items it will never return nsnull.
    */
-  inline nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  inline nsIFrame* GetUnderlyingFrame() const { return mFrame; }
   /**
    * The default bounds is the frame border rect.
    * @return a rectangle relative to aBuilder->ReferenceFrame() that
@@ -813,7 +813,7 @@ public:
   /**
    * Returns the result of aBuilder->ToReferenceFrame(GetUnderlyingFrame())
    */
-  const nsPoint& ToReferenceFrame() {
+  const nsPoint& ToReferenceFrame() const {
     NS_ASSERTION(mFrame, "No frame?");
     return mToReferenceFrame;
   }
@@ -2185,6 +2185,71 @@ public:
 
 private:
   nsDisplayWrapList mStoredList;
+};
+
+/**
+ * This class adds basic support for limiting the rendering to the part inside
+ * the specified edges.  It's a base class for the display item classes that
+ * does the actual work.  The two members, mLeftEdge and mRightEdge, are
+ * relative to the edges of the frame's scrollable overflow rectangle and is
+ * the amount to suppress on each side.
+ *
+ * Setting none, both or only one edge is allowed.
+ * The values must be non-negative.
+ * The default value for both edges is zero, which means everything is painted.
+ */
+class nsCharClipDisplayItem : public nsDisplayItem {
+public:
+  nsCharClipDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame), mLeftEdge(0), mRightEdge(0) {}
+
+  struct ClipEdges {
+    ClipEdges(const nsDisplayItem& aItem,
+              nscoord aLeftEdge, nscoord aRightEdge) {
+      nsRect r = aItem.GetUnderlyingFrame()->GetScrollableOverflowRect() +
+                 aItem.ToReferenceFrame();
+      mX = aLeftEdge > 0 ? r.x + aLeftEdge : nscoord_MIN;
+      mXMost = aRightEdge > 0 ? NS_MAX(r.XMost() - aRightEdge, mX) : nscoord_MAX;
+    }
+    void Intersect(nscoord* aX, nscoord* aWidth) const {
+      nscoord xmost1 = *aX + *aWidth;
+      *aX = NS_MAX(*aX, mX);
+      *aWidth = NS_MAX(NS_MIN(xmost1, mXMost) - *aX, 0);
+    }
+    nscoord mX;
+    nscoord mXMost;
+  };
+
+  ClipEdges Edges() const { return ClipEdges(*this, mLeftEdge, mRightEdge); }
+
+  static nsCharClipDisplayItem* CheckCast(nsDisplayItem* aItem) {
+    nsDisplayItem::Type t = aItem->GetType();
+    return (t == nsDisplayItem::TYPE_TEXT ||
+            t == nsDisplayItem::TYPE_TEXT_DECORATION ||
+            t == nsDisplayItem::TYPE_TEXT_SHADOW)
+      ? static_cast<nsCharClipDisplayItem*>(aItem) : nsnull;
+  }
+
+  nscoord mLeftEdge;  // length from the left side
+  nscoord mRightEdge; // length from the right side
+};
+
+
+/**
+ * This is a dummy item that reports true for IsVaryingRelativeToMovingFrame.
+ * It forces the bounds of its frame to be repainted every time it is scrolled.
+ * It is transparent to events and does not paint anything.
+ */
+class nsDisplayForcePaintOnScroll : public nsDisplayItem
+{
+public:
+  nsDisplayForcePaintOnScroll(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayForcePaintOnScroll();
+#endif
+  NS_DISPLAY_DECL_NAME("ForcePaintOnScroll", TYPE_FORCEPAINTONSCROLL)
+  virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
+                                                nsIFrame* aFrame);
 };
 
 #endif /*NSDISPLAYLIST_H_*/

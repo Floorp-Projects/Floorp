@@ -204,6 +204,10 @@ protected:
 
     void          StartBlinking();
     void          StopBlinking();
+
+    // If the nearest block has a potential 'text-overflow' marker then
+    // invalidate it.
+    void          InvalidateTextOverflowBlock();
     
     PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode,
                                          PRInt32 aOffset,
