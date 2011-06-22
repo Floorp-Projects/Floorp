@@ -1130,6 +1130,22 @@ private:
   }
 };
 
+struct nsStyleTextOverflow {
+  nsStyleTextOverflow() : mType(NS_STYLE_TEXT_OVERFLOW_CLIP) {}
+
+  bool operator==(const nsStyleTextOverflow& aOther) const {
+    return mType == aOther.mType &&
+           (mType != NS_STYLE_TEXT_OVERFLOW_STRING ||
+            mString == aOther.mString);
+  }
+  bool operator!=(const nsStyleTextOverflow& aOther) const {
+    return !(*this == aOther);
+  }
+
+  nsString mString;
+  PRUint8  mType;
+};
+
 struct nsStyleTextReset {
   nsStyleTextReset(void);
   nsStyleTextReset(const nsStyleTextReset& aOther);
@@ -1187,6 +1203,7 @@ struct nsStyleTextReset {
   static PRBool ForceCompare() { return PR_FALSE; }
 
   nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
+  nsStyleTextOverflow mTextOverflow;    // [reset] enum, string
 
   PRUint8 mTextBlink;                   // [reset] see nsStyleConsts.h
   PRUint8 mTextDecorationLine;          // [reset] see nsStyleConsts.h
