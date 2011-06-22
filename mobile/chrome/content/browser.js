@@ -2845,6 +2845,7 @@ Tab.prototype = {
 
     let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     fl.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
+    fl.eventMode = Ci.nsIFrameLoader.EVENT_MODE_DONT_FORWARD_TO_CHILD;
 
     return browser;
   },
