@@ -284,9 +284,8 @@ TabChild::GetVisibility(PRBool* aVisibility)
 NS_IMETHODIMP
 TabChild::SetVisibility(PRBool aVisibility)
 {
-  NS_NOTREACHED("TabChild::SetVisibility not supported in TabChild");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // should the platform support this? Bug 666365
+  return NS_OK;
 }
 
 NS_IMETHODIMP
