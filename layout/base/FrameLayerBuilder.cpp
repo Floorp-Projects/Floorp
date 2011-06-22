@@ -2101,7 +2101,7 @@ void
 FrameLayerBuilder::DumpRetainedLayerTree()
 {
   if (mRetainingManager) {
-    mRetainingManager->Dump(stderr);
+    mRetainingManager->Dump(stdout);
   }
 }
 #endif
