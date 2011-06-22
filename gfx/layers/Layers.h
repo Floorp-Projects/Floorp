@@ -943,6 +943,19 @@ public:
    * region.
    */
   virtual void InvalidateRegion(const nsIntRegion& aRegion) = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set whether ComputeEffectiveTransforms should compute the
+   * "residual translation" --- the translation that should be applied *before*
+   * mEffectiveTransform to get the ideal transform for this ThebesLayer.
+   * When this is true, ComputeEffectiveTransforms will compute the residual
+   * and ensure that the layer is invalidated whenever the residual changes.
+   * When it's false, a change in the residual will not trigger invalidation
+   * and GetResidualTranslation will return 0,0.
+   * So when the residual is to be ignored, set this to false for better
+   * performance.
+   */
+  void SetAllowResidualTranslation(bool aAllow) { mAllowResidualTranslation = aAllow; }
 
   /**
    * Can be used anytime
@@ -957,29 +970,63 @@ public:
   {
     // The default implementation just snaps 0,0 to pixels.
     gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
-    mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), nsnull);
+    gfxMatrix residual;
+    mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0),
+        mAllowResidualTranslation ? &residual : nsnull);
+    // The residual can only be a translation because ThebesLayer snapping
+    // only aligns a single point with the pixel grid; scale factors are always
+    // preserved exactly
+    NS_ASSERTION(!residual.HasNonTranslation(),
+                 "Residual transform can only be a translation");
+    if (residual.GetTranslation() != mResidualTranslation) {
+      mResidualTranslation = residual.GetTranslation();
+      NS_ASSERTION(-0.5 <= mResidualTranslation.x && mResidualTranslation.x < 0.5 &&
+                   -0.5 <= mResidualTranslation.y && mResidualTranslation.y < 0.5,
+                   "Residual translation out of range");
+      mValidRegion.SetEmpty();
+    }
   }
 
   bool UsedForReadback() { return mUsedForReadback; }
   void SetUsedForReadback(bool aUsed) { mUsedForReadback = aUsed; }
+  /**
+   * Returns the residual translation. Apply this translation when drawing
+   * into the ThebesLayer so that when mEffectiveTransform is applied afterwards
+   * by layer compositing, the results exactly match the "ideal transform"
+   * (the product of the transform of this layer and its ancestors).
+   * Returns 0,0 unless SetAllowResidualTranslation(true) has been called.
+   * The residual translation components are always in the range [-0.5, 0.5).
+   */
+  gfxPoint GetResidualTranslation() const { return mResidualTranslation; }
 
 protected:
   ThebesLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData)
     , mValidRegion()
     , mUsedForReadback(false)
+    , mAllowResidualTranslation(false)
   {
     mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
   }
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
+  /**
+   * ComputeEffectiveTransforms snaps the ideal transform to get mEffectiveTransform.
+   * mResidualTranslation is the translation that should be applied *before*
+   * mEffectiveTransform to get the ideal transform.
+   */
+  gfxPoint mResidualTranslation;
   nsIntRegion mValidRegion;
   /**
    * Set when this ThebesLayer is participating in readback, i.e. some
    * ReadbackLayer (may) be getting its background from this layer.
    */
   bool mUsedForReadback;
+  /**
+   * True when
+   */
+  bool mAllowResidualTranslation;
 };
 
 /**

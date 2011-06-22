@@ -142,10 +142,20 @@ public:
   void DidEndTransaction(LayerManager* aManager);
 
   struct ContainerParameters {
-    ContainerParameters() : mXScale(1), mYScale(1) {}
+    ContainerParameters() :
+      mXScale(1), mYScale(1),
+      mInTransformedSubtree(false), mInActiveTransformedSubtree(false) {}
     ContainerParameters(float aXScale, float aYScale) :
-      mXScale(aXScale), mYScale(aYScale) {}
+      mXScale(aXScale), mYScale(aYScale),
+      mInTransformedSubtree(false), mInActiveTransformedSubtree(false) {}
+    ContainerParameters(float aXScale, float aYScale,
+                        const ContainerParameters& aParent) :
+      mXScale(aXScale), mYScale(aYScale),
+      mInTransformedSubtree(aParent.mInTransformedSubtree),
+      mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree) {}
     float mXScale, mYScale;
+    bool mInTransformedSubtree;
+    bool mInActiveTransformedSubtree;
   };
   /**
    * Build a container layer for a display item that contains a child

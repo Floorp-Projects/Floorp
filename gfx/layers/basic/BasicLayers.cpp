@@ -504,6 +504,10 @@ public:
       // Don't do any snapping of our transform, since we're just going to
       // draw straight through without intermediate buffers.
       mEffectiveTransform = GetLocalTransform()*aTransformToSurface;
+      if (gfxPoint(0,0) != mResidualTranslation) {
+        mResidualTranslation = gfxPoint(0,0);
+        mValidRegion.SetEmpty();
+      }
       return;
     }
     ThebesLayer::ComputeEffectiveTransforms(aTransformToSurface);
