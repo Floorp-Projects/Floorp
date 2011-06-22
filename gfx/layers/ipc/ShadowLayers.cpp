@@ -186,8 +186,6 @@ ShadowLayerForwarder::CreatedCanvasLayer(ShadowableLayer* aCanvas)
 void
 ShadowLayerForwarder::CreatedThebesBuffer(ShadowableLayer* aThebes,
                                           const nsIntRegion& aFrontValidRegion,
-                                          float aXResolution,
-                                          float aYResolution,
                                           const nsIntRect& aBufferRect,
                                           const SurfaceDescriptor& aTempFrontBuffer)
 {
@@ -199,9 +197,7 @@ ShadowLayerForwarder::CreatedThebesBuffer(ShadowableLayer* aThebes,
   }
   mTxn->AddEdit(OpCreateThebesBuffer(NULL, Shadow(aThebes),
                                      buffer,
-                                     aFrontValidRegion,
-                                     aXResolution,
-                                     aYResolution));
+                                     aFrontValidRegion));
 }
 
 void
