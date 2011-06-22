@@ -2041,11 +2041,11 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   // ThebesLayer
   gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
   nsIntPoint offset = GetTranslationForThebesLayer(aLayer);
-  aContext->Scale(userData->mXScale, userData->mYScale);
   // Apply the residual transform if it has been enabled, to ensure that
   // snapping when we draw into aContext exactly matches the ideal transform.
   // See above for why this is OK.
   aContext->Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y));
+  aContext->Scale(userData->mXScale, userData->mYScale);
 
   nsPresContext* presContext = containerLayerFrame->PresContext();
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
