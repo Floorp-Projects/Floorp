@@ -85,14 +85,17 @@ struct NS_GFX nsRect :
   // In the RoundOut version we make the rect the smallest rect containing the
   // unrounded result. In the RoundIn version we make the rect the largest rect
   // contained in the unrounded result.
+  // Note: this can turn an empty rectangle into a non-empty rectangle
   inline nsRect ConvertAppUnitsRoundOut(PRInt32 aFromAPP, PRInt32 aToAPP) const;
   inline nsRect ConvertAppUnitsRoundIn(PRInt32 aFromAPP, PRInt32 aToAPP) const;
 
   inline nsIntRect ScaleToNearestPixels(float aXScale, float aYScale,
                                         nscoord aAppUnitsPerPixel) const;
   inline nsIntRect ToNearestPixels(nscoord aAppUnitsPerPixel) const;
+  // Note: this can turn an empty rectangle into a non-empty rectangle
   inline nsIntRect ScaleToOutsidePixels(float aXScale, float aYScale,
                                         nscoord aAppUnitsPerPixel) const;
+  // Note: this can turn an empty rectangle into a non-empty rectangle
   inline nsIntRect ToOutsidePixels(nscoord aAppUnitsPerPixel) const;
   inline nsIntRect ScaleToInsidePixels(float aXScale, float aYScale,
                                        nscoord aAppUnitsPerPixel) const;
