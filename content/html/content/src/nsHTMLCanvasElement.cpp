@@ -621,7 +621,7 @@ nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
   if (!frame)
     return;
 
-  frame->MarkLayersActive();
+  frame->MarkLayersActive(nsChangeHint(0));
 
   nsRect invalRect;
   nsRect contentArea = frame->GetContentRect();

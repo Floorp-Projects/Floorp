@@ -118,6 +118,7 @@
 #include "nsExpirationTracker.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGEffects.h"
+#include "nsChangeHint.h"
 
 #include "gfxContext.h"
 #include "CSSCalc.h"
@@ -4099,12 +4100,17 @@ nsIFrame::InvalidateTransformLayer()
 
 class LayerActivity {
 public:
-  LayerActivity(nsIFrame* aFrame) : mFrame(aFrame) {}
+  LayerActivity(nsIFrame* aFrame) : mFrame(aFrame), mChangeHint(nsChangeHint(0)) {}
   ~LayerActivity();
   nsExpirationState* GetExpirationState() { return &mState; }
 
   nsIFrame* mFrame;
   nsExpirationState mState;
+  // mChangeHint can be some combination of nsChangeHint_UpdateOpacityLayer and
+  // nsChangeHint_UpdateTransformLayer (or neither)
+  // The presence of those bits indicates whether opacity or transform
+  // changes have been detected.
+  nsChangeHint mChangeHint;
 };
 
 class LayerActivityTracker : public nsExpirationTracker<LayerActivity,4> {
@@ -4149,7 +4155,7 @@ LayerActivityTracker::NotifyExpired(LayerActivity* aObject)
 }
 
 void
-nsIFrame::MarkLayersActive()
+nsIFrame::MarkLayersActive(nsChangeHint aChangeHint)
 {
   FrameProperties properties = Properties();
   LayerActivity* layerActivity =
@@ -4164,12 +4170,21 @@ nsIFrame::MarkLayersActive()
     gLayerActivityTracker->AddObject(layerActivity);
     properties.Set(LayerActivityProperty(), layerActivity);
   }
+  NS_UpdateHint(layerActivity->mChangeHint, aChangeHint);
 }
 
 PRBool
 nsIFrame::AreLayersMarkedActive()
 {
   return Properties().Get(LayerActivityProperty()) != nsnull;
+}
+
+PRBool
+nsIFrame::AreLayersMarkedActive(nsChangeHint aChangeHint)
+{
+  LayerActivity* layerActivity =
+    static_cast<LayerActivity*>(Properties().Get(LayerActivityProperty()));
+  return layerActivity && (layerActivity->mChangeHint & aChangeHint);
 }
 
 /* static */ void

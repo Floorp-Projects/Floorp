@@ -956,7 +956,8 @@ public:
   NS_DISPLAY_DECL_NAME("PluginReadback", TYPE_PLUGIN_READBACK)
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager)
+                                             LayerManager* aManager,
+                                             const ContainerParameters& aContainerParameters)
   {
     return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
   }

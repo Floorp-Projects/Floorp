@@ -211,8 +211,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowThebesLayer* thebes = static_cast<ShadowThebesLayer*>(
         AsShadowLayer(otb)->AsLayer());
 
-      thebes->SetFrontBuffer(otb.initialFront(), otb.frontValidRegion(),
-                             otb.xResolution(), otb.yResolution());
+      thebes->SetFrontBuffer(otb.initialFront(), otb.frontValidRegion());
 
       break;
     }
@@ -310,7 +309,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
           specific.get_ThebesLayerAttributes();
 
         thebesLayer->SetValidRegion(attrs.validRegion());
-        thebesLayer->SetResolution(attrs.xResolution(), attrs.yResolution());
 
         break;
       }
@@ -391,16 +389,15 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
       ThebesBuffer newBack;
       nsIntRegion newValidRegion;
-      float newXResolution, newYResolution;
       OptionalThebesBuffer readonlyFront;
       nsIntRegion frontUpdatedRegion;
       thebes->Swap(newFront, op.updatedRegion(),
-                   &newBack, &newValidRegion, &newXResolution, &newYResolution,
+                   &newBack, &newValidRegion,
                    &readonlyFront, &frontUpdatedRegion);
       replyv.push_back(
         OpThebesBufferSwap(
           shadow, NULL,
-          newBack, newValidRegion, newXResolution, newYResolution,
+          newBack, newValidRegion,
           readonlyFront, frontUpdatedRegion));
       break;
     }
