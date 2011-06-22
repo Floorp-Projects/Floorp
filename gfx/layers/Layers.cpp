@@ -571,9 +571,6 @@ ThebesLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
   if (!mValidRegion.IsEmpty()) {
     AppendToString(aTo, mValidRegion, " [valid=", "]");
   }
-  if (mXResolution != 1.0 || mYResolution != 1.0) {
-    aTo.AppendPrintf(" [xres=%g yres=%g]", mXResolution, mYResolution);
-  }
   return aTo;
 }
 
