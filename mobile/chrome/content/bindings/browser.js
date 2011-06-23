@@ -60,92 +60,6 @@ let WebProgressListener = {
       let scrollOffset = ContentScroll.getScrollOffset(content);
       sendAsyncMessage("Browser:FirstPaint", scrollOffset);
     }, true);
-
-    // We need to package up the session history and send it to the sessionstore
-    let entries = [];
-    let history = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
-    for (let i = 0; i < history.count; i++) {
-      let entry = this._serializeHistoryEntry(history.getEntryAtIndex(i, false));
-      entries.push(entry);
-    }
-    let index = history.index + 1;
-    sendAsyncMessage("Content:SessionHistory", { entries: entries, index: index });
-  },
-
-  _serializeHistoryEntry: function _serializeHistoryEntry(aEntry) {
-    let entry = { url: aEntry.URI.spec };
-
-    if (aEntry.title && aEntry.title != entry.url)
-      entry.title = aEntry.title;
-
-    if (!(aEntry instanceof Ci.nsISHEntry))
-      return entry;
-
-    let cacheKey = aEntry.cacheKey;
-    if (cacheKey && cacheKey instanceof Ci.nsISupportsPRUint32 && cacheKey.data != 0)
-      entry.cacheKey = cacheKey.data;
-
-    entry.ID = aEntry.ID;
-    entry.docshellID = aEntry.docshellID;
-
-    if (aEntry.referrerURI)
-      entry.referrer = aEntry.referrerURI.spec;
-
-    if (aEntry.contentType)
-      entry.contentType = aEntry.contentType;
-
-    let x = {}, y = {};
-    aEntry.getScrollPosition(x, y);
-    if (x.value != 0 || y.value != 0)
-      entry.scroll = x.value + "," + y.value;
-
-    if (aEntry.owner) {
-      try {
-        let binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(Ci.nsIObjectOutputStream);
-        let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
-        pipe.init(false, false, 0, 0xffffffff, null);
-        binaryStream.setOutputStream(pipe.outputStream);
-        binaryStream.writeCompoundObject(aEntry.owner, Ci.nsISupports, true);
-        binaryStream.close();
-
-        // Now we want to read the data from the pipe's input end and encode it.
-        let scriptableStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
-        scriptableStream.setInputStream(pipe.inputStream);
-        let ownerBytes = scriptableStream.readByteArray(scriptableStream.available());
-        // We can stop doing base64 encoding once our serialization into JSON
-        // is guaranteed to handle all chars in strings, including embedded
-        // nulls.
-        entry.owner_b64 = btoa(String.fromCharCode.apply(null, ownerBytes));
-      } catch (e) { dump(e); }
-    }
-
-    if (aEntry.docIdentifier)
-      entry.docIdentifier = aEntry.docIdentifier;
-
-    if (aEntry.stateData)
-      entry.stateData = aEntry.stateData;
-
-    if (!(aEntry instanceof Ci.nsISHContainer))
-      return entry;
-
-    if (aEntry.childCount > 0) {
-      entry.children = [];
-      for (let i = 0; i < aEntry.childCount; i++) {
-        let child = aEntry.GetChildAt(i);
-        if (child)
-          entry.children.push(this._serializeHistoryEntry(child));
-        else // to maintain the correct frame order, insert a dummy entry 
-          entry.children.push({ url: "about:blank" });
-
-        // don't try to restore framesets containing wyciwyg URLs (cf. bug 424689 and bug 450595)
-        if (/^wyciwyg:\/\//.test(entry.children[i].url)) {
-          delete entry.children;
-          break;
-        }
-      }
-    }
-
-    return entry;
   },
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
@@ -255,6 +169,16 @@ let WebNavigation =  {
       this._webNavigation.stop(this._webNavigation.STOP_ALL);
       this._restoreHistory(tabData, 0);
     }
+  },
+
+  reload: function(message) {
+    let flags = message.json.flags || this._webNavigation.LOAD_FLAGS_NONE;
+    this._webNavigation.reload(flags);
+  },
+
+  stop: function(message) {
+    let flags = message.json.flags || this._webNavigation.STOP_ALL;
+    this._webNavigation.stop(flags);
   },
 
   _restoreHistory: function _restoreHistory(aTabData, aCount) {
@@ -384,14 +308,92 @@ let WebNavigation =  {
     return shEntry;
   },
 
-  reload: function(message) {
-    let flags = message.json.flags || this._webNavigation.LOAD_FLAGS_NONE;
-    this._webNavigation.reload(flags);
+  sendHistory: function sendHistory() {
+    // We need to package up the session history and send it to the sessionstore
+    let entries = [];
+    let history = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
+    for (let i = 0; i < history.count; i++) {
+      let entry = this._serializeHistoryEntry(history.getEntryAtIndex(i, false));
+      entries.push(entry);
+    }
+    let index = history.index + 1;
+    sendAsyncMessage("Content:SessionHistory", { entries: entries, index: index });
   },
 
-  stop: function(message) {
-    let flags = message.json.flags || this._webNavigation.STOP_ALL;
-    this._webNavigation.stop(flags);
+  _serializeHistoryEntry: function _serializeHistoryEntry(aEntry) {
+    let entry = { url: aEntry.URI.spec };
+
+    if (aEntry.title && aEntry.title != entry.url)
+      entry.title = aEntry.title;
+
+    if (!(aEntry instanceof Ci.nsISHEntry))
+      return entry;
+
+    let cacheKey = aEntry.cacheKey;
+    if (cacheKey && cacheKey instanceof Ci.nsISupportsPRUint32 && cacheKey.data != 0)
+      entry.cacheKey = cacheKey.data;
+
+    entry.ID = aEntry.ID;
+    entry.docshellID = aEntry.docshellID;
+
+    if (aEntry.referrerURI)
+      entry.referrer = aEntry.referrerURI.spec;
+
+    if (aEntry.contentType)
+      entry.contentType = aEntry.contentType;
+
+    let x = {}, y = {};
+    aEntry.getScrollPosition(x, y);
+    if (x.value != 0 || y.value != 0)
+      entry.scroll = x.value + "," + y.value;
+
+    if (aEntry.owner) {
+      try {
+        let binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(Ci.nsIObjectOutputStream);
+        let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
+        pipe.init(false, false, 0, 0xffffffff, null);
+        binaryStream.setOutputStream(pipe.outputStream);
+        binaryStream.writeCompoundObject(aEntry.owner, Ci.nsISupports, true);
+        binaryStream.close();
+
+        // Now we want to read the data from the pipe's input end and encode it.
+        let scriptableStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
+        scriptableStream.setInputStream(pipe.inputStream);
+        let ownerBytes = scriptableStream.readByteArray(scriptableStream.available());
+        // We can stop doing base64 encoding once our serialization into JSON
+        // is guaranteed to handle all chars in strings, including embedded
+        // nulls.
+        entry.owner_b64 = btoa(String.fromCharCode.apply(null, ownerBytes));
+      } catch (e) { dump(e); }
+    }
+
+    if (aEntry.docIdentifier)
+      entry.docIdentifier = aEntry.docIdentifier;
+
+    if (aEntry.stateData)
+      entry.stateData = aEntry.stateData;
+
+    if (!(aEntry instanceof Ci.nsISHContainer))
+      return entry;
+
+    if (aEntry.childCount > 0) {
+      entry.children = [];
+      for (let i = 0; i < aEntry.childCount; i++) {
+        let child = aEntry.GetChildAt(i);
+        if (child)
+          entry.children.push(this._serializeHistoryEntry(child));
+        else // to maintain the correct frame order, insert a dummy entry 
+          entry.children.push({ url: "about:blank" });
+
+        // don't try to restore framesets containing wyciwyg URLs (cf. bug 424689 and bug 450595)
+        if (/^wyciwyg:\/\//.test(entry.children[i].url)) {
+          delete entry.children;
+          break;
+        }
+      }
+    }
+
+    return entry;
   }
 };
 
@@ -419,6 +421,9 @@ let DOMEvents =  {
           return;
 
         sendAsyncMessage("DOMContentLoaded", { });
+
+        // Send the session history now too
+        WebNavigation.sendHistory();
         break;
 
       case "pageshow":
