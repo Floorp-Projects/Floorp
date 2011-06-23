@@ -335,6 +335,9 @@ assertExpr("2 + 3", binExpr("+", lit(2), lit(3)));
 // Bug 632026: constant-folding
 assertExpr("typeof(0?0:a)", unExpr("typeof", condExpr(lit(0), lit(0), ident("a"))));
 
+// Bug 632029: constant-folding
+assertExpr("[x for each (x in y) if (false)]", compExpr(ident("x"), [compEachBlock(ident("x"), ident("y"))], lit(false)));
+
 // statements
 
 assertStmt("throw 42", throwStmt(lit(42)));
