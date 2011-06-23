@@ -60,3 +60,4 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # See bug 569125#c29
 != scale-stretchy-4.xhtml scale-stretchy-4-ref.xhtml
 != scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml
 == math-as-mstyle-1.xhtml math-as-mstyle-1-ref.xhtml
+== mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
