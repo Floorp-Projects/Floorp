@@ -376,8 +376,13 @@ BrowserGlue.prototype = {
   // Browser startup complete. All initial windows have opened.
   _onBrowserStartup: function BG__onBrowserStartup() {
     // Show about:rights notification, if needed.
-    if (this._shouldShowRights())
+    if (this._shouldShowRights()) {
       this._showRightsNotification();
+    } else {
+      // Only show telemetry notification when about;rights notification is not shown.
+      this._showTelemetryNotification();
+    }
+
 
     // Show update notification, if needed.
     if (Services.prefs.prefHasUserValue("app.update.postupdate"))
@@ -388,9 +393,6 @@ BrowserGlue.prototype = {
     if (this._isPlacesDatabaseLocked) {
       this._showPlacesLockedNotificationBox();
     }
-
-    // Show telemetry notification, if needed.
-    this._showTelemetryNotification();
 
     // If there are plugins installed that are outdated, and the user hasn't
     // been warned about them yet, open the plugins update page.
