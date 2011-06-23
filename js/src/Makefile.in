@@ -645,10 +645,10 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 54 \
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 53 \
 		"in Makefile.in" "{cx,rt}->{new_,new_array,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
-	$(srcdir)/config/check_source_count.py UnwantedForeground:: 34 \
+	$(srcdir)/config/check_source_count.py UnwantedForeground:: 33 \
 		"in Makefile.in" "{cx,rt}->{free_,delete_,array_delete}" $^
 
 ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
