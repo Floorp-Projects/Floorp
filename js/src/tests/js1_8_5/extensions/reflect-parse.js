@@ -154,6 +154,10 @@ function assertGlobalDecl(src, patt) {
     program([patt]).assert(Reflect.parse(src));
 }
 
+function assertProg(src, patt) {
+    program(patt).assert(Reflect.parse(src));
+}
+
 function assertStmt(src, patt) {
     assertLocalStmt(src, patt);
     assertGlobalStmt(src, patt);
@@ -443,6 +447,15 @@ assertStmt("function f() { var x = 42; var x = 43; }",
 
 assertDecl("var {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
                                           init: ident("foo") }]));
+
+// Bug 632030: redeclarations between var and funargs, var and function
+assertStmt("function g(x) { var x }",
+           funDecl(ident("g"), [ident("x")], blockStmt([varDecl[{ id: ident("x"), init: null }]])));
+assertProg("f.p = 1; var f; f.p; function f(){}",
+           [exprStmt(aExpr("=", dotExpr(ident("f"), ident("p")), lit(1))),
+            varDecl([{ id: ident("f"), init: null }]),
+            exprStmt(dotExpr(ident("f"), ident("p"))),
+            funDecl(ident("f"), [], blockStmt([]))]);
 
 // global let is var
 assertGlobalDecl("let {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
