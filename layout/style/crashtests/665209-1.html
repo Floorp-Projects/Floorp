@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  var w = '<div xmlns="http://www.w3.org/1999/xhtml" style="content: url(#);" />';
+  var v = 'url("data:image/svg+xml,' + encodeURIComponent(w) + '")';
+  document.documentElement.style.content = v;
+  document.documentElement.className = "";
+}
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
