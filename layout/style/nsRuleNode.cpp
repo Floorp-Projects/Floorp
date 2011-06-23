@@ -79,6 +79,7 @@
 #include "mozilla/dom/Element.h"
 #include "CSSCalc.h"
 #include "nsPrintfCString.h"
+#include "mozilla/Util.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -702,8 +703,8 @@ SetPairCoords(const nsCSSValue& aValue,
 
   PRBool cX = SetCoord(valX, aCoordX, aParentX, aMask, aStyleContext,
                        aPresContext, aCanStoreInRuleTree);
-  PRBool cY = SetCoord(valY, aCoordY, aParentY, aMask, aStyleContext,
-                       aPresContext, aCanStoreInRuleTree);
+  mozilla::DebugOnly<PRBool> cY = SetCoord(valY, aCoordY, aParentY, aMask, 
+                       aStyleContext, aPresContext, aCanStoreInRuleTree);
   NS_ABORT_IF_FALSE(cX == cY, "changed one but not the other");
   return cX;
 }
