@@ -143,7 +143,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_585991_autocomplete_keys.js \
 	browser_webconsole_bug_651501_document_body_autocomplete.js \
 	browser_webconsole_bug_663443_panel_title.js \
-	browser_webconsole_bug_660806_history_nav.js \
 	head.js \
 	$(NULL)
 
