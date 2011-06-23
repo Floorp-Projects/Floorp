@@ -1,0 +1,25 @@
+<!DOCTYPE HTML><html><head>
+  <script type="text/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+x
+<div contenteditable="true">
+<p id="p">A B CD EFG<br>
+  1234567890</p>
+</div>
+<script>
+  // Position the caret before the "A"
+  var p = document.getElementById('p');
+  var div = p.parentNode;
+  div.focus();
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  range.setStart(p.firstChild, 0);
+  range.setEnd(p.firstChild, 0);
+  sel.addRange(range);
+</script>
+
+</body>
+</html>
