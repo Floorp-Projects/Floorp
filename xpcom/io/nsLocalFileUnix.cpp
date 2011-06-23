@@ -1401,6 +1401,45 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(_retval);
 
+    // Check extension (bug 663899). On certain platforms, the file
+    // extension may cause the OS to treat it as executable regardless of
+    // the execute bit, such as .jar on Mac OS X. We borrow the code from
+    // nsLocalFileWin, slightly modified.
+
+    // Don't be fooled by symlinks.
+    PRBool symLink;
+    nsresult rv = IsSymlink(&symLink);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsAutoString path;
+    if (symLink)
+        GetTarget(path);
+    else
+        GetPath(path);
+
+    PRInt32 dotIdx = path.RFindChar(PRUnichar('.'));
+    if (dotIdx != kNotFound) {
+        // Convert extension to lower case.
+        PRUnichar *p = path.BeginWriting();
+        for(p += dotIdx + 1; *p; p++)
+            *p +=  (*p >= L'A' && *p <= L'Z') ? 'a' - 'A' : 0; 
+        
+        // Search for any of the set of executable extensions.
+        static const char * const executableExts[] = {
+            "air",         // Adobe AIR installer
+            "jar"};        // java application bundle
+        nsDependentSubstring ext = Substring(path, dotIdx + 1);
+        for (int i = 0; i < NS_ARRAY_LENGTH(executableExts); i++) {
+            if (ext.EqualsASCII(executableExts[i])) {
+                // Found a match.  Set result and quit.
+                *_retval = PR_TRUE;
+                return NS_OK;
+            }
+        }
+    }
+
+    // Failing that, check the execute bit.
     *_retval = (access(mPath.get(), X_OK) == 0);
 #ifdef SOLARIS
     // On Solaris, access will always return 0 for root user, however
