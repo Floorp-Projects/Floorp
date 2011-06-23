@@ -276,10 +276,6 @@ pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 // Telemetry
 pref("toolkit.telemetry.enabled", false);
 pref("toolkit.telemetry.server", "https://data.mozilla.com");
-// Telemetry server owner. Please change if you set toolkit.telemetry.server to a different server
-pref("toolkit.telemetry.server_owner", "Mozilla");
-// Information page about telemetry (temporary ; will be about:telemetry in the end)
-pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.html#telemetry");
 
 // view source
 pref("view_source.syntax_highlight", true);
