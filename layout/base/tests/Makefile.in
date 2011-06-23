@@ -64,7 +64,6 @@ DEFINES += -D_IMPL_NS_LAYOUT
 _TEST_FILES =	\
 		border_radius_hit_testing_iframe.html \
 		bug369950-subframe.xml \
-		bug495648.rdf \
 		decoration_line_rendering.js \
 		test_after_paint_pref.html \
 		test_border_radius_hit_testing.html \
@@ -89,7 +88,6 @@ _TEST_FILES =	\
 		test_bug435293-scale.html \
 		test_bug435293-interaction.html \
 		test_bug435293-skew.html \
-		test_bug495648.xul \
 		test_bug514127.html \
 		test_bug518777.html \
 		test_bug548545.xhtml \

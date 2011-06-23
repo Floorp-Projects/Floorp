@@ -48,6 +48,8 @@ _CHROME_FILES = \
 	test_bug396367-1.html \
 	test_bug396367-2.html \
 	test_bug420499.xul \
+	test_bug495648.xul \
+	bug495648.rdf \
 	test_bug504311.xul \
 	test_bug514660.xul \
 	test_bug533845.xul \
