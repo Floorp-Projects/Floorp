@@ -91,6 +91,7 @@ public:
 
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
+    TestShellParent* GetTestShellSingleton();
 
     void ReportChildAlreadyBlocked();
     bool RequestRunToCompletion();
