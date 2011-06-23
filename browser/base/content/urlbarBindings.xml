@@ -1305,9 +1305,9 @@
         <xul:hbox align="center" flex="1">
           <xul:image class="panel-promo-icon"/>
           <xul:description anonid="promo-message" class="panel-promo-message" flex="1">
-            placeholder <xul:description anonid="promo-link"
-                                         class="plain text-link inline-link"
-                                         onclick="document.getBindingParent(this).onLinkClick();"/>
+            <xul:description anonid="promo-link"
+                             class="plain text-link inline-link"
+                             onclick="document.getBindingParent(this).onLinkClick();"/>
           </xul:description>
         </xul:hbox>
         <xul:toolbarbutton class="panel-promo-closebutton"
@@ -1369,7 +1369,7 @@
       <property name="_notificationMessage">
         <getter><![CDATA[
           return gNavigatorBundle.getFormattedString(
-            "syncPromoNotification." + this._notificationType + ".label",
+            "syncPromoNotification." + this._notificationType + ".description",
             [this._brandBundle.GetStringFromName("syncBrandShortName")]
           );
         ]]></getter>
@@ -1424,12 +1424,15 @@
 
             // HACK: The description element doesn't wrap correctly in panels,
             // thus set a width on it, based on the available space, before
-            // setting its textContent.
+            // setting its textContent.  Then set its height as well, to
+            // fix wrong height calculation on Linux (bug 659578).
+            let self = this;
             this._panel.addEventListener("popupshown", function (evt) {
-              this._panel.removeEventListener("popupshown", arguments.callee, true);
-              this._promomessage.width = this._promomessage.getBoundingClientRect().width;
-              this._promomessage.firstChild.textContent = this._notificationMessage;
-            }.bind(this), true);
+              self._panel.removeEventListener("popupshown", arguments.callee, true);
+              self._promomessage.width = self._promomessage.getBoundingClientRect().width;
+              self._promomessage.firstChild.textContent = self._notificationMessage;
+              self._promomessage.height = self._promomessage.getBoundingClientRect().height;
+            }, true);
           }
         ]]></body>
       </method>
