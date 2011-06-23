@@ -327,6 +327,14 @@ ContentParent::DestroyTestShell(TestShellParent* aTestShell)
     return PTestShellParent::Send__delete__(aTestShell);
 }
 
+TestShellParent*
+ContentParent::GetTestShellSingleton()
+{
+    if (!ManagedPTestShellParent().Length())
+        return nsnull;
+    return static_cast<TestShellParent*>(ManagedPTestShellParent()[0]);
+}
+
 ContentParent::ContentParent()
     : mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
