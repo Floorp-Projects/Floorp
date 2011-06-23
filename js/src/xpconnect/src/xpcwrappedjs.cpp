@@ -67,10 +67,9 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
                         tmp->GetClass()->GetInterfaceName());
         else
             JS_snprintf(name, sizeof(name), "nsXPCWrappedJS");
-        cb.DescribeNode(RefCounted, refcnt, sizeof(nsXPCWrappedJS), name);
+        cb.DescribeRefCountedNode(refcnt, sizeof(nsXPCWrappedJS), name);
     } else {
-        cb.DescribeNode(RefCounted, refcnt, sizeof(nsXPCWrappedJS),
-                        "nsXPCWrappedJS");
+        NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsXPCWrappedJS, refcnt)
     }
 
     // nsXPCWrappedJS keeps its own refcount artificially at or above 1, see the
