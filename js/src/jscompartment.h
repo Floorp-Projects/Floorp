@@ -405,6 +405,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     void                         *data;
     bool                         active;  // GC flag, whether there are active frames
+    bool                         hasDebugModeCodeToDrop;
     js::WrapperMap               crossCompartmentWrappers;
 
 #ifdef JS_METHODJIT
@@ -544,37 +545,21 @@ struct JS_FRIEND_API(JSCompartment) {
      * calling thread. cx is a context in the calling thread, and it is assumed
      * that no other thread is using this compartment.
      */
-    bool haveScriptsOnStack(JSContext *cx);
+    bool hasScriptsOnStack(JSContext *cx);
 
-    bool setDebugModeFromC(JSContext *cx, bool b);
-
+  private:
     /* This is called only when debugMode() has just toggled. */
     void updateForDebugMode(JSContext *cx);
 
+  public:
     js::GlobalObjectSet &getDebuggees() { return debuggees; }
 
-    bool addDebuggee(JSContext *cx, js::GlobalObject *global) {
-        bool wasEnabled = debugMode();
-        if (!debuggees.put(global)) {
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-        debugModeBits |= DebugFromJS;
-        if (!wasEnabled)
-            updateForDebugMode(cx);
-        return true;
-    }
+    bool addDebuggee(JSContext *cx, js::GlobalObject *global);
 
-    void removeDebuggee(JSContext *cx, js::GlobalObject *global) {
-        bool wasEnabled = debugMode();
-        JS_ASSERT(debuggees.has(global));
-        debuggees.remove(global);
-        if (debuggees.empty()) {
-            debugModeBits &= ~DebugFromJS;
-            if (wasEnabled && !debugMode())
-                updateForDebugMode(cx);
-        }
-    }
+    void removeDebuggee(JSContext *cx, js::GlobalObject *global,
+                        js::GlobalObjectSet::Enum *debuggeesEnum = NULL);
+
+    bool setDebugModeFromC(JSContext *cx, bool b);
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
