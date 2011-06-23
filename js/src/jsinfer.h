@@ -1038,7 +1038,7 @@ enum SpewChannel {
 
 #ifdef DEBUG
 
-inline const char * InferSpewColorReset() { return "\x1b[0m"; }
+const char * InferSpewColorReset();
 const char * InferSpewColor(TypeConstraint *constraint);
 const char * InferSpewColor(TypeSet *types);
 
