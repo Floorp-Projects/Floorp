@@ -297,6 +297,7 @@ pref("browser.urlbar.match.url", "@");
 pref("browser.urlbar.default.behavior", 0);
 
 pref("browser.urlbar.formatting.enabled", true);
+pref("browser.urlbar.trimURLs", true);
 
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to 

@@ -27,34 +27,41 @@ function test() {
 
   gURLBar.focus();
 
-  testVal("http://mozilla.org/");
+  testVal("https://mozilla.org");
 
   gBrowser.selectedBrowser.focus();
 
-  testVal("<http://>mozilla.org");
-  testVal("<http://>mozilla.org</>");
-  testVal("<http://>mözilla.org</>");
-  testVal("<http://>mozilla.imaginatory</>");
-  testVal("<http://www.>mozilla.org</>");
-  testVal("<http://sub.>mozilla.org</>");
-  testVal("<http://sub1.sub2.sub3.>mozilla.org</>");
-  testVal("<http://ftp.>mozilla.org</>");
-  testVal("<ftp://ftp.>mozilla.org</>");
+  testVal("<https://>mozilla.org");
+  testVal("<https://>mözilla.org");
+  testVal("<https://>mozilla.imaginatory");
 
-  testVal("<https://sub.>mozilla.org</>");
-  testVal("<https://sub1.sub2.sub3.>mozilla.org</>");
-  testVal("<https://user:pass@sub1.sub2.sub3.>mozilla.org</>");
-  testVal("<https://user:pass@>mozilla.org</>");
+  testVal("<https://www.>mozilla.org");
+  testVal("<https://sub.>mozilla.org");
+  testVal("<https://sub1.sub2.sub3.>mozilla.org");
+  testVal("<www.>mozilla.org");
+  testVal("<sub.>mozilla.org");
+  testVal("<sub1.sub2.sub3.>mozilla.org");
 
-  testVal("<http://>mozilla.org</file.ext>");
-  testVal("<http://>mozilla.org</sub/file.ext>");
-  testVal("<http://>mozilla.org</sub/file.ext?foo>");
-  testVal("<http://>mozilla.org</sub/file.ext?foo&bar>");
-  testVal("<http://>mozilla.org</sub/file.ext?foo&bar#top>");
+  testVal("<http://ftp.>mozilla.org");
+  testVal("<ftp://ftp.>mozilla.org");
 
-  testVal("<http://sub.>mozilla.org<:666/file.ext>");
+  testVal("<https://sub.>mozilla.org");
+  testVal("<https://sub1.sub2.sub3.>mozilla.org");
+  testVal("<https://user:pass@sub1.sub2.sub3.>mozilla.org");
+  testVal("<https://user:pass@>mozilla.org");
 
-  testVal("<http://>[fe80::222:19ff:fe11:8c76]</file.ext>");
+  testVal("<https://>mozilla.org</file.ext>");
+  testVal("<https://>mozilla.org</sub/file.ext>");
+  testVal("<https://>mozilla.org</sub/file.ext?foo>");
+  testVal("<https://>mozilla.org</sub/file.ext?foo&bar>");
+  testVal("<https://>mozilla.org</sub/file.ext?foo&bar#top>");
+  testVal("<https://>mozilla.org</sub/file.ext?foo&bar#top>");
+
+  testVal("<https://sub.>mozilla.org<:666/file.ext>");
+
+  testVal("<https://>[fe80::222:19ff:fe11:8c76]</file.ext>");
+  testVal("[fe80::222:19ff:fe11:8c76]</file.ext>");
+  testVal("<https://user:pass@>[fe80::222:19ff:fe11:8c76]<:666/file.ext>");
   testVal("<http://user:pass@>[fe80::222:19ff:fe11:8c76]<:666/file.ext>");
 
   testVal("mailto:admin@mozilla.org");
@@ -63,5 +70,5 @@ function test() {
 
   Services.prefs.setBoolPref(prefname, false);
 
-  testVal("http://mozilla.org/");
+  testVal("https://mozilla.org");
 }
