@@ -4961,6 +4961,7 @@ JSTerm.prototype = {
   setInputValue: function JST_setInputValue(aNewValue)
   {
     this.inputNode.value = aNewValue;
+    this.lastInputValue = aNewValue;
     this.completeNode.value = "";
     this.resizeInput();
   },
