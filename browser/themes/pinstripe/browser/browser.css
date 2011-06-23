@@ -2167,10 +2167,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
-.telemetry-text-link {
-  color: #fff;
-}
-
 #addons-notification-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
