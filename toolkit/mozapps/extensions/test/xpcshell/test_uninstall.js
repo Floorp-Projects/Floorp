@@ -169,7 +169,6 @@ function check_test_3() {
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
-    do_check_true(hasFlag(AddonManager.PENDING_DISABLE, a1.pendingOperations));
     do_check_true(hasFlag(AddonManager.PENDING_UNINSTALL, a1.pendingOperations));
 
     prepare_test({
@@ -179,6 +178,7 @@ function check_test_3() {
     });
     a1.cancelUninstall();
     ensure_test_completed();
+    do_check_true(hasFlag(AddonManager.PENDING_DISABLE, a1.pendingOperations));
 
     restartManager();
     run_test_4();
