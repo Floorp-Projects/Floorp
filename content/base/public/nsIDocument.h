@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1519,6 +1520,44 @@ public:
   virtual nsresult GetStateObject(nsIVariant** aResult) = 0;
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
+
+  enum DeprecatedOperations {
+    eGetAttributeNode = 0,
+    eSetAttributeNode,
+    eGetAttributeNodeNS,
+    eSetAttributeNodeNS,
+    eRemoveAttributeNode,
+    eCreateAttribute,
+    eCreateAttributeNS,
+    eSpecified,
+    eOwnerElement,
+    eNodeName,
+    eNodeValue,
+    eNodeType,
+    eParentNode,
+    eChildNodes,
+    eHasChildNodes,
+    eHasAttributes,
+    eFirstChild,
+    eLastChild,
+    ePreviousSibling,
+    eNextSibling,
+    eAttributes,
+    eInsertBefore,
+    eReplaceChild,
+    eRemoveChild,
+    eAppendChild,
+    eCloneNode,
+    eOwnerDocument,
+    eNormalize,
+    eIsSupported,
+    eIsEqualNode,
+    eTextContent
+  };
+  void WarnOnceAbout(DeprecatedOperations aOperation);
+
+private:
+  PRUint32 mWarnedAbout;
 
 protected:
   ~nsIDocument()
