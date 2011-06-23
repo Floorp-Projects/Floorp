@@ -385,25 +385,6 @@ html[dir=rtl] .guideTrench {
 /* Other
 ----------------------------------*/
 
-.newTabButton {
-  width: 16px;
-  height: 15px;
-  bottom: 10px;
-  left: 10px;
-  cursor: pointer;
-  opacity: .3;
-  background-image: url(chrome://browser/skin/tabview/new-tab.png);
-}
-
-html[dir=rtl] .newTabButton {
-  left: auto;
-  right: 10px;
-}
-
-.newTabButton:hover {
-  opacity: 1;
-}
-
 .active {
   box-shadow: 5px 5px 3px rgba(0,0,0,.5);
 }
