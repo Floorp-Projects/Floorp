@@ -293,7 +293,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint32          flags;          /* statement state flags, see above */
     uint32          bodyid;         /* block number of program/function body */
     uint32          blockidGen;     /* preincremented block number generator */
-    uint32          parenDepth;     /* paren-nesting depth */
+    uint32          parenDepth;     /* nesting depth of parens that might turn out
+                                       to be generator expressions */
     uint32          yieldCount;     /* number of |yield| tokens encountered at
                                        non-zero depth in current paren tree */
     uint32          argumentsCount; /* number of |arguments| references encountered
