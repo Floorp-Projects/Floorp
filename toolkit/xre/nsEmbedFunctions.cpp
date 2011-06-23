@@ -359,7 +359,9 @@ XRE_InitChildProcess(int aArgc,
     return 1;
   }
 #endif
-  
+
+  SetupErrorHandling(aArgv[0]);  
+
 #if defined(MOZ_CRASHREPORTER)
   if (aArgc < 1)
     return 1;
@@ -386,8 +388,6 @@ XRE_InitChildProcess(int aArgc,
   gArgv = aArgv;
   gArgc = aArgc;
 
-  SetupErrorHandling(aArgv[0]);
-  
 #if defined(MOZ_WIDGET_GTK2)
   g_thread_init(NULL);
 #endif
