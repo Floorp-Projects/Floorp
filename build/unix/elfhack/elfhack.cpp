@@ -153,15 +153,11 @@ public:
         // Find the init symbol
         entry_point = -1;
         int shndx = 0;
-        for (std::vector<Elf_SymValue>::iterator sym = symtab->syms.begin();
-             sym != symtab->syms.end(); sym++) {
-            if (strcmp(sym->name, "init") == 0) {
-                entry_point = sym->value.getValue();
-                shndx = sym->value.getSection()->getIndex();
-                break;
-            }
-        }
-        if (entry_point == -1)
+        Elf_SymValue *sym = symtab->lookup("init");
+        if (sym) {
+            entry_point = sym->value.getValue();
+            shndx = sym->value.getSection()->getIndex();
+        } else
             throw std::runtime_error("Couldn't find an 'init' symbol in the injected code");
 
         // Adjust code sections offsets according to their size
