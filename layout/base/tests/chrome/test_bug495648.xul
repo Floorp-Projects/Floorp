@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/css" href="chrome://global/skin"?>
-<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=495648
 -->
 <window title="Mozilla Bug 495648"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="/MochiKit/packed.js"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
@@ -22,7 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495648
   var uri = window.location.href.replace(/test_bug495648.xul/, "bug495648.rdf");
 
   function doTest() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var list = document.getElementById('l');
     var ios = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
     var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
