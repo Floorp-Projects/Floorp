@@ -72,6 +72,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     hold(false),
     data(NULL),
     active(false),
+    hasDebugModeCodeToDrop(false),
 #ifdef JS_METHODJIT
     jaegerCompartment(NULL),
 #endif
@@ -501,7 +502,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
      * for compartments which currently have active stack frames.
      */
     uint32 counter = 1;
-    bool discardScripts = !active && releaseInterval != 0;
+    bool discardScripts = !active && (releaseInterval != 0 || hasDebugModeCodeToDrop);
+    if (discardScripts)
+        hasDebugModeCodeToDrop = false;
 
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
@@ -602,7 +605,7 @@ JSCompartment::isAboutToBeCollected(JSGCInvocationKind gckind)
 }
 
 bool
-JSCompartment::haveScriptsOnStack(JSContext *cx)
+JSCompartment::hasScriptsOnStack(JSContext *cx)
 {
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         JSScript *script = i.fp()->maybeScript();
@@ -630,7 +633,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
     //
     bool onStack = false;
     if (enabledBefore != enabledAfter) {
-        onStack = haveScriptsOnStack(cx);
+        onStack = hasScriptsOnStack(cx);
         if (b && onStack) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
             return false;
@@ -647,9 +650,15 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
 void
 JSCompartment::updateForDebugMode(JSContext *cx)
 {
-    JS_ASSERT(!haveScriptsOnStack(cx));
 #ifdef JS_METHODJIT
-    bool mode = debugMode();
+    bool enabled = debugMode();
+
+    if (enabled) {
+        JS_ASSERT(!hasScriptsOnStack(cx));
+    } else if (hasScriptsOnStack(cx)) {
+        hasDebugModeCodeToDrop = true;
+        return;
+    }
 
     // Discard JIT code for any scripts that change debugMode. This assumes
     // that 'comp' is in the same thread as 'cx'.
@@ -657,10 +666,44 @@ JSCompartment::updateForDebugMode(JSContext *cx)
          &script->links != &scripts;
          script = (JSScript *) script->links.next)
     {
-        if (script->debugMode != mode) {
+        if (script->debugMode != enabled) {
             mjit::ReleaseScriptCode(cx, script);
-            script->debugMode = mode;
+            script->debugMode = enabled;
         }
     }
+    hasDebugModeCodeToDrop = false;
 #endif
+}
+
+bool
+JSCompartment::addDebuggee(JSContext *cx, js::GlobalObject *global)
+{
+    bool wasEnabled = debugMode();
+    if (!debuggees.put(global)) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+    debugModeBits |= DebugFromJS;
+    if (!wasEnabled)
+        updateForDebugMode(cx);
+    return true;
+}
+
+void
+JSCompartment::removeDebuggee(JSContext *cx,
+                              js::GlobalObject *global,
+                              js::GlobalObjectSet::Enum *debuggeesEnum)
+{
+    bool wasEnabled = debugMode();
+    JS_ASSERT(debuggees.has(global));
+    if (debuggeesEnum)
+        debuggeesEnum->removeFront();
+    else
+        debuggees.remove(global);
+
+    if (debuggees.empty()) {
+        debugModeBits &= ~DebugFromJS;
+        if (wasEnabled && !debugMode())
+            updateForDebugMode(cx);
+    }
 }

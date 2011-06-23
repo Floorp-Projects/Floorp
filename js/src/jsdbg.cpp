@@ -828,23 +828,8 @@ Debug::removeDebuggee(JSContext *cx, uintN argc, Value *vp)
     if (!referent)
         return false;
     GlobalObject *global = referent->getGlobal();
-    if (dbg->debuggees.has(global)) {
-        // Refuse to remove a debuggee if it would disable debug mode in a
-        // compartment that has running scripts. The way this is written is a
-        // bit overprotective, yet it's still not enough since we do not check
-        // in removeDebuggeeGlobal's other callers. See bug 665694.
-        JSCompartment *debuggeeCompartment = global->compartment();
-        JS_ASSERT(debuggeeCompartment->debugMode());
-        if (global->getDebuggers()->length() == 1 &&
-            debuggeeCompartment->getDebuggees().count() == 1 &&
-            debuggeeCompartment->haveScriptsOnStack(cx))
-        {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE, "disable");
-            return false;
-        }
-
+    if (dbg->debuggees.has(global))
         dbg->removeDebuggeeGlobal(cx, global, NULL, NULL);
-    }
     vp->setUndefined();
     return true;
 }
@@ -982,8 +967,8 @@ Debug::addDebuggeeGlobal(JSContext *cx, GlobalObject *obj)
     }
 
     // Refuse to enable debug mode for a compartment that has running scripts.
-    if (!debuggeeCompartment->debugMode() && debuggeeCompartment->haveScriptsOnStack(cx)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE, "enable");
+    if (!debuggeeCompartment->debugMode() && debuggeeCompartment->hasScriptsOnStack(cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
         return false;
     }
 
@@ -1055,12 +1040,8 @@ Debug::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
     // The relation must be removed from up to three places: *v and debuggees
     // for sure, and possibly the compartment's debuggee set.
     v->erase(p);
-    if (v->empty()) {
-        if (compartmentEnum)
-            compartmentEnum->removeFront();
-        else
-            global->compartment()->removeDebuggee(cx, global);
-    }
+    if (v->empty())
+        global->compartment()->removeDebuggee(cx, global, compartmentEnum);
     if (debugEnum)
         debugEnum->removeFront();
     else
