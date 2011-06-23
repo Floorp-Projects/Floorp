@@ -397,6 +397,7 @@ BookmarksEngine.prototype = {
       // We do this lazily so that we don't do any work unless we reconcile
       // incoming items.
       try {
+        delete this._guidMap;
         return this._guidMap = this._buildGUIDMap();
       } catch (ex) {
         this._log.warn("Got exception \"" + Utils.exceptionStr(ex) +
