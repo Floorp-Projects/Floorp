@@ -280,9 +280,14 @@
           if (typeof this.onBeforeValueSet == "function")
             val = this.onBeforeValueSet(val);
 
+          if (typeof this.trimValue == "function")
+            val = this.trimValue(val);
+
           this.inputField.value = val;
+
           if (typeof this.formatValue == "function")
             this.formatValue();
+
           this.mIgnoreInput = false;
           var event = document.createEvent('Events');
           event.initEvent('ValueChange', true, true);
@@ -1090,6 +1095,9 @@
             let url = Components.classes["@mozilla.org/intl/texttosuburi;1"].
               getService(Components.interfaces.nsITextToSubURI).
               unEscapeURIForUI("UTF-8", controller.getValueAt(this._currentIndex));
+
+            if (typeof this.input.trimValue == "function")
+              url = this.input.trimValue(url);
 
             if (this._currentIndex < existingItemsCount) {
               // re-use the existing item
