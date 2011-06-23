@@ -105,7 +105,7 @@ function performTestComparisons(evt)
 function finishUp() {
   Services.obs.removeObserver(finishUp, "inspector-closed", false);
 
-  ok(!InspectorUI.highlighter.isHighlighting, "panel is not highlighting");
+  ok(!InspectorUI.highlighter, "panel is not highlighting");
   doc = h1 = null;
   gBrowser.removeCurrentTab();
   finish();

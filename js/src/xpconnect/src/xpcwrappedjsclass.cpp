@@ -166,8 +166,9 @@ nsXPCWrappedJSClass::GetNewOrUsed(XPCCallContext& ccx, REFNSIID aIID,
         ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if(info)
         {
-            PRBool canScript;
+            PRBool canScript, isBuiltin;
             if(NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
+               NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
                nsXPConnect::IsISupportsDescendant(info))
             {
                 clazz = new nsXPCWrappedJSClass(ccx, aIID, info);
@@ -295,8 +296,9 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
         ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if(!info)
             return nsnull;
-        PRBool canScript;
-        if(NS_FAILED(info->IsScriptable(&canScript)) || !canScript)
+        PRBool canScript, isBuiltin;
+        if(NS_FAILED(info->IsScriptable(&canScript)) || !canScript ||
+           NS_FAILED(info->IsBuiltinClass(&isBuiltin)) || isBuiltin)
             return nsnull;
     }
 
