@@ -190,6 +190,37 @@ class serializable: public T::Type32 {
 public:
     serializable() {};
     serializable(const typename T::Type32 &p): T::Type32(p) {};
+
+private:
+    template <typename R>
+    void init(const char *buf, size_t len, char ei_data)
+    {
+        R e;
+        assert(len <= sizeof(e));
+        memcpy(&e, buf, sizeof(e));
+        if (ei_data == ELFDATA2LSB) {
+            T::template swap<little_endian>(e, *this);
+            return;
+        } else if (ei_data == ELFDATA2MSB) {
+            T::template swap<big_endian>(e, *this);
+            return;
+        }
+        throw std::runtime_error("Unsupported ELF data encoding");
+    }
+
+public:
+    serializable(const char *buf, size_t len, char ei_class, char ei_data)
+    {
+        if (ei_class == ELFCLASS32) {
+            init<typename T::Type32>(buf, len, ei_data);
+            return;
+        } else if (ei_class == ELFCLASS64) {
+            init<typename T::Type64>(buf, len, ei_data);
+            return;
+        }
+        throw std::runtime_error("Unsupported ELF class");
+    }
+
     serializable(std::ifstream &file, char ei_class, char ei_data)
     {
         if (ei_class == ELFCLASS32) {
