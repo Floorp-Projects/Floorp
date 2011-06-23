@@ -40,6 +40,7 @@
 #include "nsISupports.idl"
 
 typedef unsigned long long DOMTimeStamp;
+typedef unsigned long long DOMTimeMilliSec;
 
 // Core
 interface nsIDOMAttr;
