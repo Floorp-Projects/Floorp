@@ -128,10 +128,14 @@ JS_BEGIN_EXTERN_C
  * TOK_CONTINUE name        pn_atom: label or null
  * TOK_WITH     binary      pn_left: head expr, pn_right: body
  * TOK_VAR      list        pn_head: list of TOK_NAME or TOK_ASSIGN nodes
- *                                   each name node has
+ *                                   each name node has either
  *                                     pn_used: false
  *                                     pn_atom: variable name
  *                                     pn_expr: initializer or null
+ *                                   or
+ *                                     pn_used: true
+ *                                     pn_atom: variable name
+ *                                     pn_lexdef: def node
  *                                   each assignment node has
  *                                     pn_left: TOK_NAME with pn_used true and
  *                                              pn_lexdef (NOT pn_expr) set
