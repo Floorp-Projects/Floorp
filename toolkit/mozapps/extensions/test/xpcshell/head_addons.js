@@ -1105,6 +1105,7 @@ do_register_cleanup(function() {
   while (entry = dirEntries.nextFile) {
     do_throw("Found unexpected file in temporary directory: " + entry.leafName);
   }
+  dirEntries.close();
 
   var testDir = gProfD.clone();
   testDir.append("extensions");

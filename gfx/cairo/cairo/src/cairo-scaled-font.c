@@ -619,7 +619,7 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
     hash = _hash_matrix_fnv (&scaled_font->ctm, hash);
     hash = _hash_mix_bits (hash);
 
-    hash ^= (unsigned long) scaled_font->font_face;
+    hash ^= (uintptr_t) scaled_font->font_face;
     hash ^= cairo_font_options_hash (&scaled_font->options);
 
     /* final mixing of bits */
@@ -2694,7 +2694,7 @@ _cairo_scaled_font_allocate_glyph (cairo_scaled_font_t *scaled_font,
     if (unlikely (page == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    page->cache_entry.hash = (unsigned long) scaled_font;
+    page->cache_entry.hash = (uintptr_t) scaled_font;
     page->cache_entry.size = 1; /* XXX occupancy weighting? */
     page->num_glyphs = 0;
 
