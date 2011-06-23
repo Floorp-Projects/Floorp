@@ -361,7 +361,6 @@ VPATH +=	$(srcdir)/ion
 
 CPPSRCS +=	MIR.cpp \
 		IonBuilder.cpp \
-		IonSpew.cpp \
 		MIRGraph.cpp \
 		IonAnalysis.cpp \
 		IonLowering.cpp \
@@ -369,6 +368,9 @@ CPPSRCS +=	MIR.cpp \
 		BitSet.cpp \
 		IonLIR.cpp \
 		GreedyAllocator.cpp \
+		C1Spewer.cpp \
+		JSONSpewer.cpp \
+		IonSpewer.cpp \
 		$(NULL)
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

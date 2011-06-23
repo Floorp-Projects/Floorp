@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Ion.h"
-#include "IonSpew.h"
+#include "IonSpewer.h"
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "IonBuilder.h"

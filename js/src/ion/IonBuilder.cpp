@@ -43,8 +43,8 @@
 #include "IonBuilder.h"
 #include "MIRGraph.h"
 #include "Ion.h"
-#include "IonSpew.h"
 #include "IonAnalysis.h"
+#include "IonSpewer.h"
 #include "jsemit.h"
 #include "jsscriptinlines.h"
 
