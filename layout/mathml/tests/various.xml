@@ -118,7 +118,7 @@ Click the expression below to see several definitions of pi:
   <mrow>
     <mi>&pi;</mi> 
     <mo>=</mo>
-    <mn>3.14159265358</mn><mo fontweight="bold">...</mo>
+    <mn>3.14159265358</mn><mo mathvariant="bold">...</mo>
   </mrow>
 
   <mrow>
@@ -170,7 +170,7 @@ Click the expression below to see several definitions of pi:
         </msqrt>
       </msqrt>
     </mfrac>
-    <mo fontweight="bold">...</mo>
+    <mo mathvariant="bold">...</mo>
   </mrow>
 
   <mrow>
@@ -216,7 +216,7 @@ Click the expression below to see several definitions of pi:
                                    <msup><mn>7</mn><mn>2</mn></msup>
                                  </mstyle>
                                  <mstyle scriptlevel="0">
-                                   <mn>2</mn><mo>+</mo><mo fontweight="bold">...</mo>
+                                   <mn>2</mn><mo>+</mo><mo mathvariant="bold">...</mo>
                                  </mstyle>
                                </mfrac>
                              </mrow>
@@ -241,7 +241,7 @@ Click the expression below to see several definitions of pi:
 <math xmlns="&mathml;">
 <!-- {{} \atop i} A {p \atop q} -->
 <mmultiscripts>
-    <mi fontweight="bold" fontsize="large">A</mi>
+    <mi mathvariant="bold" mathsize="big">A</mi>
     <mi>q</mi><mi>p</mi>
   <mprescripts/>
     <mi>i</mi><none/>
@@ -251,7 +251,7 @@ Click the expression below to see several definitions of pi:
 
 <!-- {3 \atop k} R {1 \atop i} {2 \atop j} -->
 <mmultiscripts>
-   <mi fontweight="bold">R</mi>
+   <mi mathvariant="bold">R</mi>
       <mi>i</mi><mi>1</mi>
       <mi>j</mi><mn>230</mn>
       <mi>j</mi><msup><mn>230</mn><mi>y</mi></msup>
@@ -829,7 +829,7 @@ And this is from the "Thomson scattering theory"
             <mn>3</mn>
           </msup>
 
-          <mi fontweight='bold'>r</mi>
+          <mi mathvariant='bold'>r</mi>
           <mo>&int;</mo>
 
           <msup>
@@ -837,7 +837,7 @@ And this is from the "Thomson scattering theory"
               <mo lspace='0' rspace='0' symmetric='false'>|</mo>
 
               <mover accent='true'>
-                <mi fontweight='bold'>e</mi>
+                <mi mathvariant='bold'>e</mi>
                 <mo>&Hat;</mo>
               </mover>
 
@@ -851,7 +851,7 @@ And this is from the "Thomson scattering theory"
               <mo>.</mo>
 
               <mover accent='true'>
-                <mi fontweight='bold'>e</mi>
+                <mi mathvariant='bold'>e</mi>
                 <mo>&Hat;</mo>
               </mover>
  
@@ -871,9 +871,9 @@ And this is from the "Thomson scattering theory"
 
           <mrow>
             <mo stretchy='false'>(</mo>
-            <mi fontweight='bold'>k</mi>
+            <mi mathvariant='bold'>k</mi>
             <mo>.</mo>
-            <mi fontweight='bold'>v</mi>
+            <mi mathvariant='bold'>v</mi>
             <mo>-</mo>
             <mi>&omega;</mi>
             <mo stretchy='false'>)</mo>
@@ -884,7 +884,7 @@ And this is from the "Thomson scattering theory"
             <mn>3</mn>
           </msup>
           
-          <mi fontweight='bold'>v</mi>
+          <mi mathvariant='bold'>v</mi>
         </mrow>
       </mtd>
     </mtr>
@@ -923,7 +923,7 @@ And this is from the "Thomson scattering theory"
             <mn>3</mn>
           </msup>
 
-          <mi fontweight='bold'>r</mi>
+          <mi mathvariant='bold'>r</mi>
           <mo>&int;</mo>
           
           <msup>
@@ -938,12 +938,12 @@ And this is from the "Thomson scattering theory"
                   <mn>1</mn>
                   <mo>-</mo>
                   <mover accent='true'>
-                    <mi fontweight='bold'>s</mi>
+                    <mi mathvariant='bold'>s</mi>
                     <mo>&Hat;</mo>
                   </mover>
                   <mo>.</mo>
                   <mover accent='true'>
-                    <mi fontweight='bold'>&imath;</mi>
+                    <mi mathvariant='bold'>&imath;</mi>
                     <mo>&Hat;</mo>
                   </mover>
                   <mo stretchy='false'>)</mo>
@@ -1040,9 +1040,9 @@ And this is from the "Thomson scattering theory"
           
           <mrow>
             <mo stretchy='false'>(</mo>
-            <mi fontweight='bold'>k</mi>
+            <mi mathvariant='bold'>k</mi>
             <mo>.</mo>
-            <mi fontweight='bold'>v</mi>
+            <mi mathvariant='bold'>v</mi>
             <mo>-</mo>
             <mi>&omega;</mi>
             <mo stretchy='false'>)</mo>
@@ -1053,7 +1053,7 @@ And this is from the "Thomson scattering theory"
             <mn>3</mn>
           </msup>
           
-          <mi fontweight='bold'>v</mi>
+          <mi mathvariant='bold'>v</mi>
         </mrow>
       </mtd>
 

@@ -93,18 +93,6 @@ CPPSRCS		= \
 		xpcquickstubs.cpp \
 		dom_quickstubs.cpp \
 		$(NULL)
-ifdef XPC_IDISPATCH_SUPPORT
-CPPSRCS +=	XPCDispObject.cpp	\
-		XPCDispInterface.cpp	\
-		XPCDispConvert.cpp \
-		XPCDispTypeInfo.cpp	\
-		XPCDispTearOff.cpp \
-		XPCIDispatchExtension.cpp \
-		XPCDispParams.cpp \
-		XPCIDispatchClassInfo.cpp \
-		nsDispatchSupport.cpp \
-		$(NULL)
-endif
 
 include $(topsrcdir)/config/config.mk
 
@@ -153,14 +141,6 @@ DEFINES += \
 ENABLE_TRACEABLE_FLAGS = --enable-traceables
 
 endif # ENABLE_JIT
-
-ifdef XPC_IDISPATCH_SUPPORT
-DEFINES		+= -DXPC_IDISPATCH_SUPPORT
-ifdef XPC_COMOBJECT
-DEFINES		+= -DXPC_COMOBJECT
-endif
-
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CXX
