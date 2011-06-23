@@ -42,7 +42,7 @@
 #include "Ion.h"
 #include "IonAnalysis.h"
 #include "IonBuilder.h"
-#include "IonSpew.h"
+#include "IonSpewer.h"
 #include "IonLIR.h"
 #include "GreedyAllocator.h"
 
@@ -118,16 +118,16 @@ bool ion::SetIonContext(IonContext *ctx)
 static bool
 TestCompiler(IonBuilder &builder, MIRGraph &graph)
 {
-    C1Spewer spew(graph, builder.script);
-    spew.enable("/tmp/ion.cfg");
+    IonSpewer spew(&graph, builder.script);
+    spew.init();
 
     if (!builder.build())
         return false;
-    spew.spew("Build SSA");
+    spew.spewPass("Build SSA");
 
     if (!ReorderBlocks(graph))
         return false;
-    spew.spew("Reorder Blocks");
+    spew.spewPass("Reorder Blocks");
 
     if (!BuildPhiReverseMapping(graph))
         return false;
@@ -135,18 +135,20 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
 
     if (!ApplyTypeInformation(graph))
         return false;
-    spew.spew("Apply types");
+    spew.spewPass("Apply types");
 
     LIRGraph lir;
     LIRBuilder lirgen(&builder, graph, lir);
     if (!lirgen.generate())
         return false;
-    spew.spew("Generate LIR");
+    spew.spewPass("Generate LIR");
 
     GreedyAllocator greedy(&builder, lir);
     if (!greedy.allocate())
         return false;
-    spew.spew("Allocate registers");
+    spew.spewPass("Allocate registers");
+
+    spew.finish();
 
     return true;
 }
