@@ -29,8 +29,6 @@
 <!ENTITY checkNow.accesskey              "N">
 <!ENTITY submitCrashes.label             "Submit crash reports">
 <!ENTITY submitCrashes.accesskey         "S">
-<!ENTITY submitTelemetry.label           "Submit performance data">
-<!ENTITY submitTelemetry.accesskey       "P">
 
 <!ENTITY networkTab.label                "Network">
 
