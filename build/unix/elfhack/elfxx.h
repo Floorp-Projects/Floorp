@@ -489,11 +489,15 @@ struct Elf_SymValue {
     bool defined;
 };
 
+#define STT(type) (1 << STT_ ##type)
+
 class ElfSymtab_Section: public ElfSection {
 public:
     ElfSymtab_Section(Elf_Shdr &s, std::ifstream *file, Elf *parent);
 
     void serialize(std::ofstream &file, char ei_class, char ei_data);
+
+    Elf_SymValue *lookup(const char *name, unsigned int type_filter = STT(OBJECT) | STT(FUNC));
 
 //private: // Until we have a real API
     std::vector<Elf_SymValue> syms;
