@@ -27,6 +27,7 @@
  *   Pete Collins    <petejc@collab.net>
  *   James Ross      <silver@warwickcompsoc.co.uk>
  *   Ryan Jones      <sciguyryan@gmail.com>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -4509,13 +4510,13 @@ nsDocument::CreateAttribute(const nsAString& aName,
                             nsIDOMAttr** aReturn)
 {
   *aReturn = nsnull;
+
+  WarnOnceAbout(eCreateAttribute);
+
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
 
   nsresult rv = nsContentUtils::CheckQName(aName, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString value;
-  nsDOMAttribute* attribute;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
@@ -4523,10 +4524,11 @@ nsDocument::CreateAttribute(const nsAString& aName,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  attribute = new nsDOMAttribute(nsnull, nodeInfo.forget(), value, PR_FALSE);
-  NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
-
-  return CallQueryInterface(attribute, aReturn);
+  nsAutoString value;
+  nsCOMPtr<nsIDOMAttr> attribute =
+    new nsDOMAttribute(nsnull, nodeInfo.forget(), value, PR_FALSE);
+  attribute.forget(aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4537,6 +4539,8 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsnull;
 
+  WarnOnceAbout(eCreateAttributeNS);
+
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                                      aQualifiedName,
@@ -4546,11 +4550,10 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
-  nsDOMAttribute* attribute =
+  nsCOMPtr<nsIDOMAttr> attribute =
     new nsDOMAttribute(nsnull, nodeInfo.forget(), value, PR_TRUE);
-  NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
-
-  return CallQueryInterface(attribute, aResult);
+  attribute.forget(aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -8247,6 +8250,56 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
   }
 
   return nsnull;
+}
+
+static const char* kWarnings[] = {
+  "GetAttributeNodeWarning",
+  "SetAttributeNodeWarning",
+  "GetAttributeNodeNSWarning",
+  "SetAttributeNodeNSWarning",
+  "RemoveAttributeNodeWarning",
+  "CreateAttributeWarning",
+  "CreateAttributeNSWarning",
+  "SpecifiedWarning",
+  "OwnerElementWarning",
+  "NodeNameWarning",
+  "NodeValueWarning",
+  "NodeTypeWarning",
+  "ParentNodeWarning",
+  "ChildNodesWarning",
+  "HasChildNodesWarning",
+  "HasAttributesWarning",
+  "FirstChildWarning",
+  "LastChildWarning",
+  "PreviousSiblingWarning",
+  "NextSiblingWarning",
+  "AttributesWarning",
+  "InsertBeforeWarning",
+  "ReplaceChildWarning",
+  "RemoveChildWarning",
+  "AppendChildWarning",
+  "CloneNodeWarning",
+  "GetOwnerDocumentWarning",
+  "IsSupportedWarning",
+  "IsEqualNodeWarning",
+  "TextContentWarning"
+};
+
+void
+nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation)
+{
+  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(kWarnings) < 32);
+  if (mWarnedAbout & (1 << aOperation)) {
+    return;
+  }
+  mWarnedAbout |= (1 << aOperation);
+  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                  kWarnings[aOperation],
+                                  nsnull, 0,
+                                  nsnull,
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::warningFlag,
+                                  "DOM Core", this);
 }
 
 nsresult
