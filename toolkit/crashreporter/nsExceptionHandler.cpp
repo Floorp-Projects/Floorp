@@ -1958,7 +1958,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
 
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(L"",
-                     NULL,    // no filter callback
+                     FPEFilter,
                      NULL,    // no minidump callback
                      NULL,    // no callback context
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
