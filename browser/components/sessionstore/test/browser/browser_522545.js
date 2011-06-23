@@ -282,7 +282,7 @@ function test() {
          "userTypedValue was null after loading a URI");
       is(browser.userTypedClear, 0,
          "userTypeClear reset to 0");
-      is(gURLBar.value, "http://example.com/",
+      is(gURLBar.value, gURLBar.trimValue("http://example.com/"),
          "Address bar's value set after loading URI");
       runNextTest();
     });

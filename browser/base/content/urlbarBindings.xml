@@ -91,6 +91,7 @@
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
         this.timeout = this._prefs.getIntPref("delay");
         this._formattingEnabled = this._prefs.getBoolPref("formatting.enabled");
+        this._mayTrimURLs = this._prefs.getBoolPref("trimURLs");
 
         this._urlTooltip = document.getElementById("urlTooltip");
 
@@ -180,6 +181,14 @@
         ]]></body>
       </method>
 
+      <field name="_mayTrimURLs">true</field>
+      <method name="trimValue">
+        <parameter name="aURL"/>
+        <body><![CDATA[
+          return this._mayTrimURLs ? trimURL(aURL) : aURL;
+        ]]></body>
+      </method>
+
       <field name="_formattingEnabled">true</field>
       <method name="formatValue">
         <body><![CDATA[
@@ -192,7 +201,12 @@
 
           let textNode = this.editor.rootElement.firstChild;
           let value = textNode.textContent;
-          let matchedURL = value.match(/^((?:http|https|ftp):\/\/(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
+
+          let protocol = value.match(/^[a-z]+:/);
+          if (protocol &&
+              ["http:", "https:", "ftp:"].indexOf(protocol[0]) == -1)
+            return;
+          let matchedURL = value.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
           if (!matchedURL)
             return;
 
@@ -205,14 +219,17 @@
           let subSegments = segments(domain) - segments(baseDomain);
           let subDomain = domain.match(new RegExp("(?:[^.]*\.){" + subSegments + "}"))[0];
 
-          let range = document.createRange();
-          range.setStart(textNode, 0);
-          range.setEnd(textNode, preDomain.length + subDomain.length);
-          selection.addRange(range);
+          let rangeLength = preDomain.length + subDomain.length;
+          if (rangeLength) {
+            let range = document.createRange();
+            range.setStart(textNode, 0);
+            range.setEnd(textNode, rangeLength);
+            selection.addRange(range);
+          }
 
           let startRest = preDomain.length + domain.length;
           if (startRest < value.length) {
-            range = document.createRange();
+            let range = document.createRange();
             range.setStart(textNode, startRest);
             range.setEnd(textNode, value.length);
             selection.addRange(range);
@@ -467,7 +484,7 @@
             SetPageProxyState("invalid");
             this.focus();
             try {
-              urlSecurityCheck(this.value,
+              urlSecurityCheck(url,
                                gBrowser.contentPrincipal,
                                Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
             } catch (ex) {
@@ -488,10 +505,7 @@
           // non-data URI, encode it.
           if (val == inputVal &&
               this.getAttribute("pageproxystate") == "valid") {
-            let uri;
-            try {
-              uri = makeURI(val);
-            } catch (e) {}
+            let uri = gBrowser.currentURI;
 
             if (uri && !uri.schemeIs("javascript") && !uri.schemeIs("data")) {
               val = uri.spec;
@@ -564,6 +578,9 @@
                 break;
               case "formatting.enabled":
                 this._formattingEnabled = this._prefs.getBoolPref(aData);
+                break;
+              case "trimURLs":
+                this._mayTrimURLs = this._prefs.getBoolPref(aData);
                 break;
             }
           }
