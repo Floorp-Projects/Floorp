@@ -71,7 +71,6 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
   ["FullScreenVideo"],
   ["BadgeHandlers"],
   ["ContextHelper"],
-  ["SelectionHelper"],
   ["FormHelperUI"],
   ["FindHelperUI"],
   ["NewTabPopup"],

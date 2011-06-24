@@ -530,22 +530,10 @@
         <body>
           <![CDATA[
             let bcr = this.getBoundingClientRect();
+            let view = this.getRootView();
             let scroll = this.getRootView().getPosition();
             return { x: (clientX + scroll.x - bcr.left) / this.scale,
                      y: (clientY + scroll.y - bcr.top) / this.scale };
-          ]]>
-        </body>
-      </method>
-
-      <method name="transformBrowserToClient">
-        <parameter name="browserX"/>
-        <parameter name="browserY"/>
-        <body>
-          <![CDATA[
-            let bcr = this.getBoundingClientRect();
-            let scroll = this.getRootView().getPosition();
-            return { x: (browserX * this.scale - scroll.x + bcr.left) ,
-                     y: (browserY * this.scale - scroll.y + bcr.top)};
           ]]>
         </body>
       </method>
