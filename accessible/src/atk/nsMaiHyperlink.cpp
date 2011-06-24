@@ -135,16 +135,16 @@ MaiHyperlink::~MaiHyperlink()
     }
 }
 
-AtkHyperlink *
+AtkHyperlink*
 MaiHyperlink::GetAtkHyperlink(void)
 {
-    NS_ENSURE_TRUE(mHyperlink, nsnull);
+  NS_ENSURE_TRUE(mHyperlink, nsnull);
 
-    if (mMaiAtkHyperlink)
-        return mMaiAtkHyperlink;
+  if (mMaiAtkHyperlink)
+    return mMaiAtkHyperlink;
 
-    if (!mHyperlink->IsHyperLink())
-        return nsnull;
+  if (!mHyperlink->IsLink())
+    return nsnull;
 
     mMaiAtkHyperlink =
         reinterpret_cast<AtkHyperlink *>

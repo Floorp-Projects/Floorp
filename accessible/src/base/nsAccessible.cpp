@@ -174,7 +174,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }                       
 
   if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperLink))) {
-    if (IsHyperLink()) {
+    if (IsLink()) {
       *aInstancePtr = static_cast<nsIAccessibleHyperLink*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
@@ -2895,7 +2895,7 @@ nsAccessible::GetIndexOfEmbeddedChild(nsAccessible* aChild)
 // HyperLinkAccessible methods
 
 bool
-nsAccessible::IsHyperLink()
+nsAccessible::IsLink()
 {
   // Every embedded accessible within hypertext accessible implements
   // hyperlink interface.
@@ -2905,7 +2905,7 @@ nsAccessible::IsHyperLink()
 PRUint32
 nsAccessible::StartOffset()
 {
-  NS_PRECONDITION(IsHyperLink(), "StartOffset is called not on hyper link!");
+  NS_PRECONDITION(IsLink(), "StartOffset is called not on hyper link!");
 
   nsHyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
   return hyperText ? hyperText->GetChildOffset(this) : 0;
@@ -2914,7 +2914,7 @@ nsAccessible::StartOffset()
 PRUint32
 nsAccessible::EndOffset()
 {
-  NS_PRECONDITION(IsHyperLink(), "EndOffset is called on not hyper link!");
+  NS_PRECONDITION(IsLink(), "EndOffset is called on not hyper link!");
 
   nsHyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
   return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
@@ -2923,21 +2923,21 @@ nsAccessible::EndOffset()
 PRUint32
 nsAccessible::AnchorCount()
 {
-  NS_PRECONDITION(IsHyperLink(), "AnchorCount is called on not hyper link!");
+  NS_PRECONDITION(IsLink(), "AnchorCount is called on not hyper link!");
   return 1;
 }
 
 nsAccessible*
 nsAccessible::AnchorAt(PRUint32 aAnchorIndex)
 {
-  NS_PRECONDITION(IsHyperLink(), "GetAnchor is called on not hyper link!");
+  NS_PRECONDITION(IsLink(), "GetAnchor is called on not hyper link!");
   return aAnchorIndex == 0 ? this : nsnull;
 }
 
 already_AddRefed<nsIURI>
 nsAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
-  NS_PRECONDITION(IsHyperLink(), "AnchorURIAt is called on not hyper link!");
+  NS_PRECONDITION(IsLink(), "AnchorURIAt is called on not hyper link!");
 
   if (aAnchorIndex != 0)
     return nsnull;
