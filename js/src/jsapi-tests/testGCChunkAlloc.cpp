@@ -68,7 +68,7 @@ BEGIN_TEST(testGCChunkAlloc)
     /* Check that we get OOM. */
     CHECK(!ok);
     CHECK(!JS_IsExceptionPending(cx));
-    CHECK(errorCount == 1);
+    CHECK_EQUAL(errorCount, 1);
     CHECK(!customGCChunkAllocator.pool);
     JS_GC(cx);
     JS_ToggleOptions(cx, JSOPTION_JIT);
@@ -79,7 +79,7 @@ BEGIN_TEST(testGCChunkAlloc)
          "        array.push({});"
          "    }"
          "})();", root.addr());
-    CHECK(errorCount == 1);
+    CHECK_EQUAL(errorCount, 1);
     return true;
 }
 
