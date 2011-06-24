@@ -69,7 +69,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMNSRange.h"
 #include "nsEditorUtils.h"
-#include "nsIDOMEventTarget.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIFocusManager.h"
@@ -125,7 +124,7 @@ nsEditorEventListener::InstallToEditor()
 {
   NS_PRECONDITION(mEditor, "The caller must set mEditor");
 
-  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetDOMEventTarget();
   NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
   nsresult rv;
@@ -204,7 +203,7 @@ nsEditorEventListener::Disconnect()
 void
 nsEditorEventListener::UninstallFromEditor()
 {
-  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetDOMEventTarget();
   if (!piTarget) {
     return;
   }

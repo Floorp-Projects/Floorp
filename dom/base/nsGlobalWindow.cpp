@@ -1851,9 +1851,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (internal == static_cast<nsIDOMWindowInternal *>(this)) {
       nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
       if (xblService) {
-        nsCOMPtr<nsIDOMEventTarget> piTarget =
-          do_QueryInterface(mChromeEventHandler);
-        xblService->AttachGlobalKeyHandler(piTarget);
+        xblService->AttachGlobalKeyHandler(mChromeEventHandler);
       }
     }
   }

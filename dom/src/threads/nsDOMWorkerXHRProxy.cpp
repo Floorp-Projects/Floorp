@@ -40,7 +40,6 @@
 
 // Interfaces
 #include "nsIDOMEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsILoadGroup.h"
 #include "nsIRequest.h"

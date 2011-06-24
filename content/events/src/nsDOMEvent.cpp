@@ -46,7 +46,6 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "prmem.h"
@@ -285,11 +284,9 @@ GetDOMEventTarget(nsIDOMEventTarget* aTarget,
 {
   nsIDOMEventTarget* realTarget =
     aTarget ? aTarget->GetTargetForDOMEvent() : aTarget;
-  if (realTarget) {
-    return CallQueryInterface(realTarget, aDOMTarget);
-  }
 
-  *aDOMTarget = nsnull;
+  NS_IF_ADDREF(*aDOMTarget = realTarget);
+
   return NS_OK;
 }
 

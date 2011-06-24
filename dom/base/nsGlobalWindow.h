@@ -102,7 +102,6 @@
 #include "nsIDOMStorageEvent.h"
 #include "nsIDOMStorageIndexedDB.h"
 #include "nsIDOMOfflineResourceList.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIArray.h"
 #include "nsIContent.h"
 #include "nsIIDBFactory.h"

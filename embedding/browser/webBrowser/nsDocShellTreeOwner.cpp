@@ -74,7 +74,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -102,7 +101,6 @@
 #include "nsPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventGroup.h"
 #include "nsIDOMDragEvent.h"
@@ -115,7 +113,7 @@
 // a |nsIDOMEventTarget| via the window root and chrome event handler.
 //
 static nsresult
-GetPIDOMEventTarget( nsWebBrowser* inBrowser, nsIDOMEventTarget** aTarget)
+GetDOMEventTarget( nsWebBrowser* inBrowser, nsIDOMEventTarget** aTarget)
 {
   NS_ENSURE_ARG_POINTER(inBrowser);
   
@@ -127,11 +125,10 @@ GetPIDOMEventTarget( nsWebBrowser* inBrowser, nsIDOMEventTarget** aTarget)
   NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
   nsPIDOMWindow *rootWindow = domWindowPrivate->GetPrivateRoot();
   NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMEventTarget> piTarget =
-    do_QueryInterface(rootWindow->GetChromeEventHandler());
-  NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
-  *aTarget = piTarget;
-  NS_IF_ADDREF(*aTarget);
+  nsCOMPtr<nsIDOMEventTarget> target =
+    rootWindow->GetChromeEventHandler();
+  NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
+  target.forget(aTarget);
   
   return NS_OK;
 }
@@ -888,12 +885,12 @@ nsDocShellTreeOwner::AddChromeListeners()
   }
 
   // register dragover and drop event listeners with the listener manager
-  nsCOMPtr<nsIDOMEventTarget> piTarget;
-  GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
+  nsCOMPtr<nsIDOMEventTarget> target;
+  GetDOMEventTarget(mWebBrowser, getter_AddRefs(target));
 
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
-  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
+  target->GetSystemEventGroup(getter_AddRefs(sysGroup));
+  nsIEventListenerManager* elmP = target->GetListenerManager(PR_TRUE);
   if (sysGroup && elmP)
   {
     rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("dragover"),
@@ -923,7 +920,7 @@ nsDocShellTreeOwner::RemoveChromeListeners()
   }
 
   nsCOMPtr<nsIDOMEventTarget> piTarget;
-  GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
+  GetDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
   if (!piTarget)
     return NS_OK;
 
@@ -1246,7 +1243,7 @@ NS_IMETHODIMP
 ChromeTooltipListener::AddChromeListeners()
 {  
   if (!mEventTarget)
-    GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(mEventTarget));
+    GetDOMEventTarget(mWebBrowser, getter_AddRefs(mEventTarget));
   
   // Register the appropriate events for tooltips, but only if
   // the embedding chrome cares.
@@ -1729,7 +1726,7 @@ NS_IMETHODIMP
 ChromeContextMenuListener::AddChromeListeners()
 {  
   if (!mEventTarget)
-    GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(mEventTarget));
+    GetDOMEventTarget(mWebBrowser, getter_AddRefs(mEventTarget));
   
   // Register the appropriate events for context menus, but only if
   // the embedding chrome cares.

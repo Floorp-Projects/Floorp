@@ -613,7 +613,7 @@ public:
                                     nsIDOMNode *aEndNode,
                                     PRInt32 aEndOffset);
 
-  virtual already_AddRefed<nsIDOMEventTarget> GetPIDOMEventTarget() = 0;
+  virtual already_AddRefed<nsIDOMEventTarget> GetDOMEventTarget() = 0;
 
   // Fast non-refcounting editor root element accessor
   nsIDOMElement *GetRoot();
