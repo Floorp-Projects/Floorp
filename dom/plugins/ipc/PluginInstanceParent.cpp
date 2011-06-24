@@ -1597,6 +1597,12 @@ PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
         break;
     }
 
+    if (self->mPluginWndProc == PluginWindowHookProc) {
+      NS_NOTREACHED(
+        "PluginWindowHookProc invoking mPluginWndProc w/"
+        "mPluginWndProc == PluginWindowHookProc????");
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
     return ::CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
                             lParam);
 }
