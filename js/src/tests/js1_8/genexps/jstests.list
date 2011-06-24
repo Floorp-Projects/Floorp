@@ -10,3 +10,4 @@ skip script regress-380237-04.js # obsolete test, need to remove minor failures 
 script regress-384991.js
 script regress-634472.js
 script regress-665286.js
+script regress-666852.js
