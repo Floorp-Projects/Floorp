@@ -143,7 +143,6 @@ public:
     return NS_OK;
   }
   nsresult GetPrefix(nsAString& aPrefix);
-  nsresult Normalize();
   nsresult IsSupported(const nsAString& aFeature,
                        const nsAString& aVersion,
                        PRBool* aReturn);
