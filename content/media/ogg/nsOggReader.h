@@ -286,6 +286,10 @@ private:
   // The offset of the end of the last page we've read, or the start of
   // the page we're about to read.
   PRInt64 mPageOffset;
+
+  // The picture region inside Theora frame to be displayed, if we have
+  // a Theora video track.
+  nsIntRect mPicture;
 };
 
 #endif
