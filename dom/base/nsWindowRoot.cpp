@@ -101,12 +101,12 @@ nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* a
 }
 
 NS_IMETHODIMP
-nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, PRBool *_retval)
+nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, PRBool *aRetVal)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =  nsEventDispatcher::DispatchDOMEvent(
     static_cast<nsPIDOMEventTarget*>(this), nsnull, aEvt, nsnull, &status);
-  *_retval = (status != nsEventStatus_eConsumeNoDefault);
+  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
 }
 
@@ -159,9 +159,9 @@ NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAString& aType,
                                nsIDOMEventListener *aListener,
                                PRBool aUseCapture, PRBool aWantsUntrusted,
-                               PRUint8 optional_argc)
+                               PRUint8 aOptionalArgc)
 {
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 1,
+  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
                "explicit by making optional_argc non-zero.");

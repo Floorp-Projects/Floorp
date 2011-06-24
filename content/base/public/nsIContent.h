@@ -944,6 +944,8 @@ public:
   // Overloaded from nsINode
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+
 protected:
   /**
    * Hook for implementing GetID.  This is guaranteed to only be

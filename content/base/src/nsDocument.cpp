@@ -6209,8 +6209,6 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   return nsINode::GetOwnerDocument(aOwnerDocument);
 }
 
-NS_IMPL_DOMTARGET_DEFAULTS(nsDocument)
-
 nsIEventListenerManager*
 nsDocument::GetListenerManager(PRBool aCreateIfNotFound)
 {
@@ -6227,20 +6225,6 @@ nsDocument::GetListenerManager(PRBool aCreateIfNotFound)
 }
 
 nsresult
-nsDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
-{
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-  return manager->GetSystemEventGroupLM(aGroup);
-}
-
-nsIScriptContext*
-nsDocument::GetContextForEventHandlers(nsresult* aRv)
-{
-  return nsContentUtils::GetContextForEventHandlers(this, aRv);
-}
-
-nsresult
 nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = PR_TRUE;
@@ -6254,69 +6238,6 @@ nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mParentTarget = static_cast<nsPIDOMEventTarget*>(window);
   }
   return NS_OK;
-}
-
-nsresult
-nsDocument::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
-}
-
-nsresult
-nsDocument::DispatchDOMEvent(nsEvent* aEvent,
-                             nsIDOMEvent* aDOMEvent,
-                             nsPresContext* aPresContext,
-                             nsEventStatus* aEventStatus)
-{
-  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsINode*>(this),
-                                             aEvent, aDOMEvent,
-                                             aPresContext, aEventStatus);
-}
-
-nsresult
-nsDocument::AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                  const nsIID& aIID)
-{
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-  return manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-
-nsresult
-nsDocument::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                     const nsIID& aIID)
-{
-  return mListenerManager ?
-    mListenerManager->RemoveEventListenerByIID(aListener, aIID,
-                                               NS_EVENT_FLAG_BUBBLE) :
-    NS_OK;
-}
-
-nsresult
-nsDocument::RemoveEventListener(const nsAString& aType,
-                                nsIDOMEventListener* aListener,
-                                PRBool aUseCapture)
-{
-  return RemoveGroupedEventListener(aType, aListener, aUseCapture, nsnull);
-}
-
-NS_IMETHODIMP
-nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
-{
-  // Obtain a presentation context
-  nsIPresShell *shell = GetShell();
-  nsRefPtr<nsPresContext> context;
-  if (shell) {
-     context = shell->GetPresContext();
-  }
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsresult rv =
-    nsEventDispatcher::DispatchDOMEvent(static_cast<nsINode*>(this),
-                                        nsnull, aEvent, context, &status);
-
-  *_retval = (status != nsEventStatus_eConsumeNoDefault);
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -6355,30 +6276,6 @@ NS_IMETHODIMP
 nsDocument::IsRegisteredHere(const nsAString & type, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::AddEventListener(const nsAString& aType,
-                             nsIDOMEventListener *aListener,
-                             PRBool aUseCapture, PRBool aWantsUntrusted,
-                             PRUint8 optional_argc)
-{
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-  if (aWantsUntrusted ||
-      (optional_argc < 2 && !nsContentUtils::IsChromeDoc(this))) {
-    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
-  }
-
-  return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
 }
 
 NS_IMETHODIMP

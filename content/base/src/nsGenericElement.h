@@ -49,7 +49,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSElement.h"
 #include "nsILinkHandler.h"
@@ -303,8 +302,6 @@ public:
   friend class nsNSElementTearoff;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-
-  NS_DECL_NSIDOMEVENTTARGET
 
   /**
    * Called during QueryInterface to give the binding manager a chance to
@@ -586,12 +583,6 @@ public:
                                      nsIDOMNodeList **aReturn);
 
   /**
-   * Default event prehandling for content objects. Handles event retargeting.
-   */
-  static nsresult doPreHandleEvent(nsIContent* aContent,
-                                   nsEventChainPreVisitor& aVisitor);
-
-  /**
    * Method to create and dispatch a left-click event loosely based on
    * aSourceEvent. If aFullDispatch is true, the event will be dispatched
    * through the full dispatching of the presshell of the aPresContext; if it's
@@ -611,6 +602,7 @@ public:
    * event.
    * If aPresContext is nsnull, this does nothing.
    */
+  using nsIContent::DispatchEvent;
   static nsresult DispatchEvent(nsPresContext* aPresContext,
                                 nsEvent* aEvent,
                                 nsIContent* aTarget,

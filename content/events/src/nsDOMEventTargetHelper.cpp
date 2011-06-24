@@ -108,18 +108,18 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
                                          nsIDOMEventListener *aListener,
                                          PRBool aUseCapture,
                                          PRBool aWantsUntrusted,
-                                         PRUint8 optional_argc)
+                                         PRUint8 aOptionalArgc)
 {
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 1,
+  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
+               "explicit by making aOptionalArgc non-zero.");
 
   nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elm);
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
-  if (optional_argc < 2) {
+  if (aOptionalArgc < 2) {
     nsresult rv;
     nsIScriptContext* context = GetContextForEventHandlers(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
