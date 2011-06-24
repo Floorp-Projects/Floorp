@@ -109,7 +109,11 @@ NS_IMPL_DOMTARGET_DEFAULTS(nsWindowRoot)
 NS_IMETHODIMP
 nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
 {
-  return RemoveGroupedEventListener(aType, aListener, aUseCapture, nsnull);
+  nsRefPtr<nsEventListenerManager> elm = GetListenerManager(PR_FALSE);
+  if (elm) {
+    elm->RemoveEventListener(aType, aListener, aUseCapture);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -140,7 +144,8 @@ nsWindowRoot::AddGroupedEventListener(const nsAString & aType, nsIDOMEventListen
   nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-  return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
+  manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -149,8 +154,8 @@ nsWindowRoot::RemoveGroupedEventListener(const nsAString & aType, nsIDOMEventLis
 {
   if (mListenerManager) {
     PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-    return mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
-                                                       aEvtGrp);
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
+                                                aEvtGrp);
   }
   return NS_OK;
 }
@@ -178,16 +183,9 @@ nsWindowRoot::AddEventListener(const nsAString& aType,
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
                "explicit by making optional_argc non-zero.");
 
-  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-  if (aWantsUntrusted) {
-    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
-  }
-
-  return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
+  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
 }
 
 nsresult
@@ -203,8 +201,7 @@ nsWindowRoot::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsI
 {
   nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   if (manager) {
-    return manager->RemoveEventListenerByIID(aListener, aIID,
-                                             NS_EVENT_FLAG_BUBBLE);
+    manager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
   }
   return NS_OK;
 }

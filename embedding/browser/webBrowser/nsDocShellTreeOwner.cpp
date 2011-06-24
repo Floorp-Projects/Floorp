@@ -929,14 +929,12 @@ nsDocShellTreeOwner::RemoveChromeListeners()
   nsEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
   if (sysGroup && elmP)
   {
-    nsresult rv =
-      elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("dragover"),
-                                      NS_EVENT_FLAG_BUBBLE,
-                                      sysGroup);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("drop"),
-                                         NS_EVENT_FLAG_BUBBLE,
-                                         sysGroup);
+    elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("dragover"),
+                                    NS_EVENT_FLAG_BUBBLE,
+                                    sysGroup);
+    elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("drop"),
+                                    NS_EVENT_FLAG_BUBBLE,
+                                    sysGroup);
   }
 
   return NS_OK;

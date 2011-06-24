@@ -7215,7 +7215,11 @@ nsGlobalWindow::RemoveEventListener(const nsAString& aType,
                                     nsIDOMEventListener* aListener,
                                     PRBool aUseCapture)
 {
-  return RemoveGroupedEventListener(aType, aListener, aUseCapture, nsnull);
+  nsRefPtr<nsEventListenerManager> elm = GetListenerManager(PR_FALSE);
+  if (elm) {
+    elm->RemoveEventListener(aType, aListener, aUseCapture);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7261,7 +7265,9 @@ nsGlobalWindow::AddGroupedEventListener(const nsAString & aType,
   nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-  return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
+  manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7311,17 +7317,15 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-  if (aWantsUntrusted ||
+  if (!aWantsUntrusted &&
       (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
-    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+    aWantsUntrusted = PR_TRUE;
   }
 
-  return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
+  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->AddEventListener(aType, aListener, aUseCapture,
+                                   aWantsUntrusted);
 }
 
 nsresult
