@@ -261,6 +261,21 @@
                 onget="return this._docShell || (this._docShell = this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell);"
                 readonly="true"/>
 
+      <property name="docShellIsActive">
+        <getter>
+          <![CDATA[
+            return this.docShell && this.docShell.isActive;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (this.docShell)
+              return this.docShell.isActive = val;
+            return false;
+          ]]>
+        </setter>
+      </property>
+
       <property name="isRemoteBrowser"
                 onget="return (this.getAttribute('remote') == 'true');"
                 readonly="true"/>
