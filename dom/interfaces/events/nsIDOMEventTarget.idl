@@ -167,7 +167,7 @@ interface nsIDOMEventTarget : nsISupports
    * Usually |this| is returned, but for example global object returns
    * the outer object.
    */
-   [notxpcom] nsIDOMEventTarget GetTargetForDOMEvent();
+   [notxpcom, nostdcall] nsIDOMEventTarget GetTargetForDOMEvent();
 
   /**
    * Returns the nsPIDOMEventTarget object which should be used as the target
@@ -175,7 +175,7 @@ interface nsIDOMEventTarget : nsISupports
    * Usually |this| is returned, but for example global object returns
    * the inner object.
    */
-   [notxpcom] nsIDOMEventTarget GetTargetForEventTargetChain();
+   [notxpcom, nostdcall] nsIDOMEventTarget GetTargetForEventTargetChain();
 
   /**
    * Called before the capture phase of the event flow.
@@ -192,13 +192,15 @@ interface nsIDOMEventTarget : nsISupports
    *
    * @note Only nsEventDispatcher should call this method.
    */
-  [noscript] void PreHandleEvent(in nsEventChainPreVisitorRef aVisitor);
+  [noscript, nostdcall]
+  void PreHandleEvent(in nsEventChainPreVisitorRef aVisitor);
 
   /**
    * If nsEventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,
    * called just before possible event handlers on this object will be called.
    */
-  [noscript] void WillHandleEvent(in nsEventChainPostVisitorRef aVisitor);
+  [noscript, nostdcall]
+  void WillHandleEvent(in nsEventChainPostVisitorRef aVisitor);
 
   /**
    * Called after the bubble phase of the system event group.
@@ -208,7 +210,8 @@ interface nsIDOMEventTarget : nsISupports
    * @see nsEventDispatcher.h for documentation about aVisitor.
    * @note Only nsEventDispatcher should call this method.
    */
-  [noscript] void PostHandleEvent(in nsEventChainPostVisitorRef aVisitor);
+  [noscript, nostdcall]
+  void PostHandleEvent(in nsEventChainPostVisitorRef aVisitor);
 
   /**
    * Dispatch an event.
@@ -227,10 +230,11 @@ interface nsIDOMEventTarget : nsISupports
    * @deprecated This method is here just until all the callers outside Gecko
    *             have been converted to use nsIDOMEventTarget::dispatchEvent.
    */
-  [noscript] void DispatchDOMEvent(in nsEventPtr aEvent,
-                                   in nsIDOMEvent aDOMEvent,
-                                   in nsPresContextPtr aPresContext,
-                                   in nsEventStatusPtr aEventStatus);
+  [noscript, nostdcall]
+  void DispatchDOMEvent(in nsEventPtr aEvent,
+                        in nsIDOMEvent aDOMEvent,
+                        in nsPresContextPtr aPresContext,
+                        in nsEventStatusPtr aEventStatus);
 
   /**
    * Get the event listener manager, the guy you talk to to register for events
@@ -238,36 +242,40 @@ interface nsIDOMEventTarget : nsISupports
    * @param aMayCreate If PR_FALSE, returns a listener manager only if
    *                   one already exists.
    */
-  [notxpcom] nsIEventListenerManager GetListenerManager(in boolean aMayCreate);
+  [notxpcom, nostdcall]
+  nsIEventListenerManager GetListenerManager(in boolean aMayCreate);
 
   /**
    * Add an event listener for nsIID.
    */
-  [noscript] void AddEventListenerByIID(in nsIDOMEventListener aListener,
-                                        in nsIIDRef aIID);
+  [noscript, nostdcall]
+  void AddEventListenerByIID(in nsIDOMEventListener aListener,
+                             in nsIIDRef aIID);
   /**
    * Remove event listener for nsIID.
    */
-  [noscript] void RemoveEventListenerByIID(in nsIDOMEventListener aListener,
-                                           in nsIIDRef aIID);
+  [noscript, nostdcall]
+  void RemoveEventListenerByIID(in nsIDOMEventListener aListener,
+                                in nsIIDRef aIID);
 
   /**
    * Get the system event group.
    */
-  [noscript] nsIDOMEventGroup GetSystemEventGroup();
+  [noscript, nostdcall] nsIDOMEventGroup GetSystemEventGroup();
 
   /**
    * Get the script context in which the event handlers should be run.
    * May return null.
    * @note Caller *must* check the value of aRv.
    */
-  [notxpcom] nsIScriptContext GetContextForEventHandlers(out nsresult aRv);
+  [notxpcom, nostdcall]
+  nsIScriptContext GetContextForEventHandlers(out nsresult aRv);
 
   /**
    * If the method above returns null, but a success code, this method
    * is called.
    */
-  [notxpcom] JSContextPtr GetJSContextForEventHandlers();
+  [notxpcom, nostdcall] JSContextPtr GetJSContextForEventHandlers();
 };
 
 %{C++
