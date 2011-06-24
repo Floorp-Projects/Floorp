@@ -1208,7 +1208,7 @@ private:
      */
     bool recognizeDirectivePrologue(JSParseNode *pn, bool *isDirectivePrologueMember);
 
-    enum FunctionType { GETTER, SETTER, GENERAL };
+    enum FunctionType { Getter, Setter, Normal };
     bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNode **list);
     JSParseNode *functionBody();
     JSParseNode *functionDef(JSAtom *name, FunctionType type, FunctionSyntaxKind kind);
