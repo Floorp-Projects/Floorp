@@ -1754,13 +1754,11 @@ const ContentTouchHandler = {
       case "Browser:ContextMenu":
         // Long tap
         let contextMenu = { name: aMessage.name, json: json, target: aMessage.target };
-        if (!SelectionHelper.showPopup(contextMenu)) {
-          if (ContextHelper.showPopup(contextMenu)) {
-            // Stop all input sequences
-            let event = document.createEvent("Events");
-            event.initEvent("CancelTouchSequence", true, false);
-            document.dispatchEvent(event);
-          }
+        if (ContextHelper.showPopup(contextMenu)) {
+          // Stop all input sequences
+          let event = document.createEvent("Events");
+          event.initEvent("CancelTouchSequence", true, false);
+          document.dispatchEvent(event);
         }
         break;
       case "Browser:CaptureEvents": {
