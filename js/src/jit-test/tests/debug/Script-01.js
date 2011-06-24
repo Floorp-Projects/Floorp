@@ -44,3 +44,30 @@ scripts = evalAndNoteScripts('g(f)');
 assertEq(scripts.frame !== scripts.argument, true);
 assertEq(scripts.frame,    gScript);
 assertEq(scripts.argument, fScript);
+
+// Different closures made from the same 'function' expression should yield
+// the same script.
+global.eval('function gen1(x) { return function clo(y) { return x+y; }; }');
+global.eval('var clo1 = gen1(42);');
+global.eval('var clo2 = gen1("smoot");');
+var scripts1 = evalAndNoteScripts('f(clo1)');
+var scripts2 = evalAndNoteScripts('f(clo2)');
+assertEq(scripts1.argument, scripts2.argument);
+
+// Different closures made from the same 'function' declaration should yield
+// the same script.
+global.eval('function gen2(x) { function clo(y) { return x+y; }; return clo; }');
+global.eval('var clo1 = gen2(42);');
+global.eval('var clo2 = gen2("smoot");');
+var scripts1 = evalAndNoteScripts('f(clo1)');
+var scripts2 = evalAndNoteScripts('f(clo2)');
+assertEq(scripts1.argument, scripts2.argument);
+
+// Different closures made from the same 'function' statement should yield
+// the same script.
+global.eval('function gen3(x) { if (true) { function clo(y) { return x+y; }; return clo; } }');
+global.eval('var clo1 = gen3(42);');
+global.eval('var clo2 = gen3("smoot");');
+var scripts1 = evalAndNoteScripts('f(clo1)');
+var scripts2 = evalAndNoteScripts('f(clo2)');
+assertEq(scripts1.argument, scripts2.argument);
