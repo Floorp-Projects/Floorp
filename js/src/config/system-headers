@@ -565,14 +565,6 @@ pcfs/pc_dir.h
 Pgenerr.h
 PGenErr.h
 Ph.h
-photon/Pg.h
-photon/PhProto.h
-photon/PhRender.h
-photon/PpProto.h
-photon/PtProgress.h
-photon/PtServer.h
-photon/PtWebClient.h
-photon/PxImage.h
 pk11func.h
 pk11pub.h
 pkcs11t.h
