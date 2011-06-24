@@ -67,7 +67,6 @@ typedef struct {
   PRUint32                      mEventType;
   nsCOMPtr<nsIAtom>             mTypeAtom;
   PRUint16                      mFlags;
-  PRUint16                      mGroupFlags;
   PRBool                        mHandlerIsString;
   const EventTypeData*          mTypeData;
 } nsListenerStruct;
@@ -169,8 +168,6 @@ public:
 
   void Disconnect();
 
-  nsresult GetSystemEventGroupLM(nsIDOMEventGroup **aGroup);
-
   PRBool HasMutationListeners();
 
   PRBool HasUnloadListeners();
@@ -189,8 +186,6 @@ public:
   NS_DECL_NSIDOM3EVENTTARGET
 
   static void Shutdown();
-
-  static nsIDOMEventGroup* GetSystemEventGroup();
 
   /**
    * Returns PR_TRUE if there may be a paint event listener registered,

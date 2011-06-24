@@ -424,13 +424,6 @@ nsDOMWorkerMessageHandler::RemoveEventListenerByIID(nsIDOMEventListener *aListen
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-nsDOMWorkerMessageHandler::GetSystemEventGroup(nsIDOMEventGroup **_retval)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsIScriptContext*
 nsDOMWorkerMessageHandler::GetContextForEventHandlers(nsresult *aRv)
 {

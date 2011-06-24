@@ -1062,14 +1062,6 @@ nsINode::GetListenerManager(PRBool aCreateIfNotFound)
   return nsContentUtils::GetListenerManager(this, aCreateIfNotFound);
 }
 
-nsresult
-nsINode::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
-{
-  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->GetSystemEventGroupLM(aGroup);
-}
-
 nsIScriptContext*
 nsINode::GetContextForEventHandlers(nsresult* aRv)
 {

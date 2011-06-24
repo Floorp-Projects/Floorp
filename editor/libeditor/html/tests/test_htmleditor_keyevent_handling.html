@@ -85,13 +85,8 @@ function runTests()
        getDesciption(aPreventedOnBubbling) + "prevented on bubbling phase");
   }
 
-  var systemGroup =
-    Components.classes["@mozilla.org/eventlistenerservice;1"].
-      getService(Components.interfaces.nsIEventListenerService).
-      systemEventGroup;
-  window.QueryInterface(Components.interfaces.nsIDOM3EventTarget);
-  window.addGroupedEventListener("keypress", listener, true, systemGroup);
-  window.addGroupedEventListener("keypress", listener, false, systemGroup);
+  SpecialPowers.addSystemEventListener(window, "keypress", listener, true);
+  SpecialPowers.addSystemEventListener(window, "keypress", listener, false);
 
   function doTest(aElement, aDescription,
                   aIsReadonly, aIsTabbable, aIsPlaintext)
@@ -660,8 +655,8 @@ function runTests()
   doTest(htmlEditor, "readonly and non-tabbable HTML editor but plaintext mode",
          true, false, true);
 
-  window.removeGroupedEventListener("keypress", listener, true, systemGroup);
-  window.removeGroupedEventListener("keypress", listener, false, systemGroup);
+  SpecialPowers.removeSystemEventListener(window, "keypress", listener, true);
+  SpecialPowers.removeSystemEventListener(window, "keypress", listener, false);
 
   SimpleTest.finish();
 }
