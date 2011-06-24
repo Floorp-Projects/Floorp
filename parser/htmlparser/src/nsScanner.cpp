@@ -301,14 +301,13 @@ nsresult nsScanner::Append(const nsAString& aBuffer) {
 nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen,
                            nsIRequest *aRequest)
 {
-  nsresult res=NS_OK;
-  PRUnichar *unichars, *start;
+  nsresult res = NS_OK;
   if (mUnicodeDecoder) {
     PRInt32 unicharBufLen = 0;
     mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
     nsScannerString::Buffer* buffer = nsScannerString::AllocBuffer(unicharBufLen + 1);
     NS_ENSURE_TRUE(buffer,NS_ERROR_OUT_OF_MEMORY);
-    start = unichars = buffer->DataStart();
+    PRUnichar *unichars = buffer->DataStart();
 
     PRInt32 totalChars = 0;
     PRInt32 unicharLength = unicharBufLen;
