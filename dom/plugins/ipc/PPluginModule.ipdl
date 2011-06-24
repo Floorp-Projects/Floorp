@@ -48,7 +48,6 @@ using NPNVariable;
 using base::FileDescriptor;
 using mozilla::plugins::NativeThreadId;
 using mac_plugin_interposing::NSCursorInfo;
-using nsID;
 
 namespace mozilla {
 namespace plugins {
@@ -105,11 +104,6 @@ child:
 
   rpc NPP_GetSitesWithData()
     returns (nsCString[] sites);
-
-  // Windows specific message to set up an audio session in the plugin process
-  async SetAudioSessionData(nsID aID,
-                            nsString aDisplayName,
-                            nsString aIconPath);
 
 parent:
   /**
