@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for positioning
+  -->
+<window title="position" width="500" height="600"
+        onload="setTimeout(runTest, 0);"
+        style="margin: 0; border: 0; padding; 0;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+
+
+<hbox id="box1">
+  <button label="0" width="100" height="40" style="margin: 3px;"/>
+</hbox>
+<scrollbox id="box2" orient="vertical" align="start" width="200" height="50"
+           style="overflow: hidden; margin-left: 2px; padding: 1px;">
+  <deck>
+    <scrollbox id="box3" orient="vertical" align="start" height="100"
+               style="overflow: scroll; margin: 1px; padding: 0;">
+      <vbox id="innerscroll" width="200" align="start">
+        <button id="button1" label="1" width="90" maxwidth="100"
+                minheight="25" height="35" maxheight="50"
+                style="min-width: 80px; margin: 5px; border: 4px; padding: 7px;
+                       -moz-appearance: none;"/>
+        <menu id="menu">
+          <menupopup id="popup" style="-moz-appearance: none; margin:0; border: 0; padding: 0;"
+                                onpopupshown="menuOpened()"
+                                onpopuphidden="if (event.target == this) SimpleTest.finish()">
+            <menuitem label="One"/>
+            <menu id="submenu" label="Three">
+              <menupopup id="subpopup" style="-moz-appearance: none; margin:0; border: 0; padding: 0;"
+                         onpopupshown="submenuOpened()">
+                <menuitem label="Four"/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </menu>
+        <button label="2" maxwidth="100" maxheight="20" style="margin: 5px;"/>
+        <button label="3" maxwidth="100" maxheight="20" style="margin: 5px;"/>
+        <button label="4" maxwidth="100" maxheight="20" style="margin: 5px;"/>
+      </vbox>
+      <box height="200"/>
+    </scrollbox>
+  </deck>
+</scrollbox>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var winwidth = document.documentElement.boxObject.width;
+  var innerscroll = $("innerscroll").boxObject.width;
+
+  var box1 = $("box1");
+  checkPosition("box1", box1, 0, 0, winwidth, 46);
+
+  var box2 = $("box2");
+  checkPosition("box2", box2, 2, 46, winwidth, 96);
+
+  // height is height(box1) = 46 + margin-top(box3) = 1 + margin-top(button1) = 5
+  var button1 = $("button1");
+  checkPosition("button1", button1, 9, 53, 99, 88);
+
+  var sbo = box2.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+  sbo.scrollTo(7, 16);
+
+  // clientRect height is offset from root so is 16 pixels vertically less
+  checkPosition("button1 scrolled", button1, 9, 37, 99, 72);
+
+  var box3 = $("box3");
+  sbo = box3.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+  sbo.scrollTo(1, 2);
+
+  checkPosition("button1 scrolled", button1, 9, 35, 99, 70);
+
+  $("menu").open = true;
+}
+
+function menuOpened()
+{
+  $("submenu").open = true;
+}
+
+function submenuOpened()
+{
+  var menu = $("menu");
+  var menuleft = Math.round(menu.getBoundingClientRect().left);
+  var menubottom = Math.round(menu.getBoundingClientRect().bottom);
+
+  var submenu = $("submenu");
+  var submenutop = Math.round(submenu.getBoundingClientRect().top);
+  var submenuright = Math.round(submenu.getBoundingClientRect().right);
+
+  checkPosition("popup", $("popup"), menuleft, menubottom, -1, -1);
+  checkPosition("subpopup", $("subpopup"), submenuright, submenutop, -1, -1);
+
+  menu.open = false;
+}
+
+function checkPosition(testid, elem, cleft, ctop, cright, cbottom)
+{
+  // -1 for right or bottom means that the exact size should not be
+  // checked, just ensure it is larger then the left or top position
+  var rect = elem.getBoundingClientRect();
+  is(Math.round(rect.left), cleft, testid + " client rect left");
+  if (testid != "popup")
+    is(Math.round(rect.top), ctop, testid + " client rect top");
+  if (cright >= 0)
+    is(Math.round(rect.right), cright, testid + " client rect right");
+  else
+    ok(rect.right - rect.left > 20, testid + " client rect right");
+  if (cbottom >= 0)
+    is(Math.round(rect.bottom), cbottom, testid + " client rect bottom");
+  else
+    ok(rect.bottom - rect.top > 15, testid + " client rect bottom");
+}
+
+]]>
+
+</script>
+
+</window>
