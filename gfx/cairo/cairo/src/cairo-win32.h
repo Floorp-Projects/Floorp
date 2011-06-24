@@ -251,6 +251,11 @@ cairo_d2d_surface_create_for_texture(cairo_device_t *device,
 				     cairo_content_t content);
 
 /**
+ * Get the ID3D10Texture2D used for a surface.
+ */
+cairo_public struct ID3D10Texture2D *cairo_d2d_surface_get_texture(cairo_surface_t *surf);
+
+/**
  * Present the backbuffer for a surface create for an HWND. This needs
  * to be called when the owner of the original window surface wants to
  * actually present the executed drawing operations to the screen.
