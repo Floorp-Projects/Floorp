@@ -126,9 +126,7 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
@@ -631,6 +629,37 @@ nsGenericDOMDataNode::GetAttrCount() const
   return 0;
 }
 
+NS_IMPL_DOMTARGET_DEFAULTS(nsGenericDOMDataNode)
+
+NS_IMETHODIMP
+nsGenericDOMDataNode::AddEventListener(const nsAString& aType,
+                                       nsIDOMEventListener *aListener,
+                                       PRBool useCapture)
+{
+  return AddEventListener(aType, aListener, useCapture, PR_FALSE, 1);
+}
+
+NS_IMETHODIMP
+nsGenericDOMDataNode::RemoveEventListener(const nsAString& aType,
+                                          nsIDOMEventListener* aListener,
+                                          PRBool aUseCapture)
+{
+  nsCOMPtr<nsIDOMEventTarget> event_target =
+    do_QueryInterface(GetListenerManager(PR_TRUE));
+  NS_ENSURE_STATE(event_target);
+
+  return event_target->RemoveEventListener(aType, aListener, aUseCapture);
+}
+
+NS_IMETHODIMP
+nsGenericDOMDataNode::DispatchEvent(nsIDOMEvent *aEvt, PRBool* _retval)
+{
+  nsCOMPtr<nsIDOMEventTarget> target =
+    do_QueryInterface(GetListenerManager(PR_TRUE));
+  NS_ENSURE_STATE(target);
+  return target->DispatchEvent(aEvt, _retval);
+}
+
 nsresult
 nsGenericDOMDataNode::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
@@ -685,6 +714,12 @@ nsGenericDOMDataNode::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
   nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elm);
   return elm->GetSystemEventGroupLM(aGroup);
+}
+
+nsIScriptContext*
+nsGenericDOMDataNode::GetContextForEventHandlers(nsresult* aRv)
+{
+  return nsContentUtils::GetContextForEventHandlers(this, aRv);
 }
 
 PRUint32

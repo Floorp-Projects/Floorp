@@ -80,6 +80,18 @@ public:
   // nsIDOM3Attr interface
   NS_DECL_NSIDOM3ATTR
 
+  NS_DECL_NSIDOMEVENTTARGET
+
+  nsresult AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener *aListener,
+                            PRBool aUseCapture,
+                            PRBool aWantsUntrusted,
+                            PRUint8 optional_argc)
+  {
+    return nsIAttribute::AddEventListener(aType, aListener, aUseCapture,
+                                          aWantsUntrusted, optional_argc);
+  }
+
   // nsIAttribute interface
   void SetMap(nsDOMAttributeMap *aMap);
   nsIContent *GetContent() const;
@@ -95,21 +107,6 @@ public:
                                  PRBool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus);
-  virtual nsIEventListenerManager* GetListenerManager(PRBool aCreateIfNotFound);
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID);
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv)
-  {
-    return nsContentUtils::GetContextForEventHandlers(this, aRv);
-  }
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 

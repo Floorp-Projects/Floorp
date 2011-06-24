@@ -38,7 +38,9 @@
 #ifndef nsPIDOMEventTarget_h_
 #define nsPIDOMEventTarget_h_
 
-#include "nsISupports.h"
+#include "nsIDOMEventTarget.h"
+
+#if 0
 #include "nsEvent.h"
 
 class nsIDOMEvent;
@@ -174,5 +176,6 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMEventTarget, NS_PIDOMEVENTTARGET_IID)
+#endif
 
 #endif // !defined(nsPIDOMEventTarget_h_)

@@ -55,8 +55,7 @@ class nsEventChainPostVisitor;
 #include "nsIDOMEventTarget.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsWindowRoot : public nsIDOMEventTarget,
-                     public nsIDOM3EventTarget,
+class nsWindowRoot : public nsIDOM3EventTarget,
                      public nsIDOMNSEventTarget,
                      public nsPIWindowRoot
 {
@@ -68,24 +67,6 @@ public:
   NS_DECL_NSIDOMEVENTTARGET
   NS_DECL_NSIDOM3EVENTTARGET
   NS_DECL_NSIDOMNSEVENTTARGET
-
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent,
-                                    nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus);
-  virtual nsIEventListenerManager* GetListenerManager(PRBool aCreateIfNotFound);
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID);
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv)
-  {
-    *aRv = NS_OK;
-    return nsnull;
-  }
 
   // nsPIWindowRoot
 

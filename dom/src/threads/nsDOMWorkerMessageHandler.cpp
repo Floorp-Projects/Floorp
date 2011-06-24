@@ -370,6 +370,95 @@ nsDOMWorkerMessageHandler::AddEventListener(const nsAString& aType,
   return NS_OK;
 }
 
+nsIDOMEventTarget *
+nsDOMWorkerMessageHandler::GetTargetForDOMEvent()
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
+
+nsIDOMEventTarget *
+nsDOMWorkerMessageHandler::GetTargetForEventTargetChain()
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::PreHandleEvent(nsEventChainPreVisitor & aVisitor)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::WillHandleEvent(nsEventChainPostVisitor & aVisitor)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::PostHandleEvent(nsEventChainPostVisitor & aVisitor)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEvent,
+                                            nsPresContext *aPresContext,
+                                            nsEventStatus *aEventStatus)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsIEventListenerManager*
+nsDOMWorkerMessageHandler::GetListenerManager(PRBool aMayCreate)
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                                 const nsIID & aIID)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                                    const nsIID & aIID)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::GetSystemEventGroup(nsIDOMEventGroup **_retval)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsIScriptContext*
+nsDOMWorkerMessageHandler::GetContextForEventHandlers(nsresult *aRv)
+{
+  NS_ERROR("Should not be called");
+  *aRv = NS_ERROR_NOT_IMPLEMENTED;
+  return nsnull;
+}
+
+JSContext*
+nsDOMWorkerMessageHandler::GetJSContextForEventHandlers()
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
+
 /**
  * See nsIDOMNSEventTarget
  */

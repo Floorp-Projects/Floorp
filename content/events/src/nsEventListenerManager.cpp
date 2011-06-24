@@ -1357,6 +1357,96 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   return rv;
 }
 
+nsIDOMEventTarget *
+nsEventListenerManager::GetTargetForDOMEvent()
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
+
+nsIDOMEventTarget *
+nsEventListenerManager::GetTargetForEventTargetChain()
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
+
+nsresult
+nsEventListenerManager::PreHandleEvent(nsEventChainPreVisitor & aVisitor)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsEventListenerManager::WillHandleEvent(nsEventChainPostVisitor & aVisitor)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsEventListenerManager::PostHandleEvent(nsEventChainPostVisitor & aVisitor)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsEventListenerManager::DispatchDOMEvent(nsEvent *aEvent,
+                                         nsIDOMEvent *aDOMEvent,
+                                         nsPresContext *aPresContext,
+                                         nsEventStatus *aEventStatus)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsIEventListenerManager*
+nsEventListenerManager::GetListenerManager(PRBool aMayCreate)
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
+
+nsresult
+nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                              const nsIID & aIID)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                                 const nsIID & aIID)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsEventListenerManager::GetSystemEventGroup(nsIDOMEventGroup **_retval)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsIScriptContext*
+nsEventListenerManager::GetContextForEventHandlers(nsresult *aRv)
+{
+  NS_ERROR("Should not be called");
+  *aRv = NS_ERROR_NOT_IMPLEMENTED;
+  return nsnull;
+}
+
+JSContext*
+nsEventListenerManager::GetJSContextForEventHandlers()
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
+
 // nsIDOM3EventTarget interface
 NS_IMETHODIMP 
 nsEventListenerManager::AddGroupedEventListener(const nsAString& aType, 

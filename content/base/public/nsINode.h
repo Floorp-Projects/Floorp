@@ -288,7 +288,7 @@ private:
  * nsIContent and nsIDocument share.  An instance of this interface has a list
  * of nsIContent children and provides access to them.
  */
-class nsINode : public nsPIDOMEventTarget,
+class nsINode : public nsIDOMEventTarget,
                 public nsWrapperCache
 {
 public:
@@ -703,6 +703,15 @@ public:
   {
     return mParent;
   }
+
+  /**
+   * See nsIDOMNSEventTarget
+   */
+  NS_IMETHOD AddEventListener(const nsAString& aType,
+                              nsIDOMEventListener *aListener,
+                              PRBool aUseCapture,
+                              PRBool aWantsUntrusted,
+                              PRUint8 optional_argc);
 
   /**
    * Adds a mutation observer to be notified when this node, or any of its

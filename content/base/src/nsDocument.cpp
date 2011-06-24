@@ -1692,9 +1692,9 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMEventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3EventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSEventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsPIDOMEventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer_MOZILLA_2_0_BRANCH)
@@ -6210,6 +6210,8 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   return nsINode::GetOwnerDocument(aOwnerDocument);
 }
 
+NS_IMPL_DOMTARGET_DEFAULTS(nsDocument)
+
 nsIEventListenerManager*
 nsDocument::GetListenerManager(PRBool aCreateIfNotFound)
 {
@@ -6231,6 +6233,12 @@ nsDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
   nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
   return manager->GetSystemEventGroupLM(aGroup);
+}
+
+nsIScriptContext*
+nsDocument::GetContextForEventHandlers(nsresult* aRv)
+{
+  return nsContentUtils::GetContextForEventHandlers(this, aRv);
 }
 
 nsresult
