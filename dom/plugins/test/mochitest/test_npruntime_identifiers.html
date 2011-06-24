@@ -8,11 +8,10 @@
   <link rel="stylesheet" type="text/css" 
         href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runTests()">
+<body>
   <p id="display"></p>
 
-  <embed id="plugin1" type="application/x-test" width="400" height="100">
-  </embed>
+  <iframe id="subframe" src="npruntime_identifiers_subpage.html"></iframe>
 
   <script class="testbody" type="application/javascript">
   ////
@@ -21,16 +20,42 @@
   
   SimpleTest.waitForExplicitFinish();
 
-  function runTests() {
-    var reflector = document.getElementById("plugin1").getReflector();
+  var testsRun = 0;
 
-    for (var i = -10; i < 10; ++i)
+  document.getElementById('subframe').addEventListener('load', doTest, false);
+
+  function doTest() {
+    SpecialPowers.gc();
+
+    var reflector = document.getElementById("subframe").contentDocument.getElementById("plugin1").getReflector();
+
+    var i, prop, randomnumber;
+
+    for (i = 0; i < 20; ++i) {
+      randomnumber=Math.floor(Math.random()*1001);
+      prop = "prop" + randomnumber;
+      is(reflector[prop], prop, "Property " + prop);
+    }
+
+    for (i = -10; i < 10; ++i) {
       is(reflector[i], i, "Property " + i);
+      prop = "prop" + i;
+      is(reflector[prop], prop, "Property " + prop);
+    }
 
     is(reflector.a, 'a', "Property .a");
     is(reflector['a'], 'a', "Property ['a']");
-            
-    SimpleTest.finish();
+    reflector = null;
+
+    SpecialPowers.gc();
+
+    ++testsRun;
+    if (testsRun == 3) {
+      SimpleTest.finish();
+    }
+    else {
+      document.getElementById('subframe').contentWindow.location.reload(true);
+    }
   }
   </script>
 </body>

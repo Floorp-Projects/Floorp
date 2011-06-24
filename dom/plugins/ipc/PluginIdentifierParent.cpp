@@ -37,86 +37,84 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef dom_plugins_PluginIdentifierParent_h
-#define dom_plugins_PluginIdentifierParent_h
+#include "PluginIdentifierParent.h"
 
-#include "mozilla/plugins/PPluginIdentifierParent.h"
+#include "nsServiceManagerUtils.h"
+#include "nsNPAPIPlugin.h"
+#include "nsIJSContextStack.h"
+#include "PluginScriptableObjectUtils.h"
+#include "mozilla/unused.h"
 
-#include "npapi.h"
-#include "npruntime.h"
+using namespace mozilla::plugins::parent;
 
 namespace mozilla {
 namespace plugins {
 
-class PluginInstanceParent;
-
-class PluginIdentifierParent : public PPluginIdentifierParent
+bool
+PluginIdentifierParent::RecvRetain()
 {
-  friend class PluginModuleParent;
+  mTemporaryRefs = 0;
 
-public:
-  NPIdentifier ToNPIdentifier()
-  {
-    return mIdentifier;
+  // Intern the jsid if necessary.
+  jsid id = NPIdentifierToJSId(mIdentifier);
+  if (JSID_IS_INT(id)) {
+    return true;
   }
 
-  bool IsTemporary() {
-    return !!mTemporaryRefs;
+  // The following is what nsNPAPIPlugin.cpp does. Gross, but the API doesn't
+  // give you a NPP to play with.
+  nsCOMPtr<nsIThreadJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  if (!stack) {
+    return false;
   }
 
-  /**
-   * Holds a perhaps-temporary identifier for the current stack frame.
-   */
-  class NS_STACK_CLASS StackIdentifier
-  {
-  public:
-    StackIdentifier(PluginInstanceParent* inst, NPIdentifier aIdentifier);
-    StackIdentifier(NPObject* aObject, NPIdentifier aIdentifier);
-    ~StackIdentifier();
-
-    operator PluginIdentifierParent*() {
-      return mIdentifier;
-    }
-
-  private:
-    DISALLOW_COPY_AND_ASSIGN(StackIdentifier);
-
-    PluginIdentifierParent* mIdentifier;
-  };
-
-protected:
-  PluginIdentifierParent(NPIdentifier aIdentifier, bool aTemporary)
-    : mIdentifier(aIdentifier)
-    , mTemporaryRefs(aTemporary ? 1 : 0)
-  {
-    MOZ_COUNT_CTOR(PluginIdentifierParent);
+  JSContext *cx = nsnull;
+  stack->GetSafeJSContext(&cx);
+  if (!cx) {
+    return false;
   }
 
-  virtual ~PluginIdentifierParent()
-  {
-    MOZ_COUNT_DTOR(PluginIdentifierParent);
+  JSAutoRequest ar(cx);
+  JSString* str = JSID_TO_STRING(id);
+  JSString* str2 = JS_InternJSString(cx, str);
+  if (!str2) {
+    return false;
   }
 
-  virtual bool RecvRetain();
+  NS_ASSERTION(str == str2, "Interning a string in a JSID should always return the same string.");
 
-  void AddTemporaryRef() {
-    mTemporaryRefs++;
+  return true;
+}
+
+PluginIdentifierParent::StackIdentifier::StackIdentifier
+    (PluginInstanceParent* inst, NPIdentifier aIdentifier)
+  : mIdentifier(inst->Module()->GetIdentifierForNPIdentifier(inst->GetNPP(), aIdentifier))
+{
+}
+
+PluginIdentifierParent::StackIdentifier::StackIdentifier
+    (NPObject* aObject, NPIdentifier aIdentifier)
+  : mIdentifier(NULL)
+{
+  PluginInstanceParent* inst = GetInstance(aObject);
+  mIdentifier = inst->Module()->GetIdentifierForNPIdentifier(inst->GetNPP(), aIdentifier);
+}
+
+PluginIdentifierParent::StackIdentifier::~StackIdentifier()
+{
+  if (!mIdentifier) {
+    return;
   }
 
-  /**
-   * @returns true if the last temporary reference was removed.
-   */
-  bool RemoveTemporaryRef() {
-    --mTemporaryRefs;
-    return !mTemporaryRefs;
+  if (!mIdentifier->IsTemporary()) {
+    return;
   }
 
-private:
-  NPIdentifier mIdentifier;
-  unsigned int mTemporaryRefs;
-};
+  if (mIdentifier->RemoveTemporaryRef()) {
+    unused << PPluginIdentifierParent::Send__delete__(mIdentifier);
+  }
+}
 
-} // namespace plugins
+} // namespace mozilla::plugins
 } // namespace mozilla
-
-#endif // dom_plugins_PluginIdentifierParent_h
