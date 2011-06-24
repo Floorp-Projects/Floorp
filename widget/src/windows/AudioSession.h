@@ -41,7 +41,21 @@
 namespace mozilla {
 namespace widget {
 
+// Start the audio session in the current process
 nsresult StartAudioSession();
+
+// Pass the information necessary to start an audio session in another process
+nsresult GetAudioSessionData(nsID& aID,
+                             nsString& aSessionName,
+                             nsString& aIconPath);
+
+// Receive the information necessary to start an audio session in a non-chrome
+// process
+nsresult RecvAudioSessionData(const nsID& aID,
+                              const nsString& aSessionName,
+                              const nsString& aIconPath);
+
+// Stop the audio session in the current process
 nsresult StopAudioSession();
 
 } // namespace widget
