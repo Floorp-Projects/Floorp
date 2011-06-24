@@ -230,45 +230,6 @@ nsINode::UnsetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
                                                       aStatus);
 }
 
-nsIEventListenerManager*
-nsGenericElement::GetListenerManager(PRBool aCreateIfNotFound)
-{
-  return nsContentUtils::GetListenerManager(this, aCreateIfNotFound);
-}
-
-nsresult
-nsGenericElement::AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                       const nsIID& aIID)
-{
-  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-
-nsresult
-nsGenericElement::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                           const nsIID& aIID)
-{
-  nsIEventListenerManager* elm = GetListenerManager(PR_FALSE);
-  return elm ?
-    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE) :
-    NS_OK;
-}
-
-nsresult
-nsGenericElement::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
-{
-  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->GetSystemEventGroupLM(aGroup);
-}
-
-nsIScriptContext*
-nsGenericElement::GetContextForEventHandlers(nsresult* aRv)
-{
-  return nsContentUtils::GetContextForEventHandlers(this, aRv);
-}
-
 nsINode::nsSlots*
 nsINode::CreateSlots()
 {
@@ -985,17 +946,19 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
   return NS_OK;
 }
 
+NS_IMPL_DOMTARGET_DEFAULTS(nsINode)
+
 NS_IMETHODIMP
 nsINode::AddEventListener(const nsAString& aType,
                           nsIDOMEventListener *aListener,
                           PRBool aUseCapture,
                           PRBool aWantsUntrusted,
-                          PRUint8 optional_argc)
+                          PRUint8 aOptionalArgc)
 {
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 1,
+  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
+               "explicit by making aOptionalArgc non-zero.");
 
   nsIEventListenerManager* listener_manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(listener_manager);
@@ -1003,13 +966,97 @@ nsINode::AddEventListener(const nsAString& aType,
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
   if (aWantsUntrusted ||
-      (optional_argc < 2 &&
+      (aOptionalArgc < 2 &&
        !nsContentUtils::IsChromeDoc(GetOwnerDoc()))) {
     flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
   }
 
   return listener_manager->AddEventListenerByType(aListener, aType, flags,
                                                   nsnull);
+}
+
+NS_IMETHODIMP
+nsINode::RemoveEventListener(const nsAString& aType,
+                             nsIDOMEventListener* aListener,
+                             PRBool aUseCapture)
+{
+  nsCOMPtr<nsIDOMEventTarget> event_target =
+    do_QueryInterface(GetListenerManager(PR_TRUE));
+  NS_ENSURE_STATE(event_target);
+
+  return event_target->RemoveEventListener(aType, aListener, aUseCapture);
+}
+
+nsresult
+nsINode::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  // This is only here so that we can use the NS_DECL_NSIDOMTARGET macro
+  NS_ABORT();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsINode::DispatchEvent(nsIDOMEvent *aEvent, PRBool* aRetVal)
+{
+  nsCOMPtr<nsIDOMEventTarget> target =
+    do_QueryInterface(GetListenerManager(PR_TRUE));
+  NS_ENSURE_STATE(target);
+  return target->DispatchEvent(aEvent, aRetVal);
+}
+
+nsresult
+nsINode::PostHandleEvent(nsEventChainPostVisitor& /*aVisitor*/)
+{
+  return NS_OK;
+}
+
+nsresult
+nsINode::DispatchDOMEvent(nsEvent* aEvent,
+                          nsIDOMEvent* aDOMEvent,
+                          nsPresContext* aPresContext,
+                          nsEventStatus* aEventStatus)
+{
+  return nsEventDispatcher::DispatchDOMEvent(this, aEvent, aDOMEvent,
+                                             aPresContext, aEventStatus);
+}
+
+nsresult
+nsINode::AddEventListenerByIID(nsIDOMEventListener *aListener,
+                               const nsIID& aIID)
+{
+  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+}
+
+nsresult
+nsINode::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                  const nsIID& aIID)
+{
+  nsIEventListenerManager* elm = GetListenerManager(PR_FALSE);
+  return elm ?
+    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE) :
+    NS_OK;
+}
+
+nsIEventListenerManager*
+nsINode::GetListenerManager(PRBool aCreateIfNotFound)
+{
+  return nsContentUtils::GetListenerManager(this, aCreateIfNotFound);
+}
+
+nsresult
+nsINode::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
+{
+  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->GetSystemEventGroupLM(aGroup);
+}
+
+nsIScriptContext*
+nsINode::GetContextForEventHandlers(nsresult* aRv)
+{
+  return nsContentUtils::GetContextForEventHandlers(this, aRv);
 }
 
 //----------------------------------------------------------------------
@@ -3143,46 +3190,6 @@ nsGenericElement::GetChildren(PRUint32 aFilter)
   return returnList;
 }
 
-NS_IMETHODIMP
-nsGenericElement::AddEventListener(const nsAString& aType,
-                                   nsIDOMEventListener* aListener,
-                                   PRBool aUseCapture,
-                                   PRBool aWantsUntrusted,
-                                   PRUint8 optional_argc)
-{
-  return nsIContent::AddEventListener(aType, aListener, aUseCapture,
-                                      aWantsUntrusted, optional_argc);
-}
-
-NS_IMETHODIMP
-nsGenericElement::RemoveEventListener(const nsAString& aType,
-                                      nsIDOMEventListener* aListener,
-                                      PRBool aUseCapture)
-{
-  nsCOMPtr<nsIDOMEventTarget> event_target =
-    do_QueryInterface(GetListenerManager(PR_TRUE));
-  NS_ENSURE_STATE(event_target);
-
-  return event_target->RemoveEventListener(aType, aListener, aUseCapture);
-}
-
-NS_IMETHODIMP
-nsGenericElement::DispatchEvent(nsIDOMEvent *aEvt, PRBool* _retval)
-{
-  nsCOMPtr<nsIDOMEventTarget> target =
-    do_QueryInterface(GetListenerManager(PR_TRUE));
-  NS_ENSURE_STATE(target);
-  return target->DispatchEvent(aEvt, _retval);
-}
-
-NS_IMPL_DOMTARGET_DEFAULTS(nsGenericElement)
-
-nsresult
-nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
-{
-  return nsGenericElement::doPreHandleEvent(this, aVisitor);
-}
-
 static nsIContent*
 FindNativeAnonymousSubtreeOwner(nsIContent* aContent)
 {
@@ -3197,40 +3204,38 @@ FindNativeAnonymousSubtreeOwner(nsIContent* aContent)
 }
 
 nsresult
-nsGenericElement::doPreHandleEvent(nsIContent* aContent,
-                                   nsEventChainPreVisitor& aVisitor)
+nsIContent::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   //FIXME! Document how this event retargeting works, Bug 329124.
   aVisitor.mCanHandle = PR_TRUE;
-  aVisitor.mMayHaveListenerManager =
-    aContent->HasFlag(NODE_HAS_LISTENERMANAGER);
+  aVisitor.mMayHaveListenerManager = HasFlag(NODE_HAS_LISTENERMANAGER);
 
   // Don't propagate mouseover and mouseout events when mouse is moving
   // inside native anonymous content.
-  PRBool isAnonForEvents = aContent->IsRootOfNativeAnonymousSubtree();
+  PRBool isAnonForEvents = IsRootOfNativeAnonymousSubtree();
   if ((aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH ||
        aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH) &&
       // Check if we should stop event propagation when event has just been
       // dispatched or when we're about to propagate from
       // native anonymous subtree.
-      ((static_cast<nsISupports*>(aContent) == aVisitor.mEvent->originalTarget &&
-        !aContent->IsInNativeAnonymousSubtree()) || isAnonForEvents)) {
+      ((this == aVisitor.mEvent->originalTarget &&
+        !IsInNativeAnonymousSubtree()) || isAnonForEvents)) {
      nsCOMPtr<nsIContent> relatedTarget =
        do_QueryInterface(static_cast<nsMouseEvent*>
                                     (aVisitor.mEvent)->relatedTarget);
     if (relatedTarget &&
-        relatedTarget->GetOwnerDoc() == aContent->GetOwnerDoc()) {
+        relatedTarget->GetOwnerDoc() == GetOwnerDoc()) {
 
       // If current target is anonymous for events or we know that related
       // target is descendant of an element which is anonymous for events,
       // we may want to stop event propagation.
-      // If aContent is the original target, aVisitor.mRelatedTargetIsInAnon
+      // If this is the original target, aVisitor.mRelatedTargetIsInAnon
       // must be updated.
       if (isAnonForEvents || aVisitor.mRelatedTargetIsInAnon ||
-          (aVisitor.mEvent->originalTarget == aContent &&
+          (aVisitor.mEvent->originalTarget == this &&
            (aVisitor.mRelatedTargetIsInAnon =
             relatedTarget->IsInNativeAnonymousSubtree()))) {
-        nsIContent* anonOwner = FindNativeAnonymousSubtreeOwner(aContent);
+        nsIContent* anonOwner = FindNativeAnonymousSubtreeOwner(this);
         if (anonOwner) {
           nsIContent* anonOwnerRelated =
             FindNativeAnonymousSubtreeOwner(relatedTarget);
@@ -3251,7 +3256,7 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
               if (originalTarget) {
                 originalTarget->Tag()->ToString(ot);
               }
-              aContent->Tag()->ToString(ct);
+              Tag()->ToString(ct);
               relatedTarget->Tag()->ToString(rt);
               printf("Stopping %s propagation:"
                      "\n\toriginalTarget=%s \n\tcurrentTarget=%s %s"
@@ -3262,7 +3267,7 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
                      NS_ConvertUTF16toUTF8(ct).get(),
                      isAnonForEvents
                        ? "(is native anonymous)"
-                       : (aContent->IsInNativeAnonymousSubtree()
+                       : (IsInNativeAnonymousSubtree()
                            ? "(is in native anonymous subtree)" : ""),
                      NS_ConvertUTF16toUTF8(rt).get(),
                      relatedTarget->IsInNativeAnonymousSubtree()
@@ -3282,8 +3287,8 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
     }
   }
 
-  nsIContent* parent = aContent->GetParent();
-  // Event may need to be retargeted if aContent is the root of a native
+  nsIContent* parent = GetParent();
+  // Event may need to be retargeted if this is the root of a native
   // anonymous content subtree or event is dispatched somewhere inside XBL.
   if (isAnonForEvents) {
     // If a DOM event is explicitly dispatched using node.dispatchEvent(), then
@@ -3301,11 +3306,11 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
 
   // check for an anonymous parent
   // XXX XBL2/sXBL issue
-  if (aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIDocument* ownerDoc = aContent->GetOwnerDoc();
+  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsIDocument* ownerDoc = GetOwnerDoc();
     if (ownerDoc) {
       nsIContent* insertionParent = ownerDoc->BindingManager()->
-        GetInsertionParent(aContent);
+        GetInsertionParent(this);
       NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
                      aVisitor.mEventTargetAtParent != insertionParent),
                    "Retargeting and having insertion parent!");
@@ -3318,26 +3323,9 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
   if (parent) {
     aVisitor.mParentTarget = parent;
   } else {
-    aVisitor.mParentTarget = aContent->GetCurrentDoc();
+    aVisitor.mParentTarget = GetCurrentDoc();
   }
   return NS_OK;
-}
-
-nsresult
-nsGenericElement::PostHandleEvent(nsEventChainPostVisitor& /*aVisitor*/)
-{
-  return NS_OK;
-}
-
-nsresult
-nsGenericElement::DispatchDOMEvent(nsEvent* aEvent,
-                                   nsIDOMEvent* aDOMEvent,
-                                   nsPresContext* aPresContext,
-                                   nsEventStatus* aEventStatus)
-{
-  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsIContent*>(this),
-                                             aEvent, aDOMEvent,
-                                             aPresContext, aEventStatus);
 }
 
 const nsAttrValue*
