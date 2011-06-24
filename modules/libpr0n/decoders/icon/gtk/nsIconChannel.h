@@ -76,6 +76,7 @@ class nsIconChannel : public nsIChannel {
      * Called by Init if we need to use the gnomeui library.
      */
     nsresult InitWithGnome(nsIMozIconURI *aURI);
+    nsresult InitWithGIO(nsIMozIconURI *aIconURI);
 };
 
 #endif

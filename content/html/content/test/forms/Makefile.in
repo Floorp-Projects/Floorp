@@ -46,6 +46,16 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		save_restore_radio_groups.sjs \
 		test_save_restore_radio_groups.html \
+		test_mozistextfield.html \
+		test_input_email.html \
+		test_input_url.html \
+		test_pattern_attribute.html \
+		test_required_attribute.html \
+		test_novalidate_attribute.html \
+		test_formaction_attribute.html \
+		test_formnovalidate_attribute.html \
+		test_label_control_attribute.html \
+		test_output_element.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

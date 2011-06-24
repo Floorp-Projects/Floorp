@@ -33,13 +33,10 @@ function test() {
       ok(!document.getElementById("context_closeTab").disabled, "The 'Close tab' menu item is enabled");
       ok(!document.getElementById("context_openTabInWindow").disabled, "The 'Move to New Window' menu item is enabled");
 
-      let newTabTwo = gBrowser.selectedTab;
       gBrowser.selected = originalTab;
-
       gBrowser.removeTab(newTabOne);
-      gBrowser.removeTab(newTabTwo);
 
-      finish();
+      closeGroupItem(newGroup, finish);
     });
     let newGroup = contentWindow.GroupItems.newGroup();
     newGroup.newTab();
@@ -49,5 +46,7 @@ function test() {
 function popup(tab) {
   document.popupNode = tab;
   TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
+  is(TabContextMenu.contextTab, tab, "TabContextMenu context is the expected tab");
+  TabContextMenu.contextTab = null;
 }
 

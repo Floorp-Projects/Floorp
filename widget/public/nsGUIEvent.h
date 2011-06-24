@@ -52,7 +52,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNSMouseEvent.h"
 #include "nsIDOMDataTransfer.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsWeakPtr.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
@@ -103,9 +103,7 @@ class nsHashKey;
 #define NS_COMMAND_EVENT                  24
 #define NS_SCROLLAREA_EVENT               25
 #define NS_TRANSITION_EVENT               26
-#ifdef MOZ_CSS_ANIMATIONS
 #define NS_ANIMATION_EVENT                27
-#endif
 
 #define NS_UI_EVENT                       28
 #define NS_SVG_EVENT                      30
@@ -160,6 +158,8 @@ class nsHashKey;
 #define NS_EVENT_FLAG_EXCEPTION_THROWN    0x10000
 
 #define NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS 0x20000
+
+#define NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS 0x40000
 
 #define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 #define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
@@ -499,12 +499,10 @@ class nsHashKey;
 #define NS_TRANSITION_EVENT_START    4200
 #define NS_TRANSITION_END            (NS_TRANSITION_EVENT_START)
 
-#ifdef MOZ_CSS_ANIMATIONS
 #define NS_ANIMATION_EVENT_START     4250
 #define NS_ANIMATION_START           (NS_ANIMATION_EVENT_START)
 #define NS_ANIMATION_END             (NS_ANIMATION_EVENT_START + 1)
 #define NS_ANIMATION_ITERATION       (NS_ANIMATION_EVENT_START + 2)
-#endif
 
 #ifdef MOZ_SMIL
 #define NS_SMIL_TIME_EVENT_START     4300
@@ -604,9 +602,9 @@ public:
   // Additional type info for user defined events
   nsCOMPtr<nsIAtom>     userType;
   // Event targets, needed by DOM Events
-  nsCOMPtr<nsPIDOMEventTarget> target;
-  nsCOMPtr<nsPIDOMEventTarget> currentTarget;
-  nsCOMPtr<nsPIDOMEventTarget> originalTarget;
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsCOMPtr<nsIDOMEventTarget> currentTarget;
+  nsCOMPtr<nsIDOMEventTarget> originalTarget;
 };
 
 /**
@@ -1534,7 +1532,6 @@ public:
   float elapsedTime;
 };
 
-#ifdef MOZ_CSS_ANIMATIONS
 class nsAnimationEvent : public nsEvent
 {
 public:
@@ -1548,7 +1545,6 @@ public:
   nsString animationName;
   float elapsedTime;
 };
-#endif
 
 class nsUIStateChangeEvent : public nsGUIEvent
 {

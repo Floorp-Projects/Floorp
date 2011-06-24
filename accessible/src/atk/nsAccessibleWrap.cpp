@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2: */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1077,6 +1077,16 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
         }
       } break;
 
+    case nsIAccessibleEvent::EVENT_NAME_CHANGE:
+      {
+        nsString newName;
+        accessible->GetName(newName);
+        NS_ConvertUTF16toUTF8 utf8Name(newName);
+        if (!utf8Name.Equals(atkObj->name))
+          atk_object_set_name(atkObj, utf8Name.get());
+
+        break;
+      }
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_VALUE_CHANGE\n"));

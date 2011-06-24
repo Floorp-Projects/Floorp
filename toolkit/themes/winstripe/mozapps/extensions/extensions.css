@@ -35,73 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@import url("chrome://global/skin/inContentUI.css");
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#addons-page {
-  -moz-appearance: none;
-  padding: 18px;
-  background-repeat: repeat;
-  color: -moz-dialogText;
-  background-color: -moz-dialog;
-  background-image: /* Fade-out texture at the top, and blend with browser tab */
-                    -moz-linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0) 30%),
-                    /* Texture */
-                    url("chrome://mozapps/skin/extensions/background-texture.png");
-}
-
-%ifdef WINSTRIPE_AERO
-@media all and (-moz-windows-default-theme) {
-  #addons-page {
-    color: #000;
-    background-color: #CCD9EA;
-    background-image: /* Fade-out texture at the top */
-                      -moz-linear-gradient(top, rgb(231,237,246), rgba(231,237,246,0) 156px),
-                      /* Texture */
-                      url("chrome://mozapps/skin/extensions/background-texture.png");
-  }
-}
-@media all and (-moz-windows-compositor) {
-  #addons-page {
-    color: #000;
-    /* Blame shorlander for this monstrosity. */
-    background-image: /* Fade-out texture and light beams at the top */
-                      -moz-linear-gradient(top, rgb(231,237,246) 3px, rgba(231,237,246,0) 156px),
-                      /* Side gradients */
-                      -moz-linear-gradient(left,
-                                           rgba(255,255,255,0.2), rgba(255,255,255,0) 40%,
-                                           rgba(255,255,255,0) 60%, rgba(255,255,255,0.2)),
-                      /* Aero-style light beams */
-                      -moz-linear-gradient(left 32deg,
-                                           /* First light beam */
-                                           rgba(255,255,255,0) 19.5%, rgba(255,255,255,0.1) 20%,
-                                           rgba(255,255,255,0.1) 21.5%, rgba(255,255,255,0.2) 22%,
-                                           rgba(255,255,255,0.2) 25.5%, rgba(255,255,255,0.1) 26%,
-                                           rgba(255,255,255,0.1) 27.5%, rgba(255,255,255,0) 28%,
-                                           /* Second light beam */
-                                           rgba(255,255,255,0) 49.5%, rgba(255,255,255,0.1) 50%,
-                                           rgba(255,255,255,0.1) 52.5%, rgba(255,255,255,0.2) 53%,
-                                           rgba(255,255,255,0.2) 54.5%, rgba(255,255,255,0.1) 55%,
-                                           rgba(255,255,255,0.1) 57.5%, rgba(255,255,255,0) 58%,
-                                           /* Third light beam */
-                                           rgba(255,255,255,0) 87%, rgba(255,255,255,0.2) 90%),
-                      /* Texture */
-                      url("chrome://mozapps/skin/extensions/background-texture.png");
-  }
-}
-%endif
-
-#view-port-container {
-  /* Needed to allow the radius to clip the inner content, see bug 595656 */
-  /* Disabled because of bug 623615
-  overflow: hidden;
-  */
-  background-color: rgba(255, 255, 255, 0.35);
-  background-image: -moz-linear-gradient(top,
-                                         rgba(255, 255, 255, 0),
-                                         rgba(255, 255, 255, 0.75));
-  border: 1px solid #C3CEDF;
-  border-radius: 5px;
-}
 
 .nav-button {
   list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
@@ -1151,8 +1088,9 @@ menulist { /* Fixes some styling inconsistencies */
 /*** buttons ***/
 
 .addon-control,
-setting[type="control"] button,
-setting[type="control"] menulist {
+setting:not([type="integer"]) button,
+setting[type="control"] menulist,
+setting[type="color"] colorpicker[type="button"] {
   -moz-appearance: none;
   color: black;
   padding: 0 5px;
@@ -1166,16 +1104,23 @@ setting[type="control"] menulist {
               0 0 2px 1px rgba(255, 255, 255, 0.25) inset;
 }
 
+setting[type="color"] colorpicker[type="button"] {
+  margin: 1px 5px 2px 5px;
+  padding: 3px;
+  height: 25px;
+}
+
 .addon-control:active:hover,
-setting[type="control"] button:active:hover,
-setting[type="control"] menulist:hover {
+setting:not([type="integer"]) button:active:hover,
+setting[type="control"] menulist:active:hover,
+setting[type="color"] colorpicker[type="button"]:active:hover {
   background-color: rgba(61, 76, 92, 0.2);
   border-color: rgba(39, 53, 68, 0.5);
   box-shadow: 0 0 3px 1px rgba(39, 53, 68, 0.2) inset;
 }
 
 .addon-control > .button-box,
-setting[type="control"] button > .button-box {
+setting:not([type="integer"]) button > .button-box {
   padding: 1px;
 }
 

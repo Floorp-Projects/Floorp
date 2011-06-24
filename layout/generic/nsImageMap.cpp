@@ -151,6 +151,7 @@ void Area::ParseCoords(const nsAString& aSpec)
     mCoords = nsnull;
     if (*cp == '\0')
     {
+      nsMemory::Free(cp);
       return;
     }
 
@@ -164,6 +165,7 @@ void Area::ParseCoords(const nsAString& aSpec)
     }
     if (*n_str == '\0')
     {
+      nsMemory::Free(cp);
       return;
     }
 
@@ -248,6 +250,7 @@ void Area::ParseCoords(const nsAString& aSpec)
     value_list = new nscoord[cnt];
     if (!value_list)
     {
+      nsMemory::Free(cp);
       return;
     }
 
@@ -290,7 +293,7 @@ void Area::ParseCoords(const nsAString& aSpec)
     mNumCoords = cnt;
     mCoords = value_list;
 
-    NS_Free(cp);
+    nsMemory::Free(cp);
   }
 }
 

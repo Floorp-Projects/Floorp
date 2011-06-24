@@ -113,7 +113,8 @@ struct JSStructuredCloneReader {
   public:
     explicit JSStructuredCloneReader(js::SCInput &in, const JSStructuredCloneCallbacks *cb,
                                      void *cbClosure)
-        : in(in), objs(in.context()), callbacks(cb), closure(cbClosure) { }
+        : in(in), objs(in.context()), allObjs(in.context()),
+          callbacks(cb), closure(cbClosure) { }
 
     js::SCInput &input() { return in; }
     bool read(js::Value *vp);
@@ -132,6 +133,9 @@ struct JSStructuredCloneReader {
 
     // Stack of objects with properties remaining to be read.
     js::AutoValueVector objs;
+
+    // Stack of all objects read during this deserialization
+    js::AutoValueVector allObjs;
 
     // The user defined callbacks that will be used for cloning.
     const JSStructuredCloneCallbacks *callbacks;
@@ -167,7 +171,7 @@ struct JSStructuredCloneWriter {
 
     js::SCOutput &out;
 
-    // Stack of objects with properties remaining to be written.
+    // Vector of objects with properties remaining to be written.
     js::AutoValueVector objs;
 
     // counts[i] is the number of properties of objs[i] remaining to be written.
@@ -178,9 +182,10 @@ struct JSStructuredCloneWriter {
     js::AutoIdVector ids;
 
     // The "memory" list described in the HTML5 internal structured cloning algorithm.
-    // memory has the same elements as objs.
-    typedef js::HashSet<JSObject *> MemorySet;
-    MemorySet memory;
+    // memory is a superset of objs; items are never removed from Memory
+    // until a serialization operation is finished
+    typedef js::HashMap<JSObject *, uint32> CloneMemory;
+    CloneMemory memory;
 
     // The user defined callbacks that will be used for cloning.
     const JSStructuredCloneCallbacks *callbacks;

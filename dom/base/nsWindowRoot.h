@@ -42,23 +42,17 @@
 
 class nsPIDOMWindow;
 class nsIDOMEventListener;
-class nsIEventListenerManager;
+class nsEventListenerManager;
 class nsIDOMEvent;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 
 #include "nsIDOMEventTarget.h"
-#include "nsIDOM3EventTarget.h"
-#include "nsIDOMNSEventTarget.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsPIWindowRoot.h"
-#include "nsIDOMEventTarget.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsWindowRoot : public nsIDOMEventTarget,
-                     public nsIDOM3EventTarget,
-                     public nsIDOMNSEventTarget,
-                     public nsPIWindowRoot
+class nsWindowRoot : public nsPIWindowRoot
 {
 public:
   nsWindowRoot(nsPIDOMWindow* aWindow);
@@ -66,26 +60,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMEVENTTARGET
-  NS_DECL_NSIDOM3EVENTTARGET
-  NS_DECL_NSIDOMNSEVENTTARGET
-
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent,
-                                    nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus);
-  virtual nsIEventListenerManager* GetListenerManager(PRBool aCreateIfNotFound);
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID);
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv)
-  {
-    *aRv = NS_OK;
-    return nsnull;
-  }
 
   // nsPIWindowRoot
 
@@ -98,27 +72,27 @@ public:
   virtual nsIDOMNode* GetPopupNode();
   virtual void SetPopupNode(nsIDOMNode* aNode);
 
-  virtual void SetParentTarget(nsPIDOMEventTarget* aTarget)
+  virtual void SetParentTarget(nsIDOMEventTarget* aTarget)
   {
     mParent = aTarget;
   }
-  virtual nsPIDOMEventTarget* GetParentTarget() { return mParent; }
+  virtual nsIDOMEventTarget* GetParentTarget() { return mParent; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWindowRoot, nsIDOMEventTarget)
 
 protected:
   // Members
   nsPIDOMWindow* mWindow; // [Weak]. The window will hold on to us and let go when it dies.
-  nsCOMPtr<nsIEventListenerManager> mListenerManager; // [Strong]. We own the manager, which owns event listeners attached
+  nsRefPtr<nsEventListenerManager> mListenerManager; // [Strong]. We own the manager, which owns event listeners attached
                                                       // to us.
 
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
 
-  nsCOMPtr<nsPIDOMEventTarget> mParent;
+  nsCOMPtr<nsIDOMEventTarget> mParent;
 };
 
 extern nsresult
 NS_NewWindowRoot(nsPIDOMWindow* aWindow,
-                 nsPIDOMEventTarget** aResult);
+                 nsIDOMEventTarget** aResult);
 
 #endif

@@ -274,8 +274,10 @@ int             nsWindow::sTrimOnMinimize         = 2;
 PRBool          nsWindow::sDefaultTrackPointHack  = PR_FALSE;
 // Default value for general window class (used when the pref is the empty string).
 const char*     nsWindow::sDefaultMainWindowClass = kClassNameGeneral;
-// Whether to enable the Elantech gesture hack.
-PRBool          nsWindow::sUseElantechGestureHacks = PR_FALSE;
+// Whether to enable the Elantech swipe gesture hack.
+PRBool          nsWindow::sUseElantechSwipeHack  = PR_FALSE;
+// Whether to enable the Elantech pinch-to-zoom gesture hack.
+PRBool          nsWindow::sUseElantechPinchHack  = PR_FALSE;
 
 // If we're using D3D9, this will not be allowed during initial 5 seconds.
 bool            nsWindow::sAllowD3D9              = false;
@@ -4308,6 +4310,7 @@ DisplaySystemMenu(HWND hWnd, nsSizeMode sizeMode, PRBool isRtl, PRInt32 x, PRInt
     mii.fState = MF_GRAYED;
     switch(sizeMode) {
       case nsSizeMode_Fullscreen:
+        SetMenuItemInfo(hMenu, SC_RESTORE, FALSE, &mii);
         // intentional fall through
       case nsSizeMode_Maximized:
         SetMenuItemInfo(hMenu, SC_SIZE, FALSE, &mii);
@@ -5072,6 +5075,17 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       }
       break;
 
+    case WM_NCLBUTTONDBLCLK:
+      DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0, lParamToClient(lParam),
+                         PR_FALSE, nsMouseEvent::eLeftButton,
+                         MOUSE_INPUT_SOURCE());
+      result = 
+        DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0, lParamToClient(lParam),
+                           PR_FALSE, nsMouseEvent::eLeftButton,
+                           MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
+      break;
+
     case WM_APPCOMMAND:
     {
       PRUint32 appCommand = GET_APPCOMMAND_LPARAM(lParam);
@@ -5253,13 +5267,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         DisplaySystemMenu(mWnd, mSizeMode, mIsRTL,
                           MOZ_SYSCONTEXT_X_POS,
                           MOZ_SYSCONTEXT_Y_POS);
-        result = PR_TRUE;
-      }
-      if (filteredWParam == SC_RESTORE &&
-          mSizeMode == nsSizeMode_Fullscreen) {
-        // Windows can handle restoring a normal window, but it doesn't
-        // understand our full screen mode.
-        MakeFullScreen(PR_FALSE);
         result = PR_TRUE;
       }
     }
@@ -6646,7 +6653,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     aMsg.wParam != VK_PROCESSKEY ? aMsg.wParam : ::ImmGetVirtualKey(mWnd);
   gKbdLayout.OnKeyDown(virtualKeyCode);
 
-  if (sUseElantechGestureHacks) {
+  if (sUseElantechSwipeHack) {
     PerformElantechSwipeGestureHack(virtualKeyCode, aModKeyState);
   }
 
@@ -6989,9 +6996,11 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
 {
   UINT virtualKeyCode = aMsg.wParam;
 
-  if (sUseElantechGestureHacks) {
+  if (sUseElantechSwipeHack) {
     PerformElantechSwipeGestureHack(virtualKeyCode, aModKeyState);
+  }
 
+  if (sUseElantechPinchHack) {
     // Version 8 of the Elantech touchpad driver sends these messages for
     // zoom gestures:
     //
@@ -7604,7 +7613,7 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
   // is another app's window or no window under the
   // pointer.
 
-  if (sUseElantechGestureHacks && IsElantechHelperWindow(destWnd)) {
+  if (sUseElantechPinchHack && IsElantechHelperWindow(destWnd)) {
     // The Elantech driver places a window right underneath the cursor
     // when sending a WM_MOUSEWHEEL event to us as part of a pinch-to-zoom
     // gesture.  We detect that here, and search for our window that would
@@ -8878,8 +8887,8 @@ IsObsoleteSynapticsDriver()
   return majorVersion < 15;
 }
 
-static PRBool
-IsObsoleteElantechDriver()
+static PRInt32
+GetElantechDriverMajorVersion()
 {
   PRUnichar buf[40];
   // The driver version is found in one of these two registry keys.
@@ -8902,18 +8911,17 @@ IsObsoleteElantechDriver()
   // or at the start of the string.
   for (PRUnichar* p = buf; *p; p++) {
     if (*p >= L'0' && *p <= L'9' && (p == buf || *(p - 1) == L' ')) {
-      int majorVersion = wcstol(p, NULL, 10);
-      // Versions 7 and 8 need the hack.
-      if (majorVersion == 7 || majorVersion == 8)
-        return PR_TRUE;
+      return wcstol(p, NULL, 10);
     }
   }
 
-  return PR_FALSE;
+  return 0;
 }
 
 void nsWindow::InitInputWorkaroundPrefDefaults()
 {
+  PRUint32 elantechDriverVersion = GetElantechDriverMajorVersion();
+
   if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Lenovo\\TrackPoint")) {
     sDefaultTrackPointHack = PR_TRUE;
   } else if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Lenovo\\UltraNav")) {
@@ -8922,13 +8930,15 @@ void nsWindow::InitInputWorkaroundPrefDefaults()
     sDefaultTrackPointHack = PR_TRUE;
   } else if ((HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Synaptics\\SynTPEnh\\UltraNavUSB") ||
               HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2")) &&
-              IsObsoleteSynapticsDriver()) {
+              elantechDriverVersion != 0 && elantechDriverVersion <= 8) {
     sDefaultTrackPointHack = PR_TRUE;
   }
 
-  sUseElantechGestureHacks =
+  PRBool useElantechGestureHacks =
     GetInputWorkaroundPref("ui.elantech_gesture_hacks.enabled",
-                           IsObsoleteElantechDriver());
+                           elantechDriverVersion != 0);
+  sUseElantechSwipeHack = useElantechGestureHacks && elantechDriverVersion <= 7;
+  sUseElantechPinchHack = useElantechGestureHacks && elantechDriverVersion <= 8;
 }
 
 LPARAM nsWindow::lParamToScreen(LPARAM lParam)

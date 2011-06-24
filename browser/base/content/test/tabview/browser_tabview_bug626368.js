@@ -39,7 +39,9 @@ function test() {
     synthesizeMiddleMouseDrag(tabContainer, 10);
     ok(!groupItem.getChild(0), 'tabItem was closed');
 
-    hideTabView(finish);
+    closeGroupItem(groupItem, function () {
+      hideTabView(finish);
+    });
   }
 
   waitForExplicitFinish();

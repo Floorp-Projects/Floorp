@@ -117,9 +117,9 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     emitLevel(0),
     constMap(parser->context),
     constList(parser->context),
-    globalUses(ContextAllocPolicy(parser->context)),
-    closedArgs(ContextAllocPolicy(parser->context)),
-    closedVars(ContextAllocPolicy(parser->context)),
+    globalUses(parser->context),
+    closedArgs(parser->context),
+    closedVars(parser->context),
     traceIndex(0)
 {
     flags = TCF_COMPILING;
@@ -2182,8 +2182,16 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
         break;
       default:
-        if (pn->isConst())
+        if (pn->isConst()) {
+            if (cg->needStrictChecks()) {
+                JSAutoByteString name;
+                if (!js_AtomToPrintableString(cx, atom, &name) ||
+                    !ReportStrictModeError(cx, CG_TS(cg), cg, pn, JSMSG_READ_ONLY, name.ptr())) {
+                    return JS_FALSE;
+                }
+            }
             pn->pn_op = op = JSOP_NAME;
+        }
     }
 
     if (dn->isGlobal()) {
@@ -5801,12 +5809,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_GENERATORS
       case TOK_YIELD:
-        if (!cg->inFunction()) {
-            ReportCompileErrorNumber(cx, CG_TS(cg), pn, JSREPORT_ERROR,
-                                     JSMSG_BAD_RETURN_OR_YIELD,
-                                     js_yield_str);
-            return JS_FALSE;
-        }
+        JS_ASSERT(cg->inFunction());
         if (pn->pn_kid) {
             if (!js_EmitTree(cx, cg, pn->pn_kid))
                 return JS_FALSE;

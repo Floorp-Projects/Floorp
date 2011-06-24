@@ -1558,10 +1558,9 @@ public:
 
   /*
    * For replaced elements only. Gets the intrinsic dimensions of this element.
-   * The dimensions may only be one of the following three types:
+   * The dimensions may only be one of the following two types:
    *
    *   eStyleUnit_Coord   - a length in app units
-   *   eStyleUnit_Percent - a percentage of the available space
    *   eStyleUnit_None    - the element has no intrinsic size in this dimension
    */
   struct IntrinsicSize {
@@ -1998,14 +1997,25 @@ public:
    * after a short period. This call does no immediate invalidation,
    * but when the mark times out, we'll invalidate the frame's overflow
    * area.
+   * @param aChangeHint nsChangeHint_UpdateTransformLayer or
+   * nsChangeHint_UpdateOpacityLayer or 0, depending on whether the change
+   * triggering the activity is a changing transform, changing opacity, or
+   * something else.
    */
-  void MarkLayersActive();
-
+  void MarkLayersActive(nsChangeHint aHint);
   /**
    * Return true if this frame is marked as needing active layers.
    */
   PRBool AreLayersMarkedActive();
-  
+  /**
+   * Return true if this frame is marked as needing active layers.
+   * @param aChangeHint nsChangeHint_UpdateTransformLayer or
+   * nsChangeHint_UpdateOpacityLayer. We return true only if
+   * a change in the transform or opacity has been recorded while layers have
+   * been marked active for this frame.
+   */
+  PRBool AreLayersMarkedActive(nsChangeHint aChangeHint);
+
   /**
    * @param aFlags see InvalidateInternal below
    */

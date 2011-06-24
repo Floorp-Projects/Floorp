@@ -39,10 +39,6 @@
 #ifndef GFX_WINDOWS_PLATFORM_H
 #define GFX_WINDOWS_PLATFORM_H
 
-#if defined(WINCE)
-#define MOZ_FT2_FONTS 1
-#endif
-
 
 /**
  * XXX to get CAIRO_HAS_D2D_SURFACE, CAIRO_HAS_DWRITE_FONT
@@ -53,22 +49,14 @@
 #include "gfxFontUtils.h"
 #include "gfxWindowsSurface.h"
 #include "gfxFont.h"
-#ifdef MOZ_FT2_FONTS
-#include "gfxFT2Fonts.h"
-#else
 #ifdef CAIRO_HAS_DWRITE_FONT
 #include "gfxDWriteFonts.h"
-#endif
 #endif
 #include "gfxPlatform.h"
 #include "gfxContext.h"
 
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
-
-#ifdef MOZ_FT2_FONTS
-typedef struct FT_LibraryRec_ *FT_Library;
-#endif
 
 #include <windows.h>
 #include <objbase.h>
@@ -243,9 +231,9 @@ public:
     // returns ClearType tuning information for each display
     static void GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams);
 
-    virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
+    virtual void FontsPrefsChanged(const char *aPref);
 
-    void SetupClearTypeParams(nsIPrefBranch *aPrefBranch);
+    void SetupClearTypeParams();
 
 #ifdef CAIRO_HAS_DWRITE_FONT
     IDWriteFactory *GetDWriteFactory() { return mDWriteFactory; }
@@ -257,10 +245,6 @@ public:
 #ifdef CAIRO_HAS_D2D_SURFACE
     cairo_device_t *GetD2DDevice() { return mD2DDevice; }
     ID3D10Device1 *GetD3D10Device() { return mD2DDevice ? cairo_d2d_device_get_device(mD2DDevice) : nsnull; }
-#endif
-
-#ifdef MOZ_FT2_FONTS
-    FT_Library GetFTLibrary();
 #endif
 
     static bool IsOptimus();

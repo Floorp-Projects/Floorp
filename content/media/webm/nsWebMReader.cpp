@@ -258,9 +258,9 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
       // Picture region, taking into account cropping, before scaling
       // to the display size.
       nsIntRect pictureRect(params.crop_left,
-                        params.crop_top,
-                        params.width - (params.crop_right + params.crop_left),
-                        params.height - (params.crop_bottom + params.crop_top));
+                            params.crop_top,
+                            params.width - (params.crop_right + params.crop_left),
+                            params.height - (params.crop_bottom + params.crop_top));
 
       // If the cropping data appears invalid then use the frame data
       if (pictureRect.width <= 0 ||
@@ -282,15 +282,14 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
         // Video track's frame sizes will overflow. Ignore the video track.
         continue;
       }
-          
+
       mVideoTrack = track;
       mHasVideo = PR_TRUE;
       mInfo.mHasVideo = PR_TRUE;
-      mInfo.mPicture = pictureRect;
+
       mInfo.mDisplay = displaySize;
-      mInfo.mFrame = frameSize;
-      mInfo.mPixelAspectRatio = (static_cast<float>(params.display_width) / mInfo.mPicture.width) /
-                                (static_cast<float>(params.display_height) / mInfo.mPicture.height);
+      mPicture = pictureRect;
+      mInitialFrame = frameSize;
 
       switch (params.stereo_mode) {
       case NESTEGG_VIDEO_MONO:
@@ -724,6 +723,17 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
       b.mPlanes[2].mHeight = img->d_h >> img->y_chroma_shift;
       b.mPlanes[2].mWidth = img->d_w >> img->x_chroma_shift;
   
+      nsIntRect picture = mPicture;
+      if (img->d_w != mInitialFrame.width || img->d_h != mInitialFrame.height) {
+        // Frame size is different from what the container reports. This is legal
+        // in WebM, and we will preserve the ratio of the crop rectangle as it
+        // was reported relative to the picture size reported by the container.
+        picture.x = (mPicture.x * img->d_w) / mInitialFrame.width;
+        picture.y = (mPicture.y * img->d_h) / mInitialFrame.height;
+        picture.width = (img->d_w * mPicture.width) / mInitialFrame.width;
+        picture.height = (img->d_h * mPicture.height) / mInitialFrame.height;
+      }
+
       VideoData *v = VideoData::Create(mInfo,
                                        mDecoder->GetImageContainer(),
                                        holder->mOffset,
@@ -731,7 +741,8 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                                        next_tstamp / NS_PER_USEC,
                                        b,
                                        si.is_kf,
-                                       -1);
+                                       -1,
+                                       picture);
       if (!v) {
         return PR_FALSE;
       }

@@ -1160,7 +1160,7 @@ class GetPropCompiler : public PICStubCompiler
 class ScopeNameCompiler : public PICStubCompiler
 {
   private:
-    typedef Vector<Jump, 8, ContextAllocPolicy> JumpList;
+    typedef Vector<Jump, 8> JumpList;
 
     JSObject *scopeChain;
     JSAtom *atom;
@@ -1371,7 +1371,7 @@ class ScopeNameCompiler : public PICStubCompiler
     LookupStatus generateCallStub(JSObject *obj)
     {
         Assembler masm;
-        Vector<Jump, 8, ContextAllocPolicy> fails(cx);
+        Vector<Jump, 8> fails(cx);
         ScopeNameLabels &labels = pic.scopeNameLabels();
 
         /* For GETXPROP, the object is already in objReg. */
@@ -1605,7 +1605,7 @@ class BindNameCompiler : public PICStubCompiler
     LookupStatus generateStub(JSObject *obj)
     {
         Assembler masm;
-        js::Vector<Jump, 8, ContextAllocPolicy> fails(cx);
+        Vector<Jump, 8> fails(cx);
 
         BindNameLabels &labels = pic.bindNameLabels();
 

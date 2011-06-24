@@ -123,7 +123,7 @@ interface nsIXPCComponents_utils_Sandbox : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(c1d616fa-1875-49ba-b7b8-5861dab31a42)]
+[scriptable, uuid(5f0acf45-135a-48d1-976c-082ce3b24ead)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -203,6 +203,16 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     void /* JSObject */ import(in AUTF8String registryLocation
                                /*, [optional] in JSObject targetObj */);
+
+    /*
+     * Unloads the JS module at 'registryLocation'. Existing references to the
+     * module will continue to work but any subsequent import of the module will
+     * reload it and give new reference. If the JS module hasn't yet been
+     * imported then this method will do nothing.
+     *
+     * @param resourceURI A resource:// URI string to unload the module from.
+     */
+    void unload(in AUTF8String registryLocation);
 
     /*
      * To be called from JS only.

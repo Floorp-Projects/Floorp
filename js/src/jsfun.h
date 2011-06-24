@@ -213,13 +213,18 @@ struct JSFunction : public JSObject_Slots2
         getSlotRef(METHOD_ATOM_SLOT).setString(atom);
     }
 
-    js::Native maybeNative() const {
-        return isInterpreted() ? NULL : u.n.native;
-    }
-
     JSScript *script() const {
         JS_ASSERT(isInterpreted());
         return u.i.script;
+    }
+
+    js::Native native() const {
+        JS_ASSERT(isNative());
+        return u.n.native;
+    }
+
+    js::Native maybeNative() const {
+        return isInterpreted() ? NULL : native();
     }
 
     static uintN offsetOfNativeOrScript() {
@@ -291,13 +296,62 @@ IsFunctionObject(const js::Value &v, JSObject **funobj)
 }
 
 static JS_ALWAYS_INLINE bool
+IsFunctionObject(const js::Value &v, JSObject **funobj, JSFunction **fun)
+{
+    bool b = IsFunctionObject(v, funobj);
+    if (b)
+        *fun = (*funobj)->getFunctionPrivate();
+    return b;
+}
+
+static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v, JSFunction **fun)
 {
     JSObject *funobj;
-    bool b = IsFunctionObject(v, &funobj);
-    if (b)
-        *fun = funobj->getFunctionPrivate();
-    return b;
+    return IsFunctionObject(v, &funobj, fun);
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v)
+{
+    JSFunction *fun;
+    return IsFunctionObject(v, &fun) && fun->isNative();
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v, JSFunction **fun)
+{
+    return IsFunctionObject(v, fun) && (*fun)->isNative();
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v, Native native)
+{
+    JSFunction *fun;
+    return IsFunctionObject(v, &fun) && fun->maybeNative() == native;
+}
+
+/*
+ * When we have an object of a builtin class, we don't quite know what its
+ * valueOf/toString methods are, since these methods may have been overwritten
+ * or shadowed. However, we can still do better than js_TryMethod by
+ * hard-coding the necessary properties for us to find the native we expect.
+ *
+ * TODO: a per-thread shape-based cache would be faster and simpler.
+ */
+static JS_ALWAYS_INLINE bool
+ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid, Native native)
+{
+    JS_ASSERT(obj->getClass() == clasp);
+
+    Value v;
+    if (!HasDataProperty(obj, methodid, &v)) {
+        JSObject *proto = obj->getProto();
+        if (!proto || proto->getClass() != clasp || !HasDataProperty(proto, methodid, &v))
+            return false;
+    }
+
+    return js::IsNativeFunction(v, native);
 }
 
 extern JS_ALWAYS_INLINE bool
@@ -435,11 +489,9 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, js::Native native,
                   uintN nargs, uintN flags);
 
 /*
- * Flags for js_ValueToFunction and js_ReportIsNotFunction.  We depend on the
- * fact that JSINVOKE_CONSTRUCT (aka JSFRAME_CONSTRUCTING) is 1, and test that
- * with #if/#error in jsfun.c.
+ * Flags for js_ValueToFunction and js_ReportIsNotFunction.
  */
-#define JSV2F_CONSTRUCT         ((uintN)js::INVOKE_CONSTRUCTOR)
+#define JSV2F_CONSTRUCT         CONSTRUCT
 #define JSV2F_SEARCH_STACK      0x10000
 
 extern JSFunction *

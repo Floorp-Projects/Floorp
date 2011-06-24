@@ -54,6 +54,7 @@
 #include "nsEscape.h"
 #include "nsNetError.h"
 #include "nsIProgrammingLanguage.h"
+#include "mozilla/Util.h" // for DebugOnly
 
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
@@ -226,7 +227,7 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
         return NS_ERROR_MALFORMED_URI;
 
     mScheme.Truncate();
-    PRInt32 n = spec.Left(mScheme, colonPos);
+    mozilla::DebugOnly<PRInt32> n = spec.Left(mScheme, colonPos);
     NS_ASSERTION(n == colonPos, "Left failed");
     ToLowerCase(mScheme);
 

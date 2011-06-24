@@ -48,11 +48,12 @@
 #include "jsprvtd.h"
 #include "jshash.h"
 #include "jshashtable.h"
-#include "jsnum.h"
 #include "jspubtd.h"
 #include "jsstr.h"
 #include "jslock.h"
 #include "jsvalue.h"
+
+#include "vm/String.h"
 
 /* Engine-internal extensions of jsid */
 
@@ -109,16 +110,6 @@ static JS_ALWAYS_INLINE jsval
 IdToJsval(jsid id)
 {
     return Jsvalify(IdToValue(id));
-}
-
-static JS_ALWAYS_INLINE JSString *
-IdToString(JSContext *cx, jsid id)
-{
-    if (JSID_IS_STRING(id))
-        return JSID_TO_STRING(id);
-    if (JS_LIKELY(JSID_IS_INT(id)))
-        return js_IntToString(cx, JSID_TO_INT(id));
-    return js_ValueToString(cx, IdToValue(id));
 }
 
 template<>
@@ -467,6 +458,8 @@ struct JSAtomState
     JSAtom              *iterateAtom;
 
     JSAtom              *WeakMapAtom;
+
+    JSAtom              *byteLengthAtom;
 
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
     struct {

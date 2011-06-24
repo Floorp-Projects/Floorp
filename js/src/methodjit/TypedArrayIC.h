@@ -43,6 +43,8 @@
 #include "jscntxt.h"
 #include "jstypedarray.h"
 
+#include "jsnuminlines.h"
+
 namespace js {
 namespace mjit {
 
