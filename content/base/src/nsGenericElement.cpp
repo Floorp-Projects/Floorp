@@ -960,19 +960,16 @@ nsINode::AddEventListener(const nsAString& aType,
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
                "explicit by making aOptionalArgc non-zero.");
 
-  nsEventListenerManager* listener_manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(listener_manager);
-
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-  if (aWantsUntrusted ||
+  if (!aWantsUntrusted &&
       (aOptionalArgc < 2 &&
        !nsContentUtils::IsChromeDoc(GetOwnerDoc()))) {
-    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+    aWantsUntrusted = PR_TRUE;
   }
 
-  return listener_manager->AddEventListenerByType(aListener, aType, flags,
-                                                  nsnull);
+  nsEventListenerManager* listener_manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(listener_manager);
+  return listener_manager->AddEventListener(aType, aListener, aUseCapture,
+                                            aWantsUntrusted);
 }
 
 NS_IMETHODIMP
@@ -980,9 +977,11 @@ nsINode::RemoveEventListener(const nsAString& aType,
                              nsIDOMEventListener* aListener,
                              PRBool aUseCapture)
 {
-  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->RemoveEventListener(aType, aListener, aUseCapture);
+  nsEventListenerManager* elm = GetListenerManager(PR_FALSE);
+  if (elm) {
+    elm->RemoveEventListener(aType, aListener, aUseCapture);
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -996,9 +995,29 @@ nsINode::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 nsresult
 nsINode::DispatchEvent(nsIDOMEvent *aEvent, PRBool* aRetVal)
 {
-  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->DispatchEvent(aEvent, aRetVal);
+  // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
+  // if that's the XBL document?  Would we want its presshell?  Or what?
+  nsCOMPtr<nsIDocument> document = GetOwnerDoc();
+
+  // Do nothing if the element does not belong to a document
+  if (!document) {
+    *aRetVal = PR_TRUE;
+    return NS_OK;
+  }
+
+  // Obtain a presentation shell
+  nsIPresShell *shell = document->GetShell();
+  nsRefPtr<nsPresContext> context;
+  if (shell) {
+    context = shell->GetPresContext();
+  }
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsresult rv =
+    nsEventDispatcher::DispatchDOMEvent(this, nsnull, aEvent, context,
+                                        &status);
+  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
+  return rv;
 }
 
 nsresult
@@ -1031,9 +1050,10 @@ nsINode::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                   const nsIID& aIID)
 {
   nsEventListenerManager* elm = GetListenerManager(PR_FALSE);
-  return elm ?
-    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE) :
-    NS_OK;
+  if (elm) {
+    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+  }
+  return NS_OK;
 }
 
 nsEventListenerManager*
@@ -2126,7 +2146,8 @@ nsDOMEventRTTearoff::AddGroupedEventListener(const nsAString& aType,
 {
   nsEventListenerManager* elm = mNode->GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elm);
-  return elm->AddGroupedEventListener(aType, aListener, aUseCapture, aEvtGrp);
+  elm->AddGroupedEventListener(aType, aListener, aUseCapture, aEvtGrp);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2137,8 +2158,9 @@ nsDOMEventRTTearoff::RemoveGroupedEventListener(const nsAString& aType,
 {
   nsEventListenerManager* elm = mNode->GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elm);
-  return elm->RemoveGroupedEventListener(aType, aListener, aUseCapture,
-                                         aEvtGrp);
+  elm->RemoveGroupedEventListener(aType, aListener, aUseCapture,
+                                  aEvtGrp);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4447,9 +4469,9 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
 
   defer = defer && aDefer; // only defer if everyone agrees...
   PRUint32 lang = GetScriptTypeID();
-  return
-    manager->AddScriptEventListener(target, aEventName, aValue, lang, defer,
-                                    !nsContentUtils::IsChromeDoc(ownerDoc));
+  manager->AddScriptEventListener(target, aEventName, aValue, lang, defer,
+                                  !nsContentUtils::IsChromeDoc(ownerDoc));
+  return NS_OK;
 }
 
 

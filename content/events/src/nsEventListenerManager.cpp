@@ -307,11 +307,10 @@ nsEventListenerManager::~nsEventListenerManager()
   }
 }
 
-nsresult
+void
 nsEventListenerManager::RemoveAllListeners()
 {
   mListeners.Clear();
-  return NS_OK;
 }
 
 void
@@ -455,8 +454,6 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   mNoListenerForEventAtom = nsnull;
 
   ls = mListeners.AppendElement();
-  NS_ENSURE_TRUE(ls, NS_ERROR_OUT_OF_MEMORY);
-
   ls->mListener = aListener;
   ls->mEventType = aType;
   ls->mTypeAtom = aTypeAtom;
@@ -516,7 +513,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   return NS_OK;
 }
 
-nsresult
+void
 nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener, 
                                             PRUint32 aType,
                                             nsIAtom* aUserType,
@@ -525,7 +522,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
                                             nsIDOMEventGroup* aEvtGrp)
 {
   if (!aListener || !(aType || aTypeData)) {
-    return NS_OK;
+    return;
   }
 
   PRBool isSame = PR_FALSE;
@@ -558,8 +555,6 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
       break;
     }
   }
-
-  return NS_OK;
 }
 
 nsresult
@@ -567,19 +562,17 @@ nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener,
                                               const nsIID& aIID,
                                               PRInt32 aFlags)
 {
-  AddEventListener(aListener, NS_EVENT_TYPE_NULL, nsnull,
-                   GetTypeDataForIID(aIID), aFlags, nsnull);
-  return NS_OK;
+  return AddEventListener(aListener, NS_EVENT_TYPE_NULL, nsnull,
+                          GetTypeDataForIID(aIID), aFlags, nsnull);
 }
 
-NS_IMETHODIMP
+void
 nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener, 
                                                  const nsIID& aIID,
                                                  PRInt32 aFlags)
 {
   RemoveEventListener(aListener, NS_EVENT_TYPE_NULL, nsnull,
                       GetTypeDataForIID(aIID), aFlags, nsnull);
-  return NS_OK;
 }
 
 PRBool
@@ -593,7 +586,7 @@ nsEventListenerManager::ListenerCanHandle(nsListenerStruct* aLs,
   return (aLs->mEventType == aEvent->message);
 }
 
-NS_IMETHODIMP
+nsresult
 nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener, 
                                                const nsAString& aType,
                                                PRInt32 aFlags,
@@ -601,11 +594,10 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
   PRUint32 type = nsContentUtils::GetEventId(atom);
-  AddEventListener(aListener, type, atom, nsnull, aFlags, aEvtGrp);
-  return NS_OK;
+  return AddEventListener(aListener, type, atom, nsnull, aFlags, aEvtGrp);
 }
 
-NS_IMETHODIMP
+void
 nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener, 
                                                   const nsAString& aType,
                                                   PRInt32 aFlags,
@@ -614,7 +606,6 @@ nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
   PRUint32 type = nsContentUtils::GetEventId(atom);
   RemoveEventListener(aListener, type, atom, nsnull, aFlags, aEvtGrp);
-  return NS_OK;
 }
 
 nsListenerStruct*
@@ -673,7 +664,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
                                                nsIAtom *aName,
                                                const nsAString& aBody,
@@ -858,7 +849,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
                             aPermitUntrustedEvents);
 }
 
-nsresult
+void
 nsEventListenerManager::RemoveScriptEventListener(nsIAtom* aName)
 {
   PRUint32 eventType = nsContentUtils::GetEventId(aName);
@@ -869,14 +860,12 @@ nsEventListenerManager::RemoveScriptEventListener(nsIAtom* aName)
     mNoListenerForEvent = NS_EVENT_TYPE_NULL;
     mNoListenerForEventAtom = nsnull;
   }
-
-  return NS_OK;
 }
 
 jsid
 nsEventListenerManager::sAddListenerID = JSID_VOID;
 
-NS_IMETHODIMP
+nsresult
 nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
                                                     void *aScope,
                                                     nsISupports *aObject, 
@@ -1144,7 +1133,7 @@ static const EventDispatchData* sLatestEventDispData = nsnull;
 * @param an event listener
 */
 
-nsresult
+void
 nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                             nsEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent,
@@ -1246,18 +1235,16 @@ found:
   if (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) {
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsEventListenerManager::Disconnect()
 {
   mTarget = nsnull;
-  return RemoveAllListeners();
+  RemoveAllListeners();
 }
 
-NS_IMETHODIMP
+nsresult
 nsEventListenerManager::GetSystemEventGroupLM(nsIDOMEventGroup **aGroup)
 {
   *aGroup = GetSystemEventGroup();
@@ -1285,48 +1272,29 @@ nsEventListenerManager::GetDOM2EventGroup(nsIDOMEventGroup **aGroup)
 }
 
 // nsIDOMEventTarget interface
-NS_IMETHODIMP
+nsresult
+nsEventListenerManager::AddEventListener(const nsAString& aType,
+                                         nsIDOMEventListener* aListener,
+                                         PRBool aUseCapture,
+                                         PRBool aWantsUntrusted)
+{
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+  if (aWantsUntrusted) {
+    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  }
+
+  return AddEventListenerByType(aListener, aType, flags, nsnull);
+}
+
+void
 nsEventListenerManager::RemoveEventListener(const nsAString& aType, 
                                             nsIDOMEventListener* aListener, 
                                             PRBool aUseCapture)
 {
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   
-  return RemoveEventListenerByType(aListener, aType, flags, nsnull);
-}
-
-NS_IMETHODIMP
-nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
-{
-  nsCOMPtr<nsINode> targetNode(do_QueryInterface(mTarget));
-  if (!targetNode) {
-    // nothing to dispatch on -- bad!
-    return NS_ERROR_FAILURE;
-  }
-  
-  // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
-  // if that's the XBL document?  Would we want its presshell?  Or what?
-  nsCOMPtr<nsIDocument> document = targetNode->GetOwnerDoc();
-
-  // Do nothing if the element does not belong to a document
-  if (!document) {
-    *_retval = PR_TRUE;
-    return NS_OK;
-  }
-
-  // Obtain a presentation shell
-  nsIPresShell *shell = document->GetShell();
-  nsRefPtr<nsPresContext> context;
-  if (shell) {
-    context = shell->GetPresContext();
-  }
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsresult rv =
-    nsEventDispatcher::DispatchDOMEvent(targetNode, nsnull, aEvent,
-                                        context, &status);
-  *_retval = (status != nsEventStatus_eConsumeNoDefault);
-  return rv;
+  RemoveEventListenerByType(aListener, aType, flags, nsnull);
 }
 
 // nsIDOM3EventTarget interface
@@ -1349,7 +1317,9 @@ nsEventListenerManager::RemoveGroupedEventListener(const nsAString& aType,
 {
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   
-  return RemoveEventListenerByType(aListener, aType, flags, aEvtGrp);
+  RemoveEventListenerByType(aListener, aType, flags, aEvtGrp);
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1364,23 +1334,21 @@ nsEventListenerManager::IsRegisteredHere(const nsAString & type, PRBool *_retval
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsEventListenerManager::HasMutationListeners(PRBool* aListener)
+PRBool
+nsEventListenerManager::HasMutationListeners()
 {
-  *aListener = PR_FALSE;
   if (mMayHaveMutationListeners) {
     PRUint32 count = mListeners.Length();
     for (PRUint32 i = 0; i < count; ++i) {
       nsListenerStruct* ls = &mListeners.ElementAt(i);
       if (ls->mEventType >= NS_MUTATION_START &&
           ls->mEventType <= NS_MUTATION_END) {
-        *aListener = PR_TRUE;
-        break;
+        return PR_TRUE;
       }
     }
   }
 
-  return NS_OK;
+  return PR_FALSE;
 }
 
 PRUint32
