@@ -54,6 +54,22 @@
 
 extern "C" const char* nsGetTypeName(void* ptr);
 
+extern "C" void NS_TraceMallocShutdown();
+
+struct TraceMallocShutdown {
+    TraceMallocShutdown() {}
+    ~TraceMallocShutdown() {
+        NS_TraceMallocShutdown();
+    }
+};
+
+extern "C" void RegisterTraceMallocShutdown() {
+    // This instanciates the dummy class above, and will trigger the class
+    // destructor when libxul is unloaded. This is equivalent to atexit(),
+    // but gracefully handles dlclose().
+    static TraceMallocShutdown t;
+}
+
 class IUnknown {
 public:
     virtual long QueryInterface() = 0;

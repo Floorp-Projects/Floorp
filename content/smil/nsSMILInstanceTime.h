@@ -117,6 +117,7 @@ public:
   PRBool IsDependent() const { return !!mBaseInterval; }
   PRBool IsDependentOn(const nsSMILInstanceTime& aOther) const;
   const nsSMILInterval* GetBaseInterval() const { return mBaseInterval; }
+  const nsSMILInstanceTime* GetBaseTime() const;
 
   PRBool SameTimeAndBase(const nsSMILInstanceTime& aOther) const
   {
@@ -132,7 +133,6 @@ public:
 
 protected:
   void SetBaseInterval(nsSMILInterval* aBaseInterval);
-  const nsSMILInstanceTime* GetBaseTime() const;
 
   nsSMILTimeValue mTime;
 

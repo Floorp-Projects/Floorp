@@ -808,7 +808,7 @@ struct DefaultHasher<T *>: PointerHasher<T *, tl::FloorLog2<sizeof(void *)>::res
  * HashPolicy requirements:
  *  - see "Hash policy" above (default js::DefaultHasher<Key>)
  * AllocPolicy:
- *  - see "Allocation policies" in jsalloc.h (default js::ContextAllocPolicy)
+ *  - see "Allocation policies" in jsalloc.h
  *
  * N.B: HashMap is not reentrant: Key/Value/HashPolicy/AllocPolicy members
  *      called by HashMap must not call back into the same HashMap object.
@@ -1041,7 +1041,7 @@ class HashMap
  * HashPolicy requirements:
  *  - see "Hash policy" above (default js::DefaultHasher<Key>)
  * AllocPolicy:
- *  - see "Allocation policies" in jsalloc.h (default js::ContextAllocPolicy)
+ *  - see "Allocation policies" in jsalloc.h
  *
  * N.B: HashSet is not reentrant: T/HashPolicy/AllocPolicy members called by
  *      HashSet must not call back into the same HashSet object.

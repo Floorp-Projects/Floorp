@@ -79,7 +79,6 @@ public:
                                            nsDOMEventTargetWrapperCache)
   NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
-  NS_FORWARD_NSIDOMNSEVENTTARGET(nsDOMEventTargetHelper::)
 
 protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadListener;
@@ -104,7 +103,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
   NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
-  NS_FORWARD_NSIDOMNSEVENTTARGET(nsXHREventTarget::)
   NS_DECL_NSIXMLHTTPREQUESTUPLOAD
 
   PRBool HasListeners()
@@ -162,7 +160,6 @@ public:
                        PRUint32 argc, jsval* argv);
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
-  NS_FORWARD_NSIDOMNSEVENTTARGET(nsXHREventTarget::)
 
   // This creates a trusted readystatechange event, which is not cancelable and
   // doesn't bubble.
@@ -171,7 +168,7 @@ public:
   // and aTotalSize is LL_MAXUINT when unknown. Both those values are
   // used by nsXMLHttpProgressEvent. Normal progress event should not use
   // headers in aLoaded and aTotal is 0 when unknown.
-  void DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
+  void DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
                              const nsAString& aType,
                              // Whether to use nsXMLHttpProgressEvent,
                              // which implements LS Progress Event.
@@ -181,7 +178,7 @@ public:
                              PRUint64 aLoaded, PRUint64 aTotal,
                              // For LS Progress Events
                              PRUint64 aPosition, PRUint64 aTotalSize);
-  void DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
+  void DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
                              const nsAString& aType,
                              PRBool aLengthComputable,
                              PRUint64 aLoaded, PRUint64 aTotal)

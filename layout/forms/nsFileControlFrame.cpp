@@ -71,9 +71,8 @@
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIDOMEventGroup.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsEventListenerManager.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -151,27 +150,23 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // remove mMouseListener as a mouse event listener (bug 40533, bug 355931)
   NS_NAMED_LITERAL_STRING(click, "click");
 
-  nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  mContent->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  nsContentUtils::DestroyAnonymousContent(&mCapture);
 
-  nsCOMPtr<nsIDOM3EventTarget> dom3Capture = do_QueryInterface(mCapture);
-  if (dom3Capture) {
-    nsContentUtils::DestroyAnonymousContent(&mCapture);
+  nsEventListenerManager* elm = mBrowse->GetListenerManager(PR_FALSE);
+  if (elm) {
+    elm->RemoveEventListenerByType(mMouseListener, click,
+                                   NS_EVENT_FLAG_BUBBLE |
+                                   NS_EVENT_FLAG_SYSTEM_EVENT);
   }
+  nsContentUtils::DestroyAnonymousContent(&mBrowse);
 
-  nsCOMPtr<nsIDOM3EventTarget> dom3Browse = do_QueryInterface(mBrowse);
-  if (dom3Browse) {
-    dom3Browse->RemoveGroupedEventListener(click, mMouseListener, PR_FALSE,
-                                           systemGroup);
-    nsContentUtils::DestroyAnonymousContent(&mBrowse);
+  elm = mTextContent->GetListenerManager(PR_FALSE);
+  if (elm) {
+    elm->RemoveEventListenerByType(mMouseListener, click,
+                                   NS_EVENT_FLAG_BUBBLE |
+                                   NS_EVENT_FLAG_SYSTEM_EVENT);
   }
-  nsCOMPtr<nsIDOM3EventTarget> dom3TextContent =
-    do_QueryInterface(mTextContent);
-  if (dom3TextContent) {
-    dom3TextContent->RemoveGroupedEventListener(click, mMouseListener, PR_FALSE,
-                                                systemGroup);
-    nsContentUtils::DestroyAnonymousContent(&mTextContent);
-  }
+  nsContentUtils::DestroyAnonymousContent(&mTextContent);
 
   mCaptureMouseListener->ForgetFrame();
   mMouseListener->ForgetFrame();
@@ -237,7 +232,8 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
-                                                 kNameSpaceID_XHTML);
+                                                 kNameSpaceID_XHTML,
+                                                 nsIDOMNode::ELEMENT_NODE);
 
   // Create the text content
   NS_NewHTMLElement(getter_AddRefs(mTextContent), nodeInfo.forget(),
@@ -279,19 +275,18 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                                mMouseListener, PR_FALSE);
 
   NS_NAMED_LITERAL_STRING(click, "click");
-  nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  mContent->GetSystemEventGroup(getter_AddRefs(systemGroup));
-  nsCOMPtr<nsIDOM3EventTarget> dom3TextContent =
-    do_QueryInterface(mTextContent);
-  NS_ENSURE_STATE(dom3TextContent);
+  nsEventListenerManager* manager = mTextContent->GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
   // Register as an event listener of the textbox
   // to open file dialog on mouse click
-  dom3TextContent->AddGroupedEventListener(click, mMouseListener, PR_FALSE,
-                                           systemGroup);
+  manager->AddEventListenerByType(mMouseListener, click,
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
 
   // Create the browse button
   nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
-                                                 kNameSpaceID_XHTML);
+                                                 kNameSpaceID_XHTML,
+                                                 nsIDOMNode::ELEMENT_NODE);
   NS_NewHTMLElement(getter_AddRefs(mBrowse), nodeInfo.forget(),
                     dom::NOT_FROM_PARSER);
   if (!mBrowse)
@@ -317,7 +312,8 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     if (mode != 0) {
       mCaptureMouseListener->mMode = mode;
       nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
-                                                     kNameSpaceID_XHTML);
+                                                     kNameSpaceID_XHTML,
+                                                     nsIDOMNode::ELEMENT_NODE);
       NS_NewHTMLElement(getter_AddRefs(mCapture), nodeInfo.forget(),
                         dom::NOT_FROM_PARSER);
       if (!mCapture)
@@ -355,12 +351,15 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   if (mCapture && !aElements.AppendElement(mCapture))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIDOM3EventTarget> dom3Browse = do_QueryInterface(mBrowse);
-  NS_ENSURE_STATE(dom3Browse);
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mBrowse);
+  NS_ENSURE_STATE(target);
+  manager = target->GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
   // Register as an event listener of the button
   // to open file dialog on mouse click
-  dom3Browse->AddGroupedEventListener(click, mMouseListener, PR_FALSE,
-                                      systemGroup);
+  manager->AddEventListenerByType(mMouseListener, click,
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
 
   SyncAttr(kNameSpaceID_None, nsGkAtoms::size,     SYNC_TEXT);
   SyncDisabledState();

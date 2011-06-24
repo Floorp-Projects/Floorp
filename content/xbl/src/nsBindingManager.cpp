@@ -402,6 +402,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager)
   tmp->mWrapperTable.ops = nsnull;
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mAttachedStack)
+
+  if (tmp->mProcessAttachedQueueEvent) {
+    tmp->mProcessAttachedQueueEvent->Revoke();
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 

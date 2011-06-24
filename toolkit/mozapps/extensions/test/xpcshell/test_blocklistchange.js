@@ -363,6 +363,7 @@ function load_blocklist(aFile, aCallback) {
 // to complete
 function background_update(aCallback) {
   var installCount = 0;
+  var backgroundCheckCompleted = false;
 
   AddonManager.addInstallListener({
     onNewInstall: function(aInstall) {
@@ -371,10 +372,16 @@ function background_update(aCallback) {
 
     onInstallEnded: function(aInstall) {
       installCount--;
+      // Wait until all started installs have completed
       if (installCount)
         return;
 
       AddonManager.removeInstallListener(this);
+
+      // If the background check hasn't yet completed then let that call the
+      // callback when it is done
+      if (!backgroundCheckCompleted)
+        return;
 
       do_execute_soon(aCallback);
     }
@@ -382,9 +389,14 @@ function background_update(aCallback) {
 
   Services.obs.addObserver(function() {
     Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
+    backgroundCheckCompleted = true;
 
-    if (!installCount)
-      do_execute_soon(aCallback);
+    // If any new installs have started then we'll call the callback once they
+    // are completed
+    if (installCount)
+      return;
+
+    do_execute_soon(aCallback);
   }, "addons-background-update-complete", false);
 
   AddonManagerPrivate.backgroundUpdateCheck();

@@ -124,25 +124,6 @@ new TestCase( SECTION, "\\333",      String.fromCharCode(219),      "\333" );
 //    new TestCase( SECTION, "\\444",      "444",                         "\444" );
 
 // DoubleStringCharacters:DoubleStringCharacter::EscapeSequence::HexEscapeSequence
-/*
-  new TestCase( SECTION, "\\x0",      String.fromCharCode(0),         "\x0" );
-  new TestCase( SECTION, "\\x1",      String.fromCharCode(1),         "\x1" );
-  new TestCase( SECTION, "\\x2",      String.fromCharCode(2),         "\x2" );
-  new TestCase( SECTION, "\\x3",      String.fromCharCode(3),         "\x3" );
-  new TestCase( SECTION, "\\x4",      String.fromCharCode(4),         "\x4" );
-  new TestCase( SECTION, "\\x5",      String.fromCharCode(5),         "\x5" );
-  new TestCase( SECTION, "\\x6",      String.fromCharCode(6),         "\x6" );
-  new TestCase( SECTION, "\\x7",      String.fromCharCode(7),         "\x7" );
-  new TestCase( SECTION, "\\x8",      String.fromCharCode(8),         "\x8" );
-  new TestCase( SECTION, "\\x9",      String.fromCharCode(9),         "\x9" );
-  new TestCase( SECTION, "\\xA",      String.fromCharCode(10),         "\xA" );
-  new TestCase( SECTION, "\\xB",      String.fromCharCode(11),         "\xB" );
-  new TestCase( SECTION, "\\xC",      String.fromCharCode(12),         "\xC" );
-  new TestCase( SECTION, "\\xD",      String.fromCharCode(13),         "\xD" );
-  new TestCase( SECTION, "\\xE",      String.fromCharCode(14),         "\xE" );
-  new TestCase( SECTION, "\\xF",      String.fromCharCode(15),         "\xF" );
-
-*/
 new TestCase( SECTION, "\\xF0",      String.fromCharCode(240),         "\xF0" );
 new TestCase( SECTION, "\\xE1",      String.fromCharCode(225),         "\xE1" );
 new TestCase( SECTION, "\\xD2",      String.fromCharCode(210),         "\xD2" );
@@ -180,11 +161,6 @@ new TestCase( SECTION, "\\x2D2",      String.fromCharCode(45)+"2",         "\x2D
 new TestCase( SECTION, "\\x1E1",      String.fromCharCode(30)+"1",         "\x1E1" );
 new TestCase( SECTION, "\\x0F0",      String.fromCharCode(15)+"0",         "\x0F0" );
 
-// G is out of hex range
-
-new TestCase( SECTION, "\\xG",        "xG",                                 "\xG" );
-new TestCase( SECTION, "\\xCG",       "xCG",      				"\xCG" );
-
 // DoubleStringCharacter::EscapeSequence::CharacterEscapeSequence::\ NonEscapeCharacter
 new TestCase( SECTION, "\\a",    "a",        "\a" );
 new TestCase( SECTION, "\\c",    "c",        "\c" );
@@ -201,10 +177,7 @@ new TestCase( SECTION, "\\o",    "o",        "\o" );
 new TestCase( SECTION, "\\p",    "p",        "\p" );
 new TestCase( SECTION, "\\q",    "q",        "\q" );
 new TestCase( SECTION, "\\s",    "s",        "\s" );
-new TestCase( SECTION, "\\u",    "u",        "\u" );
-
 new TestCase( SECTION, "\\w",    "w",        "\w" );
-new TestCase( SECTION, "\\x",    "x",        "\x" );
 new TestCase( SECTION, "\\y",    "y",        "\y" );
 new TestCase( SECTION, "\\z",    "z",        "\z" );
 new TestCase( SECTION, "\\9",    "9",        "\9" );

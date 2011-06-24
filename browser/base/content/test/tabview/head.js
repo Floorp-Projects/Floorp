@@ -45,14 +45,19 @@ function createGroupItemWithBlankTabs(win, width, height, padding, numNewTabs, a
 
 // ----------
 function closeGroupItem(groupItem, callback) {
-  groupItem.addSubscriber(groupItem, "groupHidden", function() {
-    groupItem.removeSubscriber(groupItem, "groupHidden");
-    groupItem.addSubscriber(groupItem, "close", function() {
-      groupItem.removeSubscriber(groupItem, "close");
-      callback();
-    });
-    groupItem.closeHidden();
+  groupItem.addSubscriber(groupItem, "close", function () {
+    groupItem.removeSubscriber(groupItem, "close");
+    if ("function" == typeof callback)
+      executeSoon(callback);
   });
+
+  if (groupItem.getChildren().length) {
+    groupItem.addSubscriber(groupItem, "groupHidden", function () {
+      groupItem.removeSubscriber(groupItem, "groupHidden");
+      groupItem.closeHidden();
+    });
+  }
+
   groupItem.closeAll();
 }
 
@@ -289,6 +294,18 @@ function whenWindowStateReady(win, callback) {
 }
 
 // ----------
+function whenDelayedStartupFinished(win, callback) {
+  let topic = "browser-delayed-startup-finished";
+  Services.obs.addObserver(function onStartup(aSubject) {
+    if (win != aSubject)
+      return;
+
+    Services.obs.removeObserver(onStartup, topic, false);
+    executeSoon(callback);
+  }, topic, false);
+}
+
+// ----------
 function newWindowWithState(state, callback) {
   const ss = Cc["@mozilla.org/browser/sessionstore;1"]
              .getService(Ci.nsISessionStore);
@@ -297,12 +314,20 @@ function newWindowWithState(state, callback) {
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
   whenWindowLoaded(win, function () {
+    whenWindowStateReady(win, function () {
+      afterAllTabsLoaded(check, win);
+    });
+
     ss.setWindowState(win, JSON.stringify(state), true);
+    whenDelayedStartupFinished(win, check);
   });
 
-  whenWindowStateReady(win, function () {
-    afterAllTabsLoaded(function () callback(win), win);
-  });
+
+  let numConditions = 2;
+  let check = function () {
+    if (!--numConditions)
+      callback(win);
+  };
 }
 
 // ----------
@@ -312,13 +337,17 @@ function restoreTab(callback, index, win) {
   let tab = win.undoCloseTab(index || 0);
   let tabItem = tab._tabViewTabItem;
 
+  let finalize = function () {
+    afterAllTabsLoaded(function () callback(tab), win);
+  };
+
   if (tabItem._reconnected) {
-    afterAllTabsLoaded(callback, win);
+    finalize();
     return;
   }
 
   tab._tabViewTabItem.addSubscriber(tab, "reconnected", function onReconnected() {
     tab._tabViewTabItem.removeSubscriber(tab, "reconnected");
-    afterAllTabsLoaded(callback, win);
+    finalize();
   });
 }

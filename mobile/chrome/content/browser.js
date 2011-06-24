@@ -391,6 +391,15 @@ var Browser = {
       Browser.pageScrollboxScroller.scrollTo(0, 0);
   },
 
+  quit: function quit() {
+    // NOTE: onclose seems to be called only when using OS chrome to close a window,
+    // so we need to handle the Browser.closing check ourselves.
+    if (this.closing()) {
+      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
+      window.close();
+    }
+  },
+
   _waitingToClose: false,
   closing: function closing() {
     // If we are already waiting for the close prompt, don't show another

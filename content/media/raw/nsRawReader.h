@@ -122,6 +122,7 @@ private:
   PRUint32 mCurrentFrame;
   double mFrameRate;
   PRUint32 mFrameSize;
+  nsIntRect mPicture;
 };
 
 #endif

@@ -152,13 +152,13 @@ public:
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
   // nsnull for outer <svg> or SVG without an <svg> parent (invalid SVG).
-  nsSVGSVGElement* GetCtx();
+  nsSVGSVGElement* GetCtx() const;
 
   /**
    * Returns aMatrix post-multiplied by the transform from the userspace
    * established by this element to the userspace established by its parent.
    */
-  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix);
+  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
 
   // Setter for to set the current <animateMotion> transformation
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that
@@ -171,6 +171,7 @@ public:
   PRBool NumberAttrAllowsPercentage(PRUint8 aAttrEnum) {
     return GetNumberInfo().mNumberInfo[aAttrEnum].mPercentagesAllowed;
   }
+  void SetLength(nsIAtom* aName, const nsSVGLength2 &aLength);
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);

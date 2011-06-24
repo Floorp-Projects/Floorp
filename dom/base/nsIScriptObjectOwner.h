@@ -100,7 +100,7 @@ class nsIAtom;
 
 /**
  * Associate a compiled event handler with its target object, which owns it
- * This is an adjunct to nsIScriptObjectOwner that nsIEventListenerManager's
+ * This is an adjunct to nsIScriptObjectOwner that nsEventListenerManager's
  * implementation queries for, in order to avoid recompiling a recurrent or
  * prototype-inherited event handler.
  */

@@ -58,6 +58,7 @@ function checkFile() {
       ++gCheckExistsAttempts;
       // Wait a bit longer then try again
       do_timeout(1000, checkFile);
+      return;
     }
   }
 

@@ -40,7 +40,6 @@
 
 // Interfaces
 #include "nsIDOMEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsILoadGroup.h"
 #include "nsIRequest.h"
@@ -495,11 +494,6 @@ nsDOMWorkerXHRProxy::AddRemoveXHRListeners(PRBool aAdd)
   nsCOMPtr<nsIDOMEventTarget> xhrTarget(do_QueryInterface(mXHR));
   NS_ASSERTION(xhrTarget, "This shouldn't fail!");
 
-  EventListenerFunction addRemoveEventListener =
-    aAdd ?
-    &nsIDOMEventTarget::AddEventListener :
-    &nsIDOMEventTarget::RemoveEventListener;
-
   nsAutoString eventName;
   PRUint32 index = 0;
 
@@ -509,14 +503,25 @@ nsDOMWorkerXHRProxy::AddRemoveXHRListeners(PRBool aAdd)
 
     for (; index < MAX_UPLOAD_LISTENER_TYPE; index++) {
       eventName.AssignASCII(nsDOMWorkerXHREventTarget::sListenerTypes[index]);
-      (xhrTarget.get()->*addRemoveEventListener)(eventName, this, PR_FALSE);
-      (uploadTarget.get()->*addRemoveEventListener)(eventName, this, PR_FALSE);
+      if (aAdd) {
+        xhrTarget->AddEventListener(eventName, this, PR_FALSE);
+        uploadTarget->AddEventListener(eventName, this, PR_FALSE);
+      }
+      else {
+        xhrTarget->RemoveEventListener(eventName, this, PR_FALSE);
+        uploadTarget->RemoveEventListener(eventName, this, PR_FALSE);
+      }
     }
   }
 
   for (; index < MAX_XHR_LISTENER_TYPE; index++) {
     eventName.AssignASCII(nsDOMWorkerXHREventTarget::sListenerTypes[index]);
-    (xhrTarget.get()->*addRemoveEventListener)(eventName, this, PR_FALSE);
+    if (aAdd) {
+      xhrTarget->AddEventListener(eventName, this, PR_FALSE);
+    }
+    else {
+      xhrTarget->RemoveEventListener(eventName, this, PR_FALSE);
+    }
   }
 }
 

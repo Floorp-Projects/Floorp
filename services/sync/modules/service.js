@@ -45,9 +45,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-// how long we should wait before actually syncing on idle
-const IDLE_TIME = 5; // xxxmpc: in seconds, should be preffable
-
 // How long before refreshing the cluster
 const CLUSTER_BACKOFF = 5 * 60 * 1000; // 5 minutes
 
@@ -60,7 +57,6 @@ const KEYS_WBO = "keys";
 const LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
@@ -438,10 +434,10 @@ WeaveSvc.prototype = {
     // Send an event now that Weave service is ready.  We don't do this
     // synchronously so that observers can import this module before
     // registering an observer.
-    Utils.delay(function() {
+    Utils.nextTick(function() {
       Status.ready = true;
       Svc.Obs.notify("weave:service:ready");
-    }, 0);
+    });
   },
 
   _checkSetup: function WeaveSvc__checkSetup() {
@@ -451,7 +447,18 @@ WeaveSvc.prototype = {
   },
 
   _migratePrefs: function _migratePrefs() {
-    // No need to re-migrate
+    // Migrate old debugLog prefs.
+    let logLevel = Svc.Prefs.get("log.appender.debugLog");
+    if (logLevel) {
+      Svc.Prefs.set("log.appender.file.level", logLevel);
+      Svc.Prefs.reset("log.appender.debugLog");
+    }
+    if (Svc.Prefs.get("log.appender.debugLog.enabled")) {
+      Svc.Prefs.set("log.appender.file.logOnSuccess", true);
+      Svc.Prefs.reset("log.appender.debugLog.enabled");
+    }
+
+    // Migrate old extensions.weave.* prefs if we haven't already tried.
     if (Svc.Prefs.get("migrated", false))
       return;
 
@@ -473,14 +480,14 @@ WeaveSvc.prototype = {
   },
 
   _initLogs: function WeaveSvc__initLogs() {
-    this._log = Log4Moz.repository.getLogger("Service.Main");
+    this._log = Log4Moz.repository.getLogger("Sync.Service");
     this._log.level =
       Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
 
-    let formatter = new Log4Moz.BasicFormatter();
-    let root = Log4Moz.repository.rootLogger;
+    let root = Log4Moz.repository.getLogger("Sync");
     root.level = Log4Moz.Level[Svc.Prefs.get("log.rootLogger")];
 
+    let formatter = new Log4Moz.BasicFormatter();
     let capp = new Log4Moz.ConsoleAppender(formatter);
     capp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.console")];
     root.addAppender(capp);
@@ -489,26 +496,28 @@ WeaveSvc.prototype = {
     dapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.dump")];
     root.addAppender(dapp);
 
-    let enabled = Svc.Prefs.get("log.appender.debugLog.enabled", false);
-    if (enabled) {
-      let verbose = FileUtils.getFile(
-        "ProfD", ["weave", "logs", "verbose-log.txt"], true);
-
-      if (Svc.Prefs.get("log.appender.debugLog.rotate", true)) {
-        let maxSize = Svc.Prefs.get("log.appender.debugLog.maxSize");
-        this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter,
-                                                          maxSize);
-      } else {
-        this._debugApp = new Log4Moz.FileAppender(verbose, formatter);
-      }
-      this._debugApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.debugLog")];
-      root.addAppender(this._debugApp);
-    }
+    let fapp = this._logAppender = new Log4Moz.StorageStreamAppender(formatter);
+    fapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.file.level")];
+    root.addAppender(fapp);
   },
 
-  clearLogs: function WeaveSvc_clearLogs() {
-    if (this._debugApp)
-      this._debugApp.clear();
+  _resetFileLog: function resetFileLog(flushToFile) {
+    let inStream = this._logAppender.getInputStream();
+    this._logAppender.reset();
+    if (flushToFile && inStream) {
+      try {
+        let filename = Date.now() + ".log";
+        let file = FileUtils.getFile("ProfD", ["weave", "logs", filename]);
+        let outStream = FileUtils.openFileOutputStream(file);
+        NetUtil.asyncCopy(inStream, outStream, function () {
+          Svc.Obs.notify("weave:service:reset-file-log");
+        });
+      } catch (ex) {
+        Svc.Obs.notify("weave:service:reset-file-log");
+      }
+    } else {
+      Svc.Obs.notify("weave:service:reset-file-log");
+    }
   },
 
   /**
@@ -548,6 +557,8 @@ WeaveSvc.prototype = {
         if (Status.login == LOGIN_FAILED_NETWORK_ERROR &&
             !Services.io.offline) {
           this._ignorableErrorCount += 1;
+        } else {
+          this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"));
         }
         break;
       case "weave:service:sync:error":
@@ -561,9 +572,13 @@ WeaveSvc.prototype = {
           case CREDENTIALS_CHANGED:
             this.logout();
             break;
+          default:
+            this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"));
+            break;
         }
         break;
       case "weave:service:sync:finish":
+        this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"));
         this._scheduleNextSync();
         this._syncErrors = 0;
         this._ignorableErrorCount = 0;
@@ -574,7 +589,8 @@ WeaveSvc.prototype = {
         Status.minimumNextSync = Date.now() + data;
         break;
       case "weave:engine:score:updated":
-        this._handleScoreUpdate();
+        Utils.namedTimer(this._calculateScore, SCORE_UPDATE_DELAY, this,
+                         "_scoreTimer");
         break;
       case "weave:engine:sync:apply-failed":
         // An engine isn't able to apply one or more incoming records.
@@ -587,12 +603,6 @@ WeaveSvc.prototype = {
       case "weave:resource:status:401":
         this._handleResource401(subject);
         break;
-      case "idle":
-        this._log.trace("Idle time hit, trying to sync");
-        Svc.Idle.removeIdleObserver(this, this._idleTime);
-        this._idleTime = 0;
-        Utils.delay(function() this.sync(false), 0, this);
-        break;
       case "nsPref:changed":
         if (this._ignorePrefObserver)
           return;
@@ -600,11 +610,6 @@ WeaveSvc.prototype = {
         this._handleEngineStatusChanged(engine);
         break;
     }
-  },
-
-  _handleScoreUpdate: function WeaveSvc__handleScoreUpdate() {
-    const SCORE_UPDATE_DELAY = 3000;
-    Utils.delay(this._calculateScore, SCORE_UPDATE_DELAY, this, "_scoreTimer");
   },
 
   _calculateScore: function WeaveSvc_calculateScoreAndDoStuff() {
@@ -1045,11 +1050,21 @@ WeaveSvc.prototype = {
       CollectionKeys.clear();
 
       /* Login and sync. This also generates new keys. */
-      this.sync(true);
+      this.sync();
       return true;
     }))(),
 
   startOver: function() {
+    Svc.Obs.notify("weave:engine:stop-tracking");
+
+    // We want let UI consumers of the following notification know as soon as
+    // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
+    // by emptying the passphrase (we still need the password).
+    Service.passphrase = "";
+    Status.login = LOGIN_FAILED_NO_PASSPHRASE;
+    this.logout();
+    Svc.Obs.notify("weave:service:start-over");
+
     // Deletion doesn't make sense if we aren't set up yet!
     if (this.clusterURL != "") {
       // Clear client-specific data from the server, including disabled engines.
@@ -1064,10 +1079,6 @@ WeaveSvc.prototype = {
     } else {
       this._log.debug("Skipping client data removal: no cluster URL.");
     }
-
-    // Set a username error so the status message shows "set up..."
-    Status.login = LOGIN_FAILED_NO_USERNAME;
-    this.logout();
 
     // Reset all engines and clear keys.
     this.resetClient();
@@ -1085,8 +1096,6 @@ WeaveSvc.prototype = {
     Services.logins.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
       Services.logins.removeLogin(login);
     });
-    Svc.Obs.notify("weave:service:start-over");
-    Svc.Obs.notify("weave:engine:stop-tracking");
   },
 
   delayedAutoConnect: function delayedAutoConnect(delay) {
@@ -1094,7 +1103,7 @@ WeaveSvc.prototype = {
       return;
 
     if (this._checkSetup() == STATUS_OK && Svc.Prefs.get("autoconnect")) {
-      Utils.delay(this._autoConnect, delay * 1000, this, "_autoTimer");
+      Utils.namedTimer(this._autoConnect, delay * 1000, this, "_autoTimer");
     }
   },
 
@@ -1131,7 +1140,7 @@ WeaveSvc.prototype = {
     let interval = this._calculateBackoff(++attempts, 60 * 1000);
     this._log.debug("Autoconnect failed: " + (reason || Status.login) +
       "; retry in " + Math.ceil(interval / 1000) + " sec.");
-    Utils.delay(function() this._autoConnect(), interval, this, "_autoTimer");
+    Utils.namedTimer(this._autoConnect, interval, this, "_autoTimer");
   },
 
   persistLogin: function persistLogin() {
@@ -1483,13 +1492,6 @@ WeaveSvc.prototype = {
       this._syncTimer.clear();
     if (this._heartbeatTimer)
       this._heartbeatTimer.clear();
-
-    // Clear out a sync that's just waiting for idle if we happen to have one
-    try {
-      Svc.Idle.removeIdleObserver(this, this._idleTime);
-      this._idleTime = 0;
-    }
-    catch(ex) {}
   },
 
   /**
@@ -1524,29 +1526,22 @@ WeaveSvc.prototype = {
   },
 
   /**
-   * Call sync() on an idle timer
-   *
-   * delay is optional
+   * Call sync() if Master Password is not locked.
+   * 
+   * Otherwise, reschedule a sync for later.
    */
-  syncOnIdle: function WeaveSvc_syncOnIdle(delay) {
-    // No need to add a duplicate idle observer, and no point if we got kicked
-    // out by the master password dialog.
+  syncIfMPUnlocked: function syncIfMPUnlocked() {
+    // No point if we got kicked out by the master password dialog.
     if (Status.login == MASTER_PASSWORD_LOCKED &&
         Utils.mpLocked()) {
-      this._log.debug("Not syncing on idle: Login status is " + Status.login);
+      this._log.debug("Not initiating sync: Login status is " + Status.login);
 
       // If we're not syncing now, we need to schedule the next one.
       this._scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
-      return false;
+      return;
     }
 
-    if (this._idleTime)
-      return false;
-
-    this._idleTime = delay || IDLE_TIME;
-    this._log.debug("Idle timer created for sync, will sync after " +
-                    this._idleTime + " seconds of inactivity.");
-    Svc.Idle.addIdleObserver(this, this._idleTime);
+    Utils.nextTick(this.sync, this);
   },
 
   /**
@@ -1565,13 +1560,12 @@ WeaveSvc.prototype = {
 
     // Start the sync right away if we're already late
     if (interval <= 0) {
-      if (this.syncOnIdle())
-        this._log.debug("Syncing as soon as we're idle.");
+      this.syncIfMPUnlocked();
       return;
     }
 
     this._log.trace("Next sync in " + Math.ceil(interval / 1000) + " sec.");
-    Utils.delay(function() this.syncOnIdle(), interval, this, "_syncTimer");
+    Utils.namedTimer(this.syncIfMPUnlocked, interval, this, "_syncTimer");
 
     // Save the next sync time in-case sync is disabled (logout/offline/etc.)
     this.nextSync = Date.now() + interval;
@@ -1602,7 +1596,7 @@ WeaveSvc.prototype = {
                         " Local timestamp: " + Clients.lastSync);
         if (info.obj["clients"] > Clients.lastSync) {
           this._log.debug("New clients detected, triggering a full sync");
-          this.syncOnIdle();
+          this.syncIfMPUnlocked();
           return;
         }
       }
@@ -1647,7 +1641,7 @@ WeaveSvc.prototype = {
 
     this._log.trace("Setting up heartbeat, next ping in " +
                     Math.ceil(interval / 1000) + " sec.");
-    Utils.delay(function() this._doHeartbeat(), interval, this, "_heartbeatTimer");
+    Utils.namedTimer(this._doHeartbeat, interval, this, "_heartbeatTimer");
   },
 
   /**
@@ -1874,7 +1868,7 @@ WeaveSvc.prototype = {
     }
     else {
       this.syncInterval = hasMobile ? MULTI_MOBILE_SYNC : MULTI_DESKTOP_SYNC;
-      this.syncThreshold = hasMobile ? MULTI_MOBILE_THRESHOLD : MULTI_DESKTOP_THRESHOLD;
+      this.syncThreshold = MULTI_DEVICE_THRESHOLD;
     }
   },
 

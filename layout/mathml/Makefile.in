@@ -102,6 +102,7 @@ font_properties = \
 	mathfontSTIXNonUnicode.properties \
 	mathfontSTIXSize1.properties \
 	mathfontSTIXSizeOneSym.properties \
+	mathfontAsanaMath.properties \
 	mathfontStandardSymbolsL.properties \
 	$(NULL)
 

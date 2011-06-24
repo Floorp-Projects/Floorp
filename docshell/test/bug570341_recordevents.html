@@ -1,0 +1,21 @@
+<html>
+<head>
+<script>
+    var start = Date.now();
+    window._testing_js_start = Date.now();
+    window['_testing_js_after_' + document.readyState] = start;
+    document.addEventListener('DOMContentLoaded',
+      function () {
+        window._testing_evt_DOMContentLoaded = Date.now();
+      }, true);
+    document.addEventListener('readystatechange', function(){
+      window['_testing_evt_DOM_' + document.readyState] = Date.now();
+    }, true);
+    function recordLoad() {
+      window._testing_evt_load = Date.now();
+    }
+</script>
+</head>
+<body onload="recordLoad()">This document collects time
+for events related to the page load progress.</body>
+</html>
