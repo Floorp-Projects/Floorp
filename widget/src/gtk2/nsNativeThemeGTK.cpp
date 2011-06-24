@@ -968,6 +968,23 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
     case NS_THEME_RADIO:
       aResult->SizeTo(0, 0, 0, 0);
       return PR_TRUE;
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM:
+    case NS_THEME_RADIOMENUITEM:
+      {
+        // Menubar and menulist have their padding specified in CSS.
+        if (!IsRegularMenuItem(aFrame))
+          return PR_FALSE;
+
+        gint horizontal_padding;
+
+        if (aWidgetType == NS_THEME_MENUITEM)
+          moz_gtk_menuitem_get_horizontal_padding(&horizontal_padding);
+        else
+          moz_gtk_checkmenuitem_get_horizontal_padding(&horizontal_padding);
+        aResult->SizeTo(horizontal_padding, 0, horizontal_padding, 0);
+        return PR_TRUE;
+      }
   }
 
   return PR_FALSE;

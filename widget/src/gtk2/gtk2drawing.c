@@ -859,6 +859,30 @@ moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
 }
 
 gint
+moz_gtk_menuitem_get_horizontal_padding(gint* horizontal_padding)
+{
+    ensure_menu_item_widget();
+
+    gtk_widget_style_get (gMenuItemWidget,
+                          "horizontal-padding", horizontal_padding,
+                          NULL);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+gint
+moz_gtk_checkmenuitem_get_horizontal_padding(gint* horizontal_padding)
+{
+    ensure_check_menu_item_widget();
+
+    gtk_widget_style_get (gCheckMenuItemWidget,
+                          "horizontal-padding", horizontal_padding,
+                          NULL);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+gint
 moz_gtk_button_get_default_overflow(gint* border_top, gint* border_left,
                                     gint* border_bottom, gint* border_right)
 {
@@ -2688,7 +2712,7 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkStyle* style;
     GtkShadowType shadow_type = (checked)?GTK_SHADOW_IN:GTK_SHADOW_OUT;
     gint offset;
-    gint indicator_size;
+    gint indicator_size, horizontal_padding;
     gint x, y;
 
     moz_gtk_menu_item_paint(drawable, rect, cliprect, state, FALSE, direction);
@@ -2698,6 +2722,7 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     gtk_widget_style_get (gCheckMenuItemWidget,
                           "indicator-size", &indicator_size,
+                          "horizontal-padding", &horizontal_padding,
                           NULL);
 
     if (checked || GTK_CHECK_MENU_ITEM(gCheckMenuItemWidget)->always_show_toggle) {
@@ -2706,11 +2731,8 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
       offset = GTK_CONTAINER(gCheckMenuItemWidget)->border_width +
              gCheckMenuItemWidget->style->xthickness + 2;
 
-      /* while normally this "3" would be the horizontal-padding style value, passing it to Gecko
-         as the value of menuitem padding causes problems with dropdowns (bug 406129), so in the menu.css
-         file this is hardcoded as 3px. Yes it sucks, but we don't really have a choice. */
       x = (direction == GTK_TEXT_DIR_RTL) ?
-            rect->width - indicator_size - offset - 3: rect->x + offset + 3;
+            rect->width - indicator_size - offset - horizontal_padding: rect->x + offset + horizontal_padding;
       y = rect->y + (rect->height - indicator_size) / 2;
 
       TSOffsetStyleGCs(style, x, y);
