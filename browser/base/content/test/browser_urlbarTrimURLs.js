@@ -1,6 +1,10 @@
-function testVal(originalValue, tragetValue) {
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+function testVal(originalValue, targetValue) {
   gURLBar.value = originalValue;
-  is(gURLBar.value, tragetValue || originalValue, "original value: " + originalValue);
+  is(gURLBar.value, targetValue || originalValue, "original value: " + originalValue);
 }
 
 function test() {
@@ -41,6 +45,8 @@ function test() {
   testVal("mailto:admin@mozilla.org");
   testVal("gopher://mozilla.org/");
   testVal("about:config");
+  testVal("jar:http://mozilla.org/example.jar!/");
+  testVal("view-source:http://mozilla.org/");
 
   Services.prefs.setBoolPref(prefname, false);
 
