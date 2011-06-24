@@ -203,10 +203,10 @@ already_AddRefed<nsIURI>
 nsLinkableAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
   if (mIsLink) {
-    NS_ASSERTION(mActionAcc->IsHyperLink(),
+    NS_ASSERTION(mActionAcc->IsLink(),
                  "nsIAccessibleHyperLink isn't implemented.");
 
-    if (mActionAcc->IsHyperLink())
+    if (mActionAcc->IsLink())
       return mActionAcc->AnchorURIAt(aAnchorIndex);
   }
 

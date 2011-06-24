@@ -407,7 +407,7 @@ public:
   /**
    * Return true if the accessible is hyper link accessible.
    */
-  virtual bool IsHyperLink();
+  virtual bool IsLink();
 
   /**
    * Return the start offset of the link within the parent accessible.
@@ -424,7 +424,7 @@ public:
    */
   inline bool IsLinkValid()
   {
-    NS_PRECONDITION(IsHyperLink(), "IsLinkValid is called on not hyper link!");
+    NS_PRECONDITION(IsLink(), "IsLinkValid is called on not hyper link!");
 
     // XXX In order to implement this we would need to follow every link
     // Perhaps we can get information about invalid links from the cache
@@ -438,7 +438,7 @@ public:
    */
   inline bool IsLinkSelected()
   {
-    NS_PRECONDITION(IsHyperlink(),
+    NS_PRECONDITION(IsLink(),
                     "IsLinkSelected() called on something that is not a hyper link!");
     return gLastFocusedNode == GetNode();
   }
