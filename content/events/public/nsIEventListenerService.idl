@@ -67,7 +67,7 @@ interface nsIEventListenerInfo : nsISupports
   nsISupports getDebugObject();
 };
 
-[scriptable, uuid(7b0ca544-a38f-4072-96c6-5fff4996277a)]
+[scriptable, uuid(0cf94aa6-ea9a-44cb-a063-be834afa679d)]
 interface nsIEventListenerService : nsISupports
 {
   /**
@@ -99,8 +99,19 @@ interface nsIEventListenerService : nsISupports
                           in DOMString aType);
 
   /**
-   * Returns system event group.
+   * Add a system-group eventlistener to a event target.
    */
-  readonly attribute nsIDOMEventGroup systemEventGroup;
+  void addSystemEventListener(in nsIDOMEventTarget target,
+                              in DOMString type,
+                              in nsIDOMEventListener listener,
+                              in boolean useCapture);
+
+  /**
+   * Remove a system-group eventlistener from a event target.
+   */
+  void removeSystemEventListener(in nsIDOMEventTarget target,
+                                 in DOMString type,
+                                 in nsIDOMEventListener listener,
+                                 in boolean useCapture);
 };
 

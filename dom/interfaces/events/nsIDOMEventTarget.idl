@@ -260,11 +260,6 @@ interface nsIDOMEventTarget : nsISupports
                                 in nsIIDRef aIID);
 
   /**
-   * Get the system event group.
-   */
-  [noscript, nostdcall] nsIDOMEventGroup GetSystemEventGroup();
-
-  /**
    * Get the script context in which the event handlers should be run.
    * May return null.
    * @note Caller *must* check the value of aRv.

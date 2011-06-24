@@ -841,7 +841,6 @@ nsXBLBinding::InstallEventHandlers()
       if (!manager)
         return;
 
-      nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
       PRBool isChromeDoc =
         nsContentUtils::IsChromeDoc(mBoundElement->GetOwnerDoc());
       PRBool isChromeBinding = mPrototypeBinding->IsChrome();
@@ -855,24 +854,18 @@ nsXBLBinding::InstallEventHandlers()
             eventAtom == nsGkAtoms::keypress)
           continue;
 
-        // If this is a command, add it in the system event group, otherwise 
-        // add it to the standard event group.
-
-        // This is a weak ref. systemEventGroup above is already a
-        // strong ref, so we are guaranteed it will not go away.
-        nsIDOMEventGroup* eventGroup = nsnull;
-        if ((curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) &&
-            (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
-          if (!systemEventGroup)
-            manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
-          eventGroup = systemEventGroup;
-        }
-
         nsXBLEventHandler* handler = curr->GetEventHandler();
         if (handler) {
           // Figure out if we're using capturing or not.
           PRInt32 flags = (curr->GetPhase() == NS_PHASE_CAPTURING) ?
             NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+          // If this is a command, add it in the system event group
+          if ((curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND |
+                                  NS_HANDLER_TYPE_SYSTEM)) &&
+              (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
+            flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
+          }
 
           PRBool hasAllowUntrustedAttr = curr->HasAllowUntrustedAttr();
           if ((hasAllowUntrustedAttr && curr->AllowUntrustedEvents()) ||
@@ -882,7 +875,7 @@ nsXBLBinding::InstallEventHandlers()
 
           manager->AddEventListenerByType(handler,
                                           nsDependentAtomString(eventAtom),
-                                          flags, eventGroup);
+                                          flags, nsnull);
         }
       }
 
@@ -899,26 +892,22 @@ nsXBLBinding::InstallEventHandlers()
         // If this is a command, add it in the system event group, otherwise 
         // add it to the standard event group.
 
-        // This is a weak ref. systemEventGroup above is already a
-        // strong ref, so we are guaranteed it will not go away.
-        nsIDOMEventGroup* eventGroup = nsnull;
-        if ((handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) &&
-            (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
-          if (!systemEventGroup)
-            manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
-          eventGroup = systemEventGroup;
-        }
-
         // Figure out if we're using capturing or not.
         PRInt32 flags = (handler->GetPhase() == NS_PHASE_CAPTURING) ?
           NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+        if ((handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND |
+                                   NS_HANDLER_TYPE_SYSTEM)) &&
+            (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
+          flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
+        }
 
         // For key handlers we have to set NS_PRIV_EVENT_UNTRUSTED_PERMITTED flag.
         // Whether the handling of the event is allowed or not is handled in
         // nsXBLKeyEventHandler::HandleEvent
         flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
 
-        manager->AddEventListenerByType(handler, type, flags, eventGroup);
+        manager->AddEventListenerByType(handler, type, flags, nsnull);
       }
     }
   }
@@ -1003,7 +992,6 @@ nsXBLBinding::UnhookEventHandlers()
     }
                                       
     PRBool isChromeBinding = mPrototypeBinding->IsChrome();
-    nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
     nsXBLPrototypeHandler* curr;
     for (curr = handlerChain; curr; curr = curr->GetNextHandler()) {
       nsXBLEventHandler* handler = curr->GetCachedEventHandler();
@@ -1025,19 +1013,15 @@ nsXBLBinding::UnhookEventHandlers()
       // If this is a command, remove it from the system event group,
       // otherwise remove it from the standard event group.
 
-      // This is a weak ref. systemEventGroup above is already a
-      // strong ref, so we are guaranteed it will not go away.
-      nsIDOMEventGroup* eventGroup = nsnull;
-      if ((curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) &&
+      if ((curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND |
+                              NS_HANDLER_TYPE_SYSTEM)) &&
           (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
-        if (!systemEventGroup)
-          manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
-        eventGroup = systemEventGroup;
+        flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
       }
 
       manager->RemoveEventListenerByType(handler,
                                          nsDependentAtomString(eventAtom),
-                                         flags, eventGroup);
+                                         flags, nsnull);
     }
 
     const nsCOMArray<nsXBLKeyEventHandler>* keyHandlers =
@@ -1056,17 +1040,12 @@ nsXBLBinding::UnhookEventHandlers()
       // If this is a command, remove it from the system event group, otherwise 
       // remove it from the standard event group.
 
-      // This is a weak ref. systemEventGroup above is already a
-      // strong ref, so we are guaranteed it will not go away.
-      nsIDOMEventGroup* eventGroup = nsnull;
       if ((handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) &&
           (isChromeBinding || mBoundElement->IsInNativeAnonymousSubtree())) {
-        if (!systemEventGroup)
-          manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
-        eventGroup = systemEventGroup;
+        flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
       }
 
-      manager->RemoveEventListenerByType(handler, type, flags, eventGroup);
+      manager->RemoveEventListenerByType(handler, type, flags, nsnull);
     }
   }
 }

@@ -226,14 +226,6 @@ nsDOMEventTargetHelper::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
   return NS_OK;
 }
 
-nsresult
-nsDOMEventTargetHelper::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
-{
-  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->GetSystemEventGroupLM(aGroup);
-}
-
 nsIScriptContext*
 nsDOMEventTargetHelper::GetContextForEventHandlers(nsresult* aRv)
 {
