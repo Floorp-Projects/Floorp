@@ -35,75 +35,68 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_BASEMARGIN_H_
-#define MOZILLA_BASEMARGIN_H_
-
-#include "gfxCore.h"
+#ifndef MOZILLA_GFX_BASEPOINT_H_
+#define MOZILLA_GFX_BASEPOINT_H_
 
 namespace mozilla {
+namespace gfx {
 
 /**
  * Do not use this class directly. Subclass it, pass that subclass as the
- * Sub parameter, and only use that subclass.
+ * Sub parameter, and only use that subclass. This allows methods to safely
+ * cast 'this' to 'Sub*'.
  */
 template <class T, class Sub>
-struct BaseMargin {
-  typedef mozilla::css::Side SideT;
-
-  // Do not change the layout of these members; the Side() methods below
-  // depend on this order.
-  T top, right, bottom, left;
+struct BasePoint {
+  T x, y;
 
   // Constructors
-  BaseMargin() : top(0), right(0), bottom(0), left(0) {}
-  BaseMargin(T aLeft, T aTop, T aRight, T aBottom) :
-      top(aTop), right(aRight), bottom(aBottom), left(aLeft) {}
+  BasePoint() : x(0), y(0) {}
+  BasePoint(T aX, T aY) : x(aX), y(aY) {}
 
-  void SizeTo(T aLeft, T aTop, T aRight, T aBottom)
-  {
-    left = aLeft; top = aTop; right = aRight; bottom = aBottom;
-  }
+  void MoveTo(T aX, T aY) { x = aX; y = aY; }
+  void MoveBy(T aDx, T aDy) { x += aDx; y += aDy; }
 
-  T LeftRight() const { return left + right; }
-  T TopBottom() const { return top + bottom; }
-
-  T& Side(SideT aSide) {
-    NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
-    // This is ugly!
-    return *(&top + aSide);
-  }
-  T Side(SideT aSide) const {
-    NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
-    // This is ugly!
-    return *(&top + aSide);
-  }
-
-  // Overloaded operators. Note that '=' isn't defined so we'll get the
+  // Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
-  bool operator==(const Sub& aMargin) const {
-    return left == aMargin.left && top == aMargin.top &&
-           right == aMargin.right && bottom == aMargin.bottom;
+
+  bool operator==(const Sub& aPoint) const {
+    return x == aPoint.x && y == aPoint.y;
   }
-  bool operator!=(const Sub& aMargin) const {
-    return !(*this == aMargin);
+  bool operator!=(const Sub& aPoint) const {
+    return x != aPoint.x || y != aPoint.y;
   }
-  Sub operator+(const Sub& aMargin) const {
-    return Sub(left + aMargin.left, top + aMargin.top,
-             right + aMargin.right, bottom + aMargin.bottom);
+
+  Sub operator+(const Sub& aPoint) const {
+    return Sub(x + aPoint.x, y + aPoint.y);
   }
-  Sub operator-(const Sub& aMargin) const {
-    return Sub(left - aMargin.left, top - aMargin.top,
-             right - aMargin.right, bottom - aMargin.bottom);
+  Sub operator-(const Sub& aPoint) const {
+    return Sub(x - aPoint.x, y - aPoint.y);
   }
-  Sub& operator+=(const Sub& aMargin) {
-    left += aMargin.left;
-    top += aMargin.top;
-    right += aMargin.right;
-    bottom += aMargin.bottom;
+  Sub& operator+=(const Sub& aPoint) {
+    x += aPoint.x;
+    y += aPoint.y;
     return *static_cast<Sub*>(this);
+  }
+  Sub& operator-=(const Sub& aPoint) {
+    x -= aPoint.x;
+    y -= aPoint.y;
+    return *static_cast<Sub*>(this);
+  }
+
+  Sub operator*(T aScale) const {
+    return Sub(x * aScale, y * aScale);
+  }
+  Sub operator/(T aScale) const {
+    return Sub(x / aScale, y / aScale);
+  }
+
+  Sub operator-() const {
+    return Sub(-x, -y);
   }
 };
 
 }
+}
 
-#endif /* MOZILLA_BASEMARGIN_H_ */
+#endif /* MOZILLA_GFX_BASEPOINT_H_ */
