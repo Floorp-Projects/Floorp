@@ -54,9 +54,6 @@ menuitem,
   font: menu;
   list-style-image: none;
   -moz-image-region: auto;
-  /* 3px is the default padding value. See the big comment under moz_gtk_check_menu_item_paint()
-     in widget/src/gtk2/gtk2drawing.c and bug 406129 for why we're hardcoding this. */
-  padding: 0px 3px;
 }
 
 menuitem[default="true"] {
