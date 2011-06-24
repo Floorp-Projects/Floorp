@@ -56,7 +56,6 @@
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIDOMDOMImplementation.h"
-#include "nsIDOMEventGroup.h"
 #include "nsIDOMRange.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
@@ -459,7 +458,6 @@ nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewXBLService(nsIXBLService** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
-nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 
 nsresult NS_NewEventListenerService(nsIEventListenerService** aResult);
 nsresult NS_NewGlobalMessageManager(nsIChromeFrameMessageManager** aResult);
@@ -511,7 +509,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
-MAKE_CTOR(CreateDOMEventGroup,            nsIDOMEventGroup,            NS_NewDOMEventGroup)
 MAKE_CTOR(CreateDocumentViewer,           nsIDocumentViewer,           NS_NewDocumentViewer)
 MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTMLDocument)
 MAKE_CTOR(CreateDOMImplementation,        nsIDOMDOMImplementation,     NS_NewDOMImplementation)
@@ -756,7 +753,6 @@ NS_DEFINE_NAMED_CID(IN_FLASHER_CID);
 NS_DEFINE_NAMED_CID(IN_CSSVALUESEARCH_CID);
 NS_DEFINE_NAMED_CID(IN_DOMUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_NAMESPACEMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_DOMEVENTGROUP_CID);
 NS_DEFINE_NAMED_CID(NS_DOCUMENT_VIEWER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_DOM_IMPLEMENTATION_CID);
@@ -900,7 +896,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kIN_CSSVALUESEARCH_CID, false, NULL, inCSSValueSearchConstructor },
   { &kIN_DOMUTILS_CID, false, NULL, inDOMUtilsConstructor },
   { &kNS_NAMESPACEMANAGER_CID, false, NULL, CreateNameSpaceManager },
-  { &kNS_DOMEVENTGROUP_CID, false, NULL, CreateDOMEventGroup },
   { &kNS_DOCUMENT_VIEWER_CID, false, NULL, CreateDocumentViewer },
   { &kNS_HTMLDOCUMENT_CID, false, NULL, CreateHTMLDocument },
   { &kNS_DOM_IMPLEMENTATION_CID, false, NULL, CreateDOMImplementation },

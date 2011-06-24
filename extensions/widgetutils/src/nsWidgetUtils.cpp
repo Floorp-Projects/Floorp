@@ -66,7 +66,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMTextListener.h"

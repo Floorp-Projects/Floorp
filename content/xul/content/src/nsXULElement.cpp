@@ -132,8 +132,6 @@
 #include "nsFrameLoader.h"
 #include "prlog.h"
 #include "rdf.h"
-#include "nsIDOM3EventTarget.h"
-#include "nsIDOMEventGroup.h"
 #include "nsIControllers.h"
 
 // The XUL doc interface
@@ -2193,13 +2191,11 @@ PopupListenerPropertyDtor(void* aObject, nsIAtom* aPropertyName,
     manager->RemoveEventListenerByType(listener,
                                        NS_LITERAL_STRING("mousedown"),
                                        NS_EVENT_FLAG_BUBBLE |
-                                       NS_EVENT_FLAG_SYSTEM_EVENT,
-                                       nsnull);
+                                       NS_EVENT_FLAG_SYSTEM_EVENT);
     manager->RemoveEventListenerByType(listener,
                                        NS_LITERAL_STRING("contextmenu"),
                                        NS_EVENT_FLAG_BUBBLE |
-                                       NS_EVENT_FLAG_SYSTEM_EVENT,
-                                       nsnull);
+                                       NS_EVENT_FLAG_SYSTEM_EVENT);
   }
   NS_RELEASE(listener);
 }
@@ -2240,14 +2236,12 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
       manager->AddEventListenerByType(listener,
                                       NS_LITERAL_STRING("contextmenu"),
                                       NS_EVENT_FLAG_BUBBLE |
-                                      NS_EVENT_FLAG_SYSTEM_EVENT,
-                                      nsnull);
+                                      NS_EVENT_FLAG_SYSTEM_EVENT);
     } else {
       manager->AddEventListenerByType(listener,
                                       NS_LITERAL_STRING("mousedown"),
                                       NS_EVENT_FLAG_BUBBLE |
-                                      NS_EVENT_FLAG_SYSTEM_EVENT,
-                                      nsnull);
+                                      NS_EVENT_FLAG_SYSTEM_EVENT);
     }
     return NS_OK;
 }

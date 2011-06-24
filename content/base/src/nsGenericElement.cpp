@@ -2049,126 +2049,6 @@ nsNodeSupportsWeakRefTearoff::GetWeakReference(nsIWeakReference** aInstancePtr)
 
 //----------------------------------------------------------------------
 
-nsDOMEventRTTearoff *
-nsDOMEventRTTearoff::mCachedEventTearoff[NS_EVENT_TEAROFF_CACHE_SIZE];
-
-PRUint32 nsDOMEventRTTearoff::mCachedEventTearoffCount = 0;
-
-
-nsDOMEventRTTearoff::nsDOMEventRTTearoff(nsINode *aNode)
-  : mNode(aNode)
-{
-}
-
-nsDOMEventRTTearoff::~nsDOMEventRTTearoff()
-{
-}
-
-NS_IMPL_CYCLE_COLLECTION_1(nsDOMEventRTTearoff, mNode)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventRTTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-NS_INTERFACE_MAP_END_AGGREGATED(mNode)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventRTTearoff)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsDOMEventRTTearoff,
-                                              LastRelease())
-
-nsDOMEventRTTearoff *
-nsDOMEventRTTearoff::Create(nsINode *aNode)
-{
-  if (mCachedEventTearoffCount) {
-    // We have cached unused instances of this class, return a cached
-    // instance in stead of always creating a new one.
-    nsDOMEventRTTearoff *tearoff =
-      mCachedEventTearoff[--mCachedEventTearoffCount];
-
-    // Set the back pointer to the content object
-    tearoff->mNode = aNode;
-
-    return tearoff;
-  }
-
-  // The cache is empty, this means we haveto create a new instance.
-  return new nsDOMEventRTTearoff(aNode);
-}
-
-// static
-void
-nsDOMEventRTTearoff::Shutdown()
-{
-  // Clear our cache.
-  while (mCachedEventTearoffCount) {
-    delete mCachedEventTearoff[--mCachedEventTearoffCount];
-  }
-}
-
-void
-nsDOMEventRTTearoff::LastRelease()
-{
-  if (mCachedEventTearoffCount < NS_EVENT_TEAROFF_CACHE_SIZE) {
-    // There's still space in the cache for one more instance, put
-    // this instance in the cache in stead of deleting it.
-    mCachedEventTearoff[mCachedEventTearoffCount++] = this;
-
-    // Don't set mContent to null directly since setting mContent to null
-    // could result in code that grabs a tearoff from the cache and we don't
-    // want to get reused while still being torn down.
-    // See bug 330526.
-    nsCOMPtr<nsINode> kungFuDeathGrip;
-    kungFuDeathGrip.swap(mNode);
-
-    // The refcount balancing and destructor re-entrancy protection
-    // code in Release() sets mRefCnt to 1 so we have to set it to 0
-    // here to prevent leaks
-    mRefCnt = 0;
-
-    return;
-  }
-
-  delete this;
-}
-
-// nsIDOM3EventTarget
-NS_IMETHODIMP
-nsDOMEventRTTearoff::AddGroupedEventListener(const nsAString& aType,
-                                             nsIDOMEventListener *aListener,
-                                             PRBool aUseCapture,
-                                             nsIDOMEventGroup *aEvtGrp)
-{
-  nsEventListenerManager* elm = mNode->GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  elm->AddGroupedEventListener(aType, aListener, aUseCapture, aEvtGrp);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMEventRTTearoff::RemoveGroupedEventListener(const nsAString& aType,
-                                                nsIDOMEventListener *aListener,
-                                                PRBool aUseCapture,
-                                                nsIDOMEventGroup *aEvtGrp)
-{
-  nsEventListenerManager* elm = mNode->GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  elm->RemoveGroupedEventListener(aType, aListener, aUseCapture,
-                                  aEvtGrp);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMEventRTTearoff::CanTrigger(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDOMEventRTTearoff::IsRegisteredHere(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//----------------------------------------------------------------------
-
 NS_IMPL_CYCLE_COLLECTION_1(nsNodeSelectorTearoff, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNodeSelectorTearoff)
@@ -4391,8 +4271,6 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSElement, new nsNSElementTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNodeSelector,

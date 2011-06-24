@@ -45,7 +45,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsHashtable.h"
 #include "nsIScriptContext.h"
 #include "nsCycleCollectionParticipant.h"
@@ -104,12 +103,10 @@ public:
                                 const nsIID& aIID, PRInt32 aFlags);
   nsresult AddEventListenerByType(nsIDOMEventListener *aListener,
                                   const nsAString& type,
-                                  PRInt32 aFlags,
-                                  nsIDOMEventGroup* aEvtGroup);
+                                  PRInt32 aFlags);
   void RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                  const nsAString& type,
-                                 PRInt32 aFlags,
-                                 nsIDOMEventGroup* aEvtGroup);
+                                 PRInt32 aFlags);
   nsresult AddScriptEventListener(nsISupports *aObject,
                                   nsIAtom *aName,
                                   const nsAString& aFunc,
@@ -182,9 +179,6 @@ public:
 
   PRUint32 GetIdentifierForEvent(nsIAtom* aEvent);
 
-  // nsIDOM3EventTarget
-  NS_DECL_NSIDOM3EVENTTARGET
-
   static void Shutdown();
 
   /**
@@ -229,18 +223,15 @@ protected:
                             PRUint32 aType,
                             nsIAtom* aTypeAtom,
                             const EventTypeData* aTypeData,
-                            PRInt32 aFlags,
-                            nsIDOMEventGroup* aEvtGrp);
+                            PRInt32 aFlags);
   void RemoveEventListener(nsIDOMEventListener *aListener,
                            PRUint32 aType,
                            nsIAtom* aUserType,
                            const EventTypeData* aTypeData,
-                           PRInt32 aFlags,
-                           nsIDOMEventGroup* aEvtGrp);
+                           PRInt32 aFlags);
   void RemoveAllListeners();
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsIAtom* aName);
-  nsresult GetDOM2EventGroup(nsIDOMEventGroup** aGroup);
   PRBool ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent);
   nsPIDOMWindow* GetInnerWindowForTarget();
 

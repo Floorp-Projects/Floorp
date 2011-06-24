@@ -67,7 +67,6 @@ class nsEventListenerManager;
 
 interface nsIScriptContext;
 interface nsIDOMEventListener;
-interface nsIDOMEventGroup;
 interface nsIDOMEvent;
 
 [scriptable, builtinclass, uuid(1797d5a4-b12a-428d-9eef-a0e13839728c)]

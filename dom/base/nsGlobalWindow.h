@@ -63,7 +63,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMClientInformation.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNavigatorGeolocation.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
@@ -274,7 +273,6 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
                        public nsIDOMEventTarget,
-                       public nsIDOM3EventTarget,
                        public nsIDOMStorageWindow,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
@@ -335,9 +333,6 @@ public:
 
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET
-
-  // nsIDOM3EventTarget
-  NS_DECL_NSIDOM3EVENTTARGET
 
   // nsIDOMWindow_2_0_BRANCH
   NS_DECL_NSIDOMWINDOW_2_0_BRANCH

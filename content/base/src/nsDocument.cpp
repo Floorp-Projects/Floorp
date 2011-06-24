@@ -80,7 +80,6 @@
 #include "mozilla/FunctionTimer.h"
 #include "nsGenericElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMEventGroup.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsDOMString.h"
@@ -130,8 +129,6 @@
 #include "nsXMLEventsManager.h"
 
 #include "nsBidiUtils.h"
-
-static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsIDOMUserDataHandler.h"
 #include "nsScriptEventManager.h"
@@ -1693,7 +1690,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMEventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3EventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer_MOZILLA_2_0_BRANCH)
@@ -6235,44 +6231,6 @@ nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mParentTarget = static_cast<nsIDOMEventTarget*>(window);
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::AddGroupedEventListener(const nsAString& aType,
-                                    nsIDOMEventListener *aListener,
-                                    PRBool aUseCapture,
-                                    nsIDOMEventGroup *aEvtGrp)
-{
-  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-  return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-}
-
-NS_IMETHODIMP
-nsDocument::RemoveGroupedEventListener(const nsAString& aType,
-                                       nsIDOMEventListener *aListener,
-                                       PRBool aUseCapture,
-                                       nsIDOMEventGroup *aEvtGrp)
-{
-  if (mListenerManager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-    mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
-                                                aEvtGrp);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::CanTrigger(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::IsRegisteredHere(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
