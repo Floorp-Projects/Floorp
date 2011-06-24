@@ -73,7 +73,6 @@ CPPSRCS = \
   JumpListItem.cpp \
   GfxInfo.cpp \
   WidgetTraceEvent.cpp \
-  AudioSession.cpp \
   $(NULL)
 
 ifdef MOZ_CRASHREPORTER
@@ -117,8 +116,6 @@ endif
 
 
 EXPORTS		= nsdefs.h WindowHook.h
-EXPORTS_NAMESPACES = mozilla/widget
-EXPORTS_mozilla/widget = AudioSession.h
 
 LOCAL_INCLUDES	= \
 		-I. \
