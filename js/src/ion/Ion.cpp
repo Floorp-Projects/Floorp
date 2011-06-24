@@ -131,7 +131,7 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
 
     if (!BuildDominatorTree(graph))
         return false;
-    spew.spew("Dominator tree");
+    spew.spewPass("Dominator tree");
 
     if (!BuildPhiReverseMapping(graph))
         return false;
