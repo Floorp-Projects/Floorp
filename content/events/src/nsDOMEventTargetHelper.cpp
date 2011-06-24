@@ -97,8 +97,7 @@ nsDOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
 {
   nsEventListenerManager* elm = GetListenerManager(PR_FALSE);
   if (elm) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-    elm->RemoveEventListenerByType(aListener, aType, flags, nsnull);
+    elm->RemoveEventListener(aType, aListener, aUseCapture);
   }
 
   return NS_OK;
@@ -116,10 +115,6 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
                "explicit by making aOptionalArgc non-zero.");
 
-  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
   if (aOptionalArgc < 2) {
     nsresult rv;
     nsIScriptContext* context = GetContextForEventHandlers(&rv);
@@ -129,11 +124,9 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
     aWantsUntrusted = doc && !nsContentUtils::IsChromeDoc(doc);
   }
 
-  if (aWantsUntrusted) {
-    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
-  }
-
-  return elm->AddEventListenerByType(aListener, aType, flags, nsnull);
+  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
 }
 
 NS_IMETHODIMP
@@ -227,9 +220,10 @@ nsDOMEventTargetHelper::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                                  const nsIID& aIID)
 {
   nsEventListenerManager* elm = GetListenerManager(PR_FALSE);
-  return elm ?
-    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE) :
-    NS_OK;
+  if (elm) {
+    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+  }
+  return NS_OK;
 }
 
 nsresult

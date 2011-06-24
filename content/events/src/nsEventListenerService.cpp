@@ -256,6 +256,16 @@ nsEventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
 }
 
 NS_IMETHODIMP
+nsEventListenerService::HasListenersFor(nsIDOMEventTarget* aEventTarget,
+                                        const nsAString& aType,
+                                        PRBool* aRetVal)
+{
+  nsEventListenerManager* elm = aEventTarget->GetListenerManager(PR_FALSE);
+  *aRetVal = elm && elm->HasListenersFor(aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsEventListenerService::GetSystemEventGroup(nsIDOMEventGroup** aSystemGroup)
 {
   NS_ENSURE_ARG_POINTER(aSystemGroup);

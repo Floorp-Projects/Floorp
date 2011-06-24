@@ -7763,21 +7763,19 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   nsCOMPtr<nsIAtom> atom(do_GetAtom(nsDependentJSString(id)));
   NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv;
-
   JSObject *scope = ::JS_GetGlobalForObject(cx, obj);
 
   if (compile) {
-    rv = manager->CompileScriptEventListener(script_cx, scope, target, atom,
-                                             did_define);
+    nsresult rv = manager->CompileScriptEventListener(script_cx, scope, target,
+                                                      atom, did_define);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else if (remove) {
-    rv = manager->RemoveScriptEventListener(atom);
+    manager->RemoveScriptEventListener(atom);
   } else {
-    rv = manager->RegisterScriptEventListener(script_cx, scope, target,
-                                              atom);
+    manager->RegisterScriptEventListener(script_cx, scope, target, atom);
   }
 
-  return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
+  return NS_SUCCESS_I_DID_SOMETHING;
 }
 
 NS_IMETHODIMP

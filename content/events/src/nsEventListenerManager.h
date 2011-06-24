@@ -87,100 +87,103 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsEventListenerManager)
 
-  NS_IMETHOD RemoveEventListener(const nsAString& aType,
-                                 nsIDOMEventListener* aListener,
-                                 PRBool aUseCapture);
-  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);
+  nsresult AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener* aListener,
+                            PRBool aUseCapture,
+                            PRBool aWantsUntrusted);
+  void RemoveEventListener(const nsAString& aType,
+                           nsIDOMEventListener* aListener,
+                           PRBool aUseCapture);
 
   /**
   * Sets events listeners of all types. 
   * @param an event listener
   */
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                   const nsIID& aIID, PRInt32 aFlags);
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID, PRInt32 aFlags);
-  NS_IMETHOD AddEventListenerByType(nsIDOMEventListener *aListener,
-                                    const nsAString& type,
-                                    PRInt32 aFlags,
-                                    nsIDOMEventGroup* aEvtGroup);
-  NS_IMETHOD RemoveEventListenerByType(nsIDOMEventListener *aListener,
-                                       const nsAString& type,
-                                       PRInt32 aFlags,
-                                       nsIDOMEventGroup* aEvtGroup);
-  NS_IMETHOD AddScriptEventListener(nsISupports *aObject,
-                                    nsIAtom *aName,
-                                    const nsAString& aFunc,
-                                    PRUint32 aLanguage,
-                                    PRBool aDeferCompilation,
-                                    PRBool aPermitUntrustedEvents);
-  NS_IMETHOD RegisterScriptEventListener(nsIScriptContext *aContext,
-                                         void *aScopeObject,
-                                         nsISupports *aObject,
-                                         nsIAtom* aName);
-  NS_IMETHOD RemoveScriptEventListener(nsIAtom *aName);
-  NS_IMETHOD CompileScriptEventListener(nsIScriptContext *aContext,
-                                        void *aScopeObject,
-                                        nsISupports *aObject,
-                                        nsIAtom* aName, PRBool *aDidCompile);
+  nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                 const nsIID& aIID, PRInt32 aFlags);
+  void RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                const nsIID& aIID, PRInt32 aFlags);
+  nsresult AddEventListenerByType(nsIDOMEventListener *aListener,
+                                  const nsAString& type,
+                                  PRInt32 aFlags,
+                                  nsIDOMEventGroup* aEvtGroup);
+  void RemoveEventListenerByType(nsIDOMEventListener *aListener,
+                                 const nsAString& type,
+                                 PRInt32 aFlags,
+                                 nsIDOMEventGroup* aEvtGroup);
+  nsresult AddScriptEventListener(nsISupports *aObject,
+                                  nsIAtom *aName,
+                                  const nsAString& aFunc,
+                                  PRUint32 aLanguage,
+                                  PRBool aDeferCompilation,
+                                  PRBool aPermitUntrustedEvents);
+  nsresult RegisterScriptEventListener(nsIScriptContext *aContext,
+                                       void *aScopeObject,
+                                       nsISupports *aObject,
+                                       nsIAtom* aName);
+  void RemoveScriptEventListener(nsIAtom *aName);
+  nsresult CompileScriptEventListener(nsIScriptContext *aContext,
+                                      void *aScopeObject,
+                                      nsISupports *aObject,
+                                      nsIAtom* aName, PRBool *aDidCompile);
 
-  nsresult HandleEvent(nsPresContext* aPresContext,
-                       nsEvent* aEvent, 
-                       nsIDOMEvent** aDOMEvent,
-                       nsIDOMEventTarget* aCurrentTarget,
-                       PRUint32 aFlags,
-                       nsEventStatus* aEventStatus,
-                       nsCxPusher* aPusher)
+  void HandleEvent(nsPresContext* aPresContext,
+                   nsEvent* aEvent, 
+                   nsIDOMEvent** aDOMEvent,
+                   nsIDOMEventTarget* aCurrentTarget,
+                   PRUint32 aFlags,
+                   nsEventStatus* aEventStatus,
+                   nsCxPusher* aPusher)
   {
     if (mListeners.IsEmpty() || aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
-      return NS_OK;
+      return;
     }
 
     if (!mMayHaveCapturingListeners &&
         !(aEvent->flags & NS_EVENT_FLAG_BUBBLE)) {
-      return NS_OK;
+      return;
     }
 
     if (!mMayHaveSystemGroupListeners &&
         aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
-      return NS_OK;
+      return;
     }
 
     // Check if we already know that there is no event listener for the event.
     if (mNoListenerForEvent == aEvent->message &&
         (mNoListenerForEvent != NS_USER_DEFINED_EVENT ||
          mNoListenerForEventAtom == aEvent->userType)) {
-      return NS_OK;
+      return;
     }
-    return HandleEventInternal(aPresContext, aEvent, aDOMEvent, aCurrentTarget,
-                               aFlags, aEventStatus, aPusher);
+    HandleEventInternal(aPresContext, aEvent, aDOMEvent, aCurrentTarget,
+                        aFlags, aEventStatus, aPusher);
   }
 
-  nsresult HandleEventInternal(nsPresContext* aPresContext,
-                               nsEvent* aEvent, 
-                               nsIDOMEvent** aDOMEvent,
-                               nsIDOMEventTarget* aCurrentTarget,
-                               PRUint32 aFlags,
-                               nsEventStatus* aEventStatus,
-                               nsCxPusher* aPusher);
+  void HandleEventInternal(nsPresContext* aPresContext,
+                           nsEvent* aEvent, 
+                           nsIDOMEvent** aDOMEvent,
+                           nsIDOMEventTarget* aCurrentTarget,
+                           PRUint32 aFlags,
+                           nsEventStatus* aEventStatus,
+                           nsCxPusher* aPusher);
 
-  NS_IMETHOD Disconnect();
+  void Disconnect();
 
-  NS_IMETHOD HasMutationListeners(PRBool* aListener);
+  nsresult GetSystemEventGroupLM(nsIDOMEventGroup **aGroup);
 
-  NS_IMETHOD GetSystemEventGroupLM(nsIDOMEventGroup** aGroup);
+  PRBool HasMutationListeners();
 
-  virtual PRBool HasUnloadListeners();
+  PRBool HasUnloadListeners();
 
-  virtual PRUint32 MutationListenerBits();
+  PRUint32 MutationListenerBits();
 
-  virtual PRBool HasListenersFor(const nsAString& aEventName);
+  PRBool HasListenersFor(const nsAString& aEventName);
 
-  virtual PRBool HasListeners();
+  PRBool HasListeners();
 
-  virtual nsresult GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList);
+  nsresult GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList);
 
-  static PRUint32 GetIdentifierForEvent(nsIAtom* aEvent);
+  PRUint32 GetIdentifierForEvent(nsIAtom* aEvent);
 
   // nsIDOM3EventTarget
   NS_DECL_NSIDOM3EVENTTARGET
@@ -233,13 +236,13 @@ protected:
                             const EventTypeData* aTypeData,
                             PRInt32 aFlags,
                             nsIDOMEventGroup* aEvtGrp);
-  nsresult RemoveEventListener(nsIDOMEventListener *aListener,
-                               PRUint32 aType,
-                               nsIAtom* aUserType,
-                               const EventTypeData* aTypeData,
-                               PRInt32 aFlags,
-                               nsIDOMEventGroup* aEvtGrp);
-  nsresult RemoveAllListeners();
+  void RemoveEventListener(nsIDOMEventListener *aListener,
+                           PRUint32 aType,
+                           nsIAtom* aUserType,
+                           const EventTypeData* aTypeData,
+                           PRInt32 aFlags,
+                           nsIDOMEventGroup* aEvtGrp);
+  void RemoveAllListeners();
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsIAtom* aName);
   nsresult GetDOM2EventGroup(nsIDOMEventGroup** aGroup);

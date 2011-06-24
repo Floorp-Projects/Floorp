@@ -3245,12 +3245,8 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
     nsCOMPtr<nsIDOMEventTarget> piTarget(do_QueryInterface(window));
     if (piTarget) {
       nsEventListenerManager* manager = piTarget->GetListenerManager(PR_FALSE);
-      if (manager) {
-        PRBool hasListeners = PR_FALSE;
-        manager->HasMutationListeners(&hasListeners);
-        if (hasListeners) {
-          return PR_TRUE;
-        }
+      if (manager && manager->HasMutationListeners()) {
+        return PR_TRUE;
       }
     }
   }
@@ -3260,12 +3256,8 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   // mutation listener.  Check quickly to see.
   while (aNode) {
     nsEventListenerManager* manager = aNode->GetListenerManager(PR_FALSE);
-    if (manager) {
-      PRBool hasListeners = PR_FALSE;
-      manager->HasMutationListeners(&hasListeners);
-      if (hasListeners) {
-        return PR_TRUE;
-      }
+    if (manager && manager->HasMutationListeners()) {
+      return PR_TRUE;
     }
 
     if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
