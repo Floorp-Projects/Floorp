@@ -184,20 +184,21 @@ JSParseNode::clear()
     pn_parens = false;
 }
 
-Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp)
+Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldConstants)
   : js::AutoGCRooter(cx, PARSER),
     context(cx),
     aleFreeList(NULL),
     tokenStream(cx),
     principals(NULL),
     callerFrame(cfp),
-    callerVarObj(cfp ? &cx->stack.space().varObjForFrame(cfp) : NULL),
+    callerVarObj(cfp ? &cfp->varObj() : NULL),
     nodeList(NULL),
     functionCount(0),
     traceListHead(NULL),
     tc(NULL),
     emptyCallShape(NULL),
-    keepAtoms(cx->runtime)
+    keepAtoms(cx->runtime),
+    foldConstants(foldConstants)
 {
     js::PodArrayZero(tempFreeList);
     setPrincipals(prin);
@@ -767,7 +768,8 @@ JSParseNode::newBinaryOrAppend(TokenKind tt, JSOp op, JSParseNode *left, JSParse
      */
     if (tt == TOK_PLUS &&
         left->pn_type == TOK_NUMBER &&
-        right->pn_type == TOK_NUMBER) {
+        right->pn_type == TOK_NUMBER &&
+        tc->parser->foldConstants) {
         left->pn_dval += right->pn_dval;
         left->pn_pos.end = right->pn_pos.end;
         RecycleTree(right, tc);
@@ -861,7 +863,7 @@ Parser::parse(JSObject *chain)
         if (!tokenStream.matchToken(TOK_EOF)) {
             reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
-        } else {
+        } else if (foldConstants) {
             if (!js_FoldConstants(context, pn, &globaltc))
                 pn = NULL;
         }
@@ -1133,17 +1135,18 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT(cg.version() == version);
 
     script = JSScript::NewScriptFromCG(cx, &cg);
-    if (script && funbox)
+    if (!script)
+        goto out;
+
+    if (funbox)
         script->savedCallerFun = true;
 
 #ifdef JS_SCOPE_DEPTH_METER
-    if (script) {
-        JSObject *obj = scopeChain;
-        uintN depth = 1;
-        while ((obj = obj->getParent()) != NULL)
-            ++depth;
-        JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
-    }
+    JSObject *obj = scopeChain;
+    uintN depth = 1;
+    while ((obj = obj->getParent()) != NULL)
+        ++depth;
+    JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
 #endif
 
     {
@@ -1208,7 +1211,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         def.knownSlot = shape->slot;
     }
 
-    js::Vector<JSScript *, 16, ContextAllocPolicy> worklist(cx);
+    js::Vector<JSScript *, 16> worklist(cx);
     if (!worklist.append(script))
         return false;
 
@@ -2192,8 +2195,10 @@ bool
 Parser::markFunArgs(JSFunctionBox *funbox)
 {
     JSFunctionBoxQueue queue;
-    if (!queue.init(functionCount))
+    if (!queue.init(functionCount)) {
+        js_ReportOutOfMemory(context);
         return false;
+    }
 
     FindFunArgs(funbox, -1, &queue);
     while ((funbox = queue.pull()) != NULL) {
@@ -2834,7 +2839,10 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                  * allows us to handle both these cases in a natural way.
                  */
                 outer_ale = MakePlaceholder(dn, tc);
+                if (!outer_ale)
+                    return false;
             }
+
 
             JSDefinition *outer_dn = ALE_DEFN(outer_ale);
 
@@ -4149,8 +4157,10 @@ NoteLValue(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN dflag = PND_
      * chain; we ensure this happens by making such functions heavyweight.
      */
     JSAtom *lname = pn->pn_atom;
-    if (lname == cx->runtime->atomState.argumentsAtom ||
-        (tc->inFunction() && lname == tc->fun()->atom)) {
+    if (lname == cx->runtime->atomState.argumentsAtom) {
+        tc->flags |= TCF_FUN_HEAVYWEIGHT;
+        tc->countArgumentsUse(pn);
+    } else if (tc->inFunction() && lname == tc->fun()->atom) {
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
     }
 }
@@ -4611,8 +4621,9 @@ Parser::returnOrYield(bool useAssignExpr)
     JSParseNode *pn, *pn2;
 
     tt = tokenStream.currentToken().type;
-    if (tt == TOK_RETURN && !tc->inFunction()) {
-        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD, js_return_str);
+    if (!tc->inFunction()) {
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD,
+                          (tt == TOK_RETURN) ? js_return_str : js_yield_str);
         return NULL;
     }
 
@@ -4621,8 +4632,18 @@ Parser::returnOrYield(bool useAssignExpr)
         return NULL;
 
 #if JS_HAS_GENERATORS
-    if (tt == TOK_YIELD)
-        tc->flags |= TCF_FUN_IS_GENERATOR;
+    if (tt == TOK_YIELD) {
+        /*
+         * If we're within parens, we won't know if this is a generator expression until we see
+         * a |for| token, so we have to delay flagging the current function.
+         */
+        if (tc->parenDepth == 0) {
+            tc->flags |= TCF_FUN_IS_GENERATOR;
+        } else {
+            tc->yieldCount++;
+            tc->yieldNode = pn;
+        }
+    }
 #endif
 
     /* This is ugly, but we don't want to require a semicolon. */
@@ -4835,6 +4856,10 @@ NewBindingNode(JSAtom *atom, JSTreeContext *tc, bool let = false)
     pn = NameNode::create(atom, tc);
     if (!pn)
         return NULL;
+
+    if (atom == tc->parser->context->runtime->atomState.argumentsAtom)
+        tc->countArgumentsUse(pn);
+
     return pn;
 }
 
@@ -6207,7 +6232,7 @@ Parser::variables(bool inLetHead)
 
             if (tc->inFunction() &&
                 atom == context->runtime->atomState.argumentsAtom) {
-                tc->noteArgumentsUse();
+                tc->noteArgumentsUse(pn2);
                 if (!let)
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
             }
@@ -6639,7 +6664,7 @@ Parser::unaryExpr()
          * returns true. Here we fold constants before checking for a call
          * expression, in order to rule out delete of a generator expression.
          */
-        if (!js_FoldConstants(context, pn2, tc))
+        if (foldConstants && !js_FoldConstants(context, pn2, tc))
             return NULL;
         switch (pn2->pn_type) {
           case TOK_LP:
@@ -6659,8 +6684,10 @@ Parser::unaryExpr()
                 return NULL;
             }
             pn2->pn_op = JSOP_DELNAME;
-            if (pn2->pn_atom == context->runtime->atomState.argumentsAtom)
+            if (pn2->pn_atom == context->runtime->atomState.argumentsAtom) {
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
+                tc->countArgumentsUse(pn2);
+            }
             break;
           default:;
         }
@@ -6733,6 +6760,65 @@ class CompExprTransplanter {
 
     bool transplant(JSParseNode *pn);
 };
+
+/*
+ * A helper for lazily checking for the presence of illegal |yield| or |arguments|
+ * tokens inside of generator expressions.
+ *
+ * Use when entering a parenthesized context. If the nested expression is followed
+ * by a |for| token (indicating that the parenthesized expression is a generator
+ * expression), use the checkValidBody() method to see if any illegal tokens were
+ * found.
+ */
+class GenexpGuard {
+    JSTreeContext   *tc;
+    uint32          startYieldCount;
+    uint32          startArgumentsCount;
+
+  public:
+    explicit GenexpGuard(JSTreeContext *tc)
+      : tc(tc)
+    {
+        if (tc->parenDepth == 0) {
+            tc->yieldCount = tc->argumentsCount = 0;
+            tc->yieldNode = tc->argumentsNode = NULL;
+        }
+        startYieldCount = tc->yieldCount;
+        startArgumentsCount = tc->argumentsCount;
+        tc->parenDepth++;
+    }
+
+    void endBody();
+    bool checkValidBody(JSParseNode *pn);
+};
+
+void
+GenexpGuard::endBody()
+{
+    tc->parenDepth--;
+}
+
+bool
+GenexpGuard::checkValidBody(JSParseNode *pn)
+{
+    if (tc->yieldCount > startYieldCount) {
+        JSParseNode *errorNode = tc->yieldNode;
+        if (!errorNode)
+            errorNode = pn;
+        tc->parser->reportErrorNumber(errorNode, JSREPORT_ERROR, JSMSG_BAD_GENEXP_BODY, js_yield_str);
+        return false;
+    }
+
+    if (tc->argumentsCount > startArgumentsCount) {
+        JSParseNode *errorNode = tc->argumentsNode;
+        if (!errorNode)
+            errorNode = pn;
+        tc->parser->reportErrorNumber(errorNode, JSREPORT_ERROR, JSMSG_BAD_GENEXP_BODY, js_arguments_str);
+        return false;
+    }
+
+    return true;
+}
 
 /*
  * Any definitions nested within the comprehension expression of a generator
@@ -6934,7 +7020,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
  * (possibly nested) for-loop, initialized by |type, op, kid|.
  */
 JSParseNode *
-Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
+Parser::comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
                           TokenKind type, JSOp op)
 {
     uintN adjust;
@@ -7014,6 +7100,8 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
         }
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
+        GenexpGuard guard(tc);
+
         atom = NULL;
         tt = tokenStream.getToken();
         switch (tt) {
@@ -7055,6 +7143,11 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
         if (!pn4)
             return NULL;
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
+
+        guard.endBody();
+
+        if (isGenexp && !guard.checkValidBody(pn2))
+            return NULL;
 
         switch (tt) {
 #if JS_HAS_DESTRUCTURING
@@ -7191,7 +7284,7 @@ Parser::generatorExpr(JSParseNode *kid)
         genfn->pn_funbox = funbox;
         genfn->pn_blockid = gentc.bodyid;
 
-        JSParseNode *body = comprehensionTail(pn, outertc->blockid());
+        JSParseNode *body = comprehensionTail(pn, outertc->blockid(), true);
         if (!body)
             return NULL;
         JS_ASSERT(!genfn->pn_body);
@@ -7228,6 +7321,8 @@ Parser::argumentList(JSParseNode *listNode)
     if (tokenStream.matchToken(TOK_RP, TSF_OPERAND))
         return JS_TRUE;
 
+    GenexpGuard guard(tc);
+
     do {
         JSParseNode *argNode = assignExpr();
         if (!argNode)
@@ -7242,6 +7337,8 @@ Parser::argumentList(JSParseNode *listNode)
 #endif
 #if JS_HAS_GENERATOR_EXPRS
         if (tokenStream.matchToken(TOK_FOR)) {
+            if (!guard.checkValidBody(argNode))
+                return JS_FALSE;
             argNode = generatorExpr(argNode);
             if (!argNode)
                 return JS_FALSE;
@@ -7260,6 +7357,7 @@ Parser::argumentList(JSParseNode *listNode)
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_AFTER_ARGS);
         return JS_FALSE;
     }
+    guard.endBody();
     return JS_TRUE;
 }
 
@@ -8326,7 +8424,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 pn->pn_tail = &pn->pn_head;
                 *pn->pn_tail = NULL;
 
-                pntop = comprehensionTail(pnexp, pn->pn_blockid,
+                pntop = comprehensionTail(pnexp, pn->pn_blockid, false,
                                           TOK_ARRAYPUSH, JSOP_ARRAYPUSH);
                 if (!pntop)
                     return NULL;
@@ -8634,7 +8732,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
              * a reference of the form foo.arguments, which ancient code may
              * still use instead of arguments (more hate).
              */
-            tc->noteArgumentsUse();
+            tc->noteArgumentsUse(pn);
 
             /*
              * Bind early to JSOP_ARGUMENTS to relieve later code from having
@@ -8649,6 +8747,12 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     || tokenStream.peekToken() == TOK_DBLCOLON
 #endif
                    ) && !(tc->flags & TCF_DECL_DESTRUCTURING)) {
+            /* In case this is a generator expression outside of any function. */
+            if (!tc->inFunction() &&
+                pn->pn_atom == context->runtime->atomState.argumentsAtom) {
+                tc->countArgumentsUse(pn);
+            }
+
             JSStmtInfo *stmt = js_LexicalLookup(tc, pn->pn_atom, NULL);
 
             JSDefinition *dn;
@@ -8756,7 +8860,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
 
         JSObject *obj;
-        if (context->running()) {
+        if (context->hasfp()) {
             obj = RegExp::createObject(context, context->regExpStatics(),
                                        tokenStream.getTokenbuf().begin(),
                                        tokenStream.getTokenbuf().length(),
@@ -8820,16 +8924,19 @@ Parser::parenExpr(JSBool *genexp)
 
     if (genexp)
         *genexp = JS_FALSE;
+
+    GenexpGuard guard(tc);
+
     pn = bracketedExpr();
     if (!pn)
         return NULL;
+    guard.endBody();
 
 #if JS_HAS_GENERATOR_EXPRS
     if (tokenStream.matchToken(TOK_FOR)) {
-        if (pn->pn_type == TOK_YIELD && !pn->pn_parens) {
-            reportErrorNumber(pn, JSREPORT_ERROR, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
+        if (!guard.checkValidBody(pn))
             return NULL;
-        }
+        JS_ASSERT(pn->pn_type != TOK_YIELD);
         if (pn->pn_type == TOK_COMMA && !pn->pn_parens) {
             reportErrorNumber(pn->last(), JSREPORT_ERROR, JSMSG_BAD_GENERATOR_SYNTAX,
                               js_generator_str);
@@ -8850,6 +8957,14 @@ Parser::parenExpr(JSBool *genexp)
         }
     }
 #endif /* JS_HAS_GENERATOR_EXPRS */
+
+    if (tc->yieldCount > 0) {
+        tc->flags |= TCF_FUN_IS_GENERATOR;
+        if (!tc->inFunction()) {
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
+            return NULL;
+        }
+    }
 
     return pn;
 }

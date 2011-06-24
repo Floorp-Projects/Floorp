@@ -57,8 +57,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch2.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -540,6 +538,8 @@ LayerManagerOGL::RootLayer() const
   return static_cast<LayerOGL*>(mRoot->ImplData());
 }
 
+/* This function tries to stick to portable C89 as much as possible
+ * so that it can be easily copied into other applications */
 void
 LayerManagerOGL::FPSState::DrawFPS(GLContext* context, CopyProgram* copyprog)
 {
@@ -575,13 +575,18 @@ LayerManagerOGL::FPSState::DrawFPS(GLContext* context, CopyProgram* copyprog)
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     };
 
-    unsigned long* buf = (unsigned long*)malloc(64 * 8 * 4);
+    // convert from 8 bit to 32 bit so that don't have to write the text above out in 32 bit format
+    // we rely on int being 32 bits
+    unsigned int* buf = (unsigned int*)malloc(64 * 8 * 4);
     for (int i = 0; i < 7; i++) {
       for (int j = 0; j < 41; j++) {
-        buf[i * 64 + j] = (text[i * 41 + j] == 0) ? 0xfff000ff : 0xffffffff;
+        unsigned int purple = 0xfff000ff;
+        unsigned int white  = 0xffffffff;
+        buf[i * 64 + j] = (text[i * 41 + j] == 0) ? purple : white;
       }
     }
     context->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 64, 8, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf);
+    free(buf);
     initialized = true;
   }
 

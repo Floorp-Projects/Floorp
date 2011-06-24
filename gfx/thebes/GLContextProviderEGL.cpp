@@ -78,8 +78,7 @@ typedef void *EGLNativeWindowType;
 
 #elif defined(XP_WIN)
 
-#include "nsServiceManagerUtils.h"
-#include "nsIPrefBranch.h"
+#include "mozilla/Preferences.h"
 #include "nsILocalFile.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -318,14 +317,10 @@ public:
         // Allow for explicitly specifying the location of libEGL.dll and
         // libGLESv2.dll.
         do {
-            nsCOMPtr<nsIPrefBranch> prefs = do_GetService("@mozilla.org/preferences-service;1");
             nsCOMPtr<nsILocalFile> eglFile, glesv2File;
-            if (!prefs)
-                break;
-
-            nsresult rv = prefs->GetComplexValue("gfx.angle.egl.path",
-                                                 NS_GET_IID(nsILocalFile),
-                                                 getter_AddRefs(eglFile));
+            nsresult rv = Preferences::GetComplex("gfx.angle.egl.path",
+                                                  NS_GET_IID(nsILocalFile),
+                                                  getter_AddRefs(eglFile));
             if (NS_FAILED(rv) || !eglFile)
                 break;
 
@@ -1772,7 +1767,6 @@ GetVendor()
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 {
-    EGLContext context;
     EGLConfig config;
 
     if (!sEGLLibrary.EnsureInitialized()) {
@@ -2169,14 +2163,13 @@ ContentTypeToGLFormat(gfxASurface::gfxContentType aCType)
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForNativePixmapSurface(gfxASurface* aSurface)
 {
-    EGLSurface surface = nsnull;
-    EGLContext context = nsnull;
-    EGLConfig config = nsnull;
-
     if (!sEGLLibrary.EnsureInitialized())
         return nsnull;
 
 #ifdef MOZ_X11
+    EGLSurface surface = nsnull;
+    EGLConfig config = nsnull;
+
     if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib) {
         // Not implemented
         return nsnull;
@@ -2198,9 +2191,6 @@ GLContextProviderEGL::CreateForNativePixmapSurface(gfxASurface* aSurface)
 
     return glContext.forget().get();
 #else
-    (void)surface;
-    (void)context;
-
     // Not implemented
     return nsnull;
 #endif

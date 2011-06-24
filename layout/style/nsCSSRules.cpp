@@ -917,6 +917,7 @@ DocumentRule::List(FILE* out, PRInt32 aIndent) const
         break;
       case eDomain:
         str.AppendLiteral("domain(\"");
+        break;
       case eRegExp:
         str.AppendLiteral("regexp(\"");
         break;
@@ -1663,7 +1664,6 @@ nsCSSFontFaceRule::GetDesc(nsCSSFontDesc aDescID, nsCSSValue & aValue)
   aValue = mDecl.*nsCSSFontFaceStyleDecl::Fields[aDescID];
 }
 
-#ifdef MOZ_CSS_ANIMATIONS
 // -------------------------------------------
 // nsCSSKeyframeStyleDeclaration
 //
@@ -2086,4 +2086,3 @@ nsCSSKeyframesRule::UseForPresentation(nsPresContext* aPresContext,
   return PR_FALSE;
 }
 
-#endif

@@ -68,7 +68,10 @@ const ElementTouchHelper = {
 
   /* Retrieve the closest element to a point by looking at borders position */
   getClosest: function getClosest(aWindowUtils, aX, aY) {
-    let dpiRatio = aWindowUtils.displayDPI / kReferenceDpi;
+    if (!this.dpiRatio)
+      this.dpiRatio = aWindowUtils.displayDPI / kReferenceDpi;
+
+    let dpiRatio = this.dpiRatio;
 
     let target = aWindowUtils.elementFromPoint(aX, aY,
                                                true,   /* ignore root scroll frame*/
@@ -352,11 +355,6 @@ let Content = {
           } else if (ot == errorDoc.getElementById("getMeOutOfHereButton")) {
             sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: "leave" });
           }
-        } else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
-          if (ot == errorDoc.getElementById("errorTryAgain")) {
-            // Make sure we're online before attempting to load
-            Util.forceOnline();
-          }
         } else if (/^about:blocked/.test(errorDoc.documentURI)) {
           // The event came from a button on a malware/phishing block page
           // First check whether it's malware or phishing, so that we can
@@ -623,20 +621,25 @@ let Content = {
 
   _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY, aButton) {
     // the element can be out of the aX/aY point because of the touch radius
+    // if outside, we gracefully move the touch point to the center of the element
     if (!(aElement instanceof HTMLHtmlElement)) {
       let isTouchClick = true;
       let rects = getContentClientRects(aElement);
       for (let i = 0; i < rects.length; i++) {
         let rect = rects[i];
-        if ((aX > rect.left && aX < (rect.left + rect.width)) &&
-            (aY > rect.top && aY < (rect.top + rect.height))) {
+        // We might be able to deal with fractional pixels, but mouse events won't.
+        // Deflate the bounds in by 1 pixel to deal with any fractional scroll offset issues.
+        let inBounds = 
+          (aX > rect.left + 1 && aX < (rect.left + rect.width - 1)) &&
+          (aY > rect.top + 1 && aY < (rect.top + rect.height - 1));
+        if (inBounds) {
           isTouchClick = false;
           break;
         }
       }
 
       if (isTouchClick) {
-        let rect = new Rect(rects[0]);
+        let rect = new Rect(rects[0].left, rects[0].top, rects[0].width, rects[0].height);
         if (rect.isEmpty())
           return;
 

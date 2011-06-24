@@ -19,8 +19,8 @@ fails-if(!nativeThemePref) != button-native.html button-nonnative.html
 == button-nonnative-when-styled.html button-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref) != combobox-native.html combobox-nonnative.html
 == combobox-nonnative-when-styled.html combobox-nonnative-when-styled-ref.html
-fails-if(!nativeThemePref) != listbox-native.html listbox-nonnative.html
-== listbox-nonnative-when-styled.html listbox-nonnative-when-styled-ref.html
+fails-if(!nativeThemePref) needs-focus != listbox-native.html listbox-nonnative.html
+needs-focus == listbox-nonnative-when-styled.html listbox-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref) != radio-native.html radio-nonnative.html
 == radio-still-native-when-styled.html radio-still-native-when-styled-ref.html
 fails-if(!nativeThemePref) != checkbox-native.html checkbox-nonnative.html

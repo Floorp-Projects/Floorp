@@ -88,6 +88,15 @@ extern JS_PUBLIC_DATA(jsval) JSVAL_VOID;
 
 #endif
 
+/*
+ * Different "run modes" used for execution accounting (JSOPTION_PCCOUNT)
+ */
+
+#define JSRUNMODE_INTERP    0
+#define JSRUNMODE_TRACEJIT  1
+#define JSRUNMODE_METHODJIT 2
+#define JSRUNMODE_COUNT     3
+
 /************************************************************************/
 
 static JS_ALWAYS_INLINE JSBool
@@ -981,11 +990,12 @@ JS_StringToVersion(const char *string);
 #define JSOPTION_METHODJIT_ALWAYS \
                                 JS_BIT(16)      /* Always whole-method JIT,
                                                    don't tune at run-time. */
+#define JSOPTION_PCCOUNT        JS_BIT(17)      /* Collect per-op execution counts */
 
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_XML | JSOPTION_ANONFUNFIX)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(17) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(18) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32)
@@ -2943,15 +2953,13 @@ JS_IsRunning(JSContext *cx);
  * must be balanced and all nested calls to JS_SaveFrameChain must have had
  * matching JS_RestoreFrameChain calls.
  *
- * JS_SaveFrameChain deals with cx not having any code running on it. A null
- * return does not signify an error, and JS_RestoreFrameChain handles a null
- * frame pointer argument safely.
+ * JS_SaveFrameChain deals with cx not having any code running on it.
  */
-extern JS_PUBLIC_API(JSStackFrame *)
+extern JS_PUBLIC_API(JSBool)
 JS_SaveFrameChain(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp);
+JS_RestoreFrameChain(JSContext *cx);
 
 /************************************************************************/
 

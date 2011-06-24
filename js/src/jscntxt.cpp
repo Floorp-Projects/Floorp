@@ -62,6 +62,7 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
+#include "jsdtoa.h"
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -300,7 +301,7 @@ JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
     JSContext *cx;
-    JSBool ok, first;
+    JSBool first;
     JSContextCallback cxCallback;
 
     /*
@@ -317,6 +318,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword) -1;
 #endif
+    cx->iterValue.setMagic(JS_NO_ITER_VALUE);
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
@@ -382,17 +384,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #ifdef JS_THREADSAFE
         JS_BeginRequest(cx);
 #endif
-        ok = js_InitCommonAtoms(cx);
-
-        /*
-         * scriptFilenameTable may be left over from a previous episode of
-         * non-zero contexts alive in rt, so don't re-init the table if it's
-         * not necessary.
-         */
-        if (ok && !rt->scriptFilenameTable)
-            ok = js_InitRuntimeScriptState(rt);
-        if (ok)
-            ok = js_InitRuntimeNumberState(cx);
+        JSBool ok = js_InitCommonAtoms(cx);
 
 #ifdef JS_THREADSAFE
         JS_EndRequest(cx);
@@ -614,8 +606,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
                 JS_BeginRequest(cx);
 #endif
 
-            js_FinishRuntimeNumberState(cx);
-
             /* Unpin all common atoms before final GC. */
             js_FinishCommonAtoms(cx);
 
@@ -681,7 +671,7 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
     JSContext *cx = *iterp;
 
     Maybe<AutoLockGC> lockIf;
-    if (unlocked) 
+    if (unlocked)
         lockIf.construct(rt);
     cx = js_ContextFromLinkField(cx ? cx->link.next : rt->contextList.next);
     if (&cx->link == &rt->contextList)
@@ -1392,7 +1382,7 @@ js_GetCurrentBytecodePC(JSContext* cx)
 #endif
     {
         JS_ASSERT_NOT_ON_TRACE(cx);  /* for static analysis */
-        pc = cx->running() ? cx->regs().pc : NULL;
+        pc = cx->hasfp() ? cx->regs().pc : NULL;
         if (!pc)
             return NULL;
         imacpc = cx->fp()->maybeImacropc();
@@ -1461,6 +1451,9 @@ JSContext::JSContext(JSRuntime *rt)
     compartment(NULL),
     stack(thisDuringConstruction()),
     busyArrays()
+#ifdef DEBUG
+    , stackIterAssertionEnabled(true)
+#endif
 {}
 
 JSContext::~JSContext()
@@ -1492,7 +1485,7 @@ void
 JSContext::resetCompartment()
 {
     JSObject *scopeobj;
-    if (stack.running()) {
+    if (stack.hasfp()) {
         scopeobj = &fp()->scopeChain();
     } else {
         scopeobj = globalObject;
@@ -1540,7 +1533,8 @@ JSContext::wrapPendingException()
 JSGenerator *
 JSContext::generatorFor(StackFrame *fp) const
 {
-    JS_ASSERT(stack.contains(fp) && fp->isGeneratorFrame());
+    JS_ASSERT(stack.containsSlow(fp));
+    JS_ASSERT(fp->isGeneratorFrame());
     JS_ASSERT(!fp->isFloatingGenerator());
     JS_ASSERT(!genStack.empty());
 
@@ -1717,6 +1711,17 @@ LeaveTrace(JSContext *cx)
 #ifdef JS_TRACER
     if (JS_ON_TRACE(cx))
         DeepBail(cx);
+#endif
+}
+
+bool
+CanLeaveTrace(JSContext *cx)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+#ifdef JS_TRACER
+    return JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit != NULL;
+#else
+    return false;
 #endif
 }
 

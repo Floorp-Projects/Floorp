@@ -3452,7 +3452,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -18395,7 +18395,7 @@ ctx.lineWidth = 250;
 ctx.lineCap = 'round';
 ctx.lineJoin = 'round';
 ctx.strokeRect(50, 25, 0, 0);
-todo_isPixel(ctx, 50,25, 0,0,0,0, 0);
+isPixel(ctx, 50,25, 0,0,0,0, 0);
 
 
 }

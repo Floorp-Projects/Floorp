@@ -71,29 +71,5 @@ ifndef DISABLE_XFORMS_HOOKS
 SHARED_LIBRARY_LIBS += ../src/xforms/$(LIB_PREFIX)accessibility_xforms_s.$(LIB_SUFFIX)
 endif
 
-EXTRA_DSO_LIBS = \
-	gkgfx \
-	thebes \
-	$(NULL)
-
-EXTRA_DSO_LDOPTS =           \
-	$(LIBS_DIR)              \
-	$(EXTRA_DSO_LIBS)        \
-	$(MOZ_UNICHARUTIL_LIBS)  \
-	$(MOZ_COMPONENT_LIBS)    \
-	$(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += \
-	oleaut32.lib \
-	version.lib \
-	ole32.lib \
-	$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 

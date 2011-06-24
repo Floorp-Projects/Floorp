@@ -139,7 +139,9 @@ endif
 repackage-zip: UNPACKAGE="$(ZIP_IN)"
 repackage-zip:  libs-$(AB_CD)
 # Adjust jar logs with the new locale (can't use sed -i because of bug 373784)
-	-$(PERL) -pi.old -e "s/en-US/$(AB_CD)/g" $(JARLOG_DIR)/*.jar.log
+	mkdir -p $(JARLOG_DIR_AB_CD)
+	-cp -r $(JARLOG_DIR)/en-US/*.jar.log $(JARLOG_DIR_AB_CD)
+	-$(PERL) -pi.old -e "s/en-US/$(AB_CD)/g" $(JARLOG_DIR_AB_CD)/*.jar.log
 # call a hook for apps to put their uninstall helper.exe into the package
 	$(UNINSTALLER_PACKAGE_HOOK)
 # copy xpi-stage over, but not install.rdf and chrome.manifest,

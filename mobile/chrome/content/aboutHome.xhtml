@@ -196,14 +196,13 @@
       let tabs = data.windows[0].tabs;
       for (let i=0; i<tabs.length; i++) {
         let tabData = tabs[i];
-        if ("entries" in tabData)
-          tabData = tabData.entries[0];
+        let tabEntry = tabData.entries[tabData.index - 1];
 
-        let url = tabData.url;
+        let url = tabEntry.url;
         if (url.indexOf("about:") == 0)
           continue;
 
-        let title = tabData.title;
+        let title = tabEntry.title;
         if (!title)
           continue;
 

@@ -61,7 +61,6 @@
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsILocalFile.h"
-#include "nsIPrefService.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
 

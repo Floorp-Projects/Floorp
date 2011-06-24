@@ -169,4 +169,4 @@ private:
   nsAutoArrayPtr<nsFramesetSpec>  mColSpecs; // parsed, non-computed dimensions
 };
 
-#endif nsHTMLFrameSetElement_h
+#endif // nsHTMLFrameSetElement_h

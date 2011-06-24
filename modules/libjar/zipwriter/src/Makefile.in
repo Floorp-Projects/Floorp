@@ -60,8 +60,3 @@ CPPSRCS = \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-EXTRA_DSO_LDOPTS += \
-  $(MOZ_COMPONENT_LIBS) \
-  $(ZLIB_LIBS) \
-  $(NULL)

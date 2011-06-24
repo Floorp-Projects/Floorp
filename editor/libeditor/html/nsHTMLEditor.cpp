@@ -473,10 +473,9 @@ nsHTMLEditor::RemoveEventListeners()
     return;
   }
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(piTarget);
+  nsCOMPtr<nsIDOMEventTarget> target = GetDOMEventTarget();
 
-  if (piTarget && target)
+  if (target)
   {
     // Both mMouseMotionListenerP and mResizeEventListenerP can be
     // registerd with other targets than the DOM event receiver that
@@ -489,8 +488,8 @@ nsHTMLEditor::RemoveEventListeners()
     {
       // mMouseMotionListenerP might be registerd either by IID or
       // name, unregister by both.
-      piTarget->RemoveEventListenerByIID(mMouseMotionListenerP,
-                                         NS_GET_IID(nsIDOMMouseMotionListener));
+      target->RemoveEventListenerByIID(mMouseMotionListenerP,
+                                       NS_GET_IID(nsIDOMMouseMotionListener));
 
       target->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
                                   mMouseMotionListenerP, PR_TRUE);
@@ -5826,15 +5825,15 @@ nsHTMLEditor::IsActiveInDOMWindow()
   return PR_TRUE;
 }
 
-already_AddRefed<nsPIDOMEventTarget>
-nsHTMLEditor::GetPIDOMEventTarget()
+already_AddRefed<nsIDOMEventTarget>
+nsHTMLEditor::GetDOMEventTarget()
 {
   // Don't use getDocument here, because we have no way of knowing
   // whether Init() was ever called.  So we need to get the document
   // ourselves, if it exists.
   NS_PRECONDITION(mDocWeak, "This editor has not been initialized yet");
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryReferent(mDocWeak.get());
-  return piTarget.forget();
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryReferent(mDocWeak.get());
+  return target.forget();
 }
 
 PRBool

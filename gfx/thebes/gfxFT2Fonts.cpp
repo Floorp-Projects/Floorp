@@ -42,9 +42,6 @@
 #include "gfxQtPlatform.h"
 #define gfxToolkitPlatform gfxQtPlatform
 #elif defined(XP_WIN)
-#ifdef WINCE
-#define SHGetSpecialFolderPathW SHGetSpecialFolderPath
-#endif
 #include "gfxWindowsPlatform.h"
 #define gfxToolkitPlatform gfxWindowsPlatform
 #include "gfxFT2FontList.h"
@@ -67,13 +64,15 @@
 #include "gfxAtoms.h"
 #include "nsTArray.h"
 #include "nsUnicodeRange.h"
-#include "nsIPrefService.h"
-#include "nsIPrefLocalizedString.h"
-#include "nsServiceManagerUtils.h"
 #include "nsCRT.h"
 
 #include "prlog.h"
 #include "prinit.h"
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+
 static PRLogModuleInfo *gFontLog = PR_NewLogModule("ft2fonts");
 
 static const char *sCJKLangGroup[] = {
@@ -258,31 +257,42 @@ FontEntry::ReadCMAP()
     // attempt this once, if errors occur leave a blank cmap
     mCmapInitialized = PR_TRUE;
 
+    AutoFallibleTArray<PRUint8,16384> buffer;
+    nsresult rv = GetFontTable(TTAG_cmap, buffer);
+    
+    if (NS_SUCCEEDED(rv)) {
+        PRPackedBool unicodeFont;
+        PRPackedBool symbolFont;
+        rv = gfxFontUtils::ReadCMAP(buffer.Elements(), buffer.Length(),
+                                    mCharacterMap, mUVSOffset,
+                                    unicodeFont, symbolFont);
+    }
+
+    mHasCmapTable = NS_SUCCEEDED(rv);
+    return rv;
+}
+
+nsresult
+FontEntry::GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer)
+{
     // Ensure existence of mFTFace
     CairoFontFace();
     NS_ENSURE_TRUE(mFTFace, NS_ERROR_FAILURE);
 
     FT_Error status;
     FT_ULong len = 0;
-    status = FT_Load_Sfnt_Table(mFTFace, TTAG_cmap, 0, nsnull, &len);
+    status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nsnull, &len);
     NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(len != 0, NS_ERROR_FAILURE);
 
-    AutoFallibleTArray<PRUint8,16384> buffer;
-    if (!buffer.AppendElements(len)) {
-        return NS_ERROR_FAILURE;
+    if (!aBuffer.SetLength(len)) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
-    PRUint8 *buf = buffer.Elements();
-
-    status = FT_Load_Sfnt_Table(mFTFace, TTAG_cmap, 0, buf, &len);
+    PRUint8 *buf = aBuffer.Elements();
+    status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, buf, &len);
     NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
 
-    PRPackedBool unicodeFont;
-    PRPackedBool symbolFont;
-    nsresult rv = gfxFontUtils::ReadCMAP(buf, len, mCharacterMap, mUVSOffset,
-                                         unicodeFont, symbolFont);
-    mHasCmapTable = NS_SUCCEEDED(rv);
-    return rv;
+    return NS_OK;
 }
 
 FontEntry *
@@ -510,25 +520,9 @@ void gfxFT2FontGroup::GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& aFontEn
     key.AppendInt(mStyle.weight);
 
     if (!platform->GetPrefFontEntries(key, &aFontEntryList)) {
-        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (!prefs)
-            return;
-
-        nsCOMPtr<nsIPrefBranch> prefBranch;
-        prefs->GetBranch(0, getter_AddRefs(prefBranch));
-        if (!prefBranch)
-            return;
-
+        NS_ENSURE_TRUE(Preferences::GetRootBranch(), );
         // Add the CJK pref fonts from accept languages, the order should be same order
-        nsCAutoString list;
-        nsCOMPtr<nsIPrefLocalizedString> val;
-        nsresult rv = prefBranch->GetComplexValue("intl.accept_languages", NS_GET_IID(nsIPrefLocalizedString),
-                                                  getter_AddRefs(val));
-        if (NS_SUCCEEDED(rv) && val) {
-            nsAutoString temp;
-            val->ToString(getter_Copies(temp));
-            LossyCopyUTF16toASCII(temp, list);
-        }
+        nsAdoptingCString list = Preferences::GetLocalizedCString("intl.accept_languages");
         if (!list.IsEmpty()) {
             const char kComma = ',';
             const char *p, *p_end;
@@ -721,7 +715,6 @@ gfxFT2Font::AddRange(gfxTextRun *aTextRun, const PRUnichar *str, PRUint32 offset
 
     FT_UInt spaceGlyph = GetSpaceGlyph();
 
-    aTextRun->AddGlyphRun(this, offset);
     for (PRUint32 i = 0; i < len; i++) {
         PRUint32 ch = str[offset + i];
 

@@ -1065,7 +1065,7 @@ nsWebSocket::SetProtocol(const nsString& aProtocol)
   PRUint32 length = aProtocol.Length();
   PRUint32 i;
   for (i = 0; i < length; ++i) {
-    if (aProtocol[i] < static_cast<PRUnichar>(0x0020) ||
+    if (aProtocol[i] < static_cast<PRUnichar>(0x0021) ||
         aProtocol[i] > static_cast<PRUnichar>(0x007E)) {
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
@@ -1127,10 +1127,10 @@ nsWebSocket::UpdateMustKeepAlive()
 
   if (mKeepingAlive && !shouldKeepAlive) {
     mKeepingAlive = PR_FALSE;
-    static_cast<nsPIDOMEventTarget*>(this)->Release();
+    static_cast<nsIDOMEventTarget*>(this)->Release();
   } else if (!mKeepingAlive && shouldKeepAlive) {
     mKeepingAlive = PR_TRUE;
-    static_cast<nsPIDOMEventTarget*>(this)->AddRef();
+    static_cast<nsIDOMEventTarget*>(this)->AddRef();
   }
 }
 
@@ -1140,24 +1140,9 @@ nsWebSocket::DontKeepAliveAnyMore()
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   if (mKeepingAlive) {
     mKeepingAlive = PR_FALSE;
-    static_cast<nsPIDOMEventTarget*>(this)->Release();
+    static_cast<nsIDOMEventTarget*>(this)->Release();
   }
   mCheckMustKeepAlive = PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsWebSocket::AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener* aListener,
-                              PRBool aUseCapture)
-{
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  nsresult rv = nsDOMEventTargetHelper::AddEventListener(aType,
-                                                         aListener,
-                                                         aUseCapture);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateMustKeepAlive();
-  }
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -1300,7 +1285,9 @@ nsWebSocket::Close()
     // before calling it
     nsRefPtr<nsWebSocket> kungfuDeathGrip = this;
 
-    mConnection->FailConnection();
+    if (mConnection) {
+      mConnection->FailConnection();
+    }
     return NS_OK;
   }
 

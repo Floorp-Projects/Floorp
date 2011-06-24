@@ -68,8 +68,8 @@ bool SendSyncMessageToParent(void* aCallbackData,
     async->Run();
   }
   if (tabChild->mChromeMessageManager) {
-    tabChild->mChromeMessageManager->ReceiveMessage(owner, aMessage, PR_TRUE,
-                                                    aJSON, nsnull, aJSONRetVal);
+    nsRefPtr<nsFrameMessageManager> mm = tabChild->mChromeMessageManager;
+    mm->ReceiveMessage(owner, aMessage, PR_TRUE, aJSON, nsnull, aJSONRetVal);
   }
   return true;
 }
@@ -85,9 +85,9 @@ public:
   {
     mTabChild->mASyncMessages.RemoveElement(this);
     if (mTabChild->mChromeMessageManager) {
-      mTabChild->mChromeMessageManager->ReceiveMessage(mTabChild->mOwner, mMessage,
-                                                       PR_FALSE,
-                                                       mJSON, nsnull, nsnull);
+      nsRefPtr<nsFrameMessageManager> mm = mTabChild->mChromeMessageManager;
+      mm->ReceiveMessage(mTabChild->mOwner, mMessage, PR_FALSE,
+                         mJSON, nsnull, nsnull);
     }
     return NS_OK;
   }
@@ -309,7 +309,7 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
                          nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
 
   nsISupports* scopeSupports =
-    NS_ISUPPORTS_CAST(nsPIDOMEventTarget*, this);
+    NS_ISUPPORTS_CAST(nsIDOMEventTarget*, this);
   JS_SetContextPrivate(cx, scopeSupports);
 
   nsresult rv =

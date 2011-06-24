@@ -345,8 +345,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsHtml5OtherDocUpdate update(node->GetOwnerDoc(),
                                    aBuilder->GetDocument());
 
-      nsIDocument* document = node->GetCurrentDoc();
-
       PRInt32 len = attributes->getLength();
       for (PRInt32 i = len; i > 0;) {
         --i;
@@ -377,7 +375,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
       
       nsCOMPtr<nsIContent> newContent;
-      nsCOMPtr<nsINodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->GetNodeInfo(name, nsnull, ns);
+      nsCOMPtr<nsINodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->
+        GetNodeInfo(name, nsnull, ns, nsIDOMNode::ELEMENT_NODE);
       NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
       NS_NewElement(getter_AddRefs(newContent),
                     ns, nodeInfo.forget(),
@@ -418,7 +417,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
         nsCOMPtr<nsINodeInfo> optionNodeInfo = 
           aBuilder->GetNodeInfoManager()->GetNodeInfo(nsHtml5Atoms::option, 
                                                       nsnull, 
-                                                      kNameSpaceID_XHTML);
+                                                      kNameSpaceID_XHTML,
+                                                      nsIDOMNode::ELEMENT_NODE);
                                                       
         for (PRUint32 i = 0; i < theContent.Length(); ++i) {
           nsCOMPtr<nsIContent> optionElt;

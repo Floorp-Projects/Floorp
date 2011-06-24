@@ -39,10 +39,6 @@ function test() {
     tests.push([tab2, tab1]);
     tests.push([tab1]);
 
-    // test reordering of empty groups - removes the last tab and causes
-    // the groupItem to close
-    tests.push([]);
-
     while (tests.length) {
       let test = tests.shift();
 
@@ -63,7 +59,7 @@ function test() {
       groupItem.reorderTabsBasedOnTabItemOrder();
     }
 
-    testMoveBetweenGroups();
+    closeGroupItem(groupItem, testMoveBetweenGroups);
   }
 
   let testMoveBetweenGroups = function () {

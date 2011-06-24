@@ -239,16 +239,26 @@ function check_test_3(install) {
 
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                  "addon2@tests.mozilla.org"], function([a1, a2]) {
-      // Should not have installed the new add-on
+      // Should not have installed the new add-on but it should still be
+      // pending install
       do_check_neq(a1, null);
       do_check_eq(a2, null);
 
-      a1.uninstall();
-
       restartManager();
-      shutdownManager();
 
-      run_test_4();
+      AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                   "addon2@tests.mozilla.org"], function([a1, a2]) {
+        // Should have installed the new add-on
+        do_check_eq(a1, null);
+        do_check_neq(a2, null);
+
+        a2.uninstall();
+
+        restartManager();
+        shutdownManager();
+
+        run_test_4();
+      });
     });
   });
 }
