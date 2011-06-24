@@ -5773,12 +5773,7 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::Normalize()
 {
-  for (PRUint32 i = 0; i < mChildren.ChildCount(); ++i) {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mChildren.ChildAt(i)));
-    node->Normalize();
-  }
-
-  return NS_OK;
+  return nsIDocument::Normalize();
 }
 
 NS_IMETHODIMP
