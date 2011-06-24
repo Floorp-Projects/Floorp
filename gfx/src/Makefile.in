@@ -58,16 +58,7 @@ XPIDLSRCS = \
 	gfxIFormats.idl \
 	gfxidltypes.idl \
 	$(NULL)
-
-EXPORTS_NAMESPACES = mozilla
-
-EXPORTS_mozilla = \
-	BaseMargin.h \
-	BasePoint.h \
-	BaseRect.h \
-	BaseSize.h \
-	$(NULL)
-
+        
 EXPORTS	= \
 	gfxCore.h \
 	gfxCrashReporterUtils.h \
@@ -93,6 +84,8 @@ EXPORTS	= \
 	$(NULL)
 
 ifdef MOZ_X11
+EXPORTS_NAMESPACES = mozilla
+
 EXPORTS_mozilla	+= X11Util.h
 endif
 

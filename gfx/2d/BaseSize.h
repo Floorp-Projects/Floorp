@@ -35,10 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_BASEPOINT_H_
-#define MOZILLA_BASEPOINT_H_
+#ifndef MOZILLA_GFX_BASESIZE_H_
+#define MOZILLA_GFX_BASESIZE_H_
 
 namespace mozilla {
+namespace gfx {
 
 /**
  * Do not use this class directly. Subclass it, pass that subclass as the
@@ -46,55 +47,57 @@ namespace mozilla {
  * cast 'this' to 'Sub*'.
  */
 template <class T, class Sub>
-struct BasePoint {
-  T x, y;
+struct BaseSize {
+  T width, height;
 
   // Constructors
-  BasePoint() : x(0), y(0) {}
-  BasePoint(T aX, T aY) : x(aX), y(aY) {}
+  BaseSize() : width(0), height(0) {}
+  BaseSize(T aWidth, T aHeight) : width(aWidth), height(aHeight) {}
 
-  void MoveTo(T aX, T aY) { x = aX; y = aY; }
-  void MoveBy(T aDx, T aDy) { x += aDx; y += aDy; }
+  void SizeTo(T aWidth, T aHeight) { width = aWidth; height = aHeight; }
 
   // Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
 
-  bool operator==(const Sub& aPoint) const {
-    return x == aPoint.x && y == aPoint.y;
+  bool operator==(const Sub& aSize) const {
+    return width == aSize.width && height == aSize.height;
   }
-  bool operator!=(const Sub& aPoint) const {
-    return x != aPoint.x || y != aPoint.y;
+  bool operator!=(const Sub& aSize) const {
+    return width != aSize.width || height != aSize.height;
+  }
+  bool operator<=(const Sub& aSize) const {
+    return width <= aSize.width && height <= aSize.height;
+  }
+  bool operator<(const Sub& aSize) const {
+    return *this <= aSize && *this != aSize;
   }
 
-  Sub operator+(const Sub& aPoint) const {
-    return Sub(x + aPoint.x, y + aPoint.y);
+  Sub operator+(const Sub& aSize) const {
+    return Sub(width + aSize.width, height + aSize.height);
   }
-  Sub operator-(const Sub& aPoint) const {
-    return Sub(x - aPoint.x, y - aPoint.y);
+  Sub operator-(const Sub& aSize) const {
+    return Sub(width - aSize.width, height - aSize.height);
   }
-  Sub& operator+=(const Sub& aPoint) {
-    x += aPoint.x;
-    y += aPoint.y;
+  Sub& operator+=(const Sub& aSize) {
+    width += aSize.width;
+    height += aSize.height;
     return *static_cast<Sub*>(this);
   }
-  Sub& operator-=(const Sub& aPoint) {
-    x -= aPoint.x;
-    y -= aPoint.y;
+  Sub& operator-=(const Sub& aSize) {
+    width -= aSize.width;
+    height -= aSize.height;
     return *static_cast<Sub*>(this);
   }
 
   Sub operator*(T aScale) const {
-    return Sub(x * aScale, y * aScale);
+    return Sub(width * aScale, height * aScale);
   }
   Sub operator/(T aScale) const {
-    return Sub(x / aScale, y / aScale);
-  }
-
-  Sub operator-() const {
-    return Sub(-x, -y);
+    return Sub(width / aScale, height / aScale);
   }
 };
 
 }
+}
 
-#endif /* MOZILLA_BASEPOINT_H_ */
+#endif /* MOZILLA_GFX_BASESIZE_H_ */
