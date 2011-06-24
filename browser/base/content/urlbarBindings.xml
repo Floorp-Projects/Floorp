@@ -202,7 +202,7 @@
           let textNode = this.editor.rootElement.firstChild;
           let value = textNode.textContent;
 
-          let protocol = value.match(/^[a-z]+:/);
+          let protocol = value.match(/^[a-z\d.+\-]+:/);
           if (protocol &&
               ["http:", "https:", "ftp:"].indexOf(protocol[0]) == -1)
             return;
