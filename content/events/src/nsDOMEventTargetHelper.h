@@ -43,7 +43,6 @@
 #include "nsAutoPtr.h"
 #include "nsPIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMEventTarget.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
@@ -67,17 +66,15 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mListener;
 };
 
-class nsDOMEventTargetHelper : public nsIDOMEventTarget,
-                               public nsIDOMNSEventTarget
+class nsDOMEventTargetHelper : public nsIDOMEventTarget
 {
 public:
-  nsDOMEventTargetHelper() : mLang(nsIProgrammingLanguage::JAVASCRIPT) {}
+  nsDOMEventTargetHelper() {}
   virtual ~nsDOMEventTargetHelper() {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMEventTargetHelper,
                                            nsPIDOMEventTarget)
 
-  NS_DECL_NSIDOMNSEVENTTARGET
   NS_DECL_NSIDOMEVENTTARGET
 
   PRBool HasListenersFor(const nsAString& aType)
@@ -104,7 +101,6 @@ public:
   }
 protected:
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
-  PRUint32 mLang;
   // These may be null (native callers or xpcshell).
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindow>    mOwner; // Inner window.

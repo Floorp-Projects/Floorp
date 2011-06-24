@@ -1694,7 +1694,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMEventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3EventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSEventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer_MOZILLA_2_0_BRANCH)
@@ -6294,14 +6293,6 @@ nsDocument::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
 }
 
 nsresult
-nsDocument::AddEventListener(const nsAString& aType,
-                             nsIDOMEventListener* aListener,
-                             PRBool aUseCapture)
-{
-  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 0);
-}
-
-nsresult
 nsDocument::RemoveEventListener(const nsAString& aType,
                                 nsIDOMEventListener* aListener,
                                 PRBool aUseCapture)
@@ -7681,20 +7672,6 @@ nsDocument::RefreshLinkHrefs()
   for (LinkArray::size_type i = 0; i < linksToNotify.Length(); i++) {
     linksToNotify[i]->ResetLinkState(true);
   }
-}
-
-NS_IMETHODIMP
-nsDocument::GetScriptTypeID(PRUint32 *aScriptType)
-{
-    NS_ERROR("No default script type here - ask some element");
-    return nsIProgrammingLanguage::UNKNOWN;
-}
-
-NS_IMETHODIMP
-nsDocument::SetScriptTypeID(PRUint32 aScriptType)
-{
-    NS_ERROR("Can't change default script type for a document");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult

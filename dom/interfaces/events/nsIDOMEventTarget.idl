@@ -69,7 +69,7 @@ interface nsIDOMEventListener;
 interface nsIDOMEventGroup;
 interface nsIDOMEvent;
 
-[scriptable, builtinclass, uuid(d56b0ac7-16e0-4fda-8255-06158d475606)]
+[scriptable, builtinclass, uuid(1797d5a4-b12a-428d-9eef-a0e13839728c)]
 interface nsIDOMEventTarget : nsISupports
 {
   /**
@@ -96,10 +96,25 @@ interface nsIDOMEventTarget : nsISupports
    *                     in the tree. Events which are bubbling upward 
    *                     through the tree will not trigger an 
    *                     EventListener designated to use capture.
+   * @param   wantsUntrusted If false, the listener will not receive any
+   *                         untrusted events (see above), if true, the
+   *                         listener will receive events whether or not
+   *                         they're trusted
    */
-  [noscript] void          addEventListener(in DOMString type,
-                                            in nsIDOMEventListener listener,
-                                            in boolean useCapture);
+  [optional_argc] void addEventListener(in DOMString type,
+                                        in nsIDOMEventListener listener,
+                                        [optional] in boolean useCapture,
+                                        [optional] in boolean wantsUntrusted);
+
+%{C++
+  // non-virtual so it won't affect the vtable
+  nsresult AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener* aListener,
+                            PRBool aUseCapture)
+  {
+    return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
+  }
+%}
 
   /**
    * This method allows the removal of event listeners from the event 

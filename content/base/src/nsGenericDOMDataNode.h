@@ -87,16 +87,6 @@ public:
 
   NS_DECL_NSIDOMEVENTTARGET
 
-  nsresult AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener *aListener,
-                            PRBool aUseCapture,
-                            PRBool aWantsUntrusted,
-                            PRUint8 optional_argc)
-  {
-    return nsIContent::AddEventListener(aType, aListener, aUseCapture,
-                                        aWantsUntrusted, optional_argc);
-  }
-
   nsGenericDOMDataNode(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsGenericDOMDataNode();
 

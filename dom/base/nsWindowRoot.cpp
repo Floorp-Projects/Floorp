@@ -87,19 +87,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWindowRoot)
   NS_INTERFACE_MAP_ENTRY(nsPIWindowRoot)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsWindowRoot)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsWindowRoot)
 
 NS_IMPL_DOMTARGET_DEFAULTS(nsWindowRoot)
-
-NS_IMETHODIMP
-nsWindowRoot::AddEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
-{
-  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
-}
 
 NS_IMETHODIMP
 nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
@@ -258,20 +251,6 @@ nsPIDOMWindow*
 nsWindowRoot::GetWindow()
 {
   return mWindow;
-}
-
-NS_IMETHODIMP
-nsWindowRoot::GetScriptTypeID(PRUint32 *aScriptType)
-{
-    NS_ERROR("No default script type here - ask some element");
-    return nsIProgrammingLanguage::UNKNOWN;
-}
-
-NS_IMETHODIMP
-nsWindowRoot::SetScriptTypeID(PRUint32 aScriptType)
-{
-    NS_ERROR("Can't change default script type for a document");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult

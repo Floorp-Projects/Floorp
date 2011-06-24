@@ -129,8 +129,6 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
                                  nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
@@ -633,10 +631,13 @@ NS_IMPL_DOMTARGET_DEFAULTS(nsGenericDOMDataNode)
 
 NS_IMETHODIMP
 nsGenericDOMDataNode::AddEventListener(const nsAString& aType,
-                                       nsIDOMEventListener *aListener,
-                                       PRBool useCapture)
+                                       nsIDOMEventListener* aListener,
+                                       PRBool aUseCapture,
+                                       PRBool aWantsUntrusted,
+                                       PRUint8 optional_argc)
 {
-  return AddEventListener(aType, aListener, useCapture, PR_FALSE, 1);
+  return nsIContent::AddEventListener(aType, aListener, aUseCapture,
+                                      aWantsUntrusted, optional_argc);
 }
 
 NS_IMETHODIMP

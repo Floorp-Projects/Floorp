@@ -79,7 +79,6 @@ public:
                                            nsDOMEventTargetWrapperCache)
   NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
-  NS_FORWARD_NSIDOMNSEVENTTARGET(nsDOMEventTargetHelper::)
 
 protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadListener;
@@ -104,7 +103,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
   NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
-  NS_FORWARD_NSIDOMNSEVENTTARGET(nsXHREventTarget::)
   NS_DECL_NSIXMLHTTPREQUESTUPLOAD
 
   PRBool HasListeners()
@@ -162,7 +160,6 @@ public:
                        PRUint32 argc, jsval* argv);
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
-  NS_FORWARD_NSIDOMNSEVENTTARGET(nsXHREventTarget::)
 
   // This creates a trusted readystatechange event, which is not cancelable and
   // doesn't bubble.
