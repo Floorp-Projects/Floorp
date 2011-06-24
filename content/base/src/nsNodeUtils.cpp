@@ -45,7 +45,7 @@
 #include "nsIMutationObserver2.h"
 #include "nsIDocument.h"
 #include "nsIDOMUserDataHandler.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIAttribute.h"
 #include "nsIXPConnect.h"
 #include "nsGenericElement.h"
@@ -287,7 +287,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   if (aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
 #ifdef DEBUG
     if (nsContentUtils::IsInitialized()) {
-      nsIEventListenerManager* manager =
+      nsEventListenerManager* manager =
         nsContentUtils::GetListenerManager(aNode, PR_FALSE);
       if (!manager) {
         NS_ERROR("Huh, our bit says we have a listener manager list, "
@@ -559,7 +559,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
 
       nsPIDOMWindow* window = newDoc->GetInnerWindow();
       if (window) {
-        nsIEventListenerManager* elm = aNode->GetListenerManager(PR_FALSE);
+        nsEventListenerManager* elm = aNode->GetListenerManager(PR_FALSE);
         if (elm) {
           window->SetMutationListeners(elm->MutationListenerBits());
           if (elm->MayHavePaintEventListener()) {

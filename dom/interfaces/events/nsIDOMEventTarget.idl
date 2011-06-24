@@ -46,6 +46,7 @@ class nsPresContext;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 struct JSContext;
+class nsEventListenerManager;
 %}
 
 /**
@@ -62,8 +63,8 @@ struct JSContext;
 [ptr] native nsPresContextPtr(nsPresContext);
 [ptr] native nsEventStatusPtr(nsEventStatus);
 [ptr] native JSContextPtr(JSContext);
+[ptr] native nsEventListenerManagerPtr(nsEventListenerManager);
 
-interface nsIEventListenerManager;
 interface nsIScriptContext;
 interface nsIDOMEventListener;
 interface nsIDOMEventGroup;
@@ -243,7 +244,7 @@ interface nsIDOMEventTarget : nsISupports
    *                   one already exists.
    */
   [notxpcom, nostdcall]
-  nsIEventListenerManager GetListenerManager(in boolean aMayCreate);
+  nsEventListenerManagerPtr GetListenerManager(in boolean aMayCreate);
 
   /**
    * Add an event listener for nsIID.

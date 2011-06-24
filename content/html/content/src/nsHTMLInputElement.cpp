@@ -89,7 +89,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsMutationEvent.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 
 #include "nsRuleData.h"
 

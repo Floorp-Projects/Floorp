@@ -1851,7 +1851,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   // Traverse all nsDocument nsCOMPtrs.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptGlobalObject)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mListenerManager,
+                                                  nsEventListenerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDOMStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptLoader)
 
@@ -6209,17 +6210,13 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   return nsINode::GetOwnerDocument(aOwnerDocument);
 }
 
-nsIEventListenerManager*
+nsEventListenerManager*
 nsDocument::GetListenerManager(PRBool aCreateIfNotFound)
 {
-  if (mListenerManager || !aCreateIfNotFound) {
-    return mListenerManager;
+  if (!mListenerManager && aCreateIfNotFound) {
+    mListenerManager =
+      new nsEventListenerManager(static_cast<nsIDOMEventTarget*>(this));
   }
-
-  nsresult rv = NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  mListenerManager->SetListenerTarget(static_cast<nsIDocument *>(this));
 
   return mListenerManager;
 }
@@ -6246,7 +6243,7 @@ nsDocument::AddGroupedEventListener(const nsAString& aType,
                                     PRBool aUseCapture,
                                     nsIDOMEventGroup *aEvtGrp)
 {
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
@@ -7001,7 +6998,7 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
   // Check our event listener manager for unload/beforeunload listeners.
   nsCOMPtr<nsIDOMEventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
   if (piTarget) {
-    nsIEventListenerManager* manager =
+    nsEventListenerManager* manager =
       piTarget->GetListenerManager(PR_FALSE);
     if (manager && manager->HasUnloadListeners()) {
       return PR_FALSE;

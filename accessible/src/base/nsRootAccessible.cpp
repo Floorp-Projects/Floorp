@@ -65,7 +65,7 @@
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULPopupElement.h"
 #include "nsIDocument.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIFrame.h"
 #include "nsIMenuFrame.h"
 #include "nsIHTMLDocument.h"

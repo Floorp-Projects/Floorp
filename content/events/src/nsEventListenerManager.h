@@ -38,10 +38,13 @@
 #ifndef nsEventListenerManager_h__
 #define nsEventListenerManager_h__
 
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMEventListener.h"
+#include "nsAutoPtr.h"
+#include "nsCOMArray.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsHashtable.h"
 #include "nsIScriptContext.h"
@@ -56,6 +59,8 @@ struct nsPoint;
 struct EventTypeData;
 class nsEventTargetChainItem;
 class nsPIDOMWindow;
+class nsCxPusher;
+class nsIEventListenerInfo;
 
 typedef struct {
   nsRefPtr<nsIDOMEventListener> mListener;
@@ -71,16 +76,21 @@ typedef struct {
  * Event listener manager
  */
 
-class nsEventListenerManager : public nsIEventListenerManager,
-                               public nsIDOMEventTarget,
-                               public nsIDOM3EventTarget
+class nsEventListenerManager
 {
 
 public:
-  nsEventListenerManager();
+  nsEventListenerManager(nsISupports* aTarget);
   virtual ~nsEventListenerManager();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_INLINE_DECL_REFCOUNTING(nsEventListenerManager)
+
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsEventListenerManager)
+
+  NS_IMETHOD RemoveEventListener(const nsAString& aType,
+                                 nsIDOMEventListener* aListener,
+                                 PRBool aUseCapture);
+  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);
 
   /**
   * Sets events listeners of all types. 
@@ -156,8 +166,6 @@ public:
 
   NS_IMETHOD Disconnect();
 
-  NS_IMETHOD SetListenerTarget(nsISupports* aTarget);
-
   NS_IMETHOD HasMutationListeners(PRBool* aListener);
 
   NS_IMETHOD GetSystemEventGroupLM(nsIDOMEventGroup** aGroup);
@@ -174,9 +182,6 @@ public:
 
   static PRUint32 GetIdentifierForEvent(nsIAtom* aEvent);
 
-  // nsIDOMEventTarget
-  NS_DECL_NSIDOMEVENTTARGET
-
   // nsIDOM3EventTarget
   NS_DECL_NSIDOM3EVENTTARGET
 
@@ -184,8 +189,23 @@ public:
 
   static nsIDOMEventGroup* GetSystemEventGroup();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventListenerManager,
-                                           nsIEventListenerManager)
+  /**
+   * Returns PR_TRUE if there may be a paint event listener registered,
+   * PR_FALSE if there definitely isn't.
+   */
+  PRBool MayHavePaintEventListener() { return mMayHavePaintEventListener; }
+
+  /**
+   * Returns PR_TRUE if there may be a MozAudioAvailable event listener registered,
+   * PR_FALSE if there definitely isn't.
+   */
+  PRBool MayHaveAudioAvailableEventListener() { return mMayHaveAudioAvailableEventListener; }
+
+  /**
+   * Returns PR_TRUE if there may be a touch event listener registered,
+   * PR_FALSE if there definitely isn't.
+   */
+  PRBool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
 
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
@@ -225,6 +245,14 @@ protected:
   nsresult GetDOM2EventGroup(nsIDOMEventGroup** aGroup);
   PRBool ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent);
   nsPIDOMWindow* GetInnerWindowForTarget();
+
+  PRUint32 mMayHavePaintEventListener : 1;
+  PRUint32 mMayHaveMutationListeners : 1;
+  PRUint32 mMayHaveCapturingListeners : 1;
+  PRUint32 mMayHaveSystemGroupListeners : 1;
+  PRUint32 mMayHaveAudioAvailableEventListener : 1;
+  PRUint32 mMayHaveTouchEventListener : 1;
+  PRUint32 mNoListenerForEvent : 26;
 
   nsAutoTObserverArray<nsListenerStruct, 2> mListeners;
   nsISupports*                              mTarget;  //WEAK

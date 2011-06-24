@@ -74,7 +74,7 @@
 #include "mozilla/Preferences.h"
 
 // Other Classes
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsEscape.h"
 #include "nsStyleCoord.h"
 #include "nsMimeTypeArray.h"
@@ -1370,7 +1370,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOuterWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpenerScriptPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mListenerManager,
+                                                  nsEventListenerManager)
 
   for (nsTimeout* timeout = tmp->FirstTimeout();
        tmp->IsTimeout(timeout);
@@ -7257,7 +7258,7 @@ nsGlobalWindow::AddGroupedEventListener(const nsAString & aType,
                           (aType, aListener, aUseCapture, aEvtGrp),
                           NS_ERROR_NOT_AVAILABLE);
 
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
@@ -7310,7 +7311,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
@@ -7327,7 +7328,7 @@ nsresult
 nsGlobalWindow::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                       const nsIID& aIID)
 {
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
   return manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
@@ -7347,24 +7348,14 @@ nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
   return NS_ERROR_FAILURE;
 }
 
-nsIEventListenerManager*
+nsEventListenerManager*
 nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound)
 {
   FORWARD_TO_INNER_CREATE(GetListenerManager, (aCreateIfNotFound), nsnull);
 
-  if (!mListenerManager) {
-    if (!aCreateIfNotFound) {
-      return nsnull;
-    }
-
-    static NS_DEFINE_CID(kEventListenerManagerCID,
-                         NS_EVENTLISTENERMANAGER_CID);
-
-    mListenerManager = do_CreateInstance(kEventListenerManagerCID);
-    if (mListenerManager) {
-      mListenerManager->SetListenerTarget(
-        static_cast<nsIDOMEventTarget*>(this));
-    }
+  if (!mListenerManager && aCreateIfNotFound) {
+    mListenerManager =
+      new nsEventListenerManager(static_cast<nsIDOMEventTarget*>(this));
   }
 
   return mListenerManager;
@@ -7373,7 +7364,7 @@ nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound)
 nsresult
 nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
   return manager->GetSystemEventGroupLM(aGroup);
 }

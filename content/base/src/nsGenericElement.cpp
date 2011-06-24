@@ -54,7 +54,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMText.h"
 #include "nsIContentIterator.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsFocusManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
@@ -960,7 +960,7 @@ nsINode::AddEventListener(const nsAString& aType,
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
                "explicit by making aOptionalArgc non-zero.");
 
-  nsIEventListenerManager* listener_manager = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* listener_manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(listener_manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
@@ -980,11 +980,9 @@ nsINode::RemoveEventListener(const nsAString& aType,
                              nsIDOMEventListener* aListener,
                              PRBool aUseCapture)
 {
-  nsCOMPtr<nsIDOMEventTarget> event_target =
-    do_QueryInterface(GetListenerManager(PR_TRUE));
-  NS_ENSURE_STATE(event_target);
-
-  return event_target->RemoveEventListener(aType, aListener, aUseCapture);
+  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->RemoveEventListener(aType, aListener, aUseCapture);
 }
 
 nsresult
@@ -998,10 +996,9 @@ nsINode::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 nsresult
 nsINode::DispatchEvent(nsIDOMEvent *aEvent, PRBool* aRetVal)
 {
-  nsCOMPtr<nsIDOMEventTarget> target =
-    do_QueryInterface(GetListenerManager(PR_TRUE));
-  NS_ENSURE_STATE(target);
-  return target->DispatchEvent(aEvent, aRetVal);
+  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->DispatchEvent(aEvent, aRetVal);
 }
 
 nsresult
@@ -1024,7 +1021,7 @@ nsresult
 nsINode::AddEventListenerByIID(nsIDOMEventListener *aListener,
                                const nsIID& aIID)
 {
-  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elm);
   return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
@@ -1033,13 +1030,13 @@ nsresult
 nsINode::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                   const nsIID& aIID)
 {
-  nsIEventListenerManager* elm = GetListenerManager(PR_FALSE);
+  nsEventListenerManager* elm = GetListenerManager(PR_FALSE);
   return elm ?
     elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE) :
     NS_OK;
 }
 
-nsIEventListenerManager*
+nsEventListenerManager*
 nsINode::GetListenerManager(PRBool aCreateIfNotFound)
 {
   return nsContentUtils::GetListenerManager(this, aCreateIfNotFound);
@@ -1048,7 +1045,7 @@ nsINode::GetListenerManager(PRBool aCreateIfNotFound)
 nsresult
 nsINode::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
 {
-  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elm = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elm);
   return elm->GetSystemEventGroupLM(aGroup);
 }
@@ -2120,15 +2117,6 @@ nsDOMEventRTTearoff::LastRelease()
   delete this;
 }
 
-nsresult
-nsDOMEventRTTearoff::GetDOM3EventTarget(nsIDOM3EventTarget **aTarget)
-{
-  nsIEventListenerManager* listener_manager =
-    mNode->GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(listener_manager);
-  return CallQueryInterface(listener_manager, aTarget);
-}
-
 // nsIDOM3EventTarget
 NS_IMETHODIMP
 nsDOMEventRTTearoff::AddGroupedEventListener(const nsAString& aType,
@@ -2136,12 +2124,9 @@ nsDOMEventRTTearoff::AddGroupedEventListener(const nsAString& aType,
                                              PRBool aUseCapture,
                                              nsIDOMEventGroup *aEvtGrp)
 {
-  nsCOMPtr<nsIDOM3EventTarget> event_target;
-  nsresult rv = GetDOM3EventTarget(getter_AddRefs(event_target));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return event_target->AddGroupedEventListener(aType, aListener, aUseCapture,
-                                               aEvtGrp);
+  nsEventListenerManager* elm = mNode->GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->AddGroupedEventListener(aType, aListener, aUseCapture, aEvtGrp);
 }
 
 NS_IMETHODIMP
@@ -2150,12 +2135,10 @@ nsDOMEventRTTearoff::RemoveGroupedEventListener(const nsAString& aType,
                                                 PRBool aUseCapture,
                                                 nsIDOMEventGroup *aEvtGrp)
 {
-  nsCOMPtr<nsIDOM3EventTarget> event_target;
-  nsresult rv = GetDOM3EventTarget(getter_AddRefs(event_target));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return event_target->RemoveGroupedEventListener(aType, aListener,
-                                                  aUseCapture, aEvtGrp);
+  nsEventListenerManager* elm = mNode->GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(elm);
+  return elm->RemoveGroupedEventListener(aType, aListener, aUseCapture,
+                                         aEvtGrp);
 }
 
 NS_IMETHODIMP
@@ -4453,7 +4436,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
   NS_PRECONDITION(aEventName, "Must have event name!");
   nsCOMPtr<nsISupports> target;
   PRBool defer = PR_TRUE;
-  nsCOMPtr<nsIEventListenerManager> manager;
+  nsRefPtr<nsEventListenerManager> manager;
 
   GetEventListenerManagerForAttr(getter_AddRefs(manager),
                                  getter_AddRefs(target),
@@ -4734,7 +4717,7 @@ nsGenericElement::SetMappedAttribute(nsIDocument* aDocument,
 }
 
 nsresult
-nsGenericElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
+nsGenericElement::GetEventListenerManagerForAttr(nsEventListenerManager** aManager,
                                                  nsISupports** aTarget,
                                                  PRBool* aDefer)
 {

@@ -50,7 +50,7 @@
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMDocument.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -392,7 +392,7 @@ nsAccDocManager::AddListeners(nsIDocument *aDocument,
 {
   nsPIDOMWindow *window = aDocument->GetWindow();
   nsIDOMEventTarget *target = window->GetChromeEventHandler();
-  nsIEventListenerManager* elm = target->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elm = target->GetListenerManager(PR_TRUE);
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
                               NS_EVENT_FLAG_CAPTURE, nsnull);
 

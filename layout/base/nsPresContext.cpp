@@ -86,7 +86,7 @@
 #include "gfxPlatform.h"
 #include "nsCSSRules.h"
 #include "nsFontFaceLoader.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsStyleStructInlines.h"
 #include "nsIAppShell.h"
 #include "prenv.h"
@@ -2070,7 +2070,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (!parentTarget)
     return PR_FALSE;
 
-  nsIEventListenerManager* manager = nsnull;
+  nsEventListenerManager* manager = nsnull;
   if ((manager = parentTarget->GetListenerManager(PR_FALSE)) &&
       manager->MayHavePaintEventListener()) {
     return PR_TRUE;

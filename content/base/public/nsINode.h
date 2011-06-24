@@ -59,7 +59,7 @@ class nsIPresShell;
 class nsEventChainVisitor;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
-class nsIEventListenerManager;
+class nsEventListenerManager;
 class nsIPrincipal;
 class nsIMutationObserver;
 class nsChildContentList;
