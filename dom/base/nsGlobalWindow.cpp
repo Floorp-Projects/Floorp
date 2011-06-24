@@ -1335,7 +1335,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageIndexedDB)
@@ -7246,59 +7245,6 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* aRetVal)
 
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
-}
-
-//*****************************************************************************
-// nsGlobalWindow::nsIDOM3EventTarget
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsGlobalWindow::AddGroupedEventListener(const nsAString & aType,
-                                        nsIDOMEventListener *aListener,
-                                        PRBool aUseCapture,
-                                        nsIDOMEventGroup *aEvtGrp)
-{
-  FORWARD_TO_INNER_CREATE(AddGroupedEventListener,
-                          (aType, aListener, aUseCapture, aEvtGrp),
-                          NS_ERROR_NOT_AVAILABLE);
-
-  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-  manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::RemoveGroupedEventListener(const nsAString & aType,
-                                           nsIDOMEventListener *aListener,
-                                           PRBool aUseCapture,
-                                           nsIDOMEventGroup *aEvtGrp)
-{
-  FORWARD_TO_INNER(RemoveGroupedEventListener,
-                   (aType, aListener, aUseCapture, aEvtGrp),
-                   NS_ERROR_NOT_INITIALIZED);
-
-  if (mListenerManager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
-                                                aEvtGrp);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::CanTrigger(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::IsRegisteredHere(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

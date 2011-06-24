@@ -394,13 +394,13 @@ nsAccDocManager::AddListeners(nsIDocument *aDocument,
   nsIDOMEventTarget *target = window->GetChromeEventHandler();
   nsEventListenerManager* elm = target->GetListenerManager(PR_TRUE);
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
-                              NS_EVENT_FLAG_CAPTURE, nsnull);
+                              NS_EVENT_FLAG_CAPTURE);
 
   NS_LOG_ACCDOCCREATE_TEXT("  added 'pagehide' listener")
 
   if (aAddDOMContentLoadedListener) {
     elm->AddEventListenerByType(this, NS_LITERAL_STRING("DOMContentLoaded"),
-                                NS_EVENT_FLAG_CAPTURE, nsnull);
+                                NS_EVENT_FLAG_CAPTURE);
     NS_LOG_ACCDOCCREATE_TEXT("  added 'DOMContentLoaded' listener")
   }
 }

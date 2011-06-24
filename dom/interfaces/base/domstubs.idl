@@ -91,7 +91,6 @@ interface nsIDOMHistory;
 interface nsIDOMEvent;
 interface nsIDOMEventTarget;
 interface nsIDOMEventListener;
-interface nsIDOMEventGroup;
 
 // HTML
 interface nsIDOMHTMLElement;

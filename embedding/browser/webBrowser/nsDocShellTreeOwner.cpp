@@ -102,7 +102,6 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsEventListenerManager.h"
-#include "nsIDOMEventGroup.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIConstraintValidation.h"
 
@@ -893,13 +892,11 @@ nsDocShellTreeOwner::AddChromeListeners()
   {
     rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("dragover"),
                                       NS_EVENT_FLAG_BUBBLE |
-                                      NS_EVENT_FLAG_SYSTEM_EVENT,
-                                      nsnull);
+                                      NS_EVENT_FLAG_SYSTEM_EVENT);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("drop"),
                                       NS_EVENT_FLAG_BUBBLE |
-                                      NS_EVENT_FLAG_SYSTEM_EVENT,
-                                      nsnull);
+                                      NS_EVENT_FLAG_SYSTEM_EVENT);
   }
 
   return rv;
@@ -929,12 +926,10 @@ nsDocShellTreeOwner::RemoveChromeListeners()
   {
     elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("dragover"),
                                     NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT,
-                                    nsnull);
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
     elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("drop"),
                                     NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT,
-                                    nsnull);
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
   }
 
   return NS_OK;

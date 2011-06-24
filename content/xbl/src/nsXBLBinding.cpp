@@ -80,7 +80,6 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMContextMenuListener.h"
-#include "nsIDOMEventGroup.h"
 #include "nsAttrName.h"
 
 #include "nsGkAtoms.h"
@@ -875,7 +874,7 @@ nsXBLBinding::InstallEventHandlers()
 
           manager->AddEventListenerByType(handler,
                                           nsDependentAtomString(eventAtom),
-                                          flags, nsnull);
+                                          flags);
         }
       }
 
@@ -907,7 +906,7 @@ nsXBLBinding::InstallEventHandlers()
         // nsXBLKeyEventHandler::HandleEvent
         flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
 
-        manager->AddEventListenerByType(handler, type, flags, nsnull);
+        manager->AddEventListenerByType(handler, type, flags);
       }
     }
   }
@@ -1021,7 +1020,7 @@ nsXBLBinding::UnhookEventHandlers()
 
       manager->RemoveEventListenerByType(handler,
                                          nsDependentAtomString(eventAtom),
-                                         flags, nsnull);
+                                         flags);
     }
 
     const nsCOMArray<nsXBLKeyEventHandler>* keyHandlers =
@@ -1045,7 +1044,7 @@ nsXBLBinding::UnhookEventHandlers()
         flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
       }
 
-      manager->RemoveEventListenerByType(handler, type, flags, nsnull);
+      manager->RemoveEventListenerByType(handler, type, flags);
     }
   }
 }

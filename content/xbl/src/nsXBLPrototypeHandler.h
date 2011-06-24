@@ -56,7 +56,6 @@ class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
 class nsIDOMEventTarget;
-class nsIDOM3EventTarget;
 class nsXBLPrototypeBinding;
 
 #define NS_HANDLER_TYPE_XBL_JS              (1 << 0)

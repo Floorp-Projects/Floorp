@@ -50,7 +50,6 @@
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsIJSEventListener.h"
-#include "nsIDOMEventGroup.h"
 #ifdef MOZ_JSDEBUGGER
 #include "jsdIDebuggerService.h"
 #endif
@@ -281,7 +280,7 @@ nsEventListenerService::AddSystemEventListener(nsIDOMEventTarget *aTarget,
                                 NS_EVENT_FLAG_SYSTEM_EVENT :
                                 NS_EVENT_FLAG_BUBBLE |
                                 NS_EVENT_FLAG_SYSTEM_EVENT;
-  return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
+  return manager->AddEventListenerByType(aListener, aType, flags);
 }
 
 NS_IMETHODIMP
@@ -299,7 +298,7 @@ nsEventListenerService::RemoveSystemEventListener(nsIDOMEventTarget *aTarget,
                                   NS_EVENT_FLAG_SYSTEM_EVENT :
                                   NS_EVENT_FLAG_BUBBLE |
                                   NS_EVENT_FLAG_SYSTEM_EVENT;
-    manager->RemoveEventListenerByType(aListener, aType, flags, nsnull);
+    manager->RemoveEventListenerByType(aListener, aType, flags);
   }
 
   return NS_OK;

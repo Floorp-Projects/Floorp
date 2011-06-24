@@ -88,7 +88,6 @@
 #include "nsXULPrototypeCache.h"
 #endif
 #include "nsIDOMLoadListener.h"
-#include "nsIDOMEventGroup.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -742,16 +741,13 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
   // listen to these events
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
                                   NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT,
-                                  nsnull);
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
                                   NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT,
-                                  nsnull);
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
                                   NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT,
-                                  nsnull);
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
 
   if (contentNode)
     return contentNode->SetProperty(nsGkAtoms::listener, handler,
@@ -793,16 +789,13 @@ nsXBLService::DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
 
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
                                      NS_EVENT_FLAG_BUBBLE |
-                                     NS_EVENT_FLAG_SYSTEM_EVENT,
-                                     nsnull);
+                                     NS_EVENT_FLAG_SYSTEM_EVENT);
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
                                      NS_EVENT_FLAG_BUBBLE |
-                                     NS_EVENT_FLAG_SYSTEM_EVENT,
-                                     nsnull);
+                                     NS_EVENT_FLAG_SYSTEM_EVENT);
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
                                      NS_EVENT_FLAG_BUBBLE |
-                                     NS_EVENT_FLAG_SYSTEM_EVENT,
-                                     nsnull);
+                                     NS_EVENT_FLAG_SYSTEM_EVENT);
 
   contentNode->DeleteProperty(nsGkAtoms::listener);
 
