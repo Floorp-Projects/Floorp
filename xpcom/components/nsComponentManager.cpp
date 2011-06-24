@@ -730,6 +730,7 @@ nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, i
     }
 
     const mozilla::Module* m = mNativeModuleLoader.LoadModule(clfile);
+    // The native module loader should report an error here, we don't have to
     if (!m)
         return;
 
