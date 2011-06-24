@@ -7123,6 +7123,9 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
         pnp = &pn2->pn_kid2;
     }
 
+    if (!maybeNoteGenerator())
+        return NULL;
+
     pn2 = UnaryNode::create(tc);
     if (!pn2)
         return NULL;
