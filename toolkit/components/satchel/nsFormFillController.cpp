@@ -1123,11 +1123,9 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
     return;
 
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
-  nsIDOMEventTarget* chromeEventHandler = nsnull;
+  nsIDOMEventTarget* target = nsnull;
   if (privateDOMWindow)
-    chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
-
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));
+    target = privateDOMWindow->GetChromeEventHandler();
 
   if (!target)
     return;
@@ -1185,12 +1183,10 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
   mPwmgrInputs.Enumerate(RemoveForDOMDocumentEnumerator, domDoc);
 
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
-  nsIDOMEventTarget* chromeEventHandler = nsnull;
+  nsIDOMEventTarget* target = nsnull;
   if (privateDOMWindow)
-    chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
+    target = privateDOMWindow->GetChromeEventHandler();
   
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));
-
   if (!target)
     return;
 

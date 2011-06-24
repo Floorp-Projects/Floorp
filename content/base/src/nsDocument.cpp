@@ -7381,9 +7381,10 @@ nsDocument::OnPageShow(PRBool aPersisted,
     SetImagesNeedAnimating(PR_TRUE);
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target =
-    aDispatchStartTarget ? do_QueryInterface(aDispatchStartTarget) :
-                           do_QueryInterface(GetWindow());
+  nsCOMPtr<nsIDOMEventTarget> target = aDispatchStartTarget;
+  if (!target) {
+    target = do_QueryInterface(GetWindow());
+  }
   DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted);
 }
 
@@ -7434,9 +7435,10 @@ nsDocument::OnPageHide(PRBool aPersisted,
   }
 
   // Now send out a PageHide event.
-  nsCOMPtr<nsIDOMEventTarget> target =
-    aDispatchStartTarget ? do_QueryInterface(aDispatchStartTarget) :
-                           do_QueryInterface(GetWindow());
+  nsCOMPtr<nsIDOMEventTarget> target = aDispatchStartTarget;
+  if (!target) {
+    target = do_QueryInterface(GetWindow());
+  }
   DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
 
   mVisible = PR_FALSE;

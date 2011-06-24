@@ -43,7 +43,6 @@
 #include "nsAutoPtr.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMEventTarget.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
@@ -72,8 +71,7 @@ public:
   nsDOMEventTargetHelper() {}
   virtual ~nsDOMEventTargetHelper() {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMEventTargetHelper,
-                                           nsIDOMEventTarget)
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMEventTargetHelper)
 
   NS_DECL_NSIDOMEVENTTARGET
 

@@ -145,7 +145,7 @@ public:
 
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
 
-  virtual already_AddRefed<nsIDOMEventTarget> GetPIDOMEventTarget();
+  virtual already_AddRefed<nsIDOMEventTarget> GetDOMEventTarget();
 
   virtual nsresult BeginIMEComposition();
   virtual nsresult UpdateIMEComposition(const nsAString &aCompositionString,
