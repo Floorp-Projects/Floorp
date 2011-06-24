@@ -2880,9 +2880,16 @@ TraceMonitor::flush()
     needFlush = JS_FALSE;
 }
 
-inline bool
-HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
+static bool
+HasUnreachableGCThingsImpl(JSContext *cx, TreeFragment *f)
 {
+    if (f->visiting)
+        return false;
+    f->visiting = true;
+    
+    if (!f->code())
+        return false;
+
     /*
      * We do not check here for dead scripts as JSScript is not a GC thing.
      * Instead PurgeScriptFragments is used to remove dead script fragments.
@@ -2903,7 +2910,50 @@ HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
         if (IsAboutToBeFinalized(cx, shape))
             return true;
     }
+
+    TreeFragment** data = f->dependentTrees.data();
+    unsigned length = f->dependentTrees.length();
+    for (unsigned n = 0; n < length; ++n) {
+        if (HasUnreachableGCThingsImpl(cx, data[n]))
+            return true;
+    }
+
+    data = f->linkedTrees.data();
+    length = f->linkedTrees.length();
+    for (unsigned n = 0; n < length; ++n) {
+        if (HasUnreachableGCThingsImpl(cx, data[n]))
+            return true;
+    }
+
     return false;
+}
+
+static void
+ClearVisitingFlag(TreeFragment *f)
+{
+    if (!f->visiting)
+        return;
+    f->visiting = false;
+    if (!f->code())
+        return;
+
+    TreeFragment** data = f->dependentTrees.data();
+    unsigned length = f->dependentTrees.length();
+    for (unsigned n = 0; n < length; ++n)
+        ClearVisitingFlag(data[n]);
+
+    data = f->linkedTrees.data();
+    length = f->linkedTrees.length();
+    for (unsigned n = 0; n < length; ++n)
+        ClearVisitingFlag(data[n]);
+}
+
+static bool
+HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
+{
+    bool hasUnrechable = HasUnreachableGCThingsImpl(cx, f);
+    ClearVisitingFlag(f);
+    return hasUnrechable;
 }
 
 void
@@ -2924,29 +2974,42 @@ TraceMonitor::sweep(JSContext *cx)
         while (TreeFragment* frag = *fragp) {
             TreeFragment* peer = frag;
             do {
-                if (HasUnreachableGCThings(cx, peer))
+                if (peer->code() && HasUnreachableGCThings(cx, peer))
                     break;
                 peer = peer->peer;
             } while (peer);
-            if (peer) {
-                debug_only_printf(LC_TMTracer,
-                                  "TreeFragment peer %p has dead gc thing."
-                                  "Disconnecting tree %p with ip %p\n",
-                                  (void *) peer, (void *) frag, frag->ip);
-                JS_ASSERT(frag->root == frag);
-                *fragp = frag->next;
-                do {
-                    verbose_only( FragProfiling_FragFinalizer(frag, this); );
-                    if (recorderTree == frag)
-                        shouldAbortRecording = true;
-                    TrashTree(frag);
-                    frag = frag->peer;
-                } while (frag);
-            } else {
+            if (!peer) {
                 fragp = &frag->next;
+                continue;
             }
+            
+            debug_only_printf(LC_TMTracer,
+                              "TreeFragment peer %p has dead gc thing."
+                              "Disconnecting tree %p with ip %p\n",
+                              (void *) peer, (void *) frag, frag->ip);
+            JS_ASSERT(frag->root == frag);
+            *fragp = frag->next;
+            do {
+                verbose_only( FragProfiling_FragFinalizer(frag, this); );
+                if (recorderTree == frag)
+                    shouldAbortRecording = true;
+                TrashTree(frag);
+                frag = frag->peer;
+            } while (frag);
         }
     }
+
+#ifdef DEBUG
+    for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
+        for (TreeFragment* frag = vmfragments[i]; frag; frag = frag->next) {
+            TreeFragment* peer = frag;
+            do {
+                JS_ASSERT(!peer->visiting);
+                peer = peer->peer;
+            } while (peer);
+        }
+    }
+#endif
 
     if (shouldAbortRecording)
         recorder->finishAbort("dead GC things");
@@ -5638,6 +5701,7 @@ TrashTree(TreeFragment* f)
     JS_ASSERT(f == f->root);
     debug_only_printf(LC_TMTreeVis, "TREEVIS TRASH FRAG=%p\n", (void*)f);
 
+    JS_ASSERT(!f->visiting);
     if (!f->code())
         return;
     AUDIT(treesTrashed);
@@ -5742,6 +5806,7 @@ RecordTree(JSContext* cx, TraceMonitor* tm, TreeFragment* first,
     }
 
     JS_ASSERT(!f->code());
+    JS_ASSERT(!f->visiting);
 
     f->initialize(cx, globalSlots, speculate);
 

@@ -86,19 +86,6 @@ JSDependentString::new_(JSContext *cx, JSLinearString *base, const jschar *chars
     if (!str)
         return NULL;
     str->init(base, chars, length);
-#ifdef DEBUG
-    JSRuntime *rt = cx->runtime;
-    JS_RUNTIME_METER(rt, liveDependentStrings);
-    JS_RUNTIME_METER(rt, totalDependentStrings);
-    JS_RUNTIME_METER(rt, liveStrings);
-    JS_RUNTIME_METER(rt, totalStrings);
-    JS_LOCK_RUNTIME_VOID(rt,
-        (rt->strdepLengthSum += (double)length,
-         rt->strdepLengthSquaredSum += (double)length * (double)length));
-    JS_LOCK_RUNTIME_VOID(rt,
-        (rt->lengthSum += (double)length,
-         rt->lengthSquaredSum += (double)length * (double)length));
-#endif
     return str;
 }
 
@@ -119,15 +106,6 @@ JSFixedString::new_(JSContext *cx, const jschar *chars, size_t length)
     if (!str)
         return NULL;
     str->init(chars, length);
-
-#ifdef DEBUG
-    JSRuntime *rt = cx->runtime;
-    JS_RUNTIME_METER(rt, liveStrings);
-    JS_RUNTIME_METER(rt, totalStrings);
-    JS_LOCK_RUNTIME_VOID(rt,
-        (rt->lengthSum += (double)length,
-         rt->lengthSquaredSum += (double)length * (double)length));
-#endif
     return str;
 }
 
@@ -301,16 +279,13 @@ JSAtom::lookupStatic(const jschar *chars, size_t length)
 JS_ALWAYS_INLINE void
 JSString::finalize(JSContext *cx)
 {
+    /* Statics are not GC-things and shorts are in a different arena. */
     JS_ASSERT(!isStaticAtom() && !isShort());
 
-    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
-
-    if (isDependent())
-        JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
-    else if (isFlat())
+    if (isFlat())
         asFlat().finalize(cx->runtime);
     else
-        JS_ASSERT(isRope());
+        JS_ASSERT(isDependent() || isRope());
 }
 
 inline void
@@ -330,7 +305,6 @@ inline void
 JSShortString::finalize(JSContext *cx)
 {
     JS_ASSERT(isShort());
-    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
 }
 
 inline void
@@ -346,7 +320,6 @@ JSAtom::finalize(JSRuntime *rt)
 inline void
 JSExternalString::finalize(JSContext *cx)
 {
-    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
     if (JSStringFinalizeOp finalizer = str_finalizers[externalType()])
         finalizer(cx, this);
 }

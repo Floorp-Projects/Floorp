@@ -63,7 +63,7 @@ let inputValues = [
     "document.wrappedJSObject.getElementById"],
 
   // 12
-  [false, "function() { return 42; }", "function () {return 42;}",
+  [false, "(function() { return 42; })", "function () {return 42;}",
     "function () {\n    return 42;\n}",
     "(function () {return 42;})"],
 
