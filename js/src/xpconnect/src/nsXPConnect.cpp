@@ -747,7 +747,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         }
     }
 
-    PRBool isMarked;
+    CCNodeType type;
 
 #ifdef DEBUG_CC
     // Note that the conditions under which we specify GCMarked vs.
@@ -765,13 +765,14 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         // ExplainLiveExpectedGarbage codepath
         PLDHashEntryHdr* entry =
             PL_DHashTableOperate(&mJSRoots, p, PL_DHASH_LOOKUP);
-        isMarked = markJSObject || PL_DHASH_ENTRY_IS_BUSY(entry);
+        type = markJSObject || PL_DHASH_ENTRY_IS_BUSY(entry) ? GCMarked :
+                                                               GCUnmarked;
     }
     else
 #endif
     {
         // Normal codepath (matches non-DEBUG_CC codepath).
-        isMarked = markJSObject || !xpc_IsGrayGCThing(p);
+        type = !markJSObject && xpc_IsGrayGCThing(p) ? GCUnmarked : GCMarked;
     }
 
     if (cb.WantDebugInfo()) {
@@ -844,19 +845,19 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             char fullname[100];
             JS_snprintf(fullname, sizeof(fullname),
                         "%s (global=%p)", name, global);
-            cb.DescribeGCedNode(isMarked, sizeof(JSObject), fullname);
+            cb.DescribeNode(type, 0, sizeof(JSObject), fullname);
         } else {
-            cb.DescribeGCedNode(isMarked, sizeof(JSObject), name);
+            cb.DescribeNode(type, 0, sizeof(JSObject), name);
         }
     } else {
-        cb.DescribeGCedNode(isMarked, sizeof(JSObject), "JS Object");
+        cb.DescribeNode(type, 0, sizeof(JSObject), "JS Object");
     }
 
     // There's no need to trace objects that have already been marked by the JS
     // GC. Any JS objects hanging from them will already be marked. Only do this
     // if DEBUG_CC is not defined, else we do want to know about all JS objects
     // to get better graphs and explanations.
-    if(!cb.WantAllTraces() && isMarked)
+    if(!cb.WantAllTraces() && type == GCMarked)
         return NS_OK;
 
     TraversalTracer trc(cb);
@@ -931,7 +932,8 @@ public:
         // edges will ensure that any cycles this context is in won't be
         // collected.
         unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
-        NS_IMPL_CYCLE_COLLECTION_DESCRIBE(JSContext, refCount)
+
+        cb.DescribeNode(RefCounted, refCount, sizeof(JSContext), "JSContext");
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
         if (cx->globalObject) {
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,

@@ -4322,11 +4322,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
     else {
       PR_snprintf(name, sizeof(name), "nsGenericElement %s", localName.get());
     }
-    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsGenericElement),
-                              name);
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(nsGenericElement),
+                    name);
   }
   else {
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsGenericElement, tmp->mRefCnt.get())
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(nsGenericElement),
+                    "nsGenericElement");
   }
 
   // Always need to traverse script objects, so do that before we check
