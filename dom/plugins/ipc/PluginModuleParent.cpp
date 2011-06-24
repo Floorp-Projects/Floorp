@@ -66,10 +66,6 @@
 #include "nsNPAPIPlugin.h"
 #include "nsILocalFile.h"
 
-#ifdef XP_WIN
-#include "mozilla/widget/AudioSession.h"
-#endif
-
 using base::KillProcess;
 
 using mozilla::PluginLibrary;
@@ -754,8 +750,6 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
 {
     PLUGIN_LOG_DEBUG_METHOD;
 
-    nsresult rv;
-
     mNPNIface = bFuncs;
 
     if (mShutdown) {
@@ -789,18 +783,6 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 
     if (!CallNP_Initialize(&mPluginThread, error))
         return NS_ERROR_FAILURE;
-
-#if defined XP_WIN && MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-    // Send the info needed to join the chrome process's audio session to the
-    // plugin process
-    nsID id;
-    nsString sessionName;
-    nsString iconPath;
-
-    if (NS_SUCCEEDED(mozilla::widget::GetAudioSessionData(id, sessionName,
-                                                          iconPath)))
-        SendSetAudioSessionData(id, sessionName, iconPath);
-#endif
 
     return NS_OK;
 }
