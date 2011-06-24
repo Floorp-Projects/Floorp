@@ -142,12 +142,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
         }
       }
     }
-    cb.DescribeRefCountedNode(tmp->mRefCnt.get(),
-                              sizeof(nsJSScriptTimeoutHandler), foo.get());
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(),
+                    sizeof(nsJSScriptTimeoutHandler), foo.get());
   }
   else {
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSScriptTimeoutHandler,
-                                      tmp->mRefCnt.get())
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(),
+                    sizeof(nsJSScriptTimeoutHandler),
+                    "nsJSScriptTimeoutHandler");
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
