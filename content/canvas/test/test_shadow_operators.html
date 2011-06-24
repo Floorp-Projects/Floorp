@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display">
+  <canvas id="c" width="2" height="2"></canvas>
+  <canvas id="c2" width="2" height="2"></canvas>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+function isPixel(ctx, x,y, r,g,b,a, d) {
+	var pos = x + "," + y;
+	var colour = r + "," + g + "," + b + "," + a;
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    ok(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d,
+       "pixel "+pos+" of "+ctx.canvas.id+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+}
+
+function isSamePixel(ctx,ctx2, x,y, d) {
+	var pos = x + "," + y;
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pixel2 = ctx2.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    var r = pixel2.data[0],
+        g = pixel2.data[1],
+        b = pixel2.data[2],
+        a = pixel2.data[3];
+	var colour = r + "," + g + "," + b + "," + a;
+    ok(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d,
+       "pixel "+pos+" of "+ctx.canvas.id+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+}
+
+var c = document.getElementById("c");
+var ctx = c.getContext("2d");
+
+ctx.shadowColor = "rgb(0,255,0)";
+
+// Test that shadows with zero blur and offset are drawn
+ctx.fillStyle = "rgba(0,0,255,0.5)";
+ctx.fillRect(0, 0, 1, 1);
+isPixel(ctx, 0,0, 0,85,170,192, 1);
+
+// Test that non-OVER operators do not draw shadows
+var c2 = document.getElementById("c2");
+var ctx2 = c2.getContext("2d");
+var operators = ["source-atop", "source-in", "source-out", "destination-atop",
+                 "destination-in", "destination-out", "destination-over", "lighter", "copy",
+                 "xor"];
+
+ctx.shadowOffsetX = ctx.shadowOffsetY = 1;
+for (var i = 0; i < operators.length; ++i) {
+  ctx.fillStyle = "red";
+  ctx.fillRect(0, 0, 2, 2);
+  ctx.globalCompositeOperation = operators[i];
+  ctx.fillStyle = "blue";
+  ctx.fillRect(0, 0, 1, 1);
+
+  ctx2.fillStyle = "red";
+  ctx2.fillRect(0, 0, 2, 2);
+  ctx2.globalCompositeOperation = operators[i];
+  ctx2.fillStyle = "blue";
+  ctx2.fillRect(0, 0, 1, 1);
+
+  isSamePixel(ctx,ctx2, 1,1, 0);
+}
+
+</script>
+</pre>
+</body>
+</html>

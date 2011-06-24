@@ -44,6 +44,7 @@
 /*** =================== SAVED SIGNONS CODE =================== ***/
 
 var kSignonBundle;
+var showingPasswords = false;
 
 function SignonsStartup() {
   kSignonBundle = document.getElementById("signonBundle");
@@ -171,7 +172,7 @@ function DeleteAllSignons() {
 }
 
 function TogglePasswordVisible() {
-  if (showingPasswords || ConfirmShowPasswords()) {
+  if (showingPasswords || masterPasswordLogin(AskUserShowPasswords)) {
     showingPasswords = !showingPasswords;
     document.getElementById("togglePasswords").label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
     document.getElementById("togglePasswords").accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
@@ -195,29 +196,6 @@ function AskUserShowPasswords() {
           null,
           kSignonBundle.getString("noMasterPasswordPrompt"), prompter.STD_YES_NO_BUTTONS,
           null, null, null, null, dummy) == 0;    // 0=="Yes" button
-}
-
-function ConfirmShowPasswords() {
-  // This doesn't harm if passwords are not encrypted
-  var tokendb = Components.classes["@mozilla.org/security/pk11tokendb;1"]
-                    .createInstance(Components.interfaces.nsIPK11TokenDB);
-  var token = tokendb.getInternalKeyToken();
-
-  // If there is no master password, still give the user a chance to opt-out of displaying passwords
-  if (token.checkPassword(""))
-    return AskUserShowPasswords();
-
-  // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
-  try {
-    // Relogin and ask for the master password.
-    token.login(true);  // 'true' means always prompt for token password. User will be prompted until
-                        // clicking 'Cancel' or entering the correct password.
-  } catch (e) {
-    // An exception will be thrown if the user cancels the login prompt dialog.
-    // User is also logged out of Software Security Device.
-  }
-
-  return token.isLoggedIn();
 }
 
 function FinalizeSignonDeletions(syncNeeded) {
@@ -372,6 +350,10 @@ function _filterPasswords()
 }
 
 function CopyPassword() {
+  // Don't copy passwords if we aren't already showing the passwords & a master
+  // password hasn't been entered.
+  if (!showingPasswords && !masterPasswordLogin())
+    return;
   // Copy selected signon's password to clipboard
   var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
                   getService(Components.interfaces.nsIClipboardHelper);
@@ -387,4 +369,27 @@ function UpdateCopyPassword() {
     menuitem.removeAttribute("disabled");
   else
     menuitem.setAttribute("disabled", "true");
+}
+
+function masterPasswordLogin(noPasswordCallback) {
+  // This doesn't harm if passwords are not encrypted
+  var tokendb = Components.classes["@mozilla.org/security/pk11tokendb;1"]
+                    .createInstance(Components.interfaces.nsIPK11TokenDB);
+  var token = tokendb.getInternalKeyToken();
+
+  // If there is no master password, still give the user a chance to opt-out of displaying passwords
+  if (token.checkPassword(""))
+    return noPasswordCallback ? noPasswordCallback() : true;
+
+  // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
+  try {
+    // Relogin and ask for the master password.
+    token.login(true);  // 'true' means always prompt for token password. User will be prompted until
+                        // clicking 'Cancel' or entering the correct password.
+  } catch (e) {
+    // An exception will be thrown if the user cancels the login prompt dialog.
+    // User is also logged out of Software Security Device.
+  }
+
+  return token.isLoggedIn();
 }

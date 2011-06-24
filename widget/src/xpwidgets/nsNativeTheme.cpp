@@ -518,7 +518,7 @@ nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
   NS_ASSERTION(aMinimumFrameRate <= 1000,
                "aMinimumFrameRate must be less than 1000!");
 
-  PRUint32 timeout = PRUint32(NS_floor(1000 / aMinimumFrameRate));
+  PRUint32 timeout = 1000 / aMinimumFrameRate;
   timeout = NS_MIN(mAnimatedContentTimeout, timeout);
 
   if (!mAnimatedContentTimer) {

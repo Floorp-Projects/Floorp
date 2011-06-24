@@ -67,7 +67,7 @@ interface nsIEventListenerInfo : nsISupports
   nsISupports getDebugObject();
 };
 
-[scriptable, uuid(7be78bb6-33f7-4f31-b3f3-97eefaff2762)]
+[scriptable, uuid(0cf94aa6-ea9a-44cb-a063-be834afa679d)]
 interface nsIEventListenerService : nsISupports
 {
   /**
@@ -86,15 +86,32 @@ interface nsIEventListenerService : nsISupports
    * dispatching an event to aEventTarget
    * @note Some events, especially 'load', may actually have a shorter
    *       event target chain than what this methods returns.
-  */
+   */
   void getEventTargetChainFor(in nsIDOMEventTarget aEventTarget,
                               [optional] out unsigned long aCount,
                               [retval, array, size_is(aCount)] out
                                 nsIDOMEventTarget aOutArray);
 
   /**
-   * Returns system event group.
+   * Returns true if a event target has any listener for the given type.
    */
-  readonly attribute nsIDOMEventGroup systemEventGroup;
+  boolean hasListenersFor(in nsIDOMEventTarget aEventTarget,
+                          in DOMString aType);
+
+  /**
+   * Add a system-group eventlistener to a event target.
+   */
+  void addSystemEventListener(in nsIDOMEventTarget target,
+                              in DOMString type,
+                              in nsIDOMEventListener listener,
+                              in boolean useCapture);
+
+  /**
+   * Remove a system-group eventlistener from a event target.
+   */
+  void removeSystemEventListener(in nsIDOMEventTarget target,
+                                 in DOMString type,
+                                 in nsIDOMEventListener listener,
+                                 in boolean useCapture);
 };
 

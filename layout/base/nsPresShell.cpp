@@ -66,9 +66,7 @@
 #include "nsStyleSet.h"
 #include "nsCSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
 #include "nsIDOMCSSStyleSheet.h"  // for Pref-related rule management (bugs 22963,20760,31816)
-#ifdef MOZ_CSS_ANIMATIONS
 #include "nsAnimationManager.h"
-#endif
 #include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsIServiceManager.h"
 #include "nsFrame.h"
@@ -96,7 +94,6 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
-#include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsRange.h"
@@ -4403,18 +4400,9 @@ nsresult PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationStrin
             if (!anchorText.IsEmpty()) {
               // Resolve the full URI using baseURI property
 
-              nsAutoString base;
-              nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(aNode,&rv));
-              NS_ENSURE_SUCCESS(rv, rv);
-              node->GetBaseURI(base);
-
-              nsCOMPtr<nsIIOService>
-                ios(do_GetService("@mozilla.org/network/io-service;1", &rv));
-              NS_ENSURE_SUCCESS(rv, rv);
-
-              nsCOMPtr<nsIURI> baseURI;
-              rv = ios->NewURI(NS_ConvertUTF16toUTF8(base),nsnull,nsnull,getter_AddRefs(baseURI));
-              NS_ENSURE_SUCCESS(rv, rv);
+              nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+              NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
+              nsCOMPtr<nsIURI> baseURI = node->GetBaseURI();
 
               nsCAutoString spec;
               rv = baseURI->Resolve(NS_ConvertUTF16toUTF8(anchorText),spec);
@@ -4822,13 +4810,11 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       mFrameConstructor->ProcessPendingRestyles();
     }
 
-#ifdef MOZ_CSS_ANIMATIONS
     // Dispatch any 'animationstart' events those (or earlier) restyles
     // queued up.
     if (!mIsDestroying) {
       mPresContext->AnimationManager()->DispatchEvents();
     }
-#endif
 
     // Process whatever XBL constructors those restyles queued up.  This
     // ensures that onload doesn't fire too early and that we won't do extra
@@ -5147,9 +5133,7 @@ nsIPresShell::ReconstructStyleDataInternal()
 
   if (mPresContext) {
     mPresContext->RebuildUserFontSet();
-#ifdef MOZ_CSS_ANIMATIONS
     mPresContext->AnimationManager()->KeyframesListIsDirty();
-#endif
   }
 
   Element* root = mDocument->GetRootElement();
@@ -7114,6 +7098,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
           !AdjustContextMenuKeyEvent(me)) {
         return NS_OK;
       }
+      if (me->isShift)
+        aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH |
+                         NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS;
     }                                
 
     nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,

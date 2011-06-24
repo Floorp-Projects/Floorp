@@ -4005,6 +4005,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
     // don't enter this block if we're reading from the cache...
     if (NS_SUCCEEDED(mStatus) && !mCachePump && mTransaction) {
+        // mTransactionPump doesn't hit OnInputStreamReady and call this until
         // all of the response headers have been acquired, so we can take ownership
         // of them from the transaction.
         mResponseHead = mTransaction->TakeResponseHead();

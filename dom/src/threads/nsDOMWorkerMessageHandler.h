@@ -42,7 +42,6 @@
 #include "nsIClassInfo.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMWorkers.h"
 
 #include "nsIProgrammingLanguage.h"
@@ -106,13 +105,11 @@ private:
 };
 
 class nsDOMWorkerMessageHandler : public nsIDOMEventTarget,
-                                  public nsIDOMNSEventTarget,
                                   public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTTARGET
-  NS_DECL_NSIDOMNSEVENTTARGET
   NS_DECL_NSICLASSINFO
 
   virtual nsresult SetOnXListener(const nsAString& aType,
@@ -160,5 +157,19 @@ private:
 
   nsTArray<ListenerCollection> mCollections;
 };
+
+#define NS_FORWARD_INTERNAL_NSIDOMEVENTTARGET(_to) \
+  virtual nsIDOMEventTarget * GetTargetForDOMEvent(void) { return _to GetTargetForDOMEvent(); } \
+  virtual nsIDOMEventTarget * GetTargetForEventTargetChain(void) { return _to GetTargetForEventTargetChain(); } \
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor & aVisitor) { return _to PreHandleEvent(aVisitor); } \
+  virtual nsresult WillHandleEvent(nsEventChainPostVisitor & aVisitor) { return _to WillHandleEvent(aVisitor); } \
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor & aVisitor) { return _to PostHandleEvent(aVisitor); } \
+  virtual nsresult DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEvent, nsPresContext *aPresContext, nsEventStatus *aEventStatus) { return _to DispatchDOMEvent(aEvent, aDOMEvent, aPresContext, aEventStatus); } \
+  virtual nsEventListenerManager * GetListenerManager(PRBool aMayCreate) { return _to GetListenerManager(aMayCreate); } \
+  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID & aIID) { return _to AddEventListenerByIID(aListener, aIID); } \
+  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID & aIID) { return _to RemoveEventListenerByIID(aListener, aIID); } \
+  virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv NS_OUTPARAM) { return _to GetContextForEventHandlers(aRv); } \
+  virtual JSContext * GetJSContextForEventHandlers(void) { return _to GetJSContextForEventHandlers(); } 
+
 
 #endif /* __NSDOMWORKERMESSAGEHANDLER_H__ */

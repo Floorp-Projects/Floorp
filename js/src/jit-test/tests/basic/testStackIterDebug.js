@@ -50,3 +50,13 @@ function assertStackIs(s1) {
 
 (function f() { var o = { toString:function() { evalInFrame(1, "assertStackIs(['eval-code', f, 'global-code'])"); }}; [o,o].sort() })();
 (function f() { var o = { toString:function() { evalInFrame(1, "assertStackIs(['eval-code', f, 'global-code'])", true); }}; [o,o].sort() })();
+
+function inner() {
+    (function puppies() {
+        evalInFrame(1, "assertStackIs(['eval-code', inner, String.prototype.replace, outer, String.prototype.replace, 'global-code'])");
+    })();
+}
+function outer() {
+    "bbb".replace(/b/g, inner);
+}
+"aaa".replace(/a/g, outer);

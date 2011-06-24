@@ -661,8 +661,9 @@ var InspectorUI = {
     this.win.document.removeEventListener("scroll", this, false);
     this.win.removeEventListener("resize", this, false);
     this.stopInspecting();
-    if (this.highlighter && this.highlighter.isHighlighting) {
+    if (this.highlighter) {
       this.highlighter.unhighlight();
+      this.highlighter = null;
     }
 
     if (this.treePanelDiv) {

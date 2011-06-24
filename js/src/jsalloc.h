@@ -52,6 +52,9 @@ namespace js {
  *      Responsible for OOM reporting on NULL return value.
  *  - void *realloc_(size_t)
  *      Responsible for OOM reporting on NULL return value.
+ *      The *used* bytes of the previous buffer is passed in
+ *      (rather than the old allocation size), in addition to
+ *      the *new* allocation size requested.
  *  - void free_(void *)
  *  - reportAllocOverflow()
  *      Called on overflow before the container returns NULL.
@@ -62,7 +65,7 @@ class SystemAllocPolicy
 {
   public:
     void *malloc_(size_t bytes) { return js_malloc(bytes); }
-    void *realloc_(void *p, size_t bytes) { return js_realloc(p, bytes); }
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) { return js_realloc(p, bytes); }
     void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const {}
 };
@@ -76,7 +79,7 @@ class SystemAllocPolicy
  * FIXME bug 647103 - rewrite this in terms of temporary allocation functions,
  * not the system ones.
  */
-class ContextAllocPolicy
+class TempAllocPolicy
 {
     JSContext *const cx;
 
@@ -87,7 +90,7 @@ class ContextAllocPolicy
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes);
 
   public:
-    ContextAllocPolicy(JSContext *cx) : cx(cx) {}
+    TempAllocPolicy(JSContext *cx) : cx(cx) {}
 
     JSContext *context() const {
         return cx;
@@ -100,7 +103,7 @@ class ContextAllocPolicy
         return p;
     }
 
-    void *realloc_(void *p, size_t bytes) {
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
         void *p2 = js_realloc(p, bytes);
         if (JS_UNLIKELY(!p2))
             p2 = onOutOfMemory(p2, bytes);

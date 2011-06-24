@@ -372,6 +372,7 @@ protected:
                                        gfxFloat aOffset,
                                        gfxFloat aAscent,
                                        gfxFloat aSize,
+                                       const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                                        const PRUint8 aDecoration);
 
   virtual void AdjustForTextIndent(const nsLineBox* aLine,

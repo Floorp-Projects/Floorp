@@ -56,34 +56,61 @@ namespace js {
  * TypedArray with a size.
  */
 struct JS_FRIEND_API(ArrayBuffer) {
-    static Class jsclass;
+    static Class slowClass;
+    static Class fastClass;
     static JSPropertySpec jsprops[];
 
     static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
-    static void class_finalize(JSContext *cx, JSObject *obj);
 
     static JSBool class_constructor(JSContext *cx, uintN argc, Value *vp);
 
     static JSObject *create(JSContext *cx, int32 nbytes);
 
-    static ArrayBuffer *fromJSObject(JSObject *obj);
-
     ArrayBuffer()
-        : data(0), byteLength()
     {
     }
 
     ~ArrayBuffer();
 
-    bool allocateStorage(JSContext *cx, uint32 bytes);
-    void freeStorage(JSContext *cx);
+    static void
+    obj_trace(JSTracer *trc, JSObject *obj);
 
-    void *offsetData(uint32 offs) {
-        return (void*) (((intptr_t)data) + offs);
-    }
+    static JSBool
+    obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
+                       JSObject **objp, JSProperty **propp);
 
-    void *data;
-    uint32 byteLength;
+    static JSBool
+    obj_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
+                       PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+
+    static JSBool
+    obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+
+    static JSBool
+    obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+
+    static JSBool
+    obj_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+
+    static JSBool
+    obj_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+
+    static JSBool
+    obj_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict);
+
+    static JSBool
+    obj_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+                  Value *statep, jsid *idp);
+
+    static JSType
+    obj_typeOf(JSContext *cx, JSObject *obj);
+
+    static JSObject *
+    getArrayBuffer(JSObject *obj);
+
+    static inline unsigned int getByteLength(JSObject *obj);
+
+    static inline uint8 * getDataOffset(JSObject *obj);
 };
 
 /*
@@ -142,14 +169,14 @@ struct JS_FRIEND_API(TypedArray) {
     static int32 lengthOffset() { return offsetof(TypedArray, length); }
     static int32 dataOffset() { return offsetof(TypedArray, data); }
     static int32 typeOffset() { return offsetof(TypedArray, type); }
+    static void *offsetData(JSObject *obj, uint32 offs);
 
   public:
-    TypedArray() : buffer(0) { }
+    TypedArray() : bufferJS(0) { }
 
     bool isArrayIndex(JSContext *cx, jsid id, jsuint *ip = NULL);
-    bool valid() { return buffer != 0; }
+    bool valid() { return bufferJS != 0; }
 
-    ArrayBuffer *buffer;
     JSObject *bufferJS;
     uint32 byteOffset;
     uint32 byteLength;
@@ -224,5 +251,11 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
 
 extern int32 JS_FASTCALL
 js_TypedArray_uint8_clamp_double(const double x);
+
+JS_FRIEND_API(JSUint32)
+JS_GetArrayBufferByteLength(JSObject *obj);
+
+JS_FRIEND_API(uint8 *)
+JS_GetArrayBufferData(JSObject *obj);
 
 #endif /* jstypedarray_h */

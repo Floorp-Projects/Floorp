@@ -3388,7 +3388,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     //   (!FloatValidate(sx, sy, sw, sh) || !FloatValidate(dx, dy, dw, dh))
     // but we would also need to validate some sums for overflow (e.g. sx + sw).
     if (!FloatValidate(sx + sw, sy + sh, dx + dw, dy + dh)) {
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
     }
 
     // Handle negative sw, sh, dw and dh by flipping the rectangle over in the
