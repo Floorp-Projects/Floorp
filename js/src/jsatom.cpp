@@ -942,7 +942,6 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 {
     JSAtom **vector;
     JSAtomListElement *ale;
-    uint32 count;
 
     /* Map length must already be initialized. */
     JS_ASSERT(al->count == map->length);
@@ -955,7 +954,6 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
         return;
     }
 
-    count = al->count;
     vector = map->vector;
     if (al->table) {
 #ifdef DEBUG

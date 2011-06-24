@@ -37,9 +37,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 376052;
-var summary = 'javascript.options.anonfunfix to allow function (){} expressions';
-var actual = '';
-var expect = '';
+var summary = 'Unnamed function expressions are forbidden in statement context';
 
 
 //-----------------------------------------------------------------------------
@@ -52,51 +50,27 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  if (typeof window != 'undefined')
+  try
   {
-    print('Test skipped. anonfunfix not configurable in browser.');
-    reportCompare(expect, actual, summary);
+    eval('(function () {1;})');
+    reportCompare(true, true,
+                  "unnamed function expression not in statement context works");
   }
-  else
+  catch(ex)
   {
-    expect = 'No Error';
-    try
-    {
-      eval('function () {1;}');
-      actual = 'No Error';
-    }
-    catch(ex)
-    {
-      actual = ex + '';
-    }
-    reportCompare(expect, actual, summary + ': 1');
+    reportCompare(true, false, "threw exception: " + ex);
+  }
 
-    options('anonfunfix');
-
-    expect = 'No Error';
-    try
-    {
-      eval('(function () {1;})');
-      actual = 'No Error';
-    }
-    catch(ex)
-    {
-      actual = ex + '';
-    }
-    reportCompare(expect, actual, summary + ': 2');
-
-    expect = 'SyntaxError: syntax error';
-    try
-    {
-      eval('function () {1;}');
-      actual = 'No Error';
-    }
-    catch(ex)
-    {
-      actual = ex + '';
-    }
-    reportCompare(expect, actual, summary + ': 3');
-
+  try
+  {
+    eval('function () {1;}');
+    reportCompare(true, false, "didn't throw an exception");
+  }
+  catch(ex)
+  {
+    reportCompare(ex instanceof SyntaxError, true,
+                  "unnamed function expression not in statement context " +
+                  "should have been a SyntaxError");
   }
 
   exitFunc ('test');

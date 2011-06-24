@@ -338,22 +338,6 @@ js_LeaveWith(JSContext *cx);
 extern JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, js::Value *vp, js::Value *vp2);
 
-/*
- * Opcode tracing helper. When len is not 0, cx->fp->regs->pc[-len] gives the
- * previous opcode.
- */
-extern JS_REQUIRES_STACK void
-js_LogOpcode(JSContext *cx);
-
-/*
- * JS_OPMETER helper functions.
- */
-extern void
-js_MeterOpcodePair(JSOp op1, JSOp op2);
-
-extern void
-js_MeterSlotOpcode(JSOp op, uint32 slot);
-
 #endif /* JS_LONE_INTERPRET */
 /*
  * Unwind block and scope chains to match the given depth. The function sets

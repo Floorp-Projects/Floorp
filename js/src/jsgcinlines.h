@@ -49,14 +49,6 @@
 #include "jslock.h"
 #include "jstl.h"
 
-#ifdef JS_GCMETER
-# define METER(x)               ((void) (x))
-# define METER_IF(condition, x) ((void) ((condition) && (x)))
-#else
-# define METER(x)               ((void) 0)
-# define METER_IF(condition, x) ((void) 0)
-#endif
-
 inline bool
 JSAtom::isUnitString(const void *ptr)
 {
@@ -211,13 +203,9 @@ NewGCThing(JSContext *cx, unsigned thingKind, size_t thingSize)
         js::gc::RunDebugGC(cx);
 #endif
 
-    METER(cx->compartment->arenas[thingKind].stats.alloc++);
     js::gc::Cell *cell = cx->compartment->freeLists.getNext(thingKind, thingSize);
     return static_cast<T *>(cell ? cell : js::gc::RefillFinalizableFreeList(cx, thingKind));
 }
-
-#undef METER
-#undef METER_IF
 
 inline JSObject *
 js_NewGCObject(JSContext *cx, js::gc::FinalizeKind kind)
