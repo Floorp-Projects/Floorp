@@ -52,7 +52,6 @@
 #include "nsCOMPtr.h"
 
 #include "nsNetUtil.h"
-#include "nsStreamUtils.h"
 #include "nsIHttpChannel.h"
 #include "nsICachingChannel.h"
 #include "nsIInterfaceRequestor.h"
@@ -2168,6 +2167,15 @@ NS_IMETHODIMP imgCacheValidator::OnStopRequest(nsIRequest *aRequest, nsISupports
 /** nsIStreamListener methods **/
 
 
+// XXX see bug 113959
+static NS_METHOD dispose_of_data(nsIInputStream* in, void* closure,
+                                 const char* fromRawSegment, PRUint32 toOffset,
+                                 PRUint32 count, PRUint32 *writeCount)
+{
+  *writeCount = count;
+  return NS_OK;
+}
+
 /* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
 NS_IMETHODIMP imgCacheValidator::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
@@ -2183,7 +2191,7 @@ NS_IMETHODIMP imgCacheValidator::OnDataAvailable(nsIRequest *aRequest, nsISuppor
   if (!mDestListener) {
     // XXX see bug 113959
     PRUint32 _retval;
-    inStr->ReadSegments(NS_DiscardSegment, nsnull, count, &_retval);
+    inStr->ReadSegments(dispose_of_data, nsnull, count, &_retval);
     return NS_OK;
   }
 

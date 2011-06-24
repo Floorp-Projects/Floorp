@@ -1286,26 +1286,6 @@ nsTraceRefcntImpl::Shutdown()
     PL_HashTableDestroy(gSerialNumbers);
     gSerialNumbers = nsnull;
   }
-  if (gBloatLog) {
-    fclose(gBloatLog);
-    gBloatLog = nsnull;
-  }
-  if (gRefcntsLog) {
-    fclose(gRefcntsLog);
-    gRefcntsLog = nsnull;
-  }
-  if (gAllocLog) {
-    fclose(gAllocLog);
-    gAllocLog = nsnull;
-  }
-  if (gLeakyLog) {
-    fclose(gLeakyLog);
-    gLeakyLog = nsnull;
-  }
-  if (gCOMPtrLog) {
-    fclose(gCOMPtrLog);
-    gCOMPtrLog = nsnull;
-  }
 #endif
 }
 
