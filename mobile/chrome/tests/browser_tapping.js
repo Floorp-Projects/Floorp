@@ -125,7 +125,6 @@ function runNextTest() {
     window.removeEventListener("TapDouble", dumpEvents, true);
     window.removeEventListener("TapLong", dumpEvents, true);
 
-    SelectionHelper.hide();
     Browser.closeTab(gCurrentTab);
 
     finish();
@@ -278,7 +277,7 @@ gTests.push({
 
   contextPlainImageTest: function() {
     waitForContextMenu(function() {
-      ok(checkContextTypes(["image","image-shareable","image-loaded", "content-text"]), "Plain image context types");
+      ok(checkContextTypes(["image","image-shareable","image-loaded"]), "Plain image context types");
     }, gCurrentTest.contextNestedImageTest);
 
     let browser = gCurrentTab.browser;
@@ -291,22 +290,10 @@ gTests.push({
   contextNestedImageTest: function() {
     waitForContextMenu(function() {
       ok(checkContextTypes(["link", "link-saveable","image","image-shareable","image-loaded","link-openable"]), "Nested image context types");
-    }, gCurrentTest.contextPlainTextTest);
-
-    let browser = gCurrentTab.browser;
-    let img = browser.contentDocument.getElementById("img-nested");
-    let event = content.document.createEvent("PopupEvents");
-    event.initEvent("contextmenu", true, true);
-    img.dispatchEvent(event);
-  },
-
-  contextPlainTextTest: function() {
-    waitForContextMenu(function() {
-      ok(checkContextTypes(["content-text"]), "Plain text context types");
     }, runNextTest);
 
     let browser = gCurrentTab.browser;
-    let img = browser.contentDocument.getElementById("plain-text");
+    let img = browser.contentDocument.getElementById("img-nested");
     let event = content.document.createEvent("PopupEvents");
     event.initEvent("contextmenu", true, true);
     img.dispatchEvent(event);
