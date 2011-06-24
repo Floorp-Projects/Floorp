@@ -1713,8 +1713,8 @@ static void
 DebugObject_trace(JSTracer *trc, JSObject *obj)
 {
     if (!trc->context->runtime->gcCurrentCompartment) {
-        if (JSObject *obj = (JSObject *) obj->getPrivate())
-            MarkObject(trc, *obj, "Debug.Object referent");
+        if (JSObject *referent = (JSObject *) obj->getPrivate())
+            MarkObject(trc, *referent, "Debug.Object referent");
     }
 }
 
