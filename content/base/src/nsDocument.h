@@ -59,7 +59,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIContent.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMNodeSelector.h"
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
@@ -110,7 +110,7 @@
 #define XML_DECLARATION_BITS_STANDALONE_YES       (1 << 3)
 
 
-class nsIEventListenerManager;
+class nsEventListenerManager;
 class nsDOMStyleSheetList;
 class nsDOMStyleSheetSetList;
 class nsIOutputStream;
@@ -776,7 +776,7 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsIEventListenerManager*
+  virtual nsEventListenerManager*
     GetListenerManager(PRBool aCreateIfNotFound);
 
   // nsIDOM3EventTarget
@@ -1054,7 +1054,7 @@ protected:
   // is a weak reference to avoid leaks due to circular references.
   nsWeakPtr mScopeObject;
 
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
   nsRefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
   nsRefPtr<nsScriptLoader> mScriptLoader;

@@ -56,7 +56,7 @@
 #include "nsIEditorMailSupport.h"
 #include "nsILookAndFeel.h"
 #include "nsFocusManager.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMEventGroup.h"
 #include "mozilla/Preferences.h"
 
@@ -133,7 +133,7 @@ nsEditorEventListener::InstallToEditor()
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
   piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
   NS_ENSURE_STATE(sysGroup);
-  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elmP);
 
   nsCOMPtr<nsIDOMEventListener> listenerBase;
@@ -208,7 +208,7 @@ nsEditorEventListener::UninstallFromEditor()
     return;
   }
 
-  nsCOMPtr<nsIEventListenerManager> elmP =
+  nsEventListenerManager* elmP =
     piTarget->GetListenerManager(PR_TRUE);
   if (!elmP) {
     return;

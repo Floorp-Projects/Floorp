@@ -186,7 +186,7 @@ public:
 
   /**
    * If the current item in the event target chain has an event listener
-   * manager, this method calls nsIEventListenerManager::HandleEvent().
+   * manager, this method calls nsEventListenerManager::HandleEvent().
    */
   nsresult HandleEvent(nsEventChainPostVisitor& aVisitor, PRUint32 aFlags,
                        PRBool aMayHaveNewListenerManagers,

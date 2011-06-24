@@ -42,14 +42,14 @@
 
 class nsPIDOMWindow;
 class nsIDOMEventListener;
-class nsIEventListenerManager;
+class nsEventListenerManager;
 class nsIDOMEvent;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsPIWindowRoot.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -86,7 +86,7 @@ public:
 protected:
   // Members
   nsPIDOMWindow* mWindow; // [Weak]. The window will hold on to us and let go when it dies.
-  nsCOMPtr<nsIEventListenerManager> mListenerManager; // [Strong]. We own the manager, which owns event listeners attached
+  nsRefPtr<nsEventListenerManager> mListenerManager; // [Strong]. We own the manager, which owns event listeners attached
                                                       // to us.
 
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]

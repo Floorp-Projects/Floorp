@@ -82,7 +82,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMModalContentWindow.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMDocument.h"
 #ifndef MOZ_DISABLE_DOMCRYPTO
 #include "nsIDOMCrypto.h"
@@ -901,7 +901,7 @@ protected:
                                                  // whether to clear scope
 
   // These member variable are used only on inner windows.
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  nsRefPtr<nsEventListenerManager> mListenerManager;
   PRCList                       mTimeouts;
   // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
   nsTimeout*                    mTimeoutInsertionPoint;

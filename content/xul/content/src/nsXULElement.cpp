@@ -80,7 +80,7 @@
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsHTMLStyleSheet.h"
@@ -516,7 +516,7 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
 }
 
 nsresult
-nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
+nsXULElement::GetEventListenerManagerForAttr(nsEventListenerManager** aManager,
                                              nsISupports** aTarget,
                                              PRBool* aDefer)
 {

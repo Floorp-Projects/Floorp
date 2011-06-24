@@ -95,7 +95,7 @@ protected:
   nsSMILTimedElement* GetTimedElement(Element* aElement);
   void RegisterEventListener(Element* aElement);
   void UnregisterEventListener(Element* aElement);
-  nsIEventListenerManager* GetEventListenerManager(Element* aElement,
+  nsEventListenerManager* GetEventListenerManager(Element* aElement,
       nsIDOMEventGroup** aSystemGroup);
   void HandleEvent(nsIDOMEvent* aEvent);
   PRBool CheckEventDetail(nsIDOMEvent* aEvent);

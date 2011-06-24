@@ -58,7 +58,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMText.h"
 #include "nsFocusManager.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
 #include "nsIPrivateDOMEvent.h"

@@ -88,7 +88,7 @@
 #include "nsSerializationHelper.h"
 #include "nsIFrame.h"
 #include "nsIView.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "PCOMContentPermissionRequestChild.h"
 #include "xpcpublic.h"
 
@@ -478,7 +478,7 @@ TabChild::~TabChild()
       DestroyCx();
     }
     
-    nsIEventListenerManager* elm = mTabChildGlobal->GetListenerManager(PR_FALSE);
+    nsEventListenerManager* elm = mTabChildGlobal->GetListenerManager(PR_FALSE);
     if (elm) {
       elm->Disconnect();
     }

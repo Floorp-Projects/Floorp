@@ -44,7 +44,7 @@
 #include "nsSMILParserUtils.h"
 #include "nsISMILAnimationElement.h"
 #include "nsContentUtils.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMEventGroup.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMTimeEvent.h"
@@ -338,7 +338,7 @@ nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
   }
 
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  nsIEventListenerManager* elm =
+  nsEventListenerManager* elm =
     GetEventListenerManager(aTarget, getter_AddRefs(sysGroup));
   if (!elm)
     return;
@@ -357,7 +357,7 @@ nsSMILTimeValueSpec::UnregisterEventListener(Element* aTarget)
     return;
 
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  nsIEventListenerManager* elm =
+  nsEventListenerManager* elm =
     GetEventListenerManager(aTarget, getter_AddRefs(sysGroup));
   if (!elm)
     return;
@@ -369,7 +369,7 @@ nsSMILTimeValueSpec::UnregisterEventListener(Element* aTarget)
                                  sysGroup);
 }
 
-nsIEventListenerManager*
+nsEventListenerManager*
 nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget,
                                              nsIDOMEventGroup** aSystemGroup)
 {
@@ -393,7 +393,7 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget,
   if (!target)
     return nsnull;
 
-  nsIEventListenerManager* elm = target->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elm = target->GetListenerManager(PR_TRUE);
   if (!elm)
     return nsnull;
 

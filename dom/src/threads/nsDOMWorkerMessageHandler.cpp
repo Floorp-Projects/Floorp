@@ -401,7 +401,7 @@ nsDOMWorkerMessageHandler::DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEv
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsIEventListenerManager*
+nsEventListenerManager*
 nsDOMWorkerMessageHandler::GetListenerManager(PRBool aMayCreate)
 {
   NS_ERROR("Should not be called");

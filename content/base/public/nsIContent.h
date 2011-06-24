@@ -48,7 +48,7 @@
 class nsIAtom;
 class nsIDOMEvent;
 class nsIContent;
-class nsIEventListenerManager;
+class nsEventListenerManager;
 class nsIURI;
 class nsRuleWalker;
 class nsAttrValue;

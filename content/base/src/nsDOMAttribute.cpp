@@ -56,7 +56,7 @@
 #include "nsGkAtoms.h"
 #include "nsCOMArray.h"
 #include "nsNodeUtils.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsTextNode.h"
 #include "mozAutoDocUpdate.h"
 #include "nsMutationEvent.h"

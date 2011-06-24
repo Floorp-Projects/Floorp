@@ -177,7 +177,7 @@
 #include "nsGenericElement.h"
 
 // Event related includes
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 
 // CSS related includes
@@ -7757,7 +7757,7 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
   
-  nsIEventListenerManager* manager = target->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = target->GetListenerManager(PR_TRUE);
   NS_ENSURE_TRUE(manager, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIAtom> atom(do_GetAtom(nsDependentJSString(id)));

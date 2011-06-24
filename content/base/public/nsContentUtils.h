@@ -112,7 +112,7 @@ class nsIContentPolicy;
 class nsILineBreaker;
 class nsIWordBreaker;
 class nsIJSRuntimeService;
-class nsIEventListenerManager;
+class nsEventListenerManager;
 class nsIScriptContext;
 class nsIRunnable;
 class nsIInterfaceRequestor;
@@ -1000,8 +1000,8 @@ public:
    * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
    *                          one already exists.
    */
-  static nsIEventListenerManager* GetListenerManager(nsINode* aNode,
-                                                     PRBool aCreateIfNotFound);
+  static nsEventListenerManager* GetListenerManager(nsINode* aNode,
+                                                    PRBool aCreateIfNotFound);
 
   /**
    * Remove the eventlistener manager for aNode.

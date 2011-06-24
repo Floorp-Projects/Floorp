@@ -278,9 +278,11 @@ nsIDOMEventGroup* gDOM2EventGroup = nsnull;
 PRUint32 nsEventListenerManager::mInstanceCount = 0;
 PRUint32 nsEventListenerManager::sCreatedCount = 0;
 
-nsEventListenerManager::nsEventListenerManager() :
-  mTarget(nsnull)
+nsEventListenerManager::nsEventListenerManager(nsISupports* aTarget) :
+  mTarget(aTarget)
 {
+  NS_ASSERTION(aTarget, "unexpected null pointer");
+
   ++mInstanceCount;
   ++sCreatedCount;
 }
@@ -331,17 +333,10 @@ nsEventListenerManager::GetSystemEventGroup()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventListenerManager)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEventListenerManager)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEventListenerManager)
-   NS_INTERFACE_MAP_ENTRY(nsIEventListenerManager)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsEventListenerManager, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsEventListenerManager, Release)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsEventListenerManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsEventListenerManager)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsEventListenerManager)
   PRUint32 count = tmp->mListeners.Length();
   for (PRUint32 i = 0; i < count; i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mListeners[i] mListener");
@@ -349,7 +344,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
   }  
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventListenerManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsEventListenerManager)
   tmp->Disconnect();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -1263,16 +1258,6 @@ nsEventListenerManager::Disconnect()
 }
 
 NS_IMETHODIMP
-nsEventListenerManager::SetListenerTarget(nsISupports* aTarget)
-{
-  NS_PRECONDITION(aTarget, "unexpected null pointer");
-
-  //WEAK reference, must be set back to nsnull when done by calling Disconnect
-  mTarget = aTarget;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsEventListenerManager::GetSystemEventGroupLM(nsIDOMEventGroup **aGroup)
 {
   *aGroup = GetSystemEventGroup();
@@ -1300,28 +1285,7 @@ nsEventListenerManager::GetDOM2EventGroup(nsIDOMEventGroup **aGroup)
 }
 
 // nsIDOMEventTarget interface
-NS_IMETHODIMP 
-nsEventListenerManager::AddEventListener(const nsAString& aType, 
-                                         nsIDOMEventListener* aListener, 
-                                         PRBool aUseCapture,
-                                         PRBool aWantsUntrusted,
-                                         PRUint8 optional_argc)
-{
-  NS_ASSERTION(optional_argc == 2,
-               "Don't want to try to get caller from the the ELM");
-
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-  if (aWantsUntrusted) {
-    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
-  }
-
-  nsresult rv = AddEventListenerByType(aListener, aType, flags, nsnull);
-  NS_ASSERTION(NS_FAILED(rv) || HasListenersFor(aType), 
-               "Adding event listener didn't work!");
-  return rv;
-}
-
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsEventListenerManager::RemoveEventListener(const nsAString& aType, 
                                             nsIDOMEventListener* aListener, 
                                             PRBool aUseCapture)
@@ -1363,96 +1327,6 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
                                         context, &status);
   *_retval = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
-}
-
-nsIDOMEventTarget *
-nsEventListenerManager::GetTargetForDOMEvent()
-{
-  NS_ERROR("Should not be called");
-  return nsnull;
-}
-
-nsIDOMEventTarget *
-nsEventListenerManager::GetTargetForEventTargetChain()
-{
-  NS_ERROR("Should not be called");
-  return nsnull;
-}
-
-nsresult
-nsEventListenerManager::PreHandleEvent(nsEventChainPreVisitor & aVisitor)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsEventListenerManager::WillHandleEvent(nsEventChainPostVisitor & aVisitor)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsEventListenerManager::PostHandleEvent(nsEventChainPostVisitor & aVisitor)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsEventListenerManager::DispatchDOMEvent(nsEvent *aEvent,
-                                         nsIDOMEvent *aDOMEvent,
-                                         nsPresContext *aPresContext,
-                                         nsEventStatus *aEventStatus)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsIEventListenerManager*
-nsEventListenerManager::GetListenerManager(PRBool aMayCreate)
-{
-  NS_ERROR("Should not be called");
-  return nsnull;
-}
-
-nsresult
-nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                              const nsIID & aIID)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                                 const nsIID & aIID)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsEventListenerManager::GetSystemEventGroup(nsIDOMEventGroup **_retval)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsIScriptContext*
-nsEventListenerManager::GetContextForEventHandlers(nsresult *aRv)
-{
-  NS_ERROR("Should not be called");
-  *aRv = NS_ERROR_NOT_IMPLEMENTED;
-  return nsnull;
-}
-
-JSContext*
-nsEventListenerManager::GetJSContextForEventHandlers()
-{
-  NS_ERROR("Should not be called");
-  return nsnull;
 }
 
 // nsIDOM3EventTarget interface
@@ -1650,16 +1524,4 @@ nsEventListenerManager::HasUnloadListeners()
     }
   }
   return PR_FALSE;
-}
-
-nsresult
-NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult) 
-{
-  nsIEventListenerManager* l = new nsEventListenerManager();
-
-  if (!l) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return CallQueryInterface(l, aInstancePtrResult);
 }

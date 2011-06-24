@@ -47,7 +47,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsTextFragment.h"
 #include "nsDOMError.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsGenericElement.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsContentUtils.h"

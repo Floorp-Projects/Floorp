@@ -101,7 +101,7 @@
 #include "nsPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMEventGroup.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIConstraintValidation.h"
@@ -890,7 +890,7 @@ nsDocShellTreeOwner::AddChromeListeners()
 
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
   target->GetSystemEventGroup(getter_AddRefs(sysGroup));
-  nsIEventListenerManager* elmP = target->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elmP = target->GetListenerManager(PR_TRUE);
   if (sysGroup && elmP)
   {
     rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("dragover"),
@@ -926,7 +926,7 @@ nsDocShellTreeOwner::RemoveChromeListeners()
 
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
   piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
-  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
   if (sysGroup && elmP)
   {
     nsresult rv =
