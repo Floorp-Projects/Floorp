@@ -81,15 +81,19 @@ function newWindowWithTabView(shownCallback, loadCallback, width, height) {
   let win = window.openDialog(getBrowserURL(), "_blank",
                               "chrome,all,dialog=no,height=" + winHeight +
                               ",width=" + winWidth);
-
-  whenWindowLoaded(win, function () {
-    if (loadCallback)
+  let onLoad = function() {
+    win.removeEventListener("load", onLoad, false);
+    if (typeof loadCallback == "function")
       loadCallback(win);
 
-    whenDelayedStartupFinished(win, function () {
-      showTabView(function () shownCallback(win), win);
-    });
-  });
+    let onShown = function() {
+      win.removeEventListener("tabviewshown", onShown, false);
+      shownCallback(win);
+    };
+    win.addEventListener("tabviewshown", onShown, false);
+    win.TabView.toggle();
+  }
+  win.addEventListener("load", onLoad, false);
 }
 
 // ----------
