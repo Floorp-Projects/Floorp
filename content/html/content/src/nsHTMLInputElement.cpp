@@ -49,7 +49,6 @@
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"

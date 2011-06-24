@@ -73,7 +73,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"

@@ -411,7 +411,7 @@ nsHTMLEditor::GrabberClicked()
     mMouseMotionListenerP = new ResizerMouseMotionListener(this);
     if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
 
-    nsCOMPtr<nsIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+    nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
     NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
     res = piTarget->AddEventListenerByIID(mMouseMotionListenerP,
@@ -441,7 +441,7 @@ nsHTMLEditor::EndMoving()
 
     mPositioningShadow = nsnull;
   }
-  nsCOMPtr<nsIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
 
   if (piTarget && mMouseMotionListenerP) {
 #ifdef DEBUG

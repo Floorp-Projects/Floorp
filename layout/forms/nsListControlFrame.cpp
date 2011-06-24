@@ -70,7 +70,6 @@
 #include "nsILookAndFeel.h"
 #include "nsFontMetrics.h"
 #include "nsIScrollableFrame.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIServiceManager.h"

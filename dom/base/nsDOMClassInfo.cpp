@@ -7749,15 +7749,15 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   nsIScriptContext *script_cx = nsJSUtils::GetStaticScriptContext(cx, obj);
   NS_ENSURE_TRUE(script_cx, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMEventTarget> piTarget =
+  nsCOMPtr<nsIDOMEventTarget> target =
     do_QueryWrappedNative(wrapper, obj);
-  if (!piTarget) {
+  if (!target) {
     // Doesn't do events
     NS_WARNING("Doesn't QI to nsIDOMEventTarget?");
     return NS_OK;
   }
   
-  nsIEventListenerManager* manager = piTarget->GetListenerManager(PR_TRUE);
+  nsIEventListenerManager* manager = target->GetListenerManager(PR_TRUE);
   NS_ENSURE_TRUE(manager, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIAtom> atom(do_GetAtom(nsDependentJSString(id)));
@@ -7768,12 +7768,12 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   JSObject *scope = ::JS_GetGlobalForObject(cx, obj);
 
   if (compile) {
-    rv = manager->CompileScriptEventListener(script_cx, scope, piTarget, atom,
+    rv = manager->CompileScriptEventListener(script_cx, scope, target, atom,
                                              did_define);
   } else if (remove) {
     rv = manager->RemoveScriptEventListener(atom);
   } else {
-    rv = manager->RegisterScriptEventListener(script_cx, scope, piTarget,
+    rv = manager->RegisterScriptEventListener(script_cx, scope, target,
                                               atom);
   }
 

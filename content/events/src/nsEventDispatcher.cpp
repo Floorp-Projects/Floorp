@@ -232,7 +232,7 @@ public:
     sMaxEtciCount = 0;
   }
 
-  nsCOMPtr<nsIDOMEventTarget>      mTarget;
+  nsCOMPtr<nsIDOMEventTarget>       mTarget;
   nsEventTargetChainItem*           mChild;
   union {
     nsEventTargetChainItem*         mParent;
@@ -243,7 +243,7 @@ public:
   PRUint16                          mItemFlags;
   nsCOMPtr<nsISupports>             mItemData;
   // Event retargeting must happen whenever mNewTarget is non-null.
-  nsCOMPtr<nsIDOMEventTarget>      mNewTarget;
+  nsCOMPtr<nsIDOMEventTarget>       mNewTarget;
   // Cache mTarget's event listener manager.
   nsRefPtr<nsEventListenerManager>  mManager;
 
@@ -619,7 +619,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   if (preVisitor.mCanHandle) {
     // At least the original target can handle the event.
     // Setting the retarget to the |target| simplifies retargeting code.
-    nsCOMPtr<nsIDOMEventTarget> t = do_QueryInterface(aEvent->target);
+    nsCOMPtr<nsIDOMEventTarget> t = aEvent->target;
     targetEtci->SetNewTarget(t);
     nsEventTargetChainItem* topEtci = targetEtci;
     while (preVisitor.mParentTarget) {

@@ -377,7 +377,7 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget,
   NS_ABORT_IF_FALSE(aSystemGroup && !*aSystemGroup,
       "Bad out param for system group");
 
-  nsCOMPtr<nsIDOMEventTarget> piTarget;
+  nsCOMPtr<nsIDOMEventTarget> target;
 
   if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
     nsIDocument* doc = aTarget->GetCurrentDoc();
@@ -386,14 +386,14 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget,
     nsPIDOMWindow* win = doc->GetWindow();
     if (!win)
       return nsnull;
-    piTarget = do_QueryInterface(win);
+    target = do_QueryInterface(win);
   } else {
-    piTarget = aTarget;
+    target = aTarget;
   }
-  if (!piTarget)
+  if (!target)
     return nsnull;
 
-  nsIEventListenerManager* elm = piTarget->GetListenerManager(PR_TRUE);
+  nsIEventListenerManager* elm = target->GetListenerManager(PR_TRUE);
   if (!elm)
     return nsnull;
 
