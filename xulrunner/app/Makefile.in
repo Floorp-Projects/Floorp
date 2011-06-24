@@ -136,10 +136,6 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DXULRUNNER_ICO=\"$(DIST)/branding/xulrunner.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
-LIBS += -lphexlib
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 #
 # Control the default heap size.
