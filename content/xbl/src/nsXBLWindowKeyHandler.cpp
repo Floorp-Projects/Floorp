@@ -201,8 +201,7 @@ nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
   }
 }
 
-NS_IMPL_ISUPPORTS2(nsXBLWindowKeyHandler,
-                   nsIDOMKeyListener,
+NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler,
                    nsIDOMEventListener)
 
 static void
@@ -393,27 +392,19 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
   return NS_OK;
 }
 
-nsresult nsXBLWindowKeyHandler::KeyUp(nsIDOMEvent* aEvent)
+NS_IMETHODIMP
+nsXBLWindowKeyHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
-  return WalkHandlers(keyEvent, nsGkAtoms::keyup);
-}
 
-nsresult nsXBLWindowKeyHandler::KeyDown(nsIDOMEvent* aEvent)
-{
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
-  NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
-  return WalkHandlers(keyEvent, nsGkAtoms::keydown);
-}
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+  nsCOMPtr<nsIAtom> eventTypeAtom = do_GetAtom(eventType);
+  NS_ENSURE_TRUE(eventTypeAtom, NS_ERROR_OUT_OF_MEMORY);
 
-nsresult nsXBLWindowKeyHandler::KeyPress(nsIDOMEvent* aEvent)
-{
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
-  NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
-  return WalkHandlers(keyEvent, nsGkAtoms::keypress);
+  return WalkHandlers(keyEvent, eventTypeAtom);
 }
-
 
 //
 // EventMatched
