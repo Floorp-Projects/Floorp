@@ -2933,8 +2933,7 @@ SessionStoreService.prototype = {
         // force session history to update its internal index and call reload
         // instead of gotoIndex. See bug 597315.
         browser.webNavigation.sessionHistory.getEntryAtIndex(activeIndex, true);
-        browser.webNavigation.sessionHistory.
-          QueryInterface(Ci.nsISHistory).reloadCurrentEntry();
+        browser.webNavigation.sessionHistory.reloadCurrentEntry();
       }
       catch (ex) {
         // ignore page load errors
