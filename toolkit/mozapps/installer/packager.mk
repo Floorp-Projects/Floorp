@@ -119,17 +119,13 @@ ifeq ($(MOZ_PKG_FORMAT),SFX7Z)
 PKG_SUFFIX	= .exe
 INNER_MAKE_PACKAGE	= rm -f app.7z && \
   mv $(MOZ_PKG_DIR) core && \
-  (if [ -f ../optional_file_list.txt ]; then mkdir optional; xargs -I {} -a ../optional_file_list.txt mv -t optional/ core/{}; fi;) && \
   $(CYGWIN_WRAPPER) 7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 \
     -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3 && \
   mv core $(MOZ_PKG_DIR) && \
-  (if [ -d optional ]; then mv optional/* $(MOZ_PKG_DIR); rm -rf optional; fi;) && \
   cat $(SFX_HEADER) app.7z > $(PACKAGE) && \
   chmod 0755 $(PACKAGE)
 INNER_UNMAKE_PACKAGE	= $(CYGWIN_WRAPPER) 7z x $(UNPACKAGE) core && \
-  rm -f ../optional_file_list.txt && \
-  mv core $(MOZ_PKG_DIR) && \
-  (if [ -d optional ]; then ls -1 optional > ../optional_file_list.txt; cp -rp optional/* $(MOZ_PKG_DIR); rm -rf optional; fi;)
+  mv core $(MOZ_PKG_DIR)
 endif
 
 #Create an RPM file
