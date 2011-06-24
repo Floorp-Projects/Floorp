@@ -1092,7 +1092,7 @@ nsresult
 nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
                                            nsIDOMEventListener* aListener,
                                            nsIDOMEvent* aDOMEvent,
-                                           nsPIDOMEventTarget* aCurrentTarget,
+                                           nsIDOMEventTarget* aCurrentTarget,
                                            PRUint32 aPhaseFlags,
                                            nsCxPusher* aPusher)
 {
@@ -1153,7 +1153,7 @@ nsresult
 nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                             nsEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent,
-                                            nsPIDOMEventTarget* aCurrentTarget,
+                                            nsIDOMEventTarget* aCurrentTarget,
                                             PRUint32 aFlags,
                                             nsEventStatus* aEventStatus,
                                             nsCxPusher* aPusher)
@@ -1572,7 +1572,7 @@ nsEventListenerManager::HasListeners()
 nsresult
 nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
 {
-  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(mTarget);
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTarget);
   NS_ENSURE_STATE(target);
   aList->Clear();
   PRUint32 count = mListeners.Length();

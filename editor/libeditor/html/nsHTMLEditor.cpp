@@ -473,7 +473,7 @@ nsHTMLEditor::RemoveEventListeners()
     return;
   }
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = GetPIDOMEventTarget();
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(piTarget);
 
   if (piTarget && target)
@@ -5826,14 +5826,14 @@ nsHTMLEditor::IsActiveInDOMWindow()
   return PR_TRUE;
 }
 
-already_AddRefed<nsPIDOMEventTarget>
+already_AddRefed<nsIDOMEventTarget>
 nsHTMLEditor::GetPIDOMEventTarget()
 {
   // Don't use getDocument here, because we have no way of knowing
   // whether Init() was ever called.  So we need to get the document
   // ourselves, if it exists.
   NS_PRECONDITION(mDocWeak, "This editor has not been initialized yet");
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryReferent(mDocWeak.get());
+  nsCOMPtr<nsIDOMEventTarget> piTarget = do_QueryReferent(mDocWeak.get());
   return piTarget.forget();
 }
 

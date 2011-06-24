@@ -533,7 +533,7 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
     if ((!root || root == this) && !mNodeInfo->Equals(nsGkAtoms::overlay) &&
         (window = doc->GetInnerWindow()) && window->IsInnerWindow()) {
 
-        nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(window);
+        nsCOMPtr<nsIDOMEventTarget> piTarget = do_QueryInterface(window);
         if (!piTarget)
             return NS_ERROR_UNEXPECTED;
 
@@ -2192,7 +2192,7 @@ PopupListenerPropertyDtor(void* aObject, nsIAtom* aPropertyName,
     do_QueryInterface(static_cast<nsINode*>(aObject));
   if (target) {
     nsCOMPtr<nsIDOMEventGroup> systemGroup;
-    static_cast<nsPIDOMEventTarget*>(aObject)->
+    static_cast<nsIDOMEventTarget*>(aObject)->
       GetSystemEventGroup(getter_AddRefs(systemGroup));
     if (systemGroup) {
       target->RemoveGroupedEventListener(NS_LITERAL_STRING("mousedown"),

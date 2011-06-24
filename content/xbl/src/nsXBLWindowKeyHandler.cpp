@@ -179,7 +179,7 @@ nsXBLSpecialDocInfo* nsXBLWindowKeyHandler::sXBLSpecialDocInfo = nsnull;
 PRUint32 nsXBLWindowKeyHandler::sRefCnt = 0;
 
 nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement,
-                                             nsPIDOMEventTarget* aTarget)
+                                             nsIDOMEventTarget* aTarget)
   : mTarget(aTarget),
     mHandler(nsnull),
     mUserHandler(nsnull)
@@ -566,7 +566,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
       }
     }
 
-    nsCOMPtr<nsPIDOMEventTarget> piTarget;
+    nsCOMPtr<nsIDOMEventTarget> piTarget;
     nsCOMPtr<nsIDOMElement> element = GetElement();
     if (element) {
       piTarget = do_QueryInterface(commandElt);
@@ -595,7 +595,7 @@ nsXBLWindowKeyHandler::GetElement()
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement, nsPIDOMEventTarget* aTarget,
+NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventTarget* aTarget,
                           nsXBLWindowKeyHandler** aResult)
 {
   *aResult = new nsXBLWindowKeyHandler(aElement, aTarget);

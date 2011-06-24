@@ -102,7 +102,7 @@
 #include "nsPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventGroup.h"
 #include "nsIDOMDragEvent.h"
@@ -112,10 +112,10 @@
 // GetEventReceiver
 //
 // A helper routine that navigates the tricky path from a |nsWebBrowser| to
-// a |nsPIDOMEventTarget| via the window root and chrome event handler.
+// a |nsIDOMEventTarget| via the window root and chrome event handler.
 //
 static nsresult
-GetPIDOMEventTarget( nsWebBrowser* inBrowser, nsPIDOMEventTarget** aTarget)
+GetPIDOMEventTarget( nsWebBrowser* inBrowser, nsIDOMEventTarget** aTarget)
 {
   NS_ENSURE_ARG_POINTER(inBrowser);
   
@@ -127,7 +127,7 @@ GetPIDOMEventTarget( nsWebBrowser* inBrowser, nsPIDOMEventTarget** aTarget)
   NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
   nsPIDOMWindow *rootWindow = domWindowPrivate->GetPrivateRoot();
   NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
-  nsCOMPtr<nsPIDOMEventTarget> piTarget =
+  nsCOMPtr<nsIDOMEventTarget> piTarget =
     do_QueryInterface(rootWindow->GetChromeEventHandler());
   NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
   *aTarget = piTarget;
@@ -888,7 +888,7 @@ nsDocShellTreeOwner::AddChromeListeners()
   }
 
   // register dragover and drop event listeners with the listener manager
-  nsCOMPtr<nsPIDOMEventTarget> piTarget;
+  nsCOMPtr<nsIDOMEventTarget> piTarget;
   GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
 
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
@@ -922,7 +922,7 @@ nsDocShellTreeOwner::RemoveChromeListeners()
     NS_RELEASE(mChromeContextMenuListener);
   }
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget;
+  nsCOMPtr<nsIDOMEventTarget> piTarget;
   GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
   if (!piTarget)
     return NS_OK;
