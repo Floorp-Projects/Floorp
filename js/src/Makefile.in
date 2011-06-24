@@ -186,6 +186,7 @@ CPPSRCS		= \
 		GlobalObject.cpp \
 		Stack.cpp \
 		String.cpp \
+		ParseMaps.cpp \
 		$(NULL)
 
 # Changes to internal header files, used externally, massively slow down
@@ -257,11 +258,12 @@ INSTALLED_HEADERS = \
 		prmjtime.h \
 		$(NULL)
 
-###############################################
-# BEGIN include sources for the vm subdirectory
+######################################################
+# BEGIN include sources for the engine subdirectories
 #
 VPATH		+= \
-		$(srcdir)/vm 	\
+		$(srcdir)/vm \
+		$(srcdir)/frontend \
 		$(NULL)
 
 EXPORTS_NAMESPACES = vm
@@ -645,7 +647,7 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 53 \
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 54 \
 		"in Makefile.in" "{cx,rt}->{new_,new_array,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
 	$(srcdir)/config/check_source_count.py UnwantedForeground:: 33 \
