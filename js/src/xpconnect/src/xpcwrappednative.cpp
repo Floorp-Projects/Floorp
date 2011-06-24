@@ -115,10 +115,11 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
         else
             JS_snprintf(name, sizeof(name), "XPCWrappedNative");
 
-        cb.DescribeRefCountedNode(tmp->mRefCnt.get(),
-                                  sizeof(XPCWrappedNative), name);
+        cb.DescribeNode(RefCounted, tmp->mRefCnt.get(),
+                        sizeof(XPCWrappedNative), name);
     } else {
-        NS_IMPL_CYCLE_COLLECTION_DESCRIBE(XPCWrappedNative, tmp->mRefCnt.get())
+        cb.DescribeNode(RefCounted, tmp->mRefCnt.get(),
+                        sizeof(XPCWrappedNative), "XPCWrappedNative");
     }
 
     if(tmp->mRefCnt.get() > 1) {
