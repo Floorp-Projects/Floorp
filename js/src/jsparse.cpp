@@ -126,12 +126,6 @@ JS_STATIC_ASSERT(pn_offsetof(pn_u.name.atom) == pn_offsetof(pn_u.apair.atom));
     JS_END_MACRO
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
-#ifdef METER_PARSENODES
-static uint32 parsenodes = 0;
-static uint32 maxparsenodes = 0;
-static uint32 recyclednodes = 0;
-#endif
-
 void
 JSParseNode::become(JSParseNode *pn2)
 {
@@ -388,10 +382,6 @@ AddNodeToFreeList(JSParseNode *pn, js::Parser *parser)
 
     pn->pn_next = parser->nodeList;
     parser->nodeList = pn;
-
-#ifdef METER_PARSENODES
-    recyclednodes++;
-#endif
 }
 
 /* Add |node| to |tc|'s parser's free node list. */
@@ -689,11 +679,6 @@ NewOrRecycledNode(JSTreeContext *tc)
     }
 
     if (pn) {
-#ifdef METER_PARSENODES
-        parsenodes++;
-        if (parsenodes - recyclednodes > maxparsenodes)
-            maxparsenodes = parsenodes - recyclednodes;
-#endif
         pn->pn_used = pn->pn_defn = false;
         memset(&pn->pn_u, 0, sizeof pn->pn_u);
         pn->pn_next = NULL;
@@ -910,9 +895,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JSParseNode *pn;
     JSScript *script;
     bool inDirectivePrologue;
-#ifdef METER_PARSENODES
-    void *sbrk(ptrdiff_t), *before = sbrk(0);
-#endif
 
     JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_NEED_MUTABLE_SCRIPT |
                             TCF_COMPILE_FOR_EVAL)));
@@ -1107,30 +1089,12 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         }
     }
 
-#ifdef METER_PARSENODES
-    printf("Parser growth: %d (%u nodes, %u max, %u unrecycled)\n",
-           (char *)sbrk(0) - (char *)before,
-           parsenodes,
-           maxparsenodes,
-           parsenodes - recyclednodes);
-    before = sbrk(0);
-#endif
-
     /*
      * Nowadays the threaded interpreter needs a stop instruction, so we
      * do have to emit that here.
      */
     if (js_Emit1(cx, &cg, JSOP_STOP) < 0)
         goto out;
-
-#ifdef METER_PARSENODES
-    printf("Code-gen growth: %d (%u bytecodes, %u srcnotes)\n",
-           (char *)sbrk(0) - (char *)before, CG_OFFSET(&cg), cg.noteCount);
-#endif
-
-#ifdef JS_ARENAMETER
-    JS_DumpArenaStats(stdout);
-#endif
 
     JS_ASSERT(cg.version() == version);
 
@@ -1140,14 +1104,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     if (funbox)
         script->savedCallerFun = true;
-
-#ifdef JS_SCOPE_DEPTH_METER
-    JSObject *obj = scopeChain;
-    uintN depth = 1;
-    while ((obj = obj->getParent()) != NULL)
-        ++depth;
-    JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
-#endif
 
     {
         AutoShapeRooter shapeRoot(cx, script->bindings.lastShape());
@@ -2002,12 +1958,9 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext 
 #endif /* JS_HAS_DESTRUCTURING */
 
 JSFunction *
-Parser::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
+Parser::newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
 {
-    JSObject *parent;
-    JSFunction *fun;
-
-    JS_ASSERT((lambda & ~JSFUN_LAMBDA) == 0);
+    JS_ASSERT_IF(kind == Statement, atom != NULL);
 
     /*
      * Find the global compilation context in order to pre-set the newborn
@@ -2017,9 +1970,12 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
      */
     while (tc->parent)
         tc = tc->parent;
-    parent = tc->inFunction() ? NULL : tc->scopeChain();
+    JSObject *parent = tc->inFunction() ? NULL : tc->scopeChain();
 
-    fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda, parent, atom);
+    JSFunction *fun =
+        js_NewFunction(context, NULL, NULL, 0,
+                       JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
+                       parent, atom);
     if (fun && !tc->compileAndGo()) {
         FUN_OBJECT(fun)->clearParent();
         FUN_OBJECT(fun)->clearProto();
@@ -2465,8 +2421,6 @@ DeoptimizeUsesWithin(JSDefinition *dn, const TokenPos &pos)
 void
 Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
 {
-#define FUN_METER(x) JS_FUNCTION_METER(context, x)
-
     for (;;) {
         JSParseNode *fn = funbox->node;
         JSParseNode *pn = fn->pn_body;
@@ -2512,12 +2466,10 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
 
         JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
 
-        FUN_METER(allfun);
         if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
-            FUN_METER(heavy);
+            /* nothing to do */
         } else if (funbox->inAnyDynamicScope()) {
             JS_ASSERT(!FUN_NULL_CLOSURE(fun));
-            FUN_METER(indynamicscope);
         } else if (pn->pn_type != TOK_UPVARS) {
             /*
              * No lexical dependencies => null closure, for best performance.
@@ -2535,7 +2487,6 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
              *
              * FIXME: bug 476950.
              */
-            FUN_METER(nofreeupvar);
             FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
         } else {
             JSAtomList upvars(pn->pn_names);
@@ -2564,10 +2515,8 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
                     }
                 }
 
-                if (!ale) {
-                    FUN_METER(onlyfreevar);
+                if (!ale)
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
-                }
             } else {
                 uintN nupvars = 0, nflattened = 0;
 
@@ -2604,14 +2553,12 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
                 }
 
                 if (nupvars == 0) {
-                    FUN_METER(onlyfreevar);
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
                 } else if (nflattened == nupvars) {
                     /*
                      * We made it all the way through the upvar loop, so it's
                      * safe to optimize to a flat closure.
                      */
-                    FUN_METER(flat);
                     FUN_SET_KIND(fun, JSFUN_FLAT_CLOSURE);
                     switch (PN_OP(fn)) {
                       case JSOP_DEFFUN:
@@ -2627,8 +2574,6 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
                         /* js_EmitTree's case TOK_FUNCTION: will select op. */
                         JS_ASSERT(PN_OP(fn) == JSOP_NOP);
                     }
-                } else {
-                    FUN_METER(badfunarg);
                 }
             }
         }
@@ -2663,8 +2608,6 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
         if (!funbox)
             break;
     }
-
-#undef FUN_METER
 }
 
 /*
@@ -2717,10 +2660,10 @@ JSDefinition::kindString(Kind kind)
 
 static JSFunctionBox *
 EnterFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
-              uintN lambda = JSFUN_LAMBDA)
+              FunctionSyntaxKind kind = Expression)
 {
     JSTreeContext *tc = funtc->parent;
-    JSFunction *fun = tc->parser->newFunction(tc, funAtom, lambda);
+    JSFunction *fun = tc->parser->newFunction(tc, funAtom, kind);
     if (!fun)
         return NULL;
 
@@ -2744,7 +2687,7 @@ EnterFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
 
 static bool
 LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
-              uintN lambda = JSFUN_LAMBDA)
+              FunctionSyntaxKind kind = Expression)
 {
     JSTreeContext *tc = funtc->parent;
     tc->blockidGen = funtc->blockidGen;
@@ -2773,7 +2716,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
             JSDefinition *dn = ALE_DEFN(ale);
             JS_ASSERT(dn->isPlaceholder());
 
-            if (atom == funAtom && lambda != 0) {
+            if (atom == funAtom && kind == Expression) {
                 dn->pn_op = JSOP_CALLEE;
                 dn->pn_cookie.set(funtc->staticLevel, UpvarCookie::CALLEE_SLOT);
                 dn->pn_dflags |= PND_BOUND;
@@ -3077,8 +3020,10 @@ Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNo
 }
 
 JSParseNode *
-Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
+Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
 {
+    JS_ASSERT_IF(kind == Statement, funAtom);
+
     /* Make a TOK_FUNCTION node. */
     tokenStream.mungeCurrentToken(TOK_FUNCTION, JSOP_NOP);
     JSParseNode *pn = FunctionNode::create(tc);
@@ -3088,21 +3033,22 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     pn->pn_cookie.makeFree();
 
     /*
-     * If a lambda, mark this function as escaping (as a "funarg") unless it is
-     * immediately applied (we clear PND_FUNARG if so -- see memberExpr).
+     * If this is a function expression, mark this function as escaping (as a
+     * "funarg") unless it is immediately applied (we clear PND_FUNARG if so --
+     * see memberExpr).
      *
-     * Treat function sub-statements (non-lambda, non-body-level functions) as
-     * escaping funargs, since we can't statically analyze their definitions
-     * and uses.
+     * Treat function sub-statements (those not at body level of a function or
+     * program) as escaping funargs, since we can't statically analyze their
+     * definitions and uses.
      */
     bool bodyLevel = tc->atBodyLevel();
-    pn->pn_dflags = (lambda || !bodyLevel) ? PND_FUNARG : 0;
+    pn->pn_dflags = (kind == Expression || !bodyLevel) ? PND_FUNARG : 0;
 
     /*
      * Record names for function statements in tc->decls so we know when to
      * avoid optimizing variable references that might name a function.
      */
-    if (lambda == 0 && funAtom) {
+    if (kind == Statement) {
         if (JSAtomListElement *ale = tc->decls.lookup(funAtom)) {
             JSDefinition *dn = ALE_DEFN(ale);
             JSDefinition::Kind dn_kind = dn->kind();
@@ -3207,7 +3153,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     /* Initialize early for possible flags mutation via destructuringExpr. */
     JSTreeContext funtc(tc->parser);
 
-    JSFunctionBox *funbox = EnterFunction(pn, &funtc, funAtom, lambda);
+    JSFunctionBox *funbox = EnterFunction(pn, &funtc, funAtom, kind);
     if (!funbox)
         return NULL;
 
@@ -3281,7 +3227,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
 #if JS_HAS_EXPR_CLOSURES
     if (tt == TOK_LC)
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
-    else if (lambda == 0 && !MatchOrInsertSemicolon(context, &tokenStream))
+    else if (kind == Statement && !MatchOrInsertSemicolon(context, &tokenStream))
         return NULL;
 #else
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
@@ -3357,41 +3303,25 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
          * or function), then our enclosing function, if any, must be
          * heavyweight.
          */
-        if (!bodyLevel && lambda == 0 && funAtom)
+        if (!bodyLevel && kind == Statement)
             outertc->flags |= TCF_FUN_HEAVYWEIGHT;
     }
 
-    JSParseNode *result = pn;
     JSOp op = JSOP_NOP;
-    if (lambda != 0) {
-        /*
-         * ECMA ed. 3 standard: function expression, possibly anonymous.
-         */
+    if (kind == Expression) {
         op = JSOP_LAMBDA;
-    } else if (!funAtom) {
-        /*
-         * If this anonymous function definition is *not* embedded within a
-         * larger expression, we treat it as an expression statement, not as
-         * a function declaration -- and not as a syntax error (as ECMA-262
-         * Edition 3 would have it).  Backward compatibility must trump all,
-         * unless JSOPTION_ANONFUNFIX is set.
-         */
-        result = UnaryNode::create(outertc);
-        if (!result)
-            return NULL;
-        result->pn_type = TOK_SEMI;
-        result->pn_pos = pn->pn_pos;
-        result->pn_kid = pn;
-        op = JSOP_LAMBDA;
-    } else if (!bodyLevel) {
-        /*
-         * ECMA ed. 3 extension: a function expression statement not at the
-         * top level, e.g., in a compound statement such as the "then" part
-         * of an "if" statement, binds a closure only if control reaches that
-         * sub-statement.
-         */
-        op = JSOP_DEFFUN;
-        outertc->noteMightAliasLocals();
+    } else {
+        if (!bodyLevel) {
+            /*
+             * Extension: in non-strict mode code, a function statement not at
+             * the top level of a function body or whole program, e.g., in a
+             * compound statement such as the "then" part of an "if" statement,
+             * binds a closure only if control reaches that sub-statement.
+             */
+            JS_ASSERT(!outertc->inStrictMode());
+            op = JSOP_DEFFUN;
+            outertc->noteMightAliasLocals();
+        }
     }
 
     funbox->kids = funtc.functionList;
@@ -3405,7 +3335,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         pn->pn_body = body;
     }
 
-    if (!outertc->inFunction() && bodyLevel && funAtom && !lambda && outertc->compiling()) {
+    if (!outertc->inFunction() && bodyLevel && kind == Statement && outertc->compiling()) {
         JS_ASSERT(pn->pn_cookie.isFree());
         if (!DefineGlobal(pn, outertc->asCodeGenerator(), funAtom))
             return NULL;
@@ -3413,14 +3343,14 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
 
     pn->pn_blockid = outertc->blockid();
 
-    if (!LeaveFunction(pn, &funtc, funAtom, lambda))
+    if (!LeaveFunction(pn, &funtc, funAtom, kind))
         return NULL;
 
     /* If the surrounding function is not strict code, reset the lexer. */
     if (!outertc->inStrictMode())
         tokenStream.setStrictMode(false);
 
-    return result;
+    return pn;
 }
 
 JSParseNode *
@@ -3430,12 +3360,9 @@ Parser::functionStmt()
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME) {
         name = tokenStream.currentToken().t_atom;
     } else {
-        if (hasAnonFunFix()) {
-            /* Extension: accept unnamed function expressions as statements. */
-            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
-            return NULL;
-        }
-        tokenStream.ungetToken();
+        /* Unnamed function expressions are forbidden in statement context. */
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_UNNAMED_FUNCTION_STMT);
+        return NULL;
     }
 
     /* We forbid function statements in strict mode code. */
@@ -3444,7 +3371,7 @@ Parser::functionStmt()
         return NULL;
     }
 
-    return functionDef(name, GENERAL, 0);
+    return functionDef(name, GENERAL, Statement);
 }
 
 JSParseNode *
@@ -3455,7 +3382,7 @@ Parser::functionExpr()
         name = tokenStream.currentToken().t_atom;
     else
         tokenStream.ungetToken();
-    return functionDef(name, GENERAL, JSFUN_LAMBDA);
+    return functionDef(name, GENERAL, Expression);
 }
 
 /*
@@ -5614,8 +5541,6 @@ Parser::letStatement()
             stmt->flags |= SIF_SCOPE;
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
-            JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
-                                    (tc->maxScopeDepth = tc->scopeDepth));
 
             obj->setParent(tc->blockChain());
             blockbox->parent = tc->blockChainBox;
@@ -7198,6 +7123,9 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
         pnp = &pn2->pn_kid2;
     }
 
+    if (!maybeNoteGenerator())
+        return NULL;
+
     pn2 = UnaryNode::create(tc);
     if (!pn2)
         return NULL;
@@ -7315,6 +7243,27 @@ static const char js_generator_str[] = "generator";
 #endif /* JS_HAS_GENERATOR_EXPRS */
 #endif /* JS_HAS_GENERATORS */
 
+/*
+ * Check whether a |yield| token has been encountered since the last reset point
+ * (the creation of the tree context or the current GenexpGuard), and if so,
+ * note that the current function is a generator function.
+ *
+ * Call this after the current GenexpGuard has determined whether it was inside
+ * of a generator expression.
+ */
+bool
+Parser::maybeNoteGenerator()
+{
+    if (tc->yieldCount > 0) {
+        tc->flags |= TCF_FUN_IS_GENERATOR;
+        if (!tc->inFunction()) {
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
+            return false;
+        }
+    }
+    return true;
+}
+
 JSBool
 Parser::argumentList(JSParseNode *listNode)
 {
@@ -7322,11 +7271,17 @@ Parser::argumentList(JSParseNode *listNode)
         return JS_TRUE;
 
     GenexpGuard guard(tc);
+    bool arg0 = true;
 
     do {
         JSParseNode *argNode = assignExpr();
         if (!argNode)
             return JS_FALSE;
+        if (arg0) {
+            guard.endBody();
+            arg0 = false;
+        }
+
 #if JS_HAS_GENERATORS
         if (argNode->pn_type == TOK_YIELD &&
             !argNode->pn_parens &&
@@ -7353,11 +7308,13 @@ Parser::argumentList(JSParseNode *listNode)
         listNode->append(argNode);
     } while (tokenStream.matchToken(TOK_COMMA));
 
+    if (!maybeNoteGenerator())
+        return JS_FALSE;
+
     if (tokenStream.getToken() != TOK_RP) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_AFTER_ARGS);
         return JS_FALSE;
     }
-    guard.endBody();
     return JS_TRUE;
 }
 
@@ -8505,7 +8462,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     pn->pn_xflags |= PNX_NONCONST;
 
                     /* NB: Getter function in { get x(){} } is unnamed. */
-                    pn2 = functionDef(NULL, op == JSOP_SETTER ? SETTER : GETTER, JSFUN_LAMBDA);
+                    pn2 = functionDef(NULL, op == JSOP_SETTER ? SETTER : GETTER, Expression);
                     pn2 = JSParseNode::newBinaryOrAppend(TOK_COLON, op, pn3, pn2, tc);
                     goto skip;
                 }
@@ -8958,13 +8915,8 @@ Parser::parenExpr(JSBool *genexp)
     }
 #endif /* JS_HAS_GENERATOR_EXPRS */
 
-    if (tc->yieldCount > 0) {
-        tc->flags |= TCF_FUN_IS_GENERATOR;
-        if (!tc->inFunction()) {
-            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
-            return NULL;
-        }
-    }
+    if (!maybeNoteGenerator())
+        return NULL;
 
     return pn;
 }

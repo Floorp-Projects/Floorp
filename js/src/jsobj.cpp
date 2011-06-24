@@ -973,7 +973,6 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
     uintN count = 0;
     JSScript **scriptp = bucket;
 
-    EVAL_CACHE_METER(probe);
     JSVersion version = cx->findVersion();
     JSScript *script;
     while ((script = *scriptp) != NULL) {
@@ -1013,14 +1012,12 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
                             objarray = script->regexps();
                             i = 0;
                         } else {
-                            EVAL_CACHE_METER(noscope);
                             i = -1;
                         }
                     }
                     if (i < 0 ||
                         objarray->vector[i]->getParent() == &scopeobj) {
                         JS_ASSERT(staticLevel == script->staticLevel);
-                        EVAL_CACHE_METER(hit);
                         *scriptp = script->u.nextToGC;
                         script->u.nextToGC = NULL;
                         return script;
@@ -1031,7 +1028,6 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, uintN st
 
         if (++count == EVAL_CACHE_CHAIN_LIMIT)
             return NULL;
-        EVAL_CACHE_METER(step);
         scriptp = &script->u.nextToGC;
     }
     return NULL;
@@ -2521,6 +2517,13 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
                              bytes, "not an object or null");
         JS_free(cx, bytes);
         return JS_FALSE;
+    }
+
+    if (JSObject *proto = v.toObjectOrNull()) {
+        if (proto->isXML()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XML_PROTO_FORBIDDEN);
+            return false;
+        }
     }
 
     /*
@@ -4098,6 +4101,11 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
             return false;
     }
 
+    if (proto && proto->isXML()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XML_PROTO_FORBIDDEN);
+        return false;
+    }
+
     /*
      * Regenerate property cache shape ids for all of the scopes along the
      * old prototype chain to invalidate their property cache entries, in
@@ -4839,8 +4847,6 @@ CallResolveOp(JSContext *cx, JSObject *start, JSObject *obj, jsid id, uintN flag
     return true;
 }
 
-#define SCOPE_DEPTH_ACCUM(bs,val) JS_SCOPE_DEPTH_METERING(JS_BASIC_STATS_ACCUM(bs, val))
-
 static JS_ALWAYS_INLINE bool
 LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                               JSObject **objp, JSProperty **propp)
@@ -4850,13 +4856,9 @@ LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN flags
 
     /* Search scopes starting with obj and following the prototype link. */
     JSObject *start = obj;
-#ifdef JS_SCOPE_DEPTH_METER
-    int protoIndex = 0;
-#endif
-    for (; ; JS_SCOPE_DEPTH_METERING(protoIndex++)) {
+    while (true) {
         const Shape *shape = obj->nativeLookup(id);
         if (shape) {
-            SCOPE_DEPTH_ACCUM(&cx->runtime->protoLookupDepthStats, protoIndex);
             *objp = obj;
             *propp = (JSProperty *) shape;
             return true;
@@ -4874,7 +4876,6 @@ LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN flags
                  * For stats we do not recalculate protoIndex even if it was
                  * resolved on some other object.
                  */
-                SCOPE_DEPTH_ACCUM(&cx->runtime->protoLookupDepthStats, protoIndex);
                 return true;
             }
         }
@@ -4989,7 +4990,6 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
                 entry = JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj,
                                                    (Shape *) prop);
             }
-            SCOPE_DEPTH_ACCUM(&cx->runtime->scopeSearchDepthStats, scopeIndex);
             goto out;
         }
 
@@ -6277,45 +6277,6 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
 }
 
 #endif /* JS_HAS_XDR */
-
-#ifdef JS_DUMP_SCOPE_METERS
-
-#include <stdio.h>
-
-JSBasicStats js_entry_count_bs = JS_INIT_STATIC_BASIC_STATS;
-
-namespace js {
-
-void
-MeterEntryCount(uintN count)
-{
-    JS_BASIC_STATS_ACCUM(&js_entry_count_bs, count);
-}
-
-}
-
-void
-js_DumpScopeMeters(JSRuntime *rt)
-{
-    static FILE *logfp;
-    if (!logfp)
-        logfp = fopen("/tmp/scope.stats", "a");
-
-    {
-        double mean, sigma;
-
-        mean = JS_MeanAndStdDevBS(&js_entry_count_bs, &sigma);
-
-        fprintf(logfp, "scopes %u entries %g mean %g sigma %g max %u",
-                js_entry_count_bs.num, js_entry_count_bs.sum, mean, sigma,
-                js_entry_count_bs.max);
-    }
-
-    JS_DumpHistogram(&js_entry_count_bs, logfp);
-    JS_BASIC_STATS_INIT(&js_entry_count_bs);
-    fflush(logfp);
-}
-#endif
 
 #ifdef DEBUG
 void

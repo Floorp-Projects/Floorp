@@ -155,14 +155,6 @@ struct JSStmtInfo {
 #define SET_STATEMENT_TOP(stmt, top)                                          \
     ((stmt)->update = (top), (stmt)->breaks = (stmt)->continues = (-1))
 
-#ifdef JS_SCOPE_DEPTH_METER
-# define JS_SCOPE_DEPTH_METERING(code) ((void) (code))
-# define JS_SCOPE_DEPTH_METERING_IF(cond, code) ((cond) ? (void) (code) : (void) 0)
-#else
-# define JS_SCOPE_DEPTH_METERING(code) ((void) 0)
-# define JS_SCOPE_DEPTH_METERING_IF(code, x) ((void) 0)
-#endif
-
 #define TCF_COMPILING           0x01 /* JSTreeContext is JSCodeGenerator */
 #define TCF_IN_FUNCTION         0x02 /* parsing inside function body */
 #define TCF_RETURN_EXPR         0x04 /* function has 'return expr;' */
@@ -301,7 +293,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint32          flags;          /* statement state flags, see above */
     uint32          bodyid;         /* block number of program/function body */
     uint32          blockidGen;     /* preincremented block number generator */
-    uint32          parenDepth;     /* paren-nesting depth */
+    uint32          parenDepth;     /* nesting depth of parens that might turn out
+                                       to be generator expressions */
     uint32          yieldCount;     /* number of |yield| tokens encountered at
                                        non-zero depth in current paren tree */
     uint32          argumentsCount; /* number of |arguments| references encountered
@@ -361,11 +354,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
     js::Bindings    bindings;       /* bindings in this code, including
                                        arguments if we're compiling a function */
 
-#ifdef JS_SCOPE_DEPTH_METER
-    uint16          scopeDepth;     /* current lexical scope chain depth */
-    uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
-#endif
-
     void trace(JSTracer *trc);
 
     JSTreeContext(js::Parser *prs)
@@ -378,7 +366,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
         sharpSlotBase(-1)
     {
         prs->tc = this;
-        JS_SCOPE_DEPTH_METERING(scopeDepth = maxScopeDepth = 0);
     }
 
     /*
@@ -388,12 +375,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
      */
     ~JSTreeContext() {
         parser->tc = this->parent;
-        JS_SCOPE_DEPTH_METERING_IF((maxScopeDepth != uint16(-1)),
-                                   JS_BASIC_STATS_ACCUM(&parser
-                                                          ->context
-                                                          ->runtime
-                                                          ->lexicalScopeDepthStats,
-                                                        maxScopeDepth));
     }
 
     uintN blockid() { return topStmt ? topStmt->blockid : bodyid; }

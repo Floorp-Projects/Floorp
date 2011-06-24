@@ -198,9 +198,6 @@ struct PropDesc {
 
 typedef Vector<PropDesc, 1> PropDescArray;
 
-void
-MeterEntryCount(uintN count);
-
 } /* namespace js */
 
 enum {

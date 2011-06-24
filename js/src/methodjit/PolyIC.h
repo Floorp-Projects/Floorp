@@ -84,17 +84,17 @@ struct BaseIC : public MacroAssemblerTypedefs {
     // Slow path stub call.
     CodeLocationCall slowPathCall;
 
+    // Offset from start of stub to jump target of second shape guard as Nitro
+    // asm data location. This is 0 if there is only one shape guard in the
+    // last stub.
+    int32 secondShapeGuard;
+
     // Whether or not the callsite has been hit at least once.
     bool hit : 1;
     bool slowCallPatched : 1;
 
     // Number of stubs generated.
     uint32 stubsGenerated : 5;
-
-    // Offset from start of stub to jump target of second shape guard as Nitro
-    // asm data location. This is 0 if there is only one shape guard in the
-    // last stub.
-    int32 secondShapeGuard : 11;
 
     // Opcode this was compiled for.
     JSOp op : 9;

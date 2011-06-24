@@ -164,13 +164,6 @@ extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
 
 #endif /* !JS_THREADSAFE */
 
-#define JS_LOCK_RUNTIME_VOID(rt,e)                                            \
-    JS_BEGIN_MACRO                                                            \
-        JS_LOCK_RUNTIME(rt);                                                  \
-        e;                                                                    \
-        JS_UNLOCK_RUNTIME(rt);                                                \
-    JS_END_MACRO
-
 #define JS_LOCK_GC(rt)              JS_ACQUIRE_LOCK((rt)->gcLock)
 #define JS_UNLOCK_GC(rt)            JS_RELEASE_LOCK((rt)->gcLock)
 #define JS_AWAIT_GC_DONE(rt)        JS_WAIT_CONDVAR((rt)->gcDone, JS_NO_TIMEOUT)
