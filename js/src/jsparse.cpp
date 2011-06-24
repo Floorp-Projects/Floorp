@@ -7306,7 +7306,7 @@ Parser::argumentList(JSParseNode *listNode)
     } while (tokenStream.matchToken(TOK_COMMA));
 
     if (!maybeNoteGenerator())
-        return NULL;
+        return JS_FALSE;
 
     if (tokenStream.getToken() != TOK_RP) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_AFTER_ARGS);
