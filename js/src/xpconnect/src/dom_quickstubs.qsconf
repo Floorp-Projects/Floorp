@@ -159,9 +159,9 @@ members = [
     'nsIDOMCSSStyleDeclaration.*',
 
     # dom/interfaces/events
-    'nsIDOMEventTarget.dispatchEvent',
+    'nsIDOMEventTarget.addEventListener',
     'nsIDOMEventTarget.removeEventListener',
-    'nsIDOMNSEventTarget.addEventListener',
+    'nsIDOMEventTarget.dispatchEvent',
 
     'nsIDOMEvent.*',
     'nsIDOMMouseEvent.*',

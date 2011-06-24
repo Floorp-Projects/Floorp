@@ -2012,7 +2012,6 @@ NS_IMPL_CYCLE_COLLECTION_1(nsDOMEventRTTearoff, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventRTTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
 NS_INTERFACE_MAP_END_AGGREGATED(mNode)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventRTTearoff)
@@ -2083,20 +2082,6 @@ nsDOMEventRTTearoff::GetDOM3EventTarget(nsIDOM3EventTarget **aTarget)
   return CallQueryInterface(listener_manager, aTarget);
 }
 
-NS_IMETHODIMP
-nsDOMEventRTTearoff::GetScriptTypeID(PRUint32 *aLang)
-{
-  *aLang = mNode->GetScriptTypeID();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMEventRTTearoff::SetScriptTypeID(PRUint32 aLang)
-{
-  return mNode->SetScriptTypeID(aLang);
-}
-
-
 // nsIDOM3EventTarget
 NS_IMETHODIMP
 nsDOMEventRTTearoff::AddGroupedEventListener(const nsAString& aType,
@@ -2136,35 +2121,6 @@ NS_IMETHODIMP
 nsDOMEventRTTearoff::IsRegisteredHere(const nsAString & type, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// nsIDOMNSEventTarget
-NS_IMETHODIMP
-nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
-                                      nsIDOMEventListener *aListener,
-                                      PRBool aUseCapture,
-                                      PRBool aWantsUntrusted,
-                                      PRUint8 optional_argc)
-{
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  nsIEventListenerManager* listener_manager =
-    mNode->GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(listener_manager);
-
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-  if (aWantsUntrusted ||
-      (optional_argc < 2 &&
-       !nsContentUtils::IsChromeDoc(mNode->GetOwnerDoc()))) {
-    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
-  }
-
-  return listener_manager->AddEventListenerByType(aListener, aType, flags,
-                                                  nsnull);
 }
 
 //----------------------------------------------------------------------
@@ -3189,10 +3145,13 @@ nsGenericElement::GetChildren(PRUint32 aFilter)
 
 NS_IMETHODIMP
 nsGenericElement::AddEventListener(const nsAString& aType,
-                                   nsIDOMEventListener *aListener,
-                                   PRBool useCapture)
+                                   nsIDOMEventListener* aListener,
+                                   PRBool aUseCapture,
+                                   PRBool aWantsUntrusted,
+                                   PRUint8 optional_argc)
 {
-  return AddEventListener(aType, aListener, useCapture, PR_FALSE, 1);
+  return nsIContent::AddEventListener(aType, aListener, aUseCapture,
+                                      aWantsUntrusted, optional_argc);
 }
 
 NS_IMETHODIMP
@@ -4448,8 +4407,6 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSElement, new nsNSElementTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))

@@ -82,16 +82,6 @@ public:
 
   NS_DECL_NSIDOMEVENTTARGET
 
-  nsresult AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener *aListener,
-                            PRBool aUseCapture,
-                            PRBool aWantsUntrusted,
-                            PRUint8 optional_argc)
-  {
-    return nsIAttribute::AddEventListener(aType, aListener, aUseCapture,
-                                          aWantsUntrusted, optional_argc);
-  }
-
   // nsIAttribute interface
   void SetMap(nsDOMAttributeMap *aMap);
   nsIContent *GetContent() const;

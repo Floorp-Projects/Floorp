@@ -82,21 +82,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventTargetHelper)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMEventTargetHelper)
 
 NS_IMPL_DOMTARGET_DEFAULTS(nsDOMEventTargetHelper);
-
-NS_IMETHODIMP
-nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
-                                         nsIDOMEventListener* aListener,
-                                         PRBool aUseCapture)
-{
-  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
-}
 
 NS_IMETHODIMP
 nsDOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
@@ -145,20 +136,6 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
 }
 
 NS_IMETHODIMP
-nsDOMEventTargetHelper::GetScriptTypeID(PRUint32 *aLang)
-{
-  *aLang = mLang;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMEventTargetHelper::SetScriptTypeID(PRUint32 aLang)
-{
-  mLang = aLang;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, PRBool* aRetVal)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -182,7 +159,7 @@ nsDOMEventTargetHelper::RemoveAddEventListener(const nsAString& aType,
   if (aNew) {
     aCurrent = new nsDOMEventListenerWrapper(aNew);
     NS_ENSURE_TRUE(aCurrent, NS_ERROR_OUT_OF_MEMORY);
-    AddEventListener(aType, aCurrent, PR_FALSE);
+    nsIDOMEventTarget::AddEventListener(aType, aCurrent, PR_FALSE);
   }
   return NS_OK;
 }
