@@ -107,10 +107,6 @@ LIBS += \
 	$(XPCOM_STANDALONE_GLUE_LDOPTS) \
 	$(NULL)
 
-ifdef MOZ_JPROF
-LIBS += -ljprof
-endif
-
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
 MOZ_WINCONSOLE = 1
