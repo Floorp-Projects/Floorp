@@ -47,6 +47,7 @@
 #include "prenv.h"
 #include "prprf.h"
 #include "GfxDriverInfo.h"
+#include "mozilla/Preferences.h"
 
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
@@ -94,6 +95,26 @@ nsresult
 GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 {
   *aEnabled = gfxWindowsPlatform::GetPlatform()->DWriteEnabled();
+  return NS_OK;
+}
+
+nsresult
+GfxInfo::GetAzureEnabled(PRBool *aEnabled)
+{
+  *aEnabled = PR_FALSE;
+
+  PRBool d2dEnabled = 
+    gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
+
+  if (d2dEnabled) {
+    PRBool azure = PR_FALSE;
+    nsresult rv = mozilla::Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
+
+    if (NS_SUCCEEDED(rv) && azure) {
+      *aEnabled = PR_TRUE;
+    }
+  }
+
   return NS_OK;
 }
 
