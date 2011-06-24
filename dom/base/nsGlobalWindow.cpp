@@ -1336,7 +1336,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageIndexedDB)
@@ -7213,17 +7212,6 @@ nsGlobalWindow::Btoa(const nsAString& aBinaryData,
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsGlobalWindow::AddEventListener(const nsAString& aType,
-                                 nsIDOMEventListener* aListener,
-                                 PRBool aUseCapture)
-{
-  FORWARD_TO_INNER_CREATE(AddEventListener, (aType, aListener, aUseCapture),
-                          NS_ERROR_NOT_AVAILABLE);
-
-  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
-}
-
-NS_IMETHODIMP
 nsGlobalWindow::RemoveEventListener(const nsAString& aType,
                                     nsIDOMEventListener* aListener,
                                     PRBool aUseCapture)
@@ -10070,20 +10058,6 @@ nsGlobalWindow::TimeoutSuspendCount()
 {
   FORWARD_TO_INNER(TimeoutSuspendCount, (), 0);
   return mTimeoutsSuspendDepth;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetScriptTypeID(PRUint32 *aScriptType)
-{
-  NS_ERROR("No default script type here - ask some element");
-  return nsIProgrammingLanguage::UNKNOWN;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::SetScriptTypeID(PRUint32 aScriptType)
-{
-  NS_ERROR("Can't change default script type for a document");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void

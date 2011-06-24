@@ -1303,9 +1303,17 @@ nsEventListenerManager::GetDOM2EventGroup(nsIDOMEventGroup **aGroup)
 NS_IMETHODIMP 
 nsEventListenerManager::AddEventListener(const nsAString& aType, 
                                          nsIDOMEventListener* aListener, 
-                                         PRBool aUseCapture)
+                                         PRBool aUseCapture,
+                                         PRBool aWantsUntrusted,
+                                         PRUint8 optional_argc)
 {
+  NS_ASSERTION(optional_argc == 2,
+               "Don't want to try to get caller from the the ELM");
+
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  if (aWantsUntrusted) {
+    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  }
 
   nsresult rv = AddEventListenerByType(aListener, aType, flags, nsnull);
   NS_ASSERTION(NS_FAILED(rv) || HasListenersFor(aType), 

@@ -138,8 +138,6 @@ NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
                                  nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Attr)
@@ -794,10 +792,13 @@ NS_IMPL_DOMTARGET_DEFAULTS(nsDOMAttribute)
 
 NS_IMETHODIMP
 nsDOMAttribute::AddEventListener(const nsAString& aType,
-                                 nsIDOMEventListener *aListener,
-                                 PRBool useCapture)
+                                 nsIDOMEventListener* aListener,
+                                 PRBool aUseCapture,
+                                 PRBool aWantsUntrusted,
+                                 PRUint8 optional_argc)
 {
-  return AddEventListener(aType, aListener, useCapture, PR_FALSE, 1);
+  return nsIAttribute::AddEventListener(aType, aListener, aUseCapture,
+                                        aWantsUntrusted, optional_argc);
 }
 
 NS_IMETHODIMP

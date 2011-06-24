@@ -49,14 +49,12 @@ class nsEventChainPostVisitor;
 
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
-#include "nsIDOMNSEventTarget.h"
 #include "nsIEventListenerManager.h"
 #include "nsPIWindowRoot.h"
 #include "nsIDOMEventTarget.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsWindowRoot : public nsIDOM3EventTarget,
-                     public nsIDOMNSEventTarget,
                      public nsPIWindowRoot
 {
 public:
@@ -66,7 +64,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMEVENTTARGET
   NS_DECL_NSIDOM3EVENTTARGET
-  NS_DECL_NSIDOMNSEVENTTARGET
 
   // nsPIWindowRoot
 

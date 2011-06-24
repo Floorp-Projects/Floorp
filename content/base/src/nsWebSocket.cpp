@@ -1146,21 +1146,6 @@ nsWebSocket::DontKeepAliveAnyMore()
 }
 
 NS_IMETHODIMP
-nsWebSocket::AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener* aListener,
-                              PRBool aUseCapture)
-{
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  nsresult rv = nsDOMEventTargetHelper::AddEventListener(aType,
-                                                         aListener,
-                                                         aUseCapture);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateMustKeepAlive();
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsWebSocket::RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
                                  PRBool aUseCapture)

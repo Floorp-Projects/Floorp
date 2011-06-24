@@ -71,7 +71,6 @@ class nsDOMWorkerXHREventTarget : public nsDOMWorkerMessageHandler,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMWorkerMessageHandler::)
-  NS_FORWARD_NSIDOMNSEVENTTARGET(nsDOMWorkerMessageHandler::)
   NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
 
   static const char* const sListenerTypes[];
@@ -146,17 +145,14 @@ public:
   NS_FORWARD_INTERNAL_NSIDOMEVENTTARGET(nsDOMWorkerMessageHandler::)
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
-                              PRBool aUseCapture);
+                              PRBool aUseCapture,
+                              PRBool aWantsUntrusted,
+                              PRUint8 optional_argc);
   NS_IMETHOD RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
                                  PRBool aUseCapture);
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent,
                            PRBool* _retval);
-  NS_IMETHOD AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener* aListener,
-                              PRBool aUseCapture,
-                              PRBool aWantsUntrusted,
-                              PRUint8 optional_argc);
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsDOMWorkerXHREventTarget::)
   NS_DECL_NSIXMLHTTPREQUESTUPLOAD
   NS_FORWARD_NSICLASSINFO_NOGETINTERFACES(nsDOMWorkerXHREventTarget::)

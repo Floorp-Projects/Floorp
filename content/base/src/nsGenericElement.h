@@ -51,7 +51,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
-#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNSElement.h"
 #include "nsILinkHandler.h"
 #include "nsContentUtils.h"
@@ -205,15 +204,14 @@ private:
 
 /**
  * nsDOMEventRTTearoff is a tearoff class used by nsGenericElement and
- * nsGenericDOMDataNode classes for implementing the interfaces
- * nsIDOMEventTarget, nsIDOM3EventTarget and nsIDOMNSEventTarget.
+ * nsGenericDOMDataNode classes for implementing the nsIDOM3EventTarget
+ * interface.
  *
  * Use the method nsDOMEventRTTearoff::Create() to create one of these babies.
  * @see nsDOMEventRTTearoff::Create
  */
 
-class nsDOMEventRTTearoff : public nsIDOM3EventTarget,
-                            public nsIDOMNSEventTarget
+class nsDOMEventRTTearoff : public nsIDOM3EventTarget
 {
 private:
   // This class uses a caching scheme so we don't let users of this
@@ -256,11 +254,7 @@ public:
   // nsIDOM3EventTarget
   NS_DECL_NSIDOM3EVENTTARGET
 
-  // nsIDOMNSEventTarget
-  NS_DECL_NSIDOMNSEVENTTARGET
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMEventRTTearoff,
-                                           nsIDOM3EventTarget)
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMEventRTTearoff)
 
 private:
   /**
@@ -311,16 +305,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_NSIDOMEVENTTARGET
-
-  nsresult AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener *aListener,
-                            PRBool aUseCapture,
-                            PRBool aWantsUntrusted,
-                            PRUint8 optional_argc)
-  {
-    return nsINode::AddEventListener(aType, aListener, aUseCapture,
-                                     aWantsUntrusted, optional_argc);
-  }
 
   /**
    * Called during QueryInterface to give the binding manager a chance to
