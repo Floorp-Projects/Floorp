@@ -82,7 +82,6 @@
 #include "nsIDOMElement.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
-#include "nsIDOMEventGroup.h"
 #include "nsContentCID.h"
 #include "nsEventDispatcher.h"
 #include "nsDOMJSUtils.h"
@@ -105,7 +104,6 @@ using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 static const PRUint32 kAllMutationBits =
   NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
@@ -271,10 +269,6 @@ static const EventTypeData sEventTypes[] = {
   IMPL_EVENTTYPEDATA(UI)
 };
 
-// Strong references to event groups
-nsIDOMEventGroup* gDOM2EventGroup = nsnull;
-
-PRUint32 nsEventListenerManager::mInstanceCount = 0;
 PRUint32 nsEventListenerManager::sCreatedCount = 0;
 
 nsEventListenerManager::nsEventListenerManager(nsISupports* aTarget) :
@@ -282,7 +276,6 @@ nsEventListenerManager::nsEventListenerManager(nsISupports* aTarget) :
 {
   NS_ASSERTION(aTarget, "unexpected null pointer");
 
-  ++mInstanceCount;
   ++sCreatedCount;
 }
 
@@ -300,10 +293,6 @@ nsEventListenerManager::~nsEventListenerManager()
   NS_ASSERTION(!mTarget, "didn't call Disconnect");
   RemoveAllListeners();
 
-  --mInstanceCount;
-  if(mInstanceCount == 0) {
-    NS_IF_RELEASE(gDOM2EventGroup);
-  }
 }
 
 void
@@ -390,8 +379,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                          PRUint32 aType,
                                          nsIAtom* aTypeAtom,
                                          const EventTypeData* aTypeData,
-                                         PRInt32 aFlags,
-                                         nsIDOMEventGroup* aEvtGrp)
+                                         PRInt32 aFlags)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(aType || aTypeData, NS_ERROR_FAILURE);
@@ -497,8 +485,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
                                             PRUint32 aType,
                                             nsIAtom* aUserType,
                                             const EventTypeData* aTypeData,
-                                            PRInt32 aFlags,
-                                            nsIDOMEventGroup* aEvtGrp)
+                                            PRInt32 aFlags)
 {
   if (!aListener || !(aType || aTypeData)) {
     return;
@@ -530,7 +517,7 @@ nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener,
                                               PRInt32 aFlags)
 {
   return AddEventListener(aListener, NS_EVENT_TYPE_NULL, nsnull,
-                          GetTypeDataForIID(aIID), aFlags, nsnull);
+                          GetTypeDataForIID(aIID), aFlags);
 }
 
 void
@@ -539,7 +526,7 @@ nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                                  PRInt32 aFlags)
 {
   RemoveEventListener(aListener, NS_EVENT_TYPE_NULL, nsnull,
-                      GetTypeDataForIID(aIID), aFlags, nsnull);
+                      GetTypeDataForIID(aIID), aFlags);
 }
 
 PRBool
@@ -556,23 +543,21 @@ nsEventListenerManager::ListenerCanHandle(nsListenerStruct* aLs,
 nsresult
 nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener, 
                                                const nsAString& aType,
-                                               PRInt32 aFlags,
-                                               nsIDOMEventGroup* aEvtGrp)
+                                               PRInt32 aFlags)
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
   PRUint32 type = nsContentUtils::GetEventId(atom);
-  return AddEventListener(aListener, type, atom, nsnull, aFlags, aEvtGrp);
+  return AddEventListener(aListener, type, atom, nsnull, aFlags);
 }
 
 void
 nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener, 
                                                   const nsAString& aType,
-                                                  PRInt32 aFlags,
-                                                  nsIDOMEventGroup* aEvtGrp)
+                                                  PRInt32 aFlags)
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
   PRUint32 type = nsContentUtils::GetEventId(atom);
-  RemoveEventListener(aListener, type, atom, nsnull, aFlags, aEvtGrp);
+  RemoveEventListener(aListener, type, atom, nsnull, aFlags);
 }
 
 nsListenerStruct*
@@ -613,7 +598,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
                                getter_AddRefs(scriptListener));
     if (NS_SUCCEEDED(rv)) {
       AddEventListener(scriptListener, eventType, aName, nsnull,
-                       NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT, nsnull);
+                       NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT);
 
       ls = FindJSEventListener(eventType, aName);
     }
@@ -1213,24 +1198,6 @@ nsEventListenerManager::Disconnect()
   RemoveAllListeners();
 }
 
-nsresult
-nsEventListenerManager::GetDOM2EventGroup(nsIDOMEventGroup **aGroup)
-{
-  if (!gDOM2EventGroup) {
-    nsresult result;
-    nsCOMPtr<nsIDOMEventGroup> group(do_CreateInstance(kDOMEventGroupCID,&result));
-    if (NS_FAILED(result))
-      return result;
-
-    gDOM2EventGroup = group;
-    NS_ADDREF(gDOM2EventGroup);
-  }
-
-  *aGroup = gDOM2EventGroup;
-  NS_ADDREF(*aGroup);
-  return NS_OK;
-}
-
 // nsIDOMEventTarget interface
 nsresult
 nsEventListenerManager::AddEventListener(const nsAString& aType,
@@ -1244,7 +1211,7 @@ nsEventListenerManager::AddEventListener(const nsAString& aType,
     flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
   }
 
-  return AddEventListenerByType(aListener, aType, flags, nsnull);
+  return AddEventListenerByType(aListener, aType, flags);
 }
 
 void
@@ -1254,44 +1221,7 @@ nsEventListenerManager::RemoveEventListener(const nsAString& aType,
 {
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   
-  RemoveEventListenerByType(aListener, aType, flags, nsnull);
-}
-
-// nsIDOM3EventTarget interface
-NS_IMETHODIMP 
-nsEventListenerManager::AddGroupedEventListener(const nsAString& aType, 
-                                                nsIDOMEventListener* aListener, 
-                                                PRBool aUseCapture,
-                                                nsIDOMEventGroup* aEvtGrp)
-{
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-  return AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-}
-
-NS_IMETHODIMP 
-nsEventListenerManager::RemoveGroupedEventListener(const nsAString& aType, 
-                                            nsIDOMEventListener* aListener, 
-                                            PRBool aUseCapture,
-                                            nsIDOMEventGroup* aEvtGrp)
-{
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-  
-  RemoveEventListenerByType(aListener, aType, flags, aEvtGrp);
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEventListenerManager::CanTrigger(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsEventListenerManager::IsRegisteredHere(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  RemoveEventListenerByType(aListener, aType, flags);
 }
 
 PRBool

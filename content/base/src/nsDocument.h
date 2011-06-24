@@ -54,7 +54,6 @@
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsStubDocumentObserver.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEventTarget.h"
@@ -491,7 +490,6 @@ class nsDocument : public nsIDocument,
                    public nsIDOMXMLDocument, // inherits nsIDOMDocument
                    public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
-                   public nsIDOM3EventTarget,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer_MOZILLA_2_0_BRANCH,
                    public nsIApplicationCacheContainer,
@@ -778,9 +776,6 @@ public:
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsEventListenerManager*
     GetListenerManager(PRBool aCreateIfNotFound);
-
-  // nsIDOM3EventTarget
-  NS_DECL_NSIDOM3EVENTTARGET
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();

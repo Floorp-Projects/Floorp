@@ -61,7 +61,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIDOMEventGroup.h"
 #include "nsIEditor.h"
 #include "nsTextEditRules.h"
 #include "nsEventListenerManager.h"
@@ -1525,18 +1524,15 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
       manager->RemoveEventListenerByType(listener,
                                          NS_LITERAL_STRING("keydown"),
                                          NS_EVENT_FLAG_BUBBLE |
-                                         NS_EVENT_FLAG_SYSTEM_EVENT,
-                                         nsnull);
+                                         NS_EVENT_FLAG_SYSTEM_EVENT);
       manager->RemoveEventListenerByType(listener,
                                          NS_LITERAL_STRING("keypress"),
                                          NS_EVENT_FLAG_BUBBLE |
-                                         NS_EVENT_FLAG_SYSTEM_EVENT,
-                                         nsnull);
+                                         NS_EVENT_FLAG_SYSTEM_EVENT);
       manager->RemoveEventListenerByType(listener,
                                          NS_LITERAL_STRING("keyup"),
                                          NS_EVENT_FLAG_BUBBLE |
-                                         NS_EVENT_FLAG_SYSTEM_EVENT,
-                                         nsnull);
+                                         NS_EVENT_FLAG_SYSTEM_EVENT);
     }
 
     NS_RELEASE(mTextListener);
@@ -1956,16 +1952,13 @@ nsTextEditorState::InitializeKeyboardEventListeners()
 
     manager->AddEventListenerByType(listener, NS_LITERAL_STRING("keydown"),
                                     NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT,
-                                    nsnull);
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
     manager->AddEventListenerByType(listener, NS_LITERAL_STRING("keypress"),
                                     NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT,
-                                    nsnull);
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
     manager->AddEventListenerByType(listener, NS_LITERAL_STRING("keyup"),
                                     NS_EVENT_FLAG_BUBBLE |
-                                    NS_EVENT_FLAG_SYSTEM_EVENT,
-                                    nsnull);
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
   }
 
   mSelCon->SetScrollableFrame(do_QueryFrame(mBoundFrame->GetFirstChild(nsnull)));

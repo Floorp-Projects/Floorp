@@ -71,8 +71,6 @@
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIDOMEventGroup.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsEventListenerManager.h"
 #ifdef ACCESSIBILITY
@@ -158,7 +156,7 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (elm) {
     elm->RemoveEventListenerByType(mMouseListener, click,
                                    NS_EVENT_FLAG_BUBBLE |
-                                   NS_EVENT_FLAG_SYSTEM_EVENT, nsnull);
+                                   NS_EVENT_FLAG_SYSTEM_EVENT);
   }
   nsContentUtils::DestroyAnonymousContent(&mBrowse);
 
@@ -166,7 +164,7 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (elm) {
     elm->RemoveEventListenerByType(mMouseListener, click,
                                    NS_EVENT_FLAG_BUBBLE |
-                                   NS_EVENT_FLAG_SYSTEM_EVENT, nsnull);
+                                   NS_EVENT_FLAG_SYSTEM_EVENT);
   }
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
 
@@ -283,8 +281,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // to open file dialog on mouse click
   manager->AddEventListenerByType(mMouseListener, click,
                                   NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT,
-                                  nsnull);
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
 
   // Create the browse button
   nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
@@ -362,8 +359,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // to open file dialog on mouse click
   manager->AddEventListenerByType(mMouseListener, click,
                                   NS_EVENT_FLAG_BUBBLE |
-                                  NS_EVENT_FLAG_SYSTEM_EVENT,
-                                  nsnull);
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
 
   SyncAttr(kNameSpaceID_None, nsGkAtoms::size,     SYNC_TEXT);
   SyncDisabledState();

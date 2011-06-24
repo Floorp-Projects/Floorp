@@ -73,7 +73,6 @@ CPPSRCS		= \
 		nsDOMMessageEvent.cpp \
 		nsPaintRequest.cpp \
 		nsPrivateTextRange.cpp \
-		nsDOMEventGroup.cpp \
 		nsXMLEventsManager.cpp \
 		nsXMLEventsElement.cpp \
 		nsPLDOMEvent.cpp \

@@ -45,7 +45,6 @@
 #include "nsISMILAnimationElement.h"
 #include "nsContentUtils.h"
 #include "nsEventListenerManager.h"
-#include "nsIDOMEventGroup.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMTimeEvent.h"
 #include "nsString.h"
@@ -345,8 +344,7 @@ nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
                               nsDependentAtomString(mParams.mEventSymbol),
                               NS_EVENT_FLAG_BUBBLE |
                               NS_PRIV_EVENT_UNTRUSTED_PERMITTED |
-                              NS_EVENT_FLAG_SYSTEM_EVENT,
-                              nsnull);
+                              NS_EVENT_FLAG_SYSTEM_EVENT);
 }
 
 void
@@ -363,8 +361,7 @@ nsSMILTimeValueSpec::UnregisterEventListener(Element* aTarget)
                                  nsDependentAtomString(mParams.mEventSymbol),
                                  NS_EVENT_FLAG_BUBBLE |
                                  NS_PRIV_EVENT_UNTRUSTED_PERMITTED |
-                                 NS_EVENT_FLAG_SYSTEM_EVENT,
-                                 nsnull);
+                                 NS_EVENT_FLAG_SYSTEM_EVENT);
 }
 
 nsEventListenerManager*

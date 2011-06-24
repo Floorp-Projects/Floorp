@@ -50,8 +50,6 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMEvent.idl				\
 	nsIDOMEventTarget.idl			\
 	nsIDOMEventListener.idl			\
-	nsIDOM3EventTarget.idl			\
-	nsIDOMEventGroup.idl			\
 	nsIDOMMouseEvent.idl			\
 	nsIDOMMouseScrollEvent.idl      \
 	nsIDOMUIEvent.idl			\

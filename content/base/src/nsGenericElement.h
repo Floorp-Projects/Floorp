@@ -49,7 +49,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSElement.h"
 #include "nsILinkHandler.h"
 #include "nsContentUtils.h"
@@ -200,66 +199,6 @@ private:
 };
 
 #define NS_EVENT_TEAROFF_CACHE_SIZE 4
-
-/**
- * nsDOMEventRTTearoff is a tearoff class used by nsGenericElement and
- * nsGenericDOMDataNode classes for implementing the nsIDOM3EventTarget
- * interface.
- *
- * Use the method nsDOMEventRTTearoff::Create() to create one of these babies.
- * @see nsDOMEventRTTearoff::Create
- */
-
-class nsDOMEventRTTearoff : public nsIDOM3EventTarget
-{
-private:
-  // This class uses a caching scheme so we don't let users of this
-  // class create new instances with 'new', in stead the callers
-  // should use the static method
-  // nsDOMEventRTTearoff::Create(). That's why the constructor and
-  // destrucor of this class is private.
-
-  nsDOMEventRTTearoff(nsINode *aNode);
-
-  static nsDOMEventRTTearoff *mCachedEventTearoff[NS_EVENT_TEAROFF_CACHE_SIZE];
-  static PRUint32 mCachedEventTearoffCount;
-
-  /**
-   * This method gets called by Release() when it's time to delete the
-   * this object, in stead of always deleting the object we'll put the
-   * object in the cache if unless the cache is already full.
-   */
-  void LastRelease();
-
-public:
-  virtual ~nsDOMEventRTTearoff();
-
-  /**
-   * Use this static method to create instances of nsDOMEventRTTearoff.
-   * @param aContent the content to create a tearoff for
-   */
-  static nsDOMEventRTTearoff *Create(nsINode *aNode);
-
-  /**
-   * Call before shutdown to clear the cache and free memory for this class.
-   */
-  static void Shutdown();
-
-  // nsISupports
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-
-  // nsIDOM3EventTarget
-  NS_DECL_NSIDOM3EVENTTARGET
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMEventRTTearoff)
-
-private:
-  /**
-   * Strong reference back to the content object from where an instance of this
-   * class was 'torn off'
-   */
-  nsCOMPtr<nsINode> mNode;
-};
 
 /**
  * A tearoff class for nsGenericElement to implement NodeSelector
