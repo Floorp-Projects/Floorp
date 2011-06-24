@@ -212,8 +212,7 @@ private:
  * @see nsDOMEventRTTearoff::Create
  */
 
-class nsDOMEventRTTearoff : public nsIDOMEventTarget,
-                            public nsIDOM3EventTarget,
+class nsDOMEventRTTearoff : public nsIDOM3EventTarget,
                             public nsIDOMNSEventTarget
 {
 private:
@@ -254,9 +253,6 @@ public:
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  // nsIDOMEventTarget
-  NS_DECL_NSIDOMEVENTTARGET
-
   // nsIDOM3EventTarget
   NS_DECL_NSIDOM3EVENTTARGET
 
@@ -264,7 +260,7 @@ public:
   NS_DECL_NSIDOMNSEVENTTARGET
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMEventRTTearoff,
-                                           nsIDOMEventTarget)
+                                           nsIDOM3EventTarget)
 
 private:
   /**
@@ -314,6 +310,18 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
+  NS_DECL_NSIDOMEVENTTARGET
+
+  nsresult AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener *aListener,
+                            PRBool aUseCapture,
+                            PRBool aWantsUntrusted,
+                            PRUint8 optional_argc)
+  {
+    return nsINode::AddEventListener(aType, aListener, aUseCapture,
+                                     aWantsUntrusted, optional_argc);
+  }
+
   /**
    * Called during QueryInterface to give the binding manager a chance to
    * get an interface for this element.
@@ -328,21 +336,6 @@ public:
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus);
-  virtual nsIEventListenerManager* GetListenerManager(PRBool aCreateIfNotFound);
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID);
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv)
-  {
-    return nsContentUtils::GetContextForEventHandlers(this, aRv);
-  }
   NS_IMETHOD GetTextContent(nsAString &aTextContent)
   {
     nsContentUtils::GetNodeTextContent(this, PR_TRUE, aTextContent);

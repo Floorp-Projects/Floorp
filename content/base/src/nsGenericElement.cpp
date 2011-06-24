@@ -263,6 +263,12 @@ nsGenericElement::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
   return elm->GetSystemEventGroupLM(aGroup);
 }
 
+nsIScriptContext*
+nsGenericElement::GetContextForEventHandlers(nsresult* aRv)
+{
+  return nsContentUtils::GetContextForEventHandlers(this, aRv);
+}
+
 nsINode::nsSlots*
 nsINode::CreateSlots()
 {
@@ -977,6 +983,33 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsINode::AddEventListener(const nsAString& aType,
+                          nsIDOMEventListener *aListener,
+                          PRBool aUseCapture,
+                          PRBool aWantsUntrusted,
+                          PRUint8 optional_argc)
+{
+  NS_ASSERTION(!aWantsUntrusted || optional_argc > 1,
+               "Won't check if this is chrome, you want to set "
+               "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
+               "explicit by making optional_argc non-zero.");
+
+  nsIEventListenerManager* listener_manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(listener_manager);
+
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+  if (aWantsUntrusted ||
+      (optional_argc < 2 &&
+       !nsContentUtils::IsChromeDoc(GetOwnerDoc()))) {
+    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  }
+
+  return listener_manager->AddEventListenerByType(aListener, aType, flags,
+                                                  nsnull);
 }
 
 //----------------------------------------------------------------------
@@ -1978,7 +2011,6 @@ nsDOMEventRTTearoff::~nsDOMEventRTTearoff()
 NS_IMPL_CYCLE_COLLECTION_1(nsDOMEventRTTearoff, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventRTTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
 NS_INTERFACE_MAP_END_AGGREGATED(mNode)
@@ -2064,32 +2096,6 @@ nsDOMEventRTTearoff::SetScriptTypeID(PRUint32 aLang)
   return mNode->SetScriptTypeID(aLang);
 }
 
-
-// nsIDOMEventTarget
-NS_IMETHODIMP
-nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
-                                      nsIDOMEventListener *aListener,
-                                      PRBool useCapture)
-{
-  return AddEventListener(aType, aListener, useCapture, PR_FALSE, 1);
-}
-
-NS_IMETHODIMP
-nsDOMEventRTTearoff::RemoveEventListener(const nsAString& aType,
-                                         nsIDOMEventListener* aListener,
-                                         PRBool aUseCapture)
-{
-  return RemoveGroupedEventListener(aType, aListener, aUseCapture, nsnull);
-}
-
-NS_IMETHODIMP
-nsDOMEventRTTearoff::DispatchEvent(nsIDOMEvent *aEvt, PRBool* _retval)
-{
-  nsCOMPtr<nsIDOMEventTarget> target =
-    do_QueryInterface(mNode->GetListenerManager(PR_TRUE));
-  NS_ENSURE_STATE(target);
-  return target->DispatchEvent(aEvt, _retval);
-}
 
 // nsIDOM3EventTarget
 NS_IMETHODIMP
@@ -3181,6 +3187,36 @@ nsGenericElement::GetChildren(PRUint32 aFilter)
   return returnList;
 }
 
+NS_IMETHODIMP
+nsGenericElement::AddEventListener(const nsAString& aType,
+                                   nsIDOMEventListener *aListener,
+                                   PRBool useCapture)
+{
+  return AddEventListener(aType, aListener, useCapture, PR_FALSE, 1);
+}
+
+NS_IMETHODIMP
+nsGenericElement::RemoveEventListener(const nsAString& aType,
+                                      nsIDOMEventListener* aListener,
+                                      PRBool aUseCapture)
+{
+  nsCOMPtr<nsIDOMEventTarget> event_target =
+    do_QueryInterface(GetListenerManager(PR_TRUE));
+  NS_ENSURE_STATE(event_target);
+
+  return event_target->RemoveEventListener(aType, aListener, aUseCapture);
+}
+
+NS_IMETHODIMP
+nsGenericElement::DispatchEvent(nsIDOMEvent *aEvt, PRBool* _retval)
+{
+  nsCOMPtr<nsIDOMEventTarget> target =
+    do_QueryInterface(GetListenerManager(PR_TRUE));
+  NS_ENSURE_STATE(target);
+  return target->DispatchEvent(aEvt, _retval);
+}
+
+NS_IMPL_DOMTARGET_DEFAULTS(nsGenericElement)
 
 nsresult
 nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
@@ -4409,10 +4445,8 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSElement, new nsNSElementTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,

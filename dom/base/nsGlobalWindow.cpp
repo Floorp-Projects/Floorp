@@ -1334,7 +1334,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
@@ -2517,6 +2516,31 @@ nsGlobalWindow::GetIsTabModalPromptAllowed()
   }
 
   return allowTabModal;
+}
+
+nsPIDOMEventTarget*
+nsGlobalWindow::GetTargetForDOMEvent()
+{
+  return static_cast<nsPIDOMEventTarget*>(GetOuterWindowInternal());
+}
+
+nsPIDOMEventTarget*
+nsGlobalWindow::GetTargetForEventTargetChain()
+{
+  return IsInnerWindow() ?
+    this : static_cast<nsPIDOMEventTarget*>(GetCurrentInnerWindowInternal());
+}
+
+nsresult
+nsGlobalWindow::WillHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  return NS_OK;
+}
+
+JSContext*
+nsGlobalWindow::GetJSContextForEventHandlers()
+{
+  return nsnull;
 }
 
 nsresult

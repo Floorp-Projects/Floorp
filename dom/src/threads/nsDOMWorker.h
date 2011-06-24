@@ -81,7 +81,17 @@ class nsDOMWorkerScope : public nsDOMWorkerMessageHandler,
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMEVENTTARGET
+
+  // nsIDOMEventHandler
+  NS_FORWARD_INTERNAL_NSIDOMEVENTTARGET(nsDOMWorkerMessageHandler::)
+  NS_IMETHOD AddEventListener(const nsAString& aType,
+                              nsIDOMEventListener* aListener,
+                              PRBool aUseCapture);
+  NS_IMETHOD RemoveEventListener(const nsAString& aType,
+                                 nsIDOMEventListener* aListener,
+                                 PRBool aUseCapture);
+  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent,
+                           PRBool* _retval);
   // nsIDOMNSEventTarget
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
@@ -162,7 +172,18 @@ class nsDOMWorker : public nsDOMWorkerMessageHandler,
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMEVENTTARGET
+
+  // nsIDOMEventHandler
+  NS_FORWARD_INTERNAL_NSIDOMEVENTTARGET(nsDOMWorkerMessageHandler::)
+  NS_IMETHOD AddEventListener(const nsAString& aType,
+                              nsIDOMEventListener* aListener,
+                              PRBool aUseCapture);
+  NS_IMETHOD RemoveEventListener(const nsAString& aType,
+                                 nsIDOMEventListener* aListener,
+                                 PRBool aUseCapture);
+  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent,
+                           PRBool* _retval);
+
   // nsIDOMNSEventTarget
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,

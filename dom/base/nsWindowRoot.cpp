@@ -84,7 +84,6 @@ NS_IMPL_CYCLE_COLLECTION_3(nsWindowRoot, mListenerManager, mPopupNode,
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWindowRoot)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIWindowRoot)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
@@ -93,6 +92,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsWindowRoot)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsWindowRoot)
+
+NS_IMPL_DOMTARGET_DEFAULTS(nsWindowRoot)
 
 NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
@@ -229,6 +230,12 @@ nsWindowRoot::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
   return manager->GetSystemEventGroupLM(aGroup);
 }
 
+nsIScriptContext*
+nsWindowRoot::GetContextForEventHandlers(nsresult* aRv)
+{
+  *aRv = NS_OK;
+  return nsnull;
+}
 
 nsresult
 nsWindowRoot::PreHandleEvent(nsEventChainPreVisitor& aVisitor)

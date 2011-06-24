@@ -67,8 +67,7 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mListener;
 };
 
-class nsDOMEventTargetHelper : public nsPIDOMEventTarget,
-                               public nsIDOMEventTarget,
+class nsDOMEventTargetHelper : public nsIDOMEventTarget,
                                public nsIDOMNSEventTarget
 {
 public:
@@ -80,19 +79,6 @@ public:
 
   NS_DECL_NSIDOMNSEVENTTARGET
   NS_DECL_NSIDOMEVENTTARGET
-  // nsPIDOMEventTarget
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus);
-  virtual nsIEventListenerManager* GetListenerManager(PRBool aCreateIfNotFound);
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID);
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv);
 
   PRBool HasListenersFor(const nsAString& aType)
   {

@@ -39,6 +39,15 @@
 
 #include "domstubs.idl"
 
+%{C++
+#include "nsEvent.h"
+
+class nsPresContext;
+class nsEventChainPreVisitor;
+class nsEventChainPostVisitor;
+struct JSContext;
+%}
+
 /**
  * The nsIDOMEventTarget interface is the interface implemented by all
  * event targets in the Document Object Model.
@@ -47,7 +56,20 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, builtinclass, uuid(1c773b30-d1cf-11d2-bd95-00805f8ae3f4)]
+[ref] native nsEventChainPreVisitorRef(nsEventChainPreVisitor);
+[ref] native nsEventChainPostVisitorRef(nsEventChainPostVisitor);
+[ptr] native nsEventPtr(nsEvent);
+[ptr] native nsPresContextPtr(nsPresContext);
+[ptr] native nsEventStatusPtr(nsEventStatus);
+[ptr] native JSContextPtr(JSContext);
+
+interface nsIEventListenerManager;
+interface nsIScriptContext;
+interface nsIDOMEventListener;
+interface nsIDOMEventGroup;
+interface nsIDOMEvent;
+
+[scriptable, builtinclass, uuid(d56b0ac7-16e0-4fda-8255-06158d475606)]
 interface nsIDOMEventTarget : nsISupports
 {
   /**
@@ -123,4 +145,124 @@ interface nsIDOMEventTarget : nsISupports
    */
   boolean                  dispatchEvent(in nsIDOMEvent evt)
                                                raises(DOMException);
+
+  /**
+   * Returns the nsPIDOMEventTarget object which should be used as the target
+   * of DOMEvents.
+   * Usually |this| is returned, but for example global object returns
+   * the outer object.
+   */
+   [notxpcom] nsIDOMEventTarget GetTargetForDOMEvent();
+
+  /**
+   * Returns the nsPIDOMEventTarget object which should be used as the target
+   * of the event and when constructing event target chain.
+   * Usually |this| is returned, but for example global object returns
+   * the inner object.
+   */
+   [notxpcom] nsIDOMEventTarget GetTargetForEventTargetChain();
+
+  /**
+   * Called before the capture phase of the event flow.
+   * This is used to create the event target chain and implementations
+   * should set the necessary members of nsEventChainPreVisitor.
+   * At least aVisitor.mCanHandle must be set,
+   * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
+   * First one tells that this object can handle the aVisitor.mEvent event and
+   * the latter one is the possible parent object for the event target chain.
+   * @see nsEventDispatcher.h for more documentation about aVisitor.
+   *
+   * @param aVisitor the visitor object which is used to create the
+   *                 event target chain for event dispatching.
+   *
+   * @note Only nsEventDispatcher should call this method.
+   */
+  [noscript] void PreHandleEvent(in nsEventChainPreVisitorRef aVisitor);
+
+  /**
+   * If nsEventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,
+   * called just before possible event handlers on this object will be called.
+   */
+  [noscript] void WillHandleEvent(in nsEventChainPostVisitorRef aVisitor);
+
+  /**
+   * Called after the bubble phase of the system event group.
+   * The default handling of the event should happen here.
+   * @param aVisitor the visitor object which is used during post handling.
+   *
+   * @see nsEventDispatcher.h for documentation about aVisitor.
+   * @note Only nsEventDispatcher should call this method.
+   */
+  [noscript] void PostHandleEvent(in nsEventChainPostVisitorRef aVisitor);
+
+  /**
+   * Dispatch an event.
+   * @param aEvent the event that is being dispatched.
+   * @param aDOMEvent the event that is being dispatched, use if you want to
+   *                  dispatch nsIDOMEvent, not only nsEvent.
+   * @param aPresContext the current presentation context, can be nsnull.
+   * @param aEventStatus the status returned from the function, can be nsnull.
+   *
+   * @note If both aEvent and aDOMEvent are used, aEvent must be the internal
+   *       event of the aDOMEvent.
+   *
+   * If aDOMEvent is not nsnull (in which case aEvent can be nsnull) it is used
+   * for dispatching, otherwise aEvent is used.
+   *
+   * @deprecated This method is here just until all the callers outside Gecko
+   *             have been converted to use nsIDOMEventTarget::dispatchEvent.
+   */
+  [noscript] void DispatchDOMEvent(in nsEventPtr aEvent,
+                                   in nsIDOMEvent aDOMEvent,
+                                   in nsPresContextPtr aPresContext,
+                                   in nsEventStatusPtr aEventStatus);
+
+  /**
+   * Get the event listener manager, the guy you talk to to register for events
+   * on this node.
+   * @param aMayCreate If PR_FALSE, returns a listener manager only if
+   *                   one already exists.
+   */
+  [notxpcom] nsIEventListenerManager GetListenerManager(in boolean aMayCreate);
+
+  /**
+   * Add an event listener for nsIID.
+   */
+  [noscript] void AddEventListenerByIID(in nsIDOMEventListener aListener,
+                                        in nsIIDRef aIID);
+  /**
+   * Remove event listener for nsIID.
+   */
+  [noscript] void RemoveEventListenerByIID(in nsIDOMEventListener aListener,
+                                           in nsIIDRef aIID);
+
+  /**
+   * Get the system event group.
+   */
+  [noscript] nsIDOMEventGroup GetSystemEventGroup();
+
+  /**
+   * Get the script context in which the event handlers should be run.
+   * May return null.
+   * @note Caller *must* check the value of aRv.
+   */
+  [notxpcom] nsIScriptContext GetContextForEventHandlers(out nsresult aRv);
+
+  /**
+   * If the method above returns null, but a success code, this method
+   * is called.
+   */
+  [notxpcom] JSContextPtr GetJSContextForEventHandlers();
 };
+
+%{C++
+
+typedef nsIDOMEventTarget nsPIDOMEventTarget;
+
+#define NS_IMPL_DOMTARGET_DEFAULTS(_class) \
+nsPIDOMEventTarget* _class::GetTargetForDOMEvent() { return this; } \
+nsPIDOMEventTarget* _class::GetTargetForEventTargetChain() { return this; } \
+nsresult _class::WillHandleEvent(nsEventChainPostVisitor& aVisitor) { return NS_OK; } \
+JSContext* _class::GetJSContextForEventHandlers() { return nsnull; }
+
+%}
