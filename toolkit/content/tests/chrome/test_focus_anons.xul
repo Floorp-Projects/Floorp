@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Tests for focus on elements with anonymous focusable children"
+        onload="setTimeout(runTests, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<label accesskey="a" control="menulist"/>
+<label accesskey="b" control="textbox"/>
+<label accesskey="c" control="scale"/>
+
+<menulist id="menulist" editable="true">
+  <menupopup>
+    <menuitem label="One"/>
+  </menupopup>
+</menulist>
+<textbox id="textbox"/>
+<scale id="scale"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gBlurs = 0, gFocuses = 0;
+var gExpectedBlur = "";
+var gExpectedFocus = "";
+
+function blurOccurred(event) {
+  gBlurs++;
+  is(event.originalTarget, gExpectedBlur, "blur " + gBlurs + "," + event.originalTarget.localName);
+}
+
+function focusOccurred(event) {
+  gFocuses++;
+  is(event.originalTarget, gExpectedFocus, "focus " + gFocuses + "," + event.originalTarget.localName);
+}
+
+function runTests()
+{
+  addEventListener("focus", focusOccurred, true);
+  addEventListener("blur", blurOccurred, true);
+
+  gExpectedBlur = null;
+  gExpectedFocus = $("menulist").inputField;
+  $("menulist").focus();
+
+  gExpectedBlur = gExpectedFocus;
+  gExpectedFocus = $("textbox").inputField;
+  $("textbox").focus();
+
+  gExpectedBlur = gExpectedFocus;
+  gExpectedFocus = document.getAnonymousNodes($("scale"))[0];
+  $("scale").focus();
+
+  var accessKeyDetails = (navigator.platform.indexOf("Mac") >= 0) ?
+                         { ctrlKey : true } : { altKey : true, shiftKey: true };
+
+  gExpectedBlur = document.getAnonymousNodes($("scale"))[0];
+  gExpectedFocus = $("menulist").inputField;
+  synthesizeKey("a", accessKeyDetails);
+
+  gExpectedBlur = gExpectedFocus;
+  gExpectedFocus = $("textbox").inputField;
+  synthesizeKey("b", accessKeyDetails);
+
+  gExpectedBlur = gExpectedFocus;
+  gExpectedFocus = document.getAnonymousNodes($("scale"))[0];
+  synthesizeKey("c", accessKeyDetails);
+
+  if (navigator.platform.indexOf("Mac") == -1) {
+    gExpectedBlur = gExpectedFocus;
+    gExpectedFocus = $("textbox").inputField;
+    synthesizeKey("VK_TAB", { shiftKey: true });
+
+    gExpectedBlur = gExpectedFocus;
+    gExpectedFocus = $("menulist").inputField;
+    synthesizeKey("VK_TAB", { shiftKey: true });
+
+    gExpectedBlur = gExpectedFocus;
+    gExpectedFocus = $("textbox").inputField;
+    synthesizeKey("VK_TAB", { });
+
+    gExpectedBlur = gExpectedFocus;
+    gExpectedFocus = document.getAnonymousNodes($("scale"))[0];
+    synthesizeKey("VK_TAB", { });
+
+    is(gBlurs, 9, "correct number of blurs");
+    is(gFocuses, 10, "correct number of focuses");
+  }
+  else {
+    is(gBlurs, 5, "correct number of blurs");
+    is(gFocuses, 6, "correct number of focuses");
+  }
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

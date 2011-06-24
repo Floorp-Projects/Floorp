@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for bug 562554
+  -->
+<window title="Bug 557987" width="400" height="400"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <toolbarbutton type="menu" id="toolbarmenu" height="200px">
+    <menupopup id="menupopup" onpopupshowing="eventReceived('popupshowing'); return false;"/>
+    <stack>
+       <button width="100px" left="0px" height="30px" id="button1"
+        allowevents="true" onclick="eventReceived('clickbutton1'); return false;"/>
+
+       <button width="100px" left="70px" id="button2"
+        onclick="eventReceived('clickbutton2'); return false;"/>
+    </stack>
+  </toolbarbutton>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(test);
+
+// Tests that mouse events are correctly dispatched to <toolbarbutton type="menu"/>
+function test() {
+  disableNonTestMouseEvents(true);
+  nextTest();
+}
+
+let tests = [
+  // Click on the toolbarbutton itself - should call popupshowing
+  function() synthesizeMouse($("toolbarmenu"), 10, 50, {}, window),
+
+  // Click on button1 which has allowevents="true" - should call clickbutton1
+  function() synthesizeMouse($("button1"), 10, 15, {}, window),
+
+  // Click on button2 where it intersects with button1 - should call popupshowing
+  function() synthesizeMouse($("button2"), 5, 15, {}, window),
+
+  // Click on button2 outside of intersection - should call popupshowing
+  function() synthesizeMouse($("button2"), 50, 15, {}, window)
+];
+
+function nextTest() {
+  if (tests.length) {
+    let func = tests.shift();
+    func();
+    SimpleTest.executeSoon(nextTest);
+  } else {
+    disableNonTestMouseEvents(false);
+    SimpleTest.executeSoon(finishTest);
+  }
+}
+
+function finishTest() {
+  is(eventCount.clickbutton1, 1, "Correct number of clicks on button 1");
+  is(eventCount.clickbutton2, 0, "Correct number of clicks on button 2");
+  is(eventCount.popupshowing, 3, "Correct number of popupshowing events received");
+
+  SimpleTest.finish();
+}
+
+let eventCount = {
+  popupshowing: 0,
+  clickbutton1: 0,
+  clickbutton2: 0
+};
+
+function eventReceived(eventName) {
+  eventCount[eventName]++;
+}
+
+]]>
+</script>
+</window>

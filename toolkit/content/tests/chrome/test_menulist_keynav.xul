@@ -1,0 +1,184 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menulist Key Navigation Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<button id="button1" label="One"/>
+<menulist id="list">
+  <menupopup id="popup" onpopupshowing="return gShowPopup;">
+    <menuitem id="i1" label="One"/>
+    <menuitem id="i2" label="Two"/>
+    <menuitem id="i2b" disabled="true" label="Two and a Half"/>
+    <menuitem id="i3" label="Three"/>
+    <menuitem id="i4" label="Four"/>
+  </menupopup>
+</menulist>
+<button id="button2" label="Two"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gShowPopup = false;
+var gModifiers = 0;
+
+var iswin = (navigator.platform.indexOf("Win") == 0);
+
+function runTests()
+{
+  var list = $("list");
+  list.focus();
+  // on Mac, up and cursor keys open the menu, but on other platforms, the
+  // cursor keys navigate between items without opening the menu
+  if (navigator.platform.indexOf("Mac") == -1) {
+    keyCheck(list, "VK_DOWN", 2, "cursor down");
+    keyCheck(list, "VK_DOWN", iswin ? "2b" : 3, "cursor down skip disabled");
+    keyCheck(list, "VK_UP", 2, "cursor up skip disabled");
+    keyCheck(list, "VK_UP", 1, "cursor up");
+    keyCheck(list, "VK_UP", 4, "cursor up wrap");
+    keyCheck(list, "VK_DOWN", 1, "cursor down wrap");
+  }
+
+  // check that attempting to open the menulist does not change the selection
+  synthesizeKey("VK_DOWN", { altKey: navigator.platform.indexOf("Mac") == -1 });
+  is(list.selectedItem, $("i1"), "open menulist down selectedItem");
+  synthesizeKey("VK_UP", { altKey: navigator.platform.indexOf("Mac") == -1 });
+  is(list.selectedItem, $("i1"), "open menulist up selectedItem");
+
+  synthesizeKey("G", { });
+  is(list.selectedItem, $("i1"), "letter pressed not found selectedItem");
+
+  keyCheck(list, "T", 2, "letter pressed");
+  keyCheck(list, "T", 2, "letter pressed");
+  setTimeout(pressedAgain, 1200); 
+}
+
+function pressedAgain()
+{
+  var list = $("list");
+  keyCheck(list, "T", iswin ? "2b" : 3, "letter pressed again");
+  keyCheck(list, "W", 2, "second letter pressed");
+  setTimeout(differentPressed, 1200); 
+}
+
+function differentPressed()
+{
+  var list = $("list");
+  keyCheck(list, "O", 1, "different letter pressed");
+
+  if (navigator.platform.indexOf("Mac") == -1) {
+    $("button1").focus();
+    synthesizeKeyExpectEvent("VK_TAB", { }, list, "focus", "focus to menulist");
+    synthesizeKeyExpectEvent("VK_TAB", { }, $("button2"), "focus", "focus to button");
+    is(document.activeElement, $("button2"), "tab from menulist focused button");
+  }
+
+  // now make sure that using a key scrolls the menu correctly
+  gShowPopup = true;
+
+  for (let i = 0; i < 65; i++) {
+    list.appendItem("Item" + i, "item" + i);
+  }
+  list.open = true;
+  is(list.getBoundingClientRect().width, list.firstChild.getBoundingClientRect().width,
+     "menu and popup width match");
+  ok(list.getBoundingClientRect().width > list.getItemAtIndex(0).getBoundingClientRect().width + 2,
+     "menuitem width accounts for scrollbar");
+  list.open = false;
+
+  list.menupopup.maxHeight = 100;
+  list.open = true;
+
+  var rowdiff = list.getItemAtIndex(1).getBoundingClientRect().top -
+                list.getItemAtIndex(0).getBoundingClientRect().top;
+
+  var item = list.getItemAtIndex(10);
+  var originalPosition = item.getBoundingClientRect().top;
+
+  list.menuBoxObject.activeChild = item;
+  ok(item.getBoundingClientRect().top < originalPosition,
+    "position of item 1: " + item.getBoundingClientRect().top + " -> " + originalPosition);
+
+  originalPosition = item.getBoundingClientRect().top;
+
+  synthesizeKey("VK_DOWN", { });
+  is(item.getBoundingClientRect().top, originalPosition - rowdiff, "position of item 10");
+
+  list.open = false;
+
+  checkEnter();
+}
+
+function keyCheck(list, key, index, testname)
+{
+  var item = $("i" + index);
+  synthesizeKeyExpectEvent(key, { }, item, "command", testname);
+  is(list.selectedItem, item, testname + " selectedItem");
+}
+
+function checkModifiers(event)
+{
+  var expectedModifiers = (gModifiers == 1);
+  is(event.shiftKey, expectedModifiers, "shift key pressed");
+  is(event.ctrlKey, expectedModifiers, "ctrl key pressed");
+  is(event.altKey, expectedModifiers, "alt key pressed");
+  is(event.metaKey, expectedModifiers, "meta key pressed");
+  gModifiers++;
+}
+
+function checkEnter()
+{
+  var list = $("list");
+  list.addEventListener("popuphidden", checkEnterWithModifiers, false);
+  list.addEventListener("command", checkModifiers, false);
+  list.open = true;
+  synthesizeKey("VK_ENTER", { });
+}
+
+function checkEnterWithModifiers()
+{
+  is(gModifiers, 1, "modifiers checked when not set");
+
+  var list = $("list");
+  ok(!list.open, "list closed on enter press");
+  list.removeEventListener("popuphidden", checkEnterWithModifiers, false);
+
+  list.addEventListener("popuphidden", done, false);
+  list.open = true;
+
+  synthesizeKey("VK_ENTER", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true });
+}
+
+function done()
+{
+  is(gModifiers, 2, "modifiers checked when set");
+
+  var list = $("list");
+  ok(!list.open, "list closed on enter press with modifiers");
+  list.removeEventListener("popuphidden", done, false);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>
