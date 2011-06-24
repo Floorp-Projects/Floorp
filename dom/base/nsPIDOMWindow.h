@@ -45,7 +45,7 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
@@ -115,14 +115,14 @@ public:
     return mIsBackground;
   }
 
-  nsPIDOMEventTarget* GetChromeEventHandler() const
+  nsIDOMEventTarget* GetChromeEventHandler() const
   {
     return mChromeEventHandler;
   }
 
-  virtual void SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler) = 0;
+  virtual void SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler) = 0;
 
-  nsPIDOMEventTarget* GetParentTarget()
+  nsIDOMEventTarget* GetParentTarget()
   {
     if (!mParentTarget) {
       UpdateParentTarget();
@@ -588,7 +588,7 @@ protected:
 
   ~nsPIDOMWindow();
 
-  void SetChromeEventHandlerInternal(nsPIDOMEventTarget* aChromeEventHandler) {
+  void SetChromeEventHandlerInternal(nsIDOMEventTarget* aChromeEventHandler) {
     mChromeEventHandler = aChromeEventHandler;
     // mParentTarget will be set when the next event is dispatched.
     mParentTarget = nsnull;
@@ -599,10 +599,10 @@ protected:
   // These two variables are special in that they're set to the same
   // value on both the outer window and the current inner window. Make
   // sure you keep them in sync!
-  nsCOMPtr<nsPIDOMEventTarget> mChromeEventHandler; // strong
+  nsCOMPtr<nsIDOMEventTarget> mChromeEventHandler; // strong
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
 
-  nsCOMPtr<nsPIDOMEventTarget> mParentTarget; // strong
+  nsCOMPtr<nsIDOMEventTarget> mParentTarget; // strong
 
   // These members are only used on outer windows.
   nsCOMPtr<nsIDOMElement> mFrameElement;

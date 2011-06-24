@@ -52,7 +52,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNSMouseEvent.h"
 #include "nsIDOMDataTransfer.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsWeakPtr.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
@@ -602,9 +602,9 @@ public:
   // Additional type info for user defined events
   nsCOMPtr<nsIAtom>     userType;
   // Event targets, needed by DOM Events
-  nsCOMPtr<nsPIDOMEventTarget> target;
-  nsCOMPtr<nsPIDOMEventTarget> currentTarget;
-  nsCOMPtr<nsPIDOMEventTarget> originalTarget;
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsCOMPtr<nsIDOMEventTarget> currentTarget;
+  nsCOMPtr<nsIDOMEventTarget> originalTarget;
 };
 
 /**

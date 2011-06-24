@@ -377,7 +377,7 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget,
   NS_ABORT_IF_FALSE(aSystemGroup && !*aSystemGroup,
       "Bad out param for system group");
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget;
+  nsCOMPtr<nsIDOMEventTarget> piTarget;
 
   if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
     nsIDocument* doc = aTarget->GetCurrentDoc();

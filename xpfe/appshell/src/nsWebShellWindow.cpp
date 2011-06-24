@@ -744,7 +744,7 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
   nsCOMPtr<nsIXULWindow> kungFuDeathGrip(this);
 
   nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
-  nsCOMPtr<nsPIDOMEventTarget> eventTarget = do_QueryInterface(window);
+  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(window);
 
   if (eventTarget) {
     nsCOMPtr<nsIContentViewer> contentViewer;

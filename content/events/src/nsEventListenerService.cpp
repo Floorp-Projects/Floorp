@@ -37,7 +37,7 @@
 #include "nsEventListenerService.h"
 #include "nsCOMArray.h"
 #include "nsEventListenerManager.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIVariant.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
@@ -202,7 +202,7 @@ nsEventListenerService::GetListenerInfoFor(nsIDOMEventTarget* aEventTarget,
   *aCount = 0;
   *aOutArray = nsnull;
   nsCOMArray<nsIEventListenerInfo> listenerInfos;
-  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(aEventTarget);
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aEventTarget);
   if (target) {
     nsCOMPtr<nsIEventListenerManager> elm =
       target->GetListenerManager(PR_FALSE);
@@ -235,10 +235,10 @@ nsEventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
 {
   *aCount = 0;
   *aOutArray = nsnull;
-  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(aEventTarget);
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aEventTarget);
   NS_ENSURE_ARG(target);
   nsEvent event(PR_TRUE, NS_EVENT_TYPE_NULL);
-  nsCOMArray<nsPIDOMEventTarget> targets;
+  nsCOMArray<nsIDOMEventTarget> targets;
   nsresult rv = nsEventDispatcher::Dispatch(target, nsnull, &event,
                                             nsnull, nsnull, nsnull, &targets);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -249,7 +249,7 @@ nsEventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
 
   *aOutArray =
     static_cast<nsIDOMEventTarget**>(
-      nsMemory::Alloc(sizeof(nsPIDOMEventTarget*) * count));
+      nsMemory::Alloc(sizeof(nsIDOMEventTarget*) * count));
   NS_ENSURE_TRUE(*aOutArray, NS_ERROR_OUT_OF_MEMORY);
 
   for (PRInt32 i = 0; i < count; ++i) {

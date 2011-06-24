@@ -391,7 +391,7 @@ nsAccDocManager::AddListeners(nsIDocument *aDocument,
                               PRBool aAddDOMContentLoadedListener)
 {
   nsPIDOMWindow *window = aDocument->GetWindow();
-  nsPIDOMEventTarget *target = window->GetChromeEventHandler();
+  nsIDOMEventTarget *target = window->GetChromeEventHandler();
   nsIEventListenerManager* elm = target->GetListenerManager(PR_TRUE);
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
                               NS_EVENT_FLAG_CAPTURE, nsnull);

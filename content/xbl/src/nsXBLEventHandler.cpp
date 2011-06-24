@@ -83,7 +83,7 @@ nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetCurrentTarget(getter_AddRefs(target));
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(target);
+  nsCOMPtr<nsIDOMEventTarget> piTarget = do_QueryInterface(target);
 
   mProtoHandler->ExecuteHandler(piTarget, aEvent);
 
@@ -133,7 +133,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(nsIDOMKeyEvent* aKeyEvent,
 
   nsCOMPtr<nsIDOMEventTarget> target;
   aKeyEvent->GetCurrentTarget(getter_AddRefs(target));
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(target);
+  nsCOMPtr<nsIDOMEventTarget> piTarget = do_QueryInterface(target);
 
   PRBool executed = PR_FALSE;
   for (PRUint32 i = 0; i < mProtoHandlers.Length(); ++i) {

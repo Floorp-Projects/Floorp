@@ -73,7 +73,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"
@@ -645,7 +645,7 @@ mozInlineSpellChecker::RegisterEventListeners()
   nsresult rv = editor->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc, &rv);
+  nsCOMPtr<nsIDOMEventTarget> piTarget = do_QueryInterface(doc, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
@@ -678,7 +678,7 @@ mozInlineSpellChecker::UnregisterEventListeners()
   editor->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
   
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc);
+  nsCOMPtr<nsIDOMEventTarget> piTarget = do_QueryInterface(doc);
   NS_ENSURE_TRUE(piTarget, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIEventListenerManager> elmP =

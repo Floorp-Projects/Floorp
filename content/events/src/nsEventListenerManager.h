@@ -117,7 +117,7 @@ public:
   nsresult HandleEvent(nsPresContext* aPresContext,
                        nsEvent* aEvent, 
                        nsIDOMEvent** aDOMEvent,
-                       nsPIDOMEventTarget* aCurrentTarget,
+                       nsIDOMEventTarget* aCurrentTarget,
                        PRUint32 aFlags,
                        nsEventStatus* aEventStatus,
                        nsCxPusher* aPusher)
@@ -149,7 +149,7 @@ public:
   nsresult HandleEventInternal(nsPresContext* aPresContext,
                                nsEvent* aEvent, 
                                nsIDOMEvent** aDOMEvent,
-                               nsPIDOMEventTarget* aCurrentTarget,
+                               nsIDOMEventTarget* aCurrentTarget,
                                PRUint32 aFlags,
                                nsEventStatus* aEventStatus,
                                nsCxPusher* aPusher);
@@ -191,7 +191,7 @@ protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEventListener* aListener,
                               nsIDOMEvent* aDOMEvent,
-                              nsPIDOMEventTarget* aCurrentTarget,
+                              nsIDOMEventTarget* aCurrentTarget,
                               PRUint32 aPhaseFlags,
                               nsCxPusher* aPusher);
   nsresult CompileEventHandlerInternal(nsIScriptContext *aContext,
