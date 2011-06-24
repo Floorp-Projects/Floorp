@@ -331,10 +331,10 @@ nsDOMWorkerMessageHandler::AddEventListener(const nsAString& aType,
                                             nsIDOMEventListener* aListener,
                                             PRBool aUseCapture,
                                             PRBool aWantsUntrusted,
-                                            PRUint8 optional_argc)
+                                            PRUint8 aOptionalArgc)
 {
   // We don't support aWantsUntrusted yet.
-  NS_ENSURE_TRUE(optional_argc < 2, NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE(aOptionalArgc < 2, NS_ERROR_NOT_IMPLEMENTED);
 
   ListenerCollection* collection =
     const_cast<ListenerCollection*>(GetListenerCollection(aType));

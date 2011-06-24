@@ -705,13 +705,9 @@ public:
   }
 
   /**
-   * See nsIDOMNSEventTarget
+   * See nsIDOMEventTarget
    */
-  NS_IMETHOD AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener *aListener,
-                              PRBool aUseCapture,
-                              PRBool aWantsUntrusted,
-                              PRUint8 optional_argc);
+  NS_DECL_NSIDOMEVENTTARGET
 
   /**
    * Adds a mutation observer to be notified when this node, or any of its

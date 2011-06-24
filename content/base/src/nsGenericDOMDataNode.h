@@ -45,7 +45,6 @@
 
 #include "nsIContent.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMEventTarget.h"
 #include "nsTextFragment.h"
 #include "nsDOMError.h"
 #include "nsIEventListenerManager.h"
@@ -84,8 +83,6 @@ class nsGenericDOMDataNode : public nsIContent
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-
-  NS_DECL_NSIDOMEVENTTARGET
 
   nsGenericDOMDataNode(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsGenericDOMDataNode();

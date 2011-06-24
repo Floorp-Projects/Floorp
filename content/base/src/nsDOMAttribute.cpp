@@ -788,101 +788,11 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
-NS_IMPL_DOMTARGET_DEFAULTS(nsDOMAttribute)
-
-NS_IMETHODIMP
-nsDOMAttribute::AddEventListener(const nsAString& aType,
-                                 nsIDOMEventListener* aListener,
-                                 PRBool aUseCapture,
-                                 PRBool aWantsUntrusted,
-                                 PRUint8 optional_argc)
-{
-  return nsIAttribute::AddEventListener(aType, aListener, aUseCapture,
-                                        aWantsUntrusted, optional_argc);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::RemoveEventListener(const nsAString& aType,
-                                    nsIDOMEventListener* aListener,
-                                    PRBool aUseCapture)
-{
-  nsCOMPtr<nsIDOMEventTarget> event_target =
-    do_QueryInterface(GetListenerManager(PR_TRUE));
-  NS_ENSURE_STATE(event_target);
-
-  return event_target->RemoveEventListener(aType, aListener, aUseCapture);
-
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::DispatchEvent(nsIDOMEvent *aEvt, PRBool* _retval)
-{
-  nsCOMPtr<nsIDOMEventTarget> target =
-    do_QueryInterface(GetListenerManager(PR_TRUE));
-  NS_ENSURE_STATE(target);
-  return target->DispatchEvent(aEvt, _retval);
-}
-
 nsresult
 nsDOMAttribute::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = PR_TRUE;
   return NS_OK;
-}
-
-nsresult
-nsDOMAttribute::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
-}
-
-nsresult
-nsDOMAttribute::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                 nsPresContext* aPresContext,
-                                 nsEventStatus* aEventStatus)
-{
-  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsINode*>(this),
-                                             aEvent, aDOMEvent,
-                                             aPresContext, aEventStatus);
-}
-
-nsIEventListenerManager*
-nsDOMAttribute::GetListenerManager(PRBool aCreateIfNotFound)
-{
-  return nsContentUtils::GetListenerManager(this, aCreateIfNotFound);
-}
-
-nsresult
-nsDOMAttribute::AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID)
-{
-  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-
-nsresult
-nsDOMAttribute::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID)
-{
-  nsIEventListenerManager* elm = GetListenerManager(PR_FALSE);
-  return elm ? 
-    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE) :
-    NS_OK;
-}
-
-nsresult
-nsDOMAttribute::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
-{
-  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->GetSystemEventGroupLM(aGroup);
-}
-
-nsIScriptContext*
-nsDOMAttribute::GetContextForEventHandlers(nsresult* aRv)
-{
-  return nsContentUtils::GetContextForEventHandlers(this, aRv);
 }
 
 void

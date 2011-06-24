@@ -7220,9 +7220,9 @@ nsGlobalWindow::RemoveEventListener(const nsAString& aType,
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
+nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* aRetVal)
 {
-  FORWARD_TO_INNER(DispatchEvent, (aEvent, _retval), NS_OK);
+  FORWARD_TO_INNER(DispatchEvent, (aEvent, aRetVal), NS_OK);
 
   if (!mDoc) {
     return NS_ERROR_FAILURE;
@@ -7241,7 +7241,7 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
     nsEventDispatcher::DispatchDOMEvent(GetOuterWindow(), nsnull, aEvent,
                                         presContext, &status);
 
-  *_retval = (status != nsEventStatus_eConsumeNoDefault);
+  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
 }
 
@@ -7300,9 +7300,9 @@ NS_IMETHODIMP
 nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  nsIDOMEventListener *aListener,
                                  PRBool aUseCapture, PRBool aWantsUntrusted,
-                                 PRUint8 optional_argc)
+                                 PRUint8 aOptionalArgc)
 {
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 1,
+  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
                "explicit by making optional_argc non-zero.");
@@ -7318,7 +7318,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
   if (aWantsUntrusted ||
-      (optional_argc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
+      (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
     flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
   }
 

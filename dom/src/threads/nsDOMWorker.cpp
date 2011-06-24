@@ -2589,7 +2589,7 @@ nsDOMWorker::AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
                               PRBool aUseCapture,
                               PRBool aWantsUntrusted,
-                              PRUint8 optional_argc)
+                              PRUint8 aOptionalArgc)
 {
   NS_ASSERTION(mWrappedNative, "Called after Finalize!");
   if (IsCanceled()) {
@@ -2599,7 +2599,7 @@ nsDOMWorker::AddEventListener(const nsAString& aType,
   return nsDOMWorkerMessageHandler::AddEventListener(aType, aListener,
                                                      aUseCapture,
                                                      aWantsUntrusted,
-                                                     optional_argc);
+                                                     aOptionalArgc);
 }
 
 /**
