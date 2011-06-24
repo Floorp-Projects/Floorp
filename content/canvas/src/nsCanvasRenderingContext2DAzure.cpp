@@ -3190,7 +3190,7 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
     isRTL = GET_BIDI_OPTION_DIRECTION(document->GetBidiOptions()) == IBMBIDI_TEXTDIRECTION_RTL;
   }
 
-  const ContextState &state = state;
+  const ContextState &state = CurrentState();
 
   // This is only needed to know if we can know the drawing bounding box easily.
   PRBool doDrawShadow = aOp == TEXT_DRAW_OPERATION_FILL && NeedToDrawShadow();
