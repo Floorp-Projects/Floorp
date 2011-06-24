@@ -24,6 +24,7 @@
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  *   Frederic Wang <fred.wang@free.fr>
+ *   Florian Scholz <elchi3@elchi3.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -60,11 +61,8 @@
 #define THIN_FRACTION_LINE                   0.5f
 #define THIN_FRACTION_LINE_MINIMUM_PIXELS    1  // minimum of 1 pixel
 
-#define MEDIUM_FRACTION_LINE                 1.5f
-#define MEDIUM_FRACTION_LINE_MINIMUM_PIXELS  2  // minimum of 2 pixels
-
 #define THICK_FRACTION_LINE                  2.0f
-#define THICK_FRACTION_LINE_MINIMUM_PIXELS   4  // minimum of 4 pixels
+#define THICK_FRACTION_LINE_MINIMUM_PIXELS   2  // minimum of 2 pixels
 
 nsIFrame*
 NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -135,18 +133,14 @@ nsMathMLmfracFrame::CalcLineThickness(nsPresContext*  aPresContext,
         lineThickness = defaultThickness - onePixel;
     }
     else if (aThicknessAttribute.EqualsLiteral("medium")) {
-      lineThickness = NSToCoordRound(defaultThickness * MEDIUM_FRACTION_LINE);
-      minimumThickness = onePixel * MEDIUM_FRACTION_LINE_MINIMUM_PIXELS;
-      // should visually increase by at least one pixel
-      if (lineThickness < defaultThickness + onePixel)
-        lineThickness = defaultThickness + onePixel;
+      // medium is default
     }
     else if (aThicknessAttribute.EqualsLiteral("thick")) {
       lineThickness = NSToCoordCeil(defaultThickness * THICK_FRACTION_LINE);
       minimumThickness = onePixel * THICK_FRACTION_LINE_MINIMUM_PIXELS;
-      // should visually increase by at least two pixels
-      if (lineThickness < defaultThickness + 2*onePixel)
-        lineThickness = defaultThickness + 2*onePixel;
+      // should visually increase by at least one pixel
+      if (lineThickness < defaultThickness + onePixel)
+        lineThickness = defaultThickness + onePixel;
     }
     else { // see if it is a plain number, or a percentage, or a h/v-unit like 1ex, 2px, 1em
       nsCSSValue cssValue;

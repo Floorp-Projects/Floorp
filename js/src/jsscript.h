@@ -330,7 +330,7 @@ class Bindings {
      *
      * (In fact, some JSScripts we do use against multiple global objects (see
      * bug 618497), and using the fixed shapes isn't sound there.)
-     * 
+     *
      * In deciding whether a call or block has any extensible parents, we
      * actually only need to consider enclosing calls; blocks are never
      * extensible, and the other sorts of objects that appear in the scope
@@ -395,6 +395,42 @@ struct JITScript;
 }
 #endif
 
+class JSPCCounters {
+    size_t numBytecodes;
+    int *counts;
+
+ public:
+    JSPCCounters() : numBytecodes(0), counts(NULL) {
+    }
+
+    ~JSPCCounters() {
+        JS_ASSERT(!counts);
+    }
+
+    bool init(JSContext *cx, size_t numBytecodes);
+    void destroy(JSContext *cx);
+
+    // Boolean conversion, for 'if (counters) ...'
+    operator void*() const {
+        return counts;
+    }
+
+    int *get(int runmode) {
+        JS_ASSERT(runmode >= 0 && runmode < JSRUNMODE_COUNT);
+        return counts ? &counts[numBytecodes * runmode] : NULL;
+    }
+
+    int& get(int runmode, size_t offset) {
+        JS_ASSERT(offset < numBytecodes);
+        JS_ASSERT(counts);
+        return get(runmode)[offset];
+    }
+
+    size_t numRunmodes() const {
+        return JSRUNMODE_COUNT;
+    }
+};
+
 struct JSScript {
     /*
      * Two successively less primitive ways to make a new JSScript.  The first
@@ -422,16 +458,17 @@ struct JSScript {
   private:
     uint16          version;    /* JS version under which script was compiled */
 
-    size_t          callCount_; /* Number of times the script has been called. */
-
   public:
     uint16          nfixed;     /* number of slots besides stack operands in
                                    slot array */
+  private:
+    size_t          callCount_; /* Number of times the script has been called. */
 
     /*
      * Offsets to various array structures from the end of this script, or
      * JSScript::INVALID_OFFSET if the array has length 0.
      */
+  public:
     uint8           objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
                                        objects */
@@ -499,6 +536,9 @@ struct JSScript {
 
     uint32          *closedSlots; /* vector of closed slots; args first, then vars. */
 
+    /* array of execution counters for every JSOp in the script, by runmode */
+    JSPCCounters    pcCounters;
+
   public:
 #ifdef JS_METHODJIT
     // Fast-cached pointers to make calls faster. These are also used to
@@ -537,6 +577,9 @@ struct JSScript {
     }
 #endif
 
+    JS_FRIEND_API(size_t) totalSize();  /* Size of the JSScript and all sections */
+    uint32 numNotes();                  /* Number of srcnote slots in the srcnotes section */
+
     /* Script notes are allocated right after the code. */
     jssrcnote *notes() { return (jssrcnote *)(code + length); }
 
@@ -545,32 +588,32 @@ struct JSScript {
 
     JSObjectArray *objects() {
         JS_ASSERT(isValidOffset(objectsOffset));
-        return (JSObjectArray *)((uint8 *) (this + 1) + objectsOffset);
+        return reinterpret_cast<JSObjectArray *>(uintptr_t(this + 1) + objectsOffset);
     }
 
     JSUpvarArray *upvars() {
         JS_ASSERT(isValidOffset(upvarsOffset));
-        return (JSUpvarArray *) ((uint8 *) (this + 1) + upvarsOffset);
+        return reinterpret_cast<JSUpvarArray *>(uintptr_t(this + 1) + upvarsOffset);
     }
 
     JSObjectArray *regexps() {
         JS_ASSERT(isValidOffset(regexpsOffset));
-        return (JSObjectArray *) ((uint8 *) (this + 1) + regexpsOffset);
+        return reinterpret_cast<JSObjectArray *>(uintptr_t(this + 1) + regexpsOffset);
     }
 
     JSTryNoteArray *trynotes() {
         JS_ASSERT(isValidOffset(trynotesOffset));
-        return (JSTryNoteArray *) ((uint8 *) (this + 1) + trynotesOffset);
+        return reinterpret_cast<JSTryNoteArray *>(uintptr_t(this + 1) + trynotesOffset);
     }
 
     js::GlobalSlotArray *globals() {
         JS_ASSERT(isValidOffset(globalsOffset));
-        return (js::GlobalSlotArray *) ((uint8 *) (this + 1) + globalsOffset);
+        return reinterpret_cast<js::GlobalSlotArray *>(uintptr_t(this + 1) + globalsOffset);
     }
 
     JSConstArray *consts() {
         JS_ASSERT(isValidOffset(constOffset));
-        return (JSConstArray *) ((uint8 *) (this + 1) + constOffset);
+        return reinterpret_cast<JSConstArray *>(uintptr_t(this + 1) + constOffset);
     }
 
     JSAtom *getAtom(size_t index) {
@@ -660,12 +703,10 @@ extern JS_FRIEND_DATA(js::Class) js_ScriptClass;
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
 
-/*
- * On first new context in rt, initialize script runtime state, specifically
- * the script filename table and its lock.
- */
-extern JSBool
-js_InitRuntimeScriptState(JSRuntime *rt);
+namespace js {
+
+extern bool
+InitRuntimeScriptState(JSRuntime *rt);
 
 /*
  * On JS_DestroyRuntime(rt), forcibly free script filename prefixes and any
@@ -674,7 +715,9 @@ js_InitRuntimeScriptState(JSRuntime *rt);
  * This allows script filename prefixes to outlive any context in rt.
  */
 extern void
-js_FreeRuntimeScriptState(JSRuntime *rt);
+FreeRuntimeScriptState(JSRuntime *rt);
+
+} /* namespace js */
 
 extern void
 js_MarkScriptFilename(const char *filename);

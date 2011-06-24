@@ -67,14 +67,6 @@ CPPSRCS         += affentry.cpp \
 DEFINES = -DHUNSPELL_STATIC
 endif
 
-EXTRA_DSO_LDOPTS = \
-                   $(LIBS_DIR) \
-                   $(XPCOM_LIBS) \
-                   $(NSPR_LIBS) \
-                   $(MOZ_UNICHARUTIL_LIBS) \
-                   $(MOZ_HUNSPELL_LIBS) \
-                   $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_NATIVE_HUNSPELL

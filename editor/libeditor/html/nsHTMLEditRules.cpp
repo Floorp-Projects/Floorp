@@ -64,8 +64,6 @@
 #include "nsIRangeUtils.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIRange.h"
 
@@ -78,10 +76,13 @@
 #include "nsUnicharUtils.h"
 
 #include "nsFrameSelection.h"
-#include "nsIDOM3Node.h"
 #include "nsContentUtils.h"
 #include "nsTArray.h"
 #include "nsIHTMLDocument.h"
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -242,26 +243,15 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor)
   NS_ENSURE_SUCCESS(res, res);
 
   // cache any prefs we care about
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &res);
-  NS_ENSURE_SUCCESS(res, res);
+  static const char kPrefName[] =
+    "editor.html.typing.returnInEmptyListItemClosesList";
+  nsAdoptingCString returnInEmptyLIKillsList =
+    Preferences::GetCString(kPrefName);
 
-  char *returnInEmptyLIKillsList = 0;
-  res = prefBranch->GetCharPref("editor.html.typing.returnInEmptyListItemClosesList",
-                                &returnInEmptyLIKillsList);
+  // only when "false", becomes FALSE.  Otherwise (including empty), TRUE.
+  // XXX Why was this pref designed as a string and not bool?
+  mReturnInEmptyLIKillsList = !returnInEmptyLIKillsList.EqualsLiteral("false");
 
-  if (NS_SUCCEEDED(res) && returnInEmptyLIKillsList)
-  {
-    if (!strncmp(returnInEmptyLIKillsList, "false", 5))
-      mReturnInEmptyLIKillsList = PR_FALSE; 
-    else
-      mReturnInEmptyLIKillsList = PR_TRUE; 
-  }
-  else
-  {
-    mReturnInEmptyLIKillsList = PR_TRUE; 
-  }
-  
   // make a utility range for use by the listenter
   mUtilRange = do_CreateInstance("@mozilla.org/content/range;1");
   NS_ENSURE_TRUE(mUtilRange, NS_ERROR_NULL_POINTER);

@@ -99,8 +99,8 @@ static PRLogModuleInfo *webSocketLog = nsnull;
 // main transmit queue
 #define kFinMessage (reinterpret_cast<nsCString *>(0x01))
 
-// An implementation of draft-ietf-hybi-thewebsocketprotocol-07
-#define SEC_WEBSOCKET_VERSION "7"
+// An implementation of draft-ietf-hybi-thewebsocketprotocol-08
+#define SEC_WEBSOCKET_VERSION "8"
 
 /*
  * About SSL unsigned certificates
@@ -266,6 +266,7 @@ class nsWSAdmissionManager
 {
 public:
     nsWSAdmissionManager()
+        : mConnectedCount(0)
     {
         MOZ_COUNT_CTOR(nsWSAdmissionManager);
     }
@@ -328,6 +329,21 @@ public:
         }
         return PR_FALSE;
     }
+
+    void IncrementConnectedCount()
+    {
+        PR_ATOMIC_INCREMENT(&mConnectedCount);
+    }
+
+    void DecrementConnectedCount()
+    {
+        PR_ATOMIC_DECREMENT(&mConnectedCount);
+    }
+
+    PRInt32 ConnectedCount()
+    {
+        return mConnectedCount;
+    }
     
 private:
     nsTArray<nsOpenConn *> mData;
@@ -339,6 +355,10 @@ private:
                 return i;
         return -1;
     }
+    
+    // ConnectedCount might be decremented from the main or the socket
+    // thread, so manage it with atomic counters
+    PRInt32 mConnectedCount;
 };
 
 // similar to nsDeflateConverter except for the mandatory FLUSH calls
@@ -486,8 +506,10 @@ nsWebSocketHandler::nsWebSocketHandler() :
     mAllowCompression(1),
     mAutoFollowRedirects(0),
     mReleaseOnTransmit(0),
+    mTCPClosed(0),
     mMaxMessageSize(16000000),
     mStopOnClose(NS_OK),
+    mCloseCode(kCloseAbnormal),
     mFragmentOpcode(0),
     mFragmentAccumulator(0),
     mBuffered(0),
@@ -715,6 +737,15 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
             framingLength += 8;
             if (avail < framingLength)
                 break;
+
+            if (mFramePtr[2] & 0x80) {
+                // Section 4.2 says that the most significant bit MUST be
+                // 0. (i.e. this is really a 63 bit value)
+                LOG(("WebSocketHandler:: high bit of 64 bit length set"));
+                AbortSession(NS_ERROR_ILLEGAL_VALUE);
+                return NS_ERROR_ILLEGAL_VALUE;
+            }
+
             // copy this in case it is unaligned
             PRUint64 tempLen;
             memcpy(&tempLen, mFramePtr + 2, 8);
@@ -829,6 +860,17 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
             LOG(("WebSocketHandler:: text frame received\n"));
             if (mListener) {
                 nsCString utf8Data((const char *)payload, payloadLength);
+
+                // section 8.1 says to replace received non utf-8 sequences
+                // (which are non-conformant to send) with u+fffd,
+                // but secteam feels that silently rewriting messages is
+                // inappropriate - so we will fail the connection instead.
+                if (!IsUTF8(utf8Data)) {
+                    LOG(("WebSocketHandler:: text frame invalid utf-8\n"));
+                    AbortSession(NS_ERROR_ILLEGAL_VALUE);
+                    return NS_ERROR_ILLEGAL_VALUE;
+                }
+
                 nsCOMPtr<nsIRunnable> event =
                     new CallOnMessageAvailable(mListener, mContext,
                                                utf8Data, -1);
@@ -848,14 +890,25 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
                 LOG(("WebSocketHandler:: close received\n"));
                 mServerClosed = 1;
                 
+                mCloseCode = kCloseNoStatus;
                 if (payloadLength >= 2) {
-                    PRUint16 code;
-                    memcpy(&code, payload, 2);
-                    code = PR_ntohs(code);
-                    LOG(("WebSocketHandler:: close recvd code %u\n", code));
+                    memcpy(&mCloseCode, payload, 2);
+                    mCloseCode = PR_ntohs(mCloseCode);
+                    LOG(("WebSocketHandler:: close recvd code %u\n", mCloseCode));
                     PRUint16 msglen = payloadLength - 2;
                     if (msglen > 0) {
                         nsCString utf8Data((const char *)payload + 2, msglen);
+
+                        // section 8.1 says to replace received non utf-8 sequences
+                        // (which are non-conformant to send) with u+fffd,
+                        // but secteam feels that silently rewriting messages is
+                        // inappropriate - so we will fail the connection instead.
+                        if (!IsUTF8(utf8Data)) {
+                            LOG(("WebSocketHandler:: close frame invalid utf-8\n"));
+                            AbortSession(NS_ERROR_ILLEGAL_VALUE);
+                            return NS_ERROR_ILLEGAL_VALUE;
+                        }
+
                         LOG(("WebSocketHandler:: close msg  %s\n",
                              utf8Data.get()));
                     }
@@ -865,9 +918,11 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
                     mCloseTimer->Cancel();
                     mCloseTimer = nsnull;
                 }
-                nsCOMPtr<nsIRunnable> event =
-                    new CallOnServerClose(mListener, mContext);
-                NS_DispatchToMainThread(event);
+                if (mListener) {
+                    nsCOMPtr<nsIRunnable> event =
+                            new CallOnServerClose(mListener, mContext);
+                    NS_DispatchToMainThread(event);
+                }
 
                 if (mClientClosed)
                     ReleaseSession();
@@ -901,10 +956,10 @@ nsWebSocketHandler::ProcessInput(PRUint8 *buffer, PRUint32 count)
         else if (opcode == kBinary) {
             LOG(("WebSocketHandler:: binary frame received\n"));
             if (mListener) {
-                nsCString utf8Data((const char *)payload, payloadLength);
+                nsCString binaryData((const char *)payload, payloadLength);
                 nsCOMPtr<nsIRunnable> event =
                     new CallOnMessageAvailable(mListener, mContext,
-                                               utf8Data, payloadLength);
+                                               binaryData, payloadLength);
                 NS_DispatchToMainThread(event);
             }
         }
@@ -1034,6 +1089,21 @@ nsWebSocketHandler::SendMsgInternal(nsCString *aMsg,
     OnOutputStreamReady(mSocketOut);
 }
 
+PRUint16
+nsWebSocketHandler::ResultToCloseCode(nsresult resultCode)
+{
+    if (NS_SUCCEEDED(resultCode))
+        return kCloseNormal;
+    if (resultCode == NS_ERROR_FILE_TOO_BIG)
+        return kCloseTooLarge;
+    if (resultCode == NS_BASE_STREAM_CLOSED ||
+        resultCode == NS_ERROR_NET_TIMEOUT ||
+        resultCode == NS_ERROR_CONNECTION_REFUSED)
+        return kCloseAbnormal;
+    
+    return kCloseProtocolError;
+}
+
 void
 nsWebSocketHandler::PrimeNewOutgoingMessage()
 {
@@ -1080,12 +1150,7 @@ nsWebSocketHandler::PrimeNewOutgoingMessage()
         payload = mOutHeader + 6;
         
         // The close reason code sits in the first 2 bytes of payload
-        if (NS_SUCCEEDED(mStopOnClose))
-            *((PRUint16 *)payload) = PR_htons(kCloseNormal);
-        else if (mStopOnClose == NS_ERROR_FILE_TOO_BIG)
-            *((PRUint16 *)payload) = PR_htons(kCloseTooLarge);
-        else
-            *((PRUint16 *)payload) = PR_htons(kCloseProtocolError);
+        *((PRUint16 *)payload) = PR_htons(ResultToCloseCode(mStopOnClose));
 
         mHdrOutToSend = 8;
         if (mServerClosed) {
@@ -1243,6 +1308,36 @@ nsWebSocketHandler::EnsureHdrOut(PRUint32 size)
 }
 
 void
+nsWebSocketHandler::CleanupConnection()
+{
+    LOG(("WebSocketHandler::CleanupConnection() %p", this));
+
+    if (mLingeringCloseTimer) {
+        mLingeringCloseTimer->Cancel();
+        mLingeringCloseTimer = nsnull;
+    }
+
+    if (mSocketIn) {
+        if (sWebSocketAdmissions)
+            sWebSocketAdmissions->DecrementConnectedCount();
+        mSocketIn->AsyncWait(nsnull, 0, 0, nsnull);
+        mSocketIn = nsnull;
+    }
+    
+    if (mSocketOut) {
+        mSocketOut->AsyncWait(nsnull, 0, 0, nsnull);
+        mSocketOut = nsnull;
+    }
+    
+    if (mTransport) {
+        mTransport->SetSecurityCallbacks(nsnull);
+        mTransport->SetEventSink(nsnull, nsnull);
+        mTransport->Close(NS_BASE_STREAM_CLOSED);
+        mTransport = nsnull;
+    }
+}
+
+void
 nsWebSocketHandler::StopSession(nsresult reason)
 {
     LOG(("WebSocketHandler::StopSession() %p [%x]\n", this, reason));
@@ -1268,7 +1363,7 @@ nsWebSocketHandler::StopSession(nsresult reason)
         mPingTimer = nsnull;
     }
 
-    if (mSocketIn) {
+    if (mSocketIn && !mTCPClosed) {
         // drain, within reason, this socket. if we leave any data
         // unconsumed (including the tcp fin) a RST will be generated
         // The right thing to do here is shutdown(SHUT_WR) and then wait
@@ -1283,22 +1378,39 @@ nsWebSocketHandler::StopSession(nsresult reason)
         do {
             total += count;
             rv = mSocketIn->Read(buffer, 512, &count);
+            if (rv != NS_BASE_STREAM_WOULD_BLOCK &&
+                (NS_FAILED(rv) || count == 0))
+                mTCPClosed = PR_TRUE;
         } while (NS_SUCCEEDED(rv) && count > 0 && total < 32000);
-        
-        mSocketIn->AsyncWait(nsnull, 0, 0, nsnull);
-        mSocketIn = nsnull;
     }
 
-    if (mSocketOut) {
-        mSocketOut->AsyncWait(nsnull, 0, 0, nsnull);
-        mSocketOut = nsnull;
-    }
+    if (!mTCPClosed && mTransport && sWebSocketAdmissions &&
+        sWebSocketAdmissions->ConnectedCount() < kLingeringCloseThreshold) {
 
-    if (mTransport) {
-        mTransport->SetSecurityCallbacks(nsnull);
-        mTransport->SetEventSink(nsnull, nsnull);
-        mTransport->Close(NS_BASE_STREAM_CLOSED);
-        mTransport = nsnull;
+        // 7.1.1 says that the client SHOULD wait for the server to close
+        // the TCP connection. This is so we can reuse port numbers before
+        // 2 MSL expires, which is not really as much of a concern for us
+        // as the amount of state that might be accrued by keeping this
+        // handler object around waiting for the server. We handle the SHOULD
+        // by waiting a short time in the common case, but not waiting in
+        // the case of high concurrency.
+        // 
+        // Normally this will be taken care of in AbortSession() after mTCPClosed
+        // is set when the server close arrives without waiting for the timeout to
+        // expire.
+
+        LOG(("nsWebSocketHandler::StopSession - Wait for Server TCP close"));
+
+        nsresult rv;
+        mLingeringCloseTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+        if (NS_SUCCEEDED(rv))
+            mLingeringCloseTimer->InitWithCallback(this, kLingeringCloseTimeout,
+                                                   nsITimer::TYPE_ONE_SHOT);
+        else
+            CleanupConnection();
+    }
+    else {
+        CleanupConnection();
     }
 
     if (mDNSRequest) {
@@ -1314,9 +1426,11 @@ nsWebSocketHandler::StopSession(nsresult reason)
 
     if (!mCalledOnStop) {
         mCalledOnStop = 1;
-        nsCOMPtr<nsIRunnable> event =
-            new CallOnStop(mListener, mContext, reason);
-        NS_DispatchToMainThread(event);
+        if (mListener) {
+            nsCOMPtr<nsIRunnable> event =
+                    new CallOnStop(mListener, mContext, reason);
+            NS_DispatchToMainThread(event);
+        }
     }
 
     return;
@@ -1334,6 +1448,17 @@ nsWebSocketHandler::AbortSession(nsresult reason)
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread ||
                       !(mRecvdHttpOnStartRequest &&
                         mRecvdHttpUpgradeTransport), "wrong thread");
+
+    // When we are failing we need to close the TCP connection immediately
+    // as per 7.1.1
+    mTCPClosed = PR_TRUE;
+
+    if (mLingeringCloseTimer) {
+        NS_ABORT_IF_FALSE(mStopped, "Lingering without Stop");
+        LOG(("Cleanup Connection based on TCP Close"));
+        CleanupConnection();
+        return;
+    }
 
     if (mStopped)
         return;
@@ -1740,6 +1865,10 @@ nsWebSocketHandler::Notify(nsITimer *timer)
             AbortSession(NS_ERROR_NET_TIMEOUT);
         }
     }
+    else if (timer == mLingeringCloseTimer) {
+        LOG(("nsWebSocketHandler:: Lingering Close Timer"));
+        CleanupConnection();
+    }
     else {
         NS_ABORT_IF_FALSE(0, "Unknown Timer");
     }
@@ -2054,10 +2183,13 @@ nsWebSocketHandler::OnTransportAvailable(nsISocketTransport *aTransport,
 
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
     NS_ABORT_IF_FALSE(!mRecvdHttpUpgradeTransport, "OTA duplicated");
+    NS_ABORT_IF_FALSE(aSocketIn, "OTA with invalid socketIn");
     
     mTransport = aTransport;
     mSocketIn = aSocketIn;
     mSocketOut = aSocketOut;
+    if (sWebSocketAdmissions)
+        sWebSocketAdmissions->IncrementConnectedCount();
 
     nsresult rv;
     rv = mTransport->SetEventSink(nsnull, nsnull);
@@ -2266,9 +2398,6 @@ nsWebSocketHandler::OnInputStreamReady(nsIAsyncInputStream *aStream)
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread,
                       "not socket thread");
     
-    if (mStopped)
-        return NS_ERROR_UNEXPECTED;
-
     nsRefPtr<nsIStreamListener>    deleteProtector1(mInflateReader);
     nsRefPtr<nsIStringInputStream> deleteProtector2(mInflateStream);
 
@@ -2288,13 +2417,21 @@ nsWebSocketHandler::OnInputStreamReady(nsIAsyncInputStream *aStream)
         }
         
         if (NS_FAILED(rv)) {
+            mTCPClosed = PR_TRUE;
             AbortSession(rv);
             return rv;
         }
         
         if (count == 0) {
+            mTCPClosed = PR_TRUE;
             AbortSession(NS_BASE_STREAM_CLOSED);
             return NS_OK;
+        }
+        
+        if (mStopped) {
+            NS_ABORT_IF_FALSE(mLingeringCloseTimer,
+                              "OnInputReady after stop without linger");
+            continue;
         }
         
         if (mInflateReader) {

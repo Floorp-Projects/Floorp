@@ -651,7 +651,7 @@ public:
     JSParseNode *last() const {
         JS_ASSERT(pn_arity == PN_LIST);
         JS_ASSERT(pn_count != 0);
-        return (JSParseNode *)((char *)pn_tail - offsetof(JSParseNode, pn_next));
+        return (JSParseNode *)(uintptr_t(pn_tail) - offsetof(JSParseNode, pn_next));
     }
 
     void makeEmpty() {
@@ -1065,7 +1065,10 @@ struct Parser : private js::AutoGCRooter
     /* Root atoms and objects allocated for the parsed tree. */
     js::AutoKeepAtoms   keepAtoms;
 
-    Parser(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
+    /* Perform constant-folding; must be true when interfacing with the emitter. */
+    bool                foldConstants;
+
+    Parser(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL, bool fold = true);
     ~Parser();
 
     friend void js::AutoGCRooter::trace(JSTracer *trc);
@@ -1197,7 +1200,7 @@ private:
     JSParseNode *functionDef(JSAtom *name, FunctionType type, uintN lambda);
 
     JSParseNode *condition();
-    JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid,
+    JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
                                    js::TokenKind type = js::TOK_SEMI, JSOp op = JSOP_NOP);
     JSParseNode *generatorExpr(JSParseNode *kid);
     JSBool argumentList(JSParseNode *listNode);

@@ -45,28 +45,26 @@ var expect = 'No Exception';
 printBugNumber(BUGNUMBER);
 START(summary);
 
-var tests = [<></>, <><a/></>, <><a/><b/></>];
+var tests = [{ v: <></>, expect: "" },
+             { v: <><a/></>, expect: "" },
+             { v: <><a/><b/></>, expect: "<a/>\n<b/>" }];
 
-function do_one(x)
+function do_one(x, expect)
 {
     x.function::f = Math.sin;
     with (x) {
         function::toString = function::f = function() { return "test"; };
     }
 
-    if (String(x) !== "test")
-        throw "Failed to set toString";
+    assertEq(String(x), expect, "didn't implement ToString(XMLList) correctly: " + x.toXMLString());
 
     if (x.f() !== "test")
         throw "Failed to set set function f";
-
-    if (x.function::toString != x.function::f)
-        throw "toString and f are different";
 }
 
 
 for (var i  = 0; i != tests.length; ++i)
-    do_one(tests[i]);
+    do_one(tests[i].v, tests[i].expect);
 
 TEST(1, expect, actual);
 END();

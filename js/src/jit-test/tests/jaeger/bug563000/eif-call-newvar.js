@@ -5,10 +5,11 @@ function callee() {
   assertJit();
   evalInFrame(1, "var x = 'success'");
 }
-function caller() {
+function caller(code) {
   assertJit();
+  eval(code);
   callee();
   return x;
 }
-assertEq(caller(), "success");
+assertEq(caller('var y = "ignominy"'), "success");
 assertEq(typeof x, "undefined");

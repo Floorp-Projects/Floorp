@@ -50,7 +50,6 @@ SDK_XPIDLSRCS =                                 \
 	domstubs.idl				\
 	nsIDOMBarProp.idl			\
 	nsIDOMWindow.idl			\
-	nsIDOMWindow2.idl			\
 	nsIDOMWindowCollection.idl		\
 	nsIDOMWindowUtils.idl			\
 	$(NULL)
@@ -79,7 +78,6 @@ XPIDLSRCS =					\
 	nsIDOMJSWindow.idl			\
 	nsIDOMModalContentWindow.idl		\
 	nsIDOMChromeWindow.idl			\
-	nsIDOMNSFeatureFactory.idl		\
         nsIDOMClientRect.idl			\
         nsIDOMClientRectList.idl		\
 	nsIFocusManager.idl			\
@@ -88,6 +86,9 @@ XPIDLSRCS =					\
 	nsITabParent.idl			\
 	nsIDOMGlobalPropertyInitializer.idl	\
 	nsIStructuredCloneContainer.idl		\
+	nsIDOMPerformance.idl			\
+	nsIDOMPerformanceTiming.idl		\
+	nsIDOMPerformanceNavigation.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

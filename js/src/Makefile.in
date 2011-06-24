@@ -185,21 +185,22 @@ CPPSRCS		= \
 		sharkctl.cpp \
 		GlobalObject.cpp \
 		Stack.cpp \
+		String.cpp \
 		$(NULL)
 
+# Changes to internal header files, used externally, massively slow down
+# browser builds.  Don't add new files here unless you know what you're
+# doing!
 INSTALLED_HEADERS = \
 		js-config.h \
 		jsautocfg.h \
 		$(CURDIR)/jsautokw.h \
 		js.msg \
 		jsalloc.h \
-		jsanalyze.h \
 		jsapi.h \
-		jsarray.h \
 		jsarena.h \
 		jsatom.h \
 		jsbit.h \
-		jsbool.h \
 		jsclist.h \
 		jsclone.h \
 		jscntxt.h \
@@ -207,12 +208,10 @@ INSTALLED_HEADERS = \
 		jsdate.h \
 		jsdbgapi.h \
 		jsdhash.h \
-		jsdtoa.h \
 		jsemit.h \
 		jsfun.h \
 		jsfriendapi.h \
 		jsgc.h \
-		jsgcmark.h \
 		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \
@@ -222,38 +221,28 @@ INSTALLED_HEADERS = \
 		jsinttypes.h \
 		jsiter.h \
 		jslock.h \
-		jslong.h \
-		jsmath.h \
-		jsnum.h \
 		jsobj.h \
-		jsobjinlines.h \
 		json.h \
-		jsonparser.h \
 		jsopcode.tbl \
 		jsopcode.h \
-		jsopcodeinlines.h \
 		jsotypes.h \
 		jsparse.h \
 		jsproxy.h \
 		jsprf.h \
 		jsprobes.h \
 		jspropertycache.h \
-		jspropertycacheinlines.h \
 		jspropertytree.h \
 		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \
 		jsreflect.h \
-		jsregexp.h \
 		jsscan.h \
 		jsscope.h \
 		jsscript.h \
-		jsscriptinlines.h \
 		jsstaticcheck.h \
 		jsstdint.h \
 		jsstr.h \
 		jstracer.h \
-		jshotloop.h \
 		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \
@@ -261,10 +250,8 @@ INSTALLED_HEADERS = \
 		jstl.h \
 		jshashtable.h \
 		jsversion.h \
-		jsweakmap.h \
 		jswrapper.h \
 		jsxdrapi.h \
-		jsxml.h \
 		jsval.h \
 		jsvalue.h \
 		prmjtime.h \
@@ -281,8 +268,9 @@ EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
 		ArgumentsObject.h \
-		GlobalObject.h			\
-		Stack.h			\
+		GlobalObject.h	 \
+		Stack.h \
+		String.h \
 		StringObject.h \
 		$(NULL)
 
@@ -297,6 +285,7 @@ EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
 		RangedPtr.h \
+		RefPtr.h	\
 		Types.h		\
 		Util.h          \
 		$(NULL)
@@ -640,7 +629,7 @@ endif
 # don't give different results. We skip the contents of objdirs using |find|
 # (it can't be done with %-expansion, because the files we want to skip aren't
 # in the vpath).
-ALL_FILES=$(shell find $(srcdir) \( -name "*.cpp" -o -name "*.h" \) -not -path "*/dist/*" -not -path "*/config/*")
+ALL_FILES=$(shell find $(srcdir) \( -name "*.cpp" -o -name "*.h" \) ! -path "*/dist/*" ! -path "*/config/*")
 check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL_FILES))
 
 	# js_malloc and friends are only used by other memory managers, and should
@@ -656,7 +645,7 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 53 \
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 54 \
 		"in Makefile.in" "{cx,rt}->{new_,new_array,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
 	$(srcdir)/config/check_source_count.py UnwantedForeground:: 34 \

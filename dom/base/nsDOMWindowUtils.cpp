@@ -81,6 +81,7 @@
 #include "jsobj.h"
 
 #include "Layers.h"
+#include "nsIIOService.h"
 
 #include "mozilla/dom/Element.h"
 
@@ -1768,6 +1769,30 @@ nsDOMWindowUtils::GetCursorType(PRInt16 *aCursor)
   *aCursor = widget->GetCursor();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GoOnline()
+{
+  // This is only allowed from about:neterror, which is unprivileged, so it
+  // can't access the io-service itself.
+  NS_ENSURE_TRUE(mWindow, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIURI> documentURI;
+  documentURI = doc->GetDocumentURI();
+
+  nsCAutoString spec;
+  documentURI->GetSpec(spec);
+  if (!StringBeginsWith(spec,  NS_LITERAL_CSTRING("about:neterror?")))
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  nsCOMPtr<nsIIOService> ios = do_GetService("@mozilla.org/network/io-service;1");
+  if (ios) {
+    ios->SetOffline(PR_FALSE); // !offline
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP

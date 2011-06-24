@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -45,6 +46,7 @@
 *|*::-moz-fieldset-content {
   display: block;
   unicode-bidi: inherit;
+  text-overflow: inherit;
   height: 100%;   /* Need this so percentage heights of kids work right */
 }
 
@@ -624,6 +626,7 @@ input > .anonymous-div,
 *|*::-moz-display-comboboxcontrol-frame,
 optgroup:before {
   unicode-bidi: inherit;
+  text-overflow: inherit;
 }
 
  /*

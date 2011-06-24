@@ -64,6 +64,8 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/String-inl.h"
+
 using namespace js;
 using namespace js::gc;
 
@@ -201,7 +203,9 @@ const char *const js_common_atom_names[] = {
     "keys",                     /* keysAtom                     */
     "iterate",                  /* iterateAtom                  */
 
-    "WeakMap"                   /* WeakMapAtom                  */
+    "WeakMap",                  /* WeakMapAtom                  */
+
+    "byteLength"                /* byteLengthAtom               */
 };
 
 void
@@ -445,7 +449,7 @@ MakeInterned(const AutoLockAtomsCompartment &, const AtomStateEntry &entryRef, I
 {
     AtomStateEntry *entry = const_cast<AtomStateEntry *>(&entryRef);
     AtomStateEntry::makeInterned(entry, ib);
-    JS_ASSERT(entryRef.isInterned() >= ib);
+    JS_ASSERT(InternBehavior(entryRef.isInterned()) >= ib);
 }
 
 enum OwnCharsBehavior

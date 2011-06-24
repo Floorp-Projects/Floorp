@@ -164,7 +164,6 @@ NS_INTERFACE_MAP_BEGIN(nsSHistory)
    NS_INTERFACE_MAP_ENTRY(nsISHistory)
    NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
    NS_INTERFACE_MAP_ENTRY(nsISHistoryInternal)
-   NS_INTERFACE_MAP_ENTRY(nsISHistory_2_0_BRANCH)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -889,7 +888,7 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
 
   // Walk the full session history and check that entries outside the window
   // around aFromIndex have no content viewers
-  for (PRInt32 i = 0; i < mLength; ++i) {
+  for (PRInt32 i = 0; trans && i < mLength; ++i) {
     if (i < aFromIndex - gHistoryMaxViewers || 
         i > aFromIndex + gHistoryMaxViewers) {
       nsCOMPtr<nsISHEntry> entry;
@@ -1088,7 +1087,7 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
   GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
 
   PRInt32 i;
-  for (i = startIndex; i <= endIndex; ++i) {
+  for (i = startIndex; trans && i <= endIndex; ++i) {
     nsCOMPtr<nsISHEntry> entry;
     trans->GetSHEntry(getter_AddRefs(entry));
     if (entry == aEntry)

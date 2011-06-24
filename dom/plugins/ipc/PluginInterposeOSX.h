@@ -42,6 +42,23 @@ class NSCursor;
 #import <Cocoa/Cocoa.h>
 #endif
 
+// The header file QuickdrawAPI.h is missing on OS X 10.7 and up (though the
+// QuickDraw APIs defined in it are still present) -- so we need to supply the
+// relevant parts of its contents here.  It's likely that Apple will eventually
+// remove the APIs themselves (probably in OS X 10.8), so we need to make them
+// weak imports, and test for their presence before using them.
+#if !defined(__QUICKDRAWAPI__)
+
+typedef short Bits16[16];
+struct Cursor {
+  Bits16  data;
+  Bits16  mask;
+  Point   hotSpot;
+};
+typedef struct Cursor Cursor;
+
+#endif /* __QUICKDRAWAPI__ */
+
 namespace mac_plugin_interposing {
 
 // Class used to serialize NSCursor objects over IPC between processes.

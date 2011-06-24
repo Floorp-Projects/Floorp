@@ -20,10 +20,10 @@ fails-if(Android) == element-paint-native-widget.html element-paint-native-widge
 == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
-fails-if(Android) == element-paint-sharpness-01b.html element-paint-sharpness-01c.html
+== element-paint-sharpness-01b.html element-paint-sharpness-01c.html
 == element-paint-sharpness-01c.html element-paint-sharpness-01d.html
 == element-paint-sharpness-02a.html element-paint-sharpness-02b.html
-fails-if(Android) == element-paint-sharpness-02b.html element-paint-sharpness-02c.html
+== element-paint-sharpness-02b.html element-paint-sharpness-02c.html
 == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01-ref.html
 == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02-ref.html
 == element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01-ref.html

@@ -62,7 +62,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsSVGUtils.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
@@ -598,7 +598,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       mContentStyleRule = nsnull;
 
     if (IsEventName(aName)) {
-      nsIEventListenerManager* manager = GetListenerManager(PR_FALSE);
+      nsEventListenerManager* manager = GetListenerManager(PR_FALSE);
       if (manager) {
         nsIAtom* eventName = GetEventNameForAttr(aName);
         manager->RemoveScriptEventListener(eventName);
@@ -1364,7 +1364,8 @@ nsSVGElement::AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
   else {
     nsCOMPtr<nsINodeInfo> ni;
     ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, nsnull,
-                                                   aNamespaceID);
+                                                   aNamespaceID,
+                                                   nsIDOMNode::ATTRIBUTE_NODE);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mMappedAttributes.SetAndTakeAttr(ni, attrVal);
@@ -1404,7 +1405,7 @@ nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
 }
 
 nsSVGSVGElement *
-nsSVGElement::GetCtx()
+nsSVGElement::GetCtx() const
 {
   nsIContent* ancestor = GetFlattenedTreeParent();
 
@@ -1424,7 +1425,7 @@ nsSVGElement::GetCtx()
 }
 
 /* virtual */ gfxMatrix
-nsSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
+nsSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
 {
   return aMatrix;
 }
@@ -1441,6 +1442,20 @@ void nsSVGElement::LengthAttributesInfo::Reset(PRUint8 aAttrEnum)
                            aAttrEnum,
                            mLengthInfo[aAttrEnum].mDefaultValue,
                            mLengthInfo[aAttrEnum].mDefaultUnitType);
+}
+
+void
+nsSVGElement::SetLength(nsIAtom* aName, const nsSVGLength2 &aLength)
+{
+  LengthAttributesInfo lengthInfo = GetLengthInfo();
+
+  for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
+    if (aName == *lengthInfo.mLengthInfo[i].mName) {
+      lengthInfo.mLengths[i] = aLength;
+      return;
+    }
+  }
+  NS_ABORT_IF_FALSE(false, "no length found to set");
 }
 
 void

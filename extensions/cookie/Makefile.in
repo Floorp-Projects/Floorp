@@ -65,10 +65,6 @@ XPIDLSRCS	= \
 		nsICookiePromptService.idl \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
 ifdef MOZ_MAIL_NEWS
 DEFINES += -DMOZ_MAIL_NEWS
 endif

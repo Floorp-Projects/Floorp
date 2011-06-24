@@ -377,6 +377,34 @@ nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
     i = 7;
     namedspaceAtom = nsGkAtoms::veryverythickmathspace_;
   }
+  else if (aString.EqualsLiteral("negativeveryverythinmathspace")) {
+    i = -1;
+    namedspaceAtom = nsGkAtoms::negativeveryverythinmathspace_;
+  }
+  else if (aString.EqualsLiteral("negativeverythinmathspace")) {
+    i = -2;
+    namedspaceAtom = nsGkAtoms::negativeverythinmathspace_;
+  }
+  else if (aString.EqualsLiteral("negativethinmathspace")) {
+    i = -3;
+    namedspaceAtom = nsGkAtoms::negativethinmathspace_;
+  }
+  else if (aString.EqualsLiteral("negativemediummathspace")) {
+    i = -4;
+    namedspaceAtom = nsGkAtoms::negativemediummathspace_;
+  }
+  else if (aString.EqualsLiteral("negativethickmathspace")) {
+    i = -5;
+    namedspaceAtom = nsGkAtoms::negativethickmathspace_;
+  }
+  else if (aString.EqualsLiteral("negativeverythickmathspace")) {
+    i = -6;
+    namedspaceAtom = nsGkAtoms::negativeverythickmathspace_;
+  }
+  else if (aString.EqualsLiteral("negativeveryverythickmathspace")) {
+    i = -7;
+    namedspaceAtom = nsGkAtoms::negativeveryverythickmathspace_;
+  }
 
   if (0 != i) {
     if (aMathMLmstyleFrame) {

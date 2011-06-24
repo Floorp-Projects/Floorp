@@ -47,14 +47,12 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventTarget.h" 
-#include "nsIDOM3EventTarget.h" 
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseListener.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "nsGUIEvent.h"
-#include "nsIDOMEventGroup.h"
 #include "nsCRT.h"
 
 #include "nsIEnumerator.h"
@@ -71,8 +69,6 @@
 
 // Misc
 #include "nsEditorUtils.h"  // nsAutoEditBatch, nsAutoRules
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
 #include "nsContentCID.h"
 #include "nsInternetCiter.h"
@@ -1143,12 +1139,8 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   // We may reset mWrapToWindow here, based on the pref's current value.
   if (IsMailEditor())
   {
-    nsresult rv;
-    nsCOMPtr<nsIPrefBranch> prefBranch =
-      do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-      prefBranch->GetBoolPref("mail.compose.wrap_to_window_width",
-                              &mWrapToWindow);
+    mWrapToWindow =
+      Preferences::GetBool("mail.compose.wrap_to_window_width", mWrapToWindow);
   }
 
   // and now we're ready to set the new whitespace/wrapping style.
@@ -1721,8 +1713,8 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
   return NS_OK;
 }
 
-already_AddRefed<nsPIDOMEventTarget>
-nsPlaintextEditor::GetPIDOMEventTarget()
+already_AddRefed<nsIDOMEventTarget>
+nsPlaintextEditor::GetDOMEventTarget()
 {
   NS_IF_ADDREF(mEventTarget);
   return mEventTarget.get();
