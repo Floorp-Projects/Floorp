@@ -49,7 +49,7 @@
 #ifndef nsXULElement_h__
 #define nsXULElement_h__
 
-// XXX because nsIEventListenerManager has broken includes
+// XXX because nsEventListenerManager has broken includes
 #include "nsIDOMEvent.h"
 #include "nsIServiceManager.h"
 #include "nsIAtom.h"
@@ -60,7 +60,7 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIScriptObjectOwner.h"
@@ -659,7 +659,7 @@ protected:
                                   nsAttrValue& aResult);
 
     virtual nsresult
-      GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
+      GetEventListenerManagerForAttr(nsEventListenerManager** aManager,
                                      nsISupports** aTarget,
                                      PRBool* aDefer);
   

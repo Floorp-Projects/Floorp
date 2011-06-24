@@ -53,7 +53,7 @@
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLDocument.h"
@@ -1124,7 +1124,7 @@ nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
-nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
+nsGenericHTMLElement::GetEventListenerManagerForAttr(nsEventListenerManager** aManager,
                                                      nsISupports** aTarget,
                                                      PRBool* aDefer)
 {
@@ -1236,7 +1236,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     }
     else if (nsContentUtils::IsEventAttributeName(aAttribute,
                                                   EventNameType_HTML)) {
-      nsIEventListenerManager* manager = GetListenerManager(PR_FALSE);
+      nsEventListenerManager* manager = GetListenerManager(PR_FALSE);
       if (manager) {
         manager->RemoveScriptEventListener(aAttribute);
       }

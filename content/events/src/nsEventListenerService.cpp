@@ -201,7 +201,7 @@ nsEventListenerService::GetListenerInfoFor(nsIDOMEventTarget* aEventTarget,
   *aCount = 0;
   *aOutArray = nsnull;
   nsCOMArray<nsIEventListenerInfo> listenerInfos;
-  nsIEventListenerManager* elm =
+  nsEventListenerManager* elm =
     aEventTarget->GetListenerManager(PR_FALSE);
   if (elm) {
     elm->GetListenerInfo(&listenerInfos);

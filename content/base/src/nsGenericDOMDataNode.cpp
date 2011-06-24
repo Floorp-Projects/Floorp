@@ -43,7 +43,7 @@
 #include "nsGenericDOMDataNode.h"
 #include "nsGenericElement.h"
 #include "nsIDocument.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMDocument.h"
 #include "nsReadableUtils.h"
 #include "nsMutationEvent.h"

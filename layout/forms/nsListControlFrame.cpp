@@ -60,7 +60,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsEventDispatcher.h"
 #include "nsEventStateManager.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIPrivateDOMEvent.h"

@@ -72,7 +72,7 @@
 #include "nsCRT.h"
 
 // Event listeners
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMLoadListener.h"
@@ -94,7 +94,7 @@
 #include "nsXBLBinding.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsGUIEvent.h"
 
 #include "prprf.h"
@@ -836,7 +836,7 @@ nsXBLBinding::InstallEventHandlers()
     nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
     if (handlerChain) {
-      nsIEventListenerManager* manager =
+      nsEventListenerManager* manager =
         mBoundElement->GetListenerManager(PR_TRUE);
       if (!manager)
         return;
@@ -996,7 +996,7 @@ nsXBLBinding::UnhookEventHandlers()
   nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
   if (handlerChain) {
-    nsCOMPtr<nsIEventListenerManager> manager =
+    nsEventListenerManager* manager =
       mBoundElement->GetListenerManager(PR_FALSE);
     if (!manager) {
       return;

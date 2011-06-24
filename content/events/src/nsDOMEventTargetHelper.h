@@ -46,7 +46,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIScriptContext.h"
 
 class nsDOMEventListenerWrapper : public nsIDOMEventListener
@@ -98,7 +98,7 @@ public:
     return NS_OK;
   }
 protected:
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  nsRefPtr<nsEventListenerManager> mListenerManager;
   // These may be null (native callers or xpcshell).
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindow>    mOwner; // Inner window.
