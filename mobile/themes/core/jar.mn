@@ -122,8 +122,6 @@ chrome.jar:
   skin/images/mute-hdpi.png                 (images/mute-hdpi.png)
   skin/images/unmute-hdpi.png               (images/unmute-hdpi.png)
   skin/images/scrubber-hdpi.png             (images/scrubber-hdpi.png)
-  skin/images/handle-start.png              (images/handle-start.png)
-  skin/images/handle-end.png                (images/handle-end.png)
 
 chrome.jar:
 % skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4
@@ -242,8 +240,6 @@ chrome.jar:
   skin/gingerbread/images/mute-hdpi.png                 (gingerbread/images/mute-hdpi.png)
   skin/gingerbread/images/unmute-hdpi.png               (gingerbread/images/unmute-hdpi.png)
   skin/gingerbread/images/scrubber-hdpi.png             (gingerbread/images/scrubber-hdpi.png)
-  skin/gingerbread/images/handle-start.png              (gingerbread/images/handle-start.png)
-  skin/gingerbread/images/handle-end.png                (gingerbread/images/handle-end.png)
 
 chrome.jar:
 % skin browser classic/1.0 %skin/honeycomb/ os=Android osversion>=3.0
@@ -364,5 +360,4 @@ chrome.jar:
   skin/honeycomb/images/mute-hdpi.png                 (honeycomb/images/mute-hdpi.png)
   skin/honeycomb/images/unmute-hdpi.png               (honeycomb/images/unmute-hdpi.png)
   skin/honeycomb/images/scrubber-hdpi.png             (honeycomb/images/scrubber-hdpi.png)
-  skin/honeycomb/images/handle-start.png              (images/handle-start.png)
-  skin/honeycomb/images/handle-end.png                (images/handle-end.png)
+
