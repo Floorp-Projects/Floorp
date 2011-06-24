@@ -3195,12 +3195,12 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, FunctionSyntaxKind kind)
     }
 #endif
 
-    if (type == GETTER && fun->nargs > 0) {
+    if (type == Getter && fun->nargs > 0) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ACCESSOR_WRONG_ARGS,
                           "getter", "no", "s");
         return NULL;
     }
-    if (type == SETTER && fun->nargs != 1) {
+    if (type == Setter && fun->nargs != 1) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ACCESSOR_WRONG_ARGS,
                           "setter", "one", "");
         return NULL;
@@ -3373,7 +3373,7 @@ Parser::functionStmt()
         return NULL;
     }
 
-    return functionDef(name, GENERAL, Statement);
+    return functionDef(name, Normal, Statement);
 }
 
 JSParseNode *
@@ -3384,7 +3384,7 @@ Parser::functionExpr()
         name = tokenStream.currentToken().t_atom;
     else
         tokenStream.ungetToken();
-    return functionDef(name, GENERAL, Expression);
+    return functionDef(name, Normal, Expression);
 }
 
 /*
@@ -8451,7 +8451,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     pn->pn_xflags |= PNX_NONCONST;
 
                     /* NB: Getter function in { get x(){} } is unnamed. */
-                    pn2 = functionDef(NULL, op == JSOP_SETTER ? SETTER : GETTER, Expression);
+                    pn2 = functionDef(NULL, op == JSOP_GETTER ? Getter : Setter, Expression);
                     pn2 = JSParseNode::newBinaryOrAppend(TOK_COLON, op, pn3, pn2, tc);
                     goto skip;
                 }
