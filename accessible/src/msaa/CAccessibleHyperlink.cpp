@@ -56,7 +56,7 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
 
   if (IID_IAccessibleHyperlink == iid) {
     nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-    if (!thisObj->IsHyperLink())
+    if (!thisObj->IsLink())
       return E_NOINTERFACE;
 
     *ppv = static_cast<IAccessibleHyperlink*>(this);
@@ -76,7 +76,7 @@ __try {
   VariantInit(aAnchor);
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
@@ -111,7 +111,7 @@ __try {
   VariantInit(aAnchorTarget);
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
@@ -151,7 +151,7 @@ __try {
   *aIndex = 0;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
   *aIndex = thisObj->StartOffset();
@@ -168,7 +168,7 @@ __try {
   *aIndex = 0;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
   *aIndex = thisObj->EndOffset();
@@ -185,7 +185,7 @@ __try {
   *aValid = false;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
   *aValid = thisObj->IsLinkValid();
