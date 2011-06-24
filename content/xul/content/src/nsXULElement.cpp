@@ -2187,19 +2187,19 @@ PopupListenerPropertyDtor(void* aObject, nsIAtom* aPropertyName,
   if (!listener) {
     return;
   }
-  nsCOMPtr<nsIDOM3EventTarget> target =
-    do_QueryInterface(static_cast<nsINode*>(aObject));
-  if (target) {
-    nsCOMPtr<nsIDOMEventGroup> systemGroup;
-    static_cast<nsIDOMEventTarget*>(aObject)->
-      GetSystemEventGroup(getter_AddRefs(systemGroup));
-    if (systemGroup) {
-      target->RemoveGroupedEventListener(NS_LITERAL_STRING("mousedown"),
-                                         listener, PR_FALSE, systemGroup);
-
-      target->RemoveGroupedEventListener(NS_LITERAL_STRING("contextmenu"),
-                                         listener, PR_FALSE, systemGroup);
-    }
+  nsEventListenerManager* manager = static_cast<nsINode*>(aObject)->
+    GetListenerManager(PR_FALSE);
+  if (manager) {
+    manager->RemoveEventListenerByType(listener,
+                                       NS_LITERAL_STRING("mousedown"),
+                                       NS_EVENT_FLAG_BUBBLE |
+                                       NS_EVENT_FLAG_SYSTEM_EVENT,
+                                       nsnull);
+    manager->RemoveEventListenerByType(listener,
+                                       NS_LITERAL_STRING("contextmenu"),
+                                       NS_EVENT_FLAG_BUBBLE |
+                                       NS_EVENT_FLAG_SYSTEM_EVENT,
+                                       nsnull);
   }
   NS_RELEASE(listener);
 }
@@ -2221,18 +2221,14 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMEventGroup> systemGroup;
-    GetSystemEventGroup(getter_AddRefs(systemGroup));
-    NS_ENSURE_STATE(systemGroup);
-
     nsresult rv = NS_NewXULPopupListener(this, isContext,
                                          getter_AddRefs(popupListener));
     if (NS_FAILED(rv))
         return rv;
 
     // Add the popup as a listener on this element.
-    nsCOMPtr<nsIDOM3EventTarget> target(do_QueryInterface(static_cast<nsIContent *>(this)));
-    NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
+    nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
+    NS_ENSURE_TRUE(manager, NS_ERROR_FAILURE);
     rv = SetProperty(listenerAtom, popupListener, PopupListenerPropertyDtor,
                      PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2241,11 +2237,17 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     popupListener.swap(listener);
 
     if (isContext) {
-      target->AddGroupedEventListener(NS_LITERAL_STRING("contextmenu"),
-                                      listener, PR_FALSE, systemGroup);
+      manager->AddEventListenerByType(listener,
+                                      NS_LITERAL_STRING("contextmenu"),
+                                      NS_EVENT_FLAG_BUBBLE |
+                                      NS_EVENT_FLAG_SYSTEM_EVENT,
+                                      nsnull);
     } else {
-      target->AddGroupedEventListener(NS_LITERAL_STRING("mousedown"),
-                                      listener, PR_FALSE, systemGroup);
+      manager->AddEventListenerByType(listener,
+                                      NS_LITERAL_STRING("mousedown"),
+                                      NS_EVENT_FLAG_BUBBLE |
+                                      NS_EVENT_FLAG_SYSTEM_EVENT,
+                                      nsnull);
     }
     return NS_OK;
 }

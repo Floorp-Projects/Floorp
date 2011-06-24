@@ -888,18 +888,18 @@ nsDocShellTreeOwner::AddChromeListeners()
   nsCOMPtr<nsIDOMEventTarget> target;
   GetDOMEventTarget(mWebBrowser, getter_AddRefs(target));
 
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  target->GetSystemEventGroup(getter_AddRefs(sysGroup));
   nsEventListenerManager* elmP = target->GetListenerManager(PR_TRUE);
-  if (sysGroup && elmP)
+  if (elmP)
   {
     rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("dragover"),
-                                      NS_EVENT_FLAG_BUBBLE,
-                                      sysGroup);
+                                      NS_EVENT_FLAG_BUBBLE |
+                                      NS_EVENT_FLAG_SYSTEM_EVENT,
+                                      nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("drop"),
-                                      NS_EVENT_FLAG_BUBBLE,
-                                      sysGroup);
+                                      NS_EVENT_FLAG_BUBBLE |
+                                      NS_EVENT_FLAG_SYSTEM_EVENT,
+                                      nsnull);
   }
 
   return rv;
@@ -924,17 +924,17 @@ nsDocShellTreeOwner::RemoveChromeListeners()
   if (!piTarget)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
   nsEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
-  if (sysGroup && elmP)
+  if (elmP)
   {
     elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("dragover"),
-                                    NS_EVENT_FLAG_BUBBLE,
-                                    sysGroup);
+                                    NS_EVENT_FLAG_BUBBLE |
+                                    NS_EVENT_FLAG_SYSTEM_EVENT,
+                                    nsnull);
     elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("drop"),
-                                    NS_EVENT_FLAG_BUBBLE,
-                                    sysGroup);
+                                    NS_EVENT_FLAG_BUBBLE |
+                                    NS_EVENT_FLAG_SYSTEM_EVENT,
+                                    nsnull);
   }
 
   return NS_OK;

@@ -272,7 +272,6 @@ static const EventTypeData sEventTypes[] = {
 };
 
 // Strong references to event groups
-nsIDOMEventGroup* gSystemEventGroup = nsnull;
 nsIDOMEventGroup* gDOM2EventGroup = nsnull;
 
 PRUint32 nsEventListenerManager::mInstanceCount = 0;
@@ -316,18 +315,8 @@ nsEventListenerManager::RemoveAllListeners()
 void
 nsEventListenerManager::Shutdown()
 {
-  NS_IF_RELEASE(gSystemEventGroup);
   sAddListenerID = JSID_VOID;
   nsDOMEvent::Shutdown();
-}
-
-nsIDOMEventGroup*
-nsEventListenerManager::GetSystemEventGroup()
-{
-  if (!gSystemEventGroup) {
-    CallCreateInstance(kDOMEventGroupCID, &gSystemEventGroup);
-  }
-  return gSystemEventGroup;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventListenerManager)
@@ -409,18 +398,6 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
 
   nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = aListener;
 
-  PRBool isSame = PR_FALSE;
-  PRUint16 group = 0;
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  GetSystemEventGroupLM(getter_AddRefs(sysGroup));
-  if (sysGroup) {
-    sysGroup->IsSameEventGroup(aEvtGrp, &isSame);
-    if (isSame) {
-      group = NS_EVENT_FLAG_SYSTEM_EVENT;
-      mMayHaveSystemGroupListeners = PR_TRUE;
-    }
-  }
-
   if (!aTypeData) {
     // If we don't have type data, we can try to QI listener to the right
     // interface and set mTypeData only if QI succeeds. This way we can save
@@ -443,7 +420,6 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   for (PRUint32 i = 0; i < count; i++) {
     ls = &mListeners.ElementAt(i);
     if (ls->mListener == aListener && ls->mFlags == aFlags &&
-        ls->mGroupFlags == group &&
         (EVENT_TYPE_EQUALS(ls, aType, aTypeAtom) ||
          EVENT_TYPE_DATA_EQUALS(aTypeData, ls->mTypeData))) {
       return NS_OK;
@@ -458,9 +434,12 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   ls->mEventType = aType;
   ls->mTypeAtom = aTypeAtom;
   ls->mFlags = aFlags;
-  ls->mGroupFlags = group;
   ls->mHandlerIsString = PR_FALSE;
   ls->mTypeData = aTypeData;
+
+  if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
+    mMayHaveSystemGroupListeners = PR_TRUE;
+  }
   if (aFlags & NS_EVENT_FLAG_CAPTURE) {
     mMayHaveCapturingListeners = PR_TRUE;
   }
@@ -525,17 +504,6 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
     return;
   }
 
-  PRBool isSame = PR_FALSE;
-  PRUint16 group = 0;
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  GetSystemEventGroupLM(getter_AddRefs(sysGroup));
-  if (sysGroup) {
-    sysGroup->IsSameEventGroup(aEvtGrp, &isSame);
-    if (isSame) {
-      group = NS_EVENT_FLAG_SYSTEM_EVENT;
-    }
-  }
-
   nsListenerStruct* ls;
   aFlags &= ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
 
@@ -543,7 +511,6 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   for (PRUint32 i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
     if (ls->mListener == aListener &&
-        ls->mGroupFlags == group &&
         ((ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) &&
         (EVENT_TYPE_EQUALS(ls, aType, aUserType) ||
          (!(ls->mEventType) &&
@@ -1146,7 +1113,6 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
     aEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
   }
-  PRUint16 currentGroup = aFlags & NS_EVENT_FLAG_SYSTEM_EVENT;
 
   const EventTypeData* typeData = nsnull;
   const EventDispatchData* dispData = nsnull;
@@ -1191,8 +1157,11 @@ found:
     if (useTypeInterface || useGenericInterface) {
       if (ls->mListener) {
         hasListener = PR_TRUE;
-        if (ls->mFlags & aFlags &&
-            ls->mGroupFlags == currentGroup &&
+        // XXX The (mFlags & aFlags) test here seems fragile. Shouldn't we
+        // specifically only test the capture/bubble flags.
+        if ((ls->mFlags & aFlags & ~NS_EVENT_FLAG_SYSTEM_EVENT) &&
+            (ls->mFlags & NS_EVENT_FLAG_SYSTEM_EVENT) ==
+            (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
             (NS_IS_TRUSTED_EVENT(aEvent) ||
              ls->mFlags & NS_PRIV_EVENT_UNTRUSTED_PERMITTED)) {
           if (!*aDOMEvent) {
@@ -1242,15 +1211,6 @@ nsEventListenerManager::Disconnect()
 {
   mTarget = nsnull;
   RemoveAllListeners();
-}
-
-nsresult
-nsEventListenerManager::GetSystemEventGroupLM(nsIDOMEventGroup **aGroup)
-{
-  *aGroup = GetSystemEventGroup();
-  NS_ENSURE_TRUE(*aGroup, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aGroup);
-  return NS_OK;
 }
 
 nsresult
@@ -1421,7 +1381,7 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
   for (PRUint32 i = 0; i < count; ++i) {
     const nsListenerStruct& ls = mListeners.ElementAt(i);
     PRBool capturing = !!(ls.mFlags & NS_EVENT_FLAG_CAPTURE);
-    PRBool systemGroup = !!(ls.mGroupFlags & NS_EVENT_FLAG_SYSTEM_EVENT);
+    PRBool systemGroup = !!(ls.mFlags & NS_EVENT_FLAG_SYSTEM_EVENT);
     PRBool allowsUntrusted = !!(ls.mFlags & NS_PRIV_EVENT_UNTRUSTED_PERMITTED);
     // If this is a script handler and we haven't yet
     // compiled the event handler itself

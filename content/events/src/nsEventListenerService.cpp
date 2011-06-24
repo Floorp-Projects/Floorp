@@ -266,12 +266,42 @@ nsEventListenerService::HasListenersFor(nsIDOMEventTarget* aEventTarget,
 }
 
 NS_IMETHODIMP
-nsEventListenerService::GetSystemEventGroup(nsIDOMEventGroup** aSystemGroup)
+nsEventListenerService::AddSystemEventListener(nsIDOMEventTarget *aTarget,
+                                               const nsAString& aType,
+                                               nsIDOMEventListener* aListener,
+                                               PRBool aUseCapture)
 {
-  NS_ENSURE_ARG_POINTER(aSystemGroup);
-  *aSystemGroup = nsEventListenerManager::GetSystemEventGroup();
-  NS_ENSURE_TRUE(*aSystemGroup, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aSystemGroup);
+  NS_PRECONDITION(aTarget, "Missing target");
+  NS_PRECONDITION(aListener, "Missing listener");
+
+  nsEventListenerManager* manager = aTarget->GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE |
+                                NS_EVENT_FLAG_SYSTEM_EVENT :
+                                NS_EVENT_FLAG_BUBBLE |
+                                NS_EVENT_FLAG_SYSTEM_EVENT;
+  return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
+}
+
+NS_IMETHODIMP
+nsEventListenerService::RemoveSystemEventListener(nsIDOMEventTarget *aTarget,
+                                                  const nsAString& aType,
+                                                  nsIDOMEventListener* aListener,
+                                                  PRBool aUseCapture)
+{
+  NS_PRECONDITION(aTarget, "Missing target");
+  NS_PRECONDITION(aListener, "Missing listener");
+
+  nsEventListenerManager* manager = aTarget->GetListenerManager(PR_FALSE);
+  if (manager) {
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT :
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT;
+    manager->RemoveEventListenerByType(aListener, aType, flags, nsnull);
+  }
+
   return NS_OK;
 }
 

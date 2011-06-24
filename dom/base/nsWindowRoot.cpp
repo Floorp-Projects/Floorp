@@ -217,14 +217,6 @@ nsWindowRoot::GetListenerManager(PRBool aCreateIfNotFound)
   return mListenerManager;
 }
 
-nsresult
-nsWindowRoot::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
-{
-  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-  return manager->GetSystemEventGroupLM(aGroup);
-}
-
 nsIScriptContext*
 nsWindowRoot::GetContextForEventHandlers(nsresult* aRv)
 {
