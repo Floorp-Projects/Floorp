@@ -709,11 +709,11 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
 // then extra work needs to be done to hook it up to the document (XXX WHY??)
 //
 NS_IMETHODIMP
-nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
+nsXBLService::AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
 {
   // check if the receiver is a content node (not a document), and hook
   // it to the document if that is the case.
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = aTarget;
+  nsCOMPtr<nsIDOMEventTarget> piTarget = aTarget;
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
   if (contentNode) {
     // Only attach if we're really in a document
@@ -765,9 +765,9 @@ nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
 // Removes a key handler added by DeatchGlobalKeyHandler.
 //
 NS_IMETHODIMP
-nsXBLService::DetachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
+nsXBLService::DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
 {
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = aTarget;
+  nsCOMPtr<nsIDOMEventTarget> piTarget = aTarget;
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
   if (!contentNode) // detaching is only supported for content nodes
     return NS_ERROR_FAILURE;

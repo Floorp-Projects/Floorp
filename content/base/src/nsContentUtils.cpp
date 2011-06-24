@@ -2509,7 +2509,7 @@ IsContextOnStack(nsIJSContextStack *aStack, JSContext *aContext)
 }
 
 PRBool
-nsCxPusher::Push(nsPIDOMEventTarget *aCurrentTarget)
+nsCxPusher::Push(nsIDOMEventTarget *aCurrentTarget)
 {
   if (mPushedSomething) {
     NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
@@ -2551,7 +2551,7 @@ nsCxPusher::Push(nsPIDOMEventTarget *aCurrentTarget)
 }
 
 PRBool
-nsCxPusher::RePush(nsPIDOMEventTarget *aCurrentTarget)
+nsCxPusher::RePush(nsIDOMEventTarget *aCurrentTarget)
 {
   if (!mPushedSomething) {
     return Push(aCurrentTarget);
@@ -3050,7 +3050,7 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   if (!aDoc->GetWindow())
     return NS_ERROR_INVALID_ARG;
 
-  nsPIDOMEventTarget* piTarget = aDoc->GetWindow()->GetChromeEventHandler();
+  nsIDOMEventTarget* piTarget = aDoc->GetWindow()->GetChromeEventHandler();
   if (!piTarget)
     return NS_ERROR_INVALID_ARG;
 
@@ -3058,7 +3058,7 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   if (flo) {
     nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
     if (fl) {
-      nsPIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
+      nsIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
       piTarget = t ? t : piTarget;
     }
   }
@@ -3242,7 +3242,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
 
   // If we have a window, we can check it for mutation listeners now.
   if (aNode->IsInDoc()) {
-    nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(window));
+    nsCOMPtr<nsIDOMEventTarget> piTarget(do_QueryInterface(window));
     if (piTarget) {
       nsIEventListenerManager* manager = piTarget->GetListenerManager(PR_FALSE);
       if (manager) {

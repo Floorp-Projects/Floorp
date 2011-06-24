@@ -42,7 +42,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsString.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsCycleCollectionParticipant.h"
 #include "jsapi.h"
 

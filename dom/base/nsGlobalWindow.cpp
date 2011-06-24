@@ -1851,7 +1851,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (internal == static_cast<nsIDOMWindowInternal *>(this)) {
       nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
       if (xblService) {
-        nsCOMPtr<nsPIDOMEventTarget> piTarget =
+        nsCOMPtr<nsIDOMEventTarget> piTarget =
           do_QueryInterface(mChromeEventHandler);
         xblService->AttachGlobalKeyHandler(piTarget);
       }
@@ -2517,17 +2517,17 @@ nsGlobalWindow::GetIsTabModalPromptAllowed()
   return allowTabModal;
 }
 
-nsPIDOMEventTarget*
+nsIDOMEventTarget*
 nsGlobalWindow::GetTargetForDOMEvent()
 {
-  return static_cast<nsPIDOMEventTarget*>(GetOuterWindowInternal());
+  return static_cast<nsIDOMEventTarget*>(GetOuterWindowInternal());
 }
 
-nsPIDOMEventTarget*
+nsIDOMEventTarget*
 nsGlobalWindow::GetTargetForEventTargetChain()
 {
   return IsInnerWindow() ?
-    this : static_cast<nsPIDOMEventTarget*>(GetCurrentInnerWindowInternal());
+    this : static_cast<nsIDOMEventTarget*>(GetCurrentInnerWindowInternal());
 }
 
 nsresult
@@ -2707,7 +2707,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   /* mChromeEventHandler and mContext go dangling in the middle of this
    function under some circumstances (events that destroy the window)
    without this addref. */
-  nsCOMPtr<nsPIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
+  nsCOMPtr<nsIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
 
   if (aVisitor.mEvent->message == NS_RESIZE_EVENT) {
@@ -7365,7 +7365,7 @@ nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound)
     mListenerManager = do_CreateInstance(kEventListenerManagerCID);
     if (mListenerManager) {
       mListenerManager->SetListenerTarget(
-        static_cast<nsPIDOMEventTarget*>(this));
+        static_cast<nsIDOMEventTarget*>(this));
     }
   }
 
@@ -7587,7 +7587,7 @@ nsGlobalWindow::DisableDeviceMotionUpdates()
 }
 
 void
-nsGlobalWindow::SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler)
+nsGlobalWindow::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 {
   SetChromeEventHandlerInternal(aChromeEventHandler);
   if (IsOuterWindow()) {

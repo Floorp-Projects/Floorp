@@ -309,7 +309,7 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
                          nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
 
   nsISupports* scopeSupports =
-    NS_ISUPPORTS_CAST(nsPIDOMEventTarget*, this);
+    NS_ISUPPORTS_CAST(nsIDOMEventTarget*, this);
   JS_SetContextPrivate(cx, scopeSupports);
 
   nsresult rv =

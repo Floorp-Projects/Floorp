@@ -105,7 +105,7 @@ nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, PRBool *aRetVal)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =  nsEventDispatcher::DispatchDOMEvent(
-    static_cast<nsPIDOMEventTarget*>(this), nsnull, aEvt, nsnull, &status);
+    static_cast<nsIDOMEventTarget*>(this), nsnull, aEvt, nsnull, &status);
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
 }
@@ -116,7 +116,7 @@ nsWindowRoot::DispatchDOMEvent(nsEvent* aEvent,
                                nsPresContext* aPresContext,
                                nsEventStatus* aEventStatus)
 {
-  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMEventTarget*>(this),
+  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsIDOMEventTarget*>(this),
                                              aEvent, aDOMEvent,
                                              aPresContext, aEventStatus);
 }
@@ -208,7 +208,7 @@ nsWindowRoot::GetListenerManager(PRBool aCreateIfNotFound)
     mListenerManager = do_CreateInstance(kEventListenerManagerCID);
     if (mListenerManager) {
       mListenerManager->SetListenerTarget(
-        static_cast<nsPIDOMEventTarget*>(this));
+        static_cast<nsIDOMEventTarget*>(this));
     }
   }
 
@@ -355,7 +355,7 @@ nsWindowRoot::SetPopupNode(nsIDOMNode* aNode)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewWindowRoot(nsPIDOMWindow* aWindow, nsPIDOMEventTarget** aResult)
+NS_NewWindowRoot(nsPIDOMWindow* aWindow, nsIDOMEventTarget** aResult)
 {
   *aResult = new nsWindowRoot(aWindow);
   if (!*aResult)

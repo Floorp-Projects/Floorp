@@ -1147,7 +1147,7 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
     // bail if it does.
     if (document &&
         (win = document->GetInnerWindow()) && win->IsInnerWindow()) {
-      nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(win));
+      nsCOMPtr<nsIDOMEventTarget> piTarget(do_QueryInterface(win));
       NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
       *aManager = piTarget->GetListenerManager(PR_TRUE);

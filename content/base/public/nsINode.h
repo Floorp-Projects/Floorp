@@ -38,7 +38,7 @@
 #ifndef nsINode_h___
 #define nsINode_h___
 
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsEvent.h"
 #include "nsPropertyTable.h"
 #include "nsTObserverArray.h"

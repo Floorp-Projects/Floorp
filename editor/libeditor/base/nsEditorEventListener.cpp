@@ -44,7 +44,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMDocument.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
@@ -125,7 +125,7 @@ nsEditorEventListener::InstallToEditor()
 {
   NS_PRECONDITION(mEditor, "The caller must set mEditor");
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = mEditor->GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetPIDOMEventTarget();
   NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
   nsresult rv;
@@ -204,7 +204,7 @@ nsEditorEventListener::Disconnect()
 void
 nsEditorEventListener::UninstallFromEditor()
 {
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = mEditor->GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetPIDOMEventTarget();
   if (!piTarget) {
     return;
   }

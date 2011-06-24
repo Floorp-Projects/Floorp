@@ -7749,11 +7749,11 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   nsIScriptContext *script_cx = nsJSUtils::GetStaticScriptContext(cx, obj);
   NS_ENSURE_TRUE(script_cx, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget =
+  nsCOMPtr<nsIDOMEventTarget> piTarget =
     do_QueryWrappedNative(wrapper, obj);
   if (!piTarget) {
     // Doesn't do events
-    NS_WARNING("Doesn't QI to nsPIDOMEventTarget?");
+    NS_WARNING("Doesn't QI to nsIDOMEventTarget?");
     return NS_OK;
   }
   

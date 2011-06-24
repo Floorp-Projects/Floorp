@@ -80,7 +80,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventTargetHelper)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsPIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
 NS_INTERFACE_MAP_END
 
@@ -140,7 +140,7 @@ nsDOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, PRBool* aRetVal)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
-    nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMEventTarget*>(this),
+    nsEventDispatcher::DispatchDOMEvent(static_cast<nsIDOMEventTarget*>(this),
                                         nsnull, aEvent, nsnull, &status);
 
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
@@ -199,7 +199,7 @@ nsDOMEventTargetHelper::DispatchDOMEvent(nsEvent* aEvent,
                                          nsEventStatus* aEventStatus)
 {
   return
-    nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMEventTarget*>(this),
+    nsEventDispatcher::DispatchDOMEvent(static_cast<nsIDOMEventTarget*>(this),
                                         aEvent, aDOMEvent, aPresContext,
                                         aEventStatus);
 }
@@ -213,7 +213,7 @@ nsDOMEventTargetHelper::GetListenerManager(PRBool aCreateIfNotFound)
     }
     nsresult rv = NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
     NS_ENSURE_SUCCESS(rv, nsnull);
-    mListenerManager->SetListenerTarget(static_cast<nsPIDOMEventTarget*>(this));
+    mListenerManager->SetListenerTarget(static_cast<nsIDOMEventTarget*>(this));
   }
 
   return mListenerManager;
