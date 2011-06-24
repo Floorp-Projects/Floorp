@@ -85,7 +85,9 @@
 #ifdef JS_METHODJIT
 # include "assembler/assembler/MacroAssembler.h"
 #endif
+#include "frontend/ParseMaps.h"
 
+#include "jsatominlines.h"
 #include "jscntxtinlines.h"
 #include "jscompartment.h"
 #include "jsobjinlines.h"
@@ -1329,8 +1331,11 @@ JSContext::~JSContext()
 
     /* Free the stuff hanging off of cx. */
     VOUCH_DOES_NOT_REQUIRE_STACK();
-    JS_FinishArenaPool(&tempPool);
+    if (parseMapPool_)
+        Foreground::delete_<ParseMapPool>(parseMapPool_);
+
     JS_FinishArenaPool(&regExpPool);
+    JS_FinishArenaPool(&tempPool);
 
     if (lastMessage)
         Foreground::free_(lastMessage);
@@ -1454,7 +1459,7 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
  * Release pool's arenas if the stackPool has existed for longer than the
  * limit specified by gcEmptyArenaPoolLifespan.
  */
-inline void
+static void
 FreeOldArenas(JSRuntime *rt, JSArenaPool *pool)
 {
     JSArena *a = pool->current;
@@ -1469,6 +1474,10 @@ void
 JSContext::purge()
 {
     FreeOldArenas(runtime, &regExpPool);
+    if (!activeCompilations) {
+        Foreground::delete_<ParseMapPool>(parseMapPool_);
+        parseMapPool_ = NULL;
+    }
 }
 
 #if defined(JS_TRACER) || defined(JS_METHODJIT)

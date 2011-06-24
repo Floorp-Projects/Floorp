@@ -1416,7 +1416,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp);
 
 struct JSSharpObjectMap {
     jsrefcount  depth;
-    jsatomid    sharpgen;
+    uint32      sharpgen;
     JSHashTable *table;
 };
 

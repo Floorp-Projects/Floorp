@@ -48,6 +48,8 @@
 #include "jsregexp.h"
 #include "jsgc.h"
 
+#include "frontend/ParseMaps.h"
+
 namespace js {
 
 static inline GlobalObject *
@@ -415,6 +417,15 @@ JSContext::setPendingException(js::Value v) {
     this->throwing = true;
     this->exception = v;
     assertSameCompartment(this, v);
+}
+
+inline bool
+JSContext::ensureParseMapPool()
+{
+    if (parseMapPool_)
+        return true;
+    parseMapPool_ = js::OffTheBooks::new_<js::ParseMapPool>(this);
+    return parseMapPool_;
 }
 
 #endif /* jscntxtinlines_h___ */
