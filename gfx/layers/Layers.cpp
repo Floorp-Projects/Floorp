@@ -48,6 +48,7 @@
 #include "mozilla/Util.h"
 
 using namespace mozilla::layers;
+using namespace mozilla::gfx;
 
 typedef FrameMetrics::ViewID ViewID;
 const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
@@ -208,6 +209,14 @@ LayerManager::CreateOptimalSurface(const gfxIntSize &aSize,
 {
   return gfxPlatform::GetPlatform()->
     CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFormat));
+}
+
+TemporaryRef<DrawTarget>
+LayerManager::CreateDrawTarget(const IntSize &aSize,
+                               SurfaceFormat aFormat)
+{
+  // Right now this doesn't work on the general layer manager.
+  return NULL;
 }
 
 #ifdef DEBUG
