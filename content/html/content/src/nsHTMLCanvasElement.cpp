@@ -731,7 +731,7 @@ nsresult
 NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 {
   PRBool azure = PR_FALSE;
-  nsresult rv = mozilla::Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
+  nsresult rv = Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
 
   if (azure) {
     nsresult rv = NS_NewCanvasRenderingContext2DAzure(aResult);
