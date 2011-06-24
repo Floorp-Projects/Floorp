@@ -49,6 +49,8 @@
 #include "jsatom.h"
 #include "jsscan.h"
 
+#include "frontend/ParseMaps.h"
+
 JS_BEGIN_EXTERN_C
 
 /*
@@ -300,7 +302,7 @@ typedef enum JSParseNodeArity {
     PN_FUNC,                            /* function definition node */
     PN_LIST,                            /* generic singly linked list */
     PN_NAME,                            /* name use or definition node */
-    PN_NAMESET                          /* JSAtomList + JSParseNode ptr */
+    PN_NAMESET                          /* JSAtomDefnMapPtr + JSParseNode ptr */
 } JSParseNodeArity;
 
 struct JSDefinition;
@@ -309,7 +311,7 @@ namespace js {
 
 struct GlobalScope {
     GlobalScope(JSContext *cx, JSObject *globalObj, JSCodeGenerator *cg)
-      : globalObj(globalObj), cg(cg), defs(cx)
+      : globalObj(globalObj), cg(cg), defs(cx), names(cx)
     { }
 
     struct GlobalDef {
@@ -339,7 +341,7 @@ struct GlobalScope {
      * one that must be added after compilation succeeds.
      */
     Vector<GlobalDef, 16> defs;
-    JSAtomList      names;
+    AtomIndexMap      names;
 };
 
 } /* namespace js */
@@ -406,8 +408,8 @@ struct JSParseNode {
                                            computation */
         } name;
         struct {                        /* lexical dependencies + sub-tree */
-            JSAtomSet   names;          /* set of names with JSDefinitions */
-            JSParseNode *tree;          /* sub-tree containing name uses */
+            js::AtomDefnMapPtr  defnMap;
+            JSParseNode         *tree;  /* sub-tree containing name uses */
         } nameset;
         struct {                        /* PN_NULLARY variant for E4X */
             JSAtom      *atom;          /* first atom in pair */
@@ -441,19 +443,20 @@ struct JSParseNode {
 #define pn_objbox       pn_u.name.objbox
 #define pn_expr         pn_u.name.expr
 #define pn_lexdef       pn_u.name.lexdef
-#define pn_names        pn_u.nameset.names
+#define pn_names        pn_u.nameset.defnMap
 #define pn_tree         pn_u.nameset.tree
 #define pn_dval         pn_u.dval
 #define pn_atom2        pn_u.apair.atom2
 
 protected:
-    void inline init(js::TokenKind type, JSOp op, JSParseNodeArity arity) {
+    void init(js::TokenKind type, JSOp op, JSParseNodeArity arity) {
         pn_type = type;
         pn_op = op;
         pn_arity = arity;
         pn_parens = false;
         JS_ASSERT(!pn_used);
         JS_ASSERT(!pn_defn);
+        pn_names.init();
         pn_next = pn_link = NULL;
     }
 
@@ -752,6 +755,10 @@ struct LexicalScopeNode : public JSParseNode {
  * list may be a JSDefinition instead of a JSParseNode. The pn_defn bit is set
  * for all JSDefinitions, clear otherwise.
  *
+ * In an upvars list, defn->resolve() is the outermost definition the
+ * name may reference. If a with block or a function that calls eval encloses
+ * the use, the name may end up referring to something else at runtime.
+ *
  * Note that not all var declarations are definitions: JS allows multiple var
  * declarations in a function or script, but only the first creates the hoisted
  * binding. JS programmers do redeclare variables for good refactoring reasons,
@@ -861,10 +868,11 @@ struct LexicalScopeNode : public JSParseNode {
 struct JSDefinition : public JSParseNode
 {
     /*
-     * We store definition pointers in PN_NAMESET JSAtomLists in the AST, but
-     * due to redefinition these nodes may become uses of other definitions.
-     * This is unusual, so we simply chase the pn_lexdef link to find the final
-     * definition node. See methods called from Parser::analyzeFunctions.
+     * We store definition pointers in PN_NAMESET JSAtomDefnMapPtrs in the AST,
+     * but due to redefinition these nodes may become uses of other
+     * definitions.  This is unusual, so we simply chase the pn_lexdef link to
+     * find the final definition node. See methods called from
+     * Parser::analyzeFunctions.
      *
      * FIXME: MakeAssignment mutates for want of a parent link...
      */
@@ -1055,7 +1063,6 @@ enum FunctionSyntaxKind { Expression, Statement };
 struct Parser : private js::AutoGCRooter
 {
     JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
-    JSAtomListElement   *aleFreeList;
     void                *tempFreeList[NUM_TEMP_FREELISTS];
     TokenStream         tokenStream;
     void                *tempPoolMark;  /* initial JSContext.tempPool mark */
@@ -1245,17 +1252,17 @@ Parser::reportErrorNumber(JSParseNode *pn, uintN flags, uintN errorNumber, ...)
 
 struct Compiler
 {
-    Parser parser;
+    Parser      parser;
     GlobalScope *globalScope;
 
     Compiler(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
 
-    /*
-     * Initialize a compiler. Parameters are passed on to init parser.
-     */
-    inline bool
-    init(const jschar *base, size_t length, const char *filename, uintN lineno, JSVersion version)
-    {
+    JSContext *context() {
+        return parser.context;
+    }
+
+    bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
+              JSVersion version) {
         return parser.init(base, length, filename, lineno, version);
     }
 

@@ -165,6 +165,7 @@ template <> struct IsPodType<long>            { static const bool result = true;
 template <> struct IsPodType<unsigned long>   { static const bool result = true; };
 template <> struct IsPodType<float>           { static const bool result = true; };
 template <> struct IsPodType<double>          { static const bool result = true; };
+template <typename T> struct IsPodType<T *>   { static const bool result = true; };
 
 /* Return the size/end of an array without using macros. */
 template <class T, size_t N> inline T *ArraySize(T (&)[N]) { return N; }

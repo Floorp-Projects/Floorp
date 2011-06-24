@@ -1240,7 +1240,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     JSFunction *fun;
 
     /* The counts of indexed things must be checked during code generation. */
-    JS_ASSERT(cg->atomList.count <= INDEX_LIMIT);
+    JS_ASSERT(cg->atomIndices->count() <= INDEX_LIMIT);
     JS_ASSERT(cg->objectList.length <= INDEX_LIMIT);
     JS_ASSERT(cg->regexpList.length <= INDEX_LIMIT);
 
@@ -1252,9 +1252,10 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     JS_ASSERT(nClosedArgs == cg->closedArgs.length());
     uint16 nClosedVars = uint16(cg->closedVars.length());
     JS_ASSERT(nClosedVars == cg->closedVars.length());
+    size_t upvarIndexCount = cg->upvarIndices.hasMap() ? cg->upvarIndices->count() : 0;
     script = NewScript(cx, prologLength + mainLength, nsrcnotes,
-                       cg->atomList.count, cg->objectList.length,
-                       cg->upvarList.count, cg->regexpList.length,
+                       cg->atomIndices->count(), cg->objectList.length,
+                       upvarIndexCount, cg->regexpList.length,
                        cg->ntrynotes, cg->constList.length(),
                        cg->globalUses.length(), nClosedArgs, nClosedVars, cg->version());
     if (!script)
@@ -1272,7 +1273,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
              : cg->sharpSlots();
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = (uint16) nfixed;
-    js_InitAtomMap(cx, &script->atomMap, &cg->atomList);
+    js_InitAtomMap(cx, &script->atomMap, cg->atomIndices.getMap());
 
     filename = cg->parser->tokenStream.getFilename();
     if (filename) {
@@ -1316,11 +1317,11 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (cg->flags & TCF_HAS_SINGLETONS)
         script->hasSingletons = true;
 
-    if (cg->upvarList.count != 0) {
-        JS_ASSERT(cg->upvarList.count <= cg->upvarMap.length);
+    if (cg->hasUpvarIndices()) {
+        JS_ASSERT(cg->upvarIndices->count() <= cg->upvarMap.length);
         memcpy(script->upvars()->vector, cg->upvarMap.vector,
-               cg->upvarList.count * sizeof(uint32));
-        cg->upvarList.clear();
+               cg->upvarIndices->count() * sizeof(uint32));
+        cg->upvarIndices->clear();
         cx->free_(cg->upvarMap.vector);
         cg->upvarMap.vector = NULL;
     }
