@@ -47,7 +47,6 @@ class nsIScriptContext;
 class nsIDOMEventTarget;
 class nsIDOMEventGroup;
 class nsIAtom;
-class nsPIDOMEventTarget;
 class nsIEventListenerInfo;
 template<class E> class nsCOMArray;
 class nsCxPusher;

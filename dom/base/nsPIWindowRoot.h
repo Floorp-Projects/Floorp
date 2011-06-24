@@ -53,7 +53,8 @@ struct JSContext;
 { 0x426c1b56, 0xe38a, 0x435e, \
   { 0xb2, 0x91, 0xbe, 0x15, 0x57, 0xf2, 0xa0, 0xa2 } }
 
-class nsPIWindowRoot : public nsPIDOMEventTarget {
+class nsPIWindowRoot : public nsIDOMEventTarget
+{
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWINDOWROOT_IID)
 

@@ -132,12 +132,10 @@ DOMCI_NODE_DATA(Attr, nsDOMAttribute)
 NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_NODE_INTERFACE_TABLE6(nsDOMAttribute, nsIDOMAttr, nsIAttribute, nsIDOMNode,
-                           nsIDOM3Attr, nsPIDOMEventTarget, nsIMutationObserver)
+                           nsIDOM3Attr, nsIDOMEventTarget, nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
@@ -792,6 +790,38 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
+NS_IMPL_DOMTARGET_DEFAULTS(nsDOMAttribute)
+
+NS_IMETHODIMP
+nsDOMAttribute::AddEventListener(const nsAString& aType,
+                                 nsIDOMEventListener *aListener,
+                                 PRBool useCapture)
+{
+  return AddEventListener(aType, aListener, useCapture, PR_FALSE, 1);
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::RemoveEventListener(const nsAString& aType,
+                                    nsIDOMEventListener* aListener,
+                                    PRBool aUseCapture)
+{
+  nsCOMPtr<nsIDOMEventTarget> event_target =
+    do_QueryInterface(GetListenerManager(PR_TRUE));
+  NS_ENSURE_STATE(event_target);
+
+  return event_target->RemoveEventListener(aType, aListener, aUseCapture);
+
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::DispatchEvent(nsIDOMEvent *aEvt, PRBool* _retval)
+{
+  nsCOMPtr<nsIDOMEventTarget> target =
+    do_QueryInterface(GetListenerManager(PR_TRUE));
+  NS_ENSURE_STATE(target);
+  return target->DispatchEvent(aEvt, _retval);
+}
+
 nsresult
 nsDOMAttribute::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
@@ -846,6 +876,12 @@ nsDOMAttribute::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
   nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elm);
   return elm->GetSystemEventGroupLM(aGroup);
+}
+
+nsIScriptContext*
+nsDOMAttribute::GetContextForEventHandlers(nsresult* aRv)
+{
+  return nsContentUtils::GetContextForEventHandlers(this, aRv);
 }
 
 void

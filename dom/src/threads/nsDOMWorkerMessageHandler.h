@@ -161,4 +161,19 @@ private:
   nsTArray<ListenerCollection> mCollections;
 };
 
+#define NS_FORWARD_INTERNAL_NSIDOMEVENTTARGET(_to) \
+  virtual nsIDOMEventTarget * GetTargetForDOMEvent(void) { return _to GetTargetForDOMEvent(); } \
+  virtual nsIDOMEventTarget * GetTargetForEventTargetChain(void) { return _to GetTargetForEventTargetChain(); } \
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor & aVisitor) { return _to PreHandleEvent(aVisitor); } \
+  virtual nsresult WillHandleEvent(nsEventChainPostVisitor & aVisitor) { return _to WillHandleEvent(aVisitor); } \
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor & aVisitor) { return _to PostHandleEvent(aVisitor); } \
+  virtual nsresult DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEvent, nsPresContext *aPresContext, nsEventStatus *aEventStatus) { return _to DispatchDOMEvent(aEvent, aDOMEvent, aPresContext, aEventStatus); } \
+  virtual nsIEventListenerManager * GetListenerManager(PRBool aMayCreate) { return _to GetListenerManager(aMayCreate); } \
+  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID & aIID) { return _to AddEventListenerByIID(aListener, aIID); } \
+  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID & aIID) { return _to RemoveEventListenerByIID(aListener, aIID); } \
+  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup **_retval NS_OUTPARAM) { return _to GetSystemEventGroup(_retval); } \
+  virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv NS_OUTPARAM) { return _to GetContextForEventHandlers(aRv); } \
+  virtual JSContext * GetJSContextForEventHandlers(void) { return _to GetJSContextForEventHandlers(); } 
+
+
 #endif /* __NSDOMWORKERMESSAGEHANDLER_H__ */

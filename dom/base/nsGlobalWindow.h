@@ -276,7 +276,6 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
                        public nsIDOMEventTarget,
-                       public nsPIDOMEventTarget,
                        public nsIDOM3EventTarget,
                        public nsIDOMNSEventTarget,
                        public nsIDOMStorageWindow,
@@ -375,29 +374,6 @@ public:
   }
 
   virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
-
-  virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForDOMEvent()
-  {
-    return static_cast<nsPIDOMEventTarget*>(GetOuterWindowInternal());
-  }
-  virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForEventTargetChain()
-  {
-    return IsInnerWindow() ?
-      this : static_cast<nsPIDOMEventTarget*>(GetCurrentInnerWindowInternal());
-  }
-  virtual NS_HIDDEN_(nsresult) PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual NS_HIDDEN_(nsresult) PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual NS_HIDDEN_(nsresult) DispatchDOMEvent(nsEvent* aEvent,
-                                                nsIDOMEvent* aDOMEvent,
-                                                nsPresContext* aPresContext,
-                                                nsEventStatus* aEventStatus);
-  virtual NS_HIDDEN_(nsIEventListenerManager*) GetListenerManager(PRBool aCreateIfNotFound);
-  virtual NS_HIDDEN_(nsresult) AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                                     const nsIID& aIID);
-  virtual NS_HIDDEN_(nsresult) RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                                        const nsIID& aIID);
-  virtual NS_HIDDEN_(nsresult) GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual NS_HIDDEN_(nsIScriptContext*) GetContextForEventHandlers(nsresult* aRv);
 
   virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
