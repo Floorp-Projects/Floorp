@@ -87,7 +87,7 @@
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
 #endif
-#include "nsIDOMLoadListener.h"
+#include "nsIDOMEventListener.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -272,19 +272,13 @@ int nsXBLBindingRequest::gRefCnt = 0;
 // nsXBLStreamListener, a helper class used for 
 // asynchronous parsing of URLs
 /* Header file */
-class nsXBLStreamListener : public nsIStreamListener, public nsIDOMLoadListener
+class nsXBLStreamListener : public nsIStreamListener, public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
-
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Error(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_DECL_NSIDOMEVENTLISTENER
 
   nsXBLStreamListener(nsXBLService* aXBLService,
                       nsIDocument* aBoundDocument,
@@ -307,7 +301,10 @@ private:
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS4(nsXBLStreamListener, nsIStreamListener, nsIRequestObserver, nsIDOMLoadListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS3(nsXBLStreamListener,
+                   nsIStreamListener,
+                   nsIRequestObserver,
+                   nsIDOMEventListener)
 
 nsXBLStreamListener::nsXBLStreamListener(nsXBLService* aXBLService,
                                          nsIDocument* aBoundDocument,
@@ -401,7 +398,7 @@ nsXBLStreamListener::HasRequest(nsIURI* aURI, nsIContent* aElt)
 }
 
 nsresult
-nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
+nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsresult rv = NS_OK;
   PRUint32 i;
@@ -481,7 +478,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     }
   }
 
-  target->RemoveEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)this, PR_FALSE);
+  target->RemoveEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
 
   return rv;
 }
