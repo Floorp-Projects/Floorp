@@ -158,7 +158,8 @@ struct VectorImpl<T, N, AP, true>
     static inline bool growTo(Vector<T,N,AP> &v, size_t newcap) {
         JS_ASSERT(!v.usingInlineStorage());
         size_t bytes = sizeof(T) * newcap;
-        T *newbuf = reinterpret_cast<T *>(v.realloc_(v.mBegin, bytes));
+        size_t oldBytes = sizeof(T) * v.mCapacity;
+        T *newbuf = reinterpret_cast<T *>(v.realloc_(v.mBegin, oldBytes, bytes));
         if (!newbuf)
             return false;
         v.mBegin = newbuf;
@@ -181,7 +182,7 @@ struct VectorImpl<T, N, AP, true>
  * N requirements:
  *  - any value, however, N is clamped to min/max values
  * AllocPolicy:
- *  - see "Allocation policies" in jsalloc.h (default js::ContextAllocPolicy)
+ *  - see "Allocation policies" in jsalloc.h (default js::TempAllocPolicy)
  *
  * N.B: Vector is not reentrant: T member functions called during Vector member
  *      functions must not call back into the same object.

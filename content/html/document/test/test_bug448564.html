@@ -8,25 +8,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448564
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  
-  <script type="text/javascript;version=1.8">
-    var toCheck = [];
-
-    function flush() {
-      if (!check)
-        return;
-
-      for each (let qs in toCheck)
-        check(qs);
-
-      toCheck.length = 0;
-    }
-
-    function checkQueryString(queryString) {
-      toCheck.push(queryString);
-      flush();
-    }
-  </script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448564">Mozilla Bug 448564</a>
@@ -36,26 +17,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448564
   <iframe src="bug448564-iframe-3.html"></iframe>
 </p>
 <div id="content" style="display: none">
-  
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 448564 **/
 
-var checksToDo = document.getElementsByTagName("iframe").length;
+/**
+ * The three iframes are going to be loaded with some dirty constructed forms.
+ * Each of them will be submitted before the load event and a SJS will replace
+ * the frame content with the query string.
+ * Then, on the load event, our test file will check the content of each iframes
+ * and check if the query string were correctly formatted (implying that all
+ * iframes were correctly submitted.
+ */
 
-function check(queryString) {
+function checkQueryString(frame) {
+  var queryString = frame.document.body.textContent;
   is(queryString.split("&").sort().join("&"),
      "a=aval&b=bval&c=cval&d=dval",
      "Not all form fields were properly submitted.");
-  if (--checksToDo == 0)
-    SimpleTest.finish();
 }
 
-flush();
-
 SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  checkQueryString(frames[0]);
+  checkQueryString(frames[1]);
+  checkQueryString(frames[2]);
+  SimpleTest.finish();
+});
 
 </script>
 </pre>

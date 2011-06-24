@@ -562,4 +562,14 @@ XRE_API(bool,
 
 XRE_API(void,
         XRE_InstallX11ErrorHandler, ())
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+#define XRE_HAS_DLL_BLOCKLIST
+XRE_API(void,
+        XRE_SetupDllBlocklist, ())
+#endif
+
+XRE_API(void,
+        XRE_TelemetryAccumulate, (int aID, PRUint32 aSample))
+
 #endif // _nsXULAppAPI_h__

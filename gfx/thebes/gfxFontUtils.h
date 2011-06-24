@@ -706,10 +706,26 @@ public:
     DetermineFontDataType(const PRUint8 *aFontData, PRUint32 aFontDataLength);
 
     // checks for valid SFNT table structure, returns true if valid
-    // does *not* guarantee that all font data is valid
+    // does *not* guarantee that all font data is valid, though it does
+    // check that key tables such as 'name' are present and readable.
+    // XXX to be removed if/when we eliminate the option to disable OTS,
+    // which does more thorough validation.
     static PRBool
     ValidateSFNTHeaders(const PRUint8 *aFontData, PRUint32 aFontDataLength);
     
+    // Read the fullname from the sfnt data (used to save the original name
+    // prior to renaming the font for installation).
+    // This is called with sfnt data that has already been validated,
+    // so it should always succeed in finding the name table.
+    static nsresult
+    GetFullNameFromSFNT(const PRUint8* aFontData, PRUint32 aLength,
+                        nsAString& aFullName);
+
+    // helper to get fullname from name table
+    static nsresult
+    GetFullNameFromTable(FallibleTArray<PRUint8>& aNameTable,
+                         nsAString& aFullName);
+
     // create a new name table and build a new font with that name table
     // appended on the end, returns true on success
     static nsresult
@@ -884,7 +900,7 @@ public:
         InitLoader();
 
         // start timer
-        mTimer->InitWithFuncCallback(LoaderTimerCallback, this, aDelay, 
+        mTimer->InitWithFuncCallback(LoaderTimerCallback, this, timerInterval,
                                      nsITimer::TYPE_REPEATING_SLACK);
     }
 

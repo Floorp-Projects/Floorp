@@ -74,11 +74,11 @@ let AllTabs = {
    */
   register: function register(eventName, callback) {
     // Either add additional callbacks or create the first entry
-    let listeners = eventListeners[eventName];
+    let listeners = eventListeners[events[eventName]];
     if (listeners)
       listeners.push(callback);
     else
-      eventListeners[eventName] = [callback];
+      eventListeners[events[eventName]] = [callback];
   },
 
   /**
@@ -93,7 +93,7 @@ let AllTabs = {
    */
   unregister: function unregister(eventName, callback) {
     // Nothing to remove for this event
-    let listeners = eventListeners[eventName];
+    let listeners = eventListeners[events[eventName]];
     if (!listeners)
       return;
 
@@ -114,31 +114,50 @@ __defineGetter__("browserWindows", function browserWindows() {
   return browserWindows;
 });
 
-let events = ["attrModified", "close", "move", "open", "select", "pinned", "unpinned"];
+let events = {
+  attrModified: "TabAttrModified",
+  close:        "TabClose",
+  move:         "TabMove",
+  open:         "TabOpen",
+  select:       "TabSelect",
+  pinned:       "TabPinned",
+  unpinned:     "TabUnpinned"
+};
 let eventListeners = {};
 
 function registerBrowserWindow(browserWindow) {
-  events.forEach(function(eventName) {
-    let tabEvent = "Tab" + eventName[0].toUpperCase() + eventName.slice(1);
-    browserWindow.addEventListener(tabEvent, function(event) {
-      // Make sure we've gotten listeners before trying to call
-      let listeners = eventListeners[eventName];
-      if (!listeners)
-        return;
+  for each (let event in events)
+    browserWindow.addEventListener(event, tabEventListener, true);
 
-      let tab = event.target;
+  browserWindow.addEventListener("unload", unregisterBrowserWindow, false);
+}
 
-      // Make a copy of the listeners, so it can't change as we call back
-      listeners.slice().forEach(function(callback) {
-        try {
-          callback(tab, event);
-        }
-        // Don't let failing callbacks stop us but report the failure
-        catch(ex) {
-          Cu.reportError(ex);
-        }
-      });
-    }, true);
+function unregisterBrowserWindow(unloadEvent) {
+  let browserWindow = unloadEvent.currentTarget;
+
+  for each (let event in events)
+    browserWindow.removeEventListener(event, tabEventListener, true);
+
+  browserWindow.removeEventListener("unload", unregisterBrowserWindow, false);
+}
+
+function tabEventListener(event) {
+  // Make sure we've gotten listeners before trying to call
+  let listeners = eventListeners[event.type];
+  if (!listeners)
+    return;
+
+  let tab = event.target;
+
+  // Make a copy of the listeners, so it can't change as we call back
+  listeners.slice().forEach(function (callback) {
+    try {
+      callback(tab, event);
+    }
+    // Don't let failing callbacks stop us but report the failure
+    catch (ex) {
+      Cu.reportError(ex);
+    }
   });
 }
 

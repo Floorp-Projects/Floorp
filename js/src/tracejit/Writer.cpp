@@ -41,6 +41,7 @@
 #include "jstl.h"
 
 #include "jscompartment.h"
+#include "jsiter.h"
 #include "Writer.h"
 #include "nanojit.h"
 

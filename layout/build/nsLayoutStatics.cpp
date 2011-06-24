@@ -57,7 +57,6 @@
 #include "nsDOMClassInfo.h"
 #include "nsEventListenerManager.h"
 #include "nsFrame.h"
-#include "nsGenericElement.h"  // for nsDOMEventRTTearoff
 #include "nsGlobalWindow.h"
 #include "nsGkAtoms.h"
 #include "nsImageFrame.h"
@@ -288,7 +287,6 @@ nsLayoutStatics::Shutdown()
   nsDOMStorageManager::Shutdown();
   txMozillaXSLTProcessor::Shutdown();
   nsDOMAttribute::Shutdown();
-  nsDOMEventRTTearoff::Shutdown();
   nsEventListenerManager::Shutdown();
   nsComputedDOMStyle::Shutdown();
   nsCSSParser::Shutdown();

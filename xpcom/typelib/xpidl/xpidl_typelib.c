@@ -520,6 +520,9 @@ typelib_interface(TreeState *state)
     if (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "function"))
         interface_flags |= XPT_ID_FUNCTION;
 
+    if (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "builtinclass"))
+        interface_flags |= XPT_ID_BUILTINCLASS;
+
     ide = FindInterfaceByName(HEADER(state)->interface_directory,
                               HEADER(state)->num_interfaces, name);
     if (!ide) {

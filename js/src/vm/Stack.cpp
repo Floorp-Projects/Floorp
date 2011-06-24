@@ -288,6 +288,12 @@ StackSegment::pushCall(CallArgsList &callList)
 }
 
 void
+StackSegment::pointAtCall(CallArgsList &callList)
+{
+    calls_ = &callList;
+}
+
+void
 StackSegment::popCall()
 {
     calls_ = calls_->prev_;
@@ -647,7 +653,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
 
     /* pushRegs() below links the prev-frame; manually link the prev-call. */
     if (evalInFrame && evalInFrameCalls)
-        seg_->pushCall(*evalInFrameCalls);
+        seg_->pointAtCall(*evalInFrameCalls);
 
     efg->prevRegs_ = seg_->pushRegs(efg->regs_);
     JS_ASSERT(space().firstUnused() == efg->regs_.sp);
@@ -932,7 +938,12 @@ StackIter::settleOnNewState()
             if (op == JSOP_CALL || op == JSOP_FUNCALL) {
                 uintN argc = GET_ARGC(pc_);
                 DebugOnly<uintN> spoff = sp_ - fp_->base();
-                JS_ASSERT(spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
+#ifdef DEBUG
+                if (cx_->stackIterAssertionEnabled) {
+                    JS_ASSERT_IF(!fp_->hasImacropc(),
+                                 spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
+                }
+#endif
                 Value *vp = sp_ - (2 + argc);
 
                 if (IsNativeFunction(*vp)) {
@@ -941,6 +952,7 @@ StackIter::settleOnNewState()
                     return;
                 }
             } else if (op == JSOP_FUNAPPLY) {
+                JS_ASSERT(!fp_->hasImacropc());
                 uintN argc = GET_ARGC(pc_);
                 uintN spoff = js_ReconstructStackDepth(cx_, fp_->script(), pc_);
                 Value *sp = fp_->base() + spoff;

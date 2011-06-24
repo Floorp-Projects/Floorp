@@ -135,19 +135,9 @@ EXPORTS	+= \
 	gfxWindowsSurface.h \
 	gfxWindowsNativeDrawing.h \
 	WGLLibrary.h \
-	$(NULL)
-
-ifdef WINCE
-EXPORTS += \
-	gfxFT2Fonts.h \
-	gfxFT2FontBase.h \
-	$(NULL)
-else
-EXPORTS += \
 	gfxDWriteFonts.h \
 	gfxD2DSurface.h \
 	$(NULL)
-endif
 endif
 
 CPPSRCS	= \
@@ -205,20 +195,13 @@ SHARED_LIBRARY_LIBS += \
 
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+
 CPPSRCS	+= 	gfxWindowsPlatform.cpp \
 		gfxWindowsSurface.cpp \
 		gfxWindowsNativeDrawing.cpp \
 		nsUnicodeRange.cpp \
 		$(NULL)
 
-ifdef WINCE
-CPPSRCS	+= gfxFT2Fonts.cpp \
-	   gfxFT2FontBase.cpp \
-	   gfxFT2Utils.cpp \
-	   gfxFT2FontList.cpp \
-	   $(NULL)
-
-else
 ifdef MOZ_ENABLE_DWRITE_FONT
 CPPSRCS	+= gfxDWriteFonts.cpp \
 	   gfxDWriteShaper.cpp \
@@ -228,12 +211,12 @@ CPPSRCS	+= gfxDWriteFonts.cpp \
 	   gfxDWriteFontList.cpp \
 	   $(NULL)
 endif
+
 CPPSRCS	+= gfxGDIFont.cpp \
 	   gfxGDIFontList.cpp \
 	   gfxGDIShaper.cpp \
 	   gfxUniscribeShaper.cpp \
 	   $(NULL)
-endif
 
 CPPSRCS +=	gfxPDFSurface.cpp
 
@@ -342,11 +325,8 @@ CSRCS += woff.c
 GL_PROVIDER = Null
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifndef WINCE
 GL_PROVIDER = WGL
 endif
-endif
-
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 GL_PROVIDER = CGL
@@ -393,12 +373,6 @@ DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifdef WINCE
-CXXFLAGS += $(CAIRO_FT_CFLAGS)
-endif
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 CXXFLAGS += $(CAIRO_FT_CFLAGS)
