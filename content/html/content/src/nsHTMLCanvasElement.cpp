@@ -48,6 +48,7 @@
 #include "jsapi.h"
 #include "nsJSUtils.h"
 #include "nsMathUtils.h"
+#include "mozilla/Preferences.h"
 
 #include "nsFrameManager.h"
 #include "nsDisplayList.h"
@@ -721,4 +722,24 @@ nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::Gr
     return NS_OK;
 
   return mCurrentContext->Render(aContext, aFilter);
+}
+
+nsresult NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult);
+nsresult NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult);
+
+nsresult
+NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
+{
+  PRBool azure = PR_FALSE;
+  nsresult rv = Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
+
+  if (azure) {
+    nsresult rv = NS_NewCanvasRenderingContext2DAzure(aResult);
+    // If Azure fails, fall back to a classic canvas.
+    if (NS_SUCCEEDED(rv)) {
+      return rv;
+    }
+  }
+
+  return NS_NewCanvasRenderingContext2DThebes(aResult);
 }
