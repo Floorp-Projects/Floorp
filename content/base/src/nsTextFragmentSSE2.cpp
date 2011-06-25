@@ -3,6 +3,7 @@
 
 #include <emmintrin.h>
 #include "nscore.h"
+#include "nsAlgorithm.h"
 
 namespace mozilla {
 namespace SSE2 {
@@ -35,7 +36,7 @@ Is8Bit(const PRUnichar *str, const PRUnichar *end)
   // Align ourselves to a 16-byte boundary, as required by _mm_load_si128
   // (i.e. MOVDQA).
   PRInt32 alignLen =
-    PR_MIN(len, PRInt32(((-NS_PTR_TO_UINT32(str)) & 0xf) / sizeof(PRUnichar)));
+    NS_MIN(len, PRInt32(((-NS_PTR_TO_INT32(str)) & 0xf) / sizeof(PRUnichar)));
   for (; i < alignLen; i++) {
     if (str[i] > 255)
       return PR_FALSE;
