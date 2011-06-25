@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Inspector Tree Selection Tests.
+ * The Original Code is Inspector Initializationa and Shutdown Tests.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -37,62 +37,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let doc;
-let h1;
-
-function createDocument()
+function startInspectorTests()
 {
-  let div = doc.createElement("div");
-  let h1 = doc.createElement("h1");
-  let p1 = doc.createElement("p");
-  let p2 = doc.createElement("p");
-  doc.title = "Inspector Tree Selection Test";
-  h1.textContent = "Inspector Tree Selection Test";
-  p1.textContent = "This is some example text";
-  p2.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
-    "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
-    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
-    "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
-    "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
-    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
-    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-  div.appendChild(h1);
-  div.appendChild(p1);
-  div.appendChild(p2);
-  // doc.body.addEventListener("DOMSubtreeModified", , false);
-  doc.body.appendChild(div);
-  setupSelectionTests();
+  ok(InspectorUI, "InspectorUI variable exists");
+  Services.obs.addObserver(runInspectorTests,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
+  InspectorUI.toggleInspectorUI();
 }
 
-function setupSelectionTests()
+function runInspectorTests()
 {
-  h1 = doc.querySelectorAll("h1")[0];
-  ok(h1, "we have the header node");
-  Services.obs.addObserver(runSelectionTests, "inspector-opened", false);
-  InspectorUI.openInspectorUI();
+  Services.obs.removeObserver(runInspectorTests,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.addObserver(finishInspectorTests,
+    INSPECTOR_NOTIFICATIONS.CLOSED, false);
+
+  let iframe = document.getElementById("inspector-tree-iframe");
+  is(InspectorUI.treeIFrame, iframe, "Inspector IFrame matches");
+  ok(InspectorUI.inspecting, "Inspector is inspecting");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  ok(InspectorUI.highlighter, "Highlighter is up");
+
+  executeSoon(function() {
+    InspectorUI.closeInspectorUI();
+  });
 }
 
-function runSelectionTests()
+function finishInspectorTests()
 {
-  Services.obs.removeObserver(runSelectionTests, "inspector-opened", false);
-  InspectorUI.stopInspecting();
-  document.addEventListener("popupshown", performTestComparisons, false);
-  InspectorUI.inspectNode(h1);
-}
+  Services.obs.removeObserver(finishInspectorTests,
+    INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
-function performTestComparisons(evt)
-{
-  if (evt.target.id != "highlighter-panel")
-    return true;
-  document.removeEventListener("popupshown", performTestComparisons, false);
-  is(h1, InspectorUI.selection, "selection matches node");
-  ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
-  is(h1, InspectorUI.highlighter.highlitNode, "highlighter highlighting correct node");
-  finishUp();
-}
+  ok(!InspectorUI.highlighter, "Highlighter is gone");
+  ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
+  ok(!InspectorUI.inspecting, "Inspector is not inspecting");
 
-function finishUp() {
-  InspectorUI.closeInspectorUI();
   gBrowser.removeCurrentTab();
   finish();
 }
@@ -103,10 +82,9 @@ function test()
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    doc = content.document;
-    waitForFocus(createDocument, content);
+    waitForFocus(startInspectorTests, content);
   }, true);
-  
+
   content.location = "data:text/html,basic tests for inspector";
 }
 

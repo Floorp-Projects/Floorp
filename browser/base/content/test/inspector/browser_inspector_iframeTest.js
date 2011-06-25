@@ -43,6 +43,7 @@ let div1;
 let div2;
 let iframe1;
 let iframe2;
+let highlighterFrame;
 
 function createDocument()
 {
@@ -77,53 +78,59 @@ function createDocument()
   doc.body.appendChild(iframe1);
 }
 
+function moveMouseOver(aElement)
+{
+  EventUtils.synthesizeMouse(aElement, 2, 2, {type: "mousemove"},
+    aElement.ownerDocument.defaultView);
+}
+
 function setupIframeTests()
 {
-  Services.obs.addObserver(runIframeTests, "inspector-opened", false);
+  Services.obs.addObserver(runIframeTests,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.openInspectorUI();
 }
 
 function runIframeTests()
 {
-  Services.obs.removeObserver(runIframeTests, "inspector-opened", false);
-  document.addEventListener("popupshown", performTestComparisons1, false);
-  EventUtils.synthesizeMouse(div1, 2, 2, {type: "mousemove"},
-    iframe1.contentWindow);
+  Services.obs.removeObserver(runIframeTests,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
+
+  Services.obs.addObserver(performTestComparisons1,
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+
+  highlighterFrame = InspectorUI.highlighter.iframe;
+  executeSoon(moveMouseOver.bind(this, div1));
 }
 
-function performTestComparisons1(evt)
+function performTestComparisons1()
 {
-  if (evt.target.id != "highlighter-panel") {
-    return true;
-  }
-
-  document.removeEventListener(evt.type, arguments.callee, false);
+  Services.obs.removeObserver(performTestComparisons1,
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+  Services.obs.addObserver(performTestComparisons2,
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   is(InspectorUI.selection, div1, "selection matches div1 node");
   is(InspectorUI.highlighter.highlitNode, div1, "highlighter matches selection");
 
-  document.addEventListener("popupshown", performTestComparisons2, false);
-
-  EventUtils.synthesizeMouse(div2, 2, 2, {type: "mousemove"},
-    iframe2.contentWindow);
+  executeSoon(moveMouseOver.bind(this, div2));
 }
 
-function performTestComparisons2(evt)
+function performTestComparisons2()
 {
-  if (evt.target.id != "highlighter-panel") {
-    return true;
-  }
-
-  document.removeEventListener(evt.type, arguments.callee, false);
+  Services.obs.removeObserver(performTestComparisons2,
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   is(InspectorUI.selection, div2, "selection matches div2 node");
   is(InspectorUI.highlighter.highlitNode, div2, "highlighter matches selection");
 
-  executeSoon(finishUp);
+  finishUp();
 }
 
 function finishUp() {
-  InspectorUI.closeInspectorUI();
+  InspectorUI.closeInspectorUI(true);
+
+  doc = div1 = div2 = iframe1 = iframe2 = highlighterFrame = null;
   gBrowser.removeCurrentTab();
   finish();
 }
