@@ -64,7 +64,6 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMText.idl				\
 	$(NULL)
 XPIDLSRCS =                                     \
-	nsIDOM3Attr.idl				\
 	nsIDOMDOMStringList.idl			\
 	nsIDOMNameList.idl			\
 	nsIDOMXMLDocument.idl			\
