@@ -212,12 +212,18 @@
 
           let [, preDomain, domain] = matchedURL;
           let baseDomain = domain;
-          try {
-            baseDomain = Services.eTLD.getBaseDomainFromHost(domain);
-          } catch (e) {}
-          let segments = function (s) s.replace(/[^.]*/g, "").length + 1;
-          let subSegments = segments(domain) - segments(baseDomain);
-          let subDomain = domain.match(new RegExp("(?:[^.]*\.){" + subSegments + "}"))[0];
+          let subDomain = "";
+          // getBaseDomainFromHost doesn't recognize IPv6 literals in brackets as IPs (bug 667159)
+          if (domain[0] != "[") {
+            try {
+              baseDomain = Services.eTLD.getBaseDomainFromHost(domain);
+            } catch (e) {}
+          }
+          if (baseDomain != domain) {
+            let segments = function (s) s.replace(/[^.]*/g, "").length + 1;
+            let subSegments = segments(domain) - segments(baseDomain);
+            subDomain = domain.match(new RegExp("(?:[^.]*\.){" + subSegments + "}"))[0];
+          }
 
           let rangeLength = preDomain.length + subDomain.length;
           if (rangeLength) {
