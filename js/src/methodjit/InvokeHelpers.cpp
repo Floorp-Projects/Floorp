@@ -546,14 +546,28 @@ stubs::CreateThis(VMFrame &f, JSObject *proto)
 void JS_FASTCALL
 stubs::ScriptDebugPrologue(VMFrame &f)
 {
+    Probes::enterJSFun(f.cx, f.fp()->maybeFun(), f.fp()->script());
     js::ScriptDebugPrologue(f.cx, f.fp());
 }
 
 void JS_FASTCALL
 stubs::ScriptDebugEpilogue(VMFrame &f)
 {
+    Probes::exitJSFun(f.cx, f.fp()->maybeFun(), f.fp()->script());
     if (!js::ScriptDebugEpilogue(f.cx, f.fp(), JS_TRUE))
         THROW();
+}
+
+void JS_FASTCALL
+stubs::ScriptProbeOnlyPrologue(VMFrame &f)
+{
+    Probes::enterJSFun(f.cx, f.fp()->fun(), f.fp()->script());
+}
+
+void JS_FASTCALL
+stubs::ScriptProbeOnlyEpilogue(VMFrame &f)
+{
+    Probes::exitJSFun(f.cx, f.fp()->fun(), f.fp()->script());
 }
 
 #ifdef JS_TRACER
