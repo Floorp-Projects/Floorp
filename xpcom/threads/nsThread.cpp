@@ -159,7 +159,6 @@ NS_IMPL_THREADSAFE_RELEASE(nsThread)
 NS_INTERFACE_MAP_BEGIN(nsThread)
   NS_INTERFACE_MAP_ENTRY(nsIThread)
   NS_INTERFACE_MAP_ENTRY(nsIThreadInternal)
-  NS_INTERFACE_MAP_ENTRY(nsIThreadInternal2)
   NS_INTERFACE_MAP_ENTRY(nsIEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIThread)
@@ -744,9 +743,6 @@ nsThread::nsChainedEventQueue::PutEvent(nsIRunnable *event)
   }
   return val;
 }
-
-//-----------------------------------------------------------------------------
-// nsIThreadInternal2
 
 NS_IMETHODIMP
 nsThread::GetRecursionDepth(PRUint32 *depth)
