@@ -164,6 +164,9 @@ EXTRA_DSO_LDOPTS += \
 	-framework CoreAudio \
 	-framework AudioToolbox \
 	-framework AudioUnit \
+	-framework IOKit \
+	-framework Foundation \
+	-framework AppKit \
 	$(NULL)
 endif
 endif

@@ -111,7 +111,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
 void
 PluginInstanceParent::InitQuirksModes(const nsCString& aMimeType)
 {
-#ifdef OS_MACOSX
+#ifdef MOZ_WIDGET_COCOA
     NS_NAMED_LITERAL_CSTRING(flash, "application/x-shockwave-flash");
     // Flash sends us Invalidate events so we will use those
     // instead of the refresh timer.
@@ -130,7 +130,7 @@ PluginInstanceParent::~PluginInstanceParent()
     NS_ASSERTION(!(mPluginHWND || mPluginWndProc),
         "Subclass was not reset correctly before the dtor was reached!");
 #endif
-#if defined(OS_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
     if (mShWidth != 0 && mShHeight != 0) {
         DeallocShmem(mShSurface);
     }
@@ -1783,7 +1783,7 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
 #endif
 }
 
-#ifdef OS_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 void
 PluginInstanceParent::Invalidate()
 {
