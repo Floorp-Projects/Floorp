@@ -127,16 +127,12 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
         if (JSInterpreterHook hook = cx->debugHooks->callHook)
             fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->debugHooks->callHookData));
     }
-
-    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
 }
 
 bool
 ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool okArg)
 {
     JSBool ok = okArg;
-
-    Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
 
     if (void *hookData = fp->maybeHookData()) {
         if (fp->isFramePushedByExecute()) {
