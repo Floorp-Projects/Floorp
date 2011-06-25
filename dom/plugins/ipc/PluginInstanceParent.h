@@ -355,6 +355,7 @@ private:
     CGColorSpaceRef        mShColorSpace;
     int16_t                mDrawingModel;
     nsAutoPtr<nsIOSurface> mIOSurface;
+    nsAutoPtr<nsIOSurface> mFrontIOSurface;
 #endif // definied(MOZ_WIDGET_COCOA)
 
     // ObjectFrame layer wrapper
