@@ -5362,10 +5362,14 @@ public:
     mFlags = WANT_ALL_TRACES;
   }
 
-  NS_IMETHOD_(void) DescribeNode(CCNodeType type,
-                                 nsrefcnt refcount,
-                                 size_t objsz,
-                                 const char* objname)
+  NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount,
+                                           size_t objSz,
+                                           const char *objName)
+  {
+  }
+  NS_IMETHOD_(void) DescribeGCedNode(PRBool isMarked,
+                                     size_t objSz,
+                                     const char *objName)
   {
   }
   NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root)

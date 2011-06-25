@@ -1,0 +1,22 @@
+<html>
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+
+  document.documentElement.style.direction = "rtl";
+
+  document.documentElement.offsetHeight;
+  var s = document.getElementById("s");
+
+  s.removeChild(s.firstChild);
+
+  document.documentElement.offsetHeight;
+}
+
+</script>
+</head>
+<body onload="boom();" style="width: 1px;"><span id="s"> x y</span></body>
+</html>

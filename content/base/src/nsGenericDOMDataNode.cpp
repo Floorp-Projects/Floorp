@@ -173,12 +173,6 @@ nsGenericDOMDataNode::GetPrefix(nsAString& aPrefix)
 }
 
 nsresult
-nsGenericDOMDataNode::Normalize()
-{
-  return NS_OK;
-}
-
-nsresult
 nsGenericDOMDataNode::IsSupported(const nsAString& aFeature,
                                   const nsAString& aVersion,
                                   PRBool* aReturn)

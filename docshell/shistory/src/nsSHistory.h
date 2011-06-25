@@ -53,7 +53,6 @@
 #include "nsISHistoryListener.h"
 #include "nsIHistoryEntry.h"
 #include "nsIObserver.h"
-#include "nsIPrefBranch2.h"
 
 // Needed to maintain global list of all SHistory objects
 #include "prclist.h"
@@ -76,7 +75,8 @@ public:
 
   // One time initialization method called upon docshell module construction
   static nsresult Startup();
-  static void UpdatePrefs(nsIPrefBranch *aPrefBranch);
+  static void Shutdown();
+  static void UpdatePrefs();
 
   // Max number of total cached content viewers.  If the pref
   // browser.sessionhistory.max_total_viewers is negative, then

@@ -44,8 +44,6 @@
 #include "nsEscape.h"
 #include "nsCRT.h"
 
-#include "nsIPrefService.h"
-#include "nsIPrefLocalizedString.h"
 #include "nsIPlatformCharset.h"
 #include "nsILocalFile.h"
 
@@ -55,6 +53,9 @@
 
 #include "nsIURIFixup.h"
 #include "nsDefaultURIFixup.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsDefaultURIFixup, nsIURIFixup)
@@ -62,9 +63,6 @@ NS_IMPL_ISUPPORTS1(nsDefaultURIFixup, nsIURIFixup)
 nsDefaultURIFixup::nsDefaultURIFixup()
 {
   /* member initializers and constructor code */
-
-  // Try and get the pref service
-  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
 }
 
 
@@ -134,13 +132,10 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI *aURI, nsIURI **aReturn)
     }
 
     // hide user:pass unless overridden by pref
-    PRBool hideUserPass = PR_TRUE;
-    if (mPrefBranch)
+    if (Preferences::GetBool("browser.fixup.hide_user_pass", PR_TRUE))
     {
-        mPrefBranch->GetBoolPref("browser.fixup.hide_user_pass", &hideUserPass);
-    }
-    if (hideUserPass)
         uri->SetUserPass(EmptyCString());
+    }
 
     // return the fixed-up URI
     *aReturn = uri;
@@ -274,10 +269,8 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
     // Test whether keywords need to be fixed up
     PRBool fixupKeywords = PR_FALSE;
     if (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
-        if (mPrefBranch)
-        {
-            NS_ENSURE_SUCCESS(mPrefBranch->GetBoolPref("keyword.enabled", &fixupKeywords), NS_ERROR_FAILURE);
-        }
+        nsresult rv = Preferences::GetBool("keyword.enabled", &fixupKeywords);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
         if (fixupKeywords)
         {
             KeywordURIFixup(uriString, aURI);
@@ -358,7 +351,7 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
                                               nsIURI **aURI)
 {
     *aURI = nsnull;
-    NS_ENSURE_STATE(mPrefBranch);
+    NS_ENSURE_STATE(Preferences::GetRootBranch());
 
     // Strip leading "?" and leading/trailing spaces from aKeyword
     nsCAutoString keyword(aKeyword);
@@ -367,19 +360,10 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     }
     keyword.Trim(" ");
 
-    nsXPIDLCString url;
-    nsCOMPtr<nsIPrefLocalizedString> keywordURL;
-    mPrefBranch->GetComplexValue("keyword.URL", 
-                                 NS_GET_IID(nsIPrefLocalizedString),
-                                 getter_AddRefs(keywordURL));
-
-    if (keywordURL) {
-        nsXPIDLString wurl;
-        keywordURL->GetData(getter_Copies(wurl));
-        CopyUTF16toUTF8(wurl, url);
-    } else {
+    nsAdoptingCString url = Preferences::GetLocalizedCString("keyword.URL");
+    if (!url) {
         // Fall back to a non-localized pref, for backwards compat
-        mPrefBranch->GetCharPref("keyword.URL", getter_Copies(url));
+        url = Preferences::GetCString("keyword.URL");
     }
 
     // If the pref is set and non-empty, use it.
@@ -441,13 +425,11 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
 
 PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
 {
-    if (!mPrefBranch)
+    if (!Preferences::GetRootBranch())
     {
         return PR_FALSE;
     }
-    PRBool makeAlternate = PR_TRUE;
-    mPrefBranch->GetBoolPref("browser.fixup.alternate.enabled", &makeAlternate);
-    if (!makeAlternate)
+    if (!Preferences::GetBool("browser.fixup.alternate.enabled", PR_TRUE))
     {
         return PR_FALSE;
     }
@@ -489,17 +471,17 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     // are www. & .com but they could be any other value, e.g. www. & .org
 
     nsCAutoString prefix("www.");
-    nsXPIDLCString prefPrefix;
-    rv = mPrefBranch->GetCharPref("browser.fixup.alternate.prefix", getter_Copies(prefPrefix));
-    if (NS_SUCCEEDED(rv))
+    nsAdoptingCString prefPrefix =
+        Preferences::GetCString("browser.fixup.alternate.prefix");
+    if (prefPrefix)
     {
         prefix.Assign(prefPrefix);
     }
 
     nsCAutoString suffix(".com");
-    nsXPIDLCString prefSuffix;
-    rv = mPrefBranch->GetCharPref("browser.fixup.alternate.suffix", getter_Copies(prefSuffix));
-    if (NS_SUCCEEDED(rv))
+    nsAdoptingCString prefSuffix =
+        Preferences::GetCString("browser.fixup.alternate.suffix");
+    if (prefSuffix)
     {
         suffix.Assign(prefSuffix);
     }

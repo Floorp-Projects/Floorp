@@ -542,6 +542,96 @@ nsINode::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 }
 
 nsresult
+nsINode::Normalize()
+{
+  // First collect list of nodes to be removed
+  nsAutoTArray<nsCOMPtr<nsIContent>, 50> nodes;
+
+  PRBool canMerge = PR_FALSE;
+  for (nsIContent* node = this->GetFirstChild();
+       node;
+       node = node->GetNextNode(this)) {
+    if (node->NodeType() != nsIDOMNode::TEXT_NODE) {
+      canMerge = PR_FALSE;
+      continue;
+    }
+
+    if (canMerge || node->TextLength() == 0) {
+      // No need to touch canMerge. That way we can merge across empty
+      // textnodes if and only if the node before is a textnode
+      nodes.AppendElement(node);
+    }
+    else {
+      canMerge = PR_TRUE;
+    }
+
+    // If there's no following sibling, then we need to ensure that we don't
+    // collect following siblings of our (grand)parent as to-be-removed
+    canMerge = canMerge && !!node->GetNextSibling();
+  }
+
+  if (nodes.IsEmpty()) {
+    return NS_OK;
+  }
+
+  // We're relying on mozAutoSubtreeModified to keep the doc alive here.
+  nsIDocument* doc = GetOwnerDoc();
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(doc, nsnull);
+
+  // Fire all DOMNodeRemoved events. Optimize the common case of there being
+  // no listeners
+  PRBool hasRemoveListeners = nsContentUtils::
+      HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED);
+  if (hasRemoveListeners) {
+    for (PRUint32 i = 0; i < nodes.Length(); ++i) {
+      nsContentUtils::MaybeFireNodeRemoved(nodes[i], nodes[i]->GetNodeParent(),
+                                           doc);
+    }
+  }
+
+  mozAutoDocUpdate batch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
+
+  // Merge and remove all nodes
+  nsAutoString tmpStr;
+  for (PRUint32 i = 0; i < nodes.Length(); ++i) {
+    nsIContent* node = nodes[i];
+    // Merge with previous node unless empty
+    const nsTextFragment* text = node->GetText();
+    if (text->GetLength()) {
+      nsIContent* target = node->GetPreviousSibling();
+      NS_ASSERTION((target && target->NodeType() == nsIDOMNode::TEXT_NODE) ||
+                   hasRemoveListeners,
+                   "Should always have a previous text sibling unless "
+                   "mutation events messed us up");
+      if (!hasRemoveListeners ||
+          (target && target->NodeType() == nsIDOMNode::TEXT_NODE)) {
+        if (text->Is2b()) {
+          target->AppendText(text->Get2b(), text->GetLength(), PR_TRUE);
+        }
+        else {
+          tmpStr.Truncate();
+          text->AppendTo(tmpStr);
+          target->AppendText(tmpStr.get(), tmpStr.Length(), PR_TRUE);
+        }
+      }
+    }
+
+    // Remove node
+    nsINode* parent = node->GetNodeParent();
+    NS_ASSERTION(parent || hasRemoveListeners,
+                 "Should always have a parent unless "
+                 "mutation events messed us up");
+    if (parent) {
+      parent->RemoveChildAt(parent->IndexOf(node), PR_TRUE);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsINode::GetDOMBaseURI(nsAString &aURI) const
 {
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
@@ -2619,103 +2709,6 @@ nsGenericElement::HasAttributeNS(const nsAString& aNamespaceURI,
   return NS_OK;
 }
 
-nsresult
-nsGenericElement::JoinTextNodes(nsIContent* aFirst,
-                                nsIContent* aSecond)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMText> firstText(do_QueryInterface(aFirst, &rv));
-
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDOMText> secondText(do_QueryInterface(aSecond, &rv));
-
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString str;
-
-      rv = secondText->GetData(str);
-      if (NS_SUCCEEDED(rv)) {
-        rv = firstText->AppendData(str);
-      }
-    }
-  }
-
-  return rv;
-}
-
-nsresult
-nsGenericElement::Normalize()
-{
-  // We're relying on mozAutoSubtreeModified to keep the doc alive here.
-  nsIDocument* doc = GetOwnerDoc();
-
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(doc, nsnull);
-
-  bool hasRemoveListeners = nsContentUtils::
-    HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED);
-
-  nsresult result = NS_OK;
-  PRUint32 index, count = GetChildCount();
-
-  for (index = 0; (index < count) && (NS_OK == result); index++) {
-    nsIContent *child = GetChildAt(index);
-
-    switch (child->NodeType()) {
-      case nsIDOMNode::TEXT_NODE:
-
-        // ensure that if the text node is empty, it is removed
-        if (0 == child->TextLength()) {
-          if (hasRemoveListeners) {
-            nsContentUtils::MaybeFireNodeRemoved(child, this, doc);
-          }
-          result = RemoveChildAt(index, PR_TRUE);
-          if (NS_FAILED(result)) {
-            return result;
-          }
-
-          count--;
-          index--;
-          break;
-        }
-
-        if (index+1 < count) {
-          // Get the sibling. If it's also a text node, then
-          // remove it from the tree and join the two text
-          // nodes.
-          nsCOMPtr<nsIContent> sibling = GetChildAt(index + 1);
-
-          if (sibling->NodeType() == nsIDOMNode::TEXT_NODE) {
-            if (hasRemoveListeners) {
-              nsContentUtils::MaybeFireNodeRemoved(sibling, this, doc);
-            }
-            result = RemoveChildAt(index+1, PR_TRUE);
-            if (NS_FAILED(result)) {
-              return result;
-            }
-
-            result = JoinTextNodes(child, sibling);
-            if (NS_FAILED(result)) {
-              return result;
-            }
-            count--;
-            index--;
-          }
-        }
-        break;
-
-      case nsIDOMNode::ELEMENT_NODE:
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(child);
-
-        if (element) {
-          result = element->Normalize();
-        }
-        break;
-    }
-  }
-
-  return result;
-}
-
 static nsXBLBinding*
 GetFirstBindingWithContent(nsBindingManager* aBmgr, nsIContent* aBoundElem)
 {
@@ -4182,12 +4175,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
     else {
       PR_snprintf(name, sizeof(name), "nsGenericElement %s", localName.get());
     }
-    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(nsGenericElement),
-                    name);
+    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsGenericElement),
+                              name);
   }
   else {
-    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(nsGenericElement),
-                    "nsGenericElement");
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsGenericElement, tmp->mRefCnt.get())
   }
 
   // Always need to traverse script objects, so do that before we check
