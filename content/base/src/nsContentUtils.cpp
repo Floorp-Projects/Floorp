@@ -634,6 +634,61 @@ nsContentUtils::InitializeTouchEventTable()
   }
 }
 
+static PRBool
+Is8bit(const nsAString& aString)
+{
+  static const PRUnichar EIGHT_BIT = PRUnichar(~0x00FF);
+
+  nsAString::const_iterator done_reading;
+  aString.EndReading(done_reading);
+
+  // for each chunk of |aString|...
+  PRUint32 fragmentLength = 0;
+  nsAString::const_iterator iter;
+  for (aString.BeginReading(iter); iter != done_reading;
+       iter.advance(PRInt32(fragmentLength))) {
+    fragmentLength = PRUint32(iter.size_forward());
+    const PRUnichar* c = iter.get();
+    const PRUnichar* fragmentEnd = c + fragmentLength;
+
+    // for each character in this chunk...
+    while (c < fragmentEnd) {
+      if (*c++ & EIGHT_BIT) {
+        return PR_FALSE;
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
+nsresult
+nsContentUtils::Btoa(const nsAString& aBinaryData,
+                     nsAString& aAsciiBase64String)
+{
+  if (!Is8bit(aBinaryData)) {
+    aAsciiBase64String.Truncate();
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
+  return nsXPConnect::Base64Encode(aBinaryData, aAsciiBase64String);
+}
+
+nsresult
+nsContentUtils::Atob(const nsAString& aAsciiBase64String,
+                     nsAString& aBinaryData)
+{
+  if (!Is8bit(aAsciiBase64String)) {
+    aBinaryData.Truncate();
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
+  nsresult rv = nsXPConnect::Base64Decode(aAsciiBase64String, aBinaryData);
+  if (NS_FAILED(rv) && rv == NS_ERROR_INVALID_ARG) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+  return rv;
+}
 
 /**
  * Access a cached parser service. Don't addref. We need only one

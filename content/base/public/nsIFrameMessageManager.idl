@@ -81,7 +81,7 @@ interface nsISyncMessageSender : nsIFrameMessageManager
   void sendSyncMessage(/*in messageName, in JSON*/);
 };
 
-[scriptable, uuid(c56e85b8-6736-4ae2-ae90-66bcef952a82)]
+[scriptable, uuid(6f23339f-2b5c-4f22-a03f-bb7ec101f83d)]
 interface nsIContentFrameMessageManager : nsISyncMessageSender
 {
   /**
@@ -104,6 +104,12 @@ interface nsIContentFrameMessageManager : nsISyncMessageSender
    * process will intentionally crash.
    */
   void privateNoteIntentionalCrash();
+
+   /**
+    * Ascii base64 data to binary data and vice versa
+    */
+   DOMString atob(in DOMString aAsciiString);
+   DOMString btoa(in DOMString aBase64Data);
 };
 
 [uuid(9c48d557-92fe-4edb-95fc-bfe97e77bdc3)]
