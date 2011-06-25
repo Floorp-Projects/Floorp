@@ -3410,37 +3410,20 @@ DocumentViewerImpl::GetPopupLinkNode(nsIDOMNode** aNode)
   // find out if we have a link in our ancestry
   while (node) {
 
-    // are we an anchor?
-    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(node));
-    nsCOMPtr<nsIDOMHTMLAreaElement> area;
-    nsCOMPtr<nsIDOMHTMLLinkElement> link;
-    nsAutoString xlinkType;
-    if (!anchor) {
-      // area?
-      area = do_QueryInterface(node);
-      if (!area) {
-        // link?
-        link = do_QueryInterface(node);
-        if (!link) {
-          // XLink?
-          nsCOMPtr<nsIDOMElement> element(do_QueryInterface(node));
-          if (element) {
-            element->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"),NS_LITERAL_STRING("type"),xlinkType);
-          }
-        }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+    if (content) {
+      nsCOMPtr<nsIURI> hrefURI = content->GetHrefURI();
+      if (hrefURI) {
+        *aNode = node;
+        NS_IF_ADDREF(*aNode); // addref
+        return NS_OK;
       }
     }
-    if (anchor || area || link || xlinkType.EqualsLiteral("simple")) {
-      *aNode = node;
-      NS_IF_ADDREF(*aNode); // addref
-      return NS_OK;
-    }
-    else {
-      // if not, get our parent and keep trying...
-      nsCOMPtr<nsIDOMNode> parentNode;
-      node->GetParentNode(getter_AddRefs(parentNode));
-      node = parentNode;
-    }
+
+    // get our parent and keep trying...
+    nsCOMPtr<nsIDOMNode> parentNode;
+    node->GetParentNode(getter_AddRefs(parentNode));
+    node = parentNode;
   }
 
   // if we have no node, fail

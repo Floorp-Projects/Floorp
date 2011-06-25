@@ -979,6 +979,8 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  nsresult Normalize();
+
   /**
    * Get the base URI for any relative URIs within this piece of
    * content. Generally, this is the document's base URI, but certain
