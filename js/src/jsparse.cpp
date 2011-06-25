@@ -1821,13 +1821,12 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
              * NB: do not use AutoLocalNameArray because it will release space
              * allocated from cx->tempPool by DefineArg.
              */
-            jsuword *names = funcg.bindings.getLocalNameArray(cx, &cx->tempPool);
-            if (!names) {
+            Vector<JSAtom *> names(cx);
+            if (!funcg.bindings.getLocalNameArray(cx, &names)) {
                 fn = NULL;
             } else {
                 for (uintN i = 0; i < nargs; i++) {
-                    JSAtom *name = JS_LOCAL_NAME_TO_ATOM(names[i]);
-                    if (!DefineArg(fn, name, i, &funcg)) {
+                    if (!DefineArg(fn, names[i], i, &funcg)) {
                         fn = NULL;
                         break;
                     }

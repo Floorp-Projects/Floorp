@@ -1367,8 +1367,22 @@ JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 extern JS_PUBLIC_API(jsuword *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
+    Vector<JSAtom *> localNames(cx);
+    if (!fun->script()->bindings.getLocalNameArray(cx, &localNames))
+        return NULL;
+
+    /* Munge data into the API this method implements.  Avert your eyes! */
     *markp = JS_ARENA_MARK(&cx->tempPool);
-    return fun->script()->bindings.getLocalNameArray(cx, &cx->tempPool);
+
+    jsuword *names;
+    JS_ARENA_ALLOCATE_CAST(names, jsuword *, &cx->tempPool, localNames.length() * sizeof *names);
+    if (!names) {
+        js_ReportOutOfMemory(cx);
+        return NULL;
+    }
+
+    memcpy(names, localNames.begin(), localNames.length() * sizeof(jsuword));
+    return names;
 }
 
 extern JS_PUBLIC_API(JSAtom *)

@@ -4588,12 +4588,12 @@ BEGIN_CASE(JSOP_CALLUPVAR_DBG)
     jsid id;
     JSAtom *atom;
     {
-        AutoLocalNameArray names(cx, fun);
-        if (!names)
+        Vector<JSAtom *> names(cx);
+        if (!fun->script()->bindings.getLocalNameArray(cx, &names))
             goto error;
 
         uintN index = fun->script()->bindings.countArgsAndVars() + GET_UINT16(regs.pc);
-        atom = JS_LOCAL_NAME_TO_ATOM(names[index]);
+        atom = names[index];
         id = ATOM_TO_JSID(atom);
 
         if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
