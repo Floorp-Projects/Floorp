@@ -353,14 +353,17 @@ ScriptPrologue(JSContext *cx, StackFrame *fp)
         fp->functionThis().setObject(*obj);
     }
 
+    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
     if (cx->compartment->debugMode)
         ScriptDebugPrologue(cx, fp);
+
     return true;
 }
 
 inline bool
 ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
 {
+    Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
     if (cx->compartment->debugMode)
         ok = ScriptDebugEpilogue(cx, fp, ok);
 
