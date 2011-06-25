@@ -364,3 +364,4 @@ load text-overflow-form-elements.html
 load text-overflow-iframe.html
 load text-overflow-bug666751-1.html
 load text-overflow-bug666751-2.html
+load 667025.html
