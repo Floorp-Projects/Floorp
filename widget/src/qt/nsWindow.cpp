@@ -2596,7 +2596,12 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
     // create a QGraphicsView if this is a new toplevel window
 
     if (mIsTopLevel) {
-        QGraphicsView* newView = new MozQGraphicsView(widget, parentWidget);
+        QGraphicsView* newView = nsnull;
+#if defined MOZ_ENABLE_MEEGOTOUCH
+        newView = new MozMGraphicsView(widget, parentWidget);
+#else
+        newView = new MozQGraphicsView(widget, parentWidget);
+#endif
 
         if (!newView) {
             delete widget;
