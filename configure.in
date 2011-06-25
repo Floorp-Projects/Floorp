@@ -6855,6 +6855,22 @@ if test $MOZ_PLATFORM_MAEMO; then
             AC_SUBST(MOZ_ENABLE_CONTENTACTION)
          fi
       fi
+
+      MOZ_ARG_ENABLE_BOOL(meegotouch,
+      [  --enable-meegotouch  Enable meegotouch support],
+         MOZ_MEEGOTOUCHENABLED=1,
+         MOZ_MEEGOTOUCHENABLED=)
+
+      if test -n "$MOZ_MEEGOTOUCHENABLED"; then
+          PKG_CHECK_MODULES(MOZ_MEEGOTOUCH, meegotouchcore, _LIB_FOUND=1, _LIB_FOUND=)
+          if test "$_LIB_FOUND"; then
+              MOZ_QT_CFLAGS="$MOZ_MEEGOTOUCH_CFLAGS $MOZ_QT_CFLAGS"
+              MOZ_QT_LIBS="$MOZ_MEEGOTOUCH_LIBS $MOZ_QT_LIBS"
+              AC_DEFINE(MOZ_ENABLE_MEEGOTOUCH)
+          else
+              AC_MSG_WARN([Cannot meegotouchcore-dev. Disabling Meegotouch support.])
+          fi
+      fi
    fi
 
    PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
