@@ -34,19 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function browserWindowsCount() {
-  let count = 0;
-  let e = Services.wm.getEnumerator("navigator:browser");
-  while (e.hasMoreElements()) {
-    if (!e.getNext().closed)
-      ++count;
-  }
-  return count;
-}
-
 function test() {
   /** Test for Bug 465223 **/
-  is(browserWindowsCount(), 1, "Only one browser window should be open initially");
 
   // test setup
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
@@ -87,7 +76,6 @@ function test() {
 
     // clean up
     newWin.close();
-    is(browserWindowsCount(), 1, "Only one browser window should be open eventually");
     finish();
   }, false);
 }
