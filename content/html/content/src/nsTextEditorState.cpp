@@ -54,7 +54,7 @@
 #include "nsIControllerContext.h"
 #include "nsAttrValue.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMKeyListener.h"
+#include "nsIDOMEventListener.h"
 #include "nsIEditorObserver.h"
 #include "nsINativeKeyBindings.h"
 #include "nsIDocumentEncoder.h"
@@ -609,7 +609,7 @@ nsTextInputSelectionImpl::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset,
 }
 
 class nsTextInputListener : public nsISelectionListener,
-                            public nsIDOMKeyListener,
+                            public nsIDOMEventListener,
                             public nsIEditorObserver,
                             public nsSupportsWeakReference
 {
@@ -632,12 +632,7 @@ public:
 
   NS_DECL_NSISELECTIONLISTENER
 
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
-  // nsIDOMKeyListener
-  NS_IMETHOD KeyDown(nsIDOMEvent *aKeyEvent);
-  NS_IMETHOD KeyPress(nsIDOMEvent *aKeyEvent);
-  NS_IMETHOD KeyUp(nsIDOMEvent *aKeyEvent);
+  NS_DECL_NSIDOMEVENTLISTENER
 
   NS_DECL_NSIEDITOROBSERVER
 
@@ -690,17 +685,11 @@ nsTextInputListener::~nsTextInputListener()
 {
 }
 
-NS_IMPL_ADDREF(nsTextInputListener)
-NS_IMPL_RELEASE(nsTextInputListener)
-
-NS_INTERFACE_MAP_BEGIN(nsTextInputListener)
-  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
-  NS_INTERFACE_MAP_ENTRY(nsIEditorObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMKeyListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMKeyListener)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS4(nsTextInputListener,
+                   nsISelectionListener,
+                   nsIEditorObserver,
+                   nsISupportsWeakReference,
+                   nsIDOMEventListener)
 
 // BEGIN nsIDOMSelectionListener
 
@@ -763,14 +752,6 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
 
 // END nsIDOMSelectionListener
 
-// BEGIN nsIDOMKeyListener
-
-NS_IMETHODIMP
-nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
 static void
 DoCommandCallback(const char *aCommand, void *aData)
 {
@@ -802,61 +783,40 @@ DoCommandCallback(const char *aCommand, void *aData)
   }
 }
 
-
 NS_IMETHODIMP
-nsTextInputListener::KeyDown(nsIDOMEvent *aDOMEvent)
+nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aDOMEvent));
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
+
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
 
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
   if (bindings &&
       nsContentUtils::DOMEventToNativeKeyEvent(keyEvent, &nativeEvent, PR_FALSE)) {
-    if (bindings->KeyDown(nativeEvent, DoCommandCallback, mFrame)) {
-      aDOMEvent->PreventDefault();
+
+    PRBool handled = PR_FALSE;
+    if (eventType.EqualsLiteral("keydown")) {
+      handled = bindings->KeyDown(nativeEvent, DoCommandCallback, mFrame);
+    }
+    else if (eventType.EqualsLiteral("keyup")) {
+      handled = bindings->KeyUp(nativeEvent, DoCommandCallback, mFrame);
+    }
+    else if (eventType.EqualsLiteral("keypress")) {
+      handled = bindings->KeyPress(nativeEvent, DoCommandCallback, mFrame);
+    }
+    else {
+      NS_ABORT();
+    }
+    if (handled) {
+      aEvent->PreventDefault();
     }
   }
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsTextInputListener::KeyPress(nsIDOMEvent *aDOMEvent)
-{
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aDOMEvent));
-  NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
-
-  nsNativeKeyEvent nativeEvent;
-  nsINativeKeyBindings *bindings = GetKeyBindings();
-  if (bindings &&
-      nsContentUtils::DOMEventToNativeKeyEvent(keyEvent, &nativeEvent, PR_TRUE)) {
-    if (bindings->KeyPress(nativeEvent, DoCommandCallback, mFrame)) {
-      aDOMEvent->PreventDefault();
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextInputListener::KeyUp(nsIDOMEvent *aDOMEvent)
-{
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aDOMEvent));
-  NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
-
-  nsNativeKeyEvent nativeEvent;
-  nsINativeKeyBindings *bindings = GetKeyBindings();
-  if (bindings &&
-      nsContentUtils::DOMEventToNativeKeyEvent(keyEvent, &nativeEvent, PR_FALSE)) {
-    if (bindings->KeyUp(nativeEvent, DoCommandCallback, mFrame)) {
-      aDOMEvent->PreventDefault();
-    }
-  }
-
-  return NS_OK;
-}
-// END nsIDOMKeyListener
 
 // BEGIN nsIEditorObserver
 
@@ -1517,19 +1477,15 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
     nsEventListenerManager* manager =
       target->GetListenerManager(PR_FALSE);
     if (manager) {
-      // cast because of ambiguous base
-      nsIDOMEventListener *listener = static_cast<nsIDOMKeyListener*>
-                                                 (mTextListener);
-
-      manager->RemoveEventListenerByType(listener,
+      manager->RemoveEventListenerByType(mTextListener,
                                          NS_LITERAL_STRING("keydown"),
                                          NS_EVENT_FLAG_BUBBLE |
                                          NS_EVENT_FLAG_SYSTEM_EVENT);
-      manager->RemoveEventListenerByType(listener,
+      manager->RemoveEventListenerByType(mTextListener,
                                          NS_LITERAL_STRING("keypress"),
                                          NS_EVENT_FLAG_BUBBLE |
                                          NS_EVENT_FLAG_SYSTEM_EVENT);
-      manager->RemoveEventListenerByType(listener,
+      manager->RemoveEventListenerByType(mTextListener,
                                          NS_LITERAL_STRING("keyup"),
                                          NS_EVENT_FLAG_BUBBLE |
                                          NS_EVENT_FLAG_SYSTEM_EVENT);
@@ -1946,17 +1902,16 @@ nsTextEditorState::InitializeKeyboardEventListeners()
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTextCtrlElement);
   nsEventListenerManager* manager = target->GetListenerManager(PR_TRUE);
   if (manager) {
-    // cast because of ambiguous base
-    nsIDOMEventListener *listener = static_cast<nsIDOMKeyListener*>
-                                               (mTextListener);
-
-    manager->AddEventListenerByType(listener, NS_LITERAL_STRING("keydown"),
+    manager->AddEventListenerByType(mTextListener,
+                                    NS_LITERAL_STRING("keydown"),
                                     NS_EVENT_FLAG_BUBBLE |
                                     NS_EVENT_FLAG_SYSTEM_EVENT);
-    manager->AddEventListenerByType(listener, NS_LITERAL_STRING("keypress"),
+    manager->AddEventListenerByType(mTextListener,
+                                    NS_LITERAL_STRING("keypress"),
                                     NS_EVENT_FLAG_BUBBLE |
                                     NS_EVENT_FLAG_SYSTEM_EVENT);
-    manager->AddEventListenerByType(listener, NS_LITERAL_STRING("keyup"),
+    manager->AddEventListenerByType(mTextListener,
+                                    NS_LITERAL_STRING("keyup"),
                                     NS_EVENT_FLAG_BUBBLE |
                                     NS_EVENT_FLAG_SYSTEM_EVENT);
   }
