@@ -43,7 +43,6 @@ function observeOneRestore(callback) {
 };
 
 function test() {
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   waitForExplicitFinish();
 
   // There should be one tab when we start the test
