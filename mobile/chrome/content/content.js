@@ -918,6 +918,14 @@ var ContextHandler = {
           if (hasData && !elem.readOnly)
             state.types.push("paste");
           break;
+        } else if (elem instanceof Ci.nsIDOMHTMLParagraphElement ||
+                   elem instanceof Ci.nsIDOMHTMLDivElement ||
+                   elem instanceof Ci.nsIDOMHTMLLIElement ||
+                   elem instanceof Ci.nsIDOMHTMLPreElement ||
+                   elem instanceof Ci.nsIDOMHTMLHeadingElement ||
+                   elem instanceof Ci.nsIDOMHTMLTableCellElement) {
+          state.types.push("content-text");
+          break;
         }
       }
 
@@ -1281,6 +1289,7 @@ var TouchEventHandler = {
 
     if (!this.element)
       return;
+
     let cancelled = !this.sendEvent(type, json, this.element);
     if (type == "touchend")
       this.element = null;
@@ -1316,6 +1325,93 @@ var TouchEventHandler = {
     }
     return aElement.dispatchEvent(evt);
   }
-}
+};
 
 TouchEventHandler.init();
+
+var SelectionHandler = {
+  cache: {},
+  
+  init: function() {
+    addMessageListener("Browser:SelectionStart", this);
+    addMessageListener("Browser:SelectionEnd", this);
+    addMessageListener("Browser:SelectionMove", this);
+  },
+
+  receiveMessage: function(aMessage) {
+    let scrollOffset = ContentScroll.getScrollOffset(content);
+    let utils = Util.getWindowUtils(content);
+    let json = aMessage.json;
+
+    switch (aMessage.name) {
+      case "Browser:SelectionStart": {
+        // Position the caret using a fake mouse click
+        utils.sendMouseEventToWindow("mousedown", json.x - scrollOffset.x, json.y - scrollOffset.y, 0, 1, 0, true);
+        utils.sendMouseEventToWindow("mouseup", json.x - scrollOffset.x, json.y - scrollOffset.y, 0, 1, 0, true);
+
+        // Select the word nearest the caret
+        try {
+          let selcon = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsISelectionDisplay).QueryInterface(Ci.nsISelectionController);
+          selcon.wordMove(false, false);
+          selcon.wordMove(true, true);
+        } catch(e) {
+          // If we couldn't select the word at the given point, bail
+          return;
+        }
+
+        // Find the selected text rect and send it back so the handles can position correctly
+        let selection = content.getSelection();
+        if (selection.rangeCount == 0)
+          return;
+
+        let range = selection.getRangeAt(0).QueryInterface(Ci.nsIDOMNSRange);
+        this.cache = { start: {}, end: {} };
+        let rects = range.getClientRects();
+        for (let i=0; i<rects.length; i++) {
+          if (i == 0) {
+            this.cache.start.x = rects[i].left + scrollOffset.x;
+            this.cache.start.y = rects[i].bottom + scrollOffset.y;
+          }
+          this.cache.end.x = rects[i].right + scrollOffset.x;
+          this.cache.end.y = rects[i].bottom + scrollOffset.y;
+        }
+
+        sendAsyncMessage("Browser:SelectionRange", this.cache);
+        break;
+      }
+
+      case "Browser:SelectionEnd": {
+        let selection = content.getSelection();
+        let str = selection.toString();
+        selection.collapseToStart();
+        if (str.length) {
+          let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+          clipboard.copyString(str);
+          sendAsyncMessage("Browser:SelectionCopied", { succeeded: true });
+        } else {
+          sendAsyncMessage("Browser:SelectionCopied", { succeeded: false });
+        }
+        break;
+      }
+
+      case "Browser:SelectionMove":
+        if (json.type == "end") {
+          this.cache.end.x = json.x - scrollOffset.x;
+          this.cache.end.y = json.y - scrollOffset.y;
+          utils.sendMouseEventToWindow("mousedown", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+          utils.sendMouseEventToWindow("mouseup", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+        } else {
+          this.cache.start.x = json.x - scrollOffset.x;
+          this.cache.start.y = json.y - scrollOffset.y;
+          utils.sendMouseEventToWindow("mousedown", this.cache.start.x, this.cache.start.y, 0, 1, 0, true);
+          // Don't cause a click. A mousedown is enough to move the caret
+          //utils.sendMouseEventToWindow("mouseup", this.cache.start.x, this.cache.start.y, 0, 1, 0, true);
+          utils.sendMouseEventToWindow("mousedown", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+          utils.sendMouseEventToWindow("mouseup", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+        }
+        break;
+    }
+  }
+};
+
+SelectionHandler.init();

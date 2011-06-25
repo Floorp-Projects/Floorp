@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Rob Campbell <rcampbell@mozilla.com>
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -78,35 +79,40 @@ function setupHighlighterTests()
 {
   h1 = doc.querySelectorAll("h1")[0];
   ok(h1, "we have the header node");
-  Services.obs.addObserver(runSelectionTests, "inspector-opened", false);
+  Services.obs.addObserver(runSelectionTests,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.toggleInspectorUI();
 }
 
 function runSelectionTests()
 {
-  Services.obs.removeObserver(runSelectionTests, "inspector-opened", false);
-  document.addEventListener("popupshown", performTestComparisons, false);
-  EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
+  Services.obs.removeObserver(runSelectionTests,
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
+
+  executeSoon(function() {
+    Services.obs.addObserver(performTestComparisons,
+      INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
+  });
 }
 
 function performTestComparisons(evt)
 {
-  if (evt.target.id != "highlighter-panel")
-    return true;
-  document.removeEventListener("popupshown", performTestComparisons, false);
-  is(h1, InspectorUI.selection, "selection matches node");
-  ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
-  is(InspectorUI.highlighter.highlitNode, h1, "highlighter matches selection");
+  Services.obs.removeObserver(performTestComparisons,
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
-  Services.obs.addObserver(finishUp, "inspector-closed", false);
-  InspectorUI.closeInspectorUI();
+  InspectorUI.stopInspecting();
+  ok(InspectorUI.highlighter.isHighlighting, "highlighter is highlighting");
+  is(InspectorUI.highlighter.highlitNode, h1, "highlighter matches selection")
+  is(InspectorUI.selection, h1, "selection matches node");
+  is(InspectorUI.selection, InspectorUI.highlighter.highlitNode, "selection matches highlighter");
+
+  doc = h1 = null;
+  executeSoon(finishUp);
 }
 
 function finishUp() {
-  Services.obs.removeObserver(finishUp, "inspector-closed", false);
-
-  ok(!InspectorUI.highlighter, "panel is not highlighting");
-  doc = h1 = null;
+  InspectorUI.closeInspectorUI();
   gBrowser.removeCurrentTab();
   finish();
 }
@@ -120,7 +126,7 @@ function test()
     doc = content.document;
     waitForFocus(createDocument, content);
   }, true);
-  
+
   content.location = "data:text/html,basic tests for inspector";
 }
 

@@ -39,7 +39,7 @@
 
 function test()
 {
-  ok(InspectorUI, "InspectorUI variable exists");
+  ok(window.InspectorUI, "InspectorUI variable exists");
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
   is(InspectorStore.length, 0, "InspectorStore is empty");
   ok(InspectorStore.isEmpty(), "InspectorStore is empty (confirmed)");
