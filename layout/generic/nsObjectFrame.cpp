@@ -1559,13 +1559,9 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
 
 #ifdef XP_MACOSX
-  if (aManager &&
-      aManager->GetBackendType() == LayerManager::LAYERS_OPENGL &&
-      mInstanceOwner->UseAsyncRendering() &&
-      mInstanceOwner->GetEventModel() == NPEventModelCocoa &&
-      mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics)
-  {
-    return LAYER_ACTIVE;
+  if (aManager && aManager->GetBackendType() !=
+      LayerManager::LAYERS_OPENGL) {
+    return LAYER_NONE;
   }
 #endif
 
