@@ -999,9 +999,11 @@ pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
 
-// Disable the error console and inspector
+// Disable the error console
 pref("devtools.errorconsole.enabled", false);
-pref("devtools.inspector.enabled", false);
+
+// Enable the Inspector
+pref("devtools.inspector.enabled", true);
 
 // Enable the Scratchpad tool.
 pref("devtools.scratchpad.enabled", true);
@@ -1026,6 +1028,12 @@ pref("devtools.hud.loglimit.network", 200);
 pref("devtools.hud.loglimit.cssparser", 200);
 pref("devtools.hud.loglimit.exception", 200);
 pref("devtools.hud.loglimit.console", 200);
+
+// The developer tools editor configuration:
+// - tabsize: how many spaces to use when a Tab character is displayed.
+// - expandtab: expand Tab characters to spaces.
+pref("devtools.editor.tabsize", 4);
+pref("devtools.editor.expandtab", true);
 
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
