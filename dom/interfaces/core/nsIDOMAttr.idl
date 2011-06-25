@@ -48,7 +48,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(669a0f55-1e5d-4471-8de9-a6c6774354dd)]
+[scriptable, uuid(6bdedbc5-681e-4570-a3dc-3685ed8d6e1e)]
 interface nsIDOMAttr : nsIDOMNode
 {
   readonly attribute DOMString            name;
@@ -58,4 +58,6 @@ interface nsIDOMAttr : nsIDOMNode
 
   // Introduced in DOM Level 2:
   readonly attribute  nsIDOMElement       ownerElement;
+
+  readonly attribute boolean              isId;
 };
