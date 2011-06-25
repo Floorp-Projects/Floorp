@@ -34,19 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function browserWindowsCount() {
-  let count = 0;
-  let e = Services.wm.getEnumerator("navigator:browser");
-  while (e.hasMoreElements()) {
-    if (!e.getNext().closed)
-      ++count;
-  }
-  return count;
-}
-
 function test() {
   /** Test for Bug 495495 **/
-  is(browserWindowsCount(), 1, "Only one browser window should be open initially");
   
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   waitForExplicitFinish();
@@ -89,12 +78,7 @@ function test() {
           }
 
           testState(state1, {readOnly: false, enablehistory: "true"}, function() {
-            testState(state2, {readOnly: true, enablehistory: "false"}, function() {
-              executeSoon(function () {
-                is(browserWindowsCount(), 1, "Only one browser window should be open eventually");
-                finish();
-              });
-            });
+            testState(state2, {readOnly: true, enablehistory: "false"}, finish);
           });
         });
       }, false);
