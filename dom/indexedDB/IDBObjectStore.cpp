@@ -63,6 +63,9 @@ USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
+// This is just to give us some random marker in the byte stream
+static const PRUint64 kTotallyRandomNumber = LL_INIT(0x286F258B, 0x177D47A9);
+
 class AddHelper : public AsyncConnectionHelper
 {
 public:
@@ -96,7 +99,6 @@ public:
     AsyncConnectionHelper::ReleaseMainThreadObjects();
   }
 
-  nsresult ModifyValueForNewKey();
   nsresult UpdateIndexes(mozIStorageConnection* aConnection,
                          PRInt64 aObjectDataId);
 
@@ -840,9 +842,8 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
                                  JSAutoStructuredCloneBuffer& aBuffer,
                                  jsval* aValue)
 {
-  /*
-   *  This function can be called on multiple threads!  Be careful!
-   */
+  NS_ASSERTION(NS_IsMainThread(),
+               "Should only be deserializing on the main thread!");
   NS_ASSERTION(aCx, "A JSContext is required!");
 
   if (!aBuffer.data()) {
@@ -861,9 +862,8 @@ IDBObjectStore::SerializeValue(JSContext* aCx,
                                JSAutoStructuredCloneBuffer& aBuffer,
                                jsval aValue)
 {
-  /*
-   *  This function can be called on multiple threads!  Be careful!
-   */
+  NS_ASSERTION(NS_IsMainThread(),
+               "Should only be serializing on the main thread!");
   NS_ASSERTION(aCx, "A JSContext is required!");
 
   JSAutoRequest ar(aCx);
@@ -871,9 +871,62 @@ IDBObjectStore::SerializeValue(JSContext* aCx,
   return aBuffer.write(aCx, aValue, nsnull);
 }
 
+static inline jsdouble
+SwapBytes(PRUint64 u)
+{
+#ifdef IS_BIG_ENDIAN
+    return ((u & 0x00000000000000ffLLU) << 56) |
+           ((u & 0x000000000000ff00LLU) << 40) |
+           ((u & 0x0000000000ff0000LLU) << 24) |
+            ((u & 0x00000000ff000000LLU) << 8) |
+            ((u & 0x000000ff00000000LLU) >> 8) |
+           ((u & 0x0000ff0000000000LLU) >> 24) |
+           ((u & 0x00ff000000000000LLU) >> 40) |
+           ((u & 0xff00000000000000LLU) >> 56);
+#else
+     return u;
+#endif
+}
+
+nsresult
+IDBObjectStore::ModifyValueForNewKey(JSAutoStructuredCloneBuffer& aBuffer,
+                                     Key& aKey)
+{
+  NS_ASSERTION(IsAutoIncrement() && KeyPath().IsEmpty() && aKey.IsInt(),
+               "Don't call me!");
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread");
+  NS_ASSERTION(mKeyPathSerializationOffset, "How did this happen?");
+
+  // The minus 8 dangling off the end here is to account for the null entry
+  // that terminates the buffer
+  const PRUint32 keyPropLen = mKeyPathSerialization.nbytes() -
+                              mKeyPathSerializationOffset - sizeof(PRUint64);
+
+  const char* location = nsCRT::memmem((char*)aBuffer.data(),
+                                       aBuffer.nbytes(),
+                                       (char*)mKeyPathSerialization.data() +
+                                       mKeyPathSerializationOffset,
+                                       keyPropLen);
+  NS_ASSERTION(location, "How did this happen?");
+
+  // This is a duplicate of the js engine's byte munging here
+  union {
+    jsdouble d;
+    PRUint64 u;
+  } pun;
+
+  pun.d = SwapBytes(aKey.IntValue());
+
+  memcpy(const_cast<char*>(location) + keyPropLen -
+         sizeof(pun.u), // We're overwriting the last 8 bytes
+         &pun.u, sizeof(PRUint64));
+  return NS_OK;
+}
+
 IDBObjectStore::IDBObjectStore()
 : mId(LL_MININT),
-  mAutoIncrement(PR_FALSE)
+  mAutoIncrement(PR_FALSE),
+  mKeyPathSerializationOffset(0)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -932,11 +985,47 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   rv = GetIndexUpdateInfo(info, aCx, aValue, aUpdateInfoArray);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (!IDBObjectStore::SerializeValue(aCx, aCloneBuffer, aValue)) {
-    return NS_ERROR_DOM_DATA_CLONE_ERR;
+  const jschar* keyPathChars =
+    reinterpret_cast<const jschar*>(mKeyPath.get());
+  const size_t keyPathLen = mKeyPath.Length();
+  JSBool ok = JS_FALSE;
+
+  if (!mKeyPath.IsEmpty() && aKey.IsUnset()) {
+    NS_ASSERTION(mAutoIncrement, "Should have bailed earlier!");
+
+    jsval key;
+    ok = JS_NewNumberValue(aCx, kTotallyRandomNumber, &key);
+    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+ 
+    ok = JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(aValue), keyPathChars,
+                             keyPathLen, key, nsnull, nsnull,
+                             JSPROP_ENUMERATE);
+    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    // From this point on we have to try to remove the property.
+    rv = EnsureKeyPathSerializationData(aCx);
   }
 
-  return NS_OK;
+  // We guard on rv being a success because we need to run the property
+  // deletion code below even if we should not be serializing the value
+  if (NS_SUCCEEDED(rv) && 
+      !IDBObjectStore::SerializeValue(aCx, aCloneBuffer, aValue)) {
+    rv = NS_ERROR_DOM_DATA_CLONE_ERR;
+  }
+
+  if (ok) {
+    // If this fails, we lose, and the web page sees a magical property
+    // appear on the object :-(
+    jsval succeeded;
+    ok = JS_DeleteUCProperty2(aCx, JSVAL_TO_OBJECT(aValue), keyPathChars,
+                              keyPathLen, &succeeded);
+    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    NS_ASSERTION(JSVAL_IS_BOOLEAN(succeeded), "Wtf?");
+    NS_ENSURE_TRUE(JSVAL_TO_BOOLEAN(succeeded),
+                   NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+
+  return rv;
 }
 
 nsresult
@@ -984,6 +1073,46 @@ IDBObjectStore::AddOrPut(const jsval& aValue,
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
+  return NS_OK;
+}
+
+nsresult
+IDBObjectStore::EnsureKeyPathSerializationData(JSContext* aCx)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread");
+
+  if (!mKeyPathSerializationOffset) {
+    JSBool ok;
+
+    JSAutoStructuredCloneBuffer emptyObjectBuffer;
+    JSAutoStructuredCloneBuffer fakeObjectBuffer;
+
+    const jschar* keyPathChars =
+      reinterpret_cast<const jschar*>(mKeyPath.get());
+    const size_t keyPathLen = mKeyPath.Length();
+
+    JSObject* object = JS_NewObject(aCx, nsnull, nsnull, nsnull);
+    NS_ENSURE_TRUE(object, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    ok = emptyObjectBuffer.write(aCx, OBJECT_TO_JSVAL(object));
+    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    jsval key;
+    // This is just to give us some random marker in the byte stream
+    ok = JS_NewNumberValue(aCx, kTotallyRandomNumber, &key);
+    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    ok = JS_DefineUCProperty(aCx, object, keyPathChars, keyPathLen,
+                             key, nsnull, nsnull, JSPROP_ENUMERATE);
+    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    ok = fakeObjectBuffer.write(aCx, OBJECT_TO_JSVAL(object));
+    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    mKeyPathSerialization.swap(fakeObjectBuffer);
+    mKeyPathSerializationOffset = emptyObjectBuffer.nbytes();
+  }
+
   return NS_OK;
 }
 
@@ -1721,7 +1850,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       // Special case where someone put an object into an autoIncrement'ing
       // objectStore with no key in its keyPath set. We needed to figure out
       // which row id we would get above before we could set that properly.
-      rv = ModifyValueForNewKey();
+      rv = mObjectStore->ModifyValueForNewKey(mCloneBuffer, mKey);
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       scoper.Abandon();
@@ -1775,58 +1904,6 @@ AddHelper::GetSuccessResult(JSContext* aCx,
   mCloneBuffer.clear(aCx);
 
   return IDBObjectStore::GetJSValFromKey(mKey, aCx, aVal);
-}
-
-nsresult
-AddHelper::ModifyValueForNewKey()
-{
-  NS_ASSERTION(mObjectStore->IsAutoIncrement() &&
-               !mObjectStore->KeyPath().IsEmpty() &&
-               mKey.IsInt(),
-               "Don't call me!");
-
-  const nsString& keyPath = mObjectStore->KeyPath();
-
-  JSContext* cx = nsnull;
-  nsresult rv = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSAutoRequest ar(cx);
-
-  jsval clone;
-  if (!IDBObjectStore::DeserializeValue(cx, mCloneBuffer, &clone)) {
-    return NS_ERROR_DOM_DATA_CLONE_ERR;
-  }
-
-  NS_ASSERTION(!JSVAL_IS_PRIMITIVE(clone), "We should have an object!");
-
-  JSObject* obj = JSVAL_TO_OBJECT(clone);
-  JSBool ok;
-
-  const jschar* keyPathChars = reinterpret_cast<const jschar*>(keyPath.get());
-  const size_t keyPathLen = keyPath.Length();
-
-#ifdef DEBUG
-  {
-    jsval prop;
-    ok = JS_GetUCProperty(cx, obj, keyPathChars, keyPathLen, &prop);
-    NS_ASSERTION(ok && JSVAL_IS_VOID(prop), "Already has a key prop!");
-  }
-#endif
-
-  jsval key;
-  ok = JS_NewNumberValue(cx, mKey.IntValue(), &key);
-  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-  ok = JS_DefineUCProperty(cx, obj, keyPathChars, keyPathLen, key, nsnull,
-                           nsnull, JSPROP_ENUMERATE);
-  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-  if (!IDBObjectStore::SerializeValue(cx, mCloneBuffer, OBJECT_TO_JSVAL(obj))) {
-    return NS_ERROR_DOM_DATA_CLONE_ERR;
-  }
-
-  return NS_OK;
 }
 
 nsresult
