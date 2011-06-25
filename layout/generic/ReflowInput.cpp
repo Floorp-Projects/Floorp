@@ -61,6 +61,7 @@ ReflowInput::ReflowInput(nsPresContext*       aPresContext,
   : SizeComputationInput(aFrame, aRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
+  , mContainingBlockSize(mWritingMode)
   , mReflowDepth(0)
 {
   NS_PRECONDITION(aRenderingContext, "no rendering context");
@@ -192,6 +193,7 @@ ReflowInput::ReflowInput(
   : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
+  , mContainingBlockSize(mWritingMode)
   , mFlags(aParentReflowInput.mFlags)
   , mReflowDepth(aParentReflowInput.mReflowDepth + 1)
 {
@@ -2130,7 +2132,10 @@ ReflowInput::ComputeContainingBlockRectangle(
     if (!wm.IsVertical() &&
         NS_AUTOHEIGHT == cbSize.BSize(wm)) {
       if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
-          mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent) {
+          (mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent ||
+           (mFrame->IsTableWrapperFrame() &&
+            mFrame->PrincipalChildList().FirstChild()->StylePosition()->
+              mHeight.GetUnit() == eStyleUnit_Percent))) {
         cbSize.BSize(wm) = CalcQuirkContainingBlockHeight(aContainingBlockRI);
       }
     }
@@ -2511,6 +2516,9 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
       }
     }
   }
+
+  // Save our containing block dimensions
+  mContainingBlockSize = aContainingBlockSize;
 }
 
 static void

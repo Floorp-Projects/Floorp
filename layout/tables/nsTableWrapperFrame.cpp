@@ -233,6 +233,7 @@ nsTableWrapperFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 
 void
 nsTableWrapperFrame::InitChildReflowInput(nsPresContext& aPresContext,
+                                          const ReflowInput& aOuterRI,
                                           ReflowInput&   aReflowInput)
 {
   nsMargin collapseBorder;
@@ -255,6 +256,11 @@ nsTableWrapperFrame::InitChildReflowInput(nsPresContext& aPresContext,
         cbSize.emplace(*cb);
         *cbSize -= aReflowInput.ComputedLogicalMargin().Size(wm);
       }
+    }
+    if (!cbSize) {
+      // For inner table frames, the containing block is the same as for
+      // the outer table frame.
+      cbSize.emplace(aOuterRI.mContainingBlockSize);
     }
   }
   aReflowInput.Init(&aPresContext, cbSize.ptrOr(nullptr), pCollapseBorder,
@@ -282,7 +288,7 @@ nsTableWrapperFrame::GetChildMargin(nsPresContext*           aPresContext,
   LogicalSize availSize(wm, aAvailISize, aOuterRI.AvailableSize(wm).BSize(wm));
   ReflowInput childRI(aPresContext, aOuterRI, aChildFrame, availSize,
                             nullptr, ReflowInput::CALLER_WILL_INIT);
-  InitChildReflowInput(*aPresContext, childRI);
+  InitChildReflowInput(*aPresContext, aOuterRI, childRI);
 
   aMargin = childRI.ComputedLogicalMargin();
 }
@@ -792,7 +798,7 @@ nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext*            aPresContex
   // so that caller can use it after we return.
   aChildRI.emplace(aPresContext, aOuterRI, aChildFrame, availSize,
                   nullptr, ReflowInput::CALLER_WILL_INIT);
-  InitChildReflowInput(*aPresContext, *aChildRI);
+  InitChildReflowInput(*aPresContext, aOuterRI, *aChildRI);
 
   // see if we need to reset top-of-page due to a caption
   if (aChildRI->mFlags.mIsTopOfPage &&
