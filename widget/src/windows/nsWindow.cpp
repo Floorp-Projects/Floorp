@@ -2527,7 +2527,7 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
     if (mCustomNonClient) {
       // The minimum glass height must be the caption buttons height,
       // otherwise the buttons are drawn incorrectly.
-      largest.y = PR_MAX(largest.y,
+      largest.y = NS_MAX<PRUint32>(largest.y,
                          nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
     }
     margins.cyTopHeight = largest.y;
@@ -3370,7 +3370,7 @@ nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
   // on the document of SystemParametersInfo in MSDN.
   const PRUint32 kSystemDefaultScrollingSpeed = 3;
 
-  PRInt32 absOriginDelta = PR_ABS(aOriginalDelta);
+  PRInt32 absOriginDelta = NS_ABS(aOriginalDelta);
 
   // Compute the simple overridden speed.
   PRInt32 absComputedOverriddenDelta;
@@ -3428,7 +3428,7 @@ nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
   }
 
   absComputedOverriddenDelta =
-    PR_MIN(absComputedOverriddenDelta, absDeltaLimit);
+    NS_MIN(absComputedOverriddenDelta, absDeltaLimit);
 
   aOverriddenDelta = (aOriginalDelta > 0) ? absComputedOverriddenDelta :
                                             -absComputedOverriddenDelta;
@@ -6937,8 +6937,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   }
 
   if (numOfUniChars > 0 || numOfShiftedChars > 0 || numOfUnshiftedChars > 0) {
-    PRUint32 num = PR_MAX(numOfUniChars,
-                          PR_MAX(numOfShiftedChars, numOfUnshiftedChars));
+    PRUint32 num = NS_MAX(numOfUniChars,
+                          NS_MAX(numOfShiftedChars, numOfUnshiftedChars));
     PRUint32 skipUniChars = num - numOfUniChars;
     PRUint32 skipShiftedChars = num - numOfShiftedChars;
     PRUint32 skipUnshiftedChars = num - numOfUnshiftedChars;

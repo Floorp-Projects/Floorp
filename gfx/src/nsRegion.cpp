@@ -71,13 +71,13 @@ inline PRBool nsRegion::nsRectFast::Intersects (const nsRect& aRect) const
 
 inline PRBool nsRegion::nsRectFast::IntersectRect (const nsRect& aRect1, const nsRect& aRect2)
 {
-  const nscoord xmost = PR_MIN (aRect1.XMost (), aRect2.XMost ());
-  x = PR_MAX (aRect1.x, aRect2.x);
+  const nscoord xmost = NS_MIN (aRect1.XMost (), aRect2.XMost ());
+  x = NS_MAX (aRect1.x, aRect2.x);
   width = xmost - x;
   if (width <= 0) return PR_FALSE;
 
-  const nscoord ymost = PR_MIN (aRect1.YMost (), aRect2.YMost ());
-  y = PR_MAX (aRect1.y, aRect2.y);
+  const nscoord ymost = NS_MIN (aRect1.YMost (), aRect2.YMost ());
+  y = NS_MAX (aRect1.y, aRect2.y);
   height = ymost - y;
   if (height <= 0) return PR_FALSE;
 
@@ -86,8 +86,8 @@ inline PRBool nsRegion::nsRectFast::IntersectRect (const nsRect& aRect1, const n
 
 inline void nsRegion::nsRectFast::UnionRect (const nsRect& aRect1, const nsRect& aRect2)
 {
-  const nscoord xmost = PR_MAX (aRect1.XMost (), aRect2.XMost ());
-  const nscoord ymost = PR_MAX (aRect1.YMost (), aRect2.YMost ());
+  const nscoord xmost = NS_MAX (aRect1.XMost (), aRect2.XMost ());
+  const nscoord ymost = NS_MAX (aRect1.YMost (), aRect2.YMost ());
   x = PR_MIN (aRect1.x, aRect2.x);
   y = PR_MIN (aRect1.y, aRect2.y);
   width  = xmost - x;

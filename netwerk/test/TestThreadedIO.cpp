@@ -175,7 +175,7 @@ TestListener::OnDataAvailable( nsIChannel *aChannel,
         unsigned int bytesRead;
         // Read a buffer full or the number remaining (whichever is smaller).
         rv = aStream->Read( buffer,
-                            PR_MIN( sizeof( buffer ), bytesRemaining ),
+                            NS_MIN( sizeof( buffer ), bytesRemaining ),
                             &bytesRead );
         if ( NS_SUCCEEDED( rv ) ) {
             // Write the bytes just read to the output file.
