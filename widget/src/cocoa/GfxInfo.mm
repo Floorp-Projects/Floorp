@@ -67,7 +67,7 @@ GfxInfo::Init()
   if (CGLQueryRendererInfo(0xffffffff, &renderer, &rendererCount) != kCGLNoError)
     return rv;
 
-  rendererCount = (GLint) PR_MIN(rendererCount, (GLint) NS_ARRAY_LENGTH(mRendererIDs));
+  rendererCount = (GLint) NS_MIN(rendererCount, (GLint) NS_ARRAY_LENGTH(mRendererIDs));
   for (GLint i = 0; i < rendererCount; i++) {
     GLint prop = 0;
 

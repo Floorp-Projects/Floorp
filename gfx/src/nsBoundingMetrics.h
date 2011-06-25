@@ -108,8 +108,8 @@ struct nsBoundingMetrics {
         else {
             if (ascent < bm.ascent) ascent = bm.ascent;
             if (descent < bm.descent) descent = bm.descent;
-            leftBearing = PR_MIN(leftBearing, width + bm.leftBearing);
-            rightBearing = PR_MAX(rightBearing, width + bm.rightBearing);
+            leftBearing = NS_MIN(leftBearing, width + bm.leftBearing);
+            rightBearing = NS_MAX(rightBearing, width + bm.rightBearing);
         }
         width += bm.width;
     }

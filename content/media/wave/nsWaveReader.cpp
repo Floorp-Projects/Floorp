@@ -381,7 +381,7 @@ nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
     PR_STATIC_ASSERT(MAX_CHUNK_SIZE < UINT_MAX / sizeof(char));
     nsAutoArrayPtr<char> chunk(new char[MAX_CHUNK_SIZE]);
     while (chunkSize > 0) {
-      PRUint32 size = PR_MIN(chunkSize, MAX_CHUNK_SIZE);
+      PRUint32 size = NS_MIN(chunkSize, MAX_CHUNK_SIZE);
       if (!ReadAll(chunk.get(), size)) {
         return PR_FALSE;
       }
@@ -545,8 +545,8 @@ nsWaveReader::GetDataLength()
   // the content length rather than the expected PCM data length.
   PRInt64 streamLength = mDecoder->GetCurrentStream()->GetLength();
   if (streamLength >= 0) {
-    PRInt64 dataLength = PR_MAX(0, streamLength - mWavePCMOffset);
-    length = PR_MIN(dataLength, length);
+    PRInt64 dataLength = NS_MAX<PRInt64>(0, streamLength - mWavePCMOffset);
+    length = NS_MIN(dataLength, length);
   }
   return length;
 }

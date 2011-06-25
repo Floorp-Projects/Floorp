@@ -309,8 +309,8 @@ UpdateOffScreenBuffers(int aDepth, QSize aSize, QWidget* aWidget = nsnull)
             return true;
     }
 
-    gBufferMaxSize.width = PR_MAX(gBufferMaxSize.width, size.width);
-    gBufferMaxSize.height = PR_MAX(gBufferMaxSize.height, size.height);
+    gBufferMaxSize.width = NS_MAX(gBufferMaxSize.width, size.width);
+    gBufferMaxSize.height = NS_MAX(gBufferMaxSize.height, size.height);
 
     // Check if system depth has related gfxImage format
     gfxASurface::gfxImageFormat format =

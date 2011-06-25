@@ -56,8 +56,9 @@ CPPSRCS = ssltunnel.cpp
 LOCAL_INCLUDES += $(NSPR_CFLAGS) $(NSS_CFLAGS)
 
 LIBS = \
-	$(NSPR_LIBS) \
-	$(NSS_LIBS) \
-	$(NULL)
+  $(NSPR_LIBS) \
+  $(NSS_LIBS) \
+  $(MOZALLOC_LIB) \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
