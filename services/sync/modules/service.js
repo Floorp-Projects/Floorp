@@ -635,21 +635,6 @@ WeaveSvc.prototype = {
     }
   },
 
-  _handleResource401: function _handleResource401(request) {
-    // Only handle 401s that are hitting the current cluster
-    let spec = request.resource.spec;
-    let cluster = this.clusterURL;
-    if (spec.indexOf(cluster) != 0)
-      return;
-
-    // Nothing to do if the cluster isn't changing
-    if (!this._setCluster())
-      return;
-
-    // Replace the old cluster with the new one to retry the request
-    request.newUri = this.clusterURL + spec.slice(cluster.length);
-  },
-
   // gets cluster from central LDAP server and returns it, or null on error
   _findCluster: function _findCluster() {
     this._log.debug("Finding cluster for user " + this.username);
@@ -687,7 +672,7 @@ WeaveSvc.prototype = {
   _setCluster: function _setCluster() {
     // Make sure we didn't get some unexpected response for the cluster
     let cluster = this._findCluster();
-    this._log.debug("cluster value = " + cluster);
+    this._log.debug("Cluster value = " + cluster);
     if (cluster == null)
       return false;
 
@@ -695,19 +680,20 @@ WeaveSvc.prototype = {
     if (cluster == this.clusterURL)
       return false;
 
+    this._log.debug("Setting cluster to " + cluster);
     this.clusterURL = cluster;
+    Svc.Prefs.set("lastClusterUpdate", Date.now().toString());
     return true;
   },
 
-  // update cluster if required. returns false if the update was not required
+  // Update cluster if required.
+  // Returns false if the update was not required.
   _updateCluster: function _updateCluster() {
+    this._log.info("Updating cluster.");
     let cTime = Date.now();
     let lastUp = parseFloat(Svc.Prefs.get("lastClusterUpdate"));
     if (!lastUp || ((cTime - lastUp) >= CLUSTER_BACKOFF)) {
-      if (this._setCluster()) {
-        Svc.Prefs.set("lastClusterUpdate", cTime.toString());
-        return true;
-      }
+      return this._setCluster();
     }
     return false;
   },
@@ -1779,8 +1765,13 @@ WeaveSvc.prototype = {
       throw "aborting sync, remote setup failed";
 
     // Make sure we have an up-to-date list of clients before sending commands
-    this._log.trace("Refreshing client list");
-    this._syncEngine(Clients);
+    this._log.debug("Refreshing client list.");
+    if (!this._syncEngine(Clients)) {
+      // Clients is an engine like any other; it can fail with a 401,
+      // and we can elect to abort the sync.
+      this._log.warn("Client engine sync failed. Aborting.");
+      return;
+    }
 
     // Wipe data in the desired direction if necessary
     switch (Svc.Prefs.get("firstSync")) {
@@ -1808,7 +1799,10 @@ WeaveSvc.prototype = {
           throw "aborting sync, remote setup failed after processing commands";
       }
       finally {
-        // Always immediately push back the local client (now without commands)
+        // Always immediately attempt to push back the local client (now
+        // without commands).
+        // Note that we don't abort here; if there's a 401 because we've
+        // been reassigned, we'll handle it around another engine.
         this._syncEngine(Clients);
       }
     }
@@ -1826,6 +1820,15 @@ WeaveSvc.prototype = {
         }
       }
 
+      // If _syncEngine fails for a 401, we might not have a cluster URL here.
+      // If that's the case, break out of this immediately, rather than
+      // throwing an exception when trying to fetch metaURL.
+      if (!this.clusterURL) {
+        this._log.debug("Aborting sync, no cluster URL: " +
+                        "not uploading new meta/global.");
+        return;
+      }
+
       // Upload meta/global if any engines changed anything
       let meta = Records.get(this.metaURL);
       if (meta.isNew || meta.changed) {
@@ -1834,9 +1837,9 @@ WeaveSvc.prototype = {
         delete meta.changed;
       }
 
-      if (this._syncError)
+      if (this._syncError) {
         throw "Some engines did not sync correctly";
-      else {
+      } else {
         Svc.Prefs.set("lastSync", new Date().toString());
         Status.sync = SYNC_SUCCEEDED;
         let syncTime = ((Date.now() - syncStartTime) / 1000).toFixed(2);
@@ -1936,17 +1939,25 @@ WeaveSvc.prototype = {
     this._ignorePrefObserver = false;
   },
 
-  // returns true if sync should proceed
-  // false / no return value means sync should be aborted
+  // Returns true if sync should proceed.
+  // false / no return value means sync should be aborted.
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     try {
       engine.sync();
       return true;
     }
     catch(e) {
-      // maybe a 401, cluster update needed?
-      if (e.status == 401 && this._updateCluster())
-        return this._syncEngine(engine);
+      // Maybe a 401, cluster update perhaps needed?
+      if (e.status == 401) {
+        // Log out and clear the cluster URL pref. That will make us perform
+        // cluster detection and password check on next sync, which handles
+        // both causes of 401s; in either case, we won't proceed with this
+        // sync, so return false, but kick off a sync for next time.
+        this.logout();
+        Svc.Prefs.reset("clusterURL");
+        Utils.nextTick(this.sync, this);
+        return false;
+      }
 
       this._checkServerError(e);
 
