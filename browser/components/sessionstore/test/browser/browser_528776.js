@@ -1,5 +1,3 @@
-var ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-
 function browserWindowsCount(expected) {
   var count = 0;
   var e = Services.wm.getEnumerator("navigator:browser");

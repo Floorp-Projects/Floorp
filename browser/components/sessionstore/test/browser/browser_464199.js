@@ -37,8 +37,6 @@
 function test() {
   /** Test for Bug 464199 **/
 
-  // test setup
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   waitForExplicitFinish();
 
   const REMEMBER = Date.now(), FORGET = Math.random();

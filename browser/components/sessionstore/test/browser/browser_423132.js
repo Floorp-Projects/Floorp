@@ -38,13 +38,10 @@ function test() {
   // test that cookies are stored and restored correctly by sessionstore,
   // bug 423132.
 
-  // test setup
   waitForExplicitFinish();
 
   let cs = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
   cs.removeAll();
-
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
   // make sure that sessionstore.js can be forced to be created by setting
   // the interval pref to 0
