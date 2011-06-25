@@ -57,8 +57,6 @@ function test() {
 
     gBrowser.removeTab(tab);
     
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"]
-               .getService(Ci.nsISessionStore);
     let undoItems = JSON.parse(ss.getClosedTabData(window));
     let savedFormData = undoItems[0].state.entries[0].formdata;
     
