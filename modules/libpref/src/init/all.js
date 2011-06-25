@@ -813,6 +813,11 @@ pref("network.websocket.timeout.ping.response", 10);
 // extension with the websocket server
 pref("network.websocket.extensions.stream-deflate", true);
 
+// the maximum number of concurrent websocket sessions. By specification there
+// is never more than one handshake oustanding to an individual host at
+// one time.
+pref("network.websocket.max-connections", 200);
+
 // </ws>
 
 // Server-Sent Events
