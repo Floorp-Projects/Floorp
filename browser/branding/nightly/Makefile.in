@@ -19,6 +19,7 @@
 #
 # Contributor(s):
 #   Justin Dolske <dolske@mozilla.com> (original author)
+#   Jared Wein <jwein@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,7 +76,6 @@ LINUX_BRANDING_FILES = \
 	default16.png \
 	default32.png \
 	default48.png \
-	document.png \
 	mozicon128.png \
 	$(NULL)
 
