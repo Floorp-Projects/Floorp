@@ -3074,6 +3074,11 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
         }
       }
 
+      if (!glyphBuf.size()) {
+        // This may happen for glyph runs for a 0 size font.
+        continue;
+      }
+
       buffer.mGlyphs = &glyphBuf.front();
       buffer.mNumGlyphs = glyphBuf.size();
 
