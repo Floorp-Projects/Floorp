@@ -358,3 +358,4 @@ MSG_DEF(JSMSG_DEBUG_OBJECT_WRONG_OWNER, 275, 0, JSEXN_TYPEERR, "Debug.Object bel
 MSG_DEF(JSMSG_DEBUG_OBJECT_PROTO,     276, 0, JSEXN_TYPEERR, "Debug.Object.prototype is not a valid Debug.Object")
 MSG_DEF(JSMSG_DEBUG_LOOP,             277, 0, JSEXN_TYPEERR, "cannot debug an object in same compartment as debugger or a compartment that is already debugging the debugger")
 MSG_DEF(JSMSG_DEBUG_NOT_IDLE,         278, 0, JSEXN_ERR, "can't start debugging: a debuggee script is on the stack")
+MSG_DEF(JSMSG_DEBUG_BAD_OFFSET,       279, 0, JSEXN_TYPEERR, "invalid script offset")
