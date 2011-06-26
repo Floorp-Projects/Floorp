@@ -23,6 +23,7 @@
 #  Jonathan Wilson <jonwil@tpgi.com.au>
 #  Dan Mosedale <dmose@mozilla.org>
 #  Benjamin Smedberg <benjamin@smedbergs.us>
+#  Jared Wein <jwein@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -199,7 +200,6 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/mozicon128.png $(DIST)/bin/icons
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/document.png   $(DIST)/bin/icons
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png  $(DIST)/bin/chrome/icons/default
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png  $(DIST)/bin/chrome/icons/default
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png  $(DIST)/bin/chrome/icons/default
