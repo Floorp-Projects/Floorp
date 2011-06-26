@@ -2102,9 +2102,6 @@ nsObjectFrame::PrepareInstanceOwner()
          ("Created new instance owner %p for frame %p\n", mInstanceOwner.get(),
           this));
 
-  if (!mInstanceOwner)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   // Note, |this| may very well be gone after this call.
   return mInstanceOwner->Init(PresContext(), this, GetContent());
 }

@@ -912,18 +912,11 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   }
 
   mEventManager = new nsEventStateManager();
-  if (!mEventManager)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   NS_ADDREF(mEventManager);
 
   mTransitionManager = new nsTransitionManager(this);
-  if (!mTransitionManager)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   mAnimationManager = new nsAnimationManager(this);
-  if (!mAnimationManager)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   if (mDocument->GetDisplayDocument()) {
     NS_ASSERTION(mDocument->GetDisplayDocument()->GetShell() &&
@@ -959,8 +952,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
     if (!mRefreshDriver) {
       mRefreshDriver = new nsRefreshDriver(this);
-      if (!mRefreshDriver)
-        return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 

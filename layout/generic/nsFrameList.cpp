@@ -50,16 +50,12 @@
 const nsFrameList* nsFrameList::sEmptyList;
 
 /* static */
-nsresult
+void
 nsFrameList::Init()
 {
   NS_PRECONDITION(!sEmptyList, "Shouldn't be allocated");
 
   sEmptyList = new nsFrameList();
-  if (!sEmptyList)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return NS_OK;
 }
 
 void

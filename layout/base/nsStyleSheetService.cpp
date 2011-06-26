@@ -169,7 +169,6 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
   NS_ENSURE_ARG_POINTER(aSheetURI);
 
   nsRefPtr<mozilla::css::Loader> loader = new mozilla::css::Loader();
-  NS_ENSURE_TRUE(loader, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<nsCSSStyleSheet> sheet;
   // Allow UA sheets, but not user sheets, to use unsafe rules

@@ -49,17 +49,15 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsINodeInfo.h"
-#include "nsIDOM3Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsContentUtils.h"
 #include "nsStubMutationObserver.h"
 
 // Attribute helper class used to wrap up an attribute with a dom
-// object that implements nsIDOMAttr, nsIDOM3Attr, nsIDOMNode
+// object that implements nsIDOMAttr and nsIDOMNode
 class nsDOMAttribute : public nsIAttribute,
                        public nsIDOMAttr,
-                       public nsIDOM3Attr,
                        public nsStubMutationObserver
 {
 public:
@@ -76,9 +74,6 @@ public:
 
   // nsIDOMAttr interface
   NS_DECL_NSIDOMATTR
-
-  // nsIDOM3Attr interface
-  NS_DECL_NSIDOM3ATTR
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 

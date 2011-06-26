@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         title="Test BackSpace/Delete Keys">
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -32,8 +32,6 @@ function execTests() {
     }
     sel.collapse(n, firstChildOffsetForCaret);
   }
-
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   /* On Unix systems we have to check for a bug in Pango's handling of Thai
    * script (bug 474068 and http://bugzilla.gnome.org/show_bug.cgi?id=576156 ).

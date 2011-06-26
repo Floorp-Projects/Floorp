@@ -574,8 +574,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       return;
     }
     layerManager = new BasicLayerManager();
-    if (!layerManager)
-      return;
   }
 
   if (aFlags & PAINT_FLUSH_LAYERS) {
