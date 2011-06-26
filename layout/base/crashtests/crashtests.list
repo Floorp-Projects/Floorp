@@ -259,7 +259,6 @@ load 479114-1.html
 load 477333-1.xhtml
 load 477731-1.html
 asserts(6) load 479360-1.xhtml # Bug 439258
-load 480686-1.html
 load 481806-1.html
 asserts(6) load 483604-1.xhtml # Bug 439258
 load 485501-1.html
