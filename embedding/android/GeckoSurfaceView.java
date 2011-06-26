@@ -176,18 +176,15 @@ class GeckoSurfaceView
                 Log.w("GeckoAppJava", "surfaceChanged while mInDrawing is true!");
             }
 
-            boolean invalidSize = false;
-
             if (width == 0 || height == 0) {
                 mSoftwareBitmap = null;
                 mSoftwareBuffer = null;
                 mSoftwareBufferCopy = null;
-                invalidSize = true;
             }
 
             boolean doSyncDraw =
                 mDrawMode == DRAW_2D &&
-                !invalidSize &&
+                (mSoftwareBitmap != null || mSoftwareBuffer != null) &&
                 GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning);
             mSyncDraw = doSyncDraw;
 
@@ -205,7 +202,7 @@ class GeckoSurfaceView
                                           metrics.widthPixels, metrics.heightPixels);
             GeckoAppShell.sendEventToGecko(e);
 
-            if (!invalidSize)
+            if (mSoftwareBitmap != null || mSoftwareBuffer != null)
                 GeckoAppShell.scheduleRedraw();
 
             if (!doSyncDraw) {
