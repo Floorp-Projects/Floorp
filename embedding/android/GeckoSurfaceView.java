@@ -176,15 +176,20 @@ class GeckoSurfaceView
                 Log.w("GeckoAppJava", "surfaceChanged while mInDrawing is true!");
             }
 
+            boolean invalidSize;
+
             if (width == 0 || height == 0) {
                 mSoftwareBitmap = null;
                 mSoftwareBuffer = null;
                 mSoftwareBufferCopy = null;
+                invalidSize = true;
+            } else {
+                invalidSize = false;
             }
 
             boolean doSyncDraw =
                 mDrawMode == DRAW_2D &&
-                (mSoftwareBitmap != null || mSoftwareBuffer != null) &&
+                !invalidSize &&
                 GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning);
             mSyncDraw = doSyncDraw;
 
@@ -202,9 +207,6 @@ class GeckoSurfaceView
                                           metrics.widthPixels, metrics.heightPixels);
             GeckoAppShell.sendEventToGecko(e);
 
-            if (mSoftwareBitmap != null || mSoftwareBuffer != null)
-                GeckoAppShell.scheduleRedraw();
-
             if (!doSyncDraw) {
                 if (mDrawMode == DRAW_GLES_2 || mShowingSplashScreen)
                     return;
@@ -212,6 +214,8 @@ class GeckoSurfaceView
                 c.drawARGB(255, 255, 255, 255);
                 holder.unlockCanvasAndPost(c);
                 return;
+            } else {
+                GeckoAppShell.scheduleRedraw();
             }
         } finally {
             mSurfaceLock.unlock();
@@ -219,7 +223,7 @@ class GeckoSurfaceView
 
         Object syncDrawObject = null;
         try {
-            Object syncObject = mSyncDraws.take();
+            syncDrawObject = mSyncDraws.take();
         } catch (InterruptedException ie) {
             Log.e("GeckoAppJava", "Threw exception while getting sync draw bitmap/buffer: ", ie);
         }
@@ -228,6 +232,8 @@ class GeckoSurfaceView
                 draw(holder, (Bitmap)syncDrawObject);
             else
                 draw(holder, (ByteBuffer)syncDrawObject);
+        } else {
+            Log.e("GeckoSurfaceViewJava", "Synchronised draw object is null");
         }
     }
 
