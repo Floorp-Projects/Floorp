@@ -11601,6 +11601,17 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
   nsCOMPtr<nsIDocument> refererDoc = aContent->GetOwnerDoc();
   NS_ENSURE_TRUE(refererDoc, NS_ERROR_UNEXPECTED);
 
+  // Now check that the refererDoc's inner window is the current inner
+  // window for mScriptGlobal.  If it's not, then we don't want to
+  // follow this link.
+  nsPIDOMWindow* refererInner = refererDoc->GetInnerWindow();
+  NS_ENSURE_TRUE(refererInner, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsPIDOMWindow> outerWindow = do_QueryInterface(mScriptGlobal);
+  if (!outerWindow || outerWindow->GetCurrentInnerWindow() != refererInner) {
+      // We're no longer the current inner window
+      return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> referer = refererDoc->GetDocumentURI();
 
   // referer could be null here in some odd cases, but that's ok,
