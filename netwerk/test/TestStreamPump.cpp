@@ -96,7 +96,7 @@ public:
         nsresult rv;
 
         while (count) {
-            PRUint32 n, amt = PR_MIN(count, sizeof(buf));
+            PRUint32 n, amt = NS_MIN<PRUint32>(count, sizeof(buf));
 
             rv = stream->Read(buf, amt, &n);
             if (NS_FAILED(rv)) {
