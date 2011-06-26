@@ -344,11 +344,15 @@ protected:
   }
 
   PRBool AreOnSameLine(nsIFrame* aFrame1, nsIFrame* aFrame2) {
-    // Assumes that aFrame1 and aFrame2 are both decsendants of mBlockFrame.
     PRBool isValid1, isValid2;
     nsBlockInFlowLineIterator it1(mBlockFrame, aFrame1, &isValid1);
     nsBlockInFlowLineIterator it2(mBlockFrame, aFrame2, &isValid2);
-    return isValid1 && isValid2 && it1.GetLine() == it2.GetLine();
+    return isValid1 && isValid2 &&
+      // Make sure aFrame1 and aFrame2 are in the same continuation of
+      // mBlockFrame.
+      it1.GetContainer() == it2.GetContainer() &&
+      // And on the same line in it
+      it1.GetLine() == it2.GetLine();
   }
 };
 
