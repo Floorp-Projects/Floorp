@@ -172,6 +172,9 @@ nsPreloadedStream::AsyncWait(nsIInputStreamCallback *aCallback,
         return mStream->AsyncWait(aCallback, aFlags, aRequestedCount,
                                   aEventTarget);
 
+    if (!aCallback)
+        return NS_OK;
+
     if (!aEventTarget)
         return aCallback->OnInputStreamReady(this);
 

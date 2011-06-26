@@ -741,8 +741,8 @@ static PRInt32 GetMaxBlocks()
   // Cache size is in KB
   PRInt32 cacheSize = Preferences::GetInt("media.cache_size", 500*1024);
   PRInt64 maxBlocks = static_cast<PRInt64>(cacheSize)*1024/nsMediaCache::BLOCK_SIZE;
-  maxBlocks = PR_MAX(maxBlocks, 1);
-  return PRInt32(PR_MIN(maxBlocks, PR_INT32_MAX));
+  maxBlocks = NS_MAX<PRInt64>(maxBlocks, 1);
+  return PRInt32(NS_MIN<PRInt64>(maxBlocks, PR_INT32_MAX));
 }
 
 PRInt32

@@ -329,7 +329,7 @@ static int VolumeScaleChanged(const char* aPref, void *aClosure) {
     gVolumeScale = 1.0;
   } else {
     NS_ConvertUTF16toUTF8 utf8(value);
-    gVolumeScale = PR_MAX(0, PR_strtod(utf8.get(), nsnull));
+    gVolumeScale = NS_MAX<double>(0, PR_strtod(utf8.get(), nsnull));
   }
   return 0;
 }

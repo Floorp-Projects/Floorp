@@ -200,7 +200,7 @@ TestProvider::OnDataWritable(nsIRequest *request, nsISupports *context,
         return NS_BASE_STREAM_CLOSED;
 
     PRUint32 writeCount, amount;
-    amount = PR_MIN(count, mDataLen - mOffset);
+    amount = NS_MIN(count, mDataLen - mOffset);
     nsresult rv = output->Write(mData + mOffset, amount, &writeCount);
     if (NS_SUCCEEDED(rv)) {
         printf("wrote %u bytes\n", writeCount);

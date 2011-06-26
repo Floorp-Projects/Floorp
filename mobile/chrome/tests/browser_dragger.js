@@ -23,7 +23,7 @@ gTests.push({
     let winWidth = window.innerWidth;
     info("Browser document width is " + docWidth);
     info("Window width is " + winWidth);
-    is(docWidth, winWidth,
+    ok(docWidth <= winWidth,
        "Sanity check. Blank document cannot be panned left or right.");
 
     function dragAndCheck(dx) {
