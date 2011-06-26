@@ -56,6 +56,7 @@
 
 /* a presentation of a document, part 2 */
 
+#include "nsAlgorithm.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -623,7 +624,7 @@ StackArena::Allocate(size_t aSize)
 
   // make sure we are aligned. Beard said 8 was safer then 4. 
   // Round size to multiple of 8
-  aSize = PR_ROUNDUP(aSize, 8);
+  aSize = NS_ROUNDUP<size_t>(aSize, 8);
 
   // if the size makes the stack overflow. Grab another block for the stack
   if (mPos + aSize >= BLOCK_INCREMENT)

@@ -1201,7 +1201,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
         PRUint32 maxlen = compANSIStr.Length();
         mClauseArray[0] = 0; // first value must be 0
         for (PRInt32 i = 1; i < clauseArrayLength; i++) {
-          PRUint32 len = PR_MIN(mClauseArray[i], maxlen);
+          PRUint32 len = NS_MIN(mClauseArray[i], maxlen);
           mClauseArray[i] = ::MultiByteToWideChar(GetKeyboardCodePage(), 
                                                   MB_PRECOMPOSED,
                                                   (LPCSTR)compANSIStr.get(),
@@ -1212,7 +1212,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
   }
   // compClauseArrayLength may be negative. I.e., ImmGetCompositionStringW
   // may return an error code.
-  mClauseArray.SetLength(PR_MAX(0, clauseArrayLength));
+  mClauseArray.SetLength(NS_MAX<long>(0, clauseArrayLength));
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: HandleComposition, GCS_COMPCLAUSE, mClauseLength=%ld\n",
@@ -1238,7 +1238,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
 
   // attrStrLen may be negative. I.e., ImmGetCompositionStringW may return an
   // error code.
-  mAttributeArray.SetLength(PR_MAX(0, attrArrayLength));
+  mAttributeArray.SetLength(NS_MAX<long>(0, attrArrayLength));
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: HandleComposition, GCS_COMPATTR, mAttributeLength=%ld\n",
