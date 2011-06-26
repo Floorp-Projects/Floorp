@@ -1552,6 +1552,23 @@ DebugFrame_getScript(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
+DebugFrame_getOffset(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_FRAME(cx, vp, "get offset", thisobj, fp);
+    if (fp->isScriptFrame()) {
+        JSScript *script = fp->script();
+        jsbytecode *pc = fp->pcQuadratic(cx);
+        JS_ASSERT(script->code <= pc);
+        JS_ASSERT(pc < script->code + script->length);
+        size_t offset = pc - script->code;
+        vp->setNumber(double(offset));
+    } else {
+        vp->setUndefined();
+    }
+    return true;
+}
+
+static JSBool
 DebugFrame_getLive(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = CheckThisFrame(cx, vp, "get live", false);
@@ -1693,6 +1710,7 @@ static JSPropertySpec DebugFrame_properties[] = {
     JS_PSG("constructing", DebugFrame_getConstructing, 0),
     JS_PSG("generator", DebugFrame_getGenerator, 0),
     JS_PSG("live", DebugFrame_getLive, 0),
+    JS_PSG("offset", DebugFrame_getOffset, 0),
     JS_PSG("older", DebugFrame_getOlder, 0),
     JS_PSG("script", DebugFrame_getScript, 0),
     JS_PSG("this", DebugFrame_getThis, 0),
