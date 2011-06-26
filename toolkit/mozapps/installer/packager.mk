@@ -83,10 +83,12 @@ SDK_SUFFIX    = $(PKG_SUFFIX)
 SDK           = $(SDK_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
 
 # JavaScript Shell packaging
+ifndef LIBXUL_SDK
 JSSHELL_BINS  = \
   $(DIST)/bin/js$(BIN_SUFFIX) \
-  $(DIST)/bin/$(LIB_PREFIX)nspr4$(DLL_SUFFIX) \
   $(NULL)
+ifndef MOZ_NATIVE_NSPR
+JSSHELL_BINS += $(DIST)/bin/$(LIB_PREFIX)nspr4$(DLL_SUFFIX)
 ifeq ($(OS_ARCH),WINNT)
 JSSHELL_BINS += $(DIST)/bin/mozcrt19$(DLL_SUFFIX)
 else
@@ -95,7 +97,9 @@ JSSHELL_BINS += \
   $(DIST)/bin/$(LIB_PREFIX)plc4$(DLL_SUFFIX) \
   $(NULL)
 endif
+endif # MOZ_NATIVE_NSPR
 MAKE_JSSHELL  = $(ZIP) -9j $(PKG_JSSHELL) $(JSSHELL_BINS)
+endif # LIBXUL_SDK
 
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 _ABS_DIST = $(call core_abspath,$(DIST))
@@ -683,10 +687,12 @@ endif
 ifdef MOZ_PKG_REMOVALS
 	$(SYSINSTALL) $(IFLAGS1) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 endif # MOZ_PKG_REMOVALS
+ifndef LIBXUL_SDK
 # Package JavaScript Shell
 	@echo "Packaging JavaScript Shell..."
 	$(RM) $(PKG_JSSHELL)
 	$(MAKE_JSSHELL)
+endif # LIBXUL_SDK
 
 make-package: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
 	@echo "Compressing..."
