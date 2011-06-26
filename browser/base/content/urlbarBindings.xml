@@ -505,23 +505,40 @@
         <body><![CDATA[
           // Grab the actual input field's value, not our value, which could include moz-action:
           var inputVal = this.inputField.value;
-          var val = inputVal.substring(this.selectionStart, this.selectionEnd);
+          var selectedVal = inputVal.substring(this.selectionStart, this.selectionEnd);
 
-          // If the entire value is selected and it's a valid non-javascript,
-          // non-data URI, encode it.
-          if (val == inputVal &&
-              this.getAttribute("pageproxystate") == "valid") {
-            let uri = gBrowser.currentURI;
+          // If the selection doesn't start at the beginning or URL bar is
+          // modified, nothing else to do here.
+          if (this.getAttribute("pageproxystate") != "valid" || this.selectionStart > 0)
+            return selectedVal;
 
-            if (uri && !uri.schemeIs("javascript") && !uri.schemeIs("data")) {
-              val = uri.spec;
+          let uri = gBrowser.currentURI;
 
+          // If the entire URL is selected, just use the actual loaded URI.
+          if (inputVal == selectedVal) {
+            // ... but only if  isn't a javascript: or data: URI, since those
+            // are hard to read when encoded
+            if (!uri.schemeIs("javascript") && !uri.schemeIs("data")) {
               // Parentheses are known to confuse third-party applications (bug 458565).
-              val = val.replace(/[()]/g, function (c) escape(c));
+              selectedVal = uri.spec.replace(/[()]/g, function (c) escape(c));
             }
+
+            return selectedVal;
           }
 
-          return val;
+          // Just the beginning of the URL is selected, check for a trimmed
+          // value
+          let spec = uri.spec;
+          let trimmedSpec = this.trimValue(spec);
+          if (spec != trimmedSpec) {
+            // Prepend the portion that trimValue removed from the beginning.
+            // This assumes trimValue will only truncate the URL at
+            // the beginning or end (or both).
+            let trimmedSegments = spec.split(trimmedSpec);
+            selectedVal = trimmedSegments[0] + selectedVal;
+          }
+
+          return selectedVal;
         ]]></body>
       </method>
 
