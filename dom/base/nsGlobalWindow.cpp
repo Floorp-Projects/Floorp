@@ -2987,6 +2987,9 @@ nsGlobalWindow::GetPerformance(nsIDOMPerformance** aPerformance)
 
   if (nsGlobalWindow::HasPerformanceSupport()) {
     if (!mPerformance) {
+      if (!mDoc) {
+        return NS_OK;
+      }
       nsRefPtr<nsDOMNavigationTiming> timing = mDoc->GetNavigationTiming();
       if (timing) {
         mPerformance = new nsPerformance(timing);
