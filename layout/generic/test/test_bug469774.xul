@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=469774
 -->
@@ -8,9 +8,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469774
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <title>Test for Bug 469774</title>
-  <script type="application/javascript" src="/MochiKit/packed.js" />
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
-  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
 <vbox height="50"/>
 
@@ -34,7 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469774
 
 // Like snapshotWindow, but with DRAWWINDOW_DRAW_CARET
 function snapShot() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserRead');
   var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
   canvas.setAttribute("width", 200);
   canvas.setAttribute("height", 50);

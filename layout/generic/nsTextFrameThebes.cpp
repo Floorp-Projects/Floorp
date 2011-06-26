@@ -592,10 +592,9 @@ MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
     return textRun.forget();
 }
 
-nsresult
+void
 nsTextFrameTextRunCache::Init() {
     gTextRuns = new FrameTextRunCache();
-    return gTextRuns ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 void
@@ -2802,7 +2801,7 @@ PropertyProvider::CalcTabWidths(PRUint32 aStart, PRUint32 aLength)
 
   PRUint32 startOffset = mStart.GetSkippedOffset();
   PRUint32 tabsEnd = mTabWidths ?
-    mTabWidths->mLimit : PR_MAX(mTabWidthsAnalyzedLimit, startOffset);
+    mTabWidths->mLimit : NS_MAX(mTabWidthsAnalyzedLimit, startOffset);
 
   if (tabsEnd < aStart + aLength) {
     NS_ASSERTION(mReflowing,
@@ -2847,7 +2846,7 @@ PropertyProvider::CalcTabWidths(PRUint32 aStart, PRUint32 aLength)
   if (!mTabWidths) {
     // Delete any stale property that may be left on the frame
     mFrame->Properties().Delete(TabWidthProperty());
-    mTabWidthsAnalyzedLimit = PR_MAX(mTabWidthsAnalyzedLimit,
+    mTabWidthsAnalyzedLimit = NS_MAX(mTabWidthsAnalyzedLimit,
                                      aStart + aLength);
   }
 }
@@ -3037,8 +3036,8 @@ public:
 
   NS_DECL_NSITIMERCALLBACK
 
-  static nsresult AddBlinkFrame(nsPresContext* aPresContext, nsIFrame* aFrame);
-  static nsresult RemoveBlinkFrame(nsIFrame* aFrame);
+  static void AddBlinkFrame(nsPresContext* aPresContext, nsIFrame* aFrame);
+  static void RemoveBlinkFrame(nsIFrame* aFrame);
   
   static PRBool   GetBlinkIsOff() { return sState == 3; }
   
@@ -3162,33 +3161,28 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
 
 
 // static
-nsresult nsBlinkTimer::AddBlinkFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
+void nsBlinkTimer::AddBlinkFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   if (!sTextBlinker)
   {
     sTextBlinker = new nsBlinkTimer;
-    if (!sTextBlinker) return NS_ERROR_OUT_OF_MEMORY;
   }
-  
+
   NS_ADDREF(sTextBlinker);
 
   sTextBlinker->AddFrame(aPresContext, aFrame);
-  return NS_OK;
 }
 
 
 // static
-nsresult nsBlinkTimer::RemoveBlinkFrame(nsIFrame* aFrame)
+void nsBlinkTimer::RemoveBlinkFrame(nsIFrame* aFrame)
 {
   NS_ASSERTION(sTextBlinker, "Should have blink timer here");
-  
+
   nsBlinkTimer* blinkTimer = sTextBlinker;    // copy so we can call NS_RELEASE on it
-  if (!blinkTimer) return NS_OK;
-  
+
   blinkTimer->RemoveFrame(aFrame);  
   NS_RELEASE(blinkTimer);
-  
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -5001,7 +4995,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     if (type == aSelectionType) {
       pt.x = (aFramePt.x + xOffset -
              (mTextRun->IsRightToLeft() ? advance : 0)) / app;
-      gfxFloat width = PR_ABS(advance) / app;
+      gfxFloat width = NS_ABS(advance) / app;
       DrawSelectionDecorations(aCtx, aSelectionType, this, aTextPaintStyle,
                                selectedStyle,
                                pt, width, mAscent / app, decorationMetrics);
@@ -6209,7 +6203,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
       (mTextRun->GetFlags() & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0));
   if (hyphenating) {
     gfxSkipCharsIterator tmp(iter);
-    len = PR_MIN(GetContentOffset() + GetInFlowContentLength(),
+    len = NS_MIN<PRInt32>(GetContentOffset() + GetInFlowContentLength(),
                  tmp.ConvertSkippedToOriginal(flowEndInTextRun)) - iter.GetOriginalOffset();
   }
   PropertyProvider provider(mTextRun, textStyle, frag, this,
@@ -7146,12 +7140,10 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
        mContentOffset + contentLength <= contentNewLineOffset)) {
     if (!cachedNewlineOffset) {
       cachedNewlineOffset = new NewlineProperty;
-      if (cachedNewlineOffset) {
-        if (NS_FAILED(mContent->SetProperty(nsGkAtoms::newline, cachedNewlineOffset,
-                                            NewlineProperty::Destroy))) {
-          delete cachedNewlineOffset;
-          cachedNewlineOffset = nsnull;
-        }
+      if (NS_FAILED(mContent->SetProperty(nsGkAtoms::newline, cachedNewlineOffset,
+                                          NewlineProperty::Destroy))) {
+        delete cachedNewlineOffset;
+        cachedNewlineOffset = nsnull;
       }
     }
     if (cachedNewlineOffset) {

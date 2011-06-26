@@ -77,8 +77,6 @@ NS_NewLayoutHistoryState(nsILayoutHistoryState** aState)
 
   *aState = nsnull;
   state = new nsLayoutHistoryState();
-  if (!state)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(state);
   nsresult rv = state->Init();
