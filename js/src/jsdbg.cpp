@@ -1275,6 +1275,38 @@ DebugScript_getLive(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+static bool
+ScriptOffset(JSContext *cx, JSScript *script, const Value &v, size_t *offsetp)
+{
+    double d;
+    size_t off;
+
+    bool ok = v.isNumber();
+    if (ok) {
+        d = v.toNumber();
+        off = size_t(d);
+    }
+    if (!ok || off != d || !IsValidBytecodeOffset(cx, script, off)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_BAD_OFFSET);
+        return false;
+    }
+    *offsetp = off;
+    return true;
+}
+
+static JSBool
+DebugScript_getOffsetLine(JSContext *cx, uintN argc, Value *vp)
+{
+    REQUIRE_ARGC("Debug.Script.getOffsetLine", 1);
+    THIS_DEBUGSCRIPT_LIVE_SCRIPT(cx, vp, "getOffsetLine", obj, script);
+    size_t offset;
+    if (!ScriptOffset(cx, script, vp[2], &offset))
+        return false;
+    uintN lineno = JS_PCToLineNumber(cx, script, script->code + offset);
+    vp->setNumber(lineno);
+    return true;
+}
+
 static JSBool
 DebugScript_construct(JSContext *cx, uintN argc, Value *vp)
 {
@@ -1288,7 +1320,7 @@ static JSPropertySpec DebugScript_properties[] = {
 };
 
 static JSFunctionSpec DebugScript_methods[] = {
-//    JS_FN("getOffsetLine", DebugScript_getOffsetLine, 0, 0),
+    JS_FN("getOffsetLine", DebugScript_getOffsetLine, 0, 0),
     JS_FS_END
 };
 

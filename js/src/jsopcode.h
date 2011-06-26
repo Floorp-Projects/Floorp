@@ -382,12 +382,6 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
     JS_END_MACRO
 
 /*
- * Get the length of variable-length bytecode like JSOP_TABLESWITCH.
- */
-extern uintN
-js_GetVariableBytecodeLength(jsbytecode *pc);
-
-/*
  * Find the number of stack slots used by a variadic opcode such as JSOP_CALL
  * (for such ops, JSCodeSpec.nuses is -1).
  */
@@ -467,10 +461,36 @@ extern char *
 js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                            JSString *fallback);
 
+/*
+ * Given bytecode address pc in script's main program code, return the operand
+ * stack depth just before (JSOp) *pc executes.
+ */
+extern uintN
+js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc);
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
+JS_END_EXTERN_C
+
 #define JSDVG_IGNORE_STACK      0
 #define JSDVG_SEARCH_STACK      1
 
 #ifdef __cplusplus
+/*
+ * Get the length of variable-length bytecode like JSOP_TABLESWITCH.
+ */
+extern size_t
+js_GetVariableBytecodeLength(JSOp op, jsbytecode *pc);
+
+inline size_t
+js_GetVariableBytecodeLength(jsbytecode *pc)
+{
+    JS_ASSERT(*pc != JSOP_TRAP);
+    return js_GetVariableBytecodeLength(JSOp(*pc), pc);
+}
+
 namespace js {
 
 static inline char *
@@ -519,6 +539,12 @@ Sprint(Sprinter *sp, const char *format, ...);
 extern bool
 CallResultEscapes(jsbytecode *pc);
 
+extern size_t
+GetBytecodeLength(JSContext *cx, JSScript *script, jsbytecode *pc);
+
+extern bool
+IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset);
+
 }
 #endif
 
@@ -533,18 +559,5 @@ extern JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
                 JSBool lines, js::Sprinter *sp);
 #endif
-
-/*
- * Given bytecode address pc in script's main program code, return the operand
- * stack depth just before (JSOp) *pc executes.
- */
-extern uintN
-js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc);
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
-JS_END_EXTERN_C
 
 #endif /* jsopcode_h___ */
