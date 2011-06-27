@@ -37,9 +37,6 @@
 function test() {
   /** Test for Bug 514751 (Wallpaper) **/
 
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
-
   waitForExplicitFinish();
 
   let state = {
