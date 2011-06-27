@@ -87,7 +87,6 @@ struct YUVImage {
   Shmem Ydata;
   Shmem Udata;
   Shmem Vdata;
-  nsIntRect picture;
 };
 
 union SharedImage {

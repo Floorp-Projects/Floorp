@@ -132,6 +132,7 @@ public:
   nsRefPtr<IDirect3DTexture9> mCrTexture;
   nsRefPtr<IDirect3DTexture9> mCbTexture;
   PRPackedBool mHasData;
+  gfx::YUVType mType; 
 };
 
 
