@@ -3,6 +3,7 @@
 
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/policies.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
@@ -81,7 +82,7 @@ add_test(function test_sync_triggered() {
 
   Service.login();
 
-  Service.syncThreshold = MULTI_DEVICE_THRESHOLD;
+  SyncScheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
   Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
     _("Sync completed!");
     server.stop(run_next_test);
