@@ -181,7 +181,6 @@ _TEST_FILES = \
 		test_bug536895.html \
 		test_bug458037.xhtml \
 		test_bug556645.html \
-		test_bug551670.html \
 		test_bug555567.html \
 		test_bug557620.html \
 		test_bug456229.html \
