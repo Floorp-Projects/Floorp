@@ -210,16 +210,13 @@ TelemetryPing.prototype = {
         continue;
       }
 
-      let name, val;
+      let val;
       if (mr.units == Ci.nsIMemoryReporter.UNITS_BYTES) {
-        name = "Memory:" + mr.path + " + (KB)";
         val = Math.floor(mr.amount / 1024);
       }
       else if (mr.units == Ci.nsIMemoryReporter.UNITS_COUNT) {
         // If the reporter gives us a count, we'll report the difference in its
         // value between now and our previous ping.
-
-        name = "Memory:" + mr.path;
 
         // Read mr.amount just once so our arithmetic is consistent.
         let curVal = mr.amount;
@@ -239,10 +236,10 @@ TelemetryPing.prototype = {
         continue;
       }
 
-      let h = this._histograms[name];
+      let h = this._histograms[mr.name];
       if (!h) {
         h = Telemetry.getHistogramById(id);
-        this._histograms[name] = h;
+        this._histograms[mr.name] = h;
       }
       h.add(val);
     }
