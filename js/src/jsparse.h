@@ -1145,8 +1145,6 @@ struct Parser : private js::AutoGCRooter
     inline bool reportErrorNumber(JSParseNode *pn, uintN flags, uintN errorNumber, ...);
 
 private:
-    bool maybeNoteGenerator();
-
     /*
      * JS parsers, from lowest to highest precedence.
      *
