@@ -88,7 +88,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mMIMEType(nsnull),
     mOwner(nsnull),
     mCurrentPluginEvent(nsnull),
-#if defined(MOZ_X11) || defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(MOZ_X11) || defined(XP_WIN)
     mUsePluginLayersPref(PR_TRUE)
 #else
     mUsePluginLayersPref(PR_FALSE)
@@ -104,7 +104,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs) {
     PRBool useLayersPref;
-    nsresult rv = prefs->GetBoolPref("plugins.use_layers", &useLayersPref);
+    nsresult rv = prefs->GetBoolPref("mozilla.plugins.use_layers", &useLayersPref);
     if (NS_SUCCEEDED(rv))
       mUsePluginLayersPref = useLayersPref;
   }

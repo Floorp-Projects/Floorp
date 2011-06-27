@@ -436,15 +436,10 @@ private:
     bool CanPaintOnBackground();
 
     bool IsVisible() {
-#ifdef XP_MACOSX
-        return mWindow.clipRect.top != mWindow.clipRect.bottom &&
-               mWindow.clipRect.left != mWindow.clipRect.right;
-#else
         return mWindow.clipRect.top != 0 ||
             mWindow.clipRect.left != 0 ||
             mWindow.clipRect.bottom != 0 ||
             mWindow.clipRect.right != 0;
-#endif
     }
 
     // ShowPluginFrame - in general does four things:
