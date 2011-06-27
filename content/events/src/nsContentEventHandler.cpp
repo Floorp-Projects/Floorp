@@ -231,7 +231,7 @@ static PRUint32 CountNewlinesIn(nsIContent* aContent, PRUint32 aMaxOffset)
 }
 #endif
 
-static PRUint32 GetNativeTextLength(nsIContent* aContent)
+static PRUint32 GetNativeTextLength(nsIContent* aContent, PRUint32 aMaxLength = PR_UINT32_MAX)
 {
   if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     PRUint32 textLengthDifference =
@@ -243,7 +243,7 @@ static PRUint32 GetNativeTextLength(nsIContent* aContent)
       // On Windows, the length of a native newline ("\r\n") is twice the length of
       // the XP newline ("\n"), so XP length is equal to the length of the native
       // offset plus the number of newlines encountered in the string.
-      CountNewlinesIn(aContent, PR_UINT32_MAX);
+      CountNewlinesIn(aContent, aMaxLength);
 #else
       // On other platforms, the native and XP newlines are the same.
       0;
@@ -252,7 +252,8 @@ static PRUint32 GetNativeTextLength(nsIContent* aContent)
     const nsTextFragment* text = aContent->GetText();
     if (!text)
       return 0;
-    return text->GetLength() + textLengthDifference;
+    PRUint32 length = NS_MIN(text->GetLength(), aMaxLength);
+    return length + textLengthDifference;
   } else if (IsContentBR(aContent)) {
 #if defined(XP_WIN)
     // Length of \r\n
@@ -928,10 +929,38 @@ nsContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
   NS_ASSERTION(startDOMNode, "startNode doesn't have nsIDOMNode");
   domPrev->SetEnd(startDOMNode, aNodeOffset);
 
-  nsAutoString prevStr;
-  nsresult rv = GenerateFlatTextContent(prev, prevStr);
+  nsCOMPtr<nsIContentIterator> iter;
+  nsresult rv = NS_NewContentIterator(getter_AddRefs(iter));
   NS_ENSURE_SUCCESS(rv, rv);
-  *aNativeOffset = prevStr.Length();
+  NS_ASSERTION(iter, "NS_NewContentIterator succeeded, but the result is null");
+  iter->Init(domPrev);
+
+  nsCOMPtr<nsINode> startNode = do_QueryInterface(startDOMNode);
+  nsINode* endNode = aNode;
+
+  *aNativeOffset = 0;
+  for (; !iter->IsDone(); iter->Next()) {
+    nsINode* node = iter->GetCurrentNode();
+    if (!node || !node->IsNodeOfType(nsINode::eCONTENT))
+      continue;
+    nsIContent* content = static_cast<nsIContent*>(node);
+
+    if (node->IsNodeOfType(nsINode::eTEXT)) {
+      // Note: our range always starts from offset 0
+      if (node == endNode)
+        *aNativeOffset += GetNativeTextLength(content, aNodeOffset);
+      else
+        *aNativeOffset += GetNativeTextLength(content);
+    } else if (IsContentBR(content)) {
+#if defined(XP_WIN)
+      // On Windows, the length of the newline is 2.
+      *aNativeOffset += 2;
+#else
+      // On other platforms, the length of the newline is 1.
+      *aNativeOffset += 1;
+#endif
+    }
+  }
   return NS_OK;
 }
 
