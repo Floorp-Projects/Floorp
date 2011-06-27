@@ -931,14 +931,23 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     else
         aResult->bottom = 0;
     break;
+  case NS_THEME_MENUITEM:
+  case NS_THEME_CHECKMENUITEM:
+  case NS_THEME_RADIOMENUITEM:
+    // For regular menuitems, we will be using GetWidgetPadding instead of
+    // GetWidgetBorder to pad up the widget's internals; other menuitems
+    // will need to fall through and use the default case as before.
+    if (IsRegularMenuItem(aFrame))
+      break;
   default:
     {
       GtkThemeWidgetType gtkWidgetType;
       if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
-                               nsnull))
+                               nsnull)) {
         moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
                                   &aResult->right, &aResult->bottom, direction,
                                   IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XHTML));
+      }
     }
   }
   return NS_OK;
@@ -968,6 +977,35 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
     case NS_THEME_RADIO:
       aResult->SizeTo(0, 0, 0, 0);
       return PR_TRUE;
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM:
+    case NS_THEME_RADIOMENUITEM:
+      {
+        // Menubar and menulist have their padding specified in CSS.
+        if (!IsRegularMenuItem(aFrame))
+          return PR_FALSE;
+
+        aResult->SizeTo(0, 0, 0, 0);
+        GtkThemeWidgetType gtkWidgetType;
+        if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
+                                 nsnull)) {
+          moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
+                                    &aResult->right, &aResult->bottom, GetTextDirection(aFrame),
+                                    IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XHTML));
+        }
+
+        gint horizontal_padding;
+
+        if (aWidgetType == NS_THEME_MENUITEM)
+          moz_gtk_menuitem_get_horizontal_padding(&horizontal_padding);
+        else
+          moz_gtk_checkmenuitem_get_horizontal_padding(&horizontal_padding);
+
+        aResult->left += horizontal_padding;
+        aResult->right += horizontal_padding;
+
+        return PR_TRUE;
+      }
   }
 
   return PR_FALSE;

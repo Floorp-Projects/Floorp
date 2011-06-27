@@ -144,6 +144,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jSetSelectedLocale = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setSelectedLocale", "(Ljava/lang/String;)V");
     jScanMedia = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
     jGetSystemColors = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getSystemColors", "()[I");
+    jGetIconForExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getIconForExtension", "(Ljava/lang/String;I)[B");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -711,6 +712,37 @@ AndroidBridge::GetSystemColors(AndroidSystemColors *aColors)
     }
 
     mJNIEnv->ReleaseIntArrayElements(arr, elements, 0);
+}
+
+void
+AndroidBridge::GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSize, PRUint8 * const aBuf)
+{
+    ALOG_BRIDGE("AndroidBridge::GetIconForExtension");
+    NS_ASSERTION(aBuf != nsnull, "AndroidBridge::GetIconForExtension: aBuf is null!");
+    if (!aBuf)
+        return;
+
+    AutoLocalJNIFrame jniFrame;
+
+    nsString fileExt;
+    CopyUTF8toUTF16(aFileExt, fileExt);
+    jstring jstrFileExt = mJNIEnv->NewString(nsPromiseFlatString(fileExt).get(), fileExt.Length());
+    
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jGetIconForExtension, jstrFileExt, aIconSize);
+    jbyteArray arr = static_cast<jbyteArray>(obj);
+    NS_ASSERTION(arr != nsnull, "AndroidBridge::GetIconForExtension: Returned pixels array is null!");
+    if (!arr)
+        return;
+
+    jsize len = mJNIEnv->GetArrayLength(arr);
+    jbyte *elements = mJNIEnv->GetByteArrayElements(arr, 0);
+
+    PRUint32 bufSize = aIconSize * aIconSize * 4;
+    NS_ASSERTION(len == bufSize, "AndroidBridge::GetIconForExtension: Pixels array is incomplete!");
+    if (len == bufSize)
+        memcpy(aBuf, elements, bufSize);
+
+    mJNIEnv->ReleaseByteArrayElements(arr, elements, 0);
 }
 
 void

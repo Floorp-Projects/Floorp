@@ -970,6 +970,11 @@ function overrideXHR(callback) {
  * Bare bones XMLHttpRequest implementation for testing onprogress, onerror,
  * and onload nsIDomEventListener handleEvent.
  */
+function makeHandler(val) {
+  if (typeof val == "function")
+    return ({ handleEvent: val });
+  return val;
+}
 function xhr() {
 }
 xhr.prototype = {
@@ -989,20 +994,19 @@ xhr.prototype = {
     do_execute_soon(gXHRCallback); // Use a timeout so the XHR completes
   },
   _onprogress: null,
-  set onprogress(val) { gXHR._onprogress = val; },
+  set onprogress(val) { gXHR._onprogress = makeHandler(val); },
   get onprogress() { return gXHR._onprogress; },
   _onerror: null,
-  set onerror(val) { gXHR._onerror = val; },
+  set onerror(val) { gXHR._onerror = makeHandler(val); },
   get onerror() { return gXHR._onerror; },
   _onload: null,
-  set onload(val) { gXHR._onload = val; },
+  set onload(val) { gXHR._onload = makeHandler(val); },
   get onload() { return gXHR._onload; },
   flags: AUS_Ci.nsIClassInfo.SINGLETON,
   implementationLanguage: AUS_Ci.nsIProgrammingLanguage.JAVASCRIPT,
   getHelperForLanguage: function(language) null,
   getInterfaces: function(count) {
-    var interfaces = [AUS_Ci.nsIXMLHttpRequest, AUS_Ci.nsIJSXMLHttpRequest,
-                      AUS_Ci.nsIXMLHttpRequestEventTarget];
+    var interfaces = [AUS_Ci.nsISupports];
     count.value = interfaces.length;
     return interfaces;
   },
@@ -1015,14 +1019,12 @@ xhr.prototype = {
     throw AUS_Cr.NS_ERROR_NO_AGGREGATION;
   },
   QueryInterface: function(aIID) {
-    if (aIID.equals(AUS_Ci.nsIXMLHttpRequest) ||
-        aIID.equals(AUS_Ci.nsIJSXMLHttpRequest) ||
-        aIID.equals(AUS_Ci.nsIXMLHttpRequestEventTarget) ||
-        aIID.equals(AUS_Ci.nsIClassInfo) ||
+    if (aIID.equals(AUS_Ci.nsIClassInfo) ||
         aIID.equals(AUS_Ci.nsISupports))
       return gXHR;
     throw AUS_Cr.NS_ERROR_NO_INTERFACE;
-  }
+  },
+  get wrappedJSObject() { return this; }
 };
 
 /* Update check listener */

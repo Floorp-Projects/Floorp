@@ -406,7 +406,8 @@ nsDOMParser::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
     NS_ENSURE_TRUE(secMan, NS_ERROR_UNEXPECTED);
 
-    secMan->GetSubjectPrincipal(getter_AddRefs(prin));
+    nsresult rv = secMan->GetSubjectPrincipal(getter_AddRefs(prin));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // We're called from JS; there better be a subject principal, really.
     NS_ENSURE_TRUE(prin, NS_ERROR_UNEXPECTED);
@@ -463,7 +464,8 @@ nsDOMParser::Init(nsIPrincipal *aPrincipal, nsIURI *aDocumentURI,
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
     NS_ENSURE_TRUE(secMan, NS_ERROR_UNEXPECTED);
 
-    secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+    nsresult rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // We're called from JS; there better be a subject principal, really.
     NS_ENSURE_TRUE(principal, NS_ERROR_UNEXPECTED);

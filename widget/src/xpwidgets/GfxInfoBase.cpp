@@ -665,7 +665,7 @@ NS_IMETHODIMP GfxInfoBase::GetFailures(PRUint32 *failureCount NS_OUTPARAM, char 
 
     /* copy over the failure messages into the array we just allocated */
     for (PRUint32 i = 0; i < *failureCount; i++) {
-      nsPromiseFlatCString flattenedFailureMessage(mFailures[i]);
+      nsCString& flattenedFailureMessage(mFailures[i]);
       (*failures)[i] = (char*)nsMemory::Clone(flattenedFailureMessage.get(), flattenedFailureMessage.Length() + 1);
 
       if (!(*failures)[i]) {

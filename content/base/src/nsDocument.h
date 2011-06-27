@@ -54,13 +54,11 @@
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsStubDocumentObserver.h"
-#include "nsIDOM3EventTarget.h"
-#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIContent.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMNodeSelector.h"
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
@@ -103,13 +101,15 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMTouchEvent.h"
 
+#include "TimeStamp.h"
+
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
 #define XML_DECLARATION_BITS_STANDALONE_EXISTS    (1 << 2)
 #define XML_DECLARATION_BITS_STANDALONE_YES       (1 << 3)
 
 
-class nsIEventListenerManager;
+class nsEventListenerManager;
 class nsDOMStyleSheetList;
 class nsDOMStyleSheetSetList;
 class nsIOutputStream;
@@ -124,6 +124,7 @@ class nsChildContentList;
 class nsXMLEventsManager;
 class nsHTMLStyleSheet;
 class nsHTMLCSSStyleSheet;
+class nsDOMNavigationTiming;
 
 /**
  * Right now our identifier map entries contain information for 'name'
@@ -489,9 +490,6 @@ class nsDocument : public nsIDocument,
                    public nsIDOMXMLDocument, // inherits nsIDOMDocument
                    public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
-                   public nsIDOMEventTarget,
-                   public nsIDOM3EventTarget,
-                   public nsIDOMNSEventTarget,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer_MOZILLA_2_0_BRANCH,
                    public nsIApplicationCacheContainer,
@@ -728,21 +726,6 @@ public:
                                  PRBool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus);
-  virtual nsIEventListenerManager* GetListenerManager(PRBool aCreateIfNotFound);
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID);
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv)
-  {
-    return nsContentUtils::GetContextForEventHandlers(this, aRv);
-  }
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -790,13 +773,9 @@ public:
   NS_DECL_NSIDOMDOCUMENTXBL
 
   // nsIDOMEventTarget
-  NS_DECL_NSIDOMEVENTTARGET
-
-  // nsIDOM3EventTarget
-  NS_DECL_NSIDOM3EVENTTARGET
-
-  // nsIDOMNSEventTarget
-  NS_DECL_NSIDOMNSEVENTTARGET
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsEventListenerManager*
+    GetListenerManager(PRBool aCreateIfNotFound);
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
@@ -947,6 +926,9 @@ public:
 
   virtual nsresult GetStateObject(nsIVariant** aResult);
 
+  virtual nsDOMNavigationTiming* GetNavigationTiming() const;
+  virtual nsresult SetNavigationTiming(nsDOMNavigationTiming* aTiming);
+
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName);
 
 protected:
@@ -1010,7 +992,7 @@ protected:
     return kNameSpaceID_None;
   }
 
-  void DispatchPageTransition(nsPIDOMEventTarget* aDispatchTarget,
+  void DispatchPageTransition(nsIDOMEventTarget* aDispatchTarget,
                               const nsAString& aType,
                               PRBool aPersisted);
 
@@ -1067,7 +1049,7 @@ protected:
   // is a weak reference to avoid leaks due to circular references.
   nsWeakPtr mScopeObject;
 
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
   nsRefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
   nsRefPtr<nsScriptLoader> mScriptLoader;
@@ -1082,6 +1064,9 @@ protected:
   nsTHashtable<nsIdentifierMapEntry> mIdentifierMap;
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
+
+  // Recorded time of change to 'loading' state.
+  mozilla::TimeStamp mLoadingTimeStamp;
 
   // True if the document has been detached from its content viewer.
   PRPackedBool mIsGoingAway:1;
@@ -1141,6 +1126,7 @@ protected:
   nsEventStates mDocumentState;
   nsEventStates mGotDocumentState;
 
+  nsRefPtr<nsDOMNavigationTiming> mTiming;
 private:
   friend class nsUnblockOnloadEvent;
 

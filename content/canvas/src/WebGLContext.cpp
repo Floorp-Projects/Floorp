@@ -148,6 +148,22 @@ WebGLContext::WebGLContext()
     mScissorTestEnabled = 0;
     mDitherEnabled = 1;
     mBackbufferClearingStatus = BackbufferClearingStatus::NotClearedSinceLastPresented;
+    
+    // initialize some GL values: we're going to get them from the GL and use them as the sizes of arrays,
+    // so in case glGetIntegerv leaves them uninitialized because of a GL bug, we would have very weird crashes.
+    mGLMaxVertexAttribs = 0;
+    mGLMaxTextureUnits = 0;
+    mGLMaxTextureSize = 0;
+    mGLMaxCubeMapTextureSize = 0;
+    mGLMaxTextureImageUnits = 0;
+    mGLMaxVertexTextureImageUnits = 0;
+    mGLMaxVaryingVectors = 0;
+    mGLMaxFragmentUniformVectors = 0;
+    mGLMaxVertexUniformVectors = 0;
+    
+    // See OpenGL ES 2.0.25 spec, 6.2 State Tables, table 6.13
+    mPixelStorePackAlignment = 4;
+    mPixelStoreUnpackAlignment = 4;
 }
 
 WebGLContext::~WebGLContext()

@@ -1561,7 +1561,7 @@ asserts(0-1) == 582146-1.html about:blank
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
-fails-if(Android) fails-if(cocoaWidget) == 586683-1.html 586683-1-ref.html
+fails-if(Android) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
@@ -1614,7 +1614,6 @@ fails-if(Android) HTTP(..) == 619511-1.html 619511-1-ref.html
 random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
 == 622585-1.html 622585-1-ref.html
-HTTP(..) != 624359-1.html 624359-1-notref.html # http(..) for @font-face, to ensure consistent behavior
 fails-if(Android) == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 == 630835-1.html about:blank
@@ -1622,6 +1621,7 @@ fails-if(Android) == 625409-1.html 625409-1-ref.html
 fails-if(Android) == 632423-1.html 632423-1-ref.html
 skip-if(Android) fails-if(winWidget) == 632781-verybig.html 632781-ref.html # large canvas elements are not drawn on Windows, see bug 633936
 == 632781-normalsize.html 632781-ref.html
+== 633344-1.html 633344-1-ref.html
 fails-if(Android) == 634232-1.html 634232-1-ref.html
 fails-if(Android) == 635302-1.html 635302-1-ref.html
 == 635373-1.html 635373-1-ref.html
@@ -1629,6 +1629,10 @@ fails-if(Android) == 635302-1.html 635302-1-ref.html
 fails-if(http.platform=="X11"&&!layersGPUAccelerated) == 635373-3.html 635373-3-ref.html
 HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
+== 637597-1.html 637597-1-ref.html
+== 637852-1.html 637852-1-ref.html
+== 637852-2.html 637852-2-ref.html
+== 637852-3.html 637852-3-ref.html
 == 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
 == 645491-1.html 645491-1-ref.html
@@ -1641,4 +1645,5 @@ fails-if(layersGPUAccelerated&&cocoaWidget) == 654950-1.html 654950-1-ref.html #
 == 655549-1.html 655549-1-ref.html
 != 656875.html about:blank
 == 658952.html 658952-ref.html
+== 664127-1.xul 664127-1-ref.xul
 == 660682-1.html 660682-1-ref.html

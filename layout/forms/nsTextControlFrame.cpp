@@ -86,8 +86,6 @@
 #include "nsIStyleRule.h"//observe documents to send onchangenotifications
 #include "nsIDOMEventListener.h"//observe documents to send onchangenotifications
 #include "nsGUIEvent.h"
-#include "nsIDOMEventGroup.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMNSUIEvent.h"
 
@@ -108,8 +106,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIDOMKeyListener.h"
-#include "nsIDOMEventGroup.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsINativeKeyBindings.h"
 #include "nsIJSContextStack.h"
 #include "nsFocusManager.h"

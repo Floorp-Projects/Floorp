@@ -21,6 +21,8 @@
 
   <script type="application/javascript">
     // gA11yEventDumpID = "eventdump";
+    //gDumpToConsole = true;
+    //gA11yEventDumpToConsole = true;
 
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(testNames);
@@ -35,6 +37,12 @@
      title="nsIAccessible::name calculation for elements">
     Mozilla Bug 459635
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=666212"
+     title="summary attribute content mapped to accessible name in MSAA">
+    Mozilla Bug 666212
+  </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">

@@ -443,7 +443,6 @@ nsXULPrototypeCache::WritePrototype(nsXULPrototypeDocument* aPrototypeDocument)
     // has completed.
     RemoveFromCacheSet(protoURI);
 
-    PRInt32 count = mCacheURITable.Count();
     nsCOMPtr<nsIObjectOutputStream> oos;
     rv = GetOutputStream(protoURI, getter_AddRefs(oos));
     NS_ENSURE_SUCCESS(rv, rv);

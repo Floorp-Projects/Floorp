@@ -197,6 +197,9 @@ parent:
     sync GetSystemColors(PRUint32 colorsCount)
         returns (PRUint32[] colors);
 
+    sync GetIconForExtension(nsCString aFileExt, PRUint32 aIconSize)
+        returns (PRUint8[] bits);
+
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);
 

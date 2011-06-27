@@ -56,7 +56,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIEventListenerManager.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowWatcher.h"
@@ -125,7 +124,6 @@ static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
 nsWebShellWindow::nsWebShellWindow(PRUint32 aChromeFlags)
   : nsXULWindow(aChromeFlags)
   , mSPTimerLock("nsWebShellWindow.mSPTimerLock")
-  , mSizeMode(-1)
 {
 }
 
@@ -386,14 +384,11 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         // min, max, and normal are all the same to apps, but for
         // fullscreen we need to let them know so they can update
         // their ui. 
-        if (modeEvent->mSizeMode == nsSizeMode_Fullscreen ||
-            eventWindow->mSizeMode == nsSizeMode_Fullscreen) {
+        if (modeEvent->mSizeMode == nsSizeMode_Fullscreen) {
           nsCOMPtr<nsIDOMWindowInternal> ourWindow = do_GetInterface(docShell);
           if (ourWindow)
-            ourWindow->SetFullScreen(modeEvent->mSizeMode == nsSizeMode_Fullscreen);
+            ourWindow->SetFullScreen(PR_TRUE);
         }
-
-        eventWindow->mSizeMode = modeEvent->mSizeMode;
 
         // Note the current implementation of SetSizeMode just stores
         // the new state; it doesn't actually resize. So here we store
@@ -748,7 +743,7 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
   nsCOMPtr<nsIXULWindow> kungFuDeathGrip(this);
 
   nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
-  nsCOMPtr<nsPIDOMEventTarget> eventTarget = do_QueryInterface(window);
+  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(window);
 
   if (eventTarget) {
     nsCOMPtr<nsIContentViewer> contentViewer;

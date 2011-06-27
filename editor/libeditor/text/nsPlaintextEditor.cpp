@@ -47,14 +47,12 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventTarget.h" 
-#include "nsIDOM3EventTarget.h" 
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseListener.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "nsGUIEvent.h"
-#include "nsIDOMEventGroup.h"
 #include "nsCRT.h"
 
 #include "nsIEnumerator.h"
@@ -1715,8 +1713,8 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
   return NS_OK;
 }
 
-already_AddRefed<nsPIDOMEventTarget>
-nsPlaintextEditor::GetPIDOMEventTarget()
+already_AddRefed<nsIDOMEventTarget>
+nsPlaintextEditor::GetDOMEventTarget()
 {
   NS_IF_ADDREF(mEventTarget);
   return mEventTarget.get();

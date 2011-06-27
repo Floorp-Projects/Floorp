@@ -220,9 +220,6 @@ nsFrameUtil::Node*
 nsFrameUtil::Node::Read(FILE* aFile, Tag* tag)
 {
   Node* node = new Node;
-  if (!node) {
-    /* crash() */
-  }
   node->type = Copy(tag->GetAttr("type"));
   if (!node->type) {
     /* crash() */
@@ -508,7 +505,6 @@ nsFrameUtil::Tag::ToString(nsString& aResult)
 
 //----------------------------------------------------------------------
 
-nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 nsresult
 NS_NewFrameUtil(nsIFrameUtil** aResult)
 {
@@ -516,13 +512,11 @@ NS_NewFrameUtil(nsIFrameUtil** aResult)
   if (nsnull == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  *aResult = nsnull;
 
   nsFrameUtil* it = new nsFrameUtil();
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(NS_GET_IID(nsIFrameUtil), (void**) aResult);
+
+  NS_ADDREF(*aResult = it);
+  return NS_OK;
 }
 
 nsFrameUtil::nsFrameUtil()

@@ -41,10 +41,10 @@
 #include "nsCoord.h"
 #include "nsPoint.h"
 #include "gfxCore.h"
-#include "mozilla/BaseMargin.h"
+#include "mozilla/gfx/BaseMargin.h"
 
-struct nsMargin : public mozilla::BaseMargin<nscoord, nsMargin> {
-  typedef mozilla::BaseMargin<nscoord, nsMargin> Super;
+struct nsMargin : public mozilla::gfx::BaseMargin<nscoord, nsMargin> {
+  typedef mozilla::gfx::BaseMargin<nscoord, nsMargin> Super;
 
   // Constructors
   nsMargin() : Super() {}
@@ -53,8 +53,8 @@ struct nsMargin : public mozilla::BaseMargin<nscoord, nsMargin> {
     : Super(aLeft, aTop, aRight, aBottom) {}
 };
 
-struct nsIntMargin : public mozilla::BaseMargin<PRInt32, nsIntMargin> {
-  typedef mozilla::BaseMargin<PRInt32, nsIntMargin> Super;
+struct nsIntMargin : public mozilla::gfx::BaseMargin<PRInt32, nsIntMargin> {
+  typedef mozilla::gfx::BaseMargin<PRInt32, nsIntMargin> Super;
 
   // Constructors
   nsIntMargin() : Super() {}
