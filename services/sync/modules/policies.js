@@ -77,7 +77,6 @@ let SyncScheduler = {
     Svc.Obs.add("weave:service:sync:finish", this);
     Svc.Obs.add("weave:engine:sync:finish", this);
     Svc.Obs.add("weave:service:login:error", this);
-    Svc.Obs.add("weave:service:login:finish", this);
     Svc.Obs.add("weave:service:logout:finish", this);
     Svc.Obs.add("weave:service:sync:error", this);
     Svc.Obs.add("weave:service:backoff:interval", this);
@@ -128,7 +127,6 @@ let SyncScheduler = {
         if (!this.skipScheduledRetry())
           this.scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
         break;
-      case "weave:service:login:finish":
       case "weave:service:logout:finish":
         // Start or cancel the sync timer depending on if
         // logged in or logged out

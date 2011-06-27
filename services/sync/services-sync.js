@@ -7,7 +7,6 @@ pref("services.sync.statusURL", "https://services.mozilla.com/status/");
 pref("services.sync.syncKeyHelpURL", "https://services.mozilla.com/help/synckey");
 
 pref("services.sync.lastversion", "firstrun");
-pref("services.sync.autoconnect", true);
 pref("services.sync.sendVersionInfo", true);
 
 pref("services.sync.engine.bookmarks", true);
