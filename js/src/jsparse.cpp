@@ -6676,12 +6676,20 @@ class CompExprTransplanter {
 
 /*
  * A helper for lazily checking for the presence of illegal |yield| or |arguments|
- * tokens inside of generator expressions.
+ * tokens inside of generator expressions. This must be done lazily since we don't
+ * know whether we're in a generator expression until we see the "for" token after
+ * we've already parsed the body expression.
  *
- * Use when entering a parenthesized context. If the nested expression is followed
- * by a |for| token (indicating that the parenthesized expression is a generator
- * expression), use the checkValidBody() method to see if any illegal tokens were
- * found.
+ * Use in any context which may turn out to be inside a generator expression. This
+ * includes parenthesized expressions and argument lists, and it includes the tail
+ * of generator expressions.
+ * 
+ * The guard will keep track of any |yield| or |arguments| tokens that occur while
+ * parsing the body. As soon as the parser reaches the end of the body expression,
+ * call endBody() to reset the context's state, and then immediately call:
+ *
+ * - checkValidBody() if this did turn out to be in a generator expression
+ * - maybeNoteGenerator() if this did not turn out to be in a generator expression
  */
 class GenexpGuard {
     JSTreeContext   *tc;
@@ -6703,6 +6711,7 @@ class GenexpGuard {
 
     void endBody();
     bool checkValidBody(JSParseNode *pn);
+    bool maybeNoteGenerator();
 };
 
 void
@@ -6711,6 +6720,13 @@ GenexpGuard::endBody()
     tc->parenDepth--;
 }
 
+/*
+ * Check whether a |yield| or |arguments| token has been encountered in the
+ * body expression, and if so, report an error.
+ *
+ * Call this after endBody() when determining that the body *was* in a
+ * generator expression.
+ */
 bool
 GenexpGuard::checkValidBody(JSParseNode *pn)
 {
@@ -6730,6 +6746,27 @@ GenexpGuard::checkValidBody(JSParseNode *pn)
         return false;
     }
 
+    return true;
+}
+
+/*
+ * Check whether a |yield| token has been encountered in the body expression,
+ * and if so, note that the current function is a generator function.
+ *
+ * Call this after endBody() when determining that the body *was not* in a
+ * generator expression.
+ */
+bool
+GenexpGuard::maybeNoteGenerator()
+{
+    if (tc->yieldCount > 0) {
+        tc->flags |= TCF_FUN_IS_GENERATOR;
+        if (!tc->inFunction()) {
+            tc->parser->reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD,
+                                          js_yield_str);
+            return false;
+        }
+    }
     return true;
 }
 
@@ -7055,8 +7092,12 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
 
         guard.endBody();
 
-        if (isGenexp && !guard.checkValidBody(pn2))
+        if (isGenexp) {
+            if (!guard.checkValidBody(pn2))
+                return NULL;
+        } else if (!guard.maybeNoteGenerator()) {
             return NULL;
+        }
 
         switch (tt) {
 #if JS_HAS_DESTRUCTURING
@@ -7106,9 +7147,6 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
         *pnp = pn2;
         pnp = &pn2->pn_kid2;
     }
-
-    if (!maybeNoteGenerator())
-        return NULL;
 
     pn2 = UnaryNode::create(tc);
     if (!pn2)
@@ -7229,27 +7267,6 @@ static const char js_generator_str[] = "generator";
 #endif /* JS_HAS_GENERATOR_EXPRS */
 #endif /* JS_HAS_GENERATORS */
 
-/*
- * Check whether a |yield| token has been encountered since the last reset point
- * (the creation of the tree context or the current GenexpGuard), and if so,
- * note that the current function is a generator function.
- *
- * Call this after the current GenexpGuard has determined whether it was inside
- * of a generator expression.
- */
-bool
-Parser::maybeNoteGenerator()
-{
-    if (tc->yieldCount > 0) {
-        tc->flags |= TCF_FUN_IS_GENERATOR;
-        if (!tc->inFunction()) {
-            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
-            return false;
-        }
-    }
-    return true;
-}
-
 JSBool
 Parser::argumentList(JSParseNode *listNode)
 {
@@ -7263,10 +7280,8 @@ Parser::argumentList(JSParseNode *listNode)
         JSParseNode *argNode = assignExpr();
         if (!argNode)
             return JS_FALSE;
-        if (arg0) {
+        if (arg0)
             guard.endBody();
-            arg0 = false;
-        }
 
 #if JS_HAS_GENERATORS
         if (argNode->pn_type == TOK_YIELD &&
@@ -7289,13 +7304,15 @@ Parser::argumentList(JSParseNode *listNode)
                                   js_generator_str);
                 return JS_FALSE;
             }
-        }
+        } else
 #endif
+        if (arg0 && !guard.maybeNoteGenerator())
+            return JS_FALSE;
+
+        arg0 = false;
+
         listNode->append(argNode);
     } while (tokenStream.matchToken(TOK_COMMA));
-
-    if (!maybeNoteGenerator())
-        return JS_FALSE;
 
     if (tokenStream.getToken() != TOK_RP) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_AFTER_ARGS);
@@ -8898,10 +8915,10 @@ Parser::parenExpr(JSBool *genexp)
             pn->pn_pos.end = tokenStream.currentToken().pos.end;
             *genexp = JS_TRUE;
         }
-    }
+    } else
 #endif /* JS_HAS_GENERATOR_EXPRS */
 
-    if (!maybeNoteGenerator())
+    if (!guard.maybeNoteGenerator())
         return NULL;
 
     return pn;
