@@ -31,6 +31,19 @@ function isPixel(ctx, x,y, r,g,b,a, pos, colour, d) {
        "pixel "+pos+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
 }
 
+function todo_isPixel(ctx, x,y, r,g,b,a, pos, colour, d) {
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    todo(r-d <= pr && pr <= r+d &&
+         g-d <= pg && pg <= g+d &&
+         b-d <= pb && pb <= b+d &&
+         a-d <= pa && pa <= a+d,
+         "pixel "+pos+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+}
+
 SimpleTest.waitForExplicitFinish();
 MochiKit.DOM.addLoadEvent(function () {
 
