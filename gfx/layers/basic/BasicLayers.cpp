@@ -2223,7 +2223,8 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext)
 
       YUVImage yuv(tmpYSurface->GetShmem(),
                    tmpUSurface->GetShmem(),
-                   tmpVSurface->GetShmem());
+                   tmpVSurface->GetShmem(),
+                   data->GetPictureRect());
 
       BasicManager()->CreatedImageBuffer(BasicManager()->Hold(this),
                                          nsIntSize(mSize.width, mSize.height),
@@ -2231,19 +2232,24 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext)
 
     }
       
-    memcpy(mBackBufferY->Data(), 
-           data->mYChannel, 
-           data->mYStride * mSize.height);
-    memcpy(mBackBufferU->Data(), 
-           data->mCbChannel, 
-           data->mCbCrStride * mCbCrSize.height);
-    memcpy(mBackBufferV->Data(), 
-           data->mCrChannel, 
-           data->mCbCrStride * mCbCrSize.height);
+    for (int i = 0; i < data->mYSize.height; i++) {
+      memcpy(mBackBufferY->Data() + i * mBackBufferY->Stride(),
+             data->mYChannel + i * data->mYStride,
+             data->mYSize.width);
+    }
+    for (int i = 0; i < data->mCbCrSize.height; i++) {
+      memcpy(mBackBufferU->Data() + i * mBackBufferU->Stride(),
+             data->mCbChannel + i * data->mCbCrStride,
+             data->mCbCrSize.width);
+      memcpy(mBackBufferV->Data() + i * mBackBufferV->Stride(),
+             data->mCrChannel + i * data->mCbCrStride,
+             data->mCbCrSize.width);
+    }
       
     YUVImage yuv(mBackBufferY->GetShmem(),
                  mBackBufferU->GetShmem(),
-                 mBackBufferV->GetShmem());
+                 mBackBufferV->GetShmem(),
+                 data->GetPictureRect());
   
     BasicManager()->PaintedImage(BasicManager()->Hold(this),
                                  yuv);
