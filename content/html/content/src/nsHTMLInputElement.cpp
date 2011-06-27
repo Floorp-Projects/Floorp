@@ -49,7 +49,6 @@
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -90,7 +89,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsMutationEvent.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 
 #include "nsRuleData.h"
 

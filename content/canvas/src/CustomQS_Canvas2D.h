@@ -287,8 +287,8 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
     int32 wi = JS_DoubleToInt32(width);
     int32 hi = JS_DoubleToInt32(height);
 
-    uint32 w = PR_ABS(wi);
-    uint32 h = PR_ABS(hi);
+    uint32 w = NS_ABS(wi);
+    uint32 h = NS_ABS(hi);
     return CreateImageData(cx, w, h, NULL, 0, 0, vp);
 }
 

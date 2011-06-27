@@ -140,6 +140,7 @@ private:
   nsresult HandleExtensions();
   nsresult SetupRequest();
   nsresult ApplyForAdmission();
+  nsresult StartWebsocketData();
   PRUint16 ResultToCloseCode(nsresult resultCode);
   
   void StopSession(nsresult reason);
@@ -230,6 +231,8 @@ private:
   nsCOMPtr<nsITimer>              mLingeringCloseTimer;
   const static PRInt32            kLingeringCloseTimeout =   1000;
   const static PRInt32            kLingeringCloseThreshold = 50;
+
+  PRUint32                        mMaxConcurrentConnections;
 
   PRUint32                        mRecvdHttpOnStartRequest   : 1;
   PRUint32                        mRecvdHttpUpgradeTransport : 1;

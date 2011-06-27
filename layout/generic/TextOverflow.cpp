@@ -179,7 +179,7 @@ IsFrameDescendantOfAny(nsIFrame* aChild,
                        const TextOverflow::FrameHashtable& aSetOfFrames,
                        nsIFrame* aCommonAncestor)
 {
-  for (nsIFrame* f = aChild; f != aCommonAncestor;
+  for (nsIFrame* f = aChild; f && f != aCommonAncestor;
        f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     if (aSetOfFrames.GetEntry(f)) {
       return true;

@@ -210,6 +210,12 @@ public:
   static PRInt32 strncmp(const PRUnichar* s1, const PRUnichar* s2,
                          PRUint32 aMaxLen);
 
+  // The GNU libc has memmem, which is strstr except for binary data
+  // This is our own implementation that uses memmem on platforms
+  // where it's available.
+  static const char* memmem(const char* haystack, PRUint32 haystackLen,
+                            const char* needle, PRUint32 needleLen);
+
   // You must use nsCRT::free(PRUnichar*) to free memory allocated
   // by nsCRT::strdup(PRUnichar*).
   static PRUnichar* strdup(const PRUnichar* str);

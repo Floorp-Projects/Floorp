@@ -545,9 +545,6 @@ nsresult
 NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 {
   *aResult = new DocumentViewerImpl();
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(*aResult);
 
@@ -800,7 +797,6 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   if (!mSelectionListener) {
     nsDocViewerSelectionListener *selectionListener =
       new nsDocViewerSelectionListener();
-    NS_ENSURE_TRUE(selectionListener, NS_ERROR_OUT_OF_MEMORY);
 
     selectionListener->Init(this);
 
@@ -825,7 +821,6 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   // now register ourselves as a focus listener, so that we get called
   // when the focus changes in the window
   nsDocViewerFocusListener *focusListener = new nsDocViewerFocusListener();
-  NS_ENSURE_TRUE(focusListener, NS_ERROR_OUT_OF_MEMORY);
 
   focusListener->Init(this);
 
@@ -2180,9 +2175,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   // this should eventually get expanded to allow for creating
   // different sets for different media
   nsStyleSet *styleSet = new nsStyleSet();
-  if (!styleSet) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   styleSet->BeginUpdate();
   
@@ -3410,37 +3402,20 @@ DocumentViewerImpl::GetPopupLinkNode(nsIDOMNode** aNode)
   // find out if we have a link in our ancestry
   while (node) {
 
-    // are we an anchor?
-    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(node));
-    nsCOMPtr<nsIDOMHTMLAreaElement> area;
-    nsCOMPtr<nsIDOMHTMLLinkElement> link;
-    nsAutoString xlinkType;
-    if (!anchor) {
-      // area?
-      area = do_QueryInterface(node);
-      if (!area) {
-        // link?
-        link = do_QueryInterface(node);
-        if (!link) {
-          // XLink?
-          nsCOMPtr<nsIDOMElement> element(do_QueryInterface(node));
-          if (element) {
-            element->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"),NS_LITERAL_STRING("type"),xlinkType);
-          }
-        }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+    if (content) {
+      nsCOMPtr<nsIURI> hrefURI = content->GetHrefURI();
+      if (hrefURI) {
+        *aNode = node;
+        NS_IF_ADDREF(*aNode); // addref
+        return NS_OK;
       }
     }
-    if (anchor || area || link || xlinkType.EqualsLiteral("simple")) {
-      *aNode = node;
-      NS_IF_ADDREF(*aNode); // addref
-      return NS_OK;
-    }
-    else {
-      // if not, get our parent and keep trying...
-      nsCOMPtr<nsIDOMNode> parentNode;
-      node->GetParentNode(getter_AddRefs(parentNode));
-      node = parentNode;
-    }
+
+    // get our parent and keep trying...
+    nsCOMPtr<nsIDOMNode> parentNode;
+    node->GetParentNode(getter_AddRefs(parentNode));
+    node = parentNode;
   }
 
   // if we have no node, fail
@@ -3701,7 +3676,6 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
   if (!mPrintEngine) {
     mPrintEngine = new nsPrintEngine();
-    NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPrintEngine->Initialize(this, mContainer, mDocument, 
                                   float(mDeviceContext->AppUnitsPerCSSInch()) /
@@ -3768,7 +3742,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   nsPrintEventDispatcher beforeAndAfterPrint(doc);
   if (!mPrintEngine) {
     mPrintEngine = new nsPrintEngine();
-    NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPrintEngine->Initialize(this, mContainer, doc,
                                   float(mDeviceContext->AppUnitsPerCSSInch()) /

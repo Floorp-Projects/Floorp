@@ -56,6 +56,7 @@
 
 /* a presentation of a document, part 2 */
 
+#include "nsAlgorithm.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -623,7 +624,7 @@ StackArena::Allocate(size_t aSize)
 
   // make sure we are aligned. Beard said 8 was safer then 4. 
   // Round size to multiple of 8
-  aSize = PR_ROUNDUP(aSize, 8);
+  aSize = NS_ROUNDUP<size_t>(aSize, 8);
 
   // if the size makes the stack overflow. Grab another block for the stack
   if (mPos + aSize >= BLOCK_INCREMENT)
@@ -1054,7 +1055,7 @@ protected:
 
   PRBool mCaretEnabled;
 #ifdef NS_DEBUG
-  nsresult CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult);
+  nsStyleSet* CloneStyleSet(nsStyleSet* aSet);
   PRBool VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
   void ShowEventTargetDebug();
@@ -1243,10 +1244,8 @@ protected:
                                 aEvent->widget,
                                 aEvent->reason,
                                 aEvent->context);
-      if (mEvent) {
-        Init(aEvent);
-        static_cast<nsMouseEvent*>(mEvent)->clickCount = aEvent->clickCount;
-      }
+      Init(aEvent);
+      static_cast<nsMouseEvent*>(mEvent)->clickCount = aEvent->clickCount;
     }
 
     virtual ~nsDelayedMouseEvent()
@@ -1263,14 +1262,12 @@ protected:
       mEvent = new nsKeyEvent(NS_IS_TRUSTED_EVENT(aEvent),
                               aEvent->message,
                               aEvent->widget);
-      if (mEvent) {
-        Init(aEvent);
-        static_cast<nsKeyEvent*>(mEvent)->keyCode = aEvent->keyCode;
-        static_cast<nsKeyEvent*>(mEvent)->charCode = aEvent->charCode;
-        static_cast<nsKeyEvent*>(mEvent)->alternativeCharCodes =
-          aEvent->alternativeCharCodes;
-        static_cast<nsKeyEvent*>(mEvent)->isChar = aEvent->isChar;
-      }
+      Init(aEvent);
+      static_cast<nsKeyEvent*>(mEvent)->keyCode = aEvent->keyCode;
+      static_cast<nsKeyEvent*>(mEvent)->charCode = aEvent->charCode;
+      static_cast<nsKeyEvent*>(mEvent)->alternativeCharCodes =
+        aEvent->alternativeCharCodes;
+      static_cast<nsKeyEvent*>(mEvent)->isChar = aEvent->isChar;
     }
 
     virtual ~nsDelayedKeyEvent()
@@ -1663,8 +1660,6 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
 
   *aInstancePtrResult = new PresShell();
-  if (!*aInstancePtrResult)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*aInstancePtrResult);
   return NS_OK;
@@ -1800,7 +1795,6 @@ PresShell::Init(nsIDocument* aDocument,
 
   // Create our frame constructor.
   mFrameConstructor = new nsCSSFrameConstructor(mDocument, this);
-  NS_ENSURE_TRUE(mFrameConstructor, NS_ERROR_OUT_OF_MEMORY);
 
   // The document viewer owns both view manager and pres shell.
   mViewManager->SetViewObserver(this);
@@ -4365,64 +4359,24 @@ nsresult PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationStrin
 #endif
 
   NS_ENSURE_ARG_POINTER(aNode);
-  nsresult rv;
-  nsAutoString anchorText;
-  static const char strippedChars[] = "\t\r\n";
 
-  // are we an anchor?
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(aNode));
-  nsCOMPtr<nsIDOMHTMLAreaElement> area;
-  nsCOMPtr<nsIDOMHTMLLinkElement> link;
-  nsAutoString xlinkType;
-  if (anchor) {
-    rv = anchor->GetHref(anchorText);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // area?
-    area = do_QueryInterface(aNode);
-    if (area) {
-      rv = area->GetHref(anchorText);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  if (content) {
+    nsCOMPtr<nsIURI> hrefURI = content->GetHrefURI();
+    if (hrefURI) {
+      nsCAutoString specUTF8;
+      nsresult rv = hrefURI->GetSpec(specUTF8);
       NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      // link?
-      link = do_QueryInterface(aNode);
-      if (link) {
-        rv = link->GetHref(anchorText);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        // Xlink?
-        nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aNode));
-        if (element) {
-          NS_NAMED_LITERAL_STRING(xlinkNS,"http://www.w3.org/1999/xlink");
-          element->GetAttributeNS(xlinkNS,NS_LITERAL_STRING("type"),xlinkType);
-          if (xlinkType.EqualsLiteral("simple")) {
-            element->GetAttributeNS(xlinkNS,NS_LITERAL_STRING("href"),anchorText);
-            if (!anchorText.IsEmpty()) {
-              // Resolve the full URI using baseURI property
 
-              nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-              NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
-              nsCOMPtr<nsIURI> baseURI = node->GetBaseURI();
+      nsAutoString anchorText;
+      CopyUTF8toUTF16(specUTF8, anchorText);
 
-              nsCAutoString spec;
-              rv = baseURI->Resolve(NS_ConvertUTF16toUTF8(anchorText),spec);
-              NS_ENSURE_SUCCESS(rv, rv);
-
-              CopyUTF8toUTF16(spec, anchorText);
-            }
-          }
-        }
-      }
+      // Remove all the '\t', '\r' and '\n' from 'anchorText'
+      static const char strippedChars[] = "\t\r\n";
+      anchorText.StripChars(strippedChars);
+      aLocationString = anchorText;
+      return NS_OK;
     }
-  }
-
-  if (anchor || area || link || xlinkType.EqualsLiteral("simple")) {
-    //Remove all the '\t', '\r' and '\n' from 'anchorText'
-    anchorText.StripChars(strippedChars);
-
-    aLocationString = anchorText;
-
-    return NS_OK;
   }
 
   // if no link, fail.
@@ -5525,8 +5479,6 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
     return nsnull;
 
   info = new RangePaintInfo(range, ancestorFrame);
-  if (!info)
-    return nsnull;
 
   nsRect ancestorRect = ancestorFrame->GetVisualOverflowRect();
 
@@ -5628,7 +5580,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   gfxImageSurface* surface =
     new gfxImageSurface(gfxIntSize(pixelArea.width, pixelArea.height),
                         gfxImageSurface::ImageFormatARGB32);
-  if (!surface || surface->CairoStatus()) {
+  if (surface->CairoStatus()) {
     delete surface;
     return nsnull;
   }
@@ -6604,7 +6556,7 @@ PresShell::HandleEvent(nsIView         *aView,
     } else if (!mNoDelayedKeyEvents) {
       nsDelayedEvent* event =
         new nsDelayedKeyEvent(static_cast<nsKeyEvent*>(aEvent));
-      if (event && !mDelayedEvents.AppendElement(event)) {
+      if (!mDelayedEvents.AppendElement(event)) {
         delete event;
       }
     }
@@ -8586,13 +8538,10 @@ FindTopFrame(nsIFrame* aRoot)
 
 #ifdef DEBUG
 
-nsresult
-PresShell::CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult)
+nsStyleSet*
+PresShell::CloneStyleSet(nsStyleSet* aSet)
 {
   nsStyleSet *clone = new nsStyleSet();
-  if (!clone) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   PRInt32 i, n = aSet->SheetCount(nsStyleSet::eOverrideSheet);
   for (i = 0; i < n; i++) {
@@ -8624,8 +8573,7 @@ PresShell::CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult)
     if (ss)
       clone->AppendStyleSheet(nsStyleSet::eAgentSheet, ss);
   }
-  *aResult = clone;
-  return NS_OK;
+  return clone;
 }
 
 #ifdef DEBUG_Eli
@@ -8638,7 +8586,6 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
   nsRefPtr<gfxImageSurface> imgSurface =
      new gfxImageSurface(gfxIntSize(width, height),
                          gfxImageSurface::ImageFormatARGB32);
-  NS_ENSURE_TRUE(imgSurface, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<gfxContext> imgContext = new gfxContext(imgSurface);
 
@@ -8649,7 +8596,6 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
   NS_ENSURE_TRUE(surface, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<gfxContext> context = new gfxContext(surface);
-  NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
   shell->RenderDocument(r, 0, NS_RGB(255, 255, 0), context);
 
@@ -8737,9 +8683,7 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
-  nsAutoPtr<nsStyleSet> newSet;
-  rv = CloneStyleSet(mStyleSet, getter_Transfers(newSet));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  nsAutoPtr<nsStyleSet> newSet(CloneStyleSet(mStyleSet));
   nsCOMPtr<nsIPresShell> sh;
   rv = mDocument->CreateShell(cx, vm, newSet, getter_AddRefs(sh));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
@@ -9024,7 +8968,6 @@ void ReflowCountMgr::Add(const char * aName, nsIFrame * aFrame)
     ReflowCounter * counter = (ReflowCounter *)PL_HashTableLookup(mCounts, aName);
     if (counter == nsnull) {
       counter = new ReflowCounter(this);
-      NS_ASSERTION(counter != nsnull, "null ptr");
       char * name = NS_strdup(aName);
       NS_ASSERTION(name != nsnull, "null ptr");
       PL_HashTableAdd(mCounts, name, counter);
@@ -9040,7 +8983,6 @@ void ReflowCountMgr::Add(const char * aName, nsIFrame * aFrame)
     IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
     if (counter == nsnull) {
       counter = new IndiReflowCounter(this);
-      NS_ASSERTION(counter != nsnull, "null ptr");
       counter->mFrame = aFrame;
       counter->mName.AssignASCII(aName);
       PL_HashTableAdd(mIndiFrameCounts, key, counter);

@@ -74,7 +74,11 @@ public:
                                          nsIOSurface *surf, 
                                          CGColorSpaceRef aColorSpace, 
                                          int aX, int aY,
-                                         int aWidth, int aHeight);
+                                         size_t aWidth, size_t aHeight);
+
+#ifdef DEBUG
+  static void SaveToDisk(nsIOSurface *surf);
+#endif
 private:
   void Destroy();
 

@@ -50,13 +50,12 @@
 #include "nsDOMString.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOM3Attr.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
 #include "nsCOMArray.h"
 #include "nsNodeUtils.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsTextNode.h"
 #include "mozAutoDocUpdate.h"
 #include "nsMutationEvent.h"
@@ -131,17 +130,11 @@ DOMCI_NODE_DATA(Attr, nsDOMAttribute)
 // QueryInterface implementation for nsDOMAttribute
 NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_NODE_INTERFACE_TABLE6(nsDOMAttribute, nsIDOMAttr, nsIAttribute, nsIDOMNode,
-                           nsIDOM3Attr, nsPIDOMEventTarget, nsIMutationObserver)
+  NS_NODE_INTERFACE_TABLE5(nsDOMAttribute, nsIDOMAttr, nsIAttribute, nsIDOMNode,
+                           nsIDOMEventTarget, nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Attr)
@@ -797,55 +790,6 @@ nsDOMAttribute::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = PR_TRUE;
   return NS_OK;
-}
-
-nsresult
-nsDOMAttribute::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
-}
-
-nsresult
-nsDOMAttribute::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                 nsPresContext* aPresContext,
-                                 nsEventStatus* aEventStatus)
-{
-  return nsEventDispatcher::DispatchDOMEvent(static_cast<nsINode*>(this),
-                                             aEvent, aDOMEvent,
-                                             aPresContext, aEventStatus);
-}
-
-nsIEventListenerManager*
-nsDOMAttribute::GetListenerManager(PRBool aCreateIfNotFound)
-{
-  return nsContentUtils::GetListenerManager(this, aCreateIfNotFound);
-}
-
-nsresult
-nsDOMAttribute::AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID)
-{
-  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-
-nsresult
-nsDOMAttribute::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID)
-{
-  nsIEventListenerManager* elm = GetListenerManager(PR_FALSE);
-  return elm ? 
-    elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE) :
-    NS_OK;
-}
-
-nsresult
-nsDOMAttribute::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
-{
-  nsIEventListenerManager* elm = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(elm);
-  return elm->GetSystemEventGroupLM(aGroup);
 }
 
 void

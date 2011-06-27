@@ -981,7 +981,7 @@ nsARIAGridCellAccessible::GetColumnIndex(PRInt32 *aColumnIndex)
 
   *aColumnIndex = 0;
 
-  PRInt32 indexInRow = GetIndexInParent();
+  PRInt32 indexInRow = IndexInParent();
   for (PRInt32 idx = 0; idx < indexInRow; idx++) {
     nsAccessible* cell = row->GetChildAt(idx);
     PRUint32 role = cell->Role();
@@ -1013,7 +1013,7 @@ nsARIAGridCellAccessible::GetRowIndex(PRInt32 *aRowIndex)
 
   *aRowIndex = 0;
 
-  PRInt32 indexInTable = row->GetIndexInParent();
+  PRInt32 indexInTable = row->IndexInParent();
   for (PRInt32 idx = 0; idx < indexInTable; idx++) {
     row = table->GetChildAt(idx);
     if (row->Role() == nsIAccessibleRole::ROLE_ROW)

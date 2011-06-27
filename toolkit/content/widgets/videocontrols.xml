@@ -295,6 +295,7 @@
                 progressBar    : null,
                 bufferBar      : null,
                 statusOverlay  : null,
+                controlsSpacer : null,
 
                 randomID : 0,
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
@@ -416,6 +417,9 @@
                         case "play":
                             this.setPlayButtonState(false);
                             this.setupStatusFader();
+                            if (!this._triggeredByControls && this.dynamicControls && this.videocontrols.isTouchControl)
+                                this.startFadeOut(this.controlBar);
+                            this._triggeredByControls = false;
                             break;
                         case "pause":
                             // Little white lie: if we've internally paused the video
@@ -736,11 +740,15 @@
                     element.setAttribute("hidden", true);
                 },
 
+                _triggeredByControls: false,
+
                 togglePause : function () {
-                    if (this.video.paused || this.video.ended)
+                    if (this.video.paused || this.video.ended) {
+                        this._triggeredByControls = true;
                         this.video.play();
-                    else
+                    } else {
                         this.video.pause();
+                    }
 
                     // We'll handle style changes in the event listener for
                     // the "play" and "pause" events, same as if content
@@ -909,6 +917,7 @@
                     this.durationLabel = document.getAnonymousElementByAttribute(binding, "class", "durationLabel");
                     this.positionLabel = document.getAnonymousElementByAttribute(binding, "class", "positionLabel");
                     this.statusOverlay = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
+                    this.controlsSpacer = document.getAnonymousElementByAttribute(binding, "class", "controlsSpacer")
 
                     this.setupInitialState();
 
@@ -934,6 +943,7 @@
                     var self = this;
                     this.muteButton.addEventListener("command", function() { self.toggleMute(); }, false);
                     this.playButton.addEventListener("command", function() { self.togglePause(); }, false);
+                    this.controlsSpacer.addEventListener("click", function() { self.togglePause(); }, false);
                     if (!this.isAudioOnly) {
                       this.muteButton.addEventListener("mouseover",  function(e) { self.onVolumeMouseInOut(e); }, false);
                       this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);
@@ -952,15 +962,18 @@
             }) ]]>
         </field>
 
+        <field readonly="true" name="isTouchControl">false</field>
 
     </implementation>
 
     <handlers>
         <handler event="mouseover">
-            this.Utils.onMouseInOut(event);
+            if (!this.isTouchControl)
+                this.Utils.onMouseInOut(event);
         </handler>
         <handler event="mouseout">
-            this.Utils.onMouseInOut(event);
+            if (!this.isTouchControl)
+                this.Utils.onMouseInOut(event);
         </handler>
     </handlers>
   </binding>
@@ -1007,6 +1020,8 @@
 
     <implementation>
 
+        <field readonly="true" name="isTouchControl">true</field>
+
         <constructor>
           this.TouchUtils.init(this);
         </constructor>
@@ -1021,9 +1036,10 @@
             get Utils() {
               return this.videocontrols.Utils;
             },
-            
+
             get visible() {
-              return !this.Utils.controlBar.hasAttribute("fadeout") || !this.Utils.controlBar.hasAttribute("hidden");
+              return !this.Utils.controlBar.hasAttribute("fadeout") &&
+                     !(this.Utils.controlBar.getAttribute("hidden") == "true");
             },
 
             _firstShow: false,
@@ -1041,11 +1057,10 @@
             },
 
             showControls : function() {
-              let event = document.createEvent("MouseEvents");
-              event.initEvent("mouseover", true, true);
-              this.Utils.videocontrols.dispatchEvent(event);
-
-              this.delayHideControls(this.controlsTimeout);
+              if (this.Utils.dynamicControls) {
+                this.Utils.startFadeIn(this.Utils.controlBar);
+                this.delayHideControls(this.controlsTimeout);
+              }
             },
             
             delayHideControls : function(aTimeout) {
@@ -1060,10 +1075,7 @@
             },
 
             hideControls : function() {
-              let event = document.createEvent("MouseEvents");
-              event.initEvent("mouseout", true, true);
-              this.Utils.videocontrols.dispatchEvent(event);
-
+              this.Utils.startFadeOut(this.Utils.controlBar);
               if (this.firstShow)
                 this.videocontrols.addEventListener("transitionend", this, false);
             },

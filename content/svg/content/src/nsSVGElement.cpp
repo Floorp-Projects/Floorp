@@ -62,7 +62,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsSVGUtils.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
@@ -598,7 +598,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       mContentStyleRule = nsnull;
 
     if (IsEventName(aName)) {
-      nsIEventListenerManager* manager = GetListenerManager(PR_FALSE);
+      nsEventListenerManager* manager = GetListenerManager(PR_FALSE);
       if (manager) {
         nsIAtom* eventName = GetEventNameForAttr(aName);
         manager->RemoveScriptEventListener(eventName);

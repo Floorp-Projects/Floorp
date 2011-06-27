@@ -46,7 +46,6 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "prmem.h"
@@ -280,16 +279,14 @@ NS_METHOD nsDOMEvent::GetType(nsAString& aType)
 }
 
 static nsresult
-GetDOMEventTarget(nsPIDOMEventTarget* aTarget,
+GetDOMEventTarget(nsIDOMEventTarget* aTarget,
                   nsIDOMEventTarget** aDOMTarget)
 {
-  nsPIDOMEventTarget* realTarget =
+  nsIDOMEventTarget* realTarget =
     aTarget ? aTarget->GetTargetForDOMEvent() : aTarget;
-  if (realTarget) {
-    return CallQueryInterface(realTarget, aDOMTarget);
-  }
 
-  *aDOMTarget = nsnull;
+  NS_IF_ADDREF(*aDOMTarget = realTarget);
+
   return NS_OK;
 }
 

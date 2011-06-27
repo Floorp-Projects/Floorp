@@ -84,9 +84,6 @@ NS_NewLayoutDebugger(nsILayoutDebugger** aResult)
     return NS_ERROR_NULL_POINTER;
   }
   nsLayoutDebugger* it = new nsLayoutDebugger();
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   return it->QueryInterface(NS_GET_IID(nsILayoutDebugger), (void**)aResult);
 }
 

@@ -316,10 +316,6 @@ nsIOSurface* nsIOSurface::LookupSurface(IOSurfaceID aIOSurfaceID) {
   IOSurfacePtr surfaceRef = nsIOSurfaceLib::IOSurfaceLookup(aIOSurfaceID);
   if (!surfaceRef)
     return nsnull;
-  // IOSurfaceLookup does not retain the object for us,
-  // we want IOSurfacePtr to remain for the lifetime of
-  // nsIOSurface.
-  CFRetain(surfaceRef);
 
   nsIOSurface* ioSurface = new nsIOSurface(surfaceRef);
   if (!ioSurface) {
@@ -502,10 +498,27 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
     Destroy();
     return NS_ERROR_FAILURE;
   }
+
+  // Create a transaction and disable animations
+  // to make the position update instant.
+  [CATransaction begin];
+  NSMutableDictionary *newActions = [[NSMutableDictionary alloc] initWithObjectsAndKeys:[NSNull null], @"onOrderIn",
+                                   [NSNull null], @"onOrderOut",
+                                   [NSNull null], @"sublayers",
+                                   [NSNull null], @"contents",
+                                   [NSNull null], @"position",
+                                   [NSNull null], @"bounds",
+                                   nil];
+  layer.actions = newActions;
+  [newActions release];
+
+  [CATransaction setValue: [NSNumber numberWithFloat:0.0f] forKey: kCATransactionAnimationDuration];
+  [CATransaction setValue: (id) kCFBooleanTrue forKey: kCATransactionDisableActions];
   [layer setBounds:CGRectMake(0, 0, aWidth, aHeight)];
   [layer setPosition:CGPointMake(aWidth/2.0, aHeight/2.0)];
   caRenderer.layer = layer;
   caRenderer.bounds = CGRectMake(0, 0, aWidth, aHeight);
+  [CATransaction commit];
 
   // We either target rendering to a CGImage or IOSurface.
   if (!mIOSurface) {
@@ -680,6 +693,7 @@ nsresult nsCARenderer::Render(int aWidth, int aHeight,
   ::glClearColor(0.0, 0.0, 0.0, 0.0);
   ::glClear(GL_COLOR_BUFFER_BIT);
 
+  [CATransaction commit];
   double caTime = ::CACurrentMediaTime();
   [caRenderer beginFrameAtTime:caTime timeStamp:NULL];
   [caRenderer addUpdateRect:CGRectMake(0,0, aWidth, aHeight)];
@@ -713,7 +727,7 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
                                               nsIOSurface *surf, 
                                               CGColorSpaceRef aColorSpace,
                                               int aX, int aY,
-                                              int aWidth, int aHeight) {
+                                              size_t aWidth, size_t aHeight) {
   surf->Lock();
   size_t bytesPerRow = surf->GetBytesPerRow();
   size_t ioWidth = surf->GetWidth();
@@ -729,10 +743,15 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
 
   // We get rendering glitches if we use a width/height that falls
   // outside of the IOSurface.
-  if (aWidth > ioWidth - aX) 
+  if (aWidth + aX > ioWidth) 
     aWidth = ioWidth - aX;
-  if (aHeight > ioHeight - aY) 
+  if (aHeight + aY > ioHeight) 
     aHeight = ioHeight - aY;
+
+  if (aX < 0 || aX >= ioWidth ||
+      aY < 0 || aY >= ioHeight) {
+    return NS_ERROR_FAILURE;
+  }
 
   CGImageRef cgImage = ::CGImageCreate(ioWidth, ioHeight, 8, 32, bytesPerRow,
               aColorSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
@@ -751,7 +770,10 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
   }
 
   ::CGContextScaleCTM(aContext, 1.0f, -1.0f);
-  ::CGContextDrawImage(aContext, CGRectMake(aX, -aY-aHeight, aWidth, aHeight), subImage);
+  ::CGContextDrawImage(aContext, 
+                       CGRectMake(aX, -(CGFloat)aY - (CGFloat)aHeight, 
+                                  aWidth, aHeight), 
+                       subImage);
 
   ::CGImageRelease(subImage);
   ::CGImageRelease(cgImage);
@@ -759,3 +781,55 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
   return NS_OK;
 }
 
+#ifdef DEBUG
+
+int sSaveToDiskSequence = 0;
+void nsCARenderer::SaveToDisk(nsIOSurface *surf) {
+  surf->Lock();
+  size_t bytesPerRow = surf->GetBytesPerRow();
+  size_t ioWidth = surf->GetWidth();
+  size_t ioHeight = surf->GetHeight();
+  void* ioData = surf->GetBaseAddress();
+  CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(ioData,
+                                      ioData, ioHeight*(bytesPerRow)*4, 
+                                      NULL); //No release callback 
+  if (!dataProvider) {
+    surf->Unlock();
+    return;
+  }
+
+  CGImageRef cgImage = ::CGImageCreate(ioWidth, ioHeight, 8, 32, bytesPerRow,
+              CreateSystemColorSpace(), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
+              dataProvider, NULL, true, kCGRenderingIntentDefault);
+  ::CGDataProviderRelease(dataProvider);
+  if (!cgImage) {
+    surf->Unlock();
+    return;
+  }
+
+  char cstr[1000];
+
+  sprintf(cstr, "file:///Users/benoitgirard/debug/iosurface_%i.png", ++sSaveToDiskSequence);
+
+  CFStringRef cfStr = ::CFStringCreateWithCString(kCFAllocatorDefault, cstr, kCFStringEncodingMacRoman);
+
+  printf("Exporting: %s\n", cstr);
+  CFURLRef url = ::CFURLCreateWithString( NULL, cfStr, NULL);
+
+  CFStringRef type = kUTTypePNG;
+  size_t count = 1; 
+  CFDictionaryRef options = NULL;
+  CGImageDestinationRef dest = ::CGImageDestinationCreateWithURL(url, type, count, options);
+
+  ::CGImageDestinationAddImage(dest, cgImage, NULL);
+
+  ::CGImageDestinationFinalize(dest);
+  ::CFRelease(dest);
+
+  surf->Unlock();
+
+  return;
+
+}
+
+#endif

@@ -705,7 +705,7 @@ nsApplicationAccessibleWrap::AppendChild(nsAccessible *aChild)
 PRBool
 nsApplicationAccessibleWrap::RemoveChild(nsAccessible* aChild)
 {
-    PRInt32 index = aChild->GetIndexInParent();
+    PRInt32 index = aChild->IndexInParent();
 
     AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aChild);
     atk_object_set_parent(atkAccessible, NULL);

@@ -17,6 +17,7 @@ browser.jar:
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Go-arrow.png
+* skin/classic/browser/highlighter.css
   skin/classic/browser/identity.png
   skin/classic/browser/Info.png
   skin/classic/browser/KUI-close.png

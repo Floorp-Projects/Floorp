@@ -189,6 +189,7 @@ public:
   virtual PRBool IsOnActiveMenuBar() { return IsOnMenuBar() && mMenuParent->IsActive(); }
   virtual PRBool IsOpen();
   virtual PRBool IsMenu();
+  virtual nsMenuListType GetParentMenuListType();
   PRBool IsDisabled();
   void ToggleMenuState();
 

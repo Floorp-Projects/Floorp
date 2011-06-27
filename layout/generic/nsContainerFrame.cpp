@@ -219,9 +219,8 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
       generateReflowCommand = PR_FALSE;
     }
 #endif
+    nsContainerFrame* parent = static_cast<nsContainerFrame*>(aOldFrame->GetParent());
     while (aOldFrame) {
-      nsContainerFrame* parent =
-        static_cast<nsContainerFrame*>(aOldFrame->GetParent());
       // When the parent is an inline frame we have a simple task - just
       // remove the frame from its parents list and generate a reflow
       // command.
@@ -238,17 +237,15 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
           aOldFrame->Destroy();
         }
       } else {
-        // We don't want to simply make a recursive call here because with
-        // thousands of continuations it would exhaust the stack.  Instead,
-        // unhook aOldFrame from the continuation chain, destroy it, and
-        // continue the loop.
-        if (oldFrameNextContinuation) {
-          oldFrameNextContinuation->SetPrevContinuation(nsnull);
-          aOldFrame->SetNextContinuation(nsnull);
-        }
-        parent->RemoveFrame(aListName, aOldFrame);
+        // This recursive call takes care of all continuations after aOldFrame,
+        // so we don't need to loop anymore.
+        parent->RemoveFrame(nsnull, aOldFrame);
+        break;
       }
       aOldFrame = oldFrameNextContinuation;
+      if (aOldFrame) {
+        parent = static_cast<nsContainerFrame*>(aOldFrame->GetParent());
+      }
     }
 
     if (generateReflowCommand) {
@@ -1378,21 +1375,14 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 /**
  * Set the frames on the overflow list
  */
-nsresult
+void
 nsContainerFrame::SetOverflowFrames(nsPresContext* aPresContext,
                                     const nsFrameList& aOverflowFrames)
 {
   NS_PRECONDITION(aOverflowFrames.NotEmpty(), "Shouldn't be called");
   nsFrameList* newList = new nsFrameList(aOverflowFrames);
-  if (!newList) {
-    // XXXbz should really destroy the frames here, but callers are holding
-    // pointers to them.... We should switch all callers to framelists, then
-    // audit and do that.
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   aPresContext->PropertyTable()->Set(this, OverflowProperty(), newList);
-  return NS_OK;
 }
 
 nsFrameList*

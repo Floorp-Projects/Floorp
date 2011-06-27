@@ -94,6 +94,7 @@ Initialize()
 static void
 Shutdown()
 {
+  nsSHistory::Shutdown();
   nsSHEntry::Shutdown();
   gInitialized = PR_FALSE;
 }
