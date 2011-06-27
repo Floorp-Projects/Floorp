@@ -182,11 +182,9 @@ WeaveSvc.prototype = {
 
   get isLoggedIn() { return this._loggedIn; },
 
-  // nextSync and nextHeartbeat are in milliseconds, but prefs can't hold that much
+  // nextSync is in milliseconds, but prefs can't hold that much
   get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
   set nextSync(value) Svc.Prefs.set("nextSync", Math.floor(value / 1000)),
-  get nextHeartbeat() Svc.Prefs.get("nextHeartbeat", 0) * 1000,
-  set nextHeartbeat(value) Svc.Prefs.set("nextHeartbeat", Math.floor(value / 1000)),
 
   get syncInterval() {
     // If we have a partial download, sync sooner if we're not mobile
@@ -1476,8 +1474,6 @@ WeaveSvc.prototype = {
     // Clear out any scheduled syncs
     if (this._syncTimer)
       this._syncTimer.clear();
-    if (this._heartbeatTimer)
-      this._heartbeatTimer.clear();
   },
 
   /**
@@ -1555,79 +1551,6 @@ WeaveSvc.prototype = {
 
     // Save the next sync time in-case sync is disabled (logout/offline/etc.)
     this.nextSync = Date.now() + interval;
-
-    // if we're a single client, set up a heartbeat to detect new clients sooner
-    if (this.numClients == 1)
-      this._scheduleHeartbeat();
-  },
-
-  /**
-   * Hits info/collections on the server to see if there are new clients.
-   * This is only called when the account has one active client, and if more
-   * are found will trigger a sync to change client sync frequency and update data.
-   */
-
-  _doHeartbeat: function WeaveSvc__doHeartbeat() {
-    if (this._heartbeatTimer)
-      this._heartbeatTimer.clear();
-
-    this.nextHeartbeat = 0;
-    let info = null;
-    try {
-      info = new Resource(this.infoURL).get();
-      if (info && info.success) {
-        // if clients.lastModified doesn't match what the server has,
-        // we have another client in play
-        this._log.trace("Remote timestamp:" + info.obj["clients"] +
-                        " Local timestamp: " + Clients.lastSync);
-        if (info.obj["clients"] > Clients.lastSync) {
-          this._log.debug("New clients detected, triggering a full sync");
-          this.syncIfMPUnlocked();
-          return;
-        }
-      }
-      else {
-        this._checkServerError(info);
-        this._log.debug("Heartbeat failed. HTTP Error: " + info.status);
-      }
-    } catch(ex) {
-      // if something throws unexpectedly, not a big deal
-      this._log.debug("Heartbeat failed unexpectedly: " + ex);
-    }
-
-    // no joy, schedule the next heartbeat
-    this._scheduleHeartbeat();
-  },
-
-  /**
-   * Sets up a heartbeat ping to check for new clients.  This is not a critical
-   * behaviour for the client, so if we hit server/network issues, we'll just drop
-   * this until the next sync.
-   */
-  _scheduleHeartbeat: function WeaveSvc__scheduleNextHeartbeat() {
-    if (this._heartbeatTimer)
-      return;
-
-    let now = Date.now();
-    if (this.nextHeartbeat && this.nextHeartbeat < now) {
-      this._doHeartbeat();
-      return;
-    }
-
-    // if the next sync is in less than an hour, don't bother
-    let interval = MULTI_DESKTOP_SYNC;
-    if (this.nextSync < Date.now() + interval ||
-        Status.enforceBackoff)
-      return;
-
-    if (this.nextHeartbeat)
-      interval = this.nextHeartbeat - now;
-    else
-      this.nextHeartbeat = now + interval;
-
-    this._log.trace("Setting up heartbeat, next ping in " +
-                    Math.ceil(interval / 1000) + " sec.");
-    Utils.namedTimer(this._doHeartbeat, interval, this, "_heartbeatTimer");
   },
 
   /**
@@ -1738,7 +1661,6 @@ WeaveSvc.prototype = {
     // Clear out any potentially pending syncs now that we're syncing
     this._clearSyncTriggers();
     this.nextSync = 0;
-    this.nextHeartbeat = 0;
 
     // reset backoff info, if the server tells us to continue backing off,
     // we'll handle that later
