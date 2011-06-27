@@ -236,16 +236,16 @@ class RegisterSet {
             add(any.gpr());
     }
     void addUnchecked(Register reg) {
-        gpr_.add(reg);
+        gpr_.addUnchecked(reg);
     }
     void addUnchecked(FloatRegister reg) {
-        fpu_.add(reg);
+        fpu_.addUnchecked(reg);
     }
     void addUnchecked(const AnyRegister &any) {
         if (any.isFloat())
-            addUnchecked(any.gpr());
-        else
             addUnchecked(any.fpu());
+        else
+            addUnchecked(any.gpr());
     }
     bool empty(bool floats) const {
         return floats ? fpu_.empty() : gpr_.empty();
