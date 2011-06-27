@@ -55,7 +55,7 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 
-#ifdef OS_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 #include "PluginInterposeOSX.h"
 #endif
 
