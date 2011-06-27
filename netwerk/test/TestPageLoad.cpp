@@ -205,7 +205,7 @@ MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
       rv = stream->ReadSegments(streamParse, &offset, count, &bytesRead);
     } else {
       while (count) {
-        PRUint32 amount = PR_MIN(count, sizeof(buf));
+        PRUint32 amount = NS_MIN<PRUint32>(count, sizeof(buf));
         rv = stream->Read(buf, amount, &bytesRead);  
         count -= bytesRead;
       }

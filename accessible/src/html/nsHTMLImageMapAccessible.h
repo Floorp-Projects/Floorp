@@ -62,8 +62,8 @@ public:
 
   // HyperLinkAccessible
   virtual PRUint32 AnchorCount();
-  virtual nsAccessible* GetAnchor(PRUint32 aAnchorIndex);
-  virtual already_AddRefed<nsIURI> GetAnchorURI(PRUint32 aAnchorIndex);
+  virtual nsAccessible* AnchorAt(PRUint32 aAnchorIndex);
+  virtual already_AddRefed<nsIURI> AnchorURIAt(PRUint32 aAnchorIndex);
 
 protected:
 
@@ -82,7 +82,6 @@ private:
 class nsHTMLAreaAccessible : public nsHTMLLinkAccessible
 {
 public:
-  using nsAccessible::GetChildAtPoint;
 
   nsHTMLAreaAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
@@ -94,8 +93,8 @@ public:
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual PRUint64 NativeState();
-  virtual nsAccessible* GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                        EWhichChildAtPoint aWhichChild);
+  virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                     EWhichChildAtPoint aWhichChild);
 
   // HyperLinkAccessible
   virtual PRUint32 StartOffset();

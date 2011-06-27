@@ -1717,8 +1717,7 @@ nsXULDocument::AddElementToDocumentPost(Element* aElement)
         // Create our XUL key listener and hook it up.
         nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
         if (xblService) {
-            nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(aElement));
-            xblService->AttachGlobalKeyHandler(piTarget);
+            xblService->AttachGlobalKeyHandler(aElement);
         }
     }
 
@@ -1793,8 +1792,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     if (aElement->NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
         nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
         if (xblService) {
-            nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(aElement));
-            xblService->DetachGlobalKeyHandler(piTarget);
+            xblService->DetachGlobalKeyHandler(aElement);
         }
     }
 

@@ -495,6 +495,7 @@ nsWebSocketHandler::nsWebSocketHandler() :
     mOpenTimeout(20000),
     mPingTimeout(0),
     mPingResponseTimeout(10000),
+    mMaxConcurrentConnections(200),
     mRecvdHttpOnStartRequest(0),
     mRecvdHttpUpgradeTransport(0),
     mRequestedClose(0),
@@ -1443,11 +1444,7 @@ nsWebSocketHandler::AbortSession(nsresult reason)
          this, reason, mStopped));
 
     // normally this should be called on socket thread, but it is ok to call it
-    // from OnStartRequest before the socket thread machine has gotten underway
-
-    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread ||
-                      !(mRecvdHttpOnStartRequest &&
-                        mRecvdHttpUpgradeTransport), "wrong thread");
+    // from the main thread before StartWebsocketData() has completed
 
     // When we are failing we need to close the TCP connection immediately
     // as per 7.1.1
@@ -1669,6 +1666,27 @@ nsWebSocketHandler::ApplyForAdmission()
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
+}
+
+// Called after both OnStartRequest and OnTransportAvailable have
+// executed. This essentially ends the handshake and starts the websockets
+// protocol state machine.
+nsresult
+nsWebSocketHandler::StartWebsocketData()
+{
+    LOG(("WebSocketHandler::StartWebsocketData() %p", this));
+
+    if (sWebSocketAdmissions &&
+        sWebSocketAdmissions->ConnectedCount() > mMaxConcurrentConnections) {
+        LOG(("nsWebSocketHandler max concurrency %d exceeded "
+             "in OnTransportAvailable()",
+             mMaxConcurrentConnections));
+        
+        AbortSession(NS_ERROR_SOCKET_CREATE_FAILED);
+        return NS_OK;
+    }
+
+    return mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
 }
 
 // nsIDNSListener
@@ -2040,8 +2058,27 @@ nsWebSocketHandler::AsyncOpen(nsIURI *aURI,
         if (NS_SUCCEEDED(rv)) {
             mAutoFollowRedirects = boolpref ? 1 : 0;
         }
+        rv = prefService->GetIntPref
+            ("network.websocket.max-connections", &intpref);
+        if (NS_SUCCEEDED(rv)) {
+            mMaxConcurrentConnections = NS_CLAMP(intpref, 1, 0xffff);
+        }
     }
     
+    if (sWebSocketAdmissions &&
+        sWebSocketAdmissions->ConnectedCount() >= mMaxConcurrentConnections) {
+        // Checking this early creates an optimal fast-fail, but it is
+        // also a time-of-check-time-of-use problem. So we will check again
+        // after the handshake is complete to catch anything that sneaks
+        // through the race condition.
+        LOG(("nsWebSocketHandler max concurrency %d exceeded",
+             mMaxConcurrentConnections));
+        
+        // WebSocket connections are expected to be long lived, so return
+        // an error here instead of queueing
+        return NS_ERROR_SOCKET_CREATE_FAILED;
+    }
+
     if (mPingTimeout) {
         mPingTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
         if (NS_FAILED(rv)) {
@@ -2199,7 +2236,7 @@ nsWebSocketHandler::OnTransportAvailable(nsISocketTransport *aTransport,
 
     mRecvdHttpUpgradeTransport = 1;
     if (mRecvdHttpOnStartRequest)
-        return mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
+        return StartWebsocketData();
     return NS_OK;
 }
 
@@ -2364,7 +2401,7 @@ nsWebSocketHandler::OnStartRequest(nsIRequest *aRequest,
 
     mRecvdHttpOnStartRequest = 1;
     if (mRecvdHttpUpgradeTransport)
-        return mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
+        return StartWebsocketData();
 
     return NS_OK;
 }

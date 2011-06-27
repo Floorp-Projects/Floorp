@@ -1559,13 +1559,9 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
 
 #ifdef XP_MACOSX
-  if (aManager &&
-      aManager->GetBackendType() == LayerManager::LAYERS_OPENGL &&
-      mInstanceOwner->UseAsyncRendering() &&
-      mInstanceOwner->GetEventModel() == NPEventModelCocoa &&
-      mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics)
-  {
-    return LAYER_ACTIVE;
+  if (aManager && aManager->GetBackendType() !=
+      LayerManager::LAYERS_OPENGL) {
+    return LAYER_NONE;
   }
 #endif
 
@@ -2101,9 +2097,6 @@ nsObjectFrame::PrepareInstanceOwner()
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("Created new instance owner %p for frame %p\n", mInstanceOwner.get(),
           this));
-
-  if (!mInstanceOwner)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // Note, |this| may very well be gone after this call.
   return mInstanceOwner->Init(PresContext(), this, GetContent());

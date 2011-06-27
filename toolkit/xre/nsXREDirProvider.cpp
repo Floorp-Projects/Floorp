@@ -454,9 +454,6 @@ LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
   }
 }
 
-static const char *const kAppendChromeManifests[] =
-  { "chrome.manifest", nsnull };
-
 NS_IMETHODIMP
 nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
 {

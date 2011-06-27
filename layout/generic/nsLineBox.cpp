@@ -408,10 +408,8 @@ nsLineBox::SetCarriedOutBottomMargin(nsCollapsingMargin aValue)
       if (!mBlockData) {
         mBlockData = new ExtraBlockData(mBounds);
       }
-      if (mBlockData) {
-        changed = aValue != mBlockData->mCarriedOutBottomMargin;
-        mBlockData->mCarriedOutBottomMargin = aValue;
-      }
+      changed = aValue != mBlockData->mCarriedOutBottomMargin;
+      mBlockData->mCarriedOutBottomMargin = aValue;
     }
     else if (mBlockData) {
       changed = aValue != mBlockData->mCarriedOutBottomMargin;
@@ -469,9 +467,7 @@ nsLineBox::AppendFloats(nsFloatCacheFreeList& aFreeList)
       if (!mInlineData) {
         mInlineData = new ExtraInlineData(mBounds);
       }
-      if (mInlineData) {
-        mInlineData->mFloats.Append(aFreeList);
-      }
+      mInlineData->mFloats.Append(aFreeList);
     }
   }
 }

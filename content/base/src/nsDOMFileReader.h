@@ -101,7 +101,6 @@ public:
                         PRUint32 argc, jsval* argv);
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
-  NS_FORWARD_NSIDOMNSEVENTTARGET(nsXHREventTarget::)
 
   // nsICharsetDetectionObserver
   NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);

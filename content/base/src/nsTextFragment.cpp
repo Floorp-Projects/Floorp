@@ -165,7 +165,7 @@ Is8BitUnvectorized(const PRUnichar *str, const PRUnichar *end)
 
   // Align ourselves to a word boundary.
   PRInt32 alignLen =
-    PR_MIN(len, PRInt32(((-NS_PTR_TO_UINT32(str)) & alignMask) / sizeof(PRUnichar)));
+    NS_MIN(len, PRInt32(((-NS_PTR_TO_INT32(str)) & alignMask) / sizeof(PRUnichar)));
   for (; i < alignLen; i++) {
     if (str[i] > 255)
       return PR_FALSE;

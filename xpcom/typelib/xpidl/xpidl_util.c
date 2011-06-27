@@ -360,6 +360,12 @@ verify_attribute_declaration(IDL_tree attr_tree)
     if (!is_method_scriptable(attr_tree, ident))
         return TRUE;
 
+    if (IDL_tree_property_get(ident, "nostdcall") != NULL) {
+        IDL_tree_error(attr_tree,
+                       "[nostdcall] attribute must not be scriptable");
+        return FALSE;
+    }
+
     /*
      * If it should be scriptable, check that the type is non-native. nsid,
      * domstring, utf8string, cstring, astring are exempted.
@@ -779,7 +785,14 @@ verify_method_declaration(IDL_tree method_tree)
                        "arguments");
         return FALSE;
     }
-    
+
+    if (IDL_tree_property_get(op->ident, "nostdcall") != NULL &&
+        scriptable_method) {
+        IDL_tree_error(method_tree,
+                       "[nostdcall] method must not be scriptable");
+        return FALSE;
+    }
+
     /* XXX q: can return type be nsid? */
     /* Native return type? */
     if (scriptable_method &&
