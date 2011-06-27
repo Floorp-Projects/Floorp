@@ -66,6 +66,11 @@ class gfxTextRun;
 class nsIURI;
 class nsIAtom;
 
+#include "gfx2DGlue.h"
+#include "mozilla/RefPtr.h"
+
+extern cairo_user_data_key_t kDrawTarget;
+
 // pref lang id's for font prefs
 // !!! needs to match the list of pref font.default.xx entries listed in all.js !!!
 // !!! don't use as bit mask, this may grow larger !!!
@@ -166,6 +171,18 @@ public:
 
     virtual already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
                                                         gfxASurface::gfxImageFormat format);
+
+    virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
+      CreateDrawTargetForSurface(gfxASurface *aSurface);
+
+    virtual mozilla::RefPtr<mozilla::gfx::SourceSurface>
+      GetSourceSurfaceForSurface(mozilla::gfx::DrawTarget *aTarget, gfxASurface *aSurface);
+
+    virtual mozilla::RefPtr<mozilla::gfx::ScaledFont>
+      GetScaledFontForFont(gfxFont *aFont);
+
+    virtual already_AddRefed<gfxASurface>
+      GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
 
     /*
      * Font bits

@@ -77,6 +77,8 @@ protected:
                               PRInt32 aLayoutStart,
                               PRInt32 aLayoutLength);
 
+    CTFontRef CreateCTFontWithDisabledLigatures(CGFloat aSize);
+
     static void CreateDefaultFeaturesDescriptor();
 
     static CTFontDescriptorRef GetDefaultFeaturesDescriptor() {
@@ -85,8 +87,6 @@ protected:
         }
         return sDefaultFeaturesDescriptor;
     }
-
-    static CTFontRef CreateCTFontWithDisabledLigatures(ATSFontRef aFontRef, CGFloat aSize);
 
     // cached font descriptor, created the first time it's needed
     static CTFontDescriptorRef    sDefaultFeaturesDescriptor;

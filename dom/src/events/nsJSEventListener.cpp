@@ -52,7 +52,7 @@
 #include "nsVariant.h"
 #include "nsIDOMBeforeUnloadEvent.h"
 #include "nsGkAtoms.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIJSContextStack.h"
 #ifdef NS_DEBUG
 #include "nsDOMJSUtils.h"
@@ -132,7 +132,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSEventListener)
 nsresult
 nsJSEventListener::GetJSVal(const nsAString& aEventName, jsval* aJSVal)
 {
-  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(mTarget);
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTarget);
   if (target && mContext) {
     nsAutoString eventString = NS_LITERAL_STRING("on") + aEventName;
     nsCOMPtr<nsIAtom> atomName = do_GetAtom(eventString);

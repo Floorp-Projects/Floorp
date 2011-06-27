@@ -57,7 +57,6 @@
 #include "nsDOMClassInfo.h"
 #include "nsEventListenerManager.h"
 #include "nsFrame.h"
-#include "nsGenericElement.h"  // for nsDOMEventRTTearoff
 #include "nsGlobalWindow.h"
 #include "nsGkAtoms.h"
 #include "nsImageFrame.h"
@@ -184,11 +183,7 @@ nsLayoutStatics::Initialize()
 
   nsCSSRendering::Init();
 
-  rv = nsTextFrameTextRunCache::Init();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize textframe textrun cache");
-    return rv;
-  }
+  nsTextFrameTextRunCache::Init();
 
   rv = nsHTMLDNSPrefetch::Initialize();
   if (NS_FAILED(rv)) {
@@ -266,11 +261,7 @@ nsLayoutStatics::Initialize()
 
   nsCORSListenerProxy::Startup();
 
-  rv = nsFrameList::Init();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsFrameList");
-    return rv;
-  }
+  nsFrameList::Init();
 
   NS_SealStaticAtomTable();
 
@@ -288,7 +279,6 @@ nsLayoutStatics::Shutdown()
   nsDOMStorageManager::Shutdown();
   txMozillaXSLTProcessor::Shutdown();
   nsDOMAttribute::Shutdown();
-  nsDOMEventRTTearoff::Shutdown();
   nsEventListenerManager::Shutdown();
   nsComputedDOMStyle::Shutdown();
   nsCSSParser::Shutdown();

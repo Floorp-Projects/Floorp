@@ -68,12 +68,12 @@
 #include "nsDisplayList.h"
 #include "nsCSSRendering.h"
 
-class nsDisplayTextDecoration : public nsDisplayItem {
+class nsDisplayTextDecoration : public nsCharClipDisplayItem {
 public:
   nsDisplayTextDecoration(nsDisplayListBuilder* aBuilder,
                           nsHTMLContainerFrame* aFrame, PRUint8 aDecoration,
                           nscolor aColor, PRUint8 aStyle, nsLineBox* aLine)
-    : nsDisplayItem(aBuilder, aFrame), mLine(aLine), mColor(aColor),
+    : nsCharClipDisplayItem(aBuilder, aFrame), mLine(aLine), mColor(aColor),
       mDecoration(aDecoration), mStyle(aStyle) {
     MOZ_COUNT_CTOR(nsDisplayTextDecoration);
   }
@@ -134,15 +134,15 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
     gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
     f->PaintTextDecorationLine(aCtx->ThebesContext(), pt, mLine, mColor,
                                mStyle, underlineOffset, ascent,
-                               metrics.underlineSize, mDecoration);
+                               metrics.underlineSize, Edges(), mDecoration);
   } else if (mDecoration == NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) {
     f->PaintTextDecorationLine(aCtx->ThebesContext(), pt, mLine, mColor,
                                mStyle, metrics.maxAscent, ascent,
-                               metrics.underlineSize, mDecoration);
+                               metrics.underlineSize, Edges(), mDecoration);
   } else {
     f->PaintTextDecorationLine(aCtx->ThebesContext(), pt, mLine, mColor,
-                               mStyle, metrics.strikeoutOffset,
-                               ascent, metrics.strikeoutSize, mDecoration);
+                               mStyle, metrics.strikeoutOffset, ascent,
+                               metrics.strikeoutSize, Edges(), mDecoration);
   }
 }
 
@@ -152,14 +152,14 @@ nsDisplayTextDecoration::GetBounds(nsDisplayListBuilder* aBuilder)
   return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
 }
 
-class nsDisplayTextShadow : public nsDisplayItem {
+class nsDisplayTextShadow : public nsCharClipDisplayItem {
 public:
   nsDisplayTextShadow(nsDisplayListBuilder* aBuilder,
                       nsHTMLContainerFrame* aFrame,
                       const PRUint8 aDecoration, PRUint8 aUnderlineStyle,
                       PRUint8 aOverlineStyle, PRUint8 aStrikeThroughStyle,
                       nsLineBox* aLine)
-    : nsDisplayItem(aBuilder, aFrame), mLine(aLine),
+    : nsCharClipDisplayItem(aBuilder, aFrame), mLine(aLine),
       mDecorationFlags(aDecoration), mUnderlineStyle(aUnderlineStyle),
       mOverlineStyle(aOverlineStyle), mStrikeThroughStyle(aStrikeThroughStyle) {
     MOZ_COUNT_CTOR(nsDisplayTextShadow);
@@ -300,22 +300,23 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
       continue;
     }
 
+    const nsCharClipDisplayItem::ClipEdges clipEdges = this->Edges();
     if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) {
       f->PaintTextDecorationLine(shadowCtx, pt, mLine, shadowColor,
                                  mUnderlineStyle, underlineOffset, ascent,
-                                 metrics.underlineSize,
+                                 metrics.underlineSize, clipEdges,
                                  NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE);
     }
     if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) {
       f->PaintTextDecorationLine(shadowCtx, pt, mLine, shadowColor,
                                  mOverlineStyle, metrics.maxAscent, ascent,
-                                 metrics.underlineSize,
+                                 metrics.underlineSize, clipEdges,
                                  NS_STYLE_TEXT_DECORATION_LINE_OVERLINE);
     }
     if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
       f->PaintTextDecorationLine(shadowCtx, pt, mLine, shadowColor,
                                  mStrikeThroughStyle, metrics.strikeoutOffset,
-                                 ascent, metrics.strikeoutSize,
+                                 ascent, metrics.strikeoutSize, clipEdges,
                                  NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH);
     }
 
@@ -440,6 +441,7 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
                    gfxFloat aOffset, 
                    gfxFloat aAscent, 
                    gfxFloat aSize,
+                   const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                    const PRUint8 aDecoration) 
 {
   NS_ASSERTION(!aLine, "Should not have passed a linebox to a non-block frame");
@@ -450,8 +452,10 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
       bp.Side(side) = 0;
     }
   }
+  nscoord x = aPt.x + bp.left;
   nscoord innerWidth = mRect.width - bp.left - bp.right;
-  gfxPoint pt(PresContext()->AppUnitsToGfxUnits(bp.left + aPt.x),
+  aClipEdges.Intersect(&x, &innerWidth);
+  gfxPoint pt(PresContext()->AppUnitsToGfxUnits(x),
               PresContext()->AppUnitsToGfxUnits(bp.top + aPt.y));
   gfxSize size(PresContext()->AppUnitsToGfxUnits(innerWidth), aSize);
   nsCSSRendering::PaintDecorationLine(aCtx, aColor, pt, size, aAscent, aOffset,

@@ -163,6 +163,28 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n) {
   return 0;
 }
 
+const char* nsCRT::memmem(const char* haystack, PRUint32 haystackLen,
+                          const char* needle, PRUint32 needleLen)
+{
+  // Sanity checking
+  if (!(haystack && needle && haystackLen && needleLen &&
+        needleLen <= haystackLen))
+    return NULL;
+
+#ifdef HAVE_MEMMEM
+  return (const char*)::memmem(haystack, haystackLen, needle, needleLen);
+#else
+  // No memmem means we need to roll our own.  This isn't really optimized
+  // for performance ... if that becomes an issue we can take some inspiration
+  // from the js string compare code in jsstr.cpp
+  for (PRInt32 i = 0; i < haystackLen - needleLen; i++) {
+    if (!memcmp(haystack + i, needle, needleLen))
+      return haystack + i;
+  }
+#endif
+  return NULL;
+}
+
 PRUnichar* nsCRT::strdup(const PRUnichar* str)
 {
   PRUint32 len = nsCRT::strlen(str);

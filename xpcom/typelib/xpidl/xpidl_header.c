@@ -789,6 +789,8 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
     char *attrname = ATTR_IDENT(attr_tree).str;
     const char *binaryname;
     IDL_tree ident = IDL_LIST(IDL_ATTR_DCL(attr_tree).simple_declarations).data;
+    gboolean nostdcall =
+        (IDL_tree_property_get(ATTR_DECLS(attr_tree), "nostdcall") != NULL);
 
     if (mode == AS_DECL) {
         if (IDL_tree_property_get(ident, "deprecated"))
@@ -796,9 +798,15 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
         if (is_method_scriptable(attr_tree, ident))
             fputs("NS_SCRIPTABLE ", outfile);
 
-        fputs("NS_IMETHOD ", outfile);
+        if (nostdcall)
+            fputs("virtual nsresult ", outfile);
+        else
+            fputs("NS_IMETHOD ", outfile);
     } else if (mode == AS_IMPL) {
-        fprintf(outfile, "NS_IMETHODIMP %s::", className);
+        if (nostdcall)
+            fprintf(outfile, "nsresult %s::", className);
+        else
+            fprintf(outfile, "NS_IMETHODIMP %s::", className);
     }
     fprintf(outfile, "%cet",
             getter ? 'G' : 'S');
@@ -1040,6 +1048,8 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
         (IDL_tree_property_get(op->ident, "optional_argc") != NULL);
     gboolean op_context =
         (IDL_tree_property_get(op->ident, "implicit_jscontext") != NULL);
+    gboolean op_nostdcall =
+        (IDL_tree_property_get(op->ident, "nostdcall") != NULL);
     const char *name;
     const char *binaryname;
     IDL_tree iter;
@@ -1050,7 +1060,17 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
         if (is_method_scriptable(method_tree, op->ident))
             fputs("NS_SCRIPTABLE ", outfile);
 
-        if (op_notxpcom) {
+        if (op_nostdcall) {
+            fputs("virtual ", outfile);
+            if (op_notxpcom) {
+                if (!write_type(op->op_type_spec, WT_PLAIN, FALSE, outfile))
+                    return FALSE;
+            }
+            else {
+                fputs("nsresult", outfile);
+            }
+        }
+        else if (op_notxpcom) {
             fputs("NS_IMETHOD_(", outfile);
             if (!write_type(op->op_type_spec, WT_PLAIN, FALSE, outfile))
                 return FALSE;
@@ -1061,7 +1081,16 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
         fputc(' ', outfile);
     }
     else if (mode == AS_IMPL) {
-        if (op_notxpcom) {
+        if (op_nostdcall) {
+            if (op_notxpcom) {
+                if (!write_type(op->op_type_spec, WT_PLAIN, FALSE, outfile))
+                    return FALSE;
+            }
+            else {
+                fputs("nsresult", outfile);
+            }
+        }
+        else if (op_notxpcom) {
             fputs("NS_IMETHODIMP_(", outfile);
             if (!write_type(op->op_type_spec, WT_PLAIN, FALSE, outfile))
                 return FALSE;

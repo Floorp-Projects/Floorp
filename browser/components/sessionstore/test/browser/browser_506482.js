@@ -41,9 +41,6 @@ function test() {
   // test setup
   waitForExplicitFinish();
 
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
-
   // read the sessionstore.js mtime (picked from browser_248970_a.js)
   let profilePath = Cc["@mozilla.org/file/directory_service;1"].
                     getService(Ci.nsIProperties).

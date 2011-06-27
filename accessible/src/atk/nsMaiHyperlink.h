@@ -58,9 +58,8 @@ public:
 
 public:
     AtkHyperlink *GetAtkHyperlink(void);
-    nsAccessible* GetAccHyperlink(void) {
-        return mHyperlink && mHyperlink->IsHyperLink() ? mHyperlink : nsnull;
-    }
+  nsAccessible* GetAccHyperlink()
+  { return mHyperlink && mHyperlink->IsLink() ? mHyperlink : nsnull; }
 
 protected:
     nsAccessible* mHyperlink;

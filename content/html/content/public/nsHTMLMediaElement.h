@@ -188,6 +188,7 @@ public:
   gfxASurface* GetPrintSurface() { return mPrintSurface; }
 
   // Dispatch events
+  using nsGenericHTMLElement::DispatchEvent;
   nsresult DispatchEvent(const nsAString& aName);
   nsresult DispatchAsyncEvent(const nsAString& aName);
   nsresult DispatchAudioAvailableEvent(float* aFrameBuffer,

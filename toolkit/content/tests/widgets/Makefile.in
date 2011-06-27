@@ -44,84 +44,27 @@ relativesrcdir  = toolkit/content/tests/widgets
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_arrowpanel.xul \
-		test_bug360220.xul \
-		test_bug359754.xul \
-		test_bug365773.xul \
-		test_bug382990.xul \
-		test_bug457632.xul \
-		test_bug460942.xul \
-		test_bug509732.xul \
-		test_bug554279.xul \
-		test_bug557987.xul\
-		test_bug562554.xul \
-		test_button.xul \
-		test_closemenu_attribute.xul \
-		test_colorpicker_popup.xul \
-		test_deck.xul \
-		test_menulist.xul \
-		test_menuitem_blink.xul \
-		test_menulist_keynav.xul \
-		test_menulist_null_value.xul \
-		test_popup_coords.xul \
-		test_popup_recreate.xul \
-		test_popup_button.xul \
-		test_menuchecks.xul \
-		test_popup_attribute.xul \
-		test_popup_preventdefault.xul \
-		test_notificationbox.xul \
-		test_scale.xul \
-		test_radio.xul \
-		test_tabbox.xul \
-		test_tooltip_noautohide.xul \
+_CHROME_FILES = \
 		popup_shared.js \
-		popup_trigger.js \
-		window_popup_button.xul \
-		window_popup_attribute.xul \
-		popup_childframe_node.xul \
-		test_tooltip.xul \
-		test_progressmeter.xul \
-		test_props.xul \
-		test_statusbar.xul \
-		test_datepicker.xul \
-		test_timepicker.xul \
-		test_tree.xul \
-		test_tree_view.xul \
-		test_tree_single.xul \
+		tree_shared.js \
+		$(NULL)
+
+_TEST_FILES =	\
+                test_contextmenu_nested.xul \
+		test_tree_column_reorder.xul \
 		test_tree_hier.xul \
 		test_tree_hier_cell.xul \
-		test_tree_column_reorder.xul \
 		tree_shared.js \
-		test_textbox_emptytext.xul \
-		test_textbox_number.xul \
-		test_textbox_search.xul \
-		test_toolbar.xul \
-		xul_selectcontrol.js \
-		test_popupincontent.xul \
-		test_panelfrommenu.xul \
-		test_hiddenitems.xul \
-		test_hiddenpaging.xul \
-		test_popup_tree.xul \
-		test_popup_keys.xul \
-		test_popuphidden.xul \
-		test_popup_scaled.xul \
-		test_popupremoving.xul \
-		test_popupremoving_frame.xul \
-		frame_popupremoving_frame.xul \
-		test_position.xul \
-		test_menu.xul \
-		test_menu_hide.xul \
+		test_arrowpanel.xul \
+		test_datepicker.xul \
+		test_deck.xul \
+		test_menuchecks.xul \
+		test_menulist_null_value.xul \
 		test_mousecapture.xul \
-		test_mousecapture_area.html \
-		test_focus_anons.xul \
-		test_tabindex.xul \
 		test_mousescroll.xul \
-		test_scrollbar.xul \
-		test_sorttemplate.xul \
-		test_contextmenu_list.xul \
-		test_contextmenu_nested.xul \
-		test_videocontrols.html \
-		test_richlist_direction.xul \
+		test_mousecapture_area.html \
+		popup_shared.js \
+                test_videocontrols.html \
 		test_videocontrols_video_direction.html \
 		test_videocontrols_audio_direction.html \
 		videocontrols_direction-1-ref.html \
@@ -147,6 +90,9 @@ ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _TEST_FILES += test_menubar.xul \
                window_menubar.xul
 endif
+
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/../chrome
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

@@ -1664,7 +1664,6 @@ nsCSSFontFaceRule::GetDesc(nsCSSFontDesc aDescID, nsCSSValue & aValue)
   aValue = mDecl.*nsCSSFontFaceStyleDecl::Fields[aDescID];
 }
 
-#ifdef MOZ_CSS_ANIMATIONS
 // -------------------------------------------
 // nsCSSKeyframeStyleDeclaration
 //
@@ -2087,4 +2086,3 @@ nsCSSKeyframesRule::UseForPresentation(nsPresContext* aPresContext,
   return PR_FALSE;
 }
 
-#endif

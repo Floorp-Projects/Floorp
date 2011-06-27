@@ -728,7 +728,7 @@ nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbo
   [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
 
   // Ensure that the control is square.
-  float length = PR_MIN(inBoxRect.size.width, inBoxRect.size.height);
+  float length = NS_MIN(inBoxRect.size.width, inBoxRect.size.height);
   HIRect drawRect = CGRectMake(inBoxRect.origin.x + (int)((inBoxRect.size.width - length) / 2.0f),
                                inBoxRect.origin.y + (int)((inBoxRect.size.height - length) / 2.0f),
                                length, length);
@@ -2741,5 +2741,5 @@ nsNativeThemeCocoa::GetProgressMaxValue(nsIFrame* aFrame)
     }
   }
 
-  return (double)PR_MAX(CheckIntAttr(aFrame, nsWidgetAtoms::max, 100), 1);
+  return (double)NS_MAX(CheckIntAttr(aFrame, nsWidgetAtoms::max, 100), 1);
 }

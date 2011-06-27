@@ -1130,6 +1130,22 @@ private:
   }
 };
 
+struct nsStyleTextOverflow {
+  nsStyleTextOverflow() : mType(NS_STYLE_TEXT_OVERFLOW_CLIP) {}
+
+  bool operator==(const nsStyleTextOverflow& aOther) const {
+    return mType == aOther.mType &&
+           (mType != NS_STYLE_TEXT_OVERFLOW_STRING ||
+            mString == aOther.mString);
+  }
+  bool operator!=(const nsStyleTextOverflow& aOther) const {
+    return !(*this == aOther);
+  }
+
+  nsString mString;
+  PRUint8  mType;
+};
+
 struct nsStyleTextReset {
   nsStyleTextReset(void);
   nsStyleTextReset(const nsStyleTextReset& aOther);
@@ -1187,6 +1203,7 @@ struct nsStyleTextReset {
   static PRBool ForceCompare() { return PR_FALSE; }
 
   nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
+  nsStyleTextOverflow mTextOverflow;    // [reset] enum, string
 
   PRUint8 mTextBlink;                   // [reset] see nsStyleConsts.h
   PRUint8 mTextDecorationLine;          // [reset] see nsStyleConsts.h
@@ -1411,7 +1428,6 @@ private:
                                       // eCSSProperty_UNKNOWN
 };
 
-#ifdef MOZ_CSS_ANIMATIONS
 struct nsAnimation {
   nsAnimation() { /* leaves uninitialized; see also SetInitialValues */ }
   explicit nsAnimation(const nsAnimation& aCopy);
@@ -1452,7 +1468,6 @@ private:
   PRUint8 mPlayState;
   float mIterationCount; // NS_IEEEPositiveInfinity() means infinite
 };
-#endif
 
 struct nsStyleDisplay {
   nsStyleDisplay();
@@ -1510,7 +1525,6 @@ struct nsStyleDisplay {
            mTransitionDelayCount,
            mTransitionPropertyCount;
 
-#ifdef MOZ_CSS_ANIMATIONS
   nsAutoTArray<nsAnimation, 1> mAnimations; // [reset]
   // The number of elements in mAnimations that are not from repeating
   // a list due to another property being longer.
@@ -1522,7 +1536,6 @@ struct nsStyleDisplay {
            mAnimationFillModeCount,
            mAnimationPlayStateCount,
            mAnimationIterationCountCount;
-#endif
 
   PRBool IsBlockInside() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||

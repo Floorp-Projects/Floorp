@@ -663,6 +663,9 @@
       </vbox>
     </hbox>
 
+    <toolbarbutton id="selectionhandle-start" label="^" left="0" top="0" hidden="true"/>
+    <toolbarbutton id="selectionhandle-end" label="^" left="0" top="0" hidden="true"/>
+
     <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
       <vbox id="menulist-popup" class="dialog-dark">
         <label id="menulist-title" class="options-title" crop="center" flex="1"/>

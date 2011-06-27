@@ -133,7 +133,7 @@ class RefTest(object):
 
   def cleanup(self, profileDir):
     if profileDir:
-      shutil.rmtree(profileDir)
+      shutil.rmtree(profileDir, True)
 
   def runTests(self, testPath, options):
     debuggerInfo = getDebuggerInfo(self.oldcwd, options.debugger, options.debuggerArgs,

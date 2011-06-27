@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: false marker overlap
+-->
+<html><head>
+<title>text-overflow: form control elements</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test { 
+  overflow: hidden; 
+  white-space: nowrap;
+  color: black;
+  height: 6em;
+  width: 32.5em;
+  margin-bottom: 1em;
+}
+
+i {
+  display:inline-block;
+  height: 3em;
+  width: 3em;
+  border:1px solid blue;
+  text-shadow: none;
+}
+.rtl {
+  direction:rtl;
+}
+.rlo {
+  unicode-bidi: bidi-override; direction: rtl;
+}
+.lro {
+  unicode-bidi: bidi-override; direction: ltr;
+}
+
+s {
+   float:right;
+   width:3em;
+   height:3em;
+   margin-right:-0.6em;
+   border:1px solid red;
+}
+.rtl s {
+   float:left;
+   margin-left:-0.6em;
+   margin-right:0;
+}
+.overlap {margin-left:-0.6em;}
+.rtl .overlap {margin-right:-0.6em;margin-left:0;}
+.n {padding-left:0.6em;}
+.rtl .n {padding-right:0.6em;padding-left:0;}
+</style>
+
+</head><body>
+
+<div class="test"><font class="overlap"><s></s>&nbsp;<m>&#x2026;</m>| | | | | | | | | | | | | | | | | | | | | | <i class="n"></i></font></div>
+<div class="test"><font><s></s>| | | | | | | | | | | | | | | | | | | | | | | <i></i></font></div>
+<div class="test rtl"><font class="overlap"><s></s>&nbsp;<m>&#x2026;</m>| | | | | | | | | | | | | | | | | | | | | | <i class="n"></i></font></div>
+<div class="test rtl"><font><s></s>| | | | | | | | | | | | | | | | | | | | | | | <i></i></font></div>
+
+
+</body></html>

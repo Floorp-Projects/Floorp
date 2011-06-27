@@ -271,6 +271,32 @@ gfxGDIFont::SetupCairoFont(gfxContext *aContext)
     return PR_TRUE;
 }
 
+gfxFont::RunMetrics
+gfxGDIFont::Measure(gfxTextRun *aTextRun,
+                    PRUint32 aStart, PRUint32 aEnd,
+                    BoundingBoxType aBoundingBoxType,
+                    gfxContext *aRefContext,
+                    Spacing *aSpacing)
+{
+    gfxFont::RunMetrics metrics =
+        gfxFont::Measure(aTextRun, aStart, aEnd,
+                         aBoundingBoxType, aRefContext, aSpacing);
+
+    // if aBoundingBoxType is LOOSE_INK_EXTENTS
+    // and the underlying cairo font may be antialiased,
+    // we can't trust Windows to have considered all the pixels
+    // so we need to add "padding" to the bounds.
+    // (see bugs 475968, 439831, compare also bug 445087)
+    if (aBoundingBoxType == LOOSE_INK_EXTENTS &&
+        mAntialiasOption != kAntialiasNone &&
+        metrics.mBoundingBox.width > 0) {
+        metrics.mBoundingBox.x -= aTextRun->GetAppUnitsPerDevUnit();
+        metrics.mBoundingBox.width += aTextRun->GetAppUnitsPerDevUnit() * 3;
+    }
+
+    return metrics;
+}
+
 void
 gfxGDIFont::Initialize()
 {

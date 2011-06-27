@@ -3092,60 +3092,6 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     return rv;
 }
 
-#ifdef XPC_IDISPATCH_SUPPORT
-nsresult
-nsScriptSecurityManager::CheckComponentPermissions(JSContext *cx,
-                                                   const nsCID &aCID)
-{
-    nsresult rv;
-    nsIPrincipal* subjectPrincipal = GetSubjectPrincipal(cx, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Reformat the CID string so it's suitable for prefs
-    nsXPIDLCString cidTemp;
-    cidTemp.Adopt(aCID.ToString());
-    nsCAutoString cid(NS_LITERAL_CSTRING("CID") +
-                      Substring(cidTemp, 1, cidTemp.Length() - 2));
-    ToUpperCase(cid);
-
-#ifdef DEBUG_CAPS_CheckComponentPermissions
-    printf("### CheckComponentPermissions(ClassID.%s) ",cid.get());
-#endif
-
-    // Look up the policy for this class.
-    // while this isn't a property we'll treat it as such, using ACCESS_CALL_METHOD
-    JSAutoRequest ar(cx);
-    jsid cidId = INTERNED_STRING_TO_JSID(::JS_InternString(cx, cid.get()));
-
-    ClassInfoData nameData(nsnull, "ClassID");
-    SecurityLevel securityLevel;
-    rv = LookupPolicy(subjectPrincipal, nameData, cidId,
-                      nsIXPCSecurityManager::ACCESS_CALL_METHOD, 
-                      nsnull, &securityLevel);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // If there's no policy stored, use the "security.classID.allowByDefault" pref 
-    if (securityLevel.level == SCRIPT_SECURITY_UNDEFINED_ACCESS)
-        securityLevel.level = mXPCDefaultGrantAll ? SCRIPT_SECURITY_ALL_ACCESS :
-                                                    SCRIPT_SECURITY_NO_ACCESS;
-
-    if (securityLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
-    {
-#ifdef DEBUG_CAPS_CheckComponentPermissions
-        printf(" GRANTED.\n");
-#endif
-        return NS_OK;
-    }
-
-#ifdef DEBUG_CAPS_CheckComponentPermissions
-    printf(" DENIED.\n");
-#endif
-    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-}
-#endif
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
                                            const nsCID &aCID)
@@ -3158,12 +3104,6 @@ nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
 
     nsresult rv = CheckXPCPermissions(nsnull, nsnull, nsnull, nsnull, nsnull);
     if (NS_FAILED(rv))
-#ifdef XPC_IDISPATCH_SUPPORT
-    {
-        rv = CheckComponentPermissions(cx, aCID);
-    }
-    if (NS_FAILED(rv))
-#endif
     {
         //-- Access denied, report an error
         nsCAutoString errorMsg("Permission denied to create instance of class. CID=");
@@ -3337,18 +3277,12 @@ nsScriptSecurityManager::AsyncOnChannelRedirect(nsIChannel* oldChannel,
 const char sJSEnabledPrefName[] = "javascript.enabled";
 const char sFileOriginPolicyPrefName[] =
     "security.fileuri.strict_origin_policy";
-#ifdef XPC_IDISPATCH_SUPPORT
-const char sXPCDefaultGrantAllName[] = "security.classID.allowByDefault";
-#endif
 static const char sPrincipalPrefix[] = "capability.principal";
 static const char sPolicyPrefix[] = "capability.policy.";
 
 static const char* kObservedPrefs[] = {
   sJSEnabledPrefName,
   sFileOriginPolicyPrefName,
-#ifdef XPC_IDISPATCH_SUPPORT
-  sXPCDefaultGrantAllName,
-#endif
   sPolicyPrefix,
   sPrincipalPrefix,
   nsnull
@@ -3403,9 +3337,6 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mIsJavaScriptEnabled(PR_FALSE),
       mIsWritingPrefs(PR_FALSE),
       mPolicyPrefsChanged(PR_TRUE)
-#ifdef XPC_IDISPATCH_SUPPORT
-      , mXPCDefaultGrantAll(PR_FALSE)
-#endif
 {
     NS_ASSERTION(sizeof(PRWord) == sizeof(void*),
                  "PRWord and void* have different lengths on this platform. "
@@ -4005,11 +3936,6 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged()
 
     sStrictFileOriginPolicy = PR_TRUE;
 
-#ifdef XPC_IDISPATCH_SUPPORT
-    // Granting XPC Priveleges defaults to disabled in failure cases.
-    mXPCDefaultGrantAll = PR_FALSE;
-#endif
-
     nsresult rv;
     if (!mPrefInitialized) {
         rv = InitPrefs();
@@ -4022,11 +3948,6 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged()
 
     sStrictFileOriginPolicy =
         Preferences::GetBool(sFileOriginPolicyPrefName, PR_FALSE);
-
-#ifdef XPC_IDISPATCH_SUPPORT
-    mXPCDefaultGrantAll =
-        Preferences::GetBoolPref(sXPCDefaultGrantAllName, mXPCDefaultGrantAll);
-#endif
 }
 
 nsresult

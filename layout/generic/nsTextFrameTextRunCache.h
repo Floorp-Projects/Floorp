@@ -46,7 +46,7 @@
  */
 class nsTextFrameTextRunCache {
 public:
-  static nsresult Init();
+  static void Init();
   static void Shutdown();
 };
 

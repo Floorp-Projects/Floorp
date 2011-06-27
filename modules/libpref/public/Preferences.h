@@ -74,8 +74,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
   NS_DECL_NSIPREFSERVICEINTERNAL
-  NS_FORWARD_NSIPREFBRANCH(mRootBranch->)
-  NS_FORWARD_NSIPREFBRANCH2(mRootBranch->)
+  NS_FORWARD_NSIPREFBRANCH(sRootBranch->)
+  NS_FORWARD_NSIPREFBRANCH2(sRootBranch->)
   NS_DECL_NSIOBSERVER
 
   Preferences();
@@ -110,7 +110,17 @@ public:
   static nsIPrefBranch2* GetRootBranch()
   {
     NS_ENSURE_TRUE(InitStaticMembers(), nsnull);
-    return sPreferences->mRootBranch.get();
+    return sRootBranch;
+  }
+
+  /**
+   * Returns shared default pref branch instance.
+   * NOTE: not addreffed.
+   */
+  static nsIPrefBranch* GetDefaultRootBranch()
+  {
+    NS_ENSURE_TRUE(InitStaticMembers(), nsnull);
+    return sDefaultRootBranch;
   }
 
   /**
@@ -138,6 +148,27 @@ public:
     return result;
   }
 
+  /**
+   * Gets char type pref value directly.  If failed, the get() of result
+   * returns NULL.  Even if succeeded but the result was empty string, the
+   * get() does NOT return NULL.  So, you can check whether the method
+   * succeeded or not by:
+   *
+   * nsAdoptingString value = Prefereces::GetString("foo.bar");
+   * if (!value) {
+   *   // failed
+   * }
+   *
+   * Be aware.  If you wrote as:
+   *
+   * nsAutoString value = Preferences::GetString("foo.bar");
+   * if (!value.get()) {
+   *   // the condition is always FALSE!!
+   * }
+   *
+   * The value.get() doesn't return NULL. You must use nsAdoptingString when
+   * you need to check whether it was failure or not.
+   */
   static nsAdoptingCString GetCString(const char* aPref);
   static nsAdoptingString GetString(const char* aPref);
   static nsAdoptingCString GetLocalizedCString(const char* aPref);
@@ -251,6 +282,65 @@ public:
                                   const char* aPref,
                                   PRUint32 aDefault = 0);
 
+  /**
+   * Gets the default bool, int or uint value of the pref.
+   * The result is raw result of nsIPrefBranch::Get*Pref().
+   * If the pref could have any value, you needed to use these methods.
+   * If not so, you could use below methods.
+   */
+  static nsresult GetDefaultBool(const char* aPref, PRBool* aResult);
+  static nsresult GetDefaultInt(const char* aPref, PRInt32* aResult);
+  static nsresult GetDefaultUint(const char* aPref, PRUint32* aResult)
+  {
+    return GetDefaultInt(aPref, reinterpret_cast<PRInt32*>(aResult));
+  }
+
+  /**
+   * Gets the default bool, int or uint value of the pref directly.
+   * You can set an invalid value of the pref to aFailedResult.  If these
+   * methods failed to get the default value, they would return the
+   * aFailedResult value.
+   */
+  static PRBool GetDefaultBool(const char* aPref, PRBool aFailedResult)
+  {
+    PRBool result;
+    return NS_SUCCEEDED(GetDefaultBool(aPref, &result)) ? result :
+                                                          aFailedResult;
+  }
+  static PRInt32 GetDefaultInt(const char* aPref, PRInt32 aFailedResult)
+  {
+    PRInt32 result;
+    return NS_SUCCEEDED(GetDefaultInt(aPref, &result)) ? result : aFailedResult;
+  }
+  static PRUint32 GetDefaultUint(const char* aPref, PRUint32 aFailedResult)
+  {
+   return static_cast<PRUint32>(
+     GetDefaultInt(aPref, static_cast<PRInt32>(aFailedResult)));
+  }
+
+  /**
+   * Gets the default value of the char type pref.
+   * If the get() of the result returned NULL, that meant the value didn't
+   * have default value.
+   *
+   * See the comment at definition at GetString() and GetCString() for more
+   * details of the result.
+   */
+  static nsAdoptingString GetDefaultString(const char* aPref);
+  static nsAdoptingCString GetDefaultCString(const char* aPref);
+  static nsAdoptingString GetDefaultLocalizedString(const char* aPref);
+  static nsAdoptingCString GetDefaultLocalizedCString(const char* aPref);
+
+  static nsresult GetDefaultCString(const char* aPref, nsACString* aResult);
+  static nsresult GetDefaultString(const char* aPref, nsAString* aResult);
+  static nsresult GetDefaultLocalizedCString(const char* aPref,
+                                             nsACString* aResult);
+  static nsresult GetDefaultLocalizedString(const char* aPref,
+                                            nsAString* aResult);
+
+  static nsresult GetDefaultComplex(const char* aPref, const nsIID &aType,
+                                    void** aResult);
+
 protected:
   nsresult NotifyServiceObservers(const char *aSubject);
   nsresult UseDefaultPrefFile();
@@ -262,10 +352,12 @@ protected:
   nsresult MakeBackupPrefFile(nsIFile *aFile);
 
 private:
-  nsCOMPtr<nsIPrefBranch2> mRootBranch;
   nsCOMPtr<nsIFile>        mCurrentFile;
 
   static Preferences*      sPreferences;
+  static nsIPrefBranch2*   sRootBranch;
+  // NOTE: default branch doesn't return nsIPrefBranch2 interface at query.
+  static nsIPrefBranch*    sDefaultRootBranch;
   static PRBool            sShutdown;
 
   /**

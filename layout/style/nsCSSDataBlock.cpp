@@ -299,8 +299,8 @@ nsCSSCompressedDataBlock::~nsCSSCompressedDataBlock()
     const char* cursor = Block();
     const char* cursor_end = BlockEnd();
     while (cursor < cursor_end) {
-        nsCSSProperty iProp = PropertyAtCursor(cursor);
-        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
+        NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(PropertyAtCursor(cursor)),
+                          "out of range");
 
         const nsCSSValue* val = ValueAtCursor(cursor);
         NS_ABORT_IF_FALSE(val->GetUnit() != eCSSUnit_Null, "oops");
@@ -390,7 +390,9 @@ nsCSSExpandedDataBlock::ComputeSize()
         for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
             if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
                 continue;
+#ifdef DEBUG
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
+#endif
             NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
             NS_ABORT_IF_FALSE(PropertyAt(iProp)->GetUnit() != eCSSUnit_Null,
                               "null value while computing size");

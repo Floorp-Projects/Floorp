@@ -62,7 +62,7 @@
 #include "nsSelectionState.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsStubMutationObserver.h"
 #include "nsIViewManager.h"
 #include "nsCycleCollectionParticipant.h"
@@ -613,7 +613,7 @@ public:
                                     nsIDOMNode *aEndNode,
                                     PRInt32 aEndOffset);
 
-  virtual already_AddRefed<nsPIDOMEventTarget> GetPIDOMEventTarget() = 0;
+  virtual already_AddRefed<nsIDOMEventTarget> GetDOMEventTarget() = 0;
 
   // Fast non-refcounting editor root element accessor
   nsIDOMElement *GetRoot();
@@ -764,7 +764,7 @@ protected:
   PRInt8                        mDocDirtyState;		// -1 = not initialized
   nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
   // The form field as an event receiver
-  nsCOMPtr<nsPIDOMEventTarget> mEventTarget;
+  nsCOMPtr<nsIDOMEventTarget> mEventTarget;
 
   nsString* mPhonetic;
 

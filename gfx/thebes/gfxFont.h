@@ -42,6 +42,7 @@
 #define GFX_FONT_H
 
 #include "prtypes.h"
+#include "nsAlgorithm.h"
 #include "gfxTypes.h"
 #include "nsString.h"
 #include "gfxPoint.h"
@@ -167,8 +168,8 @@ struct THEBES_API gfxFontStyle {
     // Not meant to be called when sizeAdjust = 0.
     gfxFloat GetAdjustedSize(gfxFloat aspect) const {
         NS_ASSERTION(sizeAdjust != 0.0, "Not meant to be called when sizeAdjust = 0");
-        gfxFloat adjustedSize = PR_MAX(NS_round(size*(sizeAdjust/aspect)), 1.0);
-        return PR_MIN(adjustedSize, FONT_MAX_SIZE);
+        gfxFloat adjustedSize = NS_MAX(NS_round(size*(sizeAdjust/aspect)), 1.0);
+        return NS_MIN(adjustedSize, FONT_MAX_SIZE);
     }
 
     PLDHashNumber Hash() const {

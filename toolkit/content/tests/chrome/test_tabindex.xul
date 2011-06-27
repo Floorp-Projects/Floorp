@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for tabindex
+  -->
+<window title="tabindex" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+
+<!--
+  Elements are navigated in the following order:
+    1. tabindex > 0 in tree order
+    2. tabindex = 0 in tree order
+  Elements with tabindex = -1 are not in the tab order
+ -->
+<hbox>
+  <button id="t5" label="One"/>
+  <checkbox id="no1" label="Two" tabindex="-1"/>
+  <button id="t6" label="Three" tabindex="0"/>
+  <checkbox id="t1" label="Four" tabindex="1"/>
+</hbox>
+<hbox>
+  <textbox id="t7" idmod="t3" size="3"/>
+  <textbox id="no2" size="3" tabindex="-1"/>
+  <textbox id="t8" idmod="t4" size="3" tabindex="0"/>
+  <textbox id="t2" idmod="t1" size="3" tabindex="1"/>
+</hbox>
+<hbox>
+  <button id="no3" style="-moz-user-focus: ignore;" label="One"/>
+  <checkbox id="no4" style="-moz-user-focus: ignore;" label="Two" tabindex="-1"/>
+  <button id="t9" style="-moz-user-focus: ignore;" label="Three" tabindex="0"/>
+  <checkbox id="t3" style="-moz-user-focus: ignore;" label="Four" tabindex="1"/>
+</hbox>
+<hbox>
+  <textbox id="t10" idmod="t5" style="-moz-user-focus: ignore;" size="3"/>
+  <textbox id="no5" style="-moz-user-focus: ignore;" size="3" tabindex="-1"/>
+  <textbox id="t11" idmod="t6" style="-moz-user-focus: ignore;" size="3" tabindex="0"/>
+  <textbox id="t4" idmod="t2" style="-moz-user-focus: ignore;" size="3" tabindex="1"/>
+</hbox>
+<listbox id="t12" idmod="t7">
+  <listitem label="Item One"/>
+</listbox>
+
+<hbox>
+  <!-- the tabindex attribute does not apply to non-controls, so it
+       should be treated as -1 for non-focusable dropmarkers, and 0
+       for focusable dropmarkers. Thus, the first four dropmarkers
+       are not in the tab order, and the last four dropmarkers should
+       be in the tab order just after the listbox above.
+    -->
+  <dropmarker id="no6"/>
+  <dropmarker id="no7" tabindex="-1"/>
+  <dropmarker id="no8" tabindex="0"/>
+  <dropmarker id="no9" tabindex="1"/>
+  <dropmarker id="t13" style="-moz-user-focus: normal;"/>
+  <dropmarker id="t14" style="-moz-user-focus: normal;" tabindex="-1"/>
+  <dropmarker id="t15" style="-moz-user-focus: normal;" tabindex="0"/>
+  <dropmarker id="t16" style="-moz-user-focus: normal;" tabindex="1"/>
+</hbox>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gAdjustedTabFocusModel = false;
+var gTestCount = 16;
+var gTestsOccurred = 0;
+ 
+function runTests()
+{
+  var t;
+  window.addEventListener("focus", function (event) {
+    if (t == 1 && event.target.id == "t2") {
+      // looks to be using the MacOSX Full Keyboard Access set to Textboxes
+      // and lists only so use the idmod attribute instead
+      gAdjustedTabFocusModel = true;
+      gTestCount = 7;
+    }
+
+    var attrcompare = gAdjustedTabFocusModel ? "idmod" : "id";
+
+    // check for the last test which should wrap aorund to the first item
+    // consider the focus event on the inner input of textboxes instead
+    if (event.originalTarget.localName == "input") {
+      is(document.getBindingParent(event.originalTarget).getAttribute(attrcompare),
+         "t" + t, "tab " + t + " to inner input");
+      gTestsOccurred++;
+    }
+    else {
+      is(event.target.getAttribute(attrcompare), "t" + t, "tab " + t + " to " + event.target.localName)
+      if (event.target.localName != "textbox")
+        gTestsOccurred++;
+    }
+  }, true);
+
+  for (t = 1; t <= gTestCount; t++)
+    synthesizeKey("VK_TAB", { });
+
+  is(gTestsOccurred, gTestCount, "test count");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTests);
+
+]]>
+
+</script>
+
+</window>

@@ -955,6 +955,11 @@ struct JSContext
     /* Temporary arena pool used while compiling and decompiling. */
     JSArenaPool         tempPool;
 
+  private:
+    /* Lazily initialized pool of maps used during parse/emit. */
+    js::ParseMapPool    *parseMapPool_;
+
+  public:
     /* Temporary arena pool used while evaluate regular expressions. */
     JSArenaPool         regExpPool;
 
@@ -984,6 +989,13 @@ struct JSContext
     inline js::RegExpStatics *regExpStatics();
 
   public:
+    js::ParseMapPool &parseMapPool() {
+        JS_ASSERT(parseMapPool_);
+        return *parseMapPool_;
+    }
+
+    inline bool ensureParseMapPool();
+
     /*
      * The default script compilation version can be set iff there is no code running.
      * This typically occurs via the JSAPI right after a context is constructed.
@@ -1262,6 +1274,13 @@ struct JSContext
         this->throwing = false;
         this->exception.setUndefined();
     }
+
+    /*
+     * Count of currently active compilations.
+     * When there are compilations active for the context, the GC must not
+     * purge the ParseMapPool.
+     */
+    uintN activeCompilations;
 
 #ifdef DEBUG
     /*
@@ -2291,8 +2310,6 @@ extern bool
 js_CurrentPCIsInImacro(JSContext *cx);
 
 namespace js {
-
-class RegExpStatics;
 
 extern JS_FORCES_STACK JS_FRIEND_API(void)
 LeaveTrace(JSContext *cx);

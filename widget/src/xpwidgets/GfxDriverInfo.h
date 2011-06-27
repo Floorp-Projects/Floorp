@@ -122,7 +122,7 @@ ParseDriverVersion(nsAString& aVersion, PRUint64 *aNumericVersion)
 {
   int a, b, c, d;
   /* honestly, why do I even bother */
-  if (sscanf(nsPromiseFlatCString(NS_LossyConvertUTF16toASCII(aVersion)).get(),
+  if (sscanf(NS_LossyConvertUTF16toASCII(aVersion).get(),
              "%d.%d.%d.%d", &a, &b, &c, &d) != 4)
     return false;
   if (a < 0 || a > 0xffff) return false;

@@ -342,6 +342,9 @@ public:
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
+    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot()
+        { return nsnull; }
+
     NS_IMETHOD SetIsOpaque(PRBool b) { return NS_OK; };
     NS_IMETHOD SetContextOptions(nsIPropertyBag *aOptions);
 

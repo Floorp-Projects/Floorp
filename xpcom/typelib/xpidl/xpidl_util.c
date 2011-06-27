@@ -360,6 +360,12 @@ verify_attribute_declaration(IDL_tree attr_tree)
     if (!is_method_scriptable(attr_tree, ident))
         return TRUE;
 
+    if (IDL_tree_property_get(ident, "nostdcall") != NULL) {
+        IDL_tree_error(attr_tree,
+                       "[nostdcall] attribute must not be scriptable");
+        return FALSE;
+    }
+
     /*
      * If it should be scriptable, check that the type is non-native. nsid,
      * domstring, utf8string, cstring, astring are exempted.
@@ -779,7 +785,14 @@ verify_method_declaration(IDL_tree method_tree)
                        "arguments");
         return FALSE;
     }
-    
+
+    if (IDL_tree_property_get(op->ident, "nostdcall") != NULL &&
+        scriptable_method) {
+        IDL_tree_error(method_tree,
+                       "[nostdcall] method must not be scriptable");
+        return FALSE;
+    }
+
     /* XXX q: can return type be nsid? */
     /* Native return type? */
     if (scriptable_method &&
@@ -885,22 +898,39 @@ xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
 gboolean
 verify_interface_declaration(IDL_tree interface_tree)
 {
+    gboolean scriptable =
+      IDL_tree_property_get(IDL_INTERFACE(interface_tree).ident,
+                            "scriptable") != NULL;
+    gboolean builtinclass =
+      IDL_tree_property_get(IDL_INTERFACE(interface_tree).ident,
+                            "builtinclass") != NULL;
+
     IDL_tree iter;
     /* 
      * If we have the scriptable attribute then make sure all of our direct
      * parents have it as well.
-     * NOTE: We don't recurse since all interfaces will fall through here
+     * NOTE: We don't recurse since all interfaces will come through here
      */
-    if (IDL_tree_property_get(IDL_INTERFACE(interface_tree).ident, 
-        "scriptable")) {
+    if (scriptable || !builtinclass) {
         for (iter = IDL_INTERFACE(interface_tree).inheritance_spec; iter; 
             iter = IDL_LIST(iter).next) {
-            if (IDL_tree_property_get(
-                IDL_INTERFACE(iter).ident, "scriptable") == 0) {
+            if (scriptable &&
+                IDL_tree_property_get(
+                  IDL_INTERFACE(iter).ident, "scriptable") == 0) {
                 XPIDL_WARNING((interface_tree,IDL_WARNING1,
                     "%s is scriptable but inherits from the non-scriptable interface %s\n",
                     IDL_IDENT(IDL_INTERFACE(interface_tree).ident).str,
                     IDL_IDENT(IDL_INTERFACE(iter).ident).str));
+            }
+            if (!builtinclass &&
+                IDL_tree_property_get(
+                  IDL_INTERFACE(iter).ident, "builtinclass")) {
+                IDL_tree_error(interface_tree,
+                               "%s is not [builtinclass] but extends "
+                               "[builtinclass] interface %s",
+                               IDL_IDENT(IDL_INTERFACE(interface_tree).ident).str,
+                               IDL_IDENT(IDL_INTERFACE(iter).ident).str);
+                return FALSE;
             }
         }
     }

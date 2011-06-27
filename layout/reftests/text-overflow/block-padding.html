@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: test marker trigger point and alignment in a block with padding
+-->
+<!DOCTYPE HTML>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>text-overflow: text-overflow block padding </title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+body { width:24ch; overflow:hidden; }
+
+.test { 
+  overflow: hidden; 
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: line-through;
+  padding-left: 1ch;
+  padding-right: 3ch;
+  height: 3em;
+  margin-bottom:1em;
+}
+.s {
+  overflow: auto; 
+}
+span {
+  text-decoration: underline overline;
+  background:yellow;
+}
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+.rlo span {
+  unicode-bidi: bidi-override; direction: rtl;
+}
+.lro span {
+  unicode-bidi: bidi-override; direction: ltr;
+}
+</style>
+
+</head><body>
+
+<!-- LTR / LTR -->
+<div class="test ltr"  ><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+<div class="test ltr s"><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+
+<!-- RTL / LTR -->
+<div class="test rtl"  ><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+<div class="test rtl s"><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+
+<!-- LTR / RTL -->
+<div class="test ltr rlo"  ><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+<div class="test ltr rlo s"><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+
+<!-- RTL / RTL -->
+<div class="test rtl rlo"  ><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+<div class="test rtl rlo s"><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+
+</body></html>

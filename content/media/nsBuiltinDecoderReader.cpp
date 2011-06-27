@@ -50,13 +50,6 @@ using namespace mozilla;
 using mozilla::layers::ImageContainer;
 using mozilla::layers::PlanarYCbCrImage;
 
-// The maximum height and width of the video. Used for
-// sanitizing the memory allocation of the RGB buffer.
-// The maximum resolution we anticipate encountering in the
-// wild is 2160p - 3840x2160 pixels.
-#define MAX_VIDEO_WIDTH  4000
-#define MAX_VIDEO_HEIGHT 3000
-
 using mozilla::layers::PlanarYCbCrImage;
 
 // Verify these values are sane. Once we've checked the frame sizes, we then
@@ -121,7 +114,8 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
                              PRInt64 aEndTime,
                              const YCbCrBuffer& aBuffer,
                              PRBool aKeyframe,
-                             PRInt64 aTimecode)
+                             PRInt64 aTimecode,
+                             nsIntRect aPicture)
 {
   if (!aContainer) {
     return nsnull;
@@ -136,7 +130,7 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   }
 
   // The following situations could be triggered by invalid input
-  if (aInfo.mPicture.width <= 0 || aInfo.mPicture.height <= 0) {
+  if (aPicture.width <= 0 || aPicture.height <= 0) {
     NS_WARNING("Empty picture rect");
     return nsnull;
   }
@@ -146,30 +140,14 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
     return nsnull;
   }
 
-  PRUint32 picX = aInfo.mPicture.x;
-  PRUint32 picY = aInfo.mPicture.y;
-  gfxIntSize picSize = gfxIntSize(aInfo.mPicture.width, aInfo.mPicture.height);
-
-  if (aInfo.mFrame.width != aBuffer.mPlanes[0].mWidth ||
-      aInfo.mFrame.height != aBuffer.mPlanes[0].mHeight)
-  {
-    // Frame size is different from what the container reports. This is legal
-    // in WebM, and we will preserve the ratio of the crop rectangle as it
-    // was reported relative to the picture size reported by the container.
-    picX = (aInfo.mPicture.x * aBuffer.mPlanes[0].mWidth) / aInfo.mFrame.width;
-    picY = (aInfo.mPicture.y * aBuffer.mPlanes[0].mHeight) / aInfo.mFrame.height;
-    picSize = gfxIntSize((aBuffer.mPlanes[0].mWidth * aInfo.mPicture.width) / aInfo.mFrame.width,
-                         (aBuffer.mPlanes[0].mHeight * aInfo.mPicture.height) / aInfo.mFrame.height);
-  }
-
   // Ensure the picture size specified in the headers can be extracted out of
   // the frame we've been supplied without indexing out of bounds.
-  PRUint32 picXLimit;
-  PRUint32 picYLimit;
-  if (!AddOverflow32(picX, picSize.width, picXLimit) ||
-      picXLimit > aBuffer.mPlanes[0].mStride ||
-      !AddOverflow32(picY, picSize.height, picYLimit) ||
-      picYLimit > aBuffer.mPlanes[0].mHeight)
+  PRUint32 xLimit;
+  PRUint32 yLimit;
+  if (!AddOverflow32(aPicture.x, aPicture.width, xLimit) ||
+      xLimit > aBuffer.mPlanes[0].mStride ||
+      !AddOverflow32(aPicture.y, aPicture.height, yLimit) ||
+      yLimit > aBuffer.mPlanes[0].mHeight)
   {
     // The specified picture dimensions can't be contained inside the video
     // frame, we'll stomp memory if we try to copy it. Fail.
@@ -177,7 +155,12 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
     return nsnull;
   }
 
-  nsAutoPtr<VideoData> v(new VideoData(aOffset, aTime, aEndTime, aKeyframe, aTimecode));
+  nsAutoPtr<VideoData> v(new VideoData(aOffset,
+                                       aTime,
+                                       aEndTime,
+                                       aKeyframe,
+                                       aTimecode,
+                                       aInfo.mDisplay));
   // Currently our decoder only knows how to output to PLANAR_YCBCR
   // format.
   Image::Format format = Image::PLANAR_YCBCR;
@@ -197,9 +180,9 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   data.mCrChannel = aBuffer.mPlanes[2].mData;
   data.mCbCrSize = gfxIntSize(aBuffer.mPlanes[1].mWidth, aBuffer.mPlanes[1].mHeight);
   data.mCbCrStride = aBuffer.mPlanes[1].mStride;
-  data.mPicX = picX;
-  data.mPicY = picY;
-  data.mPicSize = picSize;
+  data.mPicX = aPicture.x;
+  data.mPicY = aPicture.y;
+  data.mPicSize = gfxIntSize(aPicture.width, aPicture.height);
   data.mStereoMode = aInfo.mStereoMode;
 
   videoImage->SetData(data); // Copies buffer

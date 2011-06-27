@@ -75,10 +75,6 @@ class nsDOMWorkerXHRProxy : public nsIRunnable,
   friend class nsDOMWorkerXHR;
   friend class nsDOMWorkerXHRUpload;
 
-  typedef NS_STDCALL_FUNCPROTO(nsresult, EventListenerFunction, nsIDOMEventTarget,
-                               AddEventListener,
-                               (const nsAString&, nsIDOMEventListener*, PRBool));
-
 public:
   typedef nsAutoTArray<nsCOMPtr<nsIRunnable>, 5> SyncEventQueue;
 

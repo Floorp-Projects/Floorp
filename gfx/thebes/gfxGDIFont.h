@@ -73,6 +73,13 @@ public:
 
     virtual PRBool SetupCairoFont(gfxContext *aContext);
 
+    /* override Measure to add padding for antialiasing */
+    virtual RunMetrics Measure(gfxTextRun *aTextRun,
+                               PRUint32 aStart, PRUint32 aEnd,
+                               BoundingBoxType aBoundingBoxType,
+                               gfxContext *aContextForTightBoundingBox,
+                               Spacing *aSpacing);
+
     /* required for MathML to suppress effects of ClearType "padding" */
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption);
 

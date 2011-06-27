@@ -38,9 +38,6 @@
 // Mirrors WINDOW_ATTRIBUTES IN nsSessionStore.js
 const WINDOW_ATTRIBUTES = ["width", "height", "screenX", "screenY", "sizemode"];
 
-let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-         getService(Ci.nsISessionStore);
-
 let stateBackup = ss.getBrowserState();
 
 let originalWarnOnClose = gPrefService.getBoolPref("browser.tabs.warnOnClose");

@@ -4603,6 +4603,21 @@ FAIL_CREATE:
     return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY));
 }
 
+ID3D10Texture2D*
+cairo_d2d_surface_get_texture(cairo_surface_t *surface)
+{
+    if (surface->type != CAIRO_SURFACE_TYPE_D2D) {
+        return NULL;
+    }
+
+    cairo_d2d_surface_t *d2dsurf = reinterpret_cast<cairo_d2d_surface_t*>(surface);
+
+    RefPtr<ID3D10Texture2D> texture;
+    d2dsurf->surface->QueryInterface(&texture);
+
+    return texture;
+}
+
 void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t *clip)
 {
     if (surface->type != CAIRO_SURFACE_TYPE_D2D) {

@@ -149,7 +149,7 @@ function test() {
 
     let tab_A2 = gBrowser.addTab("http://example.com");
     tab_A2.linkedBrowser.addEventListener("load", function(aEvent) {
-      tab_A2.removeEventListener("load", arguments.callee, true);
+      tab_A2.linkedBrowser.removeEventListener("load", arguments.callee, true);
       gBrowser.selectedTab = tab_A2;
       is(getPriority(tab_A1), Ci.nsISupportsPriority.PRIORITY_LOWEST - PRIORITY_DELTA,
          "Can adjust priority beyond 'lowest'");
