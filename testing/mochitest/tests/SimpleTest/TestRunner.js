@@ -272,7 +272,6 @@ TestRunner.testFinished = function(tests) {
         TestRunner.log("TEST-END | " +
                        TestRunner._urls[TestRunner._currentTest] +
                        " | finished in " + runtime + "ms");
-        TestRunner.log("TEST-INFO | Time is " + Math.floor(Date.now() / 1000));
 
         TestRunner.updateUI(tests);
         TestRunner._currentTest++;

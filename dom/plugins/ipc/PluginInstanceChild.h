@@ -45,7 +45,7 @@
 #include "mozilla/plugins/PPluginSurfaceChild.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
-#elif defined(OS_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
 #include "nsCoreAnimationSupport.h"
 #include "base/timer.h"
 #endif
@@ -407,7 +407,7 @@ private:
       HBITMAP         bmp;
     } mAlphaExtract;
 #endif // defined(OS_WIN)
-#if defined(OS_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
 private:
 #if defined(__i386__)
     NPEventModel          mEventModel;
@@ -436,10 +436,15 @@ private:
     bool CanPaintOnBackground();
 
     bool IsVisible() {
+#ifdef XP_MACOSX
+        return mWindow.clipRect.top != mWindow.clipRect.bottom &&
+               mWindow.clipRect.left != mWindow.clipRect.right;
+#else
         return mWindow.clipRect.top != 0 ||
             mWindow.clipRect.left != 0 ||
             mWindow.clipRect.bottom != 0 ||
             mWindow.clipRect.right != 0;
+#endif
     }
 
     // ShowPluginFrame - in general does four things:

@@ -1,31 +1,50 @@
 <?xml version="1.0"?>
 
 <!--
- This XML file is used to create sequence of accessible name tests. It consist of
- two sections. The first section 'ruledfn' declares name computation rules.
- The second section 'rulesample' defines markup samples we need to check name
- computation rules for.
+  This XML file is used to create sequence of accessible name tests. It consist
+  of two sections. The first section 'ruledfn' declares name computation rules.
+  The second section 'rulesample' defines markup samples we need to check name
+  computation rules for.
 
-  Section 'ruledfn' consist of 'ruleset' elements. Every 'ruleset' element is
+  <ruledfn>
+    <ruleset>
+      <rule>
+
+  Section 'ruledfn' contains 'ruleset' elements. Every 'ruleset' element is
   presented by 'rule' elements so that sequence of 'rule' elements gives the
   sequence of name computations rules. Every 'rule' element can be one of four
   types.
-   * name is equal to the value of attribute presented on the element. Example,
-     'aria-label' attribute. In this case 'rule' element has 'attr' attribute
-     pointing to attribute name and 'type' attribute with 'string' value. For
-     example, <rule attr="aria-label" type="string"/>.
-   * name is calculated from elements that are pointed to by attribute value on
-     the element. Example is 'aria-labelledby'. In this case 'rule' element
-     has 'attr' attribute holding the sequence of IDs of elements used to
-     compute the name, in addition the 'rule' element has 'type' attribute with
-     'ref' value. For example, <rule attr="aria-labelledby" type="ref"/>.
-   * name is calculated from another element. Example, html:label@for element.
-     In this case 'rule' element has 'elm' and 'elmattr' attributes. These
-     attributes are used to find an element by tagname and attribute with value
-     equaled to ID of the element. For example, <rule elm="label" elmattr="for"/>.
-   * name is computed from subtree. Example, html:button. In this case 'rule'
-     element has 'fromsubtree' attribute with 'true' value. For example,
-     <rule fromsubtree="true"/>
+
+   * <rule attr='' type='string'/> used when name is equal to the value of
+     attribute presented on the element.
+
+     Example, 'aria-label' attribute. In this case 'rule' element has 'attr'
+     attribute pointing to attribute name and 'type' attribute with 'string'
+     value. For example, <rule attr="aria-label" type="string"/>.
+
+   * <rule attr='' type='ref'/> used when name is calculated from elements that
+     are pointed to by attribute value on the element.
+
+     Example is 'aria-labelledby'. In this case 'rule' element has 'attr'
+     attribute holding the sequence of IDs of elements used to compute the name,
+     in addition the 'rule' element has 'type' attribute with 'ref' value.
+     For example, <rule attr="aria-labelledby" type="ref"/>.
+
+   * <rule elm='' elmattr=''/> used when name is calculated from another
+     element. These attributes are used to find an element by tagname and
+     attribute with value equaled to ID of the element. If 'elmattr' is missed
+     then element from subtree with the given tagname is used.
+
+     Example, html:label@for element, <rule elm="label" elmattr="for"/>.
+     Example, html:caption element, <rule elm="caption"/>
+
+   * <rule fromsubtree='true'/> used when name is computed from subtree.
+
+     Example, html:button. In this case 'rule' element has 'fromsubtree'
+     attribute with 'true' value.
+
+  <rulesample>
+    <markup ruleset=''>
 
   Section 'rulesample' provides set of markup samples ('markup' elements). Every
   'markup' element contains an element that accessible name will be computed for
@@ -120,6 +139,12 @@
       <rule attr="title" type="string"/>
     </ruleset>
 
+    <ruleset id="htmltable">
+      <ruleset ref="htmlelm_start"/>
+      <rule elm="caption"/>
+      <rule attr="summary" type="string"/>
+      <ruleset ref="htmlelm_end"/>
+    </ruleset>
   </ruledfn>
 
   <rulesample>
@@ -210,6 +235,25 @@
       </html:table>
     </markup>
 
+    <markup ref="html:table" ruleset="htmltable"
+            id="markup6test">
+      <html:span id="l1" a11yname="lby_tst6_1">lby_tst6_1</html:span>
+      <html:span id="l2" a11yname="lby_tst6_2">lby_tst6_2</html:span>
+      <html:label for="t" a11yname="label_tst6">label_tst6</html:label>
+      <!-- layout frame are recreated due to varous reasons, here's text frame
+          placed after caption frame triggres table frame recreation when
+          caption element is removed from DOM; get rid text node after caption
+          node to make the test working -->
+      <html:table id="t" aria-label="arialabel_tst6"
+                  aria-labelledby="l1 l2"
+                  summary="summary_tst6"
+                  title="title_tst6">
+        <html:caption a11yname="caption_tst6">caption_tst6</html:caption><html:tr>
+          <html:td>cell1</html:td>
+          <html:td>cell2</html:td>
+        </html:tr>
+      </html:table>
+    </markup>
   </rulesample>
 
 </rules>

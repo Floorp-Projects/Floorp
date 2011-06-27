@@ -63,8 +63,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMClientInformation.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOM3EventTarget.h"
-#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNavigatorGeolocation.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
@@ -83,7 +81,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMModalContentWindow.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMDocument.h"
 #ifndef MOZ_DISABLE_DOMCRYPTO
 #include "nsIDOMCrypto.h"
@@ -103,7 +101,6 @@
 #include "nsIDOMStorageEvent.h"
 #include "nsIDOMStorageIndexedDB.h"
 #include "nsIDOMOfflineResourceList.h"
-#include "nsPIDOMEventTarget.h"
 #include "nsIArray.h"
 #include "nsIContent.h"
 #include "nsIIDBFactory.h"
@@ -276,9 +273,6 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
                        public nsIDOMEventTarget,
-                       public nsPIDOMEventTarget,
-                       public nsIDOM3EventTarget,
-                       public nsIDOMNSEventTarget,
                        public nsIDOMStorageWindow,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
@@ -340,12 +334,6 @@ public:
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET
 
-  // nsIDOM3EventTarget
-  NS_DECL_NSIDOM3EVENTTARGET
-
-  // nsIDOMNSEventTarget
-  NS_DECL_NSIDOMNSEVENTTARGET
-  
   // nsIDOMWindow_2_0_BRANCH
   NS_DECL_NSIDOMWINDOW_2_0_BRANCH
 
@@ -353,7 +341,7 @@ public:
   virtual NS_HIDDEN_(nsPIDOMWindow*) GetPrivateRoot();
   virtual NS_HIDDEN_(void) ActivateOrDeactivate(PRBool aActivate);
   virtual NS_HIDDEN_(void) SetActive(PRBool aActive);
-  virtual NS_HIDDEN_(void) SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler);
+  virtual NS_HIDDEN_(void) SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler);
 
   virtual NS_HIDDEN_(void) SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal);
   virtual NS_HIDDEN_(nsIPrincipal*) GetOpenerScriptPrincipal();
@@ -375,29 +363,6 @@ public:
   }
 
   virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
-
-  virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForDOMEvent()
-  {
-    return static_cast<nsPIDOMEventTarget*>(GetOuterWindowInternal());
-  }
-  virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForEventTargetChain()
-  {
-    return IsInnerWindow() ?
-      this : static_cast<nsPIDOMEventTarget*>(GetCurrentInnerWindowInternal());
-  }
-  virtual NS_HIDDEN_(nsresult) PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual NS_HIDDEN_(nsresult) PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual NS_HIDDEN_(nsresult) DispatchDOMEvent(nsEvent* aEvent,
-                                                nsIDOMEvent* aDOMEvent,
-                                                nsPresContext* aPresContext,
-                                                nsEventStatus* aEventStatus);
-  virtual NS_HIDDEN_(nsIEventListenerManager*) GetListenerManager(PRBool aCreateIfNotFound);
-  virtual NS_HIDDEN_(nsresult) AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                                     const nsIID& aIID);
-  virtual NS_HIDDEN_(nsresult) RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                                        const nsIID& aIID);
-  virtual NS_HIDDEN_(nsresult) GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual NS_HIDDEN_(nsIScriptContext*) GetContextForEventHandlers(nsresult* aRv);
 
   virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
@@ -931,7 +896,7 @@ protected:
                                                  // whether to clear scope
 
   // These member variable are used only on inner windows.
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  nsRefPtr<nsEventListenerManager> mListenerManager;
   PRCList                       mTimeouts;
   // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
   nsTimeout*                    mTimeoutInsertionPoint;

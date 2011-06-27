@@ -481,7 +481,7 @@ nsGIOInputStream::DoRead(char *aBuf, PRUint32 aCount, PRUint32 *aCountRead)
       PRUint32 bufLen = mDirBuf.Length() - mDirBufCursor;
       if (bufLen)
       {
-        PRUint32 n = PR_MIN(bufLen, aCount);
+        PRUint32 n = NS_MIN(bufLen, aCount);
         memcpy(aBuf, mDirBuf.get() + mDirBufCursor, n);
         *aCountRead += n;
         aBuf += n;

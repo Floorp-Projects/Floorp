@@ -69,8 +69,8 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsLeafAccessible, nsAccessible)
 // nsLeafAccessible: nsAccessible public
 
 nsAccessible*
-nsLeafAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                  EWhichChildAtPoint aWhichChild)
+nsLeafAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                               EWhichChildAtPoint aWhichChild)
 {
   // Don't walk into leaf accessibles.
   return this;
@@ -200,14 +200,14 @@ nsLinkableAccessible::Shutdown()
 // nsLinkableAccessible: HyperLinkAccessible
 
 already_AddRefed<nsIURI>
-nsLinkableAccessible::GetAnchorURI(PRUint32 aAnchorIndex)
+nsLinkableAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
   if (mIsLink) {
-    NS_ASSERTION(mActionAcc->IsHyperLink(),
+    NS_ASSERTION(mActionAcc->IsLink(),
                  "nsIAccessibleHyperLink isn't implemented.");
 
-    if (mActionAcc->IsHyperLink())
-      return mActionAcc->GetAnchorURI(aAnchorIndex);
+    if (mActionAcc->IsLink())
+      return mActionAcc->AnchorURIAt(aAnchorIndex);
   }
 
   return nsnull;

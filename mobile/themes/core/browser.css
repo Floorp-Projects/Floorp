@@ -1531,3 +1531,20 @@ setting {
   90% { -moz-transform: translateX(@sidebar_width_minimum@); }
   to { -moz-transform: translateX(0); }
 }
+
+#selectionhandle-start,
+#selectionhandle-end {
+  min-width: 35px !important;
+  width: 35px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#selectionhandle-start {
+  list-style-image: url("chrome://browser/skin/images/handle-start.png");
+}
+
+#selectionhandle-end {
+  list-style-image: url("chrome://browser/skin/images/handle-end.png");
+}
+

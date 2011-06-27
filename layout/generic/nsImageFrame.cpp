@@ -249,7 +249,6 @@ nsImageFrame::Init(nsIContent*      aContent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mListener = new nsImageListener(this);
-  if (!mListener) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aContent);
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
@@ -1858,8 +1857,6 @@ nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
   NS_NAMED_LITERAL_STRING(brokenSrc,"resource://gre-resources/broken-image.png");
 
   gIconLoad = new IconLoad();
-  if (!gIconLoad) 
-    return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(gIconLoad);
 
   nsresult rv;

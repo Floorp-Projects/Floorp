@@ -202,7 +202,7 @@
           let textNode = this.editor.rootElement.firstChild;
           let value = textNode.textContent;
 
-          let protocol = value.match(/^[a-z]+:/);
+          let protocol = value.match(/^[a-z\d.+\-]+:/);
           if (protocol &&
               ["http:", "https:", "ftp:"].indexOf(protocol[0]) == -1)
             return;
@@ -212,12 +212,18 @@
 
           let [, preDomain, domain] = matchedURL;
           let baseDomain = domain;
-          try {
-            baseDomain = Services.eTLD.getBaseDomainFromHost(domain);
-          } catch (e) {}
-          let segments = function (s) s.replace(/[^.]*/g, "").length + 1;
-          let subSegments = segments(domain) - segments(baseDomain);
-          let subDomain = domain.match(new RegExp("(?:[^.]*\.){" + subSegments + "}"))[0];
+          let subDomain = "";
+          // getBaseDomainFromHost doesn't recognize IPv6 literals in brackets as IPs (bug 667159)
+          if (domain[0] != "[") {
+            try {
+              baseDomain = Services.eTLD.getBaseDomainFromHost(domain);
+            } catch (e) {}
+          }
+          if (baseDomain != domain) {
+            let segments = function (s) s.replace(/[^.]*/g, "").length + 1;
+            let subSegments = segments(domain) - segments(baseDomain);
+            subDomain = domain.match(new RegExp("(?:[^.]*\.){" + subSegments + "}"))[0];
+          }
 
           let rangeLength = preDomain.length + subDomain.length;
           if (rangeLength) {

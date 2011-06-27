@@ -66,7 +66,6 @@ class nsXULTreeAccessible : public nsAccessibleWrap
 public:
   using nsAccessible::GetChildCount;
   using nsAccessible::GetChildAt;
-  using nsAccessible::GetChildAtPoint;
 
   nsXULTreeAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
@@ -86,8 +85,8 @@ public:
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
-  virtual nsAccessible* GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                        EWhichChildAtPoint aWhichChild);
+  virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                     EWhichChildAtPoint aWhichChild);
 
   virtual nsAccessible* GetChildAt(PRUint32 aIndex);
   virtual PRInt32 GetChildCount();
@@ -209,7 +208,7 @@ public:
 
   // nsAccessible
   virtual PRUint64 NativeState();
-  virtual PRInt32 GetIndexInParent() const;
+  virtual PRInt32 IndexInParent() const;
 
   // nsXULTreeItemAccessibleBase
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULTREEITEMBASEACCESSIBLE_IMPL_CID)

@@ -46,13 +46,13 @@
 #include "nsMargin.h"
 #include "gfxCore.h"
 #include "nsTraceRefcnt.h"
-#include "mozilla/BaseRect.h"
+#include "mozilla/gfx/BaseRect.h"
 
 struct nsIntRect;
 
 struct NS_GFX nsRect :
-  public mozilla::BaseRect<nscoord, nsRect, nsPoint, nsSize, nsMargin> {
-  typedef mozilla::BaseRect<nscoord, nsRect, nsPoint, nsSize, nsMargin> Super;
+  public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize, nsMargin> {
+  typedef mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize, nsMargin> Super;
 
   static void VERIFY_COORD(nscoord aValue) { ::VERIFY_COORD(aValue); }
 
@@ -103,8 +103,8 @@ struct NS_GFX nsRect :
 };
 
 struct NS_GFX nsIntRect :
-  public mozilla::BaseRect<PRInt32, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> {
-  typedef mozilla::BaseRect<PRInt32, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> Super;
+  public mozilla::gfx::BaseRect<PRInt32, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> {
+  typedef mozilla::gfx::BaseRect<PRInt32, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> Super;
 
   // Constructors
   nsIntRect() : Super()

@@ -290,6 +290,17 @@ SpecialPowers.prototype = {
         aFunc();
       }
     }, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
+  addSystemEventListener: function(target, type, listener, useCapture) {
+    Components.classes["@mozilla.org/eventlistenerservice;1"].
+      getService(Components.interfaces.nsIEventListenerService).
+      addSystemEventListener(target, type, listener, useCapture);
+  },
+  removeSystemEventListener: function(target, type, listener, useCapture) {
+    Components.classes["@mozilla.org/eventlistenerservice;1"].
+      getService(Components.interfaces.nsIEventListenerService).
+      removeSystemEventListener(target, type, listener, useCapture);
   }
 };
 

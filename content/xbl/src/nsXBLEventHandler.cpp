@@ -39,13 +39,11 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
-#include "nsIDOMEventGroup.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMText.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsIDOMNSEvent.h"
@@ -83,9 +81,8 @@ nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetCurrentTarget(getter_AddRefs(target));
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(target);
 
-  mProtoHandler->ExecuteHandler(piTarget, aEvent);
+  mProtoHandler->ExecuteHandler(target, aEvent);
 
   return NS_OK;
 }
@@ -133,7 +130,6 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(nsIDOMKeyEvent* aKeyEvent,
 
   nsCOMPtr<nsIDOMEventTarget> target;
   aKeyEvent->GetCurrentTarget(getter_AddRefs(target));
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(target);
 
   PRBool executed = PR_FALSE;
   for (PRUint32 i = 0; i < mProtoHandlers.Length(); ++i) {
@@ -143,7 +139,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(nsIDOMKeyEvent* aKeyEvent,
         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
         (!hasAllowUntrustedAttr && !mIsBoundToChrome)) &&
         handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreShiftKey)) {
-      handler->ExecuteHandler(piTarget, aKeyEvent);
+      handler->ExecuteHandler(target, aKeyEvent);
       executed = PR_TRUE;
     }
   }

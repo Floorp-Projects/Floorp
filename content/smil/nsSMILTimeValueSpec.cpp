@@ -44,8 +44,7 @@
 #include "nsSMILParserUtils.h"
 #include "nsISMILAnimationElement.h"
 #include "nsContentUtils.h"
-#include "nsIEventListenerManager.h"
-#include "nsIDOMEventGroup.h"
+#include "nsEventListenerManager.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMTimeEvent.h"
 #include "nsString.h"
@@ -337,17 +336,15 @@ nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
     mEventListener = new EventListener(this);
   }
 
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  nsIEventListenerManager* elm =
-    GetEventListenerManager(aTarget, getter_AddRefs(sysGroup));
+  nsEventListenerManager* elm = GetEventListenerManager(aTarget);
   if (!elm)
     return;
   
   elm->AddEventListenerByType(mEventListener,
                               nsDependentAtomString(mParams.mEventSymbol),
                               NS_EVENT_FLAG_BUBBLE |
-                              NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
-                              sysGroup);
+                              NS_PRIV_EVENT_UNTRUSTED_PERMITTED |
+                              NS_EVENT_FLAG_SYSTEM_EVENT);
 }
 
 void
@@ -356,28 +353,23 @@ nsSMILTimeValueSpec::UnregisterEventListener(Element* aTarget)
   if (!aTarget || !mEventListener)
     return;
 
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  nsIEventListenerManager* elm =
-    GetEventListenerManager(aTarget, getter_AddRefs(sysGroup));
+  nsEventListenerManager* elm = GetEventListenerManager(aTarget);
   if (!elm)
     return;
 
   elm->RemoveEventListenerByType(mEventListener,
                                  nsDependentAtomString(mParams.mEventSymbol),
                                  NS_EVENT_FLAG_BUBBLE |
-                                 NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
-                                 sysGroup);
+                                 NS_PRIV_EVENT_UNTRUSTED_PERMITTED |
+                                 NS_EVENT_FLAG_SYSTEM_EVENT);
 }
 
-nsIEventListenerManager*
-nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget,
-                                             nsIDOMEventGroup** aSystemGroup)
+nsEventListenerManager*
+nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
 {
   NS_ABORT_IF_FALSE(aTarget, "null target; can't get EventListenerManager");
-  NS_ABORT_IF_FALSE(aSystemGroup && !*aSystemGroup,
-      "Bad out param for system group");
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget;
+  nsCOMPtr<nsIDOMEventTarget> target;
 
   if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
     nsIDocument* doc = aTarget->GetCurrentDoc();
@@ -386,22 +378,14 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget,
     nsPIDOMWindow* win = doc->GetWindow();
     if (!win)
       return nsnull;
-    piTarget = do_QueryInterface(win);
+    target = do_QueryInterface(win);
   } else {
-    piTarget = aTarget;
+    target = aTarget;
   }
-  if (!piTarget)
+  if (!target)
     return nsnull;
 
-  nsIEventListenerManager* elm = piTarget->GetListenerManager(PR_TRUE);
-  if (!elm)
-    return nsnull;
-
-  aTarget->GetSystemEventGroup(aSystemGroup);
-  if (!*aSystemGroup)
-    return nsnull;
-
-  return elm;
+  return target->GetListenerManager(PR_TRUE);
 }
 
 void

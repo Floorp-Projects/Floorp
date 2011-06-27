@@ -1,3 +1,7 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
 function testVal(aExpected) {
   gURLBar.value = aExpected.replace(/[<>]/g, "");
 
@@ -59,14 +63,45 @@ function test() {
 
   testVal("<https://sub.>mozilla.org<:666/file.ext>");
 
-  testVal("<https://>[fe80::222:19ff:fe11:8c76]</file.ext>");
-  testVal("[fe80::222:19ff:fe11:8c76]</file.ext>");
-  testVal("<https://user:pass@>[fe80::222:19ff:fe11:8c76]<:666/file.ext>");
-  testVal("<http://user:pass@>[fe80::222:19ff:fe11:8c76]<:666/file.ext>");
+  let IPs = ["192.168.1.1",
+             "[::]",
+             "[::1]",
+             "[1::]",
+             "[::]",
+             "[::1]",
+             "[1::]",
+             "[1:2:3:4:5:6:7::]",
+             "[::1:2:3:4:5:6:7]",
+             "[1:2:a:B:c:D:e:F]",
+             "[1::8]",
+             "[1:2::8]",
+             "[fe80::222:19ff:fe11:8c76]",
+             "[0000:0123:4567:89AB:CDEF:abcd:ef00:0000]",
+             "[::192.168.1.1]",
+             "[1::0.0.0.0]",
+             "[1:2::255.255.255.255]",
+             "[1:2:3::255.255.255.255]",
+             "[1:2:3:4::255.255.255.255]",
+             "[1:2:3:4:5::255.255.255.255]",
+             "[1:2:3:4:5:6:255.255.255.255]"];
+  IPs.forEach(function (IP) {
+    testVal(IP);
+    testVal(IP + "</file.ext>");
+    testVal("<https://>" + IP);
+    testVal("<https://>" + IP + "</file.ext>");
+    testVal("<https://user:pass@>" + IP + "<:666/file.ext>");
+    testVal("<http://user:pass@>" + IP + "<:666/file.ext>");
+  });
 
   testVal("mailto:admin@mozilla.org");
   testVal("gopher://mozilla.org/");
   testVal("about:config");
+  testVal("jar:http://mozilla.org/example.jar!/");
+  testVal("view-source:http://mozilla.org/");
+  testVal("foo9://mozilla.org/");
+  testVal("foo+://mozilla.org/");
+  testVal("foo.://mozilla.org/");
+  testVal("foo-://mozilla.org/");
 
   Services.prefs.setBoolPref(prefname, false);
 

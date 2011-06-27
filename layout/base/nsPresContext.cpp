@@ -86,7 +86,7 @@
 #include "gfxPlatform.h"
 #include "nsCSSRules.h"
 #include "nsFontFaceLoader.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsStyleStructInlines.h"
 #include "nsIAppShell.h"
 #include "prenv.h"
@@ -912,18 +912,11 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   }
 
   mEventManager = new nsEventStateManager();
-  if (!mEventManager)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   NS_ADDREF(mEventManager);
 
   mTransitionManager = new nsTransitionManager(this);
-  if (!mTransitionManager)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   mAnimationManager = new nsAnimationManager(this);
-  if (!mAnimationManager)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   if (mDocument->GetDisplayDocument()) {
     NS_ASSERTION(mDocument->GetDisplayDocument()->GetShell() &&
@@ -959,8 +952,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
     if (!mRefreshDriver) {
       mRefreshDriver = new nsRefreshDriver(this);
-      if (!mRefreshDriver)
-        return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
@@ -1711,7 +1702,7 @@ nsPresContext::MediaFeatureValuesChanged(PRBool aCallerWillRebuildStyleData)
 
     if (!notifyList.IsEmpty()) {
       nsPIDOMWindow *win = mDocument->GetInnerWindow();
-      nsCOMPtr<nsPIDOMEventTarget> et = do_QueryInterface(win);
+      nsCOMPtr<nsIDOMEventTarget> et = do_QueryInterface(win);
       nsCxPusher pusher;
 
       for (PRUint32 i = 0, i_end = notifyList.Length(); i != i_end; ++i) {
@@ -2066,11 +2057,11 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (aInnerWindow->HasPaintEventListeners())
     return PR_TRUE;
 
-  nsPIDOMEventTarget* parentTarget = aInnerWindow->GetParentTarget();
+  nsIDOMEventTarget* parentTarget = aInnerWindow->GetParentTarget();
   if (!parentTarget)
     return PR_FALSE;
 
-  nsIEventListenerManager* manager = nsnull;
+  nsEventListenerManager* manager = nsnull;
   if ((manager = parentTarget->GetListenerManager(PR_FALSE)) &&
       manager->MayHavePaintEventListener()) {
     return PR_TRUE;
@@ -2096,7 +2087,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
     return MayHavePaintEventListener(window);
 
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(parentTarget);
-  nsPIDOMEventTarget* tabChildGlobal;
+  nsIDOMEventTarget* tabChildGlobal;
   return root &&
          (tabChildGlobal = root->GetParentTarget()) &&
          (manager = tabChildGlobal->GetListenerManager(PR_FALSE)) &&

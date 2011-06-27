@@ -81,7 +81,7 @@
 #include "nsIObserverService.h"
 #include <prinrval.h>
 
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 #include <Carbon/Carbon.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <OpenGL/OpenGL.h>

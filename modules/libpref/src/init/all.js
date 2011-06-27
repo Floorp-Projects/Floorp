@@ -212,6 +212,10 @@ pref("gfx.font_rendering.directwrite.enabled", false);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
+#ifdef XP_WIN
+pref("gfx.canvas.azure.enabled", true);
+#endif
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
@@ -276,6 +280,10 @@ pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 // Telemetry
 pref("toolkit.telemetry.enabled", false);
 pref("toolkit.telemetry.server", "https://data.mozilla.com");
+// Telemetry server owner. Please change if you set toolkit.telemetry.server to a different server
+pref("toolkit.telemetry.server_owner", "Mozilla");
+// Information page about telemetry (temporary ; will be about:telemetry in the end)
+pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.html#telemetry");
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -804,6 +812,11 @@ pref("network.websocket.timeout.ping.response", 10);
 // Defines whether or not to try and negotiate the stream-deflate compression
 // extension with the websocket server
 pref("network.websocket.extensions.stream-deflate", true);
+
+// the maximum number of concurrent websocket sessions. By specification there
+// is never more than one handshake oustanding to an individual host at
+// one time.
+pref("network.websocket.max-connections", 200);
 
 // </ws>
 

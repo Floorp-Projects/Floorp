@@ -357,8 +357,12 @@ private:
   nsNSSShutDownList *mShutdownObjectList;
   SmartCardThreadList *mThreadList;
   PRBool mIsNetworkDown;
+
+  void deleteBackgroundThreads();
+  void createBackgroundThreads();
   nsSSLThread *mSSLThread;
   nsCertVerificationThread *mCertVerificationThread;
+
   nsNSSHttpInterface mHttpForNSS;
   nsRefPtr<nsClientAuthRememberService> mClientAuthRememberService;
   nsRefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParam;

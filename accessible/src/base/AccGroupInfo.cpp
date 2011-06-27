@@ -47,7 +47,7 @@ AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
   if (!parent)
     return;
 
-  PRInt32 indexInParent = aItem->GetIndexInParent();
+  PRInt32 indexInParent = aItem->IndexInParent();
   PRInt32 level = nsAccUtils::GetARIAOrDefaultLevel(aItem);
 
   // Compute position in set.
