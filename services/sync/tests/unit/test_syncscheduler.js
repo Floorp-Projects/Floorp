@@ -7,6 +7,41 @@ Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 
+// Tracking info/collections.
+let collectionsHelper = track_collections_helper();
+let upd = collectionsHelper.with_updated_collection;
+
+function sync_httpd_setup() {
+  let handlers = {};  
+
+  handlers["/1.1/johndoe/storage/meta/global"] = 
+    new ServerWBO("global", {}).handler();
+  handlers["/1.1/johndoe/storage/steam"] = 
+    new ServerWBO("steam", {}).handler();
+
+  handlers["/1.1/johndoe/info/collections"] = collectionsHelper.handler;
+  delete collectionsHelper.collections.crypto;
+  delete collectionsHelper.collections.meta;
+  
+  let cr = new ServerWBO("keys");
+  handlers["/1.1/johndoe/storage/crypto/keys"] =
+    upd("crypto", cr.handler());
+  
+  let cl = new ServerCollection();
+  handlers["/1.1/johndoe/storage/clients"] =
+    upd("clients", cl.handler());
+  
+  return httpd_setup(handlers);
+}
+
+function setUp() {
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "sekrit";
+  Service.clusterURL = "http://localhost:8080/";
+  new FakeCryptoService();
+}
+
 function run_test() {
   initTestLogging("Trace");
 
@@ -66,30 +101,33 @@ add_test(function test_updateClientMode() {
   run_next_test();
 });
 
-add_test(function test_login_rejected_masterpassword_interval() {
-  _("Test LOGIN_FAILED_LOGIN_REJECTED status results in reschedule at MASTER_PASSWORD interval");
+add_test(function test_masterpassword_locked_retry_interval() {
+  _("Test Status.login = MASTER_PASSWORD_LOCKED results in reschedule at MASTER_PASSWORD interval");
   let loginFailed = false;
   Svc.Obs.add("weave:service:login:error", function() {
     loginFailed = true;
   });
 
-  Service.username = "A";
-  Service.password = "B";
-  Service.passphrase = "C";
-
-  let skipRetry = false;
+  let rescheduleInterval = false;
   SyncScheduler.scheduleAtInterval = function (interval) {
-    skipRetry = true;
+    rescheduleInterval = true;
     do_check_eq(interval, MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
   };
 
-  // Will not sync due to not logged in.
+  Service.verifyLogin = function () {
+    Status.login = MASTER_PASSWORD_LOCKED;
+    return false;
+  };
+
+  let server = sync_httpd_setup();
+  setUp();
+
   Service.sync();
 
   do_check_true(loginFailed);
-  do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
-  do_check_true(skipRetry);
-  run_next_test();
+  do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
+  do_check_true(rescheduleInterval);
+  server.stop(run_next_test);
 });
 
 add_test(function test_calculateBackoff() {

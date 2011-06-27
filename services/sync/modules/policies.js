@@ -125,7 +125,7 @@ let SyncScheduler = {
         
         // Try again later, just as if we threw an error... only without the
         // error count.
-        if (!this.skipScheduledRetry())
+        if (Status.login == MASTER_PASSWORD_LOCKED)
           this.scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
         break;
       case "weave:service:logout:finish":
@@ -304,11 +304,6 @@ let SyncScheduler = {
     this._log.config("Starting backoff, next sync at:" + d.toString());
 
     this.scheduleNextSync(interval);
-  },
-
-  skipScheduledRetry: function skipScheduledRetry() {
-    return [LOGIN_FAILED_INVALID_PASSPHRASE,
-            LOGIN_FAILED_LOGIN_REJECTED].indexOf(Status.login) == -1;
   },
 
   _syncErrors: 0,
