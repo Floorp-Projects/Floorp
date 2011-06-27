@@ -668,17 +668,6 @@ static const PRUint32 deviceFamilyIntelGMAX3000[] = {
     0
 };
 
-// see bug 595364 comment 10
-static const PRUint32 deviceFamilyIntelBlockDirect2D[] = {
-    0x2982, /* IntelG35_1 */
-    0x2983, /* IntelG35_2 */
-    0x2A02, /* IntelGL960_1 */
-    0x2A03, /* IntelGL960_2 */
-    0x2A12, /* IntelGM965_1 */
-    0x2A13, /* IntelGM965_2 */
-    0
-};
-
 static const PRUint32 deviceFamilyIntelGMAX4500HD[] = {
     0x2A42, /* IntelGMA4500MHD_1 */
     0x2A43, /* IntelGMA4500MHD_2 */
@@ -798,14 +787,6 @@ static const GfxDriverInfo gDriverInfo[] = {
   /*
    * Intel entries
    */
-
-  /*
-   * Implement special Direct2D blocklist from bug 595364
-   */
-  GfxDriverInfo( DRIVER_OS_ALL,
-    vendorIntel, (GfxDeviceFamily) deviceFamilyIntelBlockDirect2D,
-    nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-    DRIVER_LESS_THAN, allDriverVersions ),
 
   /* implement the blocklist from bug 594877
    * Block all features on any drivers before this, as there's a crash when a MS Hotfix is installed.
