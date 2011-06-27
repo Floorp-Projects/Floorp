@@ -3,6 +3,7 @@ Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/policies.js");
 
 function login_handling(handler) {
   return function (request, response) {
@@ -155,9 +156,9 @@ function run_test() {
     
     // Stub scheduleNextSync. This gets called within checkSyncStatus if we're
     // ready to sync, so use it as an indicator.
-    let scheduleNextSyncF = Service._scheduleNextSync;
+    let scheduleNextSyncF = SyncScheduler.scheduleNextSync;
     let scheduleCalled = false;
-    Service._scheduleNextSync = function(wait) {
+    SyncScheduler.scheduleNextSync = function(wait) {
       scheduleCalled = true;
       scheduleNextSyncF.call(this, wait);
     }
@@ -177,16 +178,16 @@ function run_test() {
     _("We're ready to sync if locked.");
     Service.enabled = true;
     Services.io.offline = false;
-    Service._checkSyncStatus();
+    SyncScheduler.checkSyncStatus();
     do_check_true(scheduleCalled);
     
     scheduleCalled = false;
     mpLocked = false;
     
     _("... and not if not.");
-    Service._checkSyncStatus();
+    SyncScheduler.checkSyncStatus();
     do_check_false(scheduleCalled);
-    Service._scheduleNextSync = scheduleNextSyncF;
+    SyncScheduler.scheduleNextSync = scheduleNextSyncF;
     
     // TODO: need better tests around master password prompting. See Bug 620583.
 
@@ -201,13 +202,13 @@ function run_test() {
                              throw "User canceled Master Password entry";
                            });
     
-    let oldClearSyncTriggers = Service._clearSyncTriggers;
+    let oldClearSyncTriggers = SyncScheduler.clearSyncTriggers;
     let oldLockedSync = Service._lockedSync;
     
     let cSTCalled = false;
     let lockedSyncCalled = false;
     
-    Service._clearSyncTriggers = function() { cSTCalled = true; };
+    SyncScheduler.clearSyncTriggers = function() { cSTCalled = true; };
     Service._lockedSync = function() { lockedSyncCalled = true; };
     
     _("If master password is canceled, login fails and we report lockage.");

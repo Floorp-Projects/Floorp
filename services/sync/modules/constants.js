@@ -82,8 +82,14 @@ MULTI_DESKTOP_SYNC:                    60 * 60 * 1000, // 1 hour
 MULTI_MOBILE_SYNC:                     5 * 60 * 1000, // 5 minutes
 PARTIAL_DATA_SYNC:                     60 * 1000, // 1 minute
 
+NO_SYNC_NODE_INTERVAL:                 10 * 60 * 1000, // 10 minutes
+
 MAX_ERROR_COUNT_BEFORE_BACKOFF:        3,
 MAX_IGNORE_ERROR_COUNT:                5,
+
+// Backoff intervals
+MINIMUM_BACKOFF_INTERVAL:              15 * 60 * 1000,      // 15 minutes
+MAXIMUM_BACKOFF_INTERVAL:              8 * 60 * 60 * 1000,  // 8 hours 
 
 // HMAC event handling timeout.
 // 10 minutes: a compromise between the multi-desktop sync interval
