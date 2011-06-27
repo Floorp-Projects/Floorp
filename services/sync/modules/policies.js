@@ -52,21 +52,18 @@ Cu.import("resource://services-sync/main.js");    // So we can get to Service fo
 let SyncScheduler = {
   _log: Log4Moz.repository.getLogger("Sync.SyncScheduler"),
 
-  // nextSync is in milliseconds, but prefs can't hold that much
-  get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
-  set nextSync(value) Svc.Prefs.set("nextSync", Math.floor(value / 1000)),
+  // Since a user has a single device by default, they are
+  // treated as idle.
+  idle: true,
 
-  get syncInterval() {
-    // If we have a partial download, sync sooner if we're not mobile
-    if (Status.partial && Clients.clientType != "mobile")
-      return PARTIAL_DATA_SYNC;
-    return Svc.Prefs.get("syncInterval", MULTI_MOBILE_SYNC);
-  },
-  set syncInterval(value) Svc.Prefs.set("syncInterval", value),
+  hasIncomingItems: false,
+  
+  numClients: 0,
 
-  get syncThreshold() Svc.Prefs.get("syncThreshold", SINGLE_USER_THRESHOLD),
-  set syncThreshold(value) Svc.Prefs.set("syncThreshold", value),
-
+  nextSync: 0,
+  syncInterval: SINGLE_USER_SYNC,
+  syncThreshold: SINGLE_USER_THRESHOLD,
+	
   get globalScore() Svc.Prefs.get("globalScore", 0),
   set globalScore(value) Svc.Prefs.set("globalScore", value),
 
@@ -80,6 +77,8 @@ let SyncScheduler = {
     Svc.Obs.add("weave:service:logout:finish", this);
     Svc.Obs.add("weave:service:sync:error", this);
     Svc.Obs.add("weave:service:backoff:interval", this);
+    Svc.Obs.add("weave:engine:sync:applied", this);
+    Svc.Idle.addIdleObserver(this, IDLE_TIME);
   },
 
   observe: function observe(subject, topic, data) {
@@ -105,6 +104,8 @@ let SyncScheduler = {
         this.globalScore = 0;
         break;
       case "weave:service:sync:finish":
+        this.adjustSyncInterval();
+
         let sync_interval;
         this._syncErrors = 0;
 
@@ -133,6 +134,7 @@ let SyncScheduler = {
         this.checkSyncStatus();
         break; 
       case "weave:service:sync:error":
+        this.adjustSyncInterval();
         this.handleSyncError();
         break;
       case "weave:service:backoff:interval":
@@ -140,7 +142,42 @@ let SyncScheduler = {
         Status.backoffInterval = interval;
         Status.minimumNextSync = Date.now() + data;
         break;
-      }
+      case "weave:engine:sync:applied":
+        let numItems = subject.applied;
+        this._log.trace("Engine " + data + " applied " + numItems + " items.");
+        if (numItems) 
+          this.hasIncomingItems = true;
+        break;
+      case "idle":
+        this.idle = true;
+        adjustSyncInterval();
+        break;
+      case "back":
+        Utils.nextTick(Weave.Service.sync, Weave.Service);
+        this.idle = false;
+        adjustSyncInterval();
+        break;
+    }
+  },
+
+  adjustSyncInterval: function adjustSyncInterval() {
+    if (this.numClients <= 1) {
+      this.syncInterval = SINGLE_USER_SYNC;
+      return;
+    }
+    // Only MULTI_DEVICE clients will enter this if statement
+    // since SINGLE_USER clients will be handled above.
+    if (this.idle) {
+      this.syncInterval = MULTI_DEVICE_IDLE_SYNC;
+      return;
+    }
+
+    if (this.hasIncomingItems) {
+      this.hasIncomingItems = false;
+      this.syncInterval = MULTI_DEVICE_IMMEDIATE_SYNC;
+    } else {
+      this.syncInterval = MULTI_DEVICE_ACTIVE_SYNC;
+    }
   },
 
   calculateScore: function calculateScore() {
@@ -160,21 +197,20 @@ let SyncScheduler = {
    */
   updateClientMode: function updateClientMode() {
     // Nothing to do if it's the same amount
-    let {numClients, hasMobile} = Clients.stats;
-    if (Weave.Service.numClients == numClients)
+    let {numClients} = Clients.stats;	
+    if (this.numClients == numClients)
       return;
 
-    this._log.debug("Client count: " + Weave.Service.numClients + " -> " + numClients);
-    Weave.Service.numClients = numClients;
+    this._log.debug("Client count: " + this.numClients + " -> " + numClients);
+    this.numClients = numClients;
 
-    if (numClients == 1) {
-      this.syncInterval = SINGLE_USER_SYNC;
+    if (numClients <= 1) {
       this.syncThreshold = SINGLE_USER_THRESHOLD;
     }
     else {
-      this.syncInterval = hasMobile ? MULTI_MOBILE_SYNC : MULTI_DESKTOP_SYNC;
       this.syncThreshold = MULTI_DEVICE_THRESHOLD;
     }
+    this.adjustSyncInterval();
   },
 
   /**

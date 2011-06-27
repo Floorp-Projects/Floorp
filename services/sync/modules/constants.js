@@ -78,9 +78,12 @@ SYNC_KEY_HYPHENATED_LENGTH:            31,    // 26 chars, 5 hyphens.
 
 // Sync intervals for various clients configurations
 SINGLE_USER_SYNC:                      24 * 60 * 60 * 1000, // 1 day
-MULTI_DESKTOP_SYNC:                    60 * 60 * 1000, // 1 hour
-MULTI_MOBILE_SYNC:                     5 * 60 * 1000, // 5 minutes
-PARTIAL_DATA_SYNC:                     60 * 1000, // 1 minute
+MULTI_DEVICE_IDLE_SYNC:                60 * 60 * 1000, // 1 hour
+MULTI_DEVICE_ACTIVE_SYNC:              5 * 60 * 1000, // 5 minutes
+MULTI_DEVICE_IMMEDIATE_SYNC:           60 * 1000, // 1 minute
+
+// Time idle before changing the sync interval.
+IDLE_TIME:                             300, // 5 minutes (in seconds)
 
 NO_SYNC_NODE_INTERVAL:                 10 * 60 * 1000, // 10 minutes
 

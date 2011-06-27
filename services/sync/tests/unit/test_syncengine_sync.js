@@ -738,10 +738,11 @@ function test_processIncoming_failed_items_reported_once() {
     do_check_eq(engine.previousFailed.length, 0);
     do_check_eq([id for (id in engine._store.items)].length, 0);
 
-    Svc.Obs.add("weave:engine:sync:apply-failed", function(count) {
+    Svc.Obs.add("weave:engine:sync:applied", function(count) {
       _("Called with " + JSON.stringify(counts));
       counts = count;
-      called++;
+      if (count.newFailed)
+        called++;
     });
 
     // Do sync.

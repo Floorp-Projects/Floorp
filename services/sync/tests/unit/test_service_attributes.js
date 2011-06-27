@@ -147,26 +147,6 @@ function test_syncID() {
   }
 }
 
-
-function test_prefAttributes() {
-  _("Test various attributes corresponding to preferences.");
-
-  const NUMCLIENTS = 42;
-
-  try {
-    _("'numClients' corresponds to preference, defaults to zero.");
-    do_check_eq(Svc.Prefs.get('numClients'), undefined);
-    do_check_eq(Service.numClients, 0);
-    Service.numClients = NUMCLIENTS;
-    do_check_eq(Service.numClients, NUMCLIENTS);
-    do_check_eq(Svc.Prefs.get('numClients'), NUMCLIENTS);
-
-  } finally {
-    Svc.Prefs.resetBranch("");
-  }
-}
-
-
 function test_locked() {
   _("The 'locked' attribute can be toggled with lock() and unlock()");
 
@@ -187,6 +167,5 @@ function run_test() {
   test_identities();
   test_urls();
   test_syncID();
-  test_prefAttributes();
   test_locked();
 }
