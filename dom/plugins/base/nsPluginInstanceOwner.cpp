@@ -263,8 +263,8 @@ nsPluginInstanceOwner::UseAsyncRendering()
           NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncRendering)) &&
           useAsyncRendering &&
 #ifdef XP_MACOSX
-          container &&
-          container->GetBackendType() == 
+          mObjectFrame && mObjectFrame->GetImageContainer().get() &&
+          mObjectFrame->GetImageContainer().get()->GetBackendType() == 
                   LayerManager::LAYERS_OPENGL
 #else
           (!mPluginWindow ||

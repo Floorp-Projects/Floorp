@@ -97,11 +97,8 @@ void mozilla::plugins::PluginUtilsOSX::ReleaseCGLayer(void *cgLayer) {
 
 void mozilla::plugins::PluginUtilsOSX::Repaint(void *caLayer, nsIntRect aRect) {
   CGBridgeLayer *bridgeLayer = (CGBridgeLayer*)caLayer;
-  [CATransaction begin];
   [bridgeLayer updateRect:aRect];
   [bridgeLayer setNeedsDisplay];
-  [bridgeLayer displayIfNeeded];
-  [CATransaction commit];
 }
 
 @interface EventProcessor : NSObject {
