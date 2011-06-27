@@ -967,7 +967,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     if (!pushLoop(CFGState::DO_WHILE_LOOP, ifne, header, bodyStart, ifne, exitpc))
         return ControlStatus_Error;
 
-    pc = GetNextPc(GetNextPc(pc));
+    pc = bodyStart;
     return ControlStatus_Jumped;
 }
 
