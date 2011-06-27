@@ -348,7 +348,8 @@ public:
                               nsTArray<nsIWidget::Configuration>* aConfigurations);
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager)
+                                             LayerManager* aManager,
+                                             const ContainerParameters& aContainerParameters)
   {
     return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder,
                                                            aManager, 

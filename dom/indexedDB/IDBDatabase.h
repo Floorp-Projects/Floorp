@@ -80,7 +80,7 @@ public:
          DatabaseInfo* aDatabaseInfo,
          const nsACString& aASCIIOrigin);
 
-  // nsPIDOMEventTarget
+  // nsIDOMEventTarget
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   PRUint32 Id()

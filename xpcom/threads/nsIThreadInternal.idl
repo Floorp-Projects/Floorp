@@ -45,7 +45,7 @@ interface nsIThreadEventFilter;
  * The XPCOM thread object implements this interface, which allows a consumer
  * to observe dispatch activity on the thread.
  */
-[scriptable, uuid(f89b5063-b06d-42f8-bf23-4dfcf2d80d6a)]
+[scriptable, uuid(e0d35c22-53d5-4b48-8627-93e05b94cf2c)]
 interface nsIThreadInternal : nsIThread
 {
   /**
@@ -76,6 +76,28 @@ interface nsIThreadInternal : nsIThread
    * events remaining in the queue are appended to the elder queue.
    */
   void popEventQueue();
+
+  /**
+   * The current recursion depth, 0 when no events are running, 1 when a single
+   * event is running, and higher when nested events are running. Must only be
+   * called on the target thread.
+   */
+  readonly attribute unsigned long recursionDepth;
+
+  /**
+   * Add an observer that will *only* receive onProcessNextEvent and
+   * afterProcessNextEvent callbacks. Always called on the target thread, and
+   * the implementation does not have to be threadsafe. Order of callbacks is
+   * not guaranteed (i.e. afterProcessNextEvent may be called first depending on
+   * whether or not the observer is added in a nested loop). Holds a strong ref.
+   */
+  void addObserver(in nsIThreadObserver observer);
+
+  /**
+   * Remove an observer added via the addObserver call. Once removed the
+   * observer will never be called again by the thread.
+   */
+  void removeObserver(in nsIThreadObserver observer);
 };
 
 /**
@@ -165,33 +187,4 @@ interface nsIThreadEventFilter : nsISupports
    * WARNING: This method must not make any calls on the thread object.
    */
   [notxpcom] boolean acceptEvent(in nsIRunnable event);
-};
-
-/**
- * Temporary interface, will be merged into nsIThreadInternal.
- */
-[scriptable, uuid(4531f101-fddc-4d36-80e7-35260a2f3afe)]
-interface nsIThreadInternal2 : nsIThreadInternal
-{
-  /**
-   * The current recursion depth, 0 when no events are running, 1 when a single
-   * event is running, and higher when nested events are running. Must only be
-   * called on the target thread.
-   */
-  readonly attribute unsigned long recursionDepth;
-
-  /**
-   * Add an observer that will *only* receive onProcessNextEvent and
-   * afterProcessNextEvent callbacks. Always called on the target thread, and
-   * the implementation does not have to be threadsafe. Order of callbacks is
-   * not guaranteed (i.e. afterProcessNextEvent may be called first depending on
-   * whether or not the observer is added in a nested loop). Holds a strong ref.
-   */
-  void addObserver(in nsIThreadObserver observer);
-
-  /**
-   * Remove an observer added via the addObserver call. Once removed the
-   * observer will never be called again by the thread.
-   */
-  void removeObserver(in nsIThreadObserver observer);
 };

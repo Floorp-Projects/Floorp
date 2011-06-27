@@ -73,10 +73,14 @@
 
 #include <string>
 
+using namespace mozilla::gfx;
+
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
 
 #include <d3d10_1.h>
+
+#include "mozilla/gfx/2D.h"
 
 #include "nsIMemoryReporter.h"
 #include "nsMemory.h"
@@ -402,8 +406,10 @@ gfxWindowsPlatform::VerifyD2DDevice(PRBool aAttemptForce)
         mD2DDevice = cairo_d2d_create_device();
     }
 
-    if (mD2DDevice)
+    if (mD2DDevice) {
         reporter.SetSuccessful();
+        mozilla::gfx::Factory::SetDirect3D10Device(cairo_d2d_device_get_device(mD2DDevice));
+    }
 #endif
 }
 
@@ -481,6 +487,48 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     NS_IF_ADDREF(surf);
 
     return surf;
+}
+
+RefPtr<ScaledFont>
+gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
+{
+  if(mUseDirectWrite) {
+    gfxDWriteFont *font = static_cast<gfxDWriteFont*>(aFont);
+
+    NativeFont nativeFont;
+    nativeFont.mType = NATIVE_FONT_DWRITE_FONT_FACE;
+    nativeFont.mFont = font->GetFontFace();
+    RefPtr<ScaledFont> scaledFont =
+      mozilla::gfx::Factory::CreateScaledFontForNativeFont(nativeFont, font->GetAdjustedSize());
+
+    return scaledFont;
+  }
+}
+
+already_AddRefed<gfxASurface>
+gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
+{
+#ifdef XP_WIN
+  if (aTarget->GetType() == BACKEND_DIRECT2D) {
+    RefPtr<ID3D10Texture2D> texture =
+      static_cast<ID3D10Texture2D*>(aTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE));
+
+    if (!texture) {
+      return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
+    }
+
+    aTarget->Flush();
+
+    nsRefPtr<gfxASurface> surf =
+      new gfxD2DSurface(texture, ContentForFormat(aTarget->GetFormat()));
+
+    surf->SetData(&kDrawTarget, aTarget, NULL);
+
+    return surf.forget();
+  }
+#endif
+
+  return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
 }
 
 nsresult

@@ -38,6 +38,15 @@
       // Description from content of h2.
       testDescr("p", "heading");
 
+      // From table summary (caption is used as a name)
+      testDescr("table1", "summary");
+
+      // Empty (summary is used as a name)
+      testDescr("table2", "");
+
+      // From title (summary is used as a name)
+      testDescr("table3", "title");
+
       SimpleTest.finish();
     }
 
@@ -54,6 +63,11 @@
      title="@title attribute no longer exposed on accDescription">
     Mozilla Bug 489944
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=666212"
+     title="summary attribute content mapped to accessible name in MSAA">
+    Mozilla Bug 666212
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -66,5 +80,18 @@
 
   <h2 id="heading">heading</h2>
   <p id="p" aria-describedby="heading" role="button">click me</p>
+
+  <table id="table1" summary="summary">
+    <caption>caption</caption>
+    <tr><td>cell</td></tr>
+  </table>
+
+  <table id="table2" summary="summary">
+    <tr><td>cell</td></tr>
+  </table>
+
+  <table id="table3" summary="summary" title="title">
+    <tr><td>cell</td></tr>
+  </table>
 </body>
 </html>

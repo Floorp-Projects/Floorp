@@ -40,6 +40,7 @@
 #define _nsAccessible_H_
 
 #include "nsAccessNodeWrap.h"
+#include "States.h"
 
 #include "nsIAccessible.h"
 #include "nsIAccessibleHyperLink.h"
@@ -197,7 +198,7 @@ public:
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
   /**
-   * Used by GetChildAtPoint() method to get direct or deepest child at point.
+   * Used by ChildAtPoint() method to get direct or deepest child at point.
    */
   enum EWhichChildAtPoint {
     eDirectChild,
@@ -212,8 +213,8 @@ public:
    * @param  aWhichChild  [in] flag points if deepest or direct child
    *                        should be returned
    */
-  virtual nsAccessible* GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                        EWhichChildAtPoint aWhichChild);
+  virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                     EWhichChildAtPoint aWhichChild);
 
   /**
    * Return calculated group level based on accessible hierarchy.
@@ -297,7 +298,7 @@ public:
   /**
    * Return index in parent accessible.
    */
-  virtual PRInt32 GetIndexInParent() const;
+  virtual PRInt32 IndexInParent() const;
 
   /**
    * Return true if accessible has children;
@@ -406,7 +407,7 @@ public:
   /**
    * Return true if the accessible is hyper link accessible.
    */
-  virtual bool IsHyperLink();
+  virtual bool IsLink();
 
   /**
    * Return the start offset of the link within the parent accessible.
@@ -421,12 +422,26 @@ public:
   /**
    * Return true if the link is valid (e. g. points to a valid URL).
    */
-  virtual bool IsValid();
+  inline bool IsLinkValid()
+  {
+    NS_PRECONDITION(IsLink(), "IsLinkValid is called on not hyper link!");
+
+    // XXX In order to implement this we would need to follow every link
+    // Perhaps we can get information about invalid links from the cache
+    // In the mean time authors can use role="link" aria-invalid="true"
+    // to force it for links they internally know to be invalid
+    return (0 == (State() & states::INVALID));
+  }
 
   /**
    * Return true if the link currently has the focus.
    */
-  virtual bool IsSelected();
+  inline bool IsLinkSelected()
+  {
+    NS_PRECONDITION(IsLink(),
+                    "IsLinkSelected() called on something that is not a hyper link!");
+    return gLastFocusedNode == GetNode();
+  }
 
   /**
    * Return the number of anchors within the link.
@@ -436,12 +451,12 @@ public:
   /**
    * Returns an anchor accessible at the given index.
    */
-  virtual nsAccessible* GetAnchor(PRUint32 aAnchorIndex);
+  virtual nsAccessible* AnchorAt(PRUint32 aAnchorIndex);
 
   /**
    * Returns an anchor URI at the given index.
    */
-  virtual already_AddRefed<nsIURI> GetAnchorURI(PRUint32 aAnchorIndex);
+  virtual already_AddRefed<nsIURI> AnchorURIAt(PRUint32 aAnchorIndex);
 
   //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible

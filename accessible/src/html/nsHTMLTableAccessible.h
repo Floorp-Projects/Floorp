@@ -141,6 +141,14 @@ public:
   virtual PRUint64 NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
+  // TableAccessible
+  inline nsAccessible* Caption() const
+  {
+    nsAccessible* child = mChildren.SafeElementAt(0, nsnull);
+    return child && child->Role() == nsIAccessibleRole::ROLE_CAPTION ?
+      child : nsnull;
+  }
+
   // nsHTMLTableAccessible
 
   /**

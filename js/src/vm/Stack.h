@@ -389,7 +389,7 @@ class StackFrame
     /* Called by jit stubs and serve as a specification for jit-code. */
     void initJitFrameCallerHalf(JSContext *cx, StackFrame::Flags flags, void *ncode);
     void initJitFrameEarlyPrologue(JSFunction *fun, uint32 nactual);
-    void initJitFrameLatePrologue();
+    bool initJitFrameLatePrologue(JSContext *cx, Value **limit);
 
     /* Used for eval. */
     void initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs,

@@ -140,7 +140,7 @@ enum TokenKind {
                                            not a block */
     TOK_FORHEAD = 83,                   /* head of for(;;)-style loop */
     TOK_ARGSBODY = 84,                  /* formal args in list + body at end */
-    TOK_UPVARS = 85,                    /* lexical dependencies as JSAtomList
+    TOK_UPVARS = 85,                    /* lexical dependencies as JSAtomDefnMap
                                            of definitions paired with a parse
                                            tree full of uses of those names */
     TOK_RESERVED,                       /* reserved keywords */

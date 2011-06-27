@@ -245,8 +245,8 @@ public:
     return UpdateEditableFormControlState(aNotify);
   }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLInputElement,
-                                                     nsGenericHTMLFormElement)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLInputElement,
+                                           nsGenericHTMLFormElement)
 
   static UploadLastDir* gUploadLastDir;
   // create and destroy the static UploadLastDir object for remembering

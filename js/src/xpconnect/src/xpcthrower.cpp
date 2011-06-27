@@ -179,26 +179,7 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
     if(ccx.HasInterfaceAndMember())
     {
         XPCNativeInterface* iface = ccx.GetInterface();
-        jsid id = JSID_VOID;
-#ifdef XPC_IDISPATCH_SUPPORT
-        NS_ASSERTION(ccx.GetIDispatchMember() == nsnull || 
-                        ccx.GetMember() == nsnull,
-                     "Both IDispatch member and regular XPCOM member "
-                     "were set in XPCCallContext");
-        if(ccx.GetIDispatchMember())
-        {
-            XPCDispInterface::Member * member = 
-                reinterpret_cast<XPCDispInterface::Member*>(ccx.GetIDispatchMember());
-            if(member && JSID_IS_STRING(member->GetName()))
-            {
-                id = member->GetName();
-            }
-        }
-        else
-#endif
-        {
-            id = ccx.GetMember()->GetName();
-        }
+        jsid id = ccx.GetMember()->GetName();
         JSAutoByteString bytes;
         const char *name = JSID_IS_VOID(id) ? "Unknown" : bytes.encode(ccx, JSID_TO_STRING(id));
         if(!name)
@@ -339,60 +320,3 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
     }
     return success;
 }
-
-#ifdef XPC_IDISPATCH_SUPPORT
-// static
-void
-XPCThrower::ThrowCOMError(JSContext* cx, unsigned long COMErrorCode,
-                          nsresult rv, const EXCEPINFO * exception)
-{
-    nsCAutoString msg;
-    IErrorInfo * pError;
-    const char * format;
-    if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
-        format = "";
-    msg = format;
-    if(exception)
-    {
-        msg += static_cast<const char *>
-                          (_bstr_t(exception->bstrSource, false));
-        msg += " : ";
-        msg.AppendInt(static_cast<PRUint32>(COMErrorCode));
-        msg += " - ";
-        msg += static_cast<const char *>
-                          (_bstr_t(exception->bstrDescription, false));
-    }
-    else
-    {
-        // Get the current COM error object
-        unsigned long result = GetErrorInfo(0, &pError);
-        if(SUCCEEDED(result) && pError)
-        {
-            // Build an error message from the COM error object
-            BSTR bstrSource = NULL;
-            if(SUCCEEDED(pError->GetSource(&bstrSource)) && bstrSource)
-            {
-                _bstr_t src(bstrSource, false);
-                msg += static_cast<const char *>(src);
-                msg += " : ";
-            }
-            msg.AppendInt(static_cast<PRUint32>(COMErrorCode), 16);
-            BSTR bstrDesc = NULL;
-            if(SUCCEEDED(pError->GetDescription(&bstrDesc)) && bstrDesc)
-            {
-                msg += " - ";
-                _bstr_t desc(bstrDesc, false);
-                msg += static_cast<const char *>(desc);
-            }
-        }
-        else
-        {
-            // No error object, so just report the result
-            msg += "COM Error Result = ";
-            msg.AppendInt(static_cast<PRUint32>(COMErrorCode), 16);
-        }
-    }
-    XPCThrower::BuildAndThrowException(cx, rv, msg.get());
-}
-
-#endif

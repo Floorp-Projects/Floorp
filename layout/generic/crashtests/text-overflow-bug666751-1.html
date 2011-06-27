@@ -1,0 +1,12 @@
+<html class="reftest-wait"><head><script>
+function finish() {
+  window.removeEventListener("MozAfterPaint", finish, false);
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head><body onload="window.addEventListener('MozAfterPaint', finish, false); document.body.style.backgroundColor='lime';">
+<div style="overflow: scroll;  text-indent: -100px; white-space: pre; text-overflow: ellipsis;"><span style="font-family: -moz-fixed; white-space: normal;"></code><p style="position: fixed;">m
+</p>
+</div>
+
+</body></html>

@@ -88,7 +88,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIEnumerator.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"

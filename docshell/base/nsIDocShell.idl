@@ -72,7 +72,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(f77271a1-0b22-4581-af6d-529125f1901d)]
+[scriptable, uuid(0666adf8-8738-4ca7-a917-0348f47d2f40)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -273,6 +273,11 @@ interface nsIDocShell : nsISupports
    * effect starting with the next document loaded in the docshell.
    */
   attribute boolean allowDNSPrefetch;
+
+  /**
+   * Attribute that determines whether window control (move/resize) is allowed.
+   */
+  attribute boolean allowWindowControl;
 
   /**
    * Get an enumerator over this docShell and its children.

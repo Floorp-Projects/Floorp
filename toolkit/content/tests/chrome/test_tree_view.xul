@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for tree using a custom nsITreeView
+  -->
+<window title="Tree" onload="init()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+
+<script src="tree_shared.js"/>
+
+<script>
+<![CDATA[
+
+// This is our custom view, based on the treeview interface
+var view =
+{
+  treeData: [["Mary", "206 Garden Avenue"],
+                ["Chris", "19 Marion Street"],
+                ["Sarah", "702 Fern Avenue"],
+                ["John", "99 Westminster Avenue"]],
+  value: "",
+  rowCount: 8,
+  getCellText: function(row, column) { return this.treeData[row % 4][column.index]; },
+  getCellValue: function(row, column) { return this.value; },
+  setCellText: function(row, column, val) { this.treeData[row % 4][column.index] = val; },
+  setCellValue: function(row, column, val) { this.value = val; },
+  setTree: function(tree) { this.tree = tree; },
+  isContainer: function(row) { return false; },
+  isContainerOpen: function(row) { return false; },
+  isContainerEmpty: function(row) { return false; },
+  isSeparator: function(row) { return false; },
+  isSorted: function(row) { return false; },
+  isSelectable: function(row, column) { return true; },
+  isEditable: function(row, column) { return row != 2 || column.index != 1; },
+  getProgressMode: function(row, column) { return Components.interfaces.nsITreeView.PROGRESS_NORMAL; },
+  getParentIndex: function(row, column) { return -1; },
+  getLevel: function(row) { return 0; },
+  hasNextSibling: function(row, column) { return row != this.rowCount - 1; },
+  getImageSrc: function(row, column) { return ""; },
+  cycleHeader: function(column) { },
+  getRowProperties: function(row, props) { },
+  getCellProperties: function(row, column, props) { },
+  getColumnProperties: function(column, props)
+  {
+    if (!column.index) {
+      var atomService = Components.classes["@mozilla.org/atom-service;1"].
+                          getService(Components.interfaces.nsIAtomService);
+      props.AppendElement(atomService.getAtom("one"));
+      props.AppendElement(atomService.getAtom("two"));
+    }
+  }
+}
+
+function getCustomTreeViewCellInfo()
+{
+  var obj = { rows: [] };
+
+  for (var row = 0; row < view.rowCount; row++) {
+    var cellInfo = [ ];
+    for (var column = 0; column < 1; column++) {
+      cellInfo.push({ label: "" + view.treeData[row % 4][column],
+                      value: "",
+                      properties: "",
+                      editable: row != 2 || column.index != 1,
+                      selectable: true,
+                      image: "",
+                      mode: Components.interfaces.nsITreeView.PROGRESS_NORMAL });
+    }
+
+    obj.rows.push({ cells: cellInfo,
+                    properties: "",
+                    container: false,
+                    separator: false,
+                    children: null,
+                    level: 0,
+                    parent: -1 });
+  }
+
+  return obj;
+}
+
+function init()
+{
+  var tree = document.getElementById("tree-view");
+  tree.view = view;
+  tree.treeBoxObject.ensureRowIsVisible(0);
+  is(tree.treeBoxObject.getFirstVisibleRow(), 0, "first visible after ensureRowIsVisible on load");
+  tree.setAttribute("rows", "4");
+
+  setTimeout(testtag_tree, 0, "tree-view", "treechildren-view", "multiple", "simple", "tree view");
+}
+
+]]>
+</script>
+
+<tree id="tree-view">
+  <treecols>
+    <treecol id="name" label="Name" sort="label" flex="1"/>
+    <treecol id="address" label="Address" flex="1"/>
+  </treecols>
+  <treechildren id="treechildren-view"/>
+</tree>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+</window>
+

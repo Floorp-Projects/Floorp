@@ -250,7 +250,7 @@ public:
     };
     
     // Additional bit flags...
-    enum {SCRIPTABLE = 4};
+    enum {SCRIPTABLE = 4, BUILTINCLASS = 8};
 
     PRUint8 GetResolveState() const {return mFlags.GetState();}
     
@@ -261,6 +261,10 @@ public:
                 {mFlags.SetFlagBit(PRUint8(SCRIPTABLE),on);}
     PRBool GetScriptableFlag() const
                 {return mFlags.GetFlagBit(PRUint8(SCRIPTABLE));}
+    void   SetBuiltinClassFlag(PRBool on)
+                {mFlags.SetFlagBit(PRUint8(BUILTINCLASS),on);}
+    PRBool GetBuiltinClassFlag() const
+                {return mFlags.GetFlagBit(PRUint8(BUILTINCLASS));}
 
     const nsID* GetTheIID()  const {return &mIID;}
     const char* GetTheName() const {return mName;}
@@ -288,6 +292,10 @@ public:
     nsresult GetName(char * *aName);
     nsresult GetIID(nsIID * *aIID);
     nsresult IsScriptable(PRBool *_retval);
+    nsresult IsBuiltinClass(PRBool *_retval) {
+        *_retval = GetBuiltinClassFlag();
+        return NS_OK;
+    }
     // Except this one.
     //nsresult GetParent(nsIInterfaceInfo * *aParent);
     nsresult GetMethodCount(PRUint16 *aMethodCount);
@@ -363,6 +371,7 @@ public:
     NS_IMETHOD GetName(char * *aName) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetName(aName); }
     NS_IMETHOD GetInterfaceIID(nsIID * *aIID) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetIID(aIID); }
     NS_IMETHOD IsScriptable(PRBool *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->IsScriptable(_retval); }
+    NS_IMETHOD IsBuiltinClass(PRBool *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->IsBuiltinClass(_retval); }
     // Except this one.
     NS_IMETHOD GetParent(nsIInterfaceInfo * *aParent) 
     {

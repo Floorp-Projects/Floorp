@@ -242,6 +242,11 @@
             if (this._columnsCount != columnsCount && window.innerWidth > 1) { // > 1 to ignore column resizing while the main window is loading
               let width = columnsCount * (COLUMN_MARGIN + firstBox.width);
               this.children.style.width = width + "px";
+
+              // Clamp the sidebar width so it won't overflow the window. Only clamp
+              // the scrollbox. The children need to be the full width.
+              if (width > window.innerWidth - firstBox.width)
+                width = window.innerWidth - firstBox.width;
               this._scrollbox.style.width = width + "px";
               this._columnsCount = columnsCount;
             }

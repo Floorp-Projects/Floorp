@@ -58,6 +58,13 @@
   typedef unsigned __int32 uint32_t;
   typedef __int64 int64_t;
   typedef unsigned __int64 uint64_t;
+#ifndef _UINTPTR_T_DEFINED
+#ifdef _WIN64
+  typedef unsigned __int64 uintptr_t;
+#else
+  typedef unsigned int uintptr_t;
+#endif
+#endif
 # ifndef HAVE_UINT64_T
 #  define HAVE_UINT64_T 1
 # endif

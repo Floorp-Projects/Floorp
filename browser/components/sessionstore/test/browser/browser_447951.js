@@ -37,8 +37,6 @@
 function test() {
   /** Test for Bug 447951 **/
   
-  // test setup
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   waitForExplicitFinish();
   const baseURL = "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser/browser_447951_sample.html#";

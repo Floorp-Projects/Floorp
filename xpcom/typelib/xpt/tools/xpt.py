@@ -845,7 +845,7 @@ class Interface(object):
     
     def __init__(self, name, iid=UNRESOLVED_IID, namespace="",
                  resolved=False, parent=None, methods=[], constants=[],
-                 scriptable=False, function=False):
+                 scriptable=False, function=False, builtinclass=False):
         self.resolved = resolved
         #TODO: should validate IIDs!
         self.iid = iid
@@ -857,6 +857,7 @@ class Interface(object):
         self.constants = list(constants)
         self.scriptable = scriptable
         self.function = function
+        self.builtinclass = builtinclass
         # For sanity, if someone constructs an Interface and passes
         # in methods or constants, then it's resolved.
         if self.methods or self.constants:
@@ -922,11 +923,13 @@ class Interface(object):
         (flags, ) = struct.unpack(">B", map[start:start + struct.calcsize(">B")])
         offset = offset + struct.calcsize(">B")
         # only the first two bits are flags
-        flags &= 0xC0
+        flags &= 0xE0
         if flags & 0x80:
             self.scriptable = True
         if flags & 0x40:
             self.function = True
+        if flags & 0x20:
+            self.builtinclass = True
         self.resolved = True
 
     def write_directory_entry(self, file):
@@ -965,6 +968,8 @@ class Interface(object):
             flags |= 0x80
         if self.function:
             flags |= 0x40
+        if self.builtinclass:
+            flags |= 0x20
         file.write(struct.pack(">B", flags))
         
     def write_names(self, file, data_pool_offset):
@@ -1260,7 +1265,9 @@ class Typelib(object):
                                                     i.parent.name))
                 out.write("""      Flags:
          Scriptable: %s
+         BuiltinClass: %s
          Function: %s\n""" % (i.scriptable and "TRUE" or "FALSE",
+                              i.builtinclass and "TRUE" or "FALSE",
                               i.function and "TRUE" or "FALSE"))
                 out.write("      Methods:\n")
                 if len(i.methods) == 0:

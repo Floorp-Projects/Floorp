@@ -50,7 +50,6 @@
  */
 
 #define READTYPE  PRInt32
-#include "base/basictypes.h"
 #include "zlib.h"
 #include "nsISupportsUtils.h"
 #include "nsRecyclingAllocator.h"
@@ -66,9 +65,7 @@
 #if defined(XP_WIN)
 #include <windows.h>
 #endif
-
-#include "base/histogram.h"
-#include "base/logging.h"
+#include "mozilla/Telemetry.h"
 
 /**
  * Global allocator used with zlib. Destroyed in module shutdown.
@@ -1081,12 +1078,10 @@ nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char * aEntryName
     mAutoBuf = new PRUint8[size];
   }
 
-  const char kCRCHistogram[] = "nsZipItemPtr CRC Match";
-
   nsZipCursor cursor(item, aZip, mAutoBuf, size, doCRC);
   mReturnBuf = cursor.Read(&mReadlen);
   if (!mReturnBuf) {
-    UMA_HISTOGRAM_BOOLEAN(kCRCHistogram, false);
+    Telemetry::Accumulate(Telemetry::ZIPARCHIVE_CRC, false);
     return;
   }
 
@@ -1096,5 +1091,5 @@ nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char * aEntryName
     return;
   }
 
-  UMA_HISTOGRAM_BOOLEAN(kCRCHistogram, true);
+  Telemetry::Accumulate(Telemetry::ZIPARCHIVE_CRC, true);
 }

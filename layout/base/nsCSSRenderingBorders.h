@@ -137,6 +137,7 @@ struct nsCSSBorderRenderer {
   // calculated values
   PRPackedBool mOneUnitBorder;
   PRPackedBool mNoBorderRadius;
+  PRPackedBool mAvoidStroke;
 
   // For all the sides in the bitmask, would they be rendered
   // in an identical color and style?

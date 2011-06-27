@@ -52,7 +52,7 @@
 #include "nsIDOMXULElement.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIScrollableFrame.h"
@@ -78,7 +78,7 @@ PRBool
 nsCoreUtils::HasClickListener(nsIContent *aContent)
 {
   NS_ENSURE_TRUE(aContent, PR_FALSE);
-  nsIEventListenerManager* listenerManager =
+  nsEventListenerManager* listenerManager =
     aContent->GetListenerManager(PR_FALSE);
 
   return listenerManager &&

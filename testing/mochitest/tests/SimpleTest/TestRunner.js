@@ -42,15 +42,14 @@ TestRunner._urls = [];
 TestRunner.timeout = 5 * 60 * 1000; // 5 minutes.
 TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
 
-TestRunner.ipcMode = false; // running in e10s build and need to use IPC?
-try {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var ipcsanity = Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch);
-  ipcsanity.setIntPref("mochitest.ipcmode", 0);
-} catch (e) {
-  TestRunner.ipcMode = true;
+// running in e10s build and need to use IPC?
+if (typeof SpecialPowers != 'undefined') {
+    TestRunner.ipcMode = SpecialPowers.hasContentProcesses();
+} else {
+    TestRunner.ipcMode = false;
 }
+
+TestRunner._expectingProcessCrash = false;
 
 /**
  * Make sure the tests don't hang indefinitely.
@@ -102,6 +101,22 @@ TestRunner.onComplete = null;
 **/
 TestRunner.logger = MochiKit.Logging.logger;
 
+TestRunner.log = function(msg) {
+    if (TestRunner.logEnabled) {
+        TestRunner.logger.log(msg);
+    } else {
+        dump(msg + "\n");
+    }
+};
+
+TestRunner.error = function(msg) {
+    if (TestRunner.logEnabled) {
+        TestRunner.logger.error(msg);
+    } else {
+        dump(msg + "\n");
+    }
+};
+
 /**
  * Toggle element visibility
 **/
@@ -137,9 +152,7 @@ TestRunner._makeIframe = function (url, retry) {
             return;
         }
 
-        if (TestRunner.logEnabled) {
-            TestRunner.logger.log("Error: Unable to restore focus, expect failures and timeouts.");
-        }
+        TestRunner.log("Error: Unable to restore focus, expect failures and timeouts.");
     }
     window.scrollTo(0, $('indicator').offsetTop);
     iframe.src = url;
@@ -155,8 +168,11 @@ TestRunner._makeIframe = function (url, retry) {
  *
 **/
 TestRunner.runTests = function (/*url...*/) {
-    if (TestRunner.logEnabled)
-        TestRunner.logger.log("SimpleTest START");
+    TestRunner.log("SimpleTest START");
+
+    if (typeof SpecialPowers != "undefined") {
+        SpecialPowers.registerProcessCrashObservers();
+    }
 
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
@@ -182,8 +198,7 @@ TestRunner.runNextTest = function() {
         TestRunner._currentTestStartTime = new Date().valueOf();
         TestRunner._timeoutFactor = 1;
 
-        if (TestRunner.logEnabled)
-            TestRunner.logger.log("TEST-START | " + url); // used by automation.py
+        TestRunner.log("TEST-START | " + url); // used by automation.py
 
         TestRunner._makeIframe(url, 0);
     } else {
@@ -196,8 +211,7 @@ TestRunner.runNextTest = function() {
         {
           // No |$('testframe').contentWindow|, so manually update: ...
           // ... the log,
-          if (TestRunner.logEnabled)
-            TestRunner.logger.error("TEST-UNEXPECTED-FAIL | (SimpleTest/TestRunner.js) | No checks actually run.");
+          TestRunner.error("TEST-UNEXPECTED-FAIL | (SimpleTest/TestRunner.js) | No checks actually run.");
           // ... the count,
           $("fail-count").innerHTML = 1;
           // ... the indicator.
@@ -206,13 +220,11 @@ TestRunner.runNextTest = function() {
           indicator.style.backgroundColor = "red";
         }
 
-        if (TestRunner.logEnabled) {
-            TestRunner.logger.log("TEST-START | Shutdown"); // used by automation.py
-            TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
-            TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
-            TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
-            TestRunner.logger.log("SimpleTest FINISHED");
-        }
+        TestRunner.log("TEST-START | Shutdown"); // used by automation.py
+        TestRunner.log("Passed: " + $("pass-count").innerHTML);
+        TestRunner.log("Failed: " + $("fail-count").innerHTML);
+        TestRunner.log("Todo:   " + $("todo-count").innerHTML);
+        TestRunner.log("SimpleTest FINISHED");
 
         if (TestRunner.onComplete) {
             TestRunner.onComplete();
@@ -220,20 +232,60 @@ TestRunner.runNextTest = function() {
     }
 };
 
+TestRunner.expectChildProcessCrash = function() {
+    if (typeof SpecialPowers == "undefined") {
+        throw "TestRunner.expectChildProcessCrash must only be called from plain mochitests.";
+    }
+
+    TestRunner._expectingProcessCrash = true;
+};
+
 /**
  * This stub is called by SimpleTest when a test is finished.
 **/
 TestRunner.testFinished = function(tests) {
-    if (TestRunner.logEnabled) {
-        var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
-        TestRunner.logger.log("TEST-END | " +
-                              TestRunner._urls[TestRunner._currentTest] +
-                              " | finished in " + runtime + "ms");
+    function cleanUpCrashDumpFiles() {
+        if (!SpecialPowers.removeExpectedCrashDumpFiles(TestRunner._expectingProcessCrash)) {
+            TestRunner.error("TEST-UNEXPECTED-FAIL | " +
+                             TestRunner.currentTestURL +
+                             " | This test did not leave any crash dumps behind, but we were expecting some!");
+            tests.push({ result: false });
+        }
+        var unexpectedCrashDumpFiles =
+            SpecialPowers.findUnexpectedCrashDumpFiles();
+        TestRunner._expectingProcessCrash = false;
+        if (unexpectedCrashDumpFiles.length) {
+            TestRunner.error("TEST-UNEXPECTED-FAIL | " +
+                             TestRunner.currentTestURL +
+                             " | This test left crash dumps behind, but we " +
+                             "weren't expecting it to!");
+            tests.push({ result: false });
+            unexpectedCrashDumpFiles.sort().forEach(function(aFilename) {
+                TestRunner.log("TEST-INFO | Found unexpected crash dump file " +
+                               aFilename + ".");
+            });
+        }
     }
 
-    TestRunner.updateUI(tests);
-    TestRunner._currentTest++;
-    TestRunner.runNextTest();
+    function runNextTest() {
+        var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
+        TestRunner.log("TEST-END | " +
+                       TestRunner._urls[TestRunner._currentTest] +
+                       " | finished in " + runtime + "ms");
+
+        TestRunner.updateUI(tests);
+        TestRunner._currentTest++;
+        TestRunner.runNextTest();
+    }
+
+    if (typeof SpecialPowers != 'undefined') {
+        SpecialPowers.executeAfterFlushingMessageQueue(function() {
+            cleanUpCrashDumpFiles();
+            runNextTest();
+        });
+    } else {
+        runNextTest();
+    }
 };
 
 /**

@@ -1178,7 +1178,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       let targetIndex = xulTab._tPos;
 
-      $icon.remove();
+      $icon.remove({ preserveEventHandlers: true });
       if (targetIndex < (length - 1))
         self.$appTabTray[0].insertBefore(
           icon,

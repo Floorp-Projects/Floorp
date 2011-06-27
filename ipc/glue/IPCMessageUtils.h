@@ -42,6 +42,8 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "prtypes.h"
+#include "nsID.h"
+#include "nsMemory.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 #include "gfx3DMatrix.h"
@@ -684,6 +686,48 @@ struct ParamTraits<nsRect>
             ReadParam(msg, iter, &result->y) &&
             ReadParam(msg, iter, &result->width) &&
             ReadParam(msg, iter, &result->height));
+  }
+};
+
+template<>
+struct ParamTraits<nsID>
+{
+  typedef nsID paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.m0);
+    WriteParam(aMsg, aParam.m1);
+    WriteParam(aMsg, aParam.m2);
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(aParam.m3); i++) {
+      WriteParam(aMsg, aParam.m3[i]);
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if(!ReadParam(aMsg, aIter, &(aResult->m0)) ||
+       !ReadParam(aMsg, aIter, &(aResult->m1)) ||
+       !ReadParam(aMsg, aIter, &(aResult->m2)))
+      return false;
+
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(aResult->m3); i++)
+      if (!ReadParam(aMsg, aIter, &(aResult->m3[i])))
+        return false;
+
+    return true;
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    aLog->append(L"{");
+    aLog->append(StringPrintf(L"%8.8X-%4.4X-%4.4X-",
+                              aParam.m0,
+                              aParam.m1,
+                              aParam.m2));
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(aParam.m3); i++)
+      aLog->append(StringPrintf(L"%2.2X", aParam.m3[i]));
+    aLog->append(L"}");
   }
 };
 

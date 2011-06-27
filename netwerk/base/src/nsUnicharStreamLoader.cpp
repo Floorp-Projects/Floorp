@@ -256,7 +256,7 @@ nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *,
       ++consumed;
       // XXX this is needed to make sure we don't underrun our buffer;
       // bug 160784 again
-      consumed = PR_MAX(consumed, 0);
+      consumed = NS_MAX<PRUint32>(consumed, 0);
       self->mDecoder->Reset();
     }
   } while (consumed < aCount);

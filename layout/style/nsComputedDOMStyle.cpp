@@ -23,7 +23,7 @@
  *   Daniel Glazman <glazman@netscape.com>
  *   Boris Zbarsky <bzbarsky@mit.edu>
  *   Christopher A. Aillon <christopher@aillon.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Michael Ventnor <m.ventnor@gmail.com>
  *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
@@ -2385,6 +2385,24 @@ nsComputedDOMStyle::DoGetTextIndent()
 }
 
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetTextOverflow()
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  const nsStyleTextReset *style = GetStyleTextReset();
+
+  if (style->mTextOverflow.mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
+    nsString str;
+    nsStyleUtil::AppendEscapedCSSString(style->mTextOverflow.mString, str);
+    val->SetString(str);
+  } else {
+    val->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(style->mTextOverflow.mType,
+                                     nsCSSProps::kTextOverflowKTable));
+  }
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetTextShadow()
 {
   return GetCSSShadowArray(GetStyleText()->mTextShadow,
@@ -4001,7 +4019,6 @@ nsComputedDOMStyle::DoGetTransitionTimingFunction()
   return valueList;
 }
 
-#ifdef MOZ_CSS_ANIMATIONS
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetAnimationName()
 {
@@ -4188,7 +4205,6 @@ nsComputedDOMStyle::DoGetAnimationPlayState()
 
   return valueList;
 }
-#endif
 
 #define COMPUTED_STYLE_MAP_ENTRY(_prop, _method)              \
   { eCSSProperty_##_prop, &nsComputedDOMStyle::DoGet##_method, PR_FALSE }
@@ -4316,6 +4332,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(text_align,                    TextAlign),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration,               TextDecoration),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(text_indent,            TextIndent),
+    COMPUTED_STYLE_MAP_ENTRY(text_overflow,                 TextOverflow),
     COMPUTED_STYLE_MAP_ENTRY(text_shadow,                   TextShadow),
     COMPUTED_STYLE_MAP_ENTRY(text_transform,                TextTransform),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(top,                    Top),
@@ -4333,7 +4350,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
      * Implementations of -moz- styles *
     \* ******************************* */
 
-#ifdef MOZ_CSS_ANIMATIONS
     COMPUTED_STYLE_MAP_ENTRY(animation_delay,               AnimationDelay),
     COMPUTED_STYLE_MAP_ENTRY(animation_direction,           AnimationDirection),
     COMPUTED_STYLE_MAP_ENTRY(animation_duration,            AnimationDuration),
@@ -4342,7 +4358,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(animation_name,                AnimationName),
     COMPUTED_STYLE_MAP_ENTRY(animation_play_state,          AnimationPlayState),
     COMPUTED_STYLE_MAP_ENTRY(animation_timing_function,     AnimationTimingFunction),
-#endif
     COMPUTED_STYLE_MAP_ENTRY(appearance,                    Appearance),
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_inline_policy, BackgroundInlinePolicy),
     COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),

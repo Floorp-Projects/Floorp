@@ -44,6 +44,12 @@ var Cc = Components.classes;
 function SpecialPowers(window) {
   this.window = window;
   bindDOMWindowUtils(this, window);
+  this._encounteredCrashDumpFiles = [];
+  this._unexpectedCrashDumpFiles = { };
+  this._crashDumpDir = null;
+  this._pongHandlers = [];
+  this._messageListener = this._messageReceived.bind(this);
+  addMessageListener("SPPingService", this._messageListener);
 }
 
 function bindDOMWindowUtils(sp, window) {
@@ -204,6 +210,97 @@ SpecialPowers.prototype = {
 
   gc: function() {
     this.DOMWindowUtils.garbageCollect();
+  },
+
+  hasContentProcesses: function() {
+    try {
+      var rt = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+      return rt.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+    } catch (e) {
+      return true;
+    }
+  },
+
+  registerProcessCrashObservers: function() {
+    addMessageListener("SPProcessCrashService", this._messageListener);
+    sendSyncMessage("SPProcessCrashService", { op: "register-observer" });
+  },
+
+  _messageReceived: function(aMessage) {
+    switch (aMessage.name) {
+      case "SPProcessCrashService":
+        if (aMessage.json.type == "crash-observed") {
+          var self = this;
+          aMessage.json.dumpIDs.forEach(function(id) {
+            self._encounteredCrashDumpFiles.push(id + ".dmp");
+            self._encounteredCrashDumpFiles.push(id + ".extra");
+          });
+        }
+        break;
+
+      case "SPPingService":
+        if (aMessage.json.op == "pong") {
+          var handler = this._pongHandlers.shift();
+          if (handler) {
+            handler();
+          }
+        }
+        break;
+    }
+    return true;
+  },
+
+  removeExpectedCrashDumpFiles: function(aExpectingProcessCrash) {
+    var success = true;
+    if (aExpectingProcessCrash) {
+      var message = {
+        op: "delete-crash-dump-files",
+        filenames: this._encounteredCrashDumpFiles 
+      };
+      if (!sendSyncMessage("SPProcessCrashService", message)[0]) {
+        success = false;
+      }
+    }
+    this._encounteredCrashDumpFiles.length = 0;
+    return success;
+  },
+
+  findUnexpectedCrashDumpFiles: function() {
+    var self = this;
+    var message = {
+      op: "find-crash-dump-files",
+      crashDumpFilesToIgnore: this._unexpectedCrashDumpFiles
+    };
+    var crashDumpFiles = sendSyncMessage("SPProcessCrashService", message)[0];
+    crashDumpFiles.forEach(function(aFilename) {
+      self._unexpectedCrashDumpFiles[aFilename] = true;
+    });
+    return crashDumpFiles;
+  },
+
+  executeAfterFlushingMessageQueue: function(aCallback) {
+    this._pongHandlers.push(aCallback);
+    sendAsyncMessage("SPPingService", { op: "ping" });
+  },
+
+  executeSoon: function(aFunc) {
+    var tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+    tm.mainThread.dispatch({
+      run: function() {
+        aFunc();
+      }
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
+  addSystemEventListener: function(target, type, listener, useCapture) {
+    Components.classes["@mozilla.org/eventlistenerservice;1"].
+      getService(Components.interfaces.nsIEventListenerService).
+      addSystemEventListener(target, type, listener, useCapture);
+  },
+  removeSystemEventListener: function(target, type, listener, useCapture) {
+    Components.classes["@mozilla.org/eventlistenerservice;1"].
+      getService(Components.interfaces.nsIEventListenerService).
+      removeSystemEventListener(target, type, listener, useCapture);
   }
 };
 

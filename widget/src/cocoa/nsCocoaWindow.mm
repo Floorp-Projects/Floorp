@@ -227,7 +227,11 @@ static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *screen)
 // (native context menus, native tooltips)
 static PRBool UseNativePopupWindows()
 {
-  return Preferences::GetBool("ui.use_native_popup_windows", PR_FALSE);
+#ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
+  return PR_TRUE;
+#else
+  return PR_FALSE;
+#endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 }
 
 nsresult nsCocoaWindow::Create(nsIWidget *aParent,

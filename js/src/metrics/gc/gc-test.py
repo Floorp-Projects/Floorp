@@ -40,6 +40,7 @@ def stddev(seq, mean):
 
 def run_test(test):
     env = os.environ.copy()
+    env['MOZ_GCTIMER'] = 'stderr'
     cmd = get_test_cmd(test.path)
     total = []
     mark = []

@@ -82,6 +82,10 @@ endif
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DIRS = icon/mac icon
 endif
+ifeq ($(OS_TARGET),Android)
+DIRS = icon/android icon
+endif
+
 
 include $(topsrcdir)/config/rules.mk
 

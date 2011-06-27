@@ -48,7 +48,7 @@ ifdef MOZ_TREE_CAIRO
 DIRS		= cairo
 endif
 
-DIRS		+= ycbcr angle src qcms layers harfbuzz/src ots/src thebes ipc
+DIRS		+= 2d ycbcr angle src qcms layers harfbuzz/src ots/src thebes ipc
 
 ifdef ENABLE_TESTS
 TOOL_DIRS	+= tests

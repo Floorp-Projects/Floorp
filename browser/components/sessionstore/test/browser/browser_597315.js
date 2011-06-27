@@ -35,9 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-         getService(Ci.nsISessionStore);
-
 function test() {
   /** Test for Bug 597315 - Frameset history does not work properly when restoring a tab **/
   waitForExplicitFinish();

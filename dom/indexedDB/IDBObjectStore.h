@@ -157,6 +157,9 @@ public:
     return mTransaction;
   }
 
+  nsresult ModifyValueForNewKey(JSAutoStructuredCloneBuffer& aBuffer,
+                                Key& aKey);
+
 protected:
   IDBObjectStore();
   ~IDBObjectStore();
@@ -175,6 +178,8 @@ protected:
                     nsIIDBRequest** _retval,
                     bool aOverwrite);
 
+  nsresult EnsureKeyPathSerializationData(JSContext* aCx);
+
 private:
   nsRefPtr<IDBTransaction> mTransaction;
 
@@ -187,6 +192,11 @@ private:
   PRBool mAutoIncrement;
   PRUint32 mDatabaseId;
   PRUint32 mStructuredCloneVersion;
+
+  // Used to store a serialized representation of the fake property
+  // entry used to handle autoincrement with keypaths.
+  JSAutoStructuredCloneBuffer mKeyPathSerialization;
+  PRUint32 mKeyPathSerializationOffset;
 
   nsTArray<nsRefPtr<IDBIndex> > mCreatedIndexes;
 

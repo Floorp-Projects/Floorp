@@ -152,7 +152,7 @@ public:
 
   static nsresult requestActivateSSL(nsNSSSocketInfo *si);
   
-  static PRBool exitRequested();
+  static PRBool stoppedOrStopping();
 };
 
 #endif //_NSSSLTHREAD_H_

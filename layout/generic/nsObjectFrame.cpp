@@ -956,7 +956,8 @@ public:
   NS_DISPLAY_DECL_NAME("PluginReadback", TYPE_PLUGIN_READBACK)
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager)
+                                             LayerManager* aManager,
+                                             const ContainerParameters& aContainerParameters)
   {
     return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
   }
@@ -1383,7 +1384,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   window.window = &gWorld;
   npprint.print.embedPrint.platformPrint = gWorld;
   npprint.print.embedPrint.window = window;
-  nsresult rv = pi->Print(&npprint);
+  pi->Print(&npprint);
 
   ::CGContextTranslateCTM(cgContext, 0.0f, float(window.height));
   ::CGContextScaleCTM(cgContext, 1.0f, -1.0f);
@@ -2100,9 +2101,6 @@ nsObjectFrame::PrepareInstanceOwner()
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("Created new instance owner %p for frame %p\n", mInstanceOwner.get(),
           this));
-
-  if (!mInstanceOwner)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // Note, |this| may very well be gone after this call.
   return mInstanceOwner->Init(PresContext(), this, GetContent());

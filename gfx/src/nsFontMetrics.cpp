@@ -197,7 +197,7 @@ static gfxFloat ComputeMaxDescent(const gfxFont::Metrics& aMetrics,
     gfxFloat offset = NS_floor(-aFontGroup->GetUnderlineOffset() + 0.5);
     gfxFloat size = NS_round(aMetrics.underlineSize);
     gfxFloat minDescent = NS_floor(offset + size + 0.5);
-    return PR_MAX(minDescent, aMetrics.maxDescent);
+    return NS_MAX(minDescent, aMetrics.maxDescent);
 }
 
 static gfxFloat ComputeMaxAscent(const gfxFont::Metrics& aMetrics)
@@ -279,7 +279,7 @@ nsFontMetrics::GetMaxStringLength()
     const gfxFont::Metrics& m = GetMetrics();
     const double x = 32767.0 / m.maxAdvance;
     PRInt32 len = (PRInt32)floor(x);
-    return PR_MAX(1, len);
+    return NS_MAX(1, len);
 }
 
 nscoord

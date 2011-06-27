@@ -63,8 +63,6 @@ nsCUPSShim gCupsShim;
 nsresult
 nsPSPrinterList::Init()
 {
-    nsresult rv;
-
     // Should we try cups?
     PRBool useCups =
         Preferences::GetBool("print.postscript.cups.enabled", PR_TRUE);

@@ -56,7 +56,7 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
 
   if (IID_IAccessibleHyperlink == iid) {
     nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-    if (!thisObj->IsHyperLink())
+    if (!thisObj->IsLink())
       return E_NOINTERFACE;
 
     *ppv = static_cast<IAccessibleHyperlink*>(this);
@@ -76,13 +76,13 @@ __try {
   VariantInit(aAnchor);
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
 
-  nsAccessible* anchor = thisObj->GetAnchor(aIndex);
+  nsAccessible* anchor = thisObj->AnchorAt(aIndex);
   if (!anchor)
     return S_FALSE;
 
@@ -111,13 +111,13 @@ __try {
   VariantInit(aAnchorTarget);
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
 
-  nsCOMPtr<nsIURI> uri = thisObj->GetAnchorURI(aIndex);
+  nsCOMPtr<nsIURI> uri = thisObj->AnchorURIAt(aIndex);
   if (!uri)
     return S_FALSE;
 
@@ -151,7 +151,7 @@ __try {
   *aIndex = 0;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
   *aIndex = thisObj->StartOffset();
@@ -168,7 +168,7 @@ __try {
   *aIndex = 0;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
   *aIndex = thisObj->EndOffset();
@@ -185,10 +185,10 @@ __try {
   *aValid = false;
 
   nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
-  if (thisObj->IsDefunct() || !thisObj->IsHyperLink())
+  if (thisObj->IsDefunct() || !thisObj->IsLink())
     return E_FAIL;
 
-  *aValid = thisObj->IsValid();
+  *aValid = thisObj->IsLinkValid();
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }

@@ -90,14 +90,11 @@ function runTests()
        getDesciption(aPreventedOnBubbling) + "prevented on bubbling phase");
   }
 
-  var systemGroup =
-    Components.classes["@mozilla.org/eventlistenerservice;1"].
-      getService(Components.interfaces.nsIEventListenerService).
-      systemEventGroup;
   var parentElement = document.getElementById("display");
-  parentElement.QueryInterface(Components.interfaces.nsIDOM3EventTarget);
-  parentElement.addGroupedEventListener("keypress", listener, true, systemGroup);
-  parentElement.addGroupedEventListener("keypress", listener, false, systemGroup);
+  SpecialPowers.addSystemEventListener(parentElement, "keypress", listener,
+                                       true);
+  SpecialPowers.addSystemEventListener(parentElement, "keypress", listener,
+                                       false);
 
   function doTest(aElement, aDescription, aIsSingleLine, aIsReadonly,
                   aIsTabbable)
@@ -407,8 +404,10 @@ function runTests()
 
   editor.flags = flags;
 
-  parentElement.removeGroupedEventListener("keypress", listener, true, systemGroup);
-  parentElement.removeGroupedEventListener("keypress", listener, false, systemGroup);
+  SpecialPowers.removeSystemEventListener(parentElement, "keypress", listener,
+                                          true);
+  SpecialPowers.removeSystemEventListener(parentElement, "keypress", listener,
+                                          false);
 
   SimpleTest.finish();
 }

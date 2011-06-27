@@ -43,7 +43,7 @@
 #include "mozilla/plugins/PluginScriptableObjectParent.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
-#elif defined(OS_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
 #include "nsCoreAnimationSupport.h"
 #endif
 
@@ -275,9 +275,9 @@ public:
     virtual bool
     AnswerPluginFocusChange(const bool& gotFocus);
 
-#if defined(OS_MACOSX)
+#ifdef MOZ_WIDGET_COCOA
     void Invalidate();
-#endif // definied(OS_MACOSX)
+#endif // definied(MOZ_WIDGET_COCOA)
 
     nsresult AsyncSetWindow(NPWindow* window);
     nsresult GetImage(mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
@@ -347,7 +347,7 @@ private:
     WNDPROC            mPluginWndProc;
     bool               mNestedEventState;
 #endif // defined(XP_WIN)
-#if defined(OS_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
 private:
     Shmem                  mShSurface; 
     size_t                 mShWidth;
@@ -355,7 +355,7 @@ private:
     CGColorSpaceRef        mShColorSpace;
     int16_t                mDrawingModel;
     nsAutoPtr<nsIOSurface> mIOSurface;
-#endif // definied(OS_MACOSX)
+#endif // definied(MOZ_WIDGET_COCOA)
 
     // ObjectFrame layer wrapper
     nsRefPtr<gfxASurface>    mFrontSurface;

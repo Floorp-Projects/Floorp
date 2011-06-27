@@ -12,6 +12,7 @@ LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1
 
 EXPORTS	= \
+        gfx2DGlue.h \
 	gfx3DMatrix.h \
 	gfxASurface.h \
 	gfxAlphaRecovery.h \

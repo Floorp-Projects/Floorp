@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
      Any copyright is dedicated to the Public Domain.
-     http://creativecommons.org/licenses/publicdomain/
+     http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait" onload="f()">
   <title>Test that changing conditional processing attributes dynamically elements while redraw is suspended is honored</title>

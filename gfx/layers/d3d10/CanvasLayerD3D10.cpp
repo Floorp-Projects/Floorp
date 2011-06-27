@@ -42,6 +42,8 @@
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
 
+using namespace mozilla::gfx;
+
 namespace mozilla {
 namespace layers {
 
@@ -56,8 +58,8 @@ CanvasLayerD3D10::Initialize(const Data& aData)
 
   if (aData.mSurface) {
     mSurface = aData.mSurface;
-    NS_ASSERTION(aData.mGLContext == nsnull,
-                 "CanvasLayer can't have both surface and GLContext");
+    NS_ASSERTION(aData.mGLContext == nsnull && !aData.mDrawTarget,
+                 "CanvasLayer can't have both surface and GLContext/DrawTarget");
     mNeedsYFlip = PR_FALSE;
     mDataIsPremultiplied = PR_TRUE;
   } else if (aData.mGLContext) {
@@ -66,8 +68,29 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     mCanvasFramebuffer = mGLContext->GetOffscreenFBO();
     mDataIsPremultiplied = aData.mGLBufferIsPremultiplied;
     mNeedsYFlip = PR_TRUE;
+  } else if (aData.mDrawTarget) {
+    mDrawTarget = aData.mDrawTarget;
+    void *texture = mDrawTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE);
+
+    if (!texture) {
+      // XXX - Once we have non-D2D drawtargets we should do something more sensible here.
+      NS_WARNING("Failed to get D3D10 texture from DrawTarget.");
+      return;
+    }
+
+    mTexture = static_cast<ID3D10Texture2D*>(texture);
+
+    NS_ASSERTION(aData.mGLContext == nsnull && aData.mSurface == nsnull,
+                 "CanvasLayer can't have both surface and GLContext/Surface");
+
+    mNeedsYFlip = PR_FALSE;
+    mDataIsPremultiplied = PR_TRUE;
+
+    mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+    device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
+    return;
   } else {
-    NS_ERROR("CanvasLayer created without mSurface or mGLContext?");
+    NS_ERROR("CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
@@ -115,6 +138,11 @@ CanvasLayerD3D10::UpdateSurface()
   if (!mDirty)
     return;
   mDirty = PR_FALSE;
+
+  if (mDrawTarget) {
+    mDrawTarget->Flush();
+    return;
+  }
 
   if (mIsD2DTexture) {
     mSurface->Flush();

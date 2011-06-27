@@ -38,6 +38,7 @@
 #ifndef NSCOORD_H
 #define NSCOORD_H
 
+#include "nsAlgorithm.h"
 #include "nscore.h"
 #include "nsMathUtils.h"
 #include <math.h>
@@ -142,8 +143,8 @@ inline nscoord _nscoordSaturatingMultiply(nscoord aCoord, float aScale,
 
   float product = aCoord * aScale;
   if (requireNotNegative ? aCoord > 0 : (aCoord > 0) == (aScale > 0))
-    return NSToCoordRoundWithClamp(PR_MIN(nscoord_MAX, product));
-  return NSToCoordRoundWithClamp(PR_MAX(nscoord_MIN, product));
+    return NSToCoordRoundWithClamp(NS_MIN<float>(nscoord_MAX, product));
+  return NSToCoordRoundWithClamp(NS_MAX<float>(nscoord_MIN, product));
 #endif
 }
 
@@ -218,13 +219,13 @@ NSCoordSaturatingAdd(nscoord a, nscoord b)
                  "Doing nscoord addition with values > nscoord_MAX");
     NS_ASSERTION((PRInt64)a + (PRInt64)b > (PRInt64)nscoord_MIN,
                  "nscoord addition will reach or pass nscoord_MIN");
-    // This one's only a warning because the PR_MIN below means that
+    // This one's only a warning because the NS_MIN below means that
     // we'll handle this case correctly.
     NS_WARN_IF_FALSE((PRInt64)a + (PRInt64)b < (PRInt64)nscoord_MAX,
                      "nscoord addition capped to nscoord_MAX");
 
     // Cap the result, just in case we're dealing with numbers near nscoord_MAX
-    return PR_MIN(nscoord_MAX, a + b);
+    return NS_MIN(nscoord_MAX, a + b);
   }
 #endif
 }
@@ -277,13 +278,13 @@ NSCoordSaturatingSubtract(nscoord a, nscoord b,
                    "Doing nscoord subtraction with values > nscoord_MAX");
       NS_ASSERTION((PRInt64)a - (PRInt64)b > (PRInt64)nscoord_MIN,
                    "nscoord subtraction will reach or pass nscoord_MIN");
-      // This one's only a warning because the PR_MIN below means that
+      // This one's only a warning because the NS_MIN below means that
       // we'll handle this case correctly.
       NS_WARN_IF_FALSE((PRInt64)a - (PRInt64)b < (PRInt64)nscoord_MAX,
                        "nscoord subtraction capped to nscoord_MAX");
 
       // Cap the result, in case we're dealing with numbers near nscoord_MAX
-      return PR_MIN(nscoord_MAX, a - b);
+      return NS_MIN(nscoord_MAX, a - b);
     }
   }
 #endif

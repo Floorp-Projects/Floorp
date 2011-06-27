@@ -22,7 +22,7 @@ function test() {
 
       hideTabView(function () {
         assertWindowTitle(win, "new-title");
-        waitForFocus(finish);
+        finish();
       }, win);
     }, win);
   };

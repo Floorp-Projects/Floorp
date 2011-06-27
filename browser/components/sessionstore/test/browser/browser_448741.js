@@ -37,8 +37,6 @@
 function test() {
   /** Test for Bug 448741 **/
 
-  // test setup
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   waitForExplicitFinish();
 
   let uniqueName = "bug 448741";
