@@ -448,8 +448,11 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
   // data from the same principal.
   nsIPrincipal* principal = nsnull;
   if (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP &&
-      !nsContentUtils::IsCallerTrustedForCapability("UniversalBrowserRead"))
-    principal = GetCurrentPrincipal();
+      !nsContentUtils::IsCallerTrustedForCapability("UniversalBrowserRead")) {
+    nsresult rv = NS_OK;
+    principal = GetCurrentPrincipal(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   PRUint32 count = item.Length();
   for (PRUint32 i = 0; i < count; i++) {
@@ -466,7 +469,7 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
         nsCOMPtr<nsISupports> data;
         formatitem.mData->GetAsISupports(getter_AddRefs(data));
         // Make sure the code that is calling us is same-origin with the data.
-        nsCOMPtr<nsPIDOMEventTarget> pt = do_QueryInterface(data);
+        nsCOMPtr<nsIDOMEventTarget> pt = do_QueryInterface(data);
         if (pt) {
           nsresult rv = NS_OK;
           nsIScriptContext* c = pt->GetContextForEventHandlers(&rv);
@@ -475,8 +478,9 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
           NS_ENSURE_TRUE(sp, NS_ERROR_DOM_SECURITY_ERR);
           nsIPrincipal* dataPrincipal = sp->GetPrincipal();
           NS_ENSURE_TRUE(dataPrincipal, NS_ERROR_DOM_SECURITY_ERR);
-          NS_ENSURE_TRUE(principal || (principal = GetCurrentPrincipal()),
+          NS_ENSURE_TRUE(principal || (principal = GetCurrentPrincipal(&rv)),
                          NS_ERROR_DOM_SECURITY_ERR);
+          NS_ENSURE_SUCCESS(rv, rv);
           PRBool equals = PR_FALSE;
           NS_ENSURE_TRUE(NS_SUCCEEDED(principal->Equals(dataPrincipal, &equals)) && equals,
                          NS_ERROR_DOM_SECURITY_ERR);
@@ -517,7 +521,10 @@ nsDOMDataTransfer::MozSetDataAt(const nsAString& aFormat,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  return SetDataWithPrincipal(aFormat, aData, aIndex, GetCurrentPrincipal());
+  nsresult rv = NS_OK;
+  nsIPrincipal* principal = GetCurrentPrincipal(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return SetDataWithPrincipal(aFormat, aData, aIndex, principal);
 }
 
 NS_IMETHODIMP
@@ -532,7 +539,9 @@ nsDOMDataTransfer::MozClearDataAt(const nsAString& aFormat, PRUint32 aIndex)
   nsAutoString format;
   GetRealFormat(aFormat, format);
 
-  nsIPrincipal* principal = GetCurrentPrincipal();
+  nsresult rv = NS_OK;
+  nsIPrincipal* principal = GetCurrentPrincipal(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // if the format is empty, clear all formats
   PRBool clearall = format.IsEmpty();
@@ -798,12 +807,14 @@ nsDOMDataTransfer::SetDataWithPrincipal(const nsAString& aFormat,
 }
 
 nsIPrincipal*
-nsDOMDataTransfer::GetCurrentPrincipal()
+nsDOMDataTransfer::GetCurrentPrincipal(nsresult* rv)
 {
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
 
   nsCOMPtr<nsIPrincipal> currentPrincipal;
-  ssm->GetSubjectPrincipal(getter_AddRefs(currentPrincipal));
+  *rv = ssm->GetSubjectPrincipal(getter_AddRefs(currentPrincipal));
+  NS_ENSURE_SUCCESS(*rv, nsnull);
+
   if (!currentPrincipal)
     ssm->GetSystemPrincipal(getter_AddRefs(currentPrincipal));
 

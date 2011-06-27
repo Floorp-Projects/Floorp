@@ -43,12 +43,12 @@
 #include "gfxPoint.h"
 #include "gfxCore.h"
 #include "nsDebug.h"
-#include "mozilla/BaseMargin.h"
-#include "mozilla/BaseRect.h"
+#include "mozilla/gfx/BaseMargin.h"
+#include "mozilla/gfx/BaseRect.h"
 #include "nsRect.h"
 
-struct gfxMargin : public mozilla::BaseMargin<gfxFloat, gfxMargin> {
-  typedef mozilla::BaseMargin<gfxFloat, gfxMargin> Super;
+struct gfxMargin : public mozilla::gfx::BaseMargin<gfxFloat, gfxMargin> {
+  typedef mozilla::gfx::BaseMargin<gfxFloat, gfxMargin> Super;
 
   // Constructors
   gfxMargin() : Super() {}
@@ -88,8 +88,8 @@ static inline mozilla::css::Corner operator++(mozilla::css::Corner& corner, int)
 }
 
 struct THEBES_API gfxRect :
-    public mozilla::BaseRect<gfxFloat, gfxRect, gfxPoint, gfxSize, gfxMargin> {
-    typedef mozilla::BaseRect<gfxFloat, gfxRect, gfxPoint, gfxSize, gfxMargin> Super;
+    public mozilla::gfx::BaseRect<gfxFloat, gfxRect, gfxPoint, gfxSize, gfxMargin> {
+    typedef mozilla::gfx::BaseRect<gfxFloat, gfxRect, gfxPoint, gfxSize, gfxMargin> Super;
 
     gfxRect() : Super() {}
     gfxRect(const gfxPoint& aPos, const gfxSize& aSize) :

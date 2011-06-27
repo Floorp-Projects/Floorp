@@ -110,41 +110,6 @@ extern JS_PUBLIC_API(char*) JS_vsmprintf(const char *fmt, va_list ap);
 extern JS_PUBLIC_API(char*) JS_vsprintf_append(char *last, const char *fmt, va_list ap);
 extern JS_PUBLIC_API(JSUint32) JS_vsxprintf(JSStuffFunc f, void *arg, const char *fmt, va_list ap);
 
-/*
-***************************************************************************
-** FUNCTION: JS_sscanf
-** DESCRIPTION:
-**     JS_sscanf() scans the input character string, performs data
-**     conversions, and stores the converted values in the data objects
-**     pointed to by its arguments according to the format control
-**     string.
-**
-**     JS_sscanf() behaves the same way as the sscanf() function in the
-**     Standard C Library (stdio.h), with the following exceptions:
-**     - JS_sscanf() handles the NSPR integer and floating point types,
-**       such as JSInt16, JSInt32, JSInt64, and JSFloat64, whereas
-**       sscanf() handles the standard C types like short, int, long,
-**       and double.
-**     - JS_sscanf() has no multibyte character support, while sscanf()
-**       does.
-** INPUTS:
-**     const char *buf
-**         a character string holding the input to scan
-**     const char *fmt
-**         the format control string for the conversions
-**     ...
-**         variable number of arguments, each of them is a pointer to
-**         a data object in which the converted value will be stored
-** OUTPUTS: none
-** RETURNS: JSInt32
-**     The number of values converted and stored.
-** RESTRICTIONS:
-**    Multibyte characters in 'buf' or 'fmt' are not allowed.
-***************************************************************************
-*/
-
-extern JS_PUBLIC_API(JSInt32) JS_sscanf(const char *buf, const char *fmt, ...);
-
 JS_END_EXTERN_C
 
 #endif /* jsprf_h___ */

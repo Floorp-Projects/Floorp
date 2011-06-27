@@ -186,7 +186,7 @@ nsHTMLProgressElement::GetValue(double* aValue)
   double max;
   GetMax(&max);
 
-  *aValue = PR_MIN(*aValue, max);
+  *aValue = NS_MIN(*aValue, max);
 
   return NS_OK;
 }

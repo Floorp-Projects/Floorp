@@ -554,8 +554,7 @@ var gSyncSetup = {
       else
         gSyncUtils.openAddedClientFirstrun();
     }
-
-    Weave.Service.syncOnIdle(1);
+    Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
   },
 
   onWizardCancel: function () {

@@ -39,6 +39,7 @@ var testObserver = {
        "Subject should be a property bag");
     ok(subject.hasKey("serverCrashID"), "Should have a server crash ID");
     let crashid = subject.getPropertyAsAString("serverCrashID");
+    isnot(crashid, "", "Server crash ID should not be an empty string");
 
     // Verify the data. The SJS script will return the data that was POSTed
     let req = new XMLHttpRequest();

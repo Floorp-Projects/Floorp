@@ -1154,7 +1154,7 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
     return NS_ERROR_INVALID_ARG;
   }
 
-  PRInt32 accAtOffsetIdx = accAtOffset->GetIndexInParent();
+  PRInt32 accAtOffsetIdx = accAtOffset->IndexInParent();
   PRInt32 startOffset = GetChildOffset(accAtOffsetIdx);
   PRInt32 endOffset = GetChildOffset(accAtOffsetIdx + 1);
   PRInt32 offsetInAcc = aOffset - startOffset;
@@ -2093,7 +2093,7 @@ nsHyperTextAccessible::InvalidateChildren()
 PRBool
 nsHyperTextAccessible::RemoveChild(nsAccessible* aAccessible)
 {
-  PRInt32 childIndex = aAccessible->GetIndexInParent();
+  PRInt32 childIndex = aAccessible->IndexInParent();
   PRInt32 count = mOffsets.Length() - childIndex;
   if (count > 0)
     mOffsets.RemoveElementsAt(childIndex, count);

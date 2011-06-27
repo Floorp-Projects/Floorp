@@ -21,7 +21,11 @@
 
     <application android:label="@MOZ_APP_DISPLAYNAME@"
 		 android:icon="@drawable/icon"
+#if MOZILLA_OFFICIAL
+		 android:debuggable="false">
+#else
 		 android:debuggable="true">
+#endif
 
         <activity android:name="App"
                   android:label="@MOZ_APP_DISPLAYNAME@"

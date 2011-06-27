@@ -119,7 +119,8 @@ public:
     static PRBool GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
 
     /**
-     * Clamp aVal to a power of kScaleResolution.
+     * Return the smallest power of kScaleResolution (2) greater than or equal to
+     * aVal.
      */
     static gfxFloat ClampToScaleFactor(gfxFloat aVal);
 };

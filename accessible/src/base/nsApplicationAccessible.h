@@ -63,7 +63,6 @@ class nsApplicationAccessible: public nsAccessibleWrap,
                                public nsIAccessibleApplication
 {
 public:
-  using nsAccessible::GetChildAtPoint;
 
   nsApplicationAccessible();
 
@@ -126,8 +125,8 @@ public:
   virtual PRUint32 NativeRole();
   virtual PRUint64 State();
   virtual PRUint64 NativeState();
-  virtual nsAccessible* GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                        EWhichChildAtPoint aWhichChild);
+  virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                     EWhichChildAtPoint aWhichChild);
 
   virtual void InvalidateChildren();
 

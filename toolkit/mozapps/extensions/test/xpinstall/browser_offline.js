@@ -18,7 +18,6 @@ function test() {
 function download_progress(addon, value, maxValue) {
   try {
     Services.io.manageOfflineStatus = false;
-    Services.prefs.setBoolPref("browser.offline", true);
     Services.io.offline = true;
   } catch (ex) {
   }
@@ -37,7 +36,6 @@ function finish_test(count) {
 
   is(count, 0, "No add-ons should have been installed");
   try {
-    Services.prefs.setBoolPref("browser.offline", false);
     Services.io.offline = false;
   } catch (ex) {
   }

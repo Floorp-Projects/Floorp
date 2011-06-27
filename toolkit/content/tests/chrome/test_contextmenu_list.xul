@@ -1,0 +1,284 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Context Menu on List Tests"
+        onload="setTimeout(startTest, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<spacer height="5"/>
+
+<hbox style="padding-left: 10px;">
+  <spacer width="5"/>
+  <richlistbox id="list" context="themenu" style="padding: 0;" oncontextmenu="checkContextMenu(event)">
+    <richlistitem id="item1" style="padding-top: 3px; margin: 0;"><button label="One"/></richlistitem>
+    <richlistitem id="item2" height="22"><checkbox label="Checkbox"/></richlistitem>
+    <richlistitem id="item3"><button label="Three"/></richlistitem>
+    <richlistitem id="item4"><checkbox label="Four"/></richlistitem>
+  </richlistbox>
+
+  <tree id="tree" rows="5" flex="1" context="themenu" style="-moz-appearance: none; border: 0">
+    <treecols>
+      <treecol label="Name" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol label="Moons"/>
+    </treecols>
+    <treechildren id="treechildren">
+      <treeitem>
+        <treerow>
+          <treecell label="Mercury"/>
+          <treecell label="0"/>
+        </treerow>
+      </treeitem>
+      <treeitem>
+        <treerow>
+          <treecell label="Venus"/>
+          <treecell label="0"/>
+        </treerow>
+      </treeitem>
+      <treeitem>
+        <treerow>
+          <treecell label="Earth"/>
+          <treecell label="1"/>
+        </treerow>
+      </treeitem>
+      <treeitem>
+        <treerow>
+          <treecell label="Mars"/>
+          <treecell label="2"/>
+        </treerow>
+       </treeitem>
+    </treechildren>
+  </tree>
+
+  <menu id="menu" label="Menu">
+    <menupopup id="menupopup" onpopupshown="menuTests()" onpopuphidden="nextTest()"
+               oncontextmenu="checkContextMenuForMenu(event)">
+      <menuitem id="menu1" label="Menu 1"/>
+      <menuitem id="menu2" label="Menu 2"/>
+      <menuitem id="menu3" label="Menu 3"/>
+    </menupopup>
+  </menu>
+
+</hbox>
+
+<menupopup id="themenu" onpopupshowing="if (gTestId == -1) event.preventDefault()"
+                        onpopupshown="checkPopup()" onpopuphidden="setTimeout(nextTest, 0);">
+  <menuitem label="Item"/>
+</menupopup>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gTestId = -1;
+var gTestElement = "list";
+var gSelectionStep = 0;
+var gContextMenuFired = false;
+
+function startTest()
+{
+  // first, check if the richlistbox selection changes on a contextmenu mouse event
+  var element = $("list");
+  synthesizeMouse(element.getItemAtIndex(3), 7, 1, { type : "mousedown", button: 2, ctrlKey: true });
+  synthesizeMouse(element, 7, 4, { type : "contextmenu", button: 2 });
+
+  gSelectionStep++;
+  synthesizeMouse(element.getItemAtIndex(1), 7, 1, { type : "mousedown", button: 2, ctrlKey: true, shiftKey: true });
+  synthesizeMouse(element, 7, 4, { type : "contextmenu", button: 2 });
+
+  gSelectionStep++;
+  synthesizeMouse(element.getItemAtIndex(1), 7, 1, { type : "mousedown", button: 2 });
+  synthesizeMouse(element, 7, 4, { type : "contextmenu", button: 2 });
+
+  $("menu").open = true;
+}
+
+function menuTests()
+{
+  // context menus shouldn't open when a menu is open on Mac
+  var ismac = (navigator.platform.indexOf("Mac") >= 0);
+
+  gSelectionStep = 0;
+  var element = $("menu");
+  synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
+  is(gContextMenuFired, !ismac, "context menu fired when menu open");
+
+  if (!ismac) {
+    gSelectionStep = 1;
+    $("menu").boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject).activeChild = $("menu2");
+    synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
+  }
+
+  $("menu").open = false;
+}
+
+function nextTest()
+{
+  gTestId++;
+  if (gTestId > 2) {
+    if (gTestElement == "list") {
+      gTestElement = "tree";
+      gTestId = 0;
+    }
+    else {
+      SimpleTest.finish();
+      return;
+    }
+  }
+  var element = $(gTestElement);
+  element.focus();
+  if (gTestId == 0) {
+    if (gTestElement == "list")
+      element.selectedIndex = 2;
+    element.currentIndex = 2;
+    synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
+  }
+  else if (gTestId == 1) {
+    synthesizeMouse(element, 7, 4, { type : "contextmenu", button: 2 });
+  }
+  else {
+    element.currentIndex = -1;
+    element.selectedIndex = -1;
+    synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
+  }
+}
+
+// This is nasty so I'd better explain what's going on.
+// The basic problem is that the synthetic mouse coordinate generated
+// by DOMWindowUtils.sendMouseEvent and also the synthetic mouse coordinate
+// generated internally when contextmenu events are redirected to the focused
+// element are rounded to the nearest device pixel. But this rounding is done
+// while the coordinates are relative to the nearest widget. When this test
+// is run in the mochitest harness, the nearest widget is the main mochitest
+// window, and our document can have a fractional position within that
+// mochitest window. So when we round coordinates for comparison in this
+// test, we need to do so very carefully, especially if the target element
+// also has a fractional position within our document.
+//
+// For example, if the y-offset of our containing IFRAME is 100.4px,
+// and the offset of our expected point is 10.3px in our document, the actual
+// mouse event is dispatched to round(110.7) == 111px. This comes back
+// with a clientY of round(111 - 100.4) == round(10.6) == 11. This is not
+// equal to round(10.3) as you might expect.
+
+function isRoundedX(a, b, msg)
+{
+  is(Math.round(a + mozInnerScreenX), Math.round(b + mozInnerScreenX), msg);
+}
+
+function isRoundedY(a, b, msg)
+{
+  is(Math.round(a + mozInnerScreenY), Math.round(b + mozInnerScreenY), msg);
+}
+
+function checkContextMenu(event)
+{
+  var rect = $(gTestElement).getBoundingClientRect();
+
+  var frombase = (gTestId == -1 || gTestId == 1);
+  if (!frombase)
+    rect = event.originalTarget.getBoundingClientRect();
+  var left = frombase ? rect.left + 7 : rect.left;
+  var top = frombase ? rect.top + 4 : rect.bottom;
+
+  isRoundedX(event.clientX, left, gTestElement + " clientX " + gSelectionStep + " " + gTestId + "," + frombase);
+  isRoundedY(event.clientY, top, gTestElement + " clientY " + gSelectionStep + " " + gTestId);
+  ok(event.screenX > left, gTestElement + " screenX " + gSelectionStep + " " + gTestId);
+  ok(event.screenY > top, gTestElement + " screenY " + gSelectionStep + " " + gTestId);
+
+  // context menu from mouse click
+  switch (gTestId) {
+    case -1:
+      var expected = gSelectionStep == 2 ? 1 : (navigator.platform.indexOf("Mac") >= 0 ? 3 : 0);
+      is($(gTestElement).selectedIndex, expected, "index after click " + gSelectionStep);
+      break;
+    case 0:
+      if (gTestElement == "list")
+        is(event.originalTarget, $("item3"), "list selection target");
+      else
+        is(event.originalTarget, $("treechildren"), "tree selection target");
+      break;
+    case 1:
+      is(event.originalTarget.id, $("item1").id, "list mouse selection target");
+      break;
+    case 2:
+      is(event.originalTarget, $("list"), "list no selection target");
+      break;
+  }
+}
+
+function checkContextMenuForMenu(event)
+{
+  gContextMenuFired = true;
+
+  var popuprect = (gSelectionStep ? $("menu2") : $("menupopup")).getBoundingClientRect();
+  is(event.clientX, Math.round(popuprect.left), "menu left " + gSelectionStep);
+  // the clientY is off by one sometimes on Windows (when loaded in the testing iframe
+  // but not when loaded separately) so just check for both cases for now
+  ok(event.clientY == Math.round(popuprect.bottom) ||
+     event.clientY - 1 == Math.round(popuprect.bottom), "menu top " + gSelectionStep);
+}
+
+function checkPopup()
+{
+  var menurect = $("themenu").getBoundingClientRect();
+
+  if (gTestId == 0) {
+    if (gTestElement == "list") {
+      var itemrect = $("item3").getBoundingClientRect();
+      isRoundedX(menurect.left, itemrect.left + 2,
+         "list selection keyboard left");
+      isRoundedY(menurect.top, itemrect.bottom + 2,
+         "list selection keyboard top");
+    }
+    else {
+      var tree = $("tree");
+      var bodyrect = $("treechildren").getBoundingClientRect();
+      isRoundedX(menurect.left, bodyrect.left + 2,
+         "tree selection keyboard left");
+      isRoundedY(menurect.top, bodyrect.top +
+         tree.treeBoxObject.rowHeight * 3 + 2,
+         "tree selection keyboard top");
+    }
+  }
+  else if (gTestId == 1) {
+    // activating a context menu with the mouse from position (7, 1).
+    // Add 2 pixels to these values as context menus are offset by 2 pixels
+    // so that they don't appear exactly only the menu making them easier to
+    // dismiss. See nsXULPopupListener.
+    var elementrect = $(gTestElement).getBoundingClientRect();
+    isRoundedX(menurect.left, elementrect.left + 9,
+       gTestElement + " mouse left");
+    isRoundedY(menurect.top, elementrect.top + 6,
+       gTestElement + " mouse top");
+  }
+  else {
+    var elementrect = $(gTestElement).getBoundingClientRect();
+    isRoundedX(menurect.left, elementrect.left + 2,
+       gTestElement + " no selection keyboard left");
+    isRoundedY(menurect.top, elementrect.bottom + 2,
+       gTestElement + " no selection keyboard top");
+  }
+
+  $("themenu").hidePopup();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

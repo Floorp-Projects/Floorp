@@ -37,12 +37,9 @@ function runTests()
       aEvent.preventDefault(); // prevent the browser default behavior
     }
   };
-  var systemGroup =
-    Components.classes["@mozilla.org/eventlistenerservice;1"].
-      getService(Components.interfaces.nsIEventListenerService).
-      systemEventGroup;
-  window.QueryInterface(Components.interfaces.nsIDOM3EventTarget);
-  window.addGroupedEventListener("keypress", listener, false, systemGroup);
+  var els = Components.classes["@mozilla.org/eventlistenerservice;1"].
+    getService(Components.interfaces.nsIEventListenerService);
+  els.addSystemEventListener(window, "keypress", listener, false);
 
   var staticContent = document.getElementById("static");
   staticContent._defaultValue = getTextValue(staticContent);
@@ -324,7 +321,7 @@ function runTests()
   testTextInput(inputInEditor);
   testTextInput(textareaInEditor);
 
-  window.removeGroupedEventListener("keypress", listener, false, systemGroup);
+  els.removeSystemEventListener(window, "keypress", listener, false);
 
   SimpleTest.finish();
 }

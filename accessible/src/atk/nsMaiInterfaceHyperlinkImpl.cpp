@@ -49,16 +49,15 @@ hyperlinkImplInterfaceInitCB(AtkHyperlinkImplIface *aIface)
 }
 
 AtkHyperlink*
-getHyperlinkCB(AtkHyperlinkImpl *aImpl)
+getHyperlinkCB(AtkHyperlinkImpl* aImpl)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aImpl));
-    if (!accWrap)
-        return nsnull;
+  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImpl));
+  if (!accWrap)
+    return nsnull;
 
-    NS_ENSURE_TRUE(accWrap->IsHyperLink(), nsnull);
+  NS_ENSURE_TRUE(accWrap->IsLink(), nsnull);
 
-    MaiHyperlink *maiHyperlink = accWrap->GetMaiHyperlink();
-    NS_ENSURE_TRUE(maiHyperlink, nsnull);
-    return maiHyperlink->GetAtkHyperlink();
-
+  MaiHyperlink* maiHyperlink = accWrap->GetMaiHyperlink();
+  NS_ENSURE_TRUE(maiHyperlink, nsnull);
+  return maiHyperlink->GetAtkHyperlink();
 }

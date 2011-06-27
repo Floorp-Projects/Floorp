@@ -1,2 +1,3 @@
 url-prefix ../../jsreftest.html?test=js1_1/regress/
+script perfect.js
 script function-001.js

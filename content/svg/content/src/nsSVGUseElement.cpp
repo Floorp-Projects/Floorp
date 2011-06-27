@@ -254,12 +254,6 @@ nsSVGUseElement::NodeWillBeDestroyed(const nsINode *aNode)
 nsIContent*
 nsSVGUseElement::CreateAnonymousContent()
 {
-#ifdef DEBUG_tor
-  nsAutoString href;
-  mStringAttributes[HREF].GetAnimValue(href, this);
-  fprintf(stderr, "<svg:use> reclone of \"%s\"\n", ToNewCString(href));
-#endif
-
   mClone = nsnull;
 
   if (mSource.get()) {
@@ -287,6 +281,10 @@ nsSVGUseElement::CreateAnonymousContent()
       tag != nsGkAtoms::polygon &&
       tag != nsGkAtoms::image &&
       tag != nsGkAtoms::use)
+    return nsnull;
+
+  // Make sure the use attributes are valid
+  if (!HasValidDimensions())
     return nsnull;
 
   // circular loop detection
@@ -352,12 +350,6 @@ nsSVGUseElement::CreateAnonymousContent()
     if (!svgNode)
       return nsnull;
     
-    if (newcontent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
-      nsAutoString viewbox;
-      newcontent->GetAttr(kNameSpaceID_None, nsGkAtoms::viewBox, viewbox);
-      svgNode->SetAttr(kNameSpaceID_None, nsGkAtoms::viewBox, viewbox, PR_FALSE);
-    }
-
     // copy attributes
     const nsAttrName* name;
     PRUint32 i;
@@ -382,17 +374,12 @@ nsSVGUseElement::CreateAnonymousContent()
   }
 
   if (symbol || svg) {
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::width)) {
-      nsAutoString width;
-      GetAttr(kNameSpaceID_None, nsGkAtoms::width, width);
-      newcontent->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, PR_FALSE);
-    }
+    nsSVGElement *newElement = static_cast<nsSVGElement*>(newcontent.get());
 
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::height)) {
-      nsAutoString height;
-      GetAttr(kNameSpaceID_None, nsGkAtoms::height, height);
-      newcontent->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, PR_FALSE);
-    }
+    if (mLengthAttributes[WIDTH].IsExplicitlySet())
+      newElement->SetLength(nsGkAtoms::width, mLengthAttributes[WIDTH]);
+    if (mLengthAttributes[HEIGHT].IsExplicitlySet())
+      newElement->SetLength(nsGkAtoms::height, mLengthAttributes[HEIGHT]);
   }
 
   // Set up its base URI correctly
@@ -418,22 +405,40 @@ nsSVGUseElement::DestroyAnonymousContent()
 //----------------------------------------------------------------------
 // implementation helpers
 
+PRBool nsSVGUseElement::HasValidDimensions()
+{
+  nsSVGSVGElement *ctx = GetCtx();
+
+  return (!mLengthAttributes[WIDTH].IsExplicitlySet() ||
+           mLengthAttributes[WIDTH].GetAnimValue(ctx) > 0) &&
+         (!mLengthAttributes[HEIGHT].IsExplicitlySet() || 
+           mLengthAttributes[HEIGHT].GetAnimValue(ctx) > 0);
+}
+
 void
 nsSVGUseElement::SyncWidthHeight(PRUint8 aAttrEnum)
 {
+  if (HasValidDimensions() == !mClone) {
+    TriggerReclone();
+    return;
+  }
+
   if (mClone && (aAttrEnum == WIDTH || aAttrEnum == HEIGHT)) {
     nsCOMPtr<nsIDOMSVGSymbolElement> symbol = do_QueryInterface(mClone);
     nsCOMPtr<nsIDOMSVGSVGElement>    svg    = do_QueryInterface(mClone);
 
     if (symbol || svg) {
-      if (aAttrEnum == WIDTH) {
-        nsAutoString width;
-        GetAttr(kNameSpaceID_None, nsGkAtoms::width, width);
-        mClone->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, PR_FALSE);
-      } else if (aAttrEnum == HEIGHT) {
-        nsAutoString height;
-        GetAttr(kNameSpaceID_None, nsGkAtoms::height, height);
-        mClone->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, PR_FALSE);
+      nsIAtom* aAttrName = aAttrEnum == WIDTH ?
+        nsGkAtoms::width : nsGkAtoms::height;
+
+      if (mLengthAttributes[aAttrEnum].IsExplicitlySet()) {
+        static_cast<nsSVGElement*>(mClone.get())->
+          SetLength(aAttrName, mLengthAttributes[aAttrEnum]);
+      } else {
+        // Our width/height attribute is now no longer explicitly set, so we
+        // need to revert the clone's width/height to the width/height of the
+        // content that's being cloned.
+        TriggerReclone();
       }
     }
   }
@@ -495,6 +500,14 @@ void
 nsSVGUseElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 {
   nsSVGUseElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
+
+  SyncWidthHeight(aAttrEnum);
+}
+
+void
+nsSVGUseElement::DidAnimateLength(PRUint8 aAttrEnum)
+{
+  nsSVGUseElementBase::DidAnimateLength(aAttrEnum);
 
   SyncWidthHeight(aAttrEnum);
 }

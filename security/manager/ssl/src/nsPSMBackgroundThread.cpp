@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPSMBackgroundThread.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla;
 
@@ -49,7 +50,7 @@ nsPSMBackgroundThread::nsPSMBackgroundThread()
 : mThreadHandle(nsnull),
   mMutex("nsPSMBackgroundThread.mMutex"),
   mCond(mMutex, "nsPSMBackgroundThread.mCond"),
-  mExitRequested(PR_FALSE)
+  mExitState(ePSMThreadRunning)
 {
 }
 
@@ -70,19 +71,48 @@ nsPSMBackgroundThread::~nsPSMBackgroundThread()
 {
 }
 
+PRBool
+nsPSMBackgroundThread::exitRequested(const MutexAutoLock & /*proofOfLock*/) const
+{
+  return exitRequestedNoLock();
+}
+
+nsresult
+nsPSMBackgroundThread::postStoppedEventToMainThread(
+    MutexAutoLock const & /*proofOfLock*/)
+{
+  NS_ASSERTION(PR_GetCurrentThread() == mThreadHandle,
+               "Background thread stopped from another thread");
+
+  mExitState = ePSMThreadStopped;
+  // requestExit is waiting for an event, so give it one.
+  return NS_DispatchToMainThread(new nsRunnable());
+}
+
 void nsPSMBackgroundThread::requestExit()
 {
+  NS_ASSERTION(NS_IsMainThread(),
+               "nsPSMBackgroundThread::requestExit called off main thread.");
+
   if (!mThreadHandle)
     return;
 
   {
     MutexAutoLock threadLock(mMutex);
-
-    if (mExitRequested)
-      return;
-
-    mExitRequested = PR_TRUE;
-    mCond.NotifyAll();
+    if (mExitState < ePSMThreadStopRequested) {
+      mExitState = ePSMThreadStopRequested;
+      mCond.NotifyAll();
+    }
+  }
+  
+  nsCOMPtr<nsIThread> mainThread = do_GetCurrentThread();
+  for (;;) {
+    {
+      MutexAutoLock threadLock(mMutex);
+      if (mExitState == ePSMThreadStopped)
+        break;
+    }
+    NS_ProcessPendingEvents(mainThread, PR_MillisecondsToInterval(50));
   }
 
   PR_JoinThread(mThreadHandle);

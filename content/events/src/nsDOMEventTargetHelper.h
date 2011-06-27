@@ -41,14 +41,12 @@
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsPIDOMEventTarget.h"
-#include "nsIDOMEventListener.h"
-#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMEventListener.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIScriptContext.h"
 
 class nsDOMEventListenerWrapper : public nsIDOMEventListener
@@ -67,32 +65,15 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mListener;
 };
 
-class nsDOMEventTargetHelper : public nsPIDOMEventTarget,
-                               public nsIDOMEventTarget,
-                               public nsIDOMNSEventTarget
+class nsDOMEventTargetHelper : public nsIDOMEventTarget
 {
 public:
-  nsDOMEventTargetHelper() : mLang(nsIProgrammingLanguage::JAVASCRIPT) {}
+  nsDOMEventTargetHelper() {}
   virtual ~nsDOMEventTargetHelper() {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMEventTargetHelper,
-                                           nsPIDOMEventTarget)
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMEventTargetHelper)
 
-  NS_DECL_NSIDOMNSEVENTTARGET
   NS_DECL_NSIDOMEVENTTARGET
-  // nsPIDOMEventTarget
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus);
-  virtual nsIEventListenerManager* GetListenerManager(PRBool aCreateIfNotFound);
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID);
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv);
 
   PRBool HasListenersFor(const nsAString& aType)
   {
@@ -117,8 +98,7 @@ public:
     return NS_OK;
   }
 protected:
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
-  PRUint32 mLang;
+  nsRefPtr<nsEventListenerManager> mListenerManager;
   // These may be null (native callers or xpcshell).
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindow>    mOwner; // Inner window.

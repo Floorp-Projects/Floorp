@@ -49,7 +49,7 @@
 
 class nsIContent;
 class nsIDocument;
-class nsPIDOMEventTarget;
+class nsIDOMEventTarget;
 class nsIDOMNodeList;
 class nsXBLBinding;
 class nsXBLDocumentInfo;
@@ -88,8 +88,8 @@ public:
                                      nsXBLDocumentInfo** aResult) = 0;
 
   // Hooks up the global key event handlers to the document root.
-  NS_IMETHOD AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)=0;
-  NS_IMETHOD DetachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)=0;
+  NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget) = 0;
+  NS_IMETHOD DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget) = 0;
   
 };
 

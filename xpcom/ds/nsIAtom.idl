@@ -49,7 +49,7 @@
  * pointer identity.
  */
  
-[scriptable, uuid(1f341018-521a-49de-b806-1bef5c9a00b0)]
+[scriptable, builtinclass, uuid(1f341018-521a-49de-b806-1bef5c9a00b0)]
 interface nsIAtom : nsISupports
 {
   /**

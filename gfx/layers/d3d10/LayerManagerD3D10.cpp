@@ -54,6 +54,8 @@
 
 #include "gfxCrashReporterUtils.h"
 
+using namespace mozilla::gfx;
+
 namespace mozilla {
 namespace layers {
 
@@ -425,6 +427,38 @@ LayerManagerD3D10::CreateOptimalSurface(const gfxIntSize &aSize,
                    ReleaseTexture);
 
   return surface.forget();
+}
+
+TemporaryRef<DrawTarget>
+LayerManagerD3D10::CreateDrawTarget(const IntSize &aSize,
+                                    SurfaceFormat aFormat)
+{
+  if ((aFormat != FORMAT_B8G8R8A8 &&
+       aFormat != FORMAT_B8G8R8X8)) {
+    return LayerManager::CreateDrawTarget(aSize, aFormat);
+  }
+
+  nsRefPtr<ID3D10Texture2D> texture;
+  
+  CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, aSize.width, aSize.height, 1, 1);
+  desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
+  desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
+  
+  HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(texture));
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to create new texture for CreateOptimalSurface!");
+    return LayerManager::CreateDrawTarget(aSize, aFormat);
+  }
+
+  RefPtr<DrawTarget> surface =
+    Factory::CreateDrawTargetForD3D10Texture(texture, aFormat);
+
+  if (!surface) {
+    return LayerManager::CreateDrawTarget(aSize, aFormat);
+  }
+  
+  return surface;
 }
 
 ReadbackManagerD3D10*

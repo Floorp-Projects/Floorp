@@ -64,64 +64,12 @@
       }
     </style>
     <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css">
-
-    <script type="text/javascript">
-    function correctSpelling()
-    {
-      // Note that this code only runs if the page is requested using the
-      // URL containing the correct spelling - i.e. "about:licence".
-      if (document.location.href.match("icence"))
-      {       
-        function acceptNode(node)
-        {
-          if (node.hasAttribute("class")) 
-          {
-            var c = " " + node.className + " ";
-            if (c.indexOf(" correctme ") != -1)
-            {
-              return NodeFilter.FILTER_ACCEPT;
-            }
-          }
-          else if (node.nodeName == "H1")
-          {
-            return NodeFilter.FILTER_ACCEPT;
-          }
-          
-          return NodeFilter.FILTER_SKIP;
-        }
-
-        var treeWalker = document.createTreeWalker(document.documentElement,
-                                                   NodeFilter.SHOW_ELEMENT,
-                                                   acceptNode,
-                                                   true);
-        if (treeWalker) 
-        {
-          var node = treeWalker.nextNode();
-          while (node) 
-          {
-            var text = node.innerHTML;
-
-            text = text.replace(/icense\b/gi, "icence");
-            text = text.replace(/icenses\b/gi, "icences");
-
-            node.innerHTML = text;
-          
-            node = treeWalker.nextNode();
-          }
-          
-          document.title = "about:licence";
-        }
-      }
-    }
-    
-    window.onload = correctSpelling;
-    </script>    
   </head>
 
   <body id="lic-info" class="aboutPageWideContainer">
-    <h1 class="correctme"><a name="top"></a>about:license</h1>
+    <h1><a name="top"></a>about:license</h1>
 
-    <div class="correctme">
+    <div>
 
 #ifdef APP_LICENSE_BLOCK
 #includesubst @APP_LICENSE_BLOCK@
@@ -1990,7 +1938,7 @@ necessary.  Here is a sample; alter the names:
 
     <h1><a name="angle"></a>ANGLE License</h1>
 
-    <p class="correctme">This license applies to files in the directory <span class="path">gfx/angle/</span>.</p>
+    <p>This license applies to files in the directory <span class="path">gfx/angle/</span>.</p>
     
 <pre>
 Copyright (C) 2002-2010 The ANGLE Project Authors. 
@@ -2032,7 +1980,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="apple"></a>Apple License</h1>
 
-    <p class="correctme">This license applies to certain files in the directories <span class="path">js/src/assembler/assembler/</span>, <span class="path">js/src/assembler/wtf/</span>, <span class="path">js/src/yarr</span>, and <span class="path">widget/src/cocoa</span>.</p>
+    <p>This license applies to certain files in the directories <span class="path">js/src/assembler/assembler/</span>, <span class="path">js/src/assembler/wtf/</span>, <span class="path">js/src/yarr</span>, and <span class="path">widget/src/cocoa</span>.</p>
     
 <pre>
 Copyright (C) 2008, 2009 Apple Inc. All rights reserved.
@@ -2064,7 +2012,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="apple-mozilla"></a>Apple/Mozilla NPRuntime License</h1>
 
-    <p class="correctme">This license applies to the file 
+    <p>This license applies to the file
     <span class="path">modules/plugin/base/public/npruntime.h</span>.</p>
 
 <pre>
@@ -2103,7 +2051,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="apple-torch"></a>Apple/Torch Mobile License</h1>
 
-    <p class="correctme">This license applies to the following files:</p>
+    <p>This license applies to the following files:</p>
     
     <ul>
       <li class="path">js/src/assembler/wtf/Assertions.cpp</li>
@@ -2141,7 +2089,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="breakpad"></a>Breakpad License</h1>
 
-    <p class="correctme">This license applies to files in the directory 
+    <p>This license applies to files in the directory
     <span class="path">toolkit/crashreporter/google-breakpad/</span> and
     <span class="path">camino/google-breakpad/</span>.</p>
 
@@ -2181,7 +2129,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="bspatch"></a>bspatch License</h1>
 
-    <p class="correctme">This license applies to the files 
+    <p>This license applies to the files
     <span class="path">toolkit/mozapps/update/updater/bspatch.cpp</span> and
     <span class="path">toolkit/mozapps/update/updater/bspatch.h</span>.
     </p>
@@ -2217,11 +2165,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="cairo"></a>Cairo Component Licenses</h1>
 
-    <p class="correctme">This license, with different copyright holders, applies 
-    to certain files in the directory
-    <span class="path">gfx/cairo/</span>. The copyright holders 
-    and the applicable ranges of dates are as follows:
-    
+    <p>This license, with different copyright holders, applies to certain files
+     in the directory <span class="path">gfx/cairo/</span>. The copyright
+     holders and the applicable ranges of dates are as follows:
+
     <ul>
 <li>2004 Richard D. Worth
 <li>2004, 2005 Red Hat, Inc.
@@ -2270,7 +2217,7 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
     <h1><a name="chromium"></a>Chromium License</h1>
 
-    <p class="correctme">This license applies to some files in the directories
+    <p>This license applies to some files in the directories
       <span class="path">ipc/chromium/</span>,
       <span class="path">dom/plugins/</span>,
       <span class="path">gfx/ots/</span> and
@@ -2312,7 +2259,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="hunspell-nl"></a>Dutch Spellchecking Dictionary License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory
+    <p>This license applies to certain files in the directory
       <span class="path">l10n/nl/extensions/spellcheck/hunspell/</span>. (This
       code only ships in some localized versions of this product.)</p>
 
@@ -2355,7 +2302,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="expat"></a>Expat License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory 
+    <p>This license applies to certain files in the directory
     <span class="path">parser/expat/</span>.</p>
 
 <pre>
@@ -2389,7 +2336,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <h1><a name="firebug"></a>Firebug License</h1>
 
-    <p class="correctme">This license applies to the code
+    <p>This license applies to the code
     <span class="path">toolkit/components/console/hudservice/NetworkHelper.jsm</span>.</p>
 
 <pre>
@@ -2429,7 +2376,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="gfx-font-list"></a>gfxFontList License</h1>
 
-    <p class="correctme">This license applies to the files 
+    <p>This license applies to the files
     <span class="path">gfx/thebes/gfxMacPlatformFontList.mm</span> and
     <span class="path">gfx/thebes/gfxPlatformFontList.cpp</span>.
     </p>
@@ -2468,7 +2415,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="gears"></a>Google Gears</h1>
 
-    <p class="correctme">This license applies to the file 
+    <p>This license applies to the file
     <span class="path">netwerk/wifi/wlanapi.h</span>.</p>
 
 <pre>
@@ -2505,7 +2452,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="vp8"></a>Google VP8</h1>
 
-    <p class="correctme">This license applies to certain files in the directory 
+    <p>This license applies to certain files in the directory
     <span class="path">media/libvpx</span>.</p>
 <pre>
 Copyright (c) 2010, Google, Inc.
@@ -2562,7 +2509,7 @@ shall terminate as of the date such litigation is filed.
 
     <h1><a name="gears-istumbler"></a>Google Gears/iStumbler</h1>
 
-    <p class="correctme">This license applies to the file 
+    <p>This license applies to the file
     <span class="path">netwerk/wifi/osx_wifi.h</span>.</p>
 
 <pre>
@@ -2631,7 +2578,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="growl"></a>Growl License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory
+    <p>This license applies to certain files in the directory
     <span class="path">toolkit/components/alerts/src/mac/growl/</span> and
     <span class="path">camino/growl/</span>. (This code only ships in the Mac
     OS X version of the product.)
@@ -2671,7 +2618,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="halloc"></a>halloc</h1>
 
-    <p class="correctme">This license applies to certain files in the directory 
+    <p>This license applies to certain files in the directory
     <span class="path">media/libnestegg/src</span>.</p>
 <pre>
 Copyright (c) 2004-2010 Alex Pankratov. All rights reserved.
@@ -2704,9 +2651,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="harfbuzz"></a>HarfBuzz License</h1>
 
-    <p class="correctme">This license, with different copyright holders,
-    applies to the files in the directory
-    <span class="path">gfx/harfbuzz/</span>.
+    <p>This license, with different copyright holders, applies to the files in
+    the directory <span class="path">gfx/harfbuzz/</span>.
     The copyright holders and the applicable ranges of dates are as follows:</p>
 
     <ul>
@@ -2746,7 +2692,7 @@ PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
     <h1><a name="icu"></a>ICU License</h1>
 
-    <p class="correctme">This license applies to some code in the
+    <p>This license applies to some code in the
     <span class="path">gfx/thebes</span> directory.</p>
 
 <pre>
@@ -2793,7 +2739,7 @@ of their respective owners.
 
     <h1><a name="jpnic"></a>Japan Network Information Center License</h1>
 
-    <p class="correctme">This license applies to certain files in the 
+    <p>This license applies to certain files in the
     directory <span class="path">netwerk/dns/src/</span>.</p>
 
 <pre>
@@ -2843,7 +2789,7 @@ Chiyoda-ku, Tokyo 101-0047, Japan.
 
     <h1><a name="jemalloc"></a>jemalloc License</h1>
 
-    <p class="correctme">This license applies to files in the directory
+    <p>This license applies to files in the directory
     <span class="path">memory/jemalloc/</span>.
     </p>
 
@@ -2880,7 +2826,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="jquery"></a>jQuery License</h1>
 
-    <p class="correctme">This license applies to files in the directory
+    <p>This license applies to files in the directory
       <span class="path">mail/jquery/</span>.<br>
       Furthermore, the file <span class="path">browser/base/content/tabview/iq.js</span>
       incorporates work from jQuery.</p>
@@ -2912,7 +2858,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <h1><a name="libevent"></a>libevent License</h1>
 
-    <p class="correctme">This license applies to files in the directory
+    <p>This license applies to files in the directory
     <span class="path">ipc/chromium/src/third_party/libevent/</span>.
     </p>
 
@@ -2948,7 +2894,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="libffi"></a>libffi License</h1>
 
-    <p class="correctme">This license applies to files in the directory
+    <p>This license applies to files in the directory
     <span class="path">js/ctypes/libffi/</span>.
     </p>
 
@@ -2981,7 +2927,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <h1><a name="libnestegg"></a>libnestegg License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory
+    <p>This license applies to certain files in the directory
     <span class="path">media/libnestegg</span>.
     </p>
 
@@ -3005,7 +2951,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     
     <h1><a name="hunspell-lt"></a>Lithuanian Spellchecking Dictionary License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory
+    <p>This license applies to certain files in the directory
       <span class="path">l10n/lt/extensions/spellcheck/hunspell/</span>. (This
       code only ships in some localized versions of this product.)</p>
 
@@ -3048,7 +2994,7 @@ SUCH DAMAGE.
 
     <h1><a name="maattachedwindow"></a>MAAttachedWindow License</h1>
 
-    <p class="correctme">This license applies to the files 
+    <p>This license applies to the files
     <span class="path">camino/src/extensions/MAAttachedWindow.h</span> and
     <span class="path">camino/src/extensions/MAAttachedWindow.mm</span>. (This
     code only ships in the Camino browser or products based on it.)</p>
@@ -3097,7 +3043,7 @@ MATT GEMMELL HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="directx"></a>Microsoft DirectX License</h1>
 
-    <p class="correctme">This license applies to the following files;
+    <p>This license applies to the following files;
     they are referred to below as "Distributable Code":
     <span class="path">d3dx9_*.dll</span> and <span class="path">d3dcompiler_*.dll</span>.</p>
 
@@ -3120,7 +3066,7 @@ Code.
 
     <h1><a name="openvision"></a>OpenVision License</h1>
 
-    <p class="correctme">This license applies to the file 
+    <p>This license applies to the file
     <span class="path">extensions/auth/gssapi.h</span>.</p>
 
 <pre>
@@ -3150,7 +3096,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
     <h1><a name="qcms"></a>qcms License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory
+    <p>This license applies to certain files in the directory
       <span class="path">gfx/qcms/</span>.</p>
 <pre>
 Copyright (C) 2009 Mozilla Corporation
@@ -3180,7 +3126,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <h1><a name="xdg"></a>Red Hat xdg_user_dir_lookup License</h1>
 
-    <p class="correctme">This license applies to the 
+    <p>This license applies to the
     <span class="path">xdg_user_dir_lookup</span> function in
     <span class="path">xpcom/io/SpecialSystemDirectory.cpp</span>.</p>
     
@@ -3213,7 +3159,7 @@ SOFTWARE.
 
     <h1><a name="hunspell-ru"></a>Russian Spellchecking Dictionary License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory
+    <p>This license applies to certain files in the directory
       <span class="path">l10n/ru/extensions/spellcheck/hunspell/</span>. (This
       code only ships in some localized versions of this product.)</p>
 
@@ -3253,7 +3199,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="sparkle"></a>Sparkle License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory
+    <p>This license applies to certain files in the directory
     <span class="path">camino/sparkle/</span>. (This code only ships in the
     Camino browser or products based on it.)</p>
 
@@ -3283,7 +3229,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <h1><a name="sunsoft"></a>SunSoft License</h1>
 
-    <p class="correctme">This license applies to the
+    <p>This license applies to the
       <span class="path">ICC_H</span> block in
       <span class="path">gfx/qcms/qcms.h</span>.</p>
       
@@ -3323,7 +3269,7 @@ authorization from SunSoft Inc.
 
     <h1><a name="ucal"></a>University of California License</h1>
 
-    <p class="correctme">This license applies to the following files or, in the case of 
+    <p>This license applies to the following files or, in the case of
     directories, certain files in those directories:</p>
     
     <ul>
@@ -3370,7 +3316,7 @@ SUCH DAMAGE.
 
     <h1><a name="ucambridge"></a>University of Cambridge License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory <span class="path">js/src/yarr/pcre/</span>.</p>
+    <p>This license applies to certain files in the directory <span class="path">js/src/yarr/pcre/</span>.</p>
 
 <pre>
 Copyright (c) 1997-2005 University of Cambridge. All rights reserved.
@@ -3407,7 +3353,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="uszeged"></a>University of Szeged License</h1>
 
-    <p class="correctme">This license applies to certain files in the directory <span class="path">js/src/assembler/assembler/</span>.</p>
+    <p>This license applies to certain files in the directory <span class="path">js/src/assembler/assembler/</span>.</p>
     
 <pre>
 Copyright (C) 2009 University of Szeged
@@ -3440,7 +3386,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="hunspell-en-US"></a>US English Spellchecking Dictionary Licenses</h1>
 
-    <p class="correctme">These licenses apply to certain files in the directory
+    <p>These licenses apply to certain files in the directory
       <span class="path">extensions/spellcheck/locales/en-US/hunspell/</span>. (This
       code only ships in some localized versions of this product.)</p>
 
@@ -3533,7 +3479,7 @@ Additional Contributors:
 
     <h1><a name="v8"></a>V8</h1>
 
-    <p class="correctme">This license applies to certain files in the directory 
+    <p>This license applies to certain files in the directory
     <span class="path">js/src/v8-dtoa</span>.</p>
 <pre>
 Copyright 2006-2008 the V8 project authors. All rights reserved.
@@ -3569,7 +3515,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="xiph"></a>Xiph.org Foundation License</h1>
 
-    <p class="correctme">This license applies to files in the following directories 
+    <p>This license applies to files in the following directories
       with the specified copyright year ranges:</p>
     <ul>
       <li><span class="path">media/libogg/</span>, 2002</li>
@@ -3628,8 +3574,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a name="optional-notices"></a>Optional Notices</h1>
 
-    <p class="correctme">Some permissive software licenses 
-    request but do not require an 
+    <p>Some permissive software licenses request but do not require an
     acknowledgement of the use of their software. We are very grateful
     to the following people and projects for their contributions to
     this product:</p>
@@ -3650,7 +3595,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     
     <hr>
     
-    <p class="correctme"><a href="about:license#top">Return to top</a>.</p>
+    <p><a href="about:license#top">Return to top</a>.</p>
     
   </body>
 </html>

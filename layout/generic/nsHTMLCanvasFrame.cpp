@@ -97,7 +97,8 @@ public:
   }
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager)
+                                             LayerManager* aManager,
+                                             const ContainerParameters& aContainerParameters)
   {
     return static_cast<nsHTMLCanvasFrame*>(mFrame)->
       BuildLayer(aBuilder, aManager, this);
@@ -132,7 +133,7 @@ nsHTMLCanvasFrame::Init(nsIContent* aContent,
   // We can fill in the canvas before the canvas frame is created, in
   // which case we never get around to marking the layer active. Therefore,
   // we mark it active here when we create the frame.
-  MarkLayersActive();
+  MarkLayersActive(nsChangeHint(0));
 
   return rv;
 }

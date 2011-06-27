@@ -41,10 +41,9 @@
 #include "nsIServiceManager.h"
 #include "nsDateTimeFormatUnix.h"
 #include "nsIComponentManager.h"
-#include "nsLocaleCID.h"
 #include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
-#include "nsIPosixLocale.h"
+#include "nsPosixLocale.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -103,10 +102,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
   if (NS_SUCCEEDED(res) && !localeStr.IsEmpty()) {
     mLocale = localeStr; // cache locale name
 
-    nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(NS_POSIXLOCALE_CONTRACTID, &res);
-    if (NS_SUCCEEDED(res)) {
-      res = posixLocale->GetPlatformLocale(mLocale, mPlatformLocale);
-    }
+    nsPosixLocale::GetPlatformLocale(mLocale, mPlatformLocale);
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {

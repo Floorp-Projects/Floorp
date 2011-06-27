@@ -67,6 +67,15 @@ public:
     mIsBaseSet = PR_FALSE;
   }
 
+  nsSVGLength2& operator=(const nsSVGLength2& aLength) {
+    mBaseVal = aLength.mBaseVal;
+    mAnimVal = aLength.mAnimVal;
+    mSpecifiedUnitType = aLength.mSpecifiedUnitType;
+    mIsAnimated = aLength.mIsAnimated;
+    mIsBaseSet = aLength.mIsBaseSet;
+    return *this;
+  }
+
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
                               PRBool aDoSetAttr);

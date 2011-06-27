@@ -41,6 +41,7 @@
 #define nsHTMLContainerFrame_h___
 
 #include "nsContainerFrame.h"
+#include "nsDisplayList.h"
 #include "gfxPoint.h"
 
 class nsString;
@@ -172,20 +173,23 @@ protected:
    *                                i.e. negative offsets draws *below*
    *                                the baseline.
    *    @param aSize              the thickness of the line
+   *    @param aClipEdges         clip edges from the display item
    *    @param aDecoration        which line will be painted i.e.,
    *                              NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE or
    *                              NS_STYLE_TEXT_DECORATION_LINE_OVERLINE or
    *                              NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH.
    */
-  virtual void PaintTextDecorationLine(gfxContext* aCtx,
-                                       const nsPoint& aPt,
-                                       nsLineBox* aLine,
-                                       nscolor aColor,
-                                       PRUint8 aStyle,
-                                       gfxFloat aOffset,
-                                       gfxFloat aAscent,
-                                       gfxFloat aSize,
-                                       const PRUint8 aDecoration);
+  virtual void PaintTextDecorationLine(
+                 gfxContext* aCtx,
+                 const nsPoint& aPt,
+                 nsLineBox* aLine,
+                 nscolor aColor,
+                 PRUint8 aStyle,
+                 gfxFloat aOffset,
+                 gfxFloat aAscent,
+                 gfxFloat aSize,
+                 const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                 const PRUint8 aDecoration);
 
   virtual void AdjustForTextIndent(const nsLineBox* aLine,
                                    nscoord& start,

@@ -34,25 +34,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function browserWindowsCount() {
-  let count = 0;
-  let e = Services.wm.getEnumerator("navigator:browser");
-  while (e.hasMoreElements()) {
-    if (!e.getNext().closed)
-      ++count;
-  }
-  return count;
-}
-
 function test() {
   /** Test for Bug 477657 **/
-  is(browserWindowsCount(), 1, "Only one browser window should be open initially");
 
   // Test fails randomly on OS X (bug 482975)
   if ("nsILocalFileMac" in Ci)
     return;
 
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   waitForExplicitFinish();
   
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no");
@@ -104,7 +92,6 @@ function test() {
                 "the window was explicitly unmaximized");
 
           newWin.close();
-          is(browserWindowsCount(), 1, "Only one browser window should be open eventually");
           finish();
         }, 0);
       }, 0);

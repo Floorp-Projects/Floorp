@@ -40,7 +40,10 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = browser/base/content/test
 
-DIRS += tabview
+DIRS += \
+		tabview \
+		inspector \
+		$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
@@ -184,16 +187,6 @@ _BROWSER_FILES = \
                  browser_gestureSupport.js \
                  browser_getshortcutoruri.js \
                  browser_hide_removing.js \
-                 browser_inspector_initialization.js \
-                 browser_inspector_treeSelection.js \
-                 browser_inspector_highlighter.js \
-                 browser_inspector_iframeTest.js \
-                 browser_inspector_scrolling.js \
-                 browser_inspector_store.js \
-                 browser_inspector_tab_switch.js \
-                 browser_inspector_treePanel_output.js \
-                 browser_inspector_treePanel_input.html \
-                 browser_inspector_treePanel_result.html \
                  browser_scratchpad_initialization.js \
                  browser_scratchpad_contexts.js \
                  browser_scratchpad_tab_switch.js \
@@ -202,6 +195,7 @@ _BROWSER_FILES = \
                  browser_scratchpad_files.js \
                  browser_scratchpad_ui.js \
                  browser_scratchpad_bug_646070_chrome_context_pref.js \
+                 browser_scratchpad_bug_660560_tab.js \
                  browser_overflowScroll.js \
                  browser_locationBarExternalLoad.js \
                  browser_pageInfo.js \
@@ -226,6 +220,7 @@ _BROWSER_FILES = \
                  browser_tabfocus.js \
                  browser_tabs_isActive.js \
                  browser_tabs_owner.js \
+                 browser_urlbarTrimURLs.js \
                  browser_urlHighlight.js \
                  browser_visibleFindSelection.js \
                  browser_visibleTabs.js \

@@ -39,6 +39,7 @@
 
 #include "domstubs.idl"
 
+interface nsIDOMOfflineResourceList;
 interface nsISelection;
 
 /**
@@ -50,7 +51,7 @@ interface nsISelection;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(ff7d278f-93db-4078-b89a-058c8e1270b4)]
+[scriptable, uuid(90fec5b7-c58b-463f-a147-f91b6b104a96)]
 interface nsIDOMWindow : nsISupports
 {
   /**
@@ -59,11 +60,19 @@ interface nsIDOMWindow : nsISupports
   readonly attribute nsIDOMDocument                     document;
 
   /**
-   * Accessor for this window's parent window, or the window itself if
-   * there is no parent, or if the parent is of different type
-   * (i.e. this does not cross chrome-content boundaries).
+   * Set/Get the name of this window.
+   *
+   * This attribute is "replaceable" in JavaScript
    */
-  readonly attribute nsIDOMWindow                       parent;
+           attribute DOMString                          name;
+
+  /**
+   * Accessor for the object that controls whether or not scrollbars
+   * are shown in this window.
+   *
+   * This attribute is "replaceable" in JavaScript
+   */
+  readonly attribute nsIDOMBarProp                      scrollbars;
 
   /**
    * Accessor for the root of this hierarchy of windows. This root may
@@ -75,34 +84,19 @@ interface nsIDOMWindow : nsISupports
   readonly attribute nsIDOMWindow                       top;
 
   /**
-   * Accessor for the object that controls whether or not scrollbars
-   * are shown in this window.
-   *
-   * This attribute is "replaceable" in JavaScript
+   * Accessor for this window's parent window, or the window itself if
+   * there is no parent, or if the parent is of different type
+   * (i.e. this does not cross chrome-content boundaries).
    */
-  readonly attribute nsIDOMBarProp                      scrollbars;
+  readonly attribute nsIDOMWindow                       parent;
 
   /**
-   * Accessor for the child windows in this window.
+   * Get the application cache object for this window.
    */
-  [noscript] readonly attribute nsIDOMWindowCollection  frames;
+  readonly attribute nsIDOMOfflineResourceList          applicationCache;
 
-  /**
-   * Set/Get the name of this window.
-   *
-   * This attribute is "replaceable" in JavaScript
-   */
-           attribute DOMString                          name;
-  /**
-   * Set/Get the document scale factor as a multiplier on the default
-   * size. When setting this attribute, a NS_ERROR_NOT_IMPLEMENTED
-   * error may be returned by implementations not supporting
-   * zoom. Implementations not supporting zoom should return 1.0 all
-   * the time for the Get operation. 1.0 is equals normal size,
-   * i.e. no zoom.
-   */
-  [noscript] attribute float                            textZoom;
 
+  // CSSOM-View
   /**
    * Accessor for the current x scroll position in this window in
    * pixels.
@@ -130,10 +124,44 @@ interface nsIDOMWindow : nsISupports
    */
   void                      scrollBy(in long xScrollDif, in long yScrollDif);
 
+
+  // DOM Range
   /**
    * Method for accessing this window's selection object.
    */
   nsISelection              getSelection();
+
+
+  // CSSOM
+  /**
+   * @see <http://dev.w3.org/csswg/cssom/#dom-window-getcomputedstyle>
+   */
+  nsIDOMCSSStyleDeclaration getComputedStyle(in nsIDOMElement elt, 
+                                             [optional] in DOMString pseudoElt);
+
+
+  // Mozilla extensions
+  /**
+   * Get the window root for this window. This is useful for hooking
+   * up event listeners to this window and every other window nested
+   * in the window root.
+   */
+  [noscript] readonly attribute nsIDOMEventTarget windowRoot;
+
+  /**
+   * Accessor for the child windows in this window.
+   */
+  [noscript] readonly attribute nsIDOMWindowCollection  frames;
+
+  /**
+   * Set/Get the document scale factor as a multiplier on the default
+   * size. When setting this attribute, a NS_ERROR_NOT_IMPLEMENTED
+   * error may be returned by implementations not supporting
+   * zoom. Implementations not supporting zoom should return 1.0 all
+   * the time for the Get operation. 1.0 is equals normal size,
+   * i.e. no zoom.
+   */
+  [noscript] attribute float                            textZoom;
 
   /**
    * Method for scrolling this window by a number of lines.
@@ -149,10 +177,4 @@ interface nsIDOMWindow : nsISupports
    * Method for sizing this window to the content in the window.
    */
   void                      sizeToContent();
-
-  /**
-   * @see <http://dev.w3.org/csswg/cssom/#dom-window-getcomputedstyle>
-   */
-  nsIDOMCSSStyleDeclaration getComputedStyle(in nsIDOMElement elt, 
-                                             [optional] in DOMString pseudoElt);
 };

@@ -69,15 +69,15 @@ public:
 
   static nsDOMEventTargetWrapperCache* FromSupports(nsISupports* aSupports)
   {
-    nsPIDOMEventTarget* target =
-      static_cast<nsPIDOMEventTarget*>(aSupports);
+    nsIDOMEventTarget* target =
+      static_cast<nsIDOMEventTarget*>(aSupports);
 #ifdef DEBUG
     {
-      nsCOMPtr<nsPIDOMEventTarget> target_qi =
+      nsCOMPtr<nsIDOMEventTarget> target_qi =
         do_QueryInterface(aSupports);
 
       // If this assertion fires the QI implementation for the object in
-      // question doesn't use the nsPIDOMEventTarget pointer as the
+      // question doesn't use the nsIDOMEventTarget pointer as the
       // nsISupports pointer. That must be fixed, or we'll crash...
       NS_ASSERTION(target_qi == target, "Uh, fix QI!");
     }

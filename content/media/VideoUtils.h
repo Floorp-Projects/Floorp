@@ -41,6 +41,8 @@
 
 #include "mozilla/ReentrantMonitor.h"
 
+#include "nsRect.h"
+
 // This file contains stuff we'd rather put elsewhere, but which is
 // dependent on other changes which we don't want to wait for. We plan to
 // remove this file in the near future.
@@ -142,5 +144,17 @@ PRBool UsecsToSamples(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutSamples);
 
 // Number of microseconds per millisecond.
 #define USECS_PER_MS 1000
+
+// The maximum height and width of the video. Used for
+// sanitizing the memory allocation of the RGB buffer.
+// The maximum resolution we anticipate encountering in the
+// wild is 2160p - 3840x2160 pixels.
+#define MAX_VIDEO_WIDTH  4000
+#define MAX_VIDEO_HEIGHT 3000
+
+// Scales the display rect aDisplay by aspect ratio aAspectRatio.
+// Note that aDisplay must be validated by nsVideoInfo::ValidateVideoRegion()
+// before being used!
+void ScaleDisplayByAspectRatio(nsIntSize& aDisplay, float aAspectRatio);
 
 #endif

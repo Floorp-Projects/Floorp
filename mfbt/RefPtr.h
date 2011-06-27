@@ -131,6 +131,8 @@ class RefPtr
     friend class TemporaryRef<T>;
     friend class OutParamRef<T>;
 
+    struct dontRef {};
+
 public:
     RefPtr() : ptr(0) { }
     RefPtr(const RefPtr& o) : ptr(ref(o.ptr)) {}
@@ -164,13 +166,15 @@ public:
     TemporaryRef<T> forget() {
         T* tmp = ptr;
         ptr = 0;
-        return TemporaryRef<T>(tmp);
+        return TemporaryRef<T>(tmp, dontRef());
     }
 
     T* get() const { return ptr; }
     operator T*() const { return ptr; }
     T* operator->() const { return ptr; }
     T& operator*() const { return *ptr; }
+    template<typename U>
+    operator TemporaryRef<U>() { return forget(); }
 
 private:
     void assign(T* t) {
@@ -206,7 +210,10 @@ class TemporaryRef
     // To allow it to construct TemporaryRef from a bare T*
     friend class RefPtr<T>;
 
+    typedef typename RefPtr<T>::dontRef dontRef;
+
 public:
+    TemporaryRef(T* t) : ptr(RefPtr<T>::ref(t)) {}
     TemporaryRef(const TemporaryRef& o) : ptr(o.drop()) {}
 
     template<typename U>
@@ -221,7 +228,7 @@ public:
     }
 
 private:
-    TemporaryRef(T* t) : ptr(t) {}
+    TemporaryRef(T* t, const dontRef&) : ptr(t) {}
 
     mutable T* ptr;
 
@@ -231,10 +238,13 @@ private:
 
 /**
  * OutParamRef is a wrapper that tracks a refcounted pointer passed as
- * an outparam argument to a function.  If OutParamRef holds a ref to
- * an object that's reassigned during a function call in which the
- * OutParamRef is an outparam, then the old object is unref'd and the
- * new object is ref'd.
+ * an outparam argument to a function.  OutParamRef implements COM T**
+ * outparam semantics: this requires the callee to AddRef() the T*
+ * returned through the T** outparam on behalf of the caller.  This
+ * means the caller (through OutParamRef) must Release() the old
+ * object contained in the tracked RefPtr.  It's OK if the callee
+ * returns the same T* passed to it through the T** outparam, as long
+ * as the callee obeys the COM discipline.
  *
  * Prefer returning TemporaryRef<T> from functions over creating T**
  * outparams and passing OutParamRef<T> to T**.  Prefer RefPtr<T>*
@@ -246,7 +256,10 @@ class OutParamRef
     friend OutParamRef byRef<T>(RefPtr<T>&);
 
 public:
-    ~OutParamRef() { refPtr = tmp; }
+    ~OutParamRef() {
+        RefPtr<T>::unref(refPtr.ptr);
+        refPtr.ptr = tmp;
+    }
 
     operator T**() { return &tmp; }
 
@@ -260,6 +273,9 @@ private:
     OutParamRef& operator=(const OutParamRef&);
 };
 
+/**
+ * byRef cooperates with OutParamRef to implement COM outparam semantics.
+ */
 template<typename T>
 OutParamRef<T>
 byRef(RefPtr<T>& ptr)
@@ -299,26 +315,29 @@ struct Bar : public Foo { };
 TemporaryRef<Foo>
 NewFoo()
 {
-    RefPtr<Foo> f = new Foo();
-    return f.forget();
+    return RefPtr<Foo>(new Foo());
 }
 
 TemporaryRef<Foo>
 NewBar()
 {
-    RefPtr<Bar> b = new Bar();
-    return b.forget();
+    return new Bar();
 }
 
 void
 GetNewFoo(Foo** f)
 {
     *f = new Bar();
+    // Kids, don't try this at home
+    (*f)->AddRef();
 }
 
 void
 GetPassedFoo(Foo** f)
-{}
+{
+    // Kids, don't try this at home
+    (*f)->AddRef();
+}
 
 void
 GetNewFoo(RefPtr<Foo>* f)
@@ -329,6 +348,12 @@ GetNewFoo(RefPtr<Foo>* f)
 void
 GetPassedFoo(RefPtr<Foo>* f)
 {}
+
+TemporaryRef<Foo>
+GetNullFoo()
+{
+    return 0;
+}
 
 int
 main(int argc, char** argv)
@@ -404,6 +429,12 @@ main(int argc, char** argv)
 
     {
         RefPtr<Foo> f1 = new Bar();
+    }
+    MOZ_ASSERT(13 == Foo::numDestroyed);
+
+    {
+        RefPtr<Foo> f = GetNullFoo();
+        MOZ_ASSERT(13 == Foo::numDestroyed);
     }
     MOZ_ASSERT(13 == Foo::numDestroyed);
 

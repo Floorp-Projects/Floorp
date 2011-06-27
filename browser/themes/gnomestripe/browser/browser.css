@@ -1406,7 +1406,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 .panel-promo-box {
   margin: 8px -10px -10px -10px;
-  padding: 8px 16px;
+  padding: 8px 10px;
   border-top: 1px solid ThreeDShadow;
   background-image: -moz-linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
 }
@@ -1421,7 +1421,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
   margin-top: 0;
   margin-bottom: 0;
-  -moz-margin-end: -6px;
 }
 
 .panel-promo-closebutton > .toolbarbutton-text {

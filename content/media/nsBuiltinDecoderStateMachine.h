@@ -319,8 +319,7 @@ protected:
   // Performs YCbCr to RGB conversion, and pushes the image down the
   // rendering pipeline. Called on the state machine thread. The decoder
   // monitor must not be held when calling this.
-  void RenderVideoFrame(VideoData* aData, TimeStamp aTarget, 
-                        nsIntSize aDisplaySize, float aAspectRatio);
+  void RenderVideoFrame(VideoData* aData, TimeStamp aTarget);
  
   // If we have video, display a video frame if it's time for display has
   // arrived, otherwise sleep until it's time for the next sample. Update

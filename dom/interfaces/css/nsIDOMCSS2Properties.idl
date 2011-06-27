@@ -24,6 +24,7 @@
  *   Johnny Stenback <jst@netscape.com>
  *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
  *   Robert Longson <longsonr@gmail.com>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -50,7 +51,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(249755DF-EEFE-4AF4-8127-BE3D6BDAED2D)]
+[scriptable, uuid(7cf11a5f-4be5-4e31-b427-58d82746b5f5)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -342,6 +343,9 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        textIndent;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        textOverflow;
                                         // raises(DOMException) on setting
 
            attribute DOMString        textShadow;

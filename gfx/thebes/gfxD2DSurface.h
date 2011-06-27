@@ -70,6 +70,8 @@ public:
     void Present();
     void Scroll(const nsIntPoint &aDelta, const nsIntRect &aClip);
 
+    ID3D10Texture2D *GetTexture();
+
     HDC GetDC(PRBool aRetainContents);
     void ReleaseDC(const nsIntRect *aUpdatedRect);
 };

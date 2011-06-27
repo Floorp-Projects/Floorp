@@ -62,6 +62,8 @@ NS_INTERFACE_TABLE_HEAD(nsMathMLElement)
   NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsMathMLElement)
     NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, nsIDOMNode)
     NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, nsIDOMElement)
+    NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, nsILink)
+    NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, Link)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MathMLElement)
@@ -76,6 +78,8 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                             PRBool aCompileEventHandlers)
 {
   static const char kMathMLStyleSheetURI[] = "resource://gre-resources/mathml.css";
+
+  Link::ResetLinkState(false);
 
   nsresult rv = nsMathMLElementBase::BindToTree(aDocument, aParent,
                                                 aBindingParent,
@@ -99,6 +103,16 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   return rv;
+}
+
+void
+nsMathMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  // If this link is ever reinserted into a document, it might
+  // be under a different xml:base, so forget the cached state now.
+  Link::ResetLinkState(false);
+
+  nsMathMLElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
 PRBool
@@ -438,12 +452,27 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
   }
 }
 
+nsresult
+nsMathMLElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  nsresult rv = nsGenericElement::PreHandleEvent(aVisitor);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return PreHandleEventForLinks(aVisitor);
+}
+
+nsresult
+nsMathMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  return PostHandleEventForLinks(aVisitor);
+}
+
 NS_IMPL_ELEMENT_CLONE(nsMathMLElement)
 
 nsEventStates
 nsMathMLElement::IntrinsicState() const
 {
-  return nsMathMLElementBase::IntrinsicState() |
+  return Link::LinkState() | nsMathMLElementBase::IntrinsicState() |
     (mIncrementScriptLevel ? NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL : nsEventStates());
 }
 
@@ -464,4 +493,186 @@ nsMathMLElement::SetIncrementScriptLevel(PRBool aIncrementScriptLevel,
   NS_ASSERTION(aNotify, "We always notify!");
 
   UpdateState(true);
+}
+
+PRBool
+nsMathMLElement::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
+{
+  nsCOMPtr<nsIURI> uri;
+  if (IsLink(getter_AddRefs(uri))) {
+    if (aTabIndex) {
+      *aTabIndex = ((sTabFocusModel & eTabFocus_linksMask) == 0 ? -1 : 0);
+    }
+    return PR_TRUE;
+  }
+
+  if (aTabIndex) {
+    *aTabIndex = -1;
+  }
+
+  return PR_FALSE;
+}
+
+PRBool
+nsMathMLElement::IsLink(nsIURI** aURI) const
+{
+  // http://www.w3.org/TR/2010/REC-MathML3-20101021/chapter6.html#interf.link
+  // The REC says that the following elements should not be linking elements:
+  nsIAtom* tag = Tag();
+  if (tag == nsGkAtoms::mprescripts_ ||
+      tag == nsGkAtoms::none         ||
+      tag == nsGkAtoms::malignmark_  ||
+      tag == nsGkAtoms::maligngroup_) {
+    *aURI = nsnull;
+    return PR_FALSE;
+  }
+
+  PRBool hasHref = PR_FALSE;
+  const nsAttrValue* href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
+                                                      kNameSpaceID_None);
+  if (href) {
+    // MathML href
+    // The REC says: "When user agents encounter MathML elements with both href
+    // and xlink:href attributes, the href attribute should take precedence."
+    hasHref = PR_TRUE;
+  } else {
+    // To be a clickable XLink for styling and interaction purposes, we require:
+    //
+    //   xlink:href    - must be set
+    //   xlink:type    - must be unset or set to "" or set to "simple"
+    //   xlink:show    - must be unset or set to "", "new" or "replace"
+    //   xlink:actuate - must be unset or set to "" or "onRequest"
+    //
+    // For any other values, we're either not a *clickable* XLink, or the end
+    // result is poorly specified. Either way, we return PR_FALSE.
+    
+    static nsIContent::AttrValuesArray sTypeVals[] =
+      { &nsGkAtoms::_empty, &nsGkAtoms::simple, nsnull };
+    
+    static nsIContent::AttrValuesArray sShowVals[] =
+      { &nsGkAtoms::_empty, &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+    
+    static nsIContent::AttrValuesArray sActuateVals[] =
+      { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nsnull };
+    
+    // Optimization: check for href first for early return
+    href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
+                                     kNameSpaceID_XLink);
+    if (href &&
+        FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::type,
+                        sTypeVals, eCaseMatters) !=
+        nsIContent::ATTR_VALUE_NO_MATCH &&
+        FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
+                        sShowVals, eCaseMatters) !=
+        nsIContent::ATTR_VALUE_NO_MATCH &&
+        FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::actuate,
+                        sActuateVals, eCaseMatters) !=
+        nsIContent::ATTR_VALUE_NO_MATCH) {
+      hasHref = PR_TRUE;
+    }
+  }
+
+  if (hasHref) {
+    nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+    // Get absolute URI
+    nsAutoString hrefStr;
+    href->ToString(hrefStr); 
+    nsContentUtils::NewURIWithDocumentCharset(aURI, hrefStr,
+                                              GetOwnerDoc(), baseURI);
+    // must promise out param is non-null if we return true
+    return !!*aURI;
+  }
+
+  *aURI = nsnull;
+  return PR_FALSE;
+}
+
+void
+nsMathMLElement::GetLinkTarget(nsAString& aTarget)
+{
+  const nsAttrValue* target = mAttrsAndChildren.GetAttr(nsGkAtoms::target,
+                                                        kNameSpaceID_XLink);
+  if (target) {
+    target->ToString(aTarget);
+  }
+
+  if (aTarget.IsEmpty()) {
+
+    static nsIContent::AttrValuesArray sShowVals[] =
+      { &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+    
+    switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
+                            sShowVals, eCaseMatters)) {
+    case 0:
+      aTarget.AssignLiteral("_blank");
+      return;
+    case 1:
+      return;
+    }
+    nsIDocument* ownerDoc = GetOwnerDoc();
+    if (ownerDoc) {
+      ownerDoc->GetBaseTarget(aTarget);
+    }
+  }
+}
+
+nsLinkState
+nsMathMLElement::GetLinkState() const
+{
+  return Link::GetLinkState();
+}
+
+void
+nsMathMLElement::RequestLinkStateUpdate()
+{
+  UpdateLinkState(Link::LinkState());
+}
+
+already_AddRefed<nsIURI>
+nsMathMLElement::GetHrefURI() const
+{
+  nsCOMPtr<nsIURI> hrefURI;
+  return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nsnull;
+}
+
+nsresult
+nsMathMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                         nsIAtom* aPrefix, const nsAString& aValue,
+                         PRBool aNotify)
+{
+  nsresult rv = nsMathMLElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
+                                           aValue, aNotify);
+
+  // The ordering of the parent class's SetAttr call and Link::ResetLinkState
+  // is important here!  The attribute is not set until SetAttr returns, and
+  // we will need the updated attribute value because notifying the document
+  // that content states have changed will call IntrinsicState, which will try
+  // to get updated information about the visitedness from Link.
+  if (aName == nsGkAtoms::href &&
+      (aNameSpaceID == kNameSpaceID_None ||
+       aNameSpaceID == kNameSpaceID_XLink)) {
+    Link::ResetLinkState(!!aNotify);
+  }
+
+  return rv;
+}
+
+nsresult
+nsMathMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
+                           PRBool aNotify)
+{
+  nsresult rv = nsMathMLElementBase::UnsetAttr(aNameSpaceID, aAttr, aNotify);
+
+  // The ordering of the parent class's UnsetAttr call and Link::ResetLinkState
+  // is important here!  The attribute is not unset until UnsetAttr returns, and
+  // we will need the updated attribute value because notifying the document
+  // that content states have changed will call IntrinsicState, which will try
+  // to get updated information about the visitedness from Link.
+  if (aAttr == nsGkAtoms::href &&
+      (aNameSpaceID == kNameSpaceID_None ||
+       aNameSpaceID == kNameSpaceID_XLink)) {
+    Link::ResetLinkState(!!aNotify);
+  }
+
+  return rv;
 }

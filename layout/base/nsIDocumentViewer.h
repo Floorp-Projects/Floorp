@@ -48,6 +48,8 @@ class nsIPresShell;
 class nsIStyleSheet;
 class nsIView;
 
+class nsDOMNavigationTiming;
+
 #define NS_IDOCUMENT_VIEWER_IID \
   { 0x5a5c9a1d, 0x49c4, 0x4f3f, \
     { 0x80, 0xcd, 0x12, 0x09, 0x5b, 0x1e, 0x1f, 0x61 } }
@@ -69,6 +71,8 @@ public:
                                  PRBool aForceReuseInnerWindow) = 0;
 
   virtual nsIView* FindContainerView() = 0;
+
+  virtual void SetNavigationTiming(nsDOMNavigationTiming* timing) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewer, NS_IDOCUMENT_VIEWER_IID)

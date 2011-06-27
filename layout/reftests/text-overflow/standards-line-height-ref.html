@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+-->
+<html><head>
+<title>text-overflow: Standards mode line height</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  overflow:hidden;
+
+  float:left;
+  white-space:pre;
+  margin-left:1em;
+  margin-bottom:1em;
+  font-size:24px; 
+  color:blue;
+  border:1px solid black;
+  position:relative;
+}
+span {
+  font-size:16px;
+  color:black;
+}
+.rlo {
+  unicode-bidi: bidi-override; direction:rtl;
+}
+.lro {
+  unicode-bidi: bidi-override;
+}
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+.t1 { width:4em; }
+
+m { font-size:24px; color:blue; line-height:8px; }
+
+</style>
+
+</head><body>
+
+<div class="test t1"><span>0123456|</span><m>&#x2026;</m></div>
+<div class="test rtl rlo t1"><span>0123456|</span><m>&#x2026;</m></div>
+
+
+</body>
+</html>

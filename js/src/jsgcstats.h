@@ -122,8 +122,6 @@ struct ConservativeGCStats
 
 #if defined(MOZ_GCTIMER) || defined(JSGC_TESTPILOT)
 
-const bool JS_WANT_GC_SUITE_PRINT = false;  //false for gnuplot output
-
 extern jsrefcount newChunkCount;
 extern jsrefcount destroyChunkCount;
 

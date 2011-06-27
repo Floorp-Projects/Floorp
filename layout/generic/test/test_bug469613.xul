@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=469613
 -->
@@ -8,9 +8,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469613
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <title>Test for Bug 469613</title>
-  <script type="application/javascript" src="/MochiKit/packed.js" />
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 <body  xmlns="http://www.w3.org/1999/xhtml">
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469613">Mozilla Bug 469613</a>
 
@@ -28,8 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469613
 /** Test for Bug 469613 **/
 
 function doTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   let scrollbox = document.getElementById("scrollbox");
   scrollbox.scrollTop = 0;
 

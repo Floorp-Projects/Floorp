@@ -7,7 +7,6 @@ var gRuleDoc = null;
 
 // Debuggin stuff.
 var gDumpToConsole = false;
-gA11yEventDumpToConsole = gDumpToConsole;
 
 /**
  * Start name tests. Run through markup elements and test names for test
@@ -149,7 +148,7 @@ function testNameForRule(aElm, aRuleElm)
 
     testNameForAttrRule(aElm, aRuleElm);
 
-  } else if (aRuleElm.hasAttribute("elm") && aRuleElm.hasAttribute("elmattr")) {
+  } else if (aRuleElm.hasAttribute("elm")) {
     if (gDumpToConsole) {
       dump("\nProcessing rule { elm: " + aRuleElm.getAttribute("elm") +
            ", elmattr: " + aRuleElm.getAttribute("elmattr") +" }\n");
@@ -178,7 +177,7 @@ function testNameForAttrRule(aElm, aRule)
   if (type == "string") {
     name = attrValue;
 
-  } else if (type == "ref") {
+  } else if (type == "ref" && attrValue) {
     var ids = attrValue.split(/\s+/);
     for (var idx = 0; idx < ids.length; idx++) {
       var labelElm = getNode(ids[idx]);
@@ -197,37 +196,53 @@ function testNameForAttrRule(aElm, aRule)
 }
 
 function testNameForElmRule(aElm, aRule)
-{  
-  var elm = aRule.getAttribute("elm");
-  var elmattr = aRule.getAttribute("elmattr");
+{
+  var labelElm;
 
-  var filter = {
-    acceptNode: function filter_acceptNode(aNode)
-    {
-      if (aNode.localName == this.mLocalName &&
-          aNode.getAttribute(this.mAttrName) == this.mAttrValue)
-        return NodeFilter.FILTER_ACCEPT;
+  var tagname = aRule.getAttribute("elm");
+  var attrname = aRule.getAttribute("elmattr");
+  if (attrname) {
+    var filter = {
+      acceptNode: function filter_acceptNode(aNode)
+      {
+        if (aNode.localName == this.mLocalName &&
+            aNode.getAttribute(this.mAttrName) == this.mAttrValue)
+          return NodeFilter.FILTER_ACCEPT;
 
-      return NodeFilter.FILTER_SKIP;
-    },
+        return NodeFilter.FILTER_SKIP;
+      },
 
-    mLocalName: elm,
-    mAttrName: elmattr,
-    mAttrValue: aElm.getAttribute("id")
-  };
+      mLocalName: tagname,
+      mAttrName: attrname,
+      mAttrValue: aElm.getAttribute("id")
+    };
 
-  var treeWalker = document.createTreeWalker(document.body,
-                                             NodeFilter.SHOW_ELEMENT,
-                                             filter, false);
-  var labelElm = treeWalker.nextNode();
-  var msg = "Element '" + elm + "' test.";
+    var treeWalker = document.createTreeWalker(document.body,
+                                               NodeFilter.SHOW_ELEMENT,
+                                               filter, false);
+    labelElm = treeWalker.nextNode();
+
+  } else {
+    // if attrname is empty then look for the element in subtree.
+    labelElm = aElm.getElementsByTagName(tagname)[0];
+    if (!labelElm)
+      labelElm = aElm.getElementsByTagName("html:" + tagname)[0];
+  }
+
+  if (!labelElm) {
+    ok(false, msg + " Failed to find '" + tagname + "' element.");
+    gTestIterator.iterateNext();
+    return;
+  }
+
+  var msg = "Element '" + tagname + "' test.";
   testName(aElm, labelElm.getAttribute("a11yname"), msg);
 
   var parentNode = labelElm.parentNode;
 
   if (gDumpToConsole) {
     dump("\nProcessed elm rule. Wait for reorder event on " +
-         prettyName(parentNode) + "'\n");
+         prettyName(parentNode) + "\n");
   }
   waitForEvent(EVENT_REORDER, parentNode,
                gTestIterator.iterateNext, gTestIterator);

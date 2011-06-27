@@ -46,6 +46,7 @@
 #include "nsStringStream.h"
 
 #include "mozilla/unused.h"
+#include "mozilla/Util.h" // for DebugOnly
 
 namespace mozilla {
 namespace dom {
@@ -108,7 +109,7 @@ ExternalHelperAppParent::RecvOnDataAvailable(const nsCString& data,
 
   NS_ASSERTION(mPending, "must be pending!");
   nsCOMPtr<nsIInputStream> stringStream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stringStream), data.get(), count, NS_ASSIGNMENT_DEPEND);
+  DebugOnly<nsresult> rv = NS_NewByteInputStream(getter_AddRefs(stringStream), data.get(), count, NS_ASSIGNMENT_DEPEND);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create dependent string!");
   mStatus = mListener->OnDataAvailable(this, nsnull, stringStream, offset, count);
 

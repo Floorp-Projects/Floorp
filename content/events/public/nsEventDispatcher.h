@@ -46,8 +46,8 @@ class nsIContent;
 class nsIDocument;
 class nsPresContext;
 class nsIDOMEvent;
-class nsPIDOMEventTarget;
 class nsIScriptGlobalObject;
+class nsIDOMEventTarget;
 class nsEventTargetChainItem;
 template<class E> class nsCOMArray;
 
@@ -178,7 +178,7 @@ public:
   PRPackedBool          mOriginalTargetIsInAnon;
 
   /**
-   * Whether or not nsPIDOMEventTarget::WillHandleEvent will be
+   * Whether or not nsIDOMEventTarget::WillHandleEvent will be
    * called. Default is PR_FALSE;
    */
   PRPackedBool          mWantsWillHandleEvent;
@@ -192,13 +192,13 @@ public:
   /**
    * Parent item in the event target chain.
    */
-  nsPIDOMEventTarget*   mParentTarget;
+  nsIDOMEventTarget*   mParentTarget;
 
   /**
    * If the event needs to be retargeted, this is the event target,
    * which should be used when the event is handled at mParentTarget.
    */
-  nsPIDOMEventTarget*   mEventTargetAtParent;
+  nsIDOMEventTarget*   mEventTargetAtParent;
 };
 
 class nsEventChainPostVisitor : public nsEventChainVisitor {
@@ -228,7 +228,7 @@ class nsEventDispatcher
 {
 public:
   /**
-   * aTarget should QI to nsPIDOMEventTarget.
+   * aTarget should QI to nsIDOMEventTarget.
    * If the target of aEvent is set before calling this method, the target of 
    * aEvent is used as the target (unless there is event
    * retargeting) and the originalTarget of the DOM Event.
@@ -249,7 +249,7 @@ public:
                            nsIDOMEvent* aDOMEvent = nsnull,
                            nsEventStatus* aEventStatus = nsnull,
                            nsDispatchingCallback* aCallback = nsnull,
-                           nsCOMArray<nsPIDOMEventTarget>* aTargets = nsnull);
+                           nsCOMArray<nsIDOMEventTarget>* aTargets = nsnull);
 
   /**
    * Dispatches an event.

@@ -1127,10 +1127,10 @@ nsWebSocket::UpdateMustKeepAlive()
 
   if (mKeepingAlive && !shouldKeepAlive) {
     mKeepingAlive = PR_FALSE;
-    static_cast<nsPIDOMEventTarget*>(this)->Release();
+    static_cast<nsIDOMEventTarget*>(this)->Release();
   } else if (!mKeepingAlive && shouldKeepAlive) {
     mKeepingAlive = PR_TRUE;
-    static_cast<nsPIDOMEventTarget*>(this)->AddRef();
+    static_cast<nsIDOMEventTarget*>(this)->AddRef();
   }
 }
 
@@ -1140,24 +1140,9 @@ nsWebSocket::DontKeepAliveAnyMore()
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   if (mKeepingAlive) {
     mKeepingAlive = PR_FALSE;
-    static_cast<nsPIDOMEventTarget*>(this)->Release();
+    static_cast<nsIDOMEventTarget*>(this)->Release();
   }
   mCheckMustKeepAlive = PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsWebSocket::AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener* aListener,
-                              PRBool aUseCapture)
-{
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  nsresult rv = nsDOMEventTargetHelper::AddEventListener(aType,
-                                                         aListener,
-                                                         aUseCapture);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateMustKeepAlive();
-  }
-  return rv;
 }
 
 NS_IMETHODIMP
