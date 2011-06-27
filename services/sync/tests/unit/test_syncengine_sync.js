@@ -694,7 +694,7 @@ function test_processIncoming_applyIncomingBatchSize_multiple() {
 }
 
 
-function test_processIncoming_failed_items_reported_once() {
+function test_processIncoming_notify_count() {
   _("Ensure that failed records are reported only once.");
   let syncTesting = new SyncTestingInfrastructure();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -729,21 +729,20 @@ function test_processIncoming_failed_items_reported_once() {
   do_test_pending();
 
   try {
-    let called = 0;
-    let counts;
-
     // Confirm initial environment.
     do_check_eq(engine.lastSync, 0);
     do_check_eq(engine.toFetch.length, 0);
     do_check_eq(engine.previousFailed.length, 0);
     do_check_eq([id for (id in engine._store.items)].length, 0);
 
-    Svc.Obs.add("weave:engine:sync:applied", function(count) {
+    let called = 0;
+    let counts;
+    function onApplied(count) {
       _("Called with " + JSON.stringify(counts));
       counts = count;
-      if (count.newFailed)
-        called++;
-    });
+      called++;
+    }
+    Svc.Obs.add("weave:engine:sync:applied", onApplied);
 
     // Do sync.
     engine._syncStartup();
@@ -770,11 +769,12 @@ function test_processIncoming_failed_items_reported_once() {
     do_check_eq(engine.previousFailed.length, 1);
     do_check_eq(engine.previousFailed[0], "record-no-0");
 
-    // Failures weren't notified again because there were no newly failed items.
-    do_check_eq(called, 1);
-    do_check_eq(counts.failed, 3);
-    do_check_eq(counts.applied, 15);
-    do_check_eq(counts.newFailed, 3);
+    do_check_eq(called, 2);
+    do_check_eq(counts.failed, 1);
+    do_check_eq(counts.applied, 3);
+    do_check_eq(counts.newFailed, 0);
+
+    Svc.Obs.remove("weave:engine:sync:applied", onApplied);
   } finally {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
@@ -947,9 +947,8 @@ function test_processIncoming_failed_records() {
 
     let observerSubject;
     let observerData;
-    Svc.Obs.add("weave:engine:sync:apply-failed",
-                function onApplyFailed(subject, data) {
-      Svc.Obs.remove("weave:engine:sync:apply-failed", onApplyFailed);
+    Svc.Obs.add("weave:engine:sync:applied", function onApplied(subject, data) {
+      Svc.Obs.remove("weave:engine:sync:applied", onApplied);
       observerSubject = subject;
       observerData = data;
     });
@@ -972,6 +971,7 @@ function test_processIncoming_failed_records() {
     // Ensure the observer was notified
     do_check_eq(observerData, engine.name);
     do_check_eq(observerSubject.failed, BOGUS_RECORDS.length);
+    do_check_eq(observerSubject.newFailed, BOGUS_RECORDS.length);
 
     // Testing batching of failed item fetches.
     // Try to sync again. Ensure that we split the request into chunks to avoid
@@ -1058,9 +1058,8 @@ function test_processIncoming_decrypt_failed() {
 
     let observerSubject;
     let observerData;
-    Svc.Obs.add("weave:engine:sync:apply-failed",
-                function onApplyFailed(subject, data) {
-      Svc.Obs.remove("weave:engine:sync:apply-failed", onApplyFailed);
+    Svc.Obs.add("weave:engine:sync:applied", function onApplied(subject, data) {
+      Svc.Obs.remove("weave:engine:sync:applied", onApplied);
       observerSubject = subject;
       observerData = data;
     });
@@ -1560,7 +1559,7 @@ function run_test() {
   test_processIncoming_resume_toFetch();
   test_processIncoming_applyIncomingBatchSize_smaller();
   test_processIncoming_applyIncomingBatchSize_multiple();
-  test_processIncoming_failed_items_reported_once();
+  test_processIncoming_notify_count();
   test_processIncoming_previousFailed();
   test_processIncoming_failed_records();
   test_processIncoming_decrypt_failed();
