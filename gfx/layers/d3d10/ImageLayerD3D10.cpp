@@ -348,10 +348,23 @@ ImageLayerD3D10::RenderLayer()
         (float)yuvImage->mSize.width,
         (float)yuvImage->mSize.height)
       );
+
+    effect()->GetVariableByName("vTextureCoords")->AsVector()->SetFloatVector(
+      ShaderConstantRectD3D10(
+        (float)yuvImage->mData.mPicX / yuvImage->mData.mYSize.width,
+        (float)yuvImage->mData.mPicY / yuvImage->mData.mYSize.height,
+        (float)yuvImage->mData.mPicSize.width / yuvImage->mData.mYSize.width,
+        (float)yuvImage->mData.mPicSize.height / yuvImage->mData.mYSize.height)
+       );
   }
 
   technique->GetPassByIndex(0)->Apply(0);
   device()->Draw(4, 0);
+
+  if (image->GetFormat() == Image::PLANAR_YCBCR) {
+    effect()->GetVariableByName("vTextureCoords")->AsVector()->
+      SetFloatVector(ShaderConstantRectD3D10(0, 0, 1.0f, 1.0f));
+  }
 
   GetContainer()->NotifyPaintedImage(image);
 }
@@ -366,75 +379,8 @@ PlanarYCbCrImageD3D10::PlanarYCbCrImageD3D10(ID3D10Device1 *aDevice)
 void
 PlanarYCbCrImageD3D10::SetData(const PlanarYCbCrImage::Data &aData)
 {
-  // XXX - For D3D10Ex we really should just copy to systemmem surfaces here.
-  // For now, we copy the data
-  int width_shift = 0;
-  int height_shift = 0;
-  if (aData.mYSize.width == aData.mCbCrSize.width &&
-      aData.mYSize.height == aData.mCbCrSize.height) {
-     // YV24 format
-     width_shift = 0;
-     height_shift = 0;
-     mType = gfx::YV24;
-  } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
-             aData.mYSize.height == aData.mCbCrSize.height) {
-    // YV16 format
-    width_shift = 1;
-    height_shift = 0;
-    mType = gfx::YV16;
-  } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
-             aData.mYSize.height / 2 == aData.mCbCrSize.height ) {
-      // YV12 format
-    width_shift = 1;
-    height_shift = 1;
-    mType = gfx::YV12;
-  } else {
-    NS_ERROR("YCbCr format not supported");
-  }
-
-  mData = aData;
-  mData.mCbCrStride = mData.mCbCrSize.width = aData.mPicSize.width >> width_shift;
-  // Round up the values for width and height to make sure we sample enough data
-  // for the last pixel - See bug 590735
-  if (width_shift && (aData.mPicSize.width & 1)) {
-    mData.mCbCrStride++;
-    mData.mCbCrSize.width++;
-  }
-  mData.mCbCrSize.height = aData.mPicSize.height >> height_shift;
-  if (height_shift && (aData.mPicSize.height & 1)) {
-      mData.mCbCrSize.height++;
-  }
-  mData.mYSize = aData.mPicSize;
-  mData.mYStride = mData.mYSize.width;
-
-  mBuffer = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height * 2 +
-                        mData.mYStride * mData.mYSize.height];
-  mData.mYChannel = mBuffer;
-  mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
-  mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
-
-  int cbcr_x = aData.mPicX >> width_shift;
-  int cbcr_y = aData.mPicY >> height_shift;
-
-  for (int i = 0; i < mData.mYSize.height; i++) {
-    memcpy(mData.mYChannel + i * mData.mYStride,
-           aData.mYChannel + ((aData.mPicY + i) * aData.mYStride) + aData.mPicX,
-           mData.mYStride);
-  }
-  for (int i = 0; i < mData.mCbCrSize.height; i++) {
-    memcpy(mData.mCbChannel + i * mData.mCbCrStride,
-           aData.mCbChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
-           mData.mCbCrStride);
-  }
-  for (int i = 0; i < mData.mCbCrSize.height; i++) {
-    memcpy(mData.mCrChannel + i * mData.mCbCrStride,
-           aData.mCrChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
-           mData.mCbCrStride);
-  }
-
-  // Fix picture rect to be correct
-  mData.mPicX = mData.mPicY = 0;
-  mSize = aData.mPicSize;
+  PRUint32 dummy;
+  mBuffer = CopyData(mData, mSize, dummy, aData);
 
   AllocateTextures();
 
@@ -476,20 +422,26 @@ PlanarYCbCrImageD3D10::GetAsSurface()
 {
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(mSize, gfxASurface::ImageFormatRGB24);
+  
+  gfx::YUVType type = 
+    gfx::TypeFromSize(mData.mYSize.width,
+                      mData.mYSize.height,
+                      mData.mCbCrSize.width,
+                      mData.mCbCrSize.height);
 
   // Convert from YCbCr to RGB now
   gfx::ConvertYCbCrToRGB32(mData.mYChannel,
                            mData.mCbChannel,
                            mData.mCrChannel,
                            imageSurface->Data(),
-                           0,
-                           0,
-                           mSize.width,
-                           mSize.height,
+                           mData.mPicX,
+                           mData.mPicY,
+                           mData.mPicSize.width,
+                           mData.mPicSize.height,
                            mData.mYStride,
                            mData.mCbCrStride,
                            imageSurface->Stride(),
-                           mType);
+                           type);
 
   return imageSurface.forget().get();
 }
