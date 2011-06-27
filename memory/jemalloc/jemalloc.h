@@ -60,10 +60,8 @@ void *je_memalign(size_t alignment, size_t size);
 int	je_posix_memalign(void **memptr, size_t alignment, size_t size);
 char    *je_strndup(const char *src, size_t len);
 char    *je_strdup(const char *src);
-#if defined(MOZ_MEMORY_ANDROID)
+#if defined(WIN32_NEW_STYLE_JEMALLOC)
 size_t  je_malloc_usable_size(void *ptr)
-#else
-size_t	je_malloc_usable_size(const void *ptr);
 #endif
 #endif
 
