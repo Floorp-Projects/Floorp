@@ -75,6 +75,74 @@ CreateClampOrRepeatTextureImage(GLContext *aGl,
   return aGl->CreateTextureImage(aSize, aContentType, wrapMode);
 }
 
+// |aTexCoordRect| is the rectangle from the texture that we want to
+// draw using the given program.  The program already has a necessary
+// offset and scale, so the geometry that needs to be drawn is a unit
+// square from 0,0 to 1,1.
+//
+// |aTexSize| is the actual size of the texture, as it can be larger
+// than the rectangle given by |aTexCoordRect|.
+static void
+BindAndDrawQuadWithTextureRect(GLContext* aGl,
+                               LayerProgram *aProg,
+                               const nsIntRect& aTexCoordRect,
+                               const nsIntSize& aTexSize,
+                               GLenum aWrapMode)
+{
+  GLuint vertAttribIndex =
+    aProg->AttribLocation(LayerProgram::VertexAttrib);
+  GLuint texCoordAttribIndex =
+    aProg->AttribLocation(LayerProgram::TexCoordAttrib);
+  NS_ASSERTION(texCoordAttribIndex != GLuint(-1), "no texture coords?");
+
+  // clear any bound VBO so that glVertexAttribPointer() goes back to
+  // "pointer mode"
+  aGl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+
+  // Given what we know about these textures and coordinates, we can
+  // compute fmod(t, 1.0f) to get the same texture coordinate out.  If
+  // the texCoordRect dimension is < 0 or > width/height, then we have
+  // wraparound that we need to deal with by drawing multiple quads,
+  // because we can't rely on full non-power-of-two texture support
+  // (which is required for the REPEAT wrap mode).
+
+  GLContext::RectTriangles rects;
+
+  if (aWrapMode == LOCAL_GL_REPEAT) {
+    rects.addRect(/* dest rectangle */
+                  0.0f, 0.0f, 1.0f, 1.0f,
+                  /* tex coords */
+                  aTexCoordRect.x / GLfloat(aTexSize.width),
+                  aTexCoordRect.y / GLfloat(aTexSize.height),
+                  aTexCoordRect.XMost() / GLfloat(aTexSize.width),
+                  aTexCoordRect.YMost() / GLfloat(aTexSize.height));
+  } else {
+    GLContext::DecomposeIntoNoRepeatTriangles(aTexCoordRect, aTexSize, rects);
+  }
+
+  // vertex position buffer is 2 floats, not normalized, 0 stride.
+  aGl->fVertexAttribPointer(vertAttribIndex, 2,
+                            LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                            rects.vertexPointer());
+
+  // texture coord buffer is 2 floats, not normalized, 0 stride.
+  aGl->fVertexAttribPointer(texCoordAttribIndex, 2,
+                            LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                            rects.texCoordPointer());
+
+  {
+    aGl->fEnableVertexAttribArray(texCoordAttribIndex);
+    {
+      aGl->fEnableVertexAttribArray(vertAttribIndex);
+
+      aGl->fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.elements());
+
+      aGl->fDisableVertexAttribArray(vertAttribIndex);
+    }
+    aGl->fDisableVertexAttribArray(texCoordAttribIndex);
+  }
+}
+
 static void
 SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
 {
@@ -201,9 +269,9 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
 
       quadRect.MoveBy(-GetOriginOffset());
 
-      aManager->BindAndDrawQuadWithTextureRect(program, quadRect,
-                                               mTexImage->GetSize(),
-                                               mTexImage->GetWrapMode());
+      BindAndDrawQuadWithTextureRect(gl(), program, quadRect,
+                                     mTexImage->GetSize(),
+                                     mTexImage->GetWrapMode());
     }
   }
 

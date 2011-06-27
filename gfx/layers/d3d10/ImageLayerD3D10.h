@@ -127,6 +127,7 @@ public:
   nsRefPtr<ID3D10ShaderResourceView> mCbView;
   nsRefPtr<ID3D10ShaderResourceView> mCrView;
   PRPackedBool mHasData;
+  gfx::YUVType mType; 
 };
 
 
