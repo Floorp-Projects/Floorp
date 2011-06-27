@@ -149,78 +149,16 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     return;
   }
   
-  gfx::YUVType type = gfx::YV12;
-  int width_shift = 0;
-  int height_shift = 0;
-  if (aData.mYSize.width == aData.mCbCrSize.width &&
-      aData.mYSize.height == aData.mCbCrSize.height) {
-    type = gfx::YV24;
-    width_shift = 0;
-    height_shift = 0;
-  }
-  else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
-           aData.mYSize.height == aData.mCbCrSize.height) {
-    type = gfx::YV16;
-    width_shift = 1;
-    height_shift = 0;
-  }
-  else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
-           aData.mYSize.height / 2 == aData.mCbCrSize.height ) {
-    type = gfx::YV12;
-    width_shift = 1;
-    height_shift = 1;
-  }
-  else {
-    NS_ERROR("YCbCr format not supported");
-  }
-
   if (mDelayedConversion) {
-
-    mData = aData;
-    mData.mCbCrStride = mData.mCbCrSize.width = aData.mPicSize.width >> width_shift;
-    // Round up the values for width and height to make sure we sample enough data
-    // for the last pixel - See bug 590735
-    if (width_shift && (aData.mPicSize.width & 1)) {
-      mData.mCbCrStride++;
-      mData.mCbCrSize.width++;
-    }
-    mData.mCbCrSize.height = aData.mPicSize.height >> height_shift;
-    if (height_shift && (aData.mPicSize.height & 1)) {
-        mData.mCbCrSize.height++;
-    }
-    mData.mYSize = aData.mPicSize;
-    mData.mYStride = mData.mYSize.width;
-    mBufferSize = mData.mCbCrStride * mData.mCbCrSize.height * 2 +
-                  mData.mYStride * mData.mYSize.height;
-    mBuffer = new PRUint8[mBufferSize];
-    
-    mData.mYChannel = mBuffer;
-    mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
-    mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
-    int cbcr_x = aData.mPicX >> width_shift;
-    int cbcr_y = aData.mPicY >> height_shift;
-
-    for (int i = 0; i < mData.mYSize.height; i++) {
-      memcpy(mData.mYChannel + i * mData.mYStride,
-             aData.mYChannel + ((aData.mPicY + i) * aData.mYStride) + aData.mPicX,
-             mData.mYStride);
-    }
-    for (int i = 0; i < mData.mCbCrSize.height; i++) {
-      memcpy(mData.mCbChannel + i * mData.mCbCrStride,
-             aData.mCbChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
-             mData.mCbCrStride);
-    }
-    for (int i = 0; i < mData.mCbCrSize.height; i++) {
-      memcpy(mData.mCrChannel + i * mData.mCbCrStride,
-             aData.mCrChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
-             mData.mCbCrStride);
-    }
-
-    // Fix picture rect to be correct
-    mData.mPicX = mData.mPicY = 0;
-    mSize = aData.mPicSize;
+    mBuffer = CopyData(mData, mSize, mBufferSize, aData);
     return;
   }
+  
+  gfx::YUVType type = 
+    gfx::TypeFromSize(aData.mYSize.width,
+                      aData.mYSize.height,
+                      aData.mCbCrSize.width,
+                      aData.mCbCrSize.height);
 
   gfxASurface::gfxImageFormat format = GetOffscreenFormat();
 
