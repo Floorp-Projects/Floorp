@@ -480,7 +480,7 @@ WebGLContext::BufferData_array(WebGLenum target, js::TypedArray *wa, WebGLenum u
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferSubData(PRInt32 dummy)
+WebGLContext::BufferSubData(PRInt32)
 {
     return NS_ERROR_FAILURE;
 }
@@ -2695,7 +2695,7 @@ WebGLContext::GetVertexAttribOffset(WebGLuint index, WebGLenum pname, WebGLuint 
 }
 
 NS_IMETHODIMP
-WebGLContext::Hint(WebGLenum target, WebGLenum mode)
+WebGLContext::Hint(WebGLenum, WebGLenum)
 {
     return ErrorInvalidEnum("hint: invalid hint");
 }
@@ -2884,7 +2884,7 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
 GL_SAME_METHOD_2(PolygonOffset, PolygonOffset, WebGLfloat, WebGLfloat)
 
 NS_IMETHODIMP
-WebGLContext::ReadPixels(PRInt32 dummy)
+WebGLContext::ReadPixels(PRInt32)
 {
     return NS_ERROR_FAILURE;
 }
@@ -3570,7 +3570,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
 
 #define SIMPLE_ARRAY_METHOD_UNIFORM(name, cnt, arrayType, ptrType)      \
 NS_IMETHODIMP                                                           \
-WebGLContext::name(PRInt32 dummy) {                                     \
+WebGLContext::name(PRInt32) {                                     \
      return NS_ERROR_NOT_IMPLEMENTED;                                   \
 }                                                                       \
 NS_IMETHODIMP                                                           \
@@ -3588,7 +3588,7 @@ WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, js::TypedArray *wa) \
 
 #define SIMPLE_MATRIX_METHOD_UNIFORM(name, dim, arrayType, ptrType)     \
 NS_IMETHODIMP                                                           \
-WebGLContext::name(PRInt32 dummy) {                                     \
+WebGLContext::name(PRInt32) {                                     \
      return NS_ERROR_NOT_IMPLEMENTED;                                   \
 }                                                                       \
 NS_IMETHODIMP                                                           \
@@ -3733,7 +3733,7 @@ WebGLContext::VertexAttrib4f(PRUint32 index, WebGLfloat x0, WebGLfloat x1,
 
 #define SIMPLE_ARRAY_METHOD_NO_COUNT(name, cnt, arrayType, ptrType)  \
 NS_IMETHODIMP                                                           \
-WebGLContext::name(PRInt32 dummy) {                                     \
+WebGLContext::name(PRInt32) {                                     \
      return NS_ERROR_NOT_IMPLEMENTED;                                   \
 }                                                                       \
 NS_IMETHODIMP                                                           \
@@ -4131,7 +4131,7 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
 }
 
 NS_IMETHODIMP
-WebGLContext::TexImage2D(PRInt32 dummy)
+WebGLContext::TexImage2D(PRInt32)
 {
     return NS_ERROR_FAILURE;
 }
@@ -4340,7 +4340,7 @@ WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level, WebGLenum interna
 }
 
 NS_IMETHODIMP
-WebGLContext::TexSubImage2D(PRInt32 dummy)
+WebGLContext::TexSubImage2D(PRInt32)
 {
     return NS_ERROR_FAILURE;
 }
