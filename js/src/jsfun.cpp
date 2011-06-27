@@ -1560,6 +1560,9 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
     /* Find fun's top-most activation record. */
     StackFrame *fp = js_GetTopStackFrame(cx);
+    if (!fp)
+        return true;
+
     while (!fp->isFunctionFrame() || fp->fun() != fun) {
         fp = fp->prev();
         if (!fp)
