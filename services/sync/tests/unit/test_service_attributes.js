@@ -159,13 +159,10 @@ function test_prefAttributes() {
   const NUMCLIENTS = 42;
 
   try {
-    _("The 'nextSync' and 'nextHeartbeat' attributes store a millisecond timestamp to the nearest second.");
+    _("The 'nextSync' attribute stores a millisecond timestamp to the nearest second.");
     do_check_eq(Service.nextSync, 0);
-    do_check_eq(Service.nextHeartbeat, 0);
     Service.nextSync = TIMESTAMP1;
-    Service.nextHeartbeat = TIMESTAMP2;
     do_check_eq(Service.nextSync, Math.floor(TIMESTAMP1/1000)*1000);
-    do_check_eq(Service.nextHeartbeat, Math.floor(TIMESTAMP2/1000)*1000);
 
     _("'syncInterval' has a non-zero default value.");
     do_check_eq(Svc.Prefs.get('syncInterval'), undefined);
