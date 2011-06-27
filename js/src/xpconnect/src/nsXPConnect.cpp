@@ -57,7 +57,6 @@
 #include "nsIURI.h"
 #include "nsJSEnvironment.h"
 #include "plbase64.h"
-#include "jstypedarray.h"
 
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
