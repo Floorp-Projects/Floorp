@@ -407,6 +407,12 @@ public:
     PRUint32 mPicY;
     gfxIntSize mPicSize;
     StereoMode mStereoMode;
+
+    nsIntRect GetPictureRect() const {
+      return nsIntRect(mPicX, mPicY,
+                       mPicSize.width,
+                       mPicSize.height);
+    }
   };
 
   enum {
@@ -432,6 +438,20 @@ public:
    * Grab the original YUV data. This is optional.
    */
   virtual const Data* GetData() { return nsnull; }
+
+  /**
+   * Make a copy of the YCbCr data.
+   *
+   * @param aDest           Data object to store the plane data in.
+   * @param aDestSize       Size of the Y plane that was copied.
+   * @param aDestBufferSize Number of bytes allocated for storage.
+   * @param aData           Input image data.
+   * @return                Raw data pointer for the planes or nsnull on failure.
+   */
+  PRUint8 *CopyData(Data& aDest, gfxIntSize& aDestSize,
+                    PRUint32& aDestBufferSize, const Data& aData);
+
+  virtual PRUint8* AllocateBuffer(PRUint32 aSize) { return new (mozilla::fallible_t()) PRUint8[aSize]; };
 
 protected:
   PlanarYCbCrImage(void* aImplData) : Image(aImplData, PLANAR_YCBCR) {}
