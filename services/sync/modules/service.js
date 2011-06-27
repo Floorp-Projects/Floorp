@@ -184,9 +184,6 @@ WeaveSvc.prototype = {
 
   get isLoggedIn() { return this._loggedIn; },
 
-  get numClients() Svc.Prefs.get("numClients", 0),
-  set numClients(value) Svc.Prefs.set("numClients", value),
-
   get locked() { return this._locked; },
   lock: function Svc_lock() {
     if (this._locked)
@@ -380,7 +377,7 @@ WeaveSvc.prototype = {
     Svc.Obs.add("weave:service:sync:finish", this);
     Svc.Obs.add("weave:service:login:error", this);
     Svc.Obs.add("weave:service:sync:error", this);
-    Svc.Obs.add("weave:engine:sync:apply-failed", this);
+    Svc.Obs.add("weave:engine:sync:applied", this);
     Svc.Obs.add("weave:resource:status:401", this);
     Svc.Prefs.observe("engine.", this);
 
@@ -556,13 +553,15 @@ WeaveSvc.prototype = {
         this._resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"));
         this._ignorableErrorCount = 0;
         break;
-      case "weave:engine:sync:apply-failed":
-        // An engine isn't able to apply one or more incoming records.
-        // We don't fail hard on this, but it usually indicates a bug,
-        // so for now treat it as sync error (c.f. Service._syncEngine())
-        Status.engines = [data, ENGINE_APPLY_FAIL];
-        this._syncError = true;
-        this._log.debug(data + " failed to apply some records.");
+      case "weave:engine:sync:applied":
+        if (subject.newFailed) {
+          // An engine isn't able to apply one or more incoming records.
+          // We don't fail hard on this, but it usually indicates a bug,
+          // so for now treat it as sync error (c.f. Service._syncEngine())
+          Status.engines = [data, ENGINE_APPLY_FAIL];
+          this._syncError = true;
+          this._log.debug(data + " failed to apply some records.");
+        }
         break;
       case "weave:resource:status:401":
         this._handleResource401(subject);
@@ -1568,7 +1567,7 @@ WeaveSvc.prototype = {
 
 
   _updateEnabledEngines: function _updateEnabledEngines() {
-    this._log.info("Updating enabled engines: " + this.numClients + " clients.");
+    this._log.info("Updating enabled engines: " + SyncScheduler.numClients + " clients.");
     let meta = Records.get(this.metaURL);
     if (meta.isNew || !meta.payload.engines)
       return;
@@ -1576,7 +1575,7 @@ WeaveSvc.prototype = {
     // If we're the only client, and no engines are marked as enabled,
     // thumb our noses at the server data: it can't be right.
     // Belt-and-suspenders approach to Bug 615926.
-    if ((this.numClients <= 1) &&
+    if ((SyncScheduler.numClients <= 1) &&
         ([e for (e in meta.payload.engines) if (e != "clients")].length == 0)) {
       this._log.info("One client and no enabled engines: not touching local engine status.");
       return;
@@ -1658,11 +1657,6 @@ WeaveSvc.prototype = {
       this._syncError = true;
       this._log.debug(engine.name + " failed: " + Utils.exceptionStr(e));
       return true;
-    }
-    finally {
-      // If this engine has more to fetch, remember that globally
-      if (engine.toFetch != null && engine.toFetch.length > 0)
-        Status.partial = true;
     }
   },
 
