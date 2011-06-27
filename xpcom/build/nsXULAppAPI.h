@@ -572,4 +572,8 @@ XRE_API(void,
 XRE_API(void,
         XRE_TelemetryAccumulate, (int aID, PRUint32 aSample))
 
+
+XRE_API(void,
+        XRE_InitOmnijar, (nsILocalFile* greOmni,
+                          nsILocalFile* appOmni))
 #endif // _nsXULAppAPI_h__
