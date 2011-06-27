@@ -37,7 +37,6 @@
 function test() {
   /** Test for Bug 495495 **/
   
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   waitForExplicitFinish();
 
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no,toolbar=yes");

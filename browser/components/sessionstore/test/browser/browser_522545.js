@@ -41,9 +41,6 @@ function test() {
   waitForExplicitFinish();
   requestLongerTimeout(2);
 
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
-
   // This tests the following use case:
   // User opens a new tab which gets focus. The user types something into the
   // address bar, then crashes or quits.
