@@ -571,12 +571,6 @@ WebGLContext::InitAndValidateGL()
         }
     }
 
-    GLint i;
-    gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT,   &i);
-    mPixelStorePackAlignment = i;
-    gl->fGetIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, &i);
-    mPixelStoreUnpackAlignment = i;
-
     // Check the shader validator pref
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
