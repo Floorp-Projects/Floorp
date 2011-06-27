@@ -228,7 +228,8 @@ msvc_modified.lib:: msvc_removed.lib crtdll_fixed.obj
 # Fix the object file
 crtdll_fixed.obj:: crtdll.obj
 	$(PYTHON) $(srcdir)/fixcrt.py
-  
+
+# Find the path of crtdll.obj
 CRTDLL_FULLPATH=$(subst \,\\,$(shell lib -list msvc_combined.lib | grep crtdll\\.obj))
 
 # Remove the broken object file, only after we have extracted it
@@ -241,7 +242,7 @@ crtdll.obj:: msvc_combined.lib
 
 # Grab both CRT libraries and combine them into one library to simplify things
 msvc_combined.lib::
-	lib -OUT:$@ msvcrt.lib msvcprt.lib 
+	lib -OUT:$@ $(WIN32_CRT_LIBS)
 
 endif
 endif
