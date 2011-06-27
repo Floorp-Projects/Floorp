@@ -58,7 +58,6 @@ function run_test() {
   try {
     Service.serverURL = "http://localhost:8080/";
     Service.clusterURL = "http://localhost:8080/";
-    Svc.Prefs.set("autoconnect", false);
 
     _("Force the initial state.");
     Status.service = STATUS_OK;
@@ -69,7 +68,6 @@ function run_test() {
     do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);
     do_check_false(Service.isLoggedIn);
-    do_check_false(Svc.Prefs.get("autoconnect"));
 
     _("Try again with username and password set.");
     Service.username = "johndoe";
@@ -78,7 +76,6 @@ function run_test() {
     do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
     do_check_false(Service.isLoggedIn);
-    do_check_false(Svc.Prefs.get("autoconnect"));
 
     _("Success if passphrase is set.");
     Service.passphrase = "foo";
@@ -86,7 +83,6 @@ function run_test() {
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
-    do_check_true(Svc.Prefs.get("autoconnect"));
 
     _("We can also pass username, password and passphrase to login().");
     Service.login("janedoe", "incorrectpassword", "bar");
@@ -102,7 +98,6 @@ function run_test() {
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
-    do_check_true(Svc.Prefs.get("autoconnect"));
     
     _("Calling login() with parameters when the client is unconfigured sends notification.");
     let notified = false;
@@ -117,17 +112,14 @@ function run_test() {
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
-    do_check_true(Svc.Prefs.get("autoconnect"));
 
     _("Logout.");
     Service.logout();
     do_check_false(Service.isLoggedIn);
-    do_check_false(Svc.Prefs.get("autoconnect"));
 
     _("Logging out again won't do any harm.");
     Service.logout();
     do_check_false(Service.isLoggedIn);
-    do_check_false(Svc.Prefs.get("autoconnect"));
 
     /*
      * Testing login-on-sync.
