@@ -109,18 +109,7 @@ private:
 
   void CopyRegion(IDirect3DTexture9* aSrc, const nsIntPoint &aSrcOffset,
                   IDirect3DTexture9* aDest, const nsIntPoint &aDestOffset,
-                  const nsIntRegion &aCopyRegion, nsIntRegion* aValidRegion,
-                  float aXRes, float aYRes);
-
-  /**
-   * Calculate the desired texture resolution based on
-   * the layer managers resolution, and the current
-   * transforms scale factor.
-   */
-  void GetDesiredResolutions(float& aXRes, float& aYRes);
-
-  /* Check if the current texture resolution matches */
-  bool ResolutionChanged(float aXRes, float aYRes);
+                  const nsIntRegion &aCopyRegion, nsIntRegion* aValidRegion);
 };
 
 } /* layers */

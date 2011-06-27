@@ -52,6 +52,7 @@
 #include "nsIComponentManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsProgressFrame.h"
+#include "nsIMenuFrame.h"
 
 nsNativeTheme::nsNativeTheme()
 : mAnimatedContentTimeout(PR_UINT32_MAX)
@@ -510,6 +511,14 @@ nsNativeTheme::IsSubmenu(nsIFrame* aFrame, PRBool* aLeftOfParent)
 }
 
 PRBool
+nsNativeTheme::IsRegularMenuItem(nsIFrame *aFrame)
+{
+  nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+  return !(menuFrame && (menuFrame->IsOnMenuBar() ||
+                         menuFrame->GetParentMenuListType() != eNotMenuList));
+}
+
+PRBool
 nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
                                               PRUint32 aMinimumFrameRate)
 {
@@ -518,7 +527,7 @@ nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
   NS_ASSERTION(aMinimumFrameRate <= 1000,
                "aMinimumFrameRate must be less than 1000!");
 
-  PRUint32 timeout = PRUint32(NS_floor(1000 / aMinimumFrameRate));
+  PRUint32 timeout = 1000 / aMinimumFrameRate;
   timeout = NS_MIN(mAnimatedContentTimeout, timeout);
 
   if (!mAnimatedContentTimer) {

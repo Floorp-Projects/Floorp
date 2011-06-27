@@ -77,7 +77,7 @@ libs:: $(CSRCS:.c=.$(OBJ_SUFFIX))
 
 ifndef CROSS_COMPILE
 test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
-	$(MKSHLIB) $<
+	$(MKSHLIB) $(LDFLAGS) $<
 	@echo ===
 	@echo === If you get failures below, please file a bug describing the error
 	@echo === and your environment \(compiler and linker versions\), and use

@@ -450,10 +450,9 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
         interfacesBits |= 1 << MAI_INTERFACE_IMAGE;
     }
 
-    // HyperLinkAccessible
-    if (IsHyperLink()) {
-       interfacesBits |= 1 << MAI_INTERFACE_HYPERLINK_IMPL;
-    }
+  // HyperLinkAccessible
+  if (IsLink())
+    interfacesBits |= 1 << MAI_INTERFACE_HYPERLINK_IMPL;
 
     if (!nsAccUtils::MustPrune(this)) {  // These interfaces require children
       //nsIAccessibleHypertext
@@ -1077,6 +1076,16 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
         }
       } break;
 
+    case nsIAccessibleEvent::EVENT_NAME_CHANGE:
+      {
+        nsString newName;
+        accessible->GetName(newName);
+        NS_ConvertUTF16toUTF8 utf8Name(newName);
+        if (!utf8Name.Equals(atkObj->name))
+          atk_object_set_name(atkObj, utf8Name.get());
+
+        break;
+      }
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_VALUE_CHANGE\n"));

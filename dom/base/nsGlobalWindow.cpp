@@ -52,6 +52,8 @@
 #include "nsGlobalWindow.h"
 #include "nsScreen.h"
 #include "nsHistory.h"
+#include "nsPerformance.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsBarProps.h"
 #include "nsDOMStorage.h"
 #include "nsDOMOfflineResourceList.h"
@@ -72,7 +74,7 @@
 #include "mozilla/Preferences.h"
 
 // Other Classes
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsEscape.h"
 #include "nsStyleCoord.h"
 #include "nsMimeTypeArray.h"
@@ -1118,6 +1120,7 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   mIndexedDB = nsnull;
   mPendingStorageEventsObsolete = nsnull;
 
+  mPerformance = nsnull;
 
   ClearControllers();
 
@@ -1328,20 +1331,17 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowInternal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMWindow2)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageIndexedDB)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowPerformance)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
   OUTER_WINDOW_ONLY
     NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -1369,7 +1369,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOuterWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpenerScriptPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mListenerManager,
+                                                  nsEventListenerManager)
 
   for (nsTimeout* timeout = tmp->FirstTimeout();
        tmp->IsTimeout(timeout);
@@ -1410,10 +1411,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOuterWindow)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOpenerScriptPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
+  if (tmp->mListenerManager) {
+    tmp->mListenerManager->Disconnect();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSessionStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocumentPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDoc)
 
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
@@ -1846,9 +1851,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (internal == static_cast<nsIDOMWindowInternal *>(this)) {
       nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
       if (xblService) {
-        nsCOMPtr<nsPIDOMEventTarget> piTarget =
-          do_QueryInterface(mChromeEventHandler);
-        xblService->AttachGlobalKeyHandler(piTarget);
+        xblService->AttachGlobalKeyHandler(mChromeEventHandler);
       }
     }
   }
@@ -2512,6 +2515,31 @@ nsGlobalWindow::GetIsTabModalPromptAllowed()
   return allowTabModal;
 }
 
+nsIDOMEventTarget*
+nsGlobalWindow::GetTargetForDOMEvent()
+{
+  return static_cast<nsIDOMEventTarget*>(GetOuterWindowInternal());
+}
+
+nsIDOMEventTarget*
+nsGlobalWindow::GetTargetForEventTargetChain()
+{
+  return IsInnerWindow() ?
+    this : static_cast<nsIDOMEventTarget*>(GetCurrentInnerWindowInternal());
+}
+
+nsresult
+nsGlobalWindow::WillHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  return NS_OK;
+}
+
+JSContext*
+nsGlobalWindow::GetJSContextForEventHandlers()
+{
+  return nsnull;
+}
+
 nsresult
 nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
@@ -2677,7 +2705,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   /* mChromeEventHandler and mContext go dangling in the middle of this
    function under some circumstances (events that destroy the window)
    without this addref. */
-  nsCOMPtr<nsPIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
+  nsCOMPtr<nsIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
 
   if (aVisitor.mEvent->message == NS_RESIZE_EVENT) {
@@ -2721,7 +2749,6 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // be a pres context available). Since we're not firing a GUI
       // event we don't need a pres context anyway so we just pass
       // null as the pres context all the time here.
-
       nsEventDispatcher::Dispatch(content, nsnull, &event, nsnull, &status);
     }
   }
@@ -2948,6 +2975,28 @@ nsGlobalWindow::GetHistory(nsIDOMHistory** aHistory)
   }
 
   NS_IF_ADDREF(*aHistory = mHistory);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetPerformance(nsIDOMPerformance** aPerformance)
+{
+  FORWARD_TO_INNER(GetPerformance, (aPerformance), NS_ERROR_NOT_INITIALIZED);
+
+  *aPerformance = nsnull;
+
+  if (nsGlobalWindow::HasPerformanceSupport()) {
+    if (!mPerformance) {
+      if (!mDoc) {
+        return NS_OK;
+      }
+      nsRefPtr<nsDOMNavigationTiming> timing = mDoc->GetNavigationTiming();
+      if (timing) {
+        mPerformance = new nsPerformance(timing);
+      }
+    }
+    NS_IF_ADDREF(*aPerformance = mPerformance);
+  }
   return NS_OK;
 }
 
@@ -3236,18 +3285,6 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
   NS_IF_ADDREF(*aApplicationCache = mApplicationCache);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::CreateBlobURL(nsIDOMBlob* aBlob, nsAString& aURL)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::RevokeBlobURL(const nsAString& aURL)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -4612,6 +4649,13 @@ nsGlobalWindow::CanMoveResizeWindows()
         return PR_FALSE;
       }
     }
+  }
+
+  if (mDocShell) {
+    PRBool allow;
+    nsresult rv = mDocShell->GetAllowWindowControl(&allow);
+    if (NS_SUCCEEDED(rv) && !allow)
+      return PR_FALSE;
   }
 
   if (gMouseDown && !gDragServiceDisabled) {
@@ -7176,28 +7220,21 @@ nsGlobalWindow::Btoa(const nsAString& aBinaryData,
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsGlobalWindow::AddEventListener(const nsAString& aType,
-                                 nsIDOMEventListener* aListener,
-                                 PRBool aUseCapture)
-{
-  FORWARD_TO_INNER_CREATE(AddEventListener, (aType, aListener, aUseCapture),
-                          NS_ERROR_NOT_AVAILABLE);
-
-  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
-}
-
-NS_IMETHODIMP
 nsGlobalWindow::RemoveEventListener(const nsAString& aType,
                                     nsIDOMEventListener* aListener,
                                     PRBool aUseCapture)
 {
-  return RemoveGroupedEventListener(aType, aListener, aUseCapture, nsnull);
+  nsRefPtr<nsEventListenerManager> elm = GetListenerManager(PR_FALSE);
+  if (elm) {
+    elm->RemoveEventListener(aType, aListener, aUseCapture);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
+nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* aRetVal)
 {
-  FORWARD_TO_INNER(DispatchEvent, (aEvent, _retval), NS_OK);
+  FORWARD_TO_INNER(DispatchEvent, (aEvent, aRetVal), NS_OK);
 
   if (!mDoc) {
     return NS_ERROR_FAILURE;
@@ -7216,68 +7253,17 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
     nsEventDispatcher::DispatchDOMEvent(GetOuterWindow(), nsnull, aEvent,
                                         presContext, &status);
 
-  *_retval = (status != nsEventStatus_eConsumeNoDefault);
+  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
-}
-
-//*****************************************************************************
-// nsGlobalWindow::nsIDOM3EventTarget
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsGlobalWindow::AddGroupedEventListener(const nsAString & aType,
-                                        nsIDOMEventListener *aListener,
-                                        PRBool aUseCapture,
-                                        nsIDOMEventGroup *aEvtGrp)
-{
-  FORWARD_TO_INNER_CREATE(AddGroupedEventListener,
-                          (aType, aListener, aUseCapture, aEvtGrp),
-                          NS_ERROR_NOT_AVAILABLE);
-
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-  return manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::RemoveGroupedEventListener(const nsAString & aType,
-                                           nsIDOMEventListener *aListener,
-                                           PRBool aUseCapture,
-                                           nsIDOMEventGroup *aEvtGrp)
-{
-  FORWARD_TO_INNER(RemoveGroupedEventListener,
-                   (aType, aListener, aUseCapture, aEvtGrp),
-                   NS_ERROR_NOT_INITIALIZED);
-
-  if (mListenerManager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
-                                                aEvtGrp);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::CanTrigger(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::IsRegisteredHere(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  nsIDOMEventListener *aListener,
                                  PRBool aUseCapture, PRBool aWantsUntrusted,
-                                 PRUint8 optional_argc)
+                                 PRUint8 aOptionalArgc)
 {
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 1,
+  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
                "explicit by making optional_argc non-zero.");
@@ -7287,24 +7273,22 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-  if (aWantsUntrusted ||
-      (optional_argc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
-    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  if (!aWantsUntrusted &&
+      (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
+    aWantsUntrusted = PR_TRUE;
   }
 
-  return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
+  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  NS_ENSURE_STATE(manager);
+  return manager->AddEventListener(aType, aListener, aUseCapture,
+                                   aWantsUntrusted);
 }
 
 nsresult
 nsGlobalWindow::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                       const nsIID& aIID)
 {
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
+  nsEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
   return manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
 }
@@ -7324,35 +7308,17 @@ nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
   return NS_ERROR_FAILURE;
 }
 
-nsIEventListenerManager*
+nsEventListenerManager*
 nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound)
 {
   FORWARD_TO_INNER_CREATE(GetListenerManager, (aCreateIfNotFound), nsnull);
 
-  if (!mListenerManager) {
-    if (!aCreateIfNotFound) {
-      return nsnull;
-    }
-
-    static NS_DEFINE_CID(kEventListenerManagerCID,
-                         NS_EVENTLISTENERMANAGER_CID);
-
-    mListenerManager = do_CreateInstance(kEventListenerManagerCID);
-    if (mListenerManager) {
-      mListenerManager->SetListenerTarget(
-        static_cast<nsPIDOMEventTarget*>(this));
-    }
+  if (!mListenerManager && aCreateIfNotFound) {
+    mListenerManager =
+      new nsEventListenerManager(static_cast<nsIDOMEventTarget*>(this));
   }
 
   return mListenerManager;
-}
-
-nsresult
-nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
-{
-  nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
-  NS_ENSURE_STATE(manager);
-  return manager->GetSystemEventGroupLM(aGroup);
 }
 
 nsIScriptContext*
@@ -7562,7 +7528,7 @@ nsGlobalWindow::DisableDeviceMotionUpdates()
 }
 
 void
-nsGlobalWindow::SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler)
+nsGlobalWindow::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 {
   SetChromeEventHandlerInternal(aChromeEventHandler);
   if (IsOuterWindow()) {
@@ -10035,20 +10001,6 @@ nsGlobalWindow::TimeoutSuspendCount()
   return mTimeoutsSuspendDepth;
 }
 
-NS_IMETHODIMP
-nsGlobalWindow::GetScriptTypeID(PRUint32 *aScriptType)
-{
-  NS_ERROR("No default script type here - ask some element");
-  return nsIProgrammingLanguage::UNKNOWN;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::SetScriptTypeID(PRUint32 aScriptType)
-{
-  NS_ERROR("Can't change default script type for a document");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void
 nsGlobalWindow::SetHasOrientationEventListener()
 {
@@ -10077,6 +10029,14 @@ nsGlobalWindow::HasIndexedDBSupport()
   return Preferences::GetBool("indexedDB.feature.enabled", PR_TRUE);
 }
 
+// static
+bool
+nsGlobalWindow::HasPerformanceSupport() 
+{
+  return Preferences::GetBool("dom.enable_performance", PR_FALSE);
+}
+
+
 // nsGlobalChromeWindow implementation
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
@@ -10085,6 +10045,17 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBrowserDOMWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMessageManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGlobalChromeWindow,
+                                                nsGlobalWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mBrowserDOMWindow)
+  if (tmp->mMessageManager) {
+    static_cast<nsFrameMessageManager*>(
+      tmp->mMessageManager.get())->Disconnect();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mMessageManager)
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 DOMCI_DATA(ChromeWindow, nsGlobalChromeWindow)
 

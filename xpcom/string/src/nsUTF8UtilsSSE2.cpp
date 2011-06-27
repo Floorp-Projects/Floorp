@@ -1,4 +1,5 @@
 #include "nscore.h"
+#include "nsAlgorithm.h"
 #include <emmintrin.h>
 #include <nsUTF8Utils.h>
 
@@ -11,7 +12,7 @@ LossyConvertEncoding16to8::write_sse2(const PRUnichar* aSource,
   // Align source to a 16-byte boundary.
   PRUint32 i = 0;
   PRUint32 alignLen =
-    PR_MIN(aSourceLength, (-NS_PTR_TO_UINT32(aSource) & 0xf) / sizeof(PRUnichar));
+    NS_MIN<PRUint32>(aSourceLength, PRUint32(-NS_PTR_TO_INT32(aSource) & 0xf) / sizeof(PRUnichar));
   for (; i < alignLen; i++) {
     dest[i] = static_cast<unsigned char>(aSource[i]);
   }
@@ -64,7 +65,7 @@ LossyConvertEncoding8to16::write_sse2(const char* aSource,
   // to wait for a load to complete, but you can keep on moving after issuing a
   // store.
   PRUint32 i = 0;
-  PRUint32 alignLen = PR_MIN(aSourceLength, (-NS_PTR_TO_UINT32(aSource) & 0xf));
+  PRUint32 alignLen = NS_MIN(aSourceLength, PRUint32(-NS_PTR_TO_INT32(aSource) & 0xf));
   for (; i < alignLen; i++) {
     dest[i] = static_cast<unsigned char>(aSource[i]);
   }

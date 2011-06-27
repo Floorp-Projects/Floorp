@@ -159,9 +159,9 @@ members = [
     'nsIDOMCSSStyleDeclaration.*',
 
     # dom/interfaces/events
-    'nsIDOMEventTarget.dispatchEvent',
+    'nsIDOMEventTarget.addEventListener',
     'nsIDOMEventTarget.removeEventListener',
-    'nsIDOMNSEventTarget.addEventListener',
+    'nsIDOMEventTarget.dispatchEvent',
 
     'nsIDOMEvent.*',
     'nsIDOMMouseEvent.*',
@@ -779,6 +779,10 @@ customMethodCalls = {
         'code': '    nsCOMPtr<nsIDOMNodeList> result;\n'
                 '    rv = nsGenericElement::doQuerySelectorAll(self, '
                 'arg0, getter_AddRefs(result));'
+        },
+    'nsIDOMNode_Normalize': {
+        'thisType': 'nsINode',
+        'canFail': False
         },
     'nsIDOMNode_GetBaseURI': {
         'thisType': 'nsINode',

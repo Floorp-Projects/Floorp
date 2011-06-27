@@ -238,7 +238,7 @@ FormTracker.prototype = {
 
   trackEntry: function trackEntry(name, value) {
     this.addChangedID(FormWrapper.getGUID(name, value));
-    this.score += 10;
+    this.score += SCORE_INCREMENT_MEDIUM;
   },
 
   _enabled: false,

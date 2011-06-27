@@ -114,6 +114,7 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
   dumps = glob.glob(os.path.join(dumpDir, '*.dmp'))
   for d in dumps:
     log.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
+    print "Crash dump filename: " + d
     if symbolsPath and stackwalkPath and os.path.exists(stackwalkPath):
       p = subprocess.Popen([stackwalkPath, d, symbolsPath],
                            stdout=subprocess.PIPE,

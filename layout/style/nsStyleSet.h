@@ -60,9 +60,7 @@
 
 class nsIURI;
 class nsCSSFontFaceRule;
-#ifdef MOZ_CSS_ANIMATIONS
 class nsCSSKeyframesRule;
-#endif
 class nsRuleWalker;
 struct RuleProcessorData;
 struct TreeMatchContext;
@@ -174,12 +172,10 @@ class nsStyleSet
   PRBool AppendFontFaceRules(nsPresContext* aPresContext,
                              nsTArray<nsFontFaceRuleContainer>& aArray);
 
-#ifdef MOZ_CSS_ANIMATIONS
   // Append all the currently-active keyframes rules to aArray.  Return
   // true for success and false for failure.
   PRBool AppendKeyframesRules(nsPresContext* aPresContext,
                               nsTArray<nsCSSKeyframesRule*>& aArray);
-#endif
 
   // Begin ignoring style context destruction, to avoid lots of unnecessary
   // work on document teardown.
@@ -243,9 +239,7 @@ class nsStyleSet
     eDocSheet, // CSS
     eStyleAttrSheet,
     eOverrideSheet, // CSS
-#ifdef MOZ_CSS_ANIMATIONS
     eAnimationSheet,
-#endif
     eTransitionSheet,
     eSheetTypeCount
     // be sure to keep the number of bits in |mDirty| below and in

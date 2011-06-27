@@ -330,6 +330,17 @@ gint
 moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
                          gint* focus_width, gint* focus_pad);
 
+/** Get the horizontal padding for the menuitem widget or checkmenuitem widget.
+ * horizontal_padding: [OUT] The left and right padding of the menuitem or checkmenuitem
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint
+moz_gtk_menuitem_get_horizontal_padding(gint* horizontal_padding);
+
+gint
+moz_gtk_checkmenuitem_get_horizontal_padding(gint* horizontal_padding);
+
 /**
  * Some GTK themes draw their indication for the default button outside
  * the button (e.g. the glow in New Wave). This gets the extra space necessary.

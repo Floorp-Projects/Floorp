@@ -45,6 +45,7 @@
 #include "WinTaskbar.h"
 #include "nsString.h"
 #include "nsIMM32Handler.h"
+#include "mozilla/widget/AudioSession.h"
 
 // For skidmark code
 #include <windows.h> 
@@ -244,9 +245,19 @@ nsAppShell::Run(void)
 {
   LoadedModuleInfo modules[NUM_LOADEDMODULEINFO];
   memset(modules, 0, sizeof(modules));
-  sLoadedModules = modules;
+  sLoadedModules = modules;	
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  // Ignore failure; failing to start the application is not exactly an
+  // appropriate response to failing to start an audio session.
+  mozilla::widget::StartAudioSession();
+#endif
 
   nsresult rv = nsBaseAppShell::Run();
+
+#ifdef MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  mozilla::widget::StopAudioSession();
+#endif
 
   // Don't forget to null this out!
   sLoadedModules = nsnull;

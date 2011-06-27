@@ -1,0 +1,93 @@
+﻿<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Test: 1px scroll rounding at the end position
+-->
+<html class="reftest-wait"><head>
+<title>text-overflow: scroll rounding</title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+
+.test {
+  text-overflow:ellipsis;
+  overflow:auto;
+  width:100px;
+  height:50px;
+  border:1px solid black;
+  white-space:pre;
+  margin-left:90px;
+  margin-bottom:20px;
+}
+
+.rtl {
+  direction:rtl;  margin-left:0;
+}
+.ltr {
+  direction:ltr;
+}
+
+.t1 {width:100.1px;}
+.t2 {width:100.2px;}
+.t3 {width:100.3px;}
+.t4 {width:100.4px;}
+
+s {position:absolute; background:black; z-index:1; }
+#mask1 {top:0; left:60px; width:70px; height:100%; }
+#mask2 {top:30px; left:0; width:100%; height:30px; }
+#mask3 {top:100px; left:0; width:100%; height:30px; }
+#mask4 {top:170px; left:0; width:100%; height:30px; }
+#mask5 {top:240px; left:0; width:100%; height:30px; }
+#mask6 {top:320px; left:0; width:100%; height:30px; }
+#mask7 {top:390px; left:0; width:100%; height:30px; }
+#mask8 {top:460px; left:0; width:100%; height:30px; }
+#mask9 {top:530px; left:0; width:100%; height:30px; }
+#mask10 {top:600px; left:0; width:100%; height:30px; }
+#mask11 {top:670px; left:0; width:100%; height:30px; }
+</style>
+<script>
+function scrolldivs() {
+ var divs = document.getElementsByTagName('div');
+  for (i = 0; i < divs.length; ++i) {
+    if (window.getComputedStyle(divs[i]).direction == 'ltr')
+      divs[i].scrollLeft = 99999999;
+    else
+      divs[i].scrollLeft = -99999999;
+  }
+  document.documentElement.removeAttribute('class');
+}
+</script>
+
+</head><body onload="scrolldivs()">
+
+<s id="mask1"></s>
+<s id="mask2"></s>
+<s id="mask3"></s>
+<s id="mask4"></s>
+<s id="mask5"></s>
+<s id="mask6"></s>
+<s id="mask7"></s>
+<s id="mask8"></s>
+<s id="mask9"></s>
+<s id="mask10"></s>
+<s id="mask11"></s>
+
+<div class="test">HelloKittyוסוכנויות</div>
+<div class="test rtl">HelloKittyוסוכנויות</div>
+<div class="test t1">HelloKittyוסוכנויות</div>
+<div class="test rtl t1">HelloKittyוסוכנויות</div>
+<div class="test t2">HelloKittyוסוכנויות</div>
+<div class="test rtl t2">HelloKittyוסוכנויות</div>
+<div class="test t3">HelloKittyוסוכנויות</div>
+<div class="test rtl t3">HelloKittyוסוכנויות</div>
+<div class="test t4">HelloKittyוסוכנויות</div>
+<div class="test rtl t4">HelloKittyוסוכנויות</div>
+</body>
+</html>

@@ -261,12 +261,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
             *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
             aSuggestedDriverVersion.AssignLiteral("Mesa 7.10");
         }
-        else if (strstr(mRenderer.get(), "Gallium")) {
-            // see bug 624935
-            // and http://marc.info/?l=mesa3d-dev&m=126525088903956&w=2
-            *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-            aSuggestedDriverVersion.AssignLiteral("<NOT Gallium>");
-        }
     } else if (mIsNVIDIA) {
         if (version(mMajorVersion, mMinorVersion) < version(257,21)) {
             *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
@@ -295,6 +289,12 @@ GfxInfo::GetD2DEnabled(PRBool *aEnabled)
 
 NS_IMETHODIMP
 GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetAzureEnabled(PRBool *aEnabled)
 {
   return NS_ERROR_FAILURE;
 }

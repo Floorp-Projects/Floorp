@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+-->
+<!DOCTYPE HTML>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>text-overflow: text-overflow block padding </title>
+<style type="text/css">
+@font-face {
+  font-family: DejaVuSansMono;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0; font-family:DejaVuSansMono;
+}
+body { width:24ch; overflow:hidden; }
+
+.test { 
+  overflow: hidden; 
+  white-space: nowrap;
+  padding-left: 1ch;
+  padding-right: 3ch;
+  height: 3em;
+  margin-bottom:1em;
+}
+.s {
+  overflow: auto; position:relative;
+  text-decoration: line-through;
+}
+.rel { position:relative; }
+span {
+  text-decoration: underline overline;
+  background:yellow;
+}
+.rtl {
+  direction:rtl;
+}
+.ltr {
+  direction:ltr;
+}
+.rlo span {
+  unicode-bidi: bidi-override; direction: rtl;
+}
+.lro span {
+  unicode-bidi: bidi-override; direction: ltr;
+}
+.overlay {
+  position:absolute;
+  border-color:transparent;
+  text-decoration: line-through;
+  z-index:1;
+}
+y {   background:yellow;}
+m {   background:yellow; position:absolute; right:0; padding-right:3ch; z-index:2;}
+mr {  background:yellow; position:absolute; left:0;padding-left:1ch; z-index:2;}
+</style>
+</head><body>
+
+<!-- LTR / LTR -->
+<div class="test ltr overlay"><r>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</r></div>
+<div class="test ltr"><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|</span><y>&#x2026;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</y></div>
+
+<div class="test ltr s"><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><m>&#x2026;</m></div>
+
+<!-- RTL / LTR -->
+<div class="test rtl rel"><span><div class="overlay"><r>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</r></div>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|</span><y style="padding-left:3ch">&#x2026;</y></div>
+
+<div class="test rtl s"><mr>&#x2026;</mr><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+
+<!-- LTR / RTL -->
+<div class="test ltr rlo overlay"><r>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</r></div>
+<div class="test ltr rlo"  ><span>&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span><y style="padding-right:3ch">&#x2026;</y></div>
+
+<div class="test ltr rlo s"><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span><m>&#x2026;</m></div>
+
+<!-- RTL / RTL -->
+<div class="test rtl rlo rel"><span><div class="overlay"><r>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</r></div>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|</span><y>&#x2026;&nbsp;</y></div>
+
+<div class="test rtl rlo s"><mr>&#x2026;</mr><span>|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;|&nbsp;</span></div>
+
+</body></html>

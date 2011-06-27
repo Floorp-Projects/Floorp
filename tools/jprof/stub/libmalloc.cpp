@@ -92,6 +92,23 @@ static int enableRTCSignals(bool enable);
 
 
 //----------------------------------------------------------------------
+// replace use of atexit()
+
+static void DumpAddressMap();
+
+struct JprofShutdown {
+    JprofShutdown() {}
+    ~JprofShutdown() {
+        DumpAddressMap();
+    }
+};
+
+static void RegisterJprofShutdown() {
+    // This instanciates the dummy class above, and will trigger the class
+    // destructor when libxul is unloaded. This is equivalent to atexit(),
+    // but gracefully handles dlclose().
+    static JprofShutdown t;
+}
 
 #if defined(i386) || defined(_i386) || defined(__x86_64__)
 JPROF_STATIC void CrawlStack(malloc_log_entry* me,
@@ -458,7 +475,7 @@ NS_EXPORT_(void) setupProfilingStuff(void)
 		    sigset_t mset;
 
 		    // Dump out the address map when we terminate
-		    atexit(DumpAddressMap);
+		    RegisterJprofShutdown();
 
 		    main_thread = pthread_self();
                     //fprintf(stderr,"jprof: main_thread = %u\n",

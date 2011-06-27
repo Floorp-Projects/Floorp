@@ -41,7 +41,7 @@
 #include "nsXPCOMGlue.h"
 #include "nscore.h"
 
-#ifdef LINUX
+#if defined(LINUX) && !defined(ANDROID)
 #define _GNU_SOURCE 
 #include <fcntl.h>
 #include <unistd.h>
@@ -147,7 +147,7 @@ AppendDependentLib(void *libHandle)
     sTop = d;
 }
 
-#ifdef LINUX
+#if defined(LINUX) && !defined(ANDROID)
 static const unsigned int bufsize = 4096;
 
 #ifdef HAVE_64BIT_OS
@@ -206,7 +206,7 @@ preload(const char *file)
 static void
 ReadDependentCB(const char *aDependentLib, PRBool do_preload)
 {
-#ifdef LINUX
+#if defined(LINUX) && !defined(ANDROID)
     if (do_preload)
         preload(aDependentLib);
 #endif

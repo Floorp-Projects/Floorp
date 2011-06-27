@@ -1561,15 +1561,11 @@ nsGfxScrollFrameInner::ScrollTo(nsPoint aScrollPosition,
     }
   } else {
     mAsyncScroll = new AsyncScroll;
-    if (mAsyncScroll) {
-      mAsyncScroll->mScrollTimer = do_CreateInstance("@mozilla.org/timer;1");
-      if (!mAsyncScroll->mScrollTimer) {
-        delete mAsyncScroll;
-        mAsyncScroll = nsnull;
-      }
-    }
-    if (!mAsyncScroll) {
-      // some allocation failed. Scroll the normal way.
+    mAsyncScroll->mScrollTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mAsyncScroll->mScrollTimer) {
+      delete mAsyncScroll;
+      mAsyncScroll = nsnull;
+      // allocation failed. Scroll the normal way.
       ScrollToImpl(mDestination);
       return;
     }
@@ -1634,9 +1630,6 @@ CanScrollWithBlitting(nsIFrame* aFrame)
 {
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    if (f->GetStyleDisplay()->HasTransform()) {
-      return PR_FALSE;
-    }
     if (nsSVGIntegrationUtils::UsingEffectsForFrame(f) ||
         f->IsFrameOfType(nsIFrame::eSVG)) {
       return PR_FALSE;
@@ -2202,8 +2195,8 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
     nsPoint clampAmount = mDestination - newPos;
     float appUnitsPerDevPixel = mOuter->PresContext()->AppUnitsPerDevPixel();
     *aOverflow = nsIntPoint(
-        NSAppUnitsToIntPixels(PR_ABS(clampAmount.x), appUnitsPerDevPixel),
-        NSAppUnitsToIntPixels(PR_ABS(clampAmount.y), appUnitsPerDevPixel));
+        NSAppUnitsToIntPixels(NS_ABS(clampAmount.x), appUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(NS_ABS(clampAmount.y), appUnitsPerDevPixel));
   }
 }
 
@@ -3622,10 +3615,7 @@ nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
   }
 
   nsPresState* state = new nsPresState();
-  if (!state) {
-    return nsnull;
-  }
- 
+
   state->SetScrollState(scrollPos);
 
   return state;
