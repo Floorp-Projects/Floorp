@@ -64,6 +64,8 @@
 == cycle-self-ref-1.svg green-box-ref.svg
 == cycle-self-ref-2.svg green-box-ref.svg
 == cycle-self-ref-3.svg green-box-ref.svg
+== cycle-self-ref-4.svg green-box-ref.svg
+== cycle-self-ref-5.svg green-box-ref.svg
 == cycle-invalid-1.svg green-box-ref.svg
 == cycle-invalid-2.svg green-box-ref.svg
 == cycle-invalid-3.svg green-box-ref.svg 

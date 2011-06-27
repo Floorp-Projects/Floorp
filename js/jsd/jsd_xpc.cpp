@@ -2673,8 +2673,10 @@ jsdService::ActivateDebugger (JSRuntime *rt)
     printf ("+++ JavaScript debugging hooks installed.\n");
 #endif
 
-    if (mActivationCallback)
-        return mActivationCallback->OnDebuggerActivated();
+    nsCOMPtr<jsdIActivationCallback> activationCallback;
+    mActivationCallback.swap(activationCallback);
+    if (activationCallback)
+        return activationCallback->OnDebuggerActivated();
 
     return NS_OK;
 }

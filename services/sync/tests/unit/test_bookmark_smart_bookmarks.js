@@ -205,11 +205,11 @@ add_test(function test_smart_bookmarks_duped() {
   try {
     engine._syncStartup();
     
-    _("Verify that lazyMap uses the anno, discovering a dupe regardless of URI.");
-    do_check_eq(mostVisitedGUID, engine._lazyMap(record));
+    _("Verify that mapDupe uses the anno, discovering a dupe regardless of URI.");
+    do_check_eq(mostVisitedGUID, engine._mapDupe(record));
     
     record.bmkUri = "http://foo/";
-    do_check_eq(mostVisitedGUID, engine._lazyMap(record));
+    do_check_eq(mostVisitedGUID, engine._mapDupe(record));
     do_check_neq(PlacesUtils.bookmarks.getBookmarkURI(mostVisitedID).spec,
                  record.bmkUri);
     
@@ -224,7 +224,7 @@ add_test(function test_smart_bookmarks_duped() {
     _("Handle records without a queryId entry.");
     record.bmkUri = uri;
     delete record.queryId;
-    do_check_eq(mostVisitedGUID, engine._lazyMap(record));
+    do_check_eq(mostVisitedGUID, engine._mapDupe(record));
     
     engine._syncFinish();
 

@@ -526,7 +526,8 @@ protected:
   static int            sTrimOnMinimize;
   static PRBool         sDefaultTrackPointHack;
   static const char*    sDefaultMainWindowClass;
-  static PRBool         sUseElantechGestureHacks;
+  static PRBool         sUseElantechSwipeHack;
+  static PRBool         sUseElantechPinchHack;
   static bool           sAllowD3D9;
 
   // Always use the helper method to read this property.  See bug 603793.

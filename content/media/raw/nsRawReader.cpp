@@ -92,19 +92,26 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
   if (!MulOverflow32(mMetadata.frameWidth, mMetadata.frameHeight, dummy))
     return NS_ERROR_FAILURE;
 
-  mInfo.mHasVideo = PR_TRUE;
-  mInfo.mPicture.x = 0;
-  mInfo.mPicture.y = 0;
-  mInfo.mPicture.width = mMetadata.frameWidth;
-  mInfo.mPicture.height = mMetadata.frameHeight;
-  mInfo.mFrame.width = mMetadata.frameWidth;
-  mInfo.mFrame.height = mMetadata.frameHeight;
+
   if (mMetadata.aspectDenominator == 0 ||
       mMetadata.framerateDenominator == 0)
     return NS_ERROR_FAILURE; // Invalid data
-  mInfo.mPixelAspectRatio = static_cast<float>(mMetadata.aspectNumerator) / 
+
+  // Determine and verify frame display size.
+  float pixelAspectRatio = static_cast<float>(mMetadata.aspectNumerator) / 
                             mMetadata.aspectDenominator;
+  nsIntSize display(mMetadata.frameWidth, mMetadata.frameHeight);
+  ScaleDisplayByAspectRatio(display, pixelAspectRatio);
+  mPicture = nsIntRect(0, 0, mMetadata.frameWidth, mMetadata.frameHeight);
+  nsIntSize frameSize(mMetadata.frameWidth, mMetadata.frameHeight);
+  if (!nsVideoInfo::ValidateVideoRegion(frameSize, mPicture, display)) {
+    // Video track's frame sizes will overflow. Fail.
+    return NS_ERROR_FAILURE;
+  }
+
+  mInfo.mHasVideo = PR_TRUE;
   mInfo.mHasAudio = PR_FALSE;
+  mInfo.mDisplay = display;
 
   mFrameRate = static_cast<float>(mMetadata.framerateNumerator) /
                mMetadata.framerateDenominator;
@@ -112,7 +119,7 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
   // Make some sanity checks
   if (mFrameRate > 45 ||
       mFrameRate == 0 ||
-      mInfo.mPixelAspectRatio == 0 ||
+      pixelAspectRatio == 0 ||
       mMetadata.frameWidth > 2000 ||
       mMetadata.frameHeight > 2000 ||
       mMetadata.chromaChannelBpp != 4 ||
@@ -239,7 +246,8 @@ PRBool nsRawReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                                    currentFrameTime + (USECS_PER_S / mFrameRate),
                                    b,
                                    1, // In raw video every frame is a keyframe
-                                   -1);
+                                   -1,
+                                   mPicture);
   if (!v)
     return PR_FALSE;
 

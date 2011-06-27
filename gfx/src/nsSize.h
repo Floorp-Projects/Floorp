@@ -39,27 +39,41 @@
 #define NSSIZE_H
 
 #include "nsCoord.h"
-#include "mozilla/BaseSize.h"
+#include "mozilla/gfx/BaseSize.h"
 
 // Maximum allowable size
 #define NS_MAXSIZE nscoord_MAX
 
-struct nsSize : public mozilla::BaseSize<nscoord, nsSize> {
-  typedef mozilla::BaseSize<nscoord, nsSize> Super;
+struct nsIntSize;
+
+struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
+  typedef mozilla::gfx::BaseSize<nscoord, nsSize> Super;
 
   nsSize() : Super() {}
   nsSize(nscoord aWidth, nscoord aHeight) : Super(aWidth, aHeight) {}
+
+  inline nsIntSize ScaleToNearestPixels(float aXScale, float aYScale,
+                                        nscoord aAppUnitsPerPixel) const;
 
   // Converts this size from aFromAPP, an appunits per pixel ratio, to aToAPP.
   inline nsSize ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const;
 };
 
-struct nsIntSize : public mozilla::BaseSize<PRInt32, nsIntSize> {
-  typedef mozilla::BaseSize<PRInt32, nsIntSize> Super;
+struct nsIntSize : public mozilla::gfx::BaseSize<PRInt32, nsIntSize> {
+  typedef mozilla::gfx::BaseSize<PRInt32, nsIntSize> Super;
 
   nsIntSize() : Super() {}
   nsIntSize(PRInt32 aWidth, PRInt32 aHeight) : Super(aWidth, aHeight) {}
 };
+
+inline nsIntSize
+nsSize::ScaleToNearestPixels(float aXScale, float aYScale,
+                             nscoord aAppUnitsPerPixel) const
+{
+  return nsIntSize(
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(width, aAppUnitsPerPixel) * aXScale),
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(height, aAppUnitsPerPixel) * aYScale));
+}
 
 inline nsSize
 nsSize::ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const {

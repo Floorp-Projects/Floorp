@@ -89,13 +89,11 @@ nsDOMWorkerWrappedWeakEventListener(nsDOMWorkerWeakEventListener* aInner)
   NS_ASSERTION(aInner, "Null pointer!");
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDOMWorkerMessageHandler,
-                              nsIDOMNSEventTarget,
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsDOMWorkerMessageHandler,
                               nsIDOMEventTarget,
                               nsIClassInfo)
 
-NS_IMPL_CI_INTERFACE_GETTER2(nsDOMWorkerMessageHandler,
-                             nsIDOMNSEventTarget,
+NS_IMPL_CI_INTERFACE_GETTER1(nsDOMWorkerMessageHandler,
                              nsIDOMEventTarget)
 
 NS_IMPL_THREADSAFE_DOM_CI(nsDOMWorkerMessageHandler)
@@ -250,17 +248,6 @@ nsDOMWorkerMessageHandler::Trace(JSTracer* aTracer)
  * See nsIDOMEventTarget
  */
 NS_IMETHODIMP
-nsDOMWorkerMessageHandler::AddEventListener(const nsAString& aType,
-                                            nsIDOMEventListener* aListener,
-                                            PRBool aUseCapture)
-{
-  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
-}
-
-/**
- * See nsIDOMEventTarget
- */
-NS_IMETHODIMP
 nsDOMWorkerMessageHandler::RemoveEventListener(const nsAString& aType,
                                                nsIDOMEventListener* aListener,
                                                PRBool aUseCapture)
@@ -337,17 +324,17 @@ nsDOMWorkerMessageHandler::DispatchEvent(nsIDOMEvent* aEvent,
 }
 
 /**
- * See nsIDOMNSEventTarget
+ * See nsIDOMEventTarget
  */
 NS_IMETHODIMP
 nsDOMWorkerMessageHandler::AddEventListener(const nsAString& aType,
                                             nsIDOMEventListener* aListener,
                                             PRBool aUseCapture,
                                             PRBool aWantsUntrusted,
-                                            PRUint8 optional_argc)
+                                            PRUint8 aOptionalArgc)
 {
   // We don't support aWantsUntrusted yet.
-  NS_ENSURE_TRUE(optional_argc < 2, NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE(aOptionalArgc < 2, NS_ERROR_NOT_IMPLEMENTED);
 
   ListenerCollection* collection =
     const_cast<ListenerCollection*>(GetListenerCollection(aType));
@@ -370,21 +357,84 @@ nsDOMWorkerMessageHandler::AddEventListener(const nsAString& aType,
   return NS_OK;
 }
 
-/**
- * See nsIDOMNSEventTarget
- */
-NS_IMETHODIMP
-nsDOMWorkerMessageHandler::GetScriptTypeID(PRUint32 *aScriptType)
+nsIDOMEventTarget *
+nsDOMWorkerMessageHandler::GetTargetForDOMEvent()
 {
-  *aScriptType = nsIProgrammingLanguage::JAVASCRIPT;
-
-  return NS_OK;
+  NS_ERROR("Should not be called");
+  return nsnull;
 }
 
-NS_IMETHODIMP
-nsDOMWorkerMessageHandler::SetScriptTypeID(PRUint32 aScriptType)
+nsIDOMEventTarget *
+nsDOMWorkerMessageHandler::GetTargetForEventTargetChain()
 {
-  NS_ERROR("Can't change default script type for workers");
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
 
+nsresult
+nsDOMWorkerMessageHandler::PreHandleEvent(nsEventChainPreVisitor & aVisitor)
+{
+  NS_ERROR("Should not be called");
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::WillHandleEvent(nsEventChainPostVisitor & aVisitor)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::PostHandleEvent(nsEventChainPostVisitor & aVisitor)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEvent,
+                                            nsPresContext *aPresContext,
+                                            nsEventStatus *aEventStatus)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsEventListenerManager*
+nsDOMWorkerMessageHandler::GetListenerManager(PRBool aMayCreate)
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                                 const nsIID & aIID)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMWorkerMessageHandler::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                                    const nsIID & aIID)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsIScriptContext*
+nsDOMWorkerMessageHandler::GetContextForEventHandlers(nsresult *aRv)
+{
+  NS_ERROR("Should not be called");
+  *aRv = NS_ERROR_NOT_IMPLEMENTED;
+  return nsnull;
+}
+
+JSContext*
+nsDOMWorkerMessageHandler::GetJSContextForEventHandlers()
+{
+  NS_ERROR("Should not be called");
+  return nsnull;
 }

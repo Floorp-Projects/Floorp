@@ -55,9 +55,11 @@
 PRBool
 nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
 {
+  if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    return PR_FALSE;
+  }
   const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
-  return (style->mFilter || style->mClipPath || style->mMask) &&
-          !aFrame->IsFrameOfType(nsIFrame::eSVG);
+  return (style->mFilter || style->mClipPath || style->mMask);
 }
 
 /* static */ nsRect

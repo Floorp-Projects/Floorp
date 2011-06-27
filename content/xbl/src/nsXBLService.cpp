@@ -87,8 +87,7 @@
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
 #endif
-#include "nsIDOMLoadListener.h"
-#include "nsIDOMEventGroup.h"
+#include "nsIDOMEventListener.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -273,19 +272,13 @@ int nsXBLBindingRequest::gRefCnt = 0;
 // nsXBLStreamListener, a helper class used for 
 // asynchronous parsing of URLs
 /* Header file */
-class nsXBLStreamListener : public nsIStreamListener, public nsIDOMLoadListener
+class nsXBLStreamListener : public nsIStreamListener, public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
-
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Error(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_DECL_NSIDOMEVENTLISTENER
 
   nsXBLStreamListener(nsXBLService* aXBLService,
                       nsIDocument* aBoundDocument,
@@ -308,7 +301,10 @@ private:
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS4(nsXBLStreamListener, nsIStreamListener, nsIRequestObserver, nsIDOMLoadListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS3(nsXBLStreamListener,
+                   nsIStreamListener,
+                   nsIRequestObserver,
+                   nsIDOMEventListener)
 
 nsXBLStreamListener::nsXBLStreamListener(nsXBLService* aXBLService,
                                          nsIDocument* aBoundDocument,
@@ -402,7 +398,7 @@ nsXBLStreamListener::HasRequest(nsIURI* aURI, nsIContent* aElt)
 }
 
 nsresult
-nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
+nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsresult rv = NS_OK;
   PRUint32 i;
@@ -482,7 +478,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     }
   }
 
-  target->RemoveEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)this, PR_FALSE);
+  target->RemoveEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
 
   return rv;
 }
@@ -709,20 +705,22 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
 // then extra work needs to be done to hook it up to the document (XXX WHY??)
 //
 NS_IMETHODIMP
-nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
+nsXBLService::AttachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
 {
   // check if the receiver is a content node (not a document), and hook
   // it to the document if that is the case.
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = aTarget;
+  nsCOMPtr<nsIDOMEventTarget> piTarget = aTarget;
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
   if (contentNode) {
     // Only attach if we're really in a document
     nsCOMPtr<nsIDocument> doc = contentNode->GetCurrentDoc();
     if (doc)
-      piTarget = do_QueryInterface(doc); // We're a XUL keyset. Attach to our document.
+      piTarget = doc; // We're a XUL keyset. Attach to our document.
   }
+
+  nsEventListenerManager* manager = piTarget->GetListenerManager(PR_TRUE);
     
-  if (!piTarget)
+  if (!piTarget || !manager)
     return NS_ERROR_FAILURE;
 
   // the listener already exists, so skip this
@@ -738,16 +736,15 @@ nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
     return NS_ERROR_FAILURE;
 
   // listen to these events
-  nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  piTarget->GetSystemEventGroup(getter_AddRefs(systemGroup));
-  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(piTarget);
-
-  target->AddGroupedEventListener(NS_LITERAL_STRING("keydown"), handler,
-                                  PR_FALSE, systemGroup);
-  target->AddGroupedEventListener(NS_LITERAL_STRING("keyup"), handler, 
-                                  PR_FALSE, systemGroup);
-  target->AddGroupedEventListener(NS_LITERAL_STRING("keypress"), handler, 
-                                  PR_FALSE, systemGroup);
+  manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+  manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
+  manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
 
   if (contentNode)
     return contentNode->SetProperty(nsGkAtoms::listener, handler,
@@ -765,9 +762,9 @@ nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
 // Removes a key handler added by DeatchGlobalKeyHandler.
 //
 NS_IMETHODIMP
-nsXBLService::DetachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
+nsXBLService::DetachGlobalKeyHandler(nsIDOMEventTarget* aTarget)
 {
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = aTarget;
+  nsCOMPtr<nsIDOMEventTarget> piTarget = aTarget;
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
   if (!contentNode) // detaching is only supported for content nodes
     return NS_ERROR_FAILURE;
@@ -776,7 +773,10 @@ nsXBLService::DetachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
   nsCOMPtr<nsIDocument> doc = contentNode->GetCurrentDoc();
   if (doc)
     piTarget = do_QueryInterface(doc);
-  if (!piTarget)
+
+  nsEventListenerManager* manager = piTarget->GetListenerManager(PR_TRUE);
+    
+  if (!piTarget || !manager)
     return NS_ERROR_FAILURE;
 
   nsIDOMEventListener* handler =
@@ -784,16 +784,15 @@ nsXBLService::DetachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
   if (!handler)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  piTarget->GetSystemEventGroup(getter_AddRefs(systemGroup));
-  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(piTarget);
-
-  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keydown"), handler,
-                                     PR_FALSE, systemGroup);
-  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keyup"), handler, 
-                                     PR_FALSE, systemGroup);
-  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"), handler, 
-                                     PR_FALSE, systemGroup);
+  manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
+                                     NS_EVENT_FLAG_BUBBLE |
+                                     NS_EVENT_FLAG_SYSTEM_EVENT);
+  manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
+                                     NS_EVENT_FLAG_BUBBLE |
+                                     NS_EVENT_FLAG_SYSTEM_EVENT);
+  manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
+                                     NS_EVENT_FLAG_BUBBLE |
+                                     NS_EVENT_FLAG_SYSTEM_EVENT);
 
   contentNode->DeleteProperty(nsGkAtoms::listener);
 

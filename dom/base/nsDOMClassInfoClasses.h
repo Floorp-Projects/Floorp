@@ -45,6 +45,9 @@ DOMCI_CLASS(MimeType)
 DOMCI_CLASS(MimeTypeArray)
 DOMCI_CLASS(BarProp)
 DOMCI_CLASS(History)
+DOMCI_CLASS(PerformanceTiming)
+DOMCI_CLASS(PerformanceNavigation)
+DOMCI_CLASS(Performance)
 DOMCI_CLASS(Screen)
 DOMCI_CLASS(DOMPrototype)
 DOMCI_CLASS(DOMConstructor)
@@ -484,9 +487,7 @@ DOMCI_CLASS(HashChangeEvent)
 DOMCI_CLASS(EventListenerInfo)
 
 DOMCI_CLASS(TransitionEvent)
-#ifdef MOZ_CSS_ANIMATIONS
 DOMCI_CLASS(AnimationEvent)
-#endif
 
 DOMCI_CLASS(ContentFrameMessageManager)
 
@@ -518,10 +519,8 @@ DOMCI_CLASS(Touch)
 DOMCI_CLASS(TouchList)
 DOMCI_CLASS(TouchEvent)
 
-#ifdef MOZ_CSS_ANIMATIONS
 DOMCI_CLASS(MozCSSKeyframeRule)
 DOMCI_CLASS(MozCSSKeyframesRule)
-#endif
 
 DOMCI_CLASS(MediaQueryList)
 DOMCI_CLASS(CustomEvent)

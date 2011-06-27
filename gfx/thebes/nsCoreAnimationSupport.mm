@@ -713,7 +713,7 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
                                               nsIOSurface *surf, 
                                               CGColorSpaceRef aColorSpace,
                                               int aX, int aY,
-                                              int aWidth, int aHeight) {
+                                              size_t aWidth, size_t aHeight) {
   surf->Lock();
   size_t bytesPerRow = surf->GetBytesPerRow();
   size_t ioWidth = surf->GetWidth();
@@ -729,10 +729,15 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
 
   // We get rendering glitches if we use a width/height that falls
   // outside of the IOSurface.
-  if (aWidth > ioWidth - aX) 
+  if (aWidth + aX > ioWidth) 
     aWidth = ioWidth - aX;
-  if (aHeight > ioHeight - aY) 
+  if (aHeight + aY > ioHeight) 
     aHeight = ioHeight - aY;
+
+  if (aX < 0 || aX >= ioWidth ||
+      aY < 0 || aY >= ioHeight) {
+    return NS_ERROR_FAILURE;
+  }
 
   CGImageRef cgImage = ::CGImageCreate(ioWidth, ioHeight, 8, 32, bytesPerRow,
               aColorSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
@@ -751,7 +756,10 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
   }
 
   ::CGContextScaleCTM(aContext, 1.0f, -1.0f);
-  ::CGContextDrawImage(aContext, CGRectMake(aX, -aY-aHeight, aWidth, aHeight), subImage);
+  ::CGContextDrawImage(aContext, 
+                       CGRectMake(aX, -(CGFloat)aY - (CGFloat)aHeight, 
+                                  aWidth, aHeight), 
+                       subImage);
 
   ::CGImageRelease(subImage);
   ::CGImageRelease(cgImage);

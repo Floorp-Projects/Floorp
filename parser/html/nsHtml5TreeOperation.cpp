@@ -345,8 +345,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsHtml5OtherDocUpdate update(node->GetOwnerDoc(),
                                    aBuilder->GetDocument());
 
-      nsIDocument* document = node->GetCurrentDoc();
-
       PRInt32 len = attributes->getLength();
       for (PRInt32 i = len; i > 0;) {
         --i;

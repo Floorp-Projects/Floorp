@@ -228,6 +228,22 @@ nsSMILInstanceTime::IsDependentOn(const nsSMILInstanceTime& aOther) const
   return myBaseTime->IsDependentOn(aOther);
 }
 
+const nsSMILInstanceTime*
+nsSMILInstanceTime::GetBaseTime() const
+{
+  if (!mBaseInterval) {
+    return nsnull;
+  }
+
+  NS_ABORT_IF_FALSE(mCreator, "Base interval is set but there is no creator.");
+  if (!mCreator) {
+    return nsnull;
+  }
+
+  return mCreator->DependsOnBegin() ? mBaseInterval->Begin() :
+                                      mBaseInterval->End();
+}
+
 void
 nsSMILInstanceTime::SetBaseInterval(nsSMILInterval* aBaseInterval)
 {
@@ -245,20 +261,4 @@ nsSMILInstanceTime::SetBaseInterval(nsSMILInterval* aBaseInterval)
   }
 
   mBaseInterval = aBaseInterval;
-}
-
-const nsSMILInstanceTime*
-nsSMILInstanceTime::GetBaseTime() const
-{
-  if (!mBaseInterval) {
-    return nsnull;
-  }
-
-  NS_ABORT_IF_FALSE(mCreator, "Base interval is set but there is no creator.");
-  if (!mCreator) {
-    return nsnull;
-  }
-
-  return mCreator->DependsOnBegin() ? mBaseInterval->Begin() :
-                                      mBaseInterval->End();
 }

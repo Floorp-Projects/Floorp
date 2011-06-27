@@ -712,7 +712,7 @@ IDBDatabase::SetVersion(const nsAString& aVersion,
   NS_ENSURE_TRUE(transaction, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<IDBVersionChangeRequest> request =
-    IDBVersionChangeRequest::Create(static_cast<nsPIDOMEventTarget*>(this),
+    IDBVersionChangeRequest::Create(static_cast<nsIDOMEventTarget*>(this),
                                     ScriptContext(), Owner(), transaction);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -966,7 +966,7 @@ SetVersionHelper::GetSuccessResult(JSContext* aCx,
   }
   info->version = mVersion;
 
-  nsresult rv = WrapNative(aCx, NS_ISUPPORTS_CAST(nsPIDOMEventTarget*,
+  nsresult rv = WrapNative(aCx, NS_ISUPPORTS_CAST(nsIDOMEventTarget*,
                                                   mTransaction),
                            aVal);
   NS_ENSURE_SUCCESS(rv, rv);

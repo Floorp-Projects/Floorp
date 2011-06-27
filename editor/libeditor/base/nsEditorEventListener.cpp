@@ -44,7 +44,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMDocument.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
@@ -56,8 +56,7 @@
 #include "nsIEditorMailSupport.h"
 #include "nsILookAndFeel.h"
 #include "nsFocusManager.h"
-#include "nsIEventListenerManager.h"
-#include "nsIDOMEventGroup.h"
+#include "nsEventListenerManager.h"
 #include "mozilla/Preferences.h"
 
 // Drag & Drop, Clipboard
@@ -69,7 +68,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMNSRange.h"
 #include "nsEditorUtils.h"
-#include "nsIDOMEventTarget.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIFocusManager.h"
@@ -125,16 +123,13 @@ nsEditorEventListener::InstallToEditor()
 {
   NS_PRECONDITION(mEditor, "The caller must set mEditor");
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = mEditor->GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetDOMEventTarget();
   NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
   nsresult rv;
 
   // register the event listeners with the listener manager
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
-  NS_ENSURE_STATE(sysGroup);
-  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
+  nsEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(elmP);
 
   nsCOMPtr<nsIDOMEventListener> listenerBase;
@@ -143,29 +138,34 @@ nsEditorEventListener::InstallToEditor()
   rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("keypress"),
                                     NS_EVENT_FLAG_BUBBLE |
-                                    NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
-                                    sysGroup);
+                                    NS_PRIV_EVENT_UNTRUSTED_PERMITTED |
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
   NS_ENSURE_SUCCESS(rv, rv);
   // See bug 455215, we cannot use the standard dragstart event yet
   rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("draggesture"),
-                                    NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                    NS_EVENT_FLAG_BUBBLE |
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("dragenter"),
-                                    NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                    NS_EVENT_FLAG_BUBBLE |
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("dragover"),
-                                    NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                    NS_EVENT_FLAG_BUBBLE |
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("dragexit"),
-                                    NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                    NS_EVENT_FLAG_BUBBLE |
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = elmP->AddEventListenerByType(listenerBase,
                                     NS_LITERAL_STRING("drop"),
-                                    NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                    NS_EVENT_FLAG_BUBBLE |
+                                    NS_EVENT_FLAG_SYSTEM_EVENT);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = elmP->AddEventListenerByIID(listenerBase,
@@ -204,19 +204,14 @@ nsEditorEventListener::Disconnect()
 void
 nsEditorEventListener::UninstallFromEditor()
 {
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = mEditor->GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetDOMEventTarget();
   if (!piTarget) {
     return;
   }
 
-  nsCOMPtr<nsIEventListenerManager> elmP =
+  nsEventListenerManager* elmP =
     piTarget->GetListenerManager(PR_TRUE);
   if (!elmP) {
-    return;
-  }
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
-  if (!sysGroup) {
     return;
   }
 
@@ -225,22 +220,28 @@ nsEditorEventListener::UninstallFromEditor()
 
   elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("keypress"),
-                                  NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
   elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("draggesture"),
-                                  NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
   elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("dragenter"),
-                                  NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
   elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("dragover"),
-                                  NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
   elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("dragexit"),
-                                  NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
   elmP->RemoveEventListenerByType(listenerBase,
                                   NS_LITERAL_STRING("drop"),
-                                  NS_EVENT_FLAG_BUBBLE, sysGroup);
+                                  NS_EVENT_FLAG_BUBBLE |
+                                  NS_EVENT_FLAG_SYSTEM_EVENT);
 
   elmP->RemoveEventListenerByIID(listenerBase,
                                  NS_GET_IID(nsIDOMMouseListener),

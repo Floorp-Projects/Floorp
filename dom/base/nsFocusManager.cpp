@@ -108,7 +108,7 @@ struct nsDelayedBlurOrFocusEvent
   nsDelayedBlurOrFocusEvent(PRUint32 aType,
                             nsIPresShell* aPresShell,
                             nsIDocument* aDocument,
-                            nsPIDOMEventTarget* aTarget)
+                            nsIDOMEventTarget* aTarget)
    : mType(aType),
      mPresShell(aPresShell),
      mDocument(aDocument),
@@ -123,7 +123,7 @@ struct nsDelayedBlurOrFocusEvent
   PRUint32 mType;
   nsCOMPtr<nsIPresShell> mPresShell;
   nsCOMPtr<nsIDocument> mDocument;
-  nsCOMPtr<nsPIDOMEventTarget> mTarget;
+  nsCOMPtr<nsIDOMEventTarget> mTarget;
 };
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFocusManager)
@@ -1008,7 +1008,7 @@ nsFocusManager::FireDelayedEvents(nsIDocument* aDocument)
     if (mDelayedBlurFocusEvents[i].mDocument == aDocument &&
         !aDocument->EventHandlingSuppressed()) {
       PRUint32 type = mDelayedBlurFocusEvents[i].mType;
-      nsCOMPtr<nsPIDOMEventTarget> target = mDelayedBlurFocusEvents[i].mTarget;
+      nsCOMPtr<nsIDOMEventTarget> target = mDelayedBlurFocusEvents[i].mTarget;
       nsCOMPtr<nsIPresShell> presShell = mDelayedBlurFocusEvents[i].mPresShell;
       mDelayedBlurFocusEvents.RemoveElementAt(i);
       SendFocusOrBlurEvent(type, presShell, aDocument, target, 0, PR_FALSE);
@@ -1851,7 +1851,7 @@ nsFocusManager::SendFocusOrBlurEvent(PRUint32 aType,
   NS_ASSERTION(aType == NS_FOCUS_CONTENT || aType == NS_BLUR_CONTENT,
                "Wrong event type for SendFocusOrBlurEvent");
 
-  nsCOMPtr<nsPIDOMEventTarget> eventTarget = do_QueryInterface(aTarget);
+  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(aTarget);
 
   // for focus events, if this event was from a mouse or key and event
   // handling on the document is suppressed, queue the event and fire it

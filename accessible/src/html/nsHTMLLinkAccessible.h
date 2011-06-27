@@ -61,8 +61,8 @@ public:
   virtual PRUint64 NativeState();
 
   // HyperLinkAccessible
-  virtual bool IsHyperLink();
-  virtual already_AddRefed<nsIURI> GetAnchorURI(PRUint32 aAnchorIndex);
+  virtual bool IsLink();
+  virtual already_AddRefed<nsIURI> AnchorURIAt(PRUint32 aAnchorIndex);
 
 protected:
   enum { eAction_Jump = 0 };

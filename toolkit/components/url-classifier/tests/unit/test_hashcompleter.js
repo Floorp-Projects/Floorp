@@ -121,24 +121,37 @@ let multipleResponsesCompletionSet = [
 const SIZE_OF_RANDOM_SET = 16;
 function addRandomCompletionSet() {
   let completionSet = [];
+  let hashPrefixes = [];
+
+  let seed = Math.floor(Math.random() * Math.pow(2, 32));
+  dump("Using seed of " + seed + " for random completion set.\n");
+  let rand = new LFSRgenerator(seed);
+
   for (let i = 0; i < SIZE_OF_RANDOM_SET; i++) {
     let completion = {};
 
     // Generate a random 256 bit hash. First we get a random number and then
     // convert it to a string.
-    let hash = "";
-    let length = 1 + Math.floor(Math.random() * 32);
-    for (let i = 0; i < length; i++)
-      hash += String.fromCharCode(Math.floor(Math.random() * 256));
+    let hash;
+    let prefix;
+    do {
+      hash = "";
+      let length = 1 + rand.nextNum(5);
+      for (let i = 0; i < length; i++)
+        hash += String.fromCharCode(rand.nextNum(8));
+      prefix = hash.substring(0,4);
+    } while (hashPrefixes.indexOf(prefix) != -1);
+
+    hashPrefixes.push(prefix);
     completion.hash = hash;
 
-    completion.expectCompletion = Math.random() < 0.5;
+    completion.expectCompletion = rand.nextNum(1) == 1;
     if (completion.expectCompletion) {
       // Generate a random alpha-numeric string of length at most 6 for the
       // table name.
-      completion.table = Math.floor(Math.random() * Math.pow(36, 6)).toString(36);
+      completion.table = (rand.nextNum(31)).toString(36);
 
-      completion.chunkId = Math.floor(Math.random() * Math.pow(2, 16));
+      completion.chunkId = rand.nextNum(16);
     }
 
     completionSet.push(completion);
@@ -264,16 +277,6 @@ function callback(completion) {
 }
 callback.prototype = {
   completion: function completion(hash, table, chunkId, trusted) {
-    // This check was added as part of diagnostics for bug 652294.
-    if (!this._completion.expectCompletion) {
-      dump("Did not expect a completion for this result. Provided values:\n" +
-           "hash: " + JSON.stringify(hash) + "\ntable: " + table + "chunkId: " +
-           chunkId + "\n");
-      dump("Actual values:\nhash: " + JSON.stringify(this._completion.hash) +
-           "\ntable: " + this._completion.table + "\nchunkId: " +
-           this._completion.chunkId + "\n");
-    }
-
     do_check_true(this._completion.expectCompletion);
 
     if (this._completion.multipleCompletions) {

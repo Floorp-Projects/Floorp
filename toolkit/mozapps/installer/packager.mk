@@ -82,6 +82,21 @@ endif
 SDK_SUFFIX    = $(PKG_SUFFIX)
 SDK           = $(SDK_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
 
+# JavaScript Shell packaging
+JSSHELL_BINS  = \
+  $(DIST)/bin/js$(BIN_SUFFIX) \
+  $(DIST)/bin/$(LIB_PREFIX)nspr4$(DLL_SUFFIX) \
+  $(NULL)
+ifeq ($(OS_ARCH),WINNT)
+JSSHELL_BINS += $(DIST)/bin/mozcrt19$(DLL_SUFFIX)
+else
+JSSHELL_BINS += \
+  $(DIST)/bin/$(LIB_PREFIX)plds4$(DLL_SUFFIX) \
+  $(DIST)/bin/$(LIB_PREFIX)plc4$(DLL_SUFFIX) \
+  $(NULL)
+endif
+MAKE_JSSHELL  = $(ZIP) -9j $(PKG_JSSHELL) $(JSSHELL_BINS)
+
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 _ABS_DIST = $(call core_abspath,$(DIST))
 JARLOG_DIR = $(call core_abspath,$(DEPTH)/jarlog/)
@@ -119,17 +134,13 @@ ifeq ($(MOZ_PKG_FORMAT),SFX7Z)
 PKG_SUFFIX	= .exe
 INNER_MAKE_PACKAGE	= rm -f app.7z && \
   mv $(MOZ_PKG_DIR) core && \
-  (if [ -f ../optional_file_list.txt ]; then mkdir optional; xargs -I {} -a ../optional_file_list.txt mv -t optional/ core/{}; fi;) && \
   $(CYGWIN_WRAPPER) 7z a -r -t7z app.7z -mx -m0=BCJ2 -m1=LZMA:d24 \
     -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3 && \
   mv core $(MOZ_PKG_DIR) && \
-  (if [ -d optional ]; then mv optional/* $(MOZ_PKG_DIR); rm -rf optional; fi;) && \
   cat $(SFX_HEADER) app.7z > $(PACKAGE) && \
   chmod 0755 $(PACKAGE)
 INNER_UNMAKE_PACKAGE	= $(CYGWIN_WRAPPER) 7z x $(UNPACKAGE) core && \
-  rm -f ../optional_file_list.txt && \
-  mv core $(MOZ_PKG_DIR) && \
-  (if [ -d optional ]; then ls -1 optional > ../optional_file_list.txt; cp -rp optional/* $(MOZ_PKG_DIR); rm -rf optional; fi;)
+  mv core $(MOZ_PKG_DIR)
 endif
 
 #Create an RPM file
@@ -672,6 +683,10 @@ endif
 ifdef MOZ_PKG_REMOVALS
 	$(SYSINSTALL) $(IFLAGS1) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 endif # MOZ_PKG_REMOVALS
+# Package JavaScript Shell
+	@echo "Packaging JavaScript Shell..."
+	$(RM) $(PKG_JSSHELL)
+	$(MAKE_JSSHELL)
 
 make-package: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
 	@echo "Compressing..."
@@ -782,9 +797,11 @@ UPLOAD_FILES= \
   $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip) \
   $(call QUOTED_WILDCARD,$(DIST)/$(SDK)) \
   $(call QUOTED_WILDCARD,$(MOZ_SOURCESTAMP_FILE)) \
+  $(call QUOTED_WILDCARD,$(PKG_JSSHELL)) \
   $(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 checksum:
+	mkdir -p `dirname $CHECKSUM_FILE`
 	@$(PYTHON) $(MOZILLA_DIR)/build/checksums.py \
 		-o $(CHECKSUM_FILE) \
 		-d $(CHECKSUM_ALGORITHM) \

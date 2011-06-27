@@ -129,7 +129,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mWinlessHiddenMsgHWND(0)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
-#if defined(OS_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
 #if defined(__i386__)
     , mEventModel(NPEventModelCarbon)
 #endif
@@ -178,7 +178,7 @@ PluginInstanceChild::~PluginInstanceChild()
 #if defined(OS_WIN)
     NS_ASSERTION(!mPluginWindowHWND, "Destroying PluginInstanceChild without NPP_Destroy?");
 #endif
-#if defined(OS_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
     if (mShColorSpace) {
         ::CGColorSpaceRelease(mShColorSpace);
     }

@@ -1576,14 +1576,15 @@ nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
     nsContentUtils::GetSecurityManager();
 
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  securityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  nsresult rv = securityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!subjectPrincipal) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   PRBool subsumes;
-  nsresult rv = subjectPrincipal->Subsumes(mInner->mPrincipal, &subsumes);
+  rv = subjectPrincipal->Subsumes(mInner->mPrincipal, &subsumes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (subsumes) {

@@ -38,9 +38,12 @@
 
 #include "nsXPCOMGlue.h"
 #include "nsXULAppAPI.h"
-#ifdef XP_WIN
+#if defined(XP_WIN)
 #include <windows.h>
 #include <stdlib.h>
+#elif defined(XP_UNIX)
+#include <sys/time.h>
+#include <sys/resource.h>
 #endif
 
 #include <stdio.h>
@@ -64,6 +67,8 @@
 #include "BinaryPath.h"
 
 #include "nsXPCOMPrivate.h" // for MAXPATHLEN and XPCOM_DLL
+
+#include "mozilla/Telemetry.h"
 
 static void Output(const char *fmt, ... )
 {
@@ -117,6 +122,7 @@ XRE_FreeAppDataType XRE_FreeAppData;
 #ifdef XRE_HAS_DLL_BLOCKLIST
 XRE_SetupDllBlocklistType XRE_SetupDllBlocklist;
 #endif
+XRE_TelemetryAccumulateType XRE_TelemetryAccumulate;
 XRE_mainType XRE_main;
 
 static const nsDynamicFunctionLoad kXULFuncs[] = {
@@ -126,6 +132,7 @@ static const nsDynamicFunctionLoad kXULFuncs[] = {
 #ifdef XRE_HAS_DLL_BLOCKLIST
     { "XRE_SetupDllBlocklist", (NSFuncPtr*) &XRE_SetupDllBlocklist },
 #endif
+    { "XRE_TelemetryAccumulate", (NSFuncPtr*) &XRE_TelemetryAccumulate },
     { "XRE_main", (NSFuncPtr*) &XRE_main },
     { nsnull, nsnull }
 };
@@ -209,15 +216,19 @@ int main(int argc, char* argv[])
 
   strcpy(++lastSlash, XPCOM_DLL);
 
-#ifdef XP_WIN
+  int gotCounters;
+#if defined(XP_UNIX)
+  struct rusage initialRUsage;
+  gotCounters = !getrusage(RUSAGE_SELF, &initialRUsage);
+#elif defined(XP_WIN)
   // GetProcessIoCounters().ReadOperationCount seems to have little to
   // do with actual read operations. It reports 0 or 1 at this stage
   // in the program. Luckily 1 coincides with when prefetch is
   // enabled. If Windows prefetch didn't happen we can do our own
   // faster dll preloading.
   IO_COUNTERS ioCounters;
-  if (GetProcessIoCounters(GetCurrentProcess(), &ioCounters)
-      && !ioCounters.ReadOperationCount)
+  gotCounters = GetProcessIoCounters(GetCurrentProcess(), &ioCounters);
+  if (gotCounters && !ioCounters.ReadOperationCount)
 #endif
   {
       XPCOMGlueEnablePreload();
@@ -239,6 +250,30 @@ int main(int argc, char* argv[])
 #ifdef XRE_HAS_DLL_BLOCKLIST
   XRE_SetupDllBlocklist();
 #endif
+
+  if (gotCounters) {
+#if defined(XP_WIN)
+    XRE_TelemetryAccumulate(mozilla::Telemetry::EARLY_GLUESTARTUP_READ_OPS,
+                            int(ioCounters.ReadOperationCount));
+    XRE_TelemetryAccumulate(mozilla::Telemetry::EARLY_GLUESTARTUP_READ_TRANSFER,
+                            int(ioCounters.ReadTransferCount / 1024));
+    IO_COUNTERS newIoCounters;
+    if (GetProcessIoCounters(GetCurrentProcess(), &newIoCounters)) {
+      XRE_TelemetryAccumulate(mozilla::Telemetry::GLUESTARTUP_READ_OPS,
+                              int(newIoCounters.ReadOperationCount - ioCounters.ReadOperationCount));
+      XRE_TelemetryAccumulate(mozilla::Telemetry::GLUESTARTUP_READ_TRANSFER,
+                              int((newIoCounters.ReadTransferCount - ioCounters.ReadTransferCount) / 1024));
+    }
+#elif defined(XP_UNIX)
+    XRE_TelemetryAccumulate(mozilla::Telemetry::EARLY_GLUESTARTUP_HARD_FAULTS,
+                            int(initialRUsage.ru_majflt));
+    struct rusage newRUsage;
+    if (!getrusage(RUSAGE_SELF, &newRUsage)) {
+      XRE_TelemetryAccumulate(mozilla::Telemetry::GLUESTARTUP_HARD_FAULTS,
+                              int(newRUsage.ru_majflt - initialRUsage.ru_majflt));
+    }
+#endif
+  }
 
   int result;
   {

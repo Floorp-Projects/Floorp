@@ -82,6 +82,7 @@ GARBAGE += css_properties.js
 
 
 _TEST_FILES =	test_acid3_test46.html \
+		test_animations.html \
 		test_any_dynamic.html \
 		test_at_rule_parse_serialize.html \
 		test_bug73586.html \
@@ -142,6 +143,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_inherit_storage.html \
 		test_initial_computation.html \
 		test_initial_storage.html \
+		test_keyframes_rules.html \
 		test_media_queries.html \
 		test_media_queries_dynamic.html \
 		test_media_queries_dynamic_xbl.html \
@@ -218,13 +220,6 @@ _TEST_FILES =	test_acid3_test46.html \
 		visited_image_loading_frame.html \
 		visited_image_loading_frame_empty.html \
 		$(NULL)
-
-ifdef MOZ_CSS_ANIMATIONS
-_TEST_FILES +=	\
-		test_animations.html \
-		test_keyframes_rules.html \
-		$(NULL)
-endif
 
 _VISITED_REFTEST_FILES = \
 		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \

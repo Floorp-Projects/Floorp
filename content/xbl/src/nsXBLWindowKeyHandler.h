@@ -41,34 +41,25 @@
 #define nsXBLWindowKeyHandler_h__
 
 #include "nsWeakPtr.h"
-#include "nsIDOMKeyListener.h"
+#include "nsIDOMEventListener.h"
 
 class nsIAtom;
 class nsIDOMElement;
 class nsIDOMEventTarget;
 class nsIDOMKeyEvent;
-class nsPIDOMEventTarget;
+class nsIDOMEventTarget;
 class nsIXBLDocumentInfo;
 class nsXBLSpecialDocInfo;
 class nsXBLPrototypeHandler;
 
-class nsXBLWindowKeyHandler : public nsIDOMKeyListener
+class nsXBLWindowKeyHandler : public nsIDOMEventListener
 {
 public:
-  nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsPIDOMEventTarget* aTarget);
+  nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventTarget* aTarget);
   virtual ~nsXBLWindowKeyHandler();
-  
-  // nsIDOMetc.
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)
-  {
-    return NS_OK;
-  }
 
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
-   
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
 
   // release globals
   static NS_HIDDEN_(void) ShutDown();
@@ -103,7 +94,7 @@ protected:
   already_AddRefed<nsIDOMElement> GetElement();
   // Using weak pointer to the DOM Element.
   nsWeakPtr              mWeakPtrForElement;
-  nsPIDOMEventTarget*    mTarget; // weak ref
+  nsIDOMEventTarget*    mTarget; // weak ref
 
   // these are not owning references; the prototype handlers are owned
   // by the prototype bindings which are owned by the docinfo.
@@ -117,7 +108,7 @@ protected:
 
 nsresult
 NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement,
-                          nsPIDOMEventTarget* aTarget,
+                          nsIDOMEventTarget* aTarget,
                           nsXBLWindowKeyHandler** aResult);
 
 #endif

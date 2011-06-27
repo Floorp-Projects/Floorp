@@ -50,7 +50,7 @@
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMDocument.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -391,16 +391,16 @@ nsAccDocManager::AddListeners(nsIDocument *aDocument,
                               PRBool aAddDOMContentLoadedListener)
 {
   nsPIDOMWindow *window = aDocument->GetWindow();
-  nsPIDOMEventTarget *target = window->GetChromeEventHandler();
-  nsIEventListenerManager* elm = target->GetListenerManager(PR_TRUE);
+  nsIDOMEventTarget *target = window->GetChromeEventHandler();
+  nsEventListenerManager* elm = target->GetListenerManager(PR_TRUE);
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
-                              NS_EVENT_FLAG_CAPTURE, nsnull);
+                              NS_EVENT_FLAG_CAPTURE);
 
   NS_LOG_ACCDOCCREATE_TEXT("  added 'pagehide' listener")
 
   if (aAddDOMContentLoadedListener) {
     elm->AddEventListenerByType(this, NS_LITERAL_STRING("DOMContentLoaded"),
-                                NS_EVENT_FLAG_CAPTURE, nsnull);
+                                NS_EVENT_FLAG_CAPTURE);
     NS_LOG_ACCDOCCREATE_TEXT("  added 'DOMContentLoaded' listener")
   }
 }
