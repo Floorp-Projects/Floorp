@@ -38,8 +38,6 @@
 function test() {
   /** Test for Bug 524745 **/
 
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
   let uniqKey = "bug524745";
   let uniqVal = Date.now();
 

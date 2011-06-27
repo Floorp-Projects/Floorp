@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-         getService(Ci.nsISessionStore);
-
 function test() {
   let assertNumberOfTabs = function (num, msg) {
     is(gBrowser.tabs.length, num, msg);

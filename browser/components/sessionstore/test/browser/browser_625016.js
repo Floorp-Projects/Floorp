@@ -21,10 +21,10 @@ function test() {
 
   // We'll clear all closed windows to make sure our state is clean
   // forgetClosedWindow doesn't trigger a delayed save
-  while(SS_SVC.getClosedWindowCount()) {
-    SS_SVC.forgetClosedWindow(0);
+  while (ss.getClosedWindowCount()) {
+    ss.forgetClosedWindow(0);
   }
-  is(SS_SVC.getClosedWindowCount(), 0, "starting with no closed windows");
+  is(ss.getClosedWindowCount(), 0, "starting with no closed windows");
 
   // Open a new window, which should trigger a save event soon.
   waitForSaveState(onSaveState);
@@ -33,7 +33,7 @@ function test() {
 
 function onSaveState() {
   // Double check that we have no closed windows
-  is(SS_SVC.getClosedWindowCount(), 0, "no closed windows on first save");
+  is(ss.getClosedWindowCount(), 0, "no closed windows on first save");
 
   Services.obs.addObserver(observe1, "sessionstore-state-write", false);
 
@@ -43,7 +43,7 @@ function onSaveState() {
 
 function observe1(aSubject, aTopic, aData) {
   info("observe1: " + aTopic);
-  switch(aTopic) {
+  switch (aTopic) {
     case "sessionstore-state-write":
       aSubject.QueryInterface(Ci.nsISupportsString);
       let state = JSON.parse(aSubject.data);
@@ -53,7 +53,7 @@ function observe1(aSubject, aTopic, aData) {
          "observe1: no closed windows in data being writted to disk");
 
       // The API still treats the closed window as closed, so ensure that window is there
-      is(SS_SVC.getClosedWindowCount(), 1,
+      is(ss.getClosedWindowCount(), 1,
          "observe1: 1 closed window according to API");
       Services.obs.removeObserver(observe1, "sessionstore-state-write", false);
       Services.obs.addObserver(observe1, "sessionstore-state-write-complete", false);
@@ -67,7 +67,7 @@ function observe1(aSubject, aTopic, aData) {
 
 function observe2(aSubject, aTopic, aData) {
   info("observe2: " + aTopic);
-  switch(aTopic) {
+  switch (aTopic) {
     case "sessionstore-state-write":
       aSubject.QueryInterface(Ci.nsISupportsString);
       let state = JSON.parse(aSubject.data);
@@ -77,7 +77,7 @@ function observe2(aSubject, aTopic, aData) {
          "observe2: 1 closed window in data being writted to disk");
 
       // The API still treats the closed window as closed, so ensure that window is there
-      is(SS_SVC.getClosedWindowCount(), 1,
+      is(ss.getClosedWindowCount(), 1,
          "observe2: 1 closed window according to API");
       Services.obs.removeObserver(observe2, "sessionstore-state-write", false);
       Services.obs.addObserver(observe2, "sessionstore-state-write-complete", false);
@@ -101,8 +101,8 @@ function done() {
   gBrowser.removeTab(newTab);
   // The API still represents the closed window as closed, so we can clear it
   // with the API, but just to make sure...
-  is(SS_SVC.getClosedWindowCount(), 1, "1 closed window according to API");
-  SS_SVC.forgetClosedWindow(0);
+  is(ss.getClosedWindowCount(), 1, "1 closed window according to API");
+  ss.forgetClosedWindow(0);
   executeSoon(finish);
 }
 
