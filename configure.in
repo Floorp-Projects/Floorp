@@ -7385,10 +7385,16 @@ else
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     dnl This is sort of awful. Will revisit if we add support for more versions
-    if test "$CC_VERSION" != "14.00.50727.762" -a "$CC_VERSION" != "15.00.30729.01"; then
-        AC_MSG_ERROR([Building jemalloc requires exactly Visual C++ 2005 SP1 or 2008 SP1 currently.])
+    if test "$CC_VERSION" == "14.00.50727.762" -o "$CC_VERSION" == "15.00.30729.01"; then
+      WIN32_OLD_STYLE_JEMALLOC=1
+      AC_DEFINE(WIN32_OLD_STYLE_JEMALLOC)
+    elif test "$CC_VERSION" == "16.00.30319.01" -o "$CC_VERSION" == "16.00.40219.01"; then
+      WIN32_NEW_STYLE_JEMALLOC=1
+      AC_DEFINE(WIN32_NEW_STYLE_JEMALLOC)
+    else        
+      AC_MSG_ERROR([Building jemalloc requires exactly Visual C++ 2005 SP1 or 2008 SP1 or 2010 currently.])
     fi
-    if test -z "$WIN32_CRT_SRC_DIR"; then
+    if test -z "$WIN32_CRT_SRC_DIR" -a -n "$WIN32_OLD_STYLE_JEMALLOC"; then
       if test -z "$VCINSTALLDIR" -o ! -d "$VCINSTALLDIR"; then
         AC_MSG_ERROR([When building jemalloc, set WIN32_CRT_SRC_DIR to the path to the Visual C++ CRT source (usually VCINSTALLDIR\crt\src, but VCINSTALLDIR is not set, so I can't autodetect it for you).])
       else
@@ -7410,13 +7416,22 @@ else
 
     AC_SUBST(MOZ_CRT_CPU_ARCH)
 
-    if test ! -d "$WIN32_CRT_SRC_DIR"; then
-      AC_MSG_ERROR([Invalid Win32 CRT source directory: ${WIN32_CRT_SRC_DIR}])
+    if test -n "$WIN32_OLD_STYLE_JEMALLOC"; then
+      if test ! -d "$WIN32_CRT_SRC_DIR"; then
+        AC_MSG_ERROR([Invalid Win32 CRT source directory: ${WIN32_CRT_SRC_DIR}])
+      fi
+      WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd -W`
+      _objdir_win=`pwd -W`
+      WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$MOZ_CRT_CPU_ARCH"
+      MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt19 -DEFAULTLIB:mozcpp19"
+    else
+      MOZ_MEMORY_LDFLAGS='-MANIFEST:NO -LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+      if test -z "$MOZ_DEBUG"; then
+        WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
+      else
+        WIN32_CRT_LIBS="msvcrtd.lib msvcprtd.lib"
+      fi
     fi
-    WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd -W`
-    _objdir_win=`pwd -W`
-    WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$MOZ_CRT_CPU_ARCH"
-    MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt19 -DEFAULTLIB:mozcpp19"
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
@@ -7435,6 +7450,8 @@ else
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_MEMORY_LDFLAGS)
+AC_SUBST(WIN32_OLD_STYLE_JEMALLOC)
+AC_SUBST(WIN32_CRT_LIBS)
 AC_SUBST(WIN32_CRT_SRC_DIR)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
