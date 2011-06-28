@@ -48,9 +48,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISupportsPriority.h"
-#include "nsITimedChannel.h"
 #include "pldhash.h"
-#include "mozilla/TimeStamp.h"
 
 class  nsISupportsArray;
 
@@ -85,11 +83,6 @@ protected:
 
     nsresult MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& flags);
 
-private:
-    void TelemetryReport();
-    void TelemetryReportChannel(nsITimedChannel *timedChannel,
-                                bool defaultRequest);
-
 protected:
     PRUint32                        mForegroundCount;
     PRUint32                        mLoadFlags;
@@ -105,12 +98,6 @@ protected:
     nsresult                        mStatus;
     PRInt32                         mPriority;
     PRBool                          mIsCanceling;
-
-    /* Telemetry */
-    mozilla::TimeStamp              mDefaultRequestCreationTime;
-    bool                            mDefaultLoadIsTimed;
-    PRUint32                        mTimedRequests;
-    PRUint32                        mCachedRequests;
 };
 
 #endif // nsLoadGroup_h__
