@@ -40,6 +40,7 @@
 #include "nsComponentManager.h"
 #include "nsIIOService.h"
 #include "nsIDirectoryService.h"
+#include "nsIAccessibilityService.h"
 #include "nsIChromeRegistry.h"
 #include "nsIObserverService.h"
 #include "nsNetCID.h"

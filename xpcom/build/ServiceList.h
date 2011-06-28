@@ -1,3 +1,4 @@
+MOZ_SERVICE(AccessibilityService, nsIAccessibilityService, "@mozilla.org/accessibilityService;1")
 MOZ_SERVICE(ChromeRegistryService, nsIChromeRegistry, "@mozilla.org/chrome/chrome-registry;1")
 MOZ_SERVICE(ToolkitChromeRegistryService, nsIToolkitChromeRegistry, "@mozilla.org/chrome/chrome-registry;1")
 MOZ_SERVICE(XULChromeRegistryService, nsIXULChromeRegistry, "@mozilla.org/chrome/chrome-registry;1")
