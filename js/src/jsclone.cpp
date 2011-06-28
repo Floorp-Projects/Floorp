@@ -764,7 +764,7 @@ JSStructuredCloneReader::startRead(Value *vp)
         const jschar *chars = str->getChars(context());
         if (!chars)
             return false;
-        JSObject *obj = RegExp::createObjectNoStatics(context(), chars, length, data);
+        JSObject *obj = RegExp::createObjectNoStatics(context(), chars, length, data, NULL);
         if (!obj)
             return false;
         vp->setObject(*obj);

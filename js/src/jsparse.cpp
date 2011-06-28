@@ -8832,12 +8832,14 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             obj = RegExp::createObject(context, context->regExpStatics(),
                                        tokenStream.getTokenbuf().begin(),
                                        tokenStream.getTokenbuf().length(),
-                                       tokenStream.currentToken().t_reflags);
+                                       tokenStream.currentToken().t_reflags,
+                                       &tokenStream);
         } else {
             obj = RegExp::createObjectNoStatics(context,
                                                 tokenStream.getTokenbuf().begin(),
                                                 tokenStream.getTokenbuf().length(),
-                                                tokenStream.currentToken().t_reflags);
+                                                tokenStream.currentToken().t_reflags,
+                                                &tokenStream);
         }
 
         if (!obj)
