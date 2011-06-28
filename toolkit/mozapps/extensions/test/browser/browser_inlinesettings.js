@@ -181,78 +181,69 @@ add_test(function() {
     EventUtils.synthesizeKey("b", {}, gManagerWindow);
     is(input.value, "2", "Menulist should have updated value");
     is(gManagerWindow._testValue, "2", "Menulist oncommand handler should've updated the test value");
+    delete gManagerWindow._testValue;
 
-    setTimeout(function () {
-      EventUtils.synthesizeKey("c", {}, gManagerWindow);
-      is(input.value, "3", "Menulist should have updated value");
-      is(gManagerWindow._testValue, "3", "Menulist oncommand handler should've updated the test value");
-      delete gManagerWindow._testValue;
+    Services.prefs.setCharPref("extensions.inlinesettings1.color", "#FF0000");
+    input = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "input");
+    is(input.color, "#FF0000", "Color picker should have initial value");
+    input.focus();
+    EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
+    EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
+    EventUtils.synthesizeKey("VK_RETURN", {}, gManagerWindow);
+    input.hidePopup();
+    is(input.color, "#FF9900", "Color picker should have updated value");
+    is(Services.prefs.getCharPref("extensions.inlinesettings1.color"), "#FF9900", "Color pref should have been updated");
 
-      Services.prefs.setCharPref("extensions.inlinesettings1.color", "#FF0000");
-      setTimeout(function () {
-        input = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "input");
-        is(input.color, "#FF0000", "Color picker should have initial value");
-        input.focus();
-        EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
-        EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
-        EventUtils.synthesizeKey("VK_RETURN", {}, gManagerWindow);
-        is(input.color, "#FF9900", "Color picker should have updated value");
-        is(Services.prefs.getCharPref("extensions.inlinesettings1.color"), "#FF9900", "Color pref should have been updated");
+    try {
+      mockFilePickerFactory.register();
 
-        setTimeout(function () {
-          mockFilePickerFactory.register();
+      var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
+      input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
+      is(input.value, "", "Label value should be empty");
 
-          try {
-            var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
-            input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
-            is(input.value, "", "Label value should be empty");
+      var profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      var curProcD = Services.dirsvc.get("CurProcD", Ci.nsIFile);
 
-            var profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
-            var curProcD = Services.dirsvc.get("CurProcD", Ci.nsIFile);
+      _returnFile = profD;
+      _returnValue = Ci.nsIFilePicker.returnOK;
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+      is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
+      is(input.value, profD.path, "Label value should match file chosen");
+      is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should match file chosen");
 
-            _returnFile = profD;
-            _returnValue = Ci.nsIFilePicker.returnOK;
-            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-            is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
-            is(input.value, profD.path, "Label value should match file chosen");
-            is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should match file chosen");
+      _returnFile = curProcD;
+      _returnValue = Ci.nsIFilePicker.returnCancel;
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+      is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
+      is(input.value, profD.path, "Label value should not have changed");
+      is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should not have changed");
 
-            _returnFile = curProcD;
-            _returnValue = Ci.nsIFilePicker.returnCancel;
-            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-            is(_mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
-            is(input.value, profD.path, "Label value should not have changed");
-            is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should not have changed");
+      button = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "button");
+      input = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "input");
+      is(input.value, "", "Label value should be empty");
 
-            button = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "button");
-            input = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "input");
-            is(input.value, "", "Label value should be empty");
-   
-            _returnFile = profD;
-            _returnValue = Ci.nsIFilePicker.returnOK;
-            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-            is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
-            is(input.value, profD.path, "Label value should match file chosen");
-            is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should match file chosen");
+      _returnFile = profD;
+      _returnValue = Ci.nsIFilePicker.returnOK;
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+      is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
+      is(input.value, profD.path, "Label value should match file chosen");
+      is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should match file chosen");
 
-            _returnFile = curProcD;
-            _returnValue = Ci.nsIFilePicker.returnCancel;
-            EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-            is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
-            is(input.value, profD.path, "Label value should not have changed");
-            is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should not have changed");
+      _returnFile = curProcD;
+      _returnValue = Ci.nsIFilePicker.returnCancel;
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+      is(_mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
+      is(input.value, profD.path, "Label value should not have changed");
+      is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should not have changed");
 
-          } finally {
-            mockFilePickerFactory.unregister();
-          }
+    } finally {
+      mockFilePickerFactory.unregister();
 
-          button = gManagerWindow.document.getElementById("detail-prefs-btn");
-          is_element_hidden(button, "Preferences button should not be visible");
+      button = gManagerWindow.document.getElementById("detail-prefs-btn");
+      is_element_hidden(button, "Preferences button should not be visible");
 
-          gCategoryUtilities.openType("extension", run_next_test);
-        }, 0);
-      }, 0);
-    }, 1200); // Timeout value from toolkit/content/tests/widgets/test_menulist_keynav.xul
+      gCategoryUtilities.openType("extension", run_next_test);
+    }
   });
 });
 
