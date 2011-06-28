@@ -15,10 +15,10 @@ def build_dict(env=os.environ):
     """
     d = {}
     # Check that all required variables are present first.
-    required = ["TARGET_CPU", "OS_TARGET"]
+    required = ["TARGET_CPU", "OS_TARGET", "MOZ_WIDGET_TOOLKIT"]
     missing = [r for r in required if r not in env]
     if missing:
-        raise Exception("Missing required environment variables: " %
+        raise Exception("Missing required environment variables: %s" %
                         ', '.join(missing))
     # os
     o = env["OS_TARGET"]
@@ -31,6 +31,9 @@ def build_dict(env=os.environ):
     else:
         # Allow unknown values, just lowercase them.
         d["os"] = o.lower()
+
+    # Widget toolkit, just pass the value directly through.
+    d["toolkit"] = env["MOZ_WIDGET_TOOLKIT"]
     
     # processor
     p = env["TARGET_CPU"]
@@ -51,6 +54,9 @@ def build_dict(env=os.environ):
 
     # debug
     d["debug"] = 'MOZ_DEBUG' in env and env['MOZ_DEBUG'] == '1'
+
+    # crashreporter
+    d["crashreporter"] = 'MOZ_CRASHREPORTER' in env and env['MOZ_CRASHREPORTER'] == '1'
     return d
 
 #TODO: replace this with the json module when Python >= 2.6 is a requirement.
