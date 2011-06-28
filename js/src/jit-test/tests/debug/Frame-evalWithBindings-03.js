@@ -5,12 +5,12 @@ var global = dbg.addDebuggee(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	var argc = frame.arguments.length;
-	assertEq(argc, 7);
-	assertEq(frame.evalWithBindings("arguments[prop]", {prop: "length"}).return, argc);
-	for (var i = 0; i < argc; i++)
-	    assertEq(frame.evalWithBindings("arguments[i]", {i: i}).return, frame.arguments[i]);
-	hits++;
+        var argc = frame.arguments.length;
+        assertEq(argc, 7);
+        assertEq(frame.evalWithBindings("arguments[prop]", {prop: "length"}).return, argc);
+        for (var i = 0; i < argc; i++)
+            assertEq(frame.evalWithBindings("arguments[i]", {i: i}).return, frame.arguments[i]);
+        hits++;
     }
 };
 g.eval("function f() { debugger; }");

@@ -360,3 +360,4 @@ MSG_DEF(JSMSG_DEBUG_LOOP,             277, 0, JSEXN_TYPEERR, "cannot debug an ob
 MSG_DEF(JSMSG_DEBUG_NOT_IDLE,         278, 0, JSEXN_ERR, "can't start debugging: a debuggee script is on the stack")
 MSG_DEF(JSMSG_DEBUG_BAD_OFFSET,       279, 0, JSEXN_TYPEERR, "invalid script offset")
 MSG_DEF(JSMSG_DEBUG_BAD_LINE,         280, 0, JSEXN_TYPEERR, "invalid line number")
+MSG_DEF(JSMSG_DEBUG_NOT_DEBUGGING,    281, 0, JSEXN_ERR, "can't set breakpoint: script global is not a debuggee")

@@ -544,7 +544,6 @@ struct JSRuntime {
 #endif
 
     /* More debugging state, see jsdbgapi.c. */
-    JSCList             trapList;
     JSCList             watchPointList;
 
     /*
@@ -576,8 +575,8 @@ struct JSRuntime {
     PRCondVar           *stateChange;
 
     /*
-     * Lock serializing trapList and watchPointList accesses, and count of all
-     * mutations to trapList and watchPointList made by debugger threads.  To
+     * Lock serializing watchPointList accesses, and count of all
+     * mutations to watchPointList made by debugger threads.  To
      * keep the code simple, we define debuggerMutations for the thread-unsafe
      * case too.
      */

@@ -159,6 +159,7 @@ struct TokenPos;
 struct TokenPtr;
 
 class ContextAllocPolicy;
+class RuntimeAllocPolicy;
 class SystemAllocPolicy;
 
 template <class T,
@@ -187,7 +188,12 @@ struct Shape;
 struct EmptyShape;
 class Bindings;
 
+class Breakpoint;
+class BreakpointSite;
 class Debug;
+
+typedef HashMap<jsbytecode *, BreakpointSite *, DefaultHasher<jsbytecode *>, RuntimeAllocPolicy>
+    BreakpointSiteMap;
 
 } /* namespace js */
 

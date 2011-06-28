@@ -4,10 +4,10 @@ var dbg = Debug(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	if (hits++ === 0)
-	    assertEq(frame.eval("debugger;"), null);
-	else
-	    return null;
+        if (hits++ === 0)
+            assertEq(frame.eval("debugger;"), null);
+        else
+            return null;
     }
 };
 assertEq(g.eval("debugger; 'ok';"), "ok");
