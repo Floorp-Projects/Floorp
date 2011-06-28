@@ -635,6 +635,9 @@ nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
                                          nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+  if (!aNode)
+    return NS_OK;
 
   nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
   NS_IF_ADDREF(*aAccessible = GetAccessible(node));
