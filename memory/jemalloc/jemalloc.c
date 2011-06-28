@@ -5733,7 +5733,9 @@ inline void sys_free(void* ptr) {return free(ptr);}
 #define	calloc(a, b)	je_calloc(a, b)
 #define	realloc(a, b)	je_realloc(a, b)
 #define	free(a)		je_free(a)
+#if defined(WIN32_NEW_STYLE_JEMALLOC)
 #define memalign(a, b) je_memalign(a, b)
+#endif
 #define posix_memalign(a, b, c)  je_posix_memalign(a, b, c)
 #define malloc_usable_size(a) je_malloc_usable_size(a)
 

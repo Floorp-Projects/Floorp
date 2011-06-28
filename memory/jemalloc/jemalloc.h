@@ -56,7 +56,9 @@ void	*je_valloc(size_t size);
 void	*je_calloc(size_t num, size_t size);
 void	*je_realloc(void *ptr, size_t size);
 void	je_free(void *ptr);
+#if defined(WIN32_NEW_STYLE_JEMALLOC)
 void *je_memalign(size_t alignment, size_t size);
+#endif
 int	je_posix_memalign(void **memptr, size_t alignment, size_t size);
 char    *je_strndup(const char *src, size_t len);
 char    *je_strdup(const char *src);
