@@ -55,7 +55,7 @@ import sys
 from fnmatch import fnmatch
 from optparse import OptionParser
 
-version = '0.5.1' # package version
+version = '0.5.2' # package version
 try:
     from setuptools import setup
 except ImportError:
@@ -308,6 +308,13 @@ def normalize_path(path):
     if sys.platform.startswith('win'):
         return path.replace('/', os.path.sep)
     return path
+
+def denormalize_path(path):
+    """denormalize a relative path"""
+    if sys.platform.startswith('win'):
+        return path.replace(os.path.sep, '/')
+    return path
+    
 
 def read_ini(fp, variables=None, default='DEFAULT',
              comments=';#', separators=('=', ':'),
@@ -614,7 +621,7 @@ class ManifestParser(object):
 
             path = test['name']
             if not os.path.isabs(path):
-                path = relpath(test['path'], self.rootdir)
+                path = denormalize_path(relpath(test['path'], self.rootdir))
             print >> fp, '[%s]' % path
           
             # reserved keywords:
@@ -804,7 +811,7 @@ def convert(directories, pattern=None, ignore=(), write=None):
 
             # reference only the subdirectory
             _dirpath = dirpath
-            dirpath = dirpath.split(directory, 1)[-1].strip('/')
+            dirpath = dirpath.split(directory, 1)[-1].strip(os.path.sep)
 
             if dirpath.split(os.path.sep)[0] in ignore:
                 continue
@@ -826,7 +833,7 @@ def convert(directories, pattern=None, ignore=(), write=None):
                 manifest.close()
 
             # add to the list
-            retval.extend([os.path.join(dirpath, filename)
+            retval.extend([denormalize_path(os.path.join(dirpath, filename))
                            for filename in filenames])
 
     if write:
