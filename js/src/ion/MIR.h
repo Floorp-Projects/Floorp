@@ -184,6 +184,7 @@ class MInstruction
     public InlineListNode<MInstruction>
 {
     friend class MBasicBlock;
+    friend class Loop;
 
   public:
     enum Opcode {
@@ -205,6 +206,7 @@ class MInstruction
     static const uint32 IN_WORKLIST =  0x01;
     static const uint32 REWRITES_DEF = 0x02;
     static const uint32 EMIT_AT_USES = 0x04;
+    static const uint32 LOOP_INVARIANT = 0x08;
 
     void setBlock(MBasicBlock *block) {
         block_ = block;
@@ -254,6 +256,18 @@ class MInstruction
     void setNotInWorklist() {
         JS_ASSERT(inWorklist());
         removeFlags(IN_WORKLIST);
+    }
+
+    void setLoopInvariant() {
+        setFlags(LOOP_INVARIANT);
+    }
+
+    void setNotLoopInvariant() {
+        removeFlags(LOOP_INVARIANT);
+    }
+
+    bool isLoopInvariant() {
+        return hasFlags(LOOP_INVARIANT);
     }
 
     MBasicBlock *block() const {
