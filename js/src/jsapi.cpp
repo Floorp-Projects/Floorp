@@ -5765,7 +5765,7 @@ JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uin
     if (!chars)
         return NULL;
     RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
-    JSObject *reobj = RegExp::createObject(cx, res, chars, length, flags);
+    JSObject *reobj = RegExp::createObject(cx, res, chars, length, flags, NULL);
     cx->free_(chars);
     return reobj;
 }
@@ -5775,7 +5775,7 @@ JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
 {
     CHECK_REQUEST(cx);
     RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
-    return RegExp::createObject(cx, res, chars, length, flags);
+    return RegExp::createObject(cx, res, chars, length, flags, NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -5821,7 +5821,7 @@ JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN fla
     jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    JSObject *obj = RegExp::createObjectNoStatics(cx, chars, length, flags);
+    JSObject *obj = RegExp::createObjectNoStatics(cx, chars, length, flags, NULL);
     cx->free_(chars);
     return obj;
 }
@@ -5830,7 +5830,7 @@ JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    return RegExp::createObjectNoStatics(cx, chars, length, flags);
+    return RegExp::createObjectNoStatics(cx, chars, length, flags, NULL);
 }
 
 JS_PUBLIC_API(JSBool)
