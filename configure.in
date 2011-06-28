@@ -1544,8 +1544,10 @@ if test "$GNU_CC"; then
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
     DSO_LDOPTS='-shared'
     if test "$GCC_USE_GNU_LD"; then
-        # Don't allow undefined symbols in libraries
-        DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
+        # Don't allow undefined symbols in libraries, and remove dead symbols
+        DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs -Wl,--gc-sections"
+        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
+        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
     fi
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
