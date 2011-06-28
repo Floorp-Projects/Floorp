@@ -142,8 +142,6 @@ html[dir=rtl] .expander {
   top: 100%;
   text-align: center;
   width: 94.5%;
-  white-space: nowrap;
-  overflow: hidden;
 }
 
 .stacked {
