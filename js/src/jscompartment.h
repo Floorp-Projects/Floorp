@@ -522,6 +522,10 @@ struct JS_FRIEND_API(JSCompartment) {
      */
     js::GlobalObjectSet              debuggees;
 
+  public:
+    js::BreakpointSiteMap            breakpointSites;
+
+  private:
     JSCompartment *thisForCtor() { return this; }
   public:
     js::MathCache *getMathCache(JSContext *cx) {
@@ -553,13 +557,19 @@ struct JS_FRIEND_API(JSCompartment) {
 
   public:
     js::GlobalObjectSet &getDebuggees() { return debuggees; }
-
     bool addDebuggee(JSContext *cx, js::GlobalObject *global);
-
     void removeDebuggee(JSContext *cx, js::GlobalObject *global,
                         js::GlobalObjectSet::Enum *debuggeesEnum = NULL);
-
     bool setDebugModeFromC(JSContext *cx, bool b);
+
+    js::BreakpointSite *getBreakpointSite(jsbytecode *pc);
+    js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbytecode *pc,
+                                                  JSObject *scriptObject);
+    void clearBreakpointsIn(JSContext *cx, js::Debug *dbg, JSScript *script, JSObject *handler);
+    void clearTraps(JSContext *cx, JSScript *script);
+    bool markBreakpointsIteratively(JSTracer *trc);
+  private:
+    void sweepBreakpoints(JSContext *cx);
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)

@@ -43,6 +43,7 @@
 #define jsdbg_h__
 
 #include "jsapi.h"
+#include "jsclist.h"
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jshashtable.h"
@@ -54,6 +55,7 @@
 namespace js {
 
 class Debug {
+    friend class js::Breakpoint;
     friend JSBool (::JS_DefineDebugObject)(JSContext *cx, JSObject *obj);
 
   private:
@@ -68,6 +70,8 @@ class Debug {
     // property was set.
     bool hasDebuggerHandler;            // hooks.debuggerHandler
     bool hasThrowHandler;               // hooks.throw
+
+    JSCList breakpoints;                // cyclic list of all js::Breakpoints in this debugger
 
     // Weak references to stack frames that are currently on the stack and thus
     // necessarily alive. We drop them as soon as they leave the stack (see
@@ -127,6 +131,7 @@ class Debug {
     static JSBool hasDebuggee(JSContext *cx, uintN argc, Value *vp);
     static JSBool getDebuggees(JSContext *cx, uintN argc, Value *vp);
     static JSBool getYoungestFrame(JSContext *cx, uintN argc, Value *vp);
+    static JSBool clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp);
     static JSBool construct(JSContext *cx, uintN argc, Value *vp);
     static JSPropertySpec properties[];
     static JSFunctionSpec methods[];
@@ -158,6 +163,8 @@ class Debug {
 
     // Remove script from our table of eval scripts.
     void destroyEvalScript(JSScript *script);
+
+    inline Breakpoint *firstBreakpoint() const;
 
   public:
     Debug(JSObject *dbg, JSObject *hooks);
@@ -194,6 +201,7 @@ class Debug {
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
     static inline JSTrapStatus onThrow(JSContext *cx, js::Value *vp);
     static inline void onDestroyScript(JSScript *script);
+    static JSTrapStatus onTrap(JSContext *cx, Value *vp);
 
     /**************************************** Functions for use by jsdbg.cpp. */
 
@@ -263,8 +271,66 @@ class Debug {
 bool
 Debug::hasAnyLiveHooks() const
 {
-    return enabled && (hasDebuggerHandler || hasThrowHandler);
+    return enabled && (hasDebuggerHandler || hasThrowHandler || !JS_CLIST_IS_EMPTY(&breakpoints));
 }
+
+class BreakpointSite {
+    friend class js::Breakpoint;
+    friend class ::JSCompartment;
+    friend class js::Debug;
+
+  public:
+    JSScript * const script;
+    jsbytecode * const pc;
+    const JSOp realOpcode;
+
+  private:
+    // The holder object for script, if known, else NULL.  This is NULL for
+    // eval scripts and for JSD1 traps. It is always non-null for JSD2
+    // breakpoints in non-eval scripts.
+    JSObject *scriptObject;
+
+    JSCList breakpoints;  // cyclic list of all js::Breakpoints at this instruction
+    size_t enabledCount;  // number of breakpoints in the list that are enabled
+    JSTrapHandler trapHandler;  // jsdbgapi trap state
+    Value trapClosure;
+
+    bool recompile(JSContext *cx, bool forTrap);
+
+  public:
+    BreakpointSite(JSScript *script, jsbytecode *pc);
+    Breakpoint *firstBreakpoint() const;
+    bool hasBreakpoint(Breakpoint *bp);
+
+    bool inc(JSContext *cx);
+    void dec(JSContext *cx);
+    bool setTrap(JSContext *cx, JSTrapHandler handler, const Value &closure);
+    void clearTrap(JSContext *cx, BreakpointSiteMap::Enum *e = NULL,
+                   JSTrapHandler *handlerp = NULL, Value *closurep = NULL);
+    void destroyIfEmpty(JSRuntime *rt, BreakpointSiteMap::Enum *e);
+};
+
+class Breakpoint {
+    friend class ::JSCompartment;
+    friend class js::Debug;
+
+  public:
+    Debug * const debugger;
+    BreakpointSite * const site;
+  private:
+    JSObject *handler;
+    JSCList debuggerLinks;
+    JSCList siteLinks;
+
+  public:
+    static Breakpoint *fromDebuggerLinks(JSCList *links);
+    static Breakpoint *fromSiteLinks(JSCList *links);
+    Breakpoint(Debug *debugger, BreakpointSite *site, JSObject *handler);
+    void destroy(JSContext *cx, BreakpointSiteMap::Enum *e = NULL);
+    Breakpoint *nextInDebugger();
+    Breakpoint *nextInSite();
+    JSObject *getHandler() const { return handler; }
+};
 
 bool
 Debug::observesScope(JSObject *obj) const
@@ -276,6 +342,14 @@ bool
 Debug::observesFrame(StackFrame *fp) const
 {
     return observesScope(&fp->scopeChain());
+}
+
+Breakpoint *
+Debug::firstBreakpoint() const
+{
+    if (JS_CLIST_IS_EMPTY(&breakpoints))
+        return NULL;
+    return Breakpoint::fromDebuggerLinks(JS_NEXT_LINK(&breakpoints));
 }
 
 JSObject *
@@ -295,7 +369,7 @@ Debug::fromJSObject(JSObject *obj)
 void
 Debug::leaveStackFrame(JSContext *cx)
 {
-    if (!cx->compartment->getDebuggees().empty())
+    if (!cx->compartment->getDebuggees().empty() || !cx->compartment->breakpointSites.empty())
         slowPathLeaveStackFrame(cx);
 }
 

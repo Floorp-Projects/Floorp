@@ -5,25 +5,25 @@ var f1;
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	f1 = frame;
+        f1 = frame;
 
-	// This trips the throw hook.
-	var x = frame.evalWithBindings("wrongSpeling", {rightSpelling: 2}).throw;
+        // This trips the throw hook.
+        var x = frame.evalWithBindings("wrongSpeling", {rightSpelling: 2}).throw;
 
-	assertEq(frame.evalWithBindings("exc.name", {exc: x}).return, "ReferenceError");
-	hits++;
+        assertEq(frame.evalWithBindings("exc.name", {exc: x}).return, "ReferenceError");
+        hits++;
     },
     throw: function (frame, exc) {
-	assertEq(frame !== f1, true);
+        assertEq(frame !== f1, true);
 
-	// f1's environment does not contain the binding for the first evalWithBindings call.
-	assertEq(f1.eval("rightSpelling").return, "dependent");
-	assertEq(f1.evalWithBindings("n + rightSpelling", {n: "in"}).return, "independent");
+        // f1's environment does not contain the binding for the first evalWithBindings call.
+        assertEq(f1.eval("rightSpelling").return, "dependent");
+        assertEq(f1.evalWithBindings("n + rightSpelling", {n: "in"}).return, "independent");
 
-	// frame's environment does contain the binding.
-	assertEq(frame.eval("rightSpelling").return, 2);
-	assertEq(frame.evalWithBindings("rightSpelling + three", {three: 3}).return, 5);
-	hits++;
+        // frame's environment does contain the binding.
+        assertEq(frame.eval("rightSpelling").return, 2);
+        assertEq(frame.evalWithBindings("rightSpelling + three", {three: 3}).return, 5);
+        hits++;
     }
 };
 g.eval("(function () { var rightSpelling = 'dependent'; debugger; })();");

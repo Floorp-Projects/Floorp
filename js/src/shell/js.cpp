@@ -1908,9 +1908,10 @@ SetDebug(JSContext *cx, uintN argc, jsval *vp)
      * In the future, this restriction may be lifted.
      */
 
-    JSBool rv = JS_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
-    JS_SET_RVAL(cx, vp, rv ? JSVAL_TRUE : JSVAL_FALSE);
-    return JS_TRUE;
+    JSBool ok = JS_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
+    if (ok)
+        JS_SET_RVAL(cx, vp, JSVAL_TRUE);
+    return ok;
 }
 
 static JSBool

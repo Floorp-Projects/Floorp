@@ -6,9 +6,9 @@ var dbg = Debug(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	var f = frame.eval("f").return;
-	assertEq(f.call(null, "a", "b").return, "a/b");
-	hits++;
+        var f = frame.eval("f").return;
+        assertEq(f.call(null, "a", "b").return, "a/b");
+        hits++;
     }
 };
 g.eval("debugger;");

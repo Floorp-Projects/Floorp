@@ -54,9 +54,8 @@ function test()
  
   function f() { return a(); }
 
-  if (typeof trap == 'function' && typeof setDebug == 'function')
+  if (typeof trap == 'function')
   {
-    setDebug(true);
     trap(f, 0, "print('trap')");
   }
   f + '';

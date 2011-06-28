@@ -5,9 +5,9 @@ var dbg = new Debug(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	assertEq(frame.evalWithBindings("x", {x: 2}).return, 2);
-	assertEq(frame.evalWithBindings("x + y", {x: 2}).return, 5);
-	hits++;
+        assertEq(frame.evalWithBindings("x", {x: 2}).return, 2);
+        assertEq(frame.evalWithBindings("x + y", {x: 2}).return, 5);
+        hits++;
     }
 };
 

@@ -4996,7 +4996,7 @@ END_VARLEN_CASE
 BEGIN_CASE(JSOP_TRAP)
 {
     Value rval;
-    JSTrapStatus status = JS_HandleTrap(cx, script, regs.pc, Jsvalify(&rval));
+    JSTrapStatus status = Debug::onTrap(cx, &rval);
     switch (status) {
       case JSTRAP_ERROR:
         goto error;

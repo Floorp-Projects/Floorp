@@ -1268,13 +1268,6 @@ extern void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str);
 
 /*
- * This function is defined in jsdbgapi.cpp but is declared here to avoid
- * polluting jsdbgapi.h, a public API header, with internal functions.
- */
-extern void
-js_MarkTraps(JSTracer *trc);
-
-/*
  * Macro to test if a traversal is the marking phase of the GC.
  */
 #define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
