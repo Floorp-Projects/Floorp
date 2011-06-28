@@ -6688,8 +6688,8 @@ class CompExprTransplanter {
  * parsing the body. As soon as the parser reaches the end of the body expression,
  * call endBody() to reset the context's state, and then immediately call:
  *
- * - checkValidBody() if this did turn out to be in a generator expression
- * - maybeNoteGenerator() if this did not turn out to be in a generator expression
+ * - checkValidBody() if this *did* turn out to be a generator expression
+ * - maybeNoteGenerator() if this *did not* turn out to be a generator expression
  */
 class GenexpGuard {
     JSTreeContext   *tc;

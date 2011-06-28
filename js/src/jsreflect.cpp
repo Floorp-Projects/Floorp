@@ -907,29 +907,20 @@ bool
 NodeBuilder::tryStatement(Value body, NodeVector &catches, Value finally,
                           TokenPos *pos, Value *dst)
 {
-    Value handler;
+    Value handlers;
 
     Value cb = callbacks[AST_TRY_STMT];
     if (!cb.isNull()) {
-        return newArray(catches, &handler) &&
-               callback(cb, body, handler, opt(finally), pos, dst);
+        return newArray(catches, &handlers) &&
+               callback(cb, body, handlers, opt(finally), pos, dst);
     }
 
-    switch (catches.length()) {
-      case 0:
-        handler.setNull();
-        break;
-      case 1:
-        handler = catches[0];
-        break;
-      default:
-        if (!newArray(catches, &handler))
-            return false;
-    }
+    if (!newArray(catches, &handlers))
+        return false;
 
     return newNode(AST_TRY_STMT, pos,
                    "block", body,
-                   "handler", handler,
+                   "handlers", handlers,
                    "finalizer", finally,
                    dst);
 }
