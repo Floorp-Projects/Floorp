@@ -5963,7 +5963,7 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
     JSObject *obj = &regs.fp()->slots()[slot].toObject();
-    if (!js_ArrayCompPush(cx, obj, regs.sp[-1]))
+    if (!js_NewbornArrayPush(cx, obj, regs.sp[-1]))
         goto error;
     regs.sp--;
 }

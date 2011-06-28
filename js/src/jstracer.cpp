@@ -16269,7 +16269,7 @@ TraceRecorder::record_JSOP_ARRAYPUSH()
     enterDeepBailCall();
 
     LIns *args[] = { elt_ins, array_ins, cx_ins };
-    pendingGuardCondition = w.call(&js_ArrayCompPush_tn_ci, args);
+    pendingGuardCondition = w.call(&js_NewbornArrayPush_tn_ci, args);
 
     leaveDeepBailCall();
     return ARECORD_CONTINUE;
