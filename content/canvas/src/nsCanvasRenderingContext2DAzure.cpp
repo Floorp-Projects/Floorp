@@ -605,10 +605,6 @@ protected:
     */
   PRPackedBool mPredictManyRedrawCalls;
 
-  // This is stored after GetThebesSurface has been called once to avoid
-  // excessive ThebesSurface initialization overhead.
-  nsRefPtr<gfxASurface> mThebesSurface;
-
   /**
     * We also have a device space pathbuilder. The reason for this is as
     * follows, when a path is being built, but the transform changes, we
@@ -4242,22 +4238,11 @@ nsCanvasRenderingContext2DAzure::GetThebesSurface(gfxASurface **surface)
     *surface = tmpSurf.forget().get();
     return NS_OK;
   }
+    
+  nsRefPtr<gfxASurface> newSurf =
+    gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);    
 
-  if (!mThebesSurface) {
-    mThebesSurface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);    
-
-    if (!mThebesSurface) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    // Normally GetThebesSurfaceForDrawTarget will handle the flush, when
-    // we're returning a cached ThebesSurface we need to flush here.
-    mTarget->Flush();
-  }
-
-  mThebesSurface->AddRef();
-  *surface = mThebesSurface;
+  *surface = newSurf.forget().get();
 
   return NS_OK;
 }
