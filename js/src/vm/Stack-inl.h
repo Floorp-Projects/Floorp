@@ -158,8 +158,8 @@ StackFrame::initJitFrameCallerHalf(JSContext *cx, StackFrame::Flags flags,
 }
 
 /*
- * The "early prologue" refers to the members that are stored for the benefit
- * of slow paths before initializing the rest of the members.
+ * The "early prologue" refers to either the fast path or arity check path up
+ * to the "late prologue".
  */
 inline void
 StackFrame::initJitFrameEarlyPrologue(JSFunction *fun, uint32 nactual)
@@ -170,13 +170,25 @@ StackFrame::initJitFrameEarlyPrologue(JSFunction *fun, uint32 nactual)
 }
 
 /*
- * The "late prologue" refers to the members that are stored after having
- * checked for stack overflow and formal/actual arg mismatch.
+ * The "late prologue" (in generatePrologue) extends from the join point of the
+ * fast path and arity check to where the call object is (possibly) created.
  */
-inline void
-StackFrame::initJitFrameLatePrologue()
+inline bool
+StackFrame::initJitFrameLatePrologue(JSContext *cx, Value **limit)
 {
+    uintN nvals = script()->nslots + VALUES_PER_STACK_FRAME;
+    Value *required = (Value *)this + nvals;
+    if (required >= *limit) {
+        ContextStack &stack = cx->stack;
+        if (!stack.space().tryBumpLimit(NULL, slots(), nvals, limit)) {
+            stack.popFrameAfterOverflow();
+            js_ReportOverRecursed(cx);
+            return false;
+        }
+    }
+
     SetValueRangeToUndefined(slots(), script()->nfixed);
+    return true;
 }
 
 inline Value &

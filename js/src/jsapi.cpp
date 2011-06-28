@@ -140,12 +140,6 @@ class AutoVersionAPI
         , oldCompileOptions(cx->getCompileOptions())
 #endif
     {
-        /*
-         * Note: ANONFUNFIX in newVersion is ignored for backwards
-         * compatibility, must be set via JS_SetOptions. (Because of this, we
-         * inherit the current ANONFUNFIX setting from the options.
-         */
-        VersionSetAnonFunFix(&newVersion, OptionsHasAnonFunFix(cx->getCompileOptions()));
         this->newVersion = newVersion;
         cx->clearVersionOverride();
         cx->setDefaultVersion(newVersion);
@@ -658,18 +652,6 @@ JSRuntime::init(uint32 maxbytes)
     JMCheckLogging();
 #endif
 
-#ifdef DEBUG
-    functionMeterFilename = getenv("JS_FUNCTION_STATFILE");
-    if (functionMeterFilename) {
-        if (!methodReadBarrierCountMap.init())
-            return false;
-        if (!unjoinedFunctionCountMap.init())
-            return false;
-    }
-    propTreeStatFilename = getenv("JS_PROPTREE_STATFILE");
-    propTreeDumpFilename = getenv("JS_PROPTREE_DUMPFILE");
-#endif
-
 #ifdef JS_TRACER
     InitJIT();
 #endif
@@ -816,26 +798,11 @@ JS_DestroyRuntime(JSRuntime *rt)
     Foreground::delete_(rt);
 }
 
-#ifdef JS_REPRMETER
-namespace reprmeter {
-    extern void js_DumpReprMeter();
-}
-#endif
-
 JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
 #ifdef MOZ_TRACEVIS
     StopTraceVis();
-#endif
-
-#ifdef JS_OPMETER
-    extern void js_DumpOpMeters();
-    js_DumpOpMeters();
-#endif
-
-#ifdef JS_REPRMETER
-    reprmeter::js_DumpReprMeter();
 #endif
 
 #ifdef JS_THREADSAFE
@@ -2727,7 +2694,8 @@ JS_PUBLIC_API(void)
 JS_FlushCaches(JSContext *cx)
 {
 #ifdef JS_TRACER
-    FlushJITCache(cx, &cx->compartment->traceMonitor);
+    if (cx->compartment->hasTraceMonitor())
+        FlushJITCache(cx, cx->compartment->traceMonitor());
 #endif
 }
 
@@ -4802,17 +4770,6 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
                                  NULL, NULL, JSPROP_ENUMERATE)) {
             fun = NULL;
         }
-
-#ifdef JS_SCOPE_DEPTH_METER
-        if (fun && obj) {
-            JSObject *pobj = obj;
-            uintN depth = 1;
-
-            while ((pobj = pobj->getParent()) != NULL)
-                ++depth;
-            JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
-        }
-#endif
     }
 
   out2:

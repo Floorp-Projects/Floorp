@@ -549,7 +549,6 @@ function optionsInit() {
     atline:     true,
     xml:        true,
     relimit:    true,
-    anonfunfix: true,
   };
 
   // record initial values to support resetting
