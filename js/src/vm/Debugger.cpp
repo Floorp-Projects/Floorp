@@ -2802,8 +2802,8 @@ EvaluateInEnv(JSContext *cx, Env *env, StackFrame *fp, const jschar *chars,
      * we use a static level that will cause us not to attempt to optimize
      * variable references made by this frame.
      */
-    JSScript *script = frontend::CompileScript(cx, env, fp,
-                                               fp->scopeChain().principals(cx),
+    JSPrincipals *prin = fp->scopeChain().principals(cx);
+    JSScript *script = frontend::CompileScript(cx, env, fp, prin, prin,
                                                TCF_COMPILE_N_GO | TCF_NEED_SCRIPT_GLOBAL,
                                                chars, length, filename, lineno,
                                                cx->findVersion(), NULL,

@@ -503,6 +503,7 @@ struct JSScript : public js::gc::Cell {
     js::Bindings    bindings;   /* names of top-level variables in this script
                                    (and arguments if this is a function script) */
     JSPrincipals    *principals;/* principals for this script */
+    JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
     jschar          *sourceMap; /* source map file or null */
 
     /*
@@ -557,6 +558,12 @@ struct JSScript : public js::gc::Cell {
 
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
+
+#if JS_BITS_PER_WORD == 32
+  private:
+    void *padding_;
+  public:
+#endif
 
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext *cx);
@@ -811,6 +818,7 @@ struct JSScript : public js::gc::Cell {
     static inline void writeBarrierPost(JSScript *script, void *addr);
 };
 
+/* If this fails, padding_ can be removed. */
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);
 
 #define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
@@ -895,8 +903,8 @@ enum LineOption {
     NOT_CALLED_FROM_JSOP_EVAL
 };
 
-inline const char *
-CurrentScriptFileAndLine(JSContext *cx, uintN *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
+inline void
+CurrentScriptFileLineOrigin(JSContext *cx, uintN *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
 }
 
