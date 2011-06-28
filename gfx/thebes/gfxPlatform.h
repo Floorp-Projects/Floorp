@@ -181,6 +181,11 @@ public:
     virtual mozilla::RefPtr<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(gfxFont *aFont);
 
+    /**
+     * This should return a 'live' surface for the drawtarget, not a snapshot,
+     * if the draw target changes (and those changes are flushed), they will
+     * affect the content of the surface and vice versa.
+     */
     virtual already_AddRefed<gfxASurface>
       GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
 
