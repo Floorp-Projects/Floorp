@@ -65,13 +65,21 @@ class TelemetryImpl : public nsITelemetry
 public:
   TelemetryImpl();
   ~TelemetryImpl();
+  
+  static bool CanRecord();
+  static already_AddRefed<nsITelemetry> CreateTelemetryInstance();
+  static void ShutdownTelemetry();
 
 private:
   // This is used for speedy JS string->Telemetry::ID conversions
   typedef nsBaseHashtableET<nsCharPtrHashKey, Telemetry::ID> CharPtrEntryType;
   typedef nsTHashtable<CharPtrEntryType> HistogramMapType;
   HistogramMapType mHistogramMap;
+  bool mCanRecord;
+  static TelemetryImpl *sTelemetry;
 };
+
+TelemetryImpl*  TelemetryImpl::sTelemetry = NULL;
 
 // A initializer to initialize histogram collection
 StatisticsRecorder gStatisticsRecorder;
@@ -205,12 +213,14 @@ JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
     return JS_FALSE;
   }
 
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
-  if (h->histogram_type() == Histogram::BOOLEAN_HISTOGRAM)
-    h->Add(!!value);
-  else
-    h->Add(value);
+  if (TelemetryImpl::CanRecord()) {
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
+    if (h->histogram_type() == Histogram::BOOLEAN_HISTOGRAM)
+      h->Add(!!value);
+    else
+      h->Add(value);
+  }
   return JS_TRUE;
 }
 
@@ -246,7 +256,9 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
           && JS_DefineFunction (cx, obj, "snapshot", JSHistogram_Snapshot, 1, 0)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-TelemetryImpl::TelemetryImpl() {
+TelemetryImpl::TelemetryImpl():
+mCanRecord(true)
+{
   mHistogramMap.Init(Telemetry::HistogramCount);
 }
 
@@ -317,16 +329,43 @@ TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *re
   return WrapAndReturnHistogram(h, cx, ret);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TelemetryImpl, nsITelemetry)
-
-already_AddRefed<nsITelemetry>
-CreateTelemetryInstance()
-{
-  nsCOMPtr<nsITelemetry> telemetry = new TelemetryImpl();
-  return telemetry.forget();
+NS_IMETHODIMP
+TelemetryImpl::GetCanRecord(PRBool *ret) {
+  *ret = mCanRecord;
+  return NS_OK;
 }
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, CreateTelemetryInstance)
+NS_IMETHODIMP
+TelemetryImpl::SetCanRecord(PRBool canRecord) {
+  mCanRecord = !!canRecord;
+  return NS_OK;
+}
+
+bool
+TelemetryImpl::CanRecord() {
+  return !sTelemetry || sTelemetry->mCanRecord;
+}
+
+already_AddRefed<nsITelemetry>
+TelemetryImpl::CreateTelemetryInstance()
+{
+  NS_ABORT_IF_FALSE(sTelemetry == NULL, "CreateTelemetryInstance may only be called once, via GetService()");
+  sTelemetry = new TelemetryImpl(); 
+  // AddRef for the local reference
+  NS_ADDREF(sTelemetry);
+  // AddRef for the caller
+  NS_ADDREF(sTelemetry);
+  return sTelemetry;
+}
+
+void
+TelemetryImpl::ShutdownTelemetry()
+{
+  NS_IF_RELEASE(sTelemetry);
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(TelemetryImpl, nsITelemetry)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, TelemetryImpl::CreateTelemetryInstance)
 
 #define NS_TELEMETRY_CID \
   {0xaea477f2, 0xb3a2, 0x469c, {0xaa, 0x29, 0x0a, 0x82, 0xd1, 0x32, 0xb8, 0x29}}
@@ -349,7 +388,7 @@ const Module kTelemetryModule = {
   NULL,
   NULL,
   NULL,
-  NULL,
+  TelemetryImpl::ShutdownTelemetry
 };
 
 } // anonymous namespace
@@ -360,6 +399,9 @@ namespace Telemetry {
 void
 Accumulate(ID aHistogram, PRUint32 aSample)
 {
+  if (!TelemetryImpl::CanRecord()) {
+    return;
+  }
   Histogram *h;
   nsresult rv = GetHistogramByEnumId(aHistogram, &h);
   if (NS_SUCCEEDED(rv))

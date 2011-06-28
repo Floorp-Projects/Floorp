@@ -3,8 +3,10 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+Cu.import("resource://gre/modules/Services.jsm");
 
 function test_histogram(histogram_type, name, min, max, bucket_count) {
   var h = Telemetry.newHistogram(name, min, max, bucket_count, histogram_type);
@@ -85,6 +87,18 @@ function test_getHistogramById() {
   do_check_eq(s.max, 10000);
 }
 
+// Check that telemetry doesn't record in private mode
+function test_privateMode() {
+  var h = Telemetry.newHistogram("test::private_mode_boolean", 1,2,3, Telemetry.HISTOGRAM_BOOLEAN);
+  var orig = h.snapshot();
+  Telemetry.canRecord = false;
+  h.add(1);
+  do_check_eq(uneval(orig), uneval(h.snapshot()));
+  Telemetry.canRecord = true;
+  h.add(1);
+  do_check_neq(uneval(orig), uneval(h.snapshot()));
+}
+
 function run_test()
 {
   let kinds = [Telemetry.HISTOGRAM_EXPONENTIAL, Telemetry.HISTOGRAM_LINEAR]
@@ -99,4 +113,5 @@ function run_test()
 
   test_boolean_histogram();
   test_getHistogramById();
+  test_privateMode();
 }

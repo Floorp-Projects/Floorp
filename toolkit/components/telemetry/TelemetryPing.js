@@ -295,6 +295,24 @@ TelemetryPing.prototype = {
     request.send(nativeJSON.encode(payload));
   },
   
+  attachObservers: function attachObservers() {
+    if (!this._initialized)
+      return;
+    let idleService = Cc["@mozilla.org/widget/idleservice;1"].
+                      getService(Ci.nsIIdleService);
+    idleService.addIdleObserver(this, TELEMETRY_INTERVAL);
+    Services.obs.addObserver(this, "idle-daily", false);
+  },
+
+  detachObservers: function detachObservers() {
+    if (!this._initialized)
+      return;
+    let idleService = Cc["@mozilla.org/widget/idleservice;1"].
+                      getService(Ci.nsIIdleService);
+    idleService.removeIdleObserver(this, TELEMETRY_INTERVAL);
+    Services.obs.removeObserver(this, "idle-daily");
+  },
+
   /**
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    */
@@ -306,17 +324,23 @@ TelemetryPing.prototype = {
     } catch (e) {
       // Prerequesite prefs aren't set
     }
-    if (!enabled) 
+    if (!enabled) {
+      // Turn off local telemetry if telemetry is disabled.
+      // This may change once about:telemetry is added.
+      Telemetry.canRecord = false;
       return;
-  
+    }
+    Services.obs.addObserver(this, "private-browsing", false);
+    Services.obs.addObserver(this, "profile-before-change", false);
+
+    // Delay full telemetry initialization to give the browser time to
+    // run various late initializers. Otherwise our gathered memory
+    // footprint and other numbers would be too optimistic.
     let self = this;
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let timerCallback = function() {
-      let idleService = Cc["@mozilla.org/widget/idleservice;1"].
-                        getService(Ci.nsIIdleService);
-      idleService.addIdleObserver(self, TELEMETRY_INTERVAL);
-      Services.obs.addObserver(self, "idle-daily", false);
-      Services.obs.addObserver(self, "profile-before-change", false);
+      self._initialized = true;
+      self.attachObservers();
       self.gatherMemory();
       delete self._timer
     }
@@ -327,11 +351,9 @@ TelemetryPing.prototype = {
    * Remove observers to avoid leaks
    */
   uninstall: function uninstall() {
-    let idleService = Cc["@mozilla.org/widget/idleservice;1"].
-                      getService(Ci.nsIIdleService);
-    idleService.removeIdleObserver(this, TELEMETRY_INTERVAL);
-    Services.obs.removeObserver(this, "idle-daily");
+    this.detachObservers()
     Services.obs.removeObserver(this, "profile-before-change");
+    Services.obs.removeObserver(this, "private-browsing");
   },
 
   /**
@@ -350,6 +372,14 @@ TelemetryPing.prototype = {
       break;
     case "idle":
       this.gatherMemory();
+      break;
+    case "private-browsing":
+      Telemetry.canRecord = aData == "exit";
+      if (aData == "enter") {
+        this.detachObservers()
+      } else {
+        this.attachObservers()
+      }
       break;
     case "test-ping":
       server = aData;
