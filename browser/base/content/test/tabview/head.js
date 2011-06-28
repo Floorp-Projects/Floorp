@@ -313,21 +313,21 @@ function newWindowWithState(state, callback) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
+  let numConditions = 2;
+  let check = function () {
+    if (!--numConditions)
+      callback(win);
+  };
+
   whenWindowLoaded(win, function () {
     whenWindowStateReady(win, function () {
       afterAllTabsLoaded(check, win);
     });
 
     ss.setWindowState(win, JSON.stringify(state), true);
-    whenDelayedStartupFinished(win, check);
   });
 
-
-  let numConditions = 2;
-  let check = function () {
-    if (!--numConditions)
-      callback(win);
-  };
+  whenDelayedStartupFinished(win, check);
 }
 
 // ----------
