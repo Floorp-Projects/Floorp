@@ -328,15 +328,6 @@ public:
   NS_IMETHOD  DidReflow(nsPresContext*           aPresContext,
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus         aStatus);
-  void ReflowAbsoluteFrames(nsPresContext*           aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus);
-  void FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
-                                      nsHTMLReflowMetrics&     aDesiredSize,
-                                      const nsHTMLReflowState& aReflowState,
-                                      nsReflowStatus&          aStatus);
-  void DestroyAbsoluteFrames(nsIFrame* aDestructRoot);
   virtual PRBool CanContinueTextRun() const;
 
   // Selection Methods

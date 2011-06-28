@@ -54,7 +54,6 @@
 #include "nsIDOMElement.h"
 
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMMouseListener.h"
 
 #include "nsMathMLmactionFrame.h"
 #include "nsAutoPtr.h"
@@ -85,8 +84,14 @@ nsMathMLmactionFrame::~nsMathMLmactionFrame()
 {
   // unregister us as a mouse event listener ...
   //  printf("maction:%p unregistering as mouse event listener ...\n", this);
-  if (mListener)
-    mContent->RemoveEventListenerByIID(mListener, NS_GET_IID(nsIDOMMouseListener));
+  if (mListener) {
+    mContent->RemoveEventListener(NS_LITERAL_STRING("click"), mListener,
+                                  PR_FALSE);
+    mContent->RemoveEventListener(NS_LITERAL_STRING("mouseover"), mListener,
+                                  PR_FALSE);
+    mContent->RemoveEventListener(NS_LITERAL_STRING("mouseout"), mListener,
+                                  PR_FALSE);
+  }
 }
 
 NS_IMETHODIMP
@@ -255,7 +260,12 @@ nsMathMLmactionFrame::SetInitialChildList(nsIAtom*        aListName,
     // create mouse event listener and register it
     mListener = new nsMathMLmactionFrame::MouseListener(this);
     // printf("maction:%p registering as mouse event listener ...\n", this);
-    mContent->AddEventListenerByIID(mListener, NS_GET_IID(nsIDOMMouseListener));
+    mContent->AddEventListener(NS_LITERAL_STRING("click"), mListener,
+                               PR_FALSE, PR_FALSE);
+    mContent->AddEventListener(NS_LITERAL_STRING("mouseover"), mListener,
+                               PR_FALSE, PR_FALSE);
+    mContent->AddEventListener(NS_LITERAL_STRING("mouseout"), mListener,
+                               PR_FALSE, PR_FALSE);
   }
   return rv;
 }
@@ -339,9 +349,8 @@ nsMathMLmactionFrame::Place(nsRenderingContext& aRenderingContext,
 // Event handlers 
 // ################################################################
 
-NS_IMPL_ISUPPORTS2(nsMathMLmactionFrame::MouseListener,
-                   nsIDOMEventListener,
-                   nsIDOMMouseListener)
+NS_IMPL_ISUPPORTS1(nsMathMLmactionFrame::MouseListener,
+                   nsIDOMEventListener)
 
 
 // helper to show a msg on the status bar
@@ -366,9 +375,23 @@ ShowStatus(nsPresContext* aPresContext, nsString& aStatusMsg)
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::MouseListener::MouseOver(nsIDOMEvent* aMouseEvent)
+nsMathMLmactionFrame::MouseListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  mOwner->MouseOver();
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+  if (eventType.EqualsLiteral("mouseover")) {
+    mOwner->MouseOver();
+  }
+  else if (eventType.EqualsLiteral("mouseclick")) {
+    mOwner->MouseClick();
+  }
+  else if (eventType.EqualsLiteral("mouseout")) {
+    mOwner->MouseOut();
+  }
+  else {
+    NS_ABORT();
+  }
+
   return NS_OK;
 }
 
@@ -387,13 +410,6 @@ nsMathMLmactionFrame::MouseOver()
   }
 }
 
-NS_IMETHODIMP
-nsMathMLmactionFrame::MouseListener::MouseOut(nsIDOMEvent* aMouseEvent) 
-{
-  mOwner->MouseOut();
-  return NS_OK;
-}
-
 void
 nsMathMLmactionFrame::MouseOut()
 {
@@ -403,13 +419,6 @@ nsMathMLmactionFrame::MouseOut()
     value.SetLength(0);
     ShowStatus(PresContext(), value);
   }
-}
-
-NS_IMETHODIMP
-nsMathMLmactionFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
-{
-  mOwner->MouseClick();
-  return NS_OK;
 }
 
 void

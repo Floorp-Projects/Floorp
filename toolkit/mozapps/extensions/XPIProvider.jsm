@@ -66,6 +66,7 @@ const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_EM_ENABLED_ADDONS          = "extensions.enabledAddons";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.";
 const PREF_EM_ENABLED_SCOPES          = "extensions.enabledScopes";
+const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 const PREF_EM_DISABLED_ADDONS_LIST    = "extensions.disabledAddons";
 const PREF_XPI_ENABLED                = "xpinstall.enabled";
@@ -2558,6 +2559,11 @@ var XPIProvider = {
       newAddon.visible = !(newAddon.id in visibleAddons);
       newAddon.installDate = aAddonState.mtime;
       newAddon.updateDate = aAddonState.mtime;
+
+      // Check if the add-on is in a scope where add-ons should install disabled
+      let disablingScopes = Prefs.getIntPref(PREF_EM_AUTO_DISABLED_SCOPES, 0);
+      if (aInstallLocation.scope & disablingScopes)
+        newAddon.userDisabled = true;
 
       // If there is migration data then apply it.
       if (aMigrateData) {
