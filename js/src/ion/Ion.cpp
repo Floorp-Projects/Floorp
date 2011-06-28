@@ -45,6 +45,7 @@
 #include "IonSpewer.h"
 #include "IonLIR.h"
 #include "GreedyAllocator.h"
+#include "LICM.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/Lowering-x86.h"
@@ -140,6 +141,11 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
     if (!ApplyTypeInformation(graph))
         return false;
     spew.spewPass("Apply types");
+
+    LICM licm(graph);
+    if (!licm.analyze())
+        return false;
+    spew.spewPass("LICM");
 
     LIRGraph lir;
     LIRBuilder lirgen(&builder, graph, lir);

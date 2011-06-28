@@ -79,6 +79,13 @@ MIRGraph::addBlock(MBasicBlock *block)
     return blocks_.append(block);
 }
 
+void
+MIRGraph::unmarkBlocks() {
+    for (size_t i = 0; i < numBlocks(); i ++) {
+        getBlock(i)->unmark();  
+    }
+}
+
 MBasicBlock *
 MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
 {
