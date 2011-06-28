@@ -446,6 +446,11 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     mDevice->CreateRenderTargetView(tmpDSTexture, NULL,  byRef(dsRTView));
     mDevice->CreateShaderResourceView(tmpDSTexture, NULL,  byRef(dsSRView));
 
+    // We're not guaranteed the texture we created will be empty, we've
+    // seen old content at least on NVidia drivers.
+    float color[4] = { 0, 0, 0, 0 };
+    mDevice->ClearRenderTargetView(dsRTView, color);
+
     rtViews = dsRTView;
     mDevice->OMSetRenderTargets(1, &rtViews, NULL);
 
