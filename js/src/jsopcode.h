@@ -545,6 +545,14 @@ GetBytecodeLength(JSContext *cx, JSScript *script, jsbytecode *pc);
 extern bool
 IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset);
 
+inline bool
+FlowsIntoNext(JSOp op)
+{
+    // JSOP_YIELD is considered to flow into the next instruction, like JSOP_CALL.
+    return op != JSOP_STOP && op != JSOP_RETURN && op != JSOP_RETRVAL && op != JSOP_THROW &&
+           op != JSOP_GOTO && op != JSOP_GOTOX && op != JSOP_RETSUB;
+}
+
 }
 #endif
 
