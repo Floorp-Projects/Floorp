@@ -61,35 +61,3 @@ HISTOGRAM(GLUESTARTUP_HARD_FAULTS, 1, 500, 12, EXPONENTIAL, "Hard faults count a
 HISTOGRAM(HARD_PAGE_FAULTS, 8, 64 * 1024, 13, EXPONENTIAL, "Hard page faults (since last telemetry ping)")
 #endif
 HISTOGRAM(ZIPARCHIVE_CRC, 0, 1, 2, BOOLEAN, "Zip item CRC check pass")
-
-/**
- * Networking telemetry
- */
-HISTOGRAM(TOTAL_CONTENT_PAGE_LOAD_TIME, 100, 10000, 100, EXPONENTIAL, "HTTP: Total page load time (ms)")
-HISTOGRAM(HTTP_SUBITEM_OPEN_LATENCY_TIME, 1, 30000, 50, EXPONENTIAL, "HTTP subitem: Page start -> subitem open() (ms)")
-HISTOGRAM(HTTP_SUBITEM_FIRST_BYTE_LATENCY_TIME, 1, 30000, 50, EXPONENTIAL, "HTTP subitem: Page start -> first byte received for subitem reply (ms)")
-HISTOGRAM(HTTP_REQUEST_PER_PAGE, 1, 1000, 50, EXPONENTIAL, "HTTP: Requests per page (count)")
-HISTOGRAM(HTTP_REQUEST_PER_PAGE_FROM_CACHE, 1, 101, 102, LINEAR, "HTTP: Requests serviced from cache (%)")
-
-#define _HISTOGRAM_CHANNEL_TIMING(name, label) \
-  HISTOGRAM(name, 1, 10000, 50, EXPONENTIAL, "HTTP " label) \
-
-#define _HISTOGRAM_CHANNEL_TIMINGS(prefix, labelprefix) \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_DNS_ISSUE_TIME, labelprefix "open() -> DNS request issued (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_DNS_LOOKUP_TIME, labelprefix "DNS lookup time (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_TCP_CONNECTION, labelprefix "TCP connection setup (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_OPEN_TO_FIRST_SENT, labelprefix "Open -> first byte of request sent (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_FIRST_SENT_TO_LAST_RECEIVED, labelprefix "First byte of request sent -> last byte of response received (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_OPEN_TO_FIRST_RECEIVED, labelprefix "Open -> first byte of reply received (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_OPEN_TO_FIRST_FROM_CACHE, labelprefix "Open -> cache read start (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_CACHE_READ_TIME, labelprefix "Cache read time (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_REVALIDATION, labelprefix "Positive cache validation time (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_COMPLETE_LOAD, labelprefix "Overall load time - all (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_COMPLETE_LOAD_CACHED, labelprefix "Overall load time - cache hits (ms)") \
-  _HISTOGRAM_CHANNEL_TIMING(HTTP_##prefix##_COMPLETE_LOAD_NET, labelprefix "Overall load time - network (ms)") \
-
-_HISTOGRAM_CHANNEL_TIMINGS(PAGE, "page: ")
-_HISTOGRAM_CHANNEL_TIMINGS(SUB, "subitem: ")
-
-#undef _HISTOGRAM_CHANNEL_TIMING
-#undef _HISTOGRAM_CHANNEL_TIMINGS
