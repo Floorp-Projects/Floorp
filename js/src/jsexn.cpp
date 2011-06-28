@@ -242,6 +242,9 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
     }
     JS_ASSERT(cursor + filenameSize == (uint8 *)copy + mallocSize);
 
+    /* HOLD called by the destination error object. */
+    copy->originPrincipals = report->originPrincipals;
+
     /* Copy non-pointer members. */
     copy->lineno = report->lineno;
     copy->errorNumber = report->errorNumber;
@@ -293,6 +296,9 @@ struct AppendArg {
         return values.append(*vp);
     }
 };
+
+static void
+SetExnPrivate(JSContext *cx, JSObject *exnObject, JSExnPrivate *priv);
 
 static bool
 InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
@@ -391,7 +397,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     PodCopy(framesDest, frames.begin(), frames.length());
     PodCopy(valuesDest, values.begin(), values.length());
 
-    exnObject->setPrivate(priv);
+    SetExnPrivate(cx, exnObject, priv);
     return true;
 }
 
@@ -434,12 +440,29 @@ exn_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
+/* NB: An error object's private must be set through this function. */
+static void
+SetExnPrivate(JSContext *cx, JSObject *exnObject, JSExnPrivate *priv)
+{
+    JS_ASSERT(!exnObject->getPrivate());
+    JS_ASSERT(exnObject->isError());
+    if (JSErrorReport *report = priv->errorReport) {
+        if (JSPrincipals *prin = report->originPrincipals)
+            JSPRINCIPALS_HOLD(cx, prin);
+    }
+    exnObject->setPrivate(priv);
+}
+
 static void
 exn_finalize(JSContext *cx, JSObject *obj)
 {
     if (JSExnPrivate *priv = GetExnPrivate(obj)) {
-        if (JSErrorReport *report = priv->errorReport)
+        if (JSErrorReport *report = priv->errorReport) {
+            /* HOLD called by SetExnPrivate. */
+            if (JSPrincipals *prin = report->originPrincipals)
+                JSPRINCIPALS_DROP(cx, prin);
             cx->free_(report);
+        }
         cx->free_(priv);
     }
 }
@@ -1312,7 +1335,7 @@ js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
     if (!js_GetClassPrototype(cx, scope->getGlobal(), GetExceptionProtoKey(copy->exnType), &proto))
         return NULL;
     JSObject *copyobj = NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL);
-    copyobj->setPrivate(copy);
+    SetExnPrivate(cx, copyobj, copy);
     autoFree.p = NULL;
     return copyobj;
 }

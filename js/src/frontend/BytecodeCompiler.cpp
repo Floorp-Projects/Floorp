@@ -156,7 +156,8 @@ DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
 
 JSScript *
 frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
-                        JSPrincipals *principals, uint32 tcflags,
+                        JSPrincipals *principals, JSPrincipals *originPrincipals,
+                        uint32 tcflags,
                         const jschar *chars, size_t length,
                         const char *filename, uintN lineno, JSVersion version,
                         JSString *source /* = NULL */,
@@ -177,7 +178,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(callerFrame, tcflags & TCF_COMPILE_N_GO);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
-    Parser parser(cx, principals, callerFrame);
+    Parser parser(cx, principals, originPrincipals, callerFrame);
     if (!parser.init(chars, length, filename, lineno, version))
         return NULL;
 
@@ -381,11 +382,12 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
  * handler attribute in an HTML <INPUT> tag.
  */
 bool
-frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
+frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
+                              JSPrincipals *principals, JSPrincipals *originPrincipals,
                               Bindings *bindings, const jschar *chars, size_t length,
                               const char *filename, uintN lineno, JSVersion version)
 {
-    Parser parser(cx, principals);
+    Parser parser(cx, principals, originPrincipals);
     if (!parser.init(chars, length, filename, lineno, version))
         return false;
 

@@ -4620,8 +4620,8 @@ JS_OPTIONS_TO_TCFLAGS(JSContext *cx)
 
 static JSScript *
 CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *principals,
-                                      const jschar *chars, size_t length,
-                                      const char *filename, uintN lineno, JSVersion version)
+                                   const jschar *chars, size_t length,
+                                   const char *filename, uintN lineno, JSVersion version)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
@@ -4629,8 +4629,8 @@ CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *p
     AutoLastFrameCheck lfc(cx);
 
     uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_SCRIPT_GLOBAL;
-    return frontend::CompileScript(cx, obj, NULL, principals, tcflags, chars, length,
-                                   filename, lineno, version);
+    return frontend::CompileScript(cx, obj, NULL, principals, NULL, tcflags,
+                                   chars, length, filename, lineno, version);
 }
 
 extern JS_PUBLIC_API(JSScript *)
@@ -4806,8 +4806,8 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     JS_ASSERT(i <= len);
     len = i;
     uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_SCRIPT_GLOBAL;
-    script = frontend::CompileScript(cx, obj, NULL, principals, tcflags, buf, len, filename, 1,
-                                     cx->findVersion());
+    script = frontend::CompileScript(cx, obj, NULL, principals, NULL, tcflags,
+                                     buf, len, filename, 1, cx->findVersion());
     cx->free_(buf);
     return script;
 }
@@ -4907,8 +4907,8 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
     if (!fun)
         return NULL;
 
-    if (!frontend::CompileFunctionBody(cx, fun, principals, &bindings, chars, length,
-                                       filename, lineno, version))
+    if (!frontend::CompileFunctionBody(cx, fun, principals, NULL, &bindings,
+                                       chars, length, filename, lineno, version))
     {
         return NULL;
     }
@@ -5058,7 +5058,7 @@ JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSScript *script, jsval *r
 
 bool
 EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
-                                    JSPrincipals *principals,
+                                    JSPrincipals *principals, JSPrincipals *originPrincipals,
                                     const jschar *chars, uintN length,
                                     const char *filename, uintN lineno,
                                     jsval *rval, JSVersion compileVersion)
@@ -5071,14 +5071,26 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     AutoLastFrameCheck lfc(cx);
-    JSScript *script = frontend::CompileScript(cx, obj, NULL, principals, flags, chars, length,
-                                               filename, lineno, compileVersion);
+    JSScript *script = frontend::CompileScript(cx, obj, NULL, principals, originPrincipals,
+                                               flags, chars, length, filename, lineno,
+                                               compileVersion);
     if (!script)
         return false;
 
     JS_ASSERT(script->getVersion() == compileVersion);
 
     return Execute(cx, script, *obj, rval);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
+                                 JSPrincipals *principals,
+                                 const jschar *chars, uintN length,
+                                 const char *filename, uintN lineno,
+                                 jsval *rval)
+{
+    return EvaluateUCScriptForPrincipalsCommon(cx, obj, principals, NULL, chars, length,
+                                               filename, lineno, rval, cx->findVersion());
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5089,19 +5101,22 @@ JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                         jsval *rval, JSVersion version)
 {
     AutoVersionAPI avi(cx, version);
-    return EvaluateUCScriptForPrincipalsCommon(cx, obj, principals, chars, length,
+    return EvaluateUCScriptForPrincipalsCommon(cx, obj, principals, NULL, chars, length,
                                                filename, lineno, rval, avi.version());
 }
-
-JS_PUBLIC_API(JSBool)
-JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
-                                 JSPrincipals *principals,
-                                 const jschar *chars, uintN length,
-                                 const char *filename, uintN lineno,
-                                 jsval *rval)
+ 
+extern JS_PUBLIC_API(JSBool)
+JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
+                                              JSPrincipals *principals,
+                                              JSPrincipals *originPrincipals,
+                                              const jschar *chars, uintN length,
+                                              const char *filename, uintN lineno,
+                                              jsval *rval, JSVersion version)
 {
-    return EvaluateUCScriptForPrincipalsCommon(cx, obj, principals, chars, length,
-                                               filename, lineno, rval, cx->findVersion());
+    AutoVersionAPI avi(cx, version);
+    return EvaluateUCScriptForPrincipalsCommon(cx, obj, principals, originPrincipals,
+                                               chars, length, filename, lineno, rval,
+                                               avi.version());
 }
 
 JS_PUBLIC_API(JSBool)

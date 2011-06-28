@@ -1950,8 +1950,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
     }
 
     Bindings bindings(cx);
+
+    const char *filename;
     uintN lineno;
-    const char *filename = CurrentScriptFileAndLine(cx, &lineno);
+    JSPrincipals *originPrincipals;
+    CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals);
+    JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
 
     uintN n = args.length() ? args.length() - 1 : 0;
     if (n > 0) {
@@ -2024,7 +2028,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         }
 
         /* Initialize a tokenstream that reads from the given string. */
-        TokenStream ts(cx);
+        TokenStream ts(cx, principals, originPrincipals);
         if (!ts.init(collected_args, args_length, filename, lineno, cx->findVersion()))
             return false;
 
@@ -2098,9 +2102,9 @@ Function(JSContext *cx, uintN argc, Value *vp)
     if (!fun)
         return false;
 
-    JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
-    bool ok = frontend::CompileFunctionBody(cx, fun, principals, &bindings, chars, length,
-                                            filename, lineno, cx->findVersion());
+    bool ok = frontend::CompileFunctionBody(cx, fun, principals, originPrincipals,
+                                            &bindings, chars, length, filename, lineno,
+                                            cx->findVersion());
     args.rval().setObject(*fun);
     return ok;
 }

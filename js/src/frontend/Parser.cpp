@@ -116,11 +116,13 @@ using namespace js::frontend;
     JS_END_MACRO
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
-Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldConstants)
+Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
+               StackFrame *cfp, bool foldConstants)
   : AutoGCRooter(cx, PARSER),
     context(cx),
-    tokenStream(cx),
+    tokenStream(cx, prin, originPrin),
     principals(NULL),
+    originPrincipals(NULL),
     callerFrame(cfp),
     callerVarObj(cfp ? &cfp->varObj() : NULL),
     allocator(cx),
@@ -132,7 +134,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldCons
 {
     cx->activeCompilations++;
     PodArrayZero(tempFreeList);
-    setPrincipals(prin);
+    setPrincipals(prin, originPrin);
     JS_ASSERT_IF(cfp, cfp->isScriptFrame());
 }
 
@@ -154,20 +156,24 @@ Parser::init(const jschar *base, size_t length, const char *filename, uintN line
 Parser::~Parser()
 {
     JSContext *cx = context;
-
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
+    if (originPrincipals)
+        JSPRINCIPALS_DROP(cx, originPrincipals);
     cx->tempLifoAlloc().release(tempPoolMark);
     cx->activeCompilations--;
 }
 
 void
-Parser::setPrincipals(JSPrincipals *prin)
+Parser::setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin)
 {
-    JS_ASSERT(!principals);
-    if (prin)
-        JSPRINCIPALS_HOLD(context, prin);
+    JS_ASSERT(!principals && !originPrincipals);
     principals = prin;
+    if (principals)
+        JSPRINCIPALS_HOLD(context, principals);
+    originPrincipals = originPrin;
+    if (originPrincipals)
+        JSPRINCIPALS_HOLD(context, originPrincipals);
 }
 
 ObjectBox *

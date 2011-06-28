@@ -488,6 +488,12 @@ JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
     return script->principals;
 }
 
+JS_PUBLIC_API(JSPrincipals *)
+JS_GetScriptOriginPrincipals(JSContext *cx, JSScript *script)
+{
+    return script->originPrincipals;
+}
+
 /************************************************************************/
 
 /*

@@ -154,9 +154,13 @@ js::IsIdentifier(JSLinearString *str)
 #endif
 
 /* Initialize members that aren't initialized in |init|. */
-TokenStream::TokenStream(JSContext *cx)
-  : cx(cx), tokens(), cursor(), lookahead(), flags(), listenerTSData(), tokenbuf(cx)
-{}
+TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin)
+  : tokens(), cursor(), lookahead(), flags(), listenerTSData(), tokenbuf(cx),
+    cx(cx), originPrincipals(originPrin ? originPrin : prin)
+{
+    if (originPrincipals)
+        JSPRINCIPALS_HOLD(cx, originPrincipals);
+}
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -244,6 +248,8 @@ TokenStream::~TokenStream()
         cx->free_((void *) filename);
     if (sourceMap)
         cx->free_(sourceMap);
+    if (originPrincipals)
+        JSPRINCIPALS_DROP(cx, originPrincipals);
 }
 
 /* Use the fastest available getc. */
@@ -456,6 +462,7 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorN
     }
 
     report.filename = filename;
+    report.originPrincipals = originPrincipals;
 
     tp = pn ? &pn->pn_pos : &currentToken().pos;
     report.lineno = tp->begin.lineno;

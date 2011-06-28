@@ -3232,7 +3232,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
     if (!chars)
         return JS_FALSE;
 
-    Parser parser(cx, NULL, NULL, false);
+    Parser parser(cx, NULL, NULL, NULL, false);
 
     if (!parser.init(chars, length, filename, lineno, cx->findVersion()))
         return JS_FALSE;
