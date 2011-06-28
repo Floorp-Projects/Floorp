@@ -717,6 +717,116 @@ function run_test_11() {
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
     do_check_not_in_crash_annotation(addon2.id, addon2.version);
 
-    end_test();
+    run_test_12();
+  });
+}
+
+// Test that auto-disabling for specific scopes works
+function run_test_12() {
+  Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_USER);
+
+  writeInstallRDFForExtension(addon1, profileDir);
+  writeInstallRDFForExtension(addon2, userDir);
+  writeInstallRDFForExtension(addon3, globalDir);
+
+  restartManager();
+
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
+    do_check_neq(a1, null);
+    do_check_false(a1.userDisabled);
+    do_check_true(a1.isActive);
+
+    do_check_neq(a2, null);
+    do_check_true(a2.userDisabled);
+    do_check_false(a2.isActive);
+
+    do_check_neq(a3, null);
+    do_check_false(a3.userDisabled);
+    do_check_true(a3.isActive);
+
+    var dest = profileDir.clone();
+    dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
+    dest.remove(true);
+    dest = userDir.clone();
+    dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
+    dest.remove(true);
+    dest = globalDir.clone();
+    dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
+    dest.remove(true);
+
+    restartManager();
+
+    Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_SYSTEM);
+
+    writeInstallRDFForExtension(addon1, profileDir);
+    writeInstallRDFForExtension(addon2, userDir);
+    writeInstallRDFForExtension(addon3, globalDir);
+
+    restartManager();
+
+    AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                 "addon2@tests.mozilla.org",
+                                 "addon3@tests.mozilla.org",
+                                 "addon4@tests.mozilla.org",
+                                 "addon5@tests.mozilla.org"],
+                                 function([a1, a2, a3, a4, a5]) {
+      do_check_neq(a1, null);
+      do_check_false(a1.userDisabled);
+      do_check_true(a1.isActive);
+
+      do_check_neq(a2, null);
+      do_check_false(a2.userDisabled);
+      do_check_true(a2.isActive);
+
+      do_check_neq(a3, null);
+      do_check_true(a3.userDisabled);
+      do_check_false(a3.isActive);
+
+      var dest = profileDir.clone();
+      dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
+      dest.remove(true);
+      dest = userDir.clone();
+      dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
+      dest.remove(true);
+      dest = globalDir.clone();
+      dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
+      dest.remove(true);
+
+      restartManager();
+
+      Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_USER + AddonManager.SCOPE_SYSTEM);
+
+      writeInstallRDFForExtension(addon1, profileDir);
+      writeInstallRDFForExtension(addon2, userDir);
+      writeInstallRDFForExtension(addon3, globalDir);
+
+      restartManager();
+
+      AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                   "addon2@tests.mozilla.org",
+                                   "addon3@tests.mozilla.org",
+                                   "addon4@tests.mozilla.org",
+                                   "addon5@tests.mozilla.org"],
+                                   function([a1, a2, a3, a4, a5]) {
+        do_check_neq(a1, null);
+        do_check_false(a1.userDisabled);
+        do_check_true(a1.isActive);
+
+        do_check_neq(a2, null);
+        do_check_true(a2.userDisabled);
+        do_check_false(a2.isActive);
+
+        do_check_neq(a3, null);
+        do_check_true(a3.userDisabled);
+        do_check_false(a3.isActive);
+
+        end_test();
+      });
+    });
   });
 }
