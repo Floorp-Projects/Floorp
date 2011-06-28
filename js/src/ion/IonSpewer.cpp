@@ -127,7 +127,6 @@ ion::IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap)
 
     fprintf(stderr, "[%s] ", ChannelNames[channel]);
     vfprintf(stderr, fmt, ap);
-    fprintf(stderr, "\n");
 }
 
 void

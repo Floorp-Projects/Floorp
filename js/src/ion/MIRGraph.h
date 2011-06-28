@@ -145,6 +145,7 @@ class MIRGraph
     {  }
 
     bool addBlock(MBasicBlock *block);
+    void unmarkBlocks();
 
     void clearBlockList() {
         blocks_.clear();
