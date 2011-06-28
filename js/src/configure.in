@@ -591,6 +591,20 @@ if test "$GXX" = yes; then
    fi
 fi
 
+CLANG_CC=
+CLANG_CXX=
+if test "$GCC" = yes; then
+   if test "`$CC -v 2>&1 | grep -c 'clang version'`" != "0"; then
+     CLANG_CC=1
+   fi
+fi
+
+if test "$GXX" = yes; then
+   if test "`$CXX -v 2>&1 | grep -c 'clang version'`" != "0"; then
+     CLANG_CXX=1
+   fi
+fi
+
 dnl Special win32 checks
 dnl ========================================================
 WINVER=502
@@ -1537,8 +1551,8 @@ if test "$GNU_CC"; then
     # -Wbad-function-cast - warns when casting a function to a new return type
     # -Wshadow - removed because it generates more noise than help --pete
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
-    if test -z "$INTEL_CC"; then
-       # Don't use -Wcast-align with ICC
+    if test -z "$INTEL_CC" -a -z "$CLANG_CC"; then
+       # Don't use -Wcast-align with ICC or clang
        case "$CPU_ARCH" in
            # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
            hppa | ia64 | sparc | arm)
@@ -1587,8 +1601,8 @@ if test "$GNU_CXX"; then
     CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
-    if test -z "$INTEL_CC"; then
-       # Don't use -Wcast-align with ICC
+    if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
+       # Don't use -Wcast-align with ICC or clang
        case "$CPU_ARCH" in
            # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
            hppa | ia64 | sparc | arm)
