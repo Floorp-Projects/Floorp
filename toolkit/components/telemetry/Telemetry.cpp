@@ -188,15 +188,25 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
 JSBool
 JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
 {
-  jsval *argv = JS_ARGV(cx, vp);
-  JSString *str;
-  if (!JS_ConvertArguments(cx, argc, argv, "i", &str))
+  if (!argc) {
+    JS_ReportError(cx, "Expected one argument");
     return JS_FALSE;
-  if (!JSVAL_IS_INT(argv[0]))
+  }
+
+  jsval v = JS_ARGV(cx, vp)[0];
+  int32 value;
+
+  if (!(JSVAL_IS_NUMBER(v) || JSVAL_IS_BOOLEAN(v))) {
+    JS_ReportError(cx, "Not a number");
     return JS_FALSE;
+  }
+
+  if (!JS_ValueToECMAInt32(cx, v, &value)) {
+    return JS_FALSE;
+  }
+
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
-  PRUint32 value = JSVAL_TO_INT(argv[0]);
   if (h->histogram_type() == Histogram::BOOLEAN_HISTOGRAM)
     h->Add(!!value);
   else
