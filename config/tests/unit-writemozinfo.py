@@ -61,6 +61,25 @@ class TestBuildDict(unittest.TestCase):
         self.assertEqual('cocoa', d['toolkit'])
         self.assertEqual(64, d['bits'])
 
+    def testMacUniversal(self):
+        d = build_dict({'OS_TARGET':'Darwin',
+                        'TARGET_CPU':'i386',
+                        'MOZ_WIDGET_TOOLKIT':'cocoa',
+                        'UNIVERSAL_BINARY': '1'})
+        self.assertEqual('mac', d['os'])
+        self.assertEqual('universal-x86-x86_64', d['processor'])
+        self.assertEqual('cocoa', d['toolkit'])
+        self.assertFalse('bits' in d)
+
+        d = build_dict({'OS_TARGET':'Darwin',
+                        'TARGET_CPU':'x86_64',
+                        'MOZ_WIDGET_TOOLKIT':'cocoa',
+                        'UNIVERSAL_BINARY': '1'})
+        self.assertEqual('mac', d['os'])
+        self.assertEqual('universal-x86-x86_64', d['processor'])
+        self.assertEqual('cocoa', d['toolkit'])
+        self.assertFalse('bits' in d)
+
     def testAndroid(self):
         d = build_dict({'OS_TARGET':'Android',
                         'TARGET_CPU':'arm',

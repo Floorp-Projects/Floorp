@@ -73,18 +73,16 @@ class unknown(object):
 unknown = unknown() # singleton
 
 # get system information
-
 info = {'os': unknown,
         'processor': unknown,
         'version': unknown,
         'bits': unknown }
-
 (system, node, release, version, machine, processor) = platform.uname()
 (bits, linkage) = platform.architecture()
 
+# get os information and related data
 if system in ["Microsoft", "Windows"]:
-    info['os'] = 'win'
-    
+    info['os'] = 'win'    
     # There is a Python bug on Windows to determine platform values
     # http://bugs.python.org/issue7860
     if "PROCESSOR_ARCHITEW6432" in os.environ:
@@ -107,6 +105,7 @@ elif system == "Darwin":
 elif sys.platform in ('solaris', 'sunos5'):
     info['os'] = 'unix'
     version = sys.platform
+info['version'] = version # os version
 
 # processor type and bits
 if processor in ["i386", "i686"]:
@@ -120,26 +119,48 @@ elif processor == "AMD64":
 elif processor == "Power Macintosh":
     processor = "ppc"
 bits = re.search('(\d+)bit', bits).group(1)
-
-info.update({'version': version,
-             'processor': processor,
+info.update({'processor': processor,
              'bits': int(bits),
             })
 
-def update(new_info):
-    """update the info"""
-    info.update(new_info)
-    globals().update(info)
-  
-update({})
-
+# standard value of choices, for easy inspection
 choices = {'os': ['linux', 'win', 'mac', 'unix'],
            'bits': [32, 64],
            'processor': ['x86', 'x86_64', 'ppc']}
 
+
+def sanitize(info):
+    """Do some sanitization of input values, primarily
+    to handle universal Mac builds."""
+    if "processor" in info and info["processor"] == "universal-x86-x86_64":
+        # If we're running on OS X 10.6 or newer, assume 64-bit
+        if release[:4] >= "10.6":
+            info["processor"] = "x86_64"
+            info["bits"] = 64
+        else:
+            info["processor"] = "x86"
+            info["bits"] = 32
+
+# method for updating information
+def update(new_info):
+    """update the info"""
+    info.update(new_info)
+    sanitize(info)
+    globals().update(info)
+
+    # convenience data for os access
+    for os_name in choices['os']:
+        globals()['is' + os_name.title()] = info['os'] == os_name
+    # unix is special
+    if isLinux:
+        globals()['isUnix'] = True
+
+update({})
+
 # exports
 __all__ = info.keys()
-__all__ += ['info', 'unknown', 'main', 'choices']
+__all__ += ['is' + os_name.title() for os_name in choices['os']]
+__all__ += ['info', 'unknown', 'main', 'choices', 'update']
 
 
 def main(args=None):
