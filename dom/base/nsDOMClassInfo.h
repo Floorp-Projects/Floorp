@@ -367,6 +367,9 @@ public:
   static jsid sOnbeforeprint_id;
   static jsid sOnafterprint_id;
 
+  static jsid sOndevicemotion_id;
+  static jsid sOndeviceorientation_id;
+
 protected:
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;
