@@ -540,19 +540,23 @@ Debug::markCrossCompartmentDebugObjectReferents(JSTracer *tracer)
     }
 }
 
+// Mark Debug objects that are unreachable except for debugger hooks that may
+// yet be called.
+//
+// This happens during the incremental long tail of the GC mark phase. This
+// method returns true if it has to mark anything; GC calls it repeatedly until
+// it returns false.
+//
+// If |comp| is non-null, we're collecting that compartment only; if |comp| is null,
+// we're collecting all compartments.
+//
 bool
 Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
 {
-    // Debuggers are marked during the incremental long tail of the GC mark
-    // phase. This method returns true if it has to mark anything; GC calls it
-    // repeatedly until it returns false.
     bool markedAny = false;
 
-    // If |comp| is non-null, we're collecting that compartment only; if |comp| is null,
-    // we're collecting all compartments.
-    //
-    // Search the debuggers list of every global in every compartment for Debug objects in
-    // the compartment(s) being collected.
+    // We must find all Debug objects in danger of GC. This code is a little
+    // convoluted since the easiest way to find them is via their debuggees.
     JSRuntime *rt = trc->context->runtime;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
         JSCompartment *dc = *c;
@@ -572,8 +576,10 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
                     Debug *dbg = *p;
                     JSObject *obj = dbg->toJSObject();
 
-                    // We only need to examine obj if it's in a compartment
-                    // being GC'd and it isn't already marked.
+                    // dbg is a Debug with at least one debuggee. Check three things:
+                    //   - dbg is actually in a compartment being GC'd
+                    //   - it isn't already marked
+                    //   - it actually has hooks that might be called
                     if ((!comp || obj->compartment() == comp) && !obj->isMarked()) {
                         if (dbg->hasAnyLiveHooks()) {
                             // obj could be reachable only via its live, enabled
@@ -649,8 +655,15 @@ Debug::sweepAll(JSContext *cx)
 
     }
 
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
-        sweepCompartment(cx, *c);
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
+        // For each debuggee being GC'd, detach it from all its debuggers.
+        GlobalObjectSet &debuggees = (*c)->getDebuggees();
+        for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
+            GlobalObject *global = e.front();
+            if (!global->isMarked())
+                detachAllDebuggersFromGlobal(cx, global, &e);
+        }
+    }
 }
 
 void
@@ -660,18 +673,6 @@ Debug::detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global, GlobalO
     JS_ASSERT(!debuggers->empty());
     while (!debuggers->empty())
         debuggers->back()->removeDebuggeeGlobal(cx, global, compartmentEnum, NULL);
-}
-
-void
-Debug::sweepCompartment(JSContext *cx, JSCompartment *compartment)
-{
-    // For each debuggee being GC'd, detach it from all its debuggers.
-    GlobalObjectSet &debuggees = compartment->getDebuggees();
-    for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
-        GlobalObject *global = e.front();
-        if (!global->isMarked())
-            detachAllDebuggersFromGlobal(cx, global, &e);
-    }
 }
 
 void
