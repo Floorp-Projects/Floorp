@@ -838,7 +838,9 @@ ifndef NO_COMPONENTS_MANIFEST
 endif
 else # ! IS_COMPONENT
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifndef NO_INSTALL_IMPORT_LIBRARY
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
+endif
 else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
 endif
