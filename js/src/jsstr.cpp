@@ -3425,27 +3425,6 @@ js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t len
     return JSDependentString::new_(cx, base, chars, length);
 }
 
-#ifdef DEBUG
-#include <math.h>
-
-void printJSStringStats(JSRuntime *rt)
-{
-    double mean, sigma;
-
-    mean = JS_MeanAndStdDev(rt->totalStrings, rt->lengthSum,
-                            rt->lengthSquaredSum, &sigma);
-
-    fprintf(stderr, "%lu total strings, mean length %g (sigma %g)\n",
-            (unsigned long)rt->totalStrings, mean, sigma);
-
-    mean = JS_MeanAndStdDev(rt->totalDependentStrings, rt->strdepLengthSum,
-                            rt->strdepLengthSquaredSum, &sigma);
-
-    fprintf(stderr, "%lu total dependent strings, mean length %g (sigma %g)\n",
-            (unsigned long)rt->totalDependentStrings, mean, sigma);
-}
-#endif
-
 JSFixedString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
 {

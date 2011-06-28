@@ -54,7 +54,6 @@ function test()
  
 // ------- Comment #111 From Gary Kwong [:nth10sd]
 
-options("anonfunfix");
 new Function("{function x(){}}");
 
 // Assertion failure: pn->pn_defn || (fun->flags & JSFUN_LAMBDA), at ../jsemit.cpp:4149

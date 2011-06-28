@@ -1970,7 +1970,7 @@ ASTSerializer::variableDeclarator(JSParseNode *pn, VarDeclKind *pkind, Value *ds
 
     if (PN_TYPE(pn) == TOK_NAME) {
         pnleft = pn;
-        pnright = pn->pn_expr;
+        pnright = pn->pn_used ? NULL : pn->pn_expr;
     } else {
         JS_ASSERT(PN_TYPE(pn) == TOK_ASSIGN);
         pnleft = pn->pn_left;

@@ -288,15 +288,6 @@ struct ArenaHeader {
 #ifdef DEBUG
     void checkSynchronizedWithFreeList() const;
 #endif
-
-#if defined DEBUG || defined JS_GCMETER
-    static size_t CountListLength(const ArenaHeader *aheader) {
-        size_t n = 0;
-        for (; aheader; aheader = aheader->next)
-            ++n;
-        return n;
-    }
-#endif
 };
 
 struct Arena {
@@ -713,18 +704,11 @@ class ArenaList {
 #endif
 
   public:
-#ifdef JS_GCMETER
-    JSGCArenaStats  stats;
-#endif
-
     void init() {
         head = NULL;
         cursor = &head;
 #ifdef JS_THREADSAFE
         backgroundFinalizeState = BFS_DONE;
-#endif
-#ifdef JS_GCMETER
-        PodZero(&stats);
 #endif
     }
 
@@ -1290,14 +1274,10 @@ struct GCMarker : public JSTracer {
     size_t              markLaterArenas;
 #endif
 
-#if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
-    js::gc::ConservativeGCStats conservativeStats;
-#endif
-
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+    js::gc::ConservativeGCStats conservativeStats;
     Vector<void *, 0, SystemAllocPolicy> conservativeRoots;
     const char *conservativeDumpFileName;
-
     void dumpConservativeRoots();
 #endif
 

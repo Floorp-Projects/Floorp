@@ -656,7 +656,12 @@ class CallCompiler : public BaseCompiler
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
         if (ic.frameSize.isStatic()) {
             masm.move(Imm32(ic.frameSize.staticArgc()), Registers::ArgReg1);
-            masm.fallibleVMCall(compilePtr, script->code, ic.frameSize.staticLocalSlots());
+            /*
+             * CompileFunction doesn't use 'sp', so we could leave it
+             * uninitialized. However, it does wind up calling tryBumpLimit
+             * wanting to assert about regs.sp, so set regs.sp = fp->slots().
+             */
+            masm.fallibleVMCall(compilePtr, script->code, 0);
         } else {
             masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), Registers::ArgReg1);
             masm.fallibleVMCall(compilePtr, script->code, -1);

@@ -677,53 +677,12 @@ js_GenerateShape(JSRuntime *rt);
 extern uint32
 js_GenerateShape(JSContext *cx);
 
-#ifdef DEBUG
-struct JSScopeStats {
-    jsrefcount          searches;
-    jsrefcount          hits;
-    jsrefcount          misses;
-    jsrefcount          hashes;
-    jsrefcount          hashHits;
-    jsrefcount          hashMisses;
-    jsrefcount          steps;
-    jsrefcount          stepHits;
-    jsrefcount          stepMisses;
-    jsrefcount          initSearches;
-    jsrefcount          changeSearches;
-    jsrefcount          tableAllocFails;
-    jsrefcount          toDictFails;
-    jsrefcount          wrapWatchFails;
-    jsrefcount          adds;
-    jsrefcount          addFails;
-    jsrefcount          puts;
-    jsrefcount          redundantPuts;
-    jsrefcount          putFails;
-    jsrefcount          changes;
-    jsrefcount          changePuts;
-    jsrefcount          changeFails;
-    jsrefcount          compresses;
-    jsrefcount          grows;
-    jsrefcount          removes;
-    jsrefcount          removeFrees;
-    jsrefcount          uselessRemoves;
-    jsrefcount          shrinks;
-};
-
-extern JS_FRIEND_DATA(JSScopeStats) js_scope_stats;
-
-# define METER(x)       JS_ATOMIC_INCREMENT(&js_scope_stats.x)
-#else
-# define METER(x)       /* nothing */
-#endif
-
 namespace js {
 
 JS_ALWAYS_INLINE js::Shape **
 Shape::search(JSRuntime *rt, js::Shape **startp, jsid id, bool adding)
 {
     js::Shape *start = *startp;
-    METER(searches);
-
     if (start->hasTable())
         return start->getTable()->search(id, adding);
 
@@ -747,16 +706,11 @@ Shape::search(JSRuntime *rt, js::Shape **startp, jsid id, bool adding)
      */
     js::Shape **spp;
     for (spp = startp; js::Shape *shape = *spp; spp = &shape->parent) {
-        if (shape->propid == id) {
-            METER(hits);
+        if (shape->propid == id)
             return spp;
-        }
     }
-    METER(misses);
     return spp;
 }
-
-#undef METER
 
 } // namespace js
 
