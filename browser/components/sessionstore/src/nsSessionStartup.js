@@ -147,6 +147,12 @@ SessionStartup.prototype = {
       initialState && initialState.session && initialState.session.state &&
       initialState.session.state == STATE_RUNNING_STR;
 
+    // Report shutdown success via telemetry. Shortcoming here are
+    // being-killed-by-OS-shutdown-logic, shutdown freezing after
+    // session restore was written, etc.
+    let Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+    Telemetry.getHistogramById("SHUTDOWN_OK").add(!lastSessionCrashed);
+
     // set the startup type
     if (lastSessionCrashed && resumeFromCrash)
       this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
