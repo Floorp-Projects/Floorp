@@ -80,6 +80,9 @@ public:
   using nsGenericElement::GetText;
   NS_DECL_NSIDOMHTMLOPTIONELEMENT
 
+  bool Selected() const;
+  bool DefaultSelected() const;
+
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
                         JSObject *aObj, PRUint32 argc, jsval *argv);
