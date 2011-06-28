@@ -3920,7 +3920,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const jsval &vobj, JSContext *cx)
 
         JSObject *propobj = JSVAL_TO_OBJECT(v);
         // TODO Deal with non-functions.
-        if (!propobj->isWrapper() || !propobj->isCallable())
+        if (!propobj->isWrapper() || !JS_ObjectIsCallable(cx, propobj))
             continue;
 
         if (!WrapCallable(cx, obj, id, propobj, &v) ||
