@@ -284,7 +284,7 @@ TelemetryPing.prototype = {
         success = channel.QueryInterface(Ci.nsIHttpChannel).requestSucceeded;
       } catch(e) {
       }
-      hsuccess.add(success ? 1 : 0);
+      hsuccess.add(success);
       hping.add(new Date() - startTime);
       if (isTestPing)
         Services.obs.notifyObservers(null, "telemetry-test-xhr-complete", null);

@@ -29,6 +29,13 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
 
   do_check_eq(gh.min, min)
   do_check_eq(gh.max, max)
+ 
+  // Check that booleans work with nonboolean histograms
+  h.add(false);
+  h.add(true);
+  var s = h.snapshot().counts;
+  do_check_eq(s[0], 2)
+  do_check_eq(s[1], 2)
 }
 
 function expect_fail(f) {
@@ -54,11 +61,14 @@ function test_boolean_histogram()
     sum += v;
     h.add(v);
   }
+  h.add(true);
+  h.add(false);
   var s = h.snapshot();
   do_check_eq(s.histogram_type, Telemetry.HISTOGRAM_BOOLEAN);
   // last bucket should always be 0 since .add parameters are normalized to either 0 or 1
-  do_check_eq(s.counts[2],0);
-  do_check_eq(s.sum, 2);
+  do_check_eq(s.counts[2], 0);
+  do_check_eq(s.sum, 3);
+  do_check_eq(s.counts[0], 2);
 }
 
 function test_getHistogramById() {
