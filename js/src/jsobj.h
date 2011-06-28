@@ -809,6 +809,13 @@ struct JSObject : js::gc::Cell {
 
     JSBool makeDenseArraySlow(JSContext *cx);
 
+    /*
+     * If this array object has a data property with index i, set *vp to its
+     * value and return true. If not, do vp->setMagic(JS_ARRAY_HOLE) and return
+     * true. On OOM, report it and return false.
+     */
+    bool arrayGetOwnDataElement(JSContext *cx, size_t i, js::Value *vp);
+
   public:
     inline js::ArgumentsObject *asArguments();
     inline js::NormalArgumentsObject *asNormalArguments();
