@@ -1546,9 +1546,6 @@ if test "$GNU_CC"; then
     if test "$GCC_USE_GNU_LD"; then
         # Don't allow undefined symbols in libraries
         DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
-        LDFLAGS="$LDFLAGS -Wl,--gc-sections"
-        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
-        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
     fi
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
