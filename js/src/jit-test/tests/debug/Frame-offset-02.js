@@ -5,13 +5,13 @@ var dbg = Debug(g);
 var s = undefined, a = []
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	if (s === undefined)
-	    s = frame.script;
-	else
-	    assertEq(s, frame.script);
-	assertEq(frame.offset !== undefined, true);
-	assertEq(a.indexOf(frame.offset), -1);
-	a.push(frame.offset);
+        if (s === undefined)
+            s = frame.script;
+        else
+            assertEq(s, frame.script);
+        assertEq(frame.offset !== undefined, true);
+        assertEq(a.indexOf(frame.offset), -1);
+        a.push(frame.offset);
     }
 };
 g.eval("debugger; debugger; debugger;");

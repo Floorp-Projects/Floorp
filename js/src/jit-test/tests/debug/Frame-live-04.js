@@ -5,16 +5,16 @@ var hits = 0;
 var snapshot;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	var stack = [];
-	for (var f = frame; f; f = f.older) {
-	    if (f.type === "call")
-		stack.push(f);
-	}
-	snapshot = stack;
-	if (hits++ === 0)
-	    assertEq(frame.eval("x();"), null);
-	else
-	    return null;
+        var stack = [];
+        for (var f = frame; f; f = f.older) {
+            if (f.type === "call")
+                stack.push(f);
+        }
+        snapshot = stack;
+        if (hits++ === 0)
+            assertEq(frame.eval("x();"), null);
+        else
+            return null;
     }
 };
 

@@ -5,10 +5,10 @@ var global = dbg.addDebuggee(g);
 var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	var obj = frame.arguments[0];
-	var expected = frame.arguments[1];
-	assertEq(frame.evalWithBindings("obj.toString()", {obj: obj}).return, expected);
-	hits++;
+        var obj = frame.arguments[0];
+        var expected = frame.arguments[1];
+        assertEq(frame.evalWithBindings("obj.toString()", {obj: obj}).return, expected);
+        hits++;
     }
 };
 

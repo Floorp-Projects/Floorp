@@ -5,9 +5,9 @@ var dbg = Debug(g);
 var hits;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	var knownLine = frame.eval("line").return;
-	assertEq(frame.script.getOffsetLine(frame.offset), knownLine);
-	hits++;
+        var knownLine = frame.eval("line").return;
+        assertEq(frame.script.getOffsetLine(frame.offset), knownLine);
+        hits++;
     }
 };
 

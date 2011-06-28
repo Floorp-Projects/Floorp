@@ -7,7 +7,7 @@ var dbg = new Debug(g);
 var i;
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	assertEq(frame.script instanceof Debug.Script, true);
+        assertEq(frame.script instanceof Debug.Script, true);
         frame.script.id = i;
     }
 };

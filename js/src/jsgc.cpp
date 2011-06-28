@@ -1824,7 +1824,6 @@ MarkRuntime(JSTracer *trc)
         gc_lock_traversal(r.front(), trc);
 
     js_TraceAtomState(trc);
-    js_MarkTraps(trc);
 
     JSContext *iter = NULL;
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
@@ -2329,9 +2328,6 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     /* Finalize watch points associated with unreachable objects. */
     js_SweepWatchPoints(cx);
 
-    if (!comp)
-        Debug::sweepAll(cx);
-
     /*
      * We finalize objects before other GC things to ensure that object's finalizer
      * can access them even if they will be freed. Sweep the runtime's property trees
@@ -2348,6 +2344,8 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         comp->finalizeShapeArenaLists(cx);
         GCTIMESTAMP(sweepShapeEnd);
     } else {
+        Debug::sweepAll(cx);
+
         SweepCrossCompartmentWrappers(cx);
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
             (*c)->finalizeObjectArenaLists(cx);

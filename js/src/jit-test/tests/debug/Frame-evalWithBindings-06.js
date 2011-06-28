@@ -3,7 +3,7 @@ var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 dbg.hooks = {
     debuggerHandler: function (frame) {
-	assertEq(frame.evalWithBindings("y = z; x = w;", {z: 2, w: 3}).return, 3);
+        assertEq(frame.evalWithBindings("y = z; x = w;", {z: 2, w: 3}).return, 3);
     }
 };
 g.eval("function f(x) { debugger; assertEq(x, 3); }");

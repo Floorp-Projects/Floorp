@@ -152,10 +152,7 @@ extern JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(void)
-JS_ClearAllTraps(JSContext *cx);
-
-extern JS_PUBLIC_API(JSTrapStatus)
-JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval);
+JS_ClearAllTrapsForCompartment(JSContext *cx);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetInterrupt(JSRuntime *rt, JSInterruptHook handler, void *closure);

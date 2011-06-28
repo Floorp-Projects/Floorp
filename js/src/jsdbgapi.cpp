@@ -85,15 +85,6 @@
 using namespace js;
 using namespace js::gc;
 
-typedef struct JSTrap {
-    JSCList         links;
-    JSScript        *script;
-    jsbytecode      *pc;
-    JSOp            op;
-    JSTrapHandler   handler;
-    jsval           closure;
-} JSTrap;
-
 #define DBG_LOCK(rt)            JS_ACQUIRE_LOCK((rt)->debuggerLock)
 #define DBG_UNLOCK(rt)          JS_RELEASE_LOCK((rt)->debuggerLock)
 #define DBG_LOCK_EVAL(rt,expr)  (DBG_LOCK(rt), (expr), DBG_UNLOCK(rt))
@@ -216,45 +207,19 @@ JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
     return js_SetSingleStepMode(cx, script, singleStep);
 }
 
-/*
- * NB: FindTrap must be called with rt->debuggerLock acquired.
- */
-static JSTrap *
-FindTrap(JSRuntime *rt, JSScript *script, jsbytecode *pc)
-{
-    JSTrap *trap;
-
-    for (trap = (JSTrap *)rt->trapList.next;
-         &trap->links != &rt->trapList;
-         trap = (JSTrap *)trap->links.next) {
-        if (trap->script == script && trap->pc == pc)
-            return trap;
-    }
-    return NULL;
-}
-
 jsbytecode *
 js_UntrapScriptCode(JSContext *cx, JSScript *script)
 {
-    jsbytecode *code;
-    JSRuntime *rt;
-    JSTrap *trap;
+    jsbytecode *code = script->code;
 
-    code = script->code;
-    rt = cx->runtime;
-    DBG_LOCK(rt);
-    for (trap = (JSTrap *)rt->trapList.next;
-         &trap->links !=
-                &rt->trapList;
-         trap = (JSTrap *)trap->links.next) {
-        if (trap->script == script &&
-            (size_t)(trap->pc - script->code) < script->length) {
+    BreakpointSiteMap &sites = script->compartment->breakpointSites;
+    for (BreakpointSiteMap::Range r = sites.all(); !r.empty(); r.popFront()) {
+        BreakpointSite *site = r.front().value;
+        if (site->script == script && size_t(site->pc - script->code) < script->length) {
             if (code == script->code) {
-                jssrcnote *sn, *notes;
-                size_t nbytes;
-
-                nbytes = script->length * sizeof(jsbytecode);
-                notes = script->notes();
+                size_t nbytes = script->length * sizeof(jsbytecode);
+                jssrcnote *notes = script->notes();
+                jssrcnote *sn;
                 for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
                     continue;
                 nbytes += (sn - notes + 1) * sizeof *sn;
@@ -265,229 +230,58 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
                 memcpy(code, script->code, nbytes);
                 GetGSNCache(cx)->purge();
             }
-            code[trap->pc - script->code] = trap->op;
+            code[site->pc - script->code] = site->realOpcode;
         }
     }
-    DBG_UNLOCK(rt);
     return code;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-           JSTrapHandler handler, jsval closure)
+JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handler, jsval closure)
 {
-    JSTrap *junk, *trap, *twin;
-    JSRuntime *rt;
-    uint32 sample;
-
+    assertSameCompartment(cx, script);
     if (!CheckDebugMode(cx))
-        return JS_FALSE;
+        return false;
 
-    JS_ASSERT((JSOp) *pc != JSOP_TRAP);
-    junk = NULL;
-    rt = cx->runtime;
-    DBG_LOCK(rt);
-    trap = FindTrap(rt, script, pc);
-    if (trap) {
-        JS_ASSERT(trap->script == script && trap->pc == pc);
-        JS_ASSERT(*pc == JSOP_TRAP);
-    } else {
-        sample = rt->debuggerMutations;
-        DBG_UNLOCK(rt);
-        trap = (JSTrap *) cx->malloc_(sizeof *trap);
-        if (!trap)
-            return JS_FALSE;
-        trap->closure = JSVAL_NULL;
-        DBG_LOCK(rt);
-        twin = (rt->debuggerMutations != sample)
-               ? FindTrap(rt, script, pc)
-               : NULL;
-        if (twin) {
-            junk = trap;
-            trap = twin;
-        } else {
-            JS_APPEND_LINK(&trap->links, &rt->trapList);
-            ++rt->debuggerMutations;
-            trap->script = script;
-            trap->pc = pc;
-            trap->op = (JSOp)*pc;
-            *pc = JSOP_TRAP;
-        }
-    }
-    trap->handler = handler;
-    trap->closure = closure;
-    DBG_UNLOCK(rt);
-    if (junk)
-        cx->free_(junk);
-
-#ifdef JS_METHODJIT
-    if (script->hasJITCode()) {
-        js::mjit::Recompiler recompiler(cx, script);
-        if (!recompiler.recompile())
-            return JS_FALSE;
-    }
-#endif
-
-    return JS_TRUE;
+    BreakpointSite *site = script->compartment->getOrCreateBreakpointSite(cx, script, pc, NULL);
+    if (!site)
+        return false;
+    site->setTrap(cx, handler, Valueify(closure));
+    return true;
 }
 
 JS_PUBLIC_API(JSOp)
 JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    JSRuntime *rt;
-    JSTrap *trap;
-    JSOp op;
-
-    rt = cx->runtime;
-    DBG_LOCK(rt);
-    trap = FindTrap(rt, script, pc);
-    op = trap ? trap->op : (JSOp) *pc;
-    DBG_UNLOCK(rt);
-    return op;
-}
-
-static void
-DestroyTrapAndUnlock(JSContext *cx, JSTrap *trap)
-{
-    ++cx->runtime->debuggerMutations;
-    JS_REMOVE_LINK(&trap->links);
-    *trap->pc = (jsbytecode)trap->op;
-    DBG_UNLOCK(cx->runtime);
-    cx->free_(trap);
+    BreakpointSite *site = script->compartment->getBreakpointSite(pc);
+    return site ? site->realOpcode : JSOp(*pc);
 }
 
 JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep)
 {
-    JSTrap *trap;
-    
-    DBG_LOCK(cx->runtime);
-    trap = FindTrap(cx->runtime, script, pc);
-    if (handlerp)
-        *handlerp = trap ? trap->handler : NULL;
-    if (closurep)
-        *closurep = trap ? trap->closure : JSVAL_NULL;
-    if (trap)
-        DestroyTrapAndUnlock(cx, trap);
-    else
-        DBG_UNLOCK(cx->runtime);
-
-#ifdef JS_METHODJIT
-    if (script->hasJITCode()) {
-        mjit::Recompiler recompiler(cx, script);
-        recompiler.recompile();
+    if (BreakpointSite *site = script->compartment->getBreakpointSite(pc)) {
+        site->clearTrap(cx, NULL, handlerp, Valueify(closurep));
+    } else {
+        if (handlerp)
+            *handlerp = NULL;
+        if (closurep)
+            *closurep = JSVAL_VOID;
     }
-#endif
 }
 
 JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 {
-    JSRuntime *rt;
-    JSTrap *trap, *next;
-    uint32 sample;
-
-    rt = cx->runtime;
-    DBG_LOCK(rt);
-    for (trap = (JSTrap *)rt->trapList.next;
-         &trap->links != &rt->trapList;
-         trap = next) {
-        next = (JSTrap *)trap->links.next;
-        if (trap->script == script) {
-            sample = rt->debuggerMutations;
-            DestroyTrapAndUnlock(cx, trap);
-            DBG_LOCK(rt);
-            if (rt->debuggerMutations != sample + 1)
-                next = (JSTrap *)rt->trapList.next;
-        }
-    }
-    DBG_UNLOCK(rt);
+    assertSameCompartment(cx, script);
+    script->compartment->clearTraps(cx, script);
 }
 
 JS_PUBLIC_API(void)
-JS_ClearAllTraps(JSContext *cx)
+JS_ClearAllTrapsForCompartment(JSContext *cx)
 {
-    JSRuntime *rt;
-    JSTrap *trap, *next;
-    uint32 sample;
-
-    rt = cx->runtime;
-    DBG_LOCK(rt);
-    for (trap = (JSTrap *)rt->trapList.next;
-         &trap->links != &rt->trapList;
-         trap = next) {
-        next = (JSTrap *)trap->links.next;
-        sample = rt->debuggerMutations;
-        DestroyTrapAndUnlock(cx, trap);
-        DBG_LOCK(rt);
-        if (rt->debuggerMutations != sample + 1)
-            next = (JSTrap *)rt->trapList.next;
-    }
-    DBG_UNLOCK(rt);
-}
-
-/*
- * NB: js_MarkTraps does not acquire cx->runtime->debuggerLock, since the
- * debugger should never be racing with the GC (i.e., the debugger must
- * respect the request model).
- */
-void
-js_MarkTraps(JSTracer *trc)
-{
-    JSRuntime *rt = trc->context->runtime;
-
-    for (JSTrap *trap = (JSTrap *) rt->trapList.next;
-         &trap->links != &rt->trapList;
-         trap = (JSTrap *) trap->links.next) {
-        MarkValue(trc, Valueify(trap->closure), "trap->closure");
-    }
-}
-
-JS_PUBLIC_API(JSTrapStatus)
-JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval)
-{
-    JSTrap *trap;
-    jsint op;
-    JSTrapStatus status;
-
-    assertSameCompartment(cx, script);
-    DBG_LOCK(cx->runtime);
-    trap = FindTrap(cx->runtime, script, pc);
-    JS_ASSERT(!trap || trap->handler);
-    if (!trap) {
-        op = (JSOp) *pc;
-        DBG_UNLOCK(cx->runtime);
-
-        /* Defend against "pc for wrong script" API usage error. */
-        JS_ASSERT(op != JSOP_TRAP);
-
-#ifdef JS_THREADSAFE
-        /* If the API was abused, we must fail for want of the real op. */
-        if (op == JSOP_TRAP)
-            return JSTRAP_ERROR;
-
-        /* Assume a race with a debugger thread and try to carry on. */
-        *rval = INT_TO_JSVAL(op);
-        return JSTRAP_CONTINUE;
-#else
-        /* Always fail if single-threaded (must be an API usage error). */
-        return JSTRAP_ERROR;
-#endif
-    }
-    DBG_UNLOCK(cx->runtime);
-
-    /*
-     * It's important that we not use 'trap->' after calling the callback --
-     * the callback might remove the trap!
-     */
-    op = (jsint)trap->op;
-    status = trap->handler(cx, script, pc, rval, trap->closure);
-    if (status == JSTRAP_CONTINUE) {
-        /* By convention, return the true op to the interpreter in rval. */
-        *rval = INT_TO_JSVAL(op);
-    }
-    return status;
+    cx->compartment->clearTraps(cx, NULL);
 }
 
 #ifdef JS_TRACER

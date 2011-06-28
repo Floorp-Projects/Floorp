@@ -1205,7 +1205,7 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
     }
 
     if (result == JSTRAP_CONTINUE && (trapTypes & JSTRAP_TRAP))
-        result = JS_HandleTrap(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval));
+        result = Debug::onTrap(f.cx, &rval);
 
     switch (result) {
       case JSTRAP_THROW:
