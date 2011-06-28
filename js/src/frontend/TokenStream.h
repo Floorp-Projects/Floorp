@@ -484,7 +484,7 @@ class TokenStream
      * caller should JS_ARENA_MARK before calling |init| and JS_ARENA_RELEASE
      * after calling |close|.
      */
-    TokenStream(JSContext *);
+    TokenStream(JSContext *, JSPrincipals *principals, JSPrincipals *originPrincipals);
 
     /*
      * Create a new token stream from an input buffer.
@@ -825,7 +825,6 @@ class TokenStream
     void updateLineInfoForEOL();
     void updateFlagsForEOL();
 
-    JSContext           * const cx;
     Token               tokens[ntokens];/* circular token buffer */
     uintN               cursor;         /* index of last parsed token */
     uintN               lookahead;      /* count of lookahead tokens */
@@ -843,6 +842,8 @@ class TokenStream
     JSPackedBool        maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
     bool                xml;            /* see JSOPTION_XML */
+    JSContext           *const cx;
+    JSPrincipals        *const originPrincipals;
 };
 
 struct KeywordInfo {

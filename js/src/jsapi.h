@@ -4084,18 +4084,33 @@ JS_EvaluateUCScript(JSContext *cx, JSObject *obj,
                     jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
+JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
+                                 JSPrincipals *principals,
+                                 const jschar *chars, uintN length,
+                                 const char *filename, uintN lineno,
+                                 jsval *rval);
+
+extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                         JSPrincipals *principals,
                                         const jschar *chars, uintN length,
                                         const char *filename, uintN lineno,
                                         jsval *rval, JSVersion version);
 
+/*
+ * JSAPI clients may optionally specify the 'originPrincipals' of a script.
+ * A script's originPrincipals may be retrieved through the debug API (via
+ * JS_GetScriptOriginPrincipals) and the originPrincipals are transitively
+ * assigned to any nested scripts (including scripts dynamically created via
+ * eval and the Function constructor).
+ */
 extern JS_PUBLIC_API(JSBool)
-JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
-                                 JSPrincipals *principals,
-                                 const jschar *chars, uintN length,
-                                 const char *filename, uintN lineno,
-                                 jsval *rval);
+JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
+                                              JSPrincipals *principals,
+                                              JSPrincipals *originPrincipals,
+                                              const jschar *chars, uintN length,
+                                              const char *filename, uintN lineno,
+                                              jsval *rval, JSVersion version);
 
 extern JS_PUBLIC_API(JSBool)
 JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
@@ -4764,6 +4779,7 @@ JS_ReportAllocationOverflow(JSContext *cx);
 
 struct JSErrorReport {
     const char      *filename;      /* source file name, URL, etc., or null */
+    JSPrincipals    *originPrincipals; /* see 'originPrincipals' comment above */
     uintN           lineno;         /* source line number */
     const char      *linebuf;       /* offending source line without final \n */
     const char      *tokenptr;      /* pointer to error token in linebuf */

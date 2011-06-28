@@ -1242,12 +1242,14 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
 
     if (!esg.foundScript()) {
         uintN lineno;
-        const char *filename = CurrentScriptFileAndLine(cx, &lineno,
-                                                        evalType == DIRECT_EVAL
-                                                        ? CALLED_FROM_JSOP_EVAL
-                                                        : NOT_CALLED_FROM_JSOP_EVAL);
+        const char *filename;
+        JSPrincipals *originPrincipals;
+        CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals,
+                                    evalType == DIRECT_EVAL ? CALLED_FROM_JSOP_EVAL
+                                                            : NOT_CALLED_FROM_JSOP_EVAL);
         uint32 tcflags = TCF_COMPILE_N_GO | TCF_COMPILE_FOR_EVAL;
-        JSScript *compiled = frontend::CompileScript(cx, &scopeobj, caller, principals,
+        JSScript *compiled = frontend::CompileScript(cx, &scopeobj, caller,
+                                                     principals, originPrincipals,
                                                      tcflags, chars, length, filename,
                                                      lineno, cx->findVersion(), linearStr,
                                                      staticLevel);

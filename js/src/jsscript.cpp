@@ -334,8 +334,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     uint32 prologLength, version, encodedClosedCount;
     uint16 nClosedArgs = 0, nClosedVars = 0;
     uint32 nTypeSets = 0;
-    JSPrincipals *principals;
-    uint32 encodeable;
+    uint32 encodeable, sameOriginPrincipals;
     JSSecurityCallbacks *callbacks;
     uint32 scriptBits = 0;
 
@@ -598,27 +597,36 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     JS_ASSERT_IF(xdr->mode == JSXDR_ENCODE, state->filename == script->filename);
 
     callbacks = JS_GetSecurityCallbacks(cx);
-    if (xdr->mode == JSXDR_ENCODE) {
-        principals = script->principals;
-        encodeable = callbacks && callbacks->principalsTranscoder;
-        if (!JS_XDRUint32(xdr, &encodeable))
-            goto error;
-        if (encodeable &&
-            !callbacks->principalsTranscoder(xdr, &principals)) {
+    if (xdr->mode == JSXDR_ENCODE)
+        encodeable = script->principals && callbacks && callbacks->principalsTranscoder;
+
+    if (!JS_XDRUint32(xdr, &encodeable))
+        goto error;
+
+    if (encodeable) {
+        if (!callbacks || !callbacks->principalsTranscoder) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_CANT_DECODE_PRINCIPALS);
             goto error;
         }
-    } else {
-        if (!JS_XDRUint32(xdr, &encodeable))
+
+        if (!callbacks->principalsTranscoder(xdr, &script->principals))
             goto error;
-        if (encodeable) {
-            if (!(callbacks && callbacks->principalsTranscoder)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_CANT_DECODE_PRINCIPALS);
-                goto error;
+
+        if (xdr->mode == JSXDR_ENCODE)
+            sameOriginPrincipals = script->principals == script->originPrincipals;
+
+        if (!JS_XDRUint32(xdr, &sameOriginPrincipals))
+            goto error;
+
+        if (sameOriginPrincipals) {
+            if (xdr->mode == JSXDR_DECODE) {
+                script->originPrincipals = script->principals;
+                JSPRINCIPALS_HOLD(cx, script->originPrincipals);
             }
-            if (!callbacks->principalsTranscoder(xdr, &principals))
+        } else {
+            if (!callbacks->principalsTranscoder(xdr, &script->originPrincipals))
                 goto error;
-            script->principals = principals;
         }
     }
 
@@ -1149,8 +1157,16 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     script->nslots = script->nfixed + bce->maxStackDepth;
     script->staticLevel = uint16(bce->staticLevel);
     script->principals = bce->parser->principals;
+
     if (script->principals)
         JSPRINCIPALS_HOLD(cx, script->principals);
+
+    /* Establish invariant: principals implies originPrincipals. */
+    script->originPrincipals = bce->parser->originPrincipals;
+    if (!script->originPrincipals)
+        script->originPrincipals = script->principals;
+    if (script->originPrincipals)
+        JSPRINCIPALS_HOLD(cx, script->originPrincipals);
 
     script->sourceMap = (jschar *) bce->parser->tokenStream.releaseSourceMap();
 
@@ -1335,8 +1351,11 @@ JSScript::finalize(JSContext *cx, bool background)
 
     js_CallDestroyScriptHook(cx, this);
 
+    JS_ASSERT_IF(principals, originPrincipals);
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
+    if (originPrincipals)
+        JSPRINCIPALS_DROP(cx, originPrincipals);
 
     if (types)
         types->destroy();
@@ -1561,20 +1580,25 @@ CurrentLine(JSContext *cx)
     return js_PCToLineNumber(cx, cx->fp()->script(), cx->regs().pc);
 }
 
-const char *
-CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
+void
+CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, uintN *linenop,
+                                JSPrincipals **origin)
 {
     FrameRegsIter iter(cx);
     while (!iter.done() && !iter.fp()->isScriptFrame())
         ++iter;
 
     if (iter.done()) {
+        *file = NULL;
         *linenop = 0;
-        return NULL;
+        *origin = NULL;
+        return;
     }
 
+    JSScript *script = iter.fp()->script();
+    *file = script->filename;
     *linenop = js_PCToLineNumber(cx, iter.fp()->script(), iter.pc());
-    return iter.fp()->script()->filename;
+    *origin = script->originPrincipals;
 }
 
 }  /* namespace js */
@@ -1662,15 +1686,22 @@ js_CloneScript(JSContext *cx, JSScript *script)
     rstate.filename = script->filename;
     rstate.filenameSaved = true;
 
-    if (!js_XDRScript(r, &script))
+    JSScript *newScript = NULL;
+    if (!js_XDRScript(r, &newScript))
         return NULL;
 
-    // set the proper principals for the script
-    script->principals = script->compartment()->principals;
-    if (script->principals)
-        JSPRINCIPALS_HOLD(cx, script->principals);
+    // set the proper principals for the script's new compartment
+    // the originPrincipals are not related to compartment, so just copy
+    newScript->principals = newScript->compartment()->principals;
+    newScript->originPrincipals = script->originPrincipals;
+    if (!newScript->originPrincipals)
+        newScript->originPrincipals = newScript->principals;
+    if (newScript->principals) {
+        JSPRINCIPALS_HOLD(cx, newScript->principals);
+        JSPRINCIPALS_HOLD(cx, newScript->originPrincipals);
+    }
 
-    return script;
+    return newScript;
 }
 
 void

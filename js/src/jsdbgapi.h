@@ -227,6 +227,9 @@ JS_GetFunctionNative(JSContext *cx, JSFunction *fun);
 extern JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSContext *cx, JSScript *script);
 
+extern JS_PUBLIC_API(JSPrincipals *)
+JS_GetScriptOriginPrincipals(JSContext *cx, JSScript *script);
+
 /*
  * Stack Frame Iterator
  *
