@@ -1063,6 +1063,9 @@ Services.prefs.setBoolPref("extensions.logging.enabled", true);
 // By default only load extensions from the profile install location
 Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_PROFILE);
 
+// By default don't disable add-ons from any scope
+Services.prefs.setIntPref("extensions.autoDisableScopes", 0);
+
 // By default, don't cache add-ons in AddonRepository.jsm
 Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
 

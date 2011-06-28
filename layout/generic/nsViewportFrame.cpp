@@ -47,7 +47,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsDisplayList.h"
 #include "FrameLayerBuilder.h"
-#include "nsAbsoluteContainingBlock.h"
 
 using namespace mozilla;
 
@@ -70,7 +69,7 @@ ViewportFrame::Init(nsIContent*      aContent,
 void
 ViewportFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  DestroyAbsoluteFrames(aDestructRoot);
+  mFixedContainer.DestroyFrames(this, aDestructRoot);
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
@@ -78,11 +77,20 @@ NS_IMETHODIMP
 ViewportFrame::SetInitialChildList(nsIAtom*        aListName,
                                    nsFrameList&    aChildList)
 {
+  nsresult rv = NS_OK;
+
   // See which child list to add the frames to
 #ifdef NS_DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
 #endif
-  return nsContainerFrame::SetInitialChildList(aListName, aChildList);
+  if (nsGkAtoms::fixedList == aListName) {
+    rv = mFixedContainer.SetInitialChildList(this, aListName, aChildList);
+  } 
+  else {
+    rv = nsContainerFrame::SetInitialChildList(aListName, aChildList);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -90,6 +98,13 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
+  // We don't need any special painting or event handling. We just need to
+  // mark our visible out-of-flow frames (i.e., the fixed position frames) so
+  // that display list construction is guaranteed to recurse into their
+  // ancestors.
+  aBuilder->MarkFramesForDisplayList(this, mFixedContainer.GetChildList(),
+                                     aDirtyRect);
+
   nsIFrame* kid = mFrames.FirstChild();
   if (!kid)
     return NS_OK;
@@ -104,9 +119,18 @@ NS_IMETHODIMP
 ViewportFrame::AppendFrames(nsIAtom*        aListName,
                             nsFrameList&    aFrameList)
 {
-  NS_ASSERTION(!aListName, "unexpected child list");
-  NS_ASSERTION(GetChildList(nsnull).IsEmpty(), "Shouldn't have any kids!");
-  return nsContainerFrame::AppendFrames(aListName, aFrameList);
+  nsresult rv = NS_OK;
+
+  if (nsGkAtoms::fixedList == aListName) {
+    rv = mFixedContainer.AppendFrames(this, aListName, aFrameList);
+  }
+  else {
+    NS_ASSERTION(!aListName, "unexpected child list");
+    NS_ASSERTION(GetChildList(nsnull).IsEmpty(), "Shouldn't have any kids!");
+    rv = nsContainerFrame::AppendFrames(aListName, aFrameList);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -114,17 +138,57 @@ ViewportFrame::InsertFrames(nsIAtom*        aListName,
                             nsIFrame*       aPrevFrame,
                             nsFrameList&    aFrameList)
 {
-  NS_ASSERTION(!aListName, "unexpected child list");
-  NS_ASSERTION(GetChildList(nsnull).IsEmpty(), "Shouldn't have any kids!");
-  return nsContainerFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
+  nsresult rv = NS_OK;
+
+  if (nsGkAtoms::fixedList == aListName) {
+    rv = mFixedContainer.InsertFrames(this, aListName, aPrevFrame, aFrameList);
+  }
+  else {
+    NS_ASSERTION(!aListName, "unexpected child list");
+    NS_ASSERTION(GetChildList(nsnull).IsEmpty(), "Shouldn't have any kids!");
+    rv = nsContainerFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
 ViewportFrame::RemoveFrame(nsIAtom*        aListName,
                            nsIFrame*       aOldFrame)
 {
-  NS_ASSERTION(!aListName, "unexpected child list");
-  return nsContainerFrame::RemoveFrame(aListName, aOldFrame);
+  nsresult rv = NS_OK;
+
+  if (nsGkAtoms::fixedList == aListName) {
+    mFixedContainer.RemoveFrame(this, aListName, aOldFrame);
+    rv = NS_OK;
+  }
+  else {
+    NS_ASSERTION(!aListName, "unexpected child list");
+    rv = nsContainerFrame::RemoveFrame(aListName, aOldFrame);
+  }
+
+  return rv;
+}
+
+nsIAtom*
+ViewportFrame::GetAdditionalChildListName(PRInt32 aIndex) const
+{
+  NS_PRECONDITION(aIndex >= 0, "illegal index");
+
+  if (0 == aIndex) {
+    return nsGkAtoms::fixedList;
+  }
+
+  return nsnull;
+}
+
+nsFrameList
+ViewportFrame::GetChildList(nsIAtom* aListName) const
+{
+  if (nsGkAtoms::fixedList == aListName)
+    return mFixedContainer.GetChildList();
+
+  return nsContainerFrame::GetChildList(aListName);
 }
 
 /* virtual */ nscoord
@@ -136,6 +200,8 @@ ViewportFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
     result = 0;
   else
     result = mFrames.FirstChild()->GetMinWidth(aRenderingContext);
+    
+  // XXXldb Deal with mFixedContainer (matters for SizeToContent)!
 
   return result;
 }
@@ -149,6 +215,8 @@ ViewportFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
     result = 0;
   else
     result = mFrames.FirstChild()->GetPrefWidth(aRenderingContext);
+    
+  // XXXldb Deal with mFixedContainer (matters for SizeToContent)!
 
   return result;
 }
@@ -246,24 +314,20 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   // to reflect the available space for the fixed items
   nsHTMLReflowState reflowState(aReflowState);
   nsPoint offset = AdjustReflowStateForScrollbars(&reflowState);
-
+  
 #ifdef DEBUG
-  if (IsAbsoluteContainer()) {
-    NS_ASSERTION(GetAbsoluteContainingBlock()->GetChildList().IsEmpty() ||
-                 (offset.x == 0 && offset.y == 0),
-                 "We don't handle correct positioning of fixed frames with "
-                 "scrollbars in odd positions");
-  }
+  NS_ASSERTION(mFixedContainer.GetChildList().IsEmpty() ||
+               (offset.x == 0 && offset.y == 0),
+               "We don't handle correct positioning of fixed frames with "
+               "scrollbars in odd positions");
 #endif
 
-  if (IsAbsoluteContainer()) {
-    // Just reflow all the fixed-pos frames.
-    rv = GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowState, aStatus,
-                                              reflowState.ComputedWidth(),
-                                              reflowState.ComputedHeight(),
-                                              PR_FALSE, PR_TRUE, PR_TRUE, // XXX could be optimized
-                                              nsnull /* ignore overflow */);
-  }
+  // Just reflow all the fixed-pos frames.
+  rv = mFixedContainer.Reflow(this, aPresContext, reflowState, aStatus,
+                              reflowState.ComputedWidth(),
+                              reflowState.ComputedHeight(),
+                              PR_FALSE, PR_TRUE, PR_TRUE, // XXX could be optimized
+                              nsnull /* ignore overflow */);
 
   // If we were dirty then do a repaint
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
