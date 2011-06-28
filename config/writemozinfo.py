@@ -37,12 +37,16 @@ def build_dict(env=os.environ):
     
     # processor
     p = env["TARGET_CPU"]
-    # do some slight massaging for some values
-    #TODO: retain specific values in case someone wants them?
-    if p.startswith("arm"):
-        p = "arm"
-    elif re.match("i[3-9]86", p):
-        p = "x86"
+    # for universal mac builds, put in a special value
+    if d["os"] == "mac" and "UNIVERSAL_BINARY" in env and env["UNIVERSAL_BINARY"] == "1":
+        p = "universal-x86-x86_64"
+    else:
+        # do some slight massaging for some values
+        #TODO: retain specific values in case someone wants them?
+        if p.startswith("arm"):
+            p = "arm"
+        elif re.match("i[3-9]86", p):
+            p = "x86"
     d["processor"] = p
     # hardcoded list of 64-bit CPUs
     if p in ["x86_64", "ppc64"]:
