@@ -4092,14 +4092,6 @@ JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_HasArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    return js_HasLengthProperty(cx, obj, lengthp);
-}
-
-JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp)
 {
