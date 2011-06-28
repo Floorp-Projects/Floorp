@@ -2477,9 +2477,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length);
 
 extern JS_PUBLIC_API(JSBool)
-JS_HasArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp);
-
-extern JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
                  JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
 
