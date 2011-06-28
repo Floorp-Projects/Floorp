@@ -1563,12 +1563,12 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     while (!fp->isFunctionFrame() || fp->fun() != fun) {
         fp = fp->prev();
         if (!fp)
-			return true;
+            return true;
     }
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
-		/* Warn if strict about f.arguments or equivalent unqualified uses. */
-		if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT, js_GetErrorMessage,
+        /* Warn if strict about f.arguments or equivalent unqualified uses. */
+        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT, js_GetErrorMessage,
                                           NULL, JSMSG_DEPRECATED_USAGE, js_arguments_str)) {
             return false;
         }
@@ -1576,11 +1576,11 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 return false;
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
         if (!fp->prev())
-            return false;
+            return true;
 
         StackFrame *frame = js_GetScriptedCaller(cx, fp->prev());
-        if (!frame || !frame->getValidCalleeObject(cx, vp))
-			return false;
+        if (frame && !frame->getValidCalleeObject(cx, vp))
+            return false;
 
         if (vp->isObject()) {
             JSObject &caller = vp->toObject();
@@ -1588,7 +1588,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             /* Censor the caller if it is from another compartment. */
             if (caller.compartment() != cx->compartment) {
                 vp->setNull();
-            } else if (caller.isFunction()) {			
+            } else if (caller.isFunction()) {
                 JSFunction *callerFun = caller.getFunctionPrivate();
                 if (callerFun->isInterpreted() && callerFun->inStrictMode()) {
                     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,

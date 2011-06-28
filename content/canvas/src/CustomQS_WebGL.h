@@ -329,6 +329,13 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
 
         rv = self->TexImage2D_dom(argv0, argv1, argv2, argv3, argv4, elt);
 
+        // NS_ERROR_DOM_SECURITY_ERR indicates we tried to load a cross-domain element, so
+        // bail out immediately, don't try to interprete as ImageData
+        if (rv == NS_ERROR_DOM_SECURITY_ERR) {
+            xpc_qsThrowBadArg(cx, rv, vp, 5);
+            return JS_FALSE;
+        }
+
         if (NS_FAILED(rv)) {
             // failed to interprete argv[5] as a DOMElement, now try to interprete it as ImageData
             JSObject *argv5 = JSVAL_TO_OBJECT(argv[5]);
@@ -447,6 +454,13 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
         if (NS_FAILED(rv)) return JS_FALSE;
 
         rv = self->TexSubImage2D_dom(argv0, argv1, argv2, argv3, argv4, argv5, elt);
+        
+        // NS_ERROR_DOM_SECURITY_ERR indicates we tried to load a cross-domain element, so
+        // bail out immediately, don't try to interprete as ImageData
+        if (rv == NS_ERROR_DOM_SECURITY_ERR) {
+            xpc_qsThrowBadArg(cx, rv, vp, 6);
+            return JS_FALSE;
+        }
 
         if (NS_FAILED(rv)) {
             // failed to interprete argv[6] as a DOMElement, now try to interprete it as ImageData

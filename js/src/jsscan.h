@@ -140,7 +140,7 @@ enum TokenKind {
                                            not a block */
     TOK_FORHEAD = 83,                   /* head of for(;;)-style loop */
     TOK_ARGSBODY = 84,                  /* formal args in list + body at end */
-    TOK_UPVARS = 85,                    /* lexical dependencies as JSAtomList
+    TOK_UPVARS = 85,                    /* lexical dependencies as JSAtomDefnMap
                                            of definitions paired with a parse
                                            tree full of uses of those names */
     TOK_RESERVED,                       /* reserved keywords */
@@ -345,7 +345,6 @@ class TokenStream
     /* Note that the version and hasXML can get out of sync via setXML. */
     JSVersion versionNumber() const { return VersionNumber(version); }
     JSVersion versionWithFlags() const { return version; }
-    bool hasAnonFunFix() const { return VersionHasAnonFunFix(version); }
     bool hasXML() const { return xml || VersionShouldParseXML(versionNumber()); }
     void setXML(bool enabled) { xml = enabled; }
 

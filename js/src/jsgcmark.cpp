@@ -606,10 +606,6 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
     }
 
     if (obj->isNative()) {
-#ifdef JS_DUMP_SCOPE_METERS
-        js::MeterEntryCount(obj->propertyCount);
-#endif
-
         js::Shape *shape = obj->lastProp;
         PushMarkStack(gcmarker, shape);
 
@@ -701,10 +697,6 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         clasp->trace(trc, obj);
 
     if (obj->isNative()) {
-#ifdef JS_DUMP_SCOPE_METERS
-        js::MeterEntryCount(obj->propertyCount);
-#endif
-
         MarkShape(trc, obj->lastProp, "shape");
 
         if (obj->slotSpan() > 0)
