@@ -960,6 +960,7 @@ xpicleanup@BIN_SUFFIX@
   modules/PluralForm.jsm
   modules/PopupNotifications.jsm
   modules/PropertyPanel.jsm
+  modules/reflect.jsm
   modules/Services.jsm
   modules/services-sync/auth.js
   modules/services-sync/base_records/collection.js
