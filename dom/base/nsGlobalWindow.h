@@ -545,7 +545,13 @@ public:
   }
 
   PRInt64 SizeOf() const {
-    return sizeof(*this);
+    PRInt64 size = sizeof(*this);
+
+    if (IsInnerWindow() && mDoc) {
+      size += mDoc->SizeOf();
+    }
+
+    return size;
   }
 
 private:
