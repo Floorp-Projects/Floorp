@@ -68,6 +68,7 @@ const PREF_EM_EXTENSION_FORMAT        = "extensions.";
 const PREF_EM_ENABLED_SCOPES          = "extensions.enabledScopes";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
+const PREF_EM_DISABLED_ADDONS_LIST    = "extensions.disabledAddons";
 const PREF_XPI_ENABLED                = "xpinstall.enabled";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 const PREF_XPI_WHITELIST_PERMISSIONS  = "xpinstall.whitelist.add";
@@ -1455,6 +1456,14 @@ var XPIProvider = {
   enabledAddons: null,
   // An array of add-on IDs of add-ons that were inactive during startup
   inactiveAddonIDs: [],
+  // A cache of the add-on IDs of add-ons that had changes performed to them
+  // during this session's startup. This is preliminary work, hopefully it will
+  // be expanded on in the future and an API made to get at it from the
+  // application.
+  startupChanges: {
+    // Add-ons that became disabled for compatibility reasons
+    appDisabled: []
+  },
 
   /**
    * Starts the XPI provider initializes the install locations and prefs.
@@ -1577,13 +1586,24 @@ var XPIProvider = {
     // Changes to installed extensions may have changed which theme is selected
     this.applyThemeChange();
 
+    if (Services.prefs.prefHasUserValue(PREF_EM_DISABLED_ADDONS_LIST))
+      Services.prefs.clearUserPref(PREF_EM_DISABLED_ADDONS_LIST);
+
     // If the application has been upgraded and there are add-ons outside the
     // application directory then we may need to synchronize compatibility
-    // information but only if the mismatch UI isn't disabled
-    if (aAppChanged && !this.allAppGlobal &&
-        Prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true)) {
-      this.showMismatchWindow();
-      flushCaches = true;
+    // information
+    if (aAppChanged && !this.allAppGlobal) {
+      // Should we show a UI or just pass the list via a pref?
+      if (Prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true)) {
+        this.showMismatchWindow();
+        flushCaches = true;
+      }
+      else if (this.startupChanges.appDisabled.length > 0) {
+        // Remember the list of add-ons that were disabled this startup so
+        // the application can notify the user however it wants to
+        Services.prefs.setCharPref(PREF_EM_DISABLED_ADDONS_LIST,
+                                   this.startupChanges.appDisabled.join(","));
+      }
     }
 
     if (flushCaches) {
@@ -1651,6 +1671,9 @@ var XPIProvider = {
     this.bootstrapScopes = {};
     this.enabledAddons = null;
     this.allAppGlobal = true;
+
+    for (let type in this.startupChanges)
+      this.startupChanges[type] = [];
 
     this.inactiveAddonIDs = [];
 
@@ -2283,9 +2306,6 @@ var XPIProvider = {
       XPIDatabase.updateAddonMetadata(aOldAddon, newAddon, aAddonState.descriptor);
       if (newAddon.visible) {
         visibleAddons[newAddon.id] = newAddon;
-        // Remember add-ons that were changed during startup
-        AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED,
-                                             newAddon.id);
 
         // If this was the active theme and it is now disabled then enable the
         // default theme
@@ -2370,9 +2390,6 @@ var XPIProvider = {
         visibleAddons[aOldAddon.id] = aOldAddon;
 
         if (!aOldAddon.visible) {
-          // Remember add-ons that were changed during startup.
-          AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED,
-                                               aOldAddon.id);
           XPIDatabase.makeAddonVisible(aOldAddon);
 
           if (aOldAddon.bootstrap) {
@@ -2420,6 +2437,10 @@ var XPIProvider = {
         let wasDisabled = isAddonDisabled(aOldAddon);
         let isDisabled = isAddonDisabled(newAddon);
 
+        // Remember add-ons that became appDisabled by the application change
+        if (aOldAddon.visible && newAddon.appDisabled && !aOldAddon.appDisabled)
+          XPIProvider.startupChanges.appDisabled.push(aOldAddon.id);
+
         // If either property has changed update the database.
         if (newAddon.appDisabled != aOldAddon.appDisabled ||
             newAddon.userDisabled != aOldAddon.userDisabled ||
@@ -2438,11 +2459,6 @@ var XPIProvider = {
         // If this is a visible add-on and it has changed disabled state then we
         // may need a restart or to update the bootstrap list.
         if (aOldAddon.visible && wasDisabled != isDisabled) {
-          // Remember add-ons that became disabled or enabled by the application
-          // change
-          let change = isDisabled ? AddonManager.STARTUP_CHANGE_DISABLED
-                                  : AddonManager.STARTUP_CHANGE_ENABLED;
-          AddonManagerPrivate.addStartupChange(change, aOldAddon.id);
           if (aOldAddon.bootstrap) {
             // Update the add-ons active state
             aOldAddon.active = !isDisabled;
@@ -2479,19 +2495,8 @@ var XPIProvider = {
       // This add-on has disappeared
       LOG("Add-on " + aOldAddon.id + " removed from " + aInstallLocation.name);
       XPIDatabase.removeAddonMetadata(aOldAddon);
-
-      // Remember add-ons that were uninstalled during startup
-      if (aOldAddon.visible) {
-        AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_UNINSTALLED,
-                                             aOldAddon.id);
-      }
-      else if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
-                           .indexOf(aOldAddon.id) != -1) {
-        AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED,
-                                             aOldAddon.id);
-      }
-
       if (aOldAddon.active) {
+
         // Enable the default theme if the previously active theme has been
         // removed
         if (aOldAddon.type == "theme")
@@ -2623,24 +2628,6 @@ var XPIProvider = {
       }
 
       if (newAddon.visible) {
-        // Remember add-ons that were installed during startup. If there was a
-        // cached manifest or migration data then this install is already
-        // expected
-        if (!aMigrateData && (!(aInstallLocation.name in aManifests) ||
-                              !(aId in aManifests[aInstallLocation.name]))) {
-          // If a copy from a higher priority location was removed then this
-          // add-on has changed
-          if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_UNINSTALLED)
-                          .indexOf(newAddon.id) != -1) {
-            AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED,
-                                                 newAddon.id);
-          }
-          else {
-            AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_INSTALLED,
-                                                 newAddon.id);
-          }
-        }
-
         // Note if any visible add-on is not in the application install location
         if (newAddon._installLocation.name != KEY_APP_GLOBAL)
           XPIProvider.allAppGlobal = false;
@@ -2709,14 +2696,6 @@ var XPIProvider = {
         // Iterate through the add-ons installed the last time the application
         // ran
         addons.forEach(function(aOldAddon) {
-          // If a version of this add-on has been installed in an higher
-          // priority install location then count it as changed
-          if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
-                          .indexOf(aOldAddon.id) != -1) {
-            AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED,
-                                                 aOldAddon.id);
-          }
-
           // Check if the add-on is still installed
           if (aOldAddon.id in addonStates) {
             let addonState = addonStates[aOldAddon.id];
