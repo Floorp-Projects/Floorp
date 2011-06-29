@@ -51,7 +51,8 @@ public:
   NS_IMETHOD GetPath(char** aMemoryPath);
   NS_IMETHOD GetKind(int* aKnd);
   NS_IMETHOD GetDescription(char** aDescription);
-  NS_IMETHOD GetMemoryUsed(PRInt64* aMemoryUsed);
+  NS_IMETHOD GetUnits(PRInt32* aUnits);
+  NS_IMETHOD GetAmount(PRInt64* aAmount);
 
 private:
   // Protect ctor, use Init() instead.
