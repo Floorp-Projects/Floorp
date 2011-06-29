@@ -131,8 +131,7 @@ void nsMenuChainItem::Detach(nsMenuChainItem** aRoot)
   }
 }
 
-NS_IMPL_ISUPPORTS5(nsXULPopupManager,
-                   nsIDOMKeyListener,
+NS_IMPL_ISUPPORTS4(nsXULPopupManager,
                    nsIDOMEventListener,
                    nsIMenuRollup,
                    nsITimerCallback,
@@ -2073,7 +2072,30 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
 }
 
 nsresult
-nsXULPopupManager::KeyUp(nsIDOMEvent* aKeyEvent)
+nsXULPopupManager::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  NS_ENSURE_TRUE(keyEvent, NS_ERROR_UNEXPECTED);
+
+  nsAutoString eventType;
+  keyEvent->GetType(eventType);
+  if (eventType.EqualsLiteral("keyup")) {
+    return KeyUp(keyEvent);
+  }
+  if (eventType.EqualsLiteral("keydown")) {
+    return KeyDown(keyEvent);
+  }
+  if (eventType.EqualsLiteral("keypress")) {
+    return KeyPress(keyEvent);
+  }
+
+  NS_ABORT();
+
+  return NS_OK;
+}
+
+nsresult
+nsXULPopupManager::KeyUp(nsIDOMKeyEvent* aKeyEvent)
 {
   // don't do anything if a menu isn't open or a menubar isn't active
   if (!mActiveMenuBar) {
@@ -2089,7 +2111,7 @@ nsXULPopupManager::KeyUp(nsIDOMEvent* aKeyEvent)
 }
 
 nsresult
-nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
+nsXULPopupManager::KeyDown(nsIDOMKeyEvent* aKeyEvent)
 {
   nsMenuChainItem* item = GetTopVisibleMenu();
   if (item && item->Frame()->IsMenuLocked())
@@ -2107,8 +2129,7 @@ nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
   nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
   if (menuAccessKey) {
     PRUint32 theChar;
-    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-    keyEvent->GetKeyCode(&theChar);
+    aKeyEvent->GetKeyCode(&theChar);
 
     if (theChar == (PRUint32)menuAccessKey) {
       PRBool ctrl = PR_FALSE;
@@ -2142,7 +2163,7 @@ nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
 }
 
 nsresult
-nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
+nsXULPopupManager::KeyPress(nsIDOMKeyEvent* aKeyEvent)
 {
   // Don't check prevent default flag -- menus always get first shot at key events.
   // When a menu is open, the prevent default flag on a keypress is always set, so
@@ -2164,6 +2185,7 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  NS_ENSURE_TRUE(keyEvent, NS_ERROR_UNEXPECTED);
   PRUint32 theChar;
   keyEvent->GetKeyCode(&theChar);
 
