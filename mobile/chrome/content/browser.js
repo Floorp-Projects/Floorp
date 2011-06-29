@@ -2194,6 +2194,10 @@ IdentityHandler.prototype = {
    * Click handler for the identity-box element in primary chrome.
    */
   handleIdentityButtonEvent: function(aEvent) {
+    let broadcaster = document.getElementById("bcast_uidiscovery");
+    if (broadcaster && broadcaster.getAttribute("mode") == "discovery")
+      return;
+
     aEvent.stopPropagation();
 
     if ((aEvent.type == "click" && aEvent.button != 0) ||
