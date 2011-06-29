@@ -192,7 +192,9 @@ public:
     eDOMEvents_transitionend,
     eDOMEvents_animationstart,
     eDOMEvents_animationend,
-    eDOMEvents_animationiteration
+    eDOMEvents_animationiteration,
+    eDOMEvents_devicemotion,
+    eDOMEvents_deviceorientation
   };
 
   nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);
