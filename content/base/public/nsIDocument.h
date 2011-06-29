@@ -1526,39 +1526,11 @@ public:
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
 
+#define DEPRECATED_OPERATION(_op) e##_op,
   enum DeprecatedOperations {
-    eGetAttributeNode = 0,
-    eSetAttributeNode,
-    eGetAttributeNodeNS,
-    eSetAttributeNodeNS,
-    eRemoveAttributeNode,
-    eCreateAttribute,
-    eCreateAttributeNS,
-    eSpecified,
-    eOwnerElement,
-    eNodeName,
-    eNodeValue,
-    eNodeType,
-    eParentNode,
-    eChildNodes,
-    eHasChildNodes,
-    eHasAttributes,
-    eFirstChild,
-    eLastChild,
-    ePreviousSibling,
-    eNextSibling,
-    eAttributes,
-    eInsertBefore,
-    eReplaceChild,
-    eRemoveChild,
-    eAppendChild,
-    eCloneNode,
-    eOwnerDocument,
-    eNormalize,
-    eIsSupported,
-    eIsEqualNode,
-    eTextContent
+#include "nsDeprecatedOperationList.h"
   };
+#undef DEPRECATED_OPERATION
   void WarnOnceAbout(DeprecatedOperations aOperation);
 
 private:
