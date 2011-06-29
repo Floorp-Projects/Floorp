@@ -4,6 +4,8 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/service.js");
 
 function makeRotaryEngine() {
   return new RotaryEngine();
@@ -1487,4 +1489,60 @@ add_test(function test_canDecrypt_true() {
     cleanAndGo(server);
   }
 
+});
+
+add_test(function test_syncapplied_observer() {
+  let syncTesting = new SyncTestingInfrastructure();
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  const NUMBER_OF_RECORDS = 10;
+
+  let engine = makeRotaryEngine();
+
+  // Create a batch of server side records.
+  let collection = new ServerCollection();
+  for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
+    let id = 'record-no-' + i;
+    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    collection.wbos[id] = new ServerWBO(id, payload);
+  }
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = httpd_setup({
+    "/1.1/foo/storage/rotary": collection.handler()
+  });
+
+  let numApplyCalls = 0;
+  let engine_name;
+  let count;
+  function onApplied(subject, data) {
+    numApplyCalls++;
+    engine_name = data;
+    count = subject;
+  }
+
+  Svc.Obs.add("weave:engine:sync:applied", onApplied);
+
+  try {
+    SyncScheduler.hasIncomingItems = false;
+
+    // Do sync.
+    engine._syncStartup();
+    engine._processIncoming();
+
+    do_check_eq([id for (id in engine._store.items)].length, 10);
+
+    do_check_eq(numApplyCalls, 1);
+    do_check_eq(engine_name, "rotary");
+    do_check_eq(count.applied, 10);
+
+    do_check_true(SyncScheduler.hasIncomingItems);
+  } finally {
+    cleanAndGo(server);
+    SyncScheduler.hasIncomingItems = false;
+    Svc.Obs.remove("weave:engine:sync:applied", onApplied);
+  }
 });
