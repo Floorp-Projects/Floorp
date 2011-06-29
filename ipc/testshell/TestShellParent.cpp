@@ -146,18 +146,3 @@ TestShellCommandParent::ReleaseCallback()
 {
   mCallback.Release();
 }
-
-bool
-TestShellCommandParent::ExecuteCallback(const nsString& aResponse)
-{
-  return static_cast<TestShellParent*>(Manager())->CommandDone(
-      this, aResponse);
-}
-
-void
-TestShellCommandParent::ActorDestroy(ActorDestroyReason why)
-{
-  if (why == AbnormalShutdown) {
-    ExecuteCallback(EmptyString());
-  }
-}
