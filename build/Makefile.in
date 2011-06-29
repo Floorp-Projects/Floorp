@@ -117,6 +117,11 @@ ifdef ENABLE_TESTS
 libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py
 	$(INSTALL) $< $(DIST)/bin
 
+# Unit tests for ManifestParser
+check::
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py -I$(srcdir) \
+	  $(srcdir)/tests/test.py
+
 ifeq ($(OS_ARCH),Darwin)
 libs:: $(topsrcdir)/tools/rb/fix-macosx-stack.pl
 	$(INSTALL) $< $(DIST)/bin
