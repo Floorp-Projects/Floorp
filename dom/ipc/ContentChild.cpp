@@ -299,42 +299,92 @@ ContentChild::AllocPMemoryReportRequest()
     return new MemoryReportRequestChild();
 }
 
+// This is just a wrapper for InfallibleTArray<MemoryReport> that implements
+// nsISupports, so it can be passed to nsIMemoryMultiReporter::CollectReports.
+class MemoryReportsWrapper : public nsISupports {
+public:
+    NS_DECL_ISUPPORTS
+    MemoryReportsWrapper(InfallibleTArray<MemoryReport> *r) : mReports(r) { }
+    InfallibleTArray<MemoryReport> *mReports;
+};
+NS_IMPL_ISUPPORTS0(MemoryReportsWrapper)
+
+class MemoryReportCallback : public nsIMemoryMultiReporterCallback
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    MemoryReportCallback(const nsACString &aProcess)
+    : mProcess(aProcess)
+    {
+    }
+
+    NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
+                        PRInt32 aKind, PRInt32 aUnits, PRInt64 aAmount,
+                        const nsACString &aDescription,
+                        nsISupports *aiWrappedReports)
+    {
+        MemoryReportsWrapper *wrappedReports =
+            static_cast<MemoryReportsWrapper *>(aiWrappedReports);
+
+        MemoryReport memreport(mProcess, nsCString(aPath), aKind, aUnits,
+                               aAmount, nsCString(aDescription));
+        wrappedReports->mReports->AppendElement(memreport);
+        return NS_OK;
+    }
+private:
+    const nsCString mProcess;
+};
+NS_IMPL_ISUPPORTS1(
+  MemoryReportCallback
+, nsIMemoryMultiReporterCallback
+)
+
 bool
 ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* child)
 {
-    InfallibleTArray<MemoryReport> reports;
     
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    nsCOMPtr<nsISimpleEnumerator> r;
-    mgr->EnumerateReporters(getter_AddRefs(r));
 
+    InfallibleTArray<MemoryReport> reports;
+
+    static const int maxLength = 31;   // big enough; pid is only a few chars
+    nsPrintfCString process(maxLength, "Content (%d)", getpid());
+
+    // First do the vanilla memory reporters.
+    nsCOMPtr<nsISimpleEnumerator> e;
+    mgr->EnumerateReporters(getter_AddRefs(e));
     PRBool more;
-    while (NS_SUCCEEDED(r->HasMoreElements(&more)) && more) {
-      nsCOMPtr<nsIMemoryReporter> report;
-      r->GetNext(getter_AddRefs(report));
+    while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsIMemoryReporter> r;
+      e->GetNext(getter_AddRefs(r));
 
       nsCString path;
       PRInt32 kind;
       PRInt32 units;
-      nsCString desc;
       PRInt64 amount;
-      report->GetPath(getter_Copies(path));
-      report->GetKind(&kind);
-      report->GetUnits(&units);
-      report->GetAmount(&amount);
-      report->GetDescription(getter_Copies(desc));
+      nsCString desc;
+      r->GetPath(getter_Copies(path));
+      r->GetKind(&kind);
+      r->GetUnits(&units);
+      r->GetAmount(&amount);
+      r->GetDescription(getter_Copies(desc));
 
-      static const int maxLength = 31;   // big enough; pid is only a few chars
-      MemoryReport memreport(nsPrintfCString(maxLength, "Content (%d)",
-                                             getpid()),
-                             path,
-                             kind,
-                             units,
-                             amount,
-                             desc);
-
+      MemoryReport memreport(process, path, kind, units, amount, desc);
       reports.AppendElement(memreport);
+    }
 
+    // Then do the memory multi-reporters, by calling CollectReports on each
+    // one, whereupon the callback will turn each measurement into a
+    // MemoryReport.
+    mgr->EnumerateMultiReporters(getter_AddRefs(e));
+    MemoryReportsWrapper wrappedReports(&reports);
+    MemoryReportCallback cb(process);
+    while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsIMemoryMultiReporter> r;
+      e->GetNext(getter_AddRefs(r));
+
+      r->CollectReports(&cb, &wrappedReports);
     }
 
     child->Send__delete__(child, reports);
