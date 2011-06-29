@@ -441,7 +441,6 @@ SessionStore.prototype = {
     this._windows[aWindow.__SSID].selected = parseInt(index) + 1; // 1-based
 
     // Restore the resurrected browser
-    // * currently we only load the last URL into the browser
     if (aBrowser.__SS_restore) {
       let data = aBrowser.__SS_data;
       if (data.entries.length > 0) {
@@ -634,12 +633,17 @@ SessionStore.prototype = {
     let closedTab = closedTabs.splice(aIndex, 1).shift();
 
     // create a new tab and bring to front
-    let tab = aWindow.Browser.addTab(closedTab.entries[0].url, true);
+    let tab = aWindow.Browser.addTab(closedTab.entries[closedTab.index - 1].url, true);
+
+    tab.browser.messageManager.sendAsyncMessage("WebNavigation:LoadURI", {
+      uri: closedTab.entries[closedTab.index - 1].url,
+      flags: null,
+      entries: closedTab.entries,
+      index: closedTab.index
+    });
 
     // Put back the extra data
     tab.browser.__SS_extdata = closedTab.extData;
-
-    // TODO: save and restore more data (position, field values, etc)
 
     return tab.chromeTab;
   },
