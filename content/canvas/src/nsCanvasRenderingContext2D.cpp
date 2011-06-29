@@ -119,50 +119,15 @@
 // windows.h (included by chromium code) defines this, in its infinite wisdom
 #undef DrawText
 
-using namespace mozilla::ipc;
-
 using namespace mozilla;
-using namespace mozilla::layers;
+using namespace mozilla::CanvasUtils;
 using namespace mozilla::dom;
+using namespace mozilla::ipc;
+using namespace mozilla::layers;
 
 static float kDefaultFontSize = 10.0;
 static NS_NAMED_LITERAL_STRING(kDefaultFontName, "sans-serif");
 static NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
-
-/* Float validation stuff */
-#define VALIDATE(_f)  if (!NS_finite(_f)) return PR_FALSE
-
-static PRBool FloatValidate (double f1) {
-    VALIDATE(f1);
-    return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2) {
-    VALIDATE(f1); VALIDATE(f2);
-    return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2, double f3) {
-    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3);
-    return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2, double f3, double f4) {
-    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4);
-    return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5) {
-    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5);
-    return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5, double f6) {
-    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5); VALIDATE(f6);
-    return PR_TRUE;
-}
-
-#undef VALIDATE
 
 /* Memory reporter stuff */
 static nsIMemoryReporter *gCanvasMemoryReporter = nsnull;
@@ -1434,6 +1399,64 @@ nsCanvasRenderingContext2D::SetTransform(float m11, float m12, float m21, float 
     mThebes->SetMatrix(matrix);
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetMozCurrentTransform(JSContext* cx,
+                                                   const jsval& matrix)
+{
+    nsresult rv;
+    gfxMatrix newCTM;
+
+    if (!JSValToMatrix(cx, matrix, &newCTM, &rv)) {
+        return rv;
+    }
+
+    mThebes->SetMatrix(newCTM);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetMozCurrentTransform(JSContext* cx,
+                                                   jsval* matrix)
+{
+    return MatrixToJSVal(mThebes->CurrentMatrix(), cx, matrix);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetMozCurrentTransformInverse(JSContext* cx,
+                                                          const jsval& matrix)
+{
+    nsresult rv;
+    gfxMatrix newCTMInverse;
+
+    if (!JSValToMatrix(cx, matrix, &newCTMInverse, &rv)) {
+        return rv;
+    }
+
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+    if (!newCTMInverse.IsSingular()) {
+        mThebes->SetMatrix(newCTMInverse.Invert());
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetMozCurrentTransformInverse(JSContext* cx,
+                                                          jsval* matrix)
+{
+    gfxMatrix ctm = mThebes->CurrentMatrix();
+
+    if (!mThebes->CurrentMatrix().IsSingular()) {
+        ctm.Invert();
+    } else {
+        double NaN = JSVAL_TO_DOUBLE(JS_GetNaNValue(cx));
+        ctm = gfxMatrix(NaN, NaN, NaN, NaN, NaN, NaN);
+    }
+
+    return MatrixToJSVal(ctm, cx, matrix);
 }
 
 //

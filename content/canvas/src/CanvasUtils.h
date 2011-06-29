@@ -47,37 +47,91 @@ class nsIPrincipal;
 
 namespace mozilla {
 
-class CanvasUtils {
-public:
-    // Check that the rectangle [x,y,w,h] is a subrectangle of [0,0,realWidth,realHeight]
+namespace gfx {
+class Matrix;
+}
 
-    static PRBool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
-                                       PRInt32 realWidth, PRInt32 realHeight) {
-        CheckedInt32 checked_x_plus_w  = CheckedInt32(x) + w;
-        CheckedInt32 checked_y_plus_h  = CheckedInt32(y) + h;
+namespace CanvasUtils {
 
-        return w >= 0 && h >= 0 && x >= 0 && y >= 0 &&
-            checked_x_plus_w.valid() &&
-            checked_x_plus_w.value() <= realWidth &&
-            checked_y_plus_h.valid() &&
-            checked_y_plus_h.value() <= realHeight;
-    }
+using namespace gfx;
 
-    // Flag aCanvasElement as write-only if drawing an image with aPrincipal
-    // onto it would make it such.
+// Check that the rectangle [x,y,w,h] is a subrectangle of [0,0,realWidth,realHeight]
 
-    static void DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
-                                         nsIPrincipal *aPrincipal,
-                                         PRBool forceWriteOnly);
+inline PRBool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
+                            PRInt32 realWidth, PRInt32 realHeight) {
+    CheckedInt32 checked_xmost  = CheckedInt32(x) + w;
+    CheckedInt32 checked_ymost  = CheckedInt32(y) + h;
 
-    static void LogMessage (const nsCString& errorString);
-    static void LogMessagef (const char *fmt, ...);
+    return w >= 0 && h >= 0 && x >= 0 && y >= 0 &&
+        checked_xmost.valid() &&
+        checked_xmost.value() <= realWidth &&
+        checked_ymost.valid() &&
+        checked_ymost.value() <= realHeight;
+}
 
-private:
-    // this can't be instantiated
-    CanvasUtils() { }
-};
+// Flag aCanvasElement as write-only if drawing an image with aPrincipal
+// onto it would make it such.
 
+void DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
+                              nsIPrincipal *aPrincipal,
+                              PRBool forceWriteOnly);
+
+void LogMessage (const nsCString& errorString);
+void LogMessagef (const char *fmt, ...);
+
+// Make a double out of |v|, treating undefined values as 0.0 (for
+// the sake of sparse arrays).  Return true iff coercion
+// succeeded.
+bool CoerceDouble(jsval v, double* d);
+
+// Return true iff the conversion succeeded, false otherwise.  *rv is
+// the value to return to script if this returns false.
+bool JSValToMatrix(JSContext* cx, const jsval& val,
+                   gfxMatrix* matrix, nsresult* rv);
+bool JSValToMatrix(JSContext* cx, const jsval& val,
+                   Matrix* matrix, nsresult* rv);
+
+nsresult MatrixToJSVal(const gfxMatrix& matrix,
+                       JSContext* cx, jsval* val);
+nsresult MatrixToJSVal(const Matrix& matrix,
+                       JSContext* cx, jsval* val);
+
+    /* Float validation stuff */
+#define VALIDATE(_f)  if (!NS_finite(_f)) return PR_FALSE
+
+inline PRBool FloatValidate (double f1) {
+    VALIDATE(f1);
+    return PR_TRUE;
+}
+
+inline PRBool FloatValidate (double f1, double f2) {
+    VALIDATE(f1); VALIDATE(f2);
+    return PR_TRUE;
+}
+
+inline PRBool FloatValidate (double f1, double f2, double f3) {
+    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3);
+    return PR_TRUE;
+}
+
+inline PRBool FloatValidate (double f1, double f2, double f3, double f4) {
+    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4);
+    return PR_TRUE;
+}
+
+inline PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5) {
+    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5);
+    return PR_TRUE;
+}
+
+inline PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5, double f6) {
+    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5); VALIDATE(f6);
+    return PR_TRUE;
+}
+
+#undef VALIDATE
+
+}
 }
 
 #endif /* _CANVASUTILS_H_ */
