@@ -52,22 +52,28 @@ Cu.import("resource://services-sync/main.js");    // So we can get to Service fo
 let SyncScheduler = {
   _log: Log4Moz.repository.getLogger("Sync.SyncScheduler"),
 
-  // Since a user has a single device by default, they are
-  // treated as idle.
-  idle: true,
+  /**
+   * The nsITimer object that schedules the next sync. See scheduleNextSync().
+   */
+  syncTimer: null,
 
-  hasIncomingItems: false,
-  
-  numClients: 0,
+  setDefaults: function setDefaults() {
+    // A user is non-idle on startup by default.
+    this.idle = false;
 
-  nextSync: 0,
-  syncInterval: SINGLE_USER_SYNC,
-  syncThreshold: SINGLE_USER_THRESHOLD,
-	
+    this.hasIncomingItems = false;
+    this.numClients = 0;
+
+    this.nextSync = 0,
+    this.syncInterval = SINGLE_USER_SYNC;
+    this.syncThreshold = SINGLE_USER_THRESHOLD;
+  },
+
   get globalScore() Svc.Prefs.get("globalScore", 0),
   set globalScore(value) Svc.Prefs.set("globalScore", value),
 
   init: function init() {
+    this.setDefaults();
     Svc.Obs.add("weave:engine:score:updated", this);
     Svc.Obs.add("network:offline-status-changed", this);
     Svc.Obs.add("weave:service:sync:start", this);
@@ -150,12 +156,17 @@ let SyncScheduler = {
         break;
       case "idle":
         this.idle = true;
-        adjustSyncInterval();
+        // Adjust the interval for future syncs. This won't actually have any
+        // effect until the next pending sync (which will happen soon since we
+        // were just active.)
+        this.adjustSyncInterval();
         break;
       case "back":
-        Utils.nextTick(Weave.Service.sync, Weave.Service);
         this.idle = false;
-        adjustSyncInterval();
+        // Trigger a sync if we have multiple clients.
+        if (this.numClients > 1) {
+          Utils.nextTick(Weave.Service.sync, Weave.Service);
+        }
         break;
     }
   },
@@ -284,7 +295,7 @@ let SyncScheduler = {
     }
 
     this._log.trace("Next sync in " + Math.ceil(interval / 1000) + " sec.");
-    Utils.namedTimer(this._syncIfMPUnlocked, interval, this, "_syncTimer");
+    Utils.namedTimer(this._syncIfMPUnlocked, interval, this, "syncTimer");
 
     // Save the next sync time in-case sync is disabled (logout/offline/etc.)
     this.nextSync = Date.now() + interval;
@@ -334,8 +345,8 @@ let SyncScheduler = {
     this._log.debug("Clearing sync triggers.");
 
     // Clear out any scheduled syncs
-    if (this._syncTimer)
-      this._syncTimer.clear();
+    if (this.syncTimer)
+      this.syncTimer.clear();
   }
 
 };

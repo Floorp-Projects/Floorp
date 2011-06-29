@@ -1025,6 +1025,7 @@ WeaveSvc.prototype = {
     this._ignorePrefObserver = true;
     Svc.Prefs.resetBranch("");
     this._ignorePrefObserver = false;
+    SyncScheduler.setDefaults();
 
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
