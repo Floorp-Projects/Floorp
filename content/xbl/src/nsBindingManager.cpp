@@ -115,9 +115,10 @@ public:
   nsXBLInsertionPoint* GetInsertionPointAt(PRInt32 i) { return static_cast<nsXBLInsertionPoint*>(mElements->ElementAt(i)); }
   void RemoveInsertionPointAt(PRInt32 i) { mElements->RemoveElementAt(i); }
 
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope)
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap)
   {
-    return xpc::dom::NodeListBase::create(cx, scope, this);
+    return xpc::dom::NodeListBase::create(cx, scope, this, triedToWrap);
   }
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ANONYMOUS_CONTENT_LIST_IID)

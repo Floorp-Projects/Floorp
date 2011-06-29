@@ -286,12 +286,13 @@ enum {
 };
 
 typedef JSObject*
-(*DefineInterface)(JSContext *cx, XPCWrappedNativeScope *scope);
+(*DefineInterface)(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
 
 void
 Register(nsDOMClassInfoData *aData);
 extern bool
-DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine);
+DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine,
+                  nsresult *aResult);
 
 }
 }
