@@ -684,6 +684,7 @@ protected:
                        miterLimit(10.0f),
                        globalAlpha(1.0f),
                        shadowBlur(0.0),
+                       dashOffset(0.0f),
                        op(OP_OVER),
                        fillRule(FILL_WINDING),
                        lineCap(CAP_BUTT),
@@ -703,6 +704,8 @@ protected:
             miterLimit(other.miterLimit),
             globalAlpha(other.globalAlpha),
             shadowBlur(other.shadowBlur),
+            dash(other.dash),
+            dashOffset(other.dashOffset),
             op(other.op),
             fillRule(FILL_WINDING),
             lineCap(other.lineCap),
@@ -761,6 +764,8 @@ protected:
       Float miterLimit;
       Float globalAlpha;
       Float shadowBlur;
+      FallibleTArray<Float> dash;
+      Float dashOffset;
 
       CompositionOp op;
       FillRule fillRule;
@@ -2147,7 +2152,10 @@ nsCanvasRenderingContext2DAzure::StrokeRect(float x, float y, float w, float h)
       StrokeLine(Point(x, y), Point(x + w, y),
                   GeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
                   StrokeOptions(state.lineWidth, state.lineJoin,
-                                cap, state.miterLimit),
+                                cap, state.miterLimit,
+                                state.dash.Length(),
+                                state.dash.Elements(),
+                                state.dashOffset),
                   DrawOptions(state.globalAlpha, state.op));
     return NS_OK;
   } else if (!w) {
@@ -2159,7 +2167,10 @@ nsCanvasRenderingContext2DAzure::StrokeRect(float x, float y, float w, float h)
       StrokeLine(Point(x, y), Point(x, y + h),
                   GeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
                   StrokeOptions(state.lineWidth, state.lineJoin,
-                                cap, state.miterLimit),
+                                cap, state.miterLimit,
+                                state.dash.Length(),
+                                state.dash.Elements(),
+                                state.dashOffset),
                   DrawOptions(state.globalAlpha, state.op));
     return NS_OK;
   }
@@ -2168,7 +2179,10 @@ nsCanvasRenderingContext2DAzure::StrokeRect(float x, float y, float w, float h)
     StrokeRect(mgfx::Rect(x, y, w, h),
                 GeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
                 StrokeOptions(state.lineWidth, state.lineJoin,
-                              state.lineCap, state.miterLimit),
+                              state.lineCap, state.miterLimit,
+                              state.dash.Length(),
+                              state.dash.Elements(),
+                              state.dashOffset),
                 DrawOptions(state.globalAlpha, state.op));
 
   return Redraw();
@@ -2232,7 +2246,10 @@ nsCanvasRenderingContext2DAzure::Stroke()
   AdjustedTarget(this)->
     Stroke(mPath, GeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
             StrokeOptions(state.lineWidth, state.lineJoin,
-                          state.lineCap, state.miterLimit),
+                          state.lineCap, state.miterLimit,
+                          state.dash.Length(),
+                          state.dash.Elements(),
+                          state.dashOffset),
             DrawOptions(state.globalAlpha, state.op));
 
   return Redraw();
@@ -2971,6 +2988,8 @@ nsCanvasRenderingContext2DAzure::MeasureText(const nsAString& rawText,
  */
 struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiProcessor
 {
+  typedef nsCanvasRenderingContext2DAzure::ContextState ContextState;
+
   virtual void SetText(const PRUnichar* text, PRInt32 length, nsBidiDirection direction)
   {
     mTextRun = gfxTextRunCache::MakeTextRun(text,
@@ -3111,12 +3130,16 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
             
         Matrix oldTransform = mCtx->mTarget->GetTransform();
 
+        const ContextState& state = *mState;
         nsCanvasRenderingContext2DAzure::AdjustedTarget(mCtx)->
           Stroke(path, nsCanvasRenderingContext2DAzure::GeneralPattern().
                     ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_STROKE, mCtx->mTarget),
-                  StrokeOptions(mCtx->CurrentState().lineWidth, mCtx->CurrentState().lineJoin,
-                                mCtx->CurrentState().lineCap, mCtx->CurrentState().miterLimit),
-                  DrawOptions(mState->globalAlpha, mState->op));
+                  StrokeOptions(state.lineWidth, state.lineJoin,
+                                state.lineCap, state.miterLimit,
+                                state.dash.Length(),
+                                state.dash.Elements(),
+                                state.dashOffset),
+                  DrawOptions(state.globalAlpha, state.op));
 
       }
     }
@@ -3144,7 +3167,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
   nsCanvasRenderingContext2DAzure::TextDrawOperation mOp;
 
   // context state
-  nsCanvasRenderingContext2DAzure::ContextState *mState;
+  ContextState *mState;
 
   // union of bounding boxes of all runs, needed for shadows
   gfxRect mBoundingBox;
@@ -3539,6 +3562,47 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2DAzure::GetMiterLimit(float *miter)
 {
   *miter = CurrentState().miterLimit;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::SetMozDash(JSContext *cx, const jsval& patternArray)
+{
+  FallibleTArray<Float> dash;
+  nsresult rv = JSValToDashArray(cx, patternArray, dash);
+  if (NS_SUCCEEDED(rv)) {
+    ContextState& state = CurrentState();
+    state.dash = dash;
+    if (state.dash.IsEmpty()) {
+      state.dashOffset = 0;
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::GetMozDash(JSContext* cx, jsval* dashArray)
+{
+  return DashArrayToJSVal(CurrentState().dash, cx, dashArray);
+}
+ 
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::SetMozDashOffset(float offset)
+{
+  if (!FloatValidate(offset)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  ContextState& state = CurrentState();
+  if (!state.dash.IsEmpty()) {
+    state.dashOffset = offset;
+  }
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::GetMozDashOffset(float* offset)
+{
+  *offset = CurrentState().dashOffset;
   return NS_OK;
 }
 

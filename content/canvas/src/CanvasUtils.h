@@ -131,6 +131,93 @@ inline PRBool FloatValidate (double f1, double f2, double f3, double f4, double 
 
 #undef VALIDATE
 
+template<typename T>
+nsresult
+JSValToDashArray(JSContext* cx, const jsval& val,
+                 FallibleTArray<T>& dashArray);
+
+template<typename T>
+nsresult
+DashArrayToJSVal(FallibleTArray<T>& dashArray,
+                 JSContext* cx, jsval* val);
+
+template<typename T>
+nsresult
+JSValToDashArray(JSContext* cx, const jsval& patternArray,
+                 FallibleTArray<T>& dashes)
+{
+    // The cap is pretty arbitrary.  16k should be enough for
+    // anybody...
+    static const jsuint MAX_NUM_DASHES = 1 << 14;
+
+    if (!JSVAL_IS_PRIMITIVE(patternArray)) {
+        JSObject* obj = JSVAL_TO_OBJECT(patternArray);
+        jsuint length;
+        if (!JS_GetArrayLength(cx, obj, &length)) {
+            // Not an array-like thing
+            return NS_ERROR_INVALID_ARG;
+        } else if (length > MAX_NUM_DASHES) {
+            // Too many dashes in the pattern
+            return NS_ERROR_ILLEGAL_VALUE;
+        }
+
+        bool haveNonzeroElement = false;
+        for (jsint i = 0; i < jsint(length); ++i) {
+            jsval elt;
+            double d;
+            if (!JS_GetElement(cx, obj, i, &elt)) {
+                return NS_ERROR_FAILURE;
+            }
+            if (!(CoerceDouble(elt, &d) &&
+                  FloatValidate(d) &&
+                  d >= 0.0)) {
+                // Pattern elements must be finite "numbers" >= 0.
+                return NS_ERROR_INVALID_ARG;
+            } else if (d > 0.0) {
+                haveNonzeroElement = true;
+            }
+            if (!dashes.AppendElement(d)) {
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+
+        if (dashes.Length() > 0 && !haveNonzeroElement) {
+            // An all-zero pattern makes no sense.
+            return NS_ERROR_ILLEGAL_VALUE;
+        }
+    } else if (!(JSVAL_IS_VOID(patternArray) || JSVAL_IS_NULL(patternArray))) {
+        // undefined and null mean "reset to no dash".  Any other
+        // random garbage is a type error.
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    return NS_OK;
+}
+
+template<typename T>
+nsresult
+DashArrayToJSVal(FallibleTArray<T>& dashes,
+                 JSContext* cx, jsval* val)
+{
+    if (dashes.IsEmpty()) {
+        *val = JSVAL_NULL;
+    } else {
+        JSObject* obj = JS_NewArrayObject(cx, dashes.Length(), nsnull);
+        if (!obj) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        for (PRUint32 i = 0; i < dashes.Length(); ++i) {
+            double d = dashes[i];
+            jsval elt = DOUBLE_TO_JSVAL(d);
+            if (!JS_SetElement(cx, obj, i, &elt)) {
+                return NS_ERROR_FAILURE;
+            }
+        }
+        *val = OBJECT_TO_JSVAL(obj);
+    }
+    return NS_OK;
+}
+
 }
 }
 

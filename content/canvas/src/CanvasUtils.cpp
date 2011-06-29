@@ -194,7 +194,8 @@ JSValToMatrix(JSContext* cx, const jsval& val, Matrix* matrix, nsresult* rv)
     gfxMatrix m;
     if (!JSValToMatrix(cx, val, &m, rv))
         return false;
-    *matrix = Matrix(m.xx, m.yx, m.xy, m.yy, m.x0, m.y0);
+    *matrix = Matrix(Float(m.xx), Float(m.yx), Float(m.xy), Float(m.yy),
+                     Float(m.x0), Float(m.y0));
     return true;
 }
 

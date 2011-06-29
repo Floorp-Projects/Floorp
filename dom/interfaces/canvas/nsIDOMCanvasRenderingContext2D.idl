@@ -121,6 +121,10 @@ enum CanvasMultiGetterType {
   attribute DOMString lineJoin; /* "round", "bevel", "miter" (default) */
   attribute float miterLimit; /* default 10 */
 
+  [implicit_jscontext]
+  attribute jsval mozDash; /* default |null| */
+  attribute float mozDashOffset; /* default 0.0 */
+
   // shadows
   attribute float shadowOffsetX;
   attribute float shadowOffsetY;
