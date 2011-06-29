@@ -65,7 +65,6 @@
 #include "mozilla/plugins/BrowserStreamChild.h"
 #include "mozilla/plugins/PluginStreamChild.h"
 #include "PluginIdentifierChild.h"
-#include "mozilla/dom/CrashReporterChild.h"
 
 #include "nsNPAPIPlugin.h"
 
@@ -81,8 +80,6 @@
 #endif
 
 using namespace mozilla::plugins;
-using mozilla::dom::CrashReporterChild;
-using mozilla::dom::PCrashReporterChild;
 
 #if defined(XP_WIN)
 const PRUnichar * kFlashFullscreenClass = L"ShockwaveFlashFullScreen";
@@ -266,7 +263,6 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     }
 #endif
 
-    CrashReporterChild::CreateCrashReporter(this);
     return true;
 }
 
@@ -579,6 +575,7 @@ PluginModuleChild::InitGraphics()
     // Do this after initializing GDK, or GDK will install its own handler.
     XRE_InstallX11ErrorHandler();
 #endif
+
     return true;
 }
 
@@ -690,20 +687,6 @@ PluginModuleChild::QuickExit()
 {
     NS_WARNING("plugin process _exit()ing");
     _exit(0);
-}
-
-PCrashReporterChild*
-PluginModuleChild::AllocPCrashReporter(const mozilla::dom::NativeThreadId& id,
-                                       const PRUint32& processType)
-{
-    return new CrashReporterChild;
-}
-
-bool
-PluginModuleChild::DeallocPCrashReporter(PCrashReporterChild* actor)
-{
-    delete actor;
-    return true;
 }
 
 void
@@ -1790,10 +1773,16 @@ PluginModuleChild::AnswerNP_GetEntryPoints(NPError* _retval)
 }
 
 bool
-PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
+PluginModuleChild::AnswerNP_Initialize(NativeThreadId* tid, NPError* _retval)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
+
+#ifdef MOZ_CRASHREPORTER
+    *tid = CrashReporter::CurrentThreadId();
+#else
+    *tid = 0;
+#endif
 
 #ifdef OS_WIN
     SetEventHooks();
