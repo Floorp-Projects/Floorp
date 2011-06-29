@@ -29,6 +29,7 @@ skip-if(!xulRuntime.shell) script clone-forge.js
 skip-if(!xulRuntime.shell) script clone-complex-object.js
 script set-property-non-extensible.js
 script recursion.js
+script regress-627859.js
 script regress-627984-1.js
 script regress-627984-2.js
 script regress-627984-3.js
