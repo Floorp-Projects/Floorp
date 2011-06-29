@@ -8133,13 +8133,14 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
 #define DEPRECATED_OPERATION(_op) #_op "Warning",
 static const char* kWarnings[] = {
 #include "nsDeprecatedOperationList.h"
+  nsnull
 };
 #undef DEPRECATED_OPERATION
 
 void
 nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation)
 {
-  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(kWarnings) <= 32);
+  PR_STATIC_ASSERT(eDeprecatedOperationCount <= 32);
   if (mWarnedAbout & (1 << aOperation)) {
     return;
   }
