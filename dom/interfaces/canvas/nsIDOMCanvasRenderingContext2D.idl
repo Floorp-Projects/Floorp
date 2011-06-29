@@ -79,6 +79,10 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   void translate(in float x, in float y);
   void transform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
   void setTransform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
+  [implicit_jscontext]
+  attribute jsval mozCurrentTransform; // [ m11, m12, m21, m22, dx, dy ], i.e. row major
+  [implicit_jscontext]
+  attribute jsval mozCurrentTransformInverse;
 
   // compositing
   attribute float globalAlpha; /* default 1.0 -- opaque */

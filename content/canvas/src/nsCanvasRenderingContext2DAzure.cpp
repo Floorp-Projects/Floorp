@@ -127,52 +127,18 @@
 #undef DrawText
 
 using namespace mozilla;
-using namespace mozilla::layers;
+using namespace mozilla::CanvasUtils;
+using namespace mozilla::css;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::ipc;
-using namespace mozilla::css;
+using namespace mozilla::layers;
 
 namespace mgfx = mozilla::gfx;
 
 static float kDefaultFontSize = 10.0;
 static NS_NAMED_LITERAL_STRING(kDefaultFontName, "sans-serif");
 static NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
-
-/* Float validation stuff */
-#define VALIDATE(_f)  if (!NS_finite(_f)) return PR_FALSE
-
-static PRBool FloatValidate (double f1) {
-  VALIDATE(f1);
-  return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2) {
-  VALIDATE(f1); VALIDATE(f2);
-  return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2, double f3) {
-  VALIDATE(f1); VALIDATE(f2); VALIDATE(f3);
-  return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2, double f3, double f4) {
-  VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4);
-  return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5) {
-  VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5);
-  return PR_TRUE;
-}
-
-static PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5, double f6) {
-  VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5); VALIDATE(f6);
-  return PR_TRUE;
-}
-
-#undef VALIDATE
 
 /* Memory reporter stuff */
 static nsIMemoryReporter *gCanvasAzureMemoryReporter = nsnull;
@@ -1625,6 +1591,62 @@ nsCanvasRenderingContext2DAzure::SetTransform(float m11, float m12, float m21, f
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::SetMozCurrentTransform(JSContext* cx,
+                                                        const jsval& matrix)
+{
+  nsresult rv;
+  Matrix newCTM;
+
+  if (!JSValToMatrix(cx, matrix, &newCTM, &rv)) {
+    return rv;
+  }
+
+  mTarget->SetTransform(newCTM);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::GetMozCurrentTransform(JSContext* cx,
+                                                        jsval* matrix)
+{
+  return MatrixToJSVal(mTarget->GetTransform(), cx, matrix);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::SetMozCurrentTransformInverse(JSContext* cx,
+                                                               const jsval& matrix)
+{
+  nsresult rv;
+  Matrix newCTMInverse;
+
+  if (!JSValToMatrix(cx, matrix, &newCTMInverse, &rv)) {
+    return rv;
+  }
+
+  // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+  if (newCTMInverse.Invert()) {
+    mTarget->SetTransform(newCTMInverse);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::GetMozCurrentTransformInverse(JSContext* cx,
+                                                               jsval* matrix)
+{
+  Matrix ctm = mTarget->GetTransform();
+
+  if (!ctm.Invert()) {
+    double NaN = JSVAL_TO_DOUBLE(JS_GetNaNValue(cx));
+    ctm = Matrix(NaN, NaN, NaN, NaN, NaN, NaN);
+  }
+
+  return MatrixToJSVal(ctm, cx, matrix);
+}
+
 //
 // colors
 //
@@ -2050,8 +2072,6 @@ nsCanvasRenderingContext2DAzure::FillRect(float x, float y, float w, float h)
     return NS_OK;
   }
 
-  bool doDrawShadow = NeedToDrawShadow();
-
   const ContextState &state = CurrentState();
 
   if (state.patternStyles[STYLE_FILL]) {
@@ -2434,8 +2454,6 @@ nsCanvasRenderingContext2DAzure::Arc(float x, float y,
 
   // Calculate the total arc we're going to sweep.
   Float arcSweepLeft = abs(endAngle - startAngle);
-  // Calculate the amount of curves needed, 1 per quarter circle.
-  Float curves = ceil(arcSweepLeft / (M_PI / 2.0f));
 
   Float sweepDirection = ccw ? -1.0f : 1.0f;
 
@@ -3017,7 +3035,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
     Point baselineOrigin =
       Point(point.x * devUnitsPerAppUnit, point.y * devUnitsPerAppUnit);
 
-    for (int c = 0; c < numRuns; c++) {
+    for (PRUint32 c = 0; c < numRuns; c++) {
       gfxFont *font = runs[c].mFont;
       PRUint32 endRun = 0;
       if (c + 1 < numRuns) {
@@ -3037,7 +3055,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
 
       float advanceSum = 0;
 
-      for (int i = runs[c].mCharacterOffset; i < endRun; i++) {
+      for (PRUint32 i = runs[c].mCharacterOffset; i < endRun; i++) {
         Glyph newGlyph;
         if (glyphs[i].IsSimpleGlyph()) {
           newGlyph.mIndex = glyphs[i].GetSimpleGlyph();
@@ -3060,7 +3078,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
         gfxTextRun::DetailedGlyph *detailedGlyphs =
           mTextRun->GetDetailedGlyphs(i);
 
-        for (int c = 0; c < glyphs[i].GetGlyphCount(); c++) {
+        for (PRUint32 c = 0; c < glyphs[i].GetGlyphCount(); c++) {
           newGlyph.mIndex = detailedGlyphs[c].mGlyphID;
           if (mTextRun->IsRightToLeft()) {
             newGlyph.mPosition.x = baselineOrigin.x + detailedGlyphs[c].mXOffset * devUnitsPerAppUnit -
@@ -4030,8 +4048,6 @@ nsCanvasRenderingContext2DAzure::GetImageData_explicit(PRInt32 x, PRInt32 y, PRU
     memset(aData, 0, aDataLen);
   }
 
-  bool finishedPainting = false;
-
   IntRect srcReadRect = srcRect.Intersect(destRect);
   IntRect dstWriteRect = srcReadRect;
   dstWriteRect.MoveBy(-x, -y);
@@ -4055,8 +4071,8 @@ nsCanvasRenderingContext2DAzure::GetImageData_explicit(PRInt32 x, PRInt32 y, PRU
   // from src and advancing that ptr before writing to dst.
   PRUint8 *dst = aData + dstWriteRect.y * (w * 4) + dstWriteRect.x * 4;
 
-  for (PRUint32 j = 0; j < dstWriteRect.height; j++) {
-    for (PRUint32 i = 0; i < dstWriteRect.width; i++) {
+  for (int j = 0; j < dstWriteRect.height; j++) {
+    for (int i = 0; i < dstWriteRect.width; i++) {
       // XXX Is there some useful swizzle MMX we can use here?
 #ifdef IS_LITTLE_ENDIAN
       PRUint8 b = *src++;
