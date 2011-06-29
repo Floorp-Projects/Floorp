@@ -1,3 +1,17 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * reflect.js is a collection of methods to test HTML attribute reflection.
+ * Each of attribute is reflected differently, depending on various parameters,
+ * see:
+ * http://www.whatwg.org/html/#reflecting-content-attributes-in-idl-attributes
+ *
+ * Do not forget to add these line at the beginning of each new reflect* method:
+ * ok(aAttr in aElement, aAttr + " should be an IDL attribute of this element");
+ * is(typeof aElement[aAttr], <type>, aAttr + " IDL attribute should be a <type>");
+ */
+
 /**
  * Checks that a given attribute is correctly reflected as a string.
  *
@@ -8,6 +22,9 @@
 function reflectString(aElement, aAttr, aOtherValues)
 {
   var otherValues = aOtherValues !== undefined ? aOtherValues : [];
+
+  ok(aAttr in aElement, aAttr + " should be an IDL attribute of this element");
+  is(typeof aElement[aAttr], "string", aAttr + " IDL attribute should be a string");
 
   // Tests when the attribute isn't set.
   is(aElement.getAttribute(aAttr), null,
@@ -106,6 +123,9 @@ function reflectUnsignedInt(aElement, aAttr, aNonNull, aDefault)
     }
   }
 
+  ok(aAttr in aElement, aAttr + " should be an IDL attribute of this element");
+  is(typeof aElement[aAttr], "number", aAttr + " IDL attribute should be a string");
+
   // Check default value.
   is(aElement[aAttr], aDefault, "default value should be " + aDefault);
   ok(!aElement.hasAttribute(aAttr), aAttr + " shouldn't be present");
@@ -195,6 +215,10 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
   var defaultValue = aDefaultValue !== undefined ? aDefaultValue : "";
   var unsupportedValues = aUnsupportedValues !== undefined ? aUnsupportedValues
                                                            : [];
+
+  ok(aAttr in aElement, aAttr + " should be an IDL attribute of this element");
+  is(typeof aElement[aAttr], "string", aAttr + " IDL attribute should be a string");
+
   // Explicitly check the default value.
   aElement.removeAttribute(aAttr);
   is(aElement[aAttr], defaultValue,
@@ -213,7 +237,7 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
     is(aElement[aAttr], v,
        "Enumerated attributes should be case-insensitive.");
     is(aElement.getAttribute(aAttr), v.toUpperCase(),
-       "Content attribute should be upper-cased.");
+       "Content attribute should not be lower-cased.");
     aElement.removeAttribute(aAttr);
 
     aElement[aAttr] = v;
@@ -227,7 +251,7 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
     is(aElement[aAttr], v,
        "Enumerated attributes should be case-insensitive.");
     is(aElement.getAttribute(aAttr), v.toUpperCase(),
-       "Content attribute should be upper-cased.");
+       "Content attribute should not be lower-cased.");
     aElement.removeAttribute(aAttr);
   });
 
@@ -262,7 +286,7 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
     todo_is(aElement[aAttr], v,
             "Enumerated attributes should be case-insensitive.");
     is(aElement.getAttribute(aAttr), v.toUpperCase(),
-       "Content attribute should be upper-cased.");
+       "Content attribute should not be lower-cased.");
     aElement.removeAttribute(aAttr);
 
     aElement[aAttr] = v;
@@ -276,7 +300,7 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
     todo_is(aElement[aAttr], v,
             "Enumerated attributes should be case-insensitive.");
     is(aElement.getAttribute(aAttr), v.toUpperCase(),
-       "Content attribute should be upper-cased.");
+       "Content attribute should not be lower-cased.");
     aElement.removeAttribute(aAttr);
   });
 }
