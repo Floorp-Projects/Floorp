@@ -56,3 +56,7 @@ fails-if(cocoaWidget) == linear-gradient-1b.html linear-gradient-1-ref.html
 == evenodd-fill-1.html evenodd-fill-ref.html
 == evenodd-fill-2.html evenodd-fill-ref.html
 == evenodd-fill-3.html nonzero-fill-2.html
+
+== ctm-sanity.html data:text/html,<body>Pass
+fails == ctm-singular-sanity.html data:text/html,<body>Pass  # Bug 612033
+== ctm-1.html ctm-1-ref.html
