@@ -1,4 +1,86 @@
 /**
+ * Checks that a given attribute is correctly reflected as a string.
+ *
+ * @param aElement  Element   node to test
+ * @param aAttr     String    name of the attribute
+ */
+function reflectString(aElement, aAttr)
+{
+  // Tests when the attribute isn't set.
+  is(aElement.getAttribute(aAttr), null,
+     "When not set, the content attribute should be undefined.");
+  is(aElement[aAttr], "",
+     "When not set, the IDL attribute should return the empty string");
+
+  /**
+   * TODO: as long as null stringification doesn't fallow the webidl specs,
+   * don't add it to the loop below and keep it here.
+   */
+  aElement.setAttribute(aAttr, null);
+  todo_is(aElement.getAttribute(aAttr), "null",
+     "null should have been stringified to 'null'");
+  todo_is(aElement[aAttr], "null",
+     "null should have been stringified to 'null'");
+  aElement.removeAttribute(aAttr);
+
+  aElement[aAttr] = null;
+  todo_is(aElement.getAttribute(aAttr), "null",
+     "null should have been stringified to 'null'");
+  todo_is(aElement[aAttr], "null",
+     "null should have been stringified to 'null'");
+  aElement.removeAttribute(aAttr);
+
+  // Tests various strings.
+  var stringsToTest = [
+    // [ test value, expected result ]
+    [ "", "" ],
+    [ "null", "null" ],
+    [ "undefined", "undefined" ],
+    [ "foo", "foo" ],
+    [ aAttr, aAttr ],
+    // TODO: uncomment this when null stringification will follow the specs.
+    // [ null, "null" ],
+    [ undefined, "undefined" ],
+    [ true, "true" ],
+    [ false, "false" ],
+    [ 42, "42" ],
+    // ES5, verse 8.12.8.
+    [ { toString: function() { return "foo" } },
+      "foo" ],
+    [ { valueOf: function() { return "foo" } },
+      "[object Object]" ],
+    [ { valueOf: function() { return "quux" },
+       toString: undefined },
+      "quux" ],
+    [ { valueOf: function() { return "foo" },
+        toString: function() { return "bar" } },
+      "bar" ]
+  ];
+
+  stringsToTest.forEach(function([v, r]) {
+    aElement.setAttribute(aAttr, v);
+    is(aElement[aAttr], r,
+       "IDL attribute should return the value it has been set to.");
+    is(aElement.getAttribute(aAttr), r,
+       "Content attribute should return the value it has been set to.");
+    aElement.removeAttribute(aAttr);
+
+    aElement[aAttr] = v;
+    is(aElement[aAttr], r,
+       "IDL attribute should return the value it has been set to.");
+    is(aElement.getAttribute(aAttr), r,
+       "Content attribute should return the value it has been set to.");
+    aElement.removeAttribute(aAttr);
+  });
+
+  // Tests after removeAttribute() is called. Should be equivalent with not set.
+  is(aElement.getAttribute(aAttr), null,
+     "When not set, the content attribute should be undefined.");
+  is(aElement[aAttr], "",
+     "When not set, the IDL attribute should return the empty string");
+}
+
+/**
  * Checks that a given attribute name for a given element is correctly reflected
  * as an unsigned int.
  */
