@@ -8375,3 +8375,16 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
   return NS_OK;
 }
 
+PRInt64
+nsIDocument::SizeOf() const
+{
+  PRInt64 size = sizeof(*this);
+
+  for (nsIContent* node = GetFirstChild(); node;
+       node = node->GetNextNode(this)) {
+    size += node->SizeOf();
+  }
+
+  return size;
+}
+

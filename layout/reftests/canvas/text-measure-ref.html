@@ -1,0 +1,15 @@
+<html>
+<script>
+function load() {
+    var ctx = document.getElementById("canvas").getContext("2d");
+
+    ctx.font = "bold 12px sans-serif";
+    ctx.scale(4, 4);
+    var str = "HeHeHeHe";
+    ctx.fillText(str, 0, 15);
+}
+</script>
+<body onload="load();">
+<canvas id="canvas" width="400" height="200"></canvas>
+</body>
+</html>
