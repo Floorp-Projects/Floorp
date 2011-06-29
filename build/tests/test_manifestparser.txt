@@ -1,0 +1,217 @@
+Test the manifest parser
+========================
+
+You must have ManifestDestiny installed before running these tests.
+Run ``python manifestparser.py setup develop`` with setuptools installed.
+
+Ensure basic parser is sane::
+
+    >>> from manifestparser import ManifestParser
+    >>> parser = ManifestParser()
+    >>> parser.read('mozmill-example.ini')
+    >>> tests = parser.tests
+    >>> len(tests) == len(file('mozmill-example.ini').read().strip().splitlines())
+    True
+    
+Ensure that capitalization and order aren't an issue:
+
+    >>> lines = ['[%s]' % test['name'] for test in tests]
+    >>> lines == file('mozmill-example.ini').read().strip().splitlines()
+    True
+
+Show how you select subsets of tests:
+
+    >>> parser.read('mozmill-restart-example.ini')
+    >>> restart_tests = parser.get(type='restart')
+    >>> len(restart_tests) < len(parser.tests)
+    True
+    >>> import os
+    >>> len(restart_tests) == len(parser.get(manifest=os.path.abspath('mozmill-restart-example.ini')))
+    True
+    >>> assert not [test for test in restart_tests if test['manifest'] != os.path.abspath('mozmill-restart-example.ini')]
+    >>> parser.get('name', tags=['foo'])
+    ['restartTests/testExtensionInstallUninstall/test2.js', 'restartTests/testExtensionInstallUninstall/test1.js']
+    >>> parser.get('name', foo='bar')
+    ['restartTests/testExtensionInstallUninstall/test2.js']
+
+Illustrate how include works::
+
+    >>> parser = ManifestParser(manifests=('include-example.ini',))
+
+All of the tests should be included, in order::
+
+    >>> parser.get('name')
+    ['crash-handling', 'fleem', 'flowers']
+    >>> [(test['name'], os.path.basename(test['manifest'])) for test in parser.tests]
+    [('crash-handling', 'bar.ini'), ('fleem', 'include-example.ini'), ('flowers', 'foo.ini')]
+
+The manifests should be there too::
+
+    >>> len(parser.manifests())
+    3
+
+We're already in the root directory::
+
+    >>> os.getcwd() == parser.rootdir
+    True
+
+DEFAULT values should persist across includes, unless they're
+overwritten.  In this example, include-example.ini sets foo=bar, but
+its overridden to fleem in bar.ini::
+
+    >>> parser.get('name', foo='bar')
+    ['fleem', 'flowers']
+    >>> parser.get('name', foo='fleem')
+    ['crash-handling']
+
+Passing parameters in the include section allows defining variables in
+the submodule scope:
+
+    >>> parser.get('name', tags=['red'])
+    ['flowers']
+
+However, this should be overridable from the DEFAULT section in the
+included file and that overridable via the key directly connected to
+the test::
+
+    >>> parser.get(name='flowers')[0]['blue']
+    'ocean'
+    >>> parser.get(name='flowers')[0]['yellow']
+    'submarine'
+
+You can query multiple times if you need to::
+
+    >>> flowers = parser.get(foo='bar')
+    >>> len(flowers)
+    2
+    >>> roses = parser.get(tests=flowers, red='roses')
+
+Using the inverse flag should invert the set of tests returned::
+
+    >>> parser.get('name', inverse=True, tags=['red'])
+    ['crash-handling', 'fleem']
+
+All of the included tests actually exist::
+
+    >>> [i['name'] for i in parser.missing()]
+    []
+
+Write the output to a manifest:
+
+    >>> from StringIO import StringIO
+    >>> buffer = StringIO()
+    >>> parser.write(fp=buffer, global_kwargs={'foo': 'bar'})
+    >>> buffer.getvalue().strip()
+    '[DEFAULT]\nfoo = bar\n\n[fleem]\n\n[include/flowers]\nblue = ocean\nred = roses\nyellow = submarine'
+
+Test our ability to convert a static directory structure to a
+manifest. First, stub out a directory with files in it::
+
+    >>> import shutil, tempfile
+    >>> def create_stub():
+    ...     directory = tempfile.mkdtemp()
+    ...     for i in 'foo', 'bar', 'fleem':
+    ...         file(os.path.join(directory, i), 'w').write(i)
+    ...     subdir = os.path.join(directory, 'subdir')
+    ...     os.mkdir(subdir)
+    ...     file(os.path.join(subdir, 'subfile'), 'w').write('baz')
+    ...     return directory
+    >>> stub = create_stub()
+    >>> os.path.exists(stub) and os.path.isdir(stub)
+    True
+
+Make a manifest for it::
+
+    >>> from manifestparser import convert
+    >>> print convert([stub])
+    [bar]
+    [fleem]
+    [foo]
+    [subdir/subfile]
+    >>> shutil.rmtree(stub)
+
+Now do the same thing but keep the manifests in place::
+
+    >>> stub = create_stub()
+    >>> convert([stub], write='manifest.ini')
+    >>> sorted(os.listdir(stub))
+    ['bar', 'fleem', 'foo', 'manifest.ini', 'subdir']
+    >>> parser = ManifestParser()
+    >>> parser.read(os.path.join(stub, 'manifest.ini'))
+    >>> [i['name'] for i in parser.tests]
+    ['subfile', 'bar', 'fleem', 'foo']
+    >>> parser = ManifestParser()
+    >>> parser.read(os.path.join(stub, 'subdir', 'manifest.ini'))
+    >>> len(parser.tests)
+    1
+    >>> parser.tests[0]['name']
+    'subfile'
+    >>> shutil.rmtree(stub)
+
+Test our ability to copy a set of manifests::
+
+    >>> tempdir = tempfile.mkdtemp()
+    >>> manifest = ManifestParser(manifests=('include-example.ini',))
+    >>> manifest.copy(tempdir)
+    >>> sorted(os.listdir(tempdir))
+    ['fleem', 'include', 'include-example.ini']
+    >>> sorted(os.listdir(os.path.join(tempdir, 'include')))
+    ['bar.ini', 'crash-handling', 'flowers', 'foo.ini']
+    >>> from_manifest = ManifestParser(manifests=('include-example.ini',))
+    >>> to_manifest = os.path.join(tempdir, 'include-example.ini')
+    >>> to_manifest = ManifestParser(manifests=(to_manifest,))
+    >>> to_manifest.get('name') == from_manifest.get('name')
+    True
+    >>> shutil.rmtree(tempdir)
+
+Test our ability to update tests from a manifest and a directory of
+files::
+
+    >>> tempdir = tempfile.mkdtemp()
+    >>> for i in range(10):
+    ...     file(os.path.join(tempdir, str(i)), 'w').write(str(i))
+
+First, make a manifest::
+
+    >>> manifest = convert([tempdir])
+    >>> newtempdir = tempfile.mkdtemp()
+    >>> manifest_file = os.path.join(newtempdir, 'manifest.ini')
+    >>> file(manifest_file,'w').write(manifest)
+    >>> manifest = ManifestParser(manifests=(manifest_file,))
+    >>> manifest.get('name') == [str(i) for i in range(10)]
+    True
+
+All of the tests are initially missing::
+
+    >>> [i['name'] for i in manifest.missing()] == [str(i) for i in range(10)]
+    True
+
+But then we copy one over::
+
+    >>> manifest.get('name', name='1')
+    ['1']
+    >>> manifest.update(tempdir, name='1')
+    >>> sorted(os.listdir(newtempdir))
+    ['1', 'manifest.ini']
+
+Update that one file and copy all the "tests"::
+   
+    >>> file(os.path.join(tempdir, '1'), 'w').write('secret door')
+    >>> manifest.update(tempdir)
+    >>> sorted(os.listdir(newtempdir))
+    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'manifest.ini']
+    >>> file(os.path.join(newtempdir, '1')).read().strip()
+    'secret door'
+
+Clean up::
+
+    >>> shutil.rmtree(tempdir)
+    >>> shutil.rmtree(newtempdir)
+
+You can override the path in the section too.  This shows that you can
+use a relative path::
+
+    >>> manifest = ManifestParser(manifests=('path-example.ini',))
+    >>> manifest.tests[0]['path'] == os.path.abspath('fleem')
+    True
+

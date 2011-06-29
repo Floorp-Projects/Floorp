@@ -156,6 +156,7 @@ xpcshell-tests:
 	  -I$(topsrcdir)/build \
 	  $(testxpcsrcdir)/runxpcshelltests.py \
 	  --symbols-path=$(DIST)/crashreporter-symbols \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  $(EXTRA_TEST_ARGS) \
 	  $(LIBXUL_DIST)/bin/xpcshell \
 	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
@@ -168,6 +169,7 @@ check-interactive:
 	  -I$(topsrcdir)/build \
 	  $(testxpcsrcdir)/runxpcshelltests.py \
 	  --symbols-path=$(DIST)/crashreporter-symbols \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --test-path=$(SOLO_FILE) \
 	  --profile-name=$(MOZ_APP_NAME) \
 	  --interactive \
@@ -180,6 +182,7 @@ check-one:
 	  -I$(topsrcdir)/build \
 	  $(testxpcsrcdir)/runxpcshelltests.py \
 	  --symbols-path=$(DIST)/crashreporter-symbols \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --test-path=$(SOLO_FILE) \
 	  --profile-name=$(MOZ_APP_NAME) \
 	  --verbose \
