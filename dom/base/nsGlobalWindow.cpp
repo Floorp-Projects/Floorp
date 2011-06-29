@@ -31,6 +31,7 @@
  *   Ryan Jones <sciguyryan@gmail.com>
  *   Jeff Walden <jwalden+code@mit.edu>
  *   Ben Bucksch <ben.bucksch  beonex.com>
+ *   Emanuele Costa <emanuele.costa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -7483,6 +7484,15 @@ nsGlobalWindow::SetActive(PRBool aActive)
   NotifyDocumentTree(mDoc, nsnull);
 }
 
+void nsGlobalWindow::SetIsBackground(PRBool aIsBackground)
+{
+  PRBool resetTimers = (!aIsBackground && IsBackground());
+  nsPIDOMWindow::SetIsBackground(aIsBackground);
+  if (resetTimers) {
+    ResetTimersForNonBackgroundWindow();
+  }
+}
+
 void nsGlobalWindow::MaybeUpdateTouchState()
 {
   FORWARD_TO_INNER_VOID(MaybeUpdateTouchState, ());
@@ -8848,10 +8858,8 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   }
 
   nsRefPtr<nsTimeout> timeout = new nsTimeout();
-
-  if (aIsInterval) {
-    timeout->mInterval = interval;
-  }
+  timeout->mIsInterval = aIsInterval;
+  timeout->mInterval = interval;
   timeout->mScriptHandler = aHandler;
 
   // Now clamp the actual interval we will use for the timer based on
@@ -9152,7 +9160,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     ++gRunningTimeoutDepth;
     ++mTimeoutFiringDepth;
 
-    PRBool trackNestingLevel = !timeout->mInterval;
+    PRBool trackNestingLevel = !timeout->mIsInterval;
     PRUint32 nestingLevel;
     if (trackNestingLevel) {
       nestingLevel = sNestingLevel;
@@ -9238,7 +9246,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
     // If we have a regular interval timer, we re-schedule the
     // timeout, accounting for clock drift.
-    if (timeout->mInterval) {
+    if (timeout->mIsInterval) {
       // Compute time to next timeout for interval timer.
       // Make sure nextInterval is at least DOMMinTimeoutValue().
       TimeDuration nextInterval =
@@ -9309,7 +9317,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     }
 
     if (timeout->mTimer) {
-      if (timeout->mInterval) {
+      if (timeout->mIsInterval) {
         isInterval = PR_TRUE;
       } else {
         // The timeout still has an OS timer, and it's not an
@@ -9387,7 +9395,7 @@ nsGlobalWindow::ClearTimeoutOrInterval(PRInt32 aTimerID)
         /* We're running from inside the timeout. Mark this
            timeout for deferred deletion by the code in
            RunTimeout() */
-        timeout->mInterval = 0;
+        timeout->mIsInterval = PR_FALSE;
       }
       else {
         /* Delete the timeout from the pending timeout list */
@@ -9401,6 +9409,94 @@ nsGlobalWindow::ClearTimeoutOrInterval(PRInt32 aTimerID)
         timeout->Release();
       }
       break;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
+{
+  FORWARD_TO_INNER(ResetTimersForNonBackgroundWindow, (),
+                   NS_ERROR_NOT_INITIALIZED);
+
+  if (IsFrozen() || mTimeoutsSuspendDepth) {
+    return NS_OK;
+  }
+
+  TimeStamp now = TimeStamp::Now();
+
+  for (nsTimeout *timeout = FirstTimeout(); IsTimeout(timeout); ) {
+    // It's important that this check be <= so that we guarantee that
+    // taking NS_MAX with |now| won't make a quantity equal to
+    // timeout->mWhen below.
+    if (timeout->mWhen <= now) {
+      timeout = timeout->Next();
+      continue;
+    }
+
+    if (timeout->mWhen - now >
+        TimeDuration::FromMilliseconds(gMinBackgroundTimeoutValue)) {
+      // No need to loop further.  Timeouts are sorted in mWhen order
+      // and the ones after this point were all set up for at least
+      // gMinBackgroundTimeoutValue ms and hence were not clamped.
+      break;
+    }
+
+    /* We switched from background. Re-init the timer appropriately */
+    // Compute the interval the timer should have had if it had not been set in a
+    // background window
+    TimeDuration interval =
+      TimeDuration::FromMilliseconds(NS_MAX(timeout->mInterval,
+                                            PRUint32(DOMMinTimeoutValue())));
+    PRUint32 oldIntervalMillisecs = 0;
+    timeout->mTimer->GetDelay(&oldIntervalMillisecs);
+    TimeDuration oldInterval = TimeDuration::FromMilliseconds(oldIntervalMillisecs);
+    if (oldInterval > interval) {
+      // unclamp
+      TimeStamp firingTime =
+        NS_MAX(timeout->mWhen - oldInterval + interval, now);
+
+      NS_ASSERTION(firingTime < timeout->mWhen,
+                   "Our firing time should strictly decrease!");
+
+      TimeDuration delay = firingTime - now;
+      timeout->mWhen = firingTime;
+
+      // Since we reset mWhen we need to move |timeout| to the right
+      // place in the list so that it remains sorted by mWhen.
+      
+      // Get the pointer to the next timeout now, before we move the
+      // current timeout in the list.
+      nsTimeout* nextTimeout = timeout->Next();
+
+      // It is safe to remove and re-insert because mWhen is now
+      // strictly smaller than it used to be, so we know we'll insert
+      // |timeout| before nextTimeout.
+      NS_ASSERTION(!IsTimeout(nextTimeout) ||
+                   timeout->mWhen < nextTimeout->mWhen, "How did that happen?");
+      PR_REMOVE_LINK(timeout);
+      // InsertTimeoutIntoList will addref |timeout| and reset
+      // mFiringDepth.  Make sure to undo that after calling it.
+      PRUint32 firingDepth = timeout->mFiringDepth;
+      InsertTimeoutIntoList(timeout);
+      timeout->mFiringDepth = firingDepth;
+      timeout->Release();
+
+      nsresult rv =
+        timeout->mTimer->InitWithFuncCallback(TimerCallback,
+                                              timeout,
+                                              delay.ToMilliseconds(),
+                                              nsITimer::TYPE_ONE_SHOT);
+
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Error resetting non background timer for DOM timeout!");
+        return rv;
+      }
+
+      timeout = nextTimeout;
+    } else {
+      timeout = timeout->Next();
     }
   }
 
