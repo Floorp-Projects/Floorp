@@ -14,8 +14,9 @@ public:
   nsMemoryReporter(nsCString& process,
                    nsCString& path, 
                    PRInt32 kind,
-                   nsCString& desc,
-                   PRInt64 memoryUsed);
+                   PRInt32 units,
+                   PRInt64 amount,
+                   nsCString& desc);
 
   ~nsMemoryReporter();
 
@@ -23,8 +24,9 @@ protected:
   nsCString mProcess;
   nsCString mPath;
   PRInt32   mKind;
+  PRInt32   mUnits;
+  PRInt64   mAmount;
   nsCString mDesc;
-  PRInt64   mMemoryUsed;
 };
 
 

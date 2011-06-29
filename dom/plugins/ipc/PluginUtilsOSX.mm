@@ -43,6 +43,9 @@
 
 // Remove definitions for try/catch interfering with ObjCException macros.
 #include "nsObjCExceptions.h"
+#include "nsCocoaUtils.h"
+
+#include "nsDebug.h"
 
 using namespace mozilla::plugins::PluginUtilsOSX;
 
@@ -167,4 +170,100 @@ void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
   ::CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, true);
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+#define UNDOCUMENTED_SESSION_CONSTANT ((int)-2)
+static void *mozilla::plugins::PluginUtilsOSX::sApplicationASN = NULL;
+static void *mozilla::plugins::PluginUtilsOSX::sApplicationInfoItem = NULL;
+
+bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  nsAutoreleasePool localPool;
+
+  if (!aProcessName || strcmp(aProcessName, "") == 0) {
+    return false;
+  }
+
+  NSString *currentName = [[[NSBundle mainBundle] localizedInfoDictionary] 
+                              objectForKey:(NSString *)kCFBundleNameKey];
+
+  char formattedName[1024];
+  snprintf(formattedName, sizeof(formattedName), 
+      "%s (%s)", [currentName UTF8String], aProcessName);
+
+  aProcessName = formattedName;
+
+  // This function is based on Chrome/Webkit's and relies on potentially dangerous SPI.
+  typedef CFTypeRef (*LSGetASNType)();
+  typedef OSStatus (*LSSetInformationItemType)(int, CFTypeRef,
+                                               CFStringRef, 
+                                               CFStringRef,
+                                               CFDictionaryRef*);
+
+  CFBundleRef launchServices = ::CFBundleGetBundleWithIdentifier(
+                                          CFSTR("com.apple.LaunchServices"));
+  if (!launchServices) {
+    NS_WARNING("Failed to set process name: Could not open LaunchServices bundle");
+    return false;
+  }
+
+  if (!sApplicationASN) {
+    sApplicationASN = ::CFBundleGetFunctionPointerForName(launchServices, 
+                                            CFSTR("_LSGetCurrentApplicationASN"));
+  }
+
+  LSGetASNType getASNFunc = reinterpret_cast<LSGetASNType>
+                                          (sApplicationASN);
+
+  if (!sApplicationInfoItem) {
+    sApplicationInfoItem = ::CFBundleGetFunctionPointerForName(launchServices, 
+                                            CFSTR("_LSSetApplicationInformationItem"));
+  }
+
+  LSSetInformationItemType setInformationItemFunc 
+                                          = reinterpret_cast<LSSetInformationItemType>
+                                          (sApplicationInfoItem);
+
+  void * displayNameKeyAddr = ::CFBundleGetDataPointerForName(launchServices,
+                                          CFSTR("_kLSDisplayNameKey"));
+
+  CFStringRef displayNameKey = nil;
+  if (displayNameKeyAddr) {
+    displayNameKey = reinterpret_cast<CFStringRef>(*(CFStringRef*)displayNameKeyAddr);
+  }
+
+  // Rename will fail without this
+  ProcessSerialNumber psn;
+  if (::GetCurrentProcess(&psn) != noErr) {
+    return false;
+  }
+
+  CFTypeRef currentAsn = getASNFunc();
+
+  if (!getASNFunc || !setInformationItemFunc || 
+      !displayNameKey || !currentAsn) {
+    NS_WARNING("Failed to set process name: Accessing launchServices failed");
+    return false;
+  }
+
+  CFStringRef processName = ::CFStringCreateWithCString(nil, 
+                                                        aProcessName, 
+                                                        kCFStringEncodingASCII);
+  if (!processName) {
+    NS_WARNING("Failed to set process name: Could not create CFStringRef");
+    return false;
+  }
+
+  OSErr err = setInformationItemFunc(UNDOCUMENTED_SESSION_CONSTANT, currentAsn,
+                                     displayNameKey, processName,
+                                     nil); // Optional out param
+  ::CFRelease(processName);
+  if (err != noErr) {
+    NS_WARNING("Failed to set process name: LSSetInformationItemType err");
+    return false;
+  }
+
+  return true;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }

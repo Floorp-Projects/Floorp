@@ -41,6 +41,35 @@
 #include "nsMemoryReporterManager.h"
 #include "nsArrayEnumerator.h"
 
+#if defined(XP_LINUX) || defined(XP_MACOSX)
+
+#include <sys/time.h>
+#include <sys/resource.h>
+
+static PRInt64 GetHardPageFaults()
+{
+  struct rusage usage;
+  int err = getrusage(RUSAGE_SELF, &usage);
+  if (err != 0) {
+    return PRInt64(-1);
+  }
+
+  return usage.ru_majflt;
+}
+
+static PRInt64 GetSoftPageFaults()
+{
+  struct rusage usage;
+  int err = getrusage(RUSAGE_SELF, &usage);
+  if (err != 0) {
+    return PRInt64(-1);
+  }
+
+  return usage.ru_minflt;
+}
+
+#endif
+
 #if defined(XP_LINUX)
 
 #include <unistd.h>
@@ -60,12 +89,12 @@ static PRInt64 GetProcSelfStatmField(int n)
     return (PRInt64) -1;
 }
 
-static PRInt64 GetVsize(void *)
+static PRInt64 GetVsize()
 {
     return GetProcSelfStatmField(0);
 }
 
-static PRInt64 GetResident(void *)
+static PRInt64 GetResident()
 {
     return GetProcSelfStatmField(1);
 }
@@ -86,13 +115,13 @@ static bool GetTaskBasicInfo(struct task_basic_info *ti)
 // The VSIZE figure on Mac includes huge amounts of shared memory and is always
 // absurdly high, eg. 2GB+ even at start-up.  But both 'top' and 'ps' report
 // it, so we might as well too.
-static PRInt64 GetVsize(void *)
+static PRInt64 GetVsize()
 {
     task_basic_info ti;
     return (PRInt64) (GetTaskBasicInfo(&ti) ? ti.virtual_size : -1);
 }
 
-static PRInt64 GetResident(void *)
+static PRInt64 GetResident()
 {
     task_basic_info ti;
     return (PRInt64) (GetTaskBasicInfo(&ti) ? ti.resident_size : -1);
@@ -104,7 +133,7 @@ static PRInt64 GetResident(void *)
 #include <psapi.h>
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-static PRInt64 GetPrivate(void *)
+static PRInt64 GetPrivate()
 {
     PROCESS_MEMORY_COUNTERS_EX pmcex;
     pmcex.cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
@@ -118,15 +147,15 @@ static PRInt64 GetPrivate(void *)
 
 NS_MEMORY_REPORTER_IMPLEMENT(Private,
     "private",
-    MR_OTHER,
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetPrivate,
     "Memory that cannot be shared with other processes, including memory that "
     "is committed and marked MEM_PRIVATE, data that is not mapped, and "
-    "executable pages that have been written to.",
-    GetPrivate,
-    NULL)
+    "executable pages that have been written to.")
 #endif
 
-static PRInt64 GetResident(void *)
+static PRInt64 GetResident()
 {
   PROCESS_MEMORY_COUNTERS pmc;
   pmc.cb = sizeof(PROCESS_MEMORY_COUNTERS);
@@ -139,7 +168,7 @@ static PRInt64 GetResident(void *)
 
 #else
 
-static PRInt64 GetResident(void *)
+static PRInt64 GetResident()
 {
     return (PRInt64) -1;
 }
@@ -149,7 +178,9 @@ static PRInt64 GetResident(void *)
 #if defined(XP_LINUX) || defined(XP_MACOSX)
 NS_MEMORY_REPORTER_IMPLEMENT(Vsize,
     "vsize",
-    MR_OTHER,
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetVsize,
     "Memory mapped by the process, including code and data segments, the "
     "heap, thread stacks, memory explicitly mapped by the process via mmap "
     "and similar operations, and memory shared with other processes. "
@@ -157,22 +188,51 @@ NS_MEMORY_REPORTER_IMPLEMENT(Vsize,
     "by the process.) "
     "This is the vsize figure as reported by 'top' or 'ps'; on Mac the amount "
     "of memory shared with other processes is very high and so this figure is "
-    "of limited use.",
-    GetVsize,
-    NULL)
+    "of limited use.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(SoftPageFaults,
+    "soft-page-faults",
+    KIND_OTHER,
+    UNITS_COUNT,
+    GetSoftPageFaults,
+    "The number of soft page faults (also known as \"minor page faults\") that "
+    "have occurred since the process started.  A soft page fault occurs when the "
+    "process tries to access a page which is present in physical memory but is "
+    "not mapped into the process's address space.  For instance, a process might "
+    "observe soft page faults when it loads a shared library which is already "
+    "present in physical memory. A process may experience many thousands of soft "
+    "page faults even when the machine has plenty of available physical memory, "
+    "and because the OS services a soft page fault without accessing the disk, "
+    "they impact performance much less than hard page faults.")
+
+NS_MEMORY_REPORTER_IMPLEMENT(HardPageFaults,
+    "hard-page-faults",
+    KIND_OTHER,
+    UNITS_COUNT,
+    GetHardPageFaults,
+    "The number of hard page faults (also known as \"major page faults\") that "
+    "have occurred since the process started.  A hard page fault occurs when a "
+    "process tries to access a page which is not present in physical memory. "
+    "The operating system must access the disk in order to fulfill a hard page "
+    "fault. When memory is plentiful, you should see very few hard page faults. "
+    "But if the process tries to use more memory than your machine has "
+    "available, you may see many thousands of hard page faults. Because "
+    "accessing the disk is up to a million times slower than accessing RAM, "
+    "the program may run very slowly when it is experiencing more than 100 or "
+    "so hard page faults a second.")
 #endif
 
 NS_MEMORY_REPORTER_IMPLEMENT(Resident,
     "resident",
-    MR_OTHER,
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetResident,
     "Memory mapped by the process that is present in physical memory, "
     "also known as the resident set size (RSS).  This is the best single "
     "figure to use when considering the memory resources used by the process, "
     "but it depends both on other processes being run and details of the OS "
     "kernel and so is best used for comparing the memory usage of a single "
-    "process at different points in time.",
-    GetResident,
-    NULL)
+    "process at different points in time.")
 
 /**
  ** memory reporter implementation for jemalloc and OSX malloc,
@@ -200,28 +260,28 @@ extern void jemalloc_stats(jemalloc_stats_t* stats)
 
 #if HAVE_JEMALLOC_STATS
 
-static PRInt64 GetHeapUsed(void *)
+static PRInt64 GetHeapUsed()
 {
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
     return (PRInt64) stats.allocated;
 }
 
-static PRInt64 GetHeapUnused(void *)
+static PRInt64 GetHeapUnused()
 {
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
     return (PRInt64) (stats.mapped - stats.allocated);
 }
 
-static PRInt64 GetHeapCommitted(void *)
+static PRInt64 GetHeapCommitted()
 {
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
     return (PRInt64) stats.committed;
 }
 
-static PRInt64 GetHeapDirty(void *)
+static PRInt64 GetHeapDirty()
 {
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
@@ -230,42 +290,42 @@ static PRInt64 GetHeapDirty(void *)
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapCommitted,
     "heap-committed",
-    MR_OTHER,
-    "Memory mapped by the heap allocator that is committed, i.e. in physical "
-    "memory or paged to disk.",
+    KIND_OTHER,
+    UNITS_BYTES,
     GetHeapCommitted,
-    NULL)
+    "Memory mapped by the heap allocator that is committed, i.e. in physical "
+    "memory or paged to disk.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapDirty,
     "heap-dirty",
-    MR_OTHER,
-    "Memory mapped by the heap allocator that is committed but unused.",
+    KIND_OTHER,
+    UNITS_BYTES,
     GetHeapDirty,
-    NULL)
+    "Memory mapped by the heap allocator that is committed but unused.")
 
 #elif defined(XP_MACOSX) && !defined(MOZ_MEMORY)
 #include <malloc/malloc.h>
 
-static PRInt64 GetHeapUsed(void *)
+static PRInt64 GetHeapUsed()
 {
     struct mstats stats = mstats();
     return (PRInt64) stats.bytes_used;
 }
 
-static PRInt64 GetHeapUnused(void *)
+static PRInt64 GetHeapUnused()
 {
     struct mstats stats = mstats();
     return (PRInt64) (stats.bytes_total - stats.bytes_used);
 }
 
-static PRInt64 GetHeapZone0Committed(void *)
+static PRInt64 GetHeapZone0Committed()
 {
     malloc_statistics_t stats;
     malloc_zone_statistics(malloc_default_zone(), &stats);
     return stats.size_in_use;
 }
 
-static PRInt64 GetHeapZone0Used(void *)
+static PRInt64 GetHeapZone0Used()
 {
     malloc_statistics_t stats;
     malloc_zone_statistics(malloc_default_zone(), &stats);
@@ -274,27 +334,27 @@ static PRInt64 GetHeapZone0Used(void *)
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapZone0Committed,
     "heap-zone0-committed",
-    MR_OTHER,
-    "Memory mapped by the heap allocator that is committed in the default "
-    "zone.",
+    KIND_OTHER,
+    UNITS_BYTES,
     GetHeapZone0Committed,
-    NULL)
+    "Memory mapped by the heap allocator that is committed in the default "
+    "zone.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapZone0Used,
     "heap-zone0-used",
-    MR_OTHER,
-    "Memory mapped by the heap allocator in the default zone that is "
-    "available for use by the application.",
+    KIND_OTHER,
+    UNITS_BYTES,
     GetHeapZone0Used,
-    NULL)
+    "Memory mapped by the heap allocator in the default zone that is "
+    "available for use by the application.")
 #else
 
-static PRInt64 GetHeapUsed(void *)
+static PRInt64 GetHeapUsed()
 {
     return (PRInt64) -1;
 }
 
-static PRInt64 GetHeapUnused(void *)
+static PRInt64 GetHeapUnused()
 {
     return (PRInt64) -1;
 }
@@ -303,22 +363,22 @@ static PRInt64 GetHeapUnused(void *)
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapUsed,
     "heap-used",
-    MR_OTHER,
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetHeapUsed,
     "Memory mapped by the heap allocator that is available for use by the "
     "application.  This may exceed the amount of memory requested by the "
     "application due to the allocator rounding up request sizes. "
-    "(The exact amount requested is not measured.) ",
-    GetHeapUsed,
-    NULL)
+    "(The exact amount requested is not measured.) ")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapUnused,
     "heap-unused",
-    MR_OTHER,
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetHeapUnused,
     "Memory mapped by the heap allocator and not available for use by the "
     "application.  This can grow large if the heap allocator is holding onto "
-    "memory that the application has freed.",
-    GetHeapUnused,
-    NULL)
+    "memory that the application has freed.")
 
 /**
  ** nsMemoryReporterManager implementation
@@ -342,6 +402,8 @@ nsMemoryReporterManager::Init()
 
 #if defined(XP_LINUX) || defined(XP_MACOSX)
     REGISTER(Vsize);
+    REGISTER(SoftPageFaults);
+    REGISTER(HardPageFaults);
 #elif defined(XP_WIN) && MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
     REGISTER(Private);
 #endif
@@ -401,13 +463,15 @@ NS_IMPL_ISUPPORTS1(nsMemoryReporter, nsIMemoryReporter)
 nsMemoryReporter::nsMemoryReporter(nsCString& process,
                                    nsCString& path,
                                    PRInt32 kind,
-                                   nsCString& desc,
-                                   PRInt64 memoryUsed)
+                                   PRInt32 units,
+                                   PRInt64 amount,
+                                   nsCString& desc)
 : mProcess(process)
 , mPath(path)
 , mKind(kind)
+, mUnits(units)
 , mDesc(desc)
-, mMemoryUsed(memoryUsed)
+, mAmount(amount)
 {
 }
 
@@ -433,15 +497,21 @@ NS_IMETHODIMP nsMemoryReporter::GetKind(PRInt32 *aKind)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMemoryReporter::GetDescription(char **aDescription)
+NS_IMETHODIMP nsMemoryReporter::GetUnits(PRInt32 *aUnits)
 {
-    *aDescription = strdup(mDesc.get());
+  *aUnits = mUnits;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMemoryReporter::GetAmount(PRInt64 *aAmount)
+{
+    *aAmount = mAmount;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMemoryReporter::GetMemoryUsed(PRInt64 *aMemoryUsed)
+NS_IMETHODIMP nsMemoryReporter::GetDescription(char **aDescription)
 {
-    *aMemoryUsed = mMemoryUsed;
+    *aDescription = strdup(mDesc.get());
     return NS_OK;
 }
 
