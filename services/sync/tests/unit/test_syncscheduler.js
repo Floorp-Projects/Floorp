@@ -81,16 +81,16 @@ add_test(function test_updateClientMode() {
   do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
   do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
   do_check_false(SyncScheduler.numClients > 1);
-  do_check_true(SyncScheduler.idle);
+  do_check_false(SyncScheduler.idle);
 
   // Trigger a change in interval & threshold by adding a client.
   Clients._store.create({id: "foo", cleartext: "bar"});
   SyncScheduler.updateClientMode();
 
   do_check_eq(SyncScheduler.syncThreshold, MULTI_DEVICE_THRESHOLD);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IDLE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_ACTIVE_SYNC);
   do_check_true(SyncScheduler.numClients > 1);
-  do_check_true(SyncScheduler.idle);
+  do_check_false(SyncScheduler.idle);
 
   // Resets the number of clients to 0. 
   Clients.resetClient();
@@ -101,9 +101,10 @@ add_test(function test_updateClientMode() {
   do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
   do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
   do_check_false(SyncScheduler.numClients > 1);
-  do_check_true(SyncScheduler.idle);
+  do_check_false(SyncScheduler.idle);
 
   Svc.Prefs.resetBranch("");
+  SyncScheduler.setDefaults();
   Clients.resetClient();
   run_next_test();
 });
@@ -142,6 +143,7 @@ add_test(function test_masterpassword_locked_retry_interval() {
   SyncScheduler.scheduleAtInterval = SyncScheduler._scheduleAtInterval;
 
   Svc.Prefs.resetBranch("");
+  SyncScheduler.setDefaults();
   Clients.resetClient();
   server.stop(run_next_test);
 });
@@ -165,6 +167,7 @@ add_test(function test_calculateBackoff() {
 
   Status.backoffInterval = 0;
   Svc.Prefs.resetBranch("");
+  SyncScheduler.setDefaults();
   Clients.resetClient();
   run_next_test();
 });
@@ -174,8 +177,7 @@ add_test(function test_scheduleNextSync() {
   let initial_nextSync;
 
   // The estimated syncInterval value after calling scheduleNextSync.
-  let syncInterval; 
-
+  let syncInterval;
 
   // Test backoffInterval is 0 as expected.
   do_check_eq(Status.backoffInterval, 0);
@@ -193,7 +195,8 @@ add_test(function test_scheduleNextSync() {
   // syncInterval is smaller than expectedInterval
   // since some time has passed.
   do_check_true(syncInterval <= expectedInterval);
-  SyncScheduler._syncTimer.clear();
+  do_check_eq(SyncScheduler.syncTimer.delay, expectedInterval);
+  SyncScheduler.syncTimer.clear();
 
 
   _("Test setting sync interval when nextSync != 0");
@@ -208,61 +211,75 @@ add_test(function test_scheduleNextSync() {
   // syncInterval is smaller than expectedInterval
   // since some time has passed.
   do_check_true(syncInterval <= expectedInterval);
-  SyncScheduler._syncTimer.clear();
+  do_check_eq(SyncScheduler.syncTimer.delay, expectedInterval);
+  SyncScheduler.syncTimer.clear();
 
+  SyncScheduler.setDefaults();
   run_next_test();
 });
 
 add_test(function test_handleSyncError() {
-  let scheduleNextSyncCalled = 0;
-  let scheduleAtIntervalCalled = 0;
+  let server = sync_httpd_setup();
+  setUp();
+ 
+  let origLockedSync = Service._lockedSync;
+  Service._lockedSync = function () {
+    // Force a sync fail.
+    Service._loggedIn = false;
+    origLockedSync.call(Service);
+  };
 
-  SyncScheduler.scheduleNextSync = function () {
-    scheduleNextSyncCalled++;
-  }
-  
-  SyncScheduler.scheduleAtInterval = function () {
-    scheduleAtIntervalCalled++;
-  }
-
-  // Ensure expected initial environment.
+  _("Ensure expected initial environment.");
   do_check_eq(SyncScheduler._syncErrors, 0);
   do_check_false(Status.enforceBackoff);
+  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(Status.backoffInterval, 0);
 
-  // Call handleSyncError several times & ensure it
-  // functions correctly.
-  SyncScheduler.handleSyncError();
-  do_check_eq(scheduleNextSyncCalled, 1);
-  do_check_eq(scheduleAtIntervalCalled, 0);
+  // Trigger sync with an error several times & observe
+  // functionality of handleSyncError()
+  _("Test first error calls scheduleNextSync on default interval");
+  Service.sync();
+  do_check_true(SyncScheduler.nextSync <= Date.now() + SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncTimer.delay, SINGLE_USER_SYNC);
   do_check_eq(SyncScheduler._syncErrors, 1);
   do_check_false(Status.enforceBackoff);
+  SyncScheduler.syncTimer.clear();
 
-  SyncScheduler.handleSyncError();
-  do_check_eq(scheduleNextSyncCalled, 2);
-  do_check_eq(scheduleAtIntervalCalled, 0);
+  _("Test second error still calls scheduleNextSync on default interval");
+  Service.sync();
+  do_check_true(SyncScheduler.nextSync <= Date.now() + SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncTimer.delay, SINGLE_USER_SYNC);
   do_check_eq(SyncScheduler._syncErrors, 2);
   do_check_false(Status.enforceBackoff);
+  SyncScheduler.syncTimer.clear();
 
-  SyncScheduler.handleSyncError();
-  do_check_eq(scheduleNextSyncCalled, 2);
-  do_check_eq(scheduleAtIntervalCalled, 1);
+  _("Test third error sets Status.enforceBackoff and calls scheduleAtInterval");
+  Service.sync();
+  let maxInterval = SyncScheduler._syncErrors * (2 * MINIMUM_BACKOFF_INTERVAL);
+  do_check_eq(Status.backoffInterval, 0);
+  do_check_true(SyncScheduler.nextSync <= (Date.now() + maxInterval));
+  do_check_true(SyncScheduler.syncTimer.delay <= maxInterval);
   do_check_eq(SyncScheduler._syncErrors, 3);
   do_check_true(Status.enforceBackoff);
- 
+
   // Status.enforceBackoff is false but there are still errors.
   Status.resetBackoff();
   do_check_false(Status.enforceBackoff);
   do_check_eq(SyncScheduler._syncErrors, 3);
-  
-  SyncScheduler.handleSyncError();
-  do_check_eq(scheduleNextSyncCalled, 2);
-  do_check_eq(scheduleAtIntervalCalled, 2);
+  SyncScheduler.syncTimer.clear();
+
+  _("Test fourth error still calls scheduleAtInterval even if enforceBackoff was reset");
+  Service.sync();
+  maxInterval = SyncScheduler._syncErrors * (2 * MINIMUM_BACKOFF_INTERVAL);
+  do_check_true(SyncScheduler.nextSync <= Date.now() + maxInterval);
+  do_check_true(SyncScheduler.syncTimer.delay <= maxInterval);
   do_check_eq(SyncScheduler._syncErrors, 4);
   do_check_true(Status.enforceBackoff);
+  SyncScheduler.syncTimer.clear();
 
-  Svc.Prefs.resetBranch("");
-  Clients.resetClient();
-  run_next_test();
+  Service._lockedSync = origLockedSync;
+  SyncScheduler.setDefaults();
+  server.stop(run_next_test);
 });
 
 add_test(function test_client_sync_finish_updateClientMode() {
@@ -272,19 +289,18 @@ add_test(function test_client_sync_finish_updateClientMode() {
   // Confirm defaults.
   do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
   do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
-  do_check_false(SyncScheduler.numClients > 1);
-  do_check_true(SyncScheduler.idle);
+  do_check_false(SyncScheduler.idle);
 
   // Trigger a change in interval & threshold by adding a client.
   Clients._store.create({id: "foo", cleartext: "bar"});
-  do_check_eq(SyncScheduler.numClients, 1);
+  do_check_false(SyncScheduler.numClients > 1);
   SyncScheduler.updateClientMode();
   Service.sync();
 
   do_check_eq(SyncScheduler.syncThreshold, MULTI_DEVICE_THRESHOLD);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IDLE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_ACTIVE_SYNC);
   do_check_true(SyncScheduler.numClients > 1);
-  do_check_true(SyncScheduler.idle);
+  do_check_false(SyncScheduler.idle);
 
   // Resets the number of clients to 0. 
   Clients.resetClient();
@@ -295,9 +311,10 @@ add_test(function test_client_sync_finish_updateClientMode() {
   do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
   do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
   do_check_false(SyncScheduler.numClients > 1);
-  do_check_true(SyncScheduler.idle);
+  do_check_false(SyncScheduler.idle);
 
   Svc.Prefs.resetBranch("");
+  SyncScheduler.setDefaults();
   Clients.resetClient();
   server.stop(run_next_test);
 });
@@ -305,7 +322,11 @@ add_test(function test_client_sync_finish_updateClientMode() {
 add_test(function test_sync_at_startup() {
   Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
     Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
-    Service.resetClient();
+
+    Svc.Prefs.resetBranch("");
+    SyncScheduler.setDefaults();
+    Clients.resetClient();
+
     server.stop(run_next_test);
   });
 
@@ -313,4 +334,25 @@ add_test(function test_sync_at_startup() {
   setUp();
 
   Service.delayedAutoConnect(0);
+});
+
+add_test(function test_idle_adjustSyncInterval() {
+  // Confirm defaults.
+  do_check_eq(SyncScheduler.idle, false);
+
+  // Single device: nothing changes.
+  SyncScheduler.observe(null, "idle", IDLE_TIME);
+  do_check_eq(SyncScheduler.idle, true);
+  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+
+  // Multiple devices: switch to idle interval.
+  SyncScheduler.idle = false;
+  Clients._store.create({id: "foo", cleartext: "bar"});
+  SyncScheduler.updateClientMode();
+  SyncScheduler.observe(null, "idle", IDLE_TIME);
+  do_check_eq(SyncScheduler.idle, true);
+  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IDLE_SYNC);
+
+  SyncScheduler.setDefaults();
+  run_next_test();
 });

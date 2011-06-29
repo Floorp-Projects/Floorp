@@ -10,25 +10,37 @@ Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
 
 function sync_httpd_setup() {
+  let global = new ServerWBO("global", {
+    syncID: Service.syncID,
+    storageVersion: STORAGE_VERSION,
+    engines: {clients: {version: Clients.version,
+                        syncID: Clients.syncID}}
+  });
+  let clientsColl = new ServerCollection({}, true);
+
   // Tracking info/collections.
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
 
   return httpd_setup({
-    "/1.1/johndoe/storage/meta/global":
-      upd("meta", (new ServerWBO("global", {})).handler()),
+    "/1.1/johndoe/storage/meta/global": upd("meta", global.handler()),
     "/1.1/johndoe/info/collections": collectionsHelper.handler,
     "/1.1/johndoe/storage/crypto/keys":
       upd("crypto", (new ServerWBO("keys")).handler()),
-    "/1.1/johndoe/storage/clients": upd("clients", (new ServerCollection()).handler())
+    "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler())
   });
 }
 
 function setUp() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
-  Service.passphrase = "sekrit";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
   Service.clusterURL = "http://localhost:8080/";
+
+  generateNewKeys();
+  let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+  serverKeys.encrypt(Service.syncKeyBundle);
+  return serverKeys.upload(Service.cryptoKeysURL);
 }
 
 function run_test() {
@@ -52,13 +64,14 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   setUp();
 
   // Confirm defaults
-  do_check_true(SyncScheduler.idle);
+  do_check_false(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
   do_check_false(SyncScheduler.hasIncomingItems);
 
   _("Test as long as numClients <= 1 our sync interval is SINGLE_USER."); 
   // idle == true && numClients <= 1 && hasIncomingItems == false
+  SyncScheduler.idle = true;
   Service.sync();
   do_check_eq(syncSuccesses, 1);
   do_check_true(SyncScheduler.idle);
@@ -134,13 +147,8 @@ add_test(function test_successful_sync_adjustSyncInterval() {
 
   Records.clearCache();
   Svc.Prefs.resetBranch("");
+  SyncScheduler.setDefaults();
   Clients.resetClient();
-
-  // Reset defaults
-  SyncScheduler.idle = true;
-  SyncScheduler.updateClientMode();
-  SyncScheduler.syncInterval = SINGLE_USER_SYNC;
-  SyncScheduler.hasIncomingItems = false;
 
   server.stop(run_next_test);
 });
@@ -166,13 +174,14 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   setUp();
 
   // Confirm defaults
-  do_check_true(SyncScheduler.idle);
+  do_check_false(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
   do_check_false(SyncScheduler.hasIncomingItems);
 
   _("Test as long as numClients <= 1 our sync interval is SINGLE_USER."); 
   // idle == true && numClients <= 1 && hasIncomingItems == false
+  SyncScheduler.idle = true;
   Service.sync();
   do_check_eq(syncFailures, 1);
   do_check_true(SyncScheduler.idle);
@@ -253,13 +262,38 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
 
   Records.clearCache();
   Svc.Prefs.resetBranch("");
+  SyncScheduler.setDefaults();
   Clients.resetClient();
   Service._lockedSync = origLockedSync;
 
-  // Reset defaults
-  SyncScheduler.idle = true;
-  SyncScheduler.syncInterval = SINGLE_USER_SYNC;
-  SyncScheduler.hasIncomingItems = false;
-
   server.stop(run_next_test);
+});
+
+add_test(function test_back_triggers_sync() {
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Single device: no sync triggered.
+  SyncScheduler.idle = true;
+  SyncScheduler.observe(null, "back", IDLE_TIME);
+  do_check_false(SyncScheduler.idle);
+
+  // Multiple devices: sync is triggered.
+  Clients._store.create({id: "foo", cleartext: "bar"});
+  SyncScheduler.updateClientMode();
+
+  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
+    Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
+
+    Records.clearCache();
+    Svc.Prefs.resetBranch("");
+    SyncScheduler.setDefaults();
+    Clients.resetClient();
+
+    server.stop(run_next_test);
+  });
+
+  SyncScheduler.idle = true;
+  SyncScheduler.observe(null, "back", IDLE_TIME);
+  do_check_false(SyncScheduler.idle);
 });
