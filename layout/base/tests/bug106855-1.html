@@ -1,0 +1,26 @@
+<!DOCTYPE HTML><html><head>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+x<br>
+<textarea id="t" rows="4">
+A
+
+
+</textarea><br>
+y
+<script>
+  // Position the caret at the last line
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+
+  var area = document.getElementById('t');
+  area.focus();
+
+  sendKey('DOWN', window);  // now after "A"
+  sendKey('DOWN', window);  // 
+  sendKey('DOWN', window);  // now at the last line
+</script>
+</body>
+</html>
