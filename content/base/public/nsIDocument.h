@@ -1534,6 +1534,10 @@ public:
 #undef DEPRECATED_OPERATION
   void WarnOnceAbout(DeprecatedOperations aOperation);
 
+  PRInt64 SizeOf() const {
+    return sizeof(*this);
+  }
+
 private:
   PRUint32 mWarnedAbout;
 
