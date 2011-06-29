@@ -712,11 +712,11 @@ TestShellParent* GetOrCreateTestShellParent()
     if (!parent) {
       return nsnull;
     }
+
     TestShellParent* testShell = parent->GetTestShellSingleton();
-    if (testShell) {
-      return testShell;
+    if (!testShell) {
+      testShell = parent->CreateTestShell();
     }
-    testShell = parent->CreateTestShell();
     return testShell;
 }
 }
@@ -758,9 +758,7 @@ XRE_ShutdownTestShell()
 {
   ContentParent* cp = ContentParent::GetSingleton(PR_FALSE);
   TestShellParent* tsp = cp ? cp->GetTestShellSingleton() : nsnull;
-  if (!tsp)
-    return true;
-  return cp->DestroyTestShell(tsp);
+  return tsp ? cp->DestroyTestShell(tsp) : true;
 }
 
 #ifdef MOZ_X11

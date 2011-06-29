@@ -330,8 +330,9 @@ ContentParent::DestroyTestShell(TestShellParent* aTestShell)
 TestShellParent*
 ContentParent::GetTestShellSingleton()
 {
-    if (!ManagedPTestShellParent().Length())
+    if (ManagedPTestShellParent().IsEmpty()) {
         return nsnull;
+    }
     return static_cast<TestShellParent*>(ManagedPTestShellParent()[0]);
 }
 
