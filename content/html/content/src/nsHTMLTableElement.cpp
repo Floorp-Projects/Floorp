@@ -84,9 +84,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TableRowsCollection)
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope)
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap)
   {
-    return xpc::dom::NodeListBase::create(cx, scope, this, this);
+    return xpc::dom::NodeListBase::create(cx, scope, this, this, triedToWrap);
   }
 
 protected:

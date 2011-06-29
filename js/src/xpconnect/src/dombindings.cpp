@@ -129,18 +129,18 @@ WrapNativeParent(JSContext *cx, JSObject *scope, T *p)
 
 JSObject *
 NodeListBase::create(JSContext *cx, XPCWrappedNativeScope *scope,
-                     nsINodeList *aNodeList)
+                     nsINodeList *aNodeList, bool *triedToWrap)
 {
-    return NodeList<nsINodeList>::create(cx, scope, aNodeList, aNodeList);
+    return NodeList<nsINodeList>::create(cx, scope, aNodeList, aNodeList, triedToWrap);
 }
 
 JSObject *
 NodeListBase::create(JSContext *cx, XPCWrappedNativeScope *scope,
                      nsIHTMLCollection *aHTMLCollection,
-                     nsWrapperCache *aWrapperCache)
+                     nsWrapperCache *aWrapperCache, bool *triedToWrap)
 {
     return NodeList<nsIHTMLCollection>::create(cx, scope, aHTMLCollection,
-                                               aWrapperCache);
+                                               aWrapperCache, triedToWrap);
 }
 
 template<class T>
@@ -222,9 +222,14 @@ Register(nsDOMClassInfoData *aData)
 }
 
 bool
-DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine)
+DefineConstructor(JSContext *cx, JSObject *obj, DefineInterface aDefine, nsresult *aResult)
 {
-    return !!aDefine(cx, XPCWrappedNativeScope::FindInJSObjectScope(cx, obj));
+    bool enabled;
+    bool defined = !!aDefine(cx, XPCWrappedNativeScope::FindInJSObjectScope(cx, obj), &enabled);
+    NS_ASSERTION(!defined || enabled,
+                 "We defined a constructor but the new bindings are disabled?");
+    *aResult = defined ? NS_OK : NS_ERROR_FAILURE;
+    return enabled;
 }
 
 template<class T>
@@ -436,8 +441,15 @@ interface_hasInstance(JSContext *cx, JSObject *obj, const js::Value *vp, JSBool 
 
 template<class T>
 JSObject *
-NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
+NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)
 {
+    if(!scope->NewDOMBindingsEnabled()) {
+        *enabled = false;
+        return NULL;
+    }
+
+    *enabled = true;
+
     nsDataHashtable<nsDepCharHashKey, JSObject*> &cache =
         scope->GetCachedDOMPrototypes();
 
@@ -504,8 +516,10 @@ NodeList<T>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
 template<class T>
 JSObject *
 NodeList<T>::create(JSContext *cx, XPCWrappedNativeScope *scope, T *aNodeList,
-                    nsWrapperCache* aWrapperCache)
+                    nsWrapperCache* aWrapperCache, bool *triedToWrap)
 {
+    *triedToWrap = true;
+
     JSObject *parent = WrapNativeParent(cx, scope->GetGlobalJSObject(), aNodeList->GetParentObject());
     if (!parent)
         return NULL;
@@ -518,7 +532,7 @@ NodeList<T>::create(JSContext *cx, XPCWrappedNativeScope *scope, T *aNodeList,
         scope = XPCWrappedNativeScope::FindInJSObjectScope(cx, parent);
     }
 
-    JSObject *proto = getPrototype(cx, scope);
+    JSObject *proto = getPrototype(cx, scope, triedToWrap);
     if (!proto)
         return NULL;
     JSObject *obj = NewProxyObject(cx, &NodeList<T>::instance,

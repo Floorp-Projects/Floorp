@@ -120,10 +120,17 @@ public:
 
 
   /**
-   * Wrap the object corresponding to this wrapper cache.  If non-null is
-   * returned, the object has already been stored in the wrapper cache.
+   * Wrap the object corresponding to this wrapper cache. If non-null is
+   * returned, the object has already been stored in the wrapper cache and the
+   * value set in triedToWrap is meaningless. If null is returned then
+   * triedToWrap indicates whether an error occurred, if it's false then the
+   * object doesn't actually support creating a wrapper through its WrapObject
+   * hook.
    */
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope) {
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap)
+  {
+    *triedToWrap = false;
     return nsnull;
   }
 

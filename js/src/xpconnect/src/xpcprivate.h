@@ -793,6 +793,11 @@ public:
 
     static void ActivityCallback(void *arg, JSBool active);
 
+    bool NewDOMBindingsEnabled()
+    {
+        return gNewDOMBindingsEnabled;
+    }
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -801,6 +806,8 @@ private:
     void RescheduleWatchdog(XPCContext* ccx);
 
     static void WatchdogMain(void *arg);
+
+    static bool gNewDOMBindingsEnabled;
 
     static const char* mStrings[IDX_TOTAL_COUNT];
     jsid mStrIDs[IDX_TOTAL_COUNT];
@@ -1616,6 +1623,11 @@ public:
     }
     void TraceDOMPrototypes(JSTracer *trc);
 
+    JSBool NewDOMBindingsEnabled()
+    {
+        return mNewDOMBindingsEnabled;
+    }
+
 protected:
     XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal);
     virtual ~XPCWrappedNativeScope();
@@ -1657,6 +1669,8 @@ private:
     nsIScriptObjectPrincipal* mScriptObjectPrincipal;
 
     nsDataHashtable<nsDepCharHashKey, JSObject*> mCachedDOMPrototypes;
+
+    JSBool mNewDOMBindingsEnabled;
 };
 
 JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,

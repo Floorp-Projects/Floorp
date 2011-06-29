@@ -6174,10 +6174,10 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
       xpc::dom::DefineInterface define =
         sClassInfoData[name_struct->mDOMClassInfoID].mDefineDOMInterface;
-      if (define && xpc::dom::DefineConstructor(cx, obj, define)) {
-        *did_resolve = true;
+      if (define && xpc::dom::DefineConstructor(cx, obj, define, &rv)) {
+        *did_resolve = NS_SUCCEEDED(rv);
 
-        return NS_OK;
+        return rv;
       }
     }
 

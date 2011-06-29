@@ -1155,7 +1155,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // implementing it doesn't want a wrapped native as its JS Object, but
     // instead it provides its own proxy object. In that case, the object
     // to use is found as cache->GetWrapper(). If that is null, then the
-    // object will create (and fill the cache) from its PreCreate call.
+    // object will create (and fill the cache) from its WrapObject call.
     nsWrapperCache *cache = aHelper.GetWrapperCache();
 
     bool tryConstructSlimWrapper = false;
@@ -1170,16 +1170,22 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                 return JS_FALSE;
 
             if(!flat) {
-                flat = cache->WrapObject(lccx.GetJSContext(), xpcscope);
+                bool triedToWrap;
+                flat = cache->WrapObject(lccx.GetJSContext(), xpcscope,
+                                         &triedToWrap);
+                if(!flat && triedToWrap)
+                    return JS_FALSE;
                 if (!flat) {
                     flat = ConstructProxyObject(ccx, aHelper, xpcscope);
                 }
             }
 
-            if(!JS_WrapObject(ccx, &flat))
-                return JS_FALSE;
+            if(flat) {
+                if(!JS_WrapObject(ccx, &flat))
+                    return JS_FALSE;
 
-            return CreateHolderIfNeeded(ccx, flat, d, dest);
+                return CreateHolderIfNeeded(ccx, flat, d, dest);
+            }
         }
 
         if(!dest)
