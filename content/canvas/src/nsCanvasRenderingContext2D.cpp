@@ -167,6 +167,12 @@ CopyContext(gfxContext* dest, gfxContext* src)
     dest->SetFillRule(src->CurrentFillRule());
 
     dest->SetAntialiasMode(src->CurrentAntialiasMode());
+
+    AutoFallibleTArray<gfxFloat, 10> dashes;
+    double dashOffset;
+    if (src->CurrentDash(dashes, &dashOffset)) {
+        dest->SetDash(dashes.Elements(), dashes.Length(), dashOffset);
+    }
 }
 
 /**
@@ -3284,6 +3290,59 @@ nsCanvasRenderingContext2D::GetMiterLimit(float *miter)
 {
     gfxFloat d = mThebes->CurrentMiterLimit();
     *miter = static_cast<float>(d);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetMozDash(JSContext *cx, const jsval& patternArray)
+{
+    AutoFallibleTArray<gfxFloat, 10> dashes;
+    nsresult rv = JSValToDashArray(cx, patternArray, dashes);
+    if (NS_SUCCEEDED(rv)) {
+        mThebes->SetDash(dashes.Elements(), dashes.Length(),
+                         mThebes->CurrentDashOffset());
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetMozDash(JSContext* cx, jsval* dashArray)
+{
+    AutoFallibleTArray<gfxFloat, 10> dashes;
+    if (!mThebes->CurrentDash(dashes, nsnull)) {
+        dashes.SetLength(0);
+    }
+    return DashArrayToJSVal(dashes, cx, dashArray);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetMozDashOffset(float offset)
+{
+    if (!FloatValidate(offset)) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    AutoFallibleTArray<gfxFloat, 10> dashes;
+    if (!mThebes->CurrentDash(dashes, nsnull)) {
+        // Either no dash is set or the cairo call failed.  Either
+        // way, eat the error.
+
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+        return NS_OK;
+    }
+    NS_ABORT_IF_FALSE(dashes.Length() > 0,
+                      "CurrentDash() should have returned false");
+
+    mThebes->SetDash(dashes.Elements(), dashes.Length(),
+                     gfxFloat(offset));
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetMozDashOffset(float* offset)
+{
+    *offset = float(mThebes->CurrentDashOffset());
     return NS_OK;
 }
 
