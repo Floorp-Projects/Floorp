@@ -71,7 +71,7 @@ nsDOMMemoryReporter::GetPath(char** aMemoryPath)
 NS_IMETHODIMP
 nsDOMMemoryReporter::GetKind(int* aKind)
 {
-  *aKind = MR_HEAP;
+  *aKind = KIND_HEAP;
   return NS_OK;
 }
 
@@ -79,6 +79,13 @@ NS_IMETHODIMP
 nsDOMMemoryReporter::GetDescription(char** aDescription)
 {
   *aDescription = strdup("Memory used by the DOM.");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMMemoryReporter::GetUnits(PRInt32* aUnits)
+{
+  *aUnits = UNITS_BYTES;
   return NS_OK;
 }
 
@@ -92,11 +99,11 @@ GetWindowsMemoryUsage(const PRUint64& aId, nsGlobalWindow*& aWindow,
 }
 
 NS_IMETHODIMP
-nsDOMMemoryReporter::GetMemoryUsed(PRInt64* aMemoryUsed) {
-  *aMemoryUsed = 0;
+nsDOMMemoryReporter::GetAmount(PRInt64* aAmount) {
+  *aAmount = 0;
 
   nsGlobalWindow::WindowByIdTable* windows = nsGlobalWindow::GetWindowsTable();
-  windows->Enumerate(GetWindowsMemoryUsage, aMemoryUsed);
+  windows->Enumerate(GetWindowsMemoryUsage, aAmount);
 
   return NS_OK;
 }
