@@ -1422,13 +1422,12 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       PRInt32 result = NS_floor(aCoeff1 * double(aValue1.GetIntValue()) +
                                 aCoeff2 * double(aValue2.GetIntValue()));
       if (aProperty == eCSSProperty_font_weight) {
-        NS_ASSERTION(result > 0, "unexpected value");
-        result -= result % 100;
         if (result < 100) {
           result = 100;
         } else if (result > 900) {
           result = 900;
         }
+        result -= result % 100;
       } else {
         result = RestrictValue(aProperty, result);
       }
