@@ -7828,7 +7828,11 @@ dnl done during packaging with omnijar.
 if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     MOZ_OMNIJAR=1
     AC_DEFINE(MOZ_OMNIJAR)
-    MOZ_CHROME_FILE_FORMAT=flat
+    if test "$OS_ARCH" = "WINNT"; then
+        MOZ_CHROME_FILE_FORMAT=flat
+    else
+        MOZ_CHROME_FILE_FORMAT=symlink
+    fi
 elif test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
     AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
 fi
