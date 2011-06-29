@@ -167,7 +167,7 @@ RPM_CMD = \
   echo Creating RPM && \
   mkdir -p $(RPMBUILD_SOURCEDIR) && \
   $(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-  	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
 	-DMOZ_APP_DISPLAYNAME=$(MOZ_APP_DISPLAYNAME) \
 	< $(RPM_INCIDENTALS)/mozilla.desktop \
 	> $(RPMBUILD_SOURCEDIR)/$(MOZ_APP_NAME).desktop && \
@@ -822,6 +822,16 @@ upload: checksum
 	$(PYTHON) $(MOZILLA_DIR)/build/upload.py --base-path $(DIST) \
 		$(UPLOAD_FILES) \
 		$(CHECKSUM_FILE)
+
+ifeq (WINNT,$(OS_TARGET))
+CODESIGHS_PACKAGE = $(INSTALLER_PACKAGE)
+else
+CODESIGHS_PACKAGE = $(DIST)/$(PACKAGE)
+endif
+
+codesighs:
+	$(PYTHON) $(topsrcdir)/tools/codesighs/codesighs.py \
+	  "$(DIST)/$(MOZ_PKG_DIR)" "$(CODESIGHS_PACKAGE)"
 
 ifndef MOZ_PKG_SRCDIR
 MOZ_PKG_SRCDIR = $(topsrcdir)

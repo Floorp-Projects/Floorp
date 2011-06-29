@@ -64,6 +64,7 @@ TEST_HARNESS_FILES := \
 EXTRA_BUILD_FILES := \
   automationutils.py \
   manifestparser.py \
+  mozinfo.py \
   poster.zip \
   $(NULL)
 
@@ -86,10 +87,16 @@ libs::
 	$(INSTALL) $(srcdir)/xpcshell.ini $(DEPTH)/_tests/xpcshell
 	cp $(srcdir)/xpcshell.ini $(DEPTH)/_tests/xpcshell/all-test-dirs.list
 
+# Run selftests
+check::
+	OBJDIR=$(DEPTH) $(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/build $(srcdir)/selftest.py
+
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/xpcshell/tests
 	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@(cd $(topsrcdir)/build && tar $(TAR_CREATE_FLAGS) - $(EXTRA_BUILD_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
+	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/xpcshell
 	@(cd $(topsrcdir)/build/mobile && tar $(TAR_CREATE_FLAGS) - $(MOBILE_BUILD_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@(cd $(DEPTH)/_tests/xpcshell/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/xpcshell/tests && tar -xf -)
 	@(cd $(DIST)/bin/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)
