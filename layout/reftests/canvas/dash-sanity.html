@@ -1,0 +1,85 @@
+<html>
+<head>
+  <script type="text/javascript">
+function assert(cond, msg) { if (!cond) { throw msg; } }
+window.onload = function() {
+    try {
+        var ctx = document.getElementById("c1").getContext("2d");
+
+        assert(null === ctx.mozDash,
+               "Default dash is null (no dash)");
+        assert(0 == ctx.mozDashOffset,
+               "Default dashOffset is 0 (no dash)");
+
+        ctx.mozDash = [ 2 ];
+        assert(1 == ctx.mozDash.length && 2 == ctx.mozDash[0],
+               "dash = [ 2 ] works");
+        ctx.mozDash = null;
+        assert(null === ctx.mozDash,
+               "dash = null resets to null");
+        ctx.mozDash = [ 2 ];
+        ctx.mozDash = undefined;
+        assert(null === ctx.mozDash,
+               "dash = undefined resets to null");
+        ctx.mozDash = [ 2 ];
+        ctx.mozDash = [ ];
+        assert(null === ctx.mozDash,
+               "dash = [] resets to null");
+
+        ctx.mozDash = [ 2 ];
+        assert(0 == ctx.mozDashOffset, "dashOffset is 0");
+        ctx.mozDashOffset = 1;
+        assert(1 == ctx.mozDashOffset, "Setting dashOffset succeeded");
+        ctx.mozDash = null;
+        assert(0 == ctx.mozDashOffset, "Disabling dash resets dashOffset");
+        ctx.mozDash = [ 2 ];
+        assert(0 == ctx.mozDashOffset, "Previous dashOffset isn't remembered");
+        ctx.mozDash = null;
+
+        // NB: might want to add a |.dash = number| special case,
+        // don't test that it fails here.  Might also want to add a
+        // |.dash = [0]| special case for resetting, so don't test
+        // that either.
+        var badVals = [ -1,
+                        "string",
+                        /* According to the WebIDL sequence-ifying
+                         * (really they mean array-ifying here)
+                         * algorithm, objects without .length
+                         * properties convert to a 0-length arrays.
+                         * This seems ... odd, since by the book we're
+                         * forced to accept |ctx.dash = Function|,
+                         * e.g., but there it is.
+                         */
+                        // { obj: true },
+                        [ "array of string" ],
+                        [ -1 ],
+                        [ 0, 0, 0 ],
+                        [ 2, "string" ],
+        ];
+        ctx.mozDash = [ 2 ];
+        for (var i = 0; i < badVals.length; ++i) {
+            var error = false;
+            try { ctx.mozDash = badVals[i]; }
+            catch(e) { error = true; }
+            assert(error && 1 == ctx.mozDash.length && 2 == ctx.mozDash[0],
+                   "Expected |dash = "+ badVals[i] +"| to throw exception and not change .dash");
+        }
+        ctx.mozDash = null;
+
+        ctx.save();
+        ctx.mozDash = [ 2 ];
+        ctx.restore();
+        assert(null === ctx.mozDash,
+               "dash was saved then restored");
+    } catch (e) {
+        document.body.innerHTML = "FAIL: "+ e.toString();
+        return;
+    }
+    document.body.innerHTML = "Pass";
+}
+  </script>
+</head>
+<body>
+  <div><canvas id="c1" width="300" height="300"></canvas></div>
+</body>
+</html>
