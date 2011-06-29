@@ -287,6 +287,7 @@ public:
 
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
+  typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindow*> WindowByIdTable;
 
   // public methods
   nsPIDOMWindow* GetPrivateParent();
@@ -538,6 +539,14 @@ public:
   static bool HasIndexedDBSupport();
 
   static bool HasPerformanceSupport();
+
+  static WindowByIdTable* GetWindowsTable() {
+    return sWindowsById;
+  }
+
+  PRInt64 SizeOf() const {
+    return sizeof(*this);
+  }
 
 private:
   // Enable updates for the accelerometer.
@@ -960,7 +969,6 @@ protected:
   friend class PostMessageEvent;
   static nsIDOMStorageList* sGlobalStorageList;
 
-  typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindow*> WindowByIdTable;
   static WindowByIdTable* sWindowsById;
 };
 
