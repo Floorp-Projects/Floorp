@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDOMMemoryReporter.h"
+#include "nsGlobalWindow.h"
 
 
 nsDOMMemoryReporter::nsDOMMemoryReporter()
@@ -80,9 +81,23 @@ nsDOMMemoryReporter::GetDescription(char** aDescription)
   *aDescription = strdup("Memory used by the DOM.");
   return NS_OK;
 }
+
+static
+PLDHashOperator
+GetWindowsMemoryUsage(const PRUint64& aId, nsGlobalWindow*& aWindow,
+                      void* aClosure)
+{
+  *(PRInt64*)aClosure += aWindow->SizeOf();
+  return PL_DHASH_NEXT;
+}
+
 NS_IMETHODIMP
 nsDOMMemoryReporter::GetMemoryUsed(PRInt64* aMemoryUsed) {
   *aMemoryUsed = 0;
+
+  nsGlobalWindow::WindowByIdTable* windows = nsGlobalWindow::GetWindowsTable();
+  windows->Enumerate(GetWindowsMemoryUsage, aMemoryUsed);
+
   return NS_OK;
 }
 
