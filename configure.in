@@ -6926,7 +6926,7 @@ dnl ========================================================
 
 dnl Defaults
 case "${target}" in
-arm-android-eabi)
+arm-android*|arm-linuxandroid*)
     MOZ_THUMB=yes
     MOZ_ARCH=armv7-a
     MOZ_FPU=vfp
