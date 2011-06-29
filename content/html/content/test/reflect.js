@@ -1,3 +1,107 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * reflect.js is a collection of methods to test HTML attribute reflection.
+ * Each of attribute is reflected differently, depending on various parameters,
+ * see:
+ * http://www.whatwg.org/html/#reflecting-content-attributes-in-idl-attributes
+ *
+ * Do not forget to add these line at the beginning of each new reflect* method:
+ * ok(aAttr in aElement, aAttr + " should be an IDL attribute of this element");
+ * is(typeof aElement[aAttr], <type>, aAttr + " IDL attribute should be a <type>");
+ */
+
+/**
+ * Checks that a given attribute is correctly reflected as a string.
+ *
+ * @param aElement      Element   node to test
+ * @param aAttr         String    name of the attribute
+ * @param aOtherValues  Array     other values to test in addition of the default ones [optional]
+ */
+function reflectString(aElement, aAttr, aOtherValues)
+{
+  var otherValues = aOtherValues !== undefined ? aOtherValues : [];
+
+  ok(aAttr in aElement, aAttr + " should be an IDL attribute of this element");
+  is(typeof aElement[aAttr], "string", aAttr + " IDL attribute should be a string");
+
+  // Tests when the attribute isn't set.
+  is(aElement.getAttribute(aAttr), null,
+     "When not set, the content attribute should be undefined.");
+  is(aElement[aAttr], "",
+     "When not set, the IDL attribute should return the empty string");
+
+  /**
+   * TODO: as long as null stringification doesn't fallow the webidl specs,
+   * don't add it to the loop below and keep it here.
+   */
+  aElement.setAttribute(aAttr, null);
+  todo_is(aElement.getAttribute(aAttr), "null",
+     "null should have been stringified to 'null'");
+  todo_is(aElement[aAttr], "null",
+     "null should have been stringified to 'null'");
+  aElement.removeAttribute(aAttr);
+
+  aElement[aAttr] = null;
+  todo_is(aElement.getAttribute(aAttr), "null",
+     "null should have been stringified to 'null'");
+  todo_is(aElement[aAttr], "null",
+     "null should have been stringified to 'null'");
+  aElement.removeAttribute(aAttr);
+
+  // Tests various strings.
+  var stringsToTest = [
+    // [ test value, expected result ]
+    [ "", "" ],
+    [ "null", "null" ],
+    [ "undefined", "undefined" ],
+    [ "foo", "foo" ],
+    [ aAttr, aAttr ],
+    // TODO: uncomment this when null stringification will follow the specs.
+    // [ null, "null" ],
+    [ undefined, "undefined" ],
+    [ true, "true" ],
+    [ false, "false" ],
+    [ 42, "42" ],
+    // ES5, verse 8.12.8.
+    [ { toString: function() { return "foo" } },
+      "foo" ],
+    [ { valueOf: function() { return "foo" } },
+      "[object Object]" ],
+    [ { valueOf: function() { return "quux" },
+       toString: undefined },
+      "quux" ],
+    [ { valueOf: function() { return "foo" },
+        toString: function() { return "bar" } },
+      "bar" ]
+  ];
+
+  otherValues.forEach(function(v) { stringsToTest.push([v, v]) });
+
+  stringsToTest.forEach(function([v, r]) {
+    aElement.setAttribute(aAttr, v);
+    is(aElement[aAttr], r,
+       "IDL attribute should return the value it has been set to.");
+    is(aElement.getAttribute(aAttr), r,
+       "Content attribute should return the value it has been set to.");
+    aElement.removeAttribute(aAttr);
+
+    aElement[aAttr] = v;
+    is(aElement[aAttr], r,
+       "IDL attribute should return the value it has been set to.");
+    is(aElement.getAttribute(aAttr), r,
+       "Content attribute should return the value it has been set to.");
+    aElement.removeAttribute(aAttr);
+  });
+
+  // Tests after removeAttribute() is called. Should be equivalent with not set.
+  is(aElement.getAttribute(aAttr), null,
+     "When not set, the content attribute should be undefined.");
+  is(aElement[aAttr], "",
+     "When not set, the IDL attribute should return the empty string");
+}
+
 /**
  * Checks that a given attribute name for a given element is correctly reflected
  * as an unsigned int.
@@ -18,6 +122,9 @@ function reflectUnsignedInt(aElement, aAttr, aNonNull, aDefault)
       aDefault = 0;
     }
   }
+
+  ok(aAttr in aElement, aAttr + " should be an IDL attribute of this element");
+  is(typeof aElement[aAttr], "number", aAttr + " IDL attribute should be a string");
 
   // Check default value.
   is(aElement[aAttr], aDefault, "default value should be " + aDefault);
@@ -108,6 +215,10 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
   var defaultValue = aDefaultValue !== undefined ? aDefaultValue : "";
   var unsupportedValues = aUnsupportedValues !== undefined ? aUnsupportedValues
                                                            : [];
+
+  ok(aAttr in aElement, aAttr + " should be an IDL attribute of this element");
+  is(typeof aElement[aAttr], "string", aAttr + " IDL attribute should be a string");
+
   // Explicitly check the default value.
   aElement.removeAttribute(aAttr);
   is(aElement[aAttr], defaultValue,
@@ -126,7 +237,7 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
     is(aElement[aAttr], v,
        "Enumerated attributes should be case-insensitive.");
     is(aElement.getAttribute(aAttr), v.toUpperCase(),
-       "Content attribute should be upper-cased.");
+       "Content attribute should not be lower-cased.");
     aElement.removeAttribute(aAttr);
 
     aElement[aAttr] = v;
@@ -140,7 +251,7 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
     is(aElement[aAttr], v,
        "Enumerated attributes should be case-insensitive.");
     is(aElement.getAttribute(aAttr), v.toUpperCase(),
-       "Content attribute should be upper-cased.");
+       "Content attribute should not be lower-cased.");
     aElement.removeAttribute(aAttr);
   });
 
@@ -175,7 +286,7 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
     todo_is(aElement[aAttr], v,
             "Enumerated attributes should be case-insensitive.");
     is(aElement.getAttribute(aAttr), v.toUpperCase(),
-       "Content attribute should be upper-cased.");
+       "Content attribute should not be lower-cased.");
     aElement.removeAttribute(aAttr);
 
     aElement[aAttr] = v;
@@ -189,7 +300,7 @@ function reflectLimitedEnumerated(aElement, aAttr, aValidValues, aInvalidValues,
     todo_is(aElement[aAttr], v,
             "Enumerated attributes should be case-insensitive.");
     is(aElement.getAttribute(aAttr), v.toUpperCase(),
-       "Content attribute should be upper-cased.");
+       "Content attribute should not be lower-cased.");
     aElement.removeAttribute(aAttr);
   });
 }

@@ -1534,6 +1534,8 @@ public:
 #undef DEPRECATED_OPERATION
   void WarnOnceAbout(DeprecatedOperations aOperation);
 
+  PRInt64 SizeOf() const;
+
 private:
   PRUint32 mWarnedAbout;
 
