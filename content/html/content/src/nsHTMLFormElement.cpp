@@ -162,9 +162,10 @@ public:
   nsresult GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aControls) const;
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope)
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap)
   {
-    return xpc::dom::NodeListBase::create(cx, scope, this, this);
+    return xpc::dom::NodeListBase::create(cx, scope, this, this, triedToWrap);
   }
 
   nsHTMLFormElement* mForm;  // WEAK - the form owns me

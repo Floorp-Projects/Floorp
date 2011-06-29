@@ -52,6 +52,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
 #include "prsystem.h"
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -2018,6 +2019,8 @@ DiagnosticMemoryCallback(void *ptr, size_t size)
 }
 #endif
 
+bool XPCJSRuntime::gNewDOMBindingsEnabled;
+
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
    mJSRuntime(nsnull),
@@ -2053,6 +2056,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     NS_TIME_FUNCTION;
 
     DOM_InitInterfaces();
+    Preferences::AddBoolVarCache(&gNewDOMBindingsEnabled, "dom.new_bindings",
+                                 JS_FALSE);
+
 
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;

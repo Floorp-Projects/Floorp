@@ -84,10 +84,10 @@ public:
     NodeListBase() : ProxyHandler() {}
 
     static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
-                            nsINodeList *aNodeList);
+                            nsINodeList *aNodeList, bool *triedToWrap);
     static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
                             nsIHTMLCollection *aHTMLCollection,
-                            nsWrapperCache *aWrapperCache);
+                            nsWrapperCache *aWrapperCache, bool *triedToWrap);
 };
 
 /**
@@ -110,7 +110,7 @@ class NodeList : public NodeListBase {
     static Methods sProtoMethods[];
 
     static bool instanceIsNodeListObject(JSContext *cx, JSObject *obj, JSObject *callee);
-    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
+    static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
 
     static T *getNodeList(JSObject *obj);
 
@@ -163,7 +163,7 @@ class NodeList : public NodeListBase {
     void finalize(JSContext *cx, JSObject *proxy);
 
     static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, T *,
-                            nsWrapperCache* aWrapperCache);
+                            nsWrapperCache* aWrapperCache, bool *enabled);
 
     static bool objIsNodeList(JSObject *obj) {
         return js::IsProxy(obj) && js::GetProxyHandler(obj) == &instance;

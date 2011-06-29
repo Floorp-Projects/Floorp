@@ -1556,9 +1556,10 @@ NS_INTERFACE_TABLE_HEAD(nsChildContentList)
 NS_INTERFACE_MAP_END
 
 JSObject*
-nsChildContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope)
+nsChildContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap)
 {
-  return xpc::dom::NodeListBase::create(cx, scope, this);
+  return xpc::dom::NodeListBase::create(cx, scope, this, triedToWrap);
 }
 
 NS_IMETHODIMP
