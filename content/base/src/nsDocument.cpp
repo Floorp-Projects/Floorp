@@ -8130,43 +8130,17 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
   return nsnull;
 }
 
+#define DEPRECATED_OPERATION(_op) #_op "Warning",
 static const char* kWarnings[] = {
-  "GetAttributeNodeWarning",
-  "SetAttributeNodeWarning",
-  "GetAttributeNodeNSWarning",
-  "SetAttributeNodeNSWarning",
-  "RemoveAttributeNodeWarning",
-  "CreateAttributeWarning",
-  "CreateAttributeNSWarning",
-  "SpecifiedWarning",
-  "OwnerElementWarning",
-  "NodeNameWarning",
-  "NodeValueWarning",
-  "NodeTypeWarning",
-  "ParentNodeWarning",
-  "ChildNodesWarning",
-  "HasChildNodesWarning",
-  "HasAttributesWarning",
-  "FirstChildWarning",
-  "LastChildWarning",
-  "PreviousSiblingWarning",
-  "NextSiblingWarning",
-  "AttributesWarning",
-  "InsertBeforeWarning",
-  "ReplaceChildWarning",
-  "RemoveChildWarning",
-  "AppendChildWarning",
-  "CloneNodeWarning",
-  "GetOwnerDocumentWarning",
-  "IsSupportedWarning",
-  "IsEqualNodeWarning",
-  "TextContentWarning"
+#include "nsDeprecatedOperationList.h"
+  nsnull
 };
+#undef DEPRECATED_OPERATION
 
 void
 nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation)
 {
-  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(kWarnings) < 32);
+  PR_STATIC_ASSERT(eDeprecatedOperationCount <= 32);
   if (mWarnedAbout & (1 << aOperation)) {
     return;
   }
