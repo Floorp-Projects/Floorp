@@ -2622,7 +2622,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
             mBoundingBox = mBoundingBox.Union(textRunMetrics.mBoundingBox);
         }
 
-        return static_cast<nscoord>(textRunMetrics.mAdvanceWidth/gfxFloat(mAppUnitsPerDevPixel));
+        return NSToCoordRound(textRunMetrics.mAdvanceWidth);
     }
 
     virtual void DrawText(nscoord xOffset, nscoord width)
@@ -2773,7 +2773,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     processor.mFontgrp = GetCurrentFontStyle();
     NS_ASSERTION(processor.mFontgrp, "font group is null");
 
-    nscoord totalWidth;
+    nscoord totalWidthCoord;
 
     // calls bidi algo twice since it needs the full text width and the
     // bounding boxes before rendering anything
@@ -2785,12 +2785,13 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
                                 nsBidiPresUtils::MODE_MEASURE,
                                 nsnull,
                                 0,
-                                &totalWidth);
+                                &totalWidthCoord);
     if (NS_FAILED(rv))
         return rv;
 
+    float totalWidth = float(totalWidthCoord) / processor.mAppUnitsPerDevPixel;
     if (aWidth)
-        *aWidth = static_cast<float>(totalWidth);
+        *aWidth = totalWidth;
 
     // if only measuring, don't need to do any more work
     if (aOp==TEXT_DRAW_OPERATION_MEASURE)
