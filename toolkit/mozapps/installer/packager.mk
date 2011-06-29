@@ -807,7 +807,7 @@ UPLOAD_FILES= \
   $(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 checksum:
-	mkdir -p `dirname $CHECKSUM_FILE`
+	mkdir -p `dirname $(CHECKSUM_FILE)`
 	@$(PYTHON) $(MOZILLA_DIR)/build/checksums.py \
 		-o $(CHECKSUM_FILE) \
 		-d $(CHECKSUM_ALGORITHM) \
