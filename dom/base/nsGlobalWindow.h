@@ -531,7 +531,8 @@ public:
   }
 
   static nsGlobalWindow* GetOuterWindowWithId(PRUint64 aWindowID) {
-    return sOuterWindowsById ? sOuterWindowsById->Get(aWindowID) : nsnull;
+    nsGlobalWindow* outerWindow = sWindowsById->Get(aWindowID);
+    return outerWindow && !outerWindow->IsInnerWindow() ? outerWindow : nsnull;
   }
 
   static bool HasIndexedDBSupport();
@@ -960,7 +961,7 @@ protected:
   static nsIDOMStorageList* sGlobalStorageList;
 
   typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindow*> WindowByIdTable;
-  static WindowByIdTable* sOuterWindowsById;
+  static WindowByIdTable* sWindowsById;
 };
 
 /*
