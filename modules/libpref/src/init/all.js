@@ -196,14 +196,6 @@ pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.sanitize", true);
 
-// Needed to work around a serious bug in how Apple handles downloaded fonts
-// on the most recent developer previews of OS X 10.7 (Lion, builds 11A480b
-// and 11A494a).  See bug 663688.  On Lion and up this setting overrides
-// gfx.downloadable_fonts.enabled.
-#ifdef XP_MACOSX
-pref("gfx.downloadable_fonts.enabled.lion", false);
-#endif
-
 // see gfx/thebes/gfxUnicodeProperties.h for definitions of script bits
 #ifdef XP_MACOSX
 // use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04)
