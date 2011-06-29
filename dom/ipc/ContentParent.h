@@ -94,7 +94,6 @@ public:
 
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
-    TestShellParent* GetTestShellSingleton();
 
     void ReportChildAlreadyBlocked();
     bool RequestRunToCompletion();
@@ -102,10 +101,6 @@ public:
     bool IsAlive();
 
     void SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report);
-
-    GeckoChildProcessHost* Process() {
-        return mSubprocess;
-    }
 
 protected:
     void OnChannelConnected(int32 pid);
@@ -127,8 +122,7 @@ private:
     virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
-    virtual PCrashReporterParent* AllocPCrashReporter(const NativeThreadId& tid,
-                                                      const PRUint32& processType);
+    virtual PCrashReporterParent* AllocPCrashReporter();
     virtual bool DeallocPCrashReporter(PCrashReporterParent* crashreporter);
 
     virtual PMemoryReportRequestParent* AllocPMemoryReportRequest();
@@ -234,8 +228,7 @@ private:
 
     bool mIsAlive;
     nsCOMPtr<nsIPrefServiceInternal> mPrefService;
-
-    friend class CrashReporterParent;
+    time_t mProcessStartTime;
 };
 
 } // namespace dom
