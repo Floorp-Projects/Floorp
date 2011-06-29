@@ -40,15 +40,15 @@
 
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(d298b942-3e66-4cd3-9ff5-46abc69147a7)]
+[scriptable, uuid(37d18434-9819-4ce1-922f-15d8b63da066)]
 interface nsIMemoryReporter : nsISupports
 {
   /*
-   * The name of the process containing this reporter.  All reporters start
-   * with "", which is short-hand for the "main" process;  this is true even
-   * for reporters in child processes.  When reporters from child reporters
-   * are copied into the main process, the copies have their 'process' field
-   * set appropriately.
+   * The name of the process containing this reporter.  Each reporter initially
+   * has "" in this field, indicating that it applies to the current process.
+   * (This is true even for reporters in a child process.)  When a reporter
+   * from a child process is copied into the main process, the copy has its
+   * 'process' field set appropriately.
    */
   readonly attribute string process;
 
@@ -56,15 +56,15 @@ interface nsIMemoryReporter : nsISupports
    * The path that this memory usage should be reported under.  Paths are
    * '/'-delimited, eg. "a/b/c".  There are two categories of paths.
    *
-   * - Paths starting with "explicit" represent non-overlapping regions of 
-   *   memory that have been explicitly allocated with an OS-level allocation
-   *   (eg. mmap/VirtualAlloc/vm_allocate) or a heap-level allocation (eg.
-   *   malloc/calloc/operator new).  Each one can be viewed as representing a
-   *   path in a tree from the root node ("explicit") to a node lower in the
-   *   tree; this lower node does not have to be a leaf node.
+   * - Paths starting with "explicit" represent regions of memory that have
+   *   been explicitly allocated with an OS-level allocation (eg.
+   *   mmap/VirtualAlloc/vm_allocate) or a heap-level allocation (eg.
+   *   malloc/calloc/operator new).
    *
-   *   So, for example, "explicit/a/b", "explicit/a/c", "explicit/d",
-   *   "explicit/d/e", and "explicit/d/f" define this tree:
+   *   Each reporter can be viewed as representing a node in a tree rooted at
+   *   "explicit".  Not all nodes of the tree need have an associated reporter.
+   *   So, for example, the reporters "explicit/a/b", "explicit/a/c",
+   *   "explicit/d", "explicit/d/e", and "explicit/d/f" define this tree:
    *
    *     explicit
    *     |--a
@@ -74,40 +74,71 @@ interface nsIMemoryReporter : nsISupports
    *        |--e [*]
    *        \--f [*]
    *
-   *   Nodes marked with a [*] have a reporter.
+   *   Nodes marked with a [*] have a reporter.  Notice that "explicit/a" is
+   *   implicitly defined.
    *
-   * - All other paths represent cross-cuttings memory regions, ie. ones that
-   *   may overlap arbitrarily with regions in the "explicit" tree.
+   *   A node's children divide their parent's memory into disjoint pieces.
+   *   So in the example above, |a| may not count any allocations counted by
+   *   |d|, and vice versa.
+   *
+   * - All other paths represent cross-cutting values and may overlap with any
+   *   other reporter.
    */
   readonly attribute string path;
 
   /*
-   * Allocation kinds.  "MAPPED" means it is allocated directly by the OS, eg.
-   * by calling mmap, VirtualAlloc, vm_allocate, etc.  "HEAP" means it is
-   * allocated by the heap allocator, eg. by calling malloc, calloc, realloc,
-   * memalign, operator new, operator new[], etc.  "OTHER" means it doesn't fit
-   * into either of these categories;  such reporters should have a path that
-   * does *not* start with "explicit".
+   * There are three categories of memory reporters:
+   *
+   *  - MAPPED: memory allocated directly by the OS, e.g. by calling mmap,
+   *    VirtualAlloc, or vm_allocate.  Reporters in this category must have
+   *    units UNITS_BYTES and must have a path starting with "explicit".
+   *
+   *  - HEAP: memory allocated by the heap allocator, e.g. by calling malloc,
+   *    calloc, realloc, memalign, operator new, or operator new[].  Reporters
+   *    in this category must have units UNITS_BYTES and must have a path
+   *    starting with "explicit".
+   *
+   *  - OTHER: reporters which don't fit into either of these categories. Such
+   *    reporters must have a path that does not start with "explicit" and may
+   *    have any units.
    */
-  const PRInt32 MR_MAPPED = 0;
-  const PRInt32 MR_HEAP   = 1;
-  const PRInt32 MR_OTHER  = 2;
+  const PRInt32 KIND_MAPPED = 0;
+  const PRInt32 KIND_HEAP   = 1;
+  const PRInt32 KIND_OTHER  = 2;
 
   /*
-   * The memory kind, see MR_* above.
+   * The reporter kind.  See KIND_* above.
    */
   readonly attribute PRInt32 kind;
+
+  /*
+   * The amount reported by a memory reporter may have one of the following
+   * units, but you may of course add new units as necessary:
+   *
+   *  - BYTES: The amount contains a number of bytes.
+   *
+   *  - COUNT: The amount contains the cumulative number of times some event
+   *    has occurred since the application started up.  For instance, a
+   *    reporter reporting the number of page faults since startup should have
+   *    units UNITS_COUNT.
+   */
+  const PRInt32 UNITS_BYTES = 0;
+  const PRInt32 UNITS_COUNT = 1;
+
+  /*
+   * The units on the reporter's amount.  See UNITS_* above.
+   */
+  readonly attribute PRInt32 units;
+
+  /*
+   * The numeric value reported by this memory reporter.
+   */
+  readonly attribute long long amount;
 
   /*
    * A human-readable description of this memory usage report.
    */
   readonly attribute string description;
-
-  /*
-   * The current amount of memory in use, as reported by this memory
-   * reporter.
-   */
-  readonly attribute long long memoryUsed;
 };
 
 [scriptable, uuid(7c62de18-1edd-40f8-9da2-a8c622763074)]
@@ -142,16 +173,17 @@ interface nsIMemoryReporterManager : nsISupports
 /*
  * Note that this defaults 'process' to "", which is usually what's desired.
  */
-#define NS_MEMORY_REPORTER_IMPLEMENT(_classname,_path,_kind,_desc,_usageFunction,_dataptr) \
-    class MemoryReporter_##_classname : public nsIMemoryReporter {      \
-    public:                                                             \
-      NS_DECL_ISUPPORTS                                                 \
-      NS_IMETHOD GetProcess(char **process) { *process = strdup(""); return NS_OK; } \
-      NS_IMETHOD GetPath(char **memoryPath) { *memoryPath = strdup(_path); return NS_OK; } \
-      NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; } \
-      NS_IMETHOD GetDescription(char **desc) { *desc = strdup(_desc); return NS_OK; } \
-      NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed) { *memoryUsed = _usageFunction(_dataptr); return NS_OK; } \
-    };                                                                  \
+#define NS_MEMORY_REPORTER_IMPLEMENT(_classname, _path, _kind, _units, _usageFunction, _desc) \
+    class MemoryReporter_##_classname : public nsIMemoryReporter {                            \
+    public:                                                                                   \
+      NS_DECL_ISUPPORTS                                                                       \
+      NS_IMETHOD GetProcess(char **process) { *process = strdup(""); return NS_OK; }          \
+      NS_IMETHOD GetPath(char **memoryPath) { *memoryPath = strdup(_path); return NS_OK; }    \
+      NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
+      NS_IMETHOD GetUnits(int *units) { *units = _units; return NS_OK; }                      \
+      NS_IMETHOD GetAmount(PRInt64 *amount) { *amount = _usageFunction(); return NS_OK; }     \
+      NS_IMETHOD GetDescription(char **desc) { *desc = strdup(_desc); return NS_OK; }         \
+    };                                                                                        \
     NS_IMPL_ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
 
 #define NS_MEMORY_REPORTER_NAME(_classname)  MemoryReporter_##_classname

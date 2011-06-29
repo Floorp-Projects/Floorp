@@ -1452,11 +1452,11 @@ public:
   }
                   
                                   
-  static PRInt64 SizeOfLayoutMemoryReporter(void *) {
+  static PRInt64 SizeOfLayoutMemoryReporter() {
     return EstimateShellsMemory(LiveShellSizeEnumerator);
   }
 
-  static PRInt64 SizeOfBidiMemoryReporter(void *) {
+  static PRInt64 SizeOfBidiMemoryReporter() {
     return EstimateShellsMemory(LiveShellBidiSizeEnumerator);
   }
 
@@ -1670,17 +1670,17 @@ static PRBool sSynthMouseMove = PR_TRUE;
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
     "explicit/layout/all",
-    MR_HEAP,
-    "Memory used by layout PresShell, PresContext, and other related areas.",
+    KIND_HEAP,
+    UNITS_BYTES,
     PresShell::SizeOfLayoutMemoryReporter,
-    nsnull)
+    "Memory used by layout PresShell, PresContext, and other related areas.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
     "explicit/layout/bidi",
-    MR_HEAP,
-    "Memory used by layout Bidi processor.",
+    KIND_HEAP,
+    UNITS_BYTES,
     PresShell::SizeOfBidiMemoryReporter,
-    nsnull)
+    "Memory used by layout Bidi processor.")
 
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)

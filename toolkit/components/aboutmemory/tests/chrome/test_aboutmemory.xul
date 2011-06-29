@@ -35,17 +35,17 @@
   const KB = 1024;
   const MB = KB * KB;
   const kUnknown = -1;
-  const MAPPED = Ci.nsIMemoryReporter.MR_MAPPED;
-  const HEAP   = Ci.nsIMemoryReporter.MR_HEAP;
-  const OTHER  = Ci.nsIMemoryReporter.MR_OTHER;
+  const MAPPED = Ci.nsIMemoryReporter.KIND_MAPPED;
+  const HEAP   = Ci.nsIMemoryReporter.KIND_HEAP;
+  const OTHER  = Ci.nsIMemoryReporter.KIND_OTHER;
 
-  function f(aProcess, aPath, aKind, aMemoryUsed) {
+  function f(aProcess, aPath, aKind, aAmount) {
     return {
       process:     aProcess,
       path:        aPath,
       kind:        aKind,
       description: "(description)",
-      memoryUsed:  aMemoryUsed 
+      amount:      aAmount 
     };
   }
 

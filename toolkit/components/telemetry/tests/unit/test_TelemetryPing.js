@@ -87,7 +87,7 @@ function checkHistograms(request, response) {
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
   do_check_true(TELEMETRY_PING in payload.histograms)
 
-  // There should be one successful report from the previos telemetry ping
+  // There should be one successful report from the previous telemetry ping.
   const expected_tc = {
     range: [1, 2],
     bucket_count: 3,
