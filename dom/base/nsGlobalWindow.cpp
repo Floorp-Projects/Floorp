@@ -252,7 +252,7 @@ using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
 nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
-nsGlobalWindow::WindowByIdTable *nsGlobalWindow::sOuterWindowsById = nsnull;
+nsGlobalWindow::WindowByIdTable *nsGlobalWindow::sWindowsById = nsnull;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
@@ -887,18 +887,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
     mObserver = nsnull;
     SetIsProxy();
-
-    if (!sOuterWindowsById) {
-      sOuterWindowsById = new WindowByIdTable();
-      if (!sOuterWindowsById->Init()) {
-        delete sOuterWindowsById;
-        sOuterWindowsById = nsnull;
-      }
-    }
-
-    if (sOuterWindowsById) {
-      sOuterWindowsById->Put(mWindowID, this);
-    }
   }
 
   // We could have failed the first time through trying
@@ -952,17 +940,35 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     PR_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
            ("DOMWINDOW %p created outer=%p", this, aOuterWindow));
 #endif
+
+  // TODO: could be moved to a ::Init() method, see bug 667183.
+  if (!sWindowsById) {
+    sWindowsById = new WindowByIdTable();
+    if (!sWindowsById->Init()) {
+      delete sWindowsById;
+      sWindowsById = nsnull;
+      NS_ERROR("sWindowsById initialization failed!");
+    }
+  }
+
+  if (sWindowsById) {
+    NS_ASSERTION(!sWindowsById->Get(mWindowID),
+                 "This window shouldn't be in the hash table yet!");
+    sWindowsById->Put(mWindowID, this);
+  }
 }
 
 nsGlobalWindow::~nsGlobalWindow()
 {
-  if (sOuterWindowsById) {
-    sOuterWindowsById->Remove(mWindowID);
+  // We have to check if sWindowsById isn't null because ::Shutdown might have
+  // been called.
+  if (sWindowsById) {
+    NS_ASSERTION(sWindowsById->Get(mWindowID),
+                 "This window should be in the hash table");
+    sWindowsById->Remove(mWindowID);
   }
   if (!--gRefCnt) {
     NS_IF_RELEASE(gEntropyCollector);
-    delete sOuterWindowsById;
-    sOuterWindowsById = nsnull;
   }
 #ifdef DEBUG
   nsCAutoString url;
@@ -1038,6 +1044,9 @@ nsGlobalWindow::ShutDown()
     fclose(gDumpFile);
   }
   gDumpFile = nsnull;
+
+  delete sWindowsById;
+  sWindowsById = nsnull;
 }
 
 // static
