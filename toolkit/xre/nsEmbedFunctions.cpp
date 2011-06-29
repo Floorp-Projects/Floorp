@@ -706,16 +706,18 @@ XRE_ShutdownChildProcess()
 }
 
 namespace {
-TestShellParent* gTestShellParent = nsnull;
 TestShellParent* GetOrCreateTestShellParent()
 {
-    if (!gTestShellParent) {
-        ContentParent* parent = ContentParent::GetSingleton();
-        NS_ENSURE_TRUE(parent, nsnull);
-        gTestShellParent = parent->CreateTestShell();
-        NS_ENSURE_TRUE(gTestShellParent, nsnull);
+    ContentParent* parent = ContentParent::GetSingleton();
+    if (!parent) {
+      return nsnull;
     }
-    return gTestShellParent;
+    TestShellParent* testShell = parent->GetTestShellSingleton();
+    if (testShell) {
+      return testShell;
+    }
+    testShell = parent->CreateTestShell();
+    return testShell;
 }
 }
 
@@ -754,9 +756,11 @@ XRE_GetChildGlobalObject(JSContext* aCx, JSObject** aGlobalP)
 bool
 XRE_ShutdownTestShell()
 {
-  if (!gTestShellParent)
+  ContentParent* cp = ContentParent::GetSingleton(PR_FALSE);
+  TestShellParent* tsp = cp ? cp->GetTestShellSingleton() : nsnull;
+  if (!tsp)
     return true;
-  return ContentParent::GetSingleton()->DestroyTestShell(gTestShellParent);
+  return cp->DestroyTestShell(tsp);
 }
 
 #ifdef MOZ_X11
