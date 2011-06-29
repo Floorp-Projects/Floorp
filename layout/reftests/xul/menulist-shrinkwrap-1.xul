@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="left">
+  <menulist style="color: transparent">
+    <menupopup>
+      <menuitem value="1" label="long item" />
+      <menuitem value="2" label="short" />
+    </menupopup>
+  </menulist>
+</window>
