@@ -129,11 +129,6 @@ function run_test() {
   Services.prefs.setCharPref("extensions.lastAppVersion", "1");
 
   startupManager();
-  check_startup_changes("installed", []);
-  check_startup_changes("updated", []);
-  check_startup_changes("uninstalled", []);
-  check_startup_changes("disabled", []);
-  check_startup_changes("enabled", []);
 
   do_check_false(oldCache.exists());
 
