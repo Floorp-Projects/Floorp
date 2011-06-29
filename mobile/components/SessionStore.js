@@ -74,7 +74,7 @@ SessionStore.prototype = {
   _lastSaveTime: 0,
   _lastSessionTime: 0,
   _interval: 10000,
-  _maxTabsUndo: 5,
+  _maxTabsUndo: 1,
   _shouldRestore: false,
 
   init: function ss_init() {
