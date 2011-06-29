@@ -2074,7 +2074,7 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
 nsresult
 nsXULPopupManager::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_UNEXPECTED);
 
   nsAutoString eventType;
@@ -2134,16 +2134,16 @@ nsXULPopupManager::KeyDown(nsIDOMKeyEvent* aKeyEvent)
     if (theChar == (PRUint32)menuAccessKey) {
       PRBool ctrl = PR_FALSE;
       if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_CONTROL)
-        keyEvent->GetCtrlKey(&ctrl);
+        aKeyEvent->GetCtrlKey(&ctrl);
       PRBool alt=PR_FALSE;
       if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_ALT)
-        keyEvent->GetAltKey(&alt);
+        aKeyEvent->GetAltKey(&alt);
       PRBool shift=PR_FALSE;
       if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_SHIFT)
-        keyEvent->GetShiftKey(&shift);
+        aKeyEvent->GetShiftKey(&shift);
       PRBool meta=PR_FALSE;
       if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_META)
-        keyEvent->GetMetaKey(&meta);
+        aKeyEvent->GetMetaKey(&meta);
       if (!(ctrl || alt || shift || meta)) {
         // The access key just went down and no other
         // modifiers are already down.
