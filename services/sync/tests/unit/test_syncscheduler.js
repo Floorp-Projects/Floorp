@@ -1,45 +1,49 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/policies.js");
-Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 
-// Tracking info/collections.
-let collectionsHelper = track_collections_helper();
-let upd = collectionsHelper.with_updated_collection;
+Svc.DefaultPrefs.set("registerEngines", "");
+Cu.import("resource://services-sync/service.js");
 
 function sync_httpd_setup() {
-  let handlers = {};  
+  let global = new ServerWBO("global", {
+    syncID: Service.syncID,
+    storageVersion: STORAGE_VERSION,
+    engines: {clients: {version: Clients.version,
+                        syncID: Clients.syncID}}
+  });
+  let clientsColl = new ServerCollection({}, true);
 
-  handlers["/1.1/johndoe/storage/meta/global"] = 
-    new ServerWBO("global", {}).handler();
-  handlers["/1.1/johndoe/storage/steam"] = 
-    new ServerWBO("steam", {}).handler();
+  // Tracking info/collections.
+  let collectionsHelper = track_collections_helper();
+  let upd = collectionsHelper.with_updated_collection;
 
-  handlers["/1.1/johndoe/info/collections"] = collectionsHelper.handler;
-  delete collectionsHelper.collections.crypto;
-  delete collectionsHelper.collections.meta;
-  
-  let cr = new ServerWBO("keys");
-  handlers["/1.1/johndoe/storage/crypto/keys"] =
-    upd("crypto", cr.handler());
-  
-  let cl = new ServerCollection();
-  handlers["/1.1/johndoe/storage/clients"] =
-    upd("clients", cl.handler());
-  
-  return httpd_setup(handlers);
+  return httpd_setup({
+    "/1.1/johndoe/storage/meta/global": upd("meta", global.handler()),
+    "/1.1/johndoe/info/collections": collectionsHelper.handler,
+    "/1.1/johndoe/storage/crypto/keys":
+      upd("crypto", (new ServerWBO("keys")).handler()),
+    "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler())
+  });
 }
 
 function setUp() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
-  Service.passphrase = "sekrit";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
   Service.clusterURL = "http://localhost:8080/";
-  new FakeCryptoService();
+
+  generateNewKeys();
+  let serverKeys = CollectionKeys.asWBO("crypto", "keys");
+  serverKeys.encrypt(Service.syncKeyBundle);
+  return serverKeys.upload(Service.cryptoKeysURL);
 }
 
 function run_test() {
@@ -80,7 +84,7 @@ add_test(function test_updateClientMode() {
   do_check_true(SyncScheduler.idle);
 
   // Trigger a change in interval & threshold by adding a client.
-  Clients._store._remoteClients.foo = "bar";
+  Clients._store.create({id: "foo", cleartext: "bar"});
   SyncScheduler.updateClientMode();
 
   do_check_eq(SyncScheduler.syncThreshold, MULTI_DEVICE_THRESHOLD);
@@ -89,7 +93,7 @@ add_test(function test_updateClientMode() {
   do_check_true(SyncScheduler.idle);
 
   // Resets the number of clients to 0. 
-  Clients._store.wipe();
+  Clients.resetClient();
   SyncScheduler.updateClientMode();
 
   // Goes back to single user if # clients is 1.
@@ -98,22 +102,28 @@ add_test(function test_updateClientMode() {
   do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_true(SyncScheduler.idle);
+
+  Svc.Prefs.resetBranch("");
+  Clients.resetClient();
   run_next_test();
 });
 
 add_test(function test_masterpassword_locked_retry_interval() {
   _("Test Status.login = MASTER_PASSWORD_LOCKED results in reschedule at MASTER_PASSWORD interval");
   let loginFailed = false;
-  Svc.Obs.add("weave:service:login:error", function() {
+  Svc.Obs.add("weave:service:login:error", function onLoginError() {
+    Svc.Obs.remove("weave:service:login:error", onLoginError); 
     loginFailed = true;
   });
 
   let rescheduleInterval = false;
+  SyncScheduler._scheduleAtInterval = SyncScheduler.scheduleAtInterval;
   SyncScheduler.scheduleAtInterval = function (interval) {
     rescheduleInterval = true;
     do_check_eq(interval, MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
   };
 
+  Service._verifyLogin = Service.verifyLogin;
   Service.verifyLogin = function () {
     Status.login = MASTER_PASSWORD_LOCKED;
     return false;
@@ -127,29 +137,35 @@ add_test(function test_masterpassword_locked_retry_interval() {
   do_check_true(loginFailed);
   do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
   do_check_true(rescheduleInterval);
+
+  Service.verifyLogin = Service._verifyLogin;
+  SyncScheduler.scheduleAtInterval = SyncScheduler._scheduleAtInterval;
+
+  Svc.Prefs.resetBranch("");
+  Clients.resetClient();
   server.stop(run_next_test);
 });
 
 add_test(function test_calculateBackoff() {
   do_check_eq(Status.backoffInterval, 0);
 
-  try {
-    // Test no interval larger than the maximum backoff is used if
-    // Status.backoffInterval is smaller.
-    Status.backoffInterval = 5;
-    let backoffInterval = Utils.calculateBackoff(50, MAXIMUM_BACKOFF_INTERVAL);
+  // Test no interval larger than the maximum backoff is used if
+  // Status.backoffInterval is smaller.
+  Status.backoffInterval = 5;
+  let backoffInterval = Utils.calculateBackoff(50, MAXIMUM_BACKOFF_INTERVAL);
 
-    do_check_eq(backoffInterval, MAXIMUM_BACKOFF_INTERVAL);
+  do_check_eq(backoffInterval, MAXIMUM_BACKOFF_INTERVAL);
 
-    // Test Status.backoffInterval is used if it is 
-    // larger than MAXIMUM_BACKOFF_INTERVAL.
-    Status.backoffInterval = MAXIMUM_BACKOFF_INTERVAL + 10;
-    backoffInterval = Utils.calculateBackoff(50, MAXIMUM_BACKOFF_INTERVAL);
+  // Test Status.backoffInterval is used if it is 
+  // larger than MAXIMUM_BACKOFF_INTERVAL.
+  Status.backoffInterval = MAXIMUM_BACKOFF_INTERVAL + 10;
+  backoffInterval = Utils.calculateBackoff(50, MAXIMUM_BACKOFF_INTERVAL);
   
-    do_check_eq(backoffInterval, MAXIMUM_BACKOFF_INTERVAL + 10);
-  } finally {
-    Status.backoffInterval = 0;
-  }
+  do_check_eq(backoffInterval, MAXIMUM_BACKOFF_INTERVAL + 10);
+
+  Status.backoffInterval = 0;
+  Svc.Prefs.resetBranch("");
+  Clients.resetClient();
   run_next_test();
 });
 
@@ -244,5 +260,57 @@ add_test(function test_handleSyncError() {
   do_check_eq(SyncScheduler._syncErrors, 4);
   do_check_true(Status.enforceBackoff);
 
+  Svc.Prefs.resetBranch("");
+  Clients.resetClient();
   run_next_test();
+});
+
+add_test(function test_client_sync_finish_updateClientMode() {
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Confirm defaults.
+  do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
+  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_false(SyncScheduler.numClients > 1);
+  do_check_true(SyncScheduler.idle);
+
+  // Trigger a change in interval & threshold by adding a client.
+  Clients._store.create({id: "foo", cleartext: "bar"});
+  do_check_eq(SyncScheduler.numClients, 1);
+  SyncScheduler.updateClientMode();
+  Service.sync();
+
+  do_check_eq(SyncScheduler.syncThreshold, MULTI_DEVICE_THRESHOLD);
+  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IDLE_SYNC);
+  do_check_true(SyncScheduler.numClients > 1);
+  do_check_true(SyncScheduler.idle);
+
+  // Resets the number of clients to 0. 
+  Clients.resetClient();
+  Service.sync();
+
+  // Goes back to single user if # clients is 1.
+  do_check_eq(SyncScheduler.numClients, 1);
+  do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
+  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_false(SyncScheduler.numClients > 1);
+  do_check_true(SyncScheduler.idle);
+
+  Svc.Prefs.resetBranch("");
+  Clients.resetClient();
+  server.stop(run_next_test);
+});
+
+add_test(function test_sync_at_startup() {
+  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
+    Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
+    Service.resetClient();
+    server.stop(run_next_test);
+  });
+
+  let server = sync_httpd_setup();
+  setUp();
+
+  Service.delayedAutoConnect(0);
 });
