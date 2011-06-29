@@ -87,4 +87,9 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   jsval getHistogramById(in ACString id);
+
+  /**
+   * Set this to false to disable gathering of telemetry statistics.
+   */
+  attribute boolean canRecord;
 };
