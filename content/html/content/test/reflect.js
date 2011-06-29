@@ -1,11 +1,14 @@
 /**
  * Checks that a given attribute is correctly reflected as a string.
  *
- * @param aElement  Element   node to test
- * @param aAttr     String    name of the attribute
+ * @param aElement      Element   node to test
+ * @param aAttr         String    name of the attribute
+ * @param aOtherValues  Array     other values to test in addition of the default ones [optional]
  */
-function reflectString(aElement, aAttr)
+function reflectString(aElement, aAttr, aOtherValues)
 {
+  var otherValues = aOtherValues !== undefined ? aOtherValues : [];
+
   // Tests when the attribute isn't set.
   is(aElement.getAttribute(aAttr), null,
      "When not set, the content attribute should be undefined.");
@@ -56,6 +59,8 @@ function reflectString(aElement, aAttr)
         toString: function() { return "bar" } },
       "bar" ]
   ];
+
+  otherValues.forEach(function(v) { stringsToTest.push([v, v]) });
 
   stringsToTest.forEach(function([v, r]) {
     aElement.setAttribute(aAttr, v);
