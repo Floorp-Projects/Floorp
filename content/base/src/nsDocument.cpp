@@ -8139,7 +8139,7 @@ static const char* kWarnings[] = {
 void
 nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation)
 {
-  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(kWarnings) < 32);
+  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(kWarnings) <= 32);
   if (mWarnedAbout & (1 << aOperation)) {
     return;
   }

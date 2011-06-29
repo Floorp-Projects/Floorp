@@ -53,6 +53,10 @@
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
 #include "jsobj.h"
+#include "nsJSUtils.h"
+#include "nsPIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocument.h"
 
 ///////////////////////
 // nsSecurityNameSet //
@@ -156,6 +160,23 @@ netscape_security_enablePrivilege(JSContext *cx, uintN argc, jsval *vp)
     JSAutoByteString cap;
     if (!getBytesArgument(cx, obj, 0, argc, JS_ARGV(cx, vp), &cap))
         return JS_FALSE;
+
+    // Can't use nsContentUtils::GetDocumentFromCaller because that
+    // depends on various XPConnect stuff that's not set up here.
+    {
+        JSAutoEnterCompartment ac;
+        if (ac.enter(cx, obj)) {
+            nsCOMPtr<nsPIDOMWindow> win =
+                do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
+            if (win) {
+                nsCOMPtr<nsIDocument> doc =
+                    do_QueryInterface(win->GetExtantDocument());
+                if (doc) {
+                    doc->WarnOnceAbout(nsIDocument::eEnablePrivilege);
+                }
+            }
+        }
+    }
 
     nsresult rv;
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
