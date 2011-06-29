@@ -55,7 +55,6 @@
 #include "nsNullPrincipal.h"
 #include "nsJSUtils.h"
 #include "mozJSComponentLoader.h"
-#include "nsContentUtils.h"
 
 /***************************************************************************/
 // stuff used by all
@@ -3774,44 +3773,6 @@ nsXPCComponents_Utils::ForceGC()
     JS_GC(cx);
 
     return NS_OK;
-}
-
-class PreciseGCRunnable : public nsRunnable
-{
-  public:
-    PreciseGCRunnable(ScheduledGCCallback* aCallback)
-    : mCallback(aCallback) {}
-
-    NS_IMETHOD Run()
-    {
-        nsCOMPtr<nsIJSRuntimeService> runtimeSvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-        NS_ENSURE_STATE(runtimeSvc);
-
-        JSRuntime* rt = nsnull;
-        runtimeSvc->GetRuntime(&rt);
-        NS_ENSURE_STATE(rt);
-
-        JSContext *cx;
-        JSContext *iter = nsnull;
-        while ((cx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
-            if (JS_IsRunning(cx)) {
-                return NS_DispatchToMainThread(this);
-            }
-        }
-        mCallback->Callback();
-        return NS_OK;        
-    }
-
-  private:
-    nsRefPtr<ScheduledGCCallback> mCallback;
-};
-
-/* void schedulePreciseGC(in ScheduledGCCallback callback); */
-NS_IMETHODIMP
-nsXPCComponents_Utils::SchedulePreciseGC(ScheduledGCCallback* aCallback)
-{
-    nsRefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCallback);
-    return NS_DispatchToMainThread(event);
 }
 
 /* void getGlobalForObject(); */
