@@ -108,7 +108,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLLIElement)
 NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type)
 NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value)
 
-
+// values that are handled case-insensitively
 static const nsAttrValue::EnumTable kUnorderedListItemTypeTable[] = {
   { "disc", NS_STYLE_LIST_STYLE_DISC },
   { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
@@ -117,11 +117,12 @@ static const nsAttrValue::EnumTable kUnorderedListItemTypeTable[] = {
   { 0 }
 };
 
+// values that are handled case-sensitively
 static const nsAttrValue::EnumTable kOrderedListItemTypeTable[] = {
-  { "A", NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA },
-  { "a", NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA },
-  { "I", NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN },
-  { "i", NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN },
+  { "A", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
+  { "a", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
+  { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
+  { "i", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
   { "1", NS_STYLE_LIST_STYLE_DECIMAL },
   { 0 }
 };
