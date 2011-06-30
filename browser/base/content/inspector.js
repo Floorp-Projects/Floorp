@@ -732,15 +732,18 @@ var InspectorUI = {
     }
 
     if (node instanceof GetSVGDocument) {
-      // then the node is a frame
-      if (index == 0) {
-        if (!this.embeddedBrowserParents)
-          this.embeddedBrowserParents = {};
-        let skipChild = node.getSVGDocument().documentElement;
-        this.embeddedBrowserParents[skipChild] = node;
-        return skipChild;  // the node's SVGElement
+      let svgDocument = node.getSVGDocument();
+      if (svgDocument) {
+        // then the node is a frame
+        if (index == 0) {
+          if (!this.embeddedBrowserParents)
+            this.embeddedBrowserParents = {};
+          let skipChild = svgDocument.documentElement;
+          this.embeddedBrowserParents[skipChild] = node;
+          return skipChild;  // the node's SVGElement
+        }
+        return null;
       }
-      return null;
     }
 
     let child = null;
