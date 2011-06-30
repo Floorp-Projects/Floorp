@@ -119,10 +119,6 @@ treechildren::-moz-tree-image(title, separator) {
   margin: 0;
 }
 
-treechildren::-moz-tree-row(session-start) {
-  border-top:1px dotted ThreeDShadow;
-}
-
 treechildren::-moz-tree-image(container, OrganizerQuery_AllBookmarks) {
   list-style-image: url("chrome://browser/skin/places/allBookmarks.png");
 }
@@ -178,12 +174,6 @@ treechildren::-moz-tree-image(title, query, folder, open) {
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-/* FIXME this should make the date field invisible, but only does it for
-         unselected items and maybe won't work for different color schemes. */
-treechildren::-moz-tree-cell-text(date, session-continue) {
-  color:white;
-}
-
 treechildren::-moz-tree-cell-text(title, separator) {
   color: ThreeDShadow;
   margin: 0px 5px;
@@ -196,4 +186,12 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 treechildren::-moz-tree-twisty(title, separator) {
   -moz-appearance: none;
   padding: 0px;
+}
+
+treechildren::-moz-tree-image(cutting) {
+  opacity: 0.5;
+}
+
+treechildren::-moz-tree-cell-text(cutting) {
+  opacity: 0.7;
 }
