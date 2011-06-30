@@ -519,8 +519,8 @@ nsMemoryReporter::nsMemoryReporter(nsCString& process,
 , mPath(path)
 , mKind(kind)
 , mUnits(units)
-, mDesc(desc)
 , mAmount(amount)
+, mDesc(desc)
 {
 }
 
