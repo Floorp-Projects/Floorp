@@ -105,10 +105,16 @@ ValueIsLength(JSContext *cx, const Value &v, jsuint *len)
  * access.  It can be created explicitly and passed to a TypedArray, or
  * can be created implicitly by constructing a TypedArray with a size.
  */
+
+/**
+ * Walks up the prototype chain to find the actual ArrayBuffer data.
+ * This MAY return NULL. Callers should always use js_IsArrayBuffer()
+ * first.
+ */
 JSObject *
 ArrayBuffer::getArrayBuffer(JSObject *obj)
 {
-    while (!js_IsArrayBuffer(obj))
+    while (obj && !js_IsArrayBuffer(obj))
         obj = obj->getProto();
     return obj;
 }
@@ -117,6 +123,10 @@ JSBool
 ArrayBuffer::prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     JSObject *arrayBuffer = getArrayBuffer(obj);
+    if (!arrayBuffer) {
+        vp->setInt32(0);
+        return true;
+    }
     vp->setInt32(jsint(ArrayBuffer::getByteLength(arrayBuffer)));
     return true;
 }
