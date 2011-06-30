@@ -132,6 +132,18 @@ static PRInt64 GetResident()
 #include <windows.h>
 #include <psapi.h>
 
+static PRInt64 GetVsize()
+{
+  MEMORYSTATUSEX s;
+  s.dwLength = sizeof(s);
+
+  bool success = GlobalMemoryStatusEx(&s);
+  if (!success)
+    return -1;
+
+  return s.ullTotalPhys - s.ullAvailPhys;
+}
+
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 static PRInt64 GetPrivate()
 {
@@ -175,7 +187,7 @@ static PRInt64 GetResident()
 
 #endif
 
-#if defined(XP_LINUX) || defined(XP_MACOSX)
+#if defined(XP_LINUX) || defined(XP_MACOSX) || defined(XP_WIN)
 NS_MEMORY_REPORTER_IMPLEMENT(Vsize,
     "vsize",
     KIND_OTHER,
@@ -189,7 +201,9 @@ NS_MEMORY_REPORTER_IMPLEMENT(Vsize,
     "This is the vsize figure as reported by 'top' or 'ps'; on Mac the amount "
     "of memory shared with other processes is very high and so this figure is "
     "of limited use.")
+#endif
 
+#if defined(XP_LINUX) || defined(XP_MACOSX)
 NS_MEMORY_REPORTER_IMPLEMENT(SoftPageFaults,
     "soft-page-faults",
     KIND_OTHER,
@@ -400,11 +414,16 @@ nsMemoryReporterManager::Init()
     REGISTER(HeapUnused);
     REGISTER(Resident);
 
-#if defined(XP_LINUX) || defined(XP_MACOSX)
+#if defined(XP_LINUX) || defined(XP_MACOSX) || defined(XP_WIN)
     REGISTER(Vsize);
+#endif
+
+#if defined(XP_LINUX) || defined(XP_MACOSX)
     REGISTER(SoftPageFaults);
     REGISTER(HardPageFaults);
-#elif defined(XP_WIN) && MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+#endif
+
+#if defined(XP_WIN) && MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
     REGISTER(Private);
 #endif
 
