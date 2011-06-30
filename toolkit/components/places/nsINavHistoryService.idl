@@ -809,7 +809,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(06602bb6-0774-4576-8855-ea930bb85bbe)]
+[scriptable, uuid(67cb2f78-555e-48c2-8df5-9af99a9ab3a4)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -875,6 +875,15 @@ interface nsINavHistoryObserver : nsISupports
                       in AString aPageTitle);
 
   /**
+   * Removed by the user.
+   */
+  const unsigned short REASON_DELETED = 0;
+  /**
+   * Removed by automatic expiration.
+   */
+  const unsigned short REASON_EXPIRED = 1;
+
+  /**
    * This page and all of its visits are about to be deleted.  Note: the page
    * may not necessarily have actually existed for this function to be called.
    *
@@ -882,9 +891,12 @@ interface nsINavHistoryObserver : nsISupports
    *        The URI being deleted.
    * @param aGUID
    *        The unique ID associated with the page.
+   * @param aReason
+   *        Indicates the reason for the removal.  See REASON_* constants.
    */
   void onBeforeDeleteURI(in nsIURI aURI,
-                         in ACString aGUID);
+                         in ACString aGUID,
+                         in unsigned short aReason);
 
   /**
    * This page and all of its visits are being deleted. Note: the page may not
@@ -900,9 +912,12 @@ interface nsINavHistoryObserver : nsISupports
    *        The URI that was deleted.
    * @param aGUID
    *        The unique ID associated with the page.
+   * @param aReason
+   *        Indicates the reason for the removal.  see REASON_* constants.
    */
   void onDeleteURI(in nsIURI aURI,
-                   in ACString aGUID);
+                   in ACString aGUID,
+                   in unsigned short aReason);
 
   /**
    * Notification that all of history is being deleted.
@@ -940,10 +955,13 @@ interface nsINavHistoryObserver : nsISupports
    *        is expired, you will only get an onDeleteURI notification.  If a
    *        page entry is removed, then you can be sure that we don't have
    *        anymore visits for it.
+   * @param aReason
+   *        Indicates the reason for the removal.  see REASON_* constants.
    */
   void onDeleteVisits(in nsIURI aURI,
                       in PRTime aVisitTime,
-                      in ACString aGUID);
+                      in ACString aGUID,
+                      in unsigned short aReason);
 };
 
 
