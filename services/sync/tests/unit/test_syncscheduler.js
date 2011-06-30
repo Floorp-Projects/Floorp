@@ -63,23 +63,43 @@ add_test(function test_prefAttributes() {
   const SCORE = 2718;
   const TIMESTAMP1 = 1275493471649;
 
-  try {
-    _("'globalScore' corresponds to preference, defaults to zero.");
-    do_check_eq(Svc.Prefs.get('globalScore'), undefined);
-    do_check_eq(SyncScheduler.globalScore, 0);
-    SyncScheduler.globalScore = SCORE;
-    do_check_eq(SyncScheduler.globalScore, SCORE);
-    do_check_eq(Svc.Prefs.get('globalScore'), SCORE);
-  } finally {
-    Svc.Prefs.resetBranch("");
-    run_next_test();
-  }
+  _("'globalScore' corresponds to preference, defaults to zero.");
+  do_check_eq(Svc.Prefs.get('globalScore'), undefined);
+  do_check_eq(SyncScheduler.globalScore, 0);
+  SyncScheduler.globalScore = SCORE;
+  do_check_eq(SyncScheduler.globalScore, SCORE);
+  do_check_eq(Svc.Prefs.get('globalScore'), SCORE);
+
+  _("Intervals correspond to default preferences.");
+  do_check_eq(SyncScheduler.singleDeviceInterval,
+              Svc.Prefs.get("scheduler.singleDeviceInterval") * 1000);
+  do_check_eq(SyncScheduler.idleInterval,
+              Svc.Prefs.get("scheduler.idleInterval") * 1000);
+  do_check_eq(SyncScheduler.activeInterval,
+              Svc.Prefs.get("scheduler.activeInterval") * 1000);
+  do_check_eq(SyncScheduler.immediateInterval,
+              Svc.Prefs.get("scheduler.immediateInterval") * 1000);
+
+  _("Custom values for prefs will take effect after a restart.");
+  Svc.Prefs.set("scheduler.singleDeviceInterval", 42);
+  Svc.Prefs.set("scheduler.idleInterval", 23);
+  Svc.Prefs.set("scheduler.activeInterval", 18);
+  Svc.Prefs.set("scheduler.immediateInterval", 31415);
+  SyncScheduler.setDefaults();
+  do_check_eq(SyncScheduler.idleInterval, 23000);
+  do_check_eq(SyncScheduler.singleDeviceInterval, 42000);
+  do_check_eq(SyncScheduler.activeInterval, 18000);
+  do_check_eq(SyncScheduler.immediateInterval, 31415000);
+
+  Svc.Prefs.resetBranch("");
+  SyncScheduler.setDefaults();
+  run_next_test();
 });
 
 add_test(function test_updateClientMode() {
   _("Test updateClientMode adjusts scheduling attributes based on # of clients appropriately");
   do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.idle);
 
@@ -88,7 +108,7 @@ add_test(function test_updateClientMode() {
   SyncScheduler.updateClientMode();
 
   do_check_eq(SyncScheduler.syncThreshold, MULTI_DEVICE_THRESHOLD);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_ACTIVE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.activeInterval);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.idle);
 
@@ -99,7 +119,7 @@ add_test(function test_updateClientMode() {
   // Goes back to single user if # clients is 1.
   do_check_eq(SyncScheduler.numClients, 1);
   do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.idle);
 
@@ -184,7 +204,7 @@ add_test(function test_scheduleNextSync() {
 
   _("Test setting sync interval when nextSync == 0");
   initial_nextSync = SyncScheduler.nextSync = 0;
-  let expectedInterval = SINGLE_USER_SYNC;
+  let expectedInterval = SyncScheduler.singleDeviceInterval;
   SyncScheduler.scheduleNextSync();
 
   // Test nextSync value was changed.
@@ -232,23 +252,23 @@ add_test(function test_handleSyncError() {
   _("Ensure expected initial environment.");
   do_check_eq(SyncScheduler._syncErrors, 0);
   do_check_false(Status.enforceBackoff);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   do_check_eq(Status.backoffInterval, 0);
 
   // Trigger sync with an error several times & observe
   // functionality of handleSyncError()
   _("Test first error calls scheduleNextSync on default interval");
   Service.sync();
-  do_check_true(SyncScheduler.nextSync <= Date.now() + SINGLE_USER_SYNC);
-  do_check_eq(SyncScheduler.syncTimer.delay, SINGLE_USER_SYNC);
+  do_check_true(SyncScheduler.nextSync <= Date.now() + SyncScheduler.singleDeviceInterval);
+  do_check_eq(SyncScheduler.syncTimer.delay, SyncScheduler.singleDeviceInterval);
   do_check_eq(SyncScheduler._syncErrors, 1);
   do_check_false(Status.enforceBackoff);
   SyncScheduler.syncTimer.clear();
 
   _("Test second error still calls scheduleNextSync on default interval");
   Service.sync();
-  do_check_true(SyncScheduler.nextSync <= Date.now() + SINGLE_USER_SYNC);
-  do_check_eq(SyncScheduler.syncTimer.delay, SINGLE_USER_SYNC);
+  do_check_true(SyncScheduler.nextSync <= Date.now() + SyncScheduler.singleDeviceInterval);
+  do_check_eq(SyncScheduler.syncTimer.delay, SyncScheduler.singleDeviceInterval);
   do_check_eq(SyncScheduler._syncErrors, 2);
   do_check_false(Status.enforceBackoff);
   SyncScheduler.syncTimer.clear();
@@ -288,7 +308,7 @@ add_test(function test_client_sync_finish_updateClientMode() {
 
   // Confirm defaults.
   do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   do_check_false(SyncScheduler.idle);
 
   // Trigger a change in interval & threshold by adding a client.
@@ -298,7 +318,7 @@ add_test(function test_client_sync_finish_updateClientMode() {
   Service.sync();
 
   do_check_eq(SyncScheduler.syncThreshold, MULTI_DEVICE_THRESHOLD);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_ACTIVE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.activeInterval);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.idle);
 
@@ -309,7 +329,7 @@ add_test(function test_client_sync_finish_updateClientMode() {
   // Goes back to single user if # clients is 1.
   do_check_eq(SyncScheduler.numClients, 1);
   do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.idle);
 
@@ -341,17 +361,17 @@ add_test(function test_idle_adjustSyncInterval() {
   do_check_eq(SyncScheduler.idle, false);
 
   // Single device: nothing changes.
-  SyncScheduler.observe(null, "idle", IDLE_TIME);
+  SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
   do_check_eq(SyncScheduler.idle, true);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
 
   // Multiple devices: switch to idle interval.
   SyncScheduler.idle = false;
   Clients._store.create({id: "foo", cleartext: "bar"});
   SyncScheduler.updateClientMode();
-  SyncScheduler.observe(null, "idle", IDLE_TIME);
+  SyncScheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
   do_check_eq(SyncScheduler.idle, true);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IDLE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.idleInterval);
 
   SyncScheduler.setDefaults();
   run_next_test();

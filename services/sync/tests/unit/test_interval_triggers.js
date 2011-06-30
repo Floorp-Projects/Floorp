@@ -66,7 +66,7 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   // Confirm defaults
   do_check_false(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   do_check_false(SyncScheduler.hasIncomingItems);
 
   _("Test as long as numClients <= 1 our sync interval is SINGLE_USER."); 
@@ -77,7 +77,7 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   do_check_true(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   
   // idle == false && numClients <= 1 && hasIncomingItems == false
   SyncScheduler.idle = false;
@@ -86,7 +86,7 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   do_check_false(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
 
   // idle == false && numClients <= 1 && hasIncomingItems == true
   SyncScheduler.hasIncomingItems = true;
@@ -95,7 +95,7 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   do_check_false(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_true(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
 
   // idle == true && numClients <= 1 && hasIncomingItems == true
   SyncScheduler.idle = true;
@@ -104,9 +104,9 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   do_check_true(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_true(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
 
-  _("Test as long as idle && numClients > 1 our sync interval is MULTI_DEVICE_IDLE.");
+  _("Test as long as idle && numClients > 1 our sync interval is idleInterval.");
   // idle == true && numClients > 1 && hasIncomingItems == true
   Clients._store.create({id: "foo", cleartext: "bar"});
   Service.sync();
@@ -114,7 +114,7 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   do_check_true(SyncScheduler.idle);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_true(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IDLE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.idleInterval);
 
   // idle == true && numClients > 1 && hasIncomingItems == false
   SyncScheduler.hasIncomingItems = false;
@@ -123,9 +123,9 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   do_check_true(SyncScheduler.idle);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IDLE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.idleInterval);
 
-  _("Test non-idle, numClients > 1, no incoming items => MULTI_DEVICE_ACTIVE.");
+  _("Test non-idle, numClients > 1, no incoming items => activeInterval.");
   // idle == false && numClients > 1 && hasIncomingItems == false
   SyncScheduler.idle = false;
   Service.sync();
@@ -133,9 +133,9 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   do_check_false(SyncScheduler.idle);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_ACTIVE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.activeInterval);
   
-  _("Test non-idle, numClients > 1, incoming items => MULTI_DEVICE_IMMEDIATE.");
+  _("Test non-idle, numClients > 1, incoming items => immediateInterval.");
   // idle == false && numClients > 1 && hasIncomingItems == true
   SyncScheduler.hasIncomingItems = true;
   Service.sync();
@@ -143,7 +143,7 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   do_check_false(SyncScheduler.idle);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems); //gets reset to false
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IMMEDIATE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.immediateInterval);
 
   Records.clearCache();
   Svc.Prefs.resetBranch("");
@@ -176,7 +176,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   // Confirm defaults
   do_check_false(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   do_check_false(SyncScheduler.hasIncomingItems);
 
   _("Test as long as numClients <= 1 our sync interval is SINGLE_USER."); 
@@ -187,7 +187,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   do_check_true(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   
   // idle == false && numClients <= 1 && hasIncomingItems == false
   SyncScheduler.idle = false;
@@ -196,7 +196,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   do_check_false(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
 
   // idle == false && numClients <= 1 && hasIncomingItems == true
   SyncScheduler.hasIncomingItems = true;
@@ -205,7 +205,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   do_check_false(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_true(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
 
   // idle == true && numClients <= 1 && hasIncomingItems == true
   SyncScheduler.idle = true;
@@ -214,9 +214,9 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   do_check_true(SyncScheduler.idle);
   do_check_false(SyncScheduler.numClients > 1);
   do_check_true(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
   
-  _("Test as long as idle && numClients > 1 our sync interval is MULTI_DEVICE_IDLE.");
+  _("Test as long as idle && numClients > 1 our sync interval is idleInterval.");
   // idle == true && numClients > 1 && hasIncomingItems == true
   
   // Doesn't get called if there is a sync error since clients
@@ -229,7 +229,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   do_check_true(SyncScheduler.idle);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_true(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IDLE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.idleInterval);
 
   // idle == true && numClients > 1 && hasIncomingItems == false
   SyncScheduler.hasIncomingItems = false;
@@ -238,9 +238,9 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   do_check_true(SyncScheduler.idle);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IDLE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.idleInterval);
 
-  _("Test non-idle, numClients > 1, no incoming items => MULTI_DEVICE_ACTIVE.");
+  _("Test non-idle, numClients > 1, no incoming items => activeInterval.");
   // idle == false && numClients > 1 && hasIncomingItems == false
   SyncScheduler.idle = false;
   Service.sync();
@@ -248,9 +248,9 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   do_check_false(SyncScheduler.idle);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems);
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_ACTIVE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.activeInterval);
   
-  _("Test non-idle, numClients > 1, incoming items => MULTI_DEVICE_IMMEDIATE.");
+  _("Test non-idle, numClients > 1, incoming items => immediateInterval.");
   // idle == false && numClients > 1 && hasIncomingItems == true
   SyncScheduler.hasIncomingItems = true;
   Service.sync();
@@ -258,7 +258,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   do_check_false(SyncScheduler.idle);
   do_check_true(SyncScheduler.numClients > 1);
   do_check_false(SyncScheduler.hasIncomingItems); //gets reset to false
-  do_check_eq(SyncScheduler.syncInterval, MULTI_DEVICE_IMMEDIATE_SYNC);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.immediateInterval);
 
   Records.clearCache();
   Svc.Prefs.resetBranch("");
@@ -275,7 +275,7 @@ add_test(function test_back_triggers_sync() {
 
   // Single device: no sync triggered.
   SyncScheduler.idle = true;
-  SyncScheduler.observe(null, "back", IDLE_TIME);
+  SyncScheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
   do_check_false(SyncScheduler.idle);
 
   // Multiple devices: sync is triggered.
@@ -294,6 +294,6 @@ add_test(function test_back_triggers_sync() {
   });
 
   SyncScheduler.idle = true;
-  SyncScheduler.observe(null, "back", IDLE_TIME);
+  SyncScheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
   do_check_false(SyncScheduler.idle);
 });
