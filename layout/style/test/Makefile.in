@@ -127,6 +127,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug635286.html \
 		test_bug652486.html \
 		test_bug657143.html \
+		test_bug667520.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_computed_style.html \
@@ -138,6 +139,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_dont_use_document_colors.html \
 		test_font_face_parser.html \
 		test_garbage_at_end_of_declarations.html \
+		test_html_attribute_computed_values.html \
 		test_ident_escaping.html \
 		test_inherit_computation.html \
 		test_inherit_storage.html \

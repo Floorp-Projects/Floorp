@@ -60,6 +60,7 @@ const JSMSG_GENEXP_ARGUMENTS = error("(function(){(arguments for (x in []))})").
 const JSMSG_TOP_YIELD        = error("yield").message;
 const JSMSG_YIELD_PAREN      = error("(function(){yield, 1})").message;
 const JSMSG_GENERIC          = error("(for)").message;
+const JSMSG_GENEXP_PAREN     = error("print(1, x for (x in []))").message;
 
 const cases = [
   // yield expressions
@@ -93,7 +94,8 @@ const cases = [
   { expr: "(yield, 1 for (x in []))",        top: JSMSG_TOP_YIELD, fun: JSMSG_YIELD_PAREN,  gen: JSMSG_YIELD_PAREN,  desc: "simple yield in list in genexp" },
   { expr: "(yield 1, 2 for (x in []))",      top: JSMSG_TOP_YIELD, fun: JSMSG_YIELD_PAREN,  gen: JSMSG_YIELD_PAREN,  desc: "yield w/ arg in list in genexp" },
   { expr: "(1, yield for (x in []))",        top: JSMSG_TOP_YIELD, fun: JSMSG_GENERIC,      gen: JSMSG_GENERIC,      desc: "simple yield at end of list in genexp" },
-  { expr: "(1, yield 2 for (x in []))",      top: JSMSG_TOP_YIELD, fun: JSMSG_GENEXP_YIELD, gen: JSMSG_GENEXP_YIELD, desc: "yield w/ arg at end of list in genexp" },
+  { expr: "(1, yield 2 for (x in []))",      top: JSMSG_TOP_YIELD, fun: { simple: JSMSG_GENEXP_YIELD, call: JSMSG_GENEXP_PAREN },
+                                                                                            gen: JSMSG_GENEXP_YIELD, desc: "yield w/ arg at end of list in genexp" },
   { expr: "((yield) for (x in []))",         top: JSMSG_TOP_YIELD, fun: JSMSG_GENEXP_YIELD, gen: JSMSG_GENEXP_YIELD, desc: "simple yield, parenthesized in genexp" },
   { expr: "((yield 1) for (x in []))",       top: JSMSG_TOP_YIELD, fun: JSMSG_GENEXP_YIELD, gen: JSMSG_GENEXP_YIELD, desc: "yield w/ arg, parenthesized in genexp" },
   { expr: "(1, (yield) for (x in []))",      top: JSMSG_TOP_YIELD, fun: JSMSG_GENEXP_YIELD, gen: JSMSG_GENEXP_YIELD, desc: "simple yield, parenthesized in list in genexp" },
@@ -147,14 +149,17 @@ function expectError1(err, ctx, msg) {
   reportCompare(2,        err.lineNumber, 'exn token for: ' + msg);
 }
 
-function expectError(expr, call, wrapCtx, ctx, msg) {
-  expectError1(error(wrapCtx(expr)), ctx, msg);
+function expectError(expr, call, wrapCtx, expect, msg) {
+  let exps = (typeof expect === "string")
+           ? { simple: expect, call: expect }
+           : expect;
+  expectError1(error(wrapCtx(expr)), exps.simple, msg);
   if (call)
-    expectError1(error(wrapCtx(call)), ctx, 'call argument in ' + msg);
+    expectError1(error(wrapCtx(call)), exps.call, 'call argument in ' + msg);
 }
 
 function expectSuccess(err, msg) {
-  reportCompare(null,     err,            'parse: ' + msg);
+  reportCompare(null, err, 'parse: ' + msg);
 }
 
 function atTop(str) { return str }

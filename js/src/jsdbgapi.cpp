@@ -1963,7 +1963,6 @@ JS_PUBLIC_API(size_t)
 JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 {
     size_t nbytes, pbytes;
-    jsatomid i;
     jssrcnote *sn, *notes;
     JSObjectArray *objarray;
     JSPrincipals *principals;
@@ -1974,7 +1973,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 
     nbytes += script->length * sizeof script->code[0];
     nbytes += script->atomMap.length * sizeof script->atomMap.vector[0];
-    for (i = 0; i < script->atomMap.length; i++)
+    for (size_t i = 0; i < script->atomMap.length; i++)
         nbytes += GetAtomTotalSize(cx, script->atomMap.vector[i]);
 
     if (script->filename)
@@ -1987,7 +1986,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 
     if (JSScript::isValidOffset(script->objectsOffset)) {
         objarray = script->objects();
-        i = objarray->length;
+        size_t i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
         do {
             nbytes += JS_GetObjectTotalSize(cx, objarray->vector[--i]);
@@ -1996,7 +1995,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 
     if (JSScript::isValidOffset(script->regexpsOffset)) {
         objarray = script->regexps();
-        i = objarray->length;
+        size_t i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
         do {
             nbytes += JS_GetObjectTotalSize(cx, objarray->vector[--i]);

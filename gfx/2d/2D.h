@@ -107,20 +107,38 @@ struct DrawOptions {
  * mLineJoin     - Join style used for joining lines.
  * mLineCap      - Cap style used for capping lines.
  * mMiterLimit   - Miter limit in units of linewidth
+ * mDashPattern  - Series of on/off userspace lengths defining dash.
+ *                 Owned by the caller; must live at least as long as
+ *                 this StrokeOptions.
+ *                 mDashPattern != null <=> mDashLength > 0.
+ * mDashLength   - Number of on/off lengths in mDashPattern.
+ * mDashOffset   - Userspace offset within mDashPattern at which stroking
+ *                 begins.
  */
 struct StrokeOptions {
   StrokeOptions(Float aLineWidth = 1.0f,
                 JoinStyle aLineJoin = JOIN_MITER_OR_BEVEL,
                 CapStyle aLineCap = CAP_BUTT,
-                Float aMiterLimit = 10.0f)
+                Float aMiterLimit = 10.0f,
+                size_t aDashLength = 0,
+                const Float* aDashPattern = 0,
+                Float aDashOffset = 0.f)
     : mLineWidth(aLineWidth)
     , mMiterLimit(aMiterLimit)
+    , mDashPattern(aDashLength > 0 ? aDashPattern : 0)
+    , mDashLength(aDashLength)
+    , mDashOffset(aDashOffset)
     , mLineJoin(aLineJoin)
     , mLineCap(aLineCap)
-  {}
+  {
+    MOZ_ASSERT(aDashLength == 0 || aDashPattern);
+  }
 
   Float mLineWidth;
   Float mMiterLimit;
+  const Float* mDashPattern;
+  size_t mDashLength;
+  Float mDashOffset;
   JoinStyle mLineJoin : 4;
   CapStyle mLineCap : 3;
 };

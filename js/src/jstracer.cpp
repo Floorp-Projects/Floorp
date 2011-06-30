@@ -2460,7 +2460,7 @@ TraceRecorder::~TraceRecorder()
     JS_ASSERT(traceMonitor->recorder != this);
 
     JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
-    JS_ASSERT(&JS_THREAD_DATA(cx)->recordingCompartment->traceMonitor == traceMonitor);
+    JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment->traceMonitor() == traceMonitor);
     JS_THREAD_DATA(cx)->recordingCompartment = NULL;
 
     if (trashSelf)
@@ -2498,9 +2498,14 @@ TraceMonitor::getCodeAllocStats(size_t &total, size_t &frag_size, size_t &free_s
 size_t
 TraceMonitor::getVMAllocatorsMainSize() const
 {
-    return dataAlloc->getBytesAllocated() +
-           traceAlloc->getBytesAllocated() +
-           tempAlloc->getBytesAllocated();
+    size_t n = 0;
+    if (dataAlloc)
+        n += dataAlloc->getBytesAllocated();
+    if (traceAlloc)
+        n += traceAlloc->getBytesAllocated();
+    if (tempAlloc)
+        n += tempAlloc->getBytesAllocated();
+    return n;
 }
 
 size_t
@@ -2875,9 +2880,16 @@ TraceMonitor::flush()
     needFlush = JS_FALSE;
 }
 
-inline bool
-HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
+static bool
+HasUnreachableGCThingsImpl(JSContext *cx, TreeFragment *f)
 {
+    if (f->visiting)
+        return false;
+    f->visiting = true;
+    
+    if (!f->code())
+        return false;
+
     /*
      * We do not check here for dead scripts as JSScript is not a GC thing.
      * Instead PurgeScriptFragments is used to remove dead script fragments.
@@ -2898,7 +2910,50 @@ HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
         if (IsAboutToBeFinalized(cx, shape))
             return true;
     }
+
+    TreeFragment** data = f->dependentTrees.data();
+    unsigned length = f->dependentTrees.length();
+    for (unsigned n = 0; n < length; ++n) {
+        if (HasUnreachableGCThingsImpl(cx, data[n]))
+            return true;
+    }
+
+    data = f->linkedTrees.data();
+    length = f->linkedTrees.length();
+    for (unsigned n = 0; n < length; ++n) {
+        if (HasUnreachableGCThingsImpl(cx, data[n]))
+            return true;
+    }
+
     return false;
+}
+
+static void
+ClearVisitingFlag(TreeFragment *f)
+{
+    if (!f->visiting)
+        return;
+    f->visiting = false;
+    if (!f->code())
+        return;
+
+    TreeFragment** data = f->dependentTrees.data();
+    unsigned length = f->dependentTrees.length();
+    for (unsigned n = 0; n < length; ++n)
+        ClearVisitingFlag(data[n]);
+
+    data = f->linkedTrees.data();
+    length = f->linkedTrees.length();
+    for (unsigned n = 0; n < length; ++n)
+        ClearVisitingFlag(data[n]);
+}
+
+static bool
+HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
+{
+    bool hasUnrechable = HasUnreachableGCThingsImpl(cx, f);
+    ClearVisitingFlag(f);
+    return hasUnrechable;
 }
 
 void
@@ -2919,29 +2974,42 @@ TraceMonitor::sweep(JSContext *cx)
         while (TreeFragment* frag = *fragp) {
             TreeFragment* peer = frag;
             do {
-                if (HasUnreachableGCThings(cx, peer))
+                if (peer->code() && HasUnreachableGCThings(cx, peer))
                     break;
                 peer = peer->peer;
             } while (peer);
-            if (peer) {
-                debug_only_printf(LC_TMTracer,
-                                  "TreeFragment peer %p has dead gc thing."
-                                  "Disconnecting tree %p with ip %p\n",
-                                  (void *) peer, (void *) frag, frag->ip);
-                JS_ASSERT(frag->root == frag);
-                *fragp = frag->next;
-                do {
-                    verbose_only( FragProfiling_FragFinalizer(frag, this); );
-                    if (recorderTree == frag)
-                        shouldAbortRecording = true;
-                    TrashTree(frag);
-                    frag = frag->peer;
-                } while (frag);
-            } else {
+            if (!peer) {
                 fragp = &frag->next;
+                continue;
             }
+            
+            debug_only_printf(LC_TMTracer,
+                              "TreeFragment peer %p has dead gc thing."
+                              "Disconnecting tree %p with ip %p\n",
+                              (void *) peer, (void *) frag, frag->ip);
+            JS_ASSERT(frag->root == frag);
+            *fragp = frag->next;
+            do {
+                verbose_only( FragProfiling_FragFinalizer(frag, this); );
+                if (recorderTree == frag)
+                    shouldAbortRecording = true;
+                TrashTree(frag);
+                frag = frag->peer;
+            } while (frag);
         }
     }
+
+#ifdef DEBUG
+    for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
+        for (TreeFragment* frag = vmfragments[i]; frag; frag = frag->next) {
+            TreeFragment* peer = frag;
+            do {
+                JS_ASSERT(!peer->visiting);
+                peer = peer->peer;
+            } while (peer);
+        }
+    }
+#endif
 
     if (shouldAbortRecording)
         recorder->finishAbort("dead GC things");
@@ -5633,6 +5701,7 @@ TrashTree(TreeFragment* f)
     JS_ASSERT(f == f->root);
     debug_only_printf(LC_TMTreeVis, "TREEVIS TRASH FRAG=%p\n", (void*)f);
 
+    JS_ASSERT(!f->visiting);
     if (!f->code())
         return;
     AUDIT(treesTrashed);
@@ -5737,6 +5806,7 @@ RecordTree(JSContext* cx, TraceMonitor* tm, TreeFragment* first,
     }
 
     JS_ASSERT(!f->code());
+    JS_ASSERT(!f->visiting);
 
     f->initialize(cx, globalSlots, speculate);
 
@@ -7232,7 +7302,7 @@ TraceRecorder::monitorRecording(JSOp op)
 {
     JS_ASSERT(!addPropShapeBefore);
 
-    JS_ASSERT(traceMonitor == &cx->compartment->traceMonitor);
+    JS_ASSERT(traceMonitor == cx->compartment->traceMonitor());
     
     TraceMonitor &localtm = *traceMonitor;
     debug_only_stmt( JSContext *localcx = cx; )
@@ -16918,7 +16988,9 @@ JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext *cx, bool* blacklist,
                   void** traceData, uintN *traceEpoch, uint32 *loopCounter, uint32 hits)
 {
-    TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT_WITH_LAZY_INIT(cx);
+    if (!tm)
+        return TPA_Error;
 
     if (!cx->profilingEnabled)
         return RecordTracePoint(cx, tm, blacklist, true);
@@ -16999,7 +17071,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     TraceMonitor* tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
 
     JS_ASSERT(tm == traceMonitor);
-    JS_ASSERT(&entryScript->compartment->traceMonitor == tm);
+    JS_ASSERT(entryScript->compartment->traceMonitor() == tm);
 
     if (profiled) {
         stopProfiling(cx);
@@ -17396,11 +17468,14 @@ LoopProfile::decide(JSContext *cx)
 JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, InterpMode interpMode)
 {
-    TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT_WITH_LAZY_INIT(cx);
+    if (!tm)
+        return MONITOR_ERROR;
+
     if (interpMode == JSINTERP_PROFILE && tm->profile)
         return tm->profile->profileLoopEdge(cx);
-    else
-        return RecordLoopEdge(cx, tm);
+
+    return RecordLoopEdge(cx, tm);
 }
 
 void
@@ -17421,7 +17496,10 @@ AbortProfiling(JSContext *cx)
 JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, InterpMode interpMode)
 {
-    TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT_WITH_LAZY_INIT(cx);
+    if (!tm)
+        return MONITOR_ERROR;
+
     return RecordLoopEdge(cx, tm);
 }
 
