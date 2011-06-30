@@ -88,7 +88,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mMIMEType(nsnull),
     mOwner(nsnull),
     mCurrentPluginEvent(nsnull),
-#if defined(MOZ_X11) || defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(MOZ_X11) || defined(XP_WIN)
     mUsePluginLayersPref(PR_TRUE)
 #else
     mUsePluginLayersPref(PR_FALSE)
@@ -717,6 +717,22 @@ nsresult nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 #ifdef XP_MACOSX
   *aModel = (PRInt32)mDrawingModel;
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
+}
+
+nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawing)
+{
+#ifdef XP_MACOSX
+  if (!mPlugin)
+      return NS_ERROR_FAILURE;
+
+  PluginLibrary* library = mPlugin->GetLibrary();
+  if (!library)
+      return NS_ERROR_FAILURE;
+  
+  return library->IsRemoteDrawingCoreAnimation(&mNPP, aDrawing);
 #else
   return NS_ERROR_FAILURE;
 #endif

@@ -616,7 +616,15 @@ nsresult
 PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
 {
 #ifdef XP_MACOSX
-    if (!mFrontSurface && !mFrontIOSurface)
+    nsIOSurface* ioSurface = NULL;
+  
+    if (mFrontIOSurface) {
+      ioSurface = mFrontIOSurface;
+    } else if (mIOSurface) {
+      ioSurface = mIOSurface;
+    }
+
+    if (!mFrontSurface && !ioSurface)
 #else
     if (!mFrontSurface)
 #endif
@@ -624,7 +632,7 @@ PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
 
     Image::Format format = Image::CAIRO_SURFACE;
 #ifdef XP_MACOSX
-    if (mFrontIOSurface) {
+    if (ioSurface) {
         format = Image::MAC_IO_SURFACE;
         if (!aContainer->Manager()) {
             return NS_ERROR_FAILURE;
@@ -639,11 +647,11 @@ PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
     }
 
 #ifdef XP_MACOSX
-    if (mFrontIOSurface) {
+    if (ioSurface) {
         NS_ASSERTION(image->GetFormat() == Image::MAC_IO_SURFACE, "Wrong format?");
         MacIOSurfaceImage* ioImage = static_cast<MacIOSurfaceImage*>(image.get());
         MacIOSurfaceImage::Data ioData;
-        ioData.mIOSurface = mFrontIOSurface;
+        ioData.mIOSurface = ioSurface;
         ioImage->SetData(ioData);
         *aImage = image.forget().get();
         return NS_OK;
@@ -674,11 +682,24 @@ PluginInstanceParent::GetImageSize(nsIntSize* aSize)
     if (mFrontIOSurface) {
         *aSize = nsIntSize(mFrontIOSurface->GetWidth(), mFrontIOSurface->GetHeight());
         return NS_OK;
+    } else if (mIOSurface) {
+        *aSize = nsIntSize(mIOSurface->GetWidth(), mIOSurface->GetHeight());
+        return NS_OK;
     }
 #endif
 
     return NS_ERROR_NOT_AVAILABLE;
 }
+
+#ifdef XP_MACOSX
+nsresult
+PluginInstanceParent::IsRemoteDrawingCoreAnimation(PRBool *aDrawing)
+{
+    *aDrawing = (NPDrawingModelCoreAnimation == (NPDrawingModel)mDrawingModel ||
+                 NPDrawingModelInvalidatingCoreAnimation == (NPDrawingModel)mDrawingModel);
+    return NS_OK;
+}
+#endif
 
 nsresult
 PluginInstanceParent::SetBackgroundUnknown()
