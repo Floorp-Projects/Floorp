@@ -1405,7 +1405,9 @@ WeaveSvc.prototype = {
 
   _ignorableErrorCount: 0,
   shouldIgnoreError: function shouldIgnoreError() {
-    return ([Status.login, Status.sync].indexOf(LOGIN_FAILED_NETWORK_ERROR) != -1
+    // Never show an error bar for a locked master password.
+    return (Status.login == MASTER_PASSWORD_LOCKED) ||
+           ([Status.login, Status.sync].indexOf(LOGIN_FAILED_NETWORK_ERROR) != -1
             && this._ignorableErrorCount < MAX_IGNORE_ERROR_COUNT);
   },
 
