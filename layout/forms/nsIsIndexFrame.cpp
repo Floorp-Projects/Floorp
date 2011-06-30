@@ -432,7 +432,7 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
 
   // Now pretend we're triggering a link
   nsContentUtils::TriggerLink(mContent, aPresContext, uri,
-                              EmptyString(), PR_TRUE, PR_TRUE);
+                              EmptyString(), PR_TRUE, PR_TRUE, PR_TRUE);
   return result;
 }
 
