@@ -46,6 +46,9 @@
 #include "jsvector.h"
 #include "jsvalue.h"
 
+JS_FRIEND_API(uint64_t)
+js_GetSCOffset(JSStructuredCloneWriter* writer);
+
 namespace js {
 
 bool
@@ -72,6 +75,8 @@ struct SCOutput {
     bool writeArray(const T *p, size_t nbytes);
 
     bool extractBuffer(uint64_t **datap, size_t *sizep);
+
+    uint64_t count() { return buf.length(); }
 
   private:
     JSContext *cx;
