@@ -4934,8 +4934,9 @@ nsHTMLEditRules::CheckForEmptyBlock(nsIDOMNode *aStartNode,
       NS_ENSURE_SUCCESS(res, res);
     }
   }
-  
-  if (emptyBlock)
+
+  nsCOMPtr<nsIContent> emptyContent = do_QueryInterface(emptyBlock);
+  if (emptyBlock && emptyContent->IsEditable())
   {
     nsCOMPtr<nsIDOMNode> blockParent;
     PRInt32 offset;

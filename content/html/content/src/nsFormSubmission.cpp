@@ -485,6 +485,11 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
       rv = file->GetName(filename16);
       NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    if (filename16.IsEmpty()) {
+      filename16.AssignLiteral("blob");
+    }
+
     rv = EncodeVal(filename16, filename, true);
     NS_ENSURE_SUCCESS(rv, rv);
   

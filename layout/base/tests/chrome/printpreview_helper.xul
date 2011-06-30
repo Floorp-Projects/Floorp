@@ -65,6 +65,11 @@ function exitprintpreview() {
    .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
 }
 
+function finish() {
+  SimpleTest.finish();
+  window.close();
+}
+
 function runTests()
 {
   var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
@@ -75,7 +80,7 @@ function runTests()
               .getService(Components.interfaces.nsIPrinterEnumerator);
   } catch(e) {
     todo(false, "Test skipped on MacOSX, as the print preview code doesn't work there");
-    SimpleTest.finish();
+    finish();
     return;
   }
 
@@ -83,7 +88,7 @@ function runTests()
     startTest1();
   } else {
     todo(false, "No printer seems installed on this machine, that is necessary for this test");
-    SimpleTest.finish();
+    finish();
   }
 }
 
@@ -239,8 +244,7 @@ function runTest5() {
     '<input contenteditable="true" style="display: table; page-break-before: left; width: 10000px;">';
   printpreview();
   exitprintpreview();
-  SimpleTest.finish();
-  window.close();
+  finish();
 }
 
 ]]></script>

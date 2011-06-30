@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <style xmlns="http://www.w3.org/1999/xhtml">
+    <![CDATA[
+      menulist, menuitem, label { font: Menu }
+      #measurelabel { color: transparent }
+    ]]>
+  </style>
+  <stack>
+    <vbox align="left">
+      <menulist>
+        <menupopup>
+          <menuitem value="1" label="long item" />
+          <menuitem value="2" label="short" />
+        </menupopup>
+      </menulist>
+    </vbox>
+    <hbox>
+      <label id="measurelabel" value="long item" />
+      <!-- cover up the right edge of the above -->
+      <box flex="1" style="background: white" />
+    </hbox>
+  </stack>
+</window>

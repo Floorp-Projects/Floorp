@@ -96,7 +96,7 @@ GetRenderingContext(nsIDocShell *shell, gfxASurface *surface,
 
   if (!ctx) {
     // create the canvas rendering context
-    ctx = do_CreateInstance("@mozilla.org/content/canvas-rendering-context;1?id=2d", &rv);
+    ctx = do_CreateInstance("@mozilla.org/content/canvas-rendering-context;1?id=2dthebes", &rv);
     if (NS_FAILED(rv)) {
       NS_WARNING("Could not create nsICanvasRenderingContextInternal for tab previews!");
       return rv;

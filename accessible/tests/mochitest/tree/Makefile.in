@@ -50,6 +50,7 @@ _TEST_FILES =\
 	$(warning test_applicationacc.xul temporarily disabled, see bug 561508) \
 		test_aria_globals.html \
 		test_aria_imgmap.html \
+		test_aria_presentation.html \
 		test_button.xul \
 		test_combobox.xul \
 		test_cssoverflow.html \

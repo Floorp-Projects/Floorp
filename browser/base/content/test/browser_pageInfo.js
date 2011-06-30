@@ -15,6 +15,7 @@ function test() {
     if (topic != "page-info-dialog-loaded")
       return;
 
+    Services.obs.removeObserver(observer, topic);
     handlePageInfo();
   }
 
