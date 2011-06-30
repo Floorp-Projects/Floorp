@@ -80,11 +80,8 @@ public:
     virtual PBrowserChild* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserChild*);
 
-    virtual PCrashReporterChild*
-    AllocPCrashReporter(const NativeThreadId& id,
-                        const PRUint32& processType);
-    virtual bool
-    DeallocPCrashReporter(PCrashReporterChild*);
+    virtual PCrashReporterChild* AllocPCrashReporter();
+    virtual bool DeallocPCrashReporter(PCrashReporterChild*);
 
     virtual PMemoryReportRequestChild*
     AllocPMemoryReportRequest();
