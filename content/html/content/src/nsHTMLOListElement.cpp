@@ -148,7 +148,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLSharedListElement, Compact, compact)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLSharedListElement, Start, start, 1)
 NS_IMPL_STRING_ATTR(nsHTMLSharedListElement, Type, type)
 
-
+// Shared with nsHTMLSharedElement.cpp
 nsAttrValue::EnumTable kListTypeTable[] = {
   { "none", NS_STYLE_LIST_STYLE_NONE },
   { "disc", NS_STYLE_LIST_STYLE_DISC },
@@ -163,12 +163,12 @@ nsAttrValue::EnumTable kListTypeTable[] = {
   { 0 }
 };
 
-nsAttrValue::EnumTable kOldListTypeTable[] = {
-  { "1", NS_STYLE_LIST_STYLE_OLD_DECIMAL },
-  { "A", NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA },
-  { "a", NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA },
-  { "I", NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN },
-  { "i", NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN },
+static const nsAttrValue::EnumTable kOldListTypeTable[] = {
+  { "1", NS_STYLE_LIST_STYLE_DECIMAL },
+  { "A", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
+  { "a", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
+  { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
+  { "i", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
   { 0 }
 };
 

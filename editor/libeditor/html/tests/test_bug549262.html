@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=549262
+-->
+<head>
+  <title>Test for Bug 549262</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=549262">Mozilla Bug 549262</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 549262 **/
+
+SimpleTest.waitForExplicitFinish();
+var win = window.open("file_bug549262.html", "_blank", 
+                      "width=600,height=600");
+SimpleTest.waitForFocus(function() {
+  // Make sure that pressing Space when a contenteditable element is not focused
+  // will scroll the page.
+  var ed = win.document.getElementById("editor");
+  var sc = win.document.querySelector("a");
+  sc.focus();
+  is(win.scrollY, 0, "Sanity check");
+  synthesizeKey(" ", {}, win);
+  setTimeout(function() {
+    isnot(win.scrollY, 0, "Page is scrolled down");
+    is(ed.textContent, "abc", "The content of the editable element has not changed");
+    synthesizeKey(" ", {shiftKey: true}, win);
+    setTimeout(function() {
+      is(win.scrollY, 0, "Page is scrolled up");
+      is(ed.textContent, "abc", "The content of the editable element has not changed");
+
+      // Make sure that pressing Space when a contenteditable element is focused
+      // will not scroll the page, and will edit the element.
+      ed.focus();
+      win.getSelection().collapse(ed.firstChild, 1);
+      synthesizeKey(" ", {}, win);
+      setTimeout(function() {
+        is(win.scrollY, 0, "Page is not scrolled down");
+        is(ed.textContent, "a bc", "The content of the editable element has changed");
+        sc.focus();
+        synthesizeKey(" ", {}, win);
+        setTimeout(function() {
+          isnot(win.scrollY, 0, "Page is scrolled down");
+          is(ed.textContent, "a bc", "The content of the editable element has not changed");
+          ed.focus();
+          win.getSelection().collapse(ed.firstChild, 3);
+          synthesizeKey(" ", {shiftKey: true}, win);
+          setTimeout(function() {
+            isnot(win.scrollY, 0, "Page is not scrolled up");
+            is(ed.textContent, "a b c", "The content of the editable element has changed");
+
+            win.close();
+            SimpleTest.finish();
+          }, 0);
+        }, 0);
+      }, 0);
+    }, 0);
+  }, 0);
+}, win);
+
+</script>
+</pre>
+</body>
+</html>

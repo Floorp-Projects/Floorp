@@ -197,16 +197,12 @@ public:
   NS_IMETHOD OnOptionSelected(PRInt32 aIndex, PRBool aSelected);
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex);
 
-  // mouse event listeners (both might destroy |this|)
-  nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-
-  // mouse motion listeners
+  // mouse event listeners (both )
+  nsresult MouseDown(nsIDOMEvent* aMouseEvent); // might destroy |this|
+  nsresult MouseUp(nsIDOMEvent* aMouseEvent);   // might destroy |this|
   nsresult MouseMove(nsIDOMEvent* aMouseEvent);
   nsresult DragMove(nsIDOMEvent* aMouseEvent);
-
-  // key listener (might destroy |this|)
-  nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+  nsresult KeyPress(nsIDOMEvent* aKeyEvent);    // might destroy |this|
 
   /**
    * Returns the options collection for aContent, if any.

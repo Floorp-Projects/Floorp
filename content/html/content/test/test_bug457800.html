@@ -13,8 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=457800
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=457800">Mozilla Bug 457800</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  <input type="text" id="inputtext"/><br/>
-  <input type="password"id="inputpassword"/><br/>
   <textarea id="textarea"></textarea>
 </div>
 <pre id="test">
@@ -51,8 +49,6 @@ function testPlaceholderForElement(element)
   is(element.getAttribute('placeholder'), 'place\rholder', "\\r shouldn't be stripped");
 }
 
-testPlaceholderForElement(document.getElementById('inputtext'));
-testPlaceholderForElement(document.getElementById('inputpassword'));
 testPlaceholderForElement(document.getElementById('textarea'));
 
 </script>

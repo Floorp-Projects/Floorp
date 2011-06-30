@@ -122,6 +122,7 @@
 #include "nsRefreshDriver.h"
 
 #include "nsHyphenationManager.h"
+#include "nsDOMMemoryReporter.h"
 
 extern void NS_ShutdownChainItemPool();
 
@@ -265,12 +266,22 @@ nsLayoutStatics::Initialize()
 
   NS_SealStaticAtomTable();
 
+// TODO: DOM_MEMORY_REPORTER should not be defined in a regular build for the
+// moment. This protection will be removed when bug 663271 will be close enough
+// to a shippable state.
+#ifdef DOM_MEMORY_REPORTER
+  nsDOMMemoryReporter::Init();
+#endif
+
   return NS_OK;
 }
 
 void
 nsLayoutStatics::Shutdown()
 {
+  // Don't need to shutdown nsDOMMemoryReporter, that will be done by the memory
+  // reporter manager.
+
   nsFrameScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
 #ifdef MOZ_XUL

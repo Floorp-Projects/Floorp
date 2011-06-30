@@ -48,13 +48,10 @@ function checkFormTarget(aElement)
   isFormTargetEquals(aElement, "", true);
 }
 
-var input = document.createElement('input');
 var button = document.createElement('button');
 
-ok('formTarget' in input, "formTarget is a HTMLInputElement property");
 ok('formTarget' in button, "formTarget is a HTMLButtonElement property");
 
-checkFormTarget(input);
 checkFormTarget(button);
 
 </script>
