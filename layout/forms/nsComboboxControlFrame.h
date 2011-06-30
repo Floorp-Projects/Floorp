@@ -65,7 +65,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIStatefulFrame.h"
 #include "nsIScrollableFrame.h"
-#include "nsIDOMMouseListener.h"
+#include "nsIDOMEventListener.h"
 #include "nsThreadUtils.h"
 
 class nsIView;
@@ -283,7 +283,7 @@ protected:
 
   // make someone to listen to the button. If its programmatically pressed by someone like Accessibility
   // then open or close the combo box.
-  nsCOMPtr<nsIDOMMouseListener> mButtonListener;
+  nsCOMPtr<nsIDOMEventListener> mButtonListener;
 
   // static class data member for Bug 32920
   // only one control can be focused at a time
