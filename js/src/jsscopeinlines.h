@@ -350,12 +350,7 @@ Shape::insertIntoDictionary(js::Shape **dictp)
 inline
 EmptyShape::EmptyShape(JSCompartment *comp, js::Class *aclasp)
   : js::Shape(comp, aclasp)
-{
-#ifdef DEBUG
-    if (comp->rt->meterEmptyShapes())
-        comp->emptyShapes.put(this);
-#endif
-}
+{}
 
 /* static */ inline EmptyShape *
 EmptyShape::getEmptyArgumentsShape(JSContext *cx)

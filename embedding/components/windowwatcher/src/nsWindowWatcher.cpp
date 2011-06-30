@@ -944,9 +944,12 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
       }
     }
 
-    newDocShell->LoadURI(uriToLoad, loadInfo,
-      windowIsNew ? nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD :
-                    nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
+    newDocShell->LoadURI(uriToLoad,
+                         loadInfo,
+                         windowIsNew
+                           ? static_cast<PRUint32>(nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD)
+                           : static_cast<PRUint32>(nsIWebNavigation::LOAD_FLAGS_NONE),
+                         PR_TRUE);
   }
 
   // Copy the current session storage for the current domain.

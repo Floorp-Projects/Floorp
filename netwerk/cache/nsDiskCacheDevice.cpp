@@ -348,6 +348,7 @@ nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
 
 nsDiskCacheDevice::nsDiskCacheDevice()
     : mCacheCapacity(0)
+    , mMaxEntrySize(-1) // -1 means "no limit"
     , mInitialized(PR_FALSE)
 {
 }
@@ -937,12 +938,15 @@ nsDiskCacheDevice::Visit(nsICacheVisitor * visitor)
     return NS_OK;
 }
 
-// Max allowed size for an entry is currently MIN(5MB, 1/8 CacheCapacity)
+// Max allowed size for an entry is currently MIN(mMaxEntrySize, 1/8 CacheCapacity)
 bool
 nsDiskCacheDevice::EntryIsTooBig(PRInt64 entrySize)
 {
-    return entrySize > kMaxDataFileSize
-           || entrySize > (static_cast<PRInt64>(mCacheCapacity) * 1024 / 8);
+    if (mMaxEntrySize == -1) // no limit
+        return entrySize > (static_cast<PRInt64>(mCacheCapacity) * 1024 / 8);
+    else 
+        return entrySize > mMaxEntrySize ||
+               entrySize > (static_cast<PRInt64>(mCacheCapacity) * 1024 / 8);
 }
 
 nsresult
@@ -1142,4 +1146,15 @@ PRUint32 nsDiskCacheDevice::getCacheSize()
 PRUint32 nsDiskCacheDevice::getEntryCount()
 {
     return mCacheMap.EntryCount();
+}
+
+void
+nsDiskCacheDevice::SetMaxEntrySize(PRInt32 maxSizeInKilobytes)
+{
+    // Internal units are bytes. Changing this only takes effect *after* the
+    // change and has no consequences for existing cache-entries
+    if (maxSizeInKilobytes >= 0)
+        mMaxEntrySize = maxSizeInKilobytes * 1024;
+    else
+        mMaxEntrySize = -1;
 }

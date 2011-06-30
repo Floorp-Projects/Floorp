@@ -1081,7 +1081,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
         nsString newName;
         accessible->GetName(newName);
         NS_ConvertUTF16toUTF8 utf8Name(newName);
-        if (!utf8Name.Equals(atkObj->name))
+        if (!atkObj->name || !utf8Name.Equals(atkObj->name))
           atk_object_set_name(atkObj, utf8Name.get());
 
         break;

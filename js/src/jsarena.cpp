@@ -53,14 +53,6 @@
 
 using namespace js;
 
-#ifdef JS_ARENAMETER
-static JSArenaStats *arena_stats_list;
-
-#define COUNT(pool,what)  (pool)->stats.what++
-#else
-#define COUNT(pool,what)  /* nothing */
-#endif
-
 #define JS_ARENA_DEFAULT_ALIGN  sizeof(double)
 
 JS_PUBLIC_API(void)
@@ -75,12 +67,6 @@ JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size,
         JS_ARENA_ALIGN(pool, &pool->first + 1);
     pool->current = &pool->first;
     pool->arenasize = size;
-#ifdef JS_ARENAMETER
-    memset(&pool->stats, 0, sizeof pool->stats);
-    pool->stats.name = strdup(name);
-    pool->stats.next = arena_stats_list;
-    arena_stats_list = &pool->stats;
-#endif
 }
 
 /*
@@ -165,8 +151,6 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
 
             b->next = NULL;
             b->limit = (jsuword)b + gross;
-            JS_COUNT_ARENA(pool,++);
-            COUNT(pool, nmallocs);
 
             /* If oversized, store ap in the header, just before a->base. */
             *ap = a = b;
@@ -219,9 +203,6 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
     a = (JSArena *) OffTheBooks::realloc_(a, gross);
     if (!a)
         return NULL;
-#ifdef JS_ARENAMETER
-    pool->stats.nreallocs++;
-#endif
 
     if (a != *ap) {
         /* Oops, realloc moved the allocation: update other pointers to a. */
@@ -295,7 +276,6 @@ FreeArenaList(JSArenaPool *pool, JSArena *head)
     do {
         *ap = a->next;
         JS_CLEAR_ARENA(a);
-        JS_COUNT_ARENA(pool,--);
         UnwantedForeground::free_(a);
     } while ((a = *ap) != NULL);
 
@@ -323,30 +303,12 @@ JS_PUBLIC_API(void)
 JS_FreeArenaPool(JSArenaPool *pool)
 {
     FreeArenaList(pool, &pool->first);
-    COUNT(pool, ndeallocs);
 }
 
 JS_PUBLIC_API(void)
 JS_FinishArenaPool(JSArenaPool *pool)
 {
     FreeArenaList(pool, &pool->first);
-#ifdef JS_ARENAMETER
-    {
-        JSArenaStats *stats, **statsp;
-
-        if (pool->stats.name) {
-            UnwantedForeground::free_(pool->stats.name);
-            pool->stats.name = NULL;
-        }
-        for (statsp = &arena_stats_list; (stats = *statsp) != 0;
-             statsp = &stats->next) {
-            if (stats == &pool->stats) {
-                *statsp = stats->next;
-                return;
-            }
-        }
-    }
-#endif
 }
 
 JS_PUBLIC_API(void)
@@ -358,74 +320,3 @@ JS_PUBLIC_API(void)
 JS_ArenaShutDown(void)
 {
 }
-
-#ifdef JS_ARENAMETER
-JS_PUBLIC_API(void)
-JS_ArenaCountAllocation(JSArenaPool *pool, size_t nb)
-{
-    pool->stats.nallocs++;
-    pool->stats.nbytes += nb;
-    if (nb > pool->stats.maxalloc)
-        pool->stats.maxalloc = nb;
-    pool->stats.variance += nb * nb;
-}
-
-JS_PUBLIC_API(void)
-JS_ArenaCountInplaceGrowth(JSArenaPool *pool, size_t size, size_t incr)
-{
-    pool->stats.ninplace++;
-}
-
-JS_PUBLIC_API(void)
-JS_ArenaCountGrowth(JSArenaPool *pool, size_t size, size_t incr)
-{
-    pool->stats.ngrows++;
-    pool->stats.nbytes += incr;
-    pool->stats.variance -= size * size;
-    size += incr;
-    if (size > pool->stats.maxalloc)
-        pool->stats.maxalloc = size;
-    pool->stats.variance += size * size;
-}
-
-JS_PUBLIC_API(void)
-JS_ArenaCountRelease(JSArenaPool *pool, char *mark)
-{
-    pool->stats.nreleases++;
-}
-
-JS_PUBLIC_API(void)
-JS_ArenaCountRetract(JSArenaPool *pool, char *mark)
-{
-    pool->stats.nfastrels++;
-}
-
-#include <stdio.h>
-
-JS_PUBLIC_API(void)
-JS_DumpArenaStats(FILE *fp)
-{
-    JSArenaStats *stats;
-    double mean, sigma;
-
-    for (stats = arena_stats_list; stats; stats = stats->next) {
-        mean = JS_MeanAndStdDev(stats->nallocs, stats->nbytes, stats->variance,
-                                &sigma);
-
-        fprintf(fp, "\n%s allocation statistics:\n", stats->name);
-        fprintf(fp, "              number of arenas: %u\n", stats->narenas);
-        fprintf(fp, "         number of allocations: %u\n", stats->nallocs);
-        fprintf(fp, "        number of malloc calls: %u\n", stats->nmallocs);
-        fprintf(fp, "       number of deallocations: %u\n", stats->ndeallocs);
-        fprintf(fp, "  number of allocation growths: %u\n", stats->ngrows);
-        fprintf(fp, "    number of in-place growths: %u\n", stats->ninplace);
-        fprintf(fp, " number of realloc'ing growths: %u\n", stats->nreallocs);
-        fprintf(fp, "number of released allocations: %u\n", stats->nreleases);
-        fprintf(fp, "       number of fast releases: %u\n", stats->nfastrels);
-        fprintf(fp, "         total bytes allocated: %u\n", stats->nbytes);
-        fprintf(fp, "          mean allocation size: %g\n", mean);
-        fprintf(fp, "            standard deviation: %g\n", sigma);
-        fprintf(fp, "       maximum allocation size: %u\n", stats->maxalloc);
-    }
-}
-#endif /* JS_ARENAMETER */

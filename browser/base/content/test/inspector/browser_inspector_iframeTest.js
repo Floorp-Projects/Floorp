@@ -124,27 +124,25 @@ function performTestComparisons2()
   is(InspectorUI.selection, div2, "selection matches div2 node");
   is(InspectorUI.highlighter.highlitNode, div2, "highlighter matches selection");
 
-  finishUp();
-}
-
-function finishUp() {
-  InspectorUI.closeInspectorUI(true);
-
-  doc = div1 = div2 = iframe1 = iframe2 = highlighterFrame = null;
-  gBrowser.removeCurrentTab();
   finish();
 }
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
+
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
     doc = content.document;
-    waitForFocus(createDocument, content);
+    gBrowser.selectedBrowser.focus();
+    createDocument();
   }, true);
 
   content.location = "data:text/html,iframe tests for inspector";
+
+  registerCleanupFunction(function () {
+    InspectorUI.closeInspectorUI(true);
+    gBrowser.removeCurrentTab();
+  });
 }
 

@@ -2832,7 +2832,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // see if we have a crashreporter-override.ini in the application directory
       nsCOMPtr<nsIFile> overrideini;
       PRBool exists;
-      static char overrideEnv[MAXPATHLEN];
       if (NS_SUCCEEDED(dirProvider.GetAppDir()->Clone(getter_AddRefs(overrideini))) &&
           NS_SUCCEEDED(overrideini->AppendNative(NS_LITERAL_CSTRING("crashreporter-override.ini"))) &&
           NS_SUCCEEDED(overrideini->Exists(&exists)) &&
@@ -2846,9 +2845,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         overrideini->GetNativePath(overridePath);
 #endif
 
-        sprintf(overrideEnv, "MOZ_CRASHREPORTER_STRINGS_OVERRIDE=%s",
-                overridePath.get());
-        PR_SetEnv(overrideEnv);
+        SaveWordToEnv("MOZ_CRASHREPORTER_STRINGS_OVERRIDE", overridePath);
       }
     }
   }

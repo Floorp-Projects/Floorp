@@ -1627,7 +1627,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
             clicked = PR_TRUE;
           }
           nsContentUtils::TriggerLink(anchorNode, aPresContext, uri, target,
-                                      clicked, PR_TRUE);
+                                      clicked, PR_TRUE, PR_TRUE);
         }
       }
     }

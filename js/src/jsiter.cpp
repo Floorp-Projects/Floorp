@@ -176,20 +176,18 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
 {
     JS_ASSERT_IF(flags & JSITER_OWNONLY, obj == pobj);
 
-    if (!(flags & JSITER_OWNONLY) || pobj->isProxy()) {
-        IdSet::AddPtr p = ht.lookupForAdd(id);
-        JS_ASSERT_IF(obj == pobj && !obj->isProxy(), !p);
-
+    if (!(flags & JSITER_OWNONLY) || pobj->isProxy() || pobj->getOps()->enumerate) {
         /* If we've already seen this, we definitely won't add it. */
+        IdSet::AddPtr p = ht.lookupForAdd(id);
         if (JS_UNLIKELY(!!p))
             return true;
 
         /*
          * It's not necessary to add properties to the hash table at the end of
-         * the prototype chain, but a proxy might return duplicated properties,
-         * so always add if pobj is a proxy.
+         * the prototype chain, but custom enumeration behaviors might return
+         * duplicated properties, so always add in such cases.
          */
-        if ((pobj->getProto() || pobj->isProxy()) && !ht.add(p, id))
+        if ((pobj->getProto() || pobj->isProxy() || pobj->getOps()->enumerate) && !ht.add(p, id))
             return false;
     }
 

@@ -86,6 +86,7 @@
 #define strdup(a)     je_strdup(a)
 #define strndup(a, b) je_strndup(a, b)
 #define posix_memalign(a, b, c)  je_posix_memalign(a, b, c)
+#define malloc_usable_size(a) je_malloc_usable_size(a)
 #endif
 
 void

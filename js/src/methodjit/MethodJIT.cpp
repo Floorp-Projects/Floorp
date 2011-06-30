@@ -118,14 +118,14 @@ extern "C" void JaegerTrampolineReturn();
 extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
-    f.entryfp->script()->compartment->jaegerCompartment->pushActiveFrame(&f);
+    f.entryfp->script()->compartment->jaegerCompartment()->pushActiveFrame(&f);
     f.regs.fp()->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
 }
 
 extern "C" void JS_FASTCALL
 PopActiveVMFrame(VMFrame &f)
 {
-    f.entryfp->script()->compartment->jaegerCompartment->popActiveFrame();
+    f.entryfp->script()->compartment->jaegerCompartment()->popActiveFrame();
 }
 
 extern "C" void JS_FASTCALL
@@ -875,6 +875,17 @@ mjit::JITScript::~JITScript()
 #endif
 }
 
+size_t
+JSScript::jitDataSize()
+{
+    size_t n = 0;
+    if (jitNormal)
+        n += jitNormal->scriptDataSize(); 
+    if (jitCtor)
+        n += jitCtor->scriptDataSize(); 
+    return n;
+}
+
 /* Please keep in sync with Compiler::finishThisUp! */
 size_t
 mjit::JITScript::scriptDataSize()
@@ -905,8 +916,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     JITScript *jscr;
 
     if ((jscr = script->jitNormal)) {
-        cx->runtime->mjitDataSize -= jscr->scriptDataSize();
-
         jscr->~JITScript();
         cx->free_(jscr);
         script->jitNormal = NULL;
@@ -914,8 +923,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     }
 
     if ((jscr = script->jitCtor)) {
-        cx->runtime->mjitDataSize -= jscr->scriptDataSize();
-
         jscr->~JITScript();
         cx->free_(jscr);
         script->jitCtor = NULL;

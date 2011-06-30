@@ -249,7 +249,11 @@ function GroupItem(listOfEls, options) {
   this._init($container[0]);
 
   // ___ Children
-  Array.prototype.forEach.call(listOfEls, function(el) {
+  // We explicitly set dontArrange=true to prevent the groupItem from
+  // re-arranging its children after a tabItem has been added. This saves us a
+  // group.arrange() call per child and therefore some tab.setBounds() calls.
+  options.dontArrange = true;
+  listOfEls.forEach(function (el) {
     self.add(el, options);
   });
 

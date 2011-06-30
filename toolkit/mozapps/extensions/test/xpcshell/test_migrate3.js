@@ -143,6 +143,12 @@ function run_test() {
   Services.prefs.setCharPref("general.skins.selectedSkin", "theme1/1.0");
 
   startupManager();
+  check_startup_changes("installed", []);
+  check_startup_changes("updated", []);
+  check_startup_changes("uninstalled", []);
+  check_startup_changes("disabled", []);
+  check_startup_changes("enabled", []);
+
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",

@@ -415,7 +415,7 @@ public:
                                                #_field)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS                       \
-    TraverseScriptObjects(tmp, cb);
+    TraverseScriptObjects(p, cb);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                  \
     return NS_OK;                                                              \

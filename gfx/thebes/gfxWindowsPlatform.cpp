@@ -89,85 +89,37 @@ using namespace mozilla::gfx;
 using namespace mozilla;
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-class D2DCacheReporter :
-    public nsIMemoryReporter
+
+NS_MEMORY_REPORTER_IMPLEMENT(
+    D2DCache,
+    "gfx-d2d-surfacecache",
+    KIND_OTHER,
+    UNITS_BYTES,
+    cairo_d2d_get_image_surface_cache_usage,
+    "Memory used by the Direct2D internal surface cache.")
+
+namespace
 {
-public:
-    D2DCacheReporter()
-    { }
 
-    NS_DECL_ISUPPORTS
+PRInt64 GetD2DSurfaceVramUsage() {
+  cairo_device_t *device =
+      gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
+  if (device) {
+      return cairo_d2d_get_surface_vram_usage(device);
+  }
+  return 0;
+}
 
-    NS_IMETHOD GetProcess(char **process) {
-        *process = strdup("");
-        return NS_OK;
-    }
+} // anonymous namespace
 
-    NS_IMETHOD GetPath(char **memoryPath) {
-        *memoryPath = strdup("gfx-d2d-surfacecache");
-        return NS_OK;
-    }
+NS_MEMORY_REPORTER_IMPLEMENT(
+    D2DVram,
+    "gfx-d2d-surfacevram",
+    KIND_OTHER,
+    UNITS_BYTES,
+    GetD2DSurfaceVramUsage,
+    "Video memory used by D2D surfaces")
 
-    NS_IMETHOD GetKind(PRInt32 *kind) {
-        *kind = MR_OTHER;
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetDescription(char **desc) {
-        *desc = strdup("Memory used by the Direct2D internal surface cache.");
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed) {
-        *memoryUsed = cairo_d2d_get_image_surface_cache_usage();
-        return NS_OK;
-    }
-}; 
-
-NS_IMPL_ISUPPORTS1(D2DCacheReporter, nsIMemoryReporter)
-
-class D2DVRAMReporter :
-    public nsIMemoryReporter
-{
-public:
-    D2DVRAMReporter()
-    { }
-
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetProcess(char **process) {
-        *process = strdup("");
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetPath(char **memoryPath) {
-        *memoryPath = strdup("gfx-d2d-surfacevram");
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetKind(PRInt32 *kind) {
-        *kind = MR_OTHER;
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetDescription(char **desc) {
-        *desc = strdup("Video memory used by D2D surfaces");
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed) {
-        cairo_device_t *device =
-            gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
-        if (device) {
-            *memoryUsed = cairo_d2d_get_surface_vram_usage(device);
-        } else {
-            *memoryUsed = 0;
-        }
-        return NS_OK;
-    }
-};
-
-NS_IMPL_ISUPPORTS1(D2DVRAMReporter, nsIMemoryReporter)
 #endif
 
 #define GFX_USE_CLEARTYPE_ALWAYS "gfx.font_rendering.cleartype.always_use_for_content"
@@ -227,8 +179,8 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     mScreenDC = GetDC(NULL);
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-    NS_RegisterMemoryReporter(new D2DCacheReporter());
-    NS_RegisterMemoryReporter(new D2DVRAMReporter());
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(D2DCache));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(D2DVram));
     mD2DDevice = nsnull;
 #endif
 
