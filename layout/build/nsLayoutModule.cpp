@@ -440,6 +440,7 @@ nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 #endif
 
 nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult);
+nsresult NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult);
 nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult);
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
@@ -568,6 +569,7 @@ MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVid
 MAKE_CTOR(CreateFocusManager,             nsIFocusManager,      NS_NewFocusManager)
 
 MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
+MAKE_CTOR(CreateCanvasRenderingContext2DThebes, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2DThebes)
 MAKE_CTOR(CreateCanvasRenderingContextWebGL, nsIDOMWebGLRenderingContext, NS_NewCanvasRenderingContextWebGL)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
@@ -771,6 +773,7 @@ NS_DEFINE_NAMED_CID(NS_HTMLOPTIONELEMENT_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLAUDIOELEMENT_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXT2D_CID);
+NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXT2DTHEBES_CID);
 NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXT2DAZURE_CID);
 NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXTWEBGL_CID);
 NS_DEFINE_NAMED_CID(NS_TEXT_ENCODER_CID);
@@ -914,6 +917,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #ifdef MOZ_MEDIA
   { &kNS_HTMLAUDIOELEMENT_CID, false, NULL, CreateHTMLAudioElement },
 #endif
+  { &kNS_CANVASRENDERINGCONTEXT2DTHEBES_CID, false, NULL, CreateCanvasRenderingContext2DThebes },
   { &kNS_CANVASRENDERINGCONTEXT2D_CID, false, NULL, CreateCanvasRenderingContext2D },
   { &kNS_CANVASRENDERINGCONTEXTWEBGL_CID, false, NULL, CreateCanvasRenderingContextWebGL },
   { &kNS_TEXT_ENCODER_CID, false, NULL, CreateTextEncoder },
@@ -1049,6 +1053,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_HTMLAUDIOELEMENT_CONTRACTID, &kNS_HTMLAUDIOELEMENT_CID },
 #endif
   { "@mozilla.org/content/canvas-rendering-context;1?id=2d", &kNS_CANVASRENDERINGCONTEXT2D_CID },
+  { "@mozilla.org/content/canvas-rendering-context;1?id=2dthebes", &kNS_CANVASRENDERINGCONTEXT2DTHEBES_CID },
   { "@mozilla.org/content/canvas-rendering-context;1?id=moz-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
   { "@mozilla.org/content/canvas-rendering-context;1?id=experimental-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &kNS_TEXT_ENCODER_CID },
