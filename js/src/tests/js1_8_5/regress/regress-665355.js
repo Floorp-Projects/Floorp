@@ -10,4 +10,9 @@ try {
 }
 
 assertEq(test(), true);
+
+// ArrayBuffer's __proto__ behaviour verification.
+var y = new ArrayBuffer();
+y.__proto__ = null;
+assertEq(y.__proto__, undefined);
 reportCompare(true, true);

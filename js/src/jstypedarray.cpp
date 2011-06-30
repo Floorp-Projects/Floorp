@@ -61,6 +61,7 @@
 #include "jsbit.h"
 #include "jsvector.h"
 #include "jstypedarray.h"
+#include "jsutil.h"
 
 #include "jsobjinlines.h"
 #include "jstypedarrayinlines.h"
@@ -167,7 +168,7 @@ static JSObject *
 DelegateObject(JSContext *cx, JSObject *obj)
 {
     if (!obj->getPrivate()) {
-        JSObject *delegate = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL);
+        JSObject *delegate = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, obj->getProto(), NULL);
         obj->setPrivate(delegate);
         return delegate;
     }
@@ -292,10 +293,22 @@ ArrayBuffer::obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, J
             return JS_TRUE;
 
         JSObject *pobj = vp->toObjectOrNull();
-        if (!pobj)
-            return JS_FALSE;
 
-        return SetProto(cx, obj, pobj, true);
+        JSObject *delegate = DelegateObject(cx, obj);
+        if (!delegate)
+            return false;
+
+        // save the old prototype
+        JSObject *oldDelegateProto = delegate->getProto();
+        if (!SetProto(cx, delegate, pobj, true))
+            return false;
+
+        if (!SetProto(cx, obj, pobj, true)) {
+            // restore proto on delegate
+            JS_ALWAYS_TRUE(SetProto(cx, delegate, oldDelegateProto, true));
+            return false;
+        }
+        return true;
     }
 
     JSObject *delegate = DelegateObject(cx, obj);
