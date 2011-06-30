@@ -75,6 +75,10 @@ public:
                                          CGColorSpaceRef aColorSpace, 
                                          int aX, int aY,
                                          size_t aWidth, size_t aHeight);
+
+#ifdef DEBUG
+  static void SaveToDisk(nsIOSurface *surf);
+#endif
 private:
   void Destroy();
 

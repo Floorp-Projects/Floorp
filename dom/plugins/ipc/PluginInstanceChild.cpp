@@ -2336,17 +2336,12 @@ PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     }
 
     mWindow.window = NULL;
-#ifdef XP_MACOSX
-    if (mWindow.width != aWindow.width || mWindow.height != aWindow.height) 
-        mAccumulatedInvalidRect = nsIntRect(0, 0, aWindow.width, aWindow.height);
-#else
     if (mWindow.width != aWindow.width || mWindow.height != aWindow.height ||
         mWindow.clipRect.top != aWindow.clipRect.top ||
         mWindow.clipRect.left != aWindow.clipRect.left ||
         mWindow.clipRect.bottom != aWindow.clipRect.bottom ||
         mWindow.clipRect.right != aWindow.clipRect.right)
         mAccumulatedInvalidRect = nsIntRect(0, 0, aWindow.width, aWindow.height);
-#endif
 
     mWindow.x = aWindow.x;
     mWindow.y = aWindow.y;
@@ -2696,6 +2691,8 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
         return;
     }
 
+#ifndef XP_MACOSX
+    // Adjusting the window isn't needed for OSX
 #ifndef XP_WIN
     // On Windows, we translate the device context, in order for the window
     // origin to be correct.
@@ -2716,6 +2713,7 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
         mWindow.clipRect.right = clipRect.XMost();
         mWindow.clipRect.bottom = clipRect.YMost();
     }
+#endif // XP_MACOSX
 
 #ifdef XP_WIN
     // Windowless plugins on Windows need a WM_WINDOWPOSCHANGED event to update
@@ -3016,6 +3014,22 @@ PluginInstanceChild::ShowPluginFrame()
     AutoRestore<bool> pending(mPendingPluginCall);
     mPendingPluginCall = true;
 
+    bool temporarilyMakeVisible = !IsVisible() && !mHasPainted;
+    if (temporarilyMakeVisible && mWindow.width && mWindow.height) {
+        mWindow.clipRect.right = mWindow.width;
+        mWindow.clipRect.bottom = mWindow.height;
+    } else if (!IsVisible()) {
+        // If we're not visible, don't bother painting a <0,0,0,0>
+        // rect.  If we're eventually made visible, the visibility
+        // change will invalidate our window.
+        ClearCurrentSurface();
+        return true;
+    }
+
+    if (!EnsureCurrentBuffer()) {
+        return false;
+    }
+
 #ifdef XP_MACOSX
     // We can't use the thebes code with CoreAnimation so we will
     // take a different code path.
@@ -3023,8 +3037,8 @@ PluginInstanceChild::ShowPluginFrame()
         mDrawingModel == NPDrawingModelInvalidatingCoreAnimation ||
         mDrawingModel == NPDrawingModelCoreGraphics) {
 
-        if (!EnsureCurrentBuffer()) {
-          return false;
+        if (!IsVisible()) {
+            return true;
         }
 
         // Clear accRect here to be able to pass
@@ -3053,6 +3067,8 @@ PluginInstanceChild::ShowPluginFrame()
         SurfaceDescriptor currSurf;
         currSurf = IOSurfaceDescriptor(mCurrentIOSurface->GetIOSurfaceID());
 
+        mHasPainted = true;
+
         // Unused
         SurfaceDescriptor returnSurf;
 
@@ -3066,22 +3082,6 @@ PluginInstanceChild::ShowPluginFrame()
         return false;
     }
 #endif
-
-    bool temporarilyMakeVisible = !IsVisible() && !mHasPainted;
-    if (temporarilyMakeVisible && mWindow.width && mWindow.height) {
-        mWindow.clipRect.right = mWindow.width;
-        mWindow.clipRect.bottom = mWindow.height;
-    } else if (!IsVisible()) {
-        // If we're not visible, don't bother painting a <0,0,0,0>
-        // rect.  If we're eventually made visible, the visibility
-        // change will invalidate our window.
-        ClearCurrentSurface();
-        return true;
-    }
-
-    if (!EnsureCurrentBuffer()) {
-        return false;
-    }
 
     NS_ASSERTION(mWindow.width == (mWindow.clipRect.right - mWindow.clipRect.left) &&
                  mWindow.height == (mWindow.clipRect.bottom - mWindow.clipRect.top),
@@ -3566,7 +3566,11 @@ PluginInstanceChild::ClearAllSurfaces()
         SurfaceDescriptor temp = null_t();
         NPRect r = { 0, 0, 1, 1 };
         SendShow(r, temp, &temp);
+    }
 
+    if (mCGLayer) {
+        mozilla::plugins::PluginUtilsOSX::ReleaseCGLayer(mCGLayer);
+        mCGLayer = nsnull;
     }
 
     mCurrentIOSurface = nsnull;
