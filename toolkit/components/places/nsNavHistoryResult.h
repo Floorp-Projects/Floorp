@@ -107,8 +107,9 @@ private:
   NS_IMETHOD OnDeleteURI(nsIURI *aURI, const nsACString& aGUID,         \
                          PRUint16 aReason);                             \
   NS_IMETHOD OnClearHistory();                                          \
-  NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aWhat,                \
-                           const nsAString &aValue);                    \
+  NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aChangedAttribute,    \
+                           const nsAString &aNewValue,                  \
+                           const nsACString &aGUID);                    \
   NS_IMETHOD OnDeleteVisits(nsIURI* aURI, PRTime aVisitTime,            \
                             const nsACString& aGUID, PRUint16 aReason);
 

@@ -1888,8 +1888,10 @@ nsDownloadManager::OnClearHistory()
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
-                                 const nsAString &aValue)
+nsDownloadManager::OnPageChanged(nsIURI *aURI,
+                                 PRUint32 aChangedAttribute,
+                                 const nsAString& aNewValue,
+                                 const nsACString &aGUID)
 {
   return NS_OK;
 }

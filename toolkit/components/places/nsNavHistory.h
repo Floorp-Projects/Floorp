@@ -236,11 +236,35 @@ public:
   }
 
   /**
-   * Returns the database ID for the given URI, or 0 if not found and autoCreate
-   * is false.
+   * Fetches the database id and the GUID associated to the given URI.
+   *
+   * @param aURI
+   *        The page to look for.
+   * @param _pageId
+   *        Will be set to the database id associated with the page.
+   *        If the page doesn't exist, this will be zero.
+   * @param _GUID
+   *        Will be set to the unique id associated with the page.
+   *        If the page doesn't exist, this will be empty.
+   * @note This DOES NOT check for bad URLs other than that they're nonempty.
    */
-  nsresult GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
-                       PRBool aAutoCreate);
+  nsresult GetIdForPage(nsIURI* aURI,
+                        PRInt64* _pageId, nsCString& _GUID);
+
+  /**
+   * Fetches the database id and the GUID associated to the given URI, creating
+   * a new database entry if one doesn't exist yet.
+   *
+   * @param aURI
+   *        The page to look for or create.
+   * @param _pageId
+   *        Will be set to the database id associated with the page.
+   * @param _GUID
+   *        Will be set to the unique id associated with the page.
+   * @note This DOES NOT check for bad URLs other than that they're nonempty.
+   */
+  nsresult GetOrCreateIdForPage(nsIURI* aURI,
+                                PRInt64* _pageId, nsCString& _GUID);
 
   nsresult UpdateFrecency(PRInt64 aPlaceId);
 
@@ -336,8 +360,9 @@ public:
 
   // used by other places components to send history notifications (for example,
   // when the favicon has changed)
-  void SendPageChangedNotification(nsIURI* aURI, PRUint32 aWhat,
-                                   const nsAString& aValue);
+  void SendPageChangedNotification(nsIURI* aURI, PRUint32 aChangedAttribute,
+                                   const nsAString& aValue,
+                                   const nsACString& aGUID);
 
   /**
    * Returns current number of days stored in history.
