@@ -670,6 +670,16 @@ PodEqual(T *one, T *two, size_t len)
     return !memcmp(one, two, len * sizeof(T));
 }
 
+
+/*
+ * Ordinarily, a function taking a JSContext* 'cx' paremter reports errors on
+ * the context. In some cases, functions optionally report and indicate this by
+ * taking a nullable 'maybecx' parameter. In some cases, though, a function
+ * always needs a 'cx', but optionally reports. This option is presented by the
+ * MaybeReportError.
+ */
+enum MaybeReportError { REPORT_ERROR = true, DONT_REPORT_ERROR = false };
+
 } /* namespace js */
 
 #endif /* defined(__cplusplus) */

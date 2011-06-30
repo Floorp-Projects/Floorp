@@ -61,7 +61,6 @@
 #include "jsbool.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
-#include "jsfun.h"      /* for JS_ARGS_LENGTH_MAX */
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jslock.h"
@@ -3101,7 +3100,7 @@ static JSBool
 str_fromCharCode(JSContext *cx, uintN argc, Value *vp)
 {
     Value *argv = JS_ARGV(cx, vp);
-    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
+    JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
     if (argc == 1) {
         uint16_t code;
         if (!ValueToUint16(cx, argv[0], &code))

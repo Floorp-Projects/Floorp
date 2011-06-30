@@ -37,13 +37,14 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 350256;
-var summary = 'Array.apply maximum arguments: 2^19 - 1024';
+var summary = 'Array.apply maximum arguments';
 var actual = '';
 var expect = '';
 
 
 //-----------------------------------------------------------------------------
-test(Math.pow(2, 19) - 1024);
+if (getMaxArgs)
+    test(getMaxArgs());
 //-----------------------------------------------------------------------------
 
 function test(length)

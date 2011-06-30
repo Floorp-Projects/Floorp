@@ -625,7 +625,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
     /* N.B. Must be kept in sync with InvokeSessionGuard::start/invoke */
 
     CallArgs args = argsRef;
-    JS_ASSERT(args.argc() <= JS_ARGS_LENGTH_MAX);
+    JS_ASSERT(args.argc() <= StackSpace::ARGS_LENGTH_MAX);
 
     if (args.calleev().isPrimitive()) {
         js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(construct));
@@ -746,7 +746,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
 
         /* Hoist dynamic checks from CheckStackAndEnterMethodJIT. */
         JS_CHECK_RECURSION(cx, return false);
-        stackLimit_ = stack.space().getStackLimit(cx);
+        stackLimit_ = stack.space().getStackLimit(cx, REPORT_ERROR);
         if (!stackLimit_)
             return false;
 
@@ -4095,7 +4095,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     }
 
     JSScript *newScript = fun->script();
-    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, newScript, construct, OOMCheck()))
+    if (!cx->stack.pushInlineFrame(cx, regs, args, *callee, fun, newScript, construct))
         goto error;
 
     /* Refresh local js::Interpret state. */
@@ -5310,7 +5310,7 @@ BEGIN_CASE(JSOP_INITELEM)
     if (rref.isMagic(JS_ARRAY_HOLE)) {
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(jsuint(JSID_TO_INT(id)) < JS_ARGS_LENGTH_MAX);
+        JS_ASSERT(jsuint(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
         if (js_GetOpcode(cx, script, regs.pc + JSOP_INITELEM_LENGTH) == JSOP_ENDINIT &&
             !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1))) {
             goto error;
