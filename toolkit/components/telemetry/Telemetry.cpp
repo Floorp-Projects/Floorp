@@ -121,13 +121,13 @@ HistogramGet(const char *name, PRUint32 min, PRUint32 max, PRUint32 bucketCount,
 
   switch (histogramType) {
   case nsITelemetry::HISTOGRAM_EXPONENTIAL:
-    *result = Histogram::FactoryGet(name, min, max, bucketCount, Histogram::kNoFlags);
+    *result = Histogram::FactoryGet(name, min, max, bucketCount, Histogram::kUmaTargetedHistogramFlag);
     break;
   case nsITelemetry::HISTOGRAM_LINEAR:
-    *result = LinearHistogram::FactoryGet(name, min, max, bucketCount, Histogram::kNoFlags);
+    *result = LinearHistogram::FactoryGet(name, min, max, bucketCount, Histogram::kUmaTargetedHistogramFlag);
     break;
   case nsITelemetry::HISTOGRAM_BOOLEAN:
-    *result = BooleanHistogram::FactoryGet(name, Histogram::kNoFlags);
+    *result = BooleanHistogram::FactoryGet(name, Histogram::kUmaTargetedHistogramFlag);
     break;
   default:
     return NS_ERROR_INVALID_ARG;
@@ -172,6 +172,7 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
   h->SnapshotSample(&ss);
   JSObject *counts_array;
   JSObject *rarray;
+  jsval static_histogram = h->flags() && Histogram::kUmaTargetedHistogramFlag ? JSVAL_TRUE : JSVAL_FALSE;
   const size_t count = h->bucket_count();
   if (!(JS_DefineProperty(cx, obj, "min", INT_TO_JSVAL(h->declared_min()), NULL, NULL, JSPROP_ENUMERATE)
         && JS_DefineProperty(cx, obj, "max", INT_TO_JSVAL(h->declared_max()), NULL, NULL, JSPROP_ENUMERATE)
@@ -182,6 +183,7 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
         && FillRanges(cx, rarray, h)
         && (counts_array = JS_NewArrayObject(cx, count, NULL))
         && JS_DefineProperty(cx, obj, "counts", OBJECT_TO_JSVAL(counts_array), NULL, NULL, JSPROP_ENUMERATE)
+        && JS_DefineProperty(cx, obj, "static", static_histogram, NULL, NULL, JSPROP_ENUMERATE)
         )) {
     return JS_FALSE;
   }
@@ -273,6 +275,7 @@ TelemetryImpl::NewHistogram(const nsACString &name, PRUint32 min, PRUint32 max, 
   nsresult rv = HistogramGet(PromiseFlatCString(name).get(), min, max, bucketCount, histogramType, &h);
   if (NS_FAILED(rv))
     return rv;
+  h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
   return WrapAndReturnHistogram(h, cx, ret);
 }
 

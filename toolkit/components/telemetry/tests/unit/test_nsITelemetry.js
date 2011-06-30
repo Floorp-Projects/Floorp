@@ -31,7 +31,9 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
 
   do_check_eq(gh.min, min)
   do_check_eq(gh.max, max)
- 
+
+  do_check_false(gh.static); 
+
   // Check that booleans work with nonboolean histograms
   h.add(false);
   h.add(true);
@@ -85,6 +87,7 @@ function test_getHistogramById() {
   do_check_eq(s.histogram_type, Telemetry.HISTOGRAM_EXPONENTIAL);
   do_check_eq(s.min, 1);
   do_check_eq(s.max, 10000);
+  do_check_true(s.static);
 }
 
 // Check that telemetry doesn't record in private mode
