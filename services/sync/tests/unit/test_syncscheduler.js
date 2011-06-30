@@ -212,43 +212,31 @@ add_test(function test_scheduleNextSync() {
   SyncScheduler.singleDeviceInterval = 100;
   SyncScheduler.syncInterval = SyncScheduler.singleDeviceInterval;
 
-  // The pre-set value for nextSync
-  let initial_nextSync;
-
-  // The estimated syncInterval value after calling scheduleNextSync.
-  let syncInterval;
-
   // Test backoffInterval is 0 as expected.
   do_check_eq(Status.backoffInterval, 0);
 
   _("Test setting sync interval when nextSync == 0");
-  initial_nextSync = SyncScheduler.nextSync = 0;
-  let expectedInterval = SyncScheduler.singleDeviceInterval;
+  SyncScheduler.nextSync = 0;
   SyncScheduler.scheduleNextSync();
 
   // Test nextSync value was changed.
-  do_check_neq(SyncScheduler.nextSync, initial_nextSync);
-  syncInterval = SyncScheduler.nextSync - Date.now();
-  _("Sync Interval: " + syncInterval);
+  do_check_true(SyncScheduler.nextSync > 0);
 
-  // syncInterval is smaller than expectedInterval
-  // since some time has passed.
-  do_check_true(syncInterval <= expectedInterval);
+  // nextSync - Date.now() might be smaller than expectedInterval
+  // since some time has passed since we called scheduleNextSync().
+  let expectedInterval = SyncScheduler.singleDeviceInterval;
+  do_check_true(SyncScheduler.nextSync - Date.now() <= expectedInterval);
   do_check_eq(SyncScheduler.syncTimer.delay, expectedInterval);
 
   _("Test setting sync interval when nextSync != 0");
   // Schedule next sync for 100ms in the future.
-  initial_nextSync = SyncScheduler.nextSync = Date.now() + 
-    SyncScheduler.singleDeviceInterval;
+  SyncScheduler.nextSync = Date.now() + SyncScheduler.singleDeviceInterval;
   SyncScheduler.scheduleNextSync();
 
-  syncInterval = SyncScheduler.nextSync - Date.now();
-  _("Sync Interval: " + syncInterval);
-
-  // syncInterval is smaller than expectedInterval
-  // since some time has passed.
-  do_check_true(syncInterval <= expectedInterval);
-  do_check_eq(SyncScheduler.syncTimer.delay, expectedInterval);
+  // nextSync - Date.now() might be smaller than expectedInterval
+  // since some time has passed since we called scheduleNextSync().
+  do_check_true(SyncScheduler.nextSync - Date.now() <= expectedInterval);
+  do_check_true(SyncScheduler.syncTimer.delay <= expectedInterval);
 });
 
 add_test(function test_handleSyncError() {
