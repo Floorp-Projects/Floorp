@@ -120,7 +120,7 @@ FetchPageInfo(StatementCache<mozIStorageStatement>& aStmtCache,
 
   nsCOMPtr<mozIStorageStatement> stmt =
     aStmtCache.GetCachedStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.favicon_id, "
+      "SELECT h.id, h.favicon_id, h.guid, "
              "(") + redirectedBookmarksFragment + NS_LITERAL_CSTRING(") "
       "FROM moz_places h WHERE h.url = :page_url"
     ));
@@ -142,19 +142,20 @@ FetchPageInfo(StatementCache<mozIStorageStatement>& aStmtCache,
   rv = stmt->GetInt64(0, &_page.id);
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool isNull;
-  stmt->GetIsNull(1, &isNull);
+  rv = stmt->GetIsNull(1, &isNull);
   NS_ENSURE_SUCCESS(rv, rv);
   // favicon_id can be NULL.
   if (!isNull) {
     rv = stmt->GetInt64(1, &_page.iconId);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  stmt->GetIsNull(2, &isNull);
+  rv = stmt->GetUTF8String(2, _page.guid);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->GetIsNull(3, &isNull);
   NS_ENSURE_SUCCESS(rv, rv);
   // The page could not be bookmarked.
   if (!isNull) {
-    rv = stmt->GetUTF8String(2, _page.bookmarkedSpec);
+    rv = stmt->GetUTF8String(3, _page.bookmarkedSpec);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -807,6 +808,10 @@ AsyncAssociateIconToPage::Run()
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Get the new id and GUID.
+    rv = FetchPageInfo(mFaviconSvc->mSyncStatements, mPage);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     mIcon.status |= ICON_STATUS_ASSOCIATED;
   }
   // Otherwise just associate the icon to the page, if needed.
@@ -959,7 +964,7 @@ NotifyIconObservers::Run()
     rv = NS_NewURI(getter_AddRefs(pageURI), mPage.spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mFaviconSvc->SendFaviconNotifications(pageURI, iconURI);
+    mFaviconSvc->SendFaviconNotifications(pageURI, iconURI, mPage.guid);
 
     // If the page is bookmarked and the bookmarked url is different from the
     // updated one, start a new task to update its icon as well.

@@ -3063,7 +3063,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
 
 
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnBeforeDeleteURI(nsIURI *aURI,
+nsNavHistoryQueryResultNode::OnBeforeDeleteURI(nsIURI* aURI,
                                                const nsACString& aGUID,
                                                PRUint16 aReason)
 {
@@ -3075,7 +3075,7 @@ nsNavHistoryQueryResultNode::OnBeforeDeleteURI(nsIURI *aURI,
  * the given URI.
  */
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnDeleteURI(nsIURI *aURI,
+nsNavHistoryQueryResultNode::OnDeleteURI(nsIURI* aURI,
                                          const nsACString& aGUID,
                                          PRUint16 aReason)
 {
@@ -3144,22 +3144,23 @@ static nsresult setFaviconCallback(
 
 
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
-                                           const nsAString &aValue)
+nsNavHistoryQueryResultNode::OnPageChanged(nsIURI* aURI,
+                                           PRUint32 aChangedAttribute,
+                                           const nsAString& aNewValue,
+                                           const nsACString& aGUID)
 {
   nsCAutoString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  switch (aWhat) {
+  switch (aChangedAttribute) {
     case nsINavHistoryObserver::ATTRIBUTE_FAVICON: {
-      NS_ConvertUTF16toUTF8 newFavicon(aValue);
       PRBool onlyOneEntry = (mOptions->ResultType() ==
                              nsINavHistoryQueryOptions::RESULTS_AS_URI ||
                              mOptions->ResultType() ==
                              nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS);
       rv = UpdateURIs(PR_TRUE, onlyOneEntry, PR_FALSE, spec, setFaviconCallback,
-                      &newFavicon);
+                      &NS_ConvertUTF16toUTF8(aNewValue));
       NS_ENSURE_SUCCESS(rv, rv);
       break;
     }
@@ -5170,10 +5171,12 @@ nsNavHistoryResult::OnClearHistory()
 
 
 NS_IMETHODIMP
-nsNavHistoryResult::OnPageChanged(nsIURI *aURI,
-                                  PRUint32 aWhat, const nsAString &aValue)
+nsNavHistoryResult::OnPageChanged(nsIURI* aURI,
+                                  PRUint32 aChangedAttribute,
+                                  const nsAString& aValue,
+                                  const nsACString& aGUID)
 {
-  ENUMERATE_HISTORY_OBSERVERS(OnPageChanged(aURI, aWhat, aValue));
+  ENUMERATE_HISTORY_OBSERVERS(OnPageChanged(aURI, aChangedAttribute, aValue, aGUID));
   return NS_OK;
 }
 
