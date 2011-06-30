@@ -51,14 +51,22 @@
   const HEAP   = Ci.nsIMemoryReporter.KIND_HEAP;
   const OTHER  = Ci.nsIMemoryReporter.KIND_OTHER;
 
-  function f(aProcess, aPath, aKind, aAmount) {
+  const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
+  const COUNT = Ci.nsIMemoryReporter.UNITS_COUNT; 
+
+  function f2(aProcess, aPath, aKind, aUnits, aAmount) {
     return {
       process:     aProcess,
       path:        aPath,
       kind:        aKind,
+      units:       aUnits,
       description: "(description)",
       amount:      aAmount 
     };
+  }
+
+  function f(aProcess, aPath, aKind, aAmount) {
+    return f2(aProcess, aPath, aKind, BYTES, aAmount);
   }
 
   fakeReporters = [
@@ -79,6 +87,9 @@
     f("", "explicit/g/b",       HEAP,     5 * MB),
     f("", "other1",             OTHER,  111 * MB),
     f("", "other2",             OTHER,  222 * MB),
+    f2("", "other3",            OTHER,  COUNT, 777),
+    f2("", "other4",            OTHER,  COUNT, 888),
+    f2("", "unknown-unit",      OTHER,  /*bogus unit*/999, 999),
 
     f("2nd", "heap-used",       OTHER, 1000 * MB),
     f("2nd", "heap-unused",     OTHER,  100 * MB),
@@ -144,6 +155,9 @@ Other Measurements\n\
 222.00 MB -- other2\n\
 111.00 MB -- other1\n\
 100.00 MB -- heap-unused\n\
+      888 -- other4\n\
+      777 -- other3\n\
+    (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
 \n\
@@ -209,6 +223,9 @@ Other Measurements\n\
 232,783,872 B -- other2\n\
 116,391,936 B -- other1\n\
 104,857,600 B -- heap-unused\n\
+          888 -- other4\n\
+          777 -- other3\n\
+        (???) -- unknown-unit\n\
 \n\
 2nd Process\n\
 \n\
