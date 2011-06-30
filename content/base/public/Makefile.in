@@ -115,8 +115,6 @@ XPIDLSRCS	= \
 		nsISelectionPrivate.idl  \
 		nsIScriptLoaderObserver.idl  \
 		nsIDroppedLinkHandler.idl \
-		nsIScriptEventHandler.idl \
-		nsIScriptEventManager.idl \
 		nsIImageLoadingContent.idl \
 		nsIObjectLoadingContent.idl \
 		nsIFrameLoader.idl \

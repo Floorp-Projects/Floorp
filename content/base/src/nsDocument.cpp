@@ -131,7 +131,6 @@
 #include "nsBidiUtils.h"
 
 #include "nsIDOMUserDataHandler.h"
-#include "nsScriptEventManager.h"
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIXPathEvaluatorInternal.h"
 #include "nsIParserService.h"
@@ -1861,7 +1860,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mStyleAttrStyleSheet, nsIStyleSheet)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptEventManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mXPathEvaluatorTearoff)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnloadBlocker)
@@ -6317,17 +6315,6 @@ nsDocument::FlushExternalResources(mozFlushType aType)
     return;
   }
   EnumerateExternalResources(Flush, &aType);
-}
-
-nsIScriptEventManager*
-nsDocument::GetScriptEventManager()
-{
-  if (!mScriptEventManager) {
-    mScriptEventManager = new nsScriptEventManager(this);
-    // automatically AddRefs
-  }
-
-  return mScriptEventManager;
 }
 
 void
