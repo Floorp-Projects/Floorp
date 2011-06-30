@@ -84,8 +84,14 @@
     f("2nd", "heap-unused",     OTHER,  100 * MB),
     f("2nd", "explicit/a/b/c",  HEAP,   498 * MB),
     f("2nd", "explicit/a/b/c",  HEAP,     1 * MB), // dup: merge
-    f("2nd", "explicit/b",      HEAP,   400 * MB),
-    f("2nd", "other1",          OTHER,  777 * MB),
+    f("2nd", "explicit/flip\\the\\backslashes",
+                                HEAP,   200 * MB),
+    f("2nd", "explicit/compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)",
+                                HEAP,   200 * MB),
+    // The escaping of compartment names must prevent this script from running.
+    f("2nd", "danger<script>window.alert(1)</script>",
+                                OTHER,  666 * MB),
+    f("2nd", "other1",          OTHER,  111 * MB),
 
     // kUnknown should be handled gracefully for "heap-used", non-leaf
     // reporters, leaf-reporters, and "other" reporters.
@@ -146,12 +152,14 @@ Explicit Allocations\n\
 ├────499.00 MB (49.90%) -- a\n\
 │    └──499.00 MB (49.90%) -- b\n\
 │       └──499.00 MB (49.90%) -- c\n\
-├────400.00 MB (40.00%) -- b\n\
+├────200.00 MB (20.00%) -- flip/the/backslashes\n\
+├────200.00 MB (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mo...)\n\
 └────101.00 MB (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
 1,000.00 MB -- heap-used\n\
-  777.00 MB -- other1\n\
+  666.00 MB -- danger<script>window.alert(1)</script>\n\
+  111.00 MB -- other1\n\
   100.00 MB -- heap-unused\n\
 \n\
 3rd Process\n\
@@ -209,12 +217,14 @@ Explicit Allocations\n\
 ├────523,239,424 B (49.90%) -- a\n\
 │    └──523,239,424 B (49.90%) -- b\n\
 │       └──523,239,424 B (49.90%) -- c\n\
-├────419,430,400 B (40.00%) -- b\n\
+├────209,715,200 B (20.00%) -- flip/the/backslashes\n\
+├────209,715,200 B (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)\n\
 └────105,906,176 B (10.10%) -- heap-unclassified\n\
 \n\
 Other Measurements\n\
 1,048,576,000 B -- heap-used\n\
-  814,743,552 B -- other1\n\
+  698,351,616 B -- danger<script>window.alert(1)</script>\n\
+  116,391,936 B -- other1\n\
   104,857,600 B -- heap-unused\n\
 \n\
 3rd Process\n\
