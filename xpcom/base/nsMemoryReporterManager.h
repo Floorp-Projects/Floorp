@@ -40,8 +40,9 @@ public:
     virtual ~nsMemoryReporterManager();
 
 private:
-    nsCOMArray<nsIMemoryReporter> mReporters;
-    Mutex                         mMutex;
+    nsCOMArray<nsIMemoryReporter>      mReporters;
+    nsCOMArray<nsIMemoryMultiReporter> mMultiReporters;
+    Mutex                              mMutex;
 };
 
 #define NS_MEMORY_REPORTER_MANAGER_CID \
