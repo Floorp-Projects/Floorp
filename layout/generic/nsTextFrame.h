@@ -317,6 +317,8 @@ public:
                                 const gfxPoint& aTextBaselinePt,
                                 const gfxRect& aDirtyRect,
                                 PropertyProvider& aProvider,
+                                PRUint32 aContentOffset,
+                                PRUint32 aContentLength,
                                 nsTextPaintStyle& aTextPaintStyle,
                                 const nsCharClipDisplayItem::ClipEdges& aClipEdges);
   // helper: paint text with foreground and background colors determined
@@ -327,6 +329,8 @@ public:
                                     const gfxPoint& aTextBaselinePt,
                                     const gfxRect& aDirtyRect,
                                     PropertyProvider& aProvider,
+                                    PRUint32 aContentOffset,
+                                    PRUint32 aContentLength,
                                     nsTextPaintStyle& aTextPaintStyle,
                                     SelectionDetails* aDetails,
                                     SelectionType* aAllTypes);
@@ -336,6 +340,8 @@ public:
                                      const gfxPoint& aTextBaselinePt,
                                      const gfxRect& aDirtyRect,
                                      PropertyProvider& aProvider,
+                                     PRUint32 aContentOffset,
+                                     PRUint32 aContentLength,
                                      nsTextPaintStyle& aTextPaintStyle,
                                      SelectionDetails* aDetails,
                                      SelectionType aSelectionType);
