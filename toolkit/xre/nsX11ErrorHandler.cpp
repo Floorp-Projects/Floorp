@@ -38,6 +38,9 @@
 
 #include "nsX11ErrorHandler.h"
 
+#include "mozilla/plugins/PluginProcessChild.h"
+using mozilla::plugins::PluginProcessChild;
+
 #include "prenv.h"
 #include "nsXULAppAPI.h"
 #include "nsExceptionHandler.h"
@@ -153,9 +156,15 @@ X11Error(Display *display, XErrorEvent *event) {
 #ifdef MOZ_CRASHREPORTER
   switch (XRE_GetProcessType()) {
   case GeckoProcessType_Default:
-  case GeckoProcessType_Plugin:
-  case GeckoProcessType_Content:
     CrashReporter::AppendAppNotesToCrashReport(notes);
+    break;
+  case GeckoProcessType_Plugin:
+    if (CrashReporter::GetEnabled()) {
+      // This is assuming that X operations are performed on the plugin
+      // thread.  If plugins are using X on another thread, then we'll need to
+      // handle that differently.
+      PluginProcessChild::AppendNotesToCrashReport(notes);
+    }
     break;
   default: 
     ; // crash report notes not supported.
