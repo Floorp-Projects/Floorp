@@ -2995,7 +2995,8 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
  */
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
-                                            const nsAString& aPageTitle)
+                                            const nsAString& aPageTitle,
+                                            const nsACString& aGUID)
 {
   if (!mExpanded) {
     // When we are not expanded, we don't update, just invalidate and unhook.
@@ -5132,9 +5133,11 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,
 
 
 NS_IMETHODIMP
-nsNavHistoryResult::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle)
+nsNavHistoryResult::OnTitleChanged(nsIURI* aURI,
+                                   const nsAString& aPageTitle,
+                                   const nsACString& aGUID)
 {
-  ENUMERATE_HISTORY_OBSERVERS(OnTitleChanged(aURI, aPageTitle));
+  ENUMERATE_HISTORY_OBSERVERS(OnTitleChanged(aURI, aPageTitle, aGUID));
   return NS_OK;
 }
 

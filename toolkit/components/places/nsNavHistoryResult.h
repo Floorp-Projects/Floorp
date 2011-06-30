@@ -100,7 +100,8 @@ private:
                      PRInt64 aSessionId, PRInt64 aReferringId,          \
                      PRUint32 aTransitionType, const nsACString& aGUID, \
                      PRUint32* aAdded);                                 \
-  NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle); \
+  NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,  \
+                            const nsACString& aGUID);                   \
   NS_IMETHOD OnBeforeDeleteURI(nsIURI *aURI, const nsACString& aGUID,   \
                                PRUint16 aReason);                       \
   NS_IMETHOD OnDeleteURI(nsIURI *aURI, const nsACString& aGUID,         \
