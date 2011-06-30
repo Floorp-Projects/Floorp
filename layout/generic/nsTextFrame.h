@@ -310,21 +310,23 @@ public:
                             const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                             const nscolor* aOverrideColor = nsnull);
   // helper: paint text frame when we're impacted by at least one selection.
-  // Return PR_FALSE if the text was not painted and we should continue with
+  // Return false if the text was not painted and we should continue with
   // the fast path.
-  PRBool PaintTextWithSelection(gfxContext* aCtx,
-                                const gfxPoint& aFramePt,
-                                const gfxPoint& aTextBaselinePt,
-                                const gfxRect& aDirtyRect,
-                                PropertyProvider& aProvider,
-                                PRUint32 aContentOffset,
-                                PRUint32 aContentLength,
-                                nsTextPaintStyle& aTextPaintStyle,
-                                const nsCharClipDisplayItem::ClipEdges& aClipEdges);
+  bool PaintTextWithSelection(gfxContext* aCtx,
+                              const gfxPoint& aFramePt,
+                              const gfxPoint& aTextBaselinePt,
+                              const gfxRect& aDirtyRect,
+                              PropertyProvider& aProvider,
+                              PRUint32 aContentOffset,
+                              PRUint32 aContentLength,
+                              nsTextPaintStyle& aTextPaintStyle,
+                              const nsCharClipDisplayItem::ClipEdges& aClipEdges);
   // helper: paint text with foreground and background colors determined
   // by selection(s). Also computes a mask of all selection types applying to
   // our text, returned in aAllTypes.
-  void PaintTextWithSelectionColors(gfxContext* aCtx,
+  // Return false if the text was not painted and we should continue with
+  // the fast path.
+  bool PaintTextWithSelectionColors(gfxContext* aCtx,
                                     const gfxPoint& aFramePt,
                                     const gfxPoint& aTextBaselinePt,
                                     const gfxRect& aDirtyRect,
