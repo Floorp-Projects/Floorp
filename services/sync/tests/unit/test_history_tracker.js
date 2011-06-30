@@ -1,5 +1,6 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -34,6 +35,7 @@ function run_test() {
 add_test(function test_empty() {
   _("Verify we've got an empty tracker to work with.");
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_eq(tracker.score, 0);
   run_next_test();
 });
 
@@ -42,6 +44,7 @@ add_test(function test_not_tracking(next) {
   addVisit();
   Utils.nextTick(function() {
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_eq(tracker.score, 0);
     run_next_test();
   });
 });
@@ -50,6 +53,7 @@ add_test(function test_start_tracking() {
   _("Tell the tracker to start tracking changes.");
   onScoreUpdated(function() {
     do_check_eq([id for (id in tracker.changedIDs)].length, 1);
+    do_check_eq(tracker.score, SCORE_INCREMENT_SMALL);
     run_next_test();
   });
   Svc.Obs.notify("weave:engine:start-tracking");
@@ -60,6 +64,7 @@ add_test(function test_start_tracking_twice() {
   _("Notifying twice won't do any harm.");
   onScoreUpdated(function() {
     do_check_eq([id for (id in tracker.changedIDs)].length, 2);
+    do_check_eq(tracker.score, 2 * SCORE_INCREMENT_SMALL);
     run_next_test();
   });
   Svc.Obs.notify("weave:engine:start-tracking");
@@ -75,8 +80,10 @@ add_test(function test_track_delete() {
   onScoreUpdated(function() {
     do_check_true(guid in tracker.changedIDs);
     do_check_eq([id for (id in tracker.changedIDs)].length, 3);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE + 2 * SCORE_INCREMENT_SMALL);
     run_next_test();
   });
+  do_check_eq(tracker.score, 2 * SCORE_INCREMENT_SMALL);
   PlacesUtils.history.removePage(uri);
 });
 
