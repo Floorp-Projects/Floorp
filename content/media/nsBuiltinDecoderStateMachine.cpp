@@ -353,15 +353,13 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
     // waiting for more audio to be decoded.
     mDecoder->GetReentrantMonitor().NotifyAll();
 
-    if (!IsPlaying()) {
-      // Update the ready state, so that the play DOM events fire. We only
-      // need to do this if we're not playing; if we're playing the playback
-      // code will do an update whenever it advances a frame.
-      UpdateReadyState();
-    }
+    // The ready state can change when we've decoded data, so update the
+    // ready state, so that DOM events can fire.
+    UpdateReadyState();
 
     if (mState != DECODER_STATE_SHUTDOWN &&
         !mStopDecodeThreads &&
+        (videoPlaying || audioPlaying) &&
         (!audioPlaying || (GetDecodedAudioDuration() >= ampleAudioThreshold &&
                            audioQueue.GetSize() > 0))
         &&
@@ -1436,6 +1434,9 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
         mVideoFrameEndTime = frame->mEndTime;
         currentFrame = frame;
         mReader->mVideoQueue.PopFront();
+        // Notify the decode thread that the video queue's buffers may have
+        // free'd up space for more frames.
+        mDecoder->GetReentrantMonitor().NotifyAll();
         mDecoder->UpdatePlaybackOffset(frame->mOffset);
         if (mReader->mVideoQueue.GetSize() == 0)
           break;
@@ -1491,10 +1492,6 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
       remainingTime = currentFrame->mEndTime - mStartTime - now;
       currentFrame = nsnull;
     }
-
-    // Kick the decode thread in case it filled its buffers and put itself
-    // to sleep.
-    mDecoder->GetReentrantMonitor().NotifyAll();
 
     // Cap the current time to the larger of the audio and video end time.
     // This ensures that if we're running off the system clock, we don't
