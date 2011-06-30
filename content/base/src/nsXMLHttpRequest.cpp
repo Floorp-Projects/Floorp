@@ -1616,8 +1616,13 @@ void nsXMLHttpRequest::CreateResponseBlob(nsIRequest *request)
   if (file) {
     nsCAutoString contentType;
     mChannel->GetContentType(contentType);
+    nsCOMPtr<nsISupports> cacheToken;
+    if (cc) {
+      cc->GetCacheToken(getter_AddRefs(cacheToken));
+    }
     mResponseBlob = new nsDOMFile(file,
-                                  NS_ConvertASCIItoUTF16(contentType));
+                                  NS_ConvertASCIItoUTF16(contentType),
+                                  cacheToken);
     mResponseBody.Truncate();
     mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   }
