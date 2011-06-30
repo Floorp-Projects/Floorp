@@ -114,14 +114,14 @@ nsMenuBarFrame::Init(nsIContent*      aContent,
   // Also hook up the listener to the window listening for focus events. This is so we can keep proper
   // state as the user alt-tabs through processes.
   
-  target->AddEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
-  target->AddEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
-  target->AddEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);   
+  target->AddEventListener(NS_LITERAL_STRING("keypress"), mMenuBarListener, PR_FALSE); 
+  target->AddEventListener(NS_LITERAL_STRING("keydown"), mMenuBarListener, PR_FALSE);  
+  target->AddEventListener(NS_LITERAL_STRING("keyup"), mMenuBarListener, PR_FALSE);   
 
   // mousedown event should be handled in all phase
-  target->AddEventListener(NS_LITERAL_STRING("mousedown"), (nsIDOMMouseListener*)mMenuBarListener, PR_TRUE);
-  target->AddEventListener(NS_LITERAL_STRING("mousedown"), (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);
-  target->AddEventListener(NS_LITERAL_STRING("blur"), (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);   
+  target->AddEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, PR_TRUE);
+  target->AddEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, PR_FALSE);
+  target->AddEventListener(NS_LITERAL_STRING("blur"), mMenuBarListener, PR_TRUE);   
 
   return rv;
 }
@@ -462,13 +462,13 @@ nsMenuBarFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (pm)
     pm->SetActiveMenuBar(this, PR_FALSE);
 
-  mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
-  mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
-  mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), mMenuBarListener, PR_FALSE); 
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), mMenuBarListener, PR_FALSE);  
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), mMenuBarListener, PR_FALSE);
 
-  mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), (nsIDOMMouseListener*)mMenuBarListener, PR_TRUE);
-  mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);
-  mTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, PR_TRUE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, PR_FALSE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), mMenuBarListener, PR_TRUE);
 
   NS_IF_RELEASE(mMenuBarListener);
 
