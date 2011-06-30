@@ -48,6 +48,11 @@ function exitprintpreview() {
    .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
 }
 
+function finish() {
+  SimpleTest.finish();
+  window.close();
+}
+
 function run1()
 {
 /** Test for Bug 482976 **/
@@ -59,7 +64,7 @@ function run1()
               .getService(Components.interfaces.nsIPrinterEnumerator);
   } catch(e) {
     todo(false, "Test skipped on MacOSX, as the print preview code doesn't work there");
-    SimpleTest.finish();
+    finish();
     return;
   }
 
@@ -68,12 +73,10 @@ function run1()
     ok(gWbp.doingPrintPreview, "Should be doing print preview");
     exitprintpreview();
     ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore");
-    SimpleTest.finish();
   } else {
     todo(false, "No printer seems installed on this machine, that is necessary for this test");
-    SimpleTest.finish();
   }
-  window.close();
+  finish();
 }
 ]]></script>
 </window>
