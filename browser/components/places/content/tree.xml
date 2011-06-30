@@ -60,6 +60,14 @@
         if (result) {
           result.root.containerOpen = false;
         }
+
+        // Unregister the controllber before unlinking the view, otherwise it
+        // may still try to update commands on a view with a null result.
+        if (this._controller) {
+          this._controller.terminate();
+          this.controllers.removeController(this._controller);
+        }
+
         this.view = null;
       ]]></destructor>
 
@@ -332,6 +340,17 @@
           return nodes;
         ]]></getter>
       </property>
+
+      <method name="toggleCutNode">
+        <parameter name="aNode"/>
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          aNode._cutting = aValue;
+          try {
+            this.view.nodeIconChanged(aNode);
+          } catch(ex) { /* ignore no more valid nodes */ }
+        ]]></body>
+      </method>
 
       <!-- nsIPlacesView -->
       <property name="removableSelectionRanges">
