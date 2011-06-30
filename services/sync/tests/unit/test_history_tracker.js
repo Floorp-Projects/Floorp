@@ -21,10 +21,10 @@ let tracker = engine._tracker;
 
 let _counter = 0;
 function addVisit() {
-  PlacesUtils.history.addVisit(
-    Utils.makeURI("http://getfirefox.com/" + _counter),
-    Date.now() * 1000, null, 1, false, 0);
-  _counter += 1;
+  let uri = Utils.makeURI("http://getfirefox.com/" + _counter);
+  PlacesUtils.history.addVisit(uri, Date.now() * 1000, null, 1, false, 0);
+  _counter++;
+  return uri;
 }
 
 
@@ -85,6 +85,38 @@ add_test(function test_track_delete() {
   });
   do_check_eq(tracker.score, 2 * SCORE_INCREMENT_SMALL);
   PlacesUtils.history.removePage(uri);
+});
+
+add_test(function test_dont_track_expiration() {
+  _("Expirations are not tracked.");
+  let uriToExpire = addVisit();
+  let guidToExpire = engine._store.GUIDForUri(uriToExpire);
+  let uriToRemove = addVisit();
+  let guidToRemove = engine._store.GUIDForUri(uriToRemove);
+
+  tracker.clearChangedIDs();
+  do_check_false(guidToExpire in tracker.changedIDs);
+  do_check_false(guidToRemove in tracker.changedIDs);
+
+  onScoreUpdated(function() {
+    do_check_false(guidToExpire in tracker.changedIDs);
+    do_check_true(guidToRemove in tracker.changedIDs);
+    do_check_eq([id for (id in tracker.changedIDs)].length, 1);
+    run_next_test();
+  });
+
+  // Observe expiration.
+  Services.obs.addObserver(function onExpiration(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(onExpiration, aTopic);
+    // Remove the remaining page to update its score.
+    PlacesUtils.history.removePage(uriToRemove);
+  }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+
+  // Force expiration of 1 entry.
+  Services.prefs.setIntPref("places.history.expiration.max_pages", 0);
+  Cc["@mozilla.org/places/expiration;1"]
+    .getService(Ci.nsIObserver)
+    .observe(null, "places-debug-start-expiration", 1);
 });
 
 add_test(function test_stop_tracking() {
