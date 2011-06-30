@@ -1316,10 +1316,13 @@ public:
    * @param aIsUserTriggered whether the user triggered the link. This would be
    *                         false for loads from auto XLinks or from the
    *                         click() method if we ever implement it.
+   * @param aIsTrusted If PR_FALSE, JS Context will be pushed to stack
+   *                   when the link is triggered.
    */
   static void TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
                           nsIURI *aLinkURI, const nsString& aTargetSpec,
-                          PRBool aClick, PRBool aIsUserTriggered);
+                          PRBool aClick, PRBool aIsUserTriggered,
+                          PRBool aIsTrusted);
 
   /**
    * Return top-level widget in the parent chain.
