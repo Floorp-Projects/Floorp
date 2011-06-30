@@ -1451,23 +1451,25 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
    * a) The exact hostname of the url
    * b) The 4 hostnames formed by starting with the last 5 components and
    *    successivly removing the leading component.  The top-level component
-   *    can be skipped.
+   *    can be skipped. This is not done if the hostname is a numerical IP.
    */
   nsTArray<nsCString> hosts;
   hosts.AppendElement(host);
 
-  host.BeginReading(begin);
-  host.EndReading(end);
-  int numHostComponents = 0;
-  while (RFindInReadable(NS_LITERAL_CSTRING("."), begin, end) &&
-         numHostComponents < MAX_HOST_COMPONENTS) {
-    // don't bother checking toplevel domains
-    if (++numHostComponents >= 2) {
-      host.EndReading(iter);
-      hosts.AppendElement(Substring(end, iter));
-    }
-    end = begin;
+  if (!IsCanonicalizedIP(host)) {
     host.BeginReading(begin);
+    host.EndReading(end);
+    int numHostComponents = 0;
+    while (RFindInReadable(NS_LITERAL_CSTRING("."), begin, end) &&
+           numHostComponents < MAX_HOST_COMPONENTS) {
+      // don't bother checking toplevel domains
+      if (++numHostComponents >= 2) {
+        host.EndReading(iter);
+        hosts.AppendElement(Substring(end, iter));
+      }
+      end = begin;
+      host.BeginReading(begin);
+    }
   }
 
   /**
