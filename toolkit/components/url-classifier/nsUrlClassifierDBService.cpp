@@ -1458,11 +1458,11 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
 
   host.BeginReading(begin);
   host.EndReading(end);
-  int numComponents = 0;
+  int numHostComponents = 0;
   while (RFindInReadable(NS_LITERAL_CSTRING("."), begin, end) &&
-         numComponents < MAX_HOST_COMPONENTS) {
+         numHostComponents < MAX_HOST_COMPONENTS) {
     // don't bother checking toplevel domains
-    if (++numComponents >= 2) {
+    if (++numHostComponents >= 2) {
       host.EndReading(iter);
       hosts.AppendElement(Substring(end, iter));
     }
@@ -1483,29 +1483,33 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
    *    appended that was not present in the original url.
    */
   nsTArray<nsCString> paths;
-  paths.AppendElement(path);
+  nsCAutoString pathToAdd;
 
-  path.BeginReading(iter);
-  path.EndReading(end);
-  if (FindCharInReadable('?', iter, end)) {
-    path.BeginReading(begin);
-    path = Substring(begin, iter);
-    paths.AppendElement(path);
-  }
-
-  // Check an empty path (for whole-domain blacklist entries)
-  paths.AppendElement(EmptyCString());
-
-  numComponents = 1;
   path.BeginReading(begin);
   path.EndReading(end);
   iter = begin;
-  while (FindCharInReadable('/', iter, end) &&
-         numComponents < MAX_PATH_COMPONENTS) {
-    iter++;
-    paths.AppendElement(Substring(begin, iter));
-    numComponents++;
+  if (FindCharInReadable('?', iter, end)) {
+    pathToAdd = Substring(begin, iter);
+    paths.AppendElement(pathToAdd);
+    end = iter;
   }
+
+  int numPathComponents = 1;
+  iter = begin;
+  while (FindCharInReadable('/', iter, end) &&
+         numPathComponents < MAX_PATH_COMPONENTS) {
+    iter++;
+    pathToAdd.Assign(Substring(begin, iter));
+    paths.AppendElement(pathToAdd);
+    numPathComponents++;
+  }
+
+  // If we haven't already done so, add the full path
+  if (!pathToAdd.Equals(path)) {
+    paths.AppendElement(path);
+  }
+  // Check an empty path (for whole-domain blacklist entries)
+  paths.AppendElement(EmptyCString());
 
   for (PRUint32 hostIndex = 0; hostIndex < hosts.Length(); hostIndex++) {
     for (PRUint32 pathIndex = 0; pathIndex < paths.Length(); pathIndex++) {
