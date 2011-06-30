@@ -193,6 +193,25 @@ add_test(function test_calculateBackoff() {
 });
 
 add_test(function test_scheduleNextSync() {
+  let server = sync_httpd_setup();
+  setUp();
+
+  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
+    // Ensure this gets called after SyncScheduler's observer so we
+    // can cancel the timer set by SyncScheduler.scheduleNextSync().
+    Utils.nextTick(function () {
+      SyncScheduler.setDefaults();
+      Svc.Prefs.resetBranch("");
+      SyncScheduler.syncTimer.clear();
+      Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
+      server.stop(run_next_test);
+    }, this);
+  });
+  
+  // Make sync happen faster
+  SyncScheduler.singleDeviceInterval = 100;
+  SyncScheduler.syncInterval = SyncScheduler.singleDeviceInterval;
+
   // The pre-set value for nextSync
   let initial_nextSync;
 
@@ -216,13 +235,11 @@ add_test(function test_scheduleNextSync() {
   // since some time has passed.
   do_check_true(syncInterval <= expectedInterval);
   do_check_eq(SyncScheduler.syncTimer.delay, expectedInterval);
-  SyncScheduler.syncTimer.clear();
-
 
   _("Test setting sync interval when nextSync != 0");
-  // Schedule next sync for some time in the future
-  expectedInterval = 5000;
-  initial_nextSync = SyncScheduler.nextSync = Date.now() + expectedInterval;
+  // Schedule next sync for 100ms in the future.
+  initial_nextSync = SyncScheduler.nextSync = Date.now() + 
+    SyncScheduler.singleDeviceInterval;
   SyncScheduler.scheduleNextSync();
 
   syncInterval = SyncScheduler.nextSync - Date.now();
@@ -232,10 +249,6 @@ add_test(function test_scheduleNextSync() {
   // since some time has passed.
   do_check_true(syncInterval <= expectedInterval);
   do_check_eq(SyncScheduler.syncTimer.delay, expectedInterval);
-  SyncScheduler.syncTimer.clear();
-
-  SyncScheduler.setDefaults();
-  run_next_test();
 });
 
 add_test(function test_handleSyncError() {
