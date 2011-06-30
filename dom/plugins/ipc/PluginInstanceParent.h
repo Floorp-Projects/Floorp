@@ -282,6 +282,9 @@ public:
     nsresult AsyncSetWindow(NPWindow* window);
     nsresult GetImage(mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
     nsresult GetImageSize(nsIntSize* aSize);
+#ifdef XP_MACOSX
+    nsresult IsRemoteDrawingCoreAnimation(PRBool *aDrawing);
+#endif
     nsresult SetBackgroundUnknown();
     nsresult BeginUpdateBackground(const nsIntRect& aRect,
                                    gfxContext** aCtx);
