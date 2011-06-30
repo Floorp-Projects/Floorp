@@ -287,6 +287,17 @@ ArrayBuffer::obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, J
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom))
         return true;
 
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)) {
+        if (!vp->isObjectOrNull())
+            return JS_TRUE;
+
+        JSObject *pobj = vp->toObjectOrNull();
+        if (!pobj)
+            return JS_FALSE;
+
+        return SetProto(cx, obj, pobj, true);
+    }
+
     JSObject *delegate = DelegateObject(cx, obj);
     if (!delegate)
         return false;
