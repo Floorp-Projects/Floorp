@@ -13747,6 +13747,10 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     if (fval.toObject().getGlobal() != globalObj)
         RETURN_STOP("JSOP_CALL or JSOP_NEW crosses global scopes");
 
+    JS_ASSERT(fun->isInterpreted());
+    if (!fun->isInterpretedConstructor())
+        RETURN_STOP("Non-interpreted constructors get called via Invoke");
+
     StackFrame* const fp = cx->fp();
 
     if (constructing) {
