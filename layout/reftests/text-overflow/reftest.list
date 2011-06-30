@@ -12,3 +12,4 @@ HTTP(..) == quirks-decorations.html quirks-decorations-ref.html
 HTTP(..) == quirks-line-height.html quirks-line-height-ref.html
 HTTP(..) == standards-decorations.html standards-decorations-ref.html
 HTTP(..) == standards-line-height.html standards-line-height-ref.html
+HTTP(..) == selection.html selection-ref.html

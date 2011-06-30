@@ -195,10 +195,13 @@ struct nsTimeout : PRCList
   // True if this is one of the timeouts that are currently running
   PRPackedBool mRunning;
 
+  // True if this is a repeating/interval timer
+  PRPackedBool mIsInterval;
+
   // Returned as value of setTimeout()
   PRUint32 mPublicId;
 
-  // Non-zero interval in milliseconds if repetitive timeout
+  // Interval in milliseconds
   PRUint32 mInterval;
 
   // mWhen and mTimeRemaining can't be in a union, sadly, because they
@@ -342,6 +345,7 @@ public:
   virtual NS_HIDDEN_(nsPIDOMWindow*) GetPrivateRoot();
   virtual NS_HIDDEN_(void) ActivateOrDeactivate(PRBool aActivate);
   virtual NS_HIDDEN_(void) SetActive(PRBool aActive);
+  virtual NS_HIDDEN_(void) SetIsBackground(PRBool aIsBackground);
   virtual NS_HIDDEN_(void) SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler);
 
   virtual NS_HIDDEN_(void) SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal);
@@ -664,6 +668,7 @@ protected:
   // JS specific timeout functions (JS args grabbed from context).
   nsresult SetTimeoutOrInterval(PRBool aIsInterval, PRInt32* aReturn);
   nsresult ClearTimeoutOrInterval();
+  nsresult ResetTimersForNonBackgroundWindow();
 
   // The timeout implementation functions.
   void RunTimeout(nsTimeout *aTimeout);

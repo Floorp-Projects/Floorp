@@ -363,7 +363,7 @@
         </xul:label>
       </xul:vbox>
       <xul:hbox anonid="input-container" class="setting-input">
-        <xul:colorpicker type="button" anonid="input" xbl:inherits="disabled" onchange="inputChanged();"/>
+        <xul:colorpicker type="button" anonid="input" xbl:inherits="disabled" onchange="document.getBindingParent(this).inputChanged();"/>
       </xul:hbox>
     </content>
 
