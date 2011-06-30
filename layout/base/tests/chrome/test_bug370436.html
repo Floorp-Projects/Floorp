@@ -27,6 +27,8 @@ function expandStringOffsetToWord(data, offset)
 
 function onContextMenu(e)
 {
+	netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
 	var node = e.rangeParent;
 	var offset = e.rangeOffset;
 

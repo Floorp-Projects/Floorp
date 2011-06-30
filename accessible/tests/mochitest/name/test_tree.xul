@@ -86,7 +86,7 @@
       }
     }
 
-    function tableTester(aID)
+    function tableTester(aID, aIsTable, aCol1ID, aCol2ID)
     {
       this.DOMNode = getNode(aID);
 
@@ -98,7 +98,7 @@
       this.check = function tableTester_check(aEvent)
       {
         var tree = {
-          role: ROLE_TREE_TABLE,
+          role: aIsTable ? ROLE_TABLE : ROLE_TREE_TABLE,
           children: [
             {
               role: ROLE_LIST
@@ -109,15 +109,15 @@
                 {
                   role: ROLE_GRID_CELL,
                   children: [],
-                  name: "row0_col1"
+                  name: "row0_" + aCol1ID
                 },
                 {
                   role: ROLE_GRID_CELL,
                   children: [],
-                  name: "row0_col2"
+                  name: "row0_" + aCol2ID
                 }
               ],
-              name: "row0_col1"
+              name: "row0_" + aCol1ID + " row0_" + aCol2ID
             },
             {
               role: ROLE_ROW,
@@ -125,15 +125,15 @@
                 {
                   role: ROLE_GRID_CELL,
                   children: [],
-                  name: "row1_col1"
+                  name: "row1_" + aCol1ID
                 },
                 {
                   role: ROLE_GRID_CELL,
                   children: [],
-                  name: "row1_col2"
+                  name: "row1_" + aCol2ID
                 }
               ],
-              name: "row1_col1"
+              name: "row1_" + aCol1ID + " row1_" + aCol2ID
             }
           ]
         };
@@ -152,7 +152,8 @@
       var gQueue = new eventQueue(EVENT_REORDER);
 
       gQueue.push(new treeTester("tree"));
-      gQueue.push(new tableTester("table"));
+      gQueue.push(new tableTester("table", true, "t_col1", "t_col2"));
+      gQueue.push(new tableTester("treetable", false, "tt_col1", "tt_col2"));
 
       gQueue.invoke(); // Will call SimpleTest.finish()
     }
@@ -170,7 +171,12 @@
        title="Treegrid row accessible shouldn't inherit name from tree accessible">
       Mozilla Bug 546812
     </a>
-  <p id="display"></p>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=664376"
+       title="Table rows of XUL trees no longer containing cell content as accessible name">
+      Mozilla Bug 664376
+    </a>
+    <p id="display"></p>
     <div id="content" style="display: none">
     </div>
     <pre id="test">
@@ -188,8 +194,16 @@
 
   <tree id="table" flex="1">
     <treecols>
-      <treecol id="col1" flex="1" label="column" primary="true"/>
-      <treecol id="col2" flex="1" label="column 2"/>
+      <treecol id="t_col1" flex="1" label="column"/>
+      <treecol id="t_col2" flex="1" label="column 2"/>
+    </treecols>
+    <treechildren/>
+  </tree>
+
+  <tree id="treetable" flex="1">
+    <treecols>
+      <treecol id="tt_col1" flex="1" label="column" primary="true"/>
+      <treecol id="tt_col2" flex="1" label="column 2"/>
     </treecols>
     <treechildren/>
   </tree>

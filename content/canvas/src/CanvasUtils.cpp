@@ -57,13 +57,15 @@
 #include "nsTArray.h"
 
 #include "CanvasUtils.h"
+#include "mozilla/gfx/Matrix.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace CanvasUtils {
 
 void
-CanvasUtils::DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
-                                      nsIPrincipal *aPrincipal,
-                                      PRBool forceWriteOnly)
+DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
+                         nsIPrincipal *aPrincipal,
+                         PRBool forceWriteOnly)
 {
     // Callers should ensure that mCanvasElement is non-null before calling this
     if (!aCanvasElement) {
@@ -96,7 +98,7 @@ CanvasUtils::DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
 }
 
 void
-CanvasUtils::LogMessage (const nsCString& errorString)
+LogMessage (const nsCString& errorString)
 {
     nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
     if (!console)
@@ -107,7 +109,7 @@ CanvasUtils::LogMessage (const nsCString& errorString)
 }
 
 void
-CanvasUtils::LogMessagef (const char *fmt, ...)
+LogMessagef (const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -122,3 +124,116 @@ CanvasUtils::LogMessagef (const char *fmt, ...)
 
     va_end(ap);
 }
+
+bool
+CoerceDouble(jsval v, double* d)
+{
+    if (JSVAL_IS_DOUBLE(v)) {
+        *d = JSVAL_TO_DOUBLE(v);
+    } else if (JSVAL_IS_INT(v)) {
+        *d = double(JSVAL_TO_INT(v));
+    } else if (JSVAL_IS_VOID(v)) {
+        *d = 0.0;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+template<size_t N>
+static bool
+JSValToMatrixElts(JSContext* cx, const jsval& val,
+                  double* (&elts)[N], nsresult* rv)
+{
+    JSObject* obj;
+    jsuint length;
+
+    if (JSVAL_IS_PRIMITIVE(val) ||
+        !(obj = JSVAL_TO_OBJECT(val)) ||
+        !JS_GetArrayLength(cx, obj, &length) ||
+        N != length) {
+        // Not an array-like thing or wrong size
+        *rv = NS_ERROR_INVALID_ARG;
+        return false;
+    }
+
+    for (PRUint32 i = 0; i < N; ++i) {
+        jsval elt;
+        double d;
+        if (!JS_GetElement(cx, obj, i, &elt)) {
+            *rv = NS_ERROR_FAILURE;
+            return false;
+        }
+        if (!CoerceDouble(elt, &d)) {
+            *rv = NS_ERROR_INVALID_ARG;
+            return false;
+        }
+        if (!FloatValidate(d)) {
+            // This is weird, but it's the behavior of SetTransform()
+            *rv = NS_OK;
+            return false;
+        }
+        *elts[i] = d;
+    }
+
+    *rv = NS_OK;
+    return true;
+}
+
+bool
+JSValToMatrix(JSContext* cx, const jsval& val, gfxMatrix* matrix, nsresult* rv)
+{
+    double* elts[] = { &matrix->xx, &matrix->yx, &matrix->xy, &matrix->yy,
+                       &matrix->x0, &matrix->y0 };
+    return JSValToMatrixElts(cx, val, elts, rv);
+}
+
+bool
+JSValToMatrix(JSContext* cx, const jsval& val, Matrix* matrix, nsresult* rv)
+{
+    gfxMatrix m;
+    if (!JSValToMatrix(cx, val, &m, rv))
+        return false;
+    *matrix = Matrix(Float(m.xx), Float(m.yx), Float(m.xy), Float(m.yy),
+                     Float(m.x0), Float(m.y0));
+    return true;
+}
+
+template<size_t N>
+static nsresult
+MatrixEltsToJSVal(/*const*/ jsval (&elts)[N], JSContext* cx, jsval* val)
+{
+    JSObject* obj = JS_NewArrayObject(cx, N, elts);
+    if  (!obj) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    *val = OBJECT_TO_JSVAL(obj);
+
+    return NS_OK;
+}
+
+nsresult
+MatrixToJSVal(const gfxMatrix& matrix, JSContext* cx, jsval* val)
+{
+    jsval elts[] = {
+        DOUBLE_TO_JSVAL(matrix.xx), DOUBLE_TO_JSVAL(matrix.yx),
+        DOUBLE_TO_JSVAL(matrix.xy), DOUBLE_TO_JSVAL(matrix.yy),
+        DOUBLE_TO_JSVAL(matrix.x0), DOUBLE_TO_JSVAL(matrix.y0)
+    };
+    return MatrixEltsToJSVal(elts, cx, val);
+}
+
+nsresult
+MatrixToJSVal(const Matrix& matrix, JSContext* cx, jsval* val)
+{
+    jsval elts[] = {
+        DOUBLE_TO_JSVAL(matrix._11), DOUBLE_TO_JSVAL(matrix._12),
+        DOUBLE_TO_JSVAL(matrix._21), DOUBLE_TO_JSVAL(matrix._22),
+        DOUBLE_TO_JSVAL(matrix._31), DOUBLE_TO_JSVAL(matrix._32)
+    };
+    return MatrixEltsToJSVal(elts, cx, val);
+}
+
+} // namespace CanvasUtils
+} // namespace mozilla

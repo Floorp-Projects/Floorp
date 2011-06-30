@@ -68,6 +68,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
     }
 
     function isCaretVisible() {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
       var docShell = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                             .getInterface(Components.interfaces.nsIWebNavigation)

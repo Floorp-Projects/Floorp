@@ -1,0 +1,24 @@
+<!DOCTYPE HTML><html><head>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<span id="x" contenteditable="true">navigable__|</span><br />
+<script>
+  document.getElementById('x').appendChild(document.createTextNode('unnavigable'));
+
+  // Position the caret after "|"
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  var x = document.getElementById('x');
+  var t = x.firstChild;
+  range.setStart(t, 12);
+  range.setEnd(t, 12);
+  sel.addRange(range);
+  x.focus();
+
+  sendKey('RIGHT', window); // Try to move the caret one position to the right
+</script>
+</body>
+</html>

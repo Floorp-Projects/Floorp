@@ -40,6 +40,16 @@
 
 interface nsISimpleEnumerator;
 
+/*
+ * An nsIMemoryReporter reports a single memory measurement as an object.
+ * Use this when it makes sense to gather this measurement without gathering
+ * related measurements at the same time.
+ *
+ * Note that the |amount| field may be implemented as a function, and so
+ * accessing it can trigger significant computation;  the other fields can
+ * be accessed without triggering this computation.  (Compare and contrast
+ * this with nsIMemoryMultiReporter.)  
+ */
 [scriptable, uuid(37d18434-9819-4ce1-922f-15d8b63da066)]
 interface nsIMemoryReporter : nsISupports
 {
@@ -133,7 +143,7 @@ interface nsIMemoryReporter : nsISupports
   /*
    * The numeric value reported by this memory reporter.
    */
-  readonly attribute long long amount;
+  readonly attribute PRInt64 amount;
 
   /*
    * A human-readable description of this memory usage report.
@@ -141,7 +151,34 @@ interface nsIMemoryReporter : nsISupports
   readonly attribute string description;
 };
 
-[scriptable, uuid(7c62de18-1edd-40f8-9da2-a8c622763074)]
+[scriptable, function, uuid(5b15f3fa-ba15-443c-8337-7770f5f0ce5d)]
+interface nsIMemoryMultiReporterCallback : nsISupports
+{
+  void callback(in ACString process, in AUTF8String path, in PRInt32 kind,
+                in PRInt32 units, in PRInt64 amount,
+                in AUTF8String description, in nsISupports closure);
+};
+
+/*
+ * An nsIMemoryMultiReporter reports multiple memory measurements via a
+ * callback function which is called once for each measurement.  Use this
+ * when you want to gather multiple measurements in a single operation (eg.
+ * a single traversal of a large data structure).
+ *
+ * The arguments to the callback deliberately match the fields in
+ * nsIMemoryReporter, but note that seeing any of these arguments requires
+ * calling collectReports which will trigger all relevant computation.
+ * (Compare and contrast this with nsIMemoryReporter, which allows all
+ * fields except |amount| to be accessed without triggering computation.)
+ */
+[scriptable, uuid(eae277ad-b67d-4389-95f4-03fa11c09d06)]
+interface nsIMemoryMultiReporter : nsISupports
+{
+  void collectReports(in nsIMemoryMultiReporterCallback callback,
+                      in nsISupports closure);
+};
+
+[scriptable, uuid(80a93b4c-6fff-4acd-8598-3891074a30ab)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -150,17 +187,35 @@ interface nsIMemoryReporterManager : nsISupports
   nsISimpleEnumerator enumerateReporters ();
 
   /*
-   * Register the given nsIMemoryReporter.  It is an error to register
-   * more than one reporter with the same path.  After a reporter is
-   * registered, it will be available via enumerateReporters().  The
-   * Manager service will hold a strong reference to the given reporter.
+   * Return an enumerator of nsIMemoryMultiReporters that are currently
+   * registered.
+   */
+  nsISimpleEnumerator enumerateMultiReporters ();
+
+  /*
+   * Register the given nsIMemoryReporter.  After a reporter is registered,
+   * it will be available via enumerateReporters().  The Manager service
+   * will hold a strong reference to the given reporter.
    */
   void registerReporter (in nsIMemoryReporter reporter);
+
+  /*
+   * Register the given nsIMemoryMultiReporter.  After a multi-reporter is
+   * registered, it will be available via enumerateMultiReporters().  The
+   * Manager service will hold a strong reference to the given
+   * multi-reporter.
+   */
+  void registerMultiReporter (in nsIMemoryMultiReporter reporter);
 
   /*
    * Unregister the given memory reporter.
    */
   void unregisterReporter (in nsIMemoryReporter reporter);
+
+  /*
+   * Unregister the given memory multi-reporter.
+   */
+  void unregisterMultiReporter (in nsIMemoryMultiReporter reporter);
 
   /*
    * Initialize.
@@ -189,6 +244,9 @@ interface nsIMemoryReporterManager : nsISupports
 #define NS_MEMORY_REPORTER_NAME(_classname)  MemoryReporter_##_classname
 
 NS_COM nsresult NS_RegisterMemoryReporter (nsIMemoryReporter *reporter);
+NS_COM nsresult NS_RegisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
+
 NS_COM nsresult NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter);
+NS_COM nsresult NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
 
 %}

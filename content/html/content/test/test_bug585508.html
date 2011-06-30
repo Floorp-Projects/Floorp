@@ -63,13 +63,10 @@ function checkAttribute(form, attrName, idlName, data)
 }
 
 var form = document.createElement('form');
-var input = document.createElement('input');
 var button = document.createElement('button');
 
 checkAttribute(form, 'enctype', 'enctype', enctypeTestData);
 checkAttribute(form, 'method', 'method', methodTestData);
-checkAttribute(input, 'formenctype', 'formEnctype', enctypeTestData);
-checkAttribute(input, 'formmethod', 'formMethod', methodTestData);
 checkAttribute(button, 'formenctype', 'formEnctype', enctypeTestData);
 checkAttribute(button, 'formmethod', 'formMethod', methodTestData);
 
