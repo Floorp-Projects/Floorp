@@ -288,15 +288,6 @@ struct ArenaHeader {
 #ifdef DEBUG
     void checkSynchronizedWithFreeList() const;
 #endif
-
-#if defined DEBUG || defined JS_GCMETER
-    static size_t CountListLength(const ArenaHeader *aheader) {
-        size_t n = 0;
-        for (; aheader; aheader = aheader->next)
-            ++n;
-        return n;
-    }
-#endif
 };
 
 struct Arena {
@@ -713,18 +704,11 @@ class ArenaList {
 #endif
 
   public:
-#ifdef JS_GCMETER
-    JSGCArenaStats  stats;
-#endif
-
     void init() {
         head = NULL;
         cursor = &head;
 #ifdef JS_THREADSAFE
         backgroundFinalizeState = BFS_DONE;
-#endif
-#ifdef JS_GCMETER
-        PodZero(&stats);
 #endif
     }
 
@@ -1290,14 +1274,10 @@ struct GCMarker : public JSTracer {
     size_t              markLaterArenas;
 #endif
 
-#if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
-    js::gc::ConservativeGCStats conservativeStats;
-#endif
-
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+    js::gc::ConservativeGCStats conservativeStats;
     Vector<void *, 0, SystemAllocPolicy> conservativeRoots;
     const char *conservativeDumpFileName;
-
     void dumpConservativeRoots();
 #endif
 
@@ -1349,36 +1329,25 @@ struct GCMarker : public JSTracer {
     }
 };
 
-JS_FRIEND_API(void)
-MarkWeakReferences(GCMarker *trc);
-
 void
 MarkStackRangeConservatively(JSTracer *trc, Value *begin, Value *end);
 
-static inline uint64
-TraceKindMask(unsigned kind)
-{
-    return uint64(1) << kind;
-}
-
-static inline bool
-TraceKindInMask(unsigned kind, uint64 mask)
-{
-    return !!(mask & TraceKindMask(kind));
-}
-
-typedef void (*IterateCallback)(JSContext *cx, void *data, size_t traceKind, void *obj);
+typedef void (*IterateCompartmentCallback)(JSContext *cx, void *data, JSCompartment *compartment);
+typedef void (*IterateArenaCallback)(JSContext *cx, void *data, gc::Arena *arena, size_t traceKind,
+                                     size_t thingSize);
+typedef void (*IterateCellCallback)(JSContext *cx, void *data, void *thing, size_t traceKind,
+                                    size_t thingSize);
 
 /*
- * This function calls |callback| on every cell in the GC heap. If |comp| is
- * non-null, then it only selects cells in that compartment. If |traceKindMask|
- * is non-zero, then only cells whose traceKind belongs to the mask will be
- * selected. The mask should be constructed by ORing |TraceKindMask(...)|
- * results.
+ * This function calls |compartmentCallback| on every compartment,
+ * |arenaCallback| on every in-use arena, and |cellCallback| on every in-use
+ * cell in the GC heap.
  */
 extern JS_FRIEND_API(void)
-IterateCells(JSContext *cx, JSCompartment *comp, uint64 traceKindMask,
-             void *data, IterateCallback callback);
+IterateCompartmentsArenasCells(JSContext *cx, void *data,
+                               IterateCompartmentCallback compartmentCallback, 
+                               IterateArenaCallback arenaCallback,
+                               IterateCellCallback cellCallback);
 
 } /* namespace js */
 

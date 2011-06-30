@@ -1,0 +1,31 @@
+<!DOCTYPE HTML><html><head>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+x
+<div contenteditable="true">
+<p id="p">A B CD EFG<br>
+  1234567890</p>
+</div>
+<script>
+  // Position the caret after "A"
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  var p = document.getElementById('p');
+  var t = p.firstChild;
+  range.setStart(t, 1);
+  range.setEnd(t, 1);
+  sel.addRange(range);
+  p.parentNode.focus();
+
+  sendKey('DOWN', window);  // now after "1"
+  sendKey('DOWN', window);  // now below the P element
+  sendKey('UP', window);    // now before the "1"
+  sendKey('UP', window);    // now before the "A"
+  sendKey('UP', window);    // now before the "A"
+  sendKey('UP', window);    // now before the "A"
+</script>
+</body>
+</html>

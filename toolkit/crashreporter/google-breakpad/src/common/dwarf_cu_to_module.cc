@@ -850,12 +850,12 @@ void DwarfCUToModule::AssignLinesToFunctions() {
     // about what result we produce in that case, just as long as we don't
     // hang or crash.
     while (func_it != functions->end()
-           && current >= (*func_it)->address
+           && next_transition >= (*func_it)->address
            && !within(**func_it, next_transition))
       func_it++;
     func = (func_it != functions->end()) ? *func_it : NULL;
     while (line_it != lines_.end()
-           && current >= line_it->address
+           && next_transition >= line_it->address
            && !within(*line_it, next_transition))
       line_it++;
     line = (line_it != lines_.end()) ? &*line_it : NULL;

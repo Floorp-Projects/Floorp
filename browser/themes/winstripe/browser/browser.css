@@ -1616,6 +1616,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   margin: 0;
   padding: 2px 0 4px;
   -moz-border-image: url(tabbrowser/tab.png) 4 3 0 / 4px 3px 0 repeat stretch;
+  border-radius: 0;
 }
 
 .tabbrowser-tab:hover,

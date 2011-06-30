@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test accessible tree when ARIA role presentation is used</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+  function doTest()
+  {
+    // Presentation role don't allow accessible.
+    var tree =
+      { SECTION: [ // container
+        { TEXT_LEAF: [ ] } // child text of presentation node
+      ] };
+    testAccessibleTree("div_cnt", tree);
+
+    // Focusable element, presentation role is ignored.
+    tree =
+      { SECTION: [ // container
+        { PUSHBUTTON: [ // button
+          { TEXT_LEAF: [ ] }
+        ] }
+      ] };
+    testAccessibleTree("btn_cnt", tree);
+
+    // Presentation table, no table structure is exposed.
+    tree =
+      { SECTION: [ // container
+        { TEXT_LEAF: [ ] } // cell text
+      ] };
+    testAccessibleTree("tbl_cnt", tree);
+
+    // Focusable table, presentation role is ignored.
+    tree =
+      { SECTION: [ // container
+        { TABLE: [ // table
+          { ROW: [ // tr
+            { CELL: [ //td
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] }
+        ] }
+      ] };
+    testAccessibleTree("tblfocusable_cnt", tree);
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=548291"
+     title="Accessible tree of ARIA image maps">
+    Mozilla Bug 548291
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=666504"
+     title="Ignore role presentation on focusable elements">
+    Mozilla Bug 666504
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="div_cnt"><div role="presentation">text</div></div>
+
+  <div id="btn_cnt"><button role="presentation">btn</button></div>
+
+  <div id="tbl_cnt">
+    <table role="presentation">
+      <tr>
+        <td>cell</td>
+      </tr>
+    </table>
+  </div>
+
+  <div id="tblfocusable_cnt">
+    <table role="presentation" tabindex="0">
+      <tr>
+        <td>cell</td>
+      </tr>
+    </table>
+  </div>
+
+</body>
+</html>

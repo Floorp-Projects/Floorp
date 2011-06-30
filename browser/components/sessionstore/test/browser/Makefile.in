@@ -62,7 +62,9 @@ _BROWSER_TEST_FILES = \
 	browser_354894.js \
 	browser_367052.js \
 	browser_393716.js \
-	browser_394759.js \
+	browser_394759_basic.js \
+	browser_394759_behavior.js \
+	browser_394759_purge.js \
 	browser_394759_privatebrowsing.js \
 	browser_408470.js \
 	browser_408470_sample.html \

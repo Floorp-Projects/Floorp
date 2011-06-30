@@ -44,25 +44,277 @@ Mozilla universal manifest parser
 # this file lives at
 # http://hg.mozilla.org/automation/ManifestDestiny/raw-file/tip/manifestparser.py
 
-__all__ = ['ManifestParser', 'TestManifest', 'convert']
+__all__ = ['read_ini', # .ini reader
+           'ManifestParser', 'TestManifest', 'convert', # manifest handling
+           'parse', 'ParseError', 'ExpressionParser'] # conditional expression parser
 
 import os
+import re
 import shutil
 import sys
 from fnmatch import fnmatch
 from optparse import OptionParser
 
-version = '0.3.1' # package version
+version = '0.5.2' # package version
 try:
     from setuptools import setup
 except ImportError:
     setup = None
+
+# we need relpath, but it is introduced in python 2.6
+# http://docs.python.org/library/os.path.html
+try:
+    relpath = os.path.relpath
+except AttributeError:
+    def relpath(path, start):
+        """
+        Return a relative version of a path
+        from /usr/lib/python2.6/posixpath.py
+        """
+
+        if not path:
+            raise ValueError("no path specified")
+
+        start_list = os.path.abspath(start).split(os.path.sep)
+        path_list = os.path.abspath(path).split(os.path.sep)
+
+        # Work out how much of the filepath is shared by start and path.
+        i = len(os.path.commonprefix([start_list, path_list]))
+
+        rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
+        if not rel_list:
+            return start
+        return os.path.join(*rel_list)
+
+# expr.py
+# from:
+# http://k0s.org/mozilla/hg/expressionparser
+# http://hg.mozilla.org/users/tmielczarek_mozilla.com/expressionparser
+
+# Implements a top-down parser/evaluator for simple boolean expressions.
+# ideas taken from http://effbot.org/zone/simple-top-down-parsing.htm
+#
+# Rough grammar:
+# expr := literal
+#       | '(' expr ')'
+#       | expr '&&' expr
+#       | expr '||' expr
+#       | expr '==' expr
+#       | expr '!=' expr
+# literal := BOOL
+#          | INT
+#          | STRING
+#          | IDENT
+# BOOL   := true|false
+# INT    := [0-9]+
+# STRING := "[^"]*"
+# IDENT  := [A-Za-z_]\w*
+
+# Identifiers take their values from a mapping dictionary passed as the second
+# argument.
+
+# Glossary (see above URL for details):
+# - nud: null denotation
+# - led: left detonation
+# - lbp: left binding power
+# - rbp: right binding power
+
+class ident_token(object):
+    def __init__(self, value):
+        self.value = value
+    def nud(self, parser):
+        # identifiers take their value from the value mappings passed
+        # to the parser
+        return parser.value(self.value)
+
+class literal_token(object):
+    def __init__(self, value):
+        self.value = value
+    def nud(self, parser):
+        return self.value
+
+class eq_op_token(object):
+    "=="
+    def led(self, parser, left):
+        return left == parser.expression(self.lbp)
+    
+class neq_op_token(object):
+    "!="
+    def led(self, parser, left):
+        return left != parser.expression(self.lbp)
+
+class not_op_token(object):
+    "!"
+    def nud(self, parser):
+        return not parser.expression()
+
+class and_op_token(object):
+    "&&"
+    def led(self, parser, left):
+        right = parser.expression(self.lbp)
+        return left and right
+    
+class or_op_token(object):
+    "||"
+    def led(self, parser, left):
+        right = parser.expression(self.lbp)
+        return left or right
+
+class lparen_token(object):
+    "("
+    def nud(self, parser):
+        expr = parser.expression()
+        parser.advance(rparen_token)
+        return expr
+
+class rparen_token(object):
+    ")"
+
+class end_token(object):
+    """always ends parsing"""
+
+### derived literal tokens
+
+class bool_token(literal_token):
+    def __init__(self, value):
+        value = {'true':True, 'false':False}[value]
+        literal_token.__init__(self, value)
+
+class int_token(literal_token):
+    def __init__(self, value):
+        literal_token.__init__(self, int(value))
+
+class string_token(literal_token):
+    def __init__(self, value):
+        literal_token.__init__(self, value[1:-1])
+
+precedence = [(end_token, rparen_token),
+              (or_op_token,),
+              (and_op_token,),
+              (eq_op_token, neq_op_token),
+              (lparen_token,),
+              ]
+for index, rank in enumerate(precedence):
+    for token in rank:
+        token.lbp = index # lbp = lowest left binding power
+
+class ParseError(Exception):
+    """errror parsing conditional expression"""
+
+class ExpressionParser(object):
+    def __init__(self, text, valuemapping, strict=False):
+        """
+        Initialize the parser with input |text|, and |valuemapping| as
+        a dict mapping identifier names to values.
+        """
+        self.text = text
+        self.valuemapping = valuemapping
+        self.strict = strict
+
+    def _tokenize(self):
+        """
+        Lex the input text into tokens and yield them in sequence.
+        """
+        # scanner callbacks
+        def bool_(scanner, t): return bool_token(t)
+        def identifier(scanner, t): return ident_token(t)
+        def integer(scanner, t): return int_token(t)
+        def eq(scanner, t): return eq_op_token()
+        def neq(scanner, t): return neq_op_token()
+        def or_(scanner, t): return or_op_token()
+        def and_(scanner, t): return and_op_token()
+        def lparen(scanner, t): return lparen_token()
+        def rparen(scanner, t): return rparen_token()
+        def string_(scanner, t): return string_token(t)
+        def not_(scanner, t): return not_op_token()
+
+        scanner = re.Scanner([
+            (r"true|false", bool_),
+            (r"[a-zA-Z_]\w*", identifier),
+            (r"[0-9]+", integer),
+            (r'("[^"]*")|(\'[^\']*\')', string_),
+            (r"==", eq),
+            (r"!=", neq),
+            (r"\|\|", or_),
+            (r"!", not_),
+            (r"&&", and_),
+            (r"\(", lparen),
+            (r"\)", rparen),
+            (r"\s+", None), # skip whitespace
+            ])
+        tokens, remainder = scanner.scan(self.text)
+        for t in tokens:
+            yield t
+        yield end_token()
+
+    def value(self, ident):
+        """
+        Look up the value of |ident| in the value mapping passed in the
+        constructor.
+        """
+        if self.strict:
+            return self.valuemapping[ident]
+        else:
+            return self.valuemapping.get(ident, None)
+
+    def advance(self, expected):
+        """
+        Assert that the next token is an instance of |expected|, and advance
+        to the next token.
+        """
+        if not isinstance(self.token, expected):
+            raise Exception, "Unexpected token!"
+        self.token = self.iter.next()
+        
+    def expression(self, rbp=0):
+        """
+        Parse and return the value of an expression until a token with
+        right binding power greater than rbp is encountered.
+        """
+        t = self.token
+        self.token = self.iter.next()
+        left = t.nud(self)
+        while rbp < self.token.lbp:
+            t = self.token
+            self.token = self.iter.next()
+            left = t.led(self, left)
+        return left
+
+    def parse(self):
+        """
+        Parse and return the value of the expression in the text
+        passed to the constructor. Raises a ParseError if the expression
+        could not be parsed.
+        """
+        try:
+            self.iter = self._tokenize()
+            self.token = self.iter.next()
+            return self.expression()
+        except:
+            raise ParseError("could not parse: %s; variables: %s" % (self.text, self.valuemapping))
+
+    __call__ = parse
+
+def parse(text, **values):
+    """
+    Parse and evaluate a boolean expression in |text|. Use |values| to look
+    up the value of identifiers referenced in the expression. Returns the final
+    value of the expression. A ParseError will be raised if parsing fails.
+    """
+    return ExpressionParser(text, values).parse()
 
 def normalize_path(path):
     """normalize a relative path"""
     if sys.platform.startswith('win'):
         return path.replace('/', os.path.sep)
     return path
+
+def denormalize_path(path):
+    """denormalize a relative path"""
+    if sys.platform.startswith('win'):
+        return path.replace(os.path.sep, '/')
+    return path
+    
 
 def read_ini(fp, variables=None, default='DEFAULT',
              comments=';#', separators=('=', ':'),
@@ -126,7 +378,7 @@ def read_ini(fp, variables=None, default='DEFAULT',
 
         # if there aren't any sections yet, something bad happen
         if not section_names:
-            raise Exception('No sections yet :(')
+            raise Exception('No sections found')
 
         # (key, value) pair
         for separator in separators:
@@ -174,6 +426,7 @@ class ManifestParser(object):
         self.tests = []
         self.strict = strict
         self.rootdir = None
+        self.relativeRoot = None
         if manifests:
             self.read(*manifests)
 
@@ -242,13 +495,16 @@ class ManifestParser(object):
 
     ### methods for querying manifests
 
-    def query(self, *checks):
+    def query(self, *checks, **kw):
         """
         general query function for tests
         - checks : callable conditions to test if the test fulfills the query
         """
+        tests = kw.get('tests', None)
+        if tests is None:
+            tests = self.tests
         retval = []
-        for test in self.tests:
+        for test in tests:
             for check in checks:
                 if not check(test):
                     break
@@ -256,7 +512,7 @@ class ManifestParser(object):
                 retval.append(test)
         return retval
 
-    def get(self, _key=None, inverse=False, tags=None, **kwargs):
+    def get(self, _key=None, inverse=False, tags=None, tests=None, **kwargs):
         # TODO: pass a dict instead of kwargs since you might hav
         # e.g. 'inverse' as a key in the dict
 
@@ -271,7 +527,7 @@ class ManifestParser(object):
 
         # make some check functions
         if inverse:
-            has_tags = lambda test: tags.isdisjoint(test.keys())
+            has_tags = lambda test: not tags.intersection(test.keys())
             def dict_query(test):
                 for key, value in kwargs.items():
                     if test.get(key) == value:
@@ -286,7 +542,7 @@ class ManifestParser(object):
                 return True
 
         # query the tests
-        tests = self.query(has_tags, dict_query)
+        tests = self.query(has_tags, dict_query, tests=tests)
 
         # if a key is given, return only a list of that key
         # useful for keys like 'name' or 'path'
@@ -365,7 +621,7 @@ class ManifestParser(object):
 
             path = test['name']
             if not os.path.isabs(path):
-                path = os.path.relpath(test['path'], self.rootdir)
+                path = denormalize_path(relpath(test['path'], self.rootdir))
             print >> fp, '[%s]' % path
           
             # reserved keywords:
@@ -410,7 +666,7 @@ class ManifestParser(object):
             rootdir = self.rootdir
 
         # copy the manifests + tests
-        manifests = [os.path.relpath(manifest, rootdir) for manifest in self.manifests()]
+        manifests = [relpath(manifest, rootdir) for manifest in self.manifests()]
         for manifest in manifests:
             destination = os.path.join(directory, manifest)
             dirname = os.path.dirname(destination)
@@ -428,7 +684,7 @@ class ManifestParser(object):
                 print >> sys.stderr, "Missing test: '%s' does not exist!" % source
                 continue
                 # TODO: should err on strict
-            destination = os.path.join(directory, os.path.relpath(test['path'], rootdir))
+            destination = os.path.join(directory, relpath(test['path'], rootdir))
             shutil.copy(source, destination)
             # TODO: ensure that all of the tests are below the from_dir
 
@@ -451,13 +707,13 @@ class ManifestParser(object):
         # copy them!
         for test in tests:
             if not os.path.isabs(test['name']):
-                relpath = os.path.relpath(test['path'], rootdir)
-                source = os.path.join(from_dir, relpath)
+                _relpath = relpath(test['path'], rootdir)
+                source = os.path.join(from_dir, _relpath)
                 if not os.path.exists(source):
                     # TODO err on strict
                     print >> sys.stderr, "Missing test: '%s'; skipping" % test['name']
                     continue
-                destination = os.path.join(rootdir, relpath)
+                destination = os.path.join(rootdir, _relpath)
                 shutil.copy(source, destination)
 
 
@@ -467,19 +723,17 @@ class TestManifest(ManifestParser):
     specific harnesses may subclass from this if they need more logic
     """
 
-    def filter(self, tag, value, tests=None):
+    def filter(self, values, tests):
         """
         filter on a specific list tag, e.g.:
         run-if.os = win linux
         skip-if.os = mac
         """
 
-        if tests is None:
-            tests = self.tests
-        
         # tags:
-        run_tag = 'run-if.' + tag
-        skip_tag = 'skip-if.' + tag        
+        run_tag = 'run-if'
+        skip_tag = 'skip-if'
+        fail_tag = 'fail-if'
 
         # loop over test
         for test in tests:
@@ -487,21 +741,27 @@ class TestManifest(ManifestParser):
             
             # tagged-values to run
             if run_tag in test:
-                values = test[run_tag].split()
-                if value not in values:
-                    reason = '%s %s not in run values %s' % (tag, value, values)
+                condition = test[run_tag]
+                if not parse(condition, **values):
+                    reason = '%s: %s' % (run_tag, condition)
 
             # tagged-values to skip
             if skip_tag in test:
-                values = test[skip_tag].split()
-                if value in values:
-                    reason = '%s %s in skipped values %s' % (tag, value, values)
+                condition = test[skip_tag]
+                if parse(condition, **values):
+                    reason = '%s: %s' % (skip_tag, condition)
 
             # mark test as disabled if there's a reason
             if reason:
                 test.setdefault('disabled', reason)        
 
-    def active_tests(self, exists=True, disabled=True, **tags):
+            # mark test as a fail if so indicated
+            if fail_tag in test:
+                condition = test[fail_tag]
+                if parse(condition, **values):
+                    test['expected'] = 'fail'
+
+    def active_tests(self, exists=True, disabled=True, **values):
         """
         - exists : return only existing tests
         - disabled : whether to return disabled tests
@@ -509,14 +769,17 @@ class TestManifest(ManifestParser):
         """
 
         tests = [i.copy() for i in self.tests] # shallow copy
+
+        # mark all tests as passing unless indicated otherwise
+        for test in tests:
+            test['expected'] = test.get('expected', 'pass')
         
         # ignore tests that do not exist
         if exists:
             tests = [test for test in tests if os.path.exists(test['path'])]
 
         # filter by tags
-        for tag, value in tags.items():
-            self.filter(tag, value, tests)
+        self.filter(values, tests)
 
         # ignore disabled tests if specified
         if not disabled:
@@ -548,7 +811,7 @@ def convert(directories, pattern=None, ignore=(), write=None):
 
             # reference only the subdirectory
             _dirpath = dirpath
-            dirpath = dirpath.split(directory, 1)[-1].strip('/')
+            dirpath = dirpath.split(directory, 1)[-1].strip(os.path.sep)
 
             if dirpath.split(os.path.sep)[0] in ignore:
                 continue
@@ -570,7 +833,7 @@ def convert(directories, pattern=None, ignore=(), write=None):
                 manifest.close()
 
             # add to the list
-            retval.extend([os.path.join(dirpath, filename)
+            retval.extend([denormalize_path(os.path.join(dirpath, filename))
                            for filename in filenames])
 
     if write:
@@ -763,7 +1026,7 @@ class SetupCLI(CLICommand):
 
         setup(name='ManifestDestiny',
               version=version,
-              description="universal reader for manifests",
+              description="Universal manifests for Mozilla test harnesses",
               long_description=description,
               classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
               keywords='mozilla manifests',

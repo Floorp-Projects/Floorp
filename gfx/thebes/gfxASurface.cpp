@@ -611,17 +611,22 @@ public:
     }
 
     NS_IMETHOD GetKind(PRInt32 *kind) {
-        *kind = MR_OTHER;
+        *kind = KIND_OTHER;
+        return NS_OK;
+    }
+    
+    NS_IMETHOD GetUnits(PRInt32 *units) {
+        *units = UNITS_BYTES;
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetAmount(PRInt64 *amount) {
+        *amount = gSurfaceMemoryUsed[mType];
         return NS_OK;
     }
 
     NS_IMETHOD GetDescription(char **desc) {
         *desc = strdup("Memory used by gfx surface of the given type.");
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed) {
-        *memoryUsed = gSurfaceMemoryUsed[mType];
         return NS_OK;
     }
 

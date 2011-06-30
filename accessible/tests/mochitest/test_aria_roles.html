@@ -57,6 +57,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
           is(accessibleTable.getCellAt(0,0).firstChild.name, "hi", "no cell");
       }
 
+      //////////////////////////////////////////////////////////////////////////
       // test gEmptyRoleMap
       testRole("cell", ROLE_NOTHING);
 
@@ -67,10 +68,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
       for (a in abstract_roles)
         testRole(abstract_roles[a], ROLE_SECTION);
 
+      //////////////////////////////////////////////////////////////////////////
       // misc roles
       testRole("scrollbar", ROLE_SCROLLBAR);
       testRole("dir", ROLE_LIST);
 
+      //////////////////////////////////////////////////////////////////////////
       // test document role map update
       var testDoc = getAccessible(document, [nsIAccessibleDocument]);
       testRole(testDoc, ROLE_DOCUMENT);

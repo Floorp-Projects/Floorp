@@ -414,8 +414,9 @@ nsHTMLEditor::GrabberClicked()
     nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
     NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
-    res = piTarget->AddEventListenerByIID(mMouseMotionListenerP,
-                                          NS_GET_IID(nsIDOMMouseMotionListener));
+    res = piTarget->AddEventListener(NS_LITERAL_STRING("mousemove"),
+                                     mMouseMotionListenerP,
+                                     PR_FALSE, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(res),
                  "failed to register mouse motion listener");
   }
@@ -447,8 +448,9 @@ nsHTMLEditor::EndMoving()
 #ifdef DEBUG
     nsresult res =
 #endif
-    piTarget->RemoveEventListenerByIID(mMouseMotionListenerP,
-                                       NS_GET_IID(nsIDOMMouseMotionListener));
+    piTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
+                                  mMouseMotionListenerP,
+                                  PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(res), "failed to remove mouse motion listener");
   }
   mMouseMotionListenerP = nsnull;

@@ -206,8 +206,17 @@
 
 #ifdef MOZ_MEMORY_WINDOWS
 
+/* XXXkhuey switch to not patching the CRT for jemalloc all the time */
+/* We use ifndef NEW_STYLE here because when we're build as part of the CRT
+   we don't have access to AC_DEFINEs */
+#ifndef WIN32_NEW_STYLE_JEMALLOC
 #include <cruntime.h>
 #include <internal.h>
+#else
+/* Some defines from the CRT internal headers that we need here. */
+#define _CRT_SPINCOUNT 5000
+#define __crtInitCritSecAndSpinCount InitializeCriticalSectionAndSpinCount
+#endif
 #include <io.h>
 #include <windows.h>
 
@@ -5717,14 +5726,18 @@ malloc_shutdown()
 #define	free(a)		moz_free(a)
 #endif
 
-#if defined(MOZ_MEMORY_ANDROID) || defined(WRAP_MALLOC)
+#if defined(MOZ_MEMORY_ANDROID) || defined(WRAP_MALLOC) || defined(WIN32_NEW_STYLE_JEMALLOC)
 inline void sys_free(void* ptr) {return free(ptr);}
 #define	malloc(a)	je_malloc(a)
 #define	valloc(a)	je_valloc(a)
 #define	calloc(a, b)	je_calloc(a, b)
 #define	realloc(a, b)	je_realloc(a, b)
 #define	free(a)		je_free(a)
+#if defined(WIN32_NEW_STYLE_JEMALLOC)
+#define memalign(a, b) je_memalign(a, b)
+#endif
 #define posix_memalign(a, b, c)  je_posix_memalign(a, b, c)
+#define malloc_usable_size(a) je_malloc_usable_size(a)
 
 char    *je_strndup(const char *src, size_t len) {
   char* dst = (char*)je_malloc(len + 1);
@@ -6458,4 +6471,60 @@ void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIGN;
  * visibility be used for interposition where available?
  */
 #  error "Interposing malloc is unsafe on this system without libc malloc hooks."
+#endif
+
+#ifdef WIN32_NEW_STYLE_JEMALLOC
+/*
+ * In the new style jemalloc integration jemalloc is built as a separate
+ * shared library.  Since we're no longer hooking into the CRT binary,
+ * we need to initialize the heap at the first opportunity we get.
+ * DLL_PROCESS_ATTACH in DllMain is that opportunity.
+ */
+BOOL APIENTRY DllMain(HINSTANCE hModule, 
+                      DWORD reason, 
+                      LPVOID lpReserved)
+{
+  switch (reason) {
+    case DLL_PROCESS_ATTACH:
+      /* Don't force the system to page DllMain back in every time
+       * we create/destroy a thread */
+      DisableThreadLibraryCalls(hModule);
+      /* Initialize the heap */
+      malloc_init_hard();
+      break;
+    
+    case DLL_PROCESS_DETACH:
+      break;
+
+  }
+
+  return TRUE;
+}
+
+/*
+ *  There's a fun allocator mismatch in (at least) the VS 2010 CRT
+ *  (see the giant comment in this directory's Makefile.in
+ *  that gets redirected here to avoid a crash on shutdown.
+ */
+void
+je_dumb_free_thunk(void *ptr)
+{
+  return; /* shutdown leaks that we don't care about */
+}
+
+#include <wchar.h>
+
+/*
+ *  We also need to provide our own impl of wcsdup so that we don't ask
+ *  the CRT for memory from its heap (which will then be unfreeable).
+ */
+wchar_t *je_wcsdup(const wchar_t *src)
+{
+  size_t len = wcslen(src);
+  wchar_t* dst = (wchar_t*)je_malloc((len + 1) * sizeof(wchar_t));
+  if(dst)
+    wcsncpy(dst, src, len + 1);
+  return dst;
+}
+
 #endif

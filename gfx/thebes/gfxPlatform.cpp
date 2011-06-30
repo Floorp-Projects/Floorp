@@ -151,9 +151,6 @@ SRGBOverrideObserver::Observe(nsISupports *aSubject,
 }
 
 #define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
-#if defined(XP_MACOSX)
-#define GFX_DOWNLOADABLE_FONTS_ENABLED_LION "gfx.downloadable_fonts.enabled.lion"
-#endif
 #define GFX_DOWNLOADABLE_FONTS_SANITIZE "gfx.downloadable_fonts.sanitize"
 
 #define GFX_PREF_HARFBUZZ_SCRIPTS "gfx.font_rendering.harfbuzz.scripts"
@@ -531,21 +528,8 @@ PRBool
 gfxPlatform::DownloadableFontsEnabled()
 {
     if (mAllowDownloadableFonts == UNINITIALIZED_VALUE) {
-#if defined(XP_MACOSX)
-        // Work around a serious bug in how Apple handles downloaded fonts
-        // on the most recent developer previews of OS X 10.7 (Lion, builds
-        // 11A480b and 11A494a).  See bug 663688.
-        if (gfxPlatformMac::GetPlatform()->OSXVersion() >= 0x1070) {
-            mAllowDownloadableFonts =
-                Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_ENABLED_LION, PR_FALSE);
-        } else {
-            mAllowDownloadableFonts =
-                Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_ENABLED, PR_FALSE);
-        }
-#else
         mAllowDownloadableFonts =
             Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_ENABLED, PR_FALSE);
-#endif
     }
 
     return mAllowDownloadableFonts;
