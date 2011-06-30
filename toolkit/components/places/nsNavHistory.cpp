@@ -4216,13 +4216,15 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
       GUIDs.AppendElement(guid);
       // Notify we are about to remove this uri.
       NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                       nsINavHistoryObserver, OnBeforeDeleteURI(uri, guid));
+                       nsINavHistoryObserver,
+                       OnBeforeDeleteURI(uri, guid, nsINavHistoryObserver::REASON_DELETED));
     }
     else {
       // Notify that we will delete all visits for this page, but not the page
       // itself, since it's bookmarked or a place: query.
       NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                       nsINavHistoryObserver, OnDeleteVisits(uri, 0, guid));
+                       nsINavHistoryObserver,
+                       OnDeleteVisits(uri, 0, guid, nsINavHistoryObserver::REASON_DELETED));
     }
   }
 
@@ -4245,7 +4247,8 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
   // Finally notify about the removed URIs.
   for (PRInt32 i = 0; i < URIs.Count(); ++i) {
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver, OnDeleteURI(URIs[i], GUIDs[i]));
+                     nsINavHistoryObserver,
+                     OnDeleteURI(URIs[i], GUIDs[i], nsINavHistoryObserver::REASON_DELETED));
   }
 
   return NS_OK;
@@ -5368,7 +5371,8 @@ nsNavHistory::AsyncExecuteLegacyQueries(nsINavHistoryQuery** aQueries,
 
 NS_IMETHODIMP
 nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
-                                  PRBool aWholeEntry, const nsACString& aGUID)
+                                  PRBool aWholeEntry, const nsACString& aGUID,
+                                  PRUint16 aReason)
 {
   // Invalidate the cached value for whether there's history or not.
   mHasHistoryEntries = -1;
@@ -5377,12 +5381,13 @@ nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
   if (aWholeEntry) {
     // Notify our observers that the page has been removed.
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver, OnDeleteURI(aURI, aGUID));
+                     nsINavHistoryObserver, OnDeleteURI(aURI, aGUID, aReason));
   }
   else {
     // Notify our observers that some visits for the page have been removed.
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver, OnDeleteVisits(aURI, aVisitTime, aGUID));
+                     nsINavHistoryObserver,
+                     OnDeleteVisits(aURI, aVisitTime, aGUID, aReason));
   }
 
   return NS_OK;
