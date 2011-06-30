@@ -2043,10 +2043,13 @@ nsNavHistory::NotifyOnVisit(nsIURI* aURI,
 }
 
 void
-nsNavHistory::NotifyTitleChange(nsIURI* aURI, const nsString& aTitle)
+nsNavHistory::NotifyTitleChange(nsIURI* aURI,
+                                const nsString& aTitle,
+                                const nsACString& aGUID)
 {
+  MOZ_ASSERT(!aGUID.IsEmpty());
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
+                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle, aGUID));
 }
 
 PRInt32
@@ -6786,9 +6789,9 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
 {
   nsresult rv;
 
-  // first, make sure the page exists, and fetch the old title (we need the one
-  // that isn't changing to send notifications)
+  // Make sure the page exists by fetching its GUID and the old title.
   nsAutoString title;
+  nsCAutoString guid;
   {
     DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetURLPageInfo);
     rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
@@ -6806,6 +6809,8 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
     }
 
     rv = stmt->GetString(kGetInfoIndex_Title, title);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->GetUTF8String(5, guid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -6830,8 +6835,9 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  MOZ_ASSERT(!guid.IsEmpty());
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
+                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle, guid));
 
   return NS_OK;
 }
