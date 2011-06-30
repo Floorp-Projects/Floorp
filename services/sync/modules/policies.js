@@ -60,6 +60,12 @@ let SyncScheduler = {
 
   setDefaults: function setDefaults() {
     this._log.trace("Setting SyncScheduler policy values to defaults.");
+
+    this.singleDeviceInterval = Svc.Prefs.get("scheduler.singleDeviceInterval") * 1000;
+    this.idleInterval         = Svc.Prefs.get("scheduler.idleInterval")         * 1000;
+    this.activeInterval       = Svc.Prefs.get("scheduler.activeInterval")       * 1000;
+    this.immediateInterval    = Svc.Prefs.get("scheduler.immediateInterval")    * 1000;
+
     // A user is non-idle on startup by default.
     this.idle = false;
 
@@ -67,7 +73,7 @@ let SyncScheduler = {
     this.numClients = 0;
 
     this.nextSync = 0,
-    this.syncInterval = SINGLE_USER_SYNC;
+    this.syncInterval = this.singleDeviceInterval;
     this.syncThreshold = SINGLE_USER_THRESHOLD;
   },
 
@@ -87,7 +93,7 @@ let SyncScheduler = {
     Svc.Obs.add("weave:service:sync:error", this);
     Svc.Obs.add("weave:service:backoff:interval", this);
     Svc.Obs.add("weave:engine:sync:applied", this);
-    Svc.Idle.addIdleObserver(this, IDLE_TIME);
+    Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
   },
 
   observe: function observe(subject, topic, data) {
@@ -182,25 +188,25 @@ let SyncScheduler = {
 
   adjustSyncInterval: function adjustSyncInterval() {
     if (this.numClients <= 1) {
-      this._log.trace("Adjusting syncInterval to SINGLE_USER_SYNC");
-      this.syncInterval = SINGLE_USER_SYNC;
+      this._log.trace("Adjusting syncInterval to singleDeviceInterval.");
+      this.syncInterval = this.singleDeviceInterval;
       return;
     }
     // Only MULTI_DEVICE clients will enter this if statement
     // since SINGLE_USER clients will be handled above.
     if (this.idle) {
-      this._log.trace("Adjusting syncInterval to MULTI_DEVICE_IDLE_SYNC.");
-      this.syncInterval = MULTI_DEVICE_IDLE_SYNC;
+      this._log.trace("Adjusting syncInterval to idleInterval.");
+      this.syncInterval = this.idleInterval;
       return;
     }
 
     if (this.hasIncomingItems) {
-      this._log.trace("Adjusting syncInterval to MULTI_DEVICE_IMMEDIATE_SYNC.");
+      this._log.trace("Adjusting syncInterval to immediateInterval.");
       this.hasIncomingItems = false;
-      this.syncInterval = MULTI_DEVICE_IMMEDIATE_SYNC;
+      this.syncInterval = this.immediateInterval;
     } else {
-      this._log.trace("Adjusting syncInterval to MULTI_DEVICE_ACTIVE_SYNC.");
-      this.syncInterval = MULTI_DEVICE_ACTIVE_SYNC;
+      this._log.trace("Adjusting syncInterval to activeInterval.");
+      this.syncInterval = this.activeInterval;
     }
   },
 
