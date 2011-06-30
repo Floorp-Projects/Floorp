@@ -438,6 +438,15 @@ nsMemoryReporterManager::EnumerateReporters(nsISimpleEnumerator **result)
 }
 
 NS_IMETHODIMP
+nsMemoryReporterManager::EnumerateMultiReporters(nsISimpleEnumerator **result)
+{
+    nsresult rv;
+    mozilla::MutexAutoLock autoLock(mMutex);
+    rv = NS_NewArrayEnumerator(result, mMultiReporters);
+    return rv;
+}
+
+NS_IMETHODIMP
 nsMemoryReporterManager::RegisterReporter(nsIMemoryReporter *reporter)
 {
     mozilla::MutexAutoLock autoLock(mMutex);
@@ -449,10 +458,31 @@ nsMemoryReporterManager::RegisterReporter(nsIMemoryReporter *reporter)
 }
 
 NS_IMETHODIMP
+nsMemoryReporterManager::RegisterMultiReporter(nsIMemoryMultiReporter *reporter)
+{
+    mozilla::MutexAutoLock autoLock(mMutex);
+    if (mMultiReporters.IndexOf(reporter) != -1)
+        return NS_ERROR_FAILURE;
+
+    mMultiReporters.AppendObject(reporter);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMemoryReporterManager::UnregisterReporter(nsIMemoryReporter *reporter)
 {
     mozilla::MutexAutoLock autoLock(mMutex);
     if (!mReporters.RemoveObject(reporter))
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::UnregisterMultiReporter(nsIMemoryMultiReporter *reporter)
+{
+    mozilla::MutexAutoLock autoLock(mMutex);
+    if (!mMultiReporters.RemoveObject(reporter))
         return NS_ERROR_FAILURE;
 
     return NS_OK;
@@ -515,7 +545,6 @@ NS_IMETHODIMP nsMemoryReporter::GetDescription(char **aDescription)
     return NS_OK;
 }
 
-
 NS_COM nsresult
 NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)
 {
@@ -526,11 +555,29 @@ NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)
 }
 
 NS_COM nsresult
+NS_RegisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
+    if (mgr == nsnull)
+        return NS_ERROR_FAILURE;
+    return mgr->RegisterMultiReporter(reporter);
+}
+
+NS_COM nsresult
 NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
     if (mgr == nsnull)
         return NS_ERROR_FAILURE;
     return mgr->UnregisterReporter(reporter);
+}
+
+NS_COM nsresult
+NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
+    if (mgr == nsnull)
+        return NS_ERROR_FAILURE;
+    return mgr->UnregisterMultiReporter(reporter);
 }
 

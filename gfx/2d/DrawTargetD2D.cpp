@@ -65,6 +65,8 @@ typedef HRESULT (WINAPI*D3D10CreateEffectFromMemoryFunc)(
   __out  ID3D10Effect **ppEffect
 );
 
+using namespace std;
+
 namespace mozilla {
 namespace gfx {
 
@@ -665,8 +667,10 @@ DrawTargetD2D::CopySurface(SourceSurface *aSurface,
                            const IntRect &aSourceRect,
                            const IntPoint &aDestination)
 {
-  Rect srcRect(aSourceRect.x, aSourceRect.y, aSourceRect.width, aSourceRect.height);
-  Rect dstRect(aDestination.x, aDestination.y, aSourceRect.width, aSourceRect.height);
+  Rect srcRect(Float(aSourceRect.x), Float(aSourceRect.y),
+               Float(aSourceRect.width), Float(aSourceRect.height));
+  Rect dstRect(Float(aDestination.x), Float(aDestination.y),
+               Float(aSourceRect.width), Float(aSourceRect.height));
 
   mRT->SetTransform(D2D1::IdentityMatrix());
   mRT->PushAxisAlignedClip(D2DRect(dstRect), D2D1_ANTIALIAS_MODE_ALIASED);
@@ -1632,10 +1636,36 @@ DrawTargetD2D::CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
   }
 
 
-  HRESULT hr = factory()->CreateStrokeStyle(D2D1::StrokeStyleProperties(capStyle, capStyle,
-                                                                        capStyle, joinStyle,
-                                                                        aStrokeOptions.mMiterLimit),
-                                            NULL, 0, byRef(style));
+  HRESULT hr;
+  if (aStrokeOptions.mDashPattern) {
+    typedef vector<Float> FloatVector;
+    // D2D "helpfully" multiplies the dash pattern by the line width.
+    // That's not what cairo does, or is what <canvas>'s dash wants.
+    // So fix the multiplication in advance.
+    Float lineWidth = aStrokeOptions.mLineWidth;
+    FloatVector dash(aStrokeOptions.mDashPattern,
+                     aStrokeOptions.mDashPattern + aStrokeOptions.mDashLength);
+    for (FloatVector::iterator it = dash.begin(); it != dash.end(); ++it) {
+      *it /= lineWidth;
+    }
+
+    hr = factory()->CreateStrokeStyle(
+      D2D1::StrokeStyleProperties(capStyle, capStyle,
+                                  capStyle, joinStyle,
+                                  aStrokeOptions.mMiterLimit,
+                                  D2D1_DASH_STYLE_CUSTOM,
+                                  aStrokeOptions.mDashOffset),
+      &dash[0], // data() is not C++98, although it's in recent gcc
+                // and VC10's STL
+      dash.size(),
+      byRef(style));
+  } else {
+    hr = factory()->CreateStrokeStyle(
+      D2D1::StrokeStyleProperties(capStyle, capStyle,
+                                  capStyle, joinStyle,
+                                  aStrokeOptions.mMiterLimit),
+      NULL, 0, byRef(style));
+  }
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create Direct2D stroke style.";

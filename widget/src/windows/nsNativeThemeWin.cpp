@@ -515,10 +515,10 @@ nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType,
   nsEventStates eventState = GetContentState(aFrame, aWidgetType);
   if (eventState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE))
     return TS_ACTIVE;
-  if (wantFocused && eventState.HasState(NS_EVENT_STATE_FOCUS))
-    return TS_FOCUSED;
   if (eventState.HasState(NS_EVENT_STATE_HOVER))
     return TS_HOVER;
+  if (wantFocused && eventState.HasState(NS_EVENT_STATE_FOCUS))
+    return TS_FOCUSED;
 
   return TS_NORMAL;
 }
