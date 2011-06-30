@@ -77,6 +77,9 @@ function getHistograms() {
 
   for (let key in hls) {
     let hgram = hls[key];
+    if (!hgram.static)
+      continue;
+
     let r = hgram.ranges;
     let c = hgram.counts;
     let retgram = {
@@ -185,6 +188,7 @@ function TelemetryPing() {}
 
 TelemetryPing.prototype = {
   _histograms: {},
+  _initialized: false,
   _prevValues: {},
 
   /**
