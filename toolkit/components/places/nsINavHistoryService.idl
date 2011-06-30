@@ -809,7 +809,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(b02e6e42-9ef1-4b89-9ea3-aae29244fcef)]
+[scriptable, uuid(c837f6ba-6ad7-4810-a425-8ce29e05d17e)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -928,20 +928,27 @@ interface nsINavHistoryObserver : nsISupports
   void onClearHistory();
 
   /**
-   * A page has had some attribute on it changed. Note that for TYPED and
-   * HIDDEN, the page may not necessarily have been added yet.
+   * onPageChanged attribute indicating that favicon has been updated.
+   * aNewValue parameter will be set to the new favicon URI string.
+   */
+  const unsigned long ATTRIBUTE_FAVICON = 3;
+
+  /**
+   * An attribute of this page changed.
    *
    * @param aURI
-   *         The URI of the page on which an attribute changed.
-   * @param aWhat
-   *         The attribute whose value changed.
-   * @param aValue
-   *         The attribute's new value. 
+   *        The URI of the page on which an attribute changed.
+   * @param aChangedAttribute
+   *        The attribute whose value changed.  See ATTRIBUTE_* constants.
+   * @param aNewValue
+   *        The attribute's new value.
+   * @param aGUID
+   *        The unique ID associated with the page.
    */
-  const unsigned long ATTRIBUTE_FAVICON = 3; // favicon updated, aString = favicon annotation URI
   void onPageChanged(in nsIURI aURI,
-                     in unsigned long aWhat,
-                     in AString aValue);
+                     in unsigned long aChangedAttribute,
+                     in AString aNewValue,
+                     in ACString aGUID);
 
   /**
    * Called when some visits of an history entry are expired.
