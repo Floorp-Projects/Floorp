@@ -2981,9 +2981,8 @@ function FillInHTMLTooltip(tipElement)
         XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
       }
       if (lookingForSVGTitle &&
-          !(tipElement instanceof SVGElement &&
-            tipElement.parentNode instanceof SVGElement &&
-            !(tipElement.parentNode instanceof SVGForeignObjectElement))) {
+          (!(tipElement instanceof SVGElement) ||
+           tipElement.parentNode.nodeType == Node.DOCUMENT_NODE)) {
         lookingForSVGTitle = false;
       }
       if (lookingForSVGTitle) {
