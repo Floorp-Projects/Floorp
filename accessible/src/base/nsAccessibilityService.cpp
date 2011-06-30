@@ -1009,12 +1009,13 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(aNode);
-  if (roleMapEntry && !nsCRT::strcmp(roleMapEntry->roleString, "presentation") &&
-      !content->IsFocusable()) { // For presentation only
-    // Only create accessible for role of "presentation" if it is focusable --
-    // in that case we need an accessible in case it gets focused, we
-    // don't want focus ever to be 'lost'
-    return nsnull;
+  if (roleMapEntry && !nsCRT::strcmp(roleMapEntry->roleString, "presentation")) {
+    // Ignore presentation role if element is focusable (focus event shouldn't
+    // be ever lost and should be sensible).
+    if (content->IsFocusable())
+      roleMapEntry = nsnull;
+    else
+      return nsnull;
   }
 
   if (weakFrame.IsAlive() && !newAcc && isHTML) {  // HTML accessibles
