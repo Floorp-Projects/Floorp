@@ -41,13 +41,13 @@ add_test(function test_removeClientData() {
 });
 
 add_test(function test_reset_SyncScheduler() {
-  // Some non-defualt values for SyncScheduler's attributes.
+  // Some non-default values for SyncScheduler's attributes.
   SyncScheduler.idle = true;
   SyncScheduler.hasIncomingItems = true;
   SyncScheduler.numClients = 42;
   SyncScheduler.nextSync = Date.now();
   SyncScheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
-  SyncScheduler.syncInterval = MULTI_DEVICE_ACTIVE_SYNC;
+  SyncScheduler.syncInterval = SyncScheduler.activeInterval;
 
   Service.startOver();
 
@@ -55,8 +55,8 @@ add_test(function test_reset_SyncScheduler() {
   do_check_false(SyncScheduler.hasIncomingItems);
   do_check_eq(SyncScheduler.numClients, 0);
   do_check_eq(SyncScheduler.nextSync, 0);
-  do_check_eq(SyncScheduler.syncInterval, SINGLE_USER_SYNC);
   do_check_eq(SyncScheduler.syncThreshold, SINGLE_USER_THRESHOLD);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
 
   run_next_test();
 });
