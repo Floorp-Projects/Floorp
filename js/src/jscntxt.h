@@ -617,11 +617,6 @@ struct JSRuntime {
     JSWrapObjectCallback wrapObjectCallback;
     JSPreWrapCallback    preWrapObjectCallback;
 
-#ifdef JS_METHODJIT
-    /* This measures the size of JITScripts, native maps and IC structs. */
-    size_t               mjitDataSize;
-#endif
-
     /*
      * To ensure that cx->malloc does not cause a GC, we set this flag during
      * OOM reporting (in js_ReportOutOfMemory). If a GC is requested while
