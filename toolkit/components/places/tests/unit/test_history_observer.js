@@ -99,7 +99,6 @@ add_test(function test_onDeleteVisits() {
     do_check_eq(aGUID, testguid);
     do_check_eq(aReason, Ci.nsINavHistoryObserver.REASON_DELETED);
     do_check_eq(aVisitTime, 0); // All visits have been removed.
-    do_check_eq(aGUID, testguid);
 
     run_next_test();
   });
@@ -112,4 +111,18 @@ add_test(function test_onDeleteVisits() {
                                        "test");
   let testguid = do_get_guid_for_uri(testuri);
   PlacesUtils.bhistory.removePage(testuri);
+});
+
+add_test(function test_onTitleChanged() {
+  onNotify(function onTitleChanged(aURI, aTitle, aGUID) {
+    do_check_true(aURI.equals(testuri));
+    do_check_eq(aTitle, title);
+    do_check_guid_for_uri(aURI, aGUID);
+
+    run_next_test();
+  });
+
+  let [testuri] = add_visit();
+  let title = "test-title";
+  PlacesUtils.history.setPageTitle(testuri, title);
 });

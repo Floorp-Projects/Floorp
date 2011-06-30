@@ -1858,7 +1858,9 @@ nsDownloadManager::OnVisit(nsIURI *aURI, PRInt64 aVisitID, PRTime aTime,
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OnTitleChanged(nsIURI *aURI, const nsAString &aPageTitle)
+nsDownloadManager::OnTitleChanged(nsIURI *aURI,
+                                  const nsAString &aPageTitle,
+                                  const nsACString &aGUID)
 {
   return NS_OK;
 }
