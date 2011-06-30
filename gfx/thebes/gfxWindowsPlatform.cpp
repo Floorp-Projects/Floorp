@@ -455,6 +455,8 @@ gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
 
     return scaledFont;
   }
+
+  return NULL;
 }
 
 already_AddRefed<gfxASurface>
