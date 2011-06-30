@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Marina Samuel <msamuel@mozilla.com>
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,6 +59,7 @@ let SyncScheduler = {
   syncTimer: null,
 
   setDefaults: function setDefaults() {
+    this._log.trace("Setting SyncScheduler policy values to defaults.");
     // A user is non-idle on startup by default.
     this.idle = false;
 
@@ -73,6 +75,7 @@ let SyncScheduler = {
   set globalScore(value) Svc.Prefs.set("globalScore", value),
 
   init: function init() {
+    this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
     this.setDefaults();
     Svc.Obs.add("weave:engine:score:updated", this);
     Svc.Obs.add("network:offline-status-changed", this);
@@ -116,6 +119,7 @@ let SyncScheduler = {
         this._syncErrors = 0;
 
         if (Status.sync == NO_SYNC_NODE_FOUND) {
+          this._log.trace("Scheduling a sync at interval NO_SYNC_NODE_FOUND.");
           sync_interval = NO_SYNC_NODE_INTERVAL;
         }
         this.scheduleNextSync(sync_interval);
@@ -131,8 +135,11 @@ let SyncScheduler = {
         
         // Try again later, just as if we threw an error... only without the
         // error count.
-        if (Status.login == MASTER_PASSWORD_LOCKED)
+        if (Status.login == MASTER_PASSWORD_LOCKED) {
+          this._log.debug("Couldn't log in: master password is locked.");
+          this._log.trace("Scheduling a sync at MASTER_PASSWORD_LOCKED_RETRY_INTERVAL");
           this.scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
+        }
         break;
       case "weave:service:logout:finish":
         // Start or cancel the sync timer depending on if
@@ -155,6 +162,7 @@ let SyncScheduler = {
           this.hasIncomingItems = true;
         break;
       case "idle":
+        this._log.trace("We're idle.");
         this.idle = true;
         // Adjust the interval for future syncs. This won't actually have any
         // effect until the next pending sync (which will happen soon since we
@@ -162,6 +170,7 @@ let SyncScheduler = {
         this.adjustSyncInterval();
         break;
       case "back":
+        this._log.trace("We're no longer idle.");
         this.idle = false;
         // Trigger a sync if we have multiple clients.
         if (this.numClients > 1) {
@@ -173,20 +182,24 @@ let SyncScheduler = {
 
   adjustSyncInterval: function adjustSyncInterval() {
     if (this.numClients <= 1) {
+      this._log.trace("Adjusting syncInterval to SINGLE_USER_SYNC");
       this.syncInterval = SINGLE_USER_SYNC;
       return;
     }
     // Only MULTI_DEVICE clients will enter this if statement
     // since SINGLE_USER clients will be handled above.
     if (this.idle) {
+      this._log.trace("Adjusting syncInterval to MULTI_DEVICE_IDLE_SYNC.");
       this.syncInterval = MULTI_DEVICE_IDLE_SYNC;
       return;
     }
 
     if (this.hasIncomingItems) {
+      this._log.trace("Adjusting syncInterval to MULTI_DEVICE_IMMEDIATE_SYNC.");
       this.hasIncomingItems = false;
       this.syncInterval = MULTI_DEVICE_IMMEDIATE_SYNC;
     } else {
+      this._log.trace("Adjusting syncInterval to MULTI_DEVICE_ACTIVE_SYNC.");
       this.syncInterval = MULTI_DEVICE_ACTIVE_SYNC;
     }
   },
@@ -216,9 +229,10 @@ let SyncScheduler = {
     this.numClients = numClients;
 
     if (numClients <= 1) {
+      this._log.trace("Adjusting syncThreshold to SINGLE_USER_THRESHOLD");
       this.syncThreshold = SINGLE_USER_THRESHOLD;
-    }
-    else {
+    } else {
+      this._log.trace("Adjusting syncThreshold to MULTI_DEVICE_THRESHOLD");
       this.syncThreshold = MULTI_DEVICE_THRESHOLD;
     }
     this.adjustSyncInterval();
@@ -267,6 +281,7 @@ let SyncScheduler = {
       this._log.debug("Not initiating sync: Login status is " + Status.login);
 
       // If we're not syncing now, we need to schedule the next one.
+      this._log.trace("Scheduling a sync at MASTER_PASSWORD_LOCKED_RETRY_INTERVAL");
       this.scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
       return;
     }
