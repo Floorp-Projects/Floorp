@@ -906,7 +906,7 @@ Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &this
 
     AutoPreserveEnumerators preserve(cx);
     JSBool ok = RunScript(cx, script, fp);
-    if (result)
+    if (result && ok)
         *result = fp->returnValue();
 
     Probes::stopExecution(cx, script);
