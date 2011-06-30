@@ -95,7 +95,6 @@ class nsIDOMDocument;
 class nsIDOMDocumentType;
 class nsScriptLoader;
 class nsIContentSink;
-class nsIScriptEventManager;
 class nsHTMLStyleSheet;
 class nsHTMLCSSStyleSheet;
 class nsILayoutHistoryState;
@@ -838,8 +837,6 @@ public:
 
     return container;
   }
-
-  virtual nsIScriptEventManager* GetScriptEventManager() = 0;
 
   /**
    * Set and get XML declaration. If aVersion is null there is no declaration.

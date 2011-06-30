@@ -170,7 +170,6 @@
 #include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIScriptError.h"
-#include "nsIScriptEventManager.h" // For GetInterface()
 #include "nsIConsoleService.h"
 #include "nsIControllers.h"
 #include "nsIControllerContext.h"
@@ -8241,15 +8240,6 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
     }
   }
 #endif
-  else if (aIID.Equals(NS_GET_IID(nsIScriptEventManager))) {
-    if (mDoc) {
-      nsIScriptEventManager* mgr = mDoc->GetScriptEventManager();
-      if (mgr) {
-        *aSink = mgr;
-        NS_ADDREF(((nsISupports *) *aSink));
-      }
-    }
-  }
   else if (aIID.Equals(NS_GET_IID(nsIDOMWindowUtils))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
 
