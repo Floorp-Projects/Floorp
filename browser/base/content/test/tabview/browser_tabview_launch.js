@@ -28,7 +28,7 @@ function test() {
             newWin.document.getElementById("menu_tabview").doCommand();
           }, function() {
             testMethodToHideAndShowTabView(function() {
-              EventUtils.synthesizeKey("E", { accelKey: true, shiftKey: true }, newWin);
+              EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true }, newWin);
             }, finish);
           });
         });
