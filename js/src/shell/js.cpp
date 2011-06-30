@@ -3634,13 +3634,15 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
             return false;
     }
 
-    *vp = OBJECT_TO_JSVAL(sobj);
-    if (srclen == 0)
+    if (srclen == 0) {
+        JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(sobj));
         return true;
+    }
 
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
     JSScript *script = JS_GetFrameScript(cx, fp);
     jsbytecode *pc = JS_GetFramePC(cx, fp);
+    jsval rval;
     {
         JSAutoEnterCompartment ac;
         uintN flags;
@@ -3661,11 +3663,16 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
         if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
                                  script->filename,
                                  JS_PCToLineNumber(cx, script, pc),
-                                 vp)) {
+                                 &rval)) {
             return false;
         }
     }
-    return cx->compartment->wrap(cx, Valueify(vp));
+
+    if (!cx->compartment->wrap(cx, Valueify(&rval)))
+        return false;
+
+    JS_SET_RVAL(cx, vp, rval);
+    return true;
 }
 
 static JSBool
