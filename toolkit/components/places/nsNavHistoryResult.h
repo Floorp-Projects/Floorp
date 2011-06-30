@@ -101,13 +101,15 @@ private:
                      PRUint32 aTransitionType, const nsACString& aGUID, \
                      PRUint32* aAdded);                                 \
   NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle); \
-  NS_IMETHOD OnBeforeDeleteURI(nsIURI *aURI, const nsACString& aGUID);  \
-  NS_IMETHOD OnDeleteURI(nsIURI *aURI, const nsACString& aGUID);        \
+  NS_IMETHOD OnBeforeDeleteURI(nsIURI *aURI, const nsACString& aGUID,   \
+                               PRUint16 aReason);                       \
+  NS_IMETHOD OnDeleteURI(nsIURI *aURI, const nsACString& aGUID,         \
+                         PRUint16 aReason);                             \
   NS_IMETHOD OnClearHistory();                                          \
   NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aWhat,                \
                            const nsAString &aValue);                    \
   NS_IMETHOD OnDeleteVisits(nsIURI* aURI, PRTime aVisitTime,            \
-                            const nsACString& aGUID);
+                            const nsACString& aGUID, PRUint16 aReason);
 
 // nsNavHistoryResult
 //
