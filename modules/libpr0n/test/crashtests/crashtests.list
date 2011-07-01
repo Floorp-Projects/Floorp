@@ -13,3 +13,8 @@ load delaytest.html?523528-2.gif
 
 # this would have exposed the leak discovered in bug 642902
 load invalid-icc-profile.jpg
+
+# maximum (256) width and height icons that we currently (due to bug 668068)
+# interpret as 0-width and 0-height.
+load 256-width.ico
+load 256-height.ico
