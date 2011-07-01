@@ -44,8 +44,6 @@
 #include "nsMIMEInfoImpl.h"
 #include "nsIPropertyBag.h"
 
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsNetCID.h"
 #include "nsEscape.h"
 
