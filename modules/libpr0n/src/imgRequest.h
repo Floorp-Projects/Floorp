@@ -90,7 +90,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsresult Init(nsIURI *aURI,
-                nsIURI *aKeyURI,
+                nsIURI *aCurrentURI,
                 nsIRequest *aRequest,
                 nsIChannel *aChannel,
                 imgCacheEntry *aCacheEntry,
@@ -211,10 +211,11 @@ private:
   friend class imgMemoryReporter;
 
   nsCOMPtr<nsIRequest> mRequest;
-  // The original URI we were loaded with.
+  // The original URI we were loaded with. This is the same as the URI we are
+  // keyed on in the cache.
   nsCOMPtr<nsIURI> mURI;
-  // The URI we are keyed on in the cache.
-  nsCOMPtr<nsIURI> mKeyURI;
+  // The URI of the resource we ended up loading after all redirects, etc.
+  nsCOMPtr<nsIURI> mCurrentURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   // Status-tracker -- transferred to mImage, when it gets instantiated
   nsAutoPtr<imgStatusTracker> mStatusTracker;
