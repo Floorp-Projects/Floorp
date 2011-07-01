@@ -56,9 +56,7 @@ function testHistory() {
 
   openConsole();
 
-  hudId = HUDService.displaysIndex()[0];
-  let HUD = HUDService.hudReferences[hudId];
-  let jsterm = HUD.jsterm;
+  let jsterm = HUDService.getHudByWindow(content).jsterm;
   let input = jsterm.inputNode;
 
   let executeList = ["document", "window", "window.location"];
