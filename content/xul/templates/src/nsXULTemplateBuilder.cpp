@@ -275,6 +275,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateBuilder)
     if (tmp->mMatchMap.IsInitialized()) {
       tmp->mMatchMap.Enumerate(DestroyMatchList, &(tmp->mPool));
     }
+    for (PRUint32 i = 0; i < tmp->mQuerySets.Length(); ++i) {
+        nsTemplateQuerySet* qs = tmp->mQuerySets[i];
+        delete qs;
+    }
+    tmp->mQuerySets.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateBuilder)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDataSource)
