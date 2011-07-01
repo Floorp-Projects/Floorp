@@ -391,17 +391,13 @@ nsProgressNotificationProxy::GetInterface(const nsIID& iid,
   return NS_NOINTERFACE;
 }
 
-static PRBool NewRequestAndEntry(nsIURI *uri, imgRequest **request, imgCacheEntry **entry)
+static PRBool NewRequestAndEntry(imgRequest **request, imgCacheEntry **entry)
 {
-  // If file, force revalidation on expiration
-  PRBool isFile;
-  uri->SchemeIs("file", &isFile);
-
   *request = new imgRequest();
   if (!*request)
     return PR_FALSE;
 
-  *entry = new imgCacheEntry(*request, /* mustValidate = */ isFile);
+  *entry = new imgCacheEntry(*request);
   if (!*entry) {
     delete *request;
     return PR_FALSE;
@@ -529,12 +525,12 @@ static PRUint32 SecondsFromPRTime(PRTime prTime)
   return PRUint32(PRInt64(prTime) / PRInt64(PR_USEC_PER_SEC));
 }
 
-imgCacheEntry::imgCacheEntry(imgRequest *request, PRBool mustValidate /* = PR_FALSE */)
+imgCacheEntry::imgCacheEntry(imgRequest *request)
  : mRequest(request),
    mDataSize(0),
    mTouchedTime(SecondsFromPRTime(PR_Now())),
    mExpiryTime(0),
-   mMustValidate(mustValidate),
+   mMustValidate(PR_FALSE),
    mEvicted(PR_FALSE),
    mHasNoProxies(PR_TRUE)
 {}
@@ -1641,7 +1637,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 
-    if (!NewRequestAndEntry(aURI, getter_AddRefs(request), getter_AddRefs(entry)))
+    if (!NewRequestAndEntry(getter_AddRefs(request), getter_AddRefs(entry)))
       return NS_ERROR_OUT_OF_MEMORY;
 
     PR_LOG(gImgLog, PR_LOG_DEBUG,
@@ -1833,7 +1829,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
                                   requestFlags, nsnull, _retval);
     static_cast<imgRequestProxy*>(*_retval)->NotifyListener();
   } else {
-    if (!NewRequestAndEntry(uri, getter_AddRefs(request), getter_AddRefs(entry)))
+    if (!NewRequestAndEntry(getter_AddRefs(request), getter_AddRefs(entry)))
       return NS_ERROR_OUT_OF_MEMORY;
 
     // We use originalURI here to fulfil the imgIRequest contract on GetURI.
@@ -2124,7 +2120,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
 
   imgRequest *request;
 
-  if (!NewRequestAndEntry(uri, &request, getter_AddRefs(entry)))
+  if (!NewRequestAndEntry(&request, getter_AddRefs(entry)))
       return NS_ERROR_OUT_OF_MEMORY;
 
   // We use originalURI here to fulfil the imgIRequest contract on GetURI.
