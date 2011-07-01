@@ -125,8 +125,8 @@
           </hbox>
         </row>
         <row id="passwordRow" align="center">
-          <label value="&signIn.password.label;"
-                 accesskey="&signIn.password.accesskey;"
+          <label value="&setup.choosePassword.label;"
+                 accesskey="&setup.choosePassword.accesskey;"
                  control="weavePassword"/>
           <textbox id="weavePassword"
                    type="password"

@@ -38,7 +38,6 @@
 
 let WeaveGlue = {
   setupData: null,
-  autoConnect: false,
   jpake: null,
 
   init: function init() {
@@ -55,8 +54,7 @@ let WeaveGlue = {
 
     // Generating keypairs is expensive on mobile, so disable it
     if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-      this.autoConnect = Services.prefs.getBoolPref("services.sync.autoconnect");
-      if (enableSync && this.autoConnect) {
+      if (enableSync) {
         // Put the settings UI into a state of "connecting..." if we are going to auto-connect
         this._elements.connect.firstChild.disabled = true;
         this._elements.connect.setAttribute("title", this._bundle.GetStringFromName("connecting.label"));
@@ -386,10 +384,6 @@ let WeaveGlue = {
   observe: function observe(aSubject, aTopic, aData) {
     let loggedIn = Weave.Service.isLoggedIn;
 
-    // If we are going to auto-connect anyway, fake the settings UI to make it
-    // look like we are connecting
-    loggedIn = loggedIn || this.autoConnect;
-
     // Make sure we're online when connecting/syncing
     Util.forceOnline();
 
@@ -462,13 +456,9 @@ let WeaveGlue = {
     else
       connect.removeAttribute("desc");
 
-    // Init the setup data if we just logged in from an autoConnect
-    if (!this.setupData && this.autoConnect && aTopic == "weave:service:login:finish")
+    // Init the setup data if we just logged in
+    if (!this.setupData && aTopic == "weave:service:login:finish")
       this.loadSetupData();
-
-    // Reset the auto-connect flag after the first attempted login
-    if (aTopic == "weave:service:login:finish" || aTopic == "weave:service:login:error")
-      this.autoConnect = false;
 
     // Check for a storage format update, update the user and load the Sync update page
     if (aTopic =="weave:service:sync:error") {

@@ -307,6 +307,9 @@ RotaryTracker.prototype = {
 
 function RotaryEngine() {
   SyncEngine.call(this, "Rotary");
+  // Ensure that the engine starts with a clean slate.
+  this.toFetch        = [];
+  this.previousFailed = [];
 }
 RotaryEngine.prototype = {
   __proto__: SyncEngine.prototype,
