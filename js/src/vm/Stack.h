@@ -741,10 +741,9 @@ class StackFrame
     }
 
     /*
-     * getValidCalleeObject is a fallible getter to compute the correct callee
-     * function object, which may require deferred cloning due to the JSObject
-     * methodReadBarrier. For a non-function frame, return true with *vp set
-     * from calleev, which may not be an object (it could be undefined).
+     * Compute the callee function for this stack frame, cloning if needed to
+     * implement the method read barrier.  If this is not a function frame,
+     * set *vp to null.
      */
     bool getValidCalleeObject(JSContext *cx, Value *vp);
 

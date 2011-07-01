@@ -379,8 +379,10 @@ mjit::Compiler::generatePrologue()
     if (isConstructing)
         constructThis();
 
-    if (debugMode() || Probes::callTrackingActive(cx))
+    if (debugMode())
         INLINE_STUBCALL(stubs::ScriptDebugPrologue);
+    else if (Probes::callTrackingActive(cx))
+        INLINE_STUBCALL(stubs::ScriptProbeOnlyPrologue);
 
     return Compile_Okay;
 }

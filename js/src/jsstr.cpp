@@ -1460,7 +1460,7 @@ class RegExpGuard
         }
         JS_ASSERT(patstr);
 
-        AlreadyIncRefed<RegExp> re = RegExp::createFlagged(cx, patstr, opt);
+        AlreadyIncRefed<RegExp> re = RegExp::createFlagged(cx, patstr, opt, NULL);
         if (!re)
             return NULL;
         rep.reset(re);
