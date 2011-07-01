@@ -876,16 +876,12 @@ SyncEngine.prototype = {
     doApplyBatchAndPersistFailed.call(this);
 
     count.newFailed = Utils.arraySub(this.previousFailed, failedInPreviousSync).length;
-    if (count.newFailed) {
-      // Notify observers if records failed to apply. Pass the count object
-      // along so that they can make an informed decision on what to do.
-      Observers.notify("weave:engine:sync:apply-failed", count, this.name);
-    }
     this._log.info(["Records:",
                     count.applied, "applied,",
                     count.failed, "failed to apply,",
                     count.newFailed, "newly failed to apply,",
                     count.reconciled, "reconciled."].join(" "));
+    Observers.notify("weave:engine:sync:applied", count, this.name);
   },
 
   /**

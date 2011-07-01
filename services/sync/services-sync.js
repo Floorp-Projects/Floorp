@@ -7,8 +7,13 @@ pref("services.sync.statusURL", "https://services.mozilla.com/status/");
 pref("services.sync.syncKeyHelpURL", "https://services.mozilla.com/help/synckey");
 
 pref("services.sync.lastversion", "firstrun");
-pref("services.sync.autoconnect", true);
 pref("services.sync.sendVersionInfo", true);
+
+pref("services.sync.scheduler.singleDeviceInterval", 86400); // 1 day
+pref("services.sync.scheduler.idleInterval",         3600);  // 1 hour
+pref("services.sync.scheduler.activeInterval",       300);   // 5 minutes
+pref("services.sync.scheduler.immediateInterval",    60);    // 1 minute
+pref("services.sync.scheduler.idleTime",             300);   // 5 minutes
 
 pref("services.sync.engine.bookmarks", true);
 pref("services.sync.engine.history", true);

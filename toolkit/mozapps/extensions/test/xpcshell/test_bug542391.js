@@ -38,7 +38,6 @@
  */
 
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
-const PREF_EM_DISABLED_ADDONS_LIST    = "extensions.disabledAddons";
 const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 
 // The test extension uses an insecure update url.
@@ -69,6 +68,7 @@ var WindowWatcher = {
       AddonManager.getAddonByID("bug542391_6@tests.mozilla.org", function(a6) {
         a6.findUpdates({
           onUpdateFinished: function() {
+            AddonManagerPrivate.removeStartupChange("disabled", "bug542391_6@tests.mozilla.org");
             updated = true;
           }
         }, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
@@ -79,6 +79,8 @@ var WindowWatcher = {
     if (gInstallUpdate) {
       // Simulate installing an update while in the dialog
       installAllFiles([do_get_addon("test_bug542391_3_2")], function() {
+        AddonManagerPrivate.removeStartupChange("disabled", "bug542391_3@tests.mozilla.org");
+        AddonManagerPrivate.addStartupChange("updated", "bug542391_3@tests.mozilla.org");
         installed = true;
       });
     }
@@ -135,6 +137,45 @@ function check_state_v1([a1, a2, a3, a4, a5, a6]) {
   do_check_true(a3.isActive);
   do_check_true(isExtensionInAddonsList(profileDir, a3.id));
   do_check_eq(a3.version, "1.0");
+
+  do_check_neq(a4, null);
+  do_check_false(a4.appDisabled);
+  do_check_true(a4.userDisabled);
+  do_check_false(a4.isActive);
+  do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+
+  do_check_neq(a5, null);
+  do_check_false(a5.appDisabled);
+  do_check_false(a5.userDisabled);
+  do_check_true(a5.isActive);
+  do_check_true(isExtensionInAddonsList(profileDir, a5.id));
+
+  do_check_neq(a6, null);
+  do_check_false(a6.appDisabled);
+  do_check_false(a6.userDisabled);
+  do_check_true(a6.isActive);
+  do_check_true(isExtensionInAddonsList(profileDir, a6.id));
+}
+
+function check_state_v1_2([a1, a2, a3, a4, a5, a6]) {
+  do_check_neq(a1, null);
+  do_check_false(a1.appDisabled);
+  do_check_false(a1.userDisabled);
+  do_check_true(a1.isActive);
+  do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+
+  do_check_neq(a2, null);
+  do_check_false(a2.appDisabled);
+  do_check_true(a2.userDisabled);
+  do_check_false(a2.isActive);
+  do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+
+  do_check_neq(a3, null);
+  do_check_true(a3.appDisabled);
+  do_check_false(a3.userDisabled);
+  do_check_false(a3.isActive);
+  do_check_false(isExtensionInAddonsList(profileDir, a3.id));
+  do_check_eq(a3.version, "2.0");
 
   do_check_neq(a4, null);
   do_check_false(a4.appDisabled);
@@ -311,6 +352,11 @@ function run_test() {
                    do_get_addon("test_bug542391_6")], function() {
 
     restartManager();
+    check_startup_changes("installed", []);
+    check_startup_changes("updated", []);
+    check_startup_changes("uninstalled", ["addon1@tests.mozilla.org"]);
+    check_startup_changes("disabled", []);
+    check_startup_changes("enabled", []);
 
     AddonManager.getAddonsByIDs(["bug542391_2@tests.mozilla.org",
                                  "bug542391_4@tests.mozilla.org"],
@@ -318,6 +364,11 @@ function run_test() {
       a2.userDisabled = true;
       a4.userDisabled = true;
       restartManager();
+      check_startup_changes("installed", []);
+      check_startup_changes("updated", []);
+      check_startup_changes("uninstalled", []);
+      check_startup_changes("disabled", []);
+      check_startup_changes("enabled", []);
 
       AddonManager.getAddonsByIDs(["bug542391_1@tests.mozilla.org",
                                    "bug542391_2@tests.mozilla.org",
@@ -330,6 +381,11 @@ function run_test() {
 
         WindowWatcher.expected = true;
         restartManager("2");
+        check_startup_changes("installed", []);
+        check_startup_changes("updated", []);
+        check_startup_changes("uninstalled", []);
+        check_startup_changes("disabled", ["bug542391_1@tests.mozilla.org"]);
+        check_startup_changes("enabled", []);
         do_check_false(WindowWatcher.expected);
 
         AddonManager.getAddonsByIDs(["bug542391_1@tests.mozilla.org",
@@ -358,6 +414,11 @@ function run_test_1() {
   gCheckUpdates = true;
   WindowWatcher.expected = true;
   restartManager("3");
+  check_startup_changes("installed", []);
+  check_startup_changes("updated", []);
+  check_startup_changes("uninstalled", []);
+  check_startup_changes("disabled", ["bug542391_3@tests.mozilla.org"]);
+  check_startup_changes("enabled", []);
   do_check_false(WindowWatcher.expected);
   gCheckUpdates = false;
 
@@ -384,6 +445,11 @@ function run_test_1() {
 function run_test_2() {
   WindowWatcher.expected = true;
   restartManager("2");
+  check_startup_changes("installed", []);
+  check_startup_changes("updated", []);
+  check_startup_changes("uninstalled", []);
+  check_startup_changes("disabled", []);
+  check_startup_changes("enabled", ["bug542391_3@tests.mozilla.org"]);
   do_check_false(WindowWatcher.expected);
 
   AddonManager.getAddonsByIDs(["bug542391_1@tests.mozilla.org",
@@ -401,59 +467,6 @@ function run_test_2() {
     do_check_true(WindowWatcher.arguments.indexOf("bug542391_3@tests.mozilla.org") >= 0);
     do_check_true(WindowWatcher.arguments.indexOf("bug542391_4@tests.mozilla.org") >= 0);
 
-    run_test_3();
-  });
-}
-
-// Upgrade to version 3 which will appDisable two more add-ons.
-function run_test_3() {
-  Services.prefs.setBoolPref(PREF_EM_SHOW_MISMATCH_UI, false);
-
-  restartManager("3");
-
-  AddonManager.getAddonsByIDs(["bug542391_1@tests.mozilla.org",
-                               "bug542391_2@tests.mozilla.org",
-                               "bug542391_3@tests.mozilla.org",
-                               "bug542391_4@tests.mozilla.org",
-                               "bug542391_5@tests.mozilla.org",
-                               "bug542391_6@tests.mozilla.org"],
-                               function(addons) {
-    check_state_v3(addons);
-
-    var disabled = [];
-    try {
-      disabled = Services.prefs.getCharPref(PREF_EM_DISABLED_ADDONS_LIST).split(",");
-    }
-    catch (e) {}
-    do_check_eq(disabled.length, 2);
-    do_check_true(disabled.indexOf("bug542391_2@tests.mozilla.org") >= 0);
-    do_check_true(disabled.indexOf("bug542391_3@tests.mozilla.org") >= 0);
-    Services.prefs.clearUserPref(PREF_EM_DISABLED_ADDONS_LIST);
-
-    run_test_4();
-  });
-}
-
-// Downgrade to version 2 which will remove appDisable from two add-ons.
-function run_test_4() {
-  restartManager("2");
-
-  AddonManager.getAddonsByIDs(["bug542391_1@tests.mozilla.org",
-                               "bug542391_2@tests.mozilla.org",
-                               "bug542391_3@tests.mozilla.org",
-                               "bug542391_4@tests.mozilla.org",
-                               "bug542391_5@tests.mozilla.org",
-                               "bug542391_6@tests.mozilla.org"],
-                               function(addons) {
-    check_state_v2(addons);
-
-    var disabled = [];
-    try {
-      disabled = Services.prefs.getCharPref(PREF_EM_DISABLED_ADDONS_LIST).split(",");
-    }
-    catch (e) {}
-    do_check_eq(disabled.length, 0);
-
     run_test_5();
   });
 }
@@ -466,6 +479,11 @@ function run_test_5() {
 
   WindowWatcher.expected = true;
   restartManager("3");
+  check_startup_changes("installed", []);
+  check_startup_changes("updated", ["bug542391_3@tests.mozilla.org"]);
+  check_startup_changes("uninstalled", []);
+  check_startup_changes("disabled", []);
+  check_startup_changes("enabled", []);
   do_check_false(WindowWatcher.expected);
   gInstallUpdate = false;
 
@@ -482,6 +500,30 @@ function run_test_5() {
     do_check_true(WindowWatcher.arguments.indexOf("bug542391_1@tests.mozilla.org") >= 0);
     do_check_true(WindowWatcher.arguments.indexOf("bug542391_2@tests.mozilla.org") >= 0);
     do_check_true(WindowWatcher.arguments.indexOf("bug542391_4@tests.mozilla.org") >= 0);
+
+    run_test_6();
+  });
+}
+
+// Downgrade to version 1 which will appEnable all the add-ons
+function run_test_6() {
+  WindowWatcher.expected = true;
+  restartManager("1");
+  check_startup_changes("installed", []);
+  check_startup_changes("updated", []);
+  check_startup_changes("uninstalled", []);
+  check_startup_changes("disabled", ["bug542391_3@tests.mozilla.org"]);
+  check_startup_changes("enabled", ["bug542391_1@tests.mozilla.org"]);
+  do_check_false(WindowWatcher.expected);
+
+  AddonManager.getAddonsByIDs(["bug542391_1@tests.mozilla.org",
+                               "bug542391_2@tests.mozilla.org",
+                               "bug542391_3@tests.mozilla.org",
+                               "bug542391_4@tests.mozilla.org",
+                               "bug542391_5@tests.mozilla.org",
+                               "bug542391_6@tests.mozilla.org"],
+                               function(addons) {
+    check_state_v1_2(addons);
 
     finish_test();
   });
