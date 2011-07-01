@@ -1253,7 +1253,7 @@ imgRequest::AsyncOnChannelRedirect(nsIChannel *oldChannel,
     }
     return rv;
   }
-  
+
   (void) OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
@@ -1263,7 +1263,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
 {
   NS_ASSERTION(mRedirectCallback, "mRedirectCallback not set in callback");
   NS_ASSERTION(mNewRedirectChannel, "mNewRedirectChannel not set in callback");
-    
+
   if (NS_FAILED(result)) {
       mRedirectCallback->OnRedirectVerifyCallback(result);
       mRedirectCallback = nsnull;
@@ -1320,7 +1320,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
     }
 
     mKeyURI = newURI;
- 
+
     if (mIsInCache) {
       // If we don't still have a URI or cache entry, we don't want to put
       // ourselves back into the cache.
