@@ -954,6 +954,7 @@
               this._tabAttrModified(this.mCurrentTab);
 
               // Adjust focus
+              oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
               do {
 
                 // If there's a tabmodal prompt showing, focus it.
@@ -968,7 +969,6 @@
                 // Focus the location bar if it was previously focused for that tab.
                 // In full screen mode, only bother making the location bar visible
                 // if the tab is a blank one.
-                oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
                 if (newBrowser._urlbarFocused && gURLBar) {
 
                   // Explicitly close the popup if the URL bar retains focus
