@@ -777,10 +777,12 @@
         <body>
           <![CDATA[
             var newTitle = "";
+            var docTitle;
             var docElement = this.ownerDocument.documentElement;
             var sep = docElement.getAttribute("titlemenuseparator");
 
-            var docTitle = aBrowser.contentTitle;
+            if (aBrowser.docShell.contentViewer)
+              docTitle = aBrowser.contentTitle;
 
             if (!docTitle)
               docTitle = docElement.getAttribute("titledefault");
@@ -857,7 +859,7 @@
             var oldBrowser = this.mCurrentBrowser;
             if (oldBrowser) {
               oldBrowser.setAttribute("type", "content-targetable");
-              oldBrowser.docShellIsActive = false;
+              oldBrowser.docShell.isActive = false;
             }
 
             var updatePageReport = false;
@@ -867,7 +869,7 @@
               updatePageReport = true;
 
             newBrowser.setAttribute("type", "content-primary");
-            newBrowser.docShellIsActive = true;
+            newBrowser.docShell.isActive = true;
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
             this.showTab(this.mCurrentTab);
@@ -878,10 +880,6 @@
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;
 
-#ifdef MOZ_E10S_COMPAT
-            // Bug 666801 - WebProgress support for e10s and
-            // Bug 666809 - SecurityUI support for e10s
-#else
             var webProgress = this.mCurrentBrowser.webProgress;
             var securityUI = this.mCurrentBrowser.securityUI;
 
@@ -892,7 +890,6 @@
               this._callProgressListeners(null, "onSecurityChange",
                                           [webProgress, null, securityUI.state], true, false);
             }
-#endif
 
             var listener = this.mTabListeners[this.tabContainer.selectedIndex] || null;
             if (listener && listener.mStateFlags) {
@@ -904,11 +901,7 @@
 
             // Don't switch the fast find or update the titlebar (bug 540248) - this tab switch is temporary
             if (!this._previewMode) {
-#ifdef MOZ_E10S_COMPAT
-              // Bug 666816 - TypeAheadFind support for e10s
-#else
               this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
-#endif
 
               this.updateTitlebar();
 
@@ -1263,11 +1256,6 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
-            if (Services.prefs.getPrefType("browser.tabs.remote") == Services.prefs.PREF_BOOL &&
-                Services.prefs.getBoolPref("browser.tabs.remote")) {
-              b.setAttribute("remote", "true");
-            }
-
             if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
                 window.windowState == window.STATE_NORMAL) {
               b.setAttribute("showresizer", "true");
@@ -1315,11 +1303,7 @@
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                      .createInstance(Components.interfaces.nsIWebProgress);
             filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-#ifdef MOZ_E10S_COMPAT
-            // Bug 666801 - WebProgress support for e10s
-#else
             b.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-#endif
             this.mTabListeners[position] = tabListener;
             this.mTabFilters[position] = filter;
 
@@ -1357,7 +1341,7 @@
 
             // We start our browsers out as inactive, and then maintain
             // activeness in the tab switcher.
-            b.docShellIsActive = false;
+            b.docShell.isActive = false;
 
             // Check if we're opening a tab related to the current tab and
             // move it to after the current tab.
@@ -1576,11 +1560,7 @@
 
             // Remove the tab's filter and progress listener.
             const filter = this.mTabFilters[aTab._tPos];
-#ifdef MOZ_E10S_COMPAT
-            // Bug 666801 - WebProgress support for e10s
-#else 
             browser.webProgress.removeProgressListener(filter);
-#endif
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
 

@@ -342,10 +342,6 @@ private:
   // RENDER_MODE_ASYNC_SCROLL), all the fields below are ignored in
   // favor of what content tells.
   PRUint32 mRenderMode;
-
-  // See nsIFrameLoader.idl. EVENT_MODE_NORMAL_DISPATCH automatically
-  // forwards some input events to out-of-process content.
-  PRUint32 mEventMode;
 };
 
 #endif

@@ -49,13 +49,6 @@
 
 class nsIDocShellTreeItem;
 class nsPIDOMWindow;
-
-namespace mozilla {
-namespace dom {
-  class TabParent;
-}
-}
-
 struct nsDelayedBlurOrFocusEvent;
 
 /**
@@ -430,12 +423,6 @@ protected:
                               nsIDocument* aDocument,
                               PRBool aIsForDocNavigation,
                               PRBool aCheckVisibility);
-
-  /**
-   * Get the TabParent associated with aContent if it is a remote browser,
-   * or null in all other cases.
-   */
-  mozilla::dom::TabParent* GetRemoteForContent(nsIContent* aContent);
 
   /**
    * Get the last docshell child of aItem and return it in aResult.

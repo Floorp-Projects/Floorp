@@ -51,7 +51,6 @@ _BROWSER_FILES = \
   remote_autocomplete.js \
   remote_contentpopup.js \
   remote_head.js \
-  remote_focus.js \
   remote_forms.js \
   remote_formsZoom.js \
   remote_vkb.js \
@@ -65,8 +64,6 @@ _BROWSER_FILES = \
   browser_contacts.js \
   browser_dragger.js \
   browser_find.js \
-  browser_focus.html \
-  browser_focus.js \
   browser_forms.html \
   $(warning browser_forms.js disabled due to failures) \
   browser_formsZoom.html \
