@@ -226,7 +226,6 @@ TelemetryPing.prototype = {
   send: function send(reason, server) {
     // populate histograms one last time
     this.gatherMemory();
-    let nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     let payload = {
       ver: PAYLOAD_VERSION,
       info: getMetadata(reason),
@@ -266,7 +265,7 @@ TelemetryPing.prototype = {
     request.onerror = function(aEvent) finishRequest(request.channel);
     request.onload = function(aEvent) finishRequest(request.channel);
 
-    request.send(nativeJSON.encode(payload));
+    request.send(JSON.stringify(payload));
   },
   
   /**

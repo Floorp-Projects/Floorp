@@ -29,7 +29,7 @@ BEGIN_TEST(testPropCache_bug505798)
     EXEC("var arr = [x, y];\n"
          "for (var i = 0; i < arr.length; i++)\n"
          "    arr[i].p = 1;\n");
-    CHECK(g_counter == 1);
+    CHECK_EQUAL(g_counter, 1);
     return true;
 }
 END_TEST(testPropCache_bug505798)

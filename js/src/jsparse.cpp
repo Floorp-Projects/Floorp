@@ -1821,13 +1821,12 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
              * NB: do not use AutoLocalNameArray because it will release space
              * allocated from cx->tempPool by DefineArg.
              */
-            jsuword *names = funcg.bindings.getLocalNameArray(cx, &cx->tempPool);
-            if (!names) {
+            Vector<JSAtom *> names(cx);
+            if (!funcg.bindings.getLocalNameArray(cx, &names)) {
                 fn = NULL;
             } else {
                 for (uintN i = 0; i < nargs; i++) {
-                    JSAtom *name = JS_LOCAL_NAME_TO_ATOM(names[i]);
-                    if (!DefineArg(fn, name, i, &funcg)) {
+                    if (!DefineArg(fn, names[i], i, &funcg)) {
                         fn = NULL;
                         break;
                     }
@@ -6688,8 +6687,8 @@ class CompExprTransplanter {
  * parsing the body. As soon as the parser reaches the end of the body expression,
  * call endBody() to reset the context's state, and then immediately call:
  *
- * - checkValidBody() if this did turn out to be in a generator expression
- * - maybeNoteGenerator() if this did not turn out to be in a generator expression
+ * - checkValidBody() if this *did* turn out to be a generator expression
+ * - maybeNoteGenerator() if this *did not* turn out to be a generator expression
  */
 class GenexpGuard {
     JSTreeContext   *tc;
@@ -6911,33 +6910,42 @@ CompExprTransplanter::transplant(JSParseNode *pn)
             if (genexp && PN_OP(dn) != JSOP_CALLEE) {
                 JS_ASSERT(!tc->decls.lookupFirst(atom));
 
-                if (dn->pn_pos < root->pn_pos || dn->isPlaceholder()) {
-                    if (dn->pn_pos >= root->pn_pos) {
-                        tc->parent->lexdeps->remove(atom);
-                    } else {
-                        JSDefinition *dn2 = (JSDefinition *)NameNode::create(atom, tc);
-                        if (!dn2)
-                            return false;
+                if (dn->pn_pos < root->pn_pos) {
+                    /*
+                     * The variable originally appeared to be a use of a
+                     * definition or placeholder outside the generator, but now
+                     * we know it is scoped within the comprehension tail's
+                     * clauses. Make it (along with any other uses within the
+                     * generator) a use of a new placeholder in the generator's
+                     * lexdeps.
+                     */
+                    AtomDefnAddPtr p = tc->lexdeps->lookupForAdd(atom);
+                    JSDefinition *dn2 = MakePlaceholder(p, pn, tc);
+                    if (!dn2)
+                        return false;
+                    dn2->pn_pos = root->pn_pos;
 
-                        dn2->pn_type = TOK_NAME;
-                        dn2->pn_op = JSOP_NOP;
-                        dn2->pn_defn = true;
-                        dn2->pn_dflags |= PND_PLACEHOLDER;
-                        dn2->pn_pos = root->pn_pos;
-
-                        JSParseNode **pnup = &dn->dn_uses;
-                        JSParseNode *pnu;
-                        while ((pnu = *pnup) != NULL && pnu->pn_pos >= root->pn_pos) {
-                            pnu->pn_lexdef = dn2;
-                            dn2->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
-                            pnup = &pnu->pn_link;
-                        }
-                        dn2->dn_uses = dn->dn_uses;
-                        dn->dn_uses = *pnup;
-                        *pnup = NULL;
-
-                        dn = dn2;
+                    /* 
+                     * Change all uses of |dn| that lie within the generator's
+                     * |yield| expression into uses of dn2.
+                     */
+                    JSParseNode **pnup = &dn->dn_uses;
+                    JSParseNode *pnu;
+                    while ((pnu = *pnup) != NULL && pnu->pn_pos >= root->pn_pos) {
+                        pnu->pn_lexdef = dn2;
+                        dn2->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
+                        pnup = &pnu->pn_link;
                     }
+                    dn2->dn_uses = dn->dn_uses;
+                    dn->dn_uses = *pnup;
+                    *pnup = NULL;
+                } else if (dn->isPlaceholder()) {
+                    /*
+                     * The variable first occurs free in the 'yield' expression;
+                     * move the existing placeholder node (and all its uses)
+                     * from the parent's lexdeps into the generator's lexdeps.
+                     */
+                    tc->parent->lexdeps->remove(atom);
                     if (!tc->lexdeps->put(atom, dn))
                         return false;
                 }
@@ -8824,12 +8832,14 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             obj = RegExp::createObject(context, context->regExpStatics(),
                                        tokenStream.getTokenbuf().begin(),
                                        tokenStream.getTokenbuf().length(),
-                                       tokenStream.currentToken().t_reflags);
+                                       tokenStream.currentToken().t_reflags,
+                                       &tokenStream);
         } else {
             obj = RegExp::createObjectNoStatics(context,
                                                 tokenStream.getTokenbuf().begin(),
                                                 tokenStream.getTokenbuf().length(),
-                                                tokenStream.currentToken().t_reflags);
+                                                tokenStream.currentToken().t_reflags,
+                                                &tokenStream);
         }
 
         if (!obj)
