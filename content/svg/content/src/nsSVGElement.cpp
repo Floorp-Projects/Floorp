@@ -66,7 +66,9 @@
 #include "nsSVGUtils.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
+#include "nsSVGNumberPair.h"
 #include "nsSVGInteger.h"
+#include "nsSVGIntegerPair.h"
 #include "nsSVGAngle.h"
 #include "nsSVGBoolean.h"
 #include "nsSVGEnum.h"
@@ -136,10 +138,22 @@ nsSVGElement::Init()
     numberInfo.Reset(i);
   }
 
+  NumberPairAttributesInfo numberPairInfo = GetNumberPairInfo();
+
+  for (i = 0; i < numberPairInfo.mNumberPairCount; i++) {
+    numberPairInfo.Reset(i);
+  }
+
   IntegerAttributesInfo integerInfo = GetIntegerInfo();
 
   for (i = 0; i < integerInfo.mIntegerCount; i++) {
     integerInfo.Reset(i);
+  }
+
+  IntegerPairAttributesInfo integerPairInfo = GetIntegerPairInfo();
+
+  for (i = 0; i < integerPairInfo.mIntegerPairCount; i++) {
+    integerPairInfo.Reset(i);
   }
 
   AngleAttributesInfo angleInfo = GetAngleInfo();
@@ -438,17 +452,24 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       NumberAttributesInfo numberInfo = GetNumberInfo();
       for (i = 0; i < numberInfo.mNumberCount; i++) {
         if (aAttribute == *numberInfo.mNumberInfo[i].mName) {
-          if (i + 1 < numberInfo.mNumberCount &&
-              aAttribute == *numberInfo.mNumberInfo[i + 1].mName) {
-            rv = ParseNumberOptionalNumber(aValue, i, i + 1);
-            if (NS_FAILED(rv)) {
-              numberInfo.Reset(i + 1);
-            }
-          } else {
-            rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this, PR_FALSE);
-          }
+          rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this, PR_FALSE);
           if (NS_FAILED(rv)) {
             numberInfo.Reset(i);
+          }
+          foundMatch = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!foundMatch) {
+      // Check for nsSVGNumberPair attribute
+      NumberPairAttributesInfo numberPairInfo = GetNumberPairInfo();
+      for (i = 0; i < numberPairInfo.mNumberPairCount; i++) {
+        if (aAttribute == *numberPairInfo.mNumberPairInfo[i].mName) {
+          rv = numberPairInfo.mNumberPairs[i].SetBaseValueString(aValue, this, PR_FALSE);
+          if (NS_FAILED(rv)) {
+            numberPairInfo.Reset(i);
           }
           foundMatch = PR_TRUE;
           break;
@@ -461,17 +482,24 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       IntegerAttributesInfo integerInfo = GetIntegerInfo();
       for (i = 0; i < integerInfo.mIntegerCount; i++) {
         if (aAttribute == *integerInfo.mIntegerInfo[i].mName) {
-          if (i + 1 < integerInfo.mIntegerCount &&
-              aAttribute == *integerInfo.mIntegerInfo[i + 1].mName) {
-            rv = ParseIntegerOptionalInteger(aValue, i, i + 1);
-            if (NS_FAILED(rv)) {
-              integerInfo.Reset(i + 1);
-            }
-          } else {
-            rv = integerInfo.mIntegers[i].SetBaseValueString(aValue, this, PR_FALSE);
-          }
+          rv = integerInfo.mIntegers[i].SetBaseValueString(aValue, this, PR_FALSE);
           if (NS_FAILED(rv)) {
             integerInfo.Reset(i);
+          }
+          foundMatch = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!foundMatch) {
+      // Check for nsSVGIntegerPair attribute
+      IntegerPairAttributesInfo integerPairInfo = GetIntegerPairInfo();
+      for (i = 0; i < integerPairInfo.mIntegerPairCount; i++) {
+        if (aAttribute == *integerPairInfo.mIntegerPairInfo[i].mName) {
+          rv = integerPairInfo.mIntegerPairs[i].SetBaseValueString(aValue, this, PR_FALSE);
+          if (NS_FAILED(rv)) {
+            integerPairInfo.Reset(i);
           }
           foundMatch = PR_TRUE;
           break;
@@ -663,14 +691,19 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
     for (PRUint32 i = 0; i < numInfo.mNumberCount; i++) {
       if (aName == *numInfo.mNumberInfo[i].mName) {
-        if (i + 1 < numInfo.mNumberCount &&
-            aName == *numInfo.mNumberInfo[i + 1].mName) {
-          // found a number-optional-number
-          numInfo.Reset(i + 1);
-          DidChangeNumber(i + 1, PR_FALSE);
-        }
         numInfo.Reset(i);
         DidChangeNumber(i, PR_FALSE);
+        return rv;
+      }
+    }
+
+    // Check if this is a number pair attribute going away
+    NumberPairAttributesInfo numPairInfo = GetNumberPairInfo();
+
+    for (PRUint32 i = 0; i < numPairInfo.mNumberPairCount; i++) {
+      if (aName == *numPairInfo.mNumberPairInfo[i].mName) {
+        numPairInfo.Reset(i);
+        DidChangeNumberPair(i, PR_FALSE);
         return rv;
       }
     }
@@ -680,14 +713,19 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
     for (PRUint32 i = 0; i < intInfo.mIntegerCount; i++) {
       if (aName == *intInfo.mIntegerInfo[i].mName) {
-        if (i + 1 < intInfo.mIntegerCount &&
-            aName == *intInfo.mIntegerInfo[i + 1].mName) {
-          // found a number-optional-number
-          intInfo.Reset(i + 1);
-          DidChangeNumber(i + 1, PR_FALSE);
-        }
         intInfo.Reset(i);
         DidChangeInteger(i, PR_FALSE);
+        return rv;
+      }
+    }
+
+    // Check if this is an integer pair attribute going away
+    IntegerPairAttributesInfo intPairInfo = GetIntegerPairInfo();
+
+    for (PRUint32 i = 0; i < intPairInfo.mIntegerPairCount; i++) {
+      if (aName == *intPairInfo.mIntegerPairInfo[i].mName) {
+        intPairInfo.Reset(i);
+        DidChangeIntegerPair(i, PR_FALSE);
         return rv;
       }
     }
@@ -1807,6 +1845,53 @@ nsSVGElement::GetAnimatedNumberValues(float *aFirst, ...)
   va_end(args);
 }
 
+nsSVGElement::NumberPairAttributesInfo
+nsSVGElement::GetNumberPairInfo()
+{
+  return NumberPairAttributesInfo(nsnull, nsnull, 0);
+}
+
+void nsSVGElement::NumberPairAttributesInfo::Reset(PRUint8 aAttrEnum)
+{
+  mNumberPairs[aAttrEnum].Init(aAttrEnum,
+                               mNumberPairInfo[aAttrEnum].mDefaultValue1,
+                               mNumberPairInfo[aAttrEnum].mDefaultValue2);
+}
+
+void
+nsSVGElement::DidChangeNumberPair(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  NumberPairAttributesInfo info = GetNumberPairInfo();
+
+  NS_ASSERTION(info.mNumberPairCount > 0,
+               "DidChangePairNumber on element with no number pair attribs");
+
+  NS_ASSERTION(aAttrEnum < info.mNumberPairCount, "aAttrEnum out of range");
+
+  nsAutoString serializedValue;
+  info.mNumberPairs[aAttrEnum].GetBaseValueString(serializedValue);
+
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mNumberPairInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
+}
+
+void
+nsSVGElement::DidAnimateNumberPair(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    NumberPairAttributesInfo info = GetNumberPairInfo();
+    frame->AttributeChanged(kNameSpaceID_None,
+                            *info.mNumberPairInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
 nsSVGElement::IntegerAttributesInfo
 nsSVGElement::GetIntegerInfo()
 {
@@ -1872,6 +1957,53 @@ nsSVGElement::GetAnimatedIntegerValues(PRInt32 *aFirst, ...)
     n = va_arg(args, PRInt32*);
   }
   va_end(args);
+}
+
+nsSVGElement::IntegerPairAttributesInfo
+nsSVGElement::GetIntegerPairInfo()
+{
+  return IntegerPairAttributesInfo(nsnull, nsnull, 0);
+}
+
+void nsSVGElement::IntegerPairAttributesInfo::Reset(PRUint8 aAttrEnum)
+{
+  mIntegerPairs[aAttrEnum].Init(aAttrEnum,
+                                mIntegerPairInfo[aAttrEnum].mDefaultValue1,
+                                mIntegerPairInfo[aAttrEnum].mDefaultValue2);
+}
+
+void
+nsSVGElement::DidChangeIntegerPair(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  IntegerPairAttributesInfo info = GetIntegerPairInfo();
+
+  NS_ASSERTION(info.mIntegerPairCount > 0,
+               "DidChangeIntegerPair on element with no integer pair attribs");
+
+  NS_ASSERTION(aAttrEnum < info.mIntegerPairCount, "aAttrEnum out of range");
+
+  nsAutoString serializedValue;
+  info.mIntegerPairs[aAttrEnum].GetBaseValueString(serializedValue);
+
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, *info.mIntegerPairInfo[aAttrEnum].mName, nsnull,
+                attrValue, PR_TRUE);
+}
+
+void
+nsSVGElement::DidAnimateIntegerPair(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  
+  if (frame) {
+    IntegerPairAttributesInfo info = GetIntegerPairInfo();
+    frame->AttributeChanged(kNameSpaceID_None,
+                            *info.mIntegerPairInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
 }
 
 nsSVGElement::AngleAttributesInfo
@@ -2167,89 +2299,6 @@ nsSVGElement::DidAnimateClass()
 }
 
 nsresult
-nsSVGElement::ParseNumberOptionalNumber(const nsAString& aValue,
-                                        PRUint32 aIndex1, PRUint32 aIndex2)
-{
-  NS_ConvertUTF16toUTF8 value(aValue);
-  const char *str = value.get();
-
-  if (NS_IsAsciiWhitespace(*str))
-    return NS_ERROR_FAILURE;
-
-  char *rest;
-  float x = float(PR_strtod(str, &rest));
-  float y = x;
-
-  if (str == rest || !NS_FloatIsFinite(x)) {
-    //first value was illformed
-    return NS_ERROR_FAILURE;
-  }
-  
-  if (*rest != '\0') {
-    while (NS_IsAsciiWhitespace(*rest)) {
-      ++rest;
-    }
-    if (*rest == ',') {
-      ++rest;
-    }
-
-    y = float(PR_strtod(rest, &rest));
-    if (*rest != '\0' || !NS_FloatIsFinite(y)) {
-      //second value was illformed or there was trailing content
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  NumberAttributesInfo numberInfo = GetNumberInfo();
-
-  numberInfo.mNumbers[aIndex1].SetBaseValue(x, this, PR_FALSE);
-  numberInfo.mNumbers[aIndex2].SetBaseValue(y, this, PR_FALSE);
-  return NS_OK;
-}
-
-nsresult
-nsSVGElement::ParseIntegerOptionalInteger(const nsAString& aValue,
-                                          PRUint32 aIndex1, PRUint32 aIndex2)
-{
-  NS_ConvertUTF16toUTF8 value(aValue);
-  const char *str = value.get();
-
-  if (NS_IsAsciiWhitespace(*str))
-    return NS_ERROR_FAILURE;
-
-  char *rest;
-  PRInt32 x = strtol(str, &rest, 10);
-  PRInt32 y = x;
-
-  if (str == rest) {
-    //first value was illformed
-    return NS_ERROR_FAILURE;
-  }
-  
-  if (*rest != '\0') {
-    while (NS_IsAsciiWhitespace(*rest)) {
-      ++rest;
-    }
-    if (*rest == ',') {
-      ++rest;
-    }
-
-    y = strtol(rest, &rest, 10);
-    if (*rest != '\0') {
-      //second value was illformed or there was trailing content
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  IntegerAttributesInfo integerInfo = GetIntegerInfo();
-
-  integerInfo.mIntegers[aIndex1].SetBaseValue(x, this, PR_FALSE);
-  integerInfo.mIntegers[aIndex2].SetBaseValue(y, this, PR_FALSE);
-
-  return NS_OK;
-}
-
-nsresult
 nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
                                           nsIAtom* aAttribute,
                                           const nsAString& aValue)
@@ -2343,16 +2392,18 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     {
       NumberAttributesInfo info = GetNumberInfo();
       for (PRUint32 i = 0; i < info.mNumberCount; i++) {
-        // XXX this isn't valid for either of the two properties corresponding to
-        // attributes of type <number-optional-number> - see filter,
-        // feConvolveMatrix, feDiffuseLighting, feGaussianBlur, feMorphology and
-        // feTurbulence.
-        // The way to fix this is probably to handle them as 2-item number lists
-        // once we implement number list animation, and put the number list loop
-        // *above* this one at that time to catch those properties before we get
-        // here. The separate properties should then point into the list.
         if (aName == *info.mNumberInfo[i].mName) {
           return info.mNumbers[i].ToSMILAttr(this);
+        }
+      }
+    }
+
+    // Number Pairs:
+    {
+      NumberPairAttributesInfo info = GetNumberPairInfo();
+      for (PRUint32 i = 0; i < info.mNumberPairCount; i++) {
+        if (aName == *info.mNumberPairInfo[i].mName) {
+          return info.mNumberPairs[i].ToSMILAttr(this);
         }
       }
     }
@@ -2363,6 +2414,16 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
       for (PRUint32 i = 0; i < info.mIntegerCount; i++) {
         if (aName == *info.mIntegerInfo[i].mName) {
           return info.mIntegers[i].ToSMILAttr(this);
+        }
+      }
+    }
+
+    // Integer Pairs:
+    {
+      IntegerPairAttributesInfo info = GetIntegerPairInfo();
+      for (PRUint32 i = 0; i < info.mIntegerPairCount; i++) {
+        if (aName == *info.mIntegerPairInfo[i].mName) {
+          return info.mIntegerPairs[i].ToSMILAttr(this);
         }
       }
     }

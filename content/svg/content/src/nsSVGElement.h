@@ -61,7 +61,9 @@
 class nsSVGSVGElement;
 class nsSVGLength2;
 class nsSVGNumber2;
+class nsSVGNumberPair;
 class nsSVGInteger;
+class nsSVGIntegerPair;
 class nsSVGAngle;
 class nsSVGBoolean;
 class nsSVGEnum;
@@ -174,7 +176,9 @@ public:
   void SetLength(nsIAtom* aName, const nsSVGLength2 &aLength);
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeNumberPair(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeIntegerPair(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
@@ -188,7 +192,9 @@ public:
 
   virtual void DidAnimateLength(PRUint8 aAttrEnum);
   virtual void DidAnimateNumber(PRUint8 aAttrEnum);
+  virtual void DidAnimateNumberPair(PRUint8 aAttrEnum);
   virtual void DidAnimateInteger(PRUint8 aAttrEnum);
+  virtual void DidAnimateIntegerPair(PRUint8 aAttrEnum);
   virtual void DidAnimateAngle(PRUint8 aAttrEnum);
   virtual void DidAnimateBoolean(PRUint8 aAttrEnum);
   virtual void DidAnimateEnum(PRUint8 aAttrEnum);
@@ -306,6 +312,27 @@ protected:
     void Reset(PRUint8 aAttrEnum);
   };
 
+  struct NumberPairInfo {
+    nsIAtom** mName;
+    float     mDefaultValue1;
+    float     mDefaultValue2;
+  };
+
+  struct NumberPairAttributesInfo {
+    nsSVGNumberPair* mNumberPairs;
+    NumberPairInfo*  mNumberPairInfo;
+    PRUint32         mNumberPairCount;
+
+    NumberPairAttributesInfo(nsSVGNumberPair *aNumberPairs,
+                             NumberPairInfo *aNumberPairInfo,
+                             PRUint32 aNumberPairCount) :
+      mNumberPairs(aNumberPairs), mNumberPairInfo(aNumberPairInfo),
+      mNumberPairCount(aNumberPairCount)
+      {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
   struct IntegerInfo {
     nsIAtom** mName;
     PRInt32   mDefaultValue;
@@ -320,6 +347,27 @@ protected:
                           IntegerInfo *aIntegerInfo,
                           PRUint32 aIntegerCount) :
       mIntegers(aIntegers), mIntegerInfo(aIntegerInfo), mIntegerCount(aIntegerCount)
+      {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
+  struct IntegerPairInfo {
+    nsIAtom** mName;
+    PRInt32   mDefaultValue1;
+    PRInt32   mDefaultValue2;
+  };
+
+  struct IntegerPairAttributesInfo {
+    nsSVGIntegerPair* mIntegerPairs;
+    IntegerPairInfo*  mIntegerPairInfo;
+    PRUint32          mIntegerPairCount;
+
+    IntegerPairAttributesInfo(nsSVGIntegerPair *aIntegerPairs,
+                              IntegerPairInfo *aIntegerPairInfo,
+                              PRUint32 aIntegerPairCount) :
+      mIntegerPairs(aIntegerPairs), mIntegerPairInfo(aIntegerPairInfo),
+      mIntegerPairCount(aIntegerPairCount)
       {}
 
     void Reset(PRUint8 aAttrEnum);
@@ -458,7 +506,9 @@ protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual NumberPairAttributesInfo GetNumberPairInfo();
   virtual IntegerAttributesInfo GetIntegerInfo();
+  virtual IntegerPairAttributesInfo GetIntegerPairInfo();
   virtual AngleAttributesInfo GetAngleInfo();
   virtual BooleanAttributesInfo GetBooleanInfo();
   virtual EnumAttributesInfo GetEnumInfo();
@@ -474,16 +524,6 @@ protected:
   static nsSVGEnumMapping sSVGUnitTypesMap[];
 
 private:
-  /* read <number-optional-number> */
-  nsresult
-  ParseNumberOptionalNumber(const nsAString& aValue,
-                            PRUint32 aIndex1, PRUint32 aIndex2);
-
-  /* read <integer-optional-integer> */
-  nsresult
-  ParseIntegerOptionalInteger(const nsAString& aValue,
-                              PRUint32 aIndex1, PRUint32 aIndex2);
-
   void ResetOldStyleBaseType(nsISVGValue *svg_value);
 
   struct ObservableModificationData {

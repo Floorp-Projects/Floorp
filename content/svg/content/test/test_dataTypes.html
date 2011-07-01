@@ -25,6 +25,7 @@ function runTests()
   var doc = $("svg").contentWindow.document;
   var filter = doc.getElementById("filter");
   var convolve = doc.getElementById("convolve");
+  var blur = doc.getElementById("blur");
   var marker = doc.getElementById("marker");
 
   // class attribute
@@ -67,6 +68,28 @@ function runTests()
   is(convolve.divisor.animVal, 7.5, "number animVal");
   is(convolve.getAttribute("divisor"), "7.5", "number attribute");
 
+  // number-optional-number attribute
+
+  blur.setAttribute("stdDeviation", "20.5");
+  is(blur.stdDeviationX.baseVal, 20.5, "number-optional-number first baseVal");
+  is(blur.stdDeviationX.animVal, 20.5, "number-optional-number first animVal");
+  is(blur.stdDeviationY.baseVal, 20.5, "number-optional-number second baseVal");
+  is(blur.stdDeviationY.animVal, 20.5, "number-optional-number second animVal");
+
+  blur.stdDeviationX.baseVal = 8.5;
+  is(blur.stdDeviationX.animVal, 8.5, "number-optional-number first animVal");
+  is(blur.stdDeviationY.animVal, 20.5, "number-optional-number second animVal");
+  is(blur.getAttribute("stdDeviation"), "8.5, 20.5", "number-optional-number attribute");
+
+  blur.stdDeviationY.baseVal = 8.5;
+  is(blur.getAttribute("stdDeviation"), "8.5", "number-optional-number attribute");
+
+  blur.setStdDeviation(24.5, 0.5);
+  is(blur.stdDeviationX.baseVal, 24.5, "integer-optional-integer first baseVal");
+  is(blur.stdDeviationX.animVal, 24.5, "integer-optional-integer first animVal");
+  is(blur.stdDeviationY.baseVal, 0.5, "integer-optional-integer second baseVal");
+  is(blur.stdDeviationY.animVal, 0.5, "integer-optional-integer second animVal");
+
   // integer attribute
 
   convolve.setAttribute("targetX", "12");
@@ -75,6 +98,28 @@ function runTests()
   convolve.targetX.baseVal = 7;
   is(convolve.targetX.animVal, 7, "integer animVal");
   is(convolve.getAttribute("targetX"), "7", "integer attribute");
+
+  // integer-optional-integer attribute
+
+  filter.setAttribute("filterRes", "100");
+  is(filter.filterResX.baseVal, 100, "integer-optional-integer first baseVal");
+  is(filter.filterResX.animVal, 100, "integer-optional-integer first animVal");
+  is(filter.filterResY.baseVal, 100, "integer-optional-integer second baseVal");
+  is(filter.filterResY.animVal, 100, "integer-optional-integer second animVal");
+
+  filter.filterResX.baseVal = 50;
+  is(filter.filterResX.animVal, 50, "integer-optional-integer first animVal");
+  is(filter.filterResY.animVal, 100, "integer-optional-integer second animVal");
+  is(filter.getAttribute("filterRes"), "50, 100", "integer-optional-integer attribute");
+
+  filter.filterResY.baseVal = 50;
+  is(filter.getAttribute("filterRes"), "50", "integer-optional-integer attribute");
+
+  filter.setFilterRes(80, 90);
+  is(filter.filterResX.baseVal, 80, "integer-optional-integer first baseVal");
+  is(filter.filterResX.animVal, 80, "integer-optional-integer first animVal");
+  is(filter.filterResY.baseVal, 90, "integer-optional-integer second baseVal");
+  is(filter.filterResY.animVal, 90, "integer-optional-integer second animVal");
 
   // angle attribute
 

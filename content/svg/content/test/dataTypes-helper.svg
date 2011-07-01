@@ -1,17 +1,20 @@
 <?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="750">
-	<defs>
-		<filter id="filter">
-			<!-- <boolean> (preserveAlpha) -->
-			<!-- <enum> (edgeMode) -->
-			<!-- <number> (divisor) -->
-			<!-- <integer> (targetX) -->
-			<!-- <string> (result) -->
-			<feConvolveMatrix id="convolve"/>
-		</filter>
-		<!-- <angle> (orient) -->
-		<!-- <length> (markerWidth) -->
-		<!-- <preserveAspectRatio> (preserveAspectRatio) -->
-		<marker id="marker"/>
-	</defs>
+  <defs>
+    <!-- <integer-optional-integer> (filterRes) -->
+    <filter id="filter">
+      <!-- <boolean> (preserveAlpha) -->
+      <!-- <enum> (edgeMode) -->
+      <!-- <number> (divisor) -->
+      <!-- <integer> (targetX) -->
+      <!-- <string> (result) -->
+      <feConvolveMatrix id="convolve"/>
+      <!-- <number-optional-number> (stdDeviation) -->
+      <feGaussianBlur id="blur"/>
+    </filter>
+    <!-- <angle> (orient) -->
+    <!-- <length> (markerWidth) -->
+    <!-- <preserveAspectRatio> (preserveAspectRatio) -->
+    <marker id="marker"/>
+  </defs>
 </svg>

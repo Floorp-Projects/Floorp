@@ -96,6 +96,14 @@ public:
   void ClearAnimValue(nsSVGElement *aElement,
                       PRUint32 aAttrEnum);
 
+  // Returns PR_TRUE if the animated value of this list has been explicitly
+  // set (either by animation, or by taking on the base value which has been
+  // explicitly set by markup or a DOM call), PR_FALSE otherwise.
+  // If this returns PR_FALSE, the animated value is still valid, that is,
+  // useable, and represents the default base value of the attribute.
+  PRBool IsExplicitlySet() const
+    { return !!mAnimVal || mIsBaseSet; }
+  
   PRBool IsAnimating() const {
     return !!mAnimVal;
   }
@@ -114,6 +122,7 @@ private:
 
   SVGNumberList mBaseVal;
   nsAutoPtr<SVGNumberList> mAnimVal;
+  PRPackedBool mIsBaseSet;
 
 #ifdef MOZ_SMIL
   struct SMILAnimatedNumberList : public nsISMILAttr
