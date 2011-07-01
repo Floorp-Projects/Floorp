@@ -39,11 +39,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdio.h>
+
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "Ion.h"
 #include "LICM.h"
-#include "stdio.h"
 #include "IonSpewer.h"
 
 using namespace js;
@@ -57,7 +58,7 @@ LICM::LICM(MIRGraph &graph)
 bool
 LICM::analyze()
 {
-    IonSpew(IonSpew_LICM, "Beginning LICM pass ...\n");
+    IonSpew(IonSpew_LICM, "Beginning LICM pass ...");
     // In reverse post order, look for loops:
     for (size_t i = 0; i < graph.numBlocks(); i ++) {    
         MBasicBlock *header = graph.getBlock(i);
@@ -89,7 +90,7 @@ Loop::Loop(MBasicBlock *footer, MBasicBlock *header, MIRGraph &graph)
 bool
 Loop::init() 
 {
-    IonSpew(IonSpew_LICM, "Loop identified, headed by block %d\n", header_->id());
+    IonSpew(IonSpew_LICM, "Loop identified, headed by block %d", header_->id());
     // The first predecessor of the loop header must be the only predecessor of the
     // loop header that is outside of the loop
     JS_ASSERT(header_->id() > header_->getPredecessor(0)->id());
@@ -140,18 +141,20 @@ bool
 Loop::optimize()
 {
     InstructionQueue invariantInstructions;
-    IonSpew(IonSpew_LICM, "These instructions are in the loop: \n");
+    IonSpew(IonSpew_LICM, "These instructions are in the loop: ");
 
     while (!worklist_.empty()) {
         MInstruction *ins = popFromWorklist();
 
-        IonSpew(IonSpew_LICM, "");
-#ifdef DEBUG
-        ins->printName(stderr);
-        fprintf(stderr, " <- ");
-        ins->printOpcode(stderr);
-        fprintf(stderr, ":  ");
-#endif
+        IonSpewHeader(IonSpew_LICM);
+
+        if (IonSpewEnabled(IonSpew_LICM)) {
+            ins->printName(IonSpewFile);
+            fprintf(IonSpewFile, " <- ");
+            ins->printOpcode(IonSpewFile);
+            fprintf(IonSpewFile, ":  ");
+        }
+
         if (isLoopInvariant(ins)) {
             // Flag this instruction as loop invariant.
             ins->setLoopInvariant();
@@ -174,9 +177,9 @@ Loop::optimize()
                 }
                 use = use->next();
             }
-#ifdef DEBUG
-            fprintf(stderr, " Loop Invariant!\n");
-#endif
+
+            if (IonSpewEnabled(IonSpew_LICM))
+                fprintf(IonSpewFile, " Loop Invariant!\n");
         }
     }
   
@@ -205,10 +208,12 @@ Loop::isLoopInvariant(MInstruction *ins)
         // If the operand is in the loop and not loop invariant itself...
         if (isInLoop(ins->getInput(i)) &&
             !ins->getInput(i)->isLoopInvariant()) {
-#ifdef DEBUG
-            ins->getInput(i)->printName(stderr);
-            fprintf(stderr, " is in the loop.\n");
-#endif
+
+            if (IonSpewEnabled(IonSpew_LICM)) {
+                ins->getInput(i)->printName(IonSpewFile);
+                fprintf(IonSpewFile, " is in the loop.\n");
+            }
+
             return false;
         }
     }
