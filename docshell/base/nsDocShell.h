@@ -234,8 +234,9 @@ public:
     NS_IMETHOD OnLinkClick(nsIContent* aContent,
         nsIURI* aURI,
         const PRUnichar* aTargetSpec,
-        nsIInputStream* aPostDataStream = 0,
-        nsIInputStream* aHeadersDataStream = 0);
+        nsIInputStream* aPostDataStream,
+        nsIInputStream* aHeadersDataStream,
+        PRBool aIsTrusted);
     NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
         nsIURI* aURI,
         const PRUnichar* aTargetSpec,

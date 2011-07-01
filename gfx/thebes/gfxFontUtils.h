@@ -755,6 +755,10 @@ public:
         return (ch == 0x200D);
     }
 
+    static inline bool IsJoinControl(PRUint32 ch) {
+        return (ch == 0x200C || ch == 0x200D);
+    }
+
     enum {
         kUnicodeVS1 = 0xFE00,
         kUnicodeVS16 = 0xFE0F,

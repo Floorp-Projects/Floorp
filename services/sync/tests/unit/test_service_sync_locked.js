@@ -24,7 +24,7 @@ function run_test() {
   Weave.Service.sync();
   Weave.Service._locked = false;
   
-  do_check_eq(debug[debug.length - 3],
+  do_check_eq(debug[debug.length - 2],
               "Exception: Could not acquire lock. Label: \"service.js: login\". No traceback available");
   do_check_eq(info[info.length - 1],
               "Cannot start sync: already syncing?");

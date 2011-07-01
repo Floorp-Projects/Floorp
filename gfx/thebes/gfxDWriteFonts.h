@@ -75,6 +75,13 @@ public:
 
     IDWriteFontFace *GetFontFace();
 
+    /* override Measure to add padding for antialiasing */
+    virtual RunMetrics Measure(gfxTextRun *aTextRun,
+                               PRUint32 aStart, PRUint32 aEnd,
+                               BoundingBoxType aBoundingBoxType,
+                               gfxContext *aContextForTightBoundingBox,
+                               Spacing *aSpacing);
+
     // override gfxFont table access function to bypass gfxFontEntry cache,
     // use DWrite API to get direct access to system font data
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
