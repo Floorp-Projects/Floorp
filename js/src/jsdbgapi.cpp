@@ -210,8 +210,6 @@ JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
 jsbytecode *
 js_UntrapScriptCode(JSContext *cx, JSScript *script)
 {
-    assertSameCompartment(cx, script);
-
     jsbytecode *code = script->code;
     BreakpointSiteMap &sites = script->compartment->breakpointSites;
     for (BreakpointSiteMap::Range r = sites.all(); !r.empty(); r.popFront()) {
@@ -240,7 +238,6 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handler, jsval closure)
 {
-    assertSameCompartment(cx, script);
     if (!CheckDebugMode(cx))
         return false;
 
@@ -262,8 +259,6 @@ JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep)
 {
-    assertSameCompartment(cx, script);
-
     if (BreakpointSite *site = script->compartment->getBreakpointSite(pc)) {
         site->clearTrap(cx, NULL, handlerp, Valueify(closurep));
     } else {
@@ -277,12 +272,6 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 {
-    /*
-     * No assertSameCompartment here, because this can be called during
-     * GC. Rather than require the caller to figure out whether GC is going on
-     * and conditionally enter a cross-compartment call, we simply omit the
-     * assertion.
-     */
     script->compartment->clearTraps(cx, script);
 }
 
