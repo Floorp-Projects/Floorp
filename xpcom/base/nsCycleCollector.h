@@ -77,6 +77,14 @@ void nsCycleCollector_shutdown();
 struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
 {
     /**
+     * Called before/after transitioning to/from the main thread.
+     */
+    virtual void NotifyLeaveMainThread() = 0;
+    virtual void NotifyEnterCycleCollectionThread() = 0;
+    virtual void NotifyLeaveCycleCollectionThread() = 0;
+    virtual void NotifyEnterMainThread() = 0;
+
+    /**
      * Should we force a JavaScript GC before a CC?
      */
     virtual bool NeedCollect() = 0;
