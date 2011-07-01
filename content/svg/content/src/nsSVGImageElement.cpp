@@ -191,7 +191,7 @@ nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 void
 nsSVGImageElement::MaybeLoadSVGImage()
 {
-  if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href) &&
+  if (mStringAttributes[HREF].IsExplicitlySet() &&
       (NS_FAILED(LoadSVGImage(PR_FALSE, PR_TRUE)) ||
        !LoadingEnabled())) {
     CancelImageRequests(PR_TRUE);
@@ -208,7 +208,7 @@ nsSVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                   aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
+  if (mStringAttributes[HREF].IsExplicitlySet()) {
     // FIXME: Bug 660963 it would be nice if we could just have
     // ClearBrokenState update our state and do it fast...
     ClearBrokenState();

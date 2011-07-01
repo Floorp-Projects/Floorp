@@ -47,9 +47,8 @@ nsSVGElement::LengthInfo nsSVGFilterElement::sLengthInfo[4] =
   { &nsGkAtoms::height, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
 };
 
-nsSVGElement::IntegerInfo nsSVGFilterElement::sIntegerInfo[2] =
+nsSVGElement::IntegerPairInfo nsSVGFilterElement::sIntegerPairInfo[1] =
 {
-  { &nsGkAtoms::filterRes, 0 },
   { &nsGkAtoms::filterRes, 0 }
 };
 
@@ -144,13 +143,17 @@ NS_IMETHODIMP nsSVGFilterElement::GetPrimitiveUnits(nsIDOMSVGAnimatedEnumeration
 /* readonly attribute nsIDOMSVGAnimatedEnumeration filterResY; */
 NS_IMETHODIMP nsSVGFilterElement::GetFilterResX(nsIDOMSVGAnimatedInteger * *aFilterResX)
 {
-  return mIntegerAttributes[FILTERRES_X].ToDOMAnimatedInteger(aFilterResX, this);
+  return mIntegerPairAttributes[FILTERRES].ToDOMAnimatedInteger(aFilterResX,
+                                                                nsSVGIntegerPair::eFirst,
+                                                                this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration filterResY; */
 NS_IMETHODIMP nsSVGFilterElement::GetFilterResY(nsIDOMSVGAnimatedInteger * *aFilterResY)
 {
-  return mIntegerAttributes[FILTERRES_Y].ToDOMAnimatedInteger(aFilterResY, this);
+  return mIntegerPairAttributes[FILTERRES].ToDOMAnimatedInteger(aFilterResY,
+                                                                nsSVGIntegerPair::eSecond,
+                                                                this);
 }
 
 /* void setFilterRes (in unsigned long filterResX, in unsigned long filterResY);
@@ -158,8 +161,7 @@ NS_IMETHODIMP nsSVGFilterElement::GetFilterResY(nsIDOMSVGAnimatedInteger * *aFil
 NS_IMETHODIMP
 nsSVGFilterElement::SetFilterRes(PRUint32 filterResX, PRUint32 filterResY)
 {
-  mIntegerAttributes[FILTERRES_X].SetBaseValue(filterResX, this, PR_FALSE);
-  mIntegerAttributes[FILTERRES_Y].SetBaseValue(filterResY, this, PR_FALSE);
+  mIntegerPairAttributes[FILTERRES].SetBaseValues(filterResX, filterResY, this, PR_FALSE);
   return NS_OK;
 }
 
@@ -219,11 +221,11 @@ nsSVGFilterElement::GetLengthInfo()
                               NS_ARRAY_LENGTH(sLengthInfo));
 }
 
-nsSVGElement::IntegerAttributesInfo
-nsSVGFilterElement::GetIntegerInfo()
+nsSVGElement::IntegerPairAttributesInfo
+nsSVGFilterElement::GetIntegerPairInfo()
 {
-  return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
-                               NS_ARRAY_LENGTH(sIntegerInfo));
+  return IntegerPairAttributesInfo(mIntegerPairAttributes, sIntegerPairInfo,
+                                   NS_ARRAY_LENGTH(sIntegerPairInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
