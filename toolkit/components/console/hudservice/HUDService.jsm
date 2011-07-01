@@ -1492,7 +1492,7 @@ HUD_SERVICE.prototype =
   clearDisplay: function HS_clearDisplay(aHUD)
   {
     if (typeof(aHUD) === "string") {
-      aHUD = this.getOutputNodeById(aHUD);
+      aHUD = this.getHudReferenceById(aHUD).HUDBox;
     }
 
     let hudRef = HUDService.getHudReferenceForOutputNode(aHUD);
@@ -1623,8 +1623,7 @@ HUD_SERVICE.prototype =
   adjustVisibilityForMessageType:
   function HS_adjustVisibilityForMessageType(aHUDId, aPrefKey, aState)
   {
-    let displayNode = this.getOutputNodeById(aHUDId);
-    let outputNode = displayNode.querySelector(".hud-output-node");
+    let outputNode = this.getHudReferenceById(aHUDId).outputNode;
     let doc = outputNode.ownerDocument;
 
     // Look for message nodes ("hud-msg-node") with the given preference key
@@ -1683,9 +1682,7 @@ HUD_SERVICE.prototype =
   adjustVisibilityOnSearchStringChange:
   function HS_adjustVisibilityOnSearchStringChange(aHUDId, aSearchString)
   {
-    let displayNode = this.getOutputNodeById(aHUDId);
-    let outputNode = displayNode.querySelector(".hud-output-node");
-    let doc = outputNode.ownerDocument;
+    let outputNode = this.getHudReferenceById(aHUDId).outputNode;
 
     let nodes = outputNode.querySelectorAll(".hud-msg-node");
 
@@ -1899,8 +1896,8 @@ HUD_SERVICE.prototype =
   /**
    * Returns the hudReference for a given output node.
    *
-   * @param nsIDOMNode aNode (currently either a xul:vbox as returned by
-   *        getOutputNodeById() or a richlistbox).
+   * @param nsIDOMNode aNode currently either a xul:vbox, the HUDBox, or a
+   * richlistbox, the outputNode.
    * @returns a HUD | null
    */
   getHudReferenceForOutputNode: function HS_getHudReferenceForOutputNode(aNode)
@@ -1926,17 +1923,6 @@ HUD_SERVICE.prototype =
   getHudReferenceById: function HS_getHudReferenceById(aId)
   {
     return aId in this.hudReferences ? this.hudReferences[aId] : null;
-  },
-
-  /**
-   * Gets the Web Console DOM node, the .hud-box.
-   *
-   * @param string aId
-   * @returns nsIDOMNode
-   */
-  getOutputNodeById: function HS_getOutputNodeById(aId)
-  {
-    return this.getHudReferenceById(aId).HUDBox;
   },
 
   /**
@@ -2897,7 +2883,7 @@ HUD_SERVICE.prototype =
    */
   animate: function HS_animate(aHUDId, aDirection, aCallback)
   {
-    let hudBox = this.getOutputNodeById(aHUDId);
+    let hudBox = this.getHudReferenceById(aHUDId).HUDBox;
     if (!hudBox.classList.contains("animated")) {
       if (aCallback) {
         aCallback();
