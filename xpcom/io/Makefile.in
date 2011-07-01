@@ -51,11 +51,12 @@ MOZILLA_INTERNAL_API = 1
 # work around bug 408258
 ifdef GNU_CC 
 ifneq ($(OS_ARCH), Darwin)
-MODULE_OPTIMIZE_FLAGS = -O3 -fno-strict-aliasing
+MODULE_OPTIMIZE_FLAGS = $(MOZ_OPTIMIZE_FLAGS) -fno-strict-aliasing
 endif
 endif
 
 CPPSRCS		= \
+		Base64.cpp \
 		nsAppFileLocationProvider.cpp \
 		nsBinaryStream.cpp \
 		nsDirectoryService.cpp \
@@ -68,6 +69,7 @@ CPPSRCS		= \
 		nsPipe3.cpp \
 		nsStreamUtils.cpp \
 		nsScriptableInputStream.cpp \
+		nsScriptableBase64Encoder.cpp \
 		nsSegmentedBuffer.cpp \
 		nsStorageStream.cpp \
 		nsStringStream.cpp \
@@ -80,13 +82,6 @@ CPPSRCS		= \
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS		+= \
 		CocoaFileUtils.mm \
-		$(NULL)
-endif
-
-ifndef MOZ_NO_FAST_LOAD
-CPPSRCS += \
-		nsFastLoadFile.cpp \
-		nsFastLoadService.cpp \
 		$(NULL)
 endif
 
@@ -105,7 +100,6 @@ EXPORTS		= \
 		nsDirectoryService.h \
 		nsDirectoryServiceAtomList.h \
 		nsEscape.h \
-		nsFastLoadService.h \
 		nsLinebreakConverter.h \
 		nsLocalFile.h \
 		nsMultiplexInputStream.h \
@@ -127,12 +121,15 @@ EXPORTS		+= nsLocalFileUnix.h
 endif # windows
 endif # os2
 
+EXPORTS_NAMESPACES = mozilla
+EXPORTS_mozilla = \
+    Base64.h \
+    $(NULL)
+
 XPIDLSRCS	= \
 		nsIBinaryInputStream.idl \
 		nsIBinaryOutputStream.idl  \
 		nsIDirectoryEnumerator.idl \
-		nsIFastLoadFileControl.idl \
-		nsIFastLoadService.idl \
 		nsIInputStreamTee.idl \
 		nsILocalFileWin.idl \
 		nsILineInputStream.idl \
@@ -154,6 +151,7 @@ XPIDLSRCS	= \
 		nsIConverterOutputStream.idl \
 		nsIIOUtil.idl \
 		nsISafeOutputStream.idl \
+		nsIScriptableBase64Encoder.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

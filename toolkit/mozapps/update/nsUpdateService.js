@@ -51,6 +51,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+const UPDATESERVICE_CID = Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}");
+const UPDATESERVICE_CONTRACTID = "@mozilla.org/updates/update-service;1";
+
 const PREF_APP_UPDATE_ALTWINDOWTYPE       = "app.update.altwindowtype";
 const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUND_INTERVAL = "app.update.download.backgroundInterval";
@@ -1778,19 +1781,14 @@ UpdateService.prototype = {
     return this._downloader && this._downloader.isBusy;
   },
 
-  // nsIClassInfo
-  flags: Ci.nsIClassInfo.SINGLETON,
-  implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
-  getHelperForLanguage: function(language) null,
-  getInterfaces: function AUS_getInterfaces(count) {
-    var interfaces = [Ci.nsIApplicationUpdateService,
-                      Ci.nsITimerCallback,
-                      Ci.nsIObserver];
-    count.value = interfaces.length;
-    return interfaces;
-  },
+  classID: UPDATESERVICE_CID,
+  classInfo: XPCOMUtils.generateCI({classID: UPDATESERVICE_CID,
+                                    contractID: UPDATESERVICE_CONTRACTID,
+                                    interfaces: [Ci.nsIApplicationUpdateService,
+                                                 Ci.nsITimerCallback,
+                                                 Ci.nsIObserver],
+                                    flags: Ci.nsIClassInfo.SINGLETON}),
 
-  classID: Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"),
   _xpcom_factory: UpdateServiceFactory,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIApplicationUpdateService,
                                          Ci.nsIAddonUpdateCheckListener,
@@ -2140,7 +2138,11 @@ Checker.prototype = {
       cleanUpUpdatesDir();
 
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                    createInstance(Ci.nsIXMLHttpRequest);
+                    createInstance(Ci.nsISupports);
+    // This is here to let unit test code override XHR
+    if (this._request.wrappedJSObject) {
+      this._request = this._request.wrappedJSObject;
+    }
     this._request.open("GET", url, true);
     var allowNonBuiltIn = !getPref("getBoolPref",
                                    PREF_APP_UPDATE_CERT_REQUIREBUILTIN, true);

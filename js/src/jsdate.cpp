@@ -489,6 +489,15 @@ msFromTime(jsdouble t)
  * end of ECMA 'support' functions
  */
 
+static JSBool
+date_convert(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
+{
+    JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
+    JS_ASSERT(obj->isDate());
+
+    return DefaultValue(cx, obj, (hint == JSTYPE_VOID) ? JSTYPE_STRING : hint, vp);
+}
+
 /*
  * Other Support routines and definitions
  */
@@ -503,7 +512,7 @@ Class js_DateClass = {
     StrictPropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
-    ConvertStub
+    date_convert
 };
 
 /* for use by date_parse */
@@ -2085,8 +2094,8 @@ date_toJSON(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* Step 2. */
-    Value &tv = vp[0];
-    if (!DefaultValue(cx, obj, JSTYPE_NUMBER, &tv))
+    Value tv = ObjectValue(*obj);
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, &tv))
         return false;
 
     /* Step 3. */

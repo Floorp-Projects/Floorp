@@ -149,7 +149,7 @@ function hiddenDataCheck(bytes, uri, path)
                    .getElementsByTagName("h1");
   do_check_eq(header.length, 1);
 
-  do_check_eq(header.item(0).QueryInterface(Ci.nsIDOM3Node).textContent, path);
+  do_check_eq(header.item(0).QueryInterface(Ci.nsIDOMNode).textContent, path);
 
   // files
   var lst = body.getElementsByTagName("ol");
@@ -171,7 +171,7 @@ function hiddenDataCheck(bytes, uri, path)
     var link = items.item(i)
                     .childNodes
                     .item(0)
-                    .QueryInterface(Ci.nsIDOM3Node)
+                    .QueryInterface(Ci.nsIDOMNode)
                     .QueryInterface(Ci.nsIDOMElement);
     var f = dirEntries[i];
 
@@ -233,7 +233,7 @@ function dataCheck(bytes, uri, path, dirEntries)
                    .getElementsByTagName("h1");
   do_check_eq(header.length, 1);
 
-  do_check_eq(header.item(0).QueryInterface(Ci.nsIDOM3Node).textContent, path);
+  do_check_eq(header.item(0).QueryInterface(Ci.nsIDOMNode).textContent, path);
 
   // files
   var lst = body.getElementsByTagName("ol");
@@ -251,7 +251,7 @@ function dataCheck(bytes, uri, path, dirEntries)
     var link = items.item(i)
                     .childNodes
                     .item(0)
-                    .QueryInterface(Ci.nsIDOM3Node)
+                    .QueryInterface(Ci.nsIDOMNode)
                     .QueryInterface(Ci.nsIDOMElement);
     var f = dirEntries[i];
 

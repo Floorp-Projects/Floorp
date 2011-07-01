@@ -151,10 +151,9 @@ Item.prototype = {
     this.dragOptions = {
       cancelClass: 'close stackExpander',
       start: function(e, ui) {
-        if (this.isAGroupItem) {
-          UI.setActive(this);
+        UI.setActive(this);
+        if (this.isAGroupItem)
           this._unfreezeItemSize();
-        }
         // if we start dragging a tab within a group, start with dropSpace on.
         else if (this.parent != null)
           this.parent._dropSpaceActive = true;
@@ -180,7 +179,7 @@ Item.prototype = {
       out: function() {
         let groupItem = drag.info.item.parent;
         if (groupItem)
-          groupItem.remove(drag.info.$el, {dontClose: true});
+          groupItem.remove(drag.info.$el);
         iQ(this.container).removeClass("acceptsDrop");
       },
       drop: function(event) {
@@ -201,8 +200,7 @@ Item.prototype = {
       minWidth: 90,
       minHeight: 90,
       start: function(e,ui) {
-        if (this.isAGroupItem)
-          UI.setActive(this);
+        UI.setActive(this);
         resize.info = new Drag(this, e);
       },
       resize: function(e,ui) {

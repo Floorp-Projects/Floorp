@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 const TEST_URL_BASES = [
   "http://example.org/browser/browser/base/content/test/dummy_page.html#tabmatch",
   "http://example.org/browser/browser/base/content/test/moz.png#tabmatch"

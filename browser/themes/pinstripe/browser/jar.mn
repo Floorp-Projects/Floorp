@@ -15,6 +15,7 @@ browser.jar:
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Go-arrow.png
+* skin/classic/browser/highlighter.css
   skin/classic/browser/home.png
   skin/classic/browser/hud-style-check-box-checked.png
   skin/classic/browser/hud-style-check-box-empty.png

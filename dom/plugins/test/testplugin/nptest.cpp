@@ -137,6 +137,7 @@ static bool throwExceptionNextInvoke(NPObject* npobj, const NPVariant* args, uin
 static bool convertPointX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool setPluginWantsAllStreams(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -195,6 +196,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "convertPointX",
   "convertPointY",
   "streamTest",
+  "setPluginWantsAllStreams",
   "crash",
   "crashOnDestroy",
   "getObjectValue",
@@ -254,6 +256,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   convertPointX,
   convertPointY,
   streamTest,
+  setPluginWantsAllStreams,
   crashPlugin,
   crashOnDestroy,
   getObjectValue,
@@ -309,6 +312,7 @@ static URLNotifyData kNotifyData = {
   "static-cookie",
   NULL,
   NULL,
+  NULL,
   false,
   0,
   NULL
@@ -317,8 +321,6 @@ static URLNotifyData kNotifyData = {
 static const char* SUCCESS_STRING = "pass";
 
 static bool sIdentifiersInitialized = false;
-
-static uint32_t timerEventCount = 0;
 
 struct timerEvent {
   int32_t timerIdReceive;
@@ -331,15 +333,12 @@ static timerEvent timerEvents[] = {
   {-1, 0, 200, false, -1},
   {0, 0, 400, false, -1},
   {0, 0, 200, true, -1},
-  {0, 1, 100, true, -1},
-  {1, -1, 0, false, -1},
-  {0, -1, 0, false, -1},
-  {1, -1, 0, false, -1},
-  {1, -1, 0, false, -1},
+  {0, 1, 400, true, -1},
   {0, -1, 0, false, 0},
-  {1, 2, 600, false, 1},
-  {2, -1, 0, false, 2},
+  {1, -1, 0, false, -1},
+  {1, -1, 0, false, 1},
 };
+static uint32_t currentTimerEventCount = 0;
 static uint32_t totalTimerEvents = sizeof(timerEvents) / sizeof(timerEvent);
 
 /**
@@ -743,6 +742,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->focusEventCount = 0;
   instanceData->eventModel = 0;
   instanceData->closeStream = false;
+  instanceData->wantsAllStreams = false;
   instance->pdata = instanceData;
 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
@@ -1172,7 +1172,7 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
   if (instanceData->closeStream) {
     instanceData->closeStream = false;
     if (instanceData->testrange != NULL) {
-      NPError err = NPN_RequestRead(stream, instanceData->testrange);
+      NPN_RequestRead(stream, instanceData->testrange);
     }
     NPN_DestroyStream(instance, stream, NPRES_USER_BREAK);
   }
@@ -1343,6 +1343,10 @@ NPP_GetValue(NPP instance, NPPVariable variable, void* value)
   if (variable == NPPVpluginNeedsXEmbed) {
     // Only relevant for X plugins
     *(NPBool*)value = instanceData->hasWidget;
+    return NPERR_NO_ERROR;
+  }
+  if (variable == NPPVpluginWantsAllNetworkStreams) {
+    *(NPBool*)value = instanceData->wantsAllStreams;
     return NPERR_NO_ERROR;
   }
 
@@ -2554,6 +2558,24 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
 }
 
 static bool
+setPluginWantsAllStreams(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (1 != argCount)
+    return false;
+
+  if (!NPVARIANT_IS_BOOLEAN(args[0]))
+    return false;
+  bool wantsAllStreams = NPVARIANT_TO_BOOLEAN(args[0]);
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  id->wantsAllStreams = wantsAllStreams;
+
+  return true;
+}
+
+static bool
 crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
   IntentionalCrash();
@@ -2819,8 +2841,8 @@ getAuthInfo(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant
 static void timerCallback(NPP npp, uint32_t timerID)
 {
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  timerEventCount++;
-  timerEvent event = timerEvents[timerEventCount];
+  currentTimerEventCount++;
+  timerEvent event = timerEvents[currentTimerEventCount];
 
   NPObject* windowObject;
   NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
@@ -2828,10 +2850,11 @@ static void timerCallback(NPP npp, uint32_t timerID)
     return;
 
   NPVariant rval;
-  if (timerID != id->timerID[event.timerIdReceive])
+  if (timerID != id->timerID[event.timerIdReceive]) {
     id->timerTestResult = false;
+  }
 
-  if (timerEventCount == totalTimerEvents - 1) {
+  if (currentTimerEventCount == totalTimerEvents - 1) {
     NPVariant arg;
     BOOLEAN_TO_NPVARIANT(id->timerTestResult, arg);
     NPN_Invoke(npp, windowObject, NPN_GetStringIdentifier(id->timerTestScriptCallback.c_str()), &arg, 1, &rval);
@@ -2853,7 +2876,7 @@ timerTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* 
 {
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  timerEventCount = 0;
+  currentTimerEventCount = 0;
 
   if (argCount < 1 || !NPVARIANT_IS_STRING(args[0]))
     return false;
@@ -2861,7 +2884,7 @@ timerTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* 
   id->timerTestScriptCallback = argstr->UTF8Characters;
 
   id->timerTestResult = true;
-  timerEvent event = timerEvents[timerEventCount];
+  timerEvent event = timerEvents[currentTimerEventCount];
     
   id->timerID[event.timerIdSchedule] = NPN_ScheduleTimer(npp, event.timerInterval, event.timerRepeat, timerCallback);
   

@@ -34,24 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function browserWindowsCount() {
-  let count = 0;
-  let e = Services.wm.getEnumerator("navigator:browser");
-  while (e.hasMoreElements()) {
-    if (!e.getNext().closed)
-      ++count;
-  }
-  return count;
-}
-
 function test() {
   /** Test for Bug 464199 **/
-  is(browserWindowsCount(), 1, "Only one browser window should be open initially");
-  
-  // test setup
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+
   waitForExplicitFinish();
-  
+
   const REMEMBER = Date.now(), FORGET = Math.random();
   let test_state = { windows: [{ "tabs": [{ "entries": [] }], _closedTabs: [
     { state: { entries: [{ url: "http://www.example.net/" }] }, title: FORGET },
@@ -79,13 +66,15 @@ function test() {
                extData: { "setTabValue": "http://example.net:80" } }, title: REMEMBER }
   ] }] };
   let remember_count = 5;
-  
+
   function countByTitle(aClosedTabList, aTitle)
     aClosedTabList.filter(function(aData) aData.title == aTitle).length;
-  
+
   // open a window and add the above closed tab list
   let newWin = openDialog(location, "", "chrome,all,dialog=no");
   newWin.addEventListener("load", function(aEvent) {
+    newWin.removeEventListener("load", arguments.callee, false);
+
     gPrefService.setIntPref("browser.sessionstore.max_tabs_undo",
                             test_state.windows[0]._closedTabs.length);
     ss.setWindowState(newWin, JSON.stringify(test_state), true);
@@ -98,11 +87,11 @@ function test() {
        "The correct amout of tabs are to be forgotten");
     is(countByTitle(closedTabs, REMEMBER), remember_count,
        "Everything is set up.");
-    
+
     let pb = Cc["@mozilla.org/privatebrowsing;1"].
              getService(Ci.nsIPrivateBrowsingService);
     pb.removeDataFromDomain("example.net");
-    
+
     closedTabs = JSON.parse(ss.getClosedTabData(newWin));
     is(closedTabs.length, remember_count,
        "The correct amout of tabs was removed");
@@ -110,12 +99,10 @@ function test() {
        "All tabs to be forgotten were indeed removed");
     is(countByTitle(closedTabs, REMEMBER), remember_count,
        "... and tabs to be remembered weren't.");
-    
+
     // clean up
     newWin.close();
-    is(browserWindowsCount(), 1, "Only one browser window should be open eventually");
-    if (gPrefService.prefHasUserValue("browser.sessionstore.max_tabs_undo"))
-      gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
+    gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
     finish();
   }, false);
 }

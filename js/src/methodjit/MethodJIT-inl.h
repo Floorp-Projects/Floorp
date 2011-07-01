@@ -90,7 +90,7 @@ RecursiveMethodJIT(JSContext *cx, StackFrame *fp)
      * interpreter. :XXX: should be more robust.
      */
     static const unsigned RECURSIVE_METHODJIT_LIMIT = 10;
-    VMFrame *f = cx->compartment->jaegerCompartment->activeFrame();
+    VMFrame *f = cx->compartment->jaegerCompartment()->activeFrame();
     for (unsigned i = 0; i < RECURSIVE_METHODJIT_LIMIT; i++) {
         if (!f || f->entryfp != fp)
             return false;

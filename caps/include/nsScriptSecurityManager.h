@@ -50,7 +50,6 @@
 #include "nsInterfaceHashtable.h"
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
-#include "nsIPrefService.h"
 #include "nsIChannelEventSink.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserver.h"
@@ -588,13 +587,6 @@ private:
     nsresult
     InitPrincipals(PRUint32 prefCount, const char** prefNames);
 
-
-#ifdef XPC_IDISPATCH_SUPPORT
-    // While this header is included outside of caps, this class isn't 
-    // referenced so this should be fine.
-    nsresult
-    CheckComponentPermissions(JSContext *cx, const nsCID &aCID);
-#endif
 #ifdef DEBUG_CAPS_HACKER
     void
     PrintPolicyDB();
@@ -617,25 +609,18 @@ private:
     inline void
     ScriptSecurityPrefChanged();
 
-    static const char sJSEnabledPrefName[];
-    static const char sFileOriginPolicyPrefName[];
-
     nsObjectHashtable* mOriginToPolicyMap;
     DomainPolicy* mDefaultPolicy;
     nsObjectHashtable* mCapabilities;
 
-    nsCOMPtr<nsIPrefBranch> mPrefBranch;
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
     ContextPrincipal *mContextPrincipals;
     nsInterfaceHashtable<PrincipalKey, nsIPrincipal> mPrincipals;
+    PRPackedBool mPrefInitialized;
     PRPackedBool mIsJavaScriptEnabled;
     PRPackedBool mIsWritingPrefs;
     PRPackedBool mPolicyPrefsChanged;
-#ifdef XPC_IDISPATCH_SUPPORT    
-    PRPackedBool mXPCDefaultGrantAll;
-    static const char sXPCDefaultGrantAllName[];
-#endif
 
     static PRBool sStrictFileOriginPolicy;
 

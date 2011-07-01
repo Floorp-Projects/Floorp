@@ -146,10 +146,12 @@ class PICStubCompiler : public BaseCompiler
     JSScript *script;
     ic::PICInfo &pic;
     void *stub;
+    uint32 gcNumber;
 
   public:
     PICStubCompiler(const char *type, VMFrame &f, JSScript *script, ic::PICInfo &pic, void *stub)
-      : BaseCompiler(f.cx), type(type), f(f), script(script), pic(pic), stub(stub)
+      : BaseCompiler(f.cx), type(type), f(f), script(script), pic(pic), stub(stub),
+        gcNumber(f.cx->runtime->gcNumber)
     { }
 
     bool isCallOp() const {
@@ -176,6 +178,10 @@ class PICStubCompiler : public BaseCompiler
 
     LookupStatus disable(JSContext *cx, const char *reason) {
         return pic.disable(cx, reason, stub);
+    }
+
+    bool hadGC() {
+        return gcNumber != f.cx->runtime->gcNumber;
     }
 
   protected:
@@ -279,6 +285,9 @@ class SetPropCompiler : public PICStubCompiler
 
     LookupStatus generateStub(uint32 initialShape, const Shape *shape, bool adding)
     {
+        if (hadGC())
+            return Lookup_Uncacheable;
+
         /* Exits to the slow path. */
         Vector<Jump, 8> slowExits(cx);
         Vector<Jump, 8> otherGuards(cx);
@@ -938,6 +947,8 @@ class GetPropCompiler : public PICStubCompiler
             return status;
         if (getprop.obj != getprop.holder)
             return disable("proto walk on String.prototype");
+        if (hadGC())
+            return Lookup_Uncacheable;
 
         Assembler masm;
 
@@ -1191,6 +1202,8 @@ class GetPropCompiler : public PICStubCompiler
         LookupStatus status = getprop.lookupAndTest();
         if (status != Lookup_Cacheable)
             return status;
+        if (hadGC())
+            return Lookup_Uncacheable;
 
         if (obj == getprop.holder && !pic.inlinePathPatched)
             return patchInline(getprop.holder, getprop.shape);
@@ -1202,7 +1215,7 @@ class GetPropCompiler : public PICStubCompiler
 class ScopeNameCompiler : public PICStubCompiler
 {
   private:
-    typedef Vector<Jump, 8, ContextAllocPolicy> JumpList;
+    typedef Vector<Jump, 8> JumpList;
 
     JSObject *scopeChain;
     JSAtom *atom;
@@ -1413,7 +1426,7 @@ class ScopeNameCompiler : public PICStubCompiler
     LookupStatus generateCallStub(JSObject *obj)
     {
         Assembler masm;
-        Vector<Jump, 8, ContextAllocPolicy> fails(cx);
+        Vector<Jump, 8> fails(cx);
         ScopeNameLabels &labels = pic.scopeNameLabels();
 
         /* For GETXPROP, the object is already in objReg. */
@@ -1647,7 +1660,7 @@ class BindNameCompiler : public PICStubCompiler
     LookupStatus generateStub(JSObject *obj)
     {
         Assembler masm;
-        js::Vector<Jump, 8, ContextAllocPolicy> fails(cx);
+        Vector<Jump, 8> fails(cx);
 
         BindNameLabels &labels = pic.bindNameLabels();
 

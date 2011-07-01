@@ -131,9 +131,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     hasGlobalReallocation(false),
     oomInVector(false),
     applyTricks(NoApplyTricks)
-#if defined DEBUG
-    ,pcProfile(NULL)
-#endif
 {
     JS_ASSERT(!outerScript->isUncachedEval);
 
@@ -452,8 +449,6 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
     this->PC = script->code;
     this->a = newa;
 
-    variadicRejoin = false;
-
     return Compile_Okay;
 }
 
@@ -490,15 +485,6 @@ mjit::Compiler::performCompilation(JITScript **jitp)
                    outerScript->filename, outerScript->lineno);
     }
 
-#if defined(JS_METHODJIT_SPEW) && defined(DEBUG)
-    if (IsJaegerSpewChannelActive(JSpew_PCProf)) {
-        pcProfile = (int *)cx->malloc_(sizeof(int) * outerScript->length);
-        if (!pcProfile)
-            return Compile_Error;
-        memset(pcProfile, 0, outerScript->length * sizeof(int));
-    }
-#endif
-    
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
     prof.start();
@@ -522,12 +508,6 @@ mjit::Compiler::performCompilation(JITScript **jitp)
         CHECK_STATUS(generateEpilogue());
         CHECK_STATUS(finishThisUp(jitp));
     }
-
-#if defined(JS_METHODJIT_SPEW) && defined(DEBUG)
-    /* Transfer ownership to JITScript */
-    (*jitp)->pcProfile = pcProfile;
-    pcProfile = NULL;
-#endif
 
 #ifdef JS_METHODJIT_SPEW
     prof.stop();
@@ -570,11 +550,6 @@ mjit::Compiler::~Compiler()
         cx->delete_(loop);
         loop = nloop;
     }
-
-#ifdef DEBUG
-    if (pcProfile)
-        cx->free_(pcProfile);
-#endif
 }
 
 CompileStatus
@@ -625,6 +600,9 @@ mjit::TryCompile(JSContext *cx, StackFrame *fp)
     if (fp->script()->hasSharps)
         return Compile_Abort;
 #endif
+    bool ok = cx->compartment->ensureJaegerCompartmentExists(cx);
+    if (!ok)
+        return Compile_Abort;
 
     // Uncached eval scripts are not analyzed or compiled.
     if (fp->script()->isUncachedEval)
@@ -796,8 +774,10 @@ mjit::Compiler::generatePrologue()
     if (isConstructing)
         constructThis();
 
-    if (debugMode() || Probes::callTrackingActive(cx))
+    if (debugMode())
         INLINE_STUBCALL(stubs::ScriptDebugPrologue, REJOIN_RESUME);
+    else if (Probes::callTrackingActive(cx))
+        INLINE_STUBCALL(stubs::ScriptProbeOnlyPrologue, REJOIN_RESUME);
 
     if (cx->typeInferenceEnabled()) {
 #ifdef DEBUG
@@ -860,7 +840,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     JSC::ExecutablePool *execPool;
     uint8 *result =
-        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(codeSize, &execPool);
+        (uint8 *)script->compartment->jaegerCompartment()->execAlloc()->alloc(codeSize, &execPool);
     if (!result) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
@@ -1430,9 +1410,22 @@ mjit::Compiler::generateMethod()
         }
         if (script->singleStepMode && scanner.firstOpInLine(PC - script->code))
             trap |= stubs::JSTRAP_SINGLESTEP;
-        variadicRejoin = false;
 
         Bytecode *opinfo = analysis->maybeCode(PC);
+
+        if (cx->hasRunOption(JSOPTION_PCCOUNT) && script->pcCounters && opinfo) {
+            RegisterID r1 = frame.allocReg();
+            RegisterID r2 = frame.allocReg();
+
+            masm.move(ImmPtr(&script->pcCounters.get(JSRUNMODE_METHODJIT, PC - script->code)), r1);
+            Address pcCounter(r1);
+            masm.load32(pcCounter, r2);
+            masm.add32(Imm32(1), r2);
+            masm.store32(r2, pcCounter);
+
+            frame.freeReg(r1);
+            frame.freeReg(r2);
+        }
 
         if (!opinfo) {
             if (op == JSOP_STOP)

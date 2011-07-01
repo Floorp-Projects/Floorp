@@ -36,22 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "HUDService", function () {
-  Cu.import("resource:///modules/HUDService.jsm");
-  try {
-    return HUDService;
-  }
-  catch (ex) {
-    dump(ex + "\n");
-  }
-});
+Cu.import("resource://gre/modules/HUDService.jsm");
 
 function log(aMsg)
 {

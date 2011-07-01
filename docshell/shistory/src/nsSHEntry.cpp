@@ -656,7 +656,7 @@ nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
     // If there are dynamically added children before that, those must be
     // moved to be after aOffset.
     if (mChildren.Count() > 0) {
-      PRInt32 start = PR_MIN(mChildren.Count() - 1, aOffset);
+      PRInt32 start = NS_MIN(mChildren.Count() - 1, aOffset);
       PRInt32 dynEntryIndex = -1;
       nsISHEntry* dynEntry = nsnull;
       for (PRInt32 i = start; i >= 0; --i) {

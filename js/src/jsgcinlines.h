@@ -44,17 +44,10 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsscope.h"
+#include "jsxml.h"
 
 #include "jslock.h"
 #include "jstl.h"
-
-#ifdef JS_GCMETER
-# define METER(x)               ((void) (x))
-# define METER_IF(condition, x) ((void) ((condition) && (x)))
-#else
-# define METER(x)               ((void) 0)
-# define METER_IF(condition, x) ((void) 0)
-#endif
 
 inline bool
 JSAtom::isUnitString(const void *ptr)
@@ -230,9 +223,10 @@ GCPoke(JSContext *cx, Value oldval)
 
 template <typename T>
 inline T *
-NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
+NewGCThing(JSContext *cx, unsigned thingKind, size_t thingSize)
 {
     JS_ASSERT(thingKind < js::gc::FINALIZE_LIMIT);
+    JS_ASSERT(thingSize == js::gc::GCThingSizeMap[thingKind]);
 #ifdef JS_THREADSAFE
     JS_ASSERT_IF((cx->compartment == cx->runtime->atomsCompartment),
                  (thingKind == js::gc::FINALIZE_STRING) ||
@@ -245,19 +239,15 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
         js::gc::RunDebugGC(cx);
 #endif
 
-    METER(cx->compartment->arenas[thingKind].stats.alloc++);
-    js::gc::Cell *cell = cx->compartment->freeLists.getNext(thingKind);
+    js::gc::Cell *cell = cx->compartment->freeLists.getNext(thingKind, thingSize);
     return static_cast<T *>(cell ? cell : js::gc::RefillFinalizableFreeList(cx, thingKind));
 }
-
-#undef METER
-#undef METER_IF
 
 inline JSObject *
 js_NewGCObject(JSContext *cx, js::gc::FinalizeKind kind)
 {
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
-    JSObject *obj = NewFinalizableGCThing<JSObject>(cx, kind);
+    JSObject *obj = NewGCThing<JSObject>(cx, kind, js::gc::GCThingSizeMap[kind]);
     if (obj) {
         obj->capacity = js::gc::GetGCKindSlots(kind);
         obj->type = NULL;     /* :FIXME: remove (see MarkChildren) */
@@ -269,27 +259,26 @@ js_NewGCObject(JSContext *cx, js::gc::FinalizeKind kind)
 inline JSString *
 js_NewGCString(JSContext *cx)
 {
-    return NewFinalizableGCThing<JSString>(cx, js::gc::FINALIZE_STRING);    
+    return NewGCThing<JSString>(cx, js::gc::FINALIZE_STRING, sizeof(JSString));
 }
 
 inline JSShortString *
 js_NewGCShortString(JSContext *cx)
 {
-    return NewFinalizableGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING);
+    return NewGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING, sizeof(JSShortString));
 }
 
 inline JSExternalString *
-js_NewGCExternalString(JSContext *cx, uintN type)
+js_NewGCExternalString(JSContext *cx)
 {
-    JS_ASSERT(type < JSExternalString::TYPE_LIMIT);
-    JSExternalString *str = NewFinalizableGCThing<JSExternalString>(cx, js::gc::FINALIZE_EXTERNAL_STRING);
-    return str;
+    return NewGCThing<JSExternalString>(cx, js::gc::FINALIZE_EXTERNAL_STRING,
+                                        sizeof(JSExternalString));
 }
 
 inline JSFunction*
 js_NewGCFunction(JSContext *cx)
 {
-    JSFunction *fun = NewFinalizableGCThing<JSFunction>(cx, js::gc::FINALIZE_FUNCTION);
+    JSFunction *fun = NewGCThing<JSFunction>(cx, js::gc::FINALIZE_FUNCTION, sizeof(JSFunction));
     if (fun) {
         fun->capacity = JSObject::FUN_CLASS_RESERVED_SLOTS;
         fun->lastProp = NULL; /* Stops fun from being scanned until initializated. */
@@ -300,14 +289,14 @@ js_NewGCFunction(JSContext *cx)
 inline js::Shape *
 js_NewGCShape(JSContext *cx)
 {
-    return NewFinalizableGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE);
+    return NewGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
 }
 
 #if JS_HAS_XML_SUPPORT
 inline JSXML *
 js_NewGCXML(JSContext *cx)
 {
-    return NewFinalizableGCThing<JSXML>(cx, js::gc::FINALIZE_XML);
+    return NewGCThing<JSXML>(cx, js::gc::FINALIZE_XML, sizeof(JSXML));
 }
 #endif
 

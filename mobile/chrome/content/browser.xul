@@ -536,7 +536,7 @@
         <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
           <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
             <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.jpake;</description>
-            <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
+            <description class="syncsetup-center link" flex="1" onclick="WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
             <separator/>
             <vbox align="center" flex="1">
               <description id="syncsetup-code1" class="syncsetup-code">....</description>
@@ -544,7 +544,7 @@
               <description id="syncsetup-code3" class="syncsetup-code">....</description>
             </vbox>
             <separator/>
-            <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openManual();">&sync.fallback;</description>
+            <description class="syncsetup-center link" flex="1" onclick="WeaveGlue.openManual();">&sync.fallback;</description>
             <separator flex="1"/>
           </scrollbox>
           <hbox class="prompt-buttons" pack="center">
@@ -597,7 +597,7 @@
       </vbox>
     </vbox>
 
-    <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true">
+    <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
       <vbox id="context-popup" class="dialog-dark">
         <hbox id="context-header">
           <label id="context-hint" crop="center" flex="1"/>
@@ -663,6 +663,9 @@
       </vbox>
     </hbox>
 
+    <toolbarbutton id="selectionhandle-start" label="^" left="0" top="0" hidden="true"/>
+    <toolbarbutton id="selectionhandle-end" label="^" left="0" top="0" hidden="true"/>
+
     <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
       <vbox id="menulist-popup" class="dialog-dark">
         <label id="menulist-title" class="options-title" crop="center" flex="1"/>
@@ -707,6 +710,9 @@
         label="&pageactions.saveas.pdf;"
         oncommand="PageActions.savePageAsPDF();"/>
 #endif
+      <toolbarbutton class="appmenu-quit-button appmenu-button"
+        label="&pageactions.quit;"
+        oncommand="Browser.quit();"/>
     </hbox>
   </stack>
 

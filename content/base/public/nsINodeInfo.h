@@ -81,7 +81,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODEINFO_IID)
 
   nsINodeInfo()
-    : mInner(nsnull, nsnull, kNameSpaceID_None),
+    : mInner(nsnull, nsnull, kNameSpaceID_None, 0, nsnull),
       mOwnerManager(nsnull)
   {
   }
@@ -121,12 +121,17 @@ public:
   }
 
   /*
-   * As above, but return the qualified name in corrected case as
-   * needed.  For example, for HTML elements in HTML documents, this
-   * will return an ASCII-uppercased version of the qualified name.
+   * Returns the node's nodeName as defined in DOM Core
    */
-  const nsString& QualifiedNameCorrectedCase() const {
-    return mQualifiedNameCorrectedCase;
+  const nsString& NodeName() const {
+    return mNodeName;
+  }
+
+  /*
+   * Returns the node's localName as defined in DOM Core
+   */
+  const nsString& LocalName() const {
+    return mLocalName;
   }
 
 #ifdef MOZILLA_INTERNAL_API
@@ -159,28 +164,33 @@ public:
 
   /*
    * Get the namespace URI for a node, if the node has a namespace URI.
-   *
-   * For the HTML element "<body>" in a HTML document this will return a null
-   * string and for the XML element "<html:body>" (assuming that this element,
-   * or one of its ancestors has an
-   * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
-   * the string "http://www.w3.org/1999/xhtml".
    */
   virtual nsresult GetNamespaceURI(nsAString& aNameSpaceURI) const = 0;
 
   /*
    * Get the namespace ID for a node if the node has a namespace, if not this
    * returns kNameSpaceID_None.
-   *
-   * For the HTML element "<body>" in a HTML document this will return
-   * kNameSpaceID_None and for the XML element "<html:body>" (assuming that
-   * this element, or one of its ancestors has an
-   * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
-   * the namespace ID for "http://www.w3.org/1999/xhtml".
    */
   PRInt32 NamespaceID() const
   {
     return mInner.mNamespaceID;
+  }
+
+  /*
+   * Get the nodetype for the node. Returns the values specified in nsIDOMNode
+   * for nsIDOMNode.nodeType
+   */
+  PRUint16 NodeType() const
+  {
+    return mInner.mNodeType;
+  }
+
+  /*
+   * Get the extra name, used by PIs and DocTypes, for the node.
+   */
+  nsIAtom* GetExtraName() const
+  {
+    return mInner.mExtraName;
   }
 
   /*
@@ -299,7 +309,7 @@ public:
    */
   nsIDocument* GetDocument() const
   {
-    return mOwnerManager->GetDocument();
+    return mDocument;
   }
 
 protected:
@@ -322,28 +332,34 @@ protected:
   public:
     nsNodeInfoInner()
       : mName(nsnull), mPrefix(nsnull), mNamespaceID(kNameSpaceID_Unknown),
-        mNameString(nsnull)
+        mNodeType(0), mNameString(nsnull), mExtraName(nsnull)
     {
     }
-    nsNodeInfoInner(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID)
+    nsNodeInfoInner(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
+                    PRUint16 aNodeType, nsIAtom* aExtraName)
       : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
-        mNameString(nsnull)
+        mNodeType(aNodeType), mNameString(nsnull), mExtraName(aExtraName)
     {
     }
-    nsNodeInfoInner(const nsAString& aTmpName, nsIAtom *aPrefix, PRInt32 aNamespaceID)
+    nsNodeInfoInner(const nsAString& aTmpName, nsIAtom *aPrefix,
+                    PRInt32 aNamespaceID, PRUint16 aNodeType)
       : mName(nsnull), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
-        mNameString(&aTmpName)
+        mNodeType(aNodeType), mNameString(&aTmpName), mExtraName(nsnull)
     {
     }
 
     nsIAtom*            mName;
     nsIAtom*            mPrefix;
     PRInt32             mNamespaceID;
+    PRUint16            mNodeType; // As defined by nsIDOMNode.nodeType
     const nsAString*    mNameString;
+    nsIAtom*            mExtraName; // Only used by PIs and DocTypes
   };
 
   // nsNodeInfoManager needs to pass mInner to the hash table.
   friend class nsNodeInfoManager;
+
+  nsIDocument* mDocument; // Weak. Cache of mOwnerManager->mDocument
 
   nsNodeInfoInner mInner;
 
@@ -358,9 +374,12 @@ protected:
   // Qualified name
   nsString mQualifiedName;
 
-  // Qualified name in "corrected case"; this will depend on our
-  // document and on mNamespaceID.
-  nsString mQualifiedNameCorrectedCase;
+  // nodeName for the node.
+  nsString mNodeName;
+
+  // localName for the node. This is either equal to mInner.mName, or a
+  // void string, depending on mInner.mNodeType.
+  nsString mLocalName;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINodeInfo, NS_INODEINFO_IID)

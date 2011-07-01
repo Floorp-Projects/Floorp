@@ -77,7 +77,6 @@
 #ifdef USE_UNIX_LOCALE
 #include "nsCollationUnix.h"
 #include "nsDateTimeFormatUnix.h"
-#include "nsPosixLocale.h"
 #endif
 
 #define NSLOCALE_MAKE_CTOR(ctor_, iface_, func_)          \
@@ -110,7 +109,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatWin)
 #endif
 
 #ifdef USE_UNIX_LOCALE
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPosixLocale)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationUnix)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatUnix)
 #endif  

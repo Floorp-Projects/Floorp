@@ -76,6 +76,31 @@ function test_generateQI_string_names()
 }
 
 
+function test_generateCI()
+{
+    const classID = Components.ID("562dae2e-7cff-432b-995b-3d4c03fa2b89");
+    const classDescription = "generateCI test component";
+    const flags = Components.interfaces.nsIClassInfo.DOM_OBJECT;
+    var x = {
+        QueryInterface: XPCOMUtils.generateQI([]),
+        classInfo: XPCOMUtils.generateCI({classID: classID,
+                                          interfaces: [],
+                                          flags: flags,
+                                          classDescription: classDescription})
+    };
+
+    try {
+        var ci = x.QueryInterface(Components.interfaces.nsIClassInfo);
+        ci = ci.QueryInterface(Components.interfaces.nsISupports);
+        ci = ci.QueryInterface(Components.interfaces.nsIClassInfo);
+        do_check_eq(ci.classID, classID);
+        do_check_eq(ci.flags, flags);
+        do_check_eq(ci.classDescription, classDescription);
+    } catch(e) {
+        do_throw("Classinfo for x should not be missing or broken");
+    }
+}
+
 function test_defineLazyGetter()
 {
     let accessCount = 0;
@@ -186,6 +211,7 @@ function test_categoryRegistration()
 
 let tests = [
     test_generateQI_string_names,
+    test_generateCI,
     test_defineLazyGetter,
     test_defineLazyServiceGetter,
     test_categoryRegistration,

@@ -212,8 +212,8 @@ const EXPIRATION_QUERIES = {
   // unique URIs limit.
   QUERY_FIND_VISITS_TO_EXPIRE: {
     sql: "INSERT INTO expiration_notify "
-       +   "(v_id, url, visit_date, expected_results) "
-       + "SELECT v.id, h.url, v.visit_date, :limit_visits "
+       +   "(v_id, url, guid, visit_date, expected_results) "
+       + "SELECT v.id, h.url, h.guid, v.visit_date, :limit_visits "
        + "FROM moz_historyvisits v "
        + "JOIN moz_places h ON h.id = v.place_id "
        + "WHERE (SELECT COUNT(*) FROM moz_places) > :max_uris "
@@ -237,8 +237,8 @@ const EXPIRATION_QUERIES = {
   // run this query in such a case, but just delete URIs.
   QUERY_FIND_URIS_TO_EXPIRE: {
     sql: "INSERT INTO expiration_notify "
-       +   "(p_id, url, visit_date, expected_results) "
-       + "SELECT h.id, h.url, h.last_visit_date, :limit_uris "
+       +   "(p_id, url, guid, visit_date, expected_results) "
+       + "SELECT h.id, h.url, h.guid, h.last_visit_date, :limit_uris "
        + "FROM moz_places h "
        + "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
        + "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
@@ -388,7 +388,7 @@ const EXPIRATION_QUERIES = {
   // If p_id is set whole_entry = 1, then we have expired the full page.
   // Either p_id or v_id are always set.
   QUERY_SELECT_NOTIFICATIONS: {
-    sql: "SELECT url, MAX(visit_date) AS visit_date, "
+    sql: "SELECT url, guid, MAX(visit_date) AS visit_date, "
        +        "MAX(IFNULL(MIN(p_id, 1), MIN(v_id, 0))) AS whole_entry, "
        +        "expected_results "
        + "FROM expiration_notify "
@@ -449,6 +449,7 @@ function nsPlacesExpiration()
     + ", v_id INTEGER "
     + ", p_id INTEGER "
     + ", url TEXT NOT NULL "
+    + ", guid TEXT NOT NULL "
     + ", visit_date INTEGER "
     + ", expected_results INTEGER NOT NULL "
     + ") ");
@@ -526,8 +527,29 @@ nsPlacesExpiration.prototype = {
       }
     }
     else if (aTopic == TOPIC_DEBUG_START_EXPIRATION) {
-      this._debugLimit = aData || -1; // Don't limit if unspecified.
-      this._expireWithActionAndLimit(ACTION.DEBUG, LIMIT.DEBUG);
+      // The passed-in limit is the maximum number of visits to expire when
+      // history is over capacity.  Mind to correctly handle the NaN value.
+      let limit = parseInt(aData);
+      if (limit == -1) {
+        // Everything should be expired without any limit.  If history is over
+        // capacity then all existing visits will be expired.
+        // Should only be used in tests, since may cause dataloss.
+        this._expireWithActionAndLimit(ACTION.DEBUG, LIMIT.UNLIMITED);
+      }
+      else if (limit > 0) {
+        // The number of expired visits is limited by this amount.  It may be
+        // used for testing purposes, like checking that limited queries work.
+        this._debugLimit = limit;
+        this._expireWithActionAndLimit(ACTION.DEBUG, LIMIT.DEBUG);
+      }
+      else {
+        // Any other value is intended as a 0 limit, that means no visits
+        // will be expired.  Even if this doesn't touch visits, it will remove
+        // any orphan pages, icons, annotations and similar from the database,
+        // so it may be used for cleanup purposes.
+        this._debugLimit = -1;
+        this._expireWithActionAndLimit(ACTION.DEBUG, LIMIT.DEBUG);
+      }
     }
     else if (aTopic == TOPIC_IDLE_BEGIN) {
       // Stop the expiration timer.  We don't want to keep up expiring on idle
@@ -632,10 +654,11 @@ nsPlacesExpiration.prototype = {
         this._expectedResultsCount--;
 
       let uri = Services.io.newURI(row.getResultByName("url"), null, null);
+      let guid = row.getResultByName("guid");
       let visitDate = row.getResultByName("visit_date");
       let wholeEntry = row.getResultByName("whole_entry");
       // Dispatch expiration notifications to history.
-      this._hsn.notifyOnPageExpired(uri, visitDate, wholeEntry);
+      this._hsn.notifyOnPageExpired(uri, visitDate, wholeEntry, guid);
     }
   },
 
@@ -717,17 +740,14 @@ nsPlacesExpiration.prototype = {
     catch(e) {}
 
     if (this._urisLimit < 0) {
-      // PR_GetPhysicalMemorySize sometimes returns garbage (bug 660036).
-      // If the return value is greater than MEMSIZE_MAX_BYTES, assume it is
-      // garbage and use MEMSIZE_FALLBACK_BYTES instead.  Must stay in sync
-      // with the code in nsNavHistory.cpp.
-      const MEMSIZE_MAX_BYTES = 137438953472; // 128 G
+      // If physical memory size is not available, use MEMSIZE_FALLBACK_BYTES
+      // instead.  Must stay in sync with the code in nsNavHistory.cpp.
       const MEMSIZE_FALLBACK_BYTES = 268435456; // 256 M
 
       // The preference did not exist or has a negative value, so we calculate a
       // limit based on hardware.
       let memsize = this._sys.getProperty("memsize"); // Memory size in bytes.
-      if (memsize <= 0 || memsize > MEMSIZE_MAX_BYTES)
+      if (memsize <= 0)
         memsize = MEMSIZE_FALLBACK_BYTES;
 
       let cpucount = this._sys.getProperty("cpucount"); // CPU count.
@@ -841,15 +861,20 @@ nsPlacesExpiration.prototype = {
         baseLimit = this._debugLimit;
         break;
     }
-    if (this.status == STATUS.DIRTY && aLimit != LIMIT.DEBUG)
+    if (this.status == STATUS.DIRTY && aAction != ACTION.DEBUG &&
+        baseLimit > 0) {
       baseLimit *= EXPIRE_AGGRESSIVITY_MULTIPLIER;
+    }
 
     // Bind the appropriate parameters.
     let params = stmt.params;
     switch (aQueryType) {
       case "QUERY_FIND_VISITS_TO_EXPIRE":
         params.max_uris = this._urisLimit;
-        params.limit_visits = baseLimit;
+        // Avoid expiring all visits in case of an unlimited debug expiration,
+        // just remove orphans instead.
+        params.limit_visits =
+          aLimit == LIMIT.DEBUG && baseLimit == -1 ? 0 : baseLimit;
         break;
       case "QUERY_FIND_URIS_TO_EXPIRE":
         // We could run in the middle of adding a new visit or bookmark to

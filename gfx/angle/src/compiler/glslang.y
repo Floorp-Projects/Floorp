@@ -1288,27 +1288,12 @@ single_declaration
             symbol->setId(variable->getUniqueId());
     }
     | fully_specified_type IDENTIFIER LEFT_BRACKET RIGHT_BRACKET {
+        context->error($2.line, "unsized array declarations not supported", $2.string->c_str(), "");
+        context->recover();
+
         TIntermSymbol* symbol = context->intermediate.addSymbol(0, *$2.string, TType($1), $2.line);
         $$.intermAggregate = context->intermediate.makeAggregate(symbol, $2.line);
-        
-        if (context->structQualifierErrorCheck($2.line, $1))
-            context->recover();
-
-        if (context->nonInitConstErrorCheck($2.line, *$2.string, $1))
-            context->recover();
-
         $$.type = $1;
-
-        if (context->arrayTypeErrorCheck($3.line, $1) || context->arrayQualifierErrorCheck($3.line, $1))
-            context->recover();
-        else {
-            $1.setArray(true);
-            TVariable* variable = 0;
-            if (context->arrayErrorCheck($3.line, *$2.string, $1, variable))
-                context->recover();
-            if (variable && symbol)
-                symbol->setId(variable->getUniqueId());
-        }
     }
     | fully_specified_type IDENTIFIER LEFT_BRACKET constant_expression RIGHT_BRACKET {
         TType type = TType($1);

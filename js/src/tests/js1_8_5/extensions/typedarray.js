@@ -80,6 +80,8 @@ function test()
         check(function() thrown, todo);
     }
 
+    check(function() ArrayBuffer.prototype.byteLength == 0);
+
     var buf, buf2;
 
     buf = new ArrayBuffer(100);
@@ -345,6 +347,35 @@ function test()
     check(function() (new Int32Array([NaN])[0]) == 0);
     check(function() { var q = new Float32Array([NaN])[0]; return q != q; });
 
+    // check that setting and reading arbitrary properties works
+    // this is not something that will be done in real world
+    // situations, but it should work when done just like in
+    // regular objects
+    buf = new ArrayBuffer(128);
+    a = new Uint32Array(buf, 0, 4);
+    check(function() a[0] ==  0 && a[1] == 0 && a[2] == 0 && a[3] == 0);
+    buf.a = 42;
+    buf.b = "abcdefgh";
+    buf.c = {a:'literal'};
+    check(function() a[0] ==  0 && a[1] == 0 && a[2] == 0 && a[3] == 0);
+
+    check(function() buf.a == 42);
+    delete buf.a;
+    check(function() !buf.a);
+
+    // check edge cases for small arrays
+    // 16 reserved slots
+    a = new Uint8Array(120);
+    check(function() a.byteLength == 120);
+    check(function() a.length == 120);
+    for (var i = 0; i < a.length; i++)
+        check(function() a[i] == 0)
+
+    a = new Uint8Array(121);
+    check(function() a.byteLength == 121);
+    check(function() a.length == 121);
+    for (var i = 0; i < a.length; i++)
+        check(function() a[i] == 0)
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");

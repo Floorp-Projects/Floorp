@@ -157,7 +157,6 @@ public:
    */
   void CreatedThebesBuffer(ShadowableLayer* aThebes,
                            const nsIntRegion& aFrontValidRegion,
-                           float aXResolution, float aYResolution,
                            const nsIntRect& aBufferRect,
                            const SurfaceDescriptor& aInitialFrontBuffer);
   /**
@@ -169,7 +168,8 @@ public:
                           const SharedImage& aInitialFrontImage);
   void CreatedCanvasBuffer(ShadowableLayer* aCanvas,
                            nsIntSize aSize,
-                           const SurfaceDescriptor& aInitialFrontSurface);
+                           const SurfaceDescriptor& aInitialFrontSurface,
+                           bool aNeedYFlip);
 
   /**
    * The specified layer is destroying its buffers.
@@ -493,8 +493,7 @@ public:
    * values.  This is called when a new buffer has been created.
    */
   virtual void SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
-                              const nsIntRegion& aValidRegion,
-                              float aXResolution, float aYResolution) = 0;
+                              const nsIntRegion& aValidRegion) = 0;
 
   virtual void InvalidateRegion(const nsIntRegion& aRegion)
   {
@@ -512,16 +511,6 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
-   */
-  virtual void SetResolution(float aXResolution, float aYResolution)
-  {
-    mXResolution = aXResolution;
-    mYResolution = aYResolution;
-    Mutated();
-  }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
    *
    * Publish the remote layer's back ThebesLayerBuffer to this shadow,
    * swapping out the old front ThebesLayerBuffer (the new back buffer
@@ -530,7 +519,6 @@ public:
   virtual void
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
        ThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
-       float* aNewXResolution, float* aNewYResolution,
        OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion) = 0;
 
   /**
@@ -579,7 +567,7 @@ public:
    * transaction to bring in real pixels.  Init() may only be called
    * once.
    */
-  virtual void Init(const SurfaceDescriptor& front, const nsIntSize& aSize) = 0;
+  virtual void Init(const SurfaceDescriptor& front, const nsIntSize& aSize, bool needYFlip) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY

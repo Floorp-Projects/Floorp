@@ -48,6 +48,7 @@ using NPNVariable;
 using base::FileDescriptor;
 using mozilla::plugins::NativeThreadId;
 using mac_plugin_interposing::NSCursorInfo;
+using nsID;
 
 namespace mozilla {
 namespace plugins {
@@ -65,9 +66,13 @@ both:
    * constructor with the same string or int argument then we create two actors
    * and detect the second instance in the child. We prevent the parent's actor
    * from leaking out to plugin code and only allow the child's to be used.
+   *
+   * When calling into the plugin, the parent may create a "temporary"
+   * identifier which is only valid for the lifetime of the current RPC frame.
    */
   async PPluginIdentifier(nsCString aString,
-                          int32_t aInt);
+                          int32_t aInt,
+                          bool temporary);
 
   // Window-specific message which instructs the RPC mechanism to enter
   // a nested event loop for the current RPC call.
@@ -100,6 +105,11 @@ child:
 
   rpc NPP_GetSitesWithData()
     returns (nsCString[] sites);
+
+  // Windows specific message to set up an audio session in the plugin process
+  async SetAudioSessionData(nsID aID,
+                            nsString aDisplayName,
+                            nsString aIconPath);
 
 parent:
   /**

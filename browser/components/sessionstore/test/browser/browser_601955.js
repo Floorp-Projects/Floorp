@@ -37,8 +37,6 @@
 
 // This tests that pinning/unpinning a tab, on its own, eventually triggers a
 // session store.
-let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-         getService(Ci.nsISessionStore);
 
 function test() {
   waitForExplicitFinish();

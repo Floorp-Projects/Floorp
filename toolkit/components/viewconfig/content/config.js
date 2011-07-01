@@ -70,11 +70,11 @@ const PREF_IS_LOCKED = 2;
 var gPrefHash = {};
 var gPrefArray = [];
 var gPrefView = gPrefArray; // share the JS array
-var gFastIndex = 0;
 var gSortedColumn = "prefCol";
 var gSortFunction = null;
 var gSortDirection = 1; // 1 is ascending; -1 is descending
 var gConfigBundle = null;
+var gFilter = null;
 
 var view = {
   get rowCount() { return gPrefView.length; },
@@ -115,9 +115,8 @@ var view = {
   toggleOpenState : function(index) {},
   cycleHeader: function(col) {
     var index = this.selection.currentIndex;
-    if (col.id == gSortedColumn)
+    if (col.id == gSortedColumn) {
       gSortDirection = -gSortDirection;
-    if (col.id == gSortedColumn && gFastIndex == gPrefArray.length) {
       gPrefArray.reverse();
       if (gPrefView != gPrefArray)
         gPrefView.reverse();
@@ -126,24 +125,17 @@ var view = {
     }
     else {
       var pref = null;
-      if (index >= 0) {
-        if (gPrefArray != gPrefView)
-          index = gPrefView.length - index - 1;
-        else
-          pref = gPrefArray[index];
-      }
+      if (index >= 0)
+        pref = gPrefView[index];
+
       var old = document.getElementById(gSortedColumn);
       old.setAttribute("sortDirection", "");
       gPrefArray.sort(gSortFunction = gSortFunctions[col.id]);
-      if (gPrefView != gPrefArray) {
-        if (col.id == gSortedColumn)
-          gPrefView.reverse();
-        else
-          gPrefView.sort(gSortFunction);
-      }
+      if (gPrefView != gPrefArray)
+        gPrefView.sort(gSortFunction);
       gSortedColumn = col.id;
       if (pref)
-        index = getIndexOfPref(pref);
+        index = getViewIndexOfPref(pref);
     }
     col.element.setAttribute("sortDirection", gSortDirection > 0 ? "ascending" : "descending");
     this.treebox.invalidate();
@@ -151,7 +143,6 @@ var view = {
       this.selection.select(index);
       this.treebox.ensureRowIsVisible(index);
     }
-    gFastIndex = gPrefArray.length;
   },
   selectionChanged : function() {},
   cycleCell: function(row, col) {},
@@ -184,12 +175,25 @@ function getViewIndexOfPref(pref)
   return -1;
 }
 
+// find the index in gPrefView where a pref object belongs
+function getNearestViewIndexOfPref(pref)
+{
+  var low = -1, high = gPrefView.length;
+  var index = (low + high) >> 1;
+  while (index > low) {
+    if (gSortFunction(gPrefView[index], pref) < 0)
+      low = index;
+    else
+      high = index;
+    index = (low + high) >> 1;
+  }
+  return high;
+}
+
 // find the index in gPrefArray of a pref object
-// either one that was looked up in gPrefHash
-// or in case it was moved after sorting
 function getIndexOfPref(pref)
 {
-  var low = -1, high = gFastIndex;
+  var low = -1, high = gPrefArray.length;
   var index = (low + high) >> 1;
   while (index > low) {
     var mid = gPrefArray[index];
@@ -201,16 +205,12 @@ function getIndexOfPref(pref)
       high = index;
     index = (low + high) >> 1;
   }
-
-  for (index = gFastIndex; index < gPrefArray.length; ++index)
-    if (gPrefArray[index] == pref)
-      break;
   return index;
 }
 
 function getNearestIndexOfPref(pref)
 {
-  var low = -1, high = gFastIndex;
+  var low = -1, high = gPrefArray.length;
   var index = (low + high) >> 1;
   while (index > low) {
     if (gSortFunction(gPrefArray[index], pref) < 0)
@@ -232,30 +232,77 @@ var gPrefListener =
     if (/^capability\./.test(prefName)) // avoid displaying "private" preferences
       return;
 
-    var index = gPrefArray.length;
+    var arrayIndex = gPrefArray.length;
+    var viewIndex = arrayIndex;
+    var selectedIndex = view.selection.currentIndex;
+    var pref;
+    var updateView = false;
+    var updateArray = false;
+    var addedRow = false;
     if (prefName in gPrefHash) {
-      index = getViewIndexOfPref(gPrefHash[prefName]);
-      fetchPref(prefName, getIndexOfPref(gPrefHash[prefName]));
-      if (index >= 0) {
+      pref = gPrefHash[prefName];
+      viewIndex = getViewIndexOfPref(pref);
+      arrayIndex = getIndexOfPref(pref);
+      fetchPref(prefName, arrayIndex);
+      // fetchPref replaces the existing pref object
+      pref = gPrefHash[prefName];
+      if (viewIndex >= 0) {
         // Might need to update the filtered view
-        gPrefView[index] = gPrefHash[prefName];
-        view.treebox.invalidateRow(index);
+        gPrefView[viewIndex] = gPrefHash[prefName];
+        view.treebox.invalidateRow(viewIndex);
       }
-      if (gSortedColumn == "lockCol" || gSortedColumn == "valueCol")
-        gFastIndex = 1; // TODO: reinsert and invalidate range
-    } else {
-      fetchPref(prefName, index);
-      if (index == gFastIndex) {
-        // Keep the array sorted by reinserting the pref object
-        var pref = gPrefArray.pop();
-        index = getNearestIndexOfPref(pref);
-        gPrefArray.splice(index, 0, pref);
-        gFastIndex = gPrefArray.length;
+      if (gSortedColumn == "lockCol" || gSortedColumn == "valueCol") {
+        updateArray = true;
+        gPrefArray.splice(arrayIndex, 1);
+        if (gFilter && gFilter.test(pref.prefCol + ";" + pref.valueCol)) {
+          updateView = true;
+          gPrefView.splice(viewIndex, 1);
+        }
       }
-      if (gPrefView == gPrefArray)
-        view.treebox.rowCountChanged(index, 1);
-      else
-        FilterPrefs();
+    }
+    else {
+      fetchPref(prefName, arrayIndex);
+      pref = gPrefArray.pop();
+      updateArray = true;
+      addedRow = true;
+      if (gFilter && gFilter.test(pref.prefCol + ";" + pref.valueCol)) {
+        updateView = true;
+      }
+    }
+    if (updateArray) {
+      // Reinsert in the data array
+      var newIndex = getNearestIndexOfPref(pref);
+      gPrefArray.splice(newIndex, 0, pref);
+
+      if (updateView) {
+        // View is filtered, reinsert in the view separately
+        newIndex = getNearestViewIndexOfPref(pref);
+        gPrefView.splice(newIndex, 0, pref);
+      }
+      else if (gFilter) {
+        // View is filtered, but nothing to update
+        return;
+      }
+
+      if (addedRow)
+        view.treebox.rowCountChanged(newIndex, 1);
+
+      // Invalidate the changed range in the view
+      var low = Math.min(viewIndex, newIndex);
+      var high = Math.max(viewIndex, newIndex);
+      view.treebox.invalidateRange(low, high);
+
+      if (selectedIndex == viewIndex) {
+        selectedIndex = newIndex;
+      }
+      else if (selectedIndex >= low && selectedIndex <= high) {
+        selectedIndex += (newIndex > viewIndex) ? -1 : 1;
+      }
+      if (selectedIndex >= 0) {
+        view.selection.select(selectedIndex);
+        if (selectedIndex == newIndex)
+          view.treebox.ensureRowIsVisible(selectedIndex);
+      }
     }
   }
 };
@@ -358,7 +405,6 @@ function ShowPrefs()
   }
   gSortFunction = gSortFunctions[gSortedColumn];
   gPrefArray.sort(gSortFunction);
-  gFastIndex = gPrefArray.length;
   
   gPrefBranch.addObserver("", gPrefListener, false);
 
@@ -391,31 +437,31 @@ function onConfigUnload()
 function FilterPrefs()
 {
   var substring = document.getElementById("textbox").value;
-  var rex;
   // Check for "/regex/[i]"
   if (substring.charAt(0) == '/') {
     var r = substring.match(/^\/(.*)\/(i?)$/);
     try {
-      rex = RegExp(r[1], r[2]);
+      gFilter = RegExp(r[1], r[2]);
     }
     catch (e) {
       return; // Do nothing on incomplete or bad RegExp
     }
   }
+  else if (substring) {
+    gFilter = RegExp(substring.replace(/([^* \w])/g, "\\$1")
+                              .replace(/^\*+/, "").replace(/\*+/g, ".*"), "i");
+  } else {
+    gFilter = null;
+  }
 
   var prefCol = view.selection.currentIndex < 0 ? null : gPrefView[view.selection.currentIndex].prefCol;
   var oldlen = gPrefView.length;
   gPrefView = gPrefArray;
-  if (substring) {
+  if (gFilter) {
     gPrefView = [];
-    if (!rex)
-      rex = RegExp(substring.replace(/([^* \w])/g, "\\$1").replace(/^\*+/, "")
-                            .replace(/\*+/g, ".*"), "i");
     for (var i = 0; i < gPrefArray.length; ++i)
-      if (rex.test(gPrefArray[i].prefCol + ";" + gPrefArray[i].valueCol))
+      if (gFilter.test(gPrefArray[i].prefCol + ";" + gPrefArray[i].valueCol))
         gPrefView.push(gPrefArray[i]);
-    if (gFastIndex < gPrefArray.length)
-      gPrefView.sort(gSortFunction);
   }
   view.treebox.invalidate();
   view.treebox.rowCountChanged(oldlen, gPrefView.length - oldlen);

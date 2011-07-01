@@ -52,11 +52,10 @@
 #include "nsCOMPtr.h"
 
 #include "nsNetUtil.h"
+#include "nsStreamUtils.h"
 #include "nsIHttpChannel.h"
 #include "nsICachingChannel.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIPrefBranch2.h"
-#include "nsIPrefService.h"
 #include "nsIProgressEventSink.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -90,7 +89,9 @@
 #include "nsIChannelPolicy.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::imagelib;
 
 #if defined(DEBUG_pavlov) || defined(DEBUG_timeless)
@@ -851,19 +852,15 @@ nsresult imgLoader::InitCache()
   if (!sChromeCache.Init())
       return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv); 
-  if (NS_FAILED(rv))
-    return rv;
-
   PRInt32 timeweight;
-  rv = prefs->GetIntPref("image.cache.timeweight", &timeweight);
+  rv = Preferences::GetInt("image.cache.timeweight", &timeweight);
   if (NS_SUCCEEDED(rv))
     sCacheTimeWeight = timeweight / 1000.0;
   else
     sCacheTimeWeight = 0.5;
 
   PRInt32 cachesize;
-  rv = prefs->GetIntPref("image.cache.size", &cachesize);
+  rv = Preferences::GetInt("image.cache.size", &cachesize);
   if (NS_SUCCEEDED(rv))
     sCacheMaxSize = cachesize;
   else
@@ -883,14 +880,9 @@ nsresult imgLoader::InitCache()
 
 nsresult imgLoader::Init()
 {
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv); 
-  if (NS_FAILED(rv))
-    return rv;
+  ReadAcceptHeaderPref();
 
-  ReadAcceptHeaderPref(prefs);
-
-  prefs->AddObserver("image.http.accept", this, PR_TRUE);
+  Preferences::AddWeakObserver(this, "image.http.accept");
 
   // Listen for when we leave private browsing mode
   nsCOMPtr<nsIObserverService> obService = mozilla::services::GetObserverService();
@@ -906,8 +898,7 @@ imgLoader::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* a
   // We listen for pref change notifications...
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     if (!strcmp(NS_ConvertUTF16toUTF8(aData).get(), "image.http.accept")) {
-      nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
-      ReadAcceptHeaderPref(prefs);
+      ReadAcceptHeaderPref();
     }
   }
 
@@ -925,13 +916,10 @@ imgLoader::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* a
   return NS_OK;
 }
 
-void imgLoader::ReadAcceptHeaderPref(nsIPrefBranch *aBranch)
+void imgLoader::ReadAcceptHeaderPref()
 {
-  NS_ASSERTION(aBranch, "Pref branch is null");
-
-  nsXPIDLCString accept;
-  nsresult rv = aBranch->GetCharPref("image.http.accept", getter_Copies(accept));
-  if (NS_SUCCEEDED(rv))
+  nsAdoptingCString accept = Preferences::GetCString("image.http.accept");
+  if (accept)
     mAcceptHeader = accept;
   else
     mAcceptHeader = "image/png,image/*;q=0.8,*/*;q=0.5";
@@ -1815,8 +1803,8 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   nsCOMPtr<nsILoadGroup> loadGroup;
   channel->GetLoadGroup(getter_AddRefs(loadGroup));
 
-  // XXX: It looks like the wrong load flags are being passed in...
-  requestFlags &= 0xFFFF;
+  // Filter out any load flags not from nsIRequest
+  requestFlags &= nsIRequest::LOAD_REQUESTMASK;
 
   nsresult rv = NS_OK;
   if (request) {
@@ -2180,15 +2168,6 @@ NS_IMETHODIMP imgCacheValidator::OnStopRequest(nsIRequest *aRequest, nsISupports
 /** nsIStreamListener methods **/
 
 
-// XXX see bug 113959
-static NS_METHOD dispose_of_data(nsIInputStream* in, void* closure,
-                                 const char* fromRawSegment, PRUint32 toOffset,
-                                 PRUint32 count, PRUint32 *writeCount)
-{
-  *writeCount = count;
-  return NS_OK;
-}
-
 /* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
 NS_IMETHODIMP imgCacheValidator::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
@@ -2204,7 +2183,7 @@ NS_IMETHODIMP imgCacheValidator::OnDataAvailable(nsIRequest *aRequest, nsISuppor
   if (!mDestListener) {
     // XXX see bug 113959
     PRUint32 _retval;
-    inStr->ReadSegments(dispose_of_data, nsnull, count, &_retval);
+    inStr->ReadSegments(NS_DiscardSegment, nsnull, count, &_retval);
     return NS_OK;
   }
 

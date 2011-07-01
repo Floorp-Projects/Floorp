@@ -40,7 +40,6 @@
 
 // Mozilla includes
 #include "nscore.h"
-#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"

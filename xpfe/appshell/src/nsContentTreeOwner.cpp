@@ -63,8 +63,6 @@
 #include "nsIPrincipal.h"
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIWebNavigation.h"
 #include "nsIJSContextStack.h"
 
@@ -74,6 +72,10 @@
 #if defined(XP_MACOSX)
 #include "nsThreadUtils.h"
 #endif
+
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -878,21 +880,10 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
                "Parent from wrong docshell tree?");
 #endif
 
-  // First check what our prefs say
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (!prefs) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIPrefBranch> branch;
-  prefs->GetBranch("browser.link.", getter_AddRefs(branch));
-  if (!branch) {
-    return NS_OK;
-  }
-
   // Where should we open this?
   PRInt32 containerPref;
-  if (NS_FAILED(branch->GetIntPref("open_newwindow", &containerPref))) {
+  if (NS_FAILED(Preferences::GetInt("browser.link.open_newwindow",
+                                    &containerPref))) {
     return NS_OK;
   }
 
@@ -909,11 +900,9 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
        1: don't divert window.open at all
        2: don't divert window.open with features
     */
-    PRInt32 restrictionPref;
-    if (NS_FAILED(branch->GetIntPref("open_newwindow.restriction",
-                                     &restrictionPref)) ||
-        restrictionPref < 0 ||
-        restrictionPref > 2) {
+    PRInt32 restrictionPref =
+      Preferences::GetInt("browser.link.open_newwindow.restriction", 2);
+    if (restrictionPref < 0 || restrictionPref > 2) {
       restrictionPref = 2; // Sane default behavior
     }
 

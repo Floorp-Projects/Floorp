@@ -33,9 +33,9 @@ if count == expected_count:
 else:
     print "TEST-UNEXPECTED-FAIL | check_source_count.py %s | " % (search_string),
     if count < expected_count:
-        print "There are less occurences of /%s/ than expected. This may mean that you have removed some, but forgotten to account for it %s." % (search_string, error_location)
+        print "There are fewer occurrences of /%s/ than expected. This may mean that you have removed some, but forgotten to account for it %s." % (search_string, error_location)
     else:
-        print "There are more occurences of /%s/ than expected. We're trying to prevent an increase in the number of %s's, using %s if possible. If it in unavoidable, you should update the expected count %s." % (search_string, search_string, replacement, error_location)
+        print "There are more occurrences of /%s/ than expected. We're trying to prevent an increase in the number of %s's, using %s if possible. If it in unavoidable, you should update the expected count %s." % (search_string, search_string, replacement, error_location)
 
     print "Expected: %d; found: %d" % (expected_count, count)
     for k in sorted(details):

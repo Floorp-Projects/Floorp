@@ -59,11 +59,6 @@ CPPSRCS = \
     PerfMeasurement.cpp \
     $(NULL)
 
-EXTRA_DSO_LDOPTS += \
-    $(MOZ_COMPONENT_LIBS) \
-    $(MOZ_JS_LIBS) \
-    $(NULL)
-
 ifdef ENABLE_TESTS
 _CHROME_TEST_FILES = \
     test_pm.xul \

@@ -903,9 +903,23 @@ endif
 endif # SHARED_LIBRARY || PROGRAM
 endif # WINNT_
 endif # MOZ_PROFILE_GENERATE || MOZ_PROFILE_USE
+ifdef MOZ_PROFILE_GENERATE
+# Clean up profiling data during PROFILE_GENERATE phase
+export::
+ifeq ($(OS_ARCH)_$(GNU_CC), WINNT_)
+	-$(RM) *.pgd
+else
+ifdef GNU_CC
+	-$(RM) *.gcda
+endif
+endif
+endif
 endif # NO_PROFILE_GUIDED_OPTIMIZE
 
 ##############################################
+
+stdc++compat.$(OBJ_SUFFIX): CXXFLAGS+=-DMOZ_LIBSTDCXX_VERSION=$(MOZ_LIBSTDCXX_TARGET_VERSION)
+host_stdc++compat.$(OBJ_SUFFIX): CXXFLAGS+=-DMOZ_LIBSTDCXX_VERSION=$(MOZ_LIBSTDCXX_HOST_VERSION)
 
 checkout:
 	$(MAKE) -C $(topsrcdir) -f client.mk checkout

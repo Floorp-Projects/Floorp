@@ -41,7 +41,7 @@
 #include "nsWinUtils.h"
 
 #include "nsIDOMEventTarget.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/desctructor

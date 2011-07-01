@@ -130,13 +130,6 @@
 
 #include "nsIThreadInternal.h"
 
-#ifdef XPC_IDISPATCH_SUPPORT
-// This goop was added because of EXCEPINFO in ThrowCOMError
-// This include is here, because it needs to occur before the undefines below
-#include <atlbase.h>
-#include "oaidl.h"
-#endif
-
 #ifdef XP_WIN
 // Nasty MS defines
 #ifdef GetClassInfo
@@ -585,10 +578,6 @@ public:
       return gReportAllJSExceptions > 0;
     }
 
-#ifdef XPC_IDISPATCH_SUPPORT
-public:
-    static PRBool IsIDispatchEnabled();
-#endif
 protected:
     nsXPConnect();
 
@@ -1112,15 +1101,6 @@ public:
     XPCReadableJSStringWrapper *NewStringWrapper(const PRUnichar *str, PRUint32 len);
     void DeleteString(nsAString *string);
 
-#ifdef XPC_IDISPATCH_SUPPORT
-    /**
-     * Sets the IDispatch information for the context
-     * This has to be void* because of icky Microsoft macros that
-     * would be introduced if we included the DispatchInterface header
-     */
-    void SetIDispatchInfo(XPCNativeInterface* iface, void * member);
-    void* GetIDispatchMember() const { return mIDispatchMember; }
-#endif
 private:
 
     // no copy ctor or assignment allowed
@@ -1209,9 +1189,6 @@ private:
     jsval*                          mRetVal;
 
     JSBool                          mReturnValueWasSet;
-#ifdef XPC_IDISPATCH_SUPPORT
-    void*                           mIDispatchMember;
-#endif
     PRUint16                        mMethodIndex;
 
 #define XPCCCX_STRING_CACHE_SIZE 2
@@ -2362,16 +2339,6 @@ public:
     void Unmark()     {mJSObject = (JSObject*)(((jsword)mJSObject) & ~1);}
     JSBool IsMarked() const {return (JSBool)(((jsword)mJSObject) & 1);}
 
-#ifdef XPC_IDISPATCH_SUPPORT
-    enum JSObject_flags
-    {
-        IDISPATCH_BIT = 2,
-        JSOBJECT_MASK = 3
-    };
-    void                SetIDispatch(JSContext* cx);
-    JSBool              IsIDispatch() const;
-    XPCDispInterface*   GetIDispatchInfo() const;
-#endif
 private:
     XPCWrappedNativeTearOff(const XPCWrappedNativeTearOff& r); // not implemented
     XPCWrappedNativeTearOff& operator= (const XPCWrappedNativeTearOff& r); // not implemented
@@ -3363,11 +3330,6 @@ public:
     static void Throw(nsresult rv, XPCCallContext& ccx);
     static void ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx);
     static void ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx);
-#ifdef XPC_IDISPATCH_SUPPORT
-    static void ThrowCOMError(JSContext* cx, unsigned long COMErrorCode, 
-                              nsresult rv = NS_ERROR_XPC_COM_ERROR,
-                              const EXCEPINFO * exception = nsnull);
-#endif
     static JSBool SetVerbosity(JSBool state)
         {JSBool old = sVerbose; sVerbose = state; return old;}
 
@@ -3559,14 +3521,13 @@ private:
 struct XPCJSContextInfo {
     XPCJSContextInfo(JSContext* aCx) :
         cx(aCx),
-        frame(nsnull),
+        savedFrameChain(false),
         suspendDepth(0)
     {}
     JSContext* cx;
 
-    // Frame to be restored when this JSContext becomes the topmost
-    // one.
-    JSStackFrame* frame;
+    // Whether the frame chain was saved
+    bool savedFrameChain;
 
     // Greater than 0 if a request was suspended.
     jsrefcount suspendDepth;
@@ -4506,11 +4467,6 @@ ParticipatesInCycleCollection(JSContext *cx, js::gc::Cell *cell)
 }
 
 }
-
-#ifdef XPC_IDISPATCH_SUPPORT
-// IDispatch specific classes
-#include "XPCDispPrivate.h"
-#endif
 
 /***************************************************************************/
 // Inlines use the above - include last.

@@ -99,18 +99,7 @@ private:
   /* Copy a texture region */
   void CopyRegion(ID3D10Texture2D* aSrc, const nsIntPoint &aSrcOffset,
                   ID3D10Texture2D* aDest, const nsIntPoint &aDestOffset,
-                  const nsIntRegion &aCopyRegion, nsIntRegion* aValidRegion,
-                  float aXRes, float aYRes);
-
-  /**
-   * Calculate the desired texture resolution based on
-   * the layer managers resolution, and the current
-   * transforms scale factor.
-   */
-  void GetDesiredResolutions(float& aXRes, float& aYRes);
-
-  /* Check if the current texture resolution matches the stored resolution. */
-  bool ResolutionChanged(float aXRes, float aYRes);
+                  const nsIntRegion &aCopyRegion, nsIntRegion* aValidRegion);
 };
 
 } /* layers */

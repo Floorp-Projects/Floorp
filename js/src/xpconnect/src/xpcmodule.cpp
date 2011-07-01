@@ -49,10 +49,6 @@ xpcModuleCtor()
     XPCWrappedNativeScope::InitStatics();
     XPCPerThreadData::InitStatics();
 
-#ifdef XPC_IDISPATCH_SUPPORT
-    XPCIDispatchExtension::InitStatics();
-#endif
-
     return NS_OK;
 }
 
@@ -62,8 +58,4 @@ xpcModuleDtor()
     // Release our singletons
     nsXPConnect::ReleaseXPConnectSingleton();
     xpc_DestroyJSxIDClassObjects();
-#ifdef XPC_IDISPATCH_SUPPORT
-    nsDispatchSupport::FreeSingleton();
-    XPCIDispatchClassInfo::FreeSingleton();
-#endif
 }

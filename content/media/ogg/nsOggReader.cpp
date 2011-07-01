@@ -118,6 +118,7 @@ nsOggReader::nsOggReader(nsBuiltinDecoder* aDecoder)
     mPageOffset(0)
 {
   MOZ_COUNT_CTOR(nsOggReader);
+  memset(&mTheoraInfo, 0, sizeof(mTheoraInfo));
 }
 
 nsOggReader::~nsOggReader()
@@ -258,27 +259,34 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
   }
 
   if (mTheoraState && ReadHeaders(mTheoraState)) {
-    mInfo.mHasVideo = PR_TRUE;
-    mInfo.mPixelAspectRatio = mTheoraState->mPixelAspectRatio;
-    mInfo.mPicture = nsIntRect(mTheoraState->mInfo.pic_x,
-                               mTheoraState->mInfo.pic_y,
-                               mTheoraState->mInfo.pic_width,
-                               mTheoraState->mInfo.pic_height);
-    mInfo.mFrame = nsIntSize(mTheoraState->mInfo.frame_width,
-                              mTheoraState->mInfo.frame_height);
-    mInfo.mDisplay = nsIntSize(mInfo.mPicture.width,
-                               mInfo.mPicture.height);
-    gfxIntSize sz(mTheoraState->mInfo.pic_width,
-                  mTheoraState->mInfo.pic_height);
-    mDecoder->SetVideoData(sz,
-                           mTheoraState->mPixelAspectRatio,
-                           nsnull,
-                           TimeStamp::Now());
-    // Copy Theora info data for time computations on other threads.
-    memcpy(&mTheoraInfo, &mTheoraState->mInfo, sizeof(mTheoraInfo));
-    mTheoraSerial = mTheoraState->mSerial;
-  } else {
-    memset(&mTheoraInfo, 0, sizeof(mTheoraInfo));
+    nsIntRect picture = nsIntRect(mTheoraState->mInfo.pic_x,
+                                  mTheoraState->mInfo.pic_y,
+                                  mTheoraState->mInfo.pic_width,
+                                  mTheoraState->mInfo.pic_height);
+
+    nsIntSize displaySize = nsIntSize(mTheoraState->mInfo.pic_width,
+                                      mTheoraState->mInfo.pic_height);
+
+    // Apply the aspect ratio to produce the intrinsic display size we report
+    // to the element.
+    ScaleDisplayByAspectRatio(displaySize, mTheoraState->mPixelAspectRatio);
+
+    nsIntSize frameSize(mTheoraState->mInfo.frame_width,
+                        mTheoraState->mInfo.frame_height);
+    if (nsVideoInfo::ValidateVideoRegion(frameSize, picture, displaySize)) {
+      // Video track's frame sizes will not overflow. Activate the video track.
+      mInfo.mHasVideo = PR_TRUE;
+      mInfo.mDisplay = displaySize;
+      mPicture = picture;
+
+      mDecoder->SetVideoData(gfxIntSize(displaySize.width, displaySize.height),
+                             nsnull,
+                             TimeStamp::Now());
+
+      // Copy Theora info data for time computations on other threads.
+      memcpy(&mTheoraInfo, &mTheoraState->mInfo, sizeof(mTheoraInfo));
+      mTheoraSerial = mTheoraState->mSerial;
+    }
   }
 
   if (mVorbisState && ReadHeaders(mVorbisState)) {
@@ -427,7 +435,7 @@ PRBool nsOggReader::DecodeAudioData()
   return PR_TRUE;
 }
 
-nsresult nsOggReader::DecodeTheora(ogg_packet* aPacket)
+nsresult nsOggReader::DecodeTheora(ogg_packet* aPacket, PRInt64 aTimeThreshold)
 {
   NS_ASSERTION(aPacket->granulepos >= TheoraVersion(&mTheoraState->mInfo,3,2,1),
     "Packets must have valid granulepos and packetno");
@@ -447,6 +455,12 @@ nsresult nsOggReader::DecodeTheora(ogg_packet* aPacket)
   }
 
   PRInt64 endTime = mTheoraState->Time(aPacket->granulepos);
+  if (endTime < aTimeThreshold) {
+    // The end time of this frame is already before the current playback
+    // position. It will never be displayed, don't bother enqueing it.
+    return NS_OK;
+  }
+
   if (ret == TH_DUPFRAME) {
     VideoData* v = VideoData::CreateDuplicate(mPageOffset,
                                               time,
@@ -476,7 +490,8 @@ nsresult nsOggReader::DecodeTheora(ogg_packet* aPacket)
                                      endTime,
                                      b,
                                      isKeyframe,
-                                     aPacket->granulepos);
+                                     aPacket->granulepos,
+                                     mPicture);
     if (!v) {
       // There may be other reasons for this error, but for
       // simplicity just assume the worst case: out of memory.
@@ -523,7 +538,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
      (th_packet_iskeyframe(packet) && frameEndTime >= aTimeThreshold))
   {
     aKeyframeSkip = PR_FALSE;
-    nsresult res = DecodeTheora(packet);
+    nsresult res = DecodeTheora(packet, aTimeThreshold);
     decoded++;
     if (NS_FAILED(res)) {
       return PR_FALSE;

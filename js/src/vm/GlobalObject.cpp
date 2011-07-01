@@ -42,6 +42,7 @@
 
 #include "jscntxt.h"
 #include "jsexn.h"
+#include "jsmath.h"
 #include "json.h"
 
 #include "jsobjinlines.h"
@@ -123,7 +124,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     type->singleton = obj;
 
     GlobalObject *globalObj = obj->asGlobal();
-
+    globalObj->makeVarObj();
     globalObj->syncSpecialEquality();
 
     /* Construct a regexp statics object for this global object. */
@@ -186,8 +187,8 @@ GlobalObject::clear(JSContext *cx)
     /* Clear regexp statics. */
     RegExpStatics::extractFrom(this)->clear();
 
-    /* Clear the CSP eval-is-allowed cache. */
-    setSlot(EVAL_ALLOWED, UndefinedValue());
+    /* Clear the runtime-codegen-enabled cache. */
+    setSlot(RUNTIME_CODEGEN_ENABLED, UndefinedValue());
 
     /*
      * Mark global as cleared. If we try to execute any compile-and-go
@@ -199,15 +200,15 @@ GlobalObject::clear(JSContext *cx)
 }
 
 bool
-GlobalObject::isEvalAllowed(JSContext *cx)
+GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
 {
-    Value &v = getSlotRef(EVAL_ALLOWED);
+    Value &v = getSlotRef(RUNTIME_CODEGEN_ENABLED);
     if (v.isUndefined()) {
         JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
 
         /*
          * If there are callbacks, make sure that the CSP callback is installed
-         * and that it permits eval(), then cache the result.
+         * and that it permits runtime code generation, then cache the result.
          */
         v.setBoolean((!callbacks || !callbacks->contentSecurityPolicyAllows) ||
                      callbacks->contentSecurityPolicyAllows(cx));

@@ -40,6 +40,12 @@
 
 #include <stdio.h>
 
+#ifdef XRE_WANT_DLL_BLOCKLIST
+#define XRE_SetupDllBlocklist SetupDllBlocklist
+#else
+#include "nsXULAppAPI.h"
+#endif
+
 #include "nsAutoPtr.h"
 
 #include "prlog.h"
@@ -66,6 +72,8 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
   // We have UCS2 (UTF16?), we want ASCII, but we also just want the filename portion
 #define DLLNAME_MAX 128
   char dllName[DLLNAME_MAX+1];
+  wchar_t *dll_part;
+  DllBlockInfo *info;
 
   int len = moduleFileName->Length / 2;
   wchar_t *fname = moduleFileName->Buffer;
@@ -83,7 +91,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
     goto continue_loading;
   }
 
-  wchar_t *dll_part = wcsrchr(fname, L'\\');
+  dll_part = wcsrchr(fname, L'\\');
   if (dll_part) {
     dll_part = dll_part + 1;
     len -= dll_part - fname;
@@ -129,7 +137,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 #endif
 
   // then compare to everything on the blocklist
-  DllBlockInfo *info = &sWindowsDllBlocklist[0];
+  info = &sWindowsDllBlocklist[0];
   while (info->name) {
     if (strcmp(info->name, dllName) == 0)
       break;
@@ -168,7 +176,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
       // If we failed to get the version information, we block.
 
       if (infoSize != 0) {
-        nsAutoArrayPtr<unsigned char> infoData = new unsigned char[infoSize];
+        nsAutoArrayPtr<unsigned char> infoData(new unsigned char[infoSize]);
         VS_FIXEDFILEINFO *vInfo;
         UINT vInfoLen;
 
@@ -208,7 +216,7 @@ continue_loading:
 WindowsDllInterceptor NtDllIntercept;
 
 void
-SetupDllBlocklist()
+XRE_SetupDllBlocklist()
 {
   NtDllIntercept.Init("ntdll.dll");
 

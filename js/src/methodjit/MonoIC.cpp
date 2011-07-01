@@ -815,20 +815,20 @@ class CallCompiler : public BaseCompiler
          * SplatApplyArgs has not been called, so we call it here before
          * potentially touching f.u.call.dynamicArgc.
          */
-        Value *vp;
+        CallArgs args;
         if (ic.frameSize.isStatic()) {
             JS_ASSERT(f.regs.sp - f.fp()->slots() == (int)ic.frameSize.staticLocalSlots());
-            vp = f.regs.sp - (2 + ic.frameSize.staticArgc());
+            args = CallArgsFromSp(ic.frameSize.staticArgc(), f.regs.sp);
         } else {
             JS_ASSERT(!f.regs.inlined());
             JS_ASSERT(*f.regs.pc == JSOP_FUNAPPLY && GET_ARGC(f.regs.pc) == 2);
             if (!ic::SplatApplyArgs(f))       /* updates regs.sp */
                 THROWV(true);
-            vp = f.regs.sp - (2 + f.u.call.dynamicArgc);
+            args = CallArgsFromSp(f.u.call.dynamicArgc, f.regs.sp);
         }
 
         JSObject *obj;
-        if (!IsFunctionObject(*vp, &obj))
+        if (!IsFunctionObject(args.calleev(), &obj))
             return false;
 
         JSFunction *fun = obj->getFunctionPrivate();
@@ -836,14 +836,14 @@ class CallCompiler : public BaseCompiler
             return false;
 
         if (callingNew)
-            vp[1].setMagicWithObjectOrNullPayload(NULL);
+            args.thisv().setMagicWithObjectOrNullPayload(NULL);
 
         RecompilationMonitor monitor(cx);
 
-        if (!CallJSNative(cx, fun->u.n.native, ic.frameSize.getArgc(f), vp))
+        if (!CallJSNative(cx, fun->u.n.native, args))
             THROWV(true);
 
-        f.script()->types.monitor(f.cx, f.pc(), vp[0]);
+        f.script()->types.monitor(f.cx, f.pc(), args.rval());
 
         /* Don't touch the IC if the call triggered a recompilation. */
         if (monitor.recompiled())
@@ -931,7 +931,7 @@ class CallCompiler : public BaseCompiler
 #else
         RegisterID vpReg = Registers::ArgReg2;
 #endif
-        uint32 vpOffset = (uint32) ((char *) vp - (char *) f.fp());
+        uint32 vpOffset = (uint32) ((char *) args.base() - (char *) f.fp());
         masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
 
         /* Compute argc. */

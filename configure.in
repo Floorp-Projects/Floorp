@@ -127,7 +127,7 @@ W32API_VERSION=3.8
 GNOMEVFS_VERSION=2.0
 GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
-GIO_VERSION=2.0
+GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.7.5
@@ -634,17 +634,14 @@ case "$target" in
             fi
 
             _CC_SUITE=8
-            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
             AC_DEFINE(_CRT_SECURE_NO_DEPRECATE)
             AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
         elif test "$_CC_MAJOR_VERSION" = "15"; then
             _CC_SUITE=9
-            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         elif test "$_CC_MAJOR_VERSION" = "16"; then
             _CC_SUITE=10
-            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         else
@@ -1017,17 +1014,6 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
     dnl /usr/bin/g(cc|++)-$GCC_VERSION.
     MOZ_PATH_PROGS(PBBUILD, pbbuild xcodebuild pbxbuild)
 
-    case "$PBBUILD" in
-      *xcodebuild*)
-        changequote(,)
-        XCODEBUILD_VERSION=`$PBBUILD -version 2>/dev/null | xargs | sed -e 's/.*DevToolsCore-\([0-9]*\).*/\1/'`
-        changequote([,])
-        if test -n "$XCODEBUILD_VERSION" && test "$XCODEBUILD_VERSION" -ge 620 ; then
-          HAS_XCODE_2_1=1;
-        fi
-      ;;
-    esac
-
     dnl sdp was formerly in /Developer/Tools.  As of Mac OS X 10.4 (Darwin 8),
     dnl it has moved into /usr/bin.
     MOZ_PATH_PROG(SDP, sdp, :, [$PATH:/usr/bin:/Developer/Tools])
@@ -1035,8 +1021,6 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
 esac
 
 AC_SUBST(GCC_VERSION)
-AC_SUBST(XCODEBUILD_VERSION)
-AC_SUBST(HAS_XCODE_2_1)
 
 dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
 dnl that a universal binary is being produced.
@@ -1056,7 +1040,6 @@ case "$target" in
     if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
         dnl Use the specified value
         export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
-        AC_DEFINE_UNQUOTED(__ENVIRONMENT_MAC_OS_X_VERION_MIN_REQUIRED__,$_MACOSX_DEPLOYMENT_TARGET)
     else
         dnl No value specified on the command line or in the environment,
         dnl use architecture minimum.
@@ -1561,10 +1544,11 @@ if test "$GNU_CC"; then
     # -Wall - turn on all warnings
     # -pedantic - make compiler warn about non-ANSI stuff, and
     #             be a little bit stricter
+    # -Wdeclaration-after-statement - MSVC doesn't like these
     # Warnings slamm took out for now (these were giving more noise than help):
     # -Wbad-function-cast - warns when casting a function to a new return type
     # -Wshadow - removed because it generates more noise than help --pete
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith -Wdeclaration-after-statement"
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
@@ -2228,10 +2212,12 @@ ia64*-hpux*)
         esac
         # If we're building with --enable-profiling, we need a frame pointer.
         if test -z "$MOZ_PROFILING"; then
-            MOZ_OPTIMIZE_FLAGS="-O3 -fomit-frame-pointer"
+            MOZ_FRAMEPTR_FLAGS="-fomit-frame-pointer"
         else
-            MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
+            MOZ_FRAMEPTR_FLAGS="-fno-omit-frame-pointer"
         fi
+        MOZ_PGO_OPTIMIZE_FLAGS="-O3 $MOZ_FRAMEPTR_FLAGS"
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK $MOZ_FRAMEPTR_FLAGS"
         MOZ_DEBUG_FLAGS="-g"
     fi
 
@@ -2317,6 +2303,9 @@ ia64*-hpux*)
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -wd4800" # disable warning "forcing value to bool"
+        # make 'foo == bar;' error out
+        CFLAGS="$CFLAGS -we4553"
+        CXXFLAGS="$CXXFLAGS -we4553"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
         MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
@@ -3323,7 +3312,7 @@ esac
 
 _SAVE_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
-AC_CHECK_FUNCS(dladdr)
+AC_CHECK_FUNCS(dladdr memmem)
 CFLAGS="$_SAVE_CFLAGS"
 
 if test ! "$GNU_CXX"; then
@@ -4759,18 +4748,14 @@ dnl ========================================================
 MOZ_ARG_HEADER(Application)
 
 ENABLE_TESTS=1
-MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_INSTALLER=1
 MOZ_JSDEBUGGER=1
-MOZ_CSS_ANIMATIONS=1
 MOZ_MORK=
 MOZ_MORKREADER=1
 MOZ_AUTH_EXTENSION=1
-MOZ_NO_ACTIVEX_SUPPORT=1
-MOZ_NO_FAST_LOAD=
 MOZ_OGG=1
 MOZ_RAW=
 MOZ_SYDNEYAUDIO=
@@ -4823,7 +4808,7 @@ NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
-XPC_IDISPATCH_SUPPORT=
+MOZ_USE_NATIVE_POPUP_WINDOWS=
 
 
 case "${target}" in
@@ -5067,6 +5052,7 @@ cairo-qt)
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
     USE_FC_FREETYPE=1
+    XT_LIBS=
 
     TK_CFLAGS='$(MOZ_QT_CFLAGS)'
     TK_LIBS='$(MOZ_QT_LIBS)'
@@ -5458,6 +5444,8 @@ then
 
     if test "$MOZ_ENABLE_GIO" -a "$MOZ_ENABLE_GTK2"
     then
+        PKG_CHECK_MODULES(_GTKCHECK, gtk+-2.0 >= 2.14, , 
+                          [AC_MSG_ERROR([* * * Could not find gtk+-2.0 > 2.14. Required for build with gio.])])
         PKG_CHECK_MODULES(MOZ_GIO, gio-2.0 >= $GIO_VERSION,[
             MOZ_GIO_LIBS=`echo $MOZ_GIO_LIBS | sed 's/-llinc\>//'`
             MOZ_ENABLE_GIO=1
@@ -5722,21 +5710,6 @@ MOZ_ARG_DISABLE_BOOL(printing,
 if test "$NS_PRINTING"; then
     AC_DEFINE(NS_PRINTING)
     AC_DEFINE(NS_PRINT_PREVIEW)
-fi
-
-dnl ========================================================
-dnl = Disable Fast Load
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(xpcom-fastload,
-[  --disable-xpcom-fastload
-                          Disable XPCOM fastload support],
-    MOZ_NO_FAST_LOAD=1,
-    MOZ_NO_FAST_LOAD=)
-
-AC_SUBST(MOZ_NO_FAST_LOAD)
-
-if test -n "$MOZ_NO_FAST_LOAD"; then
-    AC_DEFINE(MOZ_NO_FAST_LOAD)
 fi
 
 dnl ========================================================
@@ -6368,7 +6341,9 @@ for extension in $MOZ_EXTENSIONS; do
     fi
 done
 
-AC_DEFINE(MOZ_CSS_ANIMATIONS)
+if test -n "$MOZ_USE_NATIVE_POPUP_WINDOWS"; then
+  AC_DEFINE(MOZ_USE_NATIVE_POPUP_WINDOWS)
+fi
 
 dnl ========================================================
 dnl SVG Display Lists
@@ -6501,48 +6476,6 @@ MOZ_ARG_ENABLE_BOOL(update-packaging,
     MOZ_UPDATE_PACKAGING=1,
     MOZ_UPDATE_PACKAGING= )
 AC_SUBST(MOZ_UPDATE_PACKAGING)
-
-dnl ========================================================
-dnl ActiveX
-dnl ========================================================
-
-MOZ_ARG_DISABLE_BOOL(xpconnect-idispatch,
-[  --disable-xpconnect-idispatch
-                          Disable building of xpconnect support for IDispatch
-                          (win32 only)],
-    XPC_IDISPATCH_SUPPORT=,
-    XPC_IDISPATCH_SUPPORT=1)
-AC_SUBST(XPC_IDISPATCH_SUPPORT)
-
-MOZ_ARG_DISABLE_BOOL(activex,
-[  --disable-activex       Disable building of ActiveX control (win32 only)],
-    MOZ_NO_ACTIVEX_SUPPORT=1,
-    MOZ_NO_ACTIVEX_SUPPORT= )
-AC_SUBST(MOZ_NO_ACTIVEX_SUPPORT)
-
-MOZ_ARG_ENABLE_BOOL(activex-scripting,
-[  --enable-activex-scripting
-                          Enable building of ActiveX scripting support (win32)],
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=1,
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=)
-AC_SUBST(MOZ_ACTIVEX_SCRIPTING_SUPPORT)
-
-if test -n "$MOZ_NO_ACTIVEX_SUPPORT" -a -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT";
-then
-    AC_MSG_ERROR([Cannot enable ActiveX scripting support when ActiveX support is disabled.])
-fi
-
-if test "$COMPILE_ENVIRONMENT" = "1"; then
-if test -n "$XPC_IDISPATCH_SUPPORT" -o -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT" -o -z "$MOZ_NO_ACTIVEX_SUPPORT"; then
-case "$target" in
-*-mingw*)
-    if test "$ac_cv_header_atlbase_h" = "no"; then
-        AC_MSG_ERROR([System header atlbase.h is not available. See http://developer.mozilla.org/en/docs/atlbase.h for details on fixing this problem.])
-    fi
-    ;;
-esac
-fi
-fi
 
 dnl ========================================================
 dnl leaky
@@ -6925,6 +6858,22 @@ if test $MOZ_PLATFORM_MAEMO; then
             AC_SUBST(MOZ_ENABLE_CONTENTACTION)
          fi
       fi
+
+      MOZ_ARG_ENABLE_BOOL(meegotouch,
+      [  --enable-meegotouch  Enable meegotouch support],
+         MOZ_MEEGOTOUCHENABLED=1,
+         MOZ_MEEGOTOUCHENABLED=)
+
+      if test -n "$MOZ_MEEGOTOUCHENABLED"; then
+          PKG_CHECK_MODULES(MOZ_MEEGOTOUCH, meegotouchcore, _LIB_FOUND=1, _LIB_FOUND=)
+          if test "$_LIB_FOUND"; then
+              MOZ_QT_CFLAGS="$MOZ_MEEGOTOUCH_CFLAGS $MOZ_QT_CFLAGS"
+              MOZ_QT_LIBS="$MOZ_MEEGOTOUCH_LIBS $MOZ_QT_LIBS"
+              AC_DEFINE(MOZ_ENABLE_MEEGOTOUCH)
+          else
+              AC_MSG_WARN([Cannot meegotouchcore-dev. Disabling Meegotouch support.])
+          fi
+      fi
    fi
 
    PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
@@ -7278,6 +7227,7 @@ AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
+AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
 dnl = Enable generation of debug symbols
@@ -7654,6 +7604,36 @@ if test "$USE_ELF_HACK" = 1; then
     esac
 fi
 
+if test "$USE_ELF_HACK" = 1; then
+    dnl PT_GNU_RELRO segment makes the dynamic linker set a read-only flag on
+    dnl memory addresses it maps to. The result is that by the time elfhack
+    dnl kicks in, it is not possible to apply relocations because of that,
+    dnl thus elfhack effectively skips relocations inside the PT_GNU_RELRO
+    dnl segment. It makes elfhack mostly useless, so considering the problems
+    dnl we have we PT_GNU_RELRO (e.g. bug 664366), and until elfhack can deal
+    dnl with PT_GNU_RELRO segments, it's just simpler to disable elfhack when
+    dnl the linker creates PT_GNU_RELRO segments.
+    AC_CACHE_CHECK([whether linker creates PT_GNU_RELRO segments],
+        LINK_WITH_PT_GNU_RELRO,
+        [echo "int main() {return 0;}" > conftest.${ac_ext}
+         if AC_TRY_COMMAND(${CC-cc} -o conftest${ac_exeext} $LDFLAGS conftest.${ac_ext} $LIBS 1>&2) &&
+            test -s conftest${ac_exeext}; then
+            if readelf -l conftest${ac_exeext} | grep GNU_RELRO > /dev/null; then
+                LINK_WITH_PT_GNU_RELRO=yes
+            else
+                LINK_WITH_PT_GNU_RELRO=no
+            fi
+         else
+             dnl We really don't expect to get here, but just in case
+             AC_ERROR([couldn't compile a simple C file])
+         fi
+         rm -rf conftest*])
+    if test "$LINK_WITH_PT_GNU_RELRO" = yes; then
+        AC_MSG_WARN([Disabling elfhack])
+        USE_ELF_HACK=
+    fi
+fi
+
 dnl ========================================================
 dnl = libstdc++ compatibility hacks
 dnl ========================================================
@@ -7664,6 +7644,12 @@ MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
     STDCXX_COMPAT=stdc++compat.cpp)
 
 AC_SUBST(STDCXX_COMPAT)
+
+if test -n "$STDCXX_COMPAT"; then
+   eval $($PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
+   AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
+   AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
+fi
 
 dnl ========================================================
 dnl = 
@@ -8820,7 +8806,6 @@ AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
 AC_SUBST(MOZ_PLATFORM_MAEMO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
-AC_SUBST(MOZ_CSS_ANIMATIONS)
 AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
@@ -9320,6 +9305,16 @@ echo $MAKEFILES > unallmakefiles
 mv -f config/autoconf.mk config/autoconf.mk.orig 2> /dev/null
 
 AC_OUTPUT($MAKEFILES)
+
+# Generate a JSON config file for unittest harnesses etc to read
+# build configuration details from in a standardized way.
+OS_TARGET=${OS_TARGET} TARGET_CPU=${TARGET_CPU} MOZ_DEBUG=${MOZ_DEBUG} \
+  $PYTHON ${_topsrcdir}/config/writemozinfo.py ./mozinfo.json.tmp
+if cmp -s ./mozinfo.json.tmp ./mozinfo.json; then
+  rm ./mozinfo.json.tmp
+else
+  mv -f ./mozinfo.json.tmp ./mozinfo.json
+fi
 
 dnl Prevent the regeneration of cairo-features.h forcing rebuilds of gfx stuff
 if test "$CAIRO_FEATURES_H"; then

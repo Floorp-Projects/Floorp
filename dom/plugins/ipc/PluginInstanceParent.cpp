@@ -111,7 +111,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
 void
 PluginInstanceParent::InitQuirksModes(const nsCString& aMimeType)
 {
-#ifdef OS_MACOSX
+#ifdef MOZ_WIDGET_COCOA
     NS_NAMED_LITERAL_CSTRING(flash, "application/x-shockwave-flash");
     // Flash sends us Invalidate events so we will use those
     // instead of the refresh timer.
@@ -130,7 +130,7 @@ PluginInstanceParent::~PluginInstanceParent()
     NS_ASSERTION(!(mPluginHWND || mPluginWndProc),
         "Subclass was not reset correctly before the dtor was reached!");
 #endif
-#if defined(OS_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
     if (mShWidth != 0 && mShHeight != 0) {
         DeallocShmem(mShSurface);
     }
@@ -920,6 +920,22 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
 {
     switch (aVariable) {
 
+    case NPPVpluginWantsAllNetworkStreams: {
+        bool wantsAllStreams;
+        NPError rv;
+
+        if (!CallNPP_GetValue_NPPVpluginWantsAllNetworkStreams(&wantsAllStreams, &rv)) {
+            return NPERR_GENERIC_ERROR;
+        }
+
+        if (NPERR_NO_ERROR != rv) {
+            return rv;
+        }
+
+        (*(NPBool*)_retval) = wantsAllStreams;
+        return NPERR_NO_ERROR;
+    }
+
 #ifdef MOZ_X11
     case NPPVpluginNeedsXEmbed: {
         bool needsXEmbed;
@@ -1581,6 +1597,12 @@ PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
         break;
     }
 
+    if (self->mPluginWndProc == PluginWindowHookProc) {
+      NS_NOTREACHED(
+        "PluginWindowHookProc invoking mPluginWndProc w/"
+        "mPluginWndProc == PluginWindowHookProc????");
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
     return ::CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
                             lParam);
 }
@@ -1761,7 +1783,7 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
 #endif
 }
 
-#ifdef OS_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 void
 PluginInstanceParent::Invalidate()
 {

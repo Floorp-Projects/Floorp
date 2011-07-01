@@ -1,3 +1,4 @@
+// |jit-test| error: SyntaxError;
 
 Error.prototype.__proto__.p = 5;
 f = Function("return( \"\" <arguments for(w in[]))");

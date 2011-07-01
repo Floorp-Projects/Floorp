@@ -52,9 +52,4 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= nsAutoComplete.cpp
 
-EXTRA_DSO_LDOPTS += \
-	$(XPCOM_GLUE_LDOPTS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk

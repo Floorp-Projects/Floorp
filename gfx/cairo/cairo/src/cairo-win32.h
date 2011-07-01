@@ -80,6 +80,8 @@ cairo_win32_surface_set_can_convert_to_dib (cairo_surface_t *surface, cairo_bool
 cairo_public cairo_status_t
 cairo_win32_surface_get_can_convert_to_dib (cairo_surface_t *surface, cairo_bool_t *can_convert);
 
+BYTE cairo_win32_get_system_text_quality (void);
+
 #if CAIRO_HAS_WIN32_FONT
 
 /*
@@ -134,6 +136,9 @@ cairo_dwrite_scaled_font_get_force_GDI_classic(cairo_scaled_font_t *dwrite_scale
 
 void
 cairo_dwrite_set_cleartype_params(FLOAT gamma, FLOAT contrast, FLOAT level, int geometry, int mode);
+
+int
+cairo_dwrite_get_cleartype_rendering_mode();
 
 #endif /* CAIRO_HAS_DWRITE_FONT */
 
@@ -244,6 +249,11 @@ cairo_public cairo_surface_t *
 cairo_d2d_surface_create_for_texture(cairo_device_t *device,
 				     struct ID3D10Texture2D *texture,
 				     cairo_content_t content);
+
+/**
+ * Get the ID3D10Texture2D used for a surface.
+ */
+cairo_public struct ID3D10Texture2D *cairo_d2d_surface_get_texture(cairo_surface_t *surf);
 
 /**
  * Present the backbuffer for a surface create for an HWND. This needs

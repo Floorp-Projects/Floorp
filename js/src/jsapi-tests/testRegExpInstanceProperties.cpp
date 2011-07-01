@@ -22,14 +22,14 @@ BEGIN_TEST(testRegExpInstanceProperties)
 
     JS_GC(cx);
 
-    CHECK(regexpProto->getCompartment()->initialRegExpShape == NULL);
+    CHECK_EQUAL(regexpProto->getCompartment()->initialRegExpShape, NULL);
 
     jsval regexp;
     EVAL("/foopy/", &regexp);
     JSObject *robj = JSVAL_TO_OBJECT(regexp);
 
     CHECK(robj->lastProperty());
-    CHECK(robj->getCompartment()->initialRegExpShape == robj->lastProperty());
+    CHECK_EQUAL(robj->getCompartment()->initialRegExpShape, robj->lastProperty());
 
     return true;
 }

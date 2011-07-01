@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="303267Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 662200 test">
+
+  <script type="application/javascript"
+  src="docshell_helpers.js">
+  </script>
+  <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Generator function for test steps for bug 662200:  
+    // Description goes here.
+    //
+    function testIterator()
+    {
+      // Load the first test page
+      var navData = {
+        uri: getHttpUrl("662200a.html"),
+        eventsToListenFor: ["pageshow"],
+        expectedEvents: [ {type: "pageshow", title: "A"} ],
+        onNavComplete: nextTest
+      };
+      doPageNavigation(navData);
+      yield;
+      
+      // Load the second test page.
+      navData = {
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ {type: "pagehide", 
+                           title: "A"},
+                          {type: "pageshow", 
+                           title: "B"} ],
+        onNavComplete: nextTest
+      }
+      waitForPageEvents(navData);
+      var link = TestWindow.getDocument().getElementById("link");
+      var event = TestWindow.getDocument().createEvent("MouseEvents");
+      event.initMouseEvent("click", true, true, TestWindow.getWindow(),
+                           0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      link.dispatchEvent(event);
+      yield;
+
+      // Load the third test page.
+      navData = {
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ {type: "pagehide", 
+                           title: "B"},
+                          {type: "pageshow", 
+                           title: "C"} ],
+        onNavComplete: nextTest
+      };
+      waitForPageEvents(navData);
+      var link = TestWindow.getDocument().getElementById("link");
+      var event = TestWindow.getDocument().createEvent("MouseEvents");
+      event.initMouseEvent("click", true, true, TestWindow.getWindow(),
+                           0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      link.dispatchEvent(event);
+      yield;
+      
+      // Go back.
+      navData = {
+        back: true,
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ {type: "pagehide", 
+                           title: "C"},
+                          {type: "pageshow", 
+                           title: "B"} ],
+        onNavComplete: nextTest
+      };
+      doPageNavigation(navData);
+      yield;
+
+      var Ci = Components.interfaces;
+      var docshell = TestWindow.getWindow()
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShell);
+      var shistory = docshell.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsISHistory)
+                             .QueryInterface(Ci.nsIWebNavigation);
+
+      // Reload.
+      navData = {
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ {type: "pagehide", 
+                           title: "B"},
+                          {type: "pageshow", 
+                           title: "B"} ],
+        onNavComplete: nextTest
+      };
+      // Asking the docshell harness to reload for us will call reload on
+      // nsDocShell which has different behavior than the reload on nsSHistory
+      // so we call reload explicitly here
+      waitForPageEvents(navData);
+      shistory.reload(0);
+      yield;
+
+      // After this sequence of events, we should be able to go back and forward
+      is(TestWindow.getBrowser().canGoBack, true, "Should be able to go back!");
+      is(TestWindow.getBrowser().canGoForward, true, "Should be able to go forward!");
+      is(shistory.requestedIndex, -1, "Requested index should be cleared!");
+
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+    
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

@@ -107,30 +107,6 @@ endif
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_COMPONENT_LIBS) \
-		-lgkgfx \
-		-lthebes \
-		$(MOZ_CAIRO_LIBS) \
-                $(MOZ_STARTUP_NOTIFICATION_LIBS) \
-		$(XLDFLAGS) \
-		$(XLIBS) \
-		$(XEXT_LIBS) \
-		$(XCOMPOSITE_LIBS) \
-		$(MOZ_GTK2_LIBS) \
-		$(QCMS_LIBS) \
-		$(NULL)
-
-ifdef MOZ_PLATFORM_MAEMO
-ifdef MOZ_ENABLE_GCONF
-EXTRA_DSO_LDOPTS += $(MOZ_GCONF_LIBS)
-endif
-endif
-
-ifdef MOZ_X11
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lXrender
-endif
-
 EXPORTS		= \
                 nsGTKToolkit.h \
 		nsIImageToPixbuf.h \

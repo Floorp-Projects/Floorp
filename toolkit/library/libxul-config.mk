@@ -94,6 +94,7 @@ STATIC_LIBS += \
   mozipc_s \
   mozipdlgen_s \
   ipcshell_s \
+  gfx2d \
   gfxipc_s \
   $(NULL)
 
@@ -137,8 +138,10 @@ COMPONENT_LIBS += \
 	pipboot \
 	pipnss \
 	appcomps \
+	jsreflect \
 	composer \
 	jetpack_s \
+	telemetry \
 	$(NULL)
 
 ifdef BUILD_CTYPES
@@ -266,7 +269,7 @@ endif
 endif
 
 # Platform-specific icon channel stuff - supported mostly-everywhere
-ifneq (,$(filter windows os2 mac cocoa gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows os2 mac cocoa gtk2 qt android,$(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif

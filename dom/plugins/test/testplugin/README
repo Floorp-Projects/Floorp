@@ -354,8 +354,8 @@ If the plugin is instantiated as a full-page plugin, the following defaults
 are used:
   streammode="seek" frame="testframe" range="100,100"
 
-The streamTest(url, doPost, postData, writeCallback, notifyCallback, redirectCallback, allowRedirects)
-function will test how NPN_GetURLNotify and NPN_PostURLNotify behave when they are
+* streamTest(url, doPost, postData, writeCallback, notifyCallback, redirectCallback, allowRedirects)
+This will test how NPN_GetURLNotify and NPN_PostURLNotify behave when they are
 called with arbitrary (malformed) URLs. The function will return `true` if
 NPN_[Get/Post]URLNotify succeeds, and `false` if it fails.
 @url url to request
@@ -365,6 +365,9 @@ NPN_[Get/Post]URLNotify succeeds, and `false` if it fails.
 @notifyCallback will be called when the urlnotify is received with the notify result
 @redirectCallback will be called from urlredirectnotify if a redirect is attempted
 @allowRedirects boolean value indicating whether or not to allow redirects
+
+* setPluginWantsAllStreams(wantsAllStreams)
+Set the value returned by the plugin for NPPVpluginWantsAllNetworkStreams.
 
 == Internal consistency ==
 
