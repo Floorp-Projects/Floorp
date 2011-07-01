@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=89419
+-->
+<head>
+  <title>Test for Bug 89419</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=89419">Mozilla Bug 89419</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+var first, second, third;
+var correct, val1, val2;
+
+SimpleTest.waitForExplicitFinish();
+
+function checkFirst()
+{
+  var iframeelem = document.getElementById('test-iframe');
+  first = snapshotWindow(iframeelem.contentWindow, false);
+
+  iframeelem.onload = checkSecond;
+  iframeelem.contentWindow.location.href = iframeelem.contentWindow.location.href;
+}
+
+function checkSecond()
+{
+  var iframeelem = document.getElementById('test-iframe');
+  second = snapshotWindow(iframeelem.contentWindow, false);
+
+  // Check that we actually reloaded.
+  [correct, val1, val2] = compareSnapshots(first, second, false);
+  ok(correct, "Image should have changed after the first reload.");
+
+  iframeelem.onload = checkThird;
+  iframeelem.contentWindow.location.href = iframeelem.contentWindow.location.href;
+}
+
+function checkThird()
+{
+  var iframeelem = document.getElementById('test-iframe');
+  third = snapshotWindow(iframeelem.contentWindow, false);
+
+  // Check that we actually reloaded.
+  [correct, val1, val2] = compareSnapshots(second, third, false);
+  ok(correct, "Image should have changed after the second reload.");
+
+  // Make sure we looped back to the first image.
+  [correct, val1, val2] = compareSnapshots(first, third, true);
+  ok(correct, "Third image should match first image.");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+<div id="content"> <!-- style="display: none" -->
+<iframe id="test-iframe" src="bug89419-iframe.html" onload="checkFirst()"></iframe>
+</div>
+</body>
+</html>
