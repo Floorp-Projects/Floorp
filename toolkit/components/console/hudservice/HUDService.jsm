@@ -2077,17 +2077,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Get OutputNode by Id
-   *
-   * @param string aId
-   * @returns nsIDOMNode (richlistbox)
-   */
-  getConsoleOutputNode: function HS_getConsoleOutputNode(aId)
-  {
-    return this.getHudReferenceById(aId).outputNode;
-  },
-
-  /**
    * Inform user that the Web Console API has been replaced by a script
    * in a content page.
    *
