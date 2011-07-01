@@ -82,6 +82,9 @@ IonSpewer::finish()
     jsonSpewer.finish();
 }
 
+#ifdef DEBUG
+FILE *ion::IonSpewFile = NULL;
+
 void
 ion::CheckLogging()
 {
@@ -115,18 +118,19 @@ ion::CheckLogging()
         LoggingBits |= (1 << uint32(IonSpew_LICM));
     if (strstr(env, "all"))
         LoggingBits = uint32(-1);
+
+    IonSpewFile = stderr;
 }
 
 void
 ion::IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap)
 {
-    JS_ASSERT(LoggingChecked);
-
-    if (!(LoggingBits & (1 << uint32(channel))))
+    if (!IonSpewEnabled(channel))
         return;
 
-    fprintf(stderr, "[%s] ", ChannelNames[channel]);
+    IonSpewHeader(channel);
     vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
 }
 
 void
@@ -137,3 +141,22 @@ ion::IonSpew(IonSpewChannel channel, const char *fmt, ...)
     IonSpewVA(channel, fmt, ap);
     va_end(ap);
 }
+
+void
+ion::IonSpewHeader(IonSpewChannel channel)
+{
+    if (!IonSpewEnabled(channel))
+        return;
+
+    fprintf(stderr, "[%s] ", ChannelNames[channel]);
+}
+
+bool
+ion::IonSpewEnabled(IonSpewChannel channel)
+{
+    JS_ASSERT(LoggingChecked);
+
+    return LoggingBits & (1 << uint32(channel));
+}
+
+#endif

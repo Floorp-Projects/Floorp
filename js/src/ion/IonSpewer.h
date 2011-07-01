@@ -68,16 +68,26 @@ enum IonSpewChannel {
 #endif
 
 #if defined(JS_ION_SPEW)
+void CheckLogging();
+extern FILE *IonSpewFile;
 void IonSpew(IonSpewChannel channel, const char *fmt, ...);
+void IonSpewHeader(IonSpewChannel channel);
+bool IonSpewEnabled(IonSpewChannel channel);
 void IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap);
 #else
+static inline void CheckLogging()
+{ }
+static FILE *const IonSpewFile = NULL;
 static inline void IonSpew(IonSpewChannel, const char *fmt, ...)
 { }
+static inline void IonSpewHeader(IonSpewChannel channel)
+{ }
+static inline bool IonSpewEnabled(IonSpewChannel channel)
+{ return false; }
 static inline void IonSpewVA(IonSpewChannel, const char *fmt, va_list ap)
 { } 
 #endif
 
-void CheckLogging();
 
 class IonSpewer
 {

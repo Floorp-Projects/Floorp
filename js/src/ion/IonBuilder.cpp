@@ -166,7 +166,7 @@ IonBuilder::build()
     if (!current)
         return false;
 
-    IonSpew(IonSpew_MIR, "Analying script %s:%d\n", script->filename, script->lineno);
+    IonSpew(IonSpew_MIR, "Analying script %s:%d", script->filename, script->lineno);
 
     // Initialize argument references if inside a function frame.
     if (fun()) {
