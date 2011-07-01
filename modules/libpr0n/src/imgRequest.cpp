@@ -1275,13 +1275,12 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   mTimedChannel = do_QueryInterface(mChannel);
   mNewRedirectChannel = nsnull;
 
-  // Don't make any cache changes if we're going to point to the same thing. We
-  // compare specs and not just URIs here because URIs that compare as
-  // .Equals() might have different hashes.
+#if defined(PR_LOGGING)
   nsCAutoString oldspec;
   if (mKeyURI)
     mKeyURI->GetSpec(oldspec);
   LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", oldspec.get());
+#endif
 
   // make sure we have a protocol that returns data rather than opens
   // an external application, e.g. mailto:
@@ -1299,34 +1298,6 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
     mRedirectCallback->OnRedirectVerifyCallback(rv);
     mRedirectCallback = nsnull;
     return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> newURI;
-  mChannel->GetOriginalURI(getter_AddRefs(newURI));
-  nsCAutoString newspec;
-  if (newURI)
-    newURI->GetSpec(newspec);
-  LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "new", newspec.get());
-
-  if (oldspec != newspec) {
-    if (mIsInCache) {
-      // Remove the cache entry from the cache, but don't null out mCacheEntry
-      // (as imgRequest::RemoveFromCache() does), because we need it to put
-      // ourselves back in the cache.
-      if (mCacheEntry)
-        imgLoader::RemoveFromCache(mCacheEntry);
-      else
-        imgLoader::RemoveFromCache(mKeyURI);
-    }
-
-    mKeyURI = newURI;
-
-    if (mIsInCache) {
-      // If we don't still have a URI or cache entry, we don't want to put
-      // ourselves back into the cache.
-      if (mKeyURI && mCacheEntry)
-        imgLoader::PutIntoCache(mKeyURI, mCacheEntry);
-    }
   }
 
   mRedirectCallback->OnRedirectVerifyCallback(NS_OK);
