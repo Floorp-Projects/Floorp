@@ -449,9 +449,8 @@ RegisterAllocator::allocateRegisters()
             JS_ASSERT(it->numRanges() > 0);
 
             if (it->end() < position) {
-                // FIXME (668291): Free stack slots when interval ends
                 i = active.removeAt(i);
-                handled.insert(it);
+                finishInterval(it);
             } else if (!it->covers(position)) {
                 i = active.removeAt(i);
                 inactive.insert(it);
@@ -467,9 +466,8 @@ RegisterAllocator::allocateRegisters()
             JS_ASSERT(it->numRanges() > 0);
 
             if (it->end() < position) {
-                // FIXME (668291): Free stack slots when interval ends
                 i = inactive.removeAt(i);
-                handled.insert(it);
+                finishInterval(it);
             } else if (it->covers(position)) {
                 i = inactive.removeAt(i);
                 active.insert(it);
@@ -750,7 +748,7 @@ RegisterAllocator::assign(LAllocation allocation)
                     return false;
 
                 i = inactive.removeAt(i);
-                handled.insert(it);
+                finishInterval(it);
             } else {
                 i++;
             }
@@ -760,7 +758,7 @@ RegisterAllocator::assign(LAllocation allocation)
     if (allocation.isGeneralReg())
         active.insert(current);
     else
-        handled.insert(current);
+        finishInterval(current);
 
     return true;
 }
@@ -777,6 +775,22 @@ RegisterAllocator::spill()
     IonSpew(IonSpew_LSRA, "  Allocated spill slot %u", stackSlot);
 
     return assign(LStackSlot(stackSlot));
+}
+
+void
+RegisterAllocator::finishInterval(LiveInterval *interval)
+{
+    LAllocation *alloc = interval->getAllocation();
+    JS_ASSERT(!alloc->isUse());
+
+    if (alloc->isStackSlot()) {
+        if (alloc->toStackSlot()->isDouble())
+            stackAssignment.freeDoubleSlot(alloc->toStackSlot()->slot());
+        else
+            stackAssignment.freeSlot(alloc->toStackSlot()->slot());
+    }
+
+    handled.insert(interval);
 }
 
 Register
