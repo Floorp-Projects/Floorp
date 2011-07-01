@@ -52,17 +52,13 @@ interface nsIScriptGlobalObject;
 /**
  * Encode and decode JSON text.
  */
-[scriptable, uuid(a4d68b4e-0c0b-4c7c-b540-ef2f9834171f)]
+[scriptable, uuid(98f12947-5eac-4512-8325-7c9e6a9d8509)]
 interface nsIJSON : nsISupports
 {
-  AString encode(/* in JSObject value */);
-
   void encodeToStream(in nsIOutputStream stream,
                       in string charset,
                       in boolean writeBOM
                       /* in JSObject value */);
-
-  void /* JSObject */ decode(in AString str);
 
   void /* JSObject */ decodeFromStream(in nsIInputStream stream,
                                        in long contentLength);
@@ -79,15 +75,17 @@ interface nsIJSON : nsISupports
    *
    * This method is provided only as a temporary transition path for users of
    * the old code who depended on the ability to decode leniently; new users
-   * should use the non-legacy decoding methods.
+   * should use JSON.parse.
+   *
+   * This method must only be called from script.
    *
    * @param str the string to parse
    */
-  void /* JSObject */ legacyDecode(in AString str);
+  void /* jsval */ legacyDecode(in AString str);
 
   /* Identical to legacyDecode, but decode the contents of stream. */
-  void /* JSObject */ legacyDecodeFromStream(in nsIInputStream stream,
-                                             in long contentLength);
+  void /* jsval */ legacyDecodeFromStream(in nsIInputStream stream,
+                                          in long contentLength);
 
   /* Identical to legacyDecode, but decode into a jsval. */
   // Make sure you GCroot the result of this function before using it.

@@ -65,6 +65,7 @@ PARALLEL_DIRS += \
   perf \
   places \
   prompts \
+  reflect \
   startup \
   statusfilter \
   typeaheadfind \

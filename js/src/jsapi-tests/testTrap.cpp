@@ -37,7 +37,7 @@ BEGIN_TEST(testTrap_gc)
     jsvalRoot v2(cx);
     CHECK(JS_ExecuteScript(cx, global, scriptObj, v2.addr()));
     CHECK(JSVAL_IS_OBJECT(v2));
-    CHECK(emptyTrapCallCount == 0);
+    CHECK_EQUAL(emptyTrapCallCount, 0);
 
     // Disable JIT for debugging
     JS_SetOptions(cx, JS_GetOptions(cx) & ~JSOPTION_JIT);
@@ -70,7 +70,7 @@ BEGIN_TEST(testTrap_gc)
 
     // execute
     CHECK(JS_ExecuteScript(cx, global, scriptObj, v2.addr()));
-    CHECK(emptyTrapCallCount == 11);
+    CHECK_EQUAL(emptyTrapCallCount, 11);
 
     JS_GC(cx);
 

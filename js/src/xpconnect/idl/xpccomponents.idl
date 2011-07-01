@@ -44,6 +44,10 @@
 #include "nsIComponentManager.idl"
 #include "nsIScriptableInterfaces.idl"
 
+%{C++
+#include "jspubtd.h"
+%}
+
 interface xpcIJSWeakReference;
 
 /**
@@ -123,7 +127,7 @@ interface nsIXPCComponents_utils_Sandbox : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(5f0acf45-135a-48d1-976c-082ce3b24ead)]
+[scriptable, uuid(45857850-a08e-4fe9-a582-77fe03e3676f)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -237,6 +241,23 @@ interface nsIXPCComponents_Utils : nsISupports
      * @return the corresponding global.
      */
     void /* JSObject */ getGlobalForObject(/* in JSObject obj */);
+
+    /*
+     * To be called from JS only.
+     *
+     * Returns an object created in |vobj|'s compartment.
+     */
+    [implicit_jscontext]
+    jsval createObjectIn(in jsval vobj);
+
+    /*
+     * To be called from JS only.
+     *
+     * Ensures that all functions come from vobj's scope (and aren't cross
+     * compartment wrappers).
+     */
+    [implicit_jscontext]
+    void makeObjectPropsNormal(in jsval vobj);
 };
 
 /**

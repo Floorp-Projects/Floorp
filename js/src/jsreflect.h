@@ -130,10 +130,5 @@ extern char const *nodeTypeNames[];
 
 } /* namespace js */
 
-extern js::Class js_ReflectClass;
-
-extern JSObject *
-js_InitReflectClass(JSContext *cx, JSObject *obj);
-
 
 #endif /* jsreflect_h___ */
