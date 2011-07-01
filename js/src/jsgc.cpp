@@ -2113,6 +2113,7 @@ void
 MaybeGC(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
+    JS_ASSERT(rt->onOwnerThread());
 
     if (rt->gcZeal()) {
         js_GC(cx, NULL, GC_NORMAL, gcstats::MAYBEGC);
@@ -2933,6 +2934,7 @@ void
 js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, gcstats::Reason reason)
 {
     JSRuntime *rt = cx->runtime;
+    JS_AbortIfWrongThread(rt);
 
     /*
      * Don't collect garbage if the runtime isn't up, and cx is not the last
@@ -3163,6 +3165,8 @@ JSCompartment *
 NewCompartment(JSContext *cx, JSPrincipals *principals)
 {
     JSRuntime *rt = cx->runtime;
+    JS_AbortIfWrongThread(rt);
+
     JSCompartment *compartment = cx->new_<JSCompartment>(rt);
     if (compartment && compartment->init(cx)) {
         // Any compartment with the trusted principals -- and there can be

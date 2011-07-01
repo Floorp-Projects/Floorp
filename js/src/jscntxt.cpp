@@ -318,6 +318,8 @@ js_PurgeThreads(JSContext *cx)
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
+    JS_AbortIfWrongThread(rt);
+
     /*
      * We need to initialize the new context fully before adding it to the
      * runtime list. After that it can be accessed from another thread via
@@ -416,13 +418,14 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 void
 js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 {
-    JSRuntime *rt;
+    JSRuntime *rt = cx->runtime;
+    JS_AbortIfWrongThread(rt);
+
     JSContextCallback cxCallback;
     JSBool last;
 
     JS_ASSERT(!cx->enumerators);
 
-    rt = cx->runtime;
 #ifdef JS_THREADSAFE
     /*
      * For API compatibility we allow to destroy contexts without a thread in
