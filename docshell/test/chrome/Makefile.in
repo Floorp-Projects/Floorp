@@ -44,6 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _HTTP_FILES =	\
+                bug89419.sjs \
+                blue.png \
+                red.png \
 		92598_nostore.html \
 		92598_nostore.html^headers^ \
 		112564_nocache.html \
@@ -58,6 +61,9 @@ _HTTP_FILES =	\
 		$(NULL)
 
 _TEST_FILES =	\
+                test_bug89419.xul \
+                bug89419_window.xul \
+                89419.html \
 		test_bug92598.xul \
 		bug92598_window.xul \
 		92598_nostore.html \
