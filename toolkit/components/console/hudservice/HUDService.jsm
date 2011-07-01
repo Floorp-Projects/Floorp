@@ -1758,7 +1758,7 @@ HUD_SERVICE.prototype =
     var id, outputNode, ownerDoc;
     if (typeof(aHUD) === "string") {
       id = aHUD;
-      outputNode = this.getHeadsUpDisplay(aHUD);
+      outputNode = this.getHudReferenceById(aHUD).HUDBox;
     }
     else {
       id = aHUD.getAttribute("id");
@@ -1931,24 +1931,12 @@ HUD_SERVICE.prototype =
   /**
    * Gets the Web Console DOM node, the .hud-box.
    *
-   * @param string id
-   *        The Heads Up Display DOM Id
-   * @returns nsIDOMNode
-   */
-  getHeadsUpDisplay: function HS_getHeadsUpDisplay(aId)
-  {
-    return aId in this.hudReferences ? this.hudReferences[aId].HUDBox : null;
-  },
-
-  /**
-   * Gets the Web Console DOM node, the .hud-box.
-   *
    * @param string aId
    * @returns nsIDOMNode
    */
   getOutputNodeById: function HS_getOutputNodeById(aId)
   {
-    return this.getHeadsUpDisplay(aId);
+    return this.getHudReferenceById(aId).HUDBox;
   },
 
   /**
@@ -1979,9 +1967,7 @@ HUD_SERVICE.prototype =
    * @returns string
    */
   getFilterStringByHUDId: function HS_getFilterStringbyHUDId(aHUDId) {
-    var hud = this.getHeadsUpDisplay(aHUDId);
-    var filterStr = hud.querySelectorAll(".hud-filter-box")[0].value;
-    return filterStr;
+    return this.getHudReferenceById(aHUDId).filterBox.value;
   },
 
   /**
@@ -2112,8 +2098,7 @@ HUD_SERVICE.prototype =
    */
   getConsoleOutputNode: function HS_getConsoleOutputNode(aId)
   {
-    let displayNode = this.getHeadsUpDisplay(aId);
-    return displayNode.querySelector(".hud-output-node");
+    return this.getHudReferenceById(aId).outputNode;
   },
 
   /**
@@ -2697,7 +2682,7 @@ HUD_SERVICE.prototype =
    */
   getContentWindowFromHUDId: function HS_getContentWindowFromHUDId(aHUDId)
   {
-    var hud = this.getHeadsUpDisplay(aHUDId);
+    var hud = this.getHudReferenceById(aHUDId).HUDBox;
     var nodes = hud.parentNode.childNodes;
 
     for (var i = 0; i < nodes.length; i++) {
