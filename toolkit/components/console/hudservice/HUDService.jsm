@@ -1197,15 +1197,14 @@ NetworkPanel.prototype =
  * Ensures that the number of message nodes of type aCategory don't exceed that
  * category's line limit by removing old messages as needed.
  *
- * @param nsIDOMNode aConsoleNode
- *        The DOM node (richlistbox aka outputNode) that holds the output of the
- *        console.
+ * @param aHUDId aHUDId
+ *        The HeadsUpDisplay ID.
  * @param integer aCategory
  *        The category of message nodes to limit.
  * @return number
  *         The current user-selected log limit.
  */
-function pruneConsoleOutputIfNecessary(aConsoleNode, aCategory)
+function pruneConsoleOutputIfNecessary(aHUDId, aCategory)
 {
   // Get the log limit, either from the pref or from the constant.
   let logLimit;
@@ -1216,13 +1215,15 @@ function pruneConsoleOutputIfNecessary(aConsoleNode, aCategory)
     logLimit = DEFAULT_LOG_LIMIT;
   }
 
-  let scrollBox = aConsoleNode.scrollBoxObject.element;
+  let hudRef = HUDService.getHudReferenceById(aHUDId);
+  let outputNode = hudRef.outputNode;
+
+  let scrollBox = outputNode.scrollBoxObject.element;
   let oldScrollHeight = scrollBox.scrollHeight;
-  let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(aConsoleNode);
-  let hudRef = HUDService.getHudReferenceForOutputNode(aConsoleNode);
+  let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(outputNode);
 
   // Prune the nodes.
-  let messageNodes = aConsoleNode.querySelectorAll(".webconsole-msg-" +
+  let messageNodes = outputNode.querySelectorAll(".webconsole-msg-" +
       CATEGORY_CLASS_FRAGMENTS[aCategory]);
   let removeNodes = messageNodes.length - logLimit;
   for (let i = 0; i < removeNodes; i++) {
@@ -1838,6 +1839,18 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Returns the HeadsUpDisplay object associated to a content window.
+   *
+   * @param nsIDOMWindow aContentWindow
+   * @returns object
+   */
+  getHudByWindow: function HS_getHudByWindow(aContentWindow)
+  {
+    let hudId = this.getHudIdByWindow(aContentWindow);
+    return hudId ? this.hudReferences[hudId] : null;
+  },
+
+  /**
    * Returns the hudId that is corresponding to the hud activated for the
    * passed aContentWindow. If there is no matching hudId null is returned.
    *
@@ -1851,27 +1864,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Returns the hudReference for a given output node.
-   *
-   * @param nsIDOMNode aNode currently either a xul:vbox, the HUDBox, or a
-   * richlistbox, the outputNode.
-   * @returns a HUD | null
-   */
-  getHudReferenceForOutputNode: function HS_getHudReferenceForOutputNode(aNode)
-  {
-    let node = aNode;
-    // starting from richlistbox, need to find hudbox
-    while (!node.id && !node.classList.contains("hud-box")) {
-      if (node.parentNode) {
-        node = node.parentNode;
-      } else {
-        return null;
-      }
-    }
-    return this.getHudReferenceById(node.id);
-  },
-
-  /**
    * Returns the hudReference for a given id.
    *
    * @param string aId
@@ -1880,15 +1872,6 @@ HUD_SERVICE.prototype =
   getHudReferenceById: function HS_getHudReferenceById(aId)
   {
     return aId in this.hudReferences ? this.hudReferences[aId] : null;
-  },
-
-  /**
-   * Gets an array that contains all the HUD IDs.
-   * @returns array
-   */
-  displaysIndex: function HS_displaysIndex()
-  {
-    return Object.keys(this.hudReferences);
   },
 
   /**
@@ -2587,29 +2570,6 @@ HUD_SERVICE.prototype =
 
     // TODO: injection of additional functionality needs re-thinking/api
     // see bug 559748
-  },
-
-  /**
-   * Passed a HUDId, the corresponding window is returned
-   *
-   * @param string aHUDId
-   * @returns nsIDOMWindow
-   */
-  getContentWindowFromHUDId: function HS_getContentWindowFromHUDId(aHUDId)
-  {
-    var hud = this.getHudReferenceById(aHUDId).HUDBox;
-    var nodes = hud.parentNode.childNodes;
-
-    for (var i = 0; i < nodes.length; i++) {
-      var node = nodes[i];
-
-      if (node.localName == "stack" &&
-          node.firstChild &&
-          node.firstChild.contentWindow) {
-        return node.firstChild.contentWindow;
-      }
-    }
-    throw new Error("HS_getContentWindowFromHUD: Cannot get contentWindow");
   },
 
   /**
@@ -5744,7 +5704,7 @@ ConsoleUtils = {
 
     HUDService.regroupOutput(outputNode);
 
-    if (pruneConsoleOutputIfNecessary(outputNode, aNode.category) == 0) {
+    if (pruneConsoleOutputIfNecessary(aHUDId, aNode.category) == 0) {
       // We can't very well scroll to make the message node visible if the log
       // limit is zero and the node was destroyed in the first place.
       return;
