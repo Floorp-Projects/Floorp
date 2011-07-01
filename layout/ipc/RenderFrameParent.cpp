@@ -42,7 +42,6 @@
 
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
-#include "LayerManagerD3D9.h"
 #include "RenderFrameParent.h"
 
 #include "gfx3DMatrix.h"
@@ -723,10 +722,6 @@ RenderFrameParent::AllocPLayers()
   case LayerManager::LAYERS_OPENGL: {
     LayerManagerOGL* lmo = static_cast<LayerManagerOGL*>(lm);
     return new ShadowLayersParent(lmo);
-  }
-  case LayerManager::LAYERS_D3D9: {
-    LayerManagerD3D9* lmd3d9 = static_cast<LayerManagerD3D9*>(lm);
-    return new ShadowLayersParent(lmd3d9);
   }
   default: {
     NS_WARNING("shadow layers no sprechen D3D backend yet");
