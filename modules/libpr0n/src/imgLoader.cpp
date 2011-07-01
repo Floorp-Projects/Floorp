@@ -401,7 +401,7 @@ static PRBool NewRequestAndEntry(nsIURI *uri, imgRequest **request, imgCacheEntr
   if (!*request)
     return PR_FALSE;
 
-  *entry = new imgCacheEntry(*request, /* mustValidateIfExpired = */ isFile);
+  *entry = new imgCacheEntry(*request, /* mustValidate = */ isFile);
   if (!*entry) {
     delete *request;
     return PR_FALSE;
@@ -425,6 +425,9 @@ static PRBool ShouldRevalidateEntry(imgCacheEntry *aEntry,
   if (aFlags & nsIRequest::VALIDATE_ALWAYS) {
     bValidateEntry = PR_TRUE;
   }
+  else if (aEntry->GetMustValidate()) {
+    bValidateEntry = PR_TRUE;
+  }
   //
   // The cache entry has expired...  Determine whether the stale cache
   // entry can be used without validation...
@@ -438,7 +441,7 @@ static PRBool ShouldRevalidateEntry(imgCacheEntry *aEntry,
     if (aFlags & (nsIRequest::VALIDATE_NEVER | 
                   nsIRequest::VALIDATE_ONCE_PER_SESSION)) 
     {
-      bValidateEntry = aEntry->GetMustValidateIfExpired();
+      bValidateEntry = PR_FALSE;
     }
     //
     // LOAD_FROM_CACHE allows a stale cache entry to be used... Otherwise,
@@ -526,12 +529,12 @@ static PRUint32 SecondsFromPRTime(PRTime prTime)
   return PRUint32(PRInt64(prTime) / PRInt64(PR_USEC_PER_SEC));
 }
 
-imgCacheEntry::imgCacheEntry(imgRequest *request, PRBool mustValidateIfExpired /* = PR_FALSE */)
+imgCacheEntry::imgCacheEntry(imgRequest *request, PRBool mustValidate /* = PR_FALSE */)
  : mRequest(request),
    mDataSize(0),
    mTouchedTime(SecondsFromPRTime(PR_Now())),
    mExpiryTime(0),
-   mMustValidateIfExpired(mustValidateIfExpired),
+   mMustValidate(mustValidate),
    mEvicted(PR_FALSE),
    mHasNoProxies(PR_TRUE)
 {}
