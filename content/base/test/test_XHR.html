@@ -160,6 +160,8 @@ checkResponseTextAccessThrows(xhr);
 checkResponseXMLAccessThrows(xhr);
 b = xhr.response;
 ok(b, "should have a non-null blob");
+ok(b instanceof Blob, "should be a Blob");
+ok(!(b instanceof File), "should not be a File");
 is(b.size, "hello pass\n".length, "wrong blob size");
 
 var fr = new FileReader();
