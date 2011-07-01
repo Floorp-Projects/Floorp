@@ -507,6 +507,65 @@ void imgRequest::UpdateCacheEntrySize()
   }
 }
 
+void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
+{
+  /* get the expires info */
+  if (aCacheEntry) {
+    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aRequest));
+    if (cacheChannel) {
+      nsCOMPtr<nsISupports> cacheToken;
+      cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
+      if (cacheToken) {
+        nsCOMPtr<nsICacheEntryInfo> entryDesc(do_QueryInterface(cacheToken));
+        if (entryDesc) {
+          PRUint32 expiration;
+          /* get the expiration time from the caching channel's token */
+          entryDesc->GetExpirationTime(&expiration);
+
+          // Expiration time defaults to 0. We set the expiration time on our
+          // entry if it hasn't been set yet.
+          if (aCacheEntry->GetExpiryTime() == 0)
+            aCacheEntry->SetExpiryTime(expiration);
+        }
+      }
+    }
+
+    //
+    // Determine whether the cache entry must be revalidated when it expires.
+    // If so, then the cache entry must *not* be used during HISTORY loads if
+    // it has expired.
+    //
+    // Currently, only HTTP specifies this information...
+    //
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
+    if (httpChannel) {
+      PRBool bMustRevalidate = PR_FALSE;
+
+      httpChannel->IsNoStoreResponse(&bMustRevalidate);
+
+      if (!bMustRevalidate) {
+        httpChannel->IsNoCacheResponse(&bMustRevalidate);
+      }
+
+      if (!bMustRevalidate) {
+        nsCAutoString cacheHeader;
+
+        httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"),
+                                            cacheHeader);
+        if (PL_strcasestr(cacheHeader.get(), "must-revalidate")) {
+          bMustRevalidate = PR_TRUE;
+        }
+      }
+
+      // Cache entries default to not needing to validate. We ensure that
+      // multiple calls to this function don't override an earlier decision to
+      // validate by making validation a one-way decision.
+      if (bMustRevalidate)
+        aCacheEntry->SetMustValidateIfExpired(bMustRevalidate);
+    }
+  }
+}
+
 nsresult
 imgRequest::LockImage()
 {
@@ -750,8 +809,6 @@ NS_IMETHODIMP imgRequest::OnDiscard(imgIRequest *aRequest)
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
 {
-  nsresult rv;
-
   LOG_SCOPE(gImgLog, "imgRequest::OnStartRequest");
 
   // Figure out if we're multipart
@@ -823,55 +880,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     }
   }
 
-  /* get the expires info */
-  if (mCacheEntry) {
-    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aRequest));
-    if (cacheChannel) {
-      nsCOMPtr<nsISupports> cacheToken;
-      cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
-      if (cacheToken) {
-        nsCOMPtr<nsICacheEntryInfo> entryDesc(do_QueryInterface(cacheToken));
-        if (entryDesc) {
-          PRUint32 expiration;
-          /* get the expiration time from the caching channel's token */
-          entryDesc->GetExpirationTime(&expiration);
-
-          /* set the expiration time on our entry */
-          mCacheEntry->SetExpiryTime(expiration);
-        }
-      }
-    }
-    //
-    // Determine whether the cache entry must be revalidated when it expires.
-    // If so, then the cache entry must *not* be used during HISTORY loads if
-    // it has expired.
-    //
-    // Currently, only HTTP specifies this information...
-    //
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
-    if (httpChannel) {
-      PRBool bMustRevalidate = PR_FALSE;
-
-      rv = httpChannel->IsNoStoreResponse(&bMustRevalidate);
-
-      if (!bMustRevalidate) {
-        rv = httpChannel->IsNoCacheResponse(&bMustRevalidate);
-      }
-
-      if (!bMustRevalidate) {
-        nsCAutoString cacheHeader;
-
-        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"),
-                                            cacheHeader);
-        if (PL_strcasestr(cacheHeader.get(), "must-revalidate")) {
-          bMustRevalidate = PR_TRUE;
-        }
-      }
-
-      mCacheEntry->SetMustValidateIfExpired(bMustRevalidate);
-    }
-  }
-
+  SetCacheValidation(mCacheEntry, aRequest);
 
   // Shouldn't we be dead already if this gets hit?  Probably multipart/x-mixed-replace...
   if (mObservers.IsEmpty()) {
@@ -1238,6 +1247,8 @@ imgRequest::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   NS_ASSERTION(mRequest && mChannel, "Got a channel redirect after we nulled out mRequest!");
   NS_ASSERTION(mChannel == oldChannel, "Got a channel redirect for an unknown channel!");
   NS_ASSERTION(newChannel, "Got a redirect to a NULL channel!");
+
+  SetCacheValidation(mCacheEntry, oldChannel);
 
   // Prepare for callback
   mRedirectCallback = callback;
