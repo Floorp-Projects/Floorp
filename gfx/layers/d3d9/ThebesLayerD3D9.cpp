@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "ShadowBufferD3D9.h"
+
 #include "ThebesLayerD3D9.h"
 #include "gfxPlatform.h"
 
@@ -516,8 +520,13 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
       break;
 
     case SURFACE_SINGLE_CHANNEL_ALPHA: {
-      D3DLOCKED_RECT r;
-      tmpTexture->LockRect(0, &r, NULL, 0);
+      LockTextureRectD3D9 textureLock(tmpTexture);
+      if (!textureLock.HasLock()) {
+        NS_WARNING("Failed to lock ThebesLayer tmpTexture texture.");
+        return;
+      }
+
+      D3DLOCKED_RECT r = textureLock.GetLockRect();
 
       nsRefPtr<gfxImageSurface> imgSurface =
         new gfxImageSurface((unsigned char *)r.pBits,
@@ -533,8 +542,6 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
       }
 
       imgSurface = NULL;
-
-      tmpTexture->UnlockRect(0);
 
       srcTextures.AppendElement(tmpTexture);
       destTextures.AppendElement(mTexture);
@@ -599,6 +606,96 @@ ThebesLayerD3D9::CreateNewTextures(const gfxIntSize &aSize,
                             D3DFMT_X8R8G8B8,
                             D3DPOOL_DEFAULT, getter_AddRefs(mTextureOnWhite), NULL);
   }
+}
+
+ShadowThebesLayerD3D9::ShadowThebesLayerD3D9(LayerManagerD3D9 *aManager)
+  : ShadowThebesLayer(aManager, nsnull)
+  , LayerD3D9(aManager)
+{
+  mImplData = static_cast<LayerD3D9*>(this);
+}
+
+ShadowThebesLayerD3D9::~ShadowThebesLayerD3D9()
+{}
+
+void
+ShadowThebesLayerD3D9::SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
+                                     const nsIntRegion& aValidRegion)
+{
+  if (!mBuffer) {
+    mBuffer = new ShadowBufferD3D9(this);
+  }
+
+  NS_ASSERTION(OptionalThebesBuffer::Tnull_t == aNewFront.type(),
+               "Only one system-memory buffer expected");
+}
+
+void
+ShadowThebesLayerD3D9::Swap(const ThebesBuffer& aNewFront,
+                           const nsIntRegion& aUpdatedRegion,
+                           ThebesBuffer* aNewBack,
+                           nsIntRegion* aNewBackValidRegion,
+                           OptionalThebesBuffer* aReadOnlyFront,
+                           nsIntRegion* aFrontUpdatedRegion)
+{
+  if (mBuffer) {
+    nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront.buffer());
+    mBuffer->Upload(surf, GetVisibleRegion().GetBounds());
+  }
+
+  *aNewBack = aNewFront;
+  *aNewBackValidRegion = mValidRegion;
+  *aReadOnlyFront = null_t();
+  aFrontUpdatedRegion->SetEmpty();
+}
+
+void
+ShadowThebesLayerD3D9::DestroyFrontBuffer()
+{
+  mBuffer = nsnull;
+}
+
+void
+ShadowThebesLayerD3D9::Disconnect()
+{
+  mBuffer = nsnull;
+}
+
+Layer*
+ShadowThebesLayerD3D9::GetLayer()
+{
+  return this;
+}
+
+PRBool
+ShadowThebesLayerD3D9::IsEmpty()
+{
+  return !mBuffer;
+}
+
+void
+ShadowThebesLayerD3D9::RenderThebesLayer()
+{
+  if (!mBuffer) {
+    return;
+  }
+  NS_ABORT_IF_FALSE(mBuffer, "should have a buffer here");
+
+  mBuffer->RenderTo(mD3DManager, GetEffectiveVisibleRegion());
+}
+
+void
+ShadowThebesLayerD3D9::CleanResources()
+{
+  mBuffer = nsnull;
+  mValidRegion.SetEmpty();
+}
+
+void
+ShadowThebesLayerD3D9::LayerManagerDestroyed()
+{
+  mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
+  mD3DManager = nsnull;
 }
 
 } /* namespace layers */

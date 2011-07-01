@@ -15,12 +15,11 @@
  * The Original Code is Mozilla Corporation code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Robert O'Callahan <robert@ocallahan.org>
- *   Bas Schouten <bschouten@mozilla.com>
+ *  Benoit Girard <bgirard@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,64 +35,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ColorLayerD3D9.h"
+#ifndef GFX_SHADOWBUFFERD3D9_H
+#define GFX_SHADOWBUFFERD3D9_H
+
+#include "LayerManagerD3D9.h"
 
 namespace mozilla {
 namespace layers {
 
-Layer*
-ColorLayerD3D9::GetLayer()
+class LayerManagerD3D9;
+class LayerD3D9;
+
+class ShadowBufferD3D9
 {
-  return this;
-}
+  NS_INLINE_DECL_REFCOUNTING(ShadowBufferD3D9)
+public:
 
-static void
-RenderColorLayerD3D9(ColorLayer* aLayer, LayerManagerD3D9 *aManager)
-{
-  // XXX we might be able to improve performance by using
-  // IDirect3DDevice9::Clear
+  ShadowBufferD3D9(LayerD3D9* aLayer)
+    : mLayer(aLayer)
+  {
+  }
+  virtual ~ShadowBufferD3D9() {}
+  
+  void Upload(gfxASurface* aUpdate, const nsIntRect& aVisibleRect);
 
-  nsIntRect visibleRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
+  void RenderTo(LayerManagerD3D9 *aD3DManager, const nsIntRegion& aVisibleRegion);
 
-  aManager->device()->SetVertexShaderConstantF(
-    CBvLayerQuad,
-    ShaderConstantRect(visibleRect.x,
-                       visibleRect.y,
-                       visibleRect.width,
-                       visibleRect.height),
-    1);
-
-  const gfx3DMatrix& transform = aLayer->GetEffectiveTransform();
-  aManager->device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
-
-  gfxRGBA layerColor(aLayer->GetColor());
-  float color[4];
-  float opacity = aLayer->GetEffectiveOpacity() * layerColor.a;
-  // output color is premultiplied, so we need to adjust all channels.
-  // mColor is not premultiplied.
-  color[0] = (float)(layerColor.r * opacity);
-  color[1] = (float)(layerColor.g * opacity);
-  color[2] = (float)(layerColor.b * opacity);
-  color[3] = (float)(opacity);
-
-  aManager->device()->SetPixelShaderConstantF(0, color, 1);
-
-  aManager->SetShaderMode(DeviceManagerD3D9::SOLIDCOLORLAYER);
-
-  aManager->device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-}
-
-void
-ColorLayerD3D9::RenderLayer()
-{
-  return RenderColorLayerD3D9(this, mD3DManager);
-}
-
-void
-ShadowColorLayerD3D9::RenderLayer()
-{
-  return RenderColorLayerD3D9(this, mD3DManager);
-}
+  nsIntSize GetSize() {
+    if (mTexture)
+      return nsIntSize(mTextureRect.Width(), mTextureRect.Height());
+    return nsIntSize(0, 0);
+  }
+protected:
+  nsRefPtr<IDirect3DTexture9> mTexture;
+  nsIntRect mTextureRect;
+  LayerD3D9* mLayer;
+};
 
 } /* layers */
 } /* mozilla */
+#endif /* GFX_SHADOWBUFFERD3D9_H */
