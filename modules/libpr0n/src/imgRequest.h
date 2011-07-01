@@ -129,6 +129,12 @@ public:
     return mWindowId;
   }
 
+  // Set the cache validation information (expiry time, whether we must
+  // validate, etc) on the cache entry based on the request information.
+  // If this function is called multiple times, the information set earliest
+  // wins.
+  static void SetCacheValidation(imgCacheEntry* aEntry, nsIRequest* aRequest);
+
 private:
   friend class imgCacheEntry;
   friend class imgRequestProxy;
