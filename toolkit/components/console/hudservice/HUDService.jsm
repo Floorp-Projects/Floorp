@@ -2163,23 +2163,6 @@ HUD_SERVICE.prototype =
    */
   applicationHooks: null,
 
-  getChromeWindowFromContentWindow:
-  function HS_getChromeWindowFromContentWindow(aContentWindow)
-  {
-    if (!aContentWindow) {
-      throw new Error("Cannot get contentWindow via nsILoadContext");
-    }
-    var win = aContentWindow.QueryInterface(Ci.nsIDOMWindow)
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsIDocShellTreeItem)
-      .rootTreeItem
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindow)
-      .QueryInterface(Ci.nsIDOMChromeWindow);
-    return win;
-  },
-
   /**
    * Requests that haven't finished yet.
    */
@@ -3107,7 +3090,7 @@ function HeadsUpDisplay(aConfig)
   // create textNode Factory:
   this.textFactory = NodeFactory("text", "xul", this.chromeDocument);
 
-  this.chromeWindow = HUDService.getChromeWindowFromContentWindow(this.contentWindow);
+  this.chromeWindow = this.chromeDocument.defaultView;
 
   // create a panel dynamically and attach to the parentNode
   this.createHUD();
