@@ -69,6 +69,7 @@ SVGAnimatedNumberList::SetBaseValueString(const nsAString& aValue)
   // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
   // which takes care of notifying.
 
+  mIsBaseSet = PR_TRUE;
   rv = mBaseVal.CopyFrom(newBaseValue);
   if (NS_FAILED(rv) && domWrapper) {
     // Attempting to increase mBaseVal's length failed - reduce domWrapper
@@ -88,6 +89,7 @@ SVGAnimatedNumberList::ClearBaseValue(PRUint32 aAttrEnum)
     domWrapper->InternalBaseValListWillChangeTo(SVGNumberList());
   }
   mBaseVal.Clear();
+  mIsBaseSet = PR_FALSE;
   // Caller notifies
 }
 
