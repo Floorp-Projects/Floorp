@@ -3656,6 +3656,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     return pDoc->Print();
 
   if (!mPrintEngine) {
+    NS_ENSURE_STATE(mDeviceContext);
     mPrintEngine = new nsPrintEngine();
 
     rv = mPrintEngine->Initialize(this, mContainer, mDocument, 
