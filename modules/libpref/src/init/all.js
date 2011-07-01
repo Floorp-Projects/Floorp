@@ -3208,22 +3208,14 @@ pref("network.tcp.sendbuffer", 131072);
 #endif
 
 // Whether to disable acceleration for all widgets.
-#ifdef MOZ_E10S_COMPAT
-pref("layers.acceleration.disabled", true);
-#else
 pref("layers.acceleration.disabled", false);
-#endif
 
 // Whether to force acceleration on, ignoring blacklists.
 pref("layers.acceleration.force-enabled", false);
 
 #ifdef XP_WIN
 // Whether to disable the automatic detection and use of direct2d.
-#ifdef MOZ_E10S_COMPAT
-pref("gfx.direct2d.disabled", true);
-#else
 pref("gfx.direct2d.disabled", false);
-#endif
 // Whether to attempt to enable Direct2D regardless of automatic detection or
 // blacklisting
 pref("gfx.direct2d.force-enabled", false);

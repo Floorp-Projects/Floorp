@@ -180,8 +180,6 @@ public:
                              PRUint32 aNewEnd);
   NS_IMETHOD OnIMESelectionChange(void);
 
-  NS_IMETHOD SetCursor(nsCursor aCursor);
-
   // Gets the DPI of the screen corresponding to this widget.
   // Contacts the parent process which gets the DPI from the
   // proper widget there. TODO: Handle DPI changes that happen

@@ -821,16 +821,7 @@ public:
 
 class nsMouseEvent_base : public nsInputEvent
 {
-private:
-  friend class mozilla::dom::PBrowserParent;
-  friend class mozilla::dom::PBrowserChild;
-
 public:
-
-  nsMouseEvent_base()
-  {
-  }
-
   nsMouseEvent_base(PRBool isTrusted, PRUint32 msg, nsIWidget *w, PRUint8 type)
   : nsInputEvent(isTrusted, msg, w, type), button(0), pressure(0),
     inputSource(nsIDOMNSMouseEvent::MOZ_SOURCE_MOUSE) {}
@@ -850,19 +841,11 @@ public:
 
 class nsMouseEvent : public nsMouseEvent_base
 {
-private:
-  friend class mozilla::dom::PBrowserParent;
-  friend class mozilla::dom::PBrowserChild;
-
 public:
   enum buttonType  { eLeftButton = 0, eMiddleButton = 1, eRightButton = 2 };
   enum reasonType  { eReal, eSynthesized };
   enum contextType { eNormal, eContextMenuKey };
   enum exitType    { eChild, eTopLevel };
-
-  nsMouseEvent()
-  {
-  }
 
 protected:
   nsMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
@@ -970,15 +953,7 @@ struct nsAlternativeCharCode {
 
 class nsKeyEvent : public nsInputEvent
 {
-private:
-  friend class mozilla::dom::PBrowserParent;
-  friend class mozilla::dom::PBrowserChild;
-
 public:
-  nsKeyEvent()
-  {
-  }
-
   nsKeyEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsInputEvent(isTrusted, msg, w, NS_KEY_EVENT),
       keyCode(0), charCode(0), isChar(0)
@@ -1205,14 +1180,6 @@ public:
 
 class nsMouseScrollEvent : public nsMouseEvent_base
 {
-private:
-  friend class mozilla::dom::PBrowserParent;
-  friend class mozilla::dom::PBrowserChild;
-
-  nsMouseScrollEvent()
-  {
-  }
-
 public:
   enum nsMouseScrollFlags {
     kIsFullPage =   1 << 0,
