@@ -596,6 +596,7 @@ JS_GetTypeName(JSContext *cx, JSType type)
 JS_PUBLIC_API(JSBool)
 JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
 {
+    CHECK_REQUEST(cx);
     assertSameCompartment(cx, v1, v2);
     return StrictlyEqual(cx, Valueify(v1), Valueify(v2), equal);
 }
@@ -603,6 +604,7 @@ JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
 JS_PUBLIC_API(JSBool)
 JS_LooselyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
 {
+    CHECK_REQUEST(cx);
     assertSameCompartment(cx, v1, v2);
     return LooselyEqual(cx, Valueify(v1), Valueify(v2), equal);
 }
@@ -610,6 +612,7 @@ JS_LooselyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
 JS_PUBLIC_API(JSBool)
 JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same)
 {
+    CHECK_REQUEST(cx);
     assertSameCompartment(cx, v1, v2);
     return SameValue(cx, Valueify(v1), Valueify(v2), same);
 }
@@ -647,6 +650,10 @@ JSRuntime::JSRuntime()
 bool
 JSRuntime::init(uint32 maxbytes)
 {
+#ifdef JS_THREADSAFE
+    ownerThread_ = js_CurrentThreadId();
+#endif
+
 #ifdef JS_METHODJIT_SPEW
     JMCheckLogging();
 #endif
@@ -741,6 +748,28 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_LOCK(debuggerLock);
 #endif
 }
+
+#ifdef JS_THREADSAFE
+void
+JSRuntime::setOwnerThread()
+{
+    JS_ASSERT(ownerThread_ == (void *)-1);
+    ownerThread_ = js_CurrentThreadId();
+}
+
+void
+JSRuntime::clearOwnerThread()
+{
+    JS_ASSERT(onOwnerThread());
+    ownerThread_ = (void *)-1;
+}
+
+JS_FRIEND_API(bool)
+JSRuntime::onOwnerThread() const
+{
+    return ownerThread_ == js_CurrentThreadId();
+}
+#endif
 
 JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes)
@@ -1998,12 +2027,14 @@ JS_ComputeThis(JSContext *cx, jsval *vp)
 JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes)
 {
+    CHECK_REQUEST(cx);
     return cx->malloc_(nbytes);
 }
 
 JS_PUBLIC_API(void *)
 JS_realloc(JSContext *cx, void *p, size_t nbytes)
 {
+    CHECK_REQUEST(cx);
     return cx->realloc_(p, nbytes);
 }
 
@@ -5332,12 +5363,16 @@ JS_GetFlatStringChars(JSFlatString *str)
 JS_PUBLIC_API(JSBool)
 JS_CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32 *result)
 {
+    CHECK_REQUEST(cx);
+
     return CompareStrings(cx, str1, str2, result);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_StringEqualsAscii(JSContext *cx, JSString *str, const char *asciiBytes, JSBool *match)
 {
+    CHECK_REQUEST(cx);
+
     JSLinearString *linearStr = str->ensureLinear(cx);
     if (!linearStr)
         return false;
@@ -5523,6 +5558,8 @@ JS_ReadStructuredClone(JSContext *cx, const uint64 *buf, size_t nbytes,
                        const JSStructuredCloneCallbacks *optionalCallbacks,
                        void *closure)
 {
+    CHECK_REQUEST(cx);
+
     if (version > JS_STRUCTURED_CLONE_VERSION) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CLONE_VERSION);
         return false;
@@ -5539,6 +5576,8 @@ JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **bufp, size_t *nbytesp,
                         const JSStructuredCloneCallbacks *optionalCallbacks,
                         void *closure)
 {
+    CHECK_REQUEST(cx);
+
     const JSStructuredCloneCallbacks *callbacks =
         optionalCallbacks ?
         optionalCallbacks :
@@ -6113,6 +6152,8 @@ JS_GetContextThread(JSContext *cx)
 JS_PUBLIC_API(jsword)
 JS_SetContextThread(JSContext *cx)
 {
+    JS_AbortIfWrongThread(cx->runtime);
+
 #ifdef JS_THREADSAFE
     JS_ASSERT(!cx->outstandingRequests);
     if (cx->thread()) {
@@ -6130,9 +6171,36 @@ JS_SetContextThread(JSContext *cx)
     return 0;
 }
 
+extern JS_PUBLIC_API(void)
+JS_ClearRuntimeThread(JSRuntime *rt)
+{
+#ifdef JS_THREADSAFE
+    rt->clearOwnerThread();
+#endif
+}
+
+extern JS_PUBLIC_API(void)
+JS_SetRuntimeThread(JSRuntime *rt)
+{
+#ifdef JS_THREADSAFE
+    rt->setOwnerThread();
+#endif
+}
+
+extern JS_PUBLIC_API(void)
+JS_AbortIfWrongThread(JSRuntime *rt)
+{
+#ifdef JS_THREADSAFE
+    if (!rt->onOwnerThread())
+        JS_Assert("rt->onOwnerThread()", __FILE__, __LINE__);
+#endif
+}
+
 JS_PUBLIC_API(jsword)
 JS_ClearContextThread(JSContext *cx)
 {
+    JS_AbortIfWrongThread(cx->runtime);
+
 #ifdef JS_THREADSAFE
     /*
      * cx must have exited all requests it entered and, if cx is associated

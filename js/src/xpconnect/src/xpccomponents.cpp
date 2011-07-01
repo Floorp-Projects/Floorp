@@ -3544,6 +3544,8 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo,
                   JSVersion jsVersion, PRBool returnStringOnly, jsval *rval)
 {
+    JS_AbortIfWrongThread(JS_GetRuntime(cx));
+
 #ifdef DEBUG
     // NB: The "unsafe" unwrap here is OK because we must be called from chrome.
     {
