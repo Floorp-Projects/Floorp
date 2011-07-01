@@ -41,8 +41,6 @@
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch2.h"
 #include "nsIDocCharset.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
@@ -61,6 +59,9 @@
 #include "prlog.h"
 #include "plstr.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
 
 #if defined(PR_LOGGING)
 //
@@ -414,6 +415,7 @@ nsPrefetchService::nsPrefetchService()
 
 nsPrefetchService::~nsPrefetchService()
 {
+    Preferences::RemoveObserver(this, PREFETCH_PREF);
     // cannot reach destructor if prefetch in progress (listener owns reference
     // to this service)
     EmptyQueue();
@@ -430,15 +432,8 @@ nsPrefetchService::Init()
     nsresult rv;
 
     // read prefs and hook up pref observer
-    nsCOMPtr<nsIPrefBranch2> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      PRBool enabled;
-      rv = prefs->GetBoolPref(PREFETCH_PREF, &enabled);
-      if (NS_SUCCEEDED(rv) && enabled)
-        mDisabled = PR_FALSE;
-
-      prefs->AddObserver(PREFETCH_PREF, this, PR_TRUE);
-    }
+    mDisabled = !Preferences::GetBool(PREFETCH_PREF, !mDisabled);
+    Preferences::AddWeakObserver(this, PREFETCH_PREF);
 
     // Observe xpcom-shutdown event
     nsCOMPtr<nsIObserverService> observerService =
@@ -945,10 +940,7 @@ nsPrefetchService::Observe(nsISupports     *aSubject,
         mDisabled = PR_TRUE;
     }
     else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-        nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject));
-        PRBool enabled;
-        nsresult rv = prefs->GetBoolPref(PREFETCH_PREF, &enabled);
-        if (NS_SUCCEEDED(rv) && enabled) {
+        if (Preferences::GetBool(PREFETCH_PREF, PR_FALSE)) {
             if (mDisabled) {
                 LOG(("enabling prefetching\n"));
                 mDisabled = PR_FALSE;
