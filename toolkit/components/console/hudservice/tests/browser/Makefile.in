@@ -61,10 +61,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_console_logging_api.js \
 	browser_webconsole_consoleonpage.js \
 	browser_webconsole_chrome.js \
-	browser_webconsole_display_accessors.js \
 	browser_webconsole_execution_scope.js \
-	browser_webconsole_get_content_window_from_hud_id.js \
-	browser_webconsole_get_heads_up_display.js \
 	browser_webconsole_history.js \
 	browser_webconsole_hud_getters.js \
 	browser_webconsole_js_input_and_output_styling.js \
@@ -130,7 +127,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_618311_private_browsing.js \
 	browser_webconsole_bug_626484_output_copy_order.js \
 	browser_webconsole_bug_632347_iterators_generators.js \
-	browser_webconsole_bug_642108_refForOutputNode.js \
 	browser_webconsole_bug_642108_pruneTest.js \
 	browser_webconsole_bug_585956_console_trace.js \
 	browser_webconsole_bug_595223_file_uri.js \
