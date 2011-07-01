@@ -290,7 +290,8 @@ class nsProgressNotificationProxy : public nsIProgressEventSink
   public:
     nsProgressNotificationProxy(nsIChannel* channel,
                                 imgIRequest* proxy)
-        : mImageRequest(proxy) {
+        : mImageRequest(proxy)
+    {
       channel->GetNotificationCallbacks(getter_AddRefs(mOriginalCallbacks));
     }
 
@@ -314,7 +315,8 @@ NS_IMETHODIMP
 nsProgressNotificationProxy::OnProgress(nsIRequest* request,
                                         nsISupports* ctxt,
                                         PRUint64 progress,
-                                        PRUint64 progressMax) {
+                                        PRUint64 progressMax)
+{
   nsCOMPtr<nsILoadGroup> loadGroup;
   request->GetLoadGroup(getter_AddRefs(loadGroup));
 
@@ -332,7 +334,8 @@ NS_IMETHODIMP
 nsProgressNotificationProxy::OnStatus(nsIRequest* request,
                                       nsISupports* ctxt,
                                       nsresult status,
-                                      const PRUnichar* statusArg) {
+                                      const PRUnichar* statusArg)
+{
   nsCOMPtr<nsILoadGroup> loadGroup;
   request->GetLoadGroup(getter_AddRefs(loadGroup));
 
@@ -350,7 +353,8 @@ NS_IMETHODIMP
 nsProgressNotificationProxy::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                                                     nsIChannel *newChannel,
                                                     PRUint32 flags,
-                                                    nsIAsyncVerifyRedirectCallback *cb) {
+                                                    nsIAsyncVerifyRedirectCallback *cb)
+{
   // Tell the original original callbacks about it too
   nsCOMPtr<nsILoadGroup> loadGroup;
   newChannel->GetLoadGroup(getter_AddRefs(loadGroup));
@@ -370,7 +374,8 @@ nsProgressNotificationProxy::AsyncOnChannelRedirect(nsIChannel *oldChannel,
 
 NS_IMETHODIMP
 nsProgressNotificationProxy::GetInterface(const nsIID& iid,
-                                          void** result) {
+                                          void** result)
+{
   if (iid.Equals(NS_GET_IID(nsIProgressEventSink))) {
     *result = static_cast<nsIProgressEventSink*>(this);
     NS_ADDREF_THIS();
