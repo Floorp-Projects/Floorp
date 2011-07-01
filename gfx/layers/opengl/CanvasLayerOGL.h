@@ -38,6 +38,8 @@
 #ifndef GFX_CANVASLAYEROGL_H
 #define GFX_CANVASLAYEROGL_H
 
+#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #include "LayerManagerOGL.h"
 #include "gfxASurface.h"
