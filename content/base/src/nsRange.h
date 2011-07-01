@@ -98,6 +98,8 @@ public:
   virtual nsresult SetEnd(nsINode* aParent, PRInt32 aOffset);
   virtual nsresult CloneRange(nsIRange** aNewRange) const;
 
+  NS_IMETHOD GetUsedFontFaces(nsIDOMFontFaceList** aResult);
+
   // nsIMutationObserver methods
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED

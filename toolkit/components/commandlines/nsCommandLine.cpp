@@ -132,7 +132,7 @@ NS_IMETHODIMP
 nsCommandLine::GetArgument(PRInt32 aIndex, nsAString& aResult)
 {
   NS_ENSURE_ARG_MIN(aIndex, 0);
-  NS_ENSURE_ARG_MAX(PRUint32(aIndex), mArgs.Length());
+  NS_ENSURE_ARG_MAX(aIndex, PRInt32(mArgs.Length() - 1));
 
   aResult = mArgs[aIndex];
   return NS_OK;

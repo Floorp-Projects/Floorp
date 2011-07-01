@@ -77,10 +77,9 @@
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
-#include "jsautooplen.h"
 
 #include "vm/Stack-inl.h"
+#include "vm/String-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -157,7 +156,7 @@ struct IdHashPolicy {
     }
 };
 
-typedef HashSet<jsid, IdHashPolicy, ContextAllocPolicy> IdSet;
+typedef HashSet<jsid, IdHashPolicy> IdSet;
 
 static inline bool
 NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
@@ -174,37 +173,23 @@ NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
 
 static inline bool
 Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
-          bool enumerable, bool sharedPermanent, uintN flags, IdSet& ht,
-          AutoIdVector *props)
+          bool enumerable, uintN flags, IdSet& ht, AutoIdVector *props)
 {
-    IdSet::AddPtr p = ht.lookupForAdd(id);
-    JS_ASSERT_IF(obj == pobj && !obj->isProxy(), !p);
+    JS_ASSERT_IF(flags & JSITER_OWNONLY, obj == pobj);
 
-    /* If we've already seen this, we definitely won't add it. */
-    if (JS_UNLIKELY(!!p))
-        return true;
+    if (!(flags & JSITER_OWNONLY) || pobj->isProxy() || pobj->getOps()->enumerate) {
+        /* If we've already seen this, we definitely won't add it. */
+        IdSet::AddPtr p = ht.lookupForAdd(id);
+        if (JS_UNLIKELY(!!p))
+            return true;
 
-    /*
-     * It's not necessary to add properties to the hash table at the end of the
-     * prototype chain -- but a proxy might return duplicated properties, so
-     * always add for them.
-     */
-    if ((pobj->getProto() || pobj->isProxy()) && !ht.add(p, id))
-        return false;
-
-    if (JS_UNLIKELY(flags & JSITER_OWNONLY)) {
         /*
-         * Shared-permanent hack: If this property is shared permanent
-         * and pobj and obj have the same class, then treat it as an own
-         * property of obj, even if pobj != obj. (But see bug 575997.)
-         *
-         * Omit the magic __proto__ property so that JS code can use
-         * Object.getOwnPropertyNames without worrying about it.
+         * It's not necessary to add properties to the hash table at the end of
+         * the prototype chain, but custom enumeration behaviors might return
+         * duplicated properties, so always add in such cases.
          */
-        if (!pobj->getProto() && id == ATOM_TO_JSID(cx->runtime->atomState.protoAtom))
-            return true;
-        if (pobj != obj && !(sharedPermanent && pobj->getClass() == obj->getClass()))
-            return true;
+        if ((pobj->getProto() || pobj->isProxy() || pobj->getOps()->enumerate) && !ht.add(p, id))
+            return false;
     }
 
     if (enumerable || (flags & JSITER_HIDDEN))
@@ -225,8 +210,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
 
         if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.propid) &&
             !shape.isAlias() &&
-            !Enumerate(cx, obj, pobj, shape.propid, shape.enumerable(),
-                       shape.isSharedPermanent(), flags, ht, props))
+            !Enumerate(cx, obj, pobj, shape.propid, shape.enumerable(), flags, ht, props))
         {
             return false;
         }
@@ -240,7 +224,7 @@ static bool
 EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
                               IdSet &ht, AutoIdVector *props)
 {
-    if (!Enumerate(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false, true,
+    if (!Enumerate(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false,
                    flags, ht, props)) {
         return false;
     }
@@ -251,7 +235,7 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
         for (size_t i = 0; i < initlen; ++i, ++vp) {
             if (!vp->isMagic(JS_ARRAY_HOLE)) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
-                if (!Enumerate(cx, obj, pobj, INT_TO_JSID(i), true, false, flags, ht, props))
+                if (!Enumerate(cx, obj, pobj, INT_TO_JSID(i), true, flags, ht, props))
                     return false;
             }
         }
@@ -263,11 +247,6 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
 static bool
 Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
 {
-    /*
-     * FIXME: Bug 575997 - We won't need to initialize this hash table if
-     *        (flags & JSITER_OWNONLY) when we eliminate inheritance of
-     *        shared-permanent properties as own properties.
-     */
     IdSet ht(cx);
     if (!ht.init(32))
         return NULL;
@@ -301,7 +280,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
                         return false;
                 }
                 for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
-                    if (!Enumerate(cx, obj, pobj, proxyProps[n], true, false, flags, ht, props))
+                    if (!Enumerate(cx, obj, pobj, proxyProps[n], true, flags, ht, props))
                         return false;
                 }
                 /* Proxy objects enumerate the prototype on their own, so we are done here. */
@@ -321,13 +300,13 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
                         return false;
                     if (state.isNull())
                         break;
-                    if (!Enumerate(cx, obj, pobj, id, true, false, flags, ht, props))
+                    if (!Enumerate(cx, obj, pobj, id, true, flags, ht, props))
                         return false;
                 }
             }
         }
 
-        if (JS_UNLIKELY(pobj->isXML()))
+        if ((flags & JSITER_OWNONLY) || pobj->isXML())
             break;
     } while ((pobj = pobj->getProto()) != NULL);
 
@@ -976,6 +955,9 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
         return true;
     }
 
+    /* We're reentering below and can call anything. */
+    JS_CHECK_RECURSION(cx, return false);
+
     /* Fetch and cache the next value from the iterator. */
     if (!ni) {
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);
@@ -1166,7 +1148,8 @@ js_NewGenerator(JSContext *cx)
     if (!obj)
         return NULL;
 
-    StackFrame *stackfp = cx->fp();
+    FrameRegs &stackRegs = cx->regs();
+    StackFrame *stackfp = stackRegs.fp();
     JS_ASSERT(stackfp->base() == cx->regs().sp);
     JS_ASSERT(stackfp->actualArgs() <= stackfp->formalArgs());
 
@@ -1195,12 +1178,9 @@ js_NewGenerator(JSContext *cx)
     gen->enumerators = NULL;
     gen->floating = genfp;
 
-    /* Initialize regs stored in generator. */
-    gen->regs = cx->regs();
-    gen->regs.rebaseFromTo(stackfp, genfp);
-
-    /* Copy frame off the stack. */
-    genfp->stealFrameAndSlots(genvp, stackfp, stackvp, cx->regs().sp);
+    /* Copy from the stack to the generator's floating frame. */
+    gen->regs.rebaseFromTo(stackRegs, *genfp);
+    genfp->stealFrameAndSlots(genvp, stackfp, stackvp, stackRegs.sp);
     genfp->initFloatingGenerator();
 
     obj->setPrivate(gen);
@@ -1269,54 +1249,29 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     }
 
     StackFrame *genfp = gen->floatingFrame();
-    Value *genvp = gen->floatingStack;
-    uintN vplen = genfp->formalArgsEnd() - genvp;
 
-    StackFrame *stackfp;
-    Value *stackvp;
     JSBool ok;
     {
-        /*
-         * Get a pointer to new frame/slots. This memory is not "claimed", so
-         * the code before pushExecuteFrame must not reenter the interpreter.
-         */
-        GeneratorFrameGuard frame;
-        if (!cx->stack.getGeneratorFrame(cx, vplen, genfp->numSlots(), &frame)) {
+        GeneratorFrameGuard gfg;
+        if (!cx->stack.pushGeneratorFrame(cx, gen, &gfg)) {
             gen->state = JSGEN_CLOSED;
             return JS_FALSE;
         }
-        stackfp = frame.fp();
-        stackvp = frame.vp();
 
-        /* Copy frame onto the stack. */
-        stackfp->stealFrameAndSlots(stackvp, genfp, genvp, gen->regs.sp);
-        stackfp->resetGeneratorPrev(cx);
-        stackfp->unsetFloatingGenerator();
-        gen->regs.rebaseFromTo(genfp, stackfp);
-        MUST_FLOW_THROUGH("restore");
-
-        /* Officially push frame. frame's destructor pops. */
-        cx->stack.pushGeneratorFrame(gen->regs, &frame);
+        StackFrame *fp = gfg.fp();
+        gen->regs = cx->regs();
+        JS_ASSERT(gen->liveFrame() == fp);
 
         cx->enterGenerator(gen);   /* OOM check above. */
         JSObject *enumerators = cx->enumerators;
         cx->enumerators = gen->enumerators;
 
-        ok = RunScript(cx, stackfp->script(), stackfp);
+        ok = RunScript(cx, fp->script(), fp);
 
         gen->enumerators = cx->enumerators;
         cx->enumerators = enumerators;
         cx->leaveGenerator(gen);
-
-        /*
-         * Copy the stack frame and rebase the regs, but not before popping
-         * the stack, since cx->regs == &gen->regs.
-         */
-        genfp->stealFrameAndSlots(genvp, stackfp, stackvp, gen->regs.sp);
-        genfp->setFloatingGenerator();
     }
-    MUST_FLOW_LABEL(restore)
-    gen->regs.rebaseFromTo(stackfp, genfp);
 
     if (gen->floatingFrame()->isYielding()) {
         /* Yield cannot fail, throw or be called on closing. */

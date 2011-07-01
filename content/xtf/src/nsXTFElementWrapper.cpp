@@ -49,7 +49,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsEventStateManager.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
@@ -536,7 +536,9 @@ nsXTFElementWrapper::GetExistingAttrNameFromQName(const nsAString& aStr) const
   if (!nodeInfo) {
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aStr);
     if (HandledByInner(nameAtom)) 
-      nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(nameAtom, nsnull, kNameSpaceID_None).get();
+      nodeInfo = mNodeInfo->NodeInfoManager()->
+        GetNodeInfo(nameAtom, nsnull, kNameSpaceID_None,
+                    nsIDOMNode::ATTRIBUTE_NODE).get();
   }
   
   return nodeInfo;

@@ -62,6 +62,13 @@ def attributeNativeName(a, getter):
     binaryname = a.binaryname is not None and a.binaryname or firstCap(a.name)
     return "%s%s" % (getter and 'Get' or 'Set', binaryname)
 
+def attributeReturnType(a, macro):
+    """macro should be NS_IMETHOD or NS_IMETHODIMP"""
+    if (a.nostdcall):
+        return macro == "NS_IMETHOD" and "virtual nsresult" or "nsresult"
+    else:
+        return macro
+
 def attributeParamlist(a, getter):
     return "%s%s" % (a.realtype.nativeType(getter and 'out' or 'in'),
                      attributeParamName(a))
@@ -69,16 +76,22 @@ def attributeParamlist(a, getter):
 def attributeAsNative(a, getter):
         scriptable = a.isScriptable() and "NS_SCRIPTABLE " or ""
         params = {'scriptable': scriptable,
+                  'returntype': attributeReturnType(a, 'NS_IMETHOD'),
                   'binaryname': attributeNativeName(a, getter),
                   'paramlist': attributeParamlist(a, getter)}
-        return "%(scriptable)sNS_IMETHOD %(binaryname)s(%(paramlist)s)" % params
+        return "%(scriptable)s%(returntype)s %(binaryname)s(%(paramlist)s)" % params
 
 def methodNativeName(m):
     return m.binaryname is not None and m.binaryname or firstCap(m.name)
 
 def methodReturnType(m, macro):
     """macro should be NS_IMETHOD or NS_IMETHODIMP"""
-    if m.notxpcom:
+    if m.nostdcall and m.notxpcom:
+        return "%s%s" % (macro == "NS_IMETHOD" and "virtual " or "",
+                         m.realtype.nativeType('in').strip())
+    elif m.nostdcall:
+        return "%snsresult" % (macro == "NS_IMETHOD" and "virtual " or "")
+    elif m.notxpcom:
         return "%s_(%s)" % (macro, m.realtype.nativeType('in').strip())
     else:
         return macro
@@ -345,7 +358,7 @@ def write_interface(iface, fd):
     if iface.attributes.scriptable:
         fd.write("NS_SCRIPTABLE ")
     if iface.attributes.deprecated:
-        fd.write("NS_DEPRECATED ")
+        fd.write("MOZ_DEPRECATED ")
     fd.write(iface.name)
     if iface.base:
         fd.write(" : public %s" % iface.base)
@@ -410,12 +423,12 @@ def write_interface(iface, fd):
         fd.write("/* %s */\n" % member.toIDL())
         if isinstance(member, xpidl.Attribute):
             fd.write(example_tmpl % {'implclass': implclass,
-                                     'returntype': 'NS_IMETHODIMP',
+                                     'returntype': attributeReturnType(member, 'NS_IMETHODIMP'),
                                      'nativeName': attributeNativeName(member, True),
                                      'paramList': attributeParamlist(member, True)})
             if not member.readonly:
                 fd.write(example_tmpl % {'implclass': implclass,
-                                         'returntype': 'NS_IMETHODIMP',
+                                         'returntype': attributeReturnType(member, 'NS_IMETHODIMP'),
                                          'nativeName': attributeNativeName(member, False),
                                          'paramList': attributeParamlist(member, False)})
         elif isinstance(member, xpidl.Method):

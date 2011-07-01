@@ -1,6 +1,7 @@
 url-prefix ../../jsreftest.html?test=js1_8_5/extensions/
 script typedarray.js
 script typedarray-prototype.js
+script arraybuffer-prototype.js
 script typedarray-subarray-of-subarray.js
 skip-if(!xulRuntime.shell) script worker-error.js  # these tests sometimes hang in browser, bug 559954, bug 562333
 skip-if(!xulRuntime.shell) script worker-error-propagation.js
@@ -26,8 +27,10 @@ skip-if(!xulRuntime.shell) script clone-object.js
 skip-if(!xulRuntime.shell) script clone-typed-array.js
 skip-if(!xulRuntime.shell) script clone-errors.js
 skip-if(!xulRuntime.shell) script clone-forge.js
+skip-if(!xulRuntime.shell) script clone-complex-object.js
 script set-property-non-extensible.js
 script recursion.js
+script regress-627859.js
 script regress-627984-1.js
 script regress-627984-2.js
 script regress-627984-3.js

@@ -1725,7 +1725,7 @@ FixLazyArguments(JSContext *cx, JSScript *script)
     if (!analysis || analysis->OOM())
         return;
 
-    for (FrameRegsIter iter(cx, FRAME_EXPAND_NONE); !iter.done(); ++iter) {
+    for (FrameRegsIter iter(cx); !iter.done(); ++iter) {
         StackFrame *fp = iter.fp();
         if (fp->isScriptFrame() && fp->script() == script) {
             /*
@@ -2955,7 +2955,7 @@ TypeObject::clearNewScript(JSContext *cx)
      * script keeps track of where each property is initialized so we can walk
      * the stack and fix up any such objects.
      */
-    for (FrameRegsIter iter(cx, FRAME_EXPAND_ALL); !iter.done(); ++iter) {
+    for (FrameRegsIter iter(cx); !iter.done(); ++iter) {
         StackFrame *fp = iter.fp();
         if (fp->isScriptFrame() && fp->isConstructing() &&
             fp->script() == newScript->script && fp->thisValue().isObject() &&
@@ -2991,7 +2991,7 @@ TypeObject::clearNewScript(JSContext *cx)
                         break;
                     } else if (init->offset == offset) {
                         StackSegment &seg = cx->stack.space().containingSegment(fp);
-                        if (seg.currentFrame() == fp)
+                        if (seg.maybefp() == fp)
                             break;
                         fp = seg.computeNextFrame(fp);
                         pc = fp->pcQuadratic(cx->stack);

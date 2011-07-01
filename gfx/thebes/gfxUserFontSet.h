@@ -71,12 +71,26 @@ struct gfxFontFaceSrc {
     
 };
 
-// subclassed to store platform-specific code cleaned out when font entry is deleted
-// lifetime: from when platform font is created until it is deactivated 
+// Subclassed to store platform-specific code cleaned out when font entry is
+// deleted.
+// Lifetime: from when platform font is created until it is deactivated.
+// If the platform does not need to add any platform-specific code/data here,
+// then the gfxUserFontSet will allocate a base gfxUserFontData and attach
+// to the entry to track the basic user font info fields here.
 class gfxUserFontData {
 public:
-    gfxUserFontData() { }
+    gfxUserFontData()
+        : mSrcIndex(0), mFormat(0), mMetaOrigLen(0)
+    { }
     virtual ~gfxUserFontData() { }
+
+    nsTArray<PRUint8> mMetadata;  // woff metadata block (compressed), if any
+    nsCOMPtr<nsIURI>  mURI;       // URI of the source, if it was url()
+    nsString          mLocalName; // font name used for the source, if local()
+    nsString          mRealName;  // original fullname from the font resource
+    PRUint32          mSrcIndex;  // index in the rule's source list
+    PRUint32          mFormat;    // format hint for the source used, if any
+    PRUint32          mMetaOrigLen; // length needed to decompress metadata
 };
 
 // initially contains a set of proxy font entry objects, replaced with

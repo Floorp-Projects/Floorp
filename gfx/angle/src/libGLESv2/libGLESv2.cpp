@@ -28,6 +28,31 @@
 #include "libGLESv2/Shader.h"
 #include "libGLESv2/Texture.h"
 
+bool validImageSize(GLint level, GLsizei width, GLsizei height)
+{
+    if (level < 0 || width < 0 || height < 0)
+    {
+        return false;
+    }
+
+    if (gl::getContext() && gl::getContext()->supportsNonPower2Texture())
+    {
+        return true;
+    }
+
+    if (level == 0)
+    {
+        return true;
+    }
+
+    if (gl::isPow2(width) && gl::isPow2(height))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 extern "C"
 {
 
@@ -738,12 +763,7 @@ void __stdcall glCompressedTexImage2D(GLenum target, GLint level, GLenum interna
 
     try
     {
-        if (level < 0)
-        {
-            return error(GL_INVALID_VALUE);
-        }
-
-        if (width < 0 || height < 0 || (level > 0 && !gl::isPow2(width)) || (level > 0 && !gl::isPow2(height)) || border != 0 || imageSize < 0)
+        if (!validImageSize(level, width, height) || border != 0 || imageSize < 0)
         {
             return error(GL_INVALID_VALUE);
         }
@@ -868,13 +888,7 @@ void __stdcall glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffs
             return error(GL_INVALID_ENUM);
         }
 
-        if (level < 0)
-        {
-            return error(GL_INVALID_VALUE);
-        }
-
-        if (xoffset < 0 || yoffset < 0 || width < 0 || height < 0 || 
-            (level > 0 && !gl::isPow2(width)) || (level > 0 && !gl::isPow2(height)) || imageSize < 0)
+        if (xoffset < 0 || yoffset < 0 || !validImageSize(level, width, height) || imageSize < 0)
         {
             return error(GL_INVALID_VALUE);
         }
@@ -982,12 +996,7 @@ void __stdcall glCopyTexImage2D(GLenum target, GLint level, GLenum internalforma
 
     try
     {
-        if (level < 0 || width < 0 || height < 0)
-        {
-            return error(GL_INVALID_VALUE);
-        }
-
-        if (level > 0 && (!gl::isPow2(width) || !gl::isPow2(height)))
+        if (!validImageSize(level, width, height))
         {
             return error(GL_INVALID_VALUE);
         }
@@ -4397,12 +4406,7 @@ void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
 
     try
     {
-        if (level < 0 || width < 0 || height < 0)
-        {
-            return error(GL_INVALID_VALUE);
-        }
-
-        if (level > 0 && (!gl::isPow2(width) || !gl::isPow2(height)))
+        if (!validImageSize(level, width, height))
         {
             return error(GL_INVALID_VALUE);
         }

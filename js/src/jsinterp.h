@@ -145,28 +145,6 @@ inline bool
 ComputeThis(JSContext *cx, StackFrame *fp);
 
 /*
- * Choose enumerator values so that the enum can be passed used directly as the
- * stack frame flags.
- */
-enum ConstructOption {
-    INVOKE_NORMAL = 0,
-    INVOKE_CONSTRUCTOR = StackFrame::CONSTRUCTING
-};
-JS_STATIC_ASSERT(INVOKE_CONSTRUCTOR != INVOKE_NORMAL);
-
-static inline uintN
-ToReportFlags(ConstructOption option)
-{
-    return (uintN)option;
-}
-
-static inline uint32
-ToFrameFlags(ConstructOption option)
-{
-    return (uintN)option;
-}
-
-/*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
  * immediately-enclosing successful call to js::StackSpace::pushInvokeArgs,
  * i.e., there must have been no un-popped pushes to cx->stack. Furthermore,
@@ -174,8 +152,24 @@ ToFrameFlags(ConstructOption option)
  * and the range [args.getvp() + 2, args.getvp() + 2 + args.getArgc()) should
  * be initialized actual arguments.
  */
-extern JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, const CallArgs &args, ConstructOption option = INVOKE_NORMAL);
+extern bool
+Invoke(JSContext *cx, const CallArgs &args, MaybeConstruct construct = NO_CONSTRUCT);
+
+/*
+ * For calls to natives, the InvokeArgsGuard object provides a record of the
+ * call for the debugger's callstack. For this to work, the InvokeArgsGuard
+ * record needs to know when the call is actually active (because the
+ * InvokeArgsGuard can be pushed long before and popped long after the actual
+ * call, during which time many stack-observing things can happen).
+ */
+inline bool
+Invoke(JSContext *cx, InvokeArgsGuard &args, MaybeConstruct construct = NO_CONSTRUCT)
+{
+    args.setActive();
+    bool ok = Invoke(cx, ImplicitCast<CallArgs>(args), construct);
+    args.setInactive();
+    return ok;
+}
 
 /*
  * Natives like sort/forEach/replace call Invoke repeatedly with the same
@@ -235,13 +229,18 @@ extern bool
 ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
                           Value *rval);
 
+extern bool
+ExternalExecute(JSContext *cx, JSScript *script, JSObject &scopeChain, Value *rval);
+
 /*
- * Executes a script with the given scope chain in the context of the given
- * frame.
+ * Executes a script with the given scopeChain/this. The 'type' indicates
+ * whether this is eval code or global code. To support debugging, the
+ * evalFrame parameter can point to an arbitrary frame in the context's call
+ * stack to simulate executing an eval in that frame.
  */
-extern JS_FORCES_STACK bool
-Execute(JSContext *cx, JSObject &chain, JSScript *script,
-        StackFrame *prev, uintN flags, Value *result);
+extern bool
+Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
+        ExecuteType type, StackFrame *evalInFrame, Value *result);
 
 /* Flags to toggle js::Interpret() execution. */
 enum InterpMode
@@ -293,8 +292,12 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp);
  *                          closure level.
  * @return  The value of the upvar.
  */
-extern const js::Value &
-GetUpvar(JSContext *cx, uintN level, js::UpvarCookie cookie);
+extern const Value &
+GetUpvar(JSContext *cx, uintN level, UpvarCookie cookie);
+
+/* Search the call stack for the nearest frame with static level targetLevel. */
+extern StackFrame *
+FindUpvarFrame(JSContext *cx, uintN targetLevel);
 
 } /* namespace js */
 
@@ -336,22 +339,6 @@ js_LeaveWith(JSContext *cx);
  */
 extern JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, js::Value *vp, js::Value *vp2);
-
-/*
- * Opcode tracing helper. When len is not 0, cx->fp->regs->pc[-len] gives the
- * previous opcode.
- */
-extern JS_REQUIRES_STACK void
-js_LogOpcode(JSContext *cx);
-
-/*
- * JS_OPMETER helper functions.
- */
-extern void
-js_MeterOpcodePair(JSOp op1, JSOp op2);
-
-extern void
-js_MeterSlotOpcode(JSOp op, uint32 slot);
 
 #endif /* JS_LONE_INTERPRET */
 /*

@@ -114,9 +114,9 @@ var testCases = [
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
-const histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
 var libraryWin;
 
@@ -301,24 +301,5 @@ function test() {
                                        "dummy");
   PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
 
-  var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
-
-  function windowObserver(aSubject, aTopic, aData) {
-    if (aTopic != "domwindowopened")
-      return;
-    ww.unregisterNotification(windowObserver);
-    var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-    win.addEventListener("load", function onLoad(event) {
-      win.removeEventListener("load", onLoad, false);
-      executeSoon(function () testHelper(win));
-    }, false);
-  }
-
-  ww.registerNotification(windowObserver);
-  ww.openWindow(null,
-                "chrome://browser/content/places/places.xul",
-                "",
-                "chrome,toolbar=yes,dialog=no,resizable",
-                null);
+  openLibrary(testHelper);
 }

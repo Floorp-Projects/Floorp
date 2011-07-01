@@ -45,7 +45,7 @@
 #include "mozilla/plugins/PPluginSurfaceChild.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
-#elif defined(OS_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
 #include "nsCoreAnimationSupport.h"
 #include "base/timer.h"
 #endif
@@ -87,6 +87,8 @@ class PluginInstanceChild : public PPluginInstanceChild
 protected:
     virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window);
 
+    virtual bool
+    AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(bool* wantsAllStreams, NPError* rv);
     virtual bool
     AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv);
     virtual bool
@@ -405,7 +407,7 @@ private:
       HBITMAP         bmp;
     } mAlphaExtract;
 #endif // defined(OS_WIN)
-#if defined(OS_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
 private:
 #if defined(__i386__)
     NPEventModel          mEventModel;

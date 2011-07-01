@@ -1535,8 +1535,9 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
     // XXX Check if it's an image type we can handle...
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage, nsnull,
-                                                         kNameSpaceID_XHTML);
+    nodeInfo = mDocument->NodeInfoManager()->
+      GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage, nsnull,
+                  kNameSpaceID_XHTML, nsIDOMNode::ELEMENT_NODE);
 
     nsCOMPtr<nsIContent> content;
     NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo.forget(),
@@ -1599,8 +1600,6 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       nsCounterUseNode* node =
         new nsCounterUseNode(counters, aContentIndex,
                              type == eStyleContentType_Counters);
-      if (!node)
-        return nsnull;
 
       nsGenConInitializer* initializer =
         new nsGenConInitializer(node, counterList,
@@ -1620,8 +1619,6 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
     {
       nsQuoteNode* node =
         new nsQuoteNode(type, aContentIndex);
-      if (!node)
-        return nsnull;
 
       nsGenConInitializer* initializer =
         new nsGenConInitializer(node, &mQuoteList,
@@ -1712,7 +1709,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   nsIAtom* elemName = aPseudoElement == nsCSSPseudoElements::ePseudo_before ?
     nsGkAtoms::mozgeneratedcontentbefore : nsGkAtoms::mozgeneratedcontentafter;
   nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(elemName, nsnull,
-                                                       kNameSpaceID_None);
+                                                       kNameSpaceID_None,
+                                                       nsIDOMNode::ELEMENT_NODE);
   nsCOMPtr<nsIContent> container;
   nsresult rv = NS_NewXMLElement(getter_AddRefs(container), nodeInfo.forget());
   if (NS_FAILED(rv))
@@ -5070,9 +5068,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     PRBool resolveStyle;
 
     nsAutoPtr<PendingBinding> newPendingBinding(new PendingBinding());
-    if (!newPendingBinding) {
-      return;
-    }
+
     nsresult rv = xblService->LoadBindings(aContent, display->mBinding->GetURI(),
                                            display->mBinding->mOriginPrincipal,
                                            PR_FALSE,
@@ -7687,13 +7683,13 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       }
     }
     if (aChange & nsChangeHint_UpdateOpacityLayer) {
-      aFrame->MarkLayersActive();
+      aFrame->MarkLayersActive(nsChangeHint_UpdateOpacityLayer);
       aFrame->InvalidateLayer(aFrame->GetVisualOverflowRectRelativeToSelf(),
                               nsDisplayItem::TYPE_OPACITY);
     }
     
     if (aChange & nsChangeHint_UpdateTransformLayer) {
-      aFrame->MarkLayersActive();
+      aFrame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
       // Invalidate the old transformed area. The new transformed area
       // will be invalidated by nsFrame::FinishAndStoreOverflowArea.
       aFrame->InvalidateTransformLayer();
@@ -9402,10 +9398,6 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(nsFrameConstructorState& aState,
                                 nsnull,
                                 wrapperStyle.forget(),
                                 PR_TRUE);
-
-    if (!newItem) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     // Here we're cheating a tad... technically, table-internal items should be
     // inline if aParentFrame is inline, but they'll get wrapped in an

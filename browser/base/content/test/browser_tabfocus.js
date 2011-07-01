@@ -24,6 +24,9 @@ function test() {
     if (++loadCount != 2)
       return;
 
+    browser1.removeEventListener("load", check, true);
+    browser2.removeEventListener("load", check, true);
+
     window.focus();
 
     _browser_tabfocus_test_lastfocus = gURLBar;
@@ -139,8 +142,8 @@ function test() {
     EventUtils.synthesizeKey("VK_F6", { });
     is(fm.focusedWindow, window, "switch document forward again with f6 when browser non-focusable");
 
-    window.addEventListener("focus", _browser_tabfocus_test_eventOccured, true);
-    window.addEventListener("blur", _browser_tabfocus_test_eventOccured, true);
+    window.removeEventListener("focus", _browser_tabfocus_test_eventOccured, true);
+    window.removeEventListener("blur", _browser_tabfocus_test_eventOccured, true);
 
     // next, check whether navigating forward, focusing the urlbar and then
     // navigating back maintains the focus in the urlbar.
@@ -186,6 +189,7 @@ function _browser_tabfocus_navigation_test_eventOccured(event)
       setTimeout(function () contentwin.history.back(), 0);
     }
     else if (contentwin.location.toString().indexOf("2") > 0) {
+      event.currentTarget.removeEventListener("pageshow", _browser_tabfocus_navigation_test_eventOccured, true);
       is(window.document.activeElement, gURLBar.inputField, "urlbar still focused after navigating back");
       gBrowser.removeCurrentTab();
       gBrowser.removeCurrentTab();

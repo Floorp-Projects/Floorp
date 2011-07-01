@@ -2,9 +2,9 @@
 setDebug(true);
 
 function nop(){}
-function caller(obj) {
-  eval();
+function caller(code, obj) {
+  eval(code); // Make the compiler give up on binding analysis.
   return x;
 }
-trap(caller, 13, "var x = 'success'; nop()");
-assertEq(caller(this), "success");
+trap(caller, 16, "var x = 'success'; nop()");
+assertEq(caller("var y = 'ignominy'", this), "success");

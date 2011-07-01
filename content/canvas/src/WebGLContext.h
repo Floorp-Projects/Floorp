@@ -342,6 +342,9 @@ public:
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
+    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot()
+        { return nsnull; }
+
     NS_IMETHOD SetIsOpaque(PRBool b) { return NS_OK; };
     NS_IMETHOD SetContextOptions(nsIPropertyBag *aOptions);
 
@@ -448,7 +451,6 @@ protected:
         return mEnabledExtensions[ext] != nsnull;
     }
 
-    PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRInt32* maxAllowedCount, const char *info);
     PRBool ValidateCapabilityEnum(WebGLenum cap, const char *info);

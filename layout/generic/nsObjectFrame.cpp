@@ -199,8 +199,43 @@ static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif /* PR_LOGGING */
 
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
+
 #define MAC_CARBON_PLUGINS
-#endif
+
+// The header files QuickdrawAPI.h and QDOffscreen.h are missing on OS X 10.7
+// and up (though the QuickDraw APIs defined in them are still present) -- so
+// we need to supply the relevant parts of their contents here.  It's likely
+// that Apple will eventually remove the APIs themselves (probably in OS X
+// 10.8), so we need to make them weak imports, and test for their presence
+// before using them.
+extern "C" {
+  #if !defined(__QUICKDRAWAPI__)
+  extern void SetRect(
+    Rect * r,
+    short  left,
+    short  top,
+    short  right,
+    short  bottom)
+    __attribute__((weak_import));
+  #endif /* __QUICKDRAWAPI__ */
+
+  #if !defined(__QDOFFSCREEN__)
+  extern QDErr NewGWorldFromPtr(
+    GWorldPtr *   offscreenGWorld,
+    UInt32        PixelFormat,
+    const Rect *  boundsRect,
+    CTabHandle    cTable,                /* can be NULL */
+    GDHandle      aGDevice,              /* can be NULL */
+    GWorldFlags   flags,
+    Ptr           newBuffer,
+    SInt32        rowBytes)
+    __attribute__((weak_import));
+  extern void DisposeGWorld(GWorldPtr offscreenGWorld)
+    __attribute__((weak_import));
+  #endif /* __QDOFFSCREEN__ */
+}
+
+#endif /* #if defined(XP_MACOSX) && !defined(NP_NO_CARBON) */
 
 using namespace mozilla;
 using namespace mozilla::plugins;
@@ -921,7 +956,8 @@ public:
   NS_DISPLAY_DECL_NAME("PluginReadback", TYPE_PLUGIN_READBACK)
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager)
+                                             LayerManager* aManager,
+                                             const ContainerParameters& aContainerParameters)
   {
     return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
   }
@@ -1272,6 +1308,13 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   
 // platform specific printing code
 #ifdef MAC_CARBON_PLUGINS
+  // Don't use this code if any of the QuickDraw APIs it currently requires
+  // are missing (as they probably will be on OS X 10.8 and up).
+  if (!::SetRect || !::NewGWorldFromPtr || !::DisposeGWorld) {
+    NS_WARNING("Cannot print plugin -- required QuickDraw APIs are missing!");
+    return;
+  }
+
   nsSize contentSize = GetContentRectRelativeToSelf().Size();
   window.x = 0;
   window.y = 0;
@@ -1341,7 +1384,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   window.window = &gWorld;
   npprint.print.embedPrint.platformPrint = gWorld;
   npprint.print.embedPrint.window = window;
-  nsresult rv = pi->Print(&npprint);
+  pi->Print(&npprint);
 
   ::CGContextTranslateCTM(cgContext, 0.0f, float(window.height));
   ::CGContextScaleCTM(cgContext, 1.0f, -1.0f);
@@ -2059,9 +2102,6 @@ nsObjectFrame::PrepareInstanceOwner()
          ("Created new instance owner %p for frame %p\n", mInstanceOwner.get(),
           this));
 
-  if (!mInstanceOwner)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   // Note, |this| may very well be gone after this call.
   return mInstanceOwner->Init(PresContext(), this, GetContent());
 }
@@ -2236,7 +2276,7 @@ GetMIMEType(nsNPAPIPluginInstance *aPluginInstance)
   }
   return "";
 }
-#endif XP_WIN
+#endif // XP_WIN
 
 static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)

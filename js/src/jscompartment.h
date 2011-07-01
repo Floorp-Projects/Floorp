@@ -42,12 +42,10 @@
 
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jsmath.h"
 #include "jsobj.h"
 #include "jsfun.h"
 #include "jsgcstats.h"
 #include "jsclist.h"
-#include "jsxml.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -301,17 +299,6 @@ class JaegerCompartment;
 #endif
 #define JS_EVAL_CACHE_SIZE          JS_BIT(JS_EVAL_CACHE_SHIFT)
 
-#ifdef DEBUG
-# define EVAL_CACHE_METER_LIST(_)   _(probe), _(hit), _(step), _(noscope)
-# define identity(x)                x
-
-struct JSEvalCacheMeter {
-    uint64 EVAL_CACHE_METER_LIST(identity);
-};
-
-# undef identity
-#endif
-
 namespace js {
 
 class NativeIterCache {
@@ -346,6 +333,8 @@ class NativeIterCache {
         data[getIndex(key)] = iterobj;
     }
 };
+
+class MathCache;
 
 /*
  * A single-entry cache for some base-10 double-to-string conversions. This
@@ -405,29 +394,44 @@ struct JS_FRIEND_API(JSCompartment) {
     bool condenseTypes(JSContext *cx);
 
 #ifdef JS_TRACER
-    /* Trace-tree JIT recorder/interpreter state. */
-    js::TraceMonitor             traceMonitor;
+  private:
+    /*
+     * Trace-tree JIT recorder/interpreter state.  It's created lazily because
+     * many compartments don't end up needing it.
+     */
+    js::TraceMonitor             *traceMonitor_;
 #endif
 
+  public:
     /* Hashed lists of scripts created by eval to garbage-collect. */
     JSScript                     *scriptsToGC[JS_EVAL_CACHE_SIZE];
-
-#ifdef DEBUG
-    JSEvalCacheMeter             evalCacheMeter;
-#endif
 
     void                         *data;
     bool                         active;  // GC flag, whether there are active frames
     js::WrapperMap               crossCompartmentWrappers;
 
 #ifdef JS_METHODJIT
-    js::mjit::JaegerCompartment  *jaegerCompartment;
+  private:
+    /* This is created lazily because many compartments don't need it. */
+    js::mjit::JaegerCompartment  *jaegerCompartment_;
     /*
      * This function is here so that xpconnect/src/xpcjsruntime.cpp doesn't
      * need to see the declaration of JaegerCompartment, which would require
      * #including MethodJIT.h into xpconnect/src/xpcjsruntime.cpp, which is
      * difficult due to reasons explained in bug 483677.
      */
+  public:
+    bool hasJaegerCompartment() {
+        return !!jaegerCompartment_;
+    }
+
+    js::mjit::JaegerCompartment *jaegerCompartment() const {
+        JS_ASSERT(jaegerCompartment_);
+        return jaegerCompartment_;
+    }
+
+    bool ensureJaegerCompartmentExists(JSContext *cx);
+
     size_t getMjitCodeSize() const;
 #endif
     WTF::BumpPointerAllocator    *regExpAllocator;
@@ -507,7 +511,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void finalizeShapeArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
 
-    void setGCLastBytes(size_t lastBytes);
+    void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(uint32 amount);
 
     js::DtoaCache dtoaCache;
@@ -530,6 +534,19 @@ struct JS_FRIEND_API(JSCompartment) {
         return mathCache ? mathCache : allocMathCache(cx);
     }
 
+#ifdef JS_TRACER
+    bool hasTraceMonitor() {
+        return !!traceMonitor_;
+    }
+
+    js::TraceMonitor *allocAndInitTraceMonitor(JSContext *cx);
+
+    js::TraceMonitor *traceMonitor() const {
+        JS_ASSERT(traceMonitor_);
+        return traceMonitor_;
+    }
+#endif
+
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
 };
@@ -537,23 +554,17 @@ struct JS_FRIEND_API(JSCompartment) {
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
 #define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)
 
-#ifdef DEBUG
-#define JS_COMPARTMENT_METER(x) x
-#else
-#define JS_COMPARTMENT_METER(x)
-#endif
-
 /*
  * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
  * thread, regardless of whether cx is the context in which that trace is
  * executing. cx must be a context on the current thread.
  */
 static inline bool
-JS_ON_TRACE(JSContext *cx)
+JS_ON_TRACE(const JSContext *cx)
 {
 #ifdef JS_TRACER
     if (JS_THREAD_DATA(cx)->onTraceCompartment)
-        return JS_THREAD_DATA(cx)->onTraceCompartment->traceMonitor.ontrace();
+        return JS_THREAD_DATA(cx)->onTraceCompartment->traceMonitor()->ontrace();
 #endif
     return false;
 }
@@ -563,7 +574,7 @@ static inline js::TraceMonitor *
 JS_TRACE_MONITOR_ON_TRACE(JSContext *cx)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
-    return &JS_THREAD_DATA(cx)->onTraceCompartment->traceMonitor;
+    return JS_THREAD_DATA(cx)->onTraceCompartment->traceMonitor();
 }
 
 /*
@@ -574,7 +585,20 @@ JS_TRACE_MONITOR_ON_TRACE(JSContext *cx)
 static inline js::TraceMonitor *
 JS_TRACE_MONITOR_FROM_CONTEXT(JSContext *cx)
 {
-    return &cx->compartment->traceMonitor;
+    return cx->compartment->traceMonitor();
+}
+
+/*
+ * This one also creates the TraceMonitor if it doesn't already exist.
+ * It returns NULL if the lazy creation fails due to OOM.
+ */
+static inline js::TraceMonitor *
+JS_TRACE_MONITOR_FROM_CONTEXT_WITH_LAZY_INIT(JSContext *cx)
+{
+    if (!cx->compartment->hasTraceMonitor())
+        return cx->compartment->allocAndInitTraceMonitor(cx);
+        
+    return cx->compartment->traceMonitor();
 }
 #endif
 
@@ -583,7 +607,7 @@ TRACE_RECORDER(JSContext *cx)
 {
 #ifdef JS_TRACER
     if (JS_THREAD_DATA(cx)->recordingCompartment)
-        return JS_THREAD_DATA(cx)->recordingCompartment->traceMonitor.recorder;
+        return JS_THREAD_DATA(cx)->recordingCompartment->traceMonitor()->recorder;
 #endif
     return NULL;
 }
@@ -593,7 +617,7 @@ TRACE_PROFILER(JSContext *cx)
 {
 #ifdef JS_TRACER
     if (JS_THREAD_DATA(cx)->profilingCompartment)
-        return JS_THREAD_DATA(cx)->profilingCompartment->traceMonitor.profile;
+        return JS_THREAD_DATA(cx)->profilingCompartment->traceMonitor()->profile;
 #endif
     return NULL;
 }
@@ -612,12 +636,6 @@ JSContext::setCompartment(JSCompartment *compartment)
     this->compartment = compartment;
     this->inferenceEnabled = compartment ? compartment->types.inferenceEnabled : false;
 }
-
-#ifdef DEBUG
-# define EVAL_CACHE_METER(x)    (cx->compartment->evalCacheMeter.x++)
-#else
-# define EVAL_CACHE_METER(x)    ((void) 0)
-#endif
 
 #ifdef _MSC_VER
 #pragma warning(pop)

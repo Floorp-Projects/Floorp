@@ -41,7 +41,6 @@
 #include "nsUConvPropertySearch.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
-#include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIUnicodeDecoder.h"

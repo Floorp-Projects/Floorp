@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -122,6 +123,7 @@
   display: block !important;
   position: static !important;
   unicode-bidi: inherit;
+  text-overflow: inherit;
 }
 
 *|*::-moz-anonymous-block, *|*::-moz-anonymous-positioned-block {
@@ -131,6 +133,7 @@
   clip-path: inherit;
   filter: inherit;
   mask: inherit;
+  opacity: inherit;
   -moz-box-ordinal-group: inherit !important;
 }
 
@@ -152,6 +155,7 @@
   /* make unicode-bidi inherit, otherwise it has no effect on text inputs and
      blocks with overflow: scroll; */
   unicode-bidi: inherit;
+  text-overflow: inherit;
   -moz-column-count: inherit;
   -moz-column-width: inherit;
   -moz-column-gap: inherit;
@@ -178,6 +182,7 @@
   /* the column boxes inside a column-flowed block */
   /* make unicode-bidi inherit, otherwise it has no effect on column boxes */
   unicode-bidi: inherit;
+  text-overflow: inherit;
   /* inherit the outer frame's display, otherwise we turn into an inline */
   display: inherit !important;
   /* Carry through our parent's height so that %-height children get
@@ -185,9 +190,21 @@
   height: 100%;
 }
 
-*|*::-moz-page, *|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
+*|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
+  /* Collection of pages in print/print preview. Visual styles may only appear
+   * in print preview. */
   display: block !important;
-  background: transparent;
+  background: -moz-linear-gradient(top, #606060, #8a8a8a) fixed;
+  height: 100%;
+}
+
+*|*::-moz-page {
+  /* Individual page in print/print preview. Visual styles may only appear
+   * in print preview. */
+  display: block !important;
+  background: white;
+  box-shadow: 5px 5px 8px #202020;
+  margin: 0.125in 0.25in;
 }
 
 *|*::-moz-pagecontent {
@@ -209,6 +226,7 @@
   clip: inherit;
   opacity: inherit;
   unicode-bidi: inherit;
+  text-overflow: inherit;
 }
 
 /* Printing */

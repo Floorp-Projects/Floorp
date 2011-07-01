@@ -48,7 +48,18 @@ pre.output { border: medium solid; padding: 1em; margin: 1em; }
 </style>
 <script type="text/javascript">
 
-function runfile(file) {
+function runFile(file) {
+  var result = "Results of processing log " + file.fileName + " :\n";
+
+  var fileReader = new FileReader();
+  fileReader.onload = function(e)
+  {
+    runContents(result, e.target.result);
+  }
+  fileReader.readAsText(file, "iso-8859-1");
+}
+
+function runContents(result, contents) {
     // A hash of objects (keyed by the first word of the line in the log)
     // that have two public methods, handle_line and dump (to be called using
     // call, above), along with any private data they need.
@@ -236,9 +247,6 @@ function runfile(file) {
         }
     };
 
-    var result = "Results of processing log " + file.fileName + " :\n";
-
-    var contents = file.getAsText("iso-8859-1");
     var lines = contents.split(/[\r\n]+/);
     for (var j in lines) {
         var line = lines[j];

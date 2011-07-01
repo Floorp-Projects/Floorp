@@ -58,15 +58,4 @@ include $(topsrcdir)/config/config.mk
 SHARED_LIBRARY_LIBS += ../directory/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../directory
 
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
-endif
-
-EXTRA_DSO_LDOPTS += \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_JS_LIBS) \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk

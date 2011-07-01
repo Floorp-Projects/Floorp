@@ -48,6 +48,8 @@
 #include "jsregexp.h"
 #include "jsgc.h"
 
+#include "frontend/ParseMaps.h"
+
 namespace js {
 
 struct PreserveRegsGuard
@@ -82,7 +84,7 @@ GetGlobalForScopeChain(JSContext *cx)
      */
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    if (cx->running())
+    if (cx->hasfp())
         return cx->fp()->scopeChain().getGlobal();
 
     JSObject *scope = cx->globalObject;
@@ -127,7 +129,7 @@ class CompartmentChecker
 
   public:
     explicit CompartmentChecker(JSContext *cx) : context(cx), compartment(cx->compartment) {
-        check(cx->running() ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
+        check(cx->hasfp() ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
         VOUCH_DOES_NOT_REQUIRE_STACK();
     }
 
@@ -188,6 +190,11 @@ class CompartmentChecker
     void check(const JSValueArray &arr) {
         for (size_t i = 0; i < arr.length; i++)
             check(arr.array[i]);
+    }
+
+    void check(const CallArgs &args) {
+        for (Value *p = args.base(); p != args.end(); ++p)
+            check(*p);
     }
 
     void check(jsid id) {
@@ -285,17 +292,17 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 
 #undef START_ASSERT_SAME_COMPARTMENT
 
-STATIC_PRECONDITION_ASSUME(ubound(vp) >= argc + 2)
+STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 JS_ALWAYS_INLINE bool
-CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
+CallJSNative(JSContext *cx, js::Native native, const CallArgs &args)
 {
 #ifdef DEBUG
     JSBool alreadyThrowing = cx->isExceptionPending();
 #endif
-    assertSameCompartment(cx, ValueArray(vp, argc + 2));
-    JSBool ok = native(cx, argc, vp);
+    assertSameCompartment(cx, args);
+    JSBool ok = native(cx, args.argc(), args.base());
     if (ok) {
-        assertSameCompartment(cx, vp[0]);
+        assertSameCompartment(cx, args.rval());
         JS_ASSERT_IF(!alreadyThrowing, !cx->isExceptionPending());
     }
     return ok;
@@ -303,16 +310,16 @@ CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 
 extern JSBool CallOrConstructBoundFunction(JSContext *, uintN, js::Value *);
 
-STATIC_PRECONDITION(ubound(vp) >= argc + 2)
+STATIC_PRECONDITION(ubound(args.argv_) >= argc)
 JS_ALWAYS_INLINE bool
-CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
+CallJSNativeConstructor(JSContext *cx, js::Native native, const CallArgs &args)
 {
 #ifdef DEBUG
-    JSObject *callee = &vp[0].toObject();
+    JSObject &callee = args.callee();
 #endif
 
-    JS_ASSERT(vp[1].isMagic());
-    if (!CallJSNative(cx, native, argc, vp))
+    JS_ASSERT(args.thisv().isMagic());
+    if (!CallJSNative(cx, native, args))
         return false;
 
     /*
@@ -331,9 +338,12 @@ CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value 
      * (new Object(Object)) returns the callee.
      */
     extern JSBool proxy_Construct(JSContext *, uintN, Value *);
-    JS_ASSERT_IF(native != proxy_Construct && native != js::CallOrConstructBoundFunction &&
-                 (!callee->isFunction() || callee->getFunctionPrivate()->u.n.clasp != &js_ObjectClass),
-                 !vp->isPrimitive() && callee != &vp[0].toObject());
+    extern JSBool callable_Construct(JSContext *, uintN, Value *);
+    JS_ASSERT_IF(native != proxy_Construct &&
+                 native != callable_Construct &&
+                 native != js::CallOrConstructBoundFunction &&
+                 (!callee.isFunction() || callee.getFunctionPrivate()->u.n.clasp != &js_ObjectClass),
+                 !args.rval().isPrimitive() && callee != args.rval().toObject());
 
     return true;
 }
@@ -397,23 +407,12 @@ LeaveTraceIfArgumentsObject(JSContext *cx, JSObject *obj)
         LeaveTrace(cx);
 }
 
-static JS_INLINE JSBool
-CanLeaveTrace(JSContext *cx)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-#ifdef JS_TRACER
-    return JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit != NULL;
-#else
-    return JS_FALSE;
-#endif
-}
-
 }  /* namespace js */
 
 #ifdef JS_METHODJIT
 inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
 {
-    return compartment->jaegerCompartment;
+    return compartment->jaegerCompartment();
 }
 #endif
 
@@ -437,6 +436,15 @@ JSContext::setPendingException(js::Value v) {
     this->throwing = true;
     this->exception = v;
     assertSameCompartment(this, v);
+}
+
+inline bool
+JSContext::ensureParseMapPool()
+{
+    if (parseMapPool_)
+        return true;
+    parseMapPool_ = js::OffTheBooks::new_<js::ParseMapPool>(this);
+    return parseMapPool_;
 }
 
 #endif /* jscntxtinlines_h___ */

@@ -276,10 +276,10 @@ public:
   nsresult AddSourceData(const char *aBuffer, PRUint32 aCount);
 
   /* Called after the all the source data has been added with addSourceData. */
-  virtual nsresult SourceDataComplete();
+  nsresult SourceDataComplete();
 
   /* Called for multipart images when there's a new source image to add. */
-  virtual nsresult NewSourceData();
+  nsresult NewSourceData();
 
   /**
    * A hint of the number of bytes of source data that the image contains. If
@@ -292,7 +292,7 @@ public:
    * Thus, pre-allocation simplifies code and reduces the total number of
    * allocations.
    */
-  virtual nsresult SetSourceSizeHint(PRUint32 sizeHint);
+  nsresult SetSourceSizeHint(PRUint32 sizeHint);
 
   // "Blend" method indicates how the current image is combined with the
   // previous image.
@@ -486,7 +486,7 @@ private: // data
   DiscardTrackerNode         mDiscardTrackerNode;
 
   // Source data members
-  nsTArray<char>             mSourceData;
+  FallibleTArray<char>       mSourceData;
   nsCString                  mSourceDataMimeType;
   nsCString                  mURIString;
 

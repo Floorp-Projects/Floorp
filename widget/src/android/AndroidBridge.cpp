@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <android/log.h>
+#include <dlfcn.h>
 
 #include "nsXULAppAPI.h"
 #include <pthread.h>
@@ -45,8 +46,8 @@
 #include "AndroidBridge.h"
 #include "nsAppShell.h"
 #include "nsOSHelperAppService.h"
-#include "nsIPrefService.h"
 #include "nsWindow.h"
+#include "mozilla/Preferences.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -104,6 +105,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     mJNIEnv = nsnull;
     mThread = nsnull;
+    mOpenedBitmapLibrary = false;
+    mHasNativeBitmapAccess = false;
 
     mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
 
@@ -112,7 +115,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jNotifyIMEChange = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEChange", "(Ljava/lang/String;III)V");
     jAcknowledgeEventSync = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "acknowledgeEventSync", "()V");
 
-    jEnableAccelerometer = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableAccelerometer", "(Z)V");
+    jEnableDeviceMotion = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableDeviceMotion", "(Z)V");
     jEnableLocation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocation", "(Z)V");
     jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
@@ -141,6 +144,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jSetSelectedLocale = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setSelectedLocale", "(Ljava/lang/String;)V");
     jScanMedia = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
     jGetSystemColors = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getSystemColors", "()[I");
+    jGetIconForExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getIconForExtension", "(Ljava/lang/String;I)[B");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -249,29 +253,26 @@ AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
     args[1].l = JNI()->NewString(typeHint.get(), typeHint.Length());
     args[2].l = JNI()->NewString(actionHint.get(), actionHint.Length());
     args[3].z = false;
-    nsCOMPtr<nsIPrefBranch> prefs = 
-        do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-        PRInt32 landscapeFS;
-        nsresult rv = prefs->GetIntPref(IME_FULLSCREEN_PREF, &landscapeFS);
-        if (NS_SUCCEEDED(rv)) {
-            if (landscapeFS == 1) {
-                args[3].z = true;
-            } else if (landscapeFS == -1){
-                rv = prefs->GetIntPref(IME_FULLSCREEN_THRESHOLD_PREF, 
-                                       &landscapeFS);
-                if (NS_SUCCEEDED(rv)) {
-                    // the threshold is hundreths of inches, so convert the 
-                    // threshold to pixels and multiply the height by 100
-                    if (nsWindow::GetAndroidScreenBounds().height  * 100 < 
-                        landscapeFS * Bridge()->GetDPI())
-                        args[3].z = true;
-                }
 
+    PRInt32 landscapeFS;
+    if (NS_SUCCEEDED(Preferences::GetInt(IME_FULLSCREEN_PREF, &landscapeFS))) {
+        if (landscapeFS == 1) {
+            args[3].z = true;
+        } else if (landscapeFS == -1){
+            if (NS_SUCCEEDED(
+                  Preferences::GetInt(IME_FULLSCREEN_THRESHOLD_PREF,
+                                      &landscapeFS))) {
+                // the threshold is hundreths of inches, so convert the 
+                // threshold to pixels and multiply the height by 100
+                if (nsWindow::GetAndroidScreenBounds().height  * 100 < 
+                    landscapeFS * Bridge()->GetDPI()) {
+                    args[3].z = true;
+                }
             }
+
         }
     }
-    
+
     JNI()->CallStaticVoidMethodA(sBridge->mGeckoAppShellClass,
                                  sBridge->jNotifyIMEEnabled, args);
 }
@@ -303,10 +304,10 @@ AndroidBridge::AcknowledgeEventSync()
 }
 
 void
-AndroidBridge::EnableAccelerometer(bool aEnable)
+AndroidBridge::EnableDeviceMotion(bool aEnable)
 {
-    ALOG_BRIDGE("AndroidBridge::EnableAccelerometer");
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableAccelerometer, aEnable);
+    ALOG_BRIDGE("AndroidBridge::EnableDeviceMotion");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableDeviceMotion, aEnable);
 }
 
 void
@@ -714,6 +715,37 @@ AndroidBridge::GetSystemColors(AndroidSystemColors *aColors)
 }
 
 void
+AndroidBridge::GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSize, PRUint8 * const aBuf)
+{
+    ALOG_BRIDGE("AndroidBridge::GetIconForExtension");
+    NS_ASSERTION(aBuf != nsnull, "AndroidBridge::GetIconForExtension: aBuf is null!");
+    if (!aBuf)
+        return;
+
+    AutoLocalJNIFrame jniFrame;
+
+    nsString fileExt;
+    CopyUTF8toUTF16(aFileExt, fileExt);
+    jstring jstrFileExt = mJNIEnv->NewString(nsPromiseFlatString(fileExt).get(), fileExt.Length());
+    
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jGetIconForExtension, jstrFileExt, aIconSize);
+    jbyteArray arr = static_cast<jbyteArray>(obj);
+    NS_ASSERTION(arr != nsnull, "AndroidBridge::GetIconForExtension: Returned pixels array is null!");
+    if (!arr)
+        return;
+
+    jsize len = mJNIEnv->GetArrayLength(arr);
+    jbyte *elements = mJNIEnv->GetByteArrayElements(arr, 0);
+
+    PRUint32 bufSize = aIconSize * aIconSize * 4;
+    NS_ASSERTION(len == bufSize, "AndroidBridge::GetIconForExtension: Pixels array is incomplete!");
+    if (len == bufSize)
+        memcpy(aBuf, elements, bufSize);
+
+    mJNIEnv->ReleaseByteArrayElements(arr, elements, 0);
+}
+
+void
 AndroidBridge::SetSurfaceView(jobject obj)
 {
     mSurfaceView.Init(obj);
@@ -859,5 +891,86 @@ AndroidBridge::ScanMedia(const nsAString& aFile, const nsACString& aMimeType)
     jstring jstrMimeTypes = mJNIEnv->NewString(nsPromiseFlatString(mimeType2).get(), mimeType2.Length());
 
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jScanMedia, jstrFile, jstrMimeTypes);
+}
+
+bool
+AndroidBridge::HasNativeBitmapAccess()
+{
+    if (!mOpenedBitmapLibrary) {
+        // Try to dlopen libjnigraphics.so for direct bitmap access on
+        // Android 2.2+ (API level 8)
+        mOpenedBitmapLibrary = true;
+
+        void *handle = dlopen("/system/lib/libjnigraphics.so", RTLD_LAZY | RTLD_LOCAL);
+        if (handle == nsnull)
+            return false;
+
+        AndroidBitmap_getInfo = (int (*)(JNIEnv *, jobject, void *))dlsym(handle, "AndroidBitmap_getInfo");
+        if (AndroidBitmap_getInfo == nsnull)
+            return false;
+
+        AndroidBitmap_lockPixels = (int (*)(JNIEnv *, jobject, void **))dlsym(handle, "AndroidBitmap_lockPixels");
+        if (AndroidBitmap_lockPixels == nsnull)
+            return false;
+
+        AndroidBitmap_unlockPixels = (int (*)(JNIEnv *, jobject))dlsym(handle, "AndroidBitmap_unlockPixels");
+        if (AndroidBitmap_unlockPixels == nsnull)
+            return false;
+
+        ALOG_BRIDGE("Successfully opened libjnigraphics.so");
+        mHasNativeBitmapAccess = true;
+    }
+
+    return mHasNativeBitmapAccess;
+}
+
+bool
+AndroidBridge::ValidateBitmap(jobject bitmap, int width, int height)
+{
+    // This structure is defined in Android API level 8's <android/bitmap.h>
+    // Because we can't depend on this, we get the function pointers via dlsym
+    // and define this struct ourselves.
+    struct BitmapInfo {
+        uint32_t width;
+        uint32_t height;
+        uint32_t stride;
+        uint32_t format;
+        uint32_t flags;
+    };
+
+    int err;
+    struct BitmapInfo info = { 0, };
+
+    if ((err = AndroidBitmap_getInfo(JNI(), bitmap, &info)) != 0) {
+        ALOG_BRIDGE("AndroidBitmap_getInfo failed! (error %d)", err);
+        return false;
+    }
+
+    if (info.width != width || info.height != height)
+        return false;
+
+    return true;
+}
+
+void *
+AndroidBridge::LockBitmap(jobject bitmap)
+{
+    int err;
+    void *buf;
+
+    if ((err = AndroidBitmap_lockPixels(JNI(), bitmap, &buf)) != 0) {
+        ALOG_BRIDGE("AndroidBitmap_lockPixels failed! (error %d)", err);
+        buf = nsnull;
+    }
+
+    return buf;
+}
+
+void
+AndroidBridge::UnlockBitmap(jobject bitmap)
+{
+    int err;
+    if ((err = AndroidBitmap_unlockPixels(JNI(), bitmap)) != 0)
+        ALOG_BRIDGE("AndroidBitmap_unlockPixels failed! (error %d)", err);
 }
 

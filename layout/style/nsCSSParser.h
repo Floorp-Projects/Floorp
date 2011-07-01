@@ -51,9 +51,7 @@ class nsIPrincipal;
 class nsIURI;
 struct nsCSSSelectorList;
 class nsMediaList;
-#ifdef MOZ_CSS_ANIMATIONS
 class nsCSSKeyframeRule;
-#endif
 
 namespace mozilla {
 namespace css {
@@ -190,7 +188,6 @@ public:
                                PRUint32            aLineNumber,
                                nsCSSSelectorList** aSelectorList);
 
-#ifdef MOZ_CSS_ANIMATIONS
   /*
    * Parse a keyframe rule (which goes inside an @keyframes rule).
    * Return it if the parse was successful.
@@ -208,7 +205,6 @@ public:
                                    nsIURI*            aURL,
                                    PRUint32           aLineNumber,
                                    nsTArray<float>&   aSelectorList);
-#endif
 
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this

@@ -1,24 +1,17 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const TEST_ROOT = "http://example.com/browser/toolkit/mozapps/plugins/tests/";
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
-var gPrefs, gPFS, gDS, gSeenAvailable;
+var gPFS;
 
 function test() {
   waitForExplicitFinish();
 
-  gPrefs = Cc["@mozilla.org/preferences-service;1"].
-           getService(Ci.nsIPrefBranch);
-  gDS = Cc["@mozilla.org/file/directory_service;1"].
-        getService(Ci.nsIProperties);
   prepare_test_1();
 }
 
-function finishTest(e) {
-  gPrefs.clearUserPref("pfs.datasource.url");
+function finishTest() {
+  Services.prefs.clearUserPref("pfs.datasource.url");
   finish();
 }
 
@@ -80,23 +73,94 @@ function page_shown() {
 
 function pfs_loaded() {
   info("PFS loaded");
-  gPFS.document.documentElement.addEventListener("pageshow", page_shown, false);
-  gPFS.document.documentElement.addEventListener("wizardfinish", function() {
+  var docEle = gPFS.document.documentElement;
+
+  var onwizardfinish = function () {
     info("wizardfinish event");
-  }, false);
-  gPFS.document.documentElement.addEventListener("wizardnext", function() {
+  };
+  var onwizardnext = function () {
     info("wizardnext event");
-  }, false);
+  };
+
+  docEle.addEventListener("pageshow", page_shown, false);
+  docEle.addEventListener("wizardfinish", onwizardfinish, false);
+  docEle.addEventListener("wizardnext", onwizardnext, false);
+
   gPFS.addEventListener("unload", function() {
     info("unload event");
+    gPFS.removeEventListener("unload", arguments.callee, false);
+    docEle.removeEventListener("pageshow", page_shown, false);
+    docEle.removeEventListener("wizardfinish", onwizardfinish, false);
+    docEle.removeEventListener("wizardnext", onwizardnext, false);
   }, false);
+
   page_shown();
+}
+
+function startTest(num, missingPluginsArray) {
+  info("Test " + num);
+
+  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
+                           "PFSWindow", "chrome,centerscreen,resizable=yes",
+                           {plugins: missingPluginsArray});
+
+  var testScope = this;
+
+  gPFS.addEventListener("load", function () {
+    gPFS.removeEventListener("load", arguments.callee, false);
+
+    pfs_loaded();
+
+    var seenAvailable = false;
+    var expectAvailable = typeof testScope["test_" + num + "_available"] == "function";
+
+    function availableListener() {
+      seenAvailable = true;
+
+      if (expectAvailable) {
+        executeSoon(function () {
+          testScope["test_" + num + "_available"]();
+          gPFS.document.documentElement.getButton("next").click();
+        });
+      } else {
+        ok(false, "Should not have found plugins to install");
+      }
+    }
+
+    function completeListener() {
+      if (expectAvailable)
+        ok(seenAvailable, "Should have seen the list of available plugins");
+
+      executeSoon(testScope["test_" + num + "_complete"]);
+    }
+
+    gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", availableListener);
+    gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", completeListener);
+
+    gPFS.addEventListener("unload", function () {
+      gPFS.removeEventListener("unload", arguments.callee, false);
+      gPFS.document.documentElement.wizardPages[1].removeEventListener("pageshow", availableListener, false);
+      gPFS.document.documentElement.wizardPages[4].removeEventListener("pageshow", completeListener, false);
+
+      num++;
+      if (typeof testScope["prepare_test_" + num] == "function")
+        testScope["prepare_test_" + num]();
+      else
+        finishTest();
+    });
+  });
+}
+
+function clickFinish() {
+  var finish = gPFS.document.documentElement.getButton("finish");
+  ok(!finish.hidden, "Finish button should not be hidden");
+  ok(!finish.disabled, "Finish button should not be disabled");
+  finish.click();
 }
 
 // Test a working installer
 function prepare_test_1() {
-  ok(true, "Test 1");
-  gPrefs.setCharPref("pfs.datasource.url", TEST_ROOT + "pfs_bug435788_1.rdf");
+  Services.prefs.setCharPref("pfs.datasource.url", TEST_ROOT + "pfs_bug435788_1.rdf");
 
   var missingPluginsArray = {
     "application/x-working-plugin": {
@@ -105,49 +169,25 @@ function prepare_test_1() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_1_start, false);
-}
-
-function test_1_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_2, false);
-  gSeenAvailable = false;
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    executeSoon(test_1_available);
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_1_complete);
-  }, false);
+  startTest(1, missingPluginsArray);
 }
 
 function test_1_available() {
-  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test plugin 1", null), "Should have seen the right plugin name");
-
-  gPFS.document.documentElement.getButton("next").click();
 }
 
 function test_1_complete() {
-  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test plugin 1", null);
   ok(item, "Should have seen the installed item");
   is(item.status, "Installed", "Should have been a successful install");
 
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
+  clickFinish();
 }
 
 // Test a broken installer (returns exit code 1)
 function prepare_test_2() {
-  ok(true, "Test 2");
   var missingPluginsArray = {
     "application/x-broken-installer": {
       mimetype: "application/x-broken-installer",
@@ -155,49 +195,25 @@ function prepare_test_2() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_2_start, false);
-}
-
-function test_2_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_3, false);
-  gSeenAvailable = false;
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    executeSoon(test_2_available);
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_2_complete);
-  }, false);
+  startTest(2, missingPluginsArray);
 }
 
 function test_2_available() {
-  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test plugin 2", null), "Should have seen the right plugin name");
-
-  gPFS.document.documentElement.getButton("next").click();
 }
 
 function test_2_complete() {
-  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test plugin 2", null);
   ok(item, "Should have seen the installed item");
   is(item.status, "Failed", "Should have been a failed install");
 
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
+  clickFinish();
 }
 
 // Test both working and broken together
 function prepare_test_3() {
-  ok(true, "Test 3");
   var missingPluginsArray = {
     "application/x-working-plugin": {
       mimetype: "application/x-working-plugin",
@@ -209,36 +225,16 @@ function prepare_test_3() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_3_start, false);
-}
-
-function test_3_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_4, false);
-  gSeenAvailable = false;
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    executeSoon(test_3_available);
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_3_complete);
-  }, false);
+  startTest(3, missingPluginsArray);
 }
 
 function test_3_available() {
-  gSeenAvailable = true;
   is(getListCount(), 2, "Should have found 2 plugins to install");
   ok(hasListItem("Test plugin 1", null), "Should have seen the right plugin name");
   ok(hasListItem("Test plugin 2", null), "Should have seen the right plugin name");
-
-  gPFS.document.documentElement.getButton("next").click();
 }
 
 function test_3_complete() {
-  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 2, "Should have attempted to install 2 plugins");
   var item = getResultItem("Test plugin 1", null);
   ok(item, "Should have seen the installed item");
@@ -247,15 +243,11 @@ function test_3_complete() {
   ok(item, "Should have seen the installed item");
   is(item.status, "Failed", "Should have been a failed install");
 
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
+  clickFinish();
 }
 
 // Test an installer with a bad hash
 function prepare_test_4() {
-  ok(true, "Test 4");
   var missingPluginsArray = {
     "application/x-broken-plugin-hash": {
       mimetype: "application/x-broken-plugin-hash",
@@ -263,50 +255,25 @@ function prepare_test_4() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_4_start, false);
-}
-
-function test_4_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_5, false);
-  gSeenAvailable = false;
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    executeSoon(test_4_available);
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_4_complete);
-  }, false);
+  startTest(4, missingPluginsArray);
 }
 
 function test_4_available() {
-  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test plugin 3", null), "Should have seen the right plugin name");
-
-  gPFS.document.documentElement.getButton("next").click();
 }
 
 function test_4_complete() {
-  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test plugin 3", null);
   ok(item, "Should have seen the installed item");
   is(item.status, "Failed", "Should have not been a successful install");
 
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
+  clickFinish();
 }
 
 // Test a working xpi
 function prepare_test_5() {
-  ok(true, "Test 5");
-
   var missingPluginsArray = {
     "application/x-working-extension": {
       mimetype: "application/x-working-extension",
@@ -314,35 +281,15 @@ function prepare_test_5() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_5_start, false);
-}
-
-function test_5_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_6, false);
-  gSeenAvailable = false;
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    executeSoon(test_5_available);
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_5_complete);
-  }, false);
+  startTest(5, missingPluginsArray);
 }
 
 function test_5_available() {
-  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test extension 1", null), "Should have seen the right plugin name");
-
-  gPFS.document.documentElement.getButton("next").click();
 }
 
 function test_5_complete() {
-  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test extension 1", null);
   ok(item, "Should have seen the installed item");
@@ -354,16 +301,12 @@ function test_5_complete() {
     is(installs[0].addon.id, "bug435788_1@tests.mozilla.org", "Should have installed the extension");
     installs[0].cancel();
 
-    var finish = gPFS.document.documentElement.getButton("finish");
-    ok(!finish.hidden, "Finish button should not be hidden");
-    ok(!finish.disabled, "Finish button should not be disabled");
-    finish.click();
+    clickFinish();
   });
 }
 
 // Test a broke xpi (no install.rdf)
 function prepare_test_6() {
-  ok(true, "Test 6");
   var missingPluginsArray = {
     "application/x-broken-extension": {
       mimetype: "application/x-broken-extension",
@@ -371,49 +314,25 @@ function prepare_test_6() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_6_start, false);
-}
-
-function test_6_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_7, false);
-  gSeenAvailable = false;
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    executeSoon(test_6_available);
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_6_complete);
-  }, false);
+  startTest(6, missingPluginsArray);
 }
 
 function test_6_available() {
-  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test extension 2", null), "Should have seen the right plugin name");
-
-  gPFS.document.documentElement.getButton("next").click();
 }
 
 function test_6_complete() {
-  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test extension 2", null);
   ok(item, "Should have seen the installed item");
   is(item.status, "Failed", "Should have been a failed install");
 
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
+  clickFinish();
 }
 
 // Test both working and broken xpi
 function prepare_test_7() {
-  ok(true, "Test 7");
   var missingPluginsArray = {
     "application/x-working-extension": {
       mimetype: "application/x-working-extension",
@@ -425,36 +344,16 @@ function prepare_test_7() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_7_start, false);
-}
-
-function test_7_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_8, false);
-  gSeenAvailable = false;
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    executeSoon(test_7_available);
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_7_complete);
-  }, false);
+  startTest(7, missingPluginsArray);
 }
 
 function test_7_available() {
-  gSeenAvailable = true;
   is(getListCount(), 2, "Should have found 2 plugins to install");
   ok(hasListItem("Test extension 1", null), "Should have seen the right plugin name");
   ok(hasListItem("Test extension 2", null), "Should have seen the right plugin name");
-
-  gPFS.document.documentElement.getButton("next").click();
 }
 
 function test_7_complete() {
-  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 2, "Should have attempted to install 2 plugins");
   var item = getResultItem("Test extension 1", null);
   ok(item, "Should have seen the installed item");
@@ -467,18 +366,12 @@ function test_7_complete() {
     is(installs.length, 1, "Should be one active installs");
     installs[0].cancel();
 
-    gPFS.document.documentElement.getButton("finish").click();
+    clickFinish();
   });
-
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
 }
 
 // Test an xpi with a bad hash
 function prepare_test_8() {
-  ok(true, "Test 8");
   var missingPluginsArray = {
     "application/x-broken-extension-hash": {
       mimetype: "application/x-broken-extension-hash",
@@ -486,35 +379,15 @@ function prepare_test_8() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_8_start, false);
-}
-
-function test_8_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_9, false);
-  gSeenAvailable = false;
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    executeSoon(test_8_available);
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_8_complete);
-  }, false);
+  startTest(8, missingPluginsArray);
 }
 
 function test_8_available() {
-  gSeenAvailable = true;
   is(getListCount(), 1, "Should have found 1 plugin to install");
   ok(hasListItem("Test extension 3", null), "Should have seen the right plugin name");
-
-  gPFS.document.documentElement.getButton("next").click();
 }
 
 function test_8_complete() {
-  ok(gSeenAvailable, "Should have seen the list of available plugins");
   is(getResultCount(), 1, "Should have attempted to install 1 plugin");
   var item = getResultItem("Test extension 3", null);
   ok(item, "Should have seen the installed item");
@@ -523,18 +396,12 @@ function test_8_complete() {
   AddonManager.getAllInstalls(function(installs) {
     is(installs.length, 0, "Should not be any installs");
 
-    gPFS.document.documentElement.getButton("finish").click();
+    clickFinish();
   });
-
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
 }
 
 // Test when no plugin exists in the datasource
 function prepare_test_9() {
-  ok(true, "Test 9");
   var missingPluginsArray = {
     "application/x-unknown-plugin": {
       mimetype: "application/x-unknown-plugin",
@@ -542,37 +409,18 @@ function prepare_test_9() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_9_start, false);
-}
-
-function test_9_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_10, false);
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    ok(false, "Should not have found plugins to install");
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_9_complete);
-  }, false);
+  startTest(9, missingPluginsArray);
 }
 
 function test_9_complete() {
   is(getResultCount(), 0, "Should have found no plugins");
 
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
+  clickFinish();
 }
 
 // Test when the datasource is invalid xml
 function prepare_test_10() {
-  ok(true, "Test 10");
-  gPrefs.setCharPref("pfs.datasource.url", TEST_ROOT + "pfs_bug435788_2.rdf");
+  Services.prefs.setCharPref("pfs.datasource.url", TEST_ROOT + "pfs_bug435788_2.rdf");
 
   var missingPluginsArray = {
     "application/x-broken-xml": {
@@ -581,37 +429,18 @@ function prepare_test_10() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_10_start, false);
-}
-
-function test_10_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", prepare_test_11, false);
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    ok(false, "Should not have found plugins to install");
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_10_complete);
-  }, false);
+  startTest(10, missingPluginsArray);
 }
 
 function test_10_complete() {
   is(getResultCount(), 0, "Should have found no plugins");
 
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
+  clickFinish();
 }
 
 // Test when no datasource is returned
 function prepare_test_11() {
-  ok(true, "Test 11");
-  gPrefs.setCharPref("pfs.datasource.url", TEST_ROOT + "pfs_bug435788_foo.rdf");
+  Services.prefs.setCharPref("pfs.datasource.url", TEST_ROOT + "pfs_bug435788_foo.rdf");
 
   var missingPluginsArray = {
     "application/x-missing-xml": {
@@ -620,29 +449,11 @@ function prepare_test_11() {
     }
   };
 
-  gPFS = window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                           "PFSWindow", "chrome,centerscreen,resizable=yes",
-                           {plugins: missingPluginsArray});
-  gPFS.addEventListener("load", test_11_start, false);
-}
-
-function test_11_start() {
-  pfs_loaded();
-  gPFS.addEventListener("unload", finishTest, false);
-
-  gPFS.document.documentElement.wizardPages[1].addEventListener("pageshow", function() {
-    ok(false, "Should not have found plugins to install");
-  }, false);
-  gPFS.document.documentElement.wizardPages[4].addEventListener("pageshow", function() {
-    executeSoon(test_11_complete);
-  }, false);
+  startTest(11, missingPluginsArray);
 }
 
 function test_11_complete() {
   is(getResultCount(), 0, "Should have found no plugins");
 
-  var finish = gPFS.document.documentElement.getButton("finish");
-  ok(!finish.hidden, "Finish button should not be hidden");
-  ok(!finish.disabled, "Finish button should not be disabled");
-  finish.click();
+  clickFinish();
 }

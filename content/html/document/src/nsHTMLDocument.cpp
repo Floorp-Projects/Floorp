@@ -101,7 +101,7 @@
 #include "mozilla/css/Loader.h"
 #include "nsIHttpChannel.h"
 #include "nsIFile.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionPrivate.h"//for toStringwithformat code
 
@@ -921,7 +921,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                  "How did those end up different here?  wyciwyg channels are "
                  "not nsICachingChannel");
     rv = cachingChan->SetCacheTokenCachedCharset(charset);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "cannot SetMetaDataElement");
   }
 
   // Set the parser as the stream listener for the document loader...

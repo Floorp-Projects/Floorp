@@ -294,7 +294,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     callerid = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
     stackDepth = 0;
     valueCount = 0;
-    FrameRegsIter firstPass(cx, FRAME_EXPAND_ALL);
+    FrameRegsIter firstPass(cx);
     for (; !firstPass.done(); ++firstPass) {
         StackFrame *fp = firstPass.fp();
         if (fp->compartment() != cx->compartment)
@@ -339,8 +339,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     values = GetStackTraceValueBuffer(priv);
     elem = priv->stackElems;
 
-    /* N.B. frames do not need to be expanded again. */
-    for (FrameRegsIter iter(cx, FRAME_EXPAND_NONE); iter != firstPass; ++iter) {
+    for (FrameRegsIter iter(cx); iter != firstPass; ++iter) {
         StackFrame *fp = iter.fp();
         if (fp->compartment() != cx->compartment)
             break;
@@ -359,8 +358,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
         elem->filename = NULL;
         if (fp->isScriptFrame()) {
             elem->filename = fp->script()->filename;
-            if (fp->isScriptFrame())
-                elem->ulineno = js_FramePCToLineNumber(cx, fp, iter.pc());
+            elem->ulineno = js_FramePCToLineNumber(cx, fp, iter.pc());
         }
         ++elem;
     }
@@ -739,7 +737,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Find the scripted caller. */
-    FrameRegsIter iter(cx, FRAME_EXPAND_TOP);
+    FrameRegsIter iter(cx);
     while (!iter.done() && !iter.fp()->isScriptFrame())
         ++iter;
 

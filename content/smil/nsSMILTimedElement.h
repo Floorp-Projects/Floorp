@@ -423,8 +423,10 @@ protected:
    *                    applied at the last possible moment (i.e. if they are at
    *                    or before the current sample time) and only if the
    *                    current interval is not already ending.
+   * @return PR_TRUE if the end time of the current interval was updated,
+   *         PR_FALSE otherwise.
    */
-  void ApplyEarlyEnd(const nsSMILTimeValue& aSampleTime);
+  PRBool ApplyEarlyEnd(const nsSMILTimeValue& aSampleTime);
 
   /**
    * Clears certain state in response to the element restarting.
@@ -470,6 +472,9 @@ protected:
    * @param aPrevInterval   The previous interval used. If supplied, the first
    *                        interval that begins after aPrevInterval will be
    *                        returned. May be nsnull.
+   * @param aReplacedInterval The interval that is being updated (if any). This
+   *                        used to ensure we don't return interval endpoints
+   *                        that are dependent on themselves. May be nsnull.
    * @param aFixedBeginTime The time to use for the start of the interval. This
    *                        is used when only the endpoint of the interval
    *                        should be updated such as when the animation is in
@@ -480,6 +485,7 @@ protected:
    * @return  PR_TRUE if a suitable interval was found, PR_FALSE otherwise.
    */
   PRBool            GetNextInterval(const nsSMILInterval* aPrevInterval,
+                                    const nsSMILInterval* aReplacedInterval,
                                     const nsSMILInstanceTime* aFixedBeginTime,
                                     nsSMILInterval& aResult) const;
   nsSMILInstanceTime* GetNextGreater(const InstanceTimeList& aList,
@@ -504,8 +510,17 @@ protected:
   void              RegisterMilestone();
   PRBool            GetNextMilestone(nsSMILMilestone& aNextMilestone) const;
 
+  // Notification methods. Note that these notifications can result in nested
+  // calls to this same object. Therefore,
+  // (i)  we should not perform notification until this object is in
+  //      a consistent state to receive callbacks, and
+  // (ii) after calling these methods we must assume that the state of the
+  //      element may have changed.
   void              NotifyNewInterval();
-  void              NotifyChangedInterval();
+  void              NotifyChangedInterval(nsSMILInterval* aInterval,
+                                          PRBool aBeginObjectChanged,
+                                          PRBool aEndObjectChanged);
+
   void              FireTimeEventAsync(PRUint32 aMsg, PRInt32 aDetail);
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
   const nsSMILInterval* GetPreviousInterval() const;

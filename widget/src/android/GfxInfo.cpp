@@ -47,7 +47,6 @@
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
-#include "nsIPrefService.h"
 #endif
 
 using namespace mozilla::widget;
@@ -62,6 +61,12 @@ GfxInfo::GetD2DEnabled(PRBool *aEnabled)
 
 nsresult
 GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
+{
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+GfxInfo::GetAzureEnabled(PRBool *aEnabled)
 {
   return NS_ERROR_FAILURE;
 }

@@ -56,7 +56,7 @@ function switchStmt(disc, cases) Pattern({ type: "SwitchStatement", discriminant
 function caseClause(test, stmts) Pattern({ type: "SwitchCase", test: test, consequent: stmts })
 function defaultClause(stmts) Pattern({ type: "SwitchCase", test: null, consequent: stmts })
 function catchClause(id, guard, body) Pattern({ type: "CatchClause", param: id, guard: guard, body: body })
-function tryStmt(body, catches, fin) Pattern({ type: "TryStatement", block: body, handler: catches, finalizer: fin })
+function tryStmt(body, catches, fin) Pattern({ type: "TryStatement", block: body, handlers: catches, finalizer: fin })
 function letStmt(head, body) Pattern({ type: "LetStatement", head: head, body: body })
 function funExpr(id, args, body, gen) Pattern({ type: "FunctionExpression",
                                                 id: id,
@@ -152,6 +152,10 @@ function assertGlobalExpr(src, patt, builder) {
 
 function assertGlobalDecl(src, patt) {
     program([patt]).assert(Reflect.parse(src));
+}
+
+function assertProg(src, patt) {
+    program(patt).assert(Reflect.parse(src));
 }
 
 function assertStmt(src, patt) {
@@ -329,6 +333,21 @@ assertExpr("({'x':1, 'y':2, 3:3})", objExpr([{ key: lit("x"), value: lit(1) },
                                              { key: lit("y"), value: lit(2) },
                                              { key: lit(3), value: lit(3) } ]));
 
+// Bug 571617: eliminate constant-folding
+assertExpr("2 + 3", binExpr("+", lit(2), lit(3)));
+
+// Bug 632026: constant-folding
+assertExpr("typeof(0?0:a)", unExpr("typeof", condExpr(lit(0), lit(0), ident("a"))));
+
+// Bug 632029: constant-folding
+assertExpr("[x for each (x in y) if (false)]", compExpr(ident("x"), [compEachBlock(ident("x"), ident("y"))], lit(false)));
+
+// Bug 632056: constant-folding
+program([exprStmt(ident("f")),
+         ifStmt(lit(1),
+                funDecl(ident("f"), [], blockStmt([])),
+                null)]).assert(Reflect.parse("f; if (1) function f(){}"));
+
 // statements
 
 assertStmt("throw 42", throwStmt(lit(42)));
@@ -378,15 +397,15 @@ assertStmt("switch (foo) { case 1: 1; break; case 2: 2; break; default: 3; case 
                         caseClause(lit(42), [ exprStmt(lit(42)) ]) ]));
 assertStmt("try { } catch (e) { }",
            tryStmt(blockStmt([]),
-                   catchClause(ident("e"), null, blockStmt([])),
+                   [ catchClause(ident("e"), null, blockStmt([])) ],
                    null));
 assertStmt("try { } catch (e) { } finally { }",
            tryStmt(blockStmt([]),
-                   catchClause(ident("e"), null, blockStmt([])),
+                   [ catchClause(ident("e"), null, blockStmt([])) ],
                    blockStmt([])));
 assertStmt("try { } finally { }",
            tryStmt(blockStmt([]),
-                   null,
+                   [],
                    blockStmt([])));
 assertStmt("try { } catch (e if foo) { } catch (e if bar) { } finally { }",
            tryStmt(blockStmt([]),
@@ -399,6 +418,17 @@ assertStmt("try { } catch (e if foo) { } catch (e if bar) { } catch (e) { } fina
                      catchClause(ident("e"), ident("bar"), blockStmt([])),
                      catchClause(ident("e"), null, blockStmt([])) ],
                    blockStmt([])));
+
+// Bug 632028: yield outside of a function should throw
+(function() {
+    var threw = false;
+    try {
+        Reflect.parse("yield 0");
+    } catch (expected) {
+        threw = true;
+    }
+    assertEq(threw, true);
+})();
 
 // redeclarations (TOK_NAME nodes with lexdef)
 
@@ -417,6 +447,15 @@ assertStmt("function f() { var x = 42; var x = 43; }",
 
 assertDecl("var {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
                                           init: ident("foo") }]));
+
+// Bug 632030: redeclarations between var and funargs, var and function
+assertStmt("function g(x) { var x }",
+           funDecl(ident("g"), [ident("x")], blockStmt([varDecl[{ id: ident("x"), init: null }]])));
+assertProg("f.p = 1; var f; f.p; function f(){}",
+           [exprStmt(aExpr("=", dotExpr(ident("f"), ident("p")), lit(1))),
+            varDecl([{ id: ident("f"), init: null }]),
+            exprStmt(dotExpr(ident("f"), ident("p"))),
+            funDecl(ident("f"), [], blockStmt([]))]);
 
 // global let is var
 assertGlobalDecl("let {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
@@ -774,6 +813,12 @@ assertStmt("let (x = 1, y = x) { }", letStmt([{ id: ident("x"), init: lit(1) },
 assertError("let (x = 1, x = 2) { }", TypeError);
 
 
+// Bug 632024: no crashing on stack overflow
+try {
+    Reflect.parse(Array(3000).join("x + y - ") + "z")
+} catch (e) { }
+
+
 // E4X
 
 assertExpr("x..tagName", binExpr("..", ident("x"), lit("tagName")));
@@ -969,7 +1014,7 @@ assertGlobalExpr("(function() { yield 42 })", genFunExpr(null, [], blockStmt([ex
 assertGlobalExpr("(let (x) x)", 20, { letExpression: function() 20 });
 
 assertGlobalStmt("switch (x) { case y: }", switchStmt(ident("x"), [1]), { switchCase: function() 1 });
-assertGlobalStmt("try { } catch (e) { }", tryStmt(blockStmt([]), 2, null), { catchClause: function() 2 });
+assertGlobalStmt("try { } catch (e) { }", tryStmt(blockStmt([]), [2], null), { catchClause: function() 2 });
 assertGlobalStmt("try { } catch (e if e instanceof A) { } catch (e if e instanceof B) { }",
                  tryStmt(blockStmt([]), [2, 2], null),
                  { catchClause: function() 2 });

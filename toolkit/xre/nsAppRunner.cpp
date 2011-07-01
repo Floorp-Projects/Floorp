@@ -54,6 +54,9 @@
 #include <QtGui/QApplication>
 #include <QtGui/QInputContextFactory>
 #include <QtGui/QInputContext>
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+#include <MComponentData>
+#endif // MOZ_ENABLE_MEEGOTOUCH
 #endif // MOZ_WIDGET_QT
 
 #include "mozilla/dom/ContentParent.h"
@@ -93,7 +96,6 @@ using mozilla::dom::ContentParent;
 #include "nsIContentHandler.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
-#include "nsIFastLoadService.h" // for PLATFORM_FASL_SUFFIX
 #include "mozilla/ModuleUtils.h"
 #include "nsIIOService2.h"
 #include "nsIObserverService.h"
@@ -251,6 +253,7 @@ static char **gQtOnlyArgv;
 #endif /* MOZ_X11 */
 #include "nsGTKToolkit.h"
 #endif
+#include "BinaryPath.h"
 
 // Save literal putenv string to environment variable.
 static void
@@ -1435,141 +1438,10 @@ RemoteCommandLine(const char* aDesktopStartupID)
 }
 #endif // MOZ_ENABLE_XREMOTE
 
-#ifdef XP_MACOSX
-static char const *gBinaryPath;
-#endif
-
 nsresult
 XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 {
-  nsresult rv;
-  nsCOMPtr<nsILocalFile> lf;
-
-  // We need to use platform-specific hackery to find the
-  // path of this executable. This is copied, with some modifications, from
-  // nsGREDirServiceProvider.cpp
-
-#ifdef XP_WIN
-  PRUnichar exePath[MAXPATHLEN];
-
-  if (!::GetModuleFileNameW(0, exePath, MAXPATHLEN))
-    return NS_ERROR_FAILURE;
-
-  rv = NS_NewLocalFile(nsDependentString(exePath), PR_TRUE,
-                       getter_AddRefs(lf));
-  if (NS_FAILED(rv))
-    return rv;
-
-#elif defined(XP_MACOSX)
-  if (gBinaryPath)
-    return NS_NewNativeLocalFile(nsDependentCString(gBinaryPath), PR_FALSE,
-                                 aResult);
-
-  NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(lf));
-  nsCOMPtr<nsILocalFileMac> lfm (do_QueryInterface(lf));
-  if (!lfm)
-    return NS_ERROR_FAILURE;
-
-  // Works even if we're not bundled.
-  CFBundleRef appBundle = CFBundleGetMainBundle();
-  if (!appBundle)
-    return NS_ERROR_FAILURE;
-
-  CFURLRef executableURL = CFBundleCopyExecutableURL(appBundle);
-  if (!executableURL)
-    return NS_ERROR_FAILURE;
-  rv = lfm->InitWithCFURL(executableURL);
-  CFRelease(executableURL);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // Callers expect a normalized path.
-  lfm->Normalize();
-
-#elif defined(XP_UNIX)
-  struct stat fileStat;
-  char exePath[MAXPATHLEN];
-  char tmpPath[MAXPATHLEN];
-
-  rv = NS_ERROR_FAILURE;
-
-  // on unix, there is no official way to get the path of the current binary.
-  // instead of using the MOZILLA_FIVE_HOME hack, which doesn't scale to
-  // multiple applications, we will try a series of techniques:
-  //
-  // 1) look for /proc/<pid>/exe which is a symlink to the executable on newer
-  //    Linux kernels
-  // 2) use realpath() on argv[0], which works unless we're loaded from the
-  //    PATH
-  // 3) manually walk through the PATH and look for ourself
-  // 4) give up
-
-// #ifdef __linux__
-// Commented out because it used to not work because it used to not deal
-// with readlink not null-terminating the buffer.
-#if 0
-  int r = readlink("/proc/self/exe", exePath, MAXPATHLEN);
-
-  if (r > 0 && r < MAXPATHLEN) {
-    exePath[r] = '\0';
-    if (stat(exePath, &fileStat) == 0) {
-      rv = NS_OK;
-    }
-  }
-
-#endif
-  if (NS_FAILED(rv) &&
-      realpath(argv0, exePath) && stat(exePath, &fileStat) == 0) {
-    rv = NS_OK;
-  }
-
-  if (NS_FAILED(rv)) {
-    const char *path = getenv("PATH");
-    if (!path)
-      return NS_ERROR_FAILURE;
-
-    char *pathdup = strdup(path);
-    if (!pathdup)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    PRBool found = PR_FALSE;
-    char *newStr = pathdup;
-    char *token;
-    while ( (token = nsCRT::strtok(newStr, ":", &newStr)) ) {
-      sprintf(tmpPath, "%s/%s", token, argv0);
-      if (realpath(tmpPath, exePath) && stat(exePath, &fileStat) == 0) {
-        found = PR_TRUE;
-        break;
-      }
-    }
-    free(pathdup);
-    if (!found)
-      return NS_ERROR_FAILURE;
-  }
-
-  rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
-                             getter_AddRefs(lf));
-  if (NS_FAILED(rv))
-    return rv;
-
-#elif defined(XP_OS2)
-  PPIB ppib;
-  PTIB ptib;
-  char exePath[MAXPATHLEN];
-
-  DosGetInfoBlocks( &ptib, &ppib);
-  DosQueryModuleName( ppib->pib_hmte, MAXPATHLEN, exePath);
-  rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
-                             getter_AddRefs(lf));
-  if (NS_FAILED(rv))
-    return rv;
-
-#else
-#error Oops, you need platform-specific code here
-#endif
-
-  NS_ADDREF(*aResult = lf);
-  return NS_OK;
+  return mozilla::BinaryPath::GetFile(argv0, aResult);
 }
 
 #define NS_ERROR_LAUNCHED_CHILD_PROCESS NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 200)
@@ -1809,7 +1681,9 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
     }
 
     PRInt32 button;
-    PRBool checkState;
+    // The actual value is irrelevant but we shouldn't be handing out
+    // malformed JSBools to XPConnect.
+    PRBool checkState = PR_FALSE;
     rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
                        killTitle, nsnull, nsnull, nsnull, &checkState, &button);
     NS_ENSURE_SUCCESS_LOG(rv, rv);
@@ -2417,6 +2291,12 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
   if (!file)
     return;
 
+#if defined(XP_UNIX) || defined(XP_BEOS)
+#define PLATFORM_FASL_SUFFIX ".mfasl"
+#elif defined(XP_WIN) || defined(XP_OS2)
+#define PLATFORM_FASL_SUFFIX ".mfl"
+#endif
+
   file->AppendNative(NS_LITERAL_CSTRING("XUL" PLATFORM_FASL_SUFFIX));
   file->Remove(PR_FALSE);
   
@@ -2717,7 +2597,7 @@ PRTime gXRE_mainTimestamp = 0;
 
 #ifdef MOZ_X11
 #ifndef MOZ_PLATFORM_MAEMO
-void fire_glxtest_process();
+bool fire_glxtest_process();
 #endif
 #endif
 
@@ -2747,7 +2627,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // That's the whole reason for doing this in a separate process.
 #ifdef MOZ_X11
 #ifndef MOZ_PLATFORM_MAEMO
-  fire_glxtest_process();
+  if (fire_glxtest_process())
+    return 0;
 #endif
 #endif
 
@@ -2817,16 +2698,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   gArgv = argv;
 
   NS_ENSURE_TRUE(aAppData, 2);
-
-#ifdef XP_MACOSX
-  // The xulrunner stub executable tricks CFBundleGetMainBundle on
-  // purpose into lying about the main bundle path. It will set
-  // XRE_BINARY_PATH to inform us of our real location.
-  gBinaryPath = getenv("XRE_BINARY_PATH");
-
-  if (gBinaryPath && !*gBinaryPath)
-    gBinaryPath = nsnull;
-#endif
 
   // Check for application.ini overrides
   const char* override = nsnull;
@@ -3139,6 +3010,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
 
     QScopedPointer<QApplication> app(new QApplication(gArgc, gArgv));
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+    gArgv[gArgc] = strdup("-software");
+    gArgc++;
+    QScopedPointer<MComponentData> meegotouch(new MComponentData(gArgc, gArgv));
+#endif
 
 #if MOZ_PLATFORM_MAEMO > 5
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
@@ -3746,14 +3622,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       SaveFileToEnvIfUnset("XRE_PROFILE_PATH", profD);
       SaveFileToEnvIfUnset("XRE_PROFILE_LOCAL_PATH", profLD);
       SaveWordToEnvIfUnset("XRE_PROFILE_NAME", profileName);
-
-#ifdef XP_MACOSX
-      if (gBinaryPath) {
-        static char kEnvVar[MAXPATHLEN];
-        sprintf(kEnvVar, "XRE_BINARY_PATH=%s", gBinaryPath);
-        PR_SetEnv(kEnvVar);
-      }
-#endif
 
 #ifdef MOZ_WIDGET_GTK2
       MOZ_gdk_display_close(display);

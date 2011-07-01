@@ -48,6 +48,7 @@
 #include "mozilla/Util.h"
 
 using namespace mozilla::layers;
+using namespace mozilla::gfx;
 
 typedef FrameMetrics::ViewID ViewID;
 const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
@@ -210,6 +211,14 @@ LayerManager::CreateOptimalSurface(const gfxIntSize &aSize,
     CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFormat));
 }
 
+TemporaryRef<DrawTarget>
+LayerManager::CreateDrawTarget(const IntSize &aSize,
+                               SurfaceFormat aFormat)
+{
+  // Right now this doesn't work on the general layer manager.
+  return NULL;
+}
+
 #ifdef DEBUG
 void
 LayerManager::Mutated(Layer* aLayer)
@@ -335,9 +344,14 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
     gfxMatrix matrix;
     DebugOnly<bool> is2D = container->GetEffectiveTransform().Is2D(&matrix);
     // See DefaultComputeEffectiveTransforms below
-    NS_ASSERTION(is2D && !matrix.HasNonIntegerTranslation(),
-                 "Non-integer-translation transform with clipped child should have forced intermediate surface");
-    scissor.MoveBy(nsIntPoint(PRInt32(matrix.x0), PRInt32(matrix.y0)));
+    NS_ASSERTION(is2D && matrix.PreservesAxisAlignedRectangles(),
+                 "Non preserves axis aligned transform with clipped child should have forced intermediate surface");
+    gfxRect r(scissor.x, scissor.y, scissor.width, scissor.height);
+    gfxRect trScissor = matrix.TransformBounds(r);
+    trScissor.Round();
+    if (!gfxUtils::GfxRectToIntRect(trScissor, &scissor)) {
+      return nsIntRect(currentClip.TopLeft(), nsIntSize(0, 0));
+    }
 
     // Find the nearest ancestor with an intermediate surface
     do {
@@ -408,7 +422,11 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
     useIntermediateSurface = PR_FALSE;
     gfxMatrix contTransform;
     if (!mEffectiveTransform.Is2D(&contTransform) ||
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+        !contTransform.PreservesAxisAlignedRectangles()) {
+#else
         contTransform.HasNonIntegerTranslation()) {
+#endif
       for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
         const nsIntRect *clipRect = child->GetEffectiveClipRect();
         /* We can't (easily) forward our transform to children with a non-empty clip
@@ -561,9 +579,6 @@ ThebesLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
   Layer::PrintInfo(aTo, aPrefix);
   if (!mValidRegion.IsEmpty()) {
     AppendToString(aTo, mValidRegion, " [valid=", "]");
-  }
-  if (mXResolution != 1.0 || mYResolution != 1.0) {
-    aTo.AppendPrintf(" [xres=%g yres=%g]", mXResolution, mYResolution);
   }
   return aTo;
 }

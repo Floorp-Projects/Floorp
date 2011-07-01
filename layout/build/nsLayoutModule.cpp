@@ -56,12 +56,10 @@
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIDOMDOMImplementation.h"
-#include "nsIDOMEventGroup.h"
 #include "nsIDOMRange.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDocumentViewer.h"
-#include "nsIEventListenerManager.h"
 #include "nsIFactory.h"
 #include "nsIFrameUtil.h"
 #include "nsIFragmentContentSink.h"
@@ -85,7 +83,6 @@
 #include "nsRuleNode.h"
 #include "nsContentAreaDragDrop.h"
 #include "nsContentList.h"
-#include "nsSyncLoadService.h"
 #include "nsBox.h"
 #include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
@@ -290,7 +287,7 @@ static void Shutdown();
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
-#include "nsAccelerometerSystem.h"
+#include "nsDeviceMotionSystem.h"
 #endif
 #include "nsCSPService.h"
 
@@ -323,7 +320,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(IndexedDatabaseManager,
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerSystem)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceMotionSystem)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWorkerFactory)
@@ -461,7 +458,6 @@ nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewXBLService(nsIXBLService** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
-nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 
 nsresult NS_NewEventListenerService(nsIEventListenerService** aResult);
 nsresult NS_NewGlobalMessageManager(nsIChromeFrameMessageManager** aResult);
@@ -513,8 +509,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
-MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
-MAKE_CTOR(CreateDOMEventGroup,            nsIDOMEventGroup,            NS_NewDOMEventGroup)
 MAKE_CTOR(CreateDocumentViewer,           nsIDocumentViewer,           NS_NewDocumentViewer)
 MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTMLDocument)
 MAKE_CTOR(CreateDOMImplementation,        nsIDOMDOMImplementation,     NS_NewDOMImplementation)
@@ -567,7 +561,6 @@ MAKE_CTOR(CreateParentMessageManager,     nsIFrameMessageManager,NS_NewParentPro
 MAKE_CTOR(CreateChildMessageManager,     nsISyncMessageSender,NS_NewChildProcessMessageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSyncLoadService)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
 #ifdef MOZ_MEDIA
 MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVideoDocument)
@@ -760,8 +753,6 @@ NS_DEFINE_NAMED_CID(IN_FLASHER_CID);
 NS_DEFINE_NAMED_CID(IN_CSSVALUESEARCH_CID);
 NS_DEFINE_NAMED_CID(IN_DOMUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_NAMESPACEMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_EVENTLISTENERMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_DOMEVENTGROUP_CID);
 NS_DEFINE_NAMED_CID(NS_DOCUMENT_VIEWER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_DOM_IMPLEMENTATION_CID);
@@ -780,6 +771,7 @@ NS_DEFINE_NAMED_CID(NS_HTMLOPTIONELEMENT_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLAUDIOELEMENT_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXT2D_CID);
+NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXT2DAZURE_CID);
 NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXTWEBGL_CID);
 NS_DEFINE_NAMED_CID(NS_TEXT_ENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLCOPY_TEXT_ENCODER_CID);
@@ -814,7 +806,6 @@ NS_DEFINE_NAMED_CID(NS_XTFSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_XMLCONTENTBUILDER_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
-NS_DEFINE_NAMED_CID(NS_SYNCLOADDOMSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_BASE_DOM_EXCEPTION_CID);
 NS_DEFINE_NAMED_CID(NS_JSPROTOCOLHANDLER_CID);
@@ -875,7 +866,7 @@ NS_DEFINE_NAMED_CID(NS_STRUCTUREDCLONECONTAINER_CID);
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
-NS_DEFINE_NAMED_CID(NS_ACCELEROMETER_CID);
+NS_DEFINE_NAMED_CID(NS_DEVICE_MOTION_CID);
 #endif
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
@@ -906,8 +897,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kIN_CSSVALUESEARCH_CID, false, NULL, inCSSValueSearchConstructor },
   { &kIN_DOMUTILS_CID, false, NULL, inDOMUtilsConstructor },
   { &kNS_NAMESPACEMANAGER_CID, false, NULL, CreateNameSpaceManager },
-  { &kNS_EVENTLISTENERMANAGER_CID, false, NULL, CreateEventListenerManager },
-  { &kNS_DOMEVENTGROUP_CID, false, NULL, CreateDOMEventGroup },
   { &kNS_DOCUMENT_VIEWER_CID, false, NULL, CreateDocumentViewer },
   { &kNS_HTMLDOCUMENT_CID, false, NULL, CreateHTMLDocument },
   { &kNS_DOM_IMPLEMENTATION_CID, false, NULL, CreateDOMImplementation },
@@ -960,7 +949,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XMLCONTENTBUILDER_CID, false, NULL, CreateXMLContentBuilder },
 #endif
   { &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID, false, NULL, CreateContentDLF },
-  { &kNS_SYNCLOADDOMSERVICE_CID, false, NULL, nsSyncLoadServiceConstructor },
   { &kNS_DOM_SCRIPT_OBJECT_FACTORY_CID, false, NULL, nsDOMScriptObjectFactoryConstructor },
   { &kNS_BASE_DOM_EXCEPTION_CID, false, NULL, nsBaseDOMExceptionConstructor },
   { &kNS_JSPROTOCOLHANDLER_CID, false, NULL, nsJSProtocolHandler::Create },
@@ -1017,7 +1005,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
-  { &kNS_ACCELEROMETER_CID, false, NULL, nsAccelerometerSystemConstructor },
+  { &kNS_DEVICE_MOTION_CID, false, NULL, nsDeviceMotionSystemConstructor },
 #endif
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
   { &kNS_HAPTICFEEDBACK_CID, false, NULL, nsHapticFeedbackConstructor },
@@ -1105,7 +1093,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_XMLCONTENTBUILDER_CONTRACTID, &kNS_XMLCONTENTBUILDER_CID },
 #endif
   { CONTENT_DLF_CONTRACTID, &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID },
-  { NS_SYNCLOADDOMSERVICE_CONTRACTID, &kNS_SYNCLOADDOMSERVICE_CID },
   { NS_JSPROTOCOLHANDLER_CONTRACTID, &kNS_JSPROTOCOLHANDLER_CID },
   { NS_WINDOWCONTROLLER_CONTRACTID, &kNS_WINDOWCONTROLLER_CID },
   { "@mozilla.org/view-manager;1", &kNS_VIEW_MANAGER_CID },
@@ -1155,7 +1142,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
-  { NS_ACCELEROMETER_CONTRACTID, &kNS_ACCELEROMETER_CID },
+  { NS_DEVICE_MOTION_CONTRACTID, &kNS_DEVICE_MOTION_CID },
 #endif
 #if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
   { "@mozilla.org/widget/hapticfeedback;1", &kNS_HAPTICFEEDBACK_CID },

@@ -418,7 +418,7 @@ WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferData_buf(WebGLenum target, js::ArrayBuffer *wb, WebGLenum usage)
+WebGLContext::BufferData_buf(WebGLenum target, JSObject *wb, WebGLenum usage)
 {
     WebGLBuffer *boundBuffer = NULL;
 
@@ -438,12 +438,12 @@ WebGLContext::BufferData_buf(WebGLenum target, js::ArrayBuffer *wb, WebGLenum us
 
     MakeContextCurrent();
 
-    boundBuffer->SetByteLength(wb->byteLength);
-    if (!boundBuffer->CopyDataIfElementArray(wb->data))
+    boundBuffer->SetByteLength(JS_GetArrayBufferByteLength(wb));
+    if (!boundBuffer->CopyDataIfElementArray(JS_GetArrayBufferData(wb)))
         return ErrorOutOfMemory("bufferData: out of memory");
     boundBuffer->InvalidateCachedMaxElements();
 
-    gl->fBufferData(target, wb->byteLength, wb->data, usage);
+    gl->fBufferData(target, JS_GetArrayBufferByteLength(wb), JS_GetArrayBufferData(wb), usage);
 
     return NS_OK;
 }
@@ -480,7 +480,7 @@ WebGLContext::BufferData_array(WebGLenum target, js::TypedArray *wa, WebGLenum u
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferSubData(PRInt32 dummy)
+WebGLContext::BufferSubData(PRInt32)
 {
     return NS_ERROR_FAILURE;
 }
@@ -492,7 +492,7 @@ WebGLContext::BufferSubData_null()
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, js::ArrayBuffer *wb)
+WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, JSObject *wb)
 {
     WebGLBuffer *boundBuffer = NULL;
 
@@ -510,20 +510,20 @@ WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, js::ArrayB
     if (!boundBuffer)
         return ErrorInvalidOperation("BufferData: no buffer bound!");
 
-    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + wb->byteLength;
+    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + JS_GetArrayBufferByteLength(wb);
     if (!checked_neededByteLength.valid())
         return ErrorInvalidOperation("bufferSubData: integer overflow computing the needed byte length");
 
     if (checked_neededByteLength.value() > boundBuffer->ByteLength())
         return ErrorInvalidOperation("BufferSubData: not enough data - operation requires %d bytes, but buffer only has %d bytes",
-                                     byteOffset, wb->byteLength, boundBuffer->ByteLength());
+                                     byteOffset, JS_GetArrayBufferByteLength(wb), boundBuffer->ByteLength());
 
     MakeContextCurrent();
 
-    boundBuffer->CopySubDataIfElementArray(byteOffset, wb->byteLength, wb->data);
+    boundBuffer->CopySubDataIfElementArray(byteOffset, JS_GetArrayBufferByteLength(wb), JS_GetArrayBufferData(wb));
     boundBuffer->InvalidateCachedMaxElements();
 
-    gl->fBufferSubData(target, byteOffset, wb->byteLength, wb->data);
+    gl->fBufferSubData(target, byteOffset, JS_GetArrayBufferByteLength(wb), JS_GetArrayBufferData(wb));
 
     return NS_OK;
 }
@@ -1628,10 +1628,10 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
         return NS_OK;
 
     nsAutoArrayPtr<char> name(new char[len]);
-    PRInt32 attrsize = 0;
-    PRUint32 attrtype = 0;
+    GLint attrsize = 0;
+    GLuint attrtype = 0;
 
-    gl->fGetActiveAttrib(progname, index, len, &len, (GLint*) &attrsize, (WebGLuint*) &attrtype, name);
+    gl->fGetActiveAttrib(progname, index, len, &len, &attrsize, &attrtype, name);
     if (attrsize == 0 || attrtype == 0) {
         *retval = nsnull;
         return NS_OK;
@@ -1687,10 +1687,10 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
 
     nsAutoArrayPtr<char> name(new char[len + 3]); // +3 because we might have to append "[0]", see below
 
-    PRInt32 attrsize = 0;
-    PRUint32 attrtype = 0;
+    GLint attrsize = 0;
+    GLuint attrtype = 0;
 
-    gl->fGetActiveUniform(progname, index, len, &len, (GLint*) &attrsize, (WebGLenum*) &attrtype, name);
+    gl->fGetActiveUniform(progname, index, len, &len, &attrsize, &attrtype, name);
     if (len == 0 || attrsize == 0 || attrtype == 0) {
         *retval = nsnull;
         return NS_OK;
@@ -2310,8 +2310,8 @@ WebGLContext::GetProgramInfoLog(nsIWebGLProgram *pobj, nsAString& retval)
 
     MakeContextCurrent();
 
-    PRInt32 k = -1;
-    gl->fGetProgramiv(progname, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &k);
+    GLint k = -1;
+    gl->fGetProgramiv(progname, LOCAL_GL_INFO_LOG_LENGTH, &k);
     if (k == -1)
         return NS_ERROR_FAILURE; // XXX GL error? shouldn't happen!
 
@@ -2323,7 +2323,7 @@ WebGLContext::GetProgramInfoLog(nsIWebGLProgram *pobj, nsAString& retval)
     nsCAutoString log;
     log.SetCapacity(k);
 
-    gl->fGetProgramInfoLog(progname, k, (GLint*) &k, (char*) log.BeginWriting());
+    gl->fGetProgramInfoLog(progname, k, &k, (char*) log.BeginWriting());
 
     log.SetLength(k);
 
@@ -2634,8 +2634,8 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname, nsIVariant **ret
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
         {
-            PRInt32 i = 0;
-            gl->fGetVertexAttribiv(index, pname, (GLint*) &i);
+            GLint i = 0;
+            gl->fGetVertexAttribiv(index, pname, &i);
             wrval->SetAsInt32(i);
         }
             break;
@@ -2659,8 +2659,8 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname, nsIVariant **ret
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
         {
-            PRInt32 i = 0;
-            gl->fGetVertexAttribiv(index, pname, (GLint*) &i);
+            GLint i = 0;
+            gl->fGetVertexAttribiv(index, pname, &i);
             wrval->SetAsBool(PRBool(i));
         }
             break;
@@ -2695,7 +2695,7 @@ WebGLContext::GetVertexAttribOffset(WebGLuint index, WebGLenum pname, WebGLuint 
 }
 
 NS_IMETHODIMP
-WebGLContext::Hint(WebGLenum target, WebGLenum mode)
+WebGLContext::Hint(WebGLenum, WebGLenum)
 {
     return ErrorInvalidEnum("hint: invalid hint");
 }
@@ -2884,7 +2884,7 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
 GL_SAME_METHOD_2(PolygonOffset, PolygonOffset, WebGLfloat, WebGLfloat)
 
 NS_IMETHODIMP
-WebGLContext::ReadPixels(PRInt32 dummy)
+WebGLContext::ReadPixels(PRInt32)
 {
     return NS_ERROR_FAILURE;
 }
@@ -3084,11 +3084,11 @@ WebGLContext::ReadPixels_array(WebGLint x, WebGLint y, WebGLsizei width, WebGLsi
 
 NS_IMETHODIMP
 WebGLContext::ReadPixels_buf(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
-                             WebGLenum format, WebGLenum type, js::ArrayBuffer *pixels)
+                             WebGLenum format, WebGLenum type, JSObject *pixels)
 {
     return ReadPixels_base(x, y, width, height, format, type,
-                           pixels ? pixels->data : 0,
-                           pixels ? pixels->byteLength : 0);
+                           pixels ? JS_GetArrayBufferData(pixels) : 0,
+                           pixels ? JS_GetArrayBufferByteLength(pixels) : 0);
 }
 
 NS_IMETHODIMP
@@ -3481,13 +3481,50 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
         nsLayoutUtils::SurfaceFromElement(imageOrCanvas, flags);
     if (!res.mSurface)
         return NS_ERROR_FAILURE;
-
-    CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(), res.mPrincipal, res.mIsWriteOnly);
-
     if (res.mSurface->GetType() != gfxASurface::SurfaceTypeImage) {
         // SurfaceFromElement lied!
         return NS_ERROR_FAILURE;
     }
+
+    // Bug 656277 - Prevent loading WebGL textures from cross-domain images
+    //
+    // We disallow loading cross-domain images as WebGL textures. The reason for doing that
+    // is that timing attacks on WebGL shaders are able to retrieve approximations of the pixel values
+    // in WebGL textures, see bug 655987.
+    //
+    // To prevent a loophole where a Canvas2D would be used as a proxy to load cross-domain textures,
+    // we also disallow loading textures from write-only Canvas2D's.
+
+    // part 1: check that the DOM element is same-origin.
+    // if res.mPrincipal == null, no need for the origin check. See DoDrawImageSecurityCheck.
+    // this case happens in the mochitest for images served from mochi.test:8888
+    if (res.mPrincipal) {
+        PRBool subsumes;
+        nsresult rv = HTMLCanvasElement()->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
+        if (NS_FAILED(rv) || !subsumes) {
+            LogMessageIfVerbose("It is forbidden to load a WebGL texture from a cross-domain element. "
+                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
+            return NS_ERROR_DOM_SECURITY_ERR;
+        }
+    }
+
+    // part 2: if the DOM element is a canvas, check that it's not write-only. That would indicate a tainted canvas,
+    // i.e. a canvas that could contain cross-domain image data.
+    nsCOMPtr<nsIContent> maybeDOMCanvas = do_QueryInterface(imageOrCanvas);
+    if (maybeDOMCanvas && maybeDOMCanvas->IsHTML(nsGkAtoms::canvas)) {
+        nsHTMLCanvasElement *canvas = static_cast<nsHTMLCanvasElement*>(maybeDOMCanvas.get());
+        if (canvas->IsWriteOnly()) {
+            LogMessageIfVerbose("The canvas used as source for texImage2D here is tainted (write-only). It is forbidden "
+                                "to load a WebGL texture from a tainted canvas. A Canvas becomes tainted for example "
+                                "when a cross-domain image is drawn on it. "
+                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
+            return NS_ERROR_DOM_SECURITY_ERR;
+        }
+    }
+
+    // End of security checks, now we should be safe regarding cross-domain images
+    // Notice that there is never a need to mark the WebGL canvas as write-only, since we reject write-only/cross-domain
+    // texture sources in the first place.
 
     surf = static_cast<gfxImageSurface*>(res.mSurface.get());
 
@@ -3533,7 +3570,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
 
 #define SIMPLE_ARRAY_METHOD_UNIFORM(name, cnt, arrayType, ptrType)      \
 NS_IMETHODIMP                                                           \
-WebGLContext::name(PRInt32 dummy) {                                     \
+WebGLContext::name(PRInt32) {                                     \
      return NS_ERROR_NOT_IMPLEMENTED;                                   \
 }                                                                       \
 NS_IMETHODIMP                                                           \
@@ -3551,7 +3588,7 @@ WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, js::TypedArray *wa) \
 
 #define SIMPLE_MATRIX_METHOD_UNIFORM(name, dim, arrayType, ptrType)     \
 NS_IMETHODIMP                                                           \
-WebGLContext::name(PRInt32 dummy) {                                     \
+WebGLContext::name(PRInt32) {                                     \
      return NS_ERROR_NOT_IMPLEMENTED;                                   \
 }                                                                       \
 NS_IMETHODIMP                                                           \
@@ -3696,7 +3733,7 @@ WebGLContext::VertexAttrib4f(PRUint32 index, WebGLfloat x0, WebGLfloat x1,
 
 #define SIMPLE_ARRAY_METHOD_NO_COUNT(name, cnt, arrayType, ptrType)  \
 NS_IMETHODIMP                                                           \
-WebGLContext::name(PRInt32 dummy) {                                     \
+WebGLContext::name(PRInt32) {                                     \
      return NS_ERROR_NOT_IMPLEMENTED;                                   \
 }                                                                       \
 NS_IMETHODIMP                                                           \
@@ -3965,8 +4002,8 @@ WebGLContext::GetShaderInfoLog(nsIWebGLShader *sobj, nsAString& retval)
 
     MakeContextCurrent();
 
-    PRInt32 k = -1;
-    gl->fGetShaderiv(shadername, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &k);
+    GLint k = -1;
+    gl->fGetShaderiv(shadername, LOCAL_GL_INFO_LOG_LENGTH, &k);
     if (k == -1)
         return NS_ERROR_FAILURE; // XXX GL Error? should never happen.
 
@@ -3978,7 +4015,7 @@ WebGLContext::GetShaderInfoLog(nsIWebGLShader *sobj, nsAString& retval)
     nsCAutoString log;
     log.SetCapacity(k);
 
-    gl->fGetShaderInfoLog(shadername, k, (GLint*) &k, (char*) log.BeginWriting());
+    gl->fGetShaderInfoLog(shadername, k, &k, (char*) log.BeginWriting());
 
     log.SetLength(k);
 
@@ -4094,7 +4131,7 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
 }
 
 NS_IMETHODIMP
-WebGLContext::TexImage2D(PRInt32 dummy)
+WebGLContext::TexImage2D(PRInt32)
 {
     return NS_ERROR_FAILURE;
 }
@@ -4246,11 +4283,11 @@ NS_IMETHODIMP
 WebGLContext::TexImage2D_buf(WebGLenum target, WebGLint level, WebGLenum internalformat,
                              WebGLsizei width, WebGLsizei height, WebGLint border,
                              WebGLenum format, WebGLenum type,
-                             js::ArrayBuffer *pixels)
+                             JSObject *pixels)
 {
     return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
-                           pixels ? pixels->data : 0,
-                           pixels ? pixels->byteLength : 0,
+                           pixels ? JS_GetArrayBufferData(pixels) : 0,
+                           pixels ? JS_GetArrayBufferByteLength(pixels) : 0,
                            -1,
                            WebGLTexelFormat::Auto, PR_FALSE);
 }
@@ -4303,7 +4340,7 @@ WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level, WebGLenum interna
 }
 
 NS_IMETHODIMP
-WebGLContext::TexSubImage2D(PRInt32 dummy)
+WebGLContext::TexSubImage2D(PRInt32)
 {
     return NS_ERROR_FAILURE;
 }
@@ -4421,14 +4458,14 @@ WebGLContext::TexSubImage2D_buf(WebGLenum target, WebGLint level,
                                 WebGLint xoffset, WebGLint yoffset,
                                 WebGLsizei width, WebGLsizei height,
                                 WebGLenum format, WebGLenum type,
-                                js::ArrayBuffer *pixels)
+                                JSObject *pixels)
 {
     if (!pixels)
         return ErrorInvalidValue("TexSubImage2D: pixels must not be null!");
 
     return TexSubImage2D_base(target, level, xoffset, yoffset,
                               width, height, 0, format, type,
-                              pixels->data, pixels->byteLength,
+                              JS_GetArrayBufferData(pixels), JS_GetArrayBufferByteLength(pixels),
                               -1,
                               WebGLTexelFormat::Auto, PR_FALSE);
 }

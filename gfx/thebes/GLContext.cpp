@@ -53,6 +53,8 @@
 
 #include "gfxCrashReporterUtils.h"
 
+#include "mozilla/Util.h" // for DebugOnly
+
 namespace mozilla {
 namespace gl {
 
@@ -1730,7 +1732,7 @@ GLContext::UseBlitProgram()
             fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
             log.SetLength(len);
 
-            printf_stderr("Shader %d compilation failed:\n%s\n", nsPromiseFlatCString(log).get());
+            printf_stderr("Shader %d compilation failed:\n%s\n", log.get());
             return;
         }
 
@@ -1754,7 +1756,7 @@ GLContext::UseBlitProgram()
         fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
         log.SetLength(len);
 
-        printf_stderr("Program linking failed:\n%s\n", nsPromiseFlatCString(log).get());
+        printf_stderr("Program linking failed:\n%s\n", log.get());
         return;
     }
 
@@ -1777,7 +1779,7 @@ GLContext::SetBlitFramebufferForDestTexture(GLuint aTexture)
                           0);
 
     if (aTexture) {
-        GLenum status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+        DebugOnly<GLenum> status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
 
         // Note: if you are hitting this assertion, it is likely that
         // your texture is not texture complete -- that is, you

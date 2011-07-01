@@ -45,7 +45,6 @@
  */
 #include <time.h>
 
-#include "jslong.h"
 #ifdef MOZILLA_CLIENT
 #include "jscompat.h"
 #endif
@@ -102,9 +101,6 @@ class DSTOffsetCache {
     JSInt64 getDSTOffsetMilliseconds(int64 localTimeMilliseconds, JSContext *cx);
 
     inline void purge();
-#ifdef JS_METER_DST_OFFSET_CACHING
-    void dumpStats();
-#endif
 
   private:
     JSInt64 computeDSTOffsetMilliseconds(int64 localTimeSeconds);
@@ -114,19 +110,6 @@ class DSTOffsetCache {
 
     JSInt64 oldOffsetMilliseconds;
     JSInt64 oldRangeStartSeconds, oldRangeEndSeconds;
-
-#ifdef JS_METER_DST_OFFSET_CACHING
-    size_t totalCalculations;
-    size_t hit;
-    size_t missIncreasing;
-    size_t missDecreasing;
-    size_t missIncreasingOffsetChangeUpper;
-    size_t missIncreasingOffsetChangeExpand;
-    size_t missLargeIncrease;
-    size_t missDecreasingOffsetChangeLower;
-    size_t missDecreasingOffsetChangeExpand;
-    size_t missLargeDecrease;
-#endif
 
     static const JSInt64 MAX_UNIX_TIMET = 2145859200; /* time_t 12/31/2037 */
     static const JSInt64 MILLISECONDS_PER_SECOND = 1000;
@@ -138,43 +121,6 @@ class DSTOffsetCache {
 
   private:
     void sanityCheck();
-
-#ifdef JS_METER_DST_OFFSET_CACHING
-#define NOTE_GENERIC(member) this->member++
-#else
-#define NOTE_GENERIC(member) ((void)0)
-#endif
-    void noteOffsetCalculation() {
-        NOTE_GENERIC(totalCalculations);
-    }
-    void noteCacheHit() {
-        NOTE_GENERIC(hit);
-    }
-    void noteCacheMissIncrease() {
-        NOTE_GENERIC(missIncreasing);
-    }
-    void noteCacheMissDecrease() {
-        NOTE_GENERIC(missDecreasing);
-    }
-    void noteCacheMissIncreasingOffsetChangeUpper() {
-        NOTE_GENERIC(missIncreasingOffsetChangeUpper);
-    }
-    void noteCacheMissIncreasingOffsetChangeExpand() {
-        NOTE_GENERIC(missIncreasingOffsetChangeExpand);
-    }
-    void noteCacheMissLargeIncrease() {
-        NOTE_GENERIC(missLargeIncrease);
-    }
-    void noteCacheMissDecreasingOffsetChangeLower() {
-        NOTE_GENERIC(missDecreasingOffsetChangeLower);
-    }
-    void noteCacheMissDecreasingOffsetChangeExpand() {
-        NOTE_GENERIC(missDecreasingOffsetChangeExpand);
-    }
-    void noteCacheMissLargeDecrease() {
-        NOTE_GENERIC(missLargeDecrease);
-    }
-#undef NOTE_GENERIC
 };
 
 JS_BEGIN_EXTERN_C

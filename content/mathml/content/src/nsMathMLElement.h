@@ -42,6 +42,8 @@
 
 #include "nsMappedAttributeElement.h"
 #include "nsIDOMElement.h"
+#include "nsILink.h"
+#include "Link.h"
 
 class nsCSSValue;
 
@@ -50,12 +52,15 @@ typedef nsMappedAttributeElement nsMathMLElementBase;
 /*
  * The base class for MathML elements.
  */
-class nsMathMLElement : public nsMathMLElementBase
-                      , public nsIDOMElement
+class nsMathMLElement : public nsMathMLElementBase,
+                        public nsIDOMElement,
+                        public nsILink,
+                        public mozilla::dom::Link
 {
 public:
   nsMathMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsMathMLElementBase(aNodeInfo), mIncrementScriptLevel(PR_FALSE)
+    : nsMathMLElementBase(aNodeInfo), Link(this),
+      mIncrementScriptLevel(PR_FALSE)
   {}
 
   // Implementation of nsISupports is inherited from nsMathMLElementBase
@@ -69,6 +74,8 @@ public:
   nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent,
                       PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -89,6 +96,8 @@ public:
   static void MapMathMLAttributesInto(const nsMappedAttributes* aAttributes, 
                                       nsRuleData* aRuleData);
   
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   nsresult Clone(nsINodeInfo*, nsINode**) const;
   virtual nsEventStates IntrinsicState() const;
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
@@ -99,6 +108,26 @@ public:
   PRBool GetIncrementScriptLevel() const {
     return mIncrementScriptLevel;
   }
+
+  NS_IMETHOD LinkAdded() { return NS_OK; }
+  NS_IMETHOD LinkRemoved() { return NS_OK; }
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull,
+                             PRBool aWithMouse = PR_FALSE);
+  virtual PRBool IsLink(nsIURI** aURI) const;
+  virtual void GetLinkTarget(nsAString& aTarget);
+  virtual nsLinkState GetLinkState() const;
+  virtual void RequestLinkStateUpdate();
+  virtual already_AddRefed<nsIURI> GetHrefURI() const;
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
 
   virtual nsXPCClassInfo* GetClassInfo();
 private:

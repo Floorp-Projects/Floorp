@@ -49,7 +49,6 @@
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -90,7 +89,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsMutationEvent.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 
 #include "nsRuleData.h"
 
@@ -683,8 +682,18 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLInputElement,
   if (tmp->IsSingleLineTextControl(PR_FALSE)) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mInputData.mState, nsTextEditorState)
   }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mFiles)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFileList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLInputElement,
+                                                  nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mControllers)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mFiles)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFileList);
+  //XXX should unlink more?
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+                                                              
 NS_IMPL_ADDREF_INHERITED(nsHTMLInputElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement) 
 
@@ -859,21 +868,6 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
       UpdateBarredFromConstraintValidation();
 
-      // If we are changing type from File/Text/Tel/Passwd to other input types
-      // we need save the mValue into value attribute
-      if (mInputData.mValue &&
-          mType != NS_FORM_INPUT_EMAIL &&
-          mType != NS_FORM_INPUT_TEXT &&
-          mType != NS_FORM_INPUT_SEARCH &&
-          mType != NS_FORM_INPUT_PASSWORD &&
-          mType != NS_FORM_INPUT_TEL &&
-          mType != NS_FORM_INPUT_URL &&
-          mType != NS_FORM_INPUT_FILE) {
-        SetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                NS_ConvertUTF8toUTF16(mInputData.mValue), PR_FALSE);
-        FreeData();
-      }
-
       if (mType != NS_FORM_INPUT_IMAGE) {
         // We're no longer an image input.  Cancel our image requests, if we have
         // any.  Note that doing this when we already weren't an image is ok --
@@ -1003,37 +997,42 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
 nsresult
 nsHTMLInputElement::GetValueInternal(nsAString& aValue) const
 {
-  nsTextEditorState* state = GetEditorState();
-  if (state) {
-    state->GetValue(aValue, PR_TRUE);
-    return NS_OK;
+  switch (GetValueMode()) {
+    case VALUE_MODE_VALUE:
+      mInputData.mState->GetValue(aValue, PR_TRUE);
+      return NS_OK;
+
+    case VALUE_MODE_FILENAME:
+      if (nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
+        if (mFiles.Count()) {
+          return mFiles[0]->GetMozFullPath(aValue);
+        }
+        else {
+          aValue.Truncate();
+        }
+      } else {
+        // Just return the leaf name
+        if (mFiles.Count() == 0 || NS_FAILED(mFiles[0]->GetName(aValue))) {
+          aValue.Truncate();
+        }
+      }
+
+      return NS_OK;
+
+    case VALUE_MODE_DEFAULT:
+      // Treat defaultValue as value.
+      GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue);
+      return NS_OK;
+
+    case VALUE_MODE_DEFAULT_ON:
+      // Treat default value as value and returns "on" if no value.
+      if (!GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue)) {
+        aValue.AssignLiteral("on");
+      }
+      return NS_OK;
   }
 
-  if (mType == NS_FORM_INPUT_FILE) {
-    if (nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
-      if (mFiles.Count()) {
-        return mFiles[0]->GetMozFullPath(aValue);
-      }
-      else {
-        aValue.Truncate();
-      }
-    } else {
-      // Just return the leaf name
-      if (mFiles.Count() == 0 || NS_FAILED(mFiles[0]->GetName(aValue))) {
-        aValue.Truncate();
-      }
-    }
-    
-    return NS_OK;
-  }
-
-  // Treat value == defaultValue for other input elements
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue) &&
-      (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
-    // The default value of a radio or checkbox input is "on".
-    aValue.AssignLiteral("on");
-  }
-
+  // This return statement is required for some compilers.
   return NS_OK;
 }
 
@@ -1398,48 +1397,61 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
                                      PRBool aUserInput,
                                      PRBool aSetValueChanged)
 {
-  NS_PRECONDITION(mType != NS_FORM_INPUT_FILE,
+  NS_PRECONDITION(GetValueMode() != VALUE_MODE_FILENAME,
                   "Don't call SetValueInternal for file inputs");
 
-  if (mType == NS_FORM_INPUT_FILE) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  switch (GetValueMode()) {
+    case VALUE_MODE_VALUE:
+    {
+      // At the moment, only single line text control have to sanitize their value
+      // Because we have to create a new string for that, we should prevent doing
+      // it if it's useless.
+      nsAutoString value(aValue);
 
-  if (IsSingleLineTextControl(PR_FALSE)) {
-    // At the moment, only single line text control have to sanitize their value
-    // Because we have to create a new string for that, we should prevent doing
-    // it if it's useless.
-    nsAutoString value(aValue);
-    if (!GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
-      SanitizeValue(value);
+      if (!GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+        SanitizeValue(value);
+      }
+
+      if (aSetValueChanged) {
+        SetValueChanged(PR_TRUE);
+      }
+
+      mInputData.mState->SetValue(value, aUserInput);
+
+      // This call might be useless in some situations because if the element is
+      // a single line text control, nsTextEditorState::SetValue will call
+      // nsHTMLInputElement::OnValueChanged which is going to call UpdateState()
+      // if the element is focused. This bug 665547.
+      if (PlaceholderApplies() &&
+          HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
+        UpdateState(true);
+      }
+
+      return NS_OK;
     }
 
-    if (aSetValueChanged) {
-      SetValueChanged(PR_TRUE);
-    }
-    mInputData.mState->SetValue(value, aUserInput);
+    case VALUE_MODE_DEFAULT:
+    case VALUE_MODE_DEFAULT_ON:
+      // If the value of a hidden input was changed, we mark it changed so that we
+      // will know we need to save / restore the value.  Yes, we are overloading
+      // the meaning of ValueChanged just a teensy bit to save a measly byte of
+      // storage space in nsHTMLInputElement.  Yes, you are free to make a new flag,
+      // NEED_TO_SAVE_VALUE, at such time as mBitField becomes a 16-bit value.
+      if (mType == NS_FORM_INPUT_HIDDEN) {
+        SetValueChanged(PR_TRUE);
+      }
 
-    if (PlaceholderApplies() &&
-        HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
-      UpdateState(true);
-    }
+      // Treat value == defaultValue for other input elements.
+      return nsGenericHTMLFormElement::SetAttr(kNameSpaceID_None,
+                                               nsGkAtoms::value, aValue,
+                                               PR_TRUE);
 
-    return NS_OK;
+    case VALUE_MODE_FILENAME:
+      return NS_ERROR_UNEXPECTED;
   }
 
-  // If the value of a hidden input was changed, we mark it changed so that we
-  // will know we need to save / restore the value.  Yes, we are overloading
-  // the meaning of ValueChanged just a teensy bit to save a measly byte of
-  // storage space in nsHTMLInputElement.  Yes, you are free to make a new flag,
-  // NEED_TO_SAVE_VALUE, at such time as mBitField becomes a 16-bit value.
-  if (mType == NS_FORM_INPUT_HIDDEN) {
-    SetValueChanged(PR_TRUE);
-  }
-
-  // Treat value == defaultValue for other input elements.
-  return nsGenericHTMLFormElement::SetAttr(kNameSpaceID_None,
-                                           nsGkAtoms::value, aValue,
-                                           PR_TRUE);
+  // This return statement is required for some compilers.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1448,12 +1460,6 @@ nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
   PRBool valueChangedBefore = GetValueChanged();
 
   SET_BOOLBIT(mBitField, BF_VALUE_CHANGED, aValueChanged);
-
-  if (!aValueChanged) {
-    if (!IsSingleLineTextControl(PR_FALSE)) {
-      FreeData();
-    }
-  }
 
   if (valueChangedBefore != aValueChanged) {
     UpdateState(true);
@@ -3052,19 +3058,13 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
       {
-        PRBool checked = GetChecked();
-        PRBool defaultChecked = PR_FALSE;
-        GetDefaultChecked(&defaultChecked);
-        // Only save if checked != defaultChecked (bug 62713)
-        // (always save if it's a radio button so that the checked
-        // state of all radio buttons is restored)
-        if (mType == NS_FORM_INPUT_RADIO || checked != defaultChecked) {
+        if (GetCheckedChanged()) {
           inputState = new nsHTMLInputElementState();
           if (!inputState) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
 
-          inputState->SetChecked(checked);
+          inputState->SetChecked(GetChecked());
         }
         break;
       }

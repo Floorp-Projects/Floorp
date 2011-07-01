@@ -18,6 +18,8 @@
       return;
     }
 
+    SimpleTest.expectChildProcessCrash();
+
     var p = iframe.contentDocument.createElement('embed');
     p.setAttribute('id', 'plugin1');
     p.setAttribute('type', 'application/x-test');

@@ -97,6 +97,12 @@ gfxD2DSurface::Scroll(const nsIntPoint &aDelta, const nsIntRect &aClip)
     cairo_d2d_scroll(CairoSurface(), aDelta.x, aDelta.y, &rect);
 }
 
+ID3D10Texture2D*
+gfxD2DSurface::GetTexture()
+{
+  return cairo_d2d_surface_get_texture(CairoSurface());
+}
+
 HDC
 gfxD2DSurface::GetDC(PRBool aRetainContents)
 {

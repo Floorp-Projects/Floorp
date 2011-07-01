@@ -5,7 +5,9 @@ function test() {
 
   let tab = gBrowser.addTab(testPath + "file_bug550565_popup.html");
 
-  tab.linkedBrowser.addEventListener('DOMContentLoaded', function() {
+  tab.linkedBrowser.addEventListener("DOMContentLoaded", function() {
+    tab.linkedBrowser.removeEventListener("DOMContentLoaded", arguments.callee, true);
+
     let expectedIcon = testPath + "file_bug550565_favicon.ico";
 
     is(gBrowser.getIcon(tab), expectedIcon, "Correct icon before pushState.");

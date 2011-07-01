@@ -115,11 +115,10 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
         else
             JS_snprintf(name, sizeof(name), "XPCWrappedNative");
 
-        cb.DescribeNode(RefCounted, tmp->mRefCnt.get(),
-                        sizeof(XPCWrappedNative), name);
+        cb.DescribeRefCountedNode(tmp->mRefCnt.get(),
+                                  sizeof(XPCWrappedNative), name);
     } else {
-        cb.DescribeNode(RefCounted, tmp->mRefCnt.get(),
-                        sizeof(XPCWrappedNative), "XPCWrappedNative");
+        NS_IMPL_CYCLE_COLLECTION_DESCRIBE(XPCWrappedNative, tmp->mRefCnt.get())
     }
 
     if(tmp->mRefCnt.get() > 1) {
@@ -356,20 +355,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     NS_ASSERTION(!Scope->GetRuntime()->GetThreadRunningGC(), 
                  "XPCWrappedNative::GetNewOrUsed called during GC");
 
-    nsISupports *identity;
-#ifdef XPC_IDISPATCH_SUPPORT
-    // XXX This is done for the benefit of some warped COM implementations
-    // where QI(IID_IUnknown, a.b) == QI(IID_IUnknown, a). If someone passes
-    // in a pointer that hasn't been QI'd to IDispatch properly this could
-    // create multiple wrappers for the same object, creating a fair bit of
-    // confusion.
-    PRBool isIDispatch = Interface &&
-                         Interface->GetIID()->Equals(NSID_IDISPATCH);
-    if(isIDispatch)
-        identity = helper.Object();
-    else
-#endif
-        identity = helper.GetCanonical();
+    nsISupports *identity = helper.GetCanonical();
 
     if(!identity)
     {
@@ -434,18 +420,6 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
                          Interface->GetIID()->Equals(NS_GET_IID(nsIClassInfo));
 
     nsIClassInfo *info = helper.GetClassInfo();
-
-#ifdef XPC_IDISPATCH_SUPPORT
-    // If this is an IDispatch wrapper and it didn't give us a class info
-    // we'll provide a default one
-    nsCOMPtr<nsIClassInfo> dispatchInfo;
-    if(isIDispatch && !info)
-    {
-        dispatchInfo = dont_AddRef(static_cast<nsIClassInfo*>
-                                      (XPCIDispatchClassInfo::GetSingleton()));
-        info = dispatchInfo;
-    }
-#endif
 
     XPCNativeScriptableCreateInfo sciProto;
     XPCNativeScriptableCreateInfo sci;
@@ -845,14 +819,7 @@ XPCWrappedNative::GetUsedOnly(XPCCallContext& ccx,
     }
     else
     {
-        nsCOMPtr<nsISupports> identity;
-#ifdef XPC_IDISPATCH_SUPPORT
-        // XXX See GetNewOrUsed for more info on this
-        if(Interface->GetIID()->Equals(NSID_IDISPATCH))
-            identity = Object;
-        else
-#endif
-            identity = do_QueryInterface(Object);
+        nsCOMPtr<nsISupports> identity = do_QueryInterface(Object);
 
         if(!identity)
         {
@@ -1466,10 +1433,6 @@ XPCWrappedNative::SystemIsBeingShutDown(JSContext* cx)
             if(to->GetJSObject())
             {
                 JS_SetPrivate(cx, to->GetJSObject(), nsnull);
-#ifdef XPC_IDISPATCH_SUPPORT
-                if(to->IsIDispatch())
-                    delete to->GetIDispatchInfo();
-#endif
                 to->SetJSObject(nsnull);
             }
             // We leak the tearoff mNative
@@ -2174,13 +2137,6 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
     aTearOff->SetInterface(aInterface);
     aTearOff->SetNative(obj);
-#ifdef XPC_IDISPATCH_SUPPORT
-    // Are we building a tearoff for IDispatch?
-    if(iid->Equals(NSID_IDISPATCH))
-    {
-        aTearOff->SetIDispatch(ccx);
-    }  
-#endif
     if(needJSObject && !InitTearOffJSObject(ccx, aTearOff))
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2440,12 +2396,13 @@ CallMethodHelper::~CallMethodHelper()
         for(uint8 i = 0; i < paramCount; i++)
         {
             nsXPTCVariant* dp = GetDispatchParam(i);
-            void* p = dp->val.p;
-            if(!p)
-                continue;
 
             if(dp->IsValArray())
             {
+                void* p = dp->val.p;
+                if(!p)
+                    continue;
+
                 // going to have to cleanup the array and perhaps its contents
                 if(dp->IsValAllocated() || dp->IsValInterface())
                 {
@@ -2482,8 +2439,16 @@ CallMethodHelper::~CallMethodHelper()
             else
             {
                 if(dp->IsValJSRoot())
+                {
+                    NS_ASSERTION(!dp->IsValAllocated() && !dp->IsValInterface(),
+                                 "jsvals are their own class of values");
                     JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
+                    continue;
+                }
 
+                void* p = dp->val.p;
+                if(!p)
+                    continue;
                 if(dp->IsValAllocated())
                     nsMemory::Free(p);
                 else if(dp->IsValInterface())

@@ -1048,7 +1048,15 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   border-top: @border_width_tiny@ solid rgb(205,205,205);
   padding: 0;
   -moz-user-focus: ignore;
+}
+
+.action-buttons,
+#pageactions-container {
   display: inline-block;
+}
+
+#context-commands {
+  display: -moz-box;
 }
 
 .action-button,
@@ -1154,8 +1162,13 @@ pageaction:not([image]) > hbox >.pageaction-image {
   display: none;
 }
 
+#context-header {
+  background-color: @color_background_default@;
+}
+
 #share-title,
 #context-hint {
+  color: @color_text_default@;
   font-size: @font_small@;
   padding: @padding_small@;
 }
@@ -1430,16 +1443,16 @@ setting {
   min-width: 5.5em;
 }
 
-.syncsetup-link {
-  text-decoration: underline;
-}
-
 .syncsetup-label {
   color: @color_text_default@;
 }
 
 #syncsetup-customserver {
   -moz-margin-start: @margin_xnormal@;
+}
+
+#sync-message {
+  padding-bottom: 2em;
 }
 
 /* content scrollbars */
@@ -1484,3 +1497,20 @@ setting {
   90% { -moz-transform: translateX(-@sidebar_width_minimum@); }
   to { -moz-transform: translateX(0); }
 }
+
+#selectionhandle-start,
+#selectionhandle-end {
+  min-width: 35px !important;
+  width: 35px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#selectionhandle-start {
+  list-style-image: url("chrome://browser/skin/images/handle-start.png");
+}
+
+#selectionhandle-end {
+  list-style-image: url("chrome://browser/skin/images/handle-end.png");
+}
+

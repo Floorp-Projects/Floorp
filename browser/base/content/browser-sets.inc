@@ -191,7 +191,7 @@
     <broadcaster id="isFrameImage"/>
     <broadcaster id="singleFeedMenuitemState" disabled="true"/>
     <broadcaster id="multipleFeedsMenuState" hidden="true"/>
-    <broadcaster id="tabviewGroupsNumber" groups="0"/>
+    <broadcaster id="tabviewGroupsNumber" groups="1"/>
 #ifdef MOZ_SERVICES_SYNC
     <broadcaster id="sync-setup-state"/>
     <broadcaster id="sync-syncnow-state"/>
@@ -242,7 +242,7 @@
     <key id="key_errorConsole" key="&errorConsoleCmd.commandkey;" oncommand="toJavaScriptConsole();" modifiers="accel,shift" disabled="true"/>
     <key id="key_webConsole" key="&webConsoleCmd.commandkey;" oncommand="HUDConsoleUI.toggleHUD();" modifiers="accel,shift"/>
     <key id="key_inspect" key="&inspectMenu.commandkey;" command="Tools:Inspect" modifiers="accel,shift"/>
-    <key id="key_scratchpad" keycode="&scratchpad.keycode;"
+    <key id="key_scratchpad" keycode="&scratchpad.keycode;" modifiers="shift"
          keytext="&scratchpad.keytext;" command="Tools:Scratchpad"/>
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>

@@ -128,16 +128,12 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
         if (JSInterpreterHook hook = cx->debugHooks->callHook)
             fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->debugHooks->callHookData));
     }
-
-    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
 }
 
 bool
 ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool okArg)
 {
     JSBool ok = okArg;
-
-    Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
 
     if (void *hookData = fp->maybeHookData()) {
         if (fp->isFramePushedByExecute()) {
@@ -171,9 +167,9 @@ CompartmentHasLiveScripts(JSCompartment *comp)
         if (JS_GetContextThread(icx) != currentThreadId)
             continue;
 #endif
-        for (AllFramesIter i(icx); !i.done(); ++i) {
-            JSScript *script = i.fp()->maybeScript();
-            if (script && script->compartment == comp)
+        for (FrameRegsIter i(icx); !i.done(); ++i) {
+            JSScript *script = i.fp()->script();
+            if (script->compartment == comp)
                 return JS_TRUE;
         }
     }
@@ -1377,8 +1373,22 @@ JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 extern JS_PUBLIC_API(jsuword *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
+    Vector<JSAtom *> localNames(cx);
+    if (!fun->script()->bindings.getLocalNameArray(cx, &localNames))
+        return NULL;
+
+    /* Munge data into the API this method implements.  Avert your eyes! */
     *markp = JS_ARENA_MARK(&cx->tempPool);
-    return fun->script()->bindings.getLocalNameArray(cx, &cx->tempPool);
+
+    jsuword *names;
+    JS_ARENA_ALLOCATE_CAST(names, jsuword *, &cx->tempPool, localNames.length() * sizeof *names);
+    if (!names) {
+        js_ReportOutOfMemory(cx);
+        return NULL;
+    }
+
+    memcpy(names, localNames.begin(), localNames.length() * sizeof(jsuword));
+    return names;
 }
 
 extern JS_PUBLIC_API(JSAtom *)
@@ -1501,7 +1511,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    JS_ASSERT(cx->stack.contains(fp));
+    JS_ASSERT(cx->stack.containsSlow(fp));
 
     js::AutoCompartment ac(cx, &fp->scopeChain());
     if (!ac.enter())
@@ -1516,7 +1526,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    JS_ASSERT(cx->stack.contains(fp));
+    JS_ASSERT(cx->stack.containsSlow(fp));
 
     if (!fp->isFunctionFrame())
         return NULL;
@@ -1578,7 +1588,7 @@ JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 {
-    return Valueify(fp)->maybeCallee();
+    return Valueify(fp)->maybeCalleev().toObjectOrNull();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1588,6 +1598,7 @@ JS_GetValidFrameCalleeObject(JSContext *cx, JSStackFrame *fp, jsval *vp)
 
     if (!Valueify(fp)->getValidCalleeObject(cx, &v))
         return false;
+    *vp = v.isObject() ? Jsvalify(v) : JSVAL_VOID;
     *vp = Jsvalify(v);
     return true;
 }
@@ -1701,8 +1712,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
         return false;
 
     script->isUncachedEval = true;
-    uintN evalFlags = StackFrame::DEBUGGER | StackFrame::EVAL;
-    bool ok = Execute(cx, *scobj, script, fp, evalFlags, Valueify(rval));
+    bool ok = Execute(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, Valueify(rval));
 
     js_DestroyScript(cx, script);
     return ok;
@@ -1975,7 +1985,6 @@ JS_PUBLIC_API(size_t)
 JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 {
     size_t nbytes, pbytes;
-    jsatomid i;
     jssrcnote *sn, *notes;
     JSObjectArray *objarray;
     JSPrincipals *principals;
@@ -1986,7 +1995,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 
     nbytes += script->length * sizeof script->code[0];
     nbytes += script->atomMap.length * sizeof script->atomMap.vector[0];
-    for (i = 0; i < script->atomMap.length; i++)
+    for (size_t i = 0; i < script->atomMap.length; i++)
         nbytes += GetAtomTotalSize(cx, script->atomMap.vector[i]);
 
     if (script->filename)
@@ -1999,7 +2008,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 
     if (JSScript::isValidOffset(script->objectsOffset)) {
         objarray = script->objects();
-        i = objarray->length;
+        size_t i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
         do {
             nbytes += JS_GetObjectTotalSize(cx, objarray->vector[--i]);
@@ -2008,7 +2017,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
 
     if (JSScript::isValidOffset(script->regexpsOffset)) {
         objarray = script->regexps();
-        i = objarray->length;
+        size_t i = objarray->length;
         nbytes += sizeof *objarray + i * sizeof objarray->vector[0];
         do {
             nbytes += JS_GetObjectTotalSize(cx, objarray->vector[--i]);
@@ -2777,3 +2786,33 @@ JS_GetFunctionCallback(JSContext *cx)
 
 #endif /* MOZ_TRACE_JSCALLS */
 
+JS_PUBLIC_API(void)
+JS_DumpProfile(JSContext *cx, JSScript *script)
+{
+    JS_ASSERT(!cx->runtime->gcRunning);
+
+#if defined(DEBUG)
+    if (script->pcCounters) {
+        // Display hit counts for every JS code line
+        AutoArenaAllocator mark(&cx->tempPool);
+        Sprinter sprinter;
+        INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+
+        fprintf(stdout, "--- PC COUNTS %s:%d ---\n", script->filename, script->lineno);
+        js_Disassemble(cx, script, true, &sprinter);
+        fprintf(stdout, "%s\n", sprinter.base);
+        fprintf(stdout, "--- END PC COUNTS %s:%d ---\n", script->filename, script->lineno);
+    }
+#endif
+}
+
+JS_PUBLIC_API(void)
+JS_DumpAllProfiles(JSContext *cx)
+{
+    for (JSScript *script = (JSScript *) JS_LIST_HEAD(&cx->compartment->scripts);
+         script != (JSScript *) &cx->compartment->scripts;
+         script = (JSScript *) JS_NEXT_LINK((JSCList *)script))
+    {
+        JS_DumpProfile(cx, script);
+    }
+}

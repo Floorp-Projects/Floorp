@@ -191,23 +191,28 @@ function fileentry_changed() {
   show_phase("loading");
   var input = ID("fileentry");
   var files = input.files;
-  var log = null;
   if (files.length > 0) {
     // Only handle the first file; don't handle multiple selection.
     // The parts of the log we care about are ASCII-only.  Since we
     // can ignore lines we don't care about, best to read in as
     // iso-8859-1, which guarantees we don't get decoding errors.
-    log = files[0].getAsText("iso-8859-1");
+    var fileReader = new FileReader();
+    fileReader.onload = function(e) {
+      var log = null;
+
+      log = e.target.result;
+      
+      if (log)
+        process_log(log);
+      else
+        show_phase("entry");
+    }
+    fileReader.readAsText(files[0], "iso-8859-1");
   }
   // So the user can process the same filename again (after
   // overwriting the log), clear the value on the form input so we
   // will always get an onchange event.
   input.value = "";
-
-  if (log)
-    process_log(log);
-  else
-    show_phase("entry");
 }
 
 function log_pasted() {
