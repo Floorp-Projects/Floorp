@@ -104,11 +104,13 @@
 #include "nsIViewManager.h"
 #include "nsIScriptChannel.h"
 #include "nsIOfflineCacheUpdate.h"
+#include "nsITimedChannel.h"
 #include "nsCPrefetchService.h"
 #include "nsJSON.h"
 #include "IHistory.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -6115,6 +6117,20 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     nsCOMPtr<nsIURI> url;
     nsresult rv = aChannel->GetURI(getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsITimedChannel> timingChannel =
+        do_QueryInterface(aChannel);
+    if (timingChannel) {
+        TimeStamp channelCreationTime;
+        rv = timingChannel->GetChannelCreation(&channelCreationTime);
+        if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull()) {
+            PRUint32 interval = (PRUint32)
+                (TimeStamp::Now() - channelCreationTime)
+                .ToMilliseconds();
+            Telemetry::Accumulate(Telemetry::TOTAL_CONTENT_PAGE_LOAD_TIME, 
+                                  interval);
+        }
+    }
 
     // Timing is picked up by the window, we don't need it anymore
     mTiming = nsnull;
