@@ -263,8 +263,12 @@ main(int argc, char **argv)
   // 3) give up
 
   struct stat fileStat;
-
-  if (!realpath(argv[0], iniPath) || stat(iniPath, &fileStat)) {
+  strncpy(tmpPath, argv[0], sizeof(tmpPath));
+  lastSlash = strrchr(tmpPath, '/');
+  if (lastSlash) {
+    *lastSlash = 0;
+    realpath(tmpPath, iniPath);
+  } else {
     const char *path = getenv("PATH");
     if (!path)
       return 1;
@@ -277,8 +281,11 @@ main(int argc, char **argv)
     char *token = strtok(pathdup, ":");
     while (token) {
       sprintf(tmpPath, "%s/%s", token, argv[0]);
-      if (realpath(tmpPath, iniPath) && stat(iniPath, &fileStat) == 0) {
+      if (stat(tmpPath, &fileStat) == 0) {
         found = PR_TRUE;
+        lastSlash = strrchr(tmpPath, '/');
+        *lastSlash = 0;
+        realpath(tmpPath, iniPath);
         break;
       }
       token = strtok(NULL, ":");
@@ -287,11 +294,15 @@ main(int argc, char **argv)
     if (!found)
       return 1;
   }
+  lastSlash = iniPath + strlen(iniPath);
+  *lastSlash = '/';
 #endif
 
+#ifndef XP_UNIX
   lastSlash = strrchr(iniPath, PATH_SEPARATOR_CHAR);
   if (!lastSlash)
     return 1;
+#endif
 
   *(++lastSlash) = '\0';
 
