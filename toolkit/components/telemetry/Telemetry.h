@@ -62,14 +62,14 @@ HistogramCount
 void Accumulate(ID id, PRUint32 sample);
 
 template<ID id>
-class Timer {
+class AutoTimer {
 public:
-  Timer():
+  AutoTimer():
     start(TimeStamp::Now())
   {
   }
 
-  ~Timer() {
+  ~AutoTimer() {
     Accumulate(id, (TimeStamp::Now() - start).ToMilliseconds());
   }
 
