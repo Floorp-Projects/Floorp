@@ -151,6 +151,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Telemetry.h"
 
 #if defined(XP_WIN)
 #include "nsIWindowMediator.h"
@@ -2337,6 +2338,7 @@ nsresult nsPluginHost::LoadPlugins()
 // This is needed in ReloadPlugins to prevent possible recursive reloads
 nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged)
 {
+  Telemetry::Timer<Telemetry::FIND_PLUGINS> telemetry;
   // let's start timing if we are only really creating the plugin list
   if (aCreatePluginList) {
     NS_TIMELINE_START_TIMER("LoadPlugins");
