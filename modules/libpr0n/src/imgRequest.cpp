@@ -530,13 +530,8 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
       }
     }
 
-    //
-    // Determine whether the cache entry must be revalidated when it expires.
-    // If so, then the cache entry must *not* be used during HISTORY loads if
-    // it has expired.
-    //
+    // Determine whether the cache entry must be revalidated when we try to use it.
     // Currently, only HTTP specifies this information...
-    //
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
     if (httpChannel) {
       PRBool bMustRevalidate = PR_FALSE;
@@ -561,7 +556,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
       // multiple calls to this function don't override an earlier decision to
       // validate by making validation a one-way decision.
       if (bMustRevalidate)
-        aCacheEntry->SetMustValidateIfExpired(bMustRevalidate);
+        aCacheEntry->SetMustValidate(bMustRevalidate);
     }
   }
 }

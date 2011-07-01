@@ -123,13 +123,13 @@ public:
     Touch();
   }
 
-  PRBool GetMustValidateIfExpired() const
+  PRBool GetMustValidate() const
   {
-    return mMustValidateIfExpired;
+    return mMustValidate;
   }
-  void SetMustValidateIfExpired(PRBool aValidate)
+  void SetMustValidate(PRBool aValidate)
   {
-    mMustValidateIfExpired = aValidate;
+    mMustValidate = aValidate;
     Touch();
   }
 
@@ -178,7 +178,7 @@ private: // data
   PRInt32 mTouchedTime;
   PRInt32 mExpiryTime;
   nsExpirationState mExpirationState;
-  PRPackedBool mMustValidateIfExpired : 1;
+  PRPackedBool mMustValidate : 1;
   PRPackedBool mEvicted : 1;
   PRPackedBool mHasNoProxies : 1;
 };
