@@ -240,12 +240,14 @@ TelemetryPing.prototype = {
         continue;
       }
 
-      let h = this._histograms[mr.name];
+      let h = this._histograms[mr.path];
       if (!h) {
         h = Telemetry.getHistogramById(id);
-        this._histograms[mr.name] = h;
+        this._histograms[mr.path] = h;
       }
-      h.add(val);
+      // hack to deal with some memory reporters returning 0
+      if (val)
+        h.add(val);
     }
     return memReporters;
   },
