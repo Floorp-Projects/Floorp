@@ -3,7 +3,7 @@ netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 var gWindowUtils;
 
 try {
-  gWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
+  gWindowUtils = window.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
   if (gWindowUtils && !gWindowUtils.compareCanvases)
     gWindowUtils = null;
 } catch (e) {
