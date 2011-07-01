@@ -66,7 +66,7 @@ class nsILoadGroup;
 class imgCacheEntry
 {
 public:
-  imgCacheEntry(imgRequest *request, PRBool mustValidateIfExpired = PR_FALSE);
+  imgCacheEntry(imgRequest *request);
   ~imgCacheEntry();
 
   nsrefcnt AddRef()
