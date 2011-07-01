@@ -322,6 +322,7 @@ private:
     bool splitInterval(LiveInterval *interval, CodePosition pos);
     bool assign(LAllocation allocation);
     bool spill();
+    void finishInterval(LiveInterval *interval);
     Register findBestFreeRegister();
     Register findBestBlockedRegister();
     bool canCoexist(LiveInterval *a, LiveInterval *b);
