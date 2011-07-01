@@ -72,8 +72,10 @@ public:
   NS_DECL_NSIDOMFILE
   NS_DECL_NSIXHRSENDABLE
 
-  nsDOMFile(nsIFile *aFile, const nsAString& aContentType)
+  nsDOMFile(nsIFile *aFile, const nsAString& aContentType,
+            nsISupports *aCacheToken = nsnull)
     : mFile(aFile),
+      mCacheToken(aCacheToken),
       mContentType(aContentType),
       mIsFullFile(true)
   {}
@@ -86,6 +88,7 @@ public:
   nsDOMFile(const nsDOMFile* aOther, PRUint64 aStart, PRUint64 aLength,
             const nsAString& aContentType)
     : mFile(aOther->mFile),
+      mCacheToken(aOther->mCacheToken),
       mStart(aOther->mIsFullFile ? aStart :
                                    (aOther->mStart + aStart)),
       mLength(aLength),
@@ -112,6 +115,7 @@ public:
 
 protected:
   nsCOMPtr<nsIFile> mFile;
+  nsCOMPtr<nsISupports> mCacheToken;
 
   // start and length in 
   PRUint64 mStart;

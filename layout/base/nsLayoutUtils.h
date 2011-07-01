@@ -947,6 +947,23 @@ public:
                                 PRInt32              aLength);
 
   /**
+   * Helper function for drawing text-shadow. The callback's job
+   * is to draw whatever needs to be blurred onto the given context.
+   */
+  typedef void (* TextShadowCallback)(nsRenderingContext* aCtx,
+                                      nsPoint aShadowOffset,
+                                      const nscolor& aShadowColor,
+                                      void* aData);
+
+  static void PaintTextShadow(const nsIFrame*     aFrame,
+                              nsRenderingContext* aContext,
+                              const nsRect&       aTextRect,
+                              const nsRect&       aDirtyRect,
+                              const nscolor&      aForegroundColor,
+                              TextShadowCallback  aCallback,
+                              void*               aCallbackData);
+
+  /**
    * Gets the baseline to vertically center text from a font within a
    * line of specified height.
    *
