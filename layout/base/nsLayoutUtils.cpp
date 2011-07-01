@@ -2889,6 +2889,61 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
   return aContext->GetWidth(aString, aLength);
 }
 
+/* static */ void
+nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
+                               nsRenderingContext* aContext,
+                               const nsRect& aTextRect,
+                               const nsRect& aDirtyRect,
+                               const nscolor& aForegroundColor,
+                               TextShadowCallback aCallback,
+                               void* aCallbackData)
+{
+  const nsStyleText* textStyle = aFrame->GetStyleText();
+  if (!textStyle->mTextShadow)
+    return;
+
+  // Text shadow happens with the last value being painted at the back,
+  // ie. it is painted first.
+  gfxContext* aDestCtx = aContext->ThebesContext();
+  for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
+    nsCSSShadowItem* shadowDetails = textStyle->mTextShadow->ShadowAt(i - 1);
+    nsPoint shadowOffset(shadowDetails->mXOffset,
+                         shadowDetails->mYOffset);
+    nscoord blurRadius = NS_MAX(shadowDetails->mRadius, 0);
+
+    nsRect shadowRect(aTextRect);
+    shadowRect.MoveBy(shadowOffset);
+
+    nsPresContext* presCtx = aFrame->PresContext();
+    nsContextBoxBlur contextBoxBlur;
+    gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, 0, blurRadius,
+                                                    presCtx->AppUnitsPerDevPixel(),
+                                                    aDestCtx, aDirtyRect, nsnull);
+    if (!shadowContext)
+      continue;
+
+    nscolor shadowColor;
+    if (shadowDetails->mHasColor)
+      shadowColor = shadowDetails->mColor;
+    else
+      shadowColor = aForegroundColor;
+
+    // Conjure an nsRenderingContext from a gfxContext for drawing the text
+    nsRefPtr<nsRenderingContext> renderingContext = new nsRenderingContext();
+    renderingContext->Init(presCtx->DeviceContext(), shadowContext);
+
+    aDestCtx->Save();
+    aDestCtx->NewPath();
+    aDestCtx->SetColor(gfxRGBA(shadowColor));
+
+    // The callback will draw whatever we want to blur as a shadow.
+    aCallback(renderingContext, shadowOffset, shadowColor, aCallbackData);
+
+    contextBoxBlur.DoPaint();
+    aDestCtx->Restore();
+  }
+}
+
 /* static */ nscoord
 nsLayoutUtils::GetCenteredFontBaseline(nsFontMetrics* aFontMetrics,
                                        nscoord         aLineHeight)
