@@ -348,7 +348,8 @@ public:
   virtual void DisableComponentAlpha() { mDisableSubpixelAA = PR_TRUE; }
 
   void PaintTextWithOffset(nsRenderingContext* aCtx,
-                           nsPoint aOffset);
+                           nsPoint aOffset,
+                           const nscolor* aColor);
 
   PRPackedBool mDisableSubpixelAA;
 };
@@ -360,7 +361,7 @@ PaintTextShadowCallback(nsRenderingContext* aCtx,
                         void* aData)
 {
   reinterpret_cast<nsDisplayXULTextBox*>(aData)->
-           PaintTextWithOffset(aCtx, aShadowOffset);
+           PaintTextWithOffset(aCtx, aShadowOffset, &aShadowColor);
 }
 
 void
@@ -378,15 +379,16 @@ nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
                                  PaintTextShadowCallback,
                                  (void*)this);
 
-  PaintTextWithOffset(aCtx, nsPoint(0, 0));
+  PaintTextWithOffset(aCtx, nsPoint(0, 0), nsnull);
 }
 
 void
 nsDisplayXULTextBox::PaintTextWithOffset(nsRenderingContext* aCtx,
-                                         nsPoint aOffset)
+                                         nsPoint aOffset,
+                                         const nscolor* aColor)
 {
   static_cast<nsTextBoxFrame*>(mFrame)->
-    PaintTitle(*aCtx, mVisibleRect, ToReferenceFrame() + aOffset);
+    PaintTitle(*aCtx, mVisibleRect, ToReferenceFrame() + aOffset, aColor);
 }
 
 nsRect
@@ -419,12 +421,13 @@ nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 void
 nsTextBoxFrame::PaintTitle(nsRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
-                           nsPoint              aPt)
+                           nsPoint              aPt,
+                           const nscolor*       aOverrideColor)
 {
     if (mTitle.IsEmpty())
         return;
 
-    DrawText(aRenderingContext, mTextDrawRect + aPt, nsnull);
+    DrawText(aRenderingContext, mTextDrawRect + aPt, aOverrideColor);
 }
 
 void
