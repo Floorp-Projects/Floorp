@@ -85,11 +85,11 @@ class LAllocation
   protected:
     static const uintptr_t TAG_BIT = 1;
     static const uintptr_t TAG_SHIFT = 0;
-    static const uintptr_t TAG_MASK = (1 << TAG_BIT) - 1;
+    static const uintptr_t TAG_MASK = 1 << TAG_SHIFT;
     static const uintptr_t KIND_BITS = 3;
     static const uintptr_t KIND_SHIFT = TAG_SHIFT + TAG_BIT;
     static const uintptr_t KIND_MASK = (1 << KIND_BITS) - 1;
-    static const uintptr_t DATA_BITS = (sizeof(uint32) * 8) - KIND_BITS;
+    static const uintptr_t DATA_BITS = (sizeof(uint32) * 8) - KIND_BITS - TAG_BIT;
     static const uintptr_t DATA_SHIFT = KIND_SHIFT + KIND_BITS;
     static const uintptr_t DATA_MASK = (1 << DATA_BITS) - 1;
 
