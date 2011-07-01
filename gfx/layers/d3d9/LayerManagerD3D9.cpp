@@ -245,56 +245,6 @@ LayerManagerD3D9::CreateImageContainer()
   return container.forget();
 }
 
-already_AddRefed<ShadowThebesLayer>
-LayerManagerD3D9::CreateShadowThebesLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
-  }
-  return nsRefPtr<ShadowThebesLayerD3D9>(new ShadowThebesLayerD3D9(this)).forget();
-}
-
-already_AddRefed<ShadowContainerLayer>
-LayerManagerD3D9::CreateShadowContainerLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
-  }
-  return nsRefPtr<ShadowContainerLayerD3D9>(new ShadowContainerLayerD3D9(this)).forget();
-}
-
-already_AddRefed<ShadowImageLayer>
-LayerManagerD3D9::CreateShadowImageLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
-  }
-  return nsRefPtr<ShadowImageLayerD3D9>(new ShadowImageLayerD3D9(this)).forget();
-}
-
-already_AddRefed<ShadowColorLayer>
-LayerManagerD3D9::CreateShadowColorLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
-  }
-  return nsRefPtr<ShadowColorLayerD3D9>(new ShadowColorLayerD3D9(this)).forget();
-}
-
-already_AddRefed<ShadowCanvasLayer>
-LayerManagerD3D9::CreateShadowCanvasLayer()
-{
-  if (LayerManagerD3D9::mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
-  }
-  return nsRefPtr<ShadowCanvasLayerD3D9>(new ShadowCanvasLayerD3D9(this)).forget();
-}
-
 void ReleaseTexture(void *texture)
 {
   static_cast<IDirect3DTexture9*>(texture)->Release();
