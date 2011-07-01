@@ -1734,6 +1734,10 @@ int NS_main(int argc, NS_tchar **argv)
   // Remove everything except close window from the context menu
   {
     HKEY hkApp;
+    RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Classes\\Applications",
+                    0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL,
+                    &hkApp, NULL);
+    RegCloseKey(hkApp);
     if (RegCreateKeyExW(HKEY_CURRENT_USER,
                         L"Software\\Classes\\Applications\\updater.exe",
                         0, NULL, REG_OPTION_VOLATILE, KEY_SET_VALUE, NULL,

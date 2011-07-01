@@ -36,7 +36,6 @@
 #include <dwrite.h>
 #include <D2d1.h>
 
-
 // DirectWrite is not available on all platforms.
 typedef HRESULT (WINAPI*DWriteCreateFactoryFunc)(
   __in   DWRITE_FACTORY_TYPE factoryType,
@@ -52,7 +51,7 @@ struct _cairo_dwrite_scaled_font {
     cairo_antialias_t antialias_mode;
     DWRITE_MEASURING_MODE measuring_mode;
     cairo_bool_t manual_show_glyphs_allowed;
-    cairo_bool_t force_GDI_classic;
+    cairo_d2d_surface_t::TextRenderingState rendering_mode;
 };
 typedef struct _cairo_dwrite_scaled_font cairo_dwrite_scaled_font_t;
 
@@ -103,13 +102,22 @@ public:
 	return family;
     }
 
-    static IDWriteRenderingParams *RenderingParams(cairo_bool_t forceGDIClassic)
+    static IDWriteRenderingParams *RenderingParams(cairo_d2d_surface_t::TextRenderingState mode)
     {
-	if (!mRenderingParams || !mForceGDIClassicRenderingParams) {
+	if (!mDefaultRenderingParams ||
+            !mForceGDIClassicRenderingParams ||
+            !mCustomClearTypeRenderingParams)
+        {
 	    CreateRenderingParams();
 	}
-	IDWriteRenderingParams *params =
-	    forceGDIClassic ? mForceGDIClassicRenderingParams : mRenderingParams;
+	IDWriteRenderingParams *params;
+        if (mode == cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE) {
+            params = mDefaultRenderingParams;
+        } else if (mode == cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC && mRenderingMode < 0) {
+            params = mForceGDIClassicRenderingParams;
+        } else {
+            params = mCustomClearTypeRenderingParams;
+        }
 	if (params) {
 	    params->AddRef();
 	}
@@ -127,15 +135,23 @@ public:
 	mClearTypeLevel = aClearTypeLevel;
         mPixelGeometry = aPixelGeometry;
         mRenderingMode = aRenderingMode;
-	// discard any current RenderingParams object
-	if (mRenderingParams) {
-	    mRenderingParams->Release();
-	    mRenderingParams = NULL;
+	// discard any current RenderingParams objects
+	if (mCustomClearTypeRenderingParams) {
+	    mCustomClearTypeRenderingParams->Release();
+	    mCustomClearTypeRenderingParams = NULL;
 	}
 	if (mForceGDIClassicRenderingParams) {
 	    mForceGDIClassicRenderingParams->Release();
 	    mForceGDIClassicRenderingParams = NULL;
 	}
+	if (mDefaultRenderingParams) {
+	    mDefaultRenderingParams->Release();
+	    mDefaultRenderingParams = NULL;
+	}
+    }
+
+    static int GetClearTypeRenderingMode() {
+        return mRenderingMode;
     }
 
 private:
@@ -143,7 +159,8 @@ private:
 
     static IDWriteFactory *mFactoryInstance;
     static IDWriteFontCollection *mSystemCollection;
-    static IDWriteRenderingParams *mRenderingParams;
+    static IDWriteRenderingParams *mDefaultRenderingParams;
+    static IDWriteRenderingParams *mCustomClearTypeRenderingParams;
     static IDWriteRenderingParams *mForceGDIClassicRenderingParams;
     static FLOAT mGamma;
     static FLOAT mEnhancedContrast;

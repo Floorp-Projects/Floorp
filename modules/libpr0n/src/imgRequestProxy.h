@@ -48,6 +48,7 @@
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsISupportsPriority.h"
+#include "nsITimedChannel.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
@@ -71,7 +72,10 @@ class Image;
 } // namespace imagelib
 } // namespace mozilla
 
-class imgRequestProxy : public imgIRequest, public nsISupportsPriority, public nsISecurityInfoProvider
+class imgRequestProxy : public imgIRequest, 
+                        public nsISupportsPriority, 
+                        public nsISecurityInfoProvider,
+                        public nsITimedChannel
 {
 public:
   NS_DECL_ISUPPORTS
@@ -79,6 +83,7 @@ public:
   NS_DECL_NSIREQUEST
   NS_DECL_NSISUPPORTSPRIORITY
   NS_DECL_NSISECURITYINFOPROVIDER
+  // nsITimedChannel declared below
 
   imgRequestProxy();
   virtual ~imgRequestProxy();
@@ -195,6 +200,16 @@ protected:
   //   (a) we have an mOwner at all
   //   (b) whether mOwner has instantiated its image yet
   imgStatusTracker& GetStatusTracker();
+
+  nsITimedChannel* TimedChannel()
+  {
+    if (!mOwner)
+      return nsnull;
+    return mOwner->mTimedChannel;
+  }
+
+public:
+  NS_FORWARD_SAFE_NSITIMEDCHANNEL(TimedChannel())
 
 private:
   friend class imgCacheValidator;

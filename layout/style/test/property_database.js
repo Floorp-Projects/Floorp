@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation (original author)
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -444,8 +445,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1" ],
-		other_values: [ "2", "100" ],
-		invalid_values: [ "1.0", "-1", "-1000", "0" ]
+		other_values: [ "2", "100", "0" ],
+		invalid_values: [ "1.0", "-1", "-1000" ]
 	},
 	"-moz-box-orient": {
 		domProp: "MozBoxOrient",
@@ -2497,6 +2498,14 @@ var gCSSProperties = {
 			"-moz-calc(3*25px + 50%)",
 		],
 		invalid_values: []
+	},
+	"text-overflow": {
+		domProp: "textOverflow",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "clip" ],
+		other_values: [ "ellipsis", '""', "''", '"hello"' ],
+		invalid_values: [ "none", "auto" ]
 	},
 	"text-shadow": {
 		domProp: "textShadow",

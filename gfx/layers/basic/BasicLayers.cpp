@@ -41,6 +41,8 @@
 #include "mozilla/layers/PLayerChild.h"
 #include "mozilla/layers/PLayersChild.h"
 #include "mozilla/layers/PLayersParent.h"
+#include "mozilla/gfx/2D.h"
+
 #include "ipc/ShadowLayerChild.h"
 
 #include "BasicLayers.h"
@@ -416,19 +418,18 @@ public:
   void SetBackingBuffer(gfxASurface* aBuffer,
                         const nsIntRect& aRect, const nsIntPoint& aRotation)
   {
-    gfxIntSize prevSize = gfxIntSize(BufferDims().width, BufferDims().height);
+    gfxIntSize prevSize = gfxIntSize(BufferRect().width, BufferRect().height);
     gfxIntSize newSize = aBuffer->GetSize();
     NS_ABORT_IF_FALSE(newSize == prevSize,
                       "Swapped-in buffer size doesn't match old buffer's!");
     nsRefPtr<gfxASurface> oldBuffer;
-    oldBuffer = SetBuffer(aBuffer, nsIntSize(newSize.width, newSize.height),
-                          aRect, aRotation);
+    oldBuffer = SetBuffer(aBuffer, aRect, aRotation);
   }
 
   void SetBackingBufferAndUpdateFrom(
     gfxASurface* aBuffer,
     gfxASurface* aSource, const nsIntRect& aRect, const nsIntPoint& aRotation,
-    const nsIntRegion& aUpdateRegion, float aXResolution, float aYResolution);
+    const nsIntRegion& aUpdateRegion);
 
 private:
   BasicThebesLayerBuffer(gfxASurface* aBuffer,
@@ -437,8 +438,7 @@ private:
     // intended to be used for creating temporaries
     : ThebesLayerBuffer(ContainsVisibleBounds)
   {
-    gfxIntSize sz = aBuffer->GetSize();
-    SetBuffer(aBuffer, nsIntSize(sz.width, sz.height), aRect, aRotation);
+    SetBuffer(aBuffer, aRect, aRotation);
   }
 
   BasicThebesLayer* mLayer;
@@ -498,6 +498,21 @@ public:
     }
     return referenceSurface->CreateSimilarSurface(
       aType, gfxIntSize(aSize.width, aSize.height));
+  }
+
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    if (!BasicManager()->IsRetained()) {
+      // Don't do any snapping of our transform, since we're just going to
+      // draw straight through without intermediate buffers.
+      mEffectiveTransform = GetLocalTransform()*aTransformToSurface;
+      if (gfxPoint(0,0) != mResidualTranslation) {
+        mResidualTranslation = gfxPoint(0,0);
+        mValidRegion.SetEmpty();
+      }
+      return;
+    }
+    ThebesLayer::ComputeEffectiveTransforms(aTransformToSurface);
   }
 
 protected:
@@ -680,9 +695,6 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   }
 
   {
-    gfxSize scale = aContext->CurrentMatrix().ScaleFactors(PR_TRUE);
-    float paintXRes = BasicManager()->XResolution() * gfxUtils::ClampToScaleFactor(scale.width);
-    float paintYRes = BasicManager()->YResolution() * gfxUtils::ClampToScaleFactor(scale.height);
     PRUint32 flags = 0;
     gfxMatrix transform;
     if (!GetEffectiveTransform().Is2D(&transform) ||
@@ -691,7 +703,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
     }
     Buffer::PaintState state =
-      mBuffer.BeginPaint(this, contentType, paintXRes, paintYRes, flags);
+      mBuffer.BeginPaint(this, contentType, flags);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
     if (state.mContext) {
@@ -702,9 +714,6 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       state.mRegionToInvalidate.And(state.mRegionToInvalidate,
                                     GetEffectiveVisibleRegion());
       nsIntRegion extendedDrawRegion = state.mRegionToDraw;
-      extendedDrawRegion.ExtendForScaling(paintXRes, paintYRes);
-      mXResolution = paintXRes;
-      mYResolution = paintYRes;
       SetAntialiasingFlags(this, state.mContext);
       PaintBuffer(state.mContext,
                   state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
@@ -766,8 +775,7 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
     // and may cause gray lines.
     gfxUtils::ClipToRegionSnapped(aTarget, aLayer->GetEffectiveVisibleRegion());
   }
-  DrawBufferWithRotation(aTarget, aOpacity,
-                         aLayer->GetXResolution(), aLayer->GetYResolution());
+  DrawBufferWithRotation(aTarget, aOpacity);
   aTarget->Restore();
 }
 
@@ -782,19 +790,18 @@ void
 BasicThebesLayerBuffer::SetBackingBufferAndUpdateFrom(
   gfxASurface* aBuffer,
   gfxASurface* aSource, const nsIntRect& aRect, const nsIntPoint& aRotation,
-  const nsIntRegion& aUpdateRegion, float aXResolution, float aYResolution)
+  const nsIntRegion& aUpdateRegion)
 {
   SetBackingBuffer(aBuffer, aRect, aRotation);
   nsRefPtr<gfxContext> destCtx =
-    GetContextForQuadrantUpdate(aUpdateRegion.GetBounds(),
-                                aXResolution, aYResolution);
+    GetContextForQuadrantUpdate(aUpdateRegion.GetBounds());
   destCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
   if (IsClippingCheap(destCtx, aUpdateRegion)) {
     gfxUtils::ClipToRegion(destCtx, aUpdateRegion);
   }
 
   BasicThebesLayerBuffer srcBuffer(aSource, aRect, aRotation);
-  srcBuffer.DrawBufferWithRotation(destCtx, 1.0, aXResolution, aYResolution);
+  srcBuffer.DrawBufferWithRotation(destCtx, 1.0);
 }
 
 class BasicImageLayer : public ImageLayer, public BasicImplData {
@@ -1011,10 +1018,12 @@ protected:
   {
     return static_cast<BasicLayerManager*>(mManager);
   }
-  void UpdateSurface();
+  void UpdateSurface(gfxASurface* aDestSurface = nsnull);
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
+  mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
+  
   PRUint32 mCanvasFramebuffer;
 
   PRPackedBool mGLBufferIsPremultiplied;
@@ -1037,26 +1046,49 @@ BasicCanvasLayer::Initialize(const Data& aData)
     mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
     mCanvasFramebuffer = mGLContext->GetOffscreenFBO();
     mNeedsYFlip = PR_TRUE;
+  } else if (aData.mDrawTarget) {
+    mDrawTarget = aData.mDrawTarget;
+    mSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
+    mNeedsYFlip = PR_FALSE;
   } else {
-    NS_ERROR("CanvasLayer created without mSurface or mGLContext?");
+    NS_ERROR("CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
 }
 
 void
-BasicCanvasLayer::UpdateSurface()
+BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
 {
+  if (mDrawTarget) {
+    mDrawTarget->Flush();
+  }
+
+  if (!mGLContext && aDestSurface) {
+    nsRefPtr<gfxContext> tmpCtx = new gfxContext(aDestSurface);
+    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    BasicCanvasLayer::PaintWithOpacity(tmpCtx, 1.0f);
+    return;
+  }
+
   if (!mDirty)
     return;
   mDirty = PR_FALSE;
 
   if (mGLContext) {
-    nsRefPtr<gfxImageSurface> isurf =
-      new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                          (GetContentFlags() & CONTENT_OPAQUE)
-                            ? gfxASurface::ImageFormatRGB24
-                            : gfxASurface::ImageFormatARGB32);
+    if (aDestSurface && aDestSurface->GetType() != gfxASurface::SurfaceTypeImage) {
+      NS_ASSERTION(aDestSurface->GetType() == gfxASurface::SurfaceTypeImage,
+                   "Destination surface must be ImageSurface type");
+      return;
+    }
+
+    nsRefPtr<gfxImageSurface> isurf = aDestSurface ?
+        static_cast<gfxImageSurface*>(aDestSurface) :
+        new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
+                            (GetContentFlags() & CONTENT_OPAQUE)
+                              ? gfxASurface::ImageFormatRGB24
+                              : gfxASurface::ImageFormatARGB32);
+
     if (!isurf || isurf->CairoStatus() != 0) {
       return;
     }
@@ -1095,7 +1127,9 @@ BasicCanvasLayer::UpdateSurface()
       gfxUtils::PremultiplyImageSurface(isurf);
 
     // stick our surface into mSurface, so that the Paint() path is the same
-    mSurface = isurf;
+    if (!aDestSurface) {
+      mSurface = isurf;
+    }
   }
 }
 
@@ -1188,9 +1222,7 @@ BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
 #ifdef DEBUG
   mPhase(PHASE_NONE),
 #endif
-  mXResolution(1.0)
-  , mYResolution(1.0)
-  , mWidget(aWidget)
+  mWidget(aWidget)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE)
   , mCachedSurfaceInUse(PR_FALSE)
   , mTransactionIncomplete(false)
@@ -1904,8 +1936,7 @@ public:
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
-    aAttrs = ThebesLayerAttributes(GetValidRegion(),
-                                   mXResolution, mYResolution);
+    aAttrs = ThebesLayerAttributes(GetValidRegion());
   }
 
   virtual Layer* AsLayer() { return this; }
@@ -1914,7 +1945,6 @@ public:
 
   void SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
                              const nsIntRegion& aValidRegion,
-                             float aXResolution, float aYResolution,
                              const OptionalThebesBuffer& aReadOnlyFrontBuffer,
                              const nsIntRegion& aFrontUpdatedRegion);
 
@@ -1955,8 +1985,6 @@ private:
 void
 BasicShadowableThebesLayer::SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
                                                   const nsIntRegion& aValidRegion,
-                                                  float aXResolution,
-                                                  float aYResolution,
                                                   const OptionalThebesBuffer& aReadOnlyFrontBuffer,
                                                   const nsIntRegion& aFrontUpdatedRegion)
 {
@@ -1969,8 +1997,6 @@ BasicShadowableThebesLayer::SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
     // to a texture it owns, then we probably got back the same buffer
     // we pushed in the update and all is well.  If not, ...
     mValidRegion = aValidRegion;
-    mXResolution = aXResolution;
-    mYResolution = aYResolution;
     mBuffer.SetBackingBuffer(backBuffer, aBuffer.rect(), aBuffer.rotation());
     return;
   }
@@ -1987,7 +2013,7 @@ BasicShadowableThebesLayer::SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
   mBuffer.SetBackingBufferAndUpdateFrom(
     backBuffer,
     roFrontBuffer, roFront.rect(), roFront.rotation(),
-    aFrontUpdatedRegion, mXResolution, mYResolution);
+    aFrontUpdatedRegion);
   // Now the new back buffer has the same (interesting) pixels as the
   // new front buffer, and mValidRegion et al. are correct wrt the new
   // back buffer (i.e. as they were for the old back buffer)
@@ -2077,7 +2103,6 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
 
   BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
                                       nsIntRegion(),
-                                      1.0, 1.0,
                                       nsIntRect(),
                                       tmpFront);
   return BasicManager()->OpenDescriptor(mBackBuffer);
@@ -2366,31 +2391,23 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
 
   BasicManager()->CreatedCanvasBuffer(BasicManager()->Hold(this),
                                       aData.mSize,
-                                      tmpFrontBuffer);
+                                      tmpFrontBuffer,
+                                      mNeedsYFlip ? true : false);
 }
 
 void
 BasicShadowableCanvasLayer::Paint(gfxContext* aContext)
 {
-  BasicCanvasLayer::Paint(aContext);
-  if (!HasShadow())
+  if (!HasShadow()) {
+    BasicCanvasLayer::Paint(aContext);
     return;
+  }
 
-  // It'd be nice to draw directly into the shmem back buffer.
-  // Doing so is complex -- for 2D canvases, we'd need to copy
-  // changed areas, much like we do for Thebes layers, as well as
-  // do all sorts of magic to swap out the surface underneath the
-  // canvas' thebes/cairo context.
   nsRefPtr<gfxASurface> backSurface =
     BasicManager()->OpenDescriptor(mBackBuffer);
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(backSurface);
-  tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
-  // call BasicCanvasLayer::Paint to draw to our tmp context, because
-  // it'll handle things like flipping correctly.  We always want
-  // to do this with 1.0 opacity though, because opacity is a layer
-  // property that's handled by the shadow tree.
-  BasicCanvasLayer::PaintWithOpacity(tmpCtx, 1.0f);
+  UpdateSurface(backSurface);
+  FireDidTransactionCallback();
 
   BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
                                 mBackBuffer);
@@ -2420,10 +2437,8 @@ public:
     *aOldRect = BufferRect();
     *aOldRotation = BufferRotation();
 
-    gfxIntSize newSize = aNewBuffer->GetSize();
     nsRefPtr<gfxASurface> oldBuffer;
     oldBuffer = SetBuffer(aNewBuffer,
-                          nsIntSize(newSize.width, newSize.height),
                           aNewRect, aNewRotation);
     oldBuffer.forget(aOldBuffer);
   }
@@ -2442,8 +2457,6 @@ class BasicShadowThebesLayer : public ShadowThebesLayer, public BasicImplData {
 public:
   BasicShadowThebesLayer(BasicShadowLayerManager* aLayerManager)
     : ShadowThebesLayer(aLayerManager, static_cast<BasicImplData*>(this))
-    , mOldXResolution(1.0)
-    , mOldYResolution(1.0)
   {
     MOZ_COUNT_CTOR(BasicShadowThebesLayer);
   }
@@ -2456,20 +2469,12 @@ public:
   }
 
   virtual void SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
-                              const nsIntRegion& aValidRegion,
-                              float aXResolution, float aYResolution);
+                              const nsIntRegion& aValidRegion);
 
   virtual void SetValidRegion(const nsIntRegion& aRegion)
   {
     mOldValidRegion = mValidRegion;
     ShadowThebesLayer::SetValidRegion(aRegion);
-  }
-
-  virtual void SetResolution(float aXResolution, float aYResolution)
-  {
-    mOldXResolution = mXResolution;
-    mOldYResolution = mYResolution;
-    ShadowThebesLayer::SetResolution(aXResolution, aYResolution);
   }
 
   virtual void Disconnect()
@@ -2481,7 +2486,6 @@ public:
   virtual void
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
        ThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
-       float* aNewXResolution, float* aNewYResolution,
        OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion);
 
   virtual void DestroyFrontBuffer()
@@ -2489,8 +2493,6 @@ public:
     mFrontBuffer.Clear();
     mValidRegion.SetEmpty();
     mOldValidRegion.SetEmpty();
-    mOldXResolution = 1.0;
-    mOldYResolution = 1.0;
 
     if (IsSurfaceDescriptorValid(mFrontBufferDescriptor)) {
       BasicManager()->ShadowLayerManager::DestroySharedSurface(&mFrontBufferDescriptor, mAllocator);
@@ -2516,18 +2518,13 @@ private:
   // Then when we Swap() back/front buffers, we can return these
   // parameters to our partner (adjusted as needed).
   nsIntRegion mOldValidRegion;
-  float mOldXResolution;
-  float mOldYResolution;
 };
 
 void
 BasicShadowThebesLayer::SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
-                                       const nsIntRegion& aValidRegion,
-                                       float aXResolution, float aYResolution)
+                                       const nsIntRegion& aValidRegion)
 {
   mValidRegion = mOldValidRegion = aValidRegion;
-  mXResolution = mOldXResolution = aXResolution;
-  mYResolution = mOldYResolution = aYResolution;
 
   NS_ABORT_IF_FALSE(OptionalThebesBuffer::Tnull_t != aNewFront.type(),
                     "aNewFront must be valid here!");
@@ -2549,7 +2546,6 @@ BasicShadowThebesLayer::Swap(const ThebesBuffer& aNewFront,
                              const nsIntRegion& aUpdatedRegion,
                              ThebesBuffer* aNewBack,
                              nsIntRegion* aNewBackValidRegion,
-                             float* aNewXResolution, float* aNewYResolution,
                              OptionalThebesBuffer* aReadOnlyFront,
                              nsIntRegion* aFrontUpdatedRegion)
 {
@@ -2557,25 +2553,7 @@ BasicShadowThebesLayer::Swap(const ThebesBuffer& aNewFront,
   aNewBack->buffer() = mFrontBufferDescriptor;
   // We have to invalidate the pixels painted into the new buffer.
   // They might overlap with our old pixels.
-  if (mOldXResolution == mXResolution && mOldYResolution == mYResolution) {
-    aNewBackValidRegion->Sub(mOldValidRegion, aUpdatedRegion);
-  } else {
-    // On resolution changes, pretend that our buffer has the new
-    // resolution, but just has no valid content.  This can avoid
-    // unnecessary buffer reallocs.
-    // 
-    // FIXME/bug 598866: when we start re-using buffers after
-    // resolution changes, we're going to need to implement
-    // front->back copies to avoid thrashing our valid region by
-    // always nullifying it.
-    aNewBackValidRegion->SetEmpty();
-    mOldXResolution = mXResolution;
-    mOldYResolution = mYResolution;
-  }
-  NS_ASSERTION(mXResolution == mOldXResolution && mYResolution == mOldYResolution,
-               "Uh-oh, buffer allocation thrash forthcoming!");
-  *aNewXResolution = mXResolution;
-  *aNewYResolution = mYResolution;
+  aNewBackValidRegion->Sub(mOldValidRegion, aUpdatedRegion);
 
   nsRefPtr<gfxASurface> newFrontBuffer =
     BasicManager()->OpenDescriptor(aNewFront.buffer());
@@ -2777,7 +2755,7 @@ public:
   }
 
   virtual void Initialize(const Data& aData);
-  virtual void Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize);
+  virtual void Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize, bool needYFlip);
 
   void Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack);
 
@@ -2797,6 +2775,7 @@ private:
   }
 
   SurfaceDescriptor mFrontSurface;
+  PRPackedBool mNeedsYFlip;
 };
 
 
@@ -2807,8 +2786,9 @@ BasicShadowCanvasLayer::Initialize(const Data& aData)
 }
 
 void
-BasicShadowCanvasLayer::Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize)
+BasicShadowCanvasLayer::Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize, bool needYFlip)
 {
+  mNeedsYFlip = needYFlip;
   mFrontSurface = aNewFront;
   mBounds.SetRect(0, 0, aSize.width, aSize.height);
 }
@@ -2838,11 +2818,24 @@ BasicShadowCanvasLayer::Paint(gfxContext* aContext)
   pat->SetExtend(gfxPattern::EXTEND_PAD);
 
   gfxRect r(0, 0, mBounds.width, mBounds.height);
+
+  gfxMatrix m;
+  if (mNeedsYFlip) {
+    m = aContext->CurrentMatrix();
+    aContext->Translate(gfxPoint(0.0, mBounds.height));
+    aContext->Scale(1.0, -1.0);
+  }
+
+  AutoSetOperator setOperator(aContext, GetOperator());
   aContext->NewPath();
   // No need to snap here; our transform has already taken care of it
   aContext->Rectangle(r);
   aContext->SetPattern(pat);
   aContext->FillWithOpacity(GetEffectiveOpacity());
+
+  if (mNeedsYFlip) {
+    aContext->SetMatrix(m);
+  }
 }
 
 // Create a shadow layer (PLayerChild) for aLayer, if we're forwarding
@@ -3053,8 +3046,7 @@ BasicShadowLayerManager::ForwardTransaction()
         const OpThebesBufferSwap& obs = reply.get_OpThebesBufferSwap();
         BasicShadowableThebesLayer* thebes = GetBasicShadowable(obs)->AsThebes();
         thebes->SetBackBufferAndAttrs(
-          obs.newBackBuffer(),
-          obs.newValidRegion(), obs.newXResolution(), obs.newYResolution(),
+          obs.newBackBuffer(), obs.newValidRegion(),
           obs.readOnlyFrontBuffer(), obs.frontUpdatedRegion());
         break;
       }

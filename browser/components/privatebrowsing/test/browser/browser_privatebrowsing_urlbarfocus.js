@@ -59,11 +59,14 @@ function test() {
     pb.privateBrowsingEnabled = true;
     browser = gBrowser.selectedBrowser;
     browser.addEventListener("load", function() {
+      browser.removeEventListener("load", arguments.callee, true);
+
       // setTimeout is needed here because the onload handler of about:privatebrowsing sets the focus
       setTimeout(function() {
         // ensure that the URL bar is focused inside the private browsing mode
         is(document.commandDispatcher.focusedElement, gURLBar.inputField,
           "URL Bar should be focused inside the private browsing mode");
+
         // ensure that the URL bar is emptied inside the private browsing mode
         is(gURLBar.value, "", "URL Bar should be empty inside the private browsing mode");
 
@@ -71,9 +74,12 @@ function test() {
         pb.privateBrowsingEnabled = false;
         browser = gBrowser.selectedBrowser;
         browser.addEventListener("load", function() {
+          browser.removeEventListener("load", arguments.callee, true);
+
           // ensure that the URL bar is no longer focused after leaving the private browsing mode
           isnot(document.commandDispatcher.focusedElement, gURLBar.inputField,
             "URL Bar should no longer be focused after leaving the private browsing mode");
+
           // ensure that the URL bar is no longer empty after leaving the private browsing mode
           isnot(gURLBar.value, "", "URL Bar should no longer be empty after leaving the private browsing mode");
 

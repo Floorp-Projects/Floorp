@@ -43,18 +43,16 @@
 #include "nsIObserverService.h"
 #include "nsIAppStartup.h"
 #include "nsIGeolocationProvider.h"
-#include "nsIPrefService.h"
-#include "nsIPrefLocalizedString.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
+#include "mozilla/Preferences.h"
 #include "prenv.h"
 
 #include "AndroidBridge.h"
-#include "nsAccelerometerSystem.h"
+#include "nsDeviceMotionSystem.h"
 #include <android/log.h>
 #include <pthread.h>
-#include "nsIPrefBranch2.h"
 #include <wchar.h>
 
 #ifdef MOZ_LOGGING
@@ -74,7 +72,7 @@ using namespace mozilla;
 PRLogModuleInfo *gWidgetLog = nsnull;
 #endif
 
-nsAccelerometerSystem *gAccel = nsnull;
+nsDeviceMotionSystem *gDeviceMotionSystem = nsnull;
 nsIGeolocationUpdate *gLocationCallback = nsnull;
 
 nsAppShell *nsAppShell::gAppShell = nsnull;
@@ -102,6 +100,14 @@ nsAppShell::NotifyNativeEvent()
     mQueueCond.Notify();
 }
 
+#define PREFNAME_MATCH_OS  "intl.locale.matchOS"
+#define PREFNAME_UA_LOCALE "general.useragent.locale"
+static const char* kObservedPrefs[] = {
+  PREFNAME_MATCH_OS,
+  PREFNAME_UA_LOCALE,
+  nsnull
+};
+
 nsresult
 nsAppShell::Init()
 {
@@ -126,36 +132,21 @@ nsAppShell::Init()
     if (!bridge)
         return rv;
 
-    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    branch->AddObserver("intl.locale.matchOS", this, PR_FALSE);
-    branch->AddObserver("general.useragent.locale", this, PR_FALSE);
+    Preferences::AddStrongObservers(this, kObservedPrefs);
 
-    nsString locale;
-    PRBool match = PR_FALSE;
-    rv = branch->GetBoolPref("intl.locale.matchOS", &match);
-
+    PRBool match;
+    rv = Preferences::GetBool(PREFNAME_MATCH_OS, &match);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (match) {
         bridge->SetSelectedLocale(EmptyString());
         return NS_OK;
     }
-    nsCOMPtr<nsIPrefLocalizedString> pls;
-    rv = branch->GetComplexValue("general.useragent.locale",
-                                 NS_GET_IID(nsIPrefLocalizedString),
-                                 getter_AddRefs(pls));
-    if (NS_SUCCEEDED(rv) && pls) {
-        nsXPIDLString uval;
-        pls->ToString(getter_Copies(uval));
-        if (uval)
-            locale.Assign(uval);
-    } else {
-        nsXPIDLCString cval;
-        rv = branch->GetCharPref("general.useragent.locale",
-                                 getter_Copies(cval));
-        if (NS_SUCCEEDED(rv) && cval)
-            locale.AssignWithConversion(cval);
+
+    nsAutoString locale;
+    rv = Preferences::GetLocalizedString(PREFNAME_UA_LOCALE, &locale);
+    if (NS_FAILED(rv)) {
+        rv = Preferences::GetString(PREFNAME_UA_LOCALE, &locale);
     }
 
     bridge->SetSelectedLocale(locale);
@@ -174,40 +165,27 @@ nsAppShell::Observe(nsISupports* aSubject,
         return nsBaseAppShell::Observe(aSubject, aTopic, aData);
     } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && aData && (
                    nsDependentString(aData).Equals(
-                       NS_LITERAL_STRING("general.useragent.locale")) ||
+                       NS_LITERAL_STRING(PREFNAME_UA_LOCALE)) ||
                    nsDependentString(aData).Equals(
-                       NS_LITERAL_STRING("intl.locale.matchOS"))))
-    {
+                       NS_LITERAL_STRING(PREFNAME_MATCH_OS)))) {
         AndroidBridge* bridge = AndroidBridge::Bridge();
-        nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
-        if (!prefs || !bridge)
+        if (!bridge) {
             return NS_OK;
+        }
 
-        nsString locale;
-        PRBool match = PR_FALSE;
-        nsresult rv = prefs->GetBoolPref("intl.locale.matchOS", &match);
+        PRBool match;
+        nsresult rv = Preferences::GetBool(PREFNAME_MATCH_OS, &match);
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (match) {
             bridge->SetSelectedLocale(EmptyString());
             return NS_OK;
         }
-        nsCOMPtr<nsIPrefLocalizedString> pls;
-        rv = prefs->GetComplexValue("general.useragent.locale",
-                                    NS_GET_IID(nsIPrefLocalizedString),
-                                    getter_AddRefs(pls));
-        if (NS_SUCCEEDED(rv) && pls) {
-            nsXPIDLString uval;
-            pls->ToString(getter_Copies(uval));
-            if (uval)
-                locale.Assign(uval);
-        }
-        else {
-            nsXPIDLCString cval;
-            rv = prefs->GetCharPref("general.useragent.locale",
-                                    getter_Copies(cval));
-            if (NS_SUCCEEDED(rv) && cval)
-                locale.AssignWithConversion(cval);
+
+        nsAutoString locale;
+        if (NS_FAILED(Preferences::GetLocalizedString(PREFNAME_UA_LOCALE,
+                                                      &locale))) {
+            locale = Preferences::GetString(PREFNAME_UA_LOCALE);
         }
 
         bridge->SetSelectedLocale(locale);
@@ -314,8 +292,18 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         NativeEventCallback();
         break;
 
-    case AndroidGeckoEvent::SENSOR_EVENT:
-        gAccel->AccelerationChanged(-curEvent->Alpha(), curEvent->Beta(), curEvent->Gamma());
+    case AndroidGeckoEvent::ACCELERATION_EVENT:
+        gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ACCELERATION,
+                                                 -curEvent->X(),
+                                                 curEvent->Y(),
+                                                 curEvent->Z());
+        break;
+
+    case AndroidGeckoEvent::ORIENTATION_EVENT:
+        gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ORIENTATION,
+                                                 -curEvent->Alpha(),
+                                                 curEvent->Beta(),
+                                                 curEvent->Gamma());
         break;
 
     case AndroidGeckoEvent::LOCATION_EVENT: {
@@ -362,9 +350,10 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         // We really want to send a notification like profile-before-change,
         // but profile-before-change ends up shutting some things down instead
         // of flushing data
-        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (prefs)
+        nsIPrefService* prefs = Preferences::GetService();
+        if (prefs) {
             prefs->SavePrefFile(nsnull);
+        }
 
         break;
     }

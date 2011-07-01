@@ -65,11 +65,7 @@ pref("browser.cache.disk.smart_size.first_run", true);
 // Does the user want smart-sizing?
 pref("browser.cache.disk.smart_size.enabled", true);
 // Size explicitly set by the user. Used when smart_size.enabled == false
-#ifndef WINCE
 pref("browser.cache.disk.capacity",         256000);
-#else
-pref("browser.cache.disk.capacity",         20000);
-#endif
 pref("browser.cache.memory.enable",         true);
 //pref("browser.cache.memory.capacity",     -1);
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
@@ -78,7 +74,7 @@ pref("browser.cache.disk_cache_ssl",        true);
 pref("browser.cache.check_doc_frequency",   3);
 
 pref("browser.cache.offline.enable",           true);
-#ifndef WINCE
+
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         512000);
 
@@ -89,17 +85,14 @@ pref("offline-apps.quota.max",        204800);
 // the user should be warned if offline app disk usage exceeds this amount
 // (in kilobytes)
 pref("offline-apps.quota.warn",        51200);
-#else
-// Limited disk space on WinCE, tighten limits.
-pref("browser.cache.offline.capacity", 15000);
-pref("offline-apps.quota.max",          7000);
-pref("offline-apps.quota.warn",         4000);
-#endif
 
 // Whether or not indexedDB is enabled.
 pref("dom.indexedDB.enabled", true);
 // Space to allow indexedDB databases before prompting (in MB).
 pref("dom.indexedDB.warningQuota", 50);
+
+// Whether window.performance is enabled
+pref("dom.enable_performance", true);
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
@@ -108,7 +101,6 @@ pref("browser.sessionhistory.max_total_viewers", -1);
 pref("browser.sessionhistory.optimize_eviction", true);
 
 pref("ui.use_native_colors", true);
-pref("ui.use_native_popup_windows", false);
 pref("ui.click_hold_context_menus", false);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
@@ -198,6 +190,14 @@ pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.sanitize", true);
 
+// Needed to work around a serious bug in how Apple handles downloaded fonts
+// on the most recent developer previews of OS X 10.7 (Lion, builds 11A480b
+// and 11A494a).  See bug 663688.  On Lion and up this setting overrides
+// gfx.downloadable_fonts.enabled.
+#ifdef XP_MACOSX
+pref("gfx.downloadable_fonts.enabled.lion", false);
+#endif
+
 // see gfx/thebes/gfxUnicodeProperties.h for definitions of script bits
 #ifdef XP_MACOSX
 // use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04)
@@ -208,10 +208,12 @@ pref("gfx.font_rendering.harfbuzz.scripts", 3);
 #endif
 
 #ifdef XP_WIN
-#ifndef WINCE
 pref("gfx.font_rendering.directwrite.enabled", false);
 pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
+
+#ifdef XP_WIN
+pref("gfx.canvas.azure.enabled", true);
 #endif
 
 pref("accessibility.browsewithcaret", false);
@@ -259,7 +261,7 @@ pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
 pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "beep");
-pref("accessibility.typeaheadfind.enablesound", false);
+pref("accessibility.typeaheadfind.enablesound", true);
 pref("accessibility.typeaheadfind.prefillwithselection", true);
 
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
@@ -277,8 +279,11 @@ pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
 // Telemetry
 pref("toolkit.telemetry.enabled", false);
-// Telemetry test server to be used until the official one is public
-pref("toolkit.telemetry.server", "http://telemetry.allizom.org");
+pref("toolkit.telemetry.server", "https://data.mozilla.com");
+// Telemetry server owner. Please change if you set toolkit.telemetry.server to a different server
+pref("toolkit.telemetry.server_owner", "Mozilla");
+// Information page about telemetry (temporary ; will be about:telemetry in the end)
+pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.html#telemetry");
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -624,7 +629,6 @@ pref("javascript.options.typeinference", true);
 // Comment 32 and Bug 613551.
 pref("javascript.options.mem.high_water_mark", 128);
 pref("javascript.options.mem.max", -1);
-pref("javascript.options.mem.gc_frequency",   300);
 pref("javascript.options.mem.gc_per_compartment", true);
 pref("javascript.options.mem.log", false);
 
@@ -808,7 +812,12 @@ pref("network.websocket.timeout.ping.response", 10);
 
 // Defines whether or not to try and negotiate the stream-deflate compression
 // extension with the websocket server
-pref("network.websocket.extensions.stream-deflate", false);
+pref("network.websocket.extensions.stream-deflate", true);
+
+// the maximum number of concurrent websocket sessions. By specification there
+// is never more than one handshake oustanding to an individual host at
+// one time.
+pref("network.websocket.max-connections", 200);
 
 // </ws>
 
@@ -1096,7 +1105,7 @@ pref("intl.hyphenation-alias.en", "en-us");
 // and for other subtags of en-*, if no specific patterns are available
 pref("intl.hyphenation-alias.en-*", "en-us");
 
-pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Standard Symbols L, DejaVu Sans, Cambria Math");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Standard Symbols L, DejaVu Sans, Cambria Math");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
 // These fonts are ignored the underline offset, instead of it, the underline is lowered to bottom of its em descent.
@@ -1777,7 +1786,7 @@ pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
 // We have special support for Monotype Symbol on Windows.
-pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Symbol, DejaVu Sans, Cambria Math");
 
 // cleartype settings - false implies default system settings 
 
@@ -1821,11 +1830,12 @@ pref("gfx.font_rendering.cleartype_params.pixel_structure", -1);
 pref("gfx.font_rendering.cleartype_params.rendering_mode", -1);
 
 // A comma-separated list of font family names. Fonts in these families will
-// be forced to use "GDI Classic" ClearType mode, ignoring the value
-// of gfx.font_rendering.cleartype_params.rendering_mode.
+// be forced to use "GDI Classic" ClearType mode, provided the value
+// of gfx.font_rendering.cleartype_params.rendering_mode is -1
+// (i.e. a specific rendering_mode has not been explicitly set).
 // Currently we apply this setting to the sans-serif Microsoft "core Web fonts".
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_for_families",
-     "Arial,Courier New,Segoe UI,Tahoma,Trebuchet MS,Verdana");
+     "Arial,Consolas,Courier New,Microsoft Sans Serif,Segoe UI,Tahoma,Trebuchet MS,Verdana");
 // The maximum size at which we will force GDI classic mode using
 // force_gdi_classic_for_families.
 pref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size", 15);
@@ -1885,13 +1895,8 @@ pref("intl.enable_tsf_support", false);
 pref("intl.tsf.on_layout_change_interval", 100);
 #endif
 
-#ifdef WINCE
-// bug 506798 - can't type in bookmarks panel on WinCE
-pref("ui.panel.default_level_parent", true);
-#else
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
 pref("ui.panel.default_level_parent", false);
-#endif
 
 pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
 
@@ -2309,7 +2314,7 @@ pref("font.size.variable.zh-HK", 15);
 pref("font.size.fixed.zh-HK", 16);
 
 // Apple's Symbol is Unicode so use it
-pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Symbol, DejaVu Sans, Cambria Math");
 
 // individual font faces to be treated as independent families
 // names are Postscript names of each face
@@ -2358,7 +2363,7 @@ pref("ui.key.menuAccessKeyFocuses", true);
 
 pref("font.alias-list", "sans,sans-serif,serif,monospace,Tms Rmn,Helv,Courier,Times New Roman");
 
-pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, DejaVu Sans");
+pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, DejaVu Sans");
 
 // Languages only need lists if we have a default that might not be available.
 // Tms Rmn and Helv cannot be used by Thebes but the OS/2 version of FontConfig
@@ -3176,7 +3181,11 @@ pref("image.mem.decodeondraw", false);
 // Minimum timeout for image discarding (in milliseconds). The actual time in
 // which an image must inactive for it to be discarded will vary between this
 // value and twice this value.
-pref("image.mem.min_discard_timeout_ms", 120000);
+//
+// This used to be 120 seconds, but having it that high causes our working
+// set to grow very large. Switching it back to 10 seconds will hopefully
+// be better.
+pref("image.mem.min_discard_timeout_ms", 10000);
 
 // Chunk size for calls to the image decoders
 pref("image.mem.decode_bytes_at_a_time", 200000);
@@ -3197,15 +3206,8 @@ pref("webgl.verbose", false);
 pref("webgl.prefer-native-gl", false);
 
 #ifdef XP_WIN
-#ifndef WINCE
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive
 pref("network.tcp.sendbuffer", 131072);
-#endif
-#endif
-
-#ifdef WINCE
-pref("mozilla.widget.disable-native-theme", true);
-pref("gfx.color_management.mode", 0);
 #endif
 
 // Whether to disable acceleration for all widgets.
@@ -3215,7 +3217,6 @@ pref("layers.acceleration.disabled", false);
 pref("layers.acceleration.force-enabled", false);
 
 #ifdef XP_WIN
-#ifndef WINCE
 // Whether to disable the automatic detection and use of direct2d.
 pref("gfx.direct2d.disabled", false);
 // Whether to attempt to enable Direct2D regardless of automatic detection or
@@ -3225,13 +3226,12 @@ pref("gfx.direct2d.force-enabled", false);
 pref("layers.prefer-opengl", false);
 pref("layers.prefer-d3d9", false);
 #endif
-#endif
 
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
 // Enable/Disable the orientation API for content
-pref("accelerometer.enabled", true);
+pref("device.motion.enabled", true);
 
 // Enable/Disable HTML5 parser
 pref("html5.parser.enable", true);

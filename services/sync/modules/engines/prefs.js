@@ -46,6 +46,7 @@ const WEAVE_SYNC_PREFS = "services.sync.prefs.sync.";
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
@@ -56,7 +57,7 @@ function PrefRec(collection, id) {
 }
 PrefRec.prototype = {
   __proto__: CryptoWrapper.prototype,
-  _logName: "Record.Pref",
+  _logName: "Sync.Record.Pref",
 };
 
 Utils.deferGetSet(PrefRec, "cleartext", ["value"]);
@@ -270,16 +271,11 @@ PrefTracker.prototype = {
           .getService(Ci.nsIPrefBranch2).removeObserver("", this);
         break;
       case "nsPref:changed":
-        // 100 points for a change that determines which prefs are synced,
-        // 25 points per regular pref change.
-        let up;
-        if (aData.indexOf(WEAVE_SYNC_PREFS) == 0)
-          up = 100;
-        else if (this._prefs.get(WEAVE_SYNC_PREFS + aData, false))
-          up = 25;
-
-        if (up) {
-          this.score += up;
+        // Trigger a sync for MULTI-DEVICE for a change that determines
+        // which prefs are synced or a regular pref change.
+        if (aData.indexOf(WEAVE_SYNC_PREFS) == 0 || 
+            this._prefs.get(WEAVE_SYNC_PREFS + aData, false)) {
+          this.score += SCORE_INCREMENT_XLARGE;
           this.modified = true;
           this._log.trace("Preference " + aData + " changed");
         }

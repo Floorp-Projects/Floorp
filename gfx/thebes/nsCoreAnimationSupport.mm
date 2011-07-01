@@ -449,6 +449,11 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
   if (aWidth == 0 || aHeight == 0)
     return NS_ERROR_FAILURE;
 
+  if (aWidth == mUnsupportedWidth && 
+      aHeight == mUnsupportedHeight) {
+    return NS_ERROR_FAILURE;
+  }
+
   CALayer* layer = (CALayer*)aCALayer;
   CARenderer* caRenderer = nsnull;
 
@@ -464,6 +469,8 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
     CGLError result = ::CGLCreatePBuffer(aWidth, aHeight,
                          GL_TEXTURE_2D, GL_RGBA, 0, &mPixelBuffer);
     if (result != kCGLNoError) {
+      mUnsupportedWidth = aWidth;
+      mUnsupportedHeight = aHeight;
       Destroy();
       return NS_ERROR_FAILURE;
     }
@@ -472,11 +479,15 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
   GLint screen;
   CGLPixelFormatObj format;
   if (::CGLChoosePixelFormat(attributes, &format, &screen) != kCGLNoError) {
+    mUnsupportedWidth = aWidth;
+    mUnsupportedHeight = aHeight;
     Destroy();
     return NS_ERROR_FAILURE;
   }
 
   if (::CGLCreateContext(format, nsnull, &mOpenGLContext) != kCGLNoError) {
+    mUnsupportedWidth = aWidth;
+    mUnsupportedHeight = aHeight;
     Destroy();
     return NS_ERROR_FAILURE;
   }
@@ -486,6 +497,8 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
                             options:nil] retain];
   mCARenderer = caRenderer;
   if (caRenderer == nil) {
+    mUnsupportedWidth = aWidth;
+    mUnsupportedHeight = aHeight;
     Destroy();
     return NS_ERROR_FAILURE;
   }
@@ -498,6 +511,8 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
   if (!mIOSurface) {
     mCGData = malloc(aWidth*aHeight*4);
     if (!mCGData) {
+      mUnsupportedWidth = aWidth;
+      mUnsupportedHeight = aHeight;
       Destroy();
     }
     memset(mCGData, 0, aWidth*aHeight*4);
@@ -508,6 +523,8 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
                                         cgdata_release_callback);
     if (!dataProvider) {
       cgdata_release_callback(mCGData, mCGData, aHeight*aWidth*4);
+      mUnsupportedWidth = aWidth;
+      mUnsupportedHeight = aHeight;
       Destroy();
       return NS_ERROR_FAILURE;
     }
@@ -523,6 +540,8 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
       ::CGColorSpaceRelease(colorSpace);
     }
     if (!mCGImage) {
+      mUnsupportedWidth = aWidth;
+      mUnsupportedHeight = aHeight;
       Destroy();
       return NS_ERROR_FAILURE;
     }
@@ -554,6 +573,8 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
       NS_ERROR("FBO not supported");
       if (oldContext)
         ::CGLSetCurrentContext(oldContext);
+      mUnsupportedWidth = aWidth;
+      mUnsupportedHeight = aHeight;
       Destroy();
       return NS_ERROR_FAILURE; 
     }
@@ -577,6 +598,8 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
   GLenum result = ::glGetError();
   if (result != GL_NO_ERROR) {
     NS_ERROR("Unexpected OpenGL Error");
+    mUnsupportedWidth = aWidth;
+    mUnsupportedHeight = aHeight;
     Destroy();
     if (oldContext)
       ::CGLSetCurrentContext(oldContext);
@@ -635,6 +658,7 @@ nsresult nsCARenderer::Render(int aWidth, int aHeight,
     if (SetupRenderer(caLayer, aWidth, aHeight) != NS_OK) {
       return NS_ERROR_FAILURE;
     }
+
     caRenderer = (CARenderer*)mCARenderer;
   }
 
@@ -689,7 +713,7 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
                                               nsIOSurface *surf, 
                                               CGColorSpaceRef aColorSpace,
                                               int aX, int aY,
-                                              int aWidth, int aHeight) {
+                                              size_t aWidth, size_t aHeight) {
   surf->Lock();
   size_t bytesPerRow = surf->GetBytesPerRow();
   size_t ioWidth = surf->GetWidth();
@@ -705,10 +729,15 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
 
   // We get rendering glitches if we use a width/height that falls
   // outside of the IOSurface.
-  if (aWidth > ioWidth - aX) 
+  if (aWidth + aX > ioWidth) 
     aWidth = ioWidth - aX;
-  if (aHeight > ioHeight - aY) 
+  if (aHeight + aY > ioHeight) 
     aHeight = ioHeight - aY;
+
+  if (aX < 0 || aX >= ioWidth ||
+      aY < 0 || aY >= ioHeight) {
+    return NS_ERROR_FAILURE;
+  }
 
   CGImageRef cgImage = ::CGImageCreate(ioWidth, ioHeight, 8, 32, bytesPerRow,
               aColorSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
@@ -727,7 +756,10 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
   }
 
   ::CGContextScaleCTM(aContext, 1.0f, -1.0f);
-  ::CGContextDrawImage(aContext, CGRectMake(aX, -aY-aHeight, aWidth, aHeight), subImage);
+  ::CGContextDrawImage(aContext, 
+                       CGRectMake(aX, -(CGFloat)aY - (CGFloat)aHeight, 
+                                  aWidth, aHeight), 
+                       subImage);
 
   ::CGImageRelease(subImage);
   ::CGImageRelease(cgImage);

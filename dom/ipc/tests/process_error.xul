@@ -13,13 +13,35 @@
     const done = window.opener.wrappedJSObject.done;
     const SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 
+    function getMinidumpDirectory() {
+      var dir = Services.dirsvc.get('ProfD', Components.interfaces.nsIFile);
+      dir.append("minidumps");
+      return dir;
+    }
+
+    function removeFile(directory, filename) {
+      var file = directory.clone();
+      file.append(filename);
+      if (file.exists()) {
+        file.remove(false);
+      }
+    }
+
     function crashObserver(subject, topic, data) {
       is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
       ok(subject instanceof Components.interfaces.nsIPropertyBag2,
          'Subject implements nsIPropertyBag2.');
-      
+
+      var dumpID;
       if ('nsICrashReporter' in Components.interfaces) {
-        ok(subject.getPropertyAsAString('dumpID'), "dumpID is present and not an empty string");
+        dumpID = subject.getPropertyAsAString('dumpID');
+        ok(dumpID, "dumpID is present and not an empty string");
+      }
+
+      if (dumpID) {
+        var minidumpDirectory = getMinidumpDirectory();
+        removeFile(minidumpDirectory, dumpID + '.dmp');
+        removeFile(minidumpDirectory, dumpID + '.extra');
       }
 
       Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');

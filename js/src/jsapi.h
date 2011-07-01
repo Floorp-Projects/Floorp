@@ -88,6 +88,15 @@ extern JS_PUBLIC_DATA(jsval) JSVAL_VOID;
 
 #endif
 
+/*
+ * Different "run modes" used for execution accounting (JSOPTION_PCCOUNT)
+ */
+
+#define JSRUNMODE_INTERP    0
+#define JSRUNMODE_TRACEJIT  1
+#define JSRUNMODE_METHODJIT 2
+#define JSRUNMODE_COUNT     3
+
 /************************************************************************/
 
 static JS_ALWAYS_INLINE JSBool
@@ -960,9 +969,7 @@ JS_StringToVersion(const char *string);
                                                    backtracks more than n^3
                                                    times, where n is length
                                                    of the input string */
-#define JSOPTION_ANONFUNFIX     JS_BIT(10)      /* Disallow function () {} in
-                                                   statement context per
-                                                   ECMA-262 Edition 3. */
+/* JS_BIT(10) is currently unused. */
 
 #define JSOPTION_JIT            JS_BIT(11)      /* Enable JIT compilation. */
 
@@ -981,13 +988,14 @@ JS_StringToVersion(const char *string);
 #define JSOPTION_METHODJIT_ALWAYS \
                                 JS_BIT(16)      /* Always whole-method JIT,
                                                    don't tune at run-time. */
+#define JSOPTION_PCCOUNT        JS_BIT(17)      /* Collect per-op execution counts */
 
-#define JSOPTION_TYPE_INFERENCE JS_BIT(17)      /* Perform type inference. */
+#define JSOPTION_TYPE_INFERENCE JS_BIT(18)      /* Perform type inference. */
 
 /* Options which reflect compile-time properties of scripts. */
-#define JSCOMPILEOPTION_MASK    (JSOPTION_XML | JSOPTION_ANONFUNFIX)
+#define JSCOMPILEOPTION_MASK    (JSOPTION_XML)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(18) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(19) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32)
@@ -1133,6 +1141,12 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForScopeChain(JSContext *cx);
+
+/*
+ * Initialize the 'Reflect' object on a global object.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_InitReflect(JSContext *cx, JSObject *global);
 
 #ifdef JS_HAS_CTYPES
 /*
@@ -2465,9 +2479,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length);
 
 extern JS_PUBLIC_API(JSBool)
-JS_HasArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp);
-
-extern JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
                  JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
 
@@ -2945,15 +2956,13 @@ JS_IsRunning(JSContext *cx);
  * must be balanced and all nested calls to JS_SaveFrameChain must have had
  * matching JS_RestoreFrameChain calls.
  *
- * JS_SaveFrameChain deals with cx not having any code running on it. A null
- * return does not signify an error, and JS_RestoreFrameChain handles a null
- * frame pointer argument safely.
+ * JS_SaveFrameChain deals with cx not having any code running on it.
  */
-extern JS_PUBLIC_API(JSStackFrame *)
+extern JS_PUBLIC_API(JSBool)
 JS_SaveFrameChain(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp);
+JS_RestoreFrameChain(JSContext *cx);
 
 /************************************************************************/
 
@@ -3301,12 +3310,6 @@ typedef JSBool (* JSONWriteCallback)(const jschar *buf, uint32 len, void *data);
 JS_PUBLIC_API(JSBool)
 JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSONWriteCallback callback, void *data);
-
-/*
- * Retrieve a toJSON function. If found, set vp to its result.
- */
-JS_PUBLIC_API(JSBool)
-JS_TryJSON(JSContext *cx, jsval *vp);
 
 /*
  * JSON.parse as specified by ES5.

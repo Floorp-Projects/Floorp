@@ -1,5 +1,6 @@
 url-prefix ../../jsreftest.html?test=ecma_5/misc/
 script global-numeric-properties.js
+script line-paragraph-separator-parse-as-lineterminator.js
 script redeclare-var-non-writable-property.js
 script enumerate-undefined.js
 script unwrapped-no-such-method.js
@@ -11,3 +12,4 @@ script builtin-methods-reject-null-undefined-this.js
 script regress-bug632003.js
 script new-with-non-constructor.js
 script error-undefined-message.js
+script unnamed-function.js

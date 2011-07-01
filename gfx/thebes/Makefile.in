@@ -12,6 +12,7 @@ LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1
 
 EXPORTS	= \
+        gfx2DGlue.h \
 	gfx3DMatrix.h \
 	gfxASurface.h \
 	gfxAlphaRecovery.h \
@@ -135,19 +136,9 @@ EXPORTS	+= \
 	gfxWindowsSurface.h \
 	gfxWindowsNativeDrawing.h \
 	WGLLibrary.h \
-	$(NULL)
-
-ifdef WINCE
-EXPORTS += \
-	gfxFT2Fonts.h \
-	gfxFT2FontBase.h \
-	$(NULL)
-else
-EXPORTS += \
 	gfxDWriteFonts.h \
 	gfxD2DSurface.h \
 	$(NULL)
-endif
 endif
 
 CPPSRCS	= \
@@ -204,37 +195,14 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 
 
-EXTRA_DSO_LDOPTS += \
-	$(MOZ_CAIRO_LIBS) \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(XPCOM_LIBS) \
-	$(NSPR_LIBS) \
-	$(ZLIB_LIBS) \
-	$(QCMS_LIBS) \
-	$(MOZ_HARFBUZZ_LIBS) \
-	$(MOZ_OTS_LIBS) \
-	$(NULL)
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+
 CPPSRCS	+= 	gfxWindowsPlatform.cpp \
 		gfxWindowsSurface.cpp \
 		gfxWindowsNativeDrawing.cpp \
 		nsUnicodeRange.cpp \
 		$(NULL)
 
-ifdef WINCE
-CPPSRCS	+= gfxFT2Fonts.cpp \
-	   gfxFT2FontBase.cpp \
-	   gfxFT2Utils.cpp \
-	   gfxFT2FontList.cpp \
-	   $(NULL)
-
-EXTRA_DSO_LDOPTS += $(FT2_LIBS)
-
-OS_LIBS += $(call EXPAND_LIBNAME,ddraw)
-else
 ifdef MOZ_ENABLE_DWRITE_FONT
 CPPSRCS	+= gfxDWriteFonts.cpp \
 	   gfxDWriteShaper.cpp \
@@ -244,20 +212,14 @@ CPPSRCS	+= gfxDWriteFonts.cpp \
 	   gfxDWriteFontList.cpp \
 	   $(NULL)
 endif
+
 CPPSRCS	+= gfxGDIFont.cpp \
 	   gfxGDIFontList.cpp \
 	   gfxGDIShaper.cpp \
 	   gfxUniscribeShaper.cpp \
 	   $(NULL)
-_OS_LIBS = usp10 msimg32 ole32 version advapi32 shlwapi shell32
-endif
 
 CPPSRCS +=	gfxPDFSurface.cpp
-
-ifdef GNU_CXX
-_OS_LIBS	+= uuid
-endif
-OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
 ifdef MOZ_ENABLE_D3D9_LAYER
 DEFINES +=	-DMOZ_ENABLE_D3D9_LAYER
@@ -318,7 +280,6 @@ ifdef MOZ_DFB
 CSRCS = cairo-gdk-utils.c
 endif
 
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS)
 endif
 
 ifdef MOZ_DFB
@@ -338,7 +299,6 @@ CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 CPPSRCS +=	gfxPDFSurface.cpp
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -359,22 +319,15 @@ CMMSRCS = \
 	nsCoreAnimationSupport.mm \
 	$(NULL)
 
-# Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit -framework QuartzCore
 endif
 
 CSRCS += woff.c
 
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-
 GL_PROVIDER = Null
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifndef WINCE
 GL_PROVIDER = WGL
 endif
-endif
-
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 GL_PROVIDER = CGL
@@ -421,12 +374,6 @@ DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifdef WINCE
-CXXFLAGS += $(CAIRO_FT_CFLAGS)
-endif
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 CXXFLAGS += $(CAIRO_FT_CFLAGS)

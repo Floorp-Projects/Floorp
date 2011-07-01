@@ -39,27 +39,29 @@
 #define NSPOINT_H
 
 #include "nsCoord.h"
-#include "mozilla/BaseSize.h"
-#include "mozilla/BasePoint.h"
+#include "mozilla/gfx/BaseSize.h"
+#include "mozilla/gfx/BasePoint.h"
 #include "nsSize.h"
 
 struct nsIntPoint;
 
-struct nsPoint : public mozilla::BasePoint<nscoord, nsPoint> {
-  typedef mozilla::BasePoint<nscoord, nsPoint> Super;
+struct nsPoint : public mozilla::gfx::BasePoint<nscoord, nsPoint> {
+  typedef mozilla::gfx::BasePoint<nscoord, nsPoint> Super;
 
   nsPoint() : Super() {}
   nsPoint(const nsPoint& aPoint) : Super(aPoint) {}
   nsPoint(nscoord aX, nscoord aY) : Super(aX, aY) {}
 
+  inline nsIntPoint ScaleToNearestPixels(float aXScale, float aYScale,
+                                         nscoord aAppUnitsPerPixel) const;
   inline nsIntPoint ToNearestPixels(nscoord aAppUnitsPerPixel) const;
 
   // Converts this point from aFromAPP, an appunits per pixel ratio, to aToAPP.
   inline nsPoint ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const;
 };
 
-struct nsIntPoint : public mozilla::BasePoint<PRInt32, nsIntPoint> {
-  typedef mozilla::BasePoint<PRInt32, nsIntPoint> Super;
+struct nsIntPoint : public mozilla::gfx::BasePoint<PRInt32, nsIntPoint> {
+  typedef mozilla::gfx::BasePoint<PRInt32, nsIntPoint> Super;
 
   nsIntPoint() : Super() {}
   nsIntPoint(const nsIntPoint& aPoint) : Super(aPoint) {}
@@ -67,14 +69,23 @@ struct nsIntPoint : public mozilla::BasePoint<PRInt32, nsIntPoint> {
 };
 
 inline nsIntPoint
-nsPoint::ToNearestPixels(nscoord aAppUnitsPerPixel) const {
+nsPoint::ScaleToNearestPixels(float aXScale, float aYScale,
+                              nscoord aAppUnitsPerPixel) const
+{
   return nsIntPoint(
-      NSToIntRoundUp(NSAppUnitsToDoublePixels(x, aAppUnitsPerPixel)),
-      NSToIntRoundUp(NSAppUnitsToDoublePixels(y, aAppUnitsPerPixel)));
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(x, aAppUnitsPerPixel) * aXScale),
+      NSToIntRoundUp(NSAppUnitsToDoublePixels(y, aAppUnitsPerPixel) * aYScale));
+}
+
+inline nsIntPoint
+nsPoint::ToNearestPixels(nscoord aAppUnitsPerPixel) const
+{
+  return ScaleToNearestPixels(1.0f, 1.0f, aAppUnitsPerPixel);
 }
 
 inline nsPoint
-nsPoint::ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const {
+nsPoint::ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const
+{
   if (aFromAPP != aToAPP) {
     nsPoint point;
     point.x = NSToCoordRound(NSCoordScale(x, aFromAPP, aToAPP));

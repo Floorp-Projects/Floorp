@@ -43,13 +43,9 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"
-#include "nsPIDOMEventTarget.h"
 #include "nsIMEStateManager.h"
 #include "nsFocusManager.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 
@@ -62,7 +58,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMHTMLBRElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDocument.h"
 #include "nsITransactionManager.h"
 #include "nsIAbsorbingTransaction.h"
@@ -116,6 +111,7 @@
 #include "nsTextEditUtils.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Preferences.h"
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
@@ -128,6 +124,7 @@ static PRBool gNoisy = PR_FALSE;
 #include "nsIDOMHTMLDocument.h"
 #endif
 
+using namespace mozilla;
 
 // Defined in nsEditorRegistration.cpp
 extern nsIParserService *sParserService;
@@ -378,13 +375,7 @@ nsEditor::GetDesiredSpellCheckState()
   }
 
   // Check user preferences
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  PRInt32 spellcheckLevel = 1;
-  if (NS_SUCCEEDED(rv) && prefBranch) {
-    prefBranch->GetIntPref("layout.spellcheckDefault", &spellcheckLevel);
-  }
+  PRInt32 spellcheckLevel = Preferences::GetInt("layout.spellcheckDefault", 1);
 
   if (spellcheckLevel == 0) {
     return PR_FALSE;                    // Spellchecking forced off globally
@@ -5243,7 +5234,7 @@ nsEditor::GetNativeKeyEvent(nsIDOMKeyEvent* aDOMKeyEvent)
 already_AddRefed<nsIContent>
 nsEditor::GetFocusedContent()
 {
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return nsnull;
   }
@@ -5258,7 +5249,7 @@ nsEditor::GetFocusedContent()
 PRBool
 nsEditor::IsActiveInDOMWindow()
 {
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return PR_FALSE;
   }

@@ -35,29 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@import url("chrome://global/skin/inContentUI.css");
+
 %include ../../global/shared.inc
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
-
-#addons-page {
-  -moz-appearance: none;
-  padding: 18px;
-  background-image: /* Texture */
-                    url("chrome://mozapps/skin/extensions/background-texture.png"),
-                    /* Gradient */
-                    -moz-linear-gradient(top, #ADB5C2, #BFC6D1);
-}
-
-#view-port-container {
-  /* Needed to allow the radius to clip the inner content, see bug 595656 */
-  /* Disabled because of bug 623615
-  overflow: hidden;
-  */
-  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(50, 65, 92, 0.4);
-  border-radius: 5px;
-}
 
 
 /*** global warnings ***/
@@ -913,10 +896,6 @@ setting {
   min-height: 30px;
 }
 
-.detail-row-value {
-  -moz-margin-start: 0;
-}
-
 #detail-controls {
   margin-bottom: 1em;
 }
@@ -962,7 +941,6 @@ setting[type="string"] > .setting-input > textbox {
 /*** rating ***/
 
 .meta-rating {
-  -moz-margin-start: 0;
   -moz-margin-end: 0;
   margin-top: 2px;
 }
@@ -1109,8 +1087,9 @@ setting[type="string"] > .setting-input > textbox {
 /*** buttons ***/
 
 .addon-control,
-setting[type="control"] button,
-setting[type="control"] menulist {
+setting:not([type="integer"]) button,
+setting[type="control"] menulist,
+setting[type="color"] colorpicker[type="button"] {
   -moz-appearance: none;
   padding: 1px 4px;
   min-width: 60px;
@@ -1127,9 +1106,16 @@ setting[type="control"] menulist {
   display: none;
 }
 
+setting[type="color"] colorpicker[type="button"] {
+  margin: 1px 5px 2px 5px;
+  padding: 3px;
+  height: 25px;
+}
+
 .addon-control:active:hover,
-setting[type="control"] button:active:hover,
-setting[type="control"] menulist:hover {
+setting:not([type="integer"]) button:active:hover,
+setting[type="control"] menulist:active:hover,
+setting[type="color"] colorpicker[type="button"]:active:hover {
   box-shadow: inset 0 1px 3px rgba(0,0,0,.2), 0 1px rgba(255,255,255,0.25);
   background-image: -moz-linear-gradient(rgba(45,54,71,0.3), rgba(45,54,71,0.1));
   border-color: rgba(60,73,97,0.7);

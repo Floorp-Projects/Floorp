@@ -43,7 +43,7 @@
 
 nsDOMEventTargetWrapperCache::~nsDOMEventTargetWrapperCache()
 {
-  nsISupports *supports = static_cast<nsPIDOMEventTarget*>(this);
+  nsISupports *supports = static_cast<nsIDOMEventTarget*>(this);
   nsContentUtils::ReleaseWrapper(supports, this);
 }
 

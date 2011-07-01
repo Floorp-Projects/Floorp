@@ -59,7 +59,7 @@ using namespace js::mjit;
 
 
 js::mjit::CompilerAllocPolicy::CompilerAllocPolicy(JSContext *cx, Compiler &compiler)
-: ContextAllocPolicy(cx),
+: TempAllocPolicy(cx),
   oomFlag(&compiler.oomInVector)
 {
 }
@@ -131,7 +131,7 @@ static uint32 StubCallsForOp[STUB_CALLS_FOR_OP_COUNT];
 extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
-    f.entryfp->script()->compartment->jaegerCompartment->pushActiveFrame(&f);
+    f.entryfp->script()->compartment->jaegerCompartment()->pushActiveFrame(&f);
     f.entryncode = f.entryfp->nativeReturnAddress();
     f.entryfp->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
     f.regs.clearInlined();
@@ -140,7 +140,7 @@ PushActiveVMFrame(VMFrame &f)
 extern "C" void JS_FASTCALL
 PopActiveVMFrame(VMFrame &f)
 {
-    f.entryfp->script()->compartment->jaegerCompartment->popActiveFrame();
+    f.entryfp->script()->compartment->jaegerCompartment()->popActiveFrame();
     f.entryfp->setNativeReturnAddress(f.entryncode);
 }
 
@@ -1137,12 +1137,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal)
 
     if (*pjit) {
         cx->runtime->mjitDataSize -= (*pjit)->scriptDataSize();
-#ifdef DEBUG
-        if ((*pjit)->pcProfile) {
-            cx->free_((*pjit)->pcProfile);
-            (*pjit)->pcProfile = NULL;
-        }
-#endif
         (*pjit)->~JITScript();
         cx->free_(*pjit);
         *pjit = NULL;
@@ -1248,45 +1242,6 @@ JITScript::nativeToPC(void *returnAddress, CallSite **pinline) const
     if (pinline)
         *pinline = NULL;
     return script->code + ic.call->pcOffset;
-}
-
-#ifdef JS_METHODJIT_SPEW
-static void
-DumpProfile(JSContext *cx, JSScript *script, JITScript* jit, bool isCtor)
-{
-    JS_ASSERT(!cx->runtime->gcRunning);
-
-#ifdef DEBUG
-    if (IsJaegerSpewChannelActive(JSpew_PCProf) && jit->pcProfile) {
-        // Display hit counts for every JS code line
-        AutoArenaAllocator alloc(&cx->tempPool);
-        Sprinter sprinter;
-        INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
-        js_Disassemble(cx, script, true, &sprinter, jit->pcProfile);
-        fprintf(stdout, "--- PC PROFILE %s:%d%s ---\n", script->filename, script->lineno,
-                isCtor ? " (constructor)" : "");
-        fprintf(stdout, "%s\n", sprinter.base);
-        fprintf(stdout, "--- END PC PROFILE %s:%d%s ---\n", script->filename, script->lineno,
-                isCtor ? " (constructor)" : "");
-    }
-#endif
-}
-#endif
-
-void
-mjit::DumpAllProfiles(JSContext *cx)
-{
-#ifdef JS_METHODJIT_SPEW
-    for (JSScript *script = (JSScript *) JS_LIST_HEAD(&cx->compartment->scripts);
-         script != (JSScript *) &cx->compartment->scripts;
-         script = (JSScript *) JS_NEXT_LINK((JSCList *)script))
-    {
-        if (script->jitCtor)
-            DumpProfile(cx, script, script->jitCtor, true);
-        if (script->jitNormal)
-            DumpProfile(cx, script, script->jitNormal, false);
-    }
-#endif
 }
 
 jsbytecode *

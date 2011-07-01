@@ -139,6 +139,7 @@ typedef struct InstanceData {
   int32_t eventModel;
   bool closeStream;
   std::string lastKeyText;
+  bool wantsAllStreams;
 } InstanceData;
 
 void notifyDidPaint(InstanceData* instanceData);

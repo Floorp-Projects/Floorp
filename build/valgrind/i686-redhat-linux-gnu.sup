@@ -28,3 +28,10 @@
    fun:_XSend
    fun:XChangeProperty
 }
+{
+   malloc-libmozsqlite3.so
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:/builds/slave/valgrind-linux/objdir/dist/firefox/libmozsqlite3.so
+}

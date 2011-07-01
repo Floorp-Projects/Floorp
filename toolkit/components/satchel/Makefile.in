@@ -76,17 +76,8 @@ EXTRA_JS_MODULES = \
   nsFormAutoCompleteResult.jsm \
   $(NULL)
 
-EXTRA_DSO_LIBS = gkgfx
-
 ifdef ENABLE_TESTS
 DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-EXTRA_DSO_LDOPTS += \
-  $(LIBS_DIR) \
-  $(EXTRA_DSO_LIBS) \
-  $(MOZ_UNICHARUTIL_LIBS) \
-  $(MOZ_COMPONENT_LIBS) \
-  $(NULL)

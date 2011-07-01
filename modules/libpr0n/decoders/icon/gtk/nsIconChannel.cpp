@@ -50,6 +50,9 @@ extern "C" {
 #include <libgnomevfs/gnome-vfs-ops.h>
 }
 #endif
+#ifdef MOZ_ENABLE_GIO
+#include <gio/gio.h>
+#endif
 
 #include <gtk/gtk.h>
 
@@ -60,6 +63,8 @@ extern "C" {
 #include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "prlink.h"
+
+#include "mozilla/Util.h" // for DebugOnly
 
 #include "nsIconChannel.h"
 
@@ -91,7 +96,7 @@ static _GnomeInit_fn _gnome_init = nsnull;
 static _GnomeProgramGet_fn _gnome_program_get = nsnull;
 static _GnomeVFSGetFileInfo_fn _gnome_vfs_get_file_info = nsnull;
 static _GnomeVFSFileInfoClear_fn _gnome_vfs_file_info_clear = nsnull;
-#endif
+#endif //MOZ_ENABLE_GNOMEUI
 
 static nsresult
 moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
@@ -161,7 +166,7 @@ static GtkWidget *gProtoWindow = nsnull;
 static GtkWidget *gStockImageWidget = nsnull;
 #ifdef MOZ_ENABLE_GNOMEUI
 static GnomeIconTheme *gIconTheme = nsnull;
-#endif
+#endif //MOZ_ENABLE_GNOMEUI
 
 static void
 ensure_stock_image_widget()
@@ -252,7 +257,7 @@ ensure_libgnomevfs()
 
   return NS_OK;
 }
-#endif
+#endif //MOZ_ENABLE_GNOMEUI
 
 static GtkIconSize
 moz_gtk_icon_size(const char *name)
@@ -276,6 +281,44 @@ moz_gtk_icon_size(const char *name)
     return GTK_ICON_SIZE_DIALOG;
 
   return GTK_ICON_SIZE_MENU;
+}
+
+static PRInt32
+GetIconSize(nsIMozIconURI *aIconURI)
+{
+  nsCAutoString iconSizeString;
+
+  aIconURI->GetIconSize(iconSizeString);
+  if (iconSizeString.IsEmpty()) {
+    PRUint32 size;
+    mozilla::DebugOnly<nsresult> rv = aIconURI->GetImageSize(&size);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetImageSize failed");
+    return size; 
+  } else {
+    int size;
+
+    GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
+    gtk_icon_size_lookup(icon_size, &size, NULL);
+    return size;
+  }
+}
+
+/* Scale icon buffer to preferred size */
+static nsresult
+ScaleIconBuf(GdkPixbuf **aBuf, PRInt32 iconSize)
+{
+  // Scale buffer only if width or height differ from preferred size
+  if (gdk_pixbuf_get_width(*aBuf)  != iconSize &&
+      gdk_pixbuf_get_height(*aBuf) != iconSize) {
+    GdkPixbuf *scaled = gdk_pixbuf_scale_simple(*aBuf, iconSize, iconSize,
+                                                GDK_INTERP_BILINEAR);
+    // replace original buffer by scaled
+    g_object_unref(*aBuf);
+    *aBuf = scaled;
+    if (!scaled)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
 }
 
 #ifdef MOZ_ENABLE_GNOMEUI
@@ -317,22 +360,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
     _gnome_init(NS_ConvertUTF16toUTF8(appName).get(), "1.0", 1, empty, NULL, 0, NULL);
   }
 
-  nsCAutoString iconSizeString;
-  aIconURI->GetIconSize(iconSizeString);
-
-  PRUint32 iconSize;
-
-  if (iconSizeString.IsEmpty()) {
-    rv = aIconURI->GetImageSize(&iconSize);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "GetImageSize failed");
-  } else {
-    int size;
-    
-    GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
-    gtk_icon_size_lookup(icon_size, &size, NULL);
-    iconSize = size;
-  }
-
+  PRUint32 iconSize = GetIconSize(aIconURI);
   nsCAutoString type;
   aIconURI->GetContentType(type);
 
@@ -366,7 +394,6 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
       }
     }
   }
-
 
   if (type.IsEmpty()) {
     nsCOMPtr<nsIMIMEService> ms(do_GetService("@mozilla.org/mime;1"));
@@ -407,32 +434,121 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
   GError *err = nsnull;
   GdkPixbuf* buf = gtk_icon_theme_load_icon(theme, name, iconSize, (GtkIconLookupFlags)0, &err);
   g_free(name);
-  
+
   if (!buf) {
     if (err)
       g_error_free(err);
     return NS_ERROR_UNEXPECTED;
   }
 
-  GdkPixbuf* scaled = buf;
-  if (PRUint32(gdk_pixbuf_get_width(buf))  != iconSize &&
-      PRUint32(gdk_pixbuf_get_height(buf)) != iconSize) {
-    // scale...
-    scaled = gdk_pixbuf_scale_simple(buf, iconSize, iconSize,
-                                     GDK_INTERP_BILINEAR);
-    g_object_unref(buf);
-    if (!scaled)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
+  rv = ScaleIconBuf(&buf, iconSize);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX Respect icon state
-  
-  rv = moz_gdk_pixbuf_to_channel(scaled, aIconURI,
+  rv = moz_gdk_pixbuf_to_channel(buf, aIconURI,
                                  getter_AddRefs(mRealChannel));
-  g_object_unref(scaled);
+  g_object_unref(buf);
   return rv;
 }
-#endif
+#endif // MOZ_ENABLE_GNOMEUI
+
+#ifdef MOZ_ENABLE_GIO
+nsresult
+nsIconChannel::InitWithGIO(nsIMozIconURI *aIconURI)
+{
+  nsresult rv;
+
+  GIcon *icon = NULL;
+  nsCOMPtr<nsIURL> fileURI;
+
+  // Read icon content
+  aIconURI->GetIconURL(getter_AddRefs(fileURI));
+
+  // Get icon for file specified by URI
+  if (fileURI) {
+    PRBool isFile;
+    nsCAutoString spec;
+    fileURI->GetAsciiSpec(spec);
+    if (NS_SUCCEEDED(fileURI->SchemeIs("file", &isFile)) && isFile) {
+      GFile *file = g_file_new_for_uri(spec.get());
+      GFileInfo *fileInfo = g_file_query_info(file,
+                                              G_FILE_ATTRIBUTE_STANDARD_ICON,
+                                              G_FILE_QUERY_INFO_NONE, NULL, NULL);
+      g_object_unref(file);
+      if (fileInfo) {
+        // icon from g_content_type_get_icon doesn't need unref
+        icon = g_file_info_get_icon(fileInfo);
+        if (icon)
+          g_object_ref(icon);
+        g_object_unref(fileInfo);
+      }
+    }
+  }
+  
+  // Try to get icon by using MIME type
+  if (!icon) {
+    nsCAutoString type;
+    aIconURI->GetContentType(type);
+    // Try to get MIME type from file extension by using nsIMIMEService
+    if (type.IsEmpty()) {
+      nsCOMPtr<nsIMIMEService> ms(do_GetService("@mozilla.org/mime;1"));
+      if (ms) {
+        nsCAutoString fileExt;
+        aIconURI->GetFileExtension(fileExt);
+        ms->GetTypeFromExtension(fileExt, type);
+      }
+    }
+    char *ctype = NULL; // character representation of content type
+    if (!type.IsEmpty()) {
+      ctype = g_content_type_from_mime_type(type.get());
+    }
+    if (ctype) {
+      icon = g_content_type_get_icon(ctype);
+      g_free(ctype);
+    }
+  }
+
+  // Get default icon theme
+  GtkIconTheme *iconTheme = gtk_icon_theme_get_default();  
+  GtkIconInfo *iconInfo = NULL;
+  // Get icon size
+  PRInt32 iconSize = GetIconSize(aIconURI);
+
+  if (icon) {
+    NS_SUCCEEDED(rv);
+
+    // Use icon and theme to get GtkIconInfo
+    iconInfo = gtk_icon_theme_lookup_by_gicon(iconTheme,
+                                              icon, iconSize,
+                                              (GtkIconLookupFlags)0);
+    g_object_unref(icon);
+  }
+  
+  if (!iconInfo) {
+    // Mozilla's mimetype lookup failed. Try the "unknown" icon.
+    iconInfo = gtk_icon_theme_lookup_icon(iconTheme,
+                                          "unknown", iconSize,
+                                          (GtkIconLookupFlags)0);
+    if (!iconInfo) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+  
+  // Create a GdkPixbuf buffer containing icon and scale it
+  GdkPixbuf* buf = gtk_icon_info_load_icon(iconInfo, NULL);
+  gtk_icon_info_free(iconInfo);
+  if (!buf) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  
+  rv = ScaleIconBuf(&buf, iconSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = moz_gdk_pixbuf_to_channel(buf, aIconURI,
+                                 getter_AddRefs(mRealChannel));
+  g_object_unref(buf);
+  return rv;
+}
+#endif // MOZ_ENABLE_GIO
 
 nsresult
 nsIconChannel::Init(nsIURI* aURI)
@@ -445,11 +561,16 @@ nsIconChannel::Init(nsIURI* aURI)
   if (stockIcon.IsEmpty()) {
 #ifdef MOZ_ENABLE_GNOMEUI
     return InitWithGnome(iconURI);
+#else 
+#ifdef MOZ_ENABLE_GIO
+    return InitWithGIO(iconURI);
 #else
     return NS_ERROR_NOT_AVAILABLE;
 #endif
+#endif
   }
 
+  // Search for stockIcon
   nsCAutoString iconSizeString;
   iconURI->GetIconSize(iconSizeString);
 
@@ -571,5 +692,5 @@ nsIconChannel::Shutdown() {
     PR_UnloadLibrary(gLibGnomeVFS);
     gLibGnomeVFS = nsnull;
   }
-#endif
+#endif //MOZ_ENABLE_GNOMEUI
 }

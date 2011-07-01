@@ -89,7 +89,7 @@ public:
          PRUint32 aTimeout,
          bool aDispatchDelayed = false);
 
-  // nsPIDOMEventTarget
+  // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
   void OnNewRequest();

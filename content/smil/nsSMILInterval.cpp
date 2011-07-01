@@ -40,9 +40,7 @@
 nsSMILInterval::nsSMILInterval()
 :
   mBeginFixed(PR_FALSE),
-  mEndFixed(PR_FALSE),
-  mBeginObjectChanged(PR_FALSE),
-  mEndObjectChanged(PR_FALSE)
+  mEndFixed(PR_FALSE)
 {
 }
 
@@ -51,9 +49,7 @@ nsSMILInterval::nsSMILInterval(const nsSMILInterval& aOther)
   mBegin(aOther.mBegin),
   mEnd(aOther.mEnd),
   mBeginFixed(PR_FALSE),
-  mEndFixed(PR_FALSE),
-  mBeginObjectChanged(PR_FALSE),
-  mEndObjectChanged(PR_FALSE)
+  mEndFixed(PR_FALSE)
 {
   NS_ABORT_IF_FALSE(aOther.mDependentTimes.IsEmpty(),
       "Attempting to copy-construct an interval with dependent times, "
@@ -72,18 +68,6 @@ nsSMILInterval::~nsSMILInterval()
   NS_ABORT_IF_FALSE(mDependentTimes.IsEmpty(),
       "Destroying interval without disassociating dependent instance times. "
       "Unlink was not called");
-}
-
-void
-nsSMILInterval::NotifyChanged(const nsSMILTimeContainer* aContainer)
-{
-  for (PRInt32 i = mDependentTimes.Length() - 1; i >= 0; --i) {
-    mDependentTimes[i]->HandleChangedInterval(aContainer,
-                                              mBeginObjectChanged,
-                                              mEndObjectChanged);
-  }
-  mBeginObjectChanged = PR_FALSE;
-  mEndObjectChanged = PR_FALSE;
 }
 
 void
@@ -130,12 +114,13 @@ nsSMILInterval::SetBegin(nsSMILInstanceTime& aBegin)
       "Attempting to set unresolved begin time on interval");
   NS_ABORT_IF_FALSE(!mBeginFixed,
       "Attempting to set begin time but the begin point is fixed");
-
-  if (mBegin == &aBegin)
-    return;
+  // Check that we're not making an instance time dependent on itself. Such an
+  // arrangement does not make intuitive sense and should be detected when
+  // creating or updating intervals.
+  NS_ABORT_IF_FALSE(!mBegin || aBegin.GetBaseTime() != mBegin,
+      "Attempting to make self-dependent instance time");
 
   mBegin = &aBegin;
-  mBeginObjectChanged = PR_TRUE;
 }
 
 void
@@ -143,12 +128,12 @@ nsSMILInterval::SetEnd(nsSMILInstanceTime& aEnd)
 {
   NS_ABORT_IF_FALSE(!mEndFixed,
       "Attempting to set end time but the end point is fixed");
-
-  if (mEnd == &aEnd)
-    return;
+  // As with SetBegin, check we're not making an instance time dependent on
+  // itself.
+  NS_ABORT_IF_FALSE(!mEnd || aEnd.GetBaseTime() != mEnd,
+      "Attempting to make self-dependent instance time");
 
   mEnd = &aEnd;
-  mEndObjectChanged = PR_TRUE;
 }
 
 void
@@ -191,6 +176,12 @@ nsSMILInterval::RemoveDependentTime(const nsSMILInstanceTime& aTime)
 #endif
     mDependentTimes.RemoveElementSorted(&aTime);
   NS_ABORT_IF_FALSE(found, "Couldn't find instance time to delete.");
+}
+
+void
+nsSMILInterval::GetDependentTimes(InstanceTimeList& aTimes)
+{
+  aTimes = mDependentTimes;
 }
 
 PRBool

@@ -153,18 +153,21 @@ template <class T> struct StripConst<const T> { typedef T result; };
  * Traits class for identifying POD types. Until C++0x, there is no automatic
  * way to detect PODs, so for the moment it is done manually.
  */
-template <class T> struct IsPodType           { static const bool result = false; };
-template <> struct IsPodType<char>            { static const bool result = true; };
-template <> struct IsPodType<signed char>     { static const bool result = true; };
-template <> struct IsPodType<unsigned char>   { static const bool result = true; };
-template <> struct IsPodType<short>           { static const bool result = true; };
-template <> struct IsPodType<unsigned short>  { static const bool result = true; };
-template <> struct IsPodType<int>             { static const bool result = true; };
-template <> struct IsPodType<unsigned int>    { static const bool result = true; };
-template <> struct IsPodType<long>            { static const bool result = true; };
-template <> struct IsPodType<unsigned long>   { static const bool result = true; };
-template <> struct IsPodType<float>           { static const bool result = true; };
-template <> struct IsPodType<double>          { static const bool result = true; };
+template <class T> struct IsPodType                 { static const bool result = false; };
+template <> struct IsPodType<char>                  { static const bool result = true; };
+template <> struct IsPodType<signed char>           { static const bool result = true; };
+template <> struct IsPodType<unsigned char>         { static const bool result = true; };
+template <> struct IsPodType<short>                 { static const bool result = true; };
+template <> struct IsPodType<unsigned short>        { static const bool result = true; };
+template <> struct IsPodType<int>                   { static const bool result = true; };
+template <> struct IsPodType<unsigned int>          { static const bool result = true; };
+template <> struct IsPodType<long>                  { static const bool result = true; };
+template <> struct IsPodType<unsigned long>         { static const bool result = true; };
+template <> struct IsPodType<long long>             { static const bool result = true; };
+template <> struct IsPodType<unsigned long long>    { static const bool result = true; };
+template <> struct IsPodType<float>                 { static const bool result = true; };
+template <> struct IsPodType<double>                { static const bool result = true; };
+template <typename T> struct IsPodType<T *>         { static const bool result = true; };
 
 /* Return the size/end of an array without using macros. */
 template <class T, size_t N> inline T *ArraySize(T (&)[N]) { return N; }
@@ -219,19 +222,6 @@ RoundUpPow2(size_t x)
     JS_ASSERT(log2 < tl::BitSize<size_t>::result);
     size_t result = size_t(1) << log2;
     return result;
-}
-
-/*
- * Safely subtract two pointers when it is known that end > begin.  This avoids
- * the common compiler bug that if (size_t(end) - size_t(begin)) has the MSB
- * set, the unsigned subtraction followed by right shift will produce -1, or
- * size_t(-1), instead of the real difference.
- */
-template <class T>
-JS_ALWAYS_INLINE size_t
-PointerRangeSize(T *begin, T *end)
-{
-    return (size_t(end) - size_t(begin)) / sizeof(T);
 }
 
 template <class T>
@@ -333,167 +323,6 @@ InitConst(const T &t)
 {
     return const_cast<T &>(t);
 }
-
-/* Smart pointer, restricted to a range defined at construction. */
-template <class T>
-class RangeCheckedPointer
-{
-    T *ptr;
-
-#ifdef DEBUG
-    T * const rangeStart;
-    T * const rangeEnd;
-#endif
-
-    void sanityChecks() {
-        JS_ASSERT(rangeStart <= ptr);
-        JS_ASSERT(ptr <= rangeEnd);
-    }
-
-    /* Creates a new pointer for |ptr|, restricted to this pointer's range. */
-    RangeCheckedPointer<T> create(T *ptr) const {
-#ifdef DEBUG
-        return RangeCheckedPointer<T>(ptr, rangeStart, rangeEnd);
-#else
-        return RangeCheckedPointer<T>(ptr, NULL, size_t(0));
-#endif
-    }
-
-  public:
-    RangeCheckedPointer(T *p, T *start, T *end)
-      : ptr(p)
-#ifdef DEBUG
-      , rangeStart(start), rangeEnd(end)
-#endif
-    {
-        JS_ASSERT(rangeStart <= rangeEnd);
-        sanityChecks();
-    }
-    RangeCheckedPointer(T *p, T *start, size_t length)
-      : ptr(p)
-#ifdef DEBUG
-      , rangeStart(start), rangeEnd(start + length)
-#endif
-    {
-        JS_ASSERT(length <= size_t(-1) / sizeof(T));
-        JS_ASSERT(uintptr_t(rangeStart) + length * sizeof(T) >= uintptr_t(rangeStart));
-        sanityChecks();
-    }
-
-    RangeCheckedPointer<T> &operator=(const RangeCheckedPointer<T> &other) {
-        JS_ASSERT(rangeStart == other.rangeStart);
-        JS_ASSERT(rangeEnd == other.rangeEnd);
-        ptr = other.ptr;
-        sanityChecks();
-        return *this;
-    }
-
-    RangeCheckedPointer<T> operator+(size_t inc) {
-        JS_ASSERT(inc <= size_t(-1) / sizeof(T));
-        JS_ASSERT(ptr + inc > ptr);
-        return create(ptr + inc);
-    }
-
-    RangeCheckedPointer<T> operator-(size_t dec) {
-        JS_ASSERT(dec <= size_t(-1) / sizeof(T));
-        JS_ASSERT(ptr - dec < ptr);
-        return create(ptr - dec);
-    }
-
-    template <class U>
-    RangeCheckedPointer<T> &operator=(U *p) {
-        *this = create(p);
-        return *this;
-    }
-
-    template <class U>
-    RangeCheckedPointer<T> &operator=(const RangeCheckedPointer<U> &p) {
-        JS_ASSERT(rangeStart <= p.ptr);
-        JS_ASSERT(p.ptr <= rangeEnd);
-        ptr = p.ptr;
-        sanityChecks();
-        return *this;
-    }
-
-    RangeCheckedPointer<T> &operator++() {
-        return (*this += 1);
-    }
-
-    RangeCheckedPointer<T> operator++(int) {
-        RangeCheckedPointer<T> rcp = *this;
-        ++*this;
-        return rcp;
-    }
-
-    RangeCheckedPointer<T> &operator--() {
-        return (*this -= 1);
-    }
-
-    RangeCheckedPointer<T> operator--(int) {
-        RangeCheckedPointer<T> rcp = *this;
-        --*this;
-        return rcp;
-    }
-
-    RangeCheckedPointer<T> &operator+=(size_t inc) {
-        this->operator=<T>(*this + inc);
-        return *this;
-    }
-
-    RangeCheckedPointer<T> &operator-=(size_t dec) {
-        this->operator=<T>(*this - dec);
-        return *this;
-    }
-
-    T &operator[](int index) const {
-        JS_ASSERT(size_t(index > 0 ? index : -index) <= size_t(-1) / sizeof(T));
-        return *create(ptr + index);
-    }
-
-    T &operator*() const {
-        return *ptr;
-    }
-
-    operator T*() const {
-        return ptr;
-    }
-
-    template <class U>
-    bool operator==(const RangeCheckedPointer<U> &other) const {
-        return ptr == other.ptr;
-    }
-    template <class U>
-    bool operator!=(const RangeCheckedPointer<U> &other) const {
-        return !(*this == other);
-    }
-
-    template <class U>
-    bool operator<(const RangeCheckedPointer<U> &other) const {
-        return ptr < other.ptr;
-    }
-    template <class U>
-    bool operator<=(const RangeCheckedPointer<U> &other) const {
-        return ptr <= other.ptr;
-    }
-
-    template <class U>
-    bool operator>(const RangeCheckedPointer<U> &other) const {
-        return ptr > other.ptr;
-    }
-    template <class U>
-    bool operator>=(const RangeCheckedPointer<U> &other) const {
-        return ptr >= other.ptr;
-    }
-
-    size_t operator-(const RangeCheckedPointer<T> &other) const {
-        JS_ASSERT(ptr >= other.ptr);
-        return PointerRangeSize(other.ptr, ptr);
-    }
-
-  private:
-    RangeCheckedPointer();
-    T *operator&();
-};
 
 template <class T, class U>
 JS_ALWAYS_INLINE T &

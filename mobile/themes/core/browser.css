@@ -1082,7 +1082,15 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   border-top: @border_width_tiny@ solid rgb(205,205,205);
   padding: 0;
   -moz-user-focus: ignore;
+}
+
+.action-buttons,
+#pageactions-container {
   display: inline-block;
+}
+
+#context-commands {
+  display: -moz-box;
 }
 
 .action-button,
@@ -1244,7 +1252,9 @@ setting {
 /* Put setting textboxes on a separate row in portrait */
 @media (@orientation@: portrait) {
   setting[type="integer"],
-  setting[type="string"] {
+  setting[type="string"],
+  setting[type="file"],
+  setting[type="directory"] {
     -moz-box-align: start;
     -moz-box-orient: vertical;
   }
@@ -1453,10 +1463,6 @@ setting {
   min-width: 5.5em;
 }
 
-.syncsetup-link {
-  text-decoration: underline;
-}
-
 .syncsetup-label {
   color: #fff;
 }
@@ -1525,3 +1531,20 @@ setting {
   90% { -moz-transform: translateX(@sidebar_width_minimum@); }
   to { -moz-transform: translateX(0); }
 }
+
+#selectionhandle-start,
+#selectionhandle-end {
+  min-width: 35px !important;
+  width: 35px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#selectionhandle-start {
+  list-style-image: url("chrome://browser/skin/images/handle-start.png");
+}
+
+#selectionhandle-end {
+  list-style-image: url("chrome://browser/skin/images/handle-end.png");
+}
+

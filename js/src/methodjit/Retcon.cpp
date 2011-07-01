@@ -131,7 +131,7 @@ Recompiler::patchNative(JSContext *cx, JITScript *jit, StackFrame *fp,
     fp->setRejoin(StubRejoin(rejoin));
 
     /* :XXX: We might crash later if this fails. */
-    cx->compartment->jaegerCompartment->orphanedNativeFrames.append(fp);
+    cx->compartment->jaegerCompartment()->orphanedNativeFrames.append(fp);
 
     unsigned i;
     ic::CallICInfo *callICs = jit->callICs();
@@ -180,7 +180,7 @@ Recompiler::patchNative(JSContext *cx, JITScript *jit, StackFrame *fp,
     }
 
     /* :XXX: We leak the pool if this fails. Oh well. */
-    cx->compartment->jaegerCompartment->orphanedNativePools.append(pool);
+    cx->compartment->jaegerCompartment()->orphanedNativePools.append(pool);
 
     /* Mark as stolen in case there are multiple calls on the stack. */
     pool = NULL;
@@ -294,23 +294,23 @@ Recompiler::expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *in
 void
 ExpandInlineFrames(JSContext *cx, bool all)
 {
-    if (!cx->compartment)
+    if (!cx->compartment || !cx->compartment->hasJaegerCompartment())
         return;
 
     if (!all) {
-        VMFrame *f = cx->compartment->jaegerCompartment->activeFrame();
+        VMFrame *f = cx->compartment->jaegerCompartment()->activeFrame();
         if (f && f->regs.inlined() && cx->fp() == f->fp())
             mjit::Recompiler::expandInlineFrames(cx, f->fp(), f->regs.inlined(), NULL, f);
         return;
     }
 
-    for (VMFrame *f = cx->compartment->jaegerCompartment->activeFrame();
+    for (VMFrame *f = cx->compartment->jaegerCompartment()->activeFrame();
          f != NULL;
          f = f->previous) {
 
         if (f->regs.inlined()) {
             StackSegment &seg = cx->stack.space().containingSegment(f->fp());
-            FrameRegs &regs = seg.currentRegs();
+            FrameRegs &regs = seg.regs();
             if (regs.fp() == f->fp()) {
                 JS_ASSERT(&regs == &f->regs);
                 mjit::Recompiler::expandInlineFrames(cx, f->fp(), f->regs.inlined(), NULL, f);
@@ -386,7 +386,7 @@ Recompiler::recompile(bool resetUses)
     // Find all JIT'd stack frames to account for return addresses that will
     // need to be patched after recompilation.
     VMFrame *nextf = NULL;
-    for (VMFrame *f = script->compartment->jaegerCompartment->activeFrame();
+    for (VMFrame *f = script->compartment->jaegerCompartment()->activeFrame();
          f != NULL;
          f = f->previous) {
 

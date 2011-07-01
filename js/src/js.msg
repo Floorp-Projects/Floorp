@@ -349,4 +349,7 @@ MSG_DEF(JSMSG_NON_NATIVE_SCOPE,       266, 0, JSEXN_TYPEERR, "non-native scope o
 MSG_DEF(JSMSG_STRICT_FUNCTION_STATEMENT, 267, 0, JSEXN_SYNTAXERR, "in strict mode code, functions may be declared only at top level or immediately within another function")
 MSG_DEF(JSMSG_INVALID_FOR_IN_INIT,    268, 0, JSEXN_SYNTAXERR, "for-in loop let declaration may not have an initializer")
 MSG_DEF(JSMSG_CLEARED_SCOPE,          269, 0, JSEXN_TYPEERR, "attempt to run compile-and-go script on a cleared scope")
-
+MSG_DEF(JSMSG_MALFORMED_ESCAPE,       270, 1, JSEXN_SYNTAXERR, "malformed {0} character escape sequence")
+MSG_DEF(JSMSG_BAD_GENEXP_BODY,        271, 1, JSEXN_SYNTAXERR, "illegal use of {0} in generator expression")
+MSG_DEF(JSMSG_XML_PROTO_FORBIDDEN,    272, 0, JSEXN_TYPEERR, "can't set prototype of an object to an XML value")
+MSG_DEF(JSMSG_UNNAMED_FUNCTION_STMT,  273, 0, JSEXN_SYNTAXERR, "function statement requires a name")

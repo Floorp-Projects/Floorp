@@ -505,8 +505,8 @@ OPDEF(JSOP_TYPEOFEXPR,    200,"typeofexpr",  NULL,    1,  1,  1, 15,  JOF_BYTE|J
 OPDEF(JSOP_ENTERBLOCK,    201,"enterblock",  NULL,    3,  0, -1,  0,  JOF_OBJECT)
 OPDEF(JSOP_LEAVEBLOCK,    202,"leaveblock",  NULL,    5, -1,  0,  0,  JOF_UINT16)
 
-/* Jump to target if top of stack value is of primitive type. */
-OPDEF(JSOP_IFPRIMTOP,     203,"ifprimtop",   NULL,    3,  1,  1,  0,  JOF_JUMP|JOF_DETECTING)
+/* Jump to target if top of stack value isn't callable. */
+OPDEF(JSOP_IFCANTCALLTOP, 203,"ifcantcalltop",NULL,   3,  1,  1,  0,  JOF_JUMP|JOF_DETECTING)
 
 /* Throws a TypeError if the value at the top of the stack is not primitive. */
 OPDEF(JSOP_PRIMTOP,       204,"primtop",     NULL,    2,  1,  1,  0,  JOF_INT8)

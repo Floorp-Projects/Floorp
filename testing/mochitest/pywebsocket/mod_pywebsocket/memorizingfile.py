@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2009, Google Inc.
+# Copyright 2011, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@ class MemorizingFile(object):
     is good enough for memorizing lines SimpleHTTPServer reads before
     the control reaches WebSocketRequestHandler.
     """
+
     def __init__(self, file_, max_memorized_lines=sys.maxint):
         """Construct an instance.
 
@@ -55,6 +56,7 @@ class MemorizingFile(object):
                 Only the first max_memorized_lines are memorized.
                 Default: sys.maxint.
         """
+
         self._file = file_
         self._memorized_lines = []
         self._max_memorized_lines = max_memorized_lines

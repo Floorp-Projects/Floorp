@@ -50,6 +50,7 @@
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jsiter.h"
 #include "jstypes.h"
+#include "vm/String.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
 #include "methodjit/Retcon.h"
@@ -59,13 +60,15 @@
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
+#include "jsnuminlines.h"
 #include "jsobjinlines.h"
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
 #include "StubCalls-inl.h"
 #include "jsfuninlines.h"
 #include "jstypedarray.h"
+
+#include "vm/String-inl.h"
 
 #ifdef XP_WIN
 # include "jswin.h"
@@ -791,7 +794,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      * current scope chain even for the case of function expression statements
      * and functions defined by eval inside let or with blocks.
      */
-    JSObject *parent = &cx->stack.currentVarObj();
+    JSObject *parent = &fp->varObj();
 
     /* ES5 10.5 (NB: with subsequent errata). */
     jsid id = ATOM_TO_JSID(fun->atom);
@@ -846,26 +849,17 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
 template void JS_FASTCALL stubs::DefFun<true>(VMFrame &f, JSFunction *fun);
 template void JS_FASTCALL stubs::DefFun<false>(VMFrame &f, JSFunction *fun);
 
-#define DEFAULT_VALUE(cx, n, hint, v)                                         \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(v.isObject());                                              \
-        JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!DefaultValue(cx, &v.toObject(), hint, &regs.sp[n]))              \
-            THROWV(JS_FALSE);                                                 \
-        v = regs.sp[n];                                                       \
-    JS_END_MACRO
-
 #define RELATIONAL(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
         JSContext *cx = f.cx;                                                 \
         FrameRegs &regs = f.regs;                                             \
-        Value rval = regs.sp[-1];                                             \
-        Value lval = regs.sp[-2];                                             \
+        Value &rval = regs.sp[-1];                                            \
+        Value &lval = regs.sp[-2];                                            \
         bool cond;                                                            \
-        if (lval.isObject())                                                  \
-            DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                       \
-        if (rval.isObject())                                                  \
-            DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                       \
+        if (!ToPrimitive(cx, JSTYPE_NUMBER, &lval))                           \
+            THROWV(JS_FALSE);                                                 \
+        if (!ToPrimitive(cx, JSTYPE_NUMBER, &rval))                           \
+            THROWV(JS_FALSE);                                                 \
         if (lval.isString() && rval.isString()) {                             \
             JSString *l = lval.toString(), *r = rval.toString();              \
             JSBool cmp;                                                       \
@@ -981,20 +975,13 @@ StubEqualityOp(VMFrame &f)
         } else if (rval.isNullOrUndefined()) {
             cond = !EQ;
         } else {
-            if (lval.isObject()) {
-                if (!DefaultValue(cx, &lval.toObject(), JSTYPE_VOID, &regs.sp[-2]))
-                    return false;
-                lval = regs.sp[-2];
-            }
-
-            if (rval.isObject()) {
-                if (!DefaultValue(cx, &rval.toObject(), JSTYPE_VOID, &regs.sp[-1]))
-                    return false;
-                rval = regs.sp[-1];
-            }
+            if (!ToPrimitive(cx, &lval))
+                return false;
+            if (!ToPrimitive(cx, &rval))
+                return false;
 
             /*
-             * The string==string case is repeated because DefaultValue() can
+             * The string==string case is repeated because ToPrimitive can
              * convert lval/rval to strings.
              */
             if (lval.isString() && rval.isString()) {
@@ -1037,16 +1024,6 @@ stubs::NotEqual(VMFrame &f)
     if (!StubEqualityOp<JS_FALSE, true>(f))
         THROWV(JS_FALSE);
     return f.regs.sp[-2].toBoolean();
-}
-
-static inline bool
-DefaultValue(VMFrame &f, JSType hint, Value &v, int n)
-{
-    JS_ASSERT(v.isObject());
-    if (!DefaultValue(f.cx, &v.toObject(), hint, &f.regs.sp[n]))
-        return false;
-    v = f.regs.sp[n];
-    return true;
 }
 
 static inline void
@@ -1112,17 +1089,16 @@ stubs::Add(VMFrame &f)
         rval.isObject() && rval.toObject().isXML()) {
         if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), &rval))
             THROW();
+        regs.sp[-2] = rval;
         regs.sp--;
-        regs.sp[-1] = rval;
         f.script()->types.monitorUnknown(cx, f.pc());
     } else
 #endif
     {
-        /* These can convert lval/rval to strings. */
-        bool lIsObject, rIsObject;
-        if ((lIsObject = lval.isObject()) && !DefaultValue(f, JSTYPE_VOID, lval, -2))
+        bool lIsObject = lval.isObject(), rIsObject = rval.isObject();
+        if (!ToPrimitive(f.cx, &lval))
             THROW();
-        if ((rIsObject = rval.isObject()) && !DefaultValue(f, JSTYPE_VOID, rval, -1))
+        if (!ToPrimitive(f.cx, &rval))
             THROW();
         if ((lIsString = lval.isString()) || (rIsString = rval.isString())) {
             if (lIsString) {
@@ -1162,8 +1138,8 @@ stubs::Add(VMFrame &f)
     JSString *str = js_ConcatStrings(cx, lstr, rstr);
     if (!str)
         THROW();
+    regs.sp[-2].setString(str);
     regs.sp--;
-    regs.sp[-1].setString(str);
 }
 
 
@@ -2681,7 +2657,7 @@ stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
 
-    JSObject *obj = &cx->stack.currentVarObj();
+    JSObject *obj = &fp->varObj();
     JS_ASSERT(!obj->getOps()->defineProperty);
     uintN attrs = JSPROP_ENUMERATE;
     if (!fp->isEvalFrame())
@@ -2726,7 +2702,7 @@ stubs::SetConst(VMFrame &f, JSAtom *atom)
 {
     JSContext *cx = f.cx;
 
-    JSObject *obj = &cx->stack.currentVarObj();
+    JSObject *obj = &f.fp()->varObj();
     const Value &ref = f.regs.sp[-1];
 
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ref,

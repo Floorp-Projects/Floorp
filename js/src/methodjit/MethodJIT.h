@@ -420,7 +420,7 @@ class JaegerCompartment {
  * setting a flag on the compiler when OOM occurs. The compiler is required
  * to check for OOM only before trying to use the contents of the list.
  */
-class CompilerAllocPolicy : public ContextAllocPolicy
+class CompilerAllocPolicy : public TempAllocPolicy
 {
     bool *oomFlag;
 
@@ -432,12 +432,12 @@ class CompilerAllocPolicy : public ContextAllocPolicy
 
   public:
     CompilerAllocPolicy(JSContext *cx, bool *oomFlag)
-    : ContextAllocPolicy(cx), oomFlag(oomFlag) {}
+    : TempAllocPolicy(cx), oomFlag(oomFlag) {}
     CompilerAllocPolicy(JSContext *cx, Compiler &compiler);
 
-    void *malloc_(size_t bytes) { return checkAlloc(ContextAllocPolicy::malloc_(bytes)); }
-    void *realloc_(void *p, size_t bytes) {
-        return checkAlloc(ContextAllocPolicy::realloc_(p, bytes));
+    void *malloc_(size_t bytes) { return checkAlloc(TempAllocPolicy::malloc_(bytes)); }
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
+        return checkAlloc(TempAllocPolicy::realloc_(p, oldBytes, bytes));
     }
 };
 
@@ -589,11 +589,6 @@ struct JITScript {
     jsbytecode *nativeToPC(void *returnAddress, CallSite **pinline) const;
 
     void trace(JSTracer *trc);
-
-#ifdef DEBUG
-    /* length script->length array of execution counters for every JSOp in the compiled script */
-    int             *pcProfile;
-#endif
 
   private:
     /* Helpers used to navigate the variable-length sections. */

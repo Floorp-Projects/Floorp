@@ -61,8 +61,6 @@ public:
 
   nsSize      mReflowSize;
   nsMargin    mReflowMargin;
-  // shadow of page in PrintPreview; drawn around bottom and right edges
-  nsSize      mShadowSize;
   // Extra Margin between the device area and the edge of the page;
   // approximates unprintable area
   nsMargin    mExtraMargin;
@@ -101,9 +99,6 @@ public:
   NS_IMETHOD SetPageNo(PRInt32 aPageNo) { return NS_OK;}
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
   NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) { mTotalPages = aTotal; return NS_OK; }
-
-  // Gets the dead space (the gray area) around the Print Preview Page
-  NS_IMETHOD GetDeadSpaceValue(nscoord* aValue) { *aValue = NS_INCHES_TO_INT_TWIPS(0.25); return NS_OK; }
   
   // For Shrink To Fit
   NS_IMETHOD GetSTFPercent(float& aSTFPercent);
@@ -119,6 +114,10 @@ public:
   NS_IMETHOD IsDoingPrintRange(PRBool* aDoing);
   NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage);
   NS_IMETHOD DoPageEnd();
+
+  // We must allow Print Preview UI to have a background, no matter what the
+  // user's settings
+  virtual PRBool HonorPrintBackgroundSettings() { return PR_FALSE; }
 
   /**
    * Get the "type" of the frame
@@ -144,6 +143,12 @@ protected:
   // SharedPageData Helper methods
   void SetDateTimeStr(PRUnichar * aDateTimeStr);
   void SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly);
+
+  // Sets the frame desired size to the size of the viewport, or the given
+  // nscoords, whichever is larger. Print scaling is applied in this function.
+  void SetDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nscoord aWidth, nscoord aHeight);
 
   nsMargin mMargin;
 

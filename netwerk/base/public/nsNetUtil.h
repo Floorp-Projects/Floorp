@@ -1171,16 +1171,19 @@ NS_NewPostDataStream(nsIInputStream  **result,
 }
 
 inline nsresult
-NS_ReadInputStreamToString(nsIInputStream *aInputStream, 
-                           nsACString &aDest,
+NS_ReadInputStreamToBuffer(nsIInputStream *aInputStream, 
+                           void** aDest,
                            PRUint32 aCount)
 {
     nsresult rv;
 
-    aDest.SetLength(aCount);
-    if (aDest.Length() != aCount)
-        return NS_ERROR_OUT_OF_MEMORY;
-    char * p = aDest.BeginWriting();
+    if (!*aDest) {
+        *aDest = malloc(aCount);
+        if (!*aDest)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    char * p = reinterpret_cast<char*>(*aDest);
     PRUint32 bytesRead;
     PRUint32 totalRead = 0;
     while (1) {
@@ -1195,6 +1198,18 @@ NS_ReadInputStreamToString(nsIInputStream *aInputStream,
             return NS_ERROR_UNEXPECTED;
     }
     return rv; 
+}
+
+inline nsresult
+NS_ReadInputStreamToString(nsIInputStream *aInputStream, 
+                           nsACString &aDest,
+                           PRUint32 aCount)
+{
+    aDest.SetLength(aCount);
+    if (aDest.Length() != aCount)
+        return NS_ERROR_OUT_OF_MEMORY;
+    void* dest = aDest.BeginWriting();
+    return NS_ReadInputStreamToBuffer(aInputStream, &dest, aCount);
 }
 
 inline nsresult

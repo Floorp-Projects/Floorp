@@ -81,14 +81,14 @@ JSONParser::readString()
      * Optimization: if the source contains no escaped characters, create the
      * string directly from the source text.
      */
-    RangeCheckedPointer<const jschar> start = current;
+    RangedPtr<const jschar> start = current;
     for (; current < end; current++) {
         if (*current == '"') {
             size_t length = current - start;
             current++;
             JSFlatString *str = (ST == JSONParser::PropertyName)
-                                ? js_AtomizeChars(cx, start, length)
-                                : js_NewStringCopyN(cx, start, length);
+                                ? js_AtomizeChars(cx, start.get(), length)
+                                : js_NewStringCopyN(cx, start.get(), length);
             if (!str)
                 return token(OOM);
             return stringToken(str);
@@ -110,7 +110,7 @@ JSONParser::readString()
      */
     StringBuffer buffer(cx);
     do {
-        if (start < current && !buffer.append(start, current))
+        if (start < current && !buffer.append(start.get(), current.get()))
             return token(OOM);
 
         if (current >= end)
@@ -200,7 +200,7 @@ JSONParser::readNumber()
         return token(Error);
     }
 
-    const RangeCheckedPointer<const jschar> digitStart = current;
+    const RangedPtr<const jschar> digitStart = current;
 
     /* 0|[1-9][0-9]+ */
     if (!JS7_ISDEC(*current)) {
@@ -218,7 +218,7 @@ JSONParser::readNumber()
     if (current == end || (*current != '.' && *current != 'e' && *current != 'E')) {
         const jschar *dummy;
         jsdouble d;
-        if (!GetPrefixInteger(cx, digitStart, current, 10, &dummy, &d))
+        if (!GetPrefixInteger(cx, digitStart.get(), current.get(), 10, &dummy, &d))
             return token(OOM);
         JS_ASSERT(current == dummy);
         return numberToken(negative ? -d : d);
@@ -264,7 +264,7 @@ JSONParser::readNumber()
 
     jsdouble d;
     const jschar *finish;
-    if (!js_strtod(cx, digitStart, current, &finish, &d))
+    if (!js_strtod(cx, digitStart.get(), current.get(), &finish, &d))
         return token(OOM);
     JS_ASSERT(current == finish);
     return numberToken(negative ? -d : d);
@@ -382,7 +382,7 @@ JSONParser::advanceAfterObjectOpen()
 }
 
 static inline void
-AssertPastValue(const RangeCheckedPointer<const jschar> current)
+AssertPastValue(const RangedPtr<const jschar> current)
 {
     /*
      * We're past an arbitrary JSON value, so the previous character is
@@ -584,7 +584,7 @@ JSONParser::parse(Value *vp)
 
           case FinishArrayElement: {
             Value v = valueStack.popCopy();
-            if (!js_ArrayCompPush(cx, &valueStack.back().toObject(), v))
+            if (!js_NewbornArrayPush(cx, &valueStack.back().toObject(), v))
                 return false;
             token = advanceAfterArrayElement();
             if (token == Comma) {

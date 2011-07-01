@@ -52,6 +52,7 @@ _MOCHITEST_FILES = \
   test_npruntime_npninvoke.html \
   test_npruntime_npninvokedefault.html \
   test_npruntime_identifiers.html \
+  npruntime_identifiers_subpage.html \
   loremipsum.txt \
   loremipsum_file.txt \
   loremipsum_nocache.txt \
@@ -100,6 +101,7 @@ _MOCHITEST_FILES = \
   test_redirect_handling.html \
   test_clear_site_data.html \
   test_zero_opacity.html \
+  test_NPPVpluginWantsAllNetworkStreams.html \
   $(NULL)
 
 #  test_plugin_scroll_painting.html \ bug 596491

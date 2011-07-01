@@ -68,7 +68,10 @@ const ElementTouchHelper = {
 
   /* Retrieve the closest element to a point by looking at borders position */
   getClosest: function getClosest(aWindowUtils, aX, aY) {
-    let dpiRatio = aWindowUtils.displayDPI / kReferenceDpi;
+    if (!this.dpiRatio)
+      this.dpiRatio = aWindowUtils.displayDPI / kReferenceDpi;
+
+    let dpiRatio = this.dpiRatio;
 
     let target = aWindowUtils.elementFromPoint(aX, aY,
                                                true,   /* ignore root scroll frame*/
@@ -352,11 +355,6 @@ let Content = {
           } else if (ot == errorDoc.getElementById("getMeOutOfHereButton")) {
             sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: "leave" });
           }
-        } else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
-          if (ot == errorDoc.getElementById("errorTryAgain")) {
-            // Make sure we're online before attempting to load
-            Util.forceOnline();
-          }
         } else if (/^about:blocked/.test(errorDoc.documentURI)) {
           // The event came from a button on a malware/phishing block page
           // First check whether it's malware or phishing, so that we can
@@ -623,20 +621,25 @@ let Content = {
 
   _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY, aButton) {
     // the element can be out of the aX/aY point because of the touch radius
+    // if outside, we gracefully move the touch point to the center of the element
     if (!(aElement instanceof HTMLHtmlElement)) {
       let isTouchClick = true;
       let rects = getContentClientRects(aElement);
       for (let i = 0; i < rects.length; i++) {
         let rect = rects[i];
-        if ((aX > rect.left && aX < (rect.left + rect.width)) &&
-            (aY > rect.top && aY < (rect.top + rect.height))) {
+        // We might be able to deal with fractional pixels, but mouse events won't.
+        // Deflate the bounds in by 1 pixel to deal with any fractional scroll offset issues.
+        let inBounds = 
+          (aX > rect.left + 1 && aX < (rect.left + rect.width - 1)) &&
+          (aY > rect.top + 1 && aY < (rect.top + rect.height - 1));
+        if (inBounds) {
           isTouchClick = false;
           break;
         }
       }
 
       if (isTouchClick) {
-        let rect = new Rect(rects[0]);
+        let rect = new Rect(rects[0].left, rects[0].top, rects[0].width, rects[0].height);
         if (rect.isEmpty())
           return;
 
@@ -915,6 +918,14 @@ var ContextHandler = {
           if (hasData && !elem.readOnly)
             state.types.push("paste");
           break;
+        } else if (elem instanceof Ci.nsIDOMHTMLParagraphElement ||
+                   elem instanceof Ci.nsIDOMHTMLDivElement ||
+                   elem instanceof Ci.nsIDOMHTMLLIElement ||
+                   elem instanceof Ci.nsIDOMHTMLPreElement ||
+                   elem instanceof Ci.nsIDOMHTMLHeadingElement ||
+                   elem instanceof Ci.nsIDOMHTMLTableCellElement) {
+          state.types.push("content-text");
+          break;
         }
       }
 
@@ -1156,6 +1167,20 @@ var ConsoleAPIObserver = {
       let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
       consoleMsg.init(joinedArguments, null, null, 0, 0, flag, "content javascript");
       Services.console.logMessage(consoleMsg);
+    } else if (aMessage.level == "trace") {
+      let bundle = Services.strings.createBundle("chrome://global/locale/headsUpDisplay.properties");
+      let args = aMessage.arguments;
+      let filename = this.abbreviateSourceURL(args[0].filename);
+      let functionName = args[0].functionName || bundle.GetStringFromName("stacktrace.anonymousFunction");
+      let lineNumber = args[0].lineNumber;
+
+      let body = bundle.formatStringFromName("stacktrace.outputMessage", [filename, functionName, lineNumber], 3);
+      body += "\n";
+      args.forEach(function(aFrame) {
+        body += aFrame.filename + " :: " + aFrame.functionName + " :: " + aFrame.lineNumber + "\n";
+      });
+
+      Services.console.logStringMessage(body);
     } else {
       Services.console.logStringMessage(joinedArguments);
     }
@@ -1197,6 +1222,24 @@ var ConsoleAPIObserver = {
     }
 
     return output;
+  },
+
+  abbreviateSourceURL: function abbreviateSourceURL(aSourceURL) {
+    // Remove any query parameters.
+    let hookIndex = aSourceURL.indexOf("?");
+    if (hookIndex > -1)
+      aSourceURL = aSourceURL.substring(0, hookIndex);
+
+    // Remove a trailing "/".
+    if (aSourceURL[aSourceURL.length - 1] == "/")
+      aSourceURL = aSourceURL.substring(0, aSourceURL.length - 1);
+
+    // Remove all but the last path component.
+    let slashIndex = aSourceURL.lastIndexOf("/");
+    if (slashIndex > -1)
+      aSourceURL = aSourceURL.substring(slashIndex + 1);
+
+    return aSourceURL;
   }
 };
 
@@ -1246,6 +1289,7 @@ var TouchEventHandler = {
 
     if (!this.element)
       return;
+
     let cancelled = !this.sendEvent(type, json, this.element);
     if (type == "touchend")
       this.element = null;
@@ -1281,6 +1325,93 @@ var TouchEventHandler = {
     }
     return aElement.dispatchEvent(evt);
   }
-}
+};
 
 TouchEventHandler.init();
+
+var SelectionHandler = {
+  cache: {},
+  
+  init: function() {
+    addMessageListener("Browser:SelectionStart", this);
+    addMessageListener("Browser:SelectionEnd", this);
+    addMessageListener("Browser:SelectionMove", this);
+  },
+
+  receiveMessage: function(aMessage) {
+    let scrollOffset = ContentScroll.getScrollOffset(content);
+    let utils = Util.getWindowUtils(content);
+    let json = aMessage.json;
+
+    switch (aMessage.name) {
+      case "Browser:SelectionStart": {
+        // Position the caret using a fake mouse click
+        utils.sendMouseEventToWindow("mousedown", json.x - scrollOffset.x, json.y - scrollOffset.y, 0, 1, 0, true);
+        utils.sendMouseEventToWindow("mouseup", json.x - scrollOffset.x, json.y - scrollOffset.y, 0, 1, 0, true);
+
+        // Select the word nearest the caret
+        try {
+          let selcon = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsISelectionDisplay).QueryInterface(Ci.nsISelectionController);
+          selcon.wordMove(false, false);
+          selcon.wordMove(true, true);
+        } catch(e) {
+          // If we couldn't select the word at the given point, bail
+          return;
+        }
+
+        // Find the selected text rect and send it back so the handles can position correctly
+        let selection = content.getSelection();
+        if (selection.rangeCount == 0)
+          return;
+
+        let range = selection.getRangeAt(0).QueryInterface(Ci.nsIDOMNSRange);
+        this.cache = { start: {}, end: {} };
+        let rects = range.getClientRects();
+        for (let i=0; i<rects.length; i++) {
+          if (i == 0) {
+            this.cache.start.x = rects[i].left + scrollOffset.x;
+            this.cache.start.y = rects[i].bottom + scrollOffset.y;
+          }
+          this.cache.end.x = rects[i].right + scrollOffset.x;
+          this.cache.end.y = rects[i].bottom + scrollOffset.y;
+        }
+
+        sendAsyncMessage("Browser:SelectionRange", this.cache);
+        break;
+      }
+
+      case "Browser:SelectionEnd": {
+        let selection = content.getSelection();
+        let str = selection.toString();
+        selection.collapseToStart();
+        if (str.length) {
+          let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+          clipboard.copyString(str);
+          sendAsyncMessage("Browser:SelectionCopied", { succeeded: true });
+        } else {
+          sendAsyncMessage("Browser:SelectionCopied", { succeeded: false });
+        }
+        break;
+      }
+
+      case "Browser:SelectionMove":
+        if (json.type == "end") {
+          this.cache.end.x = json.x - scrollOffset.x;
+          this.cache.end.y = json.y - scrollOffset.y;
+          utils.sendMouseEventToWindow("mousedown", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+          utils.sendMouseEventToWindow("mouseup", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+        } else {
+          this.cache.start.x = json.x - scrollOffset.x;
+          this.cache.start.y = json.y - scrollOffset.y;
+          utils.sendMouseEventToWindow("mousedown", this.cache.start.x, this.cache.start.y, 0, 1, 0, true);
+          // Don't cause a click. A mousedown is enough to move the caret
+          //utils.sendMouseEventToWindow("mouseup", this.cache.start.x, this.cache.start.y, 0, 1, 0, true);
+          utils.sendMouseEventToWindow("mousedown", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+          utils.sendMouseEventToWindow("mouseup", this.cache.end.x, this.cache.end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+        }
+        break;
+    }
+  }
+};
+
+SelectionHandler.init();

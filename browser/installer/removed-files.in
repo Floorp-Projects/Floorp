@@ -78,6 +78,8 @@ components/xpcom.xpt
 components/xpti.dat
 components/xptitemp.dat
 components/nsMicrosummaryService.js
+D3DCompiler_42.dll
+d3dx9_42.dll
 defaults/pref/all.js
 defaults/pref/bug259708.js
 defaults/pref/bug307259.js
@@ -93,6 +95,13 @@ defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/
 defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 defaults/profile/search.rdf
 #ifndef SHIP_FEEDBACK
+# In the average case, this directory is only used by Test Pilot, and will get
+# removed by the updater. In some cases (eg, partner builds), distribution/
+# will have other files and/or directories in it. In these cases, the updater
+# will print a non-fatal error and continue on, because we're not appending
+# '*' to force a recursive removal.
+distribution/
+distribution/extensions/
 distribution/extensions/testpilot@labs.mozilla.com.xpi
 #endif
 extensions/talkback@mozilla.org/
@@ -265,7 +274,6 @@ res/ua.css
 res/unixcharset.properties
 res/viewsource.css
 res/wincharset.properties
-searchplugins/
 searchplugins/DRAE.gif
 searchplugins/DRAE.png
 searchplugins/DRAE.src
@@ -952,6 +960,7 @@ xpicleanup@BIN_SUFFIX@
   modules/PluralForm.jsm
   modules/PopupNotifications.jsm
   modules/PropertyPanel.jsm
+  modules/reflect.jsm
   modules/Services.jsm
   modules/services-sync/auth.js
   modules/services-sync/base_records/collection.js

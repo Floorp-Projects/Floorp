@@ -70,7 +70,6 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWebBrowserChrome.h"
@@ -96,9 +95,6 @@
 #include "nsXPCOMCID.h"
 #include "nsISeekableStream.h"
 #include "nsAutoPtr.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
@@ -112,6 +108,7 @@
 #include "nsJSON.h"
 #include "IHistory.h"
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -234,6 +231,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 #include "nsXULAppAPI.h"
 
+#include "nsDOMNavigationTiming.h"
+
 using namespace mozilla;
 
 // Number of documents currently loading
@@ -306,21 +305,14 @@ FavorPerformanceHint(PRBool perfOverStarvation, PRUint32 starvationDelay)
 static PRBool
 PingsEnabled(PRInt32 *maxPerLink, PRBool *requireSameHost)
 {
-  PRBool allow = PR_FALSE;
+  PRBool allow = Preferences::GetBool(PREF_PINGS_ENABLED, PR_FALSE);
 
   *maxPerLink = 1;
   *requireSameHost = PR_TRUE;
 
-  nsCOMPtr<nsIPrefBranch> prefs =
-      do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    PRBool val;
-    if (NS_SUCCEEDED(prefs->GetBoolPref(PREF_PINGS_ENABLED, &val)))
-      allow = val;
-    if (allow) {
-      prefs->GetIntPref(PREF_PINGS_MAX_PER_LINK, maxPerLink);
-      prefs->GetBoolPref(PREF_PINGS_REQUIRE_SAME_HOST, requireSameHost);
-    }
+  if (allow) {
+    Preferences::GetInt(PREF_PINGS_MAX_PER_LINK, maxPerLink);
+    Preferences::GetBool(PREF_PINGS_REQUIRE_SAME_HOST, requireSameHost);
   }
 
   return allow;
@@ -673,6 +665,47 @@ DispatchPings(nsIContent *content, nsIURI *referrer)
   ForEachPing(content, SendPing, &info);
 }
 
+static nsDOMPerformanceNavigationType
+ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
+{
+  nsDOMPerformanceNavigationType result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+  switch (aLoadType) {
+    case LOAD_NORMAL:
+    case LOAD_NORMAL_EXTERNAL:
+    case LOAD_NORMAL_BYPASS_CACHE:
+    case LOAD_NORMAL_BYPASS_PROXY:
+    case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
+    case LOAD_LINK:
+        result = nsIDOMPerformanceNavigation::TYPE_NAVIGATE;
+        break;
+    case LOAD_HISTORY:
+        result = nsIDOMPerformanceNavigation::TYPE_BACK_FORWARD;
+        break;
+    case LOAD_RELOAD_NORMAL:
+    case LOAD_RELOAD_CHARSET_CHANGE:
+    case LOAD_RELOAD_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_PROXY:
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+        result = nsIDOMPerformanceNavigation::TYPE_RELOAD;
+        break;
+    case LOAD_NORMAL_REPLACE:
+    case LOAD_STOP_CONTENT:
+    case LOAD_STOP_CONTENT_AND_REPLACE:
+    case LOAD_REFRESH:
+    case LOAD_BYPASS_HISTORY:
+    case LOAD_ERROR_PAGE:
+    case LOAD_PUSHSTATE:
+        result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+        break;
+    default:
+        // NS_NOTREACHED("Unexpected load type value");
+        result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+        break;
+  }
+
+  return result;
+}
+
 static nsISHEntry* GetRootSHEntry(nsISHEntry *entry);
 
 //*****************************************************************************
@@ -695,13 +728,16 @@ nsDocShell::nsDocShell():
     mMarginHeight(-1),
     mItemType(typeContent),
     mPreviousTransIndex(-1),
+    mLoadType(0),
     mLoadedTransIndex(-1),
+    mCreated(PR_FALSE),
     mAllowSubframes(PR_TRUE),
     mAllowPlugins(PR_TRUE),
     mAllowJavascript(PR_TRUE),
     mAllowMetaRedirects(PR_TRUE),
     mAllowImages(PR_TRUE),
     mAllowDNSPrefetch(PR_TRUE),
+    mAllowWindowControl(PR_TRUE),
     mCreatingDocument(PR_FALSE),
     mUseErrorPages(PR_FALSE),
     mObserveErrorPages(PR_TRUE),
@@ -1519,7 +1555,15 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
         nsCOMPtr<nsIContentViewer> kungFuDeathGrip(mContentViewer);
         mFiredUnloadEvent = PR_TRUE;
 
+        if (mTiming) {
+            mTiming->NotifyUnloadEventStart();
+        }
+
         mContentViewer->PageHide(aIsUnload);
+
+        if (mTiming) {
+            mTiming->NotifyUnloadEventEnd();
+        }
 
         nsAutoTArray<nsCOMPtr<nsIDocShell>, 8> kids;
         PRInt32 i, n = mChildList.Count();
@@ -1541,6 +1585,21 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
 
     return NS_OK;
 }
+
+nsresult
+nsDocShell::MaybeInitTiming()
+{
+    if (mTiming) {
+        return NS_OK;
+    }
+
+    if (Preferences::GetBool("dom.enable_performance", PR_FALSE)) {
+        mTiming = new nsDOMNavigationTiming();
+        mTiming->NotifyNavigationStart();
+    }
+    return NS_OK;
+}
+
 
 //
 // Bug 13871: Prevent frameset spoofing
@@ -1704,14 +1763,12 @@ nsDocShell::GetContentViewer(nsIContentViewer ** aContentViewer)
 NS_IMETHODIMP
 nsDocShell::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 {
-    nsCOMPtr<nsPIDOMEventTarget> piTarget =
-      do_QueryInterface(aChromeEventHandler);
     // Weak reference. Don't addref.
-    mChromeEventHandler = piTarget;
+    mChromeEventHandler = aChromeEventHandler;
 
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
     if (win) {
-        win->SetChromeEventHandler(piTarget);
+        win->SetChromeEventHandler(aChromeEventHandler);
     }
 
     return NS_OK;
@@ -1980,6 +2037,18 @@ NS_IMETHODIMP nsDocShell::SetAllowDNSPrefetch(PRBool aAllowDNSPrefetch)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShell::GetAllowWindowControl(PRBool * aAllowWindowControl)
+{
+    *aAllowWindowControl = mAllowWindowControl;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetAllowWindowControl(PRBool aAllowWindowControl)
+{
+    mAllowWindowControl = aAllowWindowControl;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDocShell::GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **outEnum)
 {
@@ -2135,11 +2204,8 @@ nsDocShell::SetUseErrorPages(PRBool aUseErrorPages)
 {
     // If mUseErrorPages is set explicitly, stop observing the pref.
     if (mObserveErrorPages) {
-        nsCOMPtr<nsIPrefBranch2> prefs(do_QueryInterface(mPrefs));
-        if (prefs) {
-            prefs->RemoveObserver("browser.xul.error_pages.enabled", this);
-            mObserveErrorPages = PR_FALSE;
-        }
+        Preferences::RemoveObserver(this, "browser.xul.error_pages.enabled");
+        mObserveErrorPages = PR_FALSE;
     }
     mUseErrorPages = aUseErrorPages;
     return NS_OK;
@@ -2558,6 +2624,10 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
         if (NS_SUCCEEDED(parentAsDocShell->GetAllowImages(&value)))
         {
             SetAllowImages(value);
+        }
+        if (NS_SUCCEEDED(parentAsDocShell->GetAllowWindowControl(&value)))
+        {
+            SetAllowWindowControl(value);
         }
         if (NS_SUCCEEDED(parentAsDocShell->GetIsActive(&value)))
         {
@@ -3853,17 +3923,15 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                 if (isStsHost)
                   cssClass.AssignLiteral("badStsCert");
 
-                PRBool expert = PR_FALSE;
-                mPrefs->GetBoolPref("browser.xul.error_pages.expert_bad_cert",
-                                    &expert);
-                if (expert) {
+                if (Preferences::GetBool(
+                        "browser.xul.error_pages.expert_bad_cert", PR_FALSE)) {
                     cssClass.AssignLiteral("expertBadCert");
                 }
 
                 // See if an alternate cert error page is registered
-                nsXPIDLCString alternateErrorPage;
-                mPrefs->GetCharPref("security.alternate_certificate_error_page",
-                                    getter_Copies(alternateErrorPage));
+                nsAdoptingCString alternateErrorPage =
+                    Preferences::GetCString(
+                        "security.alternate_certificate_error_page");
                 if (alternateErrorPage)
                     errorPage.Assign(alternateErrorPage);
             } else {
@@ -3878,9 +3946,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
 
         // Malware and phishing detectors may want to use an alternate error
         // page, but if the pref's not set, we'll fall back on the standard page
-        nsXPIDLCString alternateErrorPage;
-        mPrefs->GetCharPref("urlclassifier.alternate_error_page",
-                            getter_Copies(alternateErrorPage));
+        nsAdoptingCString alternateErrorPage =
+            Preferences::GetCString("urlclassifier.alternate_error_page");
         if (alternateErrorPage)
             errorPage.Assign(alternateErrorPage);
 
@@ -3913,6 +3980,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         case NS_ERROR_DOCUMENT_NOT_CACHED:
             // Doc failed to load because we are offline and the cache does not
             // contain a copy of the document.
+        case NS_ERROR_OFFLINE:
+            // Doc failed to load because we are offline
             error.AssignLiteral("netOffline");
             break;
         case NS_ERROR_DOCUMENT_IS_PRINTMODE:
@@ -3944,6 +4013,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         case NS_ERROR_UNSAFE_CONTENT_TYPE:
             // Channel refused to load from an unrecognized content type.
             error.AssignLiteral("unsafeContentType");
+            break;
+        case NS_ERROR_CORRUPTED_CONTENT:
+            // Broken Content Detected. e.g. Content-MD5 check failure.
+            error.AssignLiteral("corruptedContentError");
             break;
         }
     }
@@ -4420,7 +4493,7 @@ nsDocShell::InitWindow(nativeWindow parentNativeWindow,
 NS_IMETHODIMP
 nsDocShell::Create()
 {
-    if (mPrefs) {
+    if (mCreated) {
         // We've already been created
         return NS_OK;
     }
@@ -4428,34 +4501,24 @@ nsDocShell::Create()
     NS_ASSERTION(mItemType == typeContent || mItemType == typeChrome,
                  "Unexpected item type in docshell");
 
-    nsresult rv = NS_ERROR_FAILURE;
-    mPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
+    mCreated = PR_TRUE;
 
-    PRBool tmpbool;
-
-    rv = mPrefs->GetBoolPref("browser.frames.enabled", &tmpbool);
-    if (NS_SUCCEEDED(rv))
-        mAllowSubframes = tmpbool;
+    mAllowSubframes =
+        Preferences::GetBool("browser.frames.enabled", mAllowSubframes);
 
     if (gValidateOrigin == (PRBool)0xffffffff) {
         // Check pref to see if we should prevent frameset spoofing
-        rv = mPrefs->GetBoolPref("browser.frame.validate_origin", &tmpbool);
-        if (NS_SUCCEEDED(rv)) {
-            gValidateOrigin = tmpbool;
-        } else {
-            gValidateOrigin = PR_TRUE;
-        }
+        gValidateOrigin =
+            Preferences::GetBool("browser.frame.validate_origin", PR_TRUE);
     }
 
     // Should we use XUL error pages instead of alerts if possible?
-    rv = mPrefs->GetBoolPref("browser.xul.error_pages.enabled", &tmpbool);
-    if (NS_SUCCEEDED(rv))
-        mUseErrorPages = tmpbool;
+    mUseErrorPages =
+        Preferences::GetBool("browser.xul.error_pages.enabled", mUseErrorPages);
 
-    nsCOMPtr<nsIPrefBranch2> prefs(do_QueryInterface(mPrefs, &rv));
-    if (NS_SUCCEEDED(rv) && mObserveErrorPages) {
-        prefs->AddObserver("browser.xul.error_pages.enabled", this, PR_FALSE);
+    if (mObserveErrorPages) {
+        Preferences::AddStrongObserver(this, "browser.xul.error_pages.enabled");
     }
 
     nsCOMPtr<nsIObserverService> serv = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
@@ -4488,11 +4551,8 @@ nsDocShell::Destroy()
 
     // Remove our pref observers
     if (mObserveErrorPages) {
-        nsCOMPtr<nsIPrefBranch2> prefs(do_QueryInterface(mPrefs));
-        if (prefs) {
-            prefs->RemoveObserver("browser.xul.error_pages.enabled", this);
-            mObserveErrorPages = PR_FALSE;
-        }
+        Preferences::RemoveObserver(this, "browser.xul.error_pages.enabled");
+        mObserveErrorPages = PR_FALSE;
     }
 
     // Make sure to blow away our mLoadingURI just in case.  No loads
@@ -5823,15 +5883,30 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
     nsresult rv;
 
     if ((~aStateFlags & (STATE_START | STATE_IS_NETWORK)) == 0) {
+        // Save timing statistics.
+        nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        nsCAutoString aURI;
+        uri->GetAsciiSpec(aURI);
+        // If load type is not set, this is not a 'normal' load.
+        // No need to collect timing.
+        if (mLoadType == 0) {
+          mTiming = nsnull;
+        }
+        else {
+          rv = MaybeInitTiming();
+        }
+        if (mTiming) {
+          mTiming->NotifyFetchStart(uri, ConvertLoadTypeToNavigationType(mLoadType));
+        }
+
         nsCOMPtr<nsIWyciwygChannel>  wcwgChannel(do_QueryInterface(aRequest));
         nsCOMPtr<nsIWebProgress> webProgress =
             do_QueryInterface(GetAsSupports(this));
 
         // Was the wyciwyg document loaded on this docshell?
         if (wcwgChannel && !mLSHE && (mItemType == typeContent) && aProgress == webProgress.get()) {
-            nsCOMPtr<nsIURI> uri;
-            wcwgChannel->GetURI(getter_AddRefs(uri));
-        
             PRBool equalUri = PR_TRUE;
             // Store the wyciwyg url in session history, only if it is
             // being loaded fresh for the first time. We don't want 
@@ -5884,9 +5959,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
 
         if ((aStateFlags & STATE_RESTORING) == 0) {
             // Show the progress cursor if the pref is set
-            PRBool tmpBool = PR_FALSE;
-            if (NS_SUCCEEDED(mPrefs->GetBoolPref("ui.use_activity_cursor", &tmpBool))
-                && tmpBool) {
+            if (Preferences::GetBool("ui.use_activity_cursor", PR_FALSE)) {
                 nsCOMPtr<nsIWidget> mainWidget;
                 GetMainWidget(getter_AddRefs(mainWidget));
                 if (mainWidget) {
@@ -5904,9 +5977,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
         mBusyFlags = BUSY_FLAGS_NONE;
 
         // Hide the progress cursor if the pref is set
-        PRBool tmpBool = PR_FALSE;
-        if (NS_SUCCEEDED(mPrefs->GetBoolPref("ui.use_activity_cursor", &tmpBool))
-            && tmpBool) {
+        if (Preferences::GetBool("ui.use_activity_cursor", PR_FALSE)) {
             nsCOMPtr<nsIWidget> mainWidget;
             GetMainWidget(getter_AddRefs(mainWidget));
             if (mainWidget) {
@@ -5953,6 +6024,13 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     aNewChannel->GetURI(getter_AddRefs(newURI));
     if (!oldURI || !newURI) {
         return;
+    }
+    // On session restore we get a redirect from page to itself. Don't count it.
+    PRBool equals = PR_FALSE;
+    if (mTiming &&
+        !(mLoadType == LOAD_HISTORY &&
+          NS_SUCCEEDED(newURI->Equals(oldURI, &equals)) && equals)) {
+        mTiming->NotifyRedirect(oldURI, newURI);
     }
 
     // Below a URI visit is saved (see AddURIVisit method doc).
@@ -6037,7 +6115,10 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     nsCOMPtr<nsIURI> url;
     nsresult rv = aChannel->GetURI(getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
-  
+
+    // Timing is picked up by the window, we don't need it anymore
+    mTiming = nsnull;
+
     // clean up reload state for meta charset
     if (eCharsetReloadRequested == mCharsetReloadState)
         mCharsetReloadState = eCharsetReloadStopOrigional;
@@ -6124,6 +6205,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     //
     if (url && NS_FAILED(aStatus)) {
         if (aStatus == NS_ERROR_FILE_NOT_FOUND ||
+            aStatus == NS_ERROR_CORRUPTED_CONTENT ||
             aStatus == NS_ERROR_INVALID_CONTENT_ENCODING) {
             DisplayLoadError(aStatus, url, nsnull, aChannel);
             return NS_OK;
@@ -6142,12 +6224,8 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
             // First try keyword fixup
             //
             if (aStatus == NS_ERROR_UNKNOWN_HOST && mAllowKeywordFixup) {
-                PRBool keywordsEnabled = PR_FALSE;
-
-                if (mPrefs &&
-                    NS_FAILED(mPrefs->GetBoolPref("keyword.enabled",
-                                                  &keywordsEnabled)))
-                    keywordsEnabled = PR_FALSE;
+                PRBool keywordsEnabled =
+                    Preferences::GetBool("keyword.enabled", PR_FALSE);
 
                 nsCAutoString host;
                 url->GetHost(host);
@@ -6273,6 +6351,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                  aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
                  aStatus == NS_ERROR_NET_INTERRUPT ||
                  aStatus == NS_ERROR_NET_RESET ||
+                 aStatus == NS_ERROR_OFFLINE ||
                  aStatus == NS_ERROR_MALWARE_URI ||
                  aStatus == NS_ERROR_PHISHING_URI ||
                  aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||
@@ -6466,6 +6545,13 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
     // with about:blank. And also ensure we fire the unload events
     // in the current document.
 
+    // Make sure timing is created. Unload gets fired first for
+    // document loaded from the session history.
+    rv = MaybeInitTiming();
+    if (mTiming) {
+      mTiming->NotifyBeforeUnload();
+    }
+
     PRBool okToUnload;
     rv = mContentViewer->PermitUnload(PR_FALSE, &okToUnload);
 
@@ -6476,6 +6562,10 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
 
     mSavingOldViewer = aTryToSaveOldPresentation && 
                        CanSavePresentation(LOAD_NORMAL, nsnull, nsnull);
+
+    if (mTiming) {
+      mTiming->NotifyUnloadAccepted(mCurrentURI);
+    }
 
     // Make sure to blow away our mLoadingURI just in case.  No loads
     // from inside this pagehide.
@@ -6590,9 +6680,9 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType,
 
     // Don't cache the content viewer if we're in a subframe and the subframe
     // pref is disabled.
-    PRBool cacheFrames = PR_FALSE;
-    mPrefs->GetBoolPref("browser.sessionhistory.cache_subframes",
-                        &cacheFrames);
+    PRBool cacheFrames =
+        Preferences::GetBool("browser.sessionhistory.cache_subframes",
+                             PR_FALSE);
     if (!cacheFrames) {
         nsCOMPtr<nsIDocShellTreeItem> root;
         GetSameTypeParent(getter_AddRefs(root));
@@ -7696,6 +7786,12 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
     nsIntRect bounds(x, y, cx, cy);
 
+    nsCOMPtr<nsIDocumentViewer> docviewer =
+        do_QueryInterface(mContentViewer);
+    if (docviewer) {
+        docviewer->SetNavigationTiming(mTiming);
+    }
+
     if (NS_FAILED(mContentViewer->Init(widget, bounds))) {
         mContentViewer = nsnull;
         NS_ERROR("ContentViewer Initialization failed");
@@ -7728,9 +7824,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
     // Stuff the bgcolor from the old pres shell into the new
     // pres shell. This improves page load continuity.
-    nsCOMPtr<nsIDocumentViewer> docviewer =
-        do_QueryInterface(mContentViewer);
-
     if (docviewer) {
         nsCOMPtr<nsIPresShell> shell;
         docviewer->GetPresShell(getter_AddRefs(shell));
@@ -8285,12 +8378,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         aLoadType == LOAD_LINK) {
 
         // Split mCurrentURI and aURI on the '#' character.  Make sure we read
-        // the return values of SplitURIAtHash; it might fail because
-        // mCurrentURI is null, for instance, and we don't want to allow a
-        // short-circuited navigation in that case.
+        // the return values of SplitURIAtHash; if it fails, we don't want to
+        // allow a short-circuited navigation.
         nsCAutoString curBeforeHash, curHash, newBeforeHash, newHash;
         nsresult splitRv1, splitRv2;
-        splitRv1 = nsContentUtils::SplitURIAtHash(mCurrentURI, curBeforeHash, curHash);
+        splitRv1 = mCurrentURI ?
+            nsContentUtils::SplitURIAtHash(mCurrentURI,
+                                           curBeforeHash, curHash) :
+            NS_ERROR_FAILURE;
         splitRv2 = nsContentUtils::SplitURIAtHash(aURI, newBeforeHash, newHash);
 
         PRBool sameExceptHashes = NS_SUCCEEDED(splitRv1) &&
@@ -8353,11 +8448,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // sometimes we might scroll even if we don't fire a hashchange
             // event!  See bug 653741.
             if (!aSHEntry) {
-                // Take the '#' off the hashes before passing them to
-                // ScrollToAnchor.
-                nsDependentCSubstring curHashName(curHash, 1);
-                nsDependentCSubstring newHashName(newHash, 1);
-                rv = ScrollToAnchor(curHashName, newHashName, aLoadType);
+                rv = ScrollToAnchor(curHash, newHash, aLoadType);
                 NS_ENSURE_SUCCESS(rv, rv);
             }
 
@@ -8513,6 +8604,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // (bug#331040)
     nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
 
+    rv = MaybeInitTiming();
+    if (mTiming) {
+      mTiming->NotifyBeforeUnload();
+    }
     // Check if the page doesn't want to be unloaded. The javascript:
     // protocol handler deals with this for javascript: URLs.
     if (!bIsJavascript && mContentViewer) {
@@ -8524,6 +8619,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // load.
             return NS_OK;
         }
+    }
+
+    if (mTiming) {
+      mTiming->NotifyUnloadAccepted(mCurrentURI);
     }
 
     // Check for saving the presentation here, before calling Stop().
@@ -9093,22 +9192,16 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
     case LOAD_NORMAL:
     case LOAD_LINK:
         // Set cache checking flags
-        PRInt32 prefSetting;
-        if (NS_SUCCEEDED
-            (mPrefs->
-             GetIntPref("browser.cache.check_doc_frequency",
-                        &prefSetting))) {
-            switch (prefSetting) {
-            case 0:
-                loadFlags |= nsIRequest::VALIDATE_ONCE_PER_SESSION;
-                break;
-            case 1:
-                loadFlags |= nsIRequest::VALIDATE_ALWAYS;
-                break;
-            case 2:
-                loadFlags |= nsIRequest::VALIDATE_NEVER;
-                break;
-            }
+        switch (Preferences::GetInt("browser.cache.check_doc_frequency", -1)) {
+        case 0:
+            loadFlags |= nsIRequest::VALIDATE_ONCE_PER_SESSION;
+            break;
+        case 1:
+            loadFlags |= nsIRequest::VALIDATE_ALWAYS;
+            break;
+        case 2:
+            loadFlags |= nsIRequest::VALIDATE_NEVER;
+            break;
         }
         break;
     }
@@ -9152,16 +9245,20 @@ nsDocShell::ScrollToAnchor(nsACString & aCurHash, nsACString & aNewHash,
         return NS_OK;
     }
 
+    // Take the '#' off aNewHash to get the ref name.  (aNewHash might be empty,
+    // but that's fine.)
+    nsDependentCSubstring newHashName(aNewHash, 1);
+
     // Both the new and current URIs refer to the same page. We can now
     // browse to the hash stored in the new URI.
 
-    if (!aNewHash.IsEmpty()) {
+    if (!newHashName.IsEmpty()) {
         // anchor is there, but if it's a load from history,
         // we don't have any anchor jumping to do
         PRBool scroll = aLoadType != LOAD_HISTORY &&
                         aLoadType != LOAD_RELOAD_NORMAL;
 
-        char *str = ToNewCString(aNewHash);
+        char *str = ToNewCString(newHashName);
         if (!str) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -9203,7 +9300,7 @@ nsDocShell::ScrollToAnchor(nsACString & aCurHash, nsACString & aNewHash,
             nsXPIDLString uStr;
 
             rv = textToSubURI->UnEscapeAndConvert(PromiseFlatCString(aCharset).get(),
-                                                  PromiseFlatCString(aNewHash).get(),
+                                                  PromiseFlatCString(newHashName).get(),
                                                   getter_Copies(uStr));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -9443,9 +9540,9 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
         }
     }
 
-    // If this was a history load, update the index in 
-    // SH. 
-    if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
+    // If this was a history load or a refresh,
+    // update the index in SH. 
+    if (rootSH && (mLoadType & (LOAD_CMD_HISTORY | LOAD_CMD_RELOAD))) {
         nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
         if (shInternal) {
             rootSH->GetIndex(&mPreviousTransIndex);
@@ -9577,11 +9674,8 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
 
     // Check that the state object isn't too long.
     // Default max length: 640k bytes.
-    PRInt32 maxStateObjSize = 0xA0000;
-    if (mPrefs) {
-        mPrefs->GetIntPref("browser.history.maxStateObjectSize",
-                           &maxStateObjSize);
-    }
+    PRInt32 maxStateObjSize =
+        Preferences::GetInt("browser.history.maxStateObjectSize", 0xA0000);
     if (maxStateObjSize < 0) {
         maxStateObjSize = 0;
     }
@@ -10676,7 +10770,9 @@ nsDocShell::ConfirmRepost(PRBool * aRepost)
   if (NS_FAILED(rv)) return rv;
 
   PRInt32 buttonPressed;
-  PRBool checkState;
+  // The actual value here is irrelevant, but we can't pass an invalid
+  // PRBool through XPConnect.
+  PRBool checkState = PR_FALSE;
   rv = prompter->
          ConfirmEx(nsnull, msgString.get(),
                    (nsIPrompt::BUTTON_POS_0 * nsIPrompt::BUTTON_TITLE_IS_STRING) +
@@ -11081,11 +11177,8 @@ nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
         !nsCRT::strcmp(aData,
           NS_LITERAL_STRING("browser.xul.error_pages.enabled").get())) {
 
-        nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject, &rv));
-        NS_ENSURE_SUCCESS(rv, rv);
-
         PRBool tmpbool;
-        rv = prefs->GetBoolPref("browser.xul.error_pages.enabled", &tmpbool);
+        rv = Preferences::GetBool("browser.xul.error_pages.enabled", &tmpbool);
         if (NS_SUCCEEDED(rv))
             mUseErrorPages = tmpbool;
 
@@ -11507,6 +11600,17 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
   // new document that we're in the process of loading.
   nsCOMPtr<nsIDocument> refererDoc = aContent->GetOwnerDoc();
   NS_ENSURE_TRUE(refererDoc, NS_ERROR_UNEXPECTED);
+
+  // Now check that the refererDoc's inner window is the current inner
+  // window for mScriptGlobal.  If it's not, then we don't want to
+  // follow this link.
+  nsPIDOMWindow* refererInner = refererDoc->GetInnerWindow();
+  NS_ENSURE_TRUE(refererInner, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsPIDOMWindow> outerWindow = do_QueryInterface(mScriptGlobal);
+  if (!outerWindow || outerWindow->GetCurrentInnerWindow() != refererInner) {
+      // We're no longer the current inner window
+      return NS_OK;
+  }
 
   nsCOMPtr<nsIURI> referer = refererDoc->GetDocumentURI();
 

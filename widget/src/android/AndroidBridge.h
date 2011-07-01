@@ -130,7 +130,7 @@ public:
 
     void AcknowledgeEventSync();
 
-    void EnableAccelerometer(bool aEnable);
+    void EnableDeviceMotion(bool aEnable);
 
     void EnableLocation(bool aEnable);
 
@@ -208,6 +208,8 @@ public:
 
     void GetSystemColors(AndroidSystemColors *aColors);
 
+    void GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSize, PRUint8 * const aBuf);
+
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             // Make sure there is enough space to store a local ref to the
@@ -245,6 +247,15 @@ public:
 
     void ScanMedia(const nsAString& aFile, const nsACString& aMimeType);
 
+    // These next four functions are for native Bitmap access in Android 2.2+
+    bool HasNativeBitmapAccess();
+
+    bool ValidateBitmap(jobject bitmap, int width, int height);
+
+    void *LockBitmap(jobject bitmap);
+
+    void UnlockBitmap(jobject bitmap);
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -266,12 +277,15 @@ protected:
 
     void EnsureJNIThread();
 
+    bool mOpenedBitmapLibrary;
+    bool mHasNativeBitmapAccess;
+
     // other things
     jmethodID jNotifyIME;
     jmethodID jNotifyIMEEnabled;
     jmethodID jNotifyIMEChange;
     jmethodID jAcknowledgeEventSync;
-    jmethodID jEnableAccelerometer;
+    jmethodID jEnableDeviceMotion;
     jmethodID jEnableLocation;
     jmethodID jReturnIMEQueryResult;
     jmethodID jNotifyAppShellReady;
@@ -301,6 +315,7 @@ protected:
     jmethodID jSetSelectedLocale;
     jmethodID jScanMedia;
     jmethodID jGetSystemColors;
+    jmethodID jGetIconForExtension;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
@@ -309,6 +324,11 @@ protected:
     jclass jEGLDisplayImplClass;
     jclass jEGLContextClass;
     jclass jEGL10Class;
+
+    // calls we've dlopened from libjnigraphics.so
+    int (* AndroidBitmap_getInfo)(JNIEnv *env, jobject bitmap, void *info);
+    int (* AndroidBitmap_lockPixels)(JNIEnv *env, jobject bitmap, void **buffer);
+    int (* AndroidBitmap_unlockPixels)(JNIEnv *env, jobject bitmap);
 };
 
 }

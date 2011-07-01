@@ -73,8 +73,8 @@ BEGIN_TEST(testCustomIterator_bug612523)
          "j;", &result);
 
     CHECK(JSVAL_IS_INT(result));
-    CHECK(JSVAL_TO_INT(result) == 100);
-    CHECK(count == 101);
+    CHECK_EQUAL(JSVAL_TO_INT(result), 100);
+    CHECK_EQUAL(count, 101);
 
     return true;
 }

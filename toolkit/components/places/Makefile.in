@@ -98,12 +98,6 @@ CPPSRCS = \
   VisitInfo.cpp \
   $(NULL)
 
-EXTRA_DSO_LDOPTS += \
-  $(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX) \
-  $(MOZ_UNICHARUTIL_LIBS) \
-  $(MOZ_COMPONENT_LIBS) \
-  $(NULL)
-
 LOCAL_INCLUDES += -I$(srcdir)/../build
 
 # This is the default value.  Must be in sync with the one defined in SQLite.

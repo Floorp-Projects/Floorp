@@ -96,8 +96,8 @@ See the difference of rendering between <br />
 
 <math xmlns="http://www.w3.org/1998/Math/MathML">
 <msup>
-  <mi fontstyle="italic">jif</mi>
-  <mi fontstyle="italic">jif</mi>
+  <mi mathvariant="italic">jif</mi>
+  <mi mathvariant="italic">jif</mi>
 </msup>
 </math> -- italic MathML &lt;msup&gt; and
 
@@ -159,7 +159,7 @@ And there could be more...
                                           <msup><mn>7</mn><mn>2</mn></msup>
                                         </mstyle>
                                         <mstyle scriptlevel="0">
-                                          <mn>2</mn><mo>+</mo><mo fontweight="bold">...</mo>
+                                          <mn>2</mn><mo>+</mo><mo mathvariant="bold">...</mo>
                                         </mstyle>
                                       </mfrac>
                                     </mrow>

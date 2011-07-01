@@ -135,33 +135,11 @@ members = [
     'nsIDOMElement.getAttributeNS',
     'nsIDOMNamedNodeMap.item',
     'nsIDOMNamedNodeMap.length',
-    'nsIDOMNode.appendChild',
-    'nsIDOMNode.nextSibling',
-    'nsIDOMNode.cloneNode',
-    'nsIDOMNode.firstChild',
-    'nsIDOMNode.prefix',
-    'nsIDOMNode.nodeValue',
-    'nsIDOMNode.childNodes',
-    'nsIDOMNode.normalize',
-    'nsIDOMNode.nodeName',
-    'nsIDOMNode.namespaceURI',
-    'nsIDOMNode.hasChildNodes',
-    'nsIDOMNode.previousSibling',
-    'nsIDOMNode.nodeType',
-    'nsIDOMNode.insertBefore',
-    'nsIDOMNode.replaceChild',
-    'nsIDOMNode.localName',
-    'nsIDOMNode.lastChild',
-    'nsIDOMNode.ownerDocument',
-    'nsIDOMNode.parentNode',
-    'nsIDOMNode.removeChild',
-    'nsIDOMNode.hasAttributes',
-    'nsIDOMNode.attributes',
+    'nsIDOMNode.*',
     'nsIDOMNodeList.*',
     'nsIDOMNodeSelector.querySelector',
     'nsIDOMNodeSelector.querySelectorAll',
     'nsIDOMText.splitText',
-    'nsIDOM3Node.*',
     'nsIDOMDOMImplementation.*',
     'nsIDOMDOMStringList.*',
     'nsIDOMDOMTokenList.*',
@@ -181,9 +159,9 @@ members = [
     'nsIDOMCSSStyleDeclaration.*',
 
     # dom/interfaces/events
-    'nsIDOMEventTarget.dispatchEvent',
+    'nsIDOMEventTarget.addEventListener',
     'nsIDOMEventTarget.removeEventListener',
-    'nsIDOMNSEventTarget.addEventListener',
+    'nsIDOMEventTarget.dispatchEvent',
 
     'nsIDOMEvent.*',
     'nsIDOMMouseEvent.*',
@@ -333,6 +311,11 @@ members = [
     'nsIDOMHTMLTextAreaElement.value',
     'nsIDOMHTMLTextAreaElement.type',
     'nsIDOMHTMLTextAreaElement.select',
+    'nsIDOMHTMLTextAreaElement.setSelectionRange',
+    'nsIDOMHTMLTextAreaElement.selectionStart',
+    'nsIDOMHTMLTextAreaElement.selectionEnd',
+    'nsIDOMHTMLTextAreaElement.textLength',
+    'nsIDOMHTMLTextAreaElement.wrap',
     'nsIDOMHTMLTitleElement.text',
     'nsIDOMHTMLCanvasElement.width',
     'nsIDOMHTMLCanvasElement.height',
@@ -350,14 +333,9 @@ members = [
     'nsIDOMNSHTMLFrameElement.contentWindow',
     'nsIDOMNSHTMLOptionCollection.selectedIndex',
     'nsIDOMNSHTMLOptionCollection.add',
-    'nsIDOMNSHTMLTextAreaElement.setSelectionRange',
-    'nsIDOMNSHTMLTextAreaElement.selectionStart',
-    'nsIDOMNSHTMLTextAreaElement.selectionEnd',
-    'nsIDOMNSHTMLTextAreaElement.textLength',
-    'nsIDOMNSHTMLTextAreaElement.wrap',
 
     # dom/interfaces/json - None.
-    # All 4 methods of nsIJSON call GetCurrentNativeCallContext.
+    # All methods of nsIJSON call GetCurrentNativeCallContext.
 
     # dom/interfaces/load-save - None.
 
@@ -638,6 +616,17 @@ customMethodCalls = {
         },
     'nsIDOMNode_GetNodeType': {
         'thisType': 'nsINode',
+        'code': 'PRUint16 result = self->NodeType();',
+        'canFail': False
+        },
+    'nsIDOMNode_GetNodeName': {
+        'thisType': 'nsINode',
+        'code': 'nsString result = self->NodeName();',
+        'canFail': False
+        },
+    'nsIDOMNode_GetLocalName': {
+        'thisType': 'nsINode',
+        'code': 'nsString result = self->LocalName();',
         'canFail': False
         },
     'nsIDOMNodeList_Item': {
@@ -791,49 +780,51 @@ customMethodCalls = {
                 '    rv = nsGenericElement::doQuerySelectorAll(self, '
                 'arg0, getter_AddRefs(result));'
         },
-    'nsIDOM3Node_': {
-        'thisType': 'nsINode'
-        },
-    'nsIDOM3Node_GetBaseURI': {
+    'nsIDOMNode_Normalize': {
         'thisType': 'nsINode',
         'canFail': False
         },
-    'nsIDOM3Node_CompareDocumentPosition': {
+    'nsIDOMNode_GetBaseURI': {
         'thisType': 'nsINode',
-        'arg0Type': 'nsINode'
+        'canFail': False
         },
-    'nsIDOM3Node_GetTextContent': {
+    'nsIDOMNode_CompareDocumentPosition': {
+        'thisType': 'nsINode',
+        'arg0Type': 'nsINode',
+        'code': '    PRUint16 result;\n'
+                '    rv = self->CompareDocPosition(arg0, &result);',
+        'canFail': True
+        },
+    'nsIDOMNode_GetTextContent': {
         'thisType': 'nsINode',
         'canFail': False
         },
     'nsIDOM3Node_IsSameNode': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    PRBool result = self->IsSameNode(arg0);',
+        'code': '    PRBool result = self == arg0;',
         'canFail': False
         },
-    'nsIDOM3Node_LookupPrefix': {
+    'nsIDOMNode_LookupPrefix': {
         'thisType': 'nsINode',
         'canFail': False
         },
-    'nsIDOM3Node_IsDefaultNamespace': {
-        'thisType': 'nsINode',
-        'code': '    PRBool result = self->IsDefaultNamespace(arg0);',
-        'canFail': False
-        },
-    'nsIDOM3Node_LookupNamespaceURI': {
+    'nsIDOMNode_IsDefaultNamespace': {
         'thisType': 'nsINode',
         'canFail': False
         },
-    'nsIDOM3Node_IsEqualNode': {
+    'nsIDOMNode_LookupNamespaceURI': {
+        'thisType': 'nsINode',
+        'canFail': False
+        },
+    'nsIDOMNode_IsEqualNode': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    PRBool result = self->IsEqualNode(arg0);',
+        'code': '    PRBool result = self->IsEqualTo(arg0);',
         'canFail': False
         },
-    'nsIDOM3Node_GetUserData': {
+    'nsIDOMNode_GetUserData': {
         'thisType': 'nsINode',
-        'code': '    nsIVariant *result = self->GetUserData(arg0);',
         'canFail': False
         },
     'nsIDOMNSHTMLElement_': {
@@ -878,6 +869,11 @@ customMethodCalls = {
         },
     'nsIDOMElement_': {
         'thisType': 'nsGenericElement'
+        },
+    'nsIDOMElement_GetTagName': {
+        'thisType': 'nsINode',
+        'code': 'nsString result = self->NodeName();',
+        'canFail': False
         },
     'nsIDOMDocument_CreateElement': {
         'thisType': 'nsDocument',

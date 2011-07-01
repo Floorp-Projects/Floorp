@@ -46,7 +46,6 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		test_bug502673.html \
-		test_selection_move_commands.xul \
 		test_bug514156.html \
 		test_bug567213.html \
 		file_bug586662.html \
@@ -54,6 +53,7 @@ _TEST_FILES = \
 		$(NULL)
 
 _CHROME_TEST_FILES = \
+		test_selection_move_commands.xul \
 		test_bug646194.xul \
 		$(NULL)
 

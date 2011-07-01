@@ -62,7 +62,9 @@ _BROWSER_TEST_FILES = \
 	browser_354894.js \
 	browser_367052.js \
 	browser_393716.js \
-	browser_394759.js \
+	browser_394759_basic.js \
+	browser_394759_behavior.js \
+	browser_394759_purge.js \
 	browser_394759_privatebrowsing.js \
 	browser_408470.js \
 	browser_408470_sample.html \
@@ -147,11 +149,13 @@ _BROWSER_TEST_FILES = \
 	browser_628270.js \
 	browser_635418.js \
 	browser_636279.js \
+	browser_659591.js \
 	$(NULL)
 
 ifneq ($(OS_ARCH),Darwin)
 _BROWSER_TEST_FILES += \
 	browser_597071.js \
+	browser_625016.js \
 	$(NULL)
 endif
 

@@ -248,21 +248,13 @@ nsSVGOuterSVGFrame::GetIntrinsicSize()
   nsSVGLength2 &width  = content->mLengthAttributes[nsSVGSVGElement::WIDTH];
   nsSVGLength2 &height = content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
 
-  if (width.IsPercentage()) {
-    float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
-    if (val < 0.0f) val = 0.0f;
-    intrinsicSize.width.SetPercentValue(val);
-  } else {
+  if (!width.IsPercentage()) {
     nscoord val = nsPresContext::CSSPixelsToAppUnits(width.GetAnimValue(content));
     if (val < 0) val = 0;
     intrinsicSize.width.SetCoordValue(val);
   }
 
-  if (height.IsPercentage()) {
-    float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
-    if (val < 0.0f) val = 0.0f;
-    intrinsicSize.height.SetPercentValue(val);
-  } else {
+  if (!height.IsPercentage()) {
     nscoord val = nsPresContext::CSSPixelsToAppUnits(height.GetAnimValue(content));
     if (val < 0) val = 0;
     intrinsicSize.height.SetCoordValue(val);
@@ -283,7 +275,8 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
   nsSVGLength2 &height = content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
 
   if (!width.IsPercentage() && !height.IsPercentage()) {
-    nsSize ratio(width.GetAnimValue(content), height.GetAnimValue(content));
+    nsSize ratio(NSToCoordRoundWithClamp(width.GetAnimValue(content)),
+                 NSToCoordRoundWithClamp(height.GetAnimValue(content)));
     if (ratio.width < 0) {
       ratio.width = 0;
     }
@@ -304,7 +297,8 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
     if (viewBoxHeight < 0.0f) {
       viewBoxHeight = 0.0f;
     }
-    return nsSize(viewBoxWidth, viewBoxHeight);
+    return nsSize(NSToCoordRoundWithClamp(viewBoxWidth),
+                  NSToCoordRoundWithClamp(viewBoxHeight));
   }
 
   return nsSVGOuterSVGFrameBase::GetIntrinsicRatio();
@@ -318,16 +312,52 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 {
   nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
 
-  if ((content->HasValidViewbox() || content->ShouldSynthesizeViewBox()) &&
-      (IsRootOfImage() || IsRootOfReplacedElementSubDoc())) {
-    // The embedding element has done the replaced element sizing, using our
-    // intrinsic dimensions as necessary. We just need to fill the viewport.
-    return aCBSize;
+  IntrinsicSize intrinsicSize = GetIntrinsicSize();
+
+  if (!mContent->GetParent()) {
+    if (IsRootOfImage() || IsRootOfReplacedElementSubDoc()) {
+      // The embedding element has done the replaced element sizing,
+      // using our intrinsic dimensions as necessary. We just need to
+      // fill the viewport.
+      return aCBSize;
+    } else {
+      // We're the root of a browsing context, so we need to honor
+      // widths and heights in percentages.  (GetIntrinsicSize() doesn't
+      // report these since there's no such thing as a percentage
+      // intrinsic size.)
+      nsSVGLength2 &width =
+        content->mLengthAttributes[nsSVGSVGElement::WIDTH];
+      if (width.IsPercentage()) {
+        NS_ABORT_IF_FALSE(intrinsicSize.width.GetUnit() == eStyleUnit_None,
+                          "GetIntrinsicSize should have reported no "
+                          "intrinsic width");
+        float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
+        if (val < 0.0f) val = 0.0f;
+        intrinsicSize.width.SetCoordValue(val * aCBSize.width);
+      }
+
+      nsSVGLength2 &height =
+        content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
+      NS_ABORT_IF_FALSE(aCBSize.height != NS_AUTOHEIGHT,
+                        "root should not have auto-height containing block");
+      if (height.IsPercentage()) {
+        NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_None,
+                          "GetIntrinsicSize should have reported no "
+                          "intrinsic height");
+        float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
+        if (val < 0.0f) val = 0.0f;
+        intrinsicSize.height.SetCoordValue(val * aCBSize.height);
+      }
+      NS_ABORT_IF_FALSE(intrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
+                        intrinsicSize.width.GetUnit() == eStyleUnit_Coord,
+                        "We should have just handled the only situation where"
+                        "we lack an intrinsic height or width.");
+    }
   }
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
-                            GetIntrinsicSize(), GetIntrinsicRatio(), aCBSize,
+                            intrinsicSize, GetIntrinsicRatio(), aCBSize,
                             aMargin, aBorder, aPadding);
 }
 

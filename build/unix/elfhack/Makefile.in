@@ -77,7 +77,7 @@ libs:: $(CSRCS:.c=.$(OBJ_SUFFIX))
 
 ifndef CROSS_COMPILE
 test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
-	$(MKSHLIB) $<
+	$(MKSHLIB) $(LDFLAGS) $<
 	@echo ===
 	@echo === If you get failures below, please file a bug describing the error
 	@echo === and your environment \(compiler and linker versions\), and use
@@ -120,3 +120,4 @@ inject/%.$(OBJ_SUFFIX): DEFINES += -DBITS=$(if $(HAVE_64BIT_OS),64,32)
 inject/%.$(OBJ_SUFFIX): CFLAGS := -O2 -fno-stack-protector $(filter -m% -I%,$(CFLAGS))
 inject/$(CPU)-noinit.$(OBJ_SUFFIX): DEFINES += -DNOINIT
 test.$(OBJ_SUFFIX): CFLAGS := -O0
+host_elf.$(OBJ_SUFFIX) host_elfhack.$(OBJ_SUFFIX): elfxx.h

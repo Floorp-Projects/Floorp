@@ -46,8 +46,7 @@
 
 #include "nsUnicharUtils.h"
 
-#include "nsIPrefService.h"
-#include "nsIPrefBranch2.h"
+#include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 
@@ -60,32 +59,36 @@
 
 #include "gfxCrashReporterUtils.h"
 
-#ifdef MOZ_FT2_FONTS
-#include "ft2build.h"
-#include FT_FREETYPE_H
-#include "gfxFT2Fonts.h"
-#include "gfxFT2FontList.h"
-#include "cairo-ft.h"
-#include "nsAppDirectoryServiceDefs.h"
-#else
 #include "gfxGDIFontList.h"
 #include "gfxGDIFont.h"
+
 #ifdef CAIRO_HAS_DWRITE_FONT
 #include "gfxDWriteFontList.h"
 #include "gfxDWriteFonts.h"
 #include "gfxDWriteCommon.h"
 #include <dwrite.h>
 #endif
-#endif
+
+#include "gfxUserFontSet.h"
+
+#include <string>
+
+using namespace mozilla::gfx;
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
 
 #include <d3d10_1.h>
 
+#include "mozilla/gfx/2D.h"
+
 #include "nsIMemoryReporter.h"
 #include "nsMemory.h"
+#endif
 
+using namespace mozilla;
+
+#ifdef CAIRO_HAS_D2D_SURFACE
 class D2DCacheReporter :
     public nsIMemoryReporter
 {
@@ -167,14 +170,6 @@ public:
 NS_IMPL_ISUPPORTS1(D2DVRAMReporter, nsIMemoryReporter)
 #endif
 
-#ifdef WINCE
-#include <shlwapi.h>
-#endif
-
-#include "gfxUserFontSet.h"
-
-#include <string>
-
 #define GFX_USE_CLEARTYPE_ALWAYS "gfx.font_rendering.cleartype.always_use_for_content"
 #define GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE "gfx.font_rendering.cleartype.use_for_downloadable_fonts"
 
@@ -184,10 +179,6 @@ NS_IMPL_ISUPPORTS1(D2DVRAMReporter, nsIMemoryReporter)
 #define GFX_CLEARTYPE_PARAMS_LEVEL     "gfx.font_rendering.cleartype_params.cleartype_level"
 #define GFX_CLEARTYPE_PARAMS_STRUCTURE "gfx.font_rendering.cleartype_params.pixel_structure"
 #define GFX_CLEARTYPE_PARAMS_MODE      "gfx.font_rendering.cleartype_params.rendering_mode"
-
-#ifdef MOZ_FT2_FONTS
-static FT_Library gPlatformFTLibrary = NULL;
-#endif
 
 #ifdef CAIRO_HAS_DWRITE_FONT
 // DirectWrite is not available on all platforms, we need to use the function
@@ -235,10 +226,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     mScreenDC = GetDC(NULL);
 
-#ifdef MOZ_FT2_FONTS
-    FT_Init_FreeType(&gPlatformFTLibrary);
-#endif
-
 #ifdef CAIRO_HAS_D2D_SURFACE
     NS_RegisterMemoryReporter(new D2DCacheReporter());
     NS_RegisterMemoryReporter(new D2DVRAMReporter());
@@ -268,16 +255,10 @@ gfxWindowsPlatform::~gfxWindowsPlatform()
 void
 gfxWindowsPlatform::UpdateRenderMode()
 {
-/* Pick the default render mode differently between
- * desktop, Windows Mobile, and Windows CE.
+/* Pick the default render mode for
+ * desktop.
  */
-#if defined(WINCE_WINDOWS_MOBILE)
-    mRenderMode = RENDER_IMAGE_DDRAW16;
-#elif defined(WINCE)
-    mRenderMode = RENDER_DDRAW_GL;
-#else
     mRenderMode = RENDER_GDI;
-#endif
 
     OSVERSIONINFOA versionInfo;
     versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
@@ -289,18 +270,7 @@ gfxWindowsPlatform::UpdateRenderMode()
     if (xr)
       xr->GetInSafeMode(&safeMode);
 
-    nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    nsresult rv;
-
-    PRBool preferDirectWrite = PR_FALSE;
-
-    rv = pref->GetBoolPref(
-        "gfx.font_rendering.directwrite.enabled", &preferDirectWrite);
-    if (NS_FAILED(rv)) {
-        preferDirectWrite = PR_FALSE;
-    }
-
-    mUseDirectWrite = preferDirectWrite;
+    mUseDirectWrite = Preferences::GetBool("gfx.font_rendering.directwrite.enabled", PR_FALSE);
 
 #ifdef CAIRO_HAS_D2D_SURFACE
     PRBool d2dDisabled = PR_FALSE;
@@ -322,12 +292,8 @@ gfxWindowsPlatform::UpdateRenderMode()
         }
     }
 
-    rv = pref->GetBoolPref("gfx.direct2d.disabled", &d2dDisabled);
-    if (NS_FAILED(rv))
-        d2dDisabled = PR_FALSE;
-    rv = pref->GetBoolPref("gfx.direct2d.force-enabled", &d2dForceEnabled);
-    if (NS_FAILED(rv))
-        d2dForceEnabled = PR_FALSE;
+    d2dDisabled = Preferences::GetBool("gfx.direct2d.disabled", PR_FALSE);
+    d2dForceEnabled = Preferences::GetBool("gfx.direct2d.force-enabled", PR_FALSE);
 
     bool tryD2D = !d2dBlocked || d2dForceEnabled;
     
@@ -370,7 +336,7 @@ gfxWindowsPlatform::UpdateRenderMode()
             mDWriteFactory = factory;
             factory->Release();
 
-            SetupClearTypeParams(pref);
+            SetupClearTypeParams();
 
             if (hr == S_OK)
               reporter.SetSuccessful();
@@ -440,8 +406,10 @@ gfxWindowsPlatform::VerifyD2DDevice(PRBool aAttemptForce)
         mD2DDevice = cairo_d2d_create_device();
     }
 
-    if (mD2DDevice)
+    if (mD2DDevice) {
         reporter.SetSuccessful();
+        mozilla::gfx::Factory::SetDirect3D10Device(cairo_d2d_device_get_device(mD2DDevice));
+    }
 #endif
 }
 
@@ -473,9 +441,6 @@ gfxWindowsPlatform::CreatePlatformFontList()
 {
     mUsingGDIFonts = PR_FALSE;
     gfxPlatformFontList *pfl;
-#ifdef MOZ_FT2_FONTS
-    pfl = new gfxFT2FontList();
-#else
 #ifdef CAIRO_HAS_DWRITE_FONT
     if (AllowDirectWrite() && GetDWriteFactory()) {
         pfl = new gfxDWriteFontList();
@@ -491,7 +456,6 @@ gfxWindowsPlatform::CreatePlatformFontList()
 #endif
     pfl = new gfxGDIFontList();
     mUsingGDIFonts = PR_TRUE;
-#endif
 
     if (NS_SUCCEEDED(pfl->InitFontList())) {
         return pfl;
@@ -523,6 +487,48 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     NS_IF_ADDREF(surf);
 
     return surf;
+}
+
+RefPtr<ScaledFont>
+gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
+{
+  if(mUseDirectWrite) {
+    gfxDWriteFont *font = static_cast<gfxDWriteFont*>(aFont);
+
+    NativeFont nativeFont;
+    nativeFont.mType = NATIVE_FONT_DWRITE_FONT_FACE;
+    nativeFont.mFont = font->GetFontFace();
+    RefPtr<ScaledFont> scaledFont =
+      mozilla::gfx::Factory::CreateScaledFontForNativeFont(nativeFont, font->GetAdjustedSize());
+
+    return scaledFont;
+  }
+}
+
+already_AddRefed<gfxASurface>
+gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
+{
+#ifdef XP_WIN
+  if (aTarget->GetType() == BACKEND_DIRECT2D) {
+    RefPtr<ID3D10Texture2D> texture =
+      static_cast<ID3D10Texture2D*>(aTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE));
+
+    if (!texture) {
+      return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
+    }
+
+    aTarget->Flush();
+
+    nsRefPtr<gfxASurface> surf =
+      new gfxD2DSurface(texture, ContentForFormat(aTarget->GetFormat()));
+
+    surf->SetData(&kDrawTarget, aTarget, NULL);
+
+    return surf.forget();
+  }
+#endif
+
+  return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
 }
 
 nsresult
@@ -592,11 +598,7 @@ gfxWindowsPlatform::CreateFontGroup(const nsAString &aFamilies,
                                     const gfxFontStyle *aStyle,
                                     gfxUserFontSet *aUserFontSet)
 {
-#ifdef MOZ_FT2_FONTS
-    return new gfxFT2FontGroup(aFamilies, aStyle);
-#else
     return new gfxFontGroup(aFamilies, aStyle, aUserFontSet);
-#endif
 }
 
 gfxFontEntry* 
@@ -659,7 +661,6 @@ gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle& aF
 qcms_profile*
 gfxWindowsPlatform::GetPlatformCMSOutputProfile()
 {
-#ifndef MOZ_FT2_FONTS
     WCHAR str[MAX_PATH];
     DWORD size = MAX_PATH;
     BOOL res;
@@ -690,9 +691,6 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile()
                 NS_ConvertUTF16toUTF8(str).get());
 #endif
     return profile;
-#else
-    return nsnull;
-#endif
 }
 
 PRBool
@@ -707,19 +705,11 @@ gfxWindowsPlatform::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<
     mPrefFonts.Put(aKey, array);
 }
 
-#ifdef MOZ_FT2_FONTS
-FT_Library
-gfxWindowsPlatform::GetFTLibrary()
-{
-    return gPlatformFTLibrary;
-}
-#endif
-
 PRBool
 gfxWindowsPlatform::UseClearTypeForDownloadableFonts()
 {
     if (mUseClearTypeForDownloadableFonts == UNINITIALIZED_VALUE) {
-        mUseClearTypeForDownloadableFonts = GetBoolPref(GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE, PR_TRUE);
+        mUseClearTypeForDownloadableFonts = Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE, PR_TRUE);
     }
 
     return mUseClearTypeForDownloadableFonts;
@@ -729,7 +719,7 @@ PRBool
 gfxWindowsPlatform::UseClearTypeAlways()
 {
     if (mUseClearTypeAlways == UNINITIALIZED_VALUE) {
-        mUseClearTypeAlways = GetBoolPref(GFX_USE_CLEARTYPE_ALWAYS, PR_FALSE);
+        mUseClearTypeAlways = Preferences::GetBool(GFX_USE_CLEARTYPE_ALWAYS, PR_FALSE);
     }
 
     return mUseClearTypeAlways;
@@ -897,11 +887,11 @@ gfxWindowsPlatform::GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams
 }
 
 void
-gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref)
+gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
 {
     PRBool clearTextFontCaches = PR_TRUE;
 
-    gfxPlatform::FontsPrefsChanged(aPrefBranch, aPref);
+    gfxPlatform::FontsPrefsChanged(aPref);
 
     if (!aPref) {
         mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
@@ -911,7 +901,7 @@ gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aP
     } else if (!strcmp(GFX_USE_CLEARTYPE_ALWAYS, aPref)) {
         mUseClearTypeAlways = UNINITIALIZED_VALUE;
     } else if (!strncmp(GFX_CLEARTYPE_PARAMS, aPref, strlen(GFX_CLEARTYPE_PARAMS))) {
-        SetupClearTypeParams(aPrefBranch);
+        SetupClearTypeParams();
     } else {
         clearTextFontCaches = PR_FALSE;
     }
@@ -926,7 +916,7 @@ gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aP
 }
 
 void
-gfxWindowsPlatform::SetupClearTypeParams(nsIPrefBranch *aPrefBranch)
+gfxWindowsPlatform::SetupClearTypeParams()
 {
 #if CAIRO_HAS_DWRITE_FONT
     if (GetDWriteFactory()) {
@@ -938,36 +928,36 @@ gfxWindowsPlatform::SetupClearTypeParams(nsIPrefBranch *aPrefBranch)
         int geometry = -1;
         int mode = -1;
         PRInt32 value;
-        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_GAMMA,
-                                                 &value))) {
+        if (NS_SUCCEEDED(Preferences::GetInt(GFX_CLEARTYPE_PARAMS_GAMMA, &value))) {
             if (value >= 1000 && value <= 2200) {
                 gamma = FLOAT(value / 1000.0);
             }
         }
-        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_CONTRAST,
-                                                 &value))) {
+
+        if (NS_SUCCEEDED(Preferences::GetInt(GFX_CLEARTYPE_PARAMS_CONTRAST, &value))) {
             if (value >= 0 && value <= 1000) {
                 contrast = FLOAT(value / 100.0);
             }
         }
-        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_LEVEL,
-                                                 &value))) {
+
+        if (NS_SUCCEEDED(Preferences::GetInt(GFX_CLEARTYPE_PARAMS_LEVEL, &value))) {
             if (value >= 0 && value <= 100) {
                 level = FLOAT(value / 100.0);
             }
         }
-        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_STRUCTURE,
-                                                 &value))) {
+
+        if (NS_SUCCEEDED(Preferences::GetInt(GFX_CLEARTYPE_PARAMS_STRUCTURE, &value))) {
             if (value >= 0 && value <= 2) {
                 geometry = value;
             }
         }
-        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_MODE,
-                                                 &value))) {
+
+        if (NS_SUCCEEDED(Preferences::GetInt(GFX_CLEARTYPE_PARAMS_MODE, &value))) {
             if (value >= 0 && value <= 5) {
                 mode = value;
             }
         }
+
         cairo_dwrite_set_cleartype_params(gamma, contrast, level, geometry, mode);
 
         switch (mode) {

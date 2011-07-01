@@ -42,6 +42,7 @@
 #ifndef jsinfer_h___
 #define jsinfer_h___
 
+#include "jsalloc.h"
 #include "jsarena.h"
 #include "jstl.h"
 #include "jsprvtd.h"

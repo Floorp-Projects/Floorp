@@ -426,7 +426,6 @@ class Compiler : public BaseCompiler
     JSScript *script;
     analyze::ScriptAnalysis *analysis;
     jsbytecode *PC;
-    bool variadicRejoin;  /* There is a variadic rejoin for PC. */
 
     LoopState *loop;
 

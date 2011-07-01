@@ -47,7 +47,6 @@
 #include "jspubtd.h"
 #include "jsatom.h"
 #include "jsobj.h"
-#include "jsstr.h"
 
 /* Small arrays are dense, no matter what. */
 const uintN MIN_SPARSE_INDEX = 256;
@@ -165,9 +164,6 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 extern JSBool
 js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length);
 
-extern JSBool
-js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
-
 namespace js {
 
 extern JSBool
@@ -230,28 +226,15 @@ extern JSBool
 js_ArrayInfo(JSContext *cx, uintN argc, jsval *vp);
 #endif
 
-extern JSBool
-js_ArrayCompPush(JSContext *cx, JSObject *obj, const js::Value &vp);
-
 /*
- * Fast dense-array-to-buffer conversion for use by canvas.
- *
- * If the array is a dense array, fill [offset..offset+count] values into
- * destination, assuming that types are consistent.  Return JS_TRUE if
- * successful, otherwise JS_FALSE -- note that the destination buffer may be
- * modified even if JS_FALSE is returned (e.g. due to finding an inappropriate
- * type later on in the array).  If JS_FALSE is returned, no error conditions
- * or exceptions are set on the context.
- *
- * This method succeeds if each element of the array is an integer or a double.
- * Values outside the 0-255 range are clamped to that range.  Double values are
- * converted to integers in this range by clamping and then rounding to
- * nearest, ties to even.
+ * Append the given (non-hole) value to the end of an array.  The array must be
+ * a newborn array -- that is, one which has not been exposed to script for
+ * arbitrary manipulation.  (This method optimizes on the assumption that
+ * extending the array to accommodate the element will never make the array
+ * sparse, which requires that the array be completely filled.)
  */
-
-JS_FRIEND_API(JSBool)
-js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
-                                JSUint8 *dest);
+extern JSBool
+js_NewbornArrayPush(JSContext *cx, JSObject *obj, const js::Value &v);
 
 JSBool
 js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);
@@ -266,26 +249,6 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id,
 /* Array constructor native. Exposed only so the JIT can know its address. */
 JSBool
 js_Array(JSContext *cx, uintN argc, js::Value *vp);
-
-/*
- * Makes a fast clone of a dense array as long as the array only contains
- * primitive values.
- *
- * If the return value is JS_FALSE then clone will not be set.
- *
- * If the return value is JS_TRUE then clone will either be set to the address
- * of a new JSObject or to NULL if the array was not dense or contained values
- * that were not primitives.
- */
-JS_FRIEND_API(JSBool)
-js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone);
-
-/*
- * Returns JS_TRUE if the given object is a dense array that contains only
- * primitive values.
- */
-JS_FRIEND_API(JSBool)
-js_IsDensePrimitiveArray(JSObject *obj);
 
 extern JSBool JS_FASTCALL
 js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i);

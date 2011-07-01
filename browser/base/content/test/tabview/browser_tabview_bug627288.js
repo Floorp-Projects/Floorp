@@ -15,22 +15,24 @@ function test() {
 
       cw.TabItems.pauseReconnecting();
       tab = gBrowser.loadOneTab('http://mochi.test:8888/', {inBackground: true});
-      cw.Storage.saveTab(tab, data);
 
-      whenTabAttrModified(tab, function () {
+      afterAllTabsLoaded(function () {
         tabItem = tab._tabViewTabItem;
 
-        // Hook into loadedCachedImageData since loading cached thumbnails 
-        // is asynchronous.
-        tabItem.addSubscriber(tabItem, "loadedCachedImageData", function(item) {
-          item.removeSubscriber(item, "loadedCachedImageData");
+        tabItem.addSubscriber(tabItem, "savedCachedImageData", function () {
+          tabItem.removeSubscriber(tabItem, "savedCachedImageData");
 
-          ok(tabItem.isShowingCachedData(), 'tabItem shows cached data');
+          tabItem.addSubscriber(tabItem, "loadedCachedImageData", function () {
+            tabItem.removeSubscriber(tabItem, "loadedCachedImageData");
 
-          testChangeUrlAfterReconnect();
+            ok(tabItem.isShowingCachedData(), 'tabItem shows cached data');
+            testChangeUrlAfterReconnect();
+          });
+
+          cw.TabItems.resumeReconnecting();
         });
 
-        cw.TabItems.resumeReconnecting();
+        cw.Storage.saveTab(tab, data);
       });
     });
   }
@@ -79,15 +81,12 @@ function test() {
 // ----------
 function whenTabAttrModified(tab, callback) {
   let onModified = function (event) {
-    if (tab === event.target) {
-      container.removeEventListener('TabAttrModified', onModified, false);
-      // we need executeSoon here because the tabItem also listens for the
-      // onTabAttrModified event. so this is to make sure the tabItem logic
-      // is executed before the test logic.
-      executeSoon(callback);
-    }
+    tab.removeEventListener(event.type, onModified, false);
+    // we need executeSoon here because the tabItem also listens for the
+    // TabAttrModified event. so this is to make sure the tabItem logic
+    // is executed before the test logic.
+    executeSoon(callback);
   }
 
-  let container = gBrowser.tabContainer;
-  container.addEventListener('TabAttrModified', onModified, false);
+  tab.addEventListener("TabAttrModified", onModified, false);
 }

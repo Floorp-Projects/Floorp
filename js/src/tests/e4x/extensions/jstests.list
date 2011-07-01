@@ -24,3 +24,4 @@ script extensibility.js
 script regress-595207.js
 script json-stringify-dropping-xml-elements.js
 script stringify-xml.js
+script xml-as-proto.js

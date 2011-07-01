@@ -41,10 +41,8 @@
 
 #include "nsServiceManagerUtils.h"
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsIPrefLocalizedString.h"
-#include "nsISupportsPrimitives.h"
+#include "mozilla/Preferences.h"
+
 #include "nsIStreamBufferAccess.h"
 #include "nsIUUIDGenerator.h"
 #include "nsMemory.h"
@@ -862,23 +860,16 @@ void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& a
     aFontList.Clear();
     
     // get the list of single-face font families
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-
-    nsAutoString fontlistValue;
-    if (prefs) {
-        nsCOMPtr<nsISupportsString> prefString;
-        prefs->GetComplexValue(aPrefName, NS_GET_IID(nsISupportsString), getter_AddRefs(prefString));
-        if (!prefString) 
-            return;
-        prefString->GetData(fontlistValue);
+    nsAdoptingString fontlistValue = Preferences::GetString(aPrefName);
+    if (!fontlistValue) {
+        return;
     }
-    
+
     // append each font name to the list
     nsAutoString fontname;
-    nsPromiseFlatString fonts(fontlistValue);
     const PRUnichar *p, *p_end;
-    fonts.BeginReading(p);
-    fonts.EndReading(p_end);
+    fontlistValue.BeginReading(p);
+    fontlistValue.EndReading(p_end);
 
      while (p < p_end) {
         const PRUnichar *nameStart = p;
@@ -1441,6 +1432,80 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
     headData->checkSumAdjustment = HeadTable::HEAD_CHECKSUM_CALC_CONST - checksum;
 
     return NS_OK;
+}
+
+// This is only called after the basic validity of the downloaded sfnt
+// data has been checked, so it should never fail to find the name table
+// (though it might fail to read it, if memory isn't available);
+// other checks here are just for extra paranoia.
+nsresult
+gfxFontUtils::GetFullNameFromSFNT(const PRUint8* aFontData, PRUint32 aLength,
+                                  nsAString& aFullName)
+{
+    aFullName.AssignLiteral("(MISSING NAME)"); // should always get replaced
+
+    NS_ENSURE_TRUE(aLength >= sizeof(SFNTHeader), NS_ERROR_UNEXPECTED);
+    const SFNTHeader *sfntHeader =
+        reinterpret_cast<const SFNTHeader*>(aFontData);
+    const TableDirEntry *dirEntry =
+        reinterpret_cast<const TableDirEntry*>(aFontData + sizeof(SFNTHeader));
+    PRUint32 numTables = sfntHeader->numTables;
+    NS_ENSURE_TRUE(aLength >=
+                   sizeof(SFNTHeader) + numTables * sizeof(TableDirEntry),
+                   NS_ERROR_UNEXPECTED);
+    PRBool foundName = PR_FALSE;
+    for (PRUint32 i = 0; i < numTables; i++, dirEntry++) {
+        if (dirEntry->tag == TRUETYPE_TAG('n','a','m','e')) {
+            foundName = PR_TRUE;
+            break;
+        }
+    }
+    
+    // should never fail, as we're only called after font validation succeeded
+    NS_ENSURE_TRUE(foundName, NS_ERROR_NOT_AVAILABLE);
+
+    PRUint32 len = dirEntry->length;
+    NS_ENSURE_TRUE(aLength > len && aLength - len >= dirEntry->offset,
+                   NS_ERROR_UNEXPECTED);
+    FallibleTArray<PRUint8> nameTable;
+    if (!nameTable.SetLength(len)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    memcpy(nameTable.Elements(), aFontData + dirEntry->offset, len);
+
+    return GetFullNameFromTable(nameTable, aFullName);
+}
+
+nsresult
+gfxFontUtils::GetFullNameFromTable(FallibleTArray<PRUint8>& aNameTable,
+                                   nsAString& aFullName)
+{
+    nsAutoString name;
+    nsresult rv =
+        gfxFontUtils::ReadCanonicalName(aNameTable,
+                                        gfxFontUtils::NAME_ID_FULL,
+                                        name);
+    if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
+        aFullName = name;
+        return NS_OK;
+    }
+    rv = gfxFontUtils::ReadCanonicalName(aNameTable,
+                                         gfxFontUtils::NAME_ID_FAMILY,
+                                         name);
+    if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
+        nsAutoString styleName;
+        rv = gfxFontUtils::ReadCanonicalName(aNameTable,
+                                             gfxFontUtils::NAME_ID_STYLE,
+                                             styleName);
+        if (NS_SUCCEEDED(rv) && !styleName.IsEmpty()) {
+            name.AppendLiteral(" ");
+            name.Append(styleName);
+            aFullName = name;
+        }
+        return NS_OK;
+    }
+
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 enum {

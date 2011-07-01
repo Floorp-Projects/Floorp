@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -50,6 +50,7 @@
 #include "nsIAtom.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSColorUtils.h"
 #include "nsIView.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIScrollableFrame.h"
@@ -98,6 +99,8 @@
 #include "gfxDrawable.h"
 #include "gfxUtils.h"
 #include "nsDataHashtable.h"
+#include "nsTextFrame.h"
+#include "nsFontFaceList.h"
 
 #include "nsSVGUtils.h"
 #include "nsSVGIntegrationUtils.h"
@@ -1290,7 +1293,7 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 
 #ifdef DEBUG
   if (gDumpEventList) {
-    fprintf(stderr, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
+    fprintf(stdout, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
     nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
@@ -1599,7 +1602,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
 #ifdef DEBUG
   if (gDumpPaintList) {
-    fprintf(stderr, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
+    fprintf(stdout, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
             dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
     nsFrame::PrintDisplayList(&builder, list);
   }
@@ -1651,10 +1654,10 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
 #ifdef DEBUG
   if (gDumpPaintList) {
-    fprintf(stderr, "Painting --- after optimization:\n");
+    fprintf(stdout, "Painting --- after optimization:\n");
     nsFrame::PrintDisplayList(&builder, list);
 
-    fprintf(stderr, "Painting --- retained layer tree:\n");
+    fprintf(stdout, "Painting --- retained layer tree:\n");
     builder.LayerBuilder()->DumpRetainedLayerTree();
   }
 #endif
@@ -1808,10 +1811,6 @@ nsLayoutUtils::RectListBuilder::RectListBuilder(nsClientRectList* aList)
 
 void nsLayoutUtils::RectListBuilder::AddRect(const nsRect& aRect) {
   nsRefPtr<nsClientRect> rect = new nsClientRect();
-  if (!rect) {
-    mRV = NS_ERROR_OUT_OF_MEMORY;
-    return;
-  }
 
   rect->SetLayoutRect(aRect);
   mRectList->Append(rect);
@@ -2586,26 +2585,26 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   PRBool hasIntrinsicWidth, hasIntrinsicHeight;
   nscoord intrinsicWidth, intrinsicHeight;
 
-  if (aIntrinsicSize.width.GetUnit() == eStyleUnit_Coord ||
-      aIntrinsicSize.width.GetUnit() == eStyleUnit_Percent) {
+  if (aIntrinsicSize.width.GetUnit() == eStyleUnit_Coord) {
     hasIntrinsicWidth = PR_TRUE;
-    intrinsicWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
-                           aFrame, aCBSize.width, 0, boxSizingAdjust.width +
-                           boxSizingToMarginEdgeWidth, aIntrinsicSize.width);
+    intrinsicWidth = aIntrinsicSize.width.GetCoordValue();
+    if (intrinsicWidth < 0)
+      intrinsicWidth = 0;
   } else {
+    NS_ASSERTION(aIntrinsicSize.width.GetUnit() == eStyleUnit_None,
+                 "unexpected unit");
     hasIntrinsicWidth = PR_FALSE;
     intrinsicWidth = 0;
   }
 
-  if (aIntrinsicSize.height.GetUnit() == eStyleUnit_Coord ||
-      (aIntrinsicSize.height.GetUnit() == eStyleUnit_Percent &&
-       aCBSize.height != NS_AUTOHEIGHT)) {
+  if (aIntrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
     hasIntrinsicHeight = PR_TRUE;
-    intrinsicHeight = nsLayoutUtils::
-      ComputeHeightDependentValue(aCBSize.height, aIntrinsicSize.height);
+    intrinsicHeight = aIntrinsicSize.height.GetCoordValue();
     if (intrinsicHeight < 0)
       intrinsicHeight = 0;
   } else {
+    NS_ASSERTION(aIntrinsicSize.height.GetUnit() == eStyleUnit_None,
+                 "unexpected unit");
     hasIntrinsicHeight = PR_FALSE;
     intrinsicHeight = 0;
   }
@@ -2786,6 +2785,49 @@ nsLayoutUtils::PrefWidthFromInline(nsIFrame* aFrame,
   aFrame->AddInlinePrefWidth(aRenderingContext, &data);
   data.ForceBreak(aRenderingContext);
   return data.prevLines;
+}
+
+static nscolor
+DarkenColor(nscolor aColor)
+{
+  PRUint16  hue, sat, value;
+  PRUint8 alpha;
+
+  // convert the RBG to HSV so we can get the lightness (which is the v)
+  NS_RGB2HSV(aColor, hue, sat, value, alpha);
+
+  // The goal here is to send white to black while letting colored
+  // stuff stay colored... So we adopt the following approach.
+  // Something with sat = 0 should end up with value = 0.  Something
+  // with a high sat can end up with a high value and it's ok.... At
+  // the same time, we don't want to make things lighter.  Do
+  // something simple, since it seems to work.
+  if (value > sat) {
+    value = sat;
+    // convert this color back into the RGB color space.
+    NS_HSV2RGB(aColor, hue, sat, value, alpha);
+  }
+  return aColor;
+}
+
+// Check whether we should darken text colors. We need to do this if
+// background images and colors are being suppressed, because that means
+// light text will not be visible against the (presumed light-colored) background.
+static PRBool
+ShouldDarkenColors(nsPresContext* aPresContext)
+{
+  return !aPresContext->GetBackgroundColorDraw() &&
+    !aPresContext->GetBackgroundImageDraw();
+}
+
+nscolor
+nsLayoutUtils::GetTextColor(nsIFrame* aFrame)
+{
+  nscolor color = aFrame->GetVisitedDependentColor(eCSSProperty_color);
+  if (ShouldDarkenColors(aFrame->PresContext())) {
+    color = DarkenColor(color);
+  }
+  return color;
 }
 
 void
@@ -3830,12 +3872,8 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
     if (wantImageSurface && surf->GetType() != gfxASurface::SurfaceTypeImage) {
       nsRefPtr<gfxImageSurface> imgSurf =
         new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
-      if (!imgSurf)
-        return result;
 
       nsRefPtr<gfxContext> ctx = new gfxContext(imgSurf);
-      if (!ctx)
-        return result;
       ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
       ctx->DrawSurface(surf, size);
       surf = imgSurf;
@@ -4054,6 +4092,77 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
   } while (childList);
 }
 #endif
+
+/* static */
+nsresult
+nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
+                                     nsFontFaceList* aFontFaceList)
+{
+  NS_PRECONDITION(aFrame, "NULL frame pointer");
+
+  if (aFrame->GetType() == nsGkAtoms::textFrame) {
+    return GetFontFacesForText(aFrame, 0, PR_INT32_MAX, PR_FALSE,
+                               aFontFaceList);
+  }
+
+  while (aFrame) {
+    nsIAtom* childLists[] = { nsnull, nsGkAtoms::popupList };
+    for (int i = 0; i < NS_ARRAY_LENGTH(childLists); ++i) {
+      nsFrameList children(aFrame->GetChildList(childLists[i]));
+      for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
+        nsIFrame* child = e.get();
+        if (child->GetPrevContinuation()) {
+          continue;
+        }
+        child = nsPlaceholderFrame::GetRealFrameFor(child);
+        nsresult rv = GetFontFacesForFrames(child, aFontFaceList);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+    aFrame = GetNextContinuationOrSpecialSibling(aFrame);
+  }
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
+                                   PRInt32 aStartOffset, PRInt32 aEndOffset,
+                                   PRBool aFollowContinuations,
+                                   nsFontFaceList* aFontFaceList)
+{
+  NS_PRECONDITION(aFrame, "NULL frame pointer");
+
+  if (aFrame->GetType() != nsGkAtoms::textFrame) {
+    return NS_OK;
+  }
+
+  nsTextFrame* curr = static_cast<nsTextFrame*>(aFrame);
+  do {
+    PRInt32 offset = curr->GetContentOffset();
+    PRInt32 fstart = NS_MAX(offset, aStartOffset);
+    PRInt32 fend = NS_MIN(curr->GetContentEnd(), aEndOffset);
+    if (fstart >= fend) {
+      continue;
+    }
+
+    // overlapping with the offset we want
+    curr->EnsureTextRun();
+    gfxTextRun* textRun = curr->GetTextRun();
+    NS_ENSURE_TRUE(textRun, NS_ERROR_OUT_OF_MEMORY);
+
+    gfxSkipCharsIterator iter(textRun->GetSkipChars());
+    PRUint32 skipStart = iter.ConvertOriginalToSkipped(fstart - offset);
+    PRUint32 skipEnd = iter.ConvertOriginalToSkipped(fend - offset);
+    aFontFaceList->AddFontsFromTextRun(textRun,
+                                       skipStart, skipEnd - skipStart,
+                                       curr);
+  } while (aFollowContinuations &&
+           (curr = static_cast<nsTextFrame*>(curr->GetNextContinuation())));
+
+  return NS_OK;
+}
 
 /* static */
 void

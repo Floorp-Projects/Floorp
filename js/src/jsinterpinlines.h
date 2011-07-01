@@ -74,7 +74,7 @@ class AutoPreserveEnumerators {
 class InvokeSessionGuard
 {
     InvokeArgsGuard args_;
-    InvokeFrameGuard frame_;
+    InvokeFrameGuard ifg_;
     Value savedCallee_, savedThis_;
     Value *formals_, *actuals_;
     unsigned nformals_;
@@ -82,14 +82,14 @@ class InvokeSessionGuard
     Value *stackLimit_;
     jsbytecode *stop_;
 
-    bool optimized() const { return frame_.pushed(); }
+    bool optimized() const { return ifg_.pushed(); }
 
   public:
-    InvokeSessionGuard() : args_(), frame_() {}
+    InvokeSessionGuard() : args_(), ifg_() {}
     ~InvokeSessionGuard() {}
 
     bool start(JSContext *cx, const Value &callee, const Value &thisv, uintN argc);
-    bool invoke(JSContext *cx) const;
+    bool invoke(JSContext *cx);
 
     bool started() const {
         return args_.pushed();
@@ -98,7 +98,7 @@ class InvokeSessionGuard
     Value &operator[](unsigned i) const {
         JS_ASSERT(i < argc());
         Value &arg = i < nformals_ ? formals_[i] : actuals_[i];
-        JS_ASSERT_IF(optimized(), &arg == &frame_.fp()->canonicalActualArg(i));
+        JS_ASSERT_IF(optimized(), &arg == &ifg_.fp()->canonicalActualArg(i));
         JS_ASSERT_IF(!optimized(), &arg == &args_[i]);
         return arg;
     }
@@ -108,12 +108,12 @@ class InvokeSessionGuard
     }
 
     const Value &rval() const {
-        return optimized() ? frame_.fp()->returnValue() : args_.rval();
+        return optimized() ? ifg_.fp()->returnValue() : args_.rval();
     }
 };
 
 inline bool
-InvokeSessionGuard::invoke(JSContext *cx) const
+InvokeSessionGuard::invoke(JSContext *cx)
 {
     /* N.B. Must be kept in sync with Invoke */
 
@@ -127,11 +127,18 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     if (!optimized())
         return Invoke(cx, args_);
 
+    /*
+     * Update the types of each argument. The 'this' type and missing argument
+     * types were handled when the invoke session was created.
+     */
+    for (unsigned i = 0; i < Min(argc(), nformals_); i++)
+        script_->types.setArgument(cx, i, (*this)[i]);
+
 #ifdef JS_METHODJIT
     mjit::JITScript *jit = script_->getJIT(false /* !constructing */);
     if (!jit) {
         /* Watch in case the code was thrown away due a recompile. */
-        mjit::CompileStatus status = mjit::TryCompile(cx, frame_.fp());
+        mjit::CompileStatus status = mjit::TryCompile(cx, ifg_.fp());
         if (status == mjit::Compile_Error)
             return false;
         JS_ASSERT(status == mjit::Compile_Okay);
@@ -143,14 +150,13 @@ InvokeSessionGuard::invoke(JSContext *cx) const
 #endif
 
     /* Clear any garbage left from the last Invoke. */
-    StackFrame *fp = frame_.fp();
-    fp->clearMissingArgs();
-    fp->resetInvokeCallFrame();
-    SetValueRangeToUndefined(fp->slots(), script_->nfixed);
+    StackFrame *fp = ifg_.fp();
+    fp->resetCallFrame(script_);
 
     JSBool ok;
     {
         AutoPreserveEnumerators preserve(cx);
+        args_.setActive();  /* From js::Invoke(InvokeArgsGuard) overload. */
         Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
         ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_);
@@ -160,6 +166,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         ok = Interpret(cx, cx->fp());
 #endif
         Probes::exitJSFun(cx, fp->fun(), script_);
+        args_.setInactive();
     }
 
     /* Don't clobber callee with rval; rval gets read from fp->rval. */
@@ -363,14 +370,17 @@ ScriptPrologue(JSContext *cx, StackFrame *fp, bool newType)
         fp->functionThis().setObject(*obj);
     }
 
+    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
     if (cx->compartment->debugMode)
         ScriptDebugPrologue(cx, fp);
+
     return true;
 }
 
 inline bool
 ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
 {
+    Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
     if (cx->compartment->debugMode)
         ok = ScriptDebugEpilogue(cx, fp, ok);
 
@@ -381,7 +391,6 @@ ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
     if (fp->isConstructing() && ok) {
         if (fp->returnValue().isPrimitive())
             fp->setReturnValue(ObjectValue(fp->constructorThis()));
-        JS_RUNTIME_METER(cx->runtime, constructs);
     }
 
     return ok;

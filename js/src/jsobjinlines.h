@@ -283,16 +283,6 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(newshape->slot == slot);
     vp->setObject(*funobj);
     nativeSetSlot(slot, *vp);
-
-#ifdef DEBUG
-    if (cx->runtime->functionMeterFilename) {
-        JS_FUNCTION_METER(cx, mreadbarrier);
-
-        typedef JSRuntime::FunctionCountMap::Ptr Ptr;
-        if (Ptr p = cx->runtime->methodReadBarrierCountMap.lookupWithDefault(fun, 0))
-            ++p->value;
-    }
-#endif
     return newshape;
 }
 
@@ -310,10 +300,8 @@ JSObject::methodWriteBarrier(JSContext *cx, const js::Shape &shape, const js::Va
     if (brandedOrHasMethodBarrier() && shape.slot != SHAPE_INVALID_SLOT) {
         const js::Value &prev = nativeGetSlot(shape.slot);
 
-        if (ChangesMethodValue(prev, v)) {
-            JS_FUNCTION_METER(cx, mwritebarrier);
+        if (ChangesMethodValue(prev, v))
             return methodShapeChange(cx, shape);
-        }
     }
     return &shape;
 }
@@ -324,10 +312,8 @@ JSObject::methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v)
     if (brandedOrHasMethodBarrier()) {
         const js::Value &prev = nativeGetSlot(slot);
 
-        if (ChangesMethodValue(prev, v)) {
-            JS_FUNCTION_METER(cx, mwslotbarrier);
+        if (ChangesMethodValue(prev, v))
             return methodShapeChange(cx, slot);
-        }
     }
     return true;
 }
@@ -420,7 +406,7 @@ JSObject::structSize() const
 {
     return (isFunction() && !getPrivate())
            ? sizeof(JSFunction)
-           : sizeof(JSObject) + sizeof(js::Value) * numFixedSlots();
+           : (sizeof(JSObject) + sizeof(js::Value) * numFixedSlots());
 }
 
 inline size_t
@@ -1333,7 +1319,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
     JSObject *global;
-    if (!cx->running()) {
+    if (!cx->hasfp()) {
         global = cx->globalObject;
         OBJ_TO_INNER_OBJECT(cx, global);
         if (!global)
@@ -1630,28 +1616,6 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
     obj->objShape = baseobj->objShape;
 
     return obj;
-}
-
-/*
- * When we have an object of a builtin class, we don't quite know what its
- * valueOf/toString methods are, since these methods may have been overwritten
- * or shadowed. However, we can still do better than js_TryMethod by
- * hard-coding the necessary properties for us to find the native we expect.
- *
- * TODO: a per-thread shape-based cache would be faster and simpler.
- */
-static JS_ALWAYS_INLINE bool
-ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid,
-                    Native native)
-{
-    JS_ASSERT(obj->getClass() == clasp);
-
-    if (HasNativeMethod(obj, methodid, native))
-        return true;
-
-    JSObject *pobj = obj->getProto();
-    return pobj && pobj->getClass() == clasp &&
-           HasNativeMethod(pobj, methodid, native);
 }
 
 inline bool

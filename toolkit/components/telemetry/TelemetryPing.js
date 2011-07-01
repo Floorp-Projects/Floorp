@@ -54,9 +54,9 @@ const TELEMETRY_INTERVAL = 60;
 const TELEMETRY_DELAY = 60000;
 // about:memory values to turn into histograms
 const MEM_HISTOGRAMS = {
-  "explicit/js/gc-heap": [1024, 512 * 1024, 10],
-  "resident": [32 * 1024, 1024 * 1024, 10],
-  "explicit/layout/all": [1024, 64 * 1025, 10]
+  "explicit/js/gc-heap": "MEMORY_JS_GC_HEAP",
+  "resident": "MEMORY_RESIDENT",
+  "explicit/layout/all": "MEMORY_LAYOUT_ALL"
 };
 
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
@@ -82,7 +82,8 @@ function getHistograms() {
       range: [r[1], r[r.length - 1]],
       bucket_count: r.length,
       histogram_type: hgram.histogram_type,
-      values: {}
+      values: {},
+      sum: hgram.sum
     };
     let first = true;
     let last = 0;
@@ -97,6 +98,7 @@ function getHistograms() {
         first = false;
         retgram.values[r[i - 1]] = 0;
       }
+      first = false;
       last = i + 1;
       retgram.values[r[i]] = value;
     }
@@ -110,8 +112,9 @@ function getHistograms() {
 }
 
 function generateUUID() {
-  return Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
-         .generateUUID().toString();
+  let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+  // strip {}
+  return str.substring(1, str.length - 1);
 }
 
 /**
@@ -200,15 +203,15 @@ TelemetryPing.prototype = {
     while (e.hasMoreElements()) {
       let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
       //  memReporters[mr.path] = mr.memoryUsed;
-      let specs = MEM_HISTOGRAMS[mr.path];
-      if (!specs) {
+      let id = MEM_HISTOGRAMS[mr.path];
+      if (!id) {
         continue;
       }
 
       let name = "Memory:" + mr.path + " (KB)";
       let h = this._histograms[name];
       if (!h) {
-        h = Telemetry.newHistogram(name, specs[0], specs[1], specs[2], Telemetry.HISTOGRAM_EXPONENTIAL);
+        h = Telemetry.getHistogramById(id);
         this._histograms[name] = h;
       }
       let v = Math.floor(mr.memoryUsed / 1024);
@@ -223,7 +226,6 @@ TelemetryPing.prototype = {
   send: function send(reason, server) {
     // populate histograms one last time
     this.gatherMemory();
-    let nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     let payload = {
       ver: PAYLOAD_VERSION,
       info: getMetadata(reason),
@@ -236,11 +238,8 @@ TelemetryPing.prototype = {
     if (!this._path)
       this._path = "/submit/telemetry/" + (isTestPing ? reason : generateUUID());
     
-    const TELEMETRY_PING = "telemetry.ping (ms)";
-    const TELEMETRY_SUCCESS = "telemetry.success (No, Yes)";
-
-    let hping = Telemetry.newHistogram(TELEMETRY_PING, 1, 3000, 10, Telemetry.HISTOGRAM_EXPONENTIAL);
-    let hsuccess = Telemetry.newHistogram(TELEMETRY_SUCCESS, 1, 2, 3, Telemetry.HISTOGRAM_LINEAR);
+    let hping = Telemetry.getHistogramById("TELEMETRY_PING");
+    let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
 
     let url = server + this._path;
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -248,18 +247,25 @@ TelemetryPing.prototype = {
     request.mozBackgroundRequest = true;
     request.open("POST", url, true);
     request.overrideMimeType("text/plain");
+    request.setRequestHeader("Content-Type", "application/json");
 
     let startTime = new Date()
 
-    function finishRequest(success_metric) {
-      hsuccess.add(success_metric);
+    function finishRequest(channel) {
+      let success = false;
+      try {
+        success = channel.QueryInterface(Ci.nsIHttpChannel).requestSucceeded;
+      } catch(e) {
+      }
+      hsuccess.add(success ? 1 : 0);
       hping.add(new Date() - startTime);
       if (isTestPing)
         Services.obs.notifyObservers(null, "telemetry-test-xhr-complete", null);
     }
-    request.onerror = function(aEvent) finishRequest(1);
-    request.onload = function(aEvent) finishRequest(2);
-    request.send(nativeJSON.encode(payload));
+    request.onerror = function(aEvent) finishRequest(request.channel);
+    request.onload = function(aEvent) finishRequest(request.channel);
+
+    request.send(JSON.stringify(payload));
   },
   
   /**

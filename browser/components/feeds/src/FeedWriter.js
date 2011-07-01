@@ -47,6 +47,9 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const FEEDWRITER_CID = Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}");
+const FEEDWRITER_CONTRACTID = "@mozilla.org/browser/feeds/result-writer;1";
+
 function LOG(str) {
   var prefB = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
@@ -1377,17 +1380,12 @@ FeedWriter.prototype = {
       });
   },
 
-  // nsIClassInfo
-  getInterfaces: function FW_getInterfaces(countRef) {
-    var interfaces = [Ci.nsIFeedWriter, Ci.nsIClassInfo, Ci.nsISupports];
-    countRef.value = interfaces.length;
-    return interfaces;
-  },
-  getHelperForLanguage: function FW_getHelperForLanguage(language) null,
-  classID: Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}"),
-  implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
-  flags: Ci.nsIClassInfo.DOM_OBJECT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedWriter, Ci.nsIClassInfo,
+  classID: FEEDWRITER_CID,
+  classInfo: XPCOMUtils.generateCI({classID: FEEDWRITER_CID,
+                                    contractID: FEEDWRITER_CONTRACTID,
+                                    interfaces: [Ci.nsIFeedWriter],
+                                    flags: Ci.nsIClassInfo.DOM_OBJECT}),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedWriter,
                                          Ci.nsIDOMEventListener, Ci.nsIObserver,
                                          Ci.nsINavHistoryObserver])
 };

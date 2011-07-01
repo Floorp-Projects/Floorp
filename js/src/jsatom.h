@@ -39,20 +39,18 @@
 
 #ifndef jsatom_h___
 #define jsatom_h___
-/*
- * JS atom table.
- */
+
 #include <stddef.h>
 #include "jsversion.h"
 #include "jsapi.h"
 #include "jsprvtd.h"
-#include "jshash.h"
 #include "jshashtable.h"
-#include "jsnum.h"
 #include "jspubtd.h"
 #include "jsstr.h"
 #include "jslock.h"
 #include "jsvalue.h"
+
+#include "vm/String.h"
 
 /* Engine-internal extensions of jsid */
 
@@ -111,16 +109,6 @@ IdToJsval(jsid id)
     return Jsvalify(IdToValue(id));
 }
 
-static JS_ALWAYS_INLINE JSString *
-IdToString(JSContext *cx, jsid id)
-{
-    if (JSID_IS_STRING(id))
-        return JSID_TO_STRING(id);
-    if (JS_LIKELY(JSID_IS_INT(id)))
-        return js_IntToString(cx, JSID_TO_INT(id));
-    return js_ValueToString(cx, IdToValue(id));
-}
-
 template<>
 struct DefaultHasher<jsid>
 {
@@ -153,123 +141,9 @@ struct DefaultHasher<jsid>
 extern const char *
 js_AtomToPrintableString(JSContext *cx, JSAtom *atom, JSAutoByteString *bytes);
 
-struct JSAtomListElement {
-    JSHashEntry         entry;
-};
-
-#define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
-#define ALE_INDEX(ale)  (jsatomid(uintptr_t((ale)->entry.value)))
-#define ALE_VALUE(ale)  ((jsboxedword) (ale)->entry.value)
-#define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
-
-/*
- * In an upvars list, ALE_DEFN(ale)->resolve() is the outermost definition the
- * name may reference. If a with block or a function that calls eval encloses
- * the use, the name may end up referring to something else at runtime.
- */
-#define ALE_DEFN(ale)   ((JSDefinition *) (ale)->entry.value)
-
-#define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
-#define ALE_SET_INDEX(ale,index)((ale)->entry.value = (void *)(index))
-#define ALE_SET_DEFN(ale, dn)   ((ale)->entry.value = (void *)(dn))
-#define ALE_SET_VALUE(ale, v)   ((ale)->entry.value = (void *)(v))
-#define ALE_SET_NEXT(ale,nxt)   ((ale)->entry.next = (JSHashEntry *)(nxt))
-
-/*
- * NB: JSAtomSet must be plain-old-data as it is embedded in the pn_u union in
- * JSParseNode. JSAtomList encapsulates all operational uses of a JSAtomSet.
- *
- * The JSAtomList name is traditional, even though the implementation is a map
- * (not to be confused with JSAtomMap). In particular the "ALE" and "ale" short
- * names for JSAtomListElement variables roll off the fingers, compared to ASE
- * or AME alternatives.
- */
-struct JSAtomSet {
-    JSHashEntry         *list;          /* literals indexed for mapping */
-    JSHashTable         *table;         /* hash table if list gets too long */
-    jsuint              count;          /* count of indexed literals */
-};
-
-struct JSAtomList : public JSAtomSet
-{
-#ifdef DEBUG
-    const JSAtomSet* set;               /* asserted null in mutating methods */
-#endif
-
-    JSAtomList() {
-        list = NULL; table = NULL; count = 0;
-#ifdef DEBUG
-        set = NULL;
-#endif
-    }
-
-    JSAtomList(const JSAtomSet& as) {
-        list = as.list; table = as.table; count = as.count;
-#ifdef DEBUG
-        set = &as;
-#endif
-    }
-
-    void clear() { JS_ASSERT(!set); list = NULL; table = NULL; count = 0; }
-
-    JSAtomListElement *lookup(JSAtom *atom) {
-        JSHashEntry **hep;
-        return rawLookup(atom, hep);
-    }
-
-    JSAtomListElement *rawLookup(JSAtom *atom, JSHashEntry **&hep);
-
-    enum AddHow { UNIQUE, SHADOW, HOIST };
-
-    JSAtomListElement *add(js::Parser *parser, JSAtom *atom, AddHow how = UNIQUE);
-
-    void remove(js::Parser *parser, JSAtom *atom) {
-        JSHashEntry **hep;
-        JSAtomListElement *ale = rawLookup(atom, hep);
-        if (ale)
-            rawRemove(parser, ale, hep);
-    }
-
-    void rawRemove(js::Parser *parser, JSAtomListElement *ale, JSHashEntry **hep);
-};
-
-/*
- * A subclass of JSAtomList with a destructor.  This atom list owns its
- * hash table and its entries, but no keys or values.
- */
-struct JSAutoAtomList: public JSAtomList
-{
-    JSAutoAtomList(js::Parser *p): parser(p) {}
-    ~JSAutoAtomList();
-  private:
-    js::Parser *parser;         /* For freeing list entries. */
-};
-
-/*
- * Iterate over an atom list. We define a call operator to minimize the syntax
- * tax for users. We do not use a more standard pattern using ++ and * because
- * (a) it's the wrong pattern for a non-scalar; (b) it's overkill -- one method
- * is enough. (This comment is overkill!)
- */
-class JSAtomListIterator {
-    JSAtomList*         list;
-    JSAtomListElement*  next;
-    uint32              index;
-
-  public:
-    JSAtomListIterator(JSAtomList* al) : list(al) { reset(); }
-
-    void reset() {
-        next = (JSAtomListElement *) list->list;
-        index = 0;
-    }
-
-    JSAtomListElement* operator ()();
-};
-
 struct JSAtomMap {
-    JSAtom              **vector;       /* array of ptrs to indexed atoms */
-    jsatomid            length;         /* count of (to-be-)indexed atoms */
+    JSAtom **vector;    /* array of ptrs to indexed atoms */
+    uint32 length;      /* count of (to-be-)indexed atoms */
 };
 
 namespace js {
@@ -467,6 +341,8 @@ struct JSAtomState
     JSAtom              *iterateAtom;
 
     JSAtom              *WeakMapAtom;
+
+    JSAtom              *byteLengthAtom;
 
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
     struct {
@@ -680,12 +556,13 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
 inline bool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
                          jsid *idp, js::Value *vp);
+
 /*
  * For all unmapped atoms recorded in al, add a mapping from the atom's index
  * to its address. map->length must already be set to the number of atoms in
  * the list and map->vector must point to pre-allocated memory.
  */
 extern void
-js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al);
+js_InitAtomMap(JSContext *cx, JSAtomMap *map, js::AtomIndexMap *indices);
 
 #endif /* jsatom_h___ */

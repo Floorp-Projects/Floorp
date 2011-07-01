@@ -114,6 +114,11 @@ protected:
                              PRUint8 aWidgetType,
                              nsIntMargin* aResult);
 
+  PRBool ClassicGetWidgetPadding(nsDeviceContext* aContext,
+                            nsIFrame* aFrame,
+                            PRUint8 aWidgetType,
+                            nsIntMargin* aResult);
+
   nsresult ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntSize* aResult,

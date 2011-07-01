@@ -103,9 +103,7 @@ class nsUserFontSet;
 struct nsFontFaceRuleContainer;
 class nsObjectFrame;
 class nsTransitionManager;
-#ifdef MOZ_CSS_ANIMATIONS
 class nsAnimationManager;
-#endif
 class nsRefreshDriver;
 class imgIContainer;
 class nsIDOMMediaQueryList;
@@ -243,9 +241,7 @@ public:
     { return GetPresShell()->FrameManager(); } 
 
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
-#ifdef MOZ_CSS_ANIMATIONS
   nsAnimationManager* AnimationManager() { return mAnimationManager; }
-#endif
 
   nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 #endif
@@ -1049,6 +1045,7 @@ protected:
 
   NS_HIDDEN_(void) UpdateCharSet(const nsAFlatCString& aCharSet);
 
+  void InvalidateThebesLayers();
   void AppUnitsPerDevPixelChanged();
 
   PRBool MayHavePaintEventListener();
@@ -1081,9 +1078,7 @@ protected:
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
   nsRefPtr<nsTransitionManager> mTransitionManager;
-#ifdef MOZ_CSS_ANIMATIONS
   nsRefPtr<nsAnimationManager> mAnimationManager;
-#endif
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
 
