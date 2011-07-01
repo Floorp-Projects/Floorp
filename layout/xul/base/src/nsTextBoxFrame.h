@@ -86,7 +86,8 @@ public:
 
   void PaintTitle(nsRenderingContext& aRenderingContext,
                   const nsRect&        aDirtyRect,
-                  nsPoint              aPt);
+                  nsPoint              aPt,
+                  const nscolor*       aOverrideColor);
 
   nsRect GetComponentAlphaBounds();
 
