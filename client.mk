@@ -1,3 +1,5 @@
+# -*- makefile -*-
+# vim:set ts=8 sw=8 sts=8 noet:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -23,6 +25,7 @@
 #   Benjamin Smedberg <bsmedberg@covad.net>
 #   Chase Phillips <chase@mozilla.org>
 #   Mark Mentovai <mark@moxienet.com>
+#   Joey Armstrong <joey@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -95,14 +98,11 @@ endif
 AUTOCONF ?= $(shell which autoconf-2.13 autoconf2.13 autoconf213 2>/dev/null | grep -v '^no autoconf' | head -1)
 
 ifeq (,$(strip $(AUTOCONF)))
-AUTOCONF=$(error Couldn't find autoconf 2.13)
+AUTOCONF=$(error Could not find autoconf 2.13)
 endif
 
 MKDIR := mkdir
 SH := /bin/sh
-ifndef MAKE
-MAKE := gmake
-endif
 PERL ?= perl
 PYTHON ?= python
 
