@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=552605
+-->
+<head>
+  <title>Test for Bug 552605</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=552605">Mozilla Bug 552605</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+var count = 0;
+
+SimpleTest.waitForExplicitFinish();
+
+function check()
+{
+  count++;
+  if (count != 2)
+    return;
+
+  var image1 = document.getElementById('test-image1');
+  var image2 = document.getElementById('test-image2');
+  var first = document.createElement('canvas')
+  var ctx = first.getContext('2d');
+  ctx.drawImage(image1, 0, 0);
+  
+  var second = document.createElement('canvas');
+  ctx = second.getContext('2d');
+  ctx.drawImage(image2, 0, 0);
+
+  // Check that the images are the same, since they're in the same document.
+  [correct, val1, val2] = compareSnapshots(first, second, true);
+  ok(correct, "Image should be the same for all loads.");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+<div id="content"> <!-- style="display: none" -->
+<img src="bug552605.sjs" onload="check()" id="test-image1"></iframe>
+<img src="bug552605.sjs" onload="check()" id="test-image2"></iframe>
+</div>
+</body>
+</html>
