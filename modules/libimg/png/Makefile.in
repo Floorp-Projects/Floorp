@@ -49,15 +49,6 @@ LIBRARY_NAME	= png
 endif
 LIBXUL_LIBRARY = 1
 
-ifndef GNU_CC
-ifeq ($(OS_ARCH),WINNT)
-ifneq ($(OS_TEST),x86_64)
-# FIXME: bug 413019
-OS_COMPILE_CFLAGS += -GL-
-endif
-endif
-endif
-
 
 CSRCS		= \
 		png.c \
