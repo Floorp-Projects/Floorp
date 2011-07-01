@@ -191,16 +191,16 @@ imgRequest::imgRequest() :
 
 imgRequest::~imgRequest()
 {
-  if (mKeyURI) {
+  if (mURI) {
     nsCAutoString spec;
-    mKeyURI->GetSpec(spec);
+    mURI->GetSpec(spec);
     LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::~imgRequest()", "keyuri", spec.get());
   } else
     LOG_FUNC(gImgLog, "imgRequest::~imgRequest()");
 }
 
 nsresult imgRequest::Init(nsIURI *aURI,
-                          nsIURI *aKeyURI,
+                          nsIURI *aCurrentURI,
                           nsIRequest *aRequest,
                           nsIChannel *aChannel,
                           imgCacheEntry *aCacheEntry,
@@ -211,7 +211,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   NS_ABORT_IF_FALSE(!mImage, "Multiple calls to init");
   NS_ABORT_IF_FALSE(aURI, "No uri");
-  NS_ABORT_IF_FALSE(aKeyURI, "No key uri");
+  NS_ABORT_IF_FALSE(aCurrentURI, "No current uri");
   NS_ABORT_IF_FALSE(aRequest, "No request");
   NS_ABORT_IF_FALSE(aChannel, "No channel");
 
@@ -220,7 +220,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mStatusTracker = new imgStatusTracker(nsnull);
 
   mURI = aURI;
-  mKeyURI = aKeyURI;
+  mCurrentURI = aCurrentURI;
   mRequest = aRequest;
   mChannel = aChannel;
   mTimedChannel = do_QueryInterface(mChannel);
@@ -281,8 +281,8 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
   // If we're empty before adding, we have to tell the loader we now have
   // proxies.
   if (mObservers.IsEmpty()) {
-    NS_ABORT_IF_FALSE(mKeyURI, "Trying to SetHasProxies without key uri.");
-    imgLoader::SetHasProxies(mKeyURI);
+    NS_ABORT_IF_FALSE(mURI, "Trying to SetHasProxies without key uri.");
+    imgLoader::SetHasProxies(mURI);
   }
 
   // If we don't have any current observers, we should restart any animation.
@@ -322,14 +322,14 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
     // been cancelled and thus removed from the cache, tell the image loader so
     // we can be evicted from the cache.
     if (mCacheEntry) {
-      NS_ABORT_IF_FALSE(mKeyURI, "Removing last observer without key uri.");
+      NS_ABORT_IF_FALSE(mURI, "Removing last observer without key uri.");
 
-      imgLoader::SetHasNoProxies(mKeyURI, mCacheEntry);
+      imgLoader::SetHasNoProxies(mURI, mCacheEntry);
     } 
 #if defined(PR_LOGGING)
     else {
       nsCAutoString spec;
-      mKeyURI->GetSpec(spec);
+      mURI->GetSpec(spec);
       LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy no cache entry", "uri", spec.get());
     }
 #endif
@@ -410,8 +410,8 @@ nsresult imgRequest::GetKeyURI(nsIURI **aKeyURI)
 {
   LOG_FUNC(gImgLog, "imgRequest::GetKeyURI");
 
-  if (mKeyURI) {
-    *aKeyURI = mKeyURI;
+  if (mURI) {
+    *aKeyURI = mURI;
     NS_ADDREF(*aKeyURI);
     return NS_OK;
   }
@@ -438,7 +438,7 @@ void imgRequest::RemoveFromCache()
     if (mCacheEntry)
       imgLoader::RemoveFromCache(mCacheEntry);
     else
-      imgLoader::RemoveFromCache(mKeyURI);
+      imgLoader::RemoveFromCache(mURI);
   }
 
   mCacheEntry = nsnull;
@@ -1294,18 +1294,17 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
 
 #if defined(PR_LOGGING)
   nsCAutoString oldspec;
-  if (mKeyURI)
-    mKeyURI->GetSpec(oldspec);
+  if (mCurrentURI)
+    mCurrentURI->GetSpec(oldspec);
   LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", oldspec.get());
 #endif
 
   // make sure we have a protocol that returns data rather than opens
   // an external application, e.g. mailto:
-  nsCOMPtr<nsIURI> uri;
-  mChannel->GetURI(getter_AddRefs(uri));
+  mChannel->GetURI(getter_AddRefs(mCurrentURI));
   PRBool doesNotReturnData = PR_FALSE;
   nsresult rv =
-    NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+    NS_URIChainHasFlags(mCurrentURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                         &doesNotReturnData);
 
   if (NS_SUCCEEDED(rv) && doesNotReturnData)
