@@ -64,6 +64,8 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -72,9 +74,6 @@
 #include "nsProxyRelease.h"
 #include "prlog.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
 
 static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nsnull;
 
@@ -570,11 +569,15 @@ nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
     permissionManager->TestExactPermission(innerURI, "offline-app", &perm);
 
     if (perm == nsIPermissionManager::UNKNOWN_ACTION) {
-        static const char kPrefName[] = "offline-apps.allow_by_default";
-        if (aPrefBranch) {
-            aPrefBranch->GetBoolPref(kPrefName, aAllowed);
-        } else {
-            *aAllowed = Preferences::GetBool(kPrefName, PR_FALSE);
+        nsCOMPtr<nsIPrefBranch> branch = aPrefBranch;
+        if (!branch) {
+            branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        }
+        if (branch) {
+            rv = branch->GetBoolPref("offline-apps.allow_by_default", aAllowed);
+            if (NS_FAILED(rv)) {
+                *aAllowed = PR_FALSE;
+            }
         }
 
         return NS_OK;

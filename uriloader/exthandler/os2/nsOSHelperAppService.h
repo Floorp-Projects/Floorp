@@ -92,7 +92,7 @@ private:
                                   nsACString& aUnEscapedCommand);
   static nsresult GetFileLocation(const char* aPrefName,
                                   const char* aEnvVarName,
-                                  nsAString& aFileLocation);
+                                  PRUnichar** aFileLocation);
   static nsresult LookUpTypeAndDescription(const nsAString& aFileExtension,
                                            nsAString& aMajorType,
                                            nsAString& aMinorType,

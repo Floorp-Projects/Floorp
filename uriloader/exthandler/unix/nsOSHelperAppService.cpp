@@ -61,6 +61,8 @@
 #include "nsILineInputStream.h"
 #include "nsILocalFile.h"
 #include "nsIProcess.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsNetCID.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -70,9 +72,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "prenv.h"      // for PR_GetEnv()
 #include "nsAutoPtr.h"
-#include "mozilla/Preferences.h"
-
-using namespace mozilla;
 
 #define LOG(args) PR_LOG(mLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(mLog, PR_LOG_DEBUG)
@@ -204,27 +203,39 @@ ParseMIMEType(const nsAString::const_iterator& aStart_iter,
 nsresult
 nsOSHelperAppService::GetFileLocation(const char* aPrefName,
                                       const char* aEnvVarName,
-                                      nsAString& aFileLocation) {
+                                      PRUnichar** aFileLocation) {
   LOG(("-- GetFileLocation.  Pref: '%s'  EnvVar: '%s'\n",
        aPrefName,
        aEnvVarName));
   NS_PRECONDITION(aPrefName, "Null pref name passed; don't do that!");
   
-  aFileLocation.Truncate();
+  nsresult rv;
+  *aFileLocation = nsnull;
   /* The lookup order is:
      1) user pref
      2) env var
      3) pref
   */
-  NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   /*
     If we have an env var we should check whether the pref is a user
     pref.  If we do not, we don't care.
   */
-  if (Preferences::HasUserValue(aPrefName) &&
-      NS_SUCCEEDED(Preferences::GetString(aPrefName, &aFileLocation))) {
-    return NS_OK;
+  nsCOMPtr<nsISupportsString> prefFileName;
+  PRBool isUserPref = PR_FALSE;
+  prefBranch->PrefHasUserValue(aPrefName, &isUserPref);
+  if (isUserPref) {
+    rv = prefBranch->GetComplexValue(aPrefName,
+                                     NS_GET_IID(nsISupportsString),
+                                     getter_AddRefs(prefFileName));
+    if (NS_SUCCEEDED(rv)) {
+      return prefFileName->ToString(aFileLocation);
+    }
   }
 
   if (aEnvVarName && *aEnvVarName) {
@@ -234,21 +245,31 @@ nsOSHelperAppService::GetFileLocation(const char* aPrefName,
       // natural way to do the charset conversion is by just initing
       // an nsIFile with the native path and asking it for the Unicode
       // version.
-      nsresult rv;
       nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = file->InitWithNativePath(nsDependentCString(prefValue));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = file->GetPath(aFileLocation);
+      nsAutoString unicodePath;
+      rv = file->GetPath(unicodePath);
       NS_ENSURE_SUCCESS(rv, rv);
-
+      
+      *aFileLocation = ToNewUnicode(unicodePath);
+      if (!*aFileLocation)
+        return NS_ERROR_OUT_OF_MEMORY;
       return NS_OK;
     }
   }
-
-  return Preferences::GetString(aPrefName, &aFileLocation);
+  
+  rv = prefBranch->GetComplexValue(aPrefName,
+                                   NS_GET_IID(nsISupportsString),
+                                   getter_AddRefs(prefFileName));
+  if (NS_SUCCEEDED(rv)) {
+    return prefFileName->ToString(aFileLocation);
+  }
+  
+  return rv;
 }
 
 
@@ -264,12 +285,14 @@ nsOSHelperAppService::LookUpTypeAndDescription(const nsAString& aFileExtension,
   LOG(("-- LookUpTypeAndDescription for extension '%s'\n",
        NS_LossyConvertUTF16toASCII(aFileExtension).get()));
   nsresult rv = NS_OK;
-  nsAutoString mimeFileName;
+  nsXPIDLString mimeFileName;
 
   const char* filenamePref = aUserData ?
     "helpers.private_mime_types_file" : "helpers.global_mime_types_file";
   
-  rv = GetFileLocation(filenamePref, nsnull, mimeFileName);
+  rv = GetFileLocation(filenamePref,
+                       nsnull,
+                       getter_Copies(mimeFileName));
   if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
     rv = GetTypeAndDescriptionFromMimetypesFile(mimeFileName,
                                                 aFileExtension,
@@ -480,9 +503,11 @@ nsOSHelperAppService::LookUpExtensionsAndDescription(const nsAString& aMajorType
        NS_LossyConvertUTF16toASCII(aMajorType).get(),
        NS_LossyConvertUTF16toASCII(aMinorType).get()));
   nsresult rv = NS_OK;
-  nsAutoString mimeFileName;
+  nsXPIDLString mimeFileName;
 
-  rv = GetFileLocation("helpers.private_mime_types_file", nsnull, mimeFileName);
+  rv = GetFileLocation("helpers.private_mime_types_file",
+                       nsnull,
+                       getter_Copies(mimeFileName));
   if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
     rv = GetExtensionsAndDescriptionFromMimetypesFile(mimeFileName,
                                                       aMajorType,
@@ -494,7 +519,8 @@ nsOSHelperAppService::LookUpExtensionsAndDescription(const nsAString& aMajorType
   }
   if (NS_FAILED(rv) || aFileExtensions.IsEmpty()) {
     rv = GetFileLocation("helpers.global_mime_types_file",
-                         nsnull, mimeFileName);
+                         nsnull,
+                         getter_Copies(mimeFileName));
     if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
       rv = GetExtensionsAndDescriptionFromMimetypesFile(mimeFileName,
                                                         aMajorType,
@@ -938,14 +964,16 @@ nsOSHelperAppService::DoLookUpHandlerAndDescription(const nsAString& aMajorType,
        NS_LossyConvertUTF16toASCII(aMajorType).get(),
        NS_LossyConvertUTF16toASCII(aMinorType).get()));
   nsresult rv = NS_OK;
-  nsAutoString mailcapFileName;
+  nsXPIDLString mailcapFileName;
 
   const char * filenamePref = aUserData ?
     "helpers.private_mailcap_file" : "helpers.global_mailcap_file";
   const char * filenameEnvVar = aUserData ?
     "PERSONAL_MAILCAP" : "MAILCAP";
   
-  rv = GetFileLocation(filenamePref, filenameEnvVar, mailcapFileName);
+  rv = GetFileLocation(filenamePref,
+                       filenameEnvVar,
+                       getter_Copies(mailcapFileName));
   if (NS_SUCCEEDED(rv) && !mailcapFileName.IsEmpty()) {
     rv = GetHandlerAndDescriptionFromMailcapFile(mailcapFileName,
                                                  aMajorType,
