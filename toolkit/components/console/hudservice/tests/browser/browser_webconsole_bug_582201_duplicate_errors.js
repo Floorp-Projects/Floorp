@@ -53,7 +53,7 @@ function testDuplicateErrors() {
                               false);
   openConsole();
 
-  let hudId = HUDService.displaysIndex()[0];
+  let hudId = HUDService.getHudIdByWindow(content);
   HUDService.clearDisplay(hudId);
 
   Services.console.registerListener(consoleObserver);
@@ -74,9 +74,7 @@ var consoleObserver = {
 
     Services.console.unregisterListener(this);
 
-    hudId = HUDService.displaysIndex()[0];
-    hud = HUDService.hudReferences[hudId];
-    outputNode = hud.outputNode;
+    outputNode = HUDService.getHudByWindow(content).outputNode;
 
     executeSoon(function () {
       var text = outputNode.textContent;
