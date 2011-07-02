@@ -493,6 +493,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_NAMEINC:
           case JSOP_NAMEDEC:
           case JSOP_FORNAME:
+          case JSOP_QNAMEPART:
+          case JSOP_QNAMECONST:
             checkAliasedName(cx, pc);
             usesScope = true;
             isInlineable = false;
