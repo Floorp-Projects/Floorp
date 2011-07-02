@@ -1329,9 +1329,6 @@ struct GCMarker : public JSTracer {
     }
 };
 
-JS_FRIEND_API(void)
-MarkWeakReferences(GCMarker *trc);
-
 void
 MarkStackRangeConservatively(JSTracer *trc, Value *begin, Value *end);
 
