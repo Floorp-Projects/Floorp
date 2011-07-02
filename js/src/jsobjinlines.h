@@ -343,6 +343,13 @@ JSObject::isFixedSlot(size_t slot)
 }
 
 inline size_t
+JSObject::numDynamicSlots(size_t capacity) const
+{
+    JS_ASSERT(capacity >= numFixedSlots());
+    return isDenseArray() ? capacity : capacity - numFixedSlots();
+}
+
+inline size_t
 JSObject::dynamicSlotIndex(size_t slot)
 {
     JS_ASSERT(!isDenseArray() && slot >= numFixedSlots());
