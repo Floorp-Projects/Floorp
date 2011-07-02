@@ -3155,12 +3155,13 @@ nsNavHistoryQueryResultNode::OnPageChanged(nsIURI* aURI,
 
   switch (aChangedAttribute) {
     case nsINavHistoryObserver::ATTRIBUTE_FAVICON: {
+      NS_ConvertUTF16toUTF8 newFavicon(aNewValue);
       PRBool onlyOneEntry = (mOptions->ResultType() ==
                              nsINavHistoryQueryOptions::RESULTS_AS_URI ||
                              mOptions->ResultType() ==
                              nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS);
       rv = UpdateURIs(PR_TRUE, onlyOneEntry, PR_FALSE, spec, setFaviconCallback,
-                      &NS_ConvertUTF16toUTF8(aNewValue));
+                      &newFavicon);
       NS_ENSURE_SUCCESS(rv, rv);
       break;
     }
