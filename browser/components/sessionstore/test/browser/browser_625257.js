@@ -39,9 +39,6 @@
 // Specifically, that session store does not rely on an invalid cache when
 // constructing data for a tab which is loading.
 
-let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-         getService(Ci.nsISessionStore);
-
 // The newly created tab which we load a URL into and try closing/undoing.
 let tab;
 

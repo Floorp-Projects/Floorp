@@ -135,6 +135,14 @@ JSWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
 static bool
 GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSPropertyDescriptor *desc)
 {
+    // If obj is a proxy, we can do better than just guessing. This is
+    // important for certain types of wrappers that wrap other wrappers.
+    if (obj->isProxy()) {
+        return JSProxy::getOwnPropertyDescriptor(cx, obj, id,
+                                                 flags & JSRESOLVE_ASSIGNING,
+                                                 Valueify(desc));
+    }
+
     if (!JS_GetPropertyDescriptorById(cx, obj, id, flags, desc))
         return false;
     if (desc->obj != obj)
@@ -146,7 +154,7 @@ bool
 JSWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set,
                                     PropertyDescriptor *desc)
 {
-    desc->obj= NULL; // default result if we refuse to perform this action
+    desc->obj = NULL; // default result if we refuse to perform this action
     CHECKED(GetOwnPropertyDescriptor(cx, wrappedObject(wrapper), id, JSRESOLVE_QUALIFIED,
                                      Jsvalify(desc)), set ? SET : GET);
 }

@@ -88,6 +88,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../events/src \
 		-I$(srcdir)/../../../layout/style \
 		-I$(srcdir)/../../../dom/base \
+		-I$(topsrcdir)/xpcom/ds \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

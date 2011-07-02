@@ -51,6 +51,7 @@
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jsiter.h"
 #include "jstypes.h"
+#include "vm/String.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
 
@@ -59,13 +60,15 @@
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
+#include "jsnuminlines.h"
 #include "jsobjinlines.h"
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
 #include "StubCalls-inl.h"
 #include "jsfuninlines.h"
 #include "jstypedarray.h"
+
+#include "vm/String-inl.h"
 
 #ifdef XP_WIN
 # include "jswin.h"

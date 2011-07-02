@@ -549,6 +549,7 @@ class Interface(object):
 class InterfaceAttributes(object):
     uuid = None
     scriptable = False
+    builtinclass = False
     function = False
     deprecated = False
     noscript = False
@@ -565,12 +566,16 @@ class InterfaceAttributes(object):
     def setnoscript(self):
         self.noscript = True
 
+    def setbuiltinclass(self):
+        self.builtinclass = True
+
     def setdeprecated(self):
         self.deprecated = True
 
     actions = {
         'uuid':       (True, setuuid),
         'scriptable': (False, setscriptable),
+        'builtinclass': (False, setbuiltinclass),
         'function':   (False, setfunction),
         'noscript':   (False, setnoscript),
         'deprecated': (False, setdeprecated),
@@ -605,6 +610,8 @@ class InterfaceAttributes(object):
             l.append("\tuuid: %s\n" % self.uuid)
         if self.scriptable:
             l.append("\tscriptable\n")
+        if self.builtinclass:
+            l.append("\tbuiltinclass\n")
         if self.function:
             l.append("\tfunction\n")
         return "".join(l)
@@ -641,6 +648,7 @@ class Attribute(object):
     notxpcom = False
     readonly = False
     implicit_jscontext = False
+    nostdcall = False
     binaryname = None
     null = None
     undefined = None
@@ -692,8 +700,10 @@ class Attribute(object):
                     self.notxpcom = True
                 elif name == 'implicit_jscontext':
                     self.implicit_jscontext = True
+                elif name == 'nostdcall':
+                    self.nostdcall = True
                 else:
-                    raise IDLError("Unexpected attribute '%s'", aloc)
+                    raise IDLError("Unexpected attribute '%s'" % name, aloc)
 
     def resolve(self, iface):
         self.iface = iface
@@ -726,6 +736,7 @@ class Method(object):
     notxpcom = False
     binaryname = None
     implicit_jscontext = False
+    nostdcall = False
     optional_argc = False
 
     def __init__(self, type, name, attlist, paramlist, location, doccomments, raises):
@@ -757,8 +768,10 @@ class Method(object):
                 self.implicit_jscontext = True
             elif name == 'optional_argc':
                 self.optional_argc = True
+            elif name == 'nostdcall':
+                self.nostdcall = True
             else:
-                raise IDLError("Unexpected attribute '%s'", aloc)
+                raise IDLError("Unexpected attribute '%s'" % name, aloc)
 
         self.namemap = NameMap()
         for p in paramlist:

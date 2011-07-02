@@ -118,6 +118,7 @@ class Debug {
     static void traceObject(JSTracer *trc, JSObject *obj);
     void trace(JSTracer *trc);
     static void finalize(JSContext *cx, JSObject *obj);
+    static void markKeysInCompartment(JSTracer *tracer, ObjectWeakMap &map);
 
     static Class jsclass;
     static JSBool getHooks(JSContext *cx, uintN argc, Value *vp);
@@ -164,6 +165,7 @@ class Debug {
     // Remove script from our table of eval scripts.
     void destroyEvalScript(JSScript *script);
 
+    static inline Debug *fromLinks(JSCList *links);
     inline Breakpoint *firstBreakpoint() const;
 
   public:
@@ -192,7 +194,7 @@ class Debug {
     // returns true. If not, it returns false.
     //
     static void markCrossCompartmentDebugObjectReferents(JSTracer *tracer);
-    static bool mark(GCMarker *trc, JSCompartment *compartment, JSGCInvocationKind gckind);
+    static bool mark(GCMarker *trc, JSGCInvocationKind gckind);
     static void sweepAll(JSContext *cx);
     static void detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global,
                                              GlobalObjectSet::Enum *compartmentEnum);
@@ -343,6 +345,14 @@ Debug::observesFrame(StackFrame *fp) const
 {
     return observesScope(&fp->scopeChain());
 }
+
+js::Debug *
+js::Debug::fromLinks(JSCList *links)
+{
+    unsigned char *p = reinterpret_cast<unsigned char *>(links);
+    return reinterpret_cast<Debug *>(p - offsetof(Debug, link));
+}
+
 
 Breakpoint *
 Debug::firstBreakpoint() const

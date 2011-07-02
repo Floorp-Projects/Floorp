@@ -651,6 +651,33 @@ PRBool IsBidiLeaf(nsIFrame* aFrame) {
 }
 
 void
+nsBidiPresUtils::AdvanceAndAppendFrame(nsIFrame** aFrame,
+                                       nsBlockInFlowLineIterator* aLineIter,
+                                       nsIFrame** aNextSibling)
+{
+  nsIFrame* frame = *aFrame;
+  nsIFrame* nextSibling = *aNextSibling;
+
+  frame = frame->GetNextContinuation();
+  if (frame) {
+    mLogicalFrames.AppendElement(frame);
+    AdvanceLineIteratorToFrame(frame, aLineIter, mPrevFrame);
+    mLinePerFrame.AppendElement(aLineIter->GetLine().get());
+
+    /*
+     * If we have already overshot the saved next-sibling while
+     * scanning the frame's continuations, advance it.
+     */
+    if (frame == nextSibling) {
+      nextSibling = frame->GetNextSibling();
+    }
+  }
+
+  *aFrame = frame;
+  *aNextSibling = nextSibling;
+}
+
+void
 nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                                 nsBlockInFlowLineIterator* aLineIter,
                                 nsIFrame*                  aCurrentFrame)
@@ -753,21 +780,23 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
 
               PRInt32 start, end;
               frame->GetOffsets(start, end);
-              PRInt32 endLine = text.FindCharInSet(NS_LITERAL_STRING("\n\r"),
-                                                   start);
+              PRInt32 endLine = text.FindChar('\n', start);
               if (endLine == -1) {
                 /*
-                 * If there is no newline in the frame, just save the text and
-                 * do bidi resolution later
+                 * If there is no newline in the text content, just save the
+                 * text from this frame and its continuations, and do bidi
+                 * resolution later
                  */
                 mBuffer.Append(Substring(text, start));
+                while (frame && nextSibling) {
+                  AdvanceAndAppendFrame(&frame, aLineIter, &nextSibling);
+                }
                 break;
               }
 
               /*
                * If there is a newline in the frame, break the frame after the
-               * newline, do bidi resolution and repeat until the end of the
-               * element.
+               * newline, do bidi resolution and repeat until the last sibling
                */
               ++endLine;
 
@@ -775,28 +804,18 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                * If the frame ends before the new line, save the text and move
                * into the next continuation
                */
-              while (end < endLine) {
-                mBuffer.Append(Substring(text, start, end - start));
-                frame = frame->GetNextContinuation();
+              mBuffer.Append(Substring(text, start,
+                                       PR_MIN(end, endLine) - start));
+              while (end < endLine && nextSibling) { 
+                AdvanceAndAppendFrame(&frame, aLineIter, &nextSibling);
                 NS_ASSERTION(frame, "Premature end of continuation chain");
                 frame->GetOffsets(start, end);
-                mLogicalFrames.AppendElement(frame);
-                AdvanceLineIteratorToFrame(frame, aLineIter, mPrevFrame);
-                mLinePerFrame.AppendElement(aLineIter->GetLine().get());
-
-                /*
-                 * If we have already overshot the saved next-sibling while
-                 * scanning the frame's continuations, advance it.
-                 */
-                if (frame == nextSibling) {
-                  nextSibling = frame->GetNextSibling();
-                }
+                mBuffer.Append(Substring(text, start,
+                                         PR_MIN(end, endLine) - start));
               }
 
-              mBuffer.Append(Substring(text, start, endLine - start));
-
               PRBool createdContinuation = PR_FALSE;
-              if (PRUint32(endLine) < text.Length()) {
+              if (end >= endLine && PRUint32(endLine) < text.Length()) {
                 /*
                  * Timing is everything here: if the frame already has a bidi
                  * continuation, we need to make the continuation fluid *before*

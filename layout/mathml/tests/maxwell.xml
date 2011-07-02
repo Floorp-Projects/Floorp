@@ -60,13 +60,10 @@
             <mrow>
               <mo>&nabla;</mo>
               <mo>&times;</mo>
-              <munderover accent='true'>
-                <mstyle fontweight='bold'>
-                  <mi>B</mi>
-                </mstyle>
-                <mrow></mrow>
+              <mover accent='true'>
+                <mi mathvariant='bold'>B</mi>
                 <mo stretchy='true'>&RightArrow;</mo>
-              </munderover>
+              </mover>
               <mo>-</mo>
               <mfrac>
                 <mn>1</mn>
@@ -75,13 +72,10 @@
               <mfrac>
                 <mrow>
                   <mo>&PartialD;</mo>
-                  <munderover accent='true'>
-                    <mstyle fontweight='bold'>
-                      <mi>E</mi>
-                    </mstyle>
-                    <mrow></mrow>
+                  <mover accent='true'>
+                    <mi mathvariant='bold'>E</mi>
                     <mo stretchy='true'>&RightArrow;</mo>
-                  </munderover>
+                  </mover>
                 </mrow>
                 <mrow>
                   <mo>&PartialD;</mo>
@@ -102,13 +96,10 @@
                 </mrow>
                 <mi>c</mi>
               </mfrac>
-              <munderover accent='true'>
-                <mstyle fontweight='bold'>
-                  <mi>j</mi>
-                </mstyle>
-                <mrow></mrow>
+              <mover accent='true'>
+                <mi mathvariant='bold'>j</mi>
                 <mo stretchy='true'>&RightArrow;</mo>
-              </munderover>
+              </mover>
             </mrow>
           </mtd>
         </mtr>
@@ -117,13 +108,10 @@
             <mrow>
               <mo>&nabla;</mo>
               <mo>&cdot;</mo>
-              <munderover accent='true'>
-                <mstyle fontweight='bold'>
-                  <mi>E</mi>
-                </mstyle>
-                <mrow></mrow>
+              <mover accent='true'>
+                <mi mathvariant='bold'>E</mi>
                 <mo stretchy='true'>&RightArrow;</mo>
-              </munderover>
+              </mover>
             </mrow>
           </mtd>
           <mtd>
@@ -142,13 +130,10 @@
             <mrow>
               <mo>&nabla;</mo>
               <mo>&times;</mo>
-              <munderover accent='true'>
-                <mstyle fontweight='bold'>
-                  <mi>E</mi>
-                </mstyle>
-                <mrow></mrow>
+              <mover accent='true'>
+                <mi mathvariant='bold'>E</mi>
                 <mo stretchy='true'>&RightArrow;</mo>
-              </munderover>
+              </mover>
               <mo>+</mo>
               <mfrac>
                 <mn>1</mn>
@@ -157,13 +142,10 @@
               <mfrac>
                 <mrow>
                   <mo>&PartialD;</mo>
-                  <munderover accent='true'>
-                    <mstyle fontweight='bold'>
-                      <mi>B</mi>
-                    </mstyle>
-                    <mrow></mrow>
+                  <mover accent='true'>
+                    <mi mathvariant='bold'>B</mi>
                     <mo stretchy='true'>&RightArrow;</mo>
-                  </munderover>
+                  </mover>
                 </mrow>
                 <mrow>
                   <mo>&PartialD;</mo>
@@ -176,13 +158,10 @@
             <mo>=</mo>
           </mtd>
           <mtd>
-            <munderover accent='true'>
-              <mstyle fontweight='bold'>
-                <mn>0</mn>
-              </mstyle>
-              <mrow></mrow>
+            <mover accent='true'>
+              <mn mathvariant='bold'>0</mn>
               <mo stretchy='true'>&RightArrow;</mo>
-            </munderover>
+            </mover>
           </mtd>
         </mtr>
         <mtr>
@@ -190,13 +169,10 @@
             <mrow>
               <mo>&nabla;</mo>
               <mo>&cdot;</mo>
-              <munderover accent='true'>
-                <mstyle fontweight='bold'>
-                  <mi>B</mi>
-                </mstyle>
-                <mrow></mrow>
+              <mover accent='true'>
+                <mi mathvariant='bold'>B</mi>
                 <mo stretchy='true'>&RightArrow;</mo>
-              </munderover>
+              </mover>
             </mrow>
           </mtd>
           <mtd>
@@ -218,24 +194,21 @@
 <math xmlns='&mathml;'>
   <mstyle displaystyle='true'>
     <mrow>
-      <msubsup>
-        <mstyle fontstyle='normal'>
-          <mi>R</mi>
-        </mstyle>
+      <msub>
+        <mi mathvariant="normal">R</mi>
         <mstyle scriptlevel='1'>
           <mrow>
             <mi>&mu;</mi>
             <mi>&nu;</mi>
           </mrow>
         </mstyle>
-        <mrow></mrow>
-      </msubsup>
+      </msub>
       <mo>-</mo>
       <mfrac>
         <mn>1</mn>
         <mn>2</mn>
       </mfrac>
-      <msubsup>
+      <msub> 
         <mi>g</mi>
         <mstyle scriptlevel='1'>
           <mrow>
@@ -243,38 +216,29 @@
             <mi>&nu;</mi>
           </mrow>
         </mstyle>
-        <mrow></mrow>
-      </msubsup>
-      <mstyle fontstyle='normal'>
-        <mi>R</mi>
-      </mstyle>
+      </msub>
+      <mi mathvariant='normal'>R</mi>
       <mo>=</mo>
       <mfrac>
         <mrow>
           <mn>8</mn>
           <mi>&pi;</mi>
-          <mstyle fontstyle='normal'>
-            <mi>G</mi>
-          </mstyle>
+          <mi mathvariant='normal'>G</mi>
         </mrow>
-        <msubsup>
+        <msup>
           <mi>c</mi>
-          <mrow></mrow>
           <mn>4</mn>
-        </msubsup>
+        </msup>
       </mfrac>
-      <msubsup>
-        <mstyle fontstyle='normal'>
-          <mi>T</mi>
-        </mstyle>
+      <msub>
+        <mi mathvariant='normal'>T</mi>
         <mstyle scriptlevel='1'>
           <mrow>
             <mi>&mu;</mi>
             <mi>&nu;</mi>
           </mrow>
         </mstyle>
-        <mrow></mrow>
-      </msubsup>
+      </msub>
     </mrow>
   </mstyle>
 </math>

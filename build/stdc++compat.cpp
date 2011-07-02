@@ -37,10 +37,7 @@
 
 #include <ostream>
 #include <istream>
-#ifdef DEBUG
 #include <string>
-#endif
-
 
 /* GLIBCXX_3.4.8  is from gcc 4.1.1 (111691)
    GLIBCXX_3.4.9  is from gcc 4.2.0 (111690)
@@ -63,10 +60,9 @@ namespace std {
     template ostream& __ostream_insert(ostream&, const char*, streamsize);
     template istream& istream::_M_extract(double&);
 #endif
-#ifdef DEBUG
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 14)
     /* Instantiate these templates to avoid GLIBCXX_3.4.14 symbol versions
-     * in debug builds */
+     * depending on optimization level */
     template char *string::_S_construct_aux_2(size_type, char, allocator<char> const&);
 #ifdef _GLIBCXX_USE_WCHAR_T
     template wchar_t *wstring::_S_construct_aux_2(size_type, wchar_t, allocator<wchar_t> const&);
@@ -79,7 +75,6 @@ namespace std {
     template wstring& wstring::assign(wstring&&);
 #endif /* __GXX_EXPERIMENTAL_CXX0X__ */
 #endif /* (__GNUC__ == 4) && (__GNUC_MINOR__ >= 5) */
-#endif /* DEBUG */
 }
 
 namespace std __attribute__((visibility("default"))) {

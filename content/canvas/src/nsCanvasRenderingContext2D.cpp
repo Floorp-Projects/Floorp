@@ -373,6 +373,9 @@ public:
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
+    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot()
+        { return nsnull; }
+
     NS_IMETHOD SetIsOpaque(PRBool isOpaque);
     NS_IMETHOD Reset();
     already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
@@ -813,7 +816,7 @@ PRUint8 (*nsCanvasRenderingContext2D::sUnpremultiplyTable)[256] = nsnull;
 PRUint8 (*nsCanvasRenderingContext2D::sPremultiplyTable)[256] = nsnull;
 
 nsresult
-NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
+NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult)
 {
     nsRefPtr<nsIDOMCanvasRenderingContext2D> ctx = new nsCanvasRenderingContext2D();
     if (!ctx)
@@ -3388,7 +3391,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     //   (!FloatValidate(sx, sy, sw, sh) || !FloatValidate(dx, dy, dw, dh))
     // but we would also need to validate some sums for overflow (e.g. sx + sw).
     if (!FloatValidate(sx + sw, sy + sh, dx + dw, dy + dh)) {
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
     }
 
     // Handle negative sw, sh, dw and dh by flipping the rectangle over in the

@@ -634,11 +634,9 @@ GK_ATOM(omitXmlDeclaration, "omit-xml-declaration")
 GK_ATOM(onabort, "onabort")
 GK_ATOM(onafterprint, "onafterprint")
 GK_ATOM(onafterscriptexecute, "onafterscriptexecute")
-#ifdef MOZ_CSS_ANIMATIONS
 GK_ATOM(onanimationend, "onanimationend")
 GK_ATOM(onanimationiteration, "onanimationiteration")
 GK_ATOM(onanimationstart, "onanimationstart")
-#endif
 GK_ATOM(onbeforecopy, "onbeforecopy")
 GK_ATOM(onbeforecut, "onbeforecut")
 GK_ATOM(onbeforepaste, "onbeforepaste")
@@ -1089,6 +1087,7 @@ GK_ATOM(headerCSP, "x-content-security-policy")
 GK_ATOM(headerCSPReportOnly, "x-content-security-policy-report-only")
 GK_ATOM(headerXFO, "x-frame-options")
 GK_ATOM(xml, "xml")
+GK_ATOM(xml_stylesheet, "xml-stylesheet")
 GK_ATOM(xmlns, "xmlns")
 GK_ATOM(xmp, "xmp")
 GK_ATOM(xulcontentsgenerated, "xulcontentsgenerated")
@@ -1698,6 +1697,7 @@ GK_ATOM(onMozTouchUp, "onMozTouchUp")
 
 // orientation support
 GK_ATOM(ondeviceorientation, "ondeviceorientation")
+GK_ATOM(ondevicemotion, "ondevicemotion")
 
 //---------------------------------------------------------------------------
 // Special atoms
@@ -1835,11 +1835,9 @@ GK_ATOM(volumechange, "volumechange")
 #endif
 
 // Content property names
-#ifdef MOZ_CSS_ANIMATIONS
 GK_ATOM(animationsProperty, "AnimationsProperty")        // FrameAnimations*
 GK_ATOM(animationsOfBeforeProperty, "AnimationsOfBeforeProperty") // FrameAnimations*
 GK_ATOM(animationsOfAfterProperty, "AnimationsOfAfterProperty") // FrameAnimations*
-#endif
 GK_ATOM(transitionsProperty, "TransitionsProperty")        // FrameTransitions*
 GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTransitions*
 GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*

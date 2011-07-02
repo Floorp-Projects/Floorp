@@ -569,7 +569,7 @@ MakeBlankTextRun(const void* aText, PRUint32 aLength,
     if (!textRun || !textRun->GetCharacterGlyphs())
         return nsnull;
     gfxFont *font = aFontGroup->GetFontAt(0);
-    textRun->AddGlyphRun(font, 0);
+    textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, PR_FALSE);
 #ifdef DEBUG
     textRun->mCachedWords = 0;
     textRun->mCacheGeneration = gTextRunWordCache ? gTextRunWordCache->mGeneration : 0;
@@ -603,7 +603,8 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
 #endif
 
     gfxFont *font = aFontGroup->GetFontAt(0);
-    nsresult rv = textRun->AddGlyphRun(font, 0);
+    nsresult rv =
+        textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     nsAutoTArray<PRUnichar,200> tempString;
@@ -746,7 +747,8 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
 #endif
 
     gfxFont *font = aFontGroup->GetFontAt(0);
-    nsresult rv = textRun->AddGlyphRun(font, 0);
+    nsresult rv =
+        textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     nsAutoTArray<PRUint8,200> tempString;

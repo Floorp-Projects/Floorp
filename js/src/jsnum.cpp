@@ -70,10 +70,14 @@
 #include "jsstr.h"
 #include "jstracer.h"
 #include "jsvector.h"
+#include "jslibmath.h"
 
 #include "jsinterpinlines.h"
+#include "jsnuminlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
+
+#include "vm/String-inl.h"
 
 using namespace js;
 
@@ -430,7 +434,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
             return true;
         }
         /*
-         * Step 1 is |inputString = ToString(string)|. When string >= 
+         * Step 1 is |inputString = ToString(string)|. When string >=
          * 1e21, ToString(string) is in the form "NeM". 'e' marks the end of
          * the word, which would mean the result of parseInt(string) should be |N|.
          *
@@ -576,7 +580,7 @@ Number(JSContext *cx, uintN argc, Value *vp)
 
     if (!isConstructing)
         return true;
-    
+
     JSObject *obj = NewBuiltinClassInstance(cx, &js_NumberClass);
     if (!obj)
         return false;
@@ -980,7 +984,7 @@ enum nc_slot {
 
 /*
  * Some to most C compilers forbid spelling these at compile time, or barf
- * if you try, so all but MAX_VALUE are set up by js_InitRuntimeNumberState
+ * if you try, so all but MAX_VALUE are set up by InitRuntimeNumberState
  * using union jsdpun.
  */
 static JSConstDoubleSpec number_constants[] = {
@@ -1017,11 +1021,11 @@ inline void FIX_FPU() {
 
 #endif
 
-JSBool
-js_InitRuntimeNumberState(JSContext *cx)
-{
-    JSRuntime *rt = cx->runtime;
+namespace js {
 
+bool
+InitRuntimeNumberState(JSRuntime *rt)
+{
     FIX_FPU();
 
     jsdpun u;
@@ -1044,40 +1048,64 @@ js_InitRuntimeNumberState(JSContext *cx)
     u.s.lo = 1;
     number_constants[NC_MIN_VALUE].dval = u.d;
 
-#ifndef HAVE_LOCALECONV
-    const char* thousands_sep = getenv("LOCALE_THOUSANDS_SEP");
-    const char* decimal_point = getenv("LOCALE_DECIMAL_POINT");
-    const char* grouping = getenv("LOCALE_GROUPING");
-
-    rt->thousandsSeparator =
-        JS_strdup(cx, thousands_sep ? thousands_sep : "'");
-    rt->decimalSeparator =
-        JS_strdup(cx, decimal_point ? decimal_point : ".");
-    rt->numGrouping =
-        JS_strdup(cx, grouping ? grouping : "\3\0");
-#else
+    /* Copy locale-specific separators into the runtime strings. */
+    const char *thousandsSeparator, *decimalPoint, *grouping;
+#ifdef HAVE_LOCALECONV
     struct lconv *locale = localeconv();
-    rt->thousandsSeparator =
-        JS_strdup(cx, locale->thousands_sep ? locale->thousands_sep : "'");
-    rt->decimalSeparator =
-        JS_strdup(cx, locale->decimal_point ? locale->decimal_point : ".");
-    rt->numGrouping =
-        JS_strdup(cx, locale->grouping ? locale->grouping : "\3\0");
+    thousandsSeparator = locale->thousands_sep;
+    decimalPoint = locale->decimal_point;
+    grouping = locale->grouping;
+#else
+    thousandsSeparator = getenv("LOCALE_THOUSANDS_SEP");
+    decimalPoint = getenv("LOCALE_DECIMAL_POINT");
+    grouping = getenv("LOCALE_GROUPING");
 #endif
+    if (!thousandsSeparator)
+        thousandsSeparator = "'";
+    if (!decimalPoint)
+        decimalPoint = ".";
+    if (!grouping)
+        grouping = "\3\0";
 
-    return rt->thousandsSeparator && rt->decimalSeparator && rt->numGrouping;
+    /*
+     * We use single malloc to get the memory for all separator and grouping
+     * strings.
+     */
+    size_t thousandsSeparatorSize = strlen(thousandsSeparator) + 1;
+    size_t decimalPointSize = strlen(decimalPoint) + 1;
+    size_t groupingSize = strlen(grouping) + 1;
+
+    char *storage = static_cast<char *>(OffTheBooks::malloc_(thousandsSeparatorSize +
+                                                             decimalPointSize +
+                                                             groupingSize));
+    if (!storage)
+        return false;
+
+    memcpy(storage, thousandsSeparator, thousandsSeparatorSize);
+    rt->thousandsSeparator = storage;
+    storage += thousandsSeparatorSize;
+
+    memcpy(storage, decimalPoint, decimalPointSize);
+    rt->decimalSeparator = storage;
+    storage += decimalPointSize;
+
+    memcpy(storage, grouping, groupingSize);
+    rt->numGrouping = grouping;
+    return true;
 }
 
 void
-js_FinishRuntimeNumberState(JSContext *cx)
+FinishRuntimeNumberState(JSRuntime *rt)
 {
-    JSRuntime *rt = cx->runtime;
-
-    cx->free_((void *) rt->thousandsSeparator);
-    cx->free_((void *) rt->decimalSeparator);
-    cx->free_((void *) rt->numGrouping);
-    rt->thousandsSeparator = rt->decimalSeparator = rt->numGrouping = NULL;
+    /*
+     * The free also releases the memory for decimalSeparator and numGrouping
+     * strings.
+     */
+    char *storage = const_cast<char *>(rt->thousandsSeparator);
+    Foreground::free_(storage);
 }
+
+} /* namespace js */
 
 JSObject *
 js_InitNumberClass(JSContext *cx, JSObject *obj)
@@ -1140,7 +1168,7 @@ FracNumberToCString(JSContext *cx, ToCStringBuf *cbuf, jsdouble d, jsint base = 
          * This is V8's implementation of the algorithm described in the
          * following paper:
          *
-         *   Printing floating-point numbers quickly and accurately with integers. 
+         *   Printing floating-point numbers quickly and accurately with integers.
          *   Florian Loitsch, PLDI 2010.
          *
          * It fails on a small number of cases, whereupon we fall back to

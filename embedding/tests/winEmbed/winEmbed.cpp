@@ -712,7 +712,7 @@ INT_PTR CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 
 
 //
-//  FUNCTION: BrowserWndProc(HWND, unsigned, WORD, LONG)
+//  FUNCTION: BrowserWndProc(HWND, UINT, WRAPAM, LPARAM)
 //
 //  PURPOSE:  Processes messages for the browser container window.
 //
@@ -875,7 +875,7 @@ void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
 
     // Clear the window user data
     HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
-    SetWindowLong(hwndBrowser, GWL_USERDATA, nsnull);
+    SetWindowLongPtr(hwndBrowser, GWLP_USERDATA, nsnull);
     DestroyWindow(hwndBrowser);
     DestroyWindow(hwndDlg);
 
@@ -1055,7 +1055,7 @@ void WebBrowserChromeUI::GetResourceStringById(PRInt32 aID, char ** aReturn)
     int retval = LoadString( ghInstanceApp, aID, (LPTSTR)resBuf, sizeof(resBuf) );
     if (retval != 0)
     {
-        int resLen = strlen(resBuf);
+        size_t resLen = strlen(resBuf);
         *aReturn = (char *)calloc(resLen+1, sizeof(char *));
         if (!*aReturn) return;
             strncpy(*aReturn, resBuf, resLen);
@@ -1131,5 +1131,5 @@ PRUint32 AppCallbacks::RunEventLoop(PRBool &aRunCondition)
     ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 100, QS_ALLEVENTS);
   }
   ::CloseHandle(hFakeEvent);
-  return msg.wParam;
+  return (PRUint32)msg.wParam;
 }

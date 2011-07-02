@@ -8,19 +8,9 @@ function test() {
     catch (ex) { }
     return false;
   }
-  
-  // test setup
-  let tabbrowser = gBrowser;
+
   waitForExplicitFinish();
-  
-  // component
-  let ssComponent = test(function() Cc["@mozilla.org/browser/sessionstore;1"]);
-  ok(ssComponent, "reference the sessionstore component");
-  
-  // service
-  let ss = test(function() ssComponent.getService(Ci.nsISessionStore));
-  ok(ss, "reference the sessionstore service");
-  
+
   ////////////////////////////
   // setWindowValue, et al. //
   ////////////////////////////
@@ -47,7 +37,7 @@ function test() {
   /////////////////////////
   key = "Unique name: " + Math.random();
   value = "Unique value: " + Date.now();
-  let tab = tabbrowser.addTab();
+  let tab = gBrowser.addTab();
   tab.linkedBrowser.stop();
   
   // test adding
@@ -66,7 +56,7 @@ function test() {
   ok(test(function() ss.deleteTabValue(tab, key)), "delete non-existent tab value");
   
   // clean up
-  tabbrowser.removeTab(tab);
+  gBrowser.removeTab(tab);
   
   /////////////////////////////////////
   // getClosedTabCount, undoCloseTab //
@@ -80,14 +70,14 @@ function test() {
   
   // create a new tab
   let testURL = "about:";
-  tab = tabbrowser.addTab(testURL);
+  tab = gBrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
     this.removeEventListener("load", arguments.callee, true);
     // make sure that the next closed tab will increase getClosedTabCount
     gPrefService.setIntPref("browser.sessionstore.max_tabs_undo", max_tabs_undo + 1);
     
     // remove tab
-    tabbrowser.removeTab(tab);
+    gBrowser.removeTab(tab);
     
     // getClosedTabCount
     var newcount = ss.getClosedTabCount(window);
@@ -104,7 +94,7 @@ function test() {
       // clean up
       if (gPrefService.prefHasUserValue("browser.sessionstore.max_tabs_undo"))
         gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
-      tabbrowser.removeTab(tab);
+      gBrowser.removeTab(tab);
       finish();
     }, true);
   }, true);

@@ -39,7 +39,7 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
-#include "gfxCore.h"
+#include "mozilla/gfx/Types.h"
 
 class nsTableCellFrame;
 class nsCellMap;

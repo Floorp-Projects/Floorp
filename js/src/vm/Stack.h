@@ -389,7 +389,7 @@ class StackFrame
     /* Called by jit stubs and serve as a specification for jit-code. */
     void initJitFrameCallerHalf(JSContext *cx, StackFrame::Flags flags, void *ncode);
     void initJitFrameEarlyPrologue(JSFunction *fun, uint32 nactual);
-    void initJitFrameLatePrologue();
+    bool initJitFrameLatePrologue(JSContext *cx, Value **limit);
 
     /* Used for eval. */
     void initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs,
@@ -741,10 +741,9 @@ class StackFrame
     }
 
     /*
-     * getValidCalleeObject is a fallible getter to compute the correct callee
-     * function object, which may require deferred cloning due to the JSObject
-     * methodReadBarrier. For a non-function frame, return true with *vp set
-     * from calleev, which may not be an object (it could be undefined).
+     * Compute the callee function for this stack frame, cloning if needed to
+     * implement the method read barrier.  If this is not a function frame,
+     * set *vp to null.
      */
     bool getValidCalleeObject(JSContext *cx, Value *vp);
 

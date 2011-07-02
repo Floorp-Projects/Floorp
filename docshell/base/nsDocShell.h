@@ -44,7 +44,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIContentViewer.h"
-#include "nsIPrefBranch.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIScriptContext.h"
 #include "nsITimer.h"
@@ -94,7 +93,7 @@
 #include "nsISupportsArray.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
-#include "nsIWebProgressListener2.h"
+#include "nsIWebProgressListener.h"
 #include "nsISHContainer.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellHistory.h"
@@ -106,7 +105,7 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIObserver.h"
 #include "nsDocShellLoadTypes.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventTarget.h"
 #include "nsILoadContext.h"
 #include "nsIWidget.h"
 #include "nsIWebShellServices.h"
@@ -119,6 +118,7 @@ class nsDocShell;
 class nsIController;
 class OnLinkClickEvent;
 class nsIScrollableFrame;
+class nsDOMNavigationTiming;
 
 /* load commands were moved to nsIDocShell.h */
 /* load types were moved to nsDocShellLoadTypes.h */
@@ -268,13 +268,10 @@ public:
 
     friend class OnLinkClickEvent;
 
-    // We need dummy OnLocationChange in some cases to update the UI without
-    // updating security info.
+    // We need dummy OnLocationChange in some cases to update the UI.
     void FireDummyOnLocationChange()
     {
-        FireOnLocationChange
-            (this, nsnull, mCurrentURI, 
-             nsIWebProgressListener2::LOCATION_CHANGE_SAME_DOCUMENT);
+      FireOnLocationChange(this, nsnull, mCurrentURI);
     }
 
     nsresult HistoryTransactionRemoved(PRInt32 aIndex);
@@ -595,8 +592,7 @@ protected:
     // FireOnLocationChange is called.
     // In all other cases PR_FALSE is returned.
     PRBool SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
-                         PRBool aFireOnLocationChange,
-                         PRUint32 aLocationFlags);
+                         PRBool aFireOnLocationChange);
 
     // The following methods deal with saving and restoring content viewers
     // in session history.
@@ -688,6 +684,8 @@ protected:
 
     void ClearFrameHistory(nsISHEntry* aEntry);
 
+    nsresult MaybeInitTiming();
+
     // Event type dispatched by RestorePresentation
     class RestorePresentationEvent : public nsRunnable {
     public:
@@ -719,7 +717,6 @@ protected:
     nsCOMPtr<nsIContentViewer> mContentViewer;
     nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
     nsCOMPtr<nsIWidget>        mParentWidget;
-    nsCOMPtr<nsIPrefBranch>    mPrefs;
 
     // mCurrentURI should be marked immutable on set if possible.
     nsCOMPtr<nsIURI>           mCurrentURI;
@@ -769,7 +766,7 @@ protected:
     // For that reasons don't use nsCOMPtr.
 
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
-    nsPIDOMEventTarget *       mChromeEventHandler; //Weak Reference
+    nsIDOMEventTarget *       mChromeEventHandler; //Weak Reference
 
     eCharsetReloadState        mCharsetReloadState;
 
@@ -792,12 +789,14 @@ protected:
     PRInt32                    mPreviousTransIndex;
     PRInt32                    mLoadedTransIndex;
 
+    PRPackedBool               mCreated;
     PRPackedBool               mAllowSubframes;
     PRPackedBool               mAllowPlugins;
     PRPackedBool               mAllowJavascript;
     PRPackedBool               mAllowMetaRedirects;
     PRPackedBool               mAllowImages;
     PRPackedBool               mAllowDNSPrefetch;
+    PRPackedBool               mAllowWindowControl;
     PRPackedBool               mCreatingDocument; // (should be) debugging only
     PRPackedBool               mUseErrorPages;
     PRPackedBool               mObserveErrorPages;
@@ -840,6 +839,8 @@ protected:
     PRUint64                   mHistoryID;
 
     static nsIURIFixup *sURIFixup;
+
+    nsRefPtr<nsDOMNavigationTiming> mTiming;
 
 #ifdef DEBUG
 private:

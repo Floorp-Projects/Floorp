@@ -63,8 +63,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMClientInformation.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOM3EventTarget.h"
-#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNavigatorGeolocation.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
@@ -83,7 +81,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMModalContentWindow.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMDocument.h"
 #ifndef MOZ_DISABLE_DOMCRYPTO
 #include "nsIDOMCrypto.h"
@@ -103,7 +101,6 @@
 #include "nsIDOMStorageEvent.h"
 #include "nsIDOMStorageIndexedDB.h"
 #include "nsIDOMOfflineResourceList.h"
-#include "nsPIDOMEventTarget.h"
 #include "nsIArray.h"
 #include "nsIContent.h"
 #include "nsIIDBFactory.h"
@@ -137,6 +134,7 @@ class nsLocation;
 class nsNavigator;
 class nsScreen;
 class nsHistory;
+class nsPerformance;
 class nsIDocShellLoadInfo;
 class WindowStateHolder;
 class nsGlobalWindowObserver;
@@ -275,16 +273,14 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
                        public nsIDOMEventTarget,
-                       public nsPIDOMEventTarget,
-                       public nsIDOM3EventTarget,
-                       public nsIDOMNSEventTarget,
                        public nsIDOMStorageWindow,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
                        public nsIDOMWindow_2_0_BRANCH,
                        public nsWrapperCache,
-                       public PRCListStr
+                       public PRCListStr,
+                       public nsIDOMWindowPerformance
 {
 public:
   friend class nsDOMMozURLProperty;
@@ -326,11 +322,11 @@ public:
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
 
-  // nsIDOMWindow2
-  NS_DECL_NSIDOMWINDOW2
-
   // nsIDOMWindowInternal
   NS_DECL_NSIDOMWINDOWINTERNAL
+
+  // nsIDOMWindowPerformance
+  NS_DECL_NSIDOMWINDOWPERFORMANCE
 
   // nsIDOMJSWindow
   NS_DECL_NSIDOMJSWINDOW
@@ -338,12 +334,6 @@ public:
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET
 
-  // nsIDOM3EventTarget
-  NS_DECL_NSIDOM3EVENTTARGET
-
-  // nsIDOMNSEventTarget
-  NS_DECL_NSIDOMNSEVENTTARGET
-  
   // nsIDOMWindow_2_0_BRANCH
   NS_DECL_NSIDOMWINDOW_2_0_BRANCH
 
@@ -351,7 +341,7 @@ public:
   virtual NS_HIDDEN_(nsPIDOMWindow*) GetPrivateRoot();
   virtual NS_HIDDEN_(void) ActivateOrDeactivate(PRBool aActivate);
   virtual NS_HIDDEN_(void) SetActive(PRBool aActive);
-  virtual NS_HIDDEN_(void) SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler);
+  virtual NS_HIDDEN_(void) SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler);
 
   virtual NS_HIDDEN_(void) SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal);
   virtual NS_HIDDEN_(nsIPrincipal*) GetOpenerScriptPrincipal();
@@ -373,29 +363,6 @@ public:
   }
 
   virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
-
-  virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForDOMEvent()
-  {
-    return static_cast<nsPIDOMEventTarget*>(GetOuterWindowInternal());
-  }
-  virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForEventTargetChain()
-  {
-    return IsInnerWindow() ?
-      this : static_cast<nsPIDOMEventTarget*>(GetCurrentInnerWindowInternal());
-  }
-  virtual NS_HIDDEN_(nsresult) PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual NS_HIDDEN_(nsresult) PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual NS_HIDDEN_(nsresult) DispatchDOMEvent(nsEvent* aEvent,
-                                                nsIDOMEvent* aDOMEvent,
-                                                nsPresContext* aPresContext,
-                                                nsEventStatus* aEventStatus);
-  virtual NS_HIDDEN_(nsIEventListenerManager*) GetListenerManager(PRBool aCreateIfNotFound);
-  virtual NS_HIDDEN_(nsresult) AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                                     const nsIID& aIID);
-  virtual NS_HIDDEN_(nsresult) RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                                        const nsIID& aIID);
-  virtual NS_HIDDEN_(nsresult) GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual NS_HIDDEN_(nsIScriptContext*) GetContextForEventHandlers(nsresult* aRv);
 
   virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
@@ -569,12 +536,14 @@ public:
 
   static bool HasIndexedDBSupport();
 
+  static bool HasPerformanceSupport();
+
 private:
   // Enable updates for the accelerometer.
-  void EnableAccelerationUpdates();
+  void EnableDeviceMotionUpdates();
 
   // Disables updates for the accelerometer.
-  void DisableAccelerationUpdates();
+  void DisableDeviceMotionUpdates();
 
 protected:
   friend class HashchangeCallback;
@@ -889,8 +858,8 @@ protected:
   // should be displayed.
   PRPackedBool           mFocusByKeyOccurred : 1;
 
-  // Indicates whether this window is getting acceleration change events
-  PRPackedBool           mHasAcceleration : 1;
+  // Indicates whether this window is getting device motion change events
+  PRPackedBool           mHasDeviceMotion : 1;
 
   // whether we've sent the destroy notification for our window id
   PRPackedBool           mNotifiedIDDestroyed : 1;
@@ -903,6 +872,7 @@ protected:
   nsCOMPtr<nsIPrincipal>        mArgumentsOrigin;
   nsRefPtr<nsNavigator>         mNavigator;
   nsRefPtr<nsScreen>            mScreen;
+  nsRefPtr<nsPerformance>       mPerformance;
   nsRefPtr<nsDOMWindowList>     mFrames;
   nsRefPtr<nsBarProp>           mMenubar;
   nsRefPtr<nsBarProp>           mToolbar;
@@ -926,7 +896,7 @@ protected:
                                                  // whether to clear scope
 
   // These member variable are used only on inner windows.
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  nsRefPtr<nsEventListenerManager> mListenerManager;
   PRCList                       mTimeouts;
   // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
   nsTimeout*                    mTimeoutInsertionPoint;
@@ -1026,8 +996,8 @@ public:
     mCleanMessageManager = PR_FALSE;
   }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGlobalChromeWindow,
-                                                     nsGlobalWindow)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalChromeWindow,
+                                           nsGlobalWindow)
 
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
   nsCOMPtr<nsIChromeFrameMessageManager> mMessageManager;

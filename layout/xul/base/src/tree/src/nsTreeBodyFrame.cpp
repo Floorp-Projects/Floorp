@@ -3393,6 +3393,9 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
   // Resolve style for the image.
   nsStyleContext* imageContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreeimage);
 
+  // Obtain opacity value for the image.
+  float opacity = imageContext->GetStyleDisplay()->mOpacity;
+
   // Obtain the margins for the image and then deflate our rect by that
   // amount.  The image is assumed to be contained within the deflated rect.
   nsRect imageRect(aImageRect);
@@ -3499,10 +3502,20 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
       nsLayoutUtils::GetWholeImageDestination(rawImageSize, sourceRect,
           nsRect(destRect.TopLeft(), imageDestSize));
 
+    gfxContext* ctx = aRenderingContext.ThebesContext();
+    if (opacity != 1.0f) {
+      ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+    }
+
     nsLayoutUtils::DrawImage(&aRenderingContext, image,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
         wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect,
         imgIContainer::FLAG_NONE);
+
+    if (opacity != 1.0f) {
+      ctx->PopGroupToSource();
+      ctx->Paint(opacity);
+    }
   }
 
   // Update the aRemainingWidth and aCurrX values.

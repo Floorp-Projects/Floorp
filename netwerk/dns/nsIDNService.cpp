@@ -586,7 +586,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
   out.Truncate();
 
   if (in.Length() > kMaxDNSNodeLen) {
-    NS_ERROR("IDN node too large");
+    NS_WARNING("IDN node too large");
     return NS_ERROR_FAILURE;
   }
 
@@ -604,7 +604,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
   }
 
   if (out.Length() > kMaxDNSNodeLen) {
-    NS_ERROR("IDN node too large");
+    NS_WARNING("IDN node too large");
     return NS_ERROR_FAILURE;
   }
 

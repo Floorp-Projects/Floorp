@@ -39,8 +39,8 @@
 #define GFX_POINT_H
 
 #include "nsMathUtils.h"
-#include "mozilla/BaseSize.h"
-#include "mozilla/BasePoint.h"
+#include "mozilla/gfx/BaseSize.h"
+#include "mozilla/gfx/BasePoint.h"
 #include "nsSize.h"
 #include "nsPoint.h"
 
@@ -48,16 +48,16 @@
 
 typedef nsIntSize gfxIntSize;
 
-struct THEBES_API gfxSize : public mozilla::BaseSize<gfxFloat, gfxSize> {
-    typedef mozilla::BaseSize<gfxFloat, gfxSize> Super;
+struct THEBES_API gfxSize : public mozilla::gfx::BaseSize<gfxFloat, gfxSize> {
+    typedef mozilla::gfx::BaseSize<gfxFloat, gfxSize> Super;
 
     gfxSize() : Super() {}
     gfxSize(gfxFloat aWidth, gfxFloat aHeight) : Super(aWidth, aHeight) {}
     gfxSize(const nsIntSize& aSize) : Super(aSize.width, aSize.height) {}
 };
 
-struct THEBES_API gfxPoint : public mozilla::BasePoint<gfxFloat, gfxPoint> {
-    typedef mozilla::BasePoint<gfxFloat, gfxPoint> Super;
+struct THEBES_API gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> {
+    typedef mozilla::gfx::BasePoint<gfxFloat, gfxPoint> Super;
 
     gfxPoint() : Super() {}
     gfxPoint(gfxFloat aX, gfxFloat aY) : Super(aX, aY) {}

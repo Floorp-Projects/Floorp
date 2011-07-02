@@ -50,7 +50,6 @@
 #include "nsIDOMClassInfo.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
-#include "nsLoadListenerProxy.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsNetCID.h"
@@ -63,60 +62,13 @@
 
 using namespace mozilla;
 
-// nsIDOMEventListener
-nsresult
-nsDOMParser::HandleEvent(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-// nsIDOMLoadListener
-nsresult
-nsDOMParser::Load(nsIDOMEvent* aEvent)
-{
-  mLoopingForSyncLoad = PR_FALSE;
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMParser::BeforeUnload(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-nsresult
-nsDOMParser::Unload(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-nsresult
-nsDOMParser::Abort(nsIDOMEvent* aEvent)
-{
-  mLoopingForSyncLoad = PR_FALSE;
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMParser::Error(nsIDOMEvent* aEvent)
-{
-  mLoopingForSyncLoad = PR_FALSE;
-
-  return NS_OK;
-}
-
 nsDOMParser::nsDOMParser()
-  : mLoopingForSyncLoad(PR_FALSE),
-    mAttemptedInit(PR_FALSE)
+  : mAttemptedInit(PR_FALSE)
 {
 }
 
 nsDOMParser::~nsDOMParser()
 {
-  NS_ABORT_IF_FALSE(!mLoopingForSyncLoad, "we rather crash than hang");
-  mLoopingForSyncLoad = PR_FALSE;
 }
 
 DOMCI_DATA(DOMParser, nsDOMParser)
@@ -126,8 +78,6 @@ NS_INTERFACE_MAP_BEGIN(nsDOMParser)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsIDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsIDOMParserJS)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMParser)
@@ -237,19 +187,6 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
                                       getter_AddRefs(domDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Register as a load listener on the document
-  nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(domDocument));
-  if (target) {
-    nsWeakPtr requestWeak(do_GetWeakReference(static_cast<nsIDOMParser*>(this)));
-    nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
-    if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
-
-    // This will addref the proxy
-    rv = target->AddEventListenerByIID(static_cast<nsIDOMEventListener*>(proxy), 
-                                       NS_GET_IID(nsIDOMLoadListener));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   // Create a fake channel 
   nsCOMPtr<nsIChannel> parserChannel;
   NS_NewInputStreamChannel(getter_AddRefs(parserChannel), mDocumentURI, nsnull,
@@ -265,9 +202,6 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   // Tell the document to start loading
   nsCOMPtr<nsIStreamListener> listener;
-
-  AutoRestore<PRPackedBool> restoreSyncLoop(mLoopingForSyncLoad);
-  mLoopingForSyncLoad = PR_TRUE;
 
   // Have to pass PR_FALSE for reset here, else the reset will remove
   // our event listener.  Should that listener addition move to later
@@ -317,15 +251,6 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
-  }
-
-  // Process events until we receive a load, abort, or error event for the
-  // document object.  That event may have already fired.
-
-  nsIThread *thread = NS_GetCurrentThread();
-  while (mLoopingForSyncLoad) {
-    if (!NS_ProcessNextEvent(thread))
-      break;
   }
 
   domDocument.swap(*aResult);
@@ -481,7 +406,8 @@ nsDOMParser::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
     NS_ENSURE_TRUE(secMan, NS_ERROR_UNEXPECTED);
 
-    secMan->GetSubjectPrincipal(getter_AddRefs(prin));
+    nsresult rv = secMan->GetSubjectPrincipal(getter_AddRefs(prin));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // We're called from JS; there better be a subject principal, really.
     NS_ENSURE_TRUE(prin, NS_ERROR_UNEXPECTED);
@@ -538,7 +464,8 @@ nsDOMParser::Init(nsIPrincipal *aPrincipal, nsIURI *aDocumentURI,
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
     NS_ENSURE_TRUE(secMan, NS_ERROR_UNEXPECTED);
 
-    secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+    nsresult rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // We're called from JS; there better be a subject principal, really.
     NS_ENSURE_TRUE(principal, NS_ERROR_UNEXPECTED);

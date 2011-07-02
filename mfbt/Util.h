@@ -188,7 +188,7 @@ struct DebugOnly
 
 /*
  * This utility pales in comparison to Boost's aligned_storage. The utility
- * simply assumes that JSUint64 is enough alignment for anyone. This may need
+ * simply assumes that uint64 is enough alignment for anyone. This may need
  * to be extended one day...
  *
  * As an important side effect, pulling the storage into this template is
@@ -217,7 +217,7 @@ struct AlignedStorage2
     } u;
 
     const T *addr() const { return (const T *)u.bytes; }
-    T *addr() { return (T *)u.bytes; }
+    T *addr() { return (T *)(void *)u.bytes; }
 };
 
 /*
@@ -290,6 +290,11 @@ class Maybe
     T &ref() {
         MOZ_ASSERT(constructed);
         return asT();
+    }
+
+    const T &ref() const {
+        MOZ_ASSERT(constructed);
+        return const_cast<Maybe *>(this)->asT();
     }
 
     void destroy() {

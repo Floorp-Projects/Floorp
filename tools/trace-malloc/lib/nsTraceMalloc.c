@@ -1365,7 +1365,7 @@ NS_TraceMallocStartup(int logfd)
         log_header(logfd);
     }
 
-    atexit(NS_TraceMallocShutdown);
+    RegisterTraceMallocShutdown();
 
     tmlock = PR_NewLock();
     (void) tm_get_thread(); /* ensure index initialization while it's easy */

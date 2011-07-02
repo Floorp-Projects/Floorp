@@ -224,15 +224,6 @@
       </hbox>
     </panel>
 
-    <panel id="highlighter-panel"
-           hidden="true"
-           ignorekeys="true"
-           noautofocus="true"
-           noautohide="true"
-           onclick="InspectorUI.stopInspecting();"
-           onmousemove="InspectorUI.highlighter.handleMouseMove(event);"
-           onMozMousePixelScroll="InspectorUI.highlighter.handlePixelScroll(event);"/>
-
     <panel id="inspector-tree-panel"
            orient="vertical"
            hidden="true"
@@ -1033,6 +1024,12 @@
 #endif
 
 </vbox>
+# <iframe id="highlighter-frame"
+#   transparent="true"
+#   type="content"
+#   src="chrome://content/base/highlighter.html"/> is dynamically appended as
+#     the last child of #tab-view-deck, only when it is needed, for minimal
+#     performance impact.
 # <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
 #     Introducing the iframe dynamically, as needed, was found to be better than
 #     starting with an empty iframe here in browser.xul from a Ts standpoint.
