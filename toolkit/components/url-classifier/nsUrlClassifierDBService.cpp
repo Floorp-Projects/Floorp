@@ -77,6 +77,7 @@
 #include "prprf.h"
 #include "prnetdb.h"
 #include "zlib.h"
+#include "mozilla/Preferences.h"
 
 // Needed to interpert mozIStorageConnection::GetLastError
 #include <sqlite3.h>
@@ -1798,7 +1799,6 @@ nsUrlClassifierDBServiceWorker::GetTables(nsIUrlClassifierCallback* c)
 
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
-    NS_ERROR("Unable to open database");
     return NS_ERROR_FAILURE;
   }
 
@@ -2913,7 +2913,6 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
 
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
-    NS_ERROR("Unable to open database");
     return NS_ERROR_FAILURE;
   }
 
@@ -3061,7 +3060,6 @@ nsUrlClassifierDBServiceWorker::UpdateStream(const nsACString& chunk)
   LOG(("Update from Stream."));
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
-    NS_ERROR("Unable to open database");
     return NS_ERROR_FAILURE;
   }
 
@@ -3366,6 +3364,15 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   // Connection already open, don't do anything.
   if (mConnection)
     return NS_OK;
+
+  // If we're turned off, refuse to open the DB
+  PRBool openDB =
+    Preferences::GetBool(CHECK_MALWARE_PREF, CHECK_MALWARE_DEFAULT) ||
+    Preferences::GetBool(CHECK_PHISHING_PREF, CHECK_PHISHING_DEFAULT);
+  if (!openDB) {
+    NS_WARNING("Not opening url-classifier DB");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   LOG(("Opening db\n"));
 
