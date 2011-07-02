@@ -907,29 +907,20 @@ bool
 NodeBuilder::tryStatement(Value body, NodeVector &catches, Value finally,
                           TokenPos *pos, Value *dst)
 {
-    Value handler;
+    Value handlers;
 
     Value cb = callbacks[AST_TRY_STMT];
     if (!cb.isNull()) {
-        return newArray(catches, &handler) &&
-               callback(cb, body, handler, opt(finally), pos, dst);
+        return newArray(catches, &handlers) &&
+               callback(cb, body, handlers, opt(finally), pos, dst);
     }
 
-    switch (catches.length()) {
-      case 0:
-        handler.setNull();
-        break;
-      case 1:
-        handler = catches[0];
-        break;
-      default:
-        if (!newArray(catches, &handler))
-            return false;
-    }
+    if (!newArray(catches, &handlers))
+        return false;
 
     return newNode(AST_TRY_STMT, pos,
                    "block", body,
-                   "handler", handler,
+                   "handlers", handlers,
                    "finalizer", finally,
                    dst);
 }
@@ -1624,7 +1615,6 @@ class ASTSerializer
     bool expressions(JSParseNode *pn, NodeVector &elts);
     bool xmls(JSParseNode *pn, NodeVector &elts);
     bool leftAssociate(JSParseNode *pn, Value *dst);
-    bool binaryOperands(JSParseNode *pn, NodeVector &elts);
     bool functionArgs(JSParseNode *pn, JSParseNode *pnargs, JSParseNode *pndestruct,
                       JSParseNode *pnbody, NodeVector &args);
 
@@ -1971,7 +1961,7 @@ ASTSerializer::variableDeclarator(JSParseNode *pn, VarDeclKind *pkind, Value *ds
 
     if (PN_TYPE(pn) == TOK_NAME) {
         pnleft = pn;
-        pnright = pn->pn_expr;
+        pnright = pn->pn_used ? NULL : pn->pn_expr;
     } else {
         JS_ASSERT(PN_TYPE(pn) == TOK_ASSIGN);
         pnleft = pn->pn_left;
@@ -2108,6 +2098,7 @@ ASTSerializer::forInit(JSParseNode *pn, Value *dst)
 bool
 ASTSerializer::statement(JSParseNode *pn, Value *dst)
 {
+    JS_CHECK_RECURSION(cx, return false);
     switch (PN_TYPE(pn)) {
       case TOK_FUNCTION:
       case TOK_VAR:
@@ -2353,23 +2344,6 @@ ASTSerializer::leftAssociate(JSParseNode *pn, Value *dst)
 }
 
 bool
-ASTSerializer::binaryOperands(JSParseNode *pn, NodeVector &elts)
-{
-    if (pn->pn_arity == PN_BINARY) {
-        Value left, right;
-
-        return expression(pn->pn_left, &left) &&
-               elts.append(left) &&
-               expression(pn->pn_right, &right) &&
-               elts.append(right);
-    }
-
-    LOCAL_ASSERT(pn->pn_arity == PN_LIST);
-
-    return expressions(pn, elts);
-}
-
-bool
 ASTSerializer::comprehensionBlock(JSParseNode *pn, Value *dst)
 {
     LOCAL_ASSERT(pn->pn_arity == PN_BINARY);
@@ -2457,6 +2431,7 @@ ASTSerializer::generatorExpression(JSParseNode *pn, Value *dst)
 bool
 ASTSerializer::expression(JSParseNode *pn, Value *dst)
 {
+    JS_CHECK_RECURSION(cx, return false);
     switch (PN_TYPE(pn)) {
       case TOK_FUNCTION:
         return function(pn, AST_FUNC_EXPR, dst);
@@ -2753,6 +2728,7 @@ ASTSerializer::expression(JSParseNode *pn, Value *dst)
 bool
 ASTSerializer::xml(JSParseNode *pn, Value *dst)
 {
+    JS_CHECK_RECURSION(cx, return false);
     switch (PN_TYPE(pn)) {
 #ifdef JS_HAS_XML_SUPPORT
       case TOK_LC:
@@ -2975,6 +2951,7 @@ ASTSerializer::objectPattern(JSParseNode *pn, VarDeclKind *pkind, Value *dst)
 bool
 ASTSerializer::pattern(JSParseNode *pn, VarDeclKind *pkind, Value *dst)
 {
+    JS_CHECK_RECURSION(cx, return false);
     switch (PN_TYPE(pn)) {
       case TOK_RC:
         return objectPattern(pn, pkind, dst);
@@ -3162,20 +3139,6 @@ ASTSerializer::functionBody(JSParseNode *pn, TokenPos *pos, Value *dst)
 
 } /* namespace js */
 
-/* Reflect class */
-
-Class js_ReflectClass = {
-    js_Reflect_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Reflect),
-    PropertyStub,
-    PropertyStub,
-    PropertyStub,
-    StrictPropertyStub,
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub
-};
-
 static JSBool
 reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 {
@@ -3274,7 +3237,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
     if (!chars)
         return JS_FALSE;
 
-    Parser parser(cx);
+    Parser parser(cx, NULL, NULL, false);
 
     if (!parser.init(chars, length, filename, lineno, cx->findVersion()))
         return JS_FALSE;
@@ -3299,14 +3262,16 @@ static JSFunctionSpec static_methods[] = {
 };
 
 
-JSObject *
-js_InitReflectClass(JSContext *cx, JSObject *obj)
+JS_BEGIN_EXTERN_C
+
+JS_PUBLIC_API(JSObject *)
+JS_InitReflect(JSContext *cx, JSObject *obj)
 {
-    JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &js_ReflectClass, NULL, obj);
+    JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, obj);
     if (!Reflect)
         return NULL;
 
-    if (!JS_DefineProperty(cx, obj, js_Reflect_str, OBJECT_TO_JSVAL(Reflect),
+    if (!JS_DefineProperty(cx, obj, "Reflect", OBJECT_TO_JSVAL(Reflect),
                            JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;
     }
@@ -3314,7 +3279,7 @@ js_InitReflectClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, Reflect, static_methods))
         return NULL;
 
-    MarkStandardClassInitializedNoProto(obj, &js_ReflectClass);
-
     return Reflect;
 }
+
+JS_END_EXTERN_C

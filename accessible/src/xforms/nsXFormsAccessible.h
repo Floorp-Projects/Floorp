@@ -194,7 +194,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
 protected:
-  PRBool IsItemSelected();
+  bool IsSelected();
 };
 
 #endif

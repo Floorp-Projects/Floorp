@@ -311,7 +311,6 @@ MAKEFILES_libreg="
   modules/libreg/Makefile
   modules/libreg/include/Makefile
   modules/libreg/src/Makefile
-  modules/libreg/standalone/Makefile
 "
 
 MAKEFILES_libpref="
@@ -559,11 +558,6 @@ MAKEFILES_embedding="
   embedding/Makefile
   embedding/base/Makefile
   embedding/browser/Makefile
-  embedding/browser/activex/src/Makefile
-  embedding/browser/activex/src/common/Makefile
-  embedding/browser/activex/src/control/Makefile
-  embedding/browser/activex/src/control_kicker/Makefile
-  embedding/browser/activex/src/plugin/Makefile
   embedding/browser/build/Makefile
   embedding/browser/webBrowser/Makefile
   embedding/components/Makefile
@@ -687,6 +681,10 @@ MAKEFILES_jsctypes="
   toolkit/components/ctypes/tests/Makefile
 "
 
+MAKEFILES_jsreflect="
+  toolkit/components/reflect/Makefile
+"
+
 MAKEFILES_libpr0n="
   modules/libpr0n/Makefile
   modules/libpr0n/build/Makefile
@@ -753,6 +751,7 @@ add_makefiles "
   $MAKEFILES_jsipc
   $MAKEFILES_jsdebugger
   $MAKEFILES_jsctypes
+  $MAKEFILES_jsreflect
   $MAKEFILES_content
   $MAKEFILES_layout
   $MAKEFILES_libimg

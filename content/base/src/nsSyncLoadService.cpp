@@ -43,7 +43,6 @@
 #include "nsSyncLoadService.h"
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
-#include "nsIDOMLoadListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIInterfaceRequestor.h"
@@ -56,7 +55,6 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsAutoPtr.h"
-#include "nsLoadListenerProxy.h"
 #include "nsStreamUtils.h"
 #include "nsCrossSiteListenerProxy.h"
 
@@ -64,13 +62,13 @@
  * This class manages loading a single XML document
  */
 
-class nsSyncLoader : public nsIDOMLoadListener,
+class nsSyncLoader : public nsIStreamListener,
                      public nsIChannelEventSink,
                      public nsIInterfaceRequestor,
                      public nsSupportsWeakReference
 {
 public:
-    nsSyncLoader() : mLoading(PR_FALSE), mLoadSuccess(PR_FALSE) {}
+    nsSyncLoader() : mLoading(PR_FALSE) {}
     virtual ~nsSyncLoader();
 
     NS_DECL_ISUPPORTS
@@ -79,14 +77,8 @@ public:
                           PRBool aChannelIsSync, PRBool aForceToXML,
                           nsIDOMDocument** aResult);
 
-    NS_DECL_NSIDOMEVENTLISTENER
-
-    // nsIDOMLoadListener
-    NS_IMETHOD Load(nsIDOMEvent* aEvent);
-    NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
-    NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-    NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-    NS_IMETHOD Error(nsIDOMEvent* aEvent);
+    NS_FORWARD_NSISTREAMLISTENER(mListener->)
+    NS_DECL_NSIREQUESTOBSERVER
 
     NS_DECL_NSICHANNELEVENTSINK
 
@@ -97,8 +89,9 @@ private:
     nsresult PushSyncStream(nsIStreamListener* aListener);
 
     nsCOMPtr<nsIChannel> mChannel;
+    nsCOMPtr<nsIStreamListener> mListener;
     PRPackedBool mLoading;
-    PRPackedBool mLoadSuccess;
+    nsresult mAsyncLoadStatus;
 };
 
 class nsForceXMLListener : public nsIStreamListener
@@ -156,8 +149,8 @@ nsSyncLoader::~nsSyncLoader()
 }
 
 NS_IMPL_ISUPPORTS5(nsSyncLoader,
-                   nsIDOMLoadListener,
-                   nsIDOMEventListener,
+                   nsIStreamListener,
+                   nsIRequestObserver,
                    nsIChannelEventSink,
                    nsIInterfaceRequestor,
                    nsISupportsWeakReference)
@@ -222,24 +215,9 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     if (aLoaderPrincipal) {
         listener = new nsCORSListenerProxy(listener, aLoaderPrincipal,
                                            mChannel, PR_FALSE, &rv);
-        NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // Register as a load listener on the document
-    nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(document);
-    NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
-
-    nsWeakPtr requestWeak = do_GetWeakReference(static_cast<nsIDOMLoadListener*>(this));
-    nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
-    NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
-
-    // This will addref the proxy
-    rv = target->AddEventListenerByIID(static_cast<nsIDOMEventListener*>(proxy), 
-                                       NS_GET_IID(nsIDOMLoadListener));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    mLoadSuccess = PR_FALSE;
     if (aChannelIsSync) {
         rv = PushSyncStream(listener);
     }
@@ -248,22 +226,16 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     }
 
     http = do_QueryInterface(mChannel);
-    if (mLoadSuccess && http) {
+    if (NS_SUCCEEDED(rv) && http) {
         PRBool succeeded;
-        mLoadSuccess = NS_SUCCEEDED(http->GetRequestSucceeded(&succeeded)) &&
-                       succeeded;
+        if (NS_FAILED(http->GetRequestSucceeded(&succeeded)) || !succeeded) {
+            rv = NS_ERROR_FAILURE;
+        }
     }
     mChannel = nsnull;
 
-    // This will release the proxy. Don't use the errorvalue from this since
-    // we're more interested in the errorvalue from the loading
-    target->RemoveEventListenerByIID(static_cast<nsIDOMEventListener*>(proxy), 
-                                     NS_GET_IID(nsIDOMLoadListener));
-
     // check that the load succeeded
     NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ENSURE_TRUE(mLoadSuccess, NS_ERROR_FAILURE);
 
     NS_ENSURE_TRUE(document->GetRootElement(), NS_ERROR_FAILURE);
 
@@ -273,8 +245,12 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
 nsresult
 nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener)
 {
+    mListener = aListener;
+
+    mAsyncLoadStatus = NS_OK;
+
     // Start reading from the channel
-    nsresult rv = mChannel->AsyncOpen(aListener, nsnull);
+    nsresult rv = mChannel->AsyncOpen(this, nsnull);
 
     if (NS_SUCCEEDED(rv)) {
         // process events until we're finished.
@@ -288,10 +264,14 @@ nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener)
         }
     }
 
+    mListener = nsnull;
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Note that if AsyncOpen failed that's ok -- the only caller of
     // this method nulls out mChannel immediately after we return.
-    
-    return rv;
+
+    return mAsyncLoadStatus;
 }
 
 nsresult
@@ -303,61 +283,31 @@ nsSyncLoader::PushSyncStream(nsIStreamListener* aListener)
 
     mLoading = PR_TRUE;
     rv = nsSyncLoadService::PushSyncStreamToListener(in, aListener, mChannel);
-
+    mLoading = PR_FALSE;
+    
     return rv;
 }
 
-// nsIDOMEventListener
-nsresult
-nsSyncLoader::HandleEvent(nsIDOMEvent* aEvent)
+NS_IMETHODIMP
+nsSyncLoader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
-    return NS_OK;
+    return mListener->OnStartRequest(aRequest, aContext);
 }
 
-// nsIDOMLoadListener
-nsresult
-nsSyncLoader::Load(nsIDOMEvent* aEvent)
+NS_IMETHODIMP
+nsSyncLoader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+                            nsresult aStatusCode)
 {
-    if (mLoading) {
-        mLoading = PR_FALSE;
-        mLoadSuccess = PR_TRUE;
+    if (NS_SUCCEEDED(mAsyncLoadStatus) && NS_FAILED(aStatusCode)) {
+        mAsyncLoadStatus = aStatusCode;
     }
-
-    return NS_OK;
-}
-
-nsresult
-nsSyncLoader::BeforeUnload(nsIDOMEvent* aEvent)
-{
-    // Like, whatever.
-
-    return NS_OK;
-}
-
-nsresult
-nsSyncLoader::Unload(nsIDOMEvent* aEvent)
-{
-    return NS_OK;
-}
-
-nsresult
-nsSyncLoader::Abort(nsIDOMEvent* aEvent)
-{
-    if (mLoading) {
-        mLoading = PR_FALSE;
+    nsresult rv = mListener->OnStopRequest(aRequest, aContext, aStatusCode);
+    if (NS_SUCCEEDED(mAsyncLoadStatus) && NS_FAILED(rv)) {
+        mAsyncLoadStatus = rv;
     }
+    mLoading = PR_FALSE;
 
-    return NS_OK;
-}
-
-nsresult
-nsSyncLoader::Error(nsIDOMEvent* aEvent)
-{
-    if (mLoading) {
-        mLoading = PR_FALSE;
-    }
-
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -381,50 +331,6 @@ nsSyncLoader::GetInterface(const nsIID & aIID,
     return QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_ISUPPORTS1(nsSyncLoadService,
-                   nsISyncLoadDOMService)
-
-static nsresult
-LoadFromChannel(nsIChannel* aChannel, nsIPrincipal *aLoaderPrincipal,
-                PRBool aChannelIsSync, PRBool aForceToXML,
-                nsIDOMDocument** aResult)
-{
-    nsRefPtr<nsSyncLoader> loader = new nsSyncLoader();
-    if (!loader) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return loader->LoadDocument(aChannel, aLoaderPrincipal, aChannelIsSync,
-                                aForceToXML, aResult);
-}
-
-NS_IMETHODIMP
-nsSyncLoadService::LoadDocument(nsIChannel* aChannel,
-                                nsIPrincipal* aLoaderPrincipal,
-                                nsIDOMDocument** aResult)
-{
-    return LoadFromChannel(aChannel, aLoaderPrincipal, PR_FALSE, PR_FALSE,
-                           aResult);
-}
-
-NS_IMETHODIMP
-nsSyncLoadService::LoadDocumentAsXML(nsIChannel* aChannel,
-                                     nsIPrincipal* aLoaderPrincipal,
-                                     nsIDOMDocument** aResult)
-{
-    return LoadFromChannel(aChannel, aLoaderPrincipal, PR_FALSE, PR_TRUE,
-                           aResult);
-}
-
-NS_IMETHODIMP
-nsSyncLoadService::LoadLocalDocument(nsIChannel* aChannel,
-                                     nsIPrincipal* aLoaderPrincipal,
-                                     nsIDOMDocument** aResult)
-{
-    return LoadFromChannel(aChannel, aLoaderPrincipal, PR_TRUE, PR_TRUE,
-                           aResult);
-}
-
 /* static */
 nsresult
 nsSyncLoadService::LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
@@ -446,8 +352,10 @@ nsSyncLoadService::LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
                     (NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)) &&
                      isResource);
 
-    return LoadFromChannel(channel, aLoaderPrincipal, isSync, aForceToXML,
-                           aResult);
+    nsRefPtr<nsSyncLoader> loader = new nsSyncLoader();
+    return loader->LoadDocument(channel, aLoaderPrincipal, isSync,
+                                aForceToXML, aResult);
+
 }
 
 /* static */

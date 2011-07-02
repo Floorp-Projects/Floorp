@@ -23,7 +23,7 @@
  *   Original Author: David W. Hyatt (hyatt@netscape.com)
  *   Daniel Glazman <glazman@netscape.com>
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   L. David Baron <dbaron@dbaron.org>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Michael Ventnor <m.ventnor@gmail.com>
@@ -79,6 +79,7 @@
 #include "mozilla/dom/Element.h"
 #include "CSSCalc.h"
 #include "nsPrintfCString.h"
+#include "mozilla/Util.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -702,8 +703,8 @@ SetPairCoords(const nsCSSValue& aValue,
 
   PRBool cX = SetCoord(valX, aCoordX, aParentX, aMask, aStyleContext,
                        aPresContext, aCanStoreInRuleTree);
-  PRBool cY = SetCoord(valY, aCoordY, aParentY, aMask, aStyleContext,
-                       aPresContext, aCanStoreInRuleTree);
+  mozilla::DebugOnly<PRBool> cY = SetCoord(valY, aCoordY, aParentY, aMask, 
+                       aStyleContext, aPresContext, aCanStoreInRuleTree);
   NS_ABORT_IF_FALSE(cX == cY, "changed one but not the other");
   return cX;
 }
@@ -3450,6 +3451,24 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
     text->SetDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID);
   }
 
+  // text-overflow: enum, string, inherit, initial
+  const nsCSSValue* textOverflowValue =
+    aRuleData->ValueForTextOverflow();
+  if (eCSSUnit_Enumerated == textOverflowValue->GetUnit() ||
+      eCSSUnit_Initial    == textOverflowValue->GetUnit()) {
+    SetDiscrete(*textOverflowValue, text->mTextOverflow.mType,
+                canStoreInRuleTree,
+                SETDSC_ENUMERATED, parentText->mTextOverflow.mType,
+                NS_STYLE_TEXT_OVERFLOW_CLIP, 0, 0, 0, 0);
+    text->mTextOverflow.mString.Truncate();
+  } else if (eCSSUnit_Inherit == textOverflowValue->GetUnit()) {
+    canStoreInRuleTree = PR_FALSE;
+    text->mTextOverflow = parentText->mTextOverflow;
+  } else if (eCSSUnit_String == textOverflowValue->GetUnit()) {
+    textOverflowValue->GetStringValue(text->mTextOverflow.mString);
+    text->mTextOverflow.mType = NS_STYLE_TEXT_OVERFLOW_STRING;
+  }
+
   // unicode-bidi: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForUnicodeBidi(), text->mUnicodeBidi, canStoreInRuleTree,
               SETDSC_ENUMERATED, parentText->mUnicodeBidi,
@@ -3610,7 +3629,6 @@ static const TransitionPropInfo transitionPropInfo[4] = {
     &nsStyleDisplay::mTransitionTimingFunctionCount },
 };
 
-#ifdef MOZ_CSS_ANIMATIONS
 // Each property's index in this array must match its index in the
 // mutable array |animationPropData| below.
 static const TransitionPropInfo animationPropInfo[8] = {
@@ -3631,7 +3649,6 @@ static const TransitionPropInfo animationPropInfo[8] = {
   { eCSSProperty_animation_iteration_count,
     &nsStyleDisplay::mAnimationIterationCountCount },
 };
-#endif
 
 // Information about each transition or animation property that changes
 // during ComputeDisplayData.
@@ -3927,7 +3944,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
   }
 
-#ifdef MOZ_CSS_ANIMATIONS
   // Each property's index in this array must match its index in the
   // const array |animationPropInfo| above.
   TransitionPropData animationPropData[8];
@@ -4171,7 +4187,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       }
     }
   }
-#endif
 
   // opacity: factor, inherit, initial
   SetFactor(*aRuleData->ValueForOpacity(), display->mOpacity, canStoreInRuleTree,

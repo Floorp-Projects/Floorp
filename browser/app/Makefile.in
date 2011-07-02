@@ -23,6 +23,7 @@
 #  Jonathan Wilson <jonwil@tpgi.com.au>
 #  Dan Mosedale <dmose@mozilla.org>
 #  Benjamin Smedberg <benjamin@smedbergs.us>
+#  Jared Wein <jwein@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -91,34 +92,21 @@ include $(topsrcdir)/config/rules.mk
 else
 # Build a binary bootstrapping with XRE_main
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
-else
-PROGRAM = $(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
-endif
 
 CPPSRCS = nsBrowserApp.cpp
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-LIBS += $(DIST)/bin/XUL
-TK_LIBS := $(TK_LIBS)
-else
-EXTRA_DSO_LIBS += xul
-endif
+DEFINES += -DXPCOM_GLUE
+STL_FLAGS=
 
 LIBS += \
-	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
-	$(XPCOM_GLUE_LDOPTS) \
-	$(NSPR_LIBS) \
+	$(XPCOM_STANDALONE_GLUE_LDOPTS) \
 	$(NULL)
-
-ifdef MOZ_JPROF
-LIBS += -ljprof
-endif
 
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
@@ -194,18 +182,9 @@ endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 
-$(MOZ_APP_NAME):: $(topsrcdir)/build/unix/mozilla.in $(GLOBAL_DEPS)
-	cat $< | sed -e "s|%MOZAPPDIR%|$(installdir)|" \
-		-e "s|%MOZ_APP_DISPLAYNAME%|$(MOZ_APP_DISPLAYNAME)|" > $@
-	chmod +x $@
+libs:: 
+	cp -p $(MOZ_APP_NAME)$(BIN_SUFFIX) $(DIST)/bin/$(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
 
-libs:: $(MOZ_APP_NAME)
-	$(INSTALL) $< $(DIST)/bin
-
-install:: $(MOZ_APP_NAME)
-	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
-
-GARBAGE += $(MOZ_APP_NAME)
 GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firefox.js)
 
 endif
@@ -221,7 +200,6 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/mozicon128.png $(DIST)/bin/icons
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/document.png   $(DIST)/bin/icons
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png  $(DIST)/bin/chrome/icons/default
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png  $(DIST)/bin/chrome/icons/default
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png  $(DIST)/bin/chrome/icons/default
@@ -273,7 +251,7 @@ libs repackage:: $(PROGRAM) application.ini
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/mangle $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/shlibsign
 ifdef LIBXUL_SDK
-	cp $(LIBXUL_DIST)/bin/$(XR_STUB_NAME) $(DIST)/$(APP_NAME).app/Contents/MacOS/firefox-bin
+	cp $(LIBXUL_DIST)/bin/$(XR_STUB_NAME) $(DIST)/$(APP_NAME).app/Contents/MacOS/firefox
 else
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS

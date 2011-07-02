@@ -1036,17 +1036,6 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
     dnl /usr/bin/g(cc|++)-$GCC_VERSION.
     MOZ_PATH_PROGS(PBBUILD, pbbuild xcodebuild pbxbuild)
 
-    case "$PBBUILD" in
-      *xcodebuild*)
-        changequote(,)
-        XCODEBUILD_VERSION=`$PBBUILD -version 2>/dev/null | xargs | sed -e 's/.*DevToolsCore-\([0-9]*\).*/\1/'`
-        changequote([,])
-        if test -n "$XCODEBUILD_VERSION" && test "$XCODEBUILD_VERSION" -ge 620 ; then
-          HAS_XCODE_2_1=1;
-        fi
-      ;;
-    esac
-
     dnl sdp was formerly in /Developer/Tools.  As of Mac OS X 10.4 (Darwin 8),
     dnl it has moved into /usr/bin.
     MOZ_PATH_PROG(SDP, sdp, :, [$PATH:/usr/bin:/Developer/Tools])
@@ -1054,8 +1043,6 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
 esac
 
 AC_SUBST(GCC_VERSION)
-AC_SUBST(XCODEBUILD_VERSION)
-AC_SUBST(HAS_XCODE_2_1)
 
 dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
 dnl that a universal binary is being produced.
@@ -2140,10 +2127,12 @@ ia64*-hpux*)
         esac
         # If we're building with --enable-profiling, we need a frame pointer.
         if test -z "$MOZ_PROFILING"; then
-            MOZ_OPTIMIZE_FLAGS="-O3 -fomit-frame-pointer"
+            MOZ_FRAMEPTR_FLAGS="-fomit-frame-pointer"
         else
-            MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
+            MOZ_FRAMEPTR_FLAGS="-fno-omit-frame-pointer"
         fi
+        MOZ_PGO_OPTIMIZE_FLAGS="-O3 $MOZ_FRAMEPTR_FLAGS"
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK $MOZ_FRAMEPTR_FLAGS"
         MOZ_DEBUG_FLAGS="-g"
     fi
 
@@ -2252,6 +2241,9 @@ ia64*-hpux*)
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         # MSVC warnings C4244 and C4800 are ubiquitous, useless, and annoying.
         CXXFLAGS="$CXXFLAGS -wd4244 -wd4800"
+        # make 'foo == bar;' error out
+        CFLAGS="$CFLAGS -we4553"
+        CXXFLAGS="$CXXFLAGS -we4553"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
         MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
@@ -4729,6 +4721,7 @@ AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
+AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
 dnl = Enable generation of debug symbols

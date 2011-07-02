@@ -127,6 +127,10 @@ https://requireclientcert.example.com:443         privileged,clientauth=require
 # the network in every test suite.
 http://fxfeeds.mozilla.com:80
 
+# Prevent safebrowsing tests from hitting the network for its-a-trap.html and
+# its-an-attack.html.
+http://www.mozilla.com:80
+
 #
 # These are subdomains of <ält.example.org>.
 #

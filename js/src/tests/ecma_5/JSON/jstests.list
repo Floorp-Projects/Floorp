@@ -4,6 +4,7 @@ script small-codepoints.js
 script parse.js
 script parse-arguments.js
 script parse-crockford-01.js
+script parse-mega-huge-array.js
 script parse-number-syntax.js
 script parse-octal-syntax-error.js
 script parse-primitives.js

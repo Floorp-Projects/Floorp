@@ -64,7 +64,6 @@
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
 #include "jsobjinlines.h"
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
@@ -285,7 +284,8 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     }
 
     /* Finish frame initialization. */
-    fp->initJitFrameLatePrologue();
+    if (!fp->initJitFrameLatePrologue(cx, &f.stackLimit))
+        THROWV(NULL);
 
     /* These would have been initialized by the prologue. */
     f.regs.prepareToRun(*fp, script);
@@ -552,14 +552,28 @@ stubs::CreateThis(VMFrame &f, JSObject *proto)
 void JS_FASTCALL
 stubs::ScriptDebugPrologue(VMFrame &f)
 {
+    Probes::enterJSFun(f.cx, f.fp()->maybeFun(), f.fp()->script());
     js::ScriptDebugPrologue(f.cx, f.fp());
 }
 
 void JS_FASTCALL
 stubs::ScriptDebugEpilogue(VMFrame &f)
 {
+    Probes::exitJSFun(f.cx, f.fp()->maybeFun(), f.fp()->script());
     if (!js::ScriptDebugEpilogue(f.cx, f.fp(), JS_TRUE))
         THROW();
+}
+
+void JS_FASTCALL
+stubs::ScriptProbeOnlyPrologue(VMFrame &f)
+{
+    Probes::enterJSFun(f.cx, f.fp()->fun(), f.fp()->script());
+}
+
+void JS_FASTCALL
+stubs::ScriptProbeOnlyEpilogue(VMFrame &f)
+{
+    Probes::exitJSFun(f.cx, f.fp()->fun(), f.fp()->script());
 }
 
 #ifdef JS_TRACER

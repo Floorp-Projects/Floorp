@@ -728,7 +728,6 @@ static const struct {
     const char  *name;
     uint32      flag;
 } js_options[] = {
-    {"anonfunfix",      JSOPTION_ANONFUNFIX},
     {"atline",          JSOPTION_ATLINE},
     {"jit",             JSOPTION_JIT},
     {"relimit",         JSOPTION_RELIMIT},

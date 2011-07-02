@@ -63,7 +63,7 @@ function testBug635418_1() {
 }
 
 function testBug635418_2() {
-  let state = JSON.parse(SS_SVC.getBrowserState());
+  let state = JSON.parse(ss.getBrowserState());
   ok(!state.windows[0].tabs[0].hidden, "first tab should still not be hidden");
   ok(state.windows[0].tabs[1].hidden, "second tab should be hidden by now");
 
@@ -72,7 +72,7 @@ function testBug635418_2() {
 }
 
 function testBug635418_3() {
-  let state = JSON.parse(SS_SVC.getBrowserState());
+  let state = JSON.parse(ss.getBrowserState());
   ok(!state.windows[0].tabs[0].hidden, "first tab should still still not be hidden");
   ok(!state.windows[0].tabs[1].hidden, "second tab should not be hidden again");
 

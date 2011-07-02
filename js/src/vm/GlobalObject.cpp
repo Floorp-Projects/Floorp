@@ -42,6 +42,7 @@
 
 #include "jscntxt.h"
 #include "jsexn.h"
+#include "jsmath.h"
 #include "json.h"
 
 #include "jsobjinlines.h"

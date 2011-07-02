@@ -104,7 +104,7 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
   }
 
   if (!aDispatchDelayed) {
-    nsCOMPtr<nsIThreadInternal2> thread =
+    nsCOMPtr<nsIThreadInternal> thread =
       do_QueryInterface(NS_GetCurrentThread());
     NS_ENSURE_TRUE(thread, nsnull);
 
@@ -628,7 +628,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransaction)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mDatabase,
-                                                       nsPIDOMEventTarget)
+                                                       nsIDOMEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnCompleteListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
@@ -899,10 +899,7 @@ IDBTransaction::AfterProcessNextEvent(nsIThreadInternal* aThread,
     }
 
     // No longer need to observe thread events.
-    nsCOMPtr<nsIThreadInternal2> thread = do_QueryInterface(aThread);
-    NS_ASSERTION(thread, "This must never fail!");
-
-    if(NS_FAILED(thread->RemoveObserver(this))) {
+    if(NS_FAILED(aThread->RemoveObserver(this))) {
       NS_ERROR("Failed to remove observer!");
     }
   }

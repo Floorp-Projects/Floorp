@@ -53,7 +53,6 @@ using namespace mozilla;
 gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
                        PRBool aNeedsBold)
     : gfxFont(aFontEntry, aFontStyle),
-      mATSFont(aFontEntry->GetFontRef()),
       mCGFont(nsnull),
       mFontFace(nsnull),
       mScaledFont(nsnull)
@@ -62,7 +61,7 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
         mSyntheticBoldOffset = 1;  // devunit offset when double-striking text to fake boldness
     }
 
-    mCGFont = ::CGFontCreateWithPlatformFont(&mATSFont);
+    mCGFont = aFontEntry->GetFontRef();
     if (!mCGFont) {
         mIsValid = PR_FALSE;
         return;
@@ -148,9 +147,6 @@ gfxMacFont::~gfxMacFont()
     if (mFontFace) {
         cairo_font_face_destroy(mFontFace);
     }
-
-    // this is documented to be safe if mCGFont is null
-    ::CGFontRelease(mCGFont);
 }
 
 PRBool
@@ -192,6 +188,28 @@ gfxMacFont::SetupCairoFont(gfxContext *aContext)
     }
     cairo_set_scaled_font(aContext->GetCairo(), mScaledFont);
     return PR_TRUE;
+}
+
+gfxFont::RunMetrics
+gfxMacFont::Measure(gfxTextRun *aTextRun,
+                    PRUint32 aStart, PRUint32 aEnd,
+                    BoundingBoxType aBoundingBoxType,
+                    gfxContext *aRefContext,
+                    Spacing *aSpacing)
+{
+    gfxFont::RunMetrics metrics =
+        gfxFont::Measure(aTextRun, aStart, aEnd,
+                         aBoundingBoxType, aRefContext, aSpacing);
+
+    // if aBoundingBoxType is not TIGHT_HINTED_OUTLINE_EXTENTS then we need to add
+    // a pixel column each side of the bounding box in case of antialiasing "bleed"
+    if (aBoundingBoxType != TIGHT_HINTED_OUTLINE_EXTENTS &&
+        metrics.mBoundingBox.width > 0) {
+        metrics.mBoundingBox.x -= aTextRun->GetAppUnitsPerDevUnit();
+        metrics.mBoundingBox.width += aTextRun->GetAppUnitsPerDevUnit() * 2;
+    }
+
+    return metrics;
 }
 
 void
@@ -245,7 +263,7 @@ gfxMacFont::InitMetrics()
     // platform APIs. The InitMetrics...() functions will set mIsValid on success.
     if (!InitMetricsFromSfntTables(mMetrics) &&
         (!mFontEntry->IsUserFont() || mFontEntry->IsLocalUserFont())) {
-        InitMetricsFromATSMetrics();
+        InitMetricsFromPlatform();
     }
     if (!mIsValid) {
         return;
@@ -269,7 +287,7 @@ gfxMacFont::InitMetrics()
         mMetrics.xHeight = 0.0;
         if (!InitMetricsFromSfntTables(mMetrics) &&
             (!mFontEntry->IsUserFont() || mFontEntry->IsLocalUserFont())) {
-            InitMetricsFromATSMetrics();
+            InitMetricsFromPlatform();
         }
         if (!mIsValid) {
             // this shouldn't happen, as we succeeded earlier before applying
@@ -393,19 +411,65 @@ gfxMacFont::GetFontTable(PRUint32 aTag)
     return nsnull;
 }
 
-// Try to initialize font metrics via ATS font metrics APIs,
+// Try to initialize font metrics via platform APIs (CG/CT),
 // and set mIsValid = TRUE on success.
 // We ONLY call this for local (platform) fonts that are not sfnt format;
-// for sfnts, including ALL downloadable fonts, use InitMetricsFromSfntTables
-// because ATSFontGetHorizontalMetrics() has been known to crash when
-// presented with bad fonts.
+// for sfnts, including ALL downloadable fonts, we prefer to use
+// InitMetricsFromSfntTables and avoid platform APIs.
 void
-gfxMacFont::InitMetricsFromATSMetrics()
+gfxMacFont::InitMetricsFromPlatform()
+{
+    if (gfxMacPlatformFontList::UseATSFontEntry()) {
+        ATSFontEntry *fe = static_cast<ATSFontEntry*>(GetFontEntry());
+        InitMetricsFromATSMetrics(fe->GetATSFontRef());
+        return;
+    }
+
+    CTFontRef ctFont = ::CTFontCreateWithGraphicsFont(mCGFont,
+                                                      mAdjustedSize,
+                                                      NULL, NULL);
+    if (!ctFont) {
+        return;
+    }
+
+    mMetrics.underlineOffset = ::CTFontGetUnderlinePosition(ctFont);
+    mMetrics.underlineSize = ::CTFontGetUnderlineThickness(ctFont);
+
+    mMetrics.externalLeading = ::CTFontGetLeading(ctFont);
+
+    mMetrics.maxAscent = ::CTFontGetAscent(ctFont);
+    mMetrics.maxDescent = ::CTFontGetDescent(ctFont);
+
+    // this is not strictly correct, but neither CTFont nor CGFont seems to
+    // provide maxAdvance, unless we were to iterate over all the glyphs
+    // (which isn't worth the cost here)
+    CGRect r = ::CTFontGetBoundingBox(ctFont);
+    mMetrics.maxAdvance = r.size.width;
+
+    // aveCharWidth is also not provided, so leave it at zero
+    // (fallback code in gfxMacFont::InitMetrics will then try measuring 'x');
+    // this could lead to less-than-"perfect" text field sizing when width is
+    // specified as a number of characters, and the font in use is a non-sfnt
+    // legacy font, but that's a sufficiently obscure edge case that we can
+    // ignore the potential discrepancy.
+    mMetrics.aveCharWidth = 0;
+
+    mMetrics.xHeight = ::CTFontGetXHeight(ctFont);
+
+    ::CFRelease(ctFont);
+
+    mIsValid = PR_TRUE;
+}
+
+// For OS X 10.5, try to initialize font metrics via ATS font metrics APIs,
+// and set mIsValid = TRUE on success.
+void
+gfxMacFont::InitMetricsFromATSMetrics(ATSFontRef aFontRef)
 {
     ATSFontMetrics atsMetrics;
     OSStatus err;
 
-    err = ::ATSFontGetHorizontalMetrics(mATSFont, kATSOptionFlagsDefault,
+    err = ::ATSFontGetHorizontalMetrics(aFontRef, kATSOptionFlagsDefault,
                                         &atsMetrics);
     if (err != noErr) {
 #ifdef DEBUG

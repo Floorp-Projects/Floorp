@@ -121,21 +121,6 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, void *rval)
 {
 }
 
-#ifdef XML_METERING
-static struct {
-    jsrefcount  qname;
-    jsrefcount  xmlnamespace;
-    jsrefcount  xml;
-    jsrefcount  xmlobj;
-} xml_stats;
-
-#define METER(x)        JS_ATOMIC_INCREMENT(&(x))
-#define UNMETER(x)      JS_ATOMIC_DECREMENT(&(x))
-#else
-#define METER(x)        /* nothing */
-#define UNMETER(x)      /* nothing */
-#endif
-
 /*
  * Random utilities and global functions.
  */
@@ -299,7 +284,6 @@ NewXMLNamespace(JSContext *cx, JSLinearString *prefix, JSLinearString *uri, JSBo
         obj->setNameURI(uri);
     if (declared)
         obj->setNamespaceDeclared(JSVAL_TRUE);
-    METER(xml_stats.xmlnamespace);
     return obj;
 }
 
@@ -513,7 +497,6 @@ NewXMLQName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
         return NULL;
     if (!InitXMLQName(cx, obj, uri, prefix, localName))
         return NULL;
-    METER(xml_stats.qname);
     return obj;
 }
 
@@ -531,7 +514,6 @@ NewXMLAttributeName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
     JS_ASSERT(obj->isQName());
     if (!InitXMLQName(cx, obj, uri, prefix, localName))
         return NULL;
-    METER(xml_stats.qname);
     return obj;
 }
 
@@ -651,7 +633,6 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
         return JS_FALSE;
 
     *rval = OBJECT_TO_JSVAL(obj);
-    METER(xml_stats.xmlnamespace);
 
     empty = cx->runtime->emptyString;
     obj->setNamePrefix(empty);
@@ -761,7 +742,6 @@ QNameHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
     }
     *rval = OBJECT_TO_JSVAL(obj);
-    METER(xml_stats.qname);
 
     if (isQName) {
         /* If namespace is not specified and name is a QName, clone it. */
@@ -7034,7 +7014,6 @@ js_NewXML(JSContext *cx, JSXMLClass xml_class)
     JS_APPEND_LINK(&xml->links, &xml_leaks);
     xml->serial = xml_serial++;
 #endif
-    METER(xml_stats.xml);
     return xml;
 }
 
@@ -7058,8 +7037,6 @@ js_TraceXML(JSTracer *trc, JSXML *xml)
                      (JSXML **) xml->xml_kids.vector,
                      xml->xml_kids.length);
     XMLArrayCursorTrace(trc, xml->xml_kids.cursors);
-    if (IS_GC_MARKING_TRACER(trc))
-        xml->xml_kids.trim();
 
     if (xml->xml_class == JSXML_CLASS_LIST) {
         if (xml->xml_target)
@@ -7071,15 +7048,11 @@ js_TraceXML(JSTracer *trc, JSXML *xml)
                         (JSObject **) xml->xml_namespaces.vector,
                         "xml_namespaces");
         XMLArrayCursorTrace(trc, xml->xml_namespaces.cursors);
-        if (IS_GC_MARKING_TRACER(trc))
-            xml->xml_namespaces.trim();
 
         xml_trace_vector(trc,
                          (JSXML **) xml->xml_attrs.vector,
                          xml->xml_attrs.length);
         XMLArrayCursorTrace(trc, xml->xml_attrs.cursors);
-        if (IS_GC_MARKING_TRACER(trc))
-            xml->xml_attrs.trim();
     }
 }
 
@@ -7103,7 +7076,6 @@ NewXMLObject(JSContext *cx, JSXML *xml)
     if (!obj)
         return NULL;
     obj->setPrivate(xml);
-    METER(xml_stats.xmlobj);
     return obj;
 }
 
@@ -7142,30 +7114,21 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto, *pobj;
-    JSFunction *fun;
-    JSXML *xml;
-    JSProperty *prop;
-    Shape *shape;
-    jsval cval, vp[3];
-
     /* Define the isXMLName function. */
     if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
         return NULL;
 
     /* Define the XML class constructor and prototype. */
-    proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1,
-                         NULL, xml_methods,
-                         xml_static_props, xml_static_methods);
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1,
+                                   NULL, xml_methods, xml_static_props, xml_static_methods);
     if (!proto)
         return NULL;
 
-    xml = js_NewXML(cx, JSXML_CLASS_TEXT);
+    JSXML *xml = js_NewXML(cx, JSXML_CLASS_TEXT);
     if (!xml)
         return NULL;
     proto->setPrivate(xml);
     xml->object = proto;
-    METER(xml_stats.xmlobj);
 
     /*
      * Prepare to set default settings on the XML constructor we just made.
@@ -7173,17 +7136,20 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
      * JSObject::getProperty, which is xml_getProperty, which creates a new
      * XMLList every time!  We must instead call js_LookupProperty directly.
      */
+    JSObject *pobj;
+    JSProperty *prop;
     if (!js_LookupProperty(cx, proto,
                            ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
                            &pobj, &prop)) {
         return NULL;
     }
     JS_ASSERT(prop);
-    shape = (Shape *) prop;
-    cval = Jsvalify(pobj->nativeGetSlot(shape->slot));
+    Shape *shape = (Shape *) prop;
+    jsval cval = Jsvalify(pobj->nativeGetSlot(shape->slot));
     JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));
 
     /* Set default settings. */
+    jsval vp[3];
     vp[0] = JSVAL_NULL;
     vp[1] = cval;
     vp[2] = JSVAL_VOID;
@@ -7191,7 +7157,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Define the XMLList function and give it the same prototype as XML. */
-    fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
+    JSFunction *fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
     if (!fun)
         return NULL;
     if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), proto,
@@ -7392,7 +7358,6 @@ js_GetAnyName(JSContext *cx, jsid *idp)
         JSRuntime *rt = cx->runtime;
         if (!InitXMLQName(cx, obj, rt->emptyString, rt->emptyString, rt->atomState.starAtom))
             return false;
-        METER(xml_stats.qname);
 
         v.setObject(*obj);
         if (!js_SetReservedSlot(cx, global, JSProto_AnyName, v))

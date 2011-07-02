@@ -44,6 +44,10 @@
 #include "nsIComponentManager.idl"
 #include "nsIScriptableInterfaces.idl"
 
+%{C++
+#include "jspubtd.h"
+%}
+
 interface xpcIJSWeakReference;
 
 /**
@@ -123,7 +127,7 @@ interface nsIXPCComponents_utils_Sandbox : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(c1d616fa-1875-49ba-b7b8-5861dab31a42)]
+[scriptable, uuid(45857850-a08e-4fe9-a582-77fe03e3676f)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -205,6 +209,16 @@ interface nsIXPCComponents_Utils : nsISupports
                                /*, [optional] in JSObject targetObj */);
 
     /*
+     * Unloads the JS module at 'registryLocation'. Existing references to the
+     * module will continue to work but any subsequent import of the module will
+     * reload it and give new reference. If the JS module hasn't yet been
+     * imported then this method will do nothing.
+     *
+     * @param resourceURI A resource:// URI string to unload the module from.
+     */
+    void unload(in AUTF8String registryLocation);
+
+    /*
      * To be called from JS only.
      *
      * Return a weak reference for the given JS object.
@@ -227,6 +241,23 @@ interface nsIXPCComponents_Utils : nsISupports
      * @return the corresponding global.
      */
     void /* JSObject */ getGlobalForObject(/* in JSObject obj */);
+
+    /*
+     * To be called from JS only.
+     *
+     * Returns an object created in |vobj|'s compartment.
+     */
+    [implicit_jscontext]
+    jsval createObjectIn(in jsval vobj);
+
+    /*
+     * To be called from JS only.
+     *
+     * Ensures that all functions come from vobj's scope (and aren't cross
+     * compartment wrappers).
+     */
+    [implicit_jscontext]
+    void makeObjectPropsNormal(in jsval vobj);
 };
 
 /**

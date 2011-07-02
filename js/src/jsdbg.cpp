@@ -768,23 +768,57 @@ Debug::onTrap(JSContext *cx, Value *vp)
 // === Debug JSObjects
 
 void
-Debug::markCrossCompartmentDebugObjectReferents(JSTracer *tracer)
+Debug::markKeysInCompartment(JSTracer *tracer, ObjectWeakMap &map)
 {
     JSCompartment *comp = tracer->context->runtime->gcCurrentCompartment;
+    JS_ASSERT(comp);
+
+    typedef HashMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, RuntimeAllocPolicy> Map;
+    Map &storage = map;
+    for (Map::Range r = storage.all(); !r.empty(); r.popFront()) {
+        JSObject *key = r.front().key;
+        if (key->compartment() == comp && IsAboutToBeFinalized(tracer->context, key))
+            js::gc::MarkObject(tracer, *key, "cross-compartment WeakMap key");
+    }
+}
+
+// Ordinarily, WeakMap keys and values are marked because at some point it was
+// discovered that the WeakMap was live; that is, some object containing the
+// WeakMap was marked during mark phase.
+//
+// However, during single-compartment GC, we have to do something about
+// cross-compartment WeakMaps in other compartments. Since those compartments
+// aren't being GC'd, the WeakMaps definitely will not be found during mark
+// phase. If their keys and values might need to be marked, we have to do it
+// manually.
+//
+// Each Debug object keeps two cross-compartment WeakMaps: objects and
+// heldScripts.  Both have the nice property that all their values are in the
+// same compartment as the Debug object, so we only need to mark the keys. We
+// must simply mark all keys that are in the compartment being GC'd.
+//
+// We must scan all Debug objects regardless of whether they *currently* have
+// any debuggees in the compartment being GC'd, because the WeakMap entries
+// persist even when debuggees are removed.
+//
+// This happens during the initial mark phase, not iterative marking, because
+// all the edges being reported here are strong references.
+//
+void 
+Debug::markCrossCompartmentDebugObjectReferents(JSTracer *tracer)
+{
+    JSRuntime *rt = tracer->context->runtime;
+    JSCompartment *comp = rt->gcCurrentCompartment;
 
     // Mark all objects in comp that are referents of Debug.Objects in other
     // compartments.
-    const GlobalObjectSet &debuggees = comp->getDebuggees();
-    for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
-        const GlobalObject::DebugVector *debuggers = r.front()->getDebuggers();
-        for (Debug **p = debuggers->begin(); p != debuggers->end(); p++) {
-            Debug *dbg = *p;
-            if (dbg->object->compartment() != comp) {
-                dbg->objects.markKeysInCompartment(tracer);
-                dbg->heldScripts.markKeysInCompartment(tracer);
-            }
+    for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
+        Debug *dbg = Debug::fromLinks(p);
+        if (dbg->object->compartment() != comp) {
+            markKeysInCompartment(tracer, dbg->objects);
+            markKeysInCompartment(tracer, dbg->heldScripts);
         }
-    }
+    }         
 }
 
 // This method has two tasks:
@@ -796,17 +830,15 @@ Debug::markCrossCompartmentDebugObjectReferents(JSTracer *tracer)
 // method returns true if it has to mark anything; GC calls it repeatedly until
 // it returns false.
 //
-// If |comp| is non-null, we're collecting that compartment only; if |comp| is null,
-// we're collecting all compartments.
-//
 bool
-Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
+Debug::mark(GCMarker *trc, JSGCInvocationKind gckind)
 {
     bool markedAny = false;
 
     // We must find all Debug objects in danger of GC. This code is a little
     // convoluted since the easiest way to find them is via their debuggees.
     JSRuntime *rt = trc->context->runtime;
+    JSCompartment *comp = rt->gcCurrentCompartment;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
         JSCompartment *dc = *c;
 
@@ -893,7 +925,7 @@ Debug::sweepAll(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
-        Debug *dbg = (Debug *) ((unsigned char *) p - offsetof(Debug, link));
+        Debug *dbg = Debug::fromLinks(p);
 
         if (!dbg->object->isMarked()) {
             // If this Debug is being GC'd, detach it from its debuggees. In the case of
@@ -1799,7 +1831,7 @@ DebugScript_getAllOffsets(JSContext *cx, uintN argc, Value *vp)
             }
 
             // Append the current offset to the offsets array.
-            if (!js_ArrayCompPush(cx, offsets, NumberValue(offset)))
+            if (!js_NewbornArrayPush(cx, offsets, NumberValue(offset)))
                 return false;
         }
     }
@@ -1845,7 +1877,7 @@ DebugScript_getLineOffsets(JSContext *cx, uintN argc, Value *vp)
             flowData[offset] != NoEdges &&
             flowData[offset] != lineno)
         {
-            if (!js_ArrayCompPush(cx, result, NumberValue(offset)))
+            if (!js_NewbornArrayPush(cx, result, NumberValue(offset)))
                 return false;
         }
     }
@@ -1917,7 +1949,7 @@ DebugScript_getBreakpoints(JSContext *cx, uintN argc, Value *vp)
         if (site->script == script && (!pc || site->pc == pc)) {
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
                 if (bp->debugger == dbg &&
-                    !js_ArrayCompPush(cx, arr, ObjectValue(*bp->getHandler())))
+                    !js_NewbornArrayPush(cx, arr, ObjectValue(*bp->getHandler())))
                 {
                     return false;
                 }
@@ -2546,12 +2578,12 @@ DebugObject_getParameterNames(JSContext *cx, uintN argc, Value *vp)
         JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
 
         if (fun->nargs > 0) {
-            const AutoLocalNameArray names(cx, fun);
-            if (!names)
+            Vector<JSAtom *> names(cx);
+            if (!fun->script()->bindings.getLocalNameArray(cx, &names))
                 return false;
 
             for (size_t i = 0; i < fun->nargs; i++) {
-                JSAtom *name = JS_LOCAL_NAME_TO_ATOM(names[i]);
+                JSAtom *name = names[i];
                 Value *elt = result->addressOfDenseArrayElement(i);
                 if (name)
                     elt->setString(name);

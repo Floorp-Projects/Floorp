@@ -766,8 +766,8 @@ let PlacesDBUtils = {
       PlacesDBUtils._executeTasks(tasks);
     }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
-    // Force a full expiration step.
-    expiration.observe(null, "places-debug-start-expiration", -1);
+    // Force an orphans expiration step.
+    expiration.observe(null, "places-debug-start-expiration", 0);
   },
 
   /**

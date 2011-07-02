@@ -1080,6 +1080,6 @@ OpenDatabaseHelper::GetSuccessResult(JSContext* aCx,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  return WrapNative(aCx, NS_ISUPPORTS_CAST(nsPIDOMEventTarget*, database),
+  return WrapNative(aCx, NS_ISUPPORTS_CAST(nsIDOMEventTarget*, database),
                     aVal);
 }

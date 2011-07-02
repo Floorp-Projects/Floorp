@@ -248,4 +248,14 @@ inline char *net_RFindCharNotInSet(const char *str, const char *set)
  */
 NS_HIDDEN_(PRBool) net_IsValidHostName(const nsCSubstring &host);
 
+/**
+ * Checks whether the IPv4 address is valid according to RFC 3986 section 3.2.2.
+ */
+NS_HIDDEN_(PRBool) net_IsValidIPv4Addr(const char *addr, PRInt32 addrLen);
+
+/**
+ * Checks whether the IPv6 address is valid according to RFC 3986 section 3.2.2.
+ */
+NS_HIDDEN_(PRBool) net_IsValidIPv6Addr(const char *addr, PRInt32 addrLen);
+
 #endif // !nsURLHelper_h__

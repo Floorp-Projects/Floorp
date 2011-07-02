@@ -54,7 +54,7 @@ function LoginRec(collection, id) {
 }
 LoginRec.prototype = {
   __proto__: CryptoWrapper.prototype,
-  _logName: "Record.Login",
+  _logName: "Sync.Record.Login",
 };
 
 Utils.deferGetSet(LoginRec, "cleartext", ["hostname", "formSubmitURL",
@@ -318,11 +318,13 @@ PasswordTracker.prototype = {
     if (this.ignoreAll)
       return;
 
-    // A single add, remove or change is 15 points, all items removed is 50
+    // A single add, remove or change or removing all items
+    // will trigger a sync for MULTI_DEVICE.
     switch (aData) {
     case 'modifyLogin':
       aSubject = aSubject.QueryInterface(Ci.nsIArray).
         queryElementAt(1, Ci.nsILoginMetaInfo);
+      // fallthrough
     case 'addLogin':
     case 'removeLogin':
       // Skip over Weave password/passphrase changes
@@ -331,13 +333,13 @@ PasswordTracker.prototype = {
       if (aSubject.hostname == PWDMGR_HOST)
         break;
 
-      this.score += 15;
+      this.score += SCORE_INCREMENT_XLARGE;
       this._log.trace(aData + ": " + aSubject.guid);
       this.addChangedID(aSubject.guid);
       break;
     case 'removeAllLogins':
       this._log.trace(aData);
-      this.score += 500;
+      this.score += SCORE_INCREMENT_XLARGE;
       break;
     }
   }

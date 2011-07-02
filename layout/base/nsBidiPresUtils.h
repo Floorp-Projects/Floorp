@@ -362,6 +362,9 @@ private:
                                           nsBidiPositionResolve* aPosResolve,  /* may be null */
                                           PRInt32                aPosResolveCount,
                                           nscoord*               aWidth /* may be null */);
+  void AdvanceAndAppendFrame(nsIFrame**                 aFrame,
+                             nsBlockInFlowLineIterator* aLineIter,
+                             nsIFrame**                 aNextSibling);
 
   /**
    * Traverse the child frames of the block element and:

@@ -60,7 +60,7 @@ function HistoryRec(collection, id) {
 }
 HistoryRec.prototype = {
   __proto__: CryptoWrapper.prototype,
-  _logName: "Record.History",
+  _logName: "Sync.Record.History",
   ttl: HISTORY_TTL
 };
 
@@ -430,10 +430,10 @@ HistoryTracker.prototype = {
   onTitleChanged: function HT_onTitleChanged() {},
 
   /* Every add or remove is worth 1 point.
-   * Clearing the whole history is worth 50 points (see below)
+   * Clearing all history will trigger a sync for MULTI-DEVICE (see below)
    */
   _upScore: function BMT__upScore() {
-    this.score += 1;
+    this.score += SCORE_INCREMENT_SMALL;
   },
 
   onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans, guid) {
@@ -458,6 +458,6 @@ HistoryTracker.prototype = {
   },
   onClearHistory: function HT_onClearHistory() {
     this._log.trace("onClearHistory");
-    this.score += 500;
+    this.score += SCORE_INCREMENT_XLARGE;
   }
 };

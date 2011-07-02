@@ -35,23 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function browserWindowsCount() {
-  let count = 0;
-  let e = Services.wm.getEnumerator("navigator:browser");
-  while (e.hasMoreElements()) {
-    if (!e.getNext().closed)
-      ++count;
-  }
-  return count;
-}
-
 function test() {
   /** Test for Bug 597071 **/
 
   waitForExplicitFinish();
 
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
 
@@ -78,8 +66,7 @@ function test() {
       newWin.gBrowser.removeEventListener("load", arguments.callee, true);
 
       newWin.gBrowser.addTab().linkedBrowser.stop();
-      // make sure there are 2 windows open
-      is(browserWindowsCount(), 2, "there should be 2 windows open currently");
+
       // make sure sessionstore sees this window
       let state = JSON.parse(ss.getBrowserState());
       is(state.windows.length, 2, "sessionstore knows about this window");
@@ -90,11 +77,8 @@ function test() {
 
         is(ss.getClosedWindowCount(), closedWindowCount + 1,
            "increased closed window count");
-        is(browserWindowsCount(), 1, "there should be 1 window open currently");
 
-        try {
-          Services.prefs.clearUserPref("browser.sessionstore.max_windows_undo");
-        } catch (e) {}
+        Services.prefs.clearUserPref("browser.sessionstore.max_windows_undo");
         ss.setBrowserState(currentState);
         executeSoon(finish);
 
